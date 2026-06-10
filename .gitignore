@@ -49,3 +49,7 @@ next-env.d.ts
 /implementation_plan.md
 /task.md
 /walkthrough.md
+.agents/
+.gemini/
+gemini.md
+Yomirra_Full_Audit_Next_Step.md
