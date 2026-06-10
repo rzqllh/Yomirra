@@ -26,7 +26,7 @@ export function BottomNav() {
   const pathname = usePathname()
 
   return (
-    <nav className="md:hidden fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom))] left-4 right-4 z-40 flex h-[60px] items-center justify-around rounded-full border border-border-subtle/50 bg-surface-base/40 px-2 shadow-[0_8px_32px_rgba(0,0,0,0.3)] backdrop-blur-xl">
+    <nav className="md:hidden fixed bottom-[calc(0.75rem+env(safe-area-inset-bottom))] left-4 right-4 z-40 flex h-[60px] items-center justify-around rounded-full border border-border-subtle/50 bg-surface-raised/90 px-2 shadow-[0_8px_32px_rgba(0,0,0,0.3)] backdrop-blur-xl">
       {NAV_ITEMS.map((item) => {
         // Simple active check. Can be enhanced for nested routes if needed.
         const isActive =
@@ -46,7 +46,7 @@ export function BottomNav() {
               "relative flex w-[64px] flex-col items-center justify-center gap-1 rounded-full py-1.5 transition-all duration-300",
               isActive
                 ? "text-accent"
-                : "text-black/70 hover:text-text-primary"
+                : "text-text-muted hover:text-text-primary"
             )}>
               {isActive && (
                 <motion.div
