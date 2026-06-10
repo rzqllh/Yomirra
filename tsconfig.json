@@ -19,6 +19,9 @@
       }
     ],
     "paths": {
+      "@/shared/*": ["./src/shared/*"],
+      "@/server/*": ["./src/server/*"],
+      "@/components/*": ["./src/components/*"],
       "@/*": ["./src/*"]
     }
   },
