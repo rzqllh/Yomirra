@@ -4,11 +4,20 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test": "vitest"
+    "test": "vitest",
+    "postinstall": "prisma generate"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@firebase/util",
+      "@prisma/engines",
+      "prisma",
+      "protobufjs"
+    ]
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
