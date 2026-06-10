@@ -53,3 +53,5 @@ next-env.d.ts
 .gemini/
 gemini.md
 Yomirra_Full_Audit_Next_Step.md
+
+.vercel

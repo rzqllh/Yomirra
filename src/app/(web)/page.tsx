@@ -121,7 +121,7 @@ export default function Home() {
               className="bg-surface-raised/50 rounded-2xl py-12"
             />
           ) : (
-            <div className="w-full h-[200px] animate-pulse bg-surface-raised/50 rounded-2xl" />
+            <div className="w-full h-[200px] motion-safe:animate-pulse bg-surface-raised/50 rounded-2xl" />
           )}
         </section>
 

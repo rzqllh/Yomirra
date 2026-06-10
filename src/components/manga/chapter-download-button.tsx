@@ -95,7 +95,7 @@ export function ChapterDownloadButton({
             transition={{ duration: 0.15 }}
             className="text-accent relative flex items-center justify-center"
           >
-            <CircleNotch size={20} className="animate-spin" />
+            <CircleNotch size={20} className="motion-safe:animate-spin" />
             <span className="absolute text-[8px] font-bold">
               {download.progress > 0 ? download.progress : ""}
             </span>

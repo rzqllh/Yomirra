@@ -50,7 +50,6 @@ export function MangaCard({ manga, sourceId, priority = false }: MangaCardProps)
 
   return (
     <motion.article
-      layoutId={`manga-card-${manga.id}`}
       whileHover={{ y: -3 }}
       whileTap={{ scale: 0.985 }}
       transition={{ type: "spring", stiffness: 420, damping: 36 }}
@@ -61,7 +60,6 @@ export function MangaCard({ manga, sourceId, priority = false }: MangaCardProps)
         className="group absolute inset-0 flex flex-col justify-end focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       >
         <motion.img
-          layoutId={`manga-cover-${manga.id}`}
           src={manga.coverUrl}
           alt={manga.title}
           className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.025]"
@@ -82,7 +80,6 @@ export function MangaCard({ manga, sourceId, priority = false }: MangaCardProps)
         {/* Info Content */}
         <div className="relative z-20 p-3 pb-2 flex flex-col justify-end w-full">
           <motion.h3 
-            layoutId={`manga-title-${manga.id}`}
             className="line-clamp-2 text-[13px] sm:text-[14px] font-bold text-white leading-snug text-shadow-sm mb-1 group-hover:text-accent transition-colors duration-200"
           >
             {manga.title}

@@ -75,6 +75,7 @@ export default function MangaDetailPage({
             fill
             className="object-cover blur-2xl opacity-30 md:opacity-20 scale-110"
             priority
+            sizes="100vw"
           />
         )}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent to-background" />
@@ -86,7 +87,7 @@ export default function MangaDetailPage({
         <div className="sticky top-[100px] self-start w-full md:w-[280px] lg:w-[320px] shrink-0 flex flex-col gap-4">
           <div className="relative w-full aspect-[2/3] rounded-xl overflow-hidden shadow-2xl border border-border-subtle bg-surface-raised flex items-center justify-center text-text-muted">
             {coverUrl ? (
-              <Image src={coverUrl} alt={detail.title} fill className="object-cover" priority />
+              <Image src={coverUrl} alt={detail.title} fill className="object-cover" priority sizes="(max-width: 768px) 100vw, 320px" />
             ) : (
               <span className="text-sm font-medium">No Cover</span>
             )}

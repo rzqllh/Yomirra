@@ -73,7 +73,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {loading ? (
           <>
-            <CircleNotch className="animate-spin" weight="bold" />
+            <CircleNotch className="motion-safe:animate-spin" weight="bold" />
             {children}
           </>
         ) : (

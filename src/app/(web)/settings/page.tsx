@@ -19,7 +19,7 @@ export default function SettingsPage() {
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
-    setMounted(true);
+    queueMicrotask(() => setMounted(true));
   }, []);
 
   const handleLogout = async () => {
