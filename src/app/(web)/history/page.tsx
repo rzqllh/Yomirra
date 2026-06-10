@@ -63,12 +63,12 @@ export default function HistoryPage() {
                 )}
               </Link>
               <div className="flex-1 min-w-0 flex flex-col justify-center">
-                <Link href={getMangaDetailHref(item.sourceId, item.mangaId)}>
-                  <h3 className="truncate font-bold text-text-primary text-[15px] hover:text-accent transition-colors">
+                <Link href={getMangaDetailHref(item.sourceId, item.mangaId)} className="block min-w-0">
+                  <h3 className="line-clamp-2 font-bold text-text-primary text-[15px] leading-snug hover:text-accent transition-colors">
                     {item.mangaTitle}
                   </h3>
                 </Link>
-                <Link href={getReaderHref(item.sourceId, item.mangaId, item.chapterId)}>
+                <Link href={getReaderHref(item.sourceId, item.mangaId, item.chapterId)} className="block min-w-0 mt-0.5">
                   <p className="truncate text-sm font-medium text-text-muted hover:text-accent transition-colors">
                     {item.chapterTitle || "Chapter"}
                   </p>
