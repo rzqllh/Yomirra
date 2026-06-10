@@ -84,8 +84,8 @@ export default function MangaDetailPage({
       <div className="w-full max-w-7xl mx-auto px-4 md:px-8 pt-6 md:pt-12 pb-24 relative z-10 flex flex-col md:flex-row gap-8">
         
         {/* Left Column (Cover + Actions) */}
-        <div className="sticky top-[100px] self-start w-full md:w-[280px] lg:w-[320px] shrink-0 flex flex-col gap-4">
-          <div className="relative w-full aspect-[2/3] rounded-xl overflow-hidden shadow-2xl border border-border-subtle bg-surface-raised flex items-center justify-center text-text-muted">
+        <div className="relative md:sticky md:top-[100px] self-start w-full md:w-[280px] lg:w-[320px] shrink-0 flex flex-col gap-4">
+          <div className="relative w-[200px] sm:w-[240px] md:w-full mx-auto aspect-[2/3] rounded-xl overflow-hidden shadow-2xl border border-border-subtle bg-surface-raised flex items-center justify-center text-text-muted">
             {coverUrl ? (
               <Image src={coverUrl} alt={detail.title} fill className="object-cover" priority sizes="(max-width: 768px) 100vw, 320px" />
             ) : (

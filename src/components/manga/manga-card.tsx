@@ -78,25 +78,22 @@ export function MangaCard({ manga, sourceId, priority = false }: MangaCardProps)
         </div>
 
         {/* Info Content */}
-        <div className="relative z-20 p-3 pb-2 flex flex-col justify-end w-full">
+        <div className="relative z-20 p-2 sm:p-3 pb-2 flex flex-col justify-end w-full">
           <motion.h3 
-            className="line-clamp-2 text-[13px] sm:text-[14px] font-bold text-white leading-snug text-shadow-sm mb-1 group-hover:text-accent transition-colors duration-200"
+            className="line-clamp-2 text-[12px] sm:text-[14px] font-bold text-white leading-tight text-shadow-sm mb-1 group-hover:text-accent transition-colors duration-200"
           >
             {manga.title}
           </motion.h3>
           
-          <div className="flex items-center justify-between w-full mt-1">
-            <div className="flex items-center gap-1.5 text-text-secondary">
+          <div className="flex items-end justify-between w-full mt-0.5 gap-1">
+            <div className="flex flex-col min-w-0 flex-1">
               {manga.latestChapter && (
-                <span className="text-[11px] font-medium text-white/90">
-                  {manga.latestChapter.length > 15 ? manga.latestChapter.slice(0, 15) + '...' : manga.latestChapter}
+                <span className="text-[10px] sm:text-[11px] font-medium text-white/90 truncate">
+                  {manga.latestChapter}
                 </span>
               )}
-              {manga.latestChapter && timeText && (
-                <span className="text-[10px] text-white/50">•</span>
-              )}
               {timeText && (
-                <span className="text-[11px] text-white/70">
+                <span className="text-[9px] sm:text-[10px] text-white/60 truncate">
                   {timeText}
                 </span>
               )}

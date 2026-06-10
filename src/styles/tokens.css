@@ -103,4 +103,6 @@
   --shadow-reader-ui: 0 -1px 0 rgba(255, 255, 255, 0.06);
 
   --reader-bg: #080808;
+
+  --text-difference: mix-blend-mode: difference;
 }

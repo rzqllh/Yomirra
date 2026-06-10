@@ -23,7 +23,7 @@ export function TopBar({
   return (
     <header
       className={cn(
-        "sticky top-0 z-[var(--z-raised)] flex h-[calc(56px+env(safe-area-inset-top))] w-full items-center justify-between border-b border-border-subtle bg-surface-base/80 px-4 pt-[env(safe-area-inset-top)] backdrop-blur-md",
+        "sticky top-0 z-[var(--z-raised)] flex h-[calc(60px+env(safe-area-inset-top))] w-full items-center justify-between border-b border-border-subtle/50 bg-surface-base/60 px-4 pt-[env(safe-area-inset-top)] shadow-sm backdrop-blur-xl",
         className
       )}
     >

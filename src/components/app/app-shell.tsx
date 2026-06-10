@@ -29,7 +29,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <main
           className={cn(
             "flex-1 flex flex-col w-full",
-            !isReader && "pb-[calc(56px+env(safe-area-inset-bottom))] md:pb-0" // Padding for BottomNav only on mobile
+            !isReader && "pb-[calc(88px+env(safe-area-inset-bottom))] md:pb-0" // Padding for BottomNav only on mobile
           )}
         >
           {children}

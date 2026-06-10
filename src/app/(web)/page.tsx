@@ -37,13 +37,13 @@ export default function Home() {
   }, []);
 
   const getContinueReading = useHistoryStore(state => state.getContinueReading);
-  const continueReadingItems = getContinueReading(1);
-  const latestHistory = isMounted ? continueReadingItems[0] : undefined;
+  const continueReadingItems = getContinueReading(4);
+  const historyItems = isMounted ? continueReadingItems : [];
 
   return (
     <main className="min-h-screen bg-background pb-12">
       {/* Mobile Header / Search */}
-      <div className="md:hidden sticky top-0 z-30 bg-background/80 backdrop-blur-xl border-b border-border-subtle pt-[env(safe-area-inset-top)] pb-3 px-4">
+      <div className="md:hidden sticky top-0 z-30 bg-surface-base/60 backdrop-blur-xl border-b border-border-subtle/50 shadow-sm pt-[env(safe-area-inset-top)] pb-3 px-4">
         <form onSubmit={(e) => { e.preventDefault(); if (query.trim()) router.push(`/search?q=${encodeURIComponent(query.trim())}`); }} className="flex items-center gap-3 rounded-full bg-surface-raised px-4 py-2.5 transition-all duration-[var(--motion-fast)] focus-within:bg-surface-overlay focus-within:ring-1 focus-within:ring-accent border border-border-subtle mt-2 shadow-sm">
           <MagnifyingGlass className="size-5 text-text-muted shrink-0" weight="bold" />
           <input 
@@ -65,52 +65,61 @@ export default function Home() {
             <h2 className="text-[22px] font-bold tracking-tight text-text-primary">
               Lanjut Baca
             </h2>
-            {latestHistory && (
+            {historyItems.length > 0 && (
               <Link href="/history" className="text-[13px] font-bold text-accent hover:text-accent-hover transition-colors">
                 Lihat Semua
               </Link>
             )}
           </div>
           
-          {latestHistory ? (
-            <div className="flex flex-col sm:flex-row items-center gap-6 p-5 sm:p-6 bg-surface-raised rounded-2xl border border-border-subtle group hover:border-border-strong transition-colors relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              
-              {latestHistory.coverUrl && (
-                <div className="relative w-24 h-32 rounded-lg overflow-hidden shrink-0 shadow-md">
-                  <Image 
-                    src={latestHistory.coverUrl} 
-                    alt={latestHistory.mangaTitle || "Cover"} 
-                    fill 
-                    className="object-cover"
-                    unoptimized 
-                  />
+          {historyItems.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+              {historyItems.map((item) => (
+                <div key={`${item.sourceId}::${item.mangaId}::${item.chapterId}`} className="group relative flex items-center gap-4 rounded-2xl bg-surface-raised p-3 border border-border-subtle transition-colors hover:bg-surface-overlay overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-r from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  
+                  <Link href={getMangaDetailHref(item.sourceId, item.mangaId)} className="relative h-20 w-14 shrink-0 overflow-hidden rounded-md bg-surface-overlay shadow-sm z-10">
+                    {item.coverUrl ? (
+                      <Image src={item.coverUrl} alt={item.mangaTitle} fill className="object-cover" unoptimized />
+                    ) : (
+                      <div className="h-full w-full bg-surface-overlay" />
+                    )}
+                  </Link>
+                  
+                  <div className="flex-1 min-w-0 flex flex-col justify-center z-10">
+                    <Link href={getMangaDetailHref(item.sourceId, item.mangaId)} className="block min-w-0">
+                      <h3 className="line-clamp-1 font-bold text-text-primary text-[15px] leading-snug group-hover:text-accent transition-colors">
+                        {item.mangaTitle}
+                      </h3>
+                    </Link>
+                    <Link href={getReaderHref(item.sourceId, item.mangaId, item.chapterId)} className="block min-w-0 mt-0.5">
+                      <p className="truncate text-sm font-medium text-text-muted group-hover:text-accent transition-colors">
+                        {item.chapterTitle || `Chapter ${item.chapterId}`}
+                      </p>
+                    </Link>
+                    <div className="mt-1 flex items-center gap-2 text-[11px] font-semibold text-text-muted">
+                      <span className="uppercase tracking-wider">{item.sourceName || item.sourceId}</span>
+                      {item.progressPercent !== undefined && item.progressPercent > 0 && (
+                        <>
+                          <span>•</span>
+                          <span className="text-accent">{item.progressPercent}%</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <Button 
+                    asChild
+                    variant="accent" 
+                    size="icon"
+                    className="shrink-0 rounded-full h-10 w-10 shadow-sm relative z-20 ml-2"
+                  >
+                    <Link href={getReaderHref(item.sourceId, item.mangaId, item.chapterId)}>
+                      <Play className="h-4 w-4" weight="fill" />
+                    </Link>
+                  </Button>
                 </div>
-              )}
-              
-              <div className="flex-1 flex flex-col justify-center min-w-0 z-10 w-full text-center sm:text-left">
-                <p className="text-xs font-bold text-accent uppercase tracking-wider mb-2">Riwayat Terakhir</p>
-                <h3 className="text-xl sm:text-2xl font-bold text-text-primary line-clamp-1 mb-1 group-hover:text-accent transition-colors">
-                  <Link href={getMangaDetailHref(latestHistory.sourceId, latestHistory.mangaId)} className="focus:outline-none">
-                    <span className="absolute inset-0" aria-hidden="true" />
-                    {latestHistory.mangaTitle}
-                  </Link>
-                </h3>
-                <p className="text-sm font-medium text-text-muted mb-6">
-                  {latestHistory.chapterTitle || `Chapter ${latestHistory.chapterId}`}
-                </p>
-                
-                <Button 
-                  asChild
-                  variant="accent" 
-                  className="rounded-full w-full sm:w-auto h-11 px-6 font-bold shadow-sm relative z-20"
-                >
-                  <Link href={getReaderHref(latestHistory.sourceId, latestHistory.mangaId, latestHistory.chapterId)}>
-                    <Play className="h-4 w-4 mr-2" weight="fill" />
-                    Lanjutkan Membaca
-                  </Link>
-                </Button>
-              </div>
+              ))}
             </div>
           ) : isMounted ? (
             <EmptyState
@@ -118,10 +127,10 @@ export default function Home() {
               icon={<BookmarkSimple size={28} className="text-text-muted" weight="duotone" />}
               title="Belum ada riwayat baca"
               description="Buka chapter komik manapun dan progresmu akan otomatis muncul di sini."
-              className="bg-surface-raised/50 rounded-2xl py-12"
+              className="bg-surface-raised/50 rounded-2xl py-12 border border-border-subtle"
             />
           ) : (
-            <div className="w-full h-[200px] motion-safe:animate-pulse bg-surface-raised/50 rounded-2xl" />
+            <div className="w-full h-[100px] motion-safe:animate-pulse bg-surface-raised/50 rounded-2xl border border-border-subtle" />
           )}
         </section>
 
@@ -131,22 +140,28 @@ export default function Home() {
             <h2 className="text-[22px] font-bold tracking-tight text-text-primary">
               Populer di {sourceName}
             </h2>
+            <Link href="/library?sort=popular" className="text-[13px] font-bold text-accent hover:text-accent-hover transition-colors">
+              Lihat Semua
+            </Link>
           </div>
           {isLoadingPopular ? (
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-5">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <MangaCardSkeleton key={i} />
+            <div className="flex overflow-x-auto gap-3 sm:gap-4 pb-4 -mx-4 px-4 md:mx-0 md:px-0 snap-x">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="w-[120px] sm:w-[140px] md:w-[160px] lg:w-[180px] shrink-0 snap-start">
+                  <MangaCardSkeleton />
+                </div>
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-5">
-              {popular?.mangas.slice(0, 6).map((manga, index) => (
-                <MangaCard 
-                  key={manga.id} 
-                  manga={manga} 
-                  sourceId={activeSourceId} 
-                  priority={index < 4}
-                />
+            <div className="flex overflow-x-auto gap-3 sm:gap-4 pb-4 -mx-4 px-4 md:mx-0 md:px-0 snap-x">
+              {popular?.mangas.slice(0, 15).map((manga, index) => (
+                <div key={manga.id} className="w-[120px] sm:w-[140px] md:w-[160px] lg:w-[180px] shrink-0 snap-start">
+                  <MangaCard 
+                    manga={manga} 
+                    sourceId={activeSourceId} 
+                    priority={index < 4}
+                  />
+                </div>
               ))}
             </div>
           )}
@@ -179,7 +194,7 @@ export default function Home() {
                   variant="outline" 
                   className="rounded-full px-8 py-6 font-bold text-[15px] border-border-strong hover:bg-surface-raised transition-all"
                 >
-                  <Link href={getLibraryHref()}>
+                  <Link href="/library?sort=latest">
                     Eksplorasi Katalog Library
                   </Link>
                 </Button>
