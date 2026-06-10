@@ -4,7 +4,8 @@ import type {
   MangaDetail,
   MangaPageResult,
   MangaSource,
-} from "@/shared/types/source";
+  FilterList,
+} from "@/shared/sources/source-types";
 import { HttpClient } from "../base/http-client";
 import { signImageUrl } from "@/shared/utils/image";
 import {
@@ -50,7 +51,7 @@ export class ShinigamiSource implements MangaSource {
   async getPopular(page: number): Promise<MangaPageResult> {
     const res = await this.client.get<ShinigamiMangaListResponse>("/v1/manga/list", {
       page,
-      page_size: 30,
+      page_size: 100,
       sort: "popularity",
     });
 
@@ -63,7 +64,7 @@ export class ShinigamiSource implements MangaSource {
   async getLatest(page: number): Promise<MangaPageResult> {
     const res = await this.client.get<ShinigamiMangaListResponse>("/v1/manga/list", {
       page,
-      page_size: 30,
+      page_size: 100,
       sort: "latest",
     });
 
@@ -73,12 +74,21 @@ export class ShinigamiSource implements MangaSource {
     };
   }
 
-  async search(query: string, page: number): Promise<MangaPageResult> {
-    const res = await this.client.get<ShinigamiMangaListResponse>("/v1/manga/list", {
+  async search(query: string, page: number, filters?: Record<string, any>): Promise<MangaPageResult> {
+    const params: Record<string, any> = {
       page,
-      page_size: 30,
-      q: query,
-    });
+      page_size: 100,
+    };
+    if (query) params.q = query;
+    
+    // Merge filters (like genre[], format, status)
+    if (filters) {
+      Object.entries(filters).forEach(([k, v]) => {
+        params[k] = v;
+      });
+    }
+
+    const res = await this.client.get<ShinigamiMangaListResponse>("/v1/manga/list", params);
 
     return {
       mangas: res.data.map(normalizeMangaItem),
@@ -113,6 +123,60 @@ export class ShinigamiSource implements MangaSource {
         index,
         url: signImageUrl(`${data.base_url}${data.chapter.path}${filename}`, "https://c.shinigami.asia"),
       })),
+    };
+  }
+
+  getFilters(): FilterList {
+    return {
+      genres: [
+        { id: "action", name: "Action" },
+        { id: "adventure", name: "Adventure" },
+        { id: "comedy", name: "Comedy" },
+        { id: "drama", name: "Drama" },
+        { id: "fantasy", name: "Fantasy" },
+        { id: "romance", name: "Romance" },
+        { id: "sci-fi", name: "Sci-Fi" },
+        { id: "slice-of-life", name: "Slice of Life" },
+        { id: "sports", name: "Sports" },
+        { id: "supernatural", name: "Supernatural" },
+        { id: "mystery", name: "Mystery" },
+        { id: "psychological", name: "Psychological" },
+        { id: "horror", name: "Horror" },
+        { id: "thriller", name: "Thriller" },
+        { id: "historical", name: "Historical" },
+        { id: "martial-arts", name: "Martial Arts" },
+        { id: "isekai", name: "Isekai" },
+        { id: "mecha", name: "Mecha" },
+        { id: "school-life", name: "School Life" },
+        { id: "shounen", name: "Shounen" },
+        { id: "shoujo", name: "Shoujo" },
+        { id: "seinen", name: "Seinen" },
+        { id: "josei", name: "Josei" },
+        { id: "harem", name: "Harem" },
+        { id: "reverse-harem", name: "Reverse Harem" },
+        { id: "ecchi", name: "Ecchi" },
+        { id: "smut", name: "Smut" },
+        { id: "yaoi", name: "Yaoi" },
+        { id: "yuri", name: "Yuri" },
+        { id: "tragedy", name: "Tragedy" },
+        { id: "webtoon", name: "Webtoon" },
+        { id: "magic", name: "Magic" },
+        { id: "reincarnation", name: "Reincarnation" }
+      ],
+      formats: [
+        { id: "manga", name: "Manga" },
+        { id: "manhwa", name: "Manhwa" },
+        { id: "manhua", name: "Manhua" }
+      ],
+      statuses: [
+        { id: "ongoing", name: "Ongoing" },
+        { id: "completed", name: "Completed" },
+        { id: "hiatus", name: "Hiatus" }
+      ],
+      sorts: [
+        { id: "popular", name: "Populer" },
+        { id: "latest", name: "Terbaru" }
+      ]
     };
   }
 }

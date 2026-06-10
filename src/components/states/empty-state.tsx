@@ -37,8 +37,9 @@ export function EmptyState({
       className
     )}>
       {icon && (
-        <div className="mb-6 rounded-full bg-surface-raised p-6 shadow-soft border border-border-subtle">
-          {icon}
+        <div className="mb-6 flex items-center justify-center h-20 w-20 rounded-full bg-gradient-to-br from-surface-raised to-surface-base shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_8px_16px_rgba(0,0,0,0.4)] border border-border-subtle relative">
+          <div className="absolute inset-0 rounded-full bg-accent/5 blur-xl"></div>
+          <div className="relative z-10 text-accent">{icon}</div>
         </div>
       )}
       <h2 className="mb-2 text-xl font-bold text-text-primary">{title}</h2>

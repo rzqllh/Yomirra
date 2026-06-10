@@ -1,8 +1,10 @@
 import * as React from "react"
 import { useReaderStore } from "@/shared/store/reader-store"
 import { useHistoryStore } from "@/shared/store/history-store"
+import { useSettingsStore } from "@/shared/store/settings-store"
 import { PageItem } from "@/shared/types/source"
 import { PageImageError } from "./page-image-error"
+import Image from "next/image"
 
 interface PagedReaderProps {
   sourceId: string;
@@ -13,6 +15,7 @@ interface PagedReaderProps {
 
 export function PagedReader({ sourceId, mangaId, chapterId, pages }: PagedReaderProps) {
   const { settings, toggleOverlay } = useReaderStore()
+  const { dataSaver } = useSettingsStore()
   const markChapterProgress = useHistoryStore((state) => state.markChapterProgress)
   
   const [currentPageIndex, setCurrentPageIndex] = React.useState(0)
@@ -28,7 +31,7 @@ export function PagedReader({ sourceId, mangaId, chapterId, pages }: PagedReader
   // Safe Preload
   React.useEffect(() => {
     if (currentPageIndex < pages.length - 1) {
-      const nextImg = new Image()
+      const nextImg = new window.Image()
       nextImg.src = pages[currentPageIndex + 1].url
     }
   }, [currentPageIndex, pages])
@@ -118,13 +121,16 @@ export function PagedReader({ sourceId, mangaId, chapterId, pages }: PagedReader
             <PageImageError index={currentPage.index} onRetry={() => setImageError(false)} />
           </div>
         ) : (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img 
-            key={currentPage.url} // Force re-render on change
+          <Image 
+            key={currentPage.url}
             src={currentPage.url}
             alt={`Page ${currentPage.index}`}
+            width={800}
+            height={1200}
+            quality={dataSaver ? 60 : 85}
+            unoptimized={!dataSaver}
             className="object-contain shadow-soft pointer-events-none max-h-full max-w-full"
-            loading="eager"
+            priority
             onError={() => setImageError(true)}
           />
         )}

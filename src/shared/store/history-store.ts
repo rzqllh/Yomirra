@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { pushHistoryItem, deleteHistoryItem } from "@/shared/lib/sync-utils";
 
 export type HistoryItem = {
   sourceId: string;
@@ -36,6 +37,7 @@ export const useHistoryStore = create<HistoryState>()(
 
       upsertHistory: (item) => set((state) => {
         const id = getHistoryId(item.sourceId, item.mangaId, item.chapterId);
+        pushHistoryItem(item); // Background sync
         return {
           items: {
             ...state.items,
@@ -48,6 +50,7 @@ export const useHistoryStore = create<HistoryState>()(
         const id = getHistoryId(sourceId, mangaId, chapterId);
         const newItems = { ...state.items };
         delete newItems[id];
+        deleteHistoryItem(sourceId, mangaId, chapterId); // Background sync
         return { items: newItems };
       }),
 
@@ -95,17 +98,21 @@ export const useHistoryStore = create<HistoryState>()(
         if (!existing) return state;
 
         const progressPercent = totalPages > 0 ? Math.round((pageIndex / totalPages) * 100) : 0;
+        
+        const updatedItem = {
+          ...existing,
+          pageIndex,
+          totalPages,
+          progressPercent,
+          readAt: new Date().toISOString(),
+        };
+        
+        pushHistoryItem(updatedItem); // Background sync
 
         return {
           items: {
             ...state.items,
-            [id]: {
-              ...existing,
-              pageIndex,
-              totalPages,
-              progressPercent,
-              readAt: new Date().toISOString(),
-            }
+            [id]: updatedItem
           }
         };
       })

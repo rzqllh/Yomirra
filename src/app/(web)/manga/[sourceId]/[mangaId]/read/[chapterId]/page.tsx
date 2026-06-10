@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, use } from "react";
+import { useEffect, use, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
 import { ReaderPageSkeleton } from "@/components/skeletons/reader-page-skeleton";
@@ -10,6 +10,7 @@ import { PagedReader } from "@/components/reader/paged-reader";
 import { useHistoryStore } from "@/shared/store/history-store";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useReaderStore } from "@/shared/store/reader-store";
+import { useDownloadStore } from "@/shared/store/download-store";
 
 export default function ReaderPage({
   params,
@@ -35,10 +36,52 @@ export default function ReaderPage({
     staleTime: 1000 * 60 * 5,
   });
 
-  const { data: chapterPages, isLoading, error } = useQuery({
+  const downloadId = `${sourceId}::${mangaId}::${chapterId}`;
+  const downloadStatus = useDownloadStore(state => state.downloads[downloadId]?.status);
+
+  const [offlinePages, setOfflinePages] = useState<import("@/shared/types/source").PageItem[] | null>(null);
+
+  useEffect(() => {
+    if (downloadStatus === "downloaded" && typeof caches !== "undefined") {
+      let isMounted = true;
+      (async () => {
+        try {
+          const cache = await caches.open("yomirra-chapter-cache-v1");
+          const keys = await cache.keys();
+          const prefix = `/offline-images/${downloadId}/`;
+          
+          const matchedKeys = keys.filter(req => req.url.includes(prefix));
+          const sorted = matchedKeys.sort((a, b) => {
+            const numA = parseInt(a.url.split('/').pop() || "0", 10);
+            const numB = parseInt(b.url.split('/').pop() || "0", 10);
+            return numA - numB;
+          });
+
+          const blobUrls = await Promise.all(sorted.map(async (req, index) => {
+            const res = await cache.match(req);
+            const blob = await res?.blob();
+            return blob ? { index, url: URL.createObjectURL(blob) } : null;
+          }));
+          
+          if (isMounted && blobUrls.length > 0) {
+            setOfflinePages(blobUrls.filter(Boolean) as import("@/shared/types/source").PageItem[]);
+          }
+        } catch (e) {
+          console.error("Failed to load offline pages", e);
+        }
+      })();
+      return () => { isMounted = false; };
+    }
+  }, [downloadStatus, downloadId]);
+
+  const { data: chapterPages, isLoading: isQueryLoading, error } = useQuery({
     queryKey: ["pages", sourceId, chapterId],
     queryFn: () => apiClient.getPages(sourceId, mangaId, chapterId),
+    enabled: downloadStatus !== "downloaded", // Don't fetch if downloaded
   });
+
+  const isLoading = downloadStatus === "downloaded" ? offlinePages === null : isQueryLoading;
+  const pagesToRender = offlinePages || chapterPages?.pages;
 
   const chapterTitle = chapters?.find(c => c.id === chapterId)?.title || "Chapter";
 
@@ -78,7 +121,7 @@ export default function ReaderPage({
     );
   }
 
-  if (error || !chapterPages?.pages) {
+  if (error || !pagesToRender) {
     return (
       <ReaderShell chapterTitle="Error" currentChapterId={chapterId} sourceId={sourceId} mangaId={mangaId}>
         <div className="flex min-h-screen items-center justify-center text-text-muted">
@@ -91,7 +134,7 @@ export default function ReaderPage({
   return (
     <ReaderShell 
       chapterTitle={chapterTitle} 
-      pageCount={chapterPages.pages.length}
+      pageCount={pagesToRender.length}
       currentChapterId={chapterId}
       sourceId={sourceId}
       mangaId={mangaId}
@@ -101,14 +144,14 @@ export default function ReaderPage({
           sourceId={sourceId}
           mangaId={mangaId}
           chapterId={chapterId}
-          pages={chapterPages.pages} 
+          pages={pagesToRender} 
         />
       ) : (
         <PagedReader 
           sourceId={sourceId}
           mangaId={mangaId}
           chapterId={chapterId}
-          pages={chapterPages.pages}
+          pages={pagesToRender}
         />
       )}
     </ReaderShell>

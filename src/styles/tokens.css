@@ -1,37 +1,32 @@
 :root {
-  /* === BACKGROUND & SURFACE === */
-  --background: #0a0a0c;
-  --foreground: #f0ede8;
-  --surface-base: #111114;
-  --surface-raised: #18181d;
-  --surface-overlay: #1f1f26;
-  --surface-glass: rgba(255, 255, 255, 0.04);
-  --surface-active: #1a1a22;
+  /* === LIGHT MODE (60-30-10 & HIG) === */
+  --background: #fdfdfd; /* 60% */
+  --foreground: #09090b;
+  --surface-base: #f1f5f9; /* Slate 100 */
+  --surface-raised: #ffffff; /* 30% */
+  --surface-overlay: #e2e8f0; /* Slate 200 */
+  --surface-glass: rgba(0, 0, 0, 0.04);
+  --surface-active: #e2e8f0;
 
-  /* === TEXT === */
-  --text-primary: #f0ede8;
-  --text-secondary: #a09d98;
-  --text-muted: #5c5a58;
-  --text-disabled: #3a3937;
+  --text-primary: #020617; /* Slate 950 */
+  --text-secondary: #475569; /* Slate 600 */
+  --text-muted: #64748b; /* Slate 500 */
+  --text-disabled: #94a3b8; /* Slate 400 */
 
-  /* === BORDER === */
-  --border-subtle: rgba(255, 255, 255, 0.06);
-  --border-strong: rgba(255, 255, 255, 0.12);
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.16);
 
-  /* === ACCENT === */
-  --accent: #c9a96e;
-  --accent-foreground: #0a0a0c;
-  --accent-muted: rgba(201, 169, 110, 0.15);
+  --accent: #ef4444; /* 10% Red 500 */
+  --accent-foreground: #ffffff;
+  --accent-muted: rgba(239, 68, 68, 0.15);
 
-  /* === INTERACTIVE / FOCUS === */
   --focus-ring: var(--accent);
   --focus-ring-offset: var(--background);
 
-  /* === SEMANTIC === */
-  --error: #e05c5c;
-  --error-muted: rgba(224, 92, 92, 0.12);
-  --success: #5cba7d;
-  --warning: #e0a84a;
+  --error: #ef4444;
+  --error-muted: rgba(239, 68, 68, 0.12);
+  --success: #22c55e;
+  --warning: #f59e0b;
 
   /* === RADIUS === */
   --radius-xs: 4px;
@@ -42,9 +37,9 @@
   --radius-2xl: 24px;
 
   /* === SHADOW === */
-  --shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-floating: 0 8px 24px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.4);
-  --shadow-reader-ui: 0 -1px 0 rgba(255, 255, 255, 0.06);
+  --shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --shadow-floating: 0 8px 24px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.05);
+  --shadow-reader-ui: 0 -1px 0 rgba(0, 0, 0, 0.06);
 
   /* === MOTION === */
   --motion-fast: 120ms;
@@ -65,7 +60,7 @@
   --z-toast: 60;
 
   /* === READER-SPECIFIC === */
-  --reader-bg: #080808;
+  --reader-bg: #e5e5e5; /* Neutral Light Gray for Reader BG */
   --reader-page-max-width: 800px;
   --reader-page-gap: 2px;
   --reader-chrome-height: 56px;
@@ -73,4 +68,36 @@
   /* === MANGA CARD === */
   --card-aspect-ratio: 3 / 4;
   --card-cover-radius: var(--radius-md);
+}
+
+.dark {
+  /* === DARK MODE === */
+  --background: #09090b; /* 60% Zinc 950 */
+  --foreground: #f8fafc;
+  --surface-base: #0f111a; 
+  --surface-raised: #161822; /* 30% */
+  --surface-overlay: #1e2230;
+  --surface-glass: rgba(255, 255, 255, 0.04);
+  --surface-active: #1a1d28;
+
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #475569;
+  --text-disabled: #334155;
+
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+
+  --accent: #ef4444; /* 10% Red 500 */
+  --accent-foreground: #ffffff;
+  --accent-muted: rgba(239, 68, 68, 0.15);
+
+  --focus-ring: var(--accent);
+  --focus-ring-offset: var(--background);
+
+  --shadow-soft: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow-floating: 0 8px 24px rgba(0, 0, 0, 0.6), 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-reader-ui: 0 -1px 0 rgba(255, 255, 255, 0.06);
+
+  --reader-bg: #080808;
 }

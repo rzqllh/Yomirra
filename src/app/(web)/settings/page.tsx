@@ -1,167 +1,215 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { MobilePageShell } from "@/components/app/mobile-page-shell"
-import { useReaderStore } from "@/shared/store/reader-store"
-import { ReaderMode, ReadingDirection } from "@/shared/types/manga"
-import { 
-  Palette, BookOpen, Globe, Info, Check,
-  Download, ChartBar, CloudArrowUp, ToggleLeft
-} from "@phosphor-icons/react"
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger } from "@/components/ui/drawer"
-import { Separator } from "@/components/ui/separator"
-
-function SettingsRow({ 
-  icon: Icon, title, subtitle, onClick, right 
-}: { 
-  icon: React.ElementType, title: string, subtitle?: string, onClick?: () => void, right?: React.ReactNode 
-}) {
-  return (
-    <button 
-      onClick={onClick}
-      className="flex w-full items-center gap-4 px-4 py-3.5 text-left transition-colors hover:bg-surface-raised active:bg-surface-overlay"
-    >
-      <Icon size={24} className="text-text-muted shrink-0" />
-      <div className="flex-1 overflow-hidden">
-        <div className="truncate text-[15px] font-medium text-text-primary">{title}</div>
-        {subtitle && <div className="mt-0.5 truncate text-[13px] text-text-secondary">{subtitle}</div>}
-      </div>
-      {right && <div className="text-text-muted shrink-0 flex items-center">{right}</div>}
-    </button>
-  )
-}
-
-function Section({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col">
-      {children}
-    </div>
-  )
-}
+import * as React from "react";
+import { UserCircle, SignOut, Trash, Monitor, BookOpenText, HandSwipeLeft, EyeSlash, WifiHigh } from "@phosphor-icons/react";
+import { useAuth } from "@/hooks/use-auth";
+import { Button } from "@/components/ui/button";
+import Image from "next/image";
+import { useHistoryStore } from "@/shared/store/history-store";
+import { useLibraryStore } from "@/shared/store/library-store";
+import { useSettingsStore } from "@/shared/store/settings-store";
+import { useTheme } from "next-themes";
 
 export default function SettingsPage() {
-  const { settings, updateSettings } = useReaderStore()
+  const { user, loginWithGoogle, logout } = useAuth();
+  const clearHistory = useHistoryStore((state) => state.clearHistory);
+  const clearLibrary = useLibraryStore((state) => state.clearLibrary);
+  const { dataSaver, setDataSaver, hideNsfw, setHideNsfw } = useSettingsStore();
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const handleLogout = async () => {
+    await logout();
+  };
+
+  const handleClearData = () => {
+    if (confirm("Yakin ingin menghapus semua Riwayat dan Readlist lokal? (Data di Cloud mungkin tidak terhapus)")) {
+      clearHistory();
+      clearLibrary();
+      alert("Data lokal berhasil dibersihkan.");
+    }
+  };
 
   return (
-    <MobilePageShell title="More" className="p-0 pb-6">
-      
-      {/* Top Banner (Like Tachiyomi app logo header) */}
-      <div className="flex flex-col items-center justify-center py-8 px-4">
-        <div className="flex size-16 items-center justify-center rounded-2xl bg-surface-raised shadow-soft border border-border-subtle">
-          <BookOpen size={32} className="text-accent" weight="duotone" />
-        </div>
-        <h2 className="mt-3 text-lg font-bold text-text-primary tracking-tight">Yomirra</h2>
-        <p className="text-sm text-text-muted">Version 0.1.0</p>
-      </div>
+    <div className="flex flex-col min-h-screen bg-background">
+      <main className="flex-1 w-full max-w-3xl mx-auto pb-20 md:pb-8">
+        <div className="px-4 py-6 md:px-8 md:py-8 space-y-8">
+          
+          <div>
+            <h1 className="text-2xl font-black text-text-primary tracking-tight">Pengaturan</h1>
+            <p className="text-text-muted mt-1">Kelola akun, sinkronisasi, dan preferensi aplikasi.</p>
+          </div>
 
-      <Separator className="mb-2" />
+          {/* Akun & Sinkronisasi */}
+          <section className="bg-surface-raised border border-border-subtle rounded-2xl p-6">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-text-muted mb-4">Akun & Sinkronisasi</h2>
+            
+            {user ? (
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                {user.photoURL ? (
+                  <Image src={user.photoURL} alt={user.displayName || "User"} width={64} height={64} className="rounded-full border border-border-strong" />
+                ) : (
+                  <UserCircle size={64} weight="duotone" className="text-accent" />
+                )}
+                
+                <div className="flex-1 text-center sm:text-left">
+                  <h3 className="text-lg font-bold text-text-primary">{user.displayName}</h3>
+                  <p className="text-sm text-text-secondary">{user.email}</p>
+                  <p className="text-xs text-success font-medium mt-1">✓ Sinkronisasi Cloud Aktif</p>
+                </div>
 
-      <Section>
-        <SettingsRow 
-          icon={Download} 
-          title="Download queue" 
-          subtitle="No active downloads" 
-        />
-        <SettingsRow 
-          icon={ChartBar} 
-          title="Statistics" 
-          subtitle="View reading history insights" 
-        />
-        <SettingsRow 
-          icon={CloudArrowUp} 
-          title="Data and storage" 
-          subtitle="Backup, restore, clear cache" 
-        />
-      </Section>
+                <Button onClick={handleLogout} variant="outline" className="w-full sm:w-auto text-error hover:text-error hover:bg-error/10 border-error/50">
+                  <SignOut size={18} className="mr-2" />
+                  Keluar
+                </Button>
+              </div>
+            ) : (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-base font-bold text-text-primary">Login untuk Sinkronisasi</h3>
+                  <p className="text-sm text-text-secondary mt-1 max-w-md">Masuk dengan Google untuk mengaktifkan sinkronisasi otomatis History dan Readlist lintas perangkat.</p>
+                </div>
+                <Button onClick={loginWithGoogle} variant="accent" className="w-full sm:w-auto rounded-full font-bold">
+                  <UserCircle size={20} className="mr-2" weight="duotone" />
+                  Masuk dengan Google
+                </Button>
+              </div>
+            )}
+          </section>
 
-      <Separator className="my-2" />
-
-      <Section>
-        <SettingsRow 
-          icon={Palette} 
-          title="Appearance" 
-          subtitle="Dark theme, UI scaling" 
-        />
-        
-        {/* Reader Preferences Drawer */}
-        <Drawer>
-          <DrawerTrigger asChild>
-            <SettingsRow 
-              icon={BookOpen} 
-              title="Reader" 
-              subtitle="Reading mode, direction, background" 
-            />
-          </DrawerTrigger>
-          <DrawerContent>
-            <DrawerHeader>
-              <DrawerTitle>Reader Preferences</DrawerTitle>
-            </DrawerHeader>
-            <div className="p-4 space-y-6">
-              <div>
-                <div className="mb-2 text-sm font-medium text-text-primary">Default Reading Mode</div>
-                <div className="grid grid-cols-1 gap-2">
-                  {(['PAGED', 'WEBTOON', 'CONTINUOUS_VERTICAL'] as ReaderMode[]).map((mode) => (
-                    <button
-                      key={mode}
-                      onClick={() => updateSettings({ mode })}
-                      className="flex items-center justify-between rounded-md bg-surface-raised px-4 py-3 text-sm text-text-primary transition-colors hover:bg-surface-overlay"
-                    >
-                      <span>
-                        {mode === 'PAGED' && 'Paged (Standard)'}
-                        {mode === 'WEBTOON' && 'Webtoon (Continuous)'}
-                        {mode === 'CONTINUOUS_VERTICAL' && 'Continuous Vertical'}
-                      </span>
-                      {settings.mode === mode && <Check size={16} className="text-accent" weight="bold" />}
-                    </button>
-                  ))}
+          {/* Preferensi Tampilan */}
+          <section className="bg-surface-raised border border-border-subtle rounded-2xl p-6">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-text-muted mb-4">Preferensi Tampilan</h2>
+            
+            <div className="flex items-center justify-between py-2 border-b border-border-subtle/50 mb-2">
+              <div className="flex items-center gap-3">
+                <div className="flex size-10 items-center justify-center rounded-full bg-surface-overlay border border-border-subtle">
+                  <Monitor size={20} className="text-text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-text-primary">Tema Aplikasi</h3>
+                  <p className="text-xs text-text-secondary mt-0.5">Pilih tema terang atau gelap.</p>
                 </div>
               </div>
-              
-              <div>
-                <div className="mb-2 text-sm font-medium text-text-primary">Reading Direction (Paged)</div>
-                <div className="grid grid-cols-2 gap-2">
-                  {(['LTR', 'RTL', 'TTB'] as ReadingDirection[]).map((dir) => (
-                    <button
-                      key={dir}
-                      onClick={() => updateSettings({ direction: dir })}
-                      className="flex items-center justify-between rounded-md bg-surface-raised px-4 py-3 text-sm text-text-primary transition-colors hover:bg-surface-overlay"
-                    >
-                      <span>
-                        {dir === 'LTR' && 'Left to Right'}
-                        {dir === 'RTL' && 'Right to Left'}
-                        {dir === 'TTB' && 'Top to Bottom'}
-                      </span>
-                      {settings.direction === dir && <Check size={16} className="text-accent" weight="bold" />}
-                    </button>
-                  ))}
-                </div>
+              <div className="flex bg-surface-overlay rounded-lg border border-border-subtle overflow-hidden">
+                {mounted ? (
+                  <>
+                    <button onClick={() => setTheme("light")} className={`px-3 py-1.5 text-xs font-medium transition-colors ${theme === "light" ? "bg-accent text-white" : "text-text-secondary hover:text-text-primary"}`}>Terang</button>
+                    <button onClick={() => setTheme("dark")} className={`px-3 py-1.5 text-xs font-medium transition-colors border-l border-border-subtle ${theme === "dark" ? "bg-accent text-white" : "text-text-secondary hover:text-text-primary"}`}>Gelap</button>
+                    <button onClick={() => setTheme("system")} className={`px-3 py-1.5 text-xs font-medium transition-colors border-l border-border-subtle ${theme === "system" ? "bg-accent text-white" : "text-text-secondary hover:text-text-primary"}`}>Sistem</button>
+                  </>
+                ) : (
+                  <>
+                    <button className="px-3 py-1.5 text-xs font-medium transition-colors text-text-secondary">Terang</button>
+                    <button className="px-3 py-1.5 text-xs font-medium transition-colors border-l border-border-subtle text-text-secondary">Gelap</button>
+                    <button className="px-3 py-1.5 text-xs font-medium transition-colors border-l border-border-subtle text-text-secondary">Sistem</button>
+                  </>
+                )}
               </div>
             </div>
-          </DrawerContent>
-        </Drawer>
 
-        <SettingsRow 
-          icon={Globe} 
-          title="Browse" 
-          subtitle="Source extensions, tracking" 
-        />
-        <SettingsRow 
-          icon={ToggleLeft} 
-          title="Advanced" 
-          subtitle="Developer options, experiments" 
-        />
-      </Section>
+            <div className="flex items-center justify-between py-2 border-b border-border-subtle/50 mb-2">
+              <div className="flex items-center gap-3">
+                <div className="flex size-10 items-center justify-center rounded-full bg-surface-overlay border border-border-subtle">
+                  <BookOpenText size={20} className="text-text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-text-primary">Arah Baca Default</h3>
+                  <p className="text-xs text-text-secondary mt-0.5">Kanan ke kiri atau scroll ke bawah.</p>
+                </div>
+              </div>
+              <div className="flex bg-surface-overlay rounded-lg border border-border-subtle overflow-hidden">
+                <button className="px-3 py-1.5 text-xs font-medium bg-accent text-white transition-colors">Webtoon</button>
+                <button className="px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-text-primary border-l border-border-subtle transition-colors">Manga</button>
+              </div>
+            </div>
 
-      <Separator className="my-2" />
+            <div className="flex items-center justify-between py-2 border-b border-border-subtle/50 mb-2">
+              <div className="flex items-center gap-3">
+                <div className="flex size-10 items-center justify-center rounded-full bg-surface-overlay border border-border-subtle">
+                  <HandSwipeLeft size={20} className="text-text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-text-primary">Perilaku Tap Layar</h3>
+                  <p className="text-xs text-text-secondary mt-0.5">Navigasi dengan sentuhan tepi.</p>
+                </div>
+              </div>
+              <Button variant="outline" size="sm" className="text-xs h-8">Ubah</Button>
+            </div>
+            
+            <div className="flex items-center justify-between py-2">
+              <div className="flex items-center gap-3">
+                <div className="flex size-10 items-center justify-center rounded-full bg-surface-overlay border border-border-subtle">
+                  <WifiHigh size={20} className="text-text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-text-primary">Penghemat Data</h3>
+                  <p className="text-xs text-text-secondary mt-0.5">Muat gambar resolusi rendah.</p>
+                </div>
+              </div>
+              <label htmlFor="data-saver" className="relative inline-flex items-center cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  id="data-saver" 
+                  className="sr-only peer" 
+                  checked={mounted ? dataSaver : false}
+                  onChange={(e) => setDataSaver(e.target.checked)}
+                />
+                <div className="w-11 h-6 bg-surface-overlay border border-border-subtle rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border-subtle after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent"></div>
+              </label>
+            </div>
+          </section>
 
-      <Section>
-        <SettingsRow 
-          icon={Info} 
-          title="Help & About" 
-          subtitle="Discord, FAQ, Github" 
-        />
-      </Section>
+          {/* Konten & Keamanan */}
+          <section className="bg-surface-raised border border-border-subtle rounded-2xl p-6">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-text-muted mb-4">Konten & Keamanan</h2>
+            
+            <div className="flex items-center justify-between py-2 border-b border-border-subtle/50 mb-2">
+              <div className="flex items-center gap-3">
+                <div className="flex size-10 items-center justify-center rounded-full bg-surface-overlay border border-border-subtle">
+                  <EyeSlash size={20} className="text-text-primary" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-text-primary">Sembunyikan NSFW</h3>
+                  <p className="text-xs text-text-secondary mt-0.5">Saring konten dewasa di sumber.</p>
+                </div>
+              </div>
+              <label htmlFor="nsfw-toggle" className="relative inline-flex items-center cursor-pointer">
+                <input 
+                  type="checkbox" 
+                  id="nsfw-toggle" 
+                  className="sr-only peer" 
+                  checked={mounted ? hideNsfw : true}
+                  onChange={(e) => setHideNsfw(e.target.checked)}
+                />
+                <div className="w-11 h-6 bg-surface-overlay border border-border-subtle rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border-subtle after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent"></div>
+              </label>
+            </div>
+          </section>
 
-    </MobilePageShell>
-  )
+          {/* Data Lokal */}
+          <section className="bg-surface-raised border border-border-subtle rounded-2xl p-6">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-text-muted mb-4">Data Lokal</h2>
+            
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-bold text-text-primary">Hapus Data Lokal</h3>
+                <p className="text-sm text-text-secondary mt-1 max-w-md">Menghapus cache riwayat baca dan daftar simpanan di perangkat ini.</p>
+              </div>
+              
+              <Button onClick={handleClearData} variant="outline" className="shrink-0 text-error hover:text-error hover:bg-error/10 border-error/50">
+                <Trash size={18} className="mr-2" />
+                Bersihkan
+              </Button>
+            </div>
+          </section>
+
+        </div>
+      </main>
+    </div>
+  );
 }

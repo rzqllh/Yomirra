@@ -21,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`dark ${plusJakarta.variable}`}>
+    <html lang="en" className={plusJakarta.variable} suppressHydrationWarning>
       <body className="min-h-screen antialiased">
         <Providers>
           <AppShell>{children}</AppShell>

@@ -11,12 +11,18 @@ export async function GET(
   const page = parseInt(searchParams.get("page") || "1", 10);
   const query = searchParams.get("q") || "";
 
-  if (!query) {
-    return NextResponse.json(
-      { error: { code: "QUERY_REQUIRED", message: "Search query 'q' is required." } },
-      { status: 400 }
-    );
-  }
+  // Extract filters
+  const filters: Record<string, any> = {};
+  searchParams.forEach((val, key) => {
+    if (key !== "page" && key !== "q") {
+      if (key.endsWith('[]')) {
+        if (!filters[key]) filters[key] = [];
+        filters[key].push(val);
+      } else {
+        filters[key] = val;
+      }
+    }
+  });
 
   try {
     const source = sourceManager.getSource(sourceId);
@@ -28,11 +34,11 @@ export async function GET(
       );
     }
 
-    const cacheKey = `source:${sourceId}:search:${query}:${page}`;
+    const cacheKey = `source:${sourceId}:search:${query}:${page}:${JSON.stringify(filters)}`;
 
     const data = await swrCache(
       cacheKey,
-      () => source.search(query, page),
+      () => source.search(query, page, filters),
       CACHE_TTL.DISCOVERY
     );
 

@@ -13,6 +13,9 @@ import { TopBar } from "@/components/app/top-bar";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ChapterDownloadButton } from "@/components/manga/chapter-download-button";
+import { MangaDetailSkeleton } from "@/components/skeletons/manga-detail-skeleton";
+import { ChapterListSkeleton } from "@/components/skeletons/chapter-list-skeleton";
 
 export default function MangaDetailPage({
   params,
@@ -43,11 +46,7 @@ export default function MangaDetailPage({
   }, [chapters, sortOrder]);
 
   if (isLoadingDetail) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <CircleNotch className="h-8 w-8 animate-spin text-text-muted" weight="bold" />
-      </div>
-    );
+    return <MangaDetailSkeleton />;
   }
 
   if (!detail) return null;
@@ -168,9 +167,7 @@ export default function MangaDetailPage({
             </div>
 
             {isLoadingChapters ? (
-              <div className="flex py-12 items-center justify-center">
-                <CircleNotch className="h-8 w-8 animate-spin text-text-muted" weight="bold" />
-              </div>
+              <ChapterListSkeleton />
             ) : !chapters || chapters.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center bg-surface-raised/30 rounded-xl border border-dashed border-border-subtle">
                 <p className="text-[15px] font-medium text-text-muted">Belum ada chapter.</p>
@@ -205,6 +202,15 @@ export default function MangaDetailPage({
                             Terakhir dibaca
                           </div>
                         )}
+                        <div className="ml-2 pl-2 border-l border-border-subtle shrink-0" onClick={(e) => e.stopPropagation()}>
+                          <ChapterDownloadButton
+                            sourceId={sourceId}
+                            mangaId={mangaId}
+                            chapterId={chapter.id}
+                            chapterTitle={chapter.title}
+                            mangaTitle={detail.title}
+                          />
+                        </div>
                       </Link>
                     );
                   })}

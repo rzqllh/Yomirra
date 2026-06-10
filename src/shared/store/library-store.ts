@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { pushLibraryItem, deleteLibraryItem } from "@/shared/lib/sync-utils";
 
 export type LibraryItem = {
   sourceId: string;
@@ -37,6 +38,7 @@ export const useLibraryStore = create<LibraryState>()(
 
       addToLibrary: (item) => set((state) => {
         const id = getLibraryId(item.sourceId, item.mangaId);
+        pushLibraryItem(item); // Background sync
         return {
           items: {
             ...state.items,
@@ -49,6 +51,7 @@ export const useLibraryStore = create<LibraryState>()(
         const id = getLibraryId(sourceId, mangaId);
         const newItems = { ...state.items };
         delete newItems[id];
+        deleteLibraryItem(sourceId, mangaId); // Background sync
         return { items: newItems };
       }),
 
@@ -76,10 +79,13 @@ export const useLibraryStore = create<LibraryState>()(
         const existing = state.items[id];
         if (!existing) return state;
 
+        const updatedItem = { ...existing, ...patch, updatedAt: new Date().toISOString() };
+        pushLibraryItem(updatedItem); // Background sync
+
         return {
           items: {
             ...state.items,
-            [id]: { ...existing, ...patch, updatedAt: new Date().toISOString() },
+            [id]: updatedItem,
           }
         };
       }),
