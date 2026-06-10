@@ -1,4 +1,11 @@
 import type { NextConfig } from "next";
+import withSerwistInit from "@serwist/next";
+
+const withSerwist = withSerwistInit({
+  swSrc: "src/app/sw.ts",
+  swDest: "public/sw.js",
+  disable: process.env.NODE_ENV === "development",
+});
 
 const nextConfig: NextConfig = {
   // Turbopack is enabled by default in Next.js 15 dev mode
@@ -41,6 +48,7 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  turbopack: {},
 };
 
-export default nextConfig;
+export default withSerwist(nextConfig);

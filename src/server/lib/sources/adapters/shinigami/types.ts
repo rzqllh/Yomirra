@@ -11,6 +11,8 @@ export interface ShinigamiMangaItem {
   cover_image_url?: string;
   cover_portrait_url?: string;
   status?: number;
+  latest_chapter_number?: number | string;
+  latest_chapter_time?: string;
 }
 
 export interface ShinigamiMangaListResponse {

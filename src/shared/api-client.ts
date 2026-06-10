@@ -1,4 +1,4 @@
-import type { MangaDetail, MangaPageResult, Chapter, ChapterPages, MangaItem, SourceMetadata } from "@/shared/types/source";
+import type { MangaDetail, MangaPageResult, Chapter, ChapterPages, MangaItem, SourceMetadata, FilterList } from "@/shared/sources/source-types";
 
 export interface SearchResponse {
   sourceId: string;
@@ -25,6 +25,10 @@ class ApiClient {
     return this.fetcher<SourceMetadata[]>("/api/sources");
   }
 
+  getFilters(sourceId: string) {
+    return this.fetcher<FilterList>(`/api/sources/${sourceId}/filters`);
+  }
+
   getPopular(sourceId: string, page: number = 1) {
     return this.fetcher<MangaPageResult>(`/api/sources/${sourceId}/popular?page=${page}`);
   }
@@ -33,8 +37,65 @@ class ApiClient {
     return this.fetcher<MangaPageResult>(`/api/sources/${sourceId}/latest?page=${page}`);
   }
 
-  search(sourceId: string, query: string, page: number = 1) {
-    return this.fetcher<SearchResponse>(`/api/sources/${sourceId}/search?q=${encodeURIComponent(query)}&page=${page}`);
+  search(sourceId: string, query: string, page: number = 1, filters?: Record<string, string | string[]>) {
+    let url = `/api/sources/${sourceId}/search?q=${encodeURIComponent(query)}&page=${page}`;
+    
+    // Automatically apply NSFW filtering if enabled in settings
+    let finalFilters = { ...filters };
+    let isNsfwFiltered = false;
+    
+    // Try to safely access the store since api-client might be used outside React
+    try {
+      // Must use dynamic import or require to avoid circular dependency / SSR issues with Zustand
+      const { useSettingsStore } = require("@/shared/store/settings-store");
+      isNsfwFiltered = useSettingsStore.getState().hideNsfw;
+    } catch (e) {
+      isNsfwFiltered = true; // default to safe
+    }
+
+    if (isNsfwFiltered) {
+      const nsfwTags = ["-adult", "-mature", "-smut", "-nsfw", "-ecchi"];
+      const existingGenres = finalFilters["genre[]"];
+      
+      if (Array.isArray(existingGenres)) {
+        finalFilters["genre[]"] = [...existingGenres, ...nsfwTags];
+      } else if (typeof existingGenres === "string") {
+        finalFilters["genre[]"] = [existingGenres, ...nsfwTags];
+      } else {
+        finalFilters["genre[]"] = nsfwTags;
+      }
+    }
+
+    if (Object.keys(finalFilters).length > 0) {
+      const sp = new URLSearchParams();
+      Object.entries(finalFilters).forEach(([k, v]) => {
+        if (Array.isArray(v)) {
+          v.forEach(val => sp.append(k, val));
+        } else if (v !== undefined) {
+          sp.set(k, v);
+        }
+      });
+      url += `&${sp.toString()}`;
+    }
+    return this.fetcher<SearchResponse>(url);
+  }
+
+  searchGlobal(query: string, sourceIds: string[]) {
+    // Note: To fully support global NSFW filtering, the backend route /api/sources/search 
+    // should also respect a generic `hideNsfw` flag, or we pass standard excluded genres.
+    let isNsfwFiltered = false;
+    try {
+      const { useSettingsStore } = require("@/shared/store/settings-store");
+      isNsfwFiltered = useSettingsStore.getState().hideNsfw;
+    } catch (e) {
+      isNsfwFiltered = true;
+    }
+    
+    let url = `/api/sources/search?q=${encodeURIComponent(query)}&sources=${sourceIds.join(",")}`;
+    if (isNsfwFiltered) {
+      url += `&genre[]=-adult&genre[]=-mature&genre[]=-smut&genre[]=-nsfw&genre[]=-ecchi`;
+    }
+    return this.fetcher<import("@/app/api/sources/search/route").GlobalSearchResponse>(url);
   }
 
   getDetail(sourceId: string, mangaId: string) {

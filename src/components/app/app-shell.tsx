@@ -7,10 +7,14 @@ import { SideNav } from "./side-nav"
 import { TopNav } from "./top-nav"
 import { CommandMenu } from "./command-menu"
 import { cn } from "@/shared/utils/cn"
+import { useSync } from "@/hooks/use-sync"
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const isReader = pathname?.includes("/read/")
+  
+  // Mount background cross-device sync
+  useSync()
 
   return (
     <div className="flex min-h-screen bg-background text-text-primary">

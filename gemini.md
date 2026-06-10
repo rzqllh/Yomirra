@@ -127,7 +127,8 @@ These route meanings are locked unless the user explicitly changes them.
 /browse                                Redirect only to /sources
 /updates                               Latest updates
 /popular                               Popular titles
-/library                               Saved manga
+/library                               Global title catalog / discovery hub
+/readlist                              Saved bookmarked manga
 /history                               Reading history
 /settings                              App / reader preferences
 /manga/[sourceId]/[mangaId]            Manga detail
@@ -304,7 +305,7 @@ CTA priority:
 
 1. `Lanjut baca` only if real history exists.
 2. `Mulai baca` only if chapters exist.
-3. `Masuk library` / `Tersimpan di library`.
+3. `Masuk readlist` / `Tersimpan di readlist`.
 
 Do not show:
 
@@ -404,6 +405,7 @@ Discover
 
 Collection
 - Library
+- Readlist
 - Riwayat
 
 Sources
@@ -417,8 +419,8 @@ Mobile bottom nav:
 
 ```txt
 Beranda
-Sumber
 Library
+Readlist
 Riwayat
 Pengaturan
 ```
@@ -488,8 +490,8 @@ Pengaturan
 Cari judul
 Lanjut baca
 Mulai baca
-Masuk library
-Tersimpan di library
+Masuk readlist
+Tersimpan di readlist
 Chapter
 Halaman
 Mode baca
@@ -629,11 +631,11 @@ Manual QA required for Yomirra core flow:
 5. `/browse` redirects to `/sources`.
 6. Home shows real Continue Reading only when history exists.
 7. Detail page CTA logic is truthful.
-8. Add to Library works.
+8. Add to Readlist works.
 9. Reader opens chapter pages.
 10. Reader panel hides/shows.
 11. History updates after opening chapter.
-12. Library last-read metadata updates if saved.
+12. Readlist last-read metadata updates if saved.
 13. Bottom nav works on mobile.
 14. SideNav/TopNav works on desktop.
 15. No fake social/community features appear.

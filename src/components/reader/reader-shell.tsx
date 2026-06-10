@@ -36,7 +36,7 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
       {/* Top Overlay */}
       <div 
         className={cn(
-          "fixed top-0 left-0 z-50 transition-all duration-300",
+          "fixed top-0 left-0 z-50 transition-all duration-200 ease-out",
           isOverlayVisible ? "translate-y-0" : "-translate-y-full",
           isDesktopPanelOpen ? "md:right-[320px] right-0" : "right-0"
         )}
@@ -101,7 +101,7 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
       {/* Bottom Overlay (Mobile only) */}
       <div 
         className={cn(
-          "fixed bottom-0 left-0 right-0 z-50 transition-transform duration-300 md:hidden",
+          "fixed bottom-0 left-0 right-0 z-50 transition-transform duration-200 ease-out md:hidden",
           isOverlayVisible ? "translate-y-0" : "translate-y-full"
         )}
       >

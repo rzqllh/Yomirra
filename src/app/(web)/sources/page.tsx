@@ -60,11 +60,7 @@ export default function SourcesPage() {
                 <div key={source.id} className="flex flex-col gap-3 rounded-[var(--radius-lg)] border border-border-subtle bg-surface-raised p-4 transition-all hover:bg-surface-overlay">
                   <div className="flex items-center gap-4">
                     <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-[var(--radius-md)] bg-background border border-border-subtle">
-                      {source.icon ? (
-                        <Image src={source.icon} alt={source.name} width={28} height={28} className="rounded-sm" />
-                      ) : (
-                        <Plug size={24} className="text-text-muted" />
-                      )}
+                      <Plug size={24} className="text-text-muted" />
                     </div>
                     <div className="flex-1 overflow-hidden">
                       <div className="flex items-center justify-between">

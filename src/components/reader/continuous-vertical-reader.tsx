@@ -1,9 +1,11 @@
 import * as React from "react"
 import { useReaderStore } from "@/shared/store/reader-store"
 import { useHistoryStore } from "@/shared/store/history-store"
+import { useSettingsStore } from "@/shared/store/settings-store"
 import { PageItem } from "@/shared/types/source"
 import { cn } from "@/shared/utils/cn"
 import { PageImageError } from "./page-image-error"
+import Image from "next/image"
 
 interface ContinuousVerticalReaderProps {
   sourceId: string;
@@ -14,6 +16,7 @@ interface ContinuousVerticalReaderProps {
 
 export function ContinuousVerticalReader({ sourceId, mangaId, chapterId, pages }: ContinuousVerticalReaderProps) {
   const { settings, toggleOverlay } = useReaderStore()
+  const { dataSaver } = useSettingsStore()
   const markChapterProgress = useHistoryStore((state) => state.markChapterProgress)
   const observerRef = React.useRef<IntersectionObserver | null>(null)
   
@@ -77,12 +80,17 @@ export function ContinuousVerticalReader({ sourceId, mangaId, chapterId, pages }
                 <PageImageError index={page.index} onRetry={() => handleRetry(page.index)} />
               </div>
             ) : (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img 
+              <Image 
                 src={page.url}
                 alt={`Page ${page.index}`}
                 className={cn("w-full object-contain", !isWebtoon && "shadow-soft")}
-                loading="lazy"
+                width={800}
+                height={1200}
+                sizes="100vw"
+                quality={dataSaver ? 60 : 85}
+                unoptimized={!dataSaver}
+                loading={page.index === 0 ? "eager" : "lazy"}
+                style={{ width: "100%", height: "auto" }}
                 onError={() => setErrorPages(prev => ({ ...prev, [page.index]: true }))}
               />
             )}

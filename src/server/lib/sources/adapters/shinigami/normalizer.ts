@@ -31,6 +31,8 @@ export function normalizeMangaItem(item: ShinigamiMangaItem): MangaItem {
     title: item.title,
     coverUrl: signImageUrl(coverUrl, "https://c.shinigami.asia"),
     status: item.status?.toString(),
+    latestChapter: item.latest_chapter_number ? `Chapter ${item.latest_chapter_number}` : undefined,
+    latestChapterTime: item.latest_chapter_time,
   };
 }
 

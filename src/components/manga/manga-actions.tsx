@@ -38,9 +38,9 @@ export function MangaActions({
     });
 
     if (isInLibrary) {
-      toast("Dihapus dari library");
+      toast("Dihapus dari readlist");
     } else {
-      toast.success("Ditambahkan ke library");
+      toast.success("Ditambahkan ke readlist");
     }
   };
 
@@ -53,12 +53,12 @@ export function MangaActions({
       {isInLibrary ? (
         <>
           <Check size={18} weight="bold" className="text-success" />
-          Tersimpan di library
+          Tersimpan di readlist
         </>
       ) : (
         <>
           <BookmarkSimple size={18} weight="bold" />
-          Masuk library
+          Masuk readlist
         </>
       )}
     </Button>

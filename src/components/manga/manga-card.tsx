@@ -1,7 +1,12 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
-
+import { BookmarkSimple } from "@phosphor-icons/react";
+import { getMangaDetailHref } from "@/shared/lib/routes";
 import type { MangaItem } from "@/shared/types/source";
+import { motion, AnimatePresence } from "motion/react";
+import { useLibraryStore } from "@/shared/store/library-store";
 
 interface MangaCardProps {
   manga: MangaItem;
@@ -9,45 +14,131 @@ interface MangaCardProps {
   priority?: boolean;
 }
 
-import { getMangaDetailHref } from "@/shared/lib/routes";
+function getRelativeTime(dateString?: string): string {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInMs = now.getTime() - date.getTime();
+  const diffInMins = Math.floor(diffInMs / (1000 * 60));
+  const diffInHours = Math.floor(diffInMins / 60);
+  const diffInDays = Math.floor(diffInHours / 24);
+
+  if (diffInMins < 60) return `${diffInMins} mnt lalu`;
+  if (diffInHours < 24) return `${diffInHours} jam lalu`;
+  if (diffInDays < 30) return `${diffInDays} hr lalu`;
+  return date.toLocaleDateString('id-ID');
+}
 
 export function MangaCard({ manga, sourceId, priority = false }: MangaCardProps) {
-  const coverUrl = manga.coverUrl;
+  const timeText = getRelativeTime(manga.latestChapterTime);
+  const isInLibrary = useLibraryStore((state) => state.isInLibrary(sourceId, manga.id));
+  const toggleLibrary = useLibraryStore((state) => state.toggleLibrary);
+
+  const handleBookmarkClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleLibrary({
+      sourceId,
+      mangaId: manga.id,
+      title: manga.title,
+      coverUrl: manga.coverUrl,
+      status: manga.status,
+      addedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+  };
 
   return (
-    <Link href={getMangaDetailHref(sourceId, manga.id)} className="group relative block aspect-[2/3] w-full overflow-hidden rounded-2xl">
-      <Image
-        src={coverUrl}
-        alt={manga.title}
-        fill
-        className="object-cover transition-transform duration-500 group-hover:scale-110"
-        sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 20vw"
-        priority={priority}
-      />
-      
-      {/* Gradient overlay for text readability */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+    <motion.article
+      layoutId={`manga-card-${manga.id}`}
+      whileHover={{ y: -3 }}
+      whileTap={{ scale: 0.985 }}
+      transition={{ type: "spring", stiffness: 420, damping: 36 }}
+      className="relative block w-full aspect-[1/1.4] overflow-hidden rounded-[var(--card-cover-radius)] bg-surface-raised border border-border-subtle shadow-sm group"
+    >
+      <Link 
+        href={getMangaDetailHref(sourceId, manga.id)} 
+        className="group absolute inset-0 flex flex-col justify-end focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      >
+        <motion.img
+          layoutId={`manga-cover-${manga.id}`}
+          src={manga.coverUrl}
+          alt={manga.title}
+          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.025]"
+        />
+        
+        {/* Solid smooth gradient for high readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0B0C10] via-[#0B0C10]/50 to-transparent opacity-90 transition-opacity duration-300 group-hover:opacity-100 z-10 pointer-events-none" />
 
-      {/* Glass overlay info panel */}
-      <div className="absolute bottom-2 left-2 right-2 translate-y-2 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
-        <div   className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-3">
-          <h3 className="line-clamp-2 text-sm font-semibold text-white">
-            {manga.title}
-          </h3>
-          {manga.status && (
-            <span className="mt-1 inline-block rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-medium text-white/90">
-              {manga.status}
-            </span>
+        {/* Top Badges */}
+        <div className="absolute top-2 left-2 flex z-20">
+          {manga.status === "Ongoing" && (
+            <div className="rounded-[4px] bg-accent px-1.5 py-0.5 shadow-sm">
+              <span className="text-[10px] font-black uppercase tracking-wider text-white">UP</span>
+            </div>
           )}
         </div>
-      </div>
-      
-      {/* Mobile persistent title */}
-      <div className="absolute bottom-0 left-0 right-0 p-3 lg:hidden">
-        <h3 className="line-clamp-2 text-sm font-semibold text-white text-shadow-sm">
-          {manga.title}
-        </h3>
-      </div>
-    </Link>
+
+        {/* Info Content */}
+        <div className="relative z-20 p-3 pb-2 flex flex-col justify-end w-full">
+          <motion.h3 
+            layoutId={`manga-title-${manga.id}`}
+            className="line-clamp-2 text-[13px] sm:text-[14px] font-bold text-white leading-snug text-shadow-sm mb-1 group-hover:text-accent transition-colors duration-200"
+          >
+            {manga.title}
+          </motion.h3>
+          
+          <div className="flex items-center justify-between w-full mt-1">
+            <div className="flex items-center gap-1.5 text-text-secondary">
+              {manga.latestChapter && (
+                <span className="text-[11px] font-medium text-white/90">
+                  {manga.latestChapter.length > 15 ? manga.latestChapter.slice(0, 15) + '...' : manga.latestChapter}
+                </span>
+              )}
+              {manga.latestChapter && timeText && (
+                <span className="text-[10px] text-white/50">•</span>
+              )}
+              {timeText && (
+                <span className="text-[11px] text-white/70">
+                  {timeText}
+                </span>
+              )}
+            </div>
+            
+            <motion.button 
+              onClick={handleBookmarkClick}
+              whileTap={{ scale: 0.86 }}
+              whileHover={{ scale: 1.04 }}
+              className={`grid size-8 place-items-center rounded-full transition-all focus-visible:outline-none ${isInLibrary ? 'text-accent hover:text-accent/80' : 'text-white/70 hover:text-white'}`}
+              aria-label={isInLibrary ? "Hapus dari readlist" : "Simpan ke readlist"}
+            >
+              <AnimatePresence mode="wait" initial={false}>
+                {isInLibrary ? (
+                  <motion.span
+                    key="saved"
+                    initial={{ scale: 0.6, rotate: -12, opacity: 0 }}
+                    animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                    exit={{ scale: 0.6, rotate: 12, opacity: 0 }}
+                    transition={{ duration: 0.16 }}
+                  >
+                    <BookmarkSimple size={16} weight="fill" />
+                  </motion.span>
+                ) : (
+                  <motion.span
+                    key="idle"
+                    initial={{ scale: 0.6, rotate: 12, opacity: 0 }}
+                    animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                    exit={{ scale: 0.6, rotate: -12, opacity: 0 }}
+                    transition={{ duration: 0.16 }}
+                  >
+                    <BookmarkSimple size={16} weight="bold" />
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </motion.button>
+          </div>
+        </div>
+      </Link>
+    </motion.article>
   );
 }

@@ -26,6 +26,7 @@ export interface MangaItem {
   coverUrl: string;
   status?: string;
   latestChapter?: string;
+  latestChapterTime?: string;
 }
 
 export interface MangaDetail extends MangaItem {
@@ -56,11 +57,24 @@ export interface PageItem {
   referer?: string; // Some sources require a referer header to bypass hotlink protection
 }
 
+export interface SourceFilter {
+  id: string;
+  name: string;
+}
+
+export interface FilterList {
+  genres: SourceFilter[];
+  formats: SourceFilter[];
+  statuses: SourceFilter[];
+  sorts: SourceFilter[];
+}
+
 export interface MangaSource extends SourceMetadata {
   getPopular(page: number): Promise<MangaPageResult>;
   getLatest(page: number): Promise<MangaPageResult>;
-  search(query: string, page: number): Promise<MangaPageResult>;
+  search(query: string, page: number, filters?: Record<string, any>): Promise<MangaPageResult>;
   getDetail(mangaId: string): Promise<MangaDetail>;
   getChapters(mangaId: string): Promise<Chapter[]>;
   getPages(chapterId: string): Promise<ChapterPages>;
+  getFilters(): FilterList;
 }
