@@ -13,6 +13,15 @@ export const metadata: Metadata = {
   description: "A source-powered reader for manga, comics, and webtoons.",
 };
 
+import type { Viewport } from "next";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
 import { AppShell } from "@/components/app/app-shell";
 
 export default function RootLayout({
