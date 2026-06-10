@@ -227,7 +227,7 @@ export default function LibraryPage() {
 
           {/* Collapsible Filters Section */}
           {showFilters && (
-            <div className="bg-surface-base border border-border-subtle rounded-3xl p-6 shadow-sm animate-in slide-in-from-top-2 fade-in duration-200">
+            <div className="bg-surface-base border border-border-subtle rounded-3xl p-6 shadow-sm motion-safe:animate-in slide-in-from-top-2 fade-in duration-200">
               <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
                 
                 {/* Left Side: Genre */}

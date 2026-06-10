@@ -53,3 +53,18 @@ body {
   background-color: var(--accent-muted);
   color: var(--accent);
 }
+
+/* === Reduced Motion Safety Net ===
+   Primary strategy: component-level motion-safe: / motion-reduce: guards.
+   This global block is the fallback for any unguarded CSS animation.
+   It removes movement but preserves state-change visibility (opacity, color). */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

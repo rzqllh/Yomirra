@@ -12,8 +12,10 @@ export class HttpClient {
     const res = await fetch(url, {
       headers: {
         Accept: "application/json",
+        Connection: "close",
         ...this.defaultHeaders,
       },
+      cache: "no-store",
     });
 
     if (!res.ok) {

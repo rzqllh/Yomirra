@@ -89,7 +89,7 @@ export function ContinuousVerticalReader({ sourceId, mangaId, chapterId, pages }
                 sizes="100vw"
                 quality={dataSaver ? 60 : 85}
                 unoptimized={!dataSaver}
-                loading={page.index === 0 ? "eager" : "lazy"}
+                priority={page.index <= 1}
                 style={{ width: "100%", height: "auto" }}
                 onError={() => setErrorPages(prev => ({ ...prev, [page.index]: true }))}
               />

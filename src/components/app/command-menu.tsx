@@ -76,7 +76,7 @@ export function CommandMenu() {
         <CommandEmpty>
           {isSearching ? (
             <div className="flex items-center justify-center gap-2 py-2">
-              <CircleNotch className="h-4 w-4 animate-spin text-text-muted" weight="bold" />
+              <CircleNotch className="h-4 w-4 motion-safe:animate-spin text-text-muted" weight="bold" />
               <span>Mencari...</span>
             </div>
           ) : (

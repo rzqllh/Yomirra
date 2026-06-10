@@ -93,6 +93,8 @@ export function useSync() {
         hasSyncedInitial.current = true;
       } catch (error) {
         console.error("Sync error:", error);
+      } finally {
+        hasSyncedInitial.current = true;
       }
     };
 
@@ -129,6 +131,8 @@ export function useSync() {
           }
         }
       });
+    }, (error) => {
+      console.error("Library sync listener error:", error);
     });
 
     const unsubHistory = onSnapshot(collection(db, `users/${uid}/history`), (snapshot) => {
@@ -142,6 +146,8 @@ export function useSync() {
           }
         }
       });
+    }, (error) => {
+      console.error("History sync listener error:", error);
     });
 
     return () => {

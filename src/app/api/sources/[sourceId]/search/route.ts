@@ -53,6 +53,7 @@ export async function GET(
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
+    console.error("[Search API Error]", error);
     const code = message.includes("not found") ? "SOURCE_NOT_FOUND" : "UPSTREAM_ERROR";
     const status = code === "SOURCE_NOT_FOUND" ? 404 : 502;
     

@@ -8,7 +8,7 @@ export function useAuth() {
 
   useEffect(() => {
     if (!auth) {
-      setLoading(false);
+      queueMicrotask(() => setLoading(false));
       return;
     }
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
