@@ -10,7 +10,18 @@ class Logger {
     const isDev = env.NODE_ENV === "development";
 
     if (isDev) {
-      const formattedMeta = meta ? `\n${JSON.stringify(meta, null, 2)}` : "";
+      let safeMeta = meta;
+      if (meta && typeof meta === 'object') {
+        safeMeta = Object.fromEntries(
+          Object.entries(meta).map(([key, value]) => {
+            if (value instanceof Error) {
+              return [key, { message: value.message, name: value.name, stack: value.stack }];
+            }
+            return [key, value];
+          })
+        );
+      }
+      const formattedMeta = safeMeta ? `\n${JSON.stringify(safeMeta, null, 2)}` : "";
       const prefix = `[${timestamp}] [${level.toUpperCase()}]`;
       
       switch (level) {
