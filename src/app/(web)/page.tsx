@@ -25,7 +25,7 @@ export default async function HomePage() {
 
     // LOGGING TO INSPECT SHINIGAMI API DATA
     const rawPopular = await source.getPopular(1);
-    console.log("SHINIGAMI_DEBUG:", JSON.stringify(rawPopular.mangas[0], null, 2));
+    
   } catch (error) {
     console.error("Failed to load home page data", error);
     return (

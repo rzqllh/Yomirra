@@ -7,14 +7,25 @@ import { BookBookmark, Compass } from "@phosphor-icons/react";
 import Link from "next/link";
 import { EmptyState } from "@/components/states/empty-state";
 import { Button } from "@/components/ui/button";
-import { getHomeHref } from "@/shared/lib/routes";
+import { useMounted } from "@/shared/hooks/use-mounted";
 
 export default function ReadlistPage() {
+  const isMounted = useMounted();
   const itemsMap = useLibraryStore((state) => state.items);
   const items = Object.values(itemsMap);
   
   // Sort by updatedAt descending
   const sortedItems = items.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+
+  if (!isMounted) {
+    return (
+      <MobilePageShell title="Readlist">
+        <div className="hidden md:block px-4 py-6">
+          <h1 className="text-3xl font-black text-text-primary tracking-tight">Readlist</h1>
+        </div>
+      </MobilePageShell>
+    );
+  }
 
   return (
     <MobilePageShell title="Readlist">

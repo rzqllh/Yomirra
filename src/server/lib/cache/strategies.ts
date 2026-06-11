@@ -20,7 +20,8 @@ export async function swrCache<T>(
       return JSON.parse(cached) as T;
     }
   } catch (error) {
-    logger.error(`Redis get error for key ${key}`, { error });
+    const msg = error instanceof Error ? error.message : String(error);
+    logger.debug(`Redis get bypassed for key ${key}: ${msg}`);
   }
 
   const data = await fetcher();
@@ -30,7 +31,8 @@ export async function swrCache<T>(
       await redis.setex(key, ttlSeconds, JSON.stringify(data));
     }
   } catch (error) {
-    logger.error(`Redis set error for key ${key}`, { error });
+    const msg = error instanceof Error ? error.message : String(error);
+    logger.debug(`Redis set bypassed for key ${key}: ${msg}`);
   }
 
   return data;

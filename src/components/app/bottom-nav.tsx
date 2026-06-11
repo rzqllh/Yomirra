@@ -11,8 +11,6 @@ import {
   Gear,
 } from "@phosphor-icons/react"
 import { cn } from "@/shared/utils/cn"
-import { motion } from "motion/react"
-import { useSafeMotion } from "@/shared/hooks/use-safe-motion"
 
 const NAV_ITEMS = [
   { href: "/", icon: House, label: "Beranda" },
@@ -24,11 +22,10 @@ const NAV_ITEMS = [
 
 export function BottomNav() {
   const pathname = usePathname()
-  const { transition, skipAnimations } = useSafeMotion()
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 w-full z-50 pointer-events-none px-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
-      <div className="pointer-events-auto mx-auto flex max-w-sm items-center justify-between rounded-full bg-surface-base/95 backdrop-blur-xl border border-border-subtle p-2 shadow-md">
+      <div className="pointer-events-auto mx-auto flex max-w-sm items-center justify-between rounded-full bg-surface-base/60 backdrop-blur-sm border border-border-subtle p-2 shadow-md">
         {NAV_ITEMS.map((item) => {
           const isActive =
             item.href === "/"
@@ -46,20 +43,13 @@ export function BottomNav() {
               aria-label={item.label}
               aria-current={isActive ? "page" : undefined}
             >
-              {/* Animated Background Pill */}
-              {isActive && (
-                <motion.div
-                  layoutId="bottom-nav-indicator"
-                  className="absolute inset-0 rounded-full bg-accent-dim"
-                  transition={
-                    transition ?? {
-                      type: "spring",
-                      stiffness: 380,
-                      damping: 32,
-                    }
-                  }
-                />
-              )}
+              {/* Static Background Pill with Opacity Transition */}
+              <div
+                className={cn(
+                  "absolute inset-0 rounded-full bg-accent-dim transition-opacity duration-200",
+                  isActive ? "opacity-100" : "opacity-0"
+                )}
+              />
 
               <div className="relative z-10 w-full h-full">
                 <Icon
@@ -68,9 +58,9 @@ export function BottomNav() {
                     "absolute left-1/2 -translate-x-1/2 transition-all duration-150",
                     isActive
                       ? "top-[6px] text-accent scale-110"
-                      : "top-1/2 -translate-y-1/2 text-text-muted hover:text-text-primary scale-100"
+                      : "top-1/2 -translate-y-1/2 text-text-primary hover:text-text-primary scale-100"
                   )}
-                  style={skipAnimations ? { transitionDuration: "0ms" } : { width: 22, height: 22 }}
+                  style={{ width: 22, height: 22 }}
                 />
 
                 <span
@@ -80,7 +70,6 @@ export function BottomNav() {
                       ? "text-accent opacity-100 translate-y-0"
                       : "text-text-muted opacity-0 translate-y-2 pointer-events-none"
                   )}
-                  style={skipAnimations ? { transitionDuration: "0ms" } : undefined}
                 >
                   {item.label}
                 </span>
