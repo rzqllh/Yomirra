@@ -83,13 +83,13 @@ export function MangaCard({ manga, sourceId, priority = false }: MangaCardProps)
         {/* Top Badges */}
         <div className="absolute top-2 left-2 flex flex-wrap gap-1 z-20">
           {manga.status === "Ongoing" && (
-            <div className="rounded-[4px] bg-accent px-1.5 py-0.5 shadow-sm">
-              <span className="text-[9px] font-black uppercase tracking-wider text-accent-on">UP</span>
+            <div className="flex items-center justify-center rounded-[4px] bg-accent px-1.5 py-[2px] shadow-sm">
+              <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider text-accent-on leading-none pt-[1px]">UP</span>
             </div>
           )}
           {manga.format && (
-            <div className="rounded-[4px] bg-black/60 backdrop-blur-sm px-1.5 py-0.5 shadow-sm border border-white/10">
-              <span className="text-[9px] font-bold uppercase tracking-wider text-white">{manga.format}</span>
+            <div className="flex items-center justify-center rounded-[4px] bg-black/50 backdrop-blur-md px-1.5 py-[2px] shadow-sm border border-white/10">
+              <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider text-white leading-none pt-[1px]">{manga.format}</span>
             </div>
           )}
         </div>
