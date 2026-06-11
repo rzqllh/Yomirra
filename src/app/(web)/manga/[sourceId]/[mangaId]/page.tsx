@@ -24,6 +24,7 @@ export default function MangaDetailPage({
 }) {
   const { sourceId, mangaId } = use(params);
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const getLatestForManga = useHistoryStore((state) => state.getLatestForManga);
   const historyItem = getLatestForManga(sourceId, mangaId);
@@ -40,10 +41,18 @@ export default function MangaDetailPage({
 
   const sortedChapters = useMemo(() => {
     if (!chapters) return [];
+    
+    // Filter by search query
+    let result = chapters;
+    if (searchQuery.trim()) {
+      const lowerQuery = searchQuery.toLowerCase();
+      result = result.filter(c => c.title.toLowerCase().includes(lowerQuery));
+    }
+    
     // Assuming the API returns chapters in descending order by default
-    if (sortOrder === "asc") return [...chapters].reverse();
-    return chapters;
-  }, [chapters, sortOrder]);
+    if (sortOrder === "asc") return [...result].reverse();
+    return result;
+  }, [chapters, sortOrder, searchQuery]);
 
   if (isLoadingDetail) {
     return <MangaDetailSkeleton />;
@@ -124,7 +133,7 @@ export default function MangaDetailPage({
         {/* Right Column (Info + Chapters) */}
         <div className="flex-1 flex flex-col min-w-0">
           <div className="flex flex-col gap-4">
-            <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-text-primary leading-tight balance">
+            <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-text-primary leading-tight balance break-words">
               {detail.title}
             </h1>
             
@@ -143,7 +152,7 @@ export default function MangaDetailPage({
             </div>
 
             <div className="mt-4 md:mt-6 bg-surface-raised/50 border border-border-subtle rounded-xl p-4 md:p-6">
-              <p className="text-sm md:text-[15px] leading-relaxed text-text-secondary whitespace-pre-wrap">
+              <p className="text-sm md:text-[15px] leading-relaxed text-text-secondary whitespace-pre-wrap break-words">
                 {detail.description || "Sinopsis belum tersedia."}
               </p>
             </div>
@@ -151,20 +160,29 @@ export default function MangaDetailPage({
 
           {/* Chapters Section */}
           <div className="mt-10">
-            <div className="mb-4 flex items-center justify-between border-b border-border-subtle pb-2">
+            <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between border-b border-border-subtle pb-2 gap-3">
               <div className="flex items-center gap-3">
                 <h3 className="text-xl font-bold text-text-primary">Chapter</h3>
                 <span className="text-sm text-text-muted font-bold">{chapters?.length || 0}</span>
               </div>
-              <IconButton 
-                variant="ghost" 
-                size="sm"
-                onClick={() => setSortOrder(prev => prev === "desc" ? "asc" : "desc")}
-                aria-label={sortOrder === "desc" ? "Urutkan paling lama" : "Urutkan terbaru"}
-                title={sortOrder === "desc" ? "Urutkan paling lama" : "Urutkan terbaru"}
-              >
-                {sortOrder === "desc" ? <SortDescending size={20} /> : <SortAscending size={20} />}
-              </IconButton>
+              <div className="flex items-center gap-2">
+                <input 
+                  type="text" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Cari chapter..." 
+                  className="bg-surface-raised border border-border-subtle rounded-full px-3 py-1.5 text-sm w-full sm:w-[150px] outline-none focus:border-border-strong text-text-primary transition-colors"
+                />
+                <IconButton 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setSortOrder(prev => prev === "desc" ? "asc" : "desc")}
+                  aria-label={sortOrder === "desc" ? "Urutkan paling lama" : "Urutkan terbaru"}
+                  title={sortOrder === "desc" ? "Urutkan paling lama" : "Urutkan terbaru"}
+                >
+                  {sortOrder === "desc" ? <SortDescending size={20} /> : <SortAscending size={20} />}
+                </IconButton>
+              </div>
             </div>
 
             {isLoadingChapters ? (
@@ -184,26 +202,31 @@ export default function MangaDetailPage({
                       <Link
                         key={chapter.id}
                         href={getReaderHref(sourceId, mangaId, chapter.id)}
-                        className={`group flex items-center justify-between rounded-md px-4 py-3 border transition-colors ${
+                        className={`group flex items-center gap-2 md:gap-3 rounded-md px-3 md:px-4 py-3 border transition-colors ${
                           isLastRead 
                             ? "bg-surface-active border-border-strong hover:bg-surface-overlay" 
                             : "bg-surface-base border-border-subtle hover:bg-surface-raised"
                         }`}
                       >
-                        <div className="flex-1 truncate pr-4 flex flex-col md:flex-row md:items-center md:gap-4">
-                          <h4 className={`text-[15px] font-bold truncate transition-colors group-hover:text-accent ${isRead ? "text-text-muted" : "text-text-primary"}`}>
+                        <div className="flex-1 min-w-0 flex flex-col md:flex-row md:items-center md:gap-4">
+                          <h4 className={`text-[14px] md:text-[15px] font-bold truncate transition-colors group-hover:text-accent ${isRead ? "text-text-muted" : "text-text-primary"}`}>
                             {chapter.title}
                           </h4>
-                          <p className="text-[12px] text-text-muted mt-1 md:mt-0 font-medium shrink-0 flex items-center gap-2">
+                          <p className="text-[11px] md:text-[12px] text-text-muted mt-1 md:mt-0 font-medium shrink-0">
                              {new Date(chapter.date).toLocaleDateString()}
                           </p>
                         </div>
                         {isLastRead && (
-                          <div className="rounded bg-accent/10 px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-accent border border-accent/20 shrink-0">
-                            Terakhir dibaca
-                          </div>
+                          <>
+                            <div className="hidden sm:block rounded bg-accent/10 px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-accent border border-accent/20 shrink-0">
+                              Terakhir dibaca
+                            </div>
+                            <div className="sm:hidden rounded bg-accent/10 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider text-accent border border-accent/20 shrink-0">
+                              Terakhir
+                            </div>
+                          </>
                         )}
-                        <div className="ml-2 pl-2 border-l border-border-subtle shrink-0" onClick={(e) => e.stopPropagation()}>
+                        <div className="pl-2 border-l border-border-subtle shrink-0" onClick={(e) => e.stopPropagation()}>
                           <ChapterDownloadButton
                             sourceId={sourceId}
                             mangaId={mangaId}

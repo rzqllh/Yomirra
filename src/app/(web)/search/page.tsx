@@ -40,10 +40,16 @@ function SearchContent() {
   const [isInitialized, setIsInitialized] = React.useState(false);
   
   React.useEffect(() => {
+    let mounted = true;
     if (searchableSources.length > 0 && !isInitialized) {
-      setSelectedSources(searchableSources.map(s => s.id));
-      setIsInitialized(true);
+      setTimeout(() => {
+        if (mounted) {
+          setSelectedSources(searchableSources.map(s => s.id));
+          setIsInitialized(true);
+        }
+      }, 0);
     }
+    return () => { mounted = false; };
   }, [searchableSources, isInitialized]);
 
   const toggleSource = (id: string) => {

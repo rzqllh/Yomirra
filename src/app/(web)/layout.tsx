@@ -20,6 +20,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
+  viewportFit: "cover",
 };
 
 import { AppShell } from "@/components/app/app-shell";
@@ -31,7 +32,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={plusJakarta.variable} suppressHydrationWarning>
-      <body className="min-h-screen antialiased">
+      <body className="min-h-screen antialiased overflow-x-hidden">
         <Providers>
           <AppShell>{children}</AppShell>
         </Providers>

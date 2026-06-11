@@ -6,7 +6,6 @@ import { apiClient } from "@/shared/api-client";
 import { ReaderPageSkeleton } from "@/components/skeletons/reader-page-skeleton";
 import { ReaderShell } from "@/components/reader/reader-shell";
 import { ContinuousVerticalReader } from "@/components/reader/continuous-vertical-reader";
-import { PagedReader } from "@/components/reader/paged-reader";
 import { useHistoryStore } from "@/shared/store/history-store";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useReaderStore } from "@/shared/store/reader-store";
@@ -131,6 +130,20 @@ export default function ReaderPage({
     );
   }
 
+  const chapterIndex = chapters?.findIndex(c => c.id === chapterId) ?? -1;
+  let prevChapterId: string | undefined;
+  let nextChapterId: string | undefined;
+  
+  // Assuming chapters are sorted descending (latest first)
+  if (chapterIndex !== -1 && chapters) {
+    if (chapterIndex < chapters.length - 1) {
+      prevChapterId = chapters[chapterIndex + 1].id;
+    }
+    if (chapterIndex > 0) {
+      nextChapterId = chapters[chapterIndex - 1].id;
+    }
+  }
+
   return (
     <ReaderShell 
       chapterTitle={chapterTitle} 
@@ -139,21 +152,16 @@ export default function ReaderPage({
       sourceId={sourceId}
       mangaId={mangaId}
     >
-      {settings.mode === "CONTINUOUS_VERTICAL" || settings.mode === "WEBTOON" ? (
-        <ContinuousVerticalReader 
-          sourceId={sourceId}
-          mangaId={mangaId}
-          chapterId={chapterId}
-          pages={pagesToRender} 
-        />
-      ) : (
-        <PagedReader 
-          sourceId={sourceId}
-          mangaId={mangaId}
-          chapterId={chapterId}
-          pages={pagesToRender}
-        />
-      )}
+      <ContinuousVerticalReader 
+        sourceId={sourceId}
+        mangaId={mangaId}
+        chapterId={chapterId}
+        chapterTitle={chapterTitle}
+        pages={pagesToRender}
+        chapters={chapters}
+        prevChapterId={prevChapterId}
+        nextChapterId={nextChapterId}
+      />
     </ReaderShell>
   );
 }
