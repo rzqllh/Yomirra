@@ -1,65 +1,76 @@
+import { checkRateLimit } from "@/server/lib/security/rate-limit";
 import { NextRequest, NextResponse } from "next/server";
 import { sourceManager } from "@/server/lib/sources/source-manager";
 import { swrCache, CACHE_TTL } from "@/server/lib/cache/strategies";
+import { searchSchema, sourceParamsSchema } from "@/server/lib/validation/api";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ sourceId: string }> }
 ) {
-  const { sourceId } = await params;
-  const searchParams = request.nextUrl.searchParams;
-  const page = parseInt(searchParams.get("page") || "1", 10);
-  const query = searchParams.get("q") || "";
+  const rateLimit = await checkRateLimit(request);
+  if (!rateLimit.success) {
+    return NextResponse.json({ error: { message: "Too Many Requests" } }, { status: 429, headers: rateLimit.headers });
+  }
 
-  // Extract filters
-  const filters: Record<string, any> = {};
-  searchParams.forEach((val, key) => {
-    if (key !== "page" && key !== "q") {
-      if (key.endsWith('[]')) {
-        if (!filters[key]) filters[key] = [];
-        filters[key].push(val);
-      } else {
-        filters[key] = val;
-      }
-    }
+  const paramValidation = sourceParamsSchema.safeParse(await params);
+  if (!paramValidation.success) {
+    return NextResponse.json({ error: { message: "Invalid parameters", details: paramValidation.error.format() } }, { status: 400 });
+  }
+  const { sourceId } = paramValidation.data;
+
+  const searchParams = request.nextUrl.searchParams;
+  const queryValidation = searchSchema.safeParse({ 
+    q: searchParams.get("q") || "", 
+    page: searchParams.get("page") 
   });
+  
+  if (!queryValidation.success) {
+    return NextResponse.json({ error: { message: "Invalid query parameters", details: queryValidation.error.format() } }, { status: 400 });
+  }
+  const { q, page } = queryValidation.data;
 
   try {
     const source = sourceManager.getSource(sourceId);
     
-    if (!source.capabilities.search) {
-      return NextResponse.json(
-        { error: { code: "SOURCE_SEARCH_UNSUPPORTED", message: `Source ${sourceId} does not support searching.`, sourceId } },
-        { status: 400 }
-      );
-    }
+    // Extract filters from search parameters
+    const filters: Record<string, string | string[]> = {};
+    searchParams.forEach((value, key) => {
+      if (key !== 'q' && key !== 'page') {
+        if (filters[key]) {
+          if (Array.isArray(filters[key])) {
+            (filters[key] as string[]).push(value);
+          } else {
+            filters[key] = [filters[key] as string, value];
+          }
+        } else {
+          // Check if it's an array key like genre[]
+          if (key.endsWith('[]')) {
+            filters[key] = [value];
+          } else {
+            filters[key] = value;
+          }
+        }
+      }
+    });
 
-    const cacheKey = `source:${sourceId}:search:${query}:${page}:${JSON.stringify(filters)}`;
+    // Make cache key deterministic regarding filters
+    const filterKey = Object.keys(filters).length > 0 
+      ? `:${JSON.stringify(filters)}`
+      : "";
+    const cacheKey = `source:${sourceId}:search:${q}:${page}${filterKey}`;
 
     const data = await swrCache(
       cacheKey,
-      () => source.search(query, page, filters),
-      CACHE_TTL.DISCOVERY
+      () => source.search(q, page, filters),
+      CACHE_TTL.SEARCH
     );
 
-    return NextResponse.json({ 
-      data: {
-        sourceId,
-        query,
-        page,
-        results: data.mangas,
-        hasNextPage: data.hasNextPage,
-      }
-    });
+    return NextResponse.json({ data });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : String(error);
-    console.error("[Search API Error]", error);
-    const code = message.includes("not found") ? "SOURCE_NOT_FOUND" : "UPSTREAM_ERROR";
-    const status = code === "SOURCE_NOT_FOUND" ? 404 : 502;
-    
     return NextResponse.json(
-      { error: { code, message: "An error occurred while communicating with the source.", sourceId } },
-      { status }
+      { error: { message: (error instanceof Error ? error.message : String(error)) || "Internal Server Error" } },
+      { status: (error instanceof Error ? error.message : String(error))?.includes("not found") ? 404 : 500 }
     );
   }
 }

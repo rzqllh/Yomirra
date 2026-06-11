@@ -1,6 +1,6 @@
 import { parseDate, stripHtml } from "@/shared/utils/normalize";
 import type { Chapter, MangaDetail, MangaItem } from "@/shared/types/source";
-import { signImageUrl } from "@/shared/utils/image";
+import { signImageUrl } from "@/server/lib/image";
 import type {
   ShinigamiChapterItem,
   ShinigamiMangaDetail,
@@ -24,13 +24,24 @@ export function normalizeShinigamiStatus(status?: string | number): MangaDetail[
   return "UNKNOWN";
 }
 
-export function normalizeMangaItem(item: ShinigamiMangaItem): MangaItem {
-  const coverUrl = item.cover_image_url || item.cover_portrait_url || "";
+export function normalizeMangaItem(item: ShinigamiMangaItem & Record<string, unknown>): MangaItem {
+  const coverUrl = item.cover_portrait_url || item.cover_image_url || "";
+  let format: string | undefined = undefined;
+
+  if (item.taxonomy?.Format?.[0]?.name) {
+    format = item.taxonomy.Format[0].name;
+  } else if (item.taxonomy?.Type?.[0]?.name) {
+    format = item.taxonomy.Type[0].name;
+  } else if (typeof item.type === "string") {
+    format = item.type;
+  }
+
   return {
     id: item.manga_id,
     title: item.title,
     coverUrl: signImageUrl(coverUrl, "https://c.shinigami.asia"),
-    status: item.status?.toString(),
+    status: normalizeShinigamiStatus(item.status),
+    format,
     latestChapter: item.latest_chapter_number ? `Chapter ${item.latest_chapter_number}` : undefined,
     latestChapterTime: item.latest_chapter_time,
   };

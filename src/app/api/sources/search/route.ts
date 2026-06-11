@@ -1,3 +1,4 @@
+import { checkRateLimit } from "@/server/lib/security/rate-limit";
 import { NextRequest, NextResponse } from "next/server";
 import { sourceManager } from "@/server/lib/sources/source-manager";
 import { MangaItem } from "@/shared/sources/source-types";
@@ -10,6 +11,11 @@ export interface GlobalSearchResponse {
 }
 
 export async function GET(req: NextRequest) {
+  const rateLimit = await checkRateLimit(req);
+  if (!rateLimit.success) {
+    return NextResponse.json({ error: { message: "Too Many Requests" } }, { status: 429, headers: rateLimit.headers });
+  }
+
   const searchParams = req.nextUrl.searchParams;
   const q = searchParams.get("q");
   const sourcesParam = searchParams.get("sources");

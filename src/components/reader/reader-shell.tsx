@@ -22,8 +22,22 @@ interface ReaderShellProps {
 
 export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sourceId, mangaId }: ReaderShellProps) {
   const router = useRouter()
-  const { settings, isOverlayVisible, isDesktopPanelOpen, toggleDesktopPanel } = useReaderStore()
+  const { settings, isOverlayVisible, isDesktopPanelOpen, toggleDesktopPanel, toggleOverlay } = useReaderStore()
   const [isDrawerOpen, setIsDrawerOpen] = React.useState(false)
+
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if typing in an input
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      
+      if (e.key === 'Escape' || e.key === 'm' || e.key === 'M') {
+        toggleOverlay();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [toggleOverlay]);
 
   return (
     <div 

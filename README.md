@@ -1,4 +1,4 @@
-<![CDATA[<div align="center">
+<div align="center">
 
 ```
 ██╗   ██╗ ██████╗ ███╗   ███╗██╗██████╗ ██████╗  █████╗
@@ -10,7 +10,6 @@
 ```
 
 **Manga reader yang kamu inginkan. Tanpa kompromi.**
-
 *The manga reader you actually want. No compromises.*
 
 [![Next.js](https://img.shields.io/badge/Next.js_16-black?logo=next.js&logoColor=white)](https://nextjs.org)
@@ -18,7 +17,7 @@
 [![Tailwind](https://img.shields.io/badge/Tailwind_v4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-[Demo](#demo) · [Instalasi](#-mulai) · [Arsitektur](#-arsitektur) · [Kontribusi](#-kontribusi)
+[Demo](#demo) · [Instalasi](#-mulai) · [Arsitektur](#-arsitektur)
 
 </div>
 
@@ -26,24 +25,22 @@
 
 ## Apa ini?
 
-Yomirra adalah manga reader open-source yang dibangun dari nol dengan Next.js 16. Bukan fork. Bukan template. Bukan wrapper tipis di atas API orang lain.
+Yomirra adalah manga reader open-source yang dibangun dari nol dengan **Next.js 16**. Bukan fork. Bukan template. Bukan wrapper tipis di atas API orang lain.
 
-Arsitekturnya menggunakan **source adapter** — satu antarmuka yang konsisten untuk berbagai sumber manga. Tambah sumber baru? Tulis satu adapter, sisanya sudah diurus.
+Arsitekturnya difokuskan pada **source adapter** — satu antarmuka yang konsisten dan terpusat untuk menghubungkan berbagai sumber manga di bawah satu payung UI/UX kelas dunia. Jika kamu butuh sumber baru, cukup tulis satu adapter dan Yomirra akan mengurus sisanya.
 
-> **EN** — Yomirra is an open-source manga reader built from scratch on Next.js 16. Not a fork, not a template. It uses a source adapter architecture: one consistent interface across multiple manga sources. Adding a new source means writing one adapter — everything else is handled.
+> **EN** — Yomirra is a world-class, open-source manga reader built from scratch on Next.js 16. It is powered by a robust source adapter architecture: providing one consistent, premium interface across multiple disjointed manga sources.
 
 ---
 
 ## Kenapa ada ini?
 
-Manga reader yang sudah ada punya dua masalah:
+Manga reader yang ada saat ini punya dua dilema klasik:
 
-1. **Reader mobile** — bagus di tangan, tapi buka di laptop dan kamu dapat UX yang menyedihkan.
-2. **Reader web** — biasanya cuma search box di atas list chapter tanpa jiwa.
+1. **Reader mobile** — Memanjakan mata di layar HP, tapi buka di laptop dan kamu akan disuguhi UX/UI hasil porting paksa yang menyedihkan.
+2. **Reader web** — Seringkali hanya search box hambar dengan list chapter yang kaku dan tanpa jiwa.
 
-Yomirra mengejar yang ketiga: reader yang terasa natural di layar 5 inci dan 27 inci sekaligus. Sidebar untuk desktop, bottom nav untuk mobile, reader yang menyesuaikan diri.
-
-> **EN** — Existing readers are either mobile-only (painful on desktop) or web-only (soulless). Yomirra targets the third option: a reader that feels natural on both 5-inch and 27-inch screens.
+Yomirra mengejar ruang kosong di antara keduanya: Reader yang terasa native dan responsif di layar 5 inci, namun berekspansi menjadi pusat literatur manga yang kaya dan padat informasi di layar 27 inci. Panel sidebar untuk desktop, bottom navigation untuk mobile, serta reader experience yang melebur mulus dengan ukuran layarmu.
 
 ---
 
@@ -51,15 +48,13 @@ Yomirra mengejar yang ketiga: reader yang terasa natural di layar 5 inci dan 27 
 
 | Fitur | Deskripsi |
 |---|---|
-| **Source Adapter** | Arsitektur plug-and-play. Setiap sumber manga adalah modul independen dengan normalizer sendiri. |
-| **Reader** | Continuous vertical, paged, dan webtoon. Arah baca LTR/RTL. Panel samping di desktop, overlay di mobile. |
-| **Readlist & Riwayat** | Simpan manga ke koleksi. Riwayat baca otomatis terekam setiap buka chapter. |
-| **Offline Sync** | Firebase Firestore + IndexedDB. Baca offline, data otomatis tersinkronisasi saat koneksi kembali. |
-| **Data Saver** | Toggle satu klik. Aktif: gambar dikompresi via Next.js Image (WebP, quality 60%). Mati: resolusi penuh. |
-| **Content Filter** | Filter NSFW global. Diinjeksi langsung di lapisan API, bukan di UI — jadi tidak bisa di-bypass dari client. |
-| **Motion** | Micro-interaction via `motion/react`. Spring physics, layout animation, scale-tap. Bukan hiasan — feedback taktil. |
-| **Dark Mode** | Default gelap. Palet warna dirancang untuk membaca komik, bukan untuk dashboard SaaS. |
-| **PWA** | Service worker via Serwist. Installable di mobile, cache strategy untuk asset statik. |
+| **Source Adapter API** | Arsitektur *plug-and-play*. Setiap sumber manga dipisahkan menjadi modul independen dengan *normalizer* mutlak. |
+| **Premium Reader** | Mendukung mode baca *Continuous Vertical*, *Paged*, dan *Webtoon*. Terdapat *smart overlay* di mobile dan *side-panel* kolapsibel di desktop. |
+| **Readlist & Riwayat** | Pustaka yang hidup. Manga yang disimpan masuk ke dalam *Library*, dengan riwayat yang otomatis merekam jejak bacamu secara akurat hingga per chapter. |
+| **Offline Sync (Firebase)** | Terintegrasi dengan Firebase Firestore + IndexedDB. Data lokal (tanpa akun) otomatis dipertahankan dan disinkronkan ke cloud saat pengguna melakukan login pertama kali. |
+| **Data Saver Mode** | Toggle kompresi 1-klik untuk Next.js Image (WebP). Cerdas dan responsif untuk membantumu menghemat kuota seluler. |
+| **Strict Content Filter** | Filter NSFW global yang diinjeksi secara native di lapisan API, menutup kemungkinan *bypass* dari sisi *client*. |
+| **Micro-Interactions** | Dibangun dengan `motion/react` dan *reduced-motion* yang peduli aksesibilitas. Animasi di Yomirra bukanlah hiasan kosmetik, melainkan fondasi feedback UX taktil. |
 
 ---
 
@@ -69,21 +64,16 @@ Yomirra mengejar yang ketiga: reader yang terasa natural di layar 5 inci dan 27 
 
 ---
 
-## Stack
+## Stack Teknologi
 
 ```
-Next.js 16 ─── App Router, Server Components, API Routes
-TypeScript ─── End-to-end type safety
-Tailwind v4 ── CSS-first configuration, design tokens
-Radix UI ───── Accessible primitives (Dialog, Tabs, Tooltip, etc.)
-Zustand ────── Client state (reader settings, library, history)
-React Query ── Server state (search results, manga detail, chapters)
-Firebase ───── Auth + Firestore (offline persistence, multi-tab sync)
-Prisma ─────── Database ORM (Supabase PostgreSQL)
-Redis ──────── API response caching (Upstash)
-motion/react ─ Physics-based animation
-Serwist ────── Service worker / PWA
-Phosphor ───── Icon system (satu keluarga, konsisten)
+Next.js 16 ─── App Router, Server Components, Secure API Routes
+TypeScript ─── End-to-end type safety & type-check
+Tailwind v4 ── Desain tersistem, Utility CSS modern
+Zustand ────── Manajemen state terisolasi (Reader, Library, History)
+Firebase ───── Autentikasi dan Sync (Firestore lokal & remote)
+motion/react ─ Transisi fisika, layout shift handler
+Phosphor ───── Bahasa ikonografi komprehensif
 ```
 
 ---
@@ -94,9 +84,9 @@ Phosphor ───── Icon system (satu keluarga, konsisten)
 
 - **Node.js** ≥ 20
 - **pnpm** (direkomendasikan) — `npm install -g pnpm`
-- Akun [Supabase](https://supabase.com) (database)
-- Akun [Firebase](https://console.firebase.google.com) (auth & sync)
-- Akun [Upstash](https://upstash.com) (redis — opsional untuk development)
+- Akun [Supabase](https://supabase.com) (Database)
+- Akun [Firebase](https://console.firebase.google.com) (Autentikasi & Sync)
+- Akun [Upstash](https://upstash.com) (Redis caching - opsional untuk dev lokal)
 
 ### Setup
 
@@ -110,18 +100,16 @@ pnpm install
 
 # Setup environment
 cp .env.example .env
-# Isi semua nilai di .env — lihat komentar di file tersebut
+# Lengkapi kunci rahasia API di dalam .env
 
-# Generate Prisma client
+# Generate Prisma client (jika kamu menggunakan layer DB tambahan di luar Firebase)
 pnpm prisma generate
 
-# Jalankan
+# Jalankan server
 pnpm dev
 ```
 
 Buka `http://localhost:3000`. Selesai.
-
-> **EN** — Clone, install, copy `.env.example` to `.env`, fill in your keys, run `pnpm dev`. Open `localhost:3000`.
 
 ---
 
@@ -129,38 +117,31 @@ Buka `http://localhost:3000`. Selesai.
 
 ```
 src/
-├── app/                    # Next.js App Router
-│   ├── (web)/              # Halaman publik (Home, Search, Library, dll.)
-│   │   ├── manga/[sourceId]/[mangaId]/          # Detail manga
-│   │   └── manga/[sourceId]/[mangaId]/read/     # Reader
-│   └── api/                # API Routes (proxy, search, sources)
+├── app/                    # Next.js App Router (16.2+)
+│   ├── (web)/              # Halaman UX Utama (Home, Search, Library)
+│   └── api/                # API Routes & Adapter proxies
 ├── components/
-│   ├── app/                # Shell, navigation (SideNav, TopNav, BottomNav)
-│   ├── manga/              # MangaCard, MangaActions, ChapterList
-│   ├── reader/             # ReaderShell, ContinuousVertical, Paged
-│   ├── motion/             # MotionProvider, Pressable
-│   ├── skeletons/          # Loading states per komponen
-│   ├── states/             # EmptyState, ErrorState
-│   └── ui/                 # Primitif (Button, Dialog, Input, dll.)
-├── hooks/                  # use-auth, use-sync
+│   ├── app/                # Shell, Navigasi (SideNav, TopNav, BottomNav)
+│   ├── manga/              # Modul manga (Card, Row, Actions)
+│   ├── reader/             # Inti Pustaka: ReaderShell & kontrol render
+│   ├── states/             # Standardization: ErrorState, EmptyState
+│   └── ui/                 # Token tersistem
 ├── server/
 │   └── lib/
-│       ├── sources/        # Source adapter system
-│       │   └── adapters/   # Shinigami, (tambah adapter baru di sini)
+│       ├── sources/        # Source adapter registry
 │       ├── cache/          # Redis caching strategies
-│       └── db/             # Prisma client
+│       └── security/       # Rate limiting & Header validation
 └── shared/
-    ├── store/              # Zustand stores (reader, library, history, settings)
-    ├── lib/                # Firebase init, motion tokens, route helpers
-    └── utils/              # cn(), image proxy, normalization
+    ├── store/              # Zustand stores (reader, library, history)
+    ├── lib/                # Konfigurasi utilitas (Firebase lazy-init, motion)
+    └── utils/              # Pengelola proxy, classnames (cn)
 ```
 
 ### Source Adapter
 
-Setiap adapter mengimplementasikan interface yang sama:
+Setiap adapter mengimplementasikan antarmuka absolut `SourceCapabilities`:
 
 ```typescript
-// Kemampuan yang harus dideklarasikan setiap adapter
 type SourceCapabilities = {
   popular: boolean;
   latest: boolean;
@@ -169,119 +150,42 @@ type SourceCapabilities = {
   chapters: boolean;
   pages: boolean;
 };
-
-// Tambah sumber baru:
-// 1. Buat folder di src/server/lib/sources/adapters/<nama>/
-// 2. Implementasi index.ts (fetcher), normalizer.ts, types.ts
-// 3. Daftarkan di adapters/index.ts
 ```
+
+Sistem proxy `mangaId` dan `sourceId` mencegah tumpang tindih data di *Library* dan menjamin isolasi setiap adapter web-scraping/API pihak ketiga.
 
 ---
 
-## Environment Variables
+## Deployment
 
-Lihat [`.env.example`](.env.example) untuk daftar lengkap. Ringkasan:
+Yomirra paling prima jika di-*deploy* melalui **Vercel**, memanfaatkan serverless functions, *image optimization*, dan arsitektur *Edge*.
 
-| Variable | Diperlukan | Keterangan |
-|---|---|---|
-| `DATABASE_URL` | Ya | Supabase PostgreSQL connection string (pooled) |
-| `DIRECT_URL` | Opsional | Non-pooled connection untuk migrasi Prisma |
-| `REDIS_URL` | Ya | Upstash Redis URL |
-| `IMAGE_PROXY_SECRET` | Ya | HMAC secret untuk image proxy (min 32 karakter) |
-| `NEXT_PUBLIC_APP_URL` | Ya | URL aplikasi (`http://localhost:3000` untuk dev) |
-| `NEXT_PUBLIC_FIREBASE_*` | Ya | Firebase project config (6 variabel) |
-| `NEXT_PUBLIC_SUPABASE_URL` | Ya | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Ya | Supabase anon key |
-| `CLOUDINARY_*` | Ya | Cloudinary credentials (3 variabel) |
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2A%2Fgithub.com%2Frzqllh%2FYomirra)
 
-> Variabel `NEXT_PUBLIC_*` terekspos ke browser — ini by design. Keamanan dijaga oleh Firebase Security Rules dan Supabase RLS, bukan oleh kerahasiaan key.
+Atau secara manual:
+1. Tautkan repositori ini di Vercel.
+2. Atur semua `Environment Variables` sesuai `.env.example`.
+3. Build & Deploy.
 
 ---
 
-## Scripts
-
-```bash
-pnpm dev          # Development server (Turbopack)
-pnpm build        # Production build (prisma generate + next build)
-pnpm start        # Start production server
-pnpm typecheck    # TypeScript strict check
-pnpm lint         # ESLint
-pnpm test         # Vitest
-```
-
----
-
-## Deploy
-
-### Vercel (Direkomendasikan)
-
-Yomirra dibangun di atas Next.js — Vercel adalah rumahnya.
-
-1. Push kode ke GitHub
-2. Import project di [vercel.com/new](https://vercel.com/new)
-3. Tambahkan semua environment variables dari `.env`
-4. Deploy
-
-Atau via CLI:
-
-```bash
-vercel --prod
-```
-
-### Self-Host
-
-```bash
-pnpm build
-pnpm start
-# Dengarkan di port 3000
-```
-
-> Pastikan environment variables sudah diset, Redis sudah jalan, dan database sudah di-migrate (`pnpm prisma db push`).
-
----
-
-## 🤝 Kontribusi
-
-Kontribusi terbuka. Beberapa aturan:
-
-1. **Satu PR, satu concern.** Jangan campur refactor dengan fitur baru.
-2. **TypeScript strict.** Tidak ada `any` yang lolos review.
-3. **Phosphor Icons saja.** Jangan tambah icon library lain.
-4. **Test sebelum push.** Minimal `pnpm typecheck && pnpm lint`.
-5. **Tulis commit yang jelas.** Ikuti [Conventional Commits](https://www.conventionalcommits.org/).
-
-```bash
-# Format commit
-feat(reader): add RTL reading direction
-fix(search): handle empty query gracefully
-refactor(store): split history store from library store
-```
-
----
-
-## Roadmap
+## Roadmap Pengembangan
 
 - [ ] Multi-source search aggregation
-- [ ] Chapter download untuk offline reading
-- [ ] Custom source creation (adapter builder)
-- [ ] Reading statistics & progress tracking
-- [ ] Notifikasi update chapter baru
+- [ ] Chapter download manager
+- [ ] Visual UI Custom Source Builder
+- [ ] Reading statistics & advanced trackers
 
 ---
 
 ## Lisensi
 
 [MIT](LICENSE) — Hafizh Rizqullah Prasetya, 2026.
-
-Pakai, modifikasi, distribusi. Tanpa batasan.
-
----
+Bebas pakai, modifikasi, dan komersialisasi. Tanpa kompromi.
 
 <div align="center">
 
-**Dibuat untuk orang yang lebih suka baca daripada scroll feed.**
-
-*Built for people who'd rather read than scroll feeds.*
+**Dibuat untuk orang yang lebih suka baca komik daripada scroll timeline.**
+*Built for people who'd rather read manga than doom-scroll feeds.*
 
 </div>
-]]>

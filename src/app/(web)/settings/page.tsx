@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { UserCircle, SignOut, Trash, Monitor, BookOpenText, HandSwipeLeft, EyeSlash, WifiHigh } from "@phosphor-icons/react";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/shared/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import { useHistoryStore } from "@/shared/store/history-store";
@@ -10,6 +10,7 @@ import { useLibraryStore } from "@/shared/store/library-store";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useTheme } from "next-themes";
 import { MobilePageShell } from "@/components/app/mobile-page-shell";
+import { ToggleSwitch } from "@/components/ui/toggle-switch";
 
 export default function SettingsPage() {
   const { user, loginWithGoogle, logout } = useAuth();
@@ -28,7 +29,7 @@ export default function SettingsPage() {
   };
 
   const handleClearData = () => {
-    if (confirm("Yakin ingin menghapus semua Riwayat dan Readlist lokal? (Data di Cloud mungkin tidak terhapus)")) {
+    if (confirm("Yakin ingin menghapus semua Riwayat dan Readlist lokal?" + (user ? " (Data di Cloud mungkin tidak terhapus)" : ""))) {
       clearHistory();
       clearLibrary();
       alert("Data lokal berhasil dibersihkan.");
@@ -61,7 +62,7 @@ export default function SettingsPage() {
                   <div className="flex-1 text-center sm:text-left">
                     <h3 className="text-lg font-bold text-text-primary">{user.displayName}</h3>
                     <p className="text-sm text-text-secondary">{user.email}</p>
-                    <p className="text-xs text-success font-medium mt-1">✓ Sinkronisasi Cloud Aktif</p>
+                    <p className="text-xs text-text-muted font-medium mt-1">Sinkronisasi cloud belum aktif sepenuhnya. Data lokal tetap disimpan di perangkat ini.</p>
                   </div>
 
                   <Button onClick={handleLogout} variant="outline" className="w-full sm:w-auto text-error hover:text-error hover:bg-error/10 border-error/50">
@@ -139,16 +140,12 @@ export default function SettingsPage() {
                     <p className="text-xs text-text-secondary mt-0.5">Muat gambar resolusi rendah.</p>
                   </div>
                 </div>
-                <label htmlFor="data-saver" className="relative inline-flex items-center cursor-pointer">
-                  <input 
-                    type="checkbox" 
-                    id="data-saver" 
-                    className="sr-only peer" 
-                    checked={mounted ? dataSaver : false}
-                    onChange={(e) => setDataSaver(e.target.checked)}
-                  />
-                  <div className="w-11 h-6 bg-surface-overlay border border-border-subtle rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border-subtle after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent"></div>
-                </label>
+                <ToggleSwitch 
+                  id="data-saver" 
+                  checked={mounted ? dataSaver : false}
+                  onCheckedChange={setDataSaver}
+                  label="Penghemat Data"
+                />
               </div>
             </section>
 
@@ -166,27 +163,31 @@ export default function SettingsPage() {
                     <p className="text-xs text-text-secondary mt-0.5">Saring konten dewasa di sumber.</p>
                   </div>
                 </div>
-                <label htmlFor="nsfw-toggle" className="relative inline-flex items-center cursor-pointer">
-                  <input 
-                    type="checkbox" 
-                    id="nsfw-toggle" 
-                    className="sr-only peer" 
-                    checked={mounted ? hideNsfw : true}
-                    onChange={(e) => setHideNsfw(e.target.checked)}
-                  />
-                  <div className="w-11 h-6 bg-surface-overlay border border-border-subtle rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border-subtle after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent"></div>
-                </label>
+                <ToggleSwitch 
+                  id="nsfw-toggle" 
+                  checked={mounted ? hideNsfw : true}
+                  onCheckedChange={setHideNsfw}
+                  label="Sembunyikan NSFW"
+                />
               </div>
             </section>
 
             {/* Data Lokal */}
             <section className="bg-surface-raised border border-border-subtle rounded-2xl p-6">
-              <h2 className="text-sm font-bold uppercase tracking-widest text-text-muted mb-4">Data Lokal</h2>
+              <h2 className="text-sm font-bold uppercase tracking-widest text-text-muted mb-4">
+                {user ? "Data Perangkat" : "Data Lokal"}
+              </h2>
               
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-4">
                 <div>
-                  <h3 className="text-base font-bold text-text-primary">Hapus Data Lokal</h3>
-                  <p className="text-sm text-text-secondary mt-1 max-w-md">Menghapus cache riwayat baca dan daftar simpanan di perangkat ini.</p>
+                  <h3 className="text-base font-bold text-text-primary">
+                    {user ? "Bersihkan Cache Perangkat" : "Hapus Data Lokal"}
+                  </h3>
+                  <p className="text-sm text-text-secondary mt-1 max-w-md">
+                    {user 
+                      ? "Menghapus data lokal di perangkat ini. (Tidak akan menghapus data yang sudah tersinkronisasi di cloud jika ada)" 
+                      : "Data disimpan lokal di perangkat ini. Menghapus akan mereset riwayat dan readlist secara permanen."}
+                  </p>
                 </div>
                 
                 <Button onClick={handleClearData} variant="outline" className="shrink-0 text-error hover:text-error hover:bg-error/10 border-error/50">

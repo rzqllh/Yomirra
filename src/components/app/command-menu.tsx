@@ -4,6 +4,8 @@ import * as React from "react"
 import { useRouter } from "next/navigation"
 import { useQuery } from "@tanstack/react-query"
 import { apiClient } from "@/shared/api-client"
+import { useDebounce } from "@/shared/hooks/use-debounce"
+import { useSettingsStore } from "@/shared/store/settings-store"
 import {
   House,
   Books,
@@ -52,10 +54,11 @@ export function CommandMenu() {
   // Search manga from active source
   const activeSourceId = "shinigami"
   const debouncedQuery = useDebounce(searchQuery, 300)
+  const isNsfwFiltered = useSettingsStore((state) => state.hideNsfw)
 
   const { data: searchResults, isLoading: isSearching } = useQuery({
-    queryKey: ["command-search", activeSourceId, debouncedQuery],
-    queryFn: () => apiClient.search(activeSourceId, debouncedQuery),
+    queryKey: ["command-search", activeSourceId, debouncedQuery, isNsfwFiltered],
+    queryFn: () => apiClient.search(activeSourceId, debouncedQuery, 1, undefined, isNsfwFiltered),
     enabled: debouncedQuery.length >= 2,
   })
 
@@ -125,14 +128,3 @@ export function CommandMenu() {
   )
 }
 
-// Simple debounce hook
-function useDebounce(value: string, delay: number) {
-  const [debouncedValue, setDebouncedValue] = React.useState(value)
-
-  React.useEffect(() => {
-    const timer = setTimeout(() => setDebouncedValue(value), delay)
-    return () => clearTimeout(timer)
-  }, [value, delay])
-
-  return debouncedValue
-}

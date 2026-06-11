@@ -1,6 +1,5 @@
-import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
-import { getAuth, Auth } from "firebase/auth";
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, Firestore } from "firebase/firestore";
+// Note: This file is for CLIENT-SIDE Firebase initialization only.
+// Do not import this file in server components or API routes.
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -11,23 +10,49 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase only if config is present
-let app: FirebaseApp | null = null;
-let auth: Auth | null = null;
-let db: Firestore | null = null;
+let appInstance: any = null;
+let authInstance: any = null;
+let dbInstance: any = null;
+let isInitialized = false;
 
-if (firebaseConfig.projectId) {
-  app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-  auth = getAuth(app);
-  
-  // Enable Offline Persistence with Multi-Tab support (ala sistem POS caching)
-  db = initializeFirestore(app, {
-    localCache: persistentLocalCache({
-      tabManager: persistentMultipleTabManager()
-    })
-  });
-} else {
-  console.warn("Firebase config is missing or incomplete. Firebase services will not be initialized.");
+export async function initFirebase() {
+  if (isInitialized) {
+    return { app: appInstance, auth: authInstance, db: dbInstance };
+  }
+
+  if (typeof window === "undefined" || !firebaseConfig.projectId) {
+    console.warn("Firebase config is missing or running on server. Services will not be initialized.");
+    isInitialized = true;
+    return { app: null, auth: null, db: null };
+  }
+
+  try {
+    const { initializeApp, getApps, getApp } = await import("firebase/app");
+    const { getAuth } = await import("firebase/auth");
+    
+    appInstance = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+    authInstance = getAuth(appInstance);
+    
+    // Lazy load firestore
+    const { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } = await import("firebase/firestore");
+    
+    try {
+      dbInstance = initializeFirestore(appInstance, {
+        localCache: persistentLocalCache({
+          tabManager: persistentMultipleTabManager()
+        })
+      });
+    } catch (e) {
+      // If already initialized
+      const { getFirestore } = await import("firebase/firestore");
+      dbInstance = getFirestore(appInstance);
+    }
+
+    isInitialized = true;
+    return { app: appInstance, auth: authInstance, db: dbInstance };
+  } catch (error) {
+    console.error("Failed to initialize Firebase", error);
+    isInitialized = true;
+    return { app: null, auth: null, db: null };
+  }
 }
-
-export { app, auth, db };

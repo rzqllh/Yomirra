@@ -1,10 +1,16 @@
-import { NextResponse } from "next/server";
+import { checkRateLimit } from "@/server/lib/security/rate-limit";
+import { NextRequest, NextResponse } from "next/server";
 import { sourceManager } from "@/server/lib/sources/source-manager";
 
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ sourceId: string }> }
 ) {
+  const rateLimit = await checkRateLimit(request);
+  if (!rateLimit.success) {
+    return NextResponse.json({ error: { message: "Too Many Requests" } }, { status: 429, headers: rateLimit.headers });
+  }
+
   try {
     const { sourceId } = await params;
     const source = sourceManager.getSource(sourceId);

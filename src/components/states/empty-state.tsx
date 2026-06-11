@@ -1,13 +1,13 @@
 import * as React from "react"
 import { cn } from "@/shared/utils/cn"
 
-interface EmptyStateProps {
+export interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
   icon?: React.ReactNode
   title: string
-  description?: string
+  description?: React.ReactNode
   action?: React.ReactNode
   variant?: "default" | "compact"
-  className?: string
+  fullHeight?: boolean
 }
 
 export function EmptyState({
@@ -16,37 +16,70 @@ export function EmptyState({
   description,
   action,
   variant = "default",
+  fullHeight = false,
   className,
+  ...props
 }: EmptyStateProps) {
   if (variant === "compact") {
     return (
-      <div className={cn("flex flex-col items-center justify-center py-8 text-center", className)}>
-        {icon && <div className="mb-2 text-text-muted">{icon}</div>}
-        <p className="text-sm font-medium text-text-primary">{title}</p>
-        {description && (
-          <p className="text-xs text-text-muted mt-1 max-w-[240px]">{description}</p>
+      <div 
+        className={cn(
+          "flex flex-col items-center justify-center py-6 text-center animate-in fade-in duration-500", 
+          className
         )}
-        {action && <div className="mt-3">{action}</div>}
+        {...props}
+      >
+        {icon && (
+          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-full bg-surface-raised text-text-muted ring-1 ring-border-subtle/50">
+            {icon}
+          </div>
+        )}
+        <p className="text-sm font-semibold text-text-primary tracking-tight">{title}</p>
+        {description && (
+          <div className="mt-1.5 max-w-[260px] text-xs text-text-muted leading-relaxed">
+            {description}
+          </div>
+        )}
+        {action && <div className="mt-4">{action}</div>}
       </div>
     )
   }
 
   return (
-    <div className={cn(
-      "flex min-h-[40vh] flex-col items-center justify-center text-center px-4",
-      className
-    )}>
+    <div 
+      className={cn(
+        "flex flex-col items-center justify-center text-center px-6 py-12 animate-in zoom-in-95 fade-in duration-500",
+        fullHeight ? "min-h-[40vh] flex-1" : "h-full w-full",
+        className
+      )}
+      {...props}
+    >
       {icon && (
-        <div className="mb-6 flex items-center justify-center h-20 w-20 rounded-full bg-gradient-to-br from-surface-raised to-surface-base shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_8px_16px_rgba(0,0,0,0.4)] border border-border-subtle relative">
-          <div className="absolute inset-0 rounded-full bg-accent/5 blur-xl"></div>
-          <div className="relative z-10 text-accent">{icon}</div>
+        <div className="relative mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-b from-surface-raised to-surface-base shadow-xl ring-1 ring-border-subtle/40 isolate">
+          {/* Ambient Glow */}
+          <div className="absolute inset-0 -z-10 rounded-2xl bg-accent/10 blur-2xl opacity-60 mix-blend-screen" />
+          {/* Inner Highlight */}
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-accent/5 to-transparent opacity-50" />
+          {/* Icon Container */}
+          <div className="relative z-10 text-accent drop-shadow-md scale-110">
+            {icon}
+          </div>
         </div>
       )}
-      <h2 className="mb-2 text-xl font-bold text-text-primary">{title}</h2>
+      
+      <h2 className="mb-2 text-xl font-bold text-text-primary tracking-tight">{title}</h2>
+      
       {description && (
-        <p className="mb-6 max-w-sm text-sm text-text-muted">{description}</p>
+        <div className="mb-8 max-w-sm text-sm text-text-muted leading-relaxed balance-text">
+          {description}
+        </div>
       )}
-      {action && <div>{action}</div>}
+      
+      {action && (
+        <div className="flex items-center justify-center gap-3">
+          {action}
+        </div>
+      )}
     </div>
   )
 }

@@ -5,62 +5,71 @@ import { UserCircle, MagnifyingGlass, SignOut } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { IconButton } from "@/components/ui/icon-button";
-import { useAuth } from "@/hooks/use-auth";
+import { useAuth } from "@/shared/hooks/use-auth";
 import { ThemeToggle } from "./theme-toggle";
+import { SearchInput } from "@/components/ui/search-input";
 
 export function TopNav() {
   const router = useRouter();
   const [query, setQuery] = React.useState("");
   const { user, loginWithGoogle, logout } = useAuth();
 
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = (e: React.FormEvent, searchValue: string) => {
     e.preventDefault();
-    if (query.trim()) {
-      router.push(`/search?q=${encodeURIComponent(query.trim())}`);
+    if (searchValue.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchValue.trim())}`);
     }
   };
 
   return (
-    <div className="hidden md:flex h-16 w-full items-center justify-between bg-background/80 backdrop-blur-xl border-b border-border-subtle px-6 sticky top-0 z-40 transition-all">
+    <div className="hidden md:flex h-16 w-full items-center justify-between bg-background/50 backdrop-blur-3xl saturate-200 border-b border-border-subtle/30 shadow-[0_1px_2px_rgba(0,0,0,0.02)] px-6 sticky top-0 z-40 transition-all duration-300">
       <div className="flex-1 max-w-xl mx-auto">
-        <form onSubmit={handleSearch} className="flex items-center gap-3 rounded-full bg-surface-raised px-4 py-2 transition-all duration-[var(--motion-fast)] hover:bg-surface-overlay focus-within:bg-surface-overlay focus-within:ring-1 focus-within:ring-accent border border-border-subtle shadow-sm">
-          <MagnifyingGlass className="size-4 text-text-muted shrink-0" weight="bold" />
-          <input 
-            type="text" 
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Cari manga, manhwa..." 
-            className="flex-1 bg-transparent text-[14px] text-text-primary outline-none placeholder:text-text-muted font-medium"
-          />
-          <kbd className="hidden lg:inline-flex h-5 select-none items-center gap-1 rounded border border-border-strong bg-surface-base px-1.5 font-mono text-[10px] font-bold text-text-muted">
-            ⌘K
-          </kbd>
-        </form>
+        <SearchInput
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onSubmitAction={handleSearch}
+          placeholder="Cari manga, manhwa..."
+          shortcut="⌘K"
+          className="bg-surface-base/50 focus-within:bg-surface-base/80 focus-within:ring-accent/30 transition-all"
+        />
       </div>
       
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3 pl-4">
         <ThemeToggle />
         
         {user ? (
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 rounded-full bg-surface-raised border border-border-subtle pl-1 pr-3 py-1">
+          <div className="flex items-center gap-1.5 p-1 rounded-full bg-surface-base/40 backdrop-blur-md ring-1 ring-border-subtle/50 shadow-sm transition-all hover:bg-surface-raised/50">
+            <div className="flex items-center gap-2 pl-1 pr-2">
               {user.photoURL ? (
-                <Image src={user.photoURL} alt={user.displayName || "User"} width={24} height={24} className="rounded-full" />
+                <div className="relative size-7 rounded-full overflow-hidden ring-1 ring-white/10 shadow-inner">
+                  <Image src={user.photoURL} alt={user.displayName || "User"} fill sizes="28px" className="object-cover" />
+                </div>
               ) : (
-                <UserCircle size={24} weight="duotone" className="text-accent" />
+                <UserCircle size={28} weight="duotone" className="text-accent" />
               )}
-              <span className="text-[12px] font-medium text-text-primary hidden lg:block">
+              <span className="text-xs font-semibold text-text-primary hidden lg:block pr-1">
                 {user.displayName?.split(' ')[0] || "User"}
               </span>
             </div>
-            <IconButton onClick={logout} aria-label="Keluar" variant="ghost" className="hover:bg-error/10 hover:text-error transition-colors">
-              <SignOut size={20} />
+            <div className="h-4 w-px bg-border-subtle/50 hidden lg:block" />
+            <IconButton 
+              onClick={logout} 
+              aria-label="Keluar" 
+              variant="ghost" 
+              className="size-8 rounded-full hover:bg-error/15 hover:text-error transition-colors"
+            >
+              <SignOut size={16} weight="bold" />
             </IconButton>
           </div>
         ) : (
-          <IconButton onClick={loginWithGoogle} aria-label="Masuk dengan Google" variant="ghost" className="hover:bg-accent/10 hover:text-accent transition-colors border border-border-subtle bg-surface-raised rounded-full px-4 w-auto h-9 gap-2">
+          <IconButton 
+            onClick={loginWithGoogle} 
+            aria-label="Masuk dengan Google" 
+            variant="ghost" 
+            className="hover:bg-accent/10 hover:text-accent transition-all duration-300 ring-1 ring-border-subtle bg-surface-base/50 backdrop-blur-md shadow-sm rounded-full px-5 w-auto h-9 gap-2 hover:ring-accent/30"
+          >
             <UserCircle size={20} weight="duotone" />
-            <span className="text-[13px] font-medium">Masuk</span>
+            <span className="text-sm font-semibold">Masuk</span>
           </IconButton>
         )}
       </div>

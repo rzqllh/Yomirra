@@ -1,11 +1,12 @@
-import { auth, db } from "./firebase";
-import { doc, setDoc, deleteDoc } from "firebase/firestore";
+import { initFirebase } from "./firebase";
 
 export async function pushLibraryItem(item: any) {
+  const { auth, db } = await initFirebase();
   if (!auth || !db) return;
   const user = auth.currentUser;
   if (!user) return;
   try {
+    const { doc, setDoc } = await import("firebase/firestore");
     const id = `${item.sourceId}::${item.mangaId}`;
     await setDoc(doc(db, `users/${user.uid}/library`, id), item);
   } catch (e) {
@@ -14,10 +15,12 @@ export async function pushLibraryItem(item: any) {
 }
 
 export async function deleteLibraryItem(sourceId: string, mangaId: string) {
+  const { auth, db } = await initFirebase();
   if (!auth || !db) return;
   const user = auth.currentUser;
   if (!user) return;
   try {
+    const { doc, deleteDoc } = await import("firebase/firestore");
     const id = `${sourceId}::${mangaId}`;
     await deleteDoc(doc(db, `users/${user.uid}/library`, id));
   } catch (e) {
@@ -26,10 +29,12 @@ export async function deleteLibraryItem(sourceId: string, mangaId: string) {
 }
 
 export async function pushHistoryItem(item: any) {
+  const { auth, db } = await initFirebase();
   if (!auth || !db) return;
   const user = auth.currentUser;
   if (!user) return;
   try {
+    const { doc, setDoc } = await import("firebase/firestore");
     const id = `${item.sourceId}::${item.mangaId}::${item.chapterId}`;
     await setDoc(doc(db, `users/${user.uid}/history`, id), item);
   } catch (e) {
@@ -38,10 +43,12 @@ export async function pushHistoryItem(item: any) {
 }
 
 export async function deleteHistoryItem(sourceId: string, mangaId: string, chapterId: string) {
+  const { auth, db } = await initFirebase();
   if (!auth || !db) return;
   const user = auth.currentUser;
   if (!user) return;
   try {
+    const { doc, deleteDoc } = await import("firebase/firestore");
     const id = `${sourceId}::${mangaId}::${chapterId}`;
     await deleteDoc(doc(db, `users/${user.uid}/history`, id));
   } catch (e) {
