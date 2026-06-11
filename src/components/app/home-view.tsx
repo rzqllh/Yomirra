@@ -11,11 +11,11 @@ import { getReaderHref, getMangaDetailHref } from "@/shared/lib/routes";
 import { useHistoryStore } from "@/shared/store/history-store";
 import Image from "next/image";
 import { SearchInput } from "@/components/ui/search-input";
-import type { PaginatedManga } from "@/shared/types/source";
+import type { MangaPageResult } from "@/shared/types/source";
 
 interface HomeViewProps {
-  popular: PaginatedManga | null;
-  latest: PaginatedManga | null;
+  popular: MangaPageResult | null;
+  latest: MangaPageResult | null;
   activeSourceId: string;
 }
 

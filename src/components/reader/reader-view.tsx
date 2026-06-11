@@ -42,7 +42,7 @@ export function ReaderView({
     queryKey: ["pages", sourceId, chapterId],
     queryFn: () => apiClient.getPages(sourceId, mangaId, chapterId),
     enabled: !initialPages && downloadStatus !== "downloaded",
-    initialData: initialPages ? { pages: initialPages } : undefined,
+    initialData: initialPages ? { chapterId, pages: initialPages } : undefined,
   });
 
   useEffect(() => {

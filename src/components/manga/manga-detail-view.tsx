@@ -52,7 +52,7 @@ export function MangaDetailView({
   const continueChapterId = historyItem?.chapterId;
   const startChapterId = firstChapter?.id;
 
-  const renderActions = () => (
+  const RenderActions = () => (
     <>
       {showContinue && continueChapterId ? (
         <Button asChild variant="accent" className="w-full rounded-full h-12 text-[15px] font-bold shadow-sm">

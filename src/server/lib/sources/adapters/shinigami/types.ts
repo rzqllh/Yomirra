@@ -13,9 +13,12 @@ export interface ShinigamiMangaItem {
   status?: number;
   latest_chapter_number?: number | string;
   latest_chapter_time?: string;
+  type?: string;
   taxonomy?: {
     Format?: Array<{ name: string; slug: string }>;
+    Type?: Array<{ name: string; slug: string }>;
   };
+  [key: string]: unknown;
 }
 
 export interface ShinigamiMangaListResponse {
