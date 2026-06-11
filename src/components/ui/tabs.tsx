@@ -43,7 +43,7 @@ const TabsList = React.forwardRef<
   <TabsPrimitive.List
     ref={ref}
     className={cn(
-      "inline-flex h-10 items-center justify-center rounded-md bg-surface-overlay p-1 text-text-muted",
+      "inline-flex h-10 items-center justify-center rounded-[var(--radius-md)] bg-surface-raised p-1 text-text-secondary",
       className
     )}
     {...props}
@@ -63,7 +63,7 @@ const TabsTrigger = React.forwardRef<
       ref={ref}
       value={value}
       className={cn(
-        "relative inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-strong disabled:pointer-events-none disabled:opacity-50 text-text-muted data-[state=active]:text-text-primary",
+        "relative inline-flex items-center justify-center whitespace-nowrap rounded-[var(--radius-sm)] px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:pointer-events-none disabled:opacity-50 text-text-secondary data-[state=active]:text-text-primary",
         className
       )}
       {...props}
@@ -72,7 +72,7 @@ const TabsTrigger = React.forwardRef<
       {isActive && (
         <motion.div
           layoutId="tab-indicator"
-          className="absolute inset-0 z-0 rounded-sm bg-surface-raised shadow-soft"
+          className="absolute inset-0 z-0 rounded-[var(--radius-sm)] bg-surface-base shadow-sm"
           transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
         />
       )}
@@ -88,7 +88,7 @@ const TabsContent = React.forwardRef<
   <TabsPrimitive.Content
     ref={ref}
     className={cn(
-      "mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-border-strong",
+      "mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
       className
     )}
     {...props}

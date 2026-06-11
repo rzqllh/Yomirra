@@ -24,7 +24,7 @@ export const ToggleSwitch = React.forwardRef<HTMLInputElement, ToggleSwitchProps
           ref={ref}
           {...props}
         />
-        <div className="w-11 h-6 bg-surface-overlay border border-border-subtle rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border-subtle after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent"></div>
+        <div className="w-11 h-6 bg-surface-raised border border-border-default rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-transparent after:border after:shadow-sm after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent peer-checked:border-accent"></div>
       </label>
     )
   }

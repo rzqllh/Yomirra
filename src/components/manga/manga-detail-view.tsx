@@ -52,7 +52,7 @@ export function MangaDetailView({
   const continueChapterId = historyItem?.chapterId;
   const startChapterId = firstChapter?.id;
 
-  const RenderActions = () => (
+  const renderActions = () => (
     <>
       {showContinue && continueChapterId ? (
         <Button asChild variant="accent" className="w-full rounded-full h-12 text-[15px] font-bold shadow-sm">
@@ -102,28 +102,28 @@ export function MangaDetailView({
       <div className="w-full max-w-7xl mx-auto px-4 md:px-8 pt-6 md:pt-12 pb-[calc(6rem+env(safe-area-inset-bottom))] relative z-10 flex flex-col md:flex-row gap-6 md:gap-8">
         
         <div className="flex gap-4 md:hidden">
-          <div className="relative w-[110px] shrink-0 aspect-[2/3] rounded-md overflow-hidden shadow-xl border border-border-subtle bg-surface-raised">
+          <div className="relative w-[110px] shrink-0 aspect-[2/3] rounded-[var(--radius-md)] overflow-hidden shadow-xl border border-border-default bg-surface-base">
             {coverUrl && <Image src={coverUrl} alt={detail.title} fill className="object-cover" priority sizes="110px" />}
           </div>
           <div className="flex flex-col flex-1 gap-1.5 justify-center py-1">
             <h1 className="text-xl font-bold leading-snug line-clamp-3 text-shadow-sm">{detail.title}</h1>
             <div className="text-sm font-medium text-text-muted">{detail.author}</div>
             <div className="mt-1">
-              <span className="text-text-primary bg-surface-raised border border-border-subtle px-1.5 py-0.5 rounded text-[10px] uppercase tracking-wider font-bold">{detail.status}</span>
+              <span className="text-text-primary bg-surface-overlay border border-border-default px-1.5 py-0.5 rounded-[var(--radius-sm)] text-[10px] uppercase tracking-wider font-bold">{detail.status}</span>
             </div>
           </div>
         </div>
 
         <div className="flex flex-col gap-3 mt-2 md:hidden">
-          <RenderActions />
+          {renderActions()}
         </div>
 
         <div className="hidden md:flex relative sticky top-[100px] self-start w-[280px] lg:w-[320px] shrink-0 flex-col gap-4">
-          <div className="relative w-full aspect-[2/3] rounded-xl overflow-hidden shadow-2xl border border-border-subtle bg-surface-raised">
+          <div className="relative w-full aspect-[2/3] rounded-[var(--radius-lg)] overflow-hidden shadow-2xl border border-border-default bg-surface-base">
             {coverUrl && <Image src={coverUrl} alt={detail.title} fill className="object-cover" priority sizes="320px" />}
           </div>
           <div className="flex flex-col gap-3 mt-2">
-            <RenderActions />
+            {renderActions()}
           </div>
         </div>
 
@@ -137,19 +137,19 @@ export function MangaDetailView({
               <div className="flex items-center gap-2 text-[15px] font-medium text-text-muted">
                 <span>{detail.author}</span>
                 <span>•</span>
-                <span className="text-text-primary bg-surface-raised px-2 py-0.5 rounded text-xs uppercase tracking-wider font-bold">{detail.status}</span>
+                <span className="text-text-primary bg-surface-overlay px-2 py-0.5 rounded-[var(--radius-sm)] text-xs uppercase tracking-wider font-bold">{detail.status}</span>
               </div>
             </div>
 
             <div className="flex flex-wrap gap-2 mt-2 md:mt-0">
               {detail.genres?.map((g) => (
-                <span key={g} className="rounded bg-surface-raised px-2 py-1 text-[11px] md:text-xs font-semibold text-text-primary border border-border-subtle uppercase tracking-wider">
+                <span key={g} className="rounded-[var(--radius-sm)] bg-surface-overlay px-2 py-1 text-[11px] md:text-xs font-semibold text-text-primary border border-border-default uppercase tracking-wider">
                   {g}
                 </span>
               ))}
             </div>
 
-            <div className="mt-2 md:mt-4 bg-surface-raised/50 border border-border-subtle rounded-xl p-4 md:p-6">
+            <div className="mt-2 md:mt-4 bg-surface-base border border-border-default rounded-[var(--radius-lg)] p-4 md:p-6">
               <p className="text-sm md:text-[15px] leading-relaxed text-text-secondary whitespace-pre-wrap break-words">
                 {detail.description || "Sinopsis belum tersedia."}
               </p>
@@ -157,7 +157,7 @@ export function MangaDetailView({
           </div>
 
           <div className="mt-8 md:mt-10">
-            <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between border-b border-border-subtle pb-2 gap-3">
+            <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between border-b border-border-default pb-2 gap-3">
               <div className="flex items-center gap-3">
                 <h3 className="text-lg md:text-xl font-bold text-text-primary">Chapter</h3>
                 <span className="text-sm text-text-muted font-bold">{chapters?.length || 0}</span>
@@ -168,7 +168,7 @@ export function MangaDetailView({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Cari chapter..." 
-                  className="bg-surface-raised border border-border-subtle rounded-full px-3 py-1.5 text-sm w-full sm:w-[150px] outline-none focus:border-border-strong text-text-primary transition-colors"
+                  className="bg-surface-overlay border border-border-default rounded-full px-3 py-1.5 text-sm w-full sm:w-[150px] outline-none focus:border-accent text-text-primary transition-colors"
                 />
                 <IconButton 
                   variant="ghost" 
@@ -182,7 +182,7 @@ export function MangaDetailView({
             </div>
 
             {!chapters || chapters.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center bg-surface-raised/30 rounded-xl border border-dashed border-border-subtle">
+              <div className="flex flex-col items-center justify-center py-12 text-center bg-surface-base/50 rounded-[var(--radius-lg)] border border-dashed border-border-default">
                 <p className="text-[15px] font-medium text-text-muted">Belum ada chapter.</p>
               </div>
             ) : (

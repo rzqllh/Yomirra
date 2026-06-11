@@ -29,10 +29,10 @@ export function ChapterRow({
     <Link
       href={getReaderHref(sourceId, mangaId, chapterId)}
       className={cn(
-        "group relative flex items-center gap-3 md:gap-4 rounded-2xl px-4 py-3.5 transition-all duration-300 ease-out will-change-transform",
+        "group relative flex items-center gap-3 md:gap-4 rounded-[var(--radius-lg)] px-4 py-3.5 transition-all duration-300 ease-out will-change-transform",
         isLastRead 
-          ? "bg-surface-active/60 backdrop-blur-md border border-accent/20 shadow-[0_4px_20px_-4px_rgba(var(--accent-rgb),0.15)] ring-1 ring-accent/10 z-10" 
-          : "bg-surface-base/40 backdrop-blur-sm border border-transparent hover:bg-surface-raised/80 hover:border-border-subtle/50 hover:shadow-lg hover:shadow-black/5 hover:ring-1 hover:ring-white/5",
+          ? "bg-surface-active/60 backdrop-blur-md border border-accent/20 shadow-sm ring-1 ring-accent/10 z-10" 
+          : "bg-surface-base border border-transparent hover:bg-surface-hover hover:border-border-default hover:shadow-sm",
         "hover:-translate-y-[1px] hover:scale-[1.005]"
       )}
     >
@@ -65,7 +65,7 @@ export function ChapterRow({
       )}
 
       <div 
-        className="pl-3 md:pl-4 border-l border-border-subtle/30 shrink-0 transition-opacity opacity-70 group-hover:opacity-100" 
+        className="pl-3 md:pl-4 border-l border-border-default/50 shrink-0 transition-opacity opacity-70 group-hover:opacity-100" 
         onClick={(e) => e.stopPropagation()}
       >
         <ChapterDownloadButton
