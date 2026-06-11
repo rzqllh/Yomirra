@@ -6,26 +6,26 @@ import { CircleNotch } from "@phosphor-icons/react"
 import { cn } from "@/shared/utils/cn"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius-md)] text-sm font-semibold transition-all duration-[var(--motion-fast)] ease-[var(--ease-standard)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] [&_svg]:pointer-events-none [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius-md)] text-sm font-semibold transition-all duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] [&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
     variants: {
       variant: {
         default:
-          "bg-accent text-accent-foreground shadow-soft hover:bg-accent/90",
+          "bg-accent text-accent-on shadow-sm hover:bg-accent-hover",
         accent:
-          "bg-accent text-accent-foreground shadow-soft hover:bg-accent/90",
+          "bg-accent text-accent-on shadow-sm hover:bg-accent-hover",
         secondary:
-          "bg-surface-raised text-text-primary border border-border-subtle shadow-soft hover:bg-surface-overlay",
+          "bg-surface-raised text-text-primary border border-border-default shadow-sm hover:bg-surface-hover",
         tertiary:
-          "text-text-secondary hover:text-text-primary hover:bg-surface-raised",
+          "text-text-secondary hover:text-text-primary hover:bg-surface-hover",
         ghost:
-          "text-text-secondary hover:bg-surface-raised hover:text-text-primary",
+          "text-text-secondary hover:bg-surface-hover hover:text-text-primary",
         outline:
-          "border border-border-strong bg-transparent hover:bg-surface-raised hover:text-text-primary",
+          "border border-border-strong bg-transparent hover:bg-surface-hover hover:text-text-primary",
         destructive:
-          "bg-error text-foreground shadow-soft hover:bg-error/90",
+          "bg-semantic-error text-white shadow-sm hover:bg-semantic-error/90",
         reader:
-          "bg-surface-overlay text-text-primary hover:bg-surface-raised border border-border-subtle",
+          "bg-surface-overlay text-text-primary hover:bg-surface-raised border border-border-default",
         link:
           "text-accent underline-offset-4 hover:underline",
       },
@@ -62,7 +62,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <Comp
         className={cn(
           buttonVariants({ variant, size, className }),
-          active && "bg-accent/10 text-accent border-accent/30",
+          active && "bg-accent-dim text-accent border-accent/30",
           loading && "cursor-wait"
         )}
         ref={ref}

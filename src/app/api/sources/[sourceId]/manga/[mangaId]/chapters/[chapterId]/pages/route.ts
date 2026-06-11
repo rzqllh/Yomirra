@@ -25,7 +25,7 @@ export async function GET(
 
     const data = await swrCache(
       cacheKey,
-      () => source.getPages(mangaId, chapterId),
+      () => source.getPages(chapterId),
       CACHE_TTL.PAGES
     );
 

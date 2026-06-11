@@ -1,7 +1,7 @@
 export class HttpClient {
   constructor(private baseUrl: string, private defaultHeaders: Record<string, string> = {}) {}
 
-  async get<T>(path: string, params?: Record<string, string | number>): Promise<T> {
+  async get<T>(path: string, params?: Record<string, any>): Promise<T> {
     let url = `${this.baseUrl}${path}`;
     if (params) {
       const searchParams = new URLSearchParams();

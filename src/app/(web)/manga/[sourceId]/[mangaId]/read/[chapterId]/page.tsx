@@ -40,7 +40,7 @@ export default async function ReaderPage({
       swrCache(`source:${sourceId}:manga:${mangaId}`, () => source.getDetail(mangaId), CACHE_TTL.DETAIL),
       swrCache(`source:${sourceId}:chapters:${mangaId}`, () => source.getChapters(mangaId), CACHE_TTL.CHAPTERS),
       // Pages might fail, so we catch error and return null to let client retry or use offline cache
-      swrCache(`source:${sourceId}:pages:${mangaId}:${chapterId}`, () => source.getPages(mangaId, chapterId), CACHE_TTL.PAGES).catch(() => null),
+      swrCache(`source:${sourceId}:pages:${mangaId}:${chapterId}`, () => source.getPages(chapterId), CACHE_TTL.PAGES).catch(() => null),
     ]);
 
     return (
