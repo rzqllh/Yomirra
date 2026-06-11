@@ -38,7 +38,7 @@ export default function SettingsPage() {
 
   return (
     <MobilePageShell title="Pengaturan">
-      <div className="flex flex-col min-h-screen bg-background">
+      <div className="flex flex-col min-h-screen bg-surface-base">
         <main className="flex-1 w-full max-w-3xl mx-auto pb-20 md:pb-8">
           <div className="px-4 py-6 md:px-8 md:py-8 space-y-8">
             
@@ -48,7 +48,7 @@ export default function SettingsPage() {
             </div>
 
             {/* Akun & Sinkronisasi */}
-            <section className="bg-surface-raised border border-border-subtle rounded-2xl p-6">
+            <section className="bg-surface-raised border border-border-subtle rounded-[var(--radius-xl)] p-6">
               <h2 className="text-sm font-bold uppercase tracking-widest text-text-muted mb-4">Akun & Sinkronisasi</h2>
               
               {user ? (
@@ -65,7 +65,7 @@ export default function SettingsPage() {
                     <p className="text-xs text-text-muted font-medium mt-1">Sinkronisasi cloud belum aktif sepenuhnya. Data lokal tetap disimpan di perangkat ini.</p>
                   </div>
 
-                  <Button onClick={handleLogout} variant="outline" className="w-full sm:w-auto text-error hover:text-error hover:bg-error/10 border-error/50">
+                  <Button onClick={handleLogout} variant="outline" className="w-full sm:w-auto text-semantic-error hover:text-semantic-error hover:bg-semantic-error/10 border-semantic-error/50">
                     <SignOut size={18} className="mr-2" />
                     Keluar
                   </Button>
@@ -85,7 +85,7 @@ export default function SettingsPage() {
             </section>
 
             {/* Preferensi Tampilan */}
-            <section className="bg-surface-raised border border-border-subtle rounded-2xl p-6">
+            <section className="bg-surface-raised border border-border-subtle rounded-[var(--radius-xl)] p-6">
               <h2 className="text-sm font-bold uppercase tracking-widest text-text-muted mb-4">Preferensi Tampilan</h2>
               
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 py-3 border-b border-border-subtle/50 mb-2">
@@ -150,7 +150,7 @@ export default function SettingsPage() {
             </section>
 
             {/* Konten & Keamanan */}
-            <section className="bg-surface-raised border border-border-subtle rounded-2xl p-6">
+            <section className="bg-surface-raised border border-border-subtle rounded-[var(--radius-xl)] p-6">
               <h2 className="text-sm font-bold uppercase tracking-widest text-text-muted mb-4">Konten & Keamanan</h2>
               
               <div className="flex items-center justify-between py-2 border-b border-border-subtle/50 mb-2">
@@ -173,7 +173,7 @@ export default function SettingsPage() {
             </section>
 
             {/* Data Lokal */}
-            <section className="bg-surface-raised border border-border-subtle rounded-2xl p-6">
+            <section className="bg-surface-raised border border-border-subtle rounded-[var(--radius-xl)] p-6">
               <h2 className="text-sm font-bold uppercase tracking-widest text-text-muted mb-4">
                 {user ? "Data Perangkat" : "Data Lokal"}
               </h2>
@@ -190,7 +190,7 @@ export default function SettingsPage() {
                   </p>
                 </div>
                 
-                <Button onClick={handleClearData} variant="outline" className="shrink-0 text-error hover:text-error hover:bg-error/10 border-error/50">
+                <Button onClick={handleClearData} variant="outline" className="shrink-0 text-semantic-error hover:text-semantic-error hover:bg-semantic-error/10 border-semantic-error/50">
                   <Trash size={18} className="mr-2" />
                   Bersihkan
                 </Button>

@@ -26,7 +26,8 @@ export function HomeView({ popular, latest, activeSourceId }: HomeViewProps) {
 
   const [isMounted, setIsMounted] = React.useState(false);
   React.useEffect(() => {
-    setIsMounted(true);
+    const t = setTimeout(() => setIsMounted(true), 0);
+    return () => clearTimeout(t);
   }, []);
 
   const getContinueReading = useHistoryStore(state => state.getContinueReading);
@@ -34,7 +35,7 @@ export function HomeView({ popular, latest, activeSourceId }: HomeViewProps) {
   const historyItems = isMounted ? continueReadingItems : [];
 
   return (
-    <main className="min-h-screen bg-background pb-12">
+    <main className="min-h-screen bg-surface-base pb-12">
       <h1 className="sr-only">Beranda Yomirra</h1>
       
       {/* Mobile Header / Search */}
@@ -70,10 +71,10 @@ export function HomeView({ popular, latest, activeSourceId }: HomeViewProps) {
           {historyItems.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
               {historyItems.map((item) => (
-                <div key={`${item.sourceId}::${item.mangaId}::${item.chapterId}`} className="group relative flex items-center gap-4 rounded-2xl bg-surface-raised p-3 border border-border-subtle transition-colors hover:bg-surface-overlay overflow-hidden">
+                <div key={`${item.sourceId}::${item.mangaId}::${item.chapterId}`} className="group relative flex items-center gap-4 rounded-[var(--radius-lg)] bg-surface-raised p-3 border border-border-subtle transition-colors hover:bg-surface-overlay overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-r from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                   
-                  <Link href={getMangaDetailHref(item.sourceId, item.mangaId)} prefetch={false} className="relative h-20 w-14 shrink-0 overflow-hidden rounded-md bg-surface-overlay shadow-sm z-10">
+                  <Link href={getMangaDetailHref(item.sourceId, item.mangaId)} prefetch={false} className="relative h-20 w-14 shrink-0 overflow-hidden rounded-[var(--radius-sm)] bg-surface-overlay shadow-sm z-10">
                     {item.coverUrl ? (
                       <Image src={item.coverUrl} alt={item.mangaTitle} fill className="object-cover" unoptimized />
                     ) : (
@@ -122,10 +123,10 @@ export function HomeView({ popular, latest, activeSourceId }: HomeViewProps) {
               icon={<BookmarkSimple size={28} className="text-text-muted" weight="duotone" />}
               title="Belum ada riwayat baca"
               description="Buka chapter komik manapun dan progresmu akan otomatis muncul di sini."
-              className="bg-surface-raised/50 rounded-2xl py-12 border border-border-subtle"
+              className="bg-surface-raised/50 rounded-[var(--radius-lg)] py-12 border border-border-subtle"
             />
           ) : (
-            <div className="w-full h-[100px] motion-safe:animate-pulse bg-surface-raised/50 rounded-2xl border border-border-subtle" />
+            <div className="w-full h-[100px] motion-safe:animate-pulse bg-surface-raised/50 rounded-[var(--radius-lg)] border border-border-subtle" />
           )}
         </section>
 

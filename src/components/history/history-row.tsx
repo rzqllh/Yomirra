@@ -14,7 +14,7 @@ interface HistoryRowProps {
 export function HistoryRow({ item, onRemove }: HistoryRowProps) {
   return (
     <div className="group relative flex items-center gap-4 rounded-[var(--radius-xl)] bg-surface-raised p-3 border border-border-subtle transition-colors hover:bg-surface-overlay overflow-hidden">
-      <Link href={getMangaDetailHref(item.sourceId, item.mangaId)} className="relative h-20 w-14 shrink-0 overflow-hidden rounded-md bg-surface-overlay">
+      <Link href={getMangaDetailHref(item.sourceId, item.mangaId)} className="relative h-20 w-14 shrink-0 overflow-hidden rounded-[var(--radius-sm)] bg-surface-overlay">
         {item.coverUrl ? (
           <Image src={item.coverUrl} alt={item.mangaTitle} fill sizes="56px" className="object-cover" />
         ) : (
@@ -48,7 +48,7 @@ export function HistoryRow({ item, onRemove }: HistoryRowProps) {
         aria-label={`Hapus ${item.mangaTitle} dari riwayat`}
         variant="ghost"
         size="sm"
-        className="absolute right-3 top-1/2 -translate-y-1/2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all hover:text-error hover:bg-error/10"
+        className="absolute right-3 top-1/2 -translate-y-1/2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all hover:text-semantic-error hover:bg-semantic-error/10"
         onClick={(e) => {
           e.preventDefault();
           onRemove(item.sourceId, item.mangaId, item.chapterId);

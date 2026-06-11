@@ -24,9 +24,10 @@ export function MangaActions({
   status,
 }: MangaActionsProps) {
   const [isMounted, setIsMounted] = React.useState(false);
-  // eslint-disable-next-line
+   
   React.useEffect(() => {
-    setIsMounted(true);
+    const t = setTimeout(() => setIsMounted(true), 0);
+    return () => clearTimeout(t);
   }, []);
 
   const rawIsInLibrary = useLibraryStore((state) => state.isInLibrary(sourceId, mangaId));
