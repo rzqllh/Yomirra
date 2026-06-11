@@ -55,3 +55,33 @@ export async function deleteHistoryItem(sourceId: string, mangaId: string, chapt
     console.error("Failed to delete history item from sync", e);
   }
 }
+
+export async function pullLibraryData(): Promise<any[]> {
+  const { auth, db } = await initFirebase();
+  if (!auth || !db) return [];
+  const user = auth.currentUser;
+  if (!user) return [];
+  try {
+    const { collection, getDocs } = await import("firebase/firestore");
+    const querySnapshot = await getDocs(collection(db, `users/${user.uid}/library`));
+    return querySnapshot.docs.map(doc => doc.data());
+  } catch (e) {
+    console.error("Failed to pull library data", e);
+    return [];
+  }
+}
+
+export async function pullHistoryData(): Promise<any[]> {
+  const { auth, db } = await initFirebase();
+  if (!auth || !db) return [];
+  const user = auth.currentUser;
+  if (!user) return [];
+  try {
+    const { collection, getDocs } = await import("firebase/firestore");
+    const querySnapshot = await getDocs(collection(db, `users/${user.uid}/history`));
+    return querySnapshot.docs.map(doc => doc.data());
+  } catch (e) {
+    console.error("Failed to pull history data", e);
+    return [];
+  }
+}

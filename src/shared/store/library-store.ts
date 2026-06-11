@@ -28,6 +28,7 @@ interface LibraryState {
   getLibraryItem: (sourceId: string, mangaId: string) => LibraryItem | undefined;
   updateLibraryItem: (sourceId: string, mangaId: string, patch: Partial<LibraryItem>) => void;
   clearLibrary: () => void;
+  syncWithCloud: (cloudItems: LibraryItem[]) => void;
 }
 
 const getLibraryId = (sourceId: string, mangaId: string) => `${sourceId}::${mangaId}`;
@@ -92,6 +93,42 @@ export const useLibraryStore = create<LibraryState>()(
       }),
 
       clearLibrary: () => set({ items: {} }),
+
+      syncWithCloud: (cloudItems) => set((state) => {
+        const newItems = { ...state.items };
+        let hasChanges = false;
+        
+        for (const cloudItem of cloudItems) {
+          const id = getLibraryId(cloudItem.sourceId, cloudItem.mangaId);
+          const localItem = newItems[id];
+          
+          if (!localItem) {
+            newItems[id] = cloudItem;
+            hasChanges = true;
+          } else {
+            const localTime = new Date(localItem.updatedAt).getTime();
+            const cloudTime = new Date(cloudItem.updatedAt).getTime();
+            
+            if (cloudTime > localTime) {
+              newItems[id] = cloudItem;
+              hasChanges = true;
+            } else if (localTime > cloudTime) {
+              // Local is newer, push to cloud to sync up
+              pushLibraryItem(localItem);
+            }
+          }
+        }
+
+        // Push any local items that don't exist in the cloud
+        const cloudIds = new Set(cloudItems.map(item => getLibraryId(item.sourceId, item.mangaId)));
+        for (const [id, localItem] of Object.entries(state.items)) {
+          if (!cloudIds.has(id)) {
+            pushLibraryItem(localItem);
+          }
+        }
+
+        return hasChanges ? { items: newItems } : state;
+      }),
     }),
     {
       name: "yomirra-library",

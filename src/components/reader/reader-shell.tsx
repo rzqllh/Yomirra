@@ -55,9 +55,9 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
           isDesktopPanelOpen ? "md:right-[320px] right-0" : "right-0"
         )}
       >
-        <div className="flex h-[calc(60px+env(safe-area-inset-top))] items-center justify-between bg-surface-base/80 backdrop-blur-xl px-4 border-b border-border-subtle pt-[env(safe-area-inset-top)] shadow-sm">
+        <div className="flex h-[calc(60px+env(safe-area-inset-top))] items-center justify-between bg-surface-base/85 backdrop-blur-xl px-2 md:px-4 border-b border-border-subtle/50 pt-[env(safe-area-inset-top)] shadow-sm">
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1 md:gap-3">
             <IconButton 
               aria-label="Kembali ke detail manga"
               variant="reader"
@@ -76,18 +76,10 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
           
           <div className="md:hidden text-center flex-1 truncate px-2">
             <span className="block text-sm font-bold text-text-primary truncate">{chapterTitle}</span>
-            {pageCount && <span className="block text-[11px] text-text-muted mt-0.5">{pageCount} halaman</span>}
+            {pageCount && <span className="block text-[11px] text-text-secondary mt-0.5">{pageCount} halaman</span>}
           </div>
 
           <div className="flex items-center gap-2">
-            <Button 
-              variant="reader"
-              size="sm"
-              className="hidden md:inline-flex rounded-full"
-            >
-              <List size={16} weight="bold" />
-              Daftar Chapter
-            </Button>
             <IconButton
               aria-label="Pengaturan pembaca"
               variant="reader"

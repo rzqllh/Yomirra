@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import type { User } from 'firebase/auth';
 import { initFirebase } from '@/shared/lib/firebase';
+import { pullLibraryData, pullHistoryData } from '@/shared/lib/sync-utils';
+import { useLibraryStore } from '@/shared/store/library-store';
+import { useHistoryStore } from '@/shared/store/history-store';
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -19,6 +22,16 @@ export function useAuth() {
         unsubscribe = onAuthStateChanged(auth, (currentUser) => {
           setUser(currentUser);
           setLoading(false);
+
+          if (currentUser) {
+            // Trigger background sync
+            Promise.all([pullLibraryData(), pullHistoryData()])
+              .then(([libData, histData]) => {
+                useLibraryStore.getState().syncWithCloud(libData);
+                useHistoryStore.getState().syncWithCloud(histData);
+              })
+              .catch(e => console.error("Failed to sync user data on auth change", e));
+          }
         });
       }).catch((e) => {
         console.error(e);
@@ -49,6 +62,9 @@ export function useAuth() {
     const { signOut } = await import('firebase/auth');
     try {
       await signOut(auth);
+      // Clear local state on explicit logout
+      useLibraryStore.getState().clearLibrary();
+      useHistoryStore.getState().clearHistory();
     } catch (error) {
       console.error("Error signing out", error);
     }

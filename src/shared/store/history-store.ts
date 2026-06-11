@@ -26,6 +26,7 @@ interface HistoryState {
   getContinueReading: (limit?: number) => HistoryItem[];
   getHistoryList: () => HistoryItem[];
   markChapterProgress: (sourceId: string, mangaId: string, chapterId: string, pageIndex: number, totalPages: number) => void;
+  syncWithCloud: (cloudItems: HistoryItem[]) => void;
 }
 
 const getHistoryId = (sourceId: string, mangaId: string, chapterId: string) => `${sourceId}::${mangaId}::${chapterId}`;
@@ -115,7 +116,43 @@ export const useHistoryStore = create<HistoryState>()(
             [id]: updatedItem
           }
         };
-      })
+      }),
+
+      syncWithCloud: (cloudItems) => set((state) => {
+        const newItems = { ...state.items };
+        let hasChanges = false;
+        
+        for (const cloudItem of cloudItems) {
+          const id = getHistoryId(cloudItem.sourceId, cloudItem.mangaId, cloudItem.chapterId);
+          const localItem = newItems[id];
+          
+          if (!localItem) {
+            newItems[id] = cloudItem;
+            hasChanges = true;
+          } else {
+            const localTime = new Date(localItem.readAt).getTime();
+            const cloudTime = new Date(cloudItem.readAt).getTime();
+            
+            if (cloudTime > localTime) {
+              newItems[id] = cloudItem;
+              hasChanges = true;
+            } else if (localTime > cloudTime) {
+              // Local is newer, push to cloud to sync up
+              pushHistoryItem(localItem);
+            }
+          }
+        }
+
+        // Push any local items that don't exist in the cloud
+        const cloudIds = new Set(cloudItems.map(item => getHistoryId(item.sourceId, item.mangaId, item.chapterId)));
+        for (const [id, localItem] of Object.entries(state.items)) {
+          if (!cloudIds.has(id)) {
+            pushHistoryItem(localItem);
+          }
+        }
+
+        return hasChanges ? { items: newItems } : state;
+      }),
     }),
     {
       name: "yomirra-history",

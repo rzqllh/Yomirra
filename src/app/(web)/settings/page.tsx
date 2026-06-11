@@ -1,10 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { UserCircle, SignOut, Trash, Monitor, BookOpenText, HandSwipeLeft, EyeSlash, WifiHigh } from "@phosphor-icons/react";
+import { UserCircle, SignOut, Trash, Monitor, HandSwipeLeft, EyeSlash, WifiHigh, Compass, CaretRight } from "@phosphor-icons/react";
 import { useAuth } from "@/shared/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import Link from "next/link";
 import { useHistoryStore } from "@/shared/store/history-store";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useSettingsStore } from "@/shared/store/settings-store";
@@ -82,6 +83,52 @@ export default function SettingsPage() {
                   </Button>
                 </div>
               )}
+            </section>
+
+            {/* Pintasan Navigasi (Untuk Mobile) */}
+            <section className="bg-surface-raised border border-border-subtle rounded-[var(--radius-xl)] p-6 md:hidden">
+              <h2 className="text-sm font-bold uppercase tracking-widest text-text-muted mb-4">Pintasan Navigasi</h2>
+              
+              <div className="flex flex-col gap-1">
+                <Link href="/updates" className="flex items-center justify-between py-3 px-2 rounded-lg hover:bg-surface-hover transition-colors group">
+                  <div className="flex items-center gap-3">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
+                      <Compass size={18} weight="duotone" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-text-primary">Update Terbaru</h3>
+                      <p className="text-xs text-text-secondary mt-0.5">Chapter rilis terbaru dari sumber aktif.</p>
+                    </div>
+                  </div>
+                  <CaretRight size={16} className="text-text-muted group-hover:text-text-primary transition-colors" />
+                </Link>
+
+                <Link href="/popular" className="flex items-center justify-between py-3 px-2 rounded-lg hover:bg-surface-hover transition-colors group">
+                  <div className="flex items-center gap-3">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
+                      <Compass size={18} weight="duotone" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-text-primary">Manga Populer</h3>
+                      <p className="text-xs text-text-secondary mt-0.5">Judul paling banyak dibaca saat ini.</p>
+                    </div>
+                  </div>
+                  <CaretRight size={16} className="text-text-muted group-hover:text-text-primary transition-colors" />
+                </Link>
+
+                <Link href="/sources" className="flex items-center justify-between py-3 px-2 rounded-lg hover:bg-surface-hover transition-colors group">
+                  <div className="flex items-center gap-3">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
+                      <Compass size={18} weight="duotone" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-text-primary">Kelola Sumber</h3>
+                      <p className="text-xs text-text-secondary mt-0.5">Pilih atau ubah sumber ekstensi manga.</p>
+                    </div>
+                  </div>
+                  <CaretRight size={16} className="text-text-muted group-hover:text-text-primary transition-colors" />
+                </Link>
+              </div>
             </section>
 
             {/* Preferensi Tampilan */}

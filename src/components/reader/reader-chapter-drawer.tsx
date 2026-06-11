@@ -47,18 +47,17 @@ export function ReaderChapterDrawer({
       {/* Backdrop */}
       <div 
         className={cn(
-          "fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm transition-opacity duration-300 md:hidden",
+          "fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm transition-opacity duration-300",
           isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
         )}
         onClick={onClose}
       />
       
-      {/* Bottom Sheet */}
+      {/* Bottom Sheet / Dialog */}
       <div 
         className={cn(
-          "fixed bottom-0 left-0 right-0 z-[70] max-h-[80vh] min-h-[50vh] bg-surface-base rounded-t-2xl shadow-2xl transition-transform duration-300 ease-out flex flex-col md:hidden",
-          "translate-y-full",
-          isOpen && "translate-y-0"
+          "fixed bottom-0 left-0 right-0 z-[70] max-h-[80vh] min-h-[50vh] bg-surface-base rounded-t-2xl shadow-2xl transition-transform duration-300 ease-out flex flex-col md:max-w-md md:mx-auto md:mb-6 md:bottom-6 md:rounded-2xl md:border md:border-border-subtle",
+          isOpen ? "translate-y-0" : "translate-y-full md:translate-y-[120%]"
         )}
       >
         <div className="flex flex-col gap-3 px-6 py-4 border-b border-border-subtle shrink-0">
