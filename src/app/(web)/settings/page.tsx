@@ -114,21 +114,7 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 py-3 border-b border-border-subtle/50 mb-2">
-                <div className="flex items-center gap-3">
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-surface-overlay border border-border-subtle">
-                    <BookOpenText size={20} className="text-text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-text-primary">Arah Baca Default</h3>
-                    <p className="text-xs text-text-secondary mt-0.5">Kanan ke kiri atau scroll ke bawah.</p>
-                  </div>
-                </div>
-                <div className="flex w-full sm:w-auto bg-surface-overlay rounded-lg border border-border-subtle overflow-hidden">
-                  <button className="flex-1 sm:flex-none px-3 py-1.5 text-xs font-medium bg-accent text-white transition-colors">Webtoon</button>
-                  <button className="flex-1 sm:flex-none px-3 py-1.5 text-xs font-medium text-text-secondary hover:text-text-primary border-l border-border-subtle transition-colors">Manga</button>
-                </div>
-              </div>
+
 
               <div className="flex items-center justify-between py-3 border-b border-border-subtle/50 mb-2">
                 <div className="flex items-center gap-3">

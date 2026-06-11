@@ -33,7 +33,11 @@ export default function Home() {
 
   const [isMounted, setIsMounted] = React.useState(false);
   React.useEffect(() => {
-    setIsMounted(true);
+    let mounted = true;
+    setTimeout(() => {
+      if (mounted) setIsMounted(true);
+    }, 0);
+    return () => { mounted = false; };
   }, []);
 
   const getContinueReading = useHistoryStore(state => state.getContinueReading);
@@ -51,7 +55,7 @@ export default function Home() {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Cari manga, manhwa..." 
-            className="flex-1 bg-transparent text-[15px] font-medium text-text-primary outline-none placeholder:text-text-muted"
+            className="flex-1 bg-transparent text-[16px] font-medium text-text-primary outline-none placeholder:text-text-muted"
           />
         </form>
       </div>
@@ -88,7 +92,7 @@ export default function Home() {
                   
                   <div className="flex-1 min-w-0 flex flex-col justify-center z-10">
                     <Link href={getMangaDetailHref(item.sourceId, item.mangaId)} className="block min-w-0">
-                      <h3 className="line-clamp-1 font-bold text-text-primary text-[15px] leading-snug group-hover:text-accent transition-colors">
+                      <h3 className="truncate font-bold text-text-primary text-[15px] leading-snug group-hover:text-accent transition-colors">
                         {item.mangaTitle}
                       </h3>
                     </Link>

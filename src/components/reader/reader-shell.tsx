@@ -36,12 +36,12 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
       {/* Top Overlay */}
       <div 
         className={cn(
-          "fixed top-0 left-0 z-50 transition-all duration-200 ease-out",
-          isOverlayVisible ? "translate-y-0" : "-translate-y-full",
+          "fixed top-0 left-0 z-50 transition-all duration-300 ease-out",
+          isOverlayVisible ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0",
           isDesktopPanelOpen ? "md:right-[320px] right-0" : "right-0"
         )}
       >
-        <div className="flex h-[calc(60px+env(safe-area-inset-top))] items-center justify-between bg-surface-base/95 backdrop-blur-md px-4 border-b border-border-subtle pt-[env(safe-area-inset-top)] shadow-sm">
+        <div className="flex h-[calc(60px+env(safe-area-inset-top))] items-center justify-between bg-surface-base/80 backdrop-blur-xl px-4 border-b border-border-subtle pt-[env(safe-area-inset-top)] shadow-sm">
           
           <div className="flex items-center gap-3">
             <IconButton 
@@ -49,11 +49,7 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
               variant="reader"
               onClick={(e) => { 
                 e.stopPropagation(); 
-                if (window.history.length > 1) {
-                  router.back();
-                } else {
-                  router.push(getMangaDetailHref(sourceId, mangaId));
-                }
+                router.push(getMangaDetailHref(sourceId, mangaId));
               }}
             >
               <CaretLeft size={20} weight="bold" />
@@ -97,26 +93,6 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
       </div>
 
       {children}
-
-      {/* Bottom Overlay (Mobile only) */}
-      <div 
-        className={cn(
-          "fixed bottom-0 left-0 right-0 z-50 transition-transform duration-200 ease-out md:hidden",
-          isOverlayVisible ? "translate-y-0" : "translate-y-full"
-        )}
-      >
-        <div className="flex items-center justify-between bg-surface-base/95 backdrop-blur-md px-6 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] border-t border-border-subtle">
-          <Button variant="ghost" size="sm" className="uppercase tracking-wider text-[13px]">
-            Sebelumnya
-          </Button>
-          <div className="text-[11px] font-bold text-text-muted tracking-widest uppercase">
-             Chapter
-          </div>
-          <Button variant="ghost" size="sm" className="uppercase tracking-wider text-[13px]">
-            Selanjutnya
-          </Button>
-        </div>
-      </div>
 
       {/* Settings Drawer */}
       <ReaderSettingsDrawer 

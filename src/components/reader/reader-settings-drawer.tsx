@@ -3,7 +3,6 @@
 import * as React from "react"
 import { X, SlidersHorizontal, ImageSquare, Layout } from "@phosphor-icons/react"
 import { useReaderStore } from "@/shared/store/reader-store"
-import type { ReaderMode } from "@/shared/types/manga"
 import { cn } from "@/shared/utils/cn"
 import { IconButton } from "@/components/ui/icon-button"
 import { Button } from "@/components/ui/button"
@@ -11,12 +10,6 @@ import { Button } from "@/components/ui/button"
 interface ReaderSettingsDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-}
-
-const MODE_LABELS: Record<ReaderMode, string> = {
-  CONTINUOUS_VERTICAL: "Vertikal Kontinu",
-  PAGED: "Halaman",
-  WEBTOON: "Webtoon",
 }
 
 export function ReaderSettingsDrawer({ isOpen, onClose }: ReaderSettingsDrawerProps) {
@@ -64,26 +57,7 @@ export function ReaderSettingsDrawer({ isOpen, onClose }: ReaderSettingsDrawerPr
 
         <div className="flex-1 overflow-y-auto p-6 space-y-8">
           
-          <div className="space-y-4">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted flex items-center gap-2">
-              <Layout size={16} />
-              Mode Baca
-            </h3>
-            <div className="grid grid-cols-1 gap-2">
-              {(['CONTINUOUS_VERTICAL', 'PAGED', 'WEBTOON'] as ReaderMode[]).map(mode => (
-                <Button
-                  key={mode}
-                  variant="secondary"
-                  active={settings.mode === mode}
-                  onClick={() => updateSettings({ mode })}
-                  className="justify-between w-full"
-                >
-                  {MODE_LABELS[mode]}
-                  {settings.mode === mode && <div className="size-2 rounded-full bg-accent" />}
-                </Button>
-              ))}
-            </div>
-          </div>
+
 
           <div className="space-y-4">
             <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted flex items-center gap-2">
