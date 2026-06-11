@@ -14,15 +14,12 @@ import { SearchInput } from "@/components/ui/search-input";
 import type { MangaPageResult } from "@/shared/types/source";
 
 interface HomeViewProps {
-  popular: MangaPageResult | null;
-  latest: MangaPageResult | null;
-  activeSourceId: string;
+  children: React.ReactNode;
 }
 
-export function HomeView({ popular, latest, activeSourceId }: HomeViewProps) {
+export function HomeView({ children }: HomeViewProps) {
   const router = useRouter();
   const [query, setQuery] = React.useState("");
-  const sourceName = activeSourceId.charAt(0).toUpperCase() + activeSourceId.slice(1);
 
   const [isMounted, setIsMounted] = React.useState(false);
   React.useEffect(() => {
@@ -130,56 +127,10 @@ export function HomeView({ popular, latest, activeSourceId }: HomeViewProps) {
           )}
         </section>
 
-        {/* Popular Section */}
-        <section>
-          <div className="flex items-center justify-between mb-6 max">
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-text-primary">
-              Populer di {sourceName}
-            </h2>
-            <Link href="/library?sort=popular" className="text-sm font-bold text-accent hover:text-accent-hover transition-colors">
-              Lihat Semua
-            </Link>
-          </div>
-          
-          <div className="flex overflow-x-auto gap-3 sm:gap-4 pb-4 -mx-4 px-4 md:mx-0 md:px-0 snap-x scroll-smooth">
-            {popular?.mangas.slice(0, 15).map((manga, index) => (
-              <div key={manga.id} className="w-[120px] sm:w-[140px] md:w-[160px] lg:w-[180px] shrink-0 snap-start ">
-                <MangaCard 
-                  manga={manga} 
-                  sourceId={activeSourceId} 
-                  priority={index < 4}
-                />
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* Latest Section */}
-        <section>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-text-primary">
-              Update Terbaru
-            </h2>
-          </div>
-          
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-5">
-            {latest?.mangas.slice(0, 12).map((manga) => (
-              <MangaCard key={manga.id} manga={manga} sourceId={activeSourceId} />
-            ))}
-          </div>
-          
-          <div className="mt-12 flex justify-center pb-8">
-            <Button 
-              asChild
-              variant="outline" 
-              className="rounded-full px-8 py-6 font-bold text-sm md:text-base border-border-strong hover:bg-surface-raised transition-all"
-            >
-              <Link href="/library?sort=latest">
-                Eksplorasi Katalog Library
-              </Link>
-            </Button>
-          </div>
-        </section>
+        {/* Dynamic Source Feeds */}
+        <div className="space-y-12">
+          {children}
+        </div>
       </div>
     </main>
   );
