@@ -20,6 +20,9 @@ export function useSync() {
 
     if (hasSyncedInitial.current) return;
     
+    // Set to true immediately to prevent race conditions while fetching
+    hasSyncedInitial.current = true;
+    
     // Extracted sync logic so it can be called on 'online' event
     const runFullSync = async () => {
       try {
@@ -90,11 +93,8 @@ export function useSync() {
           console.log(`[Sync] Synced ${batchCount} local items to Cloud`);
         }
 
-        hasSyncedInitial.current = true;
       } catch (error) {
         console.error("Sync error:", error);
-      } finally {
-        hasSyncedInitial.current = true;
       }
     };
 

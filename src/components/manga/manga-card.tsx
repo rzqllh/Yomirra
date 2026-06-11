@@ -81,15 +81,15 @@ export function MangaCard({ manga, sourceId, priority = false }: MangaCardProps)
         <div className="absolute inset-0 bg-gradient-to-t from-[#0B0C10] via-[#0B0C10]/50 to-transparent opacity-90 transition-opacity duration-300 group-hover:opacity-100 z-10 pointer-events-none" />
 
         {/* Top Badges */}
-        <div className="absolute top-2 left-2 flex flex-wrap gap-1 z-20">
+        <div className="absolute top-1.5 left-1.5 sm:top-2 sm:left-2 flex flex-wrap gap-1 z-20">
           {manga.status === "Ongoing" && (
-            <div className="flex items-center justify-center rounded-[4px] bg-accent px-1.5 py-[2px] shadow-sm">
-              <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider text-accent-on leading-none pt-[1px]">UP</span>
+            <div className="flex items-center justify-center rounded-[4px] bg-accent px-1.5 py-0.5 sm:py-[2px] shadow-sm">
+              <span className="text-[7px] sm:text-[9px] font-black uppercase tracking-wider text-accent-on leading-none">UP</span>
             </div>
           )}
           {manga.format && (
-            <div className="flex items-center justify-center rounded-[4px] bg-black/50 backdrop-blur-md px-1.5 py-[2px] shadow-sm border border-white/10">
-              <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-wider text-white leading-none pt-[1px]">{manga.format}</span>
+            <div className="flex items-center justify-center rounded-[4px] bg-black/50 backdrop-blur-md px-1.5 py-0.5 sm:py-[2px] shadow-sm border border-white/10">
+              <span className="text-[7px] sm:text-[9px] font-black uppercase tracking-wider text-white leading-none">{manga.format}</span>
             </div>
           )}
         </div>
@@ -110,7 +110,7 @@ export function MangaCard({ manga, sourceId, priority = false }: MangaCardProps)
                 </span>
               )}
               {timeText && (
-                <span className="text-3xs sm:text-2xs text-white/60 truncate" suppressHydrationWarning>
+                <span className="text-xs sm:text-2xs text-white/60 truncate" suppressHydrationWarning>
                   {timeText}
                 </span>
               )}

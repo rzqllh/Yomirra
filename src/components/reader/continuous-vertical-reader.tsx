@@ -9,9 +9,8 @@ import { cn } from "@/shared/utils/cn"
 import { getReaderHref } from "@/shared/lib/routes"
 import { IconButton } from "@/components/ui/icon-button"
 import { Button } from "@/components/ui/button"
-import { PageImageError } from "./page-image-error"
-import Image from "next/image"
 import { EndOfChapter } from "./end-of-chapter"
+import { ReaderImage } from "./reader-image"
 import { ReaderChapterDrawer } from "./reader-chapter-drawer"
 import { Chapter } from "@/shared/types/source"
 
@@ -37,13 +36,22 @@ export function ContinuousVerticalReader({
   nextChapterId
 }: ContinuousVerticalReaderProps) {
   const router = useRouter()
-  const { settings, toggleOverlay, isOverlayVisible, setOverlayVisible } = useReaderStore()
+  const { settings, toggleOverlay, isOverlayVisible, setOverlayVisible, isDesktopPanelOpen } = useReaderStore()
   const { dataSaver } = useSettingsStore()
   const markChapterProgress = useHistoryStore((state) => state.markChapterProgress)
   const observerRef = React.useRef<IntersectionObserver | null>(null)
   
-  const [errorPages, setErrorPages] = React.useState<Record<number, boolean>>({})
   const [isChapterDrawerOpen, setIsChapterDrawerOpen] = React.useState(false)
+  const [maxAllowedIndex, setMaxAllowedIndex] = React.useState(1)
+
+  const handleImageLoad = React.useCallback((index: number) => {
+    setMaxAllowedIndex(prev => Math.max(prev, index + 1))
+  }, [])
+
+  const handleImageError = React.useCallback((index: number) => {
+    // If it fails, we still want to proceed to the next one, otherwise the queue gets stuck
+    setMaxAllowedIndex(prev => Math.max(prev, index + 1))
+  }, [])
 
   // End of chapter observer
   const endRef = React.useRef<HTMLDivElement>(null)
@@ -86,10 +94,7 @@ export function ContinuousVerticalReader({
     return () => window.removeEventListener("scroll", handleScroll)
   }, [setOverlayVisible])
 
-  const handleRetry = (index: number) => {
-    setErrorPages(prev => ({ ...prev, [index]: false }))
-  }
-
+  // Auto-hide scroll listener
   React.useEffect(() => {
     observerRef.current = new IntersectionObserver((entries) => {
       const visibleEntries = entries.filter(e => e.isIntersecting)
@@ -134,36 +139,15 @@ export function ContinuousVerticalReader({
         style={{ maxWidth: settings.maxWidth ? `${settings.maxWidth}px` : '100%' }}
       >
         {pages.map((page) => (
-          <div 
-            key={`${page.index}-${errorPages[page.index] ? 'error' : 'ok'}`} 
-            className="reader-page-container w-full flex justify-center bg-surface-raised/30 min-h-[50vh]"
-            data-page-index={page.index}
-          >
-            {errorPages[page.index] ? (
-              <div className="w-full flex items-center justify-center p-4">
-                <PageImageError index={page.index} onRetry={() => handleRetry(page.index)} />
-              </div>
-            ) : (
-              <Image 
-                src={page.url}
-                alt={`Page ${page.index}`}
-                className={cn(
-                  "w-full object-contain", 
-                  !isWebtoon && "shadow-soft",
-                  // Fade in image if reduced motion is false
-                  "motion-safe:animate-in motion-safe:fade-in motion-safe:duration-300"
-                )}
-                width={800}
-                height={1200}
-                sizes="100vw"
-                quality={dataSaver ? 60 : 85}
-                unoptimized={!dataSaver}
-                priority={page.index <= 1}
-                style={{ width: "100%", height: "auto" }}
-                onError={() => setErrorPages(prev => ({ ...prev, [page.index]: true }))}
-              />
-            )}
-          </div>
+          <ReaderImage 
+            key={page.index}
+            page={page}
+            isWebtoon={isWebtoon}
+            dataSaver={dataSaver}
+            isAllowedToLoad={page.index <= maxAllowedIndex}
+            onLoadComplete={handleImageLoad}
+            onError={handleImageError}
+          />
         ))}
         
         {/* End of Chapter */}
@@ -181,11 +165,12 @@ export function ContinuousVerticalReader({
       {/* Floating Bottom Control */}
       <div 
         className={cn(
-          "fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-[60] transition-all duration-300 md:hidden",
-          isOverlayVisible && !isEndVisible ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0 pointer-events-none"
+          "fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] -translate-x-1/2 z-[60] transition-all duration-300",
+          isOverlayVisible && !isEndVisible ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0 pointer-events-none",
+          isDesktopPanelOpen ? "md:left-[calc(50%-160px)] left-1/2" : "left-1/2"
         )}
       >
-        <div className="flex items-center gap-2 bg-surface-base/85 backdrop-blur-xl border border-border-subtle rounded-full p-1.5 shadow-xl">
+        <div className="flex items-center gap-2 bg-surface-base/60 backdrop-blur-sm border border-border-subtle rounded-full p-1.5 shadow-xl">
           <IconButton 
             aria-label="Chapter sebelumnya"
             variant="ghost"

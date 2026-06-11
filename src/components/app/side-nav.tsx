@@ -15,12 +15,14 @@ export function SideNav() {
       title: "Discover",
       links: [
         { href: "/", label: "Beranda", icon: House },
-        { href: "/library", label: "Library", icon: Books },
+        { href: "/updates", label: "Update Terbaru", icon: Compass },
+        { href: "/popular", label: "Populer", icon: Compass },
       ]
     },
     {
       title: "Collection",
       links: [
+        { href: "/library", label: "Library", icon: Books },
         { href: "/readlist", label: "Readlist", icon: BookBookmark },
         { href: "/history", label: "Riwayat", icon: Clock },
       ]

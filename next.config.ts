@@ -58,6 +58,15 @@ const nextConfig: NextConfig = {
     ];
   },
   turbopack: {},
+  async redirects() {
+    return [
+      {
+        source: "/browse",
+        destination: "/sources",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default withSerwist(nextConfig);
