@@ -40,6 +40,8 @@ export function MangaCard({ manga, sourceId, priority = false }: MangaCardProps)
   const isInLibrary = isMounted ? rawIsInLibrary : false;
   const toggleLibrary = useLibraryStore((state) => state.toggleLibrary);
 
+  const [isInteracting, setIsInteracting] = React.useState(false);
+
   const handleBookmarkClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -64,6 +66,9 @@ export function MangaCard({ manga, sourceId, priority = false }: MangaCardProps)
     >
       <Link 
         href={getMangaDetailHref(sourceId, manga.id)} 
+        transitionTypes={['nav-forward']}
+        onPointerDown={() => setIsInteracting(true)}
+        onPointerLeave={() => setIsInteracting(false)}
         className="group absolute inset-0 flex flex-col justify-end focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         prefetch={false}
       >
@@ -73,6 +78,7 @@ export function MangaCard({ manga, sourceId, priority = false }: MangaCardProps)
           fill
           sizes={priority ? "(max-width: 640px) 33vw, (max-width: 768px) 25vw, 20vw" : "(max-width: 640px) 25vw, 15vw"}
           priority={priority}
+          style={isInteracting ? { viewTransitionName: `cover-${sourceId}-${manga.id}` } : undefined}
           className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.025]"
           unoptimized={manga.coverUrl.startsWith("http")} // Since these are external arbitrary URLs, standard unoptimized might be needed unless domains are configured
         />

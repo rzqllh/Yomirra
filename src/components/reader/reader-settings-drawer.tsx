@@ -7,12 +7,20 @@ import { cn } from "@/shared/utils/cn"
 import { IconButton } from "@/components/ui/icon-button"
 import { Button } from "@/components/ui/button"
 
+import Link from "next/link"
+import { getReaderHref } from "@/shared/lib/routes"
+import { Chapter } from "@/shared/types/source"
+
 interface ReaderSettingsDrawerProps {
   isOpen: boolean;
   onClose: () => void;
+  chapters?: Chapter[];
+  currentChapterId?: string;
+  sourceId?: string;
+  mangaId?: string;
 }
 
-export function ReaderSettingsDrawer({ isOpen, onClose }: ReaderSettingsDrawerProps) {
+export function ReaderSettingsDrawer({ isOpen, onClose, chapters, currentChapterId, sourceId, mangaId }: ReaderSettingsDrawerProps) {
   const { settings, updateSettings, isDesktopPanelOpen, toggleDesktopPanel } = useReaderStore()
 
   return (
@@ -55,11 +63,9 @@ export function ReaderSettingsDrawer({ isOpen, onClose }: ReaderSettingsDrawerPr
           </IconButton>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-8">
+        <div className="flex-1 overflow-y-auto p-6 space-y-8 flex flex-col">
           
-
-
-          <div className="space-y-4">
+          <div className="space-y-4 shrink-0">
             <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted flex items-center gap-2">
               <ImageSquare size={16} />
               Warna Latar
@@ -86,7 +92,7 @@ export function ReaderSettingsDrawer({ isOpen, onClose }: ReaderSettingsDrawerPr
             </div>
           </div>
           
-          <div className="space-y-4">
+          <div className="space-y-4 shrink-0">
             <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted">
               Lebar Tampilan
             </h3>
@@ -106,6 +112,46 @@ export function ReaderSettingsDrawer({ isOpen, onClose }: ReaderSettingsDrawerPr
               </span>
             </div>
           </div>
+
+          {/* Chapter List for Desktop Panel */}
+          {chapters && sourceId && mangaId && (
+            <div className="flex-1 flex flex-col space-y-4 min-h-0 pt-4 border-t border-border-subtle">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted flex items-center gap-2 shrink-0">
+                <Layout size={16} />
+                Daftar Chapter
+              </h3>
+              <div className="flex-1 overflow-y-auto space-y-1 pr-2 -mr-2 custom-scrollbar">
+                {chapters.map((chapter) => {
+                  const isCurrent = chapter.id === currentChapterId;
+                  return (
+                    <Link
+                      key={chapter.id}
+                      href={getReaderHref(sourceId, mangaId, chapter.id)}
+                      className={cn(
+                        "w-full flex flex-col items-start px-3 py-2 rounded-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent",
+                        isCurrent 
+                          ? "bg-accent/10 border border-accent/20" 
+                          : "hover:bg-surface-raised active:bg-surface-overlay border border-transparent"
+                      )}
+                    >
+                      <span className={cn(
+                        "text-sm font-bold line-clamp-1 text-left",
+                        isCurrent ? "text-accent" : "text-text-primary"
+                      )}>
+                        {chapter.title}
+                      </span>
+                      <span className={cn(
+                        "text-[10px] mt-0.5 font-medium",
+                        isCurrent ? "text-accent/80" : "text-text-muted"
+                      )}>
+                        {chapter.date}
+                      </span>
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
         </div>
       </div>

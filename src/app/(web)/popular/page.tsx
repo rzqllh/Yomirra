@@ -50,6 +50,8 @@ async function PopularFeed({ sourceId, sourceName }: { sourceId: string; sourceN
   }
 }
 
+export const dynamic = "force-dynamic";
+
 export default async function PopularPage() {
   const activeSources = sourceRegistry.filter(s => s.isEnabled && s.isInstalled);
 

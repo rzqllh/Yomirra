@@ -11,18 +11,22 @@ import { MangaCard } from "@/components/manga/manga-card";
 import { motion, AnimatePresence } from "motion/react";
 import { useSettingsStore } from "@/shared/store/settings-store";
 
+import { DirectionalTransition } from "@/components/ui/directional-transition";
+
 export default function SearchPage() {
   return (
-    <React.Suspense fallback={
-      <main className="min-h-screen pb-[calc(56px+env(safe-area-inset-bottom))] bg-surface-base">
-        <TopBar title="Hasil Pencarian" showBack />
-        <div className="px-4 py-6">
-          <SearchResultSkeleton />
-        </div>
-      </main>
-    }>
-      <SearchContent />
-    </React.Suspense>
+    <DirectionalTransition>
+      <React.Suspense fallback={
+        <main className="min-h-screen pb-[calc(56px+env(safe-area-inset-bottom))] bg-surface-base">
+          <TopBar title="Hasil Pencarian" showBack />
+          <div className="px-4 py-6">
+            <SearchResultSkeleton />
+          </div>
+        </main>
+      }>
+        <SearchContent />
+      </React.Suspense>
+    </DirectionalTransition>
   );
 }
 

@@ -11,18 +11,31 @@ interface SourceFeedProps {
 }
 
 export async function SourceFeed({ sourceId, sourceName }: SourceFeedProps) {
+  let popular = null;
+  let latest = null;
+
   try {
     const source = sourceManager.getSource(sourceId);
 
     // Fetch on server in parallel
-    const [popular, latest] = await Promise.all([
+    const [popularData, latestData] = await Promise.all([
       swrCache(`source:${sourceId}:popular:1`, () => source.getPopular(1), CACHE_TTL.DISCOVERY),
       swrCache(`source:${sourceId}:latest:1`, () => source.getLatest(1), CACHE_TTL.DISCOVERY),
     ]);
+    popular = popularData;
+    latest = latestData;
+  } catch (error) {
+    console.error(`Failed to load feed for source ${sourceId}`, error);
+    return (
+      <div className="py-8 text-center text-text-muted border border-border-subtle rounded-xl bg-surface-raised/20">
+        <p className="text-sm font-medium">Gagal memuat katalog dari {sourceName}</p>
+      </div>
+    );
+  }
 
-    if (!popular?.mangas.length && !latest?.mangas.length) {
-      return null;
-    }
+  if (!popular?.mangas.length && !latest?.mangas.length) {
+    return null;
+  }
 
     return (
       <div className="space-y-10 pt-4 border-t border-border-subtle/30 first:pt-0 first:border-t-0">
@@ -82,12 +95,4 @@ export async function SourceFeed({ sourceId, sourceName }: SourceFeedProps) {
         )}
       </div>
     );
-  } catch (error) {
-    console.error(`Failed to load feed for source ${sourceId}`, error);
-    return (
-      <div className="py-8 text-center text-text-muted border border-border-subtle rounded-xl bg-surface-raised/20">
-        <p className="text-sm font-medium">Gagal memuat katalog dari {sourceName}</p>
-      </div>
-    );
-  }
 }

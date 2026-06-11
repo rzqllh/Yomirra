@@ -8,6 +8,7 @@ const withSerwist = withSerwistInit({
 });
 
 const nextConfig: NextConfig = {
+  experimental: { viewTransition: true },
   // Turbopack is enabled by default in Next.js 15 dev mode
   reactStrictMode: true,
   images: {

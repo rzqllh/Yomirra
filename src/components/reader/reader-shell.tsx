@@ -7,6 +7,7 @@ import { CaretLeft, Gear, List } from "@phosphor-icons/react"
 import { cn } from "@/shared/utils/cn"
 
 import { getMangaDetailHref } from "@/shared/lib/routes"
+import { Chapter } from "@/shared/types/source"
 import { ReaderSettingsDrawer } from "./reader-settings-drawer"
 import { IconButton } from "@/components/ui/icon-button"
 import { Button } from "@/components/ui/button"
@@ -18,9 +19,10 @@ interface ReaderShellProps {
   currentChapterId?: string
   sourceId: string
   mangaId: string
+  chapters?: Chapter[]
 }
 
-export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sourceId, mangaId }: ReaderShellProps) {
+export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sourceId, mangaId, chapters, currentChapterId }: ReaderShellProps) {
   const router = useRouter()
   const { settings, isOverlayVisible, isDesktopPanelOpen, toggleDesktopPanel, toggleOverlay } = useReaderStore()
   const [isDrawerOpen, setIsDrawerOpen] = React.useState(false)
@@ -101,9 +103,14 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
       {children}
 
       {/* Settings Drawer */}
+      {/* Settings Drawer / Desktop Panel */}
       <ReaderSettingsDrawer 
         isOpen={isDrawerOpen} 
         onClose={() => setIsDrawerOpen(false)} 
+        chapters={chapters}
+        currentChapterId={currentChapterId}
+        sourceId={sourceId}
+        mangaId={mangaId}
       />
     </div>
   )

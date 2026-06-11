@@ -24,7 +24,7 @@ export function BottomNav() {
   const pathname = usePathname()
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 w-full z-50 pointer-events-none px-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
+    <nav style={{ viewTransitionName: 'persistent-bottom-nav' }} className="md:hidden fixed bottom-0 left-0 right-0 w-full z-50 pointer-events-none px-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
       <div className="pointer-events-auto mx-auto flex max-w-sm items-center justify-between rounded-full bg-surface-base/60 backdrop-blur-sm border border-border-subtle p-2 shadow-md">
         {NAV_ITEMS.map((item) => {
           const isActive =
@@ -39,6 +39,7 @@ export function BottomNav() {
               key={item.href}
               href={item.href}
               prefetch={false}
+              transitionTypes={['nav-lateral']}
               className="relative flex flex-col items-center justify-center min-w-[4rem] h-[3.25rem] transition-transform active:scale-95 outline-none tap-highlight-transparent"
               aria-label={item.label}
               aria-current={isActive ? "page" : undefined}

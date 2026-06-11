@@ -20,6 +20,7 @@ interface HomeViewProps {
 export function HomeView({ children }: HomeViewProps) {
   const router = useRouter();
   const [query, setQuery] = React.useState("");
+  const [interactingId, setInteractingId] = React.useState<string | null>(null);
 
   const [isMounted, setIsMounted] = React.useState(false);
   React.useEffect(() => {
@@ -71,9 +72,16 @@ export function HomeView({ children }: HomeViewProps) {
                 <div key={`${item.sourceId}::${item.mangaId}::${item.chapterId}`} className="group relative flex items-center gap-4 rounded-[var(--radius-lg)] bg-surface-raised p-3 border border-border-subtle transition-colors hover:bg-surface-overlay overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-r from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                   
-                  <Link href={getMangaDetailHref(item.sourceId, item.mangaId)} prefetch={false} className="relative h-20 w-14 shrink-0 overflow-hidden rounded-[var(--radius-sm)] bg-surface-overlay shadow-sm z-10">
+                  <Link 
+                    href={getMangaDetailHref(item.sourceId, item.mangaId)} 
+                    transitionTypes={['nav-forward']} 
+                    prefetch={false} 
+                    onPointerDown={() => setInteractingId(item.mangaId)}
+                    onPointerLeave={() => setInteractingId(null)}
+                    className="relative h-20 w-14 shrink-0 overflow-hidden rounded-[var(--radius-sm)] bg-surface-overlay shadow-sm z-10"
+                  >
                     {item.coverUrl ? (
-                      <Image src={item.coverUrl} alt={item.mangaTitle} fill className="object-cover" unoptimized />
+                      <Image src={item.coverUrl} alt={item.mangaTitle} fill className="object-cover" style={interactingId === item.mangaId ? { viewTransitionName: `cover-${item.sourceId}-${item.mangaId}` } : undefined} unoptimized />
                     ) : (
                       <div className="h-full w-full bg-surface-overlay" />
                     )}

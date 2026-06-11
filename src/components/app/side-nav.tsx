@@ -12,37 +12,19 @@ export function SideNav() {
 
   const navGroups = [
     {
-      title: "Discover",
+      title: "Utama",
       links: [
         { href: "/", label: "Beranda", icon: House },
-        { href: "/updates", label: "Update Terbaru", icon: Compass },
-        { href: "/popular", label: "Populer", icon: Compass },
-      ]
-    },
-    {
-      title: "Collection",
-      links: [
         { href: "/library", label: "Library", icon: Books },
         { href: "/readlist", label: "Readlist", icon: BookBookmark },
         { href: "/history", label: "Riwayat", icon: Clock },
-      ]
-    },
-    {
-      title: "Sources",
-      links: [
-        { href: "/sources", label: "Sumber", icon: Compass },
-      ]
-    },
-    {
-      title: "Preferences",
-      links: [
         { href: "/settings", label: "Pengaturan", icon: Gear },
       ]
     }
   ];
 
   return (
-    <div className="hidden md:flex w-[80px] lg:w-[240px] flex-col bg-surface-base border-r border-border-subtle shadow-md h-screen fixed left-0 top-0 z-50 pt-0 pb-6 overflow-y-auto custom-scrollbar transition-all duration-300">
+    <div style={{ viewTransitionName: 'persistent-side-nav' }} className="hidden md:flex w-[80px] lg:w-[240px] flex-col bg-surface-base border-r border-border-subtle shadow-md h-screen fixed left-0 top-0 z-50 pt-0 pb-6 overflow-y-auto custom-scrollbar transition-all duration-300">
       {/* Logo Area */}
       <div className="flex h-16 items-center justify-center lg:justify-start px-4 mb-6 lg:px-6 sticky top-0 z-10 bg-surface-base">
         <Link href="/" className="flex items-center gap-3 group">
@@ -70,6 +52,7 @@ export function SideNav() {
                 <Link
                   key={link.href}
                   href={link.href}
+                  transitionTypes={['nav-lateral']}
                   className={cn(
                     "relative flex items-center justify-center lg:justify-start gap-3 rounded-xl px-3 py-2.5 transition-all duration-150 ease-out overflow-hidden group outline-none",
                     isActive 

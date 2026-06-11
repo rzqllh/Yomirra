@@ -147,6 +147,7 @@ export function ReaderView({
       currentChapterId={chapterId}
       sourceId={sourceId}
       mangaId={mangaId}
+      chapters={initialChapters}
     >
       <ContinuousVerticalReader 
         sourceId={sourceId}

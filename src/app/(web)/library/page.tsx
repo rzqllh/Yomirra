@@ -433,16 +433,20 @@ function LibraryContent() {
   );
 }
 
+import { DirectionalTransition } from "@/components/ui/directional-transition";
+
 export default function LibraryPage() {
   return (
-    <React.Suspense fallback={
-      <MobilePageShell title="Library">
-        <div className="flex flex-col min-h-screen bg-surface-base items-center justify-center">
-          <CircleNotch size={32} className="motion-safe:animate-spin text-accent" />
-        </div>
-      </MobilePageShell>
-    }>
-      <LibraryContent />
-    </React.Suspense>
+    <DirectionalTransition>
+      <React.Suspense fallback={
+        <MobilePageShell title="Library">
+          <div className="flex flex-col min-h-screen bg-surface-base items-center justify-center">
+            <CircleNotch size={32} className="motion-safe:animate-spin text-accent" />
+          </div>
+        </MobilePageShell>
+      }>
+        <LibraryContent />
+      </React.Suspense>
+    </DirectionalTransition>
   );
 }
