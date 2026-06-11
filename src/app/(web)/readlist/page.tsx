@@ -8,6 +8,7 @@ import Link from "next/link";
 import { EmptyState } from "@/components/states/empty-state";
 import { Button } from "@/components/ui/button";
 import { useMounted } from "@/shared/hooks/use-mounted";
+import { getHomeHref } from "@/shared/lib/routes";
 
 export default function ReadlistPage() {
   const isMounted = useMounted();

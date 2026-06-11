@@ -44,6 +44,8 @@ async function LatestFeed({ sourceId, sourceName }: { sourceId: string; sourceNa
   }
 }
 
+export const dynamic = "force-dynamic";
+
 export default async function UpdatesPage() {
   const activeSources = sourceRegistry.filter(s => s.isEnabled && s.isInstalled);
 

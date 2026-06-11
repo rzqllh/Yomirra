@@ -22,19 +22,19 @@ export function TopNav() {
   };
 
   return (
-    <div className="hidden md:flex h-16 w-full items-center justify-between bg-surface-base/80 backdrop-blur-xl border-b border-border-subtle shadow-sm px-6 sticky top-0 z-40 transition-all duration-150">
-      <div className="flex-1 max-w-xl mx-auto">
+    <div style={{ viewTransitionName: 'persistent-top-nav' }} className="hidden md:flex h-16 w-full items-center justify-between bg-surface-base/80 backdrop-blur-2xl border-b border-border-subtle px-6 sticky top-0 z-40 transition-all duration-150">
+      <div className="w-[360px] lg:w-[480px]">
         <SearchInput
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onSubmitAction={handleSearch}
           placeholder="Cari judul"
           shortcut="⌘K"
-          className="bg-surface-raised focus-within:bg-surface-overlay transition-all"
+          className="bg-surface-raised focus-within:bg-surface-overlay transition-all shadow-inner shadow-black/5"
         />
       </div>
       
-      <div className="flex items-center gap-3 pl-4">
+      <div className="flex items-center gap-4">
         <ThemeToggle />
         
         {user ? (

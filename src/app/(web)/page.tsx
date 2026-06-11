@@ -11,22 +11,28 @@ export const metadata: Metadata = {
   description: "Manga, Manhwa, dan Manhua reader cepat, ringan, tanpa iklan.",
 };
 
+import { DirectionalTransition } from "@/components/ui/directional-transition";
+
+export const dynamic = "force-dynamic";
+
 export default async function HomePage() {
   const activeSources = sourceRegistry.filter(s => s.isEnabled && s.isInstalled);
 
   return (
-    <HomeView>
-      {activeSources.map(source => (
-        <Suspense key={source.id} fallback={<SourceFeedSkeleton />}>
-          <SourceFeed sourceId={source.id} sourceName={source.name} />
-        </Suspense>
-      ))}
-      
-      {activeSources.length === 0 && (
-        <div className="py-24 text-center">
-          <p className="text-text-muted">Tidak ada sumber komik yang aktif.</p>
-        </div>
-      )}
-    </HomeView>
+    <DirectionalTransition>
+      <HomeView>
+        {activeSources.map(source => (
+          <Suspense key={source.id} fallback={<SourceFeedSkeleton />}>
+            <SourceFeed sourceId={source.id} sourceName={source.name} />
+          </Suspense>
+        ))}
+        
+        {activeSources.length === 0 && (
+          <div className="py-24 text-center">
+            <p className="text-text-muted">Tidak ada sumber komik yang aktif.</p>
+          </div>
+        )}
+      </HomeView>
+    </DirectionalTransition>
   );
 }

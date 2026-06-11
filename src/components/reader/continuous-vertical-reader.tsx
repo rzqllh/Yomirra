@@ -42,16 +42,29 @@ export function ContinuousVerticalReader({
   const observerRef = React.useRef<IntersectionObserver | null>(null)
   
   const [isChapterDrawerOpen, setIsChapterDrawerOpen] = React.useState(false)
-  const [maxAllowedIndex, setMaxAllowedIndex] = React.useState(1)
+  const [firstUnloadedIndex, setFirstUnloadedIndex] = React.useState(0)
+  const loadedPagesRef = React.useRef<Set<number>>(new Set())
+
+  const advancePreloader = React.useCallback(() => {
+    setFirstUnloadedIndex(prev => {
+      let i = prev;
+      while (loadedPagesRef.current.has(i)) {
+        i++;
+      }
+      return i;
+    });
+  }, [])
 
   const handleImageLoad = React.useCallback((index: number) => {
-    setMaxAllowedIndex(prev => Math.max(prev, index + 1))
-  }, [])
+    loadedPagesRef.current.add(index)
+    advancePreloader()
+  }, [advancePreloader])
 
   const handleImageError = React.useCallback((index: number) => {
     // If it fails, we still want to proceed to the next one, otherwise the queue gets stuck
-    setMaxAllowedIndex(prev => Math.max(prev, index + 1))
-  }, [])
+    loadedPagesRef.current.add(index)
+    advancePreloader()
+  }, [advancePreloader])
 
   // End of chapter observer
   const endRef = React.useRef<HTMLDivElement>(null)
@@ -144,7 +157,7 @@ export function ContinuousVerticalReader({
             page={page}
             isWebtoon={isWebtoon}
             dataSaver={dataSaver}
-            isAllowedToLoad={page.index <= maxAllowedIndex}
+            isAllowedToLoad={page.index <= firstUnloadedIndex + 2}
             onLoadComplete={handleImageLoad}
             onError={handleImageError}
           />
