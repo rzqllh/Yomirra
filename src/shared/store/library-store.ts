@@ -9,6 +9,7 @@ export type LibraryItem = {
   coverUrl?: string;
   author?: string;
   status?: string;
+  format?: string;
   sourceName?: string;
   addedAt: string;
   updatedAt: string;

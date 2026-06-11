@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/pagination";
 
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { useSettingsStore } from "@/shared/store/settings-store";
 
 const FORMATS = [
   { id: "manga", name: "Manga" },
@@ -59,6 +60,8 @@ function LibraryContent() {
     queryFn: () => apiClient.getFilters(activeSourceId),
   });
 
+  const isNsfwFiltered = useSettingsStore(state => state.hideNsfw);
+
   const GENRES = filtersData?.genres || [];
   const DYNAMIC_FORMATS = filtersData?.formats || FORMATS;
   const DYNAMIC_STATUSES = filtersData?.statuses || STATUSES;
@@ -66,7 +69,9 @@ function LibraryContent() {
   const fetchCatalog = async (currentPage: number) => {
     const filters: Record<string, string | string[]> = {};
     if (sort === "latest") filters.sort = "latest";
-    if (sort === "popular") filters.sort = "popularity";
+    else if (sort === "popular") filters.sort = "popularity";
+    else filters.sort = "latest"; // Fallback for "all" to prevent empty results
+
     
     if (selectedGenres.length > 0 || excludedGenres.length > 0) {
       const genreParams: string[] = [];
@@ -78,7 +83,7 @@ function LibraryContent() {
     if (selectedFormats.length > 0) filters["format"] = selectedFormats.join(",");
     if (selectedStatuses.length > 0) filters["status"] = selectedStatuses.join(",");
 
-    const res = await apiClient.search(activeSourceId, query, currentPage, filters);
+    const res = await apiClient.search(activeSourceId, query, currentPage, filters, isNsfwFiltered);
     return { mangas: res.results, hasNextPage: !!res.hasNextPage };
   };
 
@@ -89,7 +94,7 @@ function LibraryContent() {
     isFetching,
     refetch
   } = useQuery({
-    queryKey: ["library", activeSourceId, query, sort, selectedGenres, excludedGenres, selectedFormats, selectedStatuses, page],
+    queryKey: ["library-v2", activeSourceId, query, sort, selectedGenres, excludedGenres, selectedFormats, selectedStatuses, page, isNsfwFiltered],
     queryFn: () => fetchCatalog(page),
   });
 
@@ -166,7 +171,7 @@ function LibraryContent() {
             <div className="hidden md:flex flex-col space-y-4">
               <div>
                 <h1 className="text-3xl font-black text-text-primary tracking-tight">Library</h1>
-                <p className="text-text-muted mt-1 text-[15px]">Jelajahi berbagai koleksi komik dari sumber pilihanmu.</p>
+                <p className="text-text-muted mt-1 text-sm md:text-base">Jelajahi berbagai koleksi komik dari sumber pilihanmu.</p>
               </div>
               
               <div className="flex items-center gap-4 text-sm font-medium text-text-secondary">
@@ -188,7 +193,7 @@ function LibraryContent() {
                 <button 
                   onClick={() => handleTabChange("all")}
                   className={cn(
-                    "pb-2 text-[15px] font-bold whitespace-nowrap border-b-2 transition-colors",
+                    "pb-2 text-sm md:text-base font-bold whitespace-nowrap border-b-2 transition-colors",
                     sort === "all" ? "border-accent text-accent" : "border-transparent text-text-secondary hover:text-text-primary"
                   )}
                 >
@@ -197,7 +202,7 @@ function LibraryContent() {
                 <button 
                   onClick={() => handleTabChange("latest")}
                   className={cn(
-                    "pb-2 text-[15px] font-bold whitespace-nowrap border-b-2 transition-colors",
+                    "pb-2 text-sm md:text-base font-bold whitespace-nowrap border-b-2 transition-colors",
                     sort === "latest" ? "border-accent text-accent" : "border-transparent text-text-secondary hover:text-text-primary"
                   )}
                 >
@@ -206,7 +211,7 @@ function LibraryContent() {
                 <button 
                   onClick={() => handleTabChange("popular")}
                   className={cn(
-                    "pb-2 text-[15px] font-bold whitespace-nowrap border-b-2 transition-colors",
+                    "pb-2 text-sm md:text-base font-bold whitespace-nowrap border-b-2 transition-colors",
                     sort === "popular" ? "border-accent text-accent" : "border-transparent text-text-secondary hover:text-text-primary"
                   )}
                 >
@@ -225,7 +230,7 @@ function LibraryContent() {
                     value={searchInput}
                     onChange={(e) => setSearchInput(e.target.value)}
                     placeholder="Cari..." 
-                    className="flex-1 bg-transparent text-[13px] font-medium text-text-primary outline-none placeholder:text-text-muted"
+                    className="flex-1 bg-transparent text-sm font-medium text-text-primary outline-none placeholder:text-text-muted"
                   />
                   {query && (
                     <button type="button" onClick={() => { setSearchInput(""); setQuery(""); setPage(1); }} className="p-0.5 rounded-full bg-surface-base hover:bg-surface-overlay text-text-muted hover:text-text-primary transition-colors">
@@ -255,7 +260,7 @@ function LibraryContent() {
                   <div className="md:col-span-7 space-y-4">
                     <div className="flex items-center justify-between">
                       <h3 className="text-sm font-bold uppercase tracking-widest text-text-muted">Genre</h3>
-                      <span className="text-[11px] text-text-muted italic bg-surface-raised px-2 py-0.5 rounded-full border border-border-subtle">
+                      <span className="text-xs text-text-muted italic bg-surface-raised px-2 py-0.5 rounded-full border border-border-subtle">
                         Klik: Include (Biru) ➔ Exclude (Merah) ➔ Netral
                       </span>
                     </div>
@@ -268,7 +273,7 @@ function LibraryContent() {
                             key={g.id}
                             onClick={() => toggleGenre(g.id)}
                             className={cn(
-                              "px-3 py-1.5 rounded-full text-[13px] font-semibold transition-all duration-200 border",
+                              "px-3 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 border",
                               isInc ? "bg-accent/20 border-accent text-accent shadow-sm" : 
                               isExc ? "bg-error/20 border-error text-error shadow-sm" : 
                               "bg-surface-raised border-border-subtle text-text-secondary hover:text-text-primary hover:border-text-muted"
@@ -290,7 +295,7 @@ function LibraryContent() {
                           <button
                             key={f.id}
                             onClick={() => toggleFilter(f.id, selectedFormats, setSelectedFormats)}
-                            className={cn("px-3 py-1.5 rounded-full text-[12px] font-semibold transition-colors border", selectedFormats.includes(f.id) ? "bg-accent text-accent-foreground border-transparent shadow-sm" : "bg-surface-raised border-border-subtle text-text-secondary hover:text-text-primary")}
+                            className={cn("px-3 py-1.5 rounded-full text-xs font-semibold transition-colors border", selectedFormats.includes(f.id) ? "bg-accent text-accent-foreground border-transparent shadow-sm" : "bg-surface-raised border-border-subtle text-text-secondary hover:text-text-primary")}
                           >
                             {f.name}
                           </button>
@@ -305,7 +310,7 @@ function LibraryContent() {
                           <button
                             key={s.id}
                             onClick={() => toggleFilter(s.id, selectedStatuses, setSelectedStatuses)}
-                            className={cn("px-3 py-1.5 rounded-full text-[12px] font-semibold transition-colors border", selectedStatuses.includes(s.id) ? "bg-accent text-accent-foreground border-transparent shadow-sm" : "bg-surface-raised border-border-subtle text-text-secondary hover:text-text-primary")}
+                            className={cn("px-3 py-1.5 rounded-full text-xs font-semibold transition-colors border", selectedStatuses.includes(s.id) ? "bg-accent text-accent-foreground border-transparent shadow-sm" : "bg-surface-raised border-border-subtle text-text-secondary hover:text-text-primary")}
                           >
                             {s.name}
                           </button>
@@ -433,7 +438,7 @@ export default function LibraryPage() {
     <React.Suspense fallback={
       <MobilePageShell title="Library">
         <div className="flex flex-col min-h-screen bg-background items-center justify-center">
-          <CircleNotch size={32} className="animate-spin text-accent" />
+          <CircleNotch size={32} className="motion-safe:animate-spin text-accent" />
         </div>
       </MobilePageShell>
     }>

@@ -2,8 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useAuth } from './use-auth';
 import { useLibraryStore } from '@/shared/store/library-store';
 import { useHistoryStore } from '@/shared/store/history-store';
-import { db } from '@/shared/lib/firebase';
-import { doc, setDoc, onSnapshot, collection, getDocs, writeBatch } from 'firebase/firestore';
+import { initFirebase } from '@/shared/lib/firebase';
 
 export function useSync() {
   const { user } = useAuth();
@@ -24,22 +23,23 @@ export function useSync() {
     // Extracted sync logic so it can be called on 'online' event
     const runFullSync = async () => {
       try {
-        const firestore = db;
+        const { db: firestore } = await initFirebase();
         if (!firestore) return;
+        const { doc, collection, getDocs, writeBatch } = await import('firebase/firestore');
         const uid = user.uid;
         
         // 1. Fetch remote library
         const remoteLibSnapshot = await getDocs(collection(firestore, `users/${uid}/library`));
         const remoteLibrary: Record<string, any> = {};
-        remoteLibSnapshot.forEach(doc => {
-          remoteLibrary[doc.id] = doc.data();
+        remoteLibSnapshot.forEach(d => {
+          remoteLibrary[d.id] = d.data();
         });
 
         // 2. Fetch remote history
         const remoteHistSnapshot = await getDocs(collection(firestore, `users/${uid}/history`));
         const remoteHistory: Record<string, any> = {};
-        remoteHistSnapshot.forEach(doc => {
-          remoteHistory[doc.id] = doc.data();
+        remoteHistSnapshot.forEach(d => {
+          remoteHistory[d.id] = d.data();
         });
 
         const batch = writeBatch(firestore);
@@ -116,50 +116,61 @@ export function useSync() {
 
   // Setup real-time listeners for cross-device sync
   useEffect(() => {
-    if (!user || !hasSyncedInitial.current || !db) return;
+    if (!user || !hasSyncedInitial.current) return;
 
-    const uid = user.uid;
+    let unsubLibrary: () => void;
+    let unsubHistory: () => void;
 
-    const unsubLibrary = onSnapshot(collection(db, `users/${uid}/library`), (snapshot) => {
-      snapshot.docChanges().forEach((change) => {
-        if (change.type === "added" || change.type === "modified") {
-          const data = change.doc.data() as any;
-          const localItem = useLibraryStore.getState().items[change.doc.id];
-          
-          if (!localItem || new Date(data.updatedAt).getTime() > new Date(localItem.updatedAt).getTime()) {
-            useLibraryStore.getState().addToLibrary(data);
-          }
-        }
+    initFirebase().then(({ db }) => {
+      if (!db) return;
+      import('firebase/firestore').then(({ collection, onSnapshot }) => {
+        const uid = user.uid;
+
+        unsubLibrary = onSnapshot(collection(db, `users/${uid}/library`), (snapshot) => {
+          snapshot.docChanges().forEach((change) => {
+            if (change.type === "added" || change.type === "modified") {
+              const data = change.doc.data() as any;
+              const localItem = useLibraryStore.getState().items[change.doc.id];
+              
+              if (!localItem || new Date(data.updatedAt).getTime() > new Date(localItem.updatedAt).getTime()) {
+                useLibraryStore.getState().addToLibrary(data);
+              }
+            }
+          });
+        }, (error) => {
+          console.error("Library sync listener error:", error);
+        });
+
+        unsubHistory = onSnapshot(collection(db, `users/${uid}/history`), (snapshot) => {
+          snapshot.docChanges().forEach((change) => {
+            if (change.type === "added" || change.type === "modified") {
+              const data = change.doc.data() as any;
+              const localItem = useHistoryStore.getState().items[change.doc.id];
+              
+              if (!localItem || new Date(data.readAt).getTime() > new Date(localItem.readAt).getTime()) {
+                useHistoryStore.getState().upsertHistory(data);
+              }
+            }
+          });
+        }, (error) => {
+          console.error("History sync listener error:", error);
+        });
       });
-    }, (error) => {
-      console.error("Library sync listener error:", error);
-    });
-
-    const unsubHistory = onSnapshot(collection(db, `users/${uid}/history`), (snapshot) => {
-      snapshot.docChanges().forEach((change) => {
-        if (change.type === "added" || change.type === "modified") {
-          const data = change.doc.data() as any;
-          const localItem = useHistoryStore.getState().items[change.doc.id];
-          
-          if (!localItem || new Date(data.readAt).getTime() > new Date(localItem.readAt).getTime()) {
-            useHistoryStore.getState().upsertHistory(data);
-          }
-        }
-      });
-    }, (error) => {
-      console.error("History sync listener error:", error);
     });
 
     return () => {
-      unsubLibrary();
-      unsubHistory();
+      if (unsubLibrary) unsubLibrary();
+      if (unsubHistory) unsubHistory();
     };
   }, [user]);
 
   // Helper to push updates immediately upon local action
   const syncLibraryItem = async (item: any) => {
-    if (!user || !db) return;
+    if (!user) return;
     try {
+      const { db } = await initFirebase();
+      if (!db) return;
+      const { doc, setDoc } = await import('firebase/firestore');
       const id = `${item.sourceId}::${item.mangaId}`;
       await setDoc(doc(db, `users/${user.uid}/library`, id), item);
     } catch (e) {
@@ -168,8 +179,11 @@ export function useSync() {
   };
 
   const syncHistoryItem = async (item: any) => {
-    if (!user || !db) return;
+    if (!user) return;
     try {
+      const { db } = await initFirebase();
+      if (!db) return;
+      const { doc, setDoc } = await import('firebase/firestore');
       const id = `${item.sourceId}::${item.mangaId}::${item.chapterId}`;
       await setDoc(doc(db, `users/${user.uid}/history`, id), item);
     } catch (e) {

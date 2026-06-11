@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { BookmarkSimple, Check } from "@phosphor-icons/react";
 import { toast } from "sonner";
@@ -22,7 +23,11 @@ export function MangaActions({
   author,
   status,
 }: MangaActionsProps) {
-  const isInLibrary = useLibraryStore((state) => state.isInLibrary(sourceId, mangaId));
+  const [isMounted, setIsMounted] = React.useState(false);
+  React.useEffect(() => setIsMounted(true), []);
+
+  const rawIsInLibrary = useLibraryStore((state) => state.isInLibrary(sourceId, mangaId));
+  const isInLibrary = isMounted ? rawIsInLibrary : false;
   const toggleLibrary = useLibraryStore((state) => state.toggleLibrary);
 
   const handleToggle = () => {

@@ -25,6 +25,7 @@ export interface MangaItem {
   title: string;
   coverUrl: string;
   status?: string;
+  format?: string;
   latestChapter?: string;
   latestChapterTime?: string;
 }

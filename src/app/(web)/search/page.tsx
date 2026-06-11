@@ -9,6 +9,7 @@ import { TopBar } from "@/components/app/top-bar";
 import { useSearchParams } from "next/navigation";
 import { MangaCard } from "@/components/manga/manga-card";
 import { motion, AnimatePresence } from "motion/react";
+import { useSettingsStore } from "@/shared/store/settings-store";
 
 export default function SearchPage() {
   return (
@@ -58,9 +59,11 @@ function SearchContent() {
     );
   };
 
+  const isNsfwFiltered = useSettingsStore((state) => state.hideNsfw);
+
   const { data: searchResponse, isLoading, error } = useQuery({
-    queryKey: ["searchGlobal", query, selectedSources],
-    queryFn: () => apiClient.searchGlobal(query, selectedSources),
+    queryKey: ["searchGlobal", query, selectedSources, isNsfwFiltered],
+    queryFn: () => apiClient.searchGlobal(query, selectedSources, isNsfwFiltered),
     enabled: query.length > 0 && selectedSources.length > 0,
   });
 

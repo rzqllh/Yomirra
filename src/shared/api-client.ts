@@ -37,22 +37,11 @@ class ApiClient {
     return this.fetcher<MangaPageResult>(`/api/sources/${sourceId}/latest?page=${page}`);
   }
 
-  search(sourceId: string, query: string, page: number = 1, filters?: Record<string, string | string[]>) {
+  search(sourceId: string, query: string, page: number = 1, filters?: Record<string, string | string[]>, isNsfwFiltered: boolean = false) {
     let url = `/api/sources/${sourceId}/search?q=${encodeURIComponent(query)}&page=${page}`;
     
-    // Automatically apply NSFW filtering if enabled in settings
-    let finalFilters = { ...filters };
-    let isNsfwFiltered = false;
+    const finalFilters = { ...filters };
     
-    // Try to safely access the store since api-client might be used outside React
-    try {
-      // Must use dynamic import or require to avoid circular dependency / SSR issues with Zustand
-      const { useSettingsStore } = require("@/shared/store/settings-store");
-      isNsfwFiltered = useSettingsStore.getState().hideNsfw;
-    } catch (e) {
-      isNsfwFiltered = true; // default to safe
-    }
-
     if (isNsfwFiltered) {
       const nsfwTags = ["-adult", "-mature", "-smut", "-nsfw", "-ecchi"];
       const existingGenres = finalFilters["genre[]"];
@@ -77,20 +66,16 @@ class ApiClient {
       });
       url += `&${sp.toString()}`;
     }
-    return this.fetcher<SearchResponse>(url);
+    return this.fetcher<any>(url).then(data => ({
+      sourceId,
+      query,
+      page,
+      results: data.mangas || data.results || [],
+      hasNextPage: data.hasNextPage
+    })) as Promise<SearchResponse>;
   }
 
-  searchGlobal(query: string, sourceIds: string[]) {
-    // Note: To fully support global NSFW filtering, the backend route /api/sources/search 
-    // should also respect a generic `hideNsfw` flag, or we pass standard excluded genres.
-    let isNsfwFiltered = false;
-    try {
-      const { useSettingsStore } = require("@/shared/store/settings-store");
-      isNsfwFiltered = useSettingsStore.getState().hideNsfw;
-    } catch (e) {
-      isNsfwFiltered = true;
-    }
-    
+  searchGlobal(query: string, sourceIds: string[], isNsfwFiltered: boolean = false) {
     let url = `/api/sources/search?q=${encodeURIComponent(query)}&sources=${sourceIds.join(",")}`;
     if (isNsfwFiltered) {
       url += `&genre[]=-adult&genre[]=-mature&genre[]=-smut&genre[]=-nsfw&genre[]=-ecchi`;

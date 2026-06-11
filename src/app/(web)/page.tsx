@@ -1,212 +1,52 @@
-"use client";
+import { Metadata } from "next";
+import { sourceManager } from "@/server/lib/sources/source-manager";
+import { swrCache, CACHE_TTL } from "@/server/lib/cache/strategies";
+import { HomeView } from "@/components/app/home-view";
+import { ErrorState } from "@/components/states/error-state";
+import { TopBar } from "@/components/app/top-bar";
 
-import * as React from "react"
-import { useQuery } from "@tanstack/react-query";
-import { apiClient } from "@/shared/api-client";
-import { MangaCard } from "@/components/manga/manga-card";
-import { MangaCardSkeleton } from "@/components/skeletons/manga-card-skeleton";
-import { MagnifyingGlass, CircleNotch, BookmarkSimple, Play } from "@phosphor-icons/react";
-import { useRouter } from "next/navigation";
-import { EmptyState } from "@/components/states/empty-state";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { getLibraryHref, getReaderHref, getMangaDetailHref } from "@/shared/lib/routes";
-import { useHistoryStore } from "@/shared/store/history-store";
-import Image from "next/image";
+export const metadata: Metadata = {
+  title: "Yomirra - Baca Komik Gratis",
+  description: "Manga, Manhwa, dan Manhua reader cepat, ringan, tanpa iklan.",
+};
 
-export default function Home() {
-  const router = useRouter();
-  const [query, setQuery] = React.useState("");
-  
+export default async function HomePage() {
   const activeSourceId = "shinigami";
-  const sourceName = activeSourceId.charAt(0).toUpperCase() + activeSourceId.slice(1);
 
-  const { data: popular, isLoading: isLoadingPopular } = useQuery({
-    queryKey: ["popular", activeSourceId],
-    queryFn: () => apiClient.getPopular(activeSourceId, 1),
-  });
+  try {
+    const source = sourceManager.getSource(activeSourceId);
 
-  const { data: latest, isLoading: isLoadingLatest } = useQuery({
-    queryKey: ["latest", activeSourceId],
-    queryFn: () => apiClient.getLatest(activeSourceId, 1),
-  });
+    // Fetch on server in parallel
+    const [popular, latest] = await Promise.all([
+      swrCache(`source:${activeSourceId}:popular:1`, () => source.getPopular(1), CACHE_TTL.DISCOVERY),
+      swrCache(`source:${activeSourceId}:latest:1`, () => source.getLatest(1), CACHE_TTL.DISCOVERY),
+    ]);
 
-  const [isMounted, setIsMounted] = React.useState(false);
-  React.useEffect(() => {
-    let mounted = true;
-    setTimeout(() => {
-      if (mounted) setIsMounted(true);
-    }, 0);
-    return () => { mounted = false; };
-  }, []);
+    // LOGGING TO INSPECT SHINIGAMI API DATA
+    const rawPopular = await source.getPopular(1);
+    console.log("SHINIGAMI_DEBUG:", JSON.stringify(rawPopular.mangas[0], null, 2));
 
-  const getContinueReading = useHistoryStore(state => state.getContinueReading);
-  const continueReadingItems = getContinueReading(4);
-  const historyItems = isMounted ? continueReadingItems : [];
-
-  return (
-    <main className="min-h-screen bg-background pb-12">
-      {/* Mobile Header / Search */}
-      <div className="md:hidden sticky top-0 z-30 bg-surface-base/60 backdrop-blur-xl border-b border-border-subtle/50 shadow-sm pt-[env(safe-area-inset-top)] pb-3 px-4">
-        <form onSubmit={(e) => { e.preventDefault(); if (query.trim()) router.push(`/search?q=${encodeURIComponent(query.trim())}`); }} className="flex items-center gap-3 rounded-full bg-surface-raised px-4 py-2.5 transition-all duration-[var(--motion-fast)] focus-within:bg-surface-overlay focus-within:ring-1 focus-within:ring-accent border border-border-subtle mt-2 shadow-sm">
-          <MagnifyingGlass className="size-5 text-text-muted shrink-0" weight="bold" />
-          <input 
-            type="text" 
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Cari manga, manhwa..." 
-            className="flex-1 bg-transparent text-[16px] font-medium text-text-primary outline-none placeholder:text-text-muted"
+    return (
+      <HomeView 
+        popular={popular}
+        latest={latest}
+        activeSourceId={activeSourceId}
+      />
+    );
+  } catch (error) {
+    console.error("Failed to load home page data", error);
+    return (
+      <main className="min-h-screen bg-background pb-12">
+        <div className="md:hidden">
+          <TopBar title="Error" showBack={false} />
+        </div>
+        <div className="px-4 py-24 flex flex-col items-center justify-center">
+          <ErrorState 
+            title="Gagal memuat konten" 
+            description="Terdapat masalah saat memuat data dari sumber." 
           />
-        </form>
-      </div>
-
-      {/* Main Content Area */}
-      <div className="px-4 md:px-8 py-6 md:py-10 space-y-14 max-w-7xl mx-auto">
-        
-        {/* Continue Reading Section */}
-        <section>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-[22px] font-bold tracking-tight text-text-primary">
-              Lanjut Baca
-            </h2>
-            {historyItems.length > 0 && (
-              <Link href="/history" className="text-[13px] font-bold text-accent hover:text-accent-hover transition-colors">
-                Lihat Semua
-              </Link>
-            )}
-          </div>
-          
-          {historyItems.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-              {historyItems.map((item) => (
-                <div key={`${item.sourceId}::${item.mangaId}::${item.chapterId}`} className="group relative flex items-center gap-4 rounded-2xl bg-surface-raised p-3 border border-border-subtle transition-colors hover:bg-surface-overlay overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-r from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                  
-                  <Link href={getMangaDetailHref(item.sourceId, item.mangaId)} className="relative h-20 w-14 shrink-0 overflow-hidden rounded-md bg-surface-overlay shadow-sm z-10">
-                    {item.coverUrl ? (
-                      <Image src={item.coverUrl} alt={item.mangaTitle} fill className="object-cover" unoptimized />
-                    ) : (
-                      <div className="h-full w-full bg-surface-overlay" />
-                    )}
-                  </Link>
-                  
-                  <div className="flex-1 min-w-0 flex flex-col justify-center z-10">
-                    <Link href={getMangaDetailHref(item.sourceId, item.mangaId)} className="block min-w-0">
-                      <h3 className="truncate font-bold text-text-primary text-[15px] leading-snug group-hover:text-accent transition-colors">
-                        {item.mangaTitle}
-                      </h3>
-                    </Link>
-                    <Link href={getReaderHref(item.sourceId, item.mangaId, item.chapterId)} className="block min-w-0 mt-0.5">
-                      <p className="truncate text-sm font-medium text-text-muted group-hover:text-accent transition-colors">
-                        {item.chapterTitle || `Chapter ${item.chapterId}`}
-                      </p>
-                    </Link>
-                    <div className="mt-1 flex items-center gap-2 text-[11px] font-semibold text-text-muted">
-                      <span className="uppercase tracking-wider">{item.sourceName || item.sourceId}</span>
-                      {item.progressPercent !== undefined && item.progressPercent > 0 && (
-                        <>
-                          <span>•</span>
-                          <span className="text-accent">{item.progressPercent}%</span>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                  
-                  <Button 
-                    asChild
-                    variant="accent" 
-                    size="icon"
-                    className="shrink-0 rounded-full h-10 w-10 shadow-sm relative z-20 ml-2"
-                  >
-                    <Link href={getReaderHref(item.sourceId, item.mangaId, item.chapterId)}>
-                      <Play className="h-4 w-4" weight="fill" />
-                    </Link>
-                  </Button>
-                </div>
-              ))}
-            </div>
-          ) : isMounted ? (
-            <EmptyState
-              variant="compact"
-              icon={<BookmarkSimple size={28} className="text-text-muted" weight="duotone" />}
-              title="Belum ada riwayat baca"
-              description="Buka chapter komik manapun dan progresmu akan otomatis muncul di sini."
-              className="bg-surface-raised/50 rounded-2xl py-12 border border-border-subtle"
-            />
-          ) : (
-            <div className="w-full h-[100px] motion-safe:animate-pulse bg-surface-raised/50 rounded-2xl border border-border-subtle" />
-          )}
-        </section>
-
-        {/* Popular Section */}
-        <section>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-[22px] font-bold tracking-tight text-text-primary">
-              Populer di {sourceName}
-            </h2>
-            <Link href="/library?sort=popular" className="text-[13px] font-bold text-accent hover:text-accent-hover transition-colors">
-              Lihat Semua
-            </Link>
-          </div>
-          {isLoadingPopular ? (
-            <div className="flex overflow-x-auto gap-3 sm:gap-4 pb-4 -mx-4 px-4 md:mx-0 md:px-0 snap-x">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="w-[120px] sm:w-[140px] md:w-[160px] lg:w-[180px] shrink-0 snap-start">
-                  <MangaCardSkeleton />
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="flex overflow-x-auto gap-3 sm:gap-4 pb-4 -mx-4 px-4 md:mx-0 md:px-0 snap-x">
-              {popular?.mangas.slice(0, 15).map((manga, index) => (
-                <div key={manga.id} className="w-[120px] sm:w-[140px] md:w-[160px] lg:w-[180px] shrink-0 snap-start">
-                  <MangaCard 
-                    manga={manga} 
-                    sourceId={activeSourceId} 
-                    priority={index < 4}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-
-        {/* Latest Section */}
-        <section>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-[22px] font-bold tracking-tight text-text-primary">
-              Update Terbaru
-            </h2>
-          </div>
-          {isLoadingLatest ? (
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-5">
-              {Array.from({ length: 12 }).map((_, i) => (
-                <MangaCardSkeleton key={i} />
-              ))}
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-5">
-                {latest?.mangas.slice(0, 12).map((manga) => (
-                  <MangaCard key={manga.id} manga={manga} sourceId={activeSourceId} />
-                ))}
-              </div>
-              
-              <div className="mt-12 flex justify-center pb-8">
-                <Button 
-                  asChild
-                  variant="outline" 
-                  className="rounded-full px-8 py-6 font-bold text-[15px] border-border-strong hover:bg-surface-raised transition-all"
-                >
-                  <Link href="/library?sort=latest">
-                    Eksplorasi Katalog Library
-                  </Link>
-                </Button>
-              </div>
-            </>
-          )}
-        </section>
-      </div>
-    </main>
-  );
+        </div>
+      </main>
+    );
+  }
 }

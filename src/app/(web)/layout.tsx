@@ -32,7 +32,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={plusJakarta.variable} suppressHydrationWarning>
-      <body className="min-h-screen antialiased overflow-x-hidden">
+      <body className="min-h-screen antialiased overflow-x-hidden" suppressHydrationWarning>
         <Providers>
           <AppShell>{children}</AppShell>
         </Providers>

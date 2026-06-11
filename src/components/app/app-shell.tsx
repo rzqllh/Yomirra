@@ -7,7 +7,7 @@ import { SideNav } from "./side-nav"
 import { TopNav } from "./top-nav"
 import { CommandMenu } from "./command-menu"
 import { cn } from "@/shared/utils/cn"
-import { useSync } from "@/hooks/use-sync"
+import { useSync } from "@/shared/hooks/use-sync"
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()

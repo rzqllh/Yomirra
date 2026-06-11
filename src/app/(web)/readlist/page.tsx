@@ -18,6 +18,9 @@ export default function ReadlistPage() {
 
   return (
     <MobilePageShell title="Readlist">
+      <div className="hidden md:block px-4 py-6">
+        <h1 className="text-3xl font-black text-text-primary tracking-tight">Readlist</h1>
+      </div>
       {sortedItems.length === 0 ? (
         <EmptyState
           icon={<BookBookmark size={48} className="text-text-muted" weight="duotone" />}

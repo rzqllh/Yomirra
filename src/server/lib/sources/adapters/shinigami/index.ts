@@ -7,7 +7,7 @@ import type {
   FilterList,
 } from "@/shared/sources/source-types";
 import { HttpClient } from "../base/http-client";
-import { signImageUrl } from "@/shared/utils/image";
+import { signImageUrl } from "@/server/lib/image";
 import {
   normalizeChapter,
   normalizeMangaDetail,
@@ -74,8 +74,8 @@ export class ShinigamiSource implements MangaSource {
     };
   }
 
-  async search(query: string, page: number, filters?: Record<string, any>): Promise<MangaPageResult> {
-    const params: Record<string, any> = {
+  async search(query: string, page: number, filters?: Record<string, string | string[]>): Promise<MangaPageResult> {
+    const params: Record<string, string | string[] | number> = {
       page,
       page_size: 100,
     };

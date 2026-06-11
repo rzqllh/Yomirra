@@ -80,13 +80,13 @@
   --surface-base: #0f111a; 
   --surface-raised: #161822; /* 30% */
   --surface-overlay: #1e2230;
-  --surface-glass: rgba(255, 255, 255, 0.04);
+  --surface-glass: rgba(255, 255, 255, 0.06);
   --surface-active: #1a1d28;
 
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --text-muted: #475569;
-  --text-disabled: #334155;
+  --text-primary: #f8fafc; /* Slate 50 */
+  --text-secondary: #cbd5e1; /* Slate 300 */
+  --text-muted: #94a3b8; /* Slate 400 */
+  --text-disabled: #475569; /* Slate 600 */
 
   --border-subtle: rgba(255, 255, 255, 0.08);
   --border-strong: rgba(255, 255, 255, 0.16);

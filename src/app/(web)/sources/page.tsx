@@ -9,6 +9,8 @@ import { MobilePageShell } from "@/components/app/mobile-page-shell";
 import { SourceListSkeleton } from "@/components/skeletons/source-list-skeleton";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/states/empty-state";
+import { SearchInput } from "@/components/ui/search-input";
+import { SourceCard } from "@/components/source/source-card";
 
 export default function SourcesPage() {
   const [filter, setFilter] = React.useState("");
@@ -31,16 +33,13 @@ export default function SourcesPage() {
         <h1 className="text-xl font-bold tracking-tight text-text-primary mb-1">Sumber</h1>
         <p className="text-sm text-text-muted mb-4">Kelola sumber bacaan untuk Yomirra.</p>
         
-        <div className="flex items-center gap-3 rounded-full bg-surface-raised px-4 py-2.5 transition-all duration-[var(--motion-fast)] focus-within:bg-surface-overlay focus-within:ring-2 focus-within:ring-accent/50 border border-border-subtle">
-          <MagnifyingGlass className="size-5 text-text-muted shrink-0" weight="bold" />
-          <input 
-            type="text" 
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            placeholder="Cari sumber..." 
-            className="flex-1 bg-transparent text-[15px] text-text-primary outline-none placeholder:text-text-muted"
-          />
-        </div>
+        <SearchInput
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          placeholder="Cari sumber..."
+          containerClassName="focus-within:ring-2 focus-within:ring-accent/50"
+          className="text-[15px]"
+        />
       </div>
 
       <div className="p-4">
@@ -57,38 +56,7 @@ export default function SourcesPage() {
           <div className="space-y-4">
             <div className="flex flex-col gap-3">
               {filteredSources.map((source) => (
-                <div key={source.id} className="flex flex-col gap-3 rounded-[var(--radius-lg)] border border-border-subtle bg-surface-raised p-4 transition-all hover:bg-surface-overlay">
-                  <div className="flex items-center gap-4">
-                    <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-[var(--radius-md)] bg-background border border-border-subtle">
-                      <Plug size={24} className="text-text-muted" />
-                    </div>
-                    <div className="flex-1 overflow-hidden">
-                      <div className="flex items-center justify-between">
-                        <h3 className="truncate text-[15px] font-bold text-text-primary">{source.name}</h3>
-                        <Badge variant={source.status === "online" ? "success" : "warning"}>
-                          <div className="size-1.5 rounded-full bg-current mr-1" />
-                          {source.status === "online" ? "Online" : "Offline"}
-                        </Badge>
-                      </div>
-                      <p className="truncate text-[13px] text-text-muted flex items-center gap-2 mt-0.5">
-                        <span className="uppercase">{source.language || "EN"}</span>
-                        <span>•</span>
-                        <span>v{source.version}</span>
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-1.5 mt-1">
-                    {Object.entries(source.capabilities).map(([key, value]) => {
-                      if (!value) return null;
-                      return (
-                        <Badge key={key} variant="muted">
-                          {key}
-                        </Badge>
-                      )
-                    })}
-                  </div>
-                </div>
+                <SourceCard key={source.id} source={source} />
               ))}
             </div>
 

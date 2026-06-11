@@ -1,5 +1,7 @@
 "use client";
 
+import React from "react";
+
 import { MobilePageShell } from "@/components/app/mobile-page-shell";
 import { useHistoryStore } from "@/shared/store/history-store";
 import { getReaderHref, getMangaDetailHref } from "@/shared/lib/routes";
@@ -9,14 +11,20 @@ import Image from "next/image";
 import { EmptyState } from "@/components/states/empty-state";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
-import { Trash } from "@phosphor-icons/react";
+import { HistoryRow } from "@/components/history/history-row";
 
 export default function HistoryPage() {
   const getHistoryList = useHistoryStore((state) => state.getHistoryList);
   const clearHistory = useHistoryStore((state) => state.clearHistory);
   const removeHistoryItem = useHistoryStore((state) => state.removeHistoryItem);
   
-  const historyItems = getHistoryList();
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const historyItems = mounted ? getHistoryList() : [];
 
   return (
     <MobilePageShell 
@@ -37,6 +45,9 @@ export default function HistoryPage() {
         )
       }
     >
+      <div className="hidden md:block px-4 py-6 max-w-3xl mx-auto w-full">
+        <h1 className="text-2xl font-black text-text-primary tracking-tight">Riwayat</h1>
+      </div>
       {historyItems.length === 0 ? (
         <EmptyState
           icon={<Clock size={48} className="text-text-muted" weight="duotone" />}
@@ -54,50 +65,11 @@ export default function HistoryPage() {
       ) : (
         <div className="flex flex-col gap-3 p-4 max-w-3xl mx-auto w-full">
           {historyItems.map((item) => (
-            <div key={`${item.sourceId}::${item.mangaId}::${item.chapterId}`} className="group relative flex items-center gap-4 rounded-[var(--radius-xl)] bg-surface-raised p-3 border border-border-subtle transition-colors hover:bg-surface-overlay overflow-hidden">
-              <Link href={getMangaDetailHref(item.sourceId, item.mangaId)} className="relative h-20 w-14 shrink-0 overflow-hidden rounded-md bg-surface-overlay">
-                {item.coverUrl ? (
-                  <Image src={item.coverUrl} alt={item.mangaTitle} fill className="object-cover" />
-                ) : (
-                  <div className="h-full w-full bg-surface-overlay" />
-                )}
-              </Link>
-              <div className="flex-1 min-w-0 flex flex-col justify-center">
-                <Link href={getMangaDetailHref(item.sourceId, item.mangaId)} className="block min-w-0">
-                  <h3 className="line-clamp-2 font-bold text-text-primary text-[15px] leading-snug hover:text-accent transition-colors">
-                    {item.mangaTitle}
-                  </h3>
-                </Link>
-                <Link href={getReaderHref(item.sourceId, item.mangaId, item.chapterId)} className="block min-w-0 mt-0.5">
-                  <p className="truncate text-sm font-medium text-text-muted hover:text-accent transition-colors">
-                    {item.chapterTitle || "Chapter"}
-                  </p>
-                </Link>
-                <div className="mt-1 flex items-center gap-2 text-[11px] font-semibold text-text-muted">
-                  <span className="uppercase tracking-wider">{item.sourceName || item.sourceId}</span>
-                  <span>•</span>
-                  <span>{new Date(item.readAt).toLocaleDateString()}</span>
-                  {item.progressPercent !== undefined && item.progressPercent > 0 && (
-                    <>
-                      <span>•</span>
-                      <span className="text-accent">{item.progressPercent}%</span>
-                    </>
-                  )}
-                </div>
-              </div>
-              <IconButton
-                aria-label={`Hapus ${item.mangaTitle} dari riwayat`}
-                variant="ghost"
-                size="sm"
-                className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-all hover:text-error hover:bg-error/10"
-                onClick={(e) => {
-                  e.preventDefault();
-                  removeHistoryItem(item.sourceId, item.mangaId, item.chapterId);
-                }}
-              >
-                <Trash size={16} weight="bold" />
-              </IconButton>
-            </div>
+            <HistoryRow
+              key={`${item.sourceId}::${item.mangaId}::${item.chapterId}`}
+              item={item}
+              onRemove={removeHistoryItem}
+            />
           ))}
         </div>
       )}

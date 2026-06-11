@@ -25,13 +25,7 @@ export function getSourcesHref(): string {
   return `/sources`;
 }
 
-export function getUpdatesHref(): string {
-  return `/updates`;
-}
 
-export function getPopularHref(): string {
-  return `/popular`;
-}
 
 export function getHistoryHref(): string {
   return `/history`;

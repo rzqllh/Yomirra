@@ -1,26 +1,40 @@
 import { useState, useEffect } from 'react';
-import { User, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
-import { auth } from '@/shared/lib/firebase';
+import type { User } from 'firebase/auth';
+import { initFirebase } from '@/shared/lib/firebase';
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!auth) {
-      queueMicrotask(() => setLoading(false));
-      return;
-    }
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
+    let unsubscribe: () => void;
+
+    initFirebase().then(({ auth }) => {
+      if (!auth) {
+        setLoading(false);
+        return;
+      }
+
+      import('firebase/auth').then(({ onAuthStateChanged }) => {
+        unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+          setUser(currentUser);
+          setLoading(false);
+        });
+      }).catch((e) => {
+        console.error(e);
+        setLoading(false);
+      });
     });
 
-    return () => unsubscribe();
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
   const loginWithGoogle = async () => {
+    const { auth } = await initFirebase();
     if (!auth) throw new Error("Auth is not initialized");
+    const { signInWithPopup, GoogleAuthProvider } = await import('firebase/auth');
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
@@ -30,7 +44,9 @@ export function useAuth() {
   };
 
   const logout = async () => {
+    const { auth } = await initFirebase();
     if (!auth) return;
+    const { signOut } = await import('firebase/auth');
     try {
       await signOut(auth);
     } catch (error) {

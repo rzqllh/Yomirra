@@ -1,3 +1,5 @@
+"use client";
+
 import * as React from "react"
 import { WarningCircle } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
