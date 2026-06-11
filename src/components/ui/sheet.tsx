@@ -27,16 +27,16 @@ const SheetOverlay = React.forwardRef<
 SheetOverlay.displayName = SheetPrimitive.Overlay.displayName
 
 const sheetVariants = cva(
-  "fixed z-[var(--z-overlay)] gap-4 bg-surface-raised p-6 shadow-floating transition ease-in-out data-[state=closed]:duration-[var(--motion-base)] data-[state=open]:duration-[var(--motion-slow)] data-[state=open]:motion-safe:animate-in data-[state=closed]:motion-safe:animate-out",
+  "fixed z-[var(--z-overlay)] gap-4 bg-surface-overlay p-6 shadow-lg transition ease-in-out data-[state=closed]:duration-[var(--motion-base)] data-[state=open]:duration-[var(--motion-slow)] data-[state=open]:motion-safe:animate-in data-[state=closed]:motion-safe:animate-out",
   {
     variants: {
       side: {
-        top: "inset-x-0 top-0 border-b border-border-subtle data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
+        top: "inset-x-0 top-0 border-b border-border-default data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
         bottom:
-          "inset-x-0 bottom-0 border-t border-border-subtle data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom rounded-t-xl",
-        left: "inset-y-0 left-0 h-full w-3/4 border-r border-border-subtle data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-sm",
+          "inset-x-0 bottom-0 border-t border-border-default data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom rounded-t-[var(--radius-lg)]",
+        left: "inset-y-0 left-0 h-full w-3/4 border-r border-border-default data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-sm",
         right:
-          "inset-y-0 right-0 h-full w-3/4 border-l border-border-subtle data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm",
+          "inset-y-0 right-0 h-full w-3/4 border-l border-border-default data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm",
       },
     },
     defaultVariants: {
@@ -61,7 +61,7 @@ const SheetContent = React.forwardRef<
       {...props}
     >
       {children}
-      <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-border-strong disabled:pointer-events-none data-[state=open]:bg-surface-overlay">
+      <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-border-strong disabled:pointer-events-none data-[state=open]:bg-surface-hover">
         <X size={16} weight="bold" />
         <span className="sr-only">Close</span>
       </SheetPrimitive.Close>

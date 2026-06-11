@@ -60,7 +60,7 @@ export function MangaCard({ manga, sourceId, priority = false }: MangaCardProps)
       whileHover={{ y: -3 }}
       whileTap={{ scale: 0.985 }}
       transition={{ type: "spring", stiffness: 420, damping: 36 }}
-      className="relative block w-full aspect-[1/1.4] overflow-hidden rounded-[var(--card-cover-radius)] bg-surface-raised border border-border-subtle shadow-sm group"
+      className="relative block w-full aspect-[1/1.4] overflow-hidden rounded-[var(--radius-md)] bg-surface-base border border-border-default shadow-sm group"
     >
       <Link 
         href={getMangaDetailHref(sourceId, manga.id)} 
@@ -84,7 +84,7 @@ export function MangaCard({ manga, sourceId, priority = false }: MangaCardProps)
         <div className="absolute top-2 left-2 flex flex-wrap gap-1 z-20">
           {manga.status === "Ongoing" && (
             <div className="rounded-[4px] bg-accent px-1.5 py-0.5 shadow-sm">
-              <span className="text-[9px] font-black uppercase tracking-wider text-white">UP</span>
+              <span className="text-[9px] font-black uppercase tracking-wider text-accent-on">UP</span>
             </div>
           )}
           {manga.format && (

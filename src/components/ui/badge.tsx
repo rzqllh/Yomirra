@@ -7,21 +7,21 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: "border-border-subtle bg-surface-overlay text-text-secondary",
+        default: "border-border-default bg-surface-base text-text-secondary",
         source: "border-accent/20 bg-accent/10 text-accent",
-        status: "border-border-subtle bg-surface-raised text-text-secondary",
-        success: "border-success/20 bg-success/10 text-success",
-        warning: "border-warning/20 bg-warning/10 text-warning",
-        error: "border-error/20 bg-error/10 text-error",
-        muted: "border-border-subtle bg-surface-raised text-text-muted",
+        status: "border-border-default bg-surface-raised text-text-secondary",
+        success: "border-semantic-success/20 bg-semantic-success/10 text-semantic-success",
+        warning: "border-semantic-warning/20 bg-semantic-warning/10 text-semantic-warning",
+        error: "border-semantic-error/20 bg-semantic-error/10 text-semantic-error",
+        muted: "border-border-default bg-surface-raised text-text-muted",
         outline: "border-border-strong bg-transparent text-text-secondary",
         accent: "border-accent/30 bg-accent/10 text-accent",
-        reader: "border-border-subtle bg-surface-overlay text-text-primary",
+        reader: "border-border-default bg-surface-overlay text-text-primary",
         // Legacy aliases
-        online: "border-success/20 bg-success/10 text-success",
-        slow: "border-warning/20 bg-warning/10 text-warning",
-        unavailable: "border-error/20 bg-error/10 text-error",
-        cached: "border-border-subtle bg-surface-overlay text-text-muted",
+        online: "border-semantic-success/20 bg-semantic-success/10 text-semantic-success",
+        slow: "border-semantic-warning/20 bg-semantic-warning/10 text-semantic-warning",
+        unavailable: "border-semantic-error/20 bg-semantic-error/10 text-semantic-error",
+        cached: "border-border-default bg-surface-overlay text-text-muted",
       },
     },
     defaultVariants: {
