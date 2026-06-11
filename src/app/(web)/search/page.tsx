@@ -14,7 +14,7 @@ import { useSettingsStore } from "@/shared/store/settings-store";
 export default function SearchPage() {
   return (
     <React.Suspense fallback={
-      <main className="min-h-screen pb-[calc(56px+env(safe-area-inset-bottom))] bg-background">
+      <main className="min-h-screen pb-[calc(56px+env(safe-area-inset-bottom))] bg-surface-base">
         <TopBar title="Hasil Pencarian" showBack />
         <div className="px-4 py-6">
           <SearchResultSkeleton />
@@ -68,7 +68,7 @@ function SearchContent() {
   });
 
   return (
-    <main className="min-h-screen pb-[calc(56px+env(safe-area-inset-bottom))] bg-background">
+    <main className="min-h-screen pb-[calc(56px+env(safe-area-inset-bottom))] bg-surface-base">
       <TopBar title="Hasil Pencarian" showBack />
       
       <div className="px-4 py-6 max-w-7xl mx-auto">
@@ -135,7 +135,7 @@ function SearchContent() {
           </div>
         ) : error ? (
           <div className="flex flex-col items-center justify-center py-20 text-center bg-surface-raised rounded-[var(--radius-xl)] border border-border-subtle">
-            <WarningCircle size={48} className="mb-4 text-error" weight="duotone" />
+            <WarningCircle size={48} className="mb-4 text-semantic-error" weight="duotone" />
             <p className="text-base font-medium text-text-primary">Terjadi kesalahan pencarian.</p>
           </div>
         ) : (
@@ -151,7 +151,7 @@ function SearchContent() {
                       <span className="w-2 h-2 rounded-full bg-border-strong"></span>
                       {sourceName}
                     </h2>
-                    <p className="text-sm text-text-muted italic bg-surface-raised/50 p-4 rounded-xl border border-border-subtle">
+                    <p className="text-sm text-text-muted italic bg-surface-raised/50 p-4 rounded-[var(--radius-md)] border border-border-subtle">
                       Tidak ada hasil ditemukan.
                     </p>
                   </div>
@@ -173,9 +173,10 @@ function SearchContent() {
                         <motion.div
                           key={manga.id}
                           layout
-                          initial={{ opacity: 0, y: 8 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, scale: 0.96 }}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
                         >
                           <MangaCard 
                             sourceId={sId}

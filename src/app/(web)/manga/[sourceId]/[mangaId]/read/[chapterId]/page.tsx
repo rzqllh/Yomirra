@@ -32,28 +32,19 @@ export default async function ReaderPage({
 }) {
   const { sourceId, mangaId, chapterId } = await params;
 
+  let detail, chapters, pagesResult;
   try {
     const source = sourceManager.getSource(sourceId);
     
     // Fetch detail, chapters, and pages in parallel on the server
-    const [detail, chapters, pagesResult] = await Promise.all([
+    [detail, chapters, pagesResult] = await Promise.all([
       swrCache(`source:${sourceId}:manga:${mangaId}`, () => source.getDetail(mangaId), CACHE_TTL.DETAIL),
       swrCache(`source:${sourceId}:chapters:${mangaId}`, () => source.getChapters(mangaId), CACHE_TTL.CHAPTERS),
       // Pages might fail, so we catch error and return null to let client retry or use offline cache
       swrCache(`source:${sourceId}:pages:${mangaId}:${chapterId}`, () => source.getPages(chapterId), CACHE_TTL.PAGES).catch(() => null),
     ]);
-
-    return (
-      <ReaderView 
-        sourceId={sourceId}
-        mangaId={mangaId}
-        chapterId={chapterId}
-        initialDetail={detail}
-        initialChapters={chapters}
-        initialPages={pagesResult?.pages || null}
-      />
-    );
   } catch (error) {
+    console.error("Failed to load reader data:", error);
     return (
       <ReaderShell chapterTitle="Error" currentChapterId={chapterId} sourceId={sourceId} mangaId={mangaId}>
         <div className="flex min-h-screen items-center justify-center text-text-muted">
@@ -62,4 +53,15 @@ export default async function ReaderPage({
       </ReaderShell>
     );
   }
+
+  return (
+    <ReaderView 
+      sourceId={sourceId}
+      mangaId={mangaId}
+      chapterId={chapterId}
+      initialDetail={detail}
+      initialChapters={chapters}
+      initialPages={pagesResult?.pages || null}
+    />
+  );
 }

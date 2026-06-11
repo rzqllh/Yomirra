@@ -151,7 +151,7 @@ export function ContinuousVerticalReader({
                   "w-full object-contain", 
                   !isWebtoon && "shadow-soft",
                   // Fade in image if reduced motion is false
-                  "motion-safe:animate-in motion-safe:fade-in motion-safe:duration-700"
+                  "motion-safe:animate-in motion-safe:fade-in motion-safe:duration-300"
                 )}
                 width={800}
                 height={1200}

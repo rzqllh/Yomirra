@@ -59,7 +59,7 @@ export function MangaCard({ manga, sourceId, priority = false }: MangaCardProps)
     <motion.article
       whileHover={{ y: -3 }}
       whileTap={{ scale: 0.985 }}
-      transition={{ type: "spring", stiffness: 420, damping: 36 }}
+      transition={{ type: "spring", stiffness: 400, damping: 28 }}
       className="relative block w-full aspect-[1/1.4] overflow-hidden rounded-[var(--radius-md)] bg-surface-base border border-border-default shadow-sm group"
     >
       <Link 
@@ -73,7 +73,7 @@ export function MangaCard({ manga, sourceId, priority = false }: MangaCardProps)
           fill
           sizes={priority ? "(max-width: 640px) 33vw, (max-width: 768px) 25vw, 20vw" : "(max-width: 640px) 25vw, 15vw"}
           priority={priority}
-          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.025]"
+          className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.025]"
           unoptimized={manga.coverUrl.startsWith("http")} // Since these are external arbitrary URLs, standard unoptimized might be needed unless domains are configured
         />
         

@@ -10,7 +10,7 @@ export function SourceCard({ source }: SourceCardProps) {
   return (
     <div className="flex flex-col gap-3 rounded-[var(--radius-lg)] border border-border-subtle bg-surface-raised p-4 transition-all hover:bg-surface-overlay">
       <div className="flex items-center gap-4">
-        <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-[var(--radius-md)] bg-background border border-border-subtle">
+        <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-[var(--radius-md)] bg-surface-base border border-border-subtle">
           <Plug size={24} className="text-text-muted" />
         </div>
         <div className="flex-1 overflow-hidden">

@@ -163,7 +163,7 @@ function LibraryContent() {
 
   return (
     <MobilePageShell title="Library">
-      <div className="flex flex-col min-h-screen bg-background">
+      <div className="flex flex-col min-h-screen bg-surface-base">
         <main className="flex-1 w-full max-w-7xl mx-auto pb-20 md:pb-8">
           <div className="px-4 py-6 md:px-8 md:py-8 space-y-8">
             
@@ -253,7 +253,7 @@ function LibraryContent() {
 
             {/* Collapsible Filters Section */}
             {showFilters && (
-              <div className="bg-surface-base border border-border-subtle rounded-3xl p-6 shadow-sm motion-safe:animate-in slide-in-from-top-2 fade-in duration-200">
+              <div className="bg-surface-base border border-border-subtle rounded-[var(--radius-xl)] p-6 shadow-sm motion-safe:animate-in slide-in-from-top-2 fade-in duration-200">
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
                   
                   {/* Left Side: Genre */}
@@ -275,7 +275,7 @@ function LibraryContent() {
                             className={cn(
                               "px-3 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 border",
                               isInc ? "bg-accent/20 border-accent text-accent shadow-sm" : 
-                              isExc ? "bg-error/20 border-error text-error shadow-sm" : 
+                              isExc ? "bg-semantic-error/20 border-semantic-error text-semantic-error shadow-sm" : 
                               "bg-surface-raised border-border-subtle text-text-secondary hover:text-text-primary hover:border-text-muted"
                             )}
                           >
@@ -336,7 +336,7 @@ function LibraryContent() {
                 title="Gagal memuat katalog"
                 description="Terjadi kesalahan saat mengambil data dari Shinigami."
                 action={<Button onClick={() => refetch()} variant="outline" className="mt-2">Coba lagi</Button>}
-                className="bg-surface-base rounded-3xl border border-border-subtle py-16"
+                className="bg-surface-base rounded-[var(--radius-xl)] border border-border-subtle py-16"
               />
             ) : mangas.length === 0 ? (
               <EmptyState
@@ -345,7 +345,7 @@ function LibraryContent() {
                 title="Manga tidak ditemukan"
                 description="Coba ubah kombinasi filter atau kata kunci pencarian."
                 action={<Button onClick={resetFilters} variant="outline" className="mt-2">Reset Filter</Button>}
-                className="bg-surface-base rounded-3xl border border-border-subtle border-dashed py-16"
+                className="bg-surface-base rounded-[var(--radius-xl)] border border-border-subtle border-dashed py-16"
               />
             ) : (
               <>
@@ -437,7 +437,7 @@ export default function LibraryPage() {
   return (
     <React.Suspense fallback={
       <MobilePageShell title="Library">
-        <div className="flex flex-col min-h-screen bg-background items-center justify-center">
+        <div className="flex flex-col min-h-screen bg-surface-base items-center justify-center">
           <CircleNotch size={32} className="motion-safe:animate-spin text-accent" />
         </div>
       </MobilePageShell>

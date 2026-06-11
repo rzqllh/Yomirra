@@ -13,11 +13,12 @@ export const metadata: Metadata = {
 export default async function HomePage() {
   const activeSourceId = "shinigami";
 
+  let popular, latest;
   try {
     const source = sourceManager.getSource(activeSourceId);
 
     // Fetch on server in parallel
-    const [popular, latest] = await Promise.all([
+    [popular, latest] = await Promise.all([
       swrCache(`source:${activeSourceId}:popular:1`, () => source.getPopular(1), CACHE_TTL.DISCOVERY),
       swrCache(`source:${activeSourceId}:latest:1`, () => source.getLatest(1), CACHE_TTL.DISCOVERY),
     ]);
@@ -25,18 +26,10 @@ export default async function HomePage() {
     // LOGGING TO INSPECT SHINIGAMI API DATA
     const rawPopular = await source.getPopular(1);
     console.log("SHINIGAMI_DEBUG:", JSON.stringify(rawPopular.mangas[0], null, 2));
-
-    return (
-      <HomeView 
-        popular={popular}
-        latest={latest}
-        activeSourceId={activeSourceId}
-      />
-    );
   } catch (error) {
     console.error("Failed to load home page data", error);
     return (
-      <main className="min-h-screen bg-background pb-12">
+      <main className="min-h-screen bg-surface-base pb-12">
         <div className="md:hidden">
           <TopBar title="Error" showBack={false} />
         </div>
@@ -49,4 +42,12 @@ export default async function HomePage() {
       </main>
     );
   }
+
+  return (
+    <HomeView 
+      popular={popular}
+      latest={latest}
+      activeSourceId={activeSourceId}
+    />
+  );
 }
