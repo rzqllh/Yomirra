@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { CircleNotch, Play, SortAscending, SortDescending } from "@phosphor-icons/react";
+import { Play, SortAscending, SortDescending } from "@phosphor-icons/react";
 import Image from "next/image";
 import Link from "next/link";
 import { getReaderHref } from "@/shared/lib/routes";
@@ -10,7 +10,6 @@ import { useHistoryStore } from "@/shared/store/history-store";
 import { TopBar } from "@/components/app/top-bar";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChapterRow } from "@/components/manga/chapter-row";
 import type { MangaDetail, Chapter } from "@/shared/types/source";
 

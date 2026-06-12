@@ -1,11 +1,17 @@
 export class HttpClient {
   constructor(private baseUrl: string, private defaultHeaders: Record<string, string> = {}) {}
 
-  async get<T>(path: string, params?: Record<string, any>): Promise<T> {
+  async get<T>(path: string, params?: Record<string, string | number | boolean | string[]>): Promise<T> {
     let url = `${this.baseUrl}${path}`;
     if (params) {
       const searchParams = new URLSearchParams();
-      Object.entries(params).forEach(([k, v]) => searchParams.set(k, String(v)));
+      Object.entries(params).forEach(([k, v]) => {
+        if (Array.isArray(v)) {
+          v.forEach(val => searchParams.append(k, String(val)));
+        } else {
+          searchParams.set(k, String(v));
+        }
+      });
       url += `?${searchParams.toString()}`;
     }
 

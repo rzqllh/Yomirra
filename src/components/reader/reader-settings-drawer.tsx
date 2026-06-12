@@ -5,7 +5,6 @@ import { X, SlidersHorizontal, ImageSquare, Layout } from "@phosphor-icons/react
 import { useReaderStore } from "@/shared/store/reader-store"
 import { cn } from "@/shared/utils/cn"
 import { IconButton } from "@/components/ui/icon-button"
-import { Button } from "@/components/ui/button"
 
 import Link from "next/link"
 import { getReaderHref } from "@/shared/lib/routes"

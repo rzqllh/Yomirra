@@ -7,7 +7,6 @@ import {
   House,
   Compass,
   Books,
-  ClockCounterClockwise,
   Gear,
   BookmarkSimple,
 } from "@phosphor-icons/react"

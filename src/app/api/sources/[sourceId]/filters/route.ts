@@ -29,10 +29,10 @@ export async function GET(
 
     const filters = source.getFilters();
     return NextResponse.json({ data: filters });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(`[API] Error fetching filters:`, error);
     return NextResponse.json({ 
-      error: { code: "INTERNAL_ERROR", message: error.message || "Failed to fetch filters" } 
+      error: { code: "INTERNAL_ERROR", message: error instanceof Error ? error.message : "Failed to fetch filters" } 
     }, { status: 500 });
   }
 }

@@ -202,8 +202,8 @@ export const useDownloadStore = create<DownloadState>()(
 
             // Success
             updateStatus(id, "downloaded", 100, downloaded, pages.length);
-          } catch (error: any) {
-            updateStatus(id, "error", 0, 0, 0, error.message || "Download failed");
+          } catch (error: unknown) {
+            updateStatus(id, "error", 0, 0, 0, error instanceof Error ? error.message : "Download failed");
           } finally {
             set({ isDownloading: false });
           }

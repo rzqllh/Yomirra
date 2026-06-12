@@ -61,7 +61,7 @@ export async function GET(req: NextRequest) {
           let source;
           try {
             source = sourceManager.getSource(sourceId);
-          } catch (e) {
+          } catch {
             results[sourceId] = { results: [], error: "Source not found" };
             return;
           }
@@ -95,7 +95,7 @@ export async function GET(req: NextRequest) {
         resultsBySource: cachedData
       }
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: { message: "Internal server error" } }, { status: 500 });
   }
 }

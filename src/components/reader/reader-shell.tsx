@@ -3,14 +3,13 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { useReaderStore } from "@/shared/store/reader-store"
-import { CaretLeft, Gear, List } from "@phosphor-icons/react"
+import { CaretLeft, Gear } from "@phosphor-icons/react"
 import { cn } from "@/shared/utils/cn"
 
 import { getMangaDetailHref } from "@/shared/lib/routes"
 import { Chapter } from "@/shared/types/source"
 import { ReaderSettingsDrawer } from "./reader-settings-drawer"
 import { IconButton } from "@/components/ui/icon-button"
-import { Button } from "@/components/ui/button"
 
 interface ReaderShellProps {
   children: React.ReactNode
