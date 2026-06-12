@@ -60,7 +60,7 @@ export function HomeView({ children }: HomeViewProps) {
               Lanjut Baca
             </h2>
             {historyItems.length > 0 && (
-              <Link href="/history" className="text-sm font-bold text-accent hover:text-accent-hover transition-colors">
+              <Link href="/bookmark" className="text-sm font-bold text-accent hover:text-accent-hover transition-colors">
                 Lihat Semua
               </Link>
             )}

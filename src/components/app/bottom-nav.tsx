@@ -9,14 +9,15 @@ import {
   Books,
   ClockCounterClockwise,
   Gear,
+  BookmarkSimple,
 } from "@phosphor-icons/react"
 import { cn } from "@/shared/utils/cn"
 
 const NAV_ITEMS = [
   { href: "/", icon: House, label: "Beranda" },
   { href: "/library", icon: Books, label: "Library" },
-  { href: "/sources", icon: Compass, label: "Jelajahi" },
-  { href: "/history", icon: ClockCounterClockwise, label: "Riwayat" },
+  { href: "/sources", icon: Compass, label: "Sumber" },
+  { href: "/bookmark", icon: BookmarkSimple, label: "Bookmark" },
   { href: "/settings", icon: Gear, label: "Pengaturan" },
 ]
 
