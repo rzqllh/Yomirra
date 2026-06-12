@@ -93,15 +93,15 @@ export function MangaDetailView({
           fill
           priority
           sizes="100vw"
-          className="object-cover opacity-20 dark:opacity-15 blur-xl scale-110 saturate-150 transform-gpu"
+          className="object-cover opacity-[0.15] blur-2xl scale-110 saturate-150 transform-gpu"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/80 to-background" />
+        <div className="absolute inset-0 bg-gradient-to-b from-surface-base/30 via-surface-base/80 to-surface-base" />
       </div>
 
       <div className="w-full max-w-7xl mx-auto px-4 md:px-8 pt-6 md:pt-12 relative z-10 flex flex-col md:flex-row gap-6 md:gap-8">
         
         <div className="flex gap-4 md:hidden">
-          <div className="relative w-[110px] shrink-0 aspect-[2/3] rounded-[var(--radius-md)] overflow-hidden shadow-xl border border-border-default bg-surface-base vt-cover-mobile" style={{ viewTransitionName: `cover-${sourceId}-${mangaId}` }}>
+          <div className="relative w-[110px] shrink-0 aspect-[2/3] rounded-[var(--radius-md)] overflow-hidden shadow-heavy border border-border-default bg-surface-base vt-cover-mobile" style={{ viewTransitionName: `cover-${sourceId}-${mangaId}` }}>
             {coverUrl && <Image src={coverUrl} alt={detail.title} fill className="object-cover" priority sizes="110px" />}
           </div>
           <div className="flex flex-col flex-1 gap-1.5 justify-center py-1">
@@ -118,7 +118,7 @@ export function MangaDetailView({
         </div>
 
         <div className="hidden md:flex relative sticky top-[100px] self-start w-[280px] lg:w-[320px] shrink-0 flex-col gap-4">
-          <div className="relative w-full aspect-[2/3] rounded-[var(--radius-lg)] overflow-hidden shadow-2xl border border-border-default bg-surface-base vt-cover-desktop" style={{ viewTransitionName: `cover-${sourceId}-${mangaId}` }}>
+          <div className="relative w-full aspect-[2/3] rounded-[var(--radius-lg)] overflow-hidden shadow-heavy border border-border-default bg-surface-base vt-cover-desktop" style={{ viewTransitionName: `cover-${sourceId}-${mangaId}` }}>
             {coverUrl && <Image src={coverUrl} alt={detail.title} fill className="object-cover" priority sizes="320px" />}
           </div>
           <div className="flex flex-col gap-3 mt-2">
@@ -185,27 +185,25 @@ export function MangaDetailView({
                 <p className="text-[15px] font-medium text-text-muted">Belum ada chapter.</p>
               </div>
             ) : (
-              <div className="h-[600px] overflow-y-auto pr-3 md:pr-4 custom-scrollbar -mr-3 md:-mr-4">
-                <div className="flex flex-col gap-2">
-                  {sortedChapters.map((chapter) => {
-                    const isRead = historyItems[`${sourceId}::${mangaId}::${chapter.id}`] !== undefined;
-                    const isLastRead = historyItem?.chapterId === chapter.id;
+              <div className="flex flex-col gap-2">
+                {sortedChapters.map((chapter) => {
+                  const isRead = historyItems[`${sourceId}::${mangaId}::${chapter.id}`] !== undefined;
+                  const isLastRead = historyItem?.chapterId === chapter.id;
 
-                    return (
-                      <ChapterRow
-                        key={chapter.id}
-                        sourceId={sourceId}
-                        mangaId={mangaId}
-                        chapterId={chapter.id}
-                        chapterTitle={chapter.title}
-                        mangaTitle={detail.title}
-                        date={chapter.date}
-                        isRead={isRead}
-                        isLastRead={isLastRead}
-                      />
-                    );
-                  })}
-                </div>
+                  return (
+                    <ChapterRow
+                      key={chapter.id}
+                      sourceId={sourceId}
+                      mangaId={mangaId}
+                      chapterId={chapter.id}
+                      chapterTitle={chapter.title}
+                      mangaTitle={detail.title}
+                      date={chapter.date}
+                      isRead={isRead}
+                      isLastRead={isLastRead}
+                    />
+                  );
+                })}
               </div>
             )}
           </div>

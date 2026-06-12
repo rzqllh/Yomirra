@@ -31,7 +31,7 @@ export function ChapterRow({
       className={cn(
         "group relative flex items-center gap-3 md:gap-4 rounded-[var(--radius-lg)] px-4 py-3.5 transition-all duration-300 ease-out will-change-transform",
         isLastRead 
-          ? "bg-surface-active/60 backdrop-blur-md border border-accent/20 shadow-sm ring-1 ring-accent/10 z-10" 
+          ? "bg-surface-overlay border border-accent/40 shadow-sm ring-1 ring-accent/20 z-10" 
           : "bg-surface-base border border-transparent hover:bg-surface-hover hover:border-border-default hover:shadow-sm",
         "hover:-translate-y-[1px] hover:scale-[1.005]"
       )}
