@@ -41,8 +41,8 @@ export function TopNav() {
           <div className="flex items-center gap-1.5 p-1 rounded-full bg-surface-raised ring-1 ring-border-subtle shadow-sm transition-all hover:bg-surface-hover">
             <div className="flex items-center gap-2 pl-1 pr-2">
               {user.photoURL ? (
-                <div className="relative size-7 rounded-full overflow-hidden shadow-inner">
-                  <Image src={user.photoURL} alt={user.displayName || "User"} fill sizes="28px" className="object-cover" />
+                <div className="size-7 rounded-full overflow-hidden border border-border-default relative">
+                <img src={user.photoURL} alt={user.displayName || "User"} className="object-cover w-full h-full" referrerPolicy="no-referrer" />
                 </div>
               ) : (
                 <UserCircle size={28} weight="duotone" className="text-accent" />

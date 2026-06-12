@@ -58,7 +58,7 @@ export default function SettingsPage() {
                 {user ? (
                   <div className="flex flex-col sm:flex-row items-center gap-4">
                     {user.photoURL ? (
-                      <Image src={user.photoURL} alt={user.displayName || "User"} width={64} height={64} className="rounded-full border border-border-strong" />
+                      <img src={user.photoURL} alt={user.displayName || "User"} width={64} height={64} className="rounded-full border border-border-strong object-cover" referrerPolicy="no-referrer" />
                     ) : (
                       <UserCircle size={64} weight="duotone" className="text-accent" />
                     )}
