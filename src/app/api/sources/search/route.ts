@@ -20,6 +20,18 @@ export async function GET(req: NextRequest) {
   const q = searchParams.get("q");
   const sourcesParam = searchParams.get("sources");
 
+  const filters: Record<string, string | string[]> = {};
+  searchParams.forEach((value, key) => {
+    if (key !== "q" && key !== "sources") {
+      const existing = filters[key];
+      if (existing) {
+        filters[key] = Array.isArray(existing) ? [...existing, value] : [existing, value];
+      } else {
+        filters[key] = key.endsWith("[]") ? [value] : value;
+      }
+    }
+  });
+
   if (!q) {
     return NextResponse.json({ error: { message: "Missing query 'q'" } }, { status: 400 });
   }
@@ -48,14 +60,14 @@ export async function GET(req: NextRequest) {
     }
 
     try {
-      const searchResult = await source.search(q, 1);
+      const searchResult = await source.search(q, 1, Object.keys(filters).length > 0 ? filters : undefined);
       resultsBySource[sourceId] = {
         results: searchResult.mangas,
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       resultsBySource[sourceId] = {
         results: [],
-        error: error.message || "Search failed",
+        error: error instanceof Error ? error.message : "Search failed",
       };
     }
   });

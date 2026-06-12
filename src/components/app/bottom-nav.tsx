@@ -5,7 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
   House,
-  BookBookmark,
+  Compass,
   Books,
   ClockCounterClockwise,
   Gear,
@@ -15,7 +15,7 @@ import { cn } from "@/shared/utils/cn"
 const NAV_ITEMS = [
   { href: "/", icon: House, label: "Beranda" },
   { href: "/library", icon: Books, label: "Library" },
-  { href: "/readlist", icon: BookBookmark, label: "Readlist" },
+  { href: "/sources", icon: Compass, label: "Jelajahi" },
   { href: "/history", icon: ClockCounterClockwise, label: "Riwayat" },
   { href: "/settings", icon: Gear, label: "Pengaturan" },
 ]

@@ -144,9 +144,10 @@ export const useDownloadStore = create<DownloadState>()(
 
         try {
           // 1. Fetch chapter pages from API
-          const res = await fetch(`/api/sources/${item.sourceId}/read/${item.chapterId}`);
+          const res = await fetch(`/api/sources/${item.sourceId}/manga/${encodeURIComponent(item.mangaId)}/chapters/${encodeURIComponent(item.chapterId)}/pages`);
           if (!res.ok) throw new Error("Failed to fetch chapter details");
-          const pages: string[] = await res.json();
+          const result = await res.json();
+          const pages: { index: number; url: string }[] = result.data?.pages ?? [];
 
           if (!pages || pages.length === 0) throw new Error("No pages found");
 
@@ -163,14 +164,14 @@ export const useDownloadStore = create<DownloadState>()(
           
           for (let i = 0; i < pages.length; i += CONCURRENCY) {
             const batch = pages.slice(i, i + CONCURRENCY);
-            const promises = batch.map(async (url, idx) => {
+            const promises = batch.map(async (pageObj, idx) => {
               const pageNumber = i + idx;
               // We create a predictable URL format for the cache key:
               // /offline-images/[sourceId::mangaId::chapterId]/[pageIndex]
               const cacheKey = new URL(`/offline-images/${id}/${pageNumber}`, window.location.origin).toString();
               
               // We route the image request through our proxy to avoid CORS and get the actual blob
-              const proxyUrl = `/api/proxy/image?url=${encodeURIComponent(url)}&sourceId=${item.sourceId}`;
+              const proxyUrl = `/api/proxy/image?url=${encodeURIComponent(pageObj.url)}&sourceId=${item.sourceId}`;
               
               try {
                 const imgRes = await fetch(proxyUrl);

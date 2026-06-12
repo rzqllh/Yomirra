@@ -22,6 +22,7 @@ interface LibraryState {
   items: Record<string, LibraryItem>;
   
   addToLibrary: (item: LibraryItem) => void;
+  _setItemLocal: (item: LibraryItem) => void;
   removeFromLibrary: (sourceId: string, mangaId: string) => void;
   toggleLibrary: (item: LibraryItem) => void;
   isInLibrary: (sourceId: string, mangaId: string) => boolean;
@@ -41,6 +42,16 @@ export const useLibraryStore = create<LibraryState>()(
       addToLibrary: (item) => set((state) => {
         const id = getLibraryId(item.sourceId, item.mangaId);
         pushLibraryItem(item); // Background sync
+        return {
+          items: {
+            ...state.items,
+            [id]: item,
+          }
+        };
+      }),
+
+      _setItemLocal: (item) => set((state) => {
+        const id = getLibraryId(item.sourceId, item.mangaId);
         return {
           items: {
             ...state.items,
