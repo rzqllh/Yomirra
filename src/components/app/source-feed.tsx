@@ -51,7 +51,7 @@ export async function SourceFeed({ sourceId, sourceName }: SourceFeedProps) {
               </Link>
             </div>
             
-            <div className="flex overflow-x-auto gap-3 sm:gap-4 pb-4 -mx-4 px-4 md:mx-0 md:px-0 snap-x scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="flex overflow-x-auto gap-3 sm:gap-4 pb-4 w-full min-w-0 snap-x scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {popular.mangas.slice(0, 15).map((manga, index) => (
                 <div key={manga.id} className="w-[120px] sm:w-[140px] md:w-[160px] lg:w-[180px] shrink-0 snap-start ">
                   <MangaCard 
