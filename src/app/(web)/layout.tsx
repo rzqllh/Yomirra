@@ -24,6 +24,7 @@ export const viewport: Viewport = {
 };
 
 import { AppShell } from "@/components/app/app-shell";
+import { ErrorBoundary } from "@/components/ui/error-boundary";
 
 export default function RootLayout({
   children,
@@ -34,7 +35,11 @@ export default function RootLayout({
     <html lang="id" className={inter.variable} suppressHydrationWarning>
       <body className="min-h-screen antialiased overflow-x-hidden" suppressHydrationWarning>
         <Providers>
-          <AppShell>{children}</AppShell>
+          <AppShell>
+            <ErrorBoundary>
+              {children}
+            </ErrorBoundary>
+          </AppShell>
         </Providers>
       </body>
     </html>

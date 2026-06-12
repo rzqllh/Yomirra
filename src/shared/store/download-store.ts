@@ -33,6 +33,8 @@ interface DownloadState {
 export const getDownloadId = (sourceId: string, mangaId: string, chapterId: string) => `${sourceId}::${mangaId}::${chapterId}`;
 export const CACHE_NAME = "yomirra-chapter-cache-v1";
 
+let queueLock: Promise<void> | null = null;
+
 export const useDownloadStore = create<DownloadState>()(
   persist(
     (set, get) => ({
@@ -124,80 +126,90 @@ export const useDownloadStore = create<DownloadState>()(
       },
 
       processQueue: async () => {
-        const { queue, isDownloading, downloads, updateStatus } = get();
-        
-        if (isDownloading || queue.length === 0) return;
+        if (queueLock) return;
 
-        // Take the first item in queue
-        const id = queue[0];
-        const item = downloads[id];
-
-        if (!item) {
-          // Clean up orphaned queue item
-          set((state) => ({ queue: state.queue.slice(1) }));
-          get().processQueue();
-          return;
-        }
-
-        set({ isDownloading: true, queue: queue.slice(1) });
-        updateStatus(id, "downloading", 0, 0, 0);
+        let resolveLock!: () => void;
+        queueLock = new Promise<void>((resolve) => {
+          resolveLock = resolve;
+        });
 
         try {
-          // 1. Fetch chapter pages from API
-          const res = await fetch(`/api/sources/${item.sourceId}/manga/${encodeURIComponent(item.mangaId)}/chapters/${encodeURIComponent(item.chapterId)}/pages`);
-          if (!res.ok) throw new Error("Failed to fetch chapter details");
-          const result = await res.json();
-          const pages: { index: number; url: string }[] = result.data?.pages ?? [];
-
-          if (!pages || pages.length === 0) throw new Error("No pages found");
-
-          updateStatus(id, "downloading", 0, 0, pages.length);
-
-          const cache = await caches.open(CACHE_NAME);
+          const { queue, isDownloading, downloads, updateStatus } = get();
           
-          let downloaded = 0;
-          
-          // 2. Download and cache each page
-          // To not overwhelm the browser/API, we do it in smaller batches or sequentially.
-          // We'll do a concurrency of 3
-          const CONCURRENCY = 3;
-          
-          for (let i = 0; i < pages.length; i += CONCURRENCY) {
-            const batch = pages.slice(i, i + CONCURRENCY);
-            const promises = batch.map(async (pageObj, idx) => {
-              const pageNumber = i + idx;
-              // We create a predictable URL format for the cache key:
-              // /offline-images/[sourceId::mangaId::chapterId]/[pageIndex]
-              const cacheKey = new URL(`/offline-images/${id}/${pageNumber}`, window.location.origin).toString();
-              
-              // We route the image request through our proxy to avoid CORS and get the actual blob
-              const proxyUrl = `/api/proxy/image?url=${encodeURIComponent(pageObj.url)}&sourceId=${item.sourceId}`;
-              
-              try {
-                const imgRes = await fetch(proxyUrl);
-                if (!imgRes.ok) throw new Error("Image proxy failed");
-                
-                await cache.put(cacheKey, imgRes);
-                
-                downloaded++;
-                const progress = Math.round((downloaded / pages.length) * 100);
-                updateStatus(id, "downloading", progress, downloaded, pages.length);
-              } catch (err) {
-                console.error(`Failed to download page ${pageNumber} for ${id}:`, err);
-                throw err;
-              }
-            });
+          if (isDownloading || queue.length === 0) return;
 
-            await Promise.all(promises);
+          // Take the first item in queue
+          const id = queue[0];
+          const item = downloads[id];
+
+          if (!item) {
+            // Clean up orphaned queue item
+            set((state) => ({ queue: state.queue.slice(1) }));
+            return;
           }
 
-          // Success
-          updateStatus(id, "downloaded", 100, downloaded, pages.length);
-        } catch (error: any) {
-          updateStatus(id, "error", 0, 0, 0, error.message || "Download failed");
+          set({ isDownloading: true, queue: queue.slice(1) });
+          updateStatus(id, "downloading", 0, 0, 0);
+
+          try {
+            // 1. Fetch chapter pages from API
+            const res = await fetch(`/api/sources/${item.sourceId}/manga/${encodeURIComponent(item.mangaId)}/chapters/${encodeURIComponent(item.chapterId)}/pages`);
+            if (!res.ok) throw new Error("Failed to fetch chapter details");
+            const result = await res.json();
+            const pages: { index: number; url: string }[] = result.data?.pages ?? [];
+
+            if (!pages || pages.length === 0) throw new Error("No pages found");
+
+            updateStatus(id, "downloading", 0, 0, pages.length);
+
+            const cache = await caches.open(CACHE_NAME);
+            
+            let downloaded = 0;
+            
+            // 2. Download and cache each page
+            // To not overwhelm the browser/API, we do it in smaller batches or sequentially.
+            // We'll do a concurrency of 3
+            const CONCURRENCY = 3;
+            
+            for (let i = 0; i < pages.length; i += CONCURRENCY) {
+              const batch = pages.slice(i, i + CONCURRENCY);
+              const promises = batch.map(async (pageObj, idx) => {
+                const pageNumber = i + idx;
+                // We create a predictable URL format for the cache key:
+                // /offline-images/[sourceId::mangaId::chapterId]/[pageIndex]
+                const cacheKey = new URL(`/offline-images/${id}/${pageNumber}`, window.location.origin).toString();
+                
+                // We route the image request through our proxy to avoid CORS and get the actual blob
+                const proxyUrl = `/api/proxy/image?url=${encodeURIComponent(pageObj.url)}&sourceId=${item.sourceId}`;
+                
+                try {
+                  const imgRes = await fetch(proxyUrl);
+                  if (!imgRes.ok) throw new Error("Image proxy failed");
+                  
+                  await cache.put(cacheKey, imgRes);
+                  
+                  downloaded++;
+                  const progress = Math.round((downloaded / pages.length) * 100);
+                  updateStatus(id, "downloading", progress, downloaded, pages.length);
+                } catch (err) {
+                  console.error(`Failed to download page ${pageNumber} for ${id}:`, err);
+                  throw err;
+                }
+              });
+
+              await Promise.all(promises);
+            }
+
+            // Success
+            updateStatus(id, "downloaded", 100, downloaded, pages.length);
+          } catch (error: any) {
+            updateStatus(id, "error", 0, 0, 0, error.message || "Download failed");
+          } finally {
+            set({ isDownloading: false });
+          }
         } finally {
-          // Release lock and process next in queue
-          set({ isDownloading: false });
+          queueLock = null;
+          resolveLock();
           get().processQueue();
         }
       },

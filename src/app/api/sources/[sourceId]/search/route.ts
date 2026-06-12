@@ -1,3 +1,4 @@
+import { createHash } from "crypto";
 import { checkRateLimit } from "@/server/lib/security/rate-limit";
 import { NextRequest, NextResponse } from "next/server";
 import { sourceManager } from "@/server/lib/sources/source-manager";
@@ -56,7 +57,7 @@ export async function GET(
 
     // Make cache key deterministic regarding filters
     const filterKey = Object.keys(filters).length > 0 
-      ? `:${JSON.stringify(filters)}`
+      ? `:${createHash("md5").update(JSON.stringify(filters)).digest("hex").slice(0, 8)}`
       : "";
     const cacheKey = `source:${sourceId}:search:${q}:${page}${filterKey}`;
 
