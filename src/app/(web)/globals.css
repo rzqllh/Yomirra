@@ -13,6 +13,8 @@
   --color-text-secondary: var(--text-secondary);
   --color-text-muted: var(--text-muted);
   --color-text-on-accent: var(--text-on-accent);
+  --color-media-foreground: var(--media-foreground);
+  --color-media-muted: var(--media-muted-foreground);
 
   /* Border */
   --color-border-subtle: var(--border-subtle);
@@ -56,6 +58,7 @@
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.15);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.30), 0 2px 6px rgba(0, 0, 0, 0.18);
   --shadow-lg: 0 8px 28px rgba(0, 0, 0, 0.40), 0 4px 12px rgba(0, 0, 0, 0.25);
+  --shadow-heavy: var(--shadow-heavy-val);
   --shadow-reader: 0 0 40px rgba(0, 0, 0, 0.70);
 
   /* Typography */
@@ -120,6 +123,15 @@
 }
 
 @layer base {
+  :root {
+    /* Theme-independent Media Overlay (Always Dark) */
+    --media-overlay-strong: rgba(0, 13, 15, 0.92);
+    --media-overlay-mid: rgba(0, 13, 15, 0.58);
+    --media-overlay-soft: rgba(0, 13, 15, 0.12);
+    --media-foreground: #F4FBFC;
+    --media-muted-foreground: rgba(244, 251, 252, 0.78);
+  }
+
   :root, .dark {
     /* Yomirra Deep Lagoon - Dark */
     --surface-base: #000D0F; /* deepest base */
@@ -145,6 +157,8 @@
     --color-semantic-warning: #B56A5B; /* warm-soft */
     --color-semantic-error: #964734; /* clay, warm destructive-soft */
     --color-semantic-info: #0FA4AF;
+
+    --shadow-heavy-val: 0 12px 40px rgba(0, 0, 0, 0.65);
 
     /* shadcn/ui compatible mapping */
     --background: var(--surface-base);
@@ -195,6 +209,8 @@
     --color-semantic-error: #964734;
     --color-semantic-info: #0FA4AF;
 
+    --shadow-heavy-val: 0 12px 30px rgba(0, 49, 53, 0.15), 0 4px 12px rgba(0, 49, 53, 0.08);
+
     /* shadcn/ui compatible mapping */
     --background: var(--surface-base);
     --foreground: var(--text-primary);
@@ -218,6 +234,17 @@
   }
 }
 
+@layer utilities {
+  .bg-media-gradient {
+    background: linear-gradient(
+      to top,
+      var(--media-overlay-strong) 0%,
+      var(--media-overlay-mid) 42%,
+      var(--media-overlay-soft) 72%,
+      transparent 100%
+    );
+  }
+}
 @layer base {
   html, body {
     max-width: 100%;

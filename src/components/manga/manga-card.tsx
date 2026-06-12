@@ -62,7 +62,7 @@ export function MangaCard({ manga, sourceId, priority = false, variant = "discov
       onClick={handleBookmarkClick}
       whileTap={{ scale: 0.86 }}
       whileHover={{ scale: 1.04 }}
-      className={`grid size-8 place-items-center rounded-full transition-all focus-visible:outline-none ${isInLibrary ? 'text-accent hover:text-accent-hover' : 'text-white/70 hover:text-white'}`}
+      className={`grid size-8 place-items-center rounded-full transition-all focus-visible:outline-none bg-black/40 backdrop-blur-md border border-white/10 shadow-sm ${isInLibrary ? 'text-accent hover:text-accent-hover' : 'text-media-muted hover:text-media-foreground'}`}
       aria-label={isInLibrary ? "Hapus dari readlist" : "Simpan ke readlist"}
     >
       <AnimatePresence mode="wait" initial={false}>
@@ -142,72 +142,70 @@ export function MangaCard({ manga, sourceId, priority = false, variant = "discov
   // shelf and discovery variants use the vertical grid card
   return (
     <motion.article
-      whileHover={{ y: -3 }}
-      whileTap={{ scale: 0.985 }}
+      whileHover={{ y: -4 }}
+      whileTap={{ scale: 0.98 }}
       transition={{ type: "spring", stiffness: 400, damping: 28 }}
-      className="relative block w-full aspect-[1/1.4] overflow-hidden rounded-[var(--radius-md)] bg-surface-muted border border-border-default shadow-sm group"
+      className="relative flex flex-col w-full group"
     >
       <Link 
         href={getMangaDetailHref(sourceId, manga.id)} 
         transitionTypes={['nav-forward']}
         onPointerDown={() => setIsInteracting(true)}
         onPointerLeave={() => setIsInteracting(false)}
-        className="group absolute inset-0 flex flex-col justify-end focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        className="group flex flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         prefetch={false}
       >
-        <Image
-          src={manga.coverUrl}
-          alt={manga.title}
-          fill
-          sizes={priority ? "(max-width: 640px) 33vw, (max-width: 768px) 25vw, 20vw" : "(max-width: 640px) 25vw, 15vw"}
-          priority={priority}
-          style={isInteracting ? { viewTransitionName: `cover-${sourceId}-${manga.id}` } : undefined}
-          className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.025]"
-          unoptimized={manga.coverUrl.startsWith("http")}
-        />
-        
-        {/* Cinematic gradient */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[var(--surface-base)] via-[var(--surface-base)]/40 to-transparent opacity-90 transition-opacity duration-300 group-hover:opacity-100 z-10 pointer-events-none" />
-
-        {/* Top Badges */}
-        <div className="absolute top-2 left-2 flex flex-wrap gap-1 z-20">
-          {manga.status === "Ongoing" && variant === "discovery" && (
-            <div className="flex items-center justify-center rounded-[var(--radius-xs)] bg-accent px-1.5 py-[2px] shadow-sm">
-              <span className="text-[9px] font-black uppercase tracking-wider text-accent-on leading-none">UP</span>
-            </div>
-          )}
-          {manga.format && (
-            <div className="flex items-center justify-center rounded-[var(--radius-xs)] bg-surface-overlay/80 backdrop-blur-md px-1.5 py-[2px] shadow-sm border border-border-default">
-              <span className="text-[9px] font-black uppercase tracking-wider text-text-primary leading-none">{manga.format}</span>
-            </div>
-          )}
+        <div className="relative w-full aspect-[1/1.4] overflow-hidden rounded-[var(--radius-md)] bg-surface-muted border border-border-default shadow-sm mb-2.5">
+          <Image
+            src={manga.coverUrl}
+            alt={manga.title}
+            fill
+            sizes={priority ? "(max-width: 640px) 33vw, (max-width: 768px) 25vw, 20vw" : "(max-width: 640px) 25vw, 15vw"}
+            priority={priority}
+            style={isInteracting ? { viewTransitionName: `cover-${sourceId}-${manga.id}` } : undefined}
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03]"
+            unoptimized={manga.coverUrl.startsWith("http")}
+          />
+          
+          {/* Top Badges */}
+          <div className="absolute top-2 left-2 flex flex-wrap gap-1 z-20">
+            {manga.status === "Ongoing" && variant === "discovery" && (
+              <div className="flex items-center justify-center rounded-[var(--radius-xs)] bg-accent px-1.5 py-[2px] shadow-sm">
+                <span className="text-[9px] font-black uppercase tracking-wider text-accent-on leading-none">UP</span>
+              </div>
+            )}
+            {manga.format && (
+              <div className="flex items-center justify-center rounded-[var(--radius-xs)] bg-black/60 backdrop-blur-md px-1.5 py-[2px] shadow-sm border border-white/10">
+                <span className="text-[9px] font-black uppercase tracking-wider text-media-foreground leading-none">{manga.format}</span>
+              </div>
+            )}
+          </div>
+          
+          <div className="absolute top-2 right-2 z-30 opacity-0 group-hover:opacity-100 transition-opacity md:flex hidden">
+             <BookmarkButton />
+          </div>
+          <div className="absolute top-2 right-2 z-30 md:hidden flex">
+             <BookmarkButton />
+          </div>
         </div>
 
-        {/* Info Content */}
-        <div className="relative z-20 p-3 pb-2.5 flex flex-col justify-end w-full">
-          <motion.h3 
-            className="line-clamp-2 text-xs sm:text-sm font-bold text-white leading-tight text-shadow-sm mb-1 group-hover:text-accent transition-colors duration-200"
-          >
+        {/* Info Content (Below Image) */}
+        <div className="flex flex-col px-0.5">
+          <h3 className="line-clamp-2 text-xs sm:text-sm font-bold text-text-primary leading-[1.3] mb-1 group-hover:text-accent transition-colors duration-200">
             {manga.title}
-          </motion.h3>
+          </h3>
           
-          <div className="flex items-end justify-between w-full mt-0.5 gap-1">
-            <div className="flex flex-col min-w-0 flex-1">
-              {manga.latestChapter && (
-                <span className="text-[11px] sm:text-xs font-medium text-white/90 truncate">
-                  {manga.latestChapter}
-                </span>
-              )}
-              {timeText && variant === "discovery" && (
-                <span className="text-[10px] sm:text-[11px] text-white/60 truncate" suppressHydrationWarning>
-                  {timeText}
-                </span>
-              )}
-            </div>
-            
-            <div className="relative z-30 shrink-0">
-              <BookmarkButton />
-            </div>
+          <div className="flex items-center justify-between gap-1">
+            {manga.latestChapter && (
+              <span className="text-[11px] sm:text-xs font-medium text-text-muted truncate">
+                {manga.latestChapter}
+              </span>
+            )}
+            {timeText && variant === "discovery" && (
+              <span className="text-[10px] sm:text-[11px] text-text-muted/70 whitespace-nowrap" suppressHydrationWarning>
+                {timeText}
+              </span>
+            )}
           </div>
         </div>
       </Link>
