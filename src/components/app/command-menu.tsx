@@ -14,6 +14,7 @@ import {
   Gear,
   MagnifyingGlass,
   CircleNotch,
+  BookmarkSimple,
 } from "@phosphor-icons/react"
 import {
   CommandDialog,
@@ -29,7 +30,7 @@ import { getMangaDetailHref } from "@/shared/lib/routes"
 const NAV_ITEMS = [
   { label: "Beranda", href: "/", icon: House },
   { label: "Library", href: "/library", icon: Books },
-  { label: "Riwayat", href: "/history", icon: Clock },
+  { label: "Bookmark", href: "/bookmark", icon: BookmarkSimple },
   { label: "Sumber", href: "/sources", icon: Compass },
   { label: "Pengaturan", href: "/settings", icon: Gear },
 ]

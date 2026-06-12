@@ -10,8 +10,8 @@ export function getLibraryHref(): string {
   return `/library`;
 }
 
-export function getReadlistHref(): string {
-  return `/readlist`;
+export function getBookmarkHref(): string {
+  return `/bookmark`;
 }
 
 export function getSearchHref(query?: string): string {
@@ -23,12 +23,6 @@ export function getSearchHref(query?: string): string {
 
 export function getSourcesHref(): string {
   return `/sources`;
-}
-
-
-
-export function getHistoryHref(): string {
-  return `/history`;
 }
 
 export function getSettingsHref(): string {
