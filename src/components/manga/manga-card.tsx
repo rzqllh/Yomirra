@@ -8,6 +8,7 @@ import { getMangaDetailHref } from "@/shared/lib/routes";
 import type { MangaItem } from "@/shared/types/source";
 import { motion, AnimatePresence } from "motion/react";
 import { useLibraryStore } from "@/shared/store/library-store";
+import { usePathname, useSearchParams } from "next/navigation";
 
 interface MangaCardProps {
   manga: MangaItem;
@@ -41,6 +42,9 @@ export function MangaCard({ manga, sourceId, priority = false, variant = "discov
   const isInLibrary = isMounted ? rawIsInLibrary : false;
   const toggleLibrary = useLibraryStore((state) => state.toggleLibrary);
   const [isInteracting, setIsInteracting] = React.useState(false);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const fullPath = pathname + (searchParams.toString() ? `?${searchParams.toString()}` : "");
 
   const handleBookmarkClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -99,7 +103,7 @@ export function MangaCard({ manga, sourceId, priority = false, variant = "discov
         className="relative flex items-center gap-4 w-full p-2 rounded-[var(--radius-md)] bg-surface-base hover:bg-surface-raised border border-transparent hover:border-border-subtle transition-all group"
       >
         <Link 
-          href={getMangaDetailHref(sourceId, manga.id)}
+          href={getMangaDetailHref(sourceId, manga.id, fullPath)}
           className="absolute inset-0 z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-[var(--radius-md)]"
           aria-label={manga.title}
         />
@@ -148,7 +152,7 @@ export function MangaCard({ manga, sourceId, priority = false, variant = "discov
       className="relative flex flex-col w-full group"
     >
       <Link 
-        href={getMangaDetailHref(sourceId, manga.id)} 
+        href={getMangaDetailHref(sourceId, manga.id, fullPath)} 
         transitionTypes={['nav-forward']}
         onPointerDown={() => setIsInteracting(true)}
         onPointerLeave={() => setIsInteracting(false)}
@@ -197,18 +201,18 @@ export function MangaCard({ manga, sourceId, priority = false, variant = "discov
           
           <div className="flex items-center justify-between gap-1">
             {manga.latestChapter && (
-              <span className="text-[11px] sm:text-xs font-medium text-text-muted truncate">
-                {manga.latestChapter}
-              </span>
-            )}
-            {timeText && variant === "discovery" && (
-              <span className="text-[10px] sm:text-[11px] text-text-muted/70 whitespace-nowrap" suppressHydrationWarning>
-                {timeText}
-              </span>
-            )}
-          </div>
-        </div>
-      </Link>
-    </motion.article>
-  );
+          <span className="text-[11px] sm:text-xs font-medium text-text-muted truncate">
+            {manga.latestChapter}
+          </span>
+        )}
+        {timeText && variant === "discovery" && (
+          <span className="text-[10px] sm:text-[11px] text-text-muted/70 whitespace-nowrap" suppressHydrationWarning>
+            {timeText}
+          </span>
+        )}
+      </div>
+    </div>
+  </Link>
+</motion.article>
+);
 }

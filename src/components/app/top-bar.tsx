@@ -8,6 +8,7 @@ import { cn } from "@/shared/utils/cn"
 interface TopBarProps {
   title: string
   showBack?: boolean
+  backHref?: string
   action?: React.ReactNode
   className?: string
 }
@@ -15,10 +16,19 @@ interface TopBarProps {
 export function TopBar({
   title,
   showBack = false,
+  backHref,
   action,
   className,
 }: TopBarProps) {
   const router = useRouter()
+
+  const handleBack = () => {
+    if (backHref) {
+      router.push(backHref)
+    } else {
+      router.back()
+    }
+  }
 
   return (
     <header
@@ -30,7 +40,7 @@ export function TopBar({
       <div className="flex items-center gap-3">
         {showBack && (
           <button
-            onClick={() => router.back()}
+            onClick={handleBack}
             className="flex size-9 items-center justify-center rounded-full transition-colors hover:bg-surface-raised active:bg-surface-overlay"
             aria-label="Go back"
           >

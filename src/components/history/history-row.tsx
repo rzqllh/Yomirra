@@ -1,6 +1,7 @@
 import * as React from "react"
 import Link from "next/link"
 import Image from "next/image"
+import { usePathname } from "next/navigation"
 import { getReaderHref, getMangaDetailHref } from "@/shared/lib/routes"
 import { Trash } from "@phosphor-icons/react"
 import { IconButton } from "@/components/ui/icon-button"
@@ -12,9 +13,11 @@ interface HistoryRowProps {
 }
 
 export function HistoryRow({ item, onRemove }: HistoryRowProps) {
+  const pathname = usePathname()
+
   return (
     <div className="group relative flex items-center gap-4 rounded-[var(--radius-xl)] bg-surface-raised p-3 border border-border-subtle transition-colors hover:bg-surface-overlay overflow-hidden">
-      <Link href={getMangaDetailHref(item.sourceId, item.mangaId)} className="relative h-20 w-14 shrink-0 overflow-hidden rounded-[var(--radius-sm)] bg-surface-overlay">
+      <Link href={getMangaDetailHref(item.sourceId, item.mangaId, pathname)} className="relative h-20 w-14 shrink-0 overflow-hidden rounded-[var(--radius-sm)] bg-surface-overlay">
         {item.coverUrl ? (
           <Image src={item.coverUrl} alt={item.mangaTitle} fill sizes="56px" className="object-cover" />
         ) : (
@@ -22,7 +25,7 @@ export function HistoryRow({ item, onRemove }: HistoryRowProps) {
         )}
       </Link>
       <div className="flex-1 min-w-0 flex flex-col justify-center">
-        <Link href={getMangaDetailHref(item.sourceId, item.mangaId)} className="block min-w-0">
+        <Link href={getMangaDetailHref(item.sourceId, item.mangaId, pathname)} className="block min-w-0">
           <h3 className="line-clamp-2 font-bold text-text-primary text-sm md:text-base leading-snug hover:text-accent transition-colors">
             {item.mangaTitle}
           </h3>
