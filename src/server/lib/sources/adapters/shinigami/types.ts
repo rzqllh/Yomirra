@@ -17,6 +17,7 @@ export interface ShinigamiMangaItem {
   taxonomy?: {
     Format?: Array<{ name: string; slug: string }>;
     Type?: Array<{ name: string; slug: string }>;
+    Genre?: Array<{ name: string; slug: string }>;
   };
   [key: string]: unknown;
 }
