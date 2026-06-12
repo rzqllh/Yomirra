@@ -22,7 +22,7 @@ export function TopNav() {
   };
 
   return (
-    <div style={{ viewTransitionName: 'persistent-top-nav' }} className="hidden md:flex h-16 w-full items-center justify-between bg-surface-base/80 backdrop-blur-2xl border-b border-border-subtle px-6 sticky top-0 z-40 transition-all duration-150">
+    <div style={{ viewTransitionName: 'persistent-top-nav' }} className="hidden md:flex h-16 w-full items-center justify-between bg-surface-base/90 backdrop-blur-2xl border-b border-white/5 px-6 sticky top-0 z-40 transition-all duration-150">
       <div className="w-[360px] lg:w-[480px]">
         <SearchInput
           value={query}

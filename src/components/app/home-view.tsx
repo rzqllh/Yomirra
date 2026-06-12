@@ -35,7 +35,7 @@ export function HomeView({ children }: HomeViewProps) {
       <h1 className="sr-only">Beranda Yomirra</h1>
       
       {/* Mobile Header / Search */}
-      <div className="md:hidden sticky top-0 z-[var(--z-sticky)] bg-surface-overlay/80 backdrop-blur-xl border-b border-border-default shadow-sm pt-[calc(var(--safe-top)+8px)] pb-3 px-4">
+      <div className="md:hidden sticky top-0 z-[var(--z-sticky)] bg-surface-base/90 backdrop-blur-xl border-b border-white/5 shadow-sm pt-[calc(var(--safe-top)+8px)] pb-3 px-4">
         <SearchInput
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -67,7 +67,7 @@ export function HomeView({ children }: HomeViewProps) {
           {historyItems.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
               {historyItems.map((item) => (
-                <div key={`${item.sourceId}::${item.mangaId}::${item.chapterId}`} className="group relative flex items-center gap-4 rounded-[var(--radius-lg)] bg-surface-raised p-3 border border-border-subtle transition-colors hover:bg-surface-overlay overflow-hidden">
+                <div key={`${item.sourceId}::${item.mangaId}::${item.chapterId}`} className="group relative flex items-center gap-4 rounded-[var(--radius-xl)] bg-surface-raised/50 backdrop-blur-sm p-3 border border-border-subtle/50 transition-all duration-300 hover:bg-surface-overlay/80 hover:shadow-lg overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-r from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                   
                   <Link 
@@ -111,7 +111,7 @@ export function HomeView({ children }: HomeViewProps) {
                     asChild
                     variant="accent" 
                     size="icon"
-                    className="shrink-0 rounded-full h-10 w-10 shadow-sm relative z-20 ml-2"
+                    className="shrink-0 rounded-full h-10 w-10 shadow-md relative z-20 ml-2 group-hover:scale-105 transition-transform"
                   >
                     <Link href={getReaderHref(item.sourceId, item.mangaId, item.chapterId)} prefetch={false}>
                       <Play className="h-4 w-4" weight="fill" />
@@ -126,10 +126,10 @@ export function HomeView({ children }: HomeViewProps) {
               icon={<BookmarkSimple size={28} className="text-text-muted" weight="duotone" />}
               title="Belum ada riwayat baca"
               description="Buka chapter komik manapun dan progresmu akan otomatis muncul di sini."
-              className="bg-surface-raised/50 rounded-[var(--radius-lg)] py-12 border border-border-subtle"
+              className="bg-surface-raised/30 rounded-[var(--radius-xl)] py-12 border border-border-subtle/50"
             />
           ) : (
-            <div className="w-full h-[100px] motion-safe:animate-pulse bg-surface-raised/50 rounded-[var(--radius-lg)] border border-border-subtle" />
+            <div className="w-full h-[100px] motion-safe:animate-pulse bg-surface-raised/30 rounded-[var(--radius-xl)] border border-border-subtle/50" />
           )}
         </section>
 

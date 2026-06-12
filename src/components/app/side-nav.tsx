@@ -24,9 +24,9 @@ export function SideNav() {
   ];
 
   return (
-    <div style={{ viewTransitionName: 'persistent-side-nav' }} className="hidden md:flex w-[80px] lg:w-[240px] flex-col bg-surface-base border-r border-border-subtle shadow-md h-screen fixed left-0 top-0 z-50 pt-0 pb-6 overflow-y-auto custom-scrollbar transition-all duration-300">
+    <div style={{ viewTransitionName: 'persistent-side-nav' }} className="hidden md:flex w-[80px] lg:w-[240px] flex-col bg-surface-raised border-r border-border-subtle/30 shadow-2xl h-screen fixed left-0 top-0 z-50 pt-0 pb-6 overflow-y-auto custom-scrollbar transition-all duration-300">
       {/* Logo Area */}
-      <div className="flex h-16 items-center justify-center lg:justify-start px-4 mb-6 lg:px-6 sticky top-0 z-10 bg-surface-base">
+      <div className="flex h-16 items-center justify-center lg:justify-start px-4 mb-6 lg:px-6 sticky top-0 z-10 bg-surface-raised">
         <Link href="/" className="flex items-center gap-3 group">
           <div className="relative flex size-9 items-center justify-center rounded-xl overflow-hidden shrink-0 shadow-sm ring-1 ring-border-subtle transition-transform duration-300 group-hover:scale-105">
             <Image src={Logo} alt="Yomirra Logo" fill sizes="36px" className="object-cover" />
