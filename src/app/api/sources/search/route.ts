@@ -2,6 +2,8 @@ import { checkRateLimit } from "@/server/lib/security/rate-limit";
 import { NextRequest, NextResponse } from "next/server";
 import { sourceManager } from "@/server/lib/sources/source-manager";
 import { MangaItem } from "@/shared/sources/source-types";
+import { swrCache, CACHE_TTL } from "@/server/lib/cache/strategies";
+import { createHash } from "crypto";
 
 export interface GlobalSearchResponse {
   resultsBySource: Record<string, {
@@ -42,41 +44,58 @@ export async function GET(req: NextRequest) {
 
   const sourceIds = sourcesParam.split(",").filter(Boolean);
 
-  const resultsBySource: GlobalSearchResponse["resultsBySource"] = {};
+  // Make cache key deterministic
+  let filterKey = "";
+  if (Object.keys(filters).length > 0) {
+    filterKey = `:${createHash("md5").update(JSON.stringify(filters)).digest("hex").slice(0, 8)}`;
+  }
+  const cacheKey = `global:search:${q}:sources:${sourceIds.sort().join(",")}${filterKey}`;
 
-  // Fetch from all selected sources in parallel
-  const promises = sourceIds.map(async (sourceId) => {
-    let source;
-    try {
-      source = sourceManager.getSource(sourceId);
-    } catch (e) {
-      resultsBySource[sourceId] = { results: [], error: "Source not found" };
-      return;
-    }
+  try {
+    const cachedData = await swrCache(
+      cacheKey,
+      async () => {
+        const results: GlobalSearchResponse["resultsBySource"] = {};
+        
+        const promises = sourceIds.map(async (sourceId) => {
+          let source;
+          try {
+            source = sourceManager.getSource(sourceId);
+          } catch (e) {
+            results[sourceId] = { results: [], error: "Source not found" };
+            return;
+          }
 
-    if (!source.capabilities.search) {
-      resultsBySource[sourceId] = { results: [], error: "Search not supported by source" };
-      return;
-    }
+          if (!source.capabilities.search) {
+            results[sourceId] = { results: [], error: "Search not supported by source" };
+            return;
+          }
 
-    try {
-      const searchResult = await source.search(q, 1, Object.keys(filters).length > 0 ? filters : undefined);
-      resultsBySource[sourceId] = {
-        results: searchResult.mangas,
-      };
-    } catch (error: unknown) {
-      resultsBySource[sourceId] = {
-        results: [],
-        error: error instanceof Error ? error.message : "Search failed",
-      };
-    }
-  });
+          try {
+            const searchResult = await source.search(q, 1, Object.keys(filters).length > 0 ? filters : undefined);
+            results[sourceId] = {
+              results: searchResult.mangas,
+            };
+          } catch (error: unknown) {
+            results[sourceId] = {
+              results: [],
+              error: error instanceof Error ? error.message : "Search failed",
+            };
+          }
+        });
 
-  await Promise.allSettled(promises);
+        await Promise.allSettled(promises);
+        return results;
+      },
+      CACHE_TTL.SEARCH
+    );
 
-  return NextResponse.json({
-    data: {
-      resultsBySource
-    }
-  });
+    return NextResponse.json({
+      data: {
+        resultsBySource: cachedData
+      }
+    });
+  } catch (error) {
+    return NextResponse.json({ error: { message: "Internal server error" } }, { status: 500 });
+  }
 }
