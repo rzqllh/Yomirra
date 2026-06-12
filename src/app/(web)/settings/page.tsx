@@ -43,7 +43,7 @@ export default function SettingsPage() {
     <DirectionalTransition>
       <MobilePageShell title="Pengaturan">
         <div className="flex flex-col min-h-screen bg-surface-base">
-          <main className="flex-1 w-full max-w-3xl mx-auto pb-20 md:pb-8">
+          <main className="flex-1 w-full max-w-3xl mx-auto md:pb-8">
             <div className="px-4 py-6 md:px-8 md:py-8 space-y-8">
               
               <div className="hidden md:block">

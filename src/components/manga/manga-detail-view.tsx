@@ -98,7 +98,7 @@ export function MangaDetailView({
         <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/80 to-background" />
       </div>
 
-      <div className="w-full max-w-7xl mx-auto px-4 md:px-8 pt-6 md:pt-12 pb-[calc(6rem+env(safe-area-inset-bottom))] relative z-10 flex flex-col md:flex-row gap-6 md:gap-8">
+      <div className="w-full max-w-7xl mx-auto px-4 md:px-8 pt-6 md:pt-12 relative z-10 flex flex-col md:flex-row gap-6 md:gap-8">
         
         <div className="flex gap-4 md:hidden">
           <div className="relative w-[110px] shrink-0 aspect-[2/3] rounded-[var(--radius-md)] overflow-hidden shadow-xl border border-border-default bg-surface-base vt-cover-mobile" style={{ viewTransitionName: `cover-${sourceId}-${mangaId}` }}>

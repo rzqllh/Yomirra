@@ -24,7 +24,7 @@ export function EndOfChapter({
   const router = useRouter()
 
   return (
-    <div className="w-full max-w-[600px] mx-auto px-4 py-12 pb-[calc(3rem+env(safe-area-inset-bottom))] flex flex-col items-center justify-center motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-8 duration-300">
+    <div className="w-full max-w-[600px] mx-auto px-4 py-12 pb-[calc(3rem+var(--safe-bottom))] flex flex-col items-center justify-center motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-8 duration-300">
       <div className="bg-surface-raised border border-border-subtle rounded-[var(--radius-xl)] shadow-lg p-8 w-full flex flex-col items-center text-center space-y-6">
         
         <div className="flex flex-col items-center space-y-2">
