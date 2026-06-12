@@ -29,8 +29,21 @@ export function getSettingsHref(): string {
   return `/settings`;
 }
 
-export function getMangaDetailHref(sourceId: string, mangaId: string): string {
-  return `/manga/${encodeURIComponent(sourceId)}/${encodeURIComponent(mangaId)}`;
+export function getMangaDetailHref(sourceId: string, mangaId: string, returnTo?: string): string {
+  const base = `/manga/${encodeURIComponent(sourceId)}/${encodeURIComponent(mangaId)}`;
+  if (returnTo) {
+    return `${base}?returnTo=${encodeURIComponent(returnTo)}`;
+  }
+  return base;
+}
+
+export function getSafeMangaDetailBackHref(returnTo: string | null, sourceId: string): string {
+  // If returnTo exists and is not pointing to a reader route, use it
+  if (returnTo && !returnTo.includes('/read/')) {
+    return returnTo;
+  }
+  // Otherwise safe fallback
+  return `/`;
 }
 
 export function getReaderHref(sourceId: string, mangaId: string, chapterId: string): string {

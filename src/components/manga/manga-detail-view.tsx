@@ -4,13 +4,14 @@ import { useState, useMemo } from "react";
 import { Play, SortAscending, SortDescending } from "@phosphor-icons/react";
 import Image from "next/image";
 import Link from "next/link";
-import { getReaderHref } from "@/shared/lib/routes";
+import { getReaderHref, getSafeMangaDetailBackHref } from "@/shared/lib/routes";
 import { MangaActions } from "@/components/manga/manga-actions";
 import { useHistoryStore } from "@/shared/store/history-store";
 import { TopBar } from "@/components/app/top-bar";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { ChapterRow } from "@/components/manga/chapter-row";
+import { useSearchParams } from "next/navigation";
 import type { MangaDetail, Chapter } from "@/shared/types/source";
 
 interface MangaDetailViewProps {
@@ -28,6 +29,10 @@ export function MangaDetailView({
 }: MangaDetailViewProps) {
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
   const [searchQuery, setSearchQuery] = useState("");
+  
+  const searchParams = useSearchParams();
+  const returnTo = searchParams.get("returnTo");
+  const backHref = getSafeMangaDetailBackHref(returnTo, sourceId);
 
   const getLatestForManga = useHistoryStore((state) => state.getLatestForManga);
   const historyItem = getLatestForManga(sourceId, mangaId);
@@ -83,7 +88,7 @@ export function MangaDetailView({
   return (
     <main className="min-h-screen flex flex-col w-full relative">
       <div className="md:hidden">
-        <TopBar title={detail.title} showBack />
+        <TopBar title={detail.title} showBack backHref={backHref} />
       </div>
 
       <div className="absolute top-0 left-0 right-0 h-[400px] w-full overflow-hidden z-0 pointer-events-none select-none">

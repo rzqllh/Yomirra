@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { BookmarkSimple, Play } from "@phosphor-icons/react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { EmptyState } from "@/components/states/empty-state";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -17,6 +17,7 @@ interface HomeViewProps {
 
 export function HomeView({ children }: HomeViewProps) {
   const router = useRouter();
+  const pathname = usePathname();
   const [query, setQuery] = React.useState("");
   const [interactingId, setInteractingId] = React.useState<string | null>(null);
 
@@ -71,8 +72,7 @@ export function HomeView({ children }: HomeViewProps) {
                   <div className="absolute inset-0 bg-gradient-to-r from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                   
                   <Link 
-                    href={getMangaDetailHref(item.sourceId, item.mangaId)} 
-                    transitionTypes={['nav-forward']} 
+                    href={getMangaDetailHref(item.sourceId, item.mangaId, pathname)} 
                     prefetch={false} 
                     onPointerDown={() => setInteractingId(item.mangaId)}
                     onPointerLeave={() => setInteractingId(null)}
@@ -86,7 +86,7 @@ export function HomeView({ children }: HomeViewProps) {
                   </Link>
                   
                   <div className="flex-1 min-w-0 flex flex-col justify-center z-10">
-                    <Link href={getMangaDetailHref(item.sourceId, item.mangaId)} prefetch={false} className="block min-w-0">
+                    <Link href={getMangaDetailHref(item.sourceId, item.mangaId, pathname)} prefetch={false} className="block min-w-0">
                       <h3 className="truncate font-bold text-text-primary text-sm md:text-base leading-snug group-hover:text-accent transition-colors">
                         {item.mangaTitle}
                       </h3>

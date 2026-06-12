@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import { useQuery } from "@tanstack/react-query"
 import { apiClient } from "@/shared/api-client"
 import { useDebounce } from "@/shared/hooks/use-debounce"
@@ -38,6 +38,7 @@ export function CommandMenu() {
   const [open, setOpen] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState("")
   const router = useRouter()
+  const pathname = usePathname()
 
   // Keyboard shortcut
   React.useEffect(() => {
@@ -95,7 +96,7 @@ export function CommandMenu() {
                 key={manga.id}
                 value={manga.title}
                 onSelect={() =>
-                  handleSelect(getMangaDetailHref(activeSourceId, manga.id))
+                  handleSelect(getMangaDetailHref(activeSourceId, manga.id, pathname))
                 }
               >
                 <MagnifyingGlass className="mr-2 h-4 w-4 text-text-muted" weight="bold" />
