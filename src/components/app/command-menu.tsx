@@ -9,7 +9,6 @@ import { useSettingsStore } from "@/shared/store/settings-store"
 import {
   House,
   Books,
-  Clock,
   Compass,
   Gear,
   MagnifyingGlass,

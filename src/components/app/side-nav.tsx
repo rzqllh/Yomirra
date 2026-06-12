@@ -1,6 +1,6 @@
 "use client";
 
-import { House, Books, Compass, ClockCounterClockwise, Gear, BookmarkSimple } from "@phosphor-icons/react";
+import { House, Books, Compass, Gear, BookmarkSimple } from "@phosphor-icons/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/shared/utils/cn";

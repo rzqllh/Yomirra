@@ -1,6 +1,8 @@
 import { initFirebase } from "./firebase";
+import { LibraryItem } from "@/shared/store/library-store";
+import { HistoryItem } from "@/shared/store/history-store";
 
-export async function pushLibraryItem(item: any) {
+export async function pushLibraryItem(item: LibraryItem) {
   const { auth, db } = await initFirebase();
   if (!auth || !db) return;
   const user = auth.currentUser;
@@ -28,7 +30,7 @@ export async function deleteLibraryItem(sourceId: string, mangaId: string) {
   }
 }
 
-export async function pushHistoryItem(item: any) {
+export async function pushHistoryItem(item: HistoryItem) {
   const { auth, db } = await initFirebase();
   if (!auth || !db) return;
   const user = auth.currentUser;
@@ -56,7 +58,7 @@ export async function deleteHistoryItem(sourceId: string, mangaId: string, chapt
   }
 }
 
-export async function pullLibraryData(): Promise<any[]> {
+export async function pullLibraryData(): Promise<LibraryItem[]> {
   const { auth, db } = await initFirebase();
   if (!auth || !db) return [];
   const user = auth.currentUser;
@@ -64,14 +66,14 @@ export async function pullLibraryData(): Promise<any[]> {
   try {
     const { collection, getDocs } = await import("firebase/firestore");
     const querySnapshot = await getDocs(collection(db, `users/${user.uid}/library`));
-    return querySnapshot.docs.map(doc => doc.data());
+    return querySnapshot.docs.map(doc => doc.data() as LibraryItem);
   } catch (e) {
     console.error("Failed to pull library data", e);
     return [];
   }
 }
 
-export async function pullHistoryData(): Promise<any[]> {
+export async function pullHistoryData(): Promise<HistoryItem[]> {
   const { auth, db } = await initFirebase();
   if (!auth || !db) return [];
   const user = auth.currentUser;
@@ -79,7 +81,7 @@ export async function pullHistoryData(): Promise<any[]> {
   try {
     const { collection, getDocs } = await import("firebase/firestore");
     const querySnapshot = await getDocs(collection(db, `users/${user.uid}/history`));
-    return querySnapshot.docs.map(doc => doc.data());
+    return querySnapshot.docs.map(doc => doc.data() as HistoryItem);
   } catch (e) {
     console.error("Failed to pull history data", e);
     return [];

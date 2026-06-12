@@ -15,33 +15,34 @@ export const metadata: Metadata = {
 };
 
 async function LatestFeed({ sourceId, sourceName }: { sourceId: string; sourceName: string }) {
+  let latest;
   try {
     const source = sourceManager.getSource(sourceId);
-    const latest = await swrCache(`source:${sourceId}:latest:1`, () => source.getLatest(1), CACHE_TTL.DISCOVERY);
-
-    if (!latest?.mangas.length) return null;
-
-    return (
-      <section className="mb-12">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-text-primary">
-            {sourceName}
-          </h2>
-          <Link href={`/sources/${sourceId}?sort=latest`} className="text-sm font-bold text-accent hover:text-accent-hover transition-colors">
-            Lihat Semua
-          </Link>
-        </div>
-        
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-5">
-          {latest.mangas.slice(0, 12).map((manga) => (
-            <MangaCard key={manga.id} manga={manga} sourceId={sourceId} />
-          ))}
-        </div>
-      </section>
-    );
-  } catch (error) {
+    latest = await swrCache(`source:${sourceId}:latest:1`, () => source.getLatest(1), CACHE_TTL.DISCOVERY);
+  } catch (_error) {
     return null;
   }
+
+  if (!latest?.mangas.length) return null;
+
+  return (
+    <section className="mb-12">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-text-primary">
+          {sourceName}
+        </h2>
+        <Link href={`/sources/${sourceId}?sort=latest`} className="text-sm font-bold text-accent hover:text-accent-hover transition-colors">
+          Lihat Semua
+        </Link>
+      </div>
+      
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-5">
+        {latest.mangas.slice(0, 12).map((manga) => (
+          <MangaCard key={manga.id} manga={manga} sourceId={sourceId} />
+        ))}
+      </div>
+    </section>
+  );
 }
 
 export const dynamic = "force-dynamic";

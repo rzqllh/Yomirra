@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react"
-import { MangaCard } from "@/components/manga/manga-card";
 import { BookmarkSimple, Play } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { EmptyState } from "@/components/states/empty-state";
@@ -11,7 +10,6 @@ import { getReaderHref, getMangaDetailHref } from "@/shared/lib/routes";
 import { useHistoryStore } from "@/shared/store/history-store";
 import Image from "next/image";
 import { SearchInput } from "@/components/ui/search-input";
-import type { MangaPageResult } from "@/shared/types/source";
 
 interface HomeViewProps {
   children: React.ReactNode;

@@ -21,6 +21,7 @@ async function PopularFeed({ sourceId, sourceName }: { sourceId: string; sourceN
 
     if (!popular?.mangas.length) return null;
 
+    // eslint-disable-next-line react-hooks/error-boundaries
     return (
       <section className="mb-12">
         <div className="flex items-center justify-between mb-6">
@@ -45,7 +46,7 @@ async function PopularFeed({ sourceId, sourceName }: { sourceId: string; sourceN
         </div>
       </section>
     );
-  } catch (error) {
+  } catch (_error) {
     return null;
   }
 }

@@ -49,14 +49,32 @@ export function normalizeMangaItem(item: ShinigamiMangaItem & Record<string, unk
 
 export function normalizeMangaDetail(detail: ShinigamiMangaDetail): MangaDetail {
   const coverUrl = detail.cover_image_url || detail.cover_portrait_url || "";
+  
+  let author = detail.author;
+  if (!author && detail.taxonomy?.Author?.[0]?.name) {
+    author = detail.taxonomy.Author.map(a => a.name).join(", ");
+  }
+
+  let artist = detail.artist;
+  if (!artist && detail.taxonomy?.Artist?.[0]?.name) {
+    artist = detail.taxonomy.Artist.map(a => a.name).join(", ");
+  }
+
+  let genres: string[] = [];
+  if (detail.genres?.length) {
+    genres = detail.genres.map(g => g.name);
+  } else if (detail.taxonomy?.Genre?.length) {
+    genres = detail.taxonomy.Genre.map(g => g.name);
+  }
+
   return {
     id: detail.manga_id,
     title: detail.title,
     coverUrl: signImageUrl(coverUrl, "https://c.shinigami.asia"),
     description: stripHtml(detail.description),
-    author: detail.author,
-    artist: detail.artist,
-    genres: detail.genres ? detail.genres.map((g) => g.name) : [],
+    author,
+    artist,
+    genres,
     status: normalizeShinigamiStatus(detail.status),
   };
 }

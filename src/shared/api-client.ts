@@ -66,7 +66,7 @@ class ApiClient {
       });
       url += `&${sp.toString()}`;
     }
-    return this.fetcher<any>(url).then(data => ({
+    return this.fetcher<{mangas?: MangaItem[], results?: MangaItem[], hasNextPage?: boolean}>(url).then(data => ({
       sourceId,
       query,
       page,

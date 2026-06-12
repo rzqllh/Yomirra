@@ -34,9 +34,16 @@ export interface ShinigamiMangaDetail {
   cover_image_url?: string;
   cover_portrait_url?: string;
   status: number;
-  author: string;
-  artist: string;
-  genres: Array<{ id: number; name: string }>;
+  author?: string;
+  artist?: string;
+  genres?: Array<{ id: number; name: string }>;
+  taxonomy?: {
+    Author?: Array<{ name: string; slug: string }>;
+    Artist?: Array<{ name: string; slug: string }>;
+    Genre?: Array<{ name: string; slug: string }>;
+    Format?: Array<{ name: string; slug: string }>;
+    Type?: Array<{ name: string; slug: string }>;
+  };
 }
 
 export interface ShinigamiMangaDetailResponse {

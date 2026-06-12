@@ -1,5 +1,8 @@
 // Note: This file is for CLIENT-SIDE Firebase initialization only.
 // Do not import this file in server components or API routes.
+import type { FirebaseApp } from "firebase/app";
+import type { Auth } from "firebase/auth";
+import type { Firestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -10,9 +13,9 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-let appInstance: any = null;
-let authInstance: any = null;
-let dbInstance: any = null;
+let appInstance: FirebaseApp | null = null;
+let authInstance: Auth | null = null;
+let dbInstance: Firestore | null = null;
 let isInitialized = false;
 
 export async function initFirebase() {
@@ -42,7 +45,7 @@ export async function initFirebase() {
           tabManager: persistentMultipleTabManager()
         })
       });
-    } catch (e) {
+    } catch {
       // If already initialized
       const { getFirestore } = await import("firebase/firestore");
       dbInstance = getFirestore(appInstance);

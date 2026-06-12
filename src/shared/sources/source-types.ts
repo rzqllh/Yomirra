@@ -73,7 +73,7 @@ export interface FilterList {
 export interface MangaSource extends SourceMetadata {
   getPopular(page: number): Promise<MangaPageResult>;
   getLatest(page: number): Promise<MangaPageResult>;
-  search(query: string, page: number, filters?: Record<string, any>): Promise<MangaPageResult>;
+  search(query: string, page: number, filters?: Record<string, string | string[]>): Promise<MangaPageResult>;
   getDetail(mangaId: string): Promise<MangaDetail>;
   getChapters(mangaId: string): Promise<Chapter[]>;
   getPages(chapterId: string): Promise<ChapterPages>;

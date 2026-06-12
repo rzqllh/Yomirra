@@ -1,14 +1,14 @@
 import { useEffect, useRef } from 'react';
 import { useAuth } from './use-auth';
-import { useLibraryStore } from '@/shared/store/library-store';
-import { useHistoryStore } from '@/shared/store/history-store';
+import { useLibraryStore, LibraryItem } from "@/shared/store/library-store";
+import { useHistoryStore, HistoryItem } from "@/shared/store/history-store";
 import { initFirebase } from '@/shared/lib/firebase';
 
 export function useSync() {
   const { user } = useAuth();
   
-  const { items: libraryItems, updateLibraryItem, addToLibrary, _setItemLocal: setLibraryItemLocal } = useLibraryStore();
-  const { items: historyItems, upsertHistory, _setItemLocal: setHistoryItemLocal } = useHistoryStore();
+  const { items: libraryItems, _setItemLocal: setLibraryItemLocal } = useLibraryStore();
+  const { items: historyItems, _setItemLocal: setHistoryItemLocal } = useHistoryStore();
   
   const hasSyncedInitial = useRef(false);
 
@@ -33,16 +33,16 @@ export function useSync() {
         
         // 1. Fetch remote library
         const remoteLibSnapshot = await getDocs(collection(firestore, `users/${uid}/library`));
-        const remoteLibrary: Record<string, any> = {};
+        const remoteLibrary: Record<string, LibraryItem> = {};
         remoteLibSnapshot.forEach(d => {
-          remoteLibrary[d.id] = d.data();
+          remoteLibrary[d.id] = d.data() as LibraryItem;
         });
 
         // 2. Fetch remote history
         const remoteHistSnapshot = await getDocs(collection(firestore, `users/${uid}/history`));
-        const remoteHistory: Record<string, any> = {};
+        const remoteHistory: Record<string, HistoryItem> = {};
         remoteHistSnapshot.forEach(d => {
-          remoteHistory[d.id] = d.data();
+          remoteHistory[d.id] = d.data() as HistoryItem;
         });
 
         const batch = writeBatch(firestore);
@@ -64,7 +64,7 @@ export function useSync() {
           const localItem = libraryItems[id];
           if (!localItem || new Date(remoteItem.updatedAt).getTime() > new Date(localItem.updatedAt).getTime()) {
             // Pull remote to local
-            setLibraryItemLocal(remoteItem as any);
+            setLibraryItemLocal(remoteItem);
           }
         });
 
@@ -84,7 +84,7 @@ export function useSync() {
           const localItem = historyItems[id];
           if (!localItem || new Date(remoteItem.readAt).getTime() > new Date(localItem.readAt).getTime()) {
             // Pull remote to local
-            setHistoryItemLocal(remoteItem as any);
+            setHistoryItemLocal(remoteItem);
           }
         });
 
@@ -93,7 +93,7 @@ export function useSync() {
           console.log(`[Sync] Synced ${batchCount} local items to Cloud`);
         }
 
-      } catch (error) {
+      } catch (error: unknown) {
         console.error("Sync error:", error);
       }
     };
@@ -112,6 +112,7 @@ export function useSync() {
     return () => {
       window.removeEventListener("online", handleOnline);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.uid]);
 
   // Setup real-time listeners for cross-device sync
@@ -165,7 +166,7 @@ export function useSync() {
   }, [user]);
 
   // Helper to push updates immediately upon local action
-  const syncLibraryItem = async (item: any) => {
+  const syncLibraryItem = async (item: LibraryItem) => {
     if (!user) return;
     try {
       const { db } = await initFirebase();
@@ -178,7 +179,7 @@ export function useSync() {
     }
   };
 
-  const syncHistoryItem = async (item: any) => {
+  const syncHistoryItem = async (item: HistoryItem) => {
     if (!user) return;
     try {
       const { db } = await initFirebase();
