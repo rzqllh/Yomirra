@@ -35,7 +35,7 @@ export function HomeView({ children }: HomeViewProps) {
       <h1 className="sr-only">Beranda Yomirra</h1>
       
       {/* Mobile Header / Search */}
-      <div className="md:hidden sticky top-0 z-30 bg-surface-base/60 backdrop-blur-xl border-b border-border-subtle/50 shadow-sm pt-[env(safe-area-inset-top)] pb-3 px-4">
+      <div className="md:hidden sticky top-0 z-[var(--z-sticky)] bg-surface-overlay/80 backdrop-blur-xl border-b border-border-default shadow-sm pt-[calc(env(safe-area-inset-top)+8px)] pb-3 px-4">
         <SearchInput
           value={query}
           onChange={(e) => setQuery(e.target.value)}

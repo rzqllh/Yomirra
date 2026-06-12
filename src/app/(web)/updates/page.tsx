@@ -36,9 +36,9 @@ async function LatestFeed({ sourceId, sourceName }: { sourceId: string; sourceNa
         </Link>
       </div>
       
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
         {latest.mangas.slice(0, 12).map((manga) => (
-          <MangaCard key={manga.id} manga={manga} sourceId={sourceId} />
+          <MangaCard key={manga.id} manga={manga} sourceId={sourceId} variant="compact" />
         ))}
       </div>
     </section>
@@ -51,7 +51,7 @@ export default async function UpdatesPage() {
   const activeSources = sourceRegistry.filter(s => s.isEnabled && s.isInstalled);
 
   return (
-    <main className="min-h-screen pb-[calc(56px+env(safe-area-inset-bottom))] bg-surface-base">
+    <main className="min-h-screen pb-[calc(var(--bottom-nav-height)+env(safe-area-inset-bottom))] bg-surface-base">
       <TopBar title="Update Terbaru" />
       
       <div className="px-4 py-6 max-w-7xl mx-auto">

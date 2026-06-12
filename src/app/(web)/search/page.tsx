@@ -17,7 +17,7 @@ export default function SearchPage() {
   return (
     <DirectionalTransition>
       <React.Suspense fallback={
-        <main className="min-h-screen pb-[calc(56px+env(safe-area-inset-bottom))] bg-surface-base">
+        <main className="min-h-screen pb-[calc(var(--bottom-nav-height)+env(safe-area-inset-bottom))] bg-surface-base">
           <TopBar title="Hasil Pencarian" showBack />
           <div className="px-4 py-6">
             <SearchResultSkeleton />
@@ -72,7 +72,7 @@ function SearchContent() {
   });
 
   return (
-    <main className="min-h-screen pb-[calc(56px+env(safe-area-inset-bottom))] bg-surface-base">
+    <main className="min-h-screen pb-[calc(var(--bottom-nav-height)+env(safe-area-inset-bottom))] bg-surface-base">
       <TopBar title="Hasil Pencarian" showBack />
       
       <div className="px-4 py-6 max-w-7xl mx-auto">

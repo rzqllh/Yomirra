@@ -49,7 +49,7 @@ export function EmptyState({
     <div 
       className={cn(
         "flex flex-col items-center justify-center text-center px-6 py-12 animate-in zoom-in-95 fade-in duration-300",
-        fullHeight ? "min-h-[40vh] flex-1" : "h-full w-full",
+        fullHeight ? "min-h-[300px] flex-1" : "h-full w-full",
         className
       )}
       {...props}

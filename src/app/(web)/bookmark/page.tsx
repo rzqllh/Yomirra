@@ -68,7 +68,7 @@ export default function BookmarkPage() {
 
   return (
     <DirectionalTransition>
-      <MobilePageShell title="Bookmark">
+      <MobilePageShell title="Bookmark" className="pb-[calc(var(--bottom-nav-height)+env(safe-area-inset-bottom))]">
         <div className="hidden md:block px-4 py-6 max-w-3xl mx-auto w-full">
           <h1 className="text-3xl font-black text-text-primary tracking-tight">Bookmark</h1>
         </div>
@@ -143,6 +143,7 @@ export default function BookmarkPage() {
                           status: item.status,
                         }}
                         sourceId={item.sourceId}
+                        variant="shelf"
                       />
                     ))}
                   </div>

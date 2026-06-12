@@ -24,8 +24,8 @@ export function BottomNav() {
   const pathname = usePathname()
 
   return (
-    <nav style={{ viewTransitionName: 'persistent-bottom-nav' }} className="md:hidden fixed bottom-0 left-0 right-0 w-full z-50 pointer-events-none px-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
-      <div className="pointer-events-auto mx-auto flex max-w-sm items-center justify-between rounded-full bg-surface-base/70 !backdrop-blur-sm border border-border-subtle p-2 shadow-md">
+    <nav style={{ viewTransitionName: 'persistent-bottom-nav' }} className="md:hidden fixed bottom-0 left-0 right-0 w-full z-[var(--z-sticky)] pointer-events-none px-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
+      <div className="pointer-events-auto mx-auto flex max-w-sm items-center justify-between rounded-full bg-surface-overlay/80 backdrop-blur-xl border border-border-default p-2 shadow-lg ring-1 ring-black/5">
         {NAV_ITEMS.map((item) => {
           const isActive =
             item.href === "/"
