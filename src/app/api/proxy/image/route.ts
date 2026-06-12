@@ -35,13 +35,13 @@ export async function GET(request: NextRequest) {
     }
 
     const contentType = response.headers.get("content-type");
-    const arrayBuffer = await response.arrayBuffer();
 
     const responseHeaders = new Headers();
     if (contentType) responseHeaders.set("Content-Type", contentType);
     responseHeaders.set("Cache-Control", "public, max-age=31536000, immutable");
 
-    return new NextResponse(arrayBuffer, {
+    // Stream the response directly instead of buffering in memory
+    return new NextResponse(response.body, {
       status: 200,
       headers: responseHeaders,
     });
