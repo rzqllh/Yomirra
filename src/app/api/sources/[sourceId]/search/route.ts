@@ -59,7 +59,7 @@ export async function GET(
     const filterKey = Object.keys(filters).length > 0 
       ? `:${createHash("md5").update(JSON.stringify(filters)).digest("hex").slice(0, 8)}`
       : "";
-    const cacheKey = `source:${sourceId}:search:${q}:${page}${filterKey}`;
+    const cacheKey = `source:${sourceId}:search:v2:${q}:${page}${filterKey}`;
 
     const data = await swrCache(
       cacheKey,
