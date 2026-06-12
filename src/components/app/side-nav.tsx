@@ -1,6 +1,6 @@
 "use client";
 
-import { House, Books, Compass, Clock, Gear, BookBookmark } from "@phosphor-icons/react";
+import { House, Books, Compass, ClockCounterClockwise, Gear, BookBookmark } from "@phosphor-icons/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/shared/utils/cn";
@@ -16,8 +16,9 @@ export function SideNav() {
       links: [
         { href: "/", label: "Beranda", icon: House },
         { href: "/library", label: "Library", icon: Books },
+        { href: "/sources", label: "Jelajahi", icon: Compass },
         { href: "/readlist", label: "Readlist", icon: BookBookmark },
-        { href: "/history", label: "Riwayat", icon: Clock },
+        { href: "/history", label: "Riwayat", icon: ClockCounterClockwise },
         { href: "/settings", label: "Pengaturan", icon: Gear },
       ]
     }

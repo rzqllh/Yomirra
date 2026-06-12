@@ -59,7 +59,6 @@
   --shadow-reader: 0 0 40px rgba(0, 0, 0, 0.70);
 
   /* Typography */
-  --font-ui: "Inter Variable", "Inter", system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", "Fira Code", monospace;
 
   /* Custom text sizes */

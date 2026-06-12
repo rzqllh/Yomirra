@@ -20,6 +20,7 @@ interface HistoryState {
   items: Record<string, HistoryItem>;
 
   upsertHistory: (item: HistoryItem) => void;
+  _setItemLocal: (item: HistoryItem) => void;
   removeHistoryItem: (sourceId: string, mangaId: string, chapterId: string) => void;
   clearHistory: () => void;
   getLatestForManga: (sourceId: string, mangaId: string) => HistoryItem | undefined;
@@ -39,6 +40,21 @@ export const useHistoryStore = create<HistoryState>()(
       upsertHistory: (item) => set((state) => {
         const id = getHistoryId(item.sourceId, item.mangaId, item.chapterId);
         pushHistoryItem(item); // Background sync
+        
+        const newItems = { ...state.items, [id]: item };
+        const entries = Object.entries(newItems);
+        const MAX_HISTORY_ITEMS = 1000;
+        
+        if (entries.length > MAX_HISTORY_ITEMS) {
+          entries.sort((a, b) => new Date(b[1].readAt).getTime() - new Date(a[1].readAt).getTime());
+          return { items: Object.fromEntries(entries.slice(0, MAX_HISTORY_ITEMS)) };
+        }
+
+        return { items: newItems };
+      }),
+
+      _setItemLocal: (item) => set((state) => {
+        const id = getHistoryId(item.sourceId, item.mangaId, item.chapterId);
         return {
           items: {
             ...state.items,

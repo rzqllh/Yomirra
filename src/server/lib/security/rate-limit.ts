@@ -7,7 +7,10 @@ export async function checkRateLimit(
   window: number = 60 // seconds
 ): Promise<{ success: boolean; headers: Record<string, string> }> {
   try {
-    const ip = request.headers.get("x-forwarded-for") || "unknown";
+    const ip =
+      request.headers.get("x-real-ip") ||
+      request.headers.get("x-forwarded-for")?.split(",").at(-1)?.trim() ||
+      "unknown";
     const key = `rate-limit:${ip}`;
 
     const requests = await redis.incr(key);

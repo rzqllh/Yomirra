@@ -1,4 +1,4 @@
-import { createHmac } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 import { env } from "@/env";
 
 export function signImageUrl(url: string, referer?: string): string {
@@ -31,5 +31,9 @@ export function verifyImageUrl(url: string, signature: string, referer?: string)
   }
   const expectedSignature = hmac.digest("hex");
   
-  return signature === expectedSignature;
+  const sigBuf = Buffer.from(signature, "hex");
+  const expectedBuf = Buffer.from(expectedSignature, "hex");
+
+  if (sigBuf.length !== expectedBuf.length) return false;
+  return timingSafeEqual(sigBuf, expectedBuf);
 }

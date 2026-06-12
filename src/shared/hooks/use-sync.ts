@@ -7,8 +7,8 @@ import { initFirebase } from '@/shared/lib/firebase';
 export function useSync() {
   const { user } = useAuth();
   
-  const { items: libraryItems, updateLibraryItem, addToLibrary } = useLibraryStore();
-  const { items: historyItems, upsertHistory } = useHistoryStore();
+  const { items: libraryItems, updateLibraryItem, addToLibrary, _setItemLocal: setLibraryItemLocal } = useLibraryStore();
+  const { items: historyItems, upsertHistory, _setItemLocal: setHistoryItemLocal } = useHistoryStore();
   
   const hasSyncedInitial = useRef(false);
 
@@ -64,7 +64,7 @@ export function useSync() {
           const localItem = libraryItems[id];
           if (!localItem || new Date(remoteItem.updatedAt).getTime() > new Date(localItem.updatedAt).getTime()) {
             // Pull remote to local
-            addToLibrary(remoteItem as any);
+            setLibraryItemLocal(remoteItem as any);
           }
         });
 
@@ -84,7 +84,7 @@ export function useSync() {
           const localItem = historyItems[id];
           if (!localItem || new Date(remoteItem.readAt).getTime() > new Date(localItem.readAt).getTime()) {
             // Pull remote to local
-            upsertHistory(remoteItem as any);
+            setHistoryItemLocal(remoteItem as any);
           }
         });
 
@@ -112,7 +112,7 @@ export function useSync() {
     return () => {
       window.removeEventListener("online", handleOnline);
     };
-  }, [user, libraryItems, historyItems, addToLibrary, upsertHistory]);
+  }, [user?.uid]);
 
   // Setup real-time listeners for cross-device sync
   useEffect(() => {
@@ -133,7 +133,7 @@ export function useSync() {
               const localItem = useLibraryStore.getState().items[change.doc.id];
               
               if (!localItem || new Date(data.updatedAt).getTime() > new Date(localItem.updatedAt).getTime()) {
-                useLibraryStore.getState().addToLibrary(data);
+                useLibraryStore.getState()._setItemLocal(data);
               }
             }
           });
@@ -148,7 +148,7 @@ export function useSync() {
               const localItem = useHistoryStore.getState().items[change.doc.id];
               
               if (!localItem || new Date(data.readAt).getTime() > new Date(localItem.readAt).getTime()) {
-                useHistoryStore.getState().upsertHistory(data);
+                useHistoryStore.getState()._setItemLocal(data);
               }
             }
           });

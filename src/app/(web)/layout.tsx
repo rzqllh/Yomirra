@@ -4,7 +4,7 @@ import "./globals.css";
 import { Providers } from "@/components/providers";
 
 const inter = Inter({
-  variable: "--font-sans",
+  variable: "--font-ui",
   subsets: ["latin"],
 });
 
@@ -19,8 +19,7 @@ import type { Viewport } from "next";
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  maximumScale: 5,
   viewportFit: "cover",
 };
 
@@ -32,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
+    <html lang="id" className={inter.variable} suppressHydrationWarning>
       <body className="min-h-screen antialiased overflow-x-hidden" suppressHydrationWarning>
         <Providers>
           <AppShell>{children}</AppShell>
