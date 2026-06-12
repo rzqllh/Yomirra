@@ -81,17 +81,38 @@ export class ShinigamiSource implements MangaSource {
     };
     if (query) params.q = query;
     
+    let excludedGenres: string[] = [];
+
     // Merge filters (like genre[], format, status)
     if (filters) {
       Object.entries(filters).forEach(([k, v]) => {
-        params[k] = v;
+        if (k === "genre[]") {
+          // Shinigami API expects "genre=action,comedy" and doesn't support exclusions via API
+          const items = Array.isArray(v) ? v : [v];
+          const included = items.filter((item) => !item.startsWith("-"));
+          excludedGenres = items.filter((item) => item.startsWith("-")).map(item => item.slice(1));
+          
+          if (included.length > 0) {
+            params["genre"] = included.join(",");
+          }
+        } else {
+          params[k] = Array.isArray(v) ? v.join(",") : v;
+        }
       });
     }
 
     const res = await this.client.get<ShinigamiMangaListResponse>("/v1/manga/list", params);
+    
+    let filteredData = res.data;
+    if (excludedGenres.length > 0) {
+      filteredData = filteredData.filter(manga => {
+        const mangaGenres = manga.taxonomy?.Genre?.map(g => g.slug) || [];
+        return !mangaGenres.some(g => excludedGenres.includes(g));
+      });
+    }
 
     return {
-      mangas: res.data.map(normalizeMangaItem),
+      mangas: filteredData.map(normalizeMangaItem),
       hasNextPage: res.meta.page < res.meta.total_page,
     };
   }

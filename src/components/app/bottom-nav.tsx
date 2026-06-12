@@ -25,7 +25,7 @@ export function BottomNav() {
 
   return (
     <nav style={{ viewTransitionName: 'persistent-bottom-nav' }} className="md:hidden fixed bottom-0 left-0 right-0 w-full z-50 pointer-events-none px-4 pb-[max(env(safe-area-inset-bottom),1rem)]">
-      <div className="pointer-events-auto mx-auto flex max-w-sm items-center justify-between rounded-full bg-surface-base/60 backdrop-blur-lg border border-border-subtle p-2 shadow-md">
+      <div className="pointer-events-auto mx-auto flex max-w-sm items-center justify-between rounded-full bg-surface-base/70 !backdrop-blur-sm border border-border-subtle p-2 shadow-md">
         {NAV_ITEMS.map((item) => {
           const isActive =
             item.href === "/"
@@ -40,25 +40,25 @@ export function BottomNav() {
               href={item.href}
               prefetch={false}
               transitionTypes={['nav-lateral']}
-              className="relative flex flex-col items-center justify-center min-w-[4rem] h-[3.25rem] transition-transform active:scale-95 outline-none tap-highlight-transparent"
+              className="relative flex flex-col items-center justify-center min-w-[4rem] h-[3.25rem] transition-transform active:scale-95 outline-none tap-highlight-transparent "
               aria-label={item.label}
               aria-current={isActive ? "page" : undefined}
             >
               {/* Static Background Pill with Opacity Transition */}
               <div
                 className={cn(
-                  "absolute inset-0 rounded-full bg-accent-dim transition-opacity duration-200",
+                  "absolute inset-0 rounded-full bg-accent-dim  transition-opacity duration-200 ",
                   isActive ? "opacity-100" : "opacity-0"
                 )}
               />
 
-              <div className="relative z-10 w-full h-full">
+              <div className="relative z-10 w-full h-full ">
                 <Icon
                   weight={isActive ? "fill" : "regular"}
                   className={cn(
-                    "absolute left-1/2 -translate-x-1/2 transition-all duration-150",
+                    "absolute left-1/2 -translate-x-1/2 transition-all duration-150 ",
                     isActive
-                      ? "top-[6px] text-accent scale-110"
+                      ? "top-[6px] text-accent scale-110 "
                       : "top-1/2 -translate-y-1/2 text-text-primary hover:text-text-primary scale-100"
                   )}
                   style={{ width: 22, height: 22 }}
@@ -66,7 +66,7 @@ export function BottomNav() {
 
                 <span
                   className={cn(
-                    "absolute bottom-[5px] left-1/2 -translate-x-1/2 text-[10px] font-bold tracking-wide transition-all duration-150 whitespace-nowrap",
+                    "absolute bottom-[5px] left-1/2 -translate-x-1/2 text-[10px] font-bold tracking-wide transition-all duration-150 whitespace-nowrap ",
                     isActive
                       ? "text-accent opacity-100 translate-y-0"
                       : "text-text-muted opacity-0 translate-y-2 pointer-events-none"
