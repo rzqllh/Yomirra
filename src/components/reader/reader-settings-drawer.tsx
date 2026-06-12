@@ -42,7 +42,7 @@ export function ReaderSettingsDrawer({ isOpen, onClose, chapters, currentChapter
           isDesktopPanelOpen && "md:translate-x-0"
         )}
       >
-        <div className="flex h-[calc(60px+env(safe-area-inset-top))] items-center justify-between px-6 border-b border-border-subtle shrink-0 pt-[env(safe-area-inset-top)]">
+        <div className="flex h-[calc(var(--mobile-header-height)+var(--safe-top))] items-center justify-between px-6 border-b border-border-subtle shrink-0 pt-[var(--safe-top)]">
           <h2 className="text-base font-bold text-text-primary flex items-center gap-2">
             <SlidersHorizontal size={20} className="text-text-muted" weight="bold" />
             Pengaturan Pembaca

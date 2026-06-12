@@ -57,7 +57,7 @@ export default async function PopularPage() {
   const activeSources = sourceRegistry.filter(s => s.isEnabled && s.isInstalled);
 
   return (
-    <main className="min-h-screen pb-[calc(56px+env(safe-area-inset-bottom))] bg-surface-base">
+    <main className="min-h-screen bg-surface-base">
       <TopBar title="Manga Populer" />
       
       <div className="px-4 py-6 max-w-7xl mx-auto">

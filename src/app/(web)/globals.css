@@ -109,9 +109,14 @@
   --z-overlay: 70;
   --z-toast: 80;
 
-  /* Layout */
-  --header-height: 60px;
-  --bottom-nav-height: 88px;
+  /* Safe Area & Layout Tokens */
+  --safe-top: env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
+
+  --mobile-header-height: 56px;
+  --bottom-nav-content-height: 64px;
+  --bottom-nav-height: calc(var(--bottom-nav-content-height) + var(--safe-bottom));
+  --page-bottom-safe: calc(var(--bottom-nav-height) + 16px);
 }
 
 @layer base {

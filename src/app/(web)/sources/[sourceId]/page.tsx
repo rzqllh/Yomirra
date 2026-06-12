@@ -63,7 +63,7 @@ export default function SourceBrowsePage({
 
   return (
     <DirectionalTransition>
-      <main className="min-h-screen pb-[calc(56px+env(safe-area-inset-bottom))] bg-surface-base">
+      <main className="min-h-screen bg-surface-base">
         <TopBar title={sort === "popular" ? `Populer di ${sourceName}` : `Terbaru di ${sourceName}`} showBack />
         
         <div className="px-4 py-6 max-w-7xl mx-auto">

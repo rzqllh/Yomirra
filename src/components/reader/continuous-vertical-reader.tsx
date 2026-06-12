@@ -146,7 +146,7 @@ export function ContinuousVerticalReader({
     >
       <div 
         className={cn(
-          "flex w-full flex-col items-center pt-[calc(var(--header-height)+env(safe-area-inset-top))]",
+          "flex w-full flex-col items-center pt-[calc(var(--mobile-header-height)+var(--safe-top))]",
           isWebtoon ? "gap-0" : "gap-4"
         )}
         style={{ maxWidth: settings.maxWidth ? `${settings.maxWidth}px` : '100%' }}
@@ -178,7 +178,7 @@ export function ContinuousVerticalReader({
       {/* Floating Bottom Control */}
       <div 
         className={cn(
-          "fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] -translate-x-1/2 z-[var(--z-sticky)] transition-all duration-300",
+          "fixed bottom-[calc(1.5rem+var(--safe-bottom))] -translate-x-1/2 z-[var(--z-sticky)] transition-all duration-300",
           isOverlayVisible && !isEndVisible ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0 pointer-events-none",
           isDesktopPanelOpen ? "md:left-[calc(50%-160px)] left-1/2" : "left-1/2"
         )}

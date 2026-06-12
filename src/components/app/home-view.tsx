@@ -31,11 +31,11 @@ export function HomeView({ children }: HomeViewProps) {
   const historyItems = isMounted ? continueReadingItems : [];
 
   return (
-    <main className="min-h-screen bg-surface-base pb-12">
+    <main className="min-h-screen bg-surface-base">
       <h1 className="sr-only">Beranda Yomirra</h1>
       
       {/* Mobile Header / Search */}
-      <div className="md:hidden sticky top-0 z-[var(--z-sticky)] bg-surface-overlay/80 backdrop-blur-xl border-b border-border-default shadow-sm pt-[calc(env(safe-area-inset-top)+8px)] pb-3 px-4">
+      <div className="md:hidden sticky top-0 z-[var(--z-sticky)] bg-surface-overlay/80 backdrop-blur-xl border-b border-border-default shadow-sm pt-[calc(var(--safe-top)+8px)] pb-3 px-4">
         <SearchInput
           value={query}
           onChange={(e) => setQuery(e.target.value)}

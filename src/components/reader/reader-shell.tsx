@@ -56,7 +56,7 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
           isDesktopPanelOpen ? "md:right-[320px] right-0" : "right-0"
         )}
       >
-        <div className="flex h-[calc(var(--header-height)+env(safe-area-inset-top))] items-center justify-between bg-surface-overlay/90 backdrop-blur-xl px-2 md:px-4 pt-[env(safe-area-inset-top)] shadow-sm">
+        <div className="flex h-[calc(var(--mobile-header-height)+var(--safe-top))] items-center justify-between bg-surface-overlay/90 backdrop-blur-xl px-2 md:px-4 pt-[var(--safe-top)] shadow-sm">
           
           <div className="flex items-center gap-1 md:gap-3">
             <IconButton 

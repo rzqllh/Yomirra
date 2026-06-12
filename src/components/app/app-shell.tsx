@@ -38,7 +38,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         <main
           className={cn(
             "flex-1 flex flex-col w-full min-w-0",
-            !isReader && "pb-[calc(var(--bottom-nav-height)+env(safe-area-inset-bottom))] md:pb-0" // Padding for BottomNav only on mobile
+            !isReader && "pb-[var(--page-bottom-safe)] md:pb-0" // Padding for BottomNav only on mobile
           )}
         >
           {children}
