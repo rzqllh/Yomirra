@@ -20,16 +20,16 @@
   --color-border-strong: var(--border-strong);
 
   /* Accent */
-  --color-accent: #E8343A;
-  --color-accent-dim: #E8343A20;
-  --color-accent-hover: #D02E34;
-  --color-accent-on: #FFFFFF;
+  --color-accent: var(--color-accent);
+  --color-accent-dim: var(--color-accent-dim);
+  --color-accent-hover: var(--color-accent-hover);
+  --color-accent-on: var(--text-on-accent);
 
   /* Semantic */
-  --color-semantic-success: #30D158;
-  --color-semantic-warning: #FF9F0A;
-  --color-semantic-error: #FF453A;
-  --color-semantic-info: #0A84FF;
+  --color-semantic-success: var(--color-semantic-success);
+  --color-semantic-warning: var(--color-semantic-warning);
+  --color-semantic-error: var(--color-semantic-error);
+  --color-semantic-info: var(--color-semantic-info);
 
   /* Spacing */
   --spacing-1: 4px;
@@ -121,16 +121,17 @@
 
 @layer base {
   :root, .dark {
-    --surface-base: #003135;
-    --surface-raised: #024950;
-    --surface-overlay: #045F67;
-    --surface-muted: #012427;
-    --surface-hover: #03575F;
+    /* Yomirra Deep Lagoon - Dark */
+    --surface-base: #000D0F; /* deepest base */
+    --surface-raised: #003135; /* main dark brand base */
+    --surface-overlay: #024950; /* raised surface, panels */
+    --surface-muted: #011E21; /* between base and raised */
+    --surface-hover: #03575F; /* slightly lighter than overlay */
 
-    --text-primary: #EFE7DA;
-    --text-secondary: #AFDDE5;
-    --text-muted: #55878B;
-    --text-on-accent: #FFFFFF;
+    --text-primary: #F4F8F9;
+    --text-secondary: #AFDDE5; /* mist text */
+    --text-muted: #48676B;
+    --text-on-accent: #000D0F;
 
     --border-subtle: rgba(15, 164, 175, 0.15);
     --border-default: rgba(15, 164, 175, 0.3);
@@ -138,13 +139,39 @@
     
     --color-accent: #0FA4AF;
     --color-accent-dim: rgba(15, 164, 175, 0.15);
-    --color-accent-hover: #0D8A93;
+    --color-accent-hover: #12C1CE;
     
-    --color-semantic-error: #964734;
+    --color-semantic-success: #34A853; /* softer, WCAG-safe green */
+    --color-semantic-warning: #B56A5B; /* warm-soft */
+    --color-semantic-error: #964734; /* clay, warm destructive-soft */
+    --color-semantic-info: #0FA4AF;
+
+    /* shadcn/ui compatible mapping */
+    --background: var(--surface-base);
+    --foreground: var(--text-primary);
+    --card: var(--surface-raised);
+    --card-foreground: var(--text-primary);
+    --popover: var(--surface-overlay);
+    --popover-foreground: var(--text-primary);
+    --primary: var(--color-accent);
+    --primary-foreground: var(--text-on-accent);
+    --secondary: var(--surface-muted);
+    --secondary-foreground: var(--text-primary);
+    --muted: var(--surface-muted);
+    --muted-foreground: var(--text-muted);
+    --accent: var(--surface-hover);
+    --accent-foreground: var(--text-primary);
+    --destructive: var(--color-semantic-error);
+    --destructive-foreground: #FFFFFF;
+    --border: var(--border-default);
+    --input: var(--border-default);
+    --ring: var(--color-accent-dim);
+    --radius: 8px; /* Map from radius tokens if needed */
   }
 
   .light {
-    --surface-base: #F4F8F9;
+    /* Yomirra Deep Lagoon - Light */
+    --surface-base: #F4F8F9; /* mist gray background */
     --surface-raised: #E8F3F5;
     --surface-overlay: #FFFFFF;
     --surface-muted: #D1E4E6;
@@ -163,7 +190,31 @@
     --color-accent-dim: rgba(15, 164, 175, 0.1);
     --color-accent-hover: #0D8A93;
     
+    --color-semantic-success: #34A853;
+    --color-semantic-warning: #B56A5B;
     --color-semantic-error: #964734;
+    --color-semantic-info: #0FA4AF;
+
+    /* shadcn/ui compatible mapping */
+    --background: var(--surface-base);
+    --foreground: var(--text-primary);
+    --card: var(--surface-raised);
+    --card-foreground: var(--text-primary);
+    --popover: var(--surface-overlay);
+    --popover-foreground: var(--text-primary);
+    --primary: var(--color-accent);
+    --primary-foreground: var(--text-on-accent);
+    --secondary: var(--surface-muted);
+    --secondary-foreground: var(--text-primary);
+    --muted: var(--surface-muted);
+    --muted-foreground: var(--text-muted);
+    --accent: var(--surface-hover);
+    --accent-foreground: var(--text-primary);
+    --destructive: var(--color-semantic-error);
+    --destructive-foreground: #FFFFFF;
+    --border: var(--border-default);
+    --input: var(--border-default);
+    --ring: var(--color-accent-dim);
   }
 }
 
