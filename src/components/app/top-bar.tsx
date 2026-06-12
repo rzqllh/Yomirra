@@ -23,7 +23,7 @@ export function TopBar({
   return (
     <header
       className={cn(
-        "sticky top-0 z-[var(--z-sticky)] flex h-[calc(var(--mobile-header-height)+var(--safe-top))] w-full items-center justify-between border-b border-border-subtle/50 bg-surface-base/80 px-4 pt-[var(--safe-top)] shadow-sm backdrop-blur-xl",
+        "sticky top-0 z-[var(--z-sticky)] flex h-[calc(var(--mobile-header-height)+var(--safe-top))] w-full items-center justify-between border-b border-white/5 bg-surface-base/90 px-4 pt-[var(--safe-top)] shadow-sm backdrop-blur-xl",
         className
       )}
     >
