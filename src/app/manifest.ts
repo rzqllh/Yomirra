@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'A premium manga reader app',
     start_url: '/',
     display: 'standalone',
-    background_color: '#0B0C10',
-    theme_color: '#0B0C10',
+    background_color: '#000D0F',
+    theme_color: '#000D0F',
     icons: [
       {
         src: '/icon.png',

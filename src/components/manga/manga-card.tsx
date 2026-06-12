@@ -167,7 +167,7 @@ export function MangaCard({ manga, sourceId, priority = false, variant = "discov
         />
         
         {/* Cinematic gradient */}
-        <div className="absolute inset-0 bg-gradient-to-t from-[#001719] via-[#001719]/40 to-transparent opacity-90 transition-opacity duration-300 group-hover:opacity-100 z-10 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-[var(--surface-base)] via-[var(--surface-base)]/40 to-transparent opacity-90 transition-opacity duration-300 group-hover:opacity-100 z-10 pointer-events-none" />
 
         {/* Top Badges */}
         <div className="absolute top-2 left-2 flex flex-wrap gap-1 z-20">
