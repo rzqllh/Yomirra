@@ -164,7 +164,7 @@ function LibraryContent() {
   return (
     <MobilePageShell title="Library">
       <div className="flex flex-col min-h-screen bg-surface-base">
-        <main className="flex-1 w-full max-w-7xl mx-auto pb-20 md:pb-8">
+        <main className="flex-1 w-full max-w-7xl mx-auto pb-[calc(var(--bottom-nav-height)+env(safe-area-inset-bottom))] md:pb-8">
           <div className="px-4 py-6 md:px-8 md:py-8 space-y-8">
             
             {/* Header Section */}
@@ -355,7 +355,7 @@ function LibraryContent() {
                   isFetching ? "opacity-50 pointer-events-none" : "opacity-100"
                 )}>
                   {mangas.map((manga, idx) => (
-                    <MangaCard key={`${manga.id}-${idx}`} manga={manga} sourceId={activeSourceId} />
+                    <MangaCard key={`${manga.id}-${idx}`} manga={manga} sourceId={activeSourceId} variant="shelf" />
                   ))}
                 </div>
 

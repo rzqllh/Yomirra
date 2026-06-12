@@ -146,7 +146,7 @@ export function ContinuousVerticalReader({
     >
       <div 
         className={cn(
-          "flex w-full flex-col items-center pt-[calc(56px+env(safe-area-inset-top))]",
+          "flex w-full flex-col items-center pt-[calc(var(--header-height)+env(safe-area-inset-top))]",
           isWebtoon ? "gap-0" : "gap-4"
         )}
         style={{ maxWidth: settings.maxWidth ? `${settings.maxWidth}px` : '100%' }}
@@ -178,12 +178,12 @@ export function ContinuousVerticalReader({
       {/* Floating Bottom Control */}
       <div 
         className={cn(
-          "fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] -translate-x-1/2 z-[60] transition-all duration-300",
+          "fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] -translate-x-1/2 z-[var(--z-sticky)] transition-all duration-300",
           isOverlayVisible && !isEndVisible ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0 pointer-events-none",
           isDesktopPanelOpen ? "md:left-[calc(50%-160px)] left-1/2" : "left-1/2"
         )}
       >
-        <div className="flex items-center gap-2 bg-surface-base/60 backdrop-blur-sm border border-border-subtle rounded-full p-1.5 shadow-xl">
+        <div className="flex items-center gap-2 bg-surface-overlay/80 backdrop-blur-xl border border-border-default rounded-full p-1.5 shadow-2xl">
           <IconButton 
             aria-label="Chapter sebelumnya"
             variant="ghost"

@@ -110,7 +110,7 @@ export function ReaderView({
   if (isLoading) {
     return (
       <ReaderShell chapterTitle="Loading..." currentChapterId={chapterId} sourceId={sourceId} mangaId={mangaId}>
-        <div className="flex min-h-screen w-full items-center justify-center pt-[calc(56px+env(safe-area-inset-top))] px-4">
+        <div className="flex min-h-screen w-full items-center justify-center pt-[calc(var(--header-height)+env(safe-area-inset-top))] px-4">
           <ReaderPageSkeleton />
         </div>
       </ReaderShell>
