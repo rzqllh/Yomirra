@@ -12,6 +12,7 @@ const nextConfig: NextConfig = {
   // Turbopack is enabled by default in Next.js 15 dev mode
   reactStrictMode: true,
   images: {
+    unoptimized: process.env.NODE_ENV === "development",
     qualities: [25, 50, 75, 85, 100],
     remotePatterns: [
       {
