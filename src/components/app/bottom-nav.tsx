@@ -25,7 +25,7 @@ export function BottomNav() {
 
   return (
     <nav style={{ viewTransitionName: 'persistent-bottom-nav' }} className="md:hidden fixed bottom-0 left-0 right-0 w-full z-[var(--z-sticky)] pointer-events-none px-4 pb-[calc(var(--safe-bottom)+12px)]">
-      <div className="pointer-events-auto mx-auto flex h-[var(--bottom-nav-content-height)] w-full max-w-[380px] items-center justify-between rounded-[var(--radius-full)] bg-surface-raised/90 backdrop-blur-2xl border border-white/5 px-2 shadow-[0_12px_40px_rgba(0,0,0,0.6)] ring-1 ring-white/5">
+      <div className="pointer-events-auto mx-auto flex h-[var(--bottom-nav-content-height)] w-full max-w-[380px] items-center justify-between rounded-[var(--radius-full)] bg-surface-raised/90 backdrop-blur-2xl border border-border-default shadow-heavy ring-1 ring-border-subtle">
         {NAV_ITEMS.map((item) => {
           const isActive =
             item.href === "/"
