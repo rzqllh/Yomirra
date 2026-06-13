@@ -12,6 +12,11 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
   title: "Yomirra",
   description: "A source-powered reader for manga, comics, and webtoons.",
+  appleWebApp: {
+    capable: true,
+    title: "Yomirra",
+    statusBarStyle: "black-translucent",
+  },
 };
 
 import type { Viewport } from "next";
@@ -25,6 +30,7 @@ export const viewport: Viewport = {
 
 import { AppShell } from "@/components/app/app-shell";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
+import { DemoLayoutProvider } from "@/components/app/demo-layout-context";
 
 export default function RootLayout({
   children,
@@ -35,11 +41,13 @@ export default function RootLayout({
     <html lang="id" className={plusJakartaSans.variable} suppressHydrationWarning>
       <body className="min-h-screen antialiased overflow-x-hidden" suppressHydrationWarning>
         <Providers>
-          <AppShell>
-            <ErrorBoundary>
-              {children}
-            </ErrorBoundary>
-          </AppShell>
+          <DemoLayoutProvider>
+            <AppShell>
+              <ErrorBoundary>
+                {children}
+              </ErrorBoundary>
+            </AppShell>
+          </DemoLayoutProvider>
         </Providers>
       </body>
     </html>

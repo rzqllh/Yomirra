@@ -24,7 +24,7 @@ export function ErrorState({
 }: ErrorStateProps) {
   if (variant === "inline") {
     return (
-      <div className={cn("flex items-center gap-3 rounded-[var(--radius-md)] bg-semantic-error/10 border border-semantic-error/20 px-4 py-3", className)}>
+      <div className={cn("flex items-center gap-3 rounded-md bg-semantic-error/10 border border-semantic-error/20 px-4 py-3", className)}>
         <WarningCircle size={20} className="text-semantic-error shrink-0" weight="duotone" />
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-text-primary">{title}</p>

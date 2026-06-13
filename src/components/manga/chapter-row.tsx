@@ -29,7 +29,7 @@ export function ChapterRow({
     <Link
       href={getReaderHref(sourceId, mangaId, chapterId)}
       className={cn(
-        "group relative flex items-center gap-3 md:gap-4 rounded-[var(--radius-lg)] px-4 py-3.5 transition-all duration-300 ease-out will-change-transform",
+        "group relative flex items-center gap-3 md:gap-4 rounded-lg px-4 py-3.5 transition-all duration-300 ease-out will-change-transform",
         isLastRead 
           ? "bg-surface-overlay border border-accent/40 shadow-sm ring-1 ring-accent/20 z-10" 
           : "bg-surface-base border border-transparent hover:bg-surface-hover hover:border-border-default hover:shadow-sm",
@@ -43,7 +43,7 @@ export function ChapterRow({
 
       <div className="flex-1 min-w-0 flex flex-col md:flex-row md:items-center md:gap-4">
         <h4 className={cn(
-          "text-sm md:text-[15px] font-semibold tracking-tight truncate transition-colors duration-300",
+          "text-sm md:text-base font-semibold tracking-tight truncate transition-colors duration-300",
           isRead ? "text-text-muted font-medium" : "text-text-primary group-hover:text-accent"
         )}>
           {chapterTitle}
@@ -55,7 +55,7 @@ export function ChapterRow({
 
       {isLastRead && (
         <div className="flex items-center">
-          <div className="hidden sm:flex items-center justify-center rounded-full bg-accent/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-accent ring-1 ring-inset ring-accent/20 shrink-0">
+          <div className="hidden sm:flex items-center justify-center rounded-full bg-accent/10 px-3 py-1 text-2xs font-bold uppercase tracking-widest text-accent ring-1 ring-inset ring-accent/20 shrink-0">
             Terakhir Dibaca
           </div>
           <div className="sm:hidden flex items-center justify-center rounded-full bg-accent/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-accent ring-1 ring-inset ring-accent/20 shrink-0">

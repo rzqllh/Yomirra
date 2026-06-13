@@ -36,21 +36,22 @@ export function ReaderSettingsDrawer({ isOpen, onClose, chapters, currentChapter
       {/* Drawer */}
       <div 
         className={cn(
-          "fixed top-0 right-0 bottom-0 z-[70] w-[320px] bg-surface-base border-l border-border-subtle shadow-2xl transition-transform duration-300 ease-in-out flex flex-col",
+          "fixed top-0 right-0 bottom-0 z-[70] w-80 bg-surface-overlay/95 backdrop-blur-3xl border-l border-border-glass shadow-2xl transition-transform duration-300 ease-in-out flex flex-col",
           "translate-x-full",
           isOpen && "max-md:translate-x-0",
           isDesktopPanelOpen && "md:translate-x-0"
         )}
       >
-        <div className="flex h-[calc(var(--mobile-header-height)+var(--safe-top))] items-center justify-between px-6 border-b border-border-subtle shrink-0 pt-[var(--safe-top)]">
+        <div className="flex h-[calc(var(--mobile-header-height)+var(--safe-top))] items-center justify-between px-6 shrink-0 pt-[var(--safe-top)]">
           <h2 className="text-base font-bold text-text-primary flex items-center gap-2">
-            <SlidersHorizontal size={20} className="text-text-muted" weight="bold" />
+            <SlidersHorizontal size={18} className="text-accent" weight="bold" />
             Pengaturan Pembaca
           </h2>
           <IconButton
             aria-label="Tutup panel"
-            variant="surface"
+            variant="ghost"
             size="sm"
+            className="rounded-full bg-surface-raised/50 hover:bg-surface-raised"
             onClick={() => {
               onClose();
               if (window.innerWidth >= 768 && isDesktopPanelOpen) {
@@ -62,17 +63,18 @@ export function ReaderSettingsDrawer({ isOpen, onClose, chapters, currentChapter
           </IconButton>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-8 flex flex-col">
+        <div className="flex-1 overflow-y-auto p-6 space-y-8 flex flex-col custom-scrollbar">
           
           <div className="space-y-4 shrink-0">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted flex items-center gap-2">
+            <h3 className="text-2xs font-bold uppercase tracking-widest text-text-muted flex items-center gap-2">
               <ImageSquare size={16} />
               Warna Latar
             </h3>
             <div className="flex gap-3">
               {[
-                { name: 'Gelap', value: '#0a0a0a', border: 'border-white/10' },
-                { name: 'Redup', value: '#1a1b1e', border: 'border-white/10' },
+                { name: 'Yomirra', value: '#003135', border: 'border-white/10' },
+                { name: 'Hitam', value: '#000000', border: 'border-white/10' },
+                { name: 'Gelap', value: '#1a1b1e', border: 'border-white/10' },
                 { name: 'Terang', value: '#ffffff', border: 'border-black/10' }
               ].map(bg => (
                 <button
@@ -92,7 +94,8 @@ export function ReaderSettingsDrawer({ isOpen, onClose, chapters, currentChapter
           </div>
           
           <div className="space-y-4 shrink-0">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted">
+            <h3 className="text-2xs font-bold uppercase tracking-widest text-text-muted flex items-center gap-2">
+              <Layout size={16} />
               Lebar Tampilan
             </h3>
             <div className="flex items-center gap-4">
@@ -114,12 +117,12 @@ export function ReaderSettingsDrawer({ isOpen, onClose, chapters, currentChapter
 
           {/* Chapter List for Desktop Panel */}
           {chapters && sourceId && mangaId && (
-            <div className="flex-1 flex flex-col space-y-4 min-h-0 pt-4 border-t border-border-subtle">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted flex items-center gap-2 shrink-0">
+            <div className="flex-1 flex flex-col space-y-4 min-h-0 pt-4 border-t border-border-glass">
+              <h3 className="text-2xs font-bold uppercase tracking-widest text-text-muted flex items-center gap-2 shrink-0">
                 <Layout size={16} />
                 Daftar Chapter
               </h3>
-              <div className="flex-1 overflow-y-auto space-y-1 pr-2 -mr-2 custom-scrollbar">
+              <div className="flex-1 overflow-y-auto pr-2 -mr-2 custom-scrollbar">
                 {chapters.map((chapter) => {
                   const isCurrent = chapter.id === currentChapterId;
                   return (
@@ -127,20 +130,20 @@ export function ReaderSettingsDrawer({ isOpen, onClose, chapters, currentChapter
                       key={chapter.id}
                       href={getReaderHref(sourceId, mangaId, chapter.id)}
                       className={cn(
-                        "w-full flex flex-col items-start px-3 py-2 rounded-lg transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent",
+                        "w-full flex flex-col items-start px-4 py-3 transition-colors outline-none",
                         isCurrent 
-                          ? "bg-accent/10 border border-accent/20" 
-                          : "hover:bg-surface-raised active:bg-surface-overlay border border-transparent"
+                          ? "bg-accent/10 border-l-2 border-accent" 
+                          : "hover:bg-surface-raised/50 border-l-2 border-transparent"
                       )}
                     >
                       <span className={cn(
-                        "text-sm font-bold line-clamp-1 text-left",
+                        "text-sm font-bold line-clamp-1 text-left leading-tight",
                         isCurrent ? "text-accent" : "text-text-primary"
                       )}>
                         {chapter.title}
                       </span>
                       <span className={cn(
-                        "text-[10px] mt-0.5 font-medium",
+                        "text-2xs mt-1 font-medium",
                         isCurrent ? "text-accent/80" : "text-text-muted"
                       )}>
                         {chapter.date}

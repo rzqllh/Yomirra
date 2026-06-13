@@ -10,28 +10,31 @@ import { HistoryItem } from "@/shared/store/history-store"
 interface HistoryRowProps {
   item: HistoryItem
   onRemove: (sourceId: string, mangaId: string, chapterId: string) => void
+  priority?: boolean
 }
 
-export function HistoryRow({ item, onRemove }: HistoryRowProps) {
+export function HistoryRow({ item, onRemove, priority = false }: HistoryRowProps) {
   const pathname = usePathname()
+  const targetHref = getReaderHref(item.sourceId, item.mangaId, item.chapterId)
 
   return (
-    <div className="group relative flex items-center gap-4 rounded-[var(--radius-xl)] bg-surface-raised p-3 border border-border-subtle transition-colors hover:bg-surface-overlay overflow-hidden">
-      <Link href={getMangaDetailHref(item.sourceId, item.mangaId, pathname)} className="relative h-20 w-14 shrink-0 overflow-hidden rounded-[var(--radius-sm)] bg-surface-overlay">
+    <div className="group relative flex items-center gap-4 rounded-xl bg-surface-raised/50 backdrop-blur-sm p-3 border border-border-subtle/50 transition-all duration-300 hover:bg-surface-overlay/80 hover:shadow-sm overflow-hidden">
+      <Link href={getMangaDetailHref(item.sourceId, item.mangaId, pathname)} className="relative h-[84px] w-[60px] shrink-0 overflow-hidden rounded-sm bg-surface-overlay shadow-sm z-10">
         {item.coverUrl ? (
-          <Image src={item.coverUrl} alt={item.mangaTitle} fill sizes="56px" className="object-cover" />
+          <Image src={item.coverUrl} alt={item.mangaTitle} fill sizes="60px" priority={priority} className="object-cover" />
         ) : (
-          <div className="h-full w-full bg-surface-overlay" />
+          <div className="h-full w-full bg-surface-muted" />
         )}
       </Link>
-      <div className="flex-1 min-w-0 flex flex-col justify-center">
+      
+      <div className="flex-1 min-w-0 flex flex-col justify-center z-10 pr-8">
         <Link href={getMangaDetailHref(item.sourceId, item.mangaId, pathname)} className="block min-w-0">
-          <h3 className="line-clamp-2 font-bold text-text-primary text-sm md:text-base leading-snug hover:text-accent transition-colors">
+          <h3 className="truncate font-bold text-text-primary text-sm md:text-base leading-snug group-hover:text-accent transition-colors">
             {item.mangaTitle}
           </h3>
         </Link>
-        <Link href={getReaderHref(item.sourceId, item.mangaId, item.chapterId)} className="block min-w-0 mt-0.5">
-          <p className="truncate text-sm font-medium text-text-muted hover:text-accent transition-colors">
+        <Link href={targetHref} className="block min-w-0 mt-0.5">
+          <p className="truncate text-sm font-medium text-text-muted group-hover:text-accent transition-colors">
             {item.chapterTitle || "Chapter"}
           </p>
         </Link>
@@ -47,11 +50,12 @@ export function HistoryRow({ item, onRemove }: HistoryRowProps) {
           )}
         </div>
       </div>
+      
       <IconButton
         aria-label={`Hapus ${item.mangaTitle} dari riwayat`}
         variant="ghost"
         size="sm"
-        className="absolute right-3 top-1/2 -translate-y-1/2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all hover:text-semantic-error hover:bg-semantic-error/10"
+        className="absolute right-3 top-1/2 -translate-y-1/2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all hover:text-semantic-error hover:bg-semantic-error/10 z-20"
         onClick={(e) => {
           e.preventDefault();
           onRemove(item.sourceId, item.mangaId, item.chapterId);

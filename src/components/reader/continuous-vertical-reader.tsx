@@ -160,6 +160,7 @@ export function ContinuousVerticalReader({
             isAllowedToLoad={page.index <= firstUnloadedIndex + 2}
             onLoadComplete={handleImageLoad}
             onError={handleImageError}
+            priority={page.index === 0}
           />
         ))}
         
@@ -200,7 +201,7 @@ export function ContinuousVerticalReader({
           <Button 
             variant="ghost" 
             size="sm" 
-            className="rounded-full px-4 font-bold text-[13px] bg-surface-raised/50"
+            className="rounded-full px-4 font-bold text-sm bg-surface-raised/50"
             onClick={(e) => { 
               e.stopPropagation(); 
               setIsChapterDrawerOpen(true);

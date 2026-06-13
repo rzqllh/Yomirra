@@ -37,7 +37,10 @@ export async function initFirebase() {
     authInstance = getAuth(appInstance);
     
     // Lazy load firestore
-    const { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } = await import("firebase/firestore");
+    const { initializeFirestore, persistentLocalCache, persistentMultipleTabManager, setLogLevel } = await import("firebase/firestore");
+    
+    // Suppress noisy offline errors that trigger Next.js error overlay
+    setLogLevel("silent");
     
     try {
       dbInstance = initializeFirestore(appInstance, {

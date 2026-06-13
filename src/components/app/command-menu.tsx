@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useRouter, usePathname } from "next/navigation"
+import Image from "next/image"
 import { useQuery } from "@tanstack/react-query"
 import { apiClient } from "@/shared/api-client"
 import { useDebounce } from "@/shared/hooks/use-debounce"
@@ -40,17 +41,25 @@ export function CommandMenu() {
   const router = useRouter()
   const pathname = usePathname()
 
-  // Keyboard shortcut
+  // Toggle logic
   React.useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault()
-        setOpen((prev) => !prev)
+    const down = (e: KeyboardEvent) => {
+      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setOpen((open) => !open);
       }
-    }
-    document.addEventListener("keydown", handleKeyDown)
-    return () => document.removeEventListener("keydown", handleKeyDown)
-  }, [])
+    };
+
+    const handleCustomOpen = () => setOpen(true);
+
+    document.addEventListener("keydown", down);
+    window.addEventListener("open-command-menu", handleCustomOpen);
+    
+    return () => {
+      document.removeEventListener("keydown", down);
+      window.removeEventListener("open-command-menu", handleCustomOpen);
+    };
+  }, []);
 
   // Search manga from active source
   const activeSourceId = "shinigami"
@@ -98,9 +107,27 @@ export function CommandMenu() {
                 onSelect={() =>
                   handleSelect(getMangaDetailHref(activeSourceId, manga.id, pathname))
                 }
+                className="flex items-center gap-3 py-2 cursor-pointer"
               >
-                <MagnifyingGlass className="mr-2 h-4 w-4 text-text-muted" weight="bold" />
-                <span className="truncate">{manga.title}</span>
+                {manga.coverUrl ? (
+                  <div className="relative h-12 w-9 shrink-0 overflow-hidden rounded bg-surface-muted shadow-sm">
+                    <Image 
+                      src={manga.coverUrl} 
+                      alt="" 
+                      fill
+                      className="object-cover transition-transform group-hover:scale-105" 
+                      unoptimized
+                    />
+                  </div>
+                ) : (
+                  <MagnifyingGlass className="h-5 w-5 text-text-muted shrink-0" weight="bold" />
+                )}
+                <div className="flex flex-col min-w-0">
+                  <span className="truncate font-bold text-text-primary text-sm">{manga.title}</span>
+                  {manga.latestChapter && (
+                    <span className="truncate text-xs text-text-muted mt-0.5">{manga.latestChapter}</span>
+                  )}
+                </div>
               </CommandItem>
             ))}
           </CommandGroup>

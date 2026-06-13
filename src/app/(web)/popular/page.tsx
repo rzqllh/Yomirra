@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { TopBar } from "@/components/app/top-bar";
+import { YomirraPageHeader } from "@/components/app/yomirra-header";
 import { sourceRegistry } from "@/shared/sources/source-registry";
 import { Suspense } from "react";
 import { SourceFeedSkeleton } from "@/components/app/source-feed-skeleton";
@@ -15,40 +15,41 @@ export const metadata: Metadata = {
 };
 
 async function PopularFeed({ sourceId, sourceName }: { sourceId: string; sourceName: string }) {
+  let popular;
   try {
     const source = sourceManager.getSource(sourceId);
-    const popular = await swrCache(`source:${sourceId}:popular:1`, () => source.getPopular(1), CACHE_TTL.DISCOVERY);
-
-    if (!popular?.mangas.length) return null;
-
-    // eslint-disable-next-line react-hooks/error-boundaries
-    return (
-      <section className="mb-12">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-text-primary">
-            {sourceName}
-          </h2>
-          <Link href={`/sources/${sourceId}?sort=popular`} className="text-sm font-bold text-accent hover:text-accent-hover transition-colors">
-            Lihat Semua
-          </Link>
-        </div>
-        
-        <div className="flex overflow-x-auto gap-3 sm:gap-4 pb-4 w-full min-w-0 snap-x scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {popular.mangas.slice(0, 15).map((manga, index) => (
-            <div key={manga.id} className="w-[120px] sm:w-[140px] md:w-[160px] lg:w-[180px] shrink-0 snap-start ">
-              <MangaCard 
-                manga={manga} 
-                sourceId={sourceId} 
-                priority={index < 4}
-              />
-            </div>
-          ))}
-        </div>
-      </section>
-    );
+    popular = await swrCache(`source:${sourceId}:popular:1`, () => source.getPopular(1), CACHE_TTL.DISCOVERY);
   } catch (_error) {
     return null;
   }
+
+  if (!popular?.mangas.length) return null;
+
+  return (
+    <section className="mb-12">
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-text-primary">
+          {sourceName}
+        </h2>
+        <Link href={`/sources/${sourceId}?sort=popular`} className="text-sm font-bold text-accent hover:text-accent-hover transition-colors">
+          Lihat Semua
+        </Link>
+      </div>
+      
+      <div className="flex overflow-x-auto gap-3 sm:gap-4 pb-4 w-full min-w-0 snap-x scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {popular.mangas.slice(0, 15).map((manga, index) => (
+          <div key={manga.id} className="w-[140px] sm:w-[160px] md:w-[180px] shrink-0 snap-start ">
+            <MangaCard 
+              manga={manga} 
+              sourceId={sourceId} 
+              priority={index < 4}
+              variant="editorial"
+            />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
 }
 
 export const dynamic = "force-dynamic";
@@ -58,10 +59,10 @@ export default async function PopularPage() {
 
   return (
     <main className="min-h-screen bg-surface-base">
-      <TopBar title="Manga Populer" />
+      <YomirraPageHeader title="Manga Populer" variant="auto" />
       
       <div className="px-4 py-6 max-w-7xl mx-auto">
-        <h1 className="text-2xl font-bold text-text-primary mb-8 md:hidden">Manga Populer</h1>
+        <h1 className="text-2xl md:text-3xl font-black tracking-tight text-text-primary mb-8">Manga Populer</h1>
         
         {activeSources.map(source => (
           <Suspense key={source.id} fallback={<SourceFeedSkeleton />}>

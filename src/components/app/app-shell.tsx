@@ -2,18 +2,17 @@
 
 import * as React from "react"
 import { usePathname } from "next/navigation"
-import { BottomNav } from "./bottom-nav"
-import { SideNav } from "./side-nav"
-import { TopNav } from "./top-nav"
-import { CommandMenu } from "./command-menu"
+import { YomirraBottomDock } from "./yomirra-bottom-dock"
+import { NetworkStatus } from "./network-status"
 import { cn } from "@/shared/utils/cn"
 import { useSync } from "@/shared/hooks/use-sync"
+import { TopNav } from "./top-nav"
+import { CommandMenu } from "./command-menu"
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const isReader = pathname?.includes("/read/")
   
-  // Mount background cross-device sync
   useSync()
 
   React.useEffect(() => {
@@ -26,26 +25,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [isReader])
 
   return (
-    <div className="flex min-h-screen bg-background text-text-primary overflow-x-hidden w-full max-w-full">
-      {!isReader && <SideNav />}
+    <div className="flex min-h-screen bg-background text-text-primary w-full max-w-full">
+      <NetworkStatus />
       
-      <div className={cn(
-        "flex-1 flex flex-col min-h-screen transition-all min-w-0",
-        !isReader && "md:ml-[80px] lg:ml-[240px]"
-      )}>
+      <div className="flex-1 flex flex-col min-h-screen transition-all min-w-0 duration-300 ease-in-out w-full">
         {!isReader && <TopNav />}
         
         <main
           className={cn(
-            "flex-1 flex flex-col w-full min-w-0",
-            !isReader && "pb-[var(--page-bottom-safe)] md:pb-0" // Padding for BottomNav only on mobile
+            "flex-1 flex flex-col w-full min-w-0 transition-all duration-300",
+            !isReader && "pb-[var(--page-bottom-safe)] md:pb-0"
           )}
         >
           {children}
         </main>
       </div>
 
-      {!isReader && <BottomNav />}
+      {!isReader && <YomirraBottomDock />}
       <CommandMenu />
     </div>
   )
