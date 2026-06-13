@@ -20,6 +20,7 @@
   --color-border-subtle: var(--border-subtle);
   --color-border-default: var(--border-default);
   --color-border-strong: var(--border-strong);
+  --color-border-glass: var(--border-glass);
 
   /* Accent */
   --color-accent: var(--color-accent);
@@ -59,6 +60,7 @@
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.30), 0 2px 6px rgba(0, 0, 0, 0.18);
   --shadow-lg: 0 8px 28px rgba(0, 0, 0, 0.40), 0 4px 12px rgba(0, 0, 0, 0.25);
   --shadow-heavy: var(--shadow-heavy-val);
+  --shadow-glass: var(--shadow-glass);
   --shadow-reader: 0 0 40px rgba(0, 0, 0, 0.70);
 
   /* Typography */
@@ -124,41 +126,44 @@
 
 @layer base {
   :root {
-    /* Theme-independent Media Overlay (Always Dark) */
-    --media-overlay-strong: rgba(0, 13, 15, 0.92);
-    --media-overlay-mid: rgba(0, 13, 15, 0.58);
-    --media-overlay-soft: rgba(0, 13, 15, 0.12);
-    --media-foreground: #F4FBFC;
-    --media-muted-foreground: rgba(244, 251, 252, 0.78);
+    /* Theme-independent Media Overlay (Always Dark) - Adjusted for Indigo */
+    --media-overlay-strong: rgba(5, 5, 10, 0.92);
+    --media-overlay-mid: rgba(5, 5, 10, 0.58);
+    --media-overlay-soft: rgba(5, 5, 10, 0.12);
+    --media-foreground: #F2F2F7;
+    --media-muted-foreground: rgba(242, 242, 247, 0.78);
   }
 
   :root, .dark {
-    /* Yomirra Deep Lagoon - Dark */
-    --surface-base: #000D0F; /* deepest base */
-    --surface-raised: #003135; /* main dark brand base */
-    --surface-overlay: #024950; /* raised surface, panels */
-    --surface-muted: #011E21; /* between base and raised */
-    --surface-hover: #03575F; /* slightly lighter than overlay */
+    /* Midnight Indigo - Dark */
+    --surface-base: #05050A; /* deepest base, near black */
+    --surface-raised: #0A0A14; /* raised surface */
+    --surface-overlay: #111122; /* elevated panels */
+    --surface-muted: #080810; /* muted states */
+    --surface-hover: #16162C; /* interaction hover */
 
-    --text-primary: #F4F8F9;
-    --text-secondary: #AFDDE5; /* mist text */
-    --text-muted: #48676B;
-    --text-on-accent: #000D0F;
+    --text-primary: #F2F2F7;
+    --text-secondary: #C7C7CC; /* subtle text */
+    --text-muted: #636366;
+    --text-on-accent: #FFFFFF;
 
-    --border-subtle: rgba(15, 164, 175, 0.15);
-    --border-default: rgba(15, 164, 175, 0.3);
-    --border-strong: rgba(15, 164, 175, 0.5);
+    --border-subtle: rgba(94, 92, 230, 0.15);
+    --border-default: rgba(94, 92, 230, 0.3);
+    --border-strong: rgba(94, 92, 230, 0.5);
+    --border-glass: rgba(255, 255, 255, 0.05); /* very subtle rim for glass panels */
     
-    --color-accent: #0FA4AF;
-    --color-accent-dim: rgba(15, 164, 175, 0.15);
-    --color-accent-hover: #12C1CE;
+    --color-accent: #5E5CE6; /* vibrant indigo */
+    --color-accent-dim: rgba(94, 92, 230, 0.15);
+    --color-accent-hover: #7D7AFF;
     
-    --color-semantic-success: #34A853; /* softer, WCAG-safe green */
-    --color-semantic-warning: #B56A5B; /* warm-soft */
-    --color-semantic-error: #964734; /* clay, warm destructive-soft */
-    --color-semantic-info: #0FA4AF;
+    --color-semantic-success: #32D74B; 
+    --color-semantic-warning: #FF9F0A; 
+    --color-semantic-error: #FF453A; 
+    --color-semantic-info: #5E5CE6;
 
-    --shadow-heavy-val: 0 12px 40px rgba(0, 0, 0, 0.65);
+    /* Diffused shadow for glass docks/headers */
+    --shadow-heavy-val: 0 12px 40px rgba(0, 0, 0, 0.55), 0 4px 12px rgba(0, 0, 0, 0.35);
+    --shadow-glass: inset 0 1px 0 0 rgba(255, 255, 255, 0.1), 0 8px 32px rgba(0, 0, 0, 0.45);
 
     /* shadcn/ui compatible mapping */
     --background: var(--surface-base);
@@ -184,32 +189,35 @@
   }
 
   .light {
-    /* Yomirra Deep Lagoon - Light */
-    --surface-base: #F4F8F9; /* mist gray background */
-    --surface-raised: #E8F3F5;
-    --surface-overlay: #FFFFFF;
-    --surface-muted: #D1E4E6;
-    --surface-hover: #D8EAEB;
+    /* Midnight Indigo - Light (Clean Slate) */
+    --surface-base: #FAFAFC; /* slightly cool white */
+    --surface-raised: #F2F2F7; /* subtle offset from base */
+    --surface-overlay: #FFFFFF; /* bright card */
+    --surface-muted: #EAEAEB; /* subtle background */
+    --surface-hover: #E5E5EA; /* interaction state */
 
-    --text-primary: #003135;
-    --text-secondary: #48676B;
-    --text-muted: #728D91;
+    --text-primary: #1C1C1E; /* deep ink text */
+    --text-secondary: #3A3A3C; /* secondary text */
+    --text-muted: #8E8E93;
     --text-on-accent: #FFFFFF;
 
-    --border-subtle: rgba(0, 49, 53, 0.05);
-    --border-default: rgba(0, 49, 53, 0.1);
-    --border-strong: rgba(0, 49, 53, 0.2);
+    --border-subtle: rgba(88, 86, 214, 0.08);
+    --border-default: rgba(88, 86, 214, 0.15);
+    --border-strong: rgba(88, 86, 214, 0.25);
+    --border-glass: rgba(255, 255, 255, 0.5); /* very subtle rim for glass panels */
     
-    --color-accent: #0FA4AF;
-    --color-accent-dim: rgba(15, 164, 175, 0.1);
-    --color-accent-hover: #0D8A93;
+    --color-accent: #5856D6; /* indigo light mode */
+    --color-accent-dim: rgba(88, 86, 214, 0.1);
+    --color-accent-hover: #4644B8;
     
-    --color-semantic-success: #34A853;
-    --color-semantic-warning: #B56A5B;
-    --color-semantic-error: #964734;
-    --color-semantic-info: #0FA4AF;
+    --color-semantic-success: #34C759;
+    --color-semantic-warning: #FF9500;
+    --color-semantic-error: #FF3B30;
+    --color-semantic-info: #5856D6;
 
-    --shadow-heavy-val: 0 12px 30px rgba(0, 49, 53, 0.15), 0 4px 12px rgba(0, 49, 53, 0.08);
+    /* Diffused shadow for glass docks/headers */
+    --shadow-heavy-val: 0 12px 30px rgba(28, 28, 30, 0.08), 0 4px 12px rgba(28, 28, 30, 0.04);
+    --shadow-glass: inset 0 1px 0 0 rgba(255, 255, 255, 0.7), 0 8px 32px rgba(28, 28, 30, 0.06);
 
     /* shadcn/ui compatible mapping */
     --background: var(--surface-base);
@@ -245,6 +253,7 @@
     );
   }
 }
+
 @layer base {
   html, body {
     max-width: 100%;

@@ -1,6 +1,5 @@
 import { Metadata } from "next";
 import { HomeView } from "@/components/app/home-view";
-import { TopBar } from "@/components/app/top-bar";
 import { sourceRegistry } from "@/shared/sources/source-registry";
 import { SourceFeed } from "@/components/app/source-feed";
 import { SourceFeedSkeleton } from "@/components/app/source-feed-skeleton";

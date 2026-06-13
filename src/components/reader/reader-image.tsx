@@ -13,6 +13,7 @@ interface ReaderImageProps {
   isAllowedToLoad: boolean
   onLoadComplete: (index: number) => void
   onError: (index: number) => void
+  priority?: boolean
 }
 
 export function ReaderImage({
@@ -21,7 +22,8 @@ export function ReaderImage({
   dataSaver,
   isAllowedToLoad,
   onLoadComplete,
-  onError
+  onError,
+  priority = false
 }: ReaderImageProps) {
   const [inView, setInView] = React.useState(false)
   const [hasError, setHasError] = React.useState(false)
@@ -71,9 +73,10 @@ export function ReaderImage({
           width={800}
           height={1200}
           sizes="100vw"
+          priority={priority}
           quality={dataSaver ? 60 : 85}
           unoptimized={!dataSaver}
-          loading="eager" // Important! We control the loading queue, so tell browser to load immediately
+          loading={priority ? "eager" : "lazy"} // Important! Control loading for non-priority
           style={{ width: "100%", height: "auto" }}
           onLoad={() => {
             // Push to next tick to prevent React "update during render" warnings if cached

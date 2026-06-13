@@ -7,6 +7,7 @@ import { IconButton } from "@/components/ui/icon-button"
 import { Chapter } from "@/shared/types/source"
 import { useRouter } from "next/navigation"
 import { getReaderHref } from "@/shared/lib/routes"
+import { YomirraSearchField } from "@/components/ui/yomirra-search-field"
 
 interface ReaderChapterDrawerProps {
   isOpen: boolean;
@@ -56,32 +57,32 @@ export function ReaderChapterDrawer({
       {/* Bottom Sheet / Dialog */}
       <div 
         className={cn(
-          "fixed bottom-0 left-0 right-0 z-[70] max-h-[80vh] min-h-[50vh] bg-surface-base rounded-t-2xl shadow-2xl transition-transform duration-300 ease-out flex flex-col md:max-w-md md:mx-auto md:mb-6 md:bottom-6 md:rounded-2xl md:border md:border-border-subtle",
+          "fixed bottom-0 left-0 right-0 z-[70] max-h-[80vh] min-h-[50vh] bg-surface-overlay/95 backdrop-blur-3xl rounded-t-3xl shadow-2xl transition-transform duration-300 ease-out flex flex-col md:max-w-md md:mx-auto md:mb-6 md:bottom-6 md:rounded-3xl md:border md:border-border-glass",
           isOpen ? "translate-y-0" : "translate-y-full md:translate-y-[120%]"
         )}
       >
-        <div className="flex flex-col gap-3 px-6 py-4 border-b border-border-subtle shrink-0">
+        <div className="flex flex-col gap-4 px-6 py-5 shrink-0">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-bold text-text-primary flex items-center gap-2">
-              <List size={20} className="text-text-muted" weight="bold" />
+              <List size={18} className="text-accent" weight="bold" />
               Daftar Chapter
             </h2>
             <IconButton
               aria-label="Tutup panel"
-              variant="surface"
+              variant="ghost"
               size="sm"
+              className="rounded-full bg-surface-raised/50 hover:bg-surface-raised"
               onClick={onClose}
             >
               <X size={16} weight="bold" />
             </IconButton>
           </div>
           <div className="flex items-center gap-2">
-            <input 
-              type="text" 
+            <YomirraSearchField 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Cari chapter..." 
-              className="bg-surface-raised border border-border-subtle rounded-full px-3 py-1.5 text-sm w-full outline-none focus:border-border-strong text-text-primary transition-colors"
+              containerClassName="w-full"
             />
             <IconButton 
               variant="surface" 
@@ -96,13 +97,13 @@ export function ReaderChapterDrawer({
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto pt-2 pb-6 custom-scrollbar border-t border-border-glass">
           {!chapters ? (
             <div className="flex items-center justify-center h-full text-text-muted">
               Loading chapters...
             </div>
           ) : (
-            <div className="space-y-1">
+            <div className="space-y-0">
               {sortedChapters.length === 0 ? (
                 <div className="text-center py-8 text-sm text-text-muted">
                   Chapter tidak ditemukan.
@@ -120,14 +121,14 @@ export function ReaderChapterDrawer({
                         }
                       }}
                       className={cn(
-                        "w-full flex flex-col items-start px-4 py-3 rounded-xl transition-all duration-200",
+                        "w-full flex flex-col items-start px-6 py-3.5 transition-colors outline-none",
                         isCurrent 
-                          ? "bg-accent/10 border border-accent/20" 
-                          : "hover:bg-surface-raised/50 active:scale-[0.98]"
+                          ? "bg-accent/10 border-l-2 border-accent" 
+                          : "hover:bg-surface-raised/50 border-l-2 border-transparent"
                       )}
                     >
                       <span className={cn(
-                        "text-sm font-bold line-clamp-1 text-left",
+                        "text-[14px] font-bold line-clamp-1 text-left leading-tight",
                         isCurrent ? "text-accent" : "text-text-primary"
                       )}>
                         {chapter.title}

@@ -1,17 +1,20 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Play, SortAscending, SortDescending } from "@phosphor-icons/react";
+import { useState, useMemo, useEffect } from "react";
+import { Play, SortAscending, SortDescending, Book } from "@phosphor-icons/react";
+import { CaretLeft } from "@phosphor-icons/react";
 import Image from "next/image";
 import Link from "next/link";
 import { getReaderHref, getSafeMangaDetailBackHref } from "@/shared/lib/routes";
 import { MangaActions } from "@/components/manga/manga-actions";
 import { useHistoryStore } from "@/shared/store/history-store";
-import { TopBar } from "@/components/app/top-bar";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { ChapterRow } from "@/components/manga/chapter-row";
 import { useSearchParams } from "next/navigation";
+import { YomirraSearchField } from "@/components/ui/yomirra-search-field";
+import { EmptyState } from "@/components/states/empty-state";
+import { cn } from "@/shared/utils/cn";
 import type { MangaDetail, Chapter } from "@/shared/types/source";
 
 interface MangaDetailViewProps {
@@ -29,14 +32,20 @@ export function MangaDetailView({
 }: MangaDetailViewProps) {
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    queueMicrotask(() => setMounted(true));
+  }, []);
   
   const searchParams = useSearchParams();
   const returnTo = searchParams.get("returnTo");
   const backHref = getSafeMangaDetailBackHref(returnTo, sourceId);
 
   const getLatestForManga = useHistoryStore((state) => state.getLatestForManga);
-  const historyItem = getLatestForManga(sourceId, mangaId);
-  const historyItems = useHistoryStore((state) => state.items);
+  const historyItems = useHistoryStore((state) => state.items); // keep subscription
+  const historyItem = mounted ? getLatestForManga(sourceId, mangaId) : undefined;
 
   const sortedChapters = useMemo(() => {
     if (!chapters) return [];
@@ -59,14 +68,14 @@ export function MangaDetailView({
   const renderActions = () => (
     <>
       {showContinue && continueChapterId ? (
-        <Button asChild variant="accent" className="w-full rounded-full h-12 text-[15px] font-bold shadow-sm">
+        <Button asChild variant="accent" className="w-full rounded-full h-12 text-base font-bold shadow-sm">
           <Link href={getReaderHref(sourceId, mangaId, continueChapterId)}>
             <Play className="h-5 w-5" fill="currentColor" weight="fill" />
             Lanjut baca
           </Link>
         </Button>
       ) : startChapterId ? (
-        <Button asChild variant="accent" className="w-full rounded-full h-12 text-[15px] font-bold shadow-sm">
+        <Button asChild variant="accent" className="w-full rounded-full h-12 text-base font-bold shadow-sm">
           <Link href={getReaderHref(sourceId, mangaId, startChapterId)}>
             <Play className="h-5 w-5" fill="currentColor" weight="fill" />
             Mulai baca
@@ -87,33 +96,38 @@ export function MangaDetailView({
 
   return (
     <main className="min-h-screen flex flex-col w-full relative">
-      <div className="md:hidden">
-        <TopBar title={detail.title} showBack backHref={backHref} />
+      <div className="absolute top-4 left-4 z-50 md:hidden">
+        <Link 
+          href={backHref}
+          className="flex items-center justify-center w-10 h-10 rounded-full bg-surface-overlay/80 backdrop-blur-md border border-border-glass shadow-sm text-text-primary hover:bg-surface-hover transition-colors"
+        >
+          <CaretLeft size={24} weight="bold" />
+        </Link>
       </div>
 
-      <div className="absolute top-0 left-0 right-0 h-[400px] w-full overflow-hidden z-0 pointer-events-none select-none">
+      <div className="absolute top-0 left-0 right-0 h-[300px] md:h-[450px] w-full overflow-hidden z-0 pointer-events-none select-none">
         <Image
           src={detail.coverUrl}
           alt=""
           fill
           priority
           sizes="100vw"
-          className="object-cover opacity-[0.15] blur-2xl scale-110 saturate-150 transform-gpu"
+          className="object-cover opacity-[0.25] blur-3xl scale-110 saturate-150 transform-gpu dark:opacity-[0.15]"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-surface-base/30 via-surface-base/80 to-surface-base" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-surface-base/80 to-surface-base" />
       </div>
 
-      <div className="w-full max-w-7xl mx-auto px-4 md:px-8 pt-6 md:pt-12 relative z-10 flex flex-col md:flex-row gap-6 md:gap-8">
+      <div className="w-full max-w-7xl mx-auto px-4 md:px-8 pt-20 md:pt-12 relative z-10 flex flex-col md:flex-row gap-6 md:gap-10">
         
         <div className="flex gap-4 md:hidden">
-          <div className="relative w-[110px] shrink-0 aspect-[2/3] rounded-[var(--radius-md)] overflow-hidden shadow-heavy border border-border-default bg-surface-base vt-cover-mobile" style={{ viewTransitionName: `cover-${sourceId}-${mangaId}` }}>
+          <div className="relative w-[110px] shrink-0 aspect-[2/3] rounded-md overflow-hidden shadow-heavy border border-border-default bg-surface-base vt-cover-mobile">
             {coverUrl && <Image src={coverUrl} alt={detail.title} fill className="object-cover" priority sizes="110px" />}
           </div>
           <div className="flex flex-col flex-1 gap-1.5 justify-center py-1">
             <h1 className="text-xl font-bold leading-snug line-clamp-3 text-shadow-sm">{detail.title}</h1>
             <div className="text-sm font-medium text-text-muted">{detail.author}</div>
             <div className="mt-1">
-              <span className="text-text-primary bg-surface-overlay border border-border-default px-1.5 py-0.5 rounded-[var(--radius-sm)] text-[10px] uppercase tracking-wider font-bold">{detail.status}</span>
+              <span className="text-text-primary bg-surface-overlay border border-border-default px-1.5 py-0.5 rounded-sm text-2xs uppercase tracking-wider font-bold">{detail.status}</span>
             </div>
           </div>
         </div>
@@ -122,8 +136,8 @@ export function MangaDetailView({
           {renderActions()}
         </div>
 
-        <div className="hidden md:flex relative sticky top-[100px] self-start w-[280px] lg:w-[320px] shrink-0 flex-col gap-4">
-          <div className="relative w-full aspect-[2/3] rounded-[var(--radius-lg)] overflow-hidden shadow-heavy border border-border-default bg-surface-base vt-cover-desktop" style={{ viewTransitionName: `cover-${sourceId}-${mangaId}` }}>
+        <div className="hidden md:flex relative sticky top-[100px] self-start w-[280px] lg:w-80 shrink-0 flex-col gap-4">
+          <div className="relative w-full aspect-[2/3] rounded-lg overflow-hidden shadow-heavy border border-border-default bg-surface-base vt-cover-desktop">
             {coverUrl && <Image src={coverUrl} alt={detail.title} fill className="object-cover" priority sizes="320px" />}
           </div>
           <div className="flex flex-col gap-3 mt-2">
@@ -138,41 +152,55 @@ export function MangaDetailView({
               <h1 className="text-4xl lg:text-5xl font-bold tracking-tight text-text-primary leading-tight text-balance">
                 {detail.title}
               </h1>
-              <div className="flex items-center gap-2 text-[15px] font-medium text-text-muted">
+              <div className="flex items-center gap-2 text-base font-medium text-text-muted">
                 <span>{detail.author}</span>
                 <span>•</span>
-                <span className="text-text-primary bg-surface-overlay px-2 py-0.5 rounded-[var(--radius-sm)] text-xs uppercase tracking-wider font-bold">{detail.status}</span>
+                <span className="text-text-primary bg-surface-overlay px-2 py-0.5 rounded-sm text-xs uppercase tracking-wider font-bold">{detail.status}</span>
               </div>
             </div>
 
             <div className="flex flex-wrap gap-2 mt-2 md:mt-0">
               {detail.genres?.map((g) => (
-                <span key={g} className="rounded-[var(--radius-sm)] bg-surface-overlay px-2 py-1 text-[11px] md:text-xs font-semibold text-text-primary border border-border-default uppercase tracking-wider">
+                <Link 
+                  key={g} 
+                  href={`/library?source=${sourceId}&genre=${encodeURIComponent(g)}`}
+                  className="rounded-sm bg-surface-overlay px-2 py-1 text-[11px] md:text-xs font-semibold text-text-primary border border-border-default uppercase tracking-wider hover:bg-accent/10 hover:text-accent hover:border-accent transition-colors"
+                >
                   {g}
-                </span>
+                </Link>
               ))}
             </div>
 
-            <div className="mt-2 md:mt-4 bg-surface-base border border-border-default rounded-[var(--radius-lg)] p-4 md:p-6">
-              <p className="text-sm md:text-[15px] leading-relaxed text-text-secondary whitespace-pre-wrap break-words">
+            <div className="mt-2 md:mt-4 bg-surface-base border border-border-default rounded-lg p-4 md:p-6">
+              <p className={cn(
+                "text-sm md:text-base leading-relaxed text-text-secondary whitespace-pre-wrap break-words text-justify transition-all",
+                !isExpanded && "line-clamp-4"
+              )}>
                 {detail.description || "Sinopsis belum tersedia."}
               </p>
+              {detail.description && detail.description.length > 180 && (
+                <button 
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="mt-2.5 text-sm font-bold text-accent hover:text-accent-hover transition-colors inline-flex items-center gap-1"
+                >
+                  {isExpanded ? "Tampilkan lebih sedikit" : "Selengkapnya"}
+                </button>
+              )}
             </div>
           </div>
 
           <div className="mt-8 md:mt-10">
-            <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between border-b border-border-default pb-2 gap-3">
+            <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between border-b border-border-default pb-3 gap-4">
               <div className="flex items-center gap-3">
                 <h3 className="text-lg md:text-xl font-bold text-text-primary">Chapter</h3>
                 <span className="text-sm text-text-muted font-bold">{chapters?.length || 0}</span>
               </div>
               <div className="flex items-center gap-2">
-                <input 
-                  type="text" 
+                <YomirraSearchField 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Cari chapter..." 
-                  className="bg-surface-overlay border border-border-default rounded-full px-3 py-1.5 text-sm w-full sm:w-[150px] outline-none focus:border-accent text-text-primary transition-colors"
+                  containerClassName="w-full sm:w-[220px]"
                 />
                 <IconButton 
                   variant="ghost" 
@@ -186,11 +214,14 @@ export function MangaDetailView({
             </div>
 
             {!chapters || chapters.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center bg-surface-base/50 rounded-[var(--radius-lg)] border border-dashed border-border-default">
-                <p className="text-[15px] font-medium text-text-muted">Belum ada chapter.</p>
-              </div>
+              <EmptyState 
+                icon={<Book size={32} weight="duotone" />}
+                title="Belum ada chapter"
+                description="Manga ini belum memiliki chapter atau sedang error saat memuat data."
+                className="my-8"
+              />
             ) : (
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2 max-h-[60vh] md:max-h-[500px] overflow-y-auto pr-2 -mr-2 [scrollbar-width:thin]">
                 {sortedChapters.map((chapter) => {
                   const isRead = historyItems[`${sourceId}::${mangaId}::${chapter.id}`] !== undefined;
                   const isLastRead = historyItem?.chapterId === chapter.id;

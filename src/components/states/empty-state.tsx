@@ -55,11 +55,11 @@ export function EmptyState({
       {...props}
     >
       {icon && (
-        <div className="relative mb-6 flex h-20 w-20 items-center justify-center rounded-[var(--radius-lg)] bg-gradient-to-b from-surface-raised to-surface-base shadow-lg ring-1 ring-border-default/40 isolate">
+        <div className="relative mb-6 flex h-20 w-20 items-center justify-center rounded-lg bg-gradient-to-b from-surface-raised to-surface-base shadow-lg ring-1 ring-border-default/40 isolate">
           {/* Ambient Glow */}
-          <div className="absolute inset-0 -z-10 rounded-[var(--radius-lg)] bg-accent/10 blur-2xl opacity-60 mix-blend-screen" />
+          <div className="absolute inset-0 -z-10 rounded-lg bg-accent/10 blur-2xl opacity-60 mix-blend-screen" />
           {/* Inner Highlight */}
-          <div className="absolute inset-0 rounded-[var(--radius-lg)] bg-gradient-to-tr from-accent/5 to-transparent opacity-50" />
+          <div className="absolute inset-0 rounded-lg bg-gradient-to-tr from-accent/5 to-transparent opacity-50" />
           {/* Icon Container */}
           <div className="relative z-10 text-accent drop-shadow-md scale-110">
             {icon}

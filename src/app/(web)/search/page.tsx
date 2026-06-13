@@ -5,7 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
 import { MagnifyingGlass, WarningCircle, CheckCircle } from "@phosphor-icons/react/dist/ssr";
 import { SearchResultSkeleton } from "@/components/skeletons/search-result-skeleton";
-import { TopBar } from "@/components/app/top-bar";
+import { YomirraPageHeader, DesktopPageTitle } from "@/components/app/yomirra-header";
 import { useSearchParams } from "next/navigation";
 import { MangaCard } from "@/components/manga/manga-card";
 import { motion, AnimatePresence } from "motion/react";
@@ -18,7 +18,7 @@ export default function SearchPage() {
     <DirectionalTransition>
       <React.Suspense fallback={
         <main className="min-h-screen bg-surface-base">
-          <TopBar title="Hasil Pencarian" showBack />
+          <YomirraPageHeader title="Hasil Pencarian" showBack variant="auto" />
           <div className="px-4 py-6">
             <SearchResultSkeleton />
           </div>
@@ -73,12 +73,19 @@ function SearchContent() {
 
   return (
     <main className="min-h-screen bg-surface-base">
-      <TopBar title="Hasil Pencarian" showBack />
+      <YomirraPageHeader title="Hasil Pencarian" showBack variant="auto" />
       
       <div className="px-4 py-6 max-w-7xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-text-primary">Pencarian untuk &quot;{query}&quot;</h1>
-          <p className="text-sm text-text-muted mt-1">Pilih sumber untuk mencari</p>
+          <DesktopPageTitle 
+            title={`Pencarian: ${query}`} 
+            description="Pilih sumber untuk mencari manga favoritmu."
+            icon={<MagnifyingGlass size={32} weight="duotone" />}
+          />
+          <div className="md:hidden">
+            <h1 className="text-2xl font-black tracking-tight text-text-primary">Pencarian untuk &quot;{query}&quot;</h1>
+            <p className="text-sm text-text-muted mt-1">Pilih sumber untuk mencari</p>
+          </div>
         </div>
 
         {/* Source Filter Chips */}
@@ -91,7 +98,7 @@ function SearchContent() {
                   key={source.id}
                   onClick={() => toggleSource(source.id)}
                   whileTap={{ scale: 0.96 }}
-                  className={`relative flex items-center gap-2 px-4 py-2 rounded-full text-[13px] font-bold transition-all border outline-none overflow-hidden ${
+                  className={`relative flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all border outline-none overflow-hidden ${
                     isSelected 
                       ? "border-accent text-background" 
                       : "border-border-subtle text-text-muted hover:border-border-strong hover:bg-surface-raised"
@@ -118,12 +125,12 @@ function SearchContent() {
 
         {/* Content States */}
         {query.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center bg-surface-raised rounded-[var(--radius-xl)] border border-border-subtle">
+          <div className="flex flex-col items-center justify-center py-20 text-center bg-surface-raised rounded-xl border border-border-subtle">
             <MagnifyingGlass size={48} className="mb-4 text-text-muted" weight="duotone" />
             <p className="text-base font-medium text-text-primary">Masukkan kata kunci untuk mencari.</p>
           </div>
         ) : selectedSources.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center bg-surface-raised rounded-[var(--radius-xl)] border border-border-subtle">
+          <div className="flex flex-col items-center justify-center py-20 text-center bg-surface-raised rounded-xl border border-border-subtle">
             <WarningCircle size={48} className="mb-4 text-accent" weight="duotone" />
             <p className="text-base font-medium text-text-primary">Tidak ada sumber yang dipilih.</p>
             <p className="text-sm text-text-muted mt-1">Pilih setidaknya satu sumber di atas.</p>
@@ -138,7 +145,7 @@ function SearchContent() {
             <SearchResultSkeleton />
           </div>
         ) : error ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center bg-surface-raised rounded-[var(--radius-xl)] border border-border-subtle">
+          <div className="flex flex-col items-center justify-center py-20 text-center bg-surface-raised rounded-xl border border-border-subtle">
             <WarningCircle size={48} className="mb-4 text-semantic-error" weight="duotone" />
             <p className="text-base font-medium text-text-primary">Terjadi kesalahan pencarian.</p>
           </div>
@@ -155,7 +162,7 @@ function SearchContent() {
                       <span className="w-2 h-2 rounded-full bg-border-strong"></span>
                       {sourceName}
                     </h2>
-                    <p className="text-sm text-text-muted italic bg-surface-raised/50 p-4 rounded-[var(--radius-md)] border border-border-subtle">
+                    <p className="text-sm text-text-muted italic bg-surface-raised/50 p-4 rounded-md border border-border-subtle">
                       Tidak ada hasil ditemukan.
                     </p>
                   </div>

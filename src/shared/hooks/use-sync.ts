@@ -1,18 +1,104 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from './use-auth';
 import { useLibraryStore, LibraryItem } from "@/shared/store/library-store";
 import { useHistoryStore, HistoryItem } from "@/shared/store/history-store";
+import { useSettingsStore } from "@/shared/store/settings-store";
 import { initFirebase } from '@/shared/lib/firebase';
 
-export function useSync() {
+export function useSync(options = { autoSync: true }) {
   const { user } = useAuth();
   
   const { items: libraryItems, _setItemLocal: setLibraryItemLocal } = useLibraryStore();
   const { items: historyItems, _setItemLocal: setHistoryItemLocal } = useHistoryStore();
+  const { setLastSyncedAt } = useSettingsStore();
   
   const hasSyncedInitial = useRef(false);
+  const [isSyncing, setIsSyncing] = useState(false);
+
+  const runFullSync = async () => {
+    if (!user) return;
+    
+    setIsSyncing(true);
+    try {
+      const { db: firestore } = await initFirebase();
+      if (!firestore) return;
+      const { doc, collection, getDocs, writeBatch } = await import('firebase/firestore');
+      const uid = user.uid;
+      
+      // 1. Fetch remote library
+      const remoteLibSnapshot = await getDocs(collection(firestore, `users/${uid}/library`));
+      const remoteLibrary: Record<string, LibraryItem> = {};
+      remoteLibSnapshot.forEach(d => {
+        remoteLibrary[d.id] = d.data() as LibraryItem;
+      });
+
+      // 2. Fetch remote history
+      const remoteHistSnapshot = await getDocs(collection(firestore, `users/${uid}/history`));
+      const remoteHistory: Record<string, HistoryItem> = {};
+      remoteHistSnapshot.forEach(d => {
+        remoteHistory[d.id] = d.data() as HistoryItem;
+      });
+
+      const batch = writeBatch(firestore);
+      let batchCount = 0;
+
+      // 3. Merge Library (Local wins if newer, otherwise remote wins)
+      Object.values(libraryItems).forEach(localItem => {
+        const id = `${localItem.sourceId}::${localItem.mangaId}`;
+        const remoteItem = remoteLibrary[id];
+        
+        if (!remoteItem || new Date(localItem.updatedAt).getTime() > new Date(remoteItem.updatedAt).getTime()) {
+          // Push local to remote
+          batch.set(doc(firestore, `users/${uid}/library`, id), localItem);
+          batchCount++;
+        }
+      });
+
+      Object.entries(remoteLibrary).forEach(([id, remoteItem]) => {
+        const localItem = libraryItems[id];
+        if (!localItem || new Date(remoteItem.updatedAt).getTime() > new Date(localItem.updatedAt).getTime()) {
+          // Pull remote to local
+          setLibraryItemLocal(remoteItem);
+        }
+      });
+
+      // 4. Merge History
+      Object.values(historyItems).forEach(localItem => {
+        const id = `${localItem.sourceId}::${localItem.mangaId}::${localItem.chapterId}`;
+        const remoteItem = remoteHistory[id];
+        
+        if (!remoteItem || new Date(localItem.readAt).getTime() > new Date(remoteItem.readAt).getTime()) {
+          // Push local to remote
+          batch.set(doc(firestore, `users/${uid}/history`, id), localItem);
+          batchCount++;
+        }
+      });
+
+      Object.entries(remoteHistory).forEach(([id, remoteItem]) => {
+        const localItem = historyItems[id];
+        if (!localItem || new Date(remoteItem.readAt).getTime() > new Date(localItem.readAt).getTime()) {
+          // Pull remote to local
+          setHistoryItemLocal(remoteItem);
+        }
+      });
+
+      if (batchCount > 0) {
+        await batch.commit();
+        console.log(`[Sync] Synced ${batchCount} local items to Cloud`);
+      }
+      
+      setLastSyncedAt(new Date().toISOString());
+
+    } catch (error: unknown) {
+      console.error("Sync error:", error);
+    } finally {
+      setIsSyncing(false);
+    }
+  };
 
   useEffect(() => {
+    if (!options.autoSync) return;
+
     if (!user) {
       hasSyncedInitial.current = false;
       return;
@@ -23,81 +109,6 @@ export function useSync() {
     // Set to true immediately to prevent race conditions while fetching
     hasSyncedInitial.current = true;
     
-    // Extracted sync logic so it can be called on 'online' event
-    const runFullSync = async () => {
-      try {
-        const { db: firestore } = await initFirebase();
-        if (!firestore) return;
-        const { doc, collection, getDocs, writeBatch } = await import('firebase/firestore');
-        const uid = user.uid;
-        
-        // 1. Fetch remote library
-        const remoteLibSnapshot = await getDocs(collection(firestore, `users/${uid}/library`));
-        const remoteLibrary: Record<string, LibraryItem> = {};
-        remoteLibSnapshot.forEach(d => {
-          remoteLibrary[d.id] = d.data() as LibraryItem;
-        });
-
-        // 2. Fetch remote history
-        const remoteHistSnapshot = await getDocs(collection(firestore, `users/${uid}/history`));
-        const remoteHistory: Record<string, HistoryItem> = {};
-        remoteHistSnapshot.forEach(d => {
-          remoteHistory[d.id] = d.data() as HistoryItem;
-        });
-
-        const batch = writeBatch(firestore);
-        let batchCount = 0;
-
-        // 3. Merge Library (Local wins if newer, otherwise remote wins)
-        Object.values(libraryItems).forEach(localItem => {
-          const id = `${localItem.sourceId}::${localItem.mangaId}`;
-          const remoteItem = remoteLibrary[id];
-          
-          if (!remoteItem || new Date(localItem.updatedAt).getTime() > new Date(remoteItem.updatedAt).getTime()) {
-            // Push local to remote
-            batch.set(doc(firestore, `users/${uid}/library`, id), localItem);
-            batchCount++;
-          }
-        });
-
-        Object.entries(remoteLibrary).forEach(([id, remoteItem]) => {
-          const localItem = libraryItems[id];
-          if (!localItem || new Date(remoteItem.updatedAt).getTime() > new Date(localItem.updatedAt).getTime()) {
-            // Pull remote to local
-            setLibraryItemLocal(remoteItem);
-          }
-        });
-
-        // 4. Merge History
-        Object.values(historyItems).forEach(localItem => {
-          const id = `${localItem.sourceId}::${localItem.mangaId}::${localItem.chapterId}`;
-          const remoteItem = remoteHistory[id];
-          
-          if (!remoteItem || new Date(localItem.readAt).getTime() > new Date(remoteItem.readAt).getTime()) {
-            // Push local to remote
-            batch.set(doc(firestore, `users/${uid}/history`, id), localItem);
-            batchCount++;
-          }
-        });
-
-        Object.entries(remoteHistory).forEach(([id, remoteItem]) => {
-          const localItem = historyItems[id];
-          if (!localItem || new Date(remoteItem.readAt).getTime() > new Date(localItem.readAt).getTime()) {
-            // Pull remote to local
-            setHistoryItemLocal(remoteItem);
-          }
-        });
-
-        if (batchCount > 0) {
-          await batch.commit();
-          console.log(`[Sync] Synced ${batchCount} local items to Cloud`);
-        }
-
-      } catch (error: unknown) {
-        console.error("Sync error:", error);
-      }
-    };
-
     // Run initial sync
     runFullSync();
 
@@ -113,7 +124,7 @@ export function useSync() {
       window.removeEventListener("online", handleOnline);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.uid]);
+  }, [user?.uid, options.autoSync]);
 
   // Setup real-time listeners for cross-device sync
   useEffect(() => {
@@ -130,6 +141,7 @@ export function useSync() {
         unsubLibrary = onSnapshot(collection(db, `users/${uid}/library`), (snapshot) => {
           snapshot.docChanges().forEach((change) => {
             if (change.type === "added" || change.type === "modified") {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const data = change.doc.data() as any;
               const localItem = useLibraryStore.getState().items[change.doc.id];
               
@@ -145,6 +157,7 @@ export function useSync() {
         unsubHistory = onSnapshot(collection(db, `users/${uid}/history`), (snapshot) => {
           snapshot.docChanges().forEach((change) => {
             if (change.type === "added" || change.type === "modified") {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               const data = change.doc.data() as any;
               const localItem = useHistoryStore.getState().items[change.doc.id];
               
@@ -163,34 +176,38 @@ export function useSync() {
       if (unsubLibrary) unsubLibrary();
       if (unsubHistory) unsubHistory();
     };
-  }, [user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.uid, options.autoSync]);
 
-  // Helper to push updates immediately upon local action
   const syncLibraryItem = async (item: LibraryItem) => {
-    if (!user) return;
     try {
-      const { db } = await initFirebase();
-      if (!db) return;
+      const { db: firestore } = await initFirebase();
+      if (!firestore) return;
       const { doc, setDoc } = await import('firebase/firestore');
+      const uid = user?.uid;
+      if (!uid) return;
+      
       const id = `${item.sourceId}::${item.mangaId}`;
-      await setDoc(doc(db, `users/${user.uid}/library`, id), item);
+      await setDoc(doc(firestore, `users/${uid}/library`, id), item);
     } catch (e) {
-      console.error("Failed to sync library item", e);
+      console.error(e);
     }
   };
 
   const syncHistoryItem = async (item: HistoryItem) => {
-    if (!user) return;
     try {
-      const { db } = await initFirebase();
-      if (!db) return;
+      const { db: firestore } = await initFirebase();
+      if (!firestore) return;
       const { doc, setDoc } = await import('firebase/firestore');
+      const uid = user?.uid;
+      if (!uid) return;
+      
       const id = `${item.sourceId}::${item.mangaId}::${item.chapterId}`;
-      await setDoc(doc(db, `users/${user.uid}/history`, id), item);
+      await setDoc(doc(firestore, `users/${uid}/history`, id), item);
     } catch (e) {
-      console.error("Failed to sync history item", e);
+      console.error(e);
     }
   };
 
-  return { syncLibraryItem, syncHistoryItem };
+  return { runFullSync, isSyncing, syncLibraryItem, syncHistoryItem };
 }

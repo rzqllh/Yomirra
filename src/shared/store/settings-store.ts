@@ -6,6 +6,8 @@ interface SettingsState {
   setDataSaver: (enabled: boolean) => void;
   hideNsfw: boolean;
   setHideNsfw: (enabled: boolean) => void;
+  lastSyncedAt: string | null;
+  setLastSyncedAt: (date: string | null) => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -15,6 +17,8 @@ export const useSettingsStore = create<SettingsState>()(
       setDataSaver: (enabled) => set({ dataSaver: enabled }),
       hideNsfw: true, // Default to true for safety
       setHideNsfw: (enabled) => set({ hideNsfw: enabled }),
+      lastSyncedAt: null,
+      setLastSyncedAt: (date) => set({ lastSyncedAt: date }),
     }),
     {
       name: "yomirra-settings",

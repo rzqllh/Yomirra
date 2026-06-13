@@ -51,51 +51,47 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
       {/* Top Overlay */}
       <div 
         className={cn(
-          "fixed top-0 left-0 z-50 transition-all duration-300 ease-out",
-          isOverlayVisible ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0",
-          isDesktopPanelOpen ? "md:right-[320px] right-0" : "right-0"
+          "fixed top-4 left-4 right-4 z-[var(--z-sticky)] transition-all duration-300 ease-out flex justify-between pointer-events-none",
+          isOverlayVisible ? "translate-y-0 opacity-100" : "-translate-y-20 opacity-0",
+          isDesktopPanelOpen ? "md:right-[calc(320px+1rem)]" : ""
         )}
+        style={{ marginTop: 'var(--safe-top)' }}
       >
-        <div className="flex h-[calc(var(--mobile-header-height)+var(--safe-top))] items-center justify-between bg-surface-overlay/90 backdrop-blur-xl px-2 md:px-4 pt-[var(--safe-top)] shadow-sm">
+        <div className="flex items-center gap-2 bg-surface-overlay/80 backdrop-blur-xl border border-border-glass rounded-full p-1 shadow-sm pointer-events-auto max-w-[75%] md:max-w-md">
+          <IconButton 
+            aria-label="Kembali ke detail manga"
+            variant="ghost"
+            className="rounded-full shrink-0"
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              router.push(getMangaDetailHref(sourceId, mangaId));
+            }}
+          >
+            <CaretLeft size={20} weight="bold" />
+          </IconButton>
           
-          <div className="flex items-center gap-1 md:gap-3">
-            <IconButton 
-              aria-label="Kembali ke detail manga"
-              variant="reader"
-              onClick={(e) => { 
-                e.stopPropagation(); 
-                router.push(getMangaDetailHref(sourceId, mangaId));
-              }}
-            >
-              <CaretLeft size={20} weight="bold" />
-            </IconButton>
-            <div className="hidden md:block">
-              <span className="text-[15px] font-bold text-text-primary line-clamp-1">{chapterTitle}</span>
-              {pageCount && <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">{pageCount} halaman</span>}
-            </div>
+          <div className="flex flex-col truncate pr-4">
+            <span className="text-sm font-bold text-text-primary truncate leading-tight">{chapterTitle}</span>
+            {pageCount && <span className="text-2xs text-text-muted leading-tight">{pageCount} halaman</span>}
           </div>
-          
-          <div className="md:hidden text-center flex-1 truncate px-2">
-            <span className="block text-sm font-bold text-text-primary truncate">{chapterTitle}</span>
-            {pageCount && <span className="block text-[11px] text-text-secondary mt-0.5">{pageCount} halaman</span>}
-          </div>
+        </div>
 
-          <div className="flex items-center gap-2">
-            <IconButton
-              aria-label="Pengaturan pembaca"
-              variant="reader"
-              onClick={(e) => { 
-                e.stopPropagation(); 
-                if (window.innerWidth >= 768) {
-                  toggleDesktopPanel();
-                } else {
-                  setIsDrawerOpen(true); 
-                }
-              }}
-            >
-              <Gear size={20} weight="fill" />
-            </IconButton>
-          </div>
+        <div className="bg-surface-overlay/80 backdrop-blur-xl border border-border-glass rounded-full p-1 shadow-sm pointer-events-auto shrink-0">
+          <IconButton
+            aria-label="Pengaturan pembaca"
+            variant="ghost"
+            className="rounded-full"
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              if (window.innerWidth >= 768) {
+                toggleDesktopPanel();
+              } else {
+                setIsDrawerOpen(true); 
+              }
+            }}
+          >
+            <Gear size={20} weight="fill" />
+          </IconButton>
         </div>
       </div>
 

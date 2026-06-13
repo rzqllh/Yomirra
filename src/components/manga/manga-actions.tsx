@@ -30,6 +30,7 @@ export function MangaActions({
     return () => clearTimeout(t);
   }, []);
 
+  const _libraryState = useLibraryStore((state) => state.items); // Subscribe to changes
   const rawIsInLibrary = useLibraryStore((state) => state.isInLibrary(sourceId, mangaId));
   const isInLibrary = isMounted ? rawIsInLibrary : false;
   const toggleLibrary = useLibraryStore((state) => state.toggleLibrary);
@@ -57,7 +58,7 @@ export function MangaActions({
     <Button
       onClick={handleToggle}
       variant={isInLibrary ? "secondary" : "outline"}
-      className="w-full rounded-full h-12 text-[15px] font-bold"
+      className="w-full rounded-full h-12 text-base font-bold"
     >
       {isInLibrary ? (
         <>

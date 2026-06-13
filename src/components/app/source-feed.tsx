@@ -1,9 +1,12 @@
 import * as React from "react"
 import { MangaCard } from "@/components/manga/manga-card";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/shared/utils/cn";
 import { swrCache, CACHE_TTL } from "@/server/lib/cache/strategies";
 import { sourceManager } from "@/server/lib/sources/source-manager";
+import { YomirraSection } from "@/components/ui/yomirra-layout";
+import { ErrorState } from "@/components/states/error-state";
+import { HorizontalScrollContainer } from "@/components/ui/horizontal-scroll-container";
 
 interface SourceFeedProps {
   sourceId: string;
@@ -27,8 +30,11 @@ export async function SourceFeed({ sourceId, sourceName }: SourceFeedProps) {
   } catch (error) {
     console.error(`Failed to load feed for source ${sourceId}`, error);
     return (
-      <div className="py-8 text-center text-text-muted border border-border-subtle rounded-xl bg-surface-raised/20">
-        <p className="text-sm font-medium">Gagal memuat katalog dari {sourceName}</p>
+      <div className="py-12 border border-border-subtle rounded-2xl bg-surface-raised/20 mb-12">
+        <ErrorState 
+          title="Gagal memuat katalog"
+          description={`Gagal mengambil katalog manga dari ${sourceName}. Sumber mungkin sedang tidak tersedia.`}
+        />
       </div>
     );
   }
@@ -37,62 +43,61 @@ export async function SourceFeed({ sourceId, sourceName }: SourceFeedProps) {
     return null;
   }
 
-    return (
-      <div className="space-y-10 pt-4 border-t border-border-subtle/30 first:pt-0 first:border-t-0">
-        {/* Popular Section */}
-        {popular && popular.mangas.length > 0 && (
-          <section>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-text-primary">
-                Populer di {sourceName}
-              </h2>
-              <Link href={`/sources/${sourceId}?sort=popular`} className="text-sm font-bold text-accent hover:text-accent-hover transition-colors">
-                Lihat Semua
-              </Link>
-            </div>
-            
-            <div className="flex overflow-x-auto gap-3 sm:gap-4 pb-4 w-full min-w-0 snap-x scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {popular.mangas.slice(0, 15).map((manga, index) => (
-                <div key={manga.id} className="w-[120px] sm:w-[140px] md:w-[160px] lg:w-[180px] shrink-0 snap-start ">
-                  <MangaCard 
-                    manga={manga} 
-                    sourceId={sourceId} 
-                    priority={index < 4}
-                  />
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
+  return (
+    <div className="space-y-12">
+      {/* Popular Section */}
+      {popular && popular.mangas.length > 0 && (
+        <YomirraSection 
+          title={`Populer di ${sourceName}`}
+          action={
+            <Link href={`/sources/${sourceId}?sort=popular`} className="text-sm font-bold text-accent hover:text-accent-hover transition-colors">
+              Semua
+            </Link>
+          }
+        >
+          <HorizontalScrollContainer className="gap-3 sm:gap-4 pb-4 px-4 md:px-0 -mx-4 md:mx-0">
+            {popular.mangas.slice(0, 15).map((manga, index) => (
+              <div key={manga.id} className="w-[140px] sm:w-[160px] md:w-[180px] shrink-0 snap-start first:pl-4 md:first:pl-0 last:pr-4 md:last:pr-0">
+                <MangaCard 
+                  variant="editorial"
+                  manga={manga} 
+                  sourceId={sourceId} 
+                  priority={index < 4}
+                />
+              </div>
+            ))}
+          </HorizontalScrollContainer>
+        </YomirraSection>
+      )}
 
-        {/* Latest Section */}
-        {latest && latest.mangas.length > 0 && (
-          <section>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-text-primary">
-                Update Terbaru ({sourceName})
-              </h2>
-            </div>
-            
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-5">
-              {latest.mangas.slice(0, 6).map((manga) => (
-                <MangaCard key={manga.id} manga={manga} sourceId={sourceId} />
-              ))}
-            </div>
-            
-            <div className="mt-8 flex justify-center pb-2">
-              <Button 
-                asChild
-                variant="outline" 
-                className="rounded-full px-6 py-5 font-bold text-sm border-border-strong hover:bg-surface-raised transition-all"
-              >
-                <Link href={`/sources/${sourceId}?sort=latest`}>
-                  Eksplorasi {sourceName}
-                </Link>
-              </Button>
-            </div>
-          </section>
-        )}
-      </div>
-    );
+      {/* Latest Section */}
+      {latest && latest.mangas.length > 0 && (
+        <YomirraSection title={`Terbaru (${sourceName})`}>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-5 px-4 md:px-0">
+            {latest.mangas.slice(0, 18).map((manga) => (
+              <MangaCard 
+                key={manga.id} 
+                variant="shelf"
+                manga={manga} 
+                sourceId={sourceId} 
+              />
+            ))}
+          </div>
+          
+          <div className="mt-6 flex justify-center pb-2">
+            <Link 
+              href={`/sources/${sourceId}?sort=latest`}
+              className={cn(
+                "inline-flex items-center justify-center whitespace-nowrap transition-all duration-150 ease-out active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
+                "border bg-surface-overlay text-text-primary",
+                "rounded-full px-6 py-4 font-bold text-sm border-border-default hover:bg-surface-hover shadow-sm"
+              )}
+            >
+              Eksplorasi {sourceName}
+            </Link>
+          </div>
+        </YomirraSection>
+      )}
+    </div>
+  );
 }

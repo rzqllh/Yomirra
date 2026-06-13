@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
-import { TopBar } from "@/components/app/top-bar";
+import { YomirraPageHeader } from "@/components/app/yomirra-header";
 import { MangaCard } from "@/components/manga/manga-card";
 import { SearchResultSkeleton } from "@/components/skeletons/search-result-skeleton";
 import { useSearchParams } from "next/navigation";
@@ -64,7 +64,7 @@ export default function SourceBrowsePage({
   return (
     <DirectionalTransition>
       <main className="min-h-screen bg-surface-base">
-        <TopBar title={sort === "popular" ? `Populer di ${sourceName}` : `Terbaru di ${sourceName}`} showBack />
+        <YomirraPageHeader title={sort === "popular" ? `Populer di ${sourceName}` : `Terbaru di ${sourceName}`} showBack variant="auto" />
         
         <div className="px-4 py-6 max-w-7xl mx-auto">
           {status === "pending" ? (
@@ -77,13 +77,13 @@ export default function SourceBrowsePage({
               <SearchResultSkeleton />
             </div>
           ) : status === "error" ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center bg-surface-raised rounded-[var(--radius-xl)] border border-border-subtle">
+            <div className="flex flex-col items-center justify-center py-20 text-center bg-surface-raised rounded-xl border border-border-subtle">
               <WarningCircle size={48} className="mb-4 text-semantic-error" weight="duotone" />
               <p className="text-base font-medium text-text-primary">Gagal memuat data dari {sourceName}.</p>
               <p className="text-sm text-text-muted mt-1">{(error as Error).message}</p>
             </div>
           ) : data?.pages[0]?.mangas.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center bg-surface-raised rounded-[var(--radius-xl)] border border-border-subtle">
+            <div className="flex flex-col items-center justify-center py-20 text-center bg-surface-raised rounded-xl border border-border-subtle">
               <Compass size={48} className="mb-4 text-text-muted" weight="duotone" />
               <p className="text-base font-medium text-text-primary">Tidak ada manga yang ditemukan.</p>
             </div>
