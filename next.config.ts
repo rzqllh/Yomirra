@@ -35,7 +35,6 @@ const nextConfig: NextConfig = {
     localPatterns: [
       {
         pathname: "/api/proxy/image",
-        search: "",
       },
     ],
   },

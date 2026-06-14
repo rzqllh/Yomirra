@@ -36,7 +36,7 @@ export function ContinuousVerticalReader({
   nextChapterId
 }: ContinuousVerticalReaderProps) {
   const router = useRouter()
-  const { settings, toggleOverlay, isOverlayVisible, setOverlayVisible, isDesktopPanelOpen } = useReaderStore()
+  const { preferences, toggleOverlay, isOverlayVisible, setOverlayVisible, isDesktopPanelOpen } = useReaderStore()
   const { dataSaver } = useSettingsStore()
   const markChapterProgress = useHistoryStore((state) => state.markChapterProgress)
   const observerRef = React.useRef<IntersectionObserver | null>(null)
@@ -137,7 +137,7 @@ export function ContinuousVerticalReader({
     }
   }, [sourceId, mangaId, chapterId, pages.length, markChapterProgress])
 
-  const isWebtoon = settings.mode === "WEBTOON"
+  const isWebtoon = true;
 
   return (
     <div 
@@ -145,11 +145,10 @@ export function ContinuousVerticalReader({
       onClick={toggleOverlay}
     >
       <div 
-        className={cn(
-          "flex w-full flex-col items-center pt-[calc(var(--mobile-header-height)+var(--safe-top))]",
-          isWebtoon ? "gap-0" : "gap-4"
-        )}
-        style={{ maxWidth: settings.maxWidth ? `${settings.maxWidth}px` : '100%' }}
+        className="flex w-full flex-col items-center pt-[calc(var(--mobile-header-height)+var(--safe-top))]"
+        style={{ 
+          gap: preferences.pageGap === 'none' ? '0px' : preferences.pageGap === 'small' ? '4px' : '16px'
+        }}
       >
         {pages.map((page) => (
           <ReaderImage 

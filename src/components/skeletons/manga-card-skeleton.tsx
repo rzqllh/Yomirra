@@ -1,6 +1,20 @@
 import { Skeleton } from "@/components/ui/skeleton"
 
-export function MangaCardSkeleton({ variant = "grid" }: { variant?: "grid" | "list" | "editorial" | "shelf" }) {
+export function MangaCardSkeleton({ variant = "grid" }: { variant?: "grid" | "list" | "editorial" | "shelf" | "history" }) {
+  if (variant === "history") {
+    return (
+      <div className="flex items-center gap-4 rounded-xl bg-surface-raised/50 p-3 border border-border-subtle/50 w-full">
+        <Skeleton className="h-[84px] w-[60px] rounded-sm shrink-0" />
+        <div className="flex-1 flex flex-col justify-center space-y-2 py-1">
+          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="h-3 w-1/2" />
+          <Skeleton className="h-3 w-1/3 mt-1" />
+        </div>
+        <Skeleton className="h-10 w-10 rounded-full shrink-0 ml-2" />
+      </div>
+    )
+  }
+
   if (variant === "editorial") {
     return (
       <div className="relative flex flex-col w-full rounded-lg overflow-hidden bg-surface-muted border border-border-default shadow-sm aspect-[3/4]">
