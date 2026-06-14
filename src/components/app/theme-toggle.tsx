@@ -52,7 +52,7 @@ export function ThemeToggle() {
         animate={{
           left: isDark ? "4px" : "34px",
         }}
-        transition={{ type: "spring", stiffness: 400, damping: 25 }}
+        transition={{ type: "spring", bounce: 0, duration: 0.4 }}
       />
     </button>
   );

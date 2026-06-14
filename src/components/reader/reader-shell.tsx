@@ -49,6 +49,37 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [toggleOverlay]);
 
+  // Wake Lock API
+  React.useEffect(() => {
+    let wakeLock: any = null;
+    
+    const requestWakeLock = async () => {
+      if ('wakeLock' in navigator && (preferences.keepScreenAwake ?? true)) {
+        try {
+          wakeLock = await (navigator as any).wakeLock.request('screen');
+        } catch (err) {
+          console.warn('Wake Lock error:', err);
+        }
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (wakeLock !== null && document.visibilityState === 'visible') {
+        requestWakeLock();
+      }
+    };
+
+    requestWakeLock();
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      if (wakeLock !== null) {
+        wakeLock.release().catch(console.warn);
+      }
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [preferences.keepScreenAwake]);
+
   return (
     <div 
       className={cn(

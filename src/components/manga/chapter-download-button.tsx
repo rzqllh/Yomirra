@@ -1,7 +1,8 @@
 "use client";
 
-import { DownloadSimple, CheckCircle, XCircle, CircleNotch } from "@phosphor-icons/react";
-import { useDownloadStore, getDownloadId } from "@/shared/store/download-store";
+import { DownloadSimple, CheckCircle, XCircle, CircleNotch, Pause } from "@phosphor-icons/react";
+import { useDownloadStore } from "@/shared/store/download-store";
+import { getDownloadChapterId } from "@/shared/utils/download-helpers";
 import { motion, AnimatePresence } from "motion/react";
 import { IconButton } from "@/components/ui/icon-button";
 
@@ -20,7 +21,7 @@ export function ChapterDownloadButton({
   chapterTitle,
   mangaTitle,
 }: ChapterDownloadButtonProps) {
-  const id = getDownloadId(sourceId, mangaId, chapterId);
+  const id = getDownloadChapterId(sourceId, mangaId, chapterId);
   // Only subscribe to the specific download item to prevent re-rendering the whole list
   const download = useDownloadStore((state) => state.downloads[id]);
   const addDownload = useDownloadStore((state) => state.addDownload);
@@ -38,10 +39,16 @@ export function ChapterDownloadButton({
         chapterTitle,
         mangaTitle,
       });
-    } else if (download.status === "downloaded" || download.status === "error") {
+    } else if (download.status === "downloaded" || download.status === "failed") {
       if (confirm("Hapus unduhan chapter ini?")) {
         removeDownload(id);
       }
+    } else if (download.status === "downloading" || download.status === "queued") {
+      const pauseDownload = useDownloadStore.getState().pauseDownload;
+      pauseDownload(id);
+    } else if (download.status === "paused") {
+      const resumeDownload = useDownloadStore.getState().resumeDownload;
+      resumeDownload(id);
     }
   };
 
@@ -75,16 +82,27 @@ export function ChapterDownloadButton({
           >
             <CheckCircle size={20} weight="fill" />
           </motion.span>
-        ) : download.status === "error" ? (
+        ) : download.status === "failed" ? (
           <motion.span
-            key="error"
+            key="failed"
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.8, opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="text-semantic-error"
+            className="text-error"
           >
             <XCircle size={20} weight="fill" />
+          </motion.span>
+        ) : download.status === "paused" ? (
+          <motion.span
+            key="paused"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.8, opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="text-text-muted"
+          >
+            <Pause size={20} weight="fill" />
           </motion.span>
         ) : (
           <motion.span

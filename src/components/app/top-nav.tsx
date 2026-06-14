@@ -63,7 +63,7 @@ export function TopNav() {
       >
       <motion.div 
         layout
-        transition={{ type: "spring", stiffness: 400, damping: 40 }}
+        transition={{ type: "spring", bounce: 0, duration: 0.4 }}
         className={cn(
           "flex items-center justify-between pointer-events-auto transition-all duration-500 overflow-visible mx-auto",
           isScrolled 
@@ -73,9 +73,8 @@ export function TopNav() {
       >
         {/* LEFT: Logo & Brand */}
         <Link href="/" className="flex items-center gap-2 outline-none shrink-0 h-full group z-10">
-          <div className="size-8 sm:size-9 rounded-xl bg-gradient-to-br from-brand-500 to-brand-700 flex items-center justify-center text-white shadow-sm ring-1 ring-white/10 group-hover:shadow-md group-hover:scale-105 active:scale-95 transition-all">
-            <Books size={18} weight="fill" className="sm:hidden" />
-            <Books size={20} weight="fill" className="hidden sm:block" />
+          <div className="relative size-8 sm:size-9 flex items-center justify-center drop-shadow-sm group-hover:drop-shadow-md group-hover:scale-105 active:scale-95 transition-all">
+            <Image src={Logo} alt="Yomirra Logo" className="w-full h-full object-contain" priority />
           </div>
           <span className="font-bold text-lg sm:text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-text-primary to-text-secondary hidden sm:block">
             Yomirra
@@ -100,7 +99,7 @@ export function TopNav() {
                   <motion.div
                     layoutId="top-nav-indicator"
                     className="absolute -bottom-[1px] left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-brand-500 dark:bg-brand-400"
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    transition={{ type: "spring", bounce: 0, duration: 0.4 }}
                   />
                 )}
               </Link>

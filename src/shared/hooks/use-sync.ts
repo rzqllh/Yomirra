@@ -49,7 +49,8 @@ export function useSync(options = { autoSync: true }) {
         
         if (!remoteItem || new Date(localItem.updatedAt).getTime() > new Date(remoteItem.updatedAt).getTime()) {
           // Push local to remote
-          batch.set(doc(firestore, `users/${uid}/library`, id), localItem);
+          const cleanItem = Object.fromEntries(Object.entries(localItem).filter(([_, v]) => v !== undefined));
+          batch.set(doc(firestore, `users/${uid}/library`, id), cleanItem);
           batchCount++;
         }
       });
@@ -69,7 +70,8 @@ export function useSync(options = { autoSync: true }) {
         
         if (!remoteItem || new Date(localItem.readAt).getTime() > new Date(remoteItem.readAt).getTime()) {
           // Push local to remote
-          batch.set(doc(firestore, `users/${uid}/history`, id), localItem);
+          const cleanItem = Object.fromEntries(Object.entries(localItem).filter(([_, v]) => v !== undefined));
+          batch.set(doc(firestore, `users/${uid}/history`, id), cleanItem);
           batchCount++;
         }
       });

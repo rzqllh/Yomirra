@@ -13,6 +13,7 @@ export type HistoryItem = {
   pageIndex?: number;
   totalPages?: number;
   progressPercent?: number;
+  scrollPercent?: number;
   readAt: string;
 };
 
@@ -22,11 +23,12 @@ interface HistoryState {
   upsertHistory: (item: HistoryItem) => void;
   _setItemLocal: (item: HistoryItem) => void;
   removeHistoryItem: (sourceId: string, mangaId: string, chapterId: string) => void;
+  removeMangaHistory: (sourceId: string, mangaId: string) => void;
   clearHistory: () => void;
   getLatestForManga: (sourceId: string, mangaId: string) => HistoryItem | undefined;
   getContinueReading: (limit?: number) => HistoryItem[];
   getHistoryList: () => HistoryItem[];
-  markChapterProgress: (sourceId: string, mangaId: string, chapterId: string, pageIndex: number, totalPages: number) => void;
+  markChapterProgress: (sourceId: string, mangaId: string, chapterId: string, pageIndex: number, totalPages: number, scrollPercent?: number) => void;
   syncWithCloud: (cloudItems: HistoryItem[]) => void;
 }
 
@@ -71,6 +73,27 @@ export const useHistoryStore = create<HistoryState>()(
         return { items: newItems };
       }),
 
+      removeMangaHistory: (sourceId, mangaId) => set((state) => {
+        const newItems = { ...state.items };
+        let hasChanges = false;
+        
+        Object.keys(newItems).forEach(key => {
+          const item = newItems[key];
+          if (item.sourceId === sourceId && item.mangaId === mangaId) {
+            delete newItems[key];
+            hasChanges = true;
+          }
+        });
+        
+        if (hasChanges) {
+          import("@/shared/lib/sync-utils").then(({ deleteMangaHistory }) => {
+            deleteMangaHistory(sourceId, mangaId);
+          });
+        }
+        
+        return { items: newItems };
+      }),
+
       clearHistory: () => set({ items: {} }),
 
       getLatestForManga: (sourceId, mangaId) => {
@@ -109,18 +132,27 @@ export const useHistoryStore = create<HistoryState>()(
           .sort((a, b) => new Date(b.readAt).getTime() - new Date(a.readAt).getTime());
       },
 
-      markChapterProgress: (sourceId, mangaId, chapterId, pageIndex, totalPages) => set((state) => {
+      markChapterProgress: (sourceId, mangaId, chapterId, pageIndex, totalPages, scrollPercent) => set((state) => {
         const id = getHistoryId(sourceId, mangaId, chapterId);
         const existing = state.items[id];
         if (!existing) return state;
 
-        const progressPercent = totalPages > 0 ? Math.round((pageIndex / totalPages) * 100) : 0;
+        // Phase 2.4: Trigger mark-as-read at 90-95% progress
+        let progressPercent = totalPages > 0 ? Math.round((pageIndex / totalPages) * 100) : 0;
+        
+        // If we also get scroll percent (from vertical reader), use it to determine if we've read >90% of the chapter
+        if (scrollPercent !== undefined && scrollPercent > 90) {
+          progressPercent = 100;
+        } else if (progressPercent > 90) {
+          progressPercent = 100;
+        }
         
         const updatedItem = {
           ...existing,
           pageIndex,
           totalPages,
           progressPercent,
+          scrollPercent: scrollPercent !== undefined ? scrollPercent : existing.scrollPercent,
           readAt: new Date().toISOString(),
         };
         

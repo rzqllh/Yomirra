@@ -13,6 +13,8 @@ import { EndOfChapter } from "./end-of-chapter"
 import { ReaderImage } from "./reader-image"
 import { ReaderChapterDrawer } from "./reader-chapter-drawer"
 import { Chapter } from "@/shared/types/source"
+import { useDownloadStore } from "@/shared/store/download-store"
+import { getOfflineImageUrl } from "@/shared/utils/download-helpers"
 
 interface ContinuousVerticalReaderProps {
   sourceId: string;
@@ -39,6 +41,7 @@ export function ContinuousVerticalReader({
   const { preferences, toggleOverlay, isOverlayVisible, setOverlayVisible, isDesktopPanelOpen } = useReaderStore()
   const { dataSaver } = useSettingsStore()
   const markChapterProgress = useHistoryStore((state) => state.markChapterProgress)
+  const isDownloaded = useDownloadStore(state => state.isDownloaded(sourceId, mangaId, chapterId))
   const observerRef = React.useRef<IntersectionObserver | null>(null)
   
   const [isChapterDrawerOpen, setIsChapterDrawerOpen] = React.useState(false)
@@ -156,10 +159,12 @@ export function ContinuousVerticalReader({
             page={page}
             isWebtoon={isWebtoon}
             dataSaver={dataSaver}
-            isAllowedToLoad={page.index <= firstUnloadedIndex + 2}
+            isAllowedToLoad={page.index <= firstUnloadedIndex + (preferences.preloadIntensity === 'aggressive' ? 5 : preferences.preloadIntensity === 'balanced' ? 3 : 2)}
             onLoadComplete={handleImageLoad}
             onError={handleImageError}
             priority={page.index === 0}
+            offlineUrl={isDownloaded ? getOfflineImageUrl({ sourceId, mangaId, chapterId, pageIndex: page.index }) : undefined}
+            imageFit={preferences.imageFit}
           />
         ))}
         

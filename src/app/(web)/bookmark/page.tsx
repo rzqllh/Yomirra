@@ -8,6 +8,7 @@ import { useLibraryStore } from "@/shared/store/library-store";
 import { useHistoryStore } from "@/shared/store/history-store";
 import { MangaCard } from "@/components/manga/manga-card";
 import { HistoryRow } from "@/components/history/history-row";
+import { HistoryMangaGroup } from "@/components/history/history-manga-group";
 import { EmptyState } from "@/components/states/empty-state";
 import { Button } from "@/components/ui/button";
 import { useMounted } from "@/shared/hooks/use-mounted";
@@ -57,11 +58,42 @@ export default function BookmarkPage() {
   const getHistoryList = useHistoryStore((state) => state.getHistoryList);
   useHistoryStore((state) => state.items);
   const removeHistoryItem = useHistoryStore((state) => state.removeHistoryItem);
+  const removeMangaHistory = useHistoryStore((state) => state.removeMangaHistory);
   
   const historyItems = isMounted ? getHistoryList() : [];
   
-  const continueReading = historyItems.length > 0 ? historyItems[0] : null;
-  const recentHistory = historyItems.length > 1 ? historyItems.slice(1, 15) : [];
+  const groupedHistory = React.useMemo(() => {
+    const groups: Record<string, {
+      sourceId: string;
+      mangaId: string;
+      mangaTitle: string;
+      coverUrl?: string;
+      sourceName?: string;
+      latestReadAt: string;
+      chapters: typeof historyItems;
+    }> = {};
+
+    historyItems.forEach(item => {
+      const key = `${item.sourceId}::${item.mangaId}`;
+      if (!groups[key]) {
+        groups[key] = {
+          sourceId: item.sourceId,
+          mangaId: item.mangaId,
+          mangaTitle: item.mangaTitle,
+          coverUrl: item.coverUrl,
+          sourceName: item.sourceName,
+          latestReadAt: item.readAt,
+          chapters: [],
+        };
+      }
+      groups[key].chapters.push(item);
+      if (new Date(item.readAt).getTime() > new Date(groups[key].latestReadAt).getTime()) {
+        groups[key].latestReadAt = item.readAt;
+      }
+    });
+
+    return Object.values(groups).sort((a, b) => new Date(b.latestReadAt).getTime() - new Date(a.latestReadAt).getTime());
+  }, [historyItems]);
 
   const [activeTab, setActiveTab] = React.useState<"reading" | "collection">("reading");
 
@@ -124,7 +156,7 @@ export default function BookmarkPage() {
           <div className="mt-2 outline-none">
             {activeTab === "reading" && (
               <DirectionalTransition key="reading">
-                {historyItems.length === 0 ? (
+                {groupedHistory.length === 0 ? (
                   <EmptyState
                     icon={<Clock size={48} className="text-text-muted" weight="duotone" />}
                     title="Belum ada riwayat baca"
@@ -139,86 +171,16 @@ export default function BookmarkPage() {
                     }
                   />
                 ) : (
-                  <>
-                    {continueReading && (
-                      <div className="px-4 mb-8 mt-2">
-                        <h2 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
-                          <Play size={20} weight="fill" className="text-accent" />
-                          Lanjutkan Membaca
-                        </h2>
-                        
-                        <Link 
-                          href={getReaderHref(continueReading.sourceId, continueReading.mangaId, continueReading.chapterId)}
-                          className="group relative flex flex-col md:flex-row items-stretch md:items-center gap-4 rounded-2xl bg-surface-overlay border border-border-default shadow-sm hover:shadow-md transition-all overflow-hidden p-4"
-                        >
-                          <div className="flex items-center gap-4 md:flex-1">
-                            <div className="relative h-24 w-16 md:h-28 md:w-20 shrink-0 overflow-hidden rounded-md bg-surface-muted shadow-sm">
-                              {continueReading.coverUrl ? (
-                                <Image 
-                                  src={continueReading.coverUrl} 
-                                  alt={continueReading.mangaTitle} 
-                                  fill 
-                                  sizes="(max-width: 768px) 64px, 80px"
-                                  priority
-                                  className="object-cover group-hover:scale-105 transition-transform duration-500" 
-                                  unoptimized={continueReading.coverUrl.startsWith("http")}
-                                />
-                              ) : (
-                                <div className="h-full w-full bg-surface-muted" />
-                              )}
-                            </div>
-                            
-                            <div className="flex-1 min-w-0 flex flex-col justify-center">
-                              <span className="text-xs font-black uppercase tracking-wider text-accent mb-1">Terakhir Dibaca</span>
-                              <h3 className="truncate font-bold text-text-primary text-base md:text-lg leading-tight mb-1 group-hover:text-accent transition-colors">
-                                {continueReading.mangaTitle}
-                              </h3>
-                              <p className="truncate text-sm font-medium text-text-muted">
-                                {continueReading.chapterTitle || "Chapter"}
-                              </p>
-                              
-                              <div className="mt-3 flex items-center gap-3">
-                                {continueReading.progressPercent !== undefined && continueReading.progressPercent > 0 && (
-                                  <div className="flex-1 max-w-[150px] h-1.5 rounded-full bg-surface-muted overflow-hidden">
-                                    <div 
-                                      className="h-full bg-accent rounded-full" 
-                                      style={{ width: `${continueReading.progressPercent}%` }}
-                                    />
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="hidden md:flex shrink-0 items-center justify-center rounded-full h-12 w-12 bg-accent text-background shadow-md group-hover:scale-105 group-active:scale-95 transition-transform ml-auto">
-                            <Play className="h-6 w-6 ml-1" weight="fill" />
-                          </div>
-                        </Link>
-                      </div>
-                    )}
-
-                    {recentHistory.length > 0 && (
-                      <div className="mb-10 mt-6">
-                        <div className="px-4 mb-4 flex items-center justify-between">
-                          <h2 className="text-lg font-bold text-text-primary flex items-center gap-2">
-                            <Clock size={20} className="text-text-muted" weight="bold" />
-                            Riwayat Sebelumnya
-                          </h2>
-                        </div>
-                        <HorizontalScrollContainer>
-                          {recentHistory.map((item, index) => (
-                            <div key={`${item.sourceId}::${item.mangaId}::${item.chapterId}`} className="w-[280px] shrink-0">
-                              <HistoryRow
-                                item={item}
-                                onRemove={removeHistoryItem}
-                                priority={index < 3}
-                              />
-                            </div>
-                          ))}
-                        </HorizontalScrollContainer>
-                      </div>
-                    )}
-                  </>
+                  <div className="px-4 mt-4">
+                    {groupedHistory.map((group) => (
+                      <HistoryMangaGroup
+                        key={`${group.sourceId}::${group.mangaId}`}
+                        {...group}
+                        onRemoveManga={removeMangaHistory}
+                        onRemoveChapter={removeHistoryItem}
+                      />
+                    ))}
+                  </div>
                 )}
               </DirectionalTransition>
             )}
