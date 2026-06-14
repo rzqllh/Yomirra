@@ -27,7 +27,7 @@ export function YomirraBottomDock() {
   return (
     <nav style={{ viewTransitionName: 'persistent-bottom-nav' }} className="md:hidden fixed bottom-6 left-0 w-full z-[var(--z-sticky)] pointer-events-none px-4">
       {/* Ultra-modern Expanding Floating Pill */}
-      <div className="pointer-events-auto mx-auto flex h-[56px] w-fit min-w-[280px] max-w-full items-center justify-between gap-1 rounded-full bg-surface-overlay/90 backdrop-blur-2xl border border-border-glass shadow-heavy px-1.5 ring-1 ring-border-subtle/30">
+      <div className="pointer-events-auto mx-auto flex h-[56px] w-fit min-w-[280px] max-w-full items-center justify-between gap-1 rounded-full bg-surface-overlay/70 !backdrop-blur-md  border border-border-glass shadow-heavy px-1.5 ring-1 ring-border-subtle/30">
         {NAV_ITEMS.map((item) => {
           const isActive =
             item.href === "/"
@@ -43,7 +43,7 @@ export function YomirraBottomDock() {
               prefetch={false}
               transitionTypes={['nav-lateral']}
               className={cn(
-                "group relative flex items-center justify-center h-[44px] outline-none tap-highlight-transparent transition-all duration-300 ease-out",
+                "group relative flex items-center  justify-center h-[44px] outline-none tap-highlight-transparent transition-all duration-300 ease-out",
                 isActive ? "px-4" : "px-3 w-[44px]"
               )}
               aria-label={item.label}
@@ -52,7 +52,7 @@ export function YomirraBottomDock() {
               {isActive && (
                 <motion.div
                   layoutId="bottom-dock-active-pill-modern"
-                  className="absolute inset-0 rounded-full bg-accent/15 border border-accent/20"
+                  className="absolute inset-0 rounded-full !backdrop-blur-sm bg-accent/10 border border-accent/20"
                   initial={false}
                   transition={{ type: "spring", bounce: 0, duration: 0.4 }}
                 />

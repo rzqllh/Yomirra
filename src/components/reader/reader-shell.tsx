@@ -10,6 +10,7 @@ import { getMangaDetailHref } from "@/shared/lib/routes"
 import { Chapter } from "@/shared/types/source"
 import { ReaderSettingsDrawer } from "./reader-settings-drawer"
 import { IconButton } from "@/components/ui/icon-button"
+import { ReaderProgress } from "./reader-progress"
 
 interface ReaderShellProps {
   children: React.ReactNode
@@ -88,6 +89,7 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
       )}
       style={{ backgroundColor: getBackgroundColor() }}
     >
+      <ReaderProgress />
       {/* Top Overlay */}
       <div 
         className={cn(

@@ -259,23 +259,28 @@
     max-width: 100%;
     overflow-x: hidden;
   }
-}
 
-body {
-  background-color: var(--color-surface-base);
-  color: var(--color-text-primary);
-  font-family: var(--font-ui);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+  body {
+    background-color: var(--color-surface-base);
+    color: var(--color-text-primary);
+    font-family: var(--font-ui);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 
-* {
-  border-color: var(--color-border-subtle);
-}
+  * {
+    border-color: var(--color-border-subtle);
+  }
 
-::selection {
-  background-color: var(--color-accent-dim);
-  color: var(--color-accent);
+  ::selection {
+    background-color: var(--color-accent-dim);
+    color: var(--color-accent);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
 }
 
 /* === Reduced Motion Safety Net ===

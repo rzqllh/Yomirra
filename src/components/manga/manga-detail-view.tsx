@@ -34,10 +34,29 @@ export function MangaDetailView({
   const [searchQuery, setSearchQuery] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(true);
 
   useEffect(() => {
     queueMicrotask(() => setMounted(true));
+    
+    // Dynamic Assignment via breakpoint detection
+    const mediaQuery = window.matchMedia("(min-width: 768px)");
+    // eslint-disable-next-line
+    setIsDesktop(mediaQuery.matches);
+    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener("change", handler);
+      return () => mediaQuery.removeEventListener("change", handler);
+    } else {
+      // Fallback for older browsers
+      mediaQuery.addListener(handler);
+      return () => mediaQuery.removeListener(handler);
+    }
   }, []);
+
+  const safeId = `${sourceId}-${mangaId}`.replace(/[^a-zA-Z0-9-]/g, '-');
+  const coverTransitionName = `manga-cover-${safeId}`;
   
   const searchParams = useSearchParams();
   const returnTo = searchParams.get("returnTo");
@@ -107,13 +126,14 @@ export function MangaDetailView({
 
       <div className="absolute top-0 left-0 right-0 h-[300px] md:h-[450px] w-full overflow-hidden z-0 pointer-events-none select-none">
         {detail.coverUrl && (
-          <img
-            src={detail.coverUrl}
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover opacity-[0.25] blur-3xl scale-110 saturate-150 transform-gpu dark:opacity-[0.15]"
-            onError={(e) => { e.currentTarget.style.display = 'none' }}
-            referrerPolicy="no-referrer"
-          />
+            <img
+              src={detail.coverUrl}
+              alt=""
+              className="absolute inset-0 w-full h-full object-cover opacity-[0.25] blur-3xl scale-110 saturate-150 transform-gpu dark:opacity-[0.15]"
+              onError={(e) => { e.currentTarget.style.display = 'none' }}
+              referrerPolicy="no-referrer"
+              decoding="async"
+            />
         )}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-surface-base/80 to-surface-base" />
       </div>
@@ -121,7 +141,10 @@ export function MangaDetailView({
       <div className="w-full max-w-7xl mx-auto px-4 md:px-8 pt-20 md:pt-12 relative z-10 flex flex-col md:flex-row gap-6 md:gap-10">
         
         <div className="flex gap-4 md:hidden">
-          <div className="relative w-[110px] shrink-0 aspect-[2/3] rounded-md overflow-hidden shadow-heavy border border-border-default bg-surface-base vt-cover-mobile">
+          <div 
+            className="relative w-[110px] shrink-0 aspect-[2/3] rounded-md overflow-hidden shadow-heavy border border-border-default bg-surface-base vt-cover-mobile"
+            style={{ viewTransitionName: !isDesktop ? coverTransitionName : 'none' }}
+          >
             {coverUrl && (
               <img 
                 src={coverUrl} 
@@ -129,6 +152,8 @@ export function MangaDetailView({
                 className="absolute inset-0 w-full h-full object-cover" 
                 onError={(e) => { e.currentTarget.style.display = 'none' }}
                 referrerPolicy="no-referrer"
+                decoding="async"
+                loading="eager"
               />
             )}
           </div>
@@ -146,7 +171,10 @@ export function MangaDetailView({
         </div>
 
         <div className="hidden md:flex relative sticky top-[100px] self-start w-[280px] lg:w-80 shrink-0 flex-col gap-4">
-          <div className="relative w-full aspect-[2/3] rounded-lg overflow-hidden shadow-heavy border border-border-default bg-surface-base vt-cover-desktop">
+          <div 
+            className="relative w-full aspect-[2/3] rounded-lg overflow-hidden shadow-heavy border border-border-default bg-surface-base vt-cover-desktop"
+            style={{ viewTransitionName: isDesktop ? coverTransitionName : 'none' }}
+          >
             {coverUrl && (
               <img 
                 src={coverUrl} 
@@ -154,6 +182,8 @@ export function MangaDetailView({
                 className="absolute inset-0 w-full h-full object-cover" 
                 onError={(e) => { e.currentTarget.style.display = 'none' }}
                 referrerPolicy="no-referrer"
+                decoding="async"
+                loading="eager"
               />
             )}
           </div>
@@ -190,15 +220,16 @@ export function MangaDetailView({
 
             <div className="mt-2 md:mt-4 bg-surface-base border border-border-default rounded-lg p-4 md:p-6">
               <p className={cn(
-                "text-sm md:text-base leading-relaxed text-text-secondary whitespace-pre-wrap break-words text-justify transition-all",
-                !isExpanded && "line-clamp-4"
+                "text-sm md:text-base leading-relaxed text-text-secondary whitespace-pre-wrap break-words transition-all", 
+                !isExpanded && "line-clamp-3" 
               )}>
                 {detail.description || "Sinopsis belum tersedia."}
               </p>
-              {detail.description && detail.description.length > 180 && (
+              
+              {detail.description && detail.description.length > 200 && (
                 <button 
                   onClick={() => setIsExpanded(!isExpanded)}
-                  className="mt-2.5 text-sm font-bold text-accent hover:text-accent-hover transition-colors inline-flex items-center gap-1"
+                  className="mt-3 text-sm font-semibold text-accent hover:text-accent-hover transition-colors inline-flex items-center gap-1"
                 >
                   {isExpanded ? "Tampilkan lebih sedikit" : "Selengkapnya"}
                 </button>

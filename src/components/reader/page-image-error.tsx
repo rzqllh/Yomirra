@@ -11,13 +11,13 @@ interface PageImageErrorProps {
 
 export function PageImageError({ index, onRetry, className }: PageImageErrorProps) {
   return (
-    <div className={cn("flex flex-col items-center justify-center aspect-[3/4] w-full max-w-lg mx-auto bg-surface-raised border border-border-subtle rounded-lg p-8 text-center", className)}>
-      <WarningCircle size={40} className="text-error mb-3" weight="duotone" />
-      <h4 className="text-sm font-bold text-text-primary mb-1">Gagal memuat halaman {index}</h4>
-      <p className="text-[11px] text-text-muted mb-4 max-w-[200px]">Gambar tidak dapat diunduh dari sumber.</p>
+    <div className={cn("flex flex-col items-center justify-center min-h-[200px] w-full max-w-[400px] mx-auto bg-surface-muted/30 border border-border-subtle/50 rounded-xl p-6 text-center", className)}>
+      <WarningCircle size={32} className="text-text-muted mb-2" weight="duotone" />
+      <h4 className="text-xs font-bold text-text-primary mb-1">Halaman {index} gagal dimuat</h4>
+      <p className="text-[10px] text-text-muted mb-4">Gambar tidak dapat diunduh</p>
       
-      <Button variant="secondary" size="sm" onClick={onRetry}>
-        Coba lagi
+      <Button variant="outline" size="sm" onClick={onRetry} className="rounded-full h-8 px-4 text-xs font-bold shadow-sm">
+        Coba Lagi
       </Button>
     </div>
   )

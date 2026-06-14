@@ -162,7 +162,7 @@ export default function BookmarkPage() {
                     title="Belum ada riwayat baca"
                     description="Buka chapter untuk mulai membaca. Progres bacaanmu akan muncul di sini."
                     action={
-                      <Button asChild variant="accent" className="rounded-full shadow-sm font-bold">
+                      <Button asChild variant="accent" className="rounded-full shadow-sm font-bold mt-4">
                         <Link href={getHomeHref()}>
                           <Compass size={20} weight="bold" className="mr-1.5" />
                           Eksplor Manga
