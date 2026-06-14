@@ -54,7 +54,7 @@ interface DownloadState {
 export const CACHE_NAME = "yomirra-chapter-cache-v1";
 
 let processingLock = false;
-let abortControllers: Record<string, AbortController> = {};
+const abortControllers: Record<string, AbortController> = {};
 
 export const useDownloadStore = create<DownloadState>()(
   persist(

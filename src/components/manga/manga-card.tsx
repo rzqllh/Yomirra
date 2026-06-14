@@ -4,7 +4,7 @@ import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useMounted } from "@/shared/hooks/use-mounted";
-import { BookmarkSimple, Play } from "@phosphor-icons/react";
+import { BookmarkSimple, Play, ImageBroken } from "@phosphor-icons/react";
 import { getMangaDetailHref, getReaderHref } from "@/shared/lib/routes";
 import type { MangaItem } from "@/shared/types/source";
 import { motion, AnimatePresence } from "motion/react";
@@ -54,9 +54,13 @@ export function MangaCard({
   const isInLibrary = isMounted ? rawIsInLibrary : false;
   const toggleLibrary = useLibraryStore((state) => state.toggleLibrary);
   const [isInteracting, setIsInteracting] = React.useState(false);
+  const [imageError, setImageError] = React.useState(false);
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const fullPath = pathname + (searchParams.toString() ? `?${searchParams.toString()}` : "");
+
+  const safeId = `${sourceId}-${manga.id}`.replace(/[^a-zA-Z0-9-]/g, '-');
+  const vtName = `manga-cover-${safeId}`;
 
   const handleBookmarkClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -122,17 +126,22 @@ export function MangaCard({
           href={targetHref} 
           prefetch={false} 
           className="relative h-[84px] w-[60px] shrink-0 overflow-hidden rounded-sm bg-surface-overlay shadow-sm z-10"
+          style={{ viewTransitionName: !chapterId ? vtName : undefined }}
         >
-          {manga.coverUrl ? (
+          {manga.coverUrl && !imageError ? (
             <img 
               src={manga.coverUrl} 
               alt={manga.title} 
               className="absolute inset-0 w-full h-full object-cover" 
-              onError={(e) => { e.currentTarget.style.display = 'none' }}
+              onError={() => setImageError(true)}
               referrerPolicy="no-referrer"
+              decoding="async"
+              loading="lazy"
             />
           ) : (
-            <div className="h-full w-full bg-surface-muted" />
+            <div className="h-full w-full bg-surface-muted flex flex-col items-center justify-center text-text-muted/50 p-2">
+              <ImageBroken size={24} weight="duotone" />
+            </div>
           )}
         </Link>
         
@@ -177,7 +186,7 @@ export function MangaCard({
       <motion.article
         whileHover={{ y: -4 }}
         whileTap={{ scale: 0.98 }}
-        transition={{ type: "spring", stiffness: 400, damping: 28 }}
+        transition={{ ease: "easeOut", duration: 0.2 }}
         className="relative flex flex-col w-full group rounded-lg overflow-hidden bg-surface-muted border border-border-default shadow-sm aspect-[3/4]"
       >
         <Link 
@@ -186,15 +195,23 @@ export function MangaCard({
           onPointerLeave={() => setIsInteracting(false)}
           className="absolute inset-0 z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           prefetch={false}
+          style={{ viewTransitionName: vtName }}
         >
-          {manga.coverUrl && (
+          {manga.coverUrl && !imageError ? (
             <img
               src={manga.coverUrl}
               alt={manga.title}
               className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-              onError={(e) => { e.currentTarget.style.display = 'none' }}
+              onError={() => setImageError(true)}
               referrerPolicy="no-referrer"
+              decoding="async"
+              loading="lazy"
             />
+          ) : (
+            <div className="absolute inset-0 w-full h-full bg-surface-muted flex flex-col items-center justify-center text-text-muted/50 p-4">
+              <ImageBroken size={32} weight="duotone" className="mb-2" />
+              <span className="text-xs font-medium text-center line-clamp-2 px-2">{manga.title}</span>
+            </div>
           )}
           
           {/* Media overlay gradient */}
@@ -246,7 +263,7 @@ export function MangaCard({
     <motion.article
       whileHover={{ y: -4 }}
       whileTap={{ scale: 0.98 }}
-      transition={{ type: "spring", stiffness: 400, damping: 28 }}
+      transition={{ ease: "easeOut", duration: 0.2 }}
       className="relative flex flex-col w-full group"
     >
       <Link 
@@ -257,15 +274,25 @@ export function MangaCard({
         className="group flex flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         prefetch={false}
       >
-        <div className="relative w-full aspect-[1/1.4] overflow-hidden rounded-md bg-surface-muted border border-border-default shadow-sm mb-2.5">
-          {manga.coverUrl && (
+        <div 
+          className="relative w-full aspect-[1/1.4] overflow-hidden rounded-md bg-surface-muted border border-border-default shadow-sm mb-2.5"
+          style={{ viewTransitionName: vtName }}
+        >
+          {manga.coverUrl && !imageError ? (
             <img
               src={manga.coverUrl}
               alt={manga.title}
               className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03]"
-              onError={(e) => { e.currentTarget.style.display = 'none' }}
+              onError={() => setImageError(true)}
               referrerPolicy="no-referrer"
+              decoding="async"
+              loading="lazy"
             />
+          ) : (
+            <div className="absolute inset-0 w-full h-full bg-surface-muted flex flex-col items-center justify-center text-text-muted/50 p-4">
+              <ImageBroken size={32} weight="duotone" className="mb-2" />
+              <span className="text-xs font-medium text-center line-clamp-2 px-2">{manga.title}</span>
+            </div>
           )}
           
           <div className="absolute top-1.5 left-1.5 flex flex-wrap gap-1 z-20">

@@ -63,7 +63,7 @@ export function TopNav() {
       >
       <motion.div 
         layout
-        transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
         className={cn(
           "flex items-center justify-between pointer-events-auto transition-all duration-500 overflow-visible mx-auto",
           isScrolled 
@@ -96,11 +96,11 @@ export function TopNav() {
               >
                 {item.label}
                 {isActive && (
-                  <motion.div
-                    layoutId="top-nav-indicator"
-                    className="absolute -bottom-[1px] left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-brand-500 dark:bg-brand-400"
-                    transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-                  />
+                    <motion.div
+                      layoutId="top-nav-indicator"
+                      className="absolute -bottom-[1px] left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-brand-500 dark:bg-brand-400"
+                      transition={{ duration: 0.3, ease: "easeOut" }}
+                    />
                 )}
               </Link>
             );
@@ -110,40 +110,43 @@ export function TopNav() {
         {/* RIGHT: Search + Theme + Profile */}
         <div className="flex items-center gap-3 sm:gap-4 lg:gap-6 h-full z-10">
           {/* Global Search Trigger */}
-          <div className="flex items-center">
-            {/* Desktop pill */}
-            <button 
-              onClick={() => window.dispatchEvent(new CustomEvent('open-command-menu'))}
-              className={cn(
-                "hidden sm:flex items-center gap-2 px-3 rounded-full border border-border-subtle/50 bg-surface-muted/50 hover:bg-surface-hover transition-colors text-text-muted hover:text-text-primary text-sm shadow-sm h-9 w-48"
-              )}
-            >
-              <MagnifyingGlass size={16} weight="bold" />
-              <span className="flex-1 text-left opacity-70">Cari...</span>
-              <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-border-default/40 bg-surface-base px-1.5 font-mono text-[10px] font-medium text-text-muted opacity-70">
-                <span className="text-xs">⌘</span>K
-              </kbd>
-            </button>
-            
-            {/* Mobile icon only */}
-            <IconButton 
-              onClick={() => window.dispatchEvent(new CustomEvent('open-command-menu'))}
-              className="sm:hidden size-9 rounded-full bg-surface-muted/50 hover:bg-surface-hover text-text-secondary"
-              aria-label="Cari"
-            >
-              <MagnifyingGlass size={18} weight="bold" />
-            </IconButton>
-          </div>
+          {pathname !== '/library' && (
+            <div className="flex items-center">
+              {/* Desktop pill */}
+              <button 
+                onClick={() => window.dispatchEvent(new CustomEvent('open-command-menu'))}
+                className={cn(
+                  "hidden sm:flex items-center gap-2 px-3 rounded-full border border-border-subtle/50 bg-surface-muted/50 hover:bg-surface-hover transition-colors text-text-muted hover:text-text-primary text-sm shadow-sm h-9 w-48"
+                )}
+              >
+                <MagnifyingGlass size={16} weight="bold" />
+                <span className="flex-1 text-left opacity-70">Cari...</span>
+                <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-border-default/40 bg-surface-base px-1.5 font-mono text-[10px] font-medium text-text-muted opacity-70">
+                  <span className="text-xs">⌘</span>K
+                </kbd>
+              </button>
+              
+              {/* Mobile icon only */}
+              <IconButton 
+                onClick={() => window.dispatchEvent(new CustomEvent('open-command-menu'))}
+                className="sm:hidden size-9 rounded-full bg-surface-muted/50 hover:bg-surface-hover text-text-secondary"
+                aria-label="Cari"
+              >
+                <MagnifyingGlass size={18} weight="bold" />
+              </IconButton>
+            </div>
+          )}
           
-          <motion.div layout>
+          <motion.div layout transition={{ duration: 0.3, ease: "easeOut" }}>
             <ThemeToggle />
           </motion.div>
           
 
             {user ? (
-              <motion.div layout className="relative" ref={profileRef}>
+              <motion.div layout transition={{ duration: 0.3, ease: "easeOut" }} className="relative" ref={profileRef}>
                 <button 
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
+                  aria-label="Profil Pengguna"
                   className={cn(
                     "flex items-center justify-center rounded-full bg-surface-raised ring-1 ring-border-subtle shadow-sm hover:scale-105 active:scale-95 transition-all outline-none",
                     isScrolled ? "size-9" : "size-9 lg:size-10"
@@ -182,11 +185,11 @@ export function TopNav() {
                 </AnimatePresence>
               </motion.div>
             ) : (
-              <motion.div layout>
-                <IconButton onClick={loginWithGoogle} aria-label="Masuk" variant="ghost" className="bg-surface-raised ring-1 ring-border-subtle shadow-sm rounded-full px-5 h-9 gap-2">
-                  <UserCircle size={20} weight="duotone" />
-                  <span className="text-sm font-semibold">Masuk</span>
-                </IconButton>
+              <motion.div layout transition={{ duration: 0.3, ease: "easeOut" }}>
+                <button onClick={loginWithGoogle} aria-label="Masuk" className="flex items-center justify-center bg-surface-raised ring-1 ring-border-subtle shadow-sm hover:bg-surface-hover active:scale-95 transition-all rounded-full px-4 h-9 gap-2 outline-none">
+                  <UserCircle size={20} weight="duotone" className="text-text-secondary" />
+                  <span className="text-sm font-semibold text-text-primary">Masuk</span>
+                </button>
               </motion.div>
             )}
           </div>

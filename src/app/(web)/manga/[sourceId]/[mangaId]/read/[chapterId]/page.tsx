@@ -1,8 +1,13 @@
 import { Metadata } from "next";
+import Link from "next/link";
+import { WarningCircle } from "@phosphor-icons/react/dist/ssr";
 import { sourceManager } from "@/server/lib/sources/source-manager";
 import { swrCache, CACHE_TTL } from "@/server/lib/cache/strategies";
 import { ReaderView } from "@/components/reader/reader-view";
 import { ReaderShell } from "@/components/reader/reader-shell";
+import { EmptyState } from "@/components/states/empty-state";
+import { Button } from "@/components/ui/button";
+import { getMangaDetailHref } from "@/shared/lib/routes";
 
 export async function generateMetadata({ 
   params 
@@ -49,8 +54,19 @@ export default async function ReaderPage({
     console.error("Failed to load reader data:", error);
     return (
       <ReaderShell chapterTitle="Error" currentChapterId={chapterId} sourceId={sourceId} mangaId={mangaId}>
-        <div className="flex min-h-screen items-center justify-center text-text-muted">
-          Gagal memuat chapter.
+        <div className="flex min-h-screen items-center justify-center pt-16">
+          <EmptyState
+            icon={<WarningCircle size={48} weight="duotone" className="text-text-muted" />}
+            title="Gagal Memuat Chapter"
+            description="Terjadi kesalahan saat mengambil data chapter dari server."
+            action={
+              <Button asChild variant="outline" className="rounded-full shadow-sm mt-2 font-bold">
+                <Link href={getMangaDetailHref(sourceId, mangaId)}>
+                  Kembali ke Detail
+                </Link>
+              </Button>
+            }
+          />
         </div>
       </ReaderShell>
     );

@@ -58,7 +58,10 @@ export function ReaderImage({
   return (
     <div 
       ref={containerRef} 
-      className="reader-page-container w-full flex justify-center bg-surface-raised/30 min-h-[50vh]"
+      className={cn(
+        "reader-page-container w-full flex justify-center",
+        (!shouldLoad || hasError) && "min-h-[50vh] bg-surface-muted/30"
+      )}
       data-page-index={page.index}
     >
       {hasError ? (
@@ -70,7 +73,7 @@ export function ReaderImage({
           src={offlineUrl || page.url}
           alt={`Page ${page.index}`}
           className={cn(
-            "object-contain", 
+            "block", // Prevent inline descender gap
             imageFit === 'width' ? "w-full" : "w-full max-w-[500px]",
             !isWebtoon && "shadow-soft",
             "motion-safe:animate-in motion-safe:fade-in motion-safe:duration-300"
@@ -81,8 +84,8 @@ export function ReaderImage({
           priority={priority}
           quality={dataSaver ? 60 : 85}
           unoptimized={!dataSaver}
-          loading={priority ? "eager" : "lazy"} // Important! Control loading for non-priority
-          style={{ width: imageFit === 'width' ? "100%" : "100%", height: "auto" }}
+          loading={priority ? "eager" : "lazy"} 
+          style={{ width: "100%", height: "auto", display: "block" }}
           onLoad={() => {
             // Push to next tick to prevent React "update during render" warnings if cached
             setTimeout(() => onLoadComplete(page.index), 0)

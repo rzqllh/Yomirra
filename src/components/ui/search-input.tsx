@@ -25,7 +25,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
           "flex items-center gap-3 rounded-full bg-surface-muted/50 px-4 py-2.5 transition-all duration-200 ease-out",
           "hover:bg-surface-muted/80 focus-within:bg-surface-base focus-within:ring-2 focus-within:ring-accent",
           "border border-transparent focus-within:border-accent-dim shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)]",
-          "dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] dark:bg-[#011E21]/60",
+          "dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)]",
           containerClassName
         )}
       >

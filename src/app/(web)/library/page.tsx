@@ -26,6 +26,8 @@ import { useSettingsStore } from "@/shared/store/settings-store";
 import { YomirraSegmentedControl } from "@/components/ui/yomirra-segmented-control";
 import { YomirraSurface } from "@/components/ui/yomirra-layout";
 import { YomirraPageHeader, DesktopPageTitle } from "@/components/app/yomirra-header";
+import { useDebounce } from "@/shared/hooks/use-debounce";
+import { CustomSelect } from "@/components/ui/custom-select";
 
 const FORMATS = [
   { id: "manga", name: "Manga" },
@@ -50,7 +52,7 @@ function LibraryContent() {
   
   const [searchInput, setSearchInput] = React.useState("");
   const [query, setQuery] = React.useState("");
-  const [sort, setSort] = React.useState<"popular" | "latest" | "all">(initialSort);
+  const [sort, setSort] = React.useState<"popular" | "latest" | "all" | "title_asc" | "title_desc">(initialSort as any);
   const [page, setPage] = React.useState(1);
   
   const [showFilters, setShowFilters] = React.useState(false);
@@ -58,6 +60,15 @@ function LibraryContent() {
   const [excludedGenres, setExcludedGenres] = React.useState<string[]>([]);
   const [selectedFormats, setSelectedFormats] = React.useState<string[]>([]);
   const [selectedStatuses, setSelectedStatuses] = React.useState<string[]>([]);
+  
+  const debouncedSearchInput = useDebounce(searchInput, 500);
+
+  React.useEffect(() => {
+    if (debouncedSearchInput !== query) {
+      setQuery(debouncedSearchInput.trim());
+      setPage(1);
+    }
+  }, [debouncedSearchInput, query]);
 
   const { data: filtersData } = useQuery({
     queryKey: ["filters", activeSourceId],
@@ -74,8 +85,9 @@ function LibraryContent() {
     const filters: Record<string, string | string[]> = {};
     if (sort === "latest") filters.sort = "latest";
     else if (sort === "popular") filters.sort = "popularity";
-    else filters.sort = "latest"; // Fallback for "all" to prevent empty results
-
+    else if (sort === "title_asc") filters.sort = "title";
+    else if (sort === "title_desc") filters.sort = "-title";
+    else filters.sort = "popularity"; // Fallback for "all" to prevent empty results
     
     if (selectedGenres.length > 0 || excludedGenres.length > 0) {
       const genreParams: string[] = [];
@@ -111,12 +123,12 @@ function LibraryContent() {
   const router = useRouter();
   const pathname = usePathname();
 
-  const handleTabChange = (newSort: "popular" | "latest" | "all") => {
-    setSort(newSort);
+  const handleTabChange = (newSort: "popular" | "latest" | "all" | "title_asc" | "title_desc") => {
+    setSort(newSort as any);
     setPage(1);
     
     const params = new URLSearchParams(searchParams.toString());
-    if (newSort === "all") {
+    if (newSort === "all" || newSort === "popular") {
       params.delete("sort");
     } else {
       params.set("sort", newSort);
@@ -183,16 +195,21 @@ function LibraryContent() {
           {/* Navigation Tabs & Search/Filters */}
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b border-border-subtle pb-4">
             <div className="w-full md:w-auto">
-              <YomirraSegmentedControl
-                options={[
-                  { value: "all", label: "Semua Judul" },
-                  { value: "latest", label: "Terbaru" },
-                  { value: "popular", label: "Populer" }
-                ]}
-                value={sort}
-                onChange={(val) => handleTabChange(val as "all" | "latest" | "popular")}
-                fullWidth
-              />
+              <div className="relative w-full md:w-auto">
+                <CustomSelect
+                  value={sort}
+                  onChange={(v) => handleTabChange(v as any)}
+                  options={[
+                    { value: "popular", label: "🔥 Populer" },
+                    { value: "latest", label: "✨ Terbaru" },
+                    { value: "title_asc", label: "A-Z (Judul)" },
+                    { value: "title_desc", label: "Z-A (Judul)" },
+                  ]}
+                  align="left"
+                  className="w-full md:w-auto"
+                  buttonClassName="w-full md:w-auto justify-between h-10 px-4 bg-surface-muted hover:bg-surface-overlay text-sm border-border-subtle shadow-sm"
+                />
+              </div>
             </div>
 
             <div className="flex w-full md:w-auto items-center gap-3">
@@ -310,8 +327,8 @@ function LibraryContent() {
               variant="compact"
               icon={<SmileySad size={40} className="text-text-muted" weight="duotone" />}
               title="Gagal memuat katalog"
-              description="Terjadi kesalahan saat mengambil data dari Shinigami."
-              action={<Button onClick={() => refetch()} variant="outline" className="mt-2">Coba lagi</Button>}
+              description="Terjadi kesalahan saat mengambil data dari sumber."
+              action={<Button onClick={() => refetch()} variant="outline" className="mt-4 rounded-full shadow-sm font-bold">Coba lagi</Button>}
               className="bg-surface-overlay rounded-xl border border-border-subtle py-16"
             />
           ) : mangas.length === 0 ? (
@@ -320,7 +337,7 @@ function LibraryContent() {
               icon={<MagnifyingGlass size={40} className="text-text-muted" weight="duotone" />}
               title="Manga tidak ditemukan"
               description="Coba ubah kombinasi filter atau kata kunci pencarian."
-              action={<Button onClick={resetFilters} variant="outline" className="mt-2">Reset Filter</Button>}
+              action={<Button onClick={resetFilters} variant="outline" className="mt-4 rounded-full shadow-sm font-bold">Reset Filter</Button>}
               className="bg-surface-overlay rounded-xl border border-border-subtle border-dashed py-16"
             />
           ) : (
@@ -409,6 +426,7 @@ function LibraryContent() {
 }
 
 import { DirectionalTransition } from "@/components/ui/directional-transition";
+import { LibrarySkeleton } from "@/components/skeletons/library-skeleton";
 
 export default function LibraryPage() {
   return (
@@ -418,8 +436,8 @@ export default function LibraryPage() {
           <div className="md:hidden">
             <YomirraPageHeader title="Library" variant="auto" />
           </div>
-          <YomirraSurface variant="base" className="flex-1 flex items-center justify-center">
-            <CircleNotch size={32} className="motion-safe:animate-spin text-accent" />
+          <YomirraSurface variant="base" className="flex-1 w-full max-w-7xl mx-auto px-4 py-8">
+            <LibrarySkeleton />
           </YomirraSurface>
         </div>
       }>

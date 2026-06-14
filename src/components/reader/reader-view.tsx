@@ -9,6 +9,9 @@ import { ContinuousVerticalReader } from "@/components/reader/continuous-vertica
 import { useHistoryStore } from "@/shared/store/history-store";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useDownloadStore } from "@/shared/store/download-store";
+import { EmptyState } from "@/components/states/empty-state";
+import { WarningCircle } from "@phosphor-icons/react";
+import { Button } from "@/components/ui/button";
 import type { MangaDetail, Chapter, PageItem } from "@/shared/types/source";
 
 interface ReaderViewProps {
@@ -38,7 +41,7 @@ export function ReaderView({
   const [offlinePages, setOfflinePages] = useState<PageItem[] | null>(null);
 
   // Fallback fetching if initialPages failed on SSR
-  const { data: chapterPages, isLoading: isQueryLoading, error } = useQuery({
+  const { data: chapterPages, isLoading: isQueryLoading, error, refetch } = useQuery({
     queryKey: ["pages", sourceId, chapterId],
     queryFn: () => apiClient.getPages(sourceId, mangaId, chapterId),
     enabled: !initialPages && downloadStatus !== "downloaded",
@@ -120,8 +123,17 @@ export function ReaderView({
   if (error || !pagesToRender) {
     return (
       <ReaderShell chapterTitle="Error" currentChapterId={chapterId} sourceId={sourceId} mangaId={mangaId}>
-        <div className="flex min-h-screen items-center justify-center text-text-muted">
-          Gagal memuat halaman.
+        <div className="flex min-h-screen items-center justify-center pt-16">
+          <EmptyState
+            icon={<WarningCircle size={48} weight="duotone" className="text-text-muted" />}
+            title="Gagal Memuat Halaman"
+            description="Tidak dapat mengambil halaman chapter dari server."
+            action={
+              <Button onClick={() => refetch()} variant="outline" className="rounded-full shadow-sm mt-2 font-bold">
+                Coba Lagi
+              </Button>
+            }
+          />
         </div>
       </ReaderShell>
     );
