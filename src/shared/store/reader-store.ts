@@ -1,10 +1,10 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { ReaderSettings } from "@/shared/types/manga";
+import type { ReaderPreferences } from "@/shared/types/manga";
 
 interface ReaderState {
-  settings: ReaderSettings;
-  updateSettings: (settings: Partial<ReaderSettings>) => void;
+  preferences: ReaderPreferences;
+  updatePreferences: (prefs: Partial<ReaderPreferences>) => void;
   isOverlayVisible: boolean;
   toggleOverlay: () => void;
   setOverlayVisible: (visible: boolean) => void;
@@ -12,21 +12,23 @@ interface ReaderState {
   toggleDesktopPanel: () => void;
 }
 
-const defaultSettings: ReaderSettings = {
-  direction: "RTL",
-  mode: "WEBTOON",
-  backgroundColor: "#000000",
-  padding: 0,
-  maxWidth: 800,
+const defaultPreferences: ReaderPreferences = {
+  imageFit: "width",
+  pageGap: "none",
+  background: "black",
+  toolbarBehavior: "auto-hide",
+  preloadIntensity: "balanced",
+  showPageProgress: true,
+  keepScreenAwake: true,
 };
 
 export const useReaderStore = create<ReaderState>()(
   persist(
     (set) => ({
-      settings: defaultSettings,
-      updateSettings: (newSettings) =>
+      preferences: defaultPreferences,
+      updatePreferences: (newPrefs) =>
         set((state) => ({
-          settings: { ...state.settings, ...newSettings },
+          preferences: { ...state.preferences, ...newPrefs },
         })),
       isOverlayVisible: true,
       toggleOverlay: () =>
@@ -37,21 +39,41 @@ export const useReaderStore = create<ReaderState>()(
         set((state) => ({ isDesktopPanelOpen: !state.isDesktopPanelOpen })),
     }),
     {
-      name: "manga-reader-settings",
-      partialize: (state) => ({ settings: state.settings, isDesktopPanelOpen: state.isDesktopPanelOpen }),
-      merge: (persistedState: unknown, currentState: ReaderState) => {
-        // Map old mode values to the new simplified modes to prevent crashes
-        const persisted = persistedState as Partial<ReaderState> | undefined;
-        const settings = { ...currentState.settings, ...(persisted?.settings || {}) };
-        if (settings.mode as string === "PAGED") {
-          settings.mode = "HORIZONTAL_SCROLL";
-        } else if (settings.mode as string === "CONTINUOUS_VERTICAL") {
-          settings.mode = "WEBTOON";
+      name: "manga-reader-settings", // keep the same name for migration
+      partialize: (state) => ({ preferences: state.preferences, isDesktopPanelOpen: state.isDesktopPanelOpen }),
+      merge: (persistedState: any, currentState: ReaderState) => {
+        // Safe migration from old `settings` to new `preferences`
+        let mergedPreferences = { ...currentState.preferences };
+        
+        if (persistedState) {
+          // If the old state had `settings` (old ReaderSettings object)
+          if (persistedState.settings) {
+            // Map old backgroundColor to the new predefined backgrounds if possible
+            if (persistedState.settings.backgroundColor) {
+               const oldBg = persistedState.settings.backgroundColor;
+               if (oldBg === "#000000") mergedPreferences.background = "black";
+               else if (oldBg === "#1e293b" || oldBg === "#0f172a") mergedPreferences.background = "deepLagoon";
+               else if (oldBg === "#ffffff" || oldBg === "#f8fafc") mergedPreferences.background = "mist";
+            }
+            
+            // Map old padding to pageGap
+            if (typeof persistedState.settings.padding === "number") {
+               if (persistedState.settings.padding === 0) mergedPreferences.pageGap = "none";
+               else if (persistedState.settings.padding <= 4) mergedPreferences.pageGap = "small";
+               else mergedPreferences.pageGap = "comfortable";
+            }
+          }
+          
+          // If the user already has the new `preferences`
+          if (persistedState.preferences) {
+            mergedPreferences = { ...mergedPreferences, ...persistedState.preferences };
+          }
         }
+
         return {
           ...currentState,
-          ...persisted,
-          settings,
+          ...persistedState,
+          preferences: mergedPreferences,
         };
       },
     }

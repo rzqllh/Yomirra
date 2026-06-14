@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { X, SlidersHorizontal, ImageSquare, Layout } from "@phosphor-icons/react"
+import { X, SlidersHorizontal, ImageSquare, Layout, Lightning, BoundingBox, ArrowsOutLineVertical } from "@phosphor-icons/react"
 import { useReaderStore } from "@/shared/store/reader-store"
 import { cn } from "@/shared/utils/cn"
 import { IconButton } from "@/components/ui/icon-button"
@@ -20,7 +20,7 @@ interface ReaderSettingsDrawerProps {
 }
 
 export function ReaderSettingsDrawer({ isOpen, onClose, chapters, currentChapterId, sourceId, mangaId }: ReaderSettingsDrawerProps) {
-  const { settings, updateSettings, isDesktopPanelOpen, toggleDesktopPanel } = useReaderStore()
+  const { preferences, updatePreferences, isDesktopPanelOpen, toggleDesktopPanel } = useReaderStore()
 
   return (
     <>
@@ -63,7 +63,7 @@ export function ReaderSettingsDrawer({ isOpen, onClose, chapters, currentChapter
           </IconButton>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-8 flex flex-col custom-scrollbar">
+        <div className="flex-1 overflow-y-auto p-6 space-y-8 flex flex-col custom-scrollbar pb-[calc(24px+var(--safe-bottom))]">
           
           <div className="space-y-4 shrink-0">
             <h3 className="text-2xs font-bold uppercase tracking-widest text-text-muted flex items-center gap-2">
@@ -72,23 +72,75 @@ export function ReaderSettingsDrawer({ isOpen, onClose, chapters, currentChapter
             </h3>
             <div className="flex gap-3">
               {[
-                { name: 'Yomirra', value: '#003135', border: 'border-white/10' },
-                { name: 'Hitam', value: '#000000', border: 'border-white/10' },
-                { name: 'Gelap', value: '#1a1b1e', border: 'border-white/10' },
-                { name: 'Terang', value: '#ffffff', border: 'border-black/10' }
+                { name: 'Hitam', value: 'black', color: '#000000', border: 'border-white/10' },
+                { name: 'Deep Lagoon', value: 'deepLagoon', color: '#003135', border: 'border-white/10' },
+                { name: 'Mist', value: 'mist', color: '#f8fafc', border: 'border-black/10' }
               ].map(bg => (
                 <button
                   key={bg.value}
-                  onClick={() => updateSettings({ backgroundColor: bg.value })}
+                  onClick={() => updatePreferences({ background: bg.value as any })}
                   aria-label={`Latar ${bg.name}`}
                   className={cn(
                     "relative size-12 rounded-full border shadow-sm transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring",
                     bg.border,
-                    settings.backgroundColor === bg.value ? "ring-2 ring-accent ring-offset-2 ring-offset-surface-base" : ""
+                    preferences.background === bg.value ? "ring-2 ring-accent ring-offset-2 ring-offset-surface-base" : ""
                   )}
-                  style={{ backgroundColor: bg.value }}
+                  style={{ backgroundColor: bg.color }}
                   title={bg.name}
                 />
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-4 shrink-0">
+            <h3 className="text-2xs font-bold uppercase tracking-widest text-text-muted flex items-center gap-2">
+              <BoundingBox size={16} />
+              Jarak Antar Halaman
+            </h3>
+            <div className="flex bg-surface-raised/50 p-1 rounded-xl">
+              {[
+                { id: 'none', label: 'Rapat' },
+                { id: 'small', label: 'Kecil' },
+                { id: 'comfortable', label: 'Nyaman' }
+              ].map(mode => (
+                <button
+                  key={mode.id}
+                  onClick={() => updatePreferences({ pageGap: mode.id as any })}
+                  className={cn(
+                    "flex-1 py-2 text-xs font-bold rounded-lg transition-colors",
+                    preferences.pageGap === mode.id 
+                      ? "bg-accent text-accent-fg shadow-sm" 
+                      : "text-text-muted hover:text-text-primary"
+                  )}
+                >
+                  {mode.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-4 shrink-0">
+            <h3 className="text-2xs font-bold uppercase tracking-widest text-text-muted flex items-center gap-2">
+              <ArrowsOutLineVertical size={16} />
+              Ukuran Gambar
+            </h3>
+            <div className="flex bg-surface-raised/50 p-1 rounded-xl">
+              {[
+                { id: 'width', label: 'Penuh (Lebar)' },
+                { id: 'contained', label: 'Proporsional' },
+              ].map(mode => (
+                <button
+                  key={mode.id}
+                  onClick={() => updatePreferences({ imageFit: mode.id as any })}
+                  className={cn(
+                    "flex-1 py-2 text-xs font-bold rounded-lg transition-colors",
+                    preferences.imageFit === mode.id 
+                      ? "bg-accent text-accent-fg shadow-sm" 
+                      : "text-text-muted hover:text-text-primary"
+                  )}
+                >
+                  {mode.label}
+                </button>
               ))}
             </div>
           </div>
@@ -96,22 +148,53 @@ export function ReaderSettingsDrawer({ isOpen, onClose, chapters, currentChapter
           <div className="space-y-4 shrink-0">
             <h3 className="text-2xs font-bold uppercase tracking-widest text-text-muted flex items-center gap-2">
               <Layout size={16} />
-              Lebar Tampilan
+              Perilaku Toolbar
             </h3>
-            <div className="flex items-center gap-4">
-              <input 
-                type="range" 
-                min="400" 
-                max="1200" 
-                step="100"
-                value={settings.maxWidth || 800}
-                onChange={(e) => updateSettings({ maxWidth: Number(e.target.value) })}
-                className="flex-1 accent-accent h-1.5 bg-surface-overlay rounded-lg appearance-none cursor-pointer"
-                aria-label="Lebar tampilan halaman"
-              />
-              <span className="text-sm font-bold text-text-primary w-12 text-right">
-                {settings.maxWidth}px
-              </span>
+            <div className="flex bg-surface-raised/50 p-1 rounded-xl">
+              {[
+                { id: 'auto-hide', label: 'Auto Sembunyi' },
+                { id: 'always-visible', label: 'Selalu Tampil' },
+              ].map(mode => (
+                <button
+                  key={mode.id}
+                  onClick={() => updatePreferences({ toolbarBehavior: mode.id as any })}
+                  className={cn(
+                    "flex-1 py-2 text-xs font-bold rounded-lg transition-colors",
+                    preferences.toolbarBehavior === mode.id 
+                      ? "bg-surface-overlay text-text-primary shadow-sm" 
+                      : "text-text-muted hover:text-text-primary"
+                  )}
+                >
+                  {mode.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-4 shrink-0">
+            <h3 className="text-2xs font-bold uppercase tracking-widest text-text-muted flex items-center gap-2">
+              <Lightning size={16} />
+              Performa Preload
+            </h3>
+            <div className="flex bg-surface-raised/50 p-1 rounded-xl">
+              {[
+                { id: 'light', label: 'Ringan' },
+                { id: 'balanced', label: 'Normal' },
+                { id: 'aggressive', label: 'Agresif' },
+              ].map(mode => (
+                <button
+                  key={mode.id}
+                  onClick={() => updatePreferences({ preloadIntensity: mode.id as any })}
+                  className={cn(
+                    "flex-1 py-2 text-xs font-bold rounded-lg transition-colors",
+                    preferences.preloadIntensity === mode.id 
+                      ? "bg-surface-overlay text-text-primary shadow-sm" 
+                      : "text-text-muted hover:text-text-primary"
+                  )}
+                >
+                  {mode.label}
+                </button>
+              ))}
             </div>
           </div>
 

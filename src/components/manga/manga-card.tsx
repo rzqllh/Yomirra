@@ -124,14 +124,12 @@ export function MangaCard({
           className="relative h-[84px] w-[60px] shrink-0 overflow-hidden rounded-sm bg-surface-overlay shadow-sm z-10"
         >
           {manga.coverUrl ? (
-            <Image 
+            <img 
               src={manga.coverUrl} 
               alt={manga.title} 
-              fill 
-              sizes="60px"
-              priority={priority}
-              className="object-cover" 
-              unoptimized={manga.coverUrl.startsWith("http")}
+              className="absolute inset-0 w-full h-full object-cover" 
+              onError={(e) => { e.currentTarget.style.display = 'none' }}
+              referrerPolicy="no-referrer"
             />
           ) : (
             <div className="h-full w-full bg-surface-muted" />
@@ -189,15 +187,15 @@ export function MangaCard({
           className="absolute inset-0 z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           prefetch={false}
         >
-          <Image
-            src={manga.coverUrl}
-            alt={manga.title}
-            fill
-            sizes={priority ? "(max-width: 640px) 50vw, 33vw" : "25vw"}
-            priority={priority}
-            className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-            unoptimized={manga.coverUrl.startsWith("http")}
-          />
+          {manga.coverUrl && (
+            <img
+              src={manga.coverUrl}
+              alt={manga.title}
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+              onError={(e) => { e.currentTarget.style.display = 'none' }}
+              referrerPolicy="no-referrer"
+            />
+          )}
           
           {/* Media overlay gradient */}
           <div className="absolute inset-0 bg-media-gradient opacity-80 group-hover:opacity-100 transition-opacity duration-300" />
@@ -260,15 +258,15 @@ export function MangaCard({
         prefetch={false}
       >
         <div className="relative w-full aspect-[1/1.4] overflow-hidden rounded-md bg-surface-muted border border-border-default shadow-sm mb-2.5">
-          <Image
-            src={manga.coverUrl}
-            alt={manga.title}
-            fill
-            sizes={priority ? "(max-width: 640px) 33vw, (max-width: 768px) 25vw, 20vw" : "(max-width: 640px) 25vw, 15vw"}
-            priority={priority}
-            className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03]"
-            unoptimized={manga.coverUrl.startsWith("http")}
-          />
+          {manga.coverUrl && (
+            <img
+              src={manga.coverUrl}
+              alt={manga.title}
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03]"
+              onError={(e) => { e.currentTarget.style.display = 'none' }}
+              referrerPolicy="no-referrer"
+            />
+          )}
           
           <div className="absolute top-1.5 left-1.5 flex flex-wrap gap-1 z-20">
             {manga.status === "Ongoing" && (

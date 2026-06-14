@@ -21,7 +21,13 @@ export function HistoryRow({ item, onRemove, priority = false }: HistoryRowProps
     <div className="group relative flex items-center gap-4 rounded-xl bg-surface-raised/50 backdrop-blur-sm p-3 border border-border-subtle/50 transition-all duration-300 hover:bg-surface-overlay/80 hover:shadow-sm overflow-hidden">
       <Link href={getMangaDetailHref(item.sourceId, item.mangaId, pathname)} className="relative h-[84px] w-[60px] shrink-0 overflow-hidden rounded-sm bg-surface-overlay shadow-sm z-10">
         {item.coverUrl ? (
-          <Image src={item.coverUrl} alt={item.mangaTitle} fill sizes="60px" priority={priority} className="object-cover" />
+          <img 
+            src={item.coverUrl} 
+            alt={item.mangaTitle} 
+            className="absolute inset-0 w-full h-full object-cover" 
+            onError={(e) => { e.currentTarget.style.display = 'none' }}
+            referrerPolicy="no-referrer"
+          />
         ) : (
           <div className="h-full w-full bg-surface-muted" />
         )}

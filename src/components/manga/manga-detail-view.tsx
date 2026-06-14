@@ -106,14 +106,15 @@ export function MangaDetailView({
       </div>
 
       <div className="absolute top-0 left-0 right-0 h-[300px] md:h-[450px] w-full overflow-hidden z-0 pointer-events-none select-none">
-        <Image
-          src={detail.coverUrl}
-          alt=""
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover opacity-[0.25] blur-3xl scale-110 saturate-150 transform-gpu dark:opacity-[0.15]"
-        />
+        {detail.coverUrl && (
+          <img
+            src={detail.coverUrl}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover opacity-[0.25] blur-3xl scale-110 saturate-150 transform-gpu dark:opacity-[0.15]"
+            onError={(e) => { e.currentTarget.style.display = 'none' }}
+            referrerPolicy="no-referrer"
+          />
+        )}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-surface-base/80 to-surface-base" />
       </div>
 
@@ -121,7 +122,15 @@ export function MangaDetailView({
         
         <div className="flex gap-4 md:hidden">
           <div className="relative w-[110px] shrink-0 aspect-[2/3] rounded-md overflow-hidden shadow-heavy border border-border-default bg-surface-base vt-cover-mobile">
-            {coverUrl && <Image src={coverUrl} alt={detail.title} fill className="object-cover" priority sizes="110px" />}
+            {coverUrl && (
+              <img 
+                src={coverUrl} 
+                alt={detail.title} 
+                className="absolute inset-0 w-full h-full object-cover" 
+                onError={(e) => { e.currentTarget.style.display = 'none' }}
+                referrerPolicy="no-referrer"
+              />
+            )}
           </div>
           <div className="flex flex-col flex-1 gap-1.5 justify-center py-1">
             <h1 className="text-xl font-bold leading-snug line-clamp-3 text-shadow-sm">{detail.title}</h1>
@@ -138,7 +147,15 @@ export function MangaDetailView({
 
         <div className="hidden md:flex relative sticky top-[100px] self-start w-[280px] lg:w-80 shrink-0 flex-col gap-4">
           <div className="relative w-full aspect-[2/3] rounded-lg overflow-hidden shadow-heavy border border-border-default bg-surface-base vt-cover-desktop">
-            {coverUrl && <Image src={coverUrl} alt={detail.title} fill className="object-cover" priority sizes="320px" />}
+            {coverUrl && (
+              <img 
+                src={coverUrl} 
+                alt={detail.title} 
+                className="absolute inset-0 w-full h-full object-cover" 
+                onError={(e) => { e.currentTarget.style.display = 'none' }}
+                referrerPolicy="no-referrer"
+              />
+            )}
           </div>
           <div className="flex flex-col gap-3 mt-2">
             {renderActions()}

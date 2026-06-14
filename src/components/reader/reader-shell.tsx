@@ -23,8 +23,17 @@ interface ReaderShellProps {
 
 export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sourceId, mangaId, chapters, currentChapterId }: ReaderShellProps) {
   const router = useRouter()
-  const { settings, isOverlayVisible, isDesktopPanelOpen, toggleDesktopPanel, toggleOverlay } = useReaderStore()
+  const { preferences, isOverlayVisible, isDesktopPanelOpen, toggleDesktopPanel, toggleOverlay } = useReaderStore()
   const [isDrawerOpen, setIsDrawerOpen] = React.useState(false)
+
+  const getBackgroundColor = () => {
+    switch (preferences.background) {
+      case 'deepLagoon': return '#003135';
+      case 'mist': return '#f8fafc';
+      case 'black':
+      default: return '#000000';
+    }
+  }
 
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -46,7 +55,7 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
         "relative min-h-screen w-full transition-all duration-300",
         isDesktopPanelOpen && "md:pr-[320px]"
       )}
-      style={{ backgroundColor: settings.backgroundColor }}
+      style={{ backgroundColor: getBackgroundColor() }}
     >
       {/* Top Overlay */}
       <div 
