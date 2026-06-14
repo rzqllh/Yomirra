@@ -54,7 +54,7 @@ export function YomirraBottomDock() {
                   layoutId="bottom-dock-active-pill-modern"
                   className="absolute inset-0 rounded-full bg-accent/15 border border-accent/20"
                   initial={false}
-                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  transition={{ type: "spring", bounce: 0, duration: 0.4 }}
                 />
               )}
 

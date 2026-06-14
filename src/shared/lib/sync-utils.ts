@@ -10,7 +10,8 @@ export async function pushLibraryItem(item: LibraryItem) {
   try {
     const { doc, setDoc } = await import("firebase/firestore");
     const id = `${item.sourceId}::${item.mangaId}`;
-    await setDoc(doc(db, `users/${user.uid}/library`, id), item);
+    const cleanItem = Object.fromEntries(Object.entries(item).filter(([_, v]) => v !== undefined));
+    await setDoc(doc(db, `users/${user.uid}/library`, id), cleanItem);
   } catch (e) {
     console.error("Failed to sync library item", e);
   }
@@ -38,7 +39,8 @@ export async function pushHistoryItem(item: HistoryItem) {
   try {
     const { doc, setDoc } = await import("firebase/firestore");
     const id = `${item.sourceId}::${item.mangaId}::${item.chapterId}`;
-    await setDoc(doc(db, `users/${user.uid}/history`, id), item);
+    const cleanItem = Object.fromEntries(Object.entries(item).filter(([_, v]) => v !== undefined));
+    await setDoc(doc(db, `users/${user.uid}/history`, id), cleanItem);
   } catch (e) {
     console.error("Failed to sync history item", e);
   }
@@ -55,6 +57,37 @@ export async function deleteHistoryItem(sourceId: string, mangaId: string, chapt
     await deleteDoc(doc(db, `users/${user.uid}/history`, id));
   } catch (e) {
     console.error("Failed to delete history item from sync", e);
+  }
+}
+
+export async function deleteMangaHistory(sourceId: string, mangaId: string) {
+  const { auth, db } = await initFirebase();
+  if (!auth || !db) return;
+  const user = auth.currentUser;
+  if (!user) return;
+  try {
+    const { collection, query, getDocs, deleteDoc, writeBatch } = await import("firebase/firestore");
+    const historyRef = collection(db, `users/${user.uid}/history`);
+    const q = query(historyRef);
+    const snapshot = await getDocs(q);
+    
+    // Create a batch
+    const batch = writeBatch(db);
+    let count = 0;
+    
+    snapshot.docs.forEach(doc => {
+      const data = doc.data();
+      if (data.sourceId === sourceId && data.mangaId === mangaId) {
+        batch.delete(doc.ref);
+        count++;
+      }
+    });
+    
+    if (count > 0) {
+      await batch.commit();
+    }
+  } catch (e) {
+    console.error("Failed to delete manga history from sync", e);
   }
 }
 

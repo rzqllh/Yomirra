@@ -14,6 +14,8 @@ interface ReaderImageProps {
   onLoadComplete: (index: number) => void
   onError: (index: number) => void
   priority?: boolean
+  offlineUrl?: string
+  imageFit?: 'width' | 'contained'
 }
 
 export function ReaderImage({
@@ -23,7 +25,9 @@ export function ReaderImage({
   isAllowedToLoad,
   onLoadComplete,
   onError,
-  priority = false
+  priority = false,
+  offlineUrl,
+  imageFit = 'width'
 }: ReaderImageProps) {
   const [inView, setInView] = React.useState(false)
   const [hasError, setHasError] = React.useState(false)
@@ -63,21 +67,22 @@ export function ReaderImage({
         </div>
       ) : shouldLoad ? (
         <Image 
-          src={page.url}
+          src={offlineUrl || page.url}
           alt={`Page ${page.index}`}
           className={cn(
-            "w-full object-contain", 
+            "object-contain", 
+            imageFit === 'width' ? "w-full" : "w-full max-w-[500px]",
             !isWebtoon && "shadow-soft",
             "motion-safe:animate-in motion-safe:fade-in motion-safe:duration-300"
           )}
           width={800}
           height={1200}
-          sizes="100vw"
+          sizes={imageFit === 'width' ? "100vw" : "(max-width: 500px) 100vw, 500px"}
           priority={priority}
           quality={dataSaver ? 60 : 85}
           unoptimized={!dataSaver}
           loading={priority ? "eager" : "lazy"} // Important! Control loading for non-priority
-          style={{ width: "100%", height: "auto" }}
+          style={{ width: imageFit === 'width' ? "100%" : "100%", height: "auto" }}
           onLoad={() => {
             // Push to next tick to prevent React "update during render" warnings if cached
             setTimeout(() => onLoadComplete(page.index), 0)
