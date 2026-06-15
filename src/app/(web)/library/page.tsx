@@ -48,11 +48,11 @@ function LibraryContent() {
   const activeSourceId = sourceParam || "shinigami";
   
   const sortParam = searchParams.get("sort");
-  const initialSort = sortParam === "popular" || sortParam === "latest" ? sortParam : "all";
+  const initialSort = sortParam || "popular";
   
   const [searchInput, setSearchInput] = React.useState("");
   const [query, setQuery] = React.useState("");
-  const [sort, setSort] = React.useState<"popular" | "latest" | "all" | "title_asc" | "title_desc">(initialSort as any);
+  const [sort, setSort] = React.useState<string>(initialSort);
   const [page, setPage] = React.useState(1);
   
   const [showFilters, setShowFilters] = React.useState(false);
@@ -80,14 +80,26 @@ function LibraryContent() {
   const GENRES = filtersData?.genres || [];
   const DYNAMIC_FORMATS = filtersData?.formats || FORMATS;
   const DYNAMIC_STATUSES = filtersData?.statuses || STATUSES;
+  const DYNAMIC_SORTS = filtersData?.sorts || [
+    { id: "popular", name: "🔥 Populer" },
+    { id: "latest", name: "✨ Terbaru" },
+  ];
+
+  // Fallback to supported sort if current sort is not available in the new source
+  React.useEffect(() => {
+    if (filtersData?.sorts) {
+      const isSupported = filtersData.sorts.some(s => s.id === sort);
+      if (!isSupported && filtersData.sorts.length > 0) {
+        setSort(filtersData.sorts[0].id);
+      }
+    }
+  }, [filtersData?.sorts, sort]);
 
   const fetchCatalog = async (currentPage: number) => {
     const filters: Record<string, string | string[]> = {};
     if (sort === "latest") filters.sort = "latest";
-    else if (sort === "popular") filters.sort = "popularity";
-    else if (sort === "title_asc") filters.sort = "title";
-    else if (sort === "title_desc") filters.sort = "-title";
-    else filters.sort = "popularity"; // Fallback for "all" to prevent empty results
+    else if (sort === "popular" || sort === "all") filters.sort = "popularity";
+    else filters.sort = sort; // Use specific sort format supported by source
     
     if (selectedGenres.length > 0 || excludedGenres.length > 0) {
       const genreParams: string[] = [];
@@ -123,8 +135,8 @@ function LibraryContent() {
   const router = useRouter();
   const pathname = usePathname();
 
-  const handleTabChange = (newSort: "popular" | "latest" | "all" | "title_asc" | "title_desc") => {
-    setSort(newSort as any);
+  const handleTabChange = (newSort: string) => {
+    setSort(newSort);
     setPage(1);
     
     const params = new URLSearchParams(searchParams.toString());
@@ -169,7 +181,9 @@ function LibraryContent() {
   };
 
   const activeFilterCount = selectedGenres.length + excludedGenres.length + selectedFormats.length + selectedStatuses.length;
-  const mangas = data?.mangas || [];
+  const rawMangas = data?.mangas || [];
+  // Deduplicate mangas array to prevent duplicate view-transition-names
+  const mangas = Array.from(new Map(rawMangas.map(m => [m.id, m])).values());
 
   React.useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -198,13 +212,8 @@ function LibraryContent() {
               <div className="relative w-full md:w-auto">
                 <CustomSelect
                   value={sort}
-                  onChange={(v) => handleTabChange(v as any)}
-                  options={[
-                    { value: "popular", label: "🔥 Populer" },
-                    { value: "latest", label: "✨ Terbaru" },
-                    { value: "title_asc", label: "A-Z (Judul)" },
-                    { value: "title_desc", label: "Z-A (Judul)" },
-                  ]}
+                  onChange={(v) => handleTabChange(v)}
+                  options={DYNAMIC_SORTS.map(s => ({ value: s.id, label: s.name }))}
                   align="left"
                   className="w-full md:w-auto"
                   buttonClassName="w-full md:w-auto justify-between h-10 px-4 bg-surface-muted hover:bg-surface-overlay text-sm border-border-subtle shadow-sm"
@@ -347,8 +356,8 @@ function LibraryContent() {
                 "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4 md:gap-5 transition-opacity duration-200",
                 isFetching ? "opacity-50 pointer-events-none" : "opacity-100"
               )}>
-                {mangas.map((manga, idx) => (
-                  <MangaCard key={`${manga.id}-${idx}`} manga={manga} sourceId={activeSourceId} variant="shelf" />
+                {mangas.map((manga) => (
+                  <MangaCard key={manga.id} manga={manga} sourceId={activeSourceId} variant="shelf" />
                 ))}
               </div>
 
