@@ -52,7 +52,7 @@ export function EmptyState({
     transition: {
       duration: 3,
       repeat: Infinity,
-      ease: "easeInOut"
+      ease: "easeInOut" as const
     }
   }
 

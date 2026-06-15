@@ -124,7 +124,7 @@ export function ContinuousVerticalReader({
               import("@/shared/api-client").then(m => {
                 queryClient.prefetchQuery({
                   queryKey: ["chapter", sourceId, mangaId, nextChapterId],
-                  queryFn: () => m.apiClient.getChapterPages(sourceId, mangaId, nextChapterId)
+                  queryFn: () => m.apiClient.getPages(sourceId, mangaId, nextChapterId)
                 })
               })
             }

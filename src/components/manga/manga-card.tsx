@@ -40,7 +40,7 @@ function getRelativeTime(dateString?: string): string {
 
 function BookmarkButton({ sourceId, manga }: { sourceId: string, manga: MangaItem }) {
   const isMounted = useMounted();
-  const rawIsInLibrary = useLibraryStore((state) => state.isInLibrary(manga.sourceId || sourceId, manga.id));
+  const rawIsInLibrary = useLibraryStore((state) => state.isInLibrary(sourceId, manga.id));
   const isInLibrary = isMounted ? rawIsInLibrary : false;
   const toggleLibrary = useLibraryStore((state) => state.toggleLibrary);
 
@@ -48,7 +48,7 @@ function BookmarkButton({ sourceId, manga }: { sourceId: string, manga: MangaIte
     e.preventDefault();
     e.stopPropagation();
     toggleLibrary({
-      sourceId: manga.sourceId || sourceId,
+      sourceId: sourceId,
       mangaId: manga.id,
       title: manga.title,
       coverUrl: manga.coverUrl,
