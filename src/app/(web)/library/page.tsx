@@ -26,7 +26,6 @@ import { useSettingsStore } from "@/shared/store/settings-store";
 import { YomirraSegmentedControl } from "@/components/ui/yomirra-segmented-control";
 import { YomirraSurface } from "@/components/ui/yomirra-layout";
 import { YomirraPageHeader, DesktopPageTitle } from "@/components/app/yomirra-header";
-import { useDebounce } from "@/shared/hooks/use-debounce";
 import { CustomSelect } from "@/components/ui/custom-select";
 
 const FORMATS = [
@@ -61,14 +60,14 @@ function LibraryContent() {
   const [selectedFormats, setSelectedFormats] = React.useState<string[]>([]);
   const [selectedStatuses, setSelectedStatuses] = React.useState<string[]>([]);
   
-  const debouncedSearchInput = useDebounce(searchInput, 500);
+  const deferredSearchInput = React.useDeferredValue(searchInput);
 
   React.useEffect(() => {
-    if (debouncedSearchInput !== query) {
-      setQuery(debouncedSearchInput.trim());
+    if (deferredSearchInput !== query) {
+      setQuery(deferredSearchInput.trim());
       setPage(1);
     }
-  }, [debouncedSearchInput, query]);
+  }, [deferredSearchInput, query]);
 
   const { data: filtersData } = useQuery({
     queryKey: ["filters", activeSourceId],
@@ -369,12 +368,14 @@ function LibraryContent() {
                       <PaginationPrevious10
                         onClick={() => setPage(p => Math.max(1, p - 10))}
                         className={cn(page <= 10 && "opacity-50 pointer-events-none")}
+                        aria-disabled={page <= 10}
                       />
                     </PaginationItem>
                     <PaginationItem>
                       <PaginationPrevious 
                         onClick={() => setPage(p => Math.max(1, p - 1))}
                         className={cn(page === 1 && "opacity-50 pointer-events-none")}
+                        aria-disabled={page === 1}
                       />
                     </PaginationItem>
                     
@@ -415,12 +416,14 @@ function LibraryContent() {
                       <PaginationNext 
                         onClick={() => setPage(p => p + 1)}
                         className={cn(!data?.hasNextPage && "opacity-50 pointer-events-none")}
+                        aria-disabled={!data?.hasNextPage}
                       />
                     </PaginationItem>
                     <PaginationItem>
                       <PaginationNext10
                         onClick={() => setPage(p => p + 10)}
                         className={cn(!data?.hasNextPage && "opacity-50 pointer-events-none")}
+                        aria-disabled={!data?.hasNextPage}
                       />
                     </PaginationItem>
                   </PaginationContent>

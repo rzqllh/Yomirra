@@ -270,6 +270,7 @@
 
   * {
     border-color: var(--color-border-subtle);
+    -webkit-tap-highlight-color: transparent;
   }
 
   ::selection {
@@ -366,6 +367,16 @@ body.reader-active {
   animation:
     var(--duration-enter) ease-out var(--duration-exit) both fade,
     var(--duration-move) ease-in-out both slide;
+}
+
+::view-transition-group(*) {
+  animation-timing-function: linear(
+    0, 0.009, 0.035 2.1%, 0.141 4.4%, 0.723 12.9%, 0.938 16.7%, 1.017,
+    1.077 21.8%, 1.099 23.6%, 1.114 25.6%, 1.119 26.8%, 1.114 28.3%, 1.096 30.6%,
+    1.002 36.8%, 0.963 40.7%, 0.949 43%, 0.947 44.5%, 0.952 46.5%, 0.985 52.4%,
+    1.017 59.8%, 1.022 62.4%, 1.02 65.4%, 0.995 74%, 0.99 78%, 0.991 80.3%,
+    1.004 89.3%, 1
+  );
 }
 
 ::view-transition-group(.morph) {

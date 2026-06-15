@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation"
 import { CaretLeft, CaretRight, List, CheckCircle } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { getMangaDetailHref, getReaderHref } from "@/shared/lib/routes"
+import { toast } from "sonner"
 
 interface EndOfChapterProps {
   sourceId: string;
@@ -46,7 +47,12 @@ export function EndOfChapter({
             variant="secondary" 
             className="w-full justify-center rounded-full"
             disabled={!prevChapterId}
-            onClick={() => prevChapterId && router.push(getReaderHref(sourceId, mangaId, prevChapterId))}
+            onClick={() => {
+              if (prevChapterId) {
+                toast.info("Membuka chapter sebelumnya...", { duration: 2000 });
+                router.push(getReaderHref(sourceId, mangaId, prevChapterId));
+              }
+            }}
           >
             <CaretLeft size={16} weight="bold" className="mr-2" />
             Sebelumnya
@@ -71,7 +77,12 @@ export function EndOfChapter({
             variant="default" 
             className="w-full justify-center rounded-full bg-accent hover:bg-accent/90 text-accent-on"
             disabled={!nextChapterId}
-            onClick={() => nextChapterId && router.push(getReaderHref(sourceId, mangaId, nextChapterId))}
+            onClick={() => {
+              if (nextChapterId) {
+                toast.info("Membuka chapter selanjutnya...", { duration: 2000 });
+                router.push(getReaderHref(sourceId, mangaId, nextChapterId));
+              }
+            }}
           >
             Selanjutnya
             <CaretRight size={16} weight="bold" className="ml-2" />

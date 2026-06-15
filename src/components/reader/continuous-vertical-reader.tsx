@@ -15,6 +15,7 @@ import { ReaderChapterDrawer } from "./reader-chapter-drawer"
 import { Chapter } from "@/shared/types/source"
 import { useDownloadStore } from "@/shared/store/download-store"
 import { getOfflineImageUrl } from "@/shared/utils/download-helpers"
+import { toast } from "sonner"
 
 interface ContinuousVerticalReaderProps {
   sourceId: string;
@@ -196,7 +197,10 @@ export function ContinuousVerticalReader({
             disabled={!prevChapterId}
             onClick={(e) => { 
               e.stopPropagation(); 
-              if (prevChapterId) router.push(getReaderHref(sourceId, mangaId, prevChapterId)) 
+              if (prevChapterId) {
+                toast.info("Membuka chapter sebelumnya...", { duration: 2000 });
+                router.push(getReaderHref(sourceId, mangaId, prevChapterId));
+              }
             }}
           >
             <CaretLeft size={20} weight="bold" />
@@ -222,7 +226,10 @@ export function ContinuousVerticalReader({
             disabled={!nextChapterId}
             onClick={(e) => { 
               e.stopPropagation(); 
-              if (nextChapterId) router.push(getReaderHref(sourceId, mangaId, nextChapterId)) 
+              if (nextChapterId) {
+                toast.info("Membuka chapter selanjutnya...", { duration: 2000 });
+                router.push(getReaderHref(sourceId, mangaId, nextChapterId));
+              }
             }}
           >
             <CaretRight size={20} weight="bold" />
