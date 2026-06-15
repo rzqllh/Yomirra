@@ -47,7 +47,6 @@ export default function SourcesPage() {
             <SearchInput
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              placeholder="Cari sumber..."
               placeholder="Cari sumber terinstall..."
             />
           </div>
@@ -56,7 +55,6 @@ export default function SourcesPage() {
             <SearchInput
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              placeholder="Cari sumber..."
               placeholder="Cari sumber manga..."
             />
           </div>
