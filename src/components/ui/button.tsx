@@ -13,9 +13,9 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-accent text-accent-on shadow-sm hover:bg-accent-hover",
+          "bg-text-primary text-background shadow-sm hover:bg-text-primary/90",
         accent:
-          "bg-accent text-accent-on shadow-sm hover:bg-accent-hover",
+          "bg-accent/10 text-accent hover:bg-accent/20 shadow-none dark:bg-accent/20 dark:hover:bg-accent/30 border border-accent/20",
         secondary:
           "bg-surface-raised text-text-primary border border-border-default shadow-sm hover:bg-surface-hover",
         tertiary:

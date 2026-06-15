@@ -4,6 +4,7 @@ import { CaretLeft, CaretRight, List } from "@phosphor-icons/react"
 import { useReaderStore } from "@/shared/store/reader-store"
 import { useHistoryStore } from "@/shared/store/history-store"
 import { useSettingsStore } from "@/shared/store/settings-store"
+import { useReaderProgressStore } from "@/shared/store/reader-progress-store"
 import { PageItem } from "@/shared/types/source"
 import { cn } from "@/shared/utils/cn"
 import { getReaderHref } from "@/shared/lib/routes"
@@ -16,6 +17,7 @@ import { Chapter } from "@/shared/types/source"
 import { useDownloadStore } from "@/shared/store/download-store"
 import { getOfflineImageUrl } from "@/shared/utils/download-helpers"
 import { toast } from "sonner"
+import { useQueryClient } from "@tanstack/react-query"
 
 interface ContinuousVerticalReaderProps {
   sourceId: string;
@@ -43,6 +45,9 @@ export function ContinuousVerticalReader({
   const { dataSaver } = useSettingsStore()
   const markChapterProgress = useHistoryStore((state) => state.markChapterProgress)
   const isDownloaded = useDownloadStore(state => state.isDownloaded(sourceId, mangaId, chapterId))
+  const saveProgress = useReaderProgressStore(state => state.saveProgress)
+  const getProgress = useReaderProgressStore(state => state.getProgress)
+  const queryClient = useQueryClient()
   const observerRef = React.useRef<IntersectionObserver | null>(null)
   
   const [isChapterDrawerOpen, setIsChapterDrawerOpen] = React.useState(false)
@@ -85,10 +90,12 @@ export function ContinuousVerticalReader({
     return () => endObserver.disconnect()
   }, [])
 
-  // Auto-hide scroll listener
+  // Auto-hide scroll listener & Progress saving & Preloading
   React.useEffect(() => {
     let lastScrollY = window.scrollY
     let ticking = false
+    let lastSaveTime = 0
+    let hasPrefetched = false
 
     const handleScroll = () => {
       if (!ticking) {
@@ -101,6 +108,28 @@ export function ContinuousVerticalReader({
             setOverlayVisible(true)
           }
           lastScrollY = currentScrollY
+
+          // Save progress
+          const now = Date.now()
+          if (now - lastSaveTime > 250) {
+            saveProgress(sourceId, mangaId, chapterId, currentScrollY, 0)
+            lastSaveTime = now
+          }
+
+          // Preload next chapter
+          if (!hasPrefetched && nextChapterId && navigator.onLine) {
+            const maxScroll = document.documentElement.scrollHeight - window.innerHeight
+            if (maxScroll > 0 && currentScrollY / maxScroll >= 0.8) {
+              hasPrefetched = true
+              import("@/shared/api-client").then(m => {
+                queryClient.prefetchQuery({
+                  queryKey: ["chapter", sourceId, mangaId, nextChapterId],
+                  queryFn: () => m.apiClient.getChapterPages(sourceId, mangaId, nextChapterId)
+                })
+              })
+            }
+          }
+
           ticking = false
         })
         ticking = true
@@ -109,7 +138,16 @@ export function ContinuousVerticalReader({
 
     window.addEventListener("scroll", handleScroll, { passive: true })
     return () => window.removeEventListener("scroll", handleScroll)
-  }, [setOverlayVisible])
+  }, [setOverlayVisible, sourceId, mangaId, chapterId, nextChapterId, saveProgress, queryClient])
+
+  // Restore scroll position
+  React.useEffect(() => {
+    const saved = getProgress(sourceId, mangaId, chapterId)
+    if (saved && saved.scrollY > 0) {
+      window.scrollTo({ top: saved.scrollY, behavior: 'instant' })
+      toast("Melanjutkan bacaan...", { position: 'top-center' })
+    }
+  }, [sourceId, mangaId, chapterId, getProgress])
 
   // Auto-hide scroll listener
   React.useEffect(() => {
@@ -143,10 +181,33 @@ export function ContinuousVerticalReader({
 
   const isWebtoon = true;
 
+  const pointerState = React.useRef({ startX: 0, startY: 0, time: 0 })
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    // Ignore middle/right clicks
+    if (e.button !== 0) return;
+    pointerState.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      time: Date.now()
+    }
+  }
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (e.button !== 0) return;
+    const { startX, startY, time } = pointerState.current
+    const duration = Date.now() - time
+    
+    if (duration < 150 && Math.abs(e.clientX - startX) < 5 && Math.abs(e.clientY - startY) < 5) {
+      toggleOverlay()
+    }
+  }
+
   return (
     <div 
       className="flex min-h-screen w-full flex-col items-center py-8 select-none"
-      onClick={toggleOverlay}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
     >
       <div 
         className="flex w-full flex-col items-center pt-[calc(var(--mobile-header-height)+var(--safe-top))]"
@@ -184,22 +245,23 @@ export function ContinuousVerticalReader({
       {/* Floating Bottom Control */}
       <div 
         className={cn(
-          "fixed bottom-[calc(1.5rem+var(--safe-bottom))] -translate-x-1/2 z-[var(--z-sticky)] transition-all duration-300",
-          isOverlayVisible && !isEndVisible ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0 pointer-events-none",
+          "fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] -translate-x-1/2 z-[var(--z-sticky)] transition-all duration-300 pointer-events-none",
+          isOverlayVisible && !isEndVisible ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0",
           isDesktopPanelOpen ? "md:left-[calc(50%-160px)] left-1/2" : "left-1/2"
         )}
       >
-        <div className="flex items-center gap-2 bg-surface-overlay/80 backdrop-blur-xl border border-border-default rounded-full p-1.5 shadow-2xl">
+        <div className="flex items-center gap-2 bg-black/20 dark:bg-surface-overlay/80 backdrop-blur-xl border border-border-glass rounded-full p-1 shadow-md pointer-events-auto">
           <IconButton 
             aria-label="Chapter sebelumnya"
             variant="ghost"
-            className={cn("rounded-full", !prevChapterId && "opacity-50 cursor-not-allowed")}
+            className={cn("rounded-full min-h-[44px] min-w-[44px] text-white dark:text-text-primary hover:bg-white/20 dark:hover:bg-surface-hover drop-shadow-md", !prevChapterId && "opacity-50 cursor-not-allowed")}
             disabled={!prevChapterId}
             onClick={(e) => { 
               e.stopPropagation(); 
               if (prevChapterId) {
                 toast.info("Membuka chapter sebelumnya...", { duration: 2000 });
-                router.push(getReaderHref(sourceId, mangaId, prevChapterId));
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                setTimeout(() => router.push(getReaderHref(sourceId, mangaId, prevChapterId)), 150);
               }
             }}
           >
@@ -209,7 +271,7 @@ export function ContinuousVerticalReader({
           <Button 
             variant="ghost" 
             size="sm" 
-            className="rounded-full px-4 font-bold text-sm bg-surface-raised/50"
+            className="rounded-full px-4 min-h-[44px] font-bold text-sm bg-white/10 dark:bg-surface-raised/50 text-white dark:text-text-primary hover:bg-white/20 dark:hover:bg-surface-hover drop-shadow-md"
             onClick={(e) => { 
               e.stopPropagation(); 
               setIsChapterDrawerOpen(true);
@@ -222,13 +284,14 @@ export function ContinuousVerticalReader({
           <IconButton 
             aria-label="Chapter selanjutnya"
             variant="ghost"
-            className={cn("rounded-full", !nextChapterId && "opacity-50 cursor-not-allowed")}
+            className={cn("rounded-full min-h-[44px] min-w-[44px] text-white dark:text-text-primary hover:bg-white/20 dark:hover:bg-surface-hover drop-shadow-md", !nextChapterId && "opacity-50 cursor-not-allowed")}
             disabled={!nextChapterId}
             onClick={(e) => { 
               e.stopPropagation(); 
               if (nextChapterId) {
                 toast.info("Membuka chapter selanjutnya...", { duration: 2000 });
-                router.push(getReaderHref(sourceId, mangaId, nextChapterId));
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                setTimeout(() => router.push(getReaderHref(sourceId, mangaId, nextChapterId)), 150);
               }
             }}
           >

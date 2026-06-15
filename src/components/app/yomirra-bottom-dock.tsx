@@ -25,9 +25,9 @@ export function YomirraBottomDock() {
   const pathname = usePathname()
 
   return (
-    <nav style={{ viewTransitionName: 'persistent-bottom-nav' }} className="md:hidden fixed bottom-6 left-0 w-full z-[var(--z-sticky)] pointer-events-none px-4">
+    <nav className="md:hidden fixed bottom-6 left-0 w-full z-[var(--z-sticky)] pointer-events-none px-4">
       {/* Ultra-modern Expanding Floating Pill */}
-      <div className="pointer-events-auto mx-auto flex h-[56px] w-fit min-w-[280px] max-w-full items-center justify-between gap-1 rounded-full bg-surface-overlay/70 !backdrop-blur-md  border border-border-glass shadow-heavy px-1.5 ring-1 ring-border-subtle/30">
+      <div className="pointer-events-auto mx-auto flex h-[56px] w-fit min-w-[280px] max-w-full items-center justify-between gap-1 rounded-full bg-surface-glass backdrop-blur-md border border-border-glass shadow-[0_8px_32px_rgba(0,0,0,0.08)] px-1.5">
         {NAV_ITEMS.map((item) => {
           const isActive =
             item.href === "/"
@@ -51,9 +51,9 @@ export function YomirraBottomDock() {
             >
               {isActive && (
                 <motion.div
-                  layoutId="bottom-dock-active-pill-modern"
-                  className="absolute inset-0 rounded-full !backdrop-blur-sm bg-accent/10 border border-accent/20"
-                  initial={false}
+                  className="absolute inset-0 rounded-full bg-accent/15 dark:bg-accent/20 border border-accent/20"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
                   transition={{ type: "spring", bounce: 0, duration: 0.4 }}
                 />
               )}

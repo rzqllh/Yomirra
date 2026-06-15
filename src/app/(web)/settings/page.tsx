@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { UserCircle, SignOut, Trash, Monitor, HandSwipeLeft, EyeSlash, WifiHigh, Compass, CaretRight, HardDrives, Spinner, ArrowsClockwise } from "@phosphor-icons/react";
+import { UserCircle, SignOut, Broom, Palette, HandTap, ShieldWarning, WifiHigh, Lightning, Fire, PuzzlePiece, Spinner, ArrowsClockwise } from "@phosphor-icons/react";
 import { useAuth } from "@/shared/hooks/use-auth";
 import { useSync } from "@/shared/hooks/use-sync";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ import { YomirraSegmentedControl } from "@/components/ui/yomirra-segmented-contr
 import { Gear } from "@phosphor-icons/react/dist/ssr";
 import { format } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
+import { SettingsSection, SettingsItem, IconWrapper } from "./components/settings-ui";
 
 export default function SettingsPage() {
   const { user, loginWithGoogle, logout } = useAuth();
@@ -73,50 +74,73 @@ export default function SettingsPage() {
             </div>
 
             {/* Akun & Sinkronisasi */}
-            <section className="bg-surface-overlay border border-border-subtle rounded-xl p-6 shadow-sm">
-              <h2 className="text-xs font-bold uppercase tracking-widest text-text-muted mb-4">Akun & Sinkronisasi</h2>
-              
+            <SettingsSection title="Akun & Sinkronisasi">
               {user ? (
-                <div className="flex flex-col sm:flex-row items-center gap-4">
-                  {user.photoURL ? (
-                    <Image src={user.photoURL} alt={user.displayName || "User"} width={64} height={64} className="rounded-full border border-border-subtle object-cover" referrerPolicy="no-referrer" unoptimized />
-                  ) : (
-                    <UserCircle size={64} weight="duotone" className="text-accent" />
-                  )}
-                  
-                  <div className="flex-1 text-center sm:text-left">
-                    <h3 className="text-lg font-bold text-text-primary">{user.displayName}</h3>
-                    <p className="text-sm text-text-secondary">{user.email}</p>
-                    <div className="flex items-center justify-center sm:justify-start gap-2 mt-1">
-                      <div className="w-2 h-2 rounded-full bg-semantic-success animate-pulse" />
-                      <p className="text-xs text-text-muted font-medium">Sinkronisasi aktif</p>
-                      <span className="text-xs text-text-muted opacity-50">•</span>
-                      <p className="text-xs text-text-muted font-medium">{formatLastSynced()}</p>
+                <div className="flex flex-col">
+                  {/* Profile Header */}
+                  <div className="flex items-center gap-4 p-3 border-b border-border-subtle/50 mb-2">
+                    <div className="relative shrink-0">
+                      {user.photoURL ? (
+                        <Image 
+                          src={user.photoURL} 
+                          alt={user.displayName || "User"} 
+                          width={60} 
+                          height={60} 
+                          className="rounded-full border-2 border-surface-base shadow-sm object-cover" 
+                          referrerPolicy="no-referrer" 
+                          unoptimized 
+                        />
+                      ) : (
+                        <div className="w-[60px] h-[60px] rounded-full bg-accent/10 text-accent flex items-center justify-center border-2 border-surface-base shadow-sm">
+                          <UserCircle size={32} weight="duotone" />
+                        </div>
+                      )}
+                      <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-surface-overlay flex items-center justify-center">
+                        <div className="w-2.5 h-2.5 rounded-full bg-semantic-success shadow-[0_0_8px_rgba(34,197,94,0.6)] animate-pulse" />
+                      </div>
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base sm:text-lg font-bold text-text-primary truncate leading-tight">
+                        {user.displayName}
+                      </h3>
+                      <p className="text-sm text-text-secondary truncate mt-0.5">
+                        {user.email}
+                      </p>
+                      <div className="mt-1.5 inline-flex items-center px-2 py-0.5 rounded-md bg-semantic-success/10 border border-semantic-success/20">
+                        <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-semantic-success">
+                          Sync Aktif
+                        </span>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row w-full sm:w-auto gap-2">
-                    <Button 
-                      onClick={runFullSync} 
-                      disabled={isSyncing}
-                      variant="outline" 
-                      className="w-full sm:w-auto text-text-secondary hover:text-text-primary rounded-full font-bold transition-colors"
-                    >
-                      {isSyncing ? (
-                        <Spinner size={18} className="mr-2 animate-spin" />
-                      ) : (
-                        <ArrowsClockwise size={18} className="mr-2" />
-                      )}
-                      Sinkronisasi
-                    </Button>
-                    <Button onClick={handleLogout} variant="outline" className="w-full sm:w-auto text-semantic-error hover:text-white hover:bg-semantic-error border-semantic-error/50 rounded-full font-bold transition-colors">
-                      <SignOut size={18} className="mr-2" />
-                      Keluar
-                    </Button>
-                  </div>
+                  <SettingsItem
+                    icon={
+                      <IconWrapper>
+                        {isSyncing ? <Spinner size={20} className="animate-spin" /> : <ArrowsClockwise size={20} weight="duotone" />}
+                      </IconWrapper>
+                    }
+                    title="Sinkronisasi Sekarang"
+                    description={formatLastSynced()}
+                    onClick={runFullSync}
+                    disabled={isSyncing}
+                  />
+
+                  <SettingsItem
+                    icon={
+                      <IconWrapper variant="danger">
+                        <SignOut size={20} weight="duotone" />
+                      </IconWrapper>
+                    }
+                    title="Keluar dari Akun"
+                    description="Hapus akses sesi saat ini"
+                    onClick={handleLogout}
+                    danger
+                  />
                 </div>
               ) : (
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-3">
                   <div>
                     <h3 className="text-base font-bold text-text-primary">Login untuk Sinkronisasi</h3>
                     <p className="text-sm text-text-secondary mt-1 max-w-md">Masuk dengan Google untuk mengaktifkan sinkronisasi otomatis History dan Readlist lintas perangkat.</p>
@@ -127,70 +151,47 @@ export default function SettingsPage() {
                   </Button>
                 </div>
               )}
-            </section>
+            </SettingsSection>
 
             {/* Pintasan Navigasi */}
-            <section className="bg-surface-overlay border border-border-subtle rounded-xl p-6 shadow-sm">
-              <h2 className="text-xs font-bold uppercase tracking-widest text-text-muted mb-4">Pintasan Navigasi</h2>
+            <SettingsSection title="Pintasan Navigasi">
+              <Link href="/updates" className="block outline-none" prefetch={false}>
+                <SettingsItem
+                  icon={<IconWrapper variant="accent"><Lightning size={20} weight="duotone" /></IconWrapper>}
+                  title="Update Terbaru"
+                  description="Chapter rilis terbaru dari sumber aktif."
+                  onClick={() => {}} // Pass empty function to enable interactive styling + caret
+                />
+              </Link>
               
-              <div className="flex flex-col gap-1">
-                <Link href="/updates" transitionTypes={['nav-forward']} className="flex items-center justify-between py-3 px-2 -mx-2 rounded-lg hover:bg-surface-hover transition-colors group">
-                  <div className="flex items-center gap-3">
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
-                      <Compass size={18} weight="duotone" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-bold text-text-primary">Update Terbaru</h3>
-                      <p className="text-xs text-text-secondary mt-0.5">Chapter rilis terbaru dari sumber aktif.</p>
-                    </div>
-                  </div>
-                  <CaretRight size={16} className="text-text-muted group-hover:text-text-primary transition-colors" />
-                </Link>
-
-                <Link href="/popular" transitionTypes={['nav-forward']} className="flex items-center justify-between py-3 px-2 -mx-2 rounded-lg hover:bg-surface-hover transition-colors group">
-                  <div className="flex items-center gap-3">
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
-                      <Compass size={18} weight="duotone" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-bold text-text-primary">Manga Populer</h3>
-                      <p className="text-xs text-text-secondary mt-0.5">Judul paling banyak dibaca saat ini.</p>
-                    </div>
-                  </div>
-                  <CaretRight size={16} className="text-text-muted group-hover:text-text-primary transition-colors" />
-                </Link>
-
-                <Link href="/sources" transitionTypes={['nav-forward']} className="flex items-center justify-between py-3 px-2 -mx-2 rounded-lg hover:bg-surface-hover transition-colors group">
-                  <div className="flex items-center gap-3">
-                    <div className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
-                      <HardDrives size={18} weight="duotone" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm font-bold text-text-primary">Kelola Sumber</h3>
-                      <p className="text-xs text-text-secondary mt-0.5">Pilih atau ubah sumber ekstensi manga.</p>
-                    </div>
-                  </div>
-                  <CaretRight size={16} className="text-text-muted group-hover:text-text-primary transition-colors" />
-                </Link>
-              </div>
-            </section>
+              <Link href="/popular" className="block outline-none" prefetch={false}>
+                <SettingsItem
+                  icon={<IconWrapper variant="accent"><Fire size={20} weight="duotone" /></IconWrapper>}
+                  title="Manga Populer"
+                  description="Judul paling banyak dibaca saat ini."
+                  onClick={() => {}}
+                />
+              </Link>
+              
+              <Link href="/sources" className="block outline-none" prefetch={false}>
+                <SettingsItem
+                  icon={<IconWrapper variant="accent"><PuzzlePiece size={20} weight="duotone" /></IconWrapper>}
+                  title="Kelola Sumber"
+                  description="Pilih atau ubah sumber ekstensi manga."
+                  onClick={() => {}}
+                />
+              </Link>
+            </SettingsSection>
 
             {/* Preferensi Tampilan */}
-            <section className="bg-surface-overlay border border-border-subtle rounded-xl p-6 shadow-sm">
-              <h2 className="text-xs font-bold uppercase tracking-widest text-text-muted mb-4">Preferensi Tampilan</h2>
-              
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 py-3 border-b border-border-subtle mb-2">
-                <div className="flex items-center gap-3">
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-surface-muted border border-border-subtle text-text-primary">
-                    <Monitor size={20} />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-text-primary">Tema Aplikasi</h3>
-                    <p className="text-xs text-text-secondary mt-0.5">Pilih tema terang atau gelap.</p>
-                  </div>
-                </div>
-                <div className="flex w-full sm:w-auto">
-                  {mounted ? (
+            <SettingsSection title="Preferensi Tampilan">
+              <SettingsItem
+                wrapOnMobile
+                icon={<IconWrapper><Palette size={20} weight="duotone" /></IconWrapper>}
+                title="Tema Aplikasi"
+                description="Pilih tema terang atau gelap."
+                right={
+                  mounted ? (
                     <YomirraSegmentedControl
                       layoutId="theme-toggle"
                       options={[
@@ -204,7 +205,7 @@ export default function SettingsPage() {
                     />
                   ) : (
                     <YomirraSegmentedControl
-                      layoutId="theme-toggle"
+                      layoutId="theme-toggle-skeleton"
                       options={[
                         { value: "light", label: "Terang" },
                         { value: "dark", label: "Gelap" },
@@ -214,89 +215,66 @@ export default function SettingsPage() {
                       onChange={() => {}}
                       className="w-full sm:w-auto opacity-50"
                     />
-                  )}
-                </div>
-              </div>
+                  )
+                }
+              />
 
-              <div className="flex items-center justify-between py-3 border-b border-border-subtle mb-2">
-                <div className="flex items-center gap-3">
-                  <div className="flex size-10 shrink-0 items-center justify-center rounded-full bg-surface-muted border border-border-subtle text-text-primary">
-                    <HandSwipeLeft size={20} />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-text-primary">Perilaku Tap Layar</h3>
-                    <p className="text-xs text-text-secondary mt-0.5">Navigasi dengan sentuhan tepi.</p>
-                  </div>
-                </div>
-                <Button variant="outline" size="sm" className="text-xs h-8 shrink-0 rounded-full font-bold">Ubah</Button>
-              </div>
+              <div className="mx-3 my-1 border-b border-border-subtle/50" />
+
+              <SettingsItem
+                icon={<IconWrapper><HandTap size={20} weight="duotone" /></IconWrapper>}
+                title="Perilaku Tap Layar"
+                description="Navigasi dengan sentuhan tepi."
+                right={<Button variant="outline" size="sm" className="text-xs h-8 shrink-0 rounded-full font-bold">Ubah</Button>}
+              />
               
-              <div className="flex items-center justify-between py-2">
-                <div className="flex items-center gap-3">
-                  <div className="flex size-10 items-center justify-center rounded-full bg-surface-muted border border-border-subtle text-text-primary">
-                    <WifiHigh size={20} />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-text-primary">Penghemat Data</h3>
-                    <p className="text-xs text-text-secondary mt-0.5">Muat gambar resolusi rendah.</p>
-                  </div>
-                </div>
-                <ToggleSwitch 
-                  id="data-saver" 
-                  checked={mounted ? dataSaver : false}
-                  onCheckedChange={setDataSaver}
-                  label="Penghemat Data"
-                />
-              </div>
-            </section>
+              <div className="mx-3 my-1 border-b border-border-subtle/50" />
+
+              <SettingsItem
+                icon={<IconWrapper><WifiHigh size={20} weight="duotone" /></IconWrapper>}
+                title="Penghemat Data"
+                description="Muat gambar resolusi rendah."
+                right={
+                  <ToggleSwitch 
+                    id="data-saver" 
+                    checked={mounted ? dataSaver : false}
+                    onCheckedChange={setDataSaver}
+                    label="Penghemat Data"
+                  />
+                }
+              />
+            </SettingsSection>
 
             {/* Konten & Keamanan */}
-            <section className="bg-surface-overlay border border-border-subtle rounded-xl p-6 shadow-sm">
-              <h2 className="text-xs font-bold uppercase tracking-widest text-text-muted mb-4">Konten & Keamanan</h2>
-              
-              <div className="flex items-center justify-between py-2">
-                <div className="flex items-center gap-3">
-                  <div className="flex size-10 items-center justify-center rounded-full bg-surface-muted border border-border-subtle text-text-primary">
-                    <EyeSlash size={20} />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-text-primary">Sembunyikan NSFW</h3>
-                    <p className="text-xs text-text-secondary mt-0.5">Saring konten dewasa di sumber.</p>
-                  </div>
-                </div>
-                <ToggleSwitch 
-                  id="nsfw-toggle" 
-                  checked={mounted ? hideNsfw : true}
-                  onCheckedChange={setHideNsfw}
-                  label="Sembunyikan NSFW"
-                />
-              </div>
-            </section>
+            <SettingsSection title="Konten & Keamanan">
+              <SettingsItem
+                icon={<IconWrapper><ShieldWarning size={20} weight="duotone" /></IconWrapper>}
+                title="Sembunyikan NSFW"
+                description="Saring konten dewasa di sumber."
+                right={
+                  <ToggleSwitch 
+                    id="nsfw-toggle" 
+                    checked={mounted ? hideNsfw : true}
+                    onCheckedChange={setHideNsfw}
+                    label="Sembunyikan NSFW"
+                  />
+                }
+              />
+            </SettingsSection>
 
             {/* Data Lokal */}
-            <section className="bg-surface-overlay border border-border-subtle rounded-xl p-6 shadow-sm">
-              <h2 className="text-xs font-bold uppercase tracking-widest text-text-muted mb-4">
-                {user ? "Data Perangkat" : "Data Lokal"}
-              </h2>
-              
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <h3 className="text-base font-bold text-text-primary">
-                    {user ? "Bersihkan Cache Perangkat" : "Hapus Data Lokal"}
-                  </h3>
-                  <p className="text-sm text-text-secondary mt-1 max-w-md">
-                    {user 
-                      ? "Menghapus data lokal di perangkat ini. (Tidak akan menghapus data yang tersinkronisasi di cloud)" 
-                      : "Menghapus akan mereset riwayat dan readlist secara permanen."}
-                  </p>
-                </div>
-                
-                <Button onClick={handleClearData} variant="outline" className="shrink-0 text-semantic-error hover:text-white hover:bg-semantic-error border-semantic-error/50 rounded-full font-bold transition-colors">
-                  <Trash size={18} className="mr-2" />
-                  Bersihkan
-                </Button>
-              </div>
-            </section>
+            <SettingsSection title={user ? "Data Perangkat" : "Data Lokal"}>
+              <SettingsItem
+                icon={<IconWrapper variant="danger"><Broom size={20} weight="duotone" /></IconWrapper>}
+                title={user ? "Bersihkan Cache Perangkat" : "Hapus Data Lokal"}
+                description={user ? "Menghapus data lokal di perangkat ini (tidak menghapus cloud)." : "Menghapus akan mereset riwayat & readlist secara permanen."}
+                right={
+                  <Button onClick={handleClearData} variant="outline" className="w-full sm:w-auto shrink-0 text-semantic-error hover:text-white hover:bg-semantic-error border-semantic-error/50 rounded-full font-bold transition-colors">
+                    Bersihkan
+                  </Button>
+                }
+              />
+            </SettingsSection>
 
           </div>
         </YomirraSurface>

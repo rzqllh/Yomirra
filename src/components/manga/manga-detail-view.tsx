@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useDeferredValue } from "react";
 import { Play, SortAscending, SortDescending, Book } from "@phosphor-icons/react";
 import { CaretLeft } from "@phosphor-icons/react";
 import Image from "next/image";
@@ -11,10 +11,13 @@ import { useHistoryStore } from "@/shared/store/history-store";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { ChapterRow } from "@/components/manga/chapter-row";
+import { useVirtualizer } from '@tanstack/react-virtual';
+import { useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { YomirraSearchField } from "@/components/ui/yomirra-search-field";
 import { EmptyState } from "@/components/states/empty-state";
 import { cn } from "@/shared/utils/cn";
+import { motion, useScroll, useTransform } from "motion/react";
 import type { MangaDetail, Chapter } from "@/shared/types/source";
 
 interface MangaDetailViewProps {
@@ -49,16 +52,25 @@ export function MangaDetailView({
   const historyItems = useHistoryStore((state) => state.items); // keep subscription
   const historyItem = mounted ? getLatestForManga(sourceId, mangaId) : undefined;
 
+  const deferredSearchQuery = useDeferredValue(searchQuery);
+
   const sortedChapters = useMemo(() => {
     if (!chapters) return [];
     let result = chapters;
-    if (searchQuery.trim()) {
-      const lowerQuery = searchQuery.toLowerCase();
+    if (deferredSearchQuery.trim()) {
+      const lowerQuery = deferredSearchQuery.toLowerCase();
       result = result.filter(c => c.title.toLowerCase().includes(lowerQuery));
     }
     if (sortOrder === "asc") return [...result].reverse();
     return result;
-  }, [chapters, sortOrder, searchQuery]);
+  }, [chapters, sortOrder, deferredSearchQuery]);
+
+  const parentRef = useRef<HTMLDivElement>(null);
+  const rowVirtualizer = useVirtualizer({
+    count: sortedChapters.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 70, // ~64px item + 8px gap
+  });
 
   const coverUrl = detail.coverUrl;
   const firstChapter = chapters?.[chapters.length - 1];
@@ -66,6 +78,11 @@ export function MangaDetailView({
   const showContinue = !!historyItem;
   const continueChapterId = historyItem?.chapterId;
   const startChapterId = firstChapter?.id;
+
+  const { scrollY } = useScroll();
+  const headerBgOpacity = useTransform(scrollY, [50, 150], [0, 0.85]);
+  const headerBackdropBlur = useTransform(scrollY, [50, 150], [0, 12]);
+  const headerBorderOpacity = useTransform(scrollY, [50, 150], [0, 0.1]);
 
   const renderActions = () => (
     <>
@@ -98,14 +115,31 @@ export function MangaDetailView({
 
   return (
     <main className="min-h-screen flex flex-col w-full relative">
-      <div className="absolute top-4 left-4 z-50 md:hidden">
-        <Link 
-          href={backHref}
-          className="flex items-center justify-center w-10 h-10 rounded-full bg-surface-overlay/80 backdrop-blur-md border border-border-glass shadow-sm text-text-primary hover:bg-surface-hover transition-colors"
+      <div 
+        className="fixed top-[calc(var(--safe-top)+12px)] left-4 right-4 z-50 md:hidden flex items-center gap-3 pointer-events-none"
+      >
+        <div className="bg-surface-glass backdrop-blur-md border border-border-glass shadow-sm rounded-full w-[56px] h-[56px] pointer-events-auto shrink-0 flex items-center justify-center">
+          <Link 
+            href={backHref}
+            className="flex items-center justify-center min-w-[44px] min-h-[44px] rounded-full text-text-primary hover:bg-black/5 dark:hover:bg-surface-hover transition-colors drop-shadow-sm"
+          >
+            <CaretLeft size={20} weight="bold" />
+          </Link>
+        </div>
+        <motion.div 
+          className="flex-1 bg-surface-glass backdrop-blur-md border border-border-glass shadow-sm rounded-full px-4 h-[56px] pointer-events-auto overflow-hidden flex items-center justify-center"
+          style={{ opacity: useTransform(scrollY, [80, 150], [0, 1]) }}
         >
-          <CaretLeft size={24} weight="bold" />
-        </Link>
+          <span className="font-bold text-sm line-clamp-1 text-text-primary text-center">
+            {detail.title}
+          </span>
+        </motion.div>
       </div>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media (max-width: 767px) { .vt-cover-mobile { view-transition-name: ${coverTransitionName}; } }
+        @media (min-width: 768px) { .vt-cover-desktop { view-transition-name: ${coverTransitionName}; } }
+      `}} />
 
       <div className="absolute top-0 left-0 right-0 h-[300px] md:h-[450px] w-full overflow-hidden z-0 pointer-events-none select-none">
         {detail.coverUrl && (
@@ -114,6 +148,11 @@ export function MangaDetailView({
               alt=""
               className="absolute inset-0 w-full h-full object-cover opacity-[0.25] blur-3xl scale-110 saturate-150 transform-gpu dark:opacity-[0.15] will-change-[transform,filter]"
               onError={(e) => { e.currentTarget.style.display = 'none' }}
+              ref={(img) => {
+                if (img && img.complete && img.naturalWidth === 0) {
+                  img.style.display = 'none';
+                }
+              }}
               referrerPolicy="no-referrer"
               decoding="async"
             />
@@ -126,7 +165,6 @@ export function MangaDetailView({
         <div className="flex gap-4 md:hidden">
           <div 
             className="relative w-[110px] shrink-0 aspect-[2/3] rounded-md overflow-hidden shadow-heavy border border-border-default bg-surface-base vt-cover-mobile"
-            style={{ viewTransitionName: coverTransitionName }}
           >
             {coverUrl && (
               <img 
@@ -134,6 +172,11 @@ export function MangaDetailView({
                 alt={detail.title} 
                 className="absolute inset-0 w-full h-full object-cover" 
                 onError={(e) => { e.currentTarget.style.display = 'none' }}
+                ref={(img) => {
+                  if (img && img.complete && img.naturalWidth === 0) {
+                    img.style.display = 'none';
+                  }
+                }}
                 referrerPolicy="no-referrer"
                 decoding="async"
                 loading="eager"
@@ -156,7 +199,6 @@ export function MangaDetailView({
         <div className="hidden md:flex relative sticky top-[100px] self-start w-[280px] lg:w-80 shrink-0 flex-col gap-4">
           <div 
             className="relative w-full aspect-[2/3] rounded-lg overflow-hidden shadow-heavy border border-border-default bg-surface-base vt-cover-desktop"
-            style={{ viewTransitionName: coverTransitionName }}
           >
             {coverUrl && (
               <img 
@@ -164,6 +206,11 @@ export function MangaDetailView({
                 alt={detail.title} 
                 className="absolute inset-0 w-full h-full object-cover" 
                 onError={(e) => { e.currentTarget.style.display = 'none' }}
+                ref={(img) => {
+                  if (img && img.complete && img.naturalWidth === 0) {
+                    img.style.display = 'none';
+                  }
+                }}
                 referrerPolicy="no-referrer"
                 decoding="async"
                 loading="eager"
@@ -236,6 +283,7 @@ export function MangaDetailView({
                 <IconButton 
                   variant="ghost" 
                   size="sm"
+                  className="min-h-[44px] min-w-[44px]"
                   onClick={() => setSortOrder(prev => prev === "desc" ? "asc" : "desc")}
                   aria-label={sortOrder === "desc" ? "Urutkan paling lama" : "Urutkan terbaru"}
                 >
@@ -252,25 +300,50 @@ export function MangaDetailView({
                 className="my-8"
               />
             ) : (
-              <div className="flex flex-col gap-2 max-h-[60vh] md:max-h-[500px] overflow-y-auto pr-2 -mr-2 [scrollbar-width:thin]">
-                {sortedChapters.map((chapter) => {
-                  const isRead = historyItems[`${sourceId}::${mangaId}::${chapter.id}`] !== undefined;
-                  const isLastRead = historyItem?.chapterId === chapter.id;
+              <div 
+                ref={parentRef}
+                className="flex flex-col max-h-[60vh] md:max-h-[500px] overflow-y-auto pr-2 -mr-2 [scrollbar-width:thin]"
+              >
+                <div
+                  style={{
+                    height: `${rowVirtualizer.getTotalSize()}px`,
+                    width: '100%',
+                    position: 'relative',
+                  }}
+                >
+                  {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                    const chapter = sortedChapters[virtualRow.index];
+                    const isRead = historyItems[`${sourceId}::${mangaId}::${chapter.id}`] !== undefined;
+                    const isLastRead = historyItem?.chapterId === chapter.id;
 
-                  return (
-                    <ChapterRow
-                      key={chapter.id}
-                      sourceId={sourceId}
-                      mangaId={mangaId}
-                      chapterId={chapter.id}
-                      chapterTitle={chapter.title}
-                      mangaTitle={detail.title}
-                      date={chapter.date}
-                      isRead={isRead}
-                      isLastRead={isLastRead}
-                    />
-                  );
-                })}
+                    return (
+                      <div
+                        key={virtualRow.key}
+                        data-index={virtualRow.index}
+                        ref={rowVirtualizer.measureElement}
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          width: '100%',
+                          transform: `translateY(${virtualRow.start}px)`,
+                          paddingBottom: '8px',
+                        }}
+                      >
+                        <ChapterRow
+                          sourceId={sourceId}
+                          mangaId={mangaId}
+                          chapterId={chapter.id}
+                          chapterTitle={chapter.title}
+                          mangaTitle={detail.title}
+                          date={chapter.date}
+                          isRead={isRead}
+                          isLastRead={isLastRead}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>

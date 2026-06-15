@@ -99,11 +99,11 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
         )}
         style={{ marginTop: 'var(--safe-top)' }}
       >
-        <div className="flex items-center gap-2 bg-surface-overlay/80 backdrop-blur-xl border border-border-glass rounded-full p-1 shadow-sm pointer-events-auto max-w-[75%] md:max-w-md">
+        <div className="flex items-center gap-2 bg-black/20 dark:bg-surface-overlay/80 backdrop-blur-md border border-border-glass rounded-full p-1 shadow-md pointer-events-auto max-w-[75%] md:max-w-md">
           <IconButton 
             aria-label="Kembali ke detail manga"
             variant="ghost"
-            className="rounded-full shrink-0"
+            className="rounded-full shrink-0 min-h-[44px] min-w-[44px] text-white dark:text-text-primary hover:bg-white/20 dark:hover:bg-surface-hover drop-shadow-md"
             onClick={(e) => { 
               e.stopPropagation(); 
               router.push(getMangaDetailHref(sourceId, mangaId));
@@ -112,17 +112,17 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
             <CaretLeft size={20} weight="bold" />
           </IconButton>
           
-          <div className="flex flex-col truncate pr-4">
-            <span className="text-sm font-bold text-text-primary truncate leading-tight">{chapterTitle}</span>
-            {pageCount && <span className="text-2xs text-text-muted leading-tight">{pageCount} halaman</span>}
+          <div className="flex flex-col truncate pr-4 text-shadow-sm">
+            <span className="text-sm font-bold text-white dark:text-text-primary truncate leading-tight drop-shadow-md">{chapterTitle}</span>
+            {pageCount && <span className="text-2xs text-white/80 dark:text-text-muted leading-tight drop-shadow-md">{pageCount} halaman</span>}
           </div>
         </div>
 
-        <div className="bg-surface-overlay/80 backdrop-blur-xl border border-border-glass rounded-full p-1 shadow-sm pointer-events-auto shrink-0">
+        <div className="bg-black/20 dark:bg-surface-overlay/80 backdrop-blur-xl border border-border-glass rounded-full p-1 shadow-md pointer-events-auto shrink-0">
           <IconButton
             aria-label="Pengaturan pembaca"
             variant="ghost"
-            className="rounded-full"
+            className="rounded-full min-h-[44px] min-w-[44px] text-white dark:text-text-primary hover:bg-white/20 dark:hover:bg-surface-hover drop-shadow-md"
             onClick={(e) => { 
               e.stopPropagation(); 
               if (window.innerWidth >= 768) {

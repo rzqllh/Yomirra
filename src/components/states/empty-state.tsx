@@ -1,5 +1,6 @@
 import * as React from "react"
 import { cn } from "@/shared/utils/cn"
+import { motion, useReducedMotion } from "motion/react"
 
 export interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
   icon?: React.ReactNode
@@ -45,6 +46,16 @@ export function EmptyState({
     )
   }
 
+  const prefersReducedMotion = useReducedMotion()
+  const floatAnimation = prefersReducedMotion ? {} : {
+    y: [0, -6, 0],
+    transition: {
+      duration: 3,
+      repeat: Infinity,
+      ease: "easeInOut"
+    }
+  }
+
   return (
     <div 
       className={cn(
@@ -55,16 +66,21 @@ export function EmptyState({
       {...props}
     >
       {icon && (
-        <div className="relative mb-6 flex h-20 w-20 items-center justify-center rounded-lg bg-gradient-to-b from-surface-raised to-surface-base shadow-lg ring-1 ring-border-default/40 isolate">
+        <motion.div 
+          animate={floatAnimation}
+          whileHover={prefersReducedMotion ? {} : { scale: 1.05 }}
+          whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
+          className="relative mb-6 flex h-20 w-20 items-center justify-center rounded-lg bg-gradient-to-b from-surface-raised to-surface-base shadow-lg ring-1 ring-border-default/40 isolate"
+        >
           {/* Ambient Glow */}
           <div className="absolute inset-0 -z-10 rounded-lg bg-accent/10 blur-2xl opacity-60 mix-blend-screen" />
           {/* Inner Highlight */}
           <div className="absolute inset-0 rounded-lg bg-gradient-to-tr from-accent/5 to-transparent opacity-50" />
           {/* Icon Container */}
-          <div className="relative z-10 text-accent drop-shadow-md scale-110">
+          <div className="relative z-10 text-accent drop-shadow-md scale-110 pointer-events-none">
             {icon}
           </div>
-        </div>
+        </motion.div>
       )}
       
       <h2 className="mb-2 text-xl font-bold text-text-primary tracking-tight">{title}</h2>

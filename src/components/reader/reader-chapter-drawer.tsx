@@ -57,7 +57,7 @@ export function ReaderChapterDrawer({
       {/* Bottom Sheet / Dialog */}
       <div 
         className={cn(
-          "fixed bottom-0 left-0 right-0 z-[70] max-h-[80vh] min-h-[50vh] bg-surface-overlay/95 backdrop-blur-3xl rounded-t-3xl shadow-2xl transition-transform duration-300 ease-out flex flex-col md:max-w-md md:mx-auto md:mb-6 md:bottom-6 md:rounded-3xl md:border md:border-border-glass",
+          "fixed bottom-0 left-0 right-0 z-[70] max-h-[80vh] min-h-[50vh] bg-surface-glass backdrop-blur-3xl rounded-t-3xl shadow-2xl transition-transform duration-300 ease-out flex flex-col md:max-w-md md:mx-auto md:mb-6 md:bottom-6 md:rounded-3xl md:border md:border-border-glass",
           isOpen ? "translate-y-0" : "translate-y-full md:translate-y-[120%]"
         )}
       >
@@ -67,15 +67,17 @@ export function ReaderChapterDrawer({
               <List size={18} className="text-accent" weight="bold" />
               Daftar Chapter
             </h2>
-            <IconButton
-              aria-label="Tutup panel"
-              variant="ghost"
-              size="sm"
-              className="rounded-full bg-surface-raised/50 hover:bg-surface-raised"
-              onClick={onClose}
-            >
-              <X size={16} weight="bold" />
-            </IconButton>
+            <div className="bg-black/10 dark:bg-surface-overlay/80 backdrop-blur-xl border border-border-glass rounded-full p-1 shadow-sm shrink-0">
+              <IconButton
+                aria-label="Tutup panel"
+                variant="ghost"
+                size="sm"
+                className="rounded-full min-h-[32px] min-w-[32px] hover:bg-black/5 dark:hover:bg-surface-hover text-text-primary"
+                onClick={onClose}
+              >
+                <X size={16} weight="bold" />
+              </IconButton>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <YomirraSearchField 
@@ -84,16 +86,18 @@ export function ReaderChapterDrawer({
               placeholder="Cari chapter..." 
               containerClassName="w-full"
             />
-            <IconButton 
-              variant="surface" 
-              size="sm"
-              className="shrink-0"
-              onClick={() => setSortOrder(prev => prev === "desc" ? "asc" : "desc")}
-              aria-label={sortOrder === "desc" ? "Urutkan paling lama" : "Urutkan terbaru"}
-              title={sortOrder === "desc" ? "Urutkan paling lama" : "Urutkan terbaru"}
-            >
-              {sortOrder === "desc" ? <SortDescending size={16} /> : <SortAscending size={16} />}
-            </IconButton>
+            <div className="bg-black/10 dark:bg-surface-overlay/80 backdrop-blur-xl border border-border-glass rounded-full p-1 shadow-sm shrink-0 ml-2">
+              <IconButton 
+                variant="ghost" 
+                size="sm"
+                className="rounded-full min-h-[32px] min-w-[32px] hover:bg-black/5 dark:hover:bg-surface-hover text-text-primary"
+                onClick={() => setSortOrder(prev => prev === "desc" ? "asc" : "desc")}
+                aria-label={sortOrder === "desc" ? "Urutkan paling lama" : "Urutkan terbaru"}
+                title={sortOrder === "desc" ? "Urutkan paling lama" : "Urutkan terbaru"}
+              >
+                {sortOrder === "desc" ? <SortDescending size={16} /> : <SortAscending size={16} />}
+              </IconButton>
+            </div>
           </div>
         </div>
 

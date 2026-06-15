@@ -55,31 +55,33 @@ export function YomirraPageHeader({
   return (
     <header
       className={cn(
-        "md:hidden sticky top-0 z-[var(--z-sticky)] flex h-[calc(var(--mobile-header-height)+var(--safe-top))] w-full items-center justify-between px-4 pt-[var(--safe-top)] transition-all duration-300 ease-out",
+        "md:hidden sticky top-0 z-[var(--z-sticky)] flex w-full items-center justify-between px-4 pt-[calc(var(--safe-top)+12px)] pb-2 transition-all duration-300 ease-out pointer-events-none",
         isGlass 
-          ? "bg-surface-base/80 backdrop-blur-2xl supports-[backdrop-filter]:bg-surface-base/70 border-b border-border-glass shadow-sm"
-          : "bg-transparent border-b border-transparent shadow-none",
+          ? "bg-surface-glass backdrop-blur-md border-b border-border-glass shadow-sm"
+          : "bg-transparent border-transparent shadow-none",
         className
       )}
     >
-      <div className="flex items-center gap-1 -ml-1">
+      <div className="flex items-center gap-2 w-full transition-all duration-300 ease-out pointer-events-auto h-[56px]">
         {showBack && (
-          <button
-            onClick={handleBack}
-            className="group relative flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-surface-hover/50 active:bg-surface-hover"
-            aria-label="Kembali"
-          >
-            <ArrowLeft size={24} weight="bold" className="text-text-primary transition-transform group-active:-translate-x-1" />
-          </button>
+          <div className="shrink-0">
+            <button
+              onClick={handleBack}
+              className="flex min-h-[36px] min-w-[36px] items-center justify-center rounded-full transition-colors text-text-primary hover:bg-black/5 dark:hover:bg-surface-hover active:bg-black/10 dark:active:bg-surface-hover/80"
+              aria-label="Kembali"
+            >
+              <ArrowLeft size={20} weight="bold" />
+            </button>
+          </div>
         )}
         <h1 className={cn(
-          "text-xl font-bold tracking-tight text-text-primary",
-          showBack ? "ml-0" : "ml-1"
+          "text-lg font-bold tracking-tight text-text-primary truncate flex-1",
+          showBack ? "ml-0" : "ml-2"
         )}>
           {title}
         </h1>
+        {action && <div className="shrink-0 mr-1">{action}</div>}
       </div>
-      {action && <div className="shrink-0">{action}</div>}
     </header>
   )
 }

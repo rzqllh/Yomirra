@@ -48,11 +48,12 @@ export function HomeView({ children }: HomeViewProps) {
       
       {/* Editorial Header / Search */}
       <div className={cn(
-        "md:hidden sticky top-0 z-[var(--z-sticky)] px-4 pt-[calc(var(--safe-top)+12px)] pb-3 transition-all duration-300 ease-out",
+        "md:hidden sticky top-0 z-[var(--z-sticky)] px-4 pt-[calc(var(--safe-top)+12px)] pb-3 transition-all duration-300 ease-out pointer-events-none",
         scrolled 
-          ? "bg-surface-base/80 backdrop-blur-2xl supports-[backdrop-filter]:bg-surface-base/70 border-b border-border-glass shadow-sm"
-          : "bg-surface-base/0 border-b border-transparent shadow-none"
+          ? "bg-surface-glass backdrop-blur-md border-b border-border-glass shadow-sm"
+          : "bg-transparent border-transparent shadow-none"
       )}>
+        <div className="transition-all duration-300 ease-out pointer-events-auto">
         <h2 className="text-[22px] font-black tracking-tight text-text-primary mb-3">
           Temukan
         </h2>
@@ -64,6 +65,7 @@ export function HomeView({ children }: HomeViewProps) {
           }}
           placeholder="Cari komik favoritmu..."
         />
+        </div>
       </div>
 
       <div className="px-4 md:px-8 py-6 md:py-10 space-y-12 max-w-7xl mx-auto">

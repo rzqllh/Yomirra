@@ -210,21 +210,20 @@ export default function BookmarkPage() {
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Cari di koleksi..."
-                            containerClassName="h-11 rounded-full bg-surface-muted focus-within:bg-surface-overlay border-none focus-within:ring-2 focus-within:ring-accent/50"
                           />
                         </div>
                         <div className="flex gap-2">
                           <select
                             value={sortBy}
                             onChange={(e) => setSortBy(e.target.value as "updatedAt" | "title")}
-                            className="h-11 rounded-full bg-surface-muted px-4 py-2 text-sm text-text-primary border border-transparent focus:ring-2 focus:ring-accent/50 outline-none font-medium hover:bg-surface-overlay transition-colors appearance-none"
+                            className="h-[44px] rounded-full bg-surface-glass backdrop-blur-md px-4 py-2 text-sm text-text-primary border border-border-glass focus:ring-2 focus:ring-accent/50 outline-none font-medium hover:bg-surface-glass transition-colors appearance-none shadow-[0_4px_16px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.2)]"
                           >
                             <option value="updatedAt">Terbaru Ditambahkan</option>
                             <option value="title">Judul Buku</option>
                           </select>
                           <button
                             onClick={() => setSortOrder(prev => prev === "desc" ? "asc" : "desc")}
-                            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-surface-muted text-text-primary hover:bg-surface-overlay transition-colors"
+                            className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-full bg-surface-glass backdrop-blur-md text-text-primary hover:bg-surface-glass transition-colors border border-border-glass shadow-[0_4px_16px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.2)]"
                             aria-label="Toggle sort order"
                           >
                             {sortOrder === "desc" ? <SortDescending size={20} weight="bold" /> : <SortAscending size={20} weight="bold" />}
