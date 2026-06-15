@@ -8,6 +8,7 @@ import { cn } from "@/shared/utils/cn"
 import { useSync } from "@/shared/hooks/use-sync"
 import { TopNav } from "./top-nav"
 import { CommandMenu } from "./command-menu"
+import { AnimatePresence, motion } from "motion/react"
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -33,11 +34,26 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         
         <main
           className={cn(
-            "flex-1 flex flex-col w-full min-w-0 transition-all duration-300",
+            "flex-1 flex flex-col w-full min-w-0 transition-all duration-300 overflow-x-hidden",
             !isReader && "pb-[var(--page-bottom-safe)] md:pb-0"
           )}
         >
-          {children}
+          {isReader ? (
+            children
+          ) : (
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={pathname}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -12 }}
+                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                className="flex-1 flex flex-col w-full"
+              >
+                {children}
+              </motion.div>
+            </AnimatePresence>
+          )}
         </main>
       </div>
 

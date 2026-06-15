@@ -30,7 +30,7 @@ export function YomirraSegmentedControl({
   return (
     <div 
       className={cn(
-        "relative flex items-center rounded-full bg-surface-muted/60 p-1 border border-border-subtle backdrop-blur-md",
+        "relative flex items-center rounded-xl bg-surface-muted/80 p-1 border border-border-subtle/50 backdrop-blur-xl shadow-inner",
         fullWidth ? "w-full" : "inline-flex",
         className
       )}
@@ -38,27 +38,28 @@ export function YomirraSegmentedControl({
       {options.map((option) => {
         const isActive = value === option.value;
         return (
-              <button
+          <motion.button
             key={option.value}
             type="button"
             onClick={() => onChange(option.value)}
+            whileTap={{ scale: 0.95 }}
             className={cn(
-              "relative z-10 flex items-center justify-center rounded-full py-[6px] px-4 text-[13px] font-semibold transition-colors duration-300 outline-none select-none tracking-wide whitespace-nowrap",
-              fullWidth ? "flex-1" : "min-w-[100px]",
-              isActive ? "text-text-primary" : "text-text-secondary hover:text-text-primary"
+              "relative z-10 flex items-center justify-center rounded-lg py-[6px] px-4 text-[13px] font-semibold transition-colors duration-300 outline-none select-none tracking-normal whitespace-nowrap",
+              fullWidth ? "flex-1" : "flex-1 sm:flex-none sm:min-w-[100px]",
+              isActive ? "text-text-primary" : "text-text-muted hover:text-text-primary"
             )}
             aria-pressed={isActive}
           >
             {isActive && (
               <motion.div
                 layoutId={layoutId}
-                className="absolute inset-0 z-0 rounded-full bg-surface-overlay dark:bg-[#1E1E2E] shadow-sm border border-border-default/50"
+                className="absolute inset-0 z-0 rounded-lg bg-surface-overlay shadow-[0_1px_3px_rgba(0,0,0,0.1),0_1px_2px_rgba(0,0,0,0.06)] dark:shadow-black/40 border border-border-default/40"
                 initial={false}
-                transition={{ type: "spring", stiffness: 500, damping: 35 }}
+                transition={{ type: "spring", stiffness: 450, damping: 35 }}
               />
             )}
             <span className="relative z-10">{option.label}</span>
-          </button>
+          </motion.button>
         )
       })}
     </div>

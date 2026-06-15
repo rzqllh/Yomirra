@@ -48,7 +48,7 @@ export default function SourcesPage() {
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               placeholder="Cari sumber..."
-              containerClassName="h-11 rounded-full bg-surface-muted/50 focus-within:bg-surface-overlay"
+              placeholder="Cari sumber terinstall..."
             />
           </div>
 
@@ -57,7 +57,7 @@ export default function SourcesPage() {
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               placeholder="Cari sumber..."
-              containerClassName="h-11 rounded-full bg-surface-muted/50 focus-within:bg-surface-overlay"
+              placeholder="Cari sumber manga..."
             />
           </div>
 

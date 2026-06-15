@@ -19,6 +19,8 @@ const defaultPreferences: ReaderPreferences = {
   toolbarBehavior: "auto-hide",
   preloadIntensity: "balanced",
   showPageProgress: true,
+  readingDirection: 'ltr',
+  readingMode: 'vertical',
   keepScreenAwake: true,
 };
 

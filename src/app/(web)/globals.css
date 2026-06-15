@@ -7,6 +7,7 @@
   --color-surface-overlay: var(--surface-overlay);
   --color-surface-muted: var(--surface-muted);
   --color-surface-hover: var(--surface-hover);
+  --color-surface-glass: var(--surface-glass);
 
   /* Text */
   --color-text-primary: var(--text-primary);
@@ -141,6 +142,7 @@
     --surface-overlay: #111122; /* elevated panels */
     --surface-muted: #080810; /* muted states */
     --surface-hover: #16162C; /* interaction hover */
+    --surface-glass: rgba(17, 17, 34, 0.10); /* translucent glass based on surface-overlay */
 
     --text-primary: #F2F2F7;
     --text-secondary: #C7C7CC; /* subtle text */
@@ -195,6 +197,7 @@
     --surface-overlay: #FFFFFF; /* bright card */
     --surface-muted: #EAEAEB; /* subtle background */
     --surface-hover: #E5E5EA; /* interaction state */
+    --surface-glass: rgba(255, 255, 255, 0.7); /* translucent glass */
 
     --text-primary: #1C1C1E; /* deep ink text */
     --text-secondary: #3A3A3C; /* secondary text */
@@ -411,3 +414,5 @@ body.reader-active {
 @media (min-width: 768px) {
   .vt-cover-mobile { view-transition-name: none !important; }
 }
+@media (max-width: 767px) { .vt-hover { view-transition-name: var(--vt-name); } }
+@media (min-width: 768px) { .vt-hover { view-transition-name: none; } .group:hover .vt-hover { view-transition-name: var(--vt-name); } }

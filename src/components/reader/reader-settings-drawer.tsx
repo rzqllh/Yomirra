@@ -27,7 +27,7 @@ export function ReaderSettingsDrawer({ isOpen, onClose, chapters, currentChapter
       {/* Backdrop */}
       <div 
         className={cn(
-          "fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm transition-opacity duration-300 md:hidden",
+          "fixed inset-0 z-[60] bg-black/30 backdrop-blur-sm transition-opacity duration-300 md:hidden",
           isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
         )}
         onClick={onClose}
@@ -36,7 +36,7 @@ export function ReaderSettingsDrawer({ isOpen, onClose, chapters, currentChapter
       {/* Drawer */}
       <div 
         className={cn(
-          "fixed top-0 right-0 bottom-0 z-[70] w-[320px] bg-surface-base/85 backdrop-blur-2xl border-l border-white/10 shadow-2xl transition-transform duration-300 ease-in-out flex flex-col",
+          "fixed top-0 right-0 bottom-0 z-[70] w-[320px] bg-surface-glass backdrop-blur-md border-l border-border-glass shadow-2xl transition-transform duration-300 ease-in-out flex flex-col",
           "translate-x-full",
           isOpen && "max-md:translate-x-0",
           isDesktopPanelOpen && "md:translate-x-0"
@@ -47,20 +47,22 @@ export function ReaderSettingsDrawer({ isOpen, onClose, chapters, currentChapter
             <SlidersHorizontal size={18} className="text-accent" weight="bold" />
             Pengaturan Pembaca
           </h2>
-          <IconButton
-            aria-label="Tutup panel"
-            variant="ghost"
-            size="sm"
-            className="rounded-full bg-surface-raised/50 hover:bg-surface-raised transition-colors"
-            onClick={() => {
-              onClose();
-              if (window.innerWidth >= 768 && isDesktopPanelOpen) {
-                toggleDesktopPanel();
-              }
-            }}
-          >
-            <X size={16} weight="bold" />
-          </IconButton>
+          <div className="bg-black/10 dark:bg-surface-overlay/80 backdrop-blur-xl border border-border-glass rounded-full p-1 shadow-sm shrink-0">
+            <IconButton
+              aria-label="Tutup panel"
+              variant="ghost"
+              size="sm"
+              className="rounded-full min-h-[32px] min-w-[32px] hover:bg-black/5 dark:hover:bg-surface-hover transition-colors text-text-primary"
+              onClick={() => {
+                onClose();
+                if (window.innerWidth >= 768 && isDesktopPanelOpen) {
+                  toggleDesktopPanel();
+                }
+              }}
+            >
+              <X size={16} weight="bold" />
+            </IconButton>
+          </div>
         </div>
 
         <div className="flex-1 flex flex-col min-h-0">
@@ -69,15 +71,15 @@ export function ReaderSettingsDrawer({ isOpen, onClose, chapters, currentChapter
             
             {/* Tampilan */}
             <div className="space-y-3">
-              <h3 className="text-xs font-bold text-text-muted px-2 uppercase tracking-wider">Tampilan</h3>
+              <h3 className="text-xs font-bold text-text-primary/90 px-2 uppercase tracking-wider drop-shadow-sm">Tampilan</h3>
               
-              <div className="bg-surface-raised/30 rounded-2xl border border-white/5 overflow-hidden flex flex-col divide-y divide-white/5">
+              <div className="bg-surface-raised/70 dark:bg-surface-raised/50 rounded-2xl border border-white/10 shadow-sm overflow-hidden flex flex-col divide-y divide-white/10">
                 {/* Warna Latar */}
                 <div className="p-4 flex flex-col gap-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <ImageSquare size={18} className="text-text-muted" weight="fill" />
-                      <span className="text-sm font-medium text-text-primary">Warna Latar</span>
+                      <ImageSquare size={18} className="text-text-primary/80" weight="fill" />
+                      <span className="text-sm font-bold text-text-primary">Warna Latar</span>
                     </div>
                   </div>
                   <div className="flex gap-3">
@@ -106,11 +108,11 @@ export function ReaderSettingsDrawer({ isOpen, onClose, chapters, currentChapter
                 <div className="p-4 flex flex-col gap-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <ArrowsOutLineVertical size={18} className="text-text-muted" weight="fill" />
-                      <span className="text-sm font-medium text-text-primary">Ukuran Komik</span>
+                      <ArrowsOutLineVertical size={18} className="text-text-primary/80" weight="fill" />
+                      <span className="text-sm font-bold text-text-primary">Ukuran Komik</span>
                     </div>
                   </div>
-                  <div className="flex bg-surface-base/50 p-1 rounded-xl border border-white/5">
+                  <div className="flex bg-surface-base/80 dark:bg-surface-base/60 p-1 rounded-xl border border-white/5 shadow-inner">
                     {[
                       { id: 'width', label: 'Lebar Penuh' },
                       { id: 'contained', label: 'Proporsional' },
@@ -121,8 +123,8 @@ export function ReaderSettingsDrawer({ isOpen, onClose, chapters, currentChapter
                         className={cn(
                           "flex-1 py-2 px-1 text-xs font-bold rounded-lg transition-colors",
                           preferences.imageFit === mode.id 
-                            ? "bg-surface-overlay text-text-primary shadow-sm" 
-                            : "text-text-muted hover:text-text-primary"
+                            ? "bg-surface-overlay text-text-primary shadow-md ring-1 ring-border-default/50" 
+                            : "text-text-primary/70 hover:text-text-primary hover:bg-surface-raised/50"
                         )}
                       >
                         {mode.label}
@@ -135,11 +137,11 @@ export function ReaderSettingsDrawer({ isOpen, onClose, chapters, currentChapter
                 <div className="p-4 flex flex-col gap-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <BoundingBox size={18} className="text-text-muted" weight="fill" />
-                      <span className="text-sm font-medium text-text-primary">Jarak Antar Halaman</span>
+                      <BoundingBox size={18} className="text-text-primary/80" weight="fill" />
+                      <span className="text-sm font-bold text-text-primary">Jarak Antar Halaman</span>
                     </div>
                   </div>
-                  <div className="flex bg-surface-base/50 p-1 rounded-xl border border-white/5">
+                  <div className="flex bg-surface-base/80 dark:bg-surface-base/60 p-1 rounded-xl border border-white/5 shadow-inner">
                     {[
                       { id: 'none', label: 'Tanpa Jarak' },
                       { id: 'small', label: 'Sedikit' },
@@ -151,8 +153,8 @@ export function ReaderSettingsDrawer({ isOpen, onClose, chapters, currentChapter
                         className={cn(
                           "flex-1 py-2 px-1 text-xs font-bold rounded-lg transition-colors",
                           preferences.pageGap === mode.id 
-                            ? "bg-surface-overlay text-text-primary shadow-sm" 
-                            : "text-text-muted hover:text-text-primary"
+                            ? "bg-surface-overlay text-text-primary shadow-md ring-1 ring-border-default/50" 
+                            : "text-text-primary/70 hover:text-text-primary hover:bg-surface-raised/50"
                         )}
                       >
                         {mode.label}
@@ -165,18 +167,47 @@ export function ReaderSettingsDrawer({ isOpen, onClose, chapters, currentChapter
 
             {/* Perilaku */}
             <div className="space-y-3">
-              <h3 className="text-xs font-bold text-text-muted px-2 uppercase tracking-wider">Perilaku</h3>
+              <h3 className="text-xs font-bold text-text-primary/90 px-2 uppercase tracking-wider drop-shadow-sm">Perilaku</h3>
               
-              <div className="bg-surface-raised/30 rounded-2xl border border-white/5 overflow-hidden flex flex-col divide-y divide-white/5">
+              <div className="bg-surface-raised/70 dark:bg-surface-raised/50 rounded-2xl border border-white/10 shadow-sm overflow-hidden flex flex-col divide-y divide-white/10">
+                {/* Arah Baca */}
+                <div className="p-4 flex flex-col gap-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <Layout size={18} className="text-text-primary/80" weight="fill" />
+                      <span className="text-sm font-bold text-text-primary">Arah Baca Paged</span>
+                    </div>
+                  </div>
+                  <div className="flex bg-surface-base/80 dark:bg-surface-base/60 p-1 rounded-xl border border-white/5 shadow-inner">
+                    {[
+                      { id: 'ltr', label: 'Kiri ke Kanan' },
+                      { id: 'rtl', label: 'Kanan ke Kiri' },
+                    ].map(mode => (
+                      <button
+                        key={mode.id}
+                        onClick={() => updatePreferences({ readingDirection: mode.id as any })}
+                        className={cn(
+                          "flex-1 py-2 px-1 text-xs font-bold rounded-lg transition-colors",
+                          preferences.readingDirection === mode.id 
+                            ? "bg-surface-overlay text-text-primary shadow-md ring-1 ring-border-default/50" 
+                            : "text-text-primary/70 hover:text-text-primary hover:bg-surface-raised/50"
+                        )}
+                      >
+                        {mode.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Menu Navigasi */}
                 <div className="p-4 flex flex-col gap-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <Layout size={18} className="text-text-muted" weight="fill" />
-                      <span className="text-sm font-medium text-text-primary">Menu Navigasi</span>
+                      <Layout size={18} className="text-text-primary/80" weight="fill" />
+                      <span className="text-sm font-bold text-text-primary">Menu Navigasi</span>
                     </div>
                   </div>
-                  <div className="flex bg-surface-base/50 p-1 rounded-xl border border-white/5">
+                  <div className="flex bg-surface-base/80 dark:bg-surface-base/60 p-1 rounded-xl border border-white/5 shadow-inner">
                     {[
                       { id: 'auto-hide', label: 'Auto Sembunyi' },
                       { id: 'always-visible', label: 'Selalu Tampil' },
@@ -187,8 +218,8 @@ export function ReaderSettingsDrawer({ isOpen, onClose, chapters, currentChapter
                         className={cn(
                           "flex-1 py-2 px-1 text-xs font-bold rounded-lg transition-colors",
                           preferences.toolbarBehavior === mode.id 
-                            ? "bg-surface-overlay text-text-primary shadow-sm" 
-                            : "text-text-muted hover:text-text-primary"
+                            ? "bg-surface-overlay text-text-primary shadow-md ring-1 ring-border-default/50" 
+                            : "text-text-primary/70 hover:text-text-primary hover:bg-surface-raised/50"
                         )}
                       >
                         {mode.label}
@@ -201,11 +232,11 @@ export function ReaderSettingsDrawer({ isOpen, onClose, chapters, currentChapter
                 <div className="p-4 flex flex-col gap-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
-                      <Lightning size={18} className="text-text-muted" weight="fill" />
-                      <span className="text-sm font-medium text-text-primary">Kecepatan Muat</span>
+                      <Lightning size={18} className="text-text-primary/80" weight="fill" />
+                      <span className="text-sm font-bold text-text-primary">Kecepatan Muat</span>
                     </div>
                   </div>
-                  <div className="flex bg-surface-base/50 p-1 rounded-xl border border-white/5">
+                  <div className="flex bg-surface-base/80 dark:bg-surface-base/60 p-1 rounded-xl border border-white/5 shadow-inner">
                     {[
                       { id: 'light', label: 'Ringan' },
                       { id: 'balanced', label: 'Normal' },
@@ -217,8 +248,8 @@ export function ReaderSettingsDrawer({ isOpen, onClose, chapters, currentChapter
                         className={cn(
                           "flex-1 py-2 px-1 text-xs font-bold rounded-lg transition-colors",
                           preferences.preloadIntensity === mode.id 
-                            ? "bg-surface-overlay text-text-primary shadow-sm" 
-                            : "text-text-muted hover:text-text-primary"
+                            ? "bg-surface-overlay text-text-primary shadow-md ring-1 ring-border-default/50" 
+                            : "text-text-primary/70 hover:text-text-primary hover:bg-surface-raised/50"
                         )}
                       >
                         {mode.label}
@@ -231,12 +262,12 @@ export function ReaderSettingsDrawer({ isOpen, onClose, chapters, currentChapter
 
             {/* Fitur Tambahan */}
             <div className="space-y-3">
-              <h3 className="text-xs font-bold text-text-muted px-2 uppercase tracking-wider">Fitur Tambahan</h3>
+              <h3 className="text-xs font-bold text-text-primary/90 px-2 uppercase tracking-wider drop-shadow-sm">Fitur Tambahan</h3>
               
-              <div className="bg-surface-raised/30 rounded-2xl border border-white/5 overflow-hidden flex flex-col divide-y divide-white/5">
+              <div className="bg-surface-raised/70 dark:bg-surface-raised/50 rounded-2xl border border-white/10 shadow-sm overflow-hidden flex flex-col divide-y divide-white/10">
                 {/* Progress Halaman */}
                 <label className="flex items-center justify-between p-4 cursor-pointer transition-colors hover:bg-surface-raised/50">
-                  <span className="text-sm font-medium text-text-primary">Progress Halaman</span>
+                  <span className="text-sm font-bold text-text-primary">Progress Halaman</span>
                   <input 
                     type="checkbox" 
                     className="sr-only" 
@@ -256,7 +287,7 @@ export function ReaderSettingsDrawer({ isOpen, onClose, chapters, currentChapter
 
                 {/* Layar Selalu Menyala */}
                 <label className="flex items-center justify-between p-4 cursor-pointer transition-colors hover:bg-surface-raised/50">
-                  <span className="text-sm font-medium text-text-primary">Layar Selalu Menyala</span>
+                  <span className="text-sm font-bold text-text-primary">Layar Selalu Menyala</span>
                   <input 
                     type="checkbox" 
                     className="sr-only" 

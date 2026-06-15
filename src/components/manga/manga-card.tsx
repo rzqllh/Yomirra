@@ -38,35 +38,17 @@ function getRelativeTime(dateString?: string): string {
   return date.toLocaleDateString('id-ID');
 }
 
-export function MangaCard({ 
-  manga, 
-  sourceId, 
-  priority = false, 
-  variant = "shelf",
-  chapterId,
-  chapterTitle,
-  progressPercent
-}: MangaCardProps) {
-  const timeText = getRelativeTime(manga.latestChapterTime);
+function BookmarkButton({ sourceId, manga }: { sourceId: string, manga: MangaItem }) {
   const isMounted = useMounted();
-
-  const rawIsInLibrary = useLibraryStore((state) => state.isInLibrary(sourceId, manga.id));
+  const rawIsInLibrary = useLibraryStore((state) => state.isInLibrary(manga.sourceId || sourceId, manga.id));
   const isInLibrary = isMounted ? rawIsInLibrary : false;
   const toggleLibrary = useLibraryStore((state) => state.toggleLibrary);
-  const [isInteracting, setIsInteracting] = React.useState(false);
-  const [imageError, setImageError] = React.useState(false);
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const fullPath = pathname + (searchParams.toString() ? `?${searchParams.toString()}` : "");
-
-  const safeId = `${sourceId}-${manga.id}`.replace(/[^a-zA-Z0-9-]/g, '-');
-  const vtName = `manga-cover-${safeId}`;
 
   const handleBookmarkClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     toggleLibrary({
-      sourceId,
+      sourceId: manga.sourceId || sourceId,
       mangaId: manga.id,
       title: manga.title,
       coverUrl: manga.coverUrl,
@@ -77,7 +59,7 @@ export function MangaCard({
     });
   };
 
-  const bookmarkButtonNode = (
+  return (
     <motion.button 
       onClick={handleBookmarkClick}
       whileTap={{ scale: 0.86 }}
@@ -113,6 +95,27 @@ export function MangaCard({
       </AnimatePresence>
     </motion.button>
   );
+}
+
+export function MangaCard({ 
+  manga, 
+  sourceId, 
+  priority = false, 
+  variant = "shelf",
+  chapterId,
+  chapterTitle,
+  progressPercent
+}: MangaCardProps) {
+  const timeText = getRelativeTime(manga.latestChapterTime);
+  const [imageError, setImageError] = React.useState(false);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const fullPath = pathname + (searchParams.toString() ? `?${searchParams.toString()}` : "");
+
+  const safeId = `${sourceId}-${manga.id}`.replace(/[^a-zA-Z0-9-]/g, '-');
+  const vtName = `manga-cover-${safeId}`;
+
+  const vtStyle = { '--vt-name': vtName } as React.CSSProperties;
 
   // --- HISTORY VARIANT ---
   if (variant === "history") {
@@ -121,12 +124,12 @@ export function MangaCard({
       : getMangaDetailHref(sourceId, manga.id, fullPath);
 
     return (
-      <div className="group relative flex items-center gap-4 rounded-xl bg-surface-raised/50 backdrop-blur-sm p-3 border border-border-subtle/50 transition-all duration-300 hover:bg-surface-overlay/80 hover:shadow-sm overflow-hidden">
+      <div className="group relative flex items-center gap-4 rounded-xl bg-surface-glass backdrop-blur-sm p-3 border border-border-subtle/50 transition-all duration-300 hover:bg-surface-overlay/80 hover:shadow-sm overflow-hidden">
         <Link 
           href={targetHref} 
           prefetch={false} 
-          className="relative h-[84px] w-[60px] shrink-0 overflow-hidden rounded-sm bg-surface-overlay shadow-sm z-10"
-          style={{ viewTransitionName: !chapterId ? vtName : undefined }}
+          className="relative h-[84px] w-[60px] shrink-0 overflow-hidden rounded-sm bg-surface-glass backdrop-blur-md shadow-sm z-10 vt-hover"
+          style={!chapterId ? vtStyle : undefined}
           aria-label={`Cover of ${manga.title}`}
         >
           {manga.coverUrl && !imageError ? (
@@ -135,6 +138,11 @@ export function MangaCard({
               alt={manga.title} 
               className="absolute inset-0 w-full h-full object-cover" 
               onError={() => setImageError(true)}
+              ref={(img) => {
+                if (img && img.complete && img.naturalWidth === 0) {
+                  setImageError(true);
+                }
+              }}
               referrerPolicy="no-referrer"
               decoding="async"
               loading="lazy"
@@ -169,13 +177,15 @@ export function MangaCard({
         </div>
         
         {chapterId && (
-          <Link 
-            href={targetHref} 
-            prefetch={false}
-            className="shrink-0 flex items-center justify-center rounded-full h-10 w-10 bg-accent text-accent-on shadow-md relative z-20 ml-2 group-hover:scale-105 transition-transform"
-          >
-            <Play className="h-4 w-4 ml-0.5" weight="fill" />
-          </Link>
+          <div className="bg-accent/10 dark:bg-accent/20 backdrop-blur-xl border border-accent/20 rounded-full p-1 shadow-sm shrink-0 ml-2 z-20 relative">
+            <Link 
+              href={targetHref} 
+              prefetch={false}
+              className="flex items-center justify-center rounded-full h-8 w-8 text-accent hover:bg-accent/10 transition-colors"
+            >
+              <Play className="h-4 w-4 ml-0.5" weight="fill" />
+            </Link>
+          </div>
         )}
       </div>
     );
@@ -188,15 +198,13 @@ export function MangaCard({
         whileHover={{ y: -4 }}
         whileTap={{ scale: 0.98 }}
         transition={{ ease: "easeOut", duration: 0.2 }}
-        className="relative flex flex-col w-full group rounded-lg overflow-hidden bg-surface-muted border border-border-default shadow-sm aspect-[3/4]"
+        className="relative flex flex-col w-full group rounded-lg overflow-hidden bg-surface-glass backdrop-blur-md border border-border-default shadow-sm aspect-[3/4]"
       >
         <Link 
           href={getMangaDetailHref(sourceId, manga.id, fullPath)} 
-          onPointerDown={() => setIsInteracting(true)}
-          onPointerLeave={() => setIsInteracting(false)}
-          className="absolute inset-0 z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          className="absolute inset-0 z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent vt-hover"
           prefetch={false}
-          style={{ viewTransitionName: vtName }}
+          style={vtStyle}
           aria-label={`Read ${manga.title}`}
         >
           {manga.coverUrl && !imageError ? (
@@ -205,6 +213,11 @@ export function MangaCard({
               alt={manga.title}
               className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
               onError={() => setImageError(true)}
+              ref={(img) => {
+                if (img && img.complete && img.naturalWidth === 0) {
+                  setImageError(true);
+                }
+              }}
               referrerPolicy="no-referrer"
               decoding="async"
               loading="lazy"
@@ -234,7 +247,7 @@ export function MangaCard({
           </div>
           
           <div className="absolute top-2 right-2 z-30 md:opacity-0 group-hover:opacity-100 transition-opacity">
-            {bookmarkButtonNode}
+            <BookmarkButton sourceId={sourceId} manga={manga} />
           </div>
 
           {/* Bottom Info */}
@@ -271,15 +284,13 @@ export function MangaCard({
       <Link 
         href={getMangaDetailHref(sourceId, manga.id, fullPath)} 
         transitionTypes={['nav-forward']}
-        onPointerDown={() => setIsInteracting(true)}
-        onPointerLeave={() => setIsInteracting(false)}
         className="group flex flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         prefetch={false}
         aria-label={`Read ${manga.title}`}
       >
         <div 
-          className="relative w-full aspect-[1/1.4] overflow-hidden rounded-md bg-surface-muted border border-border-default shadow-sm mb-2.5"
-          style={{ viewTransitionName: vtName }}
+          className="relative w-full aspect-[1/1.4] overflow-hidden rounded-md bg-surface-glass backdrop-blur-md border border-border-default shadow-sm mb-2.5 vt-hover"
+          style={vtStyle}
         >
           {manga.coverUrl && !imageError ? (
             <img
@@ -287,6 +298,11 @@ export function MangaCard({
               alt={manga.title}
               className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03]"
               onError={() => setImageError(true)}
+              ref={(img) => {
+                if (img && img.complete && img.naturalWidth === 0) {
+                  setImageError(true);
+                }
+              }}
               referrerPolicy="no-referrer"
               decoding="async"
               loading="lazy"
@@ -312,7 +328,7 @@ export function MangaCard({
           </div>
           
           <div className="absolute top-1.5 right-1.5 z-30 md:opacity-0 group-hover:opacity-100 transition-opacity">
-            {bookmarkButtonNode}
+            <BookmarkButton sourceId={sourceId} manga={manga} />
           </div>
         </div>
 

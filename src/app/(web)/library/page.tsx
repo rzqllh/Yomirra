@@ -215,7 +215,7 @@ function LibraryContent() {
                   options={DYNAMIC_SORTS.map(s => ({ value: s.id, label: s.name }))}
                   align="left"
                   className="w-full md:w-auto"
-                  buttonClassName="w-full md:w-auto justify-between h-10 px-4 bg-surface-muted hover:bg-surface-overlay text-sm border-border-subtle shadow-sm"
+                  buttonClassName="w-full md:w-auto justify-between h-[44px] px-4 text-[14px]"
                 />
               </div>
             </div>
@@ -223,7 +223,7 @@ function LibraryContent() {
             <div className="flex w-full md:w-auto items-center gap-3">
               <form 
                 onSubmit={handleSearchSubmit} 
-                className="flex-1 md:w-64 flex items-center gap-2 rounded-full bg-surface-muted px-3 py-2 transition-all duration-300 focus-within:bg-surface-overlay focus-within:shadow-sm border border-border-subtle focus-within:border-accent"
+                className="flex-1 md:w-64 flex items-center gap-2 rounded-full bg-surface-glass backdrop-blur-md px-4 h-[44px] transition-all duration-300 focus-within:bg-surface-glass focus-within:shadow-md border border-border-glass focus-within:border-accent-dim focus-within:ring-2 focus-within:ring-accent/50 shadow-[0_4px_16px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.2)]"
               >
                 <MagnifyingGlass className="size-4 text-text-muted shrink-0 transition-colors focus-within:text-accent" weight="bold" />
                 <input 
@@ -243,7 +243,7 @@ function LibraryContent() {
               <Button
                 variant={activeFilterCount > 0 ? "accent" : "outline"}
                 size="sm"
-                className={cn("rounded-full font-bold gap-1.5 shadow-sm", activeFilterCount > 0 ? "" : "bg-surface-raised border-border-subtle")}
+                className={cn("rounded-full font-bold gap-1.5 h-[44px] px-5 transition-all duration-300", activeFilterCount > 0 ? "shadow-md" : "bg-surface-glass backdrop-blur-md border border-border-glass text-text-primary hover:bg-surface-glass hover:text-text-primary shadow-[0_4px_16px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.2)]")}
                 onClick={() => setShowFilters(!showFilters)}
               >
                 <Funnel size={16} weight={activeFilterCount > 0 ? "fill" : "bold"} />
@@ -327,7 +327,7 @@ function LibraryContent() {
           {isLoading ? (
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4 md:gap-5">
               {Array.from({ length: 12 }).map((_, i) => (
-                <MangaCardSkeleton key={i} />
+                <MangaCardSkeleton key={i} variant="shelf" />
               ))}
             </div>
           ) : isError ? (

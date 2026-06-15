@@ -67,7 +67,7 @@ export function TopNav() {
         className={cn(
           "flex items-center justify-between pointer-events-auto transition-all duration-500 overflow-visible mx-auto",
           isScrolled 
-            ? "max-w-7xl w-full h-[60px] bg-surface-overlay/60 backdrop-blur-sm border border-border-default rounded-full shadow-heavy px-6" 
+            ? "max-w-7xl w-full h-[60px] bg-black/20 dark:bg-surface-overlay/80 backdrop-blur-xl border border-border-glass rounded-full shadow-md px-6" 
             : "w-full h-[72px] px-8"
         )}
       >
