@@ -127,6 +127,7 @@ export function MangaCard({
           prefetch={false} 
           className="relative h-[84px] w-[60px] shrink-0 overflow-hidden rounded-sm bg-surface-overlay shadow-sm z-10"
           style={{ viewTransitionName: !chapterId ? vtName : undefined }}
+          aria-label={`Cover of ${manga.title}`}
         >
           {manga.coverUrl && !imageError ? (
             <img 
@@ -196,6 +197,7 @@ export function MangaCard({
           className="absolute inset-0 z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           prefetch={false}
           style={{ viewTransitionName: vtName }}
+          aria-label={`Read ${manga.title}`}
         >
           {manga.coverUrl && !imageError ? (
             <img
@@ -273,6 +275,7 @@ export function MangaCard({
         onPointerLeave={() => setIsInteracting(false)}
         className="group flex flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         prefetch={false}
+        aria-label={`Read ${manga.title}`}
       >
         <div 
           className="relative w-full aspect-[1/1.4] overflow-hidden rounded-md bg-surface-muted border border-border-default shadow-sm mb-2.5"

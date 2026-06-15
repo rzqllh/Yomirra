@@ -5,6 +5,9 @@ import { useDownloadStore } from "@/shared/store/download-store";
 import { getDownloadChapterId } from "@/shared/utils/download-helpers";
 import { motion, AnimatePresence } from "motion/react";
 import { IconButton } from "@/components/ui/icon-button";
+import { downloadChapterAsZip } from "@/shared/utils/zip-downloader";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 interface ChapterDownloadButtonProps {
   sourceId: string;
@@ -27,9 +30,46 @@ export function ChapterDownloadButton({
   const addDownload = useDownloadStore((state) => state.addDownload);
   const removeDownload = useDownloadStore((state) => state.removeDownload);
 
-  const handleDownload = (e: React.MouseEvent) => {
+  const [isPWA, setIsPWA] = useState(true);
+  const [isZipDownloading, setIsZipDownloading] = useState(false);
+  const [zipProgress, setZipProgress] = useState(0);
+
+  useEffect(() => {
+    setIsPWA(window.matchMedia('(display-mode: standalone)').matches);
+  }, []);
+
+  const handleDownload = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    if (!isPWA) {
+      if (isZipDownloading) return;
+      const toastId = `zip-dl-${chapterId}`;
+      try {
+        setIsZipDownloading(true);
+        setZipProgress(0);
+        toast.loading(`Mempersiapkan unduhan ${chapterTitle}...`, { id: toastId });
+        
+        await downloadChapterAsZip({
+          sourceId,
+          mangaId,
+          chapterId,
+          chapterTitle,
+          mangaTitle,
+          onProgress: (current, total) => {
+            const pct = Math.round((current / total) * 100);
+            setZipProgress(pct);
+            toast.loading(`Mengunduh ${chapterTitle} (${pct}%)`, { id: toastId });
+          }
+        });
+        toast.success(`Berhasil mengunduh ${chapterTitle}!`, { id: toastId, duration: 4000 });
+      } catch (err: any) {
+        toast.error(`Gagal mengunduh: ${err.message}`, { id: toastId, duration: 5000 });
+      } finally {
+        setIsZipDownloading(false);
+      }
+      return;
+    }
 
     if (!download) {
       addDownload({
@@ -39,16 +79,20 @@ export function ChapterDownloadButton({
         chapterTitle,
         mangaTitle,
       });
+      toast.success(`Chapter ditambahkan ke antrean`);
     } else if (download.status === "downloaded" || download.status === "failed") {
       if (confirm("Hapus unduhan chapter ini?")) {
         removeDownload(id);
+        toast("Unduhan dihapus");
       }
     } else if (download.status === "downloading" || download.status === "queued") {
       const pauseDownload = useDownloadStore.getState().pauseDownload;
       pauseDownload(id);
+      toast("Unduhan dijeda");
     } else if (download.status === "paused") {
       const resumeDownload = useDownloadStore.getState().resumeDownload;
       resumeDownload(id);
+      toast.info("Melanjutkan unduhan...");
     }
   };
 
@@ -103,6 +147,20 @@ export function ChapterDownloadButton({
             className="text-text-muted"
           >
             <Pause size={20} weight="fill" />
+          </motion.span>
+        ) : isZipDownloading ? (
+          <motion.span
+            key="zip-downloading"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.8, opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="text-accent relative flex items-center justify-center"
+          >
+            <CircleNotch size={20} className="motion-safe:animate-spin" />
+            <span className="absolute text-[8px] font-bold">
+              {zipProgress > 0 ? zipProgress : ""}
+            </span>
           </motion.span>
         ) : (
           <motion.span

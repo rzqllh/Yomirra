@@ -258,7 +258,9 @@ export const useDownloadStore = create<DownloadState>()(
                 get()._updateDownload(id, { pages: pagesCopy });
 
                 const cacheKey = new URL(pageObj.offlineUrl, window.location.origin).toString();
-                const proxyUrl = `/api/proxy/image?url=${encodeURIComponent(pageObj.originalUrl)}&sourceId=${item.sourceId}`;
+                const proxyUrl = pageObj.originalUrl.startsWith('/api/proxy/image')
+                  ? pageObj.originalUrl
+                  : `/api/proxy/image?url=${encodeURIComponent(pageObj.originalUrl)}&sourceId=${item.sourceId}`;
                 
                 try {
                   const imgRes = await fetch(proxyUrl, { signal });

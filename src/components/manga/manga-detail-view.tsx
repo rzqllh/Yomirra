@@ -34,25 +34,8 @@ export function MangaDetailView({
   const [searchQuery, setSearchQuery] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [isDesktop, setIsDesktop] = useState(true);
-
   useEffect(() => {
     queueMicrotask(() => setMounted(true));
-    
-    // Dynamic Assignment via breakpoint detection
-    const mediaQuery = window.matchMedia("(min-width: 768px)");
-    // eslint-disable-next-line
-    setIsDesktop(mediaQuery.matches);
-    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
-    
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener("change", handler);
-      return () => mediaQuery.removeEventListener("change", handler);
-    } else {
-      // Fallback for older browsers
-      mediaQuery.addListener(handler);
-      return () => mediaQuery.removeListener(handler);
-    }
   }, []);
 
   const safeId = `${sourceId}-${mangaId}`.replace(/[^a-zA-Z0-9-]/g, '-');
@@ -129,7 +112,7 @@ export function MangaDetailView({
             <img
               src={detail.coverUrl}
               alt=""
-              className="absolute inset-0 w-full h-full object-cover opacity-[0.25] blur-3xl scale-110 saturate-150 transform-gpu dark:opacity-[0.15]"
+              className="absolute inset-0 w-full h-full object-cover opacity-[0.25] blur-3xl scale-110 saturate-150 transform-gpu dark:opacity-[0.15] will-change-[transform,filter]"
               onError={(e) => { e.currentTarget.style.display = 'none' }}
               referrerPolicy="no-referrer"
               decoding="async"
@@ -143,7 +126,7 @@ export function MangaDetailView({
         <div className="flex gap-4 md:hidden">
           <div 
             className="relative w-[110px] shrink-0 aspect-[2/3] rounded-md overflow-hidden shadow-heavy border border-border-default bg-surface-base vt-cover-mobile"
-            style={{ viewTransitionName: !isDesktop ? coverTransitionName : 'none' }}
+            style={{ viewTransitionName: coverTransitionName }}
           >
             {coverUrl && (
               <img 
@@ -173,7 +156,7 @@ export function MangaDetailView({
         <div className="hidden md:flex relative sticky top-[100px] self-start w-[280px] lg:w-80 shrink-0 flex-col gap-4">
           <div 
             className="relative w-full aspect-[2/3] rounded-lg overflow-hidden shadow-heavy border border-border-default bg-surface-base vt-cover-desktop"
-            style={{ viewTransitionName: isDesktop ? coverTransitionName : 'none' }}
+            style={{ viewTransitionName: coverTransitionName }}
           >
             {coverUrl && (
               <img 

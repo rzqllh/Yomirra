@@ -7,6 +7,7 @@ import { HardDrives, Pause, Play, Trash, X, ArrowClockwise, CaretLeft } from "@p
 import { IconButton } from "@/components/ui/icon-button";
 import Link from "next/link";
 import { YomirraSection, YomirraSurface } from "@/components/ui/yomirra-layout";
+import { toast } from "sonner";
 
 export default function DownloadsPage() {
   const { downloads, removeDownload, pauseDownload, resumeDownload, cancelDownload, retryDownload } = useDownloadStore();
@@ -118,20 +119,20 @@ export default function DownloadsPage() {
                   
                   <div className="flex flex-col justify-around shrink-0 border-l border-border-default/50 pl-3 ml-1">
                     {item.status === 'downloading' || item.status === 'queued' ? (
-                      <IconButton onClick={() => pauseDownload(item.id)} aria-label="Pause" className="text-text-muted hover:text-text-primary">
+                      <IconButton onClick={() => { pauseDownload(item.id); toast("Unduhan dijeda"); }} aria-label="Pause" className="text-text-muted hover:text-text-primary">
                         <Pause size={18} />
                       </IconButton>
                     ) : item.status === 'paused' ? (
-                      <IconButton onClick={() => resumeDownload(item.id)} aria-label="Resume" className="text-primary hover:text-primary/80">
+                      <IconButton onClick={() => { resumeDownload(item.id); toast.info("Melanjutkan unduhan..."); }} aria-label="Resume" className="text-primary hover:text-primary/80">
                         <Play size={18} />
                       </IconButton>
                     ) : item.status === 'failed' ? (
-                      <IconButton onClick={() => retryDownload(item.id)} aria-label="Retry" className="text-primary hover:text-primary/80">
+                      <IconButton onClick={() => { retryDownload(item.id); toast.info("Mencoba ulang unduhan..."); }} aria-label="Retry" className="text-primary hover:text-primary/80">
                         <ArrowClockwise size={18} />
                       </IconButton>
                     ) : null}
                     
-                    <IconButton onClick={() => cancelDownload(item.id)} aria-label="Cancel" className="text-semantic-error hover:text-semantic-error/80">
+                    <IconButton onClick={() => { cancelDownload(item.id); toast("Unduhan dibatalkan"); }} aria-label="Cancel" className="text-semantic-error hover:text-semantic-error/80">
                       <X size={18} />
                     </IconButton>
                   </div>
@@ -147,23 +148,34 @@ export default function DownloadsPage() {
               </div>
             ) : (
               completedItems.map(item => (
-                <YomirraSurface variant="elevated" key={item.id} className="rounded-xl p-4 flex gap-4 items-center">
-                  <div className="w-12 h-16 bg-surface-muted rounded-lg overflow-hidden shrink-0">
-                    {item.coverUrl ? (
-                      <img src={item.coverUrl} alt={item.mangaTitle} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-text-muted text-xs">No Cover</div>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-text-primary truncate text-sm">{item.mangaTitle}</h3>
-                    <p className="text-xs text-text-muted truncate mt-0.5">{item.chapterTitle}</p>
-                    <p className="text-[10px] text-text-muted mt-1">{item.downloadedPages} Halaman • Selesai</p>
-                  </div>
-                  <IconButton onClick={() => removeDownload(item.id)} aria-label="Delete" className="text-semantic-error hover:text-semantic-error/80 shrink-0">
-                    <Trash size={20} />
-                  </IconButton>
-                </YomirraSurface>
+                <div key={item.id} className="relative group">
+                  <Link 
+                    href={`/manga/${item.sourceId}/${item.mangaId}/read/${item.chapterId}`}
+                    className="absolute inset-0 z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-xl"
+                    aria-label={`Read ${item.mangaTitle} - ${item.chapterTitle}`}
+                  />
+                  <YomirraSurface variant="elevated" className="rounded-xl p-4 flex gap-4 items-center group-hover:bg-surface-hover transition-colors relative z-0">
+                    <div className="w-12 h-16 bg-surface-muted rounded-lg overflow-hidden shrink-0">
+                      {item.coverUrl ? (
+                        <img src={item.coverUrl} alt={item.mangaTitle} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-text-muted text-xs">No Cover</div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-text-primary truncate text-sm group-hover:text-accent transition-colors">{item.mangaTitle}</h3>
+                      <p className="text-xs text-text-muted truncate mt-0.5">{item.chapterTitle}</p>
+                      <p className="text-[10px] text-text-muted mt-1">{item.downloadedPages} Halaman • Selesai</p>
+                    </div>
+                    <IconButton 
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeDownload(item.id); toast("Unduhan dihapus"); }} 
+                      aria-label="Delete" 
+                      className="text-semantic-error hover:text-semantic-error/80 shrink-0 relative z-20"
+                    >
+                      <Trash size={20} />
+                    </IconButton>
+                  </YomirraSurface>
+                </div>
               ))
             )}
           </TabsContent>
