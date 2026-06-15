@@ -10,7 +10,7 @@
 
 <br />
 
-Yomirra is a progressive web application (PWA) designed to provide a cinematic, seamless reading experience. Built with a custom "Deep Lagoon" design language, it prioritizes performance, offline capabilities, and fluid interactions through native View Transitions and motion physics.
+Yomirra is a progressive web application (PWA) designed to provide a cinematic, seamless reading experience. Built with a custom "Deep Lagoon Glassmorphism" design language, it prioritizes aesthetics, performance, offline capabilities, and fluid interactions through native View Transitions and motion physics.
 
 ## 🚀 Features
 
@@ -18,7 +18,7 @@ Yomirra is a progressive web application (PWA) designed to provide a cinematic, 
 - **Extensible Source System:** Built with an adapter pattern to easily integrate new manga sources via API proxies (ships with Shinigami adapter).
 - **Progressive Web App (PWA):** Installable on mobile and desktop, featuring offline caching and native-like shortcuts powered by Serwist.
 - **Cross-Device Sync:** Firebase-powered authentication and state synchronization for your library, history, and bookmarks.
-- **Fluid UI/UX:** Advanced micro-interactions, spring-based physics, and native View Transitions for seamless navigation without jarring page loads.
+- **Fluid UI/UX:** Premium glassmorphism aesthetics, advanced micro-interactions, spring-based physics, and native View Transitions for seamless navigation without jarring page loads.
 - **Accessibility & Performance:** Reduced motion support, dynamic layout adaptations, and optimized asynchronous image decoding.
 
 ## 🛠 Tech Stack
