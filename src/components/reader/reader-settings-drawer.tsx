@@ -36,10 +36,9 @@ export function ReaderSettingsDrawer({ isOpen, onClose, chapters, currentChapter
       {/* Drawer */}
       <div 
         className={cn(
-          "fixed top-0 right-0 bottom-0 z-[70] w-[320px] bg-surface-glass backdrop-blur-md border-l border-border-glass shadow-2xl transition-transform duration-300 ease-in-out flex flex-col",
-          "translate-x-full",
-          isOpen && "max-md:translate-x-0",
-          isDesktopPanelOpen && "md:translate-x-0"
+          "fixed inset-x-0 bottom-0 max-h-[85vh] md:max-h-screen md:inset-y-0 md:left-auto md:right-0 md:w-80 md:bottom-auto bg-surface dark:bg-[#0a0a0f] shadow-2xl flex flex-col z-[70]",
+          "transition-transform duration-150 ease-out rounded-t-3xl md:rounded-none",
+          isOpen ? "translate-y-0 md:translate-x-0" : "translate-y-full md:translate-x-full md:translate-y-0"
         )}
       >
         <div className="flex h-[calc(var(--mobile-header-height)+var(--safe-top))] items-center justify-between px-6 shrink-0 pt-[var(--safe-top)] border-b border-white/5">

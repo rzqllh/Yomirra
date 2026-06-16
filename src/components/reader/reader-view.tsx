@@ -89,6 +89,17 @@ export function ReaderView({
   useEffect(() => {
     if (!initialDetail) return;
     
+    // Calculate overall series progress based on chapter list
+    const chapterIndex = initialChapters?.findIndex(c => c.id === chapterId) ?? -1;
+    let seriesProgressPercent = 0;
+    
+    // Assuming chapters are sorted newest (index 0) to oldest (index N)
+    if (chapterIndex !== -1 && initialChapters?.length > 0) {
+       const totalChapters = initialChapters.length;
+       const readCount = totalChapters - chapterIndex; // Latest chapter = 100%
+       seriesProgressPercent = Math.round((readCount / totalChapters) * 100);
+    }
+    
     upsertHistory({
       sourceId,
       mangaId,
@@ -97,6 +108,7 @@ export function ReaderView({
       chapterTitle,
       coverUrl: initialDetail.coverUrl,
       sourceName: sourceId,
+      seriesProgressPercent,
       readAt: new Date().toISOString(),
     });
 

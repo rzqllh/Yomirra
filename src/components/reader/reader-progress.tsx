@@ -1,18 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { motion, useScroll, useSpring, useReducedMotion } from "motion/react";
+import { motion, useScroll } from "motion/react";
 
 export function ReaderProgress() {
   const { scrollYProgress } = useScroll();
-  const shouldReduceMotion = useReducedMotion();
-
-  // Disable spring if reduced motion is preferred
-  const scaleX = useSpring(scrollYProgress, {
-    stiffness: 200,
-    damping: 40,
-    restDelta: 0.001
-  });
 
   return (
     <div 
@@ -21,7 +13,7 @@ export function ReaderProgress() {
     >
       <motion.div
         className="h-full bg-accent origin-left"
-        style={{ scaleX: shouldReduceMotion ? scrollYProgress : scaleX }}
+        style={{ scaleX: scrollYProgress }}
       />
     </div>
   );

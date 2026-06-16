@@ -13,6 +13,7 @@ export type HistoryItem = {
   pageIndex?: number;
   totalPages?: number;
   progressPercent?: number;
+  seriesProgressPercent?: number;
   scrollPercent?: number;
   readAt: string;
 };
@@ -41,9 +42,12 @@ export const useHistoryStore = create<HistoryState>()(
 
       upsertHistory: (item) => set((state) => {
         const id = getHistoryId(item.sourceId, item.mangaId, item.chapterId);
-        pushHistoryItem(item); // Background sync
+        const existing = state.items[id];
+        const finalItem = existing ? { ...existing, ...item, readAt: item.readAt } : item;
+
+        pushHistoryItem(finalItem); // Background sync
         
-        const newItems = { ...state.items, [id]: item };
+        const newItems = { ...state.items, [id]: finalItem };
         const entries = Object.entries(newItems);
         const MAX_HISTORY_ITEMS = 1000;
         
@@ -57,10 +61,13 @@ export const useHistoryStore = create<HistoryState>()(
 
       _setItemLocal: (item) => set((state) => {
         const id = getHistoryId(item.sourceId, item.mangaId, item.chapterId);
+        const existing = state.items[id];
+        const finalItem = existing ? { ...existing, ...item } : item;
+
         return {
           items: {
             ...state.items,
-            [id]: item,
+            [id]: finalItem,
           }
         };
       }),

@@ -5,11 +5,12 @@ import Image from "next/image"
 import { cn } from "@/shared/utils/cn"
 import { PageItem } from "@/shared/types/source"
 import { PageImageError } from "./page-image-error"
-import { motion, useSpring } from "motion/react"
+import { motion, useMotionValue } from "motion/react"
 import { useGesture } from "@use-gesture/react"
 
 interface ReaderImageProps {
-  page: PageItem
+  pageIndex: number
+  pageUrl: string
   isWebtoon: boolean
   dataSaver: boolean
   isAllowedToLoad: boolean
@@ -18,10 +19,12 @@ interface ReaderImageProps {
   priority?: boolean
   offlineUrl?: string
   imageFit?: 'width' | 'contained'
+  measureElement?: (element: HTMLElement | null) => void
 }
 
-export function ReaderImage({
-  page,
+export const ReaderImage = React.memo(function ReaderImage({
+  pageIndex,
+  pageUrl,
   isWebtoon,
   dataSaver,
   isAllowedToLoad,
@@ -29,16 +32,25 @@ export function ReaderImage({
   onError,
   priority = false,
   offlineUrl,
-  imageFit = 'width'
+  imageFit = 'width',
+  measureElement
 }: ReaderImageProps) {
-  const [inView, setInView] = React.useState(false)
   const [hasError, setHasError] = React.useState(false)
+  const [retryCount, setRetryCount] = React.useState(0)
+  const [aspectRatio, setAspectRatio] = React.useState<number | null>(null)
   const containerRef = React.useRef<HTMLDivElement>(null)
+  
+  // Call measureElement on render if it exists and we have an element
+  React.useLayoutEffect(() => {
+    if (measureElement && containerRef.current) {
+      measureElement(containerRef.current);
+    }
+  });
 
-  // Zoom springs
-  const scale = useSpring(1, { bounce: 0, stiffness: 400, damping: 30 })
-  const x = useSpring(0, { bounce: 0, stiffness: 400, damping: 30 })
-  const y = useSpring(0, { bounce: 0, stiffness: 400, damping: 30 })
+  // Zoom motion values (No spring physics loop)
+  const scale = useMotionValue(1)
+  const x = useMotionValue(0)
+  const y = useMotionValue(0)
 
   // Double tap logic
   const lastTapTime = React.useRef(0)
@@ -85,50 +97,58 @@ export function ReaderImage({
     }
   })
 
-  // Intersection Observer to detect if user scrolled to this image
-  // If they did, we force load it even if it's not its "turn" yet
-  React.useEffect(() => {
-    if (inView) return
+  const shouldLoad = isAllowedToLoad
 
-    const observer = new IntersectionObserver(([entry]) => {
-      if (entry.isIntersecting) {
-        setInView(true)
-        observer.disconnect()
-      }
-    }, { rootMargin: "1000px" }) // Generous 1000px margin
-
-    if (containerRef.current) observer.observe(containerRef.current)
-    return () => observer.disconnect()
-  }, [inView])
-
-  const shouldLoad = isAllowedToLoad || inView
+  const handleImageError = () => {
+    if (retryCount < 3) {
+      const baseDelay = [1000, 2500, 5000][retryCount]
+      const jitter = Math.random() * 500
+      setTimeout(() => {
+        setRetryCount(c => c + 1)
+      }, baseDelay + jitter)
+    } else {
+      setHasError(true)
+      onError(pageIndex)
+    }
+  }
 
   const handleRetry = () => {
     setHasError(false)
+    setRetryCount(0)
   }
+
+  const currentUrl = offlineUrl || (retryCount > 0 && !pageUrl.startsWith('blob:') ? `${pageUrl}${pageUrl.includes('?') ? '&' : '?'}retry=${retryCount}` : pageUrl)
+  const estimatedAspectRatio = aspectRatio ? `${aspectRatio}` : "1 / 1.5"
 
   return (
     <div 
-      ref={containerRef} 
+      ref={(el) => {
+        containerRef.current = el;
+        if (measureElement) measureElement(el);
+      }}
       className={cn(
-        "reader-page-container w-full flex justify-center overflow-hidden touch-pan-y",
-        (!shouldLoad || hasError) && "min-h-[50vh] bg-surface-muted/30"
+        "reader-page-container w-full flex justify-center overflow-hidden touch-pan-y relative",
+        (!shouldLoad || hasError) && "bg-surface-muted/30"
       )}
-      data-page-index={page.index}
-      style={{ touchAction: "pan-y" }} // Allow scrolling, but pinch/drag intercept it
+      data-page-index={pageIndex}
+      style={{ 
+        touchAction: "pan-y",
+        aspectRatio: estimatedAspectRatio,
+        minHeight: aspectRatio ? "auto" : "50vh",
+        transition: "aspect-ratio 0.3s ease-out"
+      }}
     >
       {hasError ? (
-        <div className="w-full flex items-center justify-center p-4">
-          <PageImageError index={page.index} onRetry={handleRetry} />
+        <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center p-4 bg-[#0a0a0f] text-white/50">
+           <PageImageError index={pageIndex} onRetry={handleRetry} />
         </div>
       ) : shouldLoad ? (
-        <motion.div style={{ x, y, scale }} className="w-full origin-center flex justify-center">
+        <motion.div style={{ x, y, scale }} className="w-full h-full origin-center flex justify-center">
           <Image 
-            src={offlineUrl || page.url}
-            alt={`Page ${page.index}`}
+            src={currentUrl}
+            alt={`Page ${pageIndex}`}
             className={cn(
-              "block", // Prevent inline descender gap
-              imageFit === 'width' ? "w-full" : "w-full max-w-[500px]",
+              "block w-full h-full object-contain",
               !isWebtoon && "shadow-soft",
               "motion-safe:animate-in motion-safe:fade-in motion-safe:duration-300"
             )}
@@ -139,33 +159,31 @@ export function ReaderImage({
             fetchPriority={priority ? "high" : "auto"}
             quality={dataSaver ? 60 : 85}
             unoptimized={!dataSaver}
-            loading={priority ? "eager" : "lazy"} 
-            style={{ width: "100%", height: "auto", display: "block" }}
+            loading="eager"
+            decoding="async"
             onLoad={(e) => {
-              if (e.currentTarget.naturalWidth === 0) {
-                setTimeout(() => {
-                  setHasError(true)
-                  onError(page.index)
-                }, 0)
+              const target = e.currentTarget;
+              if (target.naturalWidth === 0) {
+                handleImageError();
                 return;
               }
-              // Push to next tick to prevent React "update during render" warnings if cached
-              setTimeout(() => onLoadComplete(page.index), 0)
+              // Update aspect ratio for progressive height correction
+              setAspectRatio(target.naturalWidth / target.naturalHeight);
+              
+              if (measureElement && containerRef.current) {
+                measureElement(containerRef.current);
+              }
+              
+              setTimeout(() => onLoadComplete(pageIndex), 0)
             }}
-            onError={() => {
-              setTimeout(() => {
-                setHasError(true)
-                onError(page.index)
-              }, 0)
-            }}
+            onError={handleImageError}
           />
         </motion.div>
       ) : (
-        // Placeholder skeleton while waiting for its turn in the sequential queue
-        <div className="w-full min-h-[50vh] flex items-center justify-center">
+        <div className="absolute inset-0 w-full h-full flex items-center justify-center">
           <div className="size-8 rounded-full border-2 border-border-strong border-t-accent animate-spin" />
         </div>
       )}
     </div>
   )
-}
+})
