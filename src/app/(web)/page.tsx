@@ -4,13 +4,12 @@ import { sourceRegistry } from "@/shared/sources/source-registry";
 import { SourceFeed } from "@/components/app/source-feed";
 import { SourceFeedSkeleton } from "@/components/app/source-feed-skeleton";
 import { Suspense } from "react";
+import { DirectionalTransition } from "@/components/ui/directional-transition";
 
 export const metadata: Metadata = {
   title: "Yomirra - Baca Komik Gratis",
   description: "Manga, Manhwa, dan Manhua reader cepat, ringan, tanpa iklan.",
 };
-
-import { DirectionalTransition } from "@/components/ui/directional-transition";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +21,7 @@ export default async function HomePage() {
       <HomeView>
         {activeSources.map(source => (
           <Suspense key={source.id} fallback={<SourceFeedSkeleton />}>
-            <SourceFeed sourceId={source.id} sourceName={source.name} />
+            <SourceFeed sourceId={source.id} sourceName={source.name} variant="C" />
           </Suspense>
         ))}
         
