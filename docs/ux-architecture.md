@@ -8,8 +8,8 @@ We prioritize **maximum re-entry speed over content density.** The entry experie
 
 ### Landing Strategy
 - **Home Dashboard:** The app opens to a dedicated Home dashboard, NOT the Library. 
-- **The Hero (Primary Surface):** The top 60-70% of the screen is the "Continue Reading Hero". It features a blurred immersive background, the last read manga, and a massive "Resume Chapter X" CTA. One tap jumps directly into the reader at the exact scroll position.
-- **Secondary Rows:** Horizontal rows below the hero (e.g., "Recently Updated in Library"). No dense grids on entry to minimize cognitive load.
+- **Informative Layout:** The hero section uses a horizontal layout for "Lanjut Baca" (Continue Reading) to balance speed with information density. Giant single-item heroes are avoided to ensure multiple options are visible.
+- **Dynamic Feeds:** Quick access to enabled sources via horizontal rows below the history.
 - **Auto-Resume (Enhancement):** If the user reopens the app within a short window (<30 mins), skip Home entirely and drop directly into the reader.
 
 ## 2. Discovery Model: The High-Speed Router

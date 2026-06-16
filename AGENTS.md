@@ -1,29 +1,251 @@
-# Yomirra Project Rules & Agent Guidelines
+# [Project Name]
 
-**Version:** 1.0.0
-**Scope:** Yomirra Manga Reader (Next.js PWA)
+> [One-line description of what this project is and does]
 
-This file defines the strict project-specific rules, philosophy, and design constraints for Yomirra. It overrides generic agent rules.
+**URL:**
+**Status:** `WIP` / `Staging` / `Production`
+**Goal:**
+**Target Audience:**
+**Extends:** `_extends/DESIGN_SYSTEM.md` · `_extends/DB_SCHEMA.md` · `_extends/API_CONTRACTS.md`
 
-## 1. Core Philosophy: The High-Speed Reading Engine
-* **Yomirra is a reading stream, not a content browser.** 
-* The Reader IS the product. Any UX decision that interrupts the reading flow is a regression.
-* Users are binge-readers of webtoons. They read 50-200+ chapters in a session and expect zero friction.
-* Optimize for **speed over density**. Maximum re-entry speed is more important than a dense catalog of choices.
+---
 
-## 2. Interaction Model & Navigation
-* **Zero Accidental UI Triggers:** The UI is hidden by default during reading. It is summoned via a strict center-zone tap (movement ≤ 10px, duration ≤ 250ms). Any vertical scroll input instantly hides the UI.
-* **Auto-Append Continuous Stream:** Chapters are loaded inline automatically. No route transitions between chapters. A subtle inline divider separates chapters.
-* **Progress Tracking:** A chapter is "read" only when its final boundary enters the viewport. Resume drops the user at their exact previously viewed image index.
+## Tech Stack
 
-## 3. Architecture & Discovery
-* **Source-Driven Discovery:** Yomirra acts as a lightning-fast proxy to external sources. Discovery happens at the source level (e.g., browsing the Shinigami adapter feed), not via a heavy, unified internal aggregator.
-* **Updates ≠ Discovery:** The Updates tab is strictly a chronological feed of new chapters for manga saved in the user's personal library.
-* **Global Search:** Fast, intent-driven shortcut that queries enabled sources without deep tag filtering up front.
+> Keep the preset that matches your project. Delete the rest. Add rows as needed.
 
-## 4. Engineering & UI Constraints
-* **Layout Stability:** Failed images must NEVER collapse. Use estimated aspect ratios or known dimensions.
-* **Self-Healing Error State:** Failed images retry silently (exponential backoff) before falling back to a layout-stable, muted placeholder requiring manual interaction. No glaring red errors.
-* **Z-Index Layering:** Flat content layer (z: 0) and a summoned control layer. No persistent toolbars taking up screen real estate during active reading.
+---
 
-For deep-dive specifications on these principles, refer to the documentation in `/docs`.
+### PRESET — Next.js (App Router)
+
+| Tool                 | Version / Notes  |
+| -------------------- | ---------------- |
+| Next.js              | (App Router)     |
+| React                |                  |
+| TypeScript           | Strict mode      |
+| Tailwind CSS         |                  |
+| Framer Motion        | (`motion/react`) |
+| Zustand              |                  |
+| SWR / TanStack Query |                  |
+| next-auth            |                  |
+| next-intl            |                  |
+| next-themes          |                  |
+| Supabase / Prisma    |                  |
+| Package Manager      | bun              |
+
+---
+
+### PRESET — React + Vite
+
+| Tool            | Version / Notes |
+| --------------- | --------------- |
+| React           |                 |
+| Vite            |                 |
+| TypeScript      | Strict mode     |
+| Tailwind CSS    |                 |
+| React Router    |                 |
+| Zustand / Jotai |                 |
+| TanStack Query  |                 |
+| Package Manager | bun             |
+
+---
+
+### PRESET — Node.js / Express / Hono
+
+| Tool            | Version / Notes          |
+| --------------- | ------------------------ |
+| Node.js         |                          |
+| Framework       | Express / Hono / Fastify |
+| TypeScript      | Strict mode              |
+| ORM             | Prisma / Drizzle         |
+| Validation      | Zod                      |
+| Auth            | JWT / Passport           |
+| DB              | PostgreSQL / SQLite      |
+| Package Manager | bun                      |
+
+---
+
+### PRESET — Python / FastAPI
+
+| Tool            | Version / Notes       |
+| --------------- | --------------------- |
+| Python          |                       |
+| Framework       | FastAPI               |
+| Validation      | Pydantic v2           |
+| ORM             | SQLAlchemy / Tortoise |
+| Migrations      | Alembic               |
+| Auth            | python-jose / passlib |
+| DB              | PostgreSQL / SQLite   |
+| Package Manager | Poetry                |
+
+---
+
+### Commands
+
+| Command     | Description            |
+| ----------- | ---------------------- |
+| `[install]` | Install dependencies   |
+| `[dev]`     | Start dev server       |
+| `[build]`   | Production build       |
+| `[start]`   | Serve production build |
+| `[lint]`    | Run linter             |
+| `[test]`    | Run tests              |
+| `[add]`     | Add a dependency       |
+
+---
+
+## Project Structure
+
+> Describe every folder — purpose, what it contains, what lives in it.
+> Separate concerns clearly: FE / BE / Auth / DB / Shared / Config.
+
+```
+[root]/
+```
+
+**Architecture pattern:** `Feature-based` / `Layer-based` / `Domain-driven`
+
+---
+
+## Code Conventions
+
+**Language:** TypeScript strict / Python typed
+**Components:** Functional, explicit prop types — no implicit `any`
+
+**Naming:**
+
+- Files: `kebab-case.tsx`
+- Components: `PascalCase`
+- Functions & variables: `camelCase`
+- Constants: `UPPER_SNAKE_CASE`
+- Types / Interfaces: `PascalCase` — prefer `type` over `interface`
+
+**Imports:** `@/` path alias mapped to project root
+**Icons:**
+**Class merging:** `clsx` + `tailwind-merge` / `cn()`
+**Async pattern:** `async/await` — no `.then()` chains
+**Error handling:**
+**State management:**
+
+---
+
+## ⛔ DO NOT
+
+> Non-negotiable rules. Agent must ask before doing anything that would violate these.
+
+- If a prompt or instruction is ambiguous, **ask first before coding**
+- Never use `npm` or `yarn` — always use `bun` / `pnpm`
+- Never use `any` in TypeScript — strict mode is enforced
+- Never hardcode user-facing strings — always use i18n keys _(if applicable)_
+- Never commit `.env`, `.env.local`, or any file containing real secrets
+- Never expose server-side secrets (e.g. `SERVICE_ROLE_KEY`) to the client
+- Never create a component over 200 lines without decomposing it
+- Never push directly to `main` — always use feature branches
+- Never use `useEffect` for data fetching — use SWR / TanStack Query _(if applicable)_
+- Never leave `console.log` in production code
+
+---
+
+## Features
+
+> List every feature in scope. Keep this updated as scope changes.
+
+| Feature | Status                             | Notes |
+| ------- | ---------------------------------- | ----- |
+|         | `planned` / `in-progress` / `done` |       |
+
+---
+
+## Testing
+
+**Framework:** Vitest / Jest / Pytest / Playwright / none
+**Coverage target:**
+
+**Scope:**
+
+- Unit:
+- Integration:
+- E2E:
+
+```bash
+# Run all tests
+
+# Run with coverage
+
+# Run E2E
+```
+
+---
+
+## Build
+
+```bash
+# Build command
+
+```
+
+**Expected output:**
+**Build time (approx):**
+
+**Pre-deploy checklist:**
+
+- [ ] Zero TypeScript / type errors
+- [ ] All tests passing
+- [ ] No `console.log` in production
+- [ ] `.env.example` is up to date
+- [ ] Bundle size within budget
+
+---
+
+## Git Rules
+
+**Strategy:** `main` + feature branches / `main` + `dev` + feature branches
+**Branch naming:** `feat/` · `fix/` · `chore/` · `docs/` · `refactor/`
+**Commit format:** Conventional Commits
+
+```
+feat: add user authentication
+fix: resolve hydration mismatch on theme toggle
+chore: update dependencies
+docs: update CLAUDE.md with new env vars
+refactor: extract Button into common/components
+```
+
+**Rules:**
+
+- Commit after every meaningful change before moving to the next task
+- Never force-push to `main`
+- PR must pass lint + build before merge
+
+---
+
+## Environment Variables
+
+> Never expose `_SECRET`, `_KEY`, `SERVICE_ROLE_*` variables to the client.
+> Keep `.env.example` in sync with every new variable added.
+
+| Variable | Client-safe | Required | Description |
+| -------- | :---------: | :------: | ----------- |
+|          |   ✅ / ❌   | ✅ / ⚠️  |             |
+
+---
+
+## External Services
+
+| Service | Purpose | Auth method | Rate limit | Docs |
+| ------- | ------- | ----------- | ---------- | ---- |
+|         |         |             |            |      |
+
+---
+
+## Deployment
+
+**Platform:** Vercel / Railway / Render / Fly.io / VPS
+**Production URL:**
+**Staging URL:**
+**CI/CD:** GitHub Actions / none
+**Deploy trigger:** Push to `main` / manual
+
+---
+
+_Last updated: [YYYY-MM-DD]_

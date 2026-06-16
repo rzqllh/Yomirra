@@ -2,27 +2,28 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 export interface ReaderProgress {
-  scrollY: number;
-  page: number;
+  chapterId: string;
+  pageIndex: number;
+  offsetWithinPage?: number;
   timestamp: number;
 }
 
 interface ReaderProgressState {
   progress: Record<string, ReaderProgress>;
-  saveProgress: (sourceId: string, mangaId: string, chapterId: string, scrollY: number, page: number) => void;
-  getProgress: (sourceId: string, mangaId: string, chapterId: string) => ReaderProgress | undefined;
+  saveProgress: (sourceId: string, mangaId: string, chapterId: string, pageIndex: number, offsetWithinPage?: number) => void;
+  getProgress: (sourceId: string, mangaId: string) => ReaderProgress | undefined;
 }
 
-const getProgressKey = (sourceId: string, mangaId: string, chapterId: string) => 
-  `progress:${sourceId}:${mangaId}:${chapterId}`;
+const getProgressKey = (sourceId: string, mangaId: string) => 
+  `progress:${sourceId}:${mangaId}`;
 
 export const useReaderProgressStore = create<ReaderProgressState>()(
   persist(
     (set, get) => ({
       progress: {},
 
-      saveProgress: (sourceId, mangaId, chapterId, scrollY, page) => set((state) => {
-        const key = getProgressKey(sourceId, mangaId, chapterId);
+      saveProgress: (sourceId, mangaId, chapterId, pageIndex, offsetWithinPage) => set((state) => {
+        const key = getProgressKey(sourceId, mangaId);
         
         // Clean up old progress (> 7 days)
         const now = Date.now();
@@ -38,16 +39,17 @@ export const useReaderProgressStore = create<ReaderProgressState>()(
         });
 
         newProgress[key] = {
-          scrollY,
-          page,
+          chapterId,
+          pageIndex,
+          offsetWithinPage,
           timestamp: now
         };
 
         return { progress: newProgress };
       }),
 
-      getProgress: (sourceId, mangaId, chapterId) => {
-        const key = getProgressKey(sourceId, mangaId, chapterId);
+      getProgress: (sourceId, mangaId) => {
+        const key = getProgressKey(sourceId, mangaId);
         const item = get().progress[key];
         
         if (!item) return undefined;

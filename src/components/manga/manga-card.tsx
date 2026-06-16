@@ -166,7 +166,7 @@ export function MangaCard({
             </p>
           </Link>
           <div className="mt-1 flex items-center gap-2 text-xs font-semibold text-text-muted">
-            <span className="uppercase tracking-wider">{sourceId}</span>
+            <span className="uppercase tracking-wider">{manga.format || manga.status || "MANGA"}</span>
             {progressPercent !== undefined && progressPercent > 0 && (
               <>
                 <span>•</span>

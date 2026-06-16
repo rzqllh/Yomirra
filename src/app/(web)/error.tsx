@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { WarningCircle, ArrowCounterClockwise } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 
@@ -16,6 +17,9 @@ export default function GlobalError({
     console.error("Global Error Caught:", error);
   }, [error]);
 
+  const pathname = usePathname();
+  const isHome = pathname === "/";
+
   return (
     <div className="flex h-[80vh] w-full flex-col items-center justify-center gap-6 px-4 text-center">
       <div className="rounded-full bg-semantic-error/10 p-6 text-semantic-error">
@@ -26,7 +30,7 @@ export default function GlobalError({
           Terjadi Kesalahan
         </h2>
         <p className="max-w-md text-sm text-text-muted">
-          Aplikasi mengalami masalah yang tidak terduga. Silakan coba muat ulang halaman atau kembali ke beranda.
+          Aplikasi mengalami masalah yang tidak terduga. Silakan coba muat ulang halaman{isHome ? "." : " atau kembali ke beranda."}
         </p>
       </div>
       <div className="flex flex-col sm:flex-row gap-3 mt-4">
@@ -38,13 +42,15 @@ export default function GlobalError({
           <ArrowCounterClockwise className="mr-2 h-5 w-5" weight="bold" />
           Coba Lagi
         </Button>
-        <Button 
-          variant="outline" 
-          onClick={() => window.location.href = '/'}
-          className="min-h-[44px] px-8 rounded-full"
-        >
-          Kembali ke Beranda
-        </Button>
+        {!isHome && (
+          <Button 
+            variant="outline" 
+            onClick={() => window.location.href = '/'}
+            className="min-h-[44px] px-8 rounded-full"
+          >
+            Kembali ke Beranda
+          </Button>
+        )}
       </div>
     </div>
   );

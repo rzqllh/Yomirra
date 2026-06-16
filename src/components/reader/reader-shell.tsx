@@ -24,7 +24,7 @@ interface ReaderShellProps {
 
 export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sourceId, mangaId, chapters, currentChapterId }: ReaderShellProps) {
   const router = useRouter()
-  const { preferences, isOverlayVisible, isDesktopPanelOpen, toggleDesktopPanel, toggleOverlay } = useReaderStore()
+  const { preferences, isOverlayVisible, isDesktopPanelOpen, toggleDesktopPanel, toggleOverlay, setOverlayVisible } = useReaderStore()
   const [isDrawerOpen, setIsDrawerOpen] = React.useState(false)
 
   const getBackgroundColor = () => {
@@ -81,10 +81,82 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
     };
   }, [preferences.keepScreenAwake]);
 
+  // Gesture-safe overlay toggle (Center 40% tap, <=10px, <=250ms)
+  React.useEffect(() => {
+    let pointerState = { startX: 0, startY: 0, time: 0 };
+
+    const handlePointerDown = (e: PointerEvent) => {
+      if (e.button !== 0) return;
+      // Ignore if clicking on UI elements
+      if ((e.target as Element).closest('button, a, [role="button"], .pointer-events-auto')) return;
+      
+      pointerState = {
+        startX: e.clientX,
+        startY: e.clientY,
+        time: Date.now()
+      };
+    };
+
+    const handlePointerUp = (e: PointerEvent) => {
+      if (e.button !== 0) return;
+      if ((e.target as Element).closest('button, a, [role="button"], .pointer-events-auto')) return;
+
+      const duration = Date.now() - pointerState.time;
+      const deltaX = Math.abs(e.clientX - pointerState.startX);
+      const deltaY = Math.abs(e.clientY - pointerState.startY);
+
+      // Strict intent disambiguation
+      if (duration <= 250 && deltaX <= 10 && deltaY <= 10) {
+        const viewportHeight = window.innerHeight;
+        const tapY = e.clientY;
+        const topBoundary = viewportHeight * 0.3;
+        const bottomBoundary = viewportHeight * 0.7;
+
+        // Only toggle if tap is within the center 40%
+        if (tapY >= topBoundary && tapY <= bottomBoundary) {
+          toggleOverlay();
+        }
+      }
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('pointerup', handlePointerUp);
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('pointerup', handlePointerUp);
+    };
+  }, [toggleOverlay]);
+
+  // Immediate overlay auto-dismiss on scroll
+  React.useEffect(() => {
+    let ticking = false;
+    let lastScrollY = window.scrollY;
+
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY;
+          
+          if (Math.abs(currentScrollY - lastScrollY) > 10) {
+            setOverlayVisible(false);
+          }
+          
+          lastScrollY = currentScrollY;
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [setOverlayVisible]);
+
   return (
     <div 
       className={cn(
-        "relative min-h-screen w-full transition-all duration-300",
+        "relative min-h-screen w-full transition-[padding] duration-150",
         isDesktopPanelOpen && "md:pr-[320px]"
       )}
       style={{ backgroundColor: getBackgroundColor() }}
@@ -93,7 +165,7 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
       {/* Top Overlay */}
       <div 
         className={cn(
-          "fixed top-4 left-4 right-4 z-[var(--z-sticky)] transition-all duration-300 ease-out flex justify-between pointer-events-none",
+          "fixed top-4 left-4 right-4 z-[var(--z-sticky)] transition-[transform,opacity] duration-150 ease-out flex justify-between pointer-events-none",
           isOverlayVisible ? "translate-y-0 opacity-100" : "-translate-y-20 opacity-0",
           isDesktopPanelOpen ? "md:right-[calc(320px+1rem)]" : ""
         )}

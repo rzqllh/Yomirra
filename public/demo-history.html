@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo 5 Desain Lanjut Baca</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
+                    colors: { accent: '#4ADE80' }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #f4f7f9; color: #0f172a; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="p-8 pb-24">
+
+    <div class="max-w-4xl mx-auto space-y-24">
+        
+        <div class="text-center mb-12">
+            <h1 class="text-3xl font-black mb-2">Huashu Design: Demo 5 Varian</h1>
+            <p class="text-slate-500">Pilih gaya favorit Anda untuk section "Lanjut Baca" (History).</p>
+        </div>
+
+        <!-- Ide 1: Ghost Cards -->
+        <section>
+            <h2 class="text-xl font-bold mb-4">Ide 1: Ghost Cards (Rak Kosong)</h2>
+            <p class="text-sm text-slate-500 mb-6">Menyatu dengan tema Light Mode. Terlihat seperti slot rak buku yang menanti untuk diisi.</p>
+            <div class="flex gap-4 overflow-x-auto hide-scrollbar pb-4 snap-x">
+                <!-- Real Card -->
+                <div class="w-[300px] shrink-0 snap-start rounded-3xl overflow-hidden relative shadow-lg h-[200px] border border-black/5 bg-slate-900 group">
+                    <img src="https://mangatx.com/wp-content/uploads/2019/10/Revenge-of-the-Iron-Blooded-Sword-Hound-193x278.jpg" class="absolute inset-0 w-full h-full object-cover opacity-40 blur-xl scale-125" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent"></div>
+                    <div class="relative z-10 p-5 h-full flex flex-col justify-end">
+                        <div class="flex gap-4">
+                            <img src="https://mangatx.com/wp-content/uploads/2019/10/Revenge-of-the-Iron-Blooded-Sword-Hound-193x278.jpg" class="w-16 h-24 rounded-lg shadow-md object-cover" />
+                            <div class="flex-1 text-white">
+                                <span class="text-accent text-[10px] font-bold uppercase tracking-wider block mb-1">Lanjut Baca</span>
+                                <h3 class="font-bold leading-tight mb-1 line-clamp-2">Revenge of the Iron-Blooded Sword Hound</h3>
+                                <p class="text-xs text-slate-400 mb-2">Chapter 42</p>
+                                <button class="bg-white text-slate-900 text-xs font-bold px-4 py-2 rounded-full">Baca</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Ghost Card -->
+                <div class="w-[300px] shrink-0 snap-start rounded-3xl flex flex-col items-center justify-center h-[200px] border-2 border-dashed border-slate-300 bg-slate-100/50 hover:bg-slate-100 transition-colors cursor-pointer text-slate-400 hover:text-slate-600">
+                    <div class="w-12 h-12 rounded-full bg-white shadow-sm border border-slate-200 flex items-center justify-center mb-3">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    </div>
+                    <span class="font-bold text-sm">Tambahkan Komik</span>
+                </div>
+                <!-- Ghost Card -->
+                <div class="w-[300px] shrink-0 snap-start rounded-3xl flex flex-col items-center justify-center h-[200px] border-2 border-dashed border-slate-300 bg-slate-100/50 hover:bg-slate-100 transition-colors cursor-pointer text-slate-400 hover:text-slate-600">
+                    <div class="w-12 h-12 rounded-full bg-white shadow-sm border border-slate-200 flex items-center justify-center mb-3">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    </div>
+                    <span class="font-bold text-sm">Tambahkan Komik</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Ide 2: Dynamic Banner -->
+        <section>
+            <h2 class="text-xl font-bold mb-4">Ide 2: Dynamic Banner (Widescreen)</h2>
+            <p class="text-sm text-slate-500 mb-6">Jika riwayat cuma 1, jangan biarkan kosong. Stretch kartu tersebut memenuhi layar secara megah ala Netflix.</p>
+            <div class="w-full rounded-3xl overflow-hidden relative shadow-lg h-[240px] border border-black/5 bg-slate-900 group">
+                <img src="https://mangatx.com/wp-content/uploads/2019/10/Revenge-of-the-Iron-Blooded-Sword-Hound-193x278.jpg" class="absolute inset-0 w-full h-full object-cover opacity-60" />
+                <div class="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/80 to-transparent"></div>
+                <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent"></div>
+                <div class="relative z-10 p-8 h-full flex flex-col justify-center max-w-lg">
+                    <span class="text-accent text-xs font-bold uppercase tracking-widest block mb-2 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+                        Lanjut Baca
+                    </span>
+                    <h3 class="text-3xl font-black leading-tight mb-2 text-white drop-shadow-md">Revenge of the Iron-Blooded Sword Hound</h3>
+                    <p class="text-sm text-slate-300 mb-6 font-medium">Chapter 42 • Fantasy, Action</p>
+                    <div class="flex gap-3">
+                        <button class="bg-white text-slate-900 text-sm font-bold px-8 py-3 rounded-full flex items-center gap-2 shadow-lg hover:scale-105 transition-transform">
+                            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg> Lanjutkan
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Ide 3: Merged Discovery -->
+        <section>
+            <h2 class="text-xl font-bold mb-4">Ide 3: Merged Discovery (Spotify Style)</h2>
+            <p class="text-sm text-slate-500 mb-6">Campur kartu riwayat dengan komik rekomendasi. Tampilan carousel 100% penuh gambar komik sungguhan.</p>
+            <div class="flex gap-4 overflow-x-auto hide-scrollbar pb-4 snap-x">
+                <!-- History -->
+                <div class="w-[280px] shrink-0 snap-start rounded-3xl overflow-hidden relative shadow-lg h-[200px] bg-slate-900">
+                    <img src="https://mangatx.com/wp-content/uploads/2019/10/Revenge-of-the-Iron-Blooded-Sword-Hound-193x278.jpg" class="absolute inset-0 w-full h-full object-cover opacity-40 blur-md" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent"></div>
+                    <div class="relative z-10 p-5 h-full flex flex-col justify-end">
+                        <span class="bg-accent/20 text-accent px-2 py-1 rounded-md text-[10px] font-bold w-max mb-2">Riwayat Anda</span>
+                        <div class="flex gap-4 items-end">
+                            <img src="https://mangatx.com/wp-content/uploads/2019/10/Revenge-of-the-Iron-Blooded-Sword-Hound-193x278.jpg" class="w-16 h-24 rounded-lg shadow-md object-cover" />
+                            <div class="flex-1 text-white pb-1">
+                                <h3 class="font-bold leading-tight mb-1 line-clamp-1">Revenge of the Iron...</h3>
+                                <p class="text-xs text-slate-400 mb-2">Ch. 42</p>
+                                <button class="bg-white text-slate-900 text-xs font-bold px-4 py-1.5 rounded-full w-full">Baca</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Discovery 1 -->
+                <div class="w-[280px] shrink-0 snap-start rounded-3xl overflow-hidden relative shadow-lg h-[200px] bg-slate-900">
+                    <img src="https://mangatx.com/wp-content/uploads/2021/01/Demonic-Emperor-193x278.jpg" class="absolute inset-0 w-full h-full object-cover opacity-40 blur-md" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent"></div>
+                    <div class="relative z-10 p-5 h-full flex flex-col justify-end">
+                        <span class="bg-blue-500/20 text-blue-400 border border-blue-500/20 px-2 py-1 rounded-md text-[10px] font-bold w-max mb-2 flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> Disarankan</span>
+                        <div class="flex gap-4 items-end">
+                            <img src="https://mangatx.com/wp-content/uploads/2021/01/Demonic-Emperor-193x278.jpg" class="w-16 h-24 rounded-lg shadow-md object-cover" />
+                            <div class="flex-1 text-white pb-1">
+                                <h3 class="font-bold leading-tight mb-1 line-clamp-1">Demonic Emperor</h3>
+                                <p class="text-xs text-slate-400 mb-2">Action, Magic</p>
+                                <button class="bg-white/10 text-white border border-white/20 text-xs font-bold px-4 py-1.5 rounded-full w-full">Lihat Detail</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Discovery 2 -->
+                <div class="w-[280px] shrink-0 snap-start rounded-3xl overflow-hidden relative shadow-lg h-[200px] bg-slate-900">
+                    <img src="https://mangatx.com/wp-content/uploads/2020/06/Nano-Machine-193x278.jpg" class="absolute inset-0 w-full h-full object-cover opacity-40 blur-md" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent"></div>
+                    <div class="relative z-10 p-5 h-full flex flex-col justify-end">
+                        <span class="bg-blue-500/20 text-blue-400 border border-blue-500/20 px-2 py-1 rounded-md text-[10px] font-bold w-max mb-2 flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> Disarankan</span>
+                        <div class="flex gap-4 items-end">
+                            <img src="https://mangatx.com/wp-content/uploads/2020/06/Nano-Machine-193x278.jpg" class="w-16 h-24 rounded-lg shadow-md object-cover" />
+                            <div class="flex-1 text-white pb-1">
+                                <h3 class="font-bold leading-tight mb-1 line-clamp-1">Nano Machine</h3>
+                                <p class="text-xs text-slate-400 mb-2">Sci-Fi, Murim</p>
+                                <button class="bg-white/10 text-white border border-white/20 text-xs font-bold px-4 py-1.5 rounded-full w-full">Lihat Detail</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Ide 4: Sembunyikan Total / Minimal Bar -->
+        <section>
+            <h2 class="text-xl font-bold mb-4">Ide 4: Sembunyikan Total / Minimal Bar</h2>
+            <p class="text-sm text-slate-500 mb-6">Jika cuma 1 riwayat, jangan pakai desain kartu memakan layar. Pakai 'Floating Bar' tipis yang nempel di atas daftar populer.</p>
+            
+            <!-- Minimal Bar -->
+            <div class="bg-white border border-slate-200 shadow-sm rounded-2xl p-3 flex items-center gap-4 mb-8">
+                <img src="https://mangatx.com/wp-content/uploads/2019/10/Revenge-of-the-Iron-Blooded-Sword-Hound-193x278.jpg" class="w-10 h-10 rounded object-cover" />
+                <div class="flex-1">
+                    <p class="text-xs text-slate-500 font-bold mb-0.5">Lanjut Baca</p>
+                    <h4 class="text-sm font-bold line-clamp-1">Revenge of the Iron-Blooded Sword Hound - Ch. 42</h4>
+                </div>
+                <button class="w-10 h-10 rounded-full bg-slate-900 text-white flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4 fill-current ml-1" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                </button>
+            </div>
+            
+            <h3 class="text-xl font-black mb-4">Top Shinigami</h3>
+            <div class="flex gap-4">
+                <div class="w-32 h-48 bg-slate-200 rounded-xl"></div>
+                <div class="w-32 h-48 bg-slate-200 rounded-xl"></div>
+                <div class="w-32 h-48 bg-slate-200 rounded-xl"></div>
+            </div>
+        </section>
+
+        <!-- Ide 5: Inline Search Card -->
+        <section>
+            <h2 class="text-xl font-bold mb-4">Ide 5: Inline Search Card (Warna Terang)</h2>
+            <p class="text-sm text-slate-500 mb-6">Ganti kotak hitam menyeramkan dengan kartu berwarna gradasi cerah, yang isinya form pencarian interaktif.</p>
+            <div class="flex gap-4 overflow-x-auto hide-scrollbar pb-4 snap-x">
+                <!-- Real Card -->
+                <div class="w-[300px] shrink-0 snap-start rounded-3xl overflow-hidden relative shadow-lg h-[200px] bg-slate-900 group">
+                    <img src="https://mangatx.com/wp-content/uploads/2019/10/Revenge-of-the-Iron-Blooded-Sword-Hound-193x278.jpg" class="absolute inset-0 w-full h-full object-cover opacity-40 blur-xl scale-125" />
+                    <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/80 to-transparent"></div>
+                    <div class="relative z-10 p-5 h-full flex flex-col justify-end">
+                        <div class="flex gap-4">
+                            <img src="https://mangatx.com/wp-content/uploads/2019/10/Revenge-of-the-Iron-Blooded-Sword-Hound-193x278.jpg" class="w-16 h-24 rounded-lg shadow-md object-cover" />
+                            <div class="flex-1 text-white">
+                                <span class="text-accent text-[10px] font-bold uppercase tracking-wider block mb-1">Lanjut Baca</span>
+                                <h3 class="font-bold leading-tight mb-1 line-clamp-2">Revenge of the Iron-Blooded Sword Hound</h3>
+                                <button class="bg-white text-slate-900 text-xs font-bold px-4 py-2 rounded-full mt-2">Baca</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Interactive Search Card -->
+                <div class="w-[300px] md:w-[400px] shrink-0 snap-start rounded-3xl p-6 flex flex-col justify-center h-[200px] bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg text-white">
+                    <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center mb-3">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                    <h3 class="font-bold text-lg mb-1">Lagi cari komik seru?</h3>
+                    <p class="text-white/80 text-xs mb-4">Ketik judul atau genre yang kamu mau</p>
+                    <div class="relative">
+                        <input type="text" placeholder="Cari Solo Leveling..." class="w-full bg-white/10 border border-white/20 text-white placeholder-white/50 rounded-full px-4 py-2.5 text-sm outline-none focus:bg-white/20 transition-colors">
+                        <button class="absolute right-1 top-1 bottom-1 bg-white text-indigo-600 px-3 rounded-full text-xs font-bold shadow-sm">Cari</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+</body>
+</html>
