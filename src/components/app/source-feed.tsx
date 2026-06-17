@@ -8,6 +8,8 @@ import { YomirraSection } from "@/components/ui/yomirra-layout";
 import { ErrorState } from "@/components/states/error-state";
 import { HorizontalScrollContainer } from "@/components/ui/horizontal-scroll-container";
 import { PopularCarousel } from "@/components/ui/popular-carousel";
+import { Clock, Play, Fire, TrendUp, Compass } from "@phosphor-icons/react/dist/ssr";
+import { FeaturedHeroCarousel } from "@/components/app/featured-hero-carousel";
 import { MagazineHero } from "@/components/app/magazine-hero";
 
 interface SourceFeedProps {
@@ -46,51 +48,86 @@ export async function SourceFeed({ sourceId, sourceName, variant }: SourceFeedPr
     return null;
   }
 
-  const heroMangas = latest?.mangas.slice(0, 3) || [];
-  const sideMangas = popular?.mangas.slice(0, 5);
+  // Shuffle the latest data for the carousel
+  const shuffledLatest = [...(latest?.mangas || [])].sort(() => 0.5 - Math.random()).slice(0, 10);
+  const top5Trending = popular?.mangas.slice(0, 5) || [];
+  const restTrending = popular?.mangas.slice(5, 25) || [];
 
   return (
-    <div className="flex flex-col gap-10">
-      <div className="flex flex-col md:flex-row gap-6 bg-surface-base p-2 md:p-4 rounded-[36px] border border-border-subtle/50">
-        <MagazineHero sourceId={sourceId} mangas={heroMangas} />
-        
-        <div className="w-full md:w-1/3 flex flex-col pt-2 md:pt-4 px-2 md:px-0">
-          <div className="flex justify-between items-end mb-5">
-            <h3 className="text-xl font-bold tracking-tight">Sedang Tren</h3>
-            <Link href={`/sources/${sourceId}?sort=popular`} className="text-xs font-bold text-accent hover:underline">
+    <div className="flex flex-col gap-16">
+      
+      {/* SECTION: Sorotan Terbaru (Top 5) */}
+      {top5Trending.length > 0 && (
+        <div className="flex flex-col gap-6">
+          <div className="flex justify-between items-end border-b border-border-subtle pb-4">
+            <h2 className="text-2xl font-bold flex items-center gap-3">
+              <Fire weight="duotone" className="text-semantic-warning" /> Sorotan Terbaru
+            </h2>
+            <Link href={`/sources/${sourceId}?sort=popular`} className="text-sm font-bold text-accent hover:underline">
               Lihat Semua
             </Link>
           </div>
           
-          <div className="flex flex-col gap-4 flex-1">
-            {sideMangas?.map((manga, idx) => (
-              <Link 
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-auto lg:h-[400px]">
+            {/* Hero Carousel (Left 2 columns) - 10 Random Latest */}
+            <FeaturedHeroCarousel sourceId={sourceId} mangas={shuffledLatest} />
+
+            {/* Sidebar Queue (Right 1 column) - Ranks 1 to 5 */}
+            <div className="bg-surface-raised rounded-3xl p-6 border border-border-subtle flex flex-col gap-4 overflow-y-auto">
+              <h4 className="font-bold text-sm text-text-muted uppercase tracking-wider mb-2 flex items-center gap-2">
+                <TrendUp weight="duotone" /> Peringkat Populer
+              </h4>
+              {top5Trending.map((manga, idx) => (
+                <Link 
+                  key={manga.id} 
+                  href={`/sources/${sourceId}/manga/${manga.id}`}
+                  className="flex gap-4 items-center group cursor-pointer hover:bg-surface-hover p-2 -mx-2 rounded-xl transition-colors"
+                >
+                  <div className="w-10 text-center shrink-0">
+                    <span className={cn(
+                      "text-xl font-black italic",
+                      idx === 0 ? "text-slate-400" : 
+                      idx === 1 ? "text-amber-700" : "text-white/20"
+                    )}>
+                      #{idx + 1}
+                    </span>
+                  </div>
+                  <div className="w-14 aspect-[2/3] rounded-lg overflow-hidden shrink-0 shadow-sm border border-border-subtle">
+                    <img src={manga.coverUrl || ""} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h5 className="font-bold text-sm line-clamp-2 group-hover:text-accent transition-colors">{manga.title}</h5>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SECTION: Trending / Discovery */}
+      {restTrending.length > 0 && (
+        <div className="flex flex-col gap-6">
+          <div className="border-b border-border-subtle pb-4">
+            <h2 className="text-xl font-bold flex items-center gap-3">
+              <Compass weight="duotone" className="text-accent" /> Eksplorasi
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 lg:gap-6">
+            {restTrending.map((manga, idx) => (
+              <MangaCard 
                 key={manga.id} 
-                href={`/sources/${sourceId}/manga/${manga.id}`}
-                className="flex gap-4 items-center group bg-surface-raised hover:bg-surface-overlay p-2.5 rounded-2xl transition-colors border border-white/5"
-              >
-                <div className="w-8 flex justify-center">
-                  <span className={cn(
-                    "text-xl font-black italic",
-                    idx === 0 ? "text-amber-500" : 
-                    idx === 1 ? "text-slate-400" : 
-                    idx === 2 ? "text-amber-700" : "text-white/20"
-                  )}>
-                    {idx + 1}
-                  </span>
-                </div>
-                <div className="w-[52px] h-[72px] rounded-lg overflow-hidden shrink-0 shadow-md">
-                  <img src={manga.coverUrl || ""} alt={manga.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                </div>
-                <div className="flex-1 min-w-0 pr-2">
-                  <h4 className="font-bold text-sm text-text-primary line-clamp-2 group-hover:text-accent transition-colors">{manga.title}</h4>
-                  <p className="text-xs text-text-muted mt-1 truncate">Manga</p>
-                </div>
-              </Link>
+                manga={manga} 
+                sourceId={sourceId} 
+                rank={idx + 6}
+                variant="shelf" 
+              />
             ))}
           </div>
         </div>
-      </div>
+      )}
+
     </div>
   );
 }

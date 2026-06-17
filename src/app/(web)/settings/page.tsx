@@ -58,20 +58,14 @@ export default function SettingsPage() {
   return (
     <DirectionalTransition>
       <div className="flex flex-col min-h-screen">
-        <div className="md:hidden">
-          <YomirraPageHeader title="Pengaturan" variant="auto" />
-        </div>
-
         <YomirraSurface variant="base" className="flex-1 w-full max-w-7xl mx-auto md:pb-8">
           <div className="px-4 py-6 md:px-8 md:py-8 space-y-8">
             
-            <div className="hidden md:block">
-              <DesktopPageTitle 
-                title="Pengaturan" 
-                description="Sesuaikan preferensi aplikasi sesuai keinginanmu."
-                icon={<Gear size={32} weight="duotone" />}
-              />
-            </div>
+            <DesktopPageTitle 
+              title="Pengaturan" 
+              description="Sesuaikan preferensi aplikasi sesuai keinginanmu."
+              icon={<Gear size={32} weight="duotone" />}
+            />
 
             {/* Akun & Sinkronisasi */}
             <SettingsSection title="Akun & Sinkronisasi">

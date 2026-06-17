@@ -1,4 +1,4 @@
-import { Plug } from "@phosphor-icons/react"
+import { Plug, Warning, Lightning, Clock, Heartbeat, Bug } from "@phosphor-icons/react"
 import { Badge } from "@/components/ui/badge"
 import { SourceMetadata } from "@/shared/types/source"
 
@@ -7,18 +7,20 @@ interface SourceCardProps {
 }
 
 export function SourceCard({ source }: SourceCardProps) {
+  const isDown = source.status !== "online" && source.status !== "slow";
+  
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-border-subtle bg-surface-raised p-4 transition-all hover:bg-surface-overlay">
-      <div className="flex items-center gap-4">
+    <div className="flex flex-col rounded-lg border border-border-subtle bg-surface-raised transition-all hover:bg-surface-overlay overflow-hidden">
+      <div className="flex items-center gap-4 p-4 pb-3">
         <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-md bg-surface-base border border-border-subtle">
           <Plug size={24} className="text-text-muted" />
         </div>
         <div className="flex-1 overflow-hidden">
           <div className="flex items-center justify-between">
             <h3 className="truncate text-base font-bold text-text-primary">{source.name}</h3>
-            <Badge variant={source.status === "online" ? "success" : "warning"}>
+            <Badge variant={source.status === "online" ? "success" : source.status === "slow" ? "warning" : "error"}>
               <div className="size-1.5 rounded-full bg-current mr-1" />
-              {source.status === "online" ? "Online" : "Offline"}
+              {source.status === "online" ? "Online" : source.status === "slow" ? "Lambat" : "Gangguan"}
             </Badge>
           </div>
           <p className="truncate text-sm text-text-muted flex items-center gap-2 mt-0.5">
@@ -29,7 +31,7 @@ export function SourceCard({ source }: SourceCardProps) {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-1.5 mt-1">
+      <div className="px-4 pb-3 flex flex-wrap gap-1.5">
         {Object.entries(source.capabilities).map(([key, value]) => {
           if (!value) return null;
           return (
@@ -39,6 +41,42 @@ export function SourceCard({ source }: SourceCardProps) {
           )
         })}
       </div>
+
+      {source.healthStats && (
+        <div className="bg-surface-base border-t border-border-subtle p-3 px-4">
+          <div className="grid grid-cols-3 gap-2 mb-2">
+            <div className="flex items-center gap-1.5 text-xs text-text-muted">
+              <Lightning size={14} className="text-accent" />
+              <span className="font-semibold">{source.healthStats.uptime}</span> Uptime
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-text-muted">
+              <Heartbeat size={14} className="text-accent" />
+              <span className="font-semibold">{source.healthStats.latency}</span> Ping
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-text-muted text-right justify-end">
+              <Clock size={14} />
+              <span>{source.healthStats.lastChecked}</span>
+            </div>
+          </div>
+          {source.healthStats.message && (
+            <p className="text-[11px] text-text-secondary mt-1 border-l-2 border-accent-dim pl-2">
+              {source.healthStats.message}
+            </p>
+          )}
+        </div>
+      )}
+
+      {isDown && (
+        <div className="bg-semantic-error/10 border-t border-semantic-error/20 p-3 px-4 flex items-center justify-between">
+          <div className="flex items-center gap-2 text-semantic-error text-sm font-semibold">
+            <Warning size={16} weight="bold" />
+            Sumber bermasalah
+          </div>
+          <a href="https://github.com/rzqllh/Yomirra/issues" target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-xs font-bold bg-semantic-error text-semantic-error-on px-3 py-1.5 rounded-md hover:bg-semantic-error/90 transition-colors">
+            <Bug size={14} weight="bold" /> Report Dev
+          </a>
+        </div>
+      )}
     </div>
   )
 }

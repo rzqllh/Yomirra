@@ -13,6 +13,12 @@ export const sourceRegistry: SourceMetadata[] = [
     isEnabled: true,
     isInstalled: true,
     status: "online",
+    healthStats: {
+      uptime: "99.9%",
+      latency: "120ms",
+      lastChecked: "Baru saja",
+      message: "Server berjalan normal tanpa kendala."
+    },
     isNsfw: false,
     capabilities: {
       popular: true,

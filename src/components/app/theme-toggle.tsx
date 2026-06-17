@@ -28,29 +28,33 @@ export function ThemeToggle() {
     <button
       onClick={() => setTheme(isDark ? "light" : "dark")}
       className={cn(
-        "relative flex w-[68px] h-9 items-center rounded-full p-1 transition-colors duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent",
-        "bg-surface-raised border border-border-subtle hover:border-border-strong shadow-sm"
+        "relative flex w-[68px] h-9 items-center rounded-full p-1 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ",
+        "bg-surface-glass backdrop-blur-md border border-border-glass shadow-sm hover:bg-surface-hover/50"
       )}
       aria-label="Toggle theme"
     >
-      <div className="relative flex w-full justify-between items-center z-10 px-1.5">
-        <Moon 
-          size={14} 
-          weight={isDark ? "fill" : "bold"} 
-          className={cn("transition-colors duration-300", isDark ? "text-text-primary" : "text-text-muted")} 
-        />
-        <Sun 
-          size={14} 
-          weight={!isDark ? "fill" : "bold"} 
-          className={cn("transition-colors duration-300", !isDark ? "text-text-primary" : "text-text-muted")} 
-        />
+      <div className="relative flex w-full justify-between items-center z-10">
+        <div className="w-7 h-7 flex items-center justify-center">
+          <Moon 
+            size={14} 
+            weight="duotone"
+            className={cn("transition-colors duration-300", isDark ? "text-text-primary" : "text-text-muted")} 
+          />
+        </div>
+        <div className="w-7 h-7 flex items-center justify-center">
+          <Sun 
+            size={14} 
+            weight="duotone"
+            className={cn("transition-colors duration-300", !isDark ? "text-text-primary" : "text-text-muted")} 
+          />
+        </div>
       </div>
       
       {/* Sliding Pill Background */}
       <motion.div
-        className="absolute top-1 bottom-1 w-7 rounded-full bg-surface-overlay border border-border-strong shadow-sm z-0"
+        className="absolute top-1 w-7 h-7 rounded-full bg-surface-overlay border border-border-strong shadow-sm z-0"
         animate={{
-          left: isDark ? "4px" : "34px",
+          left: isDark ? "4px" : "36px",
         }}
         transition={{ duration: 0.3, ease: "easeOut" }}
       />

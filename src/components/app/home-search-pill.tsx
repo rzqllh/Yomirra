@@ -4,6 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { MagnifyingGlass, X } from "@phosphor-icons/react";
 import { cn } from "@/shared/utils/cn";
+import ReactDOM from "react-dom";
 
 export function HomeSearchPill() {
   const router = useRouter();
@@ -26,21 +27,26 @@ export function HomeSearchPill() {
     }
   };
 
-  return (
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const content = (
     <>
-      {/* Overlay Backdrop when open */}
+      {/* Backdrop (Only on mobile) */}
       <div 
         className={cn(
-          "fixed inset-0 z-[var(--z-modal)] bg-surface-base/80 backdrop-blur-md transition-all duration-300 ease-out",
+          "md:hidden fixed inset-0 z-[100] bg-surface-base/80 backdrop-blur-md transition-all duration-300 ease-out",
           isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         )}
         onClick={() => setIsOpen(false)}
       />
 
-      {/* Morphing Container */}
+      {/* Pill Container (Only on mobile) */}
       <div 
         className={cn(
-          "fixed z-[calc(var(--z-modal)+1)] transition-all duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)]",
+          "md:hidden fixed z-[101] transition-all duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)]",
           isOpen 
             ? "top-4 left-4 right-4 h-14" 
             : "top-[calc(var(--safe-top)+16px)] right-4 h-10 w-10 md:w-64"
@@ -73,8 +79,8 @@ export function HomeSearchPill() {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Cari komik favoritmu..."
             className={cn(
-              "flex-1 bg-transparent text-[16px] font-medium text-text-primary outline-none placeholder:text-text-muted/60 h-full ml-3 transition-opacity duration-200",
-              isOpen ? "opacity-100 w-full" : "opacity-0 w-0 md:opacity-100 md:w-full pointer-events-none md:pointer-events-auto"
+              "bg-transparent text-[16px] font-medium text-text-primary outline-none placeholder:text-text-muted/60 h-full transition-opacity duration-200",
+              isOpen ? "opacity-100 w-full ml-3 flex-1" : "flex-none opacity-0 w-0 md:opacity-100 md:w-full md:ml-3 md:flex-1 pointer-events-none md:pointer-events-auto"
             )}
             tabIndex={isOpen ? 0 : -1}
           />
@@ -95,4 +101,7 @@ export function HomeSearchPill() {
       </div>
     </>
   );
+
+  if (!mounted) return null;
+  return ReactDOM.createPortal(content, document.body);
 }

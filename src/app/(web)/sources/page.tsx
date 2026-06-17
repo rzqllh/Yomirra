@@ -15,7 +15,7 @@ import { YomirraPageHeader, DesktopPageTitle } from "@/components/app/yomirra-he
 export default function SourcesPage() {
   const [filter, setFilter] = React.useState("");
 
-  const { data: sources, isLoading } = useQuery({
+  const { data: sources, isLoading, isError } = useQuery({
     queryKey: ["sources"],
     queryFn: () => apiClient.getSources(),
   });
@@ -30,12 +30,8 @@ export default function SourcesPage() {
   return (
     <DirectionalTransition>
       <div className="flex flex-col min-h-screen">
-        <div className="md:hidden">
-          <YomirraPageHeader title="Sumber" variant="auto" />
-        </div>
-
         <YomirraSurface variant="base" className="flex-1 w-full max-w-7xl mx-auto md:pb-8">
-          <div className="hidden md:block px-4 py-8 pb-4">
+          <div className="px-4 py-8 pb-4">
             <DesktopPageTitle 
               title="Sumber" 
               description="Kelola sumber bacaan untuk Yomirra."
@@ -62,6 +58,14 @@ export default function SourcesPage() {
           <div className="p-4 pt-4">
             {isLoading ? (
               <SourceListSkeleton />
+            ) : isError ? (
+              <EmptyState
+                variant="compact"
+                icon={<HardDrives size={40} className="text-semantic-error" weight="duotone" />}
+                title="Gagal Memuat Sumber"
+                description="Server sedang sibuk. Silakan coba beberapa saat lagi."
+                className="bg-surface-overlay rounded-xl border border-semantic-error/20 py-16"
+              />
             ) : filteredSources.length === 0 ? (
               <EmptyState
                 variant="compact"

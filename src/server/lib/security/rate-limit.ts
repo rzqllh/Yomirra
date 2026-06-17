@@ -3,7 +3,7 @@ import { NextRequest } from "next/server";
 
 export async function checkRateLimit(
   request: NextRequest,
-  limit: number = 100, // requests
+  limit: number = process.env.NODE_ENV === "development" ? 1000 : 300, // requests
   window: number = 60 // seconds
 ): Promise<{ success: boolean; headers: Record<string, string> }> {
   try {

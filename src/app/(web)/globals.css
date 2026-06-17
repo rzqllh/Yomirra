@@ -140,19 +140,19 @@
     --surface-base: #05050A; /* deepest base, near black */
     --surface-raised: #0A0A14; /* raised surface */
     --surface-overlay: #111122; /* elevated panels */
-    --surface-muted: #080810; /* muted states */
-    --surface-hover: #16162C; /* interaction hover */
-    --surface-glass: rgba(17, 17, 34, 0.10); /* translucent glass based on surface-overlay */
+    --surface-muted: #1A1A2E; /* muted states */
+    --surface-hover: #1F1F3D; /* interaction hover */
+    --surface-glass: rgba(17, 17, 34, 0.65); /* translucent glass based on surface-overlay */
 
-    --text-primary: #F2F2F7;
-    --text-secondary: #C7C7CC; /* subtle text */
-    --text-muted: #636366;
+    --text-primary: #FDFDFD;
+    --text-secondary: #D1D1D6; /* subtle text */
+    --text-muted: #98989D;
     --text-on-accent: #FFFFFF;
 
-    --border-subtle: rgba(94, 92, 230, 0.15);
-    --border-default: rgba(94, 92, 230, 0.3);
-    --border-strong: rgba(94, 92, 230, 0.5);
-    --border-glass: rgba(255, 255, 255, 0.05); /* very subtle rim for glass panels */
+    --border-subtle: rgba(94, 92, 230, 0.2);
+    --border-default: rgba(94, 92, 230, 0.4);
+    --border-strong: rgba(94, 92, 230, 0.6);
+    --border-glass: rgba(255, 255, 255, 0.08); /* subtle rim for glass panels */
     
     --color-accent: #5E5CE6; /* vibrant indigo */
     --color-accent-dim: rgba(94, 92, 230, 0.15);
@@ -197,17 +197,17 @@
     --surface-overlay: #FFFFFF; /* bright card */
     --surface-muted: #EAEAEB; /* subtle background */
     --surface-hover: #E5E5EA; /* interaction state */
-    --surface-glass: rgba(255, 255, 255, 0.7); /* translucent glass */
+    --surface-glass: rgba(255, 255, 255, 0.65); /* translucent glass */
 
     --text-primary: #1C1C1E; /* deep ink text */
     --text-secondary: #3A3A3C; /* secondary text */
-    --text-muted: #8E8E93;
+    --text-muted: #6C6C70;
     --text-on-accent: #FFFFFF;
 
-    --border-subtle: rgba(88, 86, 214, 0.08);
-    --border-default: rgba(88, 86, 214, 0.15);
-    --border-strong: rgba(88, 86, 214, 0.25);
-    --border-glass: rgba(255, 255, 255, 0.5); /* very subtle rim for glass panels */
+    --border-subtle: rgba(88, 86, 214, 0.15);
+    --border-default: rgba(88, 86, 214, 0.3);
+    --border-strong: rgba(88, 86, 214, 0.4);
+    --border-glass: rgba(0, 0, 0, 0.05); /* subtle rim for glass panels */
     
     --color-accent: #5856D6; /* indigo light mode */
     --color-accent-dim: rgba(88, 86, 214, 0.1);
