@@ -22,7 +22,7 @@ export function TopNav() {
   const { scrollY } = useScroll();
   
   React.useEffect(() => {
-    return scrollY.onChange((latest) => {
+    return scrollY.on("change", (latest) => {
       setIsScrolled(latest > 30);
     });
   }, [scrollY]);
@@ -58,16 +58,16 @@ export function TopNav() {
           "hidden md:flex fixed top-0 left-0 right-0 z-40 w-full transition-all duration-500 pointer-events-none h-[72px]",
           isScrolled 
             ? "items-center px-4 md:px-8" 
-            : "px-0 bg-surface-base/60 backdrop-blur-3xl supports-[backdrop-filter]:bg-surface-base/50 border-b border-border-glass"
+            : "px-0 bg-surface-glass backdrop-blur-3xl border-b border-border-glass"
         )}
       >
       <motion.div 
         layout
         transition={{ duration: 0.3, ease: "easeOut" }}
         className={cn(
-          "flex items-center justify-between pointer-events-auto transition-all duration-500 overflow-visible mx-auto",
+          "flex items-center justify-between pointer-events-auto transition-colors duration-500 overflow-visible mx-auto",
           isScrolled 
-            ? "max-w-7xl w-full h-[60px] bg-black/20 dark:bg-surface-overlay/80 backdrop-blur-xl border border-border-glass rounded-full shadow-md px-6" 
+            ? "max-w-7xl w-full h-[60px] bg-surface-glass backdrop-blur-xl border border-border-glass shadow-sm rounded-full px-6" 
             : "w-full h-[72px] px-8"
         )}
       >
@@ -84,27 +84,27 @@ export function TopNav() {
         {/* CENTER: Navigation Links (Absolute Centered) */}
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden lg:flex items-center gap-8 h-full">
           {navLinks.map((item) => {
-            const isActive = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href));
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "relative flex items-center h-full text-sm font-medium transition-colors outline-none",
-                  isActive ? "text-brand-600 dark:text-brand-400" : "text-text-muted hover:text-text-primary"
-                )}
-              >
-                {item.label}
-                {isActive && (
-                    <motion.div
-                      layoutId="top-nav-indicator"
-                      className="absolute -bottom-[1px] left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-brand-500 dark:bg-brand-400"
-                      transition={{ duration: 0.3, ease: "easeOut" }}
-                    />
-                )}
-              </Link>
-            );
-          })}
+  const isActive = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href));
+  return (
+    <Link
+      key={item.href}
+      href={item.href}
+      className={cn(
+        "relative flex items-center h-full text-sm transition-colors outline-none",
+        isActive ? "text-text-primary font-semibold" : "text-text-secondary hover:text-text-primary"
+      )}
+    >
+      {item.label}
+      {isActive && (
+        <motion.div
+          layoutId="nav-underline"
+          className="absolute bottom-4 left-0 right-0 h-[2px] rounded-full bg-accent "
+          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+        />
+      )}
+    </Link>
+  );
+})}
         </div>
 
         {/* RIGHT: Search + Theme + Profile */}
@@ -116,10 +116,11 @@ export function TopNav() {
               <button 
                 onClick={() => window.dispatchEvent(new CustomEvent('open-command-menu'))}
                 className={cn(
-                  "hidden sm:flex items-center gap-2 px-3 rounded-full border border-border-subtle/50 bg-surface-muted/50 hover:bg-surface-hover transition-colors text-text-muted hover:text-text-primary text-sm shadow-sm h-9 w-48"
+                  "hidden sm:flex items-center gap-2 px-3 rounded-full transition-all text-text-muted hover:text-text-primary text-sm h-9 w-48",
+                  "bg-surface-glass backdrop-blur-md border border-border-glass shadow-sm hover:bg-surface-hover/50"
                 )}
               >
-                <MagnifyingGlass size={16} weight="bold" />
+                <MagnifyingGlass size={16} weight="duotone" />
                 <span className="flex-1 text-left opacity-70">Cari...</span>
                 <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-border-default/40 bg-surface-base px-1.5 font-mono text-[10px] font-medium text-text-muted opacity-70">
                   <span className="text-xs">⌘</span>K
@@ -129,10 +130,10 @@ export function TopNav() {
               {/* Mobile icon only */}
               <IconButton 
                 onClick={() => window.dispatchEvent(new CustomEvent('open-command-menu'))}
-                className="sm:hidden size-9 rounded-full bg-surface-muted/50 hover:bg-surface-hover text-text-secondary"
+                className="sm:hidden size-9 rounded-full bg-surface-glass backdrop-blur-md border border-border-glass shadow-sm hover:bg-surface-hover/50 text-text-secondary"
                 aria-label="Cari"
               >
-                <MagnifyingGlass size={18} weight="bold" />
+                <MagnifyingGlass size={18} weight="duotone" />
               </IconButton>
             </div>
           )}
@@ -148,7 +149,7 @@ export function TopNav() {
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
                   aria-label="Profil Pengguna"
                   className={cn(
-                    "flex items-center justify-center rounded-full bg-surface-raised ring-1 ring-border-subtle shadow-sm hover:scale-105 active:scale-95 transition-all outline-none",
+                    "flex items-center justify-center rounded-full bg-surface-glass backdrop-blur-md border border-border-glass shadow-sm hover:scale-105 active:scale-95 transition-all outline-none",
                     isScrolled ? "size-9" : "size-9 lg:size-10"
                   )}
                 >
@@ -178,7 +179,7 @@ export function TopNav() {
                         <Gear size={18} weight="duotone" /> Pengaturan
                       </button>
                       <button onClick={() => { setIsProfileOpen(false); logout(); }} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-semibold text-semantic-error hover:bg-semantic-error/10 transition-colors text-left mt-0.5">
-                        <SignOut size={18} weight="bold" /> Keluar
+                        <SignOut size={18} weight="duotone" /> Keluar
                       </button>
                     </motion.div>
                   )}

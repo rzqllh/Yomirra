@@ -18,7 +18,7 @@ export default function SearchPage() {
     <DirectionalTransition>
       <React.Suspense fallback={
         <main className="min-h-screen bg-surface-base">
-          <YomirraPageHeader title="Hasil Pencarian" showBack variant="auto" />
+          <YomirraPageHeader title="" showBack variant="transparent" />
           <div className="px-4 py-6">
             <SearchResultSkeleton />
           </div>
@@ -73,7 +73,7 @@ function SearchContent() {
 
   return (
     <main className="min-h-screen bg-surface-base">
-      <YomirraPageHeader title="Hasil Pencarian" showBack variant="auto" />
+      <YomirraPageHeader title="" showBack variant="transparent" />
       
       <div className="px-4 py-6 max-w-7xl mx-auto">
         <div className="mb-6">
@@ -82,10 +82,6 @@ function SearchContent() {
             description="Pilih sumber untuk mencari manga favoritmu."
             icon={<MagnifyingGlass size={32} weight="duotone" />}
           />
-          <div className="md:hidden">
-            <h1 className="text-2xl font-black tracking-tight text-text-primary">Pencarian untuk &quot;{query}&quot;</h1>
-            <p className="text-sm text-text-muted mt-1">Pilih sumber untuk mencari</p>
-          </div>
         </div>
 
         {/* Source Filter Chips */}

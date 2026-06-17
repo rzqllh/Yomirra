@@ -12,13 +12,36 @@ import { HistoryMangaGroup } from "@/components/history/history-manga-group";
 import { EmptyState } from "@/components/states/empty-state";
 import { Button } from "@/components/ui/button";
 import { useMounted } from "@/shared/hooks/use-mounted";
-import { getHomeHref, getReaderHref, getMangaDetailHref } from "@/shared/lib/routes";
+import { getLibraryHref, getReaderHref, getMangaDetailHref } from "@/shared/lib/routes";
 import { BookBookmark, Compass, Clock, Play, SortDescending, SortAscending, CaretRight } from "@phosphor-icons/react";
 import { DirectionalTransition } from "@/components/ui/directional-transition";
 import { SearchInput } from "@/components/ui/search-input";
 import { YomirraSurface } from "@/components/ui/yomirra-layout";
 import { YomirraPageHeader, DesktopPageTitle } from "@/components/app/yomirra-header";
 import { HorizontalScrollContainer } from "@/components/ui/horizontal-scroll-container";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+function getRelativeTime(dateString?: string): string {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInMs = now.getTime() - date.getTime();
+  const diffInMins = Math.floor(diffInMs / (1000 * 60));
+  const diffInHours = Math.floor(diffInMins / 60);
+  const diffInDays = Math.floor(diffInHours / 24);
+
+  if (diffInMins < 60) return `${diffInMins} mnt lalu`;
+  if (diffInHours < 24) return `${diffInHours} jam lalu`;
+  if (diffInDays < 30) return `${diffInDays} hr lalu`;
+  return date.toLocaleDateString('id-ID');
+}
 
 export default function BookmarkPage() {
   const isMounted = useMounted();
@@ -97,12 +120,59 @@ export default function BookmarkPage() {
 
   const [activeTab, setActiveTab] = React.useState<"reading" | "collection">("reading");
 
+  // Undo functionality state
+  const [pendingDeletions, setPendingDeletions] = React.useState<Set<string>>(new Set());
+  const deleteTimeouts = React.useRef<Record<string, NodeJS.Timeout>>({});
+
+  const [itemToDelete, setItemToDelete] = React.useState<{sourceId: string, mangaId: string, mangaTitle: string} | null>(null);
+
+  const handleRemoveHistory = React.useCallback((sourceId: string, mangaId: string, mangaTitle: string) => {
+    setItemToDelete({ sourceId, mangaId, mangaTitle });
+  }, []);
+
+  const confirmDelete = React.useCallback(() => {
+    if (!itemToDelete) return;
+    
+    const { sourceId, mangaId, mangaTitle } = itemToDelete;
+    const key = `${sourceId}::${mangaId}`;
+    setPendingDeletions(prev => new Set(prev).add(key));
+    setItemToDelete(null);
+    
+    const timeoutId = setTimeout(() => {
+      removeMangaHistory(sourceId, mangaId);
+      setPendingDeletions(prev => {
+        const next = new Set(prev);
+        next.delete(key);
+        return next;
+      });
+      delete deleteTimeouts.current[key];
+    }, 5000); // 5 detik delay sesuai request
+    
+    deleteTimeouts.current[key] = timeoutId;
+    
+    toast(`Riwayat "${mangaTitle}" dihapus`, {
+      action: {
+        label: "Batal",
+        onClick: () => {
+          clearTimeout(timeoutId);
+          delete deleteTimeouts.current[key];
+          setPendingDeletions(prev => {
+            const next = new Set(prev);
+            next.delete(key);
+            return next;
+          });
+        }
+      }
+    });
+  }, [itemToDelete, removeMangaHistory]);
+
+  const visibleHistory = React.useMemo(() => {
+    return groupedHistory.filter(g => !pendingDeletions.has(`${g.sourceId}::${g.mangaId}`));
+  }, [groupedHistory, pendingDeletions]);
+
   if (!isMounted) {
     return (
       <div className="flex flex-col min-h-screen">
-        <div className="md:hidden">
-          <YomirraPageHeader title="Rak Buku" variant="auto" />
-        </div>
         <YomirraSurface variant="base" className="flex-1 w-full max-w-7xl mx-auto">
           <div className="hidden md:block px-4 py-8">
             <h1 className="text-3xl font-black text-text-primary tracking-tight">Rak Buku</h1>
@@ -115,12 +185,8 @@ export default function BookmarkPage() {
   return (
     <DirectionalTransition>
       <div className="flex flex-col min-h-screen pb-24">
-        <div className="md:hidden">
-          <YomirraPageHeader title="Rak Buku" variant="auto" />
-        </div>
-
         <YomirraSurface variant="base" className="flex-1 w-full max-w-7xl mx-auto md:pb-8">
-          <div className="hidden md:block px-4 py-8 pb-4">
+          <div className="px-4 py-8 pb-4">
             <DesktopPageTitle 
               title="Rak Buku" 
               description="Koleksi dan riwayat bacaan personal Anda." 
@@ -156,14 +222,14 @@ export default function BookmarkPage() {
           <div className="mt-2 outline-none">
             {activeTab === "reading" && (
               <DirectionalTransition key="reading">
-                {groupedHistory.length === 0 ? (
+                {visibleHistory.length === 0 ? (
                   <EmptyState
                     icon={<Clock size={48} className="text-text-muted" weight="duotone" />}
                     title="Belum ada riwayat baca"
                     description="Buka chapter untuk mulai membaca. Progres bacaanmu akan muncul di sini."
                     action={
                       <Button asChild variant="accent" className="rounded-full shadow-sm font-bold mt-4">
-                        <Link href={getHomeHref()}>
+                        <Link href={getLibraryHref()}>
                           <Compass size={20} weight="bold" className="mr-1.5" />
                           Eksplor Manga
                         </Link>
@@ -171,15 +237,61 @@ export default function BookmarkPage() {
                     }
                   />
                 ) : (
-                  <div className="px-4 mt-4">
-                    {groupedHistory.map((group) => (
-                      <HistoryMangaGroup
-                        key={`${group.sourceId}::${group.mangaId}`}
-                        {...group}
-                        onRemoveManga={removeMangaHistory}
-                        onRemoveChapter={removeHistoryItem}
-                      />
-                    ))}
+                  <div className="px-4 mt-4 mb-16">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                      {visibleHistory.map((group) => {
+                        const item = group.chapters[0]; // get the latest read chapter
+                        const timeText = getRelativeTime(item.readAt);
+                        const progress = item.progressPercent || 0;
+                        const targetHref = getReaderHref(group.sourceId, group.mangaId, item.chapterId);
+                        
+                        return (
+                          <Link 
+                            key={`${group.sourceId}::${group.mangaId}`}
+                            href={targetHref}
+                            className="relative w-full bg-surface-glass backdrop-blur-sm rounded-2xl overflow-hidden border border-border-subtle group shadow-sm hover:shadow-md hover:border-border-default transition-all vt-hover"
+                            style={{ '--vt-name': `manga-cover-${group.sourceId}-${group.mangaId}` } as React.CSSProperties}
+                          >
+                            <div className="flex p-4 gap-4">
+                              <div className="w-[80px] shrink-0 aspect-[2/3] rounded-lg overflow-hidden shadow-sm bg-surface-muted">
+                                {group.coverUrl && (
+                                  <img 
+                                    src={group.coverUrl} 
+                                    alt={group.mangaTitle} 
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                                    referrerPolicy="no-referrer"
+                                  />
+                                )}
+                              </div>
+                              <div className="flex-1 flex flex-col justify-center min-w-0 py-1">
+                                <h4 className="font-bold text-sm line-clamp-2 text-text-primary group-hover:text-accent transition-colors">{group.mangaTitle}</h4>
+                                <p className="text-xs font-medium text-text-muted mt-1 truncate">{item.chapterTitle || "Chapter ?"}</p>
+                                <p className="text-[10px] text-text-muted/60 mt-0.5">{timeText || "Baru saja"}</p>
+                                
+                                <div className="mt-auto pt-3 flex justify-between items-center">
+                                  <button className="bg-surface-overlay border border-border-default hover:bg-surface-hover text-text-primary rounded-full px-4 py-1.5 text-xs font-bold flex items-center gap-1.5 transition-colors">
+                                    <Play weight="fill" /> Lanjut
+                                  </button>
+                                  <button 
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      handleRemoveHistory(group.sourceId, group.mangaId, group.mangaTitle);
+                                    }}
+                                    className="text-text-muted hover:text-semantic-danger px-2 py-1 transition-colors z-20"
+                                    aria-label="Hapus dari riwayat"
+                                  >
+                                    <span className="text-xs font-semibold">Hapus</span>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="h-1 bg-surface-muted w-full absolute bottom-0 left-0 right-0">
+                              <div className="h-full bg-accent" style={{ width: `${progress}%` }} />
+                            </div>
+                          </Link>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </DirectionalTransition>
@@ -261,6 +373,33 @@ export default function BookmarkPage() {
           </div>
         </YomirraSurface>
       </div>
+
+      <Dialog open={!!itemToDelete} onOpenChange={(open) => !open && setItemToDelete(null)}>
+        <DialogContent className="max-w-xs rounded-3xl p-6 sm:max-w-sm">
+          <DialogHeader className="gap-2">
+            <DialogTitle className="text-xl">Hapus Riwayat?</DialogTitle>
+            <DialogDescription className="text-base">
+              Yakin mau menghapus <strong className="text-text-primary">{itemToDelete?.mangaTitle}</strong> dari rak buku kamu?
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="mt-6 flex-row justify-end gap-3 sm:gap-3">
+            <Button
+              variant="ghost"
+              onClick={() => setItemToDelete(null)}
+              className="flex-1 rounded-full font-bold h-12"
+            >
+              Nanti aja
+            </Button>
+            <Button
+              variant="accent"
+              onClick={confirmDelete}
+              className="flex-1 rounded-full font-bold h-12 bg-red-500 hover:bg-red-600 text-white"
+            >
+              Hapus
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DirectionalTransition>
   );
 }

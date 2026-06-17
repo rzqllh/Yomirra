@@ -12,26 +12,46 @@ interface MagazineHeroProps {
 
 export function MagazineHero({ sourceId, mangas }: MagazineHeroProps) {
   const [currentIndex, setCurrentIndex] = React.useState(0);
+  const [isPaused, setIsPaused] = React.useState(false);
 
   React.useEffect(() => {
-    if (mangas.length <= 1) return;
+    if (mangas.length <= 1 || isPaused) return;
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % mangas.length);
     }, 5000);
     return () => clearInterval(interval);
-  }, [mangas.length]);
+  }, [mangas.length, isPaused]);
 
   if (!mangas || mangas.length === 0) return null;
+
+  const handleDragEnd = (event: any, info: any) => {
+    const threshold = 50;
+    if (info.offset.x < -threshold) {
+      setCurrentIndex((prev) => (prev + 1) % mangas.length);
+    } else if (info.offset.x > threshold) {
+      setCurrentIndex((prev) => (prev === 0 ? mangas.length - 1 : prev - 1));
+    }
+  };
 
   const heroManga = mangas[currentIndex];
 
   return (
     <div className="w-full md:w-2/3 flex flex-col">
       <h3 className="text-xl font-black mb-4 tracking-tight">Sorotan Terbaru</h3>
-      <div className="relative w-full h-[320px] md:h-[420px] rounded-3xl overflow-hidden group border border-white/10 shadow-2xl bg-surface-raised">
+      <div 
+        className="relative w-full h-[320px] md:h-[420px] rounded-3xl overflow-hidden group border border-white/10 shadow-2xl bg-surface-raised cursor-grab active:cursor-grabbing"
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
+        onTouchStart={() => setIsPaused(true)}
+        onTouchEnd={() => setIsPaused(false)}
+      >
         <AnimatePresence mode="popLayout" initial={false}>
           <motion.div
             key={heroManga.id}
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.2}
+            onDragEnd={handleDragEnd}
             initial={{ opacity: 0, scale: 1.05 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}

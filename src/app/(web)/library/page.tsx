@@ -72,6 +72,9 @@ function LibraryContent() {
   const { data: filtersData } = useQuery({
     queryKey: ["filters", activeSourceId],
     queryFn: () => apiClient.getFilters(activeSourceId),
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 1,
+    refetchOnWindowFocus: false,
   });
 
   const isNsfwFiltered = useSettingsStore(state => state.hideNsfw);
@@ -123,6 +126,9 @@ function LibraryContent() {
   } = useQuery({
     queryKey: ["library-v2", activeSourceId, query, sort, selectedGenres, excludedGenres, selectedFormats, selectedStatuses, page, isNsfwFiltered],
     queryFn: () => fetchCatalog(page),
+    staleTime: 1000 * 60, // 1 minute
+    retry: 1,
+    refetchOnWindowFocus: false,
   });
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -190,14 +196,11 @@ function LibraryContent() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <div className="md:hidden">
-        <YomirraPageHeader title="Library" variant="auto" />
-      </div>
       <YomirraSurface variant="base" className="flex-1 w-full max-w-7xl mx-auto md:pb-8">
         <div className="px-4 py-6 md:px-8 md:py-8 space-y-8">
           
           {/* Header Section */}
-          <div className="hidden md:block mb-6">
+          <div className="mb-6">
             <DesktopPageTitle 
               title="Library" 
               description="Jelajahi berbagai koleksi komik dari sumber pilihanmu."
@@ -445,9 +448,6 @@ export default function LibraryPage() {
     <DirectionalTransition>
       <React.Suspense fallback={
         <div className="flex flex-col min-h-screen">
-          <div className="md:hidden">
-            <YomirraPageHeader title="Library" variant="auto" />
-          </div>
           <YomirraSurface variant="base" className="flex-1 w-full max-w-7xl mx-auto px-4 py-8">
             <LibrarySkeleton />
           </YomirraSurface>

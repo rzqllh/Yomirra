@@ -4,7 +4,7 @@ import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useMounted } from "@/shared/hooks/use-mounted";
-import { BookmarkSimple, Play, ImageBroken } from "@phosphor-icons/react";
+import { BookmarkSimple, Play, ImageBroken, TrendUp, Star } from "@phosphor-icons/react";
 import { getMangaDetailHref, getReaderHref } from "@/shared/lib/routes";
 import type { MangaItem } from "@/shared/types/source";
 import { motion, AnimatePresence } from "motion/react";
@@ -21,6 +21,9 @@ export interface MangaCardProps {
   chapterId?: string;
   chapterTitle?: string;
   progressPercent?: number;
+  // eksplorasi specific
+  rank?: number;
+  score?: number;
 }
 
 function getRelativeTime(dateString?: string): string {
@@ -289,14 +292,14 @@ export function MangaCard({
         aria-label={`Read ${manga.title}`}
       >
         <div 
-          className="relative w-full aspect-[1/1.4] overflow-hidden rounded-md bg-surface-glass backdrop-blur-md border border-border-default shadow-sm mb-2.5 vt-hover"
+          className="relative w-full aspect-[2/3] overflow-hidden rounded-2xl bg-surface-glass border border-border-subtle shadow-sm mb-3 vt-hover"
           style={vtStyle}
         >
           {manga.coverUrl && !imageError ? (
             <img
               src={manga.coverUrl}
               alt={manga.title}
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-300 ease-out group-hover:scale-[1.03]"
+              className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
               onError={() => setImageError(true)}
               ref={(img) => {
                 if (img && img.complete && img.naturalWidth === 0) {
@@ -314,34 +317,42 @@ export function MangaCard({
             </div>
           )}
           
-          <div className="absolute top-1.5 left-1.5 flex flex-wrap gap-1 z-20">
-            {manga.status === "Ongoing" && (
-              <div className="flex items-center justify-center rounded-xs bg-accent px-1.5 py-[2px] shadow-sm">
-                <span className="text-[9px] font-black uppercase tracking-wider text-accent-on leading-none">UP</span>
+          <div className="absolute top-2 left-2 flex flex-col gap-1.5 z-20 items-start">
+            {manga.rank !== undefined && (
+              <div className="flex items-center gap-1 rounded-full bg-surface-glass backdrop-blur-md px-2 py-1 shadow-sm border border-border-glass">
+                <TrendUp weight="bold" className="text-accent text-[10px]" />
+                <span className="text-xs font-black text-text-primary">#{manga.rank}</span>
               </div>
             )}
-            {manga.format && (
-              <div className="flex items-center justify-center rounded-xs bg-black/60 backdrop-blur-md px-1.5 py-[2px] shadow-sm border border-white/10">
-                <span className="text-[9px] font-black uppercase tracking-wider text-media-foreground leading-none">{manga.format}</span>
-              </div>
-            )}
+            
+            <div className="md:opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <BookmarkButton sourceId={sourceId} manga={manga} />
+            </div>
           </div>
           
-          <div className="absolute top-1.5 right-1.5 z-30 md:opacity-0 group-hover:opacity-100 transition-opacity">
-            <BookmarkButton sourceId={sourceId} manga={manga} />
+          <div className="absolute top-2 right-2 flex flex-wrap gap-1 z-20">
+            {manga.format && (
+              <div className="flex items-center justify-center rounded-md bg-surface-overlay/80 backdrop-blur-md px-2 py-1 shadow-sm border border-white/10">
+                <span className="text-[10px] font-black uppercase tracking-wider text-text-primary leading-none">{manga.format}</span>
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="flex flex-col px-0.5">
-          <h3 className="line-clamp-2 text-xs sm:text-sm font-bold text-text-primary leading-[1.3] mb-0.5 group-hover:text-accent transition-colors duration-200">
+        <div className="flex flex-col px-1">
+          <h3 className="line-clamp-2 text-sm font-bold text-text-primary leading-tight mb-1.5 group-hover:text-accent transition-colors duration-200">
             {manga.title}
           </h3>
           
-          {manga.latestChapter && (
-            <span className="text-[11px] font-medium text-text-muted truncate">
-              {manga.latestChapter}
+          <div className="flex items-center justify-between mt-auto">
+            <span className="text-xs font-medium text-text-muted truncate max-w-[70%]">
+              {manga.latestChapter || "Detail"}
             </span>
-          )}
+            <span className="text-xs font-semibold flex items-center gap-1 text-text-muted shrink-0">
+              <Star weight="fill" className="text-semantic-warning" /> 
+              {manga.score ? manga.score.toFixed(1) : "-.-"}
+            </span>
+          </div>
         </div>
       </Link>
     </motion.article>

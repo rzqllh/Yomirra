@@ -12,6 +12,12 @@ export interface SourceMetadata {
   isInstalled: boolean;
   capabilities: SourceCapabilities;
   status?: "online" | "slow" | "unavailable" | "unknown";
+  healthStats?: {
+    uptime: string;
+    latency: string;
+    lastChecked: string;
+    message?: string;
+  };
   isNsfw: boolean;
 }
 
