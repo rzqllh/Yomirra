@@ -67,8 +67,9 @@ export function ChapterDownloadButton({
           }
         });
         toast.success(`Berhasil mengunduh ${chapterTitle}!`, { id: toastId, duration: 4000 });
-      } catch (err: any) {
-        toast.error(`Gagal mengunduh: ${err.message}`, { id: toastId, duration: 5000 });
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "Error tidak diketahui";
+        toast.error(`Gagal mengunduh: ${msg}`, { id: toastId, duration: 5000 });
       } finally {
         setIsZipDownloading(false);
       }
@@ -199,13 +200,13 @@ export function ChapterDownloadButton({
               Batal
             </Button>
             <Button
-              variant="accent"
+              variant="destructive"
               onClick={() => {
                 removeDownload(id);
                 toast("Unduhan dihapus");
                 setIsDeleteDialogOpen(false);
               }}
-              className="flex-1 rounded-full font-bold h-12 bg-red-500 hover:bg-red-600 text-white"
+              className="flex-1 rounded-full font-bold h-12"
             >
               Hapus
             </Button>

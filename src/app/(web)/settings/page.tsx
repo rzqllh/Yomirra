@@ -298,9 +298,9 @@ export default function SettingsPage() {
               Nanti Aja
             </Button>
             <Button
-              variant="accent"
+              variant="destructive"
               onClick={confirmClearData}
-              className="flex-1 rounded-full font-bold h-12 bg-red-500 hover:bg-red-600 text-white"
+              className="flex-1 rounded-full font-bold h-12"
             >
               Bersihkan
             </Button>

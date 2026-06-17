@@ -39,8 +39,27 @@ export function useSync(options = { autoSync: true }) {
         remoteHistory[d.id] = d.data() as HistoryItem;
       });
 
-      const batch = writeBatch(firestore);
+      let batch = writeBatch(firestore);
       let batchCount = 0;
+      let totalSynced = 0;
+      const commitBatches: Promise<void>[] = [];
+
+      const commitCurrentBatch = () => {
+        if (batchCount > 0) {
+          commitBatches.push(batch.commit());
+          totalSynced += batchCount;
+          batch = writeBatch(firestore);
+          batchCount = 0;
+        }
+      };
+
+      const pushToBatch = (ref: any, data: any) => {
+        batch.set(ref, data);
+        batchCount++;
+        if (batchCount === 450) {
+          commitCurrentBatch();
+        }
+      };
 
       // 3. Merge Library (Local wins if newer, otherwise remote wins)
       Object.values(libraryItems).forEach(localItem => {
@@ -50,8 +69,7 @@ export function useSync(options = { autoSync: true }) {
         if (!remoteItem || new Date(localItem.updatedAt).getTime() > new Date(remoteItem.updatedAt).getTime()) {
           // Push local to remote
           const cleanItem = Object.fromEntries(Object.entries(localItem).filter(([_, v]) => v !== undefined));
-          batch.set(doc(firestore, `users/${uid}/library`, id), cleanItem);
-          batchCount++;
+          pushToBatch(doc(firestore, `users/${uid}/library`, id), cleanItem);
         }
       });
 
@@ -71,8 +89,7 @@ export function useSync(options = { autoSync: true }) {
         if (!remoteItem || new Date(localItem.readAt).getTime() > new Date(remoteItem.readAt).getTime()) {
           // Push local to remote
           const cleanItem = Object.fromEntries(Object.entries(localItem).filter(([_, v]) => v !== undefined));
-          batch.set(doc(firestore, `users/${uid}/history`, id), cleanItem);
-          batchCount++;
+          pushToBatch(doc(firestore, `users/${uid}/history`, id), cleanItem);
         }
       });
 
@@ -84,9 +101,11 @@ export function useSync(options = { autoSync: true }) {
         }
       });
 
-      if (batchCount > 0) {
-        await batch.commit();
-        console.log(`[Sync] Synced ${batchCount} local items to Cloud`);
+      commitCurrentBatch();
+      await Promise.all(commitBatches);
+
+      if (totalSynced > 0 && process.env.NODE_ENV === 'development') {
+        console.log(`[Sync] Synced ${totalSynced} local items to Cloud`);
       }
       
       setLastSyncedAt(new Date().toISOString());
@@ -116,7 +135,9 @@ export function useSync(options = { autoSync: true }) {
 
     // Listen for offline -> online transitions (POS-style background sync)
     const handleOnline = () => {
-      console.log("[Sync] Device came online, running background sync...");
+      if (process.env.NODE_ENV === 'development') {
+        console.log("[Sync] Device came online, running background sync...");
+      }
       runFullSync();
     };
 
@@ -143,8 +164,7 @@ export function useSync(options = { autoSync: true }) {
         unsubLibrary = onSnapshot(collection(db, `users/${uid}/library`), (snapshot) => {
           snapshot.docChanges().forEach((change) => {
             if (change.type === "added" || change.type === "modified") {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const data = change.doc.data() as any;
+              const data = change.doc.data() as LibraryItem;
               const localItem = useLibraryStore.getState().items[change.doc.id];
               
               if (!localItem || new Date(data.updatedAt).getTime() > new Date(localItem.updatedAt).getTime()) {
@@ -159,8 +179,7 @@ export function useSync(options = { autoSync: true }) {
         unsubHistory = onSnapshot(collection(db, `users/${uid}/history`), (snapshot) => {
           snapshot.docChanges().forEach((change) => {
             if (change.type === "added" || change.type === "modified") {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              const data = change.doc.data() as any;
+              const data = change.doc.data() as HistoryItem;
               const localItem = useHistoryStore.getState().items[change.doc.id];
               
               if (!localItem || new Date(data.readAt).getTime() > new Date(localItem.readAt).getTime()) {

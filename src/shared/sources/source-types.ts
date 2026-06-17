@@ -34,6 +34,9 @@ export interface MangaItem {
   format?: string;
   latestChapter?: string;
   latestChapterTime?: string;
+  rank?: number;
+  score?: number;
+  description?: string;
 }
 
 export interface MangaDetail extends MangaItem {

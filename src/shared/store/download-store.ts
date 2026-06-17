@@ -314,11 +314,15 @@ export const useDownloadStore = create<DownloadState>()(
             } else {
               throw new Error("Beberapa gambar gagal diunduh");
             }
-          } catch (error: any) {
-            if (error.name === "AbortError" || error.message === "Aborted") {
-              // Handled by pause/cancel
+          } catch (error: unknown) {
+            if (error instanceof Error) {
+              if (error.name === "AbortError" || error.message === "Aborted") {
+                // Handled by pause/cancel
+              } else {
+                get()._updateDownload(id, { status: "failed", error: error.message || "Gagal mengunduh" });
+              }
             } else {
-              get()._updateDownload(id, { status: "failed", error: error.message || "Gagal mengunduh" });
+              get()._updateDownload(id, { status: "failed", error: "Gagal mengunduh" });
             }
           } finally {
             delete abortControllers[id];

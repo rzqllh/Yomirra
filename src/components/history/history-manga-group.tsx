@@ -49,7 +49,7 @@ export function HistoryMangaGroup({
               src={coverUrl} 
               alt={mangaTitle} 
               className="absolute inset-0 w-full h-full object-cover" 
-              onError={(e) => { e.currentTarget.style.display = 'none' }}
+              onError={(e) => { e.currentTarget.style.opacity = '0' }}
               referrerPolicy="no-referrer"
             />
           ) : (
@@ -108,12 +108,12 @@ export function HistoryMangaGroup({
               Batal
             </Button>
             <Button
-              variant="accent"
+              variant="destructive"
               onClick={() => {
                 onRemoveManga(sourceId, mangaId);
                 setIsDeleteDialogOpen(false);
               }}
-              className="flex-1 rounded-full font-bold h-12 bg-red-500 hover:bg-red-600 text-white"
+              className="flex-1 rounded-full font-bold h-12"
             >
               Hapus
             </Button>
