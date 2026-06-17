@@ -52,12 +52,14 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
 
   // Wake Lock API
   React.useEffect(() => {
-    let wakeLock: any = null;
+    let wakeLock: WakeLockSentinel | null = null;
     
     const requestWakeLock = async () => {
       if ('wakeLock' in navigator && (preferences.keepScreenAwake ?? true)) {
         try {
-          wakeLock = await (navigator as any).wakeLock.request('screen');
+          if (navigator.wakeLock) {
+            wakeLock = await navigator.wakeLock.request('screen');
+          }
         } catch (err) {
           console.warn('Wake Lock error:', err);
         }

@@ -30,7 +30,6 @@ Yang **tidak** termasuk:
 - **Security headers** (`X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`) diset di `next.config.ts`.
 - **Environment variables** divalidasi saat startup via Zod schema di `src/env.ts`. Aplikasi gagal start jika ada variabel yang hilang atau tidak valid.
 - **Firebase Auth** menangani autentikasi. Firestore Security Rules menangani otorisasi data.
-- **Supabase RLS** (Row Level Security) melindungi akses database langsung.
 
 ## Response Time
 

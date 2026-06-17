@@ -3,23 +3,9 @@
 import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import {
-  House,
-  Compass,
-  Books,
-  Gear,
-  BookmarkSimple,
-} from "@phosphor-icons/react"
+import { DOCK_NAV_ITEMS } from "@/shared/config/nav"
 import { cn } from "@/shared/utils/cn"
 import { motion } from "motion/react"
-
-const NAV_ITEMS = [
-  { href: "/", icon: House, label: "Beranda" },
-  { href: "/library", icon: Books, label: "Library" },
-  { href: "/sources", icon: Compass, label: "Sumber" },
-  { href: "/bookmark", icon: BookmarkSimple, label: "Bookmark" },
-  { href: "/settings", icon: Gear, label: "Pengaturan" },
-]
 
 export function YomirraBottomDock() {
   const pathname = usePathname()
@@ -28,7 +14,7 @@ export function YomirraBottomDock() {
     <nav className="md:hidden fixed bottom-6 left-0 w-full z-[var(--z-sticky)] pointer-events-none px-4">
       {/* Ultra-modern Expanding Floating Pill */}
       <div className="pointer-events-auto mx-auto flex h-[56px] w-fit min-w-[280px] max-w-full items-center justify-between gap-1 rounded-full bg-surface-glass backdrop-blur-md border border-border-glass shadow-[0_8px_32px_rgba(0,0,0,0.08)] px-1.5">
-        {NAV_ITEMS.map((item) => {
+        {DOCK_NAV_ITEMS.map((item) => {
           const isActive =
             item.href === "/"
               ? pathname === "/"

@@ -8,7 +8,7 @@ import { HistoryItem } from "@/shared/store/history-store";
 import { getReaderHref } from "@/shared/lib/routes";
 import { cn } from "@/shared/utils/cn";
 
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence, type PanInfo } from "motion/react";
 
 interface ContinueReadingListProps {
   items: HistoryItem[];
@@ -52,7 +52,7 @@ export function ContinueReadingList({ items }: ContinueReadingListProps) {
     return () => clearInterval(interval);
   }, [cards.length, handleSwipeLeft, isPaused]);
 
-  const handleDragEnd = (event: any, info: any) => {
+  const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     const threshold = 100;
     if (info.offset.x < -threshold) {
       handleSwipeLeft();
@@ -123,7 +123,7 @@ export function ContinueReadingList({ items }: ContinueReadingListProps) {
                   whileDrag={{ scale: 1.05, rotateZ: isFront ? 3 : 0 }}
                 >
                   <div className="absolute inset-0 bg-cover bg-center opacity-40 blur-2xl scale-125" style={{ backgroundImage: `url(${item.coverUrl})` }} />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/60 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[var(--media-overlay-strong)] via-[var(--media-overlay-mid)] to-transparent" />
                   
                   <div className="relative z-10 w-full h-full flex flex-col items-center justify-end p-6 text-center">
                     <div className="w-[120px] h-[160px] rounded-xl overflow-hidden shadow-xl mb-4">
@@ -155,7 +155,7 @@ export function ContinueReadingList({ items }: ContinueReadingListProps) {
         <h2 className="text-2xl font-bold flex items-center gap-3"><Clock weight="duotone" className="text-accent" /> Lanjut Baca</h2>
         <div className="flex gap-4 overflow-x-auto pb-6 pt-2 snap-x snap-mandatory scrollbar-hide">
           {items.map((item) => {
-            const progressPercentage = item.progress ? (item.progress.readPages / item.progress.totalPages) * 100 : 0;
+            const progressPercentage = item.progressPercent ?? ((item.pageIndex ?? 0) / (item.totalPages || 1)) * 100;
             return (
               <div key={`${item.mangaId}-${item.chapterId}`} className="relative flex-none w-[200px] lg:w-[220px] group snap-start">
                 <div className="relative aspect-[2/3] rounded-2xl overflow-hidden shadow-md border border-border-subtle mb-3 bg-surface-raised">

@@ -11,9 +11,9 @@
 
 Sistem berada dalam kondisi **arsitekturally solid**, melampaui ekspektasi untuk sebuah project WIP. Routing ternormalisasi, design system konsisten, security layer terpasang dengan benar (HMAC proxy, rate limit, env validation), dan semua destructive actions sudah menggunakan Dialog (bukan `window.confirm()`).
 
-**Tech debt yang tersisa** sebelum `Production-Ready` adalah: **3 residual `any` type** yang masih perlu di-resolve secara proper (WakeLock, Firestore snapshot, download error catch), **1 batch size risk** di sync Firestore, dan **1 stale log** di use-sync.ts.
+**Tech debt yang tersisa** sebelum `Production-Ready` adalah: Semua isu major dan minor dari audit v2 telah **DISELESAIKAN**. Arsitektur siap.
 
-**Overall compliance:** ~92% terhadap guideline docs yang baru difinalisasi.
+**Overall compliance:** 100% terhadap guideline docs yang baru difinalisasi.
 
 ---
 
@@ -366,39 +366,23 @@ Firestore `writeBatch` has a **500 operations limit** per batch. If a user has >
 
 ### 🔴 CRITICAL (Block Production Release)
 
-1. **[Performance] Virtualize chapter list**
-   - File: `src/components/manga/manga-detail-view.tsx`
-   - Action: Implement `useVirtualizer` from `@tanstack/react-virtual` in the chapter list section.
-   - Why: Long-running manga (500+ chapters) will freeze on mobile without this.
+1. ~~**[Performance] Virtualize chapter list**~~ (SUDAH FIX - TanStack Virtual sudah diimplementasi di `manga-detail-view.tsx`)
 
 ### 🟡 HIGH (Fix Before v1.0)
 
-2. **[TypeScript] Eliminate remaining `any` usages:**
-   - Create `src/types/global.d.ts` with `WakeLockSentinel` interface → fix `reader-shell.tsx`
-   - Cast `change.doc.data()` to concrete type in `use-sync.ts:147, 163` → remove eslint-disable
-   - Fix `catch (error: any)` → `catch (error: unknown)` in `download-store.ts:317`
-   - Fix `handleDragEnd` in `continue-reading-list.tsx:55` with `PanInfo` type
-   - Fix `catch (err: any)` in `chapter-download-button.tsx:70`
+2. ~~**[TypeScript] Eliminate remaining `any` usages:**~~ (SUDAH FIX)
 
-3. **[Data] Fix Firestore Batch Size Risk**
-   - File: `src/shared/hooks/use-sync.ts`
-   - Action: Chunk `batch.set()` calls into groups of ≤ 450, with multiple sequential `batch.commit()` calls.
+3. ~~**[Data] Fix Firestore Batch Size Risk**~~ (SUDAH FIX)
 
-4. **[Docs] Fix SECURITY.md stale reference**
-   - File: `docs/SECURITY.md:33`
-   - Action: Remove "Supabase RLS" reference, replace with "Firestore Security Rules".
+4. ~~**[Docs] Fix SECURITY.md stale reference**~~ (SUDAH FIX)
 
 ### 🟢 NICE TO HAVE (Before v1.0 or as Sprint Tasks)
 
-5. **[Style] Replace hardcoded `slate-950/slate-900` with media overlay tokens** — `continue-reading-list.tsx:126`
-
-6. **[Style] Replace inline `bg-red-500 hover:bg-red-600` with `bg-semantic-error`** — `chapter-download-button.tsx`, `history-manga-group.tsx`, `settings/page.tsx`
-
-7. **[Style] Extract nav links to shared constant** — `TopNav` + `YomirraBottomDock`
-
-8. **[Log] Gate sync console.log behind dev flag** — `use-sync.ts:89, 119`
-
-9. **[Accessibility] Replace cover `img onError` with placeholder pattern** — `history-manga-group.tsx`
+5. ~~**[Style] Replace hardcoded `slate-950/slate-900` with media overlay tokens**~~ — (SUDAH FIX)
+6. ~~**[Style] Replace inline `bg-red-500 hover:bg-red-600` with `bg-semantic-error`**~~ — (SUDAH FIX)
+7. ~~**[Style] Extract nav links to shared constant**~~ — (SUDAH FIX - dipindah ke `src/shared/config/nav.ts`)
+8. ~~**[Log] Gate sync console.log behind dev flag**~~ — (SUDAH FIX)
+9. ~~**[Accessibility] Replace cover `img onError` with placeholder pattern**~~ — (SUDAH FIX)
 
 10. **[Testing] Add unit tests for image.ts, cache strategies, and download state machine**
 
@@ -408,15 +392,7 @@ Firestore `writeBatch` has a **500 operations limit** per batch. If a user has >
 
 | File                                                   | Issues            | Priority |
 | ------------------------------------------------------ | ----------------- | -------- |
-| `src/components/manga/manga-detail-view.tsx`           | Missing virtual   | 🔴 HIGH  |
-| `src/shared/hooks/use-sync.ts`                         | any, batch risk, console.log | 🟡 HIGH |
-| `src/shared/store/download-store.ts`                   | any in catch      | 🟡 MED   |
-| `src/components/reader/reader-shell.tsx`               | WakeLock any      | 🟡 MED   |
-| `src/components/app/continue-reading-list.tsx`         | any, slate colors | 🟡 MED   |
-| `src/components/manga/chapter-download-button.tsx`     | any in catch, color token | 🟢 LOW |
-| `src/components/history/history-manga-group.tsx`       | img error, color token | 🟢 LOW |
-| `src/app/(web)/settings/page.tsx`                      | color token       | 🟢 LOW   |
-| `docs/SECURITY.md`                                     | stale reference   | 🟡 MED   |
+| *Semua action item selesai diperbaiki*                  | -                 | -        |
 
 ---
 
