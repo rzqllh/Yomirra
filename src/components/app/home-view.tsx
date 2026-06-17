@@ -7,7 +7,6 @@ import { useHistoryStore } from "@/shared/store/history-store";
 import { YomirraSurface } from "@/components/ui/yomirra-layout";
 import { HomeSearchPill } from "./home-search-pill";
 import { ContinueReadingList } from "./continue-reading-list";
-import { FloatingResumeDock } from "./floating-resume-dock";
 import { cn } from "@/shared/utils/cn";
 
 interface HomeViewProps {
@@ -78,8 +77,6 @@ export function HomeView({ children }: HomeViewProps) {
         {children}
         
       </div>
-      
-      <FloatingResumeDock />
     </YomirraSurface>
   );
 }
