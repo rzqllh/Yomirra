@@ -58,7 +58,7 @@ export function HomeView({ children }: HomeViewProps) {
           />
           <form 
             onSubmit={handleSearchSubmit} 
-            className="w-full max-w-md flex items-center gap-2 rounded-full bg-surface-glass backdrop-blur-md px-4 h-[44px] transition-all duration-300 focus-within:bg-surface-glass focus-within:shadow-md border border-border-glass focus-within:border-accent-dim focus-within:ring-2 focus-within:ring-accent/50 shadow-sm"
+            className="hidden md:flex w-full max-w-md items-center gap-2 rounded-full bg-surface-glass backdrop-blur-md px-4 h-[44px] transition-all duration-300 focus-within:bg-surface-glass focus-within:shadow-md border border-border-glass focus-within:border-accent-dim focus-within:ring-2 focus-within:ring-accent/50 shadow-sm"
           >
             <MagnifyingGlass className="size-4 text-text-muted shrink-0 transition-colors focus-within:text-accent" weight="bold" />
             <input 

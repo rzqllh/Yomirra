@@ -8,6 +8,7 @@ import { HistoryItem } from "@/shared/store/history-store"
 import { HistoryChapterRow } from "./history-chapter-row"
 import { motion, AnimatePresence } from "motion/react"
 import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 
 export interface HistoryMangaGroupProps {
   sourceId: string;
@@ -34,6 +35,7 @@ export function HistoryMangaGroup({
 }: HistoryMangaGroupProps) {
   const pathname = usePathname()
   const [isExpanded, setIsExpanded] = React.useState(true);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
 
   // If there's only 1 chapter, we might not even need to show the toggle, but let's keep it consistent
   
@@ -73,11 +75,7 @@ export function HistoryMangaGroup({
             aria-label={`Hapus semua riwayat ${mangaTitle}`}
             variant="ghost"
             className="text-text-muted hover:text-semantic-error hover:bg-semantic-error/10"
-            onClick={() => {
-              if (confirm(`Hapus semua riwayat bacaan untuk ${mangaTitle}?`)) {
-                onRemoveManga(sourceId, mangaId);
-              }
-            }}
+            onClick={() => setIsDeleteDialogOpen(true)}
           >
             <Trash size={18} />
           </IconButton>
@@ -92,6 +90,36 @@ export function HistoryMangaGroup({
           </IconButton>
         </div>
       </div>
+
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="max-w-sm rounded-3xl p-6 bg-surface-overlay/95 backdrop-blur-xl border border-border-default shadow-heavy">
+          <DialogHeader>
+            <DialogTitle>Hapus Riwayat Bacaan?</DialogTitle>
+            <DialogDescription>
+              Semua riwayat bacaan untuk <strong>{mangaTitle}</strong> akan dihapus dari perangkat ini.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-row gap-2 sm:justify-center mt-4">
+            <Button
+              variant="ghost"
+              onClick={() => setIsDeleteDialogOpen(false)}
+              className="flex-1 rounded-full font-bold h-12"
+            >
+              Batal
+            </Button>
+            <Button
+              variant="accent"
+              onClick={() => {
+                onRemoveManga(sourceId, mangaId);
+                setIsDeleteDialogOpen(false);
+              }}
+              className="flex-1 rounded-full font-bold h-12 bg-red-500 hover:bg-red-600 text-white"
+            >
+              Hapus
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Chapters List */}
       <AnimatePresence initial={false}>

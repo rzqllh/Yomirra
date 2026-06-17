@@ -52,9 +52,7 @@ export default async function UpdatesPage() {
 
   return (
     <main className="min-h-screen bg-surface-base">
-      <YomirraPageHeader title="Update Terbaru" variant="auto" />
-      
-      <div className="px-4 py-6 max-w-7xl mx-auto">
+      <div className="px-4 py-6 max-w-7xl mx-auto pt-[max(24px,calc(var(--safe-top)+16px))]">
         <h1 className="text-2xl md:text-3xl font-black tracking-tight text-text-primary mb-8">Update Terbaru</h1>
         
         {activeSources.map(source => (

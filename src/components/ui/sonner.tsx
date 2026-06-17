@@ -16,7 +16,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
             "group toast group-[.toaster]:bg-surface-overlay group-[.toaster]:text-text-primary group-[.toaster]:border-border-default group-[.toaster]:shadow-lg",
           description: "group-[.toast]:text-text-secondary",
           actionButton:
-            "group-[.toast]:bg-surface-raised group-[.toast]:text-text-primary",
+            "group-[.toast]:bg-accent group-[.toast]:text-surface-base font-bold px-4 py-1.5 rounded-md hover:bg-accent-hover transition-colors",
           cancelButton:
             "group-[.toast]:bg-surface-base group-[.toast]:text-text-muted",
           error: "group-[.toaster]:border-semantic-error/20",

@@ -1,22 +1,28 @@
 "use client";
 
 import * as React from "react";
-import { ViewTransition } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import { usePathname } from "next/navigation";
 
 /**
- * A wrapper for page-level components to slide in hierarchically based on the
- * transitionType. Used for forward/backward page navigation (like list to detail).
+ * A wrapper for page-level components to transition smoothly between routes.
+ * Using framer-motion for reliable cross-browser transitions.
  */
 export function DirectionalTransition({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  
   return (
-    <ViewTransition
-      enter={{ "nav-forward": "nav-forward", "nav-back": "nav-back", default: "none" }}
-      exit={{ "nav-forward": "nav-forward", "nav-back": "nav-back", default: "none" }}
-      default="none"
-    >
-      <div className="flex-1 flex flex-col min-w-0">
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={pathname}
+        initial={{ opacity: 0, y: 10, filter: "blur(4px)" }}
+        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+        exit={{ opacity: 0, y: -10, filter: "blur(4px)" }}
+        transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+        className="flex-1 flex flex-col min-w-0"
+      >
         {children}
-      </div>
-    </ViewTransition>
+      </motion.div>
+    </AnimatePresence>
   );
 }

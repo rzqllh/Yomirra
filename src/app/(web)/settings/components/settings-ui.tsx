@@ -4,7 +4,7 @@ import { cn } from "@/shared/utils/cn";
 
 export function SettingsSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="bg-surface-overlay border border-border-subtle rounded-xl shadow-sm overflow-hidden">
+    <section className="bg-surface-overlay rounded-xl border border-subtle overflow-hidden">
       <div className="px-5 py-4 border-b border-border-subtle bg-surface-muted/30">
         <h2 className="text-xs font-bold uppercase tracking-widest text-text-muted">
           {title}

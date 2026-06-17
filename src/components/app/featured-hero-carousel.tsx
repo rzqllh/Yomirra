@@ -38,13 +38,12 @@ export function FeaturedHeroCarousel({ sourceId, mangas }: FeaturedHeroCarouselP
   };
 
   return (
-    <motion.div 
-      className="lg:col-span-2 relative rounded-3xl overflow-hidden group border border-border-subtle bg-surface-base cursor-grab active:cursor-grabbing"
+    <div 
+      className="lg:col-span-2 relative rounded-3xl overflow-hidden group border border-border-subtle bg-surface-base touch-pan-y"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onTouchStart={() => setIsPaused(true)}
       onTouchEnd={() => setIsPaused(false)}
-      onPanEnd={handlePanEnd}
     >
       <AnimatePresence mode="popLayout" initial={false}>
         <motion.div
@@ -53,7 +52,7 @@ export function FeaturedHeroCarousel({ sourceId, mangas }: FeaturedHeroCarouselP
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="absolute inset-0 z-0"
+          className="absolute inset-0 z-0 pointer-events-none"
         >
           {/* Background blurred cover */}
           <div 
@@ -64,53 +63,51 @@ export function FeaturedHeroCarousel({ sourceId, mangas }: FeaturedHeroCarouselP
         </motion.div>
       </AnimatePresence>
 
-      <div className="relative z-10 p-6 md:p-8 flex flex-col sm:flex-row items-center sm:items-stretch gap-6 md:gap-8 h-full">
-        <AnimatePresence mode="popLayout" initial={false}>
-          <motion.div 
-            key={`cover-${currentManga.id}`}
-            initial={{ opacity: 0, x: -20 }}
+      <div className="relative z-10 p-6 md:p-8 h-full flex items-center overflow-hidden">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentManga.id}
+            initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            className="w-[140px] md:w-[180px] shrink-0 aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl border border-white/10 hidden sm:block"
+            exit={{ opacity: 0, x: -50 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            className="flex flex-col sm:flex-row items-center sm:items-stretch gap-4 sm:gap-6 md:gap-8 w-full cursor-grab active:cursor-grabbing"
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.2}
+            onDragEnd={handlePanEnd}
           >
-            <img src={currentManga.coverUrl || ""} alt="Cover" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
-          </motion.div>
-        </AnimatePresence>
+            {/* Cover Art */}
+            <div className="w-[100px] sm:w-[140px] md:w-[180px] shrink-0 aspect-[2/3] rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl border border-white/10 pointer-events-none">
+              <img src={currentManga.coverUrl || ""} alt="Cover" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+            </div>
 
-        <div className="flex flex-col justify-center flex-1 h-full py-2">
-          <AnimatePresence mode="popLayout" initial={false}>
-            <motion.div 
-              key={`content-${currentManga.id}`}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.4, delay: 0.1 }}
-              className="flex flex-col h-full justify-center"
-            >
-              <div className="inline-flex items-center gap-2 text-xs font-bold text-semantic-warning mb-3 bg-semantic-warning/10 border border-semantic-warning/20 px-3 py-1 rounded-full w-fit">
+            {/* Content */}
+            <div className="flex flex-col justify-center flex-1 h-full py-2 text-center sm:text-left items-center sm:items-start pointer-events-none sm:pointer-events-auto">
+              <div className="inline-flex items-center gap-2 text-xs font-bold text-semantic-warning mb-3 bg-semantic-warning/10 border border-semantic-warning/20 px-3 py-1 rounded-full w-fit pointer-events-none">
                 <TrendUp weight="duotone" /> Sorotan
               </div>
-              <h3 className="text-2xl md:text-3xl font-bold line-clamp-2 mb-2 text-text-primary group-hover:text-accent transition-colors">
+              <h3 className="text-xl sm:text-2xl md:text-3xl font-bold line-clamp-2 mb-2 text-text-primary group-hover:text-accent transition-colors pointer-events-none">
                 {currentManga.title}
               </h3>
-              <p className="text-text-secondary font-medium mb-3 flex items-center gap-2">
+              <p className="text-xs sm:text-sm text-text-secondary font-medium mb-3 flex items-center gap-2 pointer-events-none">
                 <span className="text-text-primary font-bold">{currentManga.latestChapter || "Bab Terbaru"}</span> 
                 <span className="w-1 h-1 rounded-full bg-border-strong" /> 
                 <span>{currentManga.format || "Manga"}</span>
               </p>
-              <p className="text-sm text-text-muted mb-6 line-clamp-2 max-w-lg">
+              <p className="text-xs sm:text-sm text-text-muted mb-4 sm:mb-6 line-clamp-2 max-w-lg hidden sm:block pointer-events-none">
                 {currentManga.description || "Jelajahi kisah epik ini dengan aksi yang memukau dan petualangan tak terduga. Jangan lewatkan chapter terbarunya yang semakin seru dan menegangkan!"}
               </p>
               <Link 
                 href={`/sources/${sourceId}/manga/${currentManga.id}`}
-                className="bg-text-primary text-surface-base px-8 py-3 rounded-full font-bold w-fit flex items-center gap-2 hover:opacity-90 transition-opacity shadow-xl active:scale-95 transition-transform"
+                className="bg-text-primary text-surface-base px-6 sm:px-8 py-2.5 sm:py-3 rounded-full font-bold w-fit flex items-center gap-2 hover:opacity-90 transition-opacity shadow-xl active:scale-95 transition-transform text-sm sm:text-base pointer-events-auto"
+                draggable={false}
               >
                 <Play weight="fill" /> Mulai Membaca
               </Link>
-            </motion.div>
-          </AnimatePresence>
-        </div>
+            </div>
+          </motion.div>
+        </AnimatePresence>
       </div>
 
       {/* Progress Indicators */}
@@ -130,6 +127,6 @@ export function FeaturedHeroCarousel({ sourceId, mangas }: FeaturedHeroCarouselP
           />
         ))}
       </div>
-    </motion.div>
+    </div>
   );
 }

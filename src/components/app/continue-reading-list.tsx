@@ -63,11 +63,22 @@ export function ContinueReadingList({ items }: ContinueReadingListProps) {
 
   if (!items || items.length === 0) {
     return (
-      <div className="w-full relative overflow-hidden rounded-3xl bg-gradient-to-b from-surface-raised/40 to-surface-base/20 border border-white/5 h-[360px] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4 text-text-muted">
-          <BookBookmark size={48} weight="duotone" className="opacity-50" />
-          <p className="font-medium">Belum ada riwayat baca</p>
+      <div className="w-full relative overflow-hidden rounded-2xl bg-surface-muted/30 border border-border-subtle/50 py-6 md:py-8 flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-4 px-6 md:px-10">
+        <div className="flex flex-col sm:flex-row items-center gap-3 md:gap-4 text-center sm:text-left text-text-muted">
+          <div className="w-12 h-12 md:w-14 md:h-14 shrink-0 rounded-full bg-surface-raised flex items-center justify-center  border border-border-subtle">
+            <BookBookmark size={24} weight="duotone" className="text-text-secondary md:w-7 md:h-7" />
+          </div>
+          <div>
+            <p className="font-bold text-text-primary md:text-lg">Belum ada riwayat baca</p>
+            <p className="text-sm text-text-muted">Mulai baca komik untuk melanjutkan progresmu di sini.</p>
+          </div>
         </div>
+        <Link 
+          href="/" 
+          className="bg-surface-overlay border border-border-default px-6 py-2.5 md:py-3 rounded-full font-bold text-sm text-text-primary hover:bg-surface-hover hover:text-accent transition-colors shadow-sm flex items-center gap-2"
+        >
+          <Compass weight="bold" /> Eksplor Manga
+        </Link>
       </div>
     );
   }
