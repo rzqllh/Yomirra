@@ -12,6 +12,7 @@ import { IconButton } from "@/components/ui/icon-button"
 import { Button } from "@/components/ui/button"
 import { SubtleChapterDivider } from "./subtle-chapter-divider"
 import { ReaderImage } from "./reader-image"
+import { ReaderPreloader } from "./reader-preloader"
 import { ReaderChapterDrawer } from "./reader-chapter-drawer"
 import { Chapter } from "@/shared/types/source"
 import { useDownloadStore } from "@/shared/store/download-store"
@@ -294,6 +295,12 @@ export function ContinuousVerticalReader({
         currentChapterId={chapterId}
         sourceId={sourceId}
         mangaId={mangaId}
+      />
+
+      {/* Invisible Sequential Preloader */}
+      <ReaderPreloader 
+        urls={pages.map(p => p.url)} 
+        dataSaver={dataSaver} 
       />
     </div>
   )
