@@ -5,31 +5,44 @@
 <br />
 
 <div align="center">
-  <strong>A premium, webtoon-first manga reader built for the modern web.</strong>
+  <strong>A premium, native-like manga reader built for the modern web.</strong>
 </div>
 
 <br />
 
-Yomirra is a progressive web application (PWA) designed to provide a cinematic, seamless reading experience. Built with a custom "Deep Lagoon Glassmorphism" design language, it prioritizes aesthetics, performance, offline capabilities, and fluid interactions through native View Transitions and motion physics.
+Yomirra is a progressive web application (PWA) designed to provide a seamless, cinematic reading experience. Built with a custom "Midnight Indigo Glassmorphism" design language, it prioritizes aesthetics, high performance, offline capabilities, and fluid interactions through native CSS View Transitions and spring physics.
 
-## 🚀 Features
+## 🚀 Key Features
 
-- **Webtoon-First Vertical Reader:** Continuous, uninterrupted scrolling optimized for long-strip manhwa and webtoons.
-- **Extensible Source System:** Built with an adapter pattern to easily integrate new manga sources via API proxies (ships with Shinigami adapter).
-- **Progressive Web App (PWA):** Installable on mobile and desktop, featuring offline caching and native-like shortcuts powered by Serwist.
-- **Cross-Device Sync:** Firebase-powered authentication and state synchronization for your library, history, and bookmarks.
-- **Fluid UI/UX:** Premium glassmorphism aesthetics, advanced micro-interactions, spring-based physics, and native View Transitions for seamless navigation without jarring page loads.
-- **Accessibility & Performance:** Reduced motion support, dynamic layout adaptations, and optimized asynchronous image decoding.
+- **Immersive Reader Experience:** Continuous vertical scroll and paged modes optimized for webtoons and manga, featuring auto-hiding toolbars, gesture support, and WakeLock integration.
+- **Cross-Device Sync:** Firebase-powered authentication and state synchronization for your library and reading history, ensuring you pick up right where you left off on any device.
+- **Offline Chapter Downloads:** Built-in download manager utilizing the browser's Cache API to store chapters for offline reading, complete with background queueing and persistent state.
+- **Extensible Source Adapter:** A server-side proxy architecture with HMAC-SHA256 signing to securely fetch and serve content from external sources (currently ships with Shinigami).
+- **Progressive Web App (PWA):** Installable on iOS, Android, and Desktop, featuring offline caching powered by Serwist, safe-area handling, and standalone native-like UX.
+- **High Performance:** Redis-backed SWR caching for external API endpoints, virtualized chapter lists for long-running series, and lazy-loaded image optimization.
 
 ## 🛠 Tech Stack
 
-- **Framework:** Next.js 16 (App Router + Turbopack) & React 19
-- **Styling:** Tailwind CSS v4
-- **State Management:** Zustand (Local + Cloud Sync)
-- **Animations:** Framer Motion (v12) & View Transitions API
-- **Backend & Auth:** Firebase (Auth, Firestore)
-- **PWA:** Serwist
-- **Components:** Radix UI primitives & Phosphor Icons
+### Core & Framework
+- **Next.js 16.2.5** (App Router + Turbopack)
+- **React 19.2.4**
+- **TypeScript 5.x** (Strict Mode)
+
+### Styling & UI
+- **Tailwind CSS v4**
+- **Framer Motion 12.x** (`motion/react`)
+- **Radix UI** Primitives
+- **Phosphor Icons**
+
+### State & Data
+- **Zustand 5.x** (with IndexedDB `persist` middleware)
+- **TanStack Query** (Client-side data fetching)
+- **Firebase 12.x** (Auth & Firestore for cloud sync)
+
+### Infrastructure & Caching
+- **Upstash Redis** (API cache layer)
+- **Serwist** (PWA & Service Worker)
+- **Cache API** (Offline image storage)
 
 ## 📱 Previews
 
@@ -43,7 +56,7 @@ Yomirra is a progressive web application (PWA) designed to provide a cinematic, 
 
 ### Prerequisites
 - Node.js 20+
-- `pnpm` (recommended)
+- `pnpm` (strictly required, do not use npm/yarn)
 
 ### Installation
 
@@ -59,7 +72,7 @@ Yomirra is a progressive web application (PWA) designed to provide a cinematic, 
    ```
 
 3. Configure Environment Variables:
-   Copy `.env.example` to `.env` and fill in your Firebase credentials.
+   Copy `.env.example` to `.env` and fill in your Firebase and Redis credentials.
    ```bash
    cp .env.example .env
    ```
@@ -71,14 +84,13 @@ Yomirra is a progressive web application (PWA) designed to provide a cinematic, 
 
 ## 🏗 Architecture
 
-Yomirra is structured around a strict separation of concerns to maintain a scalable codebase:
+Yomirra enforces a strict feature-based architecture with clear boundaries between server and client logic:
 
-- `/src/app`: Next.js App Router definitions, layouts, and API routes.
-- `/src/components`: Highly cohesive UI components, divided by domain (`/manga`, `/reader`, `/source`, `/ui`).
-- `/src/shared`: Core business logic, including Zustand stores, Firebase hooks, and utility functions.
-
-### Source Adapter Pattern
-The application uses a server-side proxy architecture to fetch from various external websites. This avoids CORS issues and abstracts DOM parsing into standardized interfaces (`fetchPopular`, `fetchMangaDetail`, `fetchChapterPages`), making it trivial to add new scrapers in the future without touching the frontend logic.
+- `/src/app/(web)`: Next.js App Router definitions, global CSS, and page layouts.
+- `/src/components`: Domain-driven UI components (`/app`, `/manga`, `/reader`, `/history`, `/ui`).
+- `/src/shared`: Client and server-safe utilities, Zustand stores, Firebase sync hooks, and API client.
+- `/src/server`: Server-only logic including Redis caching strategies, HMAC image proxy, rate limiting, and source adapters.
+- `/docs`: Comprehensive project guidelines defining API contracts, DB schema, design system tokens, UI/UX patterns, and agent rules.
 
 ## 📄 License
 

@@ -29,7 +29,7 @@ export function ThemeToggle() {
       onClick={() => setTheme(isDark ? "light" : "dark")}
       className={cn(
         "relative flex w-[68px] h-9 items-center rounded-full p-1 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ",
-        "bg-surface-glass backdrop-blur-md border border-border-glass shadow-sm hover:bg-surface-hover/50"
+        "bg-surface-glass backdrop-blur-md border border-border-glass  hover:bg-surface-hover/50"
       )}
       aria-label="Toggle theme"
     >
@@ -52,7 +52,7 @@ export function ThemeToggle() {
       
       {/* Sliding Pill Background */}
       <motion.div
-        className="absolute top-1 w-7 h-7 rounded-full bg-surface-overlay border border-border-strong shadow-sm z-0"
+        className="absolute top-1 w-7 h-7 rounded-full bg-surface-overlay border border-border-subtle  z-0"
         animate={{
           left: isDark ? "4px" : "36px",
         }}

@@ -65,10 +65,9 @@ function BookmarkButton({ sourceId, manga }: { sourceId: string, manga: MangaIte
   return (
     <motion.button 
       onClick={handleBookmarkClick}
-      whileTap={{ scale: 0.86 }}
-      whileHover={{ scale: 1.04 }}
+      whileTap={{ scale: 0.8 }}
       className={cn(
-        "grid size-8 place-items-center rounded-full transition-all focus-visible:outline-none bg-black/40 backdrop-blur-md shadow-sm border border-white/10",
+        "relative grid size-8 place-items-center rounded-full transition-all focus-visible:outline-none bg-black/40 backdrop-blur-md shadow-sm border border-white/10",
         isInLibrary ? 'text-accent hover:text-accent-hover' : 'text-media-muted hover:text-media-foreground'
       )}
       aria-label={isInLibrary ? "Hapus dari readlist" : "Simpan ke readlist"}
@@ -77,20 +76,29 @@ function BookmarkButton({ sourceId, manga }: { sourceId: string, manga: MangaIte
         {isInLibrary ? (
           <motion.span
             key="saved"
-            initial={{ scale: 0.6, rotate: -12, opacity: 0 }}
-            animate={{ scale: 1, rotate: 0, opacity: 1 }}
-            exit={{ scale: 0.6, rotate: 12, opacity: 0 }}
-            transition={{ duration: 0.16 }}
+            initial={{ scale: 0.3, opacity: 0 }}
+            animate={{ 
+              scale: [0.3, 1.3, 0.9, 1.1, 1],
+              opacity: 1 
+            }}
+            exit={{ scale: 0.3, opacity: 0 }}
+            transition={{ 
+              duration: 0.5,
+              times: [0, 0.4, 0.6, 0.8, 1],
+              ease: "easeOut"
+            }}
+            className="absolute inset-0 flex items-center justify-center drop-shadow-[0_0_8px_rgba(239,68,68,0.6)]"
           >
             <BookmarkSimple size={18} weight="fill" />
           </motion.span>
         ) : (
           <motion.span
             key="idle"
-            initial={{ scale: 0.6, rotate: 12, opacity: 0 }}
-            animate={{ scale: 1, rotate: 0, opacity: 1 }}
-            exit={{ scale: 0.6, rotate: -12, opacity: 0 }}
-            transition={{ duration: 0.16 }}
+            initial={{ scale: 0.6, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.6, opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="absolute inset-0 flex items-center justify-center"
           >
             <BookmarkSimple size={18} weight="bold" />
           </motion.span>

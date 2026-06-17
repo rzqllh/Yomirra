@@ -86,8 +86,10 @@ export async function SourceFeed({ sourceId, sourceName, variant }: SourceFeedPr
                   <div className="w-10 text-center shrink-0">
                     <span className={cn(
                       "text-xl font-black italic",
-                      idx === 0 ? "text-slate-400" : 
-                      idx === 1 ? "text-amber-700" : "text-white/20"
+                      idx === 0 ? "text-amber-500" : 
+                      idx === 1 ? "text-slate-400" : 
+                      idx === 2 ? "text-amber-700" : 
+                      "text-text-muted/50"
                     )}>
                       #{idx + 1}
                     </span>

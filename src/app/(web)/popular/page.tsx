@@ -59,9 +59,7 @@ export default async function PopularPage() {
 
   return (
     <main className="min-h-screen bg-surface-base">
-      <YomirraPageHeader title="Manga Populer" variant="auto" />
-      
-      <div className="px-4 py-6 max-w-7xl mx-auto">
+      <div className="px-4 py-6 max-w-7xl mx-auto pt-[max(24px,calc(var(--safe-top)+16px))]">
         <h1 className="text-2xl md:text-3xl font-black tracking-tight text-text-primary mb-8">Manga Populer</h1>
         
         {activeSources.map(source => (

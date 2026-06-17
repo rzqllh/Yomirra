@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { MagnifyingGlass, X } from "@phosphor-icons/react";
 import { cn } from "@/shared/utils/cn";
 import ReactDOM from "react-dom";
+import { motion, AnimatePresence } from "motion/react";
 
 export function HomeSearchPill() {
   const router = useRouter();
@@ -35,18 +36,24 @@ export function HomeSearchPill() {
   const content = (
     <>
       {/* Backdrop (Only on mobile) */}
-      <div 
-        className={cn(
-          "md:hidden fixed inset-0 z-[100] bg-surface-base/80 backdrop-blur-md transition-all duration-300 ease-out",
-          isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="md:hidden fixed inset-0 z-[100] bg-black/20 backdrop-blur-sm pointer-events-auto"
+            onClick={() => setIsOpen(false)}
+          />
         )}
-        onClick={() => setIsOpen(false)}
-      />
+      </AnimatePresence>
 
       {/* Pill Container (Only on mobile) */}
-      <div 
+      <motion.div 
+        layout
+        transition={{ type: "spring", stiffness: 400, damping: 30 }}
         className={cn(
-          "md:hidden fixed z-[101] transition-all duration-300 ease-[cubic-bezier(0.2,0.8,0.2,1)]",
+          "md:hidden fixed z-[101]",
           isOpen 
             ? "top-4 left-4 right-4 h-14" 
             : "top-[calc(var(--safe-top)+16px)] right-4 h-10 w-10 md:w-64"
@@ -55,10 +62,10 @@ export function HomeSearchPill() {
         <form 
           onSubmit={handleSubmit}
           className={cn(
-            "w-full h-full flex items-center bg-surface-glass backdrop-blur-md border border-border-glass transition-all duration-300 overflow-hidden",
+            "w-full h-full flex items-center bg-surface-glass/40 backdrop-blur-xl border border-border-glass overflow-hidden transition-shadow duration-300",
             isOpen 
-              ? "rounded-2xl px-4 shadow-xl ring-2 ring-accent/20" 
-              : "rounded-full md:px-4 justify-center md:justify-start cursor-pointer hover:bg-surface-hover shadow-sm"
+              ? "rounded-2xl px-4 shadow-2xl ring-1 ring-accent/30" 
+              : "rounded-full md:px-4 justify-center md:justify-start cursor-pointer hover:bg-surface-hover shadow-md"
           )}
           onClick={() => {
             if (!isOpen) setIsOpen(true);
@@ -66,10 +73,10 @@ export function HomeSearchPill() {
         >
           <MagnifyingGlass 
             className={cn(
-              "text-text-muted shrink-0 transition-colors",
-              isOpen ? "size-6 text-accent" : "size-5 md:size-[18px]"
+              "shrink-0 transition-colors duration-300",
+              isOpen ? "size-6 text-accent" : "size-5 md:size-[18px] text-text-muted"
             )} 
-            weight="regular" 
+            weight="bold" 
           />
           
           <input
@@ -79,26 +86,31 @@ export function HomeSearchPill() {
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Cari komik favoritmu..."
             className={cn(
-              "bg-transparent text-[16px] font-medium text-text-primary outline-none placeholder:text-text-muted/60 h-full transition-opacity duration-200",
+              "bg-transparent text-[16px] font-medium text-text-primary outline-none placeholder:text-text-muted/60 h-full transition-all duration-300",
               isOpen ? "opacity-100 w-full ml-3 flex-1" : "flex-none opacity-0 w-0 md:opacity-100 md:w-full md:ml-3 md:flex-1 pointer-events-none md:pointer-events-auto"
             )}
             tabIndex={isOpen ? 0 : -1}
           />
 
-          {isOpen && (
-            <button 
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsOpen(false);
-              }}
-              className="p-1 rounded-full hover:bg-surface-hover text-text-muted transition-colors ml-2"
-            >
-              <X size={20} weight="bold" />
-            </button>
-          )}
+          <AnimatePresence>
+            {isOpen && (
+              <motion.button 
+                initial={{ opacity: 0, scale: 0.5 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.5 }}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsOpen(false);
+                }}
+                className="p-1 rounded-full hover:bg-surface-hover text-text-muted transition-colors ml-2 shrink-0 bg-surface-raised/50"
+              >
+                <X size={20} weight="bold" />
+              </motion.button>
+            )}
+          </AnimatePresence>
         </form>
-      </div>
+      </motion.div>
     </>
   );
 

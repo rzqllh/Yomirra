@@ -70,7 +70,7 @@ export function EmptyState({
           animate={floatAnimation}
           whileHover={prefersReducedMotion ? {} : { scale: 1.05 }}
           whileTap={prefersReducedMotion ? {} : { scale: 0.95 }}
-          className="relative mb-6 flex h-20 w-20 items-center justify-center rounded-lg bg-gradient-to-b from-surface-raised to-surface-base shadow-lg ring-1 ring-border-default/40 isolate"
+          className="relative mb-6 flex h-20 w-20 items-center justify-center rounded-lg bg-gradient-to-b from-surface-raised to-surface-base ring-1 ring-border-default/40 isolate"
         >
           {/* Ambient Glow */}
           <div className="absolute inset-0 -z-10 rounded-lg bg-accent/10 blur-2xl opacity-60 mix-blend-screen" />

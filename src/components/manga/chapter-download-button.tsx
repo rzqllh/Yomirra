@@ -9,6 +9,9 @@ import { downloadChapterAsZip } from "@/shared/utils/zip-downloader";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+
 interface ChapterDownloadButtonProps {
   sourceId: string;
   mangaId: string;
@@ -33,6 +36,7 @@ export function ChapterDownloadButton({
   const [isPWA, setIsPWA] = useState(true);
   const [isZipDownloading, setIsZipDownloading] = useState(false);
   const [zipProgress, setZipProgress] = useState(0);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   useEffect(() => {
     setIsPWA(window.matchMedia('(display-mode: standalone)').matches);
@@ -81,10 +85,7 @@ export function ChapterDownloadButton({
       });
       toast.success(`Chapter ditambahkan ke antrean`);
     } else if (download.status === "downloaded" || download.status === "failed") {
-      if (confirm("Hapus unduhan chapter ini?")) {
-        removeDownload(id);
-        toast("Unduhan dihapus");
-      }
+      setIsDeleteDialogOpen(true);
     } else if (download.status === "downloading" || download.status === "queued") {
       const pauseDownload = useDownloadStore.getState().pauseDownload;
       pauseDownload(id);
@@ -97,7 +98,8 @@ export function ChapterDownloadButton({
   };
 
   return (
-    <IconButton
+    <>
+      <IconButton
       variant="ghost"
       size="sm"
       className="relative z-20 shrink-0 text-text-muted hover:text-text-primary rounded-full"
@@ -179,5 +181,37 @@ export function ChapterDownloadButton({
         )}
       </AnimatePresence>
     </IconButton>
+
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent className="max-w-sm rounded-3xl p-6 bg-surface-overlay/95 backdrop-blur-xl border border-border-default shadow-heavy">
+          <DialogHeader>
+            <DialogTitle>Hapus Unduhan?</DialogTitle>
+            <DialogDescription>
+              Unduhan chapter <strong>{chapterTitle}</strong> akan dihapus dari perangkat ini.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-row gap-2 sm:justify-center mt-4">
+            <Button
+              variant="ghost"
+              onClick={() => setIsDeleteDialogOpen(false)}
+              className="flex-1 rounded-full font-bold h-12"
+            >
+              Batal
+            </Button>
+            <Button
+              variant="accent"
+              onClick={() => {
+                removeDownload(id);
+                toast("Unduhan dihapus");
+                setIsDeleteDialogOpen(false);
+              }}
+              className="flex-1 rounded-full font-bold h-12 bg-red-500 hover:bg-red-600 text-white"
+            >
+              Hapus
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

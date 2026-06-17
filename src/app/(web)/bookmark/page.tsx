@@ -13,7 +13,8 @@ import { EmptyState } from "@/components/states/empty-state";
 import { Button } from "@/components/ui/button";
 import { useMounted } from "@/shared/hooks/use-mounted";
 import { getLibraryHref, getReaderHref, getMangaDetailHref } from "@/shared/lib/routes";
-import { BookBookmark, Compass, Clock, Play, SortDescending, SortAscending, CaretRight } from "@phosphor-icons/react";
+import { BookBookmark, Compass, Clock, Play, SortDescending, SortAscending, CaretRight, CaretDown } from "@phosphor-icons/react";
+import { motion } from "motion/react";
 import { DirectionalTransition } from "@/components/ui/directional-transition";
 import { SearchInput } from "@/components/ui/search-input";
 import { YomirraSurface } from "@/components/ui/yomirra-layout";
@@ -28,6 +29,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { CustomSelect } from "@/components/ui/custom-select";
 function getRelativeTime(dateString?: string): string {
   if (!dateString) return "";
   const date = new Date(dateString);
@@ -151,6 +153,7 @@ export default function BookmarkPage() {
     deleteTimeouts.current[key] = timeoutId;
     
     toast(`Riwayat "${mangaTitle}" dihapus`, {
+      duration: 5000,
       action: {
         label: "Batal",
         onClick: () => {
@@ -195,27 +198,27 @@ export default function BookmarkPage() {
           </div>
 
           <div className="px-4 py-4 w-full md:max-w-md">
-            <div className="flex bg-surface-muted/50 p-1 rounded-full border border-border-subtle/50 shadow-inner">
-              <button
-                onClick={() => setActiveTab("reading")}
-                className={`flex-1 py-2 text-sm font-bold rounded-full transition-all ${
-                  activeTab === "reading" 
-                    ? "bg-surface-overlay text-text-primary shadow-sm ring-1 ring-border-default" 
-                    : "text-text-muted hover:text-text-primary hover:bg-surface-hover/50"
-                }`}
-              >
-                Sedang Dibaca
-              </button>
-              <button
-                onClick={() => setActiveTab("collection")}
-                className={`flex-1 py-2 text-sm font-bold rounded-full transition-all ${
-                  activeTab === "collection" 
-                    ? "bg-surface-overlay text-text-primary shadow-sm ring-1 ring-border-default" 
-                    : "text-text-muted hover:text-text-primary hover:bg-surface-hover/50"
-                }`}
-              >
-                Koleksi
-              </button>
+            <div className="relative flex bg-surface-muted/50 p-1 rounded-full border border-border-subtle/50 ">
+              {["reading", "collection"].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab as "reading" | "collection")}
+                  className={`relative flex-1 py-2 text-sm font-bold rounded-full transition-colors z-10 ${
+                    activeTab === tab 
+                      ? "text-text-primary" 
+                      : "text-text-muted hover:text-text-primary"
+                  }`}
+                >
+                  {activeTab === tab && (
+                    <motion.div
+                      layoutId="bookmark-tab-indicator"
+                      className="absolute inset-0 bg-surface-overlay ring-1 ring-border-default rounded-full -z-10"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    />
+                  )}
+                  {tab === "reading" ? "Sedang Dibaca" : "Koleksi"}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -307,7 +310,7 @@ export default function BookmarkPage() {
                       description="Simpan judul dari halaman detail untuk menemukannya lagi di sini."
                       action={
                         <Button asChild variant="accent" className="rounded-full shadow-sm font-bold">
-                          <Link href={getHomeHref()}>
+                          <Link href="/">
                             <Compass size={20} weight="bold" className="mr-1.5" />
                             Eksplor Manga
                           </Link>
@@ -324,15 +327,16 @@ export default function BookmarkPage() {
                             placeholder="Cari di koleksi..."
                           />
                         </div>
-                        <div className="flex gap-2">
-                          <select
+                        <div className="flex gap-2 relative z-50">
+                          <CustomSelect
+                            align="left"
                             value={sortBy}
-                            onChange={(e) => setSortBy(e.target.value as "updatedAt" | "title")}
-                            className="h-[44px] rounded-full bg-surface-glass backdrop-blur-md px-4 py-2 text-sm text-text-primary border border-border-glass focus:ring-2 focus:ring-accent/50 outline-none font-medium hover:bg-surface-glass transition-colors appearance-none shadow-[0_4px_16px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.2)]"
-                          >
-                            <option value="updatedAt">Terbaru Ditambahkan</option>
-                            <option value="title">Judul Buku</option>
-                          </select>
+                            onChange={(val) => setSortBy(val as "updatedAt" | "title")}
+                            options={[
+                              { value: "updatedAt", label: "Terbaru Ditambahkan" },
+                              { value: "title", label: "Judul Buku" }
+                            ]}
+                          />
                           <button
                             onClick={() => setSortOrder(prev => prev === "desc" ? "asc" : "desc")}
                             className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-full bg-surface-glass backdrop-blur-md text-text-primary hover:bg-surface-glass transition-colors border border-border-glass shadow-[0_4px_16px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.2)]"

@@ -17,8 +17,10 @@ import { YomirraSurface } from "@/components/ui/yomirra-layout";
 import { YomirraPageHeader, DesktopPageTitle } from "@/components/app/yomirra-header";
 import { YomirraSegmentedControl } from "@/components/ui/yomirra-segmented-control";
 import { Gear } from "@phosphor-icons/react/dist/ssr";
+import { toast } from "sonner";
 import { format } from "date-fns";
 import { id as idLocale } from "date-fns/locale";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { SettingsSection, SettingsItem, IconWrapper } from "./components/settings-ui";
 
 export default function SettingsPage() {
@@ -38,12 +40,17 @@ export default function SettingsPage() {
     await logout();
   };
 
+  const [isClearDataDialogOpen, setIsClearDataDialogOpen] = React.useState(false);
+
   const handleClearData = () => {
-    if (confirm("Yakin ingin menghapus semua Riwayat dan Readlist lokal?" + (user ? " (Data di Cloud mungkin tidak terhapus)" : ""))) {
-      clearHistory();
-      clearLibrary();
-      alert("Data lokal berhasil dibersihkan.");
-    }
+    setIsClearDataDialogOpen(true);
+  };
+
+  const confirmClearData = () => {
+    clearHistory();
+    clearLibrary();
+    toast.success("Data lokal berhasil dibersihkan");
+    setIsClearDataDialogOpen(false);
   };
 
   const formatLastSynced = () => {
@@ -273,6 +280,33 @@ export default function SettingsPage() {
           </div>
         </YomirraSurface>
       </div>
+
+      <Dialog open={isClearDataDialogOpen} onOpenChange={setIsClearDataDialogOpen}>
+        <DialogContent className="max-w-sm rounded-3xl p-6 bg-surface-overlay/95 backdrop-blur-xl border border-border-default shadow-heavy">
+          <DialogHeader>
+            <DialogTitle>Bersihkan Data Perangkat?</DialogTitle>
+            <DialogDescription>
+              {user ? "Ini akan menghapus riwayat dan koleksi di perangkat ini. Datamu di cloud akan tetap aman dan akan dimuat ulang saat sinkronisasi." : "Semua riwayat bacaan dan koleksi akan dihapus permanen karena kamu tidak login."}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-row gap-2 sm:justify-center mt-4">
+            <Button
+              variant="ghost"
+              onClick={() => setIsClearDataDialogOpen(false)}
+              className="flex-1 rounded-full font-bold h-12"
+            >
+              Nanti Aja
+            </Button>
+            <Button
+              variant="accent"
+              onClick={confirmClearData}
+              className="flex-1 rounded-full font-bold h-12 bg-red-500 hover:bg-red-600 text-white"
+            >
+              Bersihkan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DirectionalTransition>
   );
 }
