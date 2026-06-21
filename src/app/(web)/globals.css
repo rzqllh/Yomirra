@@ -402,8 +402,7 @@ body.reader-active {
 }
 
 ::view-transition-group(persistent-top-nav),
-::view-transition-group(persistent-bottom-nav),
-::view-transition-group(persistent-side-nav) {
+::view-transition-group(persistent-bottom-nav) {
   animation: none;
   z-index: 100;
 }

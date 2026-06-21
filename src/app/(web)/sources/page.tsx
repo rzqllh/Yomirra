@@ -31,7 +31,7 @@ export default function SourcesPage() {
     <DirectionalTransition>
       <div className="flex flex-col min-h-screen">
         <YomirraSurface variant="base" className="flex-1 w-full max-w-7xl mx-auto md:pb-8">
-          <div className="px-4 py-8 pb-4">
+          <div className="px-4 pt-[calc(var(--safe-top)+24px)] pb-4">
             <DesktopPageTitle 
               title="Sumber" 
               description="Kelola sumber bacaan untuk Yomirra."

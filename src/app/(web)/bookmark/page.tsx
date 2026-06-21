@@ -94,7 +94,7 @@ export default function BookmarkPage() {
       mangaTitle: string;
       coverUrl?: string;
       sourceName?: string;
-      latestReadAt: string;
+      latestReadAt: number;
       chapters: typeof historyItems;
     }> = {};
 
@@ -112,12 +112,12 @@ export default function BookmarkPage() {
         };
       }
       groups[key].chapters.push(item);
-      if (new Date(item.readAt).getTime() > new Date(groups[key].latestReadAt).getTime()) {
+      if (item.readAt > groups[key].latestReadAt) {
         groups[key].latestReadAt = item.readAt;
       }
     });
 
-    return Object.values(groups).sort((a, b) => new Date(b.latestReadAt).getTime() - new Date(a.latestReadAt).getTime());
+    return Object.values(groups).sort((a, b) => b.latestReadAt - a.latestReadAt);
   }, [historyItems]);
 
   const [activeTab, setActiveTab] = React.useState<"reading" | "collection">("reading");
@@ -189,7 +189,7 @@ export default function BookmarkPage() {
     <DirectionalTransition>
       <div className="flex flex-col min-h-screen pb-24">
         <YomirraSurface variant="base" className="flex-1 w-full max-w-7xl mx-auto md:pb-8">
-          <div className="px-4 py-8 pb-4">
+          <div className="px-4 pt-[calc(var(--safe-top)+24px)] pb-4">
             <DesktopPageTitle 
               title="Rak Buku" 
               description="Koleksi dan riwayat bacaan personal Anda." 
@@ -244,7 +244,7 @@ export default function BookmarkPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                       {visibleHistory.map((group) => {
                         const item = group.chapters[0]; // get the latest read chapter
-                        const timeText = getRelativeTime(item.readAt);
+                        const timeText = getRelativeTime(new Date(item.readAt).toISOString());
                         const progress = item.progressPercent || 0;
                         const targetHref = getReaderHref(group.sourceId, group.mangaId, item.chapterId);
                         
@@ -252,7 +252,7 @@ export default function BookmarkPage() {
                           <Link 
                             key={`${group.sourceId}::${group.mangaId}`}
                             href={targetHref}
-                            className="relative w-full bg-surface-glass backdrop-blur-sm rounded-2xl overflow-hidden border border-border-subtle group shadow-sm hover:shadow-md hover:border-border-default transition-all vt-hover"
+                            className="relative w-full bg-surface-glass backdrop-blur-sm rounded-2xl overflow-hidden --subtle group -sm hover:-md hover:--default transition-all vt-hover"
                             style={{ '--vt-name': `manga-cover-${group.sourceId}-${group.mangaId}` } as React.CSSProperties}
                           >
                             <div className="flex p-4 gap-4">
@@ -339,7 +339,7 @@ export default function BookmarkPage() {
                           />
                           <button
                             onClick={() => setSortOrder(prev => prev === "desc" ? "asc" : "desc")}
-                            className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-full bg-surface-glass backdrop-blur-md text-text-primary hover:bg-surface-glass transition-colors border border-border-glass shadow-[0_4px_16px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.2)]"
+                            className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-full bg-surface-glass backdrop-blur-md text-text-primary hover:bg-surface-glass transition-colors --glass -[0_4px_16px_rgba(0,0,0,0.05)] dark:-[0_4px_16px_rgba(0,0,0,0.2)]"
                             aria-label="Toggle sort order"
                           >
                             {sortOrder === "desc" ? <SortDescending size={20} weight="bold" /> : <SortAscending size={20} weight="bold" />}

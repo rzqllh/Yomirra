@@ -22,6 +22,7 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Initial check on mount
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsOffline(!navigator.onLine);
 
     const handleOffline = () => setIsOffline(true);

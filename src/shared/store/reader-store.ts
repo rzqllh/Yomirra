@@ -43,6 +43,7 @@ export const useReaderStore = create<ReaderState>()(
     {
       name: "manga-reader-settings", // keep the same name for migration
       partialize: (state) => ({ preferences: state.preferences, isDesktopPanelOpen: state.isDesktopPanelOpen }),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- persistedState can be anything from localStorage including legacy versions
       merge: (persistedState: any, currentState: ReaderState) => {
         // Safe migration from old `settings` to new `preferences`
         let mergedPreferences = { ...currentState.preferences };

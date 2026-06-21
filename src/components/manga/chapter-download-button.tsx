@@ -39,6 +39,7 @@ export function ChapterDownloadButton({
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsPWA(window.matchMedia('(display-mode: standalone)').matches);
   }, []);
 
@@ -184,7 +185,7 @@ export function ChapterDownloadButton({
     </IconButton>
 
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="max-w-sm rounded-3xl p-6 bg-surface-overlay/95 backdrop-blur-xl border border-border-default shadow-heavy">
+        <DialogContent className="max-w-sm rounded-3xl p-6 bg-surface-overlay/95 backdrop-blur-xl --default -heavy">
           <DialogHeader>
             <DialogTitle>Hapus Unduhan?</DialogTitle>
             <DialogDescription>

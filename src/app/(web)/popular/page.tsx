@@ -1,5 +1,6 @@
 import { Metadata } from "next";
-import { YomirraPageHeader } from "@/components/app/yomirra-header";
+import { DesktopPageTitle } from "@/components/app/yomirra-header";
+import { Fire } from "@phosphor-icons/react/dist/ssr";
 import { sourceRegistry } from "@/shared/sources/source-registry";
 import { Suspense } from "react";
 import { SourceFeedSkeleton } from "@/components/app/source-feed-skeleton";
@@ -36,11 +37,11 @@ async function PopularFeed({ sourceId, sourceName }: { sourceId: string; sourceN
         </Link>
       </div>
       
-      <div className="flex overflow-x-auto gap-3 sm:gap-4 pb-4 w-full min-w-0 snap-x scroll-smooth [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
         {popular.mangas.slice(0, 15).map((manga, index) => (
-          <div key={manga.id} className="w-[140px] sm:w-[160px] md:w-[180px] shrink-0 snap-start ">
+          <div key={manga.id} className="w-full">
             <MangaCard 
-              manga={manga} 
+              manga={{ ...manga, rank: index + 1 }} 
               sourceId={sourceId} 
               priority={index < 4}
               variant="editorial"
@@ -59,8 +60,14 @@ export default async function PopularPage() {
 
   return (
     <main className="min-h-screen bg-surface-base">
-      <div className="px-4 py-6 max-w-7xl mx-auto pt-[max(24px,calc(var(--safe-top)+16px))]">
-        <h1 className="text-2xl md:text-3xl font-black tracking-tight text-text-primary mb-8">Manga Populer</h1>
+      <div className="px-4 pt-[calc(var(--safe-top)+24px)] pb-6 max-w-7xl mx-auto">
+        <div className="mb-8">
+          <DesktopPageTitle 
+            title="Manga Populer" 
+            description="Manga, Manhwa, dan Manhua paling populer saat ini."
+            icon={<Fire size={32} weight="duotone" />}
+          />
+        </div>
         
         {activeSources.map(source => (
           <Suspense key={source.id} fallback={<SourceFeedSkeleton />}>

@@ -38,7 +38,7 @@ export default function DownloadsPage() {
 
   return (
     <div className="flex flex-col min-h-screen pb-20 md:pb-0">
-      <header className="sticky top-[72px] md:top-0 z-30 bg-surface-base/80 backdrop-blur-xl border-b border-border-default h-14 flex items-center px-4 gap-3">
+      <header className="sticky top-[72px] md:top-0 z-30 bg-surface-base/80 backdrop-blur-xl -b --default h-14 flex items-center px-4 gap-3">
         <Link href="/library" className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-muted hover:bg-surface-hover text-text-primary transition-colors">
           <CaretLeft size={20} weight="bold" />
         </Link>

@@ -22,12 +22,7 @@ export const YomirraSearchField = React.forwardRef<HTMLInputElement, YomirraSear
     return (
       <form 
         onSubmit={handleSubmit} 
-        className={cn(
-          "group flex items-center gap-2.5 rounded-full bg-surface-glass backdrop-blur-md border border-border-glass px-4 transition-all duration-300 ease-out h-[44px]",
-          "hover:bg-surface-hover focus-within:bg-surface-overlay focus-within:shadow-sm",
-          "border border-transparent focus-within:border-border-default focus-within:ring-2 focus-within:ring-accent/20",
-          containerClassName
-        )}
+        className={cn( "group flex items-center gap-2.5 rounded-full bg-surface-glass backdrop-blur-md --glass px-4 transition-all duration-300 ease-out h-[44px]", "hover:bg-surface-hover focus-within:bg-surface-overlay focus-within:-sm", " -transparent focus-within:--default focus-within:ring-2 focus-within:ring-accent/20", containerClassName )}
       >
         <MagnifyingGlass 
           className="size-[20px] text-text-muted shrink-0 transition-colors group-focus-within:text-accent" 

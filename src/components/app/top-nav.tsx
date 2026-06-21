@@ -49,22 +49,12 @@ export function TopNav() {
       <div className="hidden md:block h-[72px] w-full shrink-0" />
       
       <div 
-        className={cn(
-          "hidden md:flex fixed top-0 left-0 right-0 z-40 w-full transition-all duration-500 pointer-events-none h-[72px]",
-          isScrolled 
-            ? "items-center px-4 md:px-8" 
-            : "px-0 bg-surface-glass backdrop-blur-3xl border-b border-border-glass"
-        )}
+        className={cn( "hidden md:flex fixed top-0 left-0 right-0 z-40 w-full transition-all duration-500 pointer-events-none h-[72px]", isScrolled ? "items-center px-4 md:px-8" : "px-0 bg-surface-glass backdrop-blur-3xl -b --glass" )}
       >
       <motion.div 
         layout
         transition={{ duration: 0.3, ease: "easeOut" }}
-        className={cn(
-          "flex items-center justify-between pointer-events-auto transition-colors duration-500 overflow-visible mx-auto",
-          isScrolled 
-            ? "max-w-7xl w-full h-[60px] bg-surface-glass backdrop-blur-xl border border-border-glass shadow-sm rounded-full px-6" 
-            : "w-full h-[72px] px-8"
-        )}
+        className={cn( "flex items-center justify-between pointer-events-auto transition-colors duration-500 overflow-visible mx-auto", isScrolled ? "max-w-7xl w-full h-[60px] bg-surface-glass backdrop-blur-xl --glass -sm rounded-full px-6" : "w-full h-[72px] px-8" )}
       >
         {/* LEFT: Logo & Brand */}
         <Link href="/" className="flex items-center gap-2 outline-none shrink-0 h-full group z-10">
@@ -110,10 +100,7 @@ export function TopNav() {
               {/* Desktop pill */}
               <button 
                 onClick={() => window.dispatchEvent(new CustomEvent('open-command-menu'))}
-                className={cn(
-                  "hidden sm:flex items-center gap-2 px-3 rounded-full transition-all text-text-muted hover:text-text-primary text-sm h-9 w-48",
-                  "bg-surface-glass backdrop-blur-md border border-border-glass shadow-sm hover:bg-surface-hover/50"
-                )}
+                className={cn( "hidden sm:flex items-center gap-2 px-3 rounded-full transition-all text-text-muted hover:text-text-primary text-sm h-9 w-48", "bg-surface-glass backdrop-blur-md --glass -sm hover:bg-surface-hover/50" )}
               >
                 <MagnifyingGlass size={16} weight="duotone" />
                 <span className="flex-1 text-left opacity-70">Cari...</span>
@@ -125,7 +112,7 @@ export function TopNav() {
               {/* Mobile icon only */}
               <IconButton 
                 onClick={() => window.dispatchEvent(new CustomEvent('open-command-menu'))}
-                className="sm:hidden size-9 rounded-full bg-surface-glass backdrop-blur-md border border-border-glass shadow-sm hover:bg-surface-hover/50 text-text-secondary"
+                className="sm:hidden size-9 rounded-full bg-surface-glass backdrop-blur-md --glass -sm hover:bg-surface-hover/50 text-text-secondary"
                 aria-label="Cari"
               >
                 <MagnifyingGlass size={18} weight="duotone" />
@@ -143,10 +130,7 @@ export function TopNav() {
                 <button 
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
                   aria-label="Profil Pengguna"
-                  className={cn(
-                    "flex items-center justify-center rounded-full bg-surface-glass backdrop-blur-md border border-border-glass shadow-sm hover:scale-105 active:scale-95 transition-all outline-none",
-                    isScrolled ? "size-9" : "size-9 lg:size-10"
-                  )}
+                  className={cn( "flex items-center justify-center rounded-full bg-surface-glass backdrop-blur-md --glass -sm hover:scale-105 active:scale-95 transition-all outline-none", isScrolled ? "size-9" : "size-9 lg:size-10" )}
                 >
                   {user.photoURL ? (
                     <div className="size-full rounded-full overflow-hidden border border-border-default">
@@ -164,7 +148,7 @@ export function TopNav() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
                       transition={{ duration: 0.15, ease: "easeOut" }}
-                      className="absolute right-0 top-14 w-56 bg-surface-overlay/95 backdrop-blur-xl border border-border-default shadow-heavy rounded-2xl p-1.5 z-50 flex flex-col"
+                      className="absolute right-0 top-14 w-56 bg-surface-overlay/95 backdrop-blur-xl --default -heavy rounded-2xl p-1.5 z-50 flex flex-col"
                     >
                       <div className="px-3 py-2.5 border-b border-border-glass mb-1.5">
                         <p className="text-[14px] font-bold text-text-primary truncate">{user.displayName || "User"}</p>

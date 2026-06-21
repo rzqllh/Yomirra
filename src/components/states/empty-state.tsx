@@ -21,6 +21,8 @@ export function EmptyState({
   className,
   ...props
 }: EmptyStateProps) {
+  const prefersReducedMotion = useReducedMotion()
+
   if (variant === "compact") {
     return (
       <div 
@@ -46,7 +48,6 @@ export function EmptyState({
     )
   }
 
-  const prefersReducedMotion = useReducedMotion()
   const floatAnimation = prefersReducedMotion ? {} : {
     y: [0, -6, 0],
     transition: {

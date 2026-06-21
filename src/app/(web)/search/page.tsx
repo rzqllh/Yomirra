@@ -11,7 +11,9 @@ import { MangaCard } from "@/components/manga/manga-card";
 import { motion, AnimatePresence } from "motion/react";
 import { useSettingsStore } from "@/shared/store/settings-store";
 
+import { YomirraSearchField } from "@/components/ui/yomirra-search-field";
 import { DirectionalTransition } from "@/components/ui/directional-transition";
+import { useRouter } from "next/navigation";
 
 export default function SearchPage() {
   return (
@@ -33,7 +35,18 @@ export default function SearchPage() {
 function SearchContent() {
   const searchParams = useSearchParams();
   const query = searchParams?.get("q") || "";
-  
+  const [localQuery, setLocalQuery] = React.useState(query);
+  const router = useRouter();
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (localQuery.trim()) {
+      const params = new URLSearchParams(searchParams?.toString() || "");
+      params.set("q", localQuery.trim());
+      router.push(`/search?${params.toString()}`);
+    }
+  };
+
   const { data: sourcesData } = useQuery({
     queryKey: ["sources"],
     queryFn: () => apiClient.getSources(),
@@ -75,12 +88,23 @@ function SearchContent() {
     <main className="min-h-screen bg-surface-base">
       <YomirraPageHeader title="" showBack variant="transparent" />
       
-      <div className="px-4 py-6 max-w-7xl mx-auto">
+      <div className="px-4 pt-[calc(var(--safe-top)+24px)] pb-6 max-w-7xl mx-auto">
         <div className="mb-6">
           <DesktopPageTitle 
-            title={`Pencarian: ${query}`} 
+            title={query ? `Pencarian: ${query}` : "Pencarian"} 
             description="Pilih sumber untuk mencari manga favoritmu."
             icon={<MagnifyingGlass size={32} weight="duotone" />}
+          />
+        </div>
+
+        <div className="mb-6">
+          <YomirraSearchField 
+            value={localQuery}
+            onChange={(e) => setLocalQuery(e.target.value)}
+            onSubmitAction={handleSearch}
+            placeholder="Cari komik favoritmu..."
+            containerClassName="w-full h-14"
+            autoFocus
           />
         </div>
 
@@ -94,11 +118,7 @@ function SearchContent() {
                   key={source.id}
                   onClick={() => toggleSource(source.id)}
                   whileTap={{ scale: 0.96 }}
-                  className={`relative flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all border outline-none overflow-hidden ${
-                    isSelected 
-                      ? "border-accent text-background" 
-                      : "border-border-glass bg-surface-glass backdrop-blur-md text-text-muted hover:border-border-strong hover:bg-surface-glass/80 shadow-[0_4px_16px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.2)]"
-                  }`}
+                  className={`relative flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all outline-none overflow-hidden ${ isSelected ? "-accent text-background" : "--glass bg-surface-glass backdrop-blur-md text-text-muted hover:--strong hover:bg-surface-glass/80 -[0_4px_16px_rgba(0,0,0,0.05)] dark:-[0_4px_16px_rgba(0,0,0,0.2)]"}`}
                 >
                   {isSelected && (
                     <motion.div
@@ -121,7 +141,7 @@ function SearchContent() {
 
         {/* Content States */}
         {query.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center bg-surface-glass backdrop-blur-md rounded-2xl border border-border-glass shadow-[0_4px_16px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.2)]">
+          <div className="flex flex-col items-center justify-center py-20 text-center bg-surface-glass backdrop-blur-md rounded-2xl --glass -[0_4px_16px_rgba(0,0,0,0.05)] dark:-[0_4px_16px_rgba(0,0,0,0.2)]">
             <MagnifyingGlass size={48} className="mb-4 text-text-muted" weight="duotone" />
             <p className="text-base font-medium text-text-primary">Masukkan kata kunci untuk mencari.</p>
           </div>
@@ -132,11 +152,7 @@ function SearchContent() {
             <p className="text-sm text-text-muted mt-1">Pilih setidaknya satu sumber di atas.</p>
           </div>
         ) : isLoading ? (
-          <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8">
-            <SearchResultSkeleton />
-            <SearchResultSkeleton />
-            <SearchResultSkeleton />
-            <SearchResultSkeleton />
+          <div className="flex flex-col gap-10">
             <SearchResultSkeleton />
             <SearchResultSkeleton />
           </div>

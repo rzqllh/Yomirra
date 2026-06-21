@@ -41,7 +41,7 @@ export function CustomSelect({ value, onChange, options, className, buttonClassN
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={cn("flex items-center gap-2 h-[34px] px-3.5 rounded-full bg-surface-glass backdrop-blur-md border border-border-glass hover:bg-surface-glass focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 shadow-[0_4px_16px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.2)] transition-all", buttonClassName)}
+        className={cn("flex items-center gap-2 h-[34px] px-3.5 rounded-full bg-surface-glass backdrop-blur-md --glass hover:bg-surface-glass focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 -[0_4px_16px_rgba(0,0,0,0.05)] dark:-[0_4px_16px_rgba(0,0,0,0.2)] transition-all", buttonClassName)}
       >
         <span className="text-[13px] font-semibold text-text-primary whitespace-nowrap">
           {selectedOption?.label}
@@ -55,10 +55,7 @@ export function CustomSelect({ value, onChange, options, className, buttonClassN
 
       {isOpen && (
         <div 
-          className={cn(
-            "absolute z-50 mt-2 w-48 rounded-2xl bg-surface-overlay/80 backdrop-blur-lg border border-border-glass/20 shadow-2xl p-1.5 animate-in fade-in zoom-in-95 duration-200",
-            align === "right" ? "right-0" : align === "left" ? "left-0" : "left-1/2 -translate-x-1/2"
-          )}
+          className={cn( "absolute z-50 mt-2 w-48 rounded-2xl bg-surface-overlay/80 backdrop-blur-lg --glass/20 -2xl p-1.5 animate-in fade-in zoom-in-95 duration-200", align === "right" ? "right-0" : align === "left" ? "left-0" : "left-1/2 -translate-x-1/2" )}
         >
           <div className="flex flex-col gap-0.5 max-h-[300px] overflow-y-auto">
             {options.map((option) => {

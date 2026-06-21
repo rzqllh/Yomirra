@@ -49,6 +49,7 @@ export async function SourceFeed({ sourceId, sourceName, variant }: SourceFeedPr
   }
 
   // Shuffle the latest data for the carousel
+  // eslint-disable-next-line react-hooks/purity
   const shuffledLatest = [...(latest?.mangas || [])].sort(() => 0.5 - Math.random()).slice(0, 10);
   const top5Trending = popular?.mangas.slice(0, 5) || [];
   const restTrending = popular?.mangas.slice(5, 25) || [];
@@ -77,31 +78,17 @@ export async function SourceFeed({ sourceId, sourceName, variant }: SourceFeedPr
               <h4 className="font-bold text-sm text-text-muted uppercase tracking-wider mb-2 flex items-center gap-2">
                 <TrendUp weight="duotone" /> Peringkat Populer
               </h4>
-              {top5Trending.map((manga, idx) => (
-                <Link 
-                  key={manga.id} 
-                  href={`/sources/${sourceId}/manga/${manga.id}`}
-                  className="flex gap-4 items-center group cursor-pointer hover:bg-surface-hover p-2 -mx-2 rounded-xl transition-colors"
-                >
-                  <div className="w-10 text-center shrink-0">
-                    <span className={cn(
-                      "text-xl font-black italic",
-                      idx === 0 ? "text-amber-500" : 
-                      idx === 1 ? "text-slate-400" : 
-                      idx === 2 ? "text-amber-700" : 
-                      "text-text-muted/50"
-                    )}>
-                      #{idx + 1}
-                    </span>
-                  </div>
-                  <div className="w-14 aspect-[2/3] rounded-lg overflow-hidden shrink-0 shadow-sm border border-border-subtle">
-                    <img src={manga.coverUrl || ""} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h5 className="font-bold text-sm line-clamp-2 group-hover:text-accent transition-colors">{manga.title}</h5>
-                  </div>
-                </Link>
-              ))}
+              <div className="flex flex-col gap-3">
+                {top5Trending.map((manga, idx) => (
+                  <MangaCard 
+                    key={manga.id} 
+                    manga={manga} 
+                    sourceId={sourceId} 
+                    rank={idx + 1} 
+                    variant="editorial" 
+                  />
+                ))}
+              </div>
             </div>
           </div>
         </div>

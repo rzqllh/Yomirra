@@ -1,25 +1,18 @@
 import * as React from "react"
-import { useRouter } from "next/navigation"
-import { CaretLeft, CaretRight, List } from "@phosphor-icons/react"
 import { useReaderStore } from "@/shared/store/reader-store"
-import { useHistoryStore } from "@/shared/store/history-store"
 import { useSettingsStore } from "@/shared/store/settings-store"
-import { useReaderProgressStore } from "@/shared/store/reader-progress-store"
+import { useHistoryStore } from "@/shared/store/history-store"
 import { PageItem } from "@/shared/types/source"
-import { cn } from "@/shared/utils/cn"
 import { getReaderHref } from "@/shared/lib/routes"
-import { IconButton } from "@/components/ui/icon-button"
-import { Button } from "@/components/ui/button"
-import { SubtleChapterDivider } from "./subtle-chapter-divider"
 import { ReaderImage } from "./reader-image"
-import { ReaderPreloader } from "./reader-preloader"
-import { ReaderChapterDrawer } from "./reader-chapter-drawer"
 import { Chapter } from "@/shared/types/source"
 import { useDownloadStore } from "@/shared/store/download-store"
 import { getOfflineImageUrl } from "@/shared/utils/download-helpers"
 import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
 import { useWindowVirtualizer } from "@tanstack/react-virtual"
+import { useReaderScroll } from "@/shared/hooks/use-reader-scroll"
+import { useDecodeQueue } from "@/shared/hooks/use-decode-queue"
 
 export type StreamItem = 
   | { type: "image"; chapterId: string; pageIndex: number; url: string; index: number }
@@ -40,22 +33,22 @@ export function ContinuousVerticalReader({
   sourceId, 
   mangaId, 
   chapterId,
-  chapterTitle = "Chapter",
+  chapterTitle: _chapterTitle = "Chapter",
   pages,
-  chapters,
-  prevChapterId,
+  chapters: _chapters,
+  prevChapterId: _prevChapterId,
   nextChapterId
 }: ContinuousVerticalReaderProps) {
-  const { preferences, isOverlayVisible, isDesktopPanelOpen } = useReaderStore()
+  const { preferences } = useReaderStore()
   const { dataSaver } = useSettingsStore()
   const isDownloaded = useDownloadStore(state => state.isDownloaded(sourceId, mangaId, chapterId))
-  const saveProgress = useReaderProgressStore(state => state.saveProgress)
-  const getProgress = useReaderProgressStore(state => state.getProgress)
+  const saveProgress = useHistoryStore(state => state.saveProgress)
+  const getProgress = useHistoryStore(state => state.getLatestForManga)
 
-  const router = useRouter()
-  const [isChapterDrawerOpen, setIsChapterDrawerOpen] = React.useState(false)
+
   
   const queryClient = useQueryClient()
+  const decodeQueue = useDecodeQueue(3)
   
   const streamItems = React.useMemo<StreamItem[]>(() => {
     return pages.map(p => ({
@@ -67,11 +60,49 @@ export function ContinuousVerticalReader({
     }));
   }, [pages, chapterId]);
 
+  const cacheKey = `yomirra-virtualizer-cache-${sourceId}-${mangaId}-${chapterId}`;
+  
+  const initialCache = React.useMemo(() => {
+    if (typeof sessionStorage !== 'undefined') {
+      const cached = sessionStorage.getItem(cacheKey);
+      if (cached) {
+        try {
+          // TanStack Virtual 3 uses an array of measurements
+          return JSON.parse(cached);
+        } catch (e) {}
+      }
+    }
+    return undefined;
+  }, [cacheKey]);
+
   const virtualizer = useWindowVirtualizer({
     count: streamItems.length,
-    estimateSize: () => 800, // loose estimate for webtoons
+    estimateSize: () => 1200, // loose estimate for webtoons
     overscan: 3,
+    initialOffset: 0,
+    // Note: TanStack Virtual 3 uses `initialMeasurementsCache` to restore
+    ...(initialCache ? { initialMeasurementsCache: initialCache } : {})
   });
+
+  // Save measurements cache when virtualItems change or on unmount
+  React.useEffect(() => {
+    // We can't directly subscribe to measurement cache updates, so we save it periodically or on unmount
+    const saveCache = () => {
+      if (typeof sessionStorage !== 'undefined') {
+        // We can access the internal measurements
+        const measurements = virtualizer.measurementsCache;
+        if (measurements && measurements.length > 0) {
+          sessionStorage.setItem(cacheKey, JSON.stringify(measurements));
+        }
+      }
+    };
+
+    window.addEventListener('beforeunload', saveCache);
+    return () => {
+      saveCache();
+      window.removeEventListener('beforeunload', saveCache);
+    };
+  }, [virtualizer, cacheKey]);
 
   const virtualItems = virtualizer.getVirtualItems();
 
@@ -85,11 +116,10 @@ export function ContinuousVerticalReader({
 
   // End of chapter observer
   const endRef = React.useRef<HTMLDivElement>(null)
-  const [isEndVisible, setIsEndVisible] = React.useState(false)
 
   React.useEffect(() => {
     const endObserver = new IntersectionObserver(([entry]) => {
-      setIsEndVisible(entry.isIntersecting)
+      // Unused isEndVisible 
     }, { threshold: 0.1 })
     
     if (endRef.current) {
@@ -98,68 +128,17 @@ export function ContinuousVerticalReader({
     return () => endObserver.disconnect()
   }, [])
 
-  // URL Throttling and Progress Saving
-  const lastActiveChapter = React.useRef(chapterId)
-  
-  React.useEffect(() => {
-    let ticking = false
-    let lastSaveTime = 0
-    let hasPrefetched = false
-
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const currentScrollY = window.scrollY
-          const maxScroll = document.documentElement.scrollHeight - window.innerHeight
-          
-          // Preload trigger (~2 viewport heights before end)
-          if (!hasPrefetched && nextChapterId && navigator.onLine) {
-            if (maxScroll > 0 && currentScrollY >= maxScroll - (window.innerHeight * 2)) {
-              hasPrefetched = true
-              import("@/shared/api-client").then(m => {
-                queryClient.prefetchQuery({
-                  queryKey: ["chapter", sourceId, mangaId, nextChapterId],
-                  queryFn: () => m.apiClient.getPages(sourceId, mangaId, nextChapterId)
-                })
-              })
-            }
-          }
-
-          // Identify active item for URL replacing and progress
-          const virtualItems = virtualizer.getVirtualItems();
-          if (virtualItems.length > 0) {
-            const centerItem = virtualItems.find(
-              (item) => item.start <= currentScrollY + window.innerHeight / 2 && item.end >= currentScrollY + window.innerHeight / 2
-            ) || virtualItems[0];
-            
-            const activeStreamItem = streamItems[centerItem.index];
-            
-            if (activeStreamItem.type === 'image') {
-              // Save Progress (debounced)
-              const now = Date.now()
-              if (now - lastSaveTime > 250) {
-                const offset = currentScrollY - centerItem.start;
-                saveProgress(sourceId, mangaId, activeStreamItem.chapterId, activeStreamItem.pageIndex, offset)
-                lastSaveTime = now
-              }
-
-              // Update URL if chapter crossed
-              if (activeStreamItem.chapterId !== lastActiveChapter.current) {
-                lastActiveChapter.current = activeStreamItem.chapterId;
-                window.history.replaceState(null, '', getReaderHref(sourceId, mangaId, activeStreamItem.chapterId));
-              }
-            }
-          }
-          
-          ticking = false
-        })
-        ticking = true
-      }
-    }
-
-    window.addEventListener("scroll", handleScroll, { passive: true })
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [sourceId, mangaId, nextChapterId, saveProgress, queryClient, streamItems, virtualizer])
+  // URL Throttling and Progress Saving handled by useReaderScroll
+  useReaderScroll({
+    streamItems,
+    virtualizer,
+    sourceId,
+    mangaId,
+    chapterId,
+    nextChapterId,
+    saveProgress,
+    queryClient,
+  });
 
   // Restore scroll position
   React.useLayoutEffect(() => {
@@ -167,7 +146,7 @@ export function ContinuousVerticalReader({
     if (saved && saved.chapterId === chapterId && saved.pageIndex !== undefined) {
       // Small timeout to allow virtualizer to mount
       setTimeout(() => {
-        virtualizer.scrollToIndex(saved.pageIndex, { align: 'start' });
+        virtualizer.scrollToIndex(saved.pageIndex!, { align: 'start' });
         toast("Melanjutkan bacaan...", { position: 'top-center' });
       }, 100);
     }
@@ -186,6 +165,7 @@ export function ContinuousVerticalReader({
           width: '100%',
           position: 'relative'
         }}
+        suppressHydrationWarning
       >
         {virtualItems.map((virtualRow) => {
           const item = streamItems[virtualRow.index];
@@ -193,6 +173,7 @@ export function ContinuousVerticalReader({
             <div
               key={virtualRow.key}
               data-index={virtualRow.index}
+              ref={virtualizer.measureElement}
               style={{
                 position: 'absolute',
                 top: 0,
@@ -215,7 +196,8 @@ export function ContinuousVerticalReader({
                   priority={virtualRow.index === 0}
                   offlineUrl={isDownloaded ? getOfflineImageUrl({ sourceId, mangaId, chapterId: item.chapterId, pageIndex: item.pageIndex }) : undefined}
                   imageFit={preferences.imageFit}
-                  measureElement={virtualizer.measureElement}
+                  decodeQueue={decodeQueue}
+                  dataIndex={virtualRow.index}
                 />
               ) : (
                 <div className="w-full py-12 flex justify-center items-center text-text-muted text-sm tracking-widest uppercase">
@@ -229,79 +211,6 @@ export function ContinuousVerticalReader({
       
       {/* End of Stream observer for triggering next chapter load */}
       <div ref={endRef} className="w-full h-1" />
-
-      {/* Floating Bottom Control */}
-      <div 
-        className={cn(
-          "fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] -translate-x-1/2 z-[var(--z-sticky)] transition-[transform,opacity] duration-150 pointer-events-none",
-          isOverlayVisible && !isEndVisible ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0",
-          isDesktopPanelOpen ? "md:left-[calc(50%-160px)] left-1/2" : "left-1/2"
-        )}
-      >
-        <div className="flex items-center gap-2 bg-black/20 dark:bg-surface-overlay/80 backdrop-blur-xl border border-border-glass rounded-full p-1 shadow-md pointer-events-auto">
-          <IconButton 
-            aria-label="Chapter sebelumnya"
-            variant="ghost"
-            className={cn("rounded-full min-h-[44px] min-w-[44px] text-white dark:text-text-primary hover:bg-white/20 dark:hover:bg-surface-hover drop-shadow-md", !prevChapterId && "opacity-50 cursor-not-allowed")}
-            disabled={!prevChapterId}
-            onClick={(e) => { 
-              e.stopPropagation(); 
-              if (prevChapterId) {
-                toast.info("Membuka chapter sebelumnya...", { duration: 2000 });
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                setTimeout(() => router.push(getReaderHref(sourceId, mangaId, prevChapterId)), 150);
-              }
-            }}
-          >
-            <CaretLeft size={20} weight="bold" />
-          </IconButton>
-          
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="rounded-full px-4 min-h-[44px] font-bold text-sm bg-white/10 dark:bg-surface-raised/50 text-white dark:text-text-primary hover:bg-white/20 dark:hover:bg-surface-hover drop-shadow-md"
-            onClick={(e) => { 
-              e.stopPropagation(); 
-              setIsChapterDrawerOpen(true);
-            }}
-          >
-            <List size={16} weight="bold" className="mr-2" />
-            Chapter
-          </Button>
-
-          <IconButton 
-            aria-label="Chapter selanjutnya"
-            variant="ghost"
-            className={cn("rounded-full min-h-[44px] min-w-[44px] text-white dark:text-text-primary hover:bg-white/20 dark:hover:bg-surface-hover drop-shadow-md", !nextChapterId && "opacity-50 cursor-not-allowed")}
-            disabled={!nextChapterId}
-            onClick={(e) => { 
-              e.stopPropagation(); 
-              if (nextChapterId) {
-                toast.info("Membuka chapter selanjutnya...", { duration: 2000 });
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                setTimeout(() => router.push(getReaderHref(sourceId, mangaId, nextChapterId)), 150);
-              }
-            }}
-          >
-            <CaretRight size={20} weight="bold" />
-          </IconButton>
-        </div>
-      </div>
-
-      <ReaderChapterDrawer 
-        isOpen={isChapterDrawerOpen}
-        onClose={() => setIsChapterDrawerOpen(false)}
-        chapters={chapters}
-        currentChapterId={chapterId}
-        sourceId={sourceId}
-        mangaId={mangaId}
-      />
-
-      {/* Invisible Sequential Preloader */}
-      <ReaderPreloader 
-        urls={pages.map(p => p.url)} 
-        dataSaver={dataSaver} 
-      />
     </div>
   )
 }

@@ -66,10 +66,7 @@ function BookmarkButton({ sourceId, manga }: { sourceId: string, manga: MangaIte
     <motion.button 
       onClick={handleBookmarkClick}
       whileTap={{ scale: 0.8 }}
-      className={cn(
-        "relative grid size-8 place-items-center rounded-full transition-all focus-visible:outline-none bg-black/40 backdrop-blur-md shadow-sm border border-white/10",
-        isInLibrary ? 'text-accent hover:text-accent-hover' : 'text-media-muted hover:text-media-foreground'
-      )}
+      className={cn( "relative grid size-8 place-items-center rounded-full transition-all focus-visible:outline-none bg-black/40 backdrop-blur-md -sm -white/10", isInLibrary ? 'text-accent hover:text-accent-hover' : 'text-media-muted hover:text-media-foreground' )}
       aria-label={isInLibrary ? "Hapus dari readlist" : "Simpan ke readlist"}
     >
       <AnimatePresence mode="wait" initial={false}>
@@ -135,11 +132,11 @@ export function MangaCard({
       : getMangaDetailHref(sourceId, manga.id, fullPath);
 
     return (
-      <div className="group relative flex items-center gap-4 rounded-xl bg-surface-glass backdrop-blur-sm p-3 border border-border-subtle/50 transition-all duration-300 hover:bg-surface-overlay/80 hover:shadow-sm overflow-hidden">
+      <div className="group relative flex items-center gap-4 rounded-xl bg-surface-glass backdrop-blur-sm p-3 --subtle/50 transition-all duration-300 hover:bg-surface-overlay/80 hover:-sm overflow-hidden">
         <Link 
           href={targetHref} 
           prefetch={false} 
-          className="relative h-[84px] w-[60px] shrink-0 overflow-hidden rounded-sm bg-surface-glass backdrop-blur-md shadow-sm z-10 vt-hover"
+          className="relative h-[84px] w-[60px] shrink-0 overflow-hidden rounded-sm bg-surface-glass backdrop-blur-md -sm z-10 vt-hover"
           style={!chapterId ? vtStyle : undefined}
           aria-label={`Cover of ${manga.title}`}
         >
@@ -188,7 +185,7 @@ export function MangaCard({
         </div>
         
         {chapterId && (
-          <div className="bg-accent/10 dark:bg-accent/20 backdrop-blur-xl border border-accent/20 rounded-full p-1 shadow-sm shrink-0 ml-2 z-20 relative">
+          <div className="bg-accent/10 dark:bg-accent/20 backdrop-blur-xl -accent/20 rounded-full p-1 -sm shrink-0 ml-2 z-20 relative">
             <Link 
               href={targetHref} 
               prefetch={false}
@@ -202,81 +199,67 @@ export function MangaCard({
     );
   }
 
-  // --- EDITORIAL VARIANT ---
+  // --- EDITORIAL VARIANT --- (Ticket Stub)
   if (variant === "editorial") {
     return (
       <motion.article
         whileHover={{ y: -4 }}
         whileTap={{ scale: 0.98 }}
         transition={{ ease: "easeOut", duration: 0.2 }}
-        className="relative flex flex-col w-full group rounded-lg overflow-hidden bg-surface-glass backdrop-blur-md border border-border-default shadow-sm aspect-[3/4]"
+        className="relative w-full group min-w-[280px]"
       >
         <Link 
           href={getMangaDetailHref(sourceId, manga.id, fullPath)} 
-          className="absolute inset-0 z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent vt-hover"
+          className="flex h-[120px] bg-surface-glass backdrop-blur-md rounded-3xl overflow-hidden cursor-pointer group hover:bg-surface-hover transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent -sm vt-hover"
           prefetch={false}
-          style={vtStyle}
           aria-label={`Read ${manga.title}`}
+          style={vtStyle}
         >
-          {manga.coverUrl && !imageError ? (
-            <img
-              src={manga.coverUrl}
-              alt={manga.title}
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-              onError={() => setImageError(true)}
-              ref={(img) => {
-                if (img && img.complete && img.naturalWidth === 0) {
-                  setImageError(true);
-                }
-              }}
-              referrerPolicy="no-referrer"
-              decoding="async"
-              loading="lazy"
-            />
-          ) : (
-            <div className="absolute inset-0 w-full h-full bg-surface-muted flex flex-col items-center justify-center text-text-muted/50 p-4">
-              <ImageBroken size={32} weight="duotone" className="mb-2" />
-              <span className="text-xs font-medium text-center line-clamp-2 px-2">{manga.title}</span>
+          {manga.rank !== undefined && (
+            <div className="w-14 sm:w-16 shrink-0 flex items-center justify-center bg-surface-muted/30 border-r-2 border-dashed border-border-subtle relative">
+              <span className={cn(
+                "text-2xl sm:text-3xl font-black italic",
+                manga.rank === 1 ? "text-amber-500 drop-shadow-md" : 
+                manga.rank === 2 ? "text-slate-400 drop-shadow-md" : 
+                manga.rank === 3 ? "text-amber-700 drop-shadow-md" : 
+                "text-text-muted/50"
+              )}>
+                #{manga.rank}
+              </span>
+              <div className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-surface-base rounded-full z-20" />
             </div>
           )}
-          
-          {/* Media overlay gradient */}
-          <div className="absolute inset-0 bg-media-gradient opacity-80 group-hover:opacity-100 transition-opacity duration-300" />
-          
-          {/* Top Badges */}
-          <div className="absolute top-2 left-2 flex flex-wrap gap-1 z-20">
-            {manga.status === "Ongoing" && (
-              <div className="flex items-center justify-center rounded-sm bg-accent px-1.5 py-0.5 shadow-sm">
-                <span className="text-2xs font-black uppercase tracking-wider text-accent-on leading-none">UP</span>
-              </div>
-            )}
-            {manga.format && (
-              <div className="flex items-center justify-center rounded-sm bg-black/60 backdrop-blur-md px-1.5 py-0.5 shadow-sm border border-white/10">
-                <span className="text-2xs font-black uppercase tracking-wider text-media-foreground leading-none">{manga.format}</span>
-              </div>
-            )}
+          <div className={cn("bg-surface-muted shrink-0 relative", manga.rank !== undefined ? "w-20" : "w-24")}>
+             {manga.rank !== undefined && (
+               <div className="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-surface-base rounded-full z-20" />
+             )}
+             <div className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-surface-base rounded-full z-20" />
+             {manga.coverUrl && !imageError ? (
+               <img src={manga.coverUrl} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt={manga.title} onError={() => setImageError(true)} referrerPolicy="no-referrer" />
+             ) : (
+               <div className="absolute inset-0 flex items-center justify-center">
+                 <ImageBroken size={24} weight="duotone" className="text-text-muted/50" />
+               </div>
+             )}
           </div>
-          
-          <div className="absolute top-2 right-2 z-30 md:opacity-0 group-hover:opacity-100 transition-opacity">
-            <BookmarkButton sourceId={sourceId} manga={manga} />
-          </div>
-
-          {/* Bottom Info */}
-          <div className="absolute bottom-0 left-0 right-0 p-3 z-20 flex flex-col justify-end pointer-events-none">
-            <h3 className="line-clamp-2 text-sm sm:text-base font-bold text-media-foreground leading-[1.25] mb-1 drop-shadow-md">
-              {manga.title}
-            </h3>
-            <div className="flex items-center gap-2">
-              {manga.latestChapter && (
-                <span className="text-xs font-semibold text-accent drop-shadow-md truncate">
-                  {manga.latestChapter}
-                </span>
-              )}
-              {timeText && (
-                <span className="text-2xs text-media-muted drop-shadow-md whitespace-nowrap" suppressHydrationWarning>
-                  {timeText}
-                </span>
-              )}
+          <div className="flex-1 p-4 pl-5 border-l-2 border-dashed border-border-subtle relative flex flex-col justify-center min-w-0">
+            <div className="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-surface-base rounded-full z-20" />
+            
+            <div className="flex items-center justify-between gap-2 mb-1 z-10 relative">
+               <div className="flex items-center gap-1.5 min-w-0">
+                 <span className="text-[10px] font-black text-accent uppercase tracking-wider shrink-0 bg-accent/10 px-1.5 py-0.5 rounded-sm">{manga.status || "Ongoing"}</span>
+                 {manga.format && <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider shrink-0 bg-surface-muted px-1.5 py-0.5 rounded-sm">{manga.format}</span>}
+               </div>
+               <div className="shrink-0 scale-90 origin-right">
+                  <BookmarkButton sourceId={sourceId} manga={manga} />
+               </div>
+            </div>
+            
+            <h4 className="text-sm sm:text-base font-bold truncate group-hover:text-accent transition-colors z-10 relative">{manga.title}</h4>
+            
+            <div className="mt-1 flex items-center justify-between text-xs text-text-muted z-10 relative">
+              <span className="truncate pr-2">{manga.latestChapter || "Detail"}</span>
+              <span className="font-semibold flex items-center gap-1 shrink-0"><Star weight="fill" className="text-semantic-warning" /> {manga.score ? manga.score.toFixed(1) : "-.-"}</span>
             </div>
           </div>
         </Link>
@@ -300,7 +283,7 @@ export function MangaCard({
         aria-label={`Read ${manga.title}`}
       >
         <div 
-          className="relative w-full aspect-[2/3] overflow-hidden rounded-2xl bg-surface-glass border border-border-subtle shadow-sm mb-3 vt-hover"
+          className="relative w-full aspect-[2/3] overflow-hidden rounded-2xl bg-surface-glass --subtle -sm mb-3 vt-hover"
           style={vtStyle}
         >
           {manga.coverUrl && !imageError ? (
@@ -327,7 +310,7 @@ export function MangaCard({
           
           <div className="absolute top-2 left-2 flex flex-col gap-1.5 z-20 items-start">
             {manga.rank !== undefined && (
-              <div className="flex items-center gap-1 rounded-full bg-surface-glass backdrop-blur-md px-2 py-1 shadow-sm border border-border-glass">
+              <div className="flex items-center gap-1 rounded-full bg-surface-glass backdrop-blur-md px-2 py-1 -sm --glass">
                 <TrendUp weight="bold" className="text-accent text-[10px]" />
                 <span className="text-xs font-black text-text-primary">#{manga.rank}</span>
               </div>
@@ -340,7 +323,7 @@ export function MangaCard({
           
           <div className="absolute top-2 right-2 flex flex-wrap gap-1 z-20">
             {manga.format && (
-              <div className="flex items-center justify-center rounded-md bg-surface-overlay/80 backdrop-blur-md px-2 py-1 shadow-sm border border-white/10">
+              <div className="flex items-center justify-center rounded-md bg-surface-overlay/80 backdrop-blur-md px-2 py-1 -sm -white/10">
                 <span className="text-[10px] font-black uppercase tracking-wider text-text-primary leading-none">{manga.format}</span>
               </div>
             )}

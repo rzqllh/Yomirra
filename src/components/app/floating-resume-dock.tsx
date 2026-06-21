@@ -14,6 +14,7 @@ export function FloatingResumeDock() {
   const [isMounted, setIsMounted] = React.useState(false);
 
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMounted(true);
     
     const handleScroll = () => {
@@ -45,7 +46,7 @@ export function FloatingResumeDock() {
     >
       <Link 
         href={getReaderHref(item.sourceId, item.mangaId, item.chapterId)}
-        className="flex relative bg-surface-glass backdrop-blur-xl border border-border-glass shadow-glass rounded-full p-2 items-center gap-4 group cursor-pointer hover:bg-surface-overlay/80 transition-all hover:scale-105"
+        className="flex relative bg-surface-glass backdrop-blur-xl --glass -glass rounded-full p-2 items-center gap-4 group cursor-pointer hover:bg-surface-overlay/80 transition-all hover:scale-105"
       >
         <div className="w-10 h-10 rounded-full overflow-hidden border border-border-subtle shrink-0">
           <img src={item.coverUrl || ""} className="w-full h-full object-cover" alt={item.mangaTitle} />

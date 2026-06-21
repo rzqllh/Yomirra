@@ -28,8 +28,9 @@ export function FeaturedHeroCarousel({ sourceId, mangas }: FeaturedHeroCarouselP
 
   const currentManga = mangas[currentIndex];
 
-  const handlePanEnd = (e: any, { offset }: any) => {
-    const swipe = offset.x;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleDragEnd = (event: any, info: any) => {
+    const swipe = info.offset.x;
     if (swipe < -50) {
       setCurrentIndex((prev) => (prev + 1) % mangas.length);
     } else if (swipe > 50) {
@@ -56,10 +57,10 @@ export function FeaturedHeroCarousel({ sourceId, mangas }: FeaturedHeroCarouselP
         >
           {/* Background blurred cover */}
           <div 
-            className="absolute inset-0 bg-cover bg-center opacity-30 blur-xl scale-110" 
+            className="absolute inset-0 bg-cover bg-center opacity-30 saturate-[2.5] blur-[80px] scale-150 transition-all duration-1000" 
             style={{ backgroundImage: `url(${currentManga.coverUrl || ""})` }} 
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-surface-base via-surface-base/80 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-surface-base via-surface-base/70 to-surface-base/10 sm:bg-gradient-to-r sm:from-surface-base sm:via-surface-base/80 sm:to-transparent" />
         </motion.div>
       </AnimatePresence>
 
@@ -71,22 +72,19 @@ export function FeaturedHeroCarousel({ sourceId, mangas }: FeaturedHeroCarouselP
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -50 }}
             transition={{ duration: 0.3, ease: "easeOut" }}
-            className="flex flex-col sm:flex-row items-center sm:items-stretch gap-4 sm:gap-6 md:gap-8 w-full cursor-grab active:cursor-grabbing"
+            className="flex flex-col sm:flex-row items-center sm:items-stretch gap-5 sm:gap-6 md:gap-8 w-full cursor-grab active:cursor-grabbing"
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
             dragElastic={0.2}
-            onDragEnd={handlePanEnd}
+            onDragEnd={handleDragEnd}
           >
             {/* Cover Art */}
-            <div className="w-[100px] sm:w-[140px] md:w-[180px] shrink-0 aspect-[2/3] rounded-xl sm:rounded-2xl overflow-hidden shadow-xl sm:shadow-2xl border border-white/10 pointer-events-none">
+            <div className="w-[120px] sm:w-[140px] md:w-[180px] shrink-0 aspect-[2/3] rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl border border-white/10 pointer-events-none">
               <img src={currentManga.coverUrl || ""} alt="Cover" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
             </div>
 
             {/* Content */}
             <div className="flex flex-col justify-center flex-1 h-full py-2 text-center sm:text-left items-center sm:items-start pointer-events-none sm:pointer-events-auto">
-              <div className="inline-flex items-center gap-2 text-xs font-bold text-semantic-warning mb-3 bg-semantic-warning/10 border border-semantic-warning/20 px-3 py-1 rounded-full w-fit pointer-events-none">
-                <TrendUp weight="duotone" /> Sorotan
-              </div>
               <h3 className="text-xl sm:text-2xl md:text-3xl font-bold line-clamp-2 mb-2 text-text-primary group-hover:text-accent transition-colors pointer-events-none">
                 {currentManga.title}
               </h3>

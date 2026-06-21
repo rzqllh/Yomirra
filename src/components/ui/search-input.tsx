@@ -21,13 +21,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
     return (
       <form 
         onSubmit={handleSubmit} 
-        className={cn(
-          "flex items-center gap-3 rounded-full bg-surface-glass backdrop-blur-md px-4 py-2.5 transition-all duration-200 ease-out",
-          "hover:bg-surface-glass focus-within:bg-surface-glass focus-within:ring-2 focus-within:ring-accent/50",
-          "border border-border-glass focus-within:border-accent-dim shadow-[0_4px_16px_rgba(0,0,0,0.05)]",
-          "dark:shadow-[0_4px_16px_rgba(0,0,0,0.2)]",
-          containerClassName
-        )}
+        className={cn( "flex items-center gap-3 rounded-full bg-surface-glass backdrop-blur-md px-4 py-2.5 transition-all duration-200 ease-out", "hover:bg-surface-glass focus-within:bg-surface-glass focus-within:ring-2 focus-within:ring-accent/50", " --glass focus-within:-accent-dim -[0_4px_16px_rgba(0,0,0,0.05)]", "dark:-[0_4px_16px_rgba(0,0,0,0.2)]", containerClassName )}
       >
         <MagnifyingGlass className="size-5 text-text-muted shrink-0 transition-colors focus-within:text-accent" weight="bold" />
         <input

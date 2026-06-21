@@ -10,7 +10,7 @@ export async function pushLibraryItem(item: LibraryItem) {
   try {
     const { doc, setDoc } = await import("firebase/firestore");
     const id = `${item.sourceId}::${item.mangaId}`;
-    const cleanItem = Object.fromEntries(Object.entries(item).filter(([_, v]) => v !== undefined));
+    const cleanItem = Object.fromEntries(Object.entries(item).filter(([, v]) => v !== undefined));
     await setDoc(doc(db, `users/${user.uid}/library`, id), cleanItem);
   } catch (e) {
     console.error("Failed to sync library item", e);
@@ -39,7 +39,7 @@ export async function pushHistoryItem(item: HistoryItem) {
   try {
     const { doc, setDoc } = await import("firebase/firestore");
     const id = `${item.sourceId}::${item.mangaId}::${item.chapterId}`;
-    const cleanItem = Object.fromEntries(Object.entries(item).filter(([_, v]) => v !== undefined));
+    const cleanItem = Object.fromEntries(Object.entries(item).filter(([, v]) => v !== undefined));
     await setDoc(doc(db, `users/${user.uid}/history`, id), cleanItem);
   } catch (e) {
     console.error("Failed to sync history item", e);
@@ -66,7 +66,7 @@ export async function deleteMangaHistory(sourceId: string, mangaId: string) {
   const user = auth.currentUser;
   if (!user) return;
   try {
-    const { collection, query, getDocs, deleteDoc, writeBatch } = await import("firebase/firestore");
+    const { collection, query, getDocs, writeBatch } = await import("firebase/firestore");
     const historyRef = collection(db, `users/${user.uid}/history`);
     const q = query(historyRef);
     const snapshot = await getDocs(q);

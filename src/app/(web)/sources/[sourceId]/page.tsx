@@ -1,16 +1,16 @@
 "use client";
 
 import * as React from "react";
-import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
 import { YomirraPageHeader } from "@/components/app/yomirra-header";
 import { MangaCard } from "@/components/manga/manga-card";
 import { SearchResultSkeleton } from "@/components/skeletons/search-result-skeleton";
 import { useSearchParams } from "next/navigation";
-import { useInView } from "react-intersection-observer";
 import { WarningCircle, Compass } from "@phosphor-icons/react/dist/ssr";
-
 import { DirectionalTransition } from "@/components/ui/directional-transition";
+import Link from "next/link";
+import { cn } from "@/shared/utils/cn";
 
 export const dynamic = "force-dynamic";
 
@@ -23,8 +23,8 @@ export default function SourceBrowsePage({
   const sourceId = unwrappedParams.sourceId;
   const searchParams = useSearchParams();
   const sort = searchParams?.get("sort") === "popular" ? "popular" : "latest";
-
-  const { ref, inView } = useInView();
+  const pageStr = searchParams?.get("page") || "1";
+  const currentPage = parseInt(pageStr, 10) || 1;
 
   const { data: sourceInfo } = useQuery({
     queryKey: ["source", sourceId],
@@ -36,43 +36,28 @@ export default function SourceBrowsePage({
 
   const {
     data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
+    isLoading,
+    isFetching,
     status,
     error
-  } = useInfiniteQuery({
-    queryKey: ["sourceBrowse", sourceId, sort],
-    queryFn: ({ pageParam = 1 }) => 
+  } = useQuery({
+    queryKey: ["sourceBrowse", sourceId, sort, currentPage],
+    queryFn: () => 
       sort === "popular" 
-        ? apiClient.getPopular(sourceId, pageParam)
-        : apiClient.getLatest(sourceId, pageParam),
-    initialPageParam: 1,
-    getNextPageParam: (lastPage, allPages) => {
-      return lastPage.hasNextPage ? allPages.length + 1 : undefined;
-    },
+        ? apiClient.getPopular(sourceId, currentPage)
+        : apiClient.getLatest(sourceId, currentPage),
   });
-
-  React.useEffect(() => {
-    if (inView && hasNextPage && !isFetchingNextPage) {
-      fetchNextPage();
-    }
-  }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const sourceName = sourceInfo?.name || sourceId;
 
   return (
     <DirectionalTransition>
-      <main className="min-h-screen bg-surface-base">
+      <main className="min-h-screen bg-surface-base flex flex-col">
         <YomirraPageHeader title={sort === "popular" ? `Populer di ${sourceName}` : `Terbaru di ${sourceName}`} showBack variant="auto" />
         
-        <div className="px-4 py-6 max-w-7xl mx-auto">
-          {status === "pending" ? (
-            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8">
-              <SearchResultSkeleton />
-              <SearchResultSkeleton />
-              <SearchResultSkeleton />
-              <SearchResultSkeleton />
+        <div className="px-4 py-6 max-w-7xl mx-auto w-full flex-1 flex flex-col">
+          {status === "pending" || isLoading ? (
+            <div className="flex flex-col gap-10">
               <SearchResultSkeleton />
               <SearchResultSkeleton />
             </div>
@@ -82,36 +67,55 @@ export default function SourceBrowsePage({
               <p className="text-base font-medium text-text-primary">Gagal memuat data dari {sourceName}.</p>
               <p className="text-sm text-text-muted mt-1">{(error as Error).message}</p>
             </div>
-          ) : data?.pages[0]?.mangas.length === 0 ? (
+          ) : data?.mangas.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center bg-surface-raised rounded-xl border border-border-subtle">
               <Compass size={48} className="mb-4 text-text-muted" weight="duotone" />
               <p className="text-base font-medium text-text-primary">Tidak ada manga yang ditemukan.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8">
-              {data.pages.map((page, i) => (
-                <React.Fragment key={i}>
-                  {page.mangas.map((manga) => (
-                    <MangaCard 
-                      key={manga.id}
-                      manga={manga}
-                      sourceId={sourceId}
-                    />
-                  ))}
-                </React.Fragment>
-              ))}
-            </div>
-          )}
+            <>
+              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 flex-1 content-start">
+                {data.mangas.map((manga) => (
+                  <MangaCard 
+                    key={manga.id}
+                    manga={manga}
+                    sourceId={sourceId}
+                  />
+                ))}
+              </div>
 
-          {/* Loading trigger for next page */}
-          {isFetchingNextPage && (
-            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 mt-4">
-              <SearchResultSkeleton />
-              <SearchResultSkeleton />
-              <SearchResultSkeleton />
-            </div>
+              {/* Pagination Controls */}
+              <div className="mt-10 flex items-center justify-center gap-4 py-4">
+                <Link
+                  href={`/sources/${sourceId}?sort=${sort}&page=${Math.max(1, currentPage - 1)}`}
+                  className={cn(
+                    "px-4 py-2 rounded-full font-bold text-sm transition-all",
+                    currentPage <= 1 
+                      ? "opacity-50 pointer-events-none bg-surface-raised text-text-muted" 
+                      : "bg-surface-glass border border-border-subtle text-text-primary hover:bg-surface-glass/80"
+                  )}
+                  aria-disabled={currentPage <= 1}
+                >
+                  Sebelumnya
+                </Link>
+                <div className="px-4 py-2 rounded-full bg-accent text-accent-on font-bold text-sm min-w-[40px] text-center">
+                  {currentPage}
+                </div>
+                <Link
+                  href={`/sources/${sourceId}?sort=${sort}&page=${currentPage + 1}`}
+                  className={cn(
+                    "px-4 py-2 rounded-full font-bold text-sm transition-all",
+                    !data?.hasNextPage 
+                      ? "opacity-50 pointer-events-none bg-surface-raised text-text-muted" 
+                      : "bg-surface-glass border border-border-subtle text-text-primary hover:bg-surface-glass/80"
+                  )}
+                  aria-disabled={!data?.hasNextPage}
+                >
+                  Selanjutnya
+                </Link>
+              </div>
+            </>
           )}
-          <div ref={ref} className="h-10 mt-4" />
         </div>
       </main>
     </DirectionalTransition>

@@ -47,19 +47,13 @@ export function ReaderChapterDrawer({
     <>
       {/* Backdrop */}
       <div 
-        className={cn(
-          "fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm transition-transform duration-150",
-          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-        )}
+        className={cn( "fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm transition-transform duration-150", isOpen ? "opacity-100" : "opacity-0 pointer-events-none" )}
         onClick={onClose}
       />
       
       {/* Bottom Sheet / Dialog */}
       <div 
-        className={cn(
-          "fixed bottom-0 left-0 right-0 z-[70] max-h-[80vh] min-h-[50vh] bg-surface-glass backdrop-blur-3xl rounded-t-3xl shadow-2xl transition-transform duration-150 ease-out flex flex-col md:max-w-md md:mx-auto md:mb-6 md:bottom-6 md:rounded-3xl md:border md:border-border-glass",
-          isOpen ? "translate-y-0" : "translate-y-full md:translate-y-[120%]"
-        )}
+        className={cn( "fixed bottom-0 left-0 right-0 z-[70] max-h-[80vh] min-h-[50vh] bg-surface-glass backdrop-blur-3xl rounded-t-3xl -2xl transition-transform duration-150 ease-out flex flex-col md:max-w-md md:mx-auto md:mb-6 md:bottom-6 md:rounded-3xl md: md:--glass", isOpen ? "translate-y-0" : "translate-y-full md:translate-y-[120%]" )}
       >
         <div className="flex flex-col gap-4 px-6 py-5 shrink-0">
           <div className="flex items-center justify-between">
@@ -67,7 +61,7 @@ export function ReaderChapterDrawer({
               <List size={18} className="text-accent" weight="bold" />
               Daftar Chapter
             </h2>
-            <div className="bg-black/10 dark:bg-surface-overlay/80 backdrop-blur-xl border border-border-glass rounded-full p-1 shadow-sm shrink-0">
+            <div className="bg-black/10 dark:bg-surface-overlay/80 backdrop-blur-xl --glass rounded-full p-1 -sm shrink-0">
               <IconButton
                 aria-label="Tutup panel"
                 variant="ghost"
@@ -86,7 +80,7 @@ export function ReaderChapterDrawer({
               placeholder="Cari chapter..." 
               containerClassName="w-full"
             />
-            <div className="bg-black/10 dark:bg-surface-overlay/80 backdrop-blur-xl border border-border-glass rounded-full p-1 shadow-sm shrink-0 ml-2">
+            <div className="bg-black/10 dark:bg-surface-overlay/80 backdrop-blur-xl --glass rounded-full p-1 -sm shrink-0 ml-2">
               <IconButton 
                 variant="ghost" 
                 size="sm"

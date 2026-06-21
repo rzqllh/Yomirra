@@ -20,6 +20,7 @@ export function ContinueReadingList({ items }: ContinueReadingListProps) {
 
   // Sync state if props change (e.g. new history)
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCards(items);
   }, [items]);
 
@@ -85,98 +86,49 @@ export function ContinueReadingList({ items }: ContinueReadingListProps) {
 
   return (
     <div className="w-full">
-      {/* MOBILE LAYOUT: Tinder Stacked Card */}
-      <div 
-        className="w-full flex md:hidden flex-col items-center justify-center py-6 overflow-visible"
-        onMouseEnter={() => setIsPaused(true)}
-        onMouseLeave={() => setIsPaused(false)}
-        onTouchStart={() => setIsPaused(true)}
-        onTouchEnd={() => setIsPaused(false)}
-      >
-        <div className="relative w-full max-w-[280px] h-[360px] flex items-center justify-center">
-          <AnimatePresence>
-            {cards.map((item, index) => {
-              if (index > 2) return null;
-              const isFront = index === 0;
-
-              return (
-                <motion.div
-                  key={`${item.mangaId}-${item.chapterId}`}
-                  className={cn(
-                    "absolute top-0 left-0 right-0 bottom-0 rounded-[32px] overflow-hidden shadow-2xl bg-surface-raised border border-white/10 flex flex-col",
-                    isFront ? "cursor-grab active:cursor-grabbing" : "pointer-events-none"
-                  )}
-                  style={{ transformOrigin: "bottom center" }}
-                  initial={{ opacity: 0, scale: 0.8, y: 50 }}
-                  animate={{
-                    opacity: 1 - index * 0.2,
-                    scale: 1 - index * 0.05,
-                    y: index * 20,
-                    zIndex: 10 - index,
-                  }}
-                  exit={{ opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
-                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                  drag={isFront ? "x" : false}
-                  dragConstraints={{ left: 0, right: 0 }}
-                  dragElastic={0.8}
-                  onDragEnd={isFront ? handleDragEnd : undefined}
-                  whileDrag={{ scale: 1.05, rotateZ: isFront ? 3 : 0 }}
-                >
-                  <div className="absolute inset-0 bg-cover bg-center opacity-40 blur-2xl scale-125" style={{ backgroundImage: `url(${item.coverUrl})` }} />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[var(--media-overlay-strong)] via-[var(--media-overlay-mid)] to-transparent" />
-                  
-                  <div className="relative z-10 w-full h-full flex flex-col items-center justify-end p-6 text-center">
-                    <div className="w-[120px] h-[160px] rounded-xl overflow-hidden shadow-xl mb-4">
-                      <img src={item.coverUrl || ""} className="w-full h-full object-cover pointer-events-none" alt={item.mangaTitle} />
-                    </div>
-                    <h2 className="font-bold text-white text-lg line-clamp-2 w-full drop-shadow-md leading-tight mb-1">{item.mangaTitle}</h2>
-                    <p className="text-slate-300 text-sm font-medium mb-6">{item.chapterTitle || `Chapter ${item.chapterId}`}</p>
-                    
-                    <Link 
-                      href={getReaderHref(item.sourceId, item.mangaId, item.chapterId)}
-                      className="bg-accent hover:bg-accent-hover text-white px-8 py-3 w-full rounded-full text-sm font-bold shadow-[0_0_20px_rgba(239,68,68,0.3)] flex items-center justify-center gap-2 transition-transform active:scale-95 pointer-events-auto"
-                      draggable={false}
-                    >
-                      <Play weight="fill" /> Lanjut Baca
-                    </Link>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </AnimatePresence>
-        </div>
-        <p className="mt-12 text-sm text-text-muted font-medium bg-surface-overlay px-4 py-1.5 rounded-full border border-white/5">
-          Swipe untuk melihat riwayat
-        </p>
-      </div>
-
-      {/* DESKTOP LAYOUT: Netflix-style Swimlane */}
-      <div className="hidden md:flex flex-col gap-4">
-        <h2 className="text-2xl font-bold flex items-center gap-3"><Clock weight="duotone" className="text-accent" /> Lanjut Baca</h2>
-        <div className="flex gap-4 overflow-x-auto pb-6 pt-2 snap-x snap-mandatory scrollbar-hide">
-          {items.map((item) => {
-            const progressPercentage = item.progressPercent ?? ((item.pageIndex ?? 0) / (item.totalPages || 1)) * 100;
+      <div className="flex flex-col gap-4">
+        <h2 className="text-xl md:text-2xl font-bold flex items-center gap-3 px-2">
+          <Clock weight="duotone" className="text-accent" /> Lanjut Baca
+        </h2>
+        <div className="flex gap-4 overflow-x-auto pb-4 pt-2 snap-x snap-mandatory scrollbar-hide px-2">
+          {items.map((group) => {
+            const progress = group.progressPercent || 0;
+            const targetHref = getReaderHref(group.sourceId, group.mangaId, group.chapterId);
+            
             return (
-              <div key={`${item.mangaId}-${item.chapterId}`} className="relative flex-none w-[200px] lg:w-[220px] group snap-start">
-                <div className="relative aspect-[2/3] rounded-2xl overflow-hidden shadow-md border border-border-subtle mb-3 bg-surface-raised">
-                  <img src={item.coverUrl || ""} alt={item.mangaTitle} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-4">
-                    <Link 
-                      href={getReaderHref(item.sourceId, item.mangaId, item.chapterId)}
-                      className="w-full bg-accent text-white py-2 rounded-lg font-bold flex items-center justify-center gap-2 shadow-lg backdrop-blur-md hover:bg-accent-hover transition-colors"
-                    >
-                      <Play weight="fill" /> Resume
-                    </Link>
-                  </div>
-                  {/* Small progress bar inside card bottom */}
-                  {progressPercentage > 0 && (
-                    <div className="absolute bottom-0 left-0 w-full h-1 bg-black/50">
-                      <div className="h-full bg-accent" style={{ width: `${progressPercentage}%` }} />
-                    </div>
+              <div
+                key={`${group.mangaId}-${group.chapterId}`}
+                className="group flex flex-col items-center gap-3 shrink-0 snap-start w-20 sm:w-24 relative"
+              >
+                <Link 
+                    href={targetHref} 
+                    className="absolute inset-0 z-10 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                    aria-label={`Lanjut baca ${group.mangaTitle}`}
+                />
+                
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-surface-muted shrink-0 overflow-hidden relative z-0 shadow-sm group-hover:shadow-md transition-shadow">
+                  {group.coverUrl && (
+                    <img 
+                      src={group.coverUrl} 
+                      alt={group.mangaTitle} 
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                      referrerPolicy="no-referrer"
+                    />
                   )}
+                  {/* Circular Progress Ring Indicator */}
+                  <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none">
+                    <circle cx="50%" cy="50%" r="48%" stroke="var(--color-accent)" strokeWidth="4%" fill="none" strokeDasharray="301.59" strokeDashoffset={301.59 - (301.59 * progress / 100)} className="opacity-80 transition-all duration-1000" />
+                  </svg>
+
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <Play weight="fill" className="text-white w-6 h-6 ml-1" />
+                  </div>
                 </div>
-                <h4 className="font-bold text-base line-clamp-1 group-hover:text-accent transition-colors">{item.mangaTitle}</h4>
-                <p className="text-sm text-text-muted">{item.chapterTitle || `Chapter ${item.chapterId}`}</p>
+                
+                <div className="text-center w-full">
+                  <h4 className="font-bold text-xs sm:text-sm text-text-primary truncate group-hover:text-accent transition-colors w-full px-1">{group.mangaTitle}</h4>
+                  <p className="text-text-muted text-[10px] sm:text-xs truncate w-full px-1">{group.chapterTitle || `Ch. ${group.chapterId}`}</p>
+                </div>
               </div>
             );
           })}
