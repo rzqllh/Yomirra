@@ -3,14 +3,26 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { useReaderStore } from "@/shared/store/reader-store"
-import { CaretLeft, Gear } from "@phosphor-icons/react"
+import { CaretLeft, Gear, CaretRight, List } from "@phosphor-icons/react"
 import { cn } from "@/shared/utils/cn"
 
-import { getMangaDetailHref } from "@/shared/lib/routes"
+import { getMangaDetailHref, getReaderHref } from "@/shared/lib/routes"
 import { Chapter } from "@/shared/types/source"
-import { ReaderSettingsDrawer } from "./reader-settings-drawer"
+import dynamic from "next/dynamic"
+
+const ReaderSettingsDrawer = dynamic(() => import("./reader-settings-drawer").then(mod => mod.ReaderSettingsDrawer), {
+  ssr: false,
+})
+
+const ReaderChapterDrawer = dynamic(() => import("./reader-chapter-drawer").then(mod => mod.ReaderChapterDrawer), {
+  ssr: false,
+})
+
 import { IconButton } from "@/components/ui/icon-button"
+import { Button } from "@/components/ui/button"
 import { ReaderProgress } from "./reader-progress"
+import { toast } from "sonner"
+import { useReaderGesture } from "@/shared/hooks/use-reader-gesture"
 
 interface ReaderShellProps {
   children: React.ReactNode
@@ -26,6 +38,20 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
   const router = useRouter()
   const { preferences, isOverlayVisible, isDesktopPanelOpen, toggleDesktopPanel, toggleOverlay, setOverlayVisible } = useReaderStore()
   const [isDrawerOpen, setIsDrawerOpen] = React.useState(false)
+  const [isChapterDrawerOpen, setIsChapterDrawerOpen] = React.useState(false)
+
+  const chapterIndex = chapters?.findIndex(c => c.id === currentChapterId) ?? -1;
+  let prevChapterId: string | undefined;
+  let nextChapterId: string | undefined;
+  
+  if (chapterIndex !== -1 && chapters) {
+    if (chapterIndex < chapters.length - 1) {
+      prevChapterId = chapters[chapterIndex + 1].id;
+    }
+    if (chapterIndex > 0) {
+      nextChapterId = chapters[chapterIndex - 1].id;
+    }
+  }
 
   const getBackgroundColor = () => {
     switch (preferences.background) {
@@ -84,51 +110,7 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
   }, [preferences.keepScreenAwake]);
 
   // Gesture-safe overlay toggle (Center 40% tap, <=10px, <=250ms)
-  React.useEffect(() => {
-    let pointerState = { startX: 0, startY: 0, time: 0 };
-
-    const handlePointerDown = (e: PointerEvent) => {
-      if (e.button !== 0) return;
-      // Ignore if clicking on UI elements
-      if ((e.target as Element).closest('button, a, [role="button"], .pointer-events-auto')) return;
-      
-      pointerState = {
-        startX: e.clientX,
-        startY: e.clientY,
-        time: Date.now()
-      };
-    };
-
-    const handlePointerUp = (e: PointerEvent) => {
-      if (e.button !== 0) return;
-      if ((e.target as Element).closest('button, a, [role="button"], .pointer-events-auto')) return;
-
-      const duration = Date.now() - pointerState.time;
-      const deltaX = Math.abs(e.clientX - pointerState.startX);
-      const deltaY = Math.abs(e.clientY - pointerState.startY);
-
-      // Strict intent disambiguation
-      if (duration <= 250 && deltaX <= 10 && deltaY <= 10) {
-        const viewportHeight = window.innerHeight;
-        const tapY = e.clientY;
-        const topBoundary = viewportHeight * 0.3;
-        const bottomBoundary = viewportHeight * 0.7;
-
-        // Only toggle if tap is within the center 40%
-        if (tapY >= topBoundary && tapY <= bottomBoundary) {
-          toggleOverlay();
-        }
-      }
-    };
-
-    document.addEventListener('pointerdown', handlePointerDown);
-    document.addEventListener('pointerup', handlePointerUp);
-
-    return () => {
-      document.removeEventListener('pointerdown', handlePointerDown);
-      document.removeEventListener('pointerup', handlePointerUp);
-    };
-  }, [toggleOverlay]);
+  useReaderGesture();
 
   // Immediate overlay auto-dismiss on scroll
   React.useEffect(() => {
@@ -164,50 +146,102 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
       style={{ backgroundColor: getBackgroundColor() }}
     >
       <ReaderProgress />
-      {/* Top Overlay */}
+      {/* Bottom Overlay */}
       <div 
         className={cn(
-          "fixed top-4 left-4 right-4 z-[var(--z-sticky)] transition-[transform,opacity] duration-150 ease-out flex justify-between pointer-events-none",
-          isOverlayVisible ? "translate-y-0 opacity-100" : "-translate-y-20 opacity-0",
+          "fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-4 right-4 z-[var(--z-sticky)] transition-[transform,opacity] duration-150 ease-out flex justify-between items-end pointer-events-none",
+          isOverlayVisible ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0",
           isDesktopPanelOpen ? "md:right-[calc(320px+1rem)]" : ""
         )}
-        style={{ marginTop: 'var(--safe-top)' }}
       >
-        <div className="flex items-center gap-2 bg-black/20 dark:bg-surface-overlay/80 backdrop-blur-md border border-border-glass rounded-full p-1 shadow-md pointer-events-auto max-w-[75%] md:max-w-md">
-          <IconButton 
-            aria-label="Kembali ke detail manga"
-            variant="ghost"
-            className="rounded-full shrink-0 min-h-[44px] min-w-[44px] text-white dark:text-text-primary hover:bg-white/20 dark:hover:bg-surface-hover drop-shadow-md"
-            onClick={(e) => { 
-              e.stopPropagation(); 
-              router.push(getMangaDetailHref(sourceId, mangaId));
-            }}
-          >
-            <CaretLeft size={20} weight="bold" />
-          </IconButton>
-          
-          <div className="flex flex-col truncate pr-4 text-shadow-sm">
-            <span className="text-sm font-bold text-white dark:text-text-primary truncate leading-tight drop-shadow-md">{chapterTitle}</span>
-            {pageCount && <span className="text-2xs text-white/80 dark:text-text-muted leading-tight drop-shadow-md">{pageCount} halaman</span>}
+        <div className="flex flex-col gap-2 pointer-events-auto max-w-[40%]">
+          <div className="flex items-center gap-2 bg-black/30 dark:bg-surface-overlay/80 backdrop-blur-sm rounded-full p-1">
+            <IconButton 
+              aria-label="Kembali ke detail manga"
+              variant="ghost"
+              className="rounded-full shrink-0 min-h-[44px] min-w-[44px] text-white dark:text-text-primary hover:bg-white/20 dark:hover:bg-surface-hover drop-shadow-md"
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                router.push(getMangaDetailHref(sourceId, mangaId));
+              }}
+            >
+              <CaretLeft size={20} weight="bold" />
+            </IconButton>
+            
+            <div className="flex flex-col truncate pr-4 text-shadow-sm">
+              <span className="text-sm font-bold text-white dark:text-text-primary truncate leading-tight drop-shadow-md">{chapterTitle}</span>
+              {pageCount && <span className="text-2xs text-white/80 dark:text-text-muted leading-tight drop-shadow-md">{pageCount} halaman</span>}
+            </div>
           </div>
         </div>
 
-        <div className="bg-black/20 dark:bg-surface-overlay/80 backdrop-blur-xl border border-border-glass rounded-full p-1 shadow-md pointer-events-auto shrink-0">
-          <IconButton
-            aria-label="Pengaturan pembaca"
-            variant="ghost"
-            className="rounded-full min-h-[44px] min-w-[44px] text-white dark:text-text-primary hover:bg-white/20 dark:hover:bg-surface-hover drop-shadow-md"
-            onClick={(e) => { 
-              e.stopPropagation(); 
-              if (window.innerWidth >= 768) {
-                toggleDesktopPanel();
-              } else {
-                setIsDrawerOpen(true); 
-              }
-            }}
-          >
-            <Gear size={20} weight="fill" />
-          </IconButton>
+        <div className="flex flex-col gap-2 items-end pointer-events-auto shrink-0">
+          <div className="flex items-center gap-2 bg-black/30 dark:bg-surface-overlay/80 backdrop-blur-sm rounded-full p-1">
+            <IconButton 
+              aria-label="Chapter sebelumnya"
+              variant="ghost"
+              className={cn("rounded-full min-h-[44px] min-w-[44px] text-white dark:text-text-primary hover:bg-white/20 dark:hover:bg-surface-hover drop-shadow-md hidden sm:flex", !prevChapterId && "opacity-50 cursor-not-allowed")}
+              disabled={!prevChapterId}
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                if (prevChapterId) {
+                  toast.info("Membuka chapter sebelumnya...", { duration: 2000 });
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                  setTimeout(() => router.push(getReaderHref(sourceId, mangaId, prevChapterId)), 150);
+                }
+              }}
+            >
+              <CaretLeft size={20} weight="bold" />
+            </IconButton>
+            
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="rounded-full px-4 min-h-[44px] font-bold text-sm bg-white/10 dark:bg-surface-raised/50 text-white dark:text-text-primary hover:bg-white/20 dark:hover:bg-surface-hover drop-shadow-md"
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                setIsChapterDrawerOpen(true);
+              }}
+            >
+              <List size={16} weight="bold" className="mr-2 hidden sm:block" />
+              Ch.
+            </Button>
+
+            <IconButton 
+              aria-label="Chapter selanjutnya"
+              variant="ghost"
+              className={cn("rounded-full min-h-[44px] min-w-[44px] text-white dark:text-text-primary hover:bg-white/20 dark:hover:bg-surface-hover drop-shadow-md hidden sm:flex", !nextChapterId && "opacity-50 cursor-not-allowed")}
+              disabled={!nextChapterId}
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                if (nextChapterId) {
+                  toast.info("Membuka chapter selanjutnya...", { duration: 2000 });
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                  setTimeout(() => router.push(getReaderHref(sourceId, mangaId, nextChapterId)), 150);
+                }
+              }}
+            >
+              <CaretRight size={20} weight="bold" />
+            </IconButton>
+
+            <div className="w-[1px] h-6 bg-white/20 dark:bg-border-glass mx-1" />
+
+            <IconButton
+              aria-label="Pengaturan pembaca"
+              variant="ghost"
+              className="rounded-full min-h-[44px] min-w-[44px] text-white dark:text-text-primary hover:bg-white/20 dark:hover:bg-surface-hover drop-shadow-md"
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                if (window.innerWidth >= 768) {
+                  toggleDesktopPanel();
+                } else {
+                  setIsDrawerOpen(true); 
+                }
+              }}
+            >
+              <Gear size={20} weight="fill" />
+            </IconButton>
+          </div>
         </div>
       </div>
 
@@ -215,14 +249,23 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
 
       {/* Settings Drawer */}
       {/* Settings Drawer / Desktop Panel */}
-      <ReaderSettingsDrawer 
-        isOpen={isDrawerOpen} 
-        onClose={() => setIsDrawerOpen(false)} 
-        chapters={chapters}
-        currentChapterId={currentChapterId}
-        sourceId={sourceId}
-        mangaId={mangaId}
-      />
+      {isDrawerOpen && (
+        <ReaderSettingsDrawer 
+          isOpen={isDrawerOpen} 
+          onClose={() => setIsDrawerOpen(false)} 
+        />
+      )}
+
+      {isChapterDrawerOpen && (
+        <ReaderChapterDrawer 
+          isOpen={isChapterDrawerOpen}
+          onClose={() => setIsChapterDrawerOpen(false)}
+          chapters={chapters}
+          currentChapterId={currentChapterId || ""}
+          sourceId={sourceId}
+          mangaId={mangaId}
+        />
+      )}
     </div>
   )
 }

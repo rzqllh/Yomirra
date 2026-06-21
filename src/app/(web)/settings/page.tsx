@@ -66,7 +66,7 @@ export default function SettingsPage() {
     <DirectionalTransition>
       <div className="flex flex-col min-h-screen">
         <YomirraSurface variant="base" className="flex-1 w-full max-w-7xl mx-auto md:pb-8">
-          <div className="px-4 py-6 md:px-8 md:py-8 space-y-8">
+          <div className="px-4 pt-[calc(var(--safe-top)+24px)] pb-6 md:px-8 md:py-8 space-y-8">
             
             <DesktopPageTitle 
               title="Pengaturan" 
@@ -184,9 +184,9 @@ export default function SettingsPage() {
               </Link>
             </SettingsSection>
 
-            {/* Preferensi Tampilan */}
             <SettingsSection title="Preferensi Tampilan">
               <SettingsItem
+                className="md:hidden"
                 wrapOnMobile
                 icon={<IconWrapper><Palette size={20} weight="duotone" /></IconWrapper>}
                 title="Tema Aplikasi"
@@ -220,7 +220,7 @@ export default function SettingsPage() {
                 }
               />
 
-              <div className="mx-3 my-1 border-b border-border-subtle/50" />
+              <div className="mx-3 my-1 border-b border-border-subtle/50 md:hidden" />
 
               <SettingsItem
                 icon={<IconWrapper><HandTap size={20} weight="duotone" /></IconWrapper>}
@@ -282,7 +282,7 @@ export default function SettingsPage() {
       </div>
 
       <Dialog open={isClearDataDialogOpen} onOpenChange={setIsClearDataDialogOpen}>
-        <DialogContent className="max-w-sm rounded-3xl p-6 bg-surface-overlay/95 backdrop-blur-xl border border-border-default shadow-heavy">
+        <DialogContent className="max-w-sm rounded-3xl p-6 bg-surface-overlay/95 backdrop-blur-xl --default -heavy">
           <DialogHeader>
             <DialogTitle>Bersihkan Data Perangkat?</DialogTitle>
             <DialogDescription>

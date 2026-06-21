@@ -21,6 +21,28 @@ const eslintConfig = defineConfig([
       ]
     }
   },
+  {
+    files: ["src/**"],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          "selector": "Literal[value=/\\b(bg|text|border|fill|stroke)-\\[#[a-fA-F0-9]{3,8}\\]/]",
+          "message": "Enforcement: Do not use arbitrary colors (e.g. bg-[#...]). Use CSS variables or design system tokens."
+        }
+      ],
+      "@typescript-eslint/ban-ts-comment": [
+        "error",
+        {
+          "ts-expect-error": "allow-with-description",
+          "ts-ignore": true,
+          "ts-nocheck": true,
+          "ts-check": false,
+          "minimumDescriptionLength": 10
+        }
+      ]
+    }
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:

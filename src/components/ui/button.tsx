@@ -13,11 +13,11 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-text-primary text-background shadow-sm hover:bg-text-primary/90",
+          "bg-text-primary text-background  hover:bg-text-primary/90",
         accent:
           "bg-accent/10 text-accent hover:bg-accent/20 shadow-none dark:bg-accent/20 dark:hover:bg-accent/30 border border-accent/20",
         secondary:
-          "bg-surface-raised text-text-primary border border-border-default shadow-sm hover:bg-surface-hover",
+          "bg-surface-raised text-text-primary border border-border-default  hover:bg-surface-hover",
         tertiary:
           "text-text-secondary hover:text-text-primary hover:bg-surface-hover",
         ghost:
@@ -25,7 +25,7 @@ const buttonVariants = cva(
         outline:
           "border border-border-strong bg-transparent hover:bg-surface-hover hover:text-text-primary",
         destructive:
-          "bg-semantic-error text-white shadow-sm hover:bg-semantic-error/90",
+          "bg-semantic-error text-white  hover:bg-semantic-error/90",
         reader:
           "bg-surface-overlay text-text-primary hover:bg-surface-raised border border-border-default",
         link:

@@ -109,7 +109,7 @@ export function ReaderView({
       coverUrl: initialDetail.coverUrl,
       sourceName: sourceId,
       seriesProgressPercent,
-      readAt: new Date().toISOString(),
+      readAt: Date.now(),
     });
 
     const libItem = getLibraryItem(sourceId, mangaId);

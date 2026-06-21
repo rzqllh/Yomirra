@@ -14,16 +14,7 @@ export const YomirraSurface = React.forwardRef<HTMLDivElement, YomirraSurfacePro
     return (
       <div
         ref={ref}
-        className={cn(
-          "transition-colors",
-          {
-            "bg-surface-base text-text-primary": variant === "base",
-            "bg-surface-raised text-text-primary": variant === "raised",
-            "bg-surface-overlay text-text-primary shadow-sm border border-border-subtle": variant === "elevated",
-            "bg-surface-overlay text-text-primary shadow-glass border border-border-default": variant === "floating",
-            "bg-surface-base/80 backdrop-blur-xl supports-[backdrop-filter]:bg-surface-base/60 border border-border-glass shadow-sm": variant === "glass",
-            "bg-surface-muted text-text-primary": variant === "muted",
-          },
+        className={cn( "transition-colors", { "bg-surface-base text-text-primary": variant === "base", "bg-surface-raised text-text-primary": variant === "raised", "bg-surface-overlay text-text-primary -sm --subtle": variant === "elevated", "bg-surface-overlay text-text-primary -glass --default": variant === "floating", "bg-surface-base/80 backdrop-blur-xl supports-[backdrop-filter]:bg-surface-base/60 --glass -sm": variant === "glass", "bg-surface-muted text-text-primary": variant === "muted",},
           className
         )}
         {...props}

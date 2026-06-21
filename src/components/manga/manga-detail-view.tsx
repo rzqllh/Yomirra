@@ -46,7 +46,7 @@ export function MangaDetailView({
   
   const searchParams = useSearchParams();
   const returnTo = searchParams.get("returnTo");
-  const backHref = getSafeMangaDetailBackHref(returnTo, sourceId);
+  const backHref = getSafeMangaDetailBackHref(returnTo);
 
   const getLatestForManga = useHistoryStore((state) => state.getLatestForManga);
   const historyItems = useHistoryStore((state) => state.items); // keep subscription
@@ -87,14 +87,14 @@ export function MangaDetailView({
   const renderActions = () => (
     <>
       {showContinue && continueChapterId ? (
-        <Button asChild variant="accent" className="w-full rounded-full h-12 text-base font-bold shadow-sm">
+        <Button asChild variant="accent" className="w-full rounded-full h-12 text-base font-bold ">
           <Link href={getReaderHref(sourceId, mangaId, continueChapterId)}>
             <Play className="h-5 w-5" fill="currentColor" weight="fill" />
             Lanjut baca
           </Link>
         </Button>
       ) : startChapterId ? (
-        <Button asChild variant="accent" className="w-full rounded-full h-12 text-base font-bold shadow-sm">
+        <Button asChild variant="accent" className="w-full rounded-full h-12 text-base font-bold ">
           <Link href={getReaderHref(sourceId, mangaId, startChapterId)}>
             <Play className="h-5 w-5" fill="currentColor" weight="fill" />
             Mulai baca
@@ -118,7 +118,7 @@ export function MangaDetailView({
       <div 
         className="fixed top-[calc(var(--safe-top)+12px)] left-4 right-4 z-50 md:hidden flex items-center gap-3 pointer-events-none"
       >
-        <div className="bg-surface-glass backdrop-blur-md border border-border-glass shadow-sm rounded-full w-[56px] h-[56px] pointer-events-auto shrink-0 flex items-center justify-center">
+        <div className="bg-surface-glass backdrop-blur-md rounded-full w-[46px] h-[46px] pointer-events-auto shrink-0 flex items-center justify-center">
           <Link 
             href={backHref}
             className="flex items-center justify-center min-w-[44px] min-h-[44px] rounded-full text-text-primary hover:bg-black/5 dark:hover:bg-surface-hover transition-colors drop-shadow-sm"
@@ -127,7 +127,7 @@ export function MangaDetailView({
           </Link>
         </div>
         <motion.div 
-          className="flex-1 bg-surface-glass backdrop-blur-md border border-border-glass shadow-sm rounded-full px-4 h-[56px] pointer-events-auto overflow-hidden flex items-center justify-center"
+          className="flex-1 bg-surface-glass backdrop-blur-md rounded-full px-4 h-[46px] pointer-events-auto overflow-hidden flex items-center justify-center"
           style={{ opacity: useTransform(scrollY, [80, 150], [0, 1]) }}
         >
           <span className="font-bold text-sm line-clamp-1 text-text-primary text-center">
@@ -141,23 +141,18 @@ export function MangaDetailView({
         @media (min-width: 768px) { .vt-cover-desktop { view-transition-name: ${coverTransitionName}; } }
       `}} />
 
-      <div className="absolute top-0 left-0 right-0 h-[300px] md:h-[450px] w-full overflow-hidden z-0 pointer-events-none select-none">
+      <div className="fixed inset-0 w-full h-full overflow-hidden z-0 pointer-events-none select-none">
         {detail.coverUrl && (
-            <img
+            <Image
               src={detail.coverUrl}
               alt=""
-              className="absolute inset-0 w-full h-full object-cover opacity-[0.25] blur-3xl scale-110 saturate-150 transform-gpu dark:opacity-[0.15] will-change-[transform,filter]"
-              onError={(e) => { e.currentTarget.style.display = 'none' }}
-              ref={(img) => {
-                if (img && img.complete && img.naturalWidth === 0) {
-                  img.style.display = 'none';
-                }
-              }}
-              referrerPolicy="no-referrer"
-              decoding="async"
+              fill
+              className="object-cover opacity-[0.25] md:opacity-[0.15] blur-[100px] scale-[1.5] saturate-200 transform-gpu will-change-[transform,filter]"
+              unoptimized
+              priority
             />
         )}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-surface-base/80 to-surface-base" />
+        <div className="absolute inset-0 bg-gradient-to-b from-surface-base/60 via-surface-base/90 to-surface-base" />
       </div>
 
       <div className="w-full max-w-7xl mx-auto px-4 md:px-8 pt-20 md:pt-12 relative z-10 flex flex-col md:flex-row gap-6 md:gap-10">
@@ -167,19 +162,14 @@ export function MangaDetailView({
             className="relative w-[110px] shrink-0 aspect-[2/3] rounded-md overflow-hidden shadow-heavy border border-border-default bg-surface-base vt-cover-mobile"
           >
             {coverUrl && (
-              <img 
+              <Image 
                 src={coverUrl} 
                 alt={detail.title} 
-                className="absolute inset-0 w-full h-full object-cover" 
-                onError={(e) => { e.currentTarget.style.display = 'none' }}
-                ref={(img) => {
-                  if (img && img.complete && img.naturalWidth === 0) {
-                    img.style.display = 'none';
-                  }
-                }}
-                referrerPolicy="no-referrer"
-                decoding="async"
-                loading="eager"
+                fill
+                sizes="110px"
+                className="object-cover" 
+                priority
+                unoptimized
               />
             )}
           </div>
@@ -201,19 +191,14 @@ export function MangaDetailView({
             className="relative w-full aspect-[2/3] rounded-lg overflow-hidden shadow-heavy border border-border-default bg-surface-base vt-cover-desktop"
           >
             {coverUrl && (
-              <img 
+              <Image 
                 src={coverUrl} 
                 alt={detail.title} 
-                className="absolute inset-0 w-full h-full object-cover" 
-                onError={(e) => { e.currentTarget.style.display = 'none' }}
-                ref={(img) => {
-                  if (img && img.complete && img.naturalWidth === 0) {
-                    img.style.display = 'none';
-                  }
-                }}
-                referrerPolicy="no-referrer"
-                decoding="async"
-                loading="eager"
+                fill
+                sizes="(min-width: 768px) 280px, (min-width: 1024px) 320px, 100vw"
+                className="object-cover" 
+                priority
+                unoptimized
               />
             )}
           </div>

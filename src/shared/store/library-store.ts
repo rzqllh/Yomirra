@@ -34,6 +34,27 @@ interface LibraryState {
 
 const getLibraryId = (sourceId: string, mangaId: string) => `${sourceId}::${mangaId}`;
 
+const enforceItemCap = (items: Record<string, LibraryItem>, maxItems = 1000) => {
+  const keys = Object.keys(items);
+  if (keys.length <= maxItems) return items;
+  
+  const sortedKeys = keys.sort((a, b) => {
+    const timeA = new Date(items[a].updatedAt || items[a].addedAt).getTime();
+    const timeB = new Date(items[b].updatedAt || items[b].addedAt).getTime();
+    return timeB - timeA; // Descending (newest first)
+  });
+
+  const keysToRemove = sortedKeys.slice(maxItems);
+  const newItems = { ...items };
+  keysToRemove.forEach(key => {
+    const [sourceId, mangaId] = key.split("::");
+    deleteLibraryItem(sourceId, mangaId);
+    delete newItems[key];
+  });
+  
+  return newItems;
+};
+
 export const useLibraryStore = create<LibraryState>()(
   persist(
     (set, get) => ({
@@ -43,20 +64,20 @@ export const useLibraryStore = create<LibraryState>()(
         const id = getLibraryId(item.sourceId, item.mangaId);
         pushLibraryItem(item); // Background sync
         return {
-          items: {
+          items: enforceItemCap({
             ...state.items,
             [id]: item,
-          }
+          })
         };
       }),
 
       _setItemLocal: (item) => set((state) => {
         const id = getLibraryId(item.sourceId, item.mangaId);
         return {
-          items: {
+          items: enforceItemCap({
             ...state.items,
             [id]: item,
-          }
+          })
         };
       }),
 
@@ -138,7 +159,7 @@ export const useLibraryStore = create<LibraryState>()(
           }
         }
 
-        return hasChanges ? { items: newItems } : state;
+        return hasChanges ? { items: enforceItemCap(newItems) } : state;
       }),
     }),
     {

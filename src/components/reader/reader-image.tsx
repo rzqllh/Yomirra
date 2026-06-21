@@ -3,7 +3,7 @@
 import * as React from "react"
 import Image from "next/image"
 import { cn } from "@/shared/utils/cn"
-import { PageItem } from "@/shared/types/source"
+
 import { PageImageError } from "./page-image-error"
 import { motion, useMotionValue } from "motion/react"
 import { useGesture } from "@use-gesture/react"
@@ -19,7 +19,12 @@ interface ReaderImageProps {
   priority?: boolean
   offlineUrl?: string
   imageFit?: 'width' | 'contained'
-  measureElement?: (element: HTMLElement | null) => void
+  decodeQueue?: {
+    addToQueue: (id: string, url: string, priority: number) => void;
+    removeFromQueue: (id: string) => void;
+    isDecoded: (id: string) => boolean;
+  };
+  dataIndex?: number;
 }
 
 export const ReaderImage = React.memo(function ReaderImage({
@@ -33,19 +38,26 @@ export const ReaderImage = React.memo(function ReaderImage({
   priority = false,
   offlineUrl,
   imageFit = 'width',
-  measureElement
+  decodeQueue,
+  dataIndex
 }: ReaderImageProps) {
   const [hasError, setHasError] = React.useState(false)
   const [retryCount, setRetryCount] = React.useState(0)
   const [aspectRatio, setAspectRatio] = React.useState<number | null>(null)
   const containerRef = React.useRef<HTMLDivElement>(null)
   
-  // Call measureElement on render if it exists and we have an element
-  React.useLayoutEffect(() => {
-    if (measureElement && containerRef.current) {
-      measureElement(containerRef.current);
+  const imageId = `${pageUrl}`;
+  const currentUrl = offlineUrl || (retryCount > 0 && !pageUrl.startsWith('blob:') ? `${pageUrl}${pageUrl.includes('?') ? '&' : '?'}retry=${retryCount}` : pageUrl);
+
+  React.useEffect(() => {
+    if (decodeQueue && isAllowedToLoad) {
+      // Priority based on index, smaller index means closer to viewport or earlier page
+      decodeQueue.addToQueue(imageId, currentUrl, pageIndex);
     }
-  });
+    return () => {
+      if (decodeQueue) decodeQueue.removeFromQueue(imageId);
+    };
+  }, [decodeQueue, imageId, currentUrl, pageIndex, isAllowedToLoad]);
 
   // Zoom motion values (No spring physics loop)
   const scale = useMotionValue(1)
@@ -60,6 +72,11 @@ export const ReaderImage = React.memo(function ReaderImage({
       event.preventDefault()
       const newScale = Math.max(1, Math.min(d, 4))
       scale.set(newScale)
+      if (newScale > 1) {
+        document.documentElement.classList.add('is-pinching');
+      } else {
+        document.documentElement.classList.remove('is-pinching');
+      }
       if (newScale === 1) {
         x.set(0)
         y.set(0)
@@ -97,7 +114,10 @@ export const ReaderImage = React.memo(function ReaderImage({
     }
   })
 
-  const shouldLoad = isAllowedToLoad
+  // If using decode queue, only load if it's decoded or if queue not provided.
+  // We still check isAllowedToLoad.
+  const isDecoded = decodeQueue ? decodeQueue.isDecoded(imageId) : true;
+  const shouldLoad = isAllowedToLoad && isDecoded;
 
   const handleImageError = () => {
     if (retryCount < 3) {
@@ -117,15 +137,12 @@ export const ReaderImage = React.memo(function ReaderImage({
     setRetryCount(0)
   }
 
-  const currentUrl = offlineUrl || (retryCount > 0 && !pageUrl.startsWith('blob:') ? `${pageUrl}${pageUrl.includes('?') ? '&' : '?'}retry=${retryCount}` : pageUrl)
   const estimatedAspectRatio = aspectRatio ? `${aspectRatio}` : "1 / 1.5"
 
   return (
     <div 
-      ref={(el) => {
-        containerRef.current = el;
-        if (measureElement) measureElement(el);
-      }}
+      ref={containerRef}
+      data-index={dataIndex}
       className={cn(
         "reader-page-container w-full flex justify-center overflow-hidden touch-pan-y relative",
         (!shouldLoad || hasError) && "bg-surface-muted/30"
@@ -133,24 +150,22 @@ export const ReaderImage = React.memo(function ReaderImage({
       data-page-index={pageIndex}
       style={{ 
         touchAction: "pan-y",
-        aspectRatio: estimatedAspectRatio,
+        aspectRatio: isWebtoon ? "auto" : estimatedAspectRatio,
         minHeight: aspectRatio ? "auto" : "50vh",
         transition: "aspect-ratio 0.3s ease-out"
       }}
     >
       {hasError ? (
-        <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center p-4 bg-[#0a0a0f] text-white/50">
-           <PageImageError index={pageIndex} onRetry={handleRetry} />
-        </div>
+        <PageImageError index={pageIndex} onRetry={handleRetry} />
       ) : shouldLoad ? (
         <motion.div style={{ x, y, scale }} className="w-full h-full origin-center flex justify-center">
           <Image 
             src={currentUrl}
             alt={`Page ${pageIndex}`}
             className={cn(
-              "block w-full h-full object-contain",
-              !isWebtoon && "shadow-soft",
-              "motion-safe:animate-in motion-safe:fade-in motion-safe:duration-300"
+              "block w-full",
+              isWebtoon ? "h-auto" : "h-full object-contain shadow-soft",
+              "motion-safe:animate-in motion-safe:fade-in motion-safe:duration-150"
             )}
             width={800}
             height={1200}
@@ -170,18 +185,15 @@ export const ReaderImage = React.memo(function ReaderImage({
               // Update aspect ratio for progressive height correction
               setAspectRatio(target.naturalWidth / target.naturalHeight);
               
-              if (measureElement && containerRef.current) {
-                measureElement(containerRef.current);
-              }
-              
               setTimeout(() => onLoadComplete(pageIndex), 0)
             }}
             onError={handleImageError}
           />
         </motion.div>
       ) : (
-        <div className="absolute inset-0 w-full h-full flex items-center justify-center">
-          <div className="size-8 rounded-full border-2 border-border-strong border-t-accent animate-spin" />
+        <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-black overflow-hidden">
+          <div className="w-full h-full absolute inset-0 bg-gradient-to-b from-transparent via-white/[0.02] to-transparent animate-pulse-slow" />
+          <div className="size-10 rounded-full border border-white/10 border-t-white/50 animate-spin z-10 drop-shadow-md" />
         </div>
       )}
     </div>

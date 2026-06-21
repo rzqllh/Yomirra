@@ -1,5 +1,6 @@
 import { Metadata } from "next";
-import { YomirraPageHeader } from "@/components/app/yomirra-header";
+import { DesktopPageTitle } from "@/components/app/yomirra-header";
+import { Lightning } from "@phosphor-icons/react/dist/ssr";
 import { sourceRegistry } from "@/shared/sources/source-registry";
 import { Suspense } from "react";
 import { SourceFeedSkeleton } from "@/components/app/source-feed-skeleton";
@@ -52,8 +53,14 @@ export default async function UpdatesPage() {
 
   return (
     <main className="min-h-screen bg-surface-base">
-      <div className="px-4 py-6 max-w-7xl mx-auto pt-[max(24px,calc(var(--safe-top)+16px))]">
-        <h1 className="text-2xl md:text-3xl font-black tracking-tight text-text-primary mb-8">Update Terbaru</h1>
+      <div className="px-4 pt-[calc(var(--safe-top)+24px)] pb-6 max-w-7xl mx-auto">
+        <div className="mb-8">
+          <DesktopPageTitle 
+            title="Update Terbaru" 
+            description="Manga, Manhwa, dan Manhua chapter terbaru."
+            icon={<Lightning size={32} weight="duotone" />}
+          />
+        </div>
         
         {activeSources.map(source => (
           <Suspense key={source.id} fallback={<SourceFeedSkeleton />}>

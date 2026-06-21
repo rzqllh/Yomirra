@@ -11,11 +11,12 @@ export type HistoryItem = {
   coverUrl?: string;
   sourceName?: string;
   pageIndex?: number;
+  pageOffset?: number;
   totalPages?: number;
   progressPercent?: number;
   seriesProgressPercent?: number;
   scrollPercent?: number;
-  readAt: string;
+  readAt: number;
 };
 
 interface HistoryState {
@@ -30,6 +31,7 @@ interface HistoryState {
   getContinueReading: (limit?: number) => HistoryItem[];
   getHistoryList: () => HistoryItem[];
   markChapterProgress: (sourceId: string, mangaId: string, chapterId: string, pageIndex: number, totalPages: number, scrollPercent?: number) => void;
+  saveProgress: (sourceId: string, mangaId: string, chapterId: string, pageIndex: number, pageOffset?: number) => void;
   syncWithCloud: (cloudItems: HistoryItem[]) => void;
 }
 
@@ -52,7 +54,7 @@ export const useHistoryStore = create<HistoryState>()(
         const MAX_HISTORY_ITEMS = 1000;
         
         if (entries.length > MAX_HISTORY_ITEMS) {
-          entries.sort((a, b) => new Date(b[1].readAt).getTime() - new Date(a[1].readAt).getTime());
+          entries.sort((a, b) => b[1].readAt - a[1].readAt);
           return { items: Object.fromEntries(entries.slice(0, MAX_HISTORY_ITEMS)) };
         }
 
@@ -110,7 +112,7 @@ export const useHistoryStore = create<HistoryState>()(
         if (mangaHistory.length === 0) return undefined;
         
         // Sort by readAt descending
-        return mangaHistory.sort((a, b) => new Date(b.readAt).getTime() - new Date(a.readAt).getTime())[0];
+        return mangaHistory.sort((a, b) => b.readAt - a.readAt)[0];
       },
 
       getContinueReading: (limit) => {
@@ -123,20 +125,20 @@ export const useHistoryStore = create<HistoryState>()(
           const key = `${item.sourceId}::${item.mangaId}`;
           const existing = latestPerManga.get(key);
           
-          if (!existing || new Date(item.readAt).getTime() > new Date(existing.readAt).getTime()) {
+          if (!existing || item.readAt > existing.readAt) {
             latestPerManga.set(key, item);
           }
         }
         
         const sorted = Array.from(latestPerManga.values())
-          .sort((a, b) => new Date(b.readAt).getTime() - new Date(a.readAt).getTime());
+          .sort((a, b) => b.readAt - a.readAt);
           
         return limit ? sorted.slice(0, limit) : sorted;
       },
       
       getHistoryList: () => {
         return Object.values(get().items)
-          .sort((a, b) => new Date(b.readAt).getTime() - new Date(a.readAt).getTime());
+          .sort((a, b) => b.readAt - a.readAt);
       },
 
       markChapterProgress: (sourceId, mangaId, chapterId, pageIndex, totalPages, scrollPercent) => set((state) => {
@@ -160,11 +162,34 @@ export const useHistoryStore = create<HistoryState>()(
           totalPages,
           progressPercent,
           scrollPercent: scrollPercent !== undefined ? scrollPercent : existing.scrollPercent,
-          readAt: new Date().toISOString(),
+          readAt: Date.now(),
         };
         
         pushHistoryItem(updatedItem); // Background sync
 
+        return {
+          items: {
+            ...state.items,
+            [id]: updatedItem
+          }
+        };
+      }),
+
+      saveProgress: (sourceId, mangaId, chapterId, pageIndex, pageOffset) => set((state) => {
+        const id = getHistoryId(sourceId, mangaId, chapterId);
+        const existing = state.items[id];
+        if (!existing) return state;
+
+        const updatedItem = {
+          ...existing,
+          pageIndex,
+          pageOffset,
+          readAt: Date.now(),
+        };
+
+        // Intentionally NOT pushing to cloud to prevent excessive network writes from scroll handler
+        // The actual progress will be synced when the user leaves the reader or finishes the chapter
+        
         return {
           items: {
             ...state.items,
@@ -185,8 +210,8 @@ export const useHistoryStore = create<HistoryState>()(
             newItems[id] = cloudItem;
             hasChanges = true;
           } else {
-            const localTime = new Date(localItem.readAt).getTime();
-            const cloudTime = new Date(cloudItem.readAt).getTime();
+            const localTime = localItem.readAt;
+            const cloudTime = cloudItem.readAt;
             
             if (cloudTime > localTime) {
               newItems[id] = cloudItem;
@@ -211,6 +236,23 @@ export const useHistoryStore = create<HistoryState>()(
     }),
     {
       name: "yomirra-history",
+      version: 1,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      migrate: (persistedState: any, version: number) => {
+        if (version === 0) {
+          const state = persistedState;
+          if (state.items) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            Object.values(state.items).forEach((item: any) => {
+              if (typeof item.readAt === 'string') {
+                item.readAt = new Date(item.readAt).getTime();
+              }
+            });
+          }
+          return state;
+        }
+        return persistedState;
+      }
     }
   )
 );

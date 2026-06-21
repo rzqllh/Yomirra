@@ -37,7 +37,7 @@ export function getMangaDetailHref(sourceId: string, mangaId: string, returnTo?:
   return base;
 }
 
-export function getSafeMangaDetailBackHref(returnTo: string | null, sourceId: string): string {
+export function getSafeMangaDetailBackHref(returnTo: string | null): string {
   // If returnTo exists and is not pointing to a reader route, use it
   if (returnTo && !returnTo.includes('/read/')) {
     return returnTo;

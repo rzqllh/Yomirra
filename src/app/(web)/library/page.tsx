@@ -1,6 +1,8 @@
 "use client";
 
 import * as React from "react";
+import { DirectionalTransition } from "@/components/ui/directional-transition";
+import { LibrarySkeleton } from "@/components/skeletons/library-skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
 import { MangaCard } from "@/components/manga/manga-card";
@@ -22,6 +24,7 @@ import {
 } from "@/components/ui/pagination";
 
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
+import { motion, AnimatePresence } from "motion/react";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { YomirraSegmentedControl } from "@/components/ui/yomirra-segmented-control";
 import { YomirraSurface } from "@/components/ui/yomirra-layout";
@@ -64,6 +67,7 @@ function LibraryContent() {
 
   React.useEffect(() => {
     if (deferredSearchInput !== query) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setQuery(deferredSearchInput.trim());
       setPage(1);
     }
@@ -92,12 +96,26 @@ function LibraryContent() {
     if (filtersData?.sorts) {
       const isSupported = filtersData.sorts.some(s => s.id === sort);
       if (!isSupported && filtersData.sorts.length > 0) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setSort(filtersData.sorts[0].id);
       }
     }
   }, [filtersData?.sorts, sort]);
 
   const fetchCatalog = async (currentPage: number) => {
+    const hasFilters = selectedGenres.length > 0 || excludedGenres.length > 0 || selectedFormats.length > 0 || selectedStatuses.length > 0;
+
+    // Use optimized endpoints for simple browsing (no search, no filters)
+    if (!query && !hasFilters) {
+      if (sort === "latest") {
+        const res = await apiClient.getLatest(activeSourceId, currentPage);
+        return { mangas: res.mangas, hasNextPage: !!res.hasNextPage };
+      } else if (sort === "popular" || sort === "all") {
+        const res = await apiClient.getPopular(activeSourceId, currentPage);
+        return { mangas: res.mangas, hasNextPage: !!res.hasNextPage };
+      }
+    }
+
     const filters: Record<string, string | string[]> = {};
     if (sort === "latest") filters.sort = "latest";
     else if (sort === "popular" || sort === "all") filters.sort = "popularity";
@@ -197,7 +215,7 @@ function LibraryContent() {
   return (
     <div className="flex flex-col min-h-screen">
       <YomirraSurface variant="base" className="flex-1 w-full max-w-7xl mx-auto md:pb-8">
-        <div className="px-4 py-6 md:px-8 md:py-8 space-y-8">
+        <div className="px-4 pt-[calc(var(--safe-top)+24px)] pb-6 md:px-8 md:py-8 space-y-8">
           
           {/* Header Section */}
           <div className="mb-6">
@@ -226,7 +244,7 @@ function LibraryContent() {
             <div className="flex w-full md:w-auto items-center gap-3">
               <form 
                 onSubmit={handleSearchSubmit} 
-                className="flex-1 md:w-64 flex items-center gap-2 rounded-full bg-surface-glass backdrop-blur-md px-4 h-[44px] transition-all duration-300 focus-within:bg-surface-glass focus-within:shadow-md border border-border-glass focus-within:border-accent-dim focus-within:ring-2 focus-within:ring-accent/50 shadow-[0_4px_16px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.2)]"
+                className="flex-1 md:w-64 flex items-center gap-2 rounded-full bg-surface-glass backdrop-blur-md px-4 h-[44px] transition-all duration-300 focus-within:bg-surface-glass focus-within:-md --glass focus-within:-accent-dim focus-within:ring-2 focus-within:ring-accent/50 -[0_4px_16px_rgba(0,0,0,0.05)] dark:-[0_4px_16px_rgba(0,0,0,0.2)]"
               >
                 <MagnifyingGlass className="size-4 text-text-muted shrink-0 transition-colors focus-within:text-accent" weight="bold" />
                 <input 
@@ -246,7 +264,7 @@ function LibraryContent() {
               <Button
                 variant={activeFilterCount > 0 ? "accent" : "outline"}
                 size="sm"
-                className={cn("rounded-full font-bold gap-1.5 h-[44px] px-5 transition-all duration-300", activeFilterCount > 0 ? "shadow-md" : "bg-surface-glass backdrop-blur-md border border-border-glass text-text-primary hover:bg-surface-glass hover:text-text-primary shadow-[0_4px_16px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.2)]")}
+                className={cn("rounded-full font-bold gap-1.5 h-[44px] px-5 transition-all duration-300", activeFilterCount > 0 ? "-md" : "bg-surface-glass backdrop-blur-md --glass text-text-primary hover:bg-surface-glass hover:text-text-primary -[0_4px_16px_rgba(0,0,0,0.05)] dark:-[0_4px_16px_rgba(0,0,0,0.2)]")}
                 onClick={() => setShowFilters(!showFilters)}
               >
                 <Funnel size={16} weight={activeFilterCount > 0 ? "fill" : "bold"} />
@@ -256,9 +274,16 @@ function LibraryContent() {
           </div>
 
           {/* Collapsible Filters Section */}
-          {showFilters && (
-            <div className="bg-surface-overlay border border-border-subtle rounded-xl p-6 shadow-sm motion-safe:animate-in slide-in-from-top-2 fade-in duration-200">
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+          <AnimatePresence>
+            {showFilters && (
+              <motion.div 
+                initial={{ opacity: 0, height: 0, marginTop: 0, filter: "blur(4px)" }}
+                animate={{ opacity: 1, height: "auto", marginTop: 16, filter: "blur(0px)" }}
+                exit={{ opacity: 0, height: 0, marginTop: 0, filter: "blur(4px)" }}
+                transition={{ duration: 0.4, type: "spring", bounce: 0, opacity: { duration: 0.2 } }}
+                className="bg-surface-overlay border border-border-subtle rounded-xl p-6 shadow-sm overflow-hidden"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
                 
                 {/* Left Side: Genre */}
                 <div className="md:col-span-7 space-y-4">
@@ -276,6 +301,7 @@ function LibraryContent() {
                         <button
                           key={g.id}
                           onClick={() => toggleGenre(g.id)}
+                          aria-pressed={isInc ? "true" : isExc ? "mixed" : "false"}
                           className={cn(
                             "px-3.5 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 border",
                             isInc ? "bg-accent text-accent-on border-transparent shadow-sm shadow-accent/20" : 
@@ -295,36 +321,43 @@ function LibraryContent() {
                   <div className="space-y-3">
                     <h3 className="text-xs font-bold uppercase tracking-widest text-text-muted">Format</h3>
                     <div className="flex flex-wrap gap-2">
-                      {DYNAMIC_FORMATS.map(f => (
+                      {DYNAMIC_FORMATS.map(f => {
+                        const isSelected = selectedFormats.includes(f.id);
+                        return (
                         <button
                           key={f.id}
                           onClick={() => toggleFilter(f.id, selectedFormats, setSelectedFormats)}
-                          className={cn("px-3.5 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 border", selectedFormats.includes(f.id) ? "bg-accent text-accent-on border-transparent shadow-sm shadow-accent/20" : "bg-surface-muted border-transparent text-text-secondary hover:text-text-primary hover:bg-surface-hover")}
+                          aria-pressed={isSelected ? "true" : "false"}
+                          className={cn("px-3.5 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 border", isSelected ? "bg-accent text-accent-on border-transparent shadow-sm shadow-accent/20" : "bg-surface-muted border-transparent text-text-secondary hover:text-text-primary hover:bg-surface-hover")}
                         >
                           {f.name}
                         </button>
-                      ))}
+                      )})}
                     </div>
                   </div>
 
                   <div className="space-y-3">
                     <h3 className="text-xs font-bold uppercase tracking-widest text-text-muted">Status</h3>
                     <div className="flex flex-wrap gap-2">
-                      {DYNAMIC_STATUSES.map(s => (
+                      {DYNAMIC_STATUSES.map(s => {
+                        const isSelected = selectedStatuses.includes(s.id);
+                        return (
                         <button
                           key={s.id}
                           onClick={() => toggleFilter(s.id, selectedStatuses, setSelectedStatuses)}
-                          className={cn("px-3.5 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 border", selectedStatuses.includes(s.id) ? "bg-accent text-accent-on border-transparent shadow-sm shadow-accent/20" : "bg-surface-muted border-transparent text-text-secondary hover:text-text-primary hover:bg-surface-hover")}
+                          aria-pressed={isSelected ? "true" : "false"}
+                          className={cn("px-3.5 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 border", isSelected ? "bg-accent text-accent-on border-transparent shadow-sm shadow-accent/20" : "bg-surface-muted border-transparent text-text-secondary hover:text-text-primary hover:bg-surface-hover")}
                         >
                           {s.name}
                         </button>
-                      ))}
+                      )})}
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
           )}
+          </AnimatePresence>
 
           {/* Catalog Content Grid */}
           {isLoading ? (
@@ -440,8 +473,7 @@ function LibraryContent() {
   );
 }
 
-import { DirectionalTransition } from "@/components/ui/directional-transition";
-import { LibrarySkeleton } from "@/components/skeletons/library-skeleton";
+
 
 export default function LibraryPage() {
   return (

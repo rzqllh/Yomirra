@@ -53,8 +53,7 @@ interface DownloadState {
 
 export const CACHE_NAME = "yomirra-chapter-cache-v1";
 
-let processingLock = false;
-const abortControllers: Record<string, AbortController> = {};
+import { processDownloadQueue, abortControllers } from "../lib/download-engine";
 
 export const useDownloadStore = create<DownloadState>()(
   persist(
@@ -195,146 +194,20 @@ export const useDownloadStore = create<DownloadState>()(
       },
 
       _processQueue: async () => {
-        if (processingLock) return;
-        processingLock = true;
-
-        try {
-          const state = get();
-          if (state.activeDownloads.length >= state.maxConcurrency || state.queue.length === 0) return;
-
-          const id = state.queue[0];
-          const item = state.downloads[id];
-
-          if (!item || item.status !== "queued") {
-            set((s) => ({ queue: s.queue.slice(1) }));
-            return;
+        processDownloadQueue({
+          getDownloads: () => get().downloads,
+          getQueue: () => get().queue,
+          getActiveDownloads: () => get().activeDownloads,
+          getMaxConcurrency: () => get().maxConcurrency,
+          setQueue: (q) => set({ queue: q }),
+          setActiveDownloads: (a) => set({ activeDownloads: a }),
+          updateDownload: get()._updateDownload,
+          onProcessComplete: () => {
+            if (get().queue.length > 0 || get().activeDownloads.length < get().maxConcurrency) {
+              setTimeout(() => get()._processQueue(), 50);
+            }
           }
-
-          set((s) => ({
-            queue: s.queue.slice(1),
-            activeDownloads: [...s.activeDownloads, id]
-          }));
-          
-          get()._updateDownload(id, { status: "downloading", error: undefined });
-
-          const abortController = new AbortController();
-          abortControllers[id] = abortController;
-          const signal = abortController.signal;
-
-          try {
-            let pages = item.pages;
-            
-            if (pages.length === 0) {
-              const res = await fetch(`/api/sources/${item.sourceId}/manga/${encodeURIComponent(item.mangaId)}/chapters/${encodeURIComponent(item.chapterId)}/pages`, { signal });
-              if (!res.ok) throw new Error("Gagal mengambil daftar halaman chapter");
-              const result = await res.json();
-              const fetchedPages: { index: number; url: string }[] = result.data?.pages ?? [];
-
-              if (!fetchedPages || fetchedPages.length === 0) throw new Error("Halaman tidak ditemukan");
-
-              pages = fetchedPages.map(p => ({
-                index: p.index,
-                originalUrl: p.url,
-                offlineUrl: getOfflineImageUrl({ sourceId: item.sourceId, mangaId: item.mangaId, chapterId: item.chapterId, pageIndex: p.index }),
-                status: 'pending'
-              }));
-
-              get()._updateDownload(id, { pages, totalPages: pages.length });
-            }
-
-            const cache = await caches.open(CACHE_NAME);
-            const CONCURRENCY = 2; // Batasi 2 koneksi per chapter untuk kestabilan offline
-            
-            for (let i = 0; i < pages.length; i += CONCURRENCY) {
-              if (signal.aborted) throw new Error("Aborted");
-              
-              const batch = pages.slice(i, i + CONCURRENCY);
-              const promises = batch.map(async (pageObj) => {
-                if (pageObj.status === 'cached') return;
-
-                const pagesCopy = [...get().downloads[id].pages];
-                const pageIdx = pagesCopy.findIndex(p => p.index === pageObj.index);
-                if (pageIdx !== -1) pagesCopy[pageIdx] = { ...pagesCopy[pageIdx], status: 'downloading' };
-                get()._updateDownload(id, { pages: pagesCopy });
-
-                const cacheKey = new URL(pageObj.offlineUrl, window.location.origin).toString();
-                const proxyUrl = pageObj.originalUrl.startsWith('/api/proxy/image')
-                  ? pageObj.originalUrl
-                  : `/api/proxy/image?url=${encodeURIComponent(pageObj.originalUrl)}&sourceId=${item.sourceId}`;
-                
-                try {
-                  const imgRes = await fetch(proxyUrl, { signal });
-                  if (!imgRes.ok) throw new Error(`Image fetch failed: ${imgRes.status}`);
-                  
-                  const contentType = imgRes.headers.get("content-type") || "image/jpeg";
-                  if (!contentType.startsWith("image/")) throw new Error("Invalid content type");
-
-                  // Clone response before putting in cache
-                  const cacheRes = imgRes.clone();
-                  await cache.put(cacheKey, cacheRes);
-                  
-                  const blob = await imgRes.blob();
-                  
-                  const pagesDone = [...get().downloads[id].pages];
-                  const doneIdx = pagesDone.findIndex(p => p.index === pageObj.index);
-                  if (doneIdx !== -1) {
-                    pagesDone[doneIdx] = { 
-                      ...pagesDone[doneIdx], 
-                      status: 'cached',
-                      contentType,
-                      sizeBytes: blob.size
-                    };
-                  }
-                  
-                  const downloadedCount = pagesDone.filter(p => p.status === 'cached').length;
-                  const progress = Math.round((downloadedCount / pages.length) * 100);
-                  
-                  get()._updateDownload(id, { 
-                    pages: pagesDone, 
-                    downloadedPages: downloadedCount,
-                    progress 
-                  });
-                } catch (err) {
-                  const pagesErr = [...get().downloads[id].pages];
-                  const errIdx = pagesErr.findIndex(p => p.index === pageObj.index);
-                  if (errIdx !== -1) pagesErr[errIdx] = { ...pagesErr[errIdx], status: 'failed' };
-                  get()._updateDownload(id, { pages: pagesErr });
-                  throw err;
-                }
-              });
-
-              await Promise.all(promises);
-            }
-
-            const finalPages = get().downloads[id].pages;
-            const allCached = finalPages.every(p => p.status === 'cached');
-            
-            if (allCached) {
-              get()._updateDownload(id, { status: "downloaded", progress: 100 });
-            } else {
-              throw new Error("Beberapa gambar gagal diunduh");
-            }
-          } catch (error: unknown) {
-            if (error instanceof Error) {
-              if (error.name === "AbortError" || error.message === "Aborted") {
-                // Handled by pause/cancel
-              } else {
-                get()._updateDownload(id, { status: "failed", error: error.message || "Gagal mengunduh" });
-              }
-            } else {
-              get()._updateDownload(id, { status: "failed", error: "Gagal mengunduh" });
-            }
-          } finally {
-            delete abortControllers[id];
-            set((s) => ({ activeDownloads: s.activeDownloads.filter(a => a !== id) }));
-          }
-        } finally {
-          processingLock = false;
-          // Recursively process next
-          if (get().queue.length > 0 || get().activeDownloads.length < get().maxConcurrency) {
-            setTimeout(() => get()._processQueue(), 50);
-          }
-        }
+        });
       },
     }),
     {

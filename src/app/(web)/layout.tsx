@@ -30,8 +30,8 @@ export const viewport: Viewport = {
 
 import { AppShell } from "@/components/app/app-shell";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
-import { DemoLayoutProvider } from "@/components/app/demo-layout-context";
 import { OfflineProvider } from "@/components/providers/offline-provider";
+
 
 export default function RootLayout({
   children,
@@ -42,15 +42,13 @@ export default function RootLayout({
     <html lang="id" className={plusJakartaSans.variable} suppressHydrationWarning>
       <body className="min-h-screen antialiased overflow-x-hidden" suppressHydrationWarning>
         <Providers>
-          <DemoLayoutProvider>
-            <OfflineProvider>
-              <AppShell>
-                <ErrorBoundary>
-                  {children}
-                </ErrorBoundary>
-              </AppShell>
-            </OfflineProvider>
-          </DemoLayoutProvider>
+          <OfflineProvider>
+            <AppShell>
+              <ErrorBoundary>
+                {children}
+              </ErrorBoundary>
+            </AppShell>
+          </OfflineProvider>
         </Providers>
       </body>
     </html>

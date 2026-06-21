@@ -87,30 +87,48 @@ export class ShinigamiSource implements MangaSource {
   }
 
   async search(query: string, page: number, filters?: Record<string, string | string[]>): Promise<MangaPageResult> {
+    let cleanQuery = query || "";
+    const extractedGenres: string[] = [];
+
+    if (cleanQuery) {
+      // Extract tags:"Genre Name" or tags:GenreName or -tags:"Genre Name" or -tags:GenreName
+      const tagRegex = /(-?)tags?:(?:"([^"]+)"|([^\s]+))/gi;
+      let match;
+      while ((match = tagRegex.exec(cleanQuery)) !== null) {
+        const isNegative = match[1] === '-';
+        const tagValue = (match[2] || match[3]).toLowerCase().replace(/\s+/g, '-');
+        extractedGenres.push(isNegative ? `-${tagValue}` : tagValue);
+      }
+      cleanQuery = cleanQuery.replace(tagRegex, '').trim();
+    }
+
     const params: Record<string, string | string[] | number> = {
       page,
       page_size: 100,
     };
-    if (query) params.q = query;
+    if (cleanQuery) params.q = cleanQuery;
     
     let excludedGenres: string[] = [];
 
     // Merge filters (like genre[], format, status)
+    let genreFilter: string[] = [...extractedGenres];
+
     if (filters) {
       Object.entries(filters).forEach(([k, v]) => {
         if (k === "genre[]") {
-          // Shinigami API expects "genre=action,comedy" and doesn't support exclusions via API
           const items = Array.isArray(v) ? v : [v];
-          const included = items.filter((item) => !item.startsWith("-"));
-          excludedGenres = items.filter((item) => item.startsWith("-")).map(item => item.slice(1));
-          
-          if (included.length > 0) {
-            params["genre"] = included.join(",");
-          }
+          genreFilter.push(...items);
         } else {
           params[k] = Array.isArray(v) ? v.join(",") : v;
         }
       });
+    }
+
+    const included = genreFilter.filter((item) => !item.startsWith("-"));
+    excludedGenres = genreFilter.filter((item) => item.startsWith("-")).map(item => item.slice(1));
+    
+    if (included.length > 0) {
+      params["genre"] = included.join(",");
     }
 
     const res = await this.client.get<ShinigamiMangaListResponse>("/v1/manga/list", params);

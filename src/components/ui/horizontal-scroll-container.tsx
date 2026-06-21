@@ -50,6 +50,11 @@ export function HorizontalScrollContainer({ children, className, ...props }: Rea
   return (
     <div
       ref={scrollRef}
+      onMouseDown={handleMouseDown}
+      onMouseLeave={handleMouseLeave}
+      onMouseUp={handleMouseUp}
+      onMouseMove={handleMouseMove}
+      onClickCapture={handleClickCapture}
       className={cn(
         "flex overflow-x-auto w-full min-w-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory scroll-smooth pb-4 -mb-4 px-1 -mx-1",
         className

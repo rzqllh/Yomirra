@@ -24,6 +24,7 @@ export function MagazineHero({ sourceId, mangas }: MagazineHeroProps) {
 
   if (!mangas || mangas.length === 0) return null;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleDragEnd = (event: any, info: any) => {
     const threshold = 50;
     if (info.offset.x < -threshold) {
