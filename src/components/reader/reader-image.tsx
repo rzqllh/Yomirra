@@ -64,9 +64,6 @@ export const ReaderImage = React.memo(function ReaderImage({
   const x = useMotionValue(0)
   const y = useMotionValue(0)
 
-  // Double tap logic
-  const lastTapTime = React.useRef(0)
-
   useGesture({
     onPinch: ({ offset: [d], event }) => {
       event.preventDefault()
@@ -87,23 +84,6 @@ export const ReaderImage = React.memo(function ReaderImage({
       event.preventDefault() // prevent scrolling while dragged
       x.set(ox)
       y.set(oy)
-    },
-    onPointerDown: ({ event }) => {
-      const now = Date.now()
-      if (now - lastTapTime.current < 300) {
-        // Double tap
-        event.stopPropagation()
-        if (scale.get() > 1) {
-          scale.set(1)
-          x.set(0)
-          y.set(0)
-        } else {
-          scale.set(2.5)
-        }
-        lastTapTime.current = 0
-      } else {
-        lastTapTime.current = now
-      }
     }
   }, {
     target: containerRef,

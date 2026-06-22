@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { useReaderStore } from "@/shared/store/reader-store"
-import { CaretLeft, Gear, CaretRight, List } from "@phosphor-icons/react"
+import { CaretLeft, Gear, CaretRight, List, X } from "@phosphor-icons/react"
 import { cn } from "@/shared/utils/cn"
 
 import { getMangaDetailHref, getReaderHref } from "@/shared/lib/routes"
@@ -112,7 +112,7 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
   // Gesture-safe overlay toggle (Center 40% tap, <=10px, <=250ms)
   useReaderGesture();
 
-  // Immediate overlay auto-dismiss on scroll
+  // Immediate overlay auto-dismiss on scroll down, show on scroll up
   React.useEffect(() => {
     let ticking = false;
     let lastScrollY = window.scrollY;
@@ -121,9 +121,16 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
       if (!ticking) {
         window.requestAnimationFrame(() => {
           const currentScrollY = window.scrollY;
+          const diff = currentScrollY - lastScrollY;
           
-          if (Math.abs(currentScrollY - lastScrollY) > 10) {
+          const isAtBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 300;
+          
+          if (isAtBottom) {
             setOverlayVisible(false);
+          } else if (diff > 10) {
+            setOverlayVisible(false);
+          } else if (diff < -15) {
+            setOverlayVisible(true);
           }
           
           lastScrollY = currentScrollY;
@@ -146,41 +153,66 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
       style={{ backgroundColor: getBackgroundColor() }}
     >
       <ReaderProgress />
-      {/* Bottom Overlay */}
+      {/* Top Overlay (Info) */}
       <div 
         className={cn(
-          "fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-4 right-4 z-[var(--z-sticky)] transition-[transform,opacity] duration-150 ease-out flex justify-between items-end pointer-events-none",
-          isOverlayVisible ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0",
+          "fixed top-0 left-0 right-0 z-[var(--z-sticky)] transition-[transform,opacity] duration-200 ease-out pointer-events-none pt-[env(safe-area-inset-top)]",
+          isOverlayVisible ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0",
+          isDesktopPanelOpen ? "md:right-[calc(320px)]" : ""
+        )}
+      >
+        <div className={cn(
+          "w-full pt-4 pb-12 px-6 flex justify-center",
+          preferences.background === 'mist' 
+            ? "bg-gradient-to-b from-white/90 via-white/50 to-transparent" 
+            : "bg-gradient-to-b from-black/80 via-black/40 to-transparent"
+        )}>
+          <div className="flex flex-col items-center text-center pointer-events-auto max-w-md">
+            <span className={cn(
+              "text-sm md:text-base font-bold drop-shadow-lg truncate w-full tracking-wide",
+              preferences.background === 'mist' ? "text-gray-900" : "text-white"
+            )}>{chapterTitle}</span>
+            {pageCount && (
+              <span className={cn(
+                "text-[11px] font-semibold tracking-widest uppercase drop-shadow-md mt-0.5",
+                preferences.background === 'mist' ? "text-gray-600" : "text-white/70"
+              )}>
+                {pageCount} halaman
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Overlay (Controls) */}
+      <div 
+        className={cn(
+          "fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-4 right-4 z-[var(--z-sticky)] transition-[transform,opacity] duration-200 ease-out flex justify-center pointer-events-none",
+          isOverlayVisible ? "translate-y-0 opacity-100" : "translate-y-24 opacity-0",
           isDesktopPanelOpen ? "md:right-[calc(320px+1rem)]" : ""
         )}
       >
-        <div className="flex flex-col gap-2 pointer-events-auto max-w-[40%]">
-          <div className="flex items-center gap-2 bg-black/30 dark:bg-surface-overlay/80 backdrop-blur-sm rounded-full p-1">
-            <IconButton 
-              aria-label="Kembali ke detail manga"
-              variant="ghost"
-              className="rounded-full shrink-0 min-h-[44px] min-w-[44px] text-white dark:text-text-primary hover:bg-white/20 dark:hover:bg-surface-hover drop-shadow-md"
-              onClick={(e) => { 
-                e.stopPropagation(); 
-                router.push(getMangaDetailHref(sourceId, mangaId));
-              }}
-            >
-              <CaretLeft size={20} weight="bold" />
-            </IconButton>
-            
-            <div className="flex flex-col truncate pr-4 text-shadow-sm">
-              <span className="text-sm font-bold text-white dark:text-text-primary truncate leading-tight drop-shadow-md">{chapterTitle}</span>
-              {pageCount && <span className="text-2xs text-white/80 dark:text-text-muted leading-tight drop-shadow-md">{pageCount} halaman</span>}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-2 items-end pointer-events-auto shrink-0">
-          <div className="flex items-center gap-2 bg-black/30 dark:bg-surface-overlay/80 backdrop-blur-sm rounded-full p-1">
+        <div className="flex w-full max-w-[400px] justify-center items-center gap-3">
+          
+          {/* Back Circle */}
+          <IconButton 
+            aria-label="Kembali ke detail manga"
+            variant="ghost"
+            className="pointer-events-auto flex h-[56px] w-[56px] shrink-0 items-center justify-center rounded-full bg-surface-glass backdrop-blur-md shadow-sm border border-border-default/30 transition-all duration-300 text-text-secondary hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/10"
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              router.push(getMangaDetailHref(sourceId, mangaId));
+            }}
+          >
+            <X size={22} weight="bold" />
+          </IconButton>
+          
+          {/* Center Pill: Prev - Ch - Next */}
+          <div className="pointer-events-auto flex h-[56px] flex-1 items-center justify-between gap-1 rounded-full bg-surface-glass backdrop-blur-md px-1.5 shadow-sm border border-border-default/30">
             <IconButton 
               aria-label="Chapter sebelumnya"
               variant="ghost"
-              className={cn("rounded-full min-h-[44px] min-w-[44px] text-white dark:text-text-primary hover:bg-white/20 dark:hover:bg-surface-hover drop-shadow-md hidden sm:flex", !prevChapterId && "opacity-50 cursor-not-allowed")}
+              className={cn("group relative flex items-center justify-center h-[44px] w-[44px] rounded-full outline-none transition-all duration-300 ease-out text-text-secondary hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/10", !prevChapterId && "opacity-30 cursor-not-allowed")}
               disabled={!prevChapterId}
               onClick={(e) => { 
                 e.stopPropagation(); 
@@ -191,26 +223,26 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
                 }
               }}
             >
-              <CaretLeft size={20} weight="bold" />
+              <CaretLeft size={20} weight="regular" />
             </IconButton>
             
             <Button 
               variant="ghost" 
               size="sm" 
-              className="rounded-full px-4 min-h-[44px] font-bold text-sm bg-white/10 dark:bg-surface-raised/50 text-white dark:text-text-primary hover:bg-white/20 dark:hover:bg-surface-hover drop-shadow-md"
+              className="rounded-full flex-1 px-2 h-[44px] font-bold text-[13px] bg-accent/15 text-accent hover:bg-accent/25 border border-accent/20 transition-all mx-1"
               onClick={(e) => { 
                 e.stopPropagation(); 
                 setIsChapterDrawerOpen(true);
               }}
             >
-              <List size={16} weight="bold" className="mr-2 hidden sm:block" />
+              <List size={16} weight="fill" className="mr-1.5" />
               Ch.
             </Button>
 
             <IconButton 
               aria-label="Chapter selanjutnya"
               variant="ghost"
-              className={cn("rounded-full min-h-[44px] min-w-[44px] text-white dark:text-text-primary hover:bg-white/20 dark:hover:bg-surface-hover drop-shadow-md hidden sm:flex", !nextChapterId && "opacity-50 cursor-not-allowed")}
+              className={cn("group relative flex items-center justify-center h-[44px] w-[44px] rounded-full outline-none transition-all duration-300 ease-out text-text-secondary hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/10", !nextChapterId && "opacity-30 cursor-not-allowed")}
               disabled={!nextChapterId}
               onClick={(e) => { 
                 e.stopPropagation(); 
@@ -221,51 +253,45 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
                 }
               }}
             >
-              <CaretRight size={20} weight="bold" />
-            </IconButton>
-
-            <div className="w-[1px] h-6 bg-white/20 dark:bg-border-glass mx-1" />
-
-            <IconButton
-              aria-label="Pengaturan pembaca"
-              variant="ghost"
-              className="rounded-full min-h-[44px] min-w-[44px] text-white dark:text-text-primary hover:bg-white/20 dark:hover:bg-surface-hover drop-shadow-md"
-              onClick={(e) => { 
-                e.stopPropagation(); 
-                if (window.innerWidth >= 768) {
-                  toggleDesktopPanel();
-                } else {
-                  setIsDrawerOpen(true); 
-                }
-              }}
-            >
-              <Gear size={20} weight="fill" />
+              <CaretRight size={20} weight="regular" />
             </IconButton>
           </div>
+
+          {/* Settings Circle */}
+          <IconButton
+            aria-label="Pengaturan pembaca"
+            variant="ghost"
+            className="pointer-events-auto flex h-[56px] w-[56px] shrink-0 items-center justify-center rounded-full bg-surface-glass backdrop-blur-md shadow-sm border border-border-default/30 transition-all duration-300 text-text-secondary hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/10"
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              if (window.innerWidth >= 768) {
+                toggleDesktopPanel();
+              } else {
+                setIsDrawerOpen(true); 
+              }
+            }}
+          >
+            <Gear size={22} weight="regular" />
+          </IconButton>
         </div>
       </div>
 
       {children}
 
       {/* Settings Drawer */}
-      {/* Settings Drawer / Desktop Panel */}
-      {isDrawerOpen && (
-        <ReaderSettingsDrawer 
-          isOpen={isDrawerOpen} 
-          onClose={() => setIsDrawerOpen(false)} 
-        />
-      )}
+      <ReaderSettingsDrawer 
+        isOpen={isDrawerOpen} 
+        onClose={() => setIsDrawerOpen(false)} 
+      />
 
-      {isChapterDrawerOpen && (
-        <ReaderChapterDrawer 
-          isOpen={isChapterDrawerOpen}
-          onClose={() => setIsChapterDrawerOpen(false)}
-          chapters={chapters}
-          currentChapterId={currentChapterId || ""}
-          sourceId={sourceId}
-          mangaId={mangaId}
-        />
-      )}
+      <ReaderChapterDrawer 
+        isOpen={isChapterDrawerOpen}
+        onClose={() => setIsChapterDrawerOpen(false)}
+        chapters={chapters}
+        currentChapterId={currentChapterId || ""}
+        sourceId={sourceId}
+        mangaId={mangaId}
+      />
     </div>
   )
 }
