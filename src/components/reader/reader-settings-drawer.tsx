@@ -1,11 +1,10 @@
-"use client"
-
 import * as React from "react"
 import { X, SlidersHorizontal, ImageSquare, Layout, Lightning, BoundingBox, ArrowsOutLineVertical } from "@phosphor-icons/react"
 import { useReaderStore } from "@/shared/store/reader-store"
 import { cn } from "@/shared/utils/cn"
 import { IconButton } from "@/components/ui/icon-button"
 import { ToggleSwitch } from "@/components/ui/toggle-switch"
+import { motion, AnimatePresence } from "motion/react"
 
 interface ReaderSettingsDrawerProps {
   isOpen: boolean;
@@ -68,16 +67,16 @@ function ReaderSettingsOption<T extends string>({
           <span className="text-sm font-bold text-text-primary">{title}</span>
         </div>
       </div>
-      <div className="flex bg-surface-base/80 dark:bg-surface-base/60 p-1 rounded-xl border border-white/5 shadow-inner">
+      <div className="flex bg-surface-raised p-1 rounded-xl border border-border-subtle shadow-inner">
         {options.map(mode => (
           <button
             key={mode.id}
             onClick={() => onChange(mode.id)}
             className={cn(
-              "flex-1 py-2 px-1 text-xs font-bold rounded-lg transition-colors",
+              "flex-1 py-2 px-1 text-xs font-bold rounded-lg transition-colors outline-none",
               value === mode.id 
                 ? "bg-surface-overlay text-text-primary ring-1 ring-border-default/50" 
-                : "text-text-primary/70 hover:text-text-primary hover:bg-surface-raised/50"
+                : "text-text-secondary hover:text-text-primary hover:bg-surface-hover"
             )}
           >
             {mode.label}
@@ -92,153 +91,163 @@ export function ReaderSettingsDrawer({ isOpen, onClose }: ReaderSettingsDrawerPr
   const { preferences, updatePreferences, isDesktopPanelOpen, toggleDesktopPanel } = useReaderStore()
 
   return (
-    <>
-      {/* Backdrop */}
-      <div 
-        className={cn( "fixed inset-0 z-[60] bg-black/30 backdrop-blur-sm transition-opacity duration-150 md:hidden", isOpen ? "opacity-100" : "opacity-0 pointer-events-none" )}
-        onClick={onClose}
-      />
-      
-      {/* Drawer */}
-      <div 
-        className={cn( "fixed inset-x-0 bottom-0 max-h-[85vh] md:max-h-screen md:inset-y-0 md:left-auto md:right-0 md:w-80 md:bottom-auto bg-surface-base/30 backdrop-blur-2xl flex flex-col z-[70]", "transition-transform duration-150 ease-out rounded-t-3xl md:rounded-none", isOpen ? "translate-y-0 md:translate-x-0" : "translate-y-full md:translate-x-full md:translate-y-0" )}
-      >
-        <div className="flex h-[calc(var(--mobile-header-height)+var(--safe-top))] items-center justify-between px-6 shrink-0 pt-[var(--safe-top)] border-b border-white/5">
-          <h2 className="text-base font-bold text-text-primary flex items-center gap-2">
-            <SlidersHorizontal size={18} className="text-accent" weight="bold" />
-            Pengaturan Pembaca
-          </h2>
-          <div className="bg-surface-raised/60 dark:bg-surface-raised/50 backdrop-blur-xl --glass rounded-full p-1 -sm shrink-0">
-            <IconButton
-              aria-label="Tutup panel"
-              variant="ghost"
-              size="sm"
-              className="rounded-full min-h-[32px] min-w-[32px] hover:bg-black/5 dark:hover:bg-surface-hover transition-colors text-text-primary"
-              onClick={() => {
-                onClose();
-                if (window.innerWidth >= 768 && isDesktopPanelOpen) {
-                  toggleDesktopPanel();
-                }
-              }}
-            >
-              <X size={16} weight="bold" />
-            </IconButton>
-          </div>
-        </div>
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm md:hidden"
+            onClick={onClose}
+          />
+          
+          {/* Drawer */}
+          <motion.div 
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+            className="fixed inset-x-0 bottom-0 z-[70] max-h-[85vh] md:max-h-screen md:inset-y-0 md:left-auto md:right-0 md:w-80 md:bottom-auto bg-surface-base border-t md:border-t-0 md:border-l border-border-subtle flex flex-col rounded-t-3xl md:rounded-none shadow-xl"
+          >
+            <div className="flex h-[calc(var(--mobile-header-height)+var(--safe-top))] items-center justify-between px-5 shrink-0 pt-[var(--safe-top)] bg-surface-raised border-b border-border-subtle">
+              <h2 className="text-base font-bold text-text-primary flex items-center gap-2">
+                <SlidersHorizontal size={20} className="text-accent" weight="bold" />
+                Pengaturan Pembaca
+              </h2>
+              <IconButton
+                aria-label="Tutup panel"
+                variant="ghost"
+                size="sm"
+                className="rounded-full bg-surface-glass border border-border-subtle hover:bg-surface-hover text-text-primary transition-colors"
+                onClick={() => {
+                  onClose();
+                  if (window.innerWidth >= 768 && isDesktopPanelOpen) {
+                    toggleDesktopPanel();
+                  }
+                }}
+              >
+                <X size={16} weight="bold" />
+              </IconButton>
+            </div>
 
-        <div className="flex-1 flex flex-col min-h-0">
-          {/* Settings Area (Scrollable on small height) */}
-          <div className="flex-1 p-5 space-y-6 overflow-y-auto overscroll-contain custom-scrollbar pb-[calc(24px+var(--safe-bottom))]">
-            
-            {/* Tampilan */}
-            <div className="space-y-3">
-              <h3 className="text-xs font-bold text-text-primary/90 px-2 uppercase tracking-wider drop-shadow-sm">Tampilan</h3>
-              
-              <div className="bg-surface-raised/60 dark:bg-surface-raised/50 rounded-2xl border border-white/10 overflow-hidden flex flex-col divide-y divide-white/10">
-                {/* Warna Latar */}
-                <div className="p-4 flex flex-col gap-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <ImageSquare size={18} className="text-text-primary/80" weight="fill" />
-                      <span className="text-sm font-bold text-text-primary">Warna Latar</span>
+            <div className="flex-1 flex flex-col min-h-0">
+              {/* Settings Area (Scrollable on small height) */}
+              <div className="flex-1 p-5 space-y-6 overflow-y-auto overscroll-contain custom-scrollbar pb-[calc(24px+var(--safe-bottom))]">
+                
+                {/* Tampilan */}
+                <div className="space-y-3">
+                  <h3 className="text-xs font-bold text-text-secondary px-2 uppercase tracking-wider">Tampilan</h3>
+                  
+                  <div className="bg-surface-glass rounded-2xl border border-border-subtle overflow-hidden flex flex-col divide-y divide-border-subtle/50">
+                    {/* Warna Latar */}
+                    <div className="p-4 flex flex-col gap-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <ImageSquare size={18} className="text-text-secondary" weight="fill" />
+                          <span className="text-sm font-bold text-text-primary">Warna Latar</span>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        {BACKGROUNDS.map(bg => (
+                          <button
+                            key={bg.value}
+                            onClick={() => updatePreferences({ background: bg.value })}
+                            aria-label={`Latar ${bg.name}`}
+                            className={cn(
+                              "relative size-12 rounded-full border shadow-sm transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring",
+                              bg.border,
+                              preferences.background === bg.value ? "ring-2 ring-accent ring-offset-2 ring-offset-surface-base scale-105" : ""
+                            )}
+                            style={{ backgroundColor: bg.color }}
+                            title={bg.name}
+                          />
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex gap-3">
-                    {BACKGROUNDS.map(bg => (
-                      <button
-                        key={bg.value}
-                        onClick={() => updatePreferences({ background: bg.value })}
-                        aria-label={`Latar ${bg.name}`}
-                        className={cn(
-                          "relative size-12 rounded-full border shadow-sm transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring",
-                          bg.border,
-                          preferences.background === bg.value ? "ring-2 ring-accent ring-offset-2 ring-offset-surface-base scale-105" : ""
-                        )}
-                        style={{ backgroundColor: bg.color }}
-                        title={bg.name}
-                      />
-                    ))}
+
+                    <ReaderSettingsOption
+                      icon={<ArrowsOutLineVertical size={18} className="text-text-secondary" weight="fill" />}
+                      title="Ukuran Komik"
+                      options={IMAGE_FITS}
+                      value={preferences.imageFit}
+                      onChange={(val) => updatePreferences({ imageFit: val })}
+                    />
+
+                    <ReaderSettingsOption
+                      icon={<BoundingBox size={18} className="text-text-secondary" weight="fill" />}
+                      title="Jarak Antar Halaman"
+                      options={PAGE_GAPS}
+                      value={preferences.pageGap}
+                      onChange={(val) => updatePreferences({ pageGap: val })}
+                    />
                   </div>
                 </div>
 
-                <ReaderSettingsOption
-                  icon={<ArrowsOutLineVertical size={18} className="text-text-primary/80" weight="fill" />}
-                  title="Ukuran Komik"
-                  options={IMAGE_FITS}
-                  value={preferences.imageFit}
-                  onChange={(val) => updatePreferences({ imageFit: val })}
-                />
+                {/* Perilaku */}
+                <div className="space-y-3">
+                  <h3 className="text-xs font-bold text-text-secondary px-2 uppercase tracking-wider">Perilaku</h3>
+                  
+                  <div className="bg-surface-glass rounded-2xl border border-border-subtle overflow-hidden flex flex-col divide-y divide-border-subtle/50">
+                    <ReaderSettingsOption
+                      icon={<Layout size={18} className="text-text-secondary" weight="fill" />}
+                      title="Arah Baca Paged"
+                      options={READING_DIRECTIONS}
+                      value={preferences.readingDirection}
+                      onChange={(val) => updatePreferences({ readingDirection: val })}
+                    />
 
-                <ReaderSettingsOption
-                  icon={<BoundingBox size={18} className="text-text-primary/80" weight="fill" />}
-                  title="Jarak Antar Halaman"
-                  options={PAGE_GAPS}
-                  value={preferences.pageGap}
-                  onChange={(val) => updatePreferences({ pageGap: val })}
-                />
+                    <ReaderSettingsOption
+                      icon={<Layout size={18} className="text-text-secondary" weight="fill" />}
+                      title="Menu Navigasi"
+                      options={TOOLBAR_BEHAVIORS}
+                      value={preferences.toolbarBehavior}
+                      onChange={(val) => updatePreferences({ toolbarBehavior: val })}
+                    />
+
+                    <ReaderSettingsOption
+                      icon={<Lightning size={18} className="text-text-secondary" weight="fill" />}
+                      title="Kecepatan Muat"
+                      options={PRELOAD_INTENSITIES}
+                      value={preferences.preloadIntensity}
+                      onChange={(val) => updatePreferences({ preloadIntensity: val })}
+                    />
+                  </div>
+                </div>
+
+                {/* Fitur Tambahan */}
+                <div className="space-y-3">
+                  <h3 className="text-xs font-bold text-text-secondary px-2 uppercase tracking-wider">Fitur Tambahan</h3>
+                  
+                  <div className="bg-surface-glass rounded-2xl border border-border-subtle overflow-hidden flex flex-col divide-y divide-border-subtle/50">
+                    {/* Progress Halaman */}
+                    <label className="flex items-center justify-between p-4 cursor-pointer transition-colors hover:bg-surface-hover">
+                      <span className="text-sm font-bold text-text-primary">Progress Halaman</span>
+                      <ToggleSwitch 
+                        checked={preferences.showPageProgress} 
+                        onCheckedChange={(checked) => updatePreferences({ showPageProgress: checked })} 
+                      />
+                    </label>
+
+                    {/* Layar Selalu Menyala */}
+                    <label className="flex items-center justify-between p-4 cursor-pointer transition-colors hover:bg-surface-hover">
+                      <span className="text-sm font-bold text-text-primary">Layar Selalu Menyala</span>
+                      <ToggleSwitch 
+                        checked={preferences.keepScreenAwake ?? true} 
+                        onCheckedChange={(checked) => updatePreferences({ keepScreenAwake: checked })} 
+                      />
+                    </label>
+                  </div>
+                </div>
+
               </div>
+
             </div>
-
-            {/* Perilaku */}
-            <div className="space-y-3">
-              <h3 className="text-xs font-bold text-text-primary/90 px-2 uppercase tracking-wider drop-shadow-sm">Perilaku</h3>
-              
-              <div className="bg-surface-raised/60 dark:bg-surface-raised/50 rounded-2xl border border-white/10 overflow-hidden flex flex-col divide-y divide-white/10">
-                <ReaderSettingsOption
-                  icon={<Layout size={18} className="text-text-primary/80" weight="fill" />}
-                  title="Arah Baca Paged"
-                  options={READING_DIRECTIONS}
-                  value={preferences.readingDirection}
-                  onChange={(val) => updatePreferences({ readingDirection: val })}
-                />
-
-                <ReaderSettingsOption
-                  icon={<Layout size={18} className="text-text-primary/80" weight="fill" />}
-                  title="Menu Navigasi"
-                  options={TOOLBAR_BEHAVIORS}
-                  value={preferences.toolbarBehavior}
-                  onChange={(val) => updatePreferences({ toolbarBehavior: val })}
-                />
-
-                <ReaderSettingsOption
-                  icon={<Lightning size={18} className="text-text-primary/80" weight="fill" />}
-                  title="Kecepatan Muat"
-                  options={PRELOAD_INTENSITIES}
-                  value={preferences.preloadIntensity}
-                  onChange={(val) => updatePreferences({ preloadIntensity: val })}
-                />
-              </div>
-            </div>
-
-            {/* Fitur Tambahan */}
-            <div className="space-y-3">
-              <h3 className="text-xs font-bold text-text-primary/90 px-2 uppercase tracking-wider drop-shadow-sm">Fitur Tambahan</h3>
-              
-              <div className="bg-surface-raised/60 dark:bg-surface-raised/50 rounded-2xl border border-white/10 overflow-hidden flex flex-col divide-y divide-white/10">
-                {/* Progress Halaman */}
-                <label className="flex items-center justify-between p-4 cursor-pointer transition-colors hover:bg-surface-raised/50">
-                  <span className="text-sm font-bold text-text-primary">Progress Halaman</span>
-                  <ToggleSwitch 
-                    checked={preferences.showPageProgress} 
-                    onCheckedChange={(checked) => updatePreferences({ showPageProgress: checked })} 
-                  />
-                </label>
-
-                {/* Layar Selalu Menyala */}
-                <label className="flex items-center justify-between p-4 cursor-pointer transition-colors hover:bg-surface-raised/50">
-                  <span className="text-sm font-bold text-text-primary">Layar Selalu Menyala</span>
-                  <ToggleSwitch 
-                    checked={preferences.keepScreenAwake ?? true} 
-                    onCheckedChange={(checked) => updatePreferences({ keepScreenAwake: checked })} 
-                  />
-                </label>
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-      </div>
-    </>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   )
 }
