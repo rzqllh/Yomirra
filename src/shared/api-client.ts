@@ -75,11 +75,36 @@ class ApiClient {
     })) as Promise<SearchResponse>;
   }
 
-  searchGlobal(query: string, sourceIds: string[], isNsfwFiltered: boolean = false) {
+  searchGlobal(query: string, sourceIds: string[], isNsfwFiltered: boolean = false, filters?: Record<string, string | string[]>) {
     let url = `/api/sources/search?q=${encodeURIComponent(query)}&sources=${sourceIds.join(",")}`;
+    
+    const finalFilters = { ...filters };
+    
     if (isNsfwFiltered) {
-      url += `&genre[]=-adult&genre[]=-mature&genre[]=-smut&genre[]=-nsfw&genre[]=-ecchi`;
+      const nsfwTags = ["-adult", "-mature", "-smut", "-nsfw", "-ecchi"];
+      const existingGenres = finalFilters["genre[]"];
+      
+      if (Array.isArray(existingGenres)) {
+        finalFilters["genre[]"] = [...existingGenres, ...nsfwTags];
+      } else if (typeof existingGenres === "string") {
+        finalFilters["genre[]"] = [existingGenres, ...nsfwTags];
+      } else {
+        finalFilters["genre[]"] = nsfwTags;
+      }
     }
+
+    if (Object.keys(finalFilters).length > 0) {
+      const sp = new URLSearchParams();
+      Object.entries(finalFilters).forEach(([k, v]) => {
+        if (Array.isArray(v)) {
+          v.forEach(val => sp.append(k, val));
+        } else if (v !== undefined) {
+          sp.set(k, v);
+        }
+      });
+      url += `&${sp.toString()}`;
+    }
+    
     return this.fetcher<import("@/app/api/sources/search/route").GlobalSearchResponse>(url);
   }
 

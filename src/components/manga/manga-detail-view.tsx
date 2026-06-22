@@ -11,6 +11,7 @@ import { useHistoryStore } from "@/shared/store/history-store";
 import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { ChapterRow } from "@/components/manga/chapter-row";
+import { MangaRating } from "@/components/manga/manga-rating";
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useRef } from "react";
 import { useSearchParams } from "next/navigation";
@@ -176,8 +177,9 @@ export function MangaDetailView({
           <div className="flex flex-col flex-1 gap-1.5 justify-center py-1">
             <h1 className="text-xl font-bold leading-snug line-clamp-3 text-shadow-sm">{detail.title}</h1>
             <div className="text-sm font-medium text-text-muted">{detail.author}</div>
-            <div className="mt-1">
+            <div className="mt-1 flex items-center gap-2 flex-wrap">
               <span className="text-text-primary bg-surface-overlay border border-border-default px-1.5 py-0.5 rounded-sm text-2xs uppercase tracking-wider font-bold">{detail.status}</span>
+              <MangaRating sourceId={sourceId} mangaId={mangaId} />
             </div>
           </div>
         </div>
@@ -218,6 +220,8 @@ export function MangaDetailView({
                 <span>{detail.author}</span>
                 <span>•</span>
                 <span className="text-text-primary bg-surface-overlay px-2 py-0.5 rounded-sm text-xs uppercase tracking-wider font-bold">{detail.status}</span>
+                <span>•</span>
+                <MangaRating sourceId={sourceId} mangaId={mangaId} />
               </div>
             </div>
 

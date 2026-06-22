@@ -11,7 +11,10 @@ export function YomirraBottomDock() {
   const pathname = usePathname()
 
   return (
-    <nav className="md:hidden fixed bottom-6 left-0 w-full z-[var(--z-sticky)] pointer-events-none px-4">
+    <nav 
+      className="md:hidden fixed bottom-6 left-0 w-full z-[var(--z-sticky)] pointer-events-none px-4"
+      style={{ viewTransitionName: 'persistent-bottom-nav' }}
+    >
       <div className="mx-auto flex w-fit max-w-full items-center justify-center gap-3">
         {/* Ultra-modern Expanding Floating Pill */}
         <div className="pointer-events-auto flex h-[56px] w-fit items-center justify-between gap-1 rounded-full bg-surface-glass backdrop-blur-md px-1.5 shadow-sm --glass border border-border-default/30">

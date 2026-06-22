@@ -16,6 +16,7 @@ export type LibraryItem = {
   lastReadChapterId?: string;
   lastReadChapterTitle?: string;
   lastReadAt?: string;
+  userRating?: number; // 1-10 rating
 };
 
 interface LibraryState {

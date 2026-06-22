@@ -50,6 +50,7 @@ export function TopNav() {
       
       <div 
         className={cn( "hidden md:flex fixed top-0 left-0 right-0 z-40 w-full transition-all duration-500 pointer-events-none h-[72px]", isScrolled ? "items-center px-4 md:px-8" : "px-0 bg-surface-glass backdrop-blur-3xl -b --glass" )}
+        style={{ viewTransitionName: 'persistent-top-nav' }}
       >
       <motion.div 
         layout
