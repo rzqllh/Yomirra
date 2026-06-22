@@ -13,8 +13,8 @@ import { EmptyState } from "@/components/states/empty-state";
 import { Button } from "@/components/ui/button";
 import { useMounted } from "@/shared/hooks/use-mounted";
 import { getLibraryHref, getReaderHref, getMangaDetailHref } from "@/shared/lib/routes";
-import { BookBookmark, Compass, Clock, Play, SortDescending, SortAscending, CaretRight, CaretDown } from "@phosphor-icons/react";
-import { motion } from "motion/react";
+import { BookBookmark, Compass, Clock, Play, SortDescending, SortAscending, CaretRight, CaretDown, List, SquaresFour } from "@phosphor-icons/react";
+import { motion, AnimatePresence } from "motion/react";
 import { DirectionalTransition } from "@/components/ui/directional-transition";
 import { SearchInput } from "@/components/ui/search-input";
 import { YomirraSurface } from "@/components/ui/yomirra-layout";
@@ -30,6 +30,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { CustomSelect } from "@/components/ui/custom-select";
+import { cn } from "@/shared/utils/cn";
 function getRelativeTime(dateString?: string): string {
   if (!dateString) return "";
   const date = new Date(dateString);
@@ -56,6 +57,7 @@ export default function BookmarkPage() {
   const [searchQuery, setSearchQuery] = React.useState("");
   const [sortOrder, setSortOrder] = React.useState<"desc" | "asc">("desc");
   const [sortBy, setSortBy] = React.useState<"updatedAt" | "title">("updatedAt");
+  const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid");
 
   const filteredAndSortedLibraryItems = React.useMemo(() => {
     let result = [...libraryItems];
@@ -344,6 +346,25 @@ export default function BookmarkPage() {
                           >
                             {sortOrder === "desc" ? <SortDescending size={20} weight="bold" /> : <SortAscending size={20} weight="bold" />}
                           </button>
+                          
+                          <div className="hidden sm:flex bg-surface-glass backdrop-blur-md rounded-full p-1 border border-border-subtle shadow-sm h-[44px]">
+                            <button
+                              type="button"
+                              onClick={() => setViewMode("grid")}
+                              className={cn("flex items-center justify-center w-10 h-full rounded-full transition-colors", viewMode === "grid" ? "bg-accent text-accent-on" : "text-text-muted hover:text-text-primary")}
+                              aria-label="Grid view"
+                            >
+                              <SquaresFour size={18} weight={viewMode === "grid" ? "fill" : "bold"} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setViewMode("list")}
+                              className={cn("flex items-center justify-center w-10 h-full rounded-full transition-colors", viewMode === "list" ? "bg-accent text-accent-on" : "text-text-muted hover:text-text-primary")}
+                              aria-label="List view"
+                            >
+                              <List size={18} weight={viewMode === "list" ? "fill" : "bold"} />
+                            </button>
+                          </div>
                         </div>
                       </div>
 
@@ -352,22 +373,32 @@ export default function BookmarkPage() {
                           <span className="font-medium">Tidak ada hasil yang cocok dengan &quot;{searchQuery}&quot;</span>
                         </div>
                       ) : (
-                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-5 max-h-[70vh] overflow-y-auto pr-2 -mr-2 [scrollbar-width:thin]">
-                          {filteredAndSortedLibraryItems.map((item, index) => (
-                            <MangaCard
-                              key={`${item.sourceId}::${item.mangaId}`}
-                              manga={{
-                                id: item.mangaId,
-                                title: item.title,
-                                coverUrl: item.coverUrl || "",
-                                status: item.status,
-                              }}
-                              sourceId={item.sourceId}
-                              variant="shelf"
-                              priority={index < 6}
-                            />
-                          ))}
-                        </div>
+                        <motion.div 
+                          layout 
+                          className={cn(
+                            viewMode === "grid" 
+                              ? "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-5" 
+                              : "flex flex-col gap-3",
+                            "max-h-[70vh] overflow-y-auto pr-2 -mr-2 [scrollbar-width:thin]"
+                          )}
+                        >
+                          <AnimatePresence>
+                            {filteredAndSortedLibraryItems.map((item, index) => (
+                              <MangaCard
+                                key={`${item.sourceId}::${item.mangaId}`}
+                                manga={{
+                                  id: item.mangaId,
+                                  title: item.title,
+                                  coverUrl: item.coverUrl || "",
+                                  status: item.status,
+                                }}
+                                sourceId={item.sourceId}
+                                variant={viewMode === "grid" ? "shelf" : "history"}
+                                priority={index < 6}
+                              />
+                            ))}
+                          </AnimatePresence>
+                        </motion.div>
                       )}
                     </>
                   )}

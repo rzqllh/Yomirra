@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
 import { MangaCard } from "@/components/manga/manga-card";
 import { MangaCardSkeleton } from "@/components/skeletons/manga-card-skeleton";
-import { MagnifyingGlass, CircleNotch, SmileySad, X, Funnel, Books, Clock } from "@phosphor-icons/react";
+import { MagnifyingGlass, CircleNotch, SmileySad, X, Funnel, Books, Clock, SquaresFour, List } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/states/empty-state";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/shared/utils/cn";
@@ -62,6 +62,7 @@ function LibraryContent() {
   const [excludedGenres, setExcludedGenres] = React.useState<string[]>([]);
   const [selectedFormats, setSelectedFormats] = React.useState<string[]>([]);
   const [selectedStatuses, setSelectedStatuses] = React.useState<string[]>([]);
+  const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid");
   
   const deferredSearchInput = React.useDeferredValue(searchInput);
 
@@ -270,6 +271,25 @@ function LibraryContent() {
                 <Funnel size={16} weight={activeFilterCount > 0 ? "fill" : "bold"} />
                 Filter {activeFilterCount > 0 && `(${activeFilterCount})`}
               </Button>
+
+              <div className="hidden sm:flex bg-surface-glass backdrop-blur-md rounded-full p-1 border border-border-subtle shadow-sm h-[44px]">
+                <button
+                  type="button"
+                  onClick={() => setViewMode("grid")}
+                  className={cn("flex items-center justify-center w-10 h-full rounded-full transition-colors", viewMode === "grid" ? "bg-accent text-accent-on" : "text-text-muted hover:text-text-primary")}
+                  aria-label="Grid view"
+                >
+                  <SquaresFour size={18} weight={viewMode === "grid" ? "fill" : "bold"} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode("list")}
+                  className={cn("flex items-center justify-center w-10 h-full rounded-full transition-colors", viewMode === "list" ? "bg-accent text-accent-on" : "text-text-muted hover:text-text-primary")}
+                  aria-label="List view"
+                >
+                  <List size={18} weight={viewMode === "list" ? "fill" : "bold"} />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -359,11 +379,14 @@ function LibraryContent() {
           )}
           </AnimatePresence>
 
-          {/* Catalog Content Grid */}
           {isLoading ? (
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4 md:gap-5">
+            <div className={cn(
+              viewMode === "grid" 
+                ? "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4 md:gap-5"
+                : "flex flex-col gap-3"
+            )}>
               {Array.from({ length: 12 }).map((_, i) => (
-                <MangaCardSkeleton key={i} variant="shelf" />
+                <MangaCardSkeleton key={i} variant={viewMode === "grid" ? "shelf" : "history"} />
               ))}
             </div>
           ) : isError ? (
@@ -387,14 +410,19 @@ function LibraryContent() {
           ) : (
             <>
               {/* Opacity transition when fetching next/prev pages */}
-              <div className={cn(
-                "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4 md:gap-5 transition-opacity duration-200",
+              <motion.div layout className={cn(
+                viewMode === "grid" 
+                  ? "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4 md:gap-5"
+                  : "flex flex-col gap-3",
+                "transition-opacity duration-200",
                 isFetching ? "opacity-50 pointer-events-none" : "opacity-100"
               )}>
-                {mangas.map((manga) => (
-                  <MangaCard key={manga.id} manga={manga} sourceId={activeSourceId} variant="shelf" />
-                ))}
-              </div>
+                <AnimatePresence>
+                  {mangas.map((manga) => (
+                    <MangaCard key={manga.id} manga={manga} sourceId={activeSourceId} variant={viewMode === "grid" ? "shelf" : "history"} />
+                  ))}
+                </AnimatePresence>
+              </motion.div>
 
               {/* Advanced Pagination */}
               <div className="mt-12 py-4">

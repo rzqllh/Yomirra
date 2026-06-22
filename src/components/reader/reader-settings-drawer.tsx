@@ -104,13 +104,12 @@ export function ReaderSettingsDrawer({ isOpen, onClose }: ReaderSettingsDrawerPr
             onClick={onClose}
           />
           
-          {/* Drawer */}
           <motion.div 
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
+            initial={{ opacity: 0, y: "100%" }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: "100%" }}
             transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-            className="fixed inset-x-0 bottom-0 z-[70] max-h-[85vh] md:max-h-screen md:inset-y-0 md:left-auto md:right-0 md:w-80 md:bottom-auto bg-surface-base border-t md:border-t-0 md:border-l border-border-subtle flex flex-col rounded-t-3xl md:rounded-none shadow-xl"
+            className="fixed inset-x-0 bottom-0 z-[70] max-h-[85vh] md:max-h-screen md:inset-y-0 md:left-auto md:right-0 md:w-80 md:bottom-auto bg-surface-base border-t md:border-t-0 md:border-l border-border-subtle flex flex-col rounded-t-[24px] md:rounded-none overflow-hidden shadow-xl"
           >
             <div className="flex h-[calc(var(--mobile-header-height)+var(--safe-top))] items-center justify-between px-5 shrink-0 pt-[var(--safe-top)] bg-surface-raised border-b border-border-subtle">
               <h2 className="text-base font-bold text-text-primary flex items-center gap-2">
@@ -142,31 +141,6 @@ export function ReaderSettingsDrawer({ isOpen, onClose }: ReaderSettingsDrawerPr
                   <h3 className="text-xs font-bold text-text-secondary px-2 uppercase tracking-wider">Tampilan</h3>
                   
                   <div className="bg-surface-glass rounded-2xl border border-border-subtle overflow-hidden flex flex-col divide-y divide-border-subtle/50">
-                    {/* Warna Latar */}
-                    <div className="p-4 flex flex-col gap-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2.5">
-                          <ImageSquare size={18} className="text-text-secondary" weight="fill" />
-                          <span className="text-sm font-bold text-text-primary">Warna Latar</span>
-                        </div>
-                      </div>
-                      <div className="flex gap-3">
-                        {BACKGROUNDS.map(bg => (
-                          <button
-                            key={bg.value}
-                            onClick={() => updatePreferences({ background: bg.value })}
-                            aria-label={`Latar ${bg.name}`}
-                            className={cn(
-                              "relative size-12 rounded-full border shadow-sm transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring",
-                              bg.border,
-                              preferences.background === bg.value ? "ring-2 ring-accent ring-offset-2 ring-offset-surface-base scale-105" : ""
-                            )}
-                            style={{ backgroundColor: bg.color }}
-                            title={bg.name}
-                          />
-                        ))}
-                      </div>
-                    </div>
 
                     <ReaderSettingsOption
                       icon={<ArrowsOutLineVertical size={18} className="text-text-secondary" weight="fill" />}

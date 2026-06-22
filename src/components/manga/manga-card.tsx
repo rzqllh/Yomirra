@@ -132,7 +132,10 @@ export function MangaCard({
       : getMangaDetailHref(sourceId, manga.id, fullPath);
 
     return (
-      <div className="group relative flex items-center gap-4 rounded-xl bg-surface-glass backdrop-blur-sm p-3 --subtle/50 transition-all duration-300 hover:bg-surface-overlay/80 hover:-sm overflow-hidden">
+      <motion.article 
+        layout="position"
+        className="group relative flex items-center gap-4 rounded-xl bg-surface-glass backdrop-blur-sm p-3 --subtle/50 transition-all duration-300 hover:bg-surface-overlay/80 hover:-sm overflow-hidden"
+      >
         <Link 
           href={targetHref} 
           prefetch={false} 
@@ -195,7 +198,7 @@ export function MangaCard({
             </Link>
           </div>
         )}
-      </div>
+      </motion.article>
     );
   }
 
@@ -270,6 +273,7 @@ export function MangaCard({
   // --- SHELF VARIANT ---
   return (
     <motion.article
+      layout="position"
       whileHover={{ y: -4 }}
       whileTap={{ scale: 0.98 }}
       transition={{ ease: "easeOut", duration: 0.2 }}

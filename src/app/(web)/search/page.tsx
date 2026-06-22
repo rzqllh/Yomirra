@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { useSettingsStore } from "@/shared/store/settings-store";
 
 import { YomirraSearchField } from "@/components/ui/yomirra-search-field";
+import { SearchFilterDrawer } from "@/components/search/search-filter-drawer";
 import { DirectionalTransition } from "@/components/ui/directional-transition";
 import { useRouter } from "next/navigation";
 
@@ -77,10 +78,19 @@ function SearchContent() {
   };
 
   const isNsfwFiltered = useSettingsStore((state) => state.hideNsfw);
+  
+  const genres = searchParams?.get("genres")?.split(",").filter(Boolean) || [];
+  const status = searchParams?.get("status") || "";
+  const sort = searchParams?.get("sort") || "";
+
+  const filters: Record<string, string | string[]> = {};
+  if (genres.length > 0) filters["genre[]"] = genres;
+  if (status) filters["status"] = status;
+  if (sort) filters["sort"] = sort;
 
   const { data: searchResponse, isLoading, error } = useQuery({
-    queryKey: ["searchGlobal", query, selectedSources, isNsfwFiltered],
-    queryFn: () => apiClient.searchGlobal(query, selectedSources, isNsfwFiltered),
+    queryKey: ["searchGlobal", query, selectedSources, isNsfwFiltered, filters],
+    queryFn: () => apiClient.searchGlobal(query, selectedSources, isNsfwFiltered, filters),
     enabled: query.length > 0 && selectedSources.length > 0,
   });
 
@@ -97,15 +107,16 @@ function SearchContent() {
           />
         </div>
 
-        <div className="mb-6">
+        <div className="mb-6 flex gap-2">
           <YomirraSearchField 
             value={localQuery}
             onChange={(e) => setLocalQuery(e.target.value)}
             onSubmitAction={handleSearch}
             placeholder="Cari komik favoritmu..."
-            containerClassName="w-full h-14"
+            containerClassName="flex-1 h-14"
             autoFocus
           />
+          <SearchFilterDrawer />
         </div>
 
         {/* Source Filter Chips */}

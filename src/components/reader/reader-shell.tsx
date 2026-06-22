@@ -3,8 +3,9 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { useReaderStore } from "@/shared/store/reader-store"
-import { CaretLeft, Gear, CaretRight, List, X } from "@phosphor-icons/react"
+import { CaretLeft, Gear, CaretRight, List, X, CaretUp } from "@phosphor-icons/react"
 import { cn } from "@/shared/utils/cn"
+import { motion } from "motion/react"
 
 import { getMangaDetailHref, getReaderHref } from "@/shared/lib/routes"
 import { Chapter } from "@/shared/types/source"
@@ -39,6 +40,7 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
   const { preferences, isOverlayVisible, isDesktopPanelOpen, toggleDesktopPanel, toggleOverlay, setOverlayVisible } = useReaderStore()
   const [isDrawerOpen, setIsDrawerOpen] = React.useState(false)
   const [isChapterDrawerOpen, setIsChapterDrawerOpen] = React.useState(false)
+  const [showBackToTop, setShowBackToTop] = React.useState(false)
 
   const chapterIndex = chapters?.findIndex(c => c.id === currentChapterId) ?? -1;
   let prevChapterId: string | undefined;
@@ -64,7 +66,6 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
 
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore if typing in an input
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       
       if (e.key === 'Escape' || e.key === 'm' || e.key === 'M') {
@@ -123,6 +124,8 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
           const currentScrollY = window.scrollY;
           const diff = currentScrollY - lastScrollY;
           
+          setShowBackToTop(currentScrollY > 1200);
+
           const isAtBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 300;
           
           if (isAtBottom) {
@@ -192,7 +195,7 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
           isDesktopPanelOpen ? "md:right-[calc(320px+1rem)]" : ""
         )}
       >
-        <div className="flex w-full max-w-[400px] justify-center items-center gap-3">
+        <div className="flex w-full max-w-[400px] justify-center items-end gap-3">
           
           {/* Back Circle */}
           <IconButton 
@@ -257,22 +260,56 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
             </IconButton>
           </div>
 
-          {/* Settings Circle */}
-          <IconButton
-            aria-label="Pengaturan pembaca"
-            variant="ghost"
-            className="pointer-events-auto flex h-[56px] w-[56px] shrink-0 items-center justify-center rounded-full bg-surface-glass backdrop-blur-md shadow-sm border border-border-default/30 transition-all duration-300 text-text-secondary hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/10"
-            onClick={(e) => { 
-              e.stopPropagation(); 
-              if (window.innerWidth >= 768) {
-                toggleDesktopPanel();
-              } else {
-                setIsDrawerOpen(true); 
-              }
-            }}
-          >
-            <Gear size={22} weight="regular" />
-          </IconButton>
+          {/* Right Controls: Settings Circle & Back to Top */}
+          <div className="flex flex-col gap-3 pointer-events-none items-center">
+            {showBackToTop && (
+              <motion.button
+                initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.8, y: 10 }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className="pointer-events-auto flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-full bg-surface-glass backdrop-blur-md shadow-sm border border-border-default/30 text-text-secondary hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+                aria-label="Kembali ke atas"
+              >
+                <CaretUp size={20} weight="bold" />
+              </motion.button>
+            )}
+
+            <IconButton
+              aria-label="Pengaturan pembaca"
+              className="pointer-events-auto flex h-[56px] w-[56px] shrink-0 items-center justify-center rounded-full bg-surface-glass backdrop-blur-md shadow-sm border border-border-default/30 transition-all duration-300 text-text-secondary hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/10"
+              onClick={(e) => { 
+                e.stopPropagation(); 
+                if (window.innerWidth >= 768) {
+                  toggleDesktopPanel();
+                } else {
+                  setIsDrawerOpen(true); 
+                }
+              }}
+            >
+              <Gear size={22} weight="regular" />
+            </IconButton>
+            
+            {/* Opsi Revert untuk Settings */}
+            {/* <IconButton
+              aria-label="Pengaturan pembaca"
+              variant="ghost"
+              className="pointer-events-auto flex h-[56px] w-[56px] shrink-0 items-center justify-center rounded-full bg-surface-glass backdrop-blur-md shadow-sm border border-border-default/30 transition-all duration-300 hover:bg-black/5 dark:hover:bg-white/10"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (window.innerWidth >= 768) {
+                  toggleDesktopPanel();
+                } else {
+                  setIsDrawerOpen(true);
+                }
+              }}
+            >
+              <Gear size={22} weight="regular" className="text-text-secondary hover:text-text-primary transition-colors" />
+            </IconButton> */}
+          </div>
         </div>
       </div>
 
