@@ -1,9 +1,9 @@
 import { Metadata } from "next";
 import { sourceManager } from "@/server/lib/sources/source-manager";
-import { swrCache, CACHE_TTL } from "@/server/lib/cache/strategies";
+import { withCache, CACHE_TTL } from "@/server/lib/cache/redis-cache";
 import { MangaDetailView } from "@/components/manga/manga-detail-view";
 import { ErrorState } from "@/components/states/error-state";
-import { YomirraPageHeader } from "@/components/app/yomirra-header";
+import { YomirraPageHeader } from "@/components/app/header";
 
 export async function generateMetadata({ 
   params 
@@ -42,8 +42,8 @@ export default async function MangaDetailPage({
     
     // Fetch data directly on the server with cache!
     [detail, chapters] = await Promise.all([
-      swrCache(`source:${sourceId}:manga:${mangaId}`, () => source.getDetail(mangaId), CACHE_TTL.DETAIL),
-      swrCache(`source:${sourceId}:chapters:${mangaId}`, () => source.getChapters(mangaId), CACHE_TTL.CHAPTERS),
+      withCache(`source:${sourceId}:manga:${mangaId}`, () => source.getDetail(mangaId), CACHE_TTL.DETAIL),
+      withCache(`source:${sourceId}:chapters:${mangaId}`, () => source.getChapters(mangaId), CACHE_TTL.CHAPTERS),
     ]);
   } catch (error) {
     console.error("Failed to load manga details", error);

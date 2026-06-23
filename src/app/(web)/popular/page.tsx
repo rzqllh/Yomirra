@@ -1,10 +1,10 @@
 import { Metadata } from "next";
-import { DesktopPageTitle } from "@/components/app/yomirra-header";
+import { DesktopPageTitle } from "@/components/app/header";
 import { Fire } from "@phosphor-icons/react/dist/ssr";
 import { sourceRegistry } from "@/shared/sources/source-registry";
 import { Suspense } from "react";
 import { SourceFeedSkeleton } from "@/components/app/source-feed-skeleton";
-import { swrCache, CACHE_TTL } from "@/server/lib/cache/strategies";
+import { withCache, CACHE_TTL } from "@/server/lib/cache/redis-cache";
 import { sourceManager } from "@/server/lib/sources/source-manager";
 import { MangaCard } from "@/components/manga/manga-card";
 import Link from "next/link";
@@ -19,7 +19,7 @@ async function PopularFeed({ sourceId, sourceName }: { sourceId: string; sourceN
   let popular;
   try {
     const source = sourceManager.getSource(sourceId);
-    popular = await swrCache(`source:${sourceId}:popular:1`, () => source.getPopular(1), CACHE_TTL.DISCOVERY);
+    popular = await withCache(`source:${sourceId}:popular:1`, () => source.getPopular(1), CACHE_TTL.DISCOVERY);
   } catch (_error) {
     return null;
   }

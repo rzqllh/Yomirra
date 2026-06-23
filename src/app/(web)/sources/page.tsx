@@ -9,8 +9,8 @@ import { EmptyState } from "@/components/states/empty-state";
 import { SearchInput } from "@/components/ui/search-input";
 import { SourceCard } from "@/components/source/source-card";
 import { DirectionalTransition } from "@/components/ui/directional-transition";
-import { YomirraSurface } from "@/components/ui/yomirra-layout";
-import { YomirraPageHeader, DesktopPageTitle } from "@/components/app/yomirra-header";
+import { YomirraSurface } from "@/components/ui/layout";
+import { YomirraPageHeader, DesktopPageTitle } from "@/components/app/header";
 
 export default function SourcesPage() {
   const [filter, setFilter] = React.useState("");

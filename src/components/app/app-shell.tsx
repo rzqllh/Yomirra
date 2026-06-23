@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { usePathname } from "next/navigation"
-import { YomirraBottomDock } from "./yomirra-bottom-dock"
+import { BottomDock } from "./bottom-dock"
 import { NetworkStatus } from "./network-status"
 import { cn } from "@/shared/utils/cn"
 import { useSync } from "@/shared/hooks/use-sync"
@@ -41,7 +41,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </main>
       </div>
 
-      {!isReader && <YomirraBottomDock />}
+      {!isReader && <BottomDock />}
       <CommandMenu />
     </div>
   )

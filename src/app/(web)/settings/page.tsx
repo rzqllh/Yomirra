@@ -13,9 +13,9 @@ import { useSettingsStore } from "@/shared/store/settings-store";
 import { useTheme } from "next-themes";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { DirectionalTransition } from "@/components/ui/directional-transition";
-import { YomirraSurface } from "@/components/ui/yomirra-layout";
-import { YomirraPageHeader, DesktopPageTitle } from "@/components/app/yomirra-header";
-import { YomirraSegmentedControl } from "@/components/ui/yomirra-segmented-control";
+import { YomirraSurface } from "@/components/ui/layout";
+import { YomirraPageHeader, DesktopPageTitle } from "@/components/app/header";
+import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Gear } from "@phosphor-icons/react/dist/ssr";
 import { toast } from "sonner";
 import { format } from "date-fns";
@@ -193,7 +193,7 @@ export default function SettingsPage() {
                 description="Pilih tema terang atau gelap."
                 right={
                   mounted ? (
-                    <YomirraSegmentedControl
+                    <SegmentedControl
                       layoutId="theme-toggle"
                       options={[
                         { value: "light", label: "Terang" },
@@ -205,7 +205,7 @@ export default function SettingsPage() {
                       className="w-full sm:w-auto"
                     />
                   ) : (
-                    <YomirraSegmentedControl
+                    <SegmentedControl
                       layoutId="theme-toggle-skeleton"
                       options={[
                         { value: "light", label: "Terang" },

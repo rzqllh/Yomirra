@@ -26,9 +26,9 @@ import {
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import { useSettingsStore } from "@/shared/store/settings-store";
-import { YomirraSegmentedControl } from "@/components/ui/yomirra-segmented-control";
-import { YomirraSurface } from "@/components/ui/yomirra-layout";
-import { YomirraPageHeader, DesktopPageTitle } from "@/components/app/yomirra-header";
+import { SegmentedControl } from "@/components/ui/segmented-control";
+import { YomirraSurface } from "@/components/ui/layout";
+import { YomirraPageHeader, DesktopPageTitle } from "@/components/app/header";
 import { CustomSelect } from "@/components/ui/custom-select";
 
 const FORMATS = [

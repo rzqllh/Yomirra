@@ -1,5 +1,5 @@
 import * as React from "react"
-import { YomirraPageHeader } from "./yomirra-header"
+import { YomirraPageHeader } from "./header"
 import { cn } from "@/shared/utils/cn"
 
 interface MobilePageShellProps {

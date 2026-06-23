@@ -4,7 +4,7 @@ import * as React from "react"
 import { useRouter, usePathname } from "next/navigation";
 import { getMangaDetailHref, getReaderHref } from "@/shared/lib/routes";
 import { useHistoryStore } from "@/shared/store/history-store";
-import { YomirraSurface } from "@/components/ui/yomirra-layout";
+import { YomirraSurface } from "@/components/ui/layout";
 import { ContinueReadingList } from "./continue-reading-list";
 import { cn } from "@/shared/utils/cn";
 
@@ -12,7 +12,7 @@ interface HomeViewProps {
   children?: React.ReactNode;
 }
 
-import { YomirraPageHeader, DesktopPageTitle } from "@/components/app/yomirra-header";
+import { YomirraPageHeader, DesktopPageTitle } from "@/components/app/header";
 import { Compass, MagnifyingGlass } from "@phosphor-icons/react";
 
 export function HomeView({ children }: HomeViewProps) {

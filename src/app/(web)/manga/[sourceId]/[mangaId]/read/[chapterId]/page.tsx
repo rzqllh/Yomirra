@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { WarningCircle } from "@phosphor-icons/react/dist/ssr";
 import { sourceManager } from "@/server/lib/sources/source-manager";
-import { swrCache, CACHE_TTL } from "@/server/lib/cache/strategies";
+import { withCache, CACHE_TTL } from "@/server/lib/cache/redis-cache";
 import { ReaderView } from "@/components/reader/reader-view";
 import { ReaderShell } from "@/components/reader/reader-shell";
 import { EmptyState } from "@/components/states/empty-state";
@@ -18,8 +18,8 @@ export async function generateMetadata({
   try {
     const source = sourceManager.getSource(sourceId);
     const [detail, chapters] = await Promise.all([
-      swrCache(`source:${sourceId}:manga:${mangaId}`, () => source.getDetail(mangaId), CACHE_TTL.DETAIL),
-      swrCache(`source:${sourceId}:chapters:${mangaId}`, () => source.getChapters(mangaId), CACHE_TTL.CHAPTERS)
+      withCache(`source:${sourceId}:manga:${mangaId}`, () => source.getDetail(mangaId), CACHE_TTL.DETAIL),
+      withCache(`source:${sourceId}:chapters:${mangaId}`, () => source.getChapters(mangaId), CACHE_TTL.CHAPTERS)
     ]);
     const chapterTitle = chapters.find(c => c.id === chapterId)?.title || "Chapter";
     return {
@@ -30,7 +30,7 @@ export async function generateMetadata({
   }
 }
 
-export const dynamic = "force-dynamic";
+export const revalidate = 1800;
 
 export default async function ReaderPage({
   params,
@@ -45,10 +45,10 @@ export default async function ReaderPage({
     
     // Fetch detail, chapters, and pages in parallel on the server
     [detail, chapters, pagesResult] = await Promise.all([
-      swrCache(`source:${sourceId}:manga:${mangaId}`, () => source.getDetail(mangaId), CACHE_TTL.DETAIL),
-      swrCache(`source:${sourceId}:chapters:${mangaId}`, () => source.getChapters(mangaId), CACHE_TTL.CHAPTERS),
+      withCache(`source:${sourceId}:manga:${mangaId}`, () => source.getDetail(mangaId), CACHE_TTL.DETAIL),
+      withCache(`source:${sourceId}:chapters:${mangaId}`, () => source.getChapters(mangaId), CACHE_TTL.CHAPTERS),
       // Pages might fail, so we catch error and return null to let client retry or use offline cache
-      swrCache(`source:${sourceId}:pages:${mangaId}:${chapterId}`, () => source.getPages(chapterId), CACHE_TTL.PAGES).catch(() => null),
+      withCache(`source:${sourceId}:pages:${mangaId}:${chapterId}`, () => source.getPages(chapterId), CACHE_TTL.PAGES).catch(() => null),
     ]);
   } catch (error) {
     console.error("Failed to load reader data:", error);

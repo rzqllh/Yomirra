@@ -2,7 +2,7 @@ import { createHash } from "crypto";
 import { checkRateLimit } from "@/server/lib/security/rate-limit";
 import { NextRequest, NextResponse } from "next/server";
 import { sourceManager } from "@/server/lib/sources/source-manager";
-import { swrCache, CACHE_TTL } from "@/server/lib/cache/strategies";
+import { withCache, CACHE_TTL } from "@/server/lib/cache/redis-cache";
 import { searchSchema, sourceParamsSchema } from "@/server/lib/validation/api";
 
 export async function GET(
@@ -61,7 +61,7 @@ export async function GET(
       : "";
     const cacheKey = `source:${sourceId}:search:v2:${q}:${page}${filterKey}`;
 
-    const data = await swrCache(
+    const data = await withCache(
       cacheKey,
       () => source.search(q, page, filters),
       CACHE_TTL.SEARCH

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { swrCache } from "../strategies";
+import { withCache, CACHE_TTL } from '../redis-cache';
 
 // Mock redis client
 vi.mock("../redis", () => ({
@@ -9,13 +9,13 @@ vi.mock("../redis", () => ({
   },
 }));
 
-describe("Cache: swrCache", () => {
+describe("Cache: withCache", () => {
   it("should return cached data if available", async () => {
     const { redis } = await import("../redis");
     vi.mocked(redis.get).mockResolvedValueOnce(JSON.stringify({ mock: "data" }));
 
     const fetcher = vi.fn().mockResolvedValue({ new: "data" });
-    const result = await swrCache("test-key", fetcher, 60);
+    const result = await withCache("test-key", fetcher, 60);
 
     expect(result).toEqual({ mock: "data" });
     // Should still call fetcher for SWR update in background (if SWR actually does background)
@@ -35,7 +35,7 @@ describe("Cache: swrCache", () => {
     vi.mocked(redis.setex).mockResolvedValueOnce("OK");
 
     const fetcher = vi.fn().mockResolvedValue({ new: "data" });
-    const result = await swrCache("test-key", fetcher, 60);
+    const result = await withCache("test-key", fetcher, 60);
 
     expect(result).toEqual({ new: "data" });
     expect(fetcher).toHaveBeenCalled();
