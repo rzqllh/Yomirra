@@ -2,9 +2,9 @@ import * as React from "react"
 import { MangaCard } from "@/components/manga/manga-card";
 import Link from "next/link";
 import { cn } from "@/shared/utils/cn";
-import { swrCache, CACHE_TTL } from "@/server/lib/cache/strategies";
+import { withCache, CACHE_TTL } from "@/server/lib/cache/redis-cache";
 import { sourceManager } from "@/server/lib/sources/source-manager";
-import { YomirraSection } from "@/components/ui/yomirra-layout";
+import { YomirraSection } from "@/components/ui/layout";
 import { ErrorState } from "@/components/states/error-state";
 import { HorizontalScrollContainer } from "@/components/ui/horizontal-scroll-container";
 import { PopularCarousel } from "@/components/ui/popular-carousel";
@@ -27,8 +27,8 @@ export async function SourceFeed({ sourceId, sourceName, variant }: SourceFeedPr
 
     // Fetch on server in parallel
     const [popularData, latestData] = await Promise.all([
-      swrCache(`source:${sourceId}:popular:1`, () => source.getPopular(1), CACHE_TTL.DISCOVERY),
-      swrCache(`source:${sourceId}:latest:1`, () => source.getLatest(1), CACHE_TTL.DISCOVERY),
+      withCache(`source:${sourceId}:popular:1`, () => source.getPopular(1), CACHE_TTL.DISCOVERY),
+      withCache(`source:${sourceId}:latest:1`, () => source.getLatest(1), CACHE_TTL.DISCOVERY),
     ]);
     popular = popularData;
     latest = latestData;

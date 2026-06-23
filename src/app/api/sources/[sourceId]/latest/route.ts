@@ -1,7 +1,7 @@
 import { checkRateLimit } from "@/server/lib/security/rate-limit";
 import { NextRequest, NextResponse } from "next/server";
 import { sourceManager } from "@/server/lib/sources/source-manager";
-import { swrCache, CACHE_TTL } from "@/server/lib/cache/strategies";
+import { withCache, CACHE_TTL } from "@/server/lib/cache/redis-cache";
 import { paginationSchema, sourceParamsSchema } from "@/server/lib/validation/api";
 
 export async function GET(
@@ -30,7 +30,7 @@ export async function GET(
     const source = sourceManager.getSource(sourceId);
     const cacheKey = `source:${sourceId}:latest:${page}`;
 
-    const data = await swrCache(
+    const data = await withCache(
       cacheKey,
       () => source.getLatest(page),
       CACHE_TTL.DISCOVERY

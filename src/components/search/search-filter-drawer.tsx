@@ -41,8 +41,8 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
   const [selectedSort, setSelectedSort] = useState<string>("popular");
 
   // Sync from URL when opening
-  useEffect(() => {
-    if (isOpen) {
+  const handleOpenChange = (open: boolean) => {
+    if (open) {
       const genres = searchParams?.get("genres")?.split(",").filter(Boolean) || [];
       const status = searchParams?.get("status") || "";
       const sort = searchParams?.get("sort") || "popular";
@@ -51,7 +51,8 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
       setSelectedStatus(status);
       setSelectedSort(sort);
     }
-  }, [isOpen, searchParams]);
+    setIsOpen(open);
+  };
 
   const toggleGenre = (genre: string) => {
     setSelectedGenres(prev => 
@@ -93,7 +94,7 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
   const activeCount = selectedGenres.length + (selectedStatus ? 1 : 0) + (selectedSort !== "popular" ? 1 : 0);
 
   return (
-    <Drawer.Root open={isOpen} onOpenChange={setIsOpen}>
+    <Drawer.Root open={isOpen} onOpenChange={handleOpenChange}>
       <Drawer.Trigger asChild>
         {children || (
           <Button 

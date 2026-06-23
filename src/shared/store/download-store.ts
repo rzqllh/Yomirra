@@ -44,6 +44,7 @@ interface DownloadState {
   cancelDownload: (id: string) => void;
   retryDownload: (id: string) => void;
   removeDownload: (id: string) => void;
+  clearDownloads: () => void;
   
   // Internal
   _updateDownload: (id: string, updates: Partial<DownloadChapter>) => void;
@@ -173,6 +174,24 @@ export const useDownloadStore = create<DownloadState>()(
           }
         }
         get()._processQueue();
+      },
+
+      clearDownloads: async () => {
+        Object.values(abortControllers).forEach(controller => controller.abort());
+        
+        set({
+          downloads: {},
+          queue: [],
+          activeDownloads: []
+        });
+
+        if (typeof caches !== "undefined") {
+          try {
+            await caches.delete(CACHE_NAME);
+          } catch (e) {
+            console.error("Failed to clear cache", e);
+          }
+        }
       },
 
       _updateDownload: (id, updates) => {

@@ -14,7 +14,7 @@ interface CacheEntry<T> {
   expiresAt: number;
 }
 
-export async function swrCache<T>(
+export async function withCache<T>(
   key: string,
   fetcher: () => Promise<T>,
   ttlSeconds: number

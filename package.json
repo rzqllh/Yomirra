@@ -13,8 +13,6 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "@firebase/util",
-      "@prisma/engines",
-      "prisma",
       "protobufjs"
     ]
   },

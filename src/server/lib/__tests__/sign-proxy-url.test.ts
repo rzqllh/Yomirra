@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { signImageUrl, verifyImageUrl } from "../image";
+import { signImageUrl, verifyImageUrl } from "../sign-proxy-url";
 
 describe("Utils: image signing", () => {
   it("should sign and verify URL correctly", () => {

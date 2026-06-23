@@ -17,8 +17,8 @@ import { BookBookmark, Compass, Clock, Play, SortDescending, SortAscending, Care
 import { motion, AnimatePresence } from "motion/react";
 import { DirectionalTransition } from "@/components/ui/directional-transition";
 import { SearchInput } from "@/components/ui/search-input";
-import { YomirraSurface } from "@/components/ui/yomirra-layout";
-import { YomirraPageHeader, DesktopPageTitle } from "@/components/app/yomirra-header";
+import { YomirraSurface } from "@/components/ui/layout";
+import { YomirraPageHeader, DesktopPageTitle } from "@/components/app/header";
 import { HorizontalScrollContainer } from "@/components/ui/horizontal-scroll-container";
 import { toast } from "sonner";
 import {

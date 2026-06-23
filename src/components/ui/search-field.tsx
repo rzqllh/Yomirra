@@ -4,12 +4,12 @@ import * as React from "react"
 import { MagnifyingGlass } from "@phosphor-icons/react"
 import { cn } from "@/shared/utils/cn"
 
-export interface YomirraSearchFieldProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onSubmit'> {
+export interface SearchFieldProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onSubmit'> {
   onSubmitAction?: (e: React.FormEvent, value: string) => void;
   containerClassName?: string;
 }
 
-export const YomirraSearchField = React.forwardRef<HTMLInputElement, YomirraSearchFieldProps>(
+export const SearchField = React.forwardRef<HTMLInputElement, SearchFieldProps>(
   ({ className, containerClassName, onSubmitAction, value, onChange, ...props }, ref) => {
     
     const handleSubmit = (e: React.FormEvent) => {
@@ -44,4 +44,4 @@ export const YomirraSearchField = React.forwardRef<HTMLInputElement, YomirraSear
   }
 )
 
-YomirraSearchField.displayName = "YomirraSearchField"
+SearchField.displayName = "SearchField"

@@ -1,10 +1,11 @@
 import { Metadata } from "next";
-import { DesktopPageTitle } from "@/components/app/yomirra-header";
-import { Lightning } from "@phosphor-icons/react/dist/ssr";
-import { sourceRegistry } from "@/shared/sources/source-registry";
+import { DesktopPageTitle } from "@/components/app/header";
+import { Lightning, PlugsConnected } from "@phosphor-icons/react/dist/ssr";
+import { getAllSourceMetadata } from "@/shared/sources/source-registry";
 import { Suspense } from "react";
 import { SourceFeedSkeleton } from "@/components/app/source-feed-skeleton";
-import { swrCache, CACHE_TTL } from "@/server/lib/cache/strategies";
+import { EmptyState } from "@/components/states/empty-state";
+import { withCache, CACHE_TTL } from "@/server/lib/cache/redis-cache";
 import { sourceManager } from "@/server/lib/sources/source-manager";
 import { MangaCard } from "@/components/manga/manga-card";
 import Link from "next/link";
@@ -19,7 +20,7 @@ async function LatestFeed({ sourceId, sourceName }: { sourceId: string; sourceNa
   let latest;
   try {
     const source = sourceManager.getSource(sourceId);
-    latest = await swrCache(`source:${sourceId}:latest:1`, () => source.getLatest(1), CACHE_TTL.DISCOVERY);
+    latest = await withCache(`source:${sourceId}:latest:1`, () => source.getLatest(1), CACHE_TTL.DISCOVERY);
   } catch (_error) {
     return null;
   }
@@ -49,7 +50,7 @@ async function LatestFeed({ sourceId, sourceName }: { sourceId: string; sourceNa
 export const dynamic = "force-dynamic";
 
 export default async function UpdatesPage() {
-  const activeSources = sourceRegistry.filter(s => s.isEnabled && s.isInstalled);
+  const activeSources = getAllSourceMetadata().filter(s => s.isEnabled && s.isInstalled);
 
   return (
     <main className="min-h-screen bg-surface-base">
@@ -69,8 +70,12 @@ export default async function UpdatesPage() {
         ))}
         
         {activeSources.length === 0 && (
-          <div className="py-24 text-center">
-            <p className="text-text-muted">Tidak ada sumber komik yang aktif.</p>
+          <div className="py-24">
+            <EmptyState 
+              icon={<PlugsConnected size={48} className="text-text-muted" weight="duotone" />} 
+              title="Tidak ada sumber aktif" 
+              description="Aktifkan atau install sumber manga di Pengaturan." 
+            />
           </div>
         )}
       </div>

@@ -7,7 +7,7 @@ import { DOCK_NAV_ITEMS } from "@/shared/config/nav"
 import { cn } from "@/shared/utils/cn"
 import { motion } from "motion/react"
 
-export function YomirraBottomDock() {
+export function BottomDock() {
   const pathname = usePathname()
 
   return (

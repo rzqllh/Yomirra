@@ -31,10 +31,13 @@ export const sourceRegistry: SourceMetadata[] = [
   }
 ];
 
+import { dynamicSourceRegistry } from "./dynamic-source-registry";
+
 export function getSourceMetadata(id: string): SourceMetadata | undefined {
-  return sourceRegistry.find(s => s.id === id);
+  return sourceRegistry.find(s => s.id === id) || dynamicSourceRegistry.get(id);
 }
 
 export function getAllSourceMetadata(): SourceMetadata[] {
-  return sourceRegistry;
+  const dynamicSources = dynamicSourceRegistry.getAll();
+  return [...sourceRegistry, ...dynamicSources];
 }

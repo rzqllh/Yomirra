@@ -5,13 +5,13 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
 import { MagnifyingGlass, WarningCircle, CheckCircle } from "@phosphor-icons/react/dist/ssr";
 import { SearchResultSkeleton } from "@/components/skeletons/search-result-skeleton";
-import { YomirraPageHeader, DesktopPageTitle } from "@/components/app/yomirra-header";
+import { YomirraPageHeader, DesktopPageTitle } from "@/components/app/header";
 import { useSearchParams } from "next/navigation";
 import { MangaCard } from "@/components/manga/manga-card";
 import { motion, AnimatePresence } from "motion/react";
 import { useSettingsStore } from "@/shared/store/settings-store";
 
-import { YomirraSearchField } from "@/components/ui/yomirra-search-field";
+import { SearchField } from "@/components/ui/search-field";
 import { SearchFilterDrawer } from "@/components/search/search-filter-drawer";
 import { DirectionalTransition } from "@/components/ui/directional-transition";
 import { useRouter } from "next/navigation";
@@ -108,7 +108,7 @@ function SearchContent() {
         </div>
 
         <div className="mb-6 flex gap-2">
-          <YomirraSearchField 
+          <SearchField 
             value={localQuery}
             onChange={(e) => setLocalQuery(e.target.value)}
             onSubmitAction={handleSearch}

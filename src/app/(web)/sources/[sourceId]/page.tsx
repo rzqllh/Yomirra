@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
-import { YomirraPageHeader } from "@/components/app/yomirra-header";
+import { YomirraPageHeader } from "@/components/app/header";
 import { MangaCard } from "@/components/manga/manga-card";
 import { SearchResultSkeleton } from "@/components/skeletons/search-result-skeleton";
 import { useSearchParams } from "next/navigation";

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyImageUrl } from "@/server/lib/image";
+import { verifyImageUrl } from "@/server/lib/sign-proxy-url";
 import { logger } from "@/shared/logger";
 
 export async function GET(request: NextRequest) {

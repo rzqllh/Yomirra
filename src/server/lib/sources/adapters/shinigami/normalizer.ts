@@ -1,6 +1,6 @@
 import { parseDate, stripHtml } from "@/shared/utils/normalize";
 import type { Chapter, MangaDetail, MangaItem } from "@/shared/types/source";
-import { signImageUrl } from "@/server/lib/image";
+import { signImageUrl } from "@/server/lib/sign-proxy-url";
 import type {
   ShinigamiChapterItem,
   ShinigamiMangaDetail,

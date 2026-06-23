@@ -7,7 +7,7 @@ import { IconButton } from "@/components/ui/icon-button"
 import { Chapter } from "@/shared/types/source"
 import { useRouter } from "next/navigation"
 import { getReaderHref } from "@/shared/lib/routes"
-import { YomirraSearchField } from "@/components/ui/yomirra-search-field"
+import { SearchField } from "@/components/ui/search-field"
 import { motion, AnimatePresence } from "motion/react"
 
 interface ReaderChapterDrawerProps {
@@ -102,7 +102,7 @@ export function ReaderChapterDrawer({
                 </IconButton>
               </div>
               <div className="flex items-center gap-2">
-                <YomirraSearchField 
+                <SearchField 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Cari chapter..." 

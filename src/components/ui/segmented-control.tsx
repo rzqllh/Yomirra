@@ -9,7 +9,7 @@ export interface SegmentedControlOption {
   label: string;
 }
 
-export interface YomirraSegmentedControlProps {
+export interface SegmentedControlProps {
   options: SegmentedControlOption[];
   value: string;
   onChange: (value: string) => void;
@@ -18,14 +18,14 @@ export interface YomirraSegmentedControlProps {
   layoutId?: string;
 }
 
-export function YomirraSegmentedControl({
+export function SegmentedControl({
   options,
   value,
   onChange,
   className,
   fullWidth = false,
   layoutId = "segmented-pill"
-}: YomirraSegmentedControlProps) {
+}: SegmentedControlProps) {
 
   return (
     <div 

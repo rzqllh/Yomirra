@@ -3,14 +3,16 @@
 import { useDownloadStore } from "@/shared/store/download-store";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEffect, useState } from "react";
-import { HardDrives, Pause, Play, Trash, X, ArrowClockwise, CaretLeft } from "@phosphor-icons/react";
+import { HardDrives, Pause, Play, Trash, X, ArrowClockwise, CaretLeft, Download, Package } from "@phosphor-icons/react";
 import { IconButton } from "@/components/ui/icon-button";
 import Link from "next/link";
-import { YomirraSection, YomirraSurface } from "@/components/ui/yomirra-layout";
+import { YomirraSection, YomirraSurface } from "@/components/ui/layout";
 import { toast } from "sonner";
+import { EmptyState } from "@/components/states/empty-state";
+import { StorageWarningBanner } from "@/components/downloads/storage-warning-banner";
 
 export default function DownloadsPage() {
-  const { downloads, removeDownload, pauseDownload, resumeDownload, cancelDownload, retryDownload } = useDownloadStore();
+  const { downloads, removeDownload, pauseDownload, resumeDownload, cancelDownload, retryDownload, clearDownloads } = useDownloadStore();
   const [storageInfo, setStorageInfo] = useState<{ usage: number; quota: number } | null>(null);
 
   useEffect(() => {
@@ -46,6 +48,7 @@ export default function DownloadsPage() {
       </header>
 
       <div className="px-4 py-6 md:py-8 max-w-3xl mx-auto w-full space-y-6 md:space-y-8">
+        <StorageWarningBanner />
         {storageInfo && (
           <YomirraSurface variant="elevated" className="rounded-2xl p-4 flex items-center gap-4">
             <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary shrink-0">
@@ -64,6 +67,18 @@ export default function DownloadsPage() {
                 />
               </div>
             </div>
+            <button 
+              onClick={() => {
+                if (window.confirm("Yakin ingin menghapus semua unduhan?")) {
+                  clearDownloads();
+                  toast("Semua unduhan dihapus");
+                }
+              }}
+              className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-muted hover:bg-semantic-error/20 text-semantic-error transition-colors shrink-0"
+              aria-label="Hapus Semua"
+            >
+              <Trash size={20} />
+            </button>
           </YomirraSurface>
         )}
 
@@ -79,8 +94,11 @@ export default function DownloadsPage() {
           
           <TabsContent value="queue" className="space-y-4">
             {queuedItems.length === 0 ? (
-              <div className="text-center py-12 text-text-muted">
-                <p>Tidak ada antrean unduhan</p>
+              <div className="py-12">
+                <EmptyState 
+                  icon={<Download size={48} className="text-text-muted" weight="duotone" />} 
+                  title="Tidak ada antrean unduhan" 
+                />
               </div>
             ) : (
               queuedItems.map(item => (
@@ -143,8 +161,11 @@ export default function DownloadsPage() {
           
           <TabsContent value="completed" className="space-y-4">
             {completedItems.length === 0 ? (
-              <div className="text-center py-12 text-text-muted">
-                <p>Belum ada chapter yang diunduh</p>
+              <div className="py-12">
+                <EmptyState 
+                  icon={<Package size={48} className="text-text-muted" weight="duotone" />} 
+                  title="Belum ada chapter yang diunduh" 
+                />
               </div>
             ) : (
               completedItems.map(item => (

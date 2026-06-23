@@ -12,7 +12,7 @@ export function useDecodeQueue(maxConcurrent = 3) {
   const activeDecodesRef = React.useRef<Set<string>>(new Set());
   const [decodedSet, setDecodedSet] = React.useState<Set<string>>(new Set());
 
-  const processQueue = React.useCallback(() => {
+  const processQueue = React.useCallback(function processQueueFn() {
     if (activeDecodesRef.current.size >= maxConcurrent || queueRef.current.length === 0) {
       return;
     }
@@ -40,7 +40,7 @@ export function useDecodeQueue(maxConcurrent = 3) {
         .finally(() => {
           activeDecodesRef.current.delete(task.id);
           // Try to process more if queue has items
-          processQueue();
+          processQueueFn();
         });
 
       task.abortController.signal.addEventListener("abort", () => {
@@ -49,7 +49,7 @@ export function useDecodeQueue(maxConcurrent = 3) {
     });
   }, [maxConcurrent]);
 
-  const addToQueue = React.useCallback((id: string, url: string, priority: number) => {
+  const addToQueue = React.useCallback(function addToQueueFn(id: string, url: string, priority: number) {
     if (decodedSet.has(id) || activeDecodesRef.current.has(id)) return;
 
     const existing = queueRef.current.find(t => t.id === id);

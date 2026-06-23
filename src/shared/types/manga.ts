@@ -6,6 +6,6 @@ export interface ReaderPreferences {
   preloadIntensity: 'light' | 'balanced' | 'aggressive';
   showPageProgress: boolean;
   readingDirection: 'ltr' | 'rtl';
-  readingMode: 'vertical' | 'paged';
+  readingMode: 'vertical';
   keepScreenAwake?: boolean;
 }

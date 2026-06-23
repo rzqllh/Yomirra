@@ -7,7 +7,7 @@ import type {
   FilterList,
 } from "@/shared/sources/source-types";
 import { HttpClient } from "../base/http-client";
-import { signImageUrl } from "@/server/lib/image";
+import { signImageUrl } from "@/server/lib/sign-proxy-url";
 import {
   normalizeChapter,
   normalizeMangaDetail,
@@ -111,7 +111,7 @@ export class ShinigamiSource implements MangaSource {
     let excludedGenres: string[] = [];
 
     // Merge filters (like genre[], format, status)
-    let genreFilter: string[] = [...extractedGenres];
+    const genreFilter: string[] = [...extractedGenres];
 
     if (filters) {
       Object.entries(filters).forEach(([k, v]) => {

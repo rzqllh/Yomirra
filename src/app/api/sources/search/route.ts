@@ -2,7 +2,7 @@ import { checkRateLimit } from "@/server/lib/security/rate-limit";
 import { NextRequest, NextResponse } from "next/server";
 import { sourceManager } from "@/server/lib/sources/source-manager";
 import { MangaItem } from "@/shared/sources/source-types";
-import { swrCache, CACHE_TTL } from "@/server/lib/cache/strategies";
+import { withCache, CACHE_TTL } from "@/server/lib/cache/redis-cache";
 import { createHash } from "crypto";
 
 export interface GlobalSearchResponse {
@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
   const cacheKey = `global:search:${q}:sources:${sourceIds.sort().join(",")}${filterKey}`;
 
   try {
-    const cachedData = await swrCache(
+    const cachedData = await withCache(
       cacheKey,
       async () => {
         const results: GlobalSearchResponse["resultsBySource"] = {};
