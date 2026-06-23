@@ -254,7 +254,7 @@ export default function BookmarkPage() {
                           <Link 
                             key={`${group.sourceId}::${group.mangaId}`}
                             href={targetHref}
-                            className="relative w-full bg-surface-glass backdrop-blur-sm rounded-2xl overflow-hidden --subtle group -sm hover:-md hover:--default transition-all vt-hover"
+                            className="relative w-full bg-surface-glass backdrop-blur-sm rounded-2xl overflow-hidden border-border-subtle group shadow-sm hover:-md hover:--default transition-all vt-hover"
                             style={{ '--vt-name': `manga-cover-${group.sourceId}-${group.mangaId}` } as React.CSSProperties}
                           >
                             <div className="flex p-4 gap-4">
@@ -341,7 +341,7 @@ export default function BookmarkPage() {
                           />
                           <button
                             onClick={() => setSortOrder(prev => prev === "desc" ? "asc" : "desc")}
-                            className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-full bg-surface-glass backdrop-blur-md text-text-primary hover:bg-surface-glass transition-colors --glass -[0_4px_16px_rgba(0,0,0,0.05)] dark:-[0_4px_16px_rgba(0,0,0,0.2)]"
+                            className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-full bg-surface-glass backdrop-blur-md text-text-primary hover:bg-surface-glass transition-colors shadow-[0_4px_16px_rgba(0,0,0,0.05)] dark:-[0_4px_16px_rgba(0,0,0,0.2)]"
                             aria-label="Toggle sort order"
                           >
                             {sortOrder === "desc" ? <SortDescending size={20} weight="bold" /> : <SortAscending size={20} weight="bold" />}

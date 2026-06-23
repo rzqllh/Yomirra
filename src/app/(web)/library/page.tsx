@@ -245,7 +245,7 @@ function LibraryContent() {
             <div className="flex w-full md:w-auto items-center gap-3">
               <form 
                 onSubmit={handleSearchSubmit} 
-                className="flex-1 md:w-64 flex items-center gap-2 rounded-full bg-surface-glass backdrop-blur-md px-4 h-[44px] transition-all duration-300 focus-within:bg-surface-glass focus-within:-md --glass focus-within:-accent-dim focus-within:ring-2 focus-within:ring-accent/50 -[0_4px_16px_rgba(0,0,0,0.05)] dark:-[0_4px_16px_rgba(0,0,0,0.2)]"
+                className="flex-1 md:w-64 flex items-center gap-2 rounded-full bg-surface-glass backdrop-blur-md px-4 h-[44px] transition-all duration-300 focus-within:bg-surface-glass focus-within:-md focus-within:-accent-dim focus-within:ring-2 focus-within:ring-accent/50 shadow-[0_4px_16px_rgba(0,0,0,0.05)] dark:-[0_4px_16px_rgba(0,0,0,0.2)]"
               >
                 <MagnifyingGlass className="size-4 text-text-muted shrink-0 transition-colors focus-within:text-accent" weight="bold" />
                 <input 
@@ -265,7 +265,7 @@ function LibraryContent() {
               <Button
                 variant={activeFilterCount > 0 ? "accent" : "outline"}
                 size="sm"
-                className={cn("rounded-full font-bold gap-1.5 h-[44px] px-5 transition-all duration-300", activeFilterCount > 0 ? "-md" : "bg-surface-glass backdrop-blur-md --glass text-text-primary hover:bg-surface-glass hover:text-text-primary -[0_4px_16px_rgba(0,0,0,0.05)] dark:-[0_4px_16px_rgba(0,0,0,0.2)]")}
+                className={cn("rounded-full font-bold gap-1.5 h-[44px] px-5 transition-all duration-300", activeFilterCount > 0 ? "-md" : "bg-surface-glass backdrop-blur-md text-text-primary hover:bg-surface-glass hover:text-text-primary shadow-[0_4px_16px_rgba(0,0,0,0.05)] dark:-[0_4px_16px_rgba(0,0,0,0.2)]")}
                 onClick={() => setShowFilters(!showFilters)}
               >
                 <Funnel size={16} weight={activeFilterCount > 0 ? "fill" : "bold"} />

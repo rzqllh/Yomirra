@@ -29,7 +29,7 @@ export function SegmentedControl({
 
   return (
     <div 
-      className={cn( "relative flex items-center rounded-xl bg-surface-muted/80 p-1 --subtle/50 backdrop-blur-xl -inner", fullWidth ? "w-full" : "inline-flex", className )}
+      className={cn( "relative flex items-center rounded-xl bg-surface-muted/80 p-1 border-border-subtle/50 backdrop-blur-xl -inner", fullWidth ? "w-full" : "inline-flex", className )}
     >
       {options.map((option) => {
         const isActive = value === option.value;

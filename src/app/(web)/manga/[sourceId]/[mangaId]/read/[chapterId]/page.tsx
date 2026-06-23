@@ -8,6 +8,7 @@ import { ReaderShell } from "@/components/reader/reader-shell";
 import { EmptyState } from "@/components/states/empty-state";
 import { Button } from "@/components/ui/button";
 import { getMangaDetailHref } from "@/shared/lib/routes";
+import { getManifestUrlFromCookie } from "@/server/lib/sources/server-manifest";
 
 export async function generateMetadata({ 
   params 
@@ -16,12 +17,13 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { sourceId, mangaId, chapterId } = await params;
   try {
-    const source = sourceManager.getSource(sourceId);
+    const manifestUrl = await getManifestUrlFromCookie(sourceId);
+    const source = await sourceManager.getSource(sourceId, manifestUrl);
     const [detail, chapters] = await Promise.all([
       withCache(`source:${sourceId}:manga:${mangaId}`, () => source.getDetail(mangaId), CACHE_TTL.DETAIL),
       withCache(`source:${sourceId}:chapters:${mangaId}`, () => source.getChapters(mangaId), CACHE_TTL.CHAPTERS)
     ]);
-    const chapterTitle = chapters.find(c => c.id === chapterId)?.title || "Chapter";
+    const chapterTitle = chapters.find((c: any) => c.id === chapterId)?.title || "Chapter";
     return {
       title: `${chapterTitle} - ${detail.title} - Yomirra`,
     };
@@ -39,9 +41,10 @@ export default async function ReaderPage({
 }) {
   const { sourceId, mangaId, chapterId } = await params;
 
-  let detail, chapters, pagesResult;
+  let detail: any, chapters: any, pagesResult: any;
   try {
-    const source = sourceManager.getSource(sourceId);
+    const manifestUrl = await getManifestUrlFromCookie(sourceId);
+    const source = await sourceManager.getSource(sourceId, manifestUrl);
     
     // Fetch detail, chapters, and pages in parallel on the server
     [detail, chapters, pagesResult] = await Promise.all([

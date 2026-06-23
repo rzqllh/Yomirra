@@ -1,4 +1,5 @@
 import type { MangaDetail, MangaPageResult, Chapter, ChapterPages, MangaItem, SourceMetadata, FilterList } from "@/shared/sources/source-types";
+import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 
 export interface SearchResponse {
   sourceId: string;
@@ -25,16 +26,25 @@ class ApiClient {
     return this.fetcher<SourceMetadata[]>("/api/sources");
   }
 
+  private appendManifest(url: string, sourceId: string): string {
+    const customSource = dynamicSourceRegistry.get(sourceId);
+    if (customSource?.manifestUrl) {
+      const sep = url.includes("?") ? "&" : "?";
+      return `${url}${sep}manifestUrl=${encodeURIComponent(customSource.manifestUrl)}`;
+    }
+    return url;
+  }
+
   getFilters(sourceId: string) {
-    return this.fetcher<FilterList>(`/api/sources/${sourceId}/filters`);
+    return this.fetcher<FilterList>(this.appendManifest(`/api/sources/${sourceId}/filters`, sourceId));
   }
 
   getPopular(sourceId: string, page: number = 1) {
-    return this.fetcher<MangaPageResult>(`/api/sources/${sourceId}/popular?page=${page}`);
+    return this.fetcher<MangaPageResult>(this.appendManifest(`/api/sources/${sourceId}/popular?page=${page}`, sourceId));
   }
 
   getLatest(sourceId: string, page: number = 1) {
-    return this.fetcher<MangaPageResult>(`/api/sources/${sourceId}/latest?page=${page}`);
+    return this.fetcher<MangaPageResult>(this.appendManifest(`/api/sources/${sourceId}/latest?page=${page}`, sourceId));
   }
 
   search(sourceId: string, query: string, page: number = 1, filters?: Record<string, string | string[]>, isNsfwFiltered: boolean = false) {
@@ -66,6 +76,9 @@ class ApiClient {
       });
       url += `&${sp.toString()}`;
     }
+    
+    url = this.appendManifest(url, sourceId);
+    
     return this.fetcher<{mangas?: MangaItem[], results?: MangaItem[], hasNextPage?: boolean}>(url).then(data => ({
       sourceId,
       query,
@@ -109,16 +122,16 @@ class ApiClient {
   }
 
   getDetail(sourceId: string, mangaId: string) {
-    return this.fetcher<MangaDetail>(`/api/sources/${sourceId}/manga/${encodeURIComponent(mangaId)}`);
+    return this.fetcher<MangaDetail>(this.appendManifest(`/api/sources/${sourceId}/manga/${encodeURIComponent(mangaId)}`, sourceId));
   }
 
   getChapters(sourceId: string, mangaId: string) {
-    return this.fetcher<Chapter[]>(`/api/sources/${sourceId}/manga/${encodeURIComponent(mangaId)}/chapters`);
+    return this.fetcher<Chapter[]>(this.appendManifest(`/api/sources/${sourceId}/manga/${encodeURIComponent(mangaId)}/chapters`, sourceId));
   }
 
   getPages(sourceId: string, mangaId: string, chapterId: string) {
     return this.fetcher<ChapterPages>(
-      `/api/sources/${sourceId}/manga/${encodeURIComponent(mangaId)}/chapters/${encodeURIComponent(chapterId)}/pages`
+      this.appendManifest(`/api/sources/${sourceId}/manga/${encodeURIComponent(mangaId)}/chapters/${encodeURIComponent(chapterId)}/pages`, sourceId)
     );
   }
 }

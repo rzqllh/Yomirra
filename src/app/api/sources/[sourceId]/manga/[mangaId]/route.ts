@@ -20,7 +20,7 @@ export async function GET(
   const { sourceId, mangaId } = paramValidation.data;
 
   try {
-    const source = sourceManager.getSource(sourceId);
+    const source = await sourceManager.getSource(sourceId, request.nextUrl.searchParams.get("manifestUrl"));
     const cacheKey = `source:${sourceId}:manga:${mangaId}`;
 
     const data = await withCache(

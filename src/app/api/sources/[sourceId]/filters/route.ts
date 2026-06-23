@@ -13,7 +13,7 @@ export async function GET(
 
   try {
     const { sourceId } = await params;
-    const source = sourceManager.getSource(sourceId);
+    const source = await sourceManager.getSource(sourceId, request.nextUrl.searchParams.get("manifestUrl"));
     
     if (!source) {
       return NextResponse.json({ 

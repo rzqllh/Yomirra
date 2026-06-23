@@ -19,6 +19,7 @@ export const MihonSourceManifestSchema = z.object({
   }).optional(),
   nsfw: z.boolean().default(false),
   icon: z.string().optional(),
+  manifestUrl: z.string().optional(),
 });
 
 export type MihonSourceManifest = z.infer<typeof MihonSourceManifestSchema>;
@@ -39,6 +40,13 @@ export class DynamicSourceRegistry {
   private setStorage(data: Record<string, MihonSourceManifest>) {
     if (typeof window === "undefined") return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    
+    // Save minimal mapping for SSR
+    const minimalData: Record<string, string> = {};
+    for (const [k, v] of Object.entries(data)) {
+      if (v.manifestUrl) minimalData[k] = v.manifestUrl;
+    }
+    document.cookie = `${STORAGE_KEY}_urls=${encodeURIComponent(JSON.stringify(minimalData))}; path=/; max-age=31536000`;
   }
 
   async validateManifest(url: string): Promise<MihonSourceManifest> {
@@ -63,6 +71,7 @@ export class DynamicSourceRegistry {
       throw new Error("Source already installed");
     }
 
+    manifest.manifestUrl = manifestUrl;
     storage[manifest.id] = manifest;
     this.setStorage(storage);
 
@@ -75,6 +84,31 @@ export class DynamicSourceRegistry {
       delete storage[sourceId];
       this.setStorage(storage);
     }
+  }
+
+  async updateSource(sourceId: string, overrides: { name?: string; icon?: string; manifestUrl?: string }): Promise<SourceMetadata> {
+    const storage = this.getStorage();
+    if (!storage[sourceId]) {
+      throw new Error("Source not found");
+    }
+
+    if (overrides.manifestUrl && overrides.manifestUrl !== storage[sourceId].manifestUrl) {
+      // Re-validate and fetch the new manifest
+      const newManifest = await this.validateManifest(overrides.manifestUrl);
+      
+      // Preserve local overrides if they exist
+      newManifest.name = overrides.name || storage[sourceId].name || newManifest.name;
+      newManifest.icon = overrides.icon || storage[sourceId].icon || newManifest.icon;
+      newManifest.manifestUrl = overrides.manifestUrl;
+      
+      storage[sourceId] = newManifest;
+    } else {
+      if (overrides.name !== undefined) storage[sourceId].name = overrides.name;
+      if (overrides.icon !== undefined) storage[sourceId].icon = overrides.icon;
+    }
+
+    this.setStorage(storage);
+    return this.mapToMetadata(storage[sourceId]);
   }
 
   getAll(): SourceMetadata[] {
@@ -97,6 +131,7 @@ export class DynamicSourceRegistry {
       baseUrl: manifest.baseUrl,
       icon: manifest.icon,
       version: manifest.version,
+      manifestUrl: manifest.manifestUrl,
       isEnabled: true,
       isInstalled: true,
       isNsfw: manifest.nsfw,

@@ -129,7 +129,7 @@ function SearchContent() {
                   key={source.id}
                   onClick={() => toggleSource(source.id)}
                   whileTap={{ scale: 0.96 }}
-                  className={`relative flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all outline-none overflow-hidden ${ isSelected ? "-accent text-background" : "--glass bg-surface-glass backdrop-blur-md text-text-muted hover:--strong hover:bg-surface-glass/80 -[0_4px_16px_rgba(0,0,0,0.05)] dark:-[0_4px_16px_rgba(0,0,0,0.2)]"}`}
+                  className={`relative flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all outline-none overflow-hidden ${ isSelected ? "-accent text-background" : "--glass bg-surface-glass backdrop-blur-md text-text-muted hover:--strong hover:bg-surface-glass/80 shadow-[0_4px_16px_rgba(0,0,0,0.05)] dark:-[0_4px_16px_rgba(0,0,0,0.2)]"}`}
                 >
                   {isSelected && (
                     <motion.div
@@ -152,7 +152,7 @@ function SearchContent() {
 
         {/* Content States */}
         {query.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center bg-surface-glass backdrop-blur-md rounded-2xl --glass -[0_4px_16px_rgba(0,0,0,0.05)] dark:-[0_4px_16px_rgba(0,0,0,0.2)]">
+          <div className="flex flex-col items-center justify-center py-20 text-center bg-surface-glass backdrop-blur-md rounded-2xl shadow-[0_4px_16px_rgba(0,0,0,0.05)] dark:-[0_4px_16px_rgba(0,0,0,0.2)]">
             <MagnifyingGlass size={48} className="mb-4 text-text-muted" weight="duotone" />
             <p className="text-base font-medium text-text-primary">Masukkan kata kunci untuk mencari.</p>
           </div>

@@ -19,6 +19,7 @@ export interface SourceMetadata {
     message?: string;
   };
   isNsfw: boolean;
+  manifestUrl?: string;
 }
 
 export interface MangaPageResult {

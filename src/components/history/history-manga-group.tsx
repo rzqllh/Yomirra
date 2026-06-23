@@ -92,7 +92,7 @@ export function HistoryMangaGroup({
       </div>
 
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="max-w-sm rounded-3xl p-6 bg-surface-overlay/95 backdrop-blur-xl --default -heavy">
+        <DialogContent className="max-w-sm rounded-3xl p-6 bg-surface-overlay/95 backdrop-blur-xl shadow-default -heavy">
           <DialogHeader>
             <DialogTitle>Hapus Riwayat Bacaan?</DialogTitle>
             <DialogDescription>

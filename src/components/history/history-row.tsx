@@ -35,7 +35,7 @@ export function HistoryRow({ item, onRemove, priority = false }: HistoryRowProps
             onRemove(item.sourceId, item.mangaId, item.chapterId);
           }
         }}
-        className="group relative flex items-center gap-4 rounded-xl bg-surface-glass backdrop-blur-md p-3 --subtle/50 transition-colors duration-300 hover:bg-surface-glass hover:-sm z-10 w-full"
+        className="group relative flex items-center gap-4 rounded-xl bg-surface-glass backdrop-blur-md p-3 border-border-subtle/50 transition-colors duration-300 hover:bg-surface-glass hover:-sm z-10 w-full"
       >
         <Link href={getMangaDetailHref(item.sourceId, item.mangaId, pathname)} className="relative h-[84px] w-[60px] shrink-0 overflow-hidden rounded-sm bg-surface-overlay shadow-sm z-10">
           {item.coverUrl ? (
