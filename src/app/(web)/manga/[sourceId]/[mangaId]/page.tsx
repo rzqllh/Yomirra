@@ -4,6 +4,7 @@ import { withCache, CACHE_TTL } from "@/server/lib/cache/redis-cache";
 import { MangaDetailView } from "@/components/manga/manga-detail-view";
 import { ErrorState } from "@/components/states/error-state";
 import { YomirraPageHeader } from "@/components/app/header";
+import { getManifestUrlFromCookie } from "@/server/lib/sources/server-manifest";
 
 export async function generateMetadata({ 
   params 
@@ -12,7 +13,8 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { sourceId, mangaId } = await params;
   try {
-    const source = sourceManager.getSource(sourceId);
+    const manifestUrl = await getManifestUrlFromCookie(sourceId);
+    const source = await sourceManager.getSource(sourceId, manifestUrl);
     const detail = await source.getDetail(mangaId);
     return {
       title: `${detail.title} - Yomirra`,
@@ -38,7 +40,8 @@ export default async function MangaDetailPage({
   let detail;
   let chapters;
   try {
-    const source = sourceManager.getSource(sourceId);
+    const manifestUrl = await getManifestUrlFromCookie(sourceId);
+    const source = await sourceManager.getSource(sourceId, manifestUrl);
     
     // Fetch data directly on the server with cache!
     [detail, chapters] = await Promise.all([

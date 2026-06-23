@@ -66,7 +66,7 @@ function BookmarkButton({ sourceId, manga }: { sourceId: string, manga: MangaIte
     <motion.button 
       onClick={handleBookmarkClick}
       whileTap={{ scale: 0.8 }}
-      className={cn( "relative grid size-8 place-items-center rounded-full transition-all focus-visible:outline-none bg-black/40 backdrop-blur-md -sm -white/10", isInLibrary ? 'text-accent hover:text-accent-hover' : 'text-media-muted hover:text-media-foreground' )}
+      className={cn( "relative grid size-8 place-items-center rounded-full transition-all focus-visible:outline-none bg-black/40 backdrop-blur-md shadow-sm -white/10", isInLibrary ? 'text-accent hover:text-accent-hover' : 'text-media-muted hover:text-media-foreground' )}
       aria-label={isInLibrary ? "Hapus dari readlist" : "Simpan ke readlist"}
     >
       <AnimatePresence mode="wait" initial={false}>
@@ -134,12 +134,12 @@ export function MangaCard({
     return (
       <motion.article 
         layout="position"
-        className="group relative flex items-center gap-4 rounded-xl bg-surface-glass backdrop-blur-sm p-3 --subtle/50 transition-all duration-300 hover:bg-surface-overlay/80 hover:-sm overflow-hidden"
+        className="group relative flex items-center gap-4 rounded-xl bg-surface-glass backdrop-blur-sm p-3 border-border-subtle/50 transition-all duration-300 hover:bg-surface-overlay/80 hover:-sm overflow-hidden"
       >
         <Link 
           href={targetHref} 
           prefetch={false} 
-          className="relative h-[84px] w-[60px] shrink-0 overflow-hidden rounded-sm bg-surface-glass backdrop-blur-md -sm z-10 vt-hover"
+          className="relative h-[84px] w-[60px] shrink-0 overflow-hidden rounded-sm bg-surface-glass backdrop-blur-md shadow-sm z-10 vt-hover"
           style={!chapterId ? vtStyle : undefined}
           aria-label={`Cover of ${manga.title}`}
         >
@@ -188,7 +188,7 @@ export function MangaCard({
         </div>
         
         {chapterId && (
-          <div className="bg-accent/10 dark:bg-accent/20 backdrop-blur-xl -accent/20 rounded-full p-1 -sm shrink-0 ml-2 z-20 relative">
+          <div className="bg-accent/10 dark:bg-accent/20 backdrop-blur-xl -accent/20 rounded-full p-1 shadow-sm shrink-0 ml-2 z-20 relative">
             <Link 
               href={targetHref} 
               prefetch={false}
@@ -213,7 +213,7 @@ export function MangaCard({
       >
         <Link 
           href={getMangaDetailHref(sourceId, manga.id, fullPath)} 
-          className="flex h-[120px] bg-surface-glass backdrop-blur-md rounded-3xl overflow-hidden cursor-pointer group hover:bg-surface-hover transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent -sm vt-hover"
+          className="flex h-[120px] bg-surface-glass backdrop-blur-md rounded-3xl overflow-hidden cursor-pointer group hover:bg-surface-hover transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent shadow-sm vt-hover"
           prefetch={false}
           aria-label={`Read ${manga.title}`}
           style={vtStyle}
@@ -287,7 +287,7 @@ export function MangaCard({
         aria-label={`Read ${manga.title}`}
       >
         <div 
-          className="relative w-full aspect-[2/3] overflow-hidden rounded-2xl bg-surface-glass --subtle -sm mb-3 vt-hover"
+          className="relative w-full aspect-[2/3] overflow-hidden rounded-2xl bg-surface-glass border-border-subtle shadow-sm mb-3 vt-hover"
           style={vtStyle}
         >
           {manga.coverUrl && !imageError ? (
@@ -314,7 +314,7 @@ export function MangaCard({
           
           <div className="absolute top-2 left-2 flex flex-col gap-1.5 z-20 items-start">
             {manga.rank !== undefined && (
-              <div className="flex items-center gap-1 rounded-full bg-surface-glass backdrop-blur-md px-2 py-1 -sm --glass">
+              <div className="flex items-center gap-1 rounded-full bg-surface-glass backdrop-blur-md px-2 py-1 shadow-sm">
                 <TrendUp weight="bold" className="text-accent text-[10px]" />
                 <span className="text-xs font-black text-text-primary">#{manga.rank}</span>
               </div>
@@ -327,7 +327,7 @@ export function MangaCard({
           
           <div className="absolute top-2 right-2 flex flex-wrap gap-1 z-20">
             {manga.format && (
-              <div className="flex items-center justify-center rounded-md bg-surface-overlay/80 backdrop-blur-md px-2 py-1 -sm -white/10">
+              <div className="flex items-center justify-center rounded-md bg-surface-overlay/80 backdrop-blur-md px-2 py-1 shadow-sm -white/10">
                 <span className="text-[10px] font-black uppercase tracking-wider text-text-primary leading-none">{manga.format}</span>
               </div>
             )}

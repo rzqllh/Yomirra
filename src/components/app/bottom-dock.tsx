@@ -13,11 +13,10 @@ export function BottomDock() {
   return (
     <nav 
       className="md:hidden fixed bottom-6 left-0 w-full z-[var(--z-sticky)] pointer-events-none px-4"
-      style={{ viewTransitionName: 'persistent-bottom-nav' }}
     >
       <div className="mx-auto flex w-fit max-w-full items-center justify-center gap-3">
         {/* Ultra-modern Expanding Floating Pill */}
-        <div className="pointer-events-auto flex h-[56px] w-fit items-center justify-between gap-1 rounded-full bg-surface-glass backdrop-blur-md px-1.5 shadow-sm --glass border border-border-default/30">
+        <div className="pointer-events-auto flex h-[56px] w-fit items-center justify-between gap-1 rounded-full bg-surface-glass backdrop-blur-md px-1.5 shadow-sm border border-border-default/30">
           {DOCK_NAV_ITEMS.filter(item => item.href !== '/search').map((item) => {
             const isActive =
               item.href === "/"
@@ -85,7 +84,7 @@ export function BottomDock() {
               prefetch={false}
               transitionTypes={['nav-lateral']}
               className={cn(
-                "group relative pointer-events-auto flex h-[56px] shrink-0 items-center justify-center rounded-full bg-surface-glass backdrop-blur-md shadow-sm --glass border border-border-default/30 transition-all duration-300 outline-none tap-highlight-transparent overflow-hidden",
+                "group relative pointer-events-auto flex h-[56px] shrink-0 items-center justify-center rounded-full bg-surface-glass backdrop-blur-md shadow-sm border border-border-default/30 transition-all duration-300 outline-none tap-highlight-transparent overflow-hidden",
                 isActive ? "w-auto px-5" : "w-[56px] text-text-secondary hover:text-text-primary"
               )}
               aria-label="Pencarian"

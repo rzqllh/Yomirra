@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
         const promises = sourceIds.map(async (sourceId) => {
           let source;
           try {
-            source = sourceManager.getSource(sourceId);
+            source = await sourceManager.getSource(sourceId);
           } catch {
             results[sourceId] = { results: [], error: "Source not found" };
             return;

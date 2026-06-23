@@ -27,7 +27,7 @@ export async function GET(
   const { page } = queryValidation.data;
 
   try {
-    const source = sourceManager.getSource(sourceId);
+    const source = await sourceManager.getSource(sourceId, request.nextUrl.searchParams.get("manifestUrl"));
     const cacheKey = `source:${sourceId}:popular:${page}`;
 
     const data = await withCache(

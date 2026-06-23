@@ -96,7 +96,7 @@ export default function SettingsPage() {
                           <UserCircle size={32} weight="duotone" />
                         </div>
                       )}
-                      <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-surface-overlay flex items-center justify-center">
+                      <div className="absolute border-bottom-1 -right-1 w-4 h-4 rounded-full bg-surface-overlay flex items-center justify-center">
                         <div className="w-2.5 h-2.5 rounded-full bg-semantic-success shadow-[0_0_8px_rgba(34,197,94,0.6)] animate-pulse" />
                       </div>
                     </div>
@@ -282,7 +282,7 @@ export default function SettingsPage() {
       </div>
 
       <Dialog open={isClearDataDialogOpen} onOpenChange={setIsClearDataDialogOpen}>
-        <DialogContent className="max-w-sm rounded-3xl p-6 bg-surface-overlay/95 backdrop-blur-xl --default -heavy">
+        <DialogContent className="max-w-sm rounded-3xl p-6 bg-surface-overlay/95 backdrop-blur-xl shadow-default -heavy">
           <DialogHeader>
             <DialogTitle>Bersihkan Data Perangkat?</DialogTitle>
             <DialogDescription>

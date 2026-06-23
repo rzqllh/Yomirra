@@ -30,8 +30,8 @@ export async function GET() {
   await Promise.all(
     activeSources.map(async (meta) => {
       try {
+        const adapter = await sourceManager.getSource(meta.id);
         const start = Date.now();
-        const adapter = sourceManager.getSource(meta.id);
         if (!adapter) throw new Error("Adapter not found");
 
         // Ping by fetching popular page 1

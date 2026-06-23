@@ -11,6 +11,7 @@ import { PopularCarousel } from "@/components/ui/popular-carousel";
 import { Clock, Play, Fire, TrendUp, Compass } from "@phosphor-icons/react/dist/ssr";
 import { FeaturedHeroCarousel } from "@/components/app/featured-hero-carousel";
 import { MagazineHero } from "@/components/app/magazine-hero";
+import { getManifestUrlFromCookie } from "@/server/lib/sources/server-manifest";
 
 interface SourceFeedProps {
   sourceId: string;
@@ -23,15 +24,16 @@ export async function SourceFeed({ sourceId, sourceName, variant }: SourceFeedPr
   let latest = null;
 
   try {
-    const source = sourceManager.getSource(sourceId);
+    const manifestUrl = await getManifestUrlFromCookie(sourceId);
+    const source = await sourceManager.getSource(sourceId, manifestUrl);
 
     // Fetch on server in parallel
     const [popularData, latestData] = await Promise.all([
       withCache(`source:${sourceId}:popular:1`, () => source.getPopular(1), CACHE_TTL.DISCOVERY),
       withCache(`source:${sourceId}:latest:1`, () => source.getLatest(1), CACHE_TTL.DISCOVERY),
     ]);
-    popular = popularData;
-    latest = latestData;
+    popular = popularData as any;
+    latest = latestData as any;
   } catch (error) {
     console.error(`Failed to load feed for source ${sourceId}`, error);
     return (
@@ -50,9 +52,9 @@ export async function SourceFeed({ sourceId, sourceName, variant }: SourceFeedPr
 
   // Shuffle the latest data for the carousel
   // eslint-disable-next-line react-hooks/purity
-  const shuffledLatest = [...(latest?.mangas || [])].sort(() => 0.5 - Math.random()).slice(0, 10);
-  const top5Trending = popular?.mangas.slice(0, 5) || [];
-  const restTrending = popular?.mangas.slice(5, 25) || [];
+  const shuffledLatest = [...((latest?.mangas || []) as any[])].sort(() => 0.5 - Math.random()).slice(0, 10);
+  const top5Trending = (popular?.mangas as any[])?.slice(0, 5) || [];
+  const restTrending = (popular?.mangas as any[])?.slice(5, 25) || [];
 
   return (
     <div className="flex flex-col gap-16">
@@ -79,7 +81,7 @@ export async function SourceFeed({ sourceId, sourceName, variant }: SourceFeedPr
                 <TrendUp weight="duotone" /> Peringkat Populer
               </h4>
               <div className="flex flex-col gap-3">
-                {top5Trending.map((manga, idx) => (
+                {top5Trending.map((manga: any, idx: number) => (
                   <MangaCard 
                     key={manga.id} 
                     manga={manga} 
@@ -104,7 +106,7 @@ export async function SourceFeed({ sourceId, sourceName, variant }: SourceFeedPr
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 lg:gap-6">
-            {restTrending.map((manga, idx) => (
+            {restTrending.map((manga: any, idx: number) => (
               <MangaCard 
                 key={manga.id} 
                 manga={manga} 

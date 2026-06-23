@@ -8,6 +8,8 @@ import { withCache, CACHE_TTL } from "@/server/lib/cache/redis-cache";
 import { sourceManager } from "@/server/lib/sources/source-manager";
 import { MangaCard } from "@/components/manga/manga-card";
 import Link from "next/link";
+import { getManifestUrlFromCookie } from "@/server/lib/sources/server-manifest";
+import { cookies } from "next/headers";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
@@ -16,9 +18,10 @@ export const metadata: Metadata = {
 };
 
 async function PopularFeed({ sourceId, sourceName }: { sourceId: string; sourceName: string }) {
-  let popular;
+  let popular: any;
   try {
-    const source = sourceManager.getSource(sourceId);
+    const manifestUrl = await getManifestUrlFromCookie(sourceId);
+    const source = await sourceManager.getSource(sourceId, manifestUrl);
     popular = await withCache(`source:${sourceId}:popular:1`, () => source.getPopular(1), CACHE_TTL.DISCOVERY);
   } catch (_error) {
     return null;
@@ -38,7 +41,7 @@ async function PopularFeed({ sourceId, sourceName }: { sourceId: string; sourceN
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
-        {popular.mangas.slice(0, 15).map((manga, index) => (
+        {popular.mangas.slice(0, 15).map((manga: any, index: number) => (
           <div key={manga.id} className="w-full">
             <MangaCard 
               manga={{ ...manga, rank: index + 1 }} 
@@ -56,7 +59,23 @@ async function PopularFeed({ sourceId, sourceName }: { sourceId: string; sourceN
 export const dynamic = "force-dynamic";
 
 export default async function PopularPage() {
-  const activeSources = sourceRegistry.filter(s => s.isEnabled && s.isInstalled);
+  const activeBuiltin = sourceRegistry.filter(s => s.isEnabled && s.isInstalled).map(s => ({ id: s.id, name: s.name }));
+  
+  // Also get custom sources from cookie
+  const customSources: { id: string, name: string }[] = [];
+  try {
+    const cookieStore = await cookies();
+    const urlsCookie = cookieStore.get("yomirra_dynamic_sources_urls")?.value;
+    const sourcesCookie = cookieStore.get("yomirra_dynamic_sources")?.value;
+    if (urlsCookie && sourcesCookie) {
+      const parsedSources = JSON.parse(decodeURIComponent(sourcesCookie));
+      for (const [id, manifest] of Object.entries(parsedSources)) {
+        customSources.push({ id, name: (manifest as any).name || id });
+      }
+    }
+  } catch(e) {}
+
+  const activeSources = [...activeBuiltin, ...customSources];
 
   return (
     <main className="min-h-screen bg-surface-base">

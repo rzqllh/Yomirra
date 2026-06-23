@@ -54,7 +54,7 @@ export function YomirraPageHeader({
 
   return (
     <header
-      className={cn( "md:hidden sticky top-0 z-[var(--z-sticky)] flex w-full items-center justify-between px-4 pt-[calc(var(--safe-top)+12px)] pb-2 transition-all duration-300 ease-out pointer-events-none", isGlass ? "bg-surface-glass backdrop-blur-md -b --glass -sm" : "bg-transparent -transparent -none", className )}
+      className={cn( "md:hidden sticky top-0 z-[var(--z-sticky)] flex w-full items-center justify-between px-4 pt-[calc(var(--safe-top)+12px)] pb-2 transition-all duration-300 ease-out pointer-events-none", isGlass ? "bg-surface-glass backdrop-blur-md border-b border-border-default shadow-sm" : "bg-transparent border-transparent shadow-none", className )}
     >
       <div className="flex items-center gap-2 w-full transition-all duration-300 ease-out pointer-events-auto h-[56px]">
         {showBack && (
