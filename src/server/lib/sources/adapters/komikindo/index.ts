@@ -16,7 +16,7 @@ export class KomikindoSource implements MangaSource {
   language = "id";
   baseUrl = "https://komikindo.ch";
   version = "1.0.0";
-  icon = "https://i0.wp.com/komikindo.ch/wp-content/uploads/2020/12/fav.png?w=50";
+  icon = "https://s2.googleusercontent.com/s2/favicons?domain=komikindo.ch&sz=64";
   isEnabled = true;
   isInstalled = true;
   status = "online" as const;

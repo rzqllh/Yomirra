@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { pushHistoryItem, deleteHistoryItem } from "@/shared/lib/sync-utils";
+import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 
 export type HistoryItem = {
   sourceId: string;
@@ -17,6 +18,7 @@ export type HistoryItem = {
   seriesProgressPercent?: number;
   scrollPercent?: number;
   readAt: number;
+  isNsfw?: boolean;
 };
 
 interface HistoryState {
@@ -43,6 +45,10 @@ export const useHistoryStore = create<HistoryState>()(
       items: {},
 
       upsertHistory: (item) => set((state) => {
+        if (item.isNsfw === undefined) {
+          const source = dynamicSourceRegistry.get(item.sourceId);
+          if (source) item.isNsfw = source.isNsfw;
+        }
         const id = getHistoryId(item.sourceId, item.mangaId, item.chapterId);
         const existing = state.items[id];
         const finalItem = existing ? { ...existing, ...item, readAt: item.readAt } : item;
@@ -156,6 +162,12 @@ export const useHistoryStore = create<HistoryState>()(
           progressPercent = 100;
         }
         
+        let isNsfw = existing.isNsfw;
+        if (isNsfw === undefined) {
+          const source = dynamicSourceRegistry.get(sourceId);
+          if (source) isNsfw = source.isNsfw;
+        }
+        
         const updatedItem = {
           ...existing,
           pageIndex,
@@ -163,6 +175,7 @@ export const useHistoryStore = create<HistoryState>()(
           progressPercent,
           scrollPercent: scrollPercent !== undefined ? scrollPercent : existing.scrollPercent,
           readAt: Date.now(),
+          isNsfw,
         };
         
         pushHistoryItem(updatedItem); // Background sync
@@ -237,6 +250,11 @@ export const useHistoryStore = create<HistoryState>()(
     {
       name: "yomirra-history",
       version: 1,
+      partialize: (state) => ({
+        items: Object.fromEntries(
+          Object.entries(state.items).filter(([_, item]) => !item.isNsfw)
+        )
+      }),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       migrate: (persistedState: any, version: number) => {
         if (version === 0) {

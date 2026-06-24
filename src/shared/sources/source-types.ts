@@ -20,6 +20,7 @@ export interface SourceMetadata {
   };
   isNsfw: boolean;
   manifestUrl?: string;
+  healthCheckUrl?: string;
 }
 
 export interface MangaPageResult {

@@ -5,6 +5,7 @@ import { SourceFeed } from "@/components/app/source-feed";
 import { SourceFeedSkeleton } from "@/components/app/source-feed-skeleton";
 import { Suspense } from "react";
 import { DirectionalTransition } from "@/components/ui/directional-transition";
+import { SourceFeedWrapper } from "@/components/app/source-feed-wrapper";
 
 export const metadata: Metadata = {
   title: "Yomirra - Baca Komik Gratis",
@@ -14,15 +15,17 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const activeSources = sourceRegistry.filter(s => s.isEnabled && s.isInstalled);
+  const activeSources = sourceRegistry.filter(s => s.isEnabled && s.isInstalled && s.status === "online");
 
   return (
     <DirectionalTransition>
       <HomeView>
         {activeSources.map(source => (
-          <Suspense key={source.id} fallback={<SourceFeedSkeleton />}>
-            <SourceFeed sourceId={source.id} sourceName={source.name} variant="C" />
-          </Suspense>
+          <SourceFeedWrapper key={source.id} sourceId={source.id} isNsfw={source.isNsfw || false}>
+            <Suspense fallback={<SourceFeedSkeleton />}>
+              <SourceFeed sourceId={source.id} sourceName={source.name} variant="C" />
+            </Suspense>
+          </SourceFeedWrapper>
         ))}
         
         {activeSources.length === 0 && (

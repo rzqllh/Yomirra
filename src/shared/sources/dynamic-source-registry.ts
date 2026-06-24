@@ -27,6 +27,8 @@ export type MihonSourceManifest = z.infer<typeof MihonSourceManifestSchema>;
 const STORAGE_KEY = "yomirra_dynamic_sources";
 
 export class DynamicSourceRegistry {
+  private volatileSources: Record<string, SourceMetadata> = {};
+
   private getStorage(): Record<string, MihonSourceManifest> {
     if (typeof window === "undefined") return {};
     try {
@@ -111,12 +113,34 @@ export class DynamicSourceRegistry {
     return this.mapToMetadata(storage[sourceId]);
   }
 
+  setVolatileSources(sources: SourceMetadata[]) {
+    this.volatileSources = {};
+    sources.forEach(s => {
+      this.volatileSources[s.id] = s;
+    });
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("sources_updated"));
+    }
+  }
+
   getAll(): SourceMetadata[] {
     const storage = this.getStorage();
-    return Object.values(storage).map(this.mapToMetadata);
+    const storedSources = Object.values(storage).map(s => this.mapToMetadata(s));
+    
+    // Merge volatile sources
+    const all = [...storedSources];
+    Object.values(this.volatileSources).forEach(vs => {
+      if (!all.find(s => s.id === vs.id)) {
+        all.push(vs);
+      }
+    });
+    return all;
   }
 
   get(id: string): SourceMetadata | undefined {
+    if (this.volatileSources[id]) {
+      return this.volatileSources[id];
+    }
     const storage = this.getStorage();
     const manifest = storage[id];
     return manifest ? this.mapToMetadata(manifest) : undefined;

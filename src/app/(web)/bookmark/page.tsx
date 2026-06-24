@@ -31,6 +31,9 @@ import {
 } from "@/components/ui/dialog";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { cn } from "@/shared/utils/cn";
+import { useSettingsStore } from "@/shared/store/settings-store";
+import { useNsfwSourceIds } from "@/shared/hooks/use-nsfw-source-ids";
+import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 function getRelativeTime(dateString?: string): string {
   if (!dateString) return "";
   const date = new Date(dateString);
@@ -58,9 +61,33 @@ export default function BookmarkPage() {
   const [sortOrder, setSortOrder] = React.useState<"desc" | "asc">("desc");
   const [sortBy, setSortBy] = React.useState<"updatedAt" | "title">("updatedAt");
   const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid");
+  const hideNsfw = useSettingsStore((state) => state.hideNsfw);
+  const isGodMode = useSettingsStore((state) => state.isGodMode);
+  const nsfwSourceIds = useNsfwSourceIds();
+  const { isSourceDisabled } = useSourcePreferencesStore();
+
+  // An item is from an NSFW source if:
+  // 1. item.isNsfw === true (set at save time), OR
+  // 2. its sourceId is in the live NSFW source IDs list (handles old items & secret sources)
+  const isFromNsfwSource = React.useCallback(
+    (sourceId: string, itemIsNsfw?: boolean) =>
+      itemIsNsfw === true || nsfwSourceIds.has(sourceId),
+    [nsfwSourceIds]
+  );
 
   const filteredAndSortedLibraryItems = React.useMemo(() => {
     let result = [...libraryItems];
+
+    // Hide items from disabled sources
+    result = result.filter(item => !isSourceDisabled(item.sourceId));
+
+    // Hide items from NSFW sources when god mode is off, regardless of hideNsfw toggle.
+    // If god mode is on, respect hideNsfw toggle.
+    if (!isGodMode) {
+      result = result.filter(item => !isFromNsfwSource(item.sourceId, item.isNsfw));
+    } else if (hideNsfw) {
+      result = result.filter(item => !isFromNsfwSource(item.sourceId, item.isNsfw));
+    }
 
     if (searchQuery.trim() !== "") {
       const q = searchQuery.toLowerCase();
@@ -79,7 +106,7 @@ export default function BookmarkPage() {
     });
 
     return result;
-  }, [libraryItems, searchQuery, sortBy, sortOrder]);
+  }, [libraryItems, searchQuery, sortBy, sortOrder, hideNsfw, isGodMode, isFromNsfwSource, isSourceDisabled]);
 
   // History state
   const getHistoryList = useHistoryStore((state) => state.getHistoryList);
@@ -87,7 +114,15 @@ export default function BookmarkPage() {
   const removeHistoryItem = useHistoryStore((state) => state.removeHistoryItem);
   const removeMangaHistory = useHistoryStore((state) => state.removeMangaHistory);
   
-  const historyItems = isMounted ? getHistoryList() : [];
+  const rawHistoryItems = isMounted ? getHistoryList() : [];
+  
+  // First filter out disabled sources
+  let historyItems = rawHistoryItems.filter(item => !isSourceDisabled(item.sourceId));
+  
+  // Then hide items from NSFW sources when god mode is off
+  if (hideNsfw) {
+    historyItems = historyItems.filter(item => !isFromNsfwSource(item.sourceId, item.isNsfw));
+  }
   
   const groupedHistory = React.useMemo(() => {
     const groups: Record<string, {

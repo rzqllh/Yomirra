@@ -6,6 +6,7 @@ import { BottomDock } from "./bottom-dock"
 import { NetworkStatus } from "./network-status"
 import { cn } from "@/shared/utils/cn"
 import { useSync } from "@/shared/hooks/use-sync"
+import { useNsfwPatcher } from "@/shared/hooks/use-nsfw-patcher"
 import { TopNav } from "./top-nav"
 import { CommandMenu } from "./command-menu"
 
@@ -14,6 +15,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const isReader = pathname?.includes("/read/")
   
   useSync()
+  useNsfwPatcher()
 
   React.useEffect(() => {
     if (isReader) {

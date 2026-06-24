@@ -35,15 +35,14 @@ export async function SourceFeed({ sourceId, sourceName, variant }: SourceFeedPr
     popular = popularData as any;
     latest = latestData as any;
   } catch (error) {
-    console.error(`Failed to load feed for source ${sourceId}`, error);
-    return (
-      <div className="py-12 border border-border-subtle rounded-2xl bg-surface-raised/20 mb-12">
-        <ErrorState 
-          title="Gagal memuat katalog"
-          description={`Gagal mengambil katalog manga dari ${sourceName}. Sumber mungkin sedang tidak tersedia.`}
-        />
-      </div>
-    );
+    // Only log silently in dev to prevent Next.js Red Error Overlay
+    if (process.env.NODE_ENV === "development") {
+      const msg = error instanceof Error ? error.message : String(error);
+      console.log(`\x1b[33m[SourceFeed] Skipped ${sourceId}: ${msg}\x1b[0m`);
+    }
+    // Seamless UX: Jika gagal fetch (misal server target down/403), 
+    // jangan tampilkan ErrorState yang mencolok, cukup sembunyikan section ini dari homepage.
+    return null;
   }
 
   if (!popular?.mangas.length && !latest?.mangas.length) {
@@ -57,7 +56,7 @@ export async function SourceFeed({ sourceId, sourceName, variant }: SourceFeedPr
   const restTrending = (popular?.mangas as any[])?.slice(5, 25) || [];
 
   return (
-    <div className="flex flex-col gap-16">
+    <div className="flex flex-col gap-16 animate-in fade-in zoom-in-[0.98] duration-500 ease-out fill-mode-both">
       
       {/* SECTION: Sorotan Terbaru (Top 5) */}
       {top5Trending.length > 0 && (

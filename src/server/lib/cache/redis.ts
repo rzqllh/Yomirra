@@ -6,9 +6,8 @@ const globalForRedis = globalThis as unknown as {
   redis: Redis | undefined;
 };
 
-export const redis =
-  globalForRedis.redis ??
-  new Redis(env.REDIS_URL, {
+const createRedisClient = () => {
+  const client = new Redis(env.REDIS_URL, {
     maxRetriesPerRequest: 3,
     enableOfflineQueue: false,
     retryStrategy(times) {
@@ -17,12 +16,17 @@ export const redis =
     },
   });
 
-redis.on("error", (error) => {
-  logger.error("Redis connection error", { error });
-});
+  client.on("error", (error) => {
+    logger.error("Redis connection error", { error });
+  });
 
-redis.on("connect", () => {
-  logger.info("Connected to Redis");
-});
+  client.on("connect", () => {
+    logger.info("Connected to Redis");
+  });
+
+  return client;
+};
+
+export const redis = globalForRedis.redis ?? createRedisClient();
 
 if (env.NODE_ENV !== "production") globalForRedis.redis = redis;

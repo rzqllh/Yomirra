@@ -31,6 +31,7 @@ export const viewport: Viewport = {
 import { AppShell } from "@/components/app/app-shell";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { OfflineProvider } from "@/components/providers/offline-provider";
+import { Toaster } from "@/components/ui/sonner";
 
 
 export default function RootLayout({
@@ -43,11 +44,14 @@ export default function RootLayout({
       <body className="min-h-screen antialiased overflow-x-hidden" suppressHydrationWarning>
         <Providers>
           <OfflineProvider>
-            <AppShell>
-              <ErrorBoundary>
-                {children}
-              </ErrorBoundary>
-            </AppShell>
+            <div vaul-drawer-wrapper="" className="bg-background min-h-screen">
+              <AppShell>
+                <ErrorBoundary>
+                  {children}
+                  <Toaster position="top-center" />
+                </ErrorBoundary>
+              </AppShell>
+            </div>
           </OfflineProvider>
         </Providers>
       </body>

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { pushLibraryItem, deleteLibraryItem } from "@/shared/lib/sync-utils";
+import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 
 export type LibraryItem = {
   sourceId: string;
@@ -17,6 +18,7 @@ export type LibraryItem = {
   lastReadChapterTitle?: string;
   lastReadAt?: string;
   userRating?: number; // 1-10 rating
+  isNsfw?: boolean;
 };
 
 interface LibraryState {
@@ -62,6 +64,10 @@ export const useLibraryStore = create<LibraryState>()(
       items: {},
 
       addToLibrary: (item) => set((state) => {
+        if (item.isNsfw === undefined) {
+          const source = dynamicSourceRegistry.get(item.sourceId);
+          if (source) item.isNsfw = source.isNsfw;
+        }
         const id = getLibraryId(item.sourceId, item.mangaId);
         pushLibraryItem(item); // Background sync
         return {
@@ -114,7 +120,13 @@ export const useLibraryStore = create<LibraryState>()(
         const existing = state.items[id];
         if (!existing) return state;
 
-        const updatedItem = { ...existing, ...patch, updatedAt: new Date().toISOString() };
+        let isNsfw = existing.isNsfw;
+        if (isNsfw === undefined && patch.isNsfw === undefined) {
+          const source = dynamicSourceRegistry.get(sourceId);
+          if (source) isNsfw = source.isNsfw;
+        }
+
+        const updatedItem = { ...existing, ...patch, isNsfw: patch.isNsfw !== undefined ? patch.isNsfw : isNsfw, updatedAt: new Date().toISOString() };
         pushLibraryItem(updatedItem); // Background sync
 
         return {
@@ -165,6 +177,11 @@ export const useLibraryStore = create<LibraryState>()(
     }),
     {
       name: "yomirra-library",
+      partialize: (state) => ({
+        items: Object.fromEntries(
+          Object.entries(state.items).filter(([_, item]) => !item.isNsfw)
+        )
+      })
     }
   )
 );
