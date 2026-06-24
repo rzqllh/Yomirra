@@ -66,3 +66,6 @@ implementation_plan.md
 mangareader-apps.zip
 tasks.md
 agent.md
+# Secret Config
+.env.local
+readme-secret.md

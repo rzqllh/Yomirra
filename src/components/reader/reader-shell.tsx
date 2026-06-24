@@ -113,10 +113,11 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
   // Gesture-safe overlay toggle (Center 40% tap, <=10px, <=250ms)
   useReaderGesture();
 
-  // Immediate overlay auto-dismiss on scroll down, show on scroll up
+  // Immediate overlay auto-dismiss on scroll down, show on scroll up with delta accumulation
   React.useEffect(() => {
     let ticking = false;
     let lastScrollY = window.scrollY;
+    let accumulatedDiff = 0;
 
     const handleScroll = () => {
       if (!ticking) {
@@ -126,14 +127,22 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
           
           setShowBackToTop(currentScrollY > 1200);
 
+          // Reset accumulator if scrolling changes direction
+          if (Math.sign(diff) !== Math.sign(accumulatedDiff)) {
+            accumulatedDiff = 0;
+          }
+          accumulatedDiff += diff;
+
           const isAtBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 300;
           
           if (isAtBottom) {
             setOverlayVisible(false);
-          } else if (diff > 10) {
+          } else if (accumulatedDiff > 80) {
             setOverlayVisible(false);
-          } else if (diff < -15) {
+            accumulatedDiff = 0; // Reset after triggering
+          } else if (accumulatedDiff < -80) {
             setOverlayVisible(true);
+            accumulatedDiff = 0; // Reset after triggering
           }
           
           lastScrollY = currentScrollY;

@@ -2,8 +2,8 @@ import { Plug, Warning, Lightning, Clock, Heartbeat, Bug, DotsThreeVertical, Pen
 import { Badge } from "@/components/ui/badge"
 import { SourceMetadata } from "@/shared/sources/source-types"
 import { ReportDevSheet } from "./report-dev-sheet"
-import { EditCustomSourceSheet } from "./edit-custom-source-sheet"
 import { useState } from "react"
+import Image from "next/image"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry"
 import { toast } from "sonner"
+import { ToggleSwitch } from "@/components/ui/toggle-switch"
+import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store"
 
 interface SourceCardProps {
   source: SourceMetadata
@@ -20,8 +22,11 @@ interface SourceCardProps {
 export function SourceCard({ source, onUpdate }: SourceCardProps & { onUpdate?: () => void }) {
   const isDown = source.status !== "online" && source.status !== "slow";
   const [reportOpen, setReportOpen] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
   const isCustom = !!source.manifestUrl;
+  
+  const { isSourceDisabled, toggleSource } = useSourcePreferencesStore();
+  // The source is considered "enabled" locally if it is NOT in the disabledSources array
+  const isEnabled = !isSourceDisabled(source.id);
 
   const handleDelete = async () => {
     if (confirm(`Hapus sumber ${source.name}?`)) {
@@ -45,17 +50,51 @@ export function SourceCard({ source, onUpdate }: SourceCardProps & { onUpdate?: 
   return (
     <div className="flex flex-col rounded-lg border border-border-subtle bg-surface-raised transition-all hover:bg-surface-overlay overflow-hidden">
       <div className="flex items-center gap-4 p-4 pb-3">
-        <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-md bg-surface-base border border-border-subtle">
-          <Plug size={24} className="text-text-muted" />
+        <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-surface-base border border-border-subtle">
+          {source.icon ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img 
+              src={source.icon} 
+              alt={`${source.name} icon`} 
+              className="w-full h-full object-cover"
+              referrerPolicy="no-referrer"
+              onError={(e) => {
+                // Fallback to plug icon if image fails to load
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.nextElementSibling?.classList.remove('hidden');
+              }}
+            />
+          ) : null}
+          <Plug 
+            size={24} 
+            className={`text-text-muted ${source.icon ? 'hidden' : ''}`} 
+          />
         </div>
         <div className="flex-1 overflow-hidden">
           <div className="flex items-center justify-between">
             <h3 className="truncate text-base font-bold text-text-primary">{source.name}</h3>
             <div className="flex items-center gap-2 shrink-0">
+              {isCustom && (
+                <Badge variant="outline" className="bg-surface-glass border-accent/20 text-accent font-semibold shadow-sm hidden md:flex">
+                  Extension
+                </Badge>
+              )}
+              {source.isNsfw && (
+                <Badge variant="outline" className="bg-semantic-error/10 border-semantic-error/30 text-semantic-error font-semibold shadow-sm">
+                  18+
+                </Badge>
+              )}
               <Badge variant={source.status === "online" ? "success" : source.status === "slow" ? "warning" : "error"}>
                 <div className="size-1.5 rounded-full bg-current mr-1" />
                 {source.status === "online" ? "Online" : source.status === "slow" ? "Lambat" : "Gangguan"}
               </Badge>
+              <div className="flex items-center ml-2 border-l border-border-subtle pl-3">
+                <ToggleSwitch 
+                  checked={isEnabled}
+                  onCheckedChange={() => toggleSource(source.id)}
+                  title={isEnabled ? "Nonaktifkan Sumber" : "Aktifkan Sumber"}
+                />
+              </div>
               {isCustom && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -64,9 +103,6 @@ export function SourceCard({ source, onUpdate }: SourceCardProps & { onUpdate?: 
                     </button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem onClick={() => setEditOpen(true)}>
-                      <PencilSimple size={16} className="mr-2" /> Edit Info
-                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={handleRefresh}>
                       <ArrowsClockwise size={16} className="mr-2" /> Perbarui Data
                     </DropdownMenuItem>
@@ -131,15 +167,6 @@ export function SourceCard({ source, onUpdate }: SourceCardProps & { onUpdate?: 
             <Bug size={14} weight="bold" /> Report Dev
           </button>
         </div>
-      )}
-
-      {isCustom && (
-        <EditCustomSourceSheet
-          source={source}
-          open={editOpen}
-          onOpenChange={setEditOpen}
-          onSuccess={onUpdate}
-        />
       )}
 
       <ReportDevSheet

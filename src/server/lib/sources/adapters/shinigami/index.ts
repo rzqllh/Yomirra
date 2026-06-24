@@ -25,9 +25,10 @@ export class ShinigamiSource implements MangaSource {
   name = "Shinigami";
   description = "Indonesian translation source for manga and manhwa.";
   language = "id";
-  baseUrl = "https://shngm.id";
+  baseUrl = "https://shinigami.asia";
+  healthCheckUrl = "https://api.shngm.io/v1/manga/list?page=1&page_size=1";
   version = "1.0.0";
-  icon = "https://shngm.id/favicon.ico";
+  icon = "https://s2.googleusercontent.com/s2/favicons?domain=shinigami.asia&sz=64";
   isEnabled = true;
   isInstalled = true;
   status = "online" as const;

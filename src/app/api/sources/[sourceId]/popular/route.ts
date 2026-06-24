@@ -38,9 +38,11 @@ export async function GET(
 
     return NextResponse.json({ data });
   } catch (error: unknown) {
+    const msg = (error instanceof Error ? error.message : String(error)) || "Internal Server Error";
+    const status = msg.includes("not found") ? 404 : msg.toLowerCase().includes("cloudflare") ? 503 : 500;
     return NextResponse.json(
-      { error: { message: (error instanceof Error ? error.message : String(error)) || "Internal Server Error" } },
-      { status: (error instanceof Error ? error.message : String(error))?.includes("not found") ? 404 : 500 }
+      { error: { message: msg } },
+      { status }
     );
   }
 }

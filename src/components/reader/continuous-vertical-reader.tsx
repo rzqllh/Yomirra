@@ -204,7 +204,7 @@ export function ContinuousVerticalReader({
           <Button
             variant="outline"
             className={cn(
-              "flex-1 rounded-2xl py-7 font-bold text-[15px] backdrop-blur-md shadow-sm transition-all",
+              "flex-1 rounded-2xl py-7 font-bold text-[15px] backdrop-blur-md shadow-sm transition-all active:scale-[0.98]",
               preferences.background === 'mist' 
                 ? "bg-black/5 hover:bg-black/10 border-black/10 text-gray-700" 
                 : "bg-white/5 hover:bg-white/10 border-white/10 text-gray-300"
@@ -217,7 +217,7 @@ export function ContinuousVerticalReader({
           
           {nextChapterId ? (
             <Button
-              className="flex-1 rounded-2xl py-7 font-bold text-[15px] bg-accent/90 text-white hover:bg-accent hover:scale-[1.02] shadow-lg shadow-accent/20 border border-accent/20 transition-all"
+              className="flex-1 rounded-2xl py-7 font-bold text-[15px] bg-accent/90 text-white hover:bg-accent active:scale-[0.98] shadow-lg shadow-accent/20 border border-accent/20 transition-all"
               onClick={() => router.push(getReaderHref(sourceId, mangaId, nextChapterId))}
             >
               Chapter Berikutnya

@@ -45,8 +45,8 @@ export default async function MangaDetailPage({
     
     // Fetch data directly on the server with cache!
     [detail, chapters] = await Promise.all([
-      withCache(`source:${sourceId}:manga:${mangaId}`, () => source.getDetail(mangaId), CACHE_TTL.DETAIL),
-      withCache(`source:${sourceId}:chapters:${mangaId}`, () => source.getChapters(mangaId), CACHE_TTL.CHAPTERS),
+      withCache(`source:v2:${sourceId}:manga:${mangaId}`, () => source.getDetail(mangaId), CACHE_TTL.DETAIL),
+      withCache(`source:v2:${sourceId}:chapters:${mangaId}`, () => source.getChapters(mangaId), CACHE_TTL.CHAPTERS),
     ]);
   } catch (error) {
     console.error("Failed to load manga details", error);

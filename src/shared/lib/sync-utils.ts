@@ -120,3 +120,38 @@ export async function pullHistoryData(): Promise<HistoryItem[]> {
     return [];
   }
 }
+
+export async function pushSourcePreferences(disabledSources: string[]) {
+  const { auth, db } = await initFirebase();
+  if (!auth || !db) return;
+  const user = auth.currentUser;
+  if (!user) return;
+  try {
+    const { doc, setDoc } = await import("firebase/firestore");
+    await setDoc(doc(db, `users/${user.uid}/preferences`, "sources"), {
+      disabledSources,
+      updatedAt: new Date().toISOString()
+    });
+  } catch (e) {
+    console.error("Failed to sync source preferences", e);
+  }
+}
+
+export async function pullSourcePreferences(): Promise<string[]> {
+  const { auth, db } = await initFirebase();
+  if (!auth || !db) return [];
+  const user = auth.currentUser;
+  if (!user) return [];
+  try {
+    const { doc, getDoc } = await import("firebase/firestore");
+    const snapshot = await getDoc(doc(db, `users/${user.uid}/preferences`, "sources"));
+    if (snapshot.exists()) {
+      const data = snapshot.data();
+      return Array.isArray(data.disabledSources) ? data.disabledSources : [];
+    }
+    return [];
+  } catch (e) {
+    console.error("Failed to pull source preferences", e);
+    return [];
+  }
+}

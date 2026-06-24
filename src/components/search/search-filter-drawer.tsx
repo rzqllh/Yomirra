@@ -1,55 +1,137 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import * as React from "react";
 import { Drawer } from "vaul";
 import { Funnel, X, Check } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/shared/utils/cn";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchFilterStore } from "@/shared/store/search-filter-store";
+import { useQuery, useQueries } from "@tanstack/react-query";
+import { apiClient } from "@/shared/api-client";
+import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 
 interface SearchFilterDrawerProps {
   children?: React.ReactNode;
 }
 
-const GENRES = [
-  "Action", "Adventure", "Comedy", "Drama", "Fantasy", 
-  "Horror", "Mystery", "Romance", "Sci-Fi", "Slice of Life",
-  "Sports", "Supernatural", "Thriller", "Isekai", "Mecha"
-];
-
-const STATUSES = [
+const DEFAULT_STATUSES = [
   { id: "ongoing", label: "Ongoing" },
   { id: "completed", label: "Completed" },
   { id: "hiatus", label: "Hiatus" },
   { id: "cancelled", label: "Cancelled" }
 ];
 
-const SORTS = [
+const DEFAULT_SORTS = [
   { id: "popular", label: "Paling Populer" },
   { id: "latest", label: "Update Terbaru" },
   { id: "alphabetical", label: "A-Z" }
 ];
 
 export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = React.useState(false);
+  const storeFilters = useSearchFilterStore();
 
   // Local state for filters before applying
-  const [selectedGenres, setSelectedGenres] = useState<string[]>([]);
-  const [selectedStatus, setSelectedStatus] = useState<string>("");
-  const [selectedSort, setSelectedSort] = useState<string>("popular");
+  const [selectedGenres, setSelectedGenres] = React.useState<string[]>([]);
+  const [selectedStatus, setSelectedStatus] = React.useState<string>("");
+  const [selectedSort, setSelectedSort] = React.useState<string>("popular");
+  const [selectedSources, setSelectedSources] = React.useState<string[]>([]);
+  const [localSources, setLocalSources] = React.useState<any[]>([]);
 
-  // Sync from URL when opening
+  React.useEffect(() => {
+    // Set initial filter state
+    if (storeFilters.selectedSources) {
+      setSelectedSources(storeFilters.selectedSources);
+    }
+    
+    // Load local sources
+    const loadLocal = () => setLocalSources(dynamicSourceRegistry.getAll());
+    loadLocal();
+    
+    const handleUpdate = () => loadLocal();
+    window.addEventListener("sources_updated", handleUpdate);
+    return () => window.removeEventListener("sources_updated", handleUpdate);
+  }, [storeFilters.selectedSources]);
+
+  // Sync selected sources with store changes
+  React.useEffect(() => {
+    if (storeFilters.selectedSources && isOpen) {
+      setSelectedSources(storeFilters.selectedSources);
+    }
+  }, [storeFilters.selectedSources, isOpen]);
+
+  const { data: sourcesData } = useQuery({
+    queryKey: ["sources"],
+    queryFn: () => apiClient.getSources(),
+  });
+
+  const { data: healthStats } = useQuery({
+    queryKey: ["sources-health"],
+    queryFn: () => apiClient.getHealth(),
+    refetchInterval: 60000,
+  });
+
+  const searchableSources = React.useMemo(() => {
+    const s = [...(sourcesData || [])];
+    localSources.forEach(ls => {
+      if (!s.find(x => x.id === ls.id)) {
+        s.push(ls);
+      }
+    });
+    
+    return s.filter(s => s.isInstalled && s.capabilities.search).map(source => {
+      const health = healthStats?.[source.id];
+      if (health) {
+        return {
+          ...source,
+          status: health.status as any,
+        };
+      }
+      return source;
+    });
+  }, [sourcesData, localSources, healthStats]);
+
+  const sourcesToFetch = selectedSources.length > 0 
+    ? searchableSources.filter(s => selectedSources.includes(s.id))
+    : searchableSources;
+
+  const filtersQueries = useQueries({
+    queries: sourcesToFetch.map(s => ({
+      queryKey: ["filters", s.id],
+      queryFn: () => apiClient.getFilters(s.id),
+      staleTime: Infinity,
+    }))
+  });
+
+  const dynamicFilters = React.useMemo(() => {
+    const genres = new Map<string, string>();
+    const statuses = new Map<string, string>();
+    const sorts = new Map<string, string>();
+
+    filtersQueries.forEach(query => {
+      if (query.data) {
+        query.data.genres?.forEach(g => genres.set(g.id, g.name));
+        query.data.statuses?.forEach(s => statuses.set(s.id, s.name));
+        query.data.sorts?.forEach(s => sorts.set(s.id, s.name));
+      }
+    });
+
+    const finalGenres = Array.from(genres.values()).sort();
+    const finalStatuses = statuses.size > 0 
+      ? Array.from(statuses.entries()).map(([id, label]) => ({ id, label }))
+      : DEFAULT_STATUSES;
+    const finalSorts = sorts.size > 0
+      ? Array.from(sorts.entries()).map(([id, label]) => ({ id, label }))
+      : DEFAULT_SORTS;
+
+    return { genres: finalGenres, statuses: finalStatuses, sorts: finalSorts };
+  }, [filtersQueries]);
   const handleOpenChange = (open: boolean) => {
     if (open) {
-      const genres = searchParams?.get("genres")?.split(",").filter(Boolean) || [];
-      const status = searchParams?.get("status") || "";
-      const sort = searchParams?.get("sort") || "popular";
-      
-      setSelectedGenres(genres);
-      setSelectedStatus(status);
-      setSelectedSort(sort);
+      setSelectedGenres(storeFilters.genres);
+      setSelectedStatus(storeFilters.status);
+      setSelectedSort(storeFilters.sort);
+      setSelectedSources(storeFilters.selectedSources || []);
     }
     setIsOpen(open);
   };
@@ -60,28 +142,21 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
     );
   };
 
+  const toggleSource = (id: string) => {
+    setSelectedSources(prev => 
+      prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
+    );
+  };
+
   const handleApply = () => {
-    const params = new URLSearchParams(searchParams?.toString() || "");
-    
-    if (selectedGenres.length > 0) {
-      params.set("genres", selectedGenres.join(","));
-    } else {
-      params.delete("genres");
+    storeFilters.applyFilters({
+      genres: selectedGenres,
+      status: selectedStatus,
+      sort: selectedSort
+    });
+    if (selectedSources.length > 0) {
+      storeFilters.setSelectedSources(selectedSources);
     }
-
-    if (selectedStatus) {
-      params.set("status", selectedStatus);
-    } else {
-      params.delete("status");
-    }
-
-    if (selectedSort !== "popular") {
-      params.set("sort", selectedSort);
-    } else {
-      params.delete("sort");
-    }
-
-    router.push(`?${params.toString()}`);
     setIsOpen(false);
   };
 
@@ -91,7 +166,7 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
     setSelectedSort("popular");
   };
 
-  const activeCount = selectedGenres.length + (selectedStatus ? 1 : 0) + (selectedSort !== "popular" ? 1 : 0);
+  const activeCount = storeFilters.genres.length + (storeFilters.status ? 1 : 0) + (storeFilters.sort !== "popular" ? 1 : 0);
 
   return (
     <Drawer.Root open={isOpen} onOpenChange={handleOpenChange}>
@@ -114,6 +189,7 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
             
             <div className="flex items-center justify-between mb-6 px-2">
               <Drawer.Title className="text-xl font-bold">Filter Pencarian</Drawer.Title>
+              <Drawer.Description className="sr-only">Atur filter pencarian berdasarkan urutan, status, dan genre manga.</Drawer.Description>
               {activeCount > 0 && (
                 <button 
                   onClick={handleReset}
@@ -129,7 +205,7 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
               <div>
                 <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Urutkan</h3>
                 <div className="flex flex-wrap gap-2">
-                  {SORTS.map(sort => (
+                  {dynamicFilters.sorts.map(sort => (
                     <button
                       key={sort.id}
                       onClick={() => setSelectedSort(sort.id)}
@@ -146,11 +222,43 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
                 </div>
               </div>
 
+              {/* Sumber */}
+              {searchableSources.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Sumber</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {searchableSources.map(source => {
+                      const isSelected = selectedSources.includes(source.id);
+                      const isOffline = source.status === "unavailable";
+                      
+                      return (
+                        <button
+                          key={source.id}
+                          onClick={() => toggleSource(source.id)}
+                          className={cn(
+                            "px-4 py-2 rounded-full text-sm font-bold transition-all border flex items-center gap-1.5 active:scale-[0.98]",
+                            isSelected
+                              ? "bg-accent/10 border-accent text-accent"
+                              : isOffline 
+                                ? "bg-semantic-error/10 border-semantic-error/20 text-semantic-error hover:bg-semantic-error/20"
+                                : "bg-surface-raised border-border-subtle text-text-secondary hover:border-border-strong"
+                          )}
+                        >
+                          {isSelected && <Check size={14} weight="bold" />}
+                          {source.name}
+                          {isOffline && <span className="text-[10px] uppercase tracking-wider ml-1 bg-semantic-error text-white px-1.5 py-0.5 rounded-sm">Down</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {/* Status */}
               <div>
                 <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Status</h3>
                 <div className="flex flex-wrap gap-2">
-                  {STATUSES.map(status => (
+                  {dynamicFilters.statuses.map(status => (
                     <button
                       key={status.id}
                       onClick={() => setSelectedStatus(status.id === selectedStatus ? "" : status.id)}
@@ -169,35 +277,37 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
               </div>
 
               {/* Genre */}
-              <div>
-                <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Genre</h3>
-                <div className="flex flex-wrap gap-2">
-                  {GENRES.map(genre => {
-                    const isSelected = selectedGenres.includes(genre);
-                    return (
-                      <button
-                        key={genre}
-                        onClick={() => toggleGenre(genre)}
-                        className={cn(
-                          "px-4 py-2 rounded-full text-sm font-bold transition-all border",
-                          isSelected
-                            ? "bg-accent text-white border-transparent shadow-[0_0_12px_rgba(94,92,230,0.3)]"
-                            : "bg-surface-raised border-border-subtle text-text-secondary hover:border-border-strong"
-                        )}
-                      >
-                        {genre}
-                      </button>
-                    );
-                  })}
+              {dynamicFilters.genres.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Genre</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {dynamicFilters.genres.map(genre => {
+                      const isSelected = selectedGenres.includes(genre);
+                      return (
+                        <button
+                          key={genre}
+                          onClick={() => toggleGenre(genre)}
+                          className={cn(
+                            "px-4 py-2 rounded-full text-sm font-bold transition-all border",
+                            isSelected
+                              ? "bg-accent text-white border-transparent shadow-[0_0_12px_rgba(94,92,230,0.3)]"
+                              : "bg-surface-raised border-border-subtle text-text-secondary hover:border-border-strong"
+                          )}
+                        >
+                          {genre}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
           
           <div className="p-4 bg-surface-base border-t border-border-subtle mt-auto sticky bottom-0">
             <Button 
               onClick={handleApply}
-              className="w-full h-14 rounded-2xl text-[15px] font-bold bg-text-primary text-surface-base hover:bg-text-primary/90"
+              className="w-full h-14 rounded-2xl text-[15px] font-bold bg-text-primary text-surface-base hover:bg-text-primary/90 active:scale-[0.98] transition-transform duration-200"
             >
               Terapkan Filter
             </Button>

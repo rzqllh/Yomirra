@@ -15,9 +15,8 @@ export function BottomDock() {
       className="md:hidden fixed bottom-6 left-0 w-full z-[var(--z-sticky)] pointer-events-none px-4"
     >
       <div className="mx-auto flex w-fit max-w-full items-center justify-center gap-3">
-        {/* Ultra-modern Expanding Floating Pill */}
         <div className="pointer-events-auto flex h-[56px] w-fit items-center justify-between gap-1 rounded-full bg-surface-glass backdrop-blur-md px-1.5 shadow-sm border border-border-default/30">
-          {DOCK_NAV_ITEMS.filter(item => item.href !== '/search').map((item) => {
+          {DOCK_NAV_ITEMS.filter(item => item.href !== '/settings').map((item) => {
             const isActive =
               item.href === "/"
                 ? pathname === "/"
@@ -72,22 +71,22 @@ export function BottomDock() {
           })}
         </div>
 
-        {/* Separate Floating Search Circle */}
-        {DOCK_NAV_ITEMS.find(i => i.href === '/search') && (() => {
-          const item = DOCK_NAV_ITEMS.find(i => i.href === '/search')!;
-          const isActive = pathname?.startsWith('/search');
-          const SearchIcon = item.icon;
+        {/* Separate Floating Circle for Settings */}
+        {DOCK_NAV_ITEMS.find(i => i.href === '/settings') && (() => {
+          const item = DOCK_NAV_ITEMS.find(i => i.href === '/settings')!;
+          const isActive = pathname?.startsWith('/settings');
+          const SettingIcon = item.icon;
 
           return (
             <Link
-              href="/search"
+              href="/settings"
               prefetch={false}
               transitionTypes={['nav-lateral']}
               className={cn(
                 "group relative pointer-events-auto flex h-[56px] shrink-0 items-center justify-center rounded-full bg-surface-glass backdrop-blur-md shadow-sm border border-border-default/30 transition-all duration-300 outline-none tap-highlight-transparent overflow-hidden",
                 isActive ? "w-auto px-5" : "w-[56px] text-text-secondary hover:text-text-primary"
               )}
-              aria-label="Pencarian"
+              aria-label={item.label}
             >
               {isActive && (
                 <motion.div
@@ -98,7 +97,7 @@ export function BottomDock() {
                 />
               )}
               <div className="relative z-10 flex items-center justify-center gap-2">
-                <SearchIcon 
+                <SettingIcon 
                   weight={isActive ? "fill" : "regular"} 
                   style={{ width: 22, height: 22 }} 
                   className={cn("shrink-0 transition-colors duration-300", isActive ? "text-accent" : "")} 

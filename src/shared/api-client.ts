@@ -26,6 +26,10 @@ class ApiClient {
     return this.fetcher<SourceMetadata[]>("/api/sources");
   }
 
+  getHealth() {
+    return this.fetcher<Record<string, { status: string; latency: string; uptime: string; message: string; }>>("/api/sources/health");
+  }
+
   private appendManifest(url: string, sourceId: string): string {
     const customSource = dynamicSourceRegistry.get(sourceId);
     if (customSource?.manifestUrl) {

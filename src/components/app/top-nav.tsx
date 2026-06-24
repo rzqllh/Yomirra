@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { UserCircle, SignOut, Gear, MagnifyingGlass, Books } from "@phosphor-icons/react";
+import { UserCircle, SignOut, Gear, MagnifyingGlass, Books, Detective } from "@phosphor-icons/react";
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -12,11 +12,13 @@ import { useAuth } from "@/shared/hooks/use-auth";
 import { ThemeToggle } from "./theme-toggle";
 import { MAIN_NAV_ITEMS } from "@/shared/config/nav";
 import { cn } from "@/shared/utils/cn";
+import { useSettingsStore } from "@/shared/store/settings-store";
 
 export function TopNav() {
   const router = useRouter();
   const pathname = usePathname();
   const { user, loginWithGoogle, logout } = useAuth();
+  const isGodMode = useSettingsStore((state) => state.isGodMode);
   
   // Scroll morph detection
   const [isScrolled, setIsScrolled] = React.useState(false);
@@ -98,8 +100,8 @@ export function TopNav() {
           {pathname !== '/library' && (
             <div className="flex items-center">
               {/* Desktop pill */}
-              <button 
-                onClick={() => window.dispatchEvent(new CustomEvent('open-command-menu'))}
+              <Link 
+                href="/search"
                 className={cn( "hidden sm:flex items-center gap-2 px-3 rounded-full transition-all text-text-muted hover:text-text-primary text-sm h-9 w-48", "bg-surface-glass backdrop-blur-md shadow-sm hover:bg-surface-hover/50" )}
               >
                 <MagnifyingGlass size={16} weight="duotone" />
@@ -107,22 +109,37 @@ export function TopNav() {
                 <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-border-default/40 bg-surface-base px-1.5 font-mono text-[10px] font-medium text-text-muted opacity-70">
                   <span className="text-xs">⌘</span>K
                 </kbd>
-              </button>
+              </Link>
               
               {/* Mobile icon only */}
-              <IconButton 
-                onClick={() => window.dispatchEvent(new CustomEvent('open-command-menu'))}
-                className="sm:hidden size-9 rounded-full bg-surface-glass backdrop-blur-md shadow-sm hover:bg-surface-hover/50 text-text-secondary"
+              <Link 
+                href="/search"
+                className="sm:hidden flex items-center justify-center size-9 rounded-full bg-surface-glass backdrop-blur-md shadow-sm hover:bg-surface-hover/50 text-text-secondary outline-none"
                 aria-label="Cari"
               >
                 <MagnifyingGlass size={18} weight="duotone" />
-              </IconButton>
+              </Link>
             </div>
           )}
           
           <motion.div layout transition={{ duration: 0.3, ease: "easeOut" }}>
             <ThemeToggle />
           </motion.div>
+          
+          <AnimatePresence>
+            {isGodMode && (
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={{ duration: 0.3 }}
+                className="flex items-center justify-center text-semantic-error drop-shadow-[0_0_8px_rgba(255,69,58,0.5)]"
+                title="God Mode Active"
+              >
+                <Detective size={24} weight="duotone" className="animate-pulse" />
+              </motion.div>
+            )}
+          </AnimatePresence>
           
 
             {user ? (

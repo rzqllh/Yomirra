@@ -5,6 +5,7 @@ import { ThemeProvider } from "next-themes";
 import { useState } from "react";
 
 import { MotionProvider } from "@/components/motion/motion-provider";
+import { PrivateSourcesProvider } from "./private-sources-provider";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -25,7 +26,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <QueryClientProvider client={queryClient}>
         <MotionProvider>
-          {children}
+          <PrivateSourcesProvider>
+            {children}
+          </PrivateSourcesProvider>
         </MotionProvider>
       </QueryClientProvider>
     </ThemeProvider>

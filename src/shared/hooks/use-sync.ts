@@ -3,7 +3,9 @@ import { useAuth } from './use-auth';
 import { useLibraryStore, LibraryItem } from "@/shared/store/library-store";
 import { useHistoryStore, HistoryItem } from "@/shared/store/history-store";
 import { useSettingsStore } from "@/shared/store/settings-store";
+import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { initFirebase } from '@/shared/lib/firebase';
+import { pullSourcePreferences } from '@/shared/lib/sync-utils';
 
 export function useSync(options = { autoSync: true }) {
   const { user } = useAuth();
@@ -11,6 +13,7 @@ export function useSync(options = { autoSync: true }) {
   const { items: libraryItems, _setItemLocal: setLibraryItemLocal } = useLibraryStore();
   const { items: historyItems, _setItemLocal: setHistoryItemLocal } = useHistoryStore();
   const { setLastSyncedAt } = useSettingsStore();
+  const { syncWithCloud: syncSourcePrefsWithCloud } = useSourcePreferencesStore();
   
   const hasSyncedInitial = useRef(false);
   const [isSyncing, setIsSyncing] = useState(false);
@@ -102,6 +105,16 @@ export function useSync(options = { autoSync: true }) {
         }
       });
 
+      // 5. Sync Source Preferences (Pull from Cloud)
+      try {
+        const cloudPrefs = await pullSourcePreferences();
+        if (cloudPrefs) {
+          syncSourcePrefsWithCloud(cloudPrefs);
+        }
+      } catch (e) {
+        console.error("Failed to pull source preferences during sync", e);
+      }
+
       commitCurrentBatch();
       await Promise.all(commitBatches);
 
@@ -190,6 +203,18 @@ export function useSync(options = { autoSync: true }) {
           });
         }, (error) => {
           console.error("History sync listener error:", error);
+        });
+
+        // Preferences sync listener
+        import('firebase/firestore').then(({ doc, onSnapshot: onDocSnapshot }) => {
+          onDocSnapshot(doc(db, `users/${uid}/preferences`, "sources"), (docSnap) => {
+            if (docSnap.exists()) {
+              const data = docSnap.data();
+              if (Array.isArray(data.disabledSources)) {
+                useSourcePreferencesStore.getState().syncWithCloud(data.disabledSources);
+              }
+            }
+          }, (err) => console.error("Pref sync error", err));
         });
       });
     });

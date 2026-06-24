@@ -59,7 +59,7 @@ async function PopularFeed({ sourceId, sourceName }: { sourceId: string; sourceN
 export const dynamic = "force-dynamic";
 
 export default async function PopularPage() {
-  const activeBuiltin = sourceRegistry.filter(s => s.isEnabled && s.isInstalled).map(s => ({ id: s.id, name: s.name }));
+  const activeBuiltin = sourceRegistry.filter(s => s.isEnabled && s.isInstalled && s.status === "online").map(s => ({ id: s.id, name: s.name }));
   
   // Also get custom sources from cookie
   const customSources: { id: string, name: string }[] = [];

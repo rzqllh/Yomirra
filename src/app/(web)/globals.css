@@ -243,6 +243,37 @@
     --input: var(--border-default);
     --ring: var(--color-accent-dim);
   }
+
+  @keyframes spy-glitch {
+    0% { filter: contrast(2) invert(1) hue-rotate(90deg); }
+    30% { filter: contrast(1.5) sepia(1) hue-rotate(180deg); }
+    60% { filter: contrast(1.2) invert(0.2) hue-rotate(270deg); }
+    100% { filter: none; }
+  }
+
+  body.theme-god-mode {
+    animation: spy-glitch 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    /* Visor Effect / God Mode */
+    --surface-base: #020204;
+    --surface-raised: #050508;
+    --surface-overlay: #08080C;
+    --surface-muted: #0D0D14;
+    --surface-hover: #12121A;
+    --surface-glass: rgba(8, 8, 12, 0.75);
+
+    --text-primary: #EBEBEB;
+    --text-secondary: #AAAAAA;
+    --text-muted: #7A7A7A;
+    
+    /* Desaturated, low-visibility accents (slate/gray-indigo) */
+    --color-accent: #4A4A6A; 
+    --color-accent-dim: rgba(74, 74, 106, 0.15);
+    --color-accent-hover: #5C5C80;
+    
+    --border-subtle: rgba(74, 74, 106, 0.2);
+    --border-default: rgba(74, 74, 106, 0.4);
+    --border-strong: rgba(74, 74, 106, 0.6);
+  }
 }
 
 @layer utilities {

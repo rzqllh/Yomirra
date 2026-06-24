@@ -26,6 +26,7 @@ import {
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import { useSettingsStore } from "@/shared/store/settings-store";
+import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { YomirraSurface } from "@/components/ui/layout";
 import { YomirraPageHeader, DesktopPageTitle } from "@/components/app/header";
@@ -64,6 +65,9 @@ function LibraryContent() {
   const [selectedStatuses, setSelectedStatuses] = React.useState<string[]>([]);
   const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid");
   
+  const { isSourceDisabled } = useSourcePreferencesStore();
+  const isDisabled = isSourceDisabled(activeSourceId);
+  
   const deferredSearchInput = React.useDeferredValue(searchInput);
 
   React.useEffect(() => {
@@ -84,7 +88,22 @@ function LibraryContent() {
 
   const isNsfwFiltered = useSettingsStore(state => state.hideNsfw);
 
-  const GENRES = filtersData?.genres || [];
+  const GENRES = React.useMemo(() => {
+    const apiGenres = filtersData?.genres || [];
+    const combined = [...apiGenres];
+    selectedGenres.forEach(id => {
+      if (!combined.find(g => g.id === id)) {
+        combined.push({ id, name: id.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) });
+      }
+    });
+    excludedGenres.forEach(id => {
+      if (!combined.find(g => g.id === id)) {
+        combined.push({ id, name: id.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) });
+      }
+    });
+    return combined;
+  }, [filtersData?.genres, selectedGenres, excludedGenres]);
+
   const DYNAMIC_FORMATS = filtersData?.formats || FORMATS;
   const DYNAMIC_STATUSES = filtersData?.statuses || STATUSES;
   const DYNAMIC_SORTS = filtersData?.sorts || [
@@ -148,6 +167,7 @@ function LibraryContent() {
     staleTime: 1000 * 60, // 1 minute
     retry: 1,
     refetchOnWindowFocus: false,
+    enabled: !isDisabled,
   });
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -379,7 +399,16 @@ function LibraryContent() {
           )}
           </AnimatePresence>
 
-          {isLoading ? (
+          {isDisabled ? (
+            <EmptyState
+              variant="compact"
+              icon={<Funnel size={40} className="text-text-muted" weight="duotone" />}
+              title="Sumber Dinonaktifkan"
+              description="Kamu telah menonaktifkan sumber ini. Aktifkan kembali di halaman Sumber untuk melihat pustaka."
+              action={<Button onClick={() => router.push('/sources')} variant="outline" className="mt-4 rounded-full shadow-sm font-bold">Kelola Sumber</Button>}
+              className="bg-surface-overlay rounded-xl border border-border-subtle border-dashed py-16"
+            />
+          ) : isLoading ? (
             <div className={cn(
               viewMode === "grid" 
                 ? "grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4 md:gap-5"
