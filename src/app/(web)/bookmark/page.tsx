@@ -34,6 +34,7 @@ import { cn } from "@/shared/utils/cn";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useNsfwSourceIds } from "@/shared/hooks/use-nsfw-source-ids";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
+import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 function getRelativeTime(dateString?: string): string {
   if (!dateString) return "";
   const date = new Date(dateString);
@@ -78,8 +79,13 @@ export default function BookmarkPage() {
   const filteredAndSortedLibraryItems = React.useMemo(() => {
     let result = [...libraryItems];
 
-    // Hide items from disabled sources
-    result = result.filter(item => !isSourceDisabled(item.sourceId));
+    // Hide items from disabled or unavailable sources
+    result = result.filter(item => {
+      if (isSourceDisabled(item.sourceId)) return false;
+      const source = dynamicSourceRegistry.get(item.sourceId);
+      if (source && source.status === "unavailable") return false;
+      return true;
+    });
 
     // Hide items from NSFW sources when god mode is off, regardless of hideNsfw toggle.
     // If god mode is on, respect hideNsfw toggle.
@@ -116,8 +122,13 @@ export default function BookmarkPage() {
   
   const rawHistoryItems = isMounted ? getHistoryList() : [];
   
-  // First filter out disabled sources
-  let historyItems = rawHistoryItems.filter(item => !isSourceDisabled(item.sourceId));
+  // First filter out disabled or unavailable sources
+  let historyItems = rawHistoryItems.filter(item => {
+    if (isSourceDisabled(item.sourceId)) return false;
+    const source = dynamicSourceRegistry.get(item.sourceId);
+    if (source && source.status === "unavailable") return false;
+    return true;
+  });
   
   // Then hide items from NSFW sources when god mode is off
   if (hideNsfw) {

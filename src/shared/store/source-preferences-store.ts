@@ -28,6 +28,11 @@ export const useSourcePreferencesStore = create<SourcePreferencesState>()(
         // Push to Firebase in background
         pushSourcePreferences(newDisabled);
         
+        // Sync to cookie for server-side filtering
+        if (typeof document !== 'undefined') {
+          document.cookie = `yomirra-disabled-sources=${encodeURIComponent(JSON.stringify(newDisabled))}; path=/; max-age=31536000`;
+        }
+        
         return { disabledSources: newDisabled };
       }),
 
@@ -35,12 +40,21 @@ export const useSourcePreferencesStore = create<SourcePreferencesState>()(
         return get().disabledSources.includes(sourceId);
       },
 
-      syncWithCloud: (cloudDisabledSources: string[]) => set({
-        disabledSources: cloudDisabledSources
-      }),
+      syncWithCloud: (cloudDisabledSources: string[]) => {
+        if (typeof document !== 'undefined') {
+          document.cookie = `yomirra-disabled-sources=${encodeURIComponent(JSON.stringify(cloudDisabledSources))}; path=/; max-age=31536000`;
+        }
+        set({ disabledSources: cloudDisabledSources })
+      },
     }),
     {
       name: "yomirra-source-preferences",
+      onRehydrateStorage: () => (state) => {
+        // Ensure cookie is set on initial load if it exists in local storage
+        if (state && typeof document !== 'undefined') {
+          document.cookie = `yomirra-disabled-sources=${encodeURIComponent(JSON.stringify(state.disabledSources))}; path=/; max-age=31536000`;
+        }
+      }
     }
   )
 );

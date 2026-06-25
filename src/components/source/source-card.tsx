@@ -26,7 +26,8 @@ export function SourceCard({ source, onUpdate }: SourceCardProps & { onUpdate?: 
   
   const { isSourceDisabled, toggleSource } = useSourcePreferencesStore();
   // The source is considered "enabled" locally if it is NOT in the disabledSources array
-  const isEnabled = !isSourceDisabled(source.id);
+  // If the source is down, we automatically treat it as disabled unless overridden
+  const isEnabled = !isSourceDisabled(source.id) && source.status !== "unavailable";
 
   const handleDelete = async () => {
     if (confirm(`Hapus sumber ${source.name}?`)) {

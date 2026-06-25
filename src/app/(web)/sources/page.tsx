@@ -14,8 +14,12 @@ import { YomirraPageHeader, DesktopPageTitle } from "@/components/app/header";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { Button } from "@/components/ui/button";
+import { useMounted } from "@/shared/hooks/use-mounted";
+import { useSettingsStore } from "@/shared/store/settings-store";
 
 export default function SourcesPage() {
+  const isMounted = useMounted();
+  const isGodMode = useSettingsStore(state => state.isGodMode);
   const [filter, setFilter] = React.useState("");
   const [localSources, setLocalSources] = React.useState<import("@/shared/sources/source-types").SourceMetadata[]>([]);
 
@@ -79,10 +83,15 @@ export default function SourcesPage() {
   }, [serverSources, localSources, healthStats]);
 
   const filteredSources = React.useMemo(() => {
-    if (!filter.trim()) return allSources;
+    let result = allSources;
+    if (isMounted && !isGodMode) {
+      result = result.filter(s => !s.isNsfw);
+    }
+    
+    if (!filter.trim()) return result;
     const lower = filter.toLowerCase();
-    return allSources.filter(s => s.name.toLowerCase().includes(lower) || s.language?.toLowerCase().includes(lower));
-  }, [allSources, filter]);
+    return result.filter(s => s.name.toLowerCase().includes(lower) || s.language?.toLowerCase().includes(lower));
+  }, [allSources, filter, isGodMode, isMounted]);
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>

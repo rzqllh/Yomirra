@@ -11,11 +11,14 @@ import { MangaCard } from "@/components/manga/manga-card";
 import { motion, AnimatePresence } from "motion/react";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useSearchFilterStore } from "@/shared/store/search-filter-store";
+import { EmptyState } from "@/components/states/empty-state";
+import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 
 import { SearchField } from "@/components/ui/search-field";
 import { SearchFilterDrawer } from "@/components/search/search-filter-drawer";
 import { DirectionalTransition } from "@/components/ui/directional-transition";
 import { useRouter } from "next/navigation";
+import { useDebounce } from "@/shared/hooks/use-debounce";
 
 export default function SearchPage() {
   return (
@@ -42,9 +45,23 @@ function SearchContent() {
   const [localQuery, setLocalQuery] = React.useState(query);
   const router = useRouter();
 
+  const debouncedQuery = useDebounce(localQuery, 800);
+
+  React.useEffect(() => {
+    if (debouncedQuery !== query) {
+      const params = new URLSearchParams(searchParams?.toString() || "");
+      if (debouncedQuery.trim() === "") {
+        params.delete("q");
+      } else {
+        params.set("q", debouncedQuery.trim());
+      }
+      router.push(`/search?${params.toString()}`);
+    }
+  }, [debouncedQuery, query, router, searchParams]);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (localQuery.trim()) {
+    if (localQuery.trim() !== query) {
       const params = new URLSearchParams(searchParams?.toString() || "");
       params.set("q", localQuery.trim());
       router.push(`/search?${params.toString()}`);
@@ -69,6 +86,8 @@ function SearchContent() {
     queryFn: () => apiClient.getSources(),
   });
 
+  const isGodMode = useSettingsStore(state => state.isGodMode);
+
   const searchableSources = React.useMemo(() => {
     const s = [...(sourcesData || [])];
     localSources.forEach(ls => {
@@ -76,8 +95,13 @@ function SearchContent() {
         s.push(ls);
       }
     });
-    return s.filter(src => src.isInstalled && src.capabilities?.search);
-  }, [sourcesData, localSources]);
+    // Search page bypasses the rule, but still respects God Mode for NSFW sources
+    return s.filter(src => {
+      if (!src.isInstalled || !src.capabilities?.search) return false;
+      if (src.isNsfw && !isGodMode) return false;
+      return true;
+    });
+  }, [sourcesData, localSources, isGodMode]);
   
   const searchFilterStore = useSearchFilterStore();
   const selectedSources = searchFilterStore.selectedSources || [];
@@ -125,16 +149,6 @@ function SearchContent() {
     enabled: query.length > 0 && activeSelectedSources.length > 0,
   });
 
-  const feedQueries = useQueries({
-    queries: activeSelectedSources.map(sourceId => ({
-      queryKey: ["feed", sourceId, sort],
-      queryFn: () => sort === "popular" ? apiClient.getPopular(sourceId, 1) : apiClient.getLatest(sourceId, 1),
-      enabled: query.length === 0,
-    }))
-  });
-  
-  const isFeedLoading = query.length === 0 && feedQueries.some(q => q.isLoading);
-
   // Helper to interleave and deduplicate mangas from multiple sources
   const getMergedMangas = (sourceArrays: { sourceId: string, items: any[] }[]) => {
     const result: { manga: any, sourceId: string }[] = [];
@@ -159,13 +173,6 @@ function SearchContent() {
     return result;
   };
 
-  const feedMangas = query.length === 0 && !isFeedLoading ? getMergedMangas(
-    feedQueries.map((q, i) => ({
-      sourceId: activeSelectedSources[i],
-      items: q.data?.mangas?.slice(0, 15) || []
-    }))
-  ) : [];
-
   const searchMangas = query.length > 0 && searchResponse?.resultsBySource ? getMergedMangas(
     Object.entries(searchResponse.resultsBySource).map(([sourceId, res]) => ({
       sourceId,
@@ -173,15 +180,11 @@ function SearchContent() {
     }))
   ) : [];
 
-  const feedErrors = query.length === 0 
-    ? feedQueries.map((q, i) => q.isError ? { sourceId: activeSelectedSources[i], error: (q.error as Error).message } : null).filter(Boolean) as { sourceId: string, error: string }[]
-    : [];
-    
   const searchErrors = query.length > 0 && searchResponse?.resultsBySource
     ? Object.entries(searchResponse.resultsBySource).map(([sourceId, res]) => res.error ? { sourceId, error: res.error } : null).filter(Boolean) as { sourceId: string, error: string }[]
     : [];
 
-  const errorsToDisplay = query.length === 0 ? feedErrors : searchErrors;
+  const errorsToDisplay = searchErrors;
 
   return (
     <main className="min-h-screen bg-surface-base">
@@ -202,7 +205,8 @@ function SearchContent() {
             onChange={(e) => setLocalQuery(e.target.value)}
             onSubmitAction={handleSearch}
             placeholder="Cari komik favoritmu..."
-            containerClassName="flex-1 h-14"
+            containerClassName="flex-1 h-[44px]"
+            onClear={() => setLocalQuery("")}
             autoFocus
           />
           <SearchFilterDrawer />
@@ -251,47 +255,32 @@ function SearchContent() {
         {/* Content States */}
         <AnimatePresence mode="wait">
           {activeSelectedSources.length === 0 ? (
-            <motion.div key="no-source" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="flex flex-col items-center justify-center py-20 text-center bg-surface-raised rounded-xl border border-border-subtle">
-              <WarningCircle size={48} className="mb-4 text-accent" weight="duotone" />
-              <p className="text-base font-medium text-text-primary">Tidak ada sumber aktif yang dipilih.</p>
-              <p className="text-sm text-text-muted mt-1">Pilih setidaknya satu sumber di atas.</p>
+            <motion.div key="no-source" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="pt-10">
+              <EmptyState 
+                icon={<WarningCircle size={40} className="text-accent" weight="duotone" />}
+                title="Tidak ada sumber aktif yang dipilih."
+                description="Pilih setidaknya satu sumber di atas untuk mencari."
+              />
             </motion.div>
           ) : query.length === 0 ? (
-            isFeedLoading ? (
-              <motion.div key="feed-loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col gap-10">
-                <SearchResultSkeleton />
-              </motion.div>
-            ) : feedMangas.length > 0 ? (
-              <motion.div key="feed-results" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="flex flex-col gap-4">
-                <h2 className="text-lg font-bold flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-accent"></span>
-                  {sort === "popular" ? "Paling Populer" : "Update Terbaru"}
-                </h2>
-                <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8">
-                  {feedMangas.map((item) => (
-                    <MangaCard 
-                      key={`${item.sourceId}-${item.manga.id}`}
-                      sourceId={item.sourceId}
-                      manga={item.manga}
-                      priority={false}
-                    />
-                  ))}
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div key="feed-empty" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="flex flex-col items-center justify-center py-20 text-center bg-surface-raised rounded-xl border border-border-subtle">
-                <WarningCircle size={48} className="mb-4 text-text-muted" weight="duotone" />
-                <p className="text-base font-medium text-text-primary">Tidak ada hasil yang dapat ditampilkan.</p>
-              </motion.div>
-            )
+            <motion.div key="search-idle" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="pt-10">
+              <EmptyState 
+                icon={<MagnifyingGlass size={40} className="text-text-muted" weight="duotone" />}
+                title="Cari komik favoritmu"
+                description="Ketik judul komik pada kolom pencarian di atas untuk mulai mencari."
+              />
+            </motion.div>
           ) : isLoading ? (
             <motion.div key="search-loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col gap-10">
               <SearchResultSkeleton />
             </motion.div>
           ) : error && searchMangas.length === 0 ? (
-            <motion.div key="search-error" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="flex flex-col items-center justify-center py-20 text-center bg-surface-raised rounded-xl border border-border-subtle">
-              <WarningCircle size={48} className="mb-4 text-semantic-error" weight="duotone" />
-              <p className="text-base font-medium text-text-primary">Terjadi kesalahan pencarian.</p>
+            <motion.div key="search-error" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="pt-10">
+              <EmptyState 
+                icon={<WarningCircle size={40} className="text-semantic-error" weight="duotone" />}
+                title="Terjadi kesalahan pencarian."
+                description="Silakan coba lagi beberapa saat."
+              />
             </motion.div>
           ) : searchMangas.length > 0 ? (
             <motion.div key="search-results" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="flex flex-col gap-4">
@@ -314,10 +303,12 @@ function SearchContent() {
               </div>
             </motion.div>
           ) : (
-            <motion.div key="search-empty" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="flex flex-col items-center justify-center py-20 text-center bg-surface-raised rounded-xl border border-border-subtle">
-              <MagnifyingGlass size={48} className="mb-4 text-text-muted" weight="duotone" />
-              <p className="text-base font-medium text-text-primary">Tidak ada hasil ditemukan.</p>
-              <p className="text-sm text-text-muted mt-1">Coba gunakan kata kunci lain.</p>
+            <motion.div key="search-empty" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="pt-10">
+              <EmptyState 
+                icon={<MagnifyingGlass size={40} className="text-text-muted" weight="duotone" />}
+                title="Tidak ada hasil ditemukan."
+                description="Coba gunakan kata kunci lain."
+              />
             </motion.div>
           )}
         </AnimatePresence>

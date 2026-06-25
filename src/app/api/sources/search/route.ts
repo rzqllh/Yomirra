@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { sourceManager } from "@/server/lib/sources/source-manager";
 import { MangaItem } from "@/shared/sources/source-types";
 import { withCache, CACHE_TTL } from "@/server/lib/cache/redis-cache";
+import { redis } from "@/server/lib/cache/redis";
 import { createHash } from "crypto";
 
 export interface GlobalSearchResponse {
@@ -89,6 +90,12 @@ export async function GET(req: NextRequest) {
       },
       CACHE_TTL.SEARCH
     );
+
+    // If all results are errors, we might want to delete the cache key so it retries next time
+    const allErrors = Object.values(cachedData).every(r => r.error);
+    if (allErrors && redis) {
+      await redis.del(cacheKey).catch(() => {});
+    }
 
     return NextResponse.json({
       data: {

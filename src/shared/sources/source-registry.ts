@@ -43,9 +43,9 @@ export const sourceRegistry: SourceMetadata[] = [
     status: "online",
     healthStats: {
       uptime: "99.9%",
-      latency: "150ms",
+      latency: "286ms",
       lastChecked: "Baru saja",
-      message: "Server berjalan normal tanpa kendala."
+      message: "Server merespons dengan baik."
     },
     isNsfw: false,
     capabilities: {
@@ -68,13 +68,13 @@ export const sourceRegistry: SourceMetadata[] = [
     version: "1.0.0",
     isEnabled: true,
     isInstalled: true,
-    status: "online",
+    status: "unavailable",
     isNsfw: false,
     healthStats: {
       uptime: "-",
       latency: "-",
       lastChecked: "Baru saja",
-      message: "Diproteksi Cloudflare."
+      message: "Koneksi diblokir oleh proteksi Cloudflare."
     },
     capabilities: {
       popular: true,
@@ -122,14 +122,70 @@ export const sourceRegistry: SourceMetadata[] = [
     version: "1.0.0",
     isEnabled: true,
     isInstalled: true,
+    status: "unavailable",
+    healthStats: {
+      uptime: "0%",
+      latency: "-",
+      lastChecked: "Baru saja",
+      message: "Akses ditolak oleh server (HTTP 403 Forbidden)."
+    },
+    isNsfw: false,
+    capabilities: {
+      popular: true,
+      latest: true,
+      search: true,
+      detail: true,
+      chapters: true,
+      pages: true,
+    }
+  },
+  {
+    id: "mangadex",
+    name: "MangaDex",
+    description: "Katalog manga terbesar dengan bahasa ID dan EN.",
+    language: "id, en",
+    baseUrl: "https://mangadex.org",
+    healthCheckUrl: "https://api.mangadex.org/ping",
+    icon: "https://mangadex.org/favicon.ico",
+    version: "1.0.0",
+    isEnabled: true,
+    isInstalled: true,
     status: "online",
     healthStats: {
       uptime: "99.9%",
-      latency: "150ms",
+      latency: "100ms",
       lastChecked: "Baru saja",
-      message: "Server berjalan normal tanpa kendala."
+      message: "Server berjalan normal."
     },
     isNsfw: false,
+    capabilities: {
+      popular: true,
+      latest: true,
+      search: true,
+      detail: true,
+      chapters: true,
+      pages: true,
+    }
+  },
+  {
+    id: "mangadex-nsfw",
+    name: "MangaDex (NSFW)",
+    description: "Katalog manga erotica & pornographic (NSFW 18+).",
+    language: "id, en",
+    baseUrl: "https://mangadex.org",
+    healthCheckUrl: "https://api.mangadex.org/ping",
+    icon: "https://mangadex.org/favicon.ico",
+    version: "1.0.0",
+    isEnabled: true,
+    isInstalled: true,
+    status: "online",
+    healthStats: {
+      uptime: "99.9%",
+      latency: "100ms",
+      lastChecked: "Baru saja",
+      message: "Server berjalan normal."
+    },
+    isNsfw: true,
     capabilities: {
       popular: true,
       latest: true,

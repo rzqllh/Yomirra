@@ -7,6 +7,7 @@ import { KomikuAsiaSource } from "./komikuasia";
 import { ProjectAlphaSource } from "./project-alpha";
 import { ProjectBetaSource } from "./project-beta";
 import { ProjectGammaSource } from "./project-gamma";
+import { MangaDexSource, MangaDexNsfwSource } from "./mangadex";
 
 // Add new sources here
 export const sources: MangaSource[] = [
@@ -18,6 +19,8 @@ export const sources: MangaSource[] = [
   new ProjectAlphaSource(),
   new ProjectBetaSource(),
   new ProjectGammaSource(),
+  new MangaDexSource(),
+  new MangaDexNsfwSource(),
 ];
 
 export const sourceMap = new Map(sources.map((s) => [s.id, s]));

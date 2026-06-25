@@ -21,16 +21,24 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
     return (
       <form 
         onSubmit={handleSubmit} 
-        className={cn( "flex items-center gap-3 rounded-full bg-surface-glass backdrop-blur-md px-4 py-2.5 transition-all duration-200 ease-out", "hover:bg-surface-glass focus-within:bg-surface-glass focus-within:ring-2 focus-within:ring-accent/50", " focus-within:-accent-dim shadow-[0_4px_16px_rgba(0,0,0,0.05)]", "dark:-[0_4px_16px_rgba(0,0,0,0.2)]", containerClassName )}
+        className={cn(
+          "flex items-center gap-2.5 rounded-full bg-surface-glass backdrop-blur-md px-4 h-[44px] transition-all duration-300 ease-out w-full",
+          "hover:bg-surface-hover focus-within:bg-surface-overlay focus-within:-sm",
+          "border border-transparent focus-within:--default focus-within:ring-2 focus-within:ring-accent/20",
+          containerClassName
+        )}
       >
-        <MagnifyingGlass className="size-5 text-text-muted shrink-0 transition-colors focus-within:text-accent" weight="bold" />
+        <MagnifyingGlass 
+          className="size-[20px] text-text-muted shrink-0 transition-colors group-focus-within:text-accent" 
+          weight="regular" 
+        />
         <input
           ref={ref}
           type="text"
           value={value}
           onChange={onChange}
           className={cn(
-            "flex-1 bg-transparent text-base text-text-primary outline-none placeholder:text-text-muted/70 font-medium w-full min-w-0",
+            "flex-1 bg-transparent text-[15px] font-medium text-text-primary outline-none placeholder:text-text-muted/60 w-full min-w-0 h-full",
             className
           )}
           {...props}

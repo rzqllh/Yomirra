@@ -6,6 +6,7 @@ import { Funnel, X, Check } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/shared/utils/cn";
 import { useSearchFilterStore } from "@/shared/store/search-filter-store";
+import { useSettingsStore } from "@/shared/store/settings-store";
 import { useQuery, useQueries } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
@@ -71,6 +72,8 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
     refetchInterval: 60000,
   });
 
+  const isGodMode = useSettingsStore(state => state.isGodMode);
+
   const searchableSources = React.useMemo(() => {
     const s = [...(sourcesData || [])];
     localSources.forEach(ls => {
@@ -79,7 +82,11 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
       }
     });
     
-    return s.filter(s => s.isInstalled && s.capabilities.search).map(source => {
+    return s.filter(s => {
+      if (!s.isInstalled || !s.capabilities.search) return false;
+      if (s.isNsfw && !isGodMode) return false;
+      return true;
+    }).map(source => {
       const health = healthStats?.[source.id];
       if (health) {
         return {
@@ -89,7 +96,7 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
       }
       return source;
     });
-  }, [sourcesData, localSources, healthStats]);
+  }, [sourcesData, localSources, healthStats, isGodMode]);
 
   const sourcesToFetch = selectedSources.length > 0 
     ? searchableSources.filter(s => selectedSources.includes(s.id))
@@ -174,9 +181,14 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
         {children || (
           <Button 
             variant={activeCount > 0 ? "accent" : "outline"} 
-            className="rounded-full px-5 h-12 gap-2"
+            className={cn(
+              "rounded-full font-bold px-5 h-[44px] gap-1.5 transition-all duration-300",
+              activeCount > 0 
+                ? "shadow-md" 
+                : "bg-surface-glass backdrop-blur-md text-text-primary hover:bg-surface-glass hover:text-text-primary shadow-[0_4px_16px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.2)]"
+            )}
           >
-            <Funnel size={18} weight={activeCount > 0 ? "fill" : "bold"} />
+            <Funnel size={16} weight={activeCount > 0 ? "fill" : "bold"} />
             Filter {activeCount > 0 && `(${activeCount})`}
           </Button>
         )}
