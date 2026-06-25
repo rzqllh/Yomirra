@@ -300,6 +300,7 @@
     font-family: var(--font-ui);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    touch-action: manipulation; /* Prevent double-tap to zoom on PWA */
   }
 
   * {
@@ -334,7 +335,8 @@
 }
 
 body.reader-active {
-  touch-action: pan-y !important;
+  /* Allow pinch-zoom and panning in reader */
+  touch-action: auto !important; 
 }
 
 /* === View Transition Animations === */

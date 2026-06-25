@@ -12,6 +12,9 @@ import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { ChapterRow } from "@/components/manga/chapter-row";
 import { MangaRating } from "@/components/manga/manga-rating";
+import { Star } from "@phosphor-icons/react";
+import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "@/shared/api-client";
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useRef } from "react";
 import { useSearchParams } from "next/navigation";
@@ -41,6 +44,14 @@ export function MangaDetailView({
   useEffect(() => {
     queueMicrotask(() => setMounted(true));
   }, []);
+
+  const { data: anilistData } = useQuery({
+    queryKey: ["anilist-score", detail.title],
+    queryFn: () => apiClient.getAnilistScore(detail.title),
+    staleTime: 1000 * 60 * 60, // 1 hour
+  });
+
+  const displayScore = anilistData?.score ?? detail.score;
 
   const safeId = `${sourceId}-${mangaId}`.replace(/[^a-zA-Z0-9-]/g, '-');
   const coverTransitionName = `manga-cover-${safeId}`;
@@ -179,6 +190,11 @@ export function MangaDetailView({
             <div className="text-sm font-medium text-text-muted">{detail.author}</div>
             <div className="mt-1 flex items-center gap-2 flex-wrap">
               <span className="text-text-primary bg-surface-overlay border border-border-default px-1.5 py-0.5 rounded-sm text-2xs uppercase tracking-wider font-bold">{detail.status}</span>
+              <span className="flex items-center gap-1 font-semibold text-sm">
+                <Star weight="fill" className="text-semantic-warning" />
+                {displayScore ? displayScore.toFixed(1) : "-.-"}
+              </span>
+              <span>•</span>
               <MangaRating sourceId={sourceId} mangaId={mangaId} />
             </div>
           </div>
@@ -220,6 +236,11 @@ export function MangaDetailView({
                 <span>{detail.author}</span>
                 <span>•</span>
                 <span className="text-text-primary bg-surface-overlay px-2 py-0.5 rounded-sm text-xs uppercase tracking-wider font-bold">{detail.status}</span>
+                <span>•</span>
+                <span className="flex items-center gap-1 font-semibold">
+                  <Star weight="fill" className="text-semantic-warning" />
+                  {displayScore ? displayScore.toFixed(1) : "-.-"}
+                </span>
                 <span>•</span>
                 <MangaRating sourceId={sourceId} mangaId={mangaId} />
               </div>

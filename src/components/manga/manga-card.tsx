@@ -11,6 +11,8 @@ import { motion, AnimatePresence } from "motion/react";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/shared/utils/cn";
+import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "@/shared/api-client";
 
 export interface MangaCardProps {
   manga: MangaItem;
@@ -124,6 +126,17 @@ export function MangaCard({
   const vtName = `manga-cover-${safeId}`;
 
   const vtStyle = { '--vt-name': vtName } as React.CSSProperties;
+
+  // Fetch Anilist score as single source of truth
+  const { data: anilistData } = useQuery({
+    queryKey: ["anilist-score", manga.title],
+    queryFn: () => apiClient.getAnilistScore(manga.title),
+    staleTime: 1000 * 60 * 60 * 24, // 24 hours
+    gcTime: 1000 * 60 * 60 * 24,
+    retry: 1, // Fail fast if Anilist rate limits us
+  });
+
+  const displayScore = anilistData?.score ?? manga.score;
 
   // --- HISTORY VARIANT ---
   if (variant === "history") {
@@ -262,7 +275,7 @@ export function MangaCard({
             
             <div className="mt-1 flex items-center justify-between text-xs text-text-muted z-10 relative">
               <span className="truncate pr-2">{manga.latestChapter || "Detail"}</span>
-              <span className="font-semibold flex items-center gap-1 shrink-0"><Star weight="fill" className="text-semantic-warning" /> {manga.score ? manga.score.toFixed(1) : "-.-"}</span>
+              <span className="font-semibold flex items-center gap-1 shrink-0"><Star weight="fill" className="text-semantic-warning" /> {displayScore ? displayScore.toFixed(1) : "-.-"}</span>
             </div>
           </div>
         </Link>
@@ -345,7 +358,7 @@ export function MangaCard({
             </span>
             <span className="text-xs font-semibold flex items-center gap-1 text-text-muted shrink-0">
               <Star weight="fill" className="text-semantic-warning" /> 
-              {manga.score ? manga.score.toFixed(1) : "-.-"}
+              {displayScore ? displayScore.toFixed(1) : "-.-"}
             </span>
           </div>
         </div>
