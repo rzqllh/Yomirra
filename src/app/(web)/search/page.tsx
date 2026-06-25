@@ -14,7 +14,7 @@ import { useSearchFilterStore } from "@/shared/store/search-filter-store";
 import { EmptyState } from "@/components/states/empty-state";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 
-import { SearchField } from "@/components/ui/search-field";
+import { SearchInput } from "@/components/ui/search-input";
 import { SearchFilterDrawer } from "@/components/search/search-filter-drawer";
 import { DirectionalTransition } from "@/components/ui/directional-transition";
 import { useRouter } from "next/navigation";
@@ -200,7 +200,7 @@ function SearchContent() {
         </div>
 
         <div className="mb-6 flex gap-2">
-          <SearchField 
+          <SearchInput 
             value={localQuery}
             onChange={(e) => setLocalQuery(e.target.value)}
             onSubmitAction={handleSearch}

@@ -18,7 +18,7 @@ import { apiClient } from "@/shared/api-client";
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useRef } from "react";
 import { useSearchParams } from "next/navigation";
-import { SearchField } from "@/components/ui/search-field";
+import { SearchInput } from "@/components/ui/search-input";
 import { EmptyState } from "@/components/states/empty-state";
 import { cn } from "@/shared/utils/cn";
 import { motion, useScroll, useTransform } from "motion/react";
@@ -284,7 +284,7 @@ export function MangaDetailView({
                 <span className="text-sm text-text-muted font-bold">{chapters?.length || 0}</span>
               </div>
               <div className="flex items-center gap-2">
-                <SearchField 
+                <SearchInput 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Cari chapter..." 
