@@ -32,7 +32,7 @@ export function BottomDock() {
                 transitionTypes={['nav-lateral']}
                 className={cn(
                   "group relative flex items-center justify-center h-[44px] outline-none tap-highlight-transparent transition-all duration-300 ease-out",
-                  isActive ? "px-4" : "px-3 w-[44px]"
+                  isActive ? "w-[110px]" : "w-[44px]"
                 )}
                 aria-label={item.label}
                 aria-current={isActive ? "page" : undefined}
@@ -40,9 +40,9 @@ export function BottomDock() {
                 {isActive && (
                   <motion.div
                     className="absolute inset-0 rounded-full bg-accent/15 dark:bg-accent/20 border border-accent/20"
-                    initial={{ opacity: 0, scale: 0.8 }}
+                    initial={{ opacity: 0, scale: 0.1 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+                    transition={{ type: "spring", bounce: 0, duration: 0.25 }}
                   />
                 )}
 
@@ -84,7 +84,7 @@ export function BottomDock() {
               transitionTypes={['nav-lateral']}
               className={cn(
                 "group relative pointer-events-auto flex h-[56px] shrink-0 items-center justify-center rounded-full bg-surface-glass backdrop-blur-md shadow-sm border border-border-default/30 transition-all duration-300 outline-none tap-highlight-transparent overflow-hidden",
-                isActive ? "w-auto px-5" : "w-[56px] text-text-secondary hover:text-text-primary"
+                isActive ? "w-[130px]" : "w-[56px] text-text-secondary hover:text-text-primary"
               )}
               aria-label={item.label}
             >

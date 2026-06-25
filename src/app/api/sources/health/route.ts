@@ -5,23 +5,41 @@ import { redis } from "@/server/lib/cache/redis";
 
 export const revalidate = 0; // Disable Next.js cache, we use Redis
 
-const CACHE_KEY = "yomirra:sources:health";
+const CACHE_KEY = "yomirra:sources:health:v6";
 const TTL_SECONDS = 600; // 10 minutes
 
 async function pingSource(source: SourceMetadata) {
   const start = Date.now();
+
+  if (source.status === "unavailable") {
+    return {
+      id: source.id,
+      status: source.status,
+      latency: source.healthStats?.latency || "-",
+      uptime: source.healthStats?.uptime || "-",
+      message: source.healthStats?.message || "Sumber sedang dinonaktifkan dari sistem.",
+    };
+  }
+
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 8000);
 
     const targetUrl = (source as any).healthCheckUrl || source.baseUrl;
 
+    const headers: Record<string, string> = {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    };
+
+    if (targetUrl.includes("mangadex.org")) {
+      headers["User-Agent"] = "Yomirra/1.0";
+      headers["Accept"] = "application/json,*/*";
+    }
+
     const res = await fetch(targetUrl, {
       method: "GET",
-      headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-      },
+      headers,
       signal: controller.signal,
     });
 
@@ -29,8 +47,8 @@ async function pingSource(source: SourceMetadata) {
 
     const latency = Date.now() - start;
 
-    // 200-299, 301-302 redirect, 401, 403 = online (server exists, may block scrapers)
-    if (res.ok || res.status === 401 || res.status === 403 || (res.status >= 301 && res.status <= 302)) {
+    // 200-299, 301-302 redirect = online
+    if (res.ok || (res.status >= 301 && res.status <= 302)) {
       return {
         id: source.id,
         status: "online",
@@ -39,16 +57,29 @@ async function pingSource(source: SourceMetadata) {
         message: "Server merespons dengan baik.",
       };
     }
-    // 503 = Cloudflare challenge (source exists but CF blocks server-side)
+    
+    // 401, 403 = Access Denied (scraper blocked)
+    if (res.status === 401 || res.status === 403) {
+      return {
+        id: source.id,
+        status: "unavailable",
+        latency: "-",
+        uptime: "0%",
+        message: `Akses ditolak (HTTP ${res.status}).`,
+      };
+    }
+
+    // 503, 522, 521 = Cloudflare challenge / server down
     if (res.status === 503 || res.status === 522 || res.status === 521) {
       return {
         id: source.id,
-        status: "online",
-        latency: `${latency}ms`,
+        status: "unavailable",
+        latency: "-",
         uptime: "-",
-        message: "Diproteksi Cloudflare — konten mungkin terbatas dari server.",
+        message: "Terhalang proteksi Cloudflare.",
       };
     }
+
     return {
       id: source.id,
       status: "unavailable",
@@ -60,11 +91,11 @@ async function pingSource(source: SourceMetadata) {
     const isTimeout = err.name === "AbortError" || err.message?.includes("aborted");
     return {
       id: source.id,
-      status: isTimeout ? "online" : "unavailable",
+      status: "unavailable",
       latency: "-",
-      uptime: isTimeout ? "-" : "-",
+      uptime: "0%",
       message: isTimeout
-        ? "Diproteksi Cloudflare — timeout saat health check."
+        ? "Koneksi ke server timeout (Fetch Failed)."
         : `Gagal menghubungi server: ${err.message}`,
     };
   }
@@ -87,6 +118,7 @@ export async function GET() {
     if (nsfwRaw) {
       try {
         const nsfwSources: SourceMetadata[] = JSON.parse(nsfwRaw);
+        nsfwSources.forEach(s => s.isNsfw = true);
         allSources.push(...nsfwSources);
       } catch (e) {
         console.error("Failed to parse SECRET_EXTENSION_SOURCES for health check", e);

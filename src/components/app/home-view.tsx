@@ -10,6 +10,7 @@ import { cn } from "@/shared/utils/cn";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useNsfwSourceIds } from "@/shared/hooks/use-nsfw-source-ids";
+import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 
 interface HomeViewProps {
   children?: React.ReactNode;
@@ -45,7 +46,12 @@ export function HomeView({ children }: HomeViewProps) {
   );
 
   const historyItems = React.useMemo(() => {
-    let result = rawHistoryItems.filter(item => !isSourceDisabled(item.sourceId));
+    let result = rawHistoryItems.filter(item => {
+      if (isSourceDisabled(item.sourceId)) return false;
+      const source = dynamicSourceRegistry.get(item.sourceId);
+      if (source && source.status === "unavailable") return false;
+      return true;
+    });
     if (!isGodMode) {
       result = result.filter(item => !isFromNsfwSource(item.sourceId, item.isNsfw));
     } else if (hideNsfw) {

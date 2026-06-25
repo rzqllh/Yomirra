@@ -19,7 +19,7 @@ export class KomikuSource implements MangaSource {
   icon = "https://s2.googleusercontent.com/s2/favicons?domain=komiku.org&sz=64";
   isEnabled = true;
   isInstalled = true;
-  status = "online" as const;
+  status = "unavailable" as const;
   isNsfw = false;
   capabilities = {
     popular: true,
@@ -47,7 +47,8 @@ export class KomikuSource implements MangaSource {
   }
 
   async search(query: string, page: number): Promise<MangaPageResult> {
-    const html = await this.client.getHtml(`/cari/?post_type=manga&s=${encodeURIComponent(query)}`);
+    // Komiku updated their search to use api.komiku.org via HTMX
+    const html = await this.client.getHtml(`https://api.komiku.org/?s=${encodeURIComponent(query)}`);
     const $ = cheerio.load(html);
     return this.parseList($);
   }

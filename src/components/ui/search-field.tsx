@@ -1,16 +1,17 @@
 "use client"
 
 import * as React from "react"
-import { MagnifyingGlass } from "@phosphor-icons/react"
+import { MagnifyingGlass, X } from "@phosphor-icons/react"
 import { cn } from "@/shared/utils/cn"
 
 export interface SearchFieldProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onSubmit'> {
   onSubmitAction?: (e: React.FormEvent, value: string) => void;
+  onClear?: () => void;
   containerClassName?: string;
 }
 
 export const SearchField = React.forwardRef<HTMLInputElement, SearchFieldProps>(
-  ({ className, containerClassName, onSubmitAction, value, onChange, ...props }, ref) => {
+  ({ className, containerClassName, onSubmitAction, onClear, value, onChange, ...props }, ref) => {
     
     const handleSubmit = (e: React.FormEvent) => {
       e.preventDefault();
@@ -39,6 +40,15 @@ export const SearchField = React.forwardRef<HTMLInputElement, SearchFieldProps>(
           )}
           {...props}
         />
+        {value && value.toString().length > 0 && onClear && (
+          <button 
+            type="button" 
+            onClick={onClear} 
+            className="p-0.5 rounded-full bg-surface-muted hover:bg-surface-hover text-text-muted hover:text-text-primary transition-colors ml-1"
+          >
+            <X size={12} weight="bold" />
+          </button>
+        )}
       </form>
     )
   }

@@ -26,7 +26,7 @@ export async function GET() {
     .map((s) => s.id);
 
   // Fallback for legacy source IDs that might be saved in user's library before they were renamed
-  const legacyNsfwIds = ["doujindesu", "nhentai", "manhwadesu", "project-alpha", "project-beta", "project-gamma"];
+  const legacyNsfwIds = ["project-alpha", "project-beta", "project-gamma", "project-delta"];
   legacyNsfwIds.forEach(id => {
     if (!nsfwSourceIds.includes(id)) {
       nsfwSourceIds.push(id);

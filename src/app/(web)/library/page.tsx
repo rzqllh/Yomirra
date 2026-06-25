@@ -6,6 +6,7 @@ import { LibrarySkeleton } from "@/components/skeletons/library-skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
 import { MangaCard } from "@/components/manga/manga-card";
+import { SearchField } from "@/components/ui/search-field";
 import { MangaCardSkeleton } from "@/components/skeletons/manga-card-skeleton";
 import { MagnifyingGlass, CircleNotch, SmileySad, X, Funnel, Books, Clock, SquaresFour, List } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/states/empty-state";
@@ -27,6 +28,8 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
+import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
+import { useMounted } from "@/shared/hooks/use-mounted";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { YomirraSurface } from "@/components/ui/layout";
 import { YomirraPageHeader, DesktopPageTitle } from "@/components/app/header";
@@ -45,6 +48,7 @@ const STATUSES = [
 ];
 
 function LibraryContent() {
+  const isMounted = useMounted();
   const searchParams = useSearchParams();
   const sourceParam = searchParams.get("source");
   const genreParams = searchParams.getAll("genre").map(g => g.toLowerCase().replace(/\s+/g, '-'));
@@ -66,7 +70,9 @@ function LibraryContent() {
   const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid");
   
   const { isSourceDisabled } = useSourcePreferencesStore();
-  const isDisabled = isSourceDisabled(activeSourceId);
+  const sourceObj = dynamicSourceRegistry.get(activeSourceId);
+  const isDown = sourceObj?.status === "unavailable";
+  const isDisabled = isSourceDisabled(activeSourceId) || isDown;
   
   const deferredSearchInput = React.useDeferredValue(searchInput);
 
@@ -233,6 +239,16 @@ function LibraryContent() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [page]);
 
+  if (!isMounted) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <YomirraSurface variant="base" className="flex-1 w-full max-w-7xl mx-auto px-4 py-8">
+          <LibrarySkeleton />
+        </YomirraSurface>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col min-h-screen">
       <YomirraSurface variant="base" className="flex-1 w-full max-w-7xl mx-auto md:pb-8">
@@ -263,29 +279,19 @@ function LibraryContent() {
             </div>
 
             <div className="flex w-full md:w-auto items-center gap-3">
-              <form 
-                onSubmit={handleSearchSubmit} 
-                className="flex-1 md:w-64 flex items-center gap-2 rounded-full bg-surface-glass backdrop-blur-md px-4 h-[44px] transition-all duration-300 focus-within:bg-surface-glass focus-within:-md focus-within:-accent-dim focus-within:ring-2 focus-within:ring-accent/50 shadow-[0_4px_16px_rgba(0,0,0,0.05)] dark:-[0_4px_16px_rgba(0,0,0,0.2)]"
-              >
-                <MagnifyingGlass className="size-4 text-text-muted shrink-0 transition-colors focus-within:text-accent" weight="bold" />
-                <input 
-                  type="text" 
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  placeholder="Cari..." 
-                  className="flex-1 bg-transparent text-base font-medium text-text-primary outline-none placeholder:text-text-muted/70"
-                />
-                {query && (
-                  <button type="button" onClick={() => { setSearchInput(""); setQuery(""); setPage(1); }} className="p-0.5 rounded-full bg-surface-muted hover:bg-surface-hover text-text-muted hover:text-text-primary transition-colors">
-                    <X size={12} weight="bold" />
-                  </button>
-                )}
-              </form>
+              <SearchField 
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onSubmitAction={handleSearchSubmit}
+                onClear={() => { setSearchInput(""); setQuery(""); setPage(1); }}
+                placeholder="Cari..." 
+                containerClassName="flex-1 md:w-64 h-[44px]"
+              />
 
               <Button
                 variant={activeFilterCount > 0 ? "accent" : "outline"}
                 size="sm"
-                className={cn("rounded-full font-bold gap-1.5 h-[44px] px-5 transition-all duration-300", activeFilterCount > 0 ? "-md" : "bg-surface-glass backdrop-blur-md text-text-primary hover:bg-surface-glass hover:text-text-primary shadow-[0_4px_16px_rgba(0,0,0,0.05)] dark:-[0_4px_16px_rgba(0,0,0,0.2)]")}
+                className={cn("rounded-full font-bold gap-1.5 h-[44px] px-5 transition-all duration-300", activeFilterCount > 0 ? "shadow-md" : "bg-surface-glass backdrop-blur-md text-text-primary hover:bg-surface-glass hover:text-text-primary shadow-[0_4px_16px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.2)]")}
                 onClick={() => setShowFilters(!showFilters)}
               >
                 <Funnel size={16} weight={activeFilterCount > 0 ? "fill" : "bold"} />
@@ -312,6 +318,82 @@ function LibraryContent() {
               </div>
             </div>
           </div>
+
+          {/* Active Filters Display */}
+          {(selectedGenres.length > 0 || excludedGenres.length > 0 || selectedFormats.length > 0 || selectedStatuses.length > 0) && (
+            <div className="flex overflow-x-auto [scrollbar-width:none] snap-x pb-2 gap-2 mt-4">
+              <AnimatePresence>
+                {selectedGenres.map(id => {
+                  const g = GENRES.find(x => x.id === id);
+                  if (!g) return null;
+                  return (
+                    <motion.button
+                      key={`inc-${id}`}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      onClick={() => toggleGenre(id)}
+                      className="relative flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all outline-none border border-accent bg-accent/10 text-accent hover:bg-accent/20 shadow-sm"
+                    >
+                      <CheckCircle weight="fill" size={14} />
+                      {g.name}
+                    </motion.button>
+                  );
+                })}
+                {excludedGenres.map(id => {
+                  const g = GENRES.find(x => x.id === id);
+                  if (!g) return null;
+                  return (
+                    <motion.button
+                      key={`exc-${id}`}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      onClick={() => toggleGenre(id)}
+                      className="relative flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all outline-none border border-semantic-error bg-semantic-error/10 text-semantic-error hover:bg-semantic-error/20 shadow-sm"
+                    >
+                      <span className="font-black text-sm leading-none">-</span>
+                      {g.name}
+                    </motion.button>
+                  );
+                })}
+                {selectedFormats.map(id => {
+                  const f = DYNAMIC_FORMATS.find(x => x.id === id);
+                  if (!f) return null;
+                  return (
+                    <motion.button
+                      key={`fmt-${id}`}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      onClick={() => toggleFilter(id, selectedFormats, setSelectedFormats)}
+                      className="relative flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all outline-none border border-accent bg-accent/10 text-accent hover:bg-accent/20 shadow-sm"
+                    >
+                      <CheckCircle weight="fill" size={14} />
+                      {f.name}
+                    </motion.button>
+                  );
+                })}
+                {selectedStatuses.map(id => {
+                  const s = DYNAMIC_STATUSES.find(x => x.id === id);
+                  if (!s) return null;
+                  return (
+                    <motion.button
+                      key={`sts-${id}`}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      onClick={() => toggleFilter(id, selectedStatuses, setSelectedStatuses)}
+                      className="relative flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all outline-none border border-accent bg-accent/10 text-accent hover:bg-accent/20 shadow-sm"
+                    >
+                      <CheckCircle weight="fill" size={14} />
+                      {s.name}
+                    </motion.button>
+                  );
+                })}
+              </AnimatePresence>
+            </div>
+          )}
 
           {/* Collapsible Filters Section */}
           <AnimatePresence>
@@ -401,12 +483,10 @@ function LibraryContent() {
 
           {isDisabled ? (
             <EmptyState
-              variant="compact"
               icon={<Funnel size={40} className="text-text-muted" weight="duotone" />}
               title="Sumber Dinonaktifkan"
               description="Kamu telah menonaktifkan sumber ini. Aktifkan kembali di halaman Sumber untuk melihat pustaka."
               action={<Button onClick={() => router.push('/sources')} variant="outline" className="mt-4 rounded-full shadow-sm font-bold">Kelola Sumber</Button>}
-              className="bg-surface-overlay rounded-xl border border-border-subtle border-dashed py-16"
             />
           ) : isLoading ? (
             <div className={cn(
@@ -420,21 +500,17 @@ function LibraryContent() {
             </div>
           ) : isError ? (
             <EmptyState
-              variant="compact"
               icon={<SmileySad size={40} className="text-text-muted" weight="duotone" />}
               title="Gagal memuat katalog"
               description="Terjadi kesalahan saat mengambil data dari sumber."
               action={<Button onClick={() => refetch()} variant="outline" className="mt-4 rounded-full shadow-sm font-bold">Coba lagi</Button>}
-              className="bg-surface-overlay rounded-xl border border-border-subtle py-16"
             />
           ) : mangas.length === 0 ? (
             <EmptyState
-              variant="compact"
               icon={<MagnifyingGlass size={40} className="text-text-muted" weight="duotone" />}
               title="Manga tidak ditemukan"
               description="Coba ubah kombinasi filter atau kata kunci pencarian."
               action={<Button onClick={resetFilters} variant="outline" className="mt-4 rounded-full shadow-sm font-bold">Reset Filter</Button>}
-              className="bg-surface-overlay rounded-xl border border-border-subtle border-dashed py-16"
             />
           ) : (
             <>
