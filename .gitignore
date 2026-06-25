@@ -68,3 +68,4 @@ agent.md
 # Secret Config
 .env.local
 readme-secret.md
+src/server/lib/sources/adapters/project-*/
