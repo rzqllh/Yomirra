@@ -1,15 +1,20 @@
 import * as React from "react"
-import { MagnifyingGlass } from "@phosphor-icons/react"
+import { MagnifyingGlass, X } from "@phosphor-icons/react"
 import { cn } from "@/shared/utils/cn"
 
 export interface SearchInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onSubmit'> {
   onSubmitAction?: (e: React.FormEvent, value: string) => void;
+  onClear?: () => void;
   shortcut?: string;
   containerClassName?: string;
 }
 
 export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
-  ({ className, containerClassName, onSubmitAction, shortcut, value, onChange, ...props }, ref) => {
+  ({ className, containerClassName, onSubmitAction, onClear, shortcut, value, onChange, ...props }, ref) => {
+    
+    const handleClear = () => {
+      onClear?.();
+    };
     
     const handleSubmit = (e: React.FormEvent) => {
       e.preventDefault();
@@ -43,6 +48,16 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
           )}
           {...props}
         />
+        {value && onClear && (
+          <button
+            type="button"
+            onClick={handleClear}
+            className="flex items-center justify-center text-text-muted hover:text-text-primary transition-colors p-1"
+            aria-label="Clear search"
+          >
+            <X size={16} weight="bold" />
+          </button>
+        )}
         {shortcut && (
           <kbd className="hidden lg:inline-flex h-6 select-none items-center gap-1 rounded-sm border border-border-default bg-surface-base px-2 font-mono text-[11px] font-bold text-text-muted">
             {shortcut}

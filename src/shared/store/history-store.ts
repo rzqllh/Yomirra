@@ -61,7 +61,15 @@ export const useHistoryStore = create<HistoryState>()(
         
         if (entries.length > MAX_HISTORY_ITEMS) {
           entries.sort((a, b) => b[1].readAt - a[1].readAt);
-          return { items: Object.fromEntries(entries.slice(0, MAX_HISTORY_ITEMS)) };
+          const keptEntries = entries.slice(0, MAX_HISTORY_ITEMS);
+          const evictedEntries = entries.slice(MAX_HISTORY_ITEMS);
+          
+          // Cleanup evicted items from Firebase
+          evictedEntries.forEach(([, item]) => {
+            deleteHistoryItem(item.sourceId, item.mangaId, item.chapterId);
+          });
+          
+          return { items: Object.fromEntries(keptEntries) };
         }
 
         return { items: newItems };

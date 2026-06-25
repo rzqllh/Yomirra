@@ -7,7 +7,7 @@ import { sourceManager } from "@/server/lib/sources/source-manager";
 import { YomirraSection } from "@/components/ui/layout";
 import { ErrorState } from "@/components/states/error-state";
 import { HorizontalScrollContainer } from "@/components/ui/horizontal-scroll-container";
-import { PopularCarousel } from "@/components/ui/popular-carousel";
+import { PopularCarousel } from "@/components/app/popular-carousel";
 import { Clock, Play, Fire, TrendUp, Compass } from "@phosphor-icons/react/dist/ssr";
 import { FeaturedHeroCarousel } from "@/components/app/featured-hero-carousel";
 import { MagazineHero } from "@/components/app/magazine-hero";

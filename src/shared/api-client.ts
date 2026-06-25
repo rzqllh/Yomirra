@@ -140,11 +140,17 @@ class ApiClient {
   }
 
   async toggleHistory(sourceId: string, mangaId: string): Promise<{ added: boolean }> {
-    return this.post<{ added: boolean }>(`/api/history`, { sourceId, mangaId });
+    return this.fetcher<{ added: boolean }>(`/api/history`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sourceId, mangaId })
+    });
   }
 
   async getAnilistScore(title: string): Promise<{ score?: number }> {
-    return this.get<{ score?: number }>(`/api/metadata/anilist-score`, { title });
+    const sp = new URLSearchParams();
+    if (title) sp.set("title", title);
+    return this.fetcher<{ score?: number }>(`/api/metadata/anilist-score?${sp.toString()}`);
   }
 }
 

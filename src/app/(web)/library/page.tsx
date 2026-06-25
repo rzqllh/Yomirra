@@ -6,9 +6,20 @@ import { LibrarySkeleton } from "@/components/skeletons/library-skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
 import { MangaCard } from "@/components/manga/manga-card";
-import { SearchField } from "@/components/ui/search-field";
+import { SearchInput } from "@/components/ui/search-input";
 import { MangaCardSkeleton } from "@/components/skeletons/manga-card-skeleton";
-import { MagnifyingGlass, CheckCircle, CircleNotch, SmileySad, X, Funnel, Books, Clock, SquaresFour, List } from "@phosphor-icons/react";
+import { 
+  MagnifyingGlass, 
+  CheckCircle, 
+  CircleNotch, 
+  SmileySad, 
+  X, 
+  Funnel, 
+  Books, 
+  Clock, 
+  SquaresFour, 
+  List 
+} from "@phosphor-icons/react";
 import { EmptyState } from "@/components/states/empty-state";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/shared/utils/cn";
@@ -279,7 +290,7 @@ function LibraryContent() {
             </div>
 
             <div className="flex w-full md:w-auto items-center gap-3">
-              <SearchField 
+              <SearchInput 
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 onSubmitAction={handleSearchSubmit}
