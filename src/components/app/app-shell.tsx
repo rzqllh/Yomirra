@@ -23,7 +23,29 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     } else {
       document.body.classList.remove("reader-active")
     }
-    return () => document.body.classList.remove("reader-active")
+
+    // Prevent pinch-zoom globally except in reader (for iOS PWA)
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!isReader && e.touches.length > 1) {
+        e.preventDefault();
+      }
+    };
+
+    // Prevent double tap to zoom via gesturestart (iOS specific)
+    const handleGestureStart = (e: Event) => {
+      if (!isReader) {
+        e.preventDefault();
+      }
+    };
+
+    document.addEventListener("touchmove", handleTouchMove, { passive: false });
+    document.addEventListener("gesturestart", handleGestureStart, { passive: false });
+
+    return () => {
+      document.body.classList.remove("reader-active");
+      document.removeEventListener("touchmove", handleTouchMove);
+      document.removeEventListener("gesturestart", handleGestureStart);
+    }
   }, [isReader])
 
   return (

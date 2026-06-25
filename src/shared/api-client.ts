@@ -138,6 +138,14 @@ class ApiClient {
       this.appendManifest(`/api/sources/${sourceId}/manga/${encodeURIComponent(mangaId)}/chapters/${encodeURIComponent(chapterId)}/pages`, sourceId)
     );
   }
+
+  async toggleHistory(sourceId: string, mangaId: string): Promise<{ added: boolean }> {
+    return this.post<{ added: boolean }>(`/api/history`, { sourceId, mangaId });
+  }
+
+  async getAnilistScore(title: string): Promise<{ score?: number }> {
+    return this.get<{ score?: number }>(`/api/metadata/anilist-score`, { title });
+  }
 }
 
 export const apiClient = new ApiClient();

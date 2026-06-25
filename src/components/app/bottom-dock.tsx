@@ -31,8 +31,8 @@ export function BottomDock() {
                 prefetch={false}
                 transitionTypes={['nav-lateral']}
                 className={cn(
-                  "group relative flex items-center justify-center h-[44px] outline-none tap-highlight-transparent transition-all duration-300 ease-out",
-                  isActive ? "w-[110px]" : "w-[44px]"
+                  "group relative flex items-center justify-center h-[44px] shrink-0 outline-none tap-highlight-transparent transition-all duration-300 ease-out",
+                  isActive ? "w-[120px]" : "w-[48px]"
                 )}
                 aria-label={item.label}
                 aria-current={isActive ? "page" : undefined}
@@ -84,7 +84,7 @@ export function BottomDock() {
               transitionTypes={['nav-lateral']}
               className={cn(
                 "group relative pointer-events-auto flex h-[56px] shrink-0 items-center justify-center rounded-full bg-surface-glass backdrop-blur-md shadow-sm border border-border-default/30 transition-all duration-300 outline-none tap-highlight-transparent overflow-hidden",
-                isActive ? "w-[130px]" : "w-[56px] text-text-secondary hover:text-text-primary"
+                isActive ? "w-[128px]" : "w-[56px] text-text-secondary hover:text-text-primary"
               )}
               aria-label={item.label}
             >
