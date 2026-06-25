@@ -8,7 +8,7 @@ import { apiClient } from "@/shared/api-client";
 import { MangaCard } from "@/components/manga/manga-card";
 import { SearchField } from "@/components/ui/search-field";
 import { MangaCardSkeleton } from "@/components/skeletons/manga-card-skeleton";
-import { MagnifyingGlass, CircleNotch, SmileySad, X, Funnel, Books, Clock, SquaresFour, List } from "@phosphor-icons/react";
+import { MagnifyingGlass, CheckCircle, CircleNotch, SmileySad, X, Funnel, Books, Clock, SquaresFour, List } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/states/empty-state";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/shared/utils/cn";
