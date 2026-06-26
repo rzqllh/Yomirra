@@ -76,3 +76,4 @@ src/server/lib/sources/adapters/doujindesu-*/
 
 src/server/lib/sources/adapters/manhwadesu/
 
+*.html

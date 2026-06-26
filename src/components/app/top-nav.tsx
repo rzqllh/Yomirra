@@ -97,7 +97,7 @@ export function TopNav() {
         {/* RIGHT: Search + Theme + Profile */}
         <div className="flex items-center gap-3 sm:gap-4 lg:gap-6 h-full z-10">
           {/* Global Search Trigger */}
-          {pathname !== '/library' && (
+          {pathname !== '/library' && pathname !== '/search' && (
             <div className="flex items-center">
               {/* Desktop pill */}
               <Link 
