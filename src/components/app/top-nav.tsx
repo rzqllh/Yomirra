@@ -100,25 +100,22 @@ export function TopNav() {
           {pathname !== '/library' && pathname !== '/search' && (
             <div className="flex items-center">
               {/* Desktop pill */}
-              <Link 
-                href="/search"
-                className={cn( "hidden sm:flex items-center gap-2 px-3 rounded-full transition-all text-text-muted hover:text-text-primary text-sm h-9 w-48", "bg-surface-glass backdrop-blur-md shadow-sm hover:bg-surface-hover/50" )}
+              <button 
+                onClick={() => window.dispatchEvent(new CustomEvent("open-command-menu"))}
+                className={cn( "hidden sm:flex items-center gap-2 px-3 rounded-full transition-all text-text-muted hover:text-text-primary text-sm h-9 w-48", "bg-surface-raised border backdrop-blur-md hover:bg-surface-hover/50" )}
               >
                 <MagnifyingGlass size={16} weight="duotone" />
                 <span className="flex-1 text-left opacity-70">Cari...</span>
-                <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border border-border-default/40 bg-surface-base px-1.5 font-mono text-[10px] font-medium text-text-muted opacity-70">
-                  <span className="text-xs">⌘</span>K
-                </kbd>
-              </Link>
+              </button>
               
               {/* Mobile icon only */}
-              <Link 
-                href="/search"
+              <button 
+                onClick={() => window.dispatchEvent(new CustomEvent("open-command-menu"))}
                 className="sm:hidden flex items-center justify-center size-9 rounded-full bg-surface-glass backdrop-blur-md shadow-sm hover:bg-surface-hover/50 text-text-secondary outline-none"
                 aria-label="Cari"
               >
                 <MagnifyingGlass size={18} weight="duotone" />
-              </Link>
+              </button>
             </div>
           )}
           

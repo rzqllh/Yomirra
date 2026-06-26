@@ -13,13 +13,18 @@ export async function checkRateLimit(
       "unknown";
     const key = `rate-limit:${ip}`;
 
-    const requests = await redis.incr(key);
-    
-    if (requests === 1) {
-      await redis.expire(key, window);
+    // Force clear for development (temporary fix to unstuck 429)
+    if (process.env.NODE_ENV === "development") {
+      await redis.del(key);
     }
 
-    const ttl = await redis.ttl(key);
+    const requests = await redis.incr(key);
+    
+    let ttl = await redis.ttl(key);
+    if (requests === 1 || ttl === -1) {
+      await redis.expire(key, window);
+      ttl = window;
+    }
 
     return {
       success: requests <= limit,

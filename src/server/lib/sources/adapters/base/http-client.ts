@@ -17,6 +17,7 @@ export class HttpClient {
 
     const res = await fetch(url, {
       cache: "no-store",
+      signal: AbortSignal.timeout(10000), // 10s timeout to prevent infinite loading
       ...init,
       headers: {
         Accept: "application/json",
@@ -50,6 +51,7 @@ export class HttpClient {
 
     const res = await fetch(url, {
       cache: "no-store",
+      signal: AbortSignal.timeout(10000), // 10s timeout to prevent infinite loading
       ...init,
       headers: {
         Accept: "text/html,application/xhtml+xml,application/xml",

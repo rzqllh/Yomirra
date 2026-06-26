@@ -32,7 +32,7 @@ export function FeaturedHeroCarousel({ sourceId, mangas }: FeaturedHeroCarouselP
   const currentManga = mangas[currentIndex];
 
   // Fetch full details to get the synopsis
-  const { data: mangaDetail } = useQuery({
+  const { data: mangaDetail, isLoading: isDetailLoading } = useQuery({
     queryKey: ["manga-detail", sourceId, currentManga?.id],
     queryFn: () => apiClient.getDetail(sourceId, currentManga.id),
     enabled: !!currentManga?.id,
@@ -73,7 +73,7 @@ export function FeaturedHeroCarousel({ sourceId, mangas }: FeaturedHeroCarouselP
         </motion.div>
       </AnimatePresence>
 
-      <div className="relative z-10 p-6 pb-16 sm:p-10 sm:pb-24 md:p-14 md:pb-28 h-full flex flex-col items-center justify-center overflow-hidden">
+      <div className="relative z-10 p-6 pb-12 sm:p-8 sm:pb-14 md:p-10 md:pb-16 h-full flex flex-col items-center justify-center overflow-hidden">
         
         {/* Swipeable Content Area */}
         <div className="flex-1 w-full flex flex-col items-center justify-center">
@@ -91,7 +91,7 @@ export function FeaturedHeroCarousel({ sourceId, mangas }: FeaturedHeroCarouselP
               onDragEnd={handleDragEnd}
             >
               {/* Cover Art - Rotated */}
-              <div className="w-[140px] sm:w-[160px] md:w-[200px] shrink-0 aspect-[3/4] rounded-[2rem] overflow-hidden shadow-2xl mb-8 transform -rotate-3 hover:rotate-0 transition-transform duration-500 border-4 border-white/50 dark:border-white/10 pointer-events-none relative z-10">
+              <div className="w-[140px] sm:w-[160px] md:w-[180px] shrink-0 aspect-[3/4] rounded-[2rem] overflow-hidden shadow-2xl mb-6 transform -rotate-3 hover:rotate-0 transition-transform duration-500 border-4 border-white/50 dark:border-white/10 pointer-events-none relative z-10">
                 <img src={currentManga.coverUrl || ""} alt="Cover" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" />
               </div>
 
@@ -102,7 +102,7 @@ export function FeaturedHeroCarousel({ sourceId, mangas }: FeaturedHeroCarouselP
                   Sorotan Utama
                 </div>
                 
-                {mangaDetail === undefined && currentManga.id ? (
+                {isDetailLoading && currentManga.id ? (
                   /* Text Skeleton during loading */
                   <div className="w-full flex flex-col items-center gap-4 mb-4 h-[134px] sm:h-[162px]">
                     <div className="h-10 sm:h-12 w-3/4 bg-black/5 dark:bg-white/10 rounded-xl animate-pulse" />
@@ -139,7 +139,7 @@ export function FeaturedHeroCarousel({ sourceId, mangas }: FeaturedHeroCarouselP
         {/* Static Button (Outside AnimatePresence so it doesn't swipe/fade) */}
         <Link 
           href={`/sources/${sourceId}/manga/${currentManga.id}`}
-          className="bg-accent text-white border border-accent-hover/20 px-8 py-4 rounded-[2rem] font-bold shadow-xl shadow-accent/20 hover:scale-105 hover:bg-accent-hover active:scale-95 transition-all flex items-center justify-center gap-2.5 pointer-events-auto cursor-pointer w-full sm:w-auto mt-6 z-20"
+          className="bg-accent text-white border border-accent-hover/20 px-8 py-3 rounded-[2rem] font-bold shadow-xl shadow-accent/20 hover:scale-105 hover:bg-accent-hover active:scale-95 transition-all flex items-center justify-center gap-2.5 pointer-events-auto cursor-pointer w-full sm:w-auto mt-4 z-20"
           draggable={false}
         >
           <Play weight="fill" size={20} /> Mulai Membaca
@@ -147,7 +147,7 @@ export function FeaturedHeroCarousel({ sourceId, mangas }: FeaturedHeroCarouselP
       </div>
 
       {/* Progress Indicators */}
-      <div className="absolute bottom-6 sm:bottom-8 left-0 right-0 flex justify-center gap-2 z-20 pointer-events-auto">
+      <div className="absolute bottom-5 sm:bottom-6 left-0 right-0 flex justify-center gap-2 z-20 pointer-events-auto">
         {mangas.map((_, idx) => (
           <button 
             key={idx} 
