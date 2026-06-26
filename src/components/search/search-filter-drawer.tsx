@@ -196,7 +196,7 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]" />
         <Drawer.Content className="bg-surface-base flex flex-col rounded-t-[32px] mt-24 fixed bottom-0 left-0 right-0 z-[100] outline-none max-h-[90vh] shadow-heavy">
-          <div className="p-4 bg-surface-base rounded-t-[32px] flex-1 overflow-y-auto [scrollbar-width:none]">
+          <div className="p-4 bg-surface-base rounded-t-[32px] flex-1 overflow-y-auto [scrollbar-width:none] touch-manipulation" data-vaul-no-drag>
             <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-border-strong mb-6" />
             
             <div className="flex items-center justify-between mb-6 px-2">
@@ -263,6 +263,11 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
                       );
                     })}
                   </div>
+                  {searchableSources.some(s => s.status === "unavailable") && (
+                    <p className="text-xs text-semantic-error mt-2">
+                      * Sumber dengan status Down mungkin diblokir oleh anti-bot/proxy di production Vercel.
+                    </p>
+                  )}
                 </div>
               )}
 

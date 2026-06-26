@@ -34,7 +34,6 @@ import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { OfflineProvider } from "@/components/providers/offline-provider";
 import { Toaster } from "@/components/ui/sonner";
 
-
 export default function RootLayout({
   children,
 }: Readonly<{

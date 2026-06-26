@@ -60,7 +60,6 @@ Location: `src/server/lib/sources/adapters/`
 | `komikuasia` | `komikuasia` | ID | No | Indonesian manga |
 | `westmanga` | `westmanga` | ID | No | Indonesian manga |
 | `manhwadesu` | `manhwadesu` | ID | No | Indonesian manhwa |
-| `doujindesu` | `doujindesu` | ID | Yes | NSFW. Requires NSFW filter bypass for display. |
 | `project-alpha` | `project-alpha` | — | — | Private source |
 | `project-beta` | `project-beta` | — | — | Private source |
 | `project-gamma` | `project-gamma` | — | — | Private source |
@@ -200,7 +199,7 @@ Status values: `"online" | "slow" | "unavailable" | "unknown"`
 
 ## 11. NSFW Handling
 
-Sources with `isNsfw: true` (e.g., `doujindesu`):
+Sources with `isNsfw: true` (e.g., `project-alpha`):
 - Are hidden by default in source browser
 - Require explicit NSFW filter enable in settings
 - `useSettingsStore` controls NSFW visibility

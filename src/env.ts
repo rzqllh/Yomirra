@@ -8,6 +8,8 @@ const envSchema = z.object({
   REDIS_URL: z.string().url().default("redis://localhost:6379"),
   NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
   IMAGE_PROXY_SECRET: z.string().min(32),
+  PROJECT_ALPHA_API_SECRET: z.string().min(1).optional(),
+  PROJECT_ALPHA_API_SALT: z.string().min(1).optional(),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
 });
 
@@ -21,6 +23,8 @@ function getEnv(): Env {
     REDIS_URL: process.env.REDIS_URL,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     IMAGE_PROXY_SECRET: process.env.IMAGE_PROXY_SECRET,
+    PROJECT_ALPHA_API_SECRET: process.env.PROJECT_ALPHA_API_SECRET,
+    PROJECT_ALPHA_API_SALT: process.env.PROJECT_ALPHA_API_SALT,
     NODE_ENV: process.env.NODE_ENV,
   });
 
@@ -43,6 +47,8 @@ function getEnv(): Env {
       REDIS_URL: "redis://localhost:6379",
       NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
       IMAGE_PROXY_SECRET: "build-placeholder-secret-not-used-at-runtime-32chars",
+      PROJECT_ALPHA_API_SECRET: "build-placeholder-secret-not-used-at-runtime",
+      PROJECT_ALPHA_API_SALT: "build-placeholder-salt-not-used-at-runtime",
       NODE_ENV: (process.env.NODE_ENV as "development" | "test" | "production") || "production",
     };
   }

@@ -1,7 +1,7 @@
 export class HttpClient {
   constructor(private baseUrl: string, private defaultHeaders: Record<string, string> = {}) {}
 
-  async get<T>(path: string, params?: Record<string, string | number | boolean | string[]>): Promise<T> {
+  async get<T>(path: string, params?: Record<string, string | number | boolean | string[]>, init?: RequestInit): Promise<T> {
     let url = path.startsWith("http") ? path : `${this.baseUrl}${path}`;
     if (params) {
       const searchParams = new URLSearchParams();
@@ -16,13 +16,15 @@ export class HttpClient {
     }
 
     const res = await fetch(url, {
+      cache: "no-store",
+      ...init,
       headers: {
         Accept: "application/json",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         Connection: "close",
         ...this.defaultHeaders,
+        ...(init?.headers || {}),
       },
-      cache: "no-store",
     });
 
     if (!res.ok) {
@@ -32,7 +34,7 @@ export class HttpClient {
     return res.json() as Promise<T>;
   }
 
-  async getHtml(path: string, params?: Record<string, string | number | boolean | string[]>): Promise<string> {
+  async getHtml(path: string, params?: Record<string, string | number | boolean | string[]>, init?: RequestInit): Promise<string> {
     let url = path.startsWith("http") ? path : `${this.baseUrl}${path}`;
     if (params) {
       const searchParams = new URLSearchParams();
@@ -47,13 +49,15 @@ export class HttpClient {
     }
 
     const res = await fetch(url, {
+      cache: "no-store",
+      ...init,
       headers: {
         Accept: "text/html,application/xhtml+xml,application/xml",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         Connection: "close",
         ...this.defaultHeaders,
+        ...(init?.headers || {}),
       },
-      cache: "no-store",
     });
 
     if (!res.ok) {

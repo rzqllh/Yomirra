@@ -14,9 +14,9 @@ export class DoujindesuSource implements MangaSource {
   name = "Doujindesu";
   description = "Baca Doujinshi Bahasa Indonesia (18+)";
   language = "id";
-  baseUrl = "https://doujindesu.tv";
+  baseUrl = "https://doujindesu.ws";
   version = "1.0.0";
-  icon = "https://s2.googleusercontent.com/s2/favicons?domain=doujindesu.tv&sz=64";
+  icon = "https://s2.googleusercontent.com/s2/favicons?domain=doujindesu.ws&sz=64";
   isEnabled = true;
   isInstalled = true;
   status = "unavailable" as const;

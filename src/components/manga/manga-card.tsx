@@ -275,7 +275,7 @@ export function MangaCard({
             
             <div className="mt-1 flex items-center justify-between text-xs text-text-muted z-10 relative">
               <span className="truncate pr-2">{manga.latestChapter || "Detail"}</span>
-              <span className="font-semibold flex items-center gap-1 shrink-0"><Star weight="fill" className="text-semantic-warning" /> {displayScore ? displayScore.toFixed(1) : "-.-"}</span>
+              <span className="font-semibold flex items-center gap-1 shrink-0"><Star weight="fill" className="text-semantic-warning" /> <span suppressHydrationWarning>{Number(displayScore) > 0 ? Number(displayScore).toFixed(1) : "-.-"}</span></span>
             </div>
           </div>
         </Link>
@@ -358,7 +358,7 @@ export function MangaCard({
             </span>
             <span className="text-xs font-semibold flex items-center gap-1 text-text-muted shrink-0">
               <Star weight="fill" className="text-semantic-warning" /> 
-              {displayScore ? displayScore.toFixed(1) : "-.-"}
+              <span suppressHydrationWarning>{Number(displayScore) > 0 ? Number(displayScore).toFixed(1) : "-.-"}</span>
             </span>
           </div>
         </div>

@@ -6,6 +6,7 @@ import { KomikuSource } from "./komiku";
 import { KomikuAsiaSource } from "./komikuasia";
 
 import { MangaDexSource, MangaDexNsfwSource } from "./mangadex";
+import { KiryuuSource } from "./kiryuu";
 
 // Add new sources here
 export const sources: MangaSource[] = [
@@ -14,6 +15,7 @@ export const sources: MangaSource[] = [
   new WestMangaSource(),
   new KomikuSource(),
   new KomikuAsiaSource(),
+  new KiryuuSource(),
 
   new MangaDexSource(),
   new MangaDexNsfwSource(),

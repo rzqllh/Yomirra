@@ -69,3 +69,10 @@ agent.md
 .env.local
 readme-secret.md
 src/server/lib/sources/adapters/project-*/
+/docs/
+/GEMINI.md
+src/server/lib/sources/adapters/doujindesu-*/
+
+
+src/server/lib/sources/adapters/manhwadesu/
+

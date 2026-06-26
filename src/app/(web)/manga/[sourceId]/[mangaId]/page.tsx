@@ -5,6 +5,7 @@ import { MangaDetailView } from "@/components/manga/manga-detail-view";
 import { ErrorState } from "@/components/states/error-state";
 import { YomirraPageHeader } from "@/components/app/header";
 import { getManifestUrlFromCookie } from "@/server/lib/sources/server-manifest";
+import { cookies } from "next/headers";
 
 export async function generateMetadata({ 
   params 
@@ -40,6 +41,14 @@ export default async function MangaDetailPage({
   let detail;
   let chapters;
   try {
+    const cookieStore = await cookies();
+    const disabledCookie = cookieStore.get("yomirra-disabled-sources");
+    const disabledSources = disabledCookie ? JSON.parse(decodeURIComponent(disabledCookie.value)) : [];
+    
+    if (disabledSources.includes(sourceId)) {
+      throw new Error("Source is disabled");
+    }
+
     const manifestUrl = await getManifestUrlFromCookie(sourceId);
     const source = await sourceManager.getSource(sourceId, manifestUrl);
     
