@@ -41,7 +41,7 @@ export const sourceRegistry: SourceMetadata[] = [
     version: "1.0.0",
     isEnabled: true,
     isInstalled: true,
-    status: "in-dev",
+    status: "in-fix",
     healthStats: {
       uptime: "99.9%",
       latency: "150ms",
@@ -68,7 +68,7 @@ export const sourceRegistry: SourceMetadata[] = [
     version: "1.0.0",
     isEnabled: true,
     isInstalled: true,
-    status: "in-dev",
+    status: "online",
     healthStats: {
       uptime: "99.9%",
       latency: "286ms",
@@ -95,7 +95,7 @@ export const sourceRegistry: SourceMetadata[] = [
     version: "1.0.0",
     isEnabled: true,
     isInstalled: true,
-    status: "in-dev",
+    status: "in-fix",
     healthStats: {
       uptime: "0%",
       latency: "-",
@@ -151,7 +151,7 @@ export const sourceRegistry: SourceMetadata[] = [
     version: "1.0.0",
     isEnabled: true,
     isInstalled: true,
-    status: "online",
+    status: "in-fix",
     healthStats: {
       uptime: "99.9%",
       latency: "100ms",
@@ -178,7 +178,7 @@ export const sourceRegistry: SourceMetadata[] = [
     version: "1.0.0",
     isEnabled: true,
     isInstalled: true,
-    status: "in-dev",
+    status: "in-fix",
     isNsfw: false,
     healthStats: {
       uptime: "-",
