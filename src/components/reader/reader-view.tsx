@@ -94,9 +94,11 @@ export function ReaderView({
     let seriesProgressPercent = 0;
     
     // Assuming chapters are sorted newest (index 0) to oldest (index N)
+    let readCount = 0;
+    let totalChapters = 0;
     if (chapterIndex !== -1 && initialChapters?.length > 0) {
-       const totalChapters = initialChapters.length;
-       const readCount = totalChapters - chapterIndex; // Latest chapter = 100%
+       totalChapters = initialChapters.length;
+       readCount = totalChapters - chapterIndex; // Latest chapter = 100%
        seriesProgressPercent = Math.round((readCount / totalChapters) * 100);
     }
     
@@ -109,6 +111,8 @@ export function ReaderView({
       coverUrl: initialDetail.coverUrl,
       sourceName: sourceId,
       seriesProgressPercent,
+      chapterIndex: readCount,
+      totalChapters,
       readAt: Date.now(),
     });
 

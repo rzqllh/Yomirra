@@ -263,11 +263,6 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
                       );
                     })}
                   </div>
-                  {searchableSources.some(s => s.status === "unavailable") && (
-                    <p className="text-xs text-semantic-error mt-2">
-                      * Sumber dengan status Down mungkin diblokir oleh anti-bot/proxy di production Vercel.
-                    </p>
-                  )}
                 </div>
               )}
 

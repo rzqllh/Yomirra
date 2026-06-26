@@ -61,16 +61,16 @@ export async function SourceFeed({ sourceId, sourceName, variant }: SourceFeedPr
       {/* SECTION: Sorotan Terbaru (Top 5) */}
       {top5Trending.length > 0 && (
         <div className="flex flex-col gap-6">
-          <div className="flex justify-between items-end border-b border-border-subtle pb-4">
-            <h2 className="text-2xl font-bold flex items-center gap-3">
+          <div className="flex justify-between items-end pb-2">
+            <h2 className="text-3xl font-black tracking-tight flex items-center gap-3">
               <Fire weight="duotone" className="text-semantic-warning" /> Sorotan Terbaru
             </h2>
-            <Link href={`/sources/${sourceId}?sort=popular`} className="text-sm font-bold text-accent hover:underline">
+            <Link href={`/sources/${sourceId}?sort=popular`} className="text-sm font-bold text-accent hover:underline mb-1">
               Lihat Semua
             </Link>
           </div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-auto lg:h-[400px]">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-auto lg:h-[460px]">
             {/* Hero Carousel (Left 2 columns) - 10 Random Latest */}
             <FeaturedHeroCarousel sourceId={sourceId} mangas={shuffledLatest} />
 

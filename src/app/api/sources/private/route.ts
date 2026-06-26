@@ -20,16 +20,15 @@ export async function POST(request: NextRequest) {
       if (nsfwSourcesRaw) {
         try {
           nsfwSources = JSON.parse(nsfwSourcesRaw);
-          return NextResponse.json({ sources: nsfwSources });
         } catch (e) {
           console.error("Failed to parse SECRET_EXTENSION_SOURCES:", e);
-          return NextResponse.json({ sources: [] });
         }
       }
+      return NextResponse.json({ authorized: true, sources: nsfwSources });
     }
 
-    // Return empty if not admin or no sources defined
-    return NextResponse.json({ sources: [] });
+    // Return unauthorized if not admin
+    return NextResponse.json({ authorized: false, sources: [] });
   } catch (error) {
     console.error("Error in /api/sources/private:", error);
     return NextResponse.json({ sources: [] }, { status: 500 });

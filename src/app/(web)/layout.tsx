@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-ui",
@@ -49,6 +50,7 @@ export default function RootLayout({
                 <ErrorBoundary>
                   {children}
                   <Toaster position="top-center" />
+                  <SpeedInsights />
                 </ErrorBoundary>
               </AppShell>
             </div>

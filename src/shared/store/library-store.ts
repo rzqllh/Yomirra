@@ -51,7 +51,7 @@ const enforceItemCap = (items: Record<string, LibraryItem>, maxItems = 1000) => 
   const newItems = { ...items };
   keysToRemove.forEach(key => {
     const [sourceId, mangaId] = key.split("::");
-    deleteLibraryItem(sourceId, mangaId);
+    setTimeout(() => deleteLibraryItem(sourceId, mangaId), 0);
     delete newItems[key];
   });
   
@@ -69,7 +69,7 @@ export const useLibraryStore = create<LibraryState>()(
           if (source) item.isNsfw = source.isNsfw;
         }
         const id = getLibraryId(item.sourceId, item.mangaId);
-        pushLibraryItem(item); // Background sync
+        setTimeout(() => pushLibraryItem(item), 0); // Async Background sync
         return {
           items: enforceItemCap({
             ...state.items,
@@ -92,7 +92,7 @@ export const useLibraryStore = create<LibraryState>()(
         const id = getLibraryId(sourceId, mangaId);
         const newItems = { ...state.items };
         delete newItems[id];
-        deleteLibraryItem(sourceId, mangaId); // Background sync
+        setTimeout(() => deleteLibraryItem(sourceId, mangaId), 0); // Async Background sync
         return { items: newItems };
       }),
 
@@ -127,7 +127,7 @@ export const useLibraryStore = create<LibraryState>()(
         }
 
         const updatedItem = { ...existing, ...patch, isNsfw: patch.isNsfw !== undefined ? patch.isNsfw : isNsfw, updatedAt: new Date().toISOString() };
-        pushLibraryItem(updatedItem); // Background sync
+        setTimeout(() => pushLibraryItem(updatedItem), 0); // Async Background sync
 
         return {
           items: {
@@ -158,8 +158,7 @@ export const useLibraryStore = create<LibraryState>()(
               newItems[id] = cloudItem;
               hasChanges = true;
             } else if (localTime > cloudTime) {
-              // Local is newer, push to cloud to sync up
-              pushLibraryItem(localItem);
+              setTimeout(() => pushLibraryItem(localItem), 0);
             }
           }
         }
@@ -168,7 +167,7 @@ export const useLibraryStore = create<LibraryState>()(
         const cloudIds = new Set(cloudItems.map(item => getLibraryId(item.sourceId, item.mangaId)));
         for (const [id, localItem] of Object.entries(state.items)) {
           if (!cloudIds.has(id)) {
-            pushLibraryItem(localItem);
+            setTimeout(() => pushLibraryItem(localItem), 0);
           }
         }
 
@@ -179,7 +178,7 @@ export const useLibraryStore = create<LibraryState>()(
       name: "yomirra-library",
       partialize: (state) => ({
         items: Object.fromEntries(
-          Object.entries(state.items).filter(([_, item]) => !item.isNsfw)
+          Object.entries(state.items).filter(([ , item]) => !item.isNsfw)
         )
       })
     }

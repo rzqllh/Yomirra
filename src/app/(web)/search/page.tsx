@@ -149,6 +149,17 @@ function SearchContent() {
     enabled: query.length > 0 && activeSelectedSources.length > 0,
   });
 
+  const latestQueries = useQueries({
+    queries: activeSelectedSources.map(sourceId => ({
+      queryKey: ["latest", sourceId],
+      queryFn: () => apiClient.getLatest(sourceId, 1),
+      enabled: query.length === 0 && activeSelectedSources.length > 0,
+    }))
+  });
+
+  const isLatestLoading = latestQueries.some(q => q.isLoading);
+
+
   // Helper to interleave and deduplicate mangas from multiple sources
   const getMergedMangas = (sourceArrays: { sourceId: string, items: any[] }[]) => {
     const result: { manga: any, sourceId: string }[] = [];
@@ -178,11 +189,18 @@ function SearchContent() {
       sourceId,
       items: res.results || []
     }))
+  ) : query.length === 0 ? getMergedMangas(
+    latestQueries.map((q, idx) => ({
+      sourceId: activeSelectedSources[idx],
+      items: q.data?.mangas || []
+    }))
   ) : [];
 
   const searchErrors = query.length > 0 && searchResponse?.resultsBySource
     ? Object.entries(searchResponse.resultsBySource).map(([sourceId, res]) => res.error ? { sourceId, error: res.error } : null).filter(Boolean) as { sourceId: string, error: string }[]
-    : [];
+    : query.length === 0 
+      ? latestQueries.map((q, idx) => q.isError ? { sourceId: activeSelectedSources[idx], error: q.error?.message || "Gagal memuat" } : null).filter(Boolean) as { sourceId: string, error: string }[]
+      : [];
 
   const errorsToDisplay = searchErrors;
 
@@ -262,13 +280,9 @@ function SearchContent() {
                 description="Pilih setidaknya satu sumber di atas untuk mencari."
               />
             </motion.div>
-          ) : query.length === 0 ? (
-            <motion.div key="search-idle" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="pt-10">
-              <EmptyState 
-                icon={<MagnifyingGlass size={40} className="text-text-muted" weight="duotone" />}
-                title="Cari komik favoritmu"
-                description="Ketik judul komik pada kolom pencarian di atas untuk mulai mencari."
-              />
+          ) : query.length === 0 && isLatestLoading ? (
+            <motion.div key="latest-loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col gap-10">
+              <SearchResultSkeleton />
             </motion.div>
           ) : isLoading ? (
             <motion.div key="search-loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col gap-10">
@@ -286,7 +300,7 @@ function SearchContent() {
             <motion.div key="search-results" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="flex flex-col gap-4">
               <h2 className="text-lg font-bold flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-accent"></span>
-                Hasil Pencarian
+                {query.length === 0 ? "Update Terbaru" : "Hasil Pencarian"}
                 <span className="text-sm text-text-muted font-normal ml-2">
                   ({searchMangas.length} judul)
                 </span>

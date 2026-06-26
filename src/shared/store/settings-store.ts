@@ -29,9 +29,10 @@ export const useSettingsStore = create<SettingsState>()(
     {
       name: "yomirra-settings",
       partialize: (state) => {
-        const { isGodMode, ...rest } = state;
-        return rest;
-      }
+        // Remove transient states from persistence
+        // (Previously isGodMode was here, which caused it to reset on refresh)
+        return state;
+      },
     }
   )
 );

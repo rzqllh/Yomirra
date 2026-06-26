@@ -44,6 +44,7 @@ export function normalizeMangaItem(item: ShinigamiMangaItem & Record<string, unk
     format,
     latestChapter: item.latest_chapter_number ? `Chapter ${item.latest_chapter_number}` : undefined,
     latestChapterTime: item.latest_chapter_time,
+    score: (item.user_rate ?? item.rating) as number | undefined,
   };
 }
 
@@ -76,6 +77,7 @@ export function normalizeMangaDetail(detail: ShinigamiMangaDetail): MangaDetail 
     artist,
     genres,
     status: normalizeShinigamiStatus(detail.status),
+    score: ((detail as any).user_rate ?? (detail as any).rating) as number | undefined,
   };
 }
 
