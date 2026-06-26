@@ -41,7 +41,7 @@ export const sourceRegistry: SourceMetadata[] = [
     version: "1.0.0",
     isEnabled: true,
     isInstalled: true,
-    status: "in-fix",
+    status: "in-dev",
     healthStats: {
       uptime: "99.9%",
       latency: "150ms",

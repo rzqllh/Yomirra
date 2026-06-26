@@ -95,8 +95,18 @@ export class KomikuSource implements MangaSource {
 
     const title = $('#Judul h1').text().trim() || $('h1[itemprop="name"]').text().trim();
     const coverUrl = $('.ims img').attr('src') || '';
-    const description = $('#Sinopsis p').text().trim() || $('p[itemprop="description"]').text().trim() || "Tidak ada sinopsis";
     
+    let description = '';
+    const descElements = $('#Sinopsis p').length > 0 ? $('#Sinopsis p') : $('p[itemprop="description"]');
+    if (descElements.length > 0) {
+      descElements.each((i, el) => {
+        const text = $(el).text().trim();
+        if (text) description += text + "\n\n";
+      });
+      description = description.trim();
+    } else {
+      description = "Tidak ada sinopsis";
+    }
     let author = 'Unknown';
     let statusStr = 'Unknown';
     

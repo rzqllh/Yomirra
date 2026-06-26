@@ -11,6 +11,8 @@ A mobile-first PWA Manga/Webtoon Reader built with Next.js 16, React 19, Tailwin
 - **Customizable Reader**: Vertical scrolling (Webtoon mode), tap-to-scroll, and customizable reading settings.
 - **Unified Search & Library**: Multi-source global search and library browsing with advanced pagination, filters (genre, format, status), and seamless view modes.
 - **Premium UI/UX**: Features fluid View Transitions, Bento Grid layouts, and high-end animations powered by Motion.
+- **Unified Homepage Feed**: Combines latest and popular manga from multiple active sources into a single, seamless Bento-style interface.
+- **Robust Error Handling**: Manages source timeouts and API rate limits gracefully with responsive fallback states and skeletons.
 - **Performance Tracking**: Integrated with Vercel Speed Insights for real-time performance monitoring.
 
 ## Tech Stack
