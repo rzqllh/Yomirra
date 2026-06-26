@@ -9,7 +9,7 @@ A mobile-first PWA Manga/Webtoon Reader built with Next.js 16, React 19, Tailwin
 - **Offline Reading**: Download chapters for offline reading (cached via Service Worker).
 - **History & Bookmarks**: Sync reading history and bookmarks across devices via Firebase.
 - **Customizable Reader**: Vertical scrolling (Webtoon mode), tap-to-scroll, and customizable reading settings.
-- **Search & Filter**: Global search across all sources with genre, format, and status filters.
+- **Unified Search & Library**: Multi-source global search and library browsing with advanced pagination, filters (genre, format, status), and seamless view modes.
 - **Premium UI/UX**: Features fluid View Transitions, Bento Grid layouts, and high-end animations powered by Motion.
 - **Performance Tracking**: Integrated with Vercel Speed Insights for real-time performance monitoring.
 

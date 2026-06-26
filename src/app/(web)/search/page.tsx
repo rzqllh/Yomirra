@@ -211,7 +211,7 @@ function SearchContent() {
   ) : [];
 
   const hasNextPage = query.length > 0 
-    ? searchResponse?.hasNextPage || Object.values(searchResponse?.resultsBySource || {}).some((res: any) => res.hasNextPage)
+    ? Object.values(searchResponse?.resultsBySource || {}).some((res: any) => res.hasNextPage)
     : latestQueries.some(q => q.data?.hasNextPage);
 
   const searchErrors = query.length > 0 && searchResponse?.resultsBySource
