@@ -100,7 +100,8 @@ export class KomikuSource implements MangaSource {
     const descElements = $('#Sinopsis p').length > 0 ? $('#Sinopsis p') : $('p[itemprop="description"]');
     if (descElements.length > 0) {
       descElements.each((i, el) => {
-        const text = $(el).text().trim();
+        let text = $(el).text();
+        text = text.replace(/\s+/g, ' ').trim();
         if (text) description += text + "\n\n";
       });
       description = description.trim();

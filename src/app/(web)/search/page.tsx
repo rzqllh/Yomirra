@@ -112,6 +112,7 @@ function SearchContent() {
     // Search page bypasses the rule, but still respects God Mode for NSFW sources
     return s.filter(src => {
       if (!src.isInstalled || !src.capabilities?.search) return false;
+      if (src.status !== "online") return false; // Hide sources that are in-fix or in-dev
       if (src.isNsfw && !isGodMode) return false;
       return true;
     });

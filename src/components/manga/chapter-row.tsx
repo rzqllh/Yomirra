@@ -25,6 +25,16 @@ export function ChapterRow({
   isRead = false,
   isLastRead = false
 }: ChapterRowProps) {
+  
+  // Format date safely
+  const formattedDate = React.useMemo(() => {
+    if (!date) return "";
+    const d = new Date(date);
+    // If it's not a valid date (like "20 jam lalu"), just return the string
+    if (isNaN(d.getTime())) return String(date);
+    return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+  }, [date]);
+
   return (
     <Link
       href={getReaderHref(sourceId, mangaId, chapterId)}
@@ -49,7 +59,7 @@ export function ChapterRow({
           {chapterTitle}
         </h4>
         <p className="text-[11px] md:text-xs text-text-muted/70 mt-1.5 md:mt-0 font-medium shrink-0 flex items-center gap-1.5">
-          {new Date(date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
+          {formattedDate}
         </p>
       </div>
 
