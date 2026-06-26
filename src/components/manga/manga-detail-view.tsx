@@ -192,7 +192,7 @@ export function MangaDetailView({
               <span className="text-text-primary bg-surface-overlay border border-border-default px-1.5 py-0.5 rounded-sm text-2xs uppercase tracking-wider font-bold">{detail.status}</span>
               <span className="flex items-center gap-1 font-semibold text-sm">
                 <Star weight="fill" className="text-semantic-warning" />
-                {displayScore ? displayScore.toFixed(1) : "-.-"}
+                <span suppressHydrationWarning>{Number(displayScore) > 0 ? Number(displayScore).toFixed(1) : "-.-"}</span>
               </span>
               <span>•</span>
               <MangaRating sourceId={sourceId} mangaId={mangaId} />
@@ -239,7 +239,7 @@ export function MangaDetailView({
                 <span>•</span>
                 <span className="flex items-center gap-1 font-semibold">
                   <Star weight="fill" className="text-semantic-warning" />
-                  {displayScore ? displayScore.toFixed(1) : "-.-"}
+                  <span suppressHydrationWarning>{Number(displayScore) > 0 ? Number(displayScore).toFixed(1) : "-.-"}</span>
                 </span>
                 <span>•</span>
                 <MangaRating sourceId={sourceId} mangaId={mangaId} />

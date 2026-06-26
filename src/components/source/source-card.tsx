@@ -26,8 +26,7 @@ export function SourceCard({ source, onUpdate }: SourceCardProps & { onUpdate?: 
   
   const { isSourceDisabled, toggleSource } = useSourcePreferencesStore();
   // The source is considered "enabled" locally if it is NOT in the disabledSources array
-  // If the source is down, we automatically treat it as disabled unless overridden
-  const isEnabled = !isSourceDisabled(source.id) && source.status !== "unavailable";
+  const isEnabled = !isSourceDisabled(source.id);
 
   const handleDelete = async () => {
     if (confirm(`Hapus sumber ${source.name}?`)) {
@@ -92,7 +91,11 @@ export function SourceCard({ source, onUpdate }: SourceCardProps & { onUpdate?: 
               <div className="flex items-center ml-2 border-l border-border-subtle pl-3">
                 <ToggleSwitch 
                   checked={isEnabled}
-                  onCheckedChange={() => toggleSource(source.id)}
+                  onCheckedChange={() => {
+                    toggleSource(source.id);
+                    // Refresh current route to update SSR data based on new cookie
+                    window.dispatchEvent(new Event("sources_updated"));
+                  }}
                   title={isEnabled ? "Nonaktifkan Sumber" : "Aktifkan Sumber"}
                 />
               </div>

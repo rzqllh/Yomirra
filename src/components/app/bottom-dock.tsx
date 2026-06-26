@@ -12,7 +12,8 @@ export function BottomDock() {
 
   return (
     <nav 
-      className="md:hidden fixed bottom-6 left-0 w-full z-[var(--z-sticky)] pointer-events-none px-4"
+      className="md:hidden fixed left-0 w-full z-[var(--z-sticky)] pointer-events-none px-4"
+      style={{ bottom: "calc(env(safe-area-inset-bottom) + 24px)", transform: "translateZ(0)" }}
     >
       <div className="mx-auto flex w-fit max-w-full items-center justify-center gap-3">
         <div className="pointer-events-auto flex h-[56px] w-fit items-center justify-between gap-1 rounded-full bg-surface-glass backdrop-blur-md px-1.5 shadow-sm border border-border-default/30">

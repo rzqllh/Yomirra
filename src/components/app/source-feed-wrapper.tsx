@@ -41,11 +41,5 @@ export function SourceFeedWrapper({ sourceId, isNsfw, children }: SourceFeedWrap
     return null;
   }
 
-  // If the source is down, hide it
-  const source = dynamicSourceRegistry.get(sourceId);
-  if (source && source.status === "unavailable") {
-    return null;
-  }
-
   return <>{children}</>;
 }

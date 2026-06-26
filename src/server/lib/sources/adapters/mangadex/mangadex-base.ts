@@ -133,7 +133,14 @@ export abstract class MangaDexBase implements MangaSource {
 
     if (filters) {
       if (filters.genres && Array.isArray(filters.genres) && filters.genres.length > 0) {
-        params["includedTags[]"] = filters.genres;
+        const supportedGenres = this.getFilters().genres || [];
+        const uuidGenres = filters.genres
+          .map(g => supportedGenres.find(sg => sg.name.toLowerCase() === g.toLowerCase())?.id)
+          .filter(Boolean);
+        
+        if (uuidGenres.length > 0) {
+          params["includedTags[]"] = uuidGenres;
+        }
       }
       if (filters.statuses && Array.isArray(filters.statuses) && filters.statuses.length > 0) {
         params["status[]"] = filters.statuses;
