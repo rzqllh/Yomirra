@@ -14,7 +14,8 @@ export function PrivateSourcesProvider({ children }: { children: React.ReactNode
     if (loading) return;
 
     if (!user) {
-      // Clear private sources on logout
+      // Clear private sources on logout and enforce God Mode turning off
+      // per user requirement: God mode is strictly for authorized logged-in users.
       dynamicSourceRegistry.setVolatileSources([]);
       if (isGodMode) setGodMode(false);
       document.body.classList.remove("theme-god-mode");
@@ -32,11 +33,14 @@ export function PrivateSourcesProvider({ children }: { children: React.ReactNode
       })
         .then((res) => res.json())
         .then((data) => {
-          if (data.sources && Array.isArray(data.sources) && data.sources.length > 0) {
-            dynamicSourceRegistry.setVolatileSources(data.sources);
+          if (data.authorized) {
+            // Authorized! Keep God Mode on, set sources if any.
+            if (data.sources && Array.isArray(data.sources) && data.sources.length > 0) {
+              dynamicSourceRegistry.setVolatileSources(data.sources);
+            }
             document.body.classList.add("theme-god-mode");
           } else {
-            // Unauth or no sources
+            // Unauthorized or mismatched email -> turn off God Mode
             setGodMode(false);
             document.body.classList.remove("theme-god-mode");
           }

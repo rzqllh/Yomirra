@@ -90,44 +90,58 @@ export function ContinueReadingList({ items }: ContinueReadingListProps) {
         <h2 className="text-xl md:text-2xl font-bold flex items-center gap-3 px-2">
           <Clock weight="duotone" className="text-accent" /> Lanjut Baca
         </h2>
-        <div className="flex gap-4 overflow-x-auto pb-4 pt-2 snap-x snap-mandatory scrollbar-hide px-2">
+        <div className="flex gap-4 overflow-x-auto pb-6 pt-2 snap-x snap-mandatory scrollbar-hide px-2">
           {items.map((group) => {
-            const progress = group.progressPercent || 0;
+            const progress = group.seriesProgressPercent || group.progressPercent || 0;
             const targetHref = getReaderHref(group.sourceId, group.mangaId, group.chapterId);
             
             return (
               <div
                 key={`${group.mangaId}-${group.chapterId}`}
-                className="group flex flex-col items-center gap-3 shrink-0 snap-start w-20 sm:w-24 relative"
+                className="group relative shrink-0 snap-center w-[85vw] sm:w-[500px] md:w-[600px] h-[200px] md:h-[260px] rounded-3xl overflow-hidden"
               >
                 <Link 
                     href={targetHref} 
-                    className="absolute inset-0 z-10 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                    className="absolute inset-0 z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                     aria-label={`Lanjut baca ${group.mangaTitle}`}
                 />
                 
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-surface-muted shrink-0 overflow-hidden relative z-0 shadow-sm group-hover:shadow-md transition-shadow">
-                  {group.coverUrl && (
-                    <img 
-                      src={group.coverUrl} 
-                      alt={group.mangaTitle} 
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                      referrerPolicy="no-referrer"
-                    />
-                  )}
-                  {/* Circular Progress Ring Indicator */}
-                  <svg className="absolute inset-0 w-full h-full -rotate-90 pointer-events-none">
-                    <circle cx="50%" cy="50%" r="48%" stroke="var(--color-accent)" strokeWidth="4%" fill="none" strokeDasharray="301.59" strokeDashoffset={301.59 - (301.59 * progress / 100)} className="opacity-80 transition-all duration-1000" />
-                  </svg>
-
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <Play weight="fill" className="text-white w-6 h-6 ml-1" />
-                  </div>
-                </div>
+                {group.coverUrl && (
+                  <img 
+                    src={group.coverUrl} 
+                    alt={group.mangaTitle} 
+                    className="absolute inset-0 w-full h-full object-cover object-[50%_25%] group-hover:scale-105 transition-transform duration-1000" 
+                    referrerPolicy="no-referrer"
+                  />
+                )}
                 
-                <div className="text-center w-full">
-                  <h4 className="font-bold text-xs sm:text-sm text-text-primary truncate group-hover:text-accent transition-colors w-full px-1">{group.mangaTitle}</h4>
-                  <p className="text-text-muted text-[10px] sm:text-xs truncate w-full px-1">{group.chapterTitle || `Ch. ${group.chapterId}`}</p>
+                {/* Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent z-0" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-0" />
+
+                {/* Content */}
+                <div className="absolute inset-0 p-6 md:p-8 flex flex-col justify-center max-w-[80%] md:max-w-md text-white z-10">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="bg-accent/20 text-accent-hover px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-widest uppercase border border-accent/20">Lanjut Baca</span>
+                    <span className="text-white/60 text-xs font-medium">{group.chapterTitle || `Ch. ${group.chapterId}`}</span>
+                    {group.totalChapters ? (
+                      <span className="text-white/80 text-xs font-bold ml-auto">{group.chapterIndex} / {group.totalChapters}</span>
+                    ) : (
+                      <span className="text-white/80 text-xs font-bold ml-auto">{Math.round(progress)}%</span>
+                    )}
+                  </div>
+                  <h4 className="font-bold text-2xl md:text-3xl text-white truncate group-hover:text-accent-hover transition-colors w-full mb-6 tracking-tight drop-shadow-md">
+                    {group.mangaTitle}
+                  </h4>
+                  
+                  {/* Progress Bar */}
+                  <div className="w-full bg-white/20 h-1.5 rounded-full overflow-hidden mb-4 max-w-[200px]">
+                    <div className="bg-accent h-full" style={{ width: `${progress}%` }} />
+                  </div>
+                  
+                  <div className="bg-white text-black px-5 py-2.5 rounded-full font-bold w-fit flex items-center gap-2 text-sm shadow-xl group-hover:bg-accent group-hover:text-white transition-colors">
+                    <Play weight="fill" size={16} /> Lanjutkan
+                  </div>
                 </div>
               </div>
             );

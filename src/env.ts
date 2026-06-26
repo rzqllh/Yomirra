@@ -6,7 +6,11 @@ import { z } from "zod";
 
 const envSchema = z.object({
   REDIS_URL: z.string().url().default("redis://localhost:6379"),
-  NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
+  NEXT_PUBLIC_APP_URL: z.string().url().default(
+    process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL 
+      ? `https://${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}` 
+      : "https://yomirra.vercel.app"
+  ),
   IMAGE_PROXY_SECRET: z.string().min(32),
   PROJECT_ALPHA_API_SECRET: z.string().min(1).optional(),
   PROJECT_ALPHA_API_SALT: z.string().min(1).optional(),
@@ -45,7 +49,7 @@ function getEnv(): Env {
     // at the API route level with proper error handling.
     return {
       REDIS_URL: "redis://localhost:6379",
-      NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+      NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || "https://yomirra.vercel.app",
       IMAGE_PROXY_SECRET: "build-placeholder-secret-not-used-at-runtime-32chars",
       PROJECT_ALPHA_API_SECRET: "build-placeholder-secret-not-used-at-runtime",
       PROJECT_ALPHA_API_SALT: "build-placeholder-salt-not-used-at-runtime",

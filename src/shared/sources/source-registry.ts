@@ -30,61 +30,7 @@ export const sourceRegistry: SourceMetadata[] = [
       pages: true,
     }
   },
-  {
-    id: "komikindo",
-    name: "Komikindo",
-    description: "Baca Komik Bahasa Indonesia",
-    language: "id",
-    baseUrl: "https://komikindo.ch",
-    icon: "https://s2.googleusercontent.com/s2/favicons?domain=komikindo.ch&sz=64",
-    version: "1.0.0",
-    isEnabled: true,
-    isInstalled: true,
-    status: "online",
-    healthStats: {
-      uptime: "99.9%",
-      latency: "286ms",
-      lastChecked: "Baru saja",
-      message: "Server merespons dengan baik."
-    },
-    isNsfw: false,
-    capabilities: {
-      popular: true,
-      latest: true,
-      search: true,
-      detail: true,
-      chapters: true,
-      pages: true,
-    }
-  },
 
-  {
-    id: "westmanga",
-    name: "West Manga",
-    description: "Baca Manga, Manhwa, dan Manhua",
-    language: "id",
-    baseUrl: "https://westmanga.info",
-    icon: "https://s2.googleusercontent.com/s2/favicons?domain=westmanga.info&sz=64",
-    version: "1.0.0",
-    isEnabled: true,
-    isInstalled: true,
-    status: "unavailable",
-    isNsfw: false,
-    healthStats: {
-      uptime: "-",
-      latency: "-",
-      lastChecked: "Baru saja",
-      message: "Koneksi diblokir oleh proteksi Cloudflare."
-    },
-    capabilities: {
-      popular: true,
-      latest: true,
-      search: true,
-      detail: true,
-      chapters: true,
-      pages: true,
-    }
-  },
   {
     id: "komiku",
     name: "Komiku",
@@ -95,12 +41,39 @@ export const sourceRegistry: SourceMetadata[] = [
     version: "1.0.0",
     isEnabled: true,
     isInstalled: true,
-    status: "online",
+    status: "in-fix",
     healthStats: {
       uptime: "99.9%",
       latency: "150ms",
       lastChecked: "Baru saja",
       message: "Server berjalan normal tanpa kendala."
+    },
+    isNsfw: false,
+    capabilities: {
+      popular: true,
+      latest: true,
+      search: true,
+      detail: true,
+      chapters: true,
+      pages: true,
+    }
+  },
+  {
+    id: "komikindo",
+    name: "Komikindo",
+    description: "Baca Komik Bahasa Indonesia",
+    language: "id",
+    baseUrl: "https://komikindo.ch",
+    icon: "https://s2.googleusercontent.com/s2/favicons?domain=komikindo.ch&sz=64",
+    version: "1.0.0",
+    isEnabled: true,
+    isInstalled: true,
+    status: "in-dev",
+    healthStats: {
+      uptime: "99.9%",
+      latency: "286ms",
+      lastChecked: "Baru saja",
+      message: "Server merespons dengan baik."
     },
     isNsfw: false,
     capabilities: {
@@ -122,7 +95,7 @@ export const sourceRegistry: SourceMetadata[] = [
     version: "1.0.0",
     isEnabled: true,
     isInstalled: true,
-    status: "unavailable",
+    status: "in-dev",
     healthStats: {
       uptime: "0%",
       latency: "-",
@@ -150,7 +123,7 @@ export const sourceRegistry: SourceMetadata[] = [
     version: "1.0.0",
     isEnabled: true,
     isInstalled: true,
-    status: "online",
+    status: "in-fix",
     healthStats: {
       uptime: "99.9%",
       latency: "100ms",
@@ -186,6 +159,33 @@ export const sourceRegistry: SourceMetadata[] = [
       message: "Server berjalan normal."
     },
     isNsfw: true,
+    capabilities: {
+      popular: true,
+      latest: true,
+      search: true,
+      detail: true,
+      chapters: true,
+      pages: true,
+    }
+  },
+  {
+    id: "westmanga",
+    name: "West Manga",
+    description: "Baca Manga, Manhwa, dan Manhua",
+    language: "id",
+    baseUrl: "https://westmanga.info",
+    icon: "https://s2.googleusercontent.com/s2/favicons?domain=westmanga.info&sz=64",
+    version: "1.0.0",
+    isEnabled: true,
+    isInstalled: true,
+    status: "in-dev",
+    isNsfw: false,
+    healthStats: {
+      uptime: "-",
+      latency: "-",
+      lastChecked: "Baru saja",
+      message: "Koneksi diblokir oleh proteksi Cloudflare."
+    },
     capabilities: {
       popular: true,
       latest: true,

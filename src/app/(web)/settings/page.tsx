@@ -74,7 +74,7 @@ export default function SettingsPage() {
   const handleVersionClick = () => {
     if (!user) return; // Only allow if logged in
     
-    if (clickCount + 1 === 7) {
+    if (clickCount + 1 >= 7) {
       toggleGodMode();
       toast.success(!isGodMode ? "God Mode Diaktifkan" : "God Mode Dinonaktifkan");
       setClickCount(0);

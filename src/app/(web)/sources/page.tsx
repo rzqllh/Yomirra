@@ -148,10 +148,32 @@ export default function SourcesPage() {
               ) : (
                 <div className="space-y-4 pb-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {filteredSources.map((source) => (
+                    {filteredSources.filter(s => s.status !== 'in-fix' && s.status !== 'in-dev').map((source) => (
                       <SourceCard key={source.id} source={source} onUpdate={loadLocalSources} />
                     ))}
                   </div>
+
+                  {filteredSources.some(s => s.status === 'in-fix') && (
+                    <div className="pt-6">
+                      <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-4 px-2">In Progress Fixing</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                        {filteredSources.filter(s => s.status === 'in-fix').map((source) => (
+                          <SourceCard key={source.id} source={source} onUpdate={loadLocalSources} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {filteredSources.some(s => s.status === 'in-dev') && (
+                    <div className="pt-6">
+                      <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-4 px-2">In Progress Dev</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                        {filteredSources.filter(s => s.status === 'in-dev').map((source) => (
+                          <SourceCard key={source.id} source={source} onUpdate={loadLocalSources} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

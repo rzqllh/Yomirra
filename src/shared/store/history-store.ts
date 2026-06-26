@@ -14,8 +14,10 @@ export type HistoryItem = {
   pageIndex?: number;
   pageOffset?: number;
   totalPages?: number;
-  progressPercent?: number;
-  seriesProgressPercent?: number;
+  progressPercent?: number; // Page-level progress inside a chapter
+  seriesProgressPercent?: number; // Series-level progress across all chapters
+  chapterIndex?: number; // The current chapter index (0-based)
+  totalChapters?: number; // Total chapters available for this manga
   scrollPercent?: number;
   readAt: number;
   isNsfw?: boolean;
@@ -53,23 +55,30 @@ export const useHistoryStore = create<HistoryState>()(
         const existing = state.items[id];
         const finalItem = existing ? { ...existing, ...item, readAt: item.readAt } : item;
 
-        pushHistoryItem(finalItem); // Background sync
+        setTimeout(() => pushHistoryItem(finalItem), 0); // Async Background sync
         
         const newItems = { ...state.items, [id]: finalItem };
-        const entries = Object.entries(newItems);
+        const keys = Object.keys(newItems);
         const MAX_HISTORY_ITEMS = 1000;
         
-        if (entries.length > MAX_HISTORY_ITEMS) {
-          entries.sort((a, b) => b[1].readAt - a[1].readAt);
-          const keptEntries = entries.slice(0, MAX_HISTORY_ITEMS);
-          const evictedEntries = entries.slice(MAX_HISTORY_ITEMS);
+        if (keys.length > MAX_HISTORY_ITEMS) {
+          // O(N) trim of oldest item
+          let oldestKey = keys[0];
+          let oldestTime = newItems[oldestKey].readAt;
           
-          // Cleanup evicted items from Firebase
-          evictedEntries.forEach(([, item]) => {
-            deleteHistoryItem(item.sourceId, item.mangaId, item.chapterId);
-          });
+          for (let i = 1; i < keys.length; i++) {
+            const key = keys[i];
+            const time = newItems[key].readAt;
+            if (time < oldestTime) {
+              oldestTime = time;
+              oldestKey = key;
+            }
+          }
           
-          return { items: Object.fromEntries(keptEntries) };
+          const evictedItem = newItems[oldestKey];
+          delete newItems[oldestKey];
+          
+          setTimeout(() => deleteHistoryItem(evictedItem.sourceId, evictedItem.mangaId, evictedItem.chapterId), 0);
         }
 
         return { items: newItems };
@@ -92,7 +101,7 @@ export const useHistoryStore = create<HistoryState>()(
         const id = getHistoryId(sourceId, mangaId, chapterId);
         const newItems = { ...state.items };
         delete newItems[id];
-        deleteHistoryItem(sourceId, mangaId, chapterId); // Background sync
+        setTimeout(() => deleteHistoryItem(sourceId, mangaId, chapterId), 0); // Async Background sync
         return { items: newItems };
       }),
 
@@ -109,9 +118,11 @@ export const useHistoryStore = create<HistoryState>()(
         });
         
         if (hasChanges) {
-          import("@/shared/lib/sync-utils").then(({ deleteMangaHistory }) => {
-            deleteMangaHistory(sourceId, mangaId);
-          });
+          setTimeout(() => {
+            import("@/shared/lib/sync-utils").then(({ deleteMangaHistory }) => {
+              deleteMangaHistory(sourceId, mangaId);
+            });
+          }, 0);
         }
         
         return { items: newItems };
@@ -163,10 +174,7 @@ export const useHistoryStore = create<HistoryState>()(
         // Phase 2.4: Trigger mark-as-read at 90-95% progress
         let progressPercent = totalPages > 0 ? Math.round((pageIndex / totalPages) * 100) : 0;
         
-        // If we also get scroll percent (from vertical reader), use it to determine if we've read >90% of the chapter
-        if (scrollPercent !== undefined && scrollPercent > 90) {
-          progressPercent = 100;
-        } else if (progressPercent > 90) {
+        if ((scrollPercent ?? 0) > 90 || progressPercent > 90) {
           progressPercent = 100;
         }
         
@@ -186,7 +194,7 @@ export const useHistoryStore = create<HistoryState>()(
           isNsfw,
         };
         
-        pushHistoryItem(updatedItem); // Background sync
+        setTimeout(() => pushHistoryItem(updatedItem), 0); // Async Background sync
 
         return {
           items: {
@@ -239,7 +247,7 @@ export const useHistoryStore = create<HistoryState>()(
               hasChanges = true;
             } else if (localTime > cloudTime) {
               // Local is newer, push to cloud to sync up
-              pushHistoryItem(localItem);
+              setTimeout(() => pushHistoryItem(localItem), 0);
             }
           }
         }
@@ -248,7 +256,7 @@ export const useHistoryStore = create<HistoryState>()(
         const cloudIds = new Set(cloudItems.map(item => getHistoryId(item.sourceId, item.mangaId, item.chapterId)));
         for (const [id, localItem] of Object.entries(state.items)) {
           if (!cloudIds.has(id)) {
-            pushHistoryItem(localItem);
+            setTimeout(() => pushHistoryItem(localItem), 0);
           }
         }
 
@@ -260,7 +268,7 @@ export const useHistoryStore = create<HistoryState>()(
       version: 1,
       partialize: (state) => ({
         items: Object.fromEntries(
-          Object.entries(state.items).filter(([_, item]) => !item.isNsfw)
+          Object.entries(state.items).filter(([ , item]) => !item.isNsfw)
         )
       }),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

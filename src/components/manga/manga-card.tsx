@@ -128,7 +128,7 @@ export function MangaCard({
   const vtStyle = { '--vt-name': vtName } as React.CSSProperties;
 
   // Fetch Anilist score as single source of truth
-  const { data: anilistData } = useQuery({
+  const { data: anilistData, isLoading: isAnilistLoading } = useQuery({
     queryKey: ["anilist-score", manga.title],
     queryFn: () => apiClient.getAnilistScore(manga.title),
     staleTime: 1000 * 60 * 60 * 24, // 24 hours
@@ -215,68 +215,83 @@ export function MangaCard({
     );
   }
 
-  // --- EDITORIAL VARIANT --- (Ticket Stub)
+  // --- EDITORIAL VARIANT --- (Bento List x Card Remastered)
   if (variant === "editorial") {
     return (
       <motion.article
-        whileHover={{ y: -4 }}
+        whileHover={{ y: -2 }}
         whileTap={{ scale: 0.98 }}
         transition={{ ease: "easeOut", duration: 0.2 }}
-        className="relative w-full group min-w-[280px]"
+        className="w-full min-w-[280px]"
       >
         <Link 
           href={getMangaDetailHref(sourceId, manga.id, fullPath)} 
-          className="flex h-[120px] bg-surface-glass backdrop-blur-md rounded-3xl overflow-hidden cursor-pointer group hover:bg-surface-hover transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent shadow-sm vt-hover"
+          className="flex gap-2.5 h-[110px] cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent vt-hover"
           prefetch={false}
           aria-label={`Read ${manga.title}`}
           style={vtStyle}
         >
-          {manga.rank !== undefined && (
-            <div className="w-14 sm:w-16 shrink-0 flex items-center justify-center bg-surface-muted/30 border-r-2 border-dashed border-border-subtle relative">
-              <span className={cn(
-                "text-2xl sm:text-3xl font-black italic",
-                manga.rank === 1 ? "text-amber-500 drop-shadow-md" : 
-                manga.rank === 2 ? "text-slate-400 drop-shadow-md" : 
-                manga.rank === 3 ? "text-amber-700 drop-shadow-md" : 
-                "text-text-muted/50"
+          {/* Cover Bento Cell */}
+          <div className="relative w-[80px] shrink-0 bg-surface-raised rounded-2xl overflow-hidden shadow-sm border border-border-subtle group-hover:border-accent/30 group-hover:shadow-accent/10 transition-all">
+            {manga.coverUrl && !imageError ? (
+              <img src={manga.coverUrl} alt={manga.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={() => setImageError(true)} referrerPolicy="no-referrer" />
+            ) : (
+              <div className="h-full w-full bg-surface-muted flex flex-col items-center justify-center text-text-muted/50 p-2">
+                <ImageBroken size={24} weight="duotone" />
+              </div>
+            )}
+            
+            {/* Number Badge (Remastered inside cover) */}
+            {manga.rank !== undefined && (
+              <div className={cn(
+                "absolute top-0 left-0 backdrop-blur-md text-white font-black text-[11px] w-7 h-7 flex items-center justify-center rounded-br-xl shadow-md z-10",
+                manga.rank === 1 ? "bg-amber-500/90 text-amber-50" :
+                manga.rank === 2 ? "bg-slate-400/90 text-slate-50" :
+                manga.rank === 3 ? "bg-amber-700/90 text-amber-50" :
+                "bg-black/80"
               )}>
-                #{manga.rank}
-              </span>
-              <div className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-surface-base rounded-full z-20" />
-            </div>
-          )}
-          <div className={cn("bg-surface-muted shrink-0 relative", manga.rank !== undefined ? "w-20" : "w-24")}>
-             {manga.rank !== undefined && (
-               <div className="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-surface-base rounded-full z-20" />
-             )}
-             <div className="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-surface-base rounded-full z-20" />
-             {manga.coverUrl && !imageError ? (
-               <img src={manga.coverUrl} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" alt={manga.title} onError={() => setImageError(true)} referrerPolicy="no-referrer" />
-             ) : (
-               <div className="absolute inset-0 flex items-center justify-center">
-                 <ImageBroken size={24} weight="duotone" className="text-text-muted/50" />
-               </div>
-             )}
+                {manga.rank}
+              </div>
+            )}
           </div>
-          <div className="flex-1 p-4 pl-5 border-l-2 border-dashed border-border-subtle relative flex flex-col justify-center min-w-0">
-            <div className="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-surface-base rounded-full z-20" />
-            
-            <div className="flex items-center justify-between gap-2 mb-1 z-10 relative">
-               <div className="flex items-center gap-1.5 min-w-0">
-                 <span className="text-[10px] font-black text-accent uppercase tracking-wider shrink-0 bg-accent/10 px-1.5 py-0.5 rounded-sm">{manga.status || "Ongoing"}</span>
-                 {manga.format && <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider shrink-0 bg-surface-muted px-1.5 py-0.5 rounded-sm">{manga.format}</span>}
-               </div>
-               <div className="shrink-0 scale-90 origin-right">
-                  <BookmarkButton sourceId={sourceId} manga={manga} />
-               </div>
+
+          {/* Info Bento Cell */}
+          <div className="flex-1 bg-surface-raised rounded-2xl border border-border-subtle p-3.5 flex flex-col justify-center min-w-0 group-hover:bg-surface-overlay group-hover:border-accent/30 transition-all shadow-sm">
+            <div className="flex items-center gap-1.5 mb-2">
+              <span className="text-[9px] font-black uppercase text-accent bg-accent/10 px-2 py-0.5 rounded-md">{manga.status || "Ongoing"}</span>
+              {manga.format && <span className="text-[9px] font-black uppercase text-text-secondary bg-surface-base px-2 py-0.5 rounded-md">{manga.format}</span>}
             </div>
-            
-            <h4 className="text-sm sm:text-base font-bold truncate group-hover:text-accent transition-colors z-10 relative">{manga.title}</h4>
-            
-            <div className="mt-1 flex items-center justify-between text-xs text-text-muted z-10 relative">
-              <span className="truncate pr-2">{manga.latestChapter || "Detail"}</span>
-              <span className="font-semibold flex items-center gap-1 shrink-0"><Star weight="fill" className="text-semantic-warning" /> <span suppressHydrationWarning>{Number(displayScore) > 0 ? Number(displayScore).toFixed(1) : "-.-"}</span></span>
+            <h4 className="font-bold text-sm md:text-base text-text-primary leading-snug truncate group-hover:text-accent transition-colors">
+              {manga.title}
+            </h4>
+            <div className="mt-1.5 flex items-center justify-between">
+              <span className="text-xs text-text-secondary font-medium truncate pr-2">{manga.latestChapter || "Detail"}</span>
+              {timeText && <span className="text-[10px] text-text-muted whitespace-nowrap">{timeText}</span>}
             </div>
+          </div>
+
+          {/* Action/Rating Bento Cell */}
+          <div className="w-[48px] shrink-0 bg-surface-raised rounded-2xl border border-border-subtle flex flex-col items-center justify-center gap-3 shadow-sm group-hover:bg-surface-overlay group-hover:border-accent/30 transition-all relative overflow-hidden">
+             {/* Bookmark */}
+             <div className="z-10 scale-90 relative" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+               <BookmarkButton sourceId={sourceId} manga={manga} />
+             </div>
+             
+             {/* Divider */}
+             <div className="w-6 h-px bg-border-subtle z-10" />
+             
+             {/* Rating */}
+             <div className="flex flex-col items-center gap-0.5 text-semantic-warning z-10">
+               <Star weight="fill" size={12} />
+               {isAnilistLoading ? (
+                 <div className="w-4 h-3 bg-semantic-warning/20 animate-pulse rounded mt-0.5" />
+               ) : (
+                 <span className="text-[10px] font-black" suppressHydrationWarning>{Number(displayScore) > 0 ? Number(displayScore).toFixed(1) : "-.-"}</span>
+               )}
+             </div>
+             
+             {/* Hover Glow */}
+             <div className="absolute inset-0 bg-gradient-to-b from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
           </div>
         </Link>
       </motion.article>
@@ -348,7 +363,7 @@ export function MangaCard({
         </div>
 
         <div className="flex flex-col px-1">
-          <h3 className="line-clamp-2 text-sm font-bold text-text-primary leading-tight mb-1.5 group-hover:text-accent transition-colors duration-200">
+          <h3 className="truncate text-sm font-bold text-text-primary leading-tight mb-1.5 group-hover:text-accent transition-colors duration-200">
             {manga.title}
           </h3>
           

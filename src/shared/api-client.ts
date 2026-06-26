@@ -147,10 +147,41 @@ class ApiClient {
     });
   }
 
+  private anilistBatch: { title: string; resolve: (val: {score?: number}) => void; reject: (err: any) => void }[] = [];
+  private anilistTimeout: NodeJS.Timeout | null = null;
+
   async getAnilistScore(title: string): Promise<{ score?: number }> {
-    const sp = new URLSearchParams();
-    if (title) sp.set("title", title);
-    return this.fetcher<{ score?: number }>(`/api/metadata/anilist-score?${sp.toString()}`);
+    return new Promise((resolve, reject) => {
+      this.anilistBatch.push({ title, resolve, reject });
+      
+      if (!this.anilistTimeout) {
+        this.anilistTimeout = setTimeout(async () => {
+          const currentBatch = [...this.anilistBatch];
+          this.anilistBatch = [];
+          this.anilistTimeout = null;
+
+          try {
+            const titles = Array.from(new Set(currentBatch.map(b => b.title))).filter(Boolean);
+            if (titles.length === 0) {
+               currentBatch.forEach(b => b.resolve({ score: undefined }));
+               return;
+            }
+
+            const res = await this.fetcher<Record<string, number | undefined>>(`/api/metadata/anilist-score-batch`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ titles })
+            });
+
+            currentBatch.forEach(b => {
+              b.resolve({ score: res[b.title] });
+            });
+          } catch (e) {
+            currentBatch.forEach(b => b.reject(e));
+          }
+        }, 50); // Accumulate calls for 50ms
+      }
+    });
   }
 }
 
