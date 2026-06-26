@@ -19,6 +19,18 @@ import { SearchFilterDrawer } from "@/components/search/search-filter-drawer";
 import { DirectionalTransition } from "@/components/ui/directional-transition";
 import { useRouter } from "next/navigation";
 import { useDebounce } from "@/shared/hooks/use-debounce";
+import { cn } from "@/shared/utils/cn";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationNext10,
+  PaginationPrevious10,
+  PaginationEllipsis
+} from "@/components/ui/pagination";
 
 export default function SearchPage() {
   return (
@@ -43,6 +55,7 @@ function SearchContent() {
   const searchParams = useSearchParams();
   const query = searchParams?.get("q") || "";
   const [localQuery, setLocalQuery] = React.useState(query);
+  const [page, setPage] = React.useState(1);
   const router = useRouter();
 
   const debouncedQuery = useDebounce(localQuery, 800);
@@ -55,6 +68,7 @@ function SearchContent() {
       } else {
         params.set("q", debouncedQuery.trim());
       }
+      setPage(1); // Reset page on new query
       router.push(`/search?${params.toString()}`);
     }
   }, [debouncedQuery, query, router, searchParams]);
@@ -144,15 +158,15 @@ function SearchContent() {
   if (sort) filters["sort"] = sort;
 
   const { data: searchResponse, isLoading, error } = useQuery({
-    queryKey: ["searchGlobal", query, activeSelectedSources, isNsfwFiltered, filters],
-    queryFn: () => apiClient.searchGlobal(query, activeSelectedSources, isNsfwFiltered, filters),
+    queryKey: ["searchGlobal", query, activeSelectedSources, isNsfwFiltered, filters, page],
+    queryFn: () => apiClient.searchGlobal(query, activeSelectedSources, page, isNsfwFiltered, filters),
     enabled: query.length > 0 && activeSelectedSources.length > 0,
   });
 
   const latestQueries = useQueries({
     queries: activeSelectedSources.map(sourceId => ({
-      queryKey: ["latest", sourceId],
-      queryFn: () => apiClient.getLatest(sourceId, 1),
+      queryKey: ["latest", sourceId, page],
+      queryFn: () => apiClient.getLatest(sourceId, page),
       enabled: query.length === 0 && activeSelectedSources.length > 0,
     }))
   });
@@ -195,6 +209,10 @@ function SearchContent() {
       items: q.data?.mangas || []
     }))
   ) : [];
+
+  const hasNextPage = query.length > 0 
+    ? searchResponse?.hasNextPage || Object.values(searchResponse?.resultsBySource || {}).some((res: any) => res.hasNextPage)
+    : latestQueries.some(q => q.data?.hasNextPage);
 
   const searchErrors = query.length > 0 && searchResponse?.resultsBySource
     ? Object.entries(searchResponse.resultsBySource).map(([sourceId, res]) => res.error ? { sourceId, error: res.error } : null).filter(Boolean) as { sourceId: string, error: string }[]
@@ -305,15 +323,86 @@ function SearchContent() {
                   ({searchMangas.length} judul)
                 </span>
               </h2>
-              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8">
+              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-5 xl:grid-cols-5">
                 {searchMangas.map((item) => (
                   <MangaCard 
                     key={`${item.sourceId}-${item.manga.id}`}
                     sourceId={item.sourceId}
                     manga={item.manga}
+                    showSourceBadge={true}
                     priority={false}
                   />
                 ))}
+              </div>
+
+              {/* Advanced Pagination */}
+              <div className="mt-12 py-4">
+                <Pagination>
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious10
+                        onClick={() => setPage(p => Math.max(1, p - 10))}
+                        className={cn(page <= 10 && "opacity-50 pointer-events-none")}
+                        aria-disabled={page <= 10}
+                      />
+                    </PaginationItem>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        onClick={() => setPage(p => Math.max(1, p - 1))}
+                        className={cn(page === 1 && "opacity-50 pointer-events-none")}
+                        aria-disabled={page === 1}
+                      />
+                    </PaginationItem>
+                    
+                    {page > 2 && (
+                      <>
+                        <PaginationItem>
+                          <PaginationLink onClick={() => setPage(1)}>1</PaginationLink>
+                        </PaginationItem>
+                        <PaginationItem>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      </>
+                    )}
+                    
+                    {page > 1 && (
+                      <PaginationItem>
+                        <PaginationLink onClick={() => setPage(page - 1)}>{page - 1}</PaginationLink>
+                      </PaginationItem>
+                    )}
+                    
+                    <PaginationItem>
+                      <PaginationLink isActive>{page}</PaginationLink>
+                    </PaginationItem>
+
+                    {hasNextPage && (
+                      <PaginationItem>
+                        <PaginationLink onClick={() => setPage(page + 1)}>{page + 1}</PaginationLink>
+                      </PaginationItem>
+                    )}
+
+                    {hasNextPage && (
+                      <PaginationItem>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    )}
+
+                    <PaginationItem>
+                      <PaginationNext 
+                        onClick={() => setPage(p => p + 1)}
+                        className={cn(!hasNextPage && "opacity-50 pointer-events-none")}
+                        aria-disabled={!hasNextPage}
+                      />
+                    </PaginationItem>
+                    <PaginationItem>
+                      <PaginationNext10
+                        onClick={() => setPage(p => p + 10)}
+                        className={cn(!hasNextPage && "opacity-50 pointer-events-none")}
+                        aria-disabled={!hasNextPage}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
               </div>
             </motion.div>
           ) : (

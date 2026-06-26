@@ -13,6 +13,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/shared/utils/cn";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
+import { sourceRegistry } from "@/shared/sources/source-registry";
 
 export interface MangaCardProps {
   manga: MangaItem;
@@ -23,6 +24,7 @@ export interface MangaCardProps {
   chapterId?: string;
   chapterTitle?: string;
   progressPercent?: number;
+  showSourceBadge?: boolean;
   // eksplorasi specific
   rank?: number;
   score?: number;
@@ -114,7 +116,8 @@ export function MangaCard({
   variant = "shelf",
   chapterId,
   chapterTitle,
-  progressPercent
+  progressPercent,
+  showSourceBadge = false
 }: MangaCardProps) {
   const timeText = getRelativeTime(manga.latestChapterTime);
   const [imageError, setImageError] = React.useState(false);
@@ -137,6 +140,7 @@ export function MangaCard({
   });
 
   const displayScore = anilistData?.score ?? manga.score;
+  const sourceName = showSourceBadge ? (sourceRegistry.find(s => s.id === sourceId)?.name || sourceId) : null;
 
   // --- HISTORY VARIANT ---
   if (variant === "history") {
@@ -352,20 +356,26 @@ export function MangaCard({
               <BookmarkButton sourceId={sourceId} manga={manga} />
             </div>
           </div>
-          
-          <div className="absolute top-2 right-2 flex flex-wrap gap-1 z-20">
-            {manga.format && (
-              <div className="flex items-center justify-center rounded-md bg-surface-overlay/80 backdrop-blur-md px-2 py-1 shadow-sm -white/10">
-                <span className="text-[10px] font-black uppercase tracking-wider text-text-primary leading-none">{manga.format}</span>
-              </div>
-            )}
-          </div>
         </div>
 
-        <div className="flex flex-col px-1">
-          <h3 className="truncate text-sm font-bold text-text-primary leading-tight mb-1.5 group-hover:text-accent transition-colors duration-200">
+        <div className="flex flex-col px-1 mt-1.5">
+          <h3 className="truncate text-sm font-bold text-text-primary leading-tight mb-1 group-hover:text-accent transition-colors duration-200">
             {manga.title}
           </h3>
+          
+          {(showSourceBadge || manga.format) && (
+            <div className="flex items-center gap-1.5 mb-1.5 min-w-0">
+              {manga.format && (
+                <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider shrink-0">{manga.format}</span>
+              )}
+              {manga.format && showSourceBadge && sourceName && (
+                <span className="w-1 h-1 rounded-full bg-border-strong shrink-0" />
+              )}
+              {showSourceBadge && sourceName && (
+                <span className="text-[10px] font-bold text-accent uppercase tracking-wider truncate">{sourceName}</span>
+              )}
+            </div>
+          )}
           
           <div className="flex items-center justify-between mt-auto">
             <span className="text-xs font-medium text-text-muted truncate max-w-[70%]">

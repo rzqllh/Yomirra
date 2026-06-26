@@ -92,8 +92,8 @@ class ApiClient {
     })) as Promise<SearchResponse>;
   }
 
-  searchGlobal(query: string, sourceIds: string[], isNsfwFiltered: boolean = false, filters?: Record<string, string | string[]>) {
-    let url = `/api/sources/search?q=${encodeURIComponent(query)}&sources=${sourceIds.join(",")}`;
+  searchGlobal(query: string, sourceIds: string[], page: number = 1, isNsfwFiltered: boolean = false, filters?: Record<string, string | string[]>) {
+    let url = `/api/sources/search?q=${encodeURIComponent(query)}&sources=${sourceIds.join(",")}&page=${page}`;
     
     const finalFilters = { ...filters };
     

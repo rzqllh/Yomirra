@@ -63,14 +63,20 @@ export async function SourceFeed({ sourceId, sourceName, variant }: SourceFeedPr
         <div className="flex flex-col gap-6">
           <div className="flex justify-between items-end pb-2">
             <h2 className="text-3xl font-black tracking-tight flex items-center gap-3">
-              <Fire weight="duotone" className="text-semantic-warning" /> Sorotan Terbaru
+              <Fire weight="duotone" className="text-semantic-warning" /> 
+              <span>Sorotan Terbaru</span>
+              {sourceName && (
+                <span className="text-sm font-bold bg-surface-raised border border-border-subtle px-3 py-1 rounded-full text-text-muted mt-1">
+                  {sourceName}
+                </span>
+              )}
             </h2>
             <Link href={`/sources/${sourceId}?sort=popular`} className="text-sm font-bold text-accent hover:underline mb-1">
               Lihat Semua
             </Link>
           </div>
           
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-auto lg:h-[460px]">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-auto">
             {/* Hero Carousel (Left 2 columns) - 10 Random Latest */}
             <FeaturedHeroCarousel sourceId={sourceId} mangas={shuffledLatest} />
 
@@ -100,7 +106,13 @@ export async function SourceFeed({ sourceId, sourceName, variant }: SourceFeedPr
         <div className="flex flex-col gap-6">
           <div className="border-b border-border-subtle pb-4">
             <h2 className="text-xl font-bold flex items-center gap-3">
-              <Compass weight="duotone" className="text-accent" /> Eksplorasi
+              <Compass weight="duotone" className="text-accent" /> 
+              <span>Eksplorasi</span>
+              {sourceName && (
+                <span className="text-xs font-bold bg-surface-raised border border-border-subtle px-2 py-0.5 rounded-full text-text-muted mt-0.5">
+                  dari {sourceName}
+                </span>
+              )}
             </h2>
           </div>
 

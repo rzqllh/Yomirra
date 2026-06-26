@@ -53,7 +53,7 @@ export function FeaturedHeroCarousel({ sourceId, mangas }: FeaturedHeroCarouselP
 
   return (
     <div 
-      className="lg:col-span-2 relative rounded-[3rem] overflow-hidden group bg-gradient-to-tr from-pink-100 to-orange-100 dark:from-surface-overlay dark:to-surface-base border border-transparent dark:border-border-subtle touch-pan-y"
+      className="relative rounded-[3rem] overflow-hidden group bg-gradient-to-tr from-accent/10 to-accent/5 dark:from-surface-overlay dark:to-surface-base border border-transparent dark:border-border-subtle touch-pan-y"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onTouchStart={() => setIsPaused(true)}
@@ -112,20 +112,20 @@ export function FeaturedHeroCarousel({ sourceId, mangas }: FeaturedHeroCarouselP
                   </div>
                 ) : (
                   <>
-                    <h3 className="text-3xl sm:text-4xl md:text-5xl font-black truncate w-full px-4 mb-4 text-pink-900 dark:text-white tracking-tight">
+                    <h3 className="text-3xl sm:text-4xl md:text-5xl font-black truncate w-full px-4 mb-4 text-text-primary tracking-tight">
                       {currentManga.title}
                     </h3>
                     
-                    <p className="text-sm sm:text-base text-pink-800/80 dark:text-white/90 font-bold mb-6 flex items-center justify-center gap-2">
+                    <p className="text-sm sm:text-base text-text-secondary font-bold mb-6 flex items-center justify-center gap-2">
                       <span>{currentManga.latestChapter || "Bab Terbaru"}</span> 
-                      <span className="w-1 h-1 rounded-full bg-pink-800/30 dark:bg-white/40" /> 
+                      <span className="w-1 h-1 rounded-full bg-border-strong" /> 
                       <span>{mangaDetail?.status || currentManga.status || "Ongoing"}</span>
-                      <span className="w-1 h-1 rounded-full bg-pink-800/30 dark:bg-white/40" /> 
+                      <span className="w-1 h-1 rounded-full bg-border-strong" /> 
                       <span>{currentManga.format || "Manga"}</span>
                     </p>
 
                     <div className="h-[44px] sm:h-[66px] w-full max-w-2xl mx-auto flex items-start justify-center overflow-hidden">
-                      <p className="text-sm text-pink-900/70 dark:text-white/80 line-clamp-2 sm:line-clamp-3 leading-relaxed font-medium">
+                      <p className="text-sm text-text-muted line-clamp-2 sm:line-clamp-3 leading-relaxed font-medium">
                         {synopsis}
                       </p>
                     </div>
