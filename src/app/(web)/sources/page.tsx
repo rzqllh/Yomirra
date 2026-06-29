@@ -19,7 +19,7 @@ import { useSettingsStore } from "@/shared/store/settings-store";
 
 export default function SourcesPage() {
   const isMounted = useMounted();
-  const isGodMode = useSettingsStore(state => state.isGodMode);
+  const hideNsfw = useSettingsStore(state => state.hideNsfw);
   const [filter, setFilter] = React.useState("");
   const [localSources, setLocalSources] = React.useState<import("@/shared/sources/source-types").SourceMetadata[]>([]);
 
@@ -84,14 +84,14 @@ export default function SourcesPage() {
 
   const filteredSources = React.useMemo(() => {
     let result = allSources;
-    if (isMounted && !isGodMode) {
+    if (isMounted && hideNsfw) {
       result = result.filter(s => !s.isNsfw);
     }
     
     if (!filter.trim()) return result;
     const lower = filter.toLowerCase();
     return result.filter(s => s.name.toLowerCase().includes(lower) || s.language?.toLowerCase().includes(lower));
-  }, [allSources, filter, isGodMode, isMounted]);
+  }, [allSources, filter, hideNsfw, isMounted]);
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>

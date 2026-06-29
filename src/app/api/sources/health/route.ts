@@ -113,17 +113,6 @@ export async function GET() {
 
     // 2. Gather all sources
     const allSources = [...sourceRegistry];
-    
-    const nsfwRaw = process.env.SECRET_EXTENSION_SOURCES;
-    if (nsfwRaw) {
-      try {
-        const nsfwSources: SourceMetadata[] = JSON.parse(nsfwRaw);
-        nsfwSources.forEach(s => s.isNsfw = true);
-        allSources.push(...nsfwSources);
-      } catch (e) {
-        console.error("Failed to parse SECRET_EXTENSION_SOURCES for health check", e);
-      }
-    }
 
     // 3. Ping in parallel
     const results = await Promise.all(allSources.map(pingSource));

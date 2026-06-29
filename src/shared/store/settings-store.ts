@@ -8,9 +8,6 @@ interface SettingsState {
   setHideNsfw: (enabled: boolean) => void;
   lastSyncedAt: string | null;
   setLastSyncedAt: (date: string | null) => void;
-  isGodMode: boolean;
-  setGodMode: (enabled: boolean) => void;
-  toggleGodMode: () => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -22,15 +19,11 @@ export const useSettingsStore = create<SettingsState>()(
       setHideNsfw: (enabled) => set({ hideNsfw: enabled }),
       lastSyncedAt: null,
       setLastSyncedAt: (date) => set({ lastSyncedAt: date }),
-      isGodMode: false,
-      setGodMode: (enabled) => set({ isGodMode: enabled }),
-      toggleGodMode: () => set((state) => ({ isGodMode: !state.isGodMode })),
     }),
     {
       name: "yomirra-settings",
       partialize: (state) => {
         // Remove transient states from persistence
-        // (Previously isGodMode was here, which caused it to reset on refresh)
         return state;
       },
     }

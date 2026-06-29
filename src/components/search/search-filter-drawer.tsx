@@ -72,7 +72,7 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
     refetchInterval: 60000,
   });
 
-  const isGodMode = useSettingsStore(state => state.isGodMode);
+  const hideNsfw = useSettingsStore(state => state.hideNsfw);
 
   const searchableSources = React.useMemo(() => {
     const s = [...(sourcesData || [])];
@@ -84,7 +84,7 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
     
     return s.filter(s => {
       if (!s.isInstalled || !s.capabilities.search) return false;
-      if (s.isNsfw && !isGodMode) return false;
+      if (s.isNsfw && hideNsfw) return false;
       return true;
     }).map(source => {
       const health = healthStats?.[source.id];
@@ -96,7 +96,7 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
       }
       return source;
     });
-  }, [sourcesData, localSources, healthStats, isGodMode]);
+  }, [sourcesData, localSources, healthStats, hideNsfw]);
 
   const sourcesToFetch = selectedSources.length > 0 
     ? searchableSources.filter(s => selectedSources.includes(s.id))
@@ -196,7 +196,7 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]" />
         <Drawer.Content className="bg-surface-base flex flex-col rounded-t-[32px] mt-24 fixed bottom-0 left-0 right-0 z-[100] outline-none max-h-[90vh] shadow-heavy">
-          <div className="p-4 bg-surface-base rounded-t-[32px] flex-1 overflow-y-auto [scrollbar-width:none] touch-manipulation" data-vaul-no-drag>
+          <div className="p-4 bg-surface-base rounded-t-[32px] flex-1 overflow-y-auto [scrollbar-width:none] touch-manipulation relative z-0" style={{ WebkitOverflowScrolling: "touch", transform: "translate3d(0,0,0)" }} data-vaul-no-drag>
             <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-border-strong mb-6" />
             
             <div className="flex items-center justify-between mb-6 px-2">
@@ -316,7 +316,7 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
             </div>
           </div>
           
-          <div className="p-4 bg-surface-base border-t border-border-subtle mt-auto sticky bottom-0">
+          <div className="p-4 bg-surface-base border-t border-border-subtle shrink-0 relative z-10" style={{ transform: "translate3d(0,0,0)" }}>
             <Button 
               onClick={handleApply}
               className="w-full h-14 rounded-2xl text-[15px] font-bold bg-text-primary text-surface-base hover:bg-text-primary/90 active:scale-[0.98] transition-transform duration-200"

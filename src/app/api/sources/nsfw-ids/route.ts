@@ -10,17 +10,6 @@ import type { SourceMetadata } from "@/shared/sources/source-types";
 export async function GET() {
   const allSources: SourceMetadata[] = [...sourceRegistry];
 
-  // Include secret extension sources (server-only env)
-  const secretRaw = process.env.SECRET_EXTENSION_SOURCES;
-  if (secretRaw) {
-    try {
-      const secretSources: SourceMetadata[] = JSON.parse(secretRaw);
-      allSources.push(...secretSources);
-    } catch {
-      // ignore parse errors
-    }
-  }
-
   const nsfwSourceIds = allSources
     .filter((s) => s.isNsfw === true)
     .map((s) => s.id);

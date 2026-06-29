@@ -36,7 +36,6 @@ export function HomeView({ children }: HomeViewProps) {
 
   const { isSourceDisabled } = useSourcePreferencesStore();
   const hideNsfw = useSettingsStore(state => state.hideNsfw);
-  const isGodMode = useSettingsStore(state => state.isGodMode);
   const nsfwSourceIds = useNsfwSourceIds();
 
   const isFromNsfwSource = React.useCallback(
@@ -52,13 +51,11 @@ export function HomeView({ children }: HomeViewProps) {
       if (source && source.status === "unavailable") return false;
       return true;
     });
-    if (!isGodMode) {
-      result = result.filter(item => !isFromNsfwSource(item.sourceId, item.isNsfw));
-    } else if (hideNsfw) {
+    if (hideNsfw) {
       result = result.filter(item => !isFromNsfwSource(item.sourceId, item.isNsfw));
     }
     return result.slice(0, 10);
-  }, [rawHistoryItems, isSourceDisabled, hideNsfw, isGodMode, isFromNsfwSource]);
+  }, [rawHistoryItems, isSourceDisabled, hideNsfw, isFromNsfwSource]);
 
   return (
     <PullToRefresh>
