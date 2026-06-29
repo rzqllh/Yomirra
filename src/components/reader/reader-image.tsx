@@ -25,6 +25,7 @@ interface ReaderImageProps {
     isDecoded: (id: string) => boolean;
   };
   dataIndex?: number;
+  totalPages?: number;
 }
 
 export const ReaderImage = React.memo(function ReaderImage({
@@ -39,7 +40,8 @@ export const ReaderImage = React.memo(function ReaderImage({
   offlineUrl,
   imageFit = 'width',
   decodeQueue,
-  dataIndex
+  dataIndex,
+  totalPages
 }: ReaderImageProps) {
   const [hasError, setHasError] = React.useState(false)
   const [retryCount, setRetryCount] = React.useState(0)
@@ -171,9 +173,16 @@ export const ReaderImage = React.memo(function ReaderImage({
           />
         </motion.div>
       ) : (
-        <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-black overflow-hidden">
+        <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-surface-muted/10 overflow-hidden">
           <div className="w-full h-full absolute inset-0 bg-gradient-to-b from-transparent via-white/[0.02] to-transparent animate-pulse-slow" />
-          <div className="size-10 rounded-full border border-white/10 border-t-white/50 animate-spin z-10 drop-shadow-md" />
+          <div className="flex flex-col items-center gap-4 z-10">
+            <div className="size-10 rounded-full border-[3px] border-border-strong border-t-accent animate-spin drop-shadow-md" />
+            <div className="flex flex-col items-center">
+              <span className="text-sm font-semibold tracking-wide text-text-primary/90 animate-pulse">
+                Memuat halaman {pageIndex + 1}{totalPages ? ` / ${totalPages}` : ''}...
+              </span>
+            </div>
+          </div>
         </div>
       )}
     </div>

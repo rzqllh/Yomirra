@@ -61,6 +61,7 @@ export function HomeView({ children }: HomeViewProps) {
     <PullToRefresh>
       <YomirraSurface variant="base" className="min-h-screen">
         <h1 className="sr-only">Beranda Yomirra</h1>
+        <YomirraPageHeader title="Beranda" variant="transparent" />
         
         <div className="px-4 pt-[calc(var(--safe-top)+24px)] md:px-8 pb-6 md:pb-10 max-w-7xl mx-auto flex flex-col gap-8 md:gap-12">
           

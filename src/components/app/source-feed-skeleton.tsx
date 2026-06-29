@@ -22,7 +22,7 @@ export function SourceFeedSkeleton() {
         <div className="flex items-center justify-between mb-4 md:mb-6 px-4 md:px-0">
           <Skeleton className="h-8 w-48" />
         </div>
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-5 px-4 md:px-0">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-5 px-4 md:px-0">
           {[...Array(6)].map((_, i) => (
             <div key={i} className="w-full">
               <MangaCardSkeleton variant="shelf" />

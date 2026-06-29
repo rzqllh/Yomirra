@@ -112,7 +112,7 @@ export function FeaturedHeroCarousel({ sourceId, mangas }: FeaturedHeroCarouselP
                   </div>
                 ) : (
                   <>
-                    <h3 className="text-3xl sm:text-4xl md:text-5xl font-black truncate w-full px-4 mb-4 text-text-primary tracking-tight">
+                    <h3 className="text-2xl sm:text-3xl md:text-4xl font-black line-clamp-2 w-full px-4 mb-3 text-text-primary tracking-tight leading-tight">
                       {currentManga.title}
                     </h3>
                     

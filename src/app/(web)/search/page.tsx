@@ -37,7 +37,7 @@ export default function SearchPage() {
     <DirectionalTransition>
       <React.Suspense fallback={
         <main className="min-h-screen bg-surface-base">
-          <YomirraPageHeader title="" showBack variant="transparent" />
+          <YomirraPageHeader title="Pencarian" showBack variant="transparent" />
           <div className="px-4 py-6">
             <SearchResultSkeleton />
           </div>
@@ -225,7 +225,7 @@ function SearchContent() {
 
   return (
     <main className="min-h-screen bg-surface-base">
-      <YomirraPageHeader title="" showBack variant="transparent" />
+      <YomirraPageHeader title="Pencarian" showBack variant="transparent" />
       
       <div className="px-4 pt-[calc(var(--safe-top)+24px)] pb-6 max-w-7xl mx-auto">
         <div className="mb-6">
@@ -324,7 +324,7 @@ function SearchContent() {
                   ({searchMangas.length} judul)
                 </span>
               </h2>
-              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-5 xl:grid-cols-5">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                 {searchMangas.map((item) => (
                   <MangaCard 
                     key={`${item.sourceId}-${item.manga.id}`}
