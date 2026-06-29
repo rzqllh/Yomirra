@@ -181,6 +181,7 @@ export function ContinuousVerticalReader({
                   imageFit={preferences.imageFit}
                   decodeQueue={decodeQueue}
                   dataIndex={virtualRow.index}
+                  totalPages={pages.length}
                 />
               ) : (
                 <div className="w-full py-12 flex justify-center items-center text-text-muted text-sm tracking-widest uppercase">

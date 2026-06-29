@@ -41,9 +41,9 @@ async function LatestFeed({ sourceId, sourceName }: { sourceId: string; sourceNa
         </Link>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-5 px-4 md:px-0">
         {latest.mangas.slice(0, 12).map((manga: any) => (
-          <MangaCard key={manga.id} manga={manga} sourceId={sourceId} variant="history" />
+          <MangaCard key={manga.id} manga={manga} sourceId={sourceId} variant="shelf" />
         ))}
       </div>
     </section>

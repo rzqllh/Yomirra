@@ -88,7 +88,7 @@ export interface DesktopPageTitleProps {
 
 export function DesktopPageTitle({ title, description, icon }: DesktopPageTitleProps) {
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-surface-muted/30 border border-border-subtle p-6 md:p-8">
+    <div className="hidden md:block relative overflow-hidden rounded-2xl bg-surface-muted/30 border border-border-subtle p-6 md:p-8">
       <div className="absolute inset-0 bg-gradient-to-br from-brand-500/5 to-transparent pointer-events-none" />
       <div className="relative flex items-start gap-4">
         {icon && (

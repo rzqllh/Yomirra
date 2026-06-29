@@ -98,7 +98,7 @@ export function ContinueReadingList({ items }: ContinueReadingListProps) {
             return (
               <div
                 key={`${group.mangaId}-${group.chapterId}`}
-                className="group relative shrink-0 snap-center w-[85vw] sm:w-[500px] md:w-[600px] h-[200px] md:h-[260px] rounded-3xl overflow-hidden"
+                className="group relative shrink-0 snap-center w-[85vw] sm:w-[400px] md:w-[450px] bg-surface-raised border border-border-subtle rounded-2xl md:rounded-3xl p-3 md:p-4 flex gap-4 md:gap-5 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
               >
                 <Link 
                     href={targetHref} 
@@ -106,41 +106,50 @@ export function ContinueReadingList({ items }: ContinueReadingListProps) {
                     aria-label={`Lanjut baca ${group.mangaTitle}`}
                 />
                 
-                {group.coverUrl && (
-                  <img 
-                    src={group.coverUrl} 
-                    alt={group.mangaTitle} 
-                    className="absolute inset-0 w-full h-full object-cover object-[50%_25%] group-hover:scale-105 transition-transform duration-1000" 
-                    referrerPolicy="no-referrer"
-                  />
-                )}
+                {/* Cover Image */}
+                <div className="relative w-24 sm:w-28 md:w-32 aspect-[3/4] shrink-0 rounded-xl md:rounded-2xl overflow-hidden bg-surface-muted">
+                  {group.coverUrl ? (
+                    <img 
+                      src={group.coverUrl} 
+                      alt={group.mangaTitle} 
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-surface-muted flex items-center justify-center">
+                      <BookBookmark size={32} className="text-text-muted/50" />
+                    </div>
+                  )}
+                  {/* Subtle Gradient for depth */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                </div>
                 
-                {/* Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent z-0" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-0" />
-
                 {/* Content */}
-                <div className="absolute inset-0 p-6 md:p-8 flex flex-col justify-center max-w-[80%] md:max-w-md text-white z-10">
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="bg-accent/20 text-accent-hover px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-widest uppercase border border-accent/20">Lanjut Baca</span>
-                    <span className="text-white/60 text-xs font-medium">{group.chapterTitle || `Ch. ${group.chapterId}`}</span>
-                    {group.totalChapters ? (
-                      <span className="text-white/80 text-xs font-bold ml-auto">{group.chapterIndex} / {group.totalChapters}</span>
-                    ) : (
-                      <span className="text-white/80 text-xs font-bold ml-auto">{Math.round(progress)}%</span>
-                    )}
+                <div className="flex flex-col flex-1 min-w-0 py-1 md:py-2">
+                  <div className="flex items-center gap-2 mb-2 md:mb-3">
+                    <span className="text-accent text-[10px] md:text-xs font-bold tracking-wider uppercase flex items-center gap-1.5">
+                      <Clock weight="fill" /> Lanjut Baca
+                    </span>
                   </div>
-                  <h4 className="font-bold text-2xl md:text-3xl text-white truncate group-hover:text-accent-hover transition-colors w-full mb-6 tracking-tight drop-shadow-md">
+                  
+                  <h4 className="font-bold text-base md:text-lg text-text-primary line-clamp-2 leading-snug group-hover:text-accent transition-colors mb-auto drop-shadow-none">
                     {group.mangaTitle}
                   </h4>
                   
-                  {/* Progress Bar */}
-                  <div className="w-full bg-white/20 h-1.5 rounded-full overflow-hidden mb-4 max-w-[200px]">
-                    <div className="bg-accent h-full" style={{ width: `${progress}%` }} />
-                  </div>
-                  
-                  <div className="bg-white text-black px-5 py-2.5 rounded-full font-bold w-fit flex items-center gap-2 text-sm shadow-xl group-hover:bg-accent group-hover:text-white transition-colors">
-                    <Play weight="fill" size={16} /> Lanjutkan
+                  <div className="mt-4 md:mt-auto">
+                    <div className="flex justify-between items-end mb-2">
+                      <span className="text-text-secondary text-xs md:text-sm font-medium">
+                        {group.chapterTitle || `Ch. ${group.chapterId}`}
+                      </span>
+                      <span className="text-text-muted text-[10px] md:text-xs font-semibold">
+                        {group.totalChapters ? `${group.chapterIndex} / ${group.totalChapters}` : `${Math.round(progress)}%`}
+                      </span>
+                    </div>
+                    
+                    {/* Progress Bar */}
+                    <div className="w-full bg-surface-muted h-1.5 md:h-2 rounded-full overflow-hidden mb-3">
+                      <div className="bg-accent h-full" style={{ width: `${progress}%` }} />
+                    </div>
                   </div>
                 </div>
               </div>
