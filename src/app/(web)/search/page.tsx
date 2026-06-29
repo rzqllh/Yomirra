@@ -100,7 +100,7 @@ function SearchContent() {
     queryFn: () => apiClient.getSources(),
   });
 
-  const isGodMode = useSettingsStore(state => state.isGodMode);
+  const hideNsfw = useSettingsStore(state => state.hideNsfw);
 
   const searchableSources = React.useMemo(() => {
     const s = [...(sourcesData || [])];
@@ -113,10 +113,10 @@ function SearchContent() {
     return s.filter(src => {
       if (!src.isInstalled || !src.capabilities?.search) return false;
       if (src.status !== "online") return false; // Hide sources that are in-fix or in-dev
-      if (src.isNsfw && !isGodMode) return false;
+      if (src.isNsfw && hideNsfw) return false;
       return true;
     });
-  }, [sourcesData, localSources, isGodMode]);
+  }, [sourcesData, localSources, hideNsfw]);
   
   const searchFilterStore = useSearchFilterStore();
   const selectedSources = searchFilterStore.selectedSources || [];

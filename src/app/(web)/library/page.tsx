@@ -41,6 +41,7 @@ import { useSettingsStore } from "@/shared/store/settings-store";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { useMounted } from "@/shared/hooks/use-mounted";
+import { useLibraryFilterStore } from "@/shared/store/library-filter-store";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { YomirraSurface } from "@/components/ui/layout";
 import { YomirraPageHeader, DesktopPageTitle } from "@/components/app/header";
@@ -66,19 +67,25 @@ function LibraryContent() {
   const activeSourceId = sourceParam || "shinigami";
   
   const sortParam = searchParams.get("sort");
-  const initialSort = sortParam || "popular";
   
-  const [searchInput, setSearchInput] = React.useState("");
-  const [query, setQuery] = React.useState("");
+  const filterStore = useLibraryFilterStore();
+  const { selectedGenres, excludedGenres, selectedFormats, selectedStatuses, sort: storeSort, query: storeQuery, viewMode } = filterStore;
+  
+  const initialSort = sortParam || storeSort || "popular";
+  
+  const [searchInput, setSearchInput] = React.useState(storeQuery);
+  const [query, setQuery] = React.useState(storeQuery);
   const [sort, setSort] = React.useState<string>(initialSort);
   const [page, setPage] = React.useState(1);
   
   const [showFilters, setShowFilters] = React.useState(false);
-  const [selectedGenres, setSelectedGenres] = React.useState<string[]>(genreParams);
-  const [excludedGenres, setExcludedGenres] = React.useState<string[]>([]);
-  const [selectedFormats, setSelectedFormats] = React.useState<string[]>([]);
-  const [selectedStatuses, setSelectedStatuses] = React.useState<string[]>([]);
-  const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid");
+
+  // Sync initial URL params if any
+  React.useEffect(() => {
+    if (genreParams.length > 0 && selectedGenres.length === 0 && excludedGenres.length === 0) {
+      filterStore.setFilters({ selectedGenres: genreParams });
+    }
+  }, []);
   
   const { isSourceDisabled } = useSourcePreferencesStore();
   const sourceObj = dynamicSourceRegistry.get(activeSourceId);
@@ -91,6 +98,7 @@ function LibraryContent() {
     if (deferredSearchInput !== query) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setQuery(deferredSearchInput.trim());
+      filterStore.setFilters({ query: deferredSearchInput.trim() });
       setPage(1);
     }
   }, [deferredSearchInput, query]);
@@ -198,6 +206,7 @@ function LibraryContent() {
 
   const handleTabChange = (newSort: string) => {
     setSort(newSort);
+    filterStore.setFilters({ sort: newSort });
     setPage(1);
     
     const params = new URLSearchParams(searchParams.toString());
@@ -213,31 +222,35 @@ function LibraryContent() {
   const toggleGenre = (id: string) => {
     setPage(1);
     if (selectedGenres.includes(id)) {
-      setSelectedGenres(prev => prev.filter(g => g !== id));
-      setExcludedGenres(prev => [...prev, id]);
+      filterStore.setFilters({
+        selectedGenres: selectedGenres.filter(g => g !== id),
+        excludedGenres: [...excludedGenres, id]
+      });
     } else if (excludedGenres.includes(id)) {
-      setExcludedGenres(prev => prev.filter(g => g !== id));
+      filterStore.setFilters({
+        excludedGenres: excludedGenres.filter(g => g !== id)
+      });
     } else {
-      setSelectedGenres(prev => [...prev, id]);
+      filterStore.setFilters({
+        selectedGenres: [...selectedGenres, id]
+      });
     }
   };
 
-  const toggleFilter = (id: string, state: string[], setState: React.Dispatch<React.SetStateAction<string[]>>) => {
+  const toggleFilter = (id: string, state: string[], key: "selectedFormats" | "selectedStatuses") => {
     setPage(1);
     if (state.includes(id)) {
-      setState(prev => prev.filter(i => i !== id));
+      filterStore.setFilters({ [key]: state.filter(i => i !== id) });
     } else {
-      setState(prev => [...prev, id]);
+      filterStore.setFilters({ [key]: [...state, id] });
     }
   };
 
   const resetFilters = () => {
-    setSelectedGenres([]);
-    setExcludedGenres([]);
-    setSelectedFormats([]);
-    setSelectedStatuses([]);
+    filterStore.resetFilters();
     setQuery("");
     setSearchInput("");
+    setSort("popular");
     setPage(1);
   };
 
@@ -312,7 +325,7 @@ function LibraryContent() {
               <div className="hidden sm:flex bg-surface-glass backdrop-blur-md rounded-full p-1 border border-border-subtle shadow-sm h-[44px]">
                 <button
                   type="button"
-                  onClick={() => setViewMode("grid")}
+                  onClick={() => filterStore.setFilters({ viewMode: "grid" })}
                   className={cn("flex items-center justify-center w-10 h-full rounded-full transition-colors", viewMode === "grid" ? "bg-accent text-accent-on" : "text-text-muted hover:text-text-primary")}
                   aria-label="Grid view"
                 >
@@ -320,7 +333,7 @@ function LibraryContent() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setViewMode("list")}
+                  onClick={() => filterStore.setFilters({ viewMode: "list" })}
                   className={cn("flex items-center justify-center w-10 h-full rounded-full transition-colors", viewMode === "list" ? "bg-accent text-accent-on" : "text-text-muted hover:text-text-primary")}
                   aria-label="List view"
                 >
@@ -377,7 +390,7 @@ function LibraryContent() {
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.9 }}
-                      onClick={() => toggleFilter(id, selectedFormats, setSelectedFormats)}
+                      onClick={() => toggleFilter(id, selectedFormats, "selectedFormats")}
                       className="relative flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all outline-none border border-accent bg-accent/10 text-accent hover:bg-accent/20 shadow-sm"
                     >
                       <CheckCircle weight="fill" size={14} />
@@ -394,7 +407,7 @@ function LibraryContent() {
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
                       exit={{ opacity: 0, scale: 0.9 }}
-                      onClick={() => toggleFilter(id, selectedStatuses, setSelectedStatuses)}
+                      onClick={() => toggleFilter(id, selectedStatuses, "selectedStatuses")}
                       className="relative flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all outline-none border border-accent bg-accent/10 text-accent hover:bg-accent/20 shadow-sm"
                     >
                       <CheckCircle weight="fill" size={14} />
@@ -459,7 +472,7 @@ function LibraryContent() {
                         return (
                         <button
                           key={f.id}
-                          onClick={() => toggleFilter(f.id, selectedFormats, setSelectedFormats)}
+                          onClick={() => toggleFilter(f.id, selectedFormats, "selectedFormats")}
                           aria-pressed={isSelected ? "true" : "false"}
                           className={cn("px-3.5 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 border", isSelected ? "bg-accent text-accent-on border-transparent shadow-sm shadow-accent/20" : "bg-surface-muted border-transparent text-text-secondary hover:text-text-primary hover:bg-surface-hover")}
                         >
@@ -477,7 +490,7 @@ function LibraryContent() {
                         return (
                         <button
                           key={s.id}
-                          onClick={() => toggleFilter(s.id, selectedStatuses, setSelectedStatuses)}
+                          onClick={() => toggleFilter(s.id, selectedStatuses, "selectedStatuses")}
                           aria-pressed={isSelected ? "true" : "false"}
                           className={cn("px-3.5 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 border", isSelected ? "bg-accent text-accent-on border-transparent shadow-sm shadow-accent/20" : "bg-surface-muted border-transparent text-text-secondary hover:text-text-primary hover:bg-surface-hover")}
                         >

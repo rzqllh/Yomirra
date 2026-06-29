@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { UserCircle, SignOut, Gear, MagnifyingGlass, Books, Detective } from "@phosphor-icons/react";
+import { UserCircle, SignOut, Gear, MagnifyingGlass, Books } from "@phosphor-icons/react";
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -18,7 +18,6 @@ export function TopNav() {
   const router = useRouter();
   const pathname = usePathname();
   const { user, loginWithGoogle, logout } = useAuth();
-  const isGodMode = useSettingsStore((state) => state.isGodMode);
   
   // Scroll morph detection
   const [isScrolled, setIsScrolled] = React.useState(false);
@@ -122,22 +121,6 @@ export function TopNav() {
           <motion.div layout transition={{ duration: 0.3, ease: "easeOut" }}>
             <ThemeToggle />
           </motion.div>
-          
-          <AnimatePresence>
-            {isGodMode && (
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ duration: 0.3 }}
-                className="flex items-center justify-center text-semantic-error drop-shadow-[0_0_8px_rgba(255,69,58,0.5)]"
-                title="God Mode Active"
-              >
-                <Detective size={24} weight="duotone" className="animate-pulse" />
-              </motion.div>
-            )}
-          </AnimatePresence>
-          
 
             {user ? (
               <motion.div layout transition={{ duration: 0.3, ease: "easeOut" }} className="relative" ref={profileRef}>

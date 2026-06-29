@@ -183,12 +183,12 @@ export function MangaCard({
         </Link>
         
         <div className="flex-1 min-w-0 flex flex-col justify-center z-10">
-          <Link href={getMangaDetailHref(sourceId, manga.id, fullPath)} prefetch={false} className="block min-w-0">
+          <Link href={getMangaDetailHref(sourceId, manga.id, fullPath)} className="block min-w-0">
             <h3 className="truncate font-bold text-text-primary text-sm md:text-base leading-snug group-hover:text-accent transition-colors">
               {manga.title}
             </h3>
           </Link>
-          <Link href={targetHref} prefetch={false} className="block min-w-0 mt-0.5">
+          <Link href={targetHref} className="block min-w-0 mt-0.5">
             <p className="truncate text-sm font-medium text-text-muted group-hover:text-accent transition-colors">
               {chapterTitle || manga.latestChapter || `Detail`}
             </p>
@@ -208,7 +208,6 @@ export function MangaCard({
           <div className="bg-accent/10 dark:bg-accent/20 backdrop-blur-xl -accent/20 rounded-full p-1 shadow-sm shrink-0 ml-2 z-20 relative">
             <Link 
               href={targetHref} 
-              prefetch={false}
               className="flex items-center justify-center rounded-full h-8 w-8 text-accent hover:bg-accent/10 transition-colors"
             >
               <Play className="h-4 w-4 ml-0.5" weight="fill" />
@@ -231,7 +230,6 @@ export function MangaCard({
         <Link 
           href={getMangaDetailHref(sourceId, manga.id, fullPath)} 
           className="flex gap-2.5 h-[110px] cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent vt-hover"
-          prefetch={false}
           aria-label={`Read ${manga.title}`}
           style={vtStyle}
         >
@@ -315,7 +313,6 @@ export function MangaCard({
         href={getMangaDetailHref(sourceId, manga.id, fullPath)} 
         transitionTypes={['nav-forward']}
         className="group flex flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-        prefetch={false}
         aria-label={`Read ${manga.title}`}
       >
         <div 

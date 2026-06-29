@@ -63,7 +63,6 @@ export default function BookmarkPage() {
   const [sortBy, setSortBy] = React.useState<"updatedAt" | "title">("updatedAt");
   const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid");
   const hideNsfw = useSettingsStore((state) => state.hideNsfw);
-  const isGodMode = useSettingsStore((state) => state.isGodMode);
   const nsfwSourceIds = useNsfwSourceIds();
   const { isSourceDisabled } = useSourcePreferencesStore();
 
@@ -87,11 +86,8 @@ export default function BookmarkPage() {
       return true;
     });
 
-    // Hide items from NSFW sources when god mode is off, regardless of hideNsfw toggle.
-    // If god mode is on, respect hideNsfw toggle.
-    if (!isGodMode) {
-      result = result.filter(item => !isFromNsfwSource(item.sourceId, item.isNsfw));
-    } else if (hideNsfw) {
+    // Hide items from NSFW sources when hideNsfw is active
+    if (hideNsfw) {
       result = result.filter(item => !isFromNsfwSource(item.sourceId, item.isNsfw));
     }
 
@@ -112,7 +108,7 @@ export default function BookmarkPage() {
     });
 
     return result;
-  }, [libraryItems, searchQuery, sortBy, sortOrder, hideNsfw, isGodMode, isFromNsfwSource, isSourceDisabled]);
+  }, [libraryItems, searchQuery, sortBy, sortOrder, hideNsfw, isFromNsfwSource, isSourceDisabled]);
 
   // History state
   const getHistoryList = useHistoryStore((state) => state.getHistoryList);

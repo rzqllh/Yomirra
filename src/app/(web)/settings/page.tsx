@@ -31,8 +31,6 @@ export default function SettingsPage() {
   const { dataSaver, setDataSaver, hideNsfw, setHideNsfw, lastSyncedAt } = useSettingsStore();
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
-  const [clickCount, setClickCount] = React.useState(0);
-  const { isGodMode, toggleGodMode } = useSettingsStore();
 
   React.useEffect(() => {
     queueMicrotask(() => setMounted(true));
@@ -61,25 +59,6 @@ export default function SettingsPage() {
       return `Terakhir sinkronisasi: ${format(new Date(lastSyncedAt), "d MMM yyyy, HH:mm", { locale: idLocale })}`;
     } catch {
       return "Terakhir sinkronisasi: -";
-    }
-  };
-
-  React.useEffect(() => {
-    if (clickCount > 0 && clickCount < 7) {
-      const timer = setTimeout(() => setClickCount(0), 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [clickCount]);
-
-  const handleVersionClick = () => {
-    if (!user) return; // Only allow if logged in
-    
-    if (clickCount + 1 >= 7) {
-      toggleGodMode();
-      toast.success(!isGodMode ? "God Mode Diaktifkan" : "God Mode Dinonaktifkan");
-      setClickCount(0);
-    } else {
-      setClickCount((prev) => prev + 1);
     }
   };
 
@@ -177,7 +156,7 @@ export default function SettingsPage() {
 
             {/* Pintasan Navigasi */}
             <SettingsSection title="Pintasan Navigasi">
-              <Link href="/updates" className="block outline-none" prefetch={false}>
+              <Link href="/updates" className="block outline-none">
                 <SettingsItem
                   icon={<IconWrapper variant="accent"><Lightning size={20} weight="duotone" /></IconWrapper>}
                   title="Update Terbaru"
@@ -186,7 +165,7 @@ export default function SettingsPage() {
                 />
               </Link>
               
-              <Link href="/popular" className="block outline-none" prefetch={false}>
+              <Link href="/popular" className="block outline-none">
                 <SettingsItem
                   icon={<IconWrapper variant="accent"><Fire size={20} weight="duotone" /></IconWrapper>}
                   title="Manga Populer"
@@ -195,7 +174,7 @@ export default function SettingsPage() {
                 />
               </Link>
               
-              <Link href="/sources" className="block outline-none" prefetch={false}>
+              <Link href="/sources" className="block outline-none">
                 <SettingsItem
                   icon={<IconWrapper variant="accent"><PuzzlePiece size={20} weight="duotone" /></IconWrapper>}
                   title="Kelola Sumber"
@@ -298,14 +277,11 @@ export default function SettingsPage() {
               />
             </SettingsSection>
 
-            {/* Version Trigger */}
+            {/* Version */}
             <div className="flex justify-center pt-4 pb-2 md:pb-4">
-              <button 
-                onClick={handleVersionClick}
-                className="text-xs text-text-muted font-medium hover:text-text-secondary transition-colors select-none"
-              >
+              <span className="text-xs text-text-muted font-medium select-none">
                 Yomirra v1.0.0
-              </button>
+              </span>
             </div>
 
           </div>
