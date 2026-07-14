@@ -7,7 +7,7 @@ import { SourceFeedSkeleton } from "@/components/app/source-feed-skeleton";
 import { EmptyState } from "@/components/states/empty-state";
 import { withCache, CACHE_TTL } from "@/server/lib/cache/redis-cache";
 import { sourceManager } from "@/server/lib/sources/source-manager";
-import { MangaCard } from "@/components/manga/manga-card";
+import { ShelfCard } from "@/components/manga/card";
 import Link from "next/link";
 import { getManifestUrlFromCookie } from "@/server/lib/sources/server-manifest";
 import { cookies } from "next/headers";
@@ -43,7 +43,7 @@ async function LatestFeed({ sourceId, sourceName }: { sourceId: string; sourceNa
       
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-5 px-4 md:px-0">
         {latest.mangas.slice(0, 12).map((manga: any) => (
-          <MangaCard key={manga.id} manga={manga} sourceId={sourceId} variant="shelf" />
+          <ShelfCard key={manga.id} manga={manga} sourceId={sourceId} />
         ))}
       </div>
     </section>

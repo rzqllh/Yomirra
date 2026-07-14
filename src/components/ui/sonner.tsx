@@ -8,7 +8,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
   return (
     <Sonner
       position="top-right"
-      className="toaster group"
+      className="toaster group !mt-[env(safe-area-inset-top,0px)]"
       toastOptions={{
         classNames: {
           toast:

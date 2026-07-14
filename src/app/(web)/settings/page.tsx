@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { UserCircle, SignOut, Broom, Palette, HandTap, ShieldWarning, WifiHigh, Lightning, Fire, PuzzlePiece, Spinner, ArrowsClockwise } from "@phosphor-icons/react";
+import { UserCircle, SignOut, Broom, Palette, HandTap, ShieldWarning, WifiHigh, Lightning, Fire, PuzzlePiece, Spinner, ArrowsClockwise, DeviceMobile } from "@phosphor-icons/react";
 import { useAuth } from "@/shared/hooks/use-auth";
 import { useSync } from "@/shared/hooks/use-sync";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import Link from "next/link";
 import { useHistoryStore } from "@/shared/store/history-store";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useSettingsStore } from "@/shared/store/settings-store";
+import { useStatsStore } from "@/shared/store/stats-store";
 import { useTheme } from "next-themes";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { DirectionalTransition } from "@/components/ui/directional-transition";
@@ -28,7 +29,8 @@ export default function SettingsPage() {
   const { runFullSync, isSyncing } = useSync({ autoSync: false });
   const clearHistory = useHistoryStore((state) => state.clearHistory);
   const clearLibrary = useLibraryStore((state) => state.clearLibrary);
-  const { dataSaver, setDataSaver, hideNsfw, setHideNsfw, lastSyncedAt } = useSettingsStore();
+  const { dataSaver, setDataSaver, hideNsfw, setHideNsfw, lastSyncedAt, keepScreenAwake, setKeepScreenAwake } = useSettingsStore();
+  const totalReadingTimeMs = useStatsStore((state) => state.totalReadingTimeMs);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
 
@@ -60,6 +62,15 @@ export default function SettingsPage() {
     } catch {
       return "Terakhir sinkronisasi: -";
     }
+  };
+
+  const formatReadingTime = () => {
+    if (!totalReadingTimeMs) return "Belum ada riwayat baca";
+    const minutes = Math.floor(totalReadingTimeMs / 60000);
+    if (minutes < 60) return `${minutes} menit`;
+    const hours = Math.floor(minutes / 60);
+    const remMins = minutes % 60;
+    return `${hours} jam ${remMins > 0 ? `${remMins} menit` : ""}`;
   };
 
   return (
@@ -154,6 +165,16 @@ export default function SettingsPage() {
               )}
             </SettingsSection>
 
+            {/* Statistik Membaca */}
+            <SettingsSection title="Statistik Membaca">
+              <SettingsItem
+                icon={<IconWrapper variant="accent"><Fire size={20} weight="duotone" /></IconWrapper>}
+                title="Waktu Membaca"
+                description={formatReadingTime()}
+                right={<div className="text-sm font-semibold text-text-primary hidden sm:block">{formatReadingTime()}</div>}
+              />
+            </SettingsSection>
+
             {/* Pintasan Navigasi */}
             <SettingsSection title="Pintasan Navigasi">
               <Link href="/updates" className="block outline-none">
@@ -241,6 +262,22 @@ export default function SettingsPage() {
                     checked={mounted ? dataSaver : false}
                     onCheckedChange={setDataSaver}
                     label="Penghemat Data"
+                  />
+                }
+              />
+              
+              <div className="mx-3 my-1 border-b border-border-subtle/50" />
+
+              <SettingsItem
+                icon={<IconWrapper><DeviceMobile size={20} weight="duotone" /></IconWrapper>}
+                title="Layar Selalu Menyala"
+                description="Layar tetap menyala saat mendownload chapter offline."
+                right={
+                  <ToggleSwitch 
+                    id="keep-awake" 
+                    checked={mounted ? keepScreenAwake : true}
+                    onCheckedChange={setKeepScreenAwake}
+                    label="Layar Selalu Menyala"
                   />
                 }
               />

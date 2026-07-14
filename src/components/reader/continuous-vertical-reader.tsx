@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation"
 import { useReaderStore } from "@/shared/store/reader-store"
 import { useSettingsStore } from "@/shared/store/settings-store"
 import { useHistoryStore } from "@/shared/store/history-store"
+import { useLibraryStore } from "@/shared/store/library-store"
 import { PageItem } from "@/shared/types/source"
 import { getReaderHref, getMangaDetailHref } from "@/shared/lib/routes"
 import { ReaderImage } from "./reader-image"
@@ -14,9 +15,11 @@ import { useQueryClient } from "@tanstack/react-query"
 import { useWindowVirtualizer } from "@tanstack/react-virtual"
 import { useReaderScroll } from "@/shared/hooks/use-reader-scroll"
 import { useDecodeQueue } from "@/shared/hooks/use-decode-queue"
+import { useReadingTimer } from "@/shared/hooks/use-reading-timer"
 import { CaretLeft, CaretRight } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/shared/utils/cn"
+import { motion } from "motion/react"
 
 export type StreamItem = 
   | { type: "image"; chapterId: string; pageIndex: number; url: string; index: number }
@@ -49,10 +52,14 @@ export function ContinuousVerticalReader({
   const isDownloaded = useDownloadStore(state => state.isDownloaded(sourceId, mangaId, chapterId))
   const saveProgress = useHistoryStore(state => state.saveProgress)
   const getProgress = useHistoryStore(state => state.getLatestForManga)
+  const isInLibrary = useLibraryStore(state => state.isInLibrary(sourceId, mangaId))
+  const addToLibrary = useLibraryStore(state => state.addToLibrary)
   
   const queryClient = useQueryClient()
   const decodeQueue = useDecodeQueue(3)
   
+  useReadingTimer()
+
   const streamItems = React.useMemo<StreamItem[]>(() => {
     return pages.map(p => ({
       type: "image",
@@ -133,17 +140,54 @@ export function ContinuousVerticalReader({
     if (saved && saved.chapterId === chapterId && saved.pageIndex !== undefined) {
       setTimeout(() => {
         virtualizer.scrollToIndex(saved.pageIndex!, { align: 'start' });
-        toast("Melanjutkan bacaan...", { position: 'top-center' });
+        toast("Melanjutkan bacaan...", { id: 'resume-reading', position: 'top-center' });
       }, 100);
     }
   }, [sourceId, mangaId, chapterId, getProgress, virtualizer])
 
   const isWebtoon = true;
 
+  const handleNextChapter = React.useCallback(() => {
+    if (!nextChapterId) return;
+    
+    if (!isInLibrary) {
+      const readCountKey = `yomirra-read-count-${mangaId}`;
+      const currentCount = parseInt(sessionStorage.getItem(readCountKey) || "0");
+      const newCount = currentCount + 1;
+      sessionStorage.setItem(readCountKey, newCount.toString());
+      
+      if (newCount >= 3) {
+        toast("Kamu sudah membaca 3 chapter dari komik ini. Simpan ke Bookmark?", {
+          action: {
+            label: "Bookmark",
+            onClick: () => {
+              const historyItem = getProgress(sourceId, mangaId);
+              if (historyItem) {
+                addToLibrary({
+                  sourceId,
+                  mangaId,
+                  title: historyItem.mangaTitle,
+                  coverUrl: historyItem.coverUrl,
+                  addedAt: new Date().toISOString(),
+                  updatedAt: new Date().toISOString(),
+                });
+                toast.success("Berhasil ditambahkan ke Bookmark!");
+              }
+            }
+          },
+          duration: 8000,
+        });
+        sessionStorage.setItem(readCountKey, "0"); // Reset count
+      }
+    }
+    
+    router.push(getReaderHref(sourceId, mangaId, nextChapterId));
+  }, [nextChapterId, isInLibrary, mangaId, sourceId, getProgress, addToLibrary, router]);
+
   return (
-    <div className="flex min-h-screen w-full flex-col items-center select-none pb-12">
+    <div className="flex min-h-screen w-full flex-col items-center select-none pb-12 bg-black/95 dark:bg-black">
       <div 
-        className="flex w-full flex-col items-center pt-[calc(var(--mobile-header-height)+var(--safe-top))]"
+        className="flex w-full max-w-[800px] flex-col items-center pt-[calc(var(--mobile-header-height)+var(--safe-top))]"
         style={{ 
           height: `${virtualizer.getTotalSize()}px`,
           width: '100%',
@@ -194,47 +238,37 @@ export function ContinuousVerticalReader({
       </div>
       
       {/* End of Chapter Section */}
-      <div className="w-full max-w-xl mx-auto px-6 py-24 flex flex-col items-center gap-8 text-center mt-8 relative z-10">
-        <div className={cn("w-16 h-1 rounded-full mb-2 opacity-50", preferences.background === 'mist' ? "bg-gray-300" : "bg-white/20")} />
-        <div className="flex flex-col gap-2">
-          <h3 className={cn("text-2xl md:text-3xl font-black tracking-tight drop-shadow-sm", preferences.background === 'mist' ? "text-gray-900" : "text-white")}>Akhir dari {chapterTitle}</h3>
-          <p className={cn("text-sm font-medium tracking-wide", preferences.background === 'mist' ? "text-gray-600" : "text-gray-400")}>Kamu telah menyelesaikan chapter ini.</p>
-        </div>
-        
-        <div className="flex flex-col sm:flex-row w-full gap-4 mt-4">
+      <div className="w-full max-w-[800px] mx-auto px-4 py-8 flex flex-col gap-4 mt-8 relative z-10 bg-background/50 backdrop-blur-sm sm:bg-transparent">
+        <div className="flex items-center justify-between gap-4 w-full">
           <Button
             variant="outline"
             className={cn(
-              "flex-1 rounded-2xl py-7 font-bold text-[15px] backdrop-blur-md shadow-sm transition-all active:scale-[0.98]",
-              preferences.background === 'mist' 
-                ? "bg-black/5 hover:bg-black/10 border-black/10 text-gray-700" 
-                : "bg-white/5 hover:bg-white/10 border-white/10 text-gray-300"
+              "flex-1 rounded-md py-6 font-semibold bg-surface-base hover:bg-surface-raised border-border-subtle",
+              !_prevChapterId && "invisible"
             )}
-            onClick={() => router.push(getMangaDetailHref(sourceId, mangaId))}
+            onClick={() => _prevChapterId && router.push(getReaderHref(sourceId, mangaId, _prevChapterId))}
           >
-            <CaretLeft size={20} className="mr-2 opacity-70" weight="bold" />
-            Detail Manga
+            <CaretLeft size={16} className="mr-2" /> Previous
+          </Button>
+
+          <Button
+            variant="ghost"
+            className="rounded-md py-6 font-semibold px-4 text-text-muted hover:text-text-primary hover:bg-surface-raised"
+            onClick={() => window.open('https://discord.gg/shinigamid', '_blank')}
+          >
+            Report Chapter
           </Button>
           
-          {nextChapterId ? (
-            <Button
-              className="flex-1 rounded-2xl py-7 font-bold text-[15px] bg-accent/90 text-white hover:bg-accent active:scale-[0.98] shadow-lg shadow-accent/20 border border-accent/20 transition-all"
-              onClick={() => router.push(getReaderHref(sourceId, mangaId, nextChapterId))}
-            >
-              Chapter Berikutnya
-              <CaretRight size={20} className="ml-2 opacity-90" weight="bold" />
-            </Button>
-          ) : (
-            <Button
-              disabled
-              className={cn(
-                "flex-1 rounded-2xl py-7 font-bold text-[15px] cursor-not-allowed border border-transparent",
-                preferences.background === 'mist' ? "bg-gray-200 text-gray-400" : "bg-white/10 text-gray-500"
-              )}
-            >
-              Mentok Raw
-            </Button>
-          )}
+          <Button
+            variant="outline"
+            className={cn(
+              "flex-1 rounded-md py-6 font-semibold bg-surface-base hover:bg-surface-raised border-border-subtle",
+              !nextChapterId && "invisible"
+            )}
+            onClick={handleNextChapter}
+          >
+            Next <CaretRight size={16} className="ml-2" />
+          </Button>
         </div>
       </div>
       

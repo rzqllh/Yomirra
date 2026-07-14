@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { pushLibraryItem, deleteLibraryItem } from "@/shared/lib/sync-utils";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
+import { toast } from "sonner";
 
 export type LibraryItem = {
   sourceId: string;
@@ -63,20 +64,28 @@ export const useLibraryStore = create<LibraryState>()(
     (set, get) => ({
       items: {},
 
-      addToLibrary: (item) => set((state) => {
-        if (item.isNsfw === undefined) {
-          const source = dynamicSourceRegistry.get(item.sourceId);
-          if (source) item.isNsfw = source.isNsfw;
-        }
-        const id = getLibraryId(item.sourceId, item.mangaId);
-        setTimeout(() => pushLibraryItem(item), 0); // Async Background sync
-        return {
-          items: enforceItemCap({
-            ...state.items,
-            [id]: item,
-          })
-        };
-      }),
+      addToLibrary: (item) => {
+        const previousState = get().items;
+        set((state) => {
+          if (item.isNsfw === undefined) {
+            const source = dynamicSourceRegistry.get(item.sourceId);
+            if (source) item.isNsfw = source.isNsfw;
+          }
+          const id = getLibraryId(item.sourceId, item.mangaId);
+          return {
+            items: enforceItemCap({
+              ...state.items,
+              [id]: item,
+            })
+          };
+        });
+
+        // Async Background sync with rollback
+        pushLibraryItem(item).catch(() => {
+          set({ items: previousState });
+          toast.error("Gagal menyimpan bookmark ke cloud. Periksa koneksi internet.");
+        });
+      },
 
       _setItemLocal: (item) => set((state) => {
         const id = getLibraryId(item.sourceId, item.mangaId);
@@ -88,13 +97,21 @@ export const useLibraryStore = create<LibraryState>()(
         };
       }),
 
-      removeFromLibrary: (sourceId, mangaId) => set((state) => {
-        const id = getLibraryId(sourceId, mangaId);
-        const newItems = { ...state.items };
-        delete newItems[id];
-        setTimeout(() => deleteLibraryItem(sourceId, mangaId), 0); // Async Background sync
-        return { items: newItems };
-      }),
+      removeFromLibrary: (sourceId, mangaId) => {
+        const previousState = get().items;
+        set((state) => {
+          const id = getLibraryId(sourceId, mangaId);
+          const newItems = { ...state.items };
+          delete newItems[id];
+          return { items: newItems };
+        });
+
+        // Async Background sync with rollback
+        deleteLibraryItem(sourceId, mangaId).catch(() => {
+          set({ items: previousState });
+          toast.error("Gagal menghapus bookmark dari cloud. Periksa koneksi internet.");
+        });
+      },
 
       toggleLibrary: (item) => {
         const { isInLibrary, addToLibrary, removeFromLibrary } = get();
@@ -115,27 +132,38 @@ export const useLibraryStore = create<LibraryState>()(
         return get().items[id];
       },
 
-      updateLibraryItem: (sourceId, mangaId, patch) => set((state) => {
-        const id = getLibraryId(sourceId, mangaId);
-        const existing = state.items[id];
-        if (!existing) return state;
+      updateLibraryItem: (sourceId, mangaId, patch) => {
+        const previousState = get().items;
+        let updatedItem: LibraryItem | null = null;
 
-        let isNsfw = existing.isNsfw;
-        if (isNsfw === undefined && patch.isNsfw === undefined) {
-          const source = dynamicSourceRegistry.get(sourceId);
-          if (source) isNsfw = source.isNsfw;
-        }
+        set((state) => {
+          const id = getLibraryId(sourceId, mangaId);
+          const existing = state.items[id];
+          if (!existing) return state;
 
-        const updatedItem = { ...existing, ...patch, isNsfw: patch.isNsfw !== undefined ? patch.isNsfw : isNsfw, updatedAt: new Date().toISOString() };
-        setTimeout(() => pushLibraryItem(updatedItem), 0); // Async Background sync
-
-        return {
-          items: {
-            ...state.items,
-            [id]: updatedItem,
+          let isNsfw = existing.isNsfw;
+          if (isNsfw === undefined && patch.isNsfw === undefined) {
+            const source = dynamicSourceRegistry.get(sourceId);
+            if (source) isNsfw = source.isNsfw;
           }
-        };
-      }),
+
+          updatedItem = { ...existing, ...patch, isNsfw: patch.isNsfw !== undefined ? patch.isNsfw : isNsfw, updatedAt: new Date().toISOString() };
+          return {
+            items: {
+              ...state.items,
+              [id]: updatedItem,
+            }
+          };
+        });
+
+        if (updatedItem) {
+          // Async Background sync with rollback
+          pushLibraryItem(updatedItem).catch(() => {
+            set({ items: previousState });
+            // silently fail or toast? Since it's often background updates, maybe no toast needed unless critical
+          });
+        }
+      },
 
       clearLibrary: () => set({ items: {} }),
 

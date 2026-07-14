@@ -7,7 +7,7 @@ import { MagnifyingGlass, WarningCircle, CheckCircle } from "@phosphor-icons/rea
 import { SearchResultSkeleton } from "@/components/skeletons/search-result-skeleton";
 import { YomirraPageHeader, DesktopPageTitle } from "@/components/app/header";
 import { useSearchParams } from "next/navigation";
-import { MangaCard } from "@/components/manga/manga-card";
+import { ShelfCard } from "@/components/manga/card";
 import { motion, AnimatePresence } from "motion/react";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useSearchFilterStore } from "@/shared/store/search-filter-store";
@@ -326,7 +326,7 @@ function SearchContent() {
               </h2>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                 {searchMangas.map((item) => (
-                  <MangaCard 
+                  <ShelfCard 
                     key={`${item.sourceId}-${item.manga.id}`}
                     sourceId={item.sourceId}
                     manga={item.manga}

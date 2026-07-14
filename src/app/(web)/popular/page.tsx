@@ -6,7 +6,7 @@ import { Suspense } from "react";
 import { SourceFeedSkeleton } from "@/components/app/source-feed-skeleton";
 import { withCache, CACHE_TTL } from "@/server/lib/cache/redis-cache";
 import { sourceManager } from "@/server/lib/sources/source-manager";
-import { MangaCard } from "@/components/manga/manga-card";
+import { EditorialCard } from "@/components/manga/card";
 import Link from "next/link";
 import { getManifestUrlFromCookie } from "@/server/lib/sources/server-manifest";
 import { cookies } from "next/headers";
@@ -43,11 +43,10 @@ async function PopularFeed({ sourceId, sourceName }: { sourceId: string; sourceN
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
         {popular.mangas.slice(0, 15).map((manga: any, index: number) => (
           <div key={manga.id} className="w-full">
-            <MangaCard 
+            <EditorialCard 
               manga={{ ...manga, rank: index + 1 }} 
               sourceId={sourceId} 
               priority={index < 4}
-              variant="editorial"
             />
           </div>
         ))}

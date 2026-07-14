@@ -8,6 +8,8 @@ interface SettingsState {
   setHideNsfw: (enabled: boolean) => void;
   lastSyncedAt: string | null;
   setLastSyncedAt: (date: string | null) => void;
+  keepScreenAwake: boolean;
+  setKeepScreenAwake: (enabled: boolean) => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -19,6 +21,8 @@ export const useSettingsStore = create<SettingsState>()(
       setHideNsfw: (enabled) => set({ hideNsfw: enabled }),
       lastSyncedAt: null,
       setLastSyncedAt: (date) => set({ lastSyncedAt: date }),
+      keepScreenAwake: true,
+      setKeepScreenAwake: (enabled) => set({ keepScreenAwake: enabled }),
     }),
     {
       name: "yomirra-settings",

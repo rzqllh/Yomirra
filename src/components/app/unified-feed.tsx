@@ -1,6 +1,6 @@
 import * as React from "react"
 import { MangaItem } from "@/shared/sources/source-types";
-import { MangaCard } from "@/components/manga/manga-card";
+import { ShelfCard, LeaderboardRow } from "@/components/manga/card";
 import Link from "next/link";
 import { cn } from "@/shared/utils/cn";
 import { withCache, CACHE_TTL } from "@/server/lib/cache/redis-cache";
@@ -104,19 +104,19 @@ export async function UnifiedFeed({ activeSources }: UnifiedFeedProps) {
             <FeaturedHeroCarousel sourceId={shuffledLatest[0]?.sourceId || activeSources[0].id} mangas={shuffledLatest} />
 
             {/* Sidebar Queue (Right 1 column) - Ranks 1 to 5 */}
-            <div className="bg-surface-raised rounded-3xl p-6 border border-border-subtle flex flex-col gap-4 overflow-y-auto">
-              <h4 className="font-bold text-sm text-text-muted uppercase tracking-wider mb-2 flex items-center gap-2">
-                <TrendUp weight="duotone" /> Peringkat Populer
-              </h4>
-              <div className="flex flex-col gap-3">
+            <div className="bg-gradient-to-bl from-accent/5 to-accent/10 dark:from-surface-base dark:to-surface-overlay rounded-[3rem] p-6 sm:p-8 border border-transparent dark:border-border-subtle flex flex-col gap-4 overflow-y-auto shadow-sm self-start w-full">
+              <div className="flex items-center gap-2 mb-4 px-2">
+                <TrendUp weight="duotone" size={24} className="text-accent" />
+                <h4 className="font-black text-xl text-text-primary tracking-tight">
+                  Peringkat Populer
+                </h4>
+              </div>
+              <div className="flex flex-col gap-1">
                 {top5Trending.map((manga: any, idx: number) => (
-                  <MangaCard 
+                  <LeaderboardRow 
                     key={`${manga.sourceId}-${manga.id}`} 
-                    manga={manga} 
+                    manga={{...manga, rank: idx + 1}} 
                     sourceId={manga.sourceId} 
-                    rank={idx + 1} 
-                    variant="editorial" 
-                    showSourceBadge={true}
                   />
                 ))}
               </div>
@@ -137,12 +137,10 @@ export async function UnifiedFeed({ activeSources }: UnifiedFeedProps) {
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 lg:gap-6">
             {restTrending.map((manga: any, idx: number) => (
-              <MangaCard 
+              <ShelfCard 
                 key={`${manga.sourceId}-${manga.id}`} 
-                manga={manga} 
+                manga={{...manga, rank: idx + 6}} 
                 sourceId={manga.sourceId} 
-                rank={idx + 6}
-                variant="shelf" 
                 showSourceBadge={true}
               />
             ))}

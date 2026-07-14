@@ -14,6 +14,7 @@ export async function pushLibraryItem(item: LibraryItem) {
     await setDoc(doc(db, `users/${user.uid}/library`, id), cleanItem);
   } catch (e) {
     console.error("Failed to sync library item", e);
+    throw e;
   }
 }
 
@@ -28,6 +29,7 @@ export async function deleteLibraryItem(sourceId: string, mangaId: string) {
     await deleteDoc(doc(db, `users/${user.uid}/library`, id));
   } catch (e) {
     console.error("Failed to delete library item from sync", e);
+    throw e;
   }
 }
 
@@ -43,6 +45,7 @@ export async function pushHistoryItem(item: HistoryItem) {
     await setDoc(doc(db, `users/${user.uid}/history`, id), cleanItem);
   } catch (e) {
     console.error("Failed to sync history item", e);
+    throw e;
   }
 }
 
@@ -57,6 +60,7 @@ export async function deleteHistoryItem(sourceId: string, mangaId: string, chapt
     await deleteDoc(doc(db, `users/${user.uid}/history`, id));
   } catch (e) {
     console.error("Failed to delete history item from sync", e);
+    throw e;
   }
 }
 
@@ -88,6 +92,7 @@ export async function deleteMangaHistory(sourceId: string, mangaId: string) {
     }
   } catch (e) {
     console.error("Failed to delete manga history from sync", e);
+    throw e;
   }
 }
 

@@ -220,7 +220,7 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
           </IconButton>
           
           {/* Center Pill: Prev - Ch - Next */}
-          <div className="pointer-events-auto flex h-[56px] flex-1 items-center justify-between gap-1 rounded-full bg-surface-glass backdrop-blur-md px-1.5 shadow-sm border border-border-default/30">
+          <div className="pointer-events-auto flex h-[56px] flex-1 items-center justify-between gap-1 rounded-full bg-surface-glass backdrop-blur-lg px-1.5 shadow-sm border border-border-default/30">
             <IconButton 
               aria-label="Chapter sebelumnya"
               variant="ghost"

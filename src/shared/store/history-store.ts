@@ -1,7 +1,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { pushHistoryItem, deleteHistoryItem } from "@/shared/lib/sync-utils";
+import { pushHistoryItem, deleteHistoryItem, deleteMangaHistory } from "@/shared/lib/sync-utils";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
+import { toast } from "sonner";
 
 export type HistoryItem = {
   sourceId: string;
@@ -97,36 +98,38 @@ export const useHistoryStore = create<HistoryState>()(
         };
       }),
 
-      removeHistoryItem: (sourceId, mangaId, chapterId) => set((state) => {
-        const id = getHistoryId(sourceId, mangaId, chapterId);
-        const newItems = { ...state.items };
-        delete newItems[id];
-        setTimeout(() => deleteHistoryItem(sourceId, mangaId, chapterId), 0); // Async Background sync
-        return { items: newItems };
-      }),
-
-      removeMangaHistory: (sourceId, mangaId) => set((state) => {
-        const newItems = { ...state.items };
-        let hasChanges = false;
-        
-        Object.keys(newItems).forEach(key => {
-          const item = newItems[key];
-          if (item.sourceId === sourceId && item.mangaId === mangaId) {
-            delete newItems[key];
-            hasChanges = true;
-          }
+      removeHistoryItem: (sourceId, mangaId, chapterId) => {
+        const previousState = get().items;
+        set((state) => {
+          const id = getHistoryId(sourceId, mangaId, chapterId);
+          const newItems = { ...state.items };
+          delete newItems[id];
+          return { items: newItems };
         });
-        
-        if (hasChanges) {
-          setTimeout(() => {
-            import("@/shared/lib/sync-utils").then(({ deleteMangaHistory }) => {
-              deleteMangaHistory(sourceId, mangaId);
-            });
-          }, 0);
-        }
-        
-        return { items: newItems };
-      }),
+
+        deleteHistoryItem(sourceId, mangaId, chapterId).catch(() => {
+          set({ items: previousState });
+          toast.error("Gagal menghapus riwayat dari cloud.");
+        });
+      },
+
+      removeMangaHistory: (sourceId, mangaId) => {
+        const previousState = get().items;
+        set((state) => {
+          const newItems = { ...state.items };
+          Object.keys(newItems).forEach(key => {
+            if (key.startsWith(`${sourceId}::${mangaId}::`)) {
+              delete newItems[key];
+            }
+          });
+          return { items: newItems };
+        });
+
+        deleteMangaHistory(sourceId, mangaId).catch(() => {
+          set({ items: previousState });
+          toast.error("Gagal menghapus riwayat manga dari cloud.");
+        });
+      },
 
       clearHistory: () => set({ items: {} }),
 
@@ -166,10 +169,10 @@ export const useHistoryStore = create<HistoryState>()(
           .sort((a, b) => b.readAt - a.readAt);
       },
 
-      markChapterProgress: (sourceId, mangaId, chapterId, pageIndex, totalPages, scrollPercent) => set((state) => {
-        const id = getHistoryId(sourceId, mangaId, chapterId);
-        const existing = state.items[id];
-        if (!existing) return state;
+      markChapterProgress: (sourceId, mangaId, chapterId, pageIndex, totalPages, scrollPercent) => {
+        const previousState = get().items;
+        const existing = previousState[getHistoryId(sourceId, mangaId, chapterId)];
+        if (!existing) return;
 
         // Phase 2.4: Trigger mark-as-read at 90-95% progress
         let progressPercent = totalPages > 0 ? Math.round((pageIndex / totalPages) * 100) : 0;
@@ -194,15 +197,18 @@ export const useHistoryStore = create<HistoryState>()(
           isNsfw,
         };
         
-        setTimeout(() => pushHistoryItem(updatedItem), 0); // Async Background sync
-
-        return {
+        set({
           items: {
-            ...state.items,
-            [id]: updatedItem
+            ...previousState,
+            [getHistoryId(sourceId, mangaId, chapterId)]: updatedItem
           }
-        };
-      }),
+        });
+
+        pushHistoryItem(updatedItem).catch(() => {
+          set({ items: previousState });
+          toast.error("Gagal menyinkronkan progres baca ke cloud.");
+        });
+      },
 
       saveProgress: (sourceId, mangaId, chapterId, pageIndex, pageOffset) => set((state) => {
         const id = getHistoryId(sourceId, mangaId, chapterId);
