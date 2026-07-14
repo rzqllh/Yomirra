@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useMemo, useEffect, useDeferredValue } from "react";
+import { useState, useMemo, useDeferredValue } from "react";
 import { Play, SortAscending, SortDescending, Book } from "@phosphor-icons/react";
 import { CaretLeft } from "@phosphor-icons/react";
 import Image from "next/image";
 import Link from "next/link";
+import { useMounted } from "@/shared/hooks/use-mounted";
 import { getReaderHref, getSafeMangaDetailBackHref } from "@/shared/lib/routes";
 import { MangaActions } from "@/components/manga/manga-actions";
 import { useHistoryStore } from "@/shared/store/history-store";
@@ -12,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { IconButton } from "@/components/ui/icon-button";
 import { ChapterRow } from "@/components/manga/chapter-row";
 import { MangaRating } from "@/components/manga/manga-rating";
+import { MangaRecommendations } from "@/components/manga/manga-recommendations";
 import { Star } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
@@ -23,6 +25,12 @@ import { EmptyState } from "@/components/states/empty-state";
 import { cn } from "@/shared/utils/cn";
 import { motion, useScroll, useTransform } from "motion/react";
 import type { MangaDetail, Chapter } from "@/shared/types/source";
+
+const CHAPTER_ITEM_ESTIMATED_SIZE = 70;
+const SCROLL_Y_RANGE = [50, 150];
+const HEADER_BG_OPACITY_RANGE = [0, 0.85];
+const HEADER_BLUR_RANGE = [0, 12];
+const HEADER_BORDER_OPACITY_RANGE = [0, 0.1];
 
 interface MangaDetailViewProps {
   sourceId: string;
@@ -40,10 +48,7 @@ export function MangaDetailView({
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
   const [searchQuery, setSearchQuery] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => {
-    queueMicrotask(() => setMounted(true));
-  }, []);
+  const isMounted = useMounted();
 
   const { data: anilistData } = useQuery({
     queryKey: ["anilist-score", detail.title],
@@ -62,7 +67,7 @@ export function MangaDetailView({
 
   const getLatestForManga = useHistoryStore((state) => state.getLatestForManga);
   const historyItems = useHistoryStore((state) => state.items); // keep subscription
-  const historyItem = mounted ? getLatestForManga(sourceId, mangaId) : undefined;
+  const historyItem = isMounted ? getLatestForManga(sourceId, mangaId) : undefined;
 
   const deferredSearchQuery = useDeferredValue(searchQuery);
 
@@ -81,7 +86,7 @@ export function MangaDetailView({
   const rowVirtualizer = useVirtualizer({
     count: sortedChapters.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 70, // ~64px item + 8px gap
+    estimateSize: () => CHAPTER_ITEM_ESTIMATED_SIZE,
   });
 
   const coverUrl = detail.coverUrl;
@@ -92,9 +97,9 @@ export function MangaDetailView({
   const startChapterId = firstChapter?.id;
 
   const { scrollY } = useScroll();
-  const headerBgOpacity = useTransform(scrollY, [50, 150], [0, 0.85]);
-  const headerBackdropBlur = useTransform(scrollY, [50, 150], [0, 12]);
-  const headerBorderOpacity = useTransform(scrollY, [50, 150], [0, 0.1]);
+  const headerBgOpacity = useTransform(scrollY, SCROLL_Y_RANGE, HEADER_BG_OPACITY_RANGE);
+  const headerBackdropBlur = useTransform(scrollY, SCROLL_Y_RANGE, HEADER_BLUR_RANGE);
+  const headerBorderOpacity = useTransform(scrollY, SCROLL_Y_RANGE, HEADER_BORDER_OPACITY_RANGE);
 
   const renderActions = () => (
     <>
@@ -153,18 +158,18 @@ export function MangaDetailView({
         @media (min-width: 768px) { .vt-cover-desktop { view-transition-name: ${coverTransitionName}; } }
       `}} />
 
-      <div className="fixed inset-0 w-full h-full overflow-hidden z-0 pointer-events-none select-none">
+      <div className="fixed inset-0 w-full h-full overflow-hidden z-0 pointer-events-none select-none bg-background">
         {detail.coverUrl && (
             <Image
               src={detail.coverUrl}
               alt=""
               fill
-              className="object-cover opacity-[0.25] md:opacity-[0.15] blur-[100px] scale-[1.5] saturate-200 transform-gpu will-change-[transform,filter]"
+              className="object-cover opacity-60 blur-[120px] scale-[1.5] saturate-[2] brightness-75 md:brightness-100 transform-gpu will-change-[transform,filter]"
               unoptimized
               priority
             />
         )}
-        <div className="absolute inset-0 bg-gradient-to-b from-surface-base/60 via-surface-base/90 to-surface-base" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/80 to-background" />
       </div>
 
       <div className="w-full max-w-7xl mx-auto px-4 md:px-8 pt-20 md:pt-12 relative z-10 flex flex-col md:flex-row gap-6 md:gap-10">
@@ -357,6 +362,12 @@ export function MangaDetailView({
               </div>
             )}
           </div>
+
+          <MangaRecommendations 
+            sourceId={sourceId}
+            currentMangaId={mangaId}
+            genres={detail.genres || []}
+          />
         </div>
       </div>
     </main>

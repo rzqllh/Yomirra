@@ -4,7 +4,7 @@ import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
 import { YomirraPageHeader } from "@/components/app/header";
-import { MangaCard } from "@/components/manga/manga-card";
+import { ShelfCard } from "@/components/manga/card";
 import { SearchResultSkeleton } from "@/components/skeletons/search-result-skeleton";
 import { useSearchParams } from "next/navigation";
 import { WarningCircle, Compass } from "@phosphor-icons/react/dist/ssr";
@@ -76,7 +76,7 @@ export default function SourceBrowsePage({
             <>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 flex-1 content-start">
                 {data.mangas.map((manga) => (
-                  <MangaCard 
+                  <ShelfCard 
                     key={manga.id}
                     manga={manga}
                     sourceId={sourceId}

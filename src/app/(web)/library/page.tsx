@@ -5,7 +5,7 @@ import { DirectionalTransition } from "@/components/ui/directional-transition";
 import { LibrarySkeleton } from "@/components/skeletons/library-skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
-import { MangaCard } from "@/components/manga/manga-card";
+import { ShelfCard, HistoryCard } from "@/components/manga/card";
 import { SearchInput } from "@/components/ui/search-input";
 import { MangaCardSkeleton } from "@/components/skeletons/manga-card-skeleton";
 import { 
@@ -548,7 +548,11 @@ function LibraryContent() {
               )}>
                 <AnimatePresence>
                   {mangas.map((manga) => (
-                    <MangaCard key={manga.id} manga={manga} sourceId={activeSourceId} variant={viewMode === "grid" ? "shelf" : "history"} />
+                    viewMode === "grid" ? (
+                      <ShelfCard key={manga.id} manga={manga} sourceId={activeSourceId} />
+                    ) : (
+                      <HistoryCard key={manga.id} manga={manga} sourceId={activeSourceId} />
+                    )
                   ))}
                 </AnimatePresence>
               </motion.div>

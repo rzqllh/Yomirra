@@ -79,25 +79,25 @@
   --text-xs--font-weight: 400;
   --text-xs--letter-spacing: 0.01em;
 
-  --text-sm: 13px;
+  --text-sm: 14px;
   --text-sm--line-height: 1.5;
   --text-sm--font-weight: 400;
 
-  --text-base: 15px;
+  --text-base: 16px;
   --text-base--line-height: 1.6;
   --text-base--font-weight: 400;
 
-  --text-md: 16px;
+  --text-md: 18px;
   --text-md--line-height: 1.4;
   --text-md--font-weight: 500;
   --text-md--letter-spacing: -0.01em;
 
-  --text-lg: 18px;
+  --text-lg: 20px;
   --text-lg--line-height: 1.35;
   --text-lg--font-weight: 600;
   --text-lg--letter-spacing: -0.02em;
 
-  --text-xl: 22px;
+  --text-xl: 24px;
   --text-xl--line-height: 1.25;
   --text-xl--font-weight: 700;
   --text-xl--letter-spacing: -0.03em;
@@ -143,7 +143,7 @@
     --surface-overlay: #111122; /* elevated panels */
     --surface-muted: #1A1A2E; /* muted states */
     --surface-hover: #1F1F3D; /* interaction hover */
-    --surface-glass: rgba(17, 17, 34, 0.65); /* translucent glass based on surface-overlay */
+    --surface-glass: rgba(17, 17, 34, 0.70); /* translucent glass based on surface-overlay */
 
     --text-primary: #FDFDFD;
     --text-secondary: #D1D1D6; /* subtle text */
@@ -198,7 +198,7 @@
     --surface-overlay: #FFFFFF; /* bright card */
     --surface-muted: #EAEAEB; /* subtle background */
     --surface-hover: #E5E5EA; /* interaction state */
-    --surface-glass: rgba(255, 255, 255, 0.65); /* translucent glass */
+    --surface-glass: rgba(255, 255, 255, 0.70); /* translucent glass */
 
     --text-primary: #1C1C1E; /* deep ink text */
     --text-secondary: #3A3A3C; /* secondary text */

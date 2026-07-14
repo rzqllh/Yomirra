@@ -6,14 +6,14 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useHistoryStore } from "@/shared/store/history-store";
-import { MangaCard } from "@/components/manga/manga-card";
+import { ShelfCard, HistoryCard } from "@/components/manga/card";
 import { HistoryRow } from "@/components/history/history-row";
 import { HistoryMangaGroup } from "@/components/history/history-manga-group";
 import { EmptyState } from "@/components/states/empty-state";
 import { Button } from "@/components/ui/button";
 import { useMounted } from "@/shared/hooks/use-mounted";
 import { getLibraryHref, getReaderHref, getMangaDetailHref } from "@/shared/lib/routes";
-import { BookBookmark, Compass, Clock, Play, SortDescending, SortAscending, CaretRight, CaretDown, List, SquaresFour } from "@phosphor-icons/react";
+import { BookBookmark, Compass, Clock, Play, SortDescending, SortAscending, CaretRight, CaretDown, List, SquaresFour, CheckCircle } from "@phosphor-icons/react";
 import { motion, AnimatePresence } from "motion/react";
 import { DirectionalTransition } from "@/components/ui/directional-transition";
 import { SearchInput } from "@/components/ui/search-input";
@@ -62,6 +62,9 @@ export default function BookmarkPage() {
   const [sortOrder, setSortOrder] = React.useState<"desc" | "asc">("desc");
   const [sortBy, setSortBy] = React.useState<"updatedAt" | "title">("updatedAt");
   const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid");
+  const [isSelectionMode, setIsSelectionMode] = React.useState(false);
+  const [selectedItems, setSelectedItems] = React.useState<Set<string>>(new Set());
+  const removeFromLibrary = useLibraryStore((state) => state.removeFromLibrary);
   const hideNsfw = useSettingsStore((state) => state.hideNsfw);
   const nsfwSourceIds = useNsfwSourceIds();
   const { isSourceDisabled } = useSourcePreferencesStore();
@@ -407,6 +410,21 @@ export default function BookmarkPage() {
                               <List size={18} weight={viewMode === "list" ? "fill" : "bold"} />
                             </button>
                           </div>
+                          
+                          <Button
+                            variant={isSelectionMode ? "accent" : "outline"}
+                            className="rounded-full h-[44px] font-bold shrink-0 ml-2 shadow-sm"
+                            onClick={() => {
+                              if (isSelectionMode) {
+                                setIsSelectionMode(false);
+                                setSelectedItems(new Set());
+                              } else {
+                                setIsSelectionMode(true);
+                              }
+                            }}
+                          >
+                            {isSelectionMode ? "Batal" : "Pilih"}
+                          </Button>
                         </div>
                       </div>
 
@@ -425,25 +443,94 @@ export default function BookmarkPage() {
                           )}
                         >
                           <AnimatePresence>
-                            {filteredAndSortedLibraryItems.map((item, index) => (
-                              <MangaCard
-                                key={`${item.sourceId}::${item.mangaId}`}
-                                manga={{
-                                  id: item.mangaId,
-                                  title: item.title,
-                                  coverUrl: item.coverUrl || "",
-                                  status: item.status,
-                                }}
-                                sourceId={item.sourceId}
-                                variant={viewMode === "grid" ? "shelf" : "history"}
-                                priority={index < 6}
-                              />
-                            ))}
+                            {filteredAndSortedLibraryItems.map((item, index) => {
+                              const itemId = `${item.sourceId}::${item.mangaId}`;
+                              return (
+                                <div 
+                                  key={itemId}
+                                  className="relative group"
+                                  onClickCapture={(e) => {
+                                    if (isSelectionMode) {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      setSelectedItems(prev => {
+                                        const next = new Set(prev);
+                                        if (next.has(itemId)) next.delete(itemId);
+                                        else next.add(itemId);
+                                        return next;
+                                      });
+                                    }
+                                  }}
+                                >
+                                  {viewMode === "grid" ? (
+                                    <ShelfCard
+                                      manga={{
+                                        id: item.mangaId,
+                                        title: item.title,
+                                        coverUrl: item.coverUrl || "",
+                                        status: item.status,
+                                      }}
+                                      sourceId={item.sourceId}
+                                      priority={index < 6}
+                                    />
+                                  ) : (
+                                    <HistoryCard
+                                      manga={{
+                                        id: item.mangaId,
+                                        title: item.title,
+                                        coverUrl: item.coverUrl || "",
+                                        status: item.status,
+                                      }}
+                                      sourceId={item.sourceId}
+                                      priority={index < 6}
+                                    />
+                                  )}
+
+                                  {isSelectionMode && (
+                                    <div className="absolute inset-0 bg-black/40 z-20 flex items-center justify-center rounded-[var(--radius-md)] sm:rounded-[var(--radius-lg)] transition-all cursor-pointer">
+                                      {selectedItems.has(itemId) ? (
+                                        <CheckCircle weight="fill" size={48} className="text-accent drop-shadow-md" />
+                                      ) : (
+                                        <div className="w-12 h-12 rounded-full border-2 border-white/70 bg-black/20" />
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
                           </AnimatePresence>
                         </motion.div>
                       )}
                     </>
                   )}
+
+                  <AnimatePresence>
+                    {isSelectionMode && selectedItems.size > 0 && (
+                      <motion.div 
+                        initial={{ y: 100, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        exit={{ y: 100, opacity: 0 }}
+                        className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 bg-surface-overlay border border-border-subtle p-3 rounded-full shadow-heavy"
+                      >
+                        <span className="font-bold px-2 text-text-primary">{selectedItems.size} dipilih</span>
+                        <Button 
+                          variant="destructive" 
+                          className="rounded-full font-bold shadow-sm"
+                          onClick={() => {
+                            selectedItems.forEach(id => {
+                              const [src, manga] = id.split("::");
+                              removeFromLibrary(src, manga);
+                            });
+                            setIsSelectionMode(false);
+                            setSelectedItems(new Set());
+                            toast.success(`${selectedItems.size} komik dihapus dari koleksi`);
+                          }}
+                        >
+                          Hapus
+                        </Button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               </DirectionalTransition>
             )}

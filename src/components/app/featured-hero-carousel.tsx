@@ -6,6 +6,7 @@ import { MangaItem } from "@/shared/sources/source-types";
 import { motion, AnimatePresence } from "motion/react";
 import { Play, Info } from "@phosphor-icons/react";
 import { cn } from "@/shared/utils/cn";
+import { getMangaDetailHref } from "@/shared/lib/routes";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
 
@@ -32,9 +33,10 @@ export function FeaturedHeroCarousel({ sourceId, mangas }: FeaturedHeroCarouselP
   const currentManga = mangas[currentIndex];
 
   // Fetch full details to get the synopsis
+  const actualSourceId = (currentManga as any)?.sourceId || sourceId;
   const { data: mangaDetail, isLoading: isDetailLoading } = useQuery({
-    queryKey: ["manga-detail", sourceId, currentManga?.id],
-    queryFn: () => apiClient.getDetail(sourceId, currentManga.id),
+    queryKey: ["manga-detail", actualSourceId, currentManga?.id],
+    queryFn: () => apiClient.getDetail(actualSourceId, currentManga.id),
     enabled: !!currentManga?.id,
     staleTime: 1000 * 60 * 15,
   });
@@ -138,7 +140,7 @@ export function FeaturedHeroCarousel({ sourceId, mangas }: FeaturedHeroCarouselP
 
         {/* Static Button (Outside AnimatePresence so it doesn't swipe/fade) */}
         <Link 
-          href={`/sources/${sourceId}/manga/${currentManga.id}`}
+          href={getMangaDetailHref((currentManga as any)?.sourceId || sourceId, currentManga.id)}
           className="bg-accent text-white border border-accent-hover/20 px-8 py-3 rounded-[2rem] font-bold shadow-xl shadow-accent/20 hover:scale-105 hover:bg-accent-hover active:scale-95 transition-all flex items-center justify-center gap-2.5 pointer-events-auto cursor-pointer w-full sm:w-auto mt-4 z-20"
           draggable={false}
         >

@@ -34,6 +34,7 @@ import { AppShell } from "@/components/app/app-shell";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { OfflineProvider } from "@/components/providers/offline-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { DownloadManager } from "@/components/download/download-manager";
 
 export default function RootLayout({
   children,
@@ -54,6 +55,7 @@ export default function RootLayout({
                 </ErrorBoundary>
               </AppShell>
             </div>
+            <DownloadManager />
           </OfflineProvider>
         </Providers>
       </body>
