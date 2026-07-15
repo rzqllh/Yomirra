@@ -164,12 +164,13 @@ export function MangaDetailView({
               src={detail.coverUrl}
               alt=""
               fill
-              className="object-cover opacity-60 blur-[120px] scale-[1.5] saturate-[2] brightness-75 md:brightness-100 transform-gpu will-change-[transform,filter]"
+              className="object-cover opacity-60 blur-[100px] scale-[1.2] saturate-[1.5] brightness-50 md:brightness-75 transform-gpu will-change-[transform,filter]"
               unoptimized
               priority
             />
         )}
-        <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/80 to-background" />
+        <div className="absolute inset-0 bg-surface-base/70" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/90 to-background" />
       </div>
 
       <div className="w-full max-w-7xl mx-auto px-4 md:px-8 pt-20 md:pt-12 relative z-10 flex flex-col md:flex-row gap-6 md:gap-10">

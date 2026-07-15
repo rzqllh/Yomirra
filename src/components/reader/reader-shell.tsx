@@ -213,7 +213,8 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
             className="pointer-events-auto flex h-[56px] w-[56px] shrink-0 items-center justify-center rounded-full bg-surface-glass backdrop-blur-md shadow-sm border border-border-default/30 transition-all duration-300 text-text-secondary hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/10"
             onClick={(e) => { 
               e.stopPropagation(); 
-              router.push(getMangaDetailHref(sourceId, mangaId));
+              const returnTo = new URLSearchParams(window.location.search).get("returnTo") || undefined;
+              router.push(getMangaDetailHref(sourceId, mangaId, returnTo));
             }}
           >
             <X size={22} weight="bold" />

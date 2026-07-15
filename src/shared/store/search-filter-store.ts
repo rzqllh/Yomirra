@@ -7,10 +7,11 @@ interface SearchFilterState {
   toggleSource: (sourceId: string) => void;
   
   genres: string[];
+  formats: string[];
   status: string;
   sort: string;
   
-  applyFilters: (filters: { genres: string[], status: string, sort: string }) => void;
+  applyFilters: (filters: { genres: string[], formats?: string[], status: string, sort: string }) => void;
   resetFilters: () => void;
 }
 
@@ -29,11 +30,17 @@ export const useSearchFilterStore = create<SearchFilterState>()(
       }),
 
       genres: [],
+      formats: [],
       status: "",
       sort: "popular",
 
-      applyFilters: (filters) => set(filters),
-      resetFilters: () => set({ genres: [], status: "", sort: "popular" })
+      applyFilters: (filters) => set({
+        genres: filters.genres,
+        formats: filters.formats || [],
+        status: filters.status,
+        sort: filters.sort
+      }),
+      resetFilters: () => set({ genres: [], formats: [], status: "", sort: "popular" })
     }),
     {
       name: "yomirra-search-filters",

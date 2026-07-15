@@ -38,9 +38,11 @@ export async function GET(req: NextRequest) {
     }
   });
 
-  if (!q) {
-    return NextResponse.json({ error: { message: "Missing query 'q'" } }, { status: 400 });
+  if (!q && Object.keys(filters).length === 0) {
+    return NextResponse.json({ error: { message: "Provide a search query or at least one filter" } }, { status: 400 });
   }
+
+  const queryStr = q || "";
 
   if (!sourcesParam) {
     return NextResponse.json({ error: { message: "Missing 'sources' parameter (comma separated)" } }, { status: 400 });
@@ -52,7 +54,7 @@ export async function GET(req: NextRequest) {
   if (Object.keys(filters).length > 0) {
     filterKey = `:${createHash("md5").update(JSON.stringify(filters)).digest("hex").slice(0, 8)}`;
   }
-  const cacheKey = `global:search:${q}:sources:${sourceIds.sort().join(",")}:page:${page}${filterKey}`;
+  const cacheKey = `global:search:${queryStr}:sources:${sourceIds.sort().join(",")}:page:${page}${filterKey}`;
 
   try {
     const cachedData = await withCache(
@@ -75,7 +77,7 @@ export async function GET(req: NextRequest) {
           }
 
           try {
-            const searchResult = await source.search(q, page, Object.keys(filters).length > 0 ? filters : undefined);
+            const searchResult = await source.search(queryStr, page, Object.keys(filters).length > 0 ? filters : undefined);
             results[sourceId] = {
               results: searchResult.mangas,
               hasNextPage: searchResult.hasNextPage,

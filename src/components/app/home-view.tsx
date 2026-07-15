@@ -30,38 +30,15 @@ export function HomeView({ children }: HomeViewProps) {
     return () => clearTimeout(t);
   }, []);
 
-  const getContinueReading = useHistoryStore(state => state.getContinueReading);
-  const _historyItemsState = useHistoryStore(state => state.items); // Subscribe to changes
-  const rawHistoryItems = isMounted ? getContinueReading(50) : [];
+  // Note: Personalized feed logic (Lanjut Baca, Update Hari Ini) 
+  // is now handled natively inside UnifiedFeed -> HomeFeedClient.
 
-  const { isSourceDisabled } = useSourcePreferencesStore();
-  const hideNsfw = useSettingsStore(state => state.hideNsfw);
-  const nsfwSourceIds = useNsfwSourceIds();
-
-  const isFromNsfwSource = React.useCallback(
-    (sourceId: string, itemIsNsfw?: boolean) =>
-      itemIsNsfw === true || nsfwSourceIds.has(sourceId),
-    [nsfwSourceIds]
-  );
-
-  const historyItems = React.useMemo(() => {
-    let result = rawHistoryItems.filter(item => {
-      if (isSourceDisabled(item.sourceId)) return false;
-      const source = dynamicSourceRegistry.get(item.sourceId);
-      if (source && source.status === "unavailable") return false;
-      return true;
-    });
-    if (hideNsfw) {
-      result = result.filter(item => !isFromNsfwSource(item.sourceId, item.isNsfw));
-    }
-    return result.slice(0, 10);
-  }, [rawHistoryItems, isSourceDisabled, hideNsfw, isFromNsfwSource]);
 
   return (
     <PullToRefresh>
       <YomirraSurface variant="base" className="min-h-screen">
         <h1 className="sr-only">Beranda Yomirra</h1>
-        <YomirraPageHeader title="Beranda" variant="transparent" />
+        <YomirraPageHeader title="Beranda" variant="transparent" icon={<Compass size={24} weight="duotone" />} />
         
         <div className="px-4 pt-[calc(var(--safe-top)+24px)] md:px-8 pb-6 md:pb-10 max-w-7xl mx-auto flex flex-col gap-8 md:gap-12">
           
@@ -74,10 +51,7 @@ export function HomeView({ children }: HomeViewProps) {
             />
           </div>
 
-          {/* Lanjut Baca Section (Bento Scroll) */}
-          <ContinueReadingList items={historyItems} />
-
-          {/* Dynamic Source Feeds */}
+          {/* Dynamic Source Feeds (Contains Lanjut Baca, Updates, etc) */}
           {children}
           
         </div>

@@ -155,14 +155,14 @@
     --border-strong: rgba(94, 92, 230, 0.6);
     --border-glass: rgba(255, 255, 255, 0.08); /* subtle rim for glass panels */
     
-    --color-accent: #5E5CE6; /* vibrant indigo */
-    --color-accent-dim: rgba(94, 92, 230, 0.15);
-    --color-accent-hover: #7D7AFF;
+    --color-accent: #6C6AFA; /* brighter indigo for WCAG AA contrast on dark bg */
+    --color-accent-dim: rgba(108, 106, 250, 0.15);
+    --color-accent-hover: #8A88FF;
     
     --color-semantic-success: #32D74B; 
     --color-semantic-warning: #FF9F0A; 
     --color-semantic-error: #FF453A; 
-    --color-semantic-info: #5E5CE6;
+    --color-semantic-info: #6C6AFA;
 
     /* Diffused shadow for glass docks/headers */
     --shadow-heavy-val: 0 12px 40px rgba(0, 0, 0, 0.55), 0 4px 12px rgba(0, 0, 0, 0.35);

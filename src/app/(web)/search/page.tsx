@@ -37,7 +37,7 @@ export default function SearchPage() {
     <DirectionalTransition>
       <React.Suspense fallback={
         <main className="min-h-screen bg-surface-base">
-          <YomirraPageHeader title="Pencarian" showBack variant="transparent" />
+          <YomirraPageHeader title="Pencarian" variant="transparent" icon={<MagnifyingGlass size={24} weight="duotone" />} />
           <div className="px-4 py-6">
             <SearchResultSkeleton />
           </div>
@@ -150,30 +150,21 @@ function SearchContent() {
   const isNsfwFiltered = useSettingsStore((state) => state.hideNsfw);
   
   const genres = searchFilterStore.genres;
+  const formats = searchFilterStore.formats;
   const status = searchFilterStore.status;
   const sort = searchFilterStore.sort;
 
   const filters: Record<string, string | string[]> = {};
   if (genres.length > 0) filters["genre[]"] = genres;
+  if (formats?.length > 0) filters["format[]"] = formats;
   if (status) filters["status"] = status;
   if (sort) filters["sort"] = sort;
 
   const { data: searchResponse, isLoading, error } = useQuery({
     queryKey: ["searchGlobal", query, activeSelectedSources, isNsfwFiltered, filters, page],
     queryFn: () => apiClient.searchGlobal(query, activeSelectedSources, page, isNsfwFiltered, filters),
-    enabled: query.length > 0 && activeSelectedSources.length > 0,
+    enabled: activeSelectedSources.length > 0,
   });
-
-  const latestQueries = useQueries({
-    queries: activeSelectedSources.map(sourceId => ({
-      queryKey: ["latest", sourceId, page],
-      queryFn: () => apiClient.getLatest(sourceId, page),
-      enabled: query.length === 0 && activeSelectedSources.length > 0,
-    }))
-  });
-
-  const isLatestLoading = latestQueries.some(q => q.isLoading);
-
 
   // Helper to interleave and deduplicate mangas from multiple sources
   const getMergedMangas = (sourceArrays: { sourceId: string, items: any[] }[]) => {
@@ -199,33 +190,22 @@ function SearchContent() {
     return result;
   };
 
-  const searchMangas = query.length > 0 && searchResponse?.resultsBySource ? getMergedMangas(
+  const searchMangas = searchResponse?.resultsBySource ? getMergedMangas(
     Object.entries(searchResponse.resultsBySource).map(([sourceId, res]) => ({
       sourceId,
       items: res.results || []
     }))
-  ) : query.length === 0 ? getMergedMangas(
-    latestQueries.map((q, idx) => ({
-      sourceId: activeSelectedSources[idx],
-      items: q.data?.mangas || []
-    }))
   ) : [];
 
-  const hasNextPage = query.length > 0 
-    ? Object.values(searchResponse?.resultsBySource || {}).some((res: any) => res.hasNextPage)
-    : latestQueries.some(q => q.data?.hasNextPage);
+  const hasNextPage = Object.values(searchResponse?.resultsBySource || {}).some((res: any) => res.hasNextPage);
 
-  const searchErrors = query.length > 0 && searchResponse?.resultsBySource
+  const errorsToDisplay = searchResponse?.resultsBySource
     ? Object.entries(searchResponse.resultsBySource).map(([sourceId, res]) => res.error ? { sourceId, error: res.error } : null).filter(Boolean) as { sourceId: string, error: string }[]
-    : query.length === 0 
-      ? latestQueries.map((q, idx) => q.isError ? { sourceId: activeSelectedSources[idx], error: q.error?.message || "Gagal memuat" } : null).filter(Boolean) as { sourceId: string, error: string }[]
-      : [];
-
-  const errorsToDisplay = searchErrors;
+    : [];
 
   return (
     <main className="min-h-screen bg-surface-base">
-      <YomirraPageHeader title="Pencarian" showBack variant="transparent" />
+      <YomirraPageHeader title="Pencarian" variant="transparent" icon={<MagnifyingGlass size={24} weight="duotone" />} />
       
       <div className="px-4 pt-[calc(var(--safe-top)+24px)] pb-6 max-w-7xl mx-auto">
         <div className="mb-6">
@@ -299,7 +279,7 @@ function SearchContent() {
                 description="Pilih setidaknya satu sumber di atas untuk mencari."
               />
             </motion.div>
-          ) : query.length === 0 && isLatestLoading ? (
+          ) : query.length === 0 && isLoading ? (
             <motion.div key="latest-loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col gap-10">
               <SearchResultSkeleton />
             </motion.div>

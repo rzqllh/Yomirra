@@ -10,6 +10,7 @@ import { Fire, TrendUp, Compass } from "@phosphor-icons/react/dist/ssr";
 import { FeaturedHeroCarousel } from "@/components/app/featured-hero-carousel";
 import { getManifestUrlFromCookie } from "@/server/lib/sources/server-manifest";
 import { SourceMetadata } from "@/shared/sources/source-types";
+import { HomeFeedClient } from "./home-feed-client";
 
 interface UnifiedFeedProps {
   activeSources: SourceMetadata[];
@@ -87,67 +88,9 @@ export async function UnifiedFeed({ activeSources }: UnifiedFeedProps) {
   const restTrending = unifiedPopular.slice(5, 30);
 
   return (
-    <div className="flex flex-col gap-16 animate-in fade-in zoom-in-[0.98] duration-500 ease-out fill-mode-both">
-      
-      {/* SECTION: Sorotan Terbaru (Top 5) */}
-      {top5Trending.length > 0 && (
-        <div className="flex flex-col gap-6">
-          <div className="flex justify-between items-end pb-2">
-            <h2 className="text-3xl font-black tracking-tight flex items-center gap-3">
-              <Fire weight="duotone" className="text-semantic-warning" /> 
-              <span>Sorotan Utama</span>
-            </h2>
-          </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 h-auto">
-            {/* Hero Carousel (Left 2 columns) - Random Latest */}
-            <FeaturedHeroCarousel sourceId={shuffledLatest[0]?.sourceId || activeSources[0].id} mangas={shuffledLatest} />
-
-            {/* Sidebar Queue (Right 1 column) - Ranks 1 to 5 */}
-            <div className="bg-gradient-to-bl from-accent/5 to-accent/10 dark:from-surface-base dark:to-surface-overlay rounded-[3rem] p-6 sm:p-8 border border-transparent dark:border-border-subtle flex flex-col gap-4 overflow-y-auto shadow-sm self-start w-full">
-              <div className="flex items-center gap-2 mb-4 px-2">
-                <TrendUp weight="duotone" size={24} className="text-accent" />
-                <h4 className="font-black text-xl text-text-primary tracking-tight">
-                  Peringkat Populer
-                </h4>
-              </div>
-              <div className="flex flex-col gap-1">
-                {top5Trending.map((manga: any, idx: number) => (
-                  <LeaderboardRow 
-                    key={`${manga.sourceId}-${manga.id}`} 
-                    manga={{...manga, rank: idx + 1}} 
-                    sourceId={manga.sourceId} 
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* SECTION: Trending / Discovery */}
-      {restTrending.length > 0 && (
-        <div className="flex flex-col gap-6">
-          <div className="border-b border-border-subtle pb-4">
-            <h2 className="text-xl font-bold flex items-center gap-3">
-              <Compass weight="duotone" className="text-accent" /> 
-              <span>Eksplorasi</span>
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 lg:gap-6">
-            {restTrending.map((manga: any, idx: number) => (
-              <ShelfCard 
-                key={`${manga.sourceId}-${manga.id}`} 
-                manga={{...manga, rank: idx + 6}} 
-                sourceId={manga.sourceId} 
-                showSourceBadge={true}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-    </div>
+    <HomeFeedClient 
+      unifiedPopular={unifiedPopular} 
+      unifiedLatest={unifiedLatest} 
+    />
   );
 }
