@@ -101,24 +101,32 @@ export function MangaDetailView({
   const headerBackdropBlur = useTransform(scrollY, SCROLL_Y_RANGE, HEADER_BLUR_RANGE);
   const headerBorderOpacity = useTransform(scrollY, SCROLL_Y_RANGE, HEADER_BORDER_OPACITY_RANGE);
 
-  const renderActions = () => (
-    <>
+  const renderMainAction = () => (
+    <div className="w-full mt-1 mb-4">
       {showContinue && continueChapterId ? (
-        <Button asChild variant="accent" className="w-full rounded-full h-12 text-base font-bold ">
+        <Button asChild variant="accent" className="w-full rounded-2xl h-14 text-base font-bold shadow-md active:scale-[0.98] transition-all">
           <Link href={getReaderHref(sourceId, mangaId, continueChapterId)}>
-            <Play className="h-5 w-5" fill="currentColor" weight="fill" />
-            Lanjut baca
+            <Play className="h-6 w-6 mr-1" fill="currentColor" weight="fill" />
+            Lanjutkan Chapter {continueChapterId}
           </Link>
         </Button>
       ) : startChapterId ? (
-        <Button asChild variant="accent" className="w-full rounded-full h-12 text-base font-bold ">
+        <Button asChild variant="accent" className="w-full rounded-2xl h-14 text-base font-bold shadow-md active:scale-[0.98] transition-all">
           <Link href={getReaderHref(sourceId, mangaId, startChapterId)}>
-            <Play className="h-5 w-5" fill="currentColor" weight="fill" />
-            Mulai baca
+            <Play className="h-6 w-6 mr-1" fill="currentColor" weight="fill" />
+            Mulai Baca
           </Link>
         </Button>
-      ) : null}
+      ) : (
+        <Button disabled variant="outline" className="w-full rounded-2xl h-14 text-base font-bold bg-surface-raised border-border-default opacity-60">
+          Belum ada chapter
+        </Button>
+      )}
+    </div>
+  );
 
+  const renderActions = () => (
+    <div className="w-full">
       <MangaActions 
         sourceId={sourceId}
         mangaId={mangaId}
@@ -127,11 +135,11 @@ export function MangaDetailView({
         author={detail.author}
         status={detail.status}
       />
-    </>
+    </div>
   );
 
   return (
-    <main className="min-h-screen flex flex-col w-full relative">
+    <main className="min-h-screen flex flex-col w-full relative pb-[calc(var(--bottom-nav-height,80px)+24px)] md:pb-12">
       <div 
         className="fixed top-[calc(var(--safe-top)+12px)] left-4 right-4 z-50 md:hidden flex items-center gap-3 pointer-events-none"
       >
@@ -193,20 +201,24 @@ export function MangaDetailView({
           </div>
           <div className="flex flex-col flex-1 gap-1.5 justify-center py-1">
             <h1 className="text-xl font-bold leading-snug line-clamp-3 text-shadow-sm">{detail.title}</h1>
-            <div className="text-sm font-medium text-text-muted">{detail.author}</div>
-            <div className="mt-1 flex items-center gap-2 flex-wrap">
+            <div className="text-sm font-medium text-text-muted">
+              {detail.author} {detail.artist && detail.artist !== detail.author && `• ${detail.artist}`}
+            </div>
+            <div className="mt-1 flex items-center gap-2 flex-wrap text-sm text-text-muted">
+              <span className="font-semibold">{sourceId.toUpperCase()}</span>
+              <span>•</span>
               <span className="text-text-primary bg-surface-overlay border border-border-default px-1.5 py-0.5 rounded-sm text-2xs uppercase tracking-wider font-bold">{detail.status}</span>
+              <span>•</span>
               <span className="flex items-center gap-1 font-semibold text-sm">
                 <Star weight="fill" className="text-semantic-warning" />
                 <span suppressHydrationWarning>{Number(displayScore) > 0 ? Number(displayScore).toFixed(1) : "-.-"}</span>
               </span>
-              <span>•</span>
-              <MangaRating sourceId={sourceId} mangaId={mangaId} />
             </div>
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 mt-2 md:hidden">
+        <div className="flex flex-col gap-1 mt-4 md:hidden">
+          {renderMainAction()}
           {renderActions()}
         </div>
 
@@ -226,7 +238,8 @@ export function MangaDetailView({
               />
             )}
           </div>
-          <div className="flex flex-col gap-3 mt-2">
+          <div className="flex flex-col gap-1 mt-2">
+            {renderMainAction()}
             {renderActions()}
           </div>
         </div>
@@ -239,7 +252,9 @@ export function MangaDetailView({
                 {detail.title}
               </h1>
               <div className="flex items-center gap-2 text-base font-medium text-text-muted">
-                <span>{detail.author}</span>
+                <span>{detail.author} {detail.artist && detail.artist !== detail.author && `• ${detail.artist}`}</span>
+                <span>•</span>
+                <span className="font-semibold text-text-primary">{sourceId.toUpperCase()}</span>
                 <span>•</span>
                 <span className="text-text-primary bg-surface-overlay px-2 py-0.5 rounded-sm text-xs uppercase tracking-wider font-bold">{detail.status}</span>
                 <span>•</span>
@@ -247,47 +262,53 @@ export function MangaDetailView({
                   <Star weight="fill" className="text-semantic-warning" />
                   <span suppressHydrationWarning>{Number(displayScore) > 0 ? Number(displayScore).toFixed(1) : "-.-"}</span>
                 </span>
-                <span>•</span>
-                <MangaRating sourceId={sourceId} mangaId={mangaId} />
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2 mt-2 md:mt-0">
-              {detail.genres?.map((g) => (
-                <Link 
-                  key={g} 
-                  href={`/library?source=${sourceId}&genre=${encodeURIComponent(g)}`}
-                  className="rounded-sm bg-surface-overlay px-2 py-1 text-[11px] md:text-xs font-semibold text-text-primary border border-border-default uppercase tracking-wider hover:bg-accent/10 hover:text-accent hover:border-accent transition-colors"
-                >
-                  {g}
-                </Link>
-              ))}
-            </div>
-
-            <div className="mt-2 md:mt-4 bg-surface-base border border-border-default rounded-lg p-4 md:p-6">
+            <div className="mt-2 md:mt-4 px-1">
               <p className={cn(
-                "text-sm md:text-base leading-relaxed text-text-secondary whitespace-pre-wrap break-words transition-all", 
-                !isExpanded && "line-clamp-3" 
+                "text-[15px] md:text-base leading-relaxed text-text-secondary break-words transition-all", 
+                !isExpanded && "line-clamp-4" 
               )}>
-                {detail.description || "Sinopsis belum tersedia."}
+                {detail.description?.replace(/\s+/g, ' ').trim() || "Sinopsis belum tersedia."}
               </p>
               
               {detail.description && detail.description.length > 200 && (
                 <button 
                   onClick={() => setIsExpanded(!isExpanded)}
-                  className="mt-3 text-sm font-semibold text-accent hover:text-accent-hover transition-colors inline-flex items-center gap-1"
+                  className="mt-2 text-sm font-semibold text-accent hover:text-accent-hover transition-colors inline-flex items-center gap-1"
                 >
                   {isExpanded ? "Tampilkan lebih sedikit" : "Selengkapnya"}
                 </button>
               )}
             </div>
+
+            <div className="flex flex-wrap gap-1.5 mt-3 md:mt-2">
+              {detail.format && (
+                <span className="rounded-sm bg-surface-overlay px-2 py-1 text-[11px] font-semibold text-text-primary border border-border-default uppercase tracking-wider">
+                  {detail.format}
+                </span>
+              )}
+              {detail.genres?.map((g) => (
+                <Link 
+                  key={g} 
+                  href={`/library?source=${sourceId}&genre=${encodeURIComponent(g)}`}
+                  className="rounded-sm bg-surface-overlay px-2 py-1 text-[11px] font-semibold text-text-primary border border-border-default uppercase tracking-wider hover:bg-accent/10 hover:text-accent hover:border-accent transition-colors"
+                >
+                  {g}
+                </Link>
+              ))}
+            </div>
           </div>
 
           <div className="mt-8 md:mt-10">
             <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between border-b border-border-default pb-3 gap-4">
-              <div className="flex items-center gap-3">
-                <h3 className="text-lg md:text-xl font-bold text-text-primary">Chapter</h3>
-                <span className="text-sm text-text-muted font-bold">{chapters?.length || 0}</span>
+              <div className="flex items-center gap-3 w-full sm:w-auto">
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl md:text-2xl font-bold tracking-tight text-text-primary">{chapters?.length || 0} chapters</span>
+                  </div>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <SearchInput 

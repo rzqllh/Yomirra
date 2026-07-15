@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation"
 import { DOCK_NAV_ITEMS } from "@/shared/config/nav"
 import { cn } from "@/shared/utils/cn"
 import { motion } from "motion/react"
+import { useSearchFilterStore } from "@/shared/store/search-filter-store"
 
 export function BottomDock() {
   const pathname = usePathname()
@@ -28,6 +29,11 @@ export function BottomDock() {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={() => {
+                  if (item.href === "/search") {
+                    useSearchFilterStore.getState().resetFilters();
+                  }
+                }}
                 transitionTypes={['nav-lateral']}
                 className={cn(
                   "group relative flex items-center justify-center h-[44px] shrink-0 outline-none tap-highlight-transparent transition-all duration-300 ease-out",

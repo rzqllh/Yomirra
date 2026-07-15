@@ -11,10 +11,11 @@ import {
 interface MangaRatingProps {
   sourceId: string;
   mangaId: string;
+  variant?: "default" | "action";
   className?: string;
 }
 
-export function MangaRating({ sourceId, mangaId, className }: MangaRatingProps) {
+export function MangaRating({ sourceId, mangaId, className, variant = "default" }: MangaRatingProps) {
   const [isOpen, setIsOpen] = useState(false);
   const getLibraryItem = useLibraryStore(state => state.getLibraryItem);
   const updateLibraryItem = useLibraryStore(state => state.updateLibraryItem);
@@ -22,8 +23,6 @@ export function MangaRating({ sourceId, mangaId, className }: MangaRatingProps) 
   const libraryItem = getLibraryItem(sourceId, mangaId);
   const userRating = libraryItem?.userRating;
 
-  // We only allow rating if the item is in the library to persist it properly.
-  // If not in library, clicking the rating could optionally add it first, but for now we just disable it or prompt.
   const isInLibrary = !!libraryItem;
 
   const handleRating = (rating: number) => {
@@ -32,21 +31,42 @@ export function MangaRating({ sourceId, mangaId, className }: MangaRatingProps) 
     setIsOpen(false);
   };
 
+  const triggerButton = variant === "action" ? (
+    <button 
+      className={cn(
+        "flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl transition-all duration-300 outline-none select-none",
+        userRating 
+          ? "bg-amber-400/10 border border-amber-400/20 text-amber-500 shadow-sm" 
+          : "bg-surface-raised border border-border-default text-text-secondary hover:bg-surface-hover hover:border-border-strong hover:text-text-primary active:scale-[0.98]",
+        !isInLibrary && "opacity-50 cursor-not-allowed"
+      )}
+      disabled={!isInLibrary}
+    >
+      <Star size={24} weight={userRating ? "fill" : "regular"} />
+      <span className="text-[11px] font-bold tracking-tight">
+        {userRating ? `${userRating}/10` : "Rating"}
+      </span>
+    </button>
+  ) : (
+    <button 
+      className={cn(
+        "flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors",
+        userRating ? "text-amber-400 bg-amber-400/10 font-bold" : "text-text-muted hover:text-text-primary hover:bg-surface-hover font-medium",
+        !isInLibrary && "opacity-50 cursor-not-allowed",
+        className
+      )}
+      title={!isInLibrary ? "Tambahkan ke library untuk memberi rating" : "Beri rating"}
+      disabled={!isInLibrary}
+    >
+      <Star size={16} weight={userRating ? "fill" : "bold"} />
+      <span className="text-sm">{userRating || "Rating"}</span>
+    </button>
+  );
+
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
-      <DropdownMenuTrigger asChild disabled={!isInLibrary}>
-        <button 
-          className={cn(
-            "flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors",
-            userRating ? "text-amber-400 bg-amber-400/10 font-bold" : "text-text-muted hover:text-text-primary hover:bg-surface-hover font-medium",
-            !isInLibrary && "opacity-50 cursor-not-allowed",
-            className
-          )}
-          title={!isInLibrary ? "Tambahkan ke library untuk memberi rating" : "Beri rating"}
-        >
-          <Star size={16} weight={userRating ? "fill" : "bold"} />
-          <span className="text-sm">{userRating || "Rating"}</span>
-        </button>
+      <DropdownMenuTrigger asChild>
+        {triggerButton}
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-[280px] p-4 bg-surface-overlay/95 backdrop-blur-xl border-border-default shadow-heavy rounded-2xl">
         <div className="flex flex-col gap-3">

@@ -83,7 +83,27 @@ export class KomikindoSource implements MangaSource {
     return this.parseMangaList(html);
   }
 
-  async search(query: string, page: number): Promise<MangaPageResult> {
+  async search(query: string, page: number, filters?: Record<string, string | string[]>): Promise<MangaPageResult> {
+    if (filters && Object.keys(filters).length > 0) {
+      // Allow only sort filter if it's the only one, otherwise throw error
+      const keys = Object.keys(filters);
+      if (keys.length > 1 || keys[0] !== "sort") {
+        throw new Error("Filter pencarian (Genre, Status, Tipe) belum didukung untuk sumber Komikindo.");
+      }
+      
+      const sort = Array.isArray(filters.sort) ? filters.sort[0] : filters.sort;
+      if (sort === "latest" && !query) {
+        return this.getLatest(page);
+      }
+      if (sort === "popular" && !query) {
+        return this.getPopular(page);
+      }
+    }
+
+    if (!query) {
+      throw new Error("Masukkan kata kunci pencarian atau gunakan sumber lain.");
+    }
+
     const html = await this.client.getHtml(`/page/${page}/`, { s: query });
     return this.parseMangaList(html);
   }
