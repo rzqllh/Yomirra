@@ -39,11 +39,10 @@ export function ChapterRow({
     <Link
       href={getReaderHref(sourceId, mangaId, chapterId)}
       className={cn(
-        "group relative flex items-center gap-3 md:gap-4 rounded-lg px-4 py-3.5 transition-all duration-300 ease-out will-change-transform",
+        "group relative flex items-center gap-3 md:gap-4 py-3.5 transition-all duration-300 ease-out will-change-transform border-b border-border-default/50 last:border-b-0",
         isLastRead 
-          ? "bg-surface-overlay border border-accent/40 shadow-sm ring-1 ring-accent/20 z-10" 
-          : "bg-surface-base border border-transparent hover:bg-surface-hover hover:border-border-default hover:shadow-sm",
-        "hover:-translate-y-[1px] hover:scale-[1.005]"
+          ? "bg-accent/5 -mx-2 px-2 md:-mx-4 md:px-4 z-10 rounded-sm" 
+          : "hover:bg-surface-hover -mx-2 px-2 md:-mx-4 md:px-4 rounded-sm"
       )}
     >
       {/* Subtle indicator for read status */}
