@@ -61,6 +61,14 @@ export default async function ReaderPage({
       // Pages might fail, so we catch error and return null to let client retry or use offline cache
       withCache(`source:${sourceId}:pages:${mangaId}:${chapterId}`, () => source.getPages(chapterId), CACHE_TTL.PAGES).catch(() => null),
     ]);
+
+    if (pagesResult?.pages) {
+      const { signImageUrl } = await import("@/server/lib/sign-proxy-url");
+      pagesResult.pages = pagesResult.pages.map((p: any) => ({
+        ...p,
+        url: signImageUrl(p.url, p.referer || source.baseUrl)
+      }));
+    }
   } catch (error) {
     console.error("Failed to load reader data:", error);
     return (

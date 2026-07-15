@@ -15,7 +15,14 @@ export async function checkRateLimit(
 
     // Force clear for development (temporary fix to unstuck 429)
     if (process.env.NODE_ENV === "development") {
-      await redis.del(key);
+      return {
+        success: true,
+        headers: {
+          "X-RateLimit-Limit": limit.toString(),
+          "X-RateLimit-Remaining": limit.toString(),
+          "X-RateLimit-Reset": window.toString(),
+        },
+      };
     }
 
     const requests = await redis.incr(key);

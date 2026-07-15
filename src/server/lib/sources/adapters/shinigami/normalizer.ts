@@ -1,6 +1,5 @@
 import { parseDate, stripHtml } from "@/shared/utils/normalize";
 import type { Chapter, MangaDetail, MangaItem } from "@/shared/types/source";
-import { signImageUrl } from "@/server/lib/sign-proxy-url";
 import type {
   ShinigamiChapterItem,
   ShinigamiMangaDetail,
@@ -39,7 +38,7 @@ export function normalizeMangaItem(item: ShinigamiMangaItem & Record<string, unk
   return {
     id: item.manga_id,
     title: item.title,
-    coverUrl: signImageUrl(coverUrl, "https://c.shinigami.asia"),
+    coverUrl: coverUrl,
     status: normalizeShinigamiStatus(item.status),
     format,
     latestChapter: item.latest_chapter_number ? `Chapter ${item.latest_chapter_number}` : undefined,
@@ -71,7 +70,7 @@ export function normalizeMangaDetail(detail: ShinigamiMangaDetail): MangaDetail 
   return {
     id: detail.manga_id,
     title: detail.title,
-    coverUrl: signImageUrl(coverUrl, "https://c.shinigami.asia"),
+    coverUrl: coverUrl,
     description: stripHtml(detail.description),
     author,
     artist,

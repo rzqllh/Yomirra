@@ -223,7 +223,7 @@ export function ContinuousVerticalReader({
                   priority={virtualRow.index === 0}
                   offlineUrl={isDownloaded ? getOfflineImageUrl({ sourceId, mangaId, chapterId: item.chapterId, pageIndex: item.pageIndex }) : undefined}
                   imageFit={preferences.imageFit}
-                  decodeQueue={decodeQueue}
+                  decodeQueue={undefined}
                   dataIndex={virtualRow.index}
                   totalPages={pages.length}
                 />
@@ -238,36 +238,41 @@ export function ContinuousVerticalReader({
       </div>
       
       {/* End of Chapter Section */}
-      <div className="w-full max-w-[800px] mx-auto px-4 py-8 flex flex-col gap-4 mt-8 relative z-10 bg-background/50 backdrop-blur-sm sm:bg-transparent">
-        <div className="flex items-center justify-between gap-4 w-full">
-          <Button
-            variant="outline"
-            className={cn(
-              "flex-1 rounded-md py-6 font-semibold bg-surface-base hover:bg-surface-raised border-border-subtle",
-              !_prevChapterId && "invisible"
-            )}
-            onClick={() => _prevChapterId && router.push(getReaderHref(sourceId, mangaId, _prevChapterId))}
-          >
-            <CaretLeft size={16} className="mr-2" /> Previous
-          </Button>
+      <div className="w-full max-w-[800px] mx-auto px-4 pt-12 pb-[calc(3rem+env(safe-area-inset-bottom))] flex flex-col gap-4 relative z-10 bg-background/80 backdrop-blur-md sm:bg-transparent border-t border-border-subtle mt-4">
+        
+        {/* Next/Prev Navigation */}
+        <div className="flex items-center justify-between gap-3 w-full">
+          {_prevChapterId ? (
+            <Button
+              className="flex-1 rounded-2xl h-14 font-bold bg-surface-raised hover:bg-surface-hover border border-border-default text-text-primary shadow-sm active:scale-[0.98] transition-all"
+              onClick={() => router.push(getReaderHref(sourceId, mangaId, _prevChapterId))}
+            >
+              <CaretLeft size={20} className="mr-1.5" weight="bold" /> Sebelumnya
+            </Button>
+          ) : (
+            <div className="flex-1" />
+          )}
 
+          {nextChapterId ? (
+            <Button
+              className="flex-1 rounded-2xl h-14 font-bold bg-accent text-accent-on shadow-md active:scale-[0.98] transition-all"
+              onClick={handleNextChapter}
+            >
+              Selanjutnya <CaretRight size={20} className="ml-1.5" weight="bold" />
+            </Button>
+          ) : (
+            <div className="flex-1" />
+          )}
+        </div>
+
+        {/* Secondary Actions */}
+        <div className="flex justify-center mt-2">
           <Button
             variant="ghost"
-            className="rounded-md py-6 font-semibold px-4 text-text-muted hover:text-text-primary hover:bg-surface-raised"
+            className="rounded-full h-10 font-bold px-6 text-text-muted hover:text-text-primary hover:bg-surface-raised transition-colors"
             onClick={() => window.open('https://discord.gg/shinigamid', '_blank')}
           >
-            Report Chapter
-          </Button>
-          
-          <Button
-            variant="outline"
-            className={cn(
-              "flex-1 rounded-md py-6 font-semibold bg-surface-base hover:bg-surface-raised border-border-subtle",
-              !nextChapterId && "invisible"
-            )}
-            onClick={handleNextChapter}
-          >
-            Next <CaretRight size={16} className="ml-2" />
+            Laporkan Chapter
           </Button>
         </div>
       </div>

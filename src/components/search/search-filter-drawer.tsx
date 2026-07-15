@@ -139,14 +139,18 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
   
   const [selectedFormats, setSelectedFormats] = React.useState<string[]>([]);
   
-  const handleOpenChange = (open: boolean) => {
-    if (open) {
+  React.useEffect(() => {
+    // Sync filter state from store when drawer opens
+    if (isOpen) {
+      setSelectedSources(storeFilters.selectedSources || []);
       setSelectedGenres(storeFilters.genres);
       setSelectedFormats(storeFilters.formats || []);
       setSelectedStatus(storeFilters.status);
       setSelectedSort(storeFilters.sort);
-      setSelectedSources(storeFilters.selectedSources || []);
     }
+  }, [isOpen, storeFilters]);
+
+  const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
   };
 
@@ -250,7 +254,7 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
               </div>
 
               {/* Sumber */}
-              {searchableSources.length > 0 && (
+              {(searchableSources.length > 0 || true) && (
                 <div>
                   <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Sumber</h3>
                   <div className="flex flex-wrap gap-2">

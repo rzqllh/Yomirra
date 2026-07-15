@@ -96,6 +96,14 @@ export function MangaDetailView({
   const continueChapterId = historyItem?.chapterId;
   const startChapterId = firstChapter?.id;
 
+  const continueChapterLabel = useMemo(() => {
+    if (!continueChapterId) return "";
+    const match = chapters?.find(c => c.id === continueChapterId);
+    if (match) return match.title || `Chapter ${match.number}`;
+    if (historyItem?.chapterTitle) return historyItem.chapterTitle;
+    return "Chapter";
+  }, [continueChapterId, chapters, historyItem]);
+
   const { scrollY } = useScroll();
   const headerBgOpacity = useTransform(scrollY, SCROLL_Y_RANGE, HEADER_BG_OPACITY_RANGE);
   const headerBackdropBlur = useTransform(scrollY, SCROLL_Y_RANGE, HEADER_BLUR_RANGE);
@@ -107,7 +115,7 @@ export function MangaDetailView({
         <Button asChild variant="accent" className="w-full rounded-2xl h-14 text-base font-bold shadow-md active:scale-[0.98] transition-all">
           <Link href={getReaderHref(sourceId, mangaId, continueChapterId)}>
             <Play className="h-6 w-6 mr-1" fill="currentColor" weight="fill" />
-            Lanjutkan Chapter {continueChapterId}
+            Lanjutkan {continueChapterLabel}
           </Link>
         </Button>
       ) : startChapterId ? (
@@ -199,20 +207,33 @@ export function MangaDetailView({
               />
             )}
           </div>
-          <div className="flex flex-col flex-1 gap-1.5 justify-center py-1">
-            <h1 className="text-xl font-bold leading-snug line-clamp-3 text-shadow-sm">{detail.title}</h1>
-            <div className="text-sm font-medium text-text-muted">
-              {detail.author} {detail.artist && detail.artist !== detail.author && `• ${detail.artist}`}
-            </div>
-            <div className="mt-1 flex items-center gap-2 flex-wrap text-sm text-text-muted">
-              <span className="font-semibold">{sourceId.toUpperCase()}</span>
-              <span>•</span>
-              <span className="text-text-primary bg-surface-overlay border border-border-default px-1.5 py-0.5 rounded-sm text-2xs uppercase tracking-wider font-bold">{detail.status}</span>
-              <span>•</span>
-              <span className="flex items-center gap-1 font-semibold text-sm">
-                <Star weight="fill" className="text-semantic-warning" />
+          <div className="flex flex-col flex-1 justify-center py-1">
+            <h1 className="text-xl font-bold leading-snug line-clamp-4 text-shadow-sm">{detail.title}</h1>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <span className="flex items-center justify-center bg-surface-raised border border-border-default px-2 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider text-text-secondary gap-1">
+                <Star weight="fill" className="text-semantic-warning" size={12} />
                 <span suppressHydrationWarning>{Number(displayScore) > 0 ? Number(displayScore).toFixed(1) : "-.-"}</span>
               </span>
+              <span className="flex items-center justify-center bg-surface-raised border border-border-default px-2 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider text-text-secondary">
+                {detail.status}
+              </span>
+              <span className="flex items-center justify-center bg-surface-raised border border-border-default px-2 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider text-text-secondary">
+                {detail.format || 'COMIC'}
+              </span>
+              <span className="flex items-center justify-center bg-surface-raised border border-border-default px-2 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider text-accent">
+                {sourceId}
+              </span>
+            </div>
+            
+            <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+              <div className="flex flex-col">
+                <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider">Author</span>
+                <span className="font-semibold text-text-primary truncate">{detail.author || '-'}</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider">Artist</span>
+                <span className="font-semibold text-text-primary truncate">{detail.artist || detail.author || '-'}</span>
+              </div>
             </div>
           </div>
         </div>
@@ -247,21 +268,40 @@ export function MangaDetailView({
         <div className="flex-1 flex flex-col min-w-0">
           <div className="flex flex-col gap-4">
             
-            <div className="hidden md:flex flex-col gap-4">
+            <div className="hidden md:flex flex-col gap-5">
               <h1 className="text-4xl lg:text-5xl font-bold tracking-tight text-text-primary leading-tight text-balance">
                 {detail.title}
               </h1>
-              <div className="flex items-center gap-2 text-base font-medium text-text-muted">
-                <span>{detail.author} {detail.artist && detail.artist !== detail.author && `• ${detail.artist}`}</span>
-                <span>•</span>
-                <span className="font-semibold text-text-primary">{sourceId.toUpperCase()}</span>
-                <span>•</span>
-                <span className="text-text-primary bg-surface-overlay px-2 py-0.5 rounded-sm text-xs uppercase tracking-wider font-bold">{detail.status}</span>
-                <span>•</span>
-                <span className="flex items-center gap-1 font-semibold">
-                  <Star weight="fill" className="text-semantic-warning" />
+              
+              <div className="flex flex-wrap gap-2">
+                <span className="flex items-center justify-center bg-surface-raised border border-border-default px-2.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider text-text-secondary gap-1">
+                  <Star weight="fill" className="text-semantic-warning" size={14} />
                   <span suppressHydrationWarning>{Number(displayScore) > 0 ? Number(displayScore).toFixed(1) : "-.-"}</span>
                 </span>
+                <span className="flex items-center justify-center bg-surface-raised border border-border-default px-2.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider text-text-secondary">
+                  {detail.status}
+                </span>
+                <span className="flex items-center justify-center bg-surface-raised border border-border-default px-2.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider text-text-secondary">
+                  {detail.format || 'COMIC'}
+                </span>
+                <span className="flex items-center justify-center bg-surface-raised border border-border-default px-2.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider text-accent">
+                  {sourceId}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm bg-surface-raised/50 border border-border-subtle rounded-xl p-4">
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-[11px] font-bold text-text-muted uppercase tracking-wider">Author</span>
+                  <span className="font-semibold text-text-primary">{detail.author || '-'}</span>
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-[11px] font-bold text-text-muted uppercase tracking-wider">Artist</span>
+                  <span className="font-semibold text-text-primary">{detail.artist || detail.author || '-'}</span>
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-[11px] font-bold text-text-muted uppercase tracking-wider">Chapters</span>
+                  <span className="font-semibold text-text-primary">{chapters?.length || 0}</span>
+                </div>
               </div>
             </div>
 

@@ -28,20 +28,20 @@ export function useDecodeQueue(maxConcurrent = 3) {
       activeDecodesRef.current.add(task.id);
       
       const img = new window.Image();
-      img.src = task.url;
       
-      img.decode()
-        .then(() => {
-          setDecodedSet(prev => new Set(prev).add(task.id));
-        })
-        .catch((e) => {
-          console.debug("Decode error/abort", e);
-        })
-        .finally(() => {
-          activeDecodesRef.current.delete(task.id);
-          // Try to process more if queue has items
-          processQueueFn();
-        });
+      img.onload = () => {
+        setDecodedSet(prev => new Set(prev).add(task.id));
+        activeDecodesRef.current.delete(task.id);
+        processQueueFn();
+      };
+
+      img.onerror = (e) => {
+        console.debug("Decode error/abort", e);
+        activeDecodesRef.current.delete(task.id);
+        processQueueFn();
+      };
+
+      img.src = task.url;
 
       task.abortController.signal.addEventListener("abort", () => {
         img.src = ""; // Stop loading

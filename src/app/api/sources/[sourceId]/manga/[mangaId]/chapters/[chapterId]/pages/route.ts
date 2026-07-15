@@ -29,7 +29,17 @@ export async function GET(
       CACHE_TTL.PAGES
     );
 
-    return NextResponse.json({ data });
+    // Sign URLs for the proxy
+    const { signImageUrl } = await import("@/server/lib/sign-proxy-url");
+    const signedData = {
+      ...data,
+      pages: data.pages.map((p: any) => ({
+        ...p,
+        url: signImageUrl(p.url, p.referer || source.baseUrl)
+      }))
+    };
+
+    return NextResponse.json({ data: signedData });
   } catch (error: unknown) {
     return NextResponse.json(
       { error: { message: (error instanceof Error ? error.message : String(error)) || "Internal Server Error" } },
