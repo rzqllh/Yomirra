@@ -183,15 +183,18 @@ export class KomikindoSource implements MangaSource {
     const $ = cheerio.load(html);
 
     const pages: any[] = [];
-    $(".chapter-image img").each((i, el) => {
+    $("#chimg-auh img, .chapter-image img, #img-container img").each((i, el) => {
+      // Exclude ads: usually wrapped in <a> tags, or GIF tracking pixels
+      if ($(el).parent().is("a")) return;
+      
       const url = $(el).attr("src") || $(el).attr("data-src");
-      if (url) {
-        pages.push({
-          index: i,
-          url: url.trim(),
-          referer: this.baseUrl,
-        });
-      }
+      if (!url || url.includes(".gif")) return;
+      
+      pages.push({
+        index: pages.length,
+        url: url.trim(),
+        referer: this.baseUrl,
+      });
     });
 
     return {

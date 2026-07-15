@@ -7,7 +7,6 @@ import type {
   FilterList,
 } from "@/shared/sources/source-types";
 import { HttpClient } from "../base/http-client";
-import { signImageUrl } from "@/server/lib/sign-proxy-url";
 import {
   normalizeChapter,
   normalizeMangaDetail,
@@ -178,9 +177,10 @@ export class ShinigamiSource implements MangaSource {
 
     return {
       chapterId,
-      pages: data.chapter.data.map((filename, index) => ({
+      pages: data.chapter.data.map((filename: any, index: number) => ({
         index,
-        url: signImageUrl(`${data.base_url}${data.chapter.path}${filename}`, "https://c.shinigami.asia"),
+        url: `${data.base_url}${data.chapter.path}${filename}`,
+        referer: "https://c.shinigami.asia"
       })),
     };
   }
