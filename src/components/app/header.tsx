@@ -10,6 +10,7 @@ export interface YomirraPageHeaderProps {
   showBack?: boolean
   backHref?: string
   action?: React.ReactNode
+  icon?: React.ReactNode
   className?: string
   /** 
    * "transparent" = completely blends with canvas.
@@ -24,6 +25,7 @@ export function YomirraPageHeader({
   showBack = false,
   backHref,
   action,
+  icon,
   className,
   variant = "auto"
 }: YomirraPageHeaderProps) {
@@ -56,25 +58,39 @@ export function YomirraPageHeader({
     <header
       className={cn( "md:hidden sticky top-0 z-[var(--z-sticky)] flex w-full items-center justify-between px-4 pt-[calc(var(--safe-top)+12px)] pb-2 transition-all duration-300 ease-out pointer-events-none", isGlass ? "bg-surface-glass backdrop-blur-md border-b border-border-default shadow-sm" : "bg-transparent border-transparent shadow-none", className )}
     >
-      <div className="flex items-center gap-2 w-full transition-all duration-300 ease-out pointer-events-auto h-[56px]">
-        {showBack && (
-          <div className="shrink-0">
-            <button
-              onClick={handleBack}
-              className="flex min-h-[36px] min-w-[36px] items-center justify-center rounded-full transition-colors text-text-primary hover:bg-black/5 dark:hover:bg-surface-hover active:bg-black/10 dark:active:bg-surface-hover/80"
-              aria-label="Kembali"
-            >
-              <ArrowLeft size={20} weight="bold" />
-            </button>
-          </div>
-        )}
-        <h1 className={cn(
-          "text-lg font-bold tracking-tight text-text-primary truncate flex-1",
-          showBack ? "ml-0" : "ml-2"
-        )}>
-          {title}
-        </h1>
-        {action && <div className="shrink-0 mr-1">{action}</div>}
+      <div className="flex items-center justify-between w-full transition-all duration-300 ease-out pointer-events-auto h-[56px]">
+        
+        {/* Left Side: Back button OR Large Title + Icon */}
+        <div className="flex items-center gap-2">
+          {showBack ? (
+            <>
+              <button
+                onClick={handleBack}
+                className="flex min-h-[36px] min-w-[36px] items-center justify-center rounded-full transition-colors text-text-primary hover:bg-black/5 dark:hover:bg-surface-hover active:bg-black/10 dark:active:bg-surface-hover/80"
+                aria-label="Kembali"
+              >
+                <ArrowLeft size={20} weight="bold" />
+              </button>
+              <h1 className="text-lg font-bold tracking-tight text-text-primary truncate ml-0">
+                {title}
+              </h1>
+            </>
+          ) : (
+            <div className="flex items-center gap-2.5 ml-1">
+              {icon && (
+                <div className="text-accent bg-accent/10 p-1.5 rounded-lg border border-accent/20">
+                  {icon}
+                </div>
+              )}
+              <h1 className="text-2xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-text-primary to-text-secondary truncate">
+                {title}
+              </h1>
+            </div>
+          )}
+        </div>
+
+        {/* Right Side: Action Button */}
+        {action && <div className="shrink-0">{action}</div>}
       </div>
     </header>
   )

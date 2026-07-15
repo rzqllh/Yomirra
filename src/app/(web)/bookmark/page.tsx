@@ -223,6 +223,8 @@ export default function BookmarkPage() {
   if (!isMounted) {
     return (
       <div className="flex flex-col min-h-screen">
+        <h1 className="sr-only">Rak Buku Yomirra</h1>
+        <YomirraPageHeader title="Rak Buku" variant="transparent" icon={<BookBookmark size={24} weight="duotone" />} />
         <YomirraSurface variant="base" className="flex-1 w-full max-w-7xl mx-auto">
           <div className="hidden md:block px-4 py-8">
             <h1 className="text-3xl font-black text-text-primary tracking-tight">Rak Buku</h1>
@@ -235,6 +237,8 @@ export default function BookmarkPage() {
   return (
     <DirectionalTransition>
       <div className="flex flex-col min-h-screen pb-24">
+        <h1 className="sr-only">Rak Buku Yomirra</h1>
+        <YomirraPageHeader title="Rak Buku" variant="transparent" icon={<BookBookmark size={24} weight="duotone" />} />
         <YomirraSurface variant="base" className="flex-1 w-full max-w-7xl mx-auto md:pb-8">
           <div className="px-4 pt-[calc(var(--safe-top)+24px)] pb-4">
             <DesktopPageTitle 
@@ -293,7 +297,7 @@ export default function BookmarkPage() {
                         const item = group.chapters[0]; // get the latest read chapter
                         const timeText = getRelativeTime(new Date(item.readAt).toISOString());
                         const progress = item.progressPercent || 0;
-                        const targetHref = getReaderHref(group.sourceId, group.mangaId, item.chapterId);
+                        const targetHref = getReaderHref(group.sourceId, group.mangaId, item.chapterId, "/bookmark");
                         
                         return (
                           <Link 
@@ -510,7 +514,8 @@ export default function BookmarkPage() {
                         initial={{ y: 100, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         exit={{ y: 100, opacity: 0 }}
-                        className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 flex items-center gap-4 bg-surface-overlay border border-border-subtle p-3 rounded-full shadow-heavy"
+                        className="fixed left-1/2 -translate-x-1/2 z-[100] flex items-center gap-4 bg-surface-overlay border border-border-strong p-3 rounded-full shadow-heavy"
+                        style={{ bottom: "calc(var(--bottom-nav-height) + 24px)" }}
                       >
                         <span className="font-bold px-2 text-text-primary">{selectedItems.size} dipilih</span>
                         <Button 

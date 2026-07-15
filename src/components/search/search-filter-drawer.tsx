@@ -114,12 +114,14 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
     const genres = new Map<string, string>();
     const statuses = new Map<string, string>();
     const sorts = new Map<string, string>();
+    const formats = new Map<string, string>();
 
     filtersQueries.forEach(query => {
       if (query.data) {
         query.data.genres?.forEach(g => genres.set(g.id, g.name));
         query.data.statuses?.forEach(s => statuses.set(s.id, s.name));
         query.data.sorts?.forEach(s => sorts.set(s.id, s.name));
+        query.data.formats?.forEach(f => formats.set(f.id, f.name));
       }
     });
 
@@ -130,12 +132,17 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
     const finalSorts = sorts.size > 0
       ? Array.from(sorts.entries()).map(([id, label]) => ({ id, label }))
       : DEFAULT_SORTS;
+    const finalFormats = Array.from(formats.entries()).map(([id, label]) => ({ id, label }));
 
-    return { genres: finalGenres, statuses: finalStatuses, sorts: finalSorts };
+    return { genres: finalGenres, statuses: finalStatuses, sorts: finalSorts, formats: finalFormats };
   }, [filtersQueries]);
+  
+  const [selectedFormats, setSelectedFormats] = React.useState<string[]>([]);
+  
   const handleOpenChange = (open: boolean) => {
     if (open) {
       setSelectedGenres(storeFilters.genres);
+      setSelectedFormats(storeFilters.formats || []);
       setSelectedStatus(storeFilters.status);
       setSelectedSort(storeFilters.sort);
       setSelectedSources(storeFilters.selectedSources || []);
@@ -149,6 +156,12 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
     );
   };
 
+  const toggleFormat = (format: string) => {
+    setSelectedFormats(prev => 
+      prev.includes(format) ? prev.filter(f => f !== format) : [...prev, format]
+    );
+  };
+
   const toggleSource = (id: string) => {
     setSelectedSources(prev => 
       prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
@@ -158,6 +171,7 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
   const handleApply = () => {
     storeFilters.applyFilters({
       genres: selectedGenres,
+      formats: selectedFormats,
       status: selectedStatus,
       sort: selectedSort
     });
@@ -169,11 +183,12 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
 
   const handleReset = () => {
     setSelectedGenres([]);
+    setSelectedFormats([]);
     setSelectedStatus("");
     setSelectedSort("popular");
   };
 
-  const activeCount = storeFilters.genres.length + (storeFilters.status ? 1 : 0) + (storeFilters.sort !== "popular" ? 1 : 0);
+  const activeCount = storeFilters.genres.length + (storeFilters.formats?.length || 0) + (storeFilters.status ? 1 : 0) + (storeFilters.sort !== "popular" ? 1 : 0);
 
   return (
     <Drawer.Root open={isOpen} onOpenChange={handleOpenChange}>
@@ -262,6 +277,30 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
                         </button>
                       );
                     })}
+                  </div>
+                </div>
+              )}
+
+              {/* Tipe / Format */}
+              {dynamicFilters.formats.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Tipe Komik</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {dynamicFilters.formats.map(format => (
+                      <button
+                        key={format.id}
+                        onClick={() => toggleFormat(format.id)}
+                        className={cn(
+                          "px-4 py-2 rounded-full text-sm font-bold transition-all border flex items-center gap-1.5 active:scale-[0.98]",
+                          selectedFormats.includes(format.id)
+                            ? "bg-accent/10 border-accent text-accent"
+                            : "bg-surface-raised border-border-subtle text-text-secondary hover:border-border-strong"
+                        )}
+                      >
+                        {selectedFormats.includes(format.id) && <Check size={14} weight="bold" />}
+                        {format.label}
+                      </button>
+                    ))}
                   </div>
                 </div>
               )}

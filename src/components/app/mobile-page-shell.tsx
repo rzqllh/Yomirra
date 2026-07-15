@@ -3,24 +3,26 @@ import { YomirraPageHeader } from "./header"
 import { cn } from "@/shared/utils/cn"
 
 interface MobilePageShellProps {
+  children: React.ReactNode
   title: string
   showBack?: boolean
   action?: React.ReactNode
-  children: React.ReactNode
+  icon?: React.ReactNode
   className?: string
 }
 
 export function MobilePageShell({
+  children,
   title,
   showBack,
   action,
-  children,
+  icon,
   className,
 }: MobilePageShellProps) {
   return (
-    <div className="flex min-h-full flex-col max-w-5xl mx-auto w-full">
+    <div className={cn("flex flex-col min-h-screen bg-surface-base", className)}>
       <div className="md:hidden">
-        <YomirraPageHeader title={title} showBack={showBack} action={action} variant="auto" />
+        <YomirraPageHeader title={title} showBack={showBack} action={action} icon={icon} variant="auto" />
       </div>
       <div className={cn("flex-1", className)}>{children}</div>
     </div>

@@ -275,6 +275,8 @@ function LibraryContent() {
 
   return (
     <div className="flex flex-col min-h-screen">
+      <h1 className="sr-only">Library Yomirra</h1>
+      <YomirraPageHeader title="Library" variant="transparent" icon={<Books size={24} weight="duotone" />} />
       <YomirraSurface variant="base" className="flex-1 w-full max-w-7xl mx-auto md:pb-8">
         <div className="px-4 pt-[calc(var(--safe-top)+24px)] pb-6 md:px-8 md:py-8 space-y-8">
           

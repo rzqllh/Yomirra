@@ -46,8 +46,12 @@ export function getSafeMangaDetailBackHref(returnTo: string | null): string {
   return `/`;
 }
 
-export function getReaderHref(sourceId: string, mangaId: string, chapterId: string): string {
-  return `/manga/${encodeURIComponent(sourceId)}/${encodeURIComponent(mangaId)}/read/${encodeURIComponent(chapterId)}`;
+export function getReaderHref(sourceId: string, mangaId: string, chapterId: string, returnTo?: string): string {
+  const base = `/manga/${encodeURIComponent(sourceId)}/${encodeURIComponent(mangaId)}/read/${encodeURIComponent(chapterId)}`;
+  if (returnTo) {
+    return `${base}?returnTo=${encodeURIComponent(returnTo)}`;
+  }
+  return base;
 }
 
 export function getSourceHref(sourceId: string): string {

@@ -134,6 +134,9 @@ export class ShinigamiSource implements MangaSource {
     
     if (included.length > 0) {
       params["genre"] = included.join(",");
+      if (included.length > 1) {
+        params["genre_condition"] = "and";
+      }
     }
 
     const res = await this.client.get<ShinigamiMangaListResponse>("/v1/manga/list", params);
@@ -217,7 +220,19 @@ export class ShinigamiSource implements MangaSource {
         { id: "tragedy", name: "Tragedy" },
         { id: "webtoon", name: "Webtoon" },
         { id: "magic", name: "Magic" },
-        { id: "reincarnation", name: "Reincarnation" }
+        { id: "reincarnation", name: "Reincarnation" },
+        { id: "mature", name: "Mature" },
+        { id: "adult", name: "Adult" },
+        { id: "villainess", name: "Villainess" },
+        { id: "revenge", name: "Revenge" },
+        { id: "system", name: "System" },
+        { id: "murim", name: "Murim" },
+        { id: "cultivation", name: "Cultivation" },
+        { id: "video-games", name: "Video Games" },
+        { id: "gender-bender", name: "Gender Bender" },
+        { id: "monsters", name: "Monsters" },
+        { id: "superhero", name: "Superhero" },
+        { id: "post-apocalyptic", name: "Post-Apocalyptic" }
       ],
       formats: [
         { id: "manga", name: "Manga" },
