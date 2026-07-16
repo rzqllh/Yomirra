@@ -22,22 +22,24 @@ export function LeaderboardRow({ manga, sourceId, displayScore }: BaseCardProps)
   return (
     <Link 
       href={getMangaDetailHref(sourceId, manga.id, fullPath)} 
-      className="group relative flex items-center gap-4 py-2.5 px-3 rounded-2xl hover:bg-surface-hover transition-colors"
+      className="group relative flex items-center gap-4 py-2 px-1 sm:px-3 rounded-2xl hover:bg-surface-hover transition-colors"
     >
-
+      {/* Big Rank Number */}
+      {manga.rank !== undefined && (
+        <div className="w-8 shrink-0 flex justify-center">
+          <span className="text-2xl sm:text-3xl font-black text-text-muted/30 group-hover:text-accent/50 transition-colors">
+            {rankStr}
+          </span>
+        </div>
+      )}
 
       {/* Cover Image */}
-      <div className="relative w-[52px] h-[72px] shrink-0 bg-surface-base rounded-[10px] overflow-hidden border border-border-subtle group-hover:border-accent/30 transition-all shadow-sm">
-        {manga.rank !== undefined && (
-          <div className="absolute top-0 left-0 z-10 bg-accent/90 backdrop-blur-sm text-accent-on text-[10px] font-black px-1.5 py-0.5 rounded-br-lg shadow-sm">
-            #{manga.rank}
-          </div>
-        )}
+      <div className="relative w-[48px] h-[64px] sm:w-[56px] sm:h-[76px] shrink-0 bg-surface-base rounded-xl overflow-hidden shadow-sm group-hover:shadow-md transition-all">
         {manga.coverUrl && !imageError ? (
           <img 
             src={manga.coverUrl} 
             alt={manga.title} 
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-out" 
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out" 
             onError={() => setImageError(true)} 
             referrerPolicy="no-referrer" 
             loading="lazy" 
@@ -50,21 +52,20 @@ export function LeaderboardRow({ manga, sourceId, displayScore }: BaseCardProps)
       </div>
 
       {/* Info */}
-      <div className="flex-1 min-w-0 flex flex-col justify-center gap-1.5 py-1">
-        <h4 className="font-bold text-[15px] text-text-primary leading-tight truncate group-hover:text-accent transition-colors">
+      <div className="flex-1 min-w-0 flex flex-col justify-center gap-1 py-1">
+        <h4 className="font-bold text-sm sm:text-[15px] text-text-primary leading-snug truncate group-hover:text-accent transition-colors">
           {manga.title}
         </h4>
-        <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-medium text-text-secondary">
-          <span className="truncate max-w-[100px] sm:max-w-[140px]">{manga.latestChapter || "Detail"}</span>
-          <span className="w-1 h-1 rounded-full bg-border-strong shrink-0" />
-          <div className="flex items-center gap-0.5 text-text-primary">
-            <Star weight="fill" size={12} className="text-semantic-warning" />
-            <span className="font-bold" suppressHydrationWarning>{Number(scoreToDisplay) > 0 ? Number(scoreToDisplay).toFixed(1) : "-.-"}</span>
+        <div className="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-text-secondary">
+          <div className="flex items-center gap-1 bg-surface-raised px-1.5 py-0.5 rounded-md border border-border-subtle">
+            <Star weight="fill" size={10} className="text-semantic-warning" />
+            <span suppressHydrationWarning>{Number(scoreToDisplay) > 0 ? Number(scoreToDisplay).toFixed(1) : "-.-"}</span>
           </div>
+          <span className="truncate max-w-[120px] sm:max-w-[140px]">{manga.latestChapter || "Detail"}</span>
           {manga.format && (
              <>
                 <span className="w-1 h-1 rounded-full bg-border-strong shrink-0" />
-                <span className="font-black uppercase text-text-muted tracking-wider">
+                <span className="font-black uppercase text-text-muted tracking-wider hidden sm:inline-block">
                   {manga.format}
                 </span>
              </>

@@ -88,5 +88,5 @@ export interface MangaSource extends SourceMetadata {
   getDetail(mangaId: string): Promise<MangaDetail>;
   getChapters(mangaId: string): Promise<Chapter[]>;
   getPages(chapterId: string): Promise<ChapterPages>;
-  getFilters(): FilterList;
+  getFilters(): FilterList | Promise<FilterList>;
 }

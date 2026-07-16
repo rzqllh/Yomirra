@@ -45,6 +45,7 @@ import { useLibraryFilterStore } from "@/shared/store/library-filter-store";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { YomirraSurface } from "@/components/ui/layout";
 import { YomirraPageHeader, DesktopPageTitle } from "@/components/app/header";
+import { LibraryFilterDrawer } from "@/components/library/library-filter-drawer";
 import { CustomSelect } from "@/components/ui/custom-select";
 
 const FORMATS = [
@@ -78,7 +79,7 @@ function LibraryContent() {
   const [sort, setSort] = React.useState<string>(initialSort);
   const [page, setPage] = React.useState(1);
   
-  const [showFilters, setShowFilters] = React.useState(false);
+
 
   // Sync initial URL params if any
   React.useEffect(() => {
@@ -314,15 +315,16 @@ function LibraryContent() {
                 containerClassName="flex-1 md:w-64 h-[44px]"
               />
 
-              <Button
-                variant={activeFilterCount > 0 ? "accent" : "outline"}
-                size="sm"
-                className={cn("rounded-full font-bold gap-1.5 h-[44px] px-5 transition-all duration-300", activeFilterCount > 0 ? "shadow-md" : "bg-surface-glass backdrop-blur-md text-text-primary hover:bg-surface-glass hover:text-text-primary shadow-[0_4px_16px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.2)]")}
-                onClick={() => setShowFilters(!showFilters)}
-              >
-                <Funnel size={16} weight={activeFilterCount > 0 ? "fill" : "bold"} />
-                Filter {activeFilterCount > 0 && `(${activeFilterCount})`}
-              </Button>
+              <LibraryFilterDrawer activeSourceId={activeSourceId}>
+                <Button
+                  variant={activeFilterCount > 0 ? "accent" : "outline"}
+                  size="sm"
+                  className={cn("rounded-full font-bold gap-1.5 h-[44px] px-5 transition-all duration-300", activeFilterCount > 0 ? "shadow-md" : "bg-surface-glass backdrop-blur-md text-text-primary hover:bg-surface-glass hover:text-text-primary shadow-[0_4px_16px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.2)]")}
+                >
+                  <Funnel size={16} weight={activeFilterCount > 0 ? "fill" : "bold"} />
+                  Filter {activeFilterCount > 0 && `(${activeFilterCount})`}
+                </Button>
+              </LibraryFilterDrawer>
 
               <div className="hidden sm:flex bg-surface-glass backdrop-blur-md rounded-full p-1 border border-border-subtle shadow-sm h-[44px]">
                 <button
@@ -344,168 +346,6 @@ function LibraryContent() {
               </div>
             </div>
           </div>
-
-          {/* Active Filters Display */}
-          {(selectedGenres.length > 0 || excludedGenres.length > 0 || selectedFormats.length > 0 || selectedStatuses.length > 0) && (
-            <div className="flex overflow-x-auto [scrollbar-width:none] snap-x pb-2 gap-2 mt-4">
-              <AnimatePresence>
-                {selectedGenres.map(id => {
-                  const g = GENRES.find(x => x.id === id);
-                  if (!g) return null;
-                  return (
-                    <motion.button
-                      key={`inc-${id}`}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
-                      onClick={() => toggleGenre(id)}
-                      className="relative flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all outline-none border border-accent bg-accent/10 text-accent hover:bg-accent/20 shadow-sm"
-                    >
-                      <CheckCircle weight="fill" size={14} />
-                      {g.name}
-                    </motion.button>
-                  );
-                })}
-                {excludedGenres.map(id => {
-                  const g = GENRES.find(x => x.id === id);
-                  if (!g) return null;
-                  return (
-                    <motion.button
-                      key={`exc-${id}`}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
-                      onClick={() => toggleGenre(id)}
-                      className="relative flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all outline-none border border-semantic-error bg-semantic-error/10 text-semantic-error hover:bg-semantic-error/20 shadow-sm"
-                    >
-                      <span className="font-black text-sm leading-none">-</span>
-                      {g.name}
-                    </motion.button>
-                  );
-                })}
-                {selectedFormats.map(id => {
-                  const f = DYNAMIC_FORMATS.find(x => x.id === id);
-                  if (!f) return null;
-                  return (
-                    <motion.button
-                      key={`fmt-${id}`}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
-                      onClick={() => toggleFilter(id, selectedFormats, "selectedFormats")}
-                      className="relative flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all outline-none border border-accent bg-accent/10 text-accent hover:bg-accent/20 shadow-sm"
-                    >
-                      <CheckCircle weight="fill" size={14} />
-                      {f.name}
-                    </motion.button>
-                  );
-                })}
-                {selectedStatuses.map(id => {
-                  const s = DYNAMIC_STATUSES.find(x => x.id === id);
-                  if (!s) return null;
-                  return (
-                    <motion.button
-                      key={`sts-${id}`}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
-                      onClick={() => toggleFilter(id, selectedStatuses, "selectedStatuses")}
-                      className="relative flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all outline-none border border-accent bg-accent/10 text-accent hover:bg-accent/20 shadow-sm"
-                    >
-                      <CheckCircle weight="fill" size={14} />
-                      {s.name}
-                    </motion.button>
-                  );
-                })}
-              </AnimatePresence>
-            </div>
-          )}
-
-          {/* Collapsible Filters Section */}
-          <AnimatePresence>
-            {showFilters && (
-              <motion.div 
-                initial={{ opacity: 0, height: 0, marginTop: 0, filter: "blur(4px)" }}
-                animate={{ opacity: 1, height: "auto", marginTop: 16, filter: "blur(0px)" }}
-                exit={{ opacity: 0, height: 0, marginTop: 0, filter: "blur(4px)" }}
-                transition={{ duration: 0.4, type: "spring", bounce: 0, opacity: { duration: 0.2 } }}
-                className="bg-surface-overlay border border-border-subtle rounded-xl p-6 shadow-sm overflow-hidden"
-              >
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-                
-                {/* Left Side: Genre */}
-                <div className="md:col-span-7 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-bold uppercase tracking-widest text-text-muted">Genre</h3>
-                    <span className="text-2xs sm:text-xs text-text-muted italic bg-surface-base px-2 py-0.5 rounded-full border border-border-subtle">
-                      Klik: Include (Biru) ➔ Exclude (Merah) ➔ Netral
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {GENRES.map(g => {
-                      const isInc = selectedGenres.includes(g.id);
-                      const isExc = excludedGenres.includes(g.id);
-                      return (
-                        <button
-                          key={g.id}
-                          onClick={() => toggleGenre(g.id)}
-                          aria-pressed={isInc ? "true" : isExc ? "mixed" : "false"}
-                          className={cn(
-                            "px-3.5 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 border",
-                            isInc ? "bg-accent text-accent-on border-transparent shadow-sm shadow-accent/20" : 
-                            isExc ? "bg-semantic-error text-semantic-error-on border-transparent shadow-sm shadow-semantic-error/20" : 
-                            "bg-surface-muted border-transparent text-text-secondary hover:text-text-primary hover:bg-surface-hover"
-                          )}
-                        >
-                          {isExc && <span className="mr-1 font-black">-</span>}{g.name}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Right Side: Format & Status */}
-                <div className="md:col-span-5 flex flex-col gap-6 border-t md:border-t-0 md:border-l border-border-subtle pt-6 md:pt-0 md:pl-8">
-                  <div className="space-y-3">
-                    <h3 className="text-xs font-bold uppercase tracking-widest text-text-muted">Format</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {DYNAMIC_FORMATS.map(f => {
-                        const isSelected = selectedFormats.includes(f.id);
-                        return (
-                        <button
-                          key={f.id}
-                          onClick={() => toggleFilter(f.id, selectedFormats, "selectedFormats")}
-                          aria-pressed={isSelected ? "true" : "false"}
-                          className={cn("px-3.5 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 border", isSelected ? "bg-accent text-accent-on border-transparent shadow-sm shadow-accent/20" : "bg-surface-muted border-transparent text-text-secondary hover:text-text-primary hover:bg-surface-hover")}
-                        >
-                          {f.name}
-                        </button>
-                      )})}
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <h3 className="text-xs font-bold uppercase tracking-widest text-text-muted">Status</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {DYNAMIC_STATUSES.map(s => {
-                        const isSelected = selectedStatuses.includes(s.id);
-                        return (
-                        <button
-                          key={s.id}
-                          onClick={() => toggleFilter(s.id, selectedStatuses, "selectedStatuses")}
-                          aria-pressed={isSelected ? "true" : "false"}
-                          className={cn("px-3.5 py-1.5 rounded-full text-sm font-semibold transition-all duration-200 border", isSelected ? "bg-accent text-accent-on border-transparent shadow-sm shadow-accent/20" : "bg-surface-muted border-transparent text-text-secondary hover:text-text-primary hover:bg-surface-hover")}
-                        >
-                          {s.name}
-                        </button>
-                      )})}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-          </AnimatePresence>
 
           {isDisabled ? (
             <EmptyState
