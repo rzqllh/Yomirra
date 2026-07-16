@@ -10,10 +10,10 @@ import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry"
 
 import { ContinueReadingList } from "./continue-reading-list";
 import { FeaturedHeroCarousel } from "./featured-hero-carousel";
-import { HomeRankSlider } from "./home-rank-slider";
-import { ShelfCard } from "@/components/manga/card";
+import { LeaderboardRow, ShelfCard } from "@/components/manga/card";
 import { Sparkle, MagicWand, MagnifyingGlass, TrendUp } from "@phosphor-icons/react";
 import Link from "next/link";
+import { cn } from "@/shared/utils/cn";
 
 interface HomeFeedClientProps {
   unifiedPopular: (MangaItem & { sourceId: string })[];
@@ -53,30 +53,21 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
   const personalizedIds = new Set<string>();
   historyItems.forEach(item => personalizedIds.add(`${item.sourceId}-${item.mangaId}`));
 
-  // Highlight (Sorotan Utama)
-  const sorotanUtama = React.useMemo(() => {
-    const available = unifiedLatest.filter(item => !personalizedIds.has(`${item.sourceId}-${item.id}`));
-    return available.slice(0, 5);
-  }, [unifiedLatest, personalizedIds]);
-
-  const sorotanIds = new Set(sorotanUtama.map(item => `${item.sourceId}-${item.id}`));
-
-  // Update Hari Ini (Top 20 Latest, deduplicated from history and highlight)
-  const updateHariIni = React.useMemo(() => {
-    return unifiedLatest.filter(item => {
-      const id = `${item.sourceId}-${item.id}`;
-      return !personalizedIds.has(id) && !sorotanIds.has(id);
-    }).slice(0, 20);
-  }, [unifiedLatest, personalizedIds, sorotanIds]);
-
-  // Grouped by Source
+  // Sources that are active and not hidden from home
   const sourcesToShow = React.useMemo(() => {
-    // Get unique active sources
     const activeSources = Array.from(new Set(unifiedPopular.map(m => m.sourceId)));
-    // Filter out hidden sources
     return activeSources.filter(id => !isSourceHiddenFromHome(id));
   }, [unifiedPopular, isSourceHiddenFromHome]);
 
+  const [activeSourceId, setActiveSourceId] = React.useState<string>("");
+
+  React.useEffect(() => {
+    if (sourcesToShow.length > 0 && !sourcesToShow.includes(activeSourceId)) {
+      setActiveSourceId(sourcesToShow[0]);
+    }
+  }, [sourcesToShow, activeSourceId]);
+
+  // Grouped by Source
   const sourceData = React.useMemo(() => {
     const data: Record<string, { popular: typeof unifiedPopular, latest: typeof unifiedLatest }> = {};
     sourcesToShow.forEach(sourceId => {
@@ -88,6 +79,20 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
     return data;
   }, [sourcesToShow, unifiedPopular, unifiedLatest]);
 
+  const activeSourcePopular = sourceData[activeSourceId]?.popular.slice(0, 5) || [];
+  const activeSourceHighlight = sourceData[activeSourceId]?.latest.slice(0, 10) || [];
+
+  // Used to prevent Sorotan items from appearing in general Latest
+  const highlightIds = new Set(activeSourceHighlight.map(item => `${item.sourceId}-${item.id}`));
+
+  // Update Hari Ini (Top 20 Latest interleaved)
+  const updateHariIni = React.useMemo(() => {
+    return unifiedLatest.filter(item => {
+      const id = `${item.sourceId}-${item.id}`;
+      return !personalizedIds.has(id);
+    }).slice(0, 20);
+  }, [unifiedLatest, personalizedIds]);
+
   if (!isMounted) return null;
 
   return (
@@ -98,30 +103,68 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
         <ContinueReadingList items={historyItems} />
       )}
 
-      {/* 2. Desktop Grid: Highlight & Rank */}
-      {(sorotanUtama.length > 0 || unifiedPopular.length > 0) && (
-        <div className="grid grid-cols-1 xl:grid-cols-[1.5fr_1fr] gap-6 px-2">
-          {/* Kiri: Sorotan Utama */}
-          {sorotanUtama.length > 0 && (
-            <div className="flex flex-col gap-4">
+      {/* 2. Desktop Grid: Highlight & Rank with Global Tabs */}
+      {(sourcesToShow.length > 0) && (
+        <div className="flex flex-col gap-4 px-2">
+          
+          {/* Global Tabs for Grid */}
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide snap-x">
+            {sourcesToShow.map(sourceId => {
+              const source = dynamicSourceRegistry.get(sourceId);
+              const name = source?.name || sourceId;
+              const isActive = sourceId === activeSourceId;
+              
+              return (
+                <button
+                  key={sourceId}
+                  onClick={() => setActiveSourceId(sourceId)}
+                  className={cn(
+                    "shrink-0 snap-start px-5 py-2 rounded-full text-sm font-bold transition-all border",
+                    isActive 
+                      ? "bg-text-primary text-surface-base border-transparent shadow-sm" 
+                      : "bg-surface-raised text-text-muted border-border-subtle hover:bg-surface-hover hover:text-text-primary"
+                  )}
+                >
+                  {name}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="grid grid-cols-1 xl:grid-cols-[1.5fr_1fr] gap-6 items-start">
+            {/* Kiri: Sorotan Utama */}
+            <div className="flex flex-col gap-4 w-full">
               <h2 className="text-xl md:text-2xl font-bold flex items-center gap-3">
                 <Sparkle weight="duotone" className="text-semantic-info" /> Sorotan Utama
               </h2>
-              <div className="h-[280px] sm:h-[350px] xl:h-full relative w-full overflow-hidden rounded-[2rem] xl:rounded-[3rem]">
-                <FeaturedHeroCarousel sourceId={sorotanUtama[0]?.sourceId || ""} mangas={sorotanUtama} />
+              {/* Force fixed height to prevent jumping */}
+              <div className="h-[320px] sm:h-[400px] xl:h-[480px] relative w-full overflow-hidden rounded-[2rem] xl:rounded-[3rem]">
+                {activeSourceHighlight.length > 0 ? (
+                  <FeaturedHeroCarousel sourceId={activeSourceId} mangas={activeSourceHighlight} />
+                ) : (
+                  <div className="w-full h-full bg-surface-raised animate-pulse rounded-[2rem] xl:rounded-[3rem]"></div>
+                )}
               </div>
             </div>
-          )}
 
-          {/* Kanan: Rank Slider per Source */}
-          {unifiedPopular.length > 0 && (
-            <div className="flex flex-col gap-4">
+            {/* Kanan: Rank */}
+            <div className="flex flex-col gap-4 w-full">
               <h2 className="text-xl md:text-2xl font-bold flex items-center gap-3">
                 <TrendUp weight="duotone" className="text-accent" /> Peringkat Populer
               </h2>
-              <HomeRankSlider unifiedPopular={unifiedPopular} />
+              {/* Force fixed height to prevent jumping, use flex and justify-between for even spacing */}
+              <div className="h-[320px] sm:h-[400px] xl:h-[480px] bg-gradient-to-bl from-accent/5 to-accent/10 dark:from-surface-base dark:to-surface-overlay rounded-[2rem] p-5 sm:p-6 border border-transparent dark:border-border-subtle flex flex-col gap-2 overflow-hidden shadow-sm">
+                {activeSourcePopular.map((manga, idx) => (
+                  <div key={`${manga.sourceId}-${manga.id}`} className="flex-1 flex flex-col justify-center min-h-0">
+                    <LeaderboardRow 
+                      manga={{...manga, rank: idx + 1}} 
+                      sourceId={manga.sourceId} 
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
-          )}
+          </div>
         </div>
       )}
 
