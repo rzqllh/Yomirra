@@ -109,7 +109,7 @@ export function useSync(options = { autoSync: true }) {
       try {
         const cloudPrefs = await pullSourcePreferences();
         if (cloudPrefs) {
-          syncSourcePrefsWithCloud(cloudPrefs);
+          syncSourcePrefsWithCloud(cloudPrefs.disabledSources, cloudPrefs.hiddenFromHomeSources);
         }
       } catch (e) {
         console.error("Failed to pull source preferences during sync", e);
@@ -210,8 +210,11 @@ export function useSync(options = { autoSync: true }) {
           onDocSnapshot(doc(db, `users/${uid}/preferences`, "sources"), (docSnap) => {
             if (docSnap.exists()) {
               const data = docSnap.data();
-              if (Array.isArray(data.disabledSources)) {
-                useSourcePreferencesStore.getState().syncWithCloud(data.disabledSources);
+              if (Array.isArray(data.disabledSources) || Array.isArray(data.hiddenFromHomeSources)) {
+                useSourcePreferencesStore.getState().syncWithCloud(
+                  Array.isArray(data.disabledSources) ? data.disabledSources : [],
+                  Array.isArray(data.hiddenFromHomeSources) ? data.hiddenFromHomeSources : []
+                );
               }
             }
           }, (err) => console.error("Pref sync error", err));

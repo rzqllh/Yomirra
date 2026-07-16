@@ -126,7 +126,7 @@ export async function pullHistoryData(): Promise<HistoryItem[]> {
   }
 }
 
-export async function pushSourcePreferences(disabledSources: string[]) {
+export async function pushSourcePreferences(disabledSources: string[], hiddenFromHomeSources: string[] = []) {
   const { auth, db } = await initFirebase();
   if (!auth || !db) return;
   const user = auth.currentUser;
@@ -135,6 +135,7 @@ export async function pushSourcePreferences(disabledSources: string[]) {
     const { doc, setDoc } = await import("firebase/firestore");
     await setDoc(doc(db, `users/${user.uid}/preferences`, "sources"), {
       disabledSources,
+      hiddenFromHomeSources,
       updatedAt: new Date().toISOString()
     });
   } catch (e) {
@@ -142,21 +143,24 @@ export async function pushSourcePreferences(disabledSources: string[]) {
   }
 }
 
-export async function pullSourcePreferences(): Promise<string[]> {
+export async function pullSourcePreferences(): Promise<{ disabledSources: string[], hiddenFromHomeSources: string[] } | null> {
   const { auth, db } = await initFirebase();
-  if (!auth || !db) return [];
+  if (!auth || !db) return null;
   const user = auth.currentUser;
-  if (!user) return [];
+  if (!user) return null;
   try {
     const { doc, getDoc } = await import("firebase/firestore");
     const snapshot = await getDoc(doc(db, `users/${user.uid}/preferences`, "sources"));
     if (snapshot.exists()) {
       const data = snapshot.data();
-      return Array.isArray(data.disabledSources) ? data.disabledSources : [];
+      return {
+        disabledSources: Array.isArray(data.disabledSources) ? data.disabledSources : [],
+        hiddenFromHomeSources: Array.isArray(data.hiddenFromHomeSources) ? data.hiddenFromHomeSources : []
+      };
     }
-    return [];
+    return null;
   } catch (e) {
     console.error("Failed to pull source preferences", e);
-    return [];
+    return null;
   }
 }

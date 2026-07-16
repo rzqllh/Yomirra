@@ -147,18 +147,18 @@ class ApiClient {
     });
   }
 
-  private anilistBatch: { title: string; resolve: (val: {score?: number}) => void; reject: (err: any) => void }[] = [];
-  private anilistTimeout: NodeJS.Timeout | null = null;
+  private ratingBatch: { title: string; resolve: (val: {score?: number}) => void; reject: (err: unknown) => void }[] = [];
+  private ratingTimeout: NodeJS.Timeout | null = null;
 
-  async getAnilistScore(title: string): Promise<{ score?: number }> {
+  async getRatingScore(title: string): Promise<{ score?: number }> {
     return new Promise((resolve, reject) => {
-      this.anilistBatch.push({ title, resolve, reject });
+      this.ratingBatch.push({ title, resolve, reject });
       
-      if (!this.anilistTimeout) {
-        this.anilistTimeout = setTimeout(async () => {
-          const currentBatch = [...this.anilistBatch];
-          this.anilistBatch = [];
-          this.anilistTimeout = null;
+      if (!this.ratingTimeout) {
+        this.ratingTimeout = setTimeout(async () => {
+          const currentBatch = [...this.ratingBatch];
+          this.ratingBatch = [];
+          this.ratingTimeout = null;
 
           try {
             const titles = Array.from(new Set(currentBatch.map(b => b.title))).filter(Boolean);
@@ -167,7 +167,7 @@ class ApiClient {
                return;
             }
 
-            const res = await this.fetcher<Record<string, number | undefined>>(`/api/metadata/anilist-score-batch`, {
+            const res = await this.fetcher<Record<string, number | undefined>>(`/api/metadata/rating-batch`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ titles })

@@ -56,6 +56,33 @@ export const sourceRegistry: SourceMetadata[] = [
       chapters: true,
       pages: true,
     }
+  },
+  {
+    id: "mangadex",
+    name: "MangaDex",
+    description: "Largest international manga source with multi-language support.",
+    language: "multi",
+    baseUrl: "https://mangadex.org",
+    icon: "https://mangadex.org/favicon.svg",
+    version: "1.0.0",
+    isEnabled: true,
+    isInstalled: true,
+    status: "online",
+    healthStats: {
+      uptime: "99.9%",
+      latency: "150ms",
+      lastChecked: "Baru saja",
+      message: "Server merespons dengan baik."
+    },
+    isNsfw: true,
+    capabilities: {
+      popular: true,
+      latest: true,
+      search: true,
+      detail: true,
+      chapters: true,
+      pages: true,
+    }
   }
 ];
 

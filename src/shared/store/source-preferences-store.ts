@@ -4,16 +4,20 @@ import { pushSourcePreferences } from "@/shared/lib/sync-utils";
 
 interface SourcePreferencesState {
   disabledSources: string[];
+  hiddenFromHomeSources: string[];
   
   toggleSource: (sourceId: string) => void;
   isSourceDisabled: (sourceId: string) => boolean;
-  syncWithCloud: (cloudDisabledSources: string[]) => void;
+  toggleHomeSource: (sourceId: string) => void;
+  isSourceHiddenFromHome: (sourceId: string) => boolean;
+  syncWithCloud: (cloudDisabledSources: string[], cloudHiddenFromHomeSources?: string[]) => void;
 }
 
 export const useSourcePreferencesStore = create<SourcePreferencesState>()(
   persist(
     (set, get) => ({
       disabledSources: [],
+      hiddenFromHomeSources: [],
 
       toggleSource: (sourceId: string) => set((state) => {
         let newDisabled: string[];
@@ -26,7 +30,7 @@ export const useSourcePreferencesStore = create<SourcePreferencesState>()(
         }
         
         // Push to Firebase in background
-        pushSourcePreferences(newDisabled);
+        pushSourcePreferences(newDisabled, state.hiddenFromHomeSources);
         
         // Sync to cookie for server-side filtering
         if (typeof document !== 'undefined') {
@@ -40,11 +44,26 @@ export const useSourcePreferencesStore = create<SourcePreferencesState>()(
         return get().disabledSources.includes(sourceId);
       },
 
-      syncWithCloud: (cloudDisabledSources: string[]) => {
+      toggleHomeSource: (sourceId: string) => set((state) => {
+        let newHidden: string[];
+        if (state.hiddenFromHomeSources.includes(sourceId)) {
+          newHidden = state.hiddenFromHomeSources.filter(id => id !== sourceId);
+        } else {
+          newHidden = [...state.hiddenFromHomeSources, sourceId];
+        }
+        pushSourcePreferences(state.disabledSources, newHidden);
+        return { hiddenFromHomeSources: newHidden };
+      }),
+
+      isSourceHiddenFromHome: (sourceId: string) => {
+        return get().hiddenFromHomeSources.includes(sourceId);
+      },
+
+      syncWithCloud: (cloudDisabledSources: string[], cloudHiddenFromHomeSources: string[] = []) => {
         if (typeof document !== 'undefined') {
           document.cookie = `yomirra-disabled-sources=${encodeURIComponent(JSON.stringify(cloudDisabledSources))}; path=/; max-age=31536000`;
         }
-        set({ disabledSources: cloudDisabledSources })
+        set({ disabledSources: cloudDisabledSources, hiddenFromHomeSources: cloudHiddenFromHomeSources })
       },
     }),
     {

@@ -11,6 +11,9 @@ import { WarningCircle, Compass } from "@phosphor-icons/react/dist/ssr";
 import { DirectionalTransition } from "@/components/ui/directional-transition";
 import Link from "next/link";
 import { cn } from "@/shared/utils/cn";
+import { ToggleSwitch } from "@/components/ui/toggle-switch";
+import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
+import { House } from "@phosphor-icons/react/dist/ssr";
 
 export const dynamic = "force-dynamic";
 
@@ -50,12 +53,35 @@ export default function SourceBrowsePage({
 
   const sourceName = sourceInfo?.name || sourceId;
 
+  const { isSourceHiddenFromHome, toggleHomeSource } = useSourcePreferencesStore();
+  const isHiddenFromHome = isSourceHiddenFromHome(sourceId);
+
   return (
     <DirectionalTransition>
       <main className="min-h-screen bg-surface-base flex flex-col">
-        <YomirraPageHeader title={sort === "popular" ? `Populer di ${sourceName}` : `Terbaru di ${sourceName}`} showBack variant="auto" />
+        <YomirraPageHeader 
+          title={sort === "popular" ? `Populer di ${sourceName}` : `Terbaru di ${sourceName}`} 
+          showBack 
+          variant="auto" 
+        />
         
-        <div className="px-4 py-6 max-w-7xl mx-auto w-full flex-1 flex flex-col">
+        <div className="px-4 pt-2 pb-6 max-w-7xl mx-auto w-full flex-1 flex flex-col">
+          <div className="flex items-center justify-between bg-surface-raised p-4 rounded-xl border border-border-subtle mb-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-accent/10 rounded-lg text-accent">
+                <House size={24} weight="duotone" />
+              </div>
+              <div>
+                <p className="font-bold text-text-primary">Tampilkan di Beranda</p>
+                <p className="text-xs text-text-muted">Munculkan komik populer dan terbaru dari sumber ini di halaman utama</p>
+              </div>
+            </div>
+            <ToggleSwitch 
+              checked={!isHiddenFromHome}
+              onCheckedChange={() => toggleHomeSource(sourceId)}
+            />
+          </div>
+
           {status === "pending" || isLoading ? (
             <div className="flex flex-col gap-10">
               <SearchResultSkeleton />
