@@ -125,18 +125,45 @@ export class MangaDexSource implements MangaSource {
 
     // Map our filter keys to MangaDex params
     if (filters) {
-      if (filters.genres) {
-        // genres are already MangaDex tag UUIDs
-        const genreIds = Array.isArray(filters.genres) ? filters.genres : [filters.genres];
-        params["includedTags[]"] = genreIds;
+      // Support both "genres" (old) and "genre[]" (standard)
+      const genresInput = filters["genre[]"] || filters.genres;
+      if (genresInput) {
+        const genreIds = Array.isArray(genresInput) ? genresInput : [genresInput];
+        const included: string[] = [];
+        const excluded: string[] = [];
+        
+        genreIds.forEach(id => {
+          // Ignore our internal NSFW minus tags as MangaDex handles NSFW via contentRating
+          if (id.startsWith("-") && ["-adult", "-mature", "-smut", "-nsfw", "-ecchi", "-pornographic"].includes(id)) {
+            return;
+          }
+          if (id.startsWith("-")) {
+            excluded.push(id.substring(1));
+          } else {
+            included.push(id);
+          }
+        });
+        
+        if (included.length > 0) params["includedTags[]"] = included;
+        if (excluded.length > 0) params["excludedTags[]"] = excluded;
       }
-      if (filters.status) {
-        const statuses = Array.isArray(filters.status) ? filters.status : [filters.status];
+      
+      const statusInput = filters["status"] || filters.status;
+      if (statusInput) {
+        const statuses = Array.isArray(statusInput) ? statusInput : [statusInput];
         params["status[]"] = statuses;
       }
-      if (filters.sort) {
-        const sort = Array.isArray(filters.sort) ? filters.sort[0] : filters.sort;
-        params[`order[${sort}]`] = "desc";
+      
+      const sortInput = filters["sort"] || filters.sort;
+      if (sortInput) {
+        const sortStr = Array.isArray(sortInput) ? sortInput[0] : sortInput;
+        let mdSort = "relevance";
+        if (sortStr === "popular") mdSort = "followedCount";
+        else if (sortStr === "latest") mdSort = "latestUploadedChapter";
+        else if (sortStr === "update") mdSort = "latestUploadedChapter";
+        else if (sortStr === "title") mdSort = "title";
+        
+        params[`order[${mdSort}]`] = sortStr === "title" ? "asc" : "desc";
       }
     }
 
