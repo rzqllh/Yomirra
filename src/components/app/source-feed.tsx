@@ -81,7 +81,7 @@ export async function SourceFeed({ sourceId, sourceName, variant }: SourceFeedPr
             <FeaturedHeroCarousel sourceId={sourceId} mangas={shuffledLatest} />
 
             {/* Sidebar Queue (Right 1 column) - Ranks 1 to 5 */}
-            <div className="bg-gradient-to-bl from-accent/5 to-accent/10 dark:from-surface-base dark:to-surface-overlay rounded-[3rem] p-6 sm:p-8 border border-transparent dark:border-border-subtle flex flex-col gap-4 overflow-y-auto shadow-sm self-start w-full">
+            <div className="bg-gradient-to-bl from-accent/5 to-accent/10 dark:from-surface-base dark:to-surface-overlay rounded-3xl p-6 sm:p-8 border border-transparent dark:border-border-subtle flex flex-col gap-4 overflow-y-auto shadow-sm self-start w-full">
               <div className="flex items-center gap-2 mb-4 px-2">
                 <TrendUp weight="duotone" size={24} className="text-accent" />
                 <h4 className="font-black text-xl text-text-primary tracking-tight">
