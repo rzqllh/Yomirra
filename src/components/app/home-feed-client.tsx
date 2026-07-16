@@ -11,7 +11,7 @@ import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry"
 import { ContinueReadingList } from "./continue-reading-list";
 import { FeaturedHeroCarousel } from "./featured-hero-carousel";
 import { LeaderboardRow, ShelfCard } from "@/components/manga/card";
-import { Sparkle, MagicWand, MagnifyingGlass, TrendUp } from "@phosphor-icons/react";
+import { MagnifyingGlass } from "@phosphor-icons/react";
 import Link from "next/link";
 import { cn } from "@/shared/utils/cn";
 
@@ -134,11 +134,11 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
           <div className="grid grid-cols-1 xl:grid-cols-[1.5fr_1fr] gap-6 items-start">
             {/* Kiri: Sorotan Utama */}
             <div className="flex flex-col gap-3 sm:gap-4 w-full min-w-0">
-              <h2 className="text-lg sm:text-xl md:text-2xl font-bold flex items-center gap-2 sm:gap-3">
-                <Sparkle weight="duotone" className="text-semantic-info" /> Sorotan Utama
+              <h2 className="text-lg sm:text-xl md:text-2xl font-bold">
+                Sorotan Utama
               </h2>
               {/* Fixed height for Sorotan so carousel works */}
-              <div className="h-[560px] sm:h-[600px] xl:h-[620px] relative w-full overflow-hidden rounded-[2rem] xl:rounded-[3rem]">
+              <div className="h-[560px] sm:h-[600px] xl:h-[620px] relative w-full overflow-hidden rounded-2xl xl:rounded-3xl">
                 {activeSourceHighlight.length > 0 ? (
                   <FeaturedHeroCarousel sourceId={activeSourceId} mangas={activeSourceHighlight} />
                 ) : (
@@ -149,8 +149,8 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
 
             {/* Kanan: Rank */}
             <div className="flex flex-col gap-3 sm:gap-4 w-full min-w-0 mt-2 xl:mt-0">
-              <h2 className="text-lg sm:text-xl md:text-2xl font-bold flex items-center gap-2 sm:gap-3">
-                <TrendUp weight="duotone" className="text-accent" /> Peringkat Populer
+              <h2 className="text-lg sm:text-xl md:text-2xl font-bold">
+                Peringkat Populer
               </h2>
               {/* Auto height on mobile so items don't squish, fixed height on desktop */}
               <div className="h-auto xl:h-[480px] bg-gradient-to-bl from-accent/5 to-accent/10 dark:from-surface-base dark:to-surface-overlay rounded-[2rem] p-4 sm:p-5 xl:p-6 border border-transparent dark:border-border-subtle flex flex-col gap-2 xl:justify-between overflow-hidden shadow-sm">
@@ -171,18 +171,18 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
       {/* 3. Update Hari Ini */}
       {updateHariIni.length > 0 && (
         <div className="flex flex-col gap-3 sm:gap-4 mt-4">
-          <h2 className="text-lg sm:text-xl md:text-2xl font-bold flex items-center gap-2 sm:gap-3 px-2">
-            <MagicWand weight="duotone" className="text-accent" /> Update Hari Ini
+          <h2 className="text-lg sm:text-xl md:text-2xl font-bold px-2">
+            Update Hari Ini
           </h2>
           <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide px-2">
-            {updateHariIni.map((manga: any) => (
-              <div key={`${manga.sourceId}-${manga.id}`} className="shrink-0 snap-start w-[140px] sm:w-[160px]">
+            {updateHariIni.map((manga) => (
+              <div key={`${manga.sourceId}-${manga.id}`} className="shrink-0 snap-start w-[150px] sm:w-[160px]">
                 <ShelfCard manga={manga} sourceId={manga.sourceId} showSourceBadge />
               </div>
             ))}
             
             {/* Lihat Semua Card */}
-            <div className="shrink-0 snap-start w-[140px] sm:w-[160px] flex items-center justify-center p-4">
+            <div className="shrink-0 snap-start w-[150px] sm:w-[160px] flex items-center justify-center p-4">
               <Link 
                 href="/library"
                 className="w-full aspect-[3/4] rounded-2xl border-2 border-dashed border-border-default hover:border-accent hover:bg-accent/5 text-text-muted hover:text-accent transition-colors flex flex-col items-center justify-center gap-2 font-bold"
@@ -196,35 +196,37 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
       )}
 
       {/* 4. Per Source Popular & Latest */}
-      {sourcesToShow.map(sourceId => {
+      {sourcesToShow.map((sourceId, idx) => {
         const source = dynamicSourceRegistry.get(sourceId);
         const sourceName = source?.name || sourceId;
         const data = sourceData[sourceId];
         
         if (!data || (data.popular.length === 0 && data.latest.length === 0)) return null;
 
+        const isVariantLayout = idx % 2 === 1;
+
         return (
           <div key={sourceId} className="flex flex-col gap-6 sm:gap-8 pt-8 mt-4 border-t-2 border-border-subtle/30 px-2">
             <div className="flex items-end justify-between">
               <div className="flex flex-col gap-1">
-                <span className="text-xs font-black text-text-muted uppercase tracking-wider">Sumber Komik</span>
-                <h2 className="text-3xl sm:text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-text-primary to-text-secondary">{sourceName}</h2>
+                <h2 className="text-3xl sm:text-4xl font-black text-text-primary">{sourceName}</h2>
               </div>
               <Link href={`/sources/${sourceId}`} className="text-sm font-bold text-accent hover:underline mb-1">
                 Lihat Semua
               </Link>
             </div>
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 pl-1 sm:pl-4 border-l-2 border-border-subtle/30">
+            <div className={cn(
+              "border-l-2 border-border-subtle/30 pl-1 sm:pl-4",
+              isVariantLayout ? "flex flex-col gap-8 lg:gap-10" : "grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12"
+            )}>
               {/* Popular */}
               {data.popular.length > 0 && (
                 <div className="flex flex-col gap-3 sm:gap-4">
-                  <h3 className="text-base sm:text-lg font-bold flex items-center gap-2 text-text-secondary">
-                    <TrendUp weight="bold" className="text-text-muted" /> Populer
-                  </h3>
+                  <h3 className="text-base sm:text-lg font-bold text-text-secondary">Populer</h3>
                   <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
                     {data.popular.map(manga => (
-                      <div key={manga.id} className="shrink-0 snap-start w-[130px] sm:w-[150px]">
+                      <div key={manga.id} className="shrink-0 snap-start w-[150px] sm:w-[160px]">
                         <ShelfCard manga={manga} sourceId={sourceId} />
                       </div>
                     ))}
@@ -235,12 +237,10 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
               {/* Latest */}
               {data.latest.length > 0 && (
                 <div className="flex flex-col gap-3 sm:gap-4">
-                  <h3 className="text-base sm:text-lg font-bold flex items-center gap-2 text-text-secondary">
-                    <MagicWand weight="bold" className="text-text-muted" /> Terbaru
-                  </h3>
+                  <h3 className="text-base sm:text-lg font-bold text-text-secondary">Terbaru</h3>
                   <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
                     {data.latest.map(manga => (
-                      <div key={manga.id} className="shrink-0 snap-start w-[130px] sm:w-[150px]">
+                      <div key={manga.id} className="shrink-0 snap-start w-[150px] sm:w-[160px]">
                         <ShelfCard manga={manga} sourceId={sourceId} />
                       </div>
                     ))}

@@ -16,51 +16,6 @@ interface ContinueReadingListProps {
 
 export function ContinueReadingList({ items }: ContinueReadingListProps) {
   const router = useRouter();
-  const [cards, setCards] = React.useState(items);
-
-  // Sync state if props change (e.g. new history)
-  React.useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setCards(items);
-  }, [items]);
-
-  const handleSwipeLeft = React.useCallback(() => {
-    setCards((prev) => {
-      const newCards = [...prev];
-      const first = newCards.shift();
-      if (first) newCards.push(first);
-      return newCards;
-    });
-  }, []);
-
-  const handleSwipeRight = React.useCallback(() => {
-    setCards((prev) => {
-      const newCards = [...prev];
-      const last = newCards.pop();
-      if (last) newCards.unshift(last);
-      return newCards;
-    });
-  }, []);
-
-  const [isPaused, setIsPaused] = React.useState(false);
-
-  // Auto swipe every 5 seconds
-  React.useEffect(() => {
-    if (cards.length <= 1 || isPaused) return;
-    const interval = setInterval(() => {
-      handleSwipeLeft();
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [cards.length, handleSwipeLeft, isPaused]);
-
-  const handleDragEnd = (_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    const threshold = 100;
-    if (info.offset.x < -threshold) {
-      handleSwipeLeft();
-    } else if (info.offset.x > threshold) {
-      handleSwipeRight();
-    }
-  };
 
   if (!items || items.length === 0) {
     return (
@@ -87,8 +42,8 @@ export function ContinueReadingList({ items }: ContinueReadingListProps) {
   return (
     <div className="w-full">
       <div className="flex flex-col gap-4">
-        <h2 className="text-xl md:text-2xl font-bold flex items-center gap-3 px-2">
-          <Clock weight="duotone" className="text-accent" /> Lanjut Baca
+        <h2 className="text-xl md:text-2xl font-bold px-2">
+          Lanjut Baca
         </h2>
         <div className="flex gap-4 overflow-x-auto pb-6 pt-2 snap-x snap-mandatory scrollbar-hide px-2">
           {items.map((group) => {

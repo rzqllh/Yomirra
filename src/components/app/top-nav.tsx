@@ -62,7 +62,7 @@ export function TopNav() {
           <div className="relative size-8 sm:size-9 flex items-center justify-center drop-shadow-sm group-hover:drop-shadow-md group-hover:scale-105 active:scale-95 transition-all">
             <Image src={Logo} alt="Yomirra Logo" className="w-full h-full object-contain" priority />
           </div>
-          <span className="font-bold text-lg sm:text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-text-primary to-text-secondary hidden sm:block">
+          <span className="font-bold text-lg sm:text-xl tracking-tight text-text-primary hidden sm:block">
             Yomirra
           </span>
         </Link>
