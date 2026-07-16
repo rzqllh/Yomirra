@@ -27,7 +27,7 @@ export async function GET(
       });
     }
 
-    const filters = source.getFilters();
+    const filters = await source.getFilters();
     return NextResponse.json({ data: filters });
   } catch (error: unknown) {
     console.error(`[API] Error fetching filters:`, error);

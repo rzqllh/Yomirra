@@ -209,28 +209,8 @@ export class MangaDexSource implements MangaSource {
     };
   }
 
-  getFilters(): FilterList {
-    // Return empty sync, actual filters loaded async via API route
-    return {
-      genres: [],
-      formats: [],
-      statuses: [
-        { id: "ongoing", name: "Ongoing" },
-        { id: "completed", name: "Completed" },
-        { id: "hiatus", name: "Hiatus" },
-        { id: "cancelled", name: "Cancelled" },
-      ],
-      sorts: [
-        { id: "followedCount", name: "Populer" },
-        { id: "latestUploadedChapter", name: "Terbaru" },
-        { id: "relevance", name: "Relevansi" },
-        { id: "rating", name: "Rating" },
-      ],
-    };
+  async getFilters(): Promise<FilterList> {
+    return getMangaDexFilters();
   }
 }
 
-// Async version for API route
-export async function getMangaDexFiltersAsync(): Promise<FilterList> {
-  return getMangaDexFilters();
-}
