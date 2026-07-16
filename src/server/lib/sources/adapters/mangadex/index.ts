@@ -21,7 +21,7 @@ import { getMangaDexFilters } from "./tag-cache";
 import { acquireToken } from "./throttle";
 
 const API_BASE = "https://api.mangadex.org";
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 24;
 const CHAPTERS_LIMIT = 500;
 
 /** Throttled fetch wrapper for MangaDex API */

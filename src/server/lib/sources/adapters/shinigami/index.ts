@@ -63,7 +63,7 @@ export class ShinigamiSource implements MangaSource {
   async getPopular(page: number): Promise<MangaPageResult> {
     const res = await this.client.get<ShinigamiMangaListResponse>("/v1/manga/list", {
       page,
-      page_size: 100,
+      page_size: 24,
       sort: "popularity",
     });
 
@@ -76,7 +76,7 @@ export class ShinigamiSource implements MangaSource {
   async getLatest(page: number): Promise<MangaPageResult> {
     const res = await this.client.get<ShinigamiMangaListResponse>("/v1/manga/list", {
       page,
-      page_size: 100,
+      page_size: 24,
       sort: "latest",
     });
 
@@ -104,7 +104,7 @@ export class ShinigamiSource implements MangaSource {
 
     const params: Record<string, string | string[] | number> = {
       page,
-      page_size: 100,
+      page_size: 24,
     };
     if (cleanQuery) params.q = cleanQuery;
     

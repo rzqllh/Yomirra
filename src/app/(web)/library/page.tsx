@@ -551,7 +551,7 @@ function LibraryContent() {
                 <AnimatePresence>
                   {mangas.map((manga) => (
                     viewMode === "grid" ? (
-                      <ShelfCard key={manga.id} manga={manga} sourceId={activeSourceId} />
+                      <ShelfCard key={manga.id} manga={manga} sourceId={activeSourceId} showSourceBadge={true} />
                     ) : (
                       <HistoryCard key={manga.id} manga={manga} sourceId={activeSourceId} />
                     )
