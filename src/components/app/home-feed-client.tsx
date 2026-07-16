@@ -133,7 +133,7 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
 
           <div className="grid grid-cols-1 xl:grid-cols-[1.5fr_1fr] gap-6 items-start">
             {/* Kiri: Sorotan Utama */}
-            <div className="flex flex-col gap-4 w-full">
+            <div className="flex flex-col gap-4 w-full min-w-0">
               <h2 className="text-xl md:text-2xl font-bold flex items-center gap-3">
                 <Sparkle weight="duotone" className="text-semantic-info" /> Sorotan Utama
               </h2>
@@ -148,7 +148,7 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
             </div>
 
             {/* Kanan: Rank */}
-            <div className="flex flex-col gap-4 w-full">
+            <div className="flex flex-col gap-4 w-full min-w-0">
               <h2 className="text-xl md:text-2xl font-bold flex items-center gap-3">
                 <TrendUp weight="duotone" className="text-accent" /> Peringkat Populer
               </h2>

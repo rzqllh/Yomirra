@@ -42,7 +42,10 @@ async function mdFetch<T>(path: string, params?: Record<string, string | string[
   const res = await fetch(url.toString(), {
     cache: "no-store",
     signal: AbortSignal.timeout(15000),
-    headers: { Accept: "application/json" },
+    headers: { 
+      Accept: "application/json",
+      "User-Agent": "Yomirra/1.0.0 (https://github.com/rzqllh/Yomirra)"
+    },
   });
 
   if (!res.ok) {
