@@ -99,26 +99,23 @@ export function FeaturedHeroCarousel({ sourceId, mangas }: FeaturedHeroCarouselP
 
               {/* Content */}
               <div className="flex flex-col items-center pointer-events-none w-full">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent/10 dark:bg-accent text-accent dark:text-white text-xs font-bold mb-4 uppercase tracking-wider">
-                  <span className="w-1.5 h-1.5 rounded-full bg-accent dark:bg-white animate-pulse" />
-                  Sorotan Utama
-                </div>
+
                 
                 {isDetailLoading && currentManga.id ? (
                   /* Text Skeleton during loading */
-                  <div className="w-full flex flex-col items-center gap-4 mb-4 h-[134px] sm:h-[162px]">
-                    <div className="h-10 sm:h-12 w-3/4 bg-black/5 dark:bg-white/10 rounded-xl animate-pulse" />
-                    <div className="h-4 w-1/2 bg-black/5 dark:bg-white/10 rounded-full animate-pulse mb-4" />
-                    <div className="h-3 w-full bg-black/5 dark:bg-white/10 rounded-full animate-pulse" />
-                    <div className="h-3 w-5/6 bg-black/5 dark:bg-white/10 rounded-full animate-pulse" />
+                  <div className="w-full flex flex-col items-center gap-4 mb-4 h-[110px] sm:h-[130px]">
+                    <div className="h-8 sm:h-10 w-3/4 bg-black/5 dark:bg-white/10 rounded-xl animate-pulse" />
+                    <div className="h-4 w-1/2 bg-black/5 dark:bg-white/10 rounded-full animate-pulse mb-2" />
+                    <div className="h-3 w-full max-w-sm bg-black/5 dark:bg-white/10 rounded-full animate-pulse" />
+                    <div className="h-3 w-5/6 max-w-sm bg-black/5 dark:bg-white/10 rounded-full animate-pulse" />
                   </div>
                 ) : (
                   <>
-                    <h3 className="text-2xl sm:text-3xl md:text-4xl font-black line-clamp-2 w-full px-4 mb-3 text-text-primary tracking-tight leading-tight">
+                    <h3 className="text-2xl sm:text-3xl md:text-4xl font-black line-clamp-2 w-full px-4 mb-4 text-text-primary tracking-tight leading-tight">
                       {currentManga.title}
                     </h3>
                     
-                    <p className="text-sm sm:text-base text-text-secondary font-bold mb-6 flex items-center justify-center gap-2">
+                    <p className="text-[13px] sm:text-sm text-text-secondary font-bold mb-6 flex items-center justify-center gap-2">
                       <span>{currentManga.latestChapter || "Bab Terbaru"}</span> 
                       <span className="w-1 h-1 rounded-full bg-border-strong" /> 
                       <span>{mangaDetail?.status || currentManga.status || "Ongoing"}</span>
@@ -141,7 +138,7 @@ export function FeaturedHeroCarousel({ sourceId, mangas }: FeaturedHeroCarouselP
         {/* Static Button (Outside AnimatePresence so it doesn't swipe/fade) */}
         <Link 
           href={getMangaDetailHref((currentManga as any)?.sourceId || sourceId, currentManga.id)}
-          className="bg-accent text-white border border-accent-hover/20 px-8 py-3 rounded-[2rem] font-bold shadow-xl shadow-accent/20 hover:scale-105 hover:bg-accent-hover active:scale-95 transition-all flex items-center justify-center gap-2.5 pointer-events-auto cursor-pointer w-full sm:w-auto mt-4 z-20"
+          className="bg-accent text-white border border-accent-hover/20 px-8 py-3.5 rounded-2xl font-bold shadow-xl shadow-accent/20 hover:scale-105 hover:bg-accent-hover active:scale-95 transition-all flex items-center justify-center gap-2.5 pointer-events-auto cursor-pointer w-full sm:w-auto mt-8 sm:mt-10 z-20"
           draggable={false}
         >
           <Play weight="fill" size={20} /> Mulai Membaca
