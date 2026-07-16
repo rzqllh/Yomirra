@@ -50,13 +50,14 @@ export function MangaDetailView({
   const [isExpanded, setIsExpanded] = useState(false);
   const isMounted = useMounted();
 
-  const { data: anilistData } = useQuery({
-    queryKey: ["anilist-score", detail.title],
-    queryFn: () => apiClient.getAnilistScore(detail.title),
+  const { data: ratingData } = useQuery({
+    queryKey: ["rating-score", detail.title],
+    queryFn: () => apiClient.getRatingScore(detail.title),
     staleTime: 1000 * 60 * 60, // 1 hour
+    enabled: true,
   });
 
-  const displayScore = anilistData?.score ?? detail.score;
+  const displayScore = ratingData?.score ?? detail.score;
 
   const safeId = `${sourceId}-${mangaId}`.replace(/[^a-zA-Z0-9-]/g, '-');
   const coverTransitionName = `manga-cover-${safeId}`;
