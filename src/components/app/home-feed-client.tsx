@@ -138,7 +138,7 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
                 <Sparkle weight="duotone" className="text-semantic-info" /> Sorotan Utama
               </h2>
               {/* Fixed height for Sorotan so carousel works */}
-              <div className="h-[360px] sm:h-[400px] xl:h-[480px] relative w-full overflow-hidden rounded-[2rem] xl:rounded-[3rem]">
+              <div className="h-[520px] sm:h-[540px] xl:h-[580px] relative w-full overflow-hidden rounded-[2rem] xl:rounded-[3rem]">
                 {activeSourceHighlight.length > 0 ? (
                   <FeaturedHeroCarousel sourceId={activeSourceId} mangas={activeSourceHighlight} />
                 ) : (
