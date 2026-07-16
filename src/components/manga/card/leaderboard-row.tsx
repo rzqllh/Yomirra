@@ -24,13 +24,15 @@ export function LeaderboardRow({ manga, sourceId, displayScore }: BaseCardProps)
       href={getMangaDetailHref(sourceId, manga.id, fullPath)} 
       className="group relative flex items-center gap-4 py-2.5 px-3 rounded-2xl hover:bg-surface-hover transition-colors"
     >
-      {/* Rank Number (Typography instead of floating badge) */}
-      <span className="text-3xl font-black text-text-muted/30 group-hover:text-accent/50 transition-colors shrink-0 w-8 text-center italic tracking-tighter select-none">
-        {rankStr}
-      </span>
+
 
       {/* Cover Image */}
       <div className="relative w-[52px] h-[72px] shrink-0 bg-surface-base rounded-[10px] overflow-hidden border border-border-subtle group-hover:border-accent/30 transition-all shadow-sm">
+        {manga.rank !== undefined && (
+          <div className="absolute top-0 left-0 z-10 bg-accent/90 backdrop-blur-sm text-accent-on text-[10px] font-black px-1.5 py-0.5 rounded-br-lg shadow-sm">
+            #{manga.rank}
+          </div>
+        )}
         {manga.coverUrl && !imageError ? (
           <img 
             src={manga.coverUrl} 
@@ -52,24 +54,21 @@ export function LeaderboardRow({ manga, sourceId, displayScore }: BaseCardProps)
         <h4 className="font-bold text-[15px] text-text-primary leading-tight truncate group-hover:text-accent transition-colors">
           {manga.title}
         </h4>
-        <div className="flex items-center gap-2 text-xs font-medium text-text-secondary">
-          <span className="truncate">{manga.latestChapter || "Detail"}</span>
+        <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-medium text-text-secondary">
+          <span className="truncate max-w-[100px] sm:max-w-[140px]">{manga.latestChapter || "Detail"}</span>
+          <span className="w-1 h-1 rounded-full bg-border-strong shrink-0" />
+          <div className="flex items-center gap-0.5 text-text-primary">
+            <Star weight="fill" size={12} className="text-semantic-warning" />
+            <span className="font-bold" suppressHydrationWarning>{Number(scoreToDisplay) > 0 ? Number(scoreToDisplay).toFixed(1) : "-.-"}</span>
+          </div>
           {manga.format && (
              <>
                 <span className="w-1 h-1 rounded-full bg-border-strong shrink-0" />
-                <span className="text-[10px] font-black uppercase text-text-muted tracking-wider">
+                <span className="font-black uppercase text-text-muted tracking-wider">
                   {manga.format}
                 </span>
              </>
           )}
-        </div>
-      </div>
-
-      {/* Rating */}
-      <div className="shrink-0 flex items-center justify-center pl-2">
-        <div className="flex items-center gap-1 bg-surface-base border border-border-subtle group-hover:border-accent/20 px-2 py-1 rounded-lg">
-          <span className="text-xs font-black text-text-primary" suppressHydrationWarning>{Number(scoreToDisplay) > 0 ? Number(scoreToDisplay).toFixed(1) : "-.-"}</span>
-          <Star weight="fill" size={14} className="text-semantic-warning" />
         </div>
       </div>
     </Link>
