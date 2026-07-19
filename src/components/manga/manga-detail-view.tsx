@@ -175,18 +175,18 @@ export function MangaDetailView({
         @media (min-width: 768px) { .vt-cover-desktop { view-transition-name: ${coverTransitionName}; } }
       `}} />
 
-      <div className="fixed inset-0 w-full h-full overflow-hidden z-0 pointer-events-none select-none bg-background">
+      <div className="fixed inset-0 w-full h-full overflow-hidden z-0 pointer-events-none select-none bg-background [contain:strict]">
         {detail.coverUrl && (
             <Image
               src={detail.coverUrl}
               alt=""
               fill
-              className="object-cover opacity-60 blur-[100px] scale-[1.2] saturate-[1.5] brightness-50 md:brightness-75 transform-gpu will-change-[transform,filter]"
+              className="object-cover opacity-40 blur-[60px] scale-[1.1] saturate-[1.3] brightness-50 md:brightness-75 transform-gpu will-change-transform"
               unoptimized
               priority
             />
         )}
-        <div className="absolute inset-0 bg-surface-base/70" />
+        <div className="absolute inset-0 bg-surface-base/60" />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/90 to-background" />
       </div>
 
