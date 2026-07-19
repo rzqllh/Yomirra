@@ -5,7 +5,7 @@ import { UserCircle, SignOut, Gear, MagnifyingGlass, Books } from "@phosphor-ico
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, AnimatePresence, useScroll } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import Logo from "@/logo/icon.png";
 import { IconButton } from "@/components/ui/icon-button";
 import { useAuth } from "@/shared/hooks/use-auth";
@@ -19,15 +19,7 @@ export function TopNav() {
   const pathname = usePathname();
   const { user, loginWithGoogle, logout } = useAuth();
   
-  // Scroll morph detection
-  const [isScrolled, setIsScrolled] = React.useState(false);
-  const { scrollY } = useScroll();
-  
-  React.useEffect(() => {
-    return scrollY.on("change", (latest) => {
-      setIsScrolled(latest > 30);
-    });
-  }, [scrollY]);
+  // No scroll-morph — always full-width nav (H7)
 
   // Profile dropdown state
   const [isProfileOpen, setIsProfileOpen] = React.useState(false);
@@ -49,14 +41,8 @@ export function TopNav() {
       {/* Spacer to reserve layout space for the fixed nav */}
       <div className="hidden md:block h-[72px] w-full shrink-0" />
       
-      <div 
-        className={cn( "hidden md:flex fixed top-0 left-0 right-0 z-40 w-full transition-all duration-500 pointer-events-none h-[72px]", isScrolled ? "items-center px-4 md:px-8" : "px-0 bg-surface-glass backdrop-blur-3xl border-b" )}
-      >
-      <motion.div 
-        layout
-        transition={{ duration: 0.3, ease: "easeOut" }}
-        className={cn( "flex items-center justify-between pointer-events-auto transition-colors duration-500 overflow-visible mx-auto", isScrolled ? "max-w-7xl w-full h-[60px] bg-surface-glass backdrop-blur-xl shadow-sm rounded-full px-6" : "w-full h-[72px] px-8" )}
-      >
+      <div className="hidden md:flex fixed top-0 left-0 right-0 z-40 w-full pointer-events-none h-[72px] bg-surface-glass backdrop-blur-3xl border-b items-center px-0">
+      <div className="flex items-center justify-between pointer-events-auto w-full h-[72px] px-8 mx-auto max-w-screen-2xl">
         {/* LEFT: Logo & Brand */}
         <Link href="/" className="flex items-center gap-2 outline-none shrink-0 h-full group z-10">
           <div className="relative size-8 sm:size-9 flex items-center justify-center drop-shadow-sm group-hover:drop-shadow-md group-hover:scale-105 active:scale-95 transition-all">
@@ -118,16 +104,14 @@ export function TopNav() {
             </div>
           )}
           
-          <motion.div layout transition={{ duration: 0.3, ease: "easeOut" }}>
-            <ThemeToggle />
-          </motion.div>
+          <ThemeToggle />
 
             {user ? (
-              <motion.div layout transition={{ duration: 0.3, ease: "easeOut" }} className="relative" ref={profileRef}>
+              <div className="relative" ref={profileRef}>
                 <button 
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
                   aria-label="Profil Pengguna"
-                  className={cn( "flex items-center justify-center rounded-full bg-surface-glass backdrop-blur-md shadow-sm hover:scale-105 active:scale-95 transition-all outline-none", isScrolled ? "size-9" : "size-9 lg:size-10" )}
+                  className="flex items-center justify-center size-9 lg:size-10 rounded-full bg-surface-glass backdrop-blur-md shadow-sm hover:scale-105 active:scale-95 transition-all outline-none"
                 >
                   {user.photoURL ? (
                     <div className="size-full rounded-full overflow-hidden border border-border-default">
@@ -160,17 +144,15 @@ export function TopNav() {
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </motion.div>
+              </div>
             ) : (
-              <motion.div layout transition={{ duration: 0.3, ease: "easeOut" }}>
-                <button onClick={loginWithGoogle} aria-label="Masuk" className="flex items-center justify-center bg-surface-raised ring-1 ring-border-subtle shadow-sm hover:bg-surface-hover active:scale-95 transition-all rounded-full px-4 h-9 gap-2 outline-none">
-                  <UserCircle size={20} weight="duotone" className="text-text-secondary" />
-                  <span className="text-sm font-semibold text-text-primary">Masuk</span>
-                </button>
-              </motion.div>
+              <button onClick={loginWithGoogle} aria-label="Masuk" className="flex items-center justify-center bg-surface-raised ring-1 ring-border-subtle shadow-sm hover:bg-surface-hover active:scale-95 transition-all rounded-full px-4 h-9 gap-2 outline-none">
+                <UserCircle size={20} weight="duotone" className="text-text-secondary" />
+                <span className="text-sm font-semibold text-text-primary">Masuk</span>
+              </button>
             )}
           </div>
-      </motion.div>
+      </div>
       </div>
     </>
   );

@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { MangaItem } from "@/shared/sources/source-types";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { Play, CaretLeft, CaretRight, Info } from "@phosphor-icons/react";
 import { cn } from "@/shared/utils/cn";
 import { getMangaDetailHref } from "@/shared/lib/routes";
@@ -19,15 +19,16 @@ interface FeaturedHeroCarouselProps {
 export function FeaturedHeroCarousel({ sourceId, mangas }: FeaturedHeroCarouselProps) {
   const [currentIndex, setCurrentIndex] = React.useState(0);
   const [isPaused, setIsPaused] = React.useState(false);
+  const shouldReduce = useReducedMotion();
 
-  // Auto-play interval
+  // Auto-play: disabled entirely when user prefers reduced motion
   React.useEffect(() => {
-    if (mangas.length <= 1 || isPaused) return;
+    if (mangas.length <= 1 || isPaused || shouldReduce) return;
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % mangas.length);
     }, 8000); 
     return () => clearInterval(interval);
-  }, [mangas.length, isPaused]);
+  }, [mangas.length, isPaused, shouldReduce]);
 
   if (!mangas || mangas.length === 0) return null;
 
@@ -65,7 +66,7 @@ export function FeaturedHeroCarousel({ sourceId, mangas }: FeaturedHeroCarouselP
           initial={{ opacity: 0, scale: 1.05 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: motionDuration.slow, ease: motionEase.softOut as [number, number, number, number] }}
+          transition={{ duration: shouldReduce ? 0 : motionDuration.slow, ease: motionEase.softOut as [number, number, number, number] }}
           className="absolute inset-0 z-0"
         >
           <img 
@@ -92,7 +93,7 @@ export function FeaturedHeroCarousel({ sourceId, mangas }: FeaturedHeroCarouselP
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: motionDuration.normal, ease: motionEase.softOut as [number, number, number, number] }}
+              transition={{ duration: shouldReduce ? 0 : motionDuration.normal, ease: motionEase.softOut as [number, number, number, number] }}
               className="flex flex-col gap-3 sm:gap-4"
             >
               <div className="flex items-center gap-3 text-xs sm:text-sm font-bold tracking-wider text-accent uppercase">
