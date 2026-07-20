@@ -117,7 +117,8 @@ export class ShinigamiSource implements MangaSource {
       Object.entries(filters).forEach(([k, v]) => {
         if (k === "genre[]") {
           const items = Array.isArray(v) ? v : [v];
-          genreFilter.push(...items);
+          const normalized = items.map(g => g.toLowerCase().replace(/\s+/g, '-'));
+          genreFilter.push(...normalized);
         } else if (k === "sort") {
           // Map global "popular" to Shinigami's "popularity"
           const sortVal = Array.isArray(v) ? v[0] : v;
