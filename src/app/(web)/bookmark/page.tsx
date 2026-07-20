@@ -441,7 +441,7 @@ export default function BookmarkPage() {
                           layout 
                           className={cn(
                             viewMode === "grid" 
-                              ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-5" 
+                              ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-3 gap-y-6 sm:gap-x-4 sm:gap-y-8 lg:gap-x-5 lg:gap-y-10" 
                               : "flex flex-col gap-3",
                             "max-h-[70vh] overflow-y-auto pr-2 -mr-2 [scrollbar-width:thin]"
                           )}

@@ -117,7 +117,7 @@ export async function SourceFeed({ sourceId, sourceName, variant }: SourceFeedPr
             </h2>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 lg:gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-4 gap-y-8 lg:gap-x-6 lg:gap-y-12">
             {restTrending.map((manga: any, idx: number) => (
               <ShelfCard 
                 key={manga.id} 

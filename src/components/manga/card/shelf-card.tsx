@@ -49,7 +49,7 @@ export function ShelfCard({
         aria-label={`Read ${manga.title}`}
       >
         <div 
-          className="relative w-full aspect-[2/3] overflow-hidden rounded-2xl bg-surface-base border-none shadow-none mb-3 vt-hover"
+          className="relative w-full aspect-[2/3] overflow-hidden rounded-2xl bg-surface-base border-none shadow-none vt-hover"
           style={vtStyle}
         >
           {manga.coverUrl && !imageError ? (
