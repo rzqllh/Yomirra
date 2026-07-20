@@ -137,6 +137,9 @@ function LibraryContent() {
     { id: "latest", name: "✨ Terbaru" },
   ];
 
+  const router = useRouter();
+  const pathname = usePathname();
+
   // Fallback to supported sort if current sort is not available in the new source
   React.useEffect(() => {
     if (filtersData?.sorts) {
@@ -147,6 +150,36 @@ function LibraryContent() {
       }
     }
   }, [filtersData?.sorts, sort]);
+
+  // Sync local sort state with storeSort (when changed by drawer)
+  React.useEffect(() => {
+    if (storeSort && storeSort !== sort) {
+      setSort(storeSort);
+      const params = new URLSearchParams(searchParams.toString());
+      if (storeSort === "all" || storeSort === "popular") {
+        params.delete("sort");
+      } else {
+        params.set("sort", storeSort);
+      }
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    }
+  }, [storeSort, sort, pathname, router, searchParams]);
+
+  // Reset page to 1 when filters change from drawer
+  const previousFiltersRef = React.useRef({ selectedGenres, excludedGenres, selectedFormats, selectedStatuses, storeSort });
+  React.useEffect(() => {
+    const prev = previousFiltersRef.current;
+    if (
+      prev.storeSort !== storeSort ||
+      prev.selectedGenres !== selectedGenres ||
+      prev.excludedGenres !== excludedGenres ||
+      prev.selectedFormats !== selectedFormats ||
+      prev.selectedStatuses !== selectedStatuses
+    ) {
+      setPage(1);
+      previousFiltersRef.current = { selectedGenres, excludedGenres, selectedFormats, selectedStatuses, storeSort };
+    }
+  }, [selectedGenres, excludedGenres, selectedFormats, selectedStatuses, storeSort]);
 
   const fetchCatalog = async (currentPage: number) => {
     const hasFilters = selectedGenres.length > 0 || excludedGenres.length > 0 || selectedFormats.length > 0 || selectedStatuses.length > 0;
@@ -201,9 +234,6 @@ function LibraryContent() {
     setQuery(searchInput.trim());
     setPage(1);
   };
-
-  const router = useRouter();
-  const pathname = usePathname();
 
   const handleTabChange = (newSort: string) => {
     setSort(newSort);

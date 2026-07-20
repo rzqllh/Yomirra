@@ -153,7 +153,7 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
                 Peringkat Populer
               </h2>
               {/* Auto height on mobile so items don't squish, fixed height on desktop */}
-              <div className="h-auto xl:h-[480px] bg-gradient-to-bl from-accent/5 to-accent/10 dark:from-surface-base dark:to-surface-overlay rounded-[2rem] p-4 sm:p-5 xl:p-6 border border-transparent dark:border-border-subtle flex flex-col gap-2 xl:justify-between overflow-hidden shadow-sm">
+              <div className="h-auto xl:h-[480px] bg-gradient-to-bl from-accent/5 to-accent/10 dark:from-surface-base dark:to-surface-overlay rounded-[2rem] p-4 sm:p-5 xl:p-6 border border-transparent dark:border-border-subtle flex flex-col gap-2 xl:justify-between overflow-hidden ">
                 {activeSourcePopular.map((manga, idx) => (
                   <div key={`${manga.sourceId}-${manga.id}`} className="flex-none xl:flex-1 flex flex-col justify-center min-h-0">
                     <LeaderboardRow 
