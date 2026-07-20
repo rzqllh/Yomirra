@@ -34,7 +34,7 @@ export function LeaderboardRow({ manga, sourceId, displayScore }: BaseCardProps)
       )}
 
       {/* Cover Image */}
-      <div className="relative w-[48px] h-[64px] sm:w-[56px] sm:h-[76px] shrink-0 bg-surface-base rounded-xl overflow-hidden shadow-sm group-hover:shadow-md transition-all">
+      <div className="relative w-[48px] h-[64px] sm:w-[56px] sm:h-[76px] shrink-0 bg-surface-base rounded-md overflow-hidden shadow-sm group-hover:shadow-md transition-all">
         {manga.coverUrl && !imageError ? (
           <img 
             src={manga.coverUrl} 
