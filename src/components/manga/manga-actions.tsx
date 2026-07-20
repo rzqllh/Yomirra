@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useLibraryStore } from "@/shared/store/library-store";
-import { GlobeHemisphereWest, BookmarkSimple, Check } from "@phosphor-icons/react";
+import { GlobeHemisphereWest, BookmarkSimple, Check, ShareNetwork, DownloadSimple } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { IconButton } from "@/components/ui/icon-button";
 import { MangaRating } from "./manga-rating";
@@ -62,39 +62,60 @@ export function MangaActions({
     if (manifestUrl) {
       window.open(manifestUrl, "_blank");
     } else {
-      toast.error("URL tidak tersedia");
+      toast.info("Source ini tidak menyediakan WebView");
     }
   };
 
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title,
+        url: window.location.href,
+      }).catch(console.error);
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      toast.success("Link berhasil disalin");
+    }
+  };
+
+  const handleDownload = () => {
+    toast.info("Fitur Download sedang dalam pengembangan", {
+      description: "Nantikan update selanjutnya!"
+    });
+  };
+
   return (
-    <div className="grid grid-cols-3 gap-3 w-full py-2">
+    <div className="grid grid-cols-4 gap-2 w-full py-2">
       <button
         onClick={handleToggle}
         className={cn(
-          "flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl transition-all duration-300 outline-none select-none",
+          "flex flex-col items-center justify-center gap-1.5 py-3 px-1 rounded-xl transition-all duration-300 outline-none select-none",
           isInLibrary 
             ? "bg-accent/10 border border-accent/20 text-accent shadow-sm" 
             : "bg-surface-raised border border-border-default text-text-secondary hover:bg-surface-hover hover:border-border-strong hover:text-text-primary active:scale-[0.98]"
         )}
       >
         {isInLibrary ? (
-          <Check size={24} weight="bold" />
+          <Check size={22} weight="bold" />
         ) : (
-          <BookmarkSimple size={24} weight="regular" />
+          <BookmarkSimple size={22} weight="regular" />
         )}
-        <span className="text-[11px] font-bold tracking-tight">
-          {isInLibrary ? "In Library" : "Add to Library"}
-        </span>
       </button>
 
       <MangaRating sourceId={sourceId} mangaId={mangaId} variant="action" />
 
       <button 
-        onClick={handleWebView}
-        className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl bg-surface-raised border border-border-default text-text-secondary hover:bg-surface-hover hover:border-border-strong hover:text-text-primary transition-all duration-300 outline-none select-none active:scale-[0.98]"
+        onClick={handleShare}
+        className="flex flex-col items-center justify-center gap-1.5 py-3 px-1 rounded-xl bg-surface-raised border border-border-default text-text-secondary hover:bg-surface-hover hover:border-border-strong hover:text-text-primary transition-all duration-300 outline-none select-none active:scale-[0.98]"
       >
-        <GlobeHemisphereWest size={24} weight="regular" />
-        <span className="text-[11px] font-bold tracking-tight">WebView</span>
+        <ShareNetwork size={22} weight="regular" />
+      </button>
+
+      <button 
+        onClick={handleWebView}
+        className="flex flex-col items-center justify-center gap-1.5 py-3 px-1 rounded-xl bg-surface-raised border border-border-default text-text-secondary hover:bg-surface-hover hover:border-border-strong hover:text-text-primary transition-all duration-300 outline-none select-none active:scale-[0.98]"
+      >
+        <GlobeHemisphereWest size={22} weight="regular" />
       </button>
     </div>
   );

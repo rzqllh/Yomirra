@@ -38,9 +38,7 @@ export async function GET(req: NextRequest) {
     }
   });
 
-  if (!q && Object.keys(filters).length === 0) {
-    return NextResponse.json({ error: { message: "Provide a search query or at least one filter" } }, { status: 400 });
-  }
+  // Removed 400 error for empty query so it can fallback to getLatest
 
   const queryStr = q || "";
 
@@ -71,13 +69,17 @@ export async function GET(req: NextRequest) {
             return;
           }
 
-          if (!source.capabilities.search) {
-            results[sourceId] = { results: [], error: "Search not supported by source" };
-            return;
-          }
-
           try {
-            const searchResult = await source.search(queryStr, page, Object.keys(filters).length > 0 ? filters : undefined);
+            let searchResult;
+            if (!queryStr && Object.keys(filters).length === 0) {
+              searchResult = await source.getLatest(page);
+            } else {
+              if (!source.capabilities.search) {
+                results[sourceId] = { results: [], error: "Search not supported by source" };
+                return;
+              }
+              searchResult = await source.search(queryStr, page, Object.keys(filters).length > 0 ? filters : undefined);
+            }
             results[sourceId] = {
               results: searchResult.mangas,
               hasNextPage: searchResult.hasNextPage,

@@ -53,7 +53,7 @@ export function FeaturedHeroCarousel({ sourceId, mangas }: FeaturedHeroCarouselP
 
   return (
     <div 
-      className="w-full h-full relative group bg-black isolate overflow-hidden"
+      className="w-full h-full relative group bg-black isolate overflow-hidden rounded-[32px]"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       onTouchStart={() => setIsPaused(true)}

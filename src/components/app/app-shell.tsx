@@ -63,9 +63,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         >
           {children}
         </main>
+        {!isReader && <BottomDock />}
       </div>
 
-      {!isReader && <BottomDock />}
       <CommandMenu />
     </div>
   )
