@@ -142,6 +142,12 @@ export class ShinigamiSource implements MangaSource {
     const res = await this.client.get<ShinigamiMangaListResponse>("/v1/manga/list", params);
     
     let filteredData = res.data;
+    if (included.length > 0) {
+      filteredData = filteredData.filter(manga => {
+        const mangaGenres = manga.taxonomy?.Genre?.map(g => g.slug) || [];
+        return included.every(g => mangaGenres.includes(g));
+      });
+    }
     if (excludedGenres.length > 0) {
       filteredData = filteredData.filter(manga => {
         const mangaGenres = manga.taxonomy?.Genre?.map(g => g.slug) || [];

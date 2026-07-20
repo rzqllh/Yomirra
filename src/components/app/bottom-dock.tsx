@@ -13,7 +13,7 @@ export function BottomDock() {
 
   return (
     <nav 
-      className="md:hidden sticky left-0 bottom-0 w-full z-[var(--z-sticky)] pointer-events-none px-4 pb-[env(safe-area-inset-bottom)]"
+      className="md:hidden fixed left-0 bottom-0 w-full z-[var(--z-sticky)] pointer-events-none px-4 pb-[env(safe-area-inset-bottom)]"
     >
       <div className="mx-auto flex w-fit max-w-full items-center justify-center gap-3 mb-6">
         <div className="pointer-events-auto flex h-[56px] w-fit items-center justify-between gap-1 rounded-full bg-surface-glass backdrop-blur-md px-1.5 shadow-sm border border-border-default/30">
