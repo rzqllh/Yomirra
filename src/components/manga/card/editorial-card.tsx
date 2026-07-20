@@ -42,7 +42,7 @@ export function EditorialCard({
         style={vtStyle}
       >
         {/* Cover Bento Cell */}
-        <div className="relative w-[80px] shrink-0 bg-surface-raised rounded-2xl overflow-hidden shadow-sm border border-border-subtle group-hover:border-accent/30 group-hover:shadow-accent/10 transition-all">
+        <div className="relative w-[80px] shrink-0 bg-surface-base rounded-2xl overflow-hidden group-hover:shadow-lg group-hover:shadow-accent/5 transition-all">
           {manga.coverUrl && !imageError ? (
             <img src={manga.coverUrl} alt={manga.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={() => setImageError(true)} referrerPolicy="no-referrer" loading="lazy" decoding="async" />
           ) : (
@@ -66,12 +66,12 @@ export function EditorialCard({
         </div>
 
         {/* Info Bento Cell */}
-        <div className="flex-1 bg-surface-raised rounded-2xl border border-border-subtle p-3.5 flex flex-col justify-center min-w-0 group-hover:bg-surface-overlay group-hover:border-accent/30 transition-all shadow-sm">
+        <div className="flex-1 p-3 flex flex-col justify-center min-w-0 transition-all bg-transparent">
           <div className="flex items-center gap-1.5 mb-2">
-            <span className="text-[9px] font-black uppercase text-accent bg-accent/10 px-2 py-0.5 rounded-md">{manga.status || "Ongoing"}</span>
-            {manga.format && <span className="text-[9px] font-black uppercase text-text-secondary bg-surface-base px-2 py-0.5 rounded-md">{manga.format}</span>}
+            <span className="text-[9px] font-bold uppercase text-accent bg-accent/10 px-2 py-0.5 rounded-md">{manga.status || "Ongoing"}</span>
+            {manga.format && <span className="text-[9px] font-bold uppercase text-text-secondary bg-surface-base px-2 py-0.5 rounded-md">{manga.format}</span>}
           </div>
-          <h4 className="font-bold text-sm md:text-base text-text-primary leading-snug truncate group-hover:text-accent transition-colors">
+          <h4 className="font-medium text-sm md:text-base text-text-primary leading-normal truncate group-hover:text-accent transition-colors">
             {manga.title}
           </h4>
           <div className="mt-1.5 flex items-center justify-between">
@@ -81,7 +81,7 @@ export function EditorialCard({
         </div>
 
         {/* Action/Rating Bento Cell */}
-        <div className="w-[48px] shrink-0 bg-surface-raised rounded-2xl border border-border-subtle flex flex-col items-center justify-center gap-3 shadow-sm group-hover:bg-surface-overlay group-hover:border-accent/30 transition-all relative overflow-hidden">
+        <div className="w-[48px] shrink-0 flex flex-col items-center justify-center gap-3 relative overflow-hidden bg-transparent">
             {/* Bookmark */}
             <div className="z-10 scale-90 relative" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
               <BookmarkButton sourceId={sourceId} manga={manga} />
