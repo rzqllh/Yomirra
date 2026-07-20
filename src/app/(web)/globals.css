@@ -419,5 +419,13 @@ body.reader-active {
 @media (min-width: 768px) {
   .vt-cover-mobile { view-transition-name: none !important; }
 }
-@media (max-width: 767px) { .vt-hover { view-transition-name: var(--vt-name); } }
-@media (min-width: 768px) { .vt-hover { view-transition-name: none; } .group:hover .vt-hover { view-transition-name: var(--vt-name); } }
+@media (max-width: 767px) { 
+  .vt-hover { view-transition-name: var(--vt-name); } 
+  .vt-title-hover { view-transition-name: var(--vt-title-name); } 
+}
+@media (min-width: 768px) { 
+  .vt-hover { view-transition-name: none; } 
+  .group:hover .vt-hover { view-transition-name: var(--vt-name); } 
+  .vt-title-hover { view-transition-name: none; } 
+  .group:hover .vt-title-hover { view-transition-name: var(--vt-title-name); } 
+}

@@ -14,6 +14,7 @@ import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry"
 import { toast } from "sonner"
 import { ToggleSwitch } from "@/components/ui/toggle-switch"
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store"
+import { useRouter } from "next/navigation"
 
 interface SourceCardProps {
   source: SourceMetadata
@@ -23,6 +24,7 @@ export function SourceCard({ source, onUpdate }: SourceCardProps & { onUpdate?: 
   const isDown = source.status !== "online" && source.status !== "slow";
   const [reportOpen, setReportOpen] = useState(false);
   const isCustom = !!source.manifestUrl;
+  const router = useRouter();
   
   const { isSourceDisabled, toggleSource } = useSourcePreferencesStore();
   // The source is considered "enabled" locally if it is NOT in the disabledSources array
@@ -95,6 +97,7 @@ export function SourceCard({ source, onUpdate }: SourceCardProps & { onUpdate?: 
                     toggleSource(source.id);
                     // Refresh current route to update SSR data based on new cookie
                     window.dispatchEvent(new Event("sources_updated"));
+                    router.refresh();
                   }}
                   title={isEnabled ? "Nonaktifkan Sumber" : "Aktifkan Sumber"}
                 />

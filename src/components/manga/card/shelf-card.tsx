@@ -28,7 +28,8 @@ export function ShelfCard({
 
   const safeId = `${sourceId}-${manga.id}`.replace(/[^a-zA-Z0-9-]/g, '-');
   const vtName = `manga-cover-${safeId}`;
-  const vtStyle = { '--vt-name': vtName } as React.CSSProperties;
+  const vtTitleName = `manga-title-${safeId}`;
+  const vtStyle = { '--vt-name': vtName, '--vt-title-name': vtTitleName } as React.CSSProperties;
 
   const scoreToDisplay = displayScore ?? manga.score;
   const sourceName = showSourceBadge ? (sourceRegistry.find(s => s.id === sourceId)?.name || sourceId) : null;
@@ -80,38 +81,38 @@ export function ShelfCard({
                 <span className="text-xs font-black text-text-primary">#{manga.rank}</span>
               </div>
             )}
-            
-            <div className="md:opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              <BookmarkButton sourceId={sourceId} manga={manga} />
-            </div>
+          </div>
+          
+          <div className="absolute top-2 right-2 z-20 md:opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <BookmarkButton sourceId={sourceId} manga={manga} />
           </div>
         </div>
 
-        <div className="flex flex-col px-1 mt-1.5">
-          <h3 className="truncate text-sm font-bold text-text-primary leading-tight mb-1 group-hover:text-accent transition-colors duration-200">
+        <div className="flex flex-col px-1 mt-1.5" style={vtStyle}>
+          <h3 className="truncate text-[13px] md:text-sm font-bold text-text-primary tracking-tight leading-snug mb-1 group-hover:text-accent transition-colors duration-200 vt-title-hover">
             {manga.title}
           </h3>
           
           {(showSourceBadge || manga.format) && (
             <div className="flex items-center gap-1.5 mb-1.5 min-w-0">
               {manga.format && (
-                <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider shrink-0">{manga.format}</span>
+                <span className="text-[9px] md:text-[10px] font-bold text-text-muted uppercase tracking-[0.05em] shrink-0">{manga.format}</span>
               )}
               {manga.format && showSourceBadge && sourceName && (
                 <span className="w-1 h-1 rounded-full bg-border-strong shrink-0" />
               )}
               {showSourceBadge && sourceName && (
-                <span className="text-[10px] font-bold text-accent uppercase tracking-wider truncate">{sourceName}</span>
+                <span className="text-[9px] md:text-[10px] font-bold text-accent uppercase tracking-[0.05em] truncate">{sourceName}</span>
               )}
             </div>
           )}
           
           <div className="flex items-center justify-between mt-auto">
-            <span className="text-xs font-medium text-text-muted truncate max-w-[70%]">
+            <span className="text-[11px] md:text-xs font-medium text-text-muted truncate max-w-[70%]">
               {manga.latestChapter || "Detail"}
             </span>
-            <span className="text-xs font-semibold flex items-center gap-1 text-text-muted shrink-0">
-              <Star weight="fill" className="text-semantic-warning" /> 
+            <span className="text-[11px] md:text-xs font-semibold flex items-center gap-1 text-text-muted shrink-0 tracking-tight">
+              <Star weight="fill" className="text-semantic-warning text-[10px] md:text-[12px]" /> 
               <span suppressHydrationWarning>{Number(scoreToDisplay) > 0 ? Number(scoreToDisplay).toFixed(1) : "-.-"}</span>
             </span>
           </div>

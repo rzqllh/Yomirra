@@ -43,7 +43,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id" className={plusJakartaSans.variable} suppressHydrationWarning>
-      <body className="min-h-screen antialiased overflow-x-hidden" suppressHydrationWarning>
+      <body className="min-h-screen antialiased" suppressHydrationWarning>
         <Providers>
           <OfflineProvider>
             <div vaul-drawer-wrapper="" className="bg-background min-h-screen">

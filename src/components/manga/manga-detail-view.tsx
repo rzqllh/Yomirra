@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useDeferredValue } from "react";
-import { Play, SortAscending, SortDescending, Book } from "@phosphor-icons/react";
+import { Play, SortAscending, SortDescending, Book, Bell } from "@phosphor-icons/react";
 import { CaretLeft } from "@phosphor-icons/react";
 import Image from "next/image";
 import Link from "next/link";
@@ -17,13 +17,16 @@ import { MangaRecommendations } from "@/components/manga/manga-recommendations";
 import { Star } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
-import { useVirtualizer } from '@tanstack/react-virtual';
+import { toast } from "sonner";
 import { useRef } from "react";
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { useSearchParams } from "next/navigation";
 import { SearchInput } from "@/components/ui/search-input";
 import { EmptyState } from "@/components/states/empty-state";
 import { cn } from "@/shared/utils/cn";
 import { motion, useScroll, useTransform } from "motion/react";
+import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
+import type { HTMLMotionProps } from "motion/react";
 import type { MangaDetail, Chapter } from "@/shared/types/source";
 
 const CHAPTER_ITEM_ESTIMATED_SIZE = 70;
@@ -31,6 +34,7 @@ const SCROLL_Y_RANGE = [50, 150];
 const HEADER_BG_OPACITY_RANGE = [0, 0.85];
 const HEADER_BLUR_RANGE = [0, 12];
 const HEADER_BORDER_OPACITY_RANGE = [0, 0.1];
+const HEADER_OPACITY_RANGE = [0, 1];
 
 interface MangaDetailViewProps {
   sourceId: string;
@@ -51,16 +55,19 @@ export function MangaDetailView({
   const isMounted = useMounted();
 
   const { data: ratingData } = useQuery({
-    queryKey: ["rating-score", detail.title],
+    queryKey: ["rating-score", sourceId, mangaId],
     queryFn: () => apiClient.getRatingScore(detail.title),
     staleTime: 1000 * 60 * 60, // 1 hour
     enabled: true,
   });
 
-  const displayScore = ratingData?.score ?? detail.score;
+  const ratingScore = ratingData?.score;
+  const displayScore = ratingScore ?? detail.score;
+  const sourceName = dynamicSourceRegistry.getSource(sourceId)?.name || sourceId;
 
   const safeId = `${sourceId}-${mangaId}`.replace(/[^a-zA-Z0-9-]/g, '-');
   const coverTransitionName = `manga-cover-${safeId}`;
+  const titleTransitionName = `manga-title-${safeId}`;
   
   const searchParams = useSearchParams();
   const returnTo = searchParams.get("returnTo");
@@ -107,20 +114,50 @@ export function MangaDetailView({
 
   const { scrollY } = useScroll();
   const headerBgOpacity = useTransform(scrollY, SCROLL_Y_RANGE, HEADER_BG_OPACITY_RANGE);
-  const headerBackdropBlur = useTransform(scrollY, SCROLL_Y_RANGE, HEADER_BLUR_RANGE);
+  const headerBlur = useTransform(scrollY, SCROLL_Y_RANGE, HEADER_BLUR_RANGE);
   const headerBorderOpacity = useTransform(scrollY, SCROLL_Y_RANGE, HEADER_BORDER_OPACITY_RANGE);
+  const headerOpacity = useTransform(scrollY, SCROLL_Y_RANGE, HEADER_OPACITY_RANGE);
+  
+  // Parallax for desktop cover
+  const desktopCoverY = useTransform(scrollY, [0, 600], [0, 80]);
+
+  const revealProps: HTMLMotionProps<"div"> = {
+    initial: { opacity: 0, y: 30 },
+    whileInView: { opacity: 1, y: 0 },
+    viewport: { once: true, margin: "-40px" },
+    transition: { duration: 0.5, ease: "easeOut" }
+  };
+
+  // Calculate Progress
+  const continueIdx = chapters ? [...chapters].reverse().findIndex(c => c.id === continueChapterId) + 1 : 0;
+  const progressPercent = chapters?.length ? (continueIdx / chapters.length) * 100 : 0;
+
+  const renderProgress = () => {
+    if (!chapters || chapters.length === 0 || !showContinue) return null;
+    return (
+      <div className="bg-surface-raised/50 dark:bg-surface-raised/30 rounded-xl p-4 border border-border-glass flex flex-col gap-3 mt-1">
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] font-black tracking-widest uppercase text-text-muted">Progress Membaca</span>
+          <span className="text-[11px] font-bold text-text-secondary">{continueIdx} / {chapters.length} Chapter</span>
+        </div>
+        <div className="w-full h-2 bg-black/5 dark:bg-white/10 rounded-full overflow-hidden shadow-inner">
+          <div className="h-full bg-accent rounded-full transition-all duration-500 ease-out" style={{ width: `max(4px, ${progressPercent}%)` }} />
+        </div>
+      </div>
+    );
+  };
 
   const renderMainAction = () => (
-    <div className="w-full mt-1 mb-4">
+    <div className="w-full flex flex-col gap-3 mt-1">
       {showContinue && continueChapterId ? (
-        <Button asChild variant="accent" className="w-full rounded-2xl h-14 text-base font-bold shadow-md active:scale-[0.98] transition-all">
+        <Button asChild variant="accent" className="w-full rounded-2xl h-14 text-base font-bold active:scale-[0.98] transition-all">
           <Link href={getReaderHref(sourceId, mangaId, continueChapterId)}>
             <Play className="h-6 w-6 mr-1" fill="currentColor" weight="fill" />
             Lanjutkan {continueChapterLabel}
           </Link>
         </Button>
       ) : startChapterId ? (
-        <Button asChild variant="accent" className="w-full rounded-2xl h-14 text-base font-bold shadow-md active:scale-[0.98] transition-all">
+        <Button asChild variant="accent" className="w-full rounded-2xl h-14 text-base font-bold shadow-md shadow-accent/20 active:scale-[0.98] transition-all">
           <Link href={getReaderHref(sourceId, mangaId, startChapterId)}>
             <Play className="h-6 w-6 mr-1" fill="currentColor" weight="fill" />
             Mulai Baca
@@ -148,210 +185,235 @@ export function MangaDetailView({
   );
 
   return (
-    <main className="min-h-screen flex flex-col w-full relative pb-[calc(var(--bottom-nav-height,80px)+24px)] md:pb-12">
-      <div 
-        className="fixed top-[calc(var(--safe-top)+12px)] left-4 right-4 z-50 md:hidden flex items-center gap-3 pointer-events-none"
-      >
-        <div className="bg-surface-glass backdrop-blur-md rounded-full w-[46px] h-[46px] pointer-events-auto shrink-0 flex items-center justify-center">
-          <Link 
-            href={backHref}
-            className="flex items-center justify-center min-w-[44px] min-h-[44px] rounded-full text-text-primary hover:bg-black/5 dark:hover:bg-surface-hover transition-colors drop-shadow-sm"
-          >
-            <CaretLeft size={20} weight="bold" />
-          </Link>
-        </div>
-        <motion.div 
-          className="flex-1 bg-surface-glass backdrop-blur-md rounded-full px-4 h-[46px] pointer-events-auto overflow-hidden flex items-center justify-center"
-          style={{ opacity: useTransform(scrollY, [80, 150], [0, 1]) }}
-        >
-          <span className="font-bold text-sm line-clamp-1 text-text-primary text-center">
-            {detail.title}
-          </span>
-        </motion.div>
-      </div>
-
-      <style dangerouslySetInnerHTML={{ __html: `
-        @media (max-width: 767px) { .vt-cover-mobile { view-transition-name: ${coverTransitionName}; } }
-        @media (min-width: 768px) { .vt-cover-desktop { view-transition-name: ${coverTransitionName}; } }
-      `}} />
-
+    <main className="min-h-screen flex flex-col w-full relative pb-[calc(var(--bottom-nav-height,80px)+24px)] md:pb-12 text-text-primary">
+      {/* ── Background (Glassmorphism Tint) ── */}
       <div className="fixed inset-0 w-full h-full overflow-hidden z-0 pointer-events-none select-none bg-background [contain:strict]">
         {detail.coverUrl && (
             <Image
               src={detail.coverUrl}
               alt=""
               fill
-              className="object-cover opacity-40 blur-[60px] scale-[1.1] saturate-[1.3] brightness-50 md:brightness-75 transform-gpu will-change-transform"
+              className="object-cover opacity-[0.6] dark:opacity-40 blur-[80px] scale-[1.2] saturate-[1.5] transform-gpu will-change-transform"
               unoptimized
               priority
             />
         )}
-        <div className="absolute inset-0 bg-surface-base/60" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/90 to-background" />
+        <div className="absolute inset-0 bg-surface-base/20 dark:bg-surface-base/50" />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-surface-base/60 to-surface-base/95" />
       </div>
 
-      <div className="w-full max-w-7xl mx-auto px-4 md:px-8 pt-20 md:pt-12 relative z-10 flex flex-col md:flex-row gap-6 md:gap-10">
+      {/* ── Mobile Sticky Header ── */}
+      <div className="fixed top-[calc(var(--safe-top)+12px)] left-4 right-4 z-50 md:hidden flex items-center gap-3 pointer-events-none">
+        <div className="bg-surface-glass backdrop-blur-xl border border-border-glass shadow-glass rounded-full w-[46px] h-[46px] pointer-events-auto shrink-0 flex items-center justify-center">
+          <Link 
+            href={backHref}
+            replace={true}
+            aria-label="Kembali"
+            className="flex items-center justify-center min-w-[44px] min-h-[44px] rounded-full text-text-primary hover:bg-black/5 dark:hover:bg-surface-hover transition-colors drop-shadow-sm"
+          >
+            <CaretLeft size={24} weight="bold" />
+          </Link>
+        </div>
+        <motion.div 
+          className="flex-1 bg-surface-glass backdrop-blur-xl border border-border-glass shadow-glass rounded-full px-4 h-[46px] pointer-events-auto overflow-hidden flex items-center justify-center vt-title-mobile"
+          style={{ opacity: headerOpacity }}
+        >
+          <span className="font-bold text-sm line-clamp-1 text-text-primary text-center">
+            {detail.title}
+          </span>
+        </motion.div>
+        <div className="bg-surface-glass backdrop-blur-xl border border-border-glass shadow-glass rounded-full w-[46px] h-[46px] pointer-events-auto shrink-0 flex items-center justify-center">
+          <button 
+            aria-label="Notifikasi"
+            className="flex items-center justify-center min-w-[44px] min-h-[44px] rounded-full text-text-primary hover:bg-black/5 dark:hover:bg-surface-hover transition-colors drop-shadow-sm"
+            onClick={() => toast.info("Fitur Notifikasi sedang dalam pengembangan", {
+              description: "Nantikan update selanjutnya!"
+            })}
+          >
+            <Bell size={20} weight="regular" />
+          </button>
+        </div>
+      </div>
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media (max-width: 767px) { 
+          .vt-cover-mobile { view-transition-name: ${coverTransitionName}; } 
+          .vt-title-mobile { view-transition-name: ${titleTransitionName}; } 
+        }
+        @media (min-width: 768px) { 
+          .vt-cover-desktop { view-transition-name: ${coverTransitionName}; } 
+          .vt-title-desktop { view-transition-name: ${titleTransitionName}; } 
+        }
+      `}} />
+
+      {/* ── Main Content Container ── */}
+      <div className="w-full max-w-5xl mx-auto px-4 md:px-8 pt-20 md:pt-16 relative z-10 flex flex-col md:flex-row gap-5 md:gap-8">
         
-        <div className="flex gap-4 md:hidden">
-          <div 
-            className="relative w-[110px] shrink-0 aspect-[2/3] rounded-md overflow-hidden shadow-heavy border border-border-default bg-surface-base vt-cover-mobile"
-          >
-            {coverUrl && (
-              <Image 
-                src={coverUrl} 
-                alt={detail.title} 
-                fill
-                sizes="110px"
-                className="object-cover" 
-                priority
-                unoptimized
-              />
-            )}
+        {/* ── Left Column (Desktop Cover & Actions) ── */}
+        <div className="hidden md:flex sticky self-start w-[280px] lg:w-80 shrink-0 flex-col gap-5">
+          <div className="relative w-full aspect-[2/3] rounded-[32px] overflow-hidden shadow-glass border border-border-glass bg-surface-glass/95 backdrop-blur-3xl p-4">
+             <motion.div 
+               style={{ y: desktopCoverY }}
+               className="relative w-full h-full rounded-[20px] overflow-hidden shadow-heavy border border-white/10 vt-cover-desktop"
+             >
+               {coverUrl && (
+                 <Image 
+                   src={coverUrl} 
+                   alt={detail.title} 
+                   fill
+                   sizes="(min-width: 768px) 280px, (min-width: 1024px) 320px, 100vw"
+                   className="object-cover" 
+                   priority
+                   unoptimized
+                 />
+               )}
+             </motion.div>
           </div>
-          <div className="flex flex-col flex-1 justify-center py-1">
-            <h1 className="text-xl font-bold leading-snug line-clamp-4 text-shadow-sm">{detail.title}</h1>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <span className="flex items-center justify-center bg-surface-raised border border-border-default px-2 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider text-text-secondary gap-1">
-                <Star weight="fill" className="text-semantic-warning" size={12} />
-                <span suppressHydrationWarning>{Number(displayScore) > 0 ? Number(displayScore).toFixed(1) : "-.-"}</span>
-              </span>
-              <span className="flex items-center justify-center bg-surface-raised border border-border-default px-2 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider text-text-secondary">
-                {detail.status}
-              </span>
-              <span className="flex items-center justify-center bg-surface-raised border border-border-default px-2 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider text-text-secondary">
-                {detail.format || 'COMIC'}
-              </span>
-              <span className="flex items-center justify-center bg-surface-raised border border-border-default px-2 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider text-accent">
-                {sourceId}
-              </span>
-            </div>
-            
-            <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-              <div className="flex flex-col">
-                <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider">Author</span>
-                <span className="font-semibold text-text-primary truncate">{detail.author || '-'}</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider">Artist</span>
-                <span className="font-semibold text-text-primary truncate">{detail.artist || detail.author || '-'}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-1 mt-4 md:hidden">
-          {renderMainAction()}
-          {renderActions()}
-        </div>
-
-        <div className="hidden md:flex relative sticky top-[100px] self-start w-[280px] lg:w-80 shrink-0 flex-col gap-4">
-          <div 
-            className="relative w-full aspect-[2/3] rounded-lg overflow-hidden shadow-heavy border border-border-default bg-surface-base vt-cover-desktop"
-          >
-            {coverUrl && (
-              <Image 
-                src={coverUrl} 
-                alt={detail.title} 
-                fill
-                sizes="(min-width: 768px) 280px, (min-width: 1024px) 320px, 100vw"
-                className="object-cover" 
-                priority
-                unoptimized
-              />
-            )}
-          </div>
-          <div className="flex flex-col gap-1 mt-2">
+          
+          <div className="bg-surface-glass/95 backdrop-blur-3xl border border-border-glass shadow-glass rounded-[32px] p-6 flex flex-col gap-4">
             {renderMainAction()}
+            {renderProgress()}
             {renderActions()}
           </div>
+
         </div>
 
-        <div className="flex-1 flex flex-col min-w-0">
-          <div className="flex flex-col gap-4">
-            
-            <div className="hidden md:flex flex-col gap-5">
-              <h1 className="text-4xl lg:text-5xl font-bold tracking-tight text-text-primary leading-tight text-balance">
-                {detail.title}
-              </h1>
+        {/* ── Right Column / Mobile Main Flow ── */}
+        <div className="flex-1 flex flex-col min-w-0 gap-4 md:gap-6">
+          
+          {/* Mobile Cover + Meta + Actions Card */}
+          <div className="relative z-10 w-full mt-[calc(var(--safe-top))] flex flex-col gap-4 md:hidden">
+            <div className="rounded-[32px] border border-border-glass bg-surface-glass/95 dark:bg-surface-glass backdrop-blur-3xl shadow-glass p-5 flex flex-col gap-5">
               
-              <div className="flex flex-wrap gap-2">
-                <span className="flex items-center justify-center bg-surface-raised border border-border-default px-2.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider text-text-secondary gap-1">
-                  <Star weight="fill" className="text-semantic-warning" size={14} />
-                  <span suppressHydrationWarning>{Number(displayScore) > 0 ? Number(displayScore).toFixed(1) : "-.-"}</span>
-                </span>
-                <span className="flex items-center justify-center bg-surface-raised border border-border-default px-2.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider text-text-secondary">
+              <div className="flex gap-5">
+                <div className="relative w-36 shrink-0 aspect-[2/3] rounded-2xl overflow-hidden shadow-glass border border-border-glass bg-surface-glass vt-cover-mobile">
+                  {detail.coverUrl ? (
+                    <Image
+                      src={detail.coverUrl}
+                      alt={detail.title}
+                      fill
+                      className="object-cover"
+                      unoptimized
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-surface-raised flex items-center justify-center">
+                      <Book size={32} weight="duotone" className="text-text-muted" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-col flex-1 py-1 overflow-hidden">
+                  <div className="flex items-center gap-1.5 flex-wrap mb-2">
+                    <span className="flex items-center gap-1 text-[11px] font-black tracking-widest uppercase text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+                      <Star weight="fill" size={10} />
+                      <span suppressHydrationWarning>{Number(displayScore) > 0 ? Number(displayScore).toFixed(1) : "-.-"}</span>
+                    </span>
+                    {detail.status && (
+                      <span className="flex items-center justify-center bg-surface-raised border border-border-default px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider text-text-secondary">
+                        {detail.status}
+                      </span>
+                    )}
+                    {detail.format && (
+                      <span className="flex items-center justify-center bg-accent/10 border border-accent/20 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider text-accent">
+                        {detail.format}
+                      </span>
+                    )}
+                    <span className="flex items-center justify-center bg-surface-raised border border-border-default px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider text-text-secondary">
+                      {sourceName}
+                    </span>
+                  </div>
+                  <h1 className="text-xl font-black tracking-tight text-text-primary leading-[1.1] line-clamp-3 text-balance drop-shadow-sm mb-1">
+                    {detail.title}
+                  </h1>
+                  <p className="text-xs font-semibold text-text-secondary line-clamp-1 mt-auto">
+                    {detail.author || 'Unknown'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Injected Actions for Mobile */}
+              <div className="flex flex-col gap-3 pt-3 border-t border-border-glass">
+                {renderMainAction()}
+                {renderProgress()}
+                {renderActions()}
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop Title & Info Header */}
+          <div className="hidden md:flex flex-col gap-4 mb-2">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="flex items-center gap-1.5 text-xs font-black tracking-widest uppercase text-amber-500 bg-amber-500/10 px-3 py-1.5 rounded-full border border-amber-500/20 shadow-sm">
+                <Star weight="fill" size={12} />
+                <span suppressHydrationWarning>{Number(displayScore) > 0 ? Number(displayScore).toFixed(1) : "-.-"}</span>
+              </span>
+              {detail.status && (
+                <span className="flex items-center justify-center bg-surface-raised border border-border-default px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider text-text-secondary shadow-sm">
                   {detail.status}
                 </span>
-                <span className="flex items-center justify-center bg-surface-raised border border-border-default px-2.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider text-text-secondary">
-                  {detail.format || 'COMIC'}
-                </span>
-                <span className="flex items-center justify-center bg-surface-raised border border-border-default px-2.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider text-accent">
-                  {sourceId}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm bg-surface-raised/50 border border-border-subtle rounded-xl p-4">
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-[11px] font-bold text-text-muted uppercase tracking-wider">Author</span>
-                  <span className="font-semibold text-text-primary">{detail.author || '-'}</span>
-                </div>
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-[11px] font-bold text-text-muted uppercase tracking-wider">Artist</span>
-                  <span className="font-semibold text-text-primary">{detail.artist || detail.author || '-'}</span>
-                </div>
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-[11px] font-bold text-text-muted uppercase tracking-wider">Chapters</span>
-                  <span className="font-semibold text-text-primary">{chapters?.length || 0}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-2 md:mt-4 px-1">
-              <p className={cn(
-                "text-[15px] md:text-base leading-relaxed text-text-secondary break-words transition-all", 
-                !isExpanded && "line-clamp-4" 
-              )}>
-                {detail.description?.replace(/\s+/g, ' ').trim() || "Sinopsis belum tersedia."}
-              </p>
-              
-              {detail.description && detail.description.length > 200 && (
-                <button 
-                  onClick={() => setIsExpanded(!isExpanded)}
-                  className="mt-2 text-sm font-semibold text-accent hover:text-accent-hover transition-colors inline-flex items-center gap-1"
-                >
-                  {isExpanded ? "Tampilkan lebih sedikit" : "Selengkapnya"}
-                </button>
               )}
-            </div>
-
-            <div className="flex flex-wrap gap-1.5 mt-3 md:mt-2">
               {detail.format && (
-                <span className="rounded-sm bg-surface-overlay px-2 py-1 text-[11px] font-semibold text-text-primary border border-border-default uppercase tracking-wider">
+                <span className="flex items-center justify-center bg-accent/10 border border-accent/20 px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider text-accent shadow-sm">
                   {detail.format}
                 </span>
               )}
+              <span className="flex items-center justify-center bg-surface-raised border border-border-default px-3 py-1.5 rounded-full text-[11px] font-bold tracking-wider text-text-secondary shadow-sm">
+                {sourceName}
+              </span>
+            </div>
+            <h1 className="text-4xl lg:text-5xl font-black tracking-tighter text-text-primary leading-[1.1] text-balance drop-shadow-sm vt-title-desktop">
+              {detail.title}
+            </h1>
+            <p className="text-sm font-semibold text-text-secondary">
+              {detail.author || 'Unknown'}
+            </p>
+          </div>
+
+          {/* Synopsis Card */}
+          <motion.div 
+            {...revealProps}
+            className="rounded-[32px] border border-border-glass bg-surface-glass/95 backdrop-blur-3xl shadow-glass p-6 md:p-8"
+          >
+            <span className="text-[11px] font-black text-text-muted uppercase tracking-widest block mb-3">Sinopsis</span>
+            <p className={cn(
+              "text-sm md:text-base leading-relaxed text-text-secondary break-words transition-all", 
+              !isExpanded && "line-clamp-4" 
+            )}>
+              {detail.description?.replace(/\s+/g, ' ').trim() || "Sinopsis belum tersedia."}
+            </p>
+            {detail.description && detail.description.length > 200 && (
+              <button 
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="mt-3 text-sm font-bold text-accent hover:text-accent-hover transition-colors inline-flex items-center gap-1"
+              >
+                {isExpanded ? "Tampilkan lebih sedikit" : "Selengkapnya"}
+              </button>
+            )}
+            
+            <div className="mt-5 md:mt-6 flex flex-wrap gap-2">
               {detail.genres?.map((g) => (
                 <Link 
                   key={g} 
                   href={`/library?source=${sourceId}&genre=${encodeURIComponent(g)}`}
-                  className="rounded-sm bg-surface-overlay px-2 py-1 text-[11px] font-semibold text-text-primary border border-border-default uppercase tracking-wider hover:bg-accent/10 hover:text-accent hover:border-accent transition-colors"
+                  className="rounded-lg bg-surface-overlay/50 px-3 py-1.5 text-xs font-bold text-text-primary border border-border-glass  uppercase tracking-wider hover:bg-accent/15 hover:text-accent hover:border-accent/40 transition-colors"
                 >
                   {g}
                 </Link>
               ))}
             </div>
-          </div>
+          </motion.div>
 
-          <div className="mt-8 md:mt-10">
-            <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between border-b border-border-default pb-3 gap-4">
+          {/* Chapters Card */}
+          <motion.div 
+            {...revealProps}
+            className="rounded-[32px] border border-border-glass bg-surface-glass/95 backdrop-blur-3xl shadow-glass p-5 md:p-8 flex flex-col overflow-hidden"
+          >
+            <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between border-b border-border-glass pb-4 gap-4">
               <div className="flex items-center gap-3 w-full sm:w-auto">
-                <div className="flex flex-col">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl md:text-2xl font-bold tracking-tight text-text-primary">{chapters?.length || 0} chapters</span>
-                  </div>
-                </div>
+                <span className="text-lg md:text-xl font-black tracking-tight text-text-primary">
+                  {chapters?.length || 0} Chapter
+                </span>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <SearchInput 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -359,9 +421,9 @@ export function MangaDetailView({
                   containerClassName="w-full sm:w-[220px]"
                 />
                 <IconButton 
-                  variant="ghost" 
+                  variant="surface" 
                   size="sm"
-                  className="min-h-[44px] min-w-[44px]"
+                  className="min-h-[44px] min-w-[44px] bg-surface-raised/50 border-border-glass"
                   onClick={() => setSortOrder(prev => prev === "desc" ? "asc" : "desc")}
                   aria-label={sortOrder === "desc" ? "Urutkan paling lama" : "Urutkan terbaru"}
                 >
@@ -375,12 +437,12 @@ export function MangaDetailView({
                 icon={<Book size={32} weight="duotone" />}
                 title="Belum ada chapter"
                 description="Manga ini belum memiliki chapter atau sedang error saat memuat data."
-                className="my-8"
+                className="my-6"
               />
             ) : (
               <div 
                 ref={parentRef}
-                className="flex flex-col max-h-[60vh] md:max-h-[500px] overflow-y-auto pr-2 -mr-2 [scrollbar-width:thin]"
+                className="flex flex-col max-h-[60vh] md:max-h-[500px] overflow-y-auto overflow-x-hidden pr-2 -mr-2 [scrollbar-width:thin]"
               >
                 <div
                   style={{
@@ -424,13 +486,16 @@ export function MangaDetailView({
                 </div>
               </div>
             )}
-          </div>
+          </motion.div>
 
-          <MangaRecommendations 
-            sourceId={sourceId}
-            currentMangaId={mangaId}
-            genres={detail.genres || []}
-          />
+          <motion.div {...revealProps} className="mt-4">
+            <MangaRecommendations 
+              sourceId={sourceId}
+              currentMangaId={mangaId}
+              genres={detail.genres || []}
+            />
+          </motion.div>
+
         </div>
       </div>
     </main>
