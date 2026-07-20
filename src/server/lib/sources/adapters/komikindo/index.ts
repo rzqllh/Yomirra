@@ -84,27 +84,34 @@ export class KomikindoSource implements MangaSource {
   }
 
   async search(query: string, page: number, filters?: Record<string, string | string[]>): Promise<MangaPageResult> {
+    const params: Record<string, any> = { s: query || "" };
+
     if (filters && Object.keys(filters).length > 0) {
-      // Allow only sort filter if it's the only one, otherwise throw error
-      const keys = Object.keys(filters);
-      if (keys.length > 1 || keys[0] !== "sort") {
-        throw new Error("Filter pencarian (Genre, Status, Tipe) belum didukung untuk sumber Komikindo.");
-      }
-      
-      const sort = Array.isArray(filters.sort) ? filters.sort[0] : filters.sort;
-      if (sort === "latest" && !query) {
-        return this.getLatest(page);
-      }
-      if (sort === "popular" && !query) {
-        return this.getPopular(page);
-      }
+      Object.entries(filters).forEach(([k, v]) => {
+        if (k === "sort") {
+          const sortVal = Array.isArray(v) ? v[0] : v;
+          if (sortVal === "latest") params["order"] = "update";
+          else if (sortVal === "popular") params["order"] = "popular";
+          else params["order"] = sortVal;
+        } else if (k === "genre[]") {
+          // Komikindo uses genre[] as array of strings
+          const items = Array.isArray(v) ? v : [v];
+          // Komikindo genres in URL are usually lowercase, like 'action'
+          params["genre[]"] = items.map(g => g.toLowerCase().replace(/\s+/g, '-'));
+        } else {
+          params[k] = Array.isArray(v) ? v.join(",") : v;
+        }
+      });
     }
 
-    if (!query) {
-      throw new Error("Masukkan kata kunci pencarian atau gunakan sumber lain.");
+    // If no query and no genre filters but we have a basic sort, we can use the dedicated routes for performance.
+    if (!query && !params["genre[]"]) {
+       if (params["order"] === "update") return this.getLatest(page);
+       if (params["order"] === "popular") return this.getPopular(page);
     }
 
-    const html = await this.client.getHtml(`/page/${page}/`, { s: query });
+    // Advanced search endpoint
+    const html = await this.client.getHtml(`/manga/page/${page}/`, params);
     return this.parseMangaList(html);
   }
 

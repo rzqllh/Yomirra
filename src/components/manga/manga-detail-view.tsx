@@ -63,7 +63,7 @@ export function MangaDetailView({
 
   const ratingScore = ratingData?.score;
   const displayScore = ratingScore ?? detail.score;
-  const sourceName = dynamicSourceRegistry.getSource(sourceId)?.name || sourceId;
+  const sourceName = dynamicSourceRegistry.get(sourceId)?.name || sourceId;
 
   const safeId = `${sourceId}-${mangaId}`.replace(/[^a-zA-Z0-9-]/g, '-');
   const coverTransitionName = `manga-cover-${safeId}`;
