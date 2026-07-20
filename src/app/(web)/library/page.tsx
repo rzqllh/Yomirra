@@ -387,7 +387,7 @@ function LibraryContent() {
           ) : isLoading ? (
             <div className={cn(
               viewMode === "grid" 
-                ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-5"
+                ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-3 gap-y-6 sm:gap-x-4 sm:gap-y-8 md:gap-x-5 md:gap-y-10"
                 : "flex flex-col gap-3"
             )}>
               {Array.from({ length: 12 }).map((_, i) => (
@@ -413,7 +413,7 @@ function LibraryContent() {
               {/* Opacity transition when fetching next/prev pages */}
               <motion.div layout className={cn(
                 viewMode === "grid" 
-                  ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-5"
+                  ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-3 gap-y-6 sm:gap-x-4 sm:gap-y-8 md:gap-x-5 md:gap-y-10"
                   : "flex flex-col gap-3",
                 "transition-opacity duration-200",
                 isFetching ? "opacity-50 pointer-events-none" : "opacity-100"

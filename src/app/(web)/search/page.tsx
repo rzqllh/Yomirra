@@ -304,7 +304,7 @@ function SearchContent() {
                   ({searchMangas.length} judul)
                 </span>
               </h2>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+              <div className="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 sm:gap-x-4 sm:gap-y-8 md:grid-cols-4 md:gap-x-5 md:gap-y-10 lg:grid-cols-5 xl:grid-cols-6">
                 {searchMangas.map((item) => (
                   <ShelfCard 
                     key={`${item.sourceId}-${item.manga.id}`}

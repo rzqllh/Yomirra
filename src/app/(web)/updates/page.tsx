@@ -41,7 +41,7 @@ async function LatestFeed({ sourceId, sourceName }: { sourceId: string; sourceNa
         </Link>
       </div>
       
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 md:gap-5 px-4 md:px-0">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-x-3 gap-y-6 sm:gap-x-4 sm:gap-y-8 md:gap-x-5 md:gap-y-10 px-4 md:px-0">
         {latest.mangas.slice(0, 12).map((manga: any) => (
           <ShelfCard key={manga.id} manga={manga} sourceId={sourceId} />
         ))}
