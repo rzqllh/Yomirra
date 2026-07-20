@@ -49,7 +49,7 @@ export function ShelfCard({
         aria-label={`Read ${manga.title}`}
       >
         <div 
-          className="relative w-full aspect-[2/3] overflow-hidden rounded-2xl bg-surface-glass border-border-subtle shadow-sm mb-3 vt-hover"
+          className="relative w-full aspect-[2/3] overflow-hidden rounded-2xl bg-surface-base border-none shadow-none mb-3 vt-hover"
           style={vtStyle}
         >
           {manga.coverUrl && !imageError ? (
@@ -88,24 +88,22 @@ export function ShelfCard({
           </div>
         </div>
 
-        <div className="flex flex-col px-1 mt-1.5" style={vtStyle}>
-          <h3 className="truncate text-[13px] md:text-sm font-bold text-text-primary tracking-tight leading-snug mb-1 group-hover:text-accent transition-colors duration-200 vt-title-hover">
+        <div className="flex flex-col px-2 mt-2" style={vtStyle}>
+          <h3 className="truncate text-[13px] md:text-sm font-medium text-text-primary tracking-tight leading-normal mb-1.5 group-hover:text-accent transition-colors duration-200 vt-title-hover">
             {manga.title}
           </h3>
           
-          {(showSourceBadge || manga.format) && (
-            <div className="flex items-center gap-1.5 mb-1.5 min-w-0">
-              {manga.format && (
-                <span className="text-[9px] md:text-[10px] font-bold text-text-muted uppercase tracking-[0.05em] shrink-0">{manga.format}</span>
-              )}
-              {manga.format && showSourceBadge && sourceName && (
-                <span className="w-1 h-1 rounded-full bg-border-strong shrink-0" />
-              )}
-              {showSourceBadge && sourceName && (
-                <span className="text-[9px] md:text-[10px] font-bold text-accent uppercase tracking-[0.05em] truncate">{sourceName}</span>
-              )}
-            </div>
-          )}
+          <div className="flex items-center gap-1.5 mb-1.5 min-w-0">
+            {manga.format && (
+              <span className="text-[10px] font-medium text-text-muted uppercase tracking-[0.05em] shrink-0">{manga.format}</span>
+            )}
+            {manga.format && showSourceBadge && sourceName && (
+              <span className="w-1 h-1 rounded-full bg-border-strong shrink-0" />
+            )}
+            {showSourceBadge && sourceName && (
+              <span className="text-[9px] md:text-[10px] font-bold text-accent uppercase tracking-[0.05em] truncate">{sourceName}</span>
+            )}
+          </div>
           
           <div className="flex items-center justify-between mt-auto">
             <span className="text-[11px] md:text-xs font-medium text-text-muted truncate max-w-[70%]">
