@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Warning, X } from "@phosphor-icons/react";
 import { YomirraSurface } from "@/components/ui/layout";
+import { IconButton } from "@/components/ui/icon-button";
 
 export function StorageWarningBanner() {
   const [isVisible, setIsVisible] = useState(false);
@@ -35,16 +36,17 @@ export function StorageWarningBanner() {
           Safari membatasi penyimpanan offline sekitar 50MB. Kosongkan unduhan yang sudah selesai jika unduhan baru mulai gagal atau terhenti.
         </p>
       </div>
-      <button 
+      <IconButton
         onClick={() => {
           setIsVisible(false);
           localStorage.setItem("yomirra_storage_warning_dismissed", "true");
         }}
-        className="absolute top-2 right-2 text-text-muted hover:text-text-primary p-2"
-        aria-label="Tutup"
+        aria-label="Tutup Peringatan"
+        variant="ghost"
+        className="absolute top-2 right-2 h-8 w-8 text-semantic-warning hover:bg-semantic-warning/10 transition-colors"
       >
-        <X size={16} />
-      </button>
+        <X size={16} weight="bold" />
+      </IconButton>
     </YomirraSurface>
   );
 }
