@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { UserCircle, SignOut, Broom, Palette, HandTap, ShieldWarning, WifiHigh, Lightning, Fire, PuzzlePiece, Spinner, ArrowsClockwise, DeviceMobile } from "@phosphor-icons/react";
+import { UserCircle, SignOut, Broom, Palette, HandTap, ShieldWarning, WifiHigh, Lightning, Fire, PuzzlePiece, Spinner, ArrowsClockwise, DeviceMobile, Download } from "@phosphor-icons/react";
 import { useAuth } from "@/shared/hooks/use-auth";
 import { useSync } from "@/shared/hooks/use-sync";
 import { Button } from "@/components/ui/button";
@@ -179,6 +179,14 @@ export default function SettingsPage() {
 
             {/* Pintasan Navigasi */}
             <SettingsSection title="Pintasan Navigasi">
+              <Link href="/downloads" className="block outline-none">
+                <SettingsItem
+                  icon={<IconWrapper variant="accent"><Download size={20} weight="duotone" /></IconWrapper>}
+                  title="Manajer Unduhan"
+                  description="Kelola unduhan chapter offline."
+                  onClick={() => {}}
+                />
+              </Link>
               <Link href="/updates" className="block outline-none">
                 <SettingsItem
                   icon={<IconWrapper variant="accent"><Lightning size={20} weight="duotone" /></IconWrapper>}

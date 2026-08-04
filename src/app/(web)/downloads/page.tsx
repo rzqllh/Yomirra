@@ -10,9 +10,11 @@ import { YomirraSection, YomirraSurface } from "@/components/ui/layout";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/states/empty-state";
 import { StorageWarningBanner } from "@/components/downloads/storage-warning-banner";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
 
 export default function DownloadsPage() {
-  const { downloads, removeDownload, pauseDownload, resumeDownload, cancelDownload, retryDownload, clearDownloads } = useDownloadStore();
+  const { downloads, removeDownload, removeDownloads, pauseDownload, resumeDownload, cancelDownload, retryDownload, clearDownloads } = useDownloadStore();
   const [storageInfo, setStorageInfo] = useState<{ usage: number; quota: number } | null>(null);
 
   useEffect(() => {
@@ -29,6 +31,33 @@ export default function DownloadsPage() {
   const allDownloads = Object.values(downloads);
   const queuedItems = allDownloads.filter(d => ['queued', 'downloading', 'paused', 'failed'].includes(d.status));
   const completedItems = allDownloads.filter(d => d.status === 'downloaded');
+
+  const [activeTab, setActiveTab] = useState("queue");
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const toggleSelection = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === completedItems.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(completedItems.map(item => item.id)));
+    }
+  };
+
+  const exitSelectionMode = () => {
+    setIsSelectionMode(false);
+    setSelectedIds(new Set());
+  };
 
   const formatBytes = (bytes: number) => {
     if (bytes === 0) return '0 B';
@@ -61,13 +90,13 @@ export default function DownloadsPage() {
                 <span className="text-text-muted">{formatBytes(storageInfo.quota)} total</span>
               </div>
               <div className="w-full bg-surface-base rounded-full h-1.5 overflow-hidden">
-                <div 
-                  className="bg-primary h-full rounded-full transition-all duration-500" 
+                <div
+                  className="bg-primary h-full rounded-full transition-all duration-500"
                   style={{ width: `${Math.min(100, (storageInfo.usage / storageInfo.quota) * 100)}%` }}
                 />
               </div>
             </div>
-            <button 
+            <button
               onClick={() => {
                 if (window.confirm("Yakin ingin menghapus semua unduhan?")) {
                   clearDownloads();
@@ -82,7 +111,7 @@ export default function DownloadsPage() {
           </YomirraSurface>
         )}
 
-        <Tabs defaultValue="queue" className="w-full">
+        <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v); exitSelectionMode(); }} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-6">
             <TabsTrigger value="queue">
               Antrean ({queuedItems.length})
@@ -91,13 +120,13 @@ export default function DownloadsPage() {
               Selesai ({completedItems.length})
             </TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="queue" className="space-y-4">
             {queuedItems.length === 0 ? (
               <div className="py-12">
-                <EmptyState 
-                  icon={<Download size={48} className="text-text-muted" weight="duotone" />} 
-                  title="Tidak ada antrean unduhan" 
+                <EmptyState
+                  icon={<Download size={48} className="text-text-muted" weight="duotone" />}
+                  title="Tidak ada antrean unduhan"
                 />
               </div>
             ) : (
@@ -115,26 +144,26 @@ export default function DownloadsPage() {
                       <h3 className="font-medium text-text-primary truncate text-sm">{item.mangaTitle}</h3>
                       <p className="text-xs text-text-muted truncate mt-0.5">{item.chapterTitle}</p>
                     </div>
-                    
+
                     <div className="mt-3">
                       <div className="flex justify-between text-xs mb-1">
                         <span className="text-text-muted capitalize">
-                          {item.status === 'downloading' ? 'Mengunduh' : 
-                           item.status === 'paused' ? 'Dijeda' : 
+                          {item.status === 'downloading' ? 'Mengunduh' :
+                           item.status === 'paused' ? 'Dijeda' :
                            item.status === 'failed' ? 'Gagal' : 'Dalam Antrean'}
                         </span>
                         <span className="font-medium text-primary">{item.progress}%</span>
                       </div>
                       <div className="w-full bg-surface-muted rounded-full h-1.5 overflow-hidden">
-                        <div 
-                          className={`h-full rounded-full transition-all duration-300 ${item.status === 'failed' ? 'bg-error' : item.status === 'paused' ? 'bg-text-muted' : 'bg-primary'}`} 
+                        <div
+                          className={`h-full rounded-full transition-all duration-300 ${item.status === 'failed' ? 'bg-error' : item.status === 'paused' ? 'bg-text-muted' : 'bg-primary'}`}
                           style={{ width: `${item.progress}%` }}
                         />
                       </div>
                       {item.error && <p className="text-xs text-error mt-1 truncate">{item.error}</p>}
                     </div>
                   </div>
-                  
+
                   <div className="flex flex-col justify-around shrink-0 border-l border-border-default/50 pl-3 ml-1">
                     {item.status === 'downloading' || item.status === 'queued' ? (
                       <IconButton onClick={() => { pauseDownload(item.id); toast("Unduhan dijeda"); }} aria-label="Pause" className="text-text-muted hover:text-text-primary">
@@ -149,7 +178,7 @@ export default function DownloadsPage() {
                         <ArrowClockwise size={18} />
                       </IconButton>
                     ) : null}
-                    
+
                     <IconButton onClick={() => { cancelDownload(item.id); toast("Unduhan dibatalkan"); }} aria-label="Cancel" className="text-semantic-error hover:text-semantic-error/80">
                       <X size={18} />
                     </IconButton>
@@ -158,50 +187,117 @@ export default function DownloadsPage() {
               ))
             )}
           </TabsContent>
-          
+
           <TabsContent value="completed" className="space-y-4">
             {completedItems.length === 0 ? (
               <div className="py-12">
-                <EmptyState 
-                  icon={<Package size={48} className="text-text-muted" weight="duotone" />} 
-                  title="Belum ada chapter yang diunduh" 
+                <EmptyState
+                  icon={<Package size={48} className="text-text-muted" weight="duotone" />}
+                  title="Belum ada chapter yang diunduh"
                 />
               </div>
             ) : (
-              completedItems.map(item => (
-                <div key={item.id} className="relative group">
-                  <Link 
-                    href={`/manga/${item.sourceId}/${item.mangaId}/read/${item.chapterId}`}
-                    className="absolute inset-0 z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-xl"
-                    aria-label={`Read ${item.mangaTitle} - ${item.chapterTitle}`}
-                  />
-                  <YomirraSurface variant="elevated" className="rounded-xl p-4 flex gap-4 items-center group-hover:bg-surface-hover transition-colors relative z-0">
-                    <div className="w-12 h-16 bg-surface-muted rounded-lg overflow-hidden shrink-0">
-                      {item.coverUrl ? (
-                        <img src={item.coverUrl} alt={item.mangaTitle} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-text-muted text-xs">No Cover</div>
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-text-primary truncate text-sm group-hover:text-accent transition-colors">{item.mangaTitle}</h3>
-                      <p className="text-xs text-text-muted truncate mt-0.5">{item.chapterTitle}</p>
-                      <p className="text-[10px] text-text-muted mt-1">{item.downloadedPages} Halaman • Selesai</p>
-                    </div>
-                    <IconButton 
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeDownload(item.id); toast("Unduhan dihapus"); }} 
-                      aria-label="Delete" 
-                      className="text-semantic-error hover:text-semantic-error/80 shrink-0 relative z-20"
-                    >
-                      <Trash size={20} />
-                    </IconButton>
-                  </YomirraSurface>
+              <>
+                <div className="flex justify-between items-center px-1">
+                  {isSelectionMode ? (
+                    <Button variant="ghost" size="sm" onClick={toggleSelectAll} className="px-2 h-8 text-sm">
+                      {selectedIds.size === completedItems.length ? 'Batal Pilih Semua' : 'Pilih Semua'}
+                    </Button>
+                  ) : (
+                    <div />
+                  )}
+                  <Button variant="ghost" size="sm" onClick={() => setIsSelectionMode(!isSelectionMode)} className="text-primary font-medium px-2 h-8">
+                    {isSelectionMode ? 'Selesai' : 'Pilih'}
+                  </Button>
                 </div>
-              ))
+                {completedItems.map(item => {
+                  const isSelected = selectedIds.has(item.id);
+                  return (
+                    <div key={item.id} className="relative group">
+                      {!isSelectionMode && (
+                        <Link
+                          href={`/manga/${item.sourceId}/${item.mangaId}/read/${item.chapterId}`}
+                          className="absolute inset-0 z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-xl"
+                          aria-label={`Read ${item.mangaTitle} - ${item.chapterTitle}`}
+                        />
+                      )}
+                      <label className={`rounded-xl p-4 flex gap-4 items-center group-hover:bg-surface-hover transition-colors relative z-0 ${isSelectionMode ? 'cursor-pointer' : ''} ${isSelectionMode && isSelected ? 'bg-primary/5' : 'bg-surface-elevated'}`}>
+                        {isSelectionMode && (
+                          <div className="shrink-0 flex items-center justify-center p-2 min-w-[44px] min-h-[44px]">
+                            <Checkbox
+                              checked={isSelected}
+                              onChange={() => toggleSelection(item.id)}
+                              aria-label={`Pilih ${item.mangaTitle} - ${item.chapterTitle}`}
+                              disabled={isDeleting}
+                            />
+                          </div>
+                        )}
+                        <div className="w-12 h-16 bg-surface-muted rounded-lg overflow-hidden shrink-0">
+                          {item.coverUrl ? (
+                            <img src={item.coverUrl} alt={item.mangaTitle} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-text-muted text-xs">No Cover</div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-text-primary truncate text-sm group-hover:text-accent transition-colors">{item.mangaTitle}</h3>
+                          <p className="text-xs text-text-muted truncate mt-0.5">{item.chapterTitle}</p>
+                          <p className="text-[10px] text-text-muted mt-1">{item.downloadedPages} Halaman • Selesai</p>
+                        </div>
+                        {!isSelectionMode && (
+                          <IconButton
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeDownload(item.id); toast("Unduhan dihapus"); }}
+                            aria-label="Delete"
+                            className="text-semantic-error hover:text-semantic-error/80 shrink-0 relative z-20"
+                          >
+                            <Trash size={20} />
+                          </IconButton>
+                        )}
+                      </label>
+                    </div>
+                  );
+                })}
+              </>
             )}
           </TabsContent>
         </Tabs>
       </div>
+
+      {isSelectionMode && (
+        <div className="fixed bottom-[calc(var(--safe-bottom)+1rem)] left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-md bg-surface-base/95 backdrop-blur-md border border-border-subtle shadow-glass rounded-2xl p-4 flex items-center justify-between z-50">
+          <span className="font-medium text-sm text-text-primary">{selectedIds.size} dipilih</span>
+          <div className="flex gap-2">
+            <Button variant="ghost" onClick={exitSelectionMode} disabled={isDeleting}>Batal</Button>
+            <Button
+              variant="destructive"
+              disabled={selectedIds.size === 0 || isDeleting}
+              onClick={async () => {
+                if (window.confirm(`Yakin ingin menghapus ${selectedIds.size} unduhan?`)) {
+                  setIsDeleting(true);
+                  try {
+                    await removeDownloads(Array.from(selectedIds));
+                    toast.success("Berhasil dihapus");
+                    exitSelectionMode();
+                  } catch (e: any) {
+                    toast.error(e.message || "Gagal menghapus beberapa item");
+                    setSelectedIds(prev => {
+                      const next = new Set(prev);
+                      Array.from(prev).forEach(id => {
+                        if (!useDownloadStore.getState().downloads[id]) next.delete(id);
+                      });
+                      return next;
+                    });
+                  } finally {
+                    setIsDeleting(false);
+                  }
+                }
+              }}
+            >
+              Hapus
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
