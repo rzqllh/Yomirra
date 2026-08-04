@@ -241,6 +241,7 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
                     <FilterChip
                       key={sort.id}
                       onClick={() => setSelectedSort(sort.id)}
+                      selected={selectedSort === sort.id}
                       variant={selectedSort === sort.id ? "inverted" : "default"}
                       label={sort.label}
                     />
@@ -261,6 +262,7 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
                         <FilterChip
                           key={source.id}
                           onClick={() => toggleSource(source.id)}
+                          selected={isSelected}
                           variant={isSelected ? "accent-subtle" : isOffline ? "offline" : "default"}
                           showCheck={isSelected}
                           showDownBadge={isOffline}
@@ -281,6 +283,7 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
                       <FilterChip
                         key={format.id}
                         onClick={() => toggleFormat(format.id)}
+                        selected={selectedFormats.includes(format.id)}
                         variant={selectedFormats.includes(format.id) ? "accent-subtle" : "default"}
                         showCheck={selectedFormats.includes(format.id)}
                         label={format.label}
@@ -298,6 +301,7 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
                     <FilterChip
                       key={status.id}
                       onClick={() => setSelectedStatus(status.id === selectedStatus ? "" : status.id)}
+                      selected={selectedStatus === status.id}
                       variant={selectedStatus === status.id ? "accent-subtle" : "default"}
                       showCheck={selectedStatus === status.id}
                       label={status.label}
@@ -317,6 +321,7 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
                         <FilterChip
                           key={genre}
                           onClick={() => toggleGenre(genre)}
+                          selected={isSelected}
                           variant={isSelected ? "accent-solid" : "default"}
                           label={genre}
                         />

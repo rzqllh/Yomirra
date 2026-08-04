@@ -164,6 +164,7 @@ export function LibraryFilterDrawer({ children, activeSourceId }: LibraryFilterD
                     <FilterChip
                       key={sort.id}
                       onClick={() => setSelectedSort(sort.id)}
+                      selected={selectedSort === sort.id}
                       variant={selectedSort === sort.id ? "inverted" : "default"}
                       label={sort.label}
                     />
@@ -182,6 +183,7 @@ export function LibraryFilterDrawer({ children, activeSourceId }: LibraryFilterD
                       <FilterChip
                         key={format.id}
                         onClick={() => toggleFormat(format.id)}
+                        selected={selectedFormats.includes(format.id)}
                         variant={selectedFormats.includes(format.id) ? "accent-subtle" : "default"}
                         showCheck={selectedFormats.includes(format.id)}
                         label={format.label}
@@ -199,6 +201,7 @@ export function LibraryFilterDrawer({ children, activeSourceId }: LibraryFilterD
                     <FilterChip
                       key={status.id}
                       onClick={() => toggleStatus(status.id)}
+                      selected={selectedStatus.includes(status.id)}
                       variant={selectedStatus.includes(status.id) ? "accent-subtle" : "default"}
                       showCheck={selectedStatus.includes(status.id)}
                       label={status.label}
@@ -219,6 +222,7 @@ export function LibraryFilterDrawer({ children, activeSourceId }: LibraryFilterD
                         <FilterChip
                           key={genre.id}
                           onClick={() => toggleGenre(genre.id)}
+                          selected={isInc || isExc}
                           variant={isInc ? "accent-solid" : isExc ? "error-solid" : "default"}
                           showMinus={isExc}
                           label={genre.label}
