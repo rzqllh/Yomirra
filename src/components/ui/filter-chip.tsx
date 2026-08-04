@@ -8,13 +8,16 @@ export interface FilterChipProps extends React.ButtonHTMLAttributes<HTMLButtonEl
   showCheck?: boolean;
   showMinus?: boolean;
   showDownBadge?: boolean;
+  selected?: boolean;
 }
 
 export const FilterChip = React.forwardRef<HTMLButtonElement, FilterChipProps>(
-  ({ variant = "default", label, showCheck, showMinus, showDownBadge, className, ...props }, ref) => {
+  ({ variant = "default", label, showCheck, showMinus, showDownBadge, selected, className, ...props }, ref) => {
     return (
       <button
         ref={ref}
+        {...props}
+        aria-pressed={selected}
         className={cn(
           "px-4 py-2 rounded-full text-sm font-bold transition-all border flex items-center gap-1.5 active:scale-[0.98]",
           variant === "inverted" && "bg-text-primary text-surface-base border-transparent",
@@ -25,7 +28,6 @@ export const FilterChip = React.forwardRef<HTMLButtonElement, FilterChipProps>(
           variant === "default" && "bg-surface-raised border-border-subtle text-text-secondary hover:border-border-strong",
           className
         )}
-        {...props}
       >
         {showCheck && <Check size={14} weight="bold" />}
         {showMinus && <span className="mr-1 font-black">-</span>}
