@@ -4,6 +4,7 @@ import * as React from "react";
 import { Moon, Sun } from "@phosphor-icons/react";
 import { useTheme } from "next-themes";
 import { motion } from "motion/react";
+import { IconButton } from "@/components/ui/icon-button";
 import { cn } from "@/shared/utils/cn";
 
 export function ThemeToggle() {
@@ -25,9 +26,10 @@ export function ThemeToggle() {
   const isDark = resolvedTheme === "dark";
 
   return (
-    <button
+    <IconButton
       onClick={() => setTheme(isDark ? "light" : "dark")}
-      className={cn( "relative flex w-[68px] h-9 items-center rounded-full p-1 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ", "bg-surface-glass backdrop-blur-md hover:bg-surface-hover/50" )}
+      variant="ghost"
+      className={cn( "relative w-[68px] h-9 rounded-full p-1 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ", "bg-surface-glass backdrop-blur-md hover:bg-surface-hover/50" )}
       aria-label="Toggle theme"
     >
       <div className="relative flex w-full justify-between items-center z-10">
@@ -55,6 +57,6 @@ export function ThemeToggle() {
         }}
         transition={{ duration: 0.3, ease: "easeOut" }}
       />
-    </button>
+    </IconButton>
   );
 }
