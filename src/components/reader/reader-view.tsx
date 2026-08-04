@@ -49,8 +49,11 @@ export function ReaderView({
   });
 
   useEffect(() => {
+    setOfflinePages(null);
+    let isMounted = true;
+    let createdUrls: string[] = [];
+
     if (downloadStatus === "downloaded" && typeof caches !== "undefined") {
-      let isMounted = true;
       (async () => {
         try {
           const cache = await caches.open("yomirra-chapter-cache-v1");
@@ -67,7 +70,12 @@ export function ReaderView({
           const blobUrls = await Promise.all(sorted.map(async (req, index) => {
             const res = await cache.match(req);
             const blob = await res?.blob();
-            return blob ? { index, url: URL.createObjectURL(blob) } : null;
+            if (blob) {
+              const url = URL.createObjectURL(blob);
+              createdUrls.push(url);
+              return { index, url };
+            }
+            return null;
           }));
           
           if (isMounted && blobUrls.length > 0) {
@@ -77,8 +85,12 @@ export function ReaderView({
           console.error("Failed to load offline pages", e);
         }
       })();
-      return () => { isMounted = false; };
     }
+
+    return () => {
+      isMounted = false;
+      createdUrls.forEach(url => URL.revokeObjectURL(url));
+    };
   }, [downloadStatus, downloadId]);
 
   const isLoading = downloadStatus === "downloaded" ? offlinePages === null : (!initialPages && isQueryLoading);

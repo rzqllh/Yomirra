@@ -48,8 +48,12 @@ export const ReaderImage = React.memo(function ReaderImage({
   const [aspectRatio, setAspectRatio] = React.useState<number | null>(null)
   const containerRef = React.useRef<HTMLDivElement>(null)
   
+  const [offlineFailed, setOfflineFailed] = React.useState(false)
+  const isUsingOffline = offlineUrl && !offlineFailed;
+  const activeUrl = isUsingOffline ? offlineUrl : pageUrl;
+
   const imageId = `${pageUrl}`;
-  const currentUrl = offlineUrl || (retryCount > 0 && !pageUrl.startsWith('blob:') ? `${pageUrl}${pageUrl.includes('?') ? '&' : '?'}retry=${retryCount}` : pageUrl);
+  const currentUrl = retryCount > 0 && !activeUrl.startsWith('blob:') ? `${activeUrl}${activeUrl.includes('?') ? '&' : '?'}retry=${retryCount}` : activeUrl;
 
   React.useEffect(() => {
     if (decodeQueue && isAllowedToLoad) {
@@ -102,6 +106,17 @@ export const ReaderImage = React.memo(function ReaderImage({
   const shouldLoad = isAllowedToLoad && isDecoded;
 
   const handleImageError = () => {
+    if (isUsingOffline) {
+      if (typeof navigator !== 'undefined' && navigator.onLine) {
+        setOfflineFailed(true);
+        return;
+      } else {
+        setHasError(true);
+        onError(pageIndex);
+        return;
+      }
+    }
+
     if (retryCount < 3) {
       const baseDelay = [1000, 2500, 5000][retryCount]
       const jitter = Math.random() * 500
@@ -155,7 +170,7 @@ export const ReaderImage = React.memo(function ReaderImage({
             priority={priority}
             fetchPriority={priority ? "high" : "auto"}
             quality={dataSaver ? 60 : 85}
-            unoptimized={!dataSaver}
+            unoptimized={Boolean(offlineUrl && !offlineFailed) || !dataSaver}
             loading="eager"
             decoding="async"
             onLoad={(e) => {
