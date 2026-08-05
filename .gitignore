@@ -46,18 +46,21 @@ next-env.d.ts
 # prisma generated client
 /src/generated/prisma
 
-# Antigravity AI artifacts
-/scratch
-/implementation_plan.md
-/task.md
-/walkthrough.md
+# Local Git worktrees
+.worktrees/
+
+# Local AI agent configuration and installed skills
+.codex/
 .agents/
 .gemini/
-gemini.md
-Yomirra_Full_Audit_Next_Step.md
+.antigravity/
+
+# Generated test and lint reports
+lint-results*.txt
+lint-results*.json
+test-results*.json
 
 # AI Artifacts & Docs
-.agents/
 AGENTS.md
 skills-lock.json
 bugs/
@@ -69,7 +72,7 @@ agent.md
 .env.local
 readme-secret.md
 src/server/lib/sources/adapters/project-*/
-/docs/
+!docs/checkpoints/
 /GEMINI.md
 src/server/lib/sources/adapters/doujindesu-*/
 
