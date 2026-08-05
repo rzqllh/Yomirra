@@ -11,23 +11,12 @@ import { useSettingsStore } from "@/shared/store/settings-store";
 import { useQuery, useQueries } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
+import { mergeFilters, pruneUnsupportedFilters } from "@/shared/utils/filter-helpers";
+import type { FilterList } from "@/shared/sources/source-types";
 
 interface SearchFilterDrawerProps {
   children?: React.ReactNode;
 }
-
-const DEFAULT_STATUSES = [
-  { id: "ongoing", label: "Ongoing" },
-  { id: "completed", label: "Completed" },
-  { id: "hiatus", label: "Hiatus" },
-  { id: "cancelled", label: "Cancelled" }
-];
-
-const DEFAULT_SORTS = [
-  { id: "popular", label: "Paling Populer" },
-  { id: "latest", label: "Update Terbaru" },
-  { id: "alphabetical", label: "A-Z" }
-];
 
 export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -112,31 +101,13 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
   });
 
   const dynamicFilters = React.useMemo(() => {
-    const genres = new Map<string, string>();
-    const statuses = new Map<string, string>();
-    const sorts = new Map<string, string>();
-    const formats = new Map<string, string>();
+    const sourceFilters = sourcesToFetch.map((s, idx) => ({
+      sourceId: s.id,
+      filters: filtersQueries[idx]?.data
+    })).filter(x => x.filters) as { sourceId: string; filters: FilterList }[];
 
-    filtersQueries.forEach(query => {
-      if (query.data) {
-        query.data.genres?.forEach(g => genres.set(g.id, g.name));
-        query.data.statuses?.forEach(s => statuses.set(s.id, s.name));
-        query.data.sorts?.forEach(s => sorts.set(s.id, s.name));
-        query.data.formats?.forEach(f => formats.set(f.id, f.name));
-      }
-    });
-
-    const finalGenres = Array.from(genres.values()).sort();
-    const finalStatuses = statuses.size > 0 
-      ? Array.from(statuses.entries()).map(([id, label]) => ({ id, label }))
-      : DEFAULT_STATUSES;
-    const finalSorts = sorts.size > 0
-      ? Array.from(sorts.entries()).map(([id, label]) => ({ id, label }))
-      : DEFAULT_SORTS;
-    const finalFormats = Array.from(formats.entries()).map(([id, label]) => ({ id, label }));
-
-    return { genres: finalGenres, statuses: finalStatuses, sorts: finalSorts, formats: finalFormats };
-  }, [filtersQueries]);
+    return mergeFilters(sourceFilters);
+  }, [filtersQueries, sourcesToFetch]);
   
   const [selectedFormats, setSelectedFormats] = React.useState<string[]>([]);
   
@@ -147,10 +118,11 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
       setSelectedGenres(storeFilters.genres);
       setSelectedFormats(storeFilters.formats || []);
       setSelectedStatus(storeFilters.status);
-      setSelectedSort(storeFilters.sort);
+      setSelectedSort(storeFilters.sort || "popular");
     }
-  }, [isOpen, storeFilters]);
+  }, [isOpen]); // Intentionally omitting storeFilters from deps to avoid overwriting local changes
 
+  // Pruning is now handled safely at the page level.
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
   };
@@ -193,7 +165,7 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
     setSelectedSort("popular");
   };
 
-  const activeCount = storeFilters.genres.length + (storeFilters.formats?.length || 0) + (storeFilters.status ? 1 : 0) + (storeFilters.sort !== "popular" ? 1 : 0);
+  const activeCount = storeFilters.genres.length + (storeFilters.formats?.length || 0) + (storeFilters.status ? 1 : 0) + (storeFilters.sort !== "popular" && storeFilters.sort ? 1 : 0);
 
   return (
     <Drawer.Root open={isOpen} onOpenChange={handleOpenChange}>
@@ -222,7 +194,7 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
             <div className="flex items-center justify-between mb-6 px-2">
               <Drawer.Title className="text-xl font-bold">Filter Pencarian</Drawer.Title>
               <Drawer.Description className="sr-only">Atur filter pencarian berdasarkan urutan, status, dan genre manga.</Drawer.Description>
-              {activeCount > 0 && (
+              {(selectedGenres.length > 0 || selectedFormats.length > 0 || selectedStatus !== "" || selectedSort !== "popular") && (
                 <button 
                   onClick={handleReset}
                   className="text-sm font-semibold text-accent hover:text-accent-hover transition-colors"
@@ -234,23 +206,25 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
 
             <div className="space-y-8 px-2 pb-24">
               {/* Urutkan */}
-              <div>
-                <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Urutkan</h3>
-                <div className="flex flex-wrap gap-2">
-                  {dynamicFilters.sorts.map(sort => (
-                    <FilterChip
-                      key={sort.id}
-                      onClick={() => setSelectedSort(sort.id)}
-                      selected={selectedSort === sort.id}
-                      variant={selectedSort === sort.id ? "inverted" : "default"}
-                      label={sort.label}
-                    />
-                  ))}
+              {dynamicFilters.sorts.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Urutkan</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {dynamicFilters.sorts.map(sort => (
+                      <FilterChip
+                        key={sort.id}
+                        onClick={() => setSelectedSort(sort.id)}
+                        selected={selectedSort === sort.id}
+                        variant={selectedSort === sort.id ? "inverted" : "default"}
+                        label={sort.label}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Sumber */}
-              {(searchableSources.length > 0 || true) && (
+              {(searchableSources.length > 0) && (
                 <div>
                   <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Sumber</h3>
                   <div className="flex flex-wrap gap-2">
@@ -294,21 +268,23 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
               )}
 
               {/* Status */}
-              <div>
-                <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Status</h3>
-                <div className="flex flex-wrap gap-2">
-                  {dynamicFilters.statuses.map(status => (
-                    <FilterChip
-                      key={status.id}
-                      onClick={() => setSelectedStatus(status.id === selectedStatus ? "" : status.id)}
-                      selected={selectedStatus === status.id}
-                      variant={selectedStatus === status.id ? "accent-subtle" : "default"}
-                      showCheck={selectedStatus === status.id}
-                      label={status.label}
-                    />
-                  ))}
+              {dynamicFilters.statuses.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Status</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {dynamicFilters.statuses.map(status => (
+                      <FilterChip
+                        key={status.id}
+                        onClick={() => setSelectedStatus(status.id === selectedStatus ? "" : status.id)}
+                        selected={selectedStatus === status.id}
+                        variant={selectedStatus === status.id ? "accent-subtle" : "default"}
+                        showCheck={selectedStatus === status.id}
+                        label={status.label}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Genre */}
               {dynamicFilters.genres.length > 0 && (
@@ -316,14 +292,14 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
                   <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Genre</h3>
                   <div className="flex flex-wrap gap-2">
                     {dynamicFilters.genres.map(genre => {
-                      const isSelected = selectedGenres.includes(genre);
+                      const isSelected = selectedGenres.includes(genre.id);
                       return (
                         <FilterChip
-                          key={genre}
-                          onClick={() => toggleGenre(genre)}
+                          key={genre.id}
+                          onClick={() => toggleGenre(genre.id)}
                           selected={isSelected}
                           variant={isSelected ? "accent-solid" : "default"}
-                          label={genre}
+                          label={genre.label}
                         />
                       );
                     })}
