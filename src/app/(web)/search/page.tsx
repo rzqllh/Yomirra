@@ -19,6 +19,10 @@ import { SearchFilterDrawer } from "@/components/search/search-filter-drawer";
 import { DirectionalTransition } from "@/components/ui/directional-transition";
 import { useRouter } from "next/navigation";
 import { useDebounce } from "@/shared/hooks/use-debounce";
+import { useSearchPruning } from "@/shared/hooks/use-search-pruning";
+import { useSearchReset } from "@/shared/hooks/use-search-reset";
+import { mergeFilters, buildPayloadForSource } from "@/shared/utils/filter-helpers";
+import type { FilterList } from "@/shared/sources/source-types";
 import { cn } from "@/shared/utils/cn";
 import {
   Pagination,
@@ -154,17 +158,87 @@ function SearchContent() {
   const status = searchFilterStore.status;
   const sort = searchFilterStore.sort;
 
-  const filters: Record<string, string | string[]> = {};
-  if (genres.length > 0) filters["genre[]"] = genres;
-  if (formats?.length > 0) filters["format[]"] = formats;
-  if (status) filters["status"] = status;
-  if (sort) filters["sort"] = sort;
-
-  const { data: searchResponse, isLoading, error } = useQuery({
-    queryKey: ["searchGlobal", query, activeSelectedSources, isNsfwFiltered, filters, page],
-    queryFn: () => apiClient.searchGlobal(query, activeSelectedSources, page, isNsfwFiltered, filters),
-    enabled: activeSelectedSources.length > 0,
+  // Fetch capability filters per source
+  const filtersQueries = useQueries({
+    queries: activeSelectedSources.map(sourceId => ({
+      queryKey: ["sourceFilters", sourceId],
+      queryFn: (): Promise<FilterList> => apiClient.getFilters(sourceId),
+      staleTime: 5 * 60 * 1000,
+    }))
   });
+
+  const isFiltersLoading = filtersQueries.some(q => q.isLoading || q.isFetching);
+  const hasFiltersError = filtersQueries.some(q => q.isError);
+  const isCapabilitiesLoaded = filtersQueries.filter(q => q.isSuccess).length === activeSelectedSources.length;
+
+  const filtersQueriesRef = React.useRef(filtersQueries);
+  filtersQueriesRef.current = filtersQueries;
+
+  const capabilitiesVersion = filtersQueries.map(q => q.dataUpdatedAt).join(":");
+
+  const dynamicFilters = React.useMemo(() => {
+    const sourceFilters = activeSelectedSources.flatMap((sourceId, idx) => {
+      const filters = filtersQueriesRef.current[idx]?.data;
+      return filters ? [{ sourceId, filters }] : [];
+    });
+
+    return mergeFilters(sourceFilters);
+  }, [activeSelectedSources, capabilitiesVersion]);
+
+  useSearchPruning({
+    activeSelectedSources,
+    isStillLoading: isFiltersLoading,
+    hasError: hasFiltersError,
+    isCapabilitiesLoaded,
+    dynamicFilters,
+    pruneFilters: searchFilterStore.pruneFilters
+  });
+
+  useSearchReset({
+    activeSelectedSources,
+    genres,
+    formats,
+    status,
+    sort,
+    query,
+    setPage
+  });
+
+  const activeFilters = React.useMemo(() => ({ genres, formats, status, sort }), [genres, formats, status, sort]);
+
+  // Execute parallel search requests per source with source-specific filter payload
+  const searchQueries = useQueries({
+    queries: activeSelectedSources.map((sourceId) => {
+      const payload = buildPayloadForSource(sourceId, dynamicFilters, activeFilters);
+      return {
+        queryKey: ["searchSource", sourceId, query, isNsfwFiltered, payload, page],
+        queryFn: () => apiClient.search(sourceId, query, page, payload, isNsfwFiltered),
+        enabled: activeSelectedSources.length > 0,
+      };
+    })
+  });
+
+  const isLoading = searchQueries.some(q => q.isLoading);
+  const searchError = searchQueries.find(q => q.error)?.error || null;
+
+  const resultsBySource = React.useMemo(() => {
+    const acc: Record<string, { results?: any[]; hasNextPage?: boolean; error?: string }> = {};
+    activeSelectedSources.forEach((sourceId, idx) => {
+      const q = searchQueries[idx];
+      if (q?.data) {
+        acc[sourceId] = {
+          results: q.data.results || [],
+          hasNextPage: q.data.hasNextPage,
+        };
+      } else if (q?.error) {
+        acc[sourceId] = {
+          error: (q.error as Error).message || "Error",
+          results: [],
+        };
+      }
+    });
+    return acc;
+  }, [activeSelectedSources, searchQueries]);
 
   // Helper to interleave and deduplicate mangas from multiple sources
   const getMergedMangas = (sourceArrays: { sourceId: string, items: any[] }[]) => {
@@ -190,17 +264,17 @@ function SearchContent() {
     return result;
   };
 
-  const searchMangas = searchResponse?.resultsBySource ? getMergedMangas(
-    Object.entries(searchResponse.resultsBySource).map(([sourceId, res]) => ({
+  const searchMangas = resultsBySource ? getMergedMangas(
+    Object.entries(resultsBySource).map(([sourceId, res]) => ({
       sourceId,
       items: res.results || []
     }))
   ) : [];
 
-  const hasNextPage = Object.values(searchResponse?.resultsBySource || {}).some((res: any) => res.hasNextPage);
+  const hasNextPage = Object.values(resultsBySource || {}).some((res: any) => res.hasNextPage);
 
-  const errorsToDisplay = searchResponse?.resultsBySource
-    ? Object.entries(searchResponse.resultsBySource).map(([sourceId, res]) => res.error ? { sourceId, error: res.error } : null).filter(Boolean) as { sourceId: string, error: string }[]
+  const errorsToDisplay = resultsBySource
+    ? Object.entries(resultsBySource).map(([sourceId, res]) => res.error ? { sourceId, error: res.error } : null).filter(Boolean) as { sourceId: string, error: string }[]
     : [];
 
   return (
@@ -287,7 +361,7 @@ function SearchContent() {
             <motion.div key="search-loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col gap-10">
               <SearchResultSkeleton />
             </motion.div>
-          ) : error && searchMangas.length === 0 ? (
+          ) : searchError && searchMangas.length === 0 ? (
             <motion.div key="search-error" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="pt-10">
               <EmptyState 
                 icon={<WarningCircle size={40} className="text-semantic-error" weight="duotone" />}
