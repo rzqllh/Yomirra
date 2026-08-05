@@ -1,5 +1,6 @@
 import * as React from "react"
 import { MagnifyingGlass, X } from "@phosphor-icons/react"
+import { IconButton } from "@/components/ui/icon-button"
 import { cn } from "@/shared/utils/cn"
 
 export interface SearchInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onSubmit'> {
@@ -49,14 +50,15 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
           {...props}
         />
         {value && onClear && (
-          <button
+          <IconButton
             type="button"
             onClick={handleClear}
-            className="flex items-center justify-center text-text-muted hover:text-text-primary transition-colors p-1"
+            variant="ghost"
+            className="text-text-muted hover:text-text-primary p-1 h-auto w-auto"
             aria-label="Clear search"
           >
             <X size={16} weight="bold" />
-          </button>
+          </IconButton>
         )}
         {shortcut && (
           <kbd className="hidden lg:inline-flex h-6 select-none items-center gap-1 rounded-sm border border-border-default bg-surface-base px-2 font-mono text-[11px] font-bold text-text-muted">
