@@ -8,6 +8,7 @@ import type {
   FilterList,
 } from "@/shared/sources/source-types";
 import { HttpClient } from "../base/http-client";
+import { getKomikindoFilters } from "./filter-cache";
 
 export class KomikindoSource implements MangaSource {
   id = "komikindo";
@@ -210,12 +211,7 @@ export class KomikindoSource implements MangaSource {
     };
   }
 
-  getFilters(): FilterList {
-    return {
-      genres: [],
-      formats: [],
-      statuses: [],
-      sorts: [],
-    };
+  async getFilters(): Promise<FilterList> {
+    return getKomikindoFilters();
   }
 }
