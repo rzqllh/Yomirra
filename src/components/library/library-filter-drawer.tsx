@@ -4,6 +4,7 @@ import * as React from "react";
 import { Drawer } from "vaul";
 import { Funnel, X, Check } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
+import { FilterChip } from "@/components/ui/filter-chip";
 import { cn } from "@/shared/utils/cn";
 import { useLibraryFilterStore } from "@/shared/store/library-filter-store";
 import { useQuery } from "@tanstack/react-query";
@@ -160,18 +161,13 @@ export function LibraryFilterDrawer({ children, activeSourceId }: LibraryFilterD
                 <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Urutkan</h3>
                 <div className="flex flex-wrap gap-2">
                   {dynamicFilters.sorts.map((sort: any) => (
-                    <button
+                    <FilterChip
                       key={sort.id}
                       onClick={() => setSelectedSort(sort.id)}
-                      className={cn(
-                        "px-4 py-2 rounded-full text-sm font-bold transition-all border",
-                        selectedSort === sort.id
-                          ? "bg-text-primary text-surface-base border-transparent"
-                          : "bg-surface-raised border-border-subtle text-text-secondary hover:border-border-strong"
-                      )}
-                    >
-                      {sort.label}
-                    </button>
+                      selected={selectedSort === sort.id}
+                      variant={selectedSort === sort.id ? "inverted" : "default"}
+                      label={sort.label}
+                    />
                   ))}
                 </div>
               </div>
@@ -184,19 +180,14 @@ export function LibraryFilterDrawer({ children, activeSourceId }: LibraryFilterD
                   <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Tipe Komik</h3>
                   <div className="flex flex-wrap gap-2">
                     {dynamicFilters.formats.map((format: any) => (
-                      <button
+                      <FilterChip
                         key={format.id}
                         onClick={() => toggleFormat(format.id)}
-                        className={cn(
-                          "px-4 py-2 rounded-full text-sm font-bold transition-all border flex items-center gap-1.5 active:scale-[0.98]",
-                          selectedFormats.includes(format.id)
-                            ? "bg-accent/10 border-accent text-accent"
-                            : "bg-surface-raised border-border-subtle text-text-secondary hover:border-border-strong"
-                        )}
-                      >
-                        {selectedFormats.includes(format.id) && <Check size={14} weight="bold" />}
-                        {format.label}
-                      </button>
+                        selected={selectedFormats.includes(format.id)}
+                        variant={selectedFormats.includes(format.id) ? "accent-subtle" : "default"}
+                        showCheck={selectedFormats.includes(format.id)}
+                        label={format.label}
+                      />
                     ))}
                   </div>
                 </div>
@@ -207,19 +198,14 @@ export function LibraryFilterDrawer({ children, activeSourceId }: LibraryFilterD
                 <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Status</h3>
                 <div className="flex flex-wrap gap-2">
                   {dynamicFilters.statuses.map((status: any) => (
-                    <button
+                    <FilterChip
                       key={status.id}
                       onClick={() => toggleStatus(status.id)}
-                      className={cn(
-                        "px-4 py-2 rounded-full text-sm font-bold transition-all border flex items-center gap-1.5",
-                        selectedStatus.includes(status.id)
-                          ? "bg-accent/10 border-accent text-accent"
-                          : "bg-surface-raised border-border-subtle text-text-secondary hover:border-border-strong"
-                      )}
-                    >
-                      {selectedStatus.includes(status.id) && <Check size={14} weight="bold" />}
-                      {status.label}
-                    </button>
+                      selected={selectedStatus.includes(status.id)}
+                      variant={selectedStatus.includes(status.id) ? "accent-subtle" : "default"}
+                      showCheck={selectedStatus.includes(status.id)}
+                      label={status.label}
+                    />
                   ))}
                 </div>
               </div>
@@ -233,20 +219,14 @@ export function LibraryFilterDrawer({ children, activeSourceId }: LibraryFilterD
                       const isInc = selectedGenres.includes(genre.id);
                       const isExc = excludedGenres.includes(genre.id);
                       return (
-                        <button
+                        <FilterChip
                           key={genre.id}
                           onClick={() => toggleGenre(genre.id)}
-                          className={cn(
-                            "px-4 py-2 rounded-full text-sm font-bold transition-all border",
-                            isInc
-                              ? "bg-accent text-white border-transparent shadow-[0_0_12px_rgba(94,92,230,0.3)]"
-                              : isExc
-                              ? "bg-semantic-error text-white border-transparent shadow-[0_0_12px_rgba(255,59,48,0.3)]"
-                              : "bg-surface-raised border-border-subtle text-text-secondary hover:border-border-strong"
-                          )}
-                        >
-                          {isExc && <span className="mr-1 font-black">-</span>}{genre.label}
-                        </button>
+                          selected={isInc || isExc}
+                          variant={isInc ? "accent-solid" : isExc ? "error-solid" : "default"}
+                          showMinus={isExc}
+                          label={genre.label}
+                        />
                       );
                     })}
                   </div>
