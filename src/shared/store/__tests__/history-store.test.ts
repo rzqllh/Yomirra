@@ -9,10 +9,17 @@ describe('history-store', () => {
 
   it('should save progress correctly', () => {
     const store = useHistoryStore.getState();
+    store.upsertHistory({
+      sourceId: 'source1',
+      mangaId: 'manga1',
+      chapterId: 'chapter1',
+      mangaTitle: 'Manga 1',
+      readAt: Date.now()
+    });
     store.saveProgress('source1', 'manga1', 'chapter1', 10, 500);
 
     const newState = useHistoryStore.getState();
-    const item = newState.items['source1:manga1'];
+    const item = newState.items['source1::manga1::chapter1'];
 
     expect(item).toBeDefined();
     expect(item.chapterId).toBe('chapter1');
@@ -23,6 +30,13 @@ describe('history-store', () => {
 
   it('should get latest progress', () => {
     const store = useHistoryStore.getState();
+    store.upsertHistory({
+      sourceId: 'source1',
+      mangaId: 'manga1',
+      chapterId: 'chapter1',
+      mangaTitle: 'Manga 1',
+      readAt: Date.now()
+    });
     store.saveProgress('source1', 'manga1', 'chapter1', 1);
     
     const latest = useHistoryStore.getState().getLatestForManga('source1', 'manga1');
