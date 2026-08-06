@@ -49,10 +49,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [isReader])
 
   return (
-    <div className="flex min-h-screen bg-background text-text-primary w-full max-w-full">
+    <div className="flex min-h-dvh bg-background text-text-primary w-full max-w-full">
       <NetworkStatus />
       
-      <div className="flex-1 flex flex-col min-h-screen transition-all min-w-0 duration-300 ease-in-out w-full">
+      <div className="flex-1 flex flex-col min-h-dvh transition-all min-w-0 duration-300 ease-in-out w-full">
         {!isReader && <TopNav />}
         
         <main

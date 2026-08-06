@@ -41,9 +41,9 @@ export function CustomSelect({ value, onChange, options, className, buttonClassN
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={cn("flex items-center gap-2 h-[34px] px-3.5 rounded-full bg-surface-glass backdrop-blur-md hover:bg-surface-glass focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 shadow-[0_4px_16px_rgba(0,0,0,0.05)] dark:-[0_4px_16px_rgba(0,0,0,0.2)] transition-all", buttonClassName)}
+        className={cn("flex items-center gap-2 h-[44px] px-4 rounded-full bg-surface-glass backdrop-blur-md hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 border border-border-subtle shadow-sm transition-all", buttonClassName)}
       >
-        <span className="text-[13px] font-semibold text-text-primary whitespace-nowrap">
+        <span className="text-[14px] font-semibold text-text-primary whitespace-nowrap">
           {selectedOption?.label}
         </span>
         <CaretDown

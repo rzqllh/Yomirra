@@ -311,14 +311,7 @@ export default function SettingsPage() {
 
               <div className="mx-3 my-1 border-b border-border-subtle/50 md:hidden" />
 
-              <SettingsItem
-                icon={<IconWrapper><HandTap size={20} weight="duotone" /></IconWrapper>}
-                title="Perilaku Tap Layar"
-                description="Navigasi dengan sentuhan tepi."
-                right={<Button variant="outline" size="sm" className="text-xs h-8 shrink-0 rounded-full font-bold">Ubah</Button>}
-              />
-              
-              <div className="mx-3 my-1 border-b border-border-subtle/50" />
+
 
               <SettingsItem
                 icon={<IconWrapper><WifiHigh size={20} weight="duotone" /></IconWrapper>}

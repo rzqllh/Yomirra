@@ -263,8 +263,7 @@
 
 @layer base {
   html, body {
-    max-width: 100%;
-    overflow-x: hidden;
+    /* overflow-x: hidden moved to main wrapper to prevent iOS safe-area fixed position bugs */
   }
 
   body {
