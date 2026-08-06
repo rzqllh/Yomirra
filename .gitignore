@@ -87,6 +87,8 @@ test-results*.json
 *.zip
 *.html
 
+
 .agents/
 .codex/
 .gemini/
+.antigravity/
