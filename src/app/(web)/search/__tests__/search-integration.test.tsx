@@ -172,7 +172,8 @@ describe('Search Page Integration', () => {
         'test',
         1,
         { 'genre[]': ['action'] },
-        false
+        false,
+        { signal: expect.anything() }
       );
 
       // 2. Source B receives only webtoon format (action genre excluded because not supported)
@@ -181,7 +182,8 @@ describe('Search Page Integration', () => {
         'test',
         1,
         { 'format[]': ['webtoon'] },
-        false
+        false,
+        { signal: expect.anything() }
       );
     });
 
@@ -268,8 +270,8 @@ describe('Search Page Integration', () => {
     });
 
     // Cache key must include sourceId, query, payload, NSFW, and page
-    expect(apiClient.search).toHaveBeenCalledWith('sourceA', 'test', 1, {}, false);
-    expect(apiClient.search).toHaveBeenCalledWith('sourceB', 'test', 1, {}, false);
+    expect(apiClient.search).toHaveBeenCalledWith('sourceA', 'test', 1, {}, false, { signal: expect.anything() });
+    expect(apiClient.search).toHaveBeenCalledWith('sourceB', 'test', 1, {}, false, { signal: expect.anything() });
 
     // Trigger page 2 by clicking Next button
     const nextBtn = screen.getByLabelText('Go to next page');
@@ -283,9 +285,9 @@ describe('Search Page Integration', () => {
     });
 
     // Verify sourceA with hasNextPage=false is NOT called on page 2
-    expect(apiClient.search).not.toHaveBeenCalledWith('sourceA', 'test', 2, expect.anything(), false);
+    expect(apiClient.search).not.toHaveBeenCalledWith('sourceA', 'test', 2, expect.anything(), false, expect.anything());
     // Verify sourceB with hasNextPage=true IS called on page 2
-    expect(apiClient.search).toHaveBeenCalledWith('sourceB', 'test', 2, {}, false);
+    expect(apiClient.search).toHaveBeenCalledWith('sourceB', 'test', 2, {}, false, { signal: expect.anything() });
   });
 
   it('resets exhausted status when search query or filters change', async () => {
@@ -357,7 +359,8 @@ describe('Search Page Integration', () => {
         'test',
         1,
         { 'genre[]': ['action'] },
-        false
+        false,
+        { signal: expect.anything() }
       );
     });
   });

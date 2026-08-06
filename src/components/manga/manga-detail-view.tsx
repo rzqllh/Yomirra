@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useDeferredValue } from "react";
-import { Play, SortAscending, SortDescending, Book, Bell } from "@phosphor-icons/react";
+import { Play, SortAscending, SortDescending, Book } from "@phosphor-icons/react";
 import { CaretLeft } from "@phosphor-icons/react";
 import Image from "next/image";
 import Link from "next/link";
@@ -222,17 +222,6 @@ export function MangaDetailView({
             {detail.title}
           </span>
         </motion.div>
-        <div className="bg-surface-glass backdrop-blur-xl border border-border-glass shadow-glass rounded-full w-[46px] h-[46px] pointer-events-auto shrink-0 flex items-center justify-center">
-          <button 
-            aria-label="Notifikasi"
-            className="flex items-center justify-center min-w-[44px] min-h-[44px] rounded-full text-text-primary hover:bg-black/5 dark:hover:bg-surface-hover transition-colors drop-shadow-sm"
-            onClick={() => toast.info("Fitur Notifikasi sedang dalam pengembangan", {
-              description: "Nantikan update selanjutnya!"
-            })}
-          >
-            <Bell size={20} weight="regular" />
-          </button>
-        </div>
       </div>
 
       <style dangerouslySetInnerHTML={{ __html: `

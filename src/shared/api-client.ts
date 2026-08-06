@@ -51,7 +51,7 @@ class ApiClient {
     return this.fetcher<MangaPageResult>(this.appendManifest(`/api/sources/${sourceId}/latest?page=${page}`, sourceId));
   }
 
-  search(sourceId: string, query: string, page: number = 1, filters?: Record<string, string | string[]>, isNsfwFiltered: boolean = false) {
+  search(sourceId: string, query: string, page: number = 1, filters?: Record<string, string | string[]>, isNsfwFiltered: boolean = false, options?: { signal?: AbortSignal }) {
     let url = `/api/sources/${sourceId}/search?q=${encodeURIComponent(query)}&page=${page}`;
     
     const finalFilters = { ...filters };
@@ -83,7 +83,7 @@ class ApiClient {
     
     url = this.appendManifest(url, sourceId);
     
-    return this.fetcher<{mangas?: MangaItem[], results?: MangaItem[], hasNextPage?: boolean}>(url).then(data => ({
+    return this.fetcher<{mangas?: MangaItem[], results?: MangaItem[], hasNextPage?: boolean}>(url, { signal: options?.signal }).then(data => ({
       sourceId,
       query,
       page,

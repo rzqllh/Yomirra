@@ -15,10 +15,14 @@ export class HttpClient {
       url += `?${searchParams.toString()}`;
     }
 
+    const requestSignal = init?.signal
+      ? AbortSignal.any([AbortSignal.timeout(10000), init.signal])
+      : AbortSignal.timeout(10000);
+
     const res = await fetch(url, {
       cache: "no-store",
-      signal: AbortSignal.timeout(10000), // 10s timeout to prevent infinite loading
       ...init,
+      signal: requestSignal,
       headers: {
         Accept: "application/json",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -49,10 +53,14 @@ export class HttpClient {
       url += `?${searchParams.toString()}`;
     }
 
+    const requestSignal = init?.signal
+      ? AbortSignal.any([AbortSignal.timeout(10000), init.signal])
+      : AbortSignal.timeout(10000);
+
     const res = await fetch(url, {
       cache: "no-store",
-      signal: AbortSignal.timeout(10000), // 10s timeout to prevent infinite loading
       ...init,
+      signal: requestSignal,
       headers: {
         Accept: "text/html,application/xhtml+xml,application/xml",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
