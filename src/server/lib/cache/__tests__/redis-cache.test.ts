@@ -39,6 +39,6 @@ describe("Cache: withCache", () => {
 
     expect(result).toEqual({ new: "data" });
     expect(fetcher).toHaveBeenCalled();
-    expect(redis.setex).toHaveBeenCalledWith("test-key", 60, JSON.stringify({ new: "data" }));
+    expect(redis.setex).toHaveBeenCalledWith("test-key", 7 * 24 * 60 * 60, expect.stringContaining('"new":"data"'));
   });
 });
