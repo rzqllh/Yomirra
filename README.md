@@ -23,7 +23,7 @@ The project is under active development. Some browser-specific PWA and offline b
 ## Highlights
 
 - Multi-source search with source-aware filters.
-- Built-in adapters for Shinigami, Komikindo, and MangaDex.
+- Built-in adapters and customizable source extensions.
 - Optional installable sources through a JSON manifest.
 - Manga detail, chapter list, and image reader flows.
 - Library, bookmarks, reading history, and preferences.
@@ -37,9 +37,8 @@ The project is under active development. Some browser-specific PWA and offline b
 
 | Source | ID | Type | Notes |
 | --- | --- | --- | --- |
-| Shinigami | `shinigami` | API adapter | Indonesian manga/manhwa source |
-| Komikindo | `komikindo` | HTML/API adapter | Filter data is discovered dynamically |
-| MangaDex | `mangadex` | API adapter | International source |
+| MangaDex | `mangadex` | API adapter | International open API source |
+| Sample Source | `sample-source` | API adapter | Generic source adapter blueprint |
 
 A source can become slow or unavailable independently of Yomirra. The application should degrade gracefully when one source fails.
 

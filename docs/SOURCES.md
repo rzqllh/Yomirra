@@ -54,12 +54,8 @@ Location: `src/server/lib/sources/adapters/`
 
 | Adapter | Source ID | Language | NSFW | Notes |
 |---------|-----------|----------|------|-------|
-| `shinigami` | `shinigami` | ID | No | Primary Indonesian source. Has custom normalizer. |
-| `komikindo` | `komikindo` | ID | No | Indonesian manga |
-| `komiku` | `komiku` | ID | No | Indonesian manga |
-| `komikuasia` | `komikuasia` | ID | No | Indonesian manga |
-| `westmanga` | `westmanga` | ID | No | Indonesian manga |
-| `manhwadesu` | `manhwadesu` | ID | No | Indonesian manhwa |
+| `mangadex` | `mangadex` | EN/Multi | No | International source API. |
+| `sample-adapter` | `sample-adapter` | ID | No | Generic source adapter blueprint. |
 | `project-alpha` | `project-alpha` | — | — | Private source |
 | `project-beta` | `project-beta` | — | — | Private source |
 | `project-gamma` | `project-gamma` | — | — | Private source |
