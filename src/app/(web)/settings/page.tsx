@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { UserCircle, SignOut, Broom, Palette, HandTap, ShieldWarning, WifiHigh, Lightning, Fire, PuzzlePiece, Spinner, ArrowsClockwise, DeviceMobile } from "@phosphor-icons/react";
+import { UserCircle, SignOut, Broom, Palette, HandTap, ShieldWarning, WifiHigh, Lightning, Fire, PuzzlePiece, Spinner, ArrowsClockwise, DeviceMobile, FileText } from "@phosphor-icons/react";
+import { BackupRestoreModal } from "@/components/settings/backup-restore-modal";
 import { useAuth } from "@/shared/hooks/use-auth";
 import { useSync } from "@/shared/hooks/use-sync";
 import { Button } from "@/components/ui/button";
@@ -43,6 +44,7 @@ export default function SettingsPage() {
   };
 
   const [isClearDataDialogOpen, setIsClearDataDialogOpen] = React.useState(false);
+  const [isBackupModalOpen, setIsBackupModalOpen] = React.useState(false);
 
   const handleClearData = () => {
     setIsClearDataDialogOpen(true);
@@ -302,6 +304,20 @@ export default function SettingsPage() {
               />
             </SettingsSection>
 
+            {/* Backup & Restore */}
+            <SettingsSection title="Cadangan Data">
+              <SettingsItem
+                icon={<IconWrapper variant="accent"><FileText size={20} weight="duotone" /></IconWrapper>}
+                title="Backup & Restore Data"
+                description="Simpan ke file JSON atau pulihkan data riwayat & koleksi lokal."
+                right={
+                  <Button onClick={() => setIsBackupModalOpen(true)} variant="outline" className="w-full sm:w-auto shrink-0 border-accent/40 text-accent hover:bg-accent hover:text-white rounded-full font-bold transition-colors">
+                    Kelola Backup
+                  </Button>
+                }
+              />
+            </SettingsSection>
+
             {/* Data Lokal */}
             <SettingsSection title={user ? "Data Perangkat" : "Data Lokal"}>
               <SettingsItem
@@ -353,6 +369,8 @@ export default function SettingsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <BackupRestoreModal isOpen={isBackupModalOpen} onOpenChange={setIsBackupModalOpen} />
     </DirectionalTransition>
   );
 }
