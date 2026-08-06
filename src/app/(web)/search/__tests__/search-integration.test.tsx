@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import SearchPage from '../page';
@@ -223,6 +223,142 @@ describe('Search Page Integration', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Naruto')).toBeDefined();
+    });
+  });
+
+  it('does not call search for sourceA on page 2 when hasNextPage=false on page 1, but continues calling sourceB with hasNextPage=true', async () => {
+    useSearchFilterStore.setState({
+      selectedSources: ['sourceA', 'sourceB'],
+      genres: [],
+      formats: [],
+      status: '',
+      sort: ''
+    });
+
+    (apiClient.getFilters as any).mockImplementation(async () => ({ genres: [], formats: [], sorts: [], statuses: [] }));
+
+    (apiClient.search as any).mockImplementation(async (sourceId: string, _query: string, page: number) => {
+      if (sourceId === 'sourceA') {
+        if (page === 1) {
+          return { sourceId: 'sourceA', query: 'test', page: 1, results: [{ id: 'm1', title: 'Manga A' }], hasNextPage: false };
+        }
+        return { sourceId: 'sourceA', query: 'test', page, results: [{ id: 'm1-unexpected', title: 'Unexpected A' }], hasNextPage: false };
+      }
+      if (sourceId === 'sourceB') {
+        if (page === 1) {
+          return { sourceId: 'sourceB', query: 'test', page: 1, results: [{ id: 'm2', title: 'Manga B Page 1' }], hasNextPage: true };
+        }
+        return { sourceId: 'sourceB', query: 'test', page: 2, results: [{ id: 'm3', title: 'Manga B Page 2' }], hasNextPage: false };
+      }
+      return { sourceId, query: 'test', page, results: [] };
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <React.Suspense fallback={<div>Loading...</div>}>
+          <SearchPage />
+        </React.Suspense>
+      </QueryClientProvider>
+    );
+
+    // Page 1 assertions
+    await waitFor(() => {
+      expect(screen.getAllByText('Manga A').length).toBeGreaterThan(0);
+      expect(screen.getAllByText('Manga B Page 1').length).toBeGreaterThan(0);
+    });
+
+    // Cache key must include sourceId, query, payload, NSFW, and page
+    expect(apiClient.search).toHaveBeenCalledWith('sourceA', 'test', 1, {}, false);
+    expect(apiClient.search).toHaveBeenCalledWith('sourceB', 'test', 1, {}, false);
+
+    // Trigger page 2 by clicking Next button
+    const nextBtn = screen.getByLabelText('Go to next page');
+    act(() => {
+      fireEvent.click(nextBtn);
+    });
+
+    // Wait for Page 2 results
+    await waitFor(() => {
+      expect(screen.getAllByText('Manga B Page 2').length).toBeGreaterThan(0);
+    });
+
+    // Verify sourceA with hasNextPage=false is NOT called on page 2
+    expect(apiClient.search).not.toHaveBeenCalledWith('sourceA', 'test', 2, expect.anything(), false);
+    // Verify sourceB with hasNextPage=true IS called on page 2
+    expect(apiClient.search).toHaveBeenCalledWith('sourceB', 'test', 2, {}, false);
+  });
+
+  it('resets exhausted status when search query or filters change', async () => {
+    useSearchFilterStore.setState({
+      selectedSources: ['sourceA', 'sourceB'],
+      genres: [],
+      formats: [],
+      status: '',
+      sort: ''
+    });
+
+    (apiClient.getFilters as any).mockImplementation(async () => ({ genres: [{ id: 'action', name: 'Action' }], formats: [], sorts: [], statuses: [] }));
+
+    (apiClient.search as any).mockImplementation(async (sourceId: string, query: string, page: number, payload: any) => {
+      if (sourceId === 'sourceA') {
+        if (query === 'test' && page === 1 && Object.keys(payload).length === 0) {
+          return { sourceId: 'sourceA', query: 'test', page: 1, results: [{ id: 'm1', title: 'Manga A Initial' }], hasNextPage: false };
+        }
+        return { sourceId: 'sourceA', query, page, results: [{ id: 'm1-new', title: 'Manga A Filtered' }], hasNextPage: true };
+      }
+      if (sourceId === 'sourceB') {
+        return { sourceId: 'sourceB', query, page, results: [{ id: 'm2', title: 'Manga B Page 1' }], hasNextPage: true };
+      }
+      return { sourceId, query, page, results: [] };
+    });
+
+    const { rerender } = render(
+      <QueryClientProvider client={queryClient}>
+        <React.Suspense fallback={<div>Loading...</div>}>
+          <SearchPage />
+        </React.Suspense>
+      </QueryClientProvider>
+    );
+
+    // Initial search for query "test" page 1
+    await waitFor(() => {
+      expect(screen.getAllByText('Manga A Initial').length).toBeGreaterThan(0);
+    });
+
+    // Go to page 2 -> sourceA becomes exhausted for key ("sourceA", "test", false, {}, 1)
+    const nextBtn = screen.getByLabelText('Go to next page');
+    act(() => {
+      fireEvent.click(nextBtn);
+    });
+
+    await waitFor(() => {
+      expect(apiClient.search).not.toHaveBeenCalledWith('sourceA', 'test', 2, expect.anything(), false);
+    });
+
+    // Now change search filters (add genre 'action')
+    act(() => {
+      useSearchFilterStore.setState({
+        genres: ['action']
+      });
+    });
+
+    rerender(
+      <QueryClientProvider client={queryClient}>
+        <React.Suspense fallback={<div>Loading...</div>}>
+          <SearchPage />
+        </React.Suspense>
+      </QueryClientProvider>
+    );
+
+    // Changing filter changes payload key to { 'genre[]': ['action'] }, resetting exhausted state
+    await waitFor(() => {
+      expect(apiClient.search).toHaveBeenCalledWith(
+        'sourceA',
+        'test',
+        1,
+        { 'genre[]': ['action'] },
+        false
+      );
     });
   });
 });

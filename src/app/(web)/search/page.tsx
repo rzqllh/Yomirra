@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useQuery, useQueries } from "@tanstack/react-query";
+import { useQuery, useQueries, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
 import { MagnifyingGlass, WarningCircle, CheckCircle } from "@phosphor-icons/react/dist/ssr";
 import { SearchResultSkeleton } from "@/components/skeletons/search-result-skeleton";
@@ -206,14 +206,28 @@ function SearchContent() {
 
   const activeFilters = React.useMemo(() => ({ genres, formats, status, sort }), [genres, formats, status, sort]);
 
+  const queryClient = useQueryClient();
+
   // Execute parallel search requests per source with source-specific filter payload
   const searchQueries = useQueries({
     queries: activeSelectedSources.map((sourceId) => {
       const payload = buildPayloadForSource(sourceId, dynamicFilters, activeFilters);
+
+      let isExhausted = false;
+      for (let p = 1; p < page; p++) {
+        const prevData = queryClient.getQueryData<{ hasNextPage?: boolean }>(
+          ["searchSource", sourceId, query, isNsfwFiltered, payload, p]
+        );
+        if (prevData && prevData.hasNextPage === false) {
+          isExhausted = true;
+          break;
+        }
+      }
+
       return {
         queryKey: ["searchSource", sourceId, query, isNsfwFiltered, payload, page],
         queryFn: () => apiClient.search(sourceId, query, page, payload, isNsfwFiltered),
-        enabled: activeSelectedSources.length > 0,
+        enabled: activeSelectedSources.length > 0 && !isExhausted,
       };
     })
   });
@@ -235,10 +249,28 @@ function SearchContent() {
           error: (q.error as Error).message || "Error",
           results: [],
         };
+      } else {
+        const payload = buildPayloadForSource(sourceId, dynamicFilters, activeFilters);
+        let isExhausted = false;
+        for (let p = 1; p < page; p++) {
+          const prevData = queryClient.getQueryData<{ hasNextPage?: boolean }>(
+            ["searchSource", sourceId, query, isNsfwFiltered, payload, p]
+          );
+          if (prevData && prevData.hasNextPage === false) {
+            isExhausted = true;
+            break;
+          }
+        }
+        if (isExhausted) {
+          acc[sourceId] = {
+            results: [],
+            hasNextPage: false,
+          };
+        }
       }
     });
     return acc;
-  }, [activeSelectedSources, searchQueries]);
+  }, [activeSelectedSources, searchQueries, queryClient, dynamicFilters, activeFilters, page, query, isNsfwFiltered]);
 
   // Helper to interleave and deduplicate mangas from multiple sources
   const getMergedMangas = (sourceArrays: { sourceId: string, items: any[] }[]) => {
