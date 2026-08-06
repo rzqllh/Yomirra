@@ -5,46 +5,137 @@ import { apiClient } from "@/shared/api-client";
 import { ShelfCard } from "@/components/manga/card/shelf-card";
 import { MangaItem } from "@/shared/types/source";
 
-
-
 interface MangaRecommendationsProps {
   sourceId: string;
   currentMangaId: string;
   genres: string[];
 }
 
-export function MangaRecommendations({ sourceId: currentSourceId, currentMangaId, genres }: MangaRecommendationsProps) {
+interface RecommendedManga {
+  manga: MangaItem;
+  sourceId: string;
+}
 
+export function MangaRecommendations({
+  sourceId: currentSourceId,
+  currentMangaId,
+  genres = [],
+}: MangaRecommendationsProps) {
   const { data: recommendations = [], isLoading } = useQuery({
     queryKey: ["recommendations", currentSourceId, currentMangaId, genres],
     queryFn: async () => {
-      let results: { manga: MangaItem, sourceId: string }[] = [];
+      const TARGET_COUNT = 10;
+      const results: RecommendedManga[] = [];
+      const seenTitles = new Set<string>();
+      const seenKeys = new Set<string>();
 
-      // Try fetching by genre from the exact same source
-      if (genres && genres.length > 0) {
+      // Exclude current manga
+      seenKeys.add(`${currentSourceId}::${currentMangaId}`);
+
+      const addItems = (items: MangaItem[], srcId: string) => {
+        for (const item of items) {
+          if (results.length >= TARGET_COUNT) break;
+          const key = `${srcId}::${item.id}`;
+          const normalizedTitle = item.title.trim().toLowerCase();
+
+          if (seenKeys.has(key) || seenTitles.has(normalizedTitle)) continue;
+
+          seenKeys.add(key);
+          seenTitles.add(normalizedTitle);
+          results.push({ manga: item, sourceId: srcId });
+        }
+      };
+
+      const primaryGenres = genres.slice(0, 2);
+
+      // 1. Primary genre search on current source (1–2 primary genres)
+      if (primaryGenres.length > 0) {
         try {
-          // Sort by latest so recommendations stay fresh
-          const searchRes = await apiClient.search(currentSourceId, "", 1, { "genre[]": genres, "sort": "latest" });
-          const searched = (searchRes.results || []).filter(m => m.id !== currentMangaId);
-          if (searched.length >= 3) {
-            results = searched.map(m => ({ manga: m, sourceId: currentSourceId }));
+          const searchRes = await apiClient.search(currentSourceId, "", 1, {
+            "genre[]": primaryGenres,
+            sort: "latest",
+          });
+          addItems(searchRes.results || [], currentSourceId);
+        } catch {
+          // Suppress error to allow fallback
+        }
+
+        if (results.length < TARGET_COUNT) {
+          try {
+            const singleGenreRes = await apiClient.search(currentSourceId, "", 1, {
+              "genre[]": [primaryGenres[0]],
+            });
+            addItems(singleGenreRes.results || [], currentSourceId);
+          } catch {
+            // Suppress error to allow fallback
           }
-        } catch (err) {
-          console.log("Source does not support genre search or failed:", err);
         }
       }
 
-      return results.slice(0, 10);
+      // 2. Fallback to popular/latest on current source
+      if (results.length < TARGET_COUNT) {
+        try {
+          const popularRes = await apiClient.getPopular(currentSourceId, 1);
+          addItems(popularRes.mangas || (popularRes as any).results || [], currentSourceId);
+        } catch {
+          // Suppress error
+        }
+      }
+
+      if (results.length < TARGET_COUNT) {
+        try {
+          const latestRes = await apiClient.getLatest(currentSourceId, 1);
+          addItems(latestRes.mangas || (latestRes as any).results || [], currentSourceId);
+        } catch {
+          // Suppress error
+        }
+      }
+
+      // 3. Fallback to other active sources if still under target
+      if (results.length < TARGET_COUNT) {
+        try {
+          const sources = await apiClient.getSources();
+          const otherSources = (sources || []).filter(
+            (s) => s.id !== currentSourceId && s.isEnabled && !s.isNsfw
+          );
+
+          for (const otherSource of otherSources) {
+            if (results.length >= TARGET_COUNT) break;
+
+            if (primaryGenres.length > 0) {
+              try {
+                const otherSearchRes = await apiClient.search(otherSource.id, "", 1, {
+                  "genre[]": [primaryGenres[0]],
+                });
+                addItems(otherSearchRes.results || [], otherSource.id);
+              } catch {
+                // Suppress error
+              }
+            }
+
+            if (results.length < TARGET_COUNT) {
+              try {
+                const otherPopularRes = await apiClient.getPopular(otherSource.id, 1);
+                addItems(otherPopularRes.mangas || (otherPopularRes as any).results || [], otherSource.id);
+              } catch {
+                // Suppress error
+              }
+            }
+          }
+        } catch {
+          // Suppress error
+        }
+      }
+
+      return results.slice(0, TARGET_COUNT);
     },
     staleTime: 1000 * 60 * 30, // 30 minutes
   });
 
-
-
   if (isLoading) {
     return (
-      <div className="mt-8">
-        <h3 className="text-lg md:text-xl font-bold text-text-primary mb-4">Mungkin Kamu Juga Suka</h3>
+      <div className="mt-8 md:mt-12">
+        <h3 className="text-lg md:text-xl font-bold text-text-primary mb-4">Komik Serupa</h3>
         <div className="h-[200px] bg-surface-base animate-pulse rounded-lg" />
       </div>
     );
@@ -54,7 +145,7 @@ export function MangaRecommendations({ sourceId: currentSourceId, currentMangaId
 
   return (
     <div className="mt-8 md:mt-12">
-      <h3 className="text-lg md:text-xl font-bold text-text-primary mb-4">Mungkin Kamu Juga Suka</h3>
+      <h3 className="text-lg md:text-xl font-bold text-text-primary mb-4">Komik Serupa</h3>
       <div className="flex gap-4 overflow-x-auto pb-4 snap-x snap-mandatory hide-scrollbar">
         {recommendations.map((item) => (
           <div key={`${item.sourceId}-${item.manga.id}`} className="w-[120px] md:w-[150px] shrink-0 snap-start">
