@@ -129,8 +129,8 @@ class ApiClient {
     return this.fetcher<MangaDetail>(this.appendManifest(`/api/sources/${sourceId}/manga/${encodeURIComponent(mangaId)}`, sourceId));
   }
 
-  getChapters(sourceId: string, mangaId: string) {
-    return this.fetcher<Chapter[]>(this.appendManifest(`/api/sources/${sourceId}/manga/${encodeURIComponent(mangaId)}/chapters`, sourceId));
+  getChapters(sourceId: string, mangaId: string, options?: RequestInit) {
+    return this.fetcher<Chapter[]>(this.appendManifest(`/api/sources/${sourceId}/manga/${encodeURIComponent(mangaId)}/chapters`, sourceId), options);
   }
 
   getPages(sourceId: string, mangaId: string, chapterId: string) {
