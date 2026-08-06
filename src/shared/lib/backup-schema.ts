@@ -69,6 +69,24 @@ export const statsBackupSchema = z.object({
   totalReadingTimeMs: z.number().min(0).finite(),
 });
 
+export const updateItemBackupSchema = z.object({
+  sourceId: z.string().min(1),
+  mangaId: z.string().min(1),
+  mangaTitle: z.string().min(1),
+  coverUrl: z.string().optional(),
+  sourceName: z.string().optional(),
+  lastKnownChapterId: z.string().optional(),
+  lastKnownChapterNumber: z.number().optional(),
+  lastKnownChapterTitle: z.string().optional(),
+  latestChapterId: z.string().optional(),
+  latestChapterNumber: z.number().optional(),
+  latestChapterTitle: z.string().optional(),
+  detectedAt: z.string().optional(),
+  lastCheckedAt: z.string().optional(),
+  seenAt: z.string().optional(),
+  error: z.string().optional(),
+});
+
 export const yomirraBackupSchemaV1 = z.object({
   schemaVersion: z.literal(1),
   appVersion: z.string().min(1),
@@ -76,6 +94,7 @@ export const yomirraBackupSchemaV1 = z.object({
   data: z.object({
     library: z.array(libraryItemBackupSchema).max(1000, "Library tidak boleh melebihi 1000 item"),
     history: z.array(historyItemBackupSchema).max(1000, "History tidak boleh melebihi 1000 item"),
+    updates: z.array(updateItemBackupSchema).max(1000, "Updates tidak boleh melebihi 1000 item").optional(),
     settings: whitelistedSettingsSchema,
     readerPreferences: readerPreferencesBackupSchema,
     sourcePreferences: sourcePreferencesBackupSchema,
@@ -86,6 +105,7 @@ export const yomirraBackupSchemaV1 = z.object({
 export type YomirraBackupV1 = z.infer<typeof yomirraBackupSchemaV1>;
 export type LibraryItemBackup = z.infer<typeof libraryItemBackupSchema>;
 export type HistoryItemBackup = z.infer<typeof historyItemBackupSchema>;
+export type UpdateItemBackup = z.infer<typeof updateItemBackupSchema>;
 
 export type ImportMode = "merge" | "replace";
 

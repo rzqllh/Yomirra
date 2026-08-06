@@ -4,6 +4,8 @@ import { useSettingsStore } from "@/shared/store/settings-store";
 import { useReaderStore } from "@/shared/store/reader-store";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { useStatsStore } from "@/shared/store/stats-store";
+import { useUpdateStore } from "@/shared/store/update-store";
+import type { MangaUpdateItem } from "@/shared/types/update";
 import {
   yomirraBackupSchemaV1,
   type YomirraBackupV1,
@@ -11,6 +13,7 @@ import {
   type ImportMode,
   type LibraryItemBackup,
   type HistoryItemBackup,
+  type UpdateItemBackup,
 } from "./backup-schema";
 
 export const getLibraryId = (sourceId: string, mangaId: string) => `${sourceId}::${mangaId}`;
@@ -19,6 +22,7 @@ export const getHistoryId = (sourceId: string, mangaId: string, chapterId: strin
 export interface CurrentStoresProjection {
   libraryItems: Record<string, LibraryItem>;
   historyItems: Record<string, HistoryItem>;
+  updateItems: Record<string, MangaUpdateItem>;
   statsTimeMs: number;
 }
 
@@ -26,6 +30,7 @@ export function getCurrentStoresProjection(): CurrentStoresProjection {
   return {
     libraryItems: useLibraryStore.getState().items || {},
     historyItems: useHistoryStore.getState().items || {},
+    updateItems: useUpdateStore.getState().items || {},
     statsTimeMs: useStatsStore.getState().totalReadingTimeMs || 0,
   };
 }
@@ -37,6 +42,7 @@ export function createBackupPayload(theme: "light" | "dark" | "system" = "system
   const readerState = useReaderStore.getState();
   const sourcePrefState = useSourcePreferencesStore.getState();
   const statsState = useStatsStore.getState();
+  const updateState = useUpdateStore.getState();
 
   // Whitelist & filter out NSFW items
   const libraryList: LibraryItemBackup[] = Object.values(libraryState.items || {})
@@ -81,6 +87,10 @@ export function createBackupPayload(theme: "light" | "dark" | "system" = "system
       isNsfw: false,
     }));
 
+  const updateList: UpdateItemBackup[] = Object.values(updateState.items || {}).map((item) => ({
+    ...item
+  }));
+
   return {
     schemaVersion: 1,
     appVersion: "1.0.0",
@@ -88,6 +98,7 @@ export function createBackupPayload(theme: "light" | "dark" | "system" = "system
     data: {
       library: libraryList,
       history: historyList,
+      updates: updateList,
       settings: {
         dataSaver: settingsState.dataSaver,
         hideNsfw: settingsState.hideNsfw,
@@ -234,6 +245,18 @@ export function performDryRun(
     }
   });
 
+  const seenUpdKeys = new Set<string>();
+  if (backupData.data.updates) {
+    backupData.data.updates.forEach((item) => {
+      const key = `${item.sourceId}::${item.mangaId}`;
+      if (seenUpdKeys.has(key)) {
+        preview.duplicateInPayloadCount++;
+      } else {
+        seenUpdKeys.add(key);
+      }
+    });
+  }
+
   // 6. Domain conflict metrics against current store projection
   // Library domain conflict metrics
   const uniqueLibItems = new Map<string, LibraryItemBackup>();
@@ -296,6 +319,7 @@ export function executeCoordinatedRestore(
   const snapRead = useReaderStore.getState();
   const snapSrc = useSourcePreferencesStore.getState();
   const snapStat = useStatsStore.getState();
+  const snapUpd = useUpdateStore.getState();
 
   try {
     // 1. Compute target Library state
@@ -352,6 +376,34 @@ export function executeCoordinatedRestore(
       });
     }
 
+    // 2.5 Compute target Updates state
+    let targetUpdateItems: Record<string, MangaUpdateItem> = {};
+    if (mode === "replace") {
+      if (backup.data.updates) {
+        backup.data.updates.forEach((item) => {
+          const id = `${item.sourceId}::${item.mangaId}`;
+          targetUpdateItems[id] = { ...item };
+        });
+      }
+    } else {
+      targetUpdateItems = { ...(snapUpd.items || {}) };
+      if (backup.data.updates) {
+        backup.data.updates.forEach((item) => {
+          const id = `${item.sourceId}::${item.mangaId}`;
+          const existing = targetUpdateItems[id];
+          if (!existing) {
+            targetUpdateItems[id] = { ...item };
+          } else {
+            const backupTime = Date.parse(item.lastCheckedAt || item.detectedAt || "");
+            const existingTime = Date.parse(existing.lastCheckedAt || existing.detectedAt || "");
+            if (!isNaN(backupTime) && !isNaN(existingTime) && backupTime > existingTime) {
+              targetUpdateItems[id] = { ...item };
+            }
+          }
+        });
+      }
+    }
+
     // 3. Compute target Settings
     const targetSettings = {
       dataSaver: backup.data.settings.dataSaver,
@@ -393,6 +445,7 @@ export function executeCoordinatedRestore(
       hiddenFromHomeSources: targetHiddenFromHomeSources,
     });
     useStatsStore.setState({ totalReadingTimeMs: targetStatsMs });
+    useUpdateStore.setState({ items: targetUpdateItems });
 
     if (themeSetter && backup.data.settings.theme) {
       themeSetter(backup.data.settings.theme);
@@ -415,6 +468,7 @@ export function executeCoordinatedRestore(
       hiddenFromHomeSources: snapSrc.hiddenFromHomeSources,
     });
     useStatsStore.setState({ totalReadingTimeMs: snapStat.totalReadingTimeMs });
+    useUpdateStore.setState({ items: snapUpd.items });
 
     throw err;
   }
