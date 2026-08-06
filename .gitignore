@@ -1,6 +1,6 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
+# Dependencies
 /node_modules
 /.pnp
 .pnp.*
@@ -10,21 +10,21 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
+# Testing
 /coverage
 
-# next.js
+# Next.js
 /.next/
 /out/
 
-# production
+# Production
 /build
 
-# misc
+# Misc
 .DS_Store
 *.pem
 
-# debug
+# Debug logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
@@ -32,53 +32,61 @@ yarn-error.log*
 firebase-debug.log
 firebase-debug.*.log
 
-# env files (can opt-in for committing if needed)
+# Environment files
 .env*
 !.env.example
 
-# vercel
+# Vercel
 .vercel
 
-# typescript
+# TypeScript
 *.tsbuildinfo
 next-env.d.ts
 
-# prisma generated client
+# Prisma generated client
 /src/generated/prisma
 
 # Local Git worktrees
 .worktrees/
 
-# Local AI agent configuration and installed skills
+# Local AI tools and installed skills
 .codex/
 .agents/
 .gemini/
 .antigravity/
 
 # Generated test and lint reports
+lint-output.txt
 lint-results*.txt
 lint-results*.json
 test-results*.json
 
-# AI Artifacts & Docs
-AGENTS.md
-skills-lock.json
-bugs/
-implementation_plan.md
-mangareader-apps.zip
-tasks.md
-agent.md
-# Secret Config
-.env.local
-readme-secret.md
-src/server/lib/sources/adapters/project-*/
-!docs/checkpoints/
+# Local AI / planning artifacts
+/AGENTS.md
 /GEMINI.md
-src/server/lib/sources/adapters/doujindesu-*/
+/skills-lock.json
+/implementation_plan.md
+/tasks.md
+/agent.md
+/bugs/
+/readme-secret.md
 
+# Internal documentation that should not be published
+/docs/GEMINI.components.md
+/docs/master_prompt.md
+/docs/RULES.md
+/docs/PRD.md
+/docs/SOURCES.md
 
-src/server/lib/sources/adapters/manhwadesu/
+# Private or local source adapters
+/src/server/lib/sources/adapters/project-*/
+/src/server/lib/sources/adapters/doujindesu-*/
+/src/server/lib/sources/adapters/manhwadesu/
 
+# Local archives and exports
+*.zip
 *.html
 
-*.zip
+.agents/
+.codex/
+.gemini/
