@@ -221,7 +221,7 @@ function SearchContent() {
 
       return {
         queryKey: ["searchSource", sourceId, query, isNsfwFiltered, payload, page],
-        queryFn: () => apiClient.search(sourceId, query, page, payload, isNsfwFiltered),
+        queryFn: ({ signal }) => apiClient.search(sourceId, query, page, payload, isNsfwFiltered, { signal }),
         enabled: activeSelectedSources.length > 0 && !isExhausted,
       };
     })

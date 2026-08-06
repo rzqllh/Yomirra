@@ -12,11 +12,20 @@ export interface FilterChipProps extends React.ButtonHTMLAttributes<HTMLButtonEl
 }
 
 export const FilterChip = React.forwardRef<HTMLButtonElement, FilterChipProps>(
-  ({ variant = "default", label, showCheck, showMinus, showDownBadge, selected, className, ...props }, ref) => {
+  ({ variant = "default", label, showCheck, showMinus, showDownBadge, selected, className, "aria-label": ariaLabel, ...props }, ref) => {
+    const computedAriaLabel =
+      ariaLabel ||
+      (showMinus
+        ? `${label}, dikecualikan`
+        : showCheck || (selected && variant === "accent-solid")
+        ? `${label}, disertakan`
+        : label);
+
     return (
       <button
         ref={ref}
         {...props}
+        aria-label={computedAriaLabel}
         aria-pressed={selected}
         className={cn(
           "px-4 py-2 rounded-full text-sm font-bold transition-all border flex items-center gap-1.5 active:scale-[0.98]",
