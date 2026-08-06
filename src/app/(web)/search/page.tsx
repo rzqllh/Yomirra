@@ -171,19 +171,14 @@ function SearchContent() {
   const hasFiltersError = filtersQueries.some(q => q.isError);
   const isCapabilitiesLoaded = filtersQueries.filter(q => q.isSuccess).length === activeSelectedSources.length;
 
-  const filtersQueriesRef = React.useRef(filtersQueries);
-  filtersQueriesRef.current = filtersQueries;
-
-  const capabilitiesVersion = filtersQueries.map(q => q.dataUpdatedAt).join(":");
-
   const dynamicFilters = React.useMemo(() => {
     const sourceFilters = activeSelectedSources.flatMap((sourceId, idx) => {
-      const filters = filtersQueriesRef.current[idx]?.data;
+      const filters = filtersQueries[idx]?.data;
       return filters ? [{ sourceId, filters }] : [];
     });
 
     return mergeFilters(sourceFilters);
-  }, [activeSelectedSources, capabilitiesVersion]);
+  }, [activeSelectedSources, filtersQueries]);
 
   useSearchPruning({
     activeSelectedSources,

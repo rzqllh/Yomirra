@@ -121,7 +121,7 @@ export function CommandMenu() {
               <div className="flex items-center justify-center h-12 w-9 shrink-0 rounded bg-accent/10 text-accent">
                 <MagnifyingGlass weight="bold" size={20} />
               </div>
-              <span className="font-bold text-text-primary">Lihat semua hasil untuk "{searchQuery}"</span>
+              <span className="font-bold text-text-primary">Lihat semua hasil untuk &quot;{searchQuery}&quot;</span>
             </CommandItem>
           </CommandGroup>
         )}
