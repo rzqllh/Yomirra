@@ -169,14 +169,14 @@ export function SearchInput({
 ### The three variants:
 ```tsx
 // Vertical card (grid displays)
-<MangaCard manga={item} sourceId="shinigami" variant="shelf" />
+<MangaCard manga={item} sourceId="mangadex" variant="shelf" />
 
 // Horizontal row (history)
-<MangaCard manga={item} sourceId="shinigami" variant="history"
+<MangaCard manga={item} sourceId="mangadex" variant="history"
   chapterId={chapter.id} chapterTitle={chapter.title} progressPercent={42} />
 
 // Ticket stub (featured/ranked)
-<MangaCard manga={item} sourceId="shinigami" variant="editorial" />
+<MangaCard manga={item} sourceId="mangadex" variant="editorial" />
 ```
 
 ### Rules:

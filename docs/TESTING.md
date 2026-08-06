@@ -33,7 +33,7 @@ src/
 │   └── cache/__tests__/redis-cache.test.ts   ← cache tests
 │
 ├── server/lib/sources/adapters/
-│   └── shinigami/__tests__/normalize.test.ts ← adapter normalizer tests
+│   └── sample-adapter/__tests__/normalize.test.ts ← adapter normalizer tests
 │
 └── shared/
     ├── store/__tests__/history-store.test.ts  ← store tests

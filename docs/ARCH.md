@@ -141,7 +141,7 @@ This is the **most important architecture rule**. Violations WILL break the app.
 
 ```tsx
 // ❌ WRONG — importing server adapter in client component
-import { ShinigamiAdapter } from "@/server/lib/sources/adapters/shinigami";
+import { SampleAdapter } from "@/server/lib/sources/adapters/sample-adapter";
 
 // ❌ WRONG — importing firebase in API route
 import { initFirebase } from "@/shared/lib/firebase"; // in /app/api/**

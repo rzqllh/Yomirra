@@ -190,7 +190,7 @@ Animated enter/exit transitions for View Transitions.
 ```tsx
 <MangaCard
   manga={item}
-  sourceId="shinigami"
+  sourceId="mangadex"
   variant="shelf"      // "shelf" | "history" | "editorial"
   priority={false}
 />
