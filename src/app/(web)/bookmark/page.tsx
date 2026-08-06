@@ -249,7 +249,7 @@ export default function BookmarkPage() {
           </div>
 
           <div className="px-4 py-4 w-full md:max-w-md">
-            <div className="relative flex bg-surface-muted/50 p-1 rounded-full border border-border-subtle/50 ">
+            <div className="relative flex bg-surface-base p-1 rounded-full border border-border-subtle shadow-sm">
               {["reading", "collection"].map((tab) => (
                 <button
                   key={tab}
@@ -263,7 +263,7 @@ export default function BookmarkPage() {
                   {activeTab === tab && (
                     <motion.div
                       layoutId="bookmark-tab-indicator"
-                      className="absolute inset-0 bg-surface-overlay ring-1 ring-border-default rounded-full -z-10"
+                      className="absolute inset-0 bg-surface-raised shadow-sm border border-border-subtle rounded-full -z-10"
                       transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                     />
                   )}
@@ -376,6 +376,7 @@ export default function BookmarkPage() {
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             placeholder="Cari di koleksi..."
+                            containerClassName="border border-border-subtle shadow-sm"
                           />
                         </div>
                         <div className="flex gap-2 relative z-50">
@@ -390,7 +391,7 @@ export default function BookmarkPage() {
                           />
                           <button
                             onClick={() => setSortOrder(prev => prev === "desc" ? "asc" : "desc")}
-                            className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-full bg-surface-glass backdrop-blur-md text-text-primary hover:bg-surface-glass transition-colors shadow-[0_4px_16px_rgba(0,0,0,0.05)] dark:-[0_4px_16px_rgba(0,0,0,0.2)]"
+                            className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-full bg-surface-glass backdrop-blur-md text-text-primary hover:bg-surface-glass transition-colors border border-border-subtle shadow-sm"
                             aria-label="Toggle sort order"
                           >
                             {sortOrder === "desc" ? <SortDescending size={20} weight="bold" /> : <SortAscending size={20} weight="bold" />}
@@ -416,8 +417,8 @@ export default function BookmarkPage() {
                           </div>
                           
                           <Button
-                            variant={isSelectionMode ? "accent" : "outline"}
-                            className="rounded-full h-[44px] font-bold shrink-0 ml-2 shadow-sm"
+                            variant={isSelectionMode ? "accent" : "secondary"}
+                            className="rounded-full h-[44px] font-bold shrink-0 ml-2 shadow-sm border-border-subtle"
                             onClick={() => {
                               if (isSelectionMode) {
                                 setIsSelectionMode(false);

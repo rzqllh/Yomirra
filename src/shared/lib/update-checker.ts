@@ -119,6 +119,10 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
           lastCheckedAt: new Date().toISOString(),
         });
       } catch (err: any) {
+        if (err.name === 'AbortError' || options.signal?.aborted) {
+          break; // Intentionally aborted
+        }
+
         // Record per-source or per-title failure without failing whole scan
         const errorMsg = err?.message || "Gagal memuat chapter terbaru";
         result.errors.push({
