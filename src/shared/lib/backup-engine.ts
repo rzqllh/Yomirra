@@ -5,15 +5,21 @@ import { useReaderStore } from "@/shared/store/reader-store";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { useStatsStore } from "@/shared/store/stats-store";
 import { useUpdateStore } from "@/shared/store/update-store";
+import { useCollectionStore } from "@/shared/store/collection-store";
 import type { MangaUpdateItem } from "@/shared/types/update";
+import type { Collection, MangaKey, ReadingStatus } from "@/shared/types/collection";
 import {
   yomirraBackupSchemaV1,
+  yomirraBackupSchemaV2,
   type YomirraBackupV1,
+  type YomirraBackupV2,
+  type AnyYomirraBackup,
   type DryRunPreview,
   type ImportMode,
   type LibraryItemBackup,
   type HistoryItemBackup,
   type UpdateItemBackup,
+  type CollectionBackup,
 } from "./backup-schema";
 
 export const getLibraryId = (sourceId: string, mangaId: string) => `${sourceId}::${mangaId}`;
@@ -23,6 +29,9 @@ export interface CurrentStoresProjection {
   libraryItems: Record<string, LibraryItem>;
   historyItems: Record<string, HistoryItem>;
   updateItems: Record<string, MangaUpdateItem>;
+  collections: Collection[];
+  membershipsByManga: Record<string, string[]>;
+  readingStatusByManga: Record<string, ReadingStatus>;
   statsTimeMs: number;
 }
 
@@ -31,11 +40,14 @@ export function getCurrentStoresProjection(): CurrentStoresProjection {
     libraryItems: useLibraryStore.getState().items || {},
     historyItems: useHistoryStore.getState().items || {},
     updateItems: useUpdateStore.getState().items || {},
+    collections: useCollectionStore.getState().collections || [],
+    membershipsByManga: useCollectionStore.getState().membershipsByManga || {},
+    readingStatusByManga: useCollectionStore.getState().readingStatusByManga || {},
     statsTimeMs: useStatsStore.getState().totalReadingTimeMs || 0,
   };
 }
 
-export function createBackupPayload(theme: "light" | "dark" | "system" = "system"): YomirraBackupV1 {
+export function createBackupPayload(theme: "light" | "dark" | "system" = "system"): YomirraBackupV2 {
   const libraryState = useLibraryStore.getState();
   const historyState = useHistoryStore.getState();
   const settingsState = useSettingsStore.getState();
@@ -43,6 +55,7 @@ export function createBackupPayload(theme: "light" | "dark" | "system" = "system
   const sourcePrefState = useSourcePreferencesStore.getState();
   const statsState = useStatsStore.getState();
   const updateState = useUpdateStore.getState();
+  const collectionState = useCollectionStore.getState();
 
   // Whitelist & filter out NSFW items
   const libraryList: LibraryItemBackup[] = Object.values(libraryState.items || {})
@@ -91,14 +104,25 @@ export function createBackupPayload(theme: "light" | "dark" | "system" = "system
     ...item
   }));
 
+  const collectionsList: CollectionBackup[] = (collectionState.collections || []).map((item) => ({
+    id: item.id,
+    name: item.name,
+    sortOrder: item.sortOrder,
+    createdAt: item.createdAt,
+    updatedAt: item.updatedAt,
+  }));
+
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     appVersion: "1.0.0",
     exportedAt: new Date().toISOString(),
     data: {
       library: libraryList,
       history: historyList,
       updates: updateList,
+      collections: collectionsList,
+      membershipsByManga: collectionState.membershipsByManga,
+      readingStatusByManga: collectionState.readingStatusByManga,
       settings: {
         dataSaver: settingsState.dataSaver,
         hideNsfw: settingsState.hideNsfw,
@@ -191,7 +215,7 @@ export function performDryRun(
 
   // 3. Schema version check
   const schemaVersion = rawParsed.schemaVersion;
-  if (typeof schemaVersion === "number" && schemaVersion > 1) {
+  if (typeof schemaVersion === "number" && schemaVersion > 2) {
     preview.isVersionSupported = false;
     preview.warnings.push(`Versi schema backup (${schemaVersion}) lebih baru dan tidak didukung`);
     preview.errors.push({ path: "schemaVersion", message: "unsupported_future_schema" });
@@ -199,7 +223,9 @@ export function performDryRun(
   }
 
   // 4. Zod envelope validation
-  const validationResult = yomirraBackupSchemaV1.safeParse(rawParsed);
+  const validationResult = schemaVersion === 2 
+    ? yomirraBackupSchemaV2.safeParse(rawParsed) 
+    : yomirraBackupSchemaV1.safeParse(rawParsed);
   if (!validationResult.success) {
     validationResult.error.issues.forEach((issue) => {
       preview.errors.push({
@@ -308,7 +334,7 @@ export function performDryRun(
 }
 
 export function executeCoordinatedRestore(
-  backup: YomirraBackupV1,
+  backup: AnyYomirraBackup,
   mode: ImportMode,
   themeSetter?: (theme: "light" | "dark" | "system") => void
 ): { success: boolean; restoredCount: number } {
@@ -320,6 +346,7 @@ export function executeCoordinatedRestore(
   const snapSrc = useSourcePreferencesStore.getState();
   const snapStat = useStatsStore.getState();
   const snapUpd = useUpdateStore.getState();
+  const snapCol = useCollectionStore.getState();
 
   try {
     // 1. Compute target Library state
@@ -435,6 +462,59 @@ export function executeCoordinatedRestore(
         ? backup.data.stats.totalReadingTimeMs
         : Math.max(snapStat.totalReadingTimeMs || 0, backup.data.stats.totalReadingTimeMs);
 
+    // 7. Compute target Collections (from V2 or fallback to empty/merge)
+    let targetCollections: Collection[] = [];
+    let targetMemberships: Record<string, string[]> = {};
+    let targetReadingStatus: Record<string, ReadingStatus> = {};
+    
+    if (backup.schemaVersion >= 2) {
+      const v2Backup = backup as YomirraBackupV2;
+      if (mode === "replace") {
+        targetCollections = (v2Backup.data.collections || []).map(c => ({
+          ...c, sortOrder: c.sortOrder ?? 0
+        }));
+        targetMemberships = v2Backup.data.membershipsByManga || {};
+        targetReadingStatus = v2Backup.data.readingStatusByManga || {};
+      } else {
+        // Merge collections
+        const currentCollections = snapCol.collections || [];
+        const currentMemberships = snapCol.membershipsByManga || {};
+        const currentReadingStatus = snapCol.readingStatusByManga || {};
+        
+        targetCollections = [...currentCollections];
+        const existingColIds = new Set(targetCollections.map(c => c.id));
+        
+        (v2Backup.data.collections || []).forEach(c => {
+          if (!existingColIds.has(c.id)) {
+            targetCollections.push({ ...c, sortOrder: c.sortOrder ?? 0 });
+          }
+        });
+        
+        targetMemberships = { ...currentMemberships };
+        Object.entries(v2Backup.data.membershipsByManga || {}).forEach(([mangaId, colIds]) => {
+          const current = targetMemberships[mangaId] || [];
+          targetMemberships[mangaId] = Array.from(new Set([...current, ...colIds]));
+        });
+        
+        targetReadingStatus = { ...currentReadingStatus };
+        Object.entries(v2Backup.data.readingStatusByManga || {}).forEach(([mangaId, status]) => {
+          if (!targetReadingStatus[mangaId]) {
+            targetReadingStatus[mangaId] = status as ReadingStatus;
+          }
+        });
+      }
+    } else {
+      if (mode === "replace") {
+        targetCollections = [];
+        targetMemberships = {};
+        targetReadingStatus = {};
+      } else {
+        targetCollections = [...(snapCol.collections || [])];
+        targetMemberships = { ...(snapCol.membershipsByManga || {}) };
+        targetReadingStatus = { ...(snapCol.readingStatusByManga || {}) };
+      }
+    }
+
     // Apply all store mutations using direct setState (No side effects, local-only)
     useLibraryStore.setState({ items: targetLibraryItems });
     useHistoryStore.setState({ items: targetHistoryItems });
@@ -446,6 +526,11 @@ export function executeCoordinatedRestore(
     });
     useStatsStore.setState({ totalReadingTimeMs: targetStatsMs });
     useUpdateStore.setState({ items: targetUpdateItems });
+    useCollectionStore.setState({
+      collections: targetCollections,
+      membershipsByManga: targetMemberships,
+      readingStatusByManga: targetReadingStatus,
+    });
 
     if (themeSetter && backup.data.settings.theme) {
       themeSetter(backup.data.settings.theme);
@@ -469,6 +554,11 @@ export function executeCoordinatedRestore(
     });
     useStatsStore.setState({ totalReadingTimeMs: snapStat.totalReadingTimeMs });
     useUpdateStore.setState({ items: snapUpd.items });
+    useCollectionStore.setState({
+      collections: snapCol.collections,
+      membershipsByManga: snapCol.membershipsByManga,
+      readingStatusByManga: snapCol.readingStatusByManga,
+    });
 
     throw err;
   }

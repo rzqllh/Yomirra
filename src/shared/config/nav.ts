@@ -1,4 +1,4 @@
-import { House, Compass, Books, Gear, BookmarkSimple, MagnifyingGlass } from "@phosphor-icons/react";
+import { House, Compass, Books, Gear, BookmarkSimple, MagnifyingGlass, Bell } from "@phosphor-icons/react";
 import type { Icon } from "@phosphor-icons/react";
 
 export interface NavItem {
@@ -10,6 +10,7 @@ export interface NavItem {
 export const MAIN_NAV_ITEMS: NavItem[] = [
   { href: "/", icon: House, label: "Beranda" },
   { href: "/library", icon: Books, label: "Library" },
+  { href: "/updates", icon: Bell, label: "Updates" },
   { href: "/bookmark", icon: BookmarkSimple, label: "Bookmark" },
 ];
 

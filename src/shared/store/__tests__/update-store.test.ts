@@ -1,9 +1,14 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { useUpdateStore, getUpdateKey } from "../update-store";
+import { useSettingsStore } from "../settings-store";
 
 describe("UpdateStore (Slice 1.1)", () => {
   beforeEach(() => {
     useUpdateStore.setState({ items: {} });
+    useSettingsStore.setState({
+      notifyForAllLibraryItems: true,
+      mutedMangaKeys: []
+    });
   });
 
   it("keys records by sourceId::mangaId", () => {
@@ -149,5 +154,53 @@ describe("UpdateStore (Slice 1.1)", () => {
     });
     useUpdateStore.getState().clearUpdates();
     expect(Object.keys(useUpdateStore.getState().items).length).toBe(0);
+  });
+
+  describe("Notification Preferences (Slice 1.4)", () => {
+    it("returns 0 unread if notifyForAllLibraryItems is false", () => {
+      useUpdateStore.getState().upsertUpdate({
+        sourceId: "srcA",
+        mangaId: "m1",
+        mangaTitle: "Manga 1",
+        latestChapterId: "ch1",
+      });
+
+      expect(useUpdateStore.getState().getUnreadCount()).toBe(1);
+
+      useSettingsStore.setState({ notifyForAllLibraryItems: false });
+      expect(useUpdateStore.getState().getUnreadCount()).toBe(0);
+    });
+
+    it("does not count muted manga as unread", () => {
+      useUpdateStore.getState().upsertUpdate({
+        sourceId: "srcA",
+        mangaId: "m1",
+        mangaTitle: "Manga 1",
+        latestChapterId: "ch1",
+      });
+
+      expect(useUpdateStore.getState().getUnreadCount()).toBe(1);
+
+      useSettingsStore.setState({ mutedMangaKeys: ["srcA::m1"] });
+      expect(useUpdateStore.getState().getUnreadCount()).toBe(0);
+
+      useSettingsStore.setState({ mutedMangaKeys: [] });
+      expect(useUpdateStore.getState().getUnreadCount()).toBe(1);
+    });
+
+    it("updates page list still contains muted manga", () => {
+      useUpdateStore.getState().upsertUpdate({
+        sourceId: "srcA",
+        mangaId: "m1",
+        mangaTitle: "Manga 1",
+        latestChapterId: "ch1",
+      });
+
+      useSettingsStore.setState({ mutedMangaKeys: ["srcA::m1"] });
+
+      // Still exists in store items
+      const item = useUpdateStore.getState().getUpdate("srcA", "m1");
+      expect(item).toBeDefined();
+    });
   });
 });

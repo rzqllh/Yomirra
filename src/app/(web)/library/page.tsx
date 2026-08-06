@@ -42,6 +42,9 @@ import { useSourcePreferencesStore } from "@/shared/store/source-preferences-sto
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { useMounted } from "@/shared/hooks/use-mounted";
 import { useLibraryFilterStore } from "@/shared/store/library-filter-store";
+import { useLibraryStore } from "@/shared/store/library-store";
+import { useCollectionStore } from "@/shared/store/collection-store";
+import { MangaKey } from "@/shared/types/collection";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { YomirraSurface } from "@/components/ui/layout";
 import { YomirraPageHeader, DesktopPageTitle } from "@/components/app/header";
@@ -70,7 +73,10 @@ function LibraryContent() {
   const sortParam = searchParams.get("sort");
   
   const filterStore = useLibraryFilterStore();
-  const { selectedGenres, excludedGenres, selectedFormats, selectedStatuses, sort: storeSort, query: storeQuery, viewMode } = filterStore;
+  const { selectedGenres, excludedGenres, selectedFormats, selectedStatuses, selectedCollections, selectedReadingStatuses, sort: storeSort, query: storeQuery, viewMode } = filterStore;
+  
+  const libraryItems = useLibraryStore(state => state.items);
+  const { membershipsByManga, readingStatusByManga } = useCollectionStore();
   
   const initialSort = sortParam || storeSort || "popular";
   
@@ -166,7 +172,7 @@ function LibraryContent() {
   }, [storeSort, sort, pathname, router, searchParams]);
 
   // Reset page to 1 when filters change from drawer
-  const previousFiltersRef = React.useRef({ selectedGenres, excludedGenres, selectedFormats, selectedStatuses, storeSort });
+  const previousFiltersRef = React.useRef({ selectedGenres, excludedGenres, selectedFormats, selectedStatuses, selectedCollections, selectedReadingStatuses, storeSort });
   React.useEffect(() => {
     const prev = previousFiltersRef.current;
     if (
@@ -174,14 +180,69 @@ function LibraryContent() {
       prev.selectedGenres !== selectedGenres ||
       prev.excludedGenres !== excludedGenres ||
       prev.selectedFormats !== selectedFormats ||
-      prev.selectedStatuses !== selectedStatuses
+      prev.selectedStatuses !== selectedStatuses ||
+      prev.selectedCollections !== selectedCollections ||
+      prev.selectedReadingStatuses !== selectedReadingStatuses
     ) {
       setPage(1);
-      previousFiltersRef.current = { selectedGenres, excludedGenres, selectedFormats, selectedStatuses, storeSort };
+      previousFiltersRef.current = { selectedGenres, excludedGenres, selectedFormats, selectedStatuses, selectedCollections, selectedReadingStatuses, storeSort };
     }
-  }, [selectedGenres, excludedGenres, selectedFormats, selectedStatuses, storeSort]);
+  }, [selectedGenres, excludedGenres, selectedFormats, selectedStatuses, selectedCollections, selectedReadingStatuses, storeSort]);
 
   const fetchCatalog = async (currentPage: number) => {
+    const hasLocalFilters = selectedCollections.length > 0 || selectedReadingStatuses.length > 0;
+    
+    if (hasLocalFilters) {
+      const localMangas = Object.values(libraryItems).filter(item => {
+        if (item.sourceId !== activeSourceId) return false;
+        
+        const key = `${item.sourceId}::${item.mangaId}` as MangaKey;
+        
+        let passCollection = true;
+        if (selectedCollections.length > 0) {
+           const memberships = membershipsByManga[key] || [];
+           passCollection = selectedCollections.some(c => memberships.includes(c));
+        }
+
+        let passStatus = true;
+        if (selectedReadingStatuses.length > 0) {
+           const status = readingStatusByManga[key];
+           passStatus = status ? selectedReadingStatuses.includes(status) : false;
+        }
+        
+        let passSearch = true;
+        if (query) {
+           passSearch = item.title.toLowerCase().includes(query.toLowerCase());
+        }
+
+        return passCollection && passStatus && passSearch;
+      });
+
+      // Sort local results (newest/popular logic simplified for local)
+      if (sort === "latest") {
+        localMangas.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+      } else if (sort === "alphabetical") {
+        localMangas.sort((a, b) => a.title.localeCompare(b.title));
+      } else {
+        // default "popular" or anything else: sort by date added
+        localMangas.sort((a, b) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime());
+      }
+
+      const PAGE_SIZE = 24;
+      const start = (currentPage - 1) * PAGE_SIZE;
+      const end = start + PAGE_SIZE;
+      const paginated = localMangas.slice(start, end).map(item => ({
+         id: item.mangaId,
+         title: item.title,
+         coverUrl: item.coverUrl || "",
+         author: item.author,
+         status: item.status,
+         format: item.format,
+      }));
+
+      return { mangas: paginated as any[], hasNextPage: end < localMangas.length };
+    }
+
     const hasFilters = selectedGenres.length > 0 || excludedGenres.length > 0 || selectedFormats.length > 0 || selectedStatuses.length > 0;
 
     // Use optimized endpoints for simple browsing (no search, no filters)
@@ -221,7 +282,7 @@ function LibraryContent() {
     isFetching,
     refetch
   } = useQuery({
-    queryKey: ["library-v2", activeSourceId, query, sort, selectedGenres, excludedGenres, selectedFormats, selectedStatuses, page, isNsfwFiltered],
+    queryKey: ["library-v2", activeSourceId, query, sort, selectedGenres, excludedGenres, selectedFormats, selectedStatuses, selectedCollections, selectedReadingStatuses, page, isNsfwFiltered],
     queryFn: () => fetchCatalog(page),
     staleTime: 1000 * 60, // 1 minute
     retry: 1,
@@ -285,7 +346,7 @@ function LibraryContent() {
     setPage(1);
   };
 
-  const activeFilterCount = selectedGenres.length + excludedGenres.length + selectedFormats.length + selectedStatuses.length;
+  const activeFilterCount = selectedGenres.length + excludedGenres.length + selectedFormats.length + selectedStatuses.length + selectedCollections.length + selectedReadingStatuses.length;
   const rawMangas = data?.mangas || [];
   // Deduplicate mangas array to prevent duplicate view-transition-names
   const mangas = Array.from(new Map(rawMangas.map(m => [m.id, m])).values());

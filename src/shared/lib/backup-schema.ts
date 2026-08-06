@@ -87,6 +87,14 @@ export const updateItemBackupSchema = z.object({
   error: z.string().optional(),
 });
 
+export const collectionBackupSchema = z.object({
+  id: z.string().min(1),
+  name: z.string().min(1),
+  sortOrder: z.number().optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+
 export const yomirraBackupSchemaV1 = z.object({
   schemaVersion: z.literal(1),
   appVersion: z.string().min(1),
@@ -102,10 +110,32 @@ export const yomirraBackupSchemaV1 = z.object({
   }),
 });
 
+export const yomirraBackupSchemaV2 = z.object({
+  schemaVersion: z.literal(2),
+  appVersion: z.string().min(1),
+  exportedAt: z.string().refine(isIsoDate, { message: "exportedAt harus berupa ISO date string yang valid" }),
+  data: z.object({
+    library: z.array(libraryItemBackupSchema).max(1000, "Library tidak boleh melebihi 1000 item"),
+    history: z.array(historyItemBackupSchema).max(1000, "History tidak boleh melebihi 1000 item"),
+    updates: z.array(updateItemBackupSchema).max(1000, "Updates tidak boleh melebihi 1000 item").optional(),
+    collections: z.array(collectionBackupSchema).max(100, "Koleksi tidak boleh melebihi 100 item").optional(),
+    membershipsByManga: z.record(z.string(), z.array(z.string())).optional(),
+    readingStatusByManga: z.record(z.string(), z.enum(["reading", "completed", "on-hold", "dropped", "plan-to-read"])).optional(),
+    settings: whitelistedSettingsSchema,
+    readerPreferences: readerPreferencesBackupSchema,
+    sourcePreferences: sourcePreferencesBackupSchema,
+    stats: statsBackupSchema,
+  }),
+});
+
 export type YomirraBackupV1 = z.infer<typeof yomirraBackupSchemaV1>;
+export type YomirraBackupV2 = z.infer<typeof yomirraBackupSchemaV2>;
 export type LibraryItemBackup = z.infer<typeof libraryItemBackupSchema>;
 export type HistoryItemBackup = z.infer<typeof historyItemBackupSchema>;
 export type UpdateItemBackup = z.infer<typeof updateItemBackupSchema>;
+export type CollectionBackup = z.infer<typeof collectionBackupSchema>;
+
+export type AnyYomirraBackup = YomirraBackupV1 | YomirraBackupV2;
 
 export type ImportMode = "merge" | "replace";
 
@@ -127,5 +157,5 @@ export interface DryRunPreview {
   warnings: string[];
   errors: DryRunPathError[];
   isVersionSupported: boolean;
-  backupPayload?: YomirraBackupV1;
+  backupPayload?: AnyYomirraBackup;
 }

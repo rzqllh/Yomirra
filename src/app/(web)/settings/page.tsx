@@ -1,8 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { UserCircle, SignOut, Broom, Palette, HandTap, ShieldWarning, WifiHigh, Lightning, Fire, PuzzlePiece, Spinner, ArrowsClockwise, DeviceMobile, FileText } from "@phosphor-icons/react";
+import { UserCircle, SignOut, Broom, Palette, HandTap, ShieldWarning, WifiHigh, Lightning, Fire, PuzzlePiece, Spinner, ArrowsClockwise, DeviceMobile, FileText, Clock, Bell } from "@phosphor-icons/react";
 import { BackupRestoreModal } from "@/components/settings/backup-restore-modal";
+import { CollectionManager } from "@/components/settings/collection-manager";
 import { useAuth } from "@/shared/hooks/use-auth";
 import { useSync } from "@/shared/hooks/use-sync";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import { useSettingsStore } from "@/shared/store/settings-store";
 import { useStatsStore } from "@/shared/store/stats-store";
 import { useTheme } from "next-themes";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
+import { CustomSelect } from "@/components/ui/custom-select";
 import { DirectionalTransition } from "@/components/ui/directional-transition";
 import { YomirraSurface } from "@/components/ui/layout";
 import { YomirraPageHeader, DesktopPageTitle } from "@/components/app/header";
@@ -30,7 +32,11 @@ export default function SettingsPage() {
   const { runFullSync, isSyncing } = useSync({ autoSync: false });
   const clearHistory = useHistoryStore((state) => state.clearHistory);
   const clearLibrary = useLibraryStore((state) => state.clearLibrary);
-  const { dataSaver, setDataSaver, hideNsfw, setHideNsfw, lastSyncedAt, keepScreenAwake, setKeepScreenAwake } = useSettingsStore();
+  const {
+    dataSaver, setDataSaver, hideNsfw, setHideNsfw, lastSyncedAt, keepScreenAwake, setKeepScreenAwake,
+    checkOnAppStart, setCheckOnAppStart, minimumCheckIntervalMinutes, setMinimumCheckIntervalMinutes,
+    notifyForAllLibraryItems, setNotifyForAllLibraryItems
+  } = useSettingsStore();
   const totalReadingTimeMs = useStatsStore((state) => state.totalReadingTimeMs);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
@@ -179,6 +185,9 @@ export default function SettingsPage() {
               />
             </SettingsSection>
 
+            {/* Kelola Koleksi */}
+            <CollectionManager />
+
             {/* Pintasan Navigasi */}
             <SettingsSection title="Pintasan Navigasi">
               <Link href="/updates" className="block outline-none">
@@ -207,6 +216,61 @@ export default function SettingsPage() {
                   onClick={() => {}}
                 />
               </Link>
+            </SettingsSection>
+
+            {/* Pembaruan Library */}
+            <SettingsSection title="Pembaruan Library">
+              <SettingsItem
+                icon={<IconWrapper><ArrowsClockwise size={20} weight="duotone" /></IconWrapper>}
+                title="Cek Otomatis Saat Dibuka"
+                description="Periksa chapter baru secara otomatis saat aplikasi dimulai."
+                right={
+                  <ToggleSwitch
+                    id="check-on-start"
+                    checked={mounted ? checkOnAppStart : true}
+                    onCheckedChange={setCheckOnAppStart}
+                    label="Cek Otomatis Saat Dibuka"
+                  />
+                }
+              />
+
+              <div className="mx-3 my-1 border-b border-border-subtle/50" />
+
+              <SettingsItem
+                icon={<IconWrapper><Clock size={20} weight="duotone" /></IconWrapper>}
+                title="Interval Pengecekan"
+                description="Batas waktu jeda (cooldown) untuk pengecekan otomatis berikutnya."
+                right={
+                  <CustomSelect
+                    value={String(mounted ? minimumCheckIntervalMinutes : 15)}
+                    onChange={(val) => setMinimumCheckIntervalMinutes(Number(val))}
+                    options={[
+                      { value: "15", label: "15 Menit" },
+                      { value: "30", label: "30 Menit" },
+                      { value: "60", label: "1 Jam" },
+                      { value: "360", label: "6 Jam" },
+                      { value: "720", label: "12 Jam" },
+                    ]}
+                    className={!checkOnAppStart ? "opacity-50 pointer-events-none" : ""}
+                  />
+                }
+              />
+
+              <div className="mx-3 my-1 border-b border-border-subtle/50" />
+
+              <SettingsItem
+                icon={<IconWrapper><Bell size={20} weight="duotone" /></IconWrapper>}
+                title="Notifikasi Global"
+                description="Tandai update baru sebagai belum dibaca pada badge navigasi."
+                right={
+                  <ToggleSwitch
+                    id="notify-all"
+                    checked={mounted ? notifyForAllLibraryItems : true}
+                    onCheckedChange={setNotifyForAllLibraryItems}
+                    label="Tandai update baru sebagai belum dibaca"
+                  />
+                }
+              />
             </SettingsSection>
 
             <SettingsSection title="Preferensi Tampilan">

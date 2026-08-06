@@ -14,6 +14,8 @@ import { IconButton } from "@/components/ui/icon-button";
 import { ChapterRow } from "@/components/manga/chapter-row";
 import { MangaRating } from "@/components/manga/manga-rating";
 import { MangaRecommendations } from "@/components/manga/manga-recommendations";
+import { MangaStatusButton } from "@/components/manga/manga-status-button";
+import { MangaCollectionButton } from "@/components/manga/manga-collection-button";
 import { Star } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
@@ -181,6 +183,10 @@ export function MangaDetailView({
         author={detail.author}
         status={detail.status}
       />
+      <div className="flex gap-2 w-full mt-1">
+        <MangaStatusButton sourceId={sourceId} mangaId={mangaId} />
+        <MangaCollectionButton sourceId={sourceId} mangaId={mangaId} />
+      </div>
     </div>
   );
 
