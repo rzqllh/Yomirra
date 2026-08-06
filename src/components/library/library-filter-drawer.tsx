@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { FilterChip } from "@/components/ui/filter-chip";
 import { cn } from "@/shared/utils/cn";
 import { useLibraryFilterStore } from "@/shared/store/library-filter-store";
+import { useCollectionStore } from "@/shared/store/collection-store";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
 
@@ -20,6 +21,14 @@ const DEFAULT_STATUSES = [
   { id: "completed", label: "Completed" },
   { id: "hiatus", label: "Hiatus" },
   { id: "cancelled", label: "Cancelled" }
+];
+
+const LOCAL_READING_STATUSES = [
+  { id: "reading", label: "Sedang Dibaca" },
+  { id: "completed", label: "Selesai" },
+  { id: "on-hold", label: "Ditunda" },
+  { id: "dropped", label: "Dihentikan" },
+  { id: "plan-to-read", label: "Akan Dibaca" },
 ];
 
 const DEFAULT_SORTS = [
@@ -38,6 +47,11 @@ export function LibraryFilterDrawer({ children, activeSourceId }: LibraryFilterD
   const [selectedStatus, setSelectedStatus] = React.useState<string[]>([]);
   const [selectedSort, setSelectedSort] = React.useState<string>("popular");
   const [selectedFormats, setSelectedFormats] = React.useState<string[]>([]);
+  
+  const [selectedCollections, setSelectedCollections] = React.useState<string[]>([]);
+  const [selectedReadingStatuses, setSelectedReadingStatuses] = React.useState<string[]>([]);
+
+  const { collections } = useCollectionStore();
 
   const { data: filtersData } = useQuery({
     queryKey: ["filters", activeSourceId],
@@ -66,6 +80,8 @@ export function LibraryFilterDrawer({ children, activeSourceId }: LibraryFilterD
       setExcludedGenres(storeFilters.excludedGenres || []);
       setSelectedFormats(storeFilters.selectedFormats || []);
       setSelectedStatus(storeFilters.selectedStatuses || []);
+      setSelectedCollections(storeFilters.selectedCollections || []);
+      setSelectedReadingStatuses(storeFilters.selectedReadingStatuses || []);
       setSelectedSort(storeFilters.sort || "popular");
     }
   }, [isOpen, storeFilters]);
@@ -97,12 +113,26 @@ export function LibraryFilterDrawer({ children, activeSourceId }: LibraryFilterD
     );
   };
 
+  const toggleCollection = (colId: string) => {
+    setSelectedCollections(prev => 
+      prev.includes(colId) ? prev.filter(c => c !== colId) : [...prev, colId]
+    );
+  };
+
+  const toggleReadingStatus = (statusId: string) => {
+    setSelectedReadingStatuses(prev => 
+      prev.includes(statusId) ? prev.filter(s => s !== statusId) : [...prev, statusId]
+    );
+  };
+
   const handleApply = () => {
     storeFilters.setFilters({
       selectedGenres,
       excludedGenres,
       selectedFormats,
       selectedStatuses: selectedStatus,
+      selectedCollections,
+      selectedReadingStatuses,
       sort: selectedSort
     });
     setIsOpen(false);
@@ -113,10 +143,12 @@ export function LibraryFilterDrawer({ children, activeSourceId }: LibraryFilterD
     setExcludedGenres([]);
     setSelectedFormats([]);
     setSelectedStatus([]);
+    setSelectedCollections([]);
+    setSelectedReadingStatuses([]);
     setSelectedSort("popular");
   };
 
-  const activeCount = selectedGenres.length + excludedGenres.length + selectedFormats.length + selectedStatus.length + (selectedSort !== "popular" ? 1 : 0);
+  const activeCount = selectedGenres.length + excludedGenres.length + selectedFormats.length + selectedStatus.length + selectedCollections.length + selectedReadingStatuses.length + (selectedSort !== "popular" ? 1 : 0);
 
   return (
     <Drawer.Root open={isOpen} onOpenChange={handleOpenChange}>
@@ -232,6 +264,42 @@ export function LibraryFilterDrawer({ children, activeSourceId }: LibraryFilterD
                   </div>
                 </div>
               )}
+
+              {/* Koleksi (Lokal) */}
+              {collections.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Koleksi (Lokal)</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {collections.map((col: any) => (
+                      <FilterChip
+                        key={col.id}
+                        onClick={() => toggleCollection(col.id)}
+                        selected={selectedCollections.includes(col.id)}
+                        variant={selectedCollections.includes(col.id) ? "accent-subtle" : "default"}
+                        showCheck={selectedCollections.includes(col.id)}
+                        label={col.name}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Status Membaca (Lokal) */}
+              <div>
+                <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Status Membaca (Lokal)</h3>
+                <div className="flex flex-wrap gap-2">
+                  {LOCAL_READING_STATUSES.map((status: any) => (
+                    <FilterChip
+                      key={status.id}
+                      onClick={() => toggleReadingStatus(status.id)}
+                      selected={selectedReadingStatuses.includes(status.id)}
+                      variant={selectedReadingStatuses.includes(status.id) ? "accent-subtle" : "default"}
+                      showCheck={selectedReadingStatuses.includes(status.id)}
+                      label={status.label}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
           

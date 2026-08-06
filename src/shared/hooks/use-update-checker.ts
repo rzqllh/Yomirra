@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { scanLibraryUpdates, type ScanResult, type ScanOptions } from "@/shared/lib/update-checker";
 import { useUpdateStore } from "@/shared/store/update-store";
+import { useSettingsStore } from "@/shared/store/settings-store";
 
 export interface UseUpdateCheckerOptions extends ScanOptions {
   checkOnMount?: boolean;
@@ -10,6 +11,8 @@ export function useUpdateChecker(options: UseUpdateCheckerOptions = {}) {
   const [isScanning, setIsScanning] = useState(false);
   const [lastScanResult, setLastScanResult] = useState<ScanResult | null>(null);
   const unreadCount = useUpdateStore((state) => state.getUnreadCount());
+  const checkOnAppStart = useSettingsStore((state) => state.checkOnAppStart);
+  const minimumCheckIntervalMinutes = useSettingsStore((state) => state.minimumCheckIntervalMinutes);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const triggerScan = useCallback(async (scanOptions: ScanOptions = {}): Promise<ScanResult> => {
@@ -21,17 +24,27 @@ export function useUpdateChecker(options: UseUpdateCheckerOptions = {}) {
 
     setIsScanning(true);
     try {
-      const mergedOptions = { ...options, ...scanOptions, signal: controller.signal };
+      // Convert minutes to ms safely, fallback to 15 mins if invalid
+      const safeInterval = typeof minimumCheckIntervalMinutes === "number" && minimumCheckIntervalMinutes > 0
+        ? minimumCheckIntervalMinutes * 60 * 1000
+        : 15 * 60 * 1000;
+
+      const mergedOptions = {
+        cooldownMs: safeInterval,
+        ...options,
+        ...scanOptions,
+        signal: controller.signal
+      };
       const res = await scanLibraryUpdates(mergedOptions);
       setLastScanResult(res);
       return res;
     } finally {
       setIsScanning(false);
     }
-  }, [options]);
+  }, [options, minimumCheckIntervalMinutes]);
 
   useEffect(() => {
-    if (options.checkOnMount) {
+    if (options.checkOnMount && checkOnAppStart) {
       triggerScan({ forceRefresh: false });
     }
     return () => {
@@ -39,7 +52,7 @@ export function useUpdateChecker(options: UseUpdateCheckerOptions = {}) {
         abortControllerRef.current.abort();
       }
     };
-  }, [options.checkOnMount, triggerScan]);
+  }, [options.checkOnMount, checkOnAppStart, triggerScan]);
 
   return {
     isScanning,

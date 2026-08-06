@@ -2,8 +2,9 @@
 
 import * as React from "react";
 import { useLibraryStore } from "@/shared/store/library-store";
-import { GlobeHemisphereWest, BookmarkSimple, Check, ShareNetwork, DownloadSimple } from "@phosphor-icons/react";
+import { GlobeHemisphereWest, BookmarkSimple, Check, ShareNetwork, DownloadSimple, Bell, BellSlash } from "@phosphor-icons/react";
 import { toast } from "sonner";
+import { useSettingsStore } from "@/shared/store/settings-store";
 import { IconButton } from "@/components/ui/icon-button";
 import { MangaRating } from "./manga-rating";
 import { cn } from "@/shared/utils/cn";
@@ -28,7 +29,7 @@ export function MangaActions({
   manifestUrl,
 }: MangaActionsProps) {
   const [isMounted, setIsMounted] = React.useState(false);
-   
+
   React.useEffect(() => {
     const t = setTimeout(() => setIsMounted(true), 0);
     return () => clearTimeout(t);
@@ -38,6 +39,12 @@ export function MangaActions({
   const rawIsInLibrary = useLibraryStore((state) => state.isInLibrary(sourceId, mangaId));
   const isInLibrary = isMounted ? rawIsInLibrary : false;
   const toggleLibrary = useLibraryStore((state) => state.toggleLibrary);
+
+  const mangaKey = `${sourceId}::${mangaId}`;
+  const mutedMangaKeys = useSettingsStore((state) => state.mutedMangaKeys);
+  const muteManga = useSettingsStore((state) => state.muteManga);
+  const unmuteManga = useSettingsStore((state) => state.unmuteManga);
+  const isMuted = isMounted ? mutedMangaKeys.includes(mangaKey) : false;
 
   const handleToggle = () => {
     toggleLibrary({
@@ -84,14 +91,24 @@ export function MangaActions({
     });
   };
 
+  const handleToggleMute = () => {
+    if (isMuted) {
+      unmuteManga(mangaKey);
+      toast.success("Notifikasi diaktifkan untuk manga ini");
+    } else {
+      muteManga(mangaKey);
+      toast("Notifikasi disenyapkan untuk manga ini");
+    }
+  };
+
   return (
-    <div className="grid grid-cols-4 gap-2 w-full py-2">
+    <div className="grid grid-cols-5 gap-2 w-full py-2">
       <button
         onClick={handleToggle}
         className={cn(
           "flex flex-col items-center justify-center gap-1.5 py-3 px-1 rounded-xl transition-all duration-300 outline-none select-none",
-          isInLibrary 
-            ? "bg-accent/10 border border-accent/20 text-accent shadow-sm" 
+          isInLibrary
+            ? "bg-accent/10 border border-accent/20 text-accent shadow-sm"
             : "bg-surface-raised border border-border-default text-text-secondary hover:bg-surface-hover hover:border-border-strong hover:text-text-primary active:scale-[0.98]"
         )}
       >
@@ -104,18 +121,34 @@ export function MangaActions({
 
       <MangaRating sourceId={sourceId} mangaId={mangaId} variant="action" />
 
-      <button 
+      <button
         onClick={handleShare}
         className="flex flex-col items-center justify-center gap-1.5 py-3 px-1 rounded-xl bg-surface-raised border border-border-default text-text-secondary hover:bg-surface-hover hover:border-border-strong hover:text-text-primary transition-all duration-300 outline-none select-none active:scale-[0.98]"
       >
         <ShareNetwork size={22} weight="regular" />
       </button>
 
-      <button 
+      <button
         onClick={handleWebView}
         className="flex flex-col items-center justify-center gap-1.5 py-3 px-1 rounded-xl bg-surface-raised border border-border-default text-text-secondary hover:bg-surface-hover hover:border-border-strong hover:text-text-primary transition-all duration-300 outline-none select-none active:scale-[0.98]"
       >
         <GlobeHemisphereWest size={22} weight="regular" />
+      </button>
+
+      <button
+        onClick={handleToggleMute}
+        className={cn(
+          "flex flex-col items-center justify-center gap-1.5 py-3 px-1 rounded-xl transition-all duration-300 outline-none select-none",
+          isMuted
+            ? "bg-semantic-warning/10 border border-semantic-warning/20 text-semantic-warning shadow-sm"
+            : "bg-surface-raised border border-border-default text-text-secondary hover:bg-surface-hover hover:border-border-strong hover:text-text-primary active:scale-[0.98]"
+        )}
+      >
+        {isMuted ? (
+          <BellSlash size={22} weight="bold" />
+        ) : (
+          <Bell size={22} weight="regular" />
+        )}
       </button>
     </div>
   );

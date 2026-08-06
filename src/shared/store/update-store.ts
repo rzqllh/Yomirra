@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { MangaUpdateItem } from "@/shared/types/update";
+import { useSettingsStore } from "@/shared/store/settings-store";
 
 export const getUpdateKey = (sourceId: string, mangaId: string) => `${sourceId}::${mangaId}`;
 
@@ -111,8 +112,12 @@ export const useUpdateStore = create<UpdateState>()(
       clearUpdates: () => set({ items: {} }),
 
       getUnreadCount: () => {
+        const { notifyForAllLibraryItems, mutedMangaKeys } = useSettingsStore.getState();
+        if (!notifyForAllLibraryItems) return 0;
+
         const items = get().items;
-        return Object.values(items).filter((item) => {
+        return Object.entries(items).filter(([key, item]) => {
+          if (mutedMangaKeys.includes(key)) return false;
           if (!item.detectedAt) return false;
           if (!item.seenAt) return true;
           const detectedTime = Date.parse(item.detectedAt);

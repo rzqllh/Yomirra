@@ -10,6 +10,7 @@ import {
   performDryRun,
   executeCoordinatedRestore,
 } from "../backup-engine";
+import type { AnyYomirraBackup } from "../backup-schema";
 
 // Mock cloud sync functions to verify local-only restore
 vi.mock("@/shared/lib/sync-utils", () => ({
@@ -44,9 +45,9 @@ describe("Backup & Restore Engine v1", () => {
     useStatsStore.setState({ totalReadingTimeMs: 0 });
   });
 
-  it("1. rejects unsupported future schema (schemaVersion > 1)", () => {
+  it("1. rejects unsupported future schema (schemaVersion > 2)", () => {
     const futurePayload = {
-      schemaVersion: 2,
+      schemaVersion: 3,
       appVersion: "2.0.0",
       exportedAt: new Date().toISOString(),
       data: {},
@@ -266,7 +267,7 @@ describe("Backup & Restore Engine v1", () => {
 
     useStatsStore.setState({ totalReadingTimeMs: 5000 });
 
-    const backup: ReturnType<typeof createBackupPayload> = {
+    const backup: AnyYomirraBackup = {
       schemaVersion: 1,
       appVersion: "1.0.0",
       exportedAt: new Date().toISOString(),
