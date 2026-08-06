@@ -1,0 +1,14 @@
+Yomirra public documentation bundle
+Generated: 2026-08-06
+
+.github/PULL_REQUEST_TEMPLATE.md
+CHANGELOG.md
+CODE_OF_CONDUCT.md
+CONTRIBUTING.md
+README.md
+SECURITY.md
+docs/ADDING_A_SOURCE.md
+docs/ARCHITECTURE.md
+docs/README.md
+
+These paths are intended to be tracked by Git and do not match the current repository .gitignore rules.
