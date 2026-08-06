@@ -299,7 +299,21 @@ Wraps app with `prefers-reduced-motion` detection.
 
 ---
 
-## 8. Forbidden Patterns (Component-Level)
+## 8. Feature Components
+
+| Component | Purpose | Location |
+|-----------|---------|----------|
+| `UpdatesList` | List of recent manga updates grouped by date | `src/components/updates/` |
+| `CollectionManager` | UI for creating, renaming, and deleting collections | `src/components/settings/` |
+| `MangaStatusButton` | Button to set/clear reading status | `src/components/manga/` |
+| `MangaCollectionButton` | Button to add/remove manga from collections | `src/components/manga/` |
+| `LibraryFilterDrawer` | Drawer containing collection and status filters | `src/components/library/` |
+| `BackupRestoreModal` | Modal for exporting and importing app state | `src/components/settings/` |
+| `NotificationPreferences` | UI for automatic scan and mute preferences | `src/components/settings/` |
+
+---
+
+## 9. Forbidden Patterns (Component-Level)
 
 ### ❌ Inline border without prefix
 ```tsx

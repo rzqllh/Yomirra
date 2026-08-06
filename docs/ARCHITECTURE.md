@@ -162,3 +162,41 @@ Offline chapter reading utilizes browser Cache Storage and Serwist Service Worke
 1. Downloads are queued in `useDownloadStore`.
 2. Pages are fetched, compiled via JSZip, and stored in Cache API (`yomirra-chapter-cache-v1`).
 3. Service worker intercepts reader image requests and serves cached blobs when offline.
+
+---
+
+## State & Data Flow
+
+### Local-First Persistence
+
+The application heavily relies on client-side state persisted to `localStorage` through Zustand.
+Currently, the following are **local-first** and **not** cloud-synced to Firebase:
+- Updates (`UpdateStore`)
+- Collections & Reading Statuses (`CollectionStore`)
+- Automatic Scan Preferences & Muted Manga (`SettingsStore`)
+- Download queues (`DownloadStore`)
+
+*(Note: Firebase sync is planned for these in future iterations, while Library, History, and Bookmarks are synced).*
+
+### Store Data Flows
+
+- **Library & Updates**
+  `LibraryStore` (source of truth for saved manga) → `UpdateChecker` (fetches latest chapter) → `UpdateStore` (stores unread updates) → `Updates Page / BottomDock` (displays unread badges).
+
+- **Settings & Notification Preferences**
+  `SettingsStore` (stores user preferences) → Controls automatic scan intervals and filters unread updates / muted manga from badges.
+
+- **Collections & Organization**
+  `CollectionStore` (stores custom collections and statuses) → Populates `Manga Detail` actions, provides client-side filters for `Library` page, and exports to `Backup Engine`.
+
+---
+
+## Backup Engine
+
+To support local-first data, Yomirra includes a Backup Engine that exports/imports Zustand state.
+
+- **Schema V1 Compatibility**: Seamlessly imports older backups without `collections` or `updates`.
+- **Schema V2 Export**: Exports the current application state including custom collections, memberships, and reading statuses.
+- **Dry-Run**: Analyzes the import payload before committing to give the user a preview of changes.
+- **Merge & Replace Strategy**: Users can choose to merge imported data with existing state or replace it entirely.
+- **Rollback**: If a setter fails during restoration, the entire state is reverted to prevent data corruption.

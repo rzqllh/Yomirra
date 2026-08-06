@@ -69,6 +69,7 @@ pnpm dev
 - Use TanStack Query for server data and request state.
 - Query keys must include every value that changes the response.
 - Do not destroy user filter state based on incomplete or failed capability requests.
+- **Store Persistence**: Any changes to persistent stores or backup schemas MUST include explicit migration tests to guarantee backward compatibility with older data.
 
 ### Source Adapters
 

@@ -20,6 +20,11 @@ pnpm test --run      # single run
 pnpm test --coverage # with coverage
 ```
 
+Run full automated verification:
+```bash
+pnpm typecheck && pnpm lint && pnpm test --run && pnpm build
+```
+
 ---
 
 ## 2. Test File Locations
@@ -54,8 +59,15 @@ src/
 - **HMAC signing/verification** — security-critical
 
 ### Test when appropriate:
-- React hooks with complex logic
-- Components with non-trivial render conditions
+- React hooks with complex logic (e.g. search pruning, update checker)
+- Complex integrations (e.g. multi-source search deduplication)
+
+### Focused Test Patterns
+For fast development loops on specific features, run focused tests using path matching:
+```bash
+pnpm test backup --run
+pnpm test update-store --run
+```
 
 ### Don't bother testing:
 - Simple presentational components (wasted effort)
@@ -150,25 +162,35 @@ vi.mock("@/shared/lib/firebase", () => ({
 
 ---
 
-## 6. Coverage Targets
+## 6. Coverage Areas
 
-| Area | Target |
-|------|--------|
-| Source adapter normalizers | 80%+ |
-| Utility functions | 90%+ |
-| Zustand store actions | 70%+ |
-| HMAC signing | 100% |
-| API validation schemas | 80%+ |
+| Area | Target Focus |
+|------|--------------|
+| Source adapter normalizers | Ensuring extraction resilience against markup changes |
+| Utility functions | Perfect coverage for pure helpers (normalize, filter) |
+| Zustand store actions | Validation of local-first state, backup engine schemas, caching |
+| Hooks & Integrations | Verifying parallel search, deduplication, update checking flows |
+| HMAC signing | Security-critical boundary |
+| API validation schemas | Enforcing robust boundaries |
 
 ---
 
-## 7. CI Integration
+## 7. Verification
 
-Tests run on every push (Vercel preview build + separate test step).
-
+### Automated Verification
+Automated verification runs on every CI push (GitHub Actions). The pipeline explicitly requires:
 ```bash
-# Runs in CI
-pnpm typecheck && pnpm lint && pnpm test --run
+pnpm typecheck
+pnpm lint
+pnpm test --run
+pnpm build
 ```
+Failing tests or typechecks will block deployment.
 
-Failing tests **block deployment**.
+### Manual Runtime Verification
+Certain flows cannot be fully validated via automated tests and require manual verification:
+- **PWA & Offline Behavior**: Installing the PWA on real devices (iOS Safari, Android Chrome), disabling network, and checking Service Worker cache hits.
+- **Hosted Source Verification**: Checking if source adapters work on Vercel infrastructure (verifying edge/serverless IP reputation and bot protections).
+- **Accessibility & Hydration**: Verifying ARIA states and focus management dynamically.
+
+

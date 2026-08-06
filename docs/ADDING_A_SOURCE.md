@@ -18,6 +18,7 @@ Confirm that:
 - The source can return stable identifiers for manga and chapters.
 
 Do not submit secrets, authentication tokens, session cookies, or copied proprietary client code.
+Do not promise or assume source uptime. Sources can break or become unavailable at any time independently of Yomirra.
 
 # Option A: Built-in Adapter
 
@@ -180,6 +181,7 @@ export function normalizeMangaItem(
 ```
 
 Stable IDs are required. Do not use array indexes as manga, chapter, or page identifiers.
+Error messages from upstream APIs should be sanitized before being thrown or returned; do not expose raw HTML or internal paths to the user.
 
 ## 5. Implement Pagination Correctly
 
@@ -236,7 +238,11 @@ Rules:
 - Keep mapping logic inside the adapter.
 - Dynamic or scraped filter data should be cached when appropriate.
 
-## 7. Handle Chapter Pages and Referers
+## 7. Handle Chapter Ordering
+
+When returning chapters, do not assume they are naturally ordered by the source API. Yomirra's `UpdateChecker` and Reader both rely on reliable chapter sorting. Ensure your adapter returns chapters in a stable order (e.g., descending by number or date).
+
+## 8. Handle Chapter Pages and Referers
 
 Return:
 
@@ -255,7 +261,7 @@ Return:
 
 `referer` is optional and should only be included when the source requires it. Never include cookies, tokens, or authorization headers in `PageItem`.
 
-## 8. Register the Source
+## 9. Register the Source
 
 Edit:
 
@@ -274,7 +280,7 @@ export const sources: MangaSource[] = [
 
 Source IDs must be unique and stable.
 
-## 9. Test the Adapter
+## 10. Test the Adapter
 
 At minimum, cover:
 
@@ -299,6 +305,12 @@ git diff --check
 ```
 
 Browser-test the source through discovery, search, detail, chapter list, and reader flows before claiming complete integration.
+
+## 11. Known Limitations
+
+- **AbortSignal**: Upstream request cancellation is not yet fully propagated to adapters. Do not assume `AbortSignal` will immediately terminate a heavy fetch.
+- **Source Health Diagnostics**: A source's health status should be exposed via the `healthCheckUrl` if available to isolate failures effectively without affecting the rest of the application.
+- **Source Failure Isolation**: A failure in one source during a global search or library update scan must not break or halt processing for other sources.
 
 # Option B: Dynamic Manifest
 
