@@ -25,12 +25,18 @@ The project is under active development. Some browser-specific PWA and offline b
 - Multi-source search with source-aware filters.
 - Built-in adapters and customizable source extensions.
 - Optional installable sources through a JSON manifest.
+- Local Library with custom Collections and reading statuses.
+- Library filters based on collections and statuses.
 - Manga detail, chapter list, and image reader flows.
-- Library, bookmarks, reading history, and preferences.
-- Chapter downloads backed by browser Cache Storage.
+- Reading history, bookmarks, and per-manga mute preferences.
+- Update checker, Updates Page, unread badge, and automatic update-check preferences.
+- Chapter downloads backed by browser Cache Storage and offline reading.
 - PWA installation and offline-reading workflows.
+- Local Backup & Restore with schema V2 and backward compatibility.
 - Firebase authentication and cloud synchronization.
 - Redis-backed server caching with stale-data fallback.
+- Source health diagnostics.
+- GitHub Actions CI workflow.
 - Responsive layouts, keyboard-accessible controls, and theme support.
 
 ## Built-in Sources
@@ -129,12 +135,15 @@ src/
 │   ├── (web)/                    # User-facing pages
 │   └── api/sources/              # Source API routes
 ├── components/                   # Shared and feature UI
+│   └── updates/                  # Updates page components
 ├── server/
 │   └── lib/sources/
 │       └── adapters/             # Built-in source adapters
 └── shared/
+    ├── lib/                      # Backup engine, update checker, etc.
     ├── sources/                  # Source contracts and dynamic registry
-    ├── store/                    # Zustand stores
+    ├── store/                    # Zustand stores (Collection, Update, etc.)
+    ├── types/                    # Collection types, Update schema, Backup schema
     └── hooks/                    # Shared React hooks
 ```
 

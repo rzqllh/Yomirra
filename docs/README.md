@@ -5,6 +5,8 @@ This directory contains public technical documentation and deeper project notes.
 ## Start Here
 
 - [Architecture overview](ARCHITECTURE.md)
+- [Component library](COMPONENTS.md)
+- [Testing conventions](TESTING.md)
 - [Adding a source](ADDING_A_SOURCE.md)
 - [Contributing](../CONTRIBUTING.md)
 - [Security policy](../SECURITY.md)
