@@ -1,6 +1,6 @@
 # Architecture Overview
 
-Yomirra is a Next.js App Router application with a client-facing reader, server API routes, pluggable source adapters, persistent browser state, and optional cloud synchronization.
+Yomirra is a mobile-first Progressive Web App (PWA) manga reader built on Next.js 16 App Router. It features a client-side reader, server-side API routes, pluggable source adapters, persistent browser state, and optional cloud synchronization.
 
 ## High-Level Flow
 
@@ -17,138 +17,148 @@ flowchart LR
     API --> RC[Redis Cache]
     ZS --> LS[Browser Storage]
     ZS --> FB[Firebase Sync]
-    UI --> SW[Service Worker and Cache Storage]
+    UI --> SW[Service Worker & Cache API]
 ```
 
-## Layers
+---
 
-### User Interface
+## Layer Separation Rules
 
-User-facing routes live under `src/app/(web)/`.
+Maintaining clear layer separation is critical for security, stability, and bundle optimization.
 
-Responsibilities include:
+### Layer 1: Server-Only (`src/server/`)
+- Runs exclusively on the Node.js / Vercel server runtime.
+- Has access to environment variables, Redis client, source adapters, and scraping logic.
+- **MUST NOT** be imported in client components.
+- **MUST NOT** import client-only SDKs such as `src/shared/lib/firebase.ts`.
 
-- Discovery and source browsing.
-- Multi-source search.
-- Library and bookmark management.
-- Manga detail and chapter navigation.
-- Reader controls.
-- Download management.
-- Settings and source configuration.
+### Layer 2: API Routes (`src/app/api/`)
+- Acts as the bridge between client components and server adapters.
+- Validates input using Zod schemas (`src/server/lib/validation/api.ts`).
+- Returns standardized responses: `{ data: T }` on success, `{ error: { code, message } }` on failure.
+- Resolves adapters dynamically via `SourceManager`.
 
-Shared UI lives under `src/components/`. Pages should reuse established primitives instead of recreating styling and interaction patterns.
+### Layer 3: Shared (`src/shared/`)
+- Contains utilities, types, and stores shared between client and server.
+- Exception: `src/shared/lib/firebase.ts` and `src/shared/api-client.ts` are client-guarded modules.
 
-### Client State
+### Layer 4: Client Components (`src/components/`, client page flows)
+- Runs in the browser (`"use client"`).
+- Reads and updates Zustand stores.
+- Fetches data strictly via `ApiClient` (never calls server adapters directly).
 
-Zustand stores under `src/shared/store/` hold persistent client state such as:
+### Layer Separation Examples
 
-- Library and bookmarks.
-- Reading history.
-- Reader preferences.
-- Search filters.
-- Download queue and downloaded chapter metadata.
+```tsx
+// ❌ WRONG — importing server adapter in client component
+import { SampleAdapter } from "@/server/lib/sources/adapters/sample-adapter";
 
-Server data and request state belong in TanStack Query rather than long-lived Zustand state.
+// ❌ WRONG — importing client firebase SDK in API route
+import { initFirebase } from "@/shared/lib/firebase"; // in /app/api/**
 
-### API Client and Routes
+// ❌ WRONG — calling sourceManager directly in UI component
+import { sourceManager } from "@/server/lib/sources/source-manager"; // in component
 
-The browser uses a shared API client to call Next.js routes under `src/app/api/`.
+// ✅ CORRECT — client fetches via API route through ApiClient
+import { apiClient } from "@/shared/api-client";
+const result = await apiClient.getPopular(sourceId);
+```
 
-Source routes follow this shape:
+---
+
+## Directory Structure
 
 ```text
-/api/sources
-/api/sources/[sourceId]/popular
-/api/sources/[sourceId]/latest
-/api/sources/[sourceId]/search
-/api/sources/[sourceId]/filters
-/api/sources/[sourceId]/manga/[mangaId]
-/api/sources/[sourceId]/manga/[mangaId]/chapters
-/api/sources/[sourceId]/manga/[mangaId]/chapters/[chapterId]/pages
+src/
+├── app/
+│   ├── (web)/                   # Route group: user-facing pages
+│   │   ├── layout.tsx           # Root layout (providers, shell)
+│   │   ├── globals.css          # Design tokens + Tailwind @theme
+│   │   ├── page.tsx             # Home
+│   │   ├── manga/[sourceId]/[mangaId]/
+│   │   │   ├── page.tsx         # Manga detail
+│   │   │   └── read/[chapterId]/page.tsx  # Reader
+│   │   ├── search/              # Multi-source search
+│   │   ├── library/             # Library page
+│   │   ├── downloads/           # Downloads page
+│   │   ├── sources/             # Source browser
+│   │   ├── updates/             # Update feed
+│   │   ├── bookmark/            # Bookmarks
+│   │   ├── popular/             # Popular feed
+│   │   └── settings/            # Settings
+│   │
+│   ├── api/                     # Server API routes
+│   │   ├── sources/             # Source endpoints
+│   │   └── proxy/image/         # HMAC-verified image proxy
+│   │
+│   ├── manifest.ts              # PWA manifest
+│   └── sw.ts                    # Service worker entry
+│
+├── components/                  # UI Components
+│   ├── app/                     # App-level shell (header, navigation)
+│   ├── manga/                   # Manga UI (cards, detail, chapter rows)
+│   ├── reader/                  # Reader-specific UI
+│   ├── search/                  # Search UI & drawers
+│   ├── ui/                      # Base design system primitives
+│   └── motion/                  # Motion-wrapped animation wrappers
+│
+├── server/                      # Server-Only Modules
+│   └── lib/
+│       ├── sources/             # Source manager & adapter registry
+│       ├── cache/               # Redis caching (withCache wrapper)
+│       └── security/            # Rate limiting & HMAC signing
+│
+└── shared/                      # Shared Contracts & Utilities
+    ├── api-client.ts            # Typed HTTP client
+    ├── hooks/                   # Custom React hooks
+    ├── lib/                     # Motion tokens & download engine
+    ├── sources/                 # Source contracts & types
+    ├── store/                   # Zustand stores
+    └── utils/                   # Pure utility functions
 ```
 
-Routes validate parameters, enforce rate limits where configured, resolve the source through `SourceManager`, and cache suitable responses.
+---
 
-### Source Layer
+## Image Proxy & Hotlink Protection
 
-`MangaSource` is the normalized contract shared by all sources. A source adapter is responsible for:
-
-- Remote request construction.
-- Source-specific headers.
-- API or HTML parsing.
-- Data normalization.
-- Pagination semantics.
-- Search-filter mapping.
-- Page referer metadata when required.
-
-Built-in adapters are registered in:
+External images must be requested via `/api/proxy/image` to bypass referrer restrictions and protect client privacy.
 
 ```text
-src/server/lib/sources/adapters/index.ts
+Image Request Flow:
+1. Client generates signed URL: signProxyUrl(originalUrl)
+   → /api/proxy/image?url=<encoded>&sig=<hmac>
+2. Server validates HMAC signature using IMAGE_PROXY_SECRET.
+3. Server fetches image with appropriate Referer headers and streams back to client.
 ```
 
-Dynamic manifests are resolved by `SourceManager` and handled by `DynamicSourceAdapter`.
+---
 
-### Caching
+## Multi-Source Search Architecture
 
-Server responses use Redis through `withCache`.
+Search capabilities vary by source adapter:
 
-The cache:
+1. **Filter Capability Discovery**: Fetch source capabilities via `/api/sources/[sourceId]/filters`.
+2. **Payload Construction**: `buildPayloadForSource` maps active filters only to supported keys per source.
+3. **Parallel Query Execution**: React Query runs per-source search requests in parallel.
+4. **Exhaustion Guarding**: If a source returns `hasNextPage: false` on page `P`, subsequent queries for page `P+1` for that source are disabled automatically until search parameters or filters change.
+5. **Deduplication & Merging**: Client interleaves and deduplicates items by title.
 
-- Returns fresh cached values when valid.
-- Fetches and stores a new value when needed.
-- Can fall back to a stale value if the upstream source fails.
-- Uses route-specific TTL values.
+---
 
-Cache availability should improve reliability, not become a requirement for correctness. Upstream source failures must still be handled explicitly.
+## Caching & Reliability
 
-### Offline Reading
+Server responses use Redis caching (`withCache`):
 
-Chapter downloads use browser Cache Storage and service-worker routes. Offline reading depends on:
+- **Fresh Hit**: Returns cached JSON payload when TTL is valid.
+- **Cache Miss**: Executes fetcher, calculates expiration, and writes to Redis.
+- **Stale Fallback**: If upstream source fails or times out, returns stale cache entry if available.
 
-- The service worker controlling the page.
-- Browser storage quota.
-- Cached chapter metadata and images remaining available.
-- The browser's PWA and background-storage behavior.
+---
 
-Code-level and unit-test verification must not be described as complete device-level offline verification.
+## Offline Reading & Download Engine
 
-### Authentication and Synchronization
+Offline chapter reading utilizes browser Cache Storage and Serwist Service Worker:
 
-Firebase provides authentication and cloud synchronization for supported user data. Local state remains important because the application must tolerate offline sessions and temporary sync failures.
-
-Synchronization must avoid replacing meaningful local data with an empty remote state.
-
-## Multi-Source Search
-
-Search source selection is independent from the global Source Config state.
-
-For each active source:
-
-1. Fetch its filter capabilities.
-2. Build a payload containing only filters that source supports.
-3. Execute a source-specific search request.
-4. Keep unsupported sources in the search with unsupported filters omitted.
-5. Merge results in the client.
-6. Preserve source identity in keys and navigation.
-
-A failed source must not automatically erase successful results from another source.
-
-## Error Handling
-
-Errors are expected at source boundaries. Adapters and API routes should provide:
-
-- Timeouts.
-- Predictable normalized errors.
-- Independent failure handling in multi-source views.
-- Empty and retry states.
-- No accidental leakage of remote secrets or raw private responses.
-
-## Architectural Rules
-
-- Normalize source data before it reaches shared UI.
-- Keep server secrets out of client bundles.
-- Keep query keys complete and deterministic.
-- Avoid destructive state updates when capability data is loading or incomplete.
-- Prefer small, focused changes over broad migrations.
-- Treat runtime, automated-test, and code-inspection evidence as different levels of verification.
+1. Downloads are queued in `useDownloadStore`.
+2. Pages are fetched, compiled via JSZip, and stored in Cache API (`yomirra-chapter-cache-v1`).
+3. Service worker intercepts reader image requests and serves cached blobs when offline.
