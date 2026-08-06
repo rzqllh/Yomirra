@@ -2,16 +2,10 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useSettingsStore } from "@/shared/store/settings-store";
 
 export function useWakeLock() {
-  const [isSupported, setIsSupported] = useState(false);
+  const [isSupported] = useState(() => typeof window !== "undefined" && "navigator" in window && "wakeLock" in navigator);
   const [isActive, setIsActive] = useState(false);
   const wakeLockRef = useRef<WakeLockSentinel | null>(null);
   const keepScreenAwake = useSettingsStore(state => state.keepScreenAwake);
-
-  useEffect(() => {
-    if ("wakeLock" in navigator) {
-      setIsSupported(true);
-    }
-  }, []);
 
   const request = useCallback(async () => {
     if (!isSupported || !keepScreenAwake) return;

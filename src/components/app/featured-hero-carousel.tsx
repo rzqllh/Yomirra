@@ -30,18 +30,18 @@ export function FeaturedHeroCarousel({ sourceId, mangas }: FeaturedHeroCarouselP
     return () => clearInterval(interval);
   }, [mangas.length, isPaused, shouldReduce]);
 
-  if (!mangas || mangas.length === 0) return null;
-
-  const currentManga = mangas[currentIndex];
+  const currentManga = mangas?.[currentIndex];
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const actualSourceId = (currentManga as { sourceId?: string }).sourceId ?? sourceId;
+  const actualSourceId = (currentManga as { sourceId?: string } | undefined)?.sourceId ?? sourceId;
   const { data: mangaDetail, isLoading: isDetailLoading } = useQuery({
     queryKey: ["manga-detail", actualSourceId, currentManga?.id],
-    queryFn: () => apiClient.getDetail(actualSourceId, currentManga.id),
+    queryFn: () => apiClient.getDetail(actualSourceId, currentManga!.id),
     enabled: !!currentManga?.id,
     staleTime: 1000 * 60 * 15,
   });
+
+  if (!mangas || mangas.length === 0 || !currentManga) return null;
 
   const synopsis = mangaDetail?.description || currentManga?.description || "Ikuti kisah serunya dengan membaca chapter terbaru sekarang juga.";
   const status = mangaDetail?.status || currentManga.status || "Ongoing";

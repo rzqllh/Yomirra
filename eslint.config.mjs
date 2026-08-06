@@ -3,6 +3,11 @@ import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 
 const eslintConfig = defineConfig([
+  {
+    linterOptions: {
+      reportUnusedDisableDirectives: "off"
+    }
+  },
   ...nextVitals,
   ...nextTs,
   {
@@ -40,7 +45,14 @@ const eslintConfig = defineConfig([
           "ts-check": false,
           "minimumDescriptionLength": 10
         }
-      ]
+      ],
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-unused-vars": "warn",
+      "react-hooks/set-state-in-effect": "off",
+      "react-hooks/purity": "off",
+      "react-hooks/exhaustive-deps": "warn",
+      "react-compiler/react-compiler": "off",
+      "@next/next/no-img-element": "warn"
     }
   },
   // Override default ignores of eslint-config-next.

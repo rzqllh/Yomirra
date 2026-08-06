@@ -13,7 +13,6 @@ export function useNsfwSourceIds(): Set<string> {
 
   useEffect(() => {
     if (cachedNsfwSourceIds !== null) {
-      setIds(cachedNsfwSourceIds);
       return;
     }
 

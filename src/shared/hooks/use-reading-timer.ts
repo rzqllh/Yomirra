@@ -3,7 +3,7 @@ import { useStatsStore } from "../store/stats-store";
 
 export function useReadingTimer() {
   const addReadingTime = useStatsStore(state => state.addReadingTime);
-  const startTimeRef = useRef<number>(Date.now());
+  const startTimeRef = useRef<number>(0);
   const isActiveRef = useRef<boolean>(true);
 
   useEffect(() => {
