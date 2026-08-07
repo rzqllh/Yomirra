@@ -63,7 +63,10 @@ export function SegmentedControl({
                 ? "text-text-primary"
                 : "text-text-muted hover:text-text-primary"
             )}
-            aria-pressed={isActive}
+            role="tab"
+            id={`tab-${option.value}`}
+            aria-controls={`tabpanel-${option.value}`}
+            aria-selected={isActive}
           >
             {isActive && (
               <motion.div
