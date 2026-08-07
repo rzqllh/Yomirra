@@ -4,8 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { MangaItem } from "@/shared/sources/source-types";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
-import { Play, CaretLeft, CaretRight, Star, Fire } from "@phosphor-icons/react";
-import { cn } from "@/shared/utils/cn";
+import { Play, CaretLeft, CaretRight } from "@phosphor-icons/react";
 import { getMangaDetailHref } from "@/shared/lib/routes";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
@@ -23,6 +22,25 @@ export function FeaturedHeroCarousel({ sourceId, mangas, variant = "cyber-editor
   const [currentIndex, setCurrentIndex] = React.useState(0);
   const [isPaused, setIsPaused] = React.useState(false);
   const shouldReduce = useReducedMotion();
+
+  // Touch swipe state
+  const touchStartX = React.useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    setIsPaused(true);
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null) return;
+    const delta = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(delta) > 40) {
+      if (delta < 0) handleNext();
+      else handlePrev();
+    }
+    touchStartX.current = null;
+    setIsPaused(false);
+  };
 
   React.useEffect(() => {
     if (mangas.length <= 1 || isPaused || shouldReduce) return;
@@ -54,123 +72,101 @@ export function FeaturedHeroCarousel({ sourceId, mangas, variant = "cyber-editor
   const handleNext = () => setCurrentIndex((prev) => (prev + 1) % mangas.length);
   const handlePrev = () => setCurrentIndex((prev) => (prev - 1 + mangas.length) % mangas.length);
 
+  // Compact metadata string: MANHWA • ONGOING • ★ 7.0 • Chapter 47
+  const metaParts: string[] = [format.toUpperCase()];
+  if (status) metaParts.push(status.toUpperCase());
+  if (score && score > 0) metaParts.push(`★ ${Number(score).toFixed(1)}`);
+  if (latestChapter) metaParts.push(latestChapter);
+
   return (
     <div
-      className={cn(
-        "w-full h-full relative group isolate overflow-hidden transition-all duration-300 shadow-2xl",
-        variant === "cyber-editorial" && "bg-black rounded-2xl md:rounded-3xl border border-white/10",
-        variant === "cinematic-glass" && "bg-slate-950/80 backdrop-blur-2xl rounded-3xl border border-white/20",
-        variant === "editorial-studio" && "bg-zinc-950 rounded-2xl border-2 border-zinc-800"
-      )}
+      className="w-full h-full relative group isolate overflow-hidden bg-black rounded-2xl md:rounded-3xl border border-white/10"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
-      onTouchStart={() => setIsPaused(true)}
-      onTouchEnd={() => setIsPaused(false)}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
     >
-      {/* Ambient Cover Background Layer */}
+      {/* Full-bleed artwork layer */}
       <AnimatePresence mode="wait">
-        <motion.div
+        <motion.img
           key={currentManga.id + "-bg"}
-          initial={{ opacity: 0, scale: 1.08 }}
+          src={currentManga.coverUrl || ""}
+          alt=""
+          aria-hidden="true"
+          initial={{ opacity: 0, scale: 1.04 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: shouldReduce ? 0 : motionDuration.slow, ease: motionEase.softOut as [number, number, number, number] }}
-          className="absolute inset-0 z-0"
-        >
-          <img
-            src={currentManga.coverUrl || ""}
-            alt={currentManga.title}
-            className={cn(
-              "w-full h-full object-cover",
-              variant === "cyber-editorial" && "opacity-80 sm:opacity-50 sm:blur-2xl sm:scale-125",
-              variant === "cinematic-glass" && "opacity-40 blur-xl scale-110",
-              variant === "editorial-studio" && "opacity-40 grayscale contrast-125 scale-105"
-            )}
-            referrerPolicy="no-referrer"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-black/30" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent" />
-        </motion.div>
+          className="absolute inset-0 w-full h-full object-cover object-top"
+          referrerPolicy="no-referrer"
+        />
       </AnimatePresence>
 
-      {/* Foreground Content */}
-      <div className="absolute inset-0 z-10 flex flex-col justify-between p-4 sm:p-6 md:p-8 pointer-events-none">
-        {/* Top Header Badge Row */}
-        <div className="flex items-center justify-between w-full z-20 pointer-events-auto">
-          <div className="flex items-center gap-2">
-            <span className={cn(
-              "inline-flex items-center gap-1.5 px-3 py-1 rounded-full font-black text-[11px] uppercase tracking-wider shadow-sm",
-              variant === "cyber-editorial" && "bg-accent/20 backdrop-blur-md border border-accent/40 text-accent",
-              variant === "cinematic-glass" && "bg-sky-400/20 backdrop-blur-md border border-sky-400/40 text-sky-300",
-              variant === "editorial-studio" && "bg-white text-black border border-white font-extrabold"
-            )}>
-              <Fire size={13} weight="fill" /> #0{currentIndex + 1} Sorotan
+      {/* Gradient overlays — bottom-heavy, artwork visible on top */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-transparent to-transparent" />
+
+      {/* Foreground UI */}
+      <div className="absolute inset-0 z-10 flex flex-col justify-between p-4 pb-5 sm:p-6 sm:pb-6 md:p-8 pointer-events-none">
+
+        {/* Top row: badge left, pager right */}
+        <div className="flex items-start justify-between w-full pointer-events-auto">
+          {/* Sorotan badge */}
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent/20 backdrop-blur-md border border-accent/30 text-accent font-black text-[10px] uppercase tracking-widest">
+            #{String(currentIndex + 1).padStart(2, "0")} Sorotan
+          </span>
+
+          {/* Pager — replaces dot bar + arrows on mobile */}
+          {mangas.length > 1 && (
+            <span className="text-[11px] font-bold text-white/60 tabular-nums">
+              {currentIndex + 1} / {mangas.length}
             </span>
-          </div>
+          )}
         </div>
 
-        {/* Bottom Details + Desktop Cover Preview */}
-        <div className="w-full flex items-end justify-between gap-6 relative z-20 pointer-events-auto">
-          <div className="w-full max-w-lg flex flex-col gap-2.5 sm:gap-3">
+        {/* Bottom content */}
+        <div className="flex items-end justify-between gap-4 pointer-events-auto">
+          <div className="flex-1 min-w-0 flex flex-col gap-2">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentManga.id + "-text"}
-                initial={{ opacity: 0, y: 15 }}
+                initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
+                exit={{ opacity: 0, y: -12 }}
                 transition={{ duration: shouldReduce ? 0 : motionDuration.normal, ease: motionEase.softOut as [number, number, number, number] }}
-                className="flex flex-col gap-2"
+                className="flex flex-col gap-1.5"
               >
-                {/* Metadata Pills */}
-                <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold text-white/90">
-                  <span className="px-2.5 py-0.5 rounded-md bg-white/10 backdrop-blur-md border border-white/20 uppercase tracking-wider text-accent font-extrabold">
-                    {format}
-                  </span>
-                  <span className="px-2.5 py-0.5 rounded-md bg-white/10 backdrop-blur-md border border-white/20">
-                    {status}
-                  </span>
-                  {score && score > 0 && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-amber-500/20 backdrop-blur-md border border-amber-500/40 text-amber-300 font-bold">
-                      <Star size={12} weight="fill" className="text-amber-400" />
-                      {Number(score).toFixed(1)}
-                    </span>
-                  )}
-                  <span className="text-white/60 text-xs hidden xs:inline">•</span>
-                  <span className="text-white/80 font-medium truncate max-w-[140px] sm:max-w-[200px]">
-                    {latestChapter}
-                  </span>
-                </div>
+                {/* Flat metadata row — no pills */}
+                <p className="text-[11px] font-semibold text-white/55 tracking-wide truncate">
+                  {metaParts.join(" · ")}
+                </p>
 
                 {/* Title */}
-                <h2 className="text-xl sm:text-3xl md:text-4xl font-black text-white leading-tight tracking-tight drop-shadow-lg line-clamp-2">
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white leading-[1.15] tracking-tight line-clamp-2 drop-shadow-md">
                   {currentManga.title}
                 </h2>
 
-                {/* Synopsis */}
+                {/* Description */}
                 {isDetailLoading ? (
-                  <div className="flex flex-col gap-1.5 w-full max-w-sm py-1">
-                    <div className="h-3.5 w-full bg-white/10 rounded-full animate-pulse" />
-                    <div className="h-3.5 w-4/5 bg-white/10 rounded-full animate-pulse" />
+                  <div className="flex flex-col gap-1 py-0.5 max-w-xs">
+                    <div className="h-3 w-full bg-white/10 rounded-full animate-pulse" />
+                    <div className="h-3 w-3/4 bg-white/10 rounded-full animate-pulse" />
                   </div>
                 ) : (
-                  <p className="text-white/75 text-xs sm:text-sm line-clamp-2 sm:line-clamp-3 leading-relaxed max-w-md font-medium drop-shadow-sm">
+                  <p className="text-white/60 text-xs sm:text-sm line-clamp-2 leading-relaxed max-w-sm">
                     {synopsis}
                   </p>
                 )}
 
-                {/* CTA Button */}
-                <div className="mt-2 sm:mt-3 flex items-center gap-3">
+                {/* CTA */}
+                <div className="mt-1 sm:mt-2">
                   <Link
                     href={getMangaDetailHref(actualSourceId, currentManga.id)}
-                    className={cn(
-                      "inline-flex items-center justify-center gap-2 min-h-[44px] px-6 rounded-full font-extrabold text-sm shadow-xl hover:scale-105 active:scale-95 transition-all shrink-0 pointer-events-auto",
-                      variant === "cyber-editorial" && "bg-white text-black hover:bg-accent hover:text-white",
-                      variant === "cinematic-glass" && "bg-sky-400 text-slate-950 hover:bg-white shadow-[0_0_15px_rgba(56,189,248,0.5)]",
-                      variant === "editorial-studio" && "bg-white text-black border-2 border-white uppercase tracking-wider"
-                    )}
+                    className="inline-flex items-center gap-2 min-h-[44px] px-5 rounded-full bg-white text-black font-extrabold text-sm shadow-lg hover:bg-accent hover:text-white active:scale-95 transition-all shrink-0"
                     draggable={false}
+                    aria-label="Baca"
                   >
-                    <Play weight="fill" size={18} />
+                    <Play weight="fill" size={16} />
                     Baca
                   </Link>
                 </div>
@@ -178,8 +174,8 @@ export function FeaturedHeroCarousel({ sourceId, mangas, variant = "cyber-editor
             </AnimatePresence>
           </div>
 
-          {/* Desktop Cover Artwork Card Stage */}
-          <div className="hidden lg:block shrink-0 relative">
+          {/* Desktop cover poster */}
+          <div className="hidden lg:block shrink-0">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentManga.id + "-poster"}
@@ -187,12 +183,7 @@ export function FeaturedHeroCarousel({ sourceId, mangas, variant = "cyber-editor
                 animate={{ opacity: 1, scale: 1, rotate: 0 }}
                 exit={{ opacity: 0, scale: 0.9, rotate: 2 }}
                 transition={{ duration: shouldReduce ? 0 : motionDuration.normal, ease: motionEase.softOut as [number, number, number, number] }}
-                className={cn(
-                  "w-[150px] xl:w-[170px] aspect-[2/3] overflow-hidden shadow-2xl border-2 bg-surface-muted transform hover:rotate-1 transition-transform",
-                  variant === "cyber-editorial" && "rounded-2xl border-white/20",
-                  variant === "cinematic-glass" && "rounded-3xl border-white/30 shadow-[0_10px_30px_rgba(0,0,0,0.5)]",
-                  variant === "editorial-studio" && "rounded-xl border-white"
-                )}
+                className="w-[150px] xl:w-[170px] aspect-[2/3] overflow-hidden rounded-2xl border-2 border-white/20 shadow-2xl bg-surface-muted"
               >
                 <img
                   src={currentManga.coverUrl || ""}
@@ -206,38 +197,25 @@ export function FeaturedHeroCarousel({ sourceId, mangas, variant = "cyber-editor
         </div>
       </div>
 
-      {/* Carousel Navigation Controls */}
-      <div className="absolute bottom-4 right-4 sm:bottom-6 sm:right-8 z-30 flex items-center gap-2 pointer-events-auto">
-        <button
-          onClick={handlePrev}
-          aria-label="Previous manga"
-          className="w-9 h-9 rounded-full border border-white/20 bg-black/50 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/30 transition-all active:scale-90"
-        >
-          <CaretLeft weight="bold" size={18} />
-        </button>
-
-        <div className="flex gap-1.5 mx-1 max-w-[120px] overflow-hidden justify-center items-center">
-          {mangas.map((_, idx) => (
-            <button
-              key={idx}
-              onClick={() => setCurrentIndex(idx)}
-              aria-label={`Go to slide ${idx + 1}`}
-              className={cn(
-                "h-1.5 rounded-full transition-all duration-300",
-                idx === currentIndex ? "w-5 bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]" : "w-1.5 bg-white/30 hover:bg-white/60"
-              )}
-            />
-          ))}
+      {/* Desktop-only prev/next arrows — hidden on mobile */}
+      {mangas.length > 1 && (
+        <div className="hidden sm:flex absolute bottom-6 right-6 md:bottom-8 md:right-8 z-30 items-center gap-2 pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <button
+            onClick={handlePrev}
+            aria-label="Previous manga"
+            className="w-10 h-10 rounded-full border border-white/20 bg-black/50 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-90"
+          >
+            <CaretLeft weight="bold" size={16} />
+          </button>
+          <button
+            onClick={handleNext}
+            aria-label="Next manga"
+            className="w-10 h-10 rounded-full border border-white/20 bg-black/50 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-90"
+          >
+            <CaretRight weight="bold" size={16} />
+          </button>
         </div>
-
-        <button
-          onClick={handleNext}
-          aria-label="Next manga"
-          className="w-9 h-9 rounded-full border border-white/20 bg-black/50 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/30 transition-all active:scale-90"
-        >
-          <CaretRight weight="bold" size={18} />
-        </button>
-      </div>
+      )}
     </div>
   );
 }

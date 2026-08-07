@@ -26,7 +26,7 @@ export function LeaderboardRow({ manga, sourceId, displayScore }: LeaderboardRow
   return (
     <Link
       href={getMangaDetailHref(sourceId, manga.id, fullPath)}
-      className="group relative flex items-center gap-3.5 py-2.5 px-3 rounded-2xl bg-surface-base/40 hover:bg-surface-raised/90 border border-border-subtle/40 hover:border-border-default/80 transition-all duration-300 shadow-xs hover:shadow-md"
+      className="group relative flex items-center gap-3.5 py-2.5 px-3 rounded md:rounded-xl bg-surface-base/40 hover:bg-surface-raised/90 border border-border-subtle/40 hover:border-border-default/80 transition-all duration-300 shadow-xs hover:shadow-md"
     >
       {/* Rank Badge */}
       {manga.rank !== undefined && (
@@ -44,7 +44,7 @@ export function LeaderboardRow({ manga, sourceId, displayScore }: LeaderboardRow
       )}
 
       {/* Cover */}
-      <div className="relative w-[50px] h-[68px] sm:w-[60px] sm:h-[80px] shrink-0 bg-surface-muted rounded-xl overflow-hidden shadow-sm border border-border-subtle/50 group-hover:shadow-md transition-all">
+      <div className="relative w-[50px] h-[68px] sm:w-[60px] sm:h-[80px] shrink-0 bg-surface-muted rounded-sm overflow-hidden shadow-sm border border-border-subtle/50 group-hover:shadow-md transition-all">
         {manga.coverUrl && !imageError ? (
           <img
             src={manga.coverUrl}
