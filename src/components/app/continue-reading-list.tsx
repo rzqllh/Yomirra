@@ -52,7 +52,7 @@ export function ContinueReadingList({ items }: ContinueReadingListProps) {
           return (
             <div
               key={`${group.mangaId}-${group.chapterId}`}
-              className="group relative shrink-0 snap-start w-[80vw] max-w-[320px] sm:w-[350px] md:w-[370px] p-3 sm:p-3.5 flex gap-3.5 bg-surface-glass backdrop-blur-xl border border-border-subtle/80 hover:border-accent/40 rounded-2xl md:rounded-3xl shadow-xs hover:shadow-md transition-all duration-300 overflow-hidden"
+              className="group relative shrink-0 snap-start w-[80vw] max-w-[320px] sm:w-[350px] md:w-[370px] p-3 md:p-3.5 flex gap-3.5 bg-surface-glass backdrop-blur-xl border border-border-subtle/80 hover:border-accent/40 rounded-2xl md:rounded-3xl shadow-xs hover:shadow-md transition-all duration-300 overflow-hidden"
             >
               <Link
                 href={targetHref}
@@ -60,7 +60,7 @@ export function ContinueReadingList({ items }: ContinueReadingListProps) {
                 aria-label={`Lanjut baca ${group.mangaTitle}`}
               />
 
-              <div className="relative w-20 sm:w-24 aspect-[3/4] shrink-0 rounded-xl overflow-hidden bg-surface-muted shadow-sm border border-border-subtle/50">
+              <div className="relative w-20 sm:w-24 aspect-[3/4] shrink-0 rounded md:rounded-lg overflow-hidden bg-surface-muted shadow-sm border border-border-subtle/50">
                 {group.coverUrl ? (
                   <img
                     src={group.coverUrl}

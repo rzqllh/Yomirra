@@ -89,7 +89,7 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
   if (!isMounted) return null;
 
   return (
-    <div className="flex flex-col gap-8 animate-in fade-in zoom-in-[0.98] duration-300 ease-out fill-mode-both">
+    <div className="flex flex-col gap-8 animate-in fade-in zoom-in-[0.98] duration-300 ease-out fill-mode-both pb-12">
 
       {/* 1. Lanjut Baca */}
       {historyItems.length > 0 && (
@@ -130,7 +130,7 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
           </div>
 
           {/* Hero Carousel */}
-          <div className="h-[380px] sm:h-[460px] w-full overflow-hidden">
+          <div className="h-[320px] sm:h-[420px] w-full overflow-hidden rounded-2xl md:rounded-3xl">
             {activeSourceHighlight.length > 0 ? (
               <FeaturedHeroCarousel sourceId={activeSourceId} mangas={activeSourceHighlight} variant="cyber-editorial" />
             ) : (
