@@ -50,17 +50,18 @@ export function MangaStatusButton({ sourceId, mangaId }: MangaStatusButtonProps)
 
   return (
     <>
-      <Button
-        variant="outline"
-        className={cn(
-          "w-full h-12 rounded-xl font-bold transition-all border-border-default",
-          readingStatus && mounted ? "bg-accent/10 border-accent/20 text-accent hover:bg-accent/20" : "bg-surface-raised text-text-secondary hover:bg-surface-hover hover:text-text-primary"
-        )}
+      <button
         onClick={() => setIsOpen(true)}
+        className={cn(
+          "flex flex-col items-center justify-center gap-1.5 py-3 px-1 rounded-2xl transition-all duration-300 outline-none select-none",
+          readingStatus && mounted
+            ? "bg-accent/10 border border-accent/20 text-accent shadow-sm"
+            : "bg-surface-raised border border-border-default text-text-secondary hover:bg-surface-hover hover:border-border-strong hover:text-text-primary active:scale-[0.98]"
+        )}
       >
-        <BookOpenText size={20} weight={readingStatus ? "fill" : "regular"} className="mr-2" />
-        {getLabel()}
-      </Button>
+        <BookOpenText size={24} weight={readingStatus && mounted ? "fill" : "regular"} />
+        <span className="text-[11px] font-bold tracking-tight">Status</span>
+      </button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="max-w-sm rounded-3xl p-6 bg-surface-overlay/95 backdrop-blur-xl shadow-default -heavy">

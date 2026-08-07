@@ -162,6 +162,7 @@ export function FeaturedHeroCarousel({ sourceId, mangas, variant = "cyber-editor
                 <div className="mt-1 sm:mt-2">
                   <Link
                     href={getMangaDetailHref(actualSourceId, currentManga.id)}
+                    prefetch={true}
                     className="inline-flex items-center gap-2 min-h-[44px] px-5 rounded-full bg-white text-black font-extrabold text-sm shadow-lg hover:bg-accent hover:text-white active:scale-95 transition-all shrink-0"
                     draggable={false}
                     aria-label="Baca"

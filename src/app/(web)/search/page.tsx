@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useQuery, useQueries, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueries, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
 import { MagnifyingGlass, WarningCircle, CheckCircle } from "@phosphor-icons/react/dist/ssr";
 import { SearchResultSkeleton } from "@/components/skeletons/search-result-skeleton";
@@ -221,6 +221,7 @@ function SearchContent() {
         queryKey: ["searchSource", sourceId, query, isNsfwFiltered, payload, page],
         queryFn: ({ signal }) => apiClient.search(sourceId, query, page, payload, isNsfwFiltered, { signal }),
         enabled: activeSelectedSources.length > 0 && !isExhausted,
+        placeholderData: keepPreviousData,
       };
     })
   });

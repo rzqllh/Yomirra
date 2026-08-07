@@ -28,7 +28,7 @@ export const FilterChip = React.forwardRef<HTMLButtonElement, FilterChipProps>(
         aria-label={computedAriaLabel}
         aria-pressed={selected}
         className={cn(
-          "px-4 py-2 rounded-full text-sm font-bold transition-all border flex items-center gap-1.5 active:scale-[0.98]",
+          "px-4 py-2 rounded-full text-sm font-bold transition-all border flex items-center justify-center gap-1.5 active:scale-[0.98]",
           variant === "inverted" && "bg-text-primary text-surface-base border-transparent",
           variant === "accent-subtle" && "bg-accent/10 border-accent text-accent",
           variant === "accent-solid" && "bg-accent text-white border-transparent shadow-[0_0_12px_rgba(94,92,230,0.3)]",

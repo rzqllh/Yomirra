@@ -3,7 +3,7 @@
 import * as React from "react";
 import { DirectionalTransition } from "@/components/ui/directional-transition";
 import { LibrarySkeleton } from "@/components/skeletons/library-skeleton";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
 import { ShelfCard, HistoryCard } from "@/components/manga/card";
 import { SearchInput } from "@/components/ui/search-input";
@@ -47,7 +47,6 @@ import { useCollectionStore } from "@/shared/store/collection-store";
 import { MangaKey } from "@/shared/types/collection";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { YomirraSurface } from "@/components/ui/layout";
-import { YomirraPageHeader, DesktopPageTitle } from "@/components/app/header";
 import { LibraryFilterDrawer } from "@/components/library/library-filter-drawer";
 import { CustomSelect } from "@/components/ui/custom-select";
 
@@ -76,7 +75,7 @@ function LibraryContent() {
   const { selectedGenres, excludedGenres, selectedFormats, selectedStatuses, selectedCollections, selectedReadingStatuses, sort: storeSort, query: storeQuery, viewMode } = filterStore;
   
   const libraryItems = useLibraryStore(state => state.items);
-  const { membershipsByManga, readingStatusByManga } = useCollectionStore();
+  const { collections, membershipsByManga, readingStatusByManga } = useCollectionStore();
   
   const initialSort = sortParam || storeSort || "popular";
   
@@ -288,6 +287,7 @@ function LibraryContent() {
     retry: 1,
     refetchOnWindowFocus: false,
     enabled: !isDisabled,
+    placeholderData: keepPreviousData,
   });
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -365,78 +365,178 @@ function LibraryContent() {
     );
   }
 
+  const totalLibraryCount = Object.keys(libraryItems).length;
+
   return (
     <div className="flex flex-col min-h-screen">
       <h1 className="sr-only">Library Yomirra</h1>
-      <YomirraPageHeader title="Library" variant="transparent" icon={<Books size={24} weight="duotone" />} />
       <YomirraSurface variant="base" className="flex-1 w-full max-w-7xl mx-auto md:pb-8">
-        <div className="px-4 pt-[calc(var(--safe-top)+24px)] pb-6 md:px-8 md:py-8 space-y-8">
+        <div className="px-4 pt-[calc(var(--safe-top)+16px)] md:pt-[calc(var(--safe-top)+24px)] pb-6 md:px-8 md:py-8">
           
-          {/* Header Section */}
-          <div className="mb-6">
-            <DesktopPageTitle 
-              title="Library" 
-              description="Jelajahi berbagai koleksi komik dari sumber pilihanmu."
-              icon={<Books size={32} weight="duotone" />}
+          {/* 1. Header Section */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="shrink-0 p-2.5 md:p-3 bg-surface-base rounded-xl shadow-sm border border-border-default/50 text-accent">
+                <Books size={24} className="md:w-8 md:h-8" weight="duotone" />
+              </div>
+              <h2 className="text-2xl md:text-3xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-text-primary to-text-secondary">
+                Library
+              </h2>
+            </div>
+            <div className="text-sm font-bold text-text-muted">
+              {totalLibraryCount} judul
+            </div>
+          </div>
+
+          {/* 2. Search & Filter Row */}
+          <div className="flex items-center gap-3 mt-6 md:mt-7">
+            <SearchInput
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onSubmitAction={handleSearchSubmit}
+              onClear={() => { setSearchInput(""); setQuery(""); setPage(1); }}
+              placeholder="Cari di library..."
+              containerClassName="flex-1 min-w-0 h-[44px]"
             />
+
+            <LibraryFilterDrawer activeSourceId={activeSourceId}>
+              <Button
+                variant={activeFilterCount > 0 ? "accent" : "outline"}
+                className={cn("shrink-0 h-[44px] px-4 rounded-full font-bold gap-1.5 transition-all duration-300", activeFilterCount === 0 && "bg-surface-glass backdrop-blur-md text-text-primary")}
+                aria-label={`Filter ${activeFilterCount > 0 ? `(${activeFilterCount} aktif)` : ''}`}
+              >
+                <Funnel size={18} weight={activeFilterCount > 0 ? "fill" : "bold"} />
+                <span>Filter</span>
+                {activeFilterCount > 0 && <span>{activeFilterCount}</span>}
+              </Button>
+            </LibraryFilterDrawer>
           </div>
 
-          {/* Navigation Tabs & Search/Filters */}
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b border-border-subtle pb-4">
-            <div className="w-full md:w-auto">
-              <div className="relative w-full md:w-auto">
-                <CustomSelect
-                  value={sort}
-                  onChange={(v) => handleTabChange(v)}
-                  options={DYNAMIC_SORTS.map(s => ({ value: s.id, label: s.name }))}
-                  align="left"
-                  className="w-full md:w-auto"
-                  buttonClassName="w-full md:w-auto justify-between h-[44px] px-4 text-[14px]"
-                />
-              </div>
-            </div>
-
-            <div className="flex w-full md:w-auto items-center gap-3">
-              <SearchInput 
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                onSubmitAction={handleSearchSubmit}
-                onClear={() => { setSearchInput(""); setQuery(""); setPage(1); }}
-                placeholder="Cari..." 
-                containerClassName="flex-1 md:w-64 h-[44px]"
+          {/* 3. Quick Sort & Reading Status Row */}
+          <div className="flex items-center mt-1 -mx-4 px-4 md:mx-0 md:px-0">
+            <div className="shrink-0 flex items-center z-50">
+              <CustomSelect
+                value={sort}
+                onChange={(v) => handleTabChange(v)}
+                options={DYNAMIC_SORTS.map(s => ({ value: s.id, label: s.name }))}
+                align="left"
+                className="shrink-0"
+                buttonClassName="h-[36px] px-3.5 text-[13px] rounded-full bg-surface-raised border-border-subtle hover:border-border-strong font-semibold shadow-sm"
               />
+              <div className="w-px h-5 bg-border-subtle shrink-0 mx-2.5" />
+            </div>
 
-              <LibraryFilterDrawer activeSourceId={activeSourceId}>
-                <Button
-                  variant={activeFilterCount > 0 ? "accent" : "outline"}
-                  size="sm"
-                  className={cn("rounded-full font-bold gap-1.5 h-[44px] px-5 transition-all duration-300", activeFilterCount > 0 ? "shadow-md" : "bg-surface-glass backdrop-blur-md text-text-primary hover:bg-surface-glass hover:text-text-primary shadow-[0_4px_16px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.2)]")}
-                >
-                  <Funnel size={16} weight={activeFilterCount > 0 ? "fill" : "bold"} />
-                  Filter {activeFilterCount > 0 && `(${activeFilterCount})`}
-                </Button>
-              </LibraryFilterDrawer>
+            <div className="flex items-center gap-2.5 overflow-x-auto hide-scrollbar flex-1 py-3 -mr-4 pr-4 md:mr-0 md:pr-0">
+              {[
+              { id: "", label: "Semua" },
+              { id: "reading", label: "Sedang Dibaca" },
+              { id: "plan-to-read", label: "Akan Dibaca" },
+              { id: "completed", label: "Selesai" },
+              { id: "on-hold", label: "Ditunda" },
+              { id: "dropped", label: "Dihentikan" }
+            ].map(status => {
+              const isSelected = status.id === ""
+                ? selectedReadingStatuses.length === 0
+                : selectedReadingStatuses.includes(status.id);
 
-              <div className="hidden sm:flex bg-surface-glass backdrop-blur-md rounded-full p-1 border border-border-subtle shadow-sm h-[44px]">
+              return (
                 <button
-                  type="button"
-                  onClick={() => filterStore.setFilters({ viewMode: "grid" })}
-                  className={cn("flex items-center justify-center w-10 h-full rounded-full transition-colors", viewMode === "grid" ? "bg-accent text-accent-on" : "text-text-muted hover:text-text-primary")}
-                  aria-label="Grid view"
+                  key={status.id}
+                  onClick={() => {
+                    setPage(1);
+                    if (status.id === "") {
+                      filterStore.setFilters({ selectedReadingStatuses: [] });
+                    } else {
+                      filterStore.setFilters({ selectedReadingStatuses: [status.id] });
+                    }
+                  }}
+                  aria-pressed={isSelected}
+                  className={cn(
+                    "shrink-0 h-[36px] px-4 rounded-full text-[13px] font-bold transition-all whitespace-nowrap active:scale-[0.98]",
+                    isSelected
+                      ? "bg-accent text-white shadow-[0_0_12px_rgba(94,92,230,0.3)] border border-transparent"
+                      : "bg-surface-raised text-text-secondary border border-border-subtle hover:border-border-strong"
+                  )}
                 >
-                  <SquaresFour size={18} weight={viewMode === "grid" ? "fill" : "bold"} />
+                  {status.label}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => filterStore.setFilters({ viewMode: "list" })}
-                  className={cn("flex items-center justify-center w-10 h-full rounded-full transition-colors", viewMode === "list" ? "bg-accent text-accent-on" : "text-text-muted hover:text-text-primary")}
-                  aria-label="List view"
-                >
-                  <List size={18} weight={viewMode === "list" ? "fill" : "bold"} />
-                </button>
+              );
+            })}
+          </div>
+        </div>
+
+          {/* 4. Collections Rail */}
+          {collections.length > 0 && (
+            <div className="mt-6 mb-2">
+              <h3 className="text-xs font-black tracking-widest text-text-muted uppercase mb-3 px-1">
+                Koleksi
+              </h3>
+              <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
+                {(() => {
+                  // Calculate counts for active source
+                  const sourceItems = Object.values(libraryItems).filter(item => item.sourceId === activeSourceId);
+                  const totalSemua = sourceItems.length;
+
+                  const getCollectionCount = (cId: string) => {
+                    return sourceItems.filter(item => {
+                      const key = `${item.sourceId}::${item.mangaId}` as MangaKey;
+                      const memberships = membershipsByManga[key] || [];
+                      return memberships.includes(cId);
+                    }).length;
+                  };
+
+                  return (
+                    <>
+                      <button
+                        onClick={() => {
+                          setPage(1);
+                          filterStore.setFilters({ selectedCollections: [] });
+                        }}
+                        aria-pressed={selectedCollections.length === 0}
+                        className={cn(
+                          "shrink-0 h-[36px] px-4 rounded-full text-[13px] font-bold transition-all whitespace-nowrap active:scale-[0.98] flex items-center gap-2",
+                          selectedCollections.length === 0
+                            ? "bg-accent text-white shadow-[0_0_12px_rgba(94,92,230,0.3)] border border-transparent"
+                            : "bg-surface-raised text-text-secondary border border-border-subtle hover:border-border-strong"
+                        )}
+                      >
+                        Semua
+                        <span className={cn("text-[11px] px-1.5 py-0.5 rounded-md", selectedCollections.length === 0 ? "bg-white/20" : "bg-border-subtle/50 text-text-muted")}>
+                          {totalSemua}
+                        </span>
+                      </button>
+
+                      {collections.map(c => {
+                        const isSelected = selectedCollections.includes(c.id);
+                        const count = getCollectionCount(c.id);
+                        return (
+                          <button
+                            key={c.id}
+                            onClick={() => {
+                              setPage(1);
+                              filterStore.setFilters({ selectedCollections: [c.id] });
+                            }}
+                            aria-pressed={isSelected}
+                            className={cn(
+                              "shrink-0 h-[36px] px-4 rounded-full text-[13px] font-bold transition-all whitespace-nowrap active:scale-[0.98] flex items-center gap-2",
+                              isSelected
+                                ? "bg-accent text-white shadow-[0_0_12px_rgba(94,92,230,0.3)] border border-transparent"
+                                : "bg-surface-raised text-text-secondary border border-border-subtle hover:border-border-strong"
+                            )}
+                          >
+                            {c.name}
+                            <span className={cn("text-[11px] px-1.5 py-0.5 rounded-md", isSelected ? "bg-white/20" : "bg-border-subtle/50 text-text-muted")}>
+                              {count}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </>
+                  );
+                })()}
               </div>
             </div>
-          </div>
+          )}
 
           {isDisabled ? (
             <EmptyState
@@ -463,12 +563,34 @@ function LibraryContent() {
               action={<Button onClick={() => refetch()} variant="outline" className="mt-4 rounded-full shadow-sm font-bold">Coba lagi</Button>}
             />
           ) : mangas.length === 0 ? (
-            <EmptyState
-              icon={<MagnifyingGlass size={40} className="text-text-muted" weight="duotone" />}
-              title="Manga tidak ditemukan"
-              description="Coba ubah kombinasi filter atau kata kunci pencarian."
-              action={<Button onClick={resetFilters} variant="outline" className="mt-4 rounded-full shadow-sm font-bold">Reset Filter</Button>}
-            />
+            (() => {
+              if (Object.keys(libraryItems).length === 0) {
+                return (
+                  <EmptyState
+                    icon={<Books size={40} className="text-text-muted" weight="duotone" />}
+                    title="Library Kosong"
+                    description="Belum ada manga yang ditambahkan ke Library."
+                  />
+                );
+              }
+              if (selectedCollections.length > 0 && !query && selectedGenres.length === 0 && excludedGenres.length === 0 && selectedFormats.length === 0 && selectedStatuses.length === 0 && selectedReadingStatuses.length === 0) {
+                return (
+                  <EmptyState
+                    icon={<Books size={40} className="text-text-muted" weight="duotone" />}
+                    title="Koleksi Kosong"
+                    description="Koleksi ini belum memiliki manga."
+                  />
+                );
+              }
+              return (
+                <EmptyState
+                  icon={<MagnifyingGlass size={40} className="text-text-muted" weight="duotone" />}
+                  title="Manga tidak ditemukan"
+                  description="Coba ubah kombinasi filter atau kata kunci pencarian."
+                  action={<Button onClick={resetFilters} variant="outline" className="mt-4 rounded-full shadow-sm font-bold">Reset Filter</Button>}
+                />
+              );
+            })()
           ) : (
             <>
               {/* Opacity transition when fetching next/prev pages */}
@@ -493,8 +615,8 @@ function LibraryContent() {
               {/* Advanced Pagination */}
               <div className="mt-12 py-4">
                 <Pagination>
-                  <PaginationContent>
-                    <PaginationItem>
+                  <PaginationContent className="gap-1 sm:gap-2">
+                    <PaginationItem className="hidden sm:block">
                       <PaginationPrevious10
                         onClick={() => setPage(p => Math.max(1, p - 10))}
                         className={cn(page <= 10 && "opacity-50 pointer-events-none")}
@@ -511,10 +633,10 @@ function LibraryContent() {
                     
                     {page > 2 && (
                       <>
-                        <PaginationItem>
+                        <PaginationItem className="hidden md:block">
                           <PaginationLink onClick={() => setPage(1)}>1</PaginationLink>
                         </PaginationItem>
-                        <PaginationItem>
+                        <PaginationItem className="hidden sm:block">
                           <PaginationEllipsis />
                         </PaginationItem>
                       </>
@@ -537,7 +659,7 @@ function LibraryContent() {
                     )}
 
                     {data?.hasNextPage && (
-                      <PaginationItem>
+                      <PaginationItem className="hidden sm:block">
                         <PaginationEllipsis />
                       </PaginationItem>
                     )}
@@ -549,7 +671,7 @@ function LibraryContent() {
                         aria-disabled={!data?.hasNextPage}
                       />
                     </PaginationItem>
-                    <PaginationItem>
+                    <PaginationItem className="hidden sm:block">
                       <PaginationNext10
                         onClick={() => setPage(p => p + 10)}
                         className={cn(!data?.hasNextPage && "opacity-50 pointer-events-none")}

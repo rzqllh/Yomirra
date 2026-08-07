@@ -228,7 +228,7 @@ export function LibraryFilterDrawer({ children, activeSourceId }: LibraryFilterD
               {/* Status */}
               <div>
                 <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Status</h3>
-                <div className="flex flex-wrap gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {dynamicFilters.statuses.map((status: any) => (
                     <FilterChip
                       key={status.id}
@@ -246,7 +246,7 @@ export function LibraryFilterDrawer({ children, activeSourceId }: LibraryFilterD
               {dynamicFilters.genres.length > 0 && (
                 <div>
                   <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Genre</h3>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {dynamicFilters.genres.map((genre: any) => {
                       const isInc = selectedGenres.includes(genre.id);
                       const isExc = excludedGenres.includes(genre.id);
@@ -269,7 +269,7 @@ export function LibraryFilterDrawer({ children, activeSourceId }: LibraryFilterD
               {collections.length > 0 && (
                 <div>
                   <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Koleksi (Lokal)</h3>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {collections.map((col: any) => (
                       <FilterChip
                         key={col.id}
@@ -287,7 +287,7 @@ export function LibraryFilterDrawer({ children, activeSourceId }: LibraryFilterD
               {/* Status Membaca (Lokal) */}
               <div>
                 <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Status Membaca (Lokal)</h3>
-                <div className="flex flex-wrap gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {LOCAL_READING_STATUSES.map((status: any) => (
                     <FilterChip
                       key={status.id}
@@ -303,7 +303,7 @@ export function LibraryFilterDrawer({ children, activeSourceId }: LibraryFilterD
             </div>
           </div>
           
-          <div className="p-4 bg-surface-base border-t border-border-subtle shrink-0 relative z-10" style={{ transform: "translate3d(0,0,0)" }}>
+          <div className="p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-surface-base border-t border-border-subtle shrink-0 relative z-10" style={{ transform: "translate3d(0,0,0)" }}>
             <Button 
               onClick={handleApply}
               className="w-full h-14 rounded-2xl text-[15px] font-bold bg-text-primary text-surface-base hover:bg-text-primary/90 active:scale-[0.98] transition-transform duration-200"

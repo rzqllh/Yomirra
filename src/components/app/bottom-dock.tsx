@@ -21,7 +21,7 @@ export function BottomDock() {
       }}
     >
       <div className="pointer-events-auto flex w-full max-w-md mx-auto items-center justify-center gap-3">
-        <div className="flex-1 min-w-0 flex h-[56px] items-center justify-between gap-1 rounded-full bg-surface-glass backdrop-blur-md px-1.5 shadow-sm border border-border-default/30">
+        <div className="flex min-w-0 h-[56px] items-center justify-center gap-1 md:gap-3 rounded-full bg-surface-glass backdrop-blur-md px-2 shadow-sm border border-border-default/30 transition-all duration-300 ease-out">
           {DOCK_NAV_ITEMS.filter(item => item.href !== '/settings').map((item) => {
             const isActive =
               item.href === "/"

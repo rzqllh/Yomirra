@@ -17,7 +17,7 @@ describe("Manga Detail Collection Actions (Slice 2.2)", () => {
   describe("MangaStatusButton", () => {
     it("renders and opens status dialog", () => {
       render(<MangaStatusButton sourceId="srcA" mangaId="m1" />);
-      const btn = screen.getByRole("button", { name: /Status Membaca/i });
+      const btn = screen.getByRole("button", { name: /Status/i });
       fireEvent.click(btn);
       
       expect(screen.getByText("Sedang Dibaca")).toBeDefined();
@@ -29,7 +29,7 @@ describe("Manga Detail Collection Actions (Slice 2.2)", () => {
 
     it("sets reading status using mangaKey sourceId::mangaId", () => {
       render(<MangaStatusButton sourceId="srcA" mangaId="m1" />);
-      fireEvent.click(screen.getByRole("button", { name: /Status Membaca/i }));
+      fireEvent.click(screen.getByRole("button", { name: /Status/i }));
       
       fireEvent.click(screen.getByText("Selesai"));
       
@@ -40,7 +40,7 @@ describe("Manga Detail Collection Actions (Slice 2.2)", () => {
   describe("MangaCollectionButton", () => {
     it("renders and opens collection dialog with empty state", () => {
       render(<MangaCollectionButton sourceId="srcA" mangaId="m1" />);
-      const btn = screen.getByRole("button", { name: /Kelola Koleksi/i });
+      const btn = screen.getByRole("button", { name: /Koleksi/i });
       fireEvent.click(btn);
       
       expect(screen.getByText("Belum ada koleksi.")).toBeDefined();
@@ -52,7 +52,7 @@ describe("Manga Detail Collection Actions (Slice 2.2)", () => {
       const cId = useCollectionStore.getState().collections[0].id;
       
       render(<MangaCollectionButton sourceId="srcA" mangaId="m1" />);
-      fireEvent.click(screen.getByRole("button", { name: /Kelola Koleksi/i }));
+      fireEvent.click(screen.getByRole("button", { name: /Koleksi/i }));
       
       const colBtn = screen.getByText("Favs");
       
@@ -67,7 +67,7 @@ describe("Manga Detail Collection Actions (Slice 2.2)", () => {
 
     it("can create collection and auto add manga", () => {
       render(<MangaCollectionButton sourceId="srcA" mangaId="m1" />);
-      fireEvent.click(screen.getByRole("button", { name: /Kelola Koleksi/i }));
+      fireEvent.click(screen.getByRole("button", { name: /Koleksi/i }));
       
       fireEvent.click(screen.getByRole("button", { name: /Buat Koleksi Baru/i }));
       

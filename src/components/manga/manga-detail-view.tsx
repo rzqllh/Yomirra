@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useMemo, useDeferredValue } from "react";
-import { Play, SortAscending, SortDescending, Book } from "@phosphor-icons/react";
-import { CaretLeft } from "@phosphor-icons/react";
+import { Play, SortAscending, SortDescending, Book, ShareNetwork, CaretLeft } from "@phosphor-icons/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useMounted } from "@/shared/hooks/use-mounted";
@@ -174,7 +173,7 @@ export function MangaDetailView({
   );
 
   const renderActions = () => (
-    <div className="w-full">
+    <div className="grid grid-cols-4 gap-2 w-full mt-2">
       <MangaActions 
         sourceId={sourceId}
         mangaId={mangaId}
@@ -183,12 +182,22 @@ export function MangaDetailView({
         author={detail.author}
         status={detail.status}
       />
-      <div className="flex gap-2 w-full mt-1">
-        <MangaStatusButton sourceId={sourceId} mangaId={mangaId} />
-        <MangaCollectionButton sourceId={sourceId} mangaId={mangaId} />
-      </div>
+      <MangaStatusButton sourceId={sourceId} mangaId={mangaId} />
+      <MangaCollectionButton sourceId={sourceId} mangaId={mangaId} />
     </div>
   );
+
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: detail.title,
+        url: window.location.href,
+      }).catch(console.error);
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      toast.success("Link berhasil disalin");
+    }
+  };
 
   return (
     <main className="min-h-screen flex flex-col w-full relative pb-[calc(var(--bottom-nav-height,80px)+24px)] md:pb-12 text-text-primary">
@@ -215,7 +224,7 @@ export function MangaDetailView({
             href={backHref}
             replace={true}
             aria-label="Kembali"
-            className="flex items-center justify-center min-w-[44px] min-h-[44px] rounded-full text-text-primary hover:bg-black/5 dark:hover:bg-surface-hover transition-colors drop-shadow-sm"
+            className="flex items-center justify-center w-[44px] h-[44px] rounded-full text-text-primary hover:bg-black/5 dark:hover:bg-surface-hover transition-colors drop-shadow-sm"
           >
             <CaretLeft size={24} weight="bold" />
           </Link>
@@ -228,6 +237,16 @@ export function MangaDetailView({
             {detail.title}
           </span>
         </motion.div>
+        
+        <div className="bg-surface-glass backdrop-blur-xl border border-border-glass shadow-glass rounded-full w-[46px] h-[46px] pointer-events-auto shrink-0 flex items-center justify-center">
+          <button
+            onClick={handleShare}
+            aria-label="Bagikan"
+            className="flex items-center justify-center w-[44px] h-[44px] rounded-full text-text-primary hover:bg-black/5 dark:hover:bg-surface-hover transition-colors drop-shadow-sm"
+          >
+            <ShareNetwork size={22} weight="regular" />
+          </button>
+        </div>
       </div>
 
       <style dangerouslySetInnerHTML={{ __html: `
@@ -280,8 +299,8 @@ export function MangaDetailView({
           <div className="relative z-10 w-full mt-[calc(var(--safe-top))] flex flex-col gap-4 md:hidden">
             <div className="rounded-[32px] border border-border-glass bg-surface-glass/95 dark:bg-surface-glass backdrop-blur-3xl shadow-glass p-5 flex flex-col gap-5">
               
-              <div className="flex gap-5">
-                <div className="relative w-36 shrink-0 aspect-[2/3] rounded-2xl overflow-hidden shadow-glass border border-border-glass bg-surface-glass vt-cover-mobile">
+              <div className="flex gap-4 md:gap-5">
+                <div className="relative w-[104px] shrink-0 aspect-[2/3] rounded-2xl overflow-hidden shadow-glass border border-border-glass bg-surface-glass vt-cover-mobile">
                   {detail.coverUrl ? (
                     <Image
                       src={detail.coverUrl}
@@ -370,26 +389,26 @@ export function MangaDetailView({
           >
             <span className="text-[11px] font-black text-text-muted uppercase tracking-widest block mb-3">Sinopsis</span>
             <p className={cn(
-              "text-sm md:text-base leading-relaxed text-text-secondary break-words transition-all", 
+              "text-[13px] md:text-sm leading-relaxed text-text-secondary break-words transition-all", 
               !isExpanded && "line-clamp-4" 
             )}>
               {detail.description?.replace(/\s+/g, ' ').trim() || "Sinopsis belum tersedia."}
             </p>
-            {detail.description && detail.description.length > 200 && (
+            {detail.description && detail.description.length > 150 && (
               <button 
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="mt-3 text-sm font-bold text-accent hover:text-accent-hover transition-colors inline-flex items-center gap-1"
+                className="mt-2 text-[13px] font-bold text-accent hover:text-accent-hover transition-colors inline-flex items-center gap-1"
               >
                 {isExpanded ? "Tampilkan lebih sedikit" : "Selengkapnya"}
               </button>
             )}
             
-            <div className="mt-5 md:mt-6 flex flex-wrap gap-2">
+            <div className="mt-5 flex flex-wrap gap-2">
               {detail.genres?.map((g) => (
                 <Link 
                   key={g} 
                   href={`/library?source=${sourceId}&genre=${encodeURIComponent(g)}`}
-                  className="rounded-lg bg-surface-overlay/50 px-3 py-1.5 text-xs font-bold text-text-primary border border-border-glass  uppercase tracking-wider hover:bg-accent/15 hover:text-accent hover:border-accent/40 transition-colors"
+                  className="rounded-full bg-surface-raised px-3 py-1 text-[10px] font-bold text-text-secondary border border-border-default uppercase tracking-wider hover:bg-accent/10 hover:text-accent hover:border-accent/30 transition-colors"
                 >
                   {g}
                 </Link>
@@ -402,23 +421,27 @@ export function MangaDetailView({
             {...revealProps}
             className="rounded-[32px] border border-border-glass bg-surface-glass/95 backdrop-blur-3xl shadow-glass p-5 md:p-8 flex flex-col overflow-hidden"
           >
-            <div className="mb-5 flex flex-col sm:flex-row sm:items-center justify-between border-b border-border-glass pb-4 gap-4">
-              <div className="flex items-center gap-3 w-full sm:w-auto">
-                <span className="text-lg md:text-xl font-black tracking-tight text-text-primary">
-                  {chapters?.length || 0} Chapter
-                </span>
+            <div className="mb-4 flex flex-col gap-3 border-b border-border-glass pb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col">
+                  <span className="text-[11px] font-black text-text-muted uppercase tracking-widest block mb-1">Daftar Chapter</span>
+                  <span className="text-lg md:text-xl font-bold tracking-tight text-text-primary">
+                    {chapters?.length || 0} Chapter
+                  </span>
+                </div>
               </div>
-              <div className="flex items-center gap-3">
+              
+              <div className="flex items-center gap-2 w-full mt-2">
                 <SearchInput 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Cari chapter..." 
-                  containerClassName="w-full sm:w-[220px]"
+                  containerClassName="flex-1"
                 />
                 <IconButton 
                   variant="surface" 
                   size="sm"
-                  className="min-h-[44px] min-w-[44px] bg-surface-raised/50 border-border-glass"
+                  className="min-h-[44px] min-w-[44px] shrink-0 bg-surface-raised border-border-default rounded-2xl"
                   onClick={() => setSortOrder(prev => prev === "desc" ? "asc" : "desc")}
                   aria-label={sortOrder === "desc" ? "Urutkan paling lama" : "Urutkan terbaru"}
                 >

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
 import { YomirraPageHeader } from "@/components/app/header";
 import { ShelfCard } from "@/components/manga/card";
@@ -49,6 +49,7 @@ export default function SourceBrowsePage({
       sort === "popular" 
         ? apiClient.getPopular(sourceId, currentPage)
         : apiClient.getLatest(sourceId, currentPage),
+    placeholderData: keepPreviousData,
   });
 
   const sourceName = sourceInfo?.name || sourceId;

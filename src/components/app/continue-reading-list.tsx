@@ -56,6 +56,7 @@ export function ContinueReadingList({ items }: ContinueReadingListProps) {
             >
               <Link
                 href={targetHref}
+                prefetch={true}
                 className="absolute inset-0 z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 aria-label={`Lanjut baca ${group.mangaTitle}`}
               />

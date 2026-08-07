@@ -69,17 +69,18 @@ export function MangaCollectionButton({ sourceId, mangaId }: MangaCollectionButt
 
   return (
     <>
-      <Button
-        variant="outline"
-        className={cn(
-          "w-full h-12 rounded-xl font-bold transition-all border-border-default",
-          memberships.length > 0 && mounted ? "bg-accent/10 border-accent/20 text-accent hover:bg-accent/20" : "bg-surface-raised text-text-secondary hover:bg-surface-hover hover:text-text-primary"
-        )}
+      <button
         onClick={() => setIsOpen(true)}
+        className={cn(
+          "flex flex-col items-center justify-center gap-1.5 py-3 px-1 rounded-2xl transition-all duration-300 outline-none select-none",
+          memberships.length > 0 && mounted
+            ? "bg-accent/10 border border-accent/20 text-accent shadow-sm"
+            : "bg-surface-raised border border-border-default text-text-secondary hover:bg-surface-hover hover:border-border-strong hover:text-text-primary active:scale-[0.98]"
+        )}
       >
-        <FolderPlus size={20} weight={memberships.length > 0 ? "fill" : "regular"} className="mr-2" />
-        <span className="truncate max-w-[100px] sm:max-w-[140px]">{getLabel()}</span>
-      </Button>
+        <FolderPlus size={24} weight={memberships.length > 0 && mounted ? "fill" : "regular"} />
+        <span className="text-[11px] font-bold tracking-tight">Koleksi</span>
+      </button>
 
       <Dialog open={isOpen} onOpenChange={(open) => {
         setIsOpen(open);
