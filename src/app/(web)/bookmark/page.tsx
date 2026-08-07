@@ -2,24 +2,28 @@
 
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
-import { usePathname } from "next/navigation";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useHistoryStore } from "@/shared/store/history-store";
-import { ShelfCard, HistoryCard } from "@/components/manga/card";
-import { HistoryRow } from "@/components/history/history-row";
-import { HistoryMangaGroup } from "@/components/history/history-manga-group";
+import { ShelfCard } from "@/components/manga/card";
 import { EmptyState } from "@/components/states/empty-state";
 import { Button } from "@/components/ui/button";
 import { useMounted } from "@/shared/hooks/use-mounted";
 import { getLibraryHref, getReaderHref, getMangaDetailHref } from "@/shared/lib/routes";
-import { BookBookmark, Compass, Clock, Play, SortDescending, SortAscending, CaretRight, CaretDown, List, SquaresFour, CheckCircle } from "@phosphor-icons/react";
+import {
+  BookBookmark,
+  Compass,
+  Clock,
+  Play,
+  Trash,
+  List,
+  SquaresFour,
+  CheckCircle,
+  MagnifyingGlass,
+} from "@phosphor-icons/react";
 import { motion, AnimatePresence } from "motion/react";
-import { DirectionalTransition } from "@/components/ui/directional-transition";
 import { SearchInput } from "@/components/ui/search-input";
 import { YomirraSurface } from "@/components/ui/layout";
 import { YomirraPageHeader, DesktopPageTitle } from "@/components/app/header";
-import { HorizontalScrollContainer } from "@/components/ui/horizontal-scroll-container";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -36,6 +40,18 @@ import { useNsfwSourceIds } from "@/shared/hooks/use-nsfw-source-ids";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
+import { MangaCardSkeleton } from "@/components/skeletons/manga-card-skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from "@/components/ui/pagination";
+
 function getRelativeTime(dateString?: string): string {
   if (!dateString) return "";
   const date = new Date(dateString);
@@ -48,31 +64,28 @@ function getRelativeTime(dateString?: string): string {
   if (diffInMins < 60) return `${diffInMins} mnt lalu`;
   if (diffInHours < 24) return `${diffInHours} jam lalu`;
   if (diffInDays < 30) return `${diffInDays} hr lalu`;
-  return date.toLocaleDateString('id-ID');
+  return date.toLocaleDateString("id-ID");
 }
 
 export default function BookmarkPage() {
   const isMounted = useMounted();
-  const pathname = usePathname();
-  
-  // Readlist state
+
+  // Collection state
   const libraryItemsMap = useLibraryStore((state) => state.items);
   const libraryItems = Object.values(libraryItemsMap);
-  
+
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [sortOrder, setSortOrder] = React.useState<"desc" | "asc">("desc");
   const [sortBy, setSortBy] = React.useState<"updatedAt" | "title">("updatedAt");
   const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid");
   const [isSelectionMode, setIsSelectionMode] = React.useState(false);
   const [selectedItems, setSelectedItems] = React.useState<Set<string>>(new Set());
+  const [collectionPage, setCollectionPage] = React.useState(1);
+  const ITEMS_PER_PAGE = 30;
   const removeFromLibrary = useLibraryStore((state) => state.removeFromLibrary);
   const hideNsfw = useSettingsStore((state) => state.hideNsfw);
   const nsfwSourceIds = useNsfwSourceIds();
   const { isSourceDisabled } = useSourcePreferencesStore();
 
-  // An item is from an NSFW source if:
-  // 1. item.isNsfw === true (set at save time), OR
-  // 2. its sourceId is in the live NSFW source IDs list (handles old items & secret sources)
   const isFromNsfwSource = React.useCallback(
     (sourceId: string, itemIsNsfw?: boolean) =>
       itemIsNsfw === true || nsfwSourceIds.has(sourceId),
@@ -82,71 +95,82 @@ export default function BookmarkPage() {
   const filteredAndSortedLibraryItems = React.useMemo(() => {
     let result = [...libraryItems];
 
-    // Hide items from disabled or unavailable sources
-    result = result.filter(item => {
+    result = result.filter((item) => {
       if (isSourceDisabled(item.sourceId)) return false;
       const source = dynamicSourceRegistry.get(item.sourceId);
       if (source && source.status === "unavailable") return false;
       return true;
     });
 
-    // Hide items from NSFW sources when hideNsfw is active
     if (hideNsfw) {
-      result = result.filter(item => !isFromNsfwSource(item.sourceId, item.isNsfw));
+      result = result.filter(
+        (item) => !isFromNsfwSource(item.sourceId, item.isNsfw)
+      );
     }
 
     if (searchQuery.trim() !== "") {
       const q = searchQuery.toLowerCase();
-      result = result.filter(item => item.title.toLowerCase().includes(q));
+      result = result.filter((item) =>
+        item.title.toLowerCase().includes(q)
+      );
     }
 
     result.sort((a, b) => {
-      let comparison = 0;
       if (sortBy === "updatedAt") {
-        comparison = new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
-      } else if (sortBy === "title") {
-        comparison = a.title.localeCompare(b.title);
+        return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
       }
-      
-      return sortOrder === "asc" ? -comparison : comparison;
+      return a.title.localeCompare(b.title);
     });
 
     return result;
-  }, [libraryItems, searchQuery, sortBy, sortOrder, hideNsfw, isFromNsfwSource, isSourceDisabled]);
+  }, [libraryItems, searchQuery, sortBy, hideNsfw, isFromNsfwSource, isSourceDisabled]);
+
+  // Reset pagination when search or sort changes
+  React.useEffect(() => {
+    setCollectionPage(1);
+  }, [searchQuery, sortBy]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredAndSortedLibraryItems.length / ITEMS_PER_PAGE));
+  const paginatedCollection = React.useMemo(() => {
+    const start = (collectionPage - 1) * ITEMS_PER_PAGE;
+    return filteredAndSortedLibraryItems.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredAndSortedLibraryItems, collectionPage]);
 
   // History state
   const getHistoryList = useHistoryStore((state) => state.getHistoryList);
   useHistoryStore((state) => state.items);
-  const removeHistoryItem = useHistoryStore((state) => state.removeHistoryItem);
   const removeMangaHistory = useHistoryStore((state) => state.removeMangaHistory);
-  
+
   const rawHistoryItems = isMounted ? getHistoryList() : [];
-  
-  // First filter out disabled or unavailable sources
-  let historyItems = rawHistoryItems.filter(item => {
+
+  let historyItems = rawHistoryItems.filter((item) => {
     if (isSourceDisabled(item.sourceId)) return false;
     const source = dynamicSourceRegistry.get(item.sourceId);
     if (source && source.status === "unavailable") return false;
     return true;
   });
-  
-  // Then hide items from NSFW sources when god mode is off
-  if (hideNsfw) {
-    historyItems = historyItems.filter(item => !isFromNsfwSource(item.sourceId, item.isNsfw));
-  }
-  
-  const groupedHistory = React.useMemo(() => {
-    const groups: Record<string, {
-      sourceId: string;
-      mangaId: string;
-      mangaTitle: string;
-      coverUrl?: string;
-      sourceName?: string;
-      latestReadAt: number;
-      chapters: typeof historyItems;
-    }> = {};
 
-    historyItems.forEach(item => {
+  if (hideNsfw) {
+    historyItems = historyItems.filter(
+      (item) => !isFromNsfwSource(item.sourceId, item.isNsfw)
+    );
+  }
+
+  const groupedHistory = React.useMemo(() => {
+    const groups: Record<
+      string,
+      {
+        sourceId: string;
+        mangaId: string;
+        mangaTitle: string;
+        coverUrl?: string;
+        sourceName?: string;
+        latestReadAt: number;
+        chapters: typeof historyItems;
+      }
+    > = {};
+
+    historyItems.forEach((item) => {
       const key = `${item.sourceId}::${item.mangaId}`;
       if (!groups[key]) {
         groups[key] = {
@@ -170,36 +194,41 @@ export default function BookmarkPage() {
 
   const [activeTab, setActiveTab] = React.useState<"reading" | "collection">("reading");
 
-  // Undo functionality state
+  // Undo / delete state
   const [pendingDeletions, setPendingDeletions] = React.useState<Set<string>>(new Set());
   const deleteTimeouts = React.useRef<Record<string, NodeJS.Timeout>>({});
+  const [itemToDelete, setItemToDelete] = React.useState<{
+    sourceId: string;
+    mangaId: string;
+    mangaTitle: string;
+  } | null>(null);
 
-  const [itemToDelete, setItemToDelete] = React.useState<{sourceId: string, mangaId: string, mangaTitle: string} | null>(null);
-
-  const handleRemoveHistory = React.useCallback((sourceId: string, mangaId: string, mangaTitle: string) => {
-    setItemToDelete({ sourceId, mangaId, mangaTitle });
-  }, []);
+  const handleRemoveHistory = React.useCallback(
+    (sourceId: string, mangaId: string, mangaTitle: string) => {
+      setItemToDelete({ sourceId, mangaId, mangaTitle });
+    },
+    []
+  );
 
   const confirmDelete = React.useCallback(() => {
     if (!itemToDelete) return;
-    
     const { sourceId, mangaId, mangaTitle } = itemToDelete;
     const key = `${sourceId}::${mangaId}`;
-    setPendingDeletions(prev => new Set(prev).add(key));
+    setPendingDeletions((prev) => new Set(prev).add(key));
     setItemToDelete(null);
-    
+
     const timeoutId = setTimeout(() => {
       removeMangaHistory(sourceId, mangaId);
-      setPendingDeletions(prev => {
+      setPendingDeletions((prev) => {
         const next = new Set(prev);
         next.delete(key);
         return next;
       });
       delete deleteTimeouts.current[key];
-    }, 5000); // 5 detik delay sesuai request
-    
+    }, 5000);
+
     deleteTimeouts.current[key] = timeoutId;
-    
+
     toast(`Riwayat "${mangaTitle}" dihapus`, {
       duration: 5000,
       action: {
@@ -207,28 +236,49 @@ export default function BookmarkPage() {
         onClick: () => {
           clearTimeout(timeoutId);
           delete deleteTimeouts.current[key];
-          setPendingDeletions(prev => {
+          setPendingDeletions((prev) => {
             const next = new Set(prev);
             next.delete(key);
             return next;
           });
-        }
-      }
+        },
+      },
     });
   }, [itemToDelete, removeMangaHistory]);
 
-  const visibleHistory = React.useMemo(() => {
-    return groupedHistory.filter(g => !pendingDeletions.has(`${g.sourceId}::${g.mangaId}`));
-  }, [groupedHistory, pendingDeletions]);
+  const visibleHistory = React.useMemo(
+    () =>
+      groupedHistory.filter(
+        (g) => !pendingDeletions.has(`${g.sourceId}::${g.mangaId}`)
+      ),
+    [groupedHistory, pendingDeletions]
+  );
 
+  // ── Skeleton shell (pre-mount) ──────────────────────────────────────────
   if (!isMounted) {
     return (
-      <div className="flex flex-col min-h-screen">
+      <div className="flex flex-col min-h-screen pb-[var(--page-bottom-safe)]">
         <h1 className="sr-only">Rak Buku Yomirra</h1>
-        <YomirraPageHeader title="Rak Buku" variant="transparent" icon={<BookBookmark size={24} weight="duotone" />} />
+        <YomirraPageHeader
+          title="Rak Buku"
+          variant="transparent"
+          icon={<BookBookmark size={24} weight="duotone" />}
+        />
         <YomirraSurface variant="base" className="flex-1 w-full max-w-7xl mx-auto">
           <div className="hidden md:block px-4 py-8">
-            <h1 className="text-3xl font-black text-text-primary tracking-tight">Rak Buku</h1>
+            <h1 className="text-3xl font-black text-text-primary tracking-tight">
+              Rak Buku
+            </h1>
+          </div>
+          {/* Tab skeleton */}
+          <div className="px-4 pt-2 pb-3">
+            <Skeleton className="h-11 w-full rounded-full" />
+          </div>
+          {/* Reading card skeletons */}
+          <div className="px-4 mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <MangaCardSkeleton key={i} variant="history" />
+            ))}
           </div>
         </YomirraSurface>
       </div>
@@ -237,19 +287,32 @@ export default function BookmarkPage() {
 
   return (
     <>
-      <div className="flex flex-col min-h-screen pb-24">
+      <div className="flex flex-col min-h-screen pb-[var(--page-bottom-safe)]">
         <h1 className="sr-only">Rak Buku Yomirra</h1>
-        <YomirraPageHeader title="Rak Buku" variant="transparent" icon={<BookBookmark size={24} weight="duotone" />} />
-        <YomirraSurface variant="base" className="flex-1 w-full max-w-7xl mx-auto md:pb-8">
-          <div className="px-4 pt-[calc(var(--safe-top)+24px)] pb-4">
-            <DesktopPageTitle 
-              title="Rak Buku" 
-              description="Koleksi dan riwayat bacaan personal Anda." 
+        <YomirraPageHeader
+          title="Rak Buku"
+          variant="transparent"
+          icon={<BookBookmark size={24} weight="duotone" />}
+        />
+        <YomirraSurface
+          variant="base"
+          className="flex-1 w-full max-w-7xl mx-auto md:pb-8"
+        >
+          {/* Desktop title — hidden on mobile, YomirraPageHeader handles mobile */}
+          <div className="hidden md:block px-4 pt-[calc(var(--safe-top)+24px)] pb-4">
+            <DesktopPageTitle
+              title="Rak Buku"
+              description="Koleksi dan riwayat bacaan personal Anda."
               icon={<BookBookmark size={32} weight="duotone" />}
             />
           </div>
 
-          <div className="px-4 py-4 w-full md:max-w-md">
+          {/* ── Segmented tabs ── */}
+          <div
+            role="tablist"
+            aria-label="Rak Buku"
+            className="px-4 pt-2 pb-3 w-full"
+          >
             <SegmentedControl
               options={[
                 { value: "reading", label: "Sedang Dibaca" },
@@ -263,16 +326,27 @@ export default function BookmarkPage() {
             />
           </div>
 
-          <div className="mt-2 outline-none">
+          {/* ── Tab content ── */}
+          <div className="mt-4 outline-none">
+
+            {/* ────────────────── SEDANG DIBACA ────────────────── */}
             {activeTab === "reading" && (
-              <DirectionalTransition key="reading">
+              <div
+                role="tabpanel"
+                id="tabpanel-reading"
+                aria-labelledby="tab-reading"
+              >
                 {visibleHistory.length === 0 ? (
                   <EmptyState
                     icon={<Clock size={48} className="text-text-muted" weight="duotone" />}
-                    title="Belum ada riwayat baca"
-                    description="Buka chapter untuk mulai membaca. Progres bacaanmu akan muncul di sini."
+                    title="Belum ada bacaan aktif"
+                    description="Komik yang kamu baca akan muncul di sini."
                     action={
-                      <Button asChild variant="accent" className="rounded-full shadow-sm font-bold mt-4">
+                      <Button
+                        asChild
+                        variant="accent"
+                        className="rounded-full shadow-sm font-bold mt-4"
+                      >
                         <Link href={getLibraryHref()}>
                           <Compass size={20} weight="bold" className="mr-1.5" />
                           Eksplor Manga
@@ -281,265 +355,417 @@ export default function BookmarkPage() {
                     }
                   />
                 ) : (
-                  <div className="px-4 mt-4 mb-16">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  <div className="px-4 mb-16">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                       {visibleHistory.map((group) => {
-                        const item = group.chapters[0]; // get the latest read chapter
-                        const timeText = getRelativeTime(new Date(item.readAt).toISOString());
+                        const item = group.chapters[0];
+                        const timeText = getRelativeTime(
+                          new Date(item.readAt).toISOString()
+                        );
                         const progress = item.progressPercent || 0;
-                        const targetHref = getReaderHref(group.sourceId, group.mangaId, item.chapterId, "/bookmark");
-                        
+                        const targetHref = getReaderHref(
+                          group.sourceId,
+                          group.mangaId,
+                          item.chapterId,
+                          "/bookmark"
+                        );
+
                         return (
-                          <Link 
+                          <Link
                             key={`${group.sourceId}::${group.mangaId}`}
                             href={targetHref}
-                            className="relative w-full bg-surface-glass backdrop-blur-sm rounded-2xl overflow-hidden border-border-subtle group shadow-sm hover:-md hover:--default transition-all vt-hover"
-                            style={{ '--vt-name': `manga-cover-${group.sourceId}-${group.mangaId}` } as React.CSSProperties}
+                            className="relative w-full bg-surface-glass backdrop-blur-sm rounded-xl overflow-hidden border border-border-subtle group shadow-sm hover:shadow-md hover:border-border-default transition-all vt-hover"
+                            style={
+                              {
+                                "--vt-name": `manga-cover-${group.sourceId}-${group.mangaId}`,
+                              } as React.CSSProperties
+                            }
                           >
-                            <div className="flex p-4 gap-4">
-                              <div className="w-[80px] shrink-0 aspect-[2/3] rounded-lg overflow-hidden shadow-sm bg-surface-muted">
+                            <div className="flex p-3 gap-3">
+                              {/* Cover */}
+                              <div className="w-[68px] shrink-0 aspect-[2/3] rounded-lg overflow-hidden shadow-sm bg-surface-muted">
                                 {group.coverUrl && (
-                                  <img 
-                                    src={group.coverUrl} 
-                                    alt={group.mangaTitle} 
-                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                                  <img
+                                    src={group.coverUrl}
+                                    alt={group.mangaTitle}
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                     referrerPolicy="no-referrer"
                                   />
                                 )}
                               </div>
-                              <div className="flex-1 flex flex-col justify-center min-w-0 py-1">
-                                <h4 className="font-bold text-sm line-clamp-2 text-text-primary group-hover:text-accent transition-colors">{group.mangaTitle}</h4>
-                                <p className="text-xs font-medium text-text-muted mt-1 truncate">{item.chapterTitle || "Chapter ?"}</p>
-                                <p className="text-[10px] text-text-muted/60 mt-0.5">{timeText || "Baru saja"}</p>
-                                
-                                <div className="mt-auto pt-3 flex justify-between items-center">
-                                  <button className="bg-surface-overlay border border-border-default hover:bg-surface-hover text-text-primary rounded-full px-4 py-1.5 text-xs font-bold flex items-center gap-1.5 transition-colors">
-                                    <Play weight="fill" /> Lanjut
-                                  </button>
-                                  <button 
+
+                              {/* Info */}
+                              <div className="flex-1 flex flex-col justify-between min-w-0 py-0.5">
+                                <div className="flex items-start justify-between gap-1 min-w-0">
+                                  <div className="min-w-0 flex-1">
+                                    <h4 className="font-bold text-sm line-clamp-2 text-text-primary group-hover:text-accent transition-colors leading-snug">
+                                      {group.mangaTitle}
+                                    </h4>
+                                    <p className="text-xs font-medium text-text-muted mt-1 truncate">
+                                      {item.chapterTitle || "Chapter ?"}
+                                    </p>
+                                    <p className="text-[10px] text-text-muted/60 mt-0.5">
+                                      {timeText || "Baru saja"}
+                                    </p>
+                                  </div>
+                                  {/* Delete icon — triggers confirm dialog */}
+                                  <button
                                     onClick={(e) => {
                                       e.preventDefault();
-                                      handleRemoveHistory(group.sourceId, group.mangaId, group.mangaTitle);
+                                      e.stopPropagation();
+                                      handleRemoveHistory(
+                                        group.sourceId,
+                                        group.mangaId,
+                                        group.mangaTitle
+                                      );
                                     }}
-                                    className="text-text-muted hover:text-semantic-danger px-2 py-1 transition-colors z-20"
-                                    aria-label="Hapus dari riwayat"
+                                    className="shrink-0 text-text-muted hover:text-semantic-error p-1.5 -mr-1 -mt-0.5 rounded-full hover:bg-surface-hover transition-colors"
+                                    aria-label={`Hapus ${group.mangaTitle} dari riwayat`}
                                   >
-                                    <span className="text-xs font-semibold">Hapus</span>
+                                    <Trash size={16} weight="bold" />
                                   </button>
+                                </div>
+
+                                {/* Lanjut CTA */}
+                                <div className="mt-2">
+                                  <Button
+                                    variant="secondary"
+                                    size="sm"
+                                    className="rounded-full font-bold pointer-events-none"
+                                    tabIndex={-1}
+                                  >
+                                    <Play size={11} weight="fill" />
+                                    Lanjut
+                                  </Button>
                                 </div>
                               </div>
                             </div>
-                            <div className="h-1 bg-surface-muted w-full absolute bottom-0 left-0 right-0">
-                              <div className="h-full bg-accent" style={{ width: `${progress}%` }} />
-                            </div>
+
+                            {/* Progress bar */}
+                            {progress > 0 && (
+                              <div className="h-[3px] bg-surface-muted w-full">
+                                <div
+                                  className="h-full bg-accent rounded-full"
+                                  style={{ width: `${progress}%` }}
+                                />
+                              </div>
+                            )}
                           </Link>
                         );
                       })}
                     </div>
                   </div>
                 )}
-              </DirectionalTransition>
+              </div>
             )}
 
+            {/* ────────────────── KOLEKSI ────────────────── */}
             {activeTab === "collection" && (
-              <DirectionalTransition key="collection">
-                <div className="px-4 mt-2">
-                  {libraryItems.length === 0 ? (
-                    <EmptyState
-                      icon={<BookBookmark size={48} className="text-text-muted" weight="duotone" />}
-                      title="Koleksi masih kosong"
-                      description="Simpan judul dari halaman detail untuk menemukannya lagi di sini."
-                      action={
-                        <Button asChild variant="accent" className="rounded-full shadow-sm font-bold">
-                          <Link href="/">
-                            <Compass size={20} weight="bold" className="mr-1.5" />
-                            Eksplor Manga
-                          </Link>
-                        </Button>
-                      }
-                    />
-                  ) : (
-                    <>
-                      <div className="py-2 flex flex-col sm:flex-row gap-3 w-full mb-6">
-                        <div className="flex-1">
-                          <SearchInput
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Cari di koleksi..."
-                            containerClassName="border border-border-subtle shadow-sm"
-                          />
-                        </div>
-                        <div className="flex gap-2 relative z-50">
-                          <CustomSelect
-                            align="left"
-                            value={sortBy}
-                            onChange={(val) => setSortBy(val as "updatedAt" | "title")}
-                            options={[
-                              { value: "updatedAt", label: "Terbaru Ditambahkan" },
-                              { value: "title", label: "Judul Buku" }
-                            ]}
-                          />
-                          <button
-                            onClick={() => setSortOrder(prev => prev === "desc" ? "asc" : "desc")}
-                            className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-full bg-surface-glass backdrop-blur-md text-text-primary hover:bg-surface-glass transition-colors border border-border-subtle shadow-sm"
-                            aria-label="Toggle sort order"
-                          >
-                            {sortOrder === "desc" ? <SortDescending size={20} weight="bold" /> : <SortAscending size={20} weight="bold" />}
-                          </button>
-                          
-                          <div className="hidden sm:flex bg-surface-glass backdrop-blur-md rounded-full p-1 border border-border-subtle shadow-sm h-[44px]">
-                            <button
-                              type="button"
-                              onClick={() => setViewMode("grid")}
-                              className={cn("flex items-center justify-center w-10 h-full rounded-full transition-colors", viewMode === "grid" ? "bg-accent text-accent-on" : "text-text-muted hover:text-text-primary")}
-                              aria-label="Grid view"
-                            >
-                              <SquaresFour size={18} weight={viewMode === "grid" ? "fill" : "bold"} />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setViewMode("list")}
-                              className={cn("flex items-center justify-center w-10 h-full rounded-full transition-colors", viewMode === "list" ? "bg-accent text-accent-on" : "text-text-muted hover:text-text-primary")}
-                              aria-label="List view"
-                            >
-                              <List size={18} weight={viewMode === "list" ? "fill" : "bold"} />
-                            </button>
-                          </div>
-                          
-                          <Button
-                            variant={isSelectionMode ? "accent" : "secondary"}
-                            className="rounded-full h-[44px] font-bold shrink-0 ml-2 shadow-sm border-border-subtle"
-                            onClick={() => {
-                              if (isSelectionMode) {
-                                setIsSelectionMode(false);
-                                setSelectedItems(new Set());
-                              } else {
-                                setIsSelectionMode(true);
-                              }
-                            }}
-                          >
-                            {isSelectionMode ? "Batal" : "Pilih"}
-                          </Button>
-                        </div>
-                      </div>
-
-                      {filteredAndSortedLibraryItems.length === 0 ? (
-                        <div className="py-16 flex flex-col items-center justify-center text-text-muted">
-                          <span className="font-medium">Tidak ada hasil yang cocok dengan &quot;{searchQuery}&quot;</span>
-                        </div>
-                      ) : (
-                        <motion.div 
-                          layout 
-                          className={cn(
-                            viewMode === "grid" 
-                              ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-3 gap-y-6 sm:gap-x-4 sm:gap-y-8 lg:gap-x-5 lg:gap-y-10" 
-                              : "flex flex-col gap-3",
-                            "max-h-[70vh] overflow-y-auto pr-2 -mr-2 [scrollbar-width:thin]"
-                          )}
-                        >
-                          <AnimatePresence>
-                            {filteredAndSortedLibraryItems.map((item, index) => {
-                              const itemId = `${item.sourceId}::${item.mangaId}`;
-                              return (
-                                <div 
-                                  key={itemId}
-                                  className="relative group"
-                                  onClickCapture={(e) => {
-                                    if (isSelectionMode) {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      setSelectedItems(prev => {
-                                        const next = new Set(prev);
-                                        if (next.has(itemId)) next.delete(itemId);
-                                        else next.add(itemId);
-                                        return next;
-                                      });
-                                    }
-                                  }}
-                                >
-                                  {viewMode === "grid" ? (
-                                    <ShelfCard
-                                      manga={{
-                                        id: item.mangaId,
-                                        title: item.title,
-                                        coverUrl: item.coverUrl || "",
-                                        status: item.status,
-                                      }}
-                                      sourceId={item.sourceId}
-                                      priority={index < 6}
-                                    />
-                                  ) : (
-                                    <HistoryCard
-                                      manga={{
-                                        id: item.mangaId,
-                                        title: item.title,
-                                        coverUrl: item.coverUrl || "",
-                                        status: item.status,
-                                      }}
-                                      sourceId={item.sourceId}
-                                      priority={index < 6}
-                                    />
-                                  )}
-
-                                  {isSelectionMode && (
-                                    <div className="absolute inset-0 bg-black/40 z-20 flex items-center justify-center rounded-[var(--radius-md)] sm:rounded-[var(--radius-lg)] transition-all cursor-pointer">
-                                      {selectedItems.has(itemId) ? (
-                                        <CheckCircle weight="fill" size={48} className="text-accent drop-shadow-md" />
-                                      ) : (
-                                        <div className="w-12 h-12 rounded-full border-2 border-white/70 bg-black/20" />
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </AnimatePresence>
-                        </motion.div>
-                      )}
-                    </>
-                  )}
-
-                  <AnimatePresence>
-                    {isSelectionMode && selectedItems.size > 0 && (
-                      <motion.div 
-                        initial={{ y: 100, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        exit={{ y: 100, opacity: 0 }}
-                        className="fixed left-1/2 -translate-x-1/2 z-[100] flex items-center gap-4 bg-surface-overlay border border-border-strong p-3 rounded-full shadow-heavy"
-                        style={{ bottom: "calc(var(--bottom-nav-height) + 24px)" }}
+              <div
+                role="tabpanel"
+                id="tabpanel-collection"
+                aria-labelledby="tab-collection"
+                className="px-4"
+              >
+                {libraryItems.length === 0 ? (
+                  <EmptyState
+                    icon={
+                      <BookBookmark
+                        size={48}
+                        className="text-text-muted"
+                        weight="duotone"
+                      />
+                    }
+                    title="Rak koleksi masih kosong"
+                    description="Simpan manga dari halaman detail untuk menemukannya di sini."
+                    action={
+                      <Button
+                        asChild
+                        variant="accent"
+                        className="rounded-full shadow-sm font-bold"
                       >
-                        <span className="font-bold px-2 text-text-primary">{selectedItems.size} dipilih</span>
-                        <Button 
-                          variant="destructive" 
-                          className="rounded-full font-bold shadow-sm"
+                        <Link href="/">
+                          <Compass size={20} weight="bold" className="mr-1.5" />
+                          Eksplor Manga
+                        </Link>
+                      </Button>
+                    }
+                  />
+                ) : (
+                  <>
+                    {/* ── Toolbar ── */}
+                    <div className="py-2 flex flex-col gap-2 w-full mb-4">
+                      {/* Search — full width */}
+                      <SearchInput
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onClear={() => setSearchQuery("")}
+                        placeholder="Cari di koleksi..."
+                        aria-label="Cari di koleksi"
+                        containerClassName="border border-border-subtle shadow-sm"
+                      />
+                      {/* Sort + View toggle + Select */}
+                      <div className="flex gap-2 items-center relative z-50">
+                        <CustomSelect
+                          align="left"
+                          value={sortBy}
+                          onChange={(val) =>
+                            setSortBy(val as "updatedAt" | "title")
+                          }
+                          options={[
+                            { value: "updatedAt", label: "Terbaru Ditambahkan" },
+                            { value: "title", label: "Judul Buku" },
+                          ]}
+                          className="flex-1"
+                          buttonClassName="w-full"
+                        />
+
+                        {/* Grid/list toggle — desktop only */}
+                        <div className="hidden sm:flex bg-surface-glass backdrop-blur-md rounded-full p-1 border border-border-subtle shadow-sm h-[44px]">
+                          <button
+                            type="button"
+                            onClick={() => setViewMode("grid")}
+                            className={cn(
+                              "flex items-center justify-center w-10 h-full rounded-full transition-colors",
+                              viewMode === "grid"
+                                ? "bg-accent text-accent-on"
+                                : "text-text-muted hover:text-text-primary"
+                            )}
+                            aria-label="Tampilan grid"
+                          >
+                            <SquaresFour
+                              size={18}
+                              weight={viewMode === "grid" ? "fill" : "bold"}
+                            />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setViewMode("list")}
+                            className={cn(
+                              "flex items-center justify-center w-10 h-full rounded-full transition-colors",
+                              viewMode === "list"
+                                ? "bg-accent text-accent-on"
+                                : "text-text-muted hover:text-text-primary"
+                            )}
+                            aria-label="Tampilan list"
+                          >
+                            <List
+                              size={18}
+                              weight={viewMode === "list" ? "fill" : "bold"}
+                            />
+                          </button>
+                        </div>
+
+                        <Button
+                          variant={isSelectionMode ? "accent" : "secondary"}
+                          className="rounded-full h-[44px] font-bold shrink-0 shadow-sm border-border-subtle"
                           onClick={() => {
-                            selectedItems.forEach(id => {
-                              const [src, manga] = id.split("::");
-                              removeFromLibrary(src, manga);
-                            });
-                            setIsSelectionMode(false);
-                            setSelectedItems(new Set());
-                            toast.success(`${selectedItems.size} komik dihapus dari koleksi`);
+                            if (isSelectionMode) {
+                              setIsSelectionMode(false);
+                              setSelectedItems(new Set());
+                            } else {
+                              setIsSelectionMode(true);
+                            }
                           }}
                         >
-                          Hapus
+                          {isSelectionMode ? "Batal" : "Pilih"}
                         </Button>
+                      </div>
+                    </div>
+
+                    {/* ── Grid / List ── */}
+                    {filteredAndSortedLibraryItems.length === 0 ? (
+                      <EmptyState
+                        icon={
+                          <MagnifyingGlass
+                            size={48}
+                            className="text-text-muted"
+                            weight="duotone"
+                          />
+                        }
+                        title="Tidak ada manga yang cocok"
+                        description={`Coba kata kunci lain untuk "${searchQuery}"`}
+                      />
+                    ) : (
+                      <motion.div
+                        layout
+                        className={cn(
+                          viewMode === "grid"
+                            ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-3 gap-y-5 sm:gap-x-4 sm:gap-y-7"
+                            : "flex flex-col gap-3"
+                        )}
+                      >
+                        <AnimatePresence>
+                          {paginatedCollection.map((item, index) => {
+                            const itemId = `${item.sourceId}::${item.mangaId}`;
+                            // Enrich: use lastReadChapterTitle if no latestChapter
+                            const enrichedManga = {
+                              id: item.mangaId,
+                              title: item.title,
+                              coverUrl: item.coverUrl || "",
+                              status: item.status,
+                              latestChapter:
+                                item.lastReadChapterTitle || undefined,
+                            };
+                            return (
+                              <div
+                                key={itemId}
+                                className="relative group"
+                                onClickCapture={(e) => {
+                                  if (isSelectionMode) {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setSelectedItems((prev) => {
+                                      const next = new Set(prev);
+                                      if (next.has(itemId)) next.delete(itemId);
+                                      else next.add(itemId);
+                                      return next;
+                                    });
+                                  }
+                                }}
+                              >
+                                <ShelfCard
+                                  manga={enrichedManga}
+                                  sourceId={item.sourceId}
+                                  priority={index < 6}
+                                />
+
+                                {isSelectionMode && (
+                                  <div className="absolute inset-0 bg-black/40 z-20 flex items-center justify-center rounded-[var(--radius-md)] sm:rounded-[var(--radius-lg)] transition-all cursor-pointer">
+                                    {selectedItems.has(itemId) ? (
+                                      <CheckCircle
+                                        weight="fill"
+                                        size={48}
+                                        className="text-accent drop-shadow-md"
+                                      />
+                                    ) : (
+                                      <div className="w-12 h-12 rounded-full border-2 border-white/70 bg-black/20" />
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </AnimatePresence>
                       </motion.div>
                     )}
-                  </AnimatePresence>
-                </div>
-              </DirectionalTransition>
+
+                    {/* Pagination */}
+                    {totalPages > 1 && (
+                      <div className="mt-8 pb-16">
+                        <Pagination>
+                          <PaginationContent>
+                            <PaginationItem>
+                              <PaginationPrevious
+                                onClick={() => setCollectionPage(p => Math.max(1, p - 1))}
+                                aria-disabled={collectionPage === 1}
+                                className={cn(collectionPage === 1 && "pointer-events-none opacity-50")}
+                              />
+                            </PaginationItem>
+
+                            {/* Simple pagination logic for mobile-friendly view */}
+                            {[...Array(totalPages)].map((_, i) => {
+                              const page = i + 1;
+                              // Show first, last, current, and adjacent pages
+                              if (
+                                page === 1 ||
+                                page === totalPages ||
+                                (page >= collectionPage - 1 && page <= collectionPage + 1)
+                              ) {
+                                return (
+                                  <PaginationItem key={page}>
+                                    <PaginationLink
+                                      isActive={page === collectionPage}
+                                      onClick={() => setCollectionPage(page)}
+                                    >
+                                      {page}
+                                    </PaginationLink>
+                                  </PaginationItem>
+                                );
+                              }
+
+                              // Show ellipsis
+                              if (
+                                page === collectionPage - 2 ||
+                                page === collectionPage + 2
+                              ) {
+                                return (
+                                  <PaginationItem key={page}>
+                                    <PaginationEllipsis />
+                                  </PaginationItem>
+                                );
+                              }
+
+                              return null;
+                            })}
+
+                            <PaginationItem>
+                              <PaginationNext
+                                onClick={() => setCollectionPage(p => Math.min(totalPages, p + 1))}
+                                aria-disabled={collectionPage === totalPages}
+                                className={cn(collectionPage === totalPages && "pointer-events-none opacity-50")}
+                              />
+                            </PaginationItem>
+                          </PaginationContent>
+                        </Pagination>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* ── Selection bulk action bar ── */}
+                <AnimatePresence>
+                  {isSelectionMode && selectedItems.size > 0 && (
+                    <motion.div
+                      initial={{ y: 100, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      exit={{ y: 100, opacity: 0 }}
+                      className="fixed left-1/2 -translate-x-1/2 z-[100] flex items-center gap-4 bg-surface-overlay border border-border-strong p-3 rounded-full shadow-heavy"
+                      style={{ bottom: "calc(var(--bottom-nav-height) + 24px)" }}
+                    >
+                      <span className="font-bold px-2 text-text-primary">
+                        {selectedItems.size} dipilih
+                      </span>
+                      <Button
+                        variant="destructive"
+                        className="rounded-full font-bold shadow-sm"
+                        onClick={() => {
+                          selectedItems.forEach((id) => {
+                            const [src, manga] = id.split("::");
+                            removeFromLibrary(src, manga);
+                          });
+                          setIsSelectionMode(false);
+                          setSelectedItems(new Set());
+                          toast.success(
+                            `${selectedItems.size} komik dihapus dari koleksi`
+                          );
+                        }}
+                      >
+                        Hapus
+                      </Button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             )}
           </div>
         </YomirraSurface>
       </div>
 
-      <Dialog open={!!itemToDelete} onOpenChange={(open) => !open && setItemToDelete(null)}>
+      {/* ── Delete confirmation dialog ── */}
+      <Dialog
+        open={!!itemToDelete}
+        onOpenChange={(open) => !open && setItemToDelete(null)}
+      >
         <DialogContent className="max-w-xs rounded-3xl p-6 sm:max-w-sm">
           <DialogHeader className="gap-2">
             <DialogTitle className="text-xl">Hapus Riwayat?</DialogTitle>
             <DialogDescription className="text-base">
-              Yakin mau menghapus <strong className="text-text-primary">{itemToDelete?.mangaTitle}</strong> dari rak buku kamu?
+              Yakin mau menghapus{" "}
+              <strong className="text-text-primary">
+                {itemToDelete?.mangaTitle}
+              </strong>{" "}
+              dari rak buku kamu?
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="mt-6 flex-row justify-end gap-3 sm:gap-3">
