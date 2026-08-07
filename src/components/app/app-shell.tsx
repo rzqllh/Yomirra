@@ -9,6 +9,7 @@ import { useSync } from "@/shared/hooks/use-sync"
 import { useNsfwPatcher } from "@/shared/hooks/use-nsfw-patcher"
 import { TopNav } from "./top-nav"
 import { CommandMenu } from "./command-menu"
+import { DirectionalTransition } from "@/components/ui/directional-transition"
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -61,7 +62,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             !isReader && "pb-[var(--page-bottom-safe)] md:pb-0"
           )}
         >
-          {children}
+          {isReader ? children : <DirectionalTransition>{children}</DirectionalTransition>}
         </main>
         {!isReader && <BottomDock />}
       </div>

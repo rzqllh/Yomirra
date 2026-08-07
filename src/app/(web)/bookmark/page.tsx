@@ -33,6 +33,7 @@ import { CustomSelect } from "@/components/ui/custom-select";
 import { cn } from "@/shared/utils/cn";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useNsfwSourceIds } from "@/shared/hooks/use-nsfw-source-ids";
+import { SegmentedControl } from "@/components/ui/segmented-control";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 function getRelativeTime(dateString?: string): string {
@@ -235,7 +236,7 @@ export default function BookmarkPage() {
   }
 
   return (
-    <DirectionalTransition>
+    <>
       <div className="flex flex-col min-h-screen pb-24">
         <h1 className="sr-only">Rak Buku Yomirra</h1>
         <YomirraPageHeader title="Rak Buku" variant="transparent" icon={<BookBookmark size={24} weight="duotone" />} />
@@ -249,28 +250,17 @@ export default function BookmarkPage() {
           </div>
 
           <div className="px-4 py-4 w-full md:max-w-md">
-            <div className="relative flex bg-surface-base p-1 rounded-full border border-border-subtle shadow-sm">
-              {["reading", "collection"].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab as "reading" | "collection")}
-                  className={`relative flex-1 py-2 text-sm font-bold rounded-full transition-colors z-10 ${
-                    activeTab === tab 
-                      ? "text-text-primary" 
-                      : "text-text-muted hover:text-text-primary"
-                  }`}
-                >
-                  {activeTab === tab && (
-                    <motion.div
-                      layoutId="bookmark-tab-indicator"
-                      className="absolute inset-0 bg-surface-raised shadow-sm border border-border-subtle rounded-full -z-10"
-                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                    />
-                  )}
-                  {tab === "reading" ? "Sedang Dibaca" : "Koleksi"}
-                </button>
-              ))}
-            </div>
+            <SegmentedControl
+              options={[
+                { value: "reading", label: "Sedang Dibaca" },
+                { value: "collection", label: "Koleksi" },
+              ]}
+              value={activeTab}
+              onChange={(val) => setActiveTab(val as "reading" | "collection")}
+              variant="glass-floating"
+              fullWidth
+              layoutId="bookmark-tab-pill"
+            />
           </div>
 
           <div className="mt-2 outline-none">
@@ -570,6 +560,6 @@ export default function BookmarkPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </DirectionalTransition>
+    </>
   );
 }

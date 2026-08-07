@@ -57,93 +57,91 @@ export default function SourceBrowsePage({
   const isHiddenFromHome = isSourceHiddenFromHome(sourceId);
 
   return (
-    <DirectionalTransition>
-      <main className="min-h-screen bg-surface-base flex flex-col">
-        <YomirraPageHeader 
-          title={sort === "popular" ? `Populer di ${sourceName}` : `Terbaru di ${sourceName}`} 
-          showBack 
-          variant="auto" 
-        />
-        
-        <div className="px-4 pt-2 pb-6 max-w-7xl mx-auto w-full flex-1 flex flex-col">
-          <div className="flex items-center justify-between bg-surface-raised p-4 rounded-xl border border-border-subtle mb-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-accent/10 rounded-lg text-accent">
-                <House size={24} weight="duotone" />
-              </div>
-              <div>
-                <p className="font-bold text-text-primary">Tampilkan di Beranda</p>
-                <p className="text-xs text-text-muted">Munculkan komik populer dan terbaru dari sumber ini di halaman utama</p>
-              </div>
+    <main className="min-h-screen bg-surface-base flex flex-col">
+      <YomirraPageHeader
+        title={sort === "popular" ? `Populer di ${sourceName}` : `Terbaru di ${sourceName}`}
+        showBack
+        variant="auto"
+      />
+
+      <div className="px-4 pt-2 pb-6 max-w-7xl mx-auto w-full flex-1 flex flex-col">
+        <div className="flex items-center justify-between bg-surface-raised p-4 rounded-xl border border-border-subtle mb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-accent/10 rounded-lg text-accent">
+              <House size={24} weight="duotone" />
             </div>
-            <ToggleSwitch 
-              checked={!isHiddenFromHome}
-              onCheckedChange={() => toggleHomeSource(sourceId)}
-            />
+            <div>
+              <p className="font-bold text-text-primary">Tampilkan di Beranda</p>
+              <p className="text-xs text-text-muted">Munculkan komik populer dan terbaru dari sumber ini di halaman utama</p>
+            </div>
           </div>
-
-          {status === "pending" || isLoading ? (
-            <div className="flex flex-col gap-10">
-              <SearchResultSkeleton />
-              <SearchResultSkeleton />
-            </div>
-          ) : status === "error" ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center bg-surface-raised rounded-xl border border-border-subtle">
-              <WarningCircle size={48} className="mb-4 text-semantic-error" weight="duotone" />
-              <p className="text-base font-medium text-text-primary">Gagal memuat data dari {sourceName}.</p>
-              <p className="text-sm text-text-muted mt-1">{(error as Error).message}</p>
-            </div>
-          ) : data?.mangas.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center bg-surface-raised rounded-xl border border-border-subtle">
-              <Compass size={48} className="mb-4 text-text-muted" weight="duotone" />
-              <p className="text-base font-medium text-text-primary">Tidak ada manga yang ditemukan.</p>
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 sm:gap-x-4 sm:gap-y-8 md:grid-cols-4 md:gap-x-5 md:gap-y-10 lg:grid-cols-5 xl:grid-cols-6 flex-1 content-start">
-                {data.mangas.map((manga) => (
-                  <ShelfCard 
-                    key={manga.id}
-                    manga={manga}
-                    sourceId={sourceId}
-                  />
-                ))}
-              </div>
-
-              {/* Pagination Controls */}
-              <div className="mt-10 flex items-center justify-center gap-4 py-4">
-                <Link
-                  href={`/sources/${sourceId}?sort=${sort}&page=${Math.max(1, currentPage - 1)}`}
-                  className={cn(
-                    "px-4 py-2 rounded-full font-bold text-sm transition-all",
-                    currentPage <= 1 
-                      ? "opacity-50 pointer-events-none bg-surface-raised text-text-muted" 
-                      : "bg-surface-glass border border-border-subtle text-text-primary hover:bg-surface-glass/80"
-                  )}
-                  aria-disabled={currentPage <= 1}
-                >
-                  Sebelumnya
-                </Link>
-                <div className="px-4 py-2 rounded-full bg-accent text-accent-on font-bold text-sm min-w-[40px] text-center">
-                  {currentPage}
-                </div>
-                <Link
-                  href={`/sources/${sourceId}?sort=${sort}&page=${currentPage + 1}`}
-                  className={cn(
-                    "px-4 py-2 rounded-full font-bold text-sm transition-all",
-                    !data?.hasNextPage 
-                      ? "opacity-50 pointer-events-none bg-surface-raised text-text-muted" 
-                      : "bg-surface-glass border border-border-subtle text-text-primary hover:bg-surface-glass/80"
-                  )}
-                  aria-disabled={!data?.hasNextPage}
-                >
-                  Selanjutnya
-                </Link>
-              </div>
-            </>
-          )}
+          <ToggleSwitch
+            checked={!isHiddenFromHome}
+            onCheckedChange={() => toggleHomeSource(sourceId)}
+          />
         </div>
-      </main>
-    </DirectionalTransition>
+
+        {status === "pending" || isLoading ? (
+          <div className="flex flex-col gap-10">
+            <SearchResultSkeleton />
+            <SearchResultSkeleton />
+          </div>
+        ) : status === "error" ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center bg-surface-raised rounded-xl border border-border-subtle">
+            <WarningCircle size={48} className="mb-4 text-semantic-error" weight="duotone" />
+            <p className="text-base font-medium text-text-primary">Gagal memuat data dari {sourceName}.</p>
+            <p className="text-sm text-text-muted mt-1">{(error as Error).message}</p>
+          </div>
+        ) : data?.mangas.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center bg-surface-raised rounded-xl border border-border-subtle">
+            <Compass size={48} className="mb-4 text-text-muted" weight="duotone" />
+            <p className="text-base font-medium text-text-primary">Tidak ada manga yang ditemukan.</p>
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 sm:gap-x-4 sm:gap-y-8 md:grid-cols-4 md:gap-x-5 md:gap-y-10 lg:grid-cols-5 xl:grid-cols-6 flex-1 content-start">
+              {data.mangas.map((manga) => (
+                <ShelfCard
+                  key={manga.id}
+                  manga={manga}
+                  sourceId={sourceId}
+                />
+              ))}
+            </div>
+
+            {/* Pagination Controls */}
+            <div className="mt-10 flex items-center justify-center gap-4 py-4">
+              <Link
+                href={`/sources/${sourceId}?sort=${sort}&page=${Math.max(1, currentPage - 1)}`}
+                className={cn(
+                  "px-4 py-2 rounded-full font-bold text-sm transition-all",
+                  currentPage <= 1
+                    ? "opacity-50 pointer-events-none bg-surface-raised text-text-muted"
+                    : "bg-surface-glass border border-border-subtle text-text-primary hover:bg-surface-glass/80"
+                )}
+                aria-disabled={currentPage <= 1}
+              >
+                Sebelumnya
+              </Link>
+              <div className="px-4 py-2 rounded-full bg-accent text-accent-on font-bold text-sm min-w-[40px] text-center">
+                {currentPage}
+              </div>
+              <Link
+                href={`/sources/${sourceId}?sort=${sort}&page=${currentPage + 1}`}
+                className={cn(
+                  "px-4 py-2 rounded-full font-bold text-sm transition-all",
+                  !data?.hasNextPage
+                    ? "opacity-50 pointer-events-none bg-surface-raised text-text-muted"
+                    : "bg-surface-glass border border-border-subtle text-text-primary hover:bg-surface-glass/80"
+                )}
+                aria-disabled={!data?.hasNextPage}
+              >
+                Selanjutnya
+              </Link>
+            </div>
+          </>
+        )}
+      </div>
+    </main>
   );
 }

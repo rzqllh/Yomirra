@@ -11,7 +11,7 @@ import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry"
 import { ContinueReadingList } from "./continue-reading-list";
 import { FeaturedHeroCarousel } from "./featured-hero-carousel";
 import { LeaderboardRow, ShelfCard } from "@/components/manga/card";
-import { MagnifyingGlass } from "@phosphor-icons/react";
+import { MagnifyingGlass, Fire, Sparkle } from "@phosphor-icons/react";
 import Link from "next/link";
 import { cn } from "@/shared/utils/cn";
 
@@ -26,7 +26,7 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
 
   const getContinueReading = useHistoryStore(state => state.getContinueReading);
   const rawHistoryItems = isMounted ? getContinueReading(50) : [];
-  
+
   const { isSourceDisabled, isSourceHiddenFromHome } = useSourcePreferencesStore();
   const hideNsfw = useSettingsStore(state => state.hideNsfw);
   const nsfwSourceIds = useNsfwSourceIds();
@@ -53,7 +53,6 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
   const personalizedIds = new Set<string>();
   historyItems.forEach(item => personalizedIds.add(`${item.sourceId}-${item.mangaId}`));
 
-  // Sources that are active and not hidden from home
   const sourcesToShow = React.useMemo(() => {
     const activeSources = Array.from(new Set(unifiedPopular.map(m => m.sourceId)));
     return activeSources.filter(id => !isSourceHiddenFromHome(id));
@@ -67,125 +66,108 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
     }
   }, [sourcesToShow, activeSourceId]);
 
-  // Grouped by Source
-  const sourceData = React.useMemo(() => {
-    const data: Record<string, { popular: typeof unifiedPopular, latest: typeof unifiedLatest }> = {};
-    sourcesToShow.forEach(sourceId => {
-      data[sourceId] = {
-        popular: unifiedPopular.filter(m => m.sourceId === sourceId).slice(0, 10),
-        latest: unifiedLatest.filter(m => m.sourceId === sourceId).slice(0, 10),
-      };
-    });
-    return data;
-  }, [sourcesToShow, unifiedPopular, unifiedLatest]);
+  const activeSourcePopular = React.useMemo(
+    () => unifiedPopular.filter(m => m.sourceId === activeSourceId).slice(0, 5),
+    [unifiedPopular, activeSourceId]
+  );
+  const activeSourceHighlight = React.useMemo(
+    () => unifiedLatest.filter(m => m.sourceId === activeSourceId).slice(0, 10),
+    [unifiedLatest, activeSourceId]
+  );
 
-  const activeSourcePopular = sourceData[activeSourceId]?.popular.slice(0, 5) || [];
-  const activeSourceHighlight = sourceData[activeSourceId]?.latest.slice(0, 10) || [];
-
-  // Used to prevent Sorotan items from appearing in general Latest
-  const highlightIds = new Set(activeSourceHighlight.map(item => `${item.sourceId}-${item.id}`));
-
-  // Update Hari Ini (Top 20 Latest interleaved)
+  // Global feeds — all active sources combined, no chip filter
   const updateHariIni = React.useMemo(() => {
-    return unifiedLatest.filter(item => {
-      const id = `${item.sourceId}-${item.id}`;
-      return !personalizedIds.has(id);
-    }).slice(0, 20);
+    return unifiedLatest
+      .filter(item => !personalizedIds.has(`${item.sourceId}-${item.id}`))
+      .slice(0, 20);
   }, [unifiedLatest, personalizedIds]);
+
+  const popularKomik = React.useMemo(() => {
+    return unifiedPopular.slice(0, 20);
+  }, [unifiedPopular]);
 
   if (!isMounted) return null;
 
   return (
-    <div className="flex flex-col gap-10 md:gap-14 animate-in fade-in zoom-in-[0.98] duration-500 ease-out fill-mode-both pb-20">
-      
+    <div className="flex flex-col gap-8 animate-in fade-in zoom-in-[0.98] duration-300 ease-out fill-mode-both">
+
       {/* 1. Lanjut Baca */}
       {historyItems.length > 0 && (
-        <ContinueReadingList items={historyItems} />
+        <ContinueReadingList items={historyItems} variant="cyber-editorial" />
       )}
 
-      {/* 2. Desktop Grid: Highlight & Rank with Global Tabs */}
-      {(sourcesToShow.length > 0) && (
-        <div className="flex flex-col gap-4 px-2">
-          
-          {/* Global Tabs for Grid */}
-          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide snap-x">
-            {sourcesToShow.map(sourceId => {
-              const source = dynamicSourceRegistry.get(sourceId);
-              const name = source?.name || sourceId;
-              const isActive = sourceId === activeSourceId;
-              
-              return (
-                <button
-                  key={sourceId}
-                  onClick={() => setActiveSourceId(sourceId)}
-                  className={cn(
-                    "shrink-0 snap-start px-5 py-2 rounded-full text-sm font-bold transition-all border",
-                    isActive 
-                      ? "bg-text-primary text-surface-base border-transparent shadow-sm" 
-                      : "bg-surface-raised text-text-muted border-border-subtle hover:bg-surface-hover hover:text-text-primary"
-                  )}
-                >
-                  {name}
-                </button>
-              );
-            })}
-          </div>
+      {/* 2. Sorotan & Peringkat — scoped to active source via chips */}
+      {sourcesToShow.length > 0 && (
+        <div className="flex flex-col gap-0 rounded-2xl md:rounded-3xl border border-border-subtle/60 bg-surface-glass/40 backdrop-blur-sm overflow-hidden">
 
-          <div className="grid grid-cols-1 xl:grid-cols-[1.5fr_1fr] gap-6 items-start">
-            {/* Kiri: Sorotan Utama */}
-            <div className="flex flex-col gap-3 sm:gap-4 w-full min-w-0">
-              <h2 className="text-lg sm:text-xl md:text-2xl font-bold">
-                Sorotan Utama
-              </h2>
-              {/* Fixed height for Sorotan so carousel works */}
-              <div className="h-[560px] sm:h-[600px] xl:h-[620px] relative w-full overflow-hidden rounded-2xl xl:rounded-3xl">
-                {activeSourceHighlight.length > 0 ? (
-                  <FeaturedHeroCarousel sourceId={activeSourceId} mangas={activeSourceHighlight} />
-                ) : (
-                  <div className="w-full h-full bg-surface-raised animate-pulse rounded-[2rem] xl:rounded-[3rem]"></div>
-                )}
-              </div>
-            </div>
-
-            {/* Kanan: Rank */}
-            <div className="flex flex-col gap-3 sm:gap-4 w-full min-w-0 mt-2 xl:mt-0">
-              <h2 className="text-lg sm:text-xl md:text-2xl font-bold">
-                Peringkat Populer
-              </h2>
-              {/* Auto height on mobile so items don't squish, fixed height on desktop */}
-              <div className="h-auto xl:h-[480px] bg-gradient-to-bl from-accent/5 to-accent/10 dark:from-surface-base dark:to-surface-overlay rounded-[2rem] p-4 sm:p-5 xl:p-6 border border-transparent dark:border-border-subtle flex flex-col gap-2 xl:justify-between overflow-hidden ">
-                {activeSourcePopular.map((manga, idx) => (
-                  <div key={`${manga.sourceId}-${manga.id}`} className="flex-none xl:flex-1 flex flex-col justify-center min-h-0">
-                    <LeaderboardRow 
-                      manga={{...manga, rank: idx + 1}} 
-                      sourceId={manga.sourceId} 
-                    />
-                  </div>
-                ))}
-              </div>
+          {/* Section header + source chips — inside the card */}
+          <div className="flex items-center justify-between gap-3 px-4 pt-4 pb-3">
+            <h2 className="text-sm font-bold text-text-secondary flex items-center gap-1.5 shrink-0">
+              <Sparkle size={14} weight="fill" className="text-accent" />
+              Sorotan &amp; Peringkat
+            </h2>
+            {/* Chips — right side, scoped filter */}
+            <div className="flex gap-1.5 overflow-x-auto scrollbar-hide py-0.5">
+              {sourcesToShow.map(sourceId => {
+                const name = dynamicSourceRegistry.get(sourceId)?.name || sourceId;
+                const isActive = sourceId === activeSourceId;
+                return (
+                  <button
+                    key={sourceId}
+                    onClick={() => setActiveSourceId(sourceId)}
+                    className={cn(
+                      "shrink-0 min-h-[30px] px-3 py-1 rounded-full text-[11px] font-bold transition-all duration-200 outline-none tap-highlight-transparent whitespace-nowrap",
+                      isActive
+                        ? "bg-text-primary text-surface-base shadow-sm"
+                        : "bg-surface-raised/80 text-text-muted border border-border-subtle/60 hover:text-text-primary"
+                    )}
+                  >
+                    {name}
+                  </button>
+                );
+              })}
             </div>
           </div>
+
+          {/* Hero Carousel */}
+          <div className="h-[380px] sm:h-[460px] w-full overflow-hidden">
+            {activeSourceHighlight.length > 0 ? (
+              <FeaturedHeroCarousel sourceId={activeSourceId} mangas={activeSourceHighlight} variant="cyber-editorial" />
+            ) : (
+              <div className="w-full h-full bg-surface-raised animate-pulse" />
+            )}
+          </div>
+
+          {/* Leaderboard strip */}
+          {activeSourcePopular.length > 0 && (
+            <div className="p-3 flex flex-col gap-0.5 border-t border-border-subtle/40">
+              {activeSourcePopular.map((manga, idx) => (
+                <LeaderboardRow
+                  key={`${manga.sourceId}-${manga.id}`}
+                  manga={{ ...manga, rank: idx + 1 }}
+                  sourceId={manga.sourceId}
+                  variant="cyber-editorial"
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
 
-      {/* 3. Update Hari Ini */}
+      {/* 3. Update Hari Ini — all active sources, no chip filter */}
       {updateHariIni.length > 0 && (
-        <div className="flex flex-col gap-3 sm:gap-4 mt-4">
-          <h2 className="text-lg sm:text-xl md:text-2xl font-bold px-2">
-            Update Hari Ini
-          </h2>
-          <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide px-2">
+        <div className="flex flex-col gap-3">
+          <h2 className="text-lg sm:text-xl font-bold text-text-primary">Update Hari Ini</h2>
+          <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide w-full">
             {updateHariIni.map((manga) => (
-              <div key={`${manga.sourceId}-${manga.id}`} className="shrink-0 snap-start w-[150px] sm:w-[160px]">
+              <div key={`${manga.sourceId}-${manga.id}`} className="shrink-0 snap-start w-[140px] sm:w-[155px]">
                 <ShelfCard manga={manga} sourceId={manga.sourceId} showSourceBadge />
               </div>
             ))}
-            
-            {/* Lihat Semua Card */}
-            <div className="shrink-0 snap-start w-[150px] sm:w-[160px] flex items-center justify-center p-4">
-              <Link 
+            <div className="shrink-0 snap-start w-[140px] sm:w-[155px] flex items-center justify-center p-2">
+              <Link
                 href="/library"
-                className="w-full aspect-[3/4] rounded-2xl border-2 border-dashed border-border-default hover:border-accent hover:bg-accent/5 text-text-muted hover:text-accent transition-colors flex flex-col items-center justify-center gap-2 font-bold"
+                className="w-full aspect-[3/4] rounded-2xl border-2 border-dashed border-border-default hover:border-accent hover:bg-accent/5 text-text-muted hover:text-accent transition-all flex flex-col items-center justify-center gap-2 font-bold"
               >
                 <MagnifyingGlass size={24} />
                 <span className="text-sm">Lihat Semua</span>
@@ -195,62 +177,27 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
         </div>
       )}
 
-      {/* 4. Per Source Popular & Latest */}
-      {sourcesToShow.map((sourceId, idx) => {
-        const source = dynamicSourceRegistry.get(sourceId);
-        const sourceName = source?.name || sourceId;
-        const data = sourceData[sourceId];
-        
-        if (!data || (data.popular.length === 0 && data.latest.length === 0)) return null;
-
-        const isVariantLayout = idx % 2 === 1;
-
-        return (
-          <div key={sourceId} className="flex flex-col gap-6 sm:gap-8 pt-8 mt-4 border-t-2 border-border-subtle/30 px-2">
-            <div className="flex items-end justify-between">
-              <div className="flex flex-col gap-1">
-                <h2 className="text-3xl sm:text-4xl font-black text-text-primary">{sourceName}</h2>
-              </div>
-              <Link href={`/sources/${sourceId}`} className="text-sm font-bold text-accent hover:underline mb-1">
-                Lihat Semua
-              </Link>
-            </div>
-            
-            <div className={cn(
-              "border-l-2 border-border-subtle/30 pl-1 sm:pl-4",
-              isVariantLayout ? "flex flex-col gap-8 lg:gap-10" : "grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12"
-            )}>
-              {/* Popular */}
-              {data.popular.length > 0 && (
-                <div className="flex flex-col gap-3 sm:gap-4">
-                  <h3 className="text-base sm:text-lg font-bold text-text-secondary">Populer</h3>
-                  <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
-                    {data.popular.map(manga => (
-                      <div key={manga.id} className="shrink-0 snap-start w-[150px] sm:w-[160px]">
-                        <ShelfCard manga={manga} sourceId={sourceId} />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Latest */}
-              {data.latest.length > 0 && (
-                <div className="flex flex-col gap-3 sm:gap-4">
-                  <h3 className="text-base sm:text-lg font-bold text-text-secondary">Terbaru</h3>
-                  <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scrollbar-hide">
-                    {data.latest.map(manga => (
-                      <div key={manga.id} className="shrink-0 snap-start w-[150px] sm:w-[160px]">
-                        <ShelfCard manga={manga} sourceId={sourceId} />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+      {/* 4. Popular Komik — all active sources, no chip filter */}
+      {popularKomik.length > 0 && (
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg sm:text-xl font-bold text-text-primary flex items-center gap-2">
+              <Fire size={20} weight="fill" className="text-orange-500" />
+              Popular Komik
+            </h2>
+            <Link href="/popular" className="text-xs font-bold text-accent hover:underline">
+              Lihat Semua
+            </Link>
           </div>
-        );
-      })}
+          <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide w-full">
+            {popularKomik.map((manga) => (
+              <div key={`${manga.sourceId}-${manga.id}`} className="shrink-0 snap-start w-[140px] sm:w-[155px]">
+                <ShelfCard manga={manga} sourceId={manga.sourceId} showSourceBadge />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
     </div>
   );

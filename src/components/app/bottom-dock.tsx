@@ -8,19 +8,8 @@ import { cn } from "@/shared/utils/cn"
 import { motion } from "motion/react"
 import { useSearchFilterStore } from "@/shared/store/search-filter-store"
 
-import { useUpdateStore } from "@/shared/store/update-store"
-import { useSettingsStore } from "@/shared/store/settings-store"
-import { useMounted } from "@/shared/hooks/use-mounted"
-
 export function BottomDock() {
   const pathname = usePathname()
-  const mounted = useMounted()
-  const unreadCount = useUpdateStore((state) => state.getUnreadCount())
-
-  // Subscribe to these so the component re-renders when they change,
-  // ensuring getUnreadCount() runs again with the fresh store states.
-  useSettingsStore((state) => state.notifyForAllLibraryItems)
-  useSettingsStore((state) => state.mutedMangaKeys)
 
   return (
     <nav
@@ -40,8 +29,6 @@ export function BottomDock() {
                 : pathname?.startsWith(item.href)
 
             const Icon = item.icon
-            const isUpdates = item.href === '/updates'
-            const displayCount = unreadCount > 99 ? '99+' : unreadCount
 
             return (
               <Link
@@ -57,7 +44,7 @@ export function BottomDock() {
                   "group relative flex items-center justify-center h-[44px] shrink-0 outline-none tap-highlight-transparent transition-all duration-300 ease-out",
                   isActive ? "w-[120px]" : "w-[48px]"
                 )}
-                aria-label={isUpdates && unreadCount > 0 ? `${item.label}, ${unreadCount} unread updates` : item.label}
+                aria-label={item.label}
                 aria-current={isActive ? "page" : undefined}
               >
                 {isActive && (
@@ -70,25 +57,14 @@ export function BottomDock() {
                 )}
 
                 <div className="relative z-10 flex items-center justify-center gap-2">
-                  <div className="relative">
-                    <Icon
-                      weight={isActive ? "fill" : "regular"}
-                      className={cn(
-                        "transition-colors duration-300 shrink-0",
-                        isActive ? "text-accent" : "text-text-secondary group-hover:text-text-primary"
-                      )}
-                      style={{ width: 22, height: 22 }}
-                    />
-                    {mounted && isUpdates && unreadCount > 0 && (
-                      <div
-                        data-testid="updates-badge"
-                        aria-hidden="true"
-                        className="absolute -top-1.5 -right-1.5 min-w-[16px] h-[16px] px-1 rounded-full bg-brand-primary flex items-center justify-center border-2 border-surface-base"
-                      >
-                        <span className="text-[9px] font-bold text-white leading-none">{displayCount}</span>
-                      </div>
+                  <Icon
+                    weight={isActive ? "fill" : "regular"}
+                    className={cn(
+                      "transition-colors duration-300 shrink-0",
+                      isActive ? "text-accent" : "text-text-secondary group-hover:text-text-primary"
                     )}
-                  </div>
+                    style={{ width: 22, height: 22 }}
+                  />
 
                   {isActive && (
                     <motion.span

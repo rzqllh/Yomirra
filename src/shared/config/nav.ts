@@ -15,7 +15,9 @@ export const MAIN_NAV_ITEMS: NavItem[] = [
 ];
 
 export const DOCK_NAV_ITEMS: NavItem[] = [
-  ...MAIN_NAV_ITEMS,
-  { href: "/settings", icon: Gear, label: "Pengaturan" },
+  { href: "/", icon: House, label: "Beranda" },
+  { href: "/library", icon: Books, label: "Library" },
+  { href: "/bookmark", icon: BookmarkSimple, label: "Bookmark" },
   { href: "/search", icon: MagnifyingGlass, label: "Cari" },
+  { href: "/settings", icon: Gear, label: "Pengaturan" },
 ];

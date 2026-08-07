@@ -82,7 +82,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <DirectionalTransition>
+    <>
       <div className="flex flex-col min-h-screen">
         <h1 className="sr-only">Pengaturan Yomirra</h1>
         <YomirraPageHeader title="Pengaturan" variant="transparent" icon={<Gear size={24} weight="duotone" />} />
@@ -284,6 +284,7 @@ export default function SettingsPage() {
                   mounted ? (
                     <SegmentedControl
                       layoutId="theme-toggle"
+                      variant="glass-floating"
                       options={[
                         { value: "light", label: "Terang" },
                         { value: "dark", label: "Gelap" },
@@ -296,6 +297,7 @@ export default function SettingsPage() {
                   ) : (
                     <SegmentedControl
                       layoutId="theme-toggle-skeleton"
+                      variant="glass-floating"
                       options={[
                         { value: "light", label: "Terang" },
                         { value: "dark", label: "Gelap" },
@@ -400,6 +402,8 @@ export default function SettingsPage() {
         </YomirraSurface>
       </div>
 
+      <BackupRestoreModal isOpen={isBackupModalOpen} onOpenChange={setIsBackupModalOpen} />
+
       <Dialog open={isClearDataDialogOpen} onOpenChange={setIsClearDataDialogOpen}>
         <DialogContent className="max-w-sm rounded-3xl p-6 bg-surface-overlay/95 backdrop-blur-xl shadow-default -heavy">
           <DialogHeader>
@@ -426,8 +430,6 @@ export default function SettingsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      <BackupRestoreModal isOpen={isBackupModalOpen} onOpenChange={setIsBackupModalOpen} />
-    </DirectionalTransition>
+    </>
   );
 }

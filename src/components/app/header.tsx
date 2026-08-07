@@ -100,28 +100,32 @@ export interface DesktopPageTitleProps {
   title: string
   description?: string
   icon?: React.ReactNode
+  action?: React.ReactNode
 }
 
-export function DesktopPageTitle({ title, description, icon }: DesktopPageTitleProps) {
+export function DesktopPageTitle({ title, description, icon, action }: DesktopPageTitleProps) {
   return (
     <div className="hidden md:block relative overflow-hidden rounded-2xl bg-surface-muted/30 border border-border-subtle p-6 md:p-8">
       <div className="absolute inset-0 bg-gradient-to-br from-brand-500/5 to-transparent pointer-events-none" />
-      <div className="relative flex items-start gap-4">
-        {icon && (
-          <div className="shrink-0 p-3 bg-surface-base rounded-xl shadow-sm border border-border-default/50 text-accent">
-            {icon}
-          </div>
-        )}
-        <div>
-          <h1 className="text-3xl md:text-4xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-text-primary to-text-secondary">
-            {title}
-          </h1>
-          {description && (
-            <p className="text-text-muted mt-2 text-sm md:text-base max-w-2xl font-medium">
-              {description}
-            </p>
+      <div className="relative flex items-center justify-between gap-4">
+        <div className="flex items-start gap-4">
+          {icon && (
+            <div className="shrink-0 p-3 bg-surface-base rounded-xl shadow-sm border border-border-default/50 text-accent">
+              {icon}
+            </div>
           )}
+          <div>
+            <h1 className="text-3xl md:text-4xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-text-primary to-text-secondary">
+              {title}
+            </h1>
+            {description && (
+              <p className="text-text-muted mt-2 text-sm md:text-base max-w-2xl font-medium">
+                {description}
+              </p>
+            )}
+          </div>
         </div>
+        {action && <div className="shrink-0">{action}</div>}
       </div>
     </div>
   )

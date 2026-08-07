@@ -35,22 +35,20 @@ export default async function HomePage() {
   );
 
   return (
-    <DirectionalTransition>
-      <HomeView>
-        <Suspense fallback={<SourceFeedSkeleton />}>
-          <UnifiedFeed activeSources={activeSources} />
-        </Suspense>
-        
-        {activeSources.length === 0 && (
-          <div className="py-10">
-            <EmptyState 
-              icon={<WarningCircle size={40} className="text-accent" weight="duotone" />}
-              title="Tidak ada sumber komik yang aktif."
-              description="Periksa halaman sumber untuk mengaktifkan sumber komik."
-            />
-          </div>
-        )}
-      </HomeView>
-    </DirectionalTransition>
+    <HomeView>
+      <Suspense fallback={<SourceFeedSkeleton />}>
+        <UnifiedFeed activeSources={activeSources} />
+      </Suspense>
+
+      {activeSources.length === 0 && (
+        <div className="py-10">
+          <EmptyState
+            icon={<WarningCircle size={40} className="text-accent" weight="duotone" />}
+            title="Tidak ada sumber komik yang aktif."
+            description="Periksa halaman sumber untuk mengaktifkan sumber komik."
+          />
+        </div>
+      )}
+    </HomeView>
   );
 }
