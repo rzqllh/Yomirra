@@ -38,18 +38,16 @@ import {
 
 export default function SearchPage() {
   return (
-    <DirectionalTransition>
-      <React.Suspense fallback={
-        <main className="min-h-screen bg-surface-base">
-          <YomirraPageHeader title="Pencarian" variant="transparent" icon={<MagnifyingGlass size={24} weight="duotone" />} />
-          <div className="px-4 py-6">
-            <SearchResultSkeleton />
-          </div>
-        </main>
-      }>
-        <SearchContent />
-      </React.Suspense>
-    </DirectionalTransition>
+    <React.Suspense fallback={
+      <main className="min-h-screen bg-surface-base">
+        <YomirraPageHeader title="Pencarian" variant="transparent" icon={<MagnifyingGlass size={24} weight="duotone" />} />
+        <div className="px-4 py-6">
+          <SearchResultSkeleton />
+        </div>
+      </main>
+    }>
+      <SearchContent />
+    </React.Suspense>
   );
 }
 
