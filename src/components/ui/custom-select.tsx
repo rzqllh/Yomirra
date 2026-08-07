@@ -55,7 +55,7 @@ export function CustomSelect({ value, onChange, options, className, buttonClassN
 
       {isOpen && (
         <div 
-          className={cn( "absolute z-50 mt-2 w-48 rounded-2xl bg-surface-overlay/80 backdrop-blur-lg/20 -2xl p-1.5 animate-in fade-in zoom-in-95 duration-200", align === "right" ? "right-0" : align === "left" ? "left-0" : "left-1/2 -translate-x-1/2" )}
+          className={cn( "absolute z-50 mt-2 w-48 rounded-2xl bg-surface-overlay/95 backdrop-blur-xl shadow-glass border border-border-glass p-1.5 animate-in fade-in zoom-in-95 duration-200", align === "right" ? "right-0" : align === "left" ? "left-0" : "left-1/2 -translate-x-1/2" )}
         >
           <div className="flex flex-col gap-0.5 max-h-[300px] overflow-y-auto">
             {options.map((option) => {

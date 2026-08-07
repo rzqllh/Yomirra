@@ -34,11 +34,11 @@ export function MangaRating({ sourceId, mangaId, className, variant = "default" 
   const triggerButton = variant === "action" ? (
     <button 
       className={cn(
-        "flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl transition-all duration-300 outline-none select-none",
+        "flex flex-col items-center justify-center gap-1.5 py-3 px-1 rounded-2xl transition-all duration-300 outline-none select-none",
         userRating 
           ? "bg-amber-400/10 border border-amber-400/20 text-amber-500 shadow-sm" 
           : "bg-surface-raised border border-border-default text-text-secondary hover:bg-surface-hover hover:border-border-strong hover:text-text-primary active:scale-[0.98]",
-        !isInLibrary && "opacity-50 cursor-not-allowed"
+        !isInLibrary && "opacity-40 cursor-not-allowed"
       )}
       disabled={!isInLibrary}
     >
