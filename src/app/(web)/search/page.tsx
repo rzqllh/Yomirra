@@ -300,28 +300,42 @@ function SearchContent() {
   const hasNextPage = Object.values(resultsBySource || {}).some((res: any) => res.hasNextPage);
 
   const errorsToDisplay = resultsBySource
-    ? Object.entries(resultsBySource).map(([sourceId, res]) => res.error ? { sourceId, error: res.error } : null).filter(Boolean) as { sourceId: string, error: string }[]
+    ? (Object.entries(resultsBySource)
+        .map(([sourceId, res]) => res.error ? { sourceId, error: res.error } : null)
+        .filter(Boolean) as { sourceId: string; error: string }[])
     : [];
 
+  const isInitialLoading = searchQueries.some(q => q.fetchStatus === "fetching" && !q.data);
+  const allSourcesFailed = activeSelectedSources.length > 0 && errorsToDisplay.length === activeSelectedSources.length;
+  const hasActiveFilters = genres.length > 0 || (formats && formats.length > 0) || Boolean(status) || (Boolean(sort) && sort !== "popular");
+
   return (
-    <main className="min-h-screen bg-surface-base">
-      <YomirraPageHeader title="Pencarian" variant="transparent" icon={<MagnifyingGlass size={24} weight="duotone" />} />
-      
-      <div className="px-4 pt-[calc(var(--safe-top)+24px)] pb-6 max-w-7xl mx-auto">
-        <div className="mb-6">
-          <DesktopPageTitle 
-            title={query ? `Pencarian: ${query}` : "Pencarian"} 
-            description="Pilih sumber untuk mencari manga favoritmu."
-            icon={<MagnifyingGlass size={32} weight="duotone" />}
-          />
+    <main className="min-h-screen bg-surface-base pb-[calc(var(--bottom-nav-height,80px)+24px)]">
+      <div className="px-4 max-w-7xl mx-auto space-y-5">
+        {/* Document Flow Header */}
+        <div className="pt-[calc(var(--safe-top)+16px)] pb-2 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="text-accent bg-accent/10 p-2 rounded-xl border border-accent/20 shrink-0">
+              <MagnifyingGlass size={24} weight="duotone" />
+            </div>
+            <div>
+              <h1 className="text-xl md:text-2xl font-extrabold text-text-primary tracking-tight">
+                Pencarian
+              </h1>
+              <p className="text-[13px] font-medium text-text-muted/90 mt-0.5">
+                Temukan komik dari berbagai sumber
+              </p>
+            </div>
+          </div>
         </div>
 
-        <div className="mb-6 flex gap-2">
+        {/* Search & Filter Row */}
+        <div className="flex gap-2 items-center">
           <SearchInput 
             value={localQuery}
             onChange={(e) => setLocalQuery(e.target.value)}
             onSubmitAction={handleSearch}
-            placeholder="Cari komik favoritmu..."
+            placeholder="Cari komik..."
             containerClassName="flex-1 h-[44px]"
             onClear={() => setLocalQuery("")}
             autoFocus
@@ -329,39 +343,48 @@ function SearchContent() {
           <SearchFilterDrawer />
         </div>
 
-        {/* Source Filter Chips */}
-        <div className="mb-6 flex overflow-x-auto [scrollbar-width:none] snap-x px-4 -mx-4 pb-2 gap-3">
-          <AnimatePresence>
-            {searchableSources.map(source => {
-              const isSelected = selectedSources.includes(source.id);
-              return (
-                <motion.button
-                  key={source.id}
-                  onClick={() => toggleSource(source.id)}
-                  whileTap={{ scale: 0.96 }}
-                  className={`relative flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all outline-none border ${ isSelected ? "border-accent bg-accent/10 text-accent" : "border-border-subtle bg-surface-raised text-text-secondary hover:border-border-strong hover:text-text-primary shadow-sm"}`}
-                >
-                  <span className="relative z-10 flex items-center gap-1.5">
-                    {isSelected && <CheckCircle weight="fill" size={16} />}
-                    {source.name}
+        {/* Source Control Rail */}
+        <div className="flex overflow-x-auto [scrollbar-width:none] snap-x px-4 -mx-4 pb-1 gap-2.5">
+          {searchableSources.map(source => {
+            const isSelected = activeSelectedSources.includes(source.id);
+            const isOffline = source.status === "unavailable" || source.status === "in-fix";
+            return (
+              <button
+                key={source.id}
+                type="button"
+                role="checkbox"
+                aria-checked={isSelected}
+                aria-label={`Sumber ${source.name}`}
+                onClick={() => toggleSource(source.id)}
+                className={cn(
+                  "relative flex-shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold transition-all outline-none border min-h-[44px]",
+                  isSelected
+                    ? "border-accent bg-accent/10 text-accent shadow-xs"
+                    : "border-border-subtle bg-surface-raised/40 text-text-secondary hover:border-border-strong hover:text-text-primary"
+                )}
+              >
+                {isSelected && <CheckCircle weight="fill" size={15} className="shrink-0" />}
+                <span>{source.name}</span>
+                {isOffline && (
+                  <span className="text-[10px] font-semibold text-semantic-warning bg-semantic-warning/15 px-1.5 py-0.5 rounded-full border border-semantic-warning/30 shrink-0">
+                    !
                   </span>
-                </motion.button>
-              );
-            })}
-          </AnimatePresence>
+                )}
+              </button>
+            );
+          })}
         </div>
 
-        {/* Source Errors */}
-        {errorsToDisplay.length > 0 && (
-          <div className="mb-8 flex flex-col gap-2">
+        {/* Partial Failure Warning (Compact) */}
+        {errorsToDisplay.length > 0 && !allSourcesFailed && (
+          <div className="flex flex-col gap-2">
             {errorsToDisplay.map(err => {
               const source = searchableSources.find(s => s.id === err.sourceId);
               return (
-                <div key={err.sourceId} className="flex items-start gap-3 p-3 rounded-xl bg-semantic-error/10 border border-semantic-error/20">
-                  <WarningCircle size={20} className="text-semantic-error shrink-0 mt-0.5" weight="fill" />
-                  <div className="flex flex-col">
-                    <span className="text-sm font-bold text-semantic-error">{source?.name || err.sourceId}</span>
-                    <span className="text-sm text-text-secondary line-clamp-2">{err.error}</span>
+                <div key={err.sourceId} className="flex items-center justify-between p-3 rounded-xl bg-semantic-error/10 border border-semantic-error/20 text-xs font-semibold text-semantic-error">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <WarningCircle size={16} weight="fill" className="shrink-0" />
+                    <span className="truncate">{source?.name || err.sourceId} gagal dimuat</span>
                   </div>
                 </div>
               );
@@ -369,41 +392,62 @@ function SearchContent() {
           </div>
         )}
 
-        {/* Content States */}
+        {/* Content Area */}
         <AnimatePresence mode="wait">
           {activeSelectedSources.length === 0 ? (
-            <motion.div key="no-source" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="pt-10">
+            <motion.div key="no-source" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="pt-8">
               <EmptyState 
                 icon={<WarningCircle size={40} className="text-accent" weight="duotone" />}
-                title="Tidak ada sumber aktif yang dipilih."
-                description="Pilih setidaknya satu sumber di atas untuk mencari."
+                title="Tidak ada sumber aktif yang dipilih"
+                description="Pilih setidaknya satu sumber di atas untuk mulai mencari."
               />
             </motion.div>
-          ) : query.length === 0 && isLoading ? (
-            <motion.div key="latest-loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col gap-10">
+          ) : isInitialLoading && searchMangas.length === 0 ? (
+            <motion.div key="loading-skeleton" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
               <SearchResultSkeleton />
             </motion.div>
-          ) : isLoading ? (
-            <motion.div key="search-loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col gap-10">
-              <SearchResultSkeleton />
-            </motion.div>
-          ) : searchError && searchMangas.length === 0 ? (
-            <motion.div key="search-error" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="pt-10">
+          ) : allSourcesFailed && searchMangas.length === 0 ? (
+            <motion.div key="global-error" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="pt-8">
               <EmptyState 
                 icon={<WarningCircle size={40} className="text-semantic-error" weight="duotone" />}
-                title="Terjadi kesalahan pencarian."
-                description="Silakan coba lagi beberapa saat."
+                title={
+                  activeSelectedSources.length === 1
+                    ? `${searchableSources.find(s => s.id === activeSelectedSources[0])?.name || activeSelectedSources[0]} tidak dapat dimuat`
+                    : "Terjadi kesalahan pencarian"
+                }
+                description={
+                  activeSelectedSources.length === 1
+                    ? "Gagal terhubung ke sumber ini. Silakan coba lagi beberapa saat."
+                    : "Semua sumber terpilih tidak dapat diakses saat ini."
+                }
+                action={
+                  <button
+                    onClick={() => {
+                      if (activeSelectedSources.length === 1) {
+                        queryClient.invalidateQueries({ queryKey: ["searchSource", activeSelectedSources[0]] });
+                      } else {
+                        queryClient.invalidateQueries({ queryKey: ["searchSource"] });
+                      }
+                    }}
+                    className="px-4 py-2 rounded-xl text-xs font-bold bg-accent text-white hover:bg-accent-hover transition-colors"
+                  >
+                    Coba Lagi
+                  </button>
+                }
               />
             </motion.div>
           ) : searchMangas.length > 0 ? (
-            <motion.div key="search-results" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="flex flex-col gap-4">
-              <h2 className="text-lg font-bold flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-accent"></span>
-                {query.length === 0 ? "Update Terbaru" : "Hasil Pencarian"}
-                <span className="text-sm text-text-muted font-normal ml-2">
-                  ({searchMangas.length} judul)
+            <motion.div key="results-grid" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-base md:text-lg font-bold flex items-center gap-2 text-text-primary tracking-tight">
+                  <span className="w-2 h-2 rounded-full bg-accent"></span>
+                  {query.length === 0 ? "Update Terbaru" : "Hasil Pencarian"}
+                </h2>
+                <span className="text-xs font-semibold text-text-muted">
+                  {searchMangas.length} {query.length === 0 ? "judul" : "hasil"}
                 </span>
-              </h2>
+              </div>
+
               <div className="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-3 sm:gap-x-4 sm:gap-y-8 md:grid-cols-4 md:gap-x-5 md:gap-y-10 lg:grid-cols-5 xl:grid-cols-6">
                 {searchMangas.map((item) => (
                   <ShelfCard 
@@ -416,8 +460,8 @@ function SearchContent() {
                 ))}
               </div>
 
-              {/* Advanced Pagination */}
-              <div className="mt-12 py-4">
+              {/* Pagination */}
+              <div className="mt-8 py-4">
                 <Pagination>
                   <PaginationContent>
                     <PaginationItem>
@@ -487,11 +531,11 @@ function SearchContent() {
               </div>
             </motion.div>
           ) : (
-            <motion.div key="search-empty" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="pt-10">
+            <motion.div key="search-empty" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="pt-8">
               <EmptyState 
                 icon={<MagnifyingGlass size={40} className="text-text-muted" weight="duotone" />}
-                title="Tidak ada hasil ditemukan."
-                description="Coba gunakan kata kunci lain."
+                title={hasActiveFilters ? "Tidak ada komik yang cocok dengan filter" : query.length > 0 ? "Tidak ada komik yang ditemukan" : "Tidak ada komik ditemukan"}
+                description={hasActiveFilters ? "Coba sesuaikan atau reset filter pencarian." : query.length > 0 ? "Coba gunakan kata kunci lain." : "Pilih sumber lain untuk menampilkan komik."}
               />
             </motion.div>
           )}

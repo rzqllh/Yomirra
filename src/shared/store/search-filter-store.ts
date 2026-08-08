@@ -25,6 +25,7 @@ export const useSearchFilterStore = create<SearchFilterState>()(
         const current = state.selectedSources || [];
         const isSelected = current.includes(sourceId);
         if (isSelected) {
+          if (current.length <= 1) return state; // Keep at least 1 source selected
           return { selectedSources: current.filter(id => id !== sourceId) };
         } else {
           return { selectedSources: [...current, sourceId] };
