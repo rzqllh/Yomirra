@@ -133,17 +133,21 @@ export function ShelfCard({
             {manga.title}
           </h3>
           {/* Bottom Row - Chapter & Score */}
-          <div className="flex items-center justify-between mt-auto">
-            <span className="text-[11px] md:text-xs font-semibold text-text-muted truncate max-w-[70%]">
-              {manga.latestChapter || "Detail"}
-            </span>
-            {scoreToDisplay !== undefined && Number(scoreToDisplay) > 0 && (
-              <span className="text-[11px] md:text-xs font-bold flex items-center gap-1 text-text-muted shrink-0 tracking-tight">
-                <Star weight="fill" className="text-semantic-warning text-[10px] md:text-[12px]" />
-                <span suppressHydrationWarning>{Number(scoreToDisplay).toFixed(1)}</span>
-              </span>
-            )}
-          </div>
+          {(manga.latestChapter || (scoreToDisplay !== undefined && Number(scoreToDisplay) > 0)) && (
+            <div className="flex items-center justify-between mt-auto">
+              {manga.latestChapter ? (
+                <span className="text-[11px] md:text-xs font-semibold text-text-muted truncate max-w-[70%]">
+                  {manga.latestChapter}
+                </span>
+              ) : <div />}
+              {scoreToDisplay !== undefined && Number(scoreToDisplay) > 0 && (
+                <span className="text-[11px] md:text-xs font-bold flex items-center gap-1 text-text-muted shrink-0 tracking-tight">
+                  <Star weight="fill" className="text-semantic-warning text-[10px] md:text-[12px]" />
+                  <span suppressHydrationWarning>{Number(scoreToDisplay).toFixed(1)}</span>
+                </span>
+              )}
+            </div>
+          )}
         </div>
       </Link>
     </motion.article>
