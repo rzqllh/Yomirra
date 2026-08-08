@@ -8,7 +8,7 @@ import { ShelfCard } from "@/components/manga/card";
 import { EmptyState } from "@/components/states/empty-state";
 import { Button } from "@/components/ui/button";
 import { useMounted } from "@/shared/hooks/use-mounted";
-import { getLibraryHref, getReaderHref } from "@/shared/lib/routes";
+import { getLibraryHref, getReaderHref, getMangaDetailHref } from "@/shared/lib/routes";
 import {
   BookBookmark,
   Compass,
@@ -365,7 +365,12 @@ export default function BookmarkPage() {
                         new Date(item.readAt).toISOString()
                       );
                       const progress = item.progressPercent || 0;
-                      const targetHref = getReaderHref(
+                      const detailHref = getMangaDetailHref(
+                        group.sourceId,
+                        group.mangaId,
+                        "/bookmark"
+                      );
+                      const readerHref = getReaderHref(
                         group.sourceId,
                         group.mangaId,
                         item.chapterId,
@@ -378,9 +383,9 @@ export default function BookmarkPage() {
                           className="group relative flex flex-col bg-surface-raised/20 hover:bg-surface-raised/50 border border-border-subtle/50 rounded-2xl p-3 shadow-none transition-all duration-200"
                         >
                           <div className="flex gap-3 items-start">
-                            {/* Cover */}
+                            {/* Cover -> Manga Detail */}
                             <Link
-                              href={targetHref}
+                              href={detailHref}
                               className="w-[68px] shrink-0 aspect-[2/3] rounded-xl overflow-hidden bg-surface-muted border border-border-subtle/40 shadow-2xs group-hover:scale-[1.02] transition-transform duration-300"
                             >
                               {group.coverUrl && (
@@ -393,10 +398,10 @@ export default function BookmarkPage() {
                               )}
                             </Link>
 
-                            {/* Info */}
+                            {/* Info -> Manga Detail */}
                             <div className="flex-1 flex flex-col min-w-0 py-0.5 justify-between self-stretch">
                               <div className="flex items-start justify-between gap-1.5">
-                                <Link href={targetHref} className="min-w-0 flex-1 group/title">
+                                <Link href={detailHref} className="min-w-0 flex-1 group/title">
                                   <h3 className="font-bold text-sm leading-snug text-text-primary group-hover/title:text-accent transition-colors line-clamp-2">
                                     {group.mangaTitle}
                                   </h3>
@@ -425,9 +430,9 @@ export default function BookmarkPage() {
                                 </button>
                               </div>
 
-                              {/* Progress bar & Continue CTA */}
+                              {/* Progress bar & Continue CTA -> Reader */}
                               <div className="mt-3 flex items-center justify-between gap-2">
-                                <Link href={targetHref}>
+                                <Link href={readerHref}>
                                   <Button
                                     variant="secondary"
                                     size="sm"

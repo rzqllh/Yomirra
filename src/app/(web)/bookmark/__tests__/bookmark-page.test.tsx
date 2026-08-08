@@ -82,16 +82,21 @@ describe('BookmarkPage Reworked', () => {
     );
   });
 
-  it('renders reading history card with continue CTA and trash button', () => {
+  it('renders reading history card with detail link on cover/title and reader link on Lanjutkan CTA', () => {
     render(<BookmarkPage />);
     
     expect(screen.getByRole('heading', { level: 1, name: /Rak Buku/i })).toBeTruthy();
-    expect(screen.getAllByText('Solo Leveling').length).toBeGreaterThan(0);
-    expect(screen.getByText('Chapter 100')).toBeTruthy();
+    
+    // Title link should point to manga detail page
+    const titleLink = screen.getByRole('heading', { level: 3, name: /Solo Leveling/i }).closest('a');
+    expect(titleLink?.getAttribute('href')).toBe('/manga/src1/manga1?returnTo=%2Fbookmark');
 
+    // Lanjutkan button link should point to reader page
     const continueBtn = screen.getByRole('button', { name: /Lanjutkan/i });
-    expect(continueBtn).toBeTruthy();
+    const continueLink = continueBtn.closest('a');
+    expect(continueLink?.getAttribute('href')).toBe('/manga/src1/manga1/read/ch-100?returnTo=%2Fbookmark');
 
+    // Trash button
     const trashBtn = screen.getByRole('button', { name: /Hapus Solo Leveling dari riwayat/i });
     expect(trashBtn).toBeTruthy();
   });
