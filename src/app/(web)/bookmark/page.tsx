@@ -8,22 +8,18 @@ import { ShelfCard } from "@/components/manga/card";
 import { EmptyState } from "@/components/states/empty-state";
 import { Button } from "@/components/ui/button";
 import { useMounted } from "@/shared/hooks/use-mounted";
-import { getLibraryHref, getReaderHref, getMangaDetailHref } from "@/shared/lib/routes";
+import { getLibraryHref, getReaderHref } from "@/shared/lib/routes";
 import {
   BookBookmark,
   Compass,
   Clock,
   Play,
   Trash,
-  List,
-  SquaresFour,
   CheckCircle,
   MagnifyingGlass,
 } from "@phosphor-icons/react";
 import { motion, AnimatePresence } from "motion/react";
 import { SearchInput } from "@/components/ui/search-input";
-import { YomirraSurface } from "@/components/ui/layout";
-import { YomirraPageHeader, DesktopPageTitle } from "@/components/app/header";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -76,11 +72,10 @@ export default function BookmarkPage() {
 
   const [searchQuery, setSearchQuery] = React.useState("");
   const [sortBy, setSortBy] = React.useState<"updatedAt" | "title">("updatedAt");
-  const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid");
   const [isSelectionMode, setIsSelectionMode] = React.useState(false);
   const [selectedItems, setSelectedItems] = React.useState<Set<string>>(new Set());
   const [collectionPage, setCollectionPage] = React.useState(1);
-  const ITEMS_PER_PAGE = 30;
+  const ITEMS_PER_PAGE = 24;
   const removeFromLibrary = useLibraryStore((state) => state.removeFromLibrary);
   const hideNsfw = useSettingsStore((state) => state.hideNsfw);
   const nsfwSourceIds = useNsfwSourceIds();
@@ -258,499 +253,459 @@ export default function BookmarkPage() {
   // ── Skeleton shell (pre-mount) ──────────────────────────────────────────
   if (!isMounted) {
     return (
-      <div className="flex flex-col min-h-screen pb-[var(--page-bottom-safe)]">
+      <div className="flex flex-col min-h-screen pb-[calc(var(--bottom-nav-height,80px)+24px)]">
         <h1 className="sr-only">Rak Buku Yomirra</h1>
-        <YomirraPageHeader
-          title="Rak Buku"
-          variant="transparent"
-          icon={<BookBookmark size={24} weight="duotone" />}
-        />
-        <YomirraSurface variant="base" className="flex-1 w-full max-w-7xl mx-auto">
-          <div className="hidden md:block px-4 py-8">
-            <h1 className="text-3xl font-black text-text-primary tracking-tight">
-              Rak Buku
-            </h1>
+        {/* Header Skeleton */}
+        <div className="px-4 pt-[calc(var(--safe-top)+16px)] pb-4 flex items-center gap-3">
+          <Skeleton className="w-10 h-10 rounded-xl" />
+          <div className="space-y-1.5 flex-1">
+            <Skeleton className="h-6 w-32 rounded-md" />
+            <Skeleton className="h-3.5 w-44 rounded-md" />
           </div>
-          {/* Tab skeleton */}
-          <div className="px-4 pt-2 pb-3">
-            <Skeleton className="h-11 w-full rounded-full" />
-          </div>
-          {/* Reading card skeletons */}
-          <div className="px-4 mt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <MangaCardSkeleton key={i} variant="history" />
-            ))}
-          </div>
-        </YomirraSurface>
+        </div>
+        {/* Tab Skeleton */}
+        <div className="px-4 pt-1 pb-4">
+          <Skeleton className="h-[46px] w-full rounded-full" />
+        </div>
+        {/* Reading Card Skeletons */}
+        <div className="px-4 mt-2 space-y-3">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <MangaCardSkeleton key={i} variant="history" />
+          ))}
+        </div>
       </div>
     );
   }
 
   return (
     <>
-      <div className="flex flex-col min-h-screen pb-[var(--page-bottom-safe)]">
-        <h1 className="sr-only">Rak Buku Yomirra</h1>
-        <YomirraPageHeader
-          title="Rak Buku"
-          variant="transparent"
-          icon={<BookBookmark size={24} weight="duotone" />}
-        />
-        <YomirraSurface
-          variant="base"
-          className="flex-1 w-full max-w-7xl mx-auto md:pb-8"
+      <div className="flex flex-col min-h-screen pb-[calc(var(--bottom-nav-height,80px)+24px)]">
+        {/* ── Document Flow Header ── */}
+        <div className="px-4 pt-[calc(var(--safe-top)+16px)] pb-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="text-accent bg-accent/10 p-2 rounded-xl border border-accent/20 shrink-0">
+              <BookBookmark size={24} weight="duotone" />
+            </div>
+            <div>
+              <h1 className="text-xl md:text-2xl font-extrabold text-text-primary tracking-tight">
+                Rak Buku
+              </h1>
+              <p className="text-[13px] font-medium text-text-muted/90 mt-0.5">
+                Bacaan & koleksi kamu
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Segmented Control ── */}
+        <div
+          role="tablist"
+          aria-label="Rak Buku"
+          className="px-4 pt-1 pb-4 w-full"
         >
-          {/* Desktop title — hidden on mobile, YomirraPageHeader handles mobile */}
-          <div className="hidden md:block px-4 pt-[calc(var(--safe-top)+24px)] pb-4">
-            <DesktopPageTitle
-              title="Rak Buku"
-              description="Koleksi dan riwayat bacaan personal Anda."
-              icon={<BookBookmark size={32} weight="duotone" />}
-            />
-          </div>
+          <SegmentedControl
+            options={[
+              { value: "reading", label: "Sedang Dibaca" },
+              { value: "collection", label: "Koleksi" },
+            ]}
+            value={activeTab}
+            onChange={(val) => setActiveTab(val as "reading" | "collection")}
+            variant="glass-floating"
+            fullWidth
+            className="h-[46px]"
+            layoutId="bookmark-tab-pill"
+          />
+        </div>
 
-          {/* ── Segmented tabs ── */}
-          <div
-            role="tablist"
-            aria-label="Rak Buku"
-            className="px-4 pt-2 pb-3 w-full"
-          >
-            <SegmentedControl
-              options={[
-                { value: "reading", label: "Sedang Dibaca" },
-                { value: "collection", label: "Koleksi" },
-              ]}
-              value={activeTab}
-              onChange={(val) => setActiveTab(val as "reading" | "collection")}
-              variant="glass-floating"
-              fullWidth
-              layoutId="bookmark-tab-pill"
-            />
-          </div>
+        {/* ── Tab Content ── */}
+        <div className="px-4 mt-1 outline-none">
+          {/* ────────────────── SEDANG DIBACA ────────────────── */}
+          {activeTab === "reading" && (
+            <div
+              role="tabpanel"
+              id="tabpanel-reading"
+              aria-labelledby="tab-reading"
+              className="space-y-4"
+            >
+              {visibleHistory.length === 0 ? (
+                <EmptyState
+                  icon={<Clock size={48} className="text-text-muted" weight="duotone" />}
+                  title="Belum ada bacaan aktif"
+                  description="Komik yang kamu baca akan muncul di sini."
+                  action={
+                    <Button
+                      asChild
+                      variant="accent"
+                      className="rounded-full shadow-sm font-bold mt-4"
+                    >
+                      <Link href={getLibraryHref()}>
+                        <Compass size={20} weight="bold" className="mr-1.5" />
+                        Eksplor Manga
+                      </Link>
+                    </Button>
+                  }
+                />
+              ) : (
+                <>
+                  {/* Optional Summary */}
+                  <div className="flex items-center justify-between px-1">
+                    <span className="text-xs font-bold text-text-muted uppercase tracking-wider">
+                      {visibleHistory.length} Bacaan Aktif
+                    </span>
+                    <span className="text-2xs text-text-muted/60">
+                      Terakhir dibaca
+                    </span>
+                  </div>
 
-          {/* ── Tab content ── */}
-          <div className="mt-4 outline-none">
+                  {/* Reading Cards Grid/List */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {visibleHistory.map((group) => {
+                      const item = group.chapters[0];
+                      const timeText = getRelativeTime(
+                        new Date(item.readAt).toISOString()
+                      );
+                      const progress = item.progressPercent || 0;
+                      const targetHref = getReaderHref(
+                        group.sourceId,
+                        group.mangaId,
+                        item.chapterId,
+                        "/bookmark"
+                      );
 
-            {/* ────────────────── SEDANG DIBACA ────────────────── */}
-            {activeTab === "reading" && (
-              <div
-                role="tabpanel"
-                id="tabpanel-reading"
-                aria-labelledby="tab-reading"
-              >
-                {visibleHistory.length === 0 ? (
-                  <EmptyState
-                    icon={<Clock size={48} className="text-text-muted" weight="duotone" />}
-                    title="Belum ada bacaan aktif"
-                    description="Komik yang kamu baca akan muncul di sini."
-                    action={
-                      <Button
-                        asChild
-                        variant="accent"
-                        className="rounded-full shadow-sm font-bold mt-4"
-                      >
-                        <Link href={getLibraryHref()}>
-                          <Compass size={20} weight="bold" className="mr-1.5" />
-                          Eksplor Manga
-                        </Link>
-                      </Button>
-                    }
-                  />
-                ) : (
-                  <div className="px-4 mb-16">
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                      {visibleHistory.map((group) => {
-                        const item = group.chapters[0];
-                        const timeText = getRelativeTime(
-                          new Date(item.readAt).toISOString()
-                        );
-                        const progress = item.progressPercent || 0;
-                        const targetHref = getReaderHref(
-                          group.sourceId,
-                          group.mangaId,
-                          item.chapterId,
-                          "/bookmark"
-                        );
+                      return (
+                        <div
+                          key={`${group.sourceId}::${group.mangaId}`}
+                          className="group relative flex flex-col bg-surface-raised/20 hover:bg-surface-raised/50 border border-border-subtle/50 rounded-2xl p-3 shadow-none transition-all duration-200"
+                        >
+                          <div className="flex gap-3 items-start">
+                            {/* Cover */}
+                            <Link
+                              href={targetHref}
+                              className="w-[68px] shrink-0 aspect-[2/3] rounded-xl overflow-hidden bg-surface-muted border border-border-subtle/40 shadow-2xs group-hover:scale-[1.02] transition-transform duration-300"
+                            >
+                              {group.coverUrl && (
+                                <img
+                                  src={group.coverUrl}
+                                  alt={group.mangaTitle}
+                                  className="w-full h-full object-cover"
+                                  referrerPolicy="no-referrer"
+                                />
+                              )}
+                            </Link>
 
-                        return (
-                          <Link
-                            key={`${group.sourceId}::${group.mangaId}`}
-                            href={targetHref}
-                            className="relative w-full bg-surface-glass backdrop-blur-sm rounded-xl overflow-hidden border border-border-subtle group shadow-sm hover:shadow-md hover:border-border-default transition-all vt-hover"
-                            style={
-                              {
-                                "--vt-name": `manga-cover-${group.sourceId}-${group.mangaId}`,
-                              } as React.CSSProperties
-                            }
-                          >
-                            <div className="flex p-3 gap-3">
-                              {/* Cover */}
-                              <div className="w-[68px] shrink-0 aspect-[2/3] rounded-lg overflow-hidden shadow-sm bg-surface-muted">
-                                {group.coverUrl && (
-                                  <img
-                                    src={group.coverUrl}
-                                    alt={group.mangaTitle}
-                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                                    referrerPolicy="no-referrer"
-                                  />
-                                )}
+                            {/* Info */}
+                            <div className="flex-1 flex flex-col min-w-0 py-0.5 justify-between self-stretch">
+                              <div className="flex items-start justify-between gap-1.5">
+                                <Link href={targetHref} className="min-w-0 flex-1 group/title">
+                                  <h3 className="font-bold text-sm leading-snug text-text-primary group-hover/title:text-accent transition-colors line-clamp-2">
+                                    {group.mangaTitle}
+                                  </h3>
+                                  <p className="text-xs font-semibold text-accent mt-1 truncate">
+                                    {item.chapterTitle || "Chapter ?"}
+                                  </p>
+                                  <p className="text-[11px] text-text-muted mt-0.5">
+                                    {timeText || "Baru saja"}
+                                  </p>
+                                </Link>
+
+                                {/* Explicit Trash Delete Action */}
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleRemoveHistory(
+                                      group.sourceId,
+                                      group.mangaId,
+                                      group.mangaTitle
+                                    )
+                                  }
+                                  className="p-1.5 -mr-1 -mt-1 rounded-xl text-text-muted/60 hover:text-semantic-error hover:bg-semantic-error/10 transition-colors shrink-0"
+                                  aria-label={`Hapus ${group.mangaTitle} dari riwayat`}
+                                >
+                                  <Trash size={16} weight="bold" />
+                                </button>
                               </div>
 
-                              {/* Info */}
-                              <div className="flex-1 flex flex-col justify-between min-w-0 py-0.5">
-                                <div className="flex items-start justify-between gap-1 min-w-0">
-                                  <div className="min-w-0 flex-1">
-                                    <h4 className="font-bold text-sm line-clamp-2 text-text-primary group-hover:text-accent transition-colors leading-snug">
-                                      {group.mangaTitle}
-                                    </h4>
-                                    <p className="text-xs font-medium text-text-muted mt-1 truncate">
-                                      {item.chapterTitle || "Chapter ?"}
-                                    </p>
-                                    <p className="text-[10px] text-text-muted/60 mt-0.5">
-                                      {timeText || "Baru saja"}
-                                    </p>
-                                  </div>
-                                  {/* Delete icon — triggers confirm dialog */}
-                                  <button
-                                    onClick={(e) => {
-                                      e.preventDefault();
-                                      e.stopPropagation();
-                                      handleRemoveHistory(
-                                        group.sourceId,
-                                        group.mangaId,
-                                        group.mangaTitle
-                                      );
-                                    }}
-                                    className="shrink-0 text-text-muted hover:text-semantic-error p-1.5 -mr-1 -mt-0.5 rounded-full hover:bg-surface-hover transition-colors"
-                                    aria-label={`Hapus ${group.mangaTitle} dari riwayat`}
-                                  >
-                                    <Trash size={16} weight="bold" />
-                                  </button>
-                                </div>
-
-                                {/* Lanjut CTA */}
-                                <div className="mt-2">
+                              {/* Progress bar & Continue CTA */}
+                              <div className="mt-3 flex items-center justify-between gap-2">
+                                <Link href={targetHref}>
                                   <Button
                                     variant="secondary"
                                     size="sm"
-                                    className="rounded-full font-bold pointer-events-none"
-                                    tabIndex={-1}
+                                    className="h-8 px-3 rounded-full text-xs font-bold text-accent border border-accent/20 bg-accent/5 hover:bg-accent/10 transition-colors"
                                   >
-                                    <Play size={11} weight="fill" />
-                                    Lanjut
+                                    <Play size={11} weight="fill" className="mr-1" />
+                                    Lanjutkan
                                   </Button>
-                                </div>
+                                </Link>
+
+                                {progress > 0 && (
+                                  <span className="text-[11px] font-semibold text-text-muted/70">
+                                    {Math.round(progress)}%
+                                  </span>
+                                )}
                               </div>
                             </div>
+                          </div>
 
-                            {/* Progress bar */}
-                            {progress > 0 && (
-                              <div className="h-[3px] bg-surface-muted w-full">
-                                <div
-                                  className="h-full bg-accent rounded-full"
-                                  style={{ width: `${progress}%` }}
-                                />
+                          {/* Progress Line */}
+                          {progress > 0 && (
+                            <div className="h-1 bg-surface-muted/60 rounded-full overflow-hidden w-full mt-3">
+                              <div
+                                className="h-full bg-accent rounded-full transition-all duration-300"
+                                style={{ width: `${Math.min(100, Math.max(2, progress))}%` }}
+                              />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* ────────────────── KOLEKSI ────────────────── */}
+          {activeTab === "collection" && (
+            <div
+              role="tabpanel"
+              id="tabpanel-collection"
+              aria-labelledby="tab-collection"
+              className="space-y-4"
+            >
+              {libraryItems.length === 0 ? (
+                <EmptyState
+                  icon={
+                    <BookBookmark
+                      size={48}
+                      className="text-text-muted"
+                      weight="duotone"
+                    />
+                  }
+                  title="Belum ada komik tersimpan"
+                  description="Simpan manga dari halaman detail untuk menemukannya di sini."
+                  action={
+                    <Button
+                      asChild
+                      variant="accent"
+                      className="rounded-full shadow-sm font-bold mt-4"
+                    >
+                      <Link href="/">
+                        <Compass size={20} weight="bold" className="mr-1.5" />
+                        Eksplor Manga
+                      </Link>
+                    </Button>
+                  }
+                />
+              ) : (
+                <>
+                  {/* Toolbar Row 1: Full-width Search */}
+                  <SearchInput
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onClear={() => setSearchQuery("")}
+                    placeholder="Cari di koleksi..."
+                    aria-label="Cari di koleksi"
+                    containerClassName="border border-border-default/50 shadow-2xs h-11"
+                  />
+
+                  {/* Toolbar Row 2: Sort + Selection Toggle */}
+                  <div className="flex gap-2 items-center">
+                    <CustomSelect
+                      align="left"
+                      value={sortBy}
+                      onChange={(val) =>
+                        setSortBy(val as "updatedAt" | "title")
+                      }
+                      options={[
+                        { value: "updatedAt", label: "Terbaru Ditambahkan" },
+                        { value: "title", label: "Judul Buku" },
+                      ]}
+                      className="flex-1"
+                      buttonClassName="w-full h-11"
+                    />
+
+                    <Button
+                      variant={isSelectionMode ? "accent" : "secondary"}
+                      className="rounded-xl h-11 px-4 font-bold shrink-0 shadow-2xs border-border-default/40"
+                      onClick={() => {
+                        if (isSelectionMode) {
+                          setIsSelectionMode(false);
+                          setSelectedItems(new Set());
+                        } else {
+                          setIsSelectionMode(true);
+                        }
+                      }}
+                    >
+                      {isSelectionMode ? "Batal" : "Pilih"}
+                    </Button>
+                  </div>
+
+                  {/* Grid or Empty Search Result */}
+                  {filteredAndSortedLibraryItems.length === 0 ? (
+                    <EmptyState
+                      icon={
+                        <MagnifyingGlass
+                          size={48}
+                          className="text-text-muted"
+                          weight="duotone"
+                        />
+                      }
+                      title="Tidak ada manga yang cocok"
+                      description={`Coba kata kunci lain untuk "${searchQuery}"`}
+                      className="my-8"
+                    />
+                  ) : (
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-3 gap-y-6 sm:gap-x-4 sm:gap-y-7 pt-1">
+                      {paginatedCollection.map((item, index) => {
+                        const itemId = `${item.sourceId}::${item.mangaId}`;
+                        const enrichedManga = {
+                          id: item.mangaId,
+                          title: item.title,
+                          coverUrl: item.coverUrl || "",
+                          status: item.status,
+                          latestChapter:
+                            item.lastReadChapterTitle || undefined,
+                        };
+                        return (
+                          <div
+                            key={itemId}
+                            className="relative group select-none"
+                            onClickCapture={(e) => {
+                              if (isSelectionMode) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setSelectedItems((prev) => {
+                                  const next = new Set(prev);
+                                  if (next.has(itemId)) next.delete(itemId);
+                                  else next.add(itemId);
+                                  return next;
+                                });
+                              }
+                            }}
+                          >
+                            <ShelfCard
+                              manga={enrichedManga}
+                              sourceId={item.sourceId}
+                              priority={index < 6}
+                            />
+
+                            {isSelectionMode && (
+                              <div className="absolute inset-0 bg-black/40 z-30 flex items-center justify-center rounded-2xl transition-all cursor-pointer">
+                                {selectedItems.has(itemId) ? (
+                                  <CheckCircle
+                                    weight="fill"
+                                    size={44}
+                                    className="text-accent drop-shadow-md"
+                                  />
+                                ) : (
+                                  <div className="w-10 h-10 rounded-full border-2 border-white/70 bg-black/20" />
+                                )}
                               </div>
                             )}
-                          </Link>
+                          </div>
                         );
                       })}
                     </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* ────────────────── KOLEKSI ────────────────── */}
-            {activeTab === "collection" && (
-              <div
-                role="tabpanel"
-                id="tabpanel-collection"
-                aria-labelledby="tab-collection"
-                className="px-4"
-              >
-                {libraryItems.length === 0 ? (
-                  <EmptyState
-                    icon={
-                      <BookBookmark
-                        size={48}
-                        className="text-text-muted"
-                        weight="duotone"
-                      />
-                    }
-                    title="Rak koleksi masih kosong"
-                    description="Simpan manga dari halaman detail untuk menemukannya di sini."
-                    action={
-                      <Button
-                        asChild
-                        variant="accent"
-                        className="rounded-full shadow-sm font-bold"
-                      >
-                        <Link href="/">
-                          <Compass size={20} weight="bold" className="mr-1.5" />
-                          Eksplor Manga
-                        </Link>
-                      </Button>
-                    }
-                  />
-                ) : (
-                  <>
-                    {/* ── Toolbar ── */}
-                    <div className="py-2 flex flex-col gap-2 w-full mb-4">
-                      {/* Search — full width */}
-                      <SearchInput
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        onClear={() => setSearchQuery("")}
-                        placeholder="Cari di koleksi..."
-                        aria-label="Cari di koleksi"
-                        containerClassName="border border-border-subtle shadow-sm"
-                      />
-                      {/* Sort + View toggle + Select */}
-                      <div className="flex gap-2 items-center relative z-50">
-                        <CustomSelect
-                          align="left"
-                          value={sortBy}
-                          onChange={(val) =>
-                            setSortBy(val as "updatedAt" | "title")
-                          }
-                          options={[
-                            { value: "updatedAt", label: "Terbaru Ditambahkan" },
-                            { value: "title", label: "Judul Buku" },
-                          ]}
-                          className="flex-1"
-                          buttonClassName="w-full"
-                        />
-
-                        {/* Grid/list toggle — desktop only */}
-                        <div className="hidden sm:flex bg-surface-glass backdrop-blur-md rounded-full p-1 border border-border-subtle shadow-sm h-[44px]">
-                          <button
-                            type="button"
-                            onClick={() => setViewMode("grid")}
-                            className={cn(
-                              "flex items-center justify-center w-10 h-full rounded-full transition-colors",
-                              viewMode === "grid"
-                                ? "bg-accent text-accent-on"
-                                : "text-text-muted hover:text-text-primary"
-                            )}
-                            aria-label="Tampilan grid"
-                          >
-                            <SquaresFour
-                              size={18}
-                              weight={viewMode === "grid" ? "fill" : "bold"}
-                            />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setViewMode("list")}
-                            className={cn(
-                              "flex items-center justify-center w-10 h-full rounded-full transition-colors",
-                              viewMode === "list"
-                                ? "bg-accent text-accent-on"
-                                : "text-text-muted hover:text-text-primary"
-                            )}
-                            aria-label="Tampilan list"
-                          >
-                            <List
-                              size={18}
-                              weight={viewMode === "list" ? "fill" : "bold"}
-                            />
-                          </button>
-                        </div>
-
-                        <Button
-                          variant={isSelectionMode ? "accent" : "secondary"}
-                          className="rounded-full h-[44px] font-bold shrink-0 shadow-sm border-border-subtle"
-                          onClick={() => {
-                            if (isSelectionMode) {
-                              setIsSelectionMode(false);
-                              setSelectedItems(new Set());
-                            } else {
-                              setIsSelectionMode(true);
-                            }
-                          }}
-                        >
-                          {isSelectionMode ? "Batal" : "Pilih"}
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* ── Grid / List ── */}
-                    {filteredAndSortedLibraryItems.length === 0 ? (
-                      <EmptyState
-                        icon={
-                          <MagnifyingGlass
-                            size={48}
-                            className="text-text-muted"
-                            weight="duotone"
-                          />
-                        }
-                        title="Tidak ada manga yang cocok"
-                        description={`Coba kata kunci lain untuk "${searchQuery}"`}
-                      />
-                    ) : (
-                      <motion.div
-                        layout
-                        className={cn(
-                          viewMode === "grid"
-                            ? "grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-3 gap-y-5 sm:gap-x-4 sm:gap-y-7"
-                            : "flex flex-col gap-3"
-                        )}
-                      >
-                        <AnimatePresence>
-                          {paginatedCollection.map((item, index) => {
-                            const itemId = `${item.sourceId}::${item.mangaId}`;
-                            // Enrich: use lastReadChapterTitle if no latestChapter
-                            const enrichedManga = {
-                              id: item.mangaId,
-                              title: item.title,
-                              coverUrl: item.coverUrl || "",
-                              status: item.status,
-                              latestChapter:
-                                item.lastReadChapterTitle || undefined,
-                            };
-                            return (
-                              <div
-                                key={itemId}
-                                className="relative group"
-                                onClickCapture={(e) => {
-                                  if (isSelectionMode) {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    setSelectedItems((prev) => {
-                                      const next = new Set(prev);
-                                      if (next.has(itemId)) next.delete(itemId);
-                                      else next.add(itemId);
-                                      return next;
-                                    });
-                                  }
-                                }}
-                              >
-                                <ShelfCard
-                                  manga={enrichedManga}
-                                  sourceId={item.sourceId}
-                                  priority={index < 6}
-                                />
-
-                                {isSelectionMode && (
-                                  <div className="absolute inset-0 bg-black/40 z-20 flex items-center justify-center rounded-[var(--radius-md)] sm:rounded-[var(--radius-lg)] transition-all cursor-pointer">
-                                    {selectedItems.has(itemId) ? (
-                                      <CheckCircle
-                                        weight="fill"
-                                        size={48}
-                                        className="text-accent drop-shadow-md"
-                                      />
-                                    ) : (
-                                      <div className="w-12 h-12 rounded-full border-2 border-white/70 bg-black/20" />
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </AnimatePresence>
-                      </motion.div>
-                    )}
-
-                    {/* Pagination */}
-                    {totalPages > 1 && (
-                      <div className="mt-8 pb-16">
-                        <Pagination>
-                          <PaginationContent>
-                            <PaginationItem>
-                              <PaginationPrevious
-                                onClick={() => setCollectionPage(p => Math.max(1, p - 1))}
-                                aria-disabled={collectionPage === 1}
-                                className={cn(collectionPage === 1 && "pointer-events-none opacity-50")}
-                              />
-                            </PaginationItem>
-
-                            {/* Simple pagination logic for mobile-friendly view */}
-                            {[...Array(totalPages)].map((_, i) => {
-                              const page = i + 1;
-                              // Show first, last, current, and adjacent pages
-                              if (
-                                page === 1 ||
-                                page === totalPages ||
-                                (page >= collectionPage - 1 && page <= collectionPage + 1)
-                              ) {
-                                return (
-                                  <PaginationItem key={page}>
-                                    <PaginationLink
-                                      isActive={page === collectionPage}
-                                      onClick={() => setCollectionPage(page)}
-                                    >
-                                      {page}
-                                    </PaginationLink>
-                                  </PaginationItem>
-                                );
-                              }
-
-                              // Show ellipsis
-                              if (
-                                page === collectionPage - 2 ||
-                                page === collectionPage + 2
-                              ) {
-                                return (
-                                  <PaginationItem key={page}>
-                                    <PaginationEllipsis />
-                                  </PaginationItem>
-                                );
-                              }
-
-                              return null;
-                            })}
-
-                            <PaginationItem>
-                              <PaginationNext
-                                onClick={() => setCollectionPage(p => Math.min(totalPages, p + 1))}
-                                aria-disabled={collectionPage === totalPages}
-                                className={cn(collectionPage === totalPages && "pointer-events-none opacity-50")}
-                              />
-                            </PaginationItem>
-                          </PaginationContent>
-                        </Pagination>
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {/* ── Selection bulk action bar ── */}
-                <AnimatePresence>
-                  {isSelectionMode && selectedItems.size > 0 && (
-                    <motion.div
-                      initial={{ y: 100, opacity: 0 }}
-                      animate={{ y: 0, opacity: 1 }}
-                      exit={{ y: 100, opacity: 0 }}
-                      className="fixed left-1/2 -translate-x-1/2 z-[100] flex items-center gap-4 bg-surface-overlay border border-border-strong p-3 rounded-full shadow-heavy"
-                      style={{ bottom: "calc(var(--bottom-nav-height) + 24px)" }}
-                    >
-                      <span className="font-bold px-2 text-text-primary">
-                        {selectedItems.size} dipilih
-                      </span>
-                      <Button
-                        variant="destructive"
-                        className="rounded-full font-bold shadow-sm"
-                        onClick={() => {
-                          selectedItems.forEach((id) => {
-                            const [src, manga] = id.split("::");
-                            removeFromLibrary(src, manga);
-                          });
-                          setIsSelectionMode(false);
-                          setSelectedItems(new Set());
-                          toast.success(
-                            `${selectedItems.size} komik dihapus dari koleksi`
-                          );
-                        }}
-                      >
-                        Hapus
-                      </Button>
-                    </motion.div>
                   )}
-                </AnimatePresence>
-              </div>
-            )}
-          </div>
-        </YomirraSurface>
+
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="mt-8 pb-4">
+                      <Pagination>
+                        <PaginationContent>
+                          <PaginationItem>
+                            <PaginationPrevious
+                              onClick={() => setCollectionPage((p) => Math.max(1, p - 1))}
+                              aria-disabled={collectionPage === 1}
+                              className={cn(collectionPage === 1 && "pointer-events-none opacity-50")}
+                            />
+                          </PaginationItem>
+
+                          {[...Array(totalPages)].map((_, i) => {
+                            const page = i + 1;
+                            if (
+                              page === 1 ||
+                              page === totalPages ||
+                              (page >= collectionPage - 1 && page <= collectionPage + 1)
+                            ) {
+                              return (
+                                <PaginationItem key={page}>
+                                  <PaginationLink
+                                    isActive={page === collectionPage}
+                                    onClick={() => setCollectionPage(page)}
+                                  >
+                                    {page}
+                                  </PaginationLink>
+                                </PaginationItem>
+                              );
+                            }
+
+                            if (
+                              page === collectionPage - 2 ||
+                              page === collectionPage + 2
+                            ) {
+                              return (
+                                <PaginationItem key={page}>
+                                  <PaginationEllipsis />
+                                </PaginationItem>
+                              );
+                            }
+
+                            return null;
+                          })}
+
+                          <PaginationItem>
+                            <PaginationNext
+                              onClick={() => setCollectionPage((p) => Math.min(totalPages, p + 1))}
+                              aria-disabled={collectionPage === totalPages}
+                              className={cn(collectionPage === totalPages && "pointer-events-none opacity-50")}
+                            />
+                          </PaginationItem>
+                        </PaginationContent>
+                      </Pagination>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {/* Selection Bulk Action Bar */}
+              <AnimatePresence>
+                {isSelectionMode && selectedItems.size > 0 && (
+                  <motion.div
+                    initial={{ y: 100, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: 100, opacity: 0 }}
+                    className="fixed left-1/2 -translate-x-1/2 z-[100] flex items-center gap-4 bg-surface-overlay/95 backdrop-blur-md border border-border-strong px-4 py-2.5 rounded-full shadow-heavy"
+                    style={{ bottom: "calc(var(--bottom-nav-height, 80px) + 24px)" }}
+                  >
+                    <span className="font-bold text-sm text-text-primary">
+                      {selectedItems.size} dipilih
+                    </span>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="rounded-full font-bold shadow-xs px-4"
+                      onClick={() => {
+                        selectedItems.forEach((id) => {
+                          const [src, manga] = id.split("::");
+                          removeFromLibrary(src, manga);
+                        });
+                        setIsSelectionMode(false);
+                        setSelectedItems(new Set());
+                        toast.success(
+                          `${selectedItems.size} komik dihapus dari koleksi`
+                        );
+                      }}
+                    >
+                      Hapus
+                    </Button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ── Delete confirmation dialog ── */}
@@ -760,8 +715,8 @@ export default function BookmarkPage() {
       >
         <DialogContent className="max-w-xs rounded-3xl p-6 sm:max-w-sm">
           <DialogHeader className="gap-2">
-            <DialogTitle className="text-xl">Hapus Riwayat?</DialogTitle>
-            <DialogDescription className="text-base">
+            <DialogTitle className="text-xl font-bold">Hapus Riwayat?</DialogTitle>
+            <DialogDescription className="text-sm text-text-muted">
               Yakin mau menghapus{" "}
               <strong className="text-text-primary">
                 {itemToDelete?.mangaTitle}
@@ -773,14 +728,14 @@ export default function BookmarkPage() {
             <Button
               variant="ghost"
               onClick={() => setItemToDelete(null)}
-              className="flex-1 rounded-full font-bold h-12"
+              className="flex-1 rounded-full font-bold h-11"
             >
               Nanti aja
             </Button>
             <Button
               variant="accent"
               onClick={confirmDelete}
-              className="flex-1 rounded-full font-bold h-12 bg-red-500 hover:bg-red-600 text-white"
+              className="flex-1 rounded-full font-bold h-11 bg-semantic-error hover:bg-semantic-error/90 text-white"
             >
               Hapus
             </Button>
