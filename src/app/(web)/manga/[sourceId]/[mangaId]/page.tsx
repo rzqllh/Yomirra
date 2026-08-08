@@ -62,7 +62,7 @@ export default async function MangaDetailPage({
     return (
       <main className="min-h-screen flex flex-col w-full relative">
         <div className="md:hidden">
-          <YomirraPageHeader title="Error" showBack variant="auto" />
+          <YomirraPageHeader title="Error" variant="auto" />
         </div>
         <div className="w-full max-w-7xl mx-auto px-4 md:px-8 pt-24 pb-24 relative z-10 flex flex-col items-center justify-center">
           <ErrorState 

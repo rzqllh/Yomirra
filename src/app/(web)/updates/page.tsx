@@ -1,27 +1,40 @@
-import { Metadata } from "next";
-import { DesktopPageTitle } from "@/components/app/header";
-import { Bell } from "@phosphor-icons/react/dist/ssr";
-import { UpdatesList } from "@/components/updates/updates-list";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Update Terbaru - Yomirra",
-  description: "Daftar chapter terbaru dari manga di library Anda.",
-};
+import { Bell, ArrowsClockwise } from "@phosphor-icons/react";
+import { UpdatesList } from "@/components/updates/updates-list";
+import { YomirraPageHeader, DesktopPageTitle } from "@/components/app/header";
+import { YomirraSurface } from "@/components/ui/layout";
 
 export default function UpdatesPage() {
   return (
-    <main className="min-h-screen bg-surface-base">
-      <div className="px-4 pt-[calc(var(--safe-top)+24px)] pb-6 max-w-7xl mx-auto">
-        <div className="mb-8">
-          <DesktopPageTitle 
+    <>
+      <h1 className="sr-only">Update Terbaru - Yomirra</h1>
+
+      {/* Mobile sticky header */}
+      <YomirraPageHeader
+        title="Updates"
+        showBack={false}
+        variant="transparent"
+        icon={<Bell size={24} weight="duotone" />}
+      />
+
+      <YomirraSurface
+        variant="base"
+        className="flex-1 w-full max-w-7xl mx-auto md:pb-8"
+      >
+        {/* Desktop hero title */}
+        <div className="hidden md:block px-4 pt-[calc(var(--safe-top)+24px)] pb-6">
+          <DesktopPageTitle
             title="Updates"
             description="Manga di library Anda yang memiliki chapter baru."
             icon={<Bell size={32} weight="duotone" />}
           />
         </div>
-        
-        <UpdatesList />
-      </div>
-    </main>
+
+        <div className="px-4 pb-6">
+          <UpdatesList />
+        </div>
+      </YomirraSurface>
+    </>
   );
 }

@@ -58,7 +58,7 @@ describe('UpdatesList Component', () => {
     expect(titles[1]).toBe('Title 1');
   });
 
-  it('marks all as seen on mount', async () => {
+  it('marks all as seen on unmount', async () => {
     (useUpdateStore as any).mockReturnValue({
       items: {
         'sourceA::manga1': { sourceId: 'sourceA', mangaId: 'manga1', mangaTitle: 'Title 1', detectedAt: new Date().toISOString() }
@@ -66,7 +66,8 @@ describe('UpdatesList Component', () => {
       markAllAsSeen: mockMarkAllAsSeen,
     });
 
-    render(<UpdatesList />);
+    const { unmount } = render(<UpdatesList />);
+    unmount();
     
     await waitFor(() => {
       expect(mockMarkAllAsSeen).toHaveBeenCalled();

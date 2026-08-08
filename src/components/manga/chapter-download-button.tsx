@@ -106,7 +106,7 @@ export function ChapterDownloadButton({
       size="sm"
       className="relative z-20 shrink-0 text-text-muted hover:text-text-primary rounded-full"
       onClick={handleDownload}
-      aria-label="Download Chapter"
+      aria-label={`Unduh ${chapterTitle}`}
     >
       <AnimatePresence mode="wait" initial={false}>
         {!download ? (

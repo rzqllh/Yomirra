@@ -52,11 +52,10 @@ export function MangaStatusButton({ sourceId, mangaId }: MangaStatusButtonProps)
     <>
       <button
         onClick={() => setIsOpen(true)}
+        aria-label="Ubah status membaca"
         className={cn(
-          "flex flex-col items-center justify-center gap-1.5 py-3 px-1 rounded-2xl transition-all duration-300 outline-none select-none",
-          readingStatus && mounted
-            ? "bg-accent/10 border border-accent/20 text-accent shadow-sm"
-            : "bg-surface-raised border border-border-default text-text-secondary hover:bg-surface-hover hover:border-border-strong hover:text-text-primary active:scale-[0.98]"
+          "flex-1 flex flex-col items-center justify-center gap-1.5 h-full transition-colors outline-none select-none hover:bg-black/5 dark:hover:bg-white/5 active:bg-black/10 dark:active:bg-white/10",
+          readingStatus && mounted ? "text-accent" : "text-text-secondary hover:text-text-primary"
         )}
       >
         <BookOpenText size={24} weight={readingStatus && mounted ? "fill" : "regular"} />

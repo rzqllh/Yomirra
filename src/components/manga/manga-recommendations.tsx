@@ -134,12 +134,12 @@ export function MangaRecommendations({
 
   if (isLoading) {
     return (
-      <div className="mt-4 mb-4">
-        <h3 className="text-[13px] font-black text-text-muted uppercase tracking-widest block mb-4">Komik Serupa</h3>
-        <div className="flex gap-4">
-          <div className="h-[200px] w-[144px] bg-surface-raised animate-pulse rounded-2xl" />
-          <div className="h-[200px] w-[144px] bg-surface-raised animate-pulse rounded-2xl" />
-          <div className="h-[200px] w-[144px] bg-surface-raised animate-pulse rounded-2xl hidden sm:block" />
+      <div className="mt-6 mb-2">
+        <h3 className="text-[11px] font-black text-text-muted uppercase tracking-widest block mb-3">Komik Serupa</h3>
+        <div className="flex gap-3 md:gap-4">
+          <div className="h-[195px] w-[130px] md:w-[140px] bg-surface-raised animate-pulse rounded-2xl shrink-0" />
+          <div className="h-[195px] w-[130px] md:w-[140px] bg-surface-raised animate-pulse rounded-2xl shrink-0" />
+          <div className="h-[195px] w-[130px] md:w-[140px] bg-surface-raised animate-pulse rounded-2xl shrink-0 hidden sm:block" />
         </div>
       </div>
     );
@@ -148,11 +148,11 @@ export function MangaRecommendations({
   if (recommendations.length === 0) return null;
 
   return (
-    <div className="mt-4 mb-4">
-      <h3 className="text-[13px] font-black text-text-muted uppercase tracking-widest block mb-4">Komik Serupa</h3>
-      <div className="flex gap-4 overflow-x-auto pb-6 snap-x snap-mandatory hide-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
+    <div className="mt-6 mb-2">
+      <h3 className="text-[11px] font-black text-text-muted uppercase tracking-widest block mb-3">Komik Serupa</h3>
+      <div className="flex gap-3 md:gap-4 overflow-x-auto pb-4 snap-x snap-mandatory hide-scrollbar">
         {recommendations.map((item) => (
-          <div key={`${item.sourceId}-${item.manga.id}`} className="w-[144px] md:w-[150px] shrink-0 snap-start">
+          <div key={`${item.sourceId}-${item.manga.id}`} className="w-[130px] md:w-[140px] shrink-0 snap-start">
             <ShelfCard sourceId={item.sourceId} manga={item.manga} />
           </div>
         ))}
