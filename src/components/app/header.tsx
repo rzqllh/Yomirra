@@ -18,6 +18,10 @@ export interface YomirraPageHeaderProps {
    * "auto" = (default) transparent at top, becomes glass on scroll.
    */
   variant?: "transparent" | "glass" | "auto"
+  /**
+   * Only show title when scrolled (fades in on scroll)
+   */
+  showTitleOnScrollOnly?: boolean
 }
 
 export function YomirraPageHeader({
@@ -27,7 +31,8 @@ export function YomirraPageHeader({
   action,
   icon,
   className,
-  variant = "auto"
+  variant = "auto",
+  showTitleOnScrollOnly = false,
 }: YomirraPageHeaderProps) {
   const router = useRouter()
   const [scrolled, setScrolled] = React.useState(false)
@@ -56,12 +61,12 @@ export function YomirraPageHeader({
 
   return (
     <header
-      className={cn( "md:hidden sticky top-0 z-[var(--z-sticky)] flex w-full items-center justify-between px-4 pt-[calc(var(--safe-top)+12px)] pb-2 transition-all duration-300 ease-out pointer-events-none", isGlass ? "bg-surface-glass backdrop-blur-md border-b border-border-default shadow-sm" : "bg-transparent border-transparent shadow-none", className )}
+      className={cn( "md:hidden fixed top-0 left-0 right-0 z-[var(--z-sticky)] flex w-full items-center justify-between px-4 pt-[calc(var(--safe-top)+12px)] pb-2 transition-all duration-300 ease-out pointer-events-none", isGlass ? "bg-surface-glass backdrop-blur-md border-b border-border-default shadow-sm" : "bg-transparent border-transparent shadow-none", className )}
     >
       <div className="flex items-center justify-between w-full transition-all duration-300 ease-out pointer-events-auto h-[56px]">
         
         {/* Left Side: Back button OR Large Title + Icon */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
           {showBack ? (
             <>
               <button
@@ -76,13 +81,18 @@ export function YomirraPageHeader({
               </h1>
             </>
           ) : (
-            <div className="flex items-center gap-2.5 ml-1">
+            <div className="flex items-center gap-2.5 ml-1 flex-1 min-w-0">
               {icon && (
                 <div className="text-accent bg-accent/10 p-1.5 rounded-lg border border-accent/20">
                   {icon}
                 </div>
               )}
-              <h1 className="text-2xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-text-primary to-text-secondary truncate">
+              <h1 className={cn(
+                showTitleOnScrollOnly
+                  ? "text-sm md:text-base font-bold tracking-tight text-text-primary truncate block w-full transition-all duration-300"
+                  : "text-2xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-text-primary to-text-secondary truncate block w-full",
+                showTitleOnScrollOnly && (isGlass ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none")
+              )}>
                 {title}
               </h1>
             </div>

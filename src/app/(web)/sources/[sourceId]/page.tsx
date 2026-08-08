@@ -61,7 +61,6 @@ export default function SourceBrowsePage({
     <main className="min-h-screen bg-surface-base flex flex-col">
       <YomirraPageHeader
         title={sort === "popular" ? `Populer di ${sourceName}` : `Terbaru di ${sourceName}`}
-        showBack
         variant="auto"
       />
 

@@ -39,10 +39,10 @@ export function ChapterRow({
     <Link
       href={getReaderHref(sourceId, mangaId, chapterId)}
       className={cn(
-        "group relative flex items-center gap-3 md:gap-4 py-3 transition-all duration-300 ease-out will-change-transform border-b border-border-default/50 last:border-b-0",
-        isLastRead 
-          ? "bg-accent/5 -mx-2 px-2 md:-mx-4 md:px-4 z-10 rounded-sm" 
-          : "hover:bg-surface-hover -mx-2 px-2 md:-mx-4 md:px-4 rounded-sm"
+        "group relative flex items-center gap-3 md:gap-4 py-3 transition-all duration-300 ease-out will-change-transform border-b border-border-default/40 last:border-b-0",
+        isLastRead
+          ? "bg-accent/5 -mx-2 px-2.5 md:-mx-3 md:px-3.5 z-10 rounded-md"
+          : "hover:bg-surface-hover -mx-2 px-2.5 md:-mx-3 md:px-3.5 rounded-md"
       )}
     >
       {/* Subtle indicator for read status */}
@@ -50,14 +50,18 @@ export function ChapterRow({
         <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-accent/80 rounded-r-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       )}
 
-      <div className="flex-1 min-w-0 flex flex-col md:flex-row md:items-center md:gap-4">
+      <div className="flex-1 min-w-0 flex flex-col md:flex-row md:items-center md:gap-3">
         <h4 className={cn(
-          "text-[15px] md:text-base font-bold tracking-tight leading-snug truncate transition-colors duration-300",
-          isRead ? "text-text-muted font-medium" : "text-text-primary group-hover:text-accent"
+          "text-[13px] md:text-sm tracking-tight leading-snug truncate transition-colors duration-300",
+          isLastRead
+            ? "text-accent font-bold"
+            : isRead
+            ? "text-text-muted font-normal"
+            : "text-text-primary font-semibold group-hover:text-accent"
         )}>
           {chapterTitle}
         </h4>
-        <p className="text-[11px] md:text-xs text-text-muted/70 mt-1.5 md:mt-0 font-semibold shrink-0 flex items-center gap-1.5">
+        <p className="text-[10px] md:text-[11px] text-text-muted/70 mt-1 md:mt-0 font-medium shrink-0 flex items-center gap-1">
           {formattedDate}
         </p>
       </div>

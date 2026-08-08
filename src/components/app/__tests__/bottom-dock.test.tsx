@@ -5,6 +5,7 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 vi.mock('next/navigation', () => ({
   usePathname: vi.fn(),
+  useRouter: vi.fn(() => ({ back: vi.fn(), push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() })),
 }));
 
 vi.mock('@/shared/store/search-filter-store', () => ({

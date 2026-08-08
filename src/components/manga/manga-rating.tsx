@@ -7,6 +7,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useMounted } from "@/shared/hooks/use-mounted";
 
 interface MangaRatingProps {
   sourceId: string;
@@ -21,9 +22,10 @@ export function MangaRating({ sourceId, mangaId, className, variant = "default" 
   const updateLibraryItem = useLibraryStore(state => state.updateLibraryItem);
   
   const libraryItem = getLibraryItem(sourceId, mangaId);
-  const userRating = libraryItem?.userRating;
+  const mounted = useMounted();
+  const userRating = mounted ? libraryItem?.userRating : undefined;
 
-  const isInLibrary = !!libraryItem;
+  const isInLibrary = mounted ? !!libraryItem : false;
 
   const handleRating = (rating: number) => {
     if (!isInLibrary) return;
@@ -34,13 +36,11 @@ export function MangaRating({ sourceId, mangaId, className, variant = "default" 
   const triggerButton = variant === "action" ? (
     <button 
       className={cn(
-        "flex flex-col items-center justify-center gap-1.5 py-3 px-1 rounded-2xl transition-all duration-300 outline-none select-none",
-        userRating 
-          ? "bg-amber-400/10 border border-amber-400/20 text-amber-500 shadow-sm" 
-          : "bg-surface-raised border border-border-default text-text-secondary hover:bg-surface-hover hover:border-border-strong hover:text-text-primary active:scale-[0.98]",
+        "flex-1 flex flex-col items-center justify-center gap-1.5 h-full transition-colors outline-none select-none hover:bg-black/5 dark:hover:bg-white/5 active:bg-black/10 dark:active:bg-white/10",
+        userRating ? "text-amber-500" : "text-text-secondary hover:text-text-primary",
         !isInLibrary && "opacity-40 cursor-not-allowed"
       )}
-      disabled={!isInLibrary}
+      disabled={!mounted || !isInLibrary}
     >
       <Star size={24} weight={userRating ? "fill" : "regular"} />
       <span className="text-[11px] font-bold tracking-tight">
@@ -56,7 +56,7 @@ export function MangaRating({ sourceId, mangaId, className, variant = "default" 
         className
       )}
       title={!isInLibrary ? "Tambahkan ke library untuk memberi rating" : "Beri rating"}
-      disabled={!isInLibrary}
+      disabled={!mounted || !isInLibrary}
     >
       <Star size={16} weight={userRating ? "fill" : "bold"} />
       <span className="text-sm">{userRating || "Rating"}</span>

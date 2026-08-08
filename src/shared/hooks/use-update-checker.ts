@@ -15,6 +15,9 @@ export function useUpdateChecker(options: UseUpdateCheckerOptions = {}) {
   const minimumCheckIntervalMinutes = useSettingsStore((state) => state.minimumCheckIntervalMinutes);
   const abortControllerRef = useRef<AbortController | null>(null);
 
+  // Stable ref so the mount-only effect doesn't re-fire when caller's options object is recreated
+  const checkOnMountRef = useRef(options.checkOnMount);
+
   const triggerScan = useCallback(async (scanOptions: ScanOptions = {}): Promise<ScanResult> => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -31,9 +34,8 @@ export function useUpdateChecker(options: UseUpdateCheckerOptions = {}) {
 
       const mergedOptions = {
         cooldownMs: safeInterval,
-        ...options,
         ...scanOptions,
-        signal: controller.signal
+        signal: controller.signal,
       };
       const res = await scanLibraryUpdates(mergedOptions);
       setLastScanResult(res);
@@ -41,10 +43,13 @@ export function useUpdateChecker(options: UseUpdateCheckerOptions = {}) {
     } finally {
       setIsScanning(false);
     }
-  }, [options, minimumCheckIntervalMinutes]);
+  // options object removed from deps — only stable scalars here to prevent infinite loop
+  // when callers pass an inline object like { checkOnMount: true } on every render
+  }, [minimumCheckIntervalMinutes]);
 
+  // Run once on mount — reads from ref to avoid triggering on every re-render
   useEffect(() => {
-    if (options.checkOnMount && checkOnAppStart) {
+    if (checkOnMountRef.current && checkOnAppStart) {
       triggerScan({ forceRefresh: false });
     }
     return () => {
@@ -52,7 +57,8 @@ export function useUpdateChecker(options: UseUpdateCheckerOptions = {}) {
         abortControllerRef.current.abort();
       }
     };
-  }, [options.checkOnMount, checkOnAppStart, triggerScan]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // intentionally empty — must only fire once on mount
 
   return {
     isScanning,
