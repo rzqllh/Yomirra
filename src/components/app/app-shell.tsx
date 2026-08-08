@@ -7,6 +7,7 @@ import { NetworkStatus } from "./network-status"
 import { cn } from "@/shared/utils/cn"
 import { useSync } from "@/shared/hooks/use-sync"
 import { useNsfwPatcher } from "@/shared/hooks/use-nsfw-patcher"
+import { useUpdateChecker } from "@/shared/hooks/use-update-checker"
 import { TopNav } from "./top-nav"
 import { CommandMenu } from "./command-menu"
 import { DirectionalTransition } from "@/components/ui/directional-transition"
@@ -17,6 +18,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   
   useSync()
   useNsfwPatcher()
+  // Trigger background chapter scan on app open (respects checkOnAppStart + cooldown settings)
+  useUpdateChecker({ checkOnMount: true })
 
   React.useEffect(() => {
     if (isReader) {

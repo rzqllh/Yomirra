@@ -93,6 +93,7 @@ export default function BookmarkPage() {
   );
 
   const filteredAndSortedLibraryItems = React.useMemo(() => {
+    if (!isMounted) return [];
     let result = [...libraryItems];
 
     result = result.filter((item) => {
@@ -123,7 +124,7 @@ export default function BookmarkPage() {
     });
 
     return result;
-  }, [libraryItems, searchQuery, sortBy, hideNsfw, isFromNsfwSource, isSourceDisabled]);
+  }, [isMounted, libraryItems, searchQuery, sortBy, hideNsfw, isFromNsfwSource, isSourceDisabled]);
 
   // Reset pagination when search or sort changes
   React.useEffect(() => {
