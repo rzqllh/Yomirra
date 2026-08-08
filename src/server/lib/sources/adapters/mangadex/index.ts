@@ -148,13 +148,13 @@ export class MangaDexSource implements MangaSource {
         if (excluded.length > 0) params["excludedTags[]"] = excluded;
       }
       
-      const statusInput = filters["status"] || filters.status;
+      const statusInput = filters["status"];
       if (statusInput) {
         const statuses = Array.isArray(statusInput) ? statusInput : [statusInput];
         params["status[]"] = statuses;
       }
       
-      const sortInput = filters["sort"] || filters.sort;
+      const sortInput = filters["sort"];
       if (sortInput) {
         const sortStr = Array.isArray(sortInput) ? sortInput[0] : sortInput;
         let mdSort = "relevance";
@@ -164,6 +164,16 @@ export class MangaDexSource implements MangaSource {
         else if (sortStr === "title") mdSort = "title";
         
         params[`order[${mdSort}]`] = sortStr === "title" ? "asc" : "desc";
+      }
+    }
+
+    // Guarantee a valid order parameter for MangaDex API if none was set by filters
+    const hasOrderParam = Object.keys(params).some(k => k.startsWith("order["));
+    if (!hasOrderParam) {
+      if (query) {
+        params["order[relevance]"] = "desc";
+      } else {
+        params["order[followedCount]"] = "desc";
       }
     }
 

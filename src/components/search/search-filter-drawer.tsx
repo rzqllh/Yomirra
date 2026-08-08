@@ -26,15 +26,10 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
   const [selectedGenres, setSelectedGenres] = React.useState<string[]>([]);
   const [selectedStatus, setSelectedStatus] = React.useState<string>("");
   const [selectedSort, setSelectedSort] = React.useState<string>("popular");
-  const [selectedSources, setSelectedSources] = React.useState<string[]>([]);
+  const [selectedFormats, setSelectedFormats] = React.useState<string[]>([]);
   const [localSources, setLocalSources] = React.useState<any[]>([]);
 
   React.useEffect(() => {
-    // Set initial filter state
-    if (storeFilters.selectedSources) {
-      setSelectedSources(storeFilters.selectedSources);
-    }
-    
     // Load local sources
     const loadLocal = () => setLocalSources(dynamicSourceRegistry.getAll());
     loadLocal();
@@ -42,24 +37,11 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
     const handleUpdate = () => loadLocal();
     window.addEventListener("sources_updated", handleUpdate);
     return () => window.removeEventListener("sources_updated", handleUpdate);
-  }, [storeFilters.selectedSources]);
-
-  // Sync selected sources with store changes
-  React.useEffect(() => {
-    if (storeFilters.selectedSources && isOpen) {
-      setSelectedSources(storeFilters.selectedSources);
-    }
-  }, [storeFilters.selectedSources, isOpen]);
+  }, []);
 
   const { data: sourcesData } = useQuery({
     queryKey: ["sources"],
     queryFn: () => apiClient.getSources(),
-  });
-
-  const { data: healthStats } = useQuery({
-    queryKey: ["sources-health"],
-    queryFn: () => apiClient.getHealth(),
-    refetchInterval: 60000,
   });
 
   const hideNsfw = useSettingsStore(state => state.hideNsfw);
@@ -76,20 +58,12 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
       if (!s.isInstalled || !s.capabilities.search) return false;
       if (s.isNsfw && hideNsfw) return false;
       return true;
-    }).map(source => {
-      const health = healthStats?.[source.id];
-      if (health) {
-        return {
-          ...source,
-          status: health.status as any,
-        };
-      }
-      return source;
     });
-  }, [sourcesData, localSources, healthStats, hideNsfw]);
+  }, [sourcesData, localSources, hideNsfw]);
 
-  const sourcesToFetch = selectedSources.length > 0 
-    ? searchableSources.filter(s => selectedSources.includes(s.id))
+  const activeSelectedSources = storeFilters.selectedSources || [];
+  const sourcesToFetch = activeSelectedSources.length > 0
+    ? searchableSources.filter(s => activeSelectedSources.includes(s.id))
     : searchableSources;
 
   const filtersQueries = useQueries({
@@ -109,20 +83,16 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
     return mergeFilters(sourceFilters);
   }, [filtersQueries, sourcesToFetch]);
   
-  const [selectedFormats, setSelectedFormats] = React.useState<string[]>([]);
-  
   React.useEffect(() => {
     // Sync filter state from store when drawer opens
     if (isOpen) {
-      setSelectedSources(storeFilters.selectedSources || []);
       setSelectedGenres(storeFilters.genres);
       setSelectedFormats(storeFilters.formats || []);
       setSelectedStatus(storeFilters.status);
       setSelectedSort(storeFilters.sort || "popular");
     }
-  }, [isOpen]); // Intentionally omitting storeFilters from deps to avoid overwriting local changes
+  }, [isOpen]);
 
-  // Pruning is now handled safely at the page level.
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
   };
@@ -139,12 +109,6 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
     );
   };
 
-  const toggleSource = (id: string) => {
-    setSelectedSources(prev => 
-      prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
-    );
-  };
-
   const handleApply = () => {
     storeFilters.applyFilters({
       genres: selectedGenres,
@@ -152,9 +116,6 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
       status: selectedStatus,
       sort: selectedSort
     });
-    if (selectedSources.length > 0) {
-      storeFilters.setSelectedSources(selectedSources);
-    }
     setIsOpen(false);
   };
 
@@ -223,31 +184,6 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
                 </div>
               )}
 
-              {/* Sumber */}
-              {(searchableSources.length > 0) && (
-                <div>
-                  <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Sumber</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {searchableSources.map(source => {
-                      const isSelected = selectedSources.includes(source.id);
-                      const isOffline = source.status === "unavailable";
-                      
-                      return (
-                        <FilterChip
-                          key={source.id}
-                          onClick={() => toggleSource(source.id)}
-                          selected={isSelected}
-                          variant={isSelected ? "accent-subtle" : isOffline ? "offline" : "default"}
-                          showCheck={isSelected}
-                          showDownBadge={isOffline}
-                          label={source.name}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
               {/* Tipe / Format */}
               {dynamicFilters.formats.length > 0 && (
                 <div>
@@ -267,10 +203,10 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
                 </div>
               )}
 
-              {/* Status */}
+              {/* Status Rilis */}
               {dynamicFilters.statuses.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Status</h3>
+                  <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Status Rilis</h3>
                   <div className="flex flex-wrap gap-2">
                     {dynamicFilters.statuses.map(status => (
                       <FilterChip
