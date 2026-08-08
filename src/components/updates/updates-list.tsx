@@ -18,8 +18,11 @@ export function UpdatesList() {
   const { isScanning, triggerScan } = useUpdateChecker();
 
   useEffect(() => {
-    // Mark as seen when the page hydrates/mounts
-    markAllAsSeen();
+    // Mark all as seen when the user *leaves* the page, not when they arrive.
+    // This keeps the badge count visible while they browse the updates list.
+    return () => {
+      markAllAsSeen();
+    };
   }, [markAllAsSeen]);
 
   const groupedUpdates = useMemo(() => {

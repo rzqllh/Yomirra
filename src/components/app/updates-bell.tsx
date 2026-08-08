@@ -9,7 +9,8 @@ import { useMounted } from "@/shared/hooks/use-mounted"
 
 export function UpdatesBell() {
   const mounted = useMounted()
-  const unreadCount = useUpdateStore((state) => state.getUnreadCount())
+  const rawUnread = useUpdateStore((state) => state.getUnreadCount())
+  const unreadCount = typeof rawUnread === "function" ? (rawUnread as () => number)() : (Number(rawUnread) || 0)
 
   // Subscribe to settings stores for updates notification preferences
   useSettingsStore((state) => state.notifyForAllLibraryItems)
