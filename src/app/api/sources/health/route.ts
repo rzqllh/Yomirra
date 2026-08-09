@@ -3,6 +3,8 @@ import { sourceRegistry } from "@/shared/sources/source-registry";
 import type { SourceMetadata } from "@/shared/sources/source-types";
 import { redis } from "@/server/lib/cache/redis";
 
+import { logger } from "@/shared/logger";
+
 export const revalidate = 0; // Disable Next.js cache, we use Redis
 
 const CACHE_KEY = "yomirra:sources:health:v6";
@@ -21,11 +23,11 @@ async function pingSource(source: SourceMetadata) {
     };
   }
 
+  const targetUrl = source.healthCheckUrl || source.baseUrl || "";
+
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 8000);
-
-    const targetUrl = (source as any).healthCheckUrl || source.baseUrl;
 
     const headers: Record<string, string> = {
       "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
@@ -89,14 +91,33 @@ async function pingSource(source: SourceMetadata) {
     };
   } catch (err: any) {
     const isTimeout = err.name === "AbortError" || err.message?.includes("aborted");
+    const errCode = err.code || err.cause?.code;
+
+    // Log internal error details with logger without leaking sensitive headers to public
+    logger.warn("Source health ping failed", {
+      sourceId: source.id,
+      targetUrl,
+      errorName: err.name,
+      errorMessage: err.message,
+      errorCode: errCode,
+      causeMessage: err.cause?.message,
+    });
+
+    let safeMessage = "Gagal menghubungi server.";
+    if (isTimeout) {
+      safeMessage = "Koneksi ke server timeout.";
+    } else if (errCode === "CERT_HAS_EXPIRED" || errCode === "ERR_TLS_CERT_ALTNAME_INVALID") {
+      safeMessage = "Sertifikat SSL/TLS server tidak valid atau kadaluarsa.";
+    } else if (errCode === "ENOTFOUND") {
+      safeMessage = "Domain tidak dapat ditemukan (DNS Error).";
+    }
+
     return {
       id: source.id,
       status: "unavailable",
       latency: "-",
       uptime: "0%",
-      message: isTimeout
-        ? "Koneksi ke server timeout (Fetch Failed)."
-        : `Gagal menghubungi server: ${err.message}`,
+      message: safeMessage,
     };
   }
 }

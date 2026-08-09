@@ -82,6 +82,34 @@ export const sourceRegistry: SourceMetadata[] = [
       detail: true,
       chapters: true,
       pages: true,
+    },
+    healthCheckUrl: "https://api.mangadex.org/manga?limit=1",
+  },
+  {
+    id: "komiku",
+    name: "Komiku",
+    description: "Baca Komik, Manga, Manhwa, dan Manhua Bahasa Indonesia",
+    language: "id",
+    baseUrl: "https://komiku.org",
+    icon: "https://s2.googleusercontent.com/s2/favicons?domain=komiku.org&sz=64",
+    version: "1.0.0",
+    isEnabled: true,
+    isInstalled: true,
+    status: "online",
+    healthStats: {
+      uptime: "99.9%",
+      latency: "169ms",
+      lastChecked: "Baru saja",
+      message: "Server merespons dengan baik."
+    },
+    isNsfw: false,
+    capabilities: {
+      popular: true,
+      latest: true,
+      search: true,
+      detail: true,
+      chapters: true,
+      pages: true,
     }
   }
 ];

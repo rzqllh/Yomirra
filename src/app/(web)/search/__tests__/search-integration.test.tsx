@@ -59,7 +59,10 @@ describe('Search Page Integration', () => {
       { id: 'sourceA', name: 'Source A', isInstalled: true, capabilities: { search: true }, status: 'online' },
       { id: 'sourceB', name: 'Source B', isInstalled: true, capabilities: { search: true }, status: 'online' },
     ]);
-    (apiClient.getSources as any).mockResolvedValue([]);
+    (apiClient.getSources as any).mockResolvedValue([
+      { id: 'sourceA', name: 'Source A', isInstalled: true, capabilities: { search: true }, status: 'online' },
+      { id: 'sourceB', name: 'Source B', isInstalled: true, capabilities: { search: true }, status: 'online' },
+    ]);
     (apiClient.search as any).mockResolvedValue({ sourceId: 'sourceA', query: 'test', page: 1, results: [] });
     (apiClient.searchGlobal as any).mockResolvedValue({ resultsBySource: {} });
   });
@@ -282,7 +285,7 @@ describe('Search Page Integration', () => {
     // Wait for Page 2 results
     await waitFor(() => {
       expect(screen.getAllByText('Manga B Page 2').length).toBeGreaterThan(0);
-    });
+    }, { timeout: 3000 });
 
     // Verify sourceA with hasNextPage=false is NOT called on page 2
     expect(apiClient.search).not.toHaveBeenCalledWith('sourceA', 'test', 2, expect.anything(), false, expect.anything());

@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import SearchPage from '../page';
@@ -56,7 +56,10 @@ describe('Search Page Revamp Unit Tests', () => {
       { id: 'source1', name: 'Shinigami', isInstalled: true, capabilities: { search: true }, status: 'online' },
       { id: 'source2', name: 'Komikindo', isInstalled: true, capabilities: { search: true }, status: 'online' },
     ]);
-    (apiClient.getSources as any).mockResolvedValue([]);
+    (apiClient.getSources as any).mockResolvedValue([
+      { id: 'source1', name: 'Shinigami', isInstalled: true, capabilities: { search: true }, status: 'online' },
+      { id: 'source2', name: 'Komikindo', isInstalled: true, capabilities: { search: true }, status: 'online' },
+    ]);
     (apiClient.getFilters as any).mockResolvedValue({ genres: [], formats: [], statuses: [], sorts: [] });
     (apiClient.search as any).mockResolvedValue({ sourceId: 'source1', query: '', page: 1, results: [] });
   });
@@ -138,6 +141,10 @@ describe('Search Page Revamp Unit Tests', () => {
         </React.Suspense>
       </QueryClientProvider>
     );
+
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 50));
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Shinigami tidak dapat dimuat')).toBeDefined();

@@ -24,10 +24,30 @@ const API_BASE = "https://api.mangadex.org";
 const PAGE_SIZE = 24;
 const CHAPTERS_LIMIT = 500;
 
-/** Throttled fetch wrapper for MangaDex API */
-async function mdFetch<T>(path: string, params?: Record<string, string | string[]>): Promise<T> {
-  await acquireToken();
+const MAX_RETRY_SLEEP_MS = 5000;
+const FALLBACK_RETRY_DELAY_MS = 1000;
 
+export function parseRetryAfter(headerVal: string | null): number {
+  if (!headerVal) return FALLBACK_RETRY_DELAY_MS;
+
+  const trimmed = headerVal.trim();
+  const seconds = parseInt(trimmed, 10);
+  if (!isNaN(seconds) && String(seconds) === trimmed) {
+    const delayMs = seconds * 1000;
+    return Math.min(Math.max(0, delayMs), MAX_RETRY_SLEEP_MS);
+  }
+
+  const dateMs = Date.parse(trimmed);
+  if (!isNaN(dateMs)) {
+    const delayMs = dateMs - Date.now();
+    return Math.min(Math.max(0, delayMs), MAX_RETRY_SLEEP_MS);
+  }
+
+  return FALLBACK_RETRY_DELAY_MS;
+}
+
+/** Throttled fetch wrapper for MangaDex API with bounded 429 retry */
+export async function mdFetch<T>(path: string, params?: Record<string, string | string[]>): Promise<T> {
   const url = new URL(`${API_BASE}${path}`);
   if (params) {
     for (const [key, val] of Object.entries(params)) {
@@ -39,14 +59,27 @@ async function mdFetch<T>(path: string, params?: Record<string, string | string[
     }
   }
 
-  const res = await fetch(url.toString(), {
+  const fullUrl = url.toString();
+  const options: RequestInit = {
     cache: "no-store",
     signal: AbortSignal.timeout(15000),
     headers: { 
       Accept: "application/json",
       "User-Agent": "Yomirra/1.0.0 (https://github.com/rzqllh/Yomirra)"
     },
-  });
+  };
+
+  await acquireToken();
+  let res = await fetch(fullUrl, options);
+
+  if (res.status === 429) {
+    const retryAfterHeader = res.headers ? res.headers.get("retry-after") : null;
+    const sleepMs = parseRetryAfter(retryAfterHeader);
+    await new Promise((r) => setTimeout(r, sleepMs));
+
+    await acquireToken();
+    res = await fetch(fullUrl, options);
+  }
 
   if (!res.ok) {
     throw new Error(`MangaDex API error ${res.status}: ${res.statusText}`);
