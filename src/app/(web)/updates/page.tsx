@@ -31,7 +31,7 @@ export default function UpdatesPage() {
           />
         </div>
 
-        <div className="px-4 pb-6">
+        <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:pt-0 pb-6">
           <UpdatesList />
         </div>
       </YomirraSurface>

@@ -23,7 +23,7 @@ export function HomeView({ children }: HomeViewProps) {
           action={<UpdatesBell />}
         />
         
-        <div className="px-4 pt-2 md:pt-4 md:px-8 pb-4 md:pb-8 max-w-7xl mx-auto flex flex-col gap-7">
+        <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:pt-4 md:px-8 pb-4 md:pb-8 max-w-7xl mx-auto flex flex-col gap-7">
           {/* Unified Desktop Header */}
           <div className="flex flex-col gap-4 relative z-50">
             <DesktopPageTitle 

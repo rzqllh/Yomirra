@@ -87,7 +87,7 @@ export default function SettingsPage() {
         <h1 className="sr-only">Pengaturan Yomirra</h1>
         <YomirraPageHeader title="Pengaturan" variant="transparent" icon={<Gear size={24} weight="duotone" />} />
         <YomirraSurface variant="base" className="flex-1 w-full max-w-7xl mx-auto md:pb-8">
-          <div className="px-4 pt-[calc(var(--safe-top)+24px)] pb-6 md:px-8 md:py-8 space-y-8">
+          <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:pt-8 pb-6 md:px-8 space-y-8">
             
             <DesktopPageTitle 
               title="Pengaturan" 
