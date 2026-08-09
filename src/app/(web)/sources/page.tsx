@@ -97,7 +97,7 @@ export default function SourcesPage() {
     <PullToRefresh onRefresh={handleRefresh}>
       <div className="flex flex-col min-h-screen">
         <YomirraSurface variant="base" className="flex-1 w-full max-w-7xl mx-auto md:pb-8 relative">
-          <div className="px-4 pt-[calc(var(--safe-top)+24px)] md:px-8 pb-4 flex flex-col md:flex-row justify-between md:items-center gap-4">
+          <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:pt-8 md:px-8 pb-4 flex flex-col md:flex-row justify-between md:items-center gap-4">
             <div className="flex-1 w-full">
               <DesktopPageTitle
                 title="Sumber"
