@@ -43,10 +43,12 @@ The project is under active development. Some browser-specific PWA and offline b
 
 | Source | ID | Type | Notes |
 | --- | --- | --- | --- |
-| MangaDex | `mangadex` | API adapter | International open API source |
-| Sample Source | `sample-source` | API adapter | Generic source adapter blueprint |
+| MangaDex | `mangadex` | API adapter | International open API source with bounded HTTP 429 Retry-After handling |
+| Shinigami | `shinigami` | Web scraper | Indonesian webtoon and manhwa source |
+| Komiku | `komiku` | Web scraper | Indonesian webtoon and manga source with signed image proxying |
+| Komikindo | `komikindo` | Web scraper | Indonesian manga source (with stale Redis cache fallback) |
 
-A source can become slow or unavailable independently of Yomirra. The application should degrade gracefully when one source fails.
+A source can become slow or unavailable independently of Yomirra. The application degrades gracefully when one source fails.
 
 ## Technology
 
