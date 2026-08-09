@@ -92,3 +92,8 @@ test-results*.json
 .codex/
 .gemini/
 .antigravity/
+.skills/
+.github/agents/
+.github/hooks/
+.github/skills/
+.vercel
