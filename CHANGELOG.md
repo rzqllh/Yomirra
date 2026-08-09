@@ -8,23 +8,32 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
+- Built-in Komiku source adapter (`komiku.org`) supporting popular, latest, multi-source search, detail, chapters, and reader pages with signed proxy URLs.
+- MangaDex HTTP 429 rate limit hardening with bounded `Retry-After` header parsing (seconds and HTTP-dates), 5,000ms max sleep cap, and process-local token re-acquisition.
 - Update checker and persisted update records.
 - Updates Page and unread navigation badge.
 - Automatic update-check preferences and per-manga mute preference.
 - Collections management and custom reading statuses.
 - Local Library filters by collection and status.
 - Local Backup & Restore with schema V2 supporting updates and collections.
-- Source health endpoint and diagnostics.
+- Source health endpoint and safe normalized diagnostics.
 - GitHub Actions CI workflow.
 - Multi-source Search Page aligned with the Library layout.
 - Independent source selection directly from Search.
 - Per-source filter capability discovery and source-specific search payloads.
 - Dynamic Komikindo filter discovery with Redis caching.
 - Safe filter pruning when the active source set changes.
-- Focused unit and integration coverage for source filters, pruning, page reset, and multi-source search.
+- Focused unit and integration coverage for source filters, pruning, page reset, multi-source search, Komiku adapter, and MangaDex 429 retries (31 test files, 149 tests).
 - Batch selection and deletion support in Download Manager.
 - Canonical `FilterChip` component with explicit `aria-pressed` state.
 - Public project documentation and source-integration guide.
+
+### Fixed
+
+- Normalized `/api/sources/health` public response shapes to prevent raw internal error stacks and headers from leaking.
+- Fixed Komiku lazy-loading cover image extraction by prioritizing `data-src` over `lazy.jpg` placeholder attributes.
+- Fixed Komiku `manga-card` title and link matching across list pages.
+- Corrected MangaDex health target URL to `https://api.mangadex.org/manga?limit=1`.
 
 ### Changed
 

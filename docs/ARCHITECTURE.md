@@ -151,7 +151,9 @@ Server responses use Redis caching (`withCache`):
 
 - **Fresh Hit**: Returns cached JSON payload when TTL is valid.
 - **Cache Miss**: Executes fetcher, calculates expiration, and writes to Redis.
-- **Stale Fallback**: If upstream source fails or times out, returns stale cache entry if available.
+- **Stale Fallback**: If upstream source fails or returns 403/5xx (e.g. Komikindo WAF restriction), returns stale cache entry if available.
+- **Bounded Rate Limit Retries**: MangaDex GET requests honor upstream `Retry-After` headers on `HTTP 429` with a bounded retry (max 1 attempt, 5000ms max sleep cap, process-local token bucket re-acquisition).
+- **Diagnostics Normalization**: `/api/sources/health` returns normalized safe public messages without exposing internal stack traces or raw response headers.
 
 ---
 
