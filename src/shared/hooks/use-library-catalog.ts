@@ -101,24 +101,6 @@ export function useLibraryCatalog() {
 
   const isNsfwFiltered = useSettingsStore(state => state.hideNsfw);
 
-  const GENRES = React.useMemo(() => {
-    const apiGenres = filtersData?.genres || [];
-    const combined = [...apiGenres];
-    selectedGenres.forEach(id => {
-      if (!combined.find(g => g.id === id)) {
-        combined.push({ id, name: id.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase()) });
-      }
-    });
-    excludedGenres.forEach(id => {
-      if (!combined.find(g => g.id === id)) {
-        combined.push({ id, name: id.replace(/-/g, " ").replace(/\b\w/g, l => l.toUpperCase()) });
-      }
-    });
-    return combined;
-  }, [filtersData?.genres, selectedGenres, excludedGenres]);
-
-  const DYNAMIC_FORMATS = filtersData?.formats || FORMATS;
-  const DYNAMIC_STATUSES = filtersData?.statuses || STATUSES;
   const DYNAMIC_SORTS = filtersData?.sorts || [
     { id: "popular", name: "🔥 Populer" },
     { id: "latest", name: "✨ Terbaru" },
