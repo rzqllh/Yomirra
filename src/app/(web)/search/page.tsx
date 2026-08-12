@@ -5,7 +5,7 @@ import { useQuery, useQueries, useQueryClient, keepPreviousData } from "@tanstac
 import { apiClient } from "@/shared/api-client";
 import { MagnifyingGlass, WarningCircle, CheckCircle } from "@phosphor-icons/react/dist/ssr";
 import { SearchResultSkeleton } from "@/components/skeletons/search-result-skeleton";
-import { YomirraPageHeader, DesktopPageTitle } from "@/components/app/header";
+import { PageHeader } from "@/components/app/header";
 import { useSearchParams } from "next/navigation";
 import { ShelfCard } from "@/components/manga/card";
 import { motion, AnimatePresence } from "motion/react";
@@ -40,7 +40,7 @@ export default function SearchPage() {
   return (
     <React.Suspense fallback={
       <main className="min-h-screen bg-surface-base">
-        <YomirraPageHeader title="Pencarian" variant="transparent" icon={<MagnifyingGlass size={24} weight="duotone" />} />
+        <PageHeader title="Pencarian" description="Temukan komik dari berbagai sumber" icon={<MagnifyingGlass size={32} weight="duotone" />} />
         <div className="px-4 py-6">
           <SearchResultSkeleton />
         </div>
@@ -313,20 +313,12 @@ function SearchContent() {
     <main className="min-h-screen bg-surface-base pb-[calc(var(--bottom-nav-height,80px)+24px)]">
       <div className="px-4 max-w-7xl mx-auto space-y-5">
         {/* Document Flow Header */}
-        <div className="pt-[calc(var(--safe-top)+16px)] pb-2 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="text-accent bg-accent/10 p-2 rounded-xl border border-accent/20 shrink-0">
-              <MagnifyingGlass size={24} weight="duotone" />
-            </div>
-            <div>
-              <h1 className="text-xl md:text-2xl font-extrabold text-text-primary tracking-tight">
-                Pencarian
-              </h1>
-              <p className="text-[13px] font-medium text-text-muted/90 mt-0.5">
-                Temukan komik dari berbagai sumber
-              </p>
-            </div>
-          </div>
+        <div className="pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:pt-8">
+          <PageHeader
+            title="Pencarian"
+            description="Temukan komik dari berbagai sumber"
+            icon={<MagnifyingGlass size={32} weight="duotone" />}
+          />
         </div>
 
         {/* Search & Filter Row */}

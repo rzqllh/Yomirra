@@ -282,7 +282,7 @@ export default function BookmarkPage() {
     <>
       <div className="flex flex-col min-h-screen pb-[calc(var(--bottom-nav-height,80px)+24px)]">
         {/* ── Document Flow Header ── */}
-        <div className="px-4 pt-[calc(var(--safe-top)+16px)] md:px-8 md:pt-8">
+        <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:px-8 md:pt-8">
           <PageHeader
             title="Rak Buku"
             description="Bacaan & koleksi kamu"

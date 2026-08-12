@@ -96,9 +96,9 @@ export function PageHeader({
               )
             )}
             <div className="flex items-center gap-2 min-w-0 flex-1">
-              <h1 className="text-xl font-extrabold tracking-tight text-text-primary truncate">
+              <p className="text-xl font-extrabold tracking-tight text-text-primary truncate">
                 {title}
-              </h1>
+              </p>
               {meta && <div className="shrink-0 text-sm font-semibold text-text-muted">{meta}</div>}
             </div>
           </div>
