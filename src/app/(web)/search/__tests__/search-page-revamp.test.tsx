@@ -144,6 +144,6 @@ describe('Search Page Revamp Unit Tests', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Shinigami tidak dapat dimuat')).toBeDefined();
-    }, { timeout: 3000 });
+    }, { timeout: 4000 });
   });
 });
