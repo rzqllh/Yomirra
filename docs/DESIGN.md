@@ -1,279 +1,206 @@
-# DESIGN — Yomirra Design System
+# Design — Yomirra Design System
 
-> **Palette:** Midnight Indigo | **Mode:** Dark-first, Light available | **File:** `src/app/(web)/globals.css`
+> **Palette:** Midnight Indigo · **Mode:** Dark-first, light available · **Token source:** `src/app/(web)/globals.css`
 
----
+This document describes the current public design contract. `globals.css` is the source of truth for token values; canonical components are the source of truth for component-specific spacing and behavior.
 
-## 1. Design Philosophy
+## 1. Design Principles
 
-- **Dark-first:** The primary experience is dark mode. Light mode is a secondary, fully-supported option.
-- **Webtoon-first:** Every layout decision optimizes for vertical content consumption on mobile.
-- **Glass morphism accents:** Translucent surfaces and blur effects for overlays, not primary content areas.
-- **Apple HIG influence:** Minimum 44×44px touch targets, safe area insets, spring-based animations.
-- **Token-only styling:** No raw hex values in component code. Always use CSS custom properties via Tailwind token classes.
-
----
+- **Mobile-first:** primary interaction and content consumption are optimized for mobile without treating desktop as an afterthought.
+- **Dark-first:** dark mode is the primary visual direction; light mode is supported through the same semantic tokens.
+- **Webtoon-aware:** reading and manga discovery prioritize vertical consumption, clear hierarchy, and stable media layouts.
+- **Glass as an accent:** translucent surfaces are appropriate for navigation, overlays, and selected floating surfaces rather than every content container.
+- **Accessible interaction:** interactive controls should preserve readable contrast, semantic state, keyboard behavior where relevant, and practical touch targets.
+- **Token-led styling:** prefer semantic surface/text/border/accent classes over raw color values in feature code.
+- **Canonical seams:** repeated UI chrome belongs in shared components; feature-specific structure remains in the owning feature.
 
 ## 2. Color Tokens
 
-All tokens are defined in `globals.css` and mapped to Tailwind via `@theme {}`.
+### Dark theme
 
-### Surface Tokens
+| Token | Current value | Typical use |
+| --- | --- | --- |
+| `--surface-base` | `#000000` | deepest application background |
+| `--surface-raised` | `#0A0A14` | raised content surface |
+| `--surface-overlay` | `#111122` | elevated panels/overlays |
+| `--surface-muted` | `#1A1A2E` | muted controls and skeletons |
+| `--surface-hover` | `#1F1F3D` | interaction hover state |
+| `--surface-glass` | `rgba(17, 17, 34, 0.70)` | translucent navigation/overlay surfaces |
+| `--text-primary` | `#FDFDFD` | primary text |
+| `--text-secondary` | `#D1D1D6` | secondary text |
+| `--text-muted` | `#98989D` | metadata/captions |
+| `--color-accent` | `#6C6AFA` | primary indigo accent |
+| `--color-accent-dim` | `rgba(108, 106, 250, 0.15)` | subtle accent fill |
+| `--color-accent-hover` | `#8A88FF` | accent hover state |
+| `--color-semantic-success` | `#32D74B` | success |
+| `--color-semantic-warning` | `#FF9F0A` | warning |
+| `--color-semantic-error` | `#FF453A` | error/destructive |
+| `--color-semantic-info` | `#6C6AFA` | informational accent |
 
-| Token Class | CSS Variable | Dark Value | Light Value | Usage |
-|-------------|-------------|------------|-------------|-------|
-| `bg-surface-base` | `--surface-base` | `#05050A` | `#FAFAFC` | Root background, deepest layer |
-| `bg-surface-raised` | `--surface-raised` | `#0A0A14` | `#F2F2F7` | Raised cards, panels |
-| `bg-surface-overlay` | `--surface-overlay` | `#111122` | `#FFFFFF` | Elevated panels, sheets |
-| `bg-surface-muted` | `--surface-muted` | `#1A1A2E` | `#EAEAEB` | Muted states, skeleton |
-| `bg-surface-hover` | `--surface-hover` | `#1F1F3D` | `#E5E5EA` | Hover interaction state |
-| `bg-surface-glass` | `--surface-glass` | `rgba(17,17,34,0.65)` | `rgba(255,255,255,0.65)` | Translucent glass panels |
+### Light theme
 
-### Text Tokens
+| Token | Current value |
+| --- | --- |
+| `--surface-base` | `#FAFAFC` |
+| `--surface-raised` | `#F2F2F7` |
+| `--surface-overlay` | `#FFFFFF` |
+| `--surface-muted` | `#EAEAEB` |
+| `--surface-hover` | `#E5E5EA` |
+| `--surface-glass` | `rgba(255, 255, 255, 0.70)` |
+| `--text-primary` | `#1C1C1E` |
+| `--text-secondary` | `#3A3A3C` |
+| `--text-muted` | `#6C6C70` |
+| `--color-accent` | `#5856D6` |
+| `--color-accent-hover` | `#4644B8` |
 
-| Token Class | CSS Variable | Dark Value | Light Value | Usage |
-|-------------|-------------|------------|-------------|-------|
-| `text-text-primary` | `--text-primary` | `#FDFDFD` | `#1C1C1E` | Primary body text, headings |
-| `text-text-secondary` | `--text-secondary` | `#D1D1D6` | `#3A3A3C` | Secondary labels |
-| `text-text-muted` | `--text-muted` | `#98989D` | `#6C6C70` | Captions, metadata |
-| `text-text-on-accent` | `--text-on-accent` | `#FFFFFF` | `#FFFFFF` | Text on accent background |
+### Border tokens
 
-### Border Tokens
+| Token | Dark value | Light value |
+| --- | --- | --- |
+| `--border-subtle` | `rgba(94, 92, 230, 0.2)` | `rgba(88, 86, 214, 0.15)` |
+| `--border-default` | `rgba(94, 92, 230, 0.4)` | `rgba(88, 86, 214, 0.3)` |
+| `--border-strong` | `rgba(94, 92, 230, 0.6)` | `rgba(88, 86, 214, 0.4)` |
+| `--border-glass` | `rgba(255,255,255,0.08)` | `rgba(0,0,0,0.05)` |
 
-| Token Class | CSS Variable | Dark Value | Light Value |
-|-------------|-------------|------------|-------------|
-| `border-border-subtle` | `--border-subtle` | `rgba(94,92,230,0.2)` | `rgba(88,86,214,0.15)` |
-| `border-border-default` | `--border-default` | `rgba(94,92,230,0.4)` | `rgba(88,86,214,0.3)` |
-| `border-border-strong` | `--border-strong` | `rgba(94,92,230,0.6)` | `rgba(88,86,214,0.4)` |
-| `border-border-glass` | `--border-glass` | `rgba(255,255,255,0.08)` | `rgba(0,0,0,0.05)` |
-
-### Accent Tokens
-
-| Token Class | CSS Variable | Dark Value | Light Value | Usage |
-|-------------|-------------|------------|-------------|-------|
-| `bg-accent` / `text-accent` | `--color-accent` | `#5E5CE6` | `#5856D6` | Primary interactive accent (Indigo) |
-| `bg-accent-dim` | `--color-accent-dim` | `rgba(94,92,230,0.15)` | `rgba(88,86,214,0.1)` | Subtle accent fill |
-| `text-accent-hover` | `--color-accent-hover` | `#7D7AFF` | `#4644B8` | Accent hover state |
-
-### Semantic Tokens
-
-| Token Class | Dark Value | Light Value | Usage |
-|-------------|------------|-------------|-------|
-| `text-semantic-success` | `#32D74B` | `#34C759` | Success states |
-| `text-semantic-warning` | `#FF9F0A` | `#FF9500` | Warnings, star ratings |
-| `text-semantic-error` | `#FF453A` | `#FF3B30` | Errors, destructive actions |
-| `text-semantic-info` | `#5E5CE6` | `#5856D6` | Info (same as accent) |
-
-### Media Overlay Tokens (Theme-Independent, Always Dark)
-
-| Token | Value | Usage |
-|-------|-------|-------|
-| `--media-overlay-strong` | `rgba(5,5,10,0.92)` | Full overlay on cover images |
-| `--media-overlay-mid` | `rgba(5,5,10,0.58)` | Partial overlay for readability |
-| `--media-overlay-soft` | `rgba(5,5,10,0.12)` | Subtle tint |
-| `text-media-foreground` | `#F2F2F7` | Text on top of manga covers |
-| `text-media-muted` | `rgba(242,242,247,0.78)` | Secondary text on covers |
-
----
+Use the Tailwind mappings (`bg-surface-*`, `text-text-*`, `border-border-*`, `text-accent`, etc.) rather than hard-coding these values in components.
 
 ## 3. Typography
 
-### Font Family
-**Plus Jakarta Sans** — Primary typeface (all weights)
-**JetBrains Mono** — Code/monospace only (`font-mono`)
+Primary UI typography is Plus Jakarta Sans; `font-mono` maps to JetBrains Mono/Fira Code fallback for code-like content.
 
-```css
-/* In layout.tsx — ensure these fonts are loaded */
-/* Plus Jakarta Sans: weights 400, 500, 600, 700, 800 */
+The current custom Tailwind type scale is:
+
+| Class | Size | Line height | Weight |
+| --- | ---: | ---: | ---: |
+| `text-2xs` | 10px | 1.4 | 500 |
+| `text-xs` | 12px | 1.45 | 400 |
+| `text-sm` | 14px | 1.5 | 400 |
+| `text-base` | 16px | 1.6 | 400 |
+| `text-md` | 18px | 1.4 | 500 |
+| `text-lg` | 20px | 1.35 | 600 |
+| `text-xl` | 24px | 1.25 | 700 |
+| `text-2xl` | 28px | 1.15 | 700 |
+
+Component code can still use standard Tailwind sizes where the canonical component already establishes them. Do not duplicate a component solely to force a slightly different type size.
+
+## 4. Spacing and Radius
+
+The project exposes a 4px-based spacing scale through `@theme` (`1`, `2`, `3`, `4`, `5`, `6`, `8`, `10`, `12`, `16`) and radius tokens from 4px through 24px plus full pills.
+
+Common intent:
+
+- `rounded-sm` / `rounded-md`: compact controls and cards;
+- `rounded-lg`: larger cards/panels;
+- `rounded-xl`: prominent drawers/modals;
+- `rounded-full`: pills and circular actions.
+
+Canonical components own their internal spacing/radius. Consumer `className` should usually position the component rather than restyle its entire internal contract.
+
+## 5. Layout and Safe Areas
+
+Current layout tokens include:
+
+| Token | Purpose |
+| --- | --- |
+| `--safe-top` | `env(safe-area-inset-top)` |
+| `--safe-bottom` | `env(safe-area-inset-bottom)` |
+| `--mobile-header-height` | 56px mobile header baseline |
+| `--bottom-nav-content-height` | 64px bottom navigation content |
+| `--bottom-nav-height` | bottom navigation + safe bottom |
+| `--page-bottom-safe` | bottom navigation + content clearance |
+
+For normal pages using the fixed mobile `PageHeader`, the established content offset pattern is:
+
+```text
+pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)]
+md:pt-8
 ```
 
-### Type Scale (defined in `@theme`)
+Do not add a second top offset inside a feature when its parent already accounts for the fixed header.
 
-| Class | Size | Line Height | Weight | Letter Spacing | Usage |
-|-------|------|------------|--------|----------------|-------|
-| `text-2xs` | 10px | 1.4 | 500 | +0.02em | Labels, badges (tiny) |
-| `text-xs` | 12px | 1.45 | 400 | +0.01em | Captions, metadata |
-| `text-sm` | 13px | 1.5 | 400 | — | Secondary body text |
-| `text-base` | 15px | 1.6 | 400 | — | Primary body text |
-| `text-md` | 16px | 1.4 | 500 | -0.01em | Medium emphasis |
-| `text-lg` | 18px | 1.35 | 600 | -0.02em | Section headings |
-| `text-xl` | 22px | 1.25 | 700 | -0.03em | Page titles |
-| `text-2xl` | 28px | 1.15 | 700 | -0.04em | Hero headings |
+## 6. PageHeader Pattern
 
----
+`PageHeader` is the visual contract for section/destination pages:
 
-## 4. Spacing Scale
+- mobile: fixed top navigation header, optionally transparent or glass based on scroll/variant;
+- desktop: raised hero/section title container;
+- supports icon, description, actions, metadata, and optional back navigation.
 
-| Token | Value | Tailwind class |
-|-------|-------|----------------|
-| `--spacing-1` | 4px | `p-1`, `m-1`, `gap-1` |
-| `--spacing-2` | 8px | `p-2`, `m-2`, `gap-2` |
-| `--spacing-3` | 12px | `p-3`, `m-3`, `gap-3` |
-| `--spacing-4` | 16px | `p-4`, `m-4`, `gap-4` |
-| `--spacing-5` | 20px | `p-5`, `m-5`, `gap-5` |
-| `--spacing-6` | 24px | `p-6`, `m-6`, `gap-6` |
-| `--spacing-8` | 32px | `p-8`, `m-8`, `gap-8` |
-| `--spacing-10` | 40px | `p-10`, `m-10`, `gap-10` |
-| `--spacing-12` | 48px | `p-12`, `m-12`, `gap-12` |
-| `--spacing-16` | 64px | `p-16`, `m-16`, `gap-16` |
+Feature routes should compose `PageHeader` rather than maintaining separate mobile and desktop title implementations.
 
----
+## 7. Manga Grid
 
-## 5. Border Radius Scale
+The canonical `MangaGrid` responsive layout currently uses:
 
-| Class | Value | Usage |
-|-------|-------|-------|
-| `rounded-xs` → `--radius-xs` | 4px | Badges, tiny chips |
-| `rounded-sm` → `--radius-sm` | 8px | Buttons (default), inputs |
-| `rounded-md` → `--radius-md` | 12px | Cards, panels |
-| `rounded-lg` → `--radius-lg` | 16px | Bottom sheets, large cards |
-| `rounded-xl` → `--radius-xl` | 24px | Drawers, modals |
-| `rounded-full` | 9999px | Pills, avatars, icon buttons |
-
----
-
-## 6. Z-Index Scale
-
-| Token | Value | Tailwind class | Usage |
-|-------|-------|----------------|-------|
-| `--z-base` | 0 | `z-0` | Default flow |
-| `--z-raised` | 10 | `z-[10]` | Raised cards |
-| `--z-dropdown` | 40 | `z-[40]` | Dropdowns, popovers |
-| `--z-sticky` | 50 | `z-[50]` | Sticky headers |
-| `--z-drawer` | 60 | `z-[60]` | Bottom sheets, drawers |
-| `--z-overlay` | 70 | `z-[70]` | Overlays |
-| `--z-toast` | 80 | `z-[80]` | Toasts (Sonner) |
-
-**Never** use arbitrary z-index values outside this scale.
-
----
-
-## 7. Shadow Scale
-
-| Token | Usage |
-|-------|-------|
-| `shadow-none` | No shadow |
-| `shadow-sm` | Subtle depth, small cards |
-| `shadow-md` | Cards, floating elements |
-| `shadow-lg` | Sheets, modals |
-| `shadow-heavy` | Docks, heavy overlays |
-| `shadow-glass` | Glass panels (includes inset rim light) |
-| `shadow-reader` | Reader page images |
-
----
-
-## 8. Layout Constants
-
-| Token | Value | Usage |
-|-------|-------|-------|
-| `--mobile-header-height` | 56px | Top navigation height |
-| `--bottom-nav-content-height` | 64px | Bottom dock content area |
-| `--bottom-nav-height` | content + safe-bottom | Full bottom nav height |
-| `--page-bottom-safe` | bottom-nav + 16px | Minimum bottom padding for content |
-| `--safe-top` | `env(safe-area-inset-top)` | iOS notch clearance |
-| `--safe-bottom` | `env(safe-area-inset-bottom)` | iOS home indicator clearance |
-
----
-
-## 9. Motion System
-
-### Duration Tokens (`src/shared/lib/motion/tokens.ts`)
-
-```typescript
-export const motionDuration = {
-  instant: 0.08,   // immediate feedback
-  fast:    0.14,   // micro-interactions
-  normal:  0.20,   // standard transitions
-  slow:    0.32,   // deliberate movements
-  page:    0.45,   // page-level transitions
-};
+```text
+base: 2 columns
+sm:   3 columns
+md:   4 columns
+lg:   5 columns
+xl:   6 columns
 ```
 
-### Easing Tokens
+`MangaGridSkeleton` consumes the same `MANGA_GRID_CLASS`. This keeps breakpoint behavior aligned between loading and loaded grids and reduces one class of layout reflow; it is not a claim that page CLS is universally zero.
 
-```typescript
-export const motionEase = {
-  standard: [0.22, 1, 0.36, 1],    // default
-  softOut:  [0.16, 1, 0.3, 1],     // soft deceleration
-  sharp:    [0.4, 0, 0.2, 1],      // quick in, quick out
-};
+## 8. Overlay Families
+
+Yomirra intentionally has more than one overlay implementation because their interaction contracts differ.
+
+### Filter drawers
+
+Search and Library filters use Vaul through `FilterDrawerShell`. The shell owns the mobile bottom-sheet chrome, overlay, scrolling, Reset/Apply layout, and safe-area footer.
+
+### Reader panels
+
+Reader chapter/settings overlays use Motion through `ReaderPanelShell` with reader-specific `bottom-dialog` and `side-panel` modes.
+
+Do not combine these families into a universal drawer abstraction just to reduce component count.
+
+## 9. Z-Index Ownership
+
+The global token scale exposes base, raised, dropdown, sticky, drawer, overlay, and toast layers. Canonical shells may own specialized layering internally when required by their established implementation.
+
+Consumers should not override the z-index of `PageHeader`, `FilterDrawerShell`, `Dialog`, or `ReaderPanelShell` casually. If a layering conflict exists, fix it at the canonical shell or token boundary rather than adding competing arbitrary z-index values throughout feature code.
+
+## 10. Motion
+
+Shared motion tokens live in `src/shared/lib/motion/tokens.ts`:
+
+```ts
+motionDuration.instant // 0.08
+motionDuration.fast    // 0.14
+motionDuration.normal  // 0.20
+motionDuration.slow    // 0.32
+motionDuration.page    // 0.45
 ```
 
-### Spring Presets
+Common springs include `transitions.snappy`, `transitions.smooth`, and `transitions.gentle`.
 
-```typescript
-export const transitions = {
-  snappy: { type: "spring", stiffness: 520, damping: 34, mass: 0.7 },
-  smooth: { type: "spring", stiffness: 360, damping: 32, mass: 0.9 },
-  gentle: { duration: 0.22, ease: [0.22, 1, 0.36, 1] },
-};
-```
+Use shared tokens/variants for repeated interaction patterns. A specialized canonical component may own its internal transition (for example `ReaderPanelShell`); consumers should then reuse the shell rather than duplicating or overriding that transition locally.
 
-### Variants (`src/shared/lib/motion/variants.ts`)
+Respect reduced-motion behavior where the feature exposes animation beyond simple CSS state transitions.
 
-```typescript
-variants.pressable  // Card press effect: scale + y lift
-variants.fadeUp     // Entrance from below: opacity + y=8px
-variants.pop        // Pop-in: opacity + scale=0.96
-```
+## 11. Glass Surfaces
 
-### Motion Rules
-
-- **ALWAYS** import tokens from `src/shared/lib/motion/tokens.ts`
-- **ALWAYS** use `variants.pressable` for interactive cards (not `whileHover={{ y: -4 }}` inline)
-- Respect `prefers-reduced-motion` — use `src/shared/hooks/use-safe-motion.ts`
-- Use `animate` prop for state-driven animations, NOT `whileHover` for complex sequences
-- Maximum animation duration for micro-interactions: `motionDuration.normal` (0.2s)
-
----
-
-## 10. Glass Morphism Pattern
-
-Used for: headers, bottom dock, floating buttons, overlays.
+Glass treatment is appropriate for headers, docks, floating controls, and overlays:
 
 ```tsx
-// ✅ Correct glass panel
-<div className="bg-surface-glass backdrop-blur-md border border-border-glass shadow-glass">
-
-// ❌ Wrong — raw values
-<div style={{ background: 'rgba(17,17,34,0.65)', backdropFilter: 'blur(12px)' }}>
+<div className="bg-surface-glass backdrop-blur-md border border-border-glass shadow-glass" />
 ```
 
----
+Prefer semantic tokens over literal `rgba(...)` values in feature components.
 
-## 11. View Transitions
+## 12. Media/Cover Rules
 
-Applied via CSS class names on navigation elements:
+Manga cards use `MangaCover` for normal cover behavior. The primitive owns image fallback/loading policy; the card owns geometry and overlays.
 
-| Class | Effect |
-|-------|--------|
-| `vt-hover` | Manga cover shared element (mobile hover, desktop tap) |
-| `vt-cover-mobile` | Cover transition on mobile only |
-| `vt-cover-desktop` | Cover transition on desktop only |
-| `nav-forward` | Slide in from right |
-| `nav-back` | Slide out to right |
-| `fade-in` / `fade-out` | Opacity transition |
-| `morph` | Shared element morph with blur |
+Use signed image-proxy URLs in source/reader flows that require them. Do not assume every external cover must pass through the same proxy path.
 
-View transition names are set dynamically:
-```tsx
-const safeId = `${sourceId}-${mangaId}`.replace(/[^a-zA-Z0-9-]/g, '-');
-style={{ '--vt-name': `manga-cover-${safeId}` } as React.CSSProperties}
-```
+## 13. Accessibility and Interaction
 
----
-
-## 12. Component Design Tokens (shadcn/ui mapping)
-
-The following CSS vars map Yomirra tokens to shadcn/ui variable names for Radix UI compatibility:
-
-```css
---background: var(--surface-base)
---foreground: var(--text-primary)
---card:       var(--surface-raised)
---primary:    var(--color-accent)
---muted:      var(--surface-muted)
---border:     var(--border-default)
---ring:       var(--color-accent-dim)
---radius:     8px
-```
+- Use semantic controls rather than clickable `div`s.
+- `IconButton` requires an accessible label.
+- Selection/filter pills should expose state (`aria-pressed`) instead of relying on color alone.
+- Keep practical touch targets around 44px for primary mobile controls where the design permits.
+- Preserve Escape/backdrop/close-button behavior of canonical dialogs/panels.
+- Browser smoke tests are required for significant responsive or overlay changes; static type checks cannot verify interaction geometry.

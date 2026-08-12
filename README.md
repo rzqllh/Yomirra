@@ -16,39 +16,36 @@ A mobile-first manga and webtoon reader built as a Progressive Web App.
 
 ## Overview
 
-Yomirra combines discovery, multi-source search, library management, chapter downloads, and a configurable reader in one responsive web application. It is designed for mobile use first, while remaining practical on desktop.
+Yomirra combines discovery, multi-source search, library management, chapter downloads, and a configurable reader in one responsive web application. The project is mobile-first while keeping desktop layouts and keyboard interaction practical.
 
-The project is under active development. Some browser-specific PWA and offline behavior may vary depending on storage limits, service worker support, and source availability.
+The project is under active development. Browser-specific PWA and offline behavior can vary with storage limits, service worker support, and source availability.
 
 ## Highlights
 
-- Multi-source search with source-aware filters.
-- Built-in adapters and customizable source extensions.
-- Optional installable sources through a JSON manifest.
-- Local Library with custom Collections and reading statuses.
-- Library filters based on collections and statuses.
-- Manga detail, chapter list, and image reader flows.
-- Reading history, bookmarks, and per-manga mute preferences.
-- Update checker, Updates Page, unread badge, and automatic update-check preferences.
-- Chapter downloads backed by browser Cache Storage and offline reading.
-- PWA installation and offline-reading workflows.
+- Multi-source search with source-aware filters and partial-failure handling.
+- Built-in adapters plus optional installable sources through a JSON manifest.
+- Local Library with custom Collections, reading statuses, search, sorting, and filtering.
+- Bookmark workspace with reading-history and saved-collection views.
+- Manga detail, chapter list, and configurable reader flows.
+- Reading history, bookmarks, per-manga mute preferences, and update tracking.
+- Chapter downloads backed by browser Cache Storage and offline-reading workflows.
 - Local Backup & Restore with schema V2 and backward compatibility.
-- Firebase authentication and cloud synchronization.
-- Redis-backed server caching with stale-data fallback.
-- Source health diagnostics.
-- GitHub Actions CI workflow.
-- Responsive layouts, keyboard-accessible controls, and theme support.
+- Firebase authentication and cloud synchronization for supported stores.
+- Redis-backed server caching with stale-data fallback where supported.
+- Source health diagnostics and normalized public errors.
+- Canonical responsive UI primitives for headers, filters, manga grids, covers, progress, and reader panels.
+- GitHub Actions CI workflow and Vitest/Testing Library coverage.
 
 ## Built-in Sources
 
 | Source | ID | Type | Notes |
 | --- | --- | --- | --- |
-| MangaDex | `mangadex` | API adapter | International open API source with bounded HTTP 429 Retry-After handling |
+| MangaDex | `mangadex` | API adapter | International API source with bounded HTTP 429 `Retry-After` handling |
 | Shinigami | `shinigami` | Web scraper | Indonesian webtoon and manhwa source |
-| Komiku | `komiku` | Web scraper | Indonesian webtoon and manga source with signed image proxying |
-| Komikindo | `komikindo` | Web scraper | Indonesian manga source (with stale Redis cache fallback) |
+| Komiku | `komiku` | Web scraper | Indonesian webtoon and manga source with signed image proxying where required |
+| Komikindo | `komikindo` | Web scraper | Indonesian manga source with stale Redis cache fallback where available |
 
-A source can become slow or unavailable independently of Yomirra. The application degrades gracefully when one source fails.
+A source can become slow or unavailable independently of Yomirra. Search and source-facing screens are designed to degrade gracefully when one source fails.
 
 ## Technology
 
@@ -64,6 +61,8 @@ A source can become slow or unavailable independently of Yomirra. The applicatio
 | PWA and service worker | Serwist |
 | Testing | Vitest and Testing Library |
 | Package manager | pnpm |
+
+See [Stack](docs/STACK.md) for the package-level source of truth used by the project documentation.
 
 ## Quick Start
 
@@ -107,7 +106,7 @@ Open `http://localhost:3000`.
 | Variable | Purpose |
 | --- | --- |
 | `NEXT_PUBLIC_APP_URL` | Public application origin |
-| `IMAGE_PROXY_SECRET` | Secret used by the signed image proxy |
+| `IMAGE_PROXY_SECRET` | Secret used by signed image-proxy URLs |
 | `NEXT_PUBLIC_FIREBASE_API_KEY` | Firebase browser API key |
 | `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Firebase authentication domain |
 | `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | Firebase project ID |
@@ -134,20 +133,29 @@ pnpm test --run     # Run the test suite once
 ```text
 src/
 ├── app/
-│   ├── (web)/                    # User-facing pages
-│   └── api/sources/              # Source API routes
-├── components/                   # Shared and feature UI
-│   └── updates/                  # Updates page components
+│   ├── (web)/                    # User-facing App Router routes and loading states
+│   └── api/                      # Server API routes and image proxy
+├── components/
+│   ├── app/                      # App shell and canonical PageHeader
+│   ├── ui/                       # Reusable primitives (filters, inputs, progress, dialogs)
+│   ├── manga/                    # MangaCover, MangaGrid, card archetypes, detail UI
+│   ├── library/                  # Library feature view, rails, toolbar, results
+│   ├── bookmark/                 # Reading/collection tabs and selection UI
+│   ├── search/                   # Search feature view, source rail, results, filters
+│   ├── reader/                   # Reader UI and ReaderPanelShell
+│   └── skeletons/                # Loading-state components
 ├── server/
-│   └── lib/sources/
-│       └── adapters/             # Built-in source adapters
+│   └── lib/sources/              # Source manager and built-in adapters
 └── shared/
-    ├── lib/                      # Backup engine, update checker, etc.
+    ├── hooks/                    # Feature/controller hooks and shared hooks
+    ├── lib/                      # Backup engine, update checker, motion, routes, etc.
     ├── sources/                  # Source contracts and dynamic registry
-    ├── store/                    # Zustand stores (Collection, Update, etc.)
-    ├── types/                    # Collection types, Update schema, Backup schema
-    └── hooks/                    # Shared React hooks
+    ├── store/                    # Zustand stores
+    ├── types/                    # Shared schemas and domain types
+    └── utils/                    # Pure utilities
 ```
+
+Complex client routes generally follow a thin route entrypoint → feature view → controller hook pattern. See [Architecture](docs/ARCHITECTURE.md) for the current boundaries.
 
 ## Adding a Source
 
@@ -161,18 +169,22 @@ Read [Adding a Source](docs/ADDING_A_SOURCE.md) before implementing one.
 ## Documentation
 
 - [Documentation index](docs/README.md)
-- [Architecture overview](docs/ARCHITECTURE.md)
+- [Architecture](docs/ARCHITECTURE.md)
+- [Component conventions](docs/COMPONENTS.md)
+- [Design system](docs/DESIGN.md)
+- [Technology stack](docs/STACK.md)
+- [Testing conventions](docs/TESTING.md)
 - [Adding a source](docs/ADDING_A_SOURCE.md)
+- [Schema notes](docs/SCHEMA.md)
 - [Contributing](CONTRIBUTING.md)
 - [Changelog](CHANGELOG.md)
 - [Security policy](SECURITY.md)
-- [Code of conduct](CODE_OF_CONDUCT.md)
 
-The repository may also contain deeper implementation notes under `docs/`. Public documentation should describe verified behavior; experimental or unresolved behavior should be labeled clearly.
+Public documentation describes verified repository behavior. When documentation and implementation disagree, current code and configuration are the source of truth and the documentation should be corrected in the same change.
 
 ## Contributing
 
-Small, focused pull requests are preferred. Do not combine source adapters, UI redesigns, state migrations, and unrelated fixes in one change. See [CONTRIBUTING.md](CONTRIBUTING.md).
+Small, focused pull requests are preferred. Reuse canonical components and preserve established feature boundaries instead of introducing parallel UI implementations. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Security
 
