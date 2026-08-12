@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { DesktopPageTitle } from "@/components/app/header";
+import { PageHeader } from "@/components/app/header";
 import { Fire } from "@phosphor-icons/react/dist/ssr";
 import { sourceRegistry } from "@/shared/sources/source-registry";
 import { Suspense } from "react";
@@ -79,13 +79,11 @@ export default async function PopularPage() {
   return (
     <main className="min-h-screen bg-surface-base">
       <div className="px-4 pt-[calc(var(--safe-top)+24px)] pb-6 max-w-7xl mx-auto">
-        <div className="mb-8">
-          <DesktopPageTitle 
-            title="Manga Populer" 
-            description="Manga, Manhwa, dan Manhua paling populer saat ini."
-            icon={<Fire size={32} weight="duotone" />}
-          />
-        </div>
+        <PageHeader 
+          title="Manga Populer" 
+          description="Manga, Manhwa, dan Manhua paling populer saat ini."
+          icon={<Fire size={32} weight="duotone" />}
+        />
         
         {activeSources.map(source => (
           <Suspense key={source.id} fallback={<SourceFeedSkeleton />}>

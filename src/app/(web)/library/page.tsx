@@ -47,6 +47,7 @@ import { useCollectionStore } from "@/shared/store/collection-store";
 import { MangaKey } from "@/shared/types/collection";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { YomirraSurface } from "@/components/ui/layout";
+import { PageHeader } from "@/components/app/header";
 import { LibraryFilterDrawer } from "@/components/library/library-filter-drawer";
 import { CustomSelect } from "@/components/ui/custom-select";
 
@@ -374,19 +375,12 @@ function LibraryContent() {
         <div className="px-4 pt-[calc(var(--safe-top)+16px)] md:pt-[calc(var(--safe-top)+24px)] pb-6 md:px-8 md:py-8">
           
           {/* 1. Header Section */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="shrink-0 p-2.5 md:p-3 bg-surface-base rounded-xl shadow-sm border border-border-default/50 text-accent">
-                <Books size={24} className="md:w-8 md:h-8" weight="duotone" />
-              </div>
-              <h2 className="text-2xl md:text-3xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-text-primary to-text-secondary">
-                Library
-              </h2>
-            </div>
-            <div className="text-sm font-bold text-text-muted">
-              {totalLibraryCount} judul
-            </div>
-          </div>
+          <PageHeader
+            title="Library"
+            description="Koleksi komik dan riwayat bacaan favoritmu."
+            icon={<Books size={32} weight="duotone" />}
+            meta={<span className="text-sm font-bold text-text-muted">{totalLibraryCount} judul</span>}
+          />
 
           {/* 2. Search & Filter Row */}
           <div className="flex items-center gap-3 mt-6 md:mt-7">

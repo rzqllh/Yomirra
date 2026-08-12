@@ -18,7 +18,7 @@ import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { DirectionalTransition } from "@/components/ui/directional-transition";
 import { YomirraSurface } from "@/components/ui/layout";
-import { YomirraPageHeader, DesktopPageTitle } from "@/components/app/header";
+import { PageHeader } from "@/components/app/header";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Gear } from "@phosphor-icons/react/dist/ssr";
 import { toast } from "sonner";
@@ -85,11 +85,9 @@ export default function SettingsPage() {
     <>
       <div className="flex flex-col min-h-screen">
         <h1 className="sr-only">Pengaturan Yomirra</h1>
-        <YomirraPageHeader title="Pengaturan" variant="transparent" icon={<Gear size={24} weight="duotone" />} />
         <YomirraSurface variant="base" className="flex-1 w-full max-w-7xl mx-auto md:pb-8">
           <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:pt-8 pb-6 md:px-8 space-y-8">
-            
-            <DesktopPageTitle 
+            <PageHeader 
               title="Pengaturan" 
               description="Sesuaikan preferensi aplikasi sesuai keinginanmu."
               icon={<Gear size={32} weight="duotone" />}

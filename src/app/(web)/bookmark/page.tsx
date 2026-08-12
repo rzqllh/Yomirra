@@ -33,6 +33,7 @@ import { CustomSelect } from "@/components/ui/custom-select";
 import { cn } from "@/shared/utils/cn";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useNsfwSourceIds } from "@/shared/hooks/use-nsfw-source-ids";
+import { PageHeader } from "@/components/app/header";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
@@ -281,20 +282,12 @@ export default function BookmarkPage() {
     <>
       <div className="flex flex-col min-h-screen pb-[calc(var(--bottom-nav-height,80px)+24px)]">
         {/* ── Document Flow Header ── */}
-        <div className="px-4 pt-[calc(var(--safe-top)+16px)] pb-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="text-accent bg-accent/10 p-2 rounded-xl border border-accent/20 shrink-0">
-              <BookBookmark size={24} weight="duotone" />
-            </div>
-            <div>
-              <h1 className="text-xl md:text-2xl font-extrabold text-text-primary tracking-tight">
-                Rak Buku
-              </h1>
-              <p className="text-[13px] font-medium text-text-muted/90 mt-0.5">
-                Bacaan & koleksi kamu
-              </p>
-            </div>
-          </div>
+        <div className="px-4 pt-[calc(var(--safe-top)+16px)] md:px-8 md:pt-8">
+          <PageHeader
+            title="Rak Buku"
+            description="Bacaan & koleksi kamu"
+            icon={<BookBookmark size={32} weight="duotone" />}
+          />
         </div>
 
         {/* ── Segmented Control ── */}
