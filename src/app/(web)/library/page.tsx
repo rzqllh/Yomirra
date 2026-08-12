@@ -87,10 +87,17 @@ function LibraryContent() {
   
 
 
-  // Sync initial URL params if any
+  // Sync initial URL params or reset on page reload
   React.useEffect(() => {
-    if (genreParams.length > 0 && selectedGenres.length === 0 && excludedGenres.length === 0) {
-      filterStore.setFilters({ selectedGenres: genreParams });
+    if (typeof window !== "undefined") {
+      const nav = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
+      if (nav?.type === "reload") {
+        filterStore.resetFilters();
+        setSearchInput("");
+        setQuery("");
+      } else if (genreParams.length > 0 && selectedGenres.length === 0 && excludedGenres.length === 0) {
+        filterStore.setFilters({ selectedGenres: genreParams });
+      }
     }
   }, []);
   
@@ -372,7 +379,7 @@ function LibraryContent() {
     <div className="flex flex-col min-h-screen">
       <h1 className="sr-only">Library Yomirra</h1>
       <YomirraSurface variant="base" className="flex-1 w-full max-w-7xl mx-auto md:pb-8">
-        <div className="px-4 pt-[calc(var(--safe-top)+16px)] md:pt-[calc(var(--safe-top)+24px)] pb-6 md:px-8 md:py-8">
+        <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:pt-8 md:px-8 md:py-8">
           
           {/* 1. Header Section */}
           <PageHeader

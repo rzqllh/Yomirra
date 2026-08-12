@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
 
 interface LibraryFilterState {
   selectedGenres: string[];
@@ -16,6 +16,7 @@ interface LibraryFilterState {
   resetFilters: () => void;
 }
 
+// ponytail: use sessionStorage so filters clear on new session/tab and can be reset on refresh, but persist during back navigation from manga detail
 export const useLibraryFilterStore = create<LibraryFilterState>()(
   persist(
     (set) => ({
@@ -43,6 +44,7 @@ export const useLibraryFilterStore = create<LibraryFilterState>()(
     }),
     {
       name: "yomirra-library-filters",
+      storage: createJSONStorage(() => sessionStorage),
     }
   )
 );
