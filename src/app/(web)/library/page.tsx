@@ -22,6 +22,7 @@ import {
 } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/states/empty-state";
 import { Button } from "@/components/ui/button";
+import { FilterChip } from "@/components/ui/filter-chip";
 import { cn } from "@/shared/utils/cn";
 import {
   Pagination,
@@ -415,7 +416,7 @@ function LibraryContent() {
 
           {/* 3. Quick Sort & Reading Status Row */}
           <div className="flex items-center mt-1 -mx-4 px-4 md:mx-0 md:px-0">
-            <div className="shrink-0 flex items-center z-50">
+            <div className="shrink-0 flex items-center">
               <CustomSelect
                 value={sort}
                 onChange={(v) => handleTabChange(v)}
@@ -441,7 +442,7 @@ function LibraryContent() {
                 : selectedReadingStatuses.includes(status.id);
 
               return (
-                <button
+                <FilterChip
                   key={status.id}
                   onClick={() => {
                     setPage(1);
@@ -451,16 +452,11 @@ function LibraryContent() {
                       filterStore.setFilters({ selectedReadingStatuses: [status.id] });
                     }
                   }}
-                  aria-pressed={isSelected}
-                  className={cn(
-                    "shrink-0 h-[36px] px-4 rounded-full text-[13px] font-bold transition-all whitespace-nowrap active:scale-[0.98]",
-                    isSelected
-                      ? "bg-accent text-white shadow-[0_0_12px_rgba(94,92,230,0.3)] border border-transparent"
-                      : "bg-surface-raised text-text-secondary border border-border-subtle hover:border-border-strong"
-                  )}
-                >
-                  {status.label}
-                </button>
+                  selected={isSelected}
+                  variant={isSelected ? "accent-solid" : "default"}
+                  label={status.label}
+                  className="shrink-0 h-[36px] px-4 text-[13px]"
+                />
               );
             })}
           </div>
@@ -488,48 +484,46 @@ function LibraryContent() {
 
                   return (
                     <>
-                      <button
+                      <FilterChip
                         onClick={() => {
                           setPage(1);
                           filterStore.setFilters({ selectedCollections: [] });
                         }}
-                        aria-pressed={selectedCollections.length === 0}
-                        className={cn(
-                          "shrink-0 h-[36px] px-4 rounded-full text-[13px] font-bold transition-all whitespace-nowrap active:scale-[0.98] flex items-center gap-2",
-                          selectedCollections.length === 0
-                            ? "bg-accent text-white shadow-[0_0_12px_rgba(94,92,230,0.3)] border border-transparent"
-                            : "bg-surface-raised text-text-secondary border border-border-subtle hover:border-border-strong"
-                        )}
-                      >
-                        Semua
-                        <span className={cn("text-[11px] px-1.5 py-0.5 rounded-md", selectedCollections.length === 0 ? "bg-white/20" : "bg-border-subtle/50 text-text-muted")}>
-                          {totalSemua}
-                        </span>
-                      </button>
+                        selected={selectedCollections.length === 0}
+                        variant={selectedCollections.length === 0 ? "accent-solid" : "default"}
+                        className="shrink-0 h-[36px] px-4 text-[13px]"
+                        label={
+                          <>
+                            Semua
+                            <span className={cn("text-[11px] px-1.5 py-0.5 rounded-md", selectedCollections.length === 0 ? "bg-white/20 text-white" : "bg-border-subtle/50 text-text-muted")}>
+                              {totalSemua}
+                            </span>
+                          </>
+                        }
+                      />
 
                       {collections.map(c => {
                         const isSelected = selectedCollections.includes(c.id);
                         const count = getCollectionCount(c.id);
                         return (
-                          <button
+                          <FilterChip
                             key={c.id}
                             onClick={() => {
                               setPage(1);
                               filterStore.setFilters({ selectedCollections: [c.id] });
                             }}
-                            aria-pressed={isSelected}
-                            className={cn(
-                              "shrink-0 h-[36px] px-4 rounded-full text-[13px] font-bold transition-all whitespace-nowrap active:scale-[0.98] flex items-center gap-2",
-                              isSelected
-                                ? "bg-accent text-white shadow-[0_0_12px_rgba(94,92,230,0.3)] border border-transparent"
-                                : "bg-surface-raised text-text-secondary border border-border-subtle hover:border-border-strong"
-                            )}
-                          >
-                            {c.name}
-                            <span className={cn("text-[11px] px-1.5 py-0.5 rounded-md", isSelected ? "bg-white/20" : "bg-border-subtle/50 text-text-muted")}>
-                              {count}
-                            </span>
-                          </button>
+                            selected={isSelected}
+                            variant={isSelected ? "accent-solid" : "default"}
+                            className="shrink-0 h-[36px] px-4 text-[13px]"
+                            label={
+                              <>
+                                {c.name}
+                                <span className={cn("text-[11px] px-1.5 py-0.5 rounded-md", isSelected ? "bg-white/20 text-white" : "bg-border-subtle/50 text-text-muted")}>
+                                  {count}
+                                </span>
+                              </>
+                            }
+                          />
                         );
                       })}
                     </>

@@ -4,7 +4,7 @@ import { cn } from "@/shared/utils/cn";
 
 export interface FilterChipProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "default" | "inverted" | "accent-subtle" | "accent-solid" | "error-solid" | "offline";
-  label: string;
+  label: React.ReactNode;
   showCheck?: boolean;
   showMinus?: boolean;
   showDownBadge?: boolean;
@@ -13,13 +13,16 @@ export interface FilterChipProps extends React.ButtonHTMLAttributes<HTMLButtonEl
 
 export const FilterChip = React.forwardRef<HTMLButtonElement, FilterChipProps>(
   ({ variant = "default", label, showCheck, showMinus, showDownBadge, selected, className, "aria-label": ariaLabel, ...props }, ref) => {
+    const labelText = typeof label === "string" ? label : undefined;
     const computedAriaLabel =
       ariaLabel ||
-      (showMinus
-        ? `${label}, dikecualikan`
-        : showCheck || (selected && variant === "accent-solid")
-        ? `${label}, disertakan`
-        : label);
+      (labelText
+        ? showMinus
+          ? `${labelText}, dikecualikan`
+          : showCheck || (selected && variant === "accent-solid")
+          ? `${labelText}, disertakan`
+          : labelText
+        : undefined);
 
     return (
       <button
