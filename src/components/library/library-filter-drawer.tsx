@@ -1,11 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Drawer } from "vaul";
-import { Funnel, X, Check } from "@phosphor-icons/react";
-import { Button } from "@/components/ui/button";
+import { FilterDrawerShell, FilterSection } from "@/components/ui/filter-drawer-shell";
 import { FilterChip } from "@/components/ui/filter-chip";
-import { cn } from "@/shared/utils/cn";
 import { useLibraryFilterStore } from "@/shared/store/library-filter-store";
 import { useCollectionStore } from "@/shared/store/collection-store";
 import { useQuery } from "@tanstack/react-query";
@@ -38,7 +35,6 @@ const DEFAULT_SORTS = [
 ];
 
 export function LibraryFilterDrawer({ children, activeSourceId }: LibraryFilterDrawerProps) {
-  const [isOpen, setIsOpen] = React.useState(false);
   const storeFilters = useLibraryFilterStore();
 
   // Local state for filters before applying
@@ -47,7 +43,6 @@ export function LibraryFilterDrawer({ children, activeSourceId }: LibraryFilterD
   const [selectedStatus, setSelectedStatus] = React.useState<string[]>([]);
   const [selectedSort, setSelectedSort] = React.useState<string>("popular");
   const [selectedFormats, setSelectedFormats] = React.useState<string[]>([]);
-  
   const [selectedCollections, setSelectedCollections] = React.useState<string[]>([]);
   const [selectedReadingStatuses, setSelectedReadingStatuses] = React.useState<string[]>([]);
 
@@ -72,22 +67,14 @@ export function LibraryFilterDrawer({ children, activeSourceId }: LibraryFilterD
     return { genres, statuses: finalStatuses, sorts: finalSorts, formats: finalFormats };
   }, [filtersData]);
 
-  
-  React.useEffect(() => {
-    // Sync filter state from store when drawer opens
-    if (isOpen) {
-      setSelectedGenres(storeFilters.selectedGenres || []);
-      setExcludedGenres(storeFilters.excludedGenres || []);
-      setSelectedFormats(storeFilters.selectedFormats || []);
-      setSelectedStatus(storeFilters.selectedStatuses || []);
-      setSelectedCollections(storeFilters.selectedCollections || []);
-      setSelectedReadingStatuses(storeFilters.selectedReadingStatuses || []);
-      setSelectedSort(storeFilters.sort || "popular");
-    }
-  }, [isOpen, storeFilters]);
-
-  const handleOpenChange = (open: boolean) => {
-    setIsOpen(open);
+  const syncFromStore = () => {
+    setSelectedGenres(storeFilters.selectedGenres || []);
+    setExcludedGenres(storeFilters.excludedGenres || []);
+    setSelectedFormats(storeFilters.selectedFormats || []);
+    setSelectedStatus(storeFilters.selectedStatuses || []);
+    setSelectedCollections(storeFilters.selectedCollections || []);
+    setSelectedReadingStatuses(storeFilters.selectedReadingStatuses || []);
+    setSelectedSort(storeFilters.sort || "popular");
   };
 
   const toggleGenre = (genreId: string) => {
@@ -135,7 +122,6 @@ export function LibraryFilterDrawer({ children, activeSourceId }: LibraryFilterD
       selectedReadingStatuses,
       sort: selectedSort
     });
-    setIsOpen(false);
   };
 
   const handleReset = () => {
@@ -151,168 +137,107 @@ export function LibraryFilterDrawer({ children, activeSourceId }: LibraryFilterD
   const activeCount = selectedGenres.length + excludedGenres.length + selectedFormats.length + selectedStatus.length + selectedCollections.length + selectedReadingStatuses.length + (selectedSort !== "popular" ? 1 : 0);
 
   return (
-    <Drawer.Root open={isOpen} onOpenChange={handleOpenChange}>
-      <Drawer.Trigger asChild>
-        {children || (
-          <Button 
-            variant={activeCount > 0 ? "accent" : "outline"} 
-            className={cn(
-              "rounded-full font-bold px-5 h-[44px] gap-1.5 transition-all duration-300",
-              activeCount > 0 
-                ? "shadow-md" 
-                : "bg-surface-glass backdrop-blur-md text-text-primary hover:bg-surface-glass hover:text-text-primary shadow-[0_4px_16px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.2)]"
-            )}
-          >
-            <Funnel size={16} weight={activeCount > 0 ? "fill" : "bold"} />
-            Filter {activeCount > 0 && `(${activeCount})`}
-          </Button>
-        )}
-      </Drawer.Trigger>
-      <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]" />
-        <Drawer.Content className="bg-surface-base flex flex-col rounded-t-[32px] mt-24 fixed bottom-0 left-0 right-0 z-[100] outline-none max-h-[90vh] shadow-heavy">
-          <div className="p-4 bg-surface-base rounded-t-[32px] flex-1 overflow-y-auto [scrollbar-width:none] touch-manipulation relative z-0" style={{ WebkitOverflowScrolling: "touch", transform: "translate3d(0,0,0)" }} data-vaul-no-drag>
-            <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-border-strong mb-6" />
-            
-            <div className="flex items-center justify-between mb-6 px-2">
-              <Drawer.Title className="text-xl font-bold">Filter Pencarian</Drawer.Title>
-              <Drawer.Description className="sr-only">Atur filter pencarian berdasarkan urutan, status, dan genre manga.</Drawer.Description>
-              {activeCount > 0 && (
-                <button 
-                  onClick={handleReset}
-                  className="text-sm font-semibold text-accent hover:text-accent-hover transition-colors"
-                >
-                  Reset
-                </button>
-              )}
-            </div>
+    <FilterDrawerShell
+      title="Filter Pencarian"
+      description="Atur filter pencarian berdasarkan urutan, status, dan genre manga."
+      activeCount={activeCount}
+      onApply={handleApply}
+      onReset={handleReset}
+      onOpen={syncFromStore}
+      trigger={children}
+    >
+      {/* Urutkan */}
+      <FilterSection title="Urutkan">
+        {dynamicFilters.sorts.map((sort: any) => (
+          <FilterChip
+            key={sort.id}
+            onClick={() => setSelectedSort(sort.id)}
+            selected={selectedSort === sort.id}
+            variant={selectedSort === sort.id ? "inverted" : "default"}
+            label={sort.label}
+          />
+        ))}
+      </FilterSection>
 
-            <div className="space-y-8 px-2 pb-24">
-              {/* Urutkan */}
-              <div>
-                <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Urutkan</h3>
-                <div className="flex flex-wrap gap-2">
-                  {dynamicFilters.sorts.map((sort: any) => (
-                    <FilterChip
-                      key={sort.id}
-                      onClick={() => setSelectedSort(sort.id)}
-                      selected={selectedSort === sort.id}
-                      variant={selectedSort === sort.id ? "inverted" : "default"}
-                      label={sort.label}
-                    />
-                  ))}
-                </div>
-              </div>
+      {/* Tipe / Format */}
+      {dynamicFilters.formats.length > 0 && (
+        <FilterSection title="Tipe Komik">
+          {dynamicFilters.formats.map((format: any) => (
+            <FilterChip
+              key={format.id}
+              onClick={() => toggleFormat(format.id)}
+              selected={selectedFormats.includes(format.id)}
+              variant={selectedFormats.includes(format.id) ? "accent-subtle" : "default"}
+              showCheck={selectedFormats.includes(format.id)}
+              label={format.label}
+            />
+          ))}
+        </FilterSection>
+      )}
 
+      {/* Status */}
+      <FilterSection title="Status" layout="grid">
+        {dynamicFilters.statuses.map((status: any) => (
+          <FilterChip
+            key={status.id}
+            onClick={() => toggleStatus(status.id)}
+            selected={selectedStatus.includes(status.id)}
+            variant={selectedStatus.includes(status.id) ? "accent-subtle" : "default"}
+            showCheck={selectedStatus.includes(status.id)}
+            label={status.label}
+          />
+        ))}
+      </FilterSection>
 
+      {/* Genre */}
+      {dynamicFilters.genres.length > 0 && (
+        <FilterSection title="Genre" layout="grid">
+          {dynamicFilters.genres.map((genre: any) => {
+            const isInc = selectedGenres.includes(genre.id);
+            const isExc = excludedGenres.includes(genre.id);
+            return (
+              <FilterChip
+                key={genre.id}
+                onClick={() => toggleGenre(genre.id)}
+                selected={isInc || isExc}
+                variant={isInc ? "accent-solid" : isExc ? "error-solid" : "default"}
+                showMinus={isExc}
+                label={genre.label}
+              />
+            );
+          })}
+        </FilterSection>
+      )}
 
-              {/* Tipe / Format */}
-              {dynamicFilters.formats.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Tipe Komik</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {dynamicFilters.formats.map((format: any) => (
-                      <FilterChip
-                        key={format.id}
-                        onClick={() => toggleFormat(format.id)}
-                        selected={selectedFormats.includes(format.id)}
-                        variant={selectedFormats.includes(format.id) ? "accent-subtle" : "default"}
-                        showCheck={selectedFormats.includes(format.id)}
-                        label={format.label}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
+      {/* Koleksi (Lokal) */}
+      {collections.length > 0 && (
+        <FilterSection title="Koleksi (Lokal)" layout="grid">
+          {collections.map((col: any) => (
+            <FilterChip
+              key={col.id}
+              onClick={() => toggleCollection(col.id)}
+              selected={selectedCollections.includes(col.id)}
+              variant={selectedCollections.includes(col.id) ? "accent-subtle" : "default"}
+              showCheck={selectedCollections.includes(col.id)}
+              label={col.name}
+            />
+          ))}
+        </FilterSection>
+      )}
 
-              {/* Status */}
-              <div>
-                <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Status</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {dynamicFilters.statuses.map((status: any) => (
-                    <FilterChip
-                      key={status.id}
-                      onClick={() => toggleStatus(status.id)}
-                      selected={selectedStatus.includes(status.id)}
-                      variant={selectedStatus.includes(status.id) ? "accent-subtle" : "default"}
-                      showCheck={selectedStatus.includes(status.id)}
-                      label={status.label}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Genre */}
-              {dynamicFilters.genres.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Genre</h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {dynamicFilters.genres.map((genre: any) => {
-                      const isInc = selectedGenres.includes(genre.id);
-                      const isExc = excludedGenres.includes(genre.id);
-                      return (
-                        <FilterChip
-                          key={genre.id}
-                          onClick={() => toggleGenre(genre.id)}
-                          selected={isInc || isExc}
-                          variant={isInc ? "accent-solid" : isExc ? "error-solid" : "default"}
-                          showMinus={isExc}
-                          label={genre.label}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Koleksi (Lokal) */}
-              {collections.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Koleksi (Lokal)</h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {collections.map((col: any) => (
-                      <FilterChip
-                        key={col.id}
-                        onClick={() => toggleCollection(col.id)}
-                        selected={selectedCollections.includes(col.id)}
-                        variant={selectedCollections.includes(col.id) ? "accent-subtle" : "default"}
-                        showCheck={selectedCollections.includes(col.id)}
-                        label={col.name}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Status Membaca (Lokal) */}
-              <div>
-                <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">Status Membaca (Lokal)</h3>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {LOCAL_READING_STATUSES.map((status: any) => (
-                    <FilterChip
-                      key={status.id}
-                      onClick={() => toggleReadingStatus(status.id)}
-                      selected={selectedReadingStatuses.includes(status.id)}
-                      variant={selectedReadingStatuses.includes(status.id) ? "accent-subtle" : "default"}
-                      showCheck={selectedReadingStatuses.includes(status.id)}
-                      label={status.label}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-surface-base border-t border-border-subtle shrink-0 relative z-10" style={{ transform: "translate3d(0,0,0)" }}>
-            <Button 
-              onClick={handleApply}
-              className="w-full h-14 rounded-2xl text-[15px] font-bold bg-text-primary text-surface-base hover:bg-text-primary/90 active:scale-[0.98] transition-transform duration-200"
-            >
-              Terapkan Filter
-            </Button>
-          </div>
-        </Drawer.Content>
-      </Drawer.Portal>
-    </Drawer.Root>
+      {/* Status Membaca (Lokal) */}
+      <FilterSection title="Status Membaca (Lokal)" layout="grid">
+        {LOCAL_READING_STATUSES.map((status: any) => (
+          <FilterChip
+            key={status.id}
+            onClick={() => toggleReadingStatus(status.id)}
+            selected={selectedReadingStatuses.includes(status.id)}
+            variant={selectedReadingStatuses.includes(status.id) ? "accent-subtle" : "default"}
+            showCheck={selectedReadingStatuses.includes(status.id)}
+            label={status.label}
+          />
+        ))}
+      </FilterSection>
+    </FilterDrawerShell>
   );
 }
