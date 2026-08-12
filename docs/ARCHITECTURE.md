@@ -1,6 +1,6 @@
 # Architecture Overview
 
-Yomirra is a mobile-first Progressive Web App (PWA) manga reader built on Next.js 16 App Router. It features a client-side reader, server-side API routes, pluggable source adapters, persistent browser state, and optional cloud synchronization.
+Yomirra is a mobile-first Progressive Web App manga reader built on Next.js 16 App Router. The application combines client-side feature flows, server API routes, pluggable source adapters, persistent browser state, optional cloud synchronization, server caching, and offline reader support.
 
 ## High-Level Flow
 
@@ -20,185 +20,208 @@ flowchart LR
     UI --> SW[Service Worker & Cache API]
 ```
 
----
+## Runtime Layers
 
-## Layer Separation Rules
+### Server-only: `src/server/`
 
-Maintaining clear layer separation is critical for security, stability, and bundle optimization.
+- Runs on the server runtime.
+- Owns source adapters, scraping/API integration, Redis access, and server security helpers.
+- Must not be imported into client components.
+- Must not depend on browser-only SDKs.
 
-### Layer 1: Server-Only (`src/server/`)
-- Runs exclusively on the Node.js / Vercel server runtime.
-- Has access to environment variables, Redis client, source adapters, and scraping logic.
-- **MUST NOT** be imported in client components.
-- **MUST NOT** import client-only SDKs such as `src/shared/lib/firebase.ts`.
+### API routes: `src/app/api/`
 
-### Layer 2: API Routes (`src/app/api/`)
-- Acts as the bridge between client components and server adapters.
-- Validates input using Zod schemas (`src/server/lib/validation/api.ts`).
-- Returns standardized responses: `{ data: T }` on success, `{ error: { code, message } }` on failure.
-- Resolves adapters dynamically via `SourceManager`.
+- Bridge browser-facing code to server-only source integrations.
+- Validate external input at the boundary.
+- Resolve source adapters through the source manager.
+- Return normalized public response and error shapes rather than leaking upstream internals.
 
-### Layer 3: Shared (`src/shared/`)
-- Contains utilities, types, and stores shared between client and server.
-- Exception: `src/shared/lib/firebase.ts` and `src/shared/api-client.ts` are client-guarded modules.
+### Shared: `src/shared/`
 
-### Layer 4: Client Components (`src/components/`, client page flows)
-- Runs in the browser (`"use client"`).
-- Reads and updates Zustand stores.
-- Fetches data strictly via `ApiClient` (never calls server adapters directly).
+- Contains cross-feature types, utilities, stores, source contracts, API client code, and reusable hooks.
+- Some modules are explicitly client-oriented, so `shared` does not mean every file is safe in every runtime.
 
-### Layer Separation Examples
+### Client UI: `src/components/` and interactive route flows
+
+- Owns browser interaction and presentation.
+- Uses Zustand for established client state and TanStack Query for request/server state.
+- Reaches source data through the API client/API routes instead of importing server adapters.
 
 ```tsx
-// ❌ WRONG — importing server adapter in client component
-import { SampleAdapter } from "@/server/lib/sources/adapters/sample-adapter";
+// Wrong: server implementation in client code
+import { sourceManager } from "@/server/lib/sources/source-manager";
 
-// ❌ WRONG — importing client firebase SDK in API route
-import { initFirebase } from "@/shared/lib/firebase"; // in /app/api/**
-
-// ❌ WRONG — calling sourceManager directly in UI component
-import { sourceManager } from "@/server/lib/sources/source-manager"; // in component
-
-// ✅ CORRECT — client fetches via API route through ApiClient
+// Correct: browser-facing code goes through the API client
 import { apiClient } from "@/shared/api-client";
-const result = await apiClient.getPopular(sourceId);
 ```
 
----
+## Route → Feature View → Controller Hook
+
+Complex client routes are intentionally thin. The route file owns the App Router boundary (and `Suspense` when required), while feature composition and client orchestration live outside the route file.
+
+```text
+app route
+   ↓
+feature page view
+   ↓
+feature components + controller hook(s)
+   ↓
+shared stores / TanStack Query / API client
+```
+
+Current examples:
+
+```text
+/library
+  app/(web)/library/page.tsx
+    → components/library/library-page-view.tsx
+      → useLibraryCatalog()
+      → LibraryToolbar
+      → LibraryStatusRail
+      → LibraryCollectionRail
+      → LibraryResults
+
+/bookmark
+  app/(web)/bookmark/page.tsx
+    → components/bookmark/bookmark-page-view.tsx
+      → ReadingTab
+      → CollectionTab
+      → useBookmarkReading()
+      → useBookmarkCollection()
+
+/search
+  app/(web)/search/page.tsx
+    → components/search/search-page-view.tsx
+      → useSearchCatalog()
+      → SearchToolbar
+      → SearchSourceRail
+      → SearchResults
+```
+
+This is a responsibility boundary, not a line-count target. Do not split a feature merely to make files shorter; extract code when state ownership, data orchestration, or presentation responsibility becomes clearer.
+
+## Canonical UI Boundaries
+
+### Page headers
+
+`PageHeader` is the canonical section/destination header. It owns the responsive mobile fixed header and desktop hero-style header contract. Feature pages provide title, description, icon, actions, and optional metadata; they should not rebuild the same responsive header chrome locally.
+
+### Filter drawers
+
+Library and Search filters use `FilterDrawerShell` + `FilterSection`. The shell owns Vaul presentation, overlay, header/reset/apply chrome, scrolling, and safe-area footer behavior. Each feature retains its own filter state and source-specific business logic.
+
+Do not move Library/Search filter semantics into the shell.
+
+### Manga presentation
+
+Shared low-level primitives include:
+
+- `MangaCover` — cover loading/error/fallback behavior.
+- `ReadingProgress` — semantic 0–100 progress rendering.
+- `MangaGrid` — canonical responsive manga grid.
+
+Card archetypes remain separate (`ShelfCard`, `HistoryCard`, `EditorialCard`, `LeaderboardRow`). They share primitives instead of being collapsed into a single variant-heavy mega component.
+
+`MangaGridSkeleton` consumes the same `MANGA_GRID_CLASS` as `MangaGrid`, keeping loading and loaded grid breakpoints aligned.
+
+### Reader panels
+
+Reader overlays form a separate family from app/filter drawers. `ReaderPanelShell` uses Motion and owns shared reader-panel infrastructure such as backdrop, header, dismiss behavior, scrolling, and the existing `bottom-dialog` / `side-panel` desktop layouts.
+
+`ReaderChapterDrawer` and `ReaderSettingsDrawer` keep their business state and content. Do not replace Reader panels with `FilterDrawerShell`, and do not turn either shell into a universal app-wide drawer abstraction.
 
 ## Directory Structure
 
 ```text
 src/
 ├── app/
-│   ├── (web)/                   # Route group: user-facing pages
-│   │   ├── layout.tsx           # Root layout (providers, shell)
-│   │   ├── globals.css          # Design tokens + Tailwind @theme
-│   │   ├── page.tsx             # Home
-│   │   ├── manga/[sourceId]/[mangaId]/
-│   │   │   ├── page.tsx         # Manga detail
-│   │   │   └── read/[chapterId]/page.tsx  # Reader
-│   │   ├── search/              # Multi-source search
-│   │   ├── library/             # Library page
-│   │   ├── downloads/           # Downloads page
-│   │   ├── sources/             # Source browser
-│   │   ├── updates/             # Update feed
-│   │   ├── bookmark/            # Bookmarks
-│   │   ├── popular/             # Popular feed
-│   │   └── settings/            # Settings
-│   │
-│   ├── api/                     # Server API routes
-│   │   ├── sources/             # Source endpoints
-│   │   └── proxy/image/         # HMAC-verified image proxy
-│   │
-│   ├── manifest.ts              # PWA manifest
-│   └── sw.ts                    # Service worker entry
+│   ├── (web)/                       # User-facing routes and loading states
+│   ├── api/                         # Server API routes and image proxy
+│   ├── manifest.ts                  # PWA manifest
+│   └── sw.ts                        # Service worker entry
 │
-├── components/                  # UI Components
-│   ├── app/                     # App-level shell (header, navigation)
-│   ├── manga/                   # Manga UI (cards, detail, chapter rows)
-│   ├── reader/                  # Reader-specific UI
-│   ├── search/                  # Search UI & drawers
-│   ├── ui/                      # Base design system primitives
-│   └── motion/                  # Motion-wrapped animation wrappers
+├── components/
+│   ├── app/                         # App shell, navigation, PageHeader
+│   ├── ui/                          # Base/canonical reusable UI primitives
+│   ├── manga/                       # MangaCover, MangaGrid, cards, detail UI
+│   ├── library/                     # Library feature UI
+│   ├── bookmark/                    # Bookmark reading/collection UI
+│   ├── search/                      # Search feature UI
+│   ├── reader/                      # Reader UI and ReaderPanelShell
+│   ├── skeletons/                   # Loading-state components
+│   ├── settings/                    # Settings feature components
+│   └── updates/                     # Update-feed components
 │
-├── server/                      # Server-Only Modules
+├── server/
 │   └── lib/
-│       ├── sources/             # Source manager & adapter registry
-│       ├── cache/               # Redis caching (withCache wrapper)
-│       └── security/            # Rate limiting & HMAC signing
+│       ├── sources/                 # Source manager and adapter registry
+│       ├── cache/                   # Redis caching
+│       └── security/                # Server security helpers
 │
-└── shared/                      # Shared Contracts & Utilities
-    ├── api-client.ts            # Typed HTTP client
-    ├── hooks/                   # Custom React hooks
-    ├── lib/                     # Motion tokens & download engine
-    ├── sources/                 # Source contracts & types
-    ├── store/                   # Zustand stores
-    └── utils/                   # Pure utility functions
+└── shared/
+    ├── api-client.ts                # Browser-facing typed HTTP client
+    ├── hooks/                       # Shared and feature-controller hooks
+    ├── lib/                         # Backup, update, motion, routes, downloads
+    ├── sources/                     # Source contracts and dynamic registry
+    ├── store/                       # Zustand stores
+    ├── types/                       # Shared domain/schema types
+    └── utils/                       # Pure utilities
 ```
 
----
-
-## Image Proxy & Hotlink Protection
-
-External images must be requested via `/api/proxy/image` to bypass referrer restrictions and protect client privacy.
-
-```text
-Image Request Flow:
-1. Client generates signed URL: signProxyUrl(originalUrl)
-   → /api/proxy/image?url=<encoded>&sig=<hmac>
-2. Server validates HMAC signature using IMAGE_PROXY_SECRET.
-3. Server fetches image with appropriate Referer headers and streams back to client.
-```
-
----
-
-## Multi-Source Search Architecture
+## Multi-Source Search
 
 Search capabilities vary by source adapter:
 
-1. **Filter Capability Discovery**: Fetch source capabilities via `/api/sources/[sourceId]/filters`.
-2. **Payload Construction**: `buildPayloadForSource` maps active filters only to supported keys per source.
-3. **Parallel Query Execution**: React Query runs per-source search requests in parallel.
-4. **Exhaustion Guarding**: If a source returns `hasNextPage: false` on page `P`, subsequent queries for page `P+1` for that source are disabled automatically until search parameters or filters change.
-5. **Deduplication & Merging**: Client interleaves and deduplicates items by title.
+1. Filter capabilities are discovered per selected source.
+2. Active filters are mapped only to keys supported by each source.
+3. TanStack Query executes per-source requests in parallel.
+4. A source that reports no next page is not needlessly re-queried for later pages until relevant search inputs change.
+5. Results are merged/deduplicated client-side while partial source failures can be surfaced without discarding successful sources.
 
----
+Feature state belongs to `useSearchCatalog`; filter presentation remains in the canonical filter shell.
 
-## Caching & Reliability
+## Images and Proxying
 
-Server responses use Redis caching (`withCache`):
+Yomirra does not use one universal path for every remote image.
 
-- **Fresh Hit**: Returns cached JSON payload when TTL is valid.
-- **Cache Miss**: Executes fetcher, calculates expiration, and writes to Redis.
-- **Stale Fallback**: If upstream source fails or returns 403/5xx (e.g. Komikindo WAF restriction), returns stale cache entry if available.
-- **Bounded Rate Limit Retries**: MangaDex GET requests honor upstream `Retry-After` headers on `HTTP 429` with a bounded retry (max 1 attempt, 5000ms max sleep cap, process-local token bucket re-acquisition).
-- **Diagnostics Normalization**: `/api/sources/health` returns normalized safe public messages without exposing internal stack traces or raw response headers.
+- Manga cover presentation is centralized through `MangaCover`, which renders a standard `<img>` with `referrerPolicy="no-referrer"`, async decoding, lazy/eager loading, and fallback handling.
+- Sources or reader flows that require protected/hotlink-sensitive image access can use signed `/api/proxy/image` URLs.
+- The server proxy validates its signature before fetching a protected remote URL.
 
----
+Do not replace cover rendering with Next.js `<Image>` solely for consistency; source restrictions and remote-image behavior are part of the current contract.
 
-## Offline Reading & Download Engine
+## Caching and Source Reliability
 
-Offline chapter reading utilizes browser Cache Storage and Serwist Service Worker:
+Server responses can use Redis caching around source requests:
 
-1. Downloads are queued in `useDownloadStore`.
-2. Pages are fetched, compiled via JSZip, and stored in Cache API (`yomirra-chapter-cache-v1`).
-3. Service worker intercepts reader image requests and serves cached blobs when offline.
+- valid cached data may satisfy a request without hitting the upstream source;
+- source integrations may fall back to stale cached data for supported upstream failures;
+- MangaDex HTTP 429 handling uses bounded `Retry-After` behavior rather than unbounded retry loops;
+- health responses normalize public diagnostics instead of exposing raw stack traces or private response headers.
 
----
+Source availability is external and can change independently of Yomirra. Documentation should distinguish a verified application behavior from the current health of a third-party source.
 
-## State & Data Flow
+## Offline Reading and Downloads
 
-### Local-First Persistence
+Offline chapter support uses the browser download store, Cache Storage, and the Serwist service worker. Reader code may create local/blob-backed image URLs for cached pages and must clean them up when appropriate.
 
-The application heavily relies on client-side state persisted to `localStorage` through Zustand.
-Currently, the following are **local-first** and **not** cloud-synced to Firebase:
-- Updates (`UpdateStore`)
-- Collections & Reading Statuses (`CollectionStore`)
-- Automatic Scan Preferences & Muted Manga (`SettingsStore`)
-- Download queues (`DownloadStore`)
+PWA/offline behavior is browser- and device-sensitive. Unit tests do not replace real-browser or device verification for storage limits, service-worker routing, or offline cache behavior.
 
-*(Note: Firebase sync is planned for these in future iterations, while Library, History, and Bookmarks are synced).*
+## State and Data Flow
 
-### Store Data Flows
+Yomirra uses a local-first client architecture. Zustand stores own established persistent browser state; selected stores also participate in Firebase synchronization. TanStack Query owns remote request state.
 
-- **Library & Updates**
-  `LibraryStore` (source of truth for saved manga) → `UpdateChecker` (fetches latest chapter) → `UpdateStore` (stores unread updates) → `Updates Page / BottomDock` (displays unread badges).
+Examples:
 
-- **Settings & Notification Preferences**
-  `SettingsStore` (stores user preferences) → Controls automatic scan intervals and filters unread updates / muted manga from badges.
+- Library state feeds saved manga, collection/filter experiences, update checking, and backup.
+- History state feeds reading progress and Bookmark's reading tab.
+- Settings and source preferences affect source visibility, reader behavior, and update-related preferences.
+- Download state owns offline download queue/status.
 
-- **Collections & Organization**
-  `CollectionStore` (stores custom collections and statuses) → Populates `Manga Detail` actions, provides client-side filters for `Library` page, and exports to `Backup Engine`.
-
----
+When changing persistence or backup schemas, preserve backward compatibility intentionally and add migration/restore coverage.
 
 ## Backup Engine
 
-To support local-first data, Yomirra includes a Backup Engine that exports/imports Zustand state.
+The Backup & Restore flow supports the current persisted application schema, including backward compatibility for older backups where implemented. Import is validated before committing state, and merge/replace behavior should remain transactional enough to avoid partial restoration when a setter fails.
 
-- **Schema V1 Compatibility**: Seamlessly imports older backups without `collections` or `updates`.
-- **Schema V2 Export**: Exports the current application state including custom collections, memberships, and reading statuses.
-- **Dry-Run**: Analyzes the import payload before committing to give the user a preview of changes.
-- **Merge & Replace Strategy**: Users can choose to merge imported data with existing state or replace it entirely.
-- **Rollback**: If a setter fails during restoration, the entire state is reverted to prevent data corruption.
+Schema details belong in [SCHEMA.md](SCHEMA.md); UI implementation details belong in [COMPONENTS.md](COMPONENTS.md).
