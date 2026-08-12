@@ -1,11 +1,11 @@
+import { PageHeader } from "@/components/app/header";
 import { Skeleton } from "@/components/ui/skeleton";
-import { YomirraPageHeader } from "@/components/app/header";
 
 export default function Loading() {
   return (
-    <main className="min-h-screen flex flex-col w-full relative pb-24 md:pb-12 bg-surface-base">
-      <div className="md:hidden">
-        <YomirraPageHeader title="" showBack={false} variant="auto" />
+    <main className="min-h-screen flex flex-col w-full relative pb-[calc(var(--bottom-nav-height,80px)+24px)] text-text-primary">
+      <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:px-8 md:pt-8">
+        <PageHeader title="" showBack={true} />
       </div>
       <div className="w-full max-w-7xl mx-auto px-4 md:px-8 pt-6 relative z-10 flex flex-col md:flex-row gap-5 md:gap-8">
         

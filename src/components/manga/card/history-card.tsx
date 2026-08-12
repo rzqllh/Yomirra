@@ -2,10 +2,12 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ImageBroken, Play } from "@phosphor-icons/react";
+import { Play } from "@phosphor-icons/react";
 import { getMangaDetailHref, getReaderHref } from "@/shared/lib/routes";
 import { motion } from "motion/react";
 import { usePathname, useSearchParams } from "next/navigation";
+import { MangaCover } from "../manga-cover";
+import { ReadingProgress } from "@/components/ui/reading-progress";
 import type { BaseCardProps } from "./types";
 
 export interface HistoryCardProps extends BaseCardProps {
@@ -21,7 +23,6 @@ export function HistoryCard({
   chapterTitle,
   progressPercent
 }: HistoryCardProps) {
-  const [imageError, setImageError] = React.useState(false);
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const fullPath = pathname + (searchParams.toString() ? `?${searchParams.toString()}` : "");
@@ -46,26 +47,12 @@ export function HistoryCard({
         style={!chapterId ? vtStyle : undefined}
         aria-label={`Cover of ${manga.title}`}
       >
-        {manga.coverUrl && !imageError ? (
-          <img 
-            src={manga.coverUrl} 
-            alt={manga.title} 
-            className="absolute inset-0 w-full h-full object-cover" 
-            onError={() => setImageError(true)}
-            ref={(img) => {
-              if (img && img.complete && img.naturalWidth === 0) {
-                setImageError(true);
-              }
-            }}
-            referrerPolicy="no-referrer"
-            decoding="async"
-            loading="lazy"
-          />
-        ) : (
-          <div className="h-full w-full bg-surface-muted flex flex-col items-center justify-center text-text-muted/50 p-2">
-            <ImageBroken size={24} weight="duotone" />
-          </div>
-        )}
+        <MangaCover
+          src={manga.coverUrl}
+          alt={manga.title}
+          fallbackTitle={manga.title}
+          iconSize={24}
+        />
       </Link>
       
       <div className="flex-1 min-w-0 flex flex-col justify-center z-10">
@@ -81,13 +68,12 @@ export function HistoryCard({
         </Link>
         <div className="mt-1 flex items-center gap-2 text-xs font-semibold text-text-muted">
           <span className="uppercase tracking-wider">{manga.format || manga.status || "MANGA"}</span>
-          {progressPercent !== undefined && progressPercent > 0 && (
-            <>
-              <span>•</span>
-              <span className="text-accent">{progressPercent}%</span>
-            </>
-          )}
         </div>
+        {progressPercent !== undefined && progressPercent > 0 && (
+          <div className="mt-1.5 max-w-[160px]">
+            <ReadingProgress value={progressPercent} size="sm" showLabel />
+          </div>
+        )}
       </div>
       
       {chapterId && (

@@ -5,6 +5,8 @@ import Link from "next/link";
 import { BookBookmark, Compass, Clock, Play } from "@phosphor-icons/react";
 import { HistoryItem } from "@/shared/store/history-store";
 import { getReaderHref } from "@/shared/lib/routes";
+import { MangaCover } from "@/components/manga/manga-cover";
+import { ReadingProgress } from "@/components/ui/reading-progress";
 
 interface ContinueReadingListProps {
   items: HistoryItem[];
@@ -62,18 +64,13 @@ export function ContinueReadingList({ items }: ContinueReadingListProps) {
               />
 
               <div className="relative w-20 sm:w-24 aspect-[3/4] shrink-0 rounded md:rounded-lg overflow-hidden bg-surface-muted shadow-sm border border-border-subtle/50">
-                {group.coverUrl ? (
-                  <img
-                    src={group.coverUrl}
-                    alt={group.mangaTitle}
-                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-                    referrerPolicy="no-referrer"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-surface-muted flex items-center justify-center">
-                    <BookBookmark size={28} className="text-text-muted/50" />
-                  </div>
-                )}
+                <MangaCover
+                  src={group.coverUrl}
+                  alt={group.mangaTitle}
+                  fallbackTitle={group.mangaTitle}
+                  className="w-full h-full"
+                  imageClassName="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                />
               </div>
 
               <div className="flex flex-col flex-1 min-w-0 py-0.5">
@@ -99,12 +96,8 @@ export function ContinueReadingList({ items }: ContinueReadingListProps) {
                       <Play weight="fill" size={10} /> Lanjut
                     </div>
                   </div>
-                  <div className="w-full bg-surface-muted/80 h-1.5 rounded-full overflow-hidden border border-border-subtle/30">
-                    <div
-                      className="bg-accent h-full transition-all duration-300 rounded-full shadow-[0_0_8px_rgba(94,92,230,0.5)]"
-                      style={{ width: `${Math.max(5, progress)}%` }}
-                    />
-                  </div>
+
+                  <ReadingProgress value={progress} size="sm" showLabel={false} />
                 </div>
               </div>
             </div>
