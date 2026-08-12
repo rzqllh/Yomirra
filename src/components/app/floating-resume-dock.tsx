@@ -40,7 +40,7 @@ export function FloatingResumeDock() {
   return (
     <div 
       className={cn(
-        "fixed bottom-8 right-8 z-50 transition-all duration-500 hidden md:block",
+        "fixed bottom-8 right-8 z-[100] transition-all duration-500 hidden md:block",
         isVisible ? "translate-y-0 opacity-100" : "translate-y-12 opacity-0 pointer-events-none"
       )}
     >

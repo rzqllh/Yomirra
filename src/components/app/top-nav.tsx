@@ -129,7 +129,7 @@ export function TopNav() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
                       transition={{ duration: 0.15, ease: "easeOut" }}
-                      className="absolute right-0 top-14 w-56 bg-surface-overlay/95 backdrop-blur-xl shadow-default -heavy rounded-2xl p-1.5 z-50 flex flex-col"
+                      className="absolute right-0 top-14 w-56 bg-surface-overlay/95 backdrop-blur-xl shadow-default -heavy rounded-2xl p-1.5 z-[100] flex flex-col"
                     >
                       <div className="px-3 py-2.5 border-b border-border-glass mb-1.5">
                         <p className="text-[14px] font-bold text-text-primary truncate">{user.displayName || "User"}</p>
