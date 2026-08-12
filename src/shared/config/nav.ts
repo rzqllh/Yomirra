@@ -1,4 +1,4 @@
-import { House, Compass, Books, Gear, BookmarkSimple, MagnifyingGlass, Bell } from "@phosphor-icons/react";
+import { House, Books, Gear, BookmarkSimple, MagnifyingGlass, Bell } from "@phosphor-icons/react";
 import type { Icon } from "@phosphor-icons/react";
 
 export interface NavItem {

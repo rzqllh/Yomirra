@@ -7,11 +7,10 @@ import { useStatsStore } from "@/shared/store/stats-store";
 import { useUpdateStore } from "@/shared/store/update-store";
 import { useCollectionStore } from "@/shared/store/collection-store";
 import type { MangaUpdateItem } from "@/shared/types/update";
-import type { Collection, MangaKey, ReadingStatus } from "@/shared/types/collection";
+import type { Collection, ReadingStatus } from "@/shared/types/collection";
 import {
   yomirraBackupSchemaV1,
   yomirraBackupSchemaV2,
-  type YomirraBackupV1,
   type YomirraBackupV2,
   type AnyYomirraBackup,
   type DryRunPreview,
