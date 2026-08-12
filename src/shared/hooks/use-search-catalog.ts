@@ -20,6 +20,10 @@ export function useSearchCatalog() {
   const [page, setPage] = React.useState(1);
   const router = useRouter();
 
+  React.useEffect(() => {
+    setLocalQuery(query);
+  }, [query]);
+
   const debouncedQuery = useDebounce(localQuery, 800);
 
   React.useEffect(() => {

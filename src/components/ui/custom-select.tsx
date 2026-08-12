@@ -40,15 +40,16 @@ export function CustomSelect({ value, onChange, options, className, buttonClassN
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className={cn("flex items-center gap-2 h-[44px] px-4 rounded-full bg-surface-glass backdrop-blur-md hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 border border-border-subtle shadow-sm transition-all", className, buttonClassName)}
+          onClick={() => setIsOpen((prev) => !prev)}
+          className={cn("flex items-center justify-between gap-2 h-[44px] px-4 rounded-2xl bg-surface-glass backdrop-blur-md hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 border border-border-subtle shadow-xs text-[13px] font-bold text-text-primary transition-all", className, buttonClassName)}
         >
-          <span className="text-[14px] font-semibold text-text-primary whitespace-nowrap">
+          <span className="truncate whitespace-nowrap">
             {selectedOption?.label}
           </span>
           <CaretDown
             size={14}
             weight="bold"
-            className={cn("text-text-muted transition-transform duration-200", isOpen && "rotate-180")}
+            className={cn("text-text-muted transition-transform duration-200 shrink-0", isOpen && "rotate-180")}
           />
         </button>
       </DropdownMenuTrigger>

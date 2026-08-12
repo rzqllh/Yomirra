@@ -28,7 +28,7 @@ export function CollectionToolbar({
   totalCount,
 }: CollectionToolbarProps) {
   return (
-    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mb-4">
+    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 mb-4">
       <SearchInput
         value={searchQuery}
         onChange={onSearchChange}
@@ -47,14 +47,13 @@ export function CollectionToolbar({
           ]}
           align="right"
           className="shrink-0"
-          buttonClassName="h-[44px] px-4 text-xs font-bold rounded-full bg-surface-glass backdrop-blur-md border-border-subtle"
         />
 
         {totalCount > 0 && (
           <Button
             variant={isSelectionMode ? "accent" : "outline"}
             onClick={onToggleSelectionMode}
-            className="h-[44px] px-4 rounded-full font-bold gap-1.5 shrink-0"
+            className="h-[44px] px-4 rounded-2xl font-bold gap-1.5 shrink-0"
           >
             <CheckCircle size={18} weight={isSelectionMode ? "fill" : "bold"} />
             <span className="hidden sm:inline">Pilih</span>

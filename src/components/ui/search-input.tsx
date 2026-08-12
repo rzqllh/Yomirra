@@ -28,15 +28,14 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
       <form 
         onSubmit={handleSubmit} 
         className={cn(
-          "flex items-center gap-2.5 rounded-full bg-surface-glass backdrop-blur-md px-4 h-[44px] transition-all duration-300 ease-out w-full",
-          "hover:bg-surface-hover focus-within:bg-surface-overlay focus-within:-sm",
-          "border border-transparent focus-within:--default focus-within:ring-2 focus-within:ring-accent/20",
+          "flex items-center gap-2.5 rounded-2xl bg-surface-glass backdrop-blur-md px-4 h-[44px] border border-border-subtle transition-all duration-200 ease-out w-full",
+          "hover:bg-surface-hover hover:border-border-strong focus-within:bg-surface-overlay focus-within:border-accent/40 focus-within:ring-2 focus-within:ring-accent/20 focus-within:shadow-xs",
           containerClassName
         )}
       >
         <MagnifyingGlass 
-          className="size-[20px] text-text-muted shrink-0 transition-colors group-focus-within:text-accent" 
-          weight="regular" 
+          className="size-[18px] text-text-muted shrink-0 transition-colors group-focus-within:text-accent" 
+          weight="bold" 
         />
         <input
           ref={ref}
@@ -44,7 +43,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
           value={value}
           onChange={onChange}
           className={cn(
-            "flex-1 bg-transparent text-[15px] font-medium text-text-primary outline-none placeholder:text-text-muted/60 w-full min-w-0 h-full",
+            "flex-1 bg-transparent text-[14px] font-medium text-text-primary outline-none placeholder:text-text-muted/60 w-full min-w-0 h-full",
             className
           )}
           {...props}
@@ -54,14 +53,14 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
             type="button"
             onClick={handleClear}
             variant="ghost"
-            className="text-text-muted hover:text-text-primary p-1 h-auto w-auto"
+            className="text-text-muted hover:text-text-primary p-1 h-auto w-auto shrink-0"
             aria-label="Clear search"
           >
             <X size={16} weight="bold" />
           </IconButton>
         )}
         {shortcut && (
-          <kbd className="hidden lg:inline-flex h-6 select-none items-center gap-1 rounded-sm border border-border-default bg-surface-base px-2 font-mono text-[11px] font-bold text-text-muted">
+          <kbd className="hidden lg:inline-flex h-6 select-none items-center gap-1 rounded-md border border-border-default bg-surface-base px-2 font-mono text-[11px] font-bold text-text-muted">
             {shortcut}
           </kbd>
         )}
