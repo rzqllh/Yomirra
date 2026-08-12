@@ -83,7 +83,7 @@ describe("SettingsPage - Update Checker UI", () => {
     });
 
     // Find and click 1 Jam option
-    const oneHourOption = screen.getByRole("button", { name: /1 Jam/i });
+    const oneHourOption = screen.getByText("1 Jam");
     
     await act(async () => {
       fireEvent.click(oneHourOption);

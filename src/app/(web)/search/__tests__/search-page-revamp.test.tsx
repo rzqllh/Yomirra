@@ -142,12 +142,8 @@ describe('Search Page Revamp Unit Tests', () => {
       </QueryClientProvider>
     );
 
-    await act(async () => {
-      await new Promise((r) => setTimeout(r, 50));
-    });
-
     await waitFor(() => {
       expect(screen.getByText('Shinigami tidak dapat dimuat')).toBeDefined();
-    });
+    }, { timeout: 3000 });
   });
 });

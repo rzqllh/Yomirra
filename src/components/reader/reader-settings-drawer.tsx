@@ -1,10 +1,11 @@
+"use client"
+
 import * as React from "react"
-import { X, SlidersHorizontal, ImageSquare, Layout, Lightning, BoundingBox, ArrowsOutLineVertical } from "@phosphor-icons/react"
+import { SlidersHorizontal, ImageSquare, Layout, Lightning, BoundingBox, ArrowsOutLineVertical } from "@phosphor-icons/react"
 import { useReaderStore } from "@/shared/store/reader-store"
 import { cn } from "@/shared/utils/cn"
-import { IconButton } from "@/components/ui/icon-button"
 import { ToggleSwitch } from "@/components/ui/toggle-switch"
-import { motion, AnimatePresence } from "motion/react"
+import { ReaderPanelShell } from "./reader-panel-shell"
 
 interface ReaderSettingsDrawerProps {
   isOpen: boolean;
@@ -90,138 +91,138 @@ function ReaderSettingsOption<T extends string>({
 export function ReaderSettingsDrawer({ isOpen, onClose }: ReaderSettingsDrawerProps) {
   const { preferences, updatePreferences, isDesktopPanelOpen, toggleDesktopPanel } = useReaderStore()
 
+  // On desktop (>=768px), settings drawer visibility is also driven by store's isDesktopPanelOpen
+  const effectiveIsOpen = React.useMemo(() => {
+    if (isOpen) return true;
+    if (typeof window !== "undefined" && window.innerWidth >= 768 && isDesktopPanelOpen) {
+      return true;
+    }
+    return false;
+  }, [isOpen, isDesktopPanelOpen]);
+
+  const handleClose = React.useCallback(() => {
+    onClose();
+    if (typeof window !== "undefined" && window.innerWidth >= 768 && isDesktopPanelOpen) {
+      toggleDesktopPanel();
+    }
+  }, [onClose, isDesktopPanelOpen, toggleDesktopPanel]);
+
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm md:hidden"
-            onClick={onClose}
+    <ReaderPanelShell
+      isOpen={effectiveIsOpen}
+      onClose={handleClose}
+      title="Pengaturan Pembaca"
+      icon={<SlidersHorizontal size={20} weight="bold" />}
+      desktopMode="side-panel"
+      contentClassName="p-5 space-y-6 overscroll-contain pb-[calc(24px+var(--safe-bottom))]"
+    >
+      {/* Tampilan */}
+      <div className="space-y-3">
+        <div className="text-xs font-bold uppercase tracking-wider text-text-muted px-1 flex items-center gap-1.5">
+          <Layout size={14} weight="bold" /> Tampilan & Tema
+        </div>
+        
+        {/* Warna Latar Belakang */}
+        <div className="p-4 bg-surface-base rounded-2xl border border-border-subtle flex flex-col gap-3">
+          <span className="text-sm font-bold text-text-primary">Warna Latar Belakang</span>
+          <div className="grid grid-cols-3 gap-2">
+            {BACKGROUNDS.map((bg) => {
+              const isSelected = preferences.background === bg.value;
+              return (
+                <button
+                  key={bg.value}
+                  onClick={() => updatePreferences({ background: bg.value })}
+                  className={cn(
+                    "flex flex-col items-center gap-2 p-2.5 rounded-xl border transition-all outline-none",
+                    isSelected 
+                      ? "border-accent bg-accent/10 shadow-xs ring-1 ring-accent" 
+                      : "border-border-subtle bg-surface-raised hover:bg-surface-hover"
+                  )}
+                >
+                  <div 
+                    className={cn("w-6 h-6 rounded-full shadow-inner border", bg.border)}
+                    style={{ backgroundColor: bg.color }}
+                  />
+                  <span className={cn(
+                    "text-xs font-bold truncate w-full text-center",
+                    isSelected ? "text-accent" : "text-text-secondary"
+                  )}>
+                    {bg.name}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Mode Baca & Gambar */}
+      <div className="space-y-3">
+        <div className="text-xs font-bold uppercase tracking-wider text-text-muted px-1 flex items-center gap-1.5">
+          <ImageSquare size={14} weight="bold" /> Penyesuaian Gambar
+        </div>
+
+        <div className="bg-surface-base rounded-2xl border border-border-subtle divide-y divide-border-subtle">
+          <ReaderSettingsOption
+            icon={<BoundingBox size={18} className="text-accent" weight="bold" />}
+            title="Kesesuaian Gambar"
+            options={IMAGE_FITS}
+            value={preferences.imageFit}
+            onChange={(val) => updatePreferences({ imageFit: val })}
           />
-          
-          <motion.div 
-            initial={{ opacity: 0, y: "100%" }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: "100%" }}
-            transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-            className="fixed inset-x-0 bottom-0 z-[70] max-h-[85vh] md:max-h-screen md:inset-y-0 md:left-auto md:right-0 md:w-80 md:bottom-auto bg-surface-base border-t md:border-t-0 md:border-l border-border-subtle flex flex-col rounded-t-[24px] md:rounded-none overflow-hidden shadow-xl"
-          >
-            <div className="flex h-[calc(var(--mobile-header-height)+var(--safe-top))] items-center justify-between px-5 shrink-0 pt-[var(--safe-top)] bg-surface-raised border-b border-border-subtle">
-              <h2 className="text-base font-bold text-text-primary flex items-center gap-2">
-                <SlidersHorizontal size={20} className="text-accent" weight="bold" />
-                Pengaturan Pembaca
-              </h2>
-              <IconButton
-                aria-label="Tutup panel"
-                variant="ghost"
-                size="sm"
-                className="rounded-full bg-surface-glass border border-border-subtle hover:bg-surface-hover text-text-primary transition-colors"
-                onClick={() => {
-                  onClose();
-                  if (window.innerWidth >= 768 && isDesktopPanelOpen) {
-                    toggleDesktopPanel();
-                  }
-                }}
-              >
-                <X size={16} weight="bold" />
-              </IconButton>
-            </div>
 
-            <div className="flex-1 flex flex-col min-h-0">
-              {/* Settings Area (Scrollable on small height) */}
-              <div className="flex-1 p-5 space-y-6 overflow-y-auto overscroll-contain custom-scrollbar pb-[calc(24px+var(--safe-bottom))]">
-                
-                {/* Tampilan */}
-                <div className="space-y-3">
-                  <h3 className="text-xs font-bold text-text-secondary px-2 uppercase tracking-wider">Tampilan</h3>
-                  
-                  <div className="bg-surface-glass rounded-2xl border border-border-subtle overflow-hidden flex flex-col divide-y divide-border-subtle/50">
+          <ReaderSettingsOption
+            icon={<ArrowsOutLineVertical size={18} className="text-accent" weight="bold" />}
+            title="Jarak Antar Halaman"
+            options={PAGE_GAPS}
+            value={preferences.pageGap}
+            onChange={(val) => updatePreferences({ pageGap: val })}
+          />
 
-                    <ReaderSettingsOption
-                      icon={<ArrowsOutLineVertical size={18} className="text-text-secondary" weight="fill" />}
-                      title="Ukuran Komik"
-                      options={IMAGE_FITS}
-                      value={preferences.imageFit}
-                      onChange={(val) => updatePreferences({ imageFit: val })}
-                    />
+          <ReaderSettingsOption
+            icon={<Layout size={18} className="text-accent" weight="bold" />}
+            title="Arah Membaca"
+            options={READING_DIRECTIONS}
+            value={preferences.readingDirection}
+            onChange={(val) => updatePreferences({ readingDirection: val })}
+          />
+        </div>
+      </div>
 
-                    <ReaderSettingsOption
-                      icon={<BoundingBox size={18} className="text-text-secondary" weight="fill" />}
-                      title="Jarak Antar Halaman"
-                      options={PAGE_GAPS}
-                      value={preferences.pageGap}
-                      onChange={(val) => updatePreferences({ pageGap: val })}
-                    />
-                  </div>
-                </div>
+      {/* Kontrol & Performa */}
+      <div className="space-y-3">
+        <div className="text-xs font-bold uppercase tracking-wider text-text-muted px-1 flex items-center gap-1.5">
+          <Lightning size={14} weight="bold" /> Kontrol & Performa
+        </div>
 
-                {/* Perilaku */}
-                <div className="space-y-3">
-                  <h3 className="text-xs font-bold text-text-secondary px-2 uppercase tracking-wider">Perilaku</h3>
-                  
-                  <div className="bg-surface-glass rounded-2xl border border-border-subtle overflow-hidden flex flex-col divide-y divide-border-subtle/50">
-                    <ReaderSettingsOption
-                      icon={<Layout size={18} className="text-text-secondary" weight="fill" />}
-                      title="Arah Baca Paged"
-                      options={READING_DIRECTIONS}
-                      value={preferences.readingDirection}
-                      onChange={(val) => updatePreferences({ readingDirection: val })}
-                    />
+        <div className="bg-surface-base rounded-2xl border border-border-subtle divide-y divide-border-subtle">
+          <ReaderSettingsOption
+            icon={<SlidersHorizontal size={18} className="text-accent" weight="bold" />}
+            title="Bar Navigasi Pembaca"
+            options={TOOLBAR_BEHAVIORS}
+            value={preferences.toolbarBehavior}
+            onChange={(val) => updatePreferences({ toolbarBehavior: val })}
+          />
 
-                    <ReaderSettingsOption
-                      icon={<Layout size={18} className="text-text-secondary" weight="fill" />}
-                      title="Menu Navigasi"
-                      options={TOOLBAR_BEHAVIORS}
-                      value={preferences.toolbarBehavior}
-                      onChange={(val) => updatePreferences({ toolbarBehavior: val })}
-                    />
+          <ReaderSettingsOption
+            icon={<Lightning size={18} className="text-accent" weight="bold" />}
+            title="Preload Gambar"
+            options={PRELOAD_INTENSITIES}
+            value={preferences.preloadIntensity}
+            onChange={(val) => updatePreferences({ preloadIntensity: val })}
+          />
 
-                    <ReaderSettingsOption
-                      icon={<Lightning size={18} className="text-text-secondary" weight="fill" />}
-                      title="Kecepatan Muat"
-                      options={PRELOAD_INTENSITIES}
-                      value={preferences.preloadIntensity}
-                      onChange={(val) => updatePreferences({ preloadIntensity: val })}
-                    />
-                  </div>
-                </div>
-
-                {/* Fitur Tambahan */}
-                <div className="space-y-3">
-                  <h3 className="text-xs font-bold text-text-secondary px-2 uppercase tracking-wider">Fitur Tambahan</h3>
-                  
-                  <div className="bg-surface-glass rounded-2xl border border-border-subtle overflow-hidden flex flex-col divide-y divide-border-subtle/50">
-                    {/* Progress Halaman */}
-                    <label className="flex items-center justify-between p-4 cursor-pointer transition-colors hover:bg-surface-hover">
-                      <span className="text-sm font-bold text-text-primary">Progress Halaman</span>
-                      <ToggleSwitch 
-                        checked={preferences.showPageProgress} 
-                        onCheckedChange={(checked) => updatePreferences({ showPageProgress: checked })} 
-                      />
-                    </label>
-
-                    {/* Layar Selalu Menyala */}
-                    <label className="flex items-center justify-between p-4 cursor-pointer transition-colors hover:bg-surface-hover">
-                      <span className="text-sm font-bold text-text-primary">Layar Selalu Menyala</span>
-                      <ToggleSwitch 
-                        checked={preferences.keepScreenAwake ?? true} 
-                        onCheckedChange={(checked) => updatePreferences({ keepScreenAwake: checked })} 
-                      />
-                    </label>
-                  </div>
-                </div>
-
-              </div>
-
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+          <div className="p-4 flex items-center justify-between">
+            <span className="text-sm font-bold text-text-primary">Progress Halaman</span>
+            <ToggleSwitch
+              id="show-page-progress"
+              checked={preferences.showPageProgress}
+              onCheckedChange={(checked) => updatePreferences({ showPageProgress: checked })}
+              label="Progress Halaman"
+            />
+          </div>
+        </div>
+      </div>
+    </ReaderPanelShell>
   )
 }

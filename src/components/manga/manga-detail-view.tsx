@@ -408,18 +408,18 @@ export function MangaDetailView({
                 </span>
               </div>
 
-              <div className="flex items-center gap-2 w-full">
+              <div className="flex items-center gap-2.5 w-full">
                 <SearchInput
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Cari chapter..."
                   aria-label="Cari chapter"
-                  containerClassName="flex-1"
+                  containerClassName="flex-1 h-[44px]"
                 />
                 <IconButton
                   variant="surface"
-                  size="sm"
-                  className="min-h-[40px] min-w-[40px] shrink-0 bg-surface-raised border-border-default rounded-xl"
+                  size="default"
+                  className="h-[44px] w-[44px] shrink-0 bg-surface-glass backdrop-blur-md border border-border-subtle rounded-2xl"
                   onClick={() => setSortOrder(prev => prev === "desc" ? "asc" : "desc")}
                   aria-label={sortOrder === "desc" ? "Urutkan paling lama" : "Urutkan terbaru"}
                 >

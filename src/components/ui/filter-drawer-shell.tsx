@@ -87,14 +87,13 @@ export function FilterDrawerShell({
           <Button
             variant={activeCount > 0 ? "accent" : "outline"}
             className={cn(
-              "rounded-full font-bold px-5 h-[44px] gap-1.5 transition-all duration-300",
-              activeCount > 0
-                ? "shadow-md"
-                : "bg-surface-glass backdrop-blur-md text-text-primary hover:bg-surface-glass hover:text-text-primary shadow-[0_4px_16px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_16px_rgba(0,0,0,0.2)]"
+              "rounded-2xl font-bold px-4 h-[44px] gap-1.5 transition-all duration-300 border-border-subtle",
+              activeCount > 0 ? "border-accent/30" : "bg-surface-glass backdrop-blur-md"
             )}
           >
-            <Funnel size={16} weight={activeCount > 0 ? "fill" : "bold"} />
-            Filter {activeCount > 0 && `(${activeCount})`}
+            <Funnel size={18} weight={activeCount > 0 ? "fill" : "bold"} />
+            <span>Filter</span>
+            {activeCount > 0 && <span className="ml-0.5">{activeCount}</span>}
           </Button>
         )}
       </Drawer.Trigger>

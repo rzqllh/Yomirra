@@ -16,6 +16,89 @@ import { cn } from "@/shared/utils/cn";
 
 const ALWAYS_EXPANDED_KEYS = new Set(["Hari Ini", "Kemarin"]);
 
+// ---------------------------------------------------------------------------
+// ErrorBanner
+// ---------------------------------------------------------------------------
+
+function ErrorBanner({
+  errorItems,
+  onRetry,
+  isScanning,
+}: {
+  errorItems: MangaUpdateItem[];
+  onRetry: () => void;
+  isScanning: boolean;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const count = errorItems.length;
+  const label = count === 1 ? "1 manga" : `${count} manga`;
+
+  return (
+    <div className="mb-6 rounded-lg bg-semantic-error/8 border border-semantic-error/20 overflow-hidden">
+      <div className="flex gap-3 items-start p-3">
+        <WarningCircle
+          size={18}
+          className="text-semantic-error shrink-0 mt-0.5"
+          weight="fill"
+        />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-sm font-semibold text-text-primary">
+              {label} gagal dimuat
+            </p>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                onClick={() => setExpanded((v) => !v)}
+                className="text-[11px] font-semibold text-text-muted hover:text-text-primary transition-colors px-1.5 py-0.5 rounded hover:bg-surface-hover"
+              >
+                {expanded ? "Sembunyikan" : "Lihat detail"}
+              </button>
+              <button
+                onClick={onRetry}
+                disabled={isScanning}
+                className="flex items-center gap-1 text-[11px] font-semibold text-semantic-error hover:text-semantic-error/80 transition-colors px-1.5 py-0.5 rounded hover:bg-semantic-error/10 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <ArrowsClockwise
+                  size={11}
+                  weight="bold"
+                  className={isScanning ? "animate-spin" : ""}
+                />
+                Coba lagi
+              </button>
+            </div>
+          </div>
+          <p className="text-xs text-text-muted mt-0.5">
+            Kemungkinan server sumber sedang tidak bisa dijangkau.
+          </p>
+        </div>
+      </div>
+
+      {expanded && (
+        <div className="border-t border-semantic-error/15 px-3 pb-3 pt-2 space-y-1.5">
+          {errorItems.map((item) => (
+            <div
+              key={`${item.sourceId}::${item.mangaId}`}
+              className="flex items-start gap-2"
+            >
+              <span className="text-semantic-error/60 text-[10px] mt-0.5 shrink-0">•</span>
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-text-primary truncate">
+                  {item.mangaTitle || item.mangaId}
+                </p>
+                <p className="text-[10px] text-text-muted truncate">
+                  {item.sourceId} — {item.error}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
+
 function UpdateGroup({
   groupDate,
   groupItems,
@@ -199,24 +282,9 @@ export function UpdatesList({ renderRefreshButton }: UpdatesListProps = {}) {
       </div>
 
       {errorItems.length > 0 && (
-        <div className="mb-6 p-3 rounded-lg bg-status-danger/10 border border-status-danger/20 flex gap-3 items-start">
-          <WarningCircle
-            size={20}
-            className="text-status-danger shrink-0 mt-0.5"
-            weight="fill"
-          />
-          <div className="text-sm">
-            <p className="text-text-primary font-medium">
-              Gagal memuat beberapa update
-            </p>
-            <p className="text-text-secondary mt-1 line-clamp-2">
-              {errorItems
-                .map((i) => `${i.mangaTitle || i.mangaId} (${i.error})`)
-                .join(", ")}
-            </p>
-          </div>
-        </div>
+        <ErrorBanner errorItems={errorItems} onRetry={() => triggerScan({ forceRefresh: true })} isScanning={isScanning} />
       )}
+
 
       {!hasUpdates && (
         <div className="py-24">

@@ -25,7 +25,7 @@ export function LibraryToolbar({
   activeFilterCount,
 }: LibraryToolbarProps) {
   return (
-    <div className="flex items-center gap-3 mt-6 md:mt-7">
+    <div className="flex items-center gap-2.5 mt-6 md:mt-7">
       <SearchInput
         value={searchInput}
         onChange={onSearchInputChange}
@@ -39,8 +39,8 @@ export function LibraryToolbar({
         <Button
           variant={activeFilterCount > 0 ? "accent" : "outline"}
           className={cn(
-            "shrink-0 h-[44px] px-4 rounded-full font-bold gap-1.5 transition-all duration-300",
-            activeFilterCount === 0 && "bg-surface-glass backdrop-blur-md text-text-primary"
+            "shrink-0 h-[44px] px-4 rounded-2xl font-bold gap-1.5 transition-all duration-300",
+            activeFilterCount === 0 && "bg-surface-glass backdrop-blur-md text-text-primary border-border-subtle"
           )}
           aria-label={`Filter ${activeFilterCount > 0 ? `(${activeFilterCount} aktif)` : ""}`}
         >

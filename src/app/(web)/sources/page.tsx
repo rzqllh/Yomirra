@@ -106,20 +106,18 @@ export default function SourcesPage() {
           </div>
 
           <div className="md:hidden flex gap-2 px-4 py-4 pb-2 border-b border-border-subtle bg-surface-base sticky top-[calc(var(--mobile-header-height)+var(--safe-top))] z-[var(--z-sticky)]">
-            <div className="flex-1">
-              <SearchInput
-                value={filter}
-                onChange={(e) => setFilter(e.target.value)}
-                placeholder="Cari sumber terinstall..."
-              />
-            </div>
+            <SearchInput
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              placeholder="Cari sumber..."
+            />
           </div>
 
           <div className="hidden md:block px-4 pb-6">
             <SearchInput
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              placeholder="Cari sumber manga..."
+              placeholder="Cari sumber..."
             />
           </div>
 
