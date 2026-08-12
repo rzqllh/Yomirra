@@ -34,10 +34,10 @@ export function CollectionToolbar({
         onChange={onSearchChange}
         onClear={onSearchClear}
         placeholder="Cari di koleksi..."
-        containerClassName="flex-1 min-w-0 h-[44px]"
+        containerClassName="sm:flex-1 min-w-0 h-[44px]"
       />
 
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex items-center gap-2">
         <CustomSelect
           value={sortBy}
           onChange={(v) => onSortChange(v as "updatedAt" | "title")}
@@ -46,20 +46,21 @@ export function CollectionToolbar({
             { value: "title", label: "Abjad (A-Z)" },
           ]}
           align="right"
-          className="shrink-0"
+          className="flex-1 min-w-0"
         />
 
         {totalCount > 0 && (
           <Button
             variant={isSelectionMode ? "accent" : "outline"}
             onClick={onToggleSelectionMode}
-            className="h-[44px] px-4 rounded-2xl font-bold gap-1.5 shrink-0"
+            className="h-[44px] w-[44px] sm:w-auto sm:px-4 rounded-2xl font-bold gap-1.5 shrink-0"
           >
             <CheckCircle size={18} weight={isSelectionMode ? "fill" : "bold"} />
             <span className="hidden sm:inline">Pilih</span>
           </Button>
         )}
       </div>
+
     </div>
   );
 }

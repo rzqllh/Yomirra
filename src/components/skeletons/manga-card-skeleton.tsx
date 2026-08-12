@@ -2,6 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 export function MangaCardSkeleton({ variant = "grid" }: { variant?: "grid" | "list" | "editorial" | "shelf" | "history" }) {
   if (variant === "history") {
+    // Mirrors HistoryCard: flex gap-4 p-3, cover h-[84px] w-[60px] rounded-sm, action h-8 w-8 rounded-full
     return (
       <div className="flex items-center gap-4 rounded-xl bg-surface-raised/50 p-3 border border-border-subtle/50 w-full">
         <Skeleton className="h-[84px] w-[60px] rounded-sm shrink-0" />
@@ -10,7 +11,8 @@ export function MangaCardSkeleton({ variant = "grid" }: { variant?: "grid" | "li
           <Skeleton className="h-3 w-1/2" />
           <Skeleton className="h-3 w-1/3 mt-1" />
         </div>
-        <Skeleton className="h-10 w-10 rounded-full shrink-0 ml-2" />
+        {/* Play button: real is h-8 w-8 rounded-full */}
+        <Skeleton className="h-8 w-8 rounded-full shrink-0" />
       </div>
     )
   }
@@ -19,11 +21,9 @@ export function MangaCardSkeleton({ variant = "grid" }: { variant?: "grid" | "li
     return (
       <div className="relative flex flex-col w-full rounded-lg overflow-hidden bg-surface-muted border border-border-default shadow-sm aspect-[3/4]">
         <Skeleton className="absolute inset-0 w-full h-full rounded-none" />
-        {/* Top Badges */}
         <div className="absolute top-2 left-2 flex gap-1 z-20">
           <Skeleton className="h-4 w-8 rounded-sm bg-black/20" />
         </div>
-        {/* Bottom Info */}
         <div className="absolute bottom-0 left-0 right-0 p-3 z-20 flex flex-col justify-end">
           <Skeleton className="h-4 w-3/4 mb-2 bg-white/20" />
           <Skeleton className="h-3 w-1/2 bg-white/20" />
@@ -33,17 +33,28 @@ export function MangaCardSkeleton({ variant = "grid" }: { variant?: "grid" | "li
   }
 
   if (variant === "shelf") {
+    // Mirrors ShelfCard: cover aspect-[2/3] rounded-2xl, metadata row mb-1.5, title 2-line min-h-[2.4em], bottom chapter/score row
     return (
-      <div className="relative flex flex-col w-full group">
-        <div className="relative w-full aspect-[1/1.4] overflow-hidden rounded-md mb-2.5">
+      <div className="relative flex flex-col w-full">
+        {/* Cover — matches aspect-[2/3] + rounded-2xl */}
+        <div className="relative w-full aspect-[2/3] overflow-hidden rounded-2xl mb-3">
           <Skeleton className="absolute inset-0 w-full h-full rounded-none" />
-          <div className="absolute top-1.5 left-1.5 z-20">
-            <Skeleton className="h-4 w-8 rounded-xs bg-black/20" />
+          {/* Source/rank badge top-left */}
+          <div className="absolute top-2 left-2 z-20">
+            <Skeleton className="h-4 w-10 rounded-full bg-black/20" />
           </div>
         </div>
-        <div className="flex flex-col px-0.5 space-y-1">
-          <Skeleton className="h-3.5 w-full" />
-          <Skeleton className="h-3.5 w-2/3" />
+        <div className="flex flex-col px-0.5">
+          {/* Metadata row: format + source badge */}
+          <Skeleton className="h-2.5 w-16 mb-1.5" />
+          {/* Title — 2 lines, min-h mirrors min-h-[2.4em] at text-[13px] ≈ 34px */}
+          <Skeleton className="h-3.5 w-full mb-1" />
+          <Skeleton className="h-3.5 w-2/3 mb-2" />
+          {/* Bottom row: chapter + score */}
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-2.5 w-2/5" />
+            <Skeleton className="h-2.5 w-10" />
+          </div>
         </div>
       </div>
     )
