@@ -10,7 +10,7 @@ import { SearchInput } from "@/components/ui/search-input";
 import { SourceCard } from "@/components/source/source-card";
 import { DirectionalTransition } from "@/components/ui/directional-transition";
 import { YomirraSurface } from "@/components/ui/layout";
-import { YomirraPageHeader, DesktopPageTitle } from "@/components/app/header";
+import { PageHeader } from "@/components/app/header";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { Button } from "@/components/ui/button";
@@ -97,14 +97,12 @@ export default function SourcesPage() {
     <PullToRefresh onRefresh={handleRefresh}>
       <div className="flex flex-col min-h-screen">
         <YomirraSurface variant="base" className="flex-1 w-full max-w-7xl mx-auto md:pb-8 relative">
-          <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:pt-8 md:px-8 pb-4 flex flex-col md:flex-row justify-between md:items-center gap-4">
-            <div className="flex-1 w-full">
-              <DesktopPageTitle
-                title="Sumber"
-                description="Kelola sumber bacaan untuk Yomirra."
-                icon={<HardDrives size={32} weight="duotone" />}
-              />
-            </div>
+          <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:pt-8 md:px-8 pb-4">
+            <PageHeader
+              title="Sumber"
+              description="Kelola sumber bacaan untuk Yomirra."
+              icon={<HardDrives size={32} weight="duotone" />}
+            />
           </div>
 
           <div className="md:hidden flex gap-2 px-4 py-4 pb-2 border-b border-border-subtle bg-surface-base sticky top-[calc(var(--mobile-header-height)+var(--safe-top))] z-[var(--z-sticky)]">

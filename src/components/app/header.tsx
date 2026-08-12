@@ -5,45 +5,52 @@ import { useRouter } from "next/navigation"
 import { ArrowLeft } from "@phosphor-icons/react"
 import { cn } from "@/shared/utils/cn"
 
-export interface YomirraPageHeaderProps {
+export interface PageHeaderProps {
+  /** Main section title */
   title: string
-  showBack?: boolean
-  backHref?: string
-  action?: React.ReactNode
+  /** Section description or subtitle */
+  description?: React.ReactNode
+  /** Section icon element */
   icon?: React.ReactNode
-  className?: string
-  /** 
-   * "transparent" = completely blends with canvas.
-   * "glass" = explicitly translucent panel (for when scrolling underneath).
-   * "auto" = (default) transparent at top, becomes glass on scroll.
-   */
+  /** Show back button on mobile header */
+  showBack?: boolean
+  /** Back button navigation target */
+  backHref?: string
+  /** Header action elements (buttons, links, triggers) */
+  actions?: React.ReactNode
+  /** Compositional meta elements (counters, badges, filters status) */
+  meta?: React.ReactNode
+  /** Mobile header background variant */
   variant?: "transparent" | "glass" | "auto"
-  /**
-   * Only show title when scrolled (fades in on scroll)
-   */
-  showTitleOnScrollOnly?: boolean
+  /** Outer wrapper className override */
+  className?: string
 }
 
-export function YomirraPageHeader({
+/**
+ * Canonical Section / Destination Page Header for Yomirra.
+ * Encapsulates responsive mobile navigation bar and desktop hero section title.
+ */
+export function PageHeader({
   title,
+  description,
+  icon,
   showBack = false,
   backHref,
-  action,
-  icon,
-  className,
+  actions,
+  meta,
   variant = "auto",
-  showTitleOnScrollOnly = false,
-}: YomirraPageHeaderProps) {
+  className,
+}: PageHeaderProps) {
   const router = useRouter()
   const [scrolled, setScrolled] = React.useState(false)
 
   React.useEffect(() => {
     if (variant !== "auto") return
-    
+
     const handleScroll = () => {
       setScrolled(window.scrollY > 10)
     }
-    
+
     window.addEventListener("scroll", handleScroll, { passive: true })
     handleScroll()
     return () => window.removeEventListener("scroll", handleScroll)
@@ -60,49 +67,110 @@ export function YomirraPageHeader({
   const isGlass = variant === "glass" || (variant === "auto" && scrolled)
 
   return (
-    <header
-      className={cn( "md:hidden fixed top-0 left-0 right-0 z-[var(--z-sticky)] flex w-full items-center justify-between px-4 pt-[calc(var(--safe-top)+12px)] pb-2 transition-all duration-300 ease-out pointer-events-none", isGlass ? "bg-surface-glass backdrop-blur-md border-b border-border-default shadow-sm" : "bg-transparent border-transparent shadow-none", className )}
-    >
-      <div className="flex items-center justify-between w-full transition-all duration-300 ease-out pointer-events-auto h-[56px]">
-        
-        {/* Left Side: Back button OR Large Title + Icon */}
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          {showBack ? (
-            <>
+    <>
+      {/* ── Mobile Navigation Bar (md:hidden) ── */}
+      <header
+        className={cn(
+          "md:hidden fixed top-0 left-0 right-0 z-[var(--z-sticky)] flex w-full items-center justify-between px-4 pt-[calc(var(--safe-top)+12px)] pb-2 transition-all duration-300 ease-out pointer-events-none",
+          isGlass
+            ? "bg-surface-glass backdrop-blur-md border-b border-border-default shadow-sm"
+            : "bg-transparent border-transparent shadow-none",
+          className
+        )}
+      >
+        <div className="flex items-center justify-between w-full transition-all duration-300 ease-out pointer-events-auto min-h-[56px]">
+          <div className="flex items-center gap-2.5 flex-1 min-w-0">
+            {showBack ? (
               <button
                 onClick={handleBack}
-                className="flex min-h-[36px] min-w-[36px] items-center justify-center rounded-full transition-colors text-text-primary hover:bg-black/5 dark:hover:bg-surface-hover active:bg-black/10 dark:active:bg-surface-hover/80"
+                className="flex min-h-[36px] min-w-[36px] items-center justify-center rounded-full transition-colors text-text-primary hover:bg-black/5 dark:hover:bg-surface-hover active:bg-black/10 dark:active:bg-surface-hover/80 shrink-0"
                 aria-label="Kembali"
               >
                 <ArrowLeft size={20} weight="bold" />
               </button>
-              <h1 className="text-lg font-bold tracking-tight text-text-primary truncate ml-0">
-                {title}
-              </h1>
-            </>
-          ) : (
-            <div className="flex items-center gap-2.5 ml-1 flex-1 min-w-0">
-              {icon && (
-                <div className="text-accent bg-accent/10 p-1.5 rounded-lg border border-accent/20">
+            ) : (
+              icon && (
+                <div className="text-accent bg-accent/10 p-1.5 rounded-lg border border-accent/20 shrink-0">
                   {icon}
                 </div>
-              )}
-              <h1 className={cn(
-                showTitleOnScrollOnly
-                  ? "text-sm md:text-base font-bold tracking-tight text-text-primary truncate block w-full transition-all duration-300"
-                  : "text-2xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-text-primary to-text-secondary truncate block w-full",
-                showTitleOnScrollOnly && (isGlass ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none")
-              )}>
+              )
+            )}
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <h1 className="text-xl font-extrabold tracking-tight text-text-primary truncate">
                 {title}
               </h1>
+              {meta && <div className="shrink-0 text-sm font-semibold text-text-muted">{meta}</div>}
             </div>
-          )}
-        </div>
+          </div>
 
-        {/* Right Side: Action Button */}
-        {action && <div className="shrink-0">{action}</div>}
+          {actions && <div className="shrink-0 ml-2">{actions}</div>}
+        </div>
+      </header>
+
+      {/* ── Desktop Hero Section Header (hidden md:block) ── */}
+      <div className={cn("hidden md:block relative overflow-hidden rounded-2xl bg-surface-muted/30 border border-border-subtle p-6 md:p-8 mb-6 md:mb-8", className)}>
+        <div className="absolute inset-0 bg-gradient-to-br from-brand-500/5 to-transparent pointer-events-none" />
+        <div className="relative flex items-center justify-between gap-4">
+          <div className="flex items-start gap-4 flex-1 min-w-0">
+            {icon && (
+              <div className="shrink-0 p-3 bg-surface-base rounded-xl shadow-sm border border-border-default/50 text-accent">
+                {icon}
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-3">
+                <h1 className="text-3xl md:text-4xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-text-primary to-text-secondary truncate">
+                  {title}
+                </h1>
+                {meta && <div className="shrink-0">{meta}</div>}
+              </div>
+              {description && (
+                <div className="text-text-muted mt-2 text-sm md:text-base max-w-2xl font-medium">
+                  {description}
+                </div>
+              )}
+            </div>
+          </div>
+          {actions && <div className="shrink-0">{actions}</div>}
+        </div>
       </div>
-    </header>
+    </>
+  )
+}
+
+// ── Backward Compatibility Wrappers (Deprecated) ──
+
+export interface YomirraPageHeaderProps {
+  title: string
+  showBack?: boolean
+  backHref?: string
+  action?: React.ReactNode
+  icon?: React.ReactNode
+  className?: string
+  variant?: "transparent" | "glass" | "auto"
+  showTitleOnScrollOnly?: boolean
+}
+
+/** @deprecated Use canonical `PageHeader` component instead. */
+export function YomirraPageHeader({
+  title,
+  showBack = false,
+  backHref,
+  action,
+  icon,
+  className,
+  variant = "auto",
+}: YomirraPageHeaderProps) {
+  return (
+    <PageHeader
+      title={title}
+      showBack={showBack}
+      backHref={backHref}
+      actions={action}
+      icon={icon}
+      variant={variant}
+      className={cn("md:hidden", className)}
+    />
   )
 }
 
@@ -113,30 +181,16 @@ export interface DesktopPageTitleProps {
   action?: React.ReactNode
 }
 
+/** @deprecated Use canonical `PageHeader` component instead. */
 export function DesktopPageTitle({ title, description, icon, action }: DesktopPageTitleProps) {
   return (
-    <div className="hidden md:block relative overflow-hidden rounded-2xl bg-surface-muted/30 border border-border-subtle p-6 md:p-8">
-      <div className="absolute inset-0 bg-gradient-to-br from-brand-500/5 to-transparent pointer-events-none" />
-      <div className="relative flex items-center justify-between gap-4">
-        <div className="flex items-start gap-4">
-          {icon && (
-            <div className="shrink-0 p-3 bg-surface-base rounded-xl shadow-sm border border-border-default/50 text-accent">
-              {icon}
-            </div>
-          )}
-          <div>
-            <h1 className="text-3xl md:text-4xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-text-primary to-text-secondary">
-              {title}
-            </h1>
-            {description && (
-              <p className="text-text-muted mt-2 text-sm md:text-base max-w-2xl font-medium">
-                {description}
-              </p>
-            )}
-          </div>
-        </div>
-        {action && <div className="shrink-0">{action}</div>}
-      </div>
+    <div className="hidden md:block">
+      <PageHeader
+        title={title}
+        description={description}
+        icon={icon}
+        actions={action}
+      />
     </div>
   )
 }
