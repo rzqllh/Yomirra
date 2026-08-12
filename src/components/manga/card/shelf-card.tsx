@@ -2,11 +2,12 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ImageBroken, TrendUp, Star } from "@phosphor-icons/react";
+import { TrendUp, Star } from "@phosphor-icons/react";
 import { getMangaDetailHref } from "@/shared/lib/routes";
 import { motion } from "motion/react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { sourceRegistry } from "@/shared/sources/source-registry";
+import { MangaCover } from "../manga-cover";
 import { BookmarkButton } from "../bookmark-button";
 import { useCollectionStore } from "@/shared/store/collection-store";
 import type { MangaKey } from "@/shared/types/collection";
@@ -24,7 +25,6 @@ export function ShelfCard({
   showSourceBadge = false,
   displayScore
 }: ShelfCardProps) {
-  const [imageError, setImageError] = React.useState(false);
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { readingStatusByManga } = useCollectionStore();
@@ -56,27 +56,13 @@ export function ShelfCard({
           className="relative w-full aspect-[2/3] overflow-hidden rounded-2xl bg-surface-base border-none shadow-none vt-hover"
           style={vtStyle}
         >
-          {manga.coverUrl && !imageError ? (
-            <img
-              src={manga.coverUrl}
-              alt={manga.title}
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-              onError={() => setImageError(true)}
-              ref={(img) => {
-                if (img && img.complete && img.naturalWidth === 0) {
-                  setImageError(true);
-                }
-              }}
-              referrerPolicy="no-referrer"
-              decoding="async"
-              loading={priority ? "eager" : "lazy"}
-            />
-          ) : (
-            <div className="absolute inset-0 w-full h-full bg-surface-muted flex flex-col items-center justify-center text-text-muted/50 p-4">
-              <ImageBroken size={32} weight="duotone" className="mb-2" />
-              <span className="text-xs font-medium text-center line-clamp-2 px-2">{manga.title}</span>
-            </div>
-          )}
+          <MangaCover
+            src={manga.coverUrl}
+            alt={manga.title}
+            priority={priority}
+            fallbackTitle={manga.title}
+            imageClassName="transition-transform duration-500 ease-out group-hover:scale-105"
+          />
           
           <div className="absolute top-2 left-2 flex flex-col gap-1.5 z-20 items-start">
             {manga.rank !== undefined && (

@@ -15,7 +15,7 @@ import { MangaRating } from "@/components/manga/manga-rating";
 import { MangaRecommendations } from "@/components/manga/manga-recommendations";
 import { MangaStatusButton } from "@/components/manga/manga-status-button";
 import { MangaCollectionButton } from "@/components/manga/manga-collection-button";
-import { YomirraPageHeader } from "@/components/app/header";
+import { PageHeader } from "@/components/app/header";
 import { MangaHeaderActions } from "./manga-header-actions";
 import { Star } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
@@ -206,12 +206,11 @@ export function MangaDetailView({
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-surface-base/60 to-surface-base/95" />
       </div>
 
-      <YomirraPageHeader
+      <PageHeader
         title={detail.title}
-        showBack={false}
-        showTitleOnScrollOnly
+        showBack={true}
         variant="auto"
-        action={
+        actions={
           <MangaHeaderActions
             sourceId={sourceId}
             mangaId={mangaId}

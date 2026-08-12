@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
-import { YomirraPageHeader } from "@/components/app/header";
+import { PageHeader } from "@/components/app/header";
 import { ShelfCard } from "@/components/manga/card";
 import { SearchResultSkeleton } from "@/components/skeletons/search-result-skeleton";
 import { useSearchParams } from "next/navigation";
@@ -59,10 +59,9 @@ export default function SourceBrowsePage({
 
   return (
     <main className="min-h-screen bg-surface-base flex flex-col">
-      <YomirraPageHeader
-        title={sort === "popular" ? `Populer di ${sourceName}` : `Terbaru di ${sourceName}`}
-        variant="auto"
-      />
+      <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:px-8 md:pt-8">
+        <PageHeader title={sourceInfo?.name || sourceId} showBack={true} />
+      </div>
 
       <div className="px-4 pt-2 pb-6 max-w-7xl mx-auto w-full flex-1 flex flex-col">
         <div className="flex items-center justify-between bg-surface-raised p-4 rounded-xl border border-border-subtle mb-6">

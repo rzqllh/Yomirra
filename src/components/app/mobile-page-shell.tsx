@@ -1,5 +1,5 @@
 import * as React from "react"
-import { YomirraPageHeader } from "./header"
+import { PageHeader } from "./header"
 import { cn } from "@/shared/utils/cn"
 
 interface MobilePageShellProps {
@@ -21,8 +21,8 @@ export function MobilePageShell({
 }: MobilePageShellProps) {
   return (
     <div className={cn("flex flex-col min-h-screen bg-surface-base", className)}>
-      <div className="md:hidden">
-        <YomirraPageHeader title={title} showBack={showBack} action={action} icon={icon} variant="auto" />
+      <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:px-8 md:pt-8">
+        <PageHeader title={title} showBack={showBack} actions={action} icon={icon} />
       </div>
       <div className={cn("flex-1", className)}>{children}</div>
     </div>

@@ -3,7 +3,7 @@ import { sourceManager } from "@/server/lib/sources/source-manager";
 import { withCache, CACHE_TTL } from "@/server/lib/cache/redis-cache";
 import { MangaDetailView } from "@/components/manga/manga-detail-view";
 import { ErrorState } from "@/components/states/error-state";
-import { YomirraPageHeader } from "@/components/app/header";
+import { PageHeader } from "@/components/app/header";
 import { getManifestUrlFromCookie } from "@/server/lib/sources/server-manifest";
 import { cookies } from "next/headers";
 
@@ -62,7 +62,9 @@ export default async function MangaDetailPage({
     return (
       <main className="min-h-screen flex flex-col w-full relative">
         <div className="md:hidden">
-          <YomirraPageHeader title="Error" variant="auto" />
+        <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:px-8 md:pt-8">
+          <PageHeader title="Error" showBack={true} />
+        </div>
         </div>
         <div className="w-full max-w-7xl mx-auto px-4 md:px-8 pt-24 pb-24 relative z-10 flex flex-col items-center justify-center">
           <ErrorState 
