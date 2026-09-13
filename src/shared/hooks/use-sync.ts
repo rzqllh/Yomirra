@@ -15,6 +15,11 @@ export function useSync(options = { autoSync: true }) {
   const { setLastSyncedAt } = useSettingsStore();
   const { syncWithCloud: syncSourcePrefsWithCloud } = useSourcePreferencesStore();
   
+  const currentUidRef = useRef<string | undefined>(user?.uid);
+  useEffect(() => {
+    currentUidRef.current = user?.uid;
+  }, [user?.uid]);
+  
   const hasSyncedInitial = useRef(false);
   const [isSyncing, setIsSyncing] = useState(false);
 
@@ -78,6 +83,7 @@ export function useSync(options = { autoSync: true }) {
       });
 
       Object.entries(remoteLibrary).forEach(([id, remoteItem]) => {
+        if (currentUidRef.current !== uid) return;
         const localItem = libraryItems[id];
         if (!localItem || new Date(remoteItem.updatedAt).getTime() > new Date(localItem.updatedAt).getTime()) {
           // Pull remote to local
@@ -98,6 +104,7 @@ export function useSync(options = { autoSync: true }) {
       });
 
       Object.entries(remoteHistory).forEach(([id, remoteItem]) => {
+        if (currentUidRef.current !== uid) return;
         const localItem = historyItems[id];
         if (!localItem || new Date(remoteItem.readAt).getTime() > new Date(localItem.readAt).getTime()) {
           // Pull remote to local
@@ -108,12 +115,15 @@ export function useSync(options = { autoSync: true }) {
       // 5. Sync Source Preferences (Pull from Cloud)
       try {
         const cloudPrefs = await pullSourcePreferences();
+        if (currentUidRef.current !== uid) return;
         if (cloudPrefs) {
           syncSourcePrefsWithCloud(cloudPrefs.disabledSources, cloudPrefs.hiddenFromHomeSources);
         }
       } catch (e) {
         console.error("Failed to pull source preferences during sync", e);
       }
+
+      if (currentUidRef.current !== uid) return;
 
       commitCurrentBatch();
       await Promise.all(commitBatches);
@@ -169,6 +179,7 @@ export function useSync(options = { autoSync: true }) {
 
     let unsubLibrary: () => void;
     let unsubHistory: () => void;
+    let unsubPrefs: () => void;
 
     initFirebase().then(({ db }) => {
       if (!db) return;
@@ -207,7 +218,7 @@ export function useSync(options = { autoSync: true }) {
 
         // Preferences sync listener
         import('firebase/firestore').then(({ doc, onSnapshot: onDocSnapshot }) => {
-          onDocSnapshot(doc(db, `users/${uid}/preferences`, "sources"), (docSnap) => {
+          unsubPrefs = onDocSnapshot(doc(db, `users/${uid}/preferences`, "sources"), (docSnap) => {
             if (docSnap.exists()) {
               const data = docSnap.data();
               if (Array.isArray(data.disabledSources) || Array.isArray(data.hiddenFromHomeSources)) {
@@ -225,6 +236,7 @@ export function useSync(options = { autoSync: true }) {
     return () => {
       if (unsubLibrary) unsubLibrary();
       if (unsubHistory) unsubHistory();
+      if (unsubPrefs) unsubPrefs();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.uid, options.autoSync]);

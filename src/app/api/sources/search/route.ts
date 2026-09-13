@@ -1,8 +1,9 @@
+export const dynamic = "force-dynamic";
 import { checkRateLimit } from "@/server/lib/security/rate-limit";
 import { NextRequest, NextResponse } from "next/server";
 import { sourceManager } from "@/server/lib/sources/source-manager";
 import { MangaItem } from "@/shared/sources/source-types";
-import { withCache, CACHE_TTL } from "@/server/lib/cache/redis-cache";
+import { withCache, CACHE_TTL, getSourceCacheKey } from "@/server/lib/cache/redis-cache";
 import { redis } from "@/server/lib/cache/redis";
 import { createHash } from "crypto";
 
@@ -38,8 +39,6 @@ export async function GET(req: NextRequest) {
     }
   });
 
-  // Removed 400 error for empty query so it can fallback to getLatest
-
   const queryStr = q || "";
 
   if (!sourcesParam) {
@@ -52,7 +51,22 @@ export async function GET(req: NextRequest) {
   if (Object.keys(filters).length > 0) {
     filterKey = `:${createHash("md5").update(JSON.stringify(filters)).digest("hex").slice(0, 8)}`;
   }
-  const cacheKey = `global:search:${queryStr}:sources:${sourceIds.sort().join(",")}:page:${page}${filterKey}`;
+
+  const loadedSources: Record<string, any> = {};
+  const sourceKeys: string[] = [];
+  
+  for (const sourceId of sourceIds) {
+    try {
+      const source = await sourceManager.getSource(sourceId);
+      loadedSources[sourceId] = source;
+      sourceKeys.push(getSourceCacheKey(source, "global", ""));
+    } catch {
+      // Source not found, handled during execution
+    }
+  }
+
+  const sourcesFingerprint = createHash("md5").update(sourceKeys.sort().join(",")).digest("hex").slice(0, 8);
+  const cacheKey = `global:search:v2:${queryStr}:sources:${sourcesFingerprint}:page:${page}${filterKey}`;
 
   try {
     const cachedData = await withCache(
@@ -61,10 +75,8 @@ export async function GET(req: NextRequest) {
         const results: GlobalSearchResponse["resultsBySource"] = {};
         
         const promises = sourceIds.map(async (sourceId) => {
-          let source;
-          try {
-            source = await sourceManager.getSource(sourceId);
-          } catch {
+          let source = loadedSources[sourceId];
+          if (!source) {
             results[sourceId] = { results: [], error: "Source not found" };
             return;
           }
@@ -113,3 +125,4 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: { message: "Internal server error" } }, { status: 500 });
   }
 }
+

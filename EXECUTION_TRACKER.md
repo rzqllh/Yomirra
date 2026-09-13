@@ -23,7 +23,7 @@
 
 # Phase 0 — Security & Correctness Gate
 
-**Status:** `NOT_STARTED`
+**Status:** `CLOSED`
 **Branch:** `phase/0-security-correctness`
 
 ## W0.1 — Dynamic Source Identity Isolation

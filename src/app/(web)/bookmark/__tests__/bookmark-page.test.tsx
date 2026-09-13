@@ -25,7 +25,7 @@ vi.mock('@/shared/store/source-preferences-store', () => ({
 }));
 
 vi.mock('@/shared/hooks/use-nsfw-source-ids', () => ({
-  useNsfwSourceIds: vi.fn(() => new Set()),
+  useNsfwSourceIds: vi.fn(() => ({ status: "KNOWN", ids: new Set() })),
 }));
 
 vi.mock('@/shared/hooks/use-mounted', () => ({

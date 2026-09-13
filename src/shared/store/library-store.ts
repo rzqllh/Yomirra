@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { pushLibraryItem, deleteLibraryItem } from "@/shared/lib/sync-utils";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
+import { sourceRegistry } from "@/shared/sources/source-registry";
 import { toast } from "sonner";
 
 export type LibraryItem = {
@@ -68,8 +69,9 @@ export const useLibraryStore = create<LibraryState>()(
         const previousState = get().items;
         set((state) => {
           if (item.isNsfw === undefined) {
-            const source = dynamicSourceRegistry.get(item.sourceId);
-            if (source) item.isNsfw = source.isNsfw;
+            const source = dynamicSourceRegistry.get(item.sourceId) || sourceRegistry.find(s => s.id === item.sourceId);
+            if (source) item.isNsfw = source.isNsfw === true;
+            else item.isNsfw = false; // default safe if unknown
           }
           const id = getLibraryId(item.sourceId, item.mangaId);
           return {
@@ -143,11 +145,12 @@ export const useLibraryStore = create<LibraryState>()(
 
           let isNsfw = existing.isNsfw;
           if (isNsfw === undefined && patch.isNsfw === undefined) {
-            const source = dynamicSourceRegistry.get(sourceId);
-            if (source) isNsfw = source.isNsfw;
+            const source = dynamicSourceRegistry.get(sourceId) || sourceRegistry.find(s => s.id === sourceId);
+            if (source) isNsfw = source.isNsfw === true;
+            else isNsfw = false;
           }
 
-          updatedItem = { ...existing, ...patch, isNsfw: patch.isNsfw !== undefined ? patch.isNsfw : isNsfw, updatedAt: new Date().toISOString() };
+          updatedItem = { ...existing, ...patch, isNsfw: patch.isNsfw !== undefined ? patch.isNsfw === true : isNsfw === true, updatedAt: new Date().toISOString() };
           return {
             items: {
               ...state.items,

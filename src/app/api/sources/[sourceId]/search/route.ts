@@ -1,8 +1,9 @@
+export const dynamic = "force-dynamic";
 import { createHash } from "crypto";
 import { checkRateLimit } from "@/server/lib/security/rate-limit";
 import { NextRequest, NextResponse } from "next/server";
 import { sourceManager } from "@/server/lib/sources/source-manager";
-import { withCache, CACHE_TTL } from "@/server/lib/cache/redis-cache";
+import { withCache, CACHE_TTL, getSourceCacheKey } from "@/server/lib/cache/redis-cache";
 import { searchSchema, sourceParamsSchema } from "@/server/lib/validation/api";
 
 export async function GET(
@@ -55,11 +56,10 @@ export async function GET(
       }
     });
 
-    // Make cache key deterministic regarding filters
     const filterKey = Object.keys(filters).length > 0 
       ? `:${createHash("md5").update(JSON.stringify(filters)).digest("hex").slice(0, 8)}`
       : "";
-    const cacheKey = `source:${sourceId}:search:v4:${q}:${page}${filterKey}`;
+    const cacheKey = getSourceCacheKey(source, "search", `v4:${q}:${page}${filterKey}`);
 
     const data = await withCache(
       cacheKey,
@@ -75,3 +75,4 @@ export async function GET(
     );
   }
 }
+

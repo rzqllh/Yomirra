@@ -17,7 +17,7 @@ export function useBookmarkCollection() {
   const libraryItems = Object.values(libraryItemsMap);
   const removeFromLibrary = useLibraryStore((state) => state.removeFromLibrary);
   const hideNsfw = useSettingsStore((state) => state.hideNsfw);
-  const nsfwSourceIds = useNsfwSourceIds();
+  const { status: nsfwStatus, ids: nsfwSourceIds } = useNsfwSourceIds();
   const { isSourceDisabled } = useSourcePreferencesStore();
 
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -45,9 +45,13 @@ export function useBookmarkCollection() {
     });
 
     if (hideNsfw) {
-      result = result.filter(
-        (item) => !isFromNsfwSource(item.sourceId, item.isNsfw)
-      );
+      if (nsfwStatus !== "KNOWN") {
+        result = [];
+      } else {
+        result = result.filter(
+          (item) => !isFromNsfwSource(item.sourceId, item.isNsfw)
+        );
+      }
     }
 
     if (searchQuery.trim() !== "") {
@@ -63,7 +67,7 @@ export function useBookmarkCollection() {
     });
 
     return result;
-  }, [isMounted, libraryItems, searchQuery, sortBy, hideNsfw, isFromNsfwSource, isSourceDisabled]);
+  }, [isMounted, libraryItems, searchQuery, sortBy, hideNsfw, nsfwStatus, isFromNsfwSource, isSourceDisabled]);
 
   // Reset pagination when search or sort changes
   React.useEffect(() => {
