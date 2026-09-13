@@ -48,6 +48,11 @@ export interface LibraryResultsProps {
   setPage: React.Dispatch<React.SetStateAction<number>>;
   hasNextPage?: boolean;
   onResetFilters: () => void;
+  
+  // Selection mode props
+  isSelectionMode?: boolean;
+  selectedItems?: Set<string>;
+  onToggleSelectItem?: (key: string) => void;
 }
 
 export function LibraryResults({
@@ -71,6 +76,9 @@ export function LibraryResults({
   setPage,
   hasNextPage,
   onResetFilters,
+  isSelectionMode,
+  selectedItems,
+  onToggleSelectItem,
 }: LibraryResultsProps) {
   const router = useRouter();
 
@@ -168,13 +176,42 @@ export function LibraryResults({
         )}
       >
         <AnimatePresence>
-          {mangas.map(manga =>
-            viewMode === "grid" ? (
-              <ShelfCard key={manga.id} manga={manga} sourceId={activeSourceId} showSourceBadge={true} />
+          {mangas.map(manga => {
+            const itemKey = `${activeSourceId}::${manga.id}`;
+            const isSelected = selectedItems?.has(itemKey);
+
+            return viewMode === "grid" ? (
+              <div key={manga.id} className="relative group">
+                <ShelfCard manga={manga} sourceId={activeSourceId} showSourceBadge={true} />
+                {isSelectionMode && onToggleSelectItem && (
+                  <button
+                    type="button"
+                    onClick={() => onToggleSelectItem(itemKey)}
+                    className={cn(
+                      "absolute inset-0 z-20 rounded-2xl flex items-start justify-end p-2.5 transition-all duration-200",
+                      isSelected
+                        ? "bg-accent/20 border-2 border-accent"
+                        : "bg-black/40 hover:bg-black/50 border border-white/20"
+                    )}
+                    aria-label={`${isSelected ? "Batal pilih" : "Pilih"} ${manga.title}`}
+                  >
+                    <div
+                      className={cn(
+                        "w-6 h-6 rounded-full flex items-center justify-center transition-transform duration-200",
+                        isSelected
+                          ? "bg-accent text-white scale-110"
+                          : "bg-surface-glass border border-white/40"
+                      )}
+                    >
+                      {isSelected && <span className="text-xs font-black">✓</span>}
+                    </div>
+                  </button>
+                )}
+              </div>
             ) : (
               <HistoryCard key={manga.id} manga={manga} sourceId={activeSourceId} />
-            )
-          )}
+            );
+          })}
         </AnimatePresence>
       </motion.div>
 
