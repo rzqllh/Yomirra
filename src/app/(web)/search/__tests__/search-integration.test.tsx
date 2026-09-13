@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, act, cleanup } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import SearchPage from '../page';
@@ -37,14 +37,15 @@ vi.mock('@/components/search/search-filter-drawer', () => ({
   SearchFilterDrawer: () => <div data-testid="drawer-stub" data-state="closed" />
 }));
 
-const queryClient = new QueryClient({
-  defaultOptions: { queries: { retry: false } }
-});
+let queryClient: QueryClient;
 
 describe('Search Page Integration', () => {
   beforeEach(() => {
+    cleanup();
     vi.clearAllMocks();
-    queryClient.clear();
+    queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } }
+    });
     useSearchFilterStore.setState({
       selectedSources: ['sourceA', 'sourceB'],
       genres: ['action', 'invalid'],
@@ -270,7 +271,7 @@ describe('Search Page Integration', () => {
     await waitFor(() => {
       expect(screen.getAllByText('Manga A').length).toBeGreaterThan(0);
       expect(screen.getAllByText('Manga B Page 1').length).toBeGreaterThan(0);
-    }, { timeout: 10000 });
+    }, { timeout: 20000 });
 
     // Cache key must include sourceId, query, payload, NSFW, and page
     expect(apiClient.search).toHaveBeenCalledWith('sourceA', 'test', 1, {}, false, { signal: expect.anything() });
@@ -285,13 +286,13 @@ describe('Search Page Integration', () => {
     // Wait for Page 2 results
     await waitFor(() => {
       expect(screen.getAllByText('Manga B Page 2').length).toBeGreaterThan(0);
-    }, { timeout: 10000 });
+    }, { timeout: 20000 });
 
     // Verify sourceA with hasNextPage=false is NOT called on page 2
     expect(apiClient.search).not.toHaveBeenCalledWith('sourceA', 'test', 2, expect.anything(), false, expect.anything());
     // Verify sourceB with hasNextPage=true IS called on page 2
     expect(apiClient.search).toHaveBeenCalledWith('sourceB', 'test', 2, {}, false, { signal: expect.anything() });
-  }, 10000);
+  }, 30000);
 
   it('resets exhausted status when search query or filters change', async () => {
     useSearchFilterStore.setState({

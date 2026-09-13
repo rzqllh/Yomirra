@@ -1,4 +1,4 @@
-export type MangaKey = `${string}::${string}`;
+export type MangaKey = string; // SavedTitleId — legacy items use "sourceId::mangaId", new items use UUID
 
 export type ReadingStatus = 
   | "reading" 
