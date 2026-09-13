@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { checkRateLimit } from "@/server/lib/security/rate-limit";
 import { NextRequest, NextResponse } from "next/server";
 import { sourceManager } from "@/server/lib/sources/source-manager";
@@ -36,3 +37,4 @@ export async function GET(
     }, { status: 500 });
   }
 }
+

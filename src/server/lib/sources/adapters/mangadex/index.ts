@@ -107,6 +107,7 @@ export class MangaDexSource implements MangaSource {
   isInstalled = true;
   status = "online" as const;
   isNsfw = true;
+  isDynamic = false;
   capabilities = {
     popular: true,
     latest: true,

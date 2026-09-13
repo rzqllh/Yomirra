@@ -1,7 +1,8 @@
+export const dynamic = "force-dynamic";
 import { checkRateLimit } from "@/server/lib/security/rate-limit";
 import { NextRequest, NextResponse } from "next/server";
 import { sourceManager } from "@/server/lib/sources/source-manager";
-import { withCache, CACHE_TTL } from "@/server/lib/cache/redis-cache";
+import { withCache, CACHE_TTL, getSourceCacheKey } from "@/server/lib/cache/redis-cache";
 import { paginationSchema, sourceParamsSchema } from "@/server/lib/validation/api";
 
 export async function GET(
@@ -28,7 +29,7 @@ export async function GET(
 
   try {
     const source = await sourceManager.getSource(sourceId, request.nextUrl.searchParams.get("manifestUrl"));
-    const cacheKey = `source:${sourceId}:latest:${page}`;
+    const cacheKey = getSourceCacheKey(source, "latest", `page=${page}`);
 
     const data = await withCache(
       cacheKey,
@@ -44,3 +45,4 @@ export async function GET(
     );
   }
 }
+

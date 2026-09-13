@@ -11,6 +11,7 @@ interface SourcePreferencesState {
   toggleHomeSource: (sourceId: string) => void;
   isSourceHiddenFromHome: (sourceId: string) => boolean;
   syncWithCloud: (cloudDisabledSources: string[], cloudHiddenFromHomeSources?: string[]) => void;
+  clearPreferences: () => void;
 }
 
 export const useSourcePreferencesStore = create<SourcePreferencesState>()(
@@ -64,6 +65,13 @@ export const useSourcePreferencesStore = create<SourcePreferencesState>()(
           document.cookie = `yomirra-disabled-sources=${encodeURIComponent(JSON.stringify(cloudDisabledSources))}; path=/; max-age=31536000`;
         }
         set({ disabledSources: cloudDisabledSources, hiddenFromHomeSources: cloudHiddenFromHomeSources })
+      },
+
+      clearPreferences: () => {
+        if (typeof document !== 'undefined') {
+          document.cookie = `yomirra-disabled-sources=[]; path=/; max-age=31536000`;
+        }
+        set({ disabledSources: [], hiddenFromHomeSources: [] });
       },
     }),
     {

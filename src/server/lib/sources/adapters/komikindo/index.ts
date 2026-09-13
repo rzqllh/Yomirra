@@ -22,6 +22,7 @@ export class KomikindoSource implements MangaSource {
   isInstalled = true;
   status = "online" as const;
   isNsfw = false;
+  isDynamic = false;
   capabilities = {
     popular: true,
     latest: true,

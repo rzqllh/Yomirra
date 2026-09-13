@@ -13,6 +13,7 @@ interface CollectionActions {
   
   setReadingStatus: (mangaKey: MangaKey, status: ReadingStatus) => void;
   clearReadingStatus: (mangaKey: MangaKey) => void;
+  clearCollections: () => void;
 }
 
 export type CollectionStore = CollectionState & CollectionActions;
@@ -23,6 +24,8 @@ export const useCollectionStore = create<CollectionStore>()(
       collections: [],
       membershipsByManga: {},
       readingStatusByManga: {},
+      
+      clearCollections: () => set({ collections: [], membershipsByManga: {}, readingStatusByManga: {} }),
 
       createCollection: (name: string) => {
         const trimmedName = name.trim();

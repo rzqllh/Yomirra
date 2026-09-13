@@ -15,7 +15,7 @@ export function useBookmarkReading() {
   useHistoryStore((state) => state.items);
   const removeMangaHistory = useHistoryStore((state) => state.removeMangaHistory);
   const hideNsfw = useSettingsStore((state) => state.hideNsfw);
-  const nsfwSourceIds = useNsfwSourceIds();
+  const { status: nsfwStatus, ids: nsfwSourceIds } = useNsfwSourceIds();
   const { isSourceDisabled } = useSourcePreferencesStore();
 
   const isFromNsfwSource = React.useCallback(
@@ -34,9 +34,13 @@ export function useBookmarkReading() {
   });
 
   if (hideNsfw) {
-    historyItems = historyItems.filter(
-      (item) => !isFromNsfwSource(item.sourceId, item.isNsfw)
-    );
+    if (nsfwStatus !== "KNOWN") {
+      historyItems = [];
+    } else {
+      historyItems = historyItems.filter(
+        (item) => !isFromNsfwSource(item.sourceId, item.isNsfw)
+      );
+    }
   }
 
   const groupedHistory = React.useMemo(() => {

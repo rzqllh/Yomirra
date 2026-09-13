@@ -4,6 +4,8 @@ import { initFirebase } from '@/shared/lib/firebase';
 import { useLibraryStore } from '@/shared/store/library-store';
 import { useHistoryStore } from '@/shared/store/history-store';
 
+let globalLastKnownUid: string | null | undefined = undefined;
+
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -18,10 +20,28 @@ export function useAuth() {
       }
 
       import('firebase/auth').then(({ onAuthStateChanged }) => {
-        unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+        unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+          const newUid = currentUser?.uid || null;
+
+          if (globalLastKnownUid !== undefined && globalLastKnownUid !== null && globalLastKnownUid !== newUid) {
+            // User changed from a known UID to a different one (or logged out/expired)
+            useLibraryStore.getState().clearLibrary();
+            useHistoryStore.getState().clearHistory();
+            
+            const { useCollectionStore } = await import('@/shared/store/collection-store');
+            const { useUpdateStore } = await import('@/shared/store/update-store');
+            const { useStatsStore } = await import('@/shared/store/stats-store');
+            const { useSourcePreferencesStore } = await import('@/shared/store/source-preferences-store');
+            
+            useCollectionStore.getState().clearCollections();
+            useUpdateStore.getState().clearUpdates();
+            useStatsStore.getState().clearStats();
+            useSourcePreferencesStore.getState().clearPreferences();
+          }
+
+          globalLastKnownUid = newUid;
           setUser(currentUser);
           setLoading(false);
-
         });
       }).catch((e) => {
         console.error(e);
@@ -52,9 +72,19 @@ export function useAuth() {
     const { signOut } = await import('firebase/auth');
     try {
       await signOut(auth);
-      // Clear local state on explicit logout
+      // Clear local user-scoped state on explicit logout
       useLibraryStore.getState().clearLibrary();
       useHistoryStore.getState().clearHistory();
+      
+      const { useCollectionStore } = await import('@/shared/store/collection-store');
+      const { useUpdateStore } = await import('@/shared/store/update-store');
+      const { useStatsStore } = await import('@/shared/store/stats-store');
+      const { useSourcePreferencesStore } = await import('@/shared/store/source-preferences-store');
+      
+      useCollectionStore.getState().clearCollections();
+      useUpdateStore.getState().clearUpdates();
+      useStatsStore.getState().clearStats();
+      useSourcePreferencesStore.getState().clearPreferences();
     } catch (error) {
       console.error("Error signing out", error);
     }

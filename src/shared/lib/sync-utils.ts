@@ -70,9 +70,13 @@ export async function deleteMangaHistory(sourceId: string, mangaId: string) {
   const user = auth.currentUser;
   if (!user) return;
   try {
-    const { collection, query, getDocs, writeBatch } = await import("firebase/firestore");
+    const { collection, query, where, getDocs, writeBatch } = await import("firebase/firestore");
     const historyRef = collection(db, `users/${user.uid}/history`);
-    const q = query(historyRef);
+    const q = query(
+      historyRef,
+      where("sourceId", "==", sourceId),
+      where("mangaId", "==", mangaId)
+    );
     const snapshot = await getDocs(q);
     
     // Create a batch
@@ -80,11 +84,8 @@ export async function deleteMangaHistory(sourceId: string, mangaId: string) {
     let count = 0;
     
     snapshot.docs.forEach(doc => {
-      const data = doc.data();
-      if (data.sourceId === sourceId && data.mangaId === mangaId) {
-        batch.delete(doc.ref);
-        count++;
-      }
+      batch.delete(doc.ref);
+      count++;
     });
     
     if (count > 0) {

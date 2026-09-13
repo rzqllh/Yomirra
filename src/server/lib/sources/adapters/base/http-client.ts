@@ -1,3 +1,5 @@
+import { safeFetch } from "../../../security/outbound-policy";
+
 export class HttpClient {
   constructor(private baseUrl: string, private defaultHeaders: Record<string, string> = {}) {}
 
@@ -19,7 +21,7 @@ export class HttpClient {
       ? AbortSignal.any([AbortSignal.timeout(10000), init.signal])
       : AbortSignal.timeout(10000);
 
-    const res = await fetch(url, {
+    const res = await safeFetch(url, {
       cache: "no-store",
       ...init,
       signal: requestSignal,
@@ -57,7 +59,7 @@ export class HttpClient {
       ? AbortSignal.any([AbortSignal.timeout(10000), init.signal])
       : AbortSignal.timeout(10000);
 
-    const res = await fetch(url, {
+    const res = await safeFetch(url, {
       cache: "no-store",
       ...init,
       signal: requestSignal,

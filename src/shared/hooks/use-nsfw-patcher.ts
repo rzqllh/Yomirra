@@ -4,13 +4,13 @@ import { useHistoryStore } from "@/shared/store/history-store";
 import { useNsfwSourceIds } from "./use-nsfw-source-ids";
 
 export function useNsfwPatcher() {
-  const nsfwSourceIds = useNsfwSourceIds();
+  const { status, ids: nsfwSourceIds } = useNsfwSourceIds();
   const hasRun = useRef(false);
 
   useEffect(() => {
     // Only run if we actually have the NSFW source IDs loaded
     // and if we haven't already run in this session
-    if (nsfwSourceIds.size === 0 || hasRun.current) return;
+    if (status !== "KNOWN" || hasRun.current) return;
 
     const runPatcher = () => {
       // Check if we've ever patched before on this device

@@ -9,9 +9,21 @@ export const CACHE_TTL = {
   PAGES: 60 * 60 * 24 * 7, // 7 days
 };
 
+import crypto from "node:crypto";
+import type { SourceMetadata } from "@/shared/sources/source-types";
+
 interface CacheEntry<T> {
   data: T;
   expiresAt: number;
+}
+
+export function getSourceCacheKey(source: SourceMetadata, operation: string, params: string): string {
+  if (source.isDynamic) {
+    const raw = `${source.id}:${source.version || "0.0.0"}:${source.baseUrl || ""}`;
+    const fingerprint = crypto.createHash("sha256").update(raw).digest("hex").substring(0, 12);
+    return `source:dynamic:${fingerprint}:${source.id}:${operation}:${params}`;
+  }
+  return `source:${source.id}:${operation}:${params}`;
 }
 
 export async function withCache<T>(

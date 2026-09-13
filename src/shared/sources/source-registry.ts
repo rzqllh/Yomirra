@@ -28,7 +28,8 @@ export const sourceRegistry: SourceMetadata[] = [
       detail: true,
       chapters: true,
       pages: true,
-    }
+    },
+    isDynamic: false
   },
   {
     id: "komikindo",
@@ -55,7 +56,8 @@ export const sourceRegistry: SourceMetadata[] = [
       detail: true,
       chapters: true,
       pages: true,
-    }
+    },
+    isDynamic: false
   },
   {
     id: "mangadex",
@@ -84,6 +86,7 @@ export const sourceRegistry: SourceMetadata[] = [
       pages: true,
     },
     healthCheckUrl: "https://api.mangadex.org/manga?limit=1",
+    isDynamic: false
   },
   {
     id: "komiku",
@@ -110,7 +113,8 @@ export const sourceRegistry: SourceMetadata[] = [
       detail: true,
       chapters: true,
       pages: true,
-    }
+    },
+    isDynamic: false
   }
 ];
 
