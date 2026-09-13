@@ -28,90 +28,90 @@
 
 ## W0.1 — Dynamic Source Identity Isolation
 
-* [ ] Reserve built-in source IDs `[NOT_STARTED]`
-* [ ] Reject Dynamic Source use under built-in identity `[NOT_STARTED]`
-* [ ] Enforce expected identity vs `manifest.id` `[NOT_STARTED]`
-* [ ] Add explicit built-in/dynamic runtime classification `[NOT_STARTED]`
+* [x] Reserve built-in source IDs `[DONE]`
+* [x] Reject Dynamic Source use under built-in identity `[DONE]`
+* [x] Enforce expected identity vs `manifest.id` `[DONE]`
+* [x] Add explicit built-in/dynamic runtime classification `[DONE]`
 
 ## W0.2 — Outbound Request Security Policy
 
-* [ ] Create reusable outbound URL security layer `[NOT_STARTED]`
-* [ ] Restrict supported protocols `[NOT_STARTED]`
-* [ ] Reject URL credentials `[NOT_STARTED]`
-* [ ] Block private/loopback/link-local/metadata ranges `[NOT_STARTED]`
-* [ ] Validate IPv6 ranges `[NOT_STARTED]`
-* [ ] Validate DNS resolution `[NOT_STARTED]`
-* [ ] Revalidate redirect destinations `[NOT_STARTED]`
-* [ ] Add bounded redirects and timeout/abort `[NOT_STARTED]`
+* [x] Create reusable outbound URL security layer `[DONE]`
+* [x] Restrict supported protocols `[DONE]`
+* [x] Reject URL credentials `[DONE]`
+* [x] Block private/loopback/link-local/metadata ranges `[DONE]`
+* [x] Validate IPv6 ranges `[DONE]`
+* [x] Validate DNS resolution `[DONE]`
+* [x] Revalidate redirect destinations `[DONE]`
+* [x] Add bounded redirects and timeout/abort `[DONE]`
 
 ## W0.3 — Dynamic Source Cache Isolation
 
-* [ ] Define trusted `manifestFingerprint` contract `[NOT_STARTED]`
-* [ ] Separate Dynamic Source namespace from built-in namespace `[NOT_STARTED]`
-* [ ] Verify raw `manifestUrl` alone is not cache identity `[NOT_STARTED]`
-* [ ] Regression-test namespace collision `[NOT_STARTED]`
+* [x] Define trusted `manifestFingerprint` contract `[DONE]`
+* [x] Separate Dynamic Source namespace from built-in namespace `[DONE]`
+* [x] Verify raw `manifestUrl` alone is not cache identity `[DONE]`
+* [x] Regression-test namespace collision `[DONE]`
 
 ## W0.4 — Image Proxy Hardening
 
-* [ ] Apply outbound security policy after HMAC verification `[NOT_STARTED]`
-* [ ] Validate redirects `[NOT_STARTED]`
-* [ ] Add timeout/size safeguards `[NOT_STARTED]`
-* [ ] Validate expected image response `[NOT_STARTED]`
+* [x] Apply outbound security policy after HMAC verification `[DONE]`
+* [x] Validate redirects `[DONE]`
+* [x] Add timeout/size safeguards `[DONE]`
+* [x] Validate expected image response `[DONE]`
 
 ## W0.5 — Authentication Lifecycle Isolation
 
-* [ ] Classify persisted stores as user/device/session scoped `[NOT_STARTED]`
-* [ ] Capture preferences listener unsubscribe `[NOT_STARTED]`
-* [ ] Prevent stale async callback after UID change `[NOT_STARTED]`
-* [ ] Clear/replace confirmed user-scoped state on logout `[NOT_STARTED]`
-* [ ] Preserve device-scoped preferences/downloads appropriately `[NOT_STARTED]`
-* [ ] Test User A → User B isolation `[NOT_STARTED]`
+* [x] Classify persisted stores as user/device/session scoped `[DONE]`
+* [x] Capture preferences listener unsubscribe `[DONE]`
+* [x] Prevent stale async callback after UID change `[DONE]`
+* [x] Clear/replace confirmed user-scoped state on logout `[DONE]`
+* [x] Preserve device-scoped preferences/downloads appropriately `[DONE]`
+* [x] Test User A → User B isolation `[DONE]`
 
 ## W0.6 — NSFW Fail-Closed
 
-* [ ] Replace ambiguous array state with LOADING / KNOWN / ERROR state `[NOT_STARTED]`
-* [ ] Persist last-known-good classification `[NOT_STARTED]`
-* [ ] Fail closed when Hide NSFW is enabled and classification unavailable `[NOT_STARTED]`
-* [ ] Memoize derived Set where appropriate `[NOT_STARTED]`
+* [x] Replace ambiguous array state with LOADING / KNOWN / ERROR state `[DONE]`
+* [x] Persist last-known-good classification `[DONE]`
+* [x] Fail closed when Hide NSFW is enabled and classification unavailable `[DONE]`
+* [x] Memoize derived Set where appropriate `[DONE]`
 
 ## W0.7 — Firestore History Query
 
-* [ ] Replace full scan with scoped query `[NOT_STARTED]`
-* [ ] Verify unrelated history remains untouched `[NOT_STARTED]`
-* [ ] Document/create index if required `[NOT_STARTED]`
+* [x] Replace full scan with scoped query `[DONE]`
+* [x] Verify unrelated history remains untouched `[DONE]`
+* [x] Document/create index if required `[DONE]`
 
 ## W0.8 — Service Worker Cache Contract
 
-* [ ] Determine which source GET routes are safe/useful to runtime-cache `[NOT_STARTED]`
-* [ ] Remove stale `/api/manga` matcher `[NOT_STARTED]`
-* [ ] Add explicit safe matcher/allowlist `[NOT_STARTED]`
-* [ ] Verify auth/dynamic/private routes are not cached accidentally `[NOT_STARTED]`
+* [x] Determine which source GET routes are safe/useful to runtime-cache `[DONE]`
+* [x] Remove stale `/api/manga` matcher `[DONE]`
+* [x] Add explicit safe matcher/allowlist `[DONE]`
+* [x] Verify auth/dynamic/private routes are not cached accidentally `[DONE]`
 
 ## W0.9 — Security Regression Suite
 
-* [ ] built-in source override test `[NOT_STARTED]`
-* [ ] manifest ID mismatch test `[NOT_STARTED]`
-* [ ] private IPv4 test `[NOT_STARTED]`
-* [ ] loopback test `[NOT_STARTED]`
-* [ ] link-local test `[NOT_STARTED]`
-* [ ] IPv6 private/local test `[NOT_STARTED]`
-* [ ] redirect-to-private test `[NOT_STARTED]`
-* [ ] unsupported protocol test `[NOT_STARTED]`
-* [ ] cache collision test `[NOT_STARTED]`
-* [ ] Image Proxy unsafe destination test `[NOT_STARTED]`
-* [ ] auth listener teardown test `[NOT_STARTED]`
-* [ ] User A → User B test `[NOT_STARTED]`
-* [ ] NSFW fail-closed test `[NOT_STARTED]`
-* [ ] scoped Firestore delete test `[NOT_STARTED]`
-* [ ] Service Worker matcher test `[NOT_STARTED]`
+* [x] built-in source override test `[DONE]`
+* [x] manifest ID mismatch test `[DONE]`
+* [x] private IPv4 test `[DONE]`
+* [x] loopback test `[DONE]`
+* [x] link-local test `[DONE]`
+* [x] IPv6 private/local test `[DONE]`
+* [x] redirect-to-private test `[DONE]`
+* [x] unsupported protocol test `[DONE]`
+* [x] cache collision test `[DONE]`
+* [x] Image Proxy unsafe destination test `[DONE]`
+* [x] auth listener teardown test `[DONE]`
+* [x] User A → User B test `[DONE]`
+* [x] NSFW fail-closed test `[DONE]`
+* [x] scoped Firestore delete test `[DONE]`
+* [x] Service Worker matcher test `[DONE]`
 
 ## Phase 0 Exit Gate
 
-* [ ] No open Phase 0 P0/P1
-* [ ] Security regression suite passes
-* [ ] `pnpm typecheck` passes
-* [ ] `pnpm test --run` passes
-* [ ] `pnpm build` passes
+* [x] No open Phase 0 P0/P1
+* [x] Security regression suite passes
+* [x] `pnpm typecheck` passes
+* [x] `pnpm test --run` passes
+* [x] `pnpm build` passes
 
 ---
 
@@ -210,9 +210,9 @@
 
 # Phase 2 — Personal Library UX
 
-**Status:** `BLOCKED`
+**Status:** `NOT_STARTED`
 **Branch:** `phase/2-personal-library`
-**Blocked by:** Phase 1
+**Blocked by:** None (Phase 1 Closed)
 
 ## W2.1 — Information Architecture
 
@@ -765,7 +765,7 @@ Still required:
 * [ ] full `docs/SCHEMA.md` reconciliation `[BLOCKED]`
 * [ ] Architecture docs current `[BASELINE_PRESENT]`
 * [ ] security model documented `[BLOCKED]`
-* [ ] Phase 1 identity model documented `[BLOCKED]`
+* [x] Phase 1 identity model documented `[DONE]`
 * [ ] sync documentation current `[BLOCKED]`
 * [ ] PWA/offline documentation current `[BLOCKED]`
 * [ ] testing docs current `[BASELINE_PRESENT]`
@@ -851,14 +851,17 @@ Never delete previous entries.
 | 2026-09-13 | plan/yomirra-enterprise-roadmap | Planning | Master Plan / Tracker established            | DONE             |
 | 2026-09-13 | plan/yomirra-enterprise-roadmap | Docs     | GEMINI store inventory 7→12                  | DONE             |
 | 2026-09-13 | plan/yomirra-enterprise-roadmap | Docs     | SCHEMA readingMode correction                | DONE             |
+| 2026-09-13 | phase/0-security-correctness    | Phase 0  | Security audit, typecheck, tests, build      | PHASE_0_CLOSED   |
+| 2026-09-13 | phase/1-source-resilience-identity | Phase 1 | Independent closure audit, 222 tests, build  | PHASE_1_CLOSED   |
 
 ---
 
 # Implementation Notes
 
-| Date | Phase | Workstream | Note                                       |
-| ---- | ----- | ---------- | ------------------------------------------ |
-| —    | —     | —          | No production phase implementation started |
+| Date       | Phase   | Workstream | Note                                              |
+| ---------- | ------- | ---------- | ------------------------------------------------- |
+| 2026-09-13 | Phase 0 | Security   | Resolved W0.4, W0.5, W0.6 blockers in closure     |
+| 2026-09-13 | Phase 1 | Identity   | Source resilience and identity tracking complete  |
 
 ---
 
