@@ -216,55 +216,55 @@
 
 ## W2.1 — Information Architecture
 
-* [ ] Define canonical `/library` structure `[BLOCKED]`
-* [ ] remove Library/Bookmark conceptual duplication `[BLOCKED]`
+* [ ] Define canonical `/library` structure `[NOT_STARTED]`
+* [ ] remove Library/Bookmark conceptual duplication `[NOT_STARTED]`
 
 ## W2.2 — Route Compatibility
 
-* [ ] legacy `/bookmark` compatibility `[BLOCKED]`
-* [ ] update navigation `[BLOCKED]`
+* [ ] legacy `/bookmark` compatibility `[NOT_STARTED]`
+* [ ] update navigation `[NOT_STARTED]`
 
 ## W2.3 — Saved Titles
 
-* [ ] search/sort/filter `[BLOCKED]`
-* [ ] collection membership `[BLOCKED]`
-* [ ] recovery state `[BLOCKED]`
-* [ ] unread/update state `[BLOCKED]`
+* [ ] search/sort/filter `[NOT_STARTED]`
+* [ ] collection membership `[NOT_STARTED]`
+* [ ] recovery state `[NOT_STARTED]`
+* [ ] unread/update state `[NOT_STARTED]`
 
 ## W2.4 — Continue Reading
 
-* [ ] last-read chapter `[BLOCKED]`
-* [ ] progress `[BLOCKED]`
-* [ ] one-tap resume `[BLOCKED]`
-* [ ] offline state `[BLOCKED]`
+* [ ] last-read chapter `[NOT_STARTED]`
+* [ ] progress `[NOT_STARTED]`
+* [ ] one-tap resume `[NOT_STARTED]`
+* [ ] offline state `[NOT_STARTED]`
 
 ## W2.5 — History
 
-* [ ] title/chapter/time/progress presentation `[BLOCKED]`
-* [ ] source provenance `[BLOCKED]`
+* [ ] title/chapter/time/progress presentation `[NOT_STARTED]`
+* [ ] source provenance `[NOT_STARTED]`
 
 ## W2.6 — Collections
 
-* [ ] collection references durable title identity `[BLOCKED]`
+* [ ] collection references durable title identity `[NOT_STARTED]`
 
 ## W2.7 — Updates
 
-* [ ] updates group by durable title identity `[BLOCKED]`
-* [ ] retain source provenance `[BLOCKED]`
+* [ ] updates group by durable title identity `[NOT_STARTED]`
+* [ ] retain source provenance `[NOT_STARTED]`
 
 ## W2.8 — Source Availability UX
 
-* [ ] AVAILABLE `[BLOCKED]`
-* [ ] UNAVAILABLE `[BLOCKED]`
-* [ ] UNKNOWN `[BLOCKED]`
-* [ ] RECOVERY_REQUIRED `[BLOCKED]`
-* [ ] no fabricated latency/uptime `[BLOCKED]`
+* [ ] AVAILABLE `[NOT_STARTED]`
+* [ ] UNAVAILABLE `[NOT_STARTED]`
+* [ ] UNKNOWN `[NOT_STARTED]`
+* [ ] RECOVERY_REQUIRED `[NOT_STARTED]`
+* [ ] no fabricated latency/uptime `[NOT_STARTED]`
 
 ## W2.9 — Responsive UX
 
-* [ ] mobile hierarchy `[BLOCKED]`
-* [ ] desktop density `[BLOCKED]`
-* [ ] accessibility smoke `[BLOCKED]`
+* [ ] mobile hierarchy `[NOT_STARTED]`
+* [ ] desktop density `[NOT_STARTED]`
+* [ ] accessibility smoke `[NOT_STARTED]`
 
 ## Phase 2 Exit Gate
 
