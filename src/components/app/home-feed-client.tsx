@@ -60,13 +60,13 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
   const filteredPopular = React.useMemo(() => {
     if (!hideNsfw) return unifiedPopular;
     if (nsfwStatus !== "KNOWN") return [];
-    return unifiedPopular.filter(m => !isFromNsfwSource(m.sourceId, m.isNsfw));
+    return unifiedPopular.filter(m => !isFromNsfwSource(m.sourceId));
   }, [unifiedPopular, hideNsfw, nsfwStatus, isFromNsfwSource]);
 
   const filteredLatest = React.useMemo(() => {
     if (!hideNsfw) return unifiedLatest;
     if (nsfwStatus !== "KNOWN") return [];
-    return unifiedLatest.filter(m => !isFromNsfwSource(m.sourceId, m.isNsfw));
+    return unifiedLatest.filter(m => !isFromNsfwSource(m.sourceId));
   }, [unifiedLatest, hideNsfw, nsfwStatus, isFromNsfwSource]);
 
   const sourcesToShow = React.useMemo(() => {
