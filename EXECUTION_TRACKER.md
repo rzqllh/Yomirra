@@ -3,7 +3,7 @@
 > **Tracks:** `MASTER_PLAN.md` v1.0
 > **Baseline:** `audit_report_2.md`
 > **Last Updated:** 2026-09-13
-> **Current Phase:** Phase 1 (Ready for Closure Audit)
+> **Current Phase:** Phase 1 (Closed)
 > **Overall Status:** `IN_PROGRESS`
 
 ---
@@ -117,8 +117,8 @@
 
 # Phase 1 — Source Resilience & Identity Foundation
 
-**Implementation:** `DONE / READY_FOR_CLOSURE`
-**Formal Status:** `NOT_CLOSED`
+**Implementation:** `DONE`
+**Formal Status:** `CLOSED`
 **Branch:** `phase/1-source-resilience-identity`
 **Blocked by:** None (Phase 0 Closed)
 
