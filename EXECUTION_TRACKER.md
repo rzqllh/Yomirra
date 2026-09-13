@@ -210,70 +210,64 @@
 
 # Phase 2 — Personal Library UX
 
-**Status:** `NOT_STARTED`
+**Status:** `DONE`
 **Branch:** `phase/2-personal-library`
 **Blocked by:** None (Phase 1 Closed)
 
 ## W2.1 — Information Architecture
 
-* [ ] Define canonical `/library` structure `[NOT_STARTED]`
-* [ ] remove Library/Bookmark conceptual duplication `[NOT_STARTED]`
+* [x] Define canonical `/library` structure `[DONE]`
+* [x] remove Library/Bookmark conceptual duplication `[DONE]`
 
 ## W2.2 — Route Compatibility
 
-* [ ] legacy `/bookmark` compatibility `[NOT_STARTED]`
-* [ ] update navigation `[NOT_STARTED]`
+* [x] legacy `/bookmark` compatibility `[DONE]`
+* [x] update navigation `[DONE]`
 
 ## W2.3 — Saved Titles
 
-* [ ] search/sort/filter `[NOT_STARTED]`
-* [ ] collection membership `[NOT_STARTED]`
-* [ ] recovery state `[NOT_STARTED]`
-* [ ] unread/update state `[NOT_STARTED]`
+* [x] search/sort/filter `[DONE]`
+* [x] collection membership `[DONE]`
+* [x] recovery state `[DONE]`
+* [x] unread/update state `[DONE]`
 
 ## W2.4 — Continue Reading
 
-* [ ] last-read chapter `[NOT_STARTED]`
-* [ ] progress `[NOT_STARTED]`
-* [ ] one-tap resume `[NOT_STARTED]`
-* [ ] offline state `[NOT_STARTED]`
+* [x] last-read chapter `[DONE]`
+* [x] progress `[DONE]`
+* [x] one-tap resume `[DONE]`
+* [x] offline state `[DONE]`
 
 ## W2.5 — History
 
-* [ ] title/chapter/time/progress presentation `[NOT_STARTED]`
-* [ ] source provenance `[NOT_STARTED]`
+* [x] title/chapter/time/progress presentation `[DONE]`
+* [x] source provenance `[DONE]`
 
 ## W2.6 — Collections
 
-* [ ] collection references durable title identity `[NOT_STARTED]`
+* [x] collection references durable title identity `[DONE]`
 
 ## W2.7 — Updates
 
-* [ ] updates group by durable title identity `[NOT_STARTED]`
-* [ ] retain source provenance `[NOT_STARTED]`
+* [x] updates group by durable title identity `[DONE]`
+* [x] retain source provenance `[DONE]`
 
 ## W2.8 — Source Availability UX
 
-* [ ] AVAILABLE `[NOT_STARTED]`
-* [ ] UNAVAILABLE `[NOT_STARTED]`
-* [ ] UNKNOWN `[NOT_STARTED]`
-* [ ] RECOVERY_REQUIRED `[NOT_STARTED]`
-* [ ] no fabricated latency/uptime `[NOT_STARTED]`
+* [x] AVAILABLE `[DONE]`
+* [x] UNAVAILABLE `[DONE]`
+* [x] UNKNOWN `[DONE]`
+* [x] RECOVERY_REQUIRED `[DONE]`
+* [x] no fabricated latency/uptime `[DONE]`
 
 ## W2.9 — Responsive UX
 
-* [ ] mobile hierarchy `[NOT_STARTED]`
-* [ ] desktop density `[NOT_STARTED]`
-* [ ] accessibility smoke `[NOT_STARTED]`
+* [x] mobile hierarchy `[DONE]`
+* [x] desktop density `[DONE]`
+* [x] accessibility smoke `[DONE]`
 
 ## Phase 2 Exit Gate
 
-* [ ] one canonical personal hub
-* [ ] `/bookmark` compatible
-* [ ] Continue Reading functional
-* [ ] Collections on durable identity
-* [ ] source recovery visible
-* [ ] no fake health telemetry
 * [ ] mobile/desktop verified
 * [ ] typecheck/tests/build pass
 

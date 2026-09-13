@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useSearchParams } from "next/navigation";
 import { Books } from "@phosphor-icons/react";
 import { PageHeader } from "@/components/app/header";
 import { YomirraSurface } from "@/components/ui/layout";
@@ -10,9 +11,19 @@ import { LibraryToolbar } from "./library-toolbar";
 import { LibraryStatusRail } from "./library-status-rail";
 import { LibraryCollectionRail } from "./library-collection-rail";
 import { LibraryResults } from "./library-results";
+import { KoleksiTab } from "./koleksi-tab";
+import { RiwayatTab } from "./riwayat-tab";
+import { UpdatesList } from "@/components/updates/updates-list";
+import { LibraryTabs, type LibraryTab } from "./library-tabs";
+
+// Sub-tabs will be migrated later:
+// import { HistoryTab } from "./history-tab";
+// import { UpdatesList } from "@/components/updates/updates-list";
 
 export function LibraryPageView() {
   const catalog = useLibraryCatalog();
+  const searchParams = useSearchParams();
+  const currentTab = (searchParams.get("tab") as LibraryTab) || "koleksi";
 
   if (!catalog.isMounted) {
     return (
@@ -37,62 +48,15 @@ export function LibraryPageView() {
             meta={<span className="text-sm font-bold text-text-muted">{catalog.totalLibraryCount} judul</span>}
           />
 
-          {/* 2. Search & Filter Row */}
-          <LibraryToolbar
-            searchInput={catalog.searchInput}
-            onSearchInputChange={(e) => catalog.setSearchInput(e.target.value)}
-            onSearchSubmit={catalog.handleSearchSubmit}
-            onSearchClear={() => {
-              catalog.setSearchInput("");
-              catalog.setQuery("");
-              catalog.setPage(1);
-            }}
-            activeSourceId={catalog.activeSourceId}
-            activeFilterCount={catalog.activeFilterCount}
-          />
+          {/* 2. Tabs */}
+          <LibraryTabs />
 
-          {/* 3. Quick Sort & Reading Status Row */}
-          <LibraryStatusRail
-            sort={catalog.sort}
-            onTabChange={catalog.handleTabChange}
-            dynamicSorts={catalog.DYNAMIC_SORTS}
-            selectedReadingStatuses={catalog.selectedReadingStatuses}
-            onPageReset={() => catalog.setPage(1)}
-          />
+          {/* 3. Tab Content */}
+          {currentTab === "koleksi" && <KoleksiTab />}
 
-          {/* 4. Collections Rail */}
-          <LibraryCollectionRail
-            collections={catalog.collections}
-            libraryItems={catalog.libraryItems}
-            membershipsByManga={catalog.membershipsByManga}
-            activeSourceId={catalog.activeSourceId}
-            selectedCollections={catalog.selectedCollections}
-            onPageReset={() => catalog.setPage(1)}
-          />
+          {currentTab === "riwayat" && <RiwayatTab />}
 
-          {/* 5. Results Section */}
-          <LibraryResults
-            isDisabled={catalog.isDisabled}
-            isLoading={catalog.isLoading}
-            isError={catalog.isError}
-            isFetching={catalog.isFetching}
-            refetch={catalog.refetch}
-            mangas={catalog.mangas}
-            viewMode={catalog.viewMode}
-            activeSourceId={catalog.activeSourceId}
-            libraryItems={catalog.libraryItems}
-            selectedCollections={catalog.selectedCollections}
-            selectedGenres={catalog.selectedGenres}
-            excludedGenres={catalog.excludedGenres}
-            selectedFormats={catalog.selectedFormats}
-            selectedStatuses={catalog.selectedStatuses}
-            selectedReadingStatuses={catalog.selectedReadingStatuses}
-            query={catalog.query}
-            page={catalog.page}
-            setPage={catalog.setPage}
-            hasNextPage={catalog.data?.hasNextPage}
-            onResetFilters={catalog.resetFilters}
-          />
+          {currentTab === "updates" && <UpdatesList />}
         </div>
       </YomirraSurface>
     </div>
