@@ -56,7 +56,7 @@ export const readerPreferencesBackupSchema = z.object({
   preloadIntensity: z.enum(["light", "balanced", "aggressive"]),
   showPageProgress: z.boolean(),
   readingDirection: z.enum(["ltr", "rtl"]),
-  readingMode: z.enum(["vertical"]),
+  readingMode: z.enum(["vertical", "paged"]),
   keepScreenAwakeWhileReading: z.boolean(),
 });
 

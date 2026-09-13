@@ -33,7 +33,7 @@ vi.mock('@/shared/hooks/use-mounted', () => ({
 }));
 
 vi.mock('next/link', () => ({
-  default: ({ children, href, ...props }: any) => <a href={href} {...props}>{children}</a>
+  default: ({ children, href, transitionTypes, ...props }: any) => <a href={href} {...props}>{children}</a>
 }));
 
 vi.mock('next/navigation', () => ({

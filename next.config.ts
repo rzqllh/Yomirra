@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   images: {
     unoptimized: process.env.NODE_ENV === "development",
-    qualities: [25, 50, 75, 85, 100],
+    qualities: [25, 50, 60, 75, 85, 100],
     remotePatterns: [
       {
         protocol: "https",
