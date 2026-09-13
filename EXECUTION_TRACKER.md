@@ -1,558 +1,880 @@
 # EXECUTION_TRACKER.md — Yomirra Engineering Execution Tracker
 
-> **Tracks:** `MASTER_PLAN.md` v1.0  
-> **Last Updated:** 2026-09-13  
-> **Current Phase:** Phase 0  
-> **Overall Status:** BLOCKED BY SECURITY GATE
+> **Tracks:** `MASTER_PLAN.md` v1.0
+> **Baseline:** `audit_report_2.md`
+> **Last Updated:** 2026-09-13
+> **Current Phase:** Phase 0
+> **Overall Status:** `BLOCKED_BY_SECURITY_GATE`
 
 ---
 
-## Status Legend
+# Status Legend
 
-| Status | Meaning |
-|---|---|
-| `NOT_STARTED` | No work begun |
-| `IN_PROGRESS` | Active development |
-| `BLOCKED` | Waiting on dependency or decision |
-| `DONE` | Completed and verified |
-| `DEFERRED` | Intentionally postponed with rationale |
-| `BASELINE_PRESENT` | Pre-existing functionality — not yet validated against phase acceptance criteria |
-
----
-
-## Phase 0 — Security & Correctness Gate
-
-**Status:** NOT_STARTED  
-**Branch:** `phase/0-security-correctness`  
-**Ref:** MASTER_PLAN.md § Phase 0
-
-### W0.1 — SSRF + Cache Isolation
-
-- [ ] Create SSRF guard (`src/server/lib/security/ssrf.ts`) — validates outbound URLs, blocks private/loopback/link-local/metadata IPs `[NOT_STARTED]`
-- [ ] Protect built-in source IDs — reject `manifestUrl` when `sourceId` matches built-in adapter `[NOT_STARTED]`
-- [ ] Enforce `manifest.id === sourceId` for dynamic sources `[NOT_STARTED]`
-- [ ] Isolate dynamic source cache keys — `source:dynamic:${hash}:${sourceId}:...` prefix `[NOT_STARTED]`
-
-### W0.2 — Image Proxy Hardening
-
-- [ ] Apply SSRF guard to `/api/proxy/image/route.ts` target URL `[NOT_STARTED]`
-- [ ] Validate resolved IP is public internet `[NOT_STARTED]`
-- [ ] Validate `Content-Type` starts with `image/` `[NOT_STARTED]`
-
-### W0.3 — Auth Lifecycle
-
-- [ ] Capture `unsubPreferences` in `use-sync.ts` useEffect cleanup `[NOT_STARTED]`
-- [ ] Clear ALL user-scoped stores on `logout()` in `use-auth.ts` `[NOT_STARTED]`
-- [ ] NSFW fail-closed: cache IDs in localStorage, default-deny on API failure `[NOT_STARTED]`
-- [ ] Memoize NSFW Set with `useMemo` (E06 — trivial fix) `[NOT_STARTED]`
-
-### W0.4 — Firestore + SW Correctness
-
-- [ ] Add compound query to `deleteMangaHistory` in `sync-utils.ts` `[NOT_STARTED]`
-- [ ] Create Firestore composite index if required `[NOT_STARTED]`
-- [ ] Update SW cache matcher from `/api/manga` to `/api/sources/` in `sw.ts` `[NOT_STARTED]`
-
-### W0.5 — Security Regression Tests
-
-- [ ] `ssrf.test.ts` — all blocked IP ranges `[NOT_STARTED]`
-- [ ] `cache-isolation.test.ts` — dynamic vs built-in key separation `[NOT_STARTED]`
-- [ ] `source-manager.test.ts` — built-in ID rejection with manifestUrl `[NOT_STARTED]`
-- [ ] `use-auth-teardown.test.ts` — all stores cleared on logout `[NOT_STARTED]`
-- [ ] `use-nsfw-failclosed.test.ts` — fail-closed behavior `[NOT_STARTED]`
-- [ ] Image proxy SSRF rejection cases `[NOT_STARTED]`
-
-### Phase 0 Exit Gate
-
-- [ ] All acceptance criteria met
-- [ ] Security regression test suite passes
-- [ ] No P0/P1 security findings remain open
-- [ ] `pnpm typecheck` passes
-- [ ] `pnpm test --run` passes
-- [ ] `pnpm build` succeeds
+| Status             | Meaning                                                                 |
+| ------------------ | ----------------------------------------------------------------------- |
+| `NOT_STARTED`      | Eligible work has not begun                                             |
+| `IN_PROGRESS`      | Active implementation                                                   |
+| `BLOCKED`          | Dependency or decision gate not satisfied                               |
+| `BASELINE_PRESENT` | Pre-existing behavior exists but has not passed new acceptance criteria |
+| `DONE`             | Implemented and verified                                                |
+| `DEFERRED`         | Explicitly postponed with rationale                                     |
 
 ---
 
-## Phase 1 — Source Resilience & Identity Foundation
+# Phase 0 — Security & Correctness Gate
 
-**Status:** NOT_STARTED  
-**Branch:** `phase/1-source-resilience`  
-**Ref:** MASTER_PLAN.md § Phase 1  
-**Blocked by:** Phase 0 exit gate
+**Status:** `NOT_STARTED`
+**Branch:** `phase/0-security-correctness`
 
-### W1.1 — Title Normalizer
+## W0.1 — Dynamic Source Identity Isolation
 
-- [ ] Create `src/shared/lib/title-normalizer.ts` `[NOT_STARTED]`
-- [ ] Normalize: lowercase, strip punctuation, normalize whitespace `[NOT_STARTED]`
-- [ ] Confidence scoring: exact, high, medium, low `[NOT_STARTED]`
-- [ ] Unit tests for normalizer `[NOT_STARTED]`
+* [ ] Reserve built-in source IDs `[NOT_STARTED]`
+* [ ] Reject Dynamic Source use under built-in identity `[NOT_STARTED]`
+* [ ] Enforce expected identity vs `manifest.id` `[NOT_STARTED]`
+* [ ] Add explicit built-in/dynamic runtime classification `[NOT_STARTED]`
 
-### W1.2 — Store Schema Extension
+## W0.2 — Outbound Request Security Policy
 
-- [ ] Extend `library-store` with `alternateSourceLinks` field `[NOT_STARTED]`
-- [ ] localStorage migration function (backward compatible) `[NOT_STARTED]`
-- [ ] Firestore document schema extension (non-breaking) `[NOT_STARTED]`
-- [ ] Backup schema v4 `[NOT_STARTED]`
-- [ ] Restore from v3 backward compatibility `[NOT_STARTED]`
+* [ ] Create reusable outbound URL security layer `[NOT_STARTED]`
+* [ ] Restrict supported protocols `[NOT_STARTED]`
+* [ ] Reject URL credentials `[NOT_STARTED]`
+* [ ] Block private/loopback/link-local/metadata ranges `[NOT_STARTED]`
+* [ ] Validate IPv6 ranges `[NOT_STARTED]`
+* [ ] Validate DNS resolution `[NOT_STARTED]`
+* [ ] Revalidate redirect destinations `[NOT_STARTED]`
+* [ ] Add bounded redirects and timeout/abort `[NOT_STARTED]`
 
-### W1.3 — Source Link UI + Migration Flow
+## W0.3 — Dynamic Source Cache Isolation
 
-- [ ] "Source unavailable" state on library items `[NOT_STARTED]`
-- [ ] "Find alternate source" action `[NOT_STARTED]`
-- [ ] Cross-source search using normalized title `[NOT_STARTED]`
-- [ ] Match results with confidence indicator `[NOT_STARTED]`
-- [ ] User confirm/reject for source linking `[NOT_STARTED]`
-- [ ] Chapter progress mapping by chapter number `[NOT_STARTED]`
+* [ ] Define trusted `manifestFingerprint` contract `[NOT_STARTED]`
+* [ ] Separate Dynamic Source namespace from built-in namespace `[NOT_STARTED]`
+* [ ] Verify raw `manifestUrl` alone is not cache identity `[NOT_STARTED]`
+* [ ] Regression-test namespace collision `[NOT_STARTED]`
 
-### W1.4 — Dead Source Recovery
+## W0.4 — Image Proxy Hardening
 
-- [ ] Library items with unavailable source show status indicator `[NOT_STARTED]`
-- [ ] Manual search and relink flow `[NOT_STARTED]`
-- [ ] Offline chapters accessible regardless of source status `[BASELINE_PRESENT]`
+* [ ] Apply outbound security policy after HMAC verification `[NOT_STARTED]`
+* [ ] Validate redirects `[NOT_STARTED]`
+* [ ] Add timeout/size safeguards `[NOT_STARTED]`
+* [ ] Validate expected image response `[NOT_STARTED]`
 
-### Phase 1 Exit Gate
+## W0.5 — Authentication Lifecycle Isolation
 
-- [ ] Title normalizer with tested confidence scoring
-- [ ] Library items show source availability status
-- [ ] User can relink manga to alternate source
-- [ ] Reading progress transfers by chapter number
-- [ ] Schema migration backward compatible
-- [ ] `pnpm typecheck` passes
-- [ ] `pnpm test --run` passes
+* [ ] Classify persisted stores as user/device/session scoped `[NOT_STARTED]`
+* [ ] Capture preferences listener unsubscribe `[NOT_STARTED]`
+* [ ] Prevent stale async callback after UID change `[NOT_STARTED]`
+* [ ] Clear/replace confirmed user-scoped state on logout `[NOT_STARTED]`
+* [ ] Preserve device-scoped preferences/downloads appropriately `[NOT_STARTED]`
+* [ ] Test User A → User B isolation `[NOT_STARTED]`
 
----
+## W0.6 — NSFW Fail-Closed
 
-## Phase 2 — Personal Library UX
+* [ ] Replace ambiguous array state with LOADING / KNOWN / ERROR state `[NOT_STARTED]`
+* [ ] Persist last-known-good classification `[NOT_STARTED]`
+* [ ] Fail closed when Hide NSFW is enabled and classification unavailable `[NOT_STARTED]`
+* [ ] Memoize derived Set where appropriate `[NOT_STARTED]`
 
-**Status:** NOT_STARTED  
-**Branch:** `phase/2-personal-library`  
-**Ref:** MASTER_PLAN.md § Phase 2  
-**Blocked by:** Phase 1 exit gate
+## W0.7 — Firestore History Query
 
-### W2.1 — Information Architecture & Routes
+* [ ] Replace full scan with scoped query `[NOT_STARTED]`
+* [ ] Verify unrelated history remains untouched `[NOT_STARTED]`
+* [ ] Document/create index if required `[NOT_STARTED]`
 
-- [ ] Unified `/library` with tabs: Saved, History, Collections, Updates `[NOT_STARTED]`
-- [ ] `/bookmark` → `/library` redirect `[NOT_STARTED]`
-- [ ] Navigation update in `nav.ts` `[NOT_STARTED]`
+## W0.8 — Service Worker Cache Contract
 
-### W2.2 — Source Status Integration
+* [ ] Determine which source GET routes are safe/useful to runtime-cache `[NOT_STARTED]`
+* [ ] Remove stale `/api/manga` matcher `[NOT_STARTED]`
+* [ ] Add explicit safe matcher/allowlist `[NOT_STARTED]`
+* [ ] Verify auth/dynamic/private routes are not cached accidentally `[NOT_STARTED]`
 
-- [ ] Source availability indicator on library items `[NOT_STARTED]`
-- [ ] "Relink" action for unavailable sources `[NOT_STARTED]`
+## W0.9 — Security Regression Suite
 
-### W2.3 — Continue Reading
+* [ ] built-in source override test `[NOT_STARTED]`
+* [ ] manifest ID mismatch test `[NOT_STARTED]`
+* [ ] private IPv4 test `[NOT_STARTED]`
+* [ ] loopback test `[NOT_STARTED]`
+* [ ] link-local test `[NOT_STARTED]`
+* [ ] IPv6 private/local test `[NOT_STARTED]`
+* [ ] redirect-to-private test `[NOT_STARTED]`
+* [ ] unsupported protocol test `[NOT_STARTED]`
+* [ ] cache collision test `[NOT_STARTED]`
+* [ ] Image Proxy unsafe destination test `[NOT_STARTED]`
+* [ ] auth listener teardown test `[NOT_STARTED]`
+* [ ] User A → User B test `[NOT_STARTED]`
+* [ ] NSFW fail-closed test `[NOT_STARTED]`
+* [ ] scoped Firestore delete test `[NOT_STARTED]`
+* [ ] Service Worker matcher test `[NOT_STARTED]`
 
-- [ ] Continue Reading section from history-store `[NOT_STARTED]`
-- [ ] Last-read chapter with progress display `[NOT_STARTED]`
-- [ ] One-tap resume to reader `[NOT_STARTED]`
+## Phase 0 Exit Gate
 
-### W2.4 — Update Indicators
-
-- [ ] Unread/new chapter badges on library items `[NOT_STARTED]`
-- [ ] Visual hierarchy: unread count, last read, latest available `[NOT_STARTED]`
-
-### W2.5 — Responsive Layout
-
-- [ ] Mobile compact cards, horizontal scroll rails `[NOT_STARTED]`
-- [ ] Desktop denser grid `[NOT_STARTED]`
-- [ ] Existing card archetypes reused `[NOT_STARTED]`
-
-### Phase 2 Exit Gate
-
-- [ ] Unified `/library` route
-- [ ] `/bookmark` redirects correctly
-- [ ] Source status visible
-- [ ] Continue Reading functional
-- [ ] Update indicators visible
-- [ ] Mobile and desktop layouts verified
-- [ ] `pnpm typecheck` passes
-- [ ] `pnpm test --run` passes
+* [ ] No open Phase 0 P0/P1
+* [ ] Security regression suite passes
+* [ ] `pnpm typecheck` passes
+* [ ] `pnpm test --run` passes
+* [ ] `pnpm build` passes
 
 ---
 
-## Phase 3 — Reader Excellence
+# Phase 1 — Source Resilience & Identity Foundation
 
-**Status:** NOT_STARTED  
-**Branch:** `phase/3-reader-excellence`  
-**Ref:** MASTER_PLAN.md § Phase 3  
-**Blocked by:** Phase 0 + Phase 1 exit gates
+**Status:** `BLOCKED`
+**Branch:** `phase/1-source-resilience`
+**Blocked by:** Phase 0
 
-### W3.1 — Reliability Fixes
+## W1.0 — Identity Architecture Decision
 
-- [ ] Remove dead IntersectionObserver (A2-B03) `[NOT_STARTED]`
-- [ ] Source-aware chapter reporting (A2-B04) `[NOT_STARTED]`
-- [ ] Image retry with exponential backoff `[NOT_STARTED]`
-- [ ] Progress persistence verification `[BASELINE_PRESENT]`
-- [ ] Offline reading verification `[BASELINE_PRESENT]`
+* [ ] Define durable saved-title identity `[BLOCKED]`
+* [ ] Define SourceRef identity `[BLOCKED]`
+* [ ] Define Library relationship `[BLOCKED]`
+* [ ] Define History relationship `[BLOCKED]`
+* [ ] Define Collections relationship `[BLOCKED]`
+* [ ] Define Updates relationship `[BLOCKED]`
+* [ ] Define Downloads relationship `[BLOCKED]`
+* [ ] Define Firestore/localStorage representation `[BLOCKED]`
+* [ ] Define legacy key migration `[BLOCKED]`
+* [ ] Define rollback strategy `[BLOCKED]`
 
-### W3.2 — Multi-chapter Prototype (Decision Gate)
+## W1.1 — Title Normalization
 
-- [ ] Build prototype `[NOT_STARTED]`
-- [ ] Memory profiling `[NOT_STARTED]`
-- [ ] Decision: implement or defer `[NOT_STARTED]`
+* [ ] Unicode normalization `[BLOCKED]`
+* [ ] whitespace/punctuation normalization `[BLOCKED]`
+* [ ] alternate-title support `[BLOCKED]`
+* [ ] author/language/provider matching signals where available `[BLOCKED]`
+* [ ] unit tests `[BLOCKED]`
 
-### W3.3 — Desktop Spread
+## W1.2 — Matching Confidence
 
-- [ ] Double-page spread in paged reader `[NOT_STARTED]`
-- [ ] LTR/RTL page ordering `[NOT_STARTED]`
-- [ ] Single-page fallback `[NOT_STARTED]`
+* [ ] `EXACT_CONFIRMED` `[BLOCKED]`
+* [ ] `HIGH_CONFIDENCE` `[BLOCKED]`
+* [ ] `AMBIGUOUS` `[BLOCKED]`
+* [ ] `NO_MATCH` `[BLOCKED]`
+* [ ] require confirmation for ambiguity `[BLOCKED]`
 
-### W3.4 — Input Methods
+## W1.3 — Source References
 
-- [ ] Keyboard navigation in paged reader `[NOT_STARTED]`
-- [ ] Keyboard navigation in vertical reader `[NOT_STARTED]`
-- [ ] Configurable tap zones (decision gate) `[NOT_STARTED]`
+* [ ] primary source representation `[BLOCKED]`
+* [ ] alternate sources `[BLOCKED]`
+* [ ] availability state `[BLOCKED]`
+* [ ] legacy references `[BLOCKED]`
+* [ ] provenance/confidence `[BLOCKED]`
 
-### W3.5 — Fullscreen + Polish
+## W1.4 — Chapter Mapping
 
-- [ ] Fullscreen toggle via Fullscreen API `[NOT_STARTED]`
-- [ ] Auto-hide toolbar in fullscreen `[NOT_STARTED]`
+* [ ] chapter-number mapping `[BLOCKED]`
+* [ ] volume handling `[BLOCKED]`
+* [ ] title/special handling `[BLOCKED]`
+* [ ] ambiguity handling `[BLOCKED]`
 
-### Phase 3 Exit Gate
+## W1.5 — Relink / Migration Flow
 
-- [ ] Dead observer removed
-- [ ] Source-aware reporting
-- [ ] Image retry functional
-- [ ] Keyboard navigation works
-- [ ] At least one world-class enhancement shipped
-- [ ] `pnpm typecheck` passes
-- [ ] `pnpm test --run` passes
+* [ ] dead source recovery entry point `[BLOCKED]`
+* [ ] search alternate sources `[BLOCKED]`
+* [ ] confidence display `[BLOCKED]`
+* [ ] user confirmation `[BLOCKED]`
+* [ ] progress preservation `[BLOCKED]`
+* [ ] unmatched history preservation `[BLOCKED]`
 
----
+## W1.6 — Persisted-State Migration
 
-## Phase 4 — Discovery & Search Excellence
+* [ ] schema version increment `[BLOCKED]`
+* [ ] idempotent migration `[BLOCKED]`
+* [ ] legacy fixtures `[BLOCKED]`
+* [ ] duplicate-prevention tests `[BLOCKED]`
+* [ ] Firestore compatibility `[BLOCKED]`
+* [ ] backup compatibility `[BLOCKED]`
 
-**Status:** NOT_STARTED  
-**Branch:** `phase/4-discovery-search`  
-**Ref:** MASTER_PLAN.md § Phase 4  
-**Blocked by:** Phase 1 exit gate
+## W1.7 — Dead Source Recovery
 
-### W4.1 — Duplicate Grouping
+* [ ] cached metadata retained `[BLOCKED]`
+* [ ] source status shown `[BLOCKED]`
+* [ ] retry `[BLOCKED]`
+* [ ] Find Alternate Source `[BLOCKED]`
+* [ ] relink `[BLOCKED]`
+* [ ] offline chapters remain usable `[BASELINE_PRESENT]`
 
-- [ ] Cross-source result grouping using title normalizer `[NOT_STARTED]`
-- [ ] "Also available on" source badges `[NOT_STARTED]`
+## Phase 1 Exit Gate
 
-### W4.2 — Capability-Aware Filters
-
-- [ ] Model filter capabilities per source `[NOT_STARTED]`
-- [ ] Dynamic filter drawer reflecting source capabilities `[NOT_STARTED]`
-- [ ] "Not supported by [source]" indicator `[NOT_STARTED]`
-
-### W4.3 — Partial Failure Handling
-
-- [ ] Show successful source results when others fail `[BASELINE_PRESENT]`
-- [ ] Per-source error indicator `[NOT_STARTED]`
-- [ ] Per-source retry button `[NOT_STARTED]`
-
-### W4.4 — Source/Language Visibility
-
-- [ ] Source badge on result cards `[NOT_STARTED]`
-- [ ] Language indicator `[NOT_STARTED]`
-
-### W4.5 — Feed & Search UX
-
-- [ ] Multi-source popular/latest feeds `[BASELINE_PRESENT]`
-- [ ] Search history (localStorage) `[NOT_STARTED]`
-- [ ] Loading/empty/error states per source `[NOT_STARTED]`
-
-### Phase 4 Exit Gate
-
-- [ ] Duplicate grouping functional
-- [ ] Capability-aware filters
-- [ ] Partial failure graceful
-- [ ] Source visibility on results
-- [ ] `pnpm typecheck` passes
-- [ ] `pnpm test --run` passes
+* [ ] Identity ADR complete
+* [ ] durable identity separated from current source
+* [ ] legacy IDs remain readable
+* [ ] matching confidence deterministic
+* [ ] ambiguous matches require confirmation
+* [ ] relink works
+* [ ] progress preservation works where safely mappable
+* [ ] migration idempotent
+* [ ] backup compatibility verified
+* [ ] typecheck/tests/build pass
 
 ---
 
-## Phase 5 — Source Platform & Observability
+# Phase 2 — Personal Library UX
 
-**Status:** NOT_STARTED  
-**Branch:** `phase/5-source-platform`  
-**Ref:** MASTER_PLAN.md § Phase 5  
-**Blocked by:** Phases 0-4 exit gates
+**Status:** `BLOCKED`
+**Branch:** `phase/2-personal-library`
+**Blocked by:** Phase 1
 
-### W5.1 — Dynamic Source Hardening
+## W2.1 — Information Architecture
 
-- [ ] Trust model documentation `[NOT_STARTED]`
-- [ ] Manifest validation hardening (strict URL validation) `[NOT_STARTED]`
-- [ ] Source versioning/update mechanism `[NOT_STARTED]`
-- [ ] Source failure states `[NOT_STARTED]`
+* [ ] Define canonical `/library` structure `[BLOCKED]`
+* [ ] remove Library/Bookmark conceptual duplication `[BLOCKED]`
 
-### W5.2 — SDK/DSL Decision
+## W2.2 — Route Compatibility
 
-- [ ] Evaluate manifest vs DSL `[NOT_STARTED]`
-- [ ] Document decision `[NOT_STARTED]`
+* [ ] legacy `/bookmark` compatibility `[BLOCKED]`
+* [ ] update navigation `[BLOCKED]`
 
-### W5.3 — Health Monitoring
+## W2.3 — Saved Titles
 
-- [ ] Real health check loop `[NOT_STARTED]`
-- [ ] Replace hardcoded healthStats (B06) `[NOT_STARTED]`
-- [ ] No fabricated data `[NOT_STARTED]`
+* [ ] search/sort/filter `[BLOCKED]`
+* [ ] collection membership `[BLOCKED]`
+* [ ] recovery state `[BLOCKED]`
+* [ ] unread/update state `[BLOCKED]`
 
-### W5.4 — Logging & Alerting
+## W2.4 — Continue Reading
 
-- [ ] Structured logger migration (B07, E07) `[NOT_STARTED]`
-- [ ] Telegram alerting `[NOT_STARTED]`
-- [ ] Redis/Firebase degradation logging `[NOT_STARTED]`
-- [ ] Rate-limit fail-open documented (E02) `[NOT_STARTED]`
+* [ ] last-read chapter `[BLOCKED]`
+* [ ] progress `[BLOCKED]`
+* [ ] one-tap resume `[BLOCKED]`
+* [ ] offline state `[BLOCKED]`
 
-### Phase 5 Exit Gate
+## W2.5 — History
 
-- [ ] Real health monitoring operational
-- [ ] Fabricated stats eliminated
-- [ ] Structured logging consistent
-- [ ] Trust model documented
-- [ ] `pnpm typecheck` passes
-- [ ] `pnpm test --run` passes
+* [ ] title/chapter/time/progress presentation `[BLOCKED]`
+* [ ] source provenance `[BLOCKED]`
 
----
+## W2.6 — Collections
 
-## Phase 6 — Quality, Reliability & Data Safety
+* [ ] collection references durable title identity `[BLOCKED]`
 
-**Status:** NOT_STARTED  
-**Branch:** `phase/6-quality-reliability`  
-**Ref:** MASTER_PLAN.md § Phase 6  
-**Blocked by:** Phases 0-5 exit gates
+## W2.7 — Updates
 
-### W6.1 — Unit Test Expansion
+* [ ] updates group by durable title identity `[BLOCKED]`
+* [ ] retain source provenance `[BLOCKED]`
 
-- [ ] Download engine tests `[NOT_STARTED]`
-- [ ] Firebase sync logic tests `[NOT_STARTED]`
-- [ ] Dynamic source adapter tests `[NOT_STARTED]`
-- [ ] Backup/restore migration tests `[NOT_STARTED]`
+## W2.8 — Source Availability UX
 
-### W6.2 — Integration Tests
+* [ ] AVAILABLE `[BLOCKED]`
+* [ ] UNAVAILABLE `[BLOCKED]`
+* [ ] UNKNOWN `[BLOCKED]`
+* [ ] RECOVERY_REQUIRED `[BLOCKED]`
+* [ ] no fabricated latency/uptime `[BLOCKED]`
 
-- [ ] API route integration tests `[NOT_STARTED]`
-- [ ] Cross-store flow tests `[NOT_STARTED]`
-- [ ] Source migration flow tests `[NOT_STARTED]`
+## W2.9 — Responsive UX
 
-### W6.3 — E2E Test Suite (Playwright)
+* [ ] mobile hierarchy `[BLOCKED]`
+* [ ] desktop density `[BLOCKED]`
+* [ ] accessibility smoke `[BLOCKED]`
 
-- [ ] Path 1: Home → Search → Manga → Reader `[NOT_STARTED]`
-- [ ] Path 2: Save → reload → Library persistence `[NOT_STARTED]`
-- [ ] Path 3: Reader progress → reload → resume `[NOT_STARTED]`
-- [ ] Path 4: Download → offline → read `[NOT_STARTED]`
-- [ ] Path 5: Login → sync → logout → isolation `[NOT_STARTED]`
-- [ ] Path 6: Vertical mobile reader `[NOT_STARTED]`
-- [ ] Path 7: Desktop paged reader `[NOT_STARTED]`
-- [ ] Path 8: Partial source outage `[NOT_STARTED]`
-- [ ] Path 9: Alternate-source recovery `[NOT_STARTED]`
-- [ ] Path 10: Backup/restore flow `[NOT_STARTED]`
+## Phase 2 Exit Gate
 
-### W6.4 — Data Safety
-
-- [ ] localStorage schema versioning `[NOT_STARTED]`
-- [ ] Firestore migration compatibility `[NOT_STARTED]`
-- [ ] Backup/restore integrity (corrupt/partial/old files) `[NOT_STARTED]`
-- [ ] Failed migration rollback `[NOT_STARTED]`
-- [ ] SW update lifecycle documented `[NOT_STARTED]`
-
-### W6.5 — Failure Engineering
-
-- [ ] Firebase unavailable behavior defined `[NOT_STARTED]`
-- [ ] Redis unavailable behavior defined `[NOT_STARTED]`
-- [ ] Individual source unavailable behavior defined `[NOT_STARTED]`
-- [ ] All sources unavailable behavior defined `[NOT_STARTED]`
-- [ ] Image host unavailable behavior defined `[NOT_STARTED]`
-- [ ] Storage quota exhausted behavior defined `[NOT_STARTED]`
-- [ ] SW stale/corrupt behavior defined `[NOT_STARTED]`
-- [ ] Network interruption during download behavior defined `[NOT_STARTED]`
-- [ ] Auth session expiration behavior defined `[NOT_STARTED]`
-
-### Phase 6 Exit Gate
-
-- [ ] Testing pyramid established
-- [ ] 10 critical E2E paths automated
-- [ ] Data safety guarantees verified
-- [ ] Failure behavior defined and tested
-- [ ] `pnpm typecheck` passes
-- [ ] `pnpm test --run` passes (expanded)
-- [ ] E2E suite passes
+* [ ] one canonical personal hub
+* [ ] `/bookmark` compatible
+* [ ] Continue Reading functional
+* [ ] Collections on durable identity
+* [ ] source recovery visible
+* [ ] no fake health telemetry
+* [ ] mobile/desktop verified
+* [ ] typecheck/tests/build pass
 
 ---
 
-## Phase 7 — Performance, Accessibility & Compatibility
+# Phase 3 — Reader Excellence
 
-**Status:** NOT_STARTED  
-**Branch:** `phase/7-performance-accessibility`  
-**Ref:** MASTER_PLAN.md § Phase 7  
-**Blocked by:** Phases 0-6 exit gates
+**Status:** `BLOCKED`
+**Branch:** `phase/3-reader-excellence`
+**Blocked by:** Phase 0 + Phase 1
 
-### W7.1 — Performance Profiling & Budgets
+## W3.1 — Reader Dead Logic Cleanup
 
-- [ ] Core Web Vitals baseline measurement `[NOT_STARTED]`
-- [ ] Reader performance profiling `[NOT_STARTED]`
-- [ ] Bundle analysis `[NOT_STARTED]`
-- [ ] Large library performance testing `[NOT_STARTED]`
-- [ ] Performance budgets verified `[NOT_STARTED]`
+* [ ] resolve/remove empty IntersectionObserver `[BLOCKED]`
+* [ ] resolve unfinished divider/stream logic `[BLOCKED]`
 
-### W7.2 — Accessibility Audit & Fixes
+## W3.2 — Source-Aware Reporting
 
-- [ ] Keyboard navigation audit `[NOT_STARTED]`
-- [ ] Focus management audit `[NOT_STARTED]`
-- [ ] Touch target audit `[NOT_STARTED]`
-- [ ] Screen reader audit `[NOT_STARTED]`
-- [ ] Contrast ratio audit (dark + light) `[NOT_STARTED]`
-- [ ] Reduced motion audit `[NOT_STARTED]`
-- [ ] Zoom behavior verification `[NOT_STARTED]`
-- [ ] axe-core audit clean `[NOT_STARTED]`
+* [ ] remove hardcoded Shinigami reporting `[BLOCKED]`
+* [ ] source-aware/generic reporting contract `[BLOCKED]`
 
-### W7.3 — Compatibility Testing & Documentation
+## W3.3 — Image Failure Recovery
 
-- [ ] Chromium desktop verified `[NOT_STARTED]`
-- [ ] Chromium Android verified `[NOT_STARTED]`
-- [ ] Safari/iOS PWA tested, limitations documented `[NOT_STARTED]`
-- [ ] Firefox desktop verified `[NOT_STARTED]`
-- [ ] Browser support policy documented `[NOT_STARTED]`
+* [ ] loading/error states `[BLOCKED]`
+* [ ] bounded retry `[BLOCKED]`
+* [ ] final failure state `[BLOCKED]`
 
-### Phase 7 Exit Gate
+## W3.4 — Progress Reliability
 
-- [ ] Performance budgets met (measured)
-- [ ] WCAG 2.2 AA baseline met
-- [ ] Browser compatibility documented
-- [ ] `pnpm typecheck` passes
-- [ ] `pnpm test --run` passes
+* [ ] navigation persistence `[BASELINE_PRESENT]`
+* [ ] reload resume `[BASELINE_PRESENT]`
+* [ ] backgrounding behavior `[BLOCKED]`
+* [ ] offline/online transition `[BLOCKED]`
+* [ ] source-relink integration `[BLOCKED]`
 
----
+## W3.5 — Offline Reader Reliability
 
-## Phase 8 — Enterprise / Production Readiness Gate
+* [ ] downloaded chapter regression test `[BLOCKED]`
+* [ ] partial-cache state `[BLOCKED]`
+* [ ] offline cache miss state `[BLOCKED]`
 
-**Status:** NOT_STARTED  
-**Branch:** `phase/8-enterprise-readiness`  
-**Ref:** MASTER_PLAN.md § Phase 8  
-**Blocked by:** Phases 0-7 exit gates
+## W3.6 — Desktop Double Spread
 
-### W8.1 — CI/CD Pipeline
+* [ ] evaluate `[BLOCKED]`
+* [ ] IMPLEMENT / DEFER / REJECT `[BLOCKED]`
 
-- [ ] GitHub Actions: lint, typecheck, tests, build on PR `[NOT_STARTED]`
-- [ ] E2E on merge to main `[NOT_STARTED]`
-- [ ] Quality gate enforcement `[NOT_STARTED]`
+## W3.7 — Keyboard Navigation
 
-### W8.2 — Security Operations
+* [ ] paged reader `[BLOCKED]`
+* [ ] vertical reader `[BLOCKED]`
 
-- [ ] Secret management documented `[NOT_STARTED]`
-- [ ] `pnpm audit` in CI `[NOT_STARTED]`
-- [ ] Dependency vulnerability process documented `[NOT_STARTED]`
-- [ ] Security headers verified `[NOT_STARTED]`
-- [ ] SECURITY.md updated `[NOT_STARTED]`
+## W3.8 — Seamless Multi-Chapter Decision
 
-### W8.3 — Observability
+* [ ] prototype if justified `[BLOCKED]`
+* [ ] memory/profile evidence `[BLOCKED]`
+* [ ] IMPLEMENT / DEFER / REJECT `[BLOCKED]`
 
-- [ ] Error reporting operational `[NOT_STARTED]`
-- [ ] Source outage detection active `[NOT_STARTED]`
-- [ ] API failure logging active `[NOT_STARTED]`
+## W3.9 — Tap Zones Decision
 
-### W8.4 — Release Engineering
+* [ ] evaluate user value `[BLOCKED]`
+* [ ] IMPLEMENT / DEFER / REJECT `[BLOCKED]`
 
-- [ ] Semantic versioning active `[NOT_STARTED]`
-- [ ] CHANGELOG maintained `[BASELINE_PRESENT]`
-- [ ] Deployment rollback tested `[NOT_STARTED]`
-- [ ] SW release behavior documented `[NOT_STARTED]`
+## W3.10 — Fullscreen Decision
 
-### W8.5 — Incident Readiness
+* [ ] evaluate `[BLOCKED]`
+* [ ] IMPLEMENT / DEFER / REJECT `[BLOCKED]`
 
-- [ ] Severity categories defined `[NOT_STARTED]`
-- [ ] Emergency procedures documented `[NOT_STARTED]`
-- [ ] Incident process documented `[NOT_STARTED]`
+## W3.11 — Virtualizer Profiling
 
-### W8.6 — Documentation
+* [ ] measure 1200px estimate behavior `[BLOCKED]`
+* [ ] reproduce or reject A2-P01 inference `[BLOCKED]`
 
-- [ ] `docs/ARCHITECTURE.md` current `[BASELINE_PRESENT]`
-- [ ] `docs/SECURITY_MODEL.md` created `[NOT_STARTED]`
-- [ ] `docs/IDENTITY.md` created (Phase 1 output) `[NOT_STARTED]`
-- [ ] `docs/SCHEMA.md` updated (all 12 stores) `[NOT_STARTED]`
-- [ ] `docs/SYNC.md` created `[NOT_STARTED]`
-- [ ] `docs/PWA.md` created `[NOT_STARTED]`
-- [ ] `docs/TESTING.md` updated `[BASELINE_PRESENT]`
-- [ ] `docs/DEPLOYMENT.md` created `[NOT_STARTED]`
-- [ ] `docs/DISASTER_RECOVERY.md` created `[NOT_STARTED]`
-- [ ] `CONTRIBUTING.md` updated `[BASELINE_PRESENT]`
-- [ ] `GEMINI.md` updated (7→12 stores, etc.) `[NOT_STARTED]`
-- [ ] Remove unused `@radix-ui/react-separator` (A2-D01) `[NOT_STARTED]`
-- [ ] Annotate `pnpm-workspace.yaml` purpose (E10) `[NOT_STARTED]`
+## Phase 3 Exit Gate
 
-### Phase 8 Exit Gate — Enterprise-Ready Declaration
-
-All items from MASTER_PLAN.md § Definition of Enterprise-Ready:
-
-**Security:**
-- [ ] All P0/P1 Audit 2 findings closed + regression-tested
-- [ ] SSRF guard operational
-- [ ] Dynamic source cache isolation proven
-- [ ] Auth session isolation verified
-- [ ] No fabricated health data
-- [ ] Dynamic sources within trust boundaries
-- [ ] Secret management follows process
-- [ ] Dependency vulnerability process active
-
-**Reliability:**
-- [ ] Source failures degrade gracefully
-- [ ] User state survives migrations
-- [ ] Backup/restore integrity verified
-- [ ] Offline reading regression-tested
-- [ ] Dependency failure behavior defined and tested
-
-**Testing:**
-- [ ] Security regression tests in CI
-- [ ] 10 critical E2E paths automated
-- [ ] Coverage includes download engine, sync, dynamic sources
-- [ ] All tests pass in CI
-
-**Quality Gates:**
-- [ ] CI enforces lint, typecheck, tests, security tests, build
-- [ ] E2E on deploy pipeline
-- [ ] Merge requires passing checks
-
-**Performance:**
-- [ ] Core Web Vitals within budget (measured)
-- [ ] Reader performance profiled
-
-**Accessibility:**
-- [ ] WCAG 2.2 AA baseline met
-- [ ] Keyboard navigation functional
-- [ ] Reduced motion respected
-
-**Operations:**
-- [ ] Production observability operational
-- [ ] Deployment rollback documented and tested
-- [ ] Incident procedures defined
-
-**Documentation:**
-- [ ] Canonical documentation matches implementation
-- [ ] All required documentation topics covered
+* [ ] reliability work complete
+* [ ] source-aware reporting
+* [ ] image failure handling
+* [ ] progress/offline regressions green
+* [ ] keyboard baseline working
+* [ ] all enhancement decision gates resolved
+* [ ] implemented enhancements covered by tests
+* [ ] no major Reader regression
+* [ ] typecheck/tests/build pass
 
 ---
 
-## Implementation Notes
+# Phase 4 — Discovery & Search Excellence
 
-_This section is for runtime notes discovered during implementation. Add entries as needed._
+**Status:** `BLOCKED`
+**Branch:** `phase/4-discovery-search`
+**Blocked by:** Phase 1
 
-| Date | Phase | Note |
-|---|---|---|
-| — | — | No implementation has begun yet |
+## W4.1 — Capability-Aware Filters
+
+* [ ] model source filter capabilities `[BLOCKED]`
+* [ ] stop blindly sending unsupported filters `[BLOCKED]`
+* [ ] unsupported-capability UX `[BLOCKED]`
+
+## W4.2 — Cross-Source Grouping
+
+* [ ] integrate Phase 1 matcher `[BLOCKED]`
+* [ ] preserve ambiguous works separately `[BLOCKED]`
+
+## W4.3 — Ranking
+
+* [ ] deterministic ranking contract `[BLOCKED]`
+* [ ] source-neutral behavior `[BLOCKED]`
+
+## W4.4 — Partial Failure
+
+* [ ] successful sources remain usable `[BASELINE_PRESENT]`
+* [ ] failed-source state `[BLOCKED]`
+* [ ] targeted retry `[BLOCKED]`
+
+## W4.5 — Source / Language Visibility
+
+* [ ] source context `[BLOCKED]`
+* [ ] language context where available `[BLOCKED]`
+
+## W4.6 — Discovery Feeds
+
+* [ ] source attribution `[BLOCKED]`
+* [ ] graceful partial failure `[BLOCKED]`
+
+## W4.7 — Search UX
+
+* [ ] loading state `[BLOCKED]`
+* [ ] empty state `[BLOCKED]`
+* [ ] partial error state `[BLOCKED]`
+* [ ] filter clarity `[BLOCKED]`
+
+## W4.8 — NSFW Integration
+
+* [ ] apply Phase 0 classification contract `[BLOCKED]`
+
+## Phase 4 Exit Gate
+
+* [ ] capability-aware filters
+* [ ] safe cross-source grouping
+* [ ] partial failures graceful
+* [ ] deterministic ranking
+* [ ] source/language context visible
+* [ ] typecheck/tests/build pass
 
 ---
 
-## Amendments
+# Phase 5 — Source Platform & Observability
 
-_Track approved amendments to MASTER_PLAN.md here._
+**Status:** `BLOCKED`
+**Branch:** `phase/5-source-platform`
+**Blocked by:** Phase 0 + stable Phase 1 identity
 
-| Amendment ID | Date | Description | Affected Phases | Status |
-|---|---|---|---|---|
-| — | — | No amendments yet | — | — |
+## W5.1 — Runtime Dynamic Source Identity
+
+* [ ] define install/import → validate → trusted identity lifecycle `[BLOCKED]`
+* [ ] remove arbitrary raw manifest URL as ordinary runtime identity `[BLOCKED]`
+
+## W5.2 — Manifest Governance
+
+* [ ] source ID `[BLOCKED]`
+* [ ] version `[BLOCKED]`
+* [ ] capabilities `[BLOCKED]`
+* [ ] endpoint policy `[BLOCKED]`
+* [ ] origin policy `[BLOCKED]`
+* [ ] classification/update metadata `[BLOCKED]`
+
+## W5.3 — Source Lifecycle
+
+* [ ] install `[BLOCKED]`
+* [ ] validation `[BLOCKED]`
+* [ ] enable/disable `[BLOCKED]`
+* [ ] update `[BLOCKED]`
+* [ ] incompatible-version handling `[BLOCKED]`
+* [ ] uninstall `[BLOCKED]`
+* [ ] cache cleanup `[BLOCKED]`
+* [ ] last-known-good fallback `[BLOCKED]`
+
+## W5.4 — SDK / DSL Decision
+
+* [ ] evaluate manifest sufficiency `[BLOCKED]`
+* [ ] document decision `[BLOCKED]`
+* [ ] no executable-code expansion `[BLOCKED]`
+
+## W5.5 — Real Health
+
+* [ ] remove hardcoded health values `[BLOCKED]`
+* [ ] real status `[BLOCKED]`
+* [ ] real latency `[BLOCKED]`
+* [ ] checked-at timestamp `[BLOCKED]`
+* [ ] historical health only if actually measured `[BLOCKED]`
+
+## W5.6 — Structured Logging
+
+* [ ] source logs `[BLOCKED]`
+* [ ] cache logs `[BLOCKED]`
+* [ ] auth/sync logs `[BLOCKED]`
+* [ ] proxy/security logs `[BLOCKED]`
+
+## W5.7 — Alerting
+
+* [ ] source outage/recovery alerting `[BLOCKED]`
+* [ ] Telegram optional integration `[BLOCKED]`
+
+## W5.8 — Redis / Rate-Limit Degradation Policy
+
+* [ ] classify endpoint failure policy `[BLOCKED]`
+* [ ] decide FAIL_OPEN / FAIL_CLOSED / LOCAL_FALLBACK per risk `[BLOCKED]`
+* [ ] test degradation `[BLOCKED]`
+
+## W5.9 — Firebase Degradation Visibility
+
+* [ ] sync outage state `[BLOCKED]`
+* [ ] local reading unaffected `[BLOCKED]`
+
+## W5.10 — Marketing Routing Decision
+
+* [ ] product decision remains undecided `[BLOCKED]`
+
+## Phase 5 Exit Gate
+
+* [ ] trusted Dynamic Source identity
+* [ ] safe source lifecycle
+* [ ] SDK/DSL decision documented
+* [ ] no fake telemetry
+* [ ] real health operational
+* [ ] logging structured
+* [ ] degradation policies explicit/tested
+* [ ] typecheck/tests/build pass
 
 ---
 
-## Hotfixes
+# Phase 6 — Quality, Reliability & Data Safety
 
-_Track emergency production fixes here._
+**Status:** `BLOCKED`
+**Branch:** `phase/6-quality-reliability`
+**Blocked by:** Phases 0–5 functional scope
 
-| Branch | Date | Issue | Reconciled to Phase |
-|---|---|---|---|
-| — | — | No hotfixes yet | — |
+## W6.1 — Unit Coverage
+
+* [ ] Download Engine tests `[BLOCKED]`
+* [ ] Firebase sync tests `[BLOCKED]`
+* [ ] Dynamic Source tests `[BLOCKED]`
+* [ ] identity/matcher tests `[BLOCKED]`
+* [ ] migration tests `[BLOCKED]`
+* [ ] backup/restore tests `[BLOCKED]`
+
+## W6.2 — Integration Coverage
+
+* [ ] API source resolution `[BLOCKED]`
+* [ ] cache integration `[BLOCKED]`
+* [ ] sync/store integration `[BLOCKED]`
+* [ ] source relink integration `[BLOCKED]`
+
+## W6.3 — Security Regression
+
+* [ ] Phase 0 suite permanent in CI `[BLOCKED]`
+
+## W6.4 — Critical E2E
+
+* [ ] Home → Search → Manga → Reader `[BLOCKED]`
+* [ ] Save → reload → Library `[BLOCKED]`
+* [ ] progress → reload → resume `[BLOCKED]`
+* [ ] download → offline → read `[BLOCKED]`
+* [ ] User A → logout → User B `[BLOCKED]`
+* [ ] mobile vertical reader `[BLOCKED]`
+* [ ] desktop paged reader `[BLOCKED]`
+* [ ] partial source outage `[BLOCKED]`
+* [ ] dead source → relink `[BLOCKED]`
+* [ ] backup → restore `[BLOCKED]`
+
+## W6.5 — Schema Governance
+
+* [ ] persisted schema version policy implemented where needed `[BLOCKED]`
+* [ ] legacy fixtures `[BLOCKED]`
+* [ ] rollback/recovery tests `[BLOCKED]`
+
+## W6.6 — Backup / Restore
+
+* [ ] pre-apply validation `[BLOCKED]`
+* [ ] legacy support `[BLOCKED]`
+* [ ] malformed/future version rejection `[BLOCKED]`
+* [ ] no partial destructive restore `[BLOCKED]`
+
+## W6.7 — Failure Engineering
+
+* [ ] Firebase unavailable `[BLOCKED]`
+* [ ] Redis unavailable using Phase 5 policy `[BLOCKED]`
+* [ ] one source unavailable `[BLOCKED]`
+* [ ] all sources unavailable `[BLOCKED]`
+* [ ] image host unavailable `[BLOCKED]`
+* [ ] quota exhausted `[BLOCKED]`
+* [ ] stale/corrupt SW `[BLOCKED]`
+* [ ] interrupted download `[BLOCKED]`
+* [ ] auth expiration `[BLOCKED]`
+
+## W6.8 — Risk-First Type Debt
+
+* [ ] Dynamic Source contracts `[BLOCKED]`
+* [ ] security/migrations `[BLOCKED]`
+* [ ] sync `[BLOCKED]`
+* [ ] filters/adapters `[BLOCKED]`
+
+## W6.9 — Repository Hygiene
+
+* [ ] remove verified unused dependencies `[BLOCKED]`
+* [ ] clarify workspace tooling `[BLOCKED]`
+* [ ] remove stale config/code `[BLOCKED]`
+
+## Phase 6 Exit Gate
+
+* [ ] 10 critical E2E flows
+* [ ] sync/download/Dynamic Source coverage
+* [ ] migrations tested
+* [ ] backup integrity tested
+* [ ] dependency failures defined/tested
+* [ ] no release-blocking flaky tests
+* [ ] typecheck/tests/build/E2E pass
 
 ---
 
-*Tracker initialized from MASTER_PLAN.md v1.0 on 2026-09-13.*
+# Phase 7 — Performance, Accessibility & Compatibility
+
+**Status:** `BLOCKED`
+**Branch:** `phase/7-performance-accessibility`
+**Blocked by:** Phase 6
+
+## W7.1 — Performance Baseline
+
+* [ ] Home `[BLOCKED]`
+* [ ] Search `[BLOCKED]`
+* [ ] Library `[BLOCKED]`
+* [ ] Manga detail `[BLOCKED]`
+* [ ] vertical Reader `[BLOCKED]`
+* [ ] paged Reader `[BLOCKED]`
+* [ ] offline Reader `[BLOCKED]`
+
+## W7.2 — Core Web Vitals
+
+Targets:
+
+* [ ] LCP ≤ 2.5s p75 `[BLOCKED]`
+* [ ] INP ≤ 200ms p75 `[BLOCKED]`
+* [ ] CLS ≤ 0.10 `[BLOCKED]`
+
+## W7.3 — Reader Profiling
+
+* [ ] virtualizer corrections `[BLOCKED]`
+* [ ] image decode `[BLOCKED]`
+* [ ] prefetch concurrency `[BLOCKED]`
+* [ ] long-chapter memory `[BLOCKED]`
+* [ ] zoom `[BLOCKED]`
+* [ ] offline pages `[BLOCKED]`
+* [ ] resolve A2-P01 with evidence `[BLOCKED]`
+
+## W7.4 — Large Data
+
+* [ ] 1,000 Library items `[BLOCKED]`
+* [ ] 1,000 History items `[BLOCKED]`
+* [ ] many Collections `[BLOCKED]`
+* [ ] long chapter `[BLOCKED]`
+* [ ] multi-source search `[BLOCKED]`
+
+## W7.5 — Bundle Analysis
+
+* [ ] heavy-module code splitting `[BLOCKED]`
+* [ ] hydration/bundle regression review `[BLOCKED]`
+
+## W7.6 — Accessibility
+
+* [ ] keyboard `[BLOCKED]`
+* [ ] focus `[BLOCKED]`
+* [ ] semantics `[BLOCKED]`
+* [ ] dialogs/drawers `[BLOCKED]`
+* [ ] screen-reader labels `[BLOCKED]`
+* [ ] contrast `[BLOCKED]`
+* [ ] status/error announcements `[BLOCKED]`
+* [ ] reduced motion `[BLOCKED]`
+* [ ] browser zoom `[BLOCKED]`
+* [ ] WCAG 2.2 AA target-size requirements `[BLOCKED]`
+* [ ] primary touch controls target 44×44 CSS px where practical `[BLOCKED]`
+
+## W7.7 — Compatibility
+
+* [ ] Chromium desktop `[BLOCKED]`
+* [ ] Chromium Android `[BLOCKED]`
+* [ ] Firefox desktop `[BLOCKED]`
+* [ ] Safari/iOS PWA limitations documented `[BLOCKED]`
+
+## Phase 7 Exit Gate
+
+* [ ] baseline recorded
+* [ ] performance targets pass or exception explicitly approved
+* [ ] long Reader memory bounded
+* [ ] large Library responsive
+* [ ] accessibility blockers resolved
+* [ ] browser support documented
+* [ ] typecheck/tests/build/E2E pass
+
+---
+
+# Phase 8 — Production / Enterprise Readiness
+
+**Status:** `BLOCKED`
+**Branch:** `phase/8-enterprise-readiness`
+**Blocked by:** Phase 7
+
+## W8.1 — CI/CD
+
+* [ ] lockfile install gate `[BLOCKED]`
+* [ ] lint `[BLOCKED]`
+* [ ] typecheck `[BLOCKED]`
+* [ ] unit/integration `[BLOCKED]`
+* [ ] security regression `[BLOCKED]`
+* [ ] build `[BLOCKED]`
+* [ ] critical E2E `[BLOCKED]`
+* [ ] merge/deploy policy `[BLOCKED]`
+
+## W8.2 — Dependency Governance
+
+* [ ] lockfile policy `[BLOCKED]`
+* [ ] update cadence `[BLOCKED]`
+* [ ] major upgrade procedure `[BLOCKED]`
+* [ ] vulnerability process `[BLOCKED]`
+
+## W8.3 — Secrets / Environment
+
+* [ ] `.env.example` review `[BLOCKED]`
+* [ ] production env validation `[BLOCKED]`
+* [ ] secret rotation `[BLOCKED]`
+* [ ] compromised secret process `[BLOCKED]`
+* [ ] archive/git secret hygiene `[BLOCKED]`
+
+## W8.4 — Security Operations
+
+* [ ] SSRF regression governance `[BLOCKED]`
+* [ ] auth isolation governance `[BLOCKED]`
+* [ ] Dynamic Source trust governance `[BLOCKED]`
+* [ ] rate-limit policy `[BLOCKED]`
+* [ ] security headers `[BLOCKED]`
+* [ ] disclosure process / SECURITY.md `[BLOCKED]`
+
+## W8.5 — Release Engineering
+
+* [ ] semantic versioning policy `[BLOCKED]`
+* [ ] CHANGELOG process `[BASELINE_PRESENT]`
+* [ ] deployment checklist `[BLOCKED]`
+* [ ] post-deploy smoke `[BLOCKED]`
+* [ ] rollback drill `[BLOCKED]`
+* [ ] migration sequence `[BLOCKED]`
+* [ ] SW/cache release behavior `[BLOCKED]`
+
+## W8.6 — Observability
+
+* [ ] application failure visibility `[BLOCKED]`
+* [ ] source outage visibility `[BLOCKED]`
+* [ ] Redis degradation visibility `[BLOCKED]`
+* [ ] Firebase sync degradation visibility `[BLOCKED]`
+* [ ] release health `[BLOCKED]`
+
+## W8.7 — Incident Readiness
+
+* [ ] security incident runbook `[BLOCKED]`
+* [ ] bad deploy runbook `[BLOCKED]`
+* [ ] Firebase runbook `[BLOCKED]`
+* [ ] Redis runbook `[BLOCKED]`
+* [ ] source outage runbook `[BLOCKED]`
+* [ ] SW failure runbook `[BLOCKED]`
+* [ ] leaked secret runbook `[BLOCKED]`
+* [ ] compromised Dynamic Source runbook `[BLOCKED]`
+
+## W8.8 — Emergency Controls
+
+* [ ] disable one source `[BLOCKED]`
+* [ ] disable Dynamic Sources globally `[BLOCKED]`
+* [ ] targeted cache purge `[BLOCKED]`
+* [ ] block manifest/version `[BLOCKED]`
+* [ ] secret rotation `[BLOCKED]`
+* [ ] deployment rollback `[BLOCKED]`
+
+## W8.9 — Canonical Documentation
+
+Already completed from planning/doc-sync work:
+
+* [x] `GEMINI.md` store inventory corrected from 7 → 12 `[DONE]`
+* [x] `docs/SCHEMA.md` incorrect vertical-only `readingMode` claim corrected `[DONE]`
+
+Still required:
+
+* [ ] full `docs/SCHEMA.md` reconciliation `[BLOCKED]`
+* [ ] Architecture docs current `[BASELINE_PRESENT]`
+* [ ] security model documented `[BLOCKED]`
+* [ ] Phase 1 identity model documented `[BLOCKED]`
+* [ ] sync documentation current `[BLOCKED]`
+* [ ] PWA/offline documentation current `[BLOCKED]`
+* [ ] testing docs current `[BASELINE_PRESENT]`
+* [ ] deployment docs `[BLOCKED]`
+* [ ] disaster recovery docs `[BLOCKED]`
+* [ ] contributor docs current `[BASELINE_PRESENT]`
+
+## W8.10 — Final Readiness Review
+
+* [ ] clean checkout `[BLOCKED]`
+* [ ] production-equivalent validation `[BLOCKED]`
+* [ ] all Enterprise-Ready gates reviewed `[BLOCKED]`
+
+---
+
+# Enterprise-Ready Gate
+
+## Security
+
+* [ ] no known open P0/P1
+* [ ] SSRF regression-tested
+* [ ] Dynamic Source isolation proven
+* [ ] sessions isolated
+* [ ] no fake telemetry
+* [ ] secret process active
+
+## Data Safety
+
+* [ ] migrations governed/tested
+* [ ] backup/restore tested
+* [ ] rollback/recovery defined
+
+## Reliability
+
+* [ ] critical E2E green
+* [ ] source outages degrade gracefully
+* [ ] offline reading regression-tested
+* [ ] sync outage preserves local state
+* [ ] emergency controls operational
+
+## Quality
+
+* [ ] release gates green
+* [ ] no blocking flaky tests
+* [ ] reproducible install
+
+## Performance
+
+* [ ] performance targets measured
+* [ ] Reader profiled
+* [ ] large Library profiled
+* [ ] no known unbounded memory issue
+
+## Accessibility
+
+* [ ] primary flows meet agreed WCAG 2.2 AA baseline
+* [ ] keyboard/focus/reduced-motion tested
+
+## Operations
+
+* [ ] truthful monitoring
+* [ ] alerts actionable
+* [ ] rollback tested
+* [ ] runbooks exist
+
+## Documentation
+
+* [ ] canonical docs match implementation
+* [ ] architecture decisions traceable
+* [ ] change-control respected
+
+**Enterprise Status:** `NOT_ENTERPRISE_READY`
+
+---
+
+# Validation Log
+
+Never delete previous entries.
+
+| Date       | Branch                          | Phase    | Evidence                                     | Result           |
+| ---------- | ------------------------------- | -------- | -------------------------------------------- | ---------------- |
+| 2026-09-13 | baseline                        | Audit 2  | typecheck + 175/175 tests + production build | BASELINE_PRESENT |
+| 2026-09-13 | plan/yomirra-enterprise-roadmap | Planning | Master Plan / Tracker established            | DONE             |
+| 2026-09-13 | plan/yomirra-enterprise-roadmap | Docs     | GEMINI store inventory 7→12                  | DONE             |
+| 2026-09-13 | plan/yomirra-enterprise-roadmap | Docs     | SCHEMA readingMode correction                | DONE             |
+
+---
+
+# Implementation Notes
+
+| Date | Phase | Workstream | Note                                       |
+| ---- | ----- | ---------- | ------------------------------------------ |
+| —    | —     | —          | No production phase implementation started |
+
+---
+
+# Amendments
+
+| ID | Date | Evidence | Affected Phase(s) | Status        |
+| -- | ---- | -------- | ----------------- | ------------- |
+| —  | —    | —        | —                 | No amendments |
+
+---
+
+# Hotfixes
+
+| Branch | Date | Issue | Reconciled To |
+| ------ | ---- | ----- | ------------- |
+| —      | —    | —     | —             |
+
+---
+
+*Tracker aligned to MASTER_PLAN.md v1.0.*

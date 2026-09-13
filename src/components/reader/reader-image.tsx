@@ -155,7 +155,7 @@ export const ReaderImage = React.memo(function ReaderImage({
             priority={priority}
             fetchPriority={priority ? "high" : "auto"}
             quality={dataSaver ? 60 : 85}
-            unoptimized={!dataSaver}
+            unoptimized={!dataSaver || currentUrl.startsWith('blob:') || currentUrl.startsWith('data:')}
             loading="eager"
             decoding="async"
             onLoad={(e) => {

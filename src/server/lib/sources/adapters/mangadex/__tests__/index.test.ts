@@ -140,5 +140,51 @@ describe("MangaDex Retry Hardening & Retry-After Parser", () => {
       await expect(mdFetch("/manga")).rejects.toThrow("fetch failed");
       expect(fetchSpy).toHaveBeenCalledTimes(1);
     });
+
+    it("Scenario 8: Caller signal propagation in mdFetch", async () => {
+      const controller = new AbortController();
+      const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(async (_url, init) => {
+        const signal = init?.signal as AbortSignal;
+        expect(signal).toBeDefined();
+        return new Response(JSON.stringify({ result: "ok" }), { status: 200 });
+      });
+
+      const result = await mdFetch<{ result: string }>("/manga", undefined, { signal: controller.signal });
+      expect(result).toEqual({ result: "ok" });
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("Scenario 9: Pre-aborted caller signal throws immediately", async () => {
+      const controller = new AbortController();
+      controller.abort();
+
+      const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(async (_url, init) => {
+        const signal = init?.signal as AbortSignal;
+        if (signal?.aborted) {
+          throw new DOMException("The operation was aborted.", "AbortError");
+        }
+        return new Response(JSON.stringify({ result: "ok" }), { status: 200 });
+      });
+
+      await expect(mdFetch("/manga", undefined, { signal: controller.signal })).rejects.toThrow();
+    });
+
+    it("Scenario 10: Abort during 429 retry prevents second fetch attempt", async () => {
+      const controller = new AbortController();
+
+      const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(async () => {
+        // Abort controller when 429 is received
+        controller.abort();
+        return new Response("Too Many Requests", {
+          status: 429,
+          statusText: "Too Many Requests",
+          headers: { "retry-after": "1" },
+        });
+      });
+
+      await expect(mdFetch("/manga", undefined, { signal: controller.signal })).rejects.toThrow();
+      // Should stop after 1st attempt because controller was aborted
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+    });
   });
 });
