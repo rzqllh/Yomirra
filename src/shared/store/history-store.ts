@@ -23,6 +23,9 @@ export type HistoryItem = {
   scrollPercent?: number;
   readAt: number;
   isNsfw?: boolean;
+  // --- Phase 1 Identity Fields (optional, denormalized) ---
+  savedTitleId?: string;  // Recoverable via SourceRef lookup if missing
+  chapterNumber?: number; // Parsed from chapterTitle for cross-source mapping
 };
 
 interface HistoryState {
@@ -38,6 +41,12 @@ interface HistoryState {
   getHistoryList: () => HistoryItem[];
   markChapterProgress: (sourceId: string, mangaId: string, chapterId: string, pageIndex: number, totalPages: number, scrollPercent?: number) => void;
   saveProgress: (sourceId: string, mangaId: string, chapterId: string, pageIndex: number, pageOffset?: number) => void;
+  /**
+   * Resolve SavedTitleId for a HistoryItem.
+   * Returns the denormalized field if present, otherwise scans Library SourceRefs.
+   * Returns null if unresolvable — item is preserved as unresolved legacy history.
+   */
+  resolveSavedTitleId: (sourceId: string, mangaId: string) => string | null;
   syncWithCloud: (cloudItems: HistoryItem[]) => void;
 }
 
@@ -235,6 +244,27 @@ export const useHistoryStore = create<HistoryState>()(
           }
         };
       }),
+
+      resolveSavedTitleId: (sourceId, mangaId) => {
+        // 1. Check denormalized field on any history item for this manga
+        const anyItem = Object.values(get().items).find(
+          (i) => i.sourceId === sourceId && i.mangaId === mangaId
+        );
+        if (anyItem?.savedTitleId) return anyItem.savedTitleId;
+
+        // 2. Scan Library SourceRefs (lazy import to avoid circular dependency)
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        const { useLibraryStore } = require("@/shared/store/library-store");
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const libraryState = (useLibraryStore as any).getState();
+        if (libraryState?.resolveBySourceRef) {
+          const match = libraryState.resolveBySourceRef(sourceId, mangaId);
+          if (match?.id) return match.id;
+        }
+
+        // 3. Unresolvable — preserve as unresolved legacy history
+        return null;
+      },
 
       syncWithCloud: (cloudItems) => set((state) => {
         const newItems = { ...state.items };

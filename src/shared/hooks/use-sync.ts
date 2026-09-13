@@ -5,7 +5,7 @@ import { useHistoryStore, HistoryItem } from "@/shared/store/history-store";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { initFirebase } from '@/shared/lib/firebase';
-import { pullSourcePreferences } from '@/shared/lib/sync-utils';
+import { pullSourcePreferences, pullLegacyLibraryData } from '@/shared/lib/sync-utils';
 
 export function useSync(options = { autoSync: true }) {
   const { user } = useAuth();
@@ -33,20 +33,6 @@ export function useSync(options = { autoSync: true }) {
       const { doc, collection, getDocs, writeBatch } = await import('firebase/firestore');
       const uid = user.uid;
       
-      // 1. Fetch remote library
-      const remoteLibSnapshot = await getDocs(collection(firestore, `users/${uid}/library`));
-      const remoteLibrary: Record<string, LibraryItem> = {};
-      remoteLibSnapshot.forEach(d => {
-        remoteLibrary[d.id] = d.data() as LibraryItem;
-      });
-
-      // 2. Fetch remote history
-      const remoteHistSnapshot = await getDocs(collection(firestore, `users/${uid}/history`));
-      const remoteHistory: Record<string, HistoryItem> = {};
-      remoteHistSnapshot.forEach(d => {
-        remoteHistory[d.id] = d.data() as HistoryItem;
-      });
-
       let batch = writeBatch(firestore);
       let batchCount = 0;
       let totalSynced = 0;
@@ -69,16 +55,84 @@ export function useSync(options = { autoSync: true }) {
           commitCurrentBatch();
         }
       };
+      
+      // 1. Fetch remote libraryV2 (canonical Phase 1 collection)
+      const remoteLibSnapshot = await getDocs(collection(firestore, `users/${uid}/libraryV2`));
+      const remoteLibrary: Record<string, LibraryItem> = {};
+      remoteLibSnapshot.forEach(d => {
+        const item = d.data() as LibraryItem & { _deleted?: boolean };
+        if (!item._deleted) remoteLibrary[d.id] = item;
+      });
+
+      // 1a. First-time migration: if libraryV2 is empty, import from legacy 'library'
+      const isMigrationComplete = localStorage.getItem('yomirra-libraryV2-migrated') === 'true';
+      if (!isMigrationComplete && remoteLibSnapshot.empty) {
+        const legacyItems = await pullLegacyLibraryData();
+        if (legacyItems.length > 0) {
+          for (const legacyItem of legacyItems) {
+            const savedTitleId = legacyItem.id ?? `${legacyItem.sourceId}::${legacyItem.mangaId}`;
+            if (!remoteLibrary[savedTitleId]) {
+              const enriched: LibraryItem = {
+                ...legacyItem,
+                id: savedTitleId,
+                schemaVersion: 2,
+                primarySourceId: legacyItem.sourceId,
+                primaryMangaId: legacyItem.mangaId,
+                linkedSources: legacyItem.linkedSources ?? [],
+              };
+              const cleanItem = Object.fromEntries(Object.entries(enriched).filter(([, v]) => v !== undefined));
+              pushToBatch(doc(firestore, `users/${uid}/libraryV2`, savedTitleId), cleanItem);
+              remoteLibrary[savedTitleId] = enriched; // include in merge below
+            }
+          }
+        }
+        try { localStorage.setItem('yomirra-libraryV2-migrated', 'true'); } catch { /* ignore */ }
+      }
+
+      // 1b. Post-migration V1 import: detect new V1 items not present in libraryV2
+      if (isMigrationComplete) {
+        const legacySnapshot = await getDocs(collection(firestore, `users/${uid}/library`));
+        legacySnapshot.forEach(d => {
+          const legacyItem = d.data() as LibraryItem & { _deleted?: boolean };
+          if (legacyItem._deleted) return;
+          const legacyKey = d.id;
+          // Check if this legacy item is already in libraryV2
+          const alreadyImported = !!remoteLibrary[legacyKey] || Object.values(remoteLibrary).some(
+            (v2) => v2.sourceId === legacyItem.sourceId && v2.mangaId === legacyItem.mangaId
+          );
+          if (!alreadyImported) {
+            const savedTitleId = legacyItem.id ?? `${legacyItem.sourceId}::${legacyItem.mangaId}`;
+            const enriched: LibraryItem = {
+              ...legacyItem,
+              id: savedTitleId,
+              schemaVersion: 2,
+              primarySourceId: legacyItem.sourceId,
+              primaryMangaId: legacyItem.mangaId,
+              linkedSources: legacyItem.linkedSources ?? [],
+            };
+            const cleanItem = Object.fromEntries(Object.entries(enriched).filter(([, v]) => v !== undefined));
+            pushToBatch(doc(firestore, `users/${uid}/libraryV2`, savedTitleId), cleanItem);
+            remoteLibrary[savedTitleId] = enriched;
+          }
+        });
+      }
+
+      // 2. Fetch remote history
+      const remoteHistSnapshot = await getDocs(collection(firestore, `users/${uid}/history`));
+      const remoteHistory: Record<string, HistoryItem> = {};
+      remoteHistSnapshot.forEach(d => {
+        remoteHistory[d.id] = d.data() as HistoryItem;
+      });
 
       // 3. Merge Library (Local wins if newer, otherwise remote wins)
       Object.values(libraryItems).forEach(localItem => {
-        const id = `${localItem.sourceId}::${localItem.mangaId}`;
-        const remoteItem = remoteLibrary[id];
+        const key = localItem.id ?? `${localItem.sourceId}::${localItem.mangaId}`;
+        const remoteItem = remoteLibrary[key];
         
         if (!remoteItem || new Date(localItem.updatedAt).getTime() > new Date(remoteItem.updatedAt).getTime()) {
           // Push local to remote
           const cleanItem = Object.fromEntries(Object.entries(localItem).filter(([, v]) => v !== undefined));
-          pushToBatch(doc(firestore, `users/${uid}/library`, id), cleanItem);
+          pushToBatch(doc(firestore, `users/${uid}/libraryV2`, key), cleanItem);
         }
       });
 

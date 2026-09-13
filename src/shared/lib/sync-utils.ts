@@ -9,24 +9,29 @@ export async function pushLibraryItem(item: LibraryItem) {
   if (!user) return;
   try {
     const { doc, setDoc } = await import("firebase/firestore");
-    const id = `${item.sourceId}::${item.mangaId}`;
+    // Phase 1: write to libraryV2 (canonical). V1 clients remain in legacy 'library' collection.
+    const savedTitleId = item.id ?? `${item.sourceId}::${item.mangaId}`;
     const cleanItem = Object.fromEntries(Object.entries(item).filter(([, v]) => v !== undefined));
-    await setDoc(doc(db, `users/${user.uid}/library`, id), cleanItem);
+    await setDoc(doc(db, `users/${user.uid}/libraryV2`, savedTitleId), cleanItem);
   } catch (e) {
     console.error("Failed to sync library item", e);
     throw e;
   }
 }
 
-export async function deleteLibraryItem(sourceId: string, mangaId: string) {
+export async function deleteLibraryItem(sourceId: string, mangaId: string, savedTitleId?: string) {
   const { auth, db } = await initFirebase();
   if (!auth || !db) return;
   const user = auth.currentUser;
   if (!user) return;
   try {
-    const { doc, deleteDoc } = await import("firebase/firestore");
-    const id = `${sourceId}::${mangaId}`;
-    await deleteDoc(doc(db, `users/${user.uid}/library`, id));
+    const { doc, deleteDoc, setDoc } = await import("firebase/firestore");
+    const v2Id = savedTitleId ?? `${sourceId}::${mangaId}`;
+    // Remove from canonical libraryV2
+    await deleteDoc(doc(db, `users/${user.uid}/libraryV2`, v2Id));
+    // Write tombstone to legacy library so V1 clients see deletion
+    const legacyId = `${sourceId}::${mangaId}`;
+    await setDoc(doc(db, `users/${user.uid}/library`, legacyId), { _deleted: true, deletedAt: new Date().toISOString() });
   } catch (e) {
     console.error("Failed to delete library item from sync", e);
     throw e;
@@ -97,6 +102,7 @@ export async function deleteMangaHistory(sourceId: string, mangaId: string) {
   }
 }
 
+/** Pull from canonical libraryV2 collection (Phase 1+). */
 export async function pullLibraryData(): Promise<LibraryItem[]> {
   const { auth, db } = await initFirebase();
   if (!auth || !db) return [];
@@ -104,10 +110,30 @@ export async function pullLibraryData(): Promise<LibraryItem[]> {
   if (!user) return [];
   try {
     const { collection, getDocs } = await import("firebase/firestore");
-    const querySnapshot = await getDocs(collection(db, `users/${user.uid}/library`));
-    return querySnapshot.docs.map(doc => doc.data() as LibraryItem);
+    const querySnapshot = await getDocs(collection(db, `users/${user.uid}/libraryV2`));
+    return querySnapshot.docs
+      .map(d => d.data() as LibraryItem)
+      .filter(item => !(item as Record<string, unknown>)._deleted);
   } catch (e) {
-    console.error("Failed to pull library data", e);
+    console.error("Failed to pull library data from libraryV2", e);
+    return [];
+  }
+}
+
+/** Pull from legacy 'library' collection — used once at migration time and for V1 import detection. */
+export async function pullLegacyLibraryData(): Promise<LibraryItem[]> {
+  const { auth, db } = await initFirebase();
+  if (!auth || !db) return [];
+  const user = auth.currentUser;
+  if (!user) return [];
+  try {
+    const { collection, getDocs } = await import("firebase/firestore");
+    const querySnapshot = await getDocs(collection(db, `users/${user.uid}/library`));
+    return querySnapshot.docs
+      .map(d => d.data() as LibraryItem)
+      .filter(item => !(item as Record<string, unknown>)._deleted);
+  } catch (e) {
+    console.error("Failed to pull legacy library data", e);
     return [];
   }
 }

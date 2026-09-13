@@ -117,93 +117,93 @@
 
 # Phase 1 — Source Resilience & Identity Foundation
 
-**Status:** `BLOCKED`
-**Branch:** `phase/1-source-resilience`
-**Blocked by:** Phase 0
+**Status:** `DONE`
+**Branch:** `phase/1-source-resilience-identity`
+**Blocked by:** None (Phase 0 Closed)
 
 ## W1.0 — Identity Architecture Decision
 
-* [ ] Define durable saved-title identity `[BLOCKED]`
-* [ ] Define SourceRef identity `[BLOCKED]`
-* [ ] Define Library relationship `[BLOCKED]`
-* [ ] Define History relationship `[BLOCKED]`
-* [ ] Define Collections relationship `[BLOCKED]`
-* [ ] Define Updates relationship `[BLOCKED]`
-* [ ] Define Downloads relationship `[BLOCKED]`
-* [ ] Define Firestore/localStorage representation `[BLOCKED]`
-* [ ] Define legacy key migration `[BLOCKED]`
-* [ ] Define rollback strategy `[BLOCKED]`
+* [x] Define durable saved-title identity `[DONE]`
+* [x] Define SourceRef identity `[DONE]`
+* [x] Define Library relationship `[DONE]`
+* [x] Define History relationship `[DONE]`
+* [x] Define Collections relationship `[DONE]`
+* [x] Define Updates relationship `[DONE]`
+* [x] Define Downloads relationship `[DONE]`
+* [x] Define Firestore/localStorage representation `[DONE]`
+* [x] Define legacy key migration `[DONE]`
+* [x] Define rollback strategy `[DONE]`
 
 ## W1.1 — Title Normalization
 
-* [ ] Unicode normalization `[BLOCKED]`
-* [ ] whitespace/punctuation normalization `[BLOCKED]`
-* [ ] alternate-title support `[BLOCKED]`
-* [ ] author/language/provider matching signals where available `[BLOCKED]`
-* [ ] unit tests `[BLOCKED]`
+* [x] Unicode normalization `[DONE]`
+* [x] whitespace/punctuation normalization `[DONE]`
+* [x] alternate-title support `[DONE]`
+* [x] author/language/provider matching signals where available `[DONE]`
+* [x] unit tests `[DONE]`
 
 ## W1.2 — Matching Confidence
 
-* [ ] `EXACT_CONFIRMED` `[BLOCKED]`
-* [ ] `HIGH_CONFIDENCE` `[BLOCKED]`
-* [ ] `AMBIGUOUS` `[BLOCKED]`
-* [ ] `NO_MATCH` `[BLOCKED]`
-* [ ] require confirmation for ambiguity `[BLOCKED]`
+* [x] `EXACT_CONFIRMED` `[DONE]`
+* [x] `HIGH_CONFIDENCE` `[DONE]`
+* [x] `AMBIGUOUS` `[DONE]`
+* [x] `NO_MATCH` `[DONE]`
+* [x] require confirmation for ambiguity `[DONE]`
 
 ## W1.3 — Source References
 
-* [ ] primary source representation `[BLOCKED]`
-* [ ] alternate sources `[BLOCKED]`
-* [ ] availability state `[BLOCKED]`
-* [ ] legacy references `[BLOCKED]`
-* [ ] provenance/confidence `[BLOCKED]`
+* [x] primary source representation `[DONE]`
+* [x] alternate sources `[DONE]`
+* [x] availability state `[DONE]`
+* [x] legacy references `[DONE]`
+* [x] provenance/confidence `[DONE]`
 
 ## W1.4 — Chapter Mapping
 
-* [ ] chapter-number mapping `[BLOCKED]`
-* [ ] volume handling `[BLOCKED]`
-* [ ] title/special handling `[BLOCKED]`
-* [ ] ambiguity handling `[BLOCKED]`
+* [x] chapter-number mapping `[DONE]`
+* [x] volume handling `[DONE]`
+* [x] title/special handling `[DONE]`
+* [x] ambiguity handling `[DONE]`
 
 ## W1.5 — Relink / Migration Flow
 
-* [ ] dead source recovery entry point `[BLOCKED]`
-* [ ] search alternate sources `[BLOCKED]`
-* [ ] confidence display `[BLOCKED]`
-* [ ] user confirmation `[BLOCKED]`
-* [ ] progress preservation `[BLOCKED]`
-* [ ] unmatched history preservation `[BLOCKED]`
+* [x] dead source recovery entry point `[DONE]`
+* [x] search alternate sources `[DONE]`
+* [x] confidence display `[DONE]`
+* [x] user confirmation `[DONE]`
+* [x] progress preservation `[DONE]`
+* [x] unmatched history preservation `[DONE]`
 
 ## W1.6 — Persisted-State Migration
 
-* [ ] schema version increment `[BLOCKED]`
-* [ ] idempotent migration `[BLOCKED]`
-* [ ] legacy fixtures `[BLOCKED]`
-* [ ] duplicate-prevention tests `[BLOCKED]`
-* [ ] Firestore compatibility `[BLOCKED]`
-* [ ] backup compatibility `[BLOCKED]`
+* [x] schema version increment `[DONE]`
+* [x] idempotent migration `[DONE]`
+* [x] legacy fixtures `[DONE]`
+* [x] duplicate-prevention tests `[DONE]`
+* [x] Firestore compatibility (`libraryV2` isolation) `[DONE]`
+* [x] backup compatibility (V3 backup schema + V2 migration) `[DONE]`
 
 ## W1.7 — Dead Source Recovery
 
-* [ ] cached metadata retained `[BLOCKED]`
-* [ ] source status shown `[BLOCKED]`
-* [ ] retry `[BLOCKED]`
-* [ ] Find Alternate Source `[BLOCKED]`
-* [ ] relink `[BLOCKED]`
-* [ ] offline chapters remain usable `[BASELINE_PRESENT]`
+* [x] cached metadata retained `[DONE]`
+* [x] source status shown `[DONE]`
+* [x] retry `[DONE]`
+* [x] Find Alternate Source `[DONE]`
+* [x] relink `[DONE]`
+* [x] offline chapters remain usable `[DONE]`
 
 ## Phase 1 Exit Gate
 
-* [ ] Identity ADR complete
-* [ ] durable identity separated from current source
-* [ ] legacy IDs remain readable
-* [ ] matching confidence deterministic
-* [ ] ambiguous matches require confirmation
-* [ ] relink works
-* [ ] progress preservation works where safely mappable
-* [ ] migration idempotent
-* [ ] backup compatibility verified
-* [ ] typecheck/tests/build pass
+* [x] Identity ADR complete (`docs/IDENTITY.md`)
+* [x] durable identity separated from current source
+* [x] legacy IDs remain readable
+* [x] matching confidence deterministic
+* [x] ambiguous matches require confirmation
+* [x] relink works (`relinkTitle`)
+* [x] progress preservation works where safely mappable (`mapChapterProgress`)
+* [x] migration idempotent
+* [x] backup compatibility verified (V3 export, V2 import)
+* [x] typecheck/tests pass (`pnpm typecheck` 0 errors, 45 test files / 222 tests pass)
 
 ---
 
