@@ -130,6 +130,7 @@ export function RiwayatTab() {
                     chapterId={item.chapterId}
                     chapterTitle={item.chapterTitle}
                     progressPercent={item.progressPercent || 0}
+                    timestamp={item.readAt}
                   />
                   
                   <button

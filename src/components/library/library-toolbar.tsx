@@ -14,6 +14,8 @@ export interface LibraryToolbarProps {
   onSearchClear: () => void;
   activeSourceId: string;
   activeFilterCount: number;
+  isSelectionMode?: boolean;
+  onToggleSelectionMode?: () => void;
 }
 
 export function LibraryToolbar({
@@ -23,6 +25,8 @@ export function LibraryToolbar({
   onSearchClear,
   activeSourceId,
   activeFilterCount,
+  isSelectionMode,
+  onToggleSelectionMode,
 }: LibraryToolbarProps) {
   return (
     <div className="flex items-center gap-2.5 mt-6 md:mt-7">
@@ -49,6 +53,20 @@ export function LibraryToolbar({
           {activeFilterCount > 0 && <span>{activeFilterCount}</span>}
         </Button>
       </LibraryFilterDrawer>
+
+      {onToggleSelectionMode && (
+        <Button
+          variant={isSelectionMode ? "accent" : "outline"}
+          onClick={onToggleSelectionMode}
+          className={cn(
+            "shrink-0 h-[44px] px-4 rounded-2xl font-bold transition-all duration-300",
+            !isSelectionMode && "bg-surface-glass backdrop-blur-md text-text-primary border-border-subtle"
+          )}
+          aria-label={isSelectionMode ? "Batal pilih" : "Pilih manga"}
+        >
+          {isSelectionMode ? "Batal" : "Pilih"}
+        </Button>
+      )}
     </div>
   );
 }
