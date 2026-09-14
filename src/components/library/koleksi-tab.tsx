@@ -40,6 +40,11 @@ export function KoleksiTab() {
         }}
         activeSourceId={catalog.activeSourceId}
         activeFilterCount={catalog.activeFilterCount}
+        isSelectionMode={isSelectionMode}
+        onToggleSelectionMode={() => {
+          setIsSelectionMode(!isSelectionMode);
+          if (isSelectionMode) setSelectedItems(new Set());
+        }}
       />
 
       {/* Quick Sort & Reading Status Row */}
@@ -117,6 +122,16 @@ export function KoleksiTab() {
         setPage={catalog.setPage}
         hasNextPage={catalog.data?.hasNextPage}
         onResetFilters={catalog.resetFilters}
+        isSelectionMode={isSelectionMode}
+        selectedItems={selectedItems}
+        onToggleSelectItem={(key) => {
+          setSelectedItems(prev => {
+            const next = new Set(prev);
+            if (next.has(key)) next.delete(key);
+            else next.add(key);
+            return next;
+          });
+        }}
       />
     </>
   );
