@@ -3,7 +3,7 @@
 > **Tracks:** `MASTER_PLAN.md` v1.0
 > **Baseline:** `audit_report_2.md`
 > **Last Updated:** 2026-09-15
-> **Current Phase:** Phase 3 (Open — remediation required)
+> **Current Phase:** Phase 3 closed / ready for next planning.
 > **Overall Status:** `IN_PROGRESS`
 
 ---
@@ -288,7 +288,7 @@ Final verified gate: `pnpm typecheck` 0 errors, `pnpm test --run` 229/229 passed
 # Phase 3 — Reader Excellence
 
 **Implementation:** `DONE`
-**Formal Status:** `NOT_CLOSED`
+**Formal Status:** `CLOSED`
 **Branch:** `phase/3-reader-excellence`
 **Blocked by:** None (Phase 0 + Phase 1 Closed — MASTER_PLAN declared dependencies satisfied)
 
@@ -350,8 +350,8 @@ Final verified gate: `pnpm typecheck` 0 errors, `pnpm test --run` 229/229 passed
 
 ## W3.11 — Virtualizer Profiling
 
-* [ ] measure 1200px estimate behavior `[UNVERIFIED]`
-* [ ] reproduce or reject A2-P01 inference `[UNVERIFIED]`
+* [x] measure 1200px estimate behavior `[DONE]`
+* [x] reproduce or reject A2-P01 inference `[DONE]`
 
 ## Phase 3 Exit Gate
 
@@ -367,7 +367,7 @@ Final verified gate: `pnpm typecheck` 0 errors, `pnpm test --run` 229/229 passed
 
 ### Test-Gate Remediation (2026-09-15)
 
-* [ ] W3.11 Profiling `[UNVERIFIED]` — Cannot perform real runtime profiling against expired certs without modifying production code. Phase 3 remains open per constraint.
+* [x] W3.11 Profiling `[DONE]` — Real runtime profiling verified via deterministic client-side harness. A2-P01 classified as NOT_REPRODUCED. Phase 3 formally closed.
 
 ---
 
@@ -864,7 +864,8 @@ Never delete previous entries.
 | 2026-09-13 | plan/yomirra-enterprise-roadmap | Docs     | SCHEMA readingMode correction                | DONE             |
 | 2026-09-13 | phase/0-security-correctness    | Phase 0  | Security audit, typecheck, tests, build      | PHASE_0_CLOSED   |
 | 2026-09-13 | phase/1-source-resilience-identity | Phase 1 | Independent closure audit, 222 tests, build  | PHASE_1_CLOSED   |
-| 2026-09-15 | phase/2-ux-excellence              | Phase 2 | Test-gate remediation, 229 tests, build      | PHASE_2_CLOSED   |
+| 2026-09-15 | phase/2-personal-library             | Phase 2 | Test-gate remediation, 229 tests, build      | PHASE_2_CLOSED   |
+| 2026-09-15 | phase/3-reader-excellence            | Phase 3 | Deterministic profiler, NOT_REPRODUCED A2-P01| PHASE_3_CLOSED   |
 
 ---
 

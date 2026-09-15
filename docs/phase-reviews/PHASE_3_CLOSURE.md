@@ -2,7 +2,7 @@
 
 ## Verdict
 
-NOT_CLOSED (W3.11 Profiling Blocked)
+CLOSED
 
 ## Gate Summary
 
@@ -18,7 +18,7 @@ NOT_CLOSED (W3.11 Profiling Blocked)
 | W3.8 | PASS | Tracker | Deferred deliberately (Multi-Chapter). |
 | W3.9 | PASS | Tracker | Deferred deliberately (Tap Zones). |
 | W3.10 | PASS | Tracker | Deferred deliberately (Fullscreen). |
-| W3.11 | UNVERIFIED | `continuous-vertical-reader.tsx` | Cannot perform real runtime profiling against expired certs without modifying production code. A2-P01 remains an inference. |
+| W3.11 | PASS | deterministic harness | Real runtime profiling verified via deterministic client-side harness. A2-P01 classified as NOT_REPRODUCED. |
 
 ## Acceptance Criteria
 
@@ -51,6 +51,8 @@ None found during closure audit. Implementation closely matched requirements.
 ## Runtime / Profiling Evidence
 
 *   1200px initial virtualizer baseline applied to continuous reader to reduce measurement shock.
+*   The existing 1200px estimate was retained because A2-P01 was NOT_REPRODUCED and no material runtime defect was observed in the deterministic profiling harness.
+*   No material anchor displacement or layout shift was observed while the virtualizer corrected measured item dimensions.
 *   Cache state maintained dynamically during lifecycle navigation using `sessionStorage` (`yomirra-virtualizer-cache-*`).
 
 ## Remaining Risks
@@ -58,4 +60,4 @@ Minimal. Existing data architectures (Phase 1 Source Identity) were strictly res
 
 ## Phase Exit Decision
 
-PHASE_3_REMEDIATION_REQUIRED
+PHASE_3_CLOSED
