@@ -2,8 +2,8 @@
 
 > **Tracks:** `MASTER_PLAN.md` v1.0
 > **Baseline:** `audit_report_2.md`
-> **Last Updated:** 2026-09-13
-> **Current Phase:** Phase 1 (Closed)
+> **Last Updated:** 2026-09-15
+> **Current Phase:** Phase 2 (Closed — remediation complete)
 > **Overall Status:** `IN_PROGRESS`
 
 ---
@@ -210,7 +210,8 @@
 
 # Phase 2 — Personal Library UX
 
-**Status:** `DONE`
+**Status:** `CLOSED`
+**Formal Closure:** 2026-09-15 (after test-gate remediation)
 **Branch:** `phase/2-personal-library`
 **Blocked by:** None (Phase 1 Closed)
 
@@ -268,16 +269,27 @@
 
 ## Phase 2 Exit Gate
 
-* [ ] mobile/desktop verified
-* [ ] typecheck/tests/build pass
+* [x] mobile/desktop verified `[DONE]`
+* [x] typecheck/tests/build pass `[DONE]`
+
+### Test-Gate Remediation (2026-09-15)
+
+Initial closure was invalidated: 4 test files / 8 tests failing. Root causes and fixes:
+
+* [x] `bottom-dock.test.tsx` — Stale assertion checked for `Bookmark` nav item removed in Phase 2. Updated to Phase 2 contract: Beranda, Library, Cari, Pengaturan. `[DONE]`
+* [x] `bookmark-page.test.tsx` — Obsolete UI tests for old Bookmark page. Replaced with redirect-contract tests asserting `redirect('/library?tab=riwayat')`. `[DONE]`
+* [x] `search-integration.test.tsx` — Mock missing `dynamicSourceRegistry.get()`. ShelfCard calls `.get()` added in Phase 2. Added `get: vi.fn()` to mock. `[DONE]`
+* [x] `search-page-revamp.test.tsx` — Same stale mock. Added `get: vi.fn()` to mock. `[DONE]`
+
+Final verified gate: `pnpm typecheck` 0 errors, `pnpm test --run` 229/229 passed (46 files), `pnpm build` pass.
 
 ---
 
 # Phase 3 — Reader Excellence
 
-**Status:** `BLOCKED`
+**Status:** `NOT_STARTED`
 **Branch:** `phase/3-reader-excellence`
-**Blocked by:** Phase 0 + Phase 1
+**Blocked by:** None (Phase 0 + Phase 1 Closed — MASTER_PLAN declared dependencies satisfied)
 
 ## W3.1 — Reader Dead Logic Cleanup
 

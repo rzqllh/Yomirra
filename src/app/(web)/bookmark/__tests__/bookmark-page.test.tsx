@@ -1,119 +1,54 @@
-import { render, screen, fireEvent } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import BookmarkPage from '../page';
-import { useLibraryStore } from '@/shared/store/library-store';
-import { useHistoryStore } from '@/shared/store/history-store';
-import { useSettingsStore } from '@/shared/store/settings-store';
-import { useSourcePreferencesStore } from '@/shared/store/source-preferences-store';
+import { redirect } from 'next/navigation';
 
-vi.mock('@/shared/store/library-store', () => ({
-  useLibraryStore: vi.fn(),
-}));
-
-vi.mock('@/shared/store/history-store', () => ({
-  useHistoryStore: vi.fn(),
-}));
-
-vi.mock('@/shared/store/settings-store', () => ({
-  useSettingsStore: vi.fn(),
-}));
-
-vi.mock('@/shared/store/source-preferences-store', () => ({
-  useSourcePreferencesStore: vi.fn(() => ({
-    isSourceDisabled: vi.fn(() => false),
-  })),
-}));
-
-vi.mock('@/shared/hooks/use-nsfw-source-ids', () => ({
-  useNsfwSourceIds: vi.fn(() => ({ status: "KNOWN", ids: new Set() })),
-}));
-
-vi.mock('@/shared/hooks/use-mounted', () => ({
-  useMounted: vi.fn(() => true),
-}));
-
-vi.mock('next/link', () => ({
-  default: ({ children, href, transitionTypes, ...props }: any) => <a href={href} {...props}>{children}</a>
-}));
-
+// next/navigation redirect is a server-side throw in Next.js App Router.
+// We test that the page calls redirect() with the correct destination.
 vi.mock('next/navigation', () => ({
+  redirect: vi.fn((url: string) => {
+    throw new Error(`NEXT_REDIRECT:${url}`);
+  }),
   useRouter: vi.fn(() => ({ back: vi.fn(), push: vi.fn() })),
   usePathname: vi.fn(() => '/bookmark'),
   useSearchParams: vi.fn(() => new URLSearchParams()),
 }));
 
-describe('BookmarkPage Reworked', () => {
-  const mockRemoveFromLibrary = vi.fn();
-  const mockRemoveMangaHistory = vi.fn();
-  const mockIsInLibrary = vi.fn(() => true);
-  const mockToggleLibrary = vi.fn();
-
+describe('/bookmark route — compatibility redirect contract', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-    (useLibraryStore as any).mockImplementation((selector: any) =>
-      selector ? selector({
-        items: {
-          'src1::manga1': { sourceId: 'src1', mangaId: 'manga1', title: 'Solo Leveling', updatedAt: '2026-08-01' },
-          'src1::manga2': { sourceId: 'src1', mangaId: 'manga2', title: 'Tower of God', updatedAt: '2026-08-02' }
-        },
-        isInLibrary: mockIsInLibrary,
-        toggleLibrary: mockToggleLibrary,
-        removeFromLibrary: mockRemoveFromLibrary
-      }) : {
-        items: {},
-        isInLibrary: mockIsInLibrary,
-        toggleLibrary: mockToggleLibrary,
-        removeFromLibrary: mockRemoveFromLibrary
-      }
-    );
-
-    (useHistoryStore as any).mockImplementation((selector: any) =>
-      selector ? selector({
-        items: {},
-        getHistoryList: () => [
-          { sourceId: 'src1', mangaId: 'manga1', mangaTitle: 'Solo Leveling', chapterId: 'ch-100', chapterTitle: 'Chapter 100', readAt: Date.now() }
-        ],
-        removeMangaHistory: mockRemoveMangaHistory
-      }) : { items: {}, getHistoryList: () => [], removeMangaHistory: mockRemoveMangaHistory }
-    );
-
-    (useSettingsStore as any).mockImplementation((selector: any) =>
-      selector ? selector({ hideNsfw: false }) : { hideNsfw: false }
-    );
+    vi.mocked(redirect).mockClear();
   });
 
-  it('renders reading history card with detail link on cover/title and reader link on Lanjutkan CTA', () => {
-    render(<BookmarkPage />);
-    
-    expect(screen.getByRole('heading', { level: 1, name: /Rak Buku/i })).toBeTruthy();
-    
-    // Title link should point to manga detail page
-    const titleLink = screen.getByRole('heading', { level: 3, name: /Solo Leveling/i }).closest('a');
-    expect(titleLink?.getAttribute('href')).toBe('/manga/src1/manga1?returnTo=%2Fbookmark');
+  it('redirects to /library?tab=riwayat', async () => {
+    const { default: BookmarkPage } = await import('../page');
 
-    // Lanjutkan button link should point to reader page
-    const continueBtn = screen.getByRole('button', { name: /Lanjutkan/i });
-    const continueLink = continueBtn.closest('a');
-    expect(continueLink?.getAttribute('href')).toBe('/manga/src1/manga1/read/ch-100?returnTo=%2Fbookmark');
-
-    // Trash button
-    const trashBtn = screen.getByRole('button', { name: /Hapus Solo Leveling dari riwayat/i });
-    expect(trashBtn).toBeTruthy();
+    expect(() => BookmarkPage()).toThrow('NEXT_REDIRECT:/library?tab=riwayat');
+    expect(redirect).toHaveBeenCalledWith('/library?tab=riwayat');
+    expect(redirect).toHaveBeenCalledTimes(1);
   });
 
-  it('switches to collection tab and filters items', () => {
-    render(<BookmarkPage />);
-    
-    const collectionTab = screen.getByRole('tab', { name: /Koleksi/i });
-    fireEvent.click(collectionTab);
+  it('does NOT redirect to /bookmark itself', async () => {
+    const { default: BookmarkPage } = await import('../page');
 
-    expect(screen.getAllByText('Solo Leveling').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Tower of God').length).toBeGreaterThan(0);
+    try {
+      BookmarkPage();
+    } catch {
+      // expected throw from redirect()
+    }
 
-    const searchInput = screen.getByPlaceholderText(/Cari di koleksi.../i);
-    fireEvent.change(searchInput, { target: { value: 'Solo' } });
+    const destination = vi.mocked(redirect).mock.calls[0]?.[0];
+    expect(destination).not.toBe('/bookmark');
+  });
 
-    expect(screen.getAllByText('Solo Leveling').length).toBeGreaterThan(0);
-    expect(screen.queryByText('Tower of God')).toBeNull();
+  it('does NOT redirect to /library without the tab parameter', async () => {
+    const { default: BookmarkPage } = await import('../page');
+
+    try {
+      BookmarkPage();
+    } catch {
+      // expected throw from redirect()
+    }
+
+    const destination = vi.mocked(redirect).mock.calls[0]?.[0];
+    expect(destination).not.toBe('/library');
+    expect(destination).toContain('tab=riwayat');
   });
 });

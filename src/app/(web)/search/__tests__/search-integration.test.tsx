@@ -29,6 +29,8 @@ vi.mock('@/shared/api-client', () => ({
 vi.mock('@/shared/sources/dynamic-source-registry', () => ({
   dynamicSourceRegistry: {
     getAll: vi.fn(),
+    // ShelfCard calls .get(sourceId) to resolve source name/status
+    get: vi.fn(() => undefined),
   }
 }));
 
