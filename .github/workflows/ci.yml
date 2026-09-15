@@ -39,7 +39,7 @@ jobs:
         run: pnpm lint
 
       - name: Unit & Integration Tests
-        run: pnpm test --run
+        run: pnpm test -- --run
 
       - name: Build Application
         run: pnpm build
