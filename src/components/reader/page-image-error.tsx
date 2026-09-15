@@ -6,10 +6,22 @@ import { cn } from "@/shared/utils/cn"
 interface PageImageErrorProps {
   index: number;
   onRetry: () => void;
+  reportUrl?: string;
   className?: string;
 }
 
-export function PageImageError({ index, onRetry, className }: PageImageErrorProps) {
+export function PageImageError({ index, onRetry, reportUrl, className }: PageImageErrorProps) {
+  const handleReport = () => {
+    if (!reportUrl) return;
+    try {
+      const url = new URL(reportUrl);
+      if (url.protocol === 'http:' || url.protocol === 'https:') {
+        window.open(url.href, '_blank', 'noopener,noreferrer');
+      }
+    } catch (e) {
+      // Invalid URL, ignore
+    }
+  }
   return (
     <div className={cn("absolute inset-0 flex flex-col items-center justify-center w-full h-full bg-black/40 backdrop-blur-md p-6 text-center z-10", className)}>
       <div className="bg-surface-overlay/80 backdrop-blur-xl rounded-2xl p-6 -2xl flex flex-col items-center max-w-[280px]">
@@ -21,9 +33,11 @@ export function PageImageError({ index, onRetry, className }: PageImageErrorProp
           <Button variant="outline" size="sm" onClick={onRetry} className="flex-1 rounded-full h-10 text-xs font-bold border-white/20 bg-white/5 hover:bg-white/10 text-white shadow-sm">
             Coba Lagi
           </Button>
-          <Button aria-label="Laporkan masalah" variant="ghost" size="sm" className="rounded-full size-10 p-0 shrink-0 border border-white/10 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white shadow-sm">
-            <Flag size={16} weight="bold" />
-          </Button>
+          {reportUrl && (
+            <Button onClick={handleReport} aria-label="Laporkan masalah" variant="ghost" size="sm" className="rounded-full size-10 p-0 shrink-0 border border-white/10 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white shadow-sm">
+              <Flag size={16} weight="bold" />
+            </Button>
+          )}
         </div>
       </div>
     </div>

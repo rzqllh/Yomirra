@@ -4,6 +4,7 @@ import { pushHistoryItem, deleteHistoryItem, deleteMangaHistory } from "@/shared
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { sourceRegistry } from "@/shared/sources/source-registry";
 import { toast } from "sonner";
+import { useLibraryStore } from "@/shared/store/library-store";
 
 export type HistoryItem = {
   sourceId: string;
@@ -146,8 +147,16 @@ export const useHistoryStore = create<HistoryState>()(
 
       getLatestForManga: (sourceId, mangaId) => {
         const allItems = Object.values(get().items);
-        const mangaHistory = allItems.filter(i => i.sourceId === sourceId && i.mangaId === mangaId);
+        let mangaHistory = allItems.filter(i => i.sourceId === sourceId && i.mangaId === mangaId);
         
+        // W3.4.5 Source Relink Fallback
+        if (mangaHistory.length === 0) {
+          const savedTitleId = get().resolveSavedTitleId(sourceId, mangaId);
+          if (savedTitleId) {
+            mangaHistory = allItems.filter(i => i.savedTitleId === savedTitleId || get().resolveSavedTitleId(i.sourceId, i.mangaId) === savedTitleId);
+          }
+        }
+
         if (mangaHistory.length === 0) return undefined;
         
         // Sort by readAt descending
@@ -252,11 +261,8 @@ export const useHistoryStore = create<HistoryState>()(
         );
         if (anyItem?.savedTitleId) return anyItem.savedTitleId;
 
-        // 2. Scan Library SourceRefs (lazy import to avoid circular dependency)
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const { useLibraryStore } = require("@/shared/store/library-store");
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const libraryState = (useLibraryStore as any).getState();
+        // 2. Scan Library SourceRefs
+        const libraryState = useLibraryStore.getState();
         if (libraryState?.resolveBySourceRef) {
           const match = libraryState.resolveBySourceRef(sourceId, mangaId);
           if (match?.id) return match.id;

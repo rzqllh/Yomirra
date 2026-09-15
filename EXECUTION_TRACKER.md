@@ -287,7 +287,7 @@ Final verified gate: `pnpm typecheck` 0 errors, `pnpm test --run` 229/229 passed
 
 # Phase 3 — Reader Excellence
 
-**Status:** `NOT_STARTED`
+**Status:** `IN_PROGRESS`
 **Branch:** `phase/3-reader-excellence`
 **Blocked by:** None (Phase 0 + Phase 1 Closed — MASTER_PLAN declared dependencies satisfied)
 

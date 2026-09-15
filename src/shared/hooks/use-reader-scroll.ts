@@ -3,6 +3,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { StreamItem } from "@/components/reader/continuous-vertical-reader";
 import { getReaderHref } from "@/shared/lib/routes";
 import { Virtualizer } from "@tanstack/react-virtual";
+import { useVisibilityFlush } from "./use-visibility-flush";
 
 interface UseReaderScrollOptions {
   streamItems: StreamItem[];
@@ -37,6 +38,8 @@ export function useReaderScroll({
       pendingProgressSave.current = null;
     }
   }, [saveProgress, sourceId, mangaId]);
+
+  useVisibilityFlush(flushProgress);
 
   React.useEffect(() => {
     let ticking = false;

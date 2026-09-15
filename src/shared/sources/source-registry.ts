@@ -20,6 +20,7 @@ export const sourceRegistry: SourceMetadata[] = [
       lastChecked: "Baru saja",
       message: "Server berjalan normal tanpa kendala."
     },
+    reportUrl: "https://discord.gg/shinigamid",
     isNsfw: false,
     capabilities: {
       popular: true,
