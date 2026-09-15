@@ -4,7 +4,7 @@
 **Auditor:** Xyeena Axazeela  
 **Branch:** `phase/3-reader-excellence`  
 **Baseline commit:** `d3469a4`  
-**Prior audit superseded:** `audit_report_2.md` (2026-09-13)
+**Historical baseline:** `audit_report_2.md` (2026-09-13)
 
 ---
 
