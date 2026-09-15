@@ -2,7 +2,7 @@
 
 ## Verdict
 
-PASS
+NOT_CLOSED (W3.11 Profiling Blocked)
 
 ## Gate Summary
 
@@ -18,7 +18,7 @@ PASS
 | W3.8 | PASS | Tracker | Deferred deliberately (Multi-Chapter). |
 | W3.9 | PASS | Tracker | Deferred deliberately (Tap Zones). |
 | W3.10 | PASS | Tracker | Deferred deliberately (Fullscreen). |
-| W3.11 | PASS | `continuous-vertical-reader.tsx` | 1200px baseline set and sessionStorage implementation provided to avoid A2-P01 layout shift. |
+| W3.11 | UNVERIFIED | `continuous-vertical-reader.tsx` | Cannot perform real runtime profiling against expired certs without modifying production code. A2-P01 remains an inference. |
 
 ## Acceptance Criteria
 
@@ -58,4 +58,4 @@ Minimal. Existing data architectures (Phase 1 Source Identity) were strictly res
 
 ## Phase Exit Decision
 
-PHASE_3_CLOSED
+PHASE_3_REMEDIATION_REQUIRED

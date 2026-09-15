@@ -3,7 +3,7 @@
 > **Tracks:** `MASTER_PLAN.md` v1.0
 > **Baseline:** `audit_report_2.md`
 > **Last Updated:** 2026-09-15
-> **Current Phase:** Phase 2 (Closed — remediation complete)
+> **Current Phase:** Phase 3 (Open — remediation required)
 > **Overall Status:** `IN_PROGRESS`
 
 ---
@@ -288,7 +288,7 @@ Final verified gate: `pnpm typecheck` 0 errors, `pnpm test --run` 229/229 passed
 # Phase 3 — Reader Excellence
 
 **Implementation:** `DONE`
-**Formal Status:** `CLOSED`
+**Formal Status:** `NOT_CLOSED`
 **Branch:** `phase/3-reader-excellence`
 **Blocked by:** None (Phase 0 + Phase 1 Closed — MASTER_PLAN declared dependencies satisfied)
 
@@ -350,8 +350,8 @@ Final verified gate: `pnpm typecheck` 0 errors, `pnpm test --run` 229/229 passed
 
 ## W3.11 — Virtualizer Profiling
 
-* [x] measure 1200px estimate behavior `[DONE]`
-* [x] reproduce or reject A2-P01 inference `[DONE]`
+* [ ] measure 1200px estimate behavior `[UNVERIFIED]`
+* [ ] reproduce or reject A2-P01 inference `[UNVERIFIED]`
 
 ## Phase 3 Exit Gate
 
@@ -364,6 +364,10 @@ Final verified gate: `pnpm typecheck` 0 errors, `pnpm test --run` 229/229 passed
 * [x] implemented enhancements covered by tests
 * [x] no major Reader regression
 * [x] typecheck/tests/build pass
+
+### Test-Gate Remediation (2026-09-15)
+
+* [ ] W3.11 Profiling `[UNVERIFIED]` — Cannot perform real runtime profiling against expired certs without modifying production code. Phase 3 remains open per constraint.
 
 ---
 
@@ -860,6 +864,7 @@ Never delete previous entries.
 | 2026-09-13 | plan/yomirra-enterprise-roadmap | Docs     | SCHEMA readingMode correction                | DONE             |
 | 2026-09-13 | phase/0-security-correctness    | Phase 0  | Security audit, typecheck, tests, build      | PHASE_0_CLOSED   |
 | 2026-09-13 | phase/1-source-resilience-identity | Phase 1 | Independent closure audit, 222 tests, build  | PHASE_1_CLOSED   |
+| 2026-09-15 | phase/2-ux-excellence              | Phase 2 | Test-gate remediation, 229 tests, build      | PHASE_2_CLOSED   |
 
 ---
 
@@ -869,6 +874,8 @@ Never delete previous entries.
 | ---------- | ------- | ---------- | ------------------------------------------------- |
 | 2026-09-13 | Phase 0 | Security   | Resolved W0.4, W0.5, W0.6 blockers in closure     |
 | 2026-09-13 | Phase 1 | Identity   | Source resilience and identity tracking complete  |
+| 2026-09-15 | Phase 2 | UX         | Addressed test-gate remediation, layout stabilization |
+| 2026-09-15 | Phase 3 | Reader     | Reporting/progress merged, W3.11 profiling blocked |
 
 ---
 
