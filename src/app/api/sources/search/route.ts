@@ -75,7 +75,7 @@ export async function GET(req: NextRequest) {
         const results: GlobalSearchResponse["resultsBySource"] = {};
         
         const promises = sourceIds.map(async (sourceId) => {
-          let source = loadedSources[sourceId];
+          const source = loadedSources[sourceId];
           if (!source) {
             results[sourceId] = { results: [], error: "Source not found" };
             return;
