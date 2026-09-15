@@ -9,7 +9,9 @@ import { useDownloadStore } from "@/shared/store/download-store";
 import { getOfflineImageUrl } from "@/shared/utils/download-helpers";
 import { PageItem, Chapter } from "@/shared/types/source";
 import { ReaderImage } from "./reader-image";
-import { getReaderHref, getMangaDetailHref } from "@/shared/lib/routes";
+import { getReaderHref } from "@/shared/lib/routes";
+import { getSourceMetadata } from "@/shared/sources/source-registry";
+import { useVisibilityFlush } from "@/shared/hooks/use-visibility-flush";
 import { useReadingTimer } from "@/shared/hooks/use-reading-timer";
 import { CaretLeft, CaretRight } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
@@ -44,6 +46,8 @@ export function PagedReader({
   const isDownloaded = useDownloadStore(state => state.isDownloaded(sourceId, mangaId, chapterId));
   const saveProgress = useHistoryStore(state => state.saveProgress);
   const getProgress = useHistoryStore(state => state.getLatestForManga);
+  const source = React.useMemo(() => getSourceMetadata(sourceId), [sourceId]);
+  const reportUrl = source?.reportUrl;
 
   useReadingTimer();
 
@@ -65,11 +69,17 @@ export function PagedReader({
   }, [pages.length]);
 
   // Persist page progress
-  React.useEffect(() => {
+  const flushProgress = React.useCallback(() => {
     if (totalPages > 0) {
       saveProgress(sourceId, mangaId, chapterId, currentPageIndex, totalPages);
     }
   }, [currentPageIndex, totalPages, sourceId, mangaId, chapterId, saveProgress]);
+
+  React.useEffect(() => {
+    flushProgress();
+  }, [flushProgress]);
+
+  useVisibilityFlush(flushProgress);
 
   const goToNextPage = React.useCallback(() => {
     if (currentPageIndex < totalPages - 1) {
@@ -211,6 +221,7 @@ export function PagedReader({
             isWebtoon={false}
             dataSaver={dataSaver}
             isAllowedToLoad={true}
+            reportUrl={reportUrl}
             onLoadComplete={() => {}}
             onError={() => {}}
           />

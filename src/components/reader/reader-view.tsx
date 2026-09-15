@@ -65,25 +65,33 @@ export function ReaderView({
           const prefix = `/offline-images/${downloadId}/`;
           
           const matchedKeys = keys.filter(req => req.url.includes(prefix));
-          const sorted = matchedKeys.sort((a, b) => {
-            const numA = parseInt(a.url.split('/').pop() || "0", 10);
-            const numB = parseInt(b.url.split('/').pop() || "0", 10);
-            return numA - numB;
+          let maxIndex = 0;
+          const parsedKeys = matchedKeys.map(req => {
+            const index = parseInt(req.url.split('/').pop() || "0", 10);
+            maxIndex = Math.max(maxIndex, index);
+            return { req, index };
           });
 
-          const blobUrls = await Promise.all(sorted.map(async (req, index) => {
+          const basePages = initialPages || chapterPages?.pages || [];
+          const pageCount = Math.max(basePages.length, maxIndex + 1);
+
+          const blobUrls: PageItem[] = Array.from({ length: pageCount }).map((_, i) => ({
+            index: i,
+            url: basePages[i]?.url || "" // fallback to network url if missing
+          }));
+
+          await Promise.all(parsedKeys.map(async ({ req, index }) => {
             const res = await cache.match(req);
             const blob = await res?.blob();
-            if (blob && isMounted) {
+            if (blob && isMounted && index < pageCount) {
               const url = URL.createObjectURL(blob);
               createdUrls.push(url);
-              return { index, url };
+              blobUrls[index] = { index, url };
             }
-            return null;
           }));
           
-          if (isMounted && blobUrls.length > 0) {
-            setOfflinePages(blobUrls.filter(Boolean) as PageItem[]);
+          if (isMounted && createdUrls.length > 0) {
+            setOfflinePages(blobUrls);
           } else {
             createdUrls.forEach(url => URL.revokeObjectURL(url));
           }
