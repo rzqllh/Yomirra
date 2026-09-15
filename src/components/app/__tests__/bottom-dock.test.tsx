@@ -26,12 +26,17 @@ describe('BottomDock Navigation', () => {
     expect(updatesLink).toBeNull();
   });
 
-  it('contains Beranda, Library, Bookmark, Cari, and Pengaturan links', () => {
+  it('contains Beranda, Library, Cari, and Pengaturan links (Phase 2 nav contract)', () => {
     render(<BottomDock />);
     expect(screen.getByRole('link', { name: /beranda/i })).toBeTruthy();
     expect(screen.getByRole('link', { name: /library/i })).toBeTruthy();
-    expect(screen.getByRole('link', { name: /bookmark/i })).toBeTruthy();
     expect(screen.getByRole('link', { name: /cari/i })).toBeTruthy();
     expect(screen.getByRole('link', { name: /pengaturan/i })).toBeTruthy();
+  });
+
+  it('does NOT contain a Bookmark link (removed in Phase 2)', () => {
+    render(<BottomDock />);
+    const bookmarkLink = screen.queryByRole('link', { name: /bookmark/i });
+    expect(bookmarkLink).toBeNull();
   });
 });

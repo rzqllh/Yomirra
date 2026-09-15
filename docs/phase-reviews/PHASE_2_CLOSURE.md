@@ -1,7 +1,7 @@
 # Phase 2 Closure Review
 
 ## Verdict
-PASS
+PASS (after test-gate remediation — 2026-09-15)
 
 ## Gate Summary
 
@@ -35,12 +35,25 @@ PASS
 - **W2.5 History Timestamp Missing:** The history card did not actually display the timestamp of when a chapter was read. Fixed by passing `timestamp` into `HistoryCard` from `RiwayatTab` and formatting it.
 - **W2.12 Testing Gaps:** No tests were added for the Phase 2 routes. Fixed by adding `library-integration.test.tsx` which tests the redirects and rendering of the three core tabs.
 
+## Test-Gate Remediation (2026-09-15)
+
+Initial closure claim was invalidated: full suite was 4 files / 8 tests failing (219 passed). Root causes were stale tests not updated to reflect Phase 2 changes:
+
+| File | Root Cause | Fix |
+|---|---|---|
+| `bottom-dock.test.tsx` | Asserted `Bookmark` link that Phase 2 removed from nav | Updated to Phase 2 contract: Beranda, Library, Cari, Pengaturan |
+| `bookmark-page.test.tsx` | Tested old Bookmark UI; `/bookmark` is now a redirect | Replaced with redirect-contract tests asserting `redirect('/library?tab=riwayat')` |
+| `search-integration.test.tsx` | Mock missing `dynamicSourceRegistry.get()` — Phase 2 added `ShelfCard` which calls `.get()` | Added `get: vi.fn()` to mock |
+| `search-page-revamp.test.tsx` | Same stale mock | Added `get: vi.fn()` to mock |
+
+Production code was correct in all four cases. No production code changes required.
+
 ## Warnings / Deferred
 None
 
 ## Validation Evidence
 typecheck: `pnpm typecheck` passed (0 errors)
-tests: `pnpm test --run` passed
+tests: `pnpm test --run` passed — **229 tests / 46 files** (corrected from initial unverified claim)
 build: `pnpm build` passed
 
 ## Remaining Risks
@@ -48,3 +61,4 @@ The reliance on search-params (`?tab=riwayat`) means we must ensure URL paramete
 
 ## Phase Exit Decision
 PHASE_2_CLOSED
+
