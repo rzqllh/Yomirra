@@ -287,82 +287,83 @@ Final verified gate: `pnpm typecheck` 0 errors, `pnpm test --run` 229/229 passed
 
 # Phase 3 — Reader Excellence
 
-**Status:** `IN_PROGRESS`
+**Implementation:** `DONE`
+**Formal Status:** `CLOSED`
 **Branch:** `phase/3-reader-excellence`
 **Blocked by:** None (Phase 0 + Phase 1 Closed — MASTER_PLAN declared dependencies satisfied)
 
 ## W3.1 — Reader Dead Logic Cleanup
 
-* [ ] resolve/remove empty IntersectionObserver `[NOT_STARTED]`
-* [ ] resolve unfinished divider/stream logic `[NOT_STARTED]`
+* [x] resolve/remove empty IntersectionObserver `[DONE]`
+* [x] resolve unfinished divider/stream logic `[DONE]`
 
 ## W3.2 — Source-Aware Reporting
 
-* [ ] remove hardcoded Shinigami reporting `[NOT_STARTED]`
-* [ ] source-aware/generic reporting contract `[NOT_STARTED]`
+* [x] remove hardcoded Shinigami reporting `[DONE]`
+* [x] source-aware/generic reporting contract `[DONE]`
 
 ## W3.3 — Image Failure Recovery
 
-* [ ] loading/error states `[NOT_STARTED]`
-* [ ] bounded retry `[NOT_STARTED]`
-* [ ] final failure state `[NOT_STARTED]`
+* [x] loading/error states `[DONE]`
+* [x] bounded retry `[DONE]`
+* [x] final failure state `[DONE]`
 
 ## W3.4 — Progress Reliability
 
-* [ ] navigation persistence `[BASELINE_PRESENT]`
-* [ ] reload resume `[BASELINE_PRESENT]`
-* [ ] backgrounding behavior `[NOT_STARTED]`
-* [ ] offline/online transition `[NOT_STARTED]`
-* [ ] source-relink integration `[NOT_STARTED]`
+* [x] navigation persistence `[BASELINE_PRESENT]`
+* [x] reload resume `[BASELINE_PRESENT]`
+* [x] backgrounding behavior `[DONE]`
+* [x] offline/online transition `[DONE]`
+* [x] source-relink integration `[DONE]`
 
 ## W3.5 — Offline Reader Reliability
 
-* [ ] downloaded chapter regression test `[NOT_STARTED]`
-* [ ] partial-cache state `[NOT_STARTED]`
-* [ ] offline cache miss state `[NOT_STARTED]`
+* [x] downloaded chapter regression test `[DONE]`
+* [x] partial-cache state `[DONE]`
+* [x] offline cache miss state `[DONE]`
 
 ## W3.6 — Desktop Double Spread
 
-* [ ] evaluate `[NOT_STARTED]`
-* [ ] IMPLEMENT / DEFER / REJECT `[NOT_STARTED]`
+* [x] evaluate `[DONE]`
+* [x] IMPLEMENT / DEFER / REJECT `[DEFER]`
 
 ## W3.7 — Keyboard Navigation
 
-* [ ] paged reader `[NOT_STARTED]`
-* [ ] vertical reader `[NOT_STARTED]`
+* [x] paged reader `[DONE]`
+* [x] vertical reader `[DONE]`
 
 ## W3.8 — Seamless Multi-Chapter Decision
 
-* [ ] prototype if justified `[NOT_STARTED]`
-* [ ] memory/profile evidence `[NOT_STARTED]`
-* [ ] IMPLEMENT / DEFER / REJECT `[NOT_STARTED]`
+* [x] prototype if justified `[DONE]`
+* [x] memory/profile evidence `[DONE]`
+* [x] IMPLEMENT / DEFER / REJECT `[DEFER]`
 
 ## W3.9 — Tap Zones Decision
 
-* [ ] evaluate user value `[NOT_STARTED]`
-* [ ] IMPLEMENT / DEFER / REJECT `[NOT_STARTED]`
+* [x] evaluate user value `[DONE]`
+* [x] IMPLEMENT / DEFER / REJECT `[DEFER]`
 
 ## W3.10 — Fullscreen Decision
 
-* [ ] evaluate `[NOT_STARTED]`
-* [ ] IMPLEMENT / DEFER / REJECT `[NOT_STARTED]`
+* [x] evaluate `[DONE]`
+* [x] IMPLEMENT / DEFER / REJECT `[DEFER]`
 
 ## W3.11 — Virtualizer Profiling
 
-* [ ] measure 1200px estimate behavior `[NOT_STARTED]`
-* [ ] reproduce or reject A2-P01 inference `[NOT_STARTED]`
+* [x] measure 1200px estimate behavior `[DONE]`
+* [x] reproduce or reject A2-P01 inference `[DONE]`
 
 ## Phase 3 Exit Gate
 
-* [ ] reliability work complete
-* [ ] source-aware reporting
-* [ ] image failure handling
-* [ ] progress/offline regressions green
-* [ ] keyboard baseline working
-* [ ] all enhancement decision gates resolved
-* [ ] implemented enhancements covered by tests
-* [ ] no major Reader regression
-* [ ] typecheck/tests/build pass
+* [x] reliability work complete
+* [x] source-aware reporting
+* [x] image failure handling
+* [x] progress/offline regressions green
+* [x] keyboard baseline working
+* [x] all enhancement decision gates resolved
+* [x] implemented enhancements covered by tests
+* [x] no major Reader regression
+* [x] typecheck/tests/build pass
 
 ---
 
