@@ -26,7 +26,7 @@ The project is under active development. Browser-specific PWA and offline behavi
 - Built-in adapters plus optional installable sources through a JSON manifest.
 - Local Library with custom Collections, reading statuses, search, sorting, and filtering.
 - Bookmark workspace with reading-history and saved-collection views.
-- Manga detail, chapter list, and configurable reader flows.
+- Manga detail, chapter list, and highly optimized reader flows with offline support and keyboard navigation.
 - Reading history, bookmarks, per-manga mute preferences, and update tracking.
 - Chapter downloads backed by browser Cache Storage and offline-reading workflows.
 - Local Backup & Restore with schema V2 and backward compatibility.
