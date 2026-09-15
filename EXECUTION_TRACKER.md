@@ -293,64 +293,64 @@ Final verified gate: `pnpm typecheck` 0 errors, `pnpm test --run` 229/229 passed
 
 ## W3.1 — Reader Dead Logic Cleanup
 
-* [ ] resolve/remove empty IntersectionObserver `[BLOCKED]`
-* [ ] resolve unfinished divider/stream logic `[BLOCKED]`
+* [ ] resolve/remove empty IntersectionObserver `[NOT_STARTED]`
+* [ ] resolve unfinished divider/stream logic `[NOT_STARTED]`
 
 ## W3.2 — Source-Aware Reporting
 
-* [ ] remove hardcoded Shinigami reporting `[BLOCKED]`
-* [ ] source-aware/generic reporting contract `[BLOCKED]`
+* [ ] remove hardcoded Shinigami reporting `[NOT_STARTED]`
+* [ ] source-aware/generic reporting contract `[NOT_STARTED]`
 
 ## W3.3 — Image Failure Recovery
 
-* [ ] loading/error states `[BLOCKED]`
-* [ ] bounded retry `[BLOCKED]`
-* [ ] final failure state `[BLOCKED]`
+* [ ] loading/error states `[NOT_STARTED]`
+* [ ] bounded retry `[NOT_STARTED]`
+* [ ] final failure state `[NOT_STARTED]`
 
 ## W3.4 — Progress Reliability
 
 * [ ] navigation persistence `[BASELINE_PRESENT]`
 * [ ] reload resume `[BASELINE_PRESENT]`
-* [ ] backgrounding behavior `[BLOCKED]`
-* [ ] offline/online transition `[BLOCKED]`
-* [ ] source-relink integration `[BLOCKED]`
+* [ ] backgrounding behavior `[NOT_STARTED]`
+* [ ] offline/online transition `[NOT_STARTED]`
+* [ ] source-relink integration `[NOT_STARTED]`
 
 ## W3.5 — Offline Reader Reliability
 
-* [ ] downloaded chapter regression test `[BLOCKED]`
-* [ ] partial-cache state `[BLOCKED]`
-* [ ] offline cache miss state `[BLOCKED]`
+* [ ] downloaded chapter regression test `[NOT_STARTED]`
+* [ ] partial-cache state `[NOT_STARTED]`
+* [ ] offline cache miss state `[NOT_STARTED]`
 
 ## W3.6 — Desktop Double Spread
 
-* [ ] evaluate `[BLOCKED]`
-* [ ] IMPLEMENT / DEFER / REJECT `[BLOCKED]`
+* [ ] evaluate `[NOT_STARTED]`
+* [ ] IMPLEMENT / DEFER / REJECT `[NOT_STARTED]`
 
 ## W3.7 — Keyboard Navigation
 
-* [ ] paged reader `[BLOCKED]`
-* [ ] vertical reader `[BLOCKED]`
+* [ ] paged reader `[NOT_STARTED]`
+* [ ] vertical reader `[NOT_STARTED]`
 
 ## W3.8 — Seamless Multi-Chapter Decision
 
-* [ ] prototype if justified `[BLOCKED]`
-* [ ] memory/profile evidence `[BLOCKED]`
-* [ ] IMPLEMENT / DEFER / REJECT `[BLOCKED]`
+* [ ] prototype if justified `[NOT_STARTED]`
+* [ ] memory/profile evidence `[NOT_STARTED]`
+* [ ] IMPLEMENT / DEFER / REJECT `[NOT_STARTED]`
 
 ## W3.9 — Tap Zones Decision
 
-* [ ] evaluate user value `[BLOCKED]`
-* [ ] IMPLEMENT / DEFER / REJECT `[BLOCKED]`
+* [ ] evaluate user value `[NOT_STARTED]`
+* [ ] IMPLEMENT / DEFER / REJECT `[NOT_STARTED]`
 
 ## W3.10 — Fullscreen Decision
 
-* [ ] evaluate `[BLOCKED]`
-* [ ] IMPLEMENT / DEFER / REJECT `[BLOCKED]`
+* [ ] evaluate `[NOT_STARTED]`
+* [ ] IMPLEMENT / DEFER / REJECT `[NOT_STARTED]`
 
 ## W3.11 — Virtualizer Profiling
 
-* [ ] measure 1200px estimate behavior `[BLOCKED]`
-* [ ] reproduce or reject A2-P01 inference `[BLOCKED]`
+* [ ] measure 1200px estimate behavior `[NOT_STARTED]`
+* [ ] reproduce or reject A2-P01 inference `[NOT_STARTED]`
 
 ## Phase 3 Exit Gate
 
