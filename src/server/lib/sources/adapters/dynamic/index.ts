@@ -73,14 +73,14 @@ export class DynamicSourceAdapter implements MangaSource {
 
   async search(query: string, page: number, filters?: Record<string, string | string[]>): Promise<MangaPageResult> {
     if (!this.capabilities.search) throw new Error("Not supported");
-    // We only pass {q} and {page} for now to the simple replacement logic. 
+    // We only pass {q} and {page} for now to the simple replacement logic.
     // If the API requires filter params, they need to be appended.
     let url = this.manifest.endpoints?.search;
     if (!url) throw new Error("Not supported");
-    
+
     // Replace standard params
     url = url.replace("{q}", encodeURIComponent(query)).replace("{page}", String(page));
-    
+
     // Append extra filters
     if (filters && Object.keys(filters).length > 0) {
       const sp = new URLSearchParams();
@@ -93,9 +93,9 @@ export class DynamicSourceAdapter implements MangaSource {
       }
       url += (url.includes("?") ? "&" : "?") + sp.toString();
     }
-    
+
     const fullUrl = url.startsWith("http") ? url : `${this.manifest.baseUrl}${url.startsWith("/") ? "" : "/"}${url}`;
-    const res = await fetch(fullUrl);
+    const res = await safeFetch(fullUrl);
     if (!res.ok) throw new Error(`Search failed: ${res.status}`);
     return await res.json();
   }

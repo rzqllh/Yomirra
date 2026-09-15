@@ -892,7 +892,7 @@ Never delete previous entries.
 
 | Branch | Date | Issue | Reconciled To |
 | ------ | ---- | ----- | ------------- |
-| —      | —    | —     | —             |
+| `hotfix/dynamic-search-ssrf` | 2026-09-15 | `DynamicSourceAdapter.search()` bypassed outbound `safeFetch` policy — SSRF gap in `dynamic/index.ts:98`. Fixed: `fetch(fullUrl)` → `safeFetch(fullUrl)`. 36-test regression suite added. | Phase 0 / W0.2 |
 
 ---
 
