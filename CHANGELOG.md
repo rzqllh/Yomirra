@@ -8,6 +8,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Added
 
+- Space and Shift+Space continuous reader navigation with input element guards.
+- Generic image error reporting via source metadata mapping.
+- Virtualizer layout cache retention using `sessionStorage` during lifecycle navigation.
 - Built-in Komiku source adapter (`komiku.org`) supporting popular, latest, multi-source search, detail, chapters, and reader pages with signed proxy URLs where required.
 - MangaDex HTTP 429 hardening with bounded `Retry-After` parsing and capped retry delay.
 - Update checker, persisted update records, Updates Page, unread navigation badge, automatic update-check preferences, and per-manga mute preference.
@@ -30,6 +33,9 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Changed
 
+- Replaced manual retry loops with native bounded retries for reader images.
+- Missing offline reader entries are preserved using explicit mapping instead of generic filtering.
+- Initial reader virtualizer baseline stabilized at 1200px.
 - Library now composes dedicated toolbar, reading-status rail, collection rail, results view, and `useLibraryCatalog` controller logic.
 - Bookmark now separates Reading and Collection domains with dedicated controller hooks, collection toolbar, selection toolbar, and tab views.
 - Search now composes dedicated toolbar, source rail, results view, and `useSearchCatalog` multi-source controller logic.
@@ -48,6 +54,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Fixed
 
+- Cleaned up dead `IntersectionObserver`, `decodeQueue`, and divider logic from the reader.
+- Scoped `useVisibilityFlush` correctly to prevent memory leaks during history navigation.
 - Normalized `/api/sources/health` public responses to avoid leaking raw internal stacks or response headers.
 - Fixed Komiku lazy cover extraction by preferring real lazy-load attributes over placeholder images.
 - Fixed Komiku manga-card title/link matching across supported list pages.
