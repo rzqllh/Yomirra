@@ -2,7 +2,8 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft } from "@phosphor-icons/react"
+import { ArrowLeft02Icon } from "@hugeicons/core-free-icons"
+import { Icon } from "@/components/ui/icon"
 import { cn } from "@/shared/utils/cn"
 
 export interface PageHeaderProps {
@@ -93,7 +94,7 @@ export function PageHeader({
                 className="flex h-10 w-10 items-center justify-center rounded-2xl bg-surface-glass backdrop-blur-md border border-border-default/40 text-text-primary hover:bg-surface-hover hover:border-border-strong active:scale-95 transition-all shrink-0 select-none outline-none"
                 aria-label="Kembali"
               >
-                <ArrowLeft size={20} weight="bold" />
+                <Icon icon={ArrowLeft02Icon} size={20} strokeWidth={2} />
               </button>
             ) : (
               icon && (

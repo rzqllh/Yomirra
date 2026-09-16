@@ -2,7 +2,8 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { Bell } from "@phosphor-icons/react"
+import { BellIcon } from "@hugeicons/core-free-icons"
+import { Icon } from "@/components/ui/icon"
 import { useUpdateStore } from "@/shared/store/update-store"
 import { useSettingsStore } from "@/shared/store/settings-store"
 import { useMounted } from "@/shared/hooks/use-mounted"
@@ -29,7 +30,7 @@ export function UpdatesBell() {
       className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-surface-glass backdrop-blur-md border border-border-default/40 text-text-primary hover:bg-surface-hover hover:border-border-strong active:scale-95 transition-all outline-none select-none shrink-0 shadow-xs"
       aria-label={accessibleLabel}
     >
-      <Bell size={20} weight="bold" className="shrink-0" />
+      <Icon icon={BellIcon} size={20} strokeWidth={1.8} className="shrink-0" />
       {showBadge && (
         <div
           data-testid="updates-badge"
