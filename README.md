@@ -2,7 +2,13 @@
 
 # Yomirra
 
-A mobile-first manga and webtoon reader built as a Progressive Web App.
+**A mobile-first manga, manhwa, and webtoon reader.**  
+Built for reading first: clean navigation, multi-source discovery, personal library, offline support, and a reader that works especially well on phones.
+
+**Reader manga, manhwa, dan webtoon yang mobile-first.**  
+Fokusnya sederhana: cari, simpan, lanjut baca, dan baca dengan nyaman tanpa UI yang mengganggu.
+
+[Open Yomirra](https://yomirra.vercel.app/) · [Documentation](docs/README.md) · [Changelog](CHANGELOG.md)
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org/)
@@ -11,43 +17,71 @@ A mobile-first manga and webtoon reader built as a Progressive Web App.
 
 </div>
 
-> [!IMPORTANT]
-> Yomirra is an independent reader client. It does not host manga, chapters, or images. Content is fetched from third-party sources, whose availability and terms may change without notice. Use the project responsibly and comply with applicable laws and each source's terms.
+> [!TIP]
+> **Yomirra is designed mobile-first and is recommended on mobile.** Desktop is supported, but the main navigation, touch targets, reader controls, and responsive layout are designed around phone use.
+>
+> **Yomirra dibuat mobile-first dan paling direkomendasikan dipakai di HP.** Desktop tetap didukung, tetapi pengalaman baca utamanya memang dirancang untuk layar sentuh dan viewport mobile.
 
-## Overview
+## Try it / Coba langsung
 
-Yomirra combines discovery, multi-source search, library management, chapter downloads, and a configurable reader in one responsive web application. The project is mobile-first while keeping desktop layouts and keyboard interaction practical.
+No installation is required.
 
-The project is under active development. Browser-specific PWA and offline behavior can vary with storage limits, service worker support, and source availability.
+**https://yomirra.vercel.app/**
 
-## Highlights
+Open it in your browser and start reading. On supported browsers, you can also add Yomirra to your home screen for a more app-like experience.
 
-- Multi-source search with source-aware filters and partial-failure handling.
-- Built-in adapters plus optional installable sources through a JSON manifest.
-- Local Library with custom Collections, reading statuses, search, sorting, and filtering.
-- Bookmark workspace with reading-history and saved-collection views.
-- Manga detail, chapter list, and highly optimized reader flows with offline support and keyboard navigation.
-- Reading history, bookmarks, per-manga mute preferences, and update tracking.
-- Chapter downloads backed by browser Cache Storage and offline-reading workflows.
-- Local Backup & Restore with schema V2 and backward compatibility.
-- Firebase authentication and cloud synchronization for supported stores.
-- Redis-backed server caching with stale-data fallback where supported.
-- Source health diagnostics and normalized public errors.
-- Canonical responsive UI primitives for headers, filters, manga grids, covers, progress, and reader panels.
-- GitHub Actions CI workflow and Vitest/Testing Library coverage.
+Buka link di atas lewat browser. Kalau browser/device mendukung, Yomirra juga bisa ditambahkan ke home screen supaya terasa lebih seperti aplikasi.
 
-## Built-in Sources
+## What Yomirra does / Yang tersedia
 
-| Source | ID | Type | Notes |
-| --- | --- | --- | --- |
-| MangaDex | `mangadex` | API adapter | International API source with bounded HTTP 429 `Retry-After` handling |
-| Shinigami | `shinigami` | Web scraper | Indonesian webtoon and manhwa source |
-| Komiku | `komiku` | Web scraper | Indonesian webtoon and manga source with signed image proxying where required |
-| Komikindo | `komikindo` | Web scraper | Indonesian manga source with stale Redis cache fallback where available |
+- **Multi-source discovery and search** — browse and search across multiple manga sources, with source-specific filtering and graceful partial-failure handling.
+- **Personal library** — save titles, manage collections and reading statuses, sort, filter, and continue where you left off.
+- **Reading history and updates** — track progress, revisit recent reads, and see title updates without rebuilding your library manually.
+- **Mobile-focused reader** — vertical and paged reading modes, responsive controls, keyboard support on desktop, and retained reader state.
+- **Offline reading** — download chapters and read cached content when available.
+- **Backup and restore** — export and restore supported local data.
+- **Account sync** — Firebase-backed authentication and synchronization for supported stores.
+- **Source resilience** — source health handling, normalized errors, stale-cache fallback where supported, and independent source failure handling.
 
-A source can become slow or unavailable independently of Yomirra. Search and source-facing screens are designed to degrade gracefully when one source fails.
+Singkatnya: Yomirra bukan sekadar halaman baca. Library, history, collections, update tracking, source selection, download, dan reader settings dibuat sebagai satu alur yang nyambung.
 
-## Technology
+## Built-in sources / Sumber bawaan
+
+| Source | Type | Notes |
+| --- | --- | --- |
+| MangaDex | API | International source with bounded rate-limit handling |
+| Shinigami | Web source | Indonesian manga/manhwa/webtoon source |
+| Komiku | Web source | Indonesian manga/manhwa/webtoon source |
+| Komikindo | Web source | Indonesian manga source with stale-cache fallback where available |
+
+Source availability is external to Yomirra. A source can become slow, change its structure, or go offline independently of the app.
+
+Ketersediaan source berada di luar kontrol Yomirra. Kalau satu source sedang bermasalah, source lain tetap bisa digunakan selama tersedia.
+
+## Reader experience
+
+Yomirra is intentionally optimized around actual reading instead of dashboard-style UI.
+
+- Mobile-first navigation and touch targets
+- Responsive manga grids and detail pages
+- Vertical and paged reader modes
+- Chapter and settings panels designed for small screens
+- Reading progress retention
+- Image retry and failure handling
+- Offline chapter support
+- Desktop keyboard navigation where applicable
+
+If you only want to use Yomirra, you can stop here and open the live app:
+
+**https://yomirra.vercel.app/**
+
+---
+
+## For developers / Untuk developer
+
+Yomirra is a Next.js application with a source-adapter architecture. Public repository documentation covers the stable implementation contracts; temporary planning files, AI-agent artifacts, audits, and local design references are intentionally kept out of version control.
+
+### Stack
 
 | Area | Stack |
 | --- | --- |
@@ -57,23 +91,19 @@ A source can become slow or unavailable independently of Yomirra. Search and sou
 | Client state | Zustand |
 | Validation | Zod |
 | Authentication and sync | Firebase |
-| Server cache | Redis through ioredis |
-| PWA and service worker | Serwist |
-| Testing | Vitest and Testing Library |
+| Server cache | Redis / ioredis |
+| PWA / service worker | Serwist |
+| Testing | Vitest, Testing Library |
 | Package manager | pnpm |
 
-See [Stack](docs/STACK.md) for the package-level source of truth used by the project documentation.
+### Local development
 
-## Quick Start
-
-### Requirements
+Requirements:
 
 - A currently supported Node.js LTS release
 - pnpm
 - Redis for server caching
 - A Firebase project for authentication and cloud synchronization
-
-### Installation
 
 ```bash
 git clone https://github.com/rzqllh/Yomirra.git
@@ -81,7 +111,7 @@ cd Yomirra
 pnpm install
 ```
 
-Copy the environment template:
+Create the local environment file:
 
 ```bash
 cp .env.example .env
@@ -93,7 +123,7 @@ PowerShell:
 Copy-Item .env.example .env
 ```
 
-Fill in the required values, then start development:
+Fill the required values from `.env.example`, then run:
 
 ```bash
 pnpm dev
@@ -101,72 +131,18 @@ pnpm dev
 
 Open `http://localhost:3000`.
 
-### Environment Variables
-
-| Variable | Purpose |
-| --- | --- |
-| `NEXT_PUBLIC_APP_URL` | Public application origin |
-| `IMAGE_PROXY_SECRET` | Secret used by signed image-proxy URLs |
-| `NEXT_PUBLIC_FIREBASE_API_KEY` | Firebase browser API key |
-| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Firebase authentication domain |
-| `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | Firebase project ID |
-| `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` | Firebase storage bucket |
-| `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Firebase sender ID |
-| `NEXT_PUBLIC_FIREBASE_APP_ID` | Firebase application ID |
-| `REDIS_URL` | Redis connection URL |
-
-Never commit `.env`, `.env.local`, credentials, service-account files, or private source tokens.
-
-## Commands
+### Useful commands
 
 ```bash
-pnpm dev            # Start the development server
-pnpm build          # Create a production build
-pnpm start          # Run the production build
-pnpm typecheck      # Run TypeScript checks
-pnpm lint           # Run ESLint
-pnpm test --run     # Run the test suite once
+pnpm dev
+pnpm build
+pnpm start
+pnpm typecheck
+pnpm lint
+pnpm test --run
 ```
 
-## Project Structure
-
-```text
-src/
-├── app/
-│   ├── (web)/                    # User-facing App Router routes and loading states
-│   └── api/                      # Server API routes and image proxy
-├── components/
-│   ├── app/                      # App shell and canonical PageHeader
-│   ├── ui/                       # Reusable primitives (filters, inputs, progress, dialogs)
-│   ├── manga/                    # MangaCover, MangaGrid, card archetypes, detail UI
-│   ├── library/                  # Library feature view, rails, toolbar, results
-│   ├── bookmark/                 # Reading/collection tabs and selection UI
-│   ├── search/                   # Search feature view, source rail, results, filters
-│   ├── reader/                   # Reader UI and ReaderPanelShell
-│   └── skeletons/                # Loading-state components
-├── server/
-│   └── lib/sources/              # Source manager and built-in adapters
-└── shared/
-    ├── hooks/                    # Feature/controller hooks and shared hooks
-    ├── lib/                      # Backup engine, update checker, motion, routes, etc.
-    ├── sources/                  # Source contracts and dynamic registry
-    ├── store/                    # Zustand stores
-    ├── types/                    # Shared schemas and domain types
-    └── utils/                    # Pure utilities
-```
-
-Complex client routes generally follow a thin route entrypoint → feature view → controller hook pattern. See [Architecture](docs/ARCHITECTURE.md) for the current boundaries.
-
-## Adding a Source
-
-Yomirra supports two source models:
-
-1. **Built-in adapter** for full control over remote APIs, HTML parsing, normalization, headers, and filters.
-2. **Dynamic manifest** for an API that already returns Yomirra's normalized response shapes.
-
-Read [Adding a Source](docs/ADDING_A_SOURCE.md) before implementing one.
-
-## Documentation
+### Public documentation
 
 - [Documentation index](docs/README.md)
 - [Architecture](docs/ARCHITECTURE.md)
@@ -177,14 +153,18 @@ Read [Adding a Source](docs/ADDING_A_SOURCE.md) before implementing one.
 - [Adding a source](docs/ADDING_A_SOURCE.md)
 - [Schema notes](docs/SCHEMA.md)
 - [Contributing](CONTRIBUTING.md)
+- [Security](SECURITY.md)
 - [Changelog](CHANGELOG.md)
-- [Security policy](SECURITY.md)
 
-Public documentation describes verified repository behavior. When documentation and implementation disagree, current code and configuration are the source of truth and the documentation should be corrected in the same change.
+## Content and source policy
+
+Yomirra is an independent reader client. It does **not** host manga, chapters, or source images. Content is requested from third-party sources, and those sources may change availability or terms without notice.
+
+Use Yomirra responsibly and follow applicable laws and the terms of the sources you use.
 
 ## Contributing
 
-Small, focused pull requests are preferred. Reuse canonical components and preserve established feature boundaries instead of introducing parallel UI implementations. See [CONTRIBUTING.md](CONTRIBUTING.md).
+Keep changes focused. Reuse existing components and feature boundaries instead of creating parallel implementations for the same behavior. See [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
 
 ## Security
 
