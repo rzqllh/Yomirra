@@ -50,11 +50,11 @@ describe("MangaDetailView - Scroll Position Reset", () => {
           title: "Test Manga",
           coverUrl: "https://example.com/cover.jpg",
           description: "Synopsis text",
-          status: "Ongoing",
+          status: "ONGOING",
           genres: ["Action"],
         }}
         chapters={[
-          { id: "ch-1", number: 1, title: "Chapter 1", date: "2026-09-16" },
+          { id: "ch-1", mangaId: "test-manga", number: 1, title: "Chapter 1", date: "2026-09-16" },
         ]}
       />
     );

@@ -95,7 +95,12 @@ export function PageHeader({
                 </div>
               )
             )}
-            <div className="flex items-center gap-2 min-w-0 flex-1">
+            <div
+              className={cn(
+                "flex items-center gap-2 min-w-0 flex-1 transition-opacity duration-300",
+                variant === "auto" && !scrolled ? "opacity-0 pointer-events-none" : "opacity-100"
+              )}
+            >
               <p className="text-xl font-extrabold tracking-tight text-text-primary truncate">
                 {title}
               </p>

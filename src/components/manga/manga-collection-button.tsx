@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useCollectionStore } from "@/shared/store/collection-store";
+import { useLibraryStore } from "@/shared/store/library-store";
 import { MangaKey } from "@/shared/types/collection";
 import { Button } from "@/components/ui/button";
 import { FolderPlus } from "@phosphor-icons/react";
@@ -13,9 +14,19 @@ import { toast } from "sonner";
 interface MangaCollectionButtonProps {
   sourceId: string;
   mangaId: string;
+  mangaDetail?: {
+    title: string;
+    coverUrl?: string;
+    author?: string;
+    status?: string;
+  };
 }
 
-export function MangaCollectionButton({ sourceId, mangaId }: MangaCollectionButtonProps) {
+export function MangaCollectionButton({
+  sourceId,
+  mangaId,
+  mangaDetail,
+}: MangaCollectionButtonProps) {
   const mangaKey: MangaKey = `${sourceId}::${mangaId}`;
   const collections = useCollectionStore((state) => state.collections);
   const memberships = useCollectionStore((state) => state.membershipsByManga[mangaKey]) || [];
@@ -28,10 +39,29 @@ export function MangaCollectionButton({ sourceId, mangaId }: MangaCollectionButt
   const [isCreateMode, setIsCreateMode] = React.useState(false);
   const [newCollectionName, setNewCollectionName] = React.useState("");
 
+  const ensureInLibrary = () => {
+    if (!mangaDetail) return;
+    const libraryStore = useLibraryStore.getState();
+    if (!libraryStore.isInLibrary(sourceId, mangaId)) {
+      libraryStore.addToLibrary({
+        sourceId,
+        mangaId,
+        title: mangaDetail.title,
+        coverUrl: mangaDetail.coverUrl,
+        author: mangaDetail.author,
+        status: mangaDetail.status,
+        addedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      toast.success("Otomatis disimpan ke Rak Buku");
+    }
+  };
+
   const handleToggle = (collectionId: string, isMember: boolean) => {
     if (isMember) {
       removeMangaFromCollection(mangaKey, collectionId);
     } else {
+      ensureInLibrary();
       addMangaToCollection(mangaKey, collectionId);
     }
   };
@@ -42,12 +72,10 @@ export function MangaCollectionButton({ sourceId, mangaId }: MangaCollectionButt
       createCollection(newCollectionName);
       toast.success("Koleksi berhasil dibuat");
       
-      // Auto-add to the newly created collection
-      // Since it's synchronous, we can just find it by name immediately or wait for re-render
-      // But re-render might be tricky. Let's rely on the user to click it after creation or auto-add
       const state = useCollectionStore.getState();
       const newCol = state.collections.find(c => c.name.toLowerCase() === newCollectionName.trim().toLowerCase());
       if (newCol) {
+        ensureInLibrary();
         addMangaToCollection(mangaKey, newCol.id);
       }
       
