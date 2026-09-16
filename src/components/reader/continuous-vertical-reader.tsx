@@ -204,7 +204,7 @@ export function ContinuousVerticalReader({
       }
     }
     
-    router.push(getReaderHref(sourceId, mangaId, nextChapterId));
+    router.replace(getReaderHref(sourceId, mangaId, nextChapterId));
   }, [nextChapterId, isInLibrary, mangaId, sourceId, getProgress, addToLibrary, router]);
 
   return (
@@ -262,7 +262,7 @@ export function ContinuousVerticalReader({
           {_prevChapterId ? (
             <Button
               className="flex-1 rounded-2xl h-14 font-bold bg-surface-raised hover:bg-surface-hover border border-border-default text-text-primary shadow-sm active:scale-[0.98] transition-all"
-              onClick={() => router.push(getReaderHref(sourceId, mangaId, _prevChapterId))}
+              onClick={() => router.replace(getReaderHref(sourceId, mangaId, _prevChapterId))}
             >
               <CaretLeft size={20} className="mr-1.5" weight="bold" /> Sebelumnya
             </Button>

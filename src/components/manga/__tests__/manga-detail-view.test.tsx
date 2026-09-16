@@ -23,6 +23,14 @@ vi.mock("@/components/manga/manga-recommendations", () => ({
   MangaRecommendations: () => <div data-testid="manga-recommendations" />,
 }));
 
+vi.mock("@/components/app/header", () => ({
+  PageHeader: (props: any) => (
+    <div data-testid="page-header" data-backhref={props.backHref} data-showback={props.showBack}>
+      {props.title}
+    </div>
+  ),
+}));
+
 vi.mock("motion/react", () => ({
   motion: {
     div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
@@ -61,5 +69,29 @@ describe("MangaDetailView - Scroll Position Reset", () => {
 
     expect(scrollToSpy).toHaveBeenCalledWith({ top: 0, left: 0, behavior: "instant" });
     scrollToSpy.mockRestore();
+  });
+
+  it("passes safe backHref to PageHeader", () => {
+    const { getByTestId } = render(
+      <MangaDetailView
+        sourceId="shinigami"
+        mangaId="test-manga"
+        detail={{
+          id: "test-manga",
+          title: "Test Manga",
+          coverUrl: "https://example.com/cover.jpg",
+          description: "Synopsis text",
+          status: "ONGOING",
+          genres: ["Action"],
+        }}
+        chapters={[
+          { id: "ch-1", mangaId: "test-manga", number: 1, title: "Chapter 1", date: "2026-09-16" },
+        ]}
+      />
+    );
+
+    const header = getByTestId("page-header");
+    expect(header.getAttribute("data-backhref")).toBe("/");
+    expect(header.getAttribute("data-showback")).toBe("true");
   });
 });

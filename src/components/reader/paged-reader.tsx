@@ -85,7 +85,7 @@ export function PagedReader({
     if (currentPageIndex < totalPages - 1) {
       setCurrentPageIndex(prev => prev + 1);
     } else if (nextChapterId) {
-      router.push(getReaderHref(sourceId, mangaId, nextChapterId));
+      router.replace(getReaderHref(sourceId, mangaId, nextChapterId));
     }
   }, [currentPageIndex, totalPages, nextChapterId, router, sourceId, mangaId]);
 
@@ -93,7 +93,7 @@ export function PagedReader({
     if (currentPageIndex > 0) {
       setCurrentPageIndex(prev => prev - 1);
     } else if (prevChapterId) {
-      router.push(getReaderHref(sourceId, mangaId, prevChapterId));
+      router.replace(getReaderHref(sourceId, mangaId, prevChapterId));
     }
   }, [currentPageIndex, prevChapterId, router, sourceId, mangaId]);
 

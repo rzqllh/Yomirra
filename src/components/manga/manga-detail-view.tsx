@@ -226,6 +226,7 @@ export function MangaDetailView({
       <PageHeader
         title={detail.title}
         showBack={true}
+        backHref={backHref}
         variant="auto"
         actions={
           <MangaHeaderActions
