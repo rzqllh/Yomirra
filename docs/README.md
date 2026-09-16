@@ -2,8 +2,11 @@
 
 Public documentation for Yomirra lives in this directory. It is intended for contributors, maintainers, and anyone who wants to understand the project's verified architecture and contracts without reading the entire codebase first.
 
+For setup and day-to-day development, start with the root [Developer Guide](../README-DEV.md).
+
 ## Start Here
 
+- [Developer Guide](../README-DEV.md) — local setup, stack, commands, environment variables, and development entry points.
 - [Architecture](ARCHITECTURE.md) — runtime layers, feature/controller boundaries, source flow, caching, offline behavior, and state ownership.
 - [Components](COMPONENTS.md) — canonical reusable UI seams and feature-component conventions.
 - [Design](DESIGN.md) — design tokens, responsive layout rules, typography, motion, and overlay families.
