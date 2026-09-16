@@ -2,9 +2,8 @@
 
 import * as React from "react";
 import { useLibraryStore } from "@/shared/store/library-store";
-import { BookmarkSimple, Check, ShareNetwork } from "@phosphor-icons/react";
+import { BookmarkSimple } from "@phosphor-icons/react";
 import { toast } from "sonner";
-import { IconButton } from "@/components/ui/icon-button";
 import { MangaRating } from "./manga-rating";
 import { cn } from "@/shared/utils/cn";
 
@@ -25,7 +24,6 @@ export function MangaActions({
   coverUrl,
   author,
   status,
-  manifestUrl,
 }: MangaActionsProps) {
   const [isMounted, setIsMounted] = React.useState(false);
 
@@ -57,17 +55,7 @@ export function MangaActions({
     }
   };
 
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title,
-        url: window.location.href,
-      }).catch(console.error);
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      toast.success("Link berhasil disalin");
-    }
-  };  return (
+  return (
     <>
       <button
         onClick={handleToggle}
@@ -78,7 +66,9 @@ export function MangaActions({
         )}
       >
         <BookmarkSimple size={24} weight={isInLibrary ? "fill" : "regular"} />
-        <span className="text-[11px] font-bold tracking-tight">Simpan</span>
+        <span className="text-[11px] font-bold tracking-tight">
+          {isInLibrary ? "Tersimpan" : "Simpan"}
+        </span>
       </button>
 
       <MangaRating sourceId={sourceId} mangaId={mangaId} variant="action" />

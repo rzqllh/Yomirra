@@ -192,12 +192,21 @@ export function MangaDetailView({
         status={detail.status}
       />
       <MangaStatusButton sourceId={sourceId} mangaId={mangaId} />
-      <MangaCollectionButton sourceId={sourceId} mangaId={mangaId} />
+      <MangaCollectionButton
+        sourceId={sourceId}
+        mangaId={mangaId}
+        mangaDetail={{
+          title: detail.title,
+          coverUrl: detail.coverUrl,
+          author: detail.author,
+          status: detail.status,
+        }}
+      />
     </div>
   );
 
   return (
-    <main className="min-h-screen flex flex-col w-full relative pb-[calc(var(--bottom-nav-height,80px)+24px)] md:pb-12 text-text-primary">
+    <main className="min-h-screen flex flex-col w-full relative pb-4 md:pb-8 text-text-primary">
       {/* ── Background (Glassmorphism Tint) ── */}
       <div className="fixed inset-0 w-full h-full overflow-hidden z-0 pointer-events-none select-none bg-background [contain:strict]">
         {detail.coverUrl && (
