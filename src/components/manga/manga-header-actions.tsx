@@ -61,13 +61,13 @@ export function MangaHeaderActions({
   };
 
   return (
-    <div className="flex items-center gap-1.5 shrink-0 pointer-events-auto">
+    <div className="flex items-center gap-2 shrink-0 pointer-events-auto">
       <button
         onClick={handleShare}
         aria-label="Bagikan"
-        className="flex items-center justify-center w-11 h-11 rounded-full bg-transparent text-text-secondary hover:bg-black/5 dark:hover:bg-white/5 hover:text-text-primary transition-colors outline-none select-none"
+        className="flex h-10 w-10 items-center justify-center rounded-2xl bg-surface-glass backdrop-blur-md border border-border-default/40 text-text-primary hover:bg-surface-hover hover:border-border-strong active:scale-95 transition-all shrink-0 select-none outline-none shadow-xs"
       >
-        <ShareNetwork size={22} weight="regular" />
+        <ShareNetwork size={20} weight="bold" />
       </button>
 
       <button
@@ -80,18 +80,18 @@ export function MangaHeaderActions({
             : "Senyapkan notifikasi"
         }
         className={cn(
-          "flex items-center justify-center w-11 h-11 rounded-full transition-colors outline-none select-none hover:bg-black/5 dark:hover:bg-white/5",
+          "flex h-10 w-10 items-center justify-center rounded-2xl backdrop-blur-md border transition-all shrink-0 select-none outline-none shadow-xs active:scale-95",
           !isInLibrary
-            ? "text-text-muted/40"
+            ? "bg-surface-glass/40 border-border-default/20 text-text-muted/40 cursor-not-allowed"
             : isMuted
-            ? "text-accent"
-            : "text-text-secondary hover:text-text-primary"
+            ? "bg-accent/15 border-accent/30 text-accent hover:bg-accent/25"
+            : "bg-surface-glass border-border-default/40 text-text-primary hover:bg-surface-hover hover:border-border-strong"
         )}
       >
         {isInLibrary && isMuted ? (
-          <BellSlash size={22} weight="fill" />
+          <BellSlash size={20} weight="fill" />
         ) : (
-          <Bell size={22} weight="regular" />
+          <Bell size={20} weight={!isInLibrary ? "regular" : "bold"} />
         )}
       </button>
     </div>

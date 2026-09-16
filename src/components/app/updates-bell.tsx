@@ -26,17 +26,17 @@ export function UpdatesBell() {
     <Link
       href="/updates"
       transitionTypes={["nav-lateral"]}
-      className="relative flex items-center justify-center min-w-[44px] min-h-[44px] w-[44px] h-[44px] rounded-full text-text-secondary hover:text-text-primary hover:bg-black/5 dark:hover:bg-surface-hover transition-colors outline-none tap-highlight-transparent shrink-0"
+      className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-surface-glass backdrop-blur-md border border-border-default/40 text-text-primary hover:bg-surface-hover hover:border-border-strong active:scale-95 transition-all outline-none select-none shrink-0 shadow-xs"
       aria-label={accessibleLabel}
     >
-      <Bell size={22} weight="regular" className="shrink-0" />
+      <Bell size={20} weight="bold" className="shrink-0" />
       {showBadge && (
         <div
           data-testid="updates-badge"
           aria-hidden="true"
-          className="absolute top-1 right-1 min-w-[16px] h-[16px] px-1 rounded-full bg-brand-primary flex items-center justify-center border-2 border-surface-base"
+          className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-brand-primary flex items-center justify-center border-2 border-surface-base shadow-xs"
         >
-          <span className="text-[9px] font-bold text-white leading-none">
+          <span className="text-[10px] font-black text-white leading-none">
             {displayCount}
           </span>
         </div>

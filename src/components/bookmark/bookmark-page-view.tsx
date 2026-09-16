@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { MangaCardSkeleton } from "@/components/skeletons/manga-card-skeleton";
 import { useBookmarkReading } from "@/shared/hooks/use-bookmark-reading";
 import { useBookmarkCollection } from "@/shared/hooks/use-bookmark-collection";
+import { useLibraryStore } from "@/shared/store/library-store";
 import { ReadingTab } from "./reading-tab";
 import { CollectionTab } from "./collection-tab";
 import { UpdatesList } from "@/components/updates/updates-list";
@@ -28,6 +29,7 @@ export function BookmarkPageView() {
 
   const reading = useBookmarkReading();
   const collection = useBookmarkCollection();
+  const libraryItemCount = useLibraryStore((state) => Object.keys(state.items).length);
 
   const handleTabChange = (tab: BookmarkTab) => {
     setActiveTab(tab);
@@ -70,7 +72,14 @@ export function BookmarkPageView() {
         <PageHeader
           title="Rak Buku"
           description="Bacaan, koleksi, & pembaruan komik favoritmu"
-          icon={<BookBookmark size={32} weight="duotone" />}
+          icon={<BookBookmark size={24} weight="duotone" />}
+          meta={
+            libraryItemCount > 0 ? (
+              <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-accent/10 border border-accent/20 text-accent">
+                {libraryItemCount} judul
+              </span>
+            ) : undefined
+          }
         />
       </div>
 

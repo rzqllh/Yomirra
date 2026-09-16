@@ -227,6 +227,7 @@ export function MangaDetailView({
         title={detail.title}
         showBack={true}
         backHref={backHref}
+        mode="detail"
         variant="auto"
         actions={
           <MangaHeaderActions
