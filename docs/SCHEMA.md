@@ -134,8 +134,8 @@ interface ReaderPreferences {
   toolbarBehavior: 'auto-hide' | 'always-visible';
   preloadIntensity: 'light' | 'balanced' | 'aggressive';
   showPageProgress: boolean;
-  readingDirection: 'ltr' | 'rtl';    // NOTE: UI is locked to 'vertical' mode
-  readingMode: 'vertical';             // LOCKED — only vertical mode supported
+  readingDirection: 'ltr' | 'rtl';
+  readingMode: 'vertical' | 'paged';
   keepScreenAwake?: boolean;
 }
 ```

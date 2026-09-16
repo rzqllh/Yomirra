@@ -21,6 +21,8 @@ export interface SourceMetadata {
   isNsfw: boolean;
   manifestUrl?: string;
   healthCheckUrl?: string;
+  reportUrl?: string;
+  isDynamic: boolean;
 }
 
 export interface MangaPageResult {

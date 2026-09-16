@@ -15,7 +15,7 @@ interface SourceFeedWrapperProps {
 export function SourceFeedWrapper({ sourceId, isNsfw, children }: SourceFeedWrapperProps) {
   const { isSourceDisabled } = useSourcePreferencesStore();
   const hideNsfw = useSettingsStore(state => state.hideNsfw);
-  const nsfwSourceIds = useNsfwSourceIds();
+  const { status: nsfwStatus, ids: nsfwSourceIds } = useNsfwSourceIds();
   const [isMounted, setIsMounted] = React.useState(false);
 
   React.useEffect(() => {
@@ -32,8 +32,10 @@ export function SourceFeedWrapper({ sourceId, isNsfw, children }: SourceFeedWrap
   }
 
   // If God mode is OFF and this is an NSFW source, hide it completely from Homepage
-  if (hideNsfw && isFromNsfwSource) {
-    return null;
+  if (hideNsfw) {
+    if (nsfwStatus !== "KNOWN" || isFromNsfwSource) {
+      return null;
+    }
   }
 
   // If the user has toggled this source OFF, hide it

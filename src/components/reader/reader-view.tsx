@@ -6,12 +6,15 @@ import { apiClient } from "@/shared/api-client";
 import { ReaderPageSkeleton } from "@/components/skeletons/reader-page-skeleton";
 import { ReaderShell } from "@/components/reader/reader-shell";
 import { ContinuousVerticalReader } from "@/components/reader/continuous-vertical-reader";
+import { PagedReader } from "@/components/reader/paged-reader";
+import { useReaderStore } from "@/shared/store/reader-store";
 import { useHistoryStore } from "@/shared/store/history-store";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useDownloadStore } from "@/shared/store/download-store";
 import { EmptyState } from "@/components/states/empty-state";
 import { WarningCircle } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
+import { getDownloadChapterId } from "@/shared/utils/download-helpers";
 import type { MangaDetail, Chapter, PageItem } from "@/shared/types/source";
 
 interface ReaderViewProps {
@@ -34,8 +37,9 @@ export function ReaderView({
   const upsertHistory = useHistoryStore(state => state.upsertHistory);
   const getLibraryItem = useLibraryStore(state => state.getLibraryItem);
   const updateLibraryItem = useLibraryStore(state => state.updateLibraryItem);
+  const readingMode = useReaderStore(state => state.preferences.readingMode);
 
-  const downloadId = `${sourceId}::${mangaId}::${chapterId}`;
+  const downloadId = getDownloadChapterId(sourceId, mangaId, chapterId);
   const downloadStatus = useDownloadStore(state => state.downloads[downloadId]?.status);
 
   const [offlinePages, setOfflinePages] = useState<PageItem[] | null>(null);
@@ -49,8 +53,11 @@ export function ReaderView({
   });
 
   useEffect(() => {
+    setOfflinePages(null);
+    const createdUrls: string[] = [];
+    let isMounted = true;
+
     if (downloadStatus === "downloaded" && typeof caches !== "undefined") {
-      let isMounted = true;
       (async () => {
         try {
           const cache = await caches.open("yomirra-chapter-cache-v1");
@@ -58,27 +65,47 @@ export function ReaderView({
           const prefix = `/offline-images/${downloadId}/`;
           
           const matchedKeys = keys.filter(req => req.url.includes(prefix));
-          const sorted = matchedKeys.sort((a, b) => {
-            const numA = parseInt(a.url.split('/').pop() || "0", 10);
-            const numB = parseInt(b.url.split('/').pop() || "0", 10);
-            return numA - numB;
+          let maxIndex = 0;
+          const parsedKeys = matchedKeys.map(req => {
+            const index = parseInt(req.url.split('/').pop() || "0", 10);
+            maxIndex = Math.max(maxIndex, index);
+            return { req, index };
           });
 
-          const blobUrls = await Promise.all(sorted.map(async (req, index) => {
+          const basePages = initialPages || chapterPages?.pages || [];
+          const pageCount = Math.max(basePages.length, maxIndex + 1);
+
+          const blobUrls: PageItem[] = Array.from({ length: pageCount }).map((_, i) => ({
+            index: i,
+            url: basePages[i]?.url || "" // fallback to network url if missing
+          }));
+
+          await Promise.all(parsedKeys.map(async ({ req, index }) => {
             const res = await cache.match(req);
             const blob = await res?.blob();
-            return blob ? { index, url: URL.createObjectURL(blob) } : null;
+            if (blob && isMounted && index < pageCount) {
+              const url = URL.createObjectURL(blob);
+              createdUrls.push(url);
+              blobUrls[index] = { index, url };
+            }
           }));
           
-          if (isMounted && blobUrls.length > 0) {
-            setOfflinePages(blobUrls.filter(Boolean) as PageItem[]);
+          if (isMounted && createdUrls.length > 0) {
+            setOfflinePages(blobUrls);
+          } else {
+            createdUrls.forEach(url => URL.revokeObjectURL(url));
           }
         } catch (e) {
           console.error("Failed to load offline pages", e);
+          createdUrls.forEach(url => URL.revokeObjectURL(url));
         }
       })();
-      return () => { isMounted = false; };
     }
+
+    return () => {
+      isMounted = false;
+      createdUrls.forEach(url => URL.revokeObjectURL(url));
+    };
   }, [downloadStatus, downloadId]);
 
   const isLoading = downloadStatus === "downloaded" ? offlinePages === null : (!initialPages && isQueryLoading);
@@ -177,16 +204,29 @@ export function ReaderView({
       mangaId={mangaId}
       chapters={initialChapters}
     >
-      <ContinuousVerticalReader 
-        sourceId={sourceId}
-        mangaId={mangaId}
-        chapterId={chapterId}
-        chapterTitle={chapterTitle}
-        pages={pagesToRender}
-        chapters={initialChapters}
-        prevChapterId={prevChapterId}
-        nextChapterId={nextChapterId}
-      />
+      {readingMode === "paged" ? (
+        <PagedReader
+          sourceId={sourceId}
+          mangaId={mangaId}
+          chapterId={chapterId}
+          chapterTitle={chapterTitle}
+          pages={pagesToRender}
+          chapters={initialChapters}
+          prevChapterId={prevChapterId}
+          nextChapterId={nextChapterId}
+        />
+      ) : (
+        <ContinuousVerticalReader
+          sourceId={sourceId}
+          mangaId={mangaId}
+          chapterId={chapterId}
+          chapterTitle={chapterTitle}
+          pages={pagesToRender}
+          chapters={initialChapters}
+          prevChapterId={prevChapterId}
+          nextChapterId={nextChapterId}
+        />
+      )}
     </ReaderShell>
   );
 }

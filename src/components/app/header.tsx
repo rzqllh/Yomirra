@@ -2,7 +2,8 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft } from "@phosphor-icons/react"
+import { ArrowLeft02Icon } from "@hugeicons/core-free-icons"
+import { Icon } from "@/components/ui/icon"
 import { cn } from "@/shared/utils/cn"
 
 export interface PageHeaderProps {
@@ -20,6 +21,8 @@ export interface PageHeaderProps {
   actions?: React.ReactNode
   /** Compositional meta elements (counters, badges, filters status) */
   meta?: React.ReactNode
+  /** Header behavior mode: standard (title always visible) or detail (title collapses on top) */
+  mode?: "standard" | "detail"
   /** Mobile header background variant */
   variant?: "transparent" | "glass" | "auto"
   /** Outer wrapper className override */
@@ -38,6 +41,7 @@ export function PageHeader({
   backHref,
   actions,
   meta,
+  mode = "standard",
   variant = "auto",
   className,
 }: PageHeaderProps) {
@@ -45,16 +49,14 @@ export function PageHeader({
   const [scrolled, setScrolled] = React.useState(false)
 
   React.useEffect(() => {
-    if (variant !== "auto") return
-
     const handleScroll = () => {
-      setScrolled(window.scrollY > 10)
+      setScrolled(window.scrollY > 12)
     }
 
     window.addEventListener("scroll", handleScroll, { passive: true })
     handleScroll()
     return () => window.removeEventListener("scroll", handleScroll)
-  }, [variant])
+  }, [])
 
   const handleBack = () => {
     if (backHref) {
@@ -64,70 +66,101 @@ export function PageHeader({
     }
   }
 
-  const isGlass = variant === "glass" || (variant === "auto" && scrolled)
+  // Header surface glass state
+  const isGlass =
+    variant === "glass" ||
+    (variant === "auto" && (mode === "standard" ? scrolled : scrolled))
+  const isTransparent = variant === "transparent" || (mode === "detail" && !scrolled)
 
   return (
     <>
       {/* ── Mobile Navigation Bar (md:hidden) ── */}
       <header
         className={cn(
-          "md:hidden fixed top-0 left-0 right-0 z-[var(--z-sticky)] flex w-full items-center justify-between px-4 pt-[calc(var(--safe-top)+12px)] pb-2 transition-all duration-300 ease-out pointer-events-none",
-          isGlass
-            ? "bg-surface-glass backdrop-blur-md border-b border-border-default shadow-sm"
-            : "bg-transparent border-transparent shadow-none",
+          "md:hidden fixed top-0 left-0 right-0 z-[var(--z-sticky)] flex w-full items-center justify-between px-4 pt-[calc(var(--safe-top)+10px)] pb-2.5 transition-all duration-300 ease-out pointer-events-none",
+          isTransparent
+            ? "bg-transparent border-transparent shadow-none"
+            : isGlass
+            ? "bg-surface-base/85 backdrop-blur-xl border-b border-border-default/40 shadow-xs"
+            : "bg-surface-base border-b border-border-subtle",
           className
         )}
       >
-        <div className="flex items-center justify-between w-full transition-all duration-300 ease-out pointer-events-auto min-h-[56px]">
+        <div className="flex items-center justify-between w-full transition-all duration-300 ease-out pointer-events-auto min-h-[48px]">
           <div className="flex items-center gap-2.5 flex-1 min-w-0">
             {showBack ? (
               <button
                 onClick={handleBack}
-                className="flex min-h-[36px] min-w-[36px] items-center justify-center rounded-full transition-colors text-text-primary hover:bg-black/5 dark:hover:bg-surface-hover active:bg-black/10 dark:active:bg-surface-hover/80 shrink-0"
+                className="flex h-10 w-10 items-center justify-center rounded-2xl bg-surface-glass backdrop-blur-md border border-border-default/40 text-text-primary hover:bg-surface-hover hover:border-border-strong active:scale-95 transition-all shrink-0 select-none outline-none"
                 aria-label="Kembali"
               >
-                <ArrowLeft size={20} weight="bold" />
+                <Icon icon={ArrowLeft02Icon} size={20} strokeWidth={2} />
               </button>
             ) : (
               icon && (
-                <div className="text-accent bg-accent/10 p-1.5 rounded-lg border border-accent/20 shrink-0">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-accent/15 via-accent/10 to-transparent border border-accent/25 text-accent shadow-xs shrink-0 select-none">
                   {icon}
                 </div>
               )
             )}
-            <div className="flex items-center gap-2 min-w-0 flex-1">
-              <p className="text-xl font-extrabold tracking-tight text-text-primary truncate">
+
+            <div
+              className={cn(
+                "flex items-center gap-2 min-w-0 flex-1 transition-opacity duration-300",
+                mode === "detail" && !scrolled
+                  ? "opacity-0 pointer-events-none"
+                  : "opacity-100"
+              )}
+            >
+              <h2 className="text-lg font-black tracking-tight text-text-primary truncate">
                 {title}
-              </p>
-              {meta && <div className="shrink-0 text-sm font-semibold text-text-muted">{meta}</div>}
+              </h2>
+              {meta && (
+                <div className="shrink-0 inline-flex items-center text-xs font-bold text-text-muted">
+                  {meta}
+                </div>
+              )}
             </div>
           </div>
 
-          {actions && <div className="shrink-0 ml-2">{actions}</div>}
+          {actions && (
+            <div className="flex items-center gap-1.5 shrink-0 ml-2">
+              {actions}
+            </div>
+          )}
         </div>
       </header>
 
       {/* ── Desktop Hero Section Header (hidden md:block) ── */}
-      <div className={cn("hidden md:block relative overflow-hidden rounded-2xl bg-surface-muted/30 border border-border-subtle p-6 md:p-8 mb-6 md:mb-8", className)}>
-        <div className="absolute inset-0 bg-gradient-to-br from-brand-500/5 to-transparent pointer-events-none" />
+      <div
+        className={cn(
+          "hidden md:block relative overflow-hidden rounded-3xl bg-surface-raised/40 border border-border-default/50 p-6 md:p-8 mb-6 md:mb-8 backdrop-blur-md shadow-xs",
+          className
+        )}
+      >
+        <div className="absolute -right-20 -top-20 w-64 h-64 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
         <div className="relative flex items-center justify-between gap-4">
-          <div className="flex items-start gap-4 flex-1 min-w-0">
+          <div className="flex items-center gap-4 flex-1 min-w-0">
             {icon && (
-              <div className="shrink-0 p-3 bg-surface-base rounded-xl shadow-sm border border-border-default/50 text-accent">
+              <div className="shrink-0 p-3.5 bg-gradient-to-br from-accent/15 via-accent/10 to-transparent rounded-2xl shadow-xs border border-accent/25 text-accent">
                 {icon}
               </div>
             )}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-3">
-                <h1 className="text-3xl md:text-4xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-text-primary to-text-secondary truncate">
+                <h1 className="text-2xl md:text-3xl font-black tracking-tight text-text-primary truncate">
                   {title}
                 </h1>
-                {meta && <div className="shrink-0">{meta}</div>}
+                {meta && (
+                  <div className="shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-full bg-surface-base border border-border-default/60 text-xs font-bold text-text-muted">
+                    {meta}
+                  </div>
+                )}
               </div>
               {description && (
-                <div className="text-text-muted mt-2 text-sm md:text-base max-w-2xl font-medium">
+                <p className="text-text-muted mt-1 text-sm md:text-base max-w-2xl font-medium leading-relaxed">
                   {description}
-                </div>
+                </p>
               )}
             </div>
           </div>

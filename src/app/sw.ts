@@ -39,10 +39,13 @@ const serwist = new Serwist({
         ],
       }),
     },
-    // StaleWhileRevalidate for Manga Metadata API
-    // Ensure quick loads for manga details while updating in background
+    // StaleWhileRevalidate for Source Metadata API
+    // Explicit allowlist: only cache manga details and chapter lists.
+    // We intentionally exclude /search, /health, /nsfw-ids to prevent cache bloat or stale data.
     {
-      matcher: ({ url }) => url.pathname.startsWith('/api/manga'),
+      matcher: ({ url }) => {
+        return !!url.pathname.match(/^\/api\/sources\/[^/]+\/(manga|chapters|popular|latest)$/);
+      },
       handler: new StaleWhileRevalidate({
         cacheName: 'yomirra-manga-metadata',
         plugins: [

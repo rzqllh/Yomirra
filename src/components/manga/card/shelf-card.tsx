@@ -7,9 +7,11 @@ import { getMangaDetailHref } from "@/shared/lib/routes";
 import { motion } from "motion/react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { sourceRegistry } from "@/shared/sources/source-registry";
+import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { MangaCover } from "../manga-cover";
 import { BookmarkButton } from "../bookmark-button";
 import { useCollectionStore } from "@/shared/store/collection-store";
+import { useUpdateStore, getUpdateKey } from "@/shared/store/update-store";
 import type { MangaKey } from "@/shared/types/collection";
 import { cn } from "@/shared/utils/cn";
 import type { BaseCardProps } from "./types";
@@ -28,6 +30,17 @@ export function ShelfCard({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { readingStatusByManga } = useCollectionStore();
+  const updateStore = useUpdateStore();
+  
+  // Check unread status (handle both UUID and legacy keys)
+  const isUnread = React.useMemo(() => {
+    const byId = updateStore.items[manga.id];
+    if (byId && !byId.seenAt) return true;
+    const byLegacy = updateStore.items[getUpdateKey(sourceId, manga.id)];
+    if (byLegacy && !byLegacy.seenAt) return true;
+    return false;
+  }, [updateStore.items, manga.id, sourceId]);
+
   const fullPath = pathname + (searchParams.toString() ? `?${searchParams.toString()}` : "");
 
   const safeId = `${sourceId}-${manga.id}`.replace(/[^a-zA-Z0-9-]/g, '-');
@@ -36,7 +49,9 @@ export function ShelfCard({
   const vtStyle = { '--vt-name': vtName, '--vt-title-name': vtTitleName } as React.CSSProperties;
 
   const scoreToDisplay = displayScore ?? manga.score;
-  const sourceName = showSourceBadge ? (sourceRegistry.find(s => s.id === sourceId)?.name || sourceId) : null;
+  const sourceObj = dynamicSourceRegistry.get(sourceId) || sourceRegistry.find(s => s.id === sourceId);
+  const sourceName = showSourceBadge ? (sourceObj?.name || sourceId) : null;
+  const isUnavailable = sourceObj?.status === "unavailable" || sourceObj?.status === "in-fix";
 
   return (
     <motion.article
@@ -65,6 +80,12 @@ export function ShelfCard({
           />
           
           <div className="absolute top-2 left-2 flex flex-col gap-1.5 z-20 items-start">
+            {isUnread && (
+              <div className="flex items-center gap-1 rounded-full bg-semantic-error text-white px-2 py-0.5 shadow-sm">
+                <span className="text-[10px] font-black uppercase tracking-widest">Baru</span>
+              </div>
+            )}
+            
             {manga.rank !== undefined && (
               <div className="flex items-center gap-1 rounded-full bg-surface-glass backdrop-blur-md px-2 py-1 shadow-sm">
                 <TrendUp weight="bold" className="text-accent text-[10px]" />
@@ -99,6 +120,14 @@ export function ShelfCard({
           <div className="absolute top-2 right-2 z-20 md:opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
             <BookmarkButton sourceId={sourceId} manga={manga} />
           </div>
+
+          {isUnavailable && (
+            <div className="absolute inset-0 bg-surface-base/60 backdrop-blur-[2px] flex items-center justify-center z-10 transition-opacity group-hover:opacity-100 opacity-90">
+              <div className="bg-semantic-error/90 text-white text-[10px] font-black tracking-widest uppercase px-2.5 py-1 rounded-full shadow-lg">
+                Tidak Tersedia
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex flex-col px-2 mt-3" style={vtStyle}>

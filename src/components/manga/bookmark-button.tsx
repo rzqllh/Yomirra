@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import { useMounted } from "@/shared/hooks/use-mounted";
-import { BookmarkSimple } from "@phosphor-icons/react";
+import { Bookmark02Icon } from "@hugeicons/core-free-icons";
+import { Icon } from "@/components/ui/icon";
 import type { MangaItem } from "@/shared/types/source";
 import { motion, AnimatePresence } from "motion/react";
 import { useLibraryStore } from "@/shared/store/library-store";
@@ -32,9 +33,9 @@ export function BookmarkButton({ sourceId, manga, className }: { sourceId: strin
   return (
     <motion.button 
       onClick={handleBookmarkClick}
-      whileTap={{ scale: 0.8 }}
+      whileTap={{ scale: 0.85 }}
       className={cn(
-        "relative grid size-8 place-items-center rounded-full transition-all focus-visible:outline-none bg-black/40 backdrop-blur-md shadow-sm -white/10",
+        "relative grid size-8 place-items-center rounded-xl transition-all focus-visible:outline-none bg-black/40 backdrop-blur-md shadow-sm border border-white/10",
         isInLibrary ? 'text-accent hover:text-accent-hover' : 'text-media-muted hover:text-media-foreground',
         className
       )}
@@ -57,7 +58,7 @@ export function BookmarkButton({ sourceId, manga, className }: { sourceId: strin
             }}
             className="absolute inset-0 flex items-center justify-center drop-shadow-[0_0_8px_rgba(239,68,68,0.6)]"
           >
-            <BookmarkSimple size={18} weight="fill" />
+            <Icon icon={Bookmark02Icon} size={18} strokeWidth={2.2} />
           </motion.span>
         ) : (
           <motion.span
@@ -68,7 +69,7 @@ export function BookmarkButton({ sourceId, manga, className }: { sourceId: strin
             transition={{ duration: 0.15 }}
             className="absolute inset-0 flex items-center justify-center"
           >
-            <BookmarkSimple size={18} weight="bold" />
+            <Icon icon={Bookmark02Icon} size={18} strokeWidth={1.8} />
           </motion.span>
         )}
       </AnimatePresence>

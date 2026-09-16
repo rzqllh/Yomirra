@@ -15,6 +15,7 @@ export interface SegmentedControlProps {
   value: string;
   onChange: (value: string) => void;
   variant?: "glass-floating" | "soft-inset";
+  shape?: "pill" | "rounded";
   size?: "sm" | "md" | "lg";
   className?: string;
   fullWidth?: boolean;
@@ -26,20 +27,31 @@ export function SegmentedControl({
   value,
   onChange,
   variant = "glass-floating",
+  shape = "pill",
   size = "md",
   className,
   fullWidth = false,
   layoutId = "segmented-pill",
 }: SegmentedControlProps) {
   const isGlass = variant === "glass-floating";
+  const isPill = shape === "pill";
+
+  // Concentric radius formula:
+  // - Pill: Both outer container and inner indicator are rounded-full (radius = height / 2).
+  //   With padding p-1 (4px), inner radius is exactly outer radius - 4px along the entire arc.
+  // - Rounded: Outer rounded-2xl (16px) with p-1 (4px padding) requires inner rounded-md (12px),
+  //   satisfying R_inner = R_outer - padding (16px - 4px = 12px) to prevent corner pinching/bulging.
+  const containerRadiusClass = isPill ? "rounded-full" : "rounded-2xl";
+  const itemRadiusClass = isPill ? "rounded-full" : "rounded-md";
 
   return (
     <div
       className={cn(
         "relative flex items-center p-1 transition-all duration-300 select-none",
+        containerRadiusClass,
         isGlass
-          ? "rounded-2xl bg-surface-glass backdrop-blur-md border border-border-subtle shadow-xs"
-          : "rounded-2xl bg-surface-muted/90 border border-border-subtle/40 shadow-inner",
+          ? "bg-surface-glass backdrop-blur-md border border-border-subtle shadow-xs"
+          : "bg-surface-muted/90 border border-border-subtle/40 shadow-inner",
         fullWidth ? "w-full" : "inline-flex",
         className
       )}
@@ -54,7 +66,7 @@ export function SegmentedControl({
             whileTap={{ scale: 0.97 }}
             className={cn(
               "relative z-10 flex items-center justify-center gap-1.5 transition-colors duration-200 outline-none whitespace-nowrap font-bold",
-              isGlass ? "rounded-xl" : "rounded-xl",
+              itemRadiusClass,
               size === "sm" && "py-1.5 px-3 text-xs",
               size === "md" && "py-2 px-4 text-xs sm:text-sm",
               size === "lg" && "py-2.5 px-5 text-sm sm:text-base",
@@ -73,9 +85,10 @@ export function SegmentedControl({
                 layoutId={layoutId}
                 className={cn(
                   "absolute inset-0 z-0 transition-shadow",
+                  itemRadiusClass,
                   isGlass
-                    ? "rounded-xl bg-surface-raised shadow-xs border border-border-subtle/80"
-                    : "rounded-xl bg-surface-base shadow-xs border border-border-subtle/60"
+                    ? "bg-surface-raised shadow-xs border border-border-subtle/80"
+                    : "bg-surface-base shadow-xs border border-border-subtle/60"
                 )}
                 initial={false}
                 transition={{

@@ -9,7 +9,7 @@ import Link from "next/link";
 import { YomirraSection, YomirraSurface } from "@/components/ui/layout";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/states/empty-state";
-import { StorageWarningBanner } from "@/components/downloads/storage-warning-banner";
+import { StorageWarningBanner } from "@/components/download/storage-warning-banner";
 
 export default function DownloadsPage() {
   const { downloads, removeDownload, pauseDownload, resumeDownload, cancelDownload, retryDownload, clearDownloads } = useDownloadStore();

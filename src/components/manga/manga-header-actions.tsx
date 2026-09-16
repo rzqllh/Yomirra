@@ -1,9 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { LinkSimple, Bell, BellSlash, ShareNetwork } from "@phosphor-icons/react";
+import { Share01Icon, BellIcon, BellOffIcon } from "@hugeicons/core-free-icons";
+import { Icon } from "@/components/ui/icon";
 import { toast } from "sonner";
 import { useSettingsStore } from "@/shared/store/settings-store";
+import { useLibraryStore } from "@/shared/store/library-store";
+import { useMounted } from "@/shared/hooks/use-mounted";
 import { cn } from "@/shared/utils/cn";
 
 interface MangaHeaderActionsProps {
@@ -19,26 +22,22 @@ export function MangaHeaderActions({
   title,
   manifestUrl,
 }: MangaHeaderActionsProps) {
-  const [isMounted, setIsMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    const t = setTimeout(() => setIsMounted(true), 0);
-    return () => clearTimeout(t);
-  }, []);
+  const isMounted = useMounted();
 
   const mangaKey = `${sourceId}::${mangaId}`;
   const mutedMangaKeys = useSettingsStore((state) => state.mutedMangaKeys);
   const muteManga = useSettingsStore((state) => state.muteManga);
   const unmuteManga = useSettingsStore((state) => state.unmuteManga);
-  const isMuted = isMounted ? mutedMangaKeys.includes(mangaKey) : false;
-
-  const handleCopyLink = () => {
-    const urlToCopy = manifestUrl || window.location.href;
-    navigator.clipboard.writeText(urlToCopy);
-    toast.success("Link berhasil disalin");
-  };
+  const rawIsInLibrary = useLibraryStore((state) => state.isInLibrary(sourceId, mangaId));
+  const isInLibrary = isMounted && rawIsInLibrary;
+  const isMuted = isMounted && mutedMangaKeys.includes(mangaKey);
 
   const handleToggleMute = () => {
+    if (!rawIsInLibrary) {
+      toast.info("Simpan komik ini terlebih dahulu untuk mengaktifkan notifikasi pembaruan");
+      return;
+    }
+
     if (isMuted) {
       unmuteManga(mangaKey);
       toast.success("Notifikasi diaktifkan untuk manga ini");
@@ -54,42 +53,44 @@ export function MangaHeaderActions({
         url: window.location.href,
       }).catch(console.error);
     } else {
-      navigator.clipboard.writeText(window.location.href);
+      navigator.clipboard.writeText(manifestUrl || window.location.href);
       toast.success("Link berhasil disalin");
     }
   };
 
   return (
-    <div className="flex items-center gap-1.5 shrink-0 pointer-events-auto">
+    <div className="flex items-center gap-2 shrink-0 pointer-events-auto">
       <button
         onClick={handleShare}
         aria-label="Bagikan"
-        className="flex items-center justify-center w-11 h-11 rounded-full bg-transparent text-text-secondary hover:bg-black/5 dark:hover:bg-white/5 hover:text-text-primary transition-colors outline-none select-none"
+        className="flex h-10 w-10 items-center justify-center rounded-2xl bg-surface-glass backdrop-blur-md border border-border-default/40 text-text-primary hover:bg-surface-hover hover:border-border-strong active:scale-95 transition-all shrink-0 select-none outline-none shadow-xs"
       >
-        <ShareNetwork size={22} weight="regular" />
+        <Icon icon={Share01Icon} size={20} strokeWidth={1.8} />
       </button>
 
       <button
         onClick={handleToggleMute}
-        aria-label={isMuted ? "Bunyikan notifikasi" : "Senyapkan notifikasi"}
+        aria-label={
+          !isInLibrary
+            ? "Notifikasi pembaruan (simpan komik terlebih dahulu)"
+            : isMuted
+            ? "Bunyikan notifikasi"
+            : "Senyapkan notifikasi"
+        }
         className={cn(
-          "flex items-center justify-center w-11 h-11 rounded-full transition-colors outline-none select-none hover:bg-black/5 dark:hover:bg-white/5",
-          isMuted ? "text-accent" : "text-text-secondary hover:text-text-primary"
+          "flex h-10 w-10 items-center justify-center rounded-2xl backdrop-blur-md border transition-all shrink-0 select-none outline-none shadow-xs active:scale-95",
+          !isInLibrary
+            ? "bg-surface-glass/40 border-border-default/20 text-text-muted/40 cursor-not-allowed"
+            : isMuted
+            ? "bg-accent/15 border-accent/30 text-accent hover:bg-accent/25"
+            : "bg-surface-glass border-border-default/40 text-text-primary hover:bg-surface-hover hover:border-border-strong"
         )}
       >
-        {isMuted ? (
-          <BellSlash size={22} weight="fill" />
+        {isInLibrary && isMuted ? (
+          <Icon icon={BellOffIcon} size={20} strokeWidth={1.8} />
         ) : (
-          <Bell size={22} weight="regular" />
+          <Icon icon={BellIcon} size={20} strokeWidth={!isInLibrary ? 1.5 : 2} />
         )}
-      </button>
-
-      <button
-        onClick={handleCopyLink}
-        aria-label="Salin link"
-        className="flex items-center justify-center w-11 h-11 rounded-full bg-transparent text-text-secondary hover:bg-black/5 dark:hover:bg-white/5 hover:text-text-primary transition-colors outline-none select-none"
-      >
-        <LinkSimple size={22} weight="regular" />
       </button>
     </div>
   );

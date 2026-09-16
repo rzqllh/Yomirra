@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useCollectionStore } from "@/shared/store/collection-store";
+import { useLibraryStore } from "@/shared/store/library-store";
 import { MangaKey } from "@/shared/types/collection";
 import { Button } from "@/components/ui/button";
 import { FolderPlus } from "@phosphor-icons/react";
@@ -13,9 +14,19 @@ import { toast } from "sonner";
 interface MangaCollectionButtonProps {
   sourceId: string;
   mangaId: string;
+  mangaDetail?: {
+    title: string;
+    coverUrl?: string;
+    author?: string;
+    status?: string;
+  };
 }
 
-export function MangaCollectionButton({ sourceId, mangaId }: MangaCollectionButtonProps) {
+export function MangaCollectionButton({
+  sourceId,
+  mangaId,
+  mangaDetail,
+}: MangaCollectionButtonProps) {
   const mangaKey: MangaKey = `${sourceId}::${mangaId}`;
   const collections = useCollectionStore((state) => state.collections);
   const memberships = useCollectionStore((state) => state.membershipsByManga[mangaKey]) || [];
@@ -28,10 +39,29 @@ export function MangaCollectionButton({ sourceId, mangaId }: MangaCollectionButt
   const [isCreateMode, setIsCreateMode] = React.useState(false);
   const [newCollectionName, setNewCollectionName] = React.useState("");
 
+  const ensureInLibrary = () => {
+    if (!mangaDetail) return;
+    const libraryStore = useLibraryStore.getState();
+    if (!libraryStore.isInLibrary(sourceId, mangaId)) {
+      libraryStore.addToLibrary({
+        sourceId,
+        mangaId,
+        title: mangaDetail.title,
+        coverUrl: mangaDetail.coverUrl,
+        author: mangaDetail.author,
+        status: mangaDetail.status,
+        addedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      toast.success("Otomatis disimpan ke Rak Buku");
+    }
+  };
+
   const handleToggle = (collectionId: string, isMember: boolean) => {
     if (isMember) {
       removeMangaFromCollection(mangaKey, collectionId);
     } else {
+      ensureInLibrary();
       addMangaToCollection(mangaKey, collectionId);
     }
   };
@@ -42,12 +72,10 @@ export function MangaCollectionButton({ sourceId, mangaId }: MangaCollectionButt
       createCollection(newCollectionName);
       toast.success("Koleksi berhasil dibuat");
       
-      // Auto-add to the newly created collection
-      // Since it's synchronous, we can just find it by name immediately or wait for re-render
-      // But re-render might be tricky. Let's rely on the user to click it after creation or auto-add
       const state = useCollectionStore.getState();
       const newCol = state.collections.find(c => c.name.toLowerCase() === newCollectionName.trim().toLowerCase());
       if (newCol) {
+        ensureInLibrary();
         addMangaToCollection(mangaKey, newCol.id);
       }
       
@@ -85,19 +113,27 @@ export function MangaCollectionButton({ sourceId, mangaId }: MangaCollectionButt
         setIsOpen(open);
         if (!open) setIsCreateMode(false);
       }}>
-        <DialogContent className="max-w-sm rounded-3xl p-6 bg-surface-overlay/95 backdrop-blur-xl shadow-default -heavy">
+        <DialogContent className="max-w-sm sm:max-w-md">
           {!isCreateMode ? (
             <>
-              <DialogHeader>
-                <DialogTitle>Koleksi Manga</DialogTitle>
-                <DialogDescription>
-                  Tambahkan manga ini ke koleksi.
-                </DialogDescription>
+              <DialogHeader className="gap-3">
+                <div
+                  className="flex h-12 w-12 items-center justify-center rounded-2xl border border-accent/30 bg-gradient-to-br from-accent/20 via-accent/10 to-transparent text-accent shadow-xs shrink-0 select-none"
+                  aria-hidden="true"
+                >
+                  <FolderPlus size={22} weight="duotone" />
+                </div>
+                <div>
+                  <DialogTitle>Koleksi Komik</DialogTitle>
+                  <DialogDescription className="mt-1.5">
+                    Tambahkan komik ini ke folder koleksi.
+                  </DialogDescription>
+                </div>
               </DialogHeader>
               
-              <div className="flex flex-col gap-2 mt-4 max-h-[300px] overflow-y-auto pr-2">
+              <div className="flex flex-col gap-2 mt-1 max-h-[300px] overflow-y-auto pr-1">
                 {collections.length === 0 ? (
-                  <p className="text-sm text-text-muted text-center py-4">Belum ada koleksi.</p>
+                  <p className="text-sm text-text-muted text-center py-6 font-medium">Belum ada koleksi.</p>
                 ) : (
                   collections.map((col) => {
                     const isMember = memberships.includes(col.id);
@@ -106,53 +142,78 @@ export function MangaCollectionButton({ sourceId, mangaId }: MangaCollectionButt
                         key={col.id}
                         onClick={() => handleToggle(col.id, isMember)}
                         className={cn(
-                          "flex items-center justify-between w-full p-3 rounded-xl transition-all border outline-none",
+                          "flex items-center justify-between w-full p-3.5 rounded-2xl transition-all border outline-none font-semibold text-sm select-none active:scale-[0.99]",
                           isMember
-                            ? "bg-accent/10 border-accent/20 text-accent font-bold"
-                            : "bg-surface-base border-border-strong text-text-primary hover:bg-surface-hover hover:border-border-default font-medium"
+                            ? "bg-accent/15 border-accent/30 text-accent font-bold shadow-xs"
+                            : "bg-surface-base border-border-default/60 text-text-primary hover:bg-surface-hover hover:border-border-strong"
                         )}
                       >
-                        {col.name}
-                        {isMember && <span className="w-2 h-2 rounded-full bg-accent" />}
+                        <span>{col.name}</span>
+                        {isMember && <span className="w-2.5 h-2.5 rounded-full bg-accent shadow-xs" />}
                       </button>
                     );
                   })
                 )}
               </div>
 
-              <div className="mt-4 pt-4 border-t border-border-subtle/50">
+              <div className="mt-2 pt-3 border-t border-border-default/40">
                 <Button 
                   onClick={() => setIsCreateMode(true)} 
                   variant="outline" 
-                  className="w-full rounded-full font-bold border-dashed hover:border-accent hover:text-accent"
+                  className="w-full h-11 rounded-2xl font-bold border-dashed border-border-default/80 hover:border-accent hover:text-accent"
                 >
                   <FolderPlus size={18} className="mr-2" /> Buat Koleksi Baru
                 </Button>
               </div>
             </>
           ) : (
-            <form onSubmit={handleCreate}>
-              <DialogHeader>
-                <DialogTitle>Koleksi Baru</DialogTitle>
-                <DialogDescription>
-                  Manga ini akan langsung ditambahkan ke koleksi baru.
-                </DialogDescription>
+            <form onSubmit={handleCreate} className="flex flex-col gap-5">
+              <DialogHeader className="gap-3">
+                <div
+                  className="flex h-12 w-12 items-center justify-center rounded-2xl border border-accent/30 bg-gradient-to-br from-accent/20 via-accent/10 to-transparent text-accent shadow-xs shrink-0 select-none"
+                  aria-hidden="true"
+                >
+                  <FolderPlus size={22} weight="duotone" />
+                </div>
+                <div>
+                  <DialogTitle>Koleksi Baru</DialogTitle>
+                  <DialogDescription className="mt-1.5">
+                    Komik ini akan langsung ditambahkan ke koleksi baru.
+                  </DialogDescription>
+                </div>
               </DialogHeader>
-              <div className="my-4">
+
+              <div>
+                <label htmlFor="new-collection-input" className="sr-only">
+                  Nama Koleksi
+                </label>
                 <input
+                  id="new-collection-input"
                   type="text"
                   autoFocus
                   value={newCollectionName}
                   onChange={(e) => setNewCollectionName(e.target.value)}
                   placeholder="Nama Koleksi"
-                  className="w-full bg-surface-base border border-border-strong rounded-xl px-4 py-2.5 outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary text-text-primary placeholder:text-text-muted transition-colors"
+                  maxLength={40}
+                  className="w-full bg-surface-base border border-border-default hover:border-border-strong rounded-2xl px-4 py-3 outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 text-text-primary placeholder:text-text-muted transition-all font-medium text-sm"
                 />
               </div>
-              <DialogFooter className="flex-row gap-2 sm:justify-end mt-4">
-                <Button type="button" variant="ghost" onClick={() => setIsCreateMode(false)} className="rounded-full font-bold">
+
+              <DialogFooter className="flex-row gap-2.5 sm:justify-end">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setIsCreateMode(false)}
+                  className="flex-1 sm:flex-none h-11 px-5 rounded-2xl font-bold border border-border-default/40 hover:bg-surface-hover"
+                >
                   Batal
                 </Button>
-                <Button type="submit" variant="accent" disabled={!newCollectionName.trim()} className="rounded-full font-bold">
+                <Button
+                  type="submit"
+                  variant="accent"
+                  disabled={!newCollectionName.trim()}
+                  className="flex-1 sm:flex-none h-11 px-5 rounded-2xl font-bold shadow-xs active:scale-95 transition-all"
+                >
                   Buat & Tambahkan
                 </Button>
               </DialogFooter>

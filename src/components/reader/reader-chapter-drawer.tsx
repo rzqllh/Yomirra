@@ -113,7 +113,7 @@ export function ReaderChapterDrawer({
                     ref={isCurrent ? activeChapterRef : null}
                     onClick={() => {
                       if (!isCurrent) {
-                        router.push(getReaderHref(sourceId, mangaId, chapter.id))
+                        router.replace(getReaderHref(sourceId, mangaId, chapter.id))
                         onClose()
                       }
                     }}

@@ -2,21 +2,16 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname } from "next/navigation"
 import { DOCK_NAV_ITEMS } from "@/shared/config/nav"
 import { cn } from "@/shared/utils/cn"
 import { motion } from "motion/react"
-import { ArrowLeft } from "@phosphor-icons/react"
 import { useSearchFilterStore } from "@/shared/store/search-filter-store"
+import { Icon } from "@/components/ui/icon"
 
 export function BottomDock() {
   const pathname = usePathname()
-  const router = useRouter()
 
-  // Show a floating back button when the current page has no dock item (e.g. /updates)
-  const hasDockItem = DOCK_NAV_ITEMS.some((item) =>
-    item.href === "/" ? pathname === "/" : pathname?.startsWith(item.href)
-  )
   return (
     <nav
       className="md:hidden fixed left-0 right-0 bottom-0 w-full z-[var(--z-sticky)] pointer-events-none"
@@ -27,24 +22,12 @@ export function BottomDock() {
       }}
     >
       <div className="pointer-events-auto flex w-full max-w-md mx-auto items-center justify-center gap-3">
-        {/* Floating back button — shown on pages outside the dock (e.g. /updates) */}
-        {!hasDockItem && (
-          <button
-            onClick={() => router.back()}
-            aria-label="Kembali"
-            className="group relative flex h-[56px] w-[56px] shrink-0 items-center justify-center rounded-full bg-surface-glass backdrop-blur-md shadow-sm border border-border-default/30 transition-all duration-300 outline-none tap-highlight-transparent text-text-secondary hover:text-text-primary"
-          >
-            <ArrowLeft size={22} weight="bold" className="shrink-0 transition-colors duration-300" />
-          </button>
-        )}
         <div className="flex min-w-0 h-[56px] items-center justify-center gap-1 md:gap-3 rounded-full bg-surface-glass backdrop-blur-md px-2 shadow-sm border border-border-default/30 transition-all duration-300 ease-out">
           {DOCK_NAV_ITEMS.filter(item => item.href !== '/settings').map((item) => {
             const isActive =
               item.href === "/"
                 ? pathname === "/"
                 : pathname?.startsWith(item.href)
-
-            const Icon = item.icon
 
             return (
               <Link
@@ -74,12 +57,13 @@ export function BottomDock() {
 
                 <div className="relative z-10 flex items-center justify-center gap-2">
                   <Icon
-                    weight={isActive ? "fill" : "regular"}
+                    icon={item.icon}
+                    size={22}
+                    strokeWidth={isActive ? 2.2 : 1.8}
                     className={cn(
                       "transition-colors duration-300 shrink-0",
                       isActive ? "text-accent" : "text-text-secondary group-hover:text-text-primary"
                     )}
-                    style={{ width: 22, height: 22 }}
                   />
 
                   {isActive && (
@@ -101,7 +85,6 @@ export function BottomDock() {
         {DOCK_NAV_ITEMS.find(i => i.href === '/settings') && (() => {
           const item = DOCK_NAV_ITEMS.find(i => i.href === '/settings')!;
           const isActive = pathname?.startsWith('/settings');
-          const SettingIcon = item.icon;
 
           return (
             <Link
@@ -122,9 +105,10 @@ export function BottomDock() {
                 />
               )}
               <div className="relative z-10 flex items-center justify-center gap-2">
-                <SettingIcon
-                  weight={isActive ? "fill" : "regular"}
-                  style={{ width: 22, height: 22 }}
+                <Icon
+                  icon={item.icon}
+                  size={22}
+                  strokeWidth={isActive ? 2.2 : 1.8}
                   className={cn("shrink-0 transition-colors duration-300", isActive ? "text-accent" : "")}
                 />
                 {isActive && (

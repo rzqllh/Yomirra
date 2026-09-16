@@ -1,6 +1,10 @@
+export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { verifyImageUrl } from "@/server/lib/sign-proxy-url";
 import { logger } from "@/shared/logger";
+import { safeFetch } from "@/server/lib/security/outbound-policy";
+
+const MAX_IMAGE_SIZE = 15 * 1024 * 1024; // 15MB
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
@@ -28,13 +32,22 @@ export async function GET(request: NextRequest) {
       headers.Origin = new URL(referer).origin;
     }
 
-    const response = await fetch(url, { headers });
+    const response = await safeFetch(url, { 
+      headers,
+      maxSize: MAX_IMAGE_SIZE,
+      // Abort if the fetch takes too long (e.g. 15s)
+      signal: AbortSignal.timeout(15000)
+    });
 
     if (!response.ok) {
       return new NextResponse("Failed to fetch image", { status: response.status });
     }
 
     const contentType = response.headers.get("content-type");
+    if (contentType && !contentType.startsWith("image/")) {
+      logger.warn(`Invalid content type for image proxy: ${contentType}`);
+      return new NextResponse("Invalid content type", { status: 400 });
+    }
 
     const responseHeaders = new Headers();
     if (contentType) responseHeaders.set("Content-Type", contentType);
@@ -50,3 +63,4 @@ export async function GET(request: NextRequest) {
     return new NextResponse("Internal Server Error", { status: 500 });
   }
 }
+

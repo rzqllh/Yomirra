@@ -7,16 +7,16 @@ import { useStatsStore } from "@/shared/store/stats-store";
 import { useUpdateStore } from "@/shared/store/update-store";
 import { useCollectionStore } from "@/shared/store/collection-store";
 import type { MangaUpdateItem } from "@/shared/types/update";
-import type { Collection, MangaKey, ReadingStatus } from "@/shared/types/collection";
+import type { Collection, ReadingStatus } from "@/shared/types/collection";
 import {
   yomirraBackupSchemaV1,
   yomirraBackupSchemaV2,
-  type YomirraBackupV1,
-  type YomirraBackupV2,
+  yomirraBackupSchemaV3,
+  type YomirraBackupV3,
   type AnyYomirraBackup,
   type DryRunPreview,
   type ImportMode,
-  type LibraryItemBackup,
+  type LibraryItemV2Backup,
   type HistoryItemBackup,
   type UpdateItemBackup,
   type CollectionBackup,
@@ -47,7 +47,7 @@ export function getCurrentStoresProjection(): CurrentStoresProjection {
   };
 }
 
-export function createBackupPayload(theme: "light" | "dark" | "system" = "system"): YomirraBackupV2 {
+export function createBackupPayload(theme: "light" | "dark" | "system" = "system"): YomirraBackupV3 {
   const libraryState = useLibraryStore.getState();
   const historyState = useHistoryStore.getState();
   const settingsState = useSettingsStore.getState();
@@ -58,11 +58,19 @@ export function createBackupPayload(theme: "light" | "dark" | "system" = "system
   const collectionState = useCollectionStore.getState();
 
   // Whitelist & filter out NSFW items
-  const libraryList: LibraryItemBackup[] = Object.values(libraryState.items || {})
+  const libraryList: LibraryItemV2Backup[] = Object.values(libraryState.items || {})
     .filter((item) => !item.isNsfw)
     .map((item) => ({
+      // Legacy identity fields (frozen)
       sourceId: item.sourceId,
       mangaId: item.mangaId,
+      // Phase 1 identity fields
+      id: item.id ?? `${item.sourceId}::${item.mangaId}`,
+      schemaVersion: 2 as const,
+      primarySourceId: item.primarySourceId ?? item.sourceId,
+      primaryMangaId: item.primaryMangaId ?? item.mangaId,
+      linkedSources: item.linkedSources ?? [],
+      // Common fields
       title: item.title,
       coverUrl: item.coverUrl,
       author: item.author,
@@ -113,7 +121,7 @@ export function createBackupPayload(theme: "light" | "dark" | "system" = "system
   }));
 
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     appVersion: "1.0.0",
     exportedAt: new Date().toISOString(),
     data: {
@@ -215,7 +223,7 @@ export function performDryRun(
 
   // 3. Schema version check
   const schemaVersion = rawParsed.schemaVersion;
-  if (typeof schemaVersion === "number" && schemaVersion > 2) {
+  if (typeof schemaVersion === "number" && schemaVersion > 3) {
     preview.isVersionSupported = false;
     preview.warnings.push(`Versi schema backup (${schemaVersion}) lebih baru dan tidak didukung`);
     preview.errors.push({ path: "schemaVersion", message: "unsupported_future_schema" });
@@ -223,9 +231,12 @@ export function performDryRun(
   }
 
   // 4. Zod envelope validation
-  const validationResult = schemaVersion === 2 
-    ? yomirraBackupSchemaV2.safeParse(rawParsed) 
-    : yomirraBackupSchemaV1.safeParse(rawParsed);
+  const validationResult =
+    schemaVersion === 3
+      ? yomirraBackupSchemaV3.safeParse(rawParsed)
+      : schemaVersion === 2
+        ? yomirraBackupSchemaV2.safeParse(rawParsed)
+        : yomirraBackupSchemaV1.safeParse(rawParsed);
   if (!validationResult.success) {
     validationResult.error.issues.forEach((issue) => {
       preview.errors.push({
@@ -285,7 +296,7 @@ export function performDryRun(
 
   // 6. Domain conflict metrics against current store projection
   // Library domain conflict metrics
-  const uniqueLibItems = new Map<string, LibraryItemBackup>();
+  const uniqueLibItems = new Map<string, LibraryItemV2Backup>();
   backupData.data.library.forEach((item) => {
     if (!item.isNsfw) {
       uniqueLibItems.set(getLibraryId(item.sourceId, item.mangaId), item);
@@ -468,13 +479,15 @@ export function executeCoordinatedRestore(
     let targetReadingStatus: Record<string, ReadingStatus> = {};
     
     if (backup.schemaVersion >= 2) {
-      const v2Backup = backup as YomirraBackupV2;
+      // Works for both V2 and V3 backups — both have .data.collections
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const v2PlusBackup = backup as any;
       if (mode === "replace") {
-        targetCollections = (v2Backup.data.collections || []).map(c => ({
+        targetCollections = (v2PlusBackup.data.collections || []).map((c: { sortOrder?: number }) => ({
           ...c, sortOrder: c.sortOrder ?? 0
         }));
-        targetMemberships = v2Backup.data.membershipsByManga || {};
-        targetReadingStatus = v2Backup.data.readingStatusByManga || {};
+        targetMemberships = v2PlusBackup.data.membershipsByManga || {};
+        targetReadingStatus = v2PlusBackup.data.readingStatusByManga || {};
       } else {
         // Merge collections
         const currentCollections = snapCol.collections || [];
@@ -482,22 +495,22 @@ export function executeCoordinatedRestore(
         const currentReadingStatus = snapCol.readingStatusByManga || {};
         
         targetCollections = [...currentCollections];
-        const existingColIds = new Set(targetCollections.map(c => c.id));
+        const existingColIds = new Set(targetCollections.map((c: Collection) => c.id));
         
-        (v2Backup.data.collections || []).forEach(c => {
+        (v2PlusBackup.data.collections || []).forEach((c: Collection) => {
           if (!existingColIds.has(c.id)) {
             targetCollections.push({ ...c, sortOrder: c.sortOrder ?? 0 });
           }
         });
         
         targetMemberships = { ...currentMemberships };
-        Object.entries(v2Backup.data.membershipsByManga || {}).forEach(([mangaId, colIds]) => {
+        Object.entries(v2PlusBackup.data.membershipsByManga || {}).forEach(([mangaId, colIds]) => {
           const current = targetMemberships[mangaId] || [];
-          targetMemberships[mangaId] = Array.from(new Set([...current, ...colIds]));
+          targetMemberships[mangaId] = Array.from(new Set([...current, ...(colIds as string[])]));
         });
         
         targetReadingStatus = { ...currentReadingStatus };
-        Object.entries(v2Backup.data.readingStatusByManga || {}).forEach(([mangaId, status]) => {
+        Object.entries(v2PlusBackup.data.readingStatusByManga || {}).forEach(([mangaId, status]) => {
           if (!targetReadingStatus[mangaId]) {
             targetReadingStatus[mangaId] = status as ReadingStatus;
           }

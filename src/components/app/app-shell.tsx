@@ -50,7 +50,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       document.removeEventListener("touchmove", handleTouchMove);
       document.removeEventListener("gesturestart", handleGestureStart);
     }
-  }, [isReader])
+  }, [isReader]);
+
+  // Reset scroll to top on route navigation (prevents preserving feed scroll on new pages)
+  React.useEffect(() => {
+    if (!isReader) {
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    }
+  }, [pathname, isReader]);
 
   return (
     <div className="flex min-h-dvh bg-background text-text-primary w-full max-w-full">

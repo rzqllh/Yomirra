@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { getDownloadChapterId, getOfflineImageUrl } from "../utils/download-helpers";
+import { getDownloadChapterId } from "../utils/download-helpers";
 
 export type DownloadStatus = 'queued' | 'downloading' | 'paused' | 'downloaded' | 'failed';
 export type DownloadPageStatus = 'pending' | 'downloading' | 'cached' | 'failed';

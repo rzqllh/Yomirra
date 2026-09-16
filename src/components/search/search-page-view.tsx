@@ -19,7 +19,7 @@ export function SearchPageView() {
           <PageHeader
             title="Pencarian"
             description="Temukan komik dari berbagai sumber"
-            icon={<MagnifyingGlass size={32} weight="duotone" />}
+            icon={<MagnifyingGlass size={24} weight="duotone" />}
           />
         </div>
 

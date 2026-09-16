@@ -3,18 +3,25 @@ import { persist } from "zustand/middleware";
 import type { MangaUpdateItem } from "@/shared/types/update";
 import { useSettingsStore } from "@/shared/store/settings-store";
 
+/** @deprecated Use savedTitleId directly. Only valid for legacy pre-Phase-1 titles. */
 export const getUpdateKey = (sourceId: string, mangaId: string) => `${sourceId}::${mangaId}`;
 
 export interface UpdateState {
   items: Record<string, MangaUpdateItem>;
 
-  upsertUpdate: (update: MangaUpdateItem) => void;
+  upsertUpdate: (update: MangaUpdateItem & { savedTitleId?: string }) => void;
+  /** @deprecated Pass savedTitleId directly via markAsSeenById */
   markAsSeen: (sourceId: string, mangaId: string) => void;
+  markAsSeenById: (savedTitleId: string) => void;
   markAllAsSeen: () => void;
+  /** @deprecated Pass savedTitleId directly via removeUpdateById */
   removeUpdate: (sourceId: string, mangaId: string) => void;
+  removeUpdateById: (savedTitleId: string) => void;
   clearUpdates: () => void;
   getUnreadCount: () => number;
+  /** @deprecated Use getUpdateById */
   getUpdate: (sourceId: string, mangaId: string) => MangaUpdateItem | undefined;
+  getUpdateById: (savedTitleId: string) => MangaUpdateItem | undefined;
 }
 
 export const useUpdateStore = create<UpdateState>()(
@@ -23,7 +30,8 @@ export const useUpdateStore = create<UpdateState>()(
       items: {},
 
       upsertUpdate: (update) => set((state) => {
-        const key = getUpdateKey(update.sourceId, update.mangaId);
+        // Use savedTitleId if provided (Phase 1 UUID titles), else fall back to composite key
+        const key = update.savedTitleId ?? getUpdateKey(update.sourceId, update.mangaId);
         const existing = state.items[key];
         const nowIso = new Date().toISOString();
 
@@ -69,19 +77,16 @@ export const useUpdateStore = create<UpdateState>()(
         };
       }),
 
-      markAsSeen: (sourceId, mangaId) => set((state) => {
+      markAsSeen: (sourceId, mangaId) => {
         const key = getUpdateKey(sourceId, mangaId);
-        const existing = state.items[key];
-        if (!existing) return state;
+        useUpdateStore.getState().markAsSeenById(key);
+      },
 
+      markAsSeenById: (savedTitleId) => set((state) => {
+        const existing = state.items[savedTitleId];
+        if (!existing) return state;
         return {
-          items: {
-            ...state.items,
-            [key]: {
-              ...existing,
-              seenAt: new Date().toISOString(),
-            },
-          },
+          items: { ...state.items, [savedTitleId]: { ...existing, seenAt: new Date().toISOString() } },
         };
       }),
 
@@ -99,13 +104,14 @@ export const useUpdateStore = create<UpdateState>()(
         return { items: updatedItems };
       }),
 
-      removeUpdate: (sourceId, mangaId) => set((state) => {
-        const key = getUpdateKey(sourceId, mangaId);
-        if (!state.items[key]) return state;
+      removeUpdate: (sourceId, mangaId) => {
+        useUpdateStore.getState().removeUpdateById(getUpdateKey(sourceId, mangaId));
+      },
 
+      removeUpdateById: (savedTitleId) => set((state) => {
+        if (!state.items[savedTitleId]) return state;
         const newItems = { ...state.items };
-        delete newItems[key];
-
+        delete newItems[savedTitleId];
         return { items: newItems };
       }),
 
@@ -127,8 +133,11 @@ export const useUpdateStore = create<UpdateState>()(
       },
 
       getUpdate: (sourceId, mangaId) => {
-        const key = getUpdateKey(sourceId, mangaId);
-        return get().items[key];
+        return get().items[getUpdateKey(sourceId, mangaId)];
+      },
+
+      getUpdateById: (savedTitleId) => {
+        return get().items[savedTitleId];
       },
     }),
     {

@@ -45,9 +45,9 @@ describe("Backup & Restore Engine v1", () => {
     useStatsStore.setState({ totalReadingTimeMs: 0 });
   });
 
-  it("1. rejects unsupported future schema (schemaVersion > 2)", () => {
+  it("1. rejects unsupported future schema (schemaVersion > 3)", () => {
     const futurePayload = {
-      schemaVersion: 3,
+      schemaVersion: 4, // V3 is now supported; V4+ is not
       appVersion: "2.0.0",
       exportedAt: new Date().toISOString(),
       data: {},

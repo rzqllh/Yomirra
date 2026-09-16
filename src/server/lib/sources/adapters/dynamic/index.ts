@@ -1,6 +1,8 @@
 import { MangaSource, MangaPageResult, MangaDetail, Chapter, ChapterPages, FilterList, SourceMetadata } from "@/shared/sources/source-types";
 import { MihonSourceManifest } from "@/shared/sources/dynamic-source-registry";
 
+import { safeFetch } from "../../../security/outbound-policy";
+
 export class DynamicSourceAdapter implements MangaSource {
   public readonly id: string;
   public readonly name: string;
@@ -14,6 +16,7 @@ export class DynamicSourceAdapter implements MangaSource {
   public readonly capabilities: SourceMetadata["capabilities"];
   public readonly isNsfw: boolean;
   public readonly manifestUrl?: string;
+  public readonly isDynamic: boolean = true;
 
   private manifest: MihonSourceManifest;
 
@@ -25,7 +28,7 @@ export class DynamicSourceAdapter implements MangaSource {
     this.baseUrl = manifest.baseUrl;
     this.icon = manifest.icon;
     this.version = manifest.version;
-    this.isNsfw = manifest.nsfw;
+    this.isNsfw = manifest.nsfw === true;
     this.manifestUrl = manifest.manifestUrl;
     this.capabilities = {
       popular: manifest.capabilities.includes("popular"),
@@ -49,7 +52,7 @@ export class DynamicSourceAdapter implements MangaSource {
     
     const fullUrl = url.startsWith("http") ? url : `${this.manifest.baseUrl}${url.startsWith("/") ? "" : "/"}${url}`;
     
-    const res = await fetch(fullUrl);
+    const res = await safeFetch(fullUrl);
     if (!res.ok) {
       throw new Error(`Custom source API error: ${res.status}`);
     }
@@ -70,14 +73,14 @@ export class DynamicSourceAdapter implements MangaSource {
 
   async search(query: string, page: number, filters?: Record<string, string | string[]>): Promise<MangaPageResult> {
     if (!this.capabilities.search) throw new Error("Not supported");
-    // We only pass {q} and {page} for now to the simple replacement logic. 
+    // We only pass {q} and {page} for now to the simple replacement logic.
     // If the API requires filter params, they need to be appended.
     let url = this.manifest.endpoints?.search;
     if (!url) throw new Error("Not supported");
-    
+
     // Replace standard params
     url = url.replace("{q}", encodeURIComponent(query)).replace("{page}", String(page));
-    
+
     // Append extra filters
     if (filters && Object.keys(filters).length > 0) {
       const sp = new URLSearchParams();
@@ -90,9 +93,9 @@ export class DynamicSourceAdapter implements MangaSource {
       }
       url += (url.includes("?") ? "&" : "?") + sp.toString();
     }
-    
+
     const fullUrl = url.startsWith("http") ? url : `${this.manifest.baseUrl}${url.startsWith("/") ? "" : "/"}${url}`;
-    const res = await fetch(fullUrl);
+    const res = await safeFetch(fullUrl);
     if (!res.ok) throw new Error(`Search failed: ${res.status}`);
     return await res.json();
   }
