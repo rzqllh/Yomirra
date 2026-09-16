@@ -5,6 +5,7 @@ import { Bell, BellSlash, ShareNetwork } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useLibraryStore } from "@/shared/store/library-store";
+import { useMounted } from "@/shared/hooks/use-mounted";
 import { cn } from "@/shared/utils/cn";
 
 interface MangaHeaderActionsProps {
@@ -20,22 +21,18 @@ export function MangaHeaderActions({
   title,
   manifestUrl,
 }: MangaHeaderActionsProps) {
-  const [isMounted, setIsMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    const t = setTimeout(() => setIsMounted(true), 0);
-    return () => clearTimeout(t);
-  }, []);
+  const isMounted = useMounted();
 
   const mangaKey = `${sourceId}::${mangaId}`;
   const mutedMangaKeys = useSettingsStore((state) => state.mutedMangaKeys);
   const muteManga = useSettingsStore((state) => state.muteManga);
   const unmuteManga = useSettingsStore((state) => state.unmuteManga);
-  const isInLibrary = useLibraryStore((state) => state.isInLibrary(sourceId, mangaId));
-  const isMuted = isMounted ? mutedMangaKeys.includes(mangaKey) : false;
+  const rawIsInLibrary = useLibraryStore((state) => state.isInLibrary(sourceId, mangaId));
+  const isInLibrary = isMounted && rawIsInLibrary;
+  const isMuted = isMounted && mutedMangaKeys.includes(mangaKey);
 
   const handleToggleMute = () => {
-    if (!isInLibrary) {
+    if (!rawIsInLibrary) {
       toast.info("Simpan komik ini terlebih dahulu untuk mengaktifkan notifikasi pembaruan");
       return;
     }
