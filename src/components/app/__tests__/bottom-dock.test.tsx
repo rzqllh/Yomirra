@@ -26,17 +26,18 @@ describe('BottomDock Navigation', () => {
     expect(updatesLink).toBeNull();
   });
 
-  it('contains Beranda, Library, Cari, and Pengaturan links (Phase 2 nav contract)', () => {
+  it('contains Beranda, Jelajah, Rak Buku, Cari, and Pengaturan links', () => {
     render(<BottomDock />);
     expect(screen.getByRole('link', { name: /beranda/i })).toBeTruthy();
-    expect(screen.getByRole('link', { name: /library/i })).toBeTruthy();
+    expect(screen.getByRole('link', { name: /jelajah/i })).toBeTruthy();
+    expect(screen.getByRole('link', { name: /rak buku/i })).toBeTruthy();
     expect(screen.getByRole('link', { name: /cari/i })).toBeTruthy();
     expect(screen.getByRole('link', { name: /pengaturan/i })).toBeTruthy();
   });
 
-  it('does NOT contain a Bookmark link (removed in Phase 2)', () => {
+  it('contains a Rak Buku bookmark link', () => {
     render(<BottomDock />);
-    const bookmarkLink = screen.queryByRole('link', { name: /bookmark/i });
-    expect(bookmarkLink).toBeNull();
+    const bookmarkLink = screen.getByRole('link', { name: /rak buku/i });
+    expect(bookmarkLink).toBeTruthy();
   });
 });

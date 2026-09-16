@@ -1,6 +1,13 @@
-import { redirect } from "next/navigation";
+"use client";
+
+import * as React from "react";
+import { BookmarkPageView } from "@/components/bookmark/bookmark-page-view";
 
 export default function BookmarkPage() {
-  redirect("/library?tab=riwayat");
-  return null;
+  return (
+    <React.Suspense fallback={null}>
+      <BookmarkPageView />
+    </React.Suspense>
+  );
 }
+

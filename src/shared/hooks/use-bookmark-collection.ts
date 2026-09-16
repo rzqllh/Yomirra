@@ -7,6 +7,7 @@ import { useNsfwSourceIds } from "@/shared/hooks/use-nsfw-source-ids";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { useMounted } from "@/shared/hooks/use-mounted";
+import { useCollectionStore } from "@/shared/store/collection-store";
 import { toast } from "sonner";
 
 const ITEMS_PER_PAGE = 24;
@@ -19,7 +20,9 @@ export function useBookmarkCollection() {
   const hideNsfw = useSettingsStore((state) => state.hideNsfw);
   const { status: nsfwStatus, ids: nsfwSourceIds } = useNsfwSourceIds();
   const { isSourceDisabled } = useSourcePreferencesStore();
+  const { collections, membershipsByManga, createCollection, renameCollection, deleteCollection } = useCollectionStore();
 
+  const [selectedCollectionId, setSelectedCollectionId] = React.useState<string | null>(null);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [sortBy, setSortBy] = React.useState<"updatedAt" | "title">("updatedAt");
   const [isSelectionMode, setIsSelectionMode] = React.useState(false);
@@ -54,6 +57,15 @@ export function useBookmarkCollection() {
       }
     }
 
+    if (selectedCollectionId) {
+      result = result.filter((item) => {
+        const key = item.id ?? `${item.sourceId}::${item.mangaId}`;
+        const legacyKey = `${item.sourceId}::${item.mangaId}`;
+        const memberships = membershipsByManga[key] || membershipsByManga[legacyKey] || [];
+        return memberships.includes(selectedCollectionId);
+      });
+    }
+
     if (searchQuery.trim() !== "") {
       const q = searchQuery.toLowerCase();
       result = result.filter((item) => item.title.toLowerCase().includes(q));
@@ -67,12 +79,12 @@ export function useBookmarkCollection() {
     });
 
     return result;
-  }, [isMounted, libraryItems, searchQuery, sortBy, hideNsfw, nsfwStatus, isFromNsfwSource, isSourceDisabled]);
+  }, [isMounted, libraryItems, selectedCollectionId, membershipsByManga, searchQuery, sortBy, hideNsfw, nsfwStatus, isFromNsfwSource, isSourceDisabled]);
 
-  // Reset pagination when search or sort changes
+  // Reset pagination when search, sort, or collection filter changes
   React.useEffect(() => {
     setCollectionPage(1);
-  }, [searchQuery, sortBy]);
+  }, [searchQuery, sortBy, selectedCollectionId]);
 
   const totalPages = Math.max(1, Math.ceil(filteredAndSortedLibraryItems.length / ITEMS_PER_PAGE));
   const paginatedCollection = React.useMemo(() => {
@@ -136,5 +148,13 @@ export function useBookmarkCollection() {
     toggleSelectItem,
     handleSelectAll,
     handleConfirmBulkDelete,
+    // Custom Collection Rail Integration
+    collections,
+    membershipsByManga,
+    selectedCollectionId,
+    setSelectedCollectionId,
+    createCollection,
+    renameCollection,
+    deleteCollection,
   };
 }

@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
 export default function UpdatesPage() {
-  redirect("/library?tab=updates");
+  redirect("/bookmark?tab=updates");
   return null;
 }
