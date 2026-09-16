@@ -9,7 +9,7 @@ The project favors small, reversible, independently verifiable changes. A pull r
 1. Search existing issues and pull requests.
 2. Open an issue for broad behavior changes, new architecture, or a new public contract.
 3. Read the relevant public docs:
-   - [README](README.md)
+   - [Developer Guide](README-DEV.md)
    - [Architecture](docs/ARCHITECTURE.md)
    - [Components](docs/COMPONENTS.md) for UI work
    - [Testing](docs/TESTING.md) for verification expectations
