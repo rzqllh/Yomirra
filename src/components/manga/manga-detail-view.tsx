@@ -150,7 +150,7 @@ export function MangaDetailView({
     <div className="w-full flex flex-col gap-2 mt-1">
       {showContinue && continueChapterId ? (
         <>
-          <Button asChild variant="accent" className="w-full rounded-2xl h-[52px] text-base font-bold shadow-md shadow-accent/20 active:scale-[0.98] transition-all">
+          <Button asChild variant="accent" className="w-full rounded-2xl h-[52px] text-base font-bold active:scale-[0.98] transition-all">
             <Link href={getReaderHref(sourceId, mangaId, continueChapterId)} aria-label={`Lanjutkan membaca ${continueChapterLabel}`}>
               <Play className="h-5 w-5 mr-1.5" fill="currentColor" weight="fill" />
               Lanjutkan {continueChapterLabel}
@@ -167,7 +167,7 @@ export function MangaDetailView({
           </div>
         </>
       ) : startChapterId ? (
-        <Button asChild variant="accent" className="w-full rounded-2xl h-[52px] text-base font-bold shadow-md shadow-accent/20 active:scale-[0.98] transition-all">
+        <Button asChild variant="accent" className="w-full rounded-2xl h-[52px] text-base font-bold active:scale-[0.98] transition-all">
           <Link href={getReaderHref(sourceId, mangaId, startChapterId)} aria-label="Mulai membaca manga">
             <Play className="h-5 w-5 mr-1.5" fill="currentColor" weight="fill" />
             Mulai Baca
