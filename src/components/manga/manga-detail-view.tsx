@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useDeferredValue } from "react";
+import { useState, useMemo, useDeferredValue, useEffect } from "react";
 import { Play, SortAscending, SortDescending, Book, ShareNetwork, CaretLeft } from "@phosphor-icons/react";
 import Image from "next/image";
 import Link from "next/link";
@@ -100,6 +100,14 @@ export function MangaDetailView({
     estimateSize: () => CHAPTER_ITEM_ESTIMATED_SIZE,
     overscan: 20,
   });
+
+  // Always reset scroll to the top when viewing manga details
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    if (parentRef.current) {
+      parentRef.current.scrollTop = 0;
+    }
+  }, [sourceId, mangaId]);
 
   const coverUrl = detail.coverUrl;
   const firstChapter = chapters?.[chapters.length - 1];
