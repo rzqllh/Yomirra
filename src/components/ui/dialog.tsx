@@ -16,7 +16,10 @@ const DialogOverlay = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Overlay
     ref={ref}
-    className={cn( "fixed inset-0 z-[var(--z-overlay)] bg-black/60 backdrop-blur-sm data-[state=open]:motion-safe:animate-in data-[state=closed]:motion-safe:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0", className )}
+    className={cn(
+      "fixed inset-0 z-[var(--z-overlay)] bg-black/60 backdrop-blur-md data-[state=open]:motion-safe:animate-in data-[state=closed]:motion-safe:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      className
+    )}
     {...props}
   />
 ))
@@ -31,15 +34,15 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-1/2 top-1/2 z-[var(--z-overlay)] grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4 border border-border-default bg-surface-overlay p-6 shadow-lg duration-[var(--motion-base)] data-[state=open]:motion-safe:animate-in data-[state=closed]:motion-safe:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] sm:rounded-lg",
+        "fixed left-1/2 top-1/2 z-[var(--z-overlay)] grid w-[calc(100vw-32px)] max-w-sm sm:max-w-md -translate-x-1/2 -translate-y-1/2 gap-5 rounded-[28px] border border-border-glass bg-surface-overlay/95 p-6 backdrop-blur-2xl shadow-glass duration-[var(--motion-base)] focus:outline-none max-h-[85vh] overflow-y-auto data-[state=open]:motion-safe:animate-in data-[state=closed]:motion-safe:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]",
         className
       )}
       {...props}
     >
       {children}
-      <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-border-strong disabled:pointer-events-none data-[state=open]:bg-surface-hover data-[state=open]:text-text-muted">
+      <DialogPrimitive.Close className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-xl bg-surface-glass border border-border-default/40 text-text-muted hover:text-text-primary hover:bg-surface-hover active:scale-95 transition-all outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:pointer-events-none">
         <X size={16} weight="bold" />
-        <span className="sr-only">Close</span>
+        <span className="sr-only">Tutup</span>
       </DialogPrimitive.Close>
     </DialogPrimitive.Content>
   </DialogPortal>
@@ -52,7 +55,7 @@ const DialogHeader = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "flex flex-col space-y-1.5 text-center sm:text-left",
+      "flex flex-col space-y-1.5 text-left",
       className
     )}
     {...props}
@@ -66,7 +69,7 @@ const DialogFooter = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
+      "flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5 pt-2",
       className
     )}
     {...props}
@@ -81,7 +84,7 @@ const DialogTitle = React.forwardRef<
   <DialogPrimitive.Title
     ref={ref}
     className={cn(
-      "text-lg font-semibold leading-none tracking-tight text-text-primary",
+      "text-lg sm:text-xl font-black tracking-tight text-text-primary",
       className
     )}
     {...props}
@@ -95,7 +98,7 @@ const DialogDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
     ref={ref}
-    className={cn("text-sm text-text-secondary", className)}
+    className={cn("text-[13px] sm:text-sm leading-relaxed text-text-secondary", className)}
     {...props}
   />
 ))

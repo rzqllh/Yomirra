@@ -99,16 +99,18 @@ export function BackupRestoreModal({ isOpen, onOpenChange }: BackupRestoreModalP
       <DialogContent className="max-w-md w-[calc(100vw-32px)] rounded-[28px] p-0 bg-surface-overlay/95 backdrop-blur-2xl border border-border-glass shadow-glass overflow-hidden flex flex-col gap-0">
         
         {/* Header Section */}
-        <div className="px-6 pt-6 pb-5 bg-surface-base/50 border-b border-border-subtle/40">
-          <DialogTitle className="text-xl font-bold text-text-primary flex items-center gap-2.5">
-            <div className="size-8 rounded-full bg-accent/15 flex items-center justify-center">
-              <FileText size={18} weight="fill" className="text-accent" />
-            </div>
-            Backup & Restore
-          </DialogTitle>
-          <DialogDescription className="text-[13px] leading-relaxed text-text-secondary mt-2.5">
-            Simpan koleksi lokal Anda ke JSON atau pulihkan data dari file backup resmi Yomirra (v1).
-          </DialogDescription>
+        <div className="px-6 pt-6 pb-4 border-b border-border-glass/40 flex items-start gap-3.5">
+          <div className="flex size-11 items-center justify-center rounded-2xl bg-accent/12 text-accent border border-accent/20 shrink-0">
+            <FileText size={22} weight="duotone" />
+          </div>
+          <div className="min-w-0 flex-1 pr-6">
+            <DialogTitle className="text-lg font-black tracking-tight text-text-primary">
+              Backup & Restore
+            </DialogTitle>
+            <DialogDescription className="text-xs leading-relaxed text-text-secondary mt-1">
+              Simpan data lokal ke file JSON atau pulihkan data dari backup resmi Yomirra (v1).
+            </DialogDescription>
+          </div>
         </div>
 
         <div className="p-6 relative bg-surface-base/20">
@@ -119,32 +121,32 @@ export function BackupRestoreModal({ isOpen, onOpenChange }: BackupRestoreModalP
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10, filter: "blur(4px)" }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
                 className="flex flex-col gap-3"
               >
                 <button
                   onClick={handleExport}
-                  className="group relative w-full flex items-center gap-4 p-4 rounded-2xl bg-surface-raised border border-border-subtle hover:border-accent/40 hover:bg-accent/5 transition-all text-left overflow-hidden outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-accent"
+                  className="group relative w-full flex items-center gap-3.5 p-4 rounded-2xl bg-surface-raised border border-border-subtle hover:border-accent/40 hover:bg-accent/5 transition-all text-left overflow-hidden outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-accent"
                 >
-                  <div className="shrink-0 flex items-center justify-center size-12 rounded-full bg-accent/10 text-accent group-hover:scale-110 transition-transform duration-300">
-                    <DownloadSimple size={24} weight="duotone" />
+                  <div className="shrink-0 flex items-center justify-center size-11 rounded-2xl bg-accent/10 text-accent group-hover:scale-105 transition-transform duration-200">
+                    <DownloadSimple size={22} weight="duotone" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-[15px] font-bold text-text-primary truncate">Export Data JSON</h3>
-                    <p className="text-[13px] text-text-muted mt-0.5 truncate">Download backup data lokal</p>
+                    <h3 className="text-sm font-bold text-text-primary truncate">Export Data JSON</h3>
+                    <p className="text-xs text-text-muted mt-0.5 truncate">Download backup data lokal</p>
                   </div>
                 </button>
 
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="group relative w-full flex items-center gap-4 p-4 rounded-2xl bg-surface-raised border border-border-subtle hover:border-accent/40 hover:bg-accent/5 transition-all text-left overflow-hidden outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-accent"
+                  className="group relative w-full flex items-center gap-3.5 p-4 rounded-2xl bg-surface-raised border border-border-subtle hover:border-accent/40 hover:bg-accent/5 transition-all text-left overflow-hidden outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-accent"
                 >
-                  <div className="shrink-0 flex items-center justify-center size-12 rounded-full bg-brand-primary/10 text-brand-primary group-hover:scale-110 transition-transform duration-300">
-                    <UploadSimple size={24} weight="duotone" />
+                  <div className="shrink-0 flex items-center justify-center size-11 rounded-2xl bg-brand-primary/10 text-brand-primary group-hover:scale-105 transition-transform duration-200">
+                    <UploadSimple size={22} weight="duotone" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-[15px] font-bold text-text-primary truncate">Import File Backup</h3>
-                    <p className="text-[13px] text-text-muted mt-0.5 truncate">Pulihkan data dari file JSON</p>
+                    <h3 className="text-sm font-bold text-text-primary truncate">Import File Backup</h3>
+                    <p className="text-xs text-text-muted mt-0.5 truncate">Pulihkan data dari file JSON</p>
                   </div>
                 </button>
 
@@ -160,7 +162,7 @@ export function BackupRestoreModal({ isOpen, onOpenChange }: BackupRestoreModalP
                   type="button"
                   variant="ghost"
                   onClick={() => onOpenChange(false)}
-                  className="w-full rounded-xl font-bold h-12 mt-2 text-text-secondary hover:text-text-primary"
+                  className="w-full rounded-2xl font-bold h-11 mt-1 text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
                 >
                   Tutup
                 </Button>

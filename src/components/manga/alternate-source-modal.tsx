@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { X, Warning, MagnifyingGlass, ArrowRight, CheckCircle } from "@phosphor-icons/react";
-import { motion, AnimatePresence } from "motion/react";
+import { Warning, MagnifyingGlass, ArrowRight, CheckCircle, ArrowsClockwise } from "@phosphor-icons/react";
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import type { MatchConfidence } from "@/shared/lib/title-matcher";
 import type { ChapterMapResult } from "@/shared/lib/chapter-parser";
+import { cn } from "@/shared/utils/cn";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -43,16 +44,16 @@ const confidenceConfig: Record<
   MatchConfidence,
   { label: string; className: string }
 > = {
-  CONFIRMED: { label: "Terkonfirmasi", className: "text-green-400 bg-green-400/10" },
-  HIGH_CONFIDENCE: { label: "Sangat Cocok", className: "text-blue-400 bg-blue-400/10" },
-  AMBIGUOUS: { label: "Mungkin Cocok", className: "text-yellow-400 bg-yellow-400/10" },
-  NO_MATCH: { label: "Tidak Cocok", className: "text-text-muted bg-surface-raised" },
+  CONFIRMED: { label: "Terkonfirmasi", className: "text-semantic-success bg-semantic-success/10 border-semantic-success/20" },
+  HIGH_CONFIDENCE: { label: "Sangat Cocok", className: "text-accent bg-accent/10 border-accent/20" },
+  AMBIGUOUS: { label: "Mungkin Cocok", className: "text-semantic-warning bg-semantic-warning/10 border-semantic-warning/20" },
+  NO_MATCH: { label: "Tidak Cocok", className: "text-text-muted bg-surface-raised border-border-subtle" },
 };
 
 function ConfidenceBadge({ confidence }: { confidence: MatchConfidence }) {
   const cfg = confidenceConfig[confidence];
   return (
-    <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${cfg.className}`}>
+    <span className={cn("text-[11px] font-bold px-2 py-0.5 rounded-lg border", cfg.className)}>
       {cfg.label}
     </span>
   );
@@ -65,16 +66,16 @@ function ConfidenceBadge({ confidence }: { confidence: MatchConfidence }) {
 function ChapterMapBanner({ result }: { result: ChapterMapResult }) {
   if (result.type === "EXACT") {
     return (
-      <div className="flex items-center gap-2 p-3 rounded-lg bg-green-400/10 border border-green-400/20 text-green-400 text-sm">
-        <CheckCircle size={16} weight="fill" />
+      <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-semantic-success/10 border border-semantic-success/20 text-semantic-success text-xs font-medium">
+        <CheckCircle size={18} weight="fill" className="shrink-0" />
         <span>Progres chapter terpetakan secara tepat ke Chapter {result.chapterNumber}.</span>
       </div>
     );
   }
   if (result.type === "PROBABLE") {
     return (
-      <div className="flex items-center gap-2 p-3 rounded-lg bg-yellow-400/10 border border-yellow-400/20 text-yellow-400 text-sm">
-        <Warning size={16} weight="fill" />
+      <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-semantic-warning/10 border border-semantic-warning/20 text-semantic-warning text-xs font-medium">
+        <Warning size={18} weight="fill" className="shrink-0" />
         <span>
           Progres dipetakan ke Chapter {result.chapterNumber} (selisih {result.delta > 0 ? "+" : ""}{result.delta} chapter). Konfirmasi diperlukan.
         </span>
@@ -83,16 +84,16 @@ function ChapterMapBanner({ result }: { result: ChapterMapResult }) {
   }
   if (result.type === "AMBIGUOUS") {
     return (
-      <div className="flex items-center gap-2 p-3 rounded-lg bg-yellow-400/10 border border-yellow-400/20 text-yellow-400 text-sm">
-        <Warning size={16} weight="fill" />
+      <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-semantic-warning/10 border border-semantic-warning/20 text-semantic-warning text-xs font-medium">
+        <Warning size={18} weight="fill" className="shrink-0" />
         <span>Beberapa kandidat chapter ditemukan. Kamu perlu memilih secara manual.</span>
       </div>
     );
   }
   // UNMAPPED
   return (
-    <div className="flex items-center gap-2 p-3 rounded-lg bg-surface-raised border border-border-subtle text-text-muted text-sm">
-      <Warning size={16} />
+    <div className="flex items-center gap-2.5 p-3 rounded-2xl bg-surface-raised border border-border-subtle text-text-muted text-xs font-medium">
+      <Warning size={18} className="shrink-0" />
       <span>Progres chapter tidak dapat dipetakan otomatis. Progres lama dipertahankan; kamu bisa mengaturnya manual.</span>
     </div>
   );
@@ -118,145 +119,120 @@ export function AlternateSourceModal({
     onConfirm(selected);
   }, [selected, onConfirm]);
 
-  if (!isOpen) return null;
-
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            key="backdrop"
-            className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-          />
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="max-w-md w-[calc(100vw-32px)] rounded-[28px] p-0 bg-surface-overlay/95 backdrop-blur-2xl border border-border-glass shadow-glass overflow-hidden flex flex-col gap-0">
+        {/* Header Section */}
+        <div className="px-6 pt-6 pb-4 border-b border-border-glass/40 flex items-start gap-3.5">
+          <div className="flex size-11 items-center justify-center rounded-2xl bg-accent/12 text-accent border border-accent/20 shrink-0">
+            <ArrowsClockwise size={22} weight="duotone" />
+          </div>
+          <div className="min-w-0 flex-1 pr-6">
+            <DialogTitle className="text-lg font-black tracking-tight text-text-primary">
+              Cari Sumber Alternatif
+            </DialogTitle>
+            <DialogDescription className="text-xs leading-relaxed text-text-secondary mt-1 truncate">
+              <span className="font-semibold text-text-primary">{deadMangaTitle}</span>
+              {" "}— sumber saat ini tidak tersedia
+            </DialogDescription>
+          </div>
+        </div>
 
-          {/* Sheet */}
-          <motion.div
-            key="sheet"
-            className="fixed bottom-0 inset-x-0 z-50 max-h-[90dvh] overflow-y-auto rounded-t-2xl bg-surface-raised border-t border-border-subtle"
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            exit={{ y: "100%" }}
-            transition={{ type: "spring", damping: 28, stiffness: 300 }}
+        {/* Content Section */}
+        <div className="p-6 flex flex-col gap-4 max-h-[60vh] overflow-y-auto">
+          {/* Chapter map result */}
+          {selected && chapterMapResult && (
+            <ChapterMapBanner result={chapterMapResult} />
+          )}
+
+          {/* Candidates */}
+          {candidates.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-2.5 py-10 text-text-muted">
+              <div className="flex size-12 items-center justify-center rounded-2xl bg-surface-raised text-text-muted border border-border-subtle">
+                <MagnifyingGlass size={24} weight="duotone" />
+              </div>
+              <p className="text-xs font-medium">Tidak ada sumber ditemukan untuk komik ini.</p>
+            </div>
+          ) : (
+            <ul className="flex flex-col gap-2.5" role="listbox" aria-label="Kandidat sumber alternatif">
+              {candidates.map((c) => {
+                const isSelected = selected?.sourceId === c.sourceId && selected?.mangaId === c.mangaId;
+                return (
+                  <li key={`${c.sourceId}::${c.mangaId}`}>
+                    <button
+                      id={`alt-source-${c.sourceId}-${c.mangaId.replace(/[^a-zA-Z0-9-]/g, "-")}`}
+                      role="option"
+                      aria-selected={isSelected}
+                      onClick={() => setSelected(isSelected ? null : c)}
+                      className={cn(
+                        "w-full flex items-start gap-3.5 p-3 rounded-2xl border text-left transition-all outline-none focus-visible:ring-2 focus-visible:ring-accent",
+                        isSelected
+                          ? "border-accent/60 bg-accent/10 shadow-sm"
+                          : "border-border-subtle bg-surface-raised/60 hover:bg-surface-raised hover:border-border-default"
+                      )}
+                    >
+                      {c.coverUrl && (
+                        <img
+                          src={c.coverUrl}
+                          alt=""
+                          referrerPolicy="no-referrer"
+                          loading="lazy"
+                          className="w-11 h-16 rounded-xl object-cover shrink-0 border border-border-glass"
+                        />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="text-text-primary text-sm font-bold leading-snug line-clamp-2">
+                          {c.title}
+                        </p>
+                        {c.author && (
+                          <p className="text-text-muted text-xs mt-0.5 truncate">{c.author}</p>
+                        )}
+                        <div className="flex items-center gap-2 mt-2 flex-wrap">
+                          <span className="text-[11px] font-bold text-text-secondary bg-surface-base px-2 py-0.5 rounded-lg border border-border-subtle">
+                            {c.sourceDisplayName}
+                          </span>
+                          <ConfidenceBadge confidence={c.confidence} />
+                        </div>
+                      </div>
+                      {isSelected && (
+                        <CheckCircle size={22} weight="fill" className="text-accent shrink-0 mt-0.5" />
+                      )}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+
+        {/* Footer Actions */}
+        <div className="p-4 border-t border-border-glass/40 bg-surface-base/30 flex flex-col gap-2">
+          <Button
+            id="alternate-source-confirm-btn"
+            onClick={handleConfirm}
+            disabled={!selected || isLoading}
+            variant="accent"
+            className="w-full h-11 rounded-2xl font-bold text-sm shadow-sm flex items-center justify-center gap-2"
           >
-            {/* Header */}
-            <div className="sticky top-0 bg-surface-raised border-b border-border-subtle px-4 py-4 flex items-start justify-between gap-3">
-              <div>
-                <h2 className="text-text-primary text-base font-semibold leading-tight">
-                  Cari Sumber Alternatif
-                </h2>
-                <p className="text-text-muted text-sm mt-0.5">
-                  <span className="text-text-secondary font-medium">{deadMangaTitle}</span>
-                  {" "}— sumber saat ini tidak tersedia
-                </p>
-              </div>
-              <button
-                id="alternate-source-modal-close"
-                onClick={onClose}
-                className="shrink-0 p-1.5 rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-overlay transition-colors"
-                aria-label="Tutup"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="p-4 flex flex-col gap-4">
-              {/* Chapter map result */}
-              {selected && chapterMapResult && (
-                <ChapterMapBanner result={chapterMapResult} />
-              )}
-
-              {/* Candidates */}
-              {candidates.length === 0 ? (
-                <div className="flex flex-col items-center gap-3 py-10 text-text-muted">
-                  <MagnifyingGlass size={32} weight="light" />
-                  <p className="text-sm">Tidak ada sumber ditemukan untuk judul ini.</p>
-                </div>
-              ) : (
-                <ul className="flex flex-col gap-2" role="listbox" aria-label="Kandidat sumber alternatif">
-                  {candidates.map((c) => {
-                    const isSelected = selected?.sourceId === c.sourceId && selected?.mangaId === c.mangaId;
-                    return (
-                      <li key={`${c.sourceId}::${c.mangaId}`}>
-                        <button
-                          id={`alt-source-${c.sourceId}-${c.mangaId.replace(/[^a-zA-Z0-9-]/g, "-")}`}
-                          role="option"
-                          aria-selected={isSelected}
-                          onClick={() => setSelected(isSelected ? null : c)}
-                          className={[
-                            "w-full flex items-start gap-3 p-3 rounded-xl border text-left transition-colors",
-                            isSelected
-                              ? "border-brand-primary bg-brand-primary/10"
-                              : "border-border-subtle bg-surface-base hover:bg-surface-overlay",
-                          ].join(" ")}
-                        >
-                          {c.coverUrl && (
-                            <img
-                              src={c.coverUrl}
-                              alt=""
-                              referrerPolicy="no-referrer"
-                              loading="lazy"
-                              className="w-10 h-14 rounded object-cover shrink-0"
-                            />
-                          )}
-                          <div className="min-w-0 flex-1">
-                            <p className="text-text-primary text-sm font-medium leading-snug line-clamp-2">
-                              {c.title}
-                            </p>
-                            {c.author && (
-                              <p className="text-text-muted text-xs mt-0.5 truncate">{c.author}</p>
-                            )}
-                            <div className="flex items-center gap-2 mt-2 flex-wrap">
-                              <span className="text-xs text-text-secondary bg-surface-raised px-2 py-0.5 rounded-full border border-border-subtle">
-                                {c.sourceDisplayName}
-                              </span>
-                              <ConfidenceBadge confidence={c.confidence} />
-                            </div>
-                          </div>
-                          {isSelected && (
-                            <CheckCircle size={20} weight="fill" className="text-brand-primary shrink-0 mt-0.5" />
-                          )}
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-
-              {/* Actions */}
-              <div className="flex flex-col gap-2 pt-2">
-                <Button
-                  id="alternate-source-confirm-btn"
-                  onClick={handleConfirm}
-                  disabled={!selected || isLoading}
-                  className="w-full flex items-center justify-center gap-2"
-                >
-                  {isLoading ? (
-                    <span>Mengganti sumber...</span>
-                  ) : (
-                    <>
-                      <span>Gunakan Sumber Ini</span>
-                      <ArrowRight size={16} weight="bold" />
-                    </>
-                  )}
-                </Button>
-                <Button
-                  id="alternate-source-cancel-btn"
-                  variant="ghost"
-                  onClick={onClose}
-                  className="w-full"
-                >
-                  Batalkan
-                </Button>
-              </div>
-            </div>
-          </motion.div>
-        </>
-      )}
-    </AnimatePresence>
+            {isLoading ? (
+              <span>Mengganti sumber...</span>
+            ) : (
+              <>
+                <span>Gunakan Sumber Ini</span>
+                <ArrowRight size={16} weight="bold" />
+              </>
+            )}
+          </Button>
+          <Button
+            id="alternate-source-cancel-btn"
+            variant="ghost"
+            onClick={onClose}
+            className="w-full h-11 rounded-2xl font-bold text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
+          >
+            Batal
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }

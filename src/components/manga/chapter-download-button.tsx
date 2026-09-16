@@ -9,8 +9,7 @@ import { downloadChapterAsZip } from "@/shared/utils/zip-downloader";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { ConfirmationModal } from "@/components/ui/confirmation-modal";
 
 interface ChapterDownloadButtonProps {
   sourceId: string;
@@ -184,36 +183,24 @@ export function ChapterDownloadButton({
       </AnimatePresence>
     </IconButton>
 
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="max-w-sm rounded-3xl p-6 bg-surface-overlay/95 backdrop-blur-xl shadow-default -heavy">
-          <DialogHeader>
-            <DialogTitle>Hapus Unduhan?</DialogTitle>
-            <DialogDescription>
-              Unduhan chapter <strong>{chapterTitle}</strong> akan dihapus dari perangkat ini.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex-row gap-2 sm:justify-center mt-4">
-            <Button
-              variant="ghost"
-              onClick={() => setIsDeleteDialogOpen(false)}
-              className="flex-1 rounded-full font-bold h-12"
-            >
-              Batal
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={() => {
-                removeDownload(id);
-                toast("Unduhan dihapus");
-                setIsDeleteDialogOpen(false);
-              }}
-              className="flex-1 rounded-full font-bold h-12"
-            >
-              Hapus
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ConfirmationModal
+        isOpen={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        title="Hapus Unduhan?"
+        description={
+          <>
+            Unduhan chapter <strong>{chapterTitle}</strong> akan dihapus dari perangkat ini.
+          </>
+        }
+        confirmLabel="Hapus"
+        cancelLabel="Batal"
+        variant="danger"
+        onConfirm={() => {
+          removeDownload(id);
+          toast.success("Unduhan berhasil dihapus");
+          setIsDeleteDialogOpen(false);
+        }}
+      />
     </>
   );
 }
