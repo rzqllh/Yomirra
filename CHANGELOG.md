@@ -30,9 +30,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 - Expanded loading skeleton coverage and page-specific loading states.
 - Public architecture, component, design, stack, testing, contribution, and source-integration documentation.
 - GitHub Actions CI workflow.
+- Cloud synchronization for user-created collections.
+- Dedicated public README files for Indonesian users, English users, and developers.
 
 ### Changed
 
+- Restored the canonical five-item mobile navigation: Beranda, Jelajah, Rak Buku, Cari, and Pengaturan.
+- Separated Jelajah/catalog browsing from the personal Rak Buku flow instead of treating them as the same destination.
+- Refined the manga-detail hierarchy, sticky header actions, reading CTA, chapter list, spacing, and mobile ergonomics.
+- Standardized application buttons and modal surfaces around the current squircle/glass UI direction and migrated newer controls toward Hugeicons.
+- Search headings now follow the active sort state more clearly.
+- Reader and route navigation now reset scroll position more consistently when opening a new destination or manga detail.
 - Replaced manual retry loops with native bounded retries for reader images.
 - Missing offline reader entries are preserved using explicit mapping instead of generic filtering.
 - Initial reader virtualizer baseline stabilized at 1200px.
@@ -54,6 +62,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 
 ### Fixed
 
+- Enforced the outbound request policy in dynamic-source search so that the search path uses the same SSRF protections as other dynamic-source requests.
+- Prevented a manga-detail hydration mismatch by delaying persisted library-state rendering until the client is mounted.
+- Removed duplicate back/history behavior around reader navigation.
+- Corrected route and manga-detail scroll restoration behavior.
 - Cleaned up dead `IntersectionObserver`, `decodeQueue`, and divider logic from the reader.
 - Scoped `useVisibilityFlush` correctly to prevent memory leaks during history navigation.
 - Normalized `/api/sources/health` public responses to avoid leaking raw internal stacks or response headers.
