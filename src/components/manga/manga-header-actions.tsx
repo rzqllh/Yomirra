@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Bell, BellSlash, ShareNetwork } from "@phosphor-icons/react";
+import { Share01Icon, BellIcon, BellOffIcon } from "@hugeicons/core-free-icons";
+import { Icon } from "@/components/ui/icon";
 import { toast } from "sonner";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useLibraryStore } from "@/shared/store/library-store";
@@ -64,7 +65,7 @@ export function MangaHeaderActions({
         aria-label="Bagikan"
         className="flex h-10 w-10 items-center justify-center rounded-2xl bg-surface-glass backdrop-blur-md border border-border-default/40 text-text-primary hover:bg-surface-hover hover:border-border-strong active:scale-95 transition-all shrink-0 select-none outline-none shadow-xs"
       >
-        <ShareNetwork size={20} weight="bold" />
+        <Icon icon={Share01Icon} size={20} strokeWidth={1.8} />
       </button>
 
       <button
@@ -86,9 +87,9 @@ export function MangaHeaderActions({
         )}
       >
         {isInLibrary && isMuted ? (
-          <BellSlash size={20} weight="fill" />
+          <Icon icon={BellOffIcon} size={20} strokeWidth={1.8} />
         ) : (
-          <Bell size={20} weight={!isInLibrary ? "regular" : "bold"} />
+          <Icon icon={BellIcon} size={20} strokeWidth={!isInLibrary ? 1.5 : 2} />
         )}
       </button>
     </div>

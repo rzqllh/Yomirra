@@ -7,6 +7,7 @@ import { DOCK_NAV_ITEMS } from "@/shared/config/nav"
 import { cn } from "@/shared/utils/cn"
 import { motion } from "motion/react"
 import { useSearchFilterStore } from "@/shared/store/search-filter-store"
+import { Icon } from "@/components/ui/icon"
 
 export function BottomDock() {
   const pathname = usePathname()
@@ -27,8 +28,6 @@ export function BottomDock() {
               item.href === "/"
                 ? pathname === "/"
                 : pathname?.startsWith(item.href)
-
-            const Icon = item.icon
 
             return (
               <Link
@@ -58,12 +57,13 @@ export function BottomDock() {
 
                 <div className="relative z-10 flex items-center justify-center gap-2">
                   <Icon
-                    weight={isActive ? "fill" : "regular"}
+                    icon={item.icon}
+                    size={22}
+                    strokeWidth={isActive ? 2.2 : 1.8}
                     className={cn(
                       "transition-colors duration-300 shrink-0",
                       isActive ? "text-accent" : "text-text-secondary group-hover:text-text-primary"
                     )}
-                    style={{ width: 22, height: 22 }}
                   />
 
                   {isActive && (
@@ -85,7 +85,6 @@ export function BottomDock() {
         {DOCK_NAV_ITEMS.find(i => i.href === '/settings') && (() => {
           const item = DOCK_NAV_ITEMS.find(i => i.href === '/settings')!;
           const isActive = pathname?.startsWith('/settings');
-          const SettingIcon = item.icon;
 
           return (
             <Link
@@ -106,9 +105,10 @@ export function BottomDock() {
                 />
               )}
               <div className="relative z-10 flex items-center justify-center gap-2">
-                <SettingIcon
-                  weight={isActive ? "fill" : "regular"}
-                  style={{ width: 22, height: 22 }}
+                <Icon
+                  icon={item.icon}
+                  size={22}
+                  strokeWidth={isActive ? 2.2 : 1.8}
                   className={cn("shrink-0 transition-colors duration-300", isActive ? "text-accent" : "")}
                 />
                 {isActive && (

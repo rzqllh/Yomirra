@@ -2,7 +2,8 @@
 
 import * as React from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
-import { X } from "@phosphor-icons/react"
+import { Cancel01Icon } from "@hugeicons/core-free-icons"
+import { Icon } from "@/components/ui/icon"
 import { cn } from "@/shared/utils/cn"
 
 const Dialog = DialogPrimitive.Root
@@ -41,7 +42,7 @@ const DialogContent = React.forwardRef<
     >
       {children}
       <DialogPrimitive.Close className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-xl bg-surface-glass border border-border-default/40 text-text-muted hover:text-text-primary hover:bg-surface-hover active:scale-95 transition-all outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:pointer-events-none">
-        <X size={16} weight="bold" />
+        <Icon icon={Cancel01Icon} size={16} strokeWidth={2} />
         <span className="sr-only">Tutup</span>
       </DialogPrimitive.Close>
     </DialogPrimitive.Content>
