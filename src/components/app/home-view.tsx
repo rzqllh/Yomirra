@@ -21,7 +21,7 @@ export function HomeView({ children }: HomeViewProps) {
           <PageHeader
             title="Beranda"
             description="Temukan dan baca komik favoritmu di satu tempat."
-            icon={<Compass size={32} weight="duotone" />}
+            icon={<Compass size={24} weight="duotone" />}
             actions={<UpdatesBell />}
           />
 

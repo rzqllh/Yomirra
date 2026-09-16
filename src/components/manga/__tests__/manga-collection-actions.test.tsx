@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { MangaStatusButton } from "../manga-status-button";
 import { MangaCollectionButton } from "../manga-collection-button";
 import { useCollectionStore } from "@/shared/store/collection-store";
+import { useLibraryStore } from "@/shared/store/library-store";
 
 describe("Manga Detail Collection Actions (Slice 2.2)", () => {
   beforeEach(() => {
@@ -10,6 +11,9 @@ describe("Manga Detail Collection Actions (Slice 2.2)", () => {
       collections: [],
       membershipsByManga: {},
       readingStatusByManga: {},
+    });
+    useLibraryStore.setState({
+      items: {},
     });
     vi.clearAllMocks();
   });
@@ -80,6 +84,34 @@ describe("Manga Detail Collection Actions (Slice 2.2)", () => {
       expect(collections.length).toBe(1);
       expect(collections[0].name).toBe("NewFavs");
       expect(useCollectionStore.getState().membershipsByManga["srcA::m1"]).toEqual([collections[0].id]);
+    });
+
+    it("auto-saves manga to library if not already saved when added to collection", () => {
+      useCollectionStore.getState().createCollection("Reading List");
+      const cId = useCollectionStore.getState().collections[0].id;
+
+      expect(useLibraryStore.getState().isInLibrary("srcA", "m1")).toBe(false);
+
+      render(
+        <MangaCollectionButton
+          sourceId="srcA"
+          mangaId="m1"
+          mangaDetail={{
+            title: "Test Comic",
+            coverUrl: "https://example.com/cover.jpg",
+            author: "Artist",
+            status: "Ongoing",
+          }}
+        />
+      );
+
+      fireEvent.click(screen.getByRole("button", { name: /Koleksi/i }));
+      fireEvent.click(screen.getByText("Reading List"));
+
+      expect(useLibraryStore.getState().isInLibrary("srcA", "m1")).toBe(true);
+      const savedItem = useLibraryStore.getState().getLibraryItem("srcA", "m1");
+      expect(savedItem?.title).toBe("Test Comic");
+      expect(useCollectionStore.getState().membershipsByManga["srcA::m1"]).toEqual([cId]);
     });
   });
 });

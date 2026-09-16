@@ -63,15 +63,23 @@ export function MangaStatusButton({ sourceId, mangaId }: MangaStatusButtonProps)
       </button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-sm rounded-3xl p-6 bg-surface-overlay/95 backdrop-blur-xl shadow-default -heavy">
-          <DialogHeader>
-            <DialogTitle>Status Membaca</DialogTitle>
-            <DialogDescription>
-              Tandai progress membaca untuk manga ini.
-            </DialogDescription>
+        <DialogContent className="max-w-sm sm:max-w-md">
+          <DialogHeader className="gap-3">
+            <div
+              className="flex h-12 w-12 items-center justify-center rounded-2xl border border-accent/30 bg-gradient-to-br from-accent/20 via-accent/10 to-transparent text-accent shadow-xs shrink-0 select-none"
+              aria-hidden="true"
+            >
+              <BookOpenText size={22} weight="duotone" />
+            </div>
+            <div>
+              <DialogTitle>Status Membaca</DialogTitle>
+              <DialogDescription className="mt-1.5">
+                Tandai progres membaca untuk komik ini.
+              </DialogDescription>
+            </div>
           </DialogHeader>
           
-          <div className="flex flex-col gap-2 mt-4">
+          <div className="flex flex-col gap-2 mt-1">
             {STATUS_OPTIONS.map((option) => {
               const isActive = readingStatus === option.value;
               return (
@@ -79,14 +87,14 @@ export function MangaStatusButton({ sourceId, mangaId }: MangaStatusButtonProps)
                   key={option.value}
                   onClick={() => handleSelect(option.value)}
                   className={cn(
-                    "flex items-center justify-between w-full p-3 rounded-xl transition-all border outline-none",
+                    "flex items-center justify-between w-full p-3.5 rounded-2xl transition-all border outline-none font-semibold text-sm select-none active:scale-[0.99]",
                     isActive
-                      ? "bg-accent/10 border-accent/20 text-accent font-bold"
-                      : "bg-surface-base border-border-strong text-text-primary hover:bg-surface-hover hover:border-border-default font-medium"
+                      ? "bg-accent/15 border-accent/30 text-accent font-bold shadow-xs"
+                      : "bg-surface-base border-border-default/60 text-text-primary hover:bg-surface-hover hover:border-border-strong"
                   )}
                 >
-                  {option.label}
-                  {isActive && <span className="w-2 h-2 rounded-full bg-accent" />}
+                  <span>{option.label}</span>
+                  {isActive && <span className="w-2.5 h-2.5 rounded-full bg-accent shadow-xs" />}
                 </button>
               );
             })}

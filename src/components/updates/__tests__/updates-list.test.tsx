@@ -101,7 +101,7 @@ describe('UpdatesList Component', () => {
     
     expect(screen.getByText('Title 1')).toBeTruthy();
     expect(screen.getByText('Title 2')).toBeTruthy();
-    expect(screen.getByText(/Network Error/i)).toBeTruthy(); // Warning exists
+    expect(screen.getByText(/gagal dimuat/i)).toBeTruthy(); // Warning banner exists
   });
 
   it('links to reader when latestChapterId exists, otherwise links to manga detail', () => {

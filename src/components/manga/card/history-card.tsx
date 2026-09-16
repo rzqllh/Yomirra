@@ -14,6 +14,7 @@ export interface HistoryCardProps extends BaseCardProps {
   chapterId?: string;
   chapterTitle?: string;
   progressPercent?: number;
+  timestamp?: number;
 }
 
 export function HistoryCard({ 
@@ -21,7 +22,8 @@ export function HistoryCard({
   sourceId, 
   chapterId,
   chapterTitle,
-  progressPercent
+  progressPercent,
+  timestamp
 }: HistoryCardProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -68,6 +70,12 @@ export function HistoryCard({
         </Link>
         <div className="mt-1 flex items-center gap-2 text-xs font-semibold text-text-muted">
           <span className="uppercase tracking-wider">{manga.format || manga.status || "MANGA"}</span>
+          {timestamp && (
+            <>
+              <span className="opacity-50">•</span>
+              <span>{new Date(timestamp).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</span>
+            </>
+          )}
         </div>
         {progressPercent !== undefined && progressPercent > 0 && (
           <div className="mt-1.5 max-w-[160px]">

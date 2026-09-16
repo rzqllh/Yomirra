@@ -214,7 +214,7 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
             onClick={(e) => { 
               e.stopPropagation(); 
               const returnTo = new URLSearchParams(window.location.search).get("returnTo") || undefined;
-              router.push(getMangaDetailHref(sourceId, mangaId, returnTo));
+              router.replace(getMangaDetailHref(sourceId, mangaId, returnTo));
             }}
           >
             <X size={22} weight="bold" />
@@ -232,7 +232,7 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
                 if (prevChapterId) {
                   toast.info("Membuka chapter sebelumnya...", { duration: 2000 });
                   window.scrollTo({ top: 0, behavior: 'smooth' });
-                  setTimeout(() => router.push(getReaderHref(sourceId, mangaId, prevChapterId)), 150);
+                  setTimeout(() => router.replace(getReaderHref(sourceId, mangaId, prevChapterId)), 150);
                 }
               }}
             >
@@ -262,7 +262,7 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
                 if (nextChapterId) {
                   toast.info("Membuka chapter selanjutnya...", { duration: 2000 });
                   window.scrollTo({ top: 0, behavior: 'smooth' });
-                  setTimeout(() => router.push(getReaderHref(sourceId, mangaId, nextChapterId)), 150);
+                  setTimeout(() => router.replace(getReaderHref(sourceId, mangaId, nextChapterId)), 150);
                 }
               }}
             >

@@ -29,7 +29,7 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
 
   const { isSourceDisabled, isSourceHiddenFromHome } = useSourcePreferencesStore();
   const hideNsfw = useSettingsStore(state => state.hideNsfw);
-  const nsfwSourceIds = useNsfwSourceIds();
+  const { status: nsfwStatus, ids: nsfwSourceIds } = useNsfwSourceIds();
 
   const isFromNsfwSource = React.useCallback(
     (sourceId: string, itemIsNsfw?: boolean) =>
@@ -45,18 +45,34 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
       return true;
     });
     if (hideNsfw) {
-      result = result.filter(item => !isFromNsfwSource(item.sourceId, item.isNsfw));
+      if (nsfwStatus !== "KNOWN") {
+        result = [];
+      } else {
+        result = result.filter(item => !isFromNsfwSource(item.sourceId, item.isNsfw));
+      }
     }
     return result.slice(0, 10);
-  }, [rawHistoryItems, isSourceDisabled, hideNsfw, isFromNsfwSource]);
+  }, [rawHistoryItems, isSourceDisabled, hideNsfw, nsfwStatus, isFromNsfwSource]);
 
   const personalizedIds = new Set<string>();
   historyItems.forEach(item => personalizedIds.add(`${item.sourceId}-${item.mangaId}`));
 
+  const filteredPopular = React.useMemo(() => {
+    if (!hideNsfw) return unifiedPopular;
+    if (nsfwStatus !== "KNOWN") return [];
+    return unifiedPopular.filter(m => !isFromNsfwSource(m.sourceId));
+  }, [unifiedPopular, hideNsfw, nsfwStatus, isFromNsfwSource]);
+
+  const filteredLatest = React.useMemo(() => {
+    if (!hideNsfw) return unifiedLatest;
+    if (nsfwStatus !== "KNOWN") return [];
+    return unifiedLatest.filter(m => !isFromNsfwSource(m.sourceId));
+  }, [unifiedLatest, hideNsfw, nsfwStatus, isFromNsfwSource]);
+
   const sourcesToShow = React.useMemo(() => {
-    const activeSources = Array.from(new Set(unifiedPopular.map(m => m.sourceId)));
+    const activeSources = Array.from(new Set(filteredPopular.map(m => m.sourceId)));
     return activeSources.filter(id => !isSourceHiddenFromHome(id));
-  }, [unifiedPopular, isSourceHiddenFromHome]);
+  }, [filteredPopular, isSourceHiddenFromHome]);
 
   const [activeSourceId, setActiveSourceId] = React.useState<string>("");
 
@@ -67,24 +83,24 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
   }, [sourcesToShow, activeSourceId]);
 
   const activeSourcePopular = React.useMemo(
-    () => unifiedPopular.filter(m => m.sourceId === activeSourceId).slice(0, 5),
-    [unifiedPopular, activeSourceId]
+    () => filteredPopular.filter(m => m.sourceId === activeSourceId).slice(0, 5),
+    [filteredPopular, activeSourceId]
   );
   const activeSourceHighlight = React.useMemo(
-    () => unifiedLatest.filter(m => m.sourceId === activeSourceId).slice(0, 10),
-    [unifiedLatest, activeSourceId]
+    () => filteredLatest.filter(m => m.sourceId === activeSourceId).slice(0, 10),
+    [filteredLatest, activeSourceId]
   );
 
   // Global feeds — all active sources combined, no chip filter
   const updateHariIni = React.useMemo(() => {
-    return unifiedLatest
+    return filteredLatest
       .filter(item => !personalizedIds.has(`${item.sourceId}-${item.id}`))
       .slice(0, 20);
-  }, [unifiedLatest, personalizedIds]);
+  }, [filteredLatest, personalizedIds]);
 
   const popularKomik = React.useMemo(() => {
-    return unifiedPopular.slice(0, 20);
-  }, [unifiedPopular]);
+    return filteredPopular.slice(0, 20);
+  }, [filteredPopular]);
 
   if (!isMounted) return null;
 

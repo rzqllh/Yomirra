@@ -47,7 +47,7 @@ export function parseRetryAfter(headerVal: string | null): number {
 }
 
 /** Throttled fetch wrapper for MangaDex API with bounded 429 retry */
-export async function mdFetch<T>(path: string, params?: Record<string, string | string[]>): Promise<T> {
+export async function mdFetch<T>(path: string, params?: Record<string, string | string[]>, init?: RequestInit): Promise<T> {
   const url = new URL(`${API_BASE}${path}`);
   if (params) {
     for (const [key, val] of Object.entries(params)) {
@@ -59,13 +59,18 @@ export async function mdFetch<T>(path: string, params?: Record<string, string | 
     }
   }
 
+  const timeoutSignal = AbortSignal.timeout(15000);
+  const signal = init?.signal ? AbortSignal.any([timeoutSignal, init.signal]) : timeoutSignal;
+
   const fullUrl = url.toString();
   const options: RequestInit = {
     cache: "no-store",
-    signal: AbortSignal.timeout(15000),
+    ...init,
+    signal,
     headers: { 
       Accept: "application/json",
-      "User-Agent": "Yomirra/1.0.0 (https://github.com/rzqllh/Yomirra)"
+      "User-Agent": "Yomirra/1.0.0 (https://github.com/rzqllh/Yomirra)",
+      ...(init?.headers || {})
     },
   };
 
@@ -73,9 +78,11 @@ export async function mdFetch<T>(path: string, params?: Record<string, string | 
   let res = await fetch(fullUrl, options);
 
   if (res.status === 429) {
+    signal.throwIfAborted?.();
     const retryAfterHeader = res.headers ? res.headers.get("retry-after") : null;
     const sleepMs = parseRetryAfter(retryAfterHeader);
     await new Promise((r) => setTimeout(r, sleepMs));
+    signal.throwIfAborted?.();
 
     await acquireToken();
     res = await fetch(fullUrl, options);
@@ -100,6 +107,7 @@ export class MangaDexSource implements MangaSource {
   isInstalled = true;
   status = "online" as const;
   isNsfw = true;
+  isDynamic = false;
   capabilities = {
     popular: true,
     latest: true,

@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { checkRateLimit } from "@/server/lib/security/rate-limit";
 import { NextRequest, NextResponse } from "next/server";
 import { getAllSourceMetadata } from "@/shared/sources/source-registry";
@@ -11,3 +12,4 @@ export async function GET(request: NextRequest) {
   const sources = getAllSourceMetadata();
   return NextResponse.json({ data: sources });
 }
+

@@ -15,7 +15,7 @@ export function useBookmarkReading() {
   useHistoryStore((state) => state.items);
   const removeMangaHistory = useHistoryStore((state) => state.removeMangaHistory);
   const hideNsfw = useSettingsStore((state) => state.hideNsfw);
-  const nsfwSourceIds = useNsfwSourceIds();
+  const { status: nsfwStatus, ids: nsfwSourceIds } = useNsfwSourceIds();
   const { isSourceDisabled } = useSourcePreferencesStore();
 
   const isFromNsfwSource = React.useCallback(
@@ -34,12 +34,28 @@ export function useBookmarkReading() {
   });
 
   if (hideNsfw) {
-    historyItems = historyItems.filter(
-      (item) => !isFromNsfwSource(item.sourceId, item.isNsfw)
-    );
+    if (nsfwStatus !== "KNOWN") {
+      historyItems = [];
+    } else {
+      historyItems = historyItems.filter(
+        (item) => !isFromNsfwSource(item.sourceId, item.isNsfw)
+      );
+    }
   }
 
   const groupedHistory = React.useMemo(() => {
+    const getTimestamp = (val: unknown): number => {
+      if (typeof val === "number" && !isNaN(val)) return val;
+      if (typeof val === "string") {
+        const parsed = new Date(val).getTime();
+        return isNaN(parsed) ? 0 : parsed;
+      }
+      if (val && typeof val === "object" && "seconds" in (val as any)) {
+        return (val as { seconds: number }).seconds * 1000;
+      }
+      return 0;
+    };
+
     const groups: Record<
       string,
       {
@@ -55,6 +71,9 @@ export function useBookmarkReading() {
 
     historyItems.forEach((item) => {
       const key = `${item.sourceId}::${item.mangaId}`;
+      const itemTimestamp = getTimestamp(item.readAt);
+      const normalizedItem = { ...item, readAt: itemTimestamp };
+
       if (!groups[key]) {
         groups[key] = {
           sourceId: item.sourceId,
@@ -62,13 +81,21 @@ export function useBookmarkReading() {
           mangaTitle: item.mangaTitle,
           coverUrl: item.coverUrl,
           sourceName: item.sourceName,
-          latestReadAt: item.readAt,
+          latestReadAt: itemTimestamp,
           chapters: [],
         };
       }
-      groups[key].chapters.push(item);
-      if (item.readAt > groups[key].latestReadAt) {
-        groups[key].latestReadAt = item.readAt;
+      groups[key].chapters.push(normalizedItem);
+      if (itemTimestamp > groups[key].latestReadAt) {
+        groups[key].latestReadAt = itemTimestamp;
+      }
+    });
+
+    // Ensure each group's chapters are sorted descending so chapters[0] is always the latest chapter read
+    Object.values(groups).forEach((group) => {
+      group.chapters.sort((a, b) => getTimestamp(b.readAt) - getTimestamp(a.readAt));
+      if (group.chapters.length > 0) {
+        group.latestReadAt = getTimestamp(group.chapters[0].readAt);
       }
     });
 

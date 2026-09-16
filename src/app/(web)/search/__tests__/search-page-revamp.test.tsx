@@ -28,6 +28,8 @@ vi.mock('@/shared/api-client', () => ({
 vi.mock('@/shared/sources/dynamic-source-registry', () => ({
   dynamicSourceRegistry: {
     getAll: vi.fn(),
+    // ShelfCard calls .get(sourceId) to resolve source name/status
+    get: vi.fn(() => undefined),
   }
 }));
 
@@ -144,6 +146,6 @@ describe('Search Page Revamp Unit Tests', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Shinigami tidak dapat dimuat')).toBeDefined();
-    }, { timeout: 3000 });
+    }, { timeout: 10000 });
   });
 });

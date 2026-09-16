@@ -2,7 +2,9 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { pushHistoryItem, deleteHistoryItem, deleteMangaHistory } from "@/shared/lib/sync-utils";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
+import { sourceRegistry } from "@/shared/sources/source-registry";
 import { toast } from "sonner";
+import { useLibraryStore } from "@/shared/store/library-store";
 
 export type HistoryItem = {
   sourceId: string;
@@ -22,6 +24,9 @@ export type HistoryItem = {
   scrollPercent?: number;
   readAt: number;
   isNsfw?: boolean;
+  // --- Phase 1 Identity Fields (optional, denormalized) ---
+  savedTitleId?: string;  // Recoverable via SourceRef lookup if missing
+  chapterNumber?: number; // Parsed from chapterTitle for cross-source mapping
 };
 
 interface HistoryState {
@@ -37,6 +42,12 @@ interface HistoryState {
   getHistoryList: () => HistoryItem[];
   markChapterProgress: (sourceId: string, mangaId: string, chapterId: string, pageIndex: number, totalPages: number, scrollPercent?: number) => void;
   saveProgress: (sourceId: string, mangaId: string, chapterId: string, pageIndex: number, pageOffset?: number) => void;
+  /**
+   * Resolve SavedTitleId for a HistoryItem.
+   * Returns the denormalized field if present, otherwise scans Library SourceRefs.
+   * Returns null if unresolvable — item is preserved as unresolved legacy history.
+   */
+  resolveSavedTitleId: (sourceId: string, mangaId: string) => string | null;
   syncWithCloud: (cloudItems: HistoryItem[]) => void;
 }
 
@@ -49,8 +60,9 @@ export const useHistoryStore = create<HistoryState>()(
 
       upsertHistory: (item) => set((state) => {
         if (item.isNsfw === undefined) {
-          const source = dynamicSourceRegistry.get(item.sourceId);
-          if (source) item.isNsfw = source.isNsfw;
+          const source = dynamicSourceRegistry.get(item.sourceId) || sourceRegistry.find(s => s.id === item.sourceId);
+          if (source) item.isNsfw = source.isNsfw === true;
+          else item.isNsfw = false;
         }
         const id = getHistoryId(item.sourceId, item.mangaId, item.chapterId);
         const existing = state.items[id];
@@ -88,7 +100,16 @@ export const useHistoryStore = create<HistoryState>()(
       _setItemLocal: (item) => set((state) => {
         const id = getHistoryId(item.sourceId, item.mangaId, item.chapterId);
         const existing = state.items[id];
-        const finalItem = existing ? { ...existing, ...item } : item;
+        let normalizedReadAt = item.readAt;
+        if (typeof normalizedReadAt === 'string') {
+          const parsed = new Date(normalizedReadAt).getTime();
+          normalizedReadAt = isNaN(parsed) ? Date.now() : parsed;
+        } else if (normalizedReadAt && typeof normalizedReadAt === 'object' && 'seconds' in (normalizedReadAt as any)) {
+          normalizedReadAt = (normalizedReadAt as any).seconds * 1000;
+        }
+        const finalItem = existing
+          ? { ...existing, ...item, readAt: normalizedReadAt }
+          : { ...item, readAt: normalizedReadAt };
 
         return {
           items: {
@@ -135,8 +156,16 @@ export const useHistoryStore = create<HistoryState>()(
 
       getLatestForManga: (sourceId, mangaId) => {
         const allItems = Object.values(get().items);
-        const mangaHistory = allItems.filter(i => i.sourceId === sourceId && i.mangaId === mangaId);
+        let mangaHistory = allItems.filter(i => i.sourceId === sourceId && i.mangaId === mangaId);
         
+        // W3.4.5 Source Relink Fallback
+        if (mangaHistory.length === 0) {
+          const savedTitleId = get().resolveSavedTitleId(sourceId, mangaId);
+          if (savedTitleId) {
+            mangaHistory = allItems.filter(i => i.savedTitleId === savedTitleId || get().resolveSavedTitleId(i.sourceId, i.mangaId) === savedTitleId);
+          }
+        }
+
         if (mangaHistory.length === 0) return undefined;
         
         // Sort by readAt descending
@@ -165,8 +194,19 @@ export const useHistoryStore = create<HistoryState>()(
       },
       
       getHistoryList: () => {
+        const toTimestamp = (val: unknown) => {
+          if (typeof val === 'number' && !isNaN(val)) return val;
+          if (typeof val === 'string') {
+            const parsed = new Date(val).getTime();
+            return isNaN(parsed) ? 0 : parsed;
+          }
+          if (val && typeof val === 'object' && 'seconds' in (val as any)) {
+            return (val as any).seconds * 1000;
+          }
+          return 0;
+        };
         return Object.values(get().items)
-          .sort((a, b) => b.readAt - a.readAt);
+          .sort((a, b) => toTimestamp(b.readAt) - toTimestamp(a.readAt));
       },
 
       markChapterProgress: (sourceId, mangaId, chapterId, pageIndex, totalPages, scrollPercent) => {
@@ -183,8 +223,9 @@ export const useHistoryStore = create<HistoryState>()(
         
         let isNsfw = existing.isNsfw;
         if (isNsfw === undefined) {
-          const source = dynamicSourceRegistry.get(sourceId);
-          if (source) isNsfw = source.isNsfw;
+          const source = dynamicSourceRegistry.get(sourceId) || sourceRegistry.find(s => s.id === sourceId);
+          if (source) isNsfw = source.isNsfw === true;
+          else isNsfw = false;
         }
         
         const updatedItem = {
@@ -232,6 +273,24 @@ export const useHistoryStore = create<HistoryState>()(
           }
         };
       }),
+
+      resolveSavedTitleId: (sourceId, mangaId) => {
+        // 1. Check denormalized field on any history item for this manga
+        const anyItem = Object.values(get().items).find(
+          (i) => i.sourceId === sourceId && i.mangaId === mangaId
+        );
+        if (anyItem?.savedTitleId) return anyItem.savedTitleId;
+
+        // 2. Scan Library SourceRefs
+        const libraryState = useLibraryStore.getState();
+        if (libraryState?.resolveBySourceRef) {
+          const match = libraryState.resolveBySourceRef(sourceId, mangaId);
+          if (match?.id) return match.id;
+        }
+
+        // 3. Unresolvable — preserve as unresolved legacy history
+        return null;
+      },
 
       syncWithCloud: (cloudItems) => set((state) => {
         const newItems = { ...state.items };

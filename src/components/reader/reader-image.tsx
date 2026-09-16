@@ -16,16 +16,12 @@ interface ReaderImageProps {
   isAllowedToLoad: boolean
   onLoadComplete: (index: number) => void
   onError: (index: number) => void
-  priority?: boolean
-  offlineUrl?: string
   imageFit?: 'width' | 'contained'
-  decodeQueue?: {
-    addToQueue: (id: string, url: string, priority: number) => void;
-    removeFromQueue: (id: string) => void;
-    isDecoded: (id: string) => boolean;
-  };
+  reportUrl?: string
   dataIndex?: number;
   totalPages?: number;
+  priority?: boolean;
+  offlineUrl?: string;
 }
 
 export const ReaderImage = React.memo(function ReaderImage({
@@ -39,7 +35,7 @@ export const ReaderImage = React.memo(function ReaderImage({
   priority = false,
   offlineUrl,
   imageFit = 'width',
-  decodeQueue,
+  reportUrl,
   dataIndex,
   totalPages
 }: ReaderImageProps) {
@@ -49,17 +45,12 @@ export const ReaderImage = React.memo(function ReaderImage({
   const containerRef = React.useRef<HTMLDivElement>(null)
   
   const imageId = `${pageUrl}`;
-  const currentUrl = offlineUrl || (retryCount > 0 && !pageUrl.startsWith('blob:') ? `${pageUrl}${pageUrl.includes('?') ? '&' : '?'}retry=${retryCount}` : pageUrl);
+  const [useFallback, setUseFallback] = React.useState(false)
+  const currentUrl = (offlineUrl && !useFallback) 
+    ? offlineUrl 
+    : (retryCount > 0 && !pageUrl.startsWith('blob:') ? `${pageUrl}${pageUrl.includes('?') ? '&' : '?'}retry=${retryCount}` : pageUrl);
 
-  React.useEffect(() => {
-    if (decodeQueue && isAllowedToLoad) {
-      // Priority based on index, smaller index means closer to viewport or earlier page
-      decodeQueue.addToQueue(imageId, currentUrl, pageIndex);
-    }
-    return () => {
-      if (decodeQueue) decodeQueue.removeFromQueue(imageId);
-    };
-  }, [decodeQueue, imageId, currentUrl, pageIndex, isAllowedToLoad]);
+
 
   // Zoom motion values (No spring physics loop)
   const scale = useMotionValue(1)
@@ -96,12 +87,15 @@ export const ReaderImage = React.memo(function ReaderImage({
     }
   })
 
-  // If using decode queue, only load if it's decoded or if queue not provided.
-  // We still check isAllowedToLoad.
-  const isDecoded = decodeQueue ? decodeQueue.isDecoded(imageId) : true;
-  const shouldLoad = isAllowedToLoad && isDecoded;
+  const shouldLoad = isAllowedToLoad;
 
   const handleImageError = () => {
+    if (offlineUrl && !useFallback) {
+      // W3.5: Cached page missing + online -> allow network fallback
+      setUseFallback(true);
+      return;
+    }
+
     if (retryCount < 3) {
       const baseDelay = [1000, 2500, 5000][retryCount]
       const jitter = Math.random() * 500
@@ -117,6 +111,7 @@ export const ReaderImage = React.memo(function ReaderImage({
   const handleRetry = () => {
     setHasError(false)
     setRetryCount(0)
+    setUseFallback(false)
   }
 
   const estimatedAspectRatio = aspectRatio ? `${aspectRatio}` : "1 / 1.5"
@@ -138,7 +133,7 @@ export const ReaderImage = React.memo(function ReaderImage({
       }}
     >
       {hasError ? (
-        <PageImageError index={pageIndex} onRetry={handleRetry} />
+        <PageImageError index={pageIndex} onRetry={handleRetry} reportUrl={reportUrl} />
       ) : shouldLoad ? (
         <motion.div style={{ x, y, scale }} className="w-full h-full origin-center flex justify-center">
           <Image 
@@ -155,7 +150,7 @@ export const ReaderImage = React.memo(function ReaderImage({
             priority={priority}
             fetchPriority={priority ? "high" : "auto"}
             quality={dataSaver ? 60 : 85}
-            unoptimized={!dataSaver}
+            unoptimized={!dataSaver || currentUrl.startsWith('blob:') || currentUrl.startsWith('data:')}
             loading="eager"
             decoding="async"
             onLoad={(e) => {

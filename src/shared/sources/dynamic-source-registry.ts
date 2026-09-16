@@ -68,6 +68,12 @@ export class DynamicSourceRegistry {
   async install(manifestUrl: string): Promise<SourceMetadata> {
     const manifest = await this.validateManifest(manifestUrl);
     
+    // Lazy import to avoid circular dependency issues at module load
+    const { sourceRegistry } = await import("./source-registry");
+    if (sourceRegistry.some(s => s.id === manifest.id)) {
+      throw new Error("SECURITY_REJECTED: Cannot install dynamic source with a built-in source identity.");
+    }
+
     const storage = this.getStorage();
     if (storage[manifest.id]) {
       throw new Error("Source already installed");
@@ -158,7 +164,8 @@ export class DynamicSourceRegistry {
       manifestUrl: manifest.manifestUrl,
       isEnabled: true,
       isInstalled: true,
-      isNsfw: manifest.nsfw,
+      isNsfw: manifest.nsfw === true,
+      isDynamic: true,
       capabilities: {
         popular: manifest.capabilities.includes("popular"),
         latest: manifest.capabilities.includes("latest"),

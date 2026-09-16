@@ -25,6 +25,12 @@ const sizeMap: Record<"sm" | "default" | "lg", ButtonProps["size"]> = {
   lg: "icon-lg",
 }
 
+const radiusMap: Record<"sm" | "default" | "lg", string> = {
+  sm: "rounded-xl",
+  default: "rounded-2xl",
+  lg: "rounded-[22px]",
+}
+
 const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
   ({ variant = "ghost", size = "default", className, ...props }, ref) => {
     return (
@@ -32,7 +38,7 @@ const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
         ref={ref}
         variant={variantMap[variant]}
         size={sizeMap[size]}
-        className={cn("rounded-full", className)}
+        className={cn(radiusMap[size], className)}
         {...props}
       />
     )

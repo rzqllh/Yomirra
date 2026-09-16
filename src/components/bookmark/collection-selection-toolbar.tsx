@@ -3,14 +3,7 @@
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { Trash } from "@phosphor-icons/react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { ConfirmationModal } from "@/components/ui/confirmation-modal";
 
 export interface CollectionSelectionToolbarProps {
   selectedCount: number;
@@ -73,29 +66,16 @@ export function CollectionSelectionToolbar({
         </div>
       </div>
 
-      <Dialog open={isDeleteDialogOpen} onOpenChange={onOpenDeleteDialogChange}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Hapus Bookmark</DialogTitle>
-            <DialogDescription>
-              Apakah kamu yakin ingin menghapus {selectedCount} manga dari bookmark?
-              Tindakan ini tidak dapat dibatalkan.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" onClick={() => onOpenDeleteDialogChange(false)}>
-              Batal
-            </Button>
-            <Button
-              variant="accent"
-              onClick={onConfirmBulkDelete}
-              className="bg-semantic-error hover:bg-semantic-error/90 text-white"
-            >
-              Hapus
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ConfirmationModal
+        isOpen={isDeleteDialogOpen}
+        onOpenChange={onOpenDeleteDialogChange}
+        title="Hapus Bookmark?"
+        description={`Apakah kamu yakin ingin menghapus ${selectedCount} komik dari bookmark? Tindakan ini tidak dapat dibatalkan.`}
+        confirmLabel="Hapus"
+        cancelLabel="Batal"
+        variant="danger"
+        onConfirm={onConfirmBulkDelete}
+      />
     </>
   );
 }

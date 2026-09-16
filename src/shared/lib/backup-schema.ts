@@ -3,6 +3,14 @@ import { z } from "zod";
 // ISO timestamp validator helper
 const isIsoDate = (val: string) => !isNaN(Date.parse(val));
 
+// SourceRef used inside linkedSources
+const sourceRefBackupSchema = z.object({
+  sourceId: z.string().min(1),
+  mangaId: z.string().min(1),
+  addedAt: z.number().positive().finite(),
+  matchConfidence: z.enum(["CONFIRMED", "HIGH_CONFIDENCE", "AMBIGUOUS", "NO_MATCH"]),
+});
+
 export const libraryItemBackupSchema = z.object({
   sourceId: z.string().min(1),
   mangaId: z.string().min(1),
@@ -56,7 +64,7 @@ export const readerPreferencesBackupSchema = z.object({
   preloadIntensity: z.enum(["light", "balanced", "aggressive"]),
   showPageProgress: z.boolean(),
   readingDirection: z.enum(["ltr", "rtl"]),
-  readingMode: z.enum(["vertical"]),
+  readingMode: z.enum(["vertical", "paged"]),
   keepScreenAwakeWhileReading: z.boolean(),
 });
 
@@ -128,14 +136,43 @@ export const yomirraBackupSchemaV2 = z.object({
   }),
 });
 
+// V3 library item schema — includes Phase 1 identity fields
+export const libraryItemV2BackupSchema = libraryItemBackupSchema.extend({
+  id: z.string().min(1).optional(), // SavedTitleId
+  schemaVersion: z.literal(2).optional(),
+  primarySourceId: z.string().min(1).optional(),
+  primaryMangaId: z.string().min(1).optional(),
+  linkedSources: z.array(sourceRefBackupSchema).optional(),
+});
+
+export const yomirraBackupSchemaV3 = z.object({
+  schemaVersion: z.literal(3),
+  appVersion: z.string().min(1),
+  exportedAt: z.string().refine(isIsoDate, { message: "exportedAt harus berupa ISO date string yang valid" }),
+  data: z.object({
+    library: z.array(libraryItemV2BackupSchema).max(1000, "Library tidak boleh melebihi 1000 item"),
+    history: z.array(historyItemBackupSchema).max(1000, "History tidak boleh melebihi 1000 item"),
+    updates: z.array(updateItemBackupSchema).max(1000, "Updates tidak boleh melebihi 1000 item").optional(),
+    collections: z.array(collectionBackupSchema).max(100, "Koleksi tidak boleh melebihi 100 item").optional(),
+    membershipsByManga: z.record(z.string(), z.array(z.string())).optional(),
+    readingStatusByManga: z.record(z.string(), z.enum(["reading", "completed", "on-hold", "dropped", "plan-to-read"])).optional(),
+    settings: whitelistedSettingsSchema,
+    readerPreferences: readerPreferencesBackupSchema,
+    sourcePreferences: sourcePreferencesBackupSchema,
+    stats: statsBackupSchema,
+  }),
+});
+
 export type YomirraBackupV1 = z.infer<typeof yomirraBackupSchemaV1>;
 export type YomirraBackupV2 = z.infer<typeof yomirraBackupSchemaV2>;
+export type YomirraBackupV3 = z.infer<typeof yomirraBackupSchemaV3>;
 export type LibraryItemBackup = z.infer<typeof libraryItemBackupSchema>;
+export type LibraryItemV2Backup = z.infer<typeof libraryItemV2BackupSchema>;
 export type HistoryItemBackup = z.infer<typeof historyItemBackupSchema>;
 export type UpdateItemBackup = z.infer<typeof updateItemBackupSchema>;
 export type CollectionBackup = z.infer<typeof collectionBackupSchema>;
 
-export type AnyYomirraBackup = YomirraBackupV1 | YomirraBackupV2;
+export type AnyYomirraBackup = YomirraBackupV1 | YomirraBackupV2 | YomirraBackupV3;
 
 export type ImportMode = "merge" | "replace";
 

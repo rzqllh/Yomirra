@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useDeferredValue } from "react";
+import { useState, useMemo, useDeferredValue, useEffect } from "react";
 import { Play, SortAscending, SortDescending, Book, ShareNetwork, CaretLeft } from "@phosphor-icons/react";
 import Image from "next/image";
 import Link from "next/link";
@@ -101,6 +101,14 @@ export function MangaDetailView({
     overscan: 20,
   });
 
+  // Always reset scroll to the top when viewing manga details
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    if (parentRef.current) {
+      parentRef.current.scrollTop = 0;
+    }
+  }, [sourceId, mangaId]);
+
   const coverUrl = detail.coverUrl;
   const firstChapter = chapters?.[chapters.length - 1];
 
@@ -142,7 +150,7 @@ export function MangaDetailView({
     <div className="w-full flex flex-col gap-2 mt-1">
       {showContinue && continueChapterId ? (
         <>
-          <Button asChild variant="accent" className="w-full rounded-2xl h-[52px] text-base font-bold shadow-md shadow-accent/20 active:scale-[0.98] transition-all">
+          <Button asChild variant="accent" className="w-full rounded-2xl h-[52px] text-base font-bold active:scale-[0.98] transition-all">
             <Link href={getReaderHref(sourceId, mangaId, continueChapterId)} aria-label={`Lanjutkan membaca ${continueChapterLabel}`}>
               <Play className="h-5 w-5 mr-1.5" fill="currentColor" weight="fill" />
               Lanjutkan {continueChapterLabel}
@@ -159,7 +167,7 @@ export function MangaDetailView({
           </div>
         </>
       ) : startChapterId ? (
-        <Button asChild variant="accent" className="w-full rounded-2xl h-[52px] text-base font-bold shadow-md shadow-accent/20 active:scale-[0.98] transition-all">
+        <Button asChild variant="accent" className="w-full rounded-2xl h-[52px] text-base font-bold active:scale-[0.98] transition-all">
           <Link href={getReaderHref(sourceId, mangaId, startChapterId)} aria-label="Mulai membaca manga">
             <Play className="h-5 w-5 mr-1.5" fill="currentColor" weight="fill" />
             Mulai Baca
@@ -184,12 +192,21 @@ export function MangaDetailView({
         status={detail.status}
       />
       <MangaStatusButton sourceId={sourceId} mangaId={mangaId} />
-      <MangaCollectionButton sourceId={sourceId} mangaId={mangaId} />
+      <MangaCollectionButton
+        sourceId={sourceId}
+        mangaId={mangaId}
+        mangaDetail={{
+          title: detail.title,
+          coverUrl: detail.coverUrl,
+          author: detail.author,
+          status: detail.status,
+        }}
+      />
     </div>
   );
 
   return (
-    <main className="min-h-screen flex flex-col w-full relative pb-[calc(var(--bottom-nav-height,80px)+24px)] md:pb-12 text-text-primary">
+    <main className="min-h-screen flex flex-col w-full relative pb-4 md:pb-8 text-text-primary">
       {/* ── Background (Glassmorphism Tint) ── */}
       <div className="fixed inset-0 w-full h-full overflow-hidden z-0 pointer-events-none select-none bg-background [contain:strict]">
         {detail.coverUrl && (
@@ -209,6 +226,8 @@ export function MangaDetailView({
       <PageHeader
         title={detail.title}
         showBack={true}
+        backHref={backHref}
+        mode="detail"
         variant="auto"
         actions={
           <MangaHeaderActions

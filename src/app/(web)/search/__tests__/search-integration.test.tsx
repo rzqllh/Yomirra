@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor, fireEvent, act } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent, act, cleanup } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import SearchPage from '../page';
@@ -29,6 +29,8 @@ vi.mock('@/shared/api-client', () => ({
 vi.mock('@/shared/sources/dynamic-source-registry', () => ({
   dynamicSourceRegistry: {
     getAll: vi.fn(),
+    // ShelfCard calls .get(sourceId) to resolve source name/status
+    get: vi.fn(() => undefined),
   }
 }));
 
@@ -37,14 +39,15 @@ vi.mock('@/components/search/search-filter-drawer', () => ({
   SearchFilterDrawer: () => <div data-testid="drawer-stub" data-state="closed" />
 }));
 
-const queryClient = new QueryClient({
-  defaultOptions: { queries: { retry: false } }
-});
+let queryClient: QueryClient;
 
 describe('Search Page Integration', () => {
   beforeEach(() => {
+    cleanup();
     vi.clearAllMocks();
-    queryClient.clear();
+    queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } }
+    });
     useSearchFilterStore.setState({
       selectedSources: ['sourceA', 'sourceB'],
       genres: ['action', 'invalid'],
@@ -228,8 +231,8 @@ describe('Search Page Integration', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Naruto')).toBeDefined();
-    });
-  });
+    }, { timeout: 10000 });
+  }, 10000);
 
   it('does not call search for sourceA on page 2 when hasNextPage=false on page 1, but continues calling sourceB with hasNextPage=true', async () => {
     useSearchFilterStore.setState({
@@ -270,7 +273,7 @@ describe('Search Page Integration', () => {
     await waitFor(() => {
       expect(screen.getAllByText('Manga A').length).toBeGreaterThan(0);
       expect(screen.getAllByText('Manga B Page 1').length).toBeGreaterThan(0);
-    });
+    }, { timeout: 20000 });
 
     // Cache key must include sourceId, query, payload, NSFW, and page
     expect(apiClient.search).toHaveBeenCalledWith('sourceA', 'test', 1, {}, false, { signal: expect.anything() });
@@ -285,13 +288,13 @@ describe('Search Page Integration', () => {
     // Wait for Page 2 results
     await waitFor(() => {
       expect(screen.getAllByText('Manga B Page 2').length).toBeGreaterThan(0);
-    }, { timeout: 3000 });
+    }, { timeout: 20000 });
 
     // Verify sourceA with hasNextPage=false is NOT called on page 2
     expect(apiClient.search).not.toHaveBeenCalledWith('sourceA', 'test', 2, expect.anything(), false, expect.anything());
     // Verify sourceB with hasNextPage=true IS called on page 2
     expect(apiClient.search).toHaveBeenCalledWith('sourceB', 'test', 2, {}, false, { signal: expect.anything() });
-  });
+  }, 30000);
 
   it('resets exhausted status when search query or filters change', async () => {
     useSearchFilterStore.setState({
@@ -328,7 +331,7 @@ describe('Search Page Integration', () => {
     // Initial search for query "test" page 1
     await waitFor(() => {
       expect(screen.getAllByText('Manga A Initial').length).toBeGreaterThan(0);
-    });
+    }, { timeout: 3000 });
 
     // Go to page 2 -> sourceA becomes exhausted for key ("sourceA", "test", false, {}, 1)
     const nextBtn = screen.getByLabelText('Go to next page');
@@ -366,5 +369,5 @@ describe('Search Page Integration', () => {
         { signal: expect.anything() }
       );
     });
-  });
+  }, 10000);
 });

@@ -26,12 +26,18 @@ describe('BottomDock Navigation', () => {
     expect(updatesLink).toBeNull();
   });
 
-  it('contains Beranda, Library, Bookmark, Cari, and Pengaturan links', () => {
+  it('contains Beranda, Jelajah, Rak Buku, Cari, and Pengaturan links', () => {
     render(<BottomDock />);
     expect(screen.getByRole('link', { name: /beranda/i })).toBeTruthy();
-    expect(screen.getByRole('link', { name: /library/i })).toBeTruthy();
-    expect(screen.getByRole('link', { name: /bookmark/i })).toBeTruthy();
+    expect(screen.getByRole('link', { name: /jelajah/i })).toBeTruthy();
+    expect(screen.getByRole('link', { name: /rak buku/i })).toBeTruthy();
     expect(screen.getByRole('link', { name: /cari/i })).toBeTruthy();
     expect(screen.getByRole('link', { name: /pengaturan/i })).toBeTruthy();
+  });
+
+  it('contains a Rak Buku bookmark link', () => {
+    render(<BottomDock />);
+    const bookmarkLink = screen.getByRole('link', { name: /rak buku/i });
+    expect(bookmarkLink).toBeTruthy();
   });
 });

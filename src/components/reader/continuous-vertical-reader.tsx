@@ -14,16 +14,15 @@ import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
 import { useWindowVirtualizer } from "@tanstack/react-virtual"
 import { useReaderScroll } from "@/shared/hooks/use-reader-scroll"
-import { useDecodeQueue } from "@/shared/hooks/use-decode-queue"
+import { getSourceMetadata } from "@/shared/sources/source-registry"
+
 import { useReadingTimer } from "@/shared/hooks/use-reading-timer"
 import { CaretLeft, CaretRight } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/shared/utils/cn"
 import { motion } from "motion/react"
 
-export type StreamItem = 
-  | { type: "image"; chapterId: string; pageIndex: number; url: string; index: number }
-  | { type: "divider"; chapterId: string; chapterTitle: string };
+export type StreamItem = { type: "image"; chapterId: string; pageIndex: number; url: string; index: number };
 
 interface ContinuousVerticalReaderProps {
   sourceId: string;
@@ -54,9 +53,10 @@ export function ContinuousVerticalReader({
   const getProgress = useHistoryStore(state => state.getLatestForManga)
   const isInLibrary = useLibraryStore(state => state.isInLibrary(sourceId, mangaId))
   const addToLibrary = useLibraryStore(state => state.addToLibrary)
+  const source = React.useMemo(() => getSourceMetadata(sourceId), [sourceId]);
+  const reportUrl = source?.reportUrl;
   
   const queryClient = useQueryClient()
-  const decodeQueue = useDecodeQueue(3)
   
   useReadingTimer()
 
@@ -114,15 +114,7 @@ export function ContinuousVerticalReader({
   const handleImageLoad = React.useCallback(() => {}, [])
   const handleImageError = React.useCallback(() => {}, [])
 
-  const endRef = React.useRef<HTMLDivElement>(null)
 
-  React.useEffect(() => {
-    const endObserver = new IntersectionObserver(([entry]) => {}, { threshold: 0.1 })
-    if (endRef.current) {
-      endObserver.observe(endRef.current)
-    }
-    return () => endObserver.disconnect()
-  }, [])
 
   useReaderScroll({
     streamItems,
@@ -146,6 +138,37 @@ export function ContinuousVerticalReader({
   }, [sourceId, mangaId, chapterId, getProgress, virtualizer])
 
   const isWebtoon = true;
+
+  // W3.7 Keyboard Navigation
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT" ||
+          target.tagName === "BUTTON" ||
+          target.tagName === "A" ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+
+      if (e.key === " " || e.code === "Space") {
+        // Only handle if overlay isn't capturing it
+        e.preventDefault();
+        const scrollAmount = window.innerHeight * 0.9;
+        window.scrollBy({
+          top: e.shiftKey ? -scrollAmount : scrollAmount,
+          behavior: 'smooth'
+        });
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   const handleNextChapter = React.useCallback(() => {
     if (!nextChapterId) return;
@@ -181,7 +204,7 @@ export function ContinuousVerticalReader({
       }
     }
     
-    router.push(getReaderHref(sourceId, mangaId, nextChapterId));
+    router.replace(getReaderHref(sourceId, mangaId, nextChapterId));
   }, [nextChapterId, isInLibrary, mangaId, sourceId, getProgress, addToLibrary, router]);
 
   return (
@@ -211,27 +234,21 @@ export function ContinuousVerticalReader({
                 paddingBottom: preferences.pageGap === 'none' ? '0px' : preferences.pageGap === 'small' ? '4px' : '16px'
               }}
             >
-              {item.type === 'image' ? (
-                <ReaderImage 
-                  pageIndex={item.pageIndex}
-                  pageUrl={item.url}
-                  isWebtoon={isWebtoon}
-                  dataSaver={dataSaver}
-                  isAllowedToLoad={true}
-                  onLoadComplete={handleImageLoad}
-                  onError={handleImageError}
-                  priority={virtualRow.index === 0}
-                  offlineUrl={isDownloaded ? getOfflineImageUrl({ sourceId, mangaId, chapterId: item.chapterId, pageIndex: item.pageIndex }) : undefined}
-                  imageFit={preferences.imageFit}
-                  decodeQueue={undefined}
-                  dataIndex={virtualRow.index}
-                  totalPages={pages.length}
-                />
-              ) : (
-                <div className="w-full py-12 flex justify-center items-center text-text-muted text-sm tracking-widest uppercase">
-                  {item.chapterTitle}
-                </div>
-              )}
+              <ReaderImage 
+                pageIndex={item.pageIndex}
+                pageUrl={item.url}
+                isWebtoon={isWebtoon}
+                dataSaver={dataSaver}
+                isAllowedToLoad={true}
+                onLoadComplete={handleImageLoad}
+                onError={handleImageError}
+                priority={virtualRow.index === 0}
+                offlineUrl={isDownloaded ? getOfflineImageUrl({ sourceId, mangaId, chapterId: item.chapterId, pageIndex: item.pageIndex }) : undefined}
+                imageFit={preferences.imageFit}
+                reportUrl={reportUrl}
+                dataIndex={virtualRow.index}
+                totalPages={pages.length}
+              />
             </div>
           );
         })}
@@ -245,7 +262,7 @@ export function ContinuousVerticalReader({
           {_prevChapterId ? (
             <Button
               className="flex-1 rounded-2xl h-14 font-bold bg-surface-raised hover:bg-surface-hover border border-border-default text-text-primary shadow-sm active:scale-[0.98] transition-all"
-              onClick={() => router.push(getReaderHref(sourceId, mangaId, _prevChapterId))}
+              onClick={() => router.replace(getReaderHref(sourceId, mangaId, _prevChapterId))}
             >
               <CaretLeft size={20} className="mr-1.5" weight="bold" /> Sebelumnya
             </Button>
@@ -266,19 +283,26 @@ export function ContinuousVerticalReader({
         </div>
 
         {/* Secondary Actions */}
-        <div className="flex justify-center mt-2">
-          <Button
-            variant="ghost"
-            className="rounded-full h-10 font-bold px-6 text-text-muted hover:text-text-primary hover:bg-surface-raised transition-colors"
-            onClick={() => window.open('https://discord.gg/shinigamid', '_blank')}
-          >
-            Laporkan Chapter
-          </Button>
-        </div>
+        {reportUrl && (
+          <div className="flex justify-center mt-2">
+            <Button
+              variant="ghost"
+              className="rounded-full h-10 font-bold px-6 text-text-muted hover:text-text-primary hover:bg-surface-raised transition-colors"
+              onClick={() => {
+                try {
+                  const url = new URL(reportUrl);
+                  if (url.protocol === 'http:' || url.protocol === 'https:') {
+                    window.open(url.href, '_blank', 'noopener,noreferrer');
+                  }
+                } catch (e) {}
+              }}
+            >
+              Laporkan Chapter
+            </Button>
+          </div>
+        )}
       </div>
-      
-      {/* End of Stream observer for triggering next chapter load */}
-      <div ref={endRef} className="w-full h-1" />
+
     </div>
   )
 }
