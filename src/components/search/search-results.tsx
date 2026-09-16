@@ -19,6 +19,7 @@ import {
   PaginationEllipsis,
 } from "@/components/ui/pagination";
 import { cn } from "@/shared/utils/cn";
+import { useSearchFilterStore } from "@/shared/store/search-filter-store";
 import type { SourceMetadata } from "@/shared/sources/source-types";
 
 export interface SearchResultsProps {
@@ -50,6 +51,26 @@ export function SearchResults({
   hasNextPage,
   queryClient,
 }: SearchResultsProps) {
+  const sort = useSearchFilterStore((state) => state.sort);
+
+  const headingTitle = React.useMemo(() => {
+    if (query.trim().length > 0) {
+      return "Hasil Pencarian";
+    }
+    switch (sort) {
+      case "popular":
+        return "Populer";
+      case "latest":
+      case "update":
+        return "Terbaru";
+      case "title":
+      case "alphabet":
+        return "Judul (A-Z)";
+      default:
+        return "Populer";
+    }
+  }, [query, sort]);
+
   return (
     <>
       {/* Partial Failure Warning (Compact) */}
@@ -149,10 +170,10 @@ export function SearchResults({
             <div className="flex items-center justify-between">
               <h2 className="text-base md:text-lg font-bold flex items-center gap-2 text-text-primary tracking-tight">
                 <span className="w-2 h-2 rounded-full bg-accent"></span>
-                {query.length === 0 ? "Update Terbaru" : "Hasil Pencarian"}
+                {headingTitle}
               </h2>
               <span className="text-xs font-semibold text-text-muted">
-                {searchMangas.length} {query.length === 0 ? "judul" : "hasil"}
+                {searchMangas.length} {query.trim().length === 0 ? "judul" : "hasil"}
               </span>
             </div>
 
