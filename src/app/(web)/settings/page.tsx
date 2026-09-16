@@ -90,7 +90,7 @@ export default function SettingsPage() {
             <PageHeader 
               title="Pengaturan" 
               description="Sesuaikan preferensi aplikasi sesuai keinginanmu."
-              icon={<Gear size={32} weight="duotone" />}
+              icon={<Gear size={24} weight="duotone" />}
             />
 
             {/* Akun & Sinkronisasi */}

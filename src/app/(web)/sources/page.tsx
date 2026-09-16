@@ -101,7 +101,7 @@ export default function SourcesPage() {
             <PageHeader
               title="Sumber"
               description="Kelola sumber bacaan untuk Yomirra."
-              icon={<HardDrives size={32} weight="duotone" />}
+              icon={<HardDrives size={24} weight="duotone" />}
             />
           </div>
 

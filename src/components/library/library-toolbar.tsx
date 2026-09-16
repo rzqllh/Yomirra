@@ -35,7 +35,7 @@ export function LibraryToolbar({
         onChange={onSearchInputChange}
         onSubmitAction={onSearchSubmit}
         onClear={onSearchClear}
-        placeholder="Cari di library..."
+        placeholder="Cari judul komik..."
         containerClassName="flex-1 min-w-0 h-[44px]"
       />
 

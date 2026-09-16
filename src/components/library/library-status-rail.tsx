@@ -9,24 +9,22 @@ export interface LibraryStatusRailProps {
   sort: string;
   onTabChange: (newSort: string) => void;
   dynamicSorts: { id: string; name: string }[];
-  selectedReadingStatuses: string[];
+  selectedFormats: string[];
   onPageReset: () => void;
 }
 
-const READING_STATUS_OPTIONS = [
-  { id: "", label: "Semua" },
-  { id: "reading", label: "Sedang Dibaca" },
-  { id: "plan-to-read", label: "Akan Dibaca" },
-  { id: "completed", label: "Selesai" },
-  { id: "on-hold", label: "Ditunda" },
-  { id: "dropped", label: "Dihentikan" },
+const FORMAT_OPTIONS = [
+  { id: "", label: "Semua Format" },
+  { id: "manhwa", label: "Manhwa" },
+  { id: "manga", label: "Manga" },
+  { id: "manhua", label: "Manhua" },
 ];
 
 export function LibraryStatusRail({
   sort,
   onTabChange,
   dynamicSorts,
-  selectedReadingStatuses,
+  selectedFormats,
   onPageReset,
 }: LibraryStatusRailProps) {
   const filterStore = useLibraryFilterStore();
@@ -46,26 +44,26 @@ export function LibraryStatusRail({
       </div>
 
       <div className="flex items-center gap-2.5 overflow-x-auto hide-scrollbar flex-1 py-3 -mr-4 pr-4 md:mr-0 md:pr-0">
-        {READING_STATUS_OPTIONS.map(status => {
+        {FORMAT_OPTIONS.map(fmt => {
           const isSelected =
-            status.id === ""
-              ? selectedReadingStatuses.length === 0
-              : selectedReadingStatuses.includes(status.id);
+            fmt.id === ""
+              ? selectedFormats.length === 0
+              : selectedFormats.includes(fmt.id);
 
           return (
             <FilterChip
-              key={status.id}
+              key={fmt.id}
               onClick={() => {
                 onPageReset();
-                if (status.id === "") {
-                  filterStore.setFilters({ selectedReadingStatuses: [] });
+                if (fmt.id === "") {
+                  filterStore.setFilters({ selectedFormats: [] });
                 } else {
-                  filterStore.setFilters({ selectedReadingStatuses: [status.id] });
+                  filterStore.setFilters({ selectedFormats: [fmt.id] });
                 }
               }}
               selected={isSelected}
               variant={isSelected ? "accent-solid" : "default"}
-              label={status.label}
+              label={fmt.label}
               className="shrink-0 h-[36px] px-4 text-[13px]"
             />
           );

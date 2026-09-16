@@ -149,57 +149,6 @@ export function useLibraryCatalog() {
   }, [selectedGenres, excludedGenres, selectedFormats, selectedStatuses, selectedCollections, selectedReadingStatuses, storeSort]);
 
   const fetchCatalog = async (currentPage: number) => {
-    const hasLocalFilters = selectedCollections.length > 0 || selectedReadingStatuses.length > 0;
-
-    if (hasLocalFilters) {
-      const localMangas = Object.values(libraryItems).filter(item => {
-        if (item.sourceId !== activeSourceId) return false;
-
-        const key = `${item.sourceId}::${item.mangaId}` as MangaKey;
-
-        let passCollection = true;
-        if (selectedCollections.length > 0) {
-          const memberships = membershipsByManga[key] || [];
-          passCollection = selectedCollections.some(c => memberships.includes(c));
-        }
-
-        let passStatus = true;
-        if (selectedReadingStatuses.length > 0) {
-          const status = readingStatusByManga[key];
-          passStatus = status ? selectedReadingStatuses.includes(status) : false;
-        }
-
-        let passSearch = true;
-        if (query) {
-          passSearch = item.title.toLowerCase().includes(query.toLowerCase());
-        }
-
-        return passCollection && passStatus && passSearch;
-      });
-
-      if (sort === "latest") {
-        localMangas.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-      } else if (sort === "alphabetical") {
-        localMangas.sort((a, b) => a.title.localeCompare(b.title));
-      } else {
-        localMangas.sort((a, b) => new Date(b.addedAt).getTime() - new Date(a.addedAt).getTime());
-      }
-
-      const PAGE_SIZE = 24;
-      const start = (currentPage - 1) * PAGE_SIZE;
-      const end = start + PAGE_SIZE;
-      const paginated = localMangas.slice(start, end).map(item => ({
-        id: item.mangaId,
-        title: item.title,
-        coverUrl: item.coverUrl || "",
-        author: item.author,
-        status: item.status,
-        format: item.format,
-      }));
-
-      return { mangas: paginated as any[], hasNextPage: end < localMangas.length };
-    }
-
     const hasFilters = selectedGenres.length > 0 || excludedGenres.length > 0 || selectedFormats.length > 0 || selectedStatuses.length > 0;
 
     if (!query && !hasFilters) {

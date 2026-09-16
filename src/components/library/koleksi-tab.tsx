@@ -52,7 +52,7 @@ export function KoleksiTab() {
         sort={catalog.sort}
         onTabChange={catalog.handleTabChange}
         dynamicSorts={catalog.DYNAMIC_SORTS}
-        selectedReadingStatuses={catalog.selectedReadingStatuses}
+        selectedFormats={catalog.selectedFormats}
         onPageReset={() => catalog.setPage(1)}
       />
 

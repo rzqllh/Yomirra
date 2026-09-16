@@ -8,7 +8,6 @@ import { LibrarySkeleton } from "@/components/skeletons/library-skeleton";
 import { useLibraryCatalog } from "@/shared/hooks/use-library-catalog";
 import { LibraryToolbar } from "./library-toolbar";
 import { LibraryStatusRail } from "./library-status-rail";
-import { LibraryCollectionRail } from "./library-collection-rail";
 import { LibraryResults } from "./library-results";
 
 export function LibraryPageView() {
@@ -33,8 +32,12 @@ export function LibraryPageView() {
           <PageHeader
             title="Jelajah"
             description="Eksplorasi manga dan komik dari berbagai sumber."
-            icon={<Books size={32} weight="duotone" />}
-            meta={<span className="text-sm font-bold text-text-muted">{catalog.totalLibraryCount} judul tersimpan</span>}
+            icon={<Books size={24} weight="duotone" />}
+            meta={
+              <span className="uppercase text-[11px] tracking-wider font-extrabold px-2.5 py-0.5 rounded-full bg-accent/10 border border-accent/20 text-accent">
+                {catalog.activeSourceId}
+              </span>
+            }
           />
 
           {/* 2. Search & Filter Row */}
@@ -51,26 +54,16 @@ export function LibraryPageView() {
             activeFilterCount={catalog.activeFilterCount}
           />
 
-          {/* 3. Quick Sort & Reading Status Row */}
+          {/* 3. Quick Sort & Format Rail */}
           <LibraryStatusRail
             sort={catalog.sort}
             onTabChange={catalog.handleTabChange}
             dynamicSorts={catalog.DYNAMIC_SORTS}
-            selectedReadingStatuses={catalog.selectedReadingStatuses}
+            selectedFormats={catalog.selectedFormats}
             onPageReset={() => catalog.setPage(1)}
           />
 
-          {/* 4. Collections Rail */}
-          <LibraryCollectionRail
-            collections={catalog.collections}
-            libraryItems={catalog.libraryItems}
-            membershipsByManga={catalog.membershipsByManga}
-            activeSourceId={catalog.activeSourceId}
-            selectedCollections={catalog.selectedCollections}
-            onPageReset={() => catalog.setPage(1)}
-          />
-
-          {/* 5. Results Section */}
+          {/* 4. Results Section */}
           <LibraryResults
             isDisabled={catalog.isDisabled}
             isLoading={catalog.isLoading}
