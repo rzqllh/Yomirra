@@ -100,7 +100,16 @@ export const useHistoryStore = create<HistoryState>()(
       _setItemLocal: (item) => set((state) => {
         const id = getHistoryId(item.sourceId, item.mangaId, item.chapterId);
         const existing = state.items[id];
-        const finalItem = existing ? { ...existing, ...item } : item;
+        let normalizedReadAt = item.readAt;
+        if (typeof normalizedReadAt === 'string') {
+          const parsed = new Date(normalizedReadAt).getTime();
+          normalizedReadAt = isNaN(parsed) ? Date.now() : parsed;
+        } else if (normalizedReadAt && typeof normalizedReadAt === 'object' && 'seconds' in (normalizedReadAt as any)) {
+          normalizedReadAt = (normalizedReadAt as any).seconds * 1000;
+        }
+        const finalItem = existing
+          ? { ...existing, ...item, readAt: normalizedReadAt }
+          : { ...item, readAt: normalizedReadAt };
 
         return {
           items: {
@@ -185,8 +194,19 @@ export const useHistoryStore = create<HistoryState>()(
       },
       
       getHistoryList: () => {
+        const toTimestamp = (val: unknown) => {
+          if (typeof val === 'number' && !isNaN(val)) return val;
+          if (typeof val === 'string') {
+            const parsed = new Date(val).getTime();
+            return isNaN(parsed) ? 0 : parsed;
+          }
+          if (val && typeof val === 'object' && 'seconds' in (val as any)) {
+            return (val as any).seconds * 1000;
+          }
+          return 0;
+        };
         return Object.values(get().items)
-          .sort((a, b) => b.readAt - a.readAt);
+          .sort((a, b) => toTimestamp(b.readAt) - toTimestamp(a.readAt));
       },
 
       markChapterProgress: (sourceId, mangaId, chapterId, pageIndex, totalPages, scrollPercent) => {

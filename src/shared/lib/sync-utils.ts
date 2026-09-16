@@ -191,3 +191,53 @@ export async function pullSourcePreferences(): Promise<{ disabledSources: string
     return null;
   }
 }
+
+export interface CustomCollectionsSyncData {
+  collections: import("@/shared/types/collection").Collection[];
+  membershipsByManga: Record<string, string[]>;
+  updatedAt: string;
+}
+
+export async function pushCustomCollections(
+  collections: import("@/shared/types/collection").Collection[],
+  membershipsByManga: Record<string, string[]>
+) {
+  const { auth, db } = await initFirebase();
+  if (!auth || !db) return;
+  const user = auth.currentUser;
+  if (!user) return;
+  try {
+    const { doc, setDoc } = await import("firebase/firestore");
+    await setDoc(doc(db, `users/${user.uid}/preferences`, "collections"), {
+      collections,
+      membershipsByManga,
+      updatedAt: new Date().toISOString()
+    });
+  } catch (e) {
+    console.error("Failed to sync custom collections", e);
+  }
+}
+
+export async function pullCustomCollections(): Promise<CustomCollectionsSyncData | null> {
+  const { auth, db } = await initFirebase();
+  if (!auth || !db) return null;
+  const user = auth.currentUser;
+  if (!user) return null;
+  try {
+    const { doc, getDoc } = await import("firebase/firestore");
+    const snapshot = await getDoc(doc(db, `users/${user.uid}/preferences`, "collections"));
+    if (snapshot.exists()) {
+      const data = snapshot.data();
+      return {
+        collections: Array.isArray(data.collections) ? data.collections : [],
+        membershipsByManga: data.membershipsByManga || {},
+        updatedAt: data.updatedAt || new Date().toISOString()
+      };
+    }
+    return null;
+  } catch (e) {
+    console.error("Failed to pull custom collections", e);
+    return null;
+  }
+}
+

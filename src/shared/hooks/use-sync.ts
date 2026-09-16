@@ -5,7 +5,8 @@ import { useHistoryStore, HistoryItem } from "@/shared/store/history-store";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { initFirebase } from '@/shared/lib/firebase';
-import { pullSourcePreferences, pullLegacyLibraryData } from '@/shared/lib/sync-utils';
+import { pullSourcePreferences, pullLegacyLibraryData, pullCustomCollections } from '@/shared/lib/sync-utils';
+import { useCollectionStore } from '@/shared/store/collection-store';
 
 export function useSync(options = { autoSync: true }) {
   const { user } = useAuth();
@@ -145,14 +146,30 @@ export function useSync(options = { autoSync: true }) {
         }
       });
 
+      const getSafeTimestamp = (val: unknown): number => {
+        if (typeof val === 'number' && !isNaN(val)) return val;
+        if (typeof val === 'string') {
+          const parsed = new Date(val).getTime();
+          return isNaN(parsed) ? 0 : parsed;
+        }
+        if (val && typeof val === 'object' && 'seconds' in (val as any)) {
+          return (val as any).seconds * 1000;
+        }
+        return 0;
+      };
+
       // 4. Merge History
       Object.values(historyItems).forEach(localItem => {
         const id = `${localItem.sourceId}::${localItem.mangaId}::${localItem.chapterId}`;
         const remoteItem = remoteHistory[id];
-        
-        if (!remoteItem || new Date(localItem.readAt).getTime() > new Date(remoteItem.readAt).getTime()) {
+        const localTime = getSafeTimestamp(localItem.readAt);
+        const remoteTime = remoteItem ? getSafeTimestamp(remoteItem.readAt) : 0;
+
+        if (!remoteItem || localTime > remoteTime) {
           // Push local to remote
-          const cleanItem = Object.fromEntries(Object.entries(localItem).filter(([, v]) => v !== undefined));
+          const cleanItem = Object.fromEntries(
+            Object.entries({ ...localItem, readAt: localTime }).filter(([, v]) => v !== undefined)
+          );
           pushToBatch(doc(firestore, `users/${uid}/history`, id), cleanItem);
         }
       });
@@ -160,9 +177,11 @@ export function useSync(options = { autoSync: true }) {
       Object.entries(remoteHistory).forEach(([id, remoteItem]) => {
         if (currentUidRef.current !== uid) return;
         const localItem = historyItems[id];
-        if (!localItem || new Date(remoteItem.readAt).getTime() > new Date(localItem.readAt).getTime()) {
+        const remoteTime = getSafeTimestamp(remoteItem.readAt);
+        const localTime = localItem ? getSafeTimestamp(localItem.readAt) : 0;
+        if (!localItem || remoteTime > localTime) {
           // Pull remote to local
-          setHistoryItemLocal(remoteItem);
+          setHistoryItemLocal({ ...remoteItem, readAt: remoteTime });
         }
       });
 
@@ -175,6 +194,19 @@ export function useSync(options = { autoSync: true }) {
         }
       } catch (e) {
         console.error("Failed to pull source preferences during sync", e);
+      }
+
+      // 6. Sync Custom Collections (Pull from Cloud)
+      try {
+        const cloudCollections = await pullCustomCollections();
+        if (currentUidRef.current === uid && cloudCollections) {
+          useCollectionStore.getState().syncWithCloud(
+            cloudCollections.collections,
+            cloudCollections.membershipsByManga
+          );
+        }
+      } catch (e) {
+        console.error("Failed to pull custom collections during sync", e);
       }
 
       if (currentUidRef.current !== uid) return;

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { BookBookmark } from "@phosphor-icons/react";
 import { PageHeader } from "@/components/app/header";
 import { SegmentedControl } from "@/components/ui/segmented-control";
@@ -10,11 +11,35 @@ import { useBookmarkReading } from "@/shared/hooks/use-bookmark-reading";
 import { useBookmarkCollection } from "@/shared/hooks/use-bookmark-collection";
 import { ReadingTab } from "./reading-tab";
 import { CollectionTab } from "./collection-tab";
+import { UpdatesList } from "@/components/updates/updates-list";
+
+export type BookmarkTab = "reading" | "collection" | "updates";
 
 export function BookmarkPageView() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const initialTabParam = searchParams.get("tab") as BookmarkTab | null;
+
+  const validTabs: BookmarkTab[] = ["reading", "collection", "updates"];
+  const [activeTab, setActiveTab] = React.useState<BookmarkTab>(
+    initialTabParam && validTabs.includes(initialTabParam) ? initialTabParam : "reading"
+  );
+
   const reading = useBookmarkReading();
   const collection = useBookmarkCollection();
-  const [activeTab, setActiveTab] = React.useState<"reading" | "collection">("reading");
+
+  const handleTabChange = (tab: BookmarkTab) => {
+    setActiveTab(tab);
+    const params = new URLSearchParams(searchParams.toString());
+    if (tab === "reading") {
+      params.delete("tab");
+    } else {
+      params.set("tab", tab);
+    }
+    const query = params.toString();
+    router.replace(`${pathname}${query ? `?${query}` : ""}`, { scroll: false });
+  };
 
   if (!reading.isMounted || !collection.isMounted) {
     return (
@@ -44,7 +69,7 @@ export function BookmarkPageView() {
       <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:px-8 md:pt-8">
         <PageHeader
           title="Rak Buku"
-          description="Bacaan & koleksi kamu"
+          description="Bacaan, koleksi, & pembaruan komik favoritmu"
           icon={<BookBookmark size={32} weight="duotone" />}
         />
       </div>
@@ -58,9 +83,10 @@ export function BookmarkPageView() {
           options={[
             { value: "reading", label: "Sedang Dibaca" },
             { value: "collection", label: "Koleksi" },
+            { value: "updates", label: "Updates" },
           ]}
           value={activeTab}
-          onChange={(val) => setActiveTab(val as "reading" | "collection")}
+          onChange={(val) => handleTabChange(val as BookmarkTab)}
           variant="glass-floating"
           fullWidth
           className="h-[46px]"
@@ -69,13 +95,15 @@ export function BookmarkPageView() {
       </div>
 
       <div className="px-4 mt-1 outline-none">
-        {activeTab === "reading" ? (
+        {activeTab === "reading" && (
           <ReadingTab
             groupedHistory={reading.groupedHistory}
             pendingDeletions={reading.pendingDeletions}
             onRemoveHistory={reading.handleRemoveHistory}
           />
-        ) : (
+        )}
+
+        {activeTab === "collection" && (
           <CollectionTab
             searchQuery={collection.searchQuery}
             onSearchChange={(e) => collection.setSearchQuery(e.target.value)}
@@ -99,7 +127,18 @@ export function BookmarkPageView() {
             collectionPage={collection.collectionPage}
             setCollectionPage={collection.setCollectionPage}
             totalPages={collection.totalPages}
+            collections={collection.collections}
+            membershipsByManga={collection.membershipsByManga}
+            selectedCollectionId={collection.selectedCollectionId}
+            onSelectCollectionId={collection.setSelectedCollectionId}
+            onCreateCollection={collection.createCollection}
+            onRenameCollection={collection.renameCollection}
+            onDeleteCollection={collection.deleteCollection}
           />
+        )}
+
+        {activeTab === "updates" && (
+          <UpdatesList />
         )}
       </div>
     </div>
