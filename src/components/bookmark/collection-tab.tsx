@@ -10,8 +10,9 @@ import { ShelfCard } from "@/components/manga/card";
 import { FilterChip } from "@/components/ui/filter-chip";
 import { CollectionToolbar } from "./collection-toolbar";
 import { CollectionSelectionToolbar } from "./collection-selection-toolbar";
+import { ConfirmationModal } from "@/components/ui/confirmation-modal";
+import { CreateCollectionModal, RenameCollectionModal } from "@/components/collection/collection-modals";
 import { getLibraryHref } from "@/shared/lib/routes";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import {
   Pagination,
@@ -90,27 +91,20 @@ export function CollectionTab({
   const [newName, setNewName] = React.useState("");
   const [activeCollectionId, setActiveCollectionId] = React.useState<string | null>(null);
 
-  const handleCreate = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newName.trim()) return;
+  const handleCreate = (name: string) => {
     try {
-      onCreateCollection?.(newName.trim());
+      onCreateCollection?.(name);
       toast.success("Koleksi berhasil dibuat");
-      setIsCreateOpen(false);
-      setNewName("");
     } catch (err: any) {
       toast.error(err.message || "Gagal membuat koleksi");
     }
   };
 
-  const handleRename = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!activeCollectionId || !newName.trim()) return;
+  const handleRename = (name: string) => {
+    if (!activeCollectionId) return;
     try {
-      onRenameCollection?.(activeCollectionId, newName.trim());
+      onRenameCollection?.(activeCollectionId, name);
       toast.success("Koleksi berhasil diubah");
-      setIsRenameOpen(false);
-      setNewName("");
       setActiveCollectionId(null);
     } catch (err: any) {
       toast.error(err.message || "Gagal mengubah koleksi");
@@ -387,89 +381,32 @@ export function CollectionTab({
         </>
       )}
 
-      {/* Create Dialog */}
-      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="max-w-sm rounded-3xl p-6 bg-surface-overlay/95 backdrop-blur-xl shadow-default -heavy">
-          <form onSubmit={handleCreate}>
-            <DialogHeader>
-              <DialogTitle>Koleksi Baru</DialogTitle>
-              <DialogDescription>
-                Masukkan nama untuk membuat folder koleksi baru.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="my-4">
-              <input
-                type="text"
-                autoFocus
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                placeholder="Nama Koleksi"
-                className="w-full bg-surface-base border border-border-strong rounded-xl px-4 py-2.5 outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary text-text-primary placeholder:text-text-muted transition-colors"
-              />
-            </div>
-            <DialogFooter className="flex-row gap-2 sm:justify-end mt-4">
-              <Button type="button" variant="ghost" onClick={() => setIsCreateOpen(false)} className="rounded-full font-bold">
-                Batal
-              </Button>
-              <Button type="submit" variant="accent" disabled={!newName.trim()} className="rounded-full font-bold">
-                Buat
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      {/* Create Modal */}
+      <CreateCollectionModal
+        isOpen={isCreateOpen}
+        onOpenChange={setIsCreateOpen}
+        onSubmit={handleCreate}
+      />
 
-      {/* Rename Dialog */}
-      <Dialog open={isRenameOpen} onOpenChange={setIsRenameOpen}>
-        <DialogContent className="max-w-sm rounded-3xl p-6 bg-surface-overlay/95 backdrop-blur-xl shadow-default -heavy">
-          <form onSubmit={handleRename}>
-            <DialogHeader>
-              <DialogTitle>Ubah Nama Koleksi</DialogTitle>
-              <DialogDescription>
-                Masukkan nama baru untuk folder koleksi ini.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="my-4">
-              <input
-                type="text"
-                autoFocus
-                value={newName}
-                onChange={(e) => setNewName(e.target.value)}
-                placeholder="Nama Koleksi"
-                className="w-full bg-surface-base border border-border-strong rounded-xl px-4 py-2.5 outline-none focus:border-brand-primary focus:ring-1 focus:ring-brand-primary text-text-primary placeholder:text-text-muted transition-colors"
-              />
-            </div>
-            <DialogFooter className="flex-row gap-2 sm:justify-end mt-4">
-              <Button type="button" variant="ghost" onClick={() => setIsRenameOpen(false)} className="rounded-full font-bold">
-                Batal
-              </Button>
-              <Button type="submit" variant="accent" disabled={!newName.trim()} className="rounded-full font-bold">
-                Simpan
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      {/* Rename Modal */}
+      <RenameCollectionModal
+        isOpen={isRenameOpen}
+        onOpenChange={setIsRenameOpen}
+        initialName={newName}
+        onSubmit={handleRename}
+      />
 
-      {/* Delete Dialog */}
-      <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-        <DialogContent className="max-w-sm rounded-3xl p-6 bg-surface-overlay/95 backdrop-blur-xl shadow-default -heavy">
-          <DialogHeader>
-            <DialogTitle>Hapus Koleksi?</DialogTitle>
-            <DialogDescription>
-              Folder koleksi ini akan dihapus. Komik di dalamnya tidak akan terhapus dari Rak Buku.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex-row gap-2 sm:justify-end mt-4">
-            <Button variant="ghost" onClick={() => setIsDeleteOpen(false)} className="rounded-full font-bold flex-1 sm:flex-none">
-              Batal
-            </Button>
-            <Button variant="destructive" onClick={handleDelete} className="rounded-full font-bold flex-1 sm:flex-none">
-              Hapus
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* Delete Modal */}
+      <ConfirmationModal
+        isOpen={isDeleteOpen}
+        onOpenChange={setIsDeleteOpen}
+        title="Hapus Koleksi?"
+        description="Folder koleksi ini akan dihapus. Komik di dalamnya tidak akan terhapus dari Rak Buku."
+        confirmLabel="Hapus"
+        cancelLabel="Batal"
+        variant="danger"
+        onConfirm={handleDelete}
+      />
     </div>
   );
 }
