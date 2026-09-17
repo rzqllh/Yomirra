@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { useMounted } from "@/shared/hooks/use-mounted";
 import { cn } from "@/shared/utils/cn";
 import { toast } from "sonner";
+import { useShallow } from "zustand/react/shallow";
 
 interface MangaCollectionButtonProps {
   sourceId: string;
@@ -29,7 +30,7 @@ export function MangaCollectionButton({
 }: MangaCollectionButtonProps) {
   const mangaKey: MangaKey = `${sourceId}::${mangaId}`;
   const collections = useCollectionStore((state) => state.collections);
-  const memberships = useCollectionStore((state) => state.getMemberships(mangaKey)) || [];
+  const memberships = useCollectionStore(useShallow((state) => state.getMemberships(mangaKey))) || [];
   const addMangaToCollection = useCollectionStore((state) => state.addMangaToCollection);
   const removeMangaFromCollection = useCollectionStore((state) => state.removeMangaFromCollection);
   const createCollection = useCollectionStore((state) => state.createCollection);
