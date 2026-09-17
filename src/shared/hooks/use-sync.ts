@@ -263,13 +263,15 @@ export function useSync(options = { autoSync: true }) {
   useEffect(() => {
     if (!user || !hasSyncedInitial.current) return;
 
-    let unsubLibrary: () => void;
-    let unsubHistory: () => void;
-    let unsubPrefs: () => void;
+    let isCancelled = false;
+    let unsubLibrary: (() => void) | undefined;
+    let unsubHistory: (() => void) | undefined;
+    let unsubPrefs: (() => void) | undefined;
 
     initFirebase().then(({ db }) => {
-      if (!db) return;
-      import('firebase/firestore').then(({ collection, onSnapshot }) => {
+      if (!db || isCancelled) return;
+      import('firebase/firestore').then(({ collection, doc, onSnapshot }) => {
+        if (isCancelled) return;
         const uid = user.uid;
 
         unsubLibrary = onSnapshot(collection(db, `users/${uid}/library`), (snapshot) => {
@@ -303,23 +305,22 @@ export function useSync(options = { autoSync: true }) {
         });
 
         // Preferences sync listener
-        import('firebase/firestore').then(({ doc, onSnapshot: onDocSnapshot }) => {
-          unsubPrefs = onDocSnapshot(doc(db, `users/${uid}/preferences`, "sources"), (docSnap) => {
-            if (docSnap.exists()) {
-              const data = docSnap.data();
-              if (Array.isArray(data.disabledSources) || Array.isArray(data.hiddenFromHomeSources)) {
-                useSourcePreferencesStore.getState().syncWithCloud(
-                  Array.isArray(data.disabledSources) ? data.disabledSources : [],
-                  Array.isArray(data.hiddenFromHomeSources) ? data.hiddenFromHomeSources : []
-                );
-              }
+        unsubPrefs = onSnapshot(doc(db, `users/${uid}/preferences`, "sources"), (docSnap) => {
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            if (Array.isArray(data.disabledSources) || Array.isArray(data.hiddenFromHomeSources)) {
+              useSourcePreferencesStore.getState().syncWithCloud(
+                Array.isArray(data.disabledSources) ? data.disabledSources : [],
+                Array.isArray(data.hiddenFromHomeSources) ? data.hiddenFromHomeSources : []
+              );
             }
-          }, (err) => console.error("Pref sync error", err));
-        });
+          }
+        }, (err) => console.error("Pref sync error", err));
       });
     });
 
     return () => {
+      isCancelled = true;
       if (unsubLibrary) unsubLibrary();
       if (unsubHistory) unsubHistory();
       if (unsubPrefs) unsubPrefs();
