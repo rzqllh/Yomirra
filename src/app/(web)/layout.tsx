@@ -35,6 +35,7 @@ import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { OfflineProvider } from "@/components/providers/offline-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { DownloadManager } from "@/components/download/download-manager";
+import { BootGate } from "@/components/app/boot-gate";
 
 export default function RootLayout({
   children,
@@ -47,13 +48,15 @@ export default function RootLayout({
         <Providers>
           <OfflineProvider>
             <div vaul-drawer-wrapper="" className="bg-background min-h-dvh">
-              <AppShell>
-                <ErrorBoundary>
-                  {children}
-                  <Toaster position="top-center" />
-                  <SpeedInsights />
-                </ErrorBoundary>
-              </AppShell>
+              <BootGate>
+                <AppShell>
+                  <ErrorBoundary>
+                    {children}
+                    <Toaster position="top-center" />
+                    <SpeedInsights />
+                  </ErrorBoundary>
+                </AppShell>
+              </BootGate>
             </div>
             <DownloadManager />
           </OfflineProvider>

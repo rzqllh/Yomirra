@@ -5,7 +5,7 @@ import { YomirraSurface } from "@/components/ui/layout";
 import { PageHeader } from "@/components/app/header";
 import { Compass } from "@phosphor-icons/react";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
-import { UpdatesBell } from "@/components/app/updates-bell";
+import { HeaderActions } from "@/components/app/header-actions";
 
 interface HomeViewProps {
   children?: React.ReactNode;
@@ -22,7 +22,7 @@ export function HomeView({ children }: HomeViewProps) {
             title="Beranda"
             description="Temukan dan baca komik favoritmu di satu tempat."
             icon={<Compass size={24} weight="duotone" />}
-            actions={<UpdatesBell />}
+            actions={<HeaderActions />}
           />
 
           {/* Dynamic Source Feeds & Personalization */}

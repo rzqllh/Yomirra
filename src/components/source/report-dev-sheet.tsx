@@ -72,7 +72,7 @@ export function ReportDevSheet({ source, open, onOpenChange }: ReportDevSheetPro
           <div className="flex gap-3 pt-2">
             <Button
               variant="outline"
-              className="flex-1 h-12 rounded-full font-bold border-border-default"
+              className="flex-1 h-12 rounded-2xl font-bold border-border-default"
               onClick={() => onOpenChange(false)}
               disabled={isSending}
             >
@@ -80,7 +80,7 @@ export function ReportDevSheet({ source, open, onOpenChange }: ReportDevSheetPro
             </Button>
             <Button
               variant="accent"
-              className="flex-[2] h-12 rounded-full font-bold"
+              className="flex-[2] h-12 rounded-2xl font-bold"
               onClick={handleSend}
               disabled={isSending || !message.trim()}
             >

@@ -79,7 +79,7 @@ export default async function ReaderPage({
             title="Gagal Memuat Chapter"
             description="Terjadi kesalahan saat mengambil data chapter dari server."
             action={
-              <Button asChild variant="outline" className="rounded-full shadow-sm mt-2 font-bold">
+              <Button asChild variant="outline" className="rounded-xl shadow-sm mt-2 font-bold">
                 <Link href={getMangaDetailHref(sourceId, mangaId)}>
                   Kembali ke Detail
                 </Link>

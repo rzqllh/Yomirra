@@ -26,18 +26,24 @@ describe('BottomDock Navigation', () => {
     expect(updatesLink).toBeNull();
   });
 
-  it('contains Beranda, Jelajah, Rak Buku, Cari, and Pengaturan links', () => {
+  it('contains Beranda, Library, Bookmark, and Cari links', () => {
     render(<BottomDock />);
     expect(screen.getByRole('link', { name: /beranda/i })).toBeTruthy();
-    expect(screen.getByRole('link', { name: /jelajah/i })).toBeTruthy();
-    expect(screen.getByRole('link', { name: /rak buku/i })).toBeTruthy();
+    expect(screen.getByRole('link', { name: /library/i })).toBeTruthy();
+    expect(screen.getByRole('link', { name: /bookmark/i })).toBeTruthy();
     expect(screen.getByRole('link', { name: /cari/i })).toBeTruthy();
-    expect(screen.getByRole('link', { name: /pengaturan/i })).toBeTruthy();
   });
 
-  it('contains a Rak Buku bookmark link', () => {
+  it('does NOT contain link to /settings in bottom dock', () => {
     render(<BottomDock />);
-    const bookmarkLink = screen.getByRole('link', { name: /rak buku/i });
+    const settingsLink = screen.queryByRole('link', { name: /pengaturan|settings/i });
+    expect(settingsLink).toBeNull();
+  });
+
+  it('contains a Bookmark link pointing to /bookmark', () => {
+    render(<BottomDock />);
+    const bookmarkLink = screen.getByRole('link', { name: /bookmark/i });
     expect(bookmarkLink).toBeTruthy();
+    expect(bookmarkLink.getAttribute('href')).toBe('/bookmark');
   });
 });

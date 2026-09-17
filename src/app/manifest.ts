@@ -21,8 +21,8 @@ export default function manifest(): MetadataRoute.Manifest {
     display_override: ['window-controls-overlay', 'fullscreen', 'standalone', 'minimal-ui', 'browser'],
     orientation: 'portrait',
 
-    background_color: '#000D0F',
-    theme_color: '#000D0F',
+    background_color: '#000000',
+    theme_color: '#000000',
 
     categories: ['books', 'entertainment', 'productivity'],
     prefer_related_applications: false,

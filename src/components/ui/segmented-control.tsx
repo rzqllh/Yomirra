@@ -8,14 +8,16 @@ export interface SegmentedControlOption {
   value: string;
   label: string;
   icon?: React.ReactNode;
+  badge?: string | number;
+  badgeVariant?: "accent" | "muted" | "error";
 }
 
 export interface SegmentedControlProps {
   options: SegmentedControlOption[];
   value: string;
   onChange: (value: string) => void;
-  variant?: "glass-floating" | "soft-inset";
-  shape?: "pill" | "rounded";
+  variant?: "quick-rail" | "glass-floating" | "soft-inset";
+  shape?: "rounded" | "pill";
   size?: "sm" | "md" | "lg";
   className?: string;
   fullWidth?: boolean;
@@ -26,54 +28,59 @@ export function SegmentedControl({
   options,
   value,
   onChange,
-  variant = "glass-floating",
-  shape = "pill",
+  variant = "quick-rail",
+  shape = "rounded",
   size = "md",
   className,
   fullWidth = false,
   layoutId = "segmented-pill",
 }: SegmentedControlProps) {
-  const isGlass = variant === "glass-floating";
   const isPill = shape === "pill";
+  const isQuickRail = variant === "quick-rail";
+  const isGlass = variant === "glass-floating";
 
   // Concentric radius formula:
-  // - Pill: Both outer container and inner indicator are rounded-full (radius = height / 2).
-  //   With padding p-1 (4px), inner radius is exactly outer radius - 4px along the entire arc.
-  // - Rounded: Outer rounded-2xl (16px) with p-1 (4px padding) requires inner rounded-md (12px),
-  //   satisfying R_inner = R_outer - padding (16px - 4px = 12px) to prevent corner pinching/bulging.
+  // - Pill: Both outer container and inner indicator are rounded-full.
+  // - Rounded: Outer rounded-2xl with p-1 padding requires inner rounded-md (14px squircle)
+  //   satisfying R_inner = R_outer - padding to prevent corner pinching/bulging.
   const containerRadiusClass = isPill ? "rounded-full" : "rounded-2xl";
   const itemRadiusClass = isPill ? "rounded-full" : "rounded-md";
 
   return (
     <div
+      role="tablist"
       className={cn(
-        "relative flex items-center p-1 transition-all duration-300 select-none",
+        "relative flex items-center p-1 transition-all duration-200 select-none",
         containerRadiusClass,
-        isGlass
-          ? "bg-surface-glass backdrop-blur-md border border-border-subtle shadow-xs"
-          : "bg-surface-muted/90 border border-border-subtle/40 shadow-inner",
+        isQuickRail && "bg-surface-raised/90 border border-border-subtle shadow-xs",
+        isGlass && "bg-surface-glass backdrop-blur-md border border-border-subtle shadow-xs",
+        variant === "soft-inset" && "bg-surface-muted/90 border border-border-subtle/40 shadow-inner",
         fullWidth ? "w-full" : "inline-flex",
         className
       )}
     >
       {options.map((option) => {
         const isActive = value === option.value;
+        const hasBadge = option.badge !== undefined && option.badge !== null && option.badge !== "";
+
         return (
           <motion.button
             key={option.value}
             type="button"
             onClick={() => onChange(option.value)}
-            whileTap={{ scale: 0.97 }}
+            whileTap={{ scale: 0.96 }}
             className={cn(
               "relative z-10 flex items-center justify-center gap-1.5 transition-colors duration-200 outline-none whitespace-nowrap font-bold",
               itemRadiusClass,
               size === "sm" && "py-1.5 px-3 text-xs",
-              size === "md" && "py-2 px-4 text-xs sm:text-sm",
+              size === "md" && "py-2 px-3.5 text-xs sm:text-sm",
               size === "lg" && "py-2.5 px-5 text-sm sm:text-base",
-              fullWidth ? "flex-1" : "flex-1 sm:flex-none sm:min-w-[100px]",
+              fullWidth ? "flex-1" : "flex-1 sm:flex-none sm:min-w-[90px]",
               isActive
-                ? "text-text-primary"
-                : "text-text-muted hover:text-text-primary"
+                ? isQuickRail
+                  ? "text-white"
+                  : "text-text-primary"
+                : "text-text-secondary hover:text-text-primary hover:bg-surface-hover/40"
             )}
             role="tab"
             id={`tab-${option.value}`}
@@ -86,15 +93,15 @@ export function SegmentedControl({
                 className={cn(
                   "absolute inset-0 z-0 transition-shadow",
                   itemRadiusClass,
-                  isGlass
-                    ? "bg-surface-raised shadow-xs border border-border-subtle/80"
-                    : "bg-surface-base shadow-xs border border-border-subtle/60"
+                  isQuickRail && "bg-accent shadow-xs",
+                  isGlass && "bg-surface-raised shadow-xs border border-border-subtle/80",
+                  variant === "soft-inset" && "bg-surface-base shadow-xs border border-border-subtle/60"
                 )}
                 initial={false}
                 transition={{
                   type: "spring",
-                  stiffness: isGlass ? 500 : 450,
-                  damping: isGlass ? 38 : 35,
+                  stiffness: 500,
+                  damping: 35,
                 }}
               />
             )}
@@ -102,9 +109,28 @@ export function SegmentedControl({
               <span className="relative z-10 shrink-0">{option.icon}</span>
             )}
             <span className="relative z-10">{option.label}</span>
+            {hasBadge && (
+              <span
+                className={cn(
+                  "relative z-10 text-[10px] px-1.5 py-0.5 rounded-md font-bold transition-colors leading-none",
+                  isActive
+                    ? isQuickRail
+                      ? "bg-white/20 text-white"
+                      : "bg-accent/15 text-accent"
+                    : option.badgeVariant === "error"
+                    ? "bg-semantic-error text-white shadow-xs"
+                    : option.badgeVariant === "accent"
+                    ? "bg-accent/15 text-accent border border-accent/20"
+                    : "bg-surface-muted text-text-muted border border-border-subtle"
+                )}
+              >
+                {option.badge}
+              </span>
+            )}
           </motion.button>
         );
       })}
     </div>
   );
 }
+

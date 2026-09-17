@@ -1,8 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Share01Icon, BellIcon, BellOffIcon } from "@hugeicons/core-free-icons";
-import { Icon } from "@/components/ui/icon";
+import { ShareNetwork, Bell, BellSlash } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useLibraryStore } from "@/shared/store/library-store";
@@ -63,9 +62,9 @@ export function MangaHeaderActions({
       <button
         onClick={handleShare}
         aria-label="Bagikan"
-        className="flex h-10 w-10 items-center justify-center rounded-2xl bg-surface-glass backdrop-blur-md border border-border-default/40 text-text-primary hover:bg-surface-hover hover:border-border-strong active:scale-95 transition-all shrink-0 select-none outline-none shadow-xs"
+        className="flex h-10 w-10 items-center justify-center rounded-[12px] liquid-glass text-text-primary active:scale-95 transition-all shrink-0 select-none outline-none cursor-pointer"
       >
-        <Icon icon={Share01Icon} size={20} strokeWidth={1.8} />
+        <ShareNetwork size={20} weight="regular" />
       </button>
 
       <button
@@ -78,18 +77,16 @@ export function MangaHeaderActions({
             : "Senyapkan notifikasi"
         }
         className={cn(
-          "flex h-10 w-10 items-center justify-center rounded-2xl backdrop-blur-md border transition-all shrink-0 select-none outline-none shadow-xs active:scale-95",
-          !isInLibrary
-            ? "bg-surface-glass/40 border-border-default/20 text-text-muted/40 cursor-not-allowed"
-            : isMuted
-            ? "bg-accent/15 border-accent/30 text-accent hover:bg-accent/25"
-            : "bg-surface-glass border-border-default/40 text-text-primary hover:bg-surface-hover hover:border-border-strong"
+          "flex h-10 w-10 items-center justify-center rounded-[12px] transition-all shrink-0 select-none outline-none active:scale-95 cursor-pointer",
+          isMounted && isMuted
+            ? "bg-accent/20 border border-accent/40 text-accent shadow-xs"
+            : "liquid-glass text-text-primary"
         )}
       >
-        {isInLibrary && isMuted ? (
-          <Icon icon={BellOffIcon} size={20} strokeWidth={1.8} />
+        {isMounted && isMuted ? (
+          <BellSlash size={20} weight="fill" />
         ) : (
-          <Icon icon={BellIcon} size={20} strokeWidth={!isInLibrary ? 1.5 : 2} />
+          <Bell size={20} weight={isMounted && isInLibrary ? "regular" : "regular"} />
         )}
       </button>
     </div>

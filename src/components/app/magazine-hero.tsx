@@ -77,7 +77,7 @@ export function MagazineHero({ sourceId, mangas }: MagazineHeroProps) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.5 }}
           >
-            <span className="bg-accent text-white text-xs font-bold px-3 py-1 rounded-full mb-4 inline-block shadow-lg">
+            <span className="bg-accent text-white text-xs font-bold px-3 py-1 rounded-md mb-4 inline-block shadow-lg">
               #{currentIndex + 1} Hottest
             </span>
           </motion.div>
@@ -100,7 +100,7 @@ export function MagazineHero({ sourceId, mangas }: MagazineHeroProps) {
           >
             <Link 
               href={`/sources/${sourceId}/manga/${heroManga.id}`} 
-              className="inline-flex mt-2 bg-white text-slate-950 hover:bg-slate-200 px-6 py-2.5 rounded-full text-sm font-bold transition-all shadow-[0_0_20px_rgba(255,255,255,0.2)] active:scale-95"
+              className="inline-flex mt-2 bg-white text-slate-950 hover:bg-slate-200 px-6 py-2.5 rounded-2xl text-sm font-bold transition-all shadow-[0_0_20px_rgba(255,255,255,0.2)] active:scale-95"
             >
               Baca Sekarang
             </Link>

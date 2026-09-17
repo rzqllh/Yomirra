@@ -12,18 +12,21 @@ import { Icon } from "@/components/ui/icon"
 export function BottomDock() {
   const pathname = usePathname()
 
+  // Primary 4 tabs only: Beranda, Library, Bookmark, Cari
+  const navItems = DOCK_NAV_ITEMS.filter((item) => item.href !== "/settings")
+
   return (
     <nav
       className="md:hidden fixed left-0 right-0 bottom-0 w-full z-[var(--z-sticky)] pointer-events-none"
       style={{
         paddingLeft: "max(12px, env(safe-area-inset-left, 0px))",
         paddingRight: "max(12px, env(safe-area-inset-right, 0px))",
-        paddingBottom: "max(8px, env(safe-area-inset-bottom, 0px))"
+        paddingBottom: "max(12px, env(safe-area-inset-bottom, 0px))",
       }}
     >
-      <div className="pointer-events-auto flex w-full max-w-md mx-auto items-center justify-center gap-3">
-        <div className="flex min-w-0 h-[56px] items-center justify-center gap-1 md:gap-3 rounded-full bg-surface-glass backdrop-blur-md px-2 shadow-sm border border-border-default/30 transition-all duration-300 ease-out">
-          {DOCK_NAV_ITEMS.filter(item => item.href !== '/settings').map((item) => {
+      <div className="pointer-events-auto flex w-full max-w-[360px] mx-auto items-center justify-center">
+        <div className="grid grid-cols-4 w-full h-[64px] items-center gap-1 rounded-[24px] liquid-glass p-1.5 transition-all duration-300 ease-out">
+          {navItems.map((item) => {
             const isActive =
               item.href === "/"
                 ? pathname === "/"
@@ -35,95 +38,50 @@ export function BottomDock() {
                 href={item.href}
                 onClick={() => {
                   if (item.href === "/search") {
-                    useSearchFilterStore.getState().resetFilters();
+                    useSearchFilterStore.getState().resetFilters()
                   }
                 }}
-                transitionTypes={['nav-lateral']}
-                className={cn(
-                  "group relative flex items-center justify-center h-[44px] shrink-0 outline-none tap-highlight-transparent transition-all duration-300 ease-out",
-                  isActive ? "w-[120px]" : "w-[48px]"
-                )}
+                transitionTypes={["nav-lateral"]}
+                className="group relative flex flex-col items-center justify-center h-full rounded-[20px] outline-none tap-highlight-transparent transition-all duration-200 ease-out active:scale-95 select-none"
                 aria-label={item.label}
                 aria-current={isActive ? "page" : undefined}
               >
                 {isActive && (
                   <motion.div
-                    className="absolute inset-0 rounded-full bg-accent/15 dark:bg-accent/20 border border-accent/20"
-                    initial={{ opacity: 0, scale: 0.1 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ type: "spring", bounce: 0, duration: 0.25 }}
+                    className="absolute inset-0 rounded-[20px] bg-accent/15 border border-accent/25 shadow-xs"
+                    layoutId="active-dock-tab"
+                    transition={{ type: "spring", bounce: 0.15, duration: 0.3 }}
                   />
                 )}
 
-                <div className="relative z-10 flex items-center justify-center gap-2">
+                <div className="relative z-10 flex flex-col items-center justify-center gap-1">
                   <Icon
                     icon={item.icon}
-                    size={22}
-                    strokeWidth={isActive ? 2.2 : 1.8}
+                    size={20}
+                    weight={isActive ? "fill" : "regular"}
                     className={cn(
-                      "transition-colors duration-300 shrink-0",
-                      isActive ? "text-accent" : "text-text-secondary group-hover:text-text-primary"
+                      "transition-colors duration-200 shrink-0",
+                      isActive
+                        ? "text-accent"
+                        : "text-text-secondary group-hover:text-text-primary"
                     )}
                   />
 
-                  {isActive && (
-                    <motion.span
-                      initial={{ opacity: 0, width: 0 }}
-                      animate={{ opacity: 1, width: "auto" }}
-                      className="text-[12px] font-bold tracking-wide text-accent whitespace-nowrap overflow-hidden"
-                    >
-                      {item.label}
-                    </motion.span>
-                  )}
+                  <span
+                    className={cn(
+                      "text-[10px] tracking-tight leading-none transition-colors duration-200",
+                      isActive
+                        ? "font-bold text-accent"
+                        : "font-medium text-text-muted group-hover:text-text-secondary"
+                    )}
+                  >
+                    {item.label}
+                  </span>
                 </div>
               </Link>
             )
           })}
         </div>
-
-        {/* Separate Floating Circle for Settings */}
-        {DOCK_NAV_ITEMS.find(i => i.href === '/settings') && (() => {
-          const item = DOCK_NAV_ITEMS.find(i => i.href === '/settings')!;
-          const isActive = pathname?.startsWith('/settings');
-
-          return (
-            <Link
-              href="/settings"
-              transitionTypes={['nav-lateral']}
-              className={cn(
-                "group relative flex h-[56px] shrink-0 items-center justify-center rounded-full bg-surface-glass backdrop-blur-md shadow-sm border border-border-default/30 transition-all duration-300 outline-none tap-highlight-transparent overflow-hidden",
-                isActive ? "w-[128px]" : "w-[56px] text-text-secondary hover:text-text-primary"
-              )}
-              aria-label={item.label}
-            >
-              {isActive && (
-                <motion.div
-                  className="absolute inset-1.5 rounded-full bg-accent/15 dark:bg-accent/20 border border-accent/20"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-                />
-              )}
-              <div className="relative z-10 flex items-center justify-center gap-2">
-                <Icon
-                  icon={item.icon}
-                  size={22}
-                  strokeWidth={isActive ? 2.2 : 1.8}
-                  className={cn("shrink-0 transition-colors duration-300", isActive ? "text-accent" : "")}
-                />
-                {isActive && (
-                  <motion.span
-                    initial={{ opacity: 0, width: 0 }}
-                    animate={{ opacity: 1, width: "auto" }}
-                    className="text-[13px] font-bold tracking-wide whitespace-nowrap text-accent"
-                  >
-                    {item.label}
-                  </motion.span>
-                )}
-              </div>
-            </Link>
-          );
-        })()}
       </div>
     </nav>
   )

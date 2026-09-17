@@ -27,7 +27,7 @@ export default function ReaderError({
           <Button 
             onClick={() => reset()} 
             variant="outline" 
-            className="rounded-full shadow-sm mt-4 font-bold px-6"
+            className="rounded-xl shadow-sm mt-4 font-bold px-6"
           >
             Coba Lagi
           </Button>

@@ -3,6 +3,7 @@
 import * as React from "react";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 import { PageHeader } from "@/components/app/header";
+import { HeaderActions } from "@/components/app/header-actions";
 import { useSearchCatalog } from "@/shared/hooks/use-search-catalog";
 import { SearchToolbar } from "./search-toolbar";
 import { SearchSourceRail } from "./search-source-rail";
@@ -20,6 +21,7 @@ export function SearchPageView() {
             title="Pencarian"
             description="Temukan komik dari berbagai sumber"
             icon={<MagnifyingGlass size={24} weight="duotone" />}
+            actions={<HeaderActions />}
           />
         </div>
 

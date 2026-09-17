@@ -1,26 +1,21 @@
 "use client";
 
 import * as React from "react";
-import { HugeiconsIcon } from "@hugeicons/react";
-import type { IconSvgElement } from "@hugeicons/react";
+import type { Icon as PhosphorIcon, IconProps as PhosphorIconProps } from "@phosphor-icons/react";
 import { cn } from "@/shared/utils/cn";
 
-export interface IconProps extends Omit<React.SVGProps<SVGSVGElement>, "ref"> {
-  icon: IconSvgElement;
-  size?: number | string;
+export interface IconProps extends Omit<PhosphorIconProps, "ref"> {
+  icon: PhosphorIcon | React.ComponentType<PhosphorIconProps>;
   strokeWidth?: number;
-  className?: string;
-  color?: string;
 }
 
 export const Icon = React.forwardRef<SVGSVGElement, IconProps>(
-  ({ icon, size = 20, strokeWidth = 1.75, className, color = "currentColor", ...props }, ref) => {
+  ({ icon: IconComponent, size = 20, weight = "regular", className, color = "currentColor", strokeWidth, ...props }, ref) => {
     return (
-      <HugeiconsIcon
+      <IconComponent
         ref={ref}
-        icon={icon}
         size={size}
-        strokeWidth={strokeWidth}
+        weight={weight}
         color={color}
         className={cn("shrink-0 pointer-events-none transition-colors", className)}
         {...props}

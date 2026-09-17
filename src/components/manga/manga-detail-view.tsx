@@ -298,6 +298,7 @@ export function MangaDetailView({
                       fill
                       className="object-cover"
                       unoptimized
+                      priority
                     />
                   ) : (
                     <div className="w-full h-full bg-surface-raised flex items-center justify-center">
@@ -310,7 +311,7 @@ export function MangaDetailView({
                     {detail.title}
                   </h1>
                   <div className="flex items-center gap-1.5 flex-wrap mb-2">
-                    <span className="flex items-center gap-1 text-[11px] font-black tracking-widest uppercase text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20">
+                    <span className="flex items-center gap-1 text-[11px] font-black tracking-widest uppercase text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
                       <Star weight="fill" size={10} />
                       <span suppressHydrationWarning>{Number(displayScore) > 0 ? Number(displayScore).toFixed(1) : "-.-"}</span>
                     </span>

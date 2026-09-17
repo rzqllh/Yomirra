@@ -132,9 +132,9 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
                     key={sourceId}
                     onClick={() => setActiveSourceId(sourceId)}
                     className={cn(
-                      "shrink-0 min-h-[30px] px-3 py-1 rounded-full text-[11px] font-bold transition-all duration-200 outline-none tap-highlight-transparent whitespace-nowrap",
+                      "shrink-0 min-h-[30px] px-3 py-1 rounded-xl text-[11px] font-bold transition-all duration-200 outline-none tap-highlight-transparent whitespace-nowrap active:scale-95 shadow-xs",
                       isActive
-                        ? "bg-text-primary text-surface-base shadow-sm"
+                        ? "bg-text-primary text-surface-base shadow-xs font-extrabold"
                         : "bg-surface-raised/80 text-text-muted border border-border-subtle/60 hover:text-text-primary"
                     )}
                   >

@@ -34,7 +34,7 @@ export function CollectionSelectionToolbar({
             variant="outline"
             size="sm"
             onClick={onSelectAll}
-            className="rounded-full text-xs font-bold"
+            className="rounded-xl text-xs font-bold"
           >
             {isAllSelected ? "Batal Semua" : "Pilih Semua"}
           </Button>
@@ -48,7 +48,7 @@ export function CollectionSelectionToolbar({
             variant="ghost"
             size="sm"
             onClick={onCancelSelection}
-            className="rounded-full text-xs font-bold"
+            className="rounded-xl text-xs font-bold"
           >
             Selesai
           </Button>
@@ -57,7 +57,7 @@ export function CollectionSelectionToolbar({
               variant="accent"
               size="sm"
               onClick={() => onOpenDeleteDialogChange(true)}
-              className="rounded-full text-xs font-bold bg-semantic-error hover:bg-semantic-error/90 text-white gap-1"
+              className="rounded-xl text-xs font-bold bg-semantic-error hover:bg-semantic-error/90 text-white gap-1"
             >
               <Trash size={14} weight="bold" />
               Hapus ({selectedCount})

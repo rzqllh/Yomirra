@@ -1,1025 +1,306 @@
 # Yomirra — UI/UX Redesign Audit & Proposal
 
-> Status: `AUDIT / PROPOSAL ONLY`
-> Implementation: `NOT STARTED`
-> Reference directory: `redesign-reference/`
-> Source of truth: actual repository + runtime behavior
-> Date:
-> Auditor:
+> Status: `FINAL AUDIT & PROPOSAL — PENDING EXECUTION PLAN APPROVAL`  
+> Implementation: `NOT STARTED (AWAITING APPROVAL TO COMMENCE CODE EDITS)`  
+> Reference directory: `redesign-reference/` (13 Visual References inspected)  
+> Source of truth: Actual repository code + runtime behavior + PRD/ARCH/DESIGN  
+> Date: 16 September 2026  
+> Lead Architect: Xyeena Axazeela  
 
 ---
 
-# 1. Executive Summary
+# 1. Executive Summary & Final Approved Direction
 
-## Current State
-Ringkas kondisi Yomirra saat ini dalam 3–6 poin.
-
-## Core Problems
-Sebutkan masalah yang paling berdampak, bukan seluruh detail kecil.
-
-## Proposed Direction
-Ringkas arah redesign yang direkomendasikan.
-
-## Overall Risk
-`Low / Medium / High`
-
-Reason:
-- ...
-
----
-
-# 2. Scope & Inventory
-
-## Routes / Screens Found
-
-| Screen / Route | Exists | Mobile | Tablet | Desktop | Reference Available | Audit Status |
-|---|---:|---:|---:|---:|---:|---|
-| Beranda | ✅ | ✅ | ? | ? | ✅ | Pending |
-| Library | | | | | | |
-| Bookmark | | | | | | |
-| Cari | | | | | | |
-| Sources | | | | | | |
-| Manga Detail | | | | | | |
-| Reader | | | | | | |
-| Reader Settings | | | | | | |
-| Chapter List | | | | | | |
-| Settings | | | | | | |
-| Updates | | | | | | |
-| Popular | | | | | | |
-| Backup / Restore | | | | | | |
-| Other | | | | | | |
-
-Tambahkan semua route/screen lain yang ditemukan di repo.
+## 1.1 Status Keputusan Terkunci (Final Locked Direction)
+1. **Navigasi Mobile 4 Tab (A-001):**  
+   Bottom dock mobile akan dikunci pada 4 pilar inti: **`Beranda`**, **`Library`**, **`Bookmark`**, **`Cari`**. `Settings` akan dikeluarkan dari bottom dock dan dialihkan menjadi aksi sekunder di header/top-level utility.
+2. **Domain Koleksi (A-002):**  
+   `CollectionManager` akan dipindahkan keluar dari `Settings` menuju domain **`Bookmark`** (tab Koleksi) tanpa menghapus atau mengubah logika fungsional CRUD koleksi yang ada.
+3. **Pembersihan Pintasan Navigasi di Settings (A-003):**  
+   Seksi statis "Pintasan Navigasi" akan dihapus dari UI halaman Settings. Rute `/updates`, `/popular`, dan `/sources` **tetap dipertahankan** dan akan dialirkan melalui titik masuk kontekstual yang natural di Beranda dan Library.
+4. **Pustaka Ikon Kanonikal (A-005):**  
+   **`@phosphor-icons/react`** ditetapkan sebagai pustaka ikon tunggal aplikasi. 8 file yang sempat mengimpor `@hugeicons` akan dinormalisasi kembali ke Phosphor. Aturan size, weight, dan seleksi state akan distandardisasi.
+5. **Pemisahan Halaman Pengaturan (Settings) & Akun (Account):**  
+   - `/settings`: Pusat kontrol preferensi aplikasi (tampilan, pembaca, keamanan, cache, pembaruan).
+   - `/account`: Halaman khusus profil, autentikasi Firebase Google, dan status sinkronisasi cloud. *Ketat: Tanpa mengarang fitur yang tidak didukung backend (tanpa 2FA, Discord, atau multi-device manager buatan).*
+6. **Reader Control (A-004) — Option A (Compact Navigation-First):**  
+   - Tombol Kembali (Back) akan dipindahkan ke Top Chrome bersama judul bab dan metadata halaman.
+   - Kontrol bawah akan dikonsolidasikan menjadi satu dock squircle ramping (tinggi ~56px) berisi: `[|< Prev]`, `[≡ Daftar Chapter]`, `[Next >|]`, dan `[⚙ Settings]`.
+   - Progres membaca pasif 2px (`ReaderProgress`) tetap independen di bagian atas.
+   - Scrubber horizontal besar dari Option B **tidak akan diimplementasikan** guna mencegah screen obstruction dan gesture conflict pada manhwa/webtoon vertikal.
+7. **Splash & Onboarding:**  
+   - *Splash Screen:* **Tidak akan dibuat** splash screen HTML buatan. Aplikasi akan mengandalkan native PWA launch bawaan OS dan mengoptimalkan kecepatan startup.
+   - *Onboarding:* Disetujui sebagai rute terpisah yang ringan, namun **bukan bagian blocking** dari fase redesign core UI. Akan dieksekusi setelah core UI stabil.
+8. **Component Showcase:**  
+   Akan dibuat rute implementasi nyata di **`/showcase`** menggunakan komponen aktual Yomirra, diperlakukan secara ketat sebagai **internal/development tooling** yang tidak diekspos pada navigasi publik.
+9. **Kompatibilitas Rute `/browse`:**  
+   Status rute `/browse` diubah menjadi **`DEPRECATE / KEEP REDIRECT`** (tetap me-redirect ke `/sources` demi menjaga kompatibilitas link eksternal dan bookmark lama).
 
 ---
 
-# 3. Component Inventory
+# 2. Mental Model Sumber Komik (Source Mental Model)
 
-| Component | Used By | Current Role | Reusable? | Problem | Proposed Action |
-|---|---|---|---:|---|---|
-| BottomDock | | | | | |
-| PageHeader | | | | | |
-| SettingsSection | | | | | |
-| SettingsItem | | | | | |
-| Modal / Dialog | | | | | |
-| Bottom Sheet | | | | | |
-| Segmented Control | | | | | |
-| Button | | | | | |
-| Icon Button | | | | | |
-| Input | | | | | |
-| Chip / Badge | | | | | |
+Redesign ini membedakan secara tegas 3 konsep sumber komik pada UI, label, dan perilakunya:
 
-Flag jika:
-- component terlalu page-specific
-- duplicate
-- punya variant tidak konsisten
-- seharusnya menjadi shared primitive
-
----
-
-# 4. Verified Findings
-
-Hanya masukkan fakta yang benar-benar sudah diverifikasi dari:
-- code
-- runtime
-- screenshot/reference
-- actual navigation/state
-
-Format:
-
-### V-001 — [Judul Temuan]
-**Area:**  
-**Evidence:**  
-**Current behavior:**  
-**Impact:**  
-**Related files/components:**  
-
-### V-002 — ...
-...
+```
++-----------------------------------------------------------------------------+
+|                           SOURCE MENTAL MODEL                               |
++-----------------------------------------------------------------------------+
+| 1. ENABLED SOURCE (Sumber Terpasang / Aktif Digunakan)                      |
+|    - Ekstensi sumber yang berstatus aktif/terpasang dan siap digunakan.     |
+|    - Pengguna dapat memiliki BANYAK sumber yang berstatus Enabled.          |
+|    - Dikelola di: Halaman Sources (/sources) via toggle enable/disable.     |
++-----------------------------------------------------------------------------+
+| 2. ACTIVE SOURCE (Sumber Terpilih / Katalog Aktif)                          |
+|    - SATU sumber tunggal yang saat ini menggerakkan katalog Library.        |
+|    - Mengatur filter kategori, urutan, dan rilis bab pada halaman Library.   |
+|    - Ditampilkan jelas di: Kartu Sumber Aktif di /library [Ganti Sumber >]. |
++-----------------------------------------------------------------------------+
+| 3. MULTI-SOURCE SEARCH (Pencarian Lintas Sumber)                            |
+|    - Mesin pencari paralel yang meminta data ke SEMUA Enabled Sources.      |
+|    - TIDAK dibatasi oleh Active Source Library saat ini.                     |
+|    - Dikelola di: Halaman Cari (/search) dengan source control rail.        |
++-----------------------------------------------------------------------------+
+```
 
 ---
 
-# 5. Inferred Issues
+# 3. Workstream Identitas & Brand Yomirra (App Icon & Visual Mark)
 
-Masukkan asumsi atau dugaan yang masuk akal tetapi belum sepenuhnya terbukti.
+## 3.1 Audit Aset Brand Saat Ini di Repositori
+- **File Manifest:** `src/app/manifest.ts` saat ini masih menggunakan sisa tema lama (`background_color: '#000D0F'`, `theme_color: '#000D0F'`).
+- **File Ikon Aplikasi Saat Ini:**
+  - `src/app/icon.png`, `apple-icon.png`, `favicon.png` (ukuran 1.1MB).
+  - `src/logo/icon.png`, `brand.png`, `favicon.png`.
+  - `public/icons/`: `icon-192.png`, `icon-192-maskable.png`, `icon-512.png`, `icon-512-maskable.png`, serta 4 shortcut icons.
+- **Header Logo & App Shell:** `src/components/app/top-nav.tsx` mengimpor `import Logo from "@/logo/icon.png"`.
 
-### I-001 — [Judul]
-**Observation:**  
-**Inference:**  
-**Why it matters:**  
-**How to verify:**  
-
-Jangan tulis inference sebagai fakta.
-
----
-
-# 6. Information Architecture Audit
-
-## Current IA
-Jelaskan struktur navigasi aktual.
-
-## Proposed Mobile Primary Navigation
-
-- Beranda
-- Library
-- Bookmark
-- Cari
-
-## Settings
-Proposed role:
-- secondary destination
-- accessible from top-level header/profile utility
-- not part of bottom dock
-
-## Secondary Destinations
-Audit placement untuk:
-- Updates
-- Popular
-- Sources
-- Downloads
-- Settings
-- Backup
-- other utilities
-
-## Findings
-Apa yang redundant, misplaced, atau terlalu tersembunyi?
+## 3.2 Konsep Identitas Brand & App Icon
+- **Akar Filosofi:** Nama `Yomirra` berakar secara konseptual dari terminologi membaca dalam bahasa Jepang (*yomu* / *yomimasu*). Namun, identitas brand **TIDAK AKAN** diubah menjadi klise ornamen Jepang secara harfiah.
+- **Komunikasi Visual Ikon:**
+  1. *Reading (Membaca):* Helaian lembaran buku/cerita yang dinamis.
+  2. *Manga / Webtoon Storytelling:* Estetika panel modern dengan kontras tinggi.
+  3. *Multi-Source Reading:* Lapisan kaca transparan (*frosted glass layers*) yang menyatu dalam satu antarmuka terpadu.
+  4. *Discovery (Penemuan):* Elemen aksen cahaya/sparkle di puncak ikon yang memancarkan eksplorasi judul baru.
+- **Status Mockup `icon.png`:** Gambar `redesign-reference/icon.png` diperlakukan secara ketat sebagai **visual reference saja**, bukan aset biner final yang langsung disalin tanpa audit.
+- **Ruang Lingkup Aset Brand yang Akan Dihasilkan:**
+  1. *Yomirra App Icon Master:* Master SVG / High-Res PNG.
+  2. *Favicon & PWA Icon Family:*
+     - `favicon.ico` (multi-size: 16x16, 32x32, 48x48)
+     - `icon-192.png` (192x192 PNG standar)
+     - `icon-192-maskable.png` (192x192 PNG dengan safe margin 20% Android)
+     - `icon-512.png` (512x512 PNG splash desktop/PWA)
+     - `icon-512-maskable.png` (512x512 PNG Android adaptive icon)
+     - `apple-touch-icon.png` (180x180 PNG iOS home screen)
+  3. *Logo Mark & Compact Logo:*
+     - Full Logo Mark (Ikon + Logotype "Yomirra" dalam tipografi Inter/Outfit semi-bold)
+     - Compact Logo Mark (Monogram Squircle Y/Book untuk mobile header)
+  4. *Splash / Native Launch Identity:* Integrasi `theme_color` (#000000) dan icon centered di PWA webmanifest untuk launch sequence native OS yang mulus tanpa flash.
+  5. *Header / App-Shell Logo Usage:* Standardisasi pemakaian logo di `top-nav.tsx` dan `header.tsx` dengan ukuran fixed 32x32 squircle.
+- **Klausul Integritas:** **TIDAK ADA penggantian aset biner gambar yang akan dilakukan sebelum proposal desain brand/ikon final dipresentasikan dan disetujui pengguna.**
 
 ---
 
-# 7. Bottom Navigation Audit
+# 4. Scope & Page Inventory
 
-## Current
-Jelaskan actual implementation.
-
-## Problems
-- ...
-
-## Proposed
-`Beranda / Library / Bookmark / Cari`
-
-## Active State
-Jelaskan:
-- icon behavior
-- label behavior
-- selected surface
-- motion
-- hit target
-- safe-area handling
-
-## Desktop / Tablet Adaptation
-Jelaskan apakah:
-- bottom dock berubah menjadi top nav
-- sidebar
-- navigation rail
-- atau pattern lain
-
-Jangan copy mobile dock mentah ke desktop.
+| Screen / Route | Status Repo | Mobile | Tablet | Desktop | Reference File | Status Rencana |
+|---|:---:|:---:|:---:|:---:|---|:---:|
+| **Splash Screen** | ❌ (Belum Ada) | ✅ | ✅ | ✅ | `Splash_Screen.png` | **REJECTED (Native PWA Launch)** |
+| **Onboarding Flow** | ❌ (Belum Ada) | ✅ | ✅ | ✅ | `Onboarding_Screen.png` | **DEFERRED (Post-Core Phase)** |
+| **Beranda** (`/`) | ✅ Ada | ✅ | ✅ | ✅ | `... (1).png` | **REFACTOR (Editorial Squircle)** |
+| **Library** (`/library`) | ✅ Ada | ✅ | ✅ | ✅ | `... (2).png` | **REFACTOR (Active Source View)** |
+| **Bookmark** (`/bookmark`) | ✅ Ada | ✅ | ✅ | ✅ | `... (3).png` | **REFACTOR (Hub Koleksi Pribadi)** |
+| **Cari** (`/search`) | ✅ Ada | ✅ | ✅ | ✅ | `... (4).png` | **REFACTOR (Multi-Source Discovery)** |
+| **Sources** (`/sources`) | ✅ Ada | ✅ | ✅ | ✅ | `... (5).png` | **REFACTOR (Domain Manajemen Sumber)** |
+| **Manga Detail** (`/manga/[src]/[id]`) | ✅ Ada | ✅ | ✅ | ✅ | `... (6).png` | **REFACTOR (Single Header Action)** |
+| **Reader View** (`.../read/[ch]`) | ✅ Ada | ✅ | ✅ | ✅ | `... (8).png` | **REFACTOR (Option A Ramping)** |
+| **Reader Settings Sheet** | ✅ Ada | ✅ | ✅ | ✅ | `... (9).png` | **REFACTOR (Squircle Sheet)** |
+| **Reader Chapter Drawer** | ✅ Ada | ✅ | ✅ | ✅ | `... (10).png` | **REFACTOR (Squircle Drawer)** |
+| **Settings** (`/settings`) | ✅ Ada | ✅ | ✅ | ✅ | `... (7).png` | **RESTRUCTURE (App Control Center)** |
+| **Account** (`/account`) | ❌ (Eksis di Settings) | ✅ | ✅ | ✅ | `... (7).png` | **NEW ROUTE (Dedicated Profile & Sync)** |
+| **Updates** (`/updates`) | ✅ Ada | ✅ | ✅ | ✅ | Lonceng Header | **KEEP (Contextual Entry)** |
+| **Popular** (`/popular`) | ✅ Ada | ✅ | ✅ | ✅ | Seksi Beranda | **KEEP (Contextual Entry)** |
+| **Downloads** (`/downloads`) | ✅ Ada | ✅ | ✅ | ✅ | Storage Settings | **KEEP (Contextual Entry)** |
+| **Component Showcase** (`/showcase`)| ❌ (Belum Ada) | ✅ | ✅ | ✅ | Design Specs | **NEW DEV ROUTE (Internal Only)** |
+| **Browse Redirect** (`/browse`) | ✅ Ada (Dummy) | - | - | - | - | **DEPRECATE / KEEP REDIRECT** |
 
 ---
 
-# 8. Global Visual Direction
+# 5. Global Squircle & Concentric Radius Specification
 
-## Direction
-`Modern Editorial Utility`
+Aplikasi Yomirra mengadopsi standar sudut **Squircle Konsentris** secara global.
 
-## Characteristics
-- ...
-- ...
+## 5.1 Formula Radius Konsentris
+Untuk elemen anak (child) di dalam kontainer induk (parent) yang memiliki inset:
+$$R_{\text{child}} = \max(R_{\text{parent}} - \text{inset}, R_{\text{min}})$$
 
-## Avoid
-- Material / Google Settings look
-- excessive nested cards
-- excessive glass
-- random gradients
-- arbitrary pills
-- equal visual weight everywhere
-- decorative UI tanpa functional hierarchy
+*Aturan Batas Bawah ($R_{\text{min}}$):*  
+Nilai $R_{\text{min}} = 6\text{px}$ (`radius-xs`). Jika perhitungan menghasilkan angka di bawah 6px, radius dikunci pada 6px agar sudut tidak berubah menjadi persegi tajam.
 
----
+## 5.2 Skala Token Radius Yomirra
 
-# 9. Geometry / Squircle System
+| Token | Nilai | Contoh Induk (Parent) | Contoh Anak (Child) & Inset | Nilai Terhitung |
+|---|:---:|---|---|:---:|
+| `--radius-sheet` | `32px` | Vaul Filter Drawer / Reader Sheet | Group card opsi (inset 16px) | $32 - 16 = 16\text{px} \rightarrow$ `rounded-2xl` |
+| `--radius-xl` | `26px` | Floating Bottom Dock / Dialog Modal | Active tab indicator pill (inset 6px) | $26 - 6 = 20\text{px} \rightarrow$ `rounded-xl` |
+| `--radius-lg` | `20px` | ShelfCard / Segmented Track / Button | Segmented sliding thumb (inset 4px) | $20 - 4 = 16\text{px} \rightarrow$ `rounded-lg` |
+| `--radius-md` | `14px` | FilterChip / Input / Cover Grid | Icon badge di dalam chip (inset 4px) | $14 - 4 = 10\text{px} \rightarrow$ `rounded-sm` |
+| `--radius-sm` | `10px` | Thumbnail Row / Inner Card Item | Mini rating badge / dot (inset 2px) | $10 - 2 = 8\text{px} \rightarrow$ `rounded-xs` |
+| `--radius-xs` | `6px` | Format Badge (`MANHWA`, `18+`, `RAW`) | Teks monospace mikro | - |
 
-## Principle
-Seluruh aplikasi menggunakan squircle / square-circle geometry sebagai default visual language.
-
-## Proposed Radius Tokens
-
-| Token | Intended Use | Value / Formula |
-|---|---|---|
-| radius-xs | | |
-| radius-sm | | |
-| radius-md | | |
-| radius-lg | | |
-| radius-xl | | |
-| radius-sheet | | |
-
-## Nested Radius Formula
-Example:
-
-`R_child = max(R_parent - inset, R_min)`
-
-Jelaskan actual recommendation berdasarkan spacing/token repo.
-
-## Full Circle Exceptions
-Hanya jika memang secara geometris perlu:
-- toggle thumb
-- status dot
-- spinner
-- progress handle
-- etc.
-
-Catat semua penggunaan `rounded-full` existing yang perlu diaudit.
+## 5.3 Aturan Avatar Pengguna (User Avatar Geometry)
+- **Arah Desain:** Avatar pengguna **TIDAK DIKECUALIKAN** dari squircle. Avatar akan menggunakan kontainer **squircle konsentris** (`rounded-2xl` untuk avatar besar 60px, `rounded-xl` untuk avatar header 36px) dengan border halus.
+- **Pengecualian Bulat Murni (`rounded-full`):**  
+  Hanya dibatasi ketat untuk entitas geometris yang menuntut lingkaran murni:
+  1. *Status Online Dot* (`w-2 h-2 rounded-full`)
+  2. *Toggle Switch Thumb* (`w-4 h-4 rounded-full`)
+  3. *Progress/Scrubber Thumb*
+  4. *Circular Loading Spinner*
 
 ---
 
-# 10. Typography Hierarchy
+# 6. Kontrak Semantik Visual & Matriks Varian × State Lengkap
 
-| Role | Usage | Size | Weight | Line Height | Example |
-|---|---|---:|---:|---:|---|
-| Display | | | | | |
-| Page Title | | | | | |
-| Section Title | | | | | |
-| Card Title | | | | | |
-| Body | | | | | |
-| Secondary | | | | | |
-| Caption | | | | | |
-| Metadata | | | | | |
+Berikut adalah matriks varian × state lengkap untuk **9 Varian Semantik** dan **7 State Interaktif** yang mendefinisikan perilaku visual secara eksplisit, mencegah class hover generik merusak hierarki warna solid.
 
-Pastikan hierarchy tidak hanya mengandalkan font-weight.
-
----
-
-# 11. Spacing & Layout System
-
-## Spacing Tokens
-Propose consistent spacing scale.
-
-## Mobile
-- horizontal page margin:
-- section gap:
-- card padding:
-- row padding:
-- control gap:
-
-## Tablet
-...
-
-## Desktop
-...
-
-## Density Rule
-Jelaskan kapan UI boleh compact dan kapan harus spacious.
-
----
-
-# 12. Semantic Color System
-
-## Core Palette
-
-| Role | Light | Dark | Usage |
-|---|---|---|---|
-| Background | | | |
-| Surface Base | | | |
-| Surface Raised | | | |
-| Surface Overlay | | | |
-| Glass | | | |
-| Text Primary | | | |
-| Text Secondary | | | |
-| Text Muted | | | |
-| Border | | | |
-| Accent | | | |
-| Success | | | |
-| Warning | | | |
-| Error / Destructive | | | |
-| Info | | | |
-
----
-
-# 13. Visual Hierarchy by Variant
-
-## Primary / Accent
-
-### Usage
-Dipakai untuk:
-- primary CTA
-- selected navigation
-- focused state
-- selected segmented option
-- progress penting
-
-### Do Not Use For
-- decorative icon random
-- every card
-- secondary labels
-
-### States
-
-| State | Background | Text/Icon | Border | Elevation |
-|---|---|---|---|---|
-| Default | | | | |
-| Hover | | | | |
-| Active | | | | |
-| Focus | | | | |
-| Disabled | | | | |
+| Varian | State | Background | Foreground / Teks | Border | Shadow / Elevation | Icon Treatment | Opasitas | Motion Feedback |
+|---|---|---|---|---|---|---|:---:|---|
+| **1. Primary / Accent** | **Default** | `bg-accent` (`#5856D6` / `#6C6AFA`) | `#FFFFFF` (Solid White) | `border-transparent` | `shadow-xs` | `#FFFFFF regular` | 1.0 | `transition-all duration-150` |
+| | **Hover** | `bg-accent-hover` (`#4644B8` / `#8A88FF`) | `#FFFFFF` | `border-transparent` | `shadow-sm` | `#FFFFFF regular` | 1.0 | `brightness-105 duration-150` |
+| | **Pressed** | `bg-accent` (`#3E3C9E` / `#5A58D6`) | `#FFFFFF` | `border-transparent` | `shadow-none` | `#FFFFFF regular` | 1.0 | `scale-[0.98] duration-75` |
+| | **Focus-Vis** | `bg-accent` | `#FFFFFF` | `ring-2 ring-accent ring-offset-2 ring-offset-background` | `shadow-xs` | `#FFFFFF regular` | 1.0 | `ring-offset-2 transition-shadow` |
+| | **Selected** | `bg-accent text-white font-bold` | `#FFFFFF` | `border-transparent` | `shadow-xs` | `#FFFFFF fill` | 1.0 | `stable` |
+| | **Disabled** | `bg-accent/40` | `#FFFFFF/70` | `border-transparent` | `shadow-none` | `#FFFFFF/60 regular` | 0.45 | `pointer-events-none` |
+| | **Loading** | `bg-accent` | `#FFFFFF` | `border-transparent` | `shadow-none` | `CircleNotch animate-spin` | 0.85 | `cursor-wait` |
+|---|---|---|---|---|---|---|:---:|---|
+| **2. Secondary** | **Default** | `bg-surface-raised` | `text-text-primary` | `border-border-default` | `shadow-none` | `text-text-secondary regular` | 1.0 | `transition-all duration-150` |
+| | **Hover** | `bg-surface-hover` | `text-text-primary` | `border-border-strong` | `shadow-xs` | `text-text-primary regular` | 1.0 | `duration-150` |
+| | **Pressed** | `bg-surface-muted` | `text-text-primary` | `border-border-strong` | `shadow-none` | `text-text-primary regular` | 1.0 | `scale-[0.98] duration-75` |
+| | **Focus-Vis** | `bg-surface-raised` | `text-text-primary` | `ring-2 ring-accent ring-offset-2 ring-offset-background` | `shadow-none` | `text-text-primary regular` | 1.0 | `transition-shadow` |
+| | **Selected** | `bg-surface-hover` | `text-accent font-bold` | `border-accent/40` | `shadow-none` | `text-accent fill` | 1.0 | `stable` |
+| | **Disabled** | `bg-surface-raised/40` | `text-text-muted/40` | `border-border-subtle/30` | `shadow-none` | `text-text-muted/30 regular` | 0.4 | `pointer-events-none` |
+| | **Loading** | `bg-surface-raised` | `text-text-primary` | `border-border-default` | `shadow-none` | `CircleNotch animate-spin` | 0.7 | `cursor-wait` |
+|---|---|---|---|---|---|---|:---:|---|
+| **3. Ghost** | **Default** | `bg-transparent` | `text-text-secondary` | `border-transparent` | `shadow-none` | `text-text-secondary regular` | 1.0 | `transition-colors duration-150` |
+| | **Hover** | `bg-surface-hover/60` | `text-text-primary` | `border-transparent` | `shadow-none` | `text-text-primary regular` | 1.0 | `duration-150` |
+| | **Pressed** | `bg-surface-hover` | `text-text-primary` | `border-transparent` | `shadow-none` | `text-text-primary regular` | 1.0 | `scale-[0.98] duration-75` |
+| | **Focus-Vis** | `bg-surface-hover/40` | `text-text-primary` | `ring-2 ring-accent ring-offset-2 ring-offset-background` | `shadow-none` | `text-text-primary regular` | 1.0 | `transition-shadow` |
+| | **Selected** | `bg-accent/10` | `text-accent font-bold` | `border-transparent` | `shadow-none` | `text-accent fill` | 1.0 | `stable` |
+| | **Disabled** | `bg-transparent` | `text-text-muted/30` | `border-transparent` | `shadow-none` | `text-text-muted/30 regular` | 0.35 | `pointer-events-none` |
+| | **Loading** | `bg-transparent` | `text-text-secondary` | `border-transparent` | `shadow-none` | `CircleNotch animate-spin` | 0.7 | `cursor-wait` |
+|---|---|---|---|---|---|---|:---:|---|
+| **4. Glass / Frosted** | **Default** | `bg-surface-glass backdrop-blur-xl` | `text-text-primary` | `border-border-glass` | `shadow-glass` | `text-text-secondary regular` | 1.0 | `backdrop-blur-xl duration-150` |
+| | **Hover** | `bg-surface-glass/90 backdrop-blur-2xl`| `text-text-primary` | `border-border-strong` | `shadow-glass` | `text-text-primary regular` | 1.0 | `duration-150` |
+| | **Pressed** | `bg-surface-glass` | `text-text-primary` | `border-border-strong` | `shadow-xs` | `text-text-primary regular` | 1.0 | `scale-[0.98] duration-75` |
+| | **Focus-Vis** | `bg-surface-glass` | `text-text-primary` | `ring-2 ring-accent ring-offset-2 ring-offset-background` | `shadow-glass` | `text-text-primary regular` | 1.0 | `transition-shadow` |
+| | **Selected** | `bg-accent/20 backdrop-blur-xl` | `text-accent font-bold` | `border-accent/40` | `shadow-xs` | `text-accent fill` | 1.0 | `stable` |
+| | **Disabled** | `bg-surface-glass/30` | `text-text-muted/30` | `border-border-glass/30` | `shadow-none` | `text-text-muted/30 regular` | 0.4 | `pointer-events-none` |
+| | **Loading** | `bg-surface-glass` | `text-text-primary` | `border-border-glass` | `shadow-glass` | `CircleNotch animate-spin` | 0.7 | `cursor-wait` |
+|---|---|---|---|---|---|---|:---:|---|
+| **5. Destructive** | **Default** | `bg-semantic-error` (`#DC2626` / `#EF4444`)| `#FFFFFF` | `border-transparent` | `shadow-xs` | `#FFFFFF regular` | 1.0 | `transition-all duration-150` |
+| | **Hover** | `bg-semantic-error/90` | `#FFFFFF` | `border-transparent` | `shadow-sm` | `#FFFFFF regular` | 1.0 | `brightness-105 duration-150` |
+| | **Pressed** | `bg-semantic-error/80` | `#FFFFFF` | `border-transparent` | `shadow-none` | `#FFFFFF regular` | 1.0 | `scale-[0.98] duration-75` |
+| | **Focus-Vis** | `bg-semantic-error` | `#FFFFFF` | `ring-2 ring-semantic-error ring-offset-2 ring-offset-background`| `shadow-xs` | `#FFFFFF regular` | 1.0 | `ring-offset-2 transition-shadow` |
+| | **Selected** | `bg-semantic-error font-bold` | `#FFFFFF` | `border-transparent` | `shadow-xs` | `#FFFFFF fill` | 1.0 | `stable` |
+| | **Disabled** | `bg-semantic-error/40` | `#FFFFFF/60` | `border-transparent` | `shadow-none` | `#FFFFFF/50 regular` | 0.4 | `pointer-events-none` |
+| | **Loading** | `bg-semantic-error` | `#FFFFFF` | `border-transparent` | `shadow-none` | `CircleNotch animate-spin` | 0.8 | `cursor-wait` |
+|---|---|---|---|---|---|---|:---:|---|
+| **6. Success** | **Default** | `bg-semantic-success/15` | `text-semantic-success` (`#34C759` / `#30D158`) | `border-semantic-success/30` | `shadow-none` | `text-semantic-success regular` | 1.0 | `transition-all duration-150` |
+| | **Hover** | `bg-semantic-success/25` | `text-semantic-success` | `border-semantic-success/50` | `shadow-xs` | `text-semantic-success regular` | 1.0 | `duration-150` |
+| | **Pressed** | `bg-semantic-success/30` | `text-semantic-success` | `border-semantic-success/60` | `shadow-none` | `text-semantic-success regular` | 1.0 | `scale-[0.98] duration-75` |
+| | **Focus-Vis** | `bg-semantic-success/20` | `text-semantic-success` | `ring-2 ring-semantic-success ring-offset-2 ring-offset-background` | `shadow-none` | `text-semantic-success regular` | 1.0 | `transition-shadow` |
+| | **Selected** | `bg-semantic-success text-white font-bold` | `#FFFFFF` | `border-transparent` | `shadow-xs` | `#FFFFFF fill` | 1.0 | `stable` |
+| | **Disabled** | `bg-semantic-success/10` | `text-semantic-success/40` | `border-semantic-success/15` | `shadow-none` | `text-semantic-success/40 regular` | 0.4 | `pointer-events-none` |
+| | **Loading** | `bg-semantic-success/20` | `text-semantic-success` | `border-semantic-success/30` | `shadow-none` | `CircleNotch animate-spin` | 0.7 | `cursor-wait` |
+|---|---|---|---|---|---|---|:---:|---|
+| **7. Warning** | **Default** | `bg-semantic-warning/15` | `text-semantic-warning` (`#FF9500` / `#FF9F0A`) | `border-semantic-warning/30` | `shadow-none` | `text-semantic-warning regular` | 1.0 | `transition-all duration-150` |
+| | **Hover** | `bg-semantic-warning/25` | `text-semantic-warning` | `border-semantic-warning/50` | `shadow-xs` | `text-semantic-warning regular` | 1.0 | `duration-150` |
+| | **Pressed** | `bg-semantic-warning/30` | `text-semantic-warning` | `border-semantic-warning/60` | `shadow-none` | `text-semantic-warning regular` | 1.0 | `scale-[0.98] duration-75` |
+| | **Focus-Vis** | `bg-semantic-warning/20` | `text-semantic-warning` | `ring-2 ring-semantic-warning ring-offset-2 ring-offset-background` | `shadow-none` | `text-semantic-warning regular` | 1.0 | `transition-shadow` |
+| | **Selected** | `bg-semantic-warning text-black font-bold` | `#000000` | `border-transparent` | `shadow-xs` | `#000000 fill` | 1.0 | `stable` |
+| | **Disabled** | `bg-semantic-warning/10` | `text-semantic-warning/40` | `border-semantic-warning/15` | `shadow-none` | `text-semantic-warning/40 regular` | 0.4 | `pointer-events-none` |
+| | **Loading** | `bg-semantic-warning/20` | `text-semantic-warning` | `border-semantic-warning/30` | `shadow-none` | `CircleNotch animate-spin` | 0.7 | `cursor-wait` |
+|---|---|---|---|---|---|---|:---:|---|
+| **8. Info** | **Default** | `bg-semantic-info/15` | `text-semantic-info` (`#0A84FF` / `#64D2FF`) | `border-semantic-info/30` | `shadow-none` | `text-semantic-info regular` | 1.0 | `transition-all duration-150` |
+| | **Hover** | `bg-semantic-info/25` | `text-semantic-info` | `border-semantic-info/50` | `shadow-xs` | `text-semantic-info regular` | 1.0 | `duration-150` |
+| | **Pressed** | `bg-semantic-info/30` | `text-semantic-info` | `border-semantic-info/60` | `shadow-none` | `text-semantic-info regular` | 1.0 | `scale-[0.98] duration-75` |
+| | **Focus-Vis** | `bg-semantic-info/20` | `text-semantic-info` | `ring-2 ring-semantic-info ring-offset-2 ring-offset-background` | `shadow-none` | `text-semantic-info regular` | 1.0 | `transition-shadow` |
+| | **Selected** | `bg-semantic-info text-white font-bold` | `#FFFFFF` | `border-transparent` | `shadow-xs` | `#FFFFFF fill` | 1.0 | `stable` |
+| | **Disabled** | `bg-semantic-info/10` | `text-semantic-info/40` | `border-semantic-info/15` | `shadow-none` | `text-semantic-info/40 regular` | 0.4 | `pointer-events-none` |
+| | **Loading** | `bg-semantic-info/20` | `text-semantic-info` | `border-semantic-info/30` | `shadow-none` | `CircleNotch animate-spin` | 0.7 | `cursor-wait` |
+|---|---|---|---|---|---|---|:---:|---|
+| **9. Neutral / Muted** | **Default** | `bg-surface-muted` | `text-text-muted` | `border-transparent` | `shadow-none` | `text-text-muted regular` | 1.0 | `transition-all duration-150` |
+| | **Hover** | `bg-surface-hover` | `text-text-secondary` | `border-border-subtle` | `shadow-none` | `text-text-secondary regular` | 1.0 | `duration-150` |
+| | **Pressed** | `bg-surface-hover/80` | `text-text-primary` | `border-border-subtle` | `shadow-none` | `text-text-primary regular` | 1.0 | `scale-[0.98] duration-75` |
+| | **Focus-Vis** | `bg-surface-muted` | `text-text-primary` | `ring-2 ring-text-muted ring-offset-2 ring-offset-background` | `shadow-none` | `text-text-primary regular` | 1.0 | `transition-shadow` |
+| | **Selected** | `bg-surface-raised font-bold` | `text-text-primary` | `border-border-default` | `shadow-xs` | `text-text-primary fill` | 1.0 | `stable` |
+| | **Disabled** | `bg-surface-muted/30` | `text-text-muted/20` | `border-transparent` | `shadow-none` | `text-text-muted/20 regular` | 0.3 | `pointer-events-none` |
+| | **Loading** | `bg-surface-muted` | `text-text-muted` | `border-transparent` | `shadow-none` | `CircleNotch animate-spin` | 0.6 | `cursor-wait` |
 
 ---
 
-## Secondary
+# 7. Information Architecture Definitif: Settings vs Account
 
-Isi aturan yang sama.
-
----
-
-## Glass / Frosted
-
-Jelaskan:
-- kapan boleh digunakan
-- kapan tidak
-- blur amount
-- opacity logic
-- fallback jika backdrop-filter unavailable
-- contrast requirement
-
----
-
-## Destructive
-
-Cakup:
-- button
-- text action
-- destructive modal
-- confirmation hierarchy
-
-Harus beda jelas dari Primary.
+```
+[HEADER PROFILE / TOP NAV AVATAR]
+├── (Klik Foto / Nama Profil) ──► [/account] PUSAT AKUN & SINKRONISASI
+│                                 ├── Profile Box: Foto Squircle, Display Name, Email
+│                                 ├── Status Sinkronisasi Real-time (useSync)
+│                                 ├── Tombol Aksi "Sinkronkan Sekarang"
+│                                 └── Tombol Keluar (Sign Out) Akun
+│
+└── (Klik Ikon Gear) ───────────► [/settings] PUSAT KONTROL APLIKASI
+                                  ├── Quick Settings Grid (4 Squircle Tiles: Tema, Hemat Data, WakeLock, Notifikasi)
+                                  ├── Kartu Ringkasan Akun (Tautan "Kelola Akun >" ke /account)
+                                  ├── Preferensi Tampilan (Theme Segmented: Terang, Gelap, Sistem)
+                                  ├── Preferensi Pembaca (Default Mode: Continuous Vertical / Paged)
+                                  ├── Pembaruan & Notifikasi (Interval Scan Library Cooldown)
+                                  ├── Konten & Keamanan (Filter NSFW 18+ Toggle)
+                                  ├── Data & Penyimpanan (Cache Bar Visual, Bersihkan Cache, Backup & Restore)
+                                  └── Tentang Yomirra (Versi Build & Info Komunitas)
+```
 
 ---
 
-## Success / Warning / Info
-Buat rule yang sama.
+# 8. Reader Ergonomics Option A (Terpilih)
+
+1. **Top Chrome Overlay:**
+   - Tombol Kembali (Back Squircle `h-10 w-10`) di pojok kiri atas.
+   - Judul Bab dan Jumlah Halaman di tengah (`text-sm font-bold`).
+   - Tombol Bookmark komik di pojok kanan atas.
+   - Dilindungi soft gradient scrim `h-24` absolut dari titik `top: 0` untuk proteksi Dynamic Island iOS.
+2. **Bottom Control Dock:**
+   - Floating squircle dock tunggal (`h-14`, tinggi 56px, `rounded-[22px]`).
+   - 4 Tombol navigasi discrete:
+     - `[|< Prev]` (Bab Sebelumnya)
+     - `[≡ Ch. List]` (Daftar Bab — Tombol Pusat Lebar)
+     - `[Next >|]` (Bab Berikutnya)
+     - `[⚙]` (Pengaturan Pembaca)
+   - Jarak aman bawah: `bottom: max(env(safe-area-inset-bottom), 12px)`.
+3. **Progres Membaca:**
+   - Garis 2px pasif `ReaderProgress` di batas atas tetap independen, melacak `scrollYProgress` tanpa membebani kontrol sentuh bawah.
 
 ---
 
-# 14. Component Variant Matrix
-
-| Component | Primary | Secondary | Ghost | Glass | Destructive | Disabled | Loading |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| Button | ✅ | ✅ | ✅ | ? | ✅ | ✅ | ✅ |
-| Icon Button | | | | | | | |
-| Chip | | | | | | | |
-| Segmented Control | | | | | | | |
-| List Action | | | | | | | |
-| Modal CTA | | | | | | | |
-| Reader Control | | | | | | | |
-
-Catat variant yang sebenarnya dibutuhkan.
-Jangan bikin variant hanya karena “mungkin nanti”.
-
----
-
-# 15. State System
-
-Audit visual dan behavior untuk:
-
-| State | Current | Problem | Proposed |
-|---|---|---|---|
-| Default | | | |
-| Hover | | | |
-| Pressed | | | |
-| Focus | | | |
-| Selected | | | |
-| Disabled | | | |
-| Loading | | | |
-| Success | | | |
-| Warning | | | |
-| Error | | | |
-| Offline | | | |
-| Syncing | | | |
-| Empty | | | |
-| Current Chapter | | | |
-| Saved | | | |
-| Muted | | | |
-
----
-
-# 16. Page-by-Page Audit
-
-Gunakan format yang sama untuk setiap screen.
-
----
-
-## 16.x — [PAGE NAME]
-
-### Current Purpose
-Apa fungsi page ini sekarang.
-
-### Verified Current Behavior
-- ...
-
-### Current Problems
-
-#### UX
-- ...
-
-#### Visual
-- ...
-
-#### Layout
-- ...
-
-#### Responsive
-- ...
-
-#### Accessibility
-- ...
-
-### Reference Review
-Reference file(s):
-- `redesign-reference/...`
-
-Yang bagus dari reference:
-- ...
-
-Yang jangan ditiru mentah:
-- ...
-
-### Proposed Redesign
-Jelaskan komposisi layar dari atas ke bawah.
-
-### Keep
-Fitur/behavior yang tetap.
-
-### Move
-Yang dipindahkan ke tempat lebih tepat.
-
-### Merge
-Yang sebaiknya digabung.
-
-### Remove Candidate
-Hanya proposal.
-**Tidak boleh dieksekusi tanpa approval.**
-
-### Unknown / Needs Validation
-- ...
-
-### Implementation Impact
-Files/components kemungkinan terdampak:
-- ...
-
-### Risk
-`Low / Medium / High`
-
----
-
-Gunakan section di atas untuk minimal:
-
-### Beranda
-Audit:
-- continue reading
-- Sorotan & Peringkat
-- source selector
-- ranking
-- header
-- bottom nav
-
-### Library
-Audit:
-- active source
-- search/filter
-- latest read
-- following
-- saved/downloaded
-- grid/list
-
-### Bookmark
-Audit:
-- saved manga
-- collection
-- reading state
-- create/edit collection
-
-### Cari
-Audit:
-- multi-source semantics
-- result grouping
-- source filters
-- sort
-- genre/status filters
-
-### Sources
-Audit:
-- active source
-- installed source
-- health
-- version/update
-- source actions
-
-### Manga Detail
-Audit:
-- artwork
-- cover
-- title/meta
-- CTA
-- progress
-- actions
-- synopsis
-- genre
-- chapter list
-
-### Reader
-Audit:
-- immersive reading
-- top overlay
-- progress
-- controls
-- auto-hide
-- gestures
-- safe area
-
-### Reader Settings
-Audit:
-- background
-- fit
-- spacing
-- direction
-- navigation
-- preload
-- wake lock
-- progress
-
-### Chapter List
-Audit:
-- current chapter
-- search
-- sorting
-- metadata
-
-### Settings
-Audit:
-- account
-- quick settings
-- preferences
-- update
-- privacy
-- storage
-- about
-
-Tambahkan page lain yang ditemukan.
-
----
-
-# 17. Settings IA Proposal
-
-## Settings Home
-Tentukan informasi yang cukup tampil di dashboard utama.
-
-## Quick Settings
-Candidate:
-- Theme
-- Data Saver
-- Sync
-- Notification
-
-Validasi berdasarkan actual usage.
-
-## Sections
-
-### Akun & Sinkronisasi
-...
-
-### Preferensi Tampilan
-...
-
-### Pembaruan & Notifikasi
-...
-
-### Konten & Keamanan
-...
-
-### Data & Penyimpanan
-...
-
-### Tentang
-...
-
-## Candidate to Move Out
-Contoh:
-- collection management → Bookmark/collection domain
-- navigation shortcuts → proper navigation
-- etc.
-
-Semua masih proposal sampai approval.
-
----
-
-# 18. Modal / Dialog / Sheet System
-
-## Modal Families
-
-### Confirmation
-Use case:
-Structure:
-Actions:
-
-### Destructive Confirmation
-Use case:
-Structure:
-Actions:
-
-### Information Dialog
-...
-
-### Bottom Sheet
-...
-
-### Reader Sheet
-...
-
-### Full / Near-Full Sheet
-...
-
-## Shared Anatomy
-Definisikan:
-- header
-- title
-- description
-- close affordance
-- body
-- footer
-- action ordering
-- spacing
-- motion
-
----
-
-# 19. Copywriting Audit
-
-Audit:
-- terminology consistency
-- CTA wording
-- destructive copy
-- confirmation copy
-- empty-state copy
-- reader terminology
-- source terminology
-- Library vs Bookmark terminology
-
-## Terminology Table
-
-| Concept | Current Terms Found | Proposed Canonical Term |
-|---|---|---|
-| Save | | |
-| Collection | | |
-| Reading Progress | | |
-| Source | | |
-| Search | | |
-| Update | | |
-
----
-
-# 20. Responsive / Adaptive Strategy
-
-## Small Mobile
-`<...>`
-
-## Large Mobile / iPhone
-`<...>`
-
-## Tablet
-`<...>`
-
-## Desktop
-`<...>`
-
-Audit:
-- navigation pattern
-- max content width
-- number of columns
-- sheet vs side panel
-- hover/focus availability
-- keyboard navigation
-- reader desktop panel
-
----
-
-# 21. iOS PWA / Safe Area Audit
-
-## Current Behavior
-...
-
-## Problems
-...
-
-## Requirements
-
-### Top
-- `env(safe-area-inset-top)`
-- Dynamic Island / status bar
-- overlay/scrim behavior
-
-### Bottom
-- `env(safe-area-inset-bottom)`
-- home indicator
-- bottom dock
-- reader control spacing
-
-### Reader
-Jelaskan full-bleed image vs interactive chrome.
-
-### Installed PWA vs Browser
-Audit behavior difference jika ada.
-
----
-
-# 22. Accessibility Audit
-
-Minimum checks:
-- contrast
-- semantic HTML
-- aria labels
-- keyboard navigation
-- focus visible
-- hit target
-- reduced motion
-- readable font size
-- destructive confirmation
-- sheet focus trap
-- scroll locking
-
-## Findings
-...
-
----
-
-# 23. Motion & Interaction
-
-## Global Motion Principles
-- ...
-
-## Navigation Transition
-...
-
-## Modal / Sheet
-...
-
-## Selection
-...
-
-## Reader Overlay
-...
-
-## Reduced Motion
-...
-
-Jangan tambahkan animation hanya untuk dekorasi.
-
----
-
-# 24. Hydration Mismatch Investigation
-
-## Known Area
-`MangaHeaderActions`
-
-## Observed Server State
-...
-
-## Observed Client State
-...
-
-## Root Cause
-`Verified / Inferred`
-
-## Correct Fix Options
-
-### Option A
-...
-
-### Option B
-...
-
-## Rejected Fix
-Examples:
-- `suppressHydrationWarning` tanpa menyelesaikan source mismatch
-- client-only hacks tanpa alasan
-
-## Recommended Fix
-...
-
-## Risk
-...
-
----
-
-# 25. Redundant / Misplaced Feature Candidates
-
-| Feature | Current Location | Problem | Proposed Action | Confidence | Approval Needed |
-|---|---|---|---|---|---|
-| | | | Move / Merge / Keep / Remove Candidate | | ✅ |
-
-Jangan hapus apa pun di tahap ini.
-
----
-
-# 26. Technical Design-System Proposal
-
-## Existing Tokens to Reuse
-...
-
-## Existing Tokens to Change
-...
-
-## New Tokens Actually Required
-...
-
-## Tokens to Deprecate
-...
-
-## Shared Components to Refactor
-...
-
-## Components to Merge
-...
-
-## Components to Leave Alone
-...
-
-Tujuan:
-**jangan menciptakan design system paralel.**
-
----
-
-# 27. Migration Strategy
-
-## Phase A — Foundations
-Examples:
-- color tokens
-- radius
-- spacing
-- typography
-- shared primitives
-
-## Phase B — Navigation / Shell
-...
-
-## Phase C — Core Screens
-...
-
-## Phase D — Reader
-...
-
-## Phase E — Modal / States
-...
-
-## Phase F — Cleanup
-...
-
-Untuk setiap phase:
-- scope
-- dependencies
-- risk
-- verification
-
----
-
-# 28. Regression Risks
-
-| Risk | Area | Severity | Prevention |
-|---|---|---|---|
-| | | Low/Medium/High | |
-
-Cakup:
-- navigation behavior
-- store state
-- hydration
-- reader gestures
-- responsive UI
-- source-specific logic
-- PWA behavior
-
----
-
-# 29. Proposed Decisions
-
-Gunakan format:
-
-### D-001 — [Decision]
-**Status:** Proposed  
-**Problem:**  
-**Proposal:**  
-**Why:**  
-**Alternatives considered:**  
-**Impact:**  
-**Approval required:** Yes  
-
-### D-002
-...
-
----
-
-# 30. Approval Required
-
-Tuliskan hanya keputusan yang memang perlu user putuskan sebelum implementasi.
-
-Format:
-
-### A-001
-**Decision needed:**  
-**Recommended:**  
-**Alternative:**  
-**Impact if approved:**  
-
-Jangan lanjut implementasi sampai bagian ini di-review.
-
----
-
-# 31. Recommended Implementation Order
-
-Setelah approval, urutkan implementasi berdasarkan dependency dan risiko.
-
-Contoh:
-
-`tokens → primitives → navigation → page shell → core pages → reader → modal/sheets → states → cleanup`
-
-Berikan alasan jika urutannya berbeda.
-
----
-
-# 32. Verification Plan
-
-Sebelum redesign dianggap selesai, minimum verification harus mencakup:
-
-## Visual
-- reference comparison
-- responsive
-- light/dark
-- squircle consistency
-- hierarchy
-- contrast
-
-## Functional
-- navigation
-- search
-- Library
-- Bookmark
-- source switching
-- reader
-- reader settings
-- chapter navigation
-- account/sync
-- backup
-
-## Platform
-- iOS PWA
-- mobile browser
-- tablet
-- desktop
-
-## Technical
-- no hydration errors
-- no console errors
-- no broken route
-- no state regression
-- no inaccessible modal
-- no unexpected layout shift
-
----
-
-# 33. Final Verdict
-
-## Keep
-...
-
-## Refactor
-...
-
-## Move
-...
-
-## Merge
-...
-
-## Candidate for Removal
-...
-
-## Highest Priority
-...
-
-## Lowest Priority
-...
+# 9. Internal Component Showcase (`/showcase`)
+
+Akan dibuat rute pengujian internal di `src/app/(web)/showcase/page.tsx` yang mendemonstrasikan varian nyata komponen Yomirra:
+- `Button` (Primary, Secondary, Ghost, Glass, Destructive, Success, Warning, Info, Muted, Loading, Disabled)
+- `IconButton` (Squircle varian)
+- `SearchInput` (Squircle `rounded-2xl`)
+- `SegmentedControl` (Squircle container + concentric thumb)
+- `ToggleSwitch`
+- `FilterChip` (Active vs Inactive)
+- `SourceCard` & `LeaderboardRow`
+- `Dialog` (Modal konfirmasi & destructive delete)
+- `Bottom Sheet` (FilterDrawer via Vaul)
+- `Toasts` & `Empty States`
+
+Rute ini **tidak akan dimasukkan** ke dalam navigasi publik maupun sitemap produksi.
 
 ---
 
 # STOP CONDITION
 
-Setelah menghasilkan audit + redesign proposal ini:
-
-**STOP.**
-
-Jangan:
-- mengedit file
-- melakukan refactor
-- mengubah token
-- mengubah route
-- menghapus fitur
-- menjalankan migration redesign
-
-Tunggu explicit approval user terlebih dahulu.
+Audit dan proposal ini telah diperbarui secara menyeluruh dan telah mengunci seluruh keputusan pengguna.  
+**Tidak ada kode produksi yang diedit sebelum Implementation Plan disetujui.**

@@ -39,6 +39,7 @@ export type LibraryItem = {
   lastReadAt?: string;
   userRating?: number; // 1-10 rating
   isNsfw?: boolean;
+  releaseDay?: number; // 0=Minggu, 1=Senin, 2=Selasa, 3=Rabu, 4=Kamis, 5=Jumat, 6=Sabtu
 };
 
 interface LibraryState {
@@ -95,30 +96,46 @@ export const useLibraryStore = create<LibraryState>()(
 
       addToLibrary: (item) => {
         const previousState = get().items;
+        let itemToPush: LibraryItem = item;
         set((state) => {
           if (item.isNsfw === undefined) {
             const source = dynamicSourceRegistry.get(item.sourceId) || sourceRegistry.find(s => s.id === item.sourceId);
             if (source) item.isNsfw = source.isNsfw === true;
             else item.isNsfw = false;
           }
-          // New items get a Phase 1 SavedTitleId
-          const savedTitleId = crypto.randomUUID ? crypto.randomUUID() : getLibraryId(item.sourceId, item.mangaId);
+          const legacyId = getLibraryId(item.sourceId, item.mangaId);
+          // Check if item already exists to prevent duplicate entries under different keys
+          const existingEntry = Object.entries(state.items).find(
+            ([k, i]) =>
+              k === legacyId ||
+              (item.id && (k === item.id || i.id === item.id)) ||
+              (i.primarySourceId === item.sourceId && i.primaryMangaId === item.mangaId) ||
+              (i.sourceId === item.sourceId && i.mangaId === item.mangaId)
+          );
+
+          const existingKey = existingEntry?.[0];
+          const existingItem = existingEntry?.[1];
+
+          // Re-use existing ID if present, otherwise generate new SavedTitleId
+          const savedTitleId = existingItem?.id || item.id || (crypto.randomUUID ? crypto.randomUUID() : legacyId);
           const enriched: LibraryItem = {
+            ...existingItem,
             ...item,
-            id: item.id ?? savedTitleId,
+            id: savedTitleId,
             schemaVersion: 2,
-            primarySourceId: item.primarySourceId ?? item.sourceId,
-            primaryMangaId: item.primaryMangaId ?? item.mangaId,
-            linkedSources: item.linkedSources ?? [],
+            primarySourceId: item.primarySourceId ?? existingItem?.primarySourceId ?? item.sourceId,
+            primaryMangaId: item.primaryMangaId ?? existingItem?.primaryMangaId ?? item.mangaId,
+            linkedSources: item.linkedSources ?? existingItem?.linkedSources ?? [],
           };
-          const key = enriched.id!;
+          itemToPush = enriched;
+          const key = existingKey || enriched.id!;
           return {
             items: enforceItemCap({ ...state.items, [key]: enriched })
           };
         });
 
         // Async Background sync with rollback
-        pushLibraryItem(item).catch(() => {
+        pushLibraryItem(itemToPush).catch(() => {
           set({ items: previousState });
           toast.error("Gagal menyimpan bookmark ke cloud. Periksa koneksi internet.");
         });
@@ -135,13 +152,20 @@ export const useLibraryStore = create<LibraryState>()(
       removeFromLibrary: (sourceId, mangaId) => {
         const previousState = get().items;
         set((state) => {
-          // Find by primary source ref or legacy key
           const legacyId = getLibraryId(sourceId, mangaId);
-          const byLegacy = state.items[legacyId];
-          const key = byLegacy?.id ?? legacyId;
           const newItems = { ...state.items };
-          delete newItems[key];
-          return { items: newItems };
+          let deleted = false;
+          for (const [k, i] of Object.entries(newItems)) {
+            if (
+              k === legacyId ||
+              (i.primarySourceId === sourceId && i.primaryMangaId === mangaId) ||
+              (i.sourceId === sourceId && i.mangaId === mangaId)
+            ) {
+              delete newItems[k];
+              deleted = true;
+            }
+          }
+          return deleted ? { items: newItems } : state;
         });
 
         // Async Background sync with rollback
@@ -264,9 +288,16 @@ export const useLibraryStore = create<LibraryState>()(
         let updatedItem: LibraryItem | null = null;
 
         set((state) => {
-          const id = getLibraryId(sourceId, mangaId);
-          const existing = state.items[id];
-          if (!existing) return state;
+          const legacyId = getLibraryId(sourceId, mangaId);
+          const entry = Object.entries(state.items).find(
+            ([k, i]) =>
+              k === legacyId ||
+              (i.primarySourceId === sourceId && i.primaryMangaId === mangaId) ||
+              (i.sourceId === sourceId && i.mangaId === mangaId)
+          );
+          if (!entry) return state;
+
+          const [itemKey, existing] = entry;
 
           let isNsfw = existing.isNsfw;
           if (isNsfw === undefined && patch.isNsfw === undefined) {
@@ -275,11 +306,16 @@ export const useLibraryStore = create<LibraryState>()(
             else isNsfw = false;
           }
 
-          updatedItem = { ...existing, ...patch, isNsfw: patch.isNsfw !== undefined ? patch.isNsfw === true : isNsfw === true, updatedAt: new Date().toISOString() };
+          updatedItem = {
+            ...existing,
+            ...patch,
+            isNsfw: patch.isNsfw !== undefined ? patch.isNsfw === true : isNsfw === true,
+            updatedAt: new Date().toISOString(),
+          };
           return {
             items: {
               ...state.items,
-              [id]: updatedItem,
+              [itemKey]: updatedItem,
             }
           };
         });
@@ -300,18 +336,26 @@ export const useLibraryStore = create<LibraryState>()(
         let hasChanges = false;
         
         for (const cloudItem of cloudItems) {
-          const id = getLibraryId(cloudItem.sourceId, cloudItem.mangaId);
-          const localItem = newItems[id];
+          const legacyId = getLibraryId(cloudItem.sourceId, cloudItem.mangaId);
+          const localEntry = Object.entries(newItems).find(
+            ([k, i]) =>
+              (cloudItem.id && (k === cloudItem.id || i.id === cloudItem.id)) ||
+              k === legacyId ||
+              (i.primarySourceId === cloudItem.sourceId && i.primaryMangaId === cloudItem.mangaId) ||
+              (i.sourceId === cloudItem.sourceId && i.mangaId === cloudItem.mangaId)
+          );
           
-          if (!localItem) {
-            newItems[id] = cloudItem;
+          if (!localEntry) {
+            const targetKey = cloudItem.id || legacyId;
+            newItems[targetKey] = cloudItem;
             hasChanges = true;
           } else {
-            const localTime = new Date(localItem.updatedAt).getTime();
-            const cloudTime = new Date(cloudItem.updatedAt).getTime();
+            const [localKey, localItem] = localEntry;
+            const localTime = new Date(localItem.updatedAt || localItem.addedAt).getTime();
+            const cloudTime = new Date(cloudItem.updatedAt || cloudItem.addedAt).getTime();
             
             if (cloudTime > localTime) {
-              newItems[id] = cloudItem;
+              newItems[localKey] = { ...localItem, ...cloudItem };
               hasChanges = true;
             } else if (localTime > cloudTime) {
               setTimeout(() => pushLibraryItem(localItem), 0);
@@ -320,9 +364,13 @@ export const useLibraryStore = create<LibraryState>()(
         }
 
         // Push any local items that don't exist in the cloud
-        const cloudIds = new Set(cloudItems.map(item => getLibraryId(item.sourceId, item.mangaId)));
+        const cloudKeys = new Set(cloudItems.map(item => getLibraryId(item.sourceId, item.mangaId)));
+        for (const cloudItem of cloudItems) {
+          if (cloudItem.id) cloudKeys.add(cloudItem.id);
+        }
         for (const [id, localItem] of Object.entries(state.items)) {
-          if (!cloudIds.has(id)) {
+          const legacyId = getLibraryId(localItem.sourceId, localItem.mangaId);
+          if (!cloudKeys.has(id) && !cloudKeys.has(legacyId) && (!localItem.id || !cloudKeys.has(localItem.id))) {
             setTimeout(() => pushLibraryItem(localItem), 0);
           }
         }
@@ -333,6 +381,36 @@ export const useLibraryStore = create<LibraryState>()(
     {
       name: "yomirra-library",
       version: 1,
+      onRehydrateStorage: () => (state) => {
+        if (!state?.items) return;
+        // Clean up any duplicate items in local storage
+        const seen = new Map<string, string>();
+        const keysToRemove: string[] = [];
+        for (const [key, item] of Object.entries(state.items)) {
+          const compKey = `${item.primarySourceId ?? item.sourceId}::${item.primaryMangaId ?? item.mangaId}`;
+          if (seen.has(compKey)) {
+            const existingKey = seen.get(compKey)!;
+            const existing = state.items[existingKey];
+            const existingTime = new Date(existing.updatedAt || existing.addedAt).getTime();
+            const itemTime = new Date(item.updatedAt || item.addedAt).getTime();
+            if (itemTime > existingTime || (item.releaseDay !== undefined && existing.releaseDay === undefined)) {
+              keysToRemove.push(existingKey);
+              seen.set(compKey, key);
+            } else {
+              keysToRemove.push(key);
+            }
+          } else {
+            seen.set(compKey, key);
+          }
+        }
+        if (keysToRemove.length > 0) {
+          const cleaned = { ...state.items };
+          for (const k of keysToRemove) {
+            delete cleaned[k];
+          }
+          state.items = cleaned;
+        }
+      },
       partialize: (state) => ({
         items: Object.fromEntries(
           Object.entries(state.items).filter(([ , item]) => !item.isNsfw)

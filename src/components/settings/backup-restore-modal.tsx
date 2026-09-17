@@ -141,7 +141,7 @@ export function BackupRestoreModal({ isOpen, onOpenChange }: BackupRestoreModalP
                   onClick={() => fileInputRef.current?.click()}
                   className="group relative w-full flex items-center gap-3.5 p-4 rounded-2xl bg-surface-raised border border-border-subtle hover:border-accent/40 hover:bg-accent/5 transition-all text-left overflow-hidden outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-accent"
                 >
-                  <div className="shrink-0 flex items-center justify-center size-11 rounded-2xl bg-brand-primary/10 text-brand-primary group-hover:scale-105 transition-transform duration-200">
+                  <div className="shrink-0 flex items-center justify-center size-11 rounded-2xl bg-accent/10 text-accent group-hover:scale-105 transition-transform duration-200">
                     <UploadSimple size={22} weight="duotone" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -181,14 +181,14 @@ export function BackupRestoreModal({ isOpen, onOpenChange }: BackupRestoreModalP
                   <span className="text-[11px] font-bold text-text-muted uppercase tracking-wider pl-1">File Terpilih</span>
                   <div className="flex items-center justify-between p-3 rounded-[18px] bg-surface-raised border border-border-subtle shadow-sm">
                     <div className="flex items-center gap-3 overflow-hidden">
-                      <div className="size-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
+                      <div className="size-8 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
                         <FileText size={16} className="text-accent" weight="duotone" />
                       </div>
                       <span className="text-[13px] font-bold text-text-primary truncate">{selectedFileName}</span>
                     </div>
                     <button 
                       onClick={resetState} 
-                      className="text-[11px] font-bold text-text-secondary hover:text-text-primary px-3 py-1.5 rounded-full bg-surface-base border border-border-subtle hover:bg-surface-hover transition-colors shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                      className="text-[11px] font-bold text-text-secondary hover:text-text-primary px-3 py-1.5 rounded-lg bg-surface-base border border-border-subtle hover:bg-surface-hover transition-colors shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-accent"
                     >
                       Batal
                     </button>

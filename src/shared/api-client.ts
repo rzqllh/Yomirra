@@ -125,8 +125,8 @@ class ApiClient {
     return this.fetcher<import("@/app/api/sources/search/route").GlobalSearchResponse>(url);
   }
 
-  getDetail(sourceId: string, mangaId: string) {
-    return this.fetcher<MangaDetail>(this.appendManifest(`/api/sources/${sourceId}/manga/${encodeURIComponent(mangaId)}`, sourceId));
+  getDetail(sourceId: string, mangaId: string, options?: RequestInit) {
+    return this.fetcher<MangaDetail>(this.appendManifest(`/api/sources/${sourceId}/manga/${encodeURIComponent(mangaId)}`, sourceId), options);
   }
 
   getChapters(sourceId: string, mangaId: string, options?: RequestInit) {

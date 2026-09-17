@@ -46,7 +46,7 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
     <OfflineContext.Provider value={{ isOffline }}>
       {showFallback ? (
         <div className="fixed inset-0 z-[100] bg-surface-base flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300">
-          <div className="w-20 h-20 bg-surface-muted rounded-full flex items-center justify-center text-text-muted mb-6">
+          <div className="w-20 h-20 bg-surface-muted rounded-3xl flex items-center justify-center text-text-muted mb-6">
             <WifiSlash size={40} weight="duotone" />
           </div>
           <h1 className="text-2xl font-bold mb-2">Anda Sedang Offline</h1>
@@ -56,7 +56,7 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
           <Button 
             onClick={() => router.push("/downloads")}
             size="lg"
-            className="rounded-full gap-2 font-bold px-8"
+            className="rounded-2xl gap-2 font-bold px-8"
           >
             <HardDrives size={20} weight="fill" />
             Buka Manajer Unduhan

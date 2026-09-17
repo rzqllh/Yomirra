@@ -48,12 +48,13 @@
   --spacing-12: 48px;
   --spacing-16: 64px;
 
-  /* Radius */
-  --radius-xs: 4px;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 24px;
+  /* Radius (Squircle Concentric Scale) */
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 26px;
+  --radius-sheet: 32px;
   --radius-full: 9999px;
 
   /* Elevation */
@@ -143,7 +144,7 @@
     --surface-overlay: #111122; /* elevated panels */
     --surface-muted: #1A1A2E; /* muted states */
     --surface-hover: #1F1F3D; /* interaction hover */
-    --surface-glass: rgba(17, 17, 34, 0.70); /* translucent glass based on surface-overlay */
+    --surface-glass: rgba(16, 16, 28, 0.72); /* translucent glass based on surface-overlay */
 
     --text-primary: #FDFDFD;
     --text-secondary: #D1D1D6; /* subtle text */
@@ -153,7 +154,7 @@
     --border-subtle: rgba(94, 92, 230, 0.2);
     --border-default: rgba(94, 92, 230, 0.4);
     --border-strong: rgba(94, 92, 230, 0.6);
-    --border-glass: rgba(255, 255, 255, 0.08); /* subtle rim for glass panels */
+    --border-glass: rgba(255, 255, 255, 0.12); /* refined rim for glass panels */
     
     --color-accent: #6C6AFA; /* brighter indigo for WCAG AA contrast on dark bg */
     --color-accent-dim: rgba(108, 106, 250, 0.15);
@@ -198,7 +199,7 @@
     --surface-overlay: #FFFFFF; /* bright card */
     --surface-muted: #EAEAEB; /* subtle background */
     --surface-hover: #E5E5EA; /* interaction state */
-    --surface-glass: rgba(255, 255, 255, 0.70); /* translucent glass */
+    --surface-glass: rgba(255, 255, 255, 0.75); /* translucent glass */
 
     --text-primary: #1C1C1E; /* deep ink text */
     --text-secondary: #3A3A3C; /* secondary text */
@@ -427,4 +428,63 @@ body.reader-active {
   .group:hover .vt-hover { view-transition-name: var(--vt-name); } 
   .vt-title-hover { view-transition-name: none; } 
   .group:hover .vt-title-hover { view-transition-name: var(--vt-title-name); } 
+}
+
+/* ── Reusable iOS Liquid Glass Design System ── */
+.liquid-glass:not(.fixed):not(.absolute):not(.sticky), 
+.liquid-glass-dark:not(.fixed):not(.absolute):not(.sticky) {
+  position: relative;
+}
+
+.liquid-glass::before, .liquid-glass-dark::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(115deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 30%, rgba(255,255,255,0) 70%, rgba(255,255,255,0.1) 100%);
+  mix-blend-mode: overlay;
+}
+
+.dark .liquid-glass::before, :is(.dark) .liquid-glass::before, .liquid-glass-dark::before {
+  background: linear-gradient(115deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 30%, rgba(255,255,255,0) 70%, rgba(255,255,255,0.05) 100%);
+}
+
+.liquid-glass {
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 
+    0 16px 40px rgba(0, 0, 0, 0.08),
+    0 4px 12px rgba(0, 0, 0, 0.04),
+    inset 0 1.5px 1.5px rgba(255, 255, 255, 0.95),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.03);
+}
+
+.dark .liquid-glass,
+:is(.dark) .liquid-glass,
+.liquid-glass-dark {
+  background: rgba(13, 13, 22, 0.50);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 
+    0 20px 48px rgba(0, 0, 0, 0.60),
+    0 4px 16px rgba(0, 0, 0, 0.35),
+    inset 0 1.5px 1.5px rgba(255, 255, 255, 0.20),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.4);
+}
+
+.liquid-glass-interactive {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.liquid-glass-interactive:hover {
+  background: rgba(255, 255, 255, 0.82);
+  border-color: rgba(255, 255, 255, 0.75);
+}
+.dark .liquid-glass-interactive:hover,
+:is(.dark) .liquid-glass-interactive:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.24);
 }

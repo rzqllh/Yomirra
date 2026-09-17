@@ -103,7 +103,7 @@ export function ChapterDownloadButton({
       <IconButton
       variant="ghost"
       size="sm"
-      className="relative z-20 shrink-0 text-text-muted hover:text-text-primary rounded-full"
+      className="relative z-20 shrink-0 text-text-muted hover:text-text-primary"
       onClick={handleDownload}
       aria-label={`Unduh ${chapterTitle}`}
     >

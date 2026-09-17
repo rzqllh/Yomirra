@@ -51,7 +51,7 @@ describe('UpdatesList Component', () => {
       markAllAsSeen: mockMarkAllAsSeen,
     });
 
-    render(<UpdatesList />);
+    render(<UpdatesList initialDay="all" />);
     
     const titles = screen.getAllByRole('heading', { level: 4 }).map(el => el.textContent);
     expect(titles[0]).toBe('Title 2'); // Today's should be first
@@ -104,7 +104,7 @@ describe('UpdatesList Component', () => {
     expect(screen.getByText(/gagal dimuat/i)).toBeTruthy(); // Warning banner exists
   });
 
-  it('links to reader when latestChapterId exists, otherwise links to manga detail', () => {
+  it('links title to manga detail with returnTo, and CTA button to reader with adaptive label', () => {
     (useUpdateStore as any).mockReturnValue({
       items: {
         'sourceA::manga1': { sourceId: 'sourceA', mangaId: 'manga1', mangaTitle: 'Title 1', detectedAt: new Date().toISOString(), latestChapterId: 'chap1' },
@@ -115,10 +115,13 @@ describe('UpdatesList Component', () => {
 
     render(<UpdatesList />);
     
-    const link1 = screen.getByText('Title 1').closest('a');
-    expect(link1?.getAttribute('href')).toMatch(/\/read\//);
+    // Title link must point to detail with returnTo=/updates
+    const titleLink = screen.getByText('Title 1').closest('a');
+    expect(titleLink?.getAttribute('href')).toMatch(/\/manga\/sourceA\/manga1\?returnTo=%2Fupdates/);
     
-    const link2 = screen.getByText('Title 2').closest('a');
-    expect(link2?.getAttribute('href')).toMatch(/\/manga\//);
+    // Adaptive CTA button must point to reader with returnTo
+    const readButtons = screen.getAllByRole('link', { name: /mulai baca|lanjut baca/i });
+    expect(readButtons.length).toBeGreaterThan(0);
+    expect(readButtons[0].getAttribute('href')).toMatch(/\/read\/chap1\?returnTo=%2Fupdates/);
   });
 });

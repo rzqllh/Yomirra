@@ -58,7 +58,7 @@ export function ReadingTab({
         title="Belum ada bacaan aktif"
         description="Komik yang kamu baca akan muncul di sini."
         action={
-          <Button asChild variant="accent" className="rounded-full shadow-sm font-bold mt-4">
+          <Button asChild variant="accent" className="rounded-xl shadow-sm font-bold mt-4">
             <Link href={getLibraryHref()}>
               <Compass size={20} weight="bold" className="mr-1.5" />
               Eksplor Manga
@@ -146,7 +146,7 @@ export function ReadingTab({
                       <Button
                         variant="secondary"
                         size="sm"
-                        className="h-8 px-3 rounded-full text-xs font-bold text-accent border border-accent/20 bg-accent/5 hover:bg-accent/10 transition-colors"
+                        className="h-8 px-3 rounded-xl text-xs font-bold text-accent border border-accent/20 bg-accent/5 hover:bg-accent/10 transition-colors"
                       >
                         <Play size={11} weight="fill" className="mr-1" />
                         Lanjutkan

@@ -70,7 +70,7 @@ export default function GlobalError({
         <Button 
           variant="accent" 
           onClick={() => reset()}
-          className="min-h-[52px] px-8 rounded-full shadow-lg shadow-accent/20 font-bold w-full sm:w-auto hover:scale-105 transition-transform"
+          className="min-h-[52px] px-8 rounded-2xl shadow-lg shadow-accent/20 font-bold w-full sm:w-auto hover:scale-105 transition-transform"
         >
           <ArrowCounterClockwise className="mr-2" size={20} weight="bold" />
           Coba Lagi
@@ -79,7 +79,7 @@ export default function GlobalError({
           <Button 
             variant="secondary" 
             asChild
-            className="min-h-[52px] px-8 rounded-full font-bold w-full sm:w-auto hover:scale-105 transition-transform"
+            className="min-h-[52px] px-8 rounded-2xl font-bold w-full sm:w-auto hover:scale-105 transition-transform"
           >
             <Link href="/">
               <House className="mr-2" size={20} weight="fill" />

@@ -41,7 +41,7 @@ export default function DownloadsPage() {
   return (
     <div className="flex flex-col min-h-screen pb-20 md:pb-0">
       <header className="sticky top-[72px] md:top-0 z-30 bg-surface-base/80 backdrop-blur-xl border-b shadow-default h-14 flex items-center px-4 gap-3">
-        <Link href="/library" className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-muted hover:bg-surface-hover text-text-primary transition-colors">
+        <Link href="/library" className="w-10 h-10 flex items-center justify-center rounded-xl bg-surface-muted hover:bg-surface-hover text-text-primary transition-colors">
           <CaretLeft size={20} weight="bold" />
         </Link>
         <h1 className="font-bold text-lg">Manajer Unduhan</h1>
@@ -51,7 +51,7 @@ export default function DownloadsPage() {
         <StorageWarningBanner />
         {storageInfo && (
           <YomirraSurface variant="elevated" className="rounded-2xl p-4 flex items-center gap-4">
-            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary shrink-0">
+            <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary shrink-0">
               <HardDrives size={24} weight="fill" />
             </div>
             <div className="flex-1 min-w-0">
@@ -74,7 +74,7 @@ export default function DownloadsPage() {
                   toast("Semua unduhan dihapus");
                 }
               }}
-              className="w-10 h-10 flex items-center justify-center rounded-full bg-surface-muted hover:bg-semantic-error/20 text-semantic-error transition-colors shrink-0"
+              className="w-10 h-10 flex items-center justify-center rounded-xl bg-surface-muted hover:bg-semantic-error/20 text-semantic-error transition-colors shrink-0"
               aria-label="Hapus Semua"
             >
               <Trash size={20} />

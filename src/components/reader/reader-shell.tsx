@@ -3,9 +3,11 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { useReaderStore } from "@/shared/store/reader-store"
-import { CaretLeft, Gear, CaretRight, List, X, CaretUp } from "@phosphor-icons/react"
+import { CaretLeft, Gear, CaretRight, List, CaretUp, BookmarkSimple, BookOpen } from "@phosphor-icons/react"
+import { useLibraryStore } from "@/shared/store/library-store"
 import { cn } from "@/shared/utils/cn"
-import { motion } from "motion/react"
+import { motion, AnimatePresence } from "motion/react"
+import { transitions } from "@/shared/lib/motion/tokens"
 
 import { getMangaDetailHref, getReaderHref } from "@/shared/lib/routes"
 import { Chapter } from "@/shared/types/source"
@@ -24,6 +26,7 @@ import { Button } from "@/components/ui/button"
 import { ReaderProgress } from "./reader-progress"
 import { toast } from "sonner"
 import { useReaderGesture } from "@/shared/hooks/use-reader-gesture"
+import { useMounted } from "@/shared/hooks/use-mounted"
 
 interface ReaderShellProps {
   children: React.ReactNode
@@ -53,6 +56,33 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
     if (chapterIndex > 0) {
       nextChapterId = chapters[chapterIndex - 1].id;
     }
+  }
+
+  const isMounted = useMounted()
+  const rawIsSaved = useLibraryStore((state) => state.isInLibrary(sourceId, mangaId))
+  const isSaved = isMounted ? rawIsSaved : false
+  const toggleLibrary = useLibraryStore((state) => state.toggleLibrary)
+
+  const handleBack = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    const returnTo =
+      typeof window !== "undefined"
+        ? new URLSearchParams(window.location.search).get("returnTo") || undefined
+        : undefined
+    router.replace(getMangaDetailHref(sourceId, mangaId, returnTo))
+  }
+
+  const handleToggleBookmark = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    toggleLibrary({
+      sourceId,
+      mangaId,
+      title: chapterTitle.split(" - ")[0] || "Manga",
+      coverUrl: "",
+      addedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    })
+    toast.success(isSaved ? "Dihapus dari bookmark" : "Disimpan ke bookmark")
   }
 
   const getBackgroundColor = () => {
@@ -160,168 +190,216 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
     <div 
       className={cn(
         "relative min-h-screen w-full transition-[padding] duration-150",
-        isDesktopPanelOpen && "md:pr-[320px]"
+        isDesktopPanelOpen && "md:pr-[320px]",
+        preferences.background !== 'mist' && "dark"
       )}
       style={{ backgroundColor: getBackgroundColor() }}
     >
       <ReaderProgress />
-      {/* Top Overlay (Info) */}
-      <div 
-        className={cn(
-          "fixed top-0 left-0 right-0 z-[var(--z-sticky)] transition-[transform,opacity] duration-200 ease-out pointer-events-none pt-[env(safe-area-inset-top)]",
-          isOverlayVisible ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0",
-          isDesktopPanelOpen ? "md:right-[calc(320px)]" : ""
-        )}
-      >
-        <div className={cn(
-          "w-full pt-4 pb-12 px-6 flex justify-center",
-          preferences.background === 'mist' 
-            ? "bg-gradient-to-b from-white/90 via-white/50 to-transparent" 
-            : "bg-gradient-to-b from-black/80 via-black/40 to-transparent"
-        )}>
-          <div className="flex flex-col items-center text-center pointer-events-auto max-w-md">
-            <span className={cn(
-              "text-sm md:text-base font-bold drop-shadow-lg truncate w-full tracking-wide",
-              preferences.background === 'mist' ? "text-gray-900" : "text-white"
-            )}>{chapterTitle}</span>
-            {pageCount && (
-              <span className={cn(
-                "text-[11px] font-semibold tracking-widest uppercase drop-shadow-md mt-0.5",
-                preferences.background === 'mist' ? "text-gray-600" : "text-white/70"
-              )}>
-                {pageCount} halaman
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Bottom Overlay (Controls) */}
-      <div 
-        className={cn(
-          "fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom))] left-4 right-4 z-[var(--z-sticky)] transition-[transform,opacity] duration-200 ease-out flex justify-center pointer-events-none",
-          isOverlayVisible ? "translate-y-0 opacity-100" : "translate-y-24 opacity-0",
-          isDesktopPanelOpen ? "md:right-[calc(320px+1rem)]" : ""
-        )}
-      >
-        <div className="flex w-full max-w-[400px] justify-center items-end gap-3">
-          
-          {/* Back Circle */}
-          <IconButton 
-            aria-label="Kembali ke detail manga"
-            variant="ghost"
-            className="pointer-events-auto flex h-[56px] w-[56px] shrink-0 items-center justify-center rounded-full bg-surface-glass backdrop-blur-md shadow-sm border border-border-default/30 transition-all duration-300 text-text-secondary hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/10"
-            onClick={(e) => { 
-              e.stopPropagation(); 
-              const returnTo = new URLSearchParams(window.location.search).get("returnTo") || undefined;
-              router.replace(getMangaDetailHref(sourceId, mangaId, returnTo));
+      {/* Top Overlay (Option A: Back + Info + Bookmark with Spring Animation & High Contrast) */}
+      <AnimatePresence>
+        {isOverlayVisible && (
+          <motion.div 
+            key="reader-top-overlay"
+            initial={{ y: -80, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -80, opacity: 0 }}
+            transition={transitions.smooth}
+            drag="y"
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0.2, bottom: 0 }}
+            onDragEnd={(e, info) => {
+              if (info.offset.y < -20 || info.velocity.y < -200) {
+                setOverlayVisible(false);
+              }
             }}
-          >
-            <X size={22} weight="bold" />
-          </IconButton>
-          
-          {/* Center Pill: Prev - Ch - Next */}
-          <div className="pointer-events-auto flex h-[56px] flex-1 items-center justify-between gap-1 rounded-full bg-surface-glass backdrop-blur-lg px-1.5 shadow-sm border border-border-default/30">
-            <IconButton 
-              aria-label="Chapter sebelumnya"
-              variant="ghost"
-              className={cn("group relative flex items-center justify-center h-[44px] w-[44px] rounded-full outline-none transition-all duration-300 ease-out text-text-secondary hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/10", !prevChapterId && "opacity-30 cursor-not-allowed")}
-              disabled={!prevChapterId}
-              onClick={(e) => { 
-                e.stopPropagation(); 
-                if (prevChapterId) {
-                  toast.info("Membuka chapter sebelumnya...", { duration: 2000 });
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                  setTimeout(() => router.replace(getReaderHref(sourceId, mangaId, prevChapterId)), 150);
-                }
-              }}
-            >
-              <CaretLeft size={20} weight="regular" />
-            </IconButton>
-            
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="rounded-full flex-1 px-2 h-[44px] font-bold text-[13px] bg-accent/15 text-accent hover:bg-accent/25 border border-accent/20 transition-all mx-1"
-              onClick={(e) => { 
-                e.stopPropagation(); 
-                setIsChapterDrawerOpen(true);
-              }}
-            >
-              <List size={16} weight="fill" className="mr-1.5" />
-              Ch.
-            </Button>
-
-            <IconButton 
-              aria-label="Chapter selanjutnya"
-              variant="ghost"
-              className={cn("group relative flex items-center justify-center h-[44px] w-[44px] rounded-full outline-none transition-all duration-300 ease-out text-text-secondary hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/10", !nextChapterId && "opacity-30 cursor-not-allowed")}
-              disabled={!nextChapterId}
-              onClick={(e) => { 
-                e.stopPropagation(); 
-                if (nextChapterId) {
-                  toast.info("Membuka chapter selanjutnya...", { duration: 2000 });
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                  setTimeout(() => router.replace(getReaderHref(sourceId, mangaId, nextChapterId)), 150);
-                }
-              }}
-            >
-              <CaretRight size={20} weight="regular" />
-            </IconButton>
-          </div>
-
-          {/* Right Controls: Settings Circle & Back to Top */}
-          <div className="flex flex-col gap-3 pointer-events-none items-center">
-            {showBackToTop && (
-              <motion.button
-                initial={{ opacity: 0, scale: 0.8, y: 10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.8, y: 10 }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
-                className="pointer-events-auto flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-full bg-surface-glass backdrop-blur-md shadow-sm border border-border-default/30 text-text-secondary hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-                aria-label="Kembali ke atas"
-              >
-                <CaretUp size={20} weight="bold" />
-              </motion.button>
+            className={cn(
+              "fixed top-0 left-0 right-0 z-[var(--z-sticky)] pointer-events-none touch-none",
+              isDesktopPanelOpen ? "md:right-[calc(320px)]" : ""
             )}
+          >
+            <div className="w-full pt-[calc(var(--safe-top)+10px)] pb-4 px-3 flex items-center justify-center pointer-events-none">
+              <div className="pointer-events-auto flex items-center justify-between w-full max-w-[420px] h-[52px] px-2 rounded-[18px] liquid-glass text-text-primary transition-all duration-300">
+                {/* Left: Back Button (Squircle) */}
+                <button
+                  aria-label="Kembali ke detail komik"
+                  className={cn(
+                    "flex h-9 w-9 items-center justify-center rounded-[10px] active:scale-95 transition-all shrink-0 cursor-pointer outline-none",
+                    preferences.background === 'mist'
+                      ? "text-gray-800 hover:bg-black/5"
+                      : "text-white/85 hover:text-white hover:bg-white/10"
+                  )}
+                  onClick={handleBack}
+                >
+                  <CaretLeft size={20} weight="bold" />
+                </button>
 
-            <IconButton
-              aria-label="Pengaturan pembaca"
-              className="pointer-events-auto flex h-[56px] w-[56px] shrink-0 items-center justify-center rounded-full bg-surface-glass backdrop-blur-md shadow-sm border border-border-default/30 transition-all duration-300 text-text-secondary hover:text-text-primary hover:bg-black/5 dark:hover:bg-white/10"
-              onClick={(e) => { 
-                e.stopPropagation(); 
-                if (window.innerWidth >= 768) {
-                  toggleDesktopPanel();
-                } else {
-                  setIsDrawerOpen(true); 
-                }
-              }}
-            >
-              <Gear size={22} weight="regular" />
-            </IconButton>
-            
-            {/* Opsi Revert untuk Settings */}
-            {/* <IconButton
-              aria-label="Pengaturan pembaca"
-              variant="ghost"
-              className="pointer-events-auto flex h-[56px] w-[56px] shrink-0 items-center justify-center rounded-full bg-surface-glass backdrop-blur-md shadow-sm border border-border-default/30 transition-all duration-300 hover:bg-black/5 dark:hover:bg-white/10"
-              onClick={(e) => {
-                e.stopPropagation();
-                if (window.innerWidth >= 768) {
-                  toggleDesktopPanel();
-                } else {
-                  setIsDrawerOpen(true);
-                }
-              }}
-            >
-              <Gear size={22} weight="regular" className="text-text-secondary hover:text-text-primary transition-colors" />
-            </IconButton> */}
-          </div>
-        </div>
-      </div>
+                {/* Center: Title & Page Count */}
+                <div className="flex flex-col items-center justify-center px-2 min-w-0 flex-1 select-none">
+                  <span className={cn(
+                    "text-sm font-bold truncate max-w-[200px] sm:max-w-[260px] tracking-tight text-center leading-tight",
+                    preferences.background === 'mist' ? "text-gray-950" : "text-white"
+                  )}>
+                    {chapterTitle}
+                  </span>
+                  {pageCount && (
+                    <span className={cn(
+                      "text-[10px] font-semibold tracking-wider uppercase text-center mt-0.5",
+                      preferences.background === 'mist' ? "text-gray-500" : "text-white/60"
+                    )}>
+                      {pageCount} halaman
+                    </span>
+                  )}
+                </div>
+
+                {/* Right: Bookmark Button (Squircle) */}
+                <button
+                  aria-label={isSaved ? "Hapus dari bookmark" : "Simpan ke bookmark"}
+                  className={cn(
+                    "flex h-9 w-9 items-center justify-center rounded-[10px] active:scale-95 transition-all shrink-0 cursor-pointer outline-none",
+                    isSaved
+                      ? "bg-accent text-white shadow-[0_2px_12px_rgba(99,102,241,0.5),inset_0_1px_0_rgba(255,255,255,0.3)] border border-white/20"
+                      : preferences.background === 'mist'
+                      ? "text-gray-800 hover:bg-black/5"
+                      : "text-white/85 hover:text-white hover:bg-white/10"
+                  )}
+                  onClick={handleToggleBookmark}
+                >
+                  <BookmarkSimple size={19} weight={isSaved ? "fill" : "bold"} />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Bottom Overlay (Option A: Compact High-Contrast Squircle Dock with Spring Animation) */}
+      <AnimatePresence>
+        {isOverlayVisible && (
+          <motion.div 
+            key="reader-bottom-overlay"
+            initial={{ y: 80, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 80, opacity: 0 }}
+            transition={transitions.smooth}
+            drag="y"
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0, bottom: 0.2 }}
+            onDragEnd={(e, info) => {
+              if (info.offset.y > 20 || info.velocity.y > 200) {
+                setOverlayVisible(false);
+              }
+            }}
+            className={cn(
+              "fixed bottom-0 left-0 right-0 z-[var(--z-sticky)] pointer-events-none touch-none pb-[calc(var(--safe-bottom)+12px)] px-3",
+              isDesktopPanelOpen ? "md:right-[calc(320px)]" : ""
+            )}
+          >
+            <div className="w-full flex flex-col items-center gap-3">
+              {/* Floating Back to Top Button (Squircle) */}
+              {showBackToTop && (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.8, y: 10 }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  className="pointer-events-auto self-end flex h-10 w-10 items-center justify-center rounded-[12px] liquid-glass text-text-primary transition-all active:scale-95 cursor-pointer outline-none hover:scale-105"
+                  aria-label="Kembali ke atas"
+                >
+                  <CaretUp size={18} weight="bold" />
+                </motion.button>
+              )}
+
+              {/* iOS Liquid Glass Concentric Squircle Dock */}
+              <div className="pointer-events-auto flex h-[58px] w-full max-w-[420px] mx-auto items-center justify-between gap-1.5 rounded-[22px] liquid-glass text-text-primary px-2.5 transition-all duration-300">
+
+
+                {/* 2. Prev Chapter (Squircle) */}
+                <button 
+                  aria-label="Chapter sebelumnya"
+                  className={cn(
+                    "flex h-10 w-10 items-center justify-center rounded-[12px] active:scale-95 transition-all shrink-0 cursor-pointer outline-none",
+                    preferences.background === 'mist'
+                      ? "text-gray-800 hover:bg-black/5"
+                      : "text-white/80 hover:text-white hover:bg-white/10",
+                    !prevChapterId && "opacity-25 cursor-not-allowed pointer-events-none"
+                  )}
+                  disabled={!prevChapterId}
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    if (prevChapterId) {
+                      toast.info("Membuka chapter sebelumnya...", { duration: 1500 });
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                      setTimeout(() => router.replace(getReaderHref(sourceId, mangaId, prevChapterId)), 150);
+                    }
+                  }}
+                >
+                  <CaretLeft size={20} weight="bold" />
+                </button>
+                
+                {/* 3. Chapter List Drawer Trigger (Squircle rounded-[12px], NOT Pill!) */}
+                <button 
+                  className="flex-1 h-10 rounded-[12px] font-bold text-sm bg-accent hover:bg-accent-hover text-white shadow-[0_4px_16px_rgba(108,106,250,0.4),inset_0_1px_0_rgba(255,255,255,0.3)] border border-white/20 transition-all truncate px-2.5 sm:px-3 active:scale-[0.98] flex items-center justify-center cursor-pointer outline-none"
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    setIsChapterDrawerOpen(true);
+                  }}
+                >
+                  <List size={18} weight="bold" className="mr-1.5 shrink-0" />
+                  <span className="truncate">Daftar Chapter</span>
+                </button>
+
+                {/* 4. Next Chapter (Squircle) */}
+                <button 
+                  aria-label="Chapter selanjutnya"
+                  className={cn(
+                    "flex h-10 w-10 items-center justify-center rounded-[12px] active:scale-95 transition-all shrink-0 cursor-pointer outline-none",
+                    preferences.background === 'mist'
+                      ? "text-gray-800 hover:bg-black/5"
+                      : "text-white/80 hover:text-white hover:bg-white/10",
+                    !nextChapterId && "opacity-25 cursor-not-allowed pointer-events-none"
+                  )}
+                  disabled={!nextChapterId}
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    if (nextChapterId) {
+                      toast.info("Membuka chapter selanjutnya...", { duration: 1500 });
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                      setTimeout(() => router.replace(getReaderHref(sourceId, mangaId, nextChapterId)), 150);
+                    }
+                  }}
+                >
+                  <CaretRight size={20} weight="bold" />
+                </button>
+
+                {/* 5. Reader Settings (Squircle) */}
+                <button
+                  aria-label="Pengaturan pembaca"
+                  className={cn(
+                    "flex h-10 w-10 items-center justify-center rounded-[12px] active:scale-95 transition-all shrink-0 cursor-pointer outline-none",
+                    preferences.background === 'mist'
+                      ? "text-gray-800 hover:bg-black/5"
+                      : "text-white/80 hover:text-white hover:bg-white/10"
+                  )}
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    if (window.innerWidth >= 768) {
+                      toggleDesktopPanel();
+                    } else {
+                      setIsDrawerOpen(true); 
+                    }
+                  }}
+                >
+                  <Gear size={20} weight="bold" />
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {children}
 

@@ -50,9 +50,9 @@ export function SourceCard({ source, onUpdate }: SourceCardProps & { onUpdate?: 
   };
   
   return (
-    <div className="flex flex-col rounded-lg border border-border-subtle bg-surface-raised transition-all hover:bg-surface-overlay overflow-hidden">
-      <div className="flex items-center gap-4 p-4 pb-3">
-        <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-surface-base border border-border-subtle">
+    <div className="flex flex-col rounded-2xl border border-border-subtle bg-surface-raised transition-all hover:border-border-strong hover:bg-surface-overlay overflow-hidden shadow-xs">
+      <div className="flex items-start gap-3.5 p-4 pb-3">
+        <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-surface-base border border-border-subtle shadow-inner">
           {source.icon ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img 
@@ -72,44 +72,32 @@ export function SourceCard({ source, onUpdate }: SourceCardProps & { onUpdate?: 
             className={`text-text-muted ${source.icon ? 'hidden' : ''}`} 
           />
         </div>
-        <div className="flex-1 overflow-hidden">
-          <div className="flex items-center justify-between">
-            <h3 className="truncate text-base font-bold text-text-primary">{source.name}</h3>
-            <div className="flex items-center gap-2 shrink-0">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="truncate text-base font-bold text-text-primary tracking-tight">{source.name}</h3>
+            <div className="flex items-center gap-1.5 shrink-0">
               {isCustom && (
-                <Badge variant="outline" className="bg-surface-glass border-accent/20 text-accent font-semibold shadow-sm hidden md:flex">
+                <Badge variant="outline" className="bg-surface-glass border-accent/20 text-accent font-semibold shadow-xs hidden sm:flex rounded-lg">
                   Extension
                 </Badge>
               )}
               {source.isNsfw && (
-                <Badge variant="outline" className="bg-semantic-error/10 border-semantic-error/30 text-semantic-error font-semibold shadow-sm">
+                <Badge variant="outline" className="bg-semantic-error/10 border-semantic-error/30 text-semantic-error font-semibold shadow-xs rounded-lg">
                   18+
                 </Badge>
               )}
-              <Badge variant={source.status === "online" ? "success" : source.status === "slow" ? "warning" : "error"}>
-                <div className="size-1.5 rounded-full bg-current mr-1" />
+              <Badge variant={source.status === "online" ? "success" : source.status === "slow" ? "warning" : "error"} className="rounded-lg">
+                <span className="size-1.5 rounded-full bg-current mr-1" />
                 {source.status === "online" ? "Online" : source.status === "slow" ? "Lambat" : "Gangguan"}
               </Badge>
-              <div className="flex items-center ml-2 border-l border-border-subtle pl-3">
-                <ToggleSwitch 
-                  checked={isEnabled}
-                  onCheckedChange={() => {
-                    toggleSource(source.id);
-                    // Refresh current route to update SSR data based on new cookie
-                    window.dispatchEvent(new Event("sources_updated"));
-                    router.refresh();
-                  }}
-                  title={isEnabled ? "Nonaktifkan Sumber" : "Aktifkan Sumber"}
-                />
-              </div>
               {isCustom && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="flex h-8 w-8 items-center justify-center rounded-full text-text-muted hover:text-text-primary hover:bg-surface-hover transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent">
-                      <DotsThreeVertical size={20} weight="bold" />
+                    <button className="flex h-8 w-8 items-center justify-center rounded-xl text-text-muted hover:text-text-primary hover:bg-surface-hover transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent">
+                      <DotsThreeVertical size={18} weight="bold" />
                     </button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuContent align="end" className="w-48 rounded-xl">
                     <DropdownMenuItem onClick={handleRefresh}>
                       <ArrowsClockwise size={16} className="mr-2" /> Perbarui Data
                     </DropdownMenuItem>
@@ -121,11 +109,16 @@ export function SourceCard({ source, onUpdate }: SourceCardProps & { onUpdate?: 
               )}
             </div>
           </div>
-          <p className="truncate text-sm text-text-muted flex items-center gap-2 mt-0.5">
-            <span className="uppercase">{source.language || "EN"}</span>
-            <span>•</span>
-            <span>v{source.version}</span>
-          </p>
+          <div className="flex items-center justify-between mt-1 text-xs text-text-muted">
+            <span className="flex items-center gap-1.5">
+              <span className="uppercase font-semibold tracking-wider">{source.language || "ID"}</span>
+              <span>•</span>
+              <span>v{source.version}</span>
+            </span>
+            <span className="text-[11px] font-medium text-text-muted">
+              {isEnabled ? "Sumber Aktif" : "Dinonaktifkan"}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -133,36 +126,65 @@ export function SourceCard({ source, onUpdate }: SourceCardProps & { onUpdate?: 
         {Object.entries(source.capabilities).map(([key, value]) => {
           if (!value) return null;
           return (
-            <Badge key={key} variant="muted">
+            <Badge key={key} variant="muted" className="rounded-md text-[10px] uppercase font-semibold">
               {key}
             </Badge>
-          )
+          );
         })}
       </div>
 
       {source.healthStats && (
-        <div className="bg-surface-base border-t border-border-subtle p-3 px-4">
-          <div className="grid grid-cols-3 gap-2 mb-2">
-            <div className="flex items-center gap-1.5 text-xs text-text-muted">
-              <Lightning size={14} className="text-accent" />
-              <span className="font-semibold">{source.healthStats.uptime}</span> Uptime
+        <div className="bg-surface-base/80 border-t border-border-subtle p-3 px-4">
+          <div className="grid grid-cols-3 gap-2 mb-1 text-xs text-text-muted">
+            <div className="flex items-center gap-1.5">
+              <Lightning size={14} className="text-accent shrink-0" />
+              <span className="font-semibold text-text-secondary">{source.healthStats.uptime}</span>
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-text-muted">
-              <Heartbeat size={14} className="text-accent" />
-              <span className="font-semibold">{source.healthStats.latency}</span> Ping
+            <div className="flex items-center gap-1.5">
+              <Heartbeat size={14} className="text-accent shrink-0" />
+              <span className="font-semibold text-text-secondary">{source.healthStats.latency}</span>
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-text-muted text-right justify-end">
-              <Clock size={14} />
-              <span>{source.healthStats.lastChecked}</span>
+            <div className="flex items-center gap-1.5 text-right justify-end text-[11px]">
+              <Clock size={13} className="shrink-0" />
+              <span className="truncate">{source.healthStats.lastChecked}</span>
             </div>
           </div>
           {source.healthStats.message && (
-            <p className="text-[11px] text-text-secondary mt-1 border-l-2 border-accent-dim pl-2">
+            <p className="text-[11px] text-text-muted mt-1 border-l-2 border-accent/40 pl-2 line-clamp-1">
               {source.healthStats.message}
             </p>
           )}
         </div>
       )}
+
+      {/* Action Footer: Enabled toggle & Direct Library Browse link */}
+      <div className="border-t border-border-subtle bg-surface-base/40 p-3 px-4 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5">
+          <ToggleSwitch 
+            checked={isEnabled}
+            onCheckedChange={() => {
+              toggleSource(source.id);
+              window.dispatchEvent(new Event("sources_updated"));
+              router.refresh();
+            }}
+            title={isEnabled ? "Nonaktifkan Sumber" : "Aktifkan Sumber"}
+          />
+          <span className="text-xs font-semibold text-text-secondary">
+            {isEnabled ? "Enabled" : "Disabled"}
+          </span>
+        </div>
+
+        {isEnabled && (
+          <button
+            type="button"
+            onClick={() => router.push(`/library?source=${encodeURIComponent(source.id)}`)}
+            className="text-xs font-bold text-accent hover:text-accent-hover px-2.5 py-1 rounded-lg hover:bg-accent/10 transition-colors flex items-center gap-1"
+          >
+            <span>Buka di Library</span>
+            <span className="text-[11px]">&rarr;</span>
+          </button>
+        )}
+      </div>
 
       {isDown && (
         <div className="bg-semantic-error/10 border-t border-semantic-error/20 p-3 px-4 flex items-center justify-between">
@@ -170,8 +192,8 @@ export function SourceCard({ source, onUpdate }: SourceCardProps & { onUpdate?: 
             <Warning size={16} weight="bold" />
             Sumber bermasalah
           </div>
-          <button onClick={() => setReportOpen(true)} className="flex items-center gap-1.5 text-xs font-bold bg-semantic-error text-semantic-error-on px-3 py-1.5 rounded-md hover:bg-semantic-error/90 transition-colors">
-            <Bug size={14} weight="bold" /> Report Dev
+          <button onClick={() => setReportOpen(true)} className="flex items-center gap-1.5 text-xs font-bold bg-semantic-error text-semantic-error-on px-3 py-1.5 rounded-lg hover:bg-semantic-error/90 transition-colors">
+            <Bug size={14} weight="bold" /> Laporkan
           </button>
         </div>
       )}
@@ -182,5 +204,5 @@ export function SourceCard({ source, onUpdate }: SourceCardProps & { onUpdate?: 
         onOpenChange={setReportOpen}
       />
     </div>
-  )
+  );
 }

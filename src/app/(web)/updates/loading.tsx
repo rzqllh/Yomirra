@@ -10,8 +10,8 @@ export default function Loading() {
       <div className="w-full max-w-3xl mx-auto px-4 md:px-8 pt-20 md:pt-24 relative z-10 flex flex-col gap-6">
         
         <div className="flex gap-2 overflow-hidden">
-          <Skeleton className="h-8 w-24 rounded-full shrink-0" />
-          <Skeleton className="h-8 w-24 rounded-full shrink-0" />
+          <Skeleton className="h-8 w-24 rounded-xl shrink-0" />
+          <Skeleton className="h-8 w-24 rounded-xl shrink-0" />
         </div>
 
         <div className="flex flex-col gap-4">

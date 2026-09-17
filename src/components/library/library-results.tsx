@@ -89,7 +89,7 @@ export function LibraryResults({
         title="Sumber Dinonaktifkan"
         description="Kamu telah menonaktifkan sumber ini. Aktifkan kembali di halaman Sumber untuk melihat pustaka."
         action={
-          <Button onClick={() => router.push("/sources")} variant="outline" className="mt-4 rounded-full shadow-sm font-bold">
+          <Button onClick={() => router.push("/sources")} variant="outline" className="mt-4 rounded-xl shadow-sm font-bold">
             Kelola Sumber
           </Button>
         }
@@ -114,7 +114,7 @@ export function LibraryResults({
         title="Gagal memuat katalog"
         description="Terjadi kesalahan saat mengambil data dari sumber."
         action={
-          <Button onClick={() => refetch()} variant="outline" className="mt-4 rounded-full shadow-sm font-bold">
+          <Button onClick={() => refetch()} variant="outline" className="mt-4 rounded-xl shadow-sm font-bold">
             Coba lagi
           </Button>
         }
@@ -157,7 +157,7 @@ export function LibraryResults({
         title="Manga tidak ditemukan"
         description="Coba ubah kombinasi filter atau kata kunci pencarian."
         action={
-          <Button onClick={onResetFilters} variant="outline" className="mt-4 rounded-full shadow-sm font-bold">
+          <Button onClick={onResetFilters} variant="outline" className="mt-4 rounded-xl shadow-sm font-bold">
             Reset Filter
           </Button>
         }
@@ -197,7 +197,7 @@ export function LibraryResults({
                   >
                     <div
                       className={cn(
-                        "w-6 h-6 rounded-full flex items-center justify-center transition-transform duration-200",
+                        "w-6 h-6 rounded-lg flex items-center justify-center transition-transform duration-200",
                         isSelected
                           ? "bg-accent text-white scale-110"
                           : "bg-surface-glass border border-white/40"

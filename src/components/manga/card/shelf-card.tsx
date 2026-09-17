@@ -81,13 +81,13 @@ export function ShelfCard({
           
           <div className="absolute top-2 left-2 flex flex-col gap-1.5 z-20 items-start">
             {isUnread && (
-              <div className="flex items-center gap-1 rounded-full bg-semantic-error text-white px-2 py-0.5 shadow-sm">
+              <div className="flex items-center gap-1 rounded-md bg-semantic-error text-white px-2 py-0.5 shadow-sm">
                 <span className="text-[10px] font-black uppercase tracking-widest">Baru</span>
               </div>
             )}
             
             {manga.rank !== undefined && (
-              <div className="flex items-center gap-1 rounded-full bg-surface-glass backdrop-blur-md px-2 py-1 shadow-sm">
+              <div className="flex items-center gap-1 rounded-md bg-surface-glass backdrop-blur-md px-2 py-1 shadow-sm">
                 <TrendUp weight="bold" className="text-accent text-[10px]" />
                 <span className="text-xs font-black text-text-primary">#{manga.rank}</span>
               </div>
@@ -110,7 +110,7 @@ export function ShelfCard({
               if (!config) return null;
 
               return (
-                <div className={cn("px-2 py-0.5 rounded-sm text-[9px] font-black tracking-widest uppercase shadow-md backdrop-blur-sm", config.bg, config.bg.includes('surface') && "border border-border-subtle")}>
+                <div className={cn("px-2 py-0.5 rounded-md text-[9px] font-black tracking-widest uppercase shadow-md backdrop-blur-sm", config.bg, config.bg.includes('surface') && "border border-border-subtle")}>
                   {config.label}
                 </div>
               );
@@ -123,7 +123,7 @@ export function ShelfCard({
 
           {isUnavailable && (
             <div className="absolute inset-0 bg-surface-base/60 backdrop-blur-[2px] flex items-center justify-center z-10 transition-opacity group-hover:opacity-100 opacity-90">
-              <div className="bg-semantic-error/90 text-white text-[10px] font-black tracking-widest uppercase px-2.5 py-1 rounded-full shadow-lg">
+              <div className="bg-semantic-error/90 text-white text-[10px] font-black tracking-widest uppercase px-2.5 py-1 rounded-md shadow-lg">
                 Tidak Tersedia
               </div>
             </div>

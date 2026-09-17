@@ -87,7 +87,7 @@ export function CollectionManager() {
             }} 
             variant="accent" 
             size="sm" 
-            className="rounded-full font-bold h-9"
+            className="rounded-xl font-bold h-9"
           >
             <Plus size={16} weight="bold" className="mr-1.5" />
             Koleksi Baru
@@ -112,7 +112,7 @@ export function CollectionManager() {
                         onClick={() => openRename(c.id, c.name)}
                         variant="ghost" 
                         size="icon" 
-                        className="w-8 h-8 rounded-full text-text-secondary hover:text-text-primary"
+                        className="w-8 h-8 rounded-lg text-text-secondary hover:text-text-primary"
                         aria-label="Ubah nama"
                       >
                         <PencilSimple size={18} weight="duotone" />
@@ -121,7 +121,7 @@ export function CollectionManager() {
                         onClick={() => openDelete(c.id)}
                         variant="ghost" 
                         size="icon" 
-                        className="w-8 h-8 rounded-full text-semantic-error hover:text-white hover:bg-semantic-error transition-colors"
+                        className="w-8 h-8 rounded-lg text-semantic-error hover:text-white hover:bg-semantic-error transition-colors"
                         aria-label="Hapus"
                       >
                         <Trash size={18} weight="duotone" />

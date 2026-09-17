@@ -87,7 +87,7 @@ export function TopNav() {
               {/* Desktop pill */}
               <button 
                 onClick={() => window.dispatchEvent(new CustomEvent("open-command-menu"))}
-                className={cn( "hidden sm:flex items-center gap-2 px-3 rounded-full transition-all text-text-muted hover:text-text-primary text-sm h-9 w-48", "bg-surface-raised border backdrop-blur-md hover:bg-surface-hover/50" )}
+                className={cn( "hidden sm:flex items-center gap-2 px-3.5 rounded-xl transition-all text-text-muted hover:text-text-primary text-sm h-9 w-48", "bg-surface-raised border border-border-default/40 backdrop-blur-md hover:bg-surface-hover/50 shadow-xs" )}
               >
                 <MagnifyingGlass size={16} weight="duotone" />
                 <span className="flex-1 text-left opacity-70">Cari...</span>
@@ -96,7 +96,7 @@ export function TopNav() {
               {/* Mobile icon only */}
               <button 
                 onClick={() => window.dispatchEvent(new CustomEvent("open-command-menu"))}
-                className="sm:hidden flex items-center justify-center size-9 rounded-full bg-surface-glass backdrop-blur-md shadow-sm hover:bg-surface-hover/50 text-text-secondary outline-none"
+                className="sm:hidden flex items-center justify-center size-9 rounded-xl bg-surface-glass backdrop-blur-md shadow-xs border border-border-default/40 hover:bg-surface-hover/50 text-text-secondary outline-none"
                 aria-label="Cari"
               >
                 <MagnifyingGlass size={18} weight="duotone" />
@@ -111,10 +111,10 @@ export function TopNav() {
                 <button 
                   onClick={() => setIsProfileOpen(!isProfileOpen)}
                   aria-label="Profil Pengguna"
-                  className="flex items-center justify-center size-9 lg:size-10 rounded-full bg-surface-glass backdrop-blur-md shadow-sm hover:scale-105 active:scale-95 transition-all outline-none"
+                  className="flex items-center justify-center size-9 lg:size-10 rounded-xl bg-surface-glass backdrop-blur-md shadow-xs hover:scale-105 active:scale-95 transition-all outline-none border border-border-default/40"
                 >
                   {user.photoURL ? (
-                    <div className="size-full rounded-full overflow-hidden border border-border-default">
+                    <div className="size-full rounded-xl overflow-hidden border border-border-default/60">
                       <img src={user.photoURL} alt="User" className="object-cover w-full h-full" referrerPolicy="no-referrer" />
                     </div>
                   ) : (
@@ -129,15 +129,26 @@ export function TopNav() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
                       transition={{ duration: 0.15, ease: "easeOut" }}
-                      className="absolute right-0 top-14 w-56 bg-surface-overlay/95 backdrop-blur-xl shadow-default -heavy rounded-2xl p-1.5 z-[100] flex flex-col"
+                      className="absolute right-0 top-14 w-56 bg-surface-overlay/95 backdrop-blur-xl shadow-glass border border-border-glass rounded-2xl p-1.5 z-[100] flex flex-col"
                     >
                       <div className="px-3 py-2.5 border-b border-border-glass mb-1.5">
                         <p className="text-[14px] font-bold text-text-primary truncate">{user.displayName || "User"}</p>
                         <p className="text-[12px] text-text-muted truncate mt-0.5">{user.email || ""}</p>
                       </div>
-                      <button onClick={() => { setIsProfileOpen(false); router.push('/settings'); }} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors text-left">
+                      <Link 
+                        href="/account" 
+                        onClick={() => setIsProfileOpen(false)} 
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors text-left"
+                      >
+                        <UserCircle size={18} weight="duotone" /> Akun & Sinkronisasi
+                      </Link>
+                      <Link 
+                        href="/settings" 
+                        onClick={() => setIsProfileOpen(false)} 
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors text-left"
+                      >
                         <Gear size={18} weight="duotone" /> Pengaturan
-                      </button>
+                      </Link>
                       <button onClick={() => { setIsProfileOpen(false); logout(); }} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-semibold text-semantic-error hover:bg-semantic-error/10 transition-colors text-left mt-0.5">
                         <SignOut size={18} weight="duotone" /> Keluar
                       </button>
@@ -146,7 +157,7 @@ export function TopNav() {
                 </AnimatePresence>
               </div>
             ) : (
-              <button onClick={loginWithGoogle} aria-label="Masuk" className="flex items-center justify-center bg-surface-raised ring-1 ring-border-subtle shadow-sm hover:bg-surface-hover active:scale-95 transition-all rounded-full px-4 h-9 gap-2 outline-none">
+              <button onClick={loginWithGoogle} aria-label="Masuk" className="flex items-center justify-center bg-surface-raised border border-border-subtle shadow-xs hover:bg-surface-hover active:scale-95 transition-all rounded-xl px-4 h-9 gap-2 outline-none">
                 <UserCircle size={20} weight="duotone" className="text-text-secondary" />
                 <span className="text-sm font-semibold text-text-primary">Masuk</span>
               </button>

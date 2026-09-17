@@ -23,7 +23,7 @@ export default function Loading() {
                 <Skeleton className="h-4 w-1/2" />
               </div>
               <div className="flex items-center justify-center shrink-0">
-                <Skeleton className="h-8 w-8 rounded-full" />
+                <Skeleton className="h-8 w-8 rounded-lg" />
               </div>
             </div>
           ))}

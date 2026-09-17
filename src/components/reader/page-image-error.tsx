@@ -30,11 +30,11 @@ export function PageImageError({ index, onRetry, reportUrl, className }: PageIma
         <p className="text-[10px] text-white/70 mb-5 leading-tight">Terjadi kesalahan saat mengunduh gambar ini. Coba muat ulang halaman atau lapor.</p>
         
         <div className="flex gap-2 w-full">
-          <Button variant="outline" size="sm" onClick={onRetry} className="flex-1 rounded-full h-10 text-xs font-bold border-white/20 bg-white/5 hover:bg-white/10 text-white shadow-sm">
+          <Button variant="outline" size="sm" onClick={onRetry} className="flex-1 rounded-xl h-10 text-xs font-bold border-white/20 bg-white/5 hover:bg-white/10 text-white shadow-sm">
             Coba Lagi
           </Button>
           {reportUrl && (
-            <Button onClick={handleReport} aria-label="Laporkan masalah" variant="ghost" size="sm" className="rounded-full size-10 p-0 shrink-0 border border-white/10 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white shadow-sm">
+            <Button onClick={handleReport} aria-label="Laporkan masalah" variant="ghost" size="sm" className="rounded-xl size-10 p-0 shrink-0 border border-white/10 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white shadow-sm">
               <Flag size={16} weight="bold" />
             </Button>
           )}

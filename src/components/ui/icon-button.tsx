@@ -7,7 +7,7 @@ type IconButtonVariant = "ghost" | "surface" | "primary" | "destructive" | "read
 const variantMap: Record<IconButtonVariant, ButtonProps["variant"]> = {
   ghost: "ghost",
   surface: "secondary",
-  primary: "default",
+  primary: "primary",
   destructive: "destructive",
   reader: "reader",
 }
@@ -26,9 +26,9 @@ const sizeMap: Record<"sm" | "default" | "lg", ButtonProps["size"]> = {
 }
 
 const radiusMap: Record<"sm" | "default" | "lg", string> = {
-  sm: "rounded-xl",
-  default: "rounded-2xl",
-  lg: "rounded-[22px]",
+  sm: "rounded-[10px]",
+  default: "rounded-[12px]",
+  lg: "rounded-[14px]",
 }
 
 const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(

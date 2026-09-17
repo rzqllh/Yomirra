@@ -66,14 +66,19 @@ vi.mock("@/components/library/library-results", () => ({
   LibraryResults: () => <div data-testid="library-results">Library Results</div>,
 }));
 
+vi.mock("@/components/updates/updates-list", () => ({
+  UpdatesList: () => <div data-testid="updates-list">Updates List</div>,
+}));
+
 describe("Library & Updates Integration", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("redirects /updates to /bookmark?tab=updates", () => {
-    UpdatesPage();
-    expect(mockRedirect).toHaveBeenCalledWith("/bookmark?tab=updates");
+  it("renders UpdatesPage with weekly calendar updates list", () => {
+    render(<UpdatesPage />);
+    expect(screen.getAllByText("Jadwal Rilis Mingguan").length).toBeGreaterThan(0);
+    expect(screen.getByTestId("updates-list")).toBeTruthy();
   });
 
   it("renders catalog Jelajah components", () => {

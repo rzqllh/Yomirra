@@ -66,7 +66,7 @@ export async function SourceFeed({ sourceId, sourceName, variant }: SourceFeedPr
               <Fire weight="duotone" className="text-semantic-warning" /> 
               <span>Sorotan Terbaru</span>
               {sourceName && (
-                <span className="text-sm font-bold bg-surface-raised border border-border-subtle px-3 py-1 rounded-full text-text-muted mt-1">
+                <span className="text-sm font-bold bg-surface-raised border border-border-subtle px-3 py-1 rounded-md text-text-muted mt-1">
                   {sourceName}
                 </span>
               )}
@@ -110,7 +110,7 @@ export async function SourceFeed({ sourceId, sourceName, variant }: SourceFeedPr
               <Compass weight="duotone" className="text-accent" /> 
               <span>Eksplorasi</span>
               {sourceName && (
-                <span className="text-xs font-bold bg-surface-raised border border-border-subtle px-2 py-0.5 rounded-full text-text-muted mt-0.5">
+                <span className="text-xs font-bold bg-surface-raised border border-border-subtle px-2 py-0.5 rounded-md text-text-muted mt-0.5">
                   dari {sourceName}
                 </span>
               )}

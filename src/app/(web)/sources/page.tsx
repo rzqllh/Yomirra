@@ -100,24 +100,33 @@ export default function SourcesPage() {
           <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:pt-8 md:px-8 pb-4">
             <PageHeader
               title="Sumber"
-              description="Kelola sumber bacaan untuk Yomirra."
+              description="Kelola ekstensi dan sumber bacaan untuk Yomirra."
               icon={<HardDrives size={24} weight="duotone" />}
             />
+            
+            {/* Source Mental Model Guidance Banner */}
+            <div className="mt-4 p-3.5 rounded-2xl bg-surface-glass border border-border-subtle text-xs text-text-muted flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+              <p className="leading-relaxed">
+                <span className="font-bold text-text-primary">Model Sumber:</span> Sumber yang <strong className="text-text-primary">Enabled</strong> otomatis dicari secara paralel pada Pencarian Multi-Sumber & Beranda. Klik <em className="text-accent not-italic font-semibold">Buka di Library</em> untuk menjadikannya Sumber Aktif di katalog.
+              </p>
+            </div>
           </div>
 
-          <div className="md:hidden flex gap-2 px-4 py-4 pb-2 border-b border-border-subtle bg-surface-base sticky top-[calc(var(--mobile-header-height)+var(--safe-top))] z-[var(--z-sticky)]">
+          <div className="md:hidden flex gap-2 px-4 py-3 pb-2 border-b border-border-subtle bg-surface-base sticky top-[calc(var(--mobile-header-height)+var(--safe-top))] z-[var(--z-sticky)]">
             <SearchInput
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               placeholder="Cari sumber..."
+              containerClassName="flex-1 rounded-2xl"
             />
           </div>
 
-          <div className="hidden md:block px-4 pb-6">
+          <div className="hidden md:block px-4 md:px-8 pb-6">
             <SearchInput
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               placeholder="Cari sumber..."
+              containerClassName="rounded-2xl max-w-md"
             />
           </div>
 

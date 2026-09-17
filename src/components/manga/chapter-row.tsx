@@ -68,10 +68,10 @@ export function ChapterRow({
 
       {isLastRead && (
         <div className="flex items-center">
-          <div className="hidden sm:flex items-center justify-center rounded-full bg-accent/10 px-3 py-1 text-2xs font-bold uppercase tracking-widest text-accent ring-1 ring-inset ring-accent/20 shrink-0">
+          <div className="hidden sm:flex items-center justify-center rounded-md bg-accent/10 px-2.5 py-1 text-2xs font-bold uppercase tracking-widest text-accent ring-1 ring-inset ring-accent/20 shrink-0">
             Terakhir Dibaca
           </div>
-          <div className="sm:hidden flex items-center justify-center rounded-full bg-accent/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-accent ring-1 ring-inset ring-accent/20 shrink-0">
+          <div className="sm:hidden flex items-center justify-center rounded-md bg-accent/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-accent ring-1 ring-inset ring-accent/20 shrink-0">
             Terakhir
           </div>
         </div>

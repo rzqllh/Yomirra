@@ -287,7 +287,7 @@ export function ContinuousVerticalReader({
           <div className="flex justify-center mt-2">
             <Button
               variant="ghost"
-              className="rounded-full h-10 font-bold px-6 text-text-muted hover:text-text-primary hover:bg-surface-raised transition-colors"
+              className="rounded-xl h-10 font-bold px-6 text-text-muted hover:text-text-primary hover:bg-surface-raised transition-colors"
               onClick={() => {
                 try {
                   const url = new URL(reportUrl);

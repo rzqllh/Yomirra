@@ -67,7 +67,7 @@ export function LeaderboardRow({ manga, sourceId, displayScore }: LeaderboardRow
           {manga.title}
         </h4>
         <div className="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-text-secondary">
-          <div className="flex items-center gap-1 bg-surface-raised/80 backdrop-blur-sm px-2 py-0.5 rounded-full border border-border-subtle/60">
+          <div className="flex items-center gap-1 bg-surface-raised/80 backdrop-blur-sm px-2 py-0.5 rounded-md border border-border-subtle/60">
             <Star weight="fill" size={11} className="text-amber-400" />
             <span suppressHydrationWarning>{Number(scoreToDisplay) > 0 ? Number(scoreToDisplay).toFixed(1) : "-.-"}</span>
           </div>

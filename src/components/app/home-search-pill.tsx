@@ -119,7 +119,7 @@ export function MorphingSearch() {
                       e.stopPropagation();
                       setIsExpanded(false);
                     }}
-                    className="p-1.5 rounded-full hover:bg-surface-hover text-text-muted transition-colors ml-2 shrink-0 bg-surface-raised/50"
+                    className="p-1.5 rounded-lg hover:bg-surface-hover text-text-muted transition-colors ml-2 shrink-0 bg-surface-raised/50"
                   >
                     <X size={16} weight="bold" />
                   </motion.button>

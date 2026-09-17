@@ -16,9 +16,9 @@ interface ContinueReadingListProps {
 export function ContinueReadingList({ items }: ContinueReadingListProps) {
   if (!items || items.length === 0) {
     return (
-      <div className="w-full relative overflow-hidden p-6 md:p-8 flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-4 rounded-2xl md:rounded-3xl bg-surface-glass backdrop-blur-xl border border-border-subtle/70 shadow-sm">
+      <div className="w-full relative overflow-hidden p-6 md:p-8 flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-4 rounded-2xl md:rounded-3xl bg-surface-glass backdrop-blur-xl border border-border-subtle/70 shadow-xs">
         <div className="flex flex-col sm:flex-row items-center gap-3 md:gap-4 text-center sm:text-left text-text-muted">
-          <div className="w-12 h-12 md:w-14 md:h-14 shrink-0 rounded-full bg-accent/10 text-accent flex items-center justify-center border border-accent/20">
+          <div className="w-12 h-12 md:w-14 md:h-14 shrink-0 rounded-2xl bg-accent/10 text-accent flex items-center justify-center border border-accent/20">
             <BookBookmark size={24} weight="duotone" />
           </div>
           <div>
@@ -28,7 +28,7 @@ export function ContinueReadingList({ items }: ContinueReadingListProps) {
         </div>
         <Link
           href="/"
-          className="bg-accent text-accent-on px-6 py-2.5 md:py-3 rounded-full font-bold text-sm hover:scale-105 active:scale-95 transition-all shadow-md flex items-center gap-2"
+          className="bg-accent text-white px-5 py-2.5 md:py-3 rounded-xl font-bold text-sm hover:bg-accent-hover active:scale-95 transition-all shadow-xs flex items-center gap-2"
         >
           <Compass weight="bold" /> Eksplor Manga
         </Link>
@@ -63,7 +63,7 @@ export function ContinueReadingList({ items }: ContinueReadingListProps) {
                 aria-label={`Lanjut baca ${group.mangaTitle}`}
               />
 
-              <div className="relative w-20 sm:w-24 aspect-[3/4] shrink-0 rounded md:rounded-lg overflow-hidden bg-surface-muted shadow-sm border border-border-subtle/50">
+              <div className="relative w-20 sm:w-24 aspect-[3/4] shrink-0 rounded-xl overflow-hidden bg-surface-muted shadow-sm border border-border-subtle/50">
                 <MangaCover
                   src={group.coverUrl}
                   alt={group.mangaTitle}
@@ -78,7 +78,7 @@ export function ContinueReadingList({ items }: ContinueReadingListProps) {
                   <span className="text-accent text-[10px] sm:text-xs font-bold tracking-wider uppercase flex items-center gap-1">
                     <Clock weight="fill" size={12} /> Progres Baca
                   </span>
-                  <span className="text-[10px] font-bold text-text-muted bg-surface-muted/80 px-2 py-0.5 rounded-full border border-border-subtle/40">
+                  <span className="text-[10px] font-bold text-text-muted bg-surface-muted/80 px-2 py-0.5 rounded-lg border border-border-subtle/40">
                     {Math.round(progress)}%
                   </span>
                 </div>

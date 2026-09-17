@@ -91,7 +91,8 @@ describe("MangaDetailView - Scroll Position Reset", () => {
     );
 
     const header = getByTestId("page-header");
-    expect(header.getAttribute("data-backhref")).toBe("/");
+    // When no returnTo query is present, backHref is undefined (null in DOM attribute) so PageHeader uses contextual router.back()
+    expect(header.getAttribute("data-backhref")).toBeNull();
     expect(header.getAttribute("data-showback")).toBe("true");
   });
 });

@@ -45,8 +45,8 @@ export function ReaderPanelShell({
 
   const containerClasses =
     desktopMode === "side-panel"
-      ? "fixed inset-x-0 bottom-0 z-[70] max-h-[85vh] md:max-h-screen md:inset-y-0 md:left-auto md:right-0 md:w-80 md:bottom-auto bg-surface-base border-t md:border-t-0 md:border-l border-border-subtle flex flex-col rounded-t-[24px] md:rounded-none overflow-hidden shadow-xl"
-      : "fixed bottom-0 left-0 right-0 z-[70] max-h-[85vh] min-h-[50vh] bg-surface-base border-t border-border-subtle rounded-t-3xl flex flex-col md:max-w-md md:mx-auto md:mb-6 md:bottom-6 md:rounded-3xl shadow-xl overflow-hidden"
+      ? "fixed inset-x-0 bottom-0 z-[70] max-h-[85vh] md:max-h-screen md:inset-y-0 md:left-auto md:right-0 md:w-80 md:bottom-auto bg-surface-base border-t md:border-t-0 md:border-l border-border-subtle flex flex-col rounded-t-[32px] md:rounded-none overflow-hidden shadow-xl"
+      : "fixed bottom-0 left-0 right-0 z-[70] max-h-[85vh] min-h-[50vh] bg-surface-base border-t border-border-subtle rounded-t-[32px] flex flex-col md:max-w-md md:mx-auto md:mb-6 md:bottom-6 md:rounded-3xl shadow-xl overflow-hidden"
 
   const backdropClasses =
     desktopMode === "side-panel"
@@ -86,7 +86,7 @@ export function ReaderPanelShell({
                   aria-label="Tutup panel"
                   variant="ghost"
                   size="sm"
-                  className="rounded-full bg-surface-glass border border-border-subtle hover:bg-surface-hover text-text-primary transition-colors"
+                  className="rounded-xl bg-surface-glass border border-border-subtle hover:bg-surface-hover text-text-primary transition-colors"
                   onClick={onClose}
                 >
                   <X size={16} weight="bold" />

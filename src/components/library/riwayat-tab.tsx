@@ -32,7 +32,7 @@ export function RiwayatTab() {
         title="Belum ada bacaan aktif"
         description="Komik yang kamu baca akan muncul di sini."
         action={
-          <Button asChild variant="accent" className="rounded-full shadow-sm font-bold mt-4">
+          <Button asChild variant="accent" className="rounded-xl shadow-sm font-bold mt-4">
             <Link href={getLibraryHref()}>
               <Compass size={20} weight="bold" className="mr-1.5" />
               Eksplor Manga
@@ -87,7 +87,7 @@ export function RiwayatTab() {
             <div className="flex flex-col justify-center pr-2">
               <Link
                 href={continueReaderHref}
-                className="w-12 h-12 bg-accent text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
+                className="w-12 h-12 bg-accent text-white rounded-2xl flex items-center justify-center shadow-lg hover:scale-105 transition-transform"
                 aria-label="Lanjutkan Membaca"
               >
                 <Play weight="fill" size={24} />
@@ -135,7 +135,7 @@ export function RiwayatTab() {
                   
                   <button
                     onClick={() => handleRemoveHistory(group.sourceId, group.mangaId, group.mangaTitle)}
-                    className="absolute top-2 right-2 w-8 h-8 rounded-full bg-surface-glass backdrop-blur-md border border-white/10 flex items-center justify-center text-text-muted hover:text-semantic-error transition-colors md:opacity-0 group-hover:opacity-100 z-10"
+                    className="absolute top-2 right-2 w-8 h-8 rounded-lg bg-surface-glass backdrop-blur-md border border-white/10 flex items-center justify-center text-text-muted hover:text-semantic-error transition-colors md:opacity-0 group-hover:opacity-100 z-10"
                     aria-label="Hapus dari riwayat"
                   >
                     <Trash size={16} weight="duotone" />

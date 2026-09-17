@@ -2,8 +2,7 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
-import { ArrowLeft02Icon } from "@hugeicons/core-free-icons"
-import { Icon } from "@/components/ui/icon"
+import { CaretLeft } from "@phosphor-icons/react"
 import { cn } from "@/shared/utils/cn"
 
 export interface PageHeaderProps {
@@ -46,11 +45,11 @@ export function PageHeader({
   className,
 }: PageHeaderProps) {
   const router = useRouter()
-  const [scrolled, setScrolled] = React.useState(false)
+  const [scrollY, setScrollY] = React.useState(0)
 
   React.useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 12)
+      setScrollY(window.scrollY)
     }
 
     window.addEventListener("scroll", handleScroll, { passive: true })
@@ -61,16 +60,24 @@ export function PageHeader({
   const handleBack = () => {
     if (backHref) {
       router.push(backHref)
-    } else {
+    } else if (typeof window !== "undefined" && window.history.length > 2) {
+      // Only use router.back() if we are deep enough in the history stack (length > 2).
+      // If length is 1 or 2, we might be on the first page load or just one step away,
+      // where router.back() can get stuck or behave like a refresh.
       router.back()
+    } else {
+      router.push("/")
     }
   }
 
-  // Header surface glass state
+  // Header surface glass state & title visibility threshold
+  // For detail mode: title only reveals once hero cover has scrolled fully past (~320px) to prevent redundancy
+  const isScrolled = scrollY > 20
+  const isTitleVisible = mode === "detail" ? scrollY > 320 : true
   const isGlass =
     variant === "glass" ||
-    (variant === "auto" && (mode === "standard" ? scrolled : scrolled))
-  const isTransparent = variant === "transparent" || (mode === "detail" && !scrolled)
+    (variant === "auto" && (mode === "detail" ? isTitleVisible : isScrolled))
+  const isTransparent = variant === "transparent" || (variant === "auto" && !isGlass)
 
   return (
     <>
@@ -81,7 +88,7 @@ export function PageHeader({
           isTransparent
             ? "bg-transparent border-transparent shadow-none"
             : isGlass
-            ? "bg-surface-base/85 backdrop-blur-xl border-b border-border-default/40 shadow-xs"
+            ? "liquid-glass border-b border-white/10 shadow-xs"
             : "bg-surface-base border-b border-border-subtle",
           className
         )}
@@ -90,15 +97,16 @@ export function PageHeader({
           <div className="flex items-center gap-2.5 flex-1 min-w-0">
             {showBack ? (
               <button
+                type="button"
                 onClick={handleBack}
-                className="flex h-10 w-10 items-center justify-center rounded-2xl bg-surface-glass backdrop-blur-md border border-border-default/40 text-text-primary hover:bg-surface-hover hover:border-border-strong active:scale-95 transition-all shrink-0 select-none outline-none"
+                className="flex h-10 w-10 items-center justify-center rounded-[12px] liquid-glass text-text-primary active:scale-95 transition-all shrink-0 select-none outline-none cursor-pointer"
                 aria-label="Kembali"
               >
-                <Icon icon={ArrowLeft02Icon} size={20} strokeWidth={2} />
+                <CaretLeft size={20} weight="bold" />
               </button>
             ) : (
               icon && (
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-accent/15 via-accent/10 to-transparent border border-accent/25 text-accent shadow-xs shrink-0 select-none">
+                <div className="flex h-10 w-10 items-center justify-center rounded-[12px] bg-gradient-to-br from-accent/15 via-accent/10 to-transparent border border-accent/25 text-accent shadow-xs shrink-0 select-none">
                   {icon}
                 </div>
               )
@@ -106,13 +114,13 @@ export function PageHeader({
 
             <div
               className={cn(
-                "flex items-center gap-2 min-w-0 flex-1 transition-opacity duration-300",
-                mode === "detail" && !scrolled
-                  ? "opacity-0 pointer-events-none"
-                  : "opacity-100"
+                "flex items-center gap-2 min-w-0 flex-1 transition-all duration-300 ease-out",
+                !isTitleVisible
+                  ? "opacity-0 pointer-events-none -translate-y-1"
+                  : "opacity-100 translate-y-0"
               )}
             >
-              <h2 className="text-lg font-black tracking-tight text-text-primary truncate">
+              <h2 className="text-[15px] sm:text-base font-bold tracking-tight text-text-primary truncate select-none">
                 {title}
               </h2>
               {meta && (
@@ -152,7 +160,7 @@ export function PageHeader({
                   {title}
                 </h1>
                 {meta && (
-                  <div className="shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-full bg-surface-base border border-border-default/60 text-xs font-bold text-text-muted">
+                  <div className="shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-md bg-surface-base border border-border-default/60 text-xs font-bold text-text-muted">
                     {meta}
                   </div>
                 )}

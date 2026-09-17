@@ -3,20 +3,42 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 import { SegmentedControl } from "../segmented-control";
 
-describe("SegmentedControl - Concentric Radius Architecture", () => {
+describe("SegmentedControl - Concentric Radius Architecture & Quick Rail", () => {
   const options = [
     { value: "reading", label: "Sedang Dibaca" },
-    { value: "collection", label: "Koleksi" },
-    { value: "updates", label: "Updates" },
+    { value: "collection", label: "Koleksi", badge: 5 },
+    { value: "updates", label: "Updates", badge: "New", badgeVariant: "error" as const },
   ];
 
-  it("applies rounded-full to container and buttons by default (pill mode)", () => {
+  it("applies concentric rounded-2xl to container and rounded-md to buttons by default (quick-rail mode)", () => {
     const handleChange = vi.fn();
     const { container } = render(
       <SegmentedControl
         options={options}
         value="reading"
         onChange={handleChange}
+      />
+    );
+
+    const outerContainer = container.firstElementChild as HTMLElement;
+    // Outer container has rounded-2xl with p-1 padding
+    expect(outerContainer.className).toContain("rounded-2xl");
+
+    // Inner buttons have rounded-md satisfying R_inner = R_outer - padding
+    const buttons = screen.getAllByRole("tab");
+    buttons.forEach((button) => {
+      expect(button.className).toContain("rounded-md");
+    });
+  });
+
+  it("applies rounded-full to container and buttons when shape='pill'", () => {
+    const handleChange = vi.fn();
+    const { container } = render(
+      <SegmentedControl
+        options={options}
+        value="reading"
+        onChange={handleChange}
+        shape="pill"
       />
     );
 
@@ -26,28 +48,6 @@ describe("SegmentedControl - Concentric Radius Architecture", () => {
     const buttons = screen.getAllByRole("tab");
     buttons.forEach((button) => {
       expect(button.className).toContain("rounded-full");
-    });
-  });
-
-  it("applies concentric rounded classes when shape='rounded' (R_inner = R_outer - padding)", () => {
-    const handleChange = vi.fn();
-    const { container } = render(
-      <SegmentedControl
-        options={options}
-        value="reading"
-        onChange={handleChange}
-        shape="rounded"
-      />
-    );
-
-    const outerContainer = container.firstElementChild as HTMLElement;
-    // Outer container has rounded-2xl (16px) with p-1 (4px padding)
-    expect(outerContainer.className).toContain("rounded-2xl");
-
-    // Inner buttons have rounded-md (12px = 16px - 4px) to satisfy concentric formula
-    const buttons = screen.getAllByRole("tab");
-    buttons.forEach((button) => {
-      expect(button.className).toContain("rounded-md");
     });
   });
 
@@ -65,4 +65,18 @@ describe("SegmentedControl - Concentric Radius Architecture", () => {
     fireEvent.click(collectionTab);
     expect(handleChange).toHaveBeenCalledWith("collection");
   });
+
+  it("renders badges for options that provide them", () => {
+    render(
+      <SegmentedControl
+        options={options}
+        value="reading"
+        onChange={vi.fn()}
+      />
+    );
+
+    expect(screen.getByText("5")).toBeDefined();
+    expect(screen.getByText("New")).toBeDefined();
+  });
 });
+

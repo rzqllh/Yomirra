@@ -2,8 +2,7 @@
 
 import * as React from "react";
 import { useMounted } from "@/shared/hooks/use-mounted";
-import { Bookmark02Icon } from "@hugeicons/core-free-icons";
-import { Icon } from "@/components/ui/icon";
+import { BookmarkSimple } from "@phosphor-icons/react";
 import type { MangaItem } from "@/shared/types/source";
 import { motion, AnimatePresence } from "motion/react";
 import { useLibraryStore } from "@/shared/store/library-store";
@@ -58,7 +57,7 @@ export function BookmarkButton({ sourceId, manga, className }: { sourceId: strin
             }}
             className="absolute inset-0 flex items-center justify-center drop-shadow-[0_0_8px_rgba(239,68,68,0.6)]"
           >
-            <Icon icon={Bookmark02Icon} size={18} strokeWidth={2.2} />
+            <BookmarkSimple size={18} weight="fill" />
           </motion.span>
         ) : (
           <motion.span
@@ -69,7 +68,7 @@ export function BookmarkButton({ sourceId, manga, className }: { sourceId: strin
             transition={{ duration: 0.15 }}
             className="absolute inset-0 flex items-center justify-center"
           >
-            <Icon icon={Bookmark02Icon} size={18} strokeWidth={1.8} />
+            <BookmarkSimple size={18} weight="regular" />
           </motion.span>
         )}
       </AnimatePresence>

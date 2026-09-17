@@ -228,12 +228,12 @@ export function PagedReader({
         </motion.div>
       ) : null}
 
-      {/* Bottom Paged Navigation & Counter Pill */}
-      <div className="fixed bottom-[calc(var(--bottom-dock-height,80px)+16px)] z-30 flex items-center gap-3 px-3 py-1.5 bg-surface-raised/90 backdrop-blur-md rounded-full border border-border-subtle shadow-md text-xs font-semibold text-text-primary">
+      {/* Bottom Paged Navigation & Counter Squircle */}
+      <div className="fixed bottom-[calc(var(--bottom-dock-height,80px)+16px)] z-30 flex items-center gap-2.5 px-3 py-1.5 bg-surface-raised/95 backdrop-blur-xl rounded-xl border border-border-subtle shadow-md text-xs font-semibold text-text-primary">
         <Button
           variant="ghost"
           size="icon"
-          className="size-7 rounded-full text-text-secondary hover:text-text-primary"
+          className="size-7 rounded-lg text-text-secondary hover:text-text-primary"
           onClick={goToPrevPage}
           disabled={currentPageIndex === 0 && !prevChapterId}
           aria-label="Halaman sebelumnya"
@@ -241,14 +241,14 @@ export function PagedReader({
           <CaretLeft size={16} weight="bold" />
         </Button>
 
-        <span className="tabular-nums">
+        <span className="tabular-nums font-bold">
           {currentPageIndex + 1} / {totalPages}
         </span>
 
         <Button
           variant="ghost"
           size="icon"
-          className="size-7 rounded-full text-text-secondary hover:text-text-primary"
+          className="size-7 rounded-lg text-text-secondary hover:text-text-primary"
           onClick={goToNextPage}
           disabled={currentPageIndex === totalPages - 1 && !nextChapterId}
           aria-label="Halaman berikutnya"

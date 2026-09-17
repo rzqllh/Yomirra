@@ -113,7 +113,7 @@ export default function SourceBrowsePage({
               <Link
                 href={`/sources/${sourceId}?sort=${sort}&page=${Math.max(1, currentPage - 1)}`}
                 className={cn(
-                  "px-4 py-2 rounded-full font-bold text-sm transition-all",
+                  "px-4 py-2 rounded-xl font-bold text-sm transition-all",
                   currentPage <= 1
                     ? "opacity-50 pointer-events-none bg-surface-raised text-text-muted"
                     : "bg-surface-glass border border-border-subtle text-text-primary hover:bg-surface-glass/80"
@@ -122,13 +122,13 @@ export default function SourceBrowsePage({
               >
                 Sebelumnya
               </Link>
-              <div className="px-4 py-2 rounded-full bg-accent text-accent-on font-bold text-sm min-w-[40px] text-center">
+              <div className="px-4 py-2 rounded-xl bg-accent text-accent-on font-bold text-sm min-w-[40px] text-center">
                 {currentPage}
               </div>
               <Link
                 href={`/sources/${sourceId}?sort=${sort}&page=${currentPage + 1}`}
                 className={cn(
-                  "px-4 py-2 rounded-full font-bold text-sm transition-all",
+                  "px-4 py-2 rounded-xl font-bold text-sm transition-all",
                   !data?.hasNextPage
                     ? "opacity-50 pointer-events-none bg-surface-raised text-text-muted"
                     : "bg-surface-glass border border-border-subtle text-text-primary hover:bg-surface-glass/80"

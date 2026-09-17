@@ -15,15 +15,15 @@ export function SourceListSkeleton({ count = 6 }: { count?: number }) {
             </div>
             {/* Status badge + toggle */}
             <div className="flex items-center gap-3 shrink-0">
-              <Skeleton className="h-5 w-14 rounded-full" />
-              <Skeleton className="h-5 w-9 rounded-full" />
+              <Skeleton className="h-5 w-14 rounded-md" />
+              <Skeleton className="h-5 w-9 rounded-xl" />
             </div>
           </div>
           {/* Capabilities badges row */}
           <div className="px-4 pb-3 flex gap-1.5">
-            <Skeleton className="h-4 w-12 rounded-full" />
-            <Skeleton className="h-4 w-16 rounded-full" />
-            <Skeleton className="h-4 w-10 rounded-full" />
+            <Skeleton className="h-4 w-12 rounded-md" />
+            <Skeleton className="h-4 w-16 rounded-md" />
+            <Skeleton className="h-4 w-10 rounded-md" />
           </div>
         </div>
       ))}

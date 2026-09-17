@@ -16,7 +16,7 @@ export function MangaDetailSkeleton() {
             <Skeleton className="h-5 w-3/5" />
             {/* Badges row: score + status */}
             <div className="flex gap-2 mt-1">
-              <Skeleton className="h-5 w-12 rounded-full" />
+              <Skeleton className="h-5 w-12 rounded-md" />
               <Skeleton className="h-5 w-16 rounded-md" />
             </div>
             {/* Author + source */}
@@ -46,9 +46,9 @@ export function MangaDetailSkeleton() {
 
       {/* Genres/tags row */}
       <div className="px-4 flex gap-2">
-        <Skeleton className="h-6 w-16 rounded-full" />
-        <Skeleton className="h-6 w-20 rounded-full" />
-        <Skeleton className="h-6 w-14 rounded-full" />
+        <Skeleton className="h-6 w-16 rounded-lg" />
+        <Skeleton className="h-6 w-20 rounded-lg" />
+        <Skeleton className="h-6 w-14 rounded-lg" />
       </div>
 
       {/* Synopsis lines */}

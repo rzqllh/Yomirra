@@ -59,7 +59,7 @@ export function ErrorState({
       "flex min-h-[40vh] flex-col items-center justify-center text-center px-4",
       className
     )}>
-      <div className="mb-6 rounded-full bg-semantic-error/10 p-6 border border-semantic-error/20">
+      <div className="mb-6 rounded-3xl bg-semantic-error/10 p-6 border border-semantic-error/20">
         <WarningCircle size={40} className="text-semantic-error" weight="duotone" />
       </div>
       <h2 className="mb-2 text-xl font-bold text-text-primary">{title}</h2>

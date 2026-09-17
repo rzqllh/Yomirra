@@ -85,10 +85,10 @@ export function HistoryCard({
       </div>
       
       {chapterId && (
-        <div className="bg-accent/10 dark:bg-accent/20 backdrop-blur-xl -accent/20 rounded-full p-1 shadow-sm shrink-0 ml-2 z-20 relative">
+        <div className="bg-accent/10 dark:bg-accent/20 backdrop-blur-xl border border-accent/20 rounded-xl p-1 shadow-sm shrink-0 ml-2 z-20 relative">
           <Link 
             href={targetHref} 
-            className="flex items-center justify-center rounded-full h-8 w-8 text-accent hover:bg-accent/10 transition-colors"
+            className="flex items-center justify-center rounded-lg h-8 w-8 text-accent hover:bg-accent/10 transition-colors"
           >
             <Play className="h-4 w-4 ml-0.5" weight="fill" />
           </Link>

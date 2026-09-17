@@ -35,7 +35,7 @@ export function IconWrapper({
   };
 
   return (
-    <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-full", styles[variant], className)}>
+    <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-xl", styles[variant], className)}>
       {children}
     </div>
   );

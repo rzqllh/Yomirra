@@ -3,7 +3,6 @@
 import * as React from "react";
 import { UserCircle, SignOut, Broom, Palette, HandTap, ShieldWarning, WifiHigh, Lightning, Fire, PuzzlePiece, Spinner, ArrowsClockwise, DeviceMobile, FileText, Clock, Bell } from "@phosphor-icons/react";
 import { BackupRestoreModal } from "@/components/settings/backup-restore-modal";
-import { CollectionManager } from "@/components/settings/collection-manager";
 import { useAuth } from "@/shared/hooks/use-auth";
 import { useSync } from "@/shared/hooks/use-sync";
 import { Button } from "@/components/ui/button";
@@ -93,82 +92,69 @@ export default function SettingsPage() {
               icon={<Gear size={24} weight="duotone" />}
             />
 
-            {/* Akun & Sinkronisasi */}
-            <SettingsSection title="Akun & Sinkronisasi">
+            {/* Akun & Profil */}
+            <SettingsSection title="Akun & Profil">
               {user ? (
-                <div className="flex flex-col">
-                  {/* Profile Header */}
-                  <div className="flex items-center gap-4 p-3 border-b border-border-subtle/50 mb-2">
+                <div className="flex flex-col gap-3 p-3">
+                  <div className="flex items-center gap-4">
                     <div className="relative shrink-0">
                       {user.photoURL ? (
                         <Image 
                           src={user.photoURL} 
                           alt={user.displayName || "User"} 
-                          width={60} 
-                          height={60} 
-                          className="rounded-full border-2 border-surface-base shadow-sm object-cover" 
+                          width={56} 
+                          height={56} 
+                          className="rounded-2xl border border-border-default/60 shadow-xs object-cover" 
                           referrerPolicy="no-referrer" 
                           unoptimized 
                         />
                       ) : (
-                        <div className="w-[60px] h-[60px] rounded-full bg-accent/10 text-accent flex items-center justify-center border-2 border-surface-base shadow-sm">
+                        <div className="w-14 h-14 rounded-2xl bg-accent/10 text-accent flex items-center justify-center border border-accent/20 shadow-xs">
                           <UserCircle size={32} weight="duotone" />
                         </div>
                       )}
-                      <div className="absolute border-bottom-1 -right-1 w-4 h-4 rounded-full bg-surface-overlay flex items-center justify-center">
-                        <div className="w-2.5 h-2.5 rounded-full bg-semantic-success shadow-[0_0_8px_rgba(34,197,94,0.6)] animate-pulse" />
+                      <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-surface-overlay flex items-center justify-center">
+                        <div className="w-2.5 h-2.5 rounded-full bg-semantic-success shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
                       </div>
                     </div>
                     
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-base sm:text-lg font-bold text-text-primary truncate leading-tight">
+                      <h3 className="text-base font-bold text-text-primary truncate leading-tight">
                         {user.displayName}
                       </h3>
-                      <p className="text-sm text-text-secondary truncate mt-0.5">
+                      <p className="text-xs text-text-secondary truncate mt-0.5">
                         {user.email}
                       </p>
                       <div className="mt-1.5 inline-flex items-center px-2 py-0.5 rounded-md bg-semantic-success/10 border border-semantic-success/20">
-                        <span className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-semantic-success">
-                          Sync Aktif
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-semantic-success">
+                          Sync Cloud Aktif
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  <SettingsItem
-                    icon={
-                      <IconWrapper>
-                        {isSyncing ? <Spinner size={20} className="animate-spin" /> : <ArrowsClockwise size={20} weight="duotone" />}
-                      </IconWrapper>
-                    }
-                    title="Sinkronisasi Sekarang"
-                    description={formatLastSynced()}
-                    onClick={runFullSync}
-                    disabled={isSyncing}
-                  />
-
-                  <SettingsItem
-                    icon={
-                      <IconWrapper variant="danger">
-                        <SignOut size={20} weight="duotone" />
-                      </IconWrapper>
-                    }
-                    title="Keluar dari Akun"
-                    description="Hapus akses sesi saat ini"
-                    onClick={handleLogout}
-                    danger
-                  />
+                  <Link href="/account" className="block outline-none pt-1">
+                    <Button variant="secondary" className="w-full rounded-xl justify-between h-10 px-4 text-xs font-bold">
+                      <span className="flex items-center gap-2">
+                        <UserCircle size={18} weight="duotone" className="text-accent" />
+                        Kelola Akun & Sinkronisasi Cloud
+                      </span>
+                      <span>&rarr;</span>
+                    </Button>
+                  </Link>
                 </div>
               ) : (
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-3">
                   <div>
                     <h3 className="text-base font-bold text-text-primary">Login untuk Sinkronisasi</h3>
-                    <p className="text-sm text-text-secondary mt-1 max-w-md">Masuk dengan Google untuk mengaktifkan sinkronisasi otomatis History dan Readlist lintas perangkat.</p>
+                    <p className="text-xs text-text-secondary mt-1 max-w-md">Masuk dengan Google untuk mengaktifkan sinkronisasi otomatis History dan Readlist lintas perangkat.</p>
                   </div>
-                  <Button onClick={loginWithGoogle} variant="accent" className="w-full sm:w-auto rounded-full font-bold shadow-sm">
-                    <UserCircle size={20} className="mr-2" weight="duotone" />
-                    Masuk dengan Google
-                  </Button>
+                  <Link href="/account" className="w-full sm:w-auto">
+                    <Button variant="primary" className="w-full sm:w-auto rounded-xl font-bold shadow-xs text-xs">
+                      <UserCircle size={18} className="mr-1.5" weight="bold" />
+                      Buka Halaman Akun
+                    </Button>
+                  </Link>
                 </div>
               )}
             </SettingsSection>
@@ -181,39 +167,6 @@ export default function SettingsPage() {
                 description={formatReadingTime()}
                 right={<div className="text-sm font-semibold text-text-primary hidden sm:block">{formatReadingTime()}</div>}
               />
-            </SettingsSection>
-
-            {/* Kelola Koleksi */}
-            <CollectionManager />
-
-            {/* Pintasan Navigasi */}
-            <SettingsSection title="Pintasan Navigasi">
-              <Link href="/updates" className="block outline-none">
-                <SettingsItem
-                  icon={<IconWrapper variant="accent"><Lightning size={20} weight="duotone" /></IconWrapper>}
-                  title="Update Terbaru"
-                  description="Chapter rilis terbaru dari sumber aktif."
-                  onClick={() => {}} // Pass empty function to enable interactive styling + caret
-                />
-              </Link>
-              
-              <Link href="/popular" className="block outline-none">
-                <SettingsItem
-                  icon={<IconWrapper variant="accent"><Fire size={20} weight="duotone" /></IconWrapper>}
-                  title="Manga Populer"
-                  description="Judul paling banyak dibaca saat ini."
-                  onClick={() => {}}
-                />
-              </Link>
-              
-              <Link href="/sources" className="block outline-none">
-                <SettingsItem
-                  icon={<IconWrapper variant="accent"><PuzzlePiece size={20} weight="duotone" /></IconWrapper>}
-                  title="Kelola Sumber"
-                  description="Pilih atau ubah sumber ekstensi manga."
-                  onClick={() => {}}
-                />
-              </Link>
             </SettingsSection>
 
             {/* Pembaruan Library */}
@@ -282,7 +235,7 @@ export default function SettingsPage() {
                   mounted ? (
                     <SegmentedControl
                       layoutId="theme-toggle"
-                      variant="glass-floating"
+                      variant="quick-rail"
                       options={[
                         { value: "light", label: "Terang" },
                         { value: "dark", label: "Gelap" },
@@ -295,7 +248,7 @@ export default function SettingsPage() {
                   ) : (
                     <SegmentedControl
                       layoutId="theme-toggle-skeleton"
-                      variant="glass-floating"
+                      variant="quick-rail"
                       options={[
                         { value: "light", label: "Terang" },
                         { value: "dark", label: "Gelap" },
@@ -368,7 +321,7 @@ export default function SettingsPage() {
                 title="Backup & Restore Data"
                 description="Simpan ke file JSON atau pulihkan data riwayat & koleksi lokal."
                 right={
-                  <Button onClick={() => setIsBackupModalOpen(true)} variant="outline" className="w-full sm:w-auto shrink-0 border-accent/40 text-accent hover:bg-accent hover:text-white rounded-full font-bold transition-colors">
+                  <Button onClick={() => setIsBackupModalOpen(true)} variant="outline" className="w-full sm:w-auto shrink-0 border-accent/40 text-accent hover:bg-accent hover:text-white rounded-xl font-bold transition-colors">
                     Kelola Backup
                   </Button>
                 }
@@ -382,7 +335,7 @@ export default function SettingsPage() {
                 title={user ? "Bersihkan Cache Perangkat" : "Hapus Data Lokal"}
                 description={user ? "Menghapus data lokal di perangkat ini (tidak menghapus cloud)." : "Menghapus akan mereset riwayat & readlist secara permanen."}
                 right={
-                  <Button onClick={handleClearData} variant="outline" className="w-full sm:w-auto shrink-0 text-semantic-error hover:text-white hover:bg-semantic-error border-semantic-error/50 rounded-full font-bold transition-colors">
+                  <Button onClick={handleClearData} variant="outline" className="w-full sm:w-auto shrink-0 text-semantic-error hover:text-white hover:bg-semantic-error border-semantic-error/50 rounded-xl font-bold transition-colors">
                     Bersihkan
                   </Button>
                 }

@@ -239,7 +239,7 @@ export function CollectionTab({
           title="Koleksi masih kosong"
           description="Simpan manga favoritmu ke koleksi agar mudah diakses kembali kapan saja."
           action={
-            <Button asChild variant="accent" className="rounded-full shadow-sm font-bold mt-4">
+            <Button asChild variant="accent" className="rounded-xl shadow-sm font-bold mt-4">
               <Link href={getLibraryHref()}>
                 <Compass size={20} weight="bold" className="mr-1.5" />
                 Eksplor Manga
@@ -261,7 +261,7 @@ export function CollectionTab({
               <Button
                 variant="outline"
                 onClick={() => onSelectCollectionId?.(null)}
-                className="rounded-full shadow-sm font-bold mt-4"
+                className="rounded-xl shadow-sm font-bold mt-4"
               >
                 Tampilkan Semua Komik
               </Button>
@@ -269,7 +269,7 @@ export function CollectionTab({
               <Button
                 variant="outline"
                 onClick={onSearchClear}
-                className="rounded-full shadow-sm font-bold mt-4"
+                className="rounded-xl shadow-sm font-bold mt-4"
               >
                 Hapus Pencarian
               </Button>
@@ -310,7 +310,7 @@ export function CollectionTab({
                     >
                       <div
                         className={cn(
-                          "w-6 h-6 rounded-full flex items-center justify-center transition-transform duration-200",
+                          "w-6 h-6 rounded-lg flex items-center justify-center transition-transform duration-200",
                           isSelected
                             ? "bg-accent text-white scale-110"
                             : "bg-surface-glass border border-white/40"

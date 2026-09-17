@@ -77,12 +77,33 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
       try {
         const chapters = await apiClient.getChapters(item.sourceId, item.mangaId, { signal: options.signal });
 
+        // Self-heal: If item.title is missing, corrupted into a chapter label, or coverUrl is missing
+        let resolvedTitle = item.title;
+        let resolvedCoverUrl = item.coverUrl;
+        const isCorruptedTitle = !resolvedTitle || /^chapter\s*\d+/i.test(resolvedTitle.trim());
+        const needsHealing = isCorruptedTitle || !resolvedCoverUrl;
+        if (needsHealing) {
+          try {
+            const detail = await apiClient.getDetail(item.sourceId, item.mangaId, { signal: options.signal });
+            if (detail?.title) {
+              resolvedTitle = detail.title;
+              resolvedCoverUrl = detail.coverUrl || resolvedCoverUrl;
+              useLibraryStore.getState().updateLibraryItem(item.sourceId, item.mangaId, {
+                title: resolvedTitle,
+                coverUrl: resolvedCoverUrl,
+              });
+            }
+          } catch {
+            // Non-blocking fallback
+          }
+        }
+
         if (!chapters || chapters.length === 0) {
           useUpdateStore.getState().upsertUpdate({
             sourceId: item.sourceId,
             mangaId: item.mangaId,
-            mangaTitle: item.title,
-            coverUrl: item.coverUrl,
+            mangaTitle: resolvedTitle,
+            coverUrl: resolvedCoverUrl,
             sourceName: item.sourceName,
             lastCheckedAt: new Date().toISOString(),
           });
@@ -108,8 +129,8 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
         useUpdateStore.getState().upsertUpdate({
           sourceId: item.sourceId,
           mangaId: item.mangaId,
-          mangaTitle: item.title,
-          coverUrl: item.coverUrl,
+          mangaTitle: resolvedTitle,
+          coverUrl: resolvedCoverUrl,
           sourceName: item.sourceName,
           lastKnownChapterId: item.lastReadChapterId,
           lastKnownChapterTitle: item.lastReadChapterTitle,

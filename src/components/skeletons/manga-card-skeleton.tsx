@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 export function MangaCardSkeleton({ variant = "grid" }: { variant?: "grid" | "list" | "editorial" | "shelf" | "history" }) {
   if (variant === "history") {
-    // Mirrors HistoryCard: flex gap-4 p-3, cover h-[84px] w-[60px] rounded-sm, action h-8 w-8 rounded-full
+    // Mirrors HistoryCard: flex gap-4 p-3, cover h-[84px] w-[60px] rounded-sm, action h-8 w-8 rounded-lg
     return (
       <div className="flex items-center gap-4 rounded-xl bg-surface-raised/50 p-3 border border-border-subtle/50 w-full">
         <Skeleton className="h-[84px] w-[60px] rounded-sm shrink-0" />
@@ -11,8 +11,8 @@ export function MangaCardSkeleton({ variant = "grid" }: { variant?: "grid" | "li
           <Skeleton className="h-3 w-1/2" />
           <Skeleton className="h-3 w-1/3 mt-1" />
         </div>
-        {/* Play button: real is h-8 w-8 rounded-full */}
-        <Skeleton className="h-8 w-8 rounded-full shrink-0" />
+        {/* Play button: real is h-8 w-8 rounded-lg */}
+        <Skeleton className="h-8 w-8 rounded-lg shrink-0" />
       </div>
     )
   }
@@ -41,7 +41,7 @@ export function MangaCardSkeleton({ variant = "grid" }: { variant?: "grid" | "li
           <Skeleton className="absolute inset-0 w-full h-full rounded-none" />
           {/* Source/rank badge top-left */}
           <div className="absolute top-2 left-2 z-20">
-            <Skeleton className="h-4 w-10 rounded-full bg-black/20" />
+            <Skeleton className="h-4 w-10 rounded-md bg-black/20" />
           </div>
         </div>
         <div className="flex flex-col px-0.5">
@@ -81,7 +81,7 @@ export function MangaCardSkeleton({ variant = "grid" }: { variant?: "grid" | "li
         <Skeleton className="h-4 w-3/4" />
         <Skeleton className="h-3 w-1/2" />
       </div>
-      <Skeleton className="h-10 w-10 rounded-full shrink-0" />
+      <Skeleton className="h-10 w-10 rounded-xl shrink-0" />
     </div>
   )
 }

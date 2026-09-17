@@ -112,7 +112,7 @@ export function FeaturedHeroCarousel({ sourceId, mangas, variant = "cyber-editor
         {/* Top row: badge left, pager right */}
         <div className="flex items-start justify-between w-full pointer-events-auto">
           {/* Sorotan badge */}
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-accent/20 backdrop-blur-md border border-accent/30 text-accent font-black text-[10px] uppercase tracking-widest">
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-accent/20 backdrop-blur-md border border-accent/30 text-accent font-black text-[10px] uppercase tracking-widest">
             #{String(currentIndex + 1).padStart(2, "0")} Sorotan
           </span>
 
@@ -163,7 +163,7 @@ export function FeaturedHeroCarousel({ sourceId, mangas, variant = "cyber-editor
                   <Link
                     href={getMangaDetailHref(actualSourceId, currentManga.id)}
                     prefetch={true}
-                    className="inline-flex items-center gap-2 min-h-[44px] px-5 rounded-full bg-white text-black font-extrabold text-sm shadow-lg hover:bg-accent hover:text-white active:scale-95 transition-all shrink-0"
+                    className="inline-flex items-center gap-2 min-h-[44px] px-5 rounded-2xl bg-white text-black font-extrabold text-sm shadow-lg hover:bg-accent hover:text-white active:scale-95 transition-all shrink-0"
                     draggable={false}
                     aria-label="Baca"
                   >
@@ -204,14 +204,14 @@ export function FeaturedHeroCarousel({ sourceId, mangas, variant = "cyber-editor
           <button
             onClick={handlePrev}
             aria-label="Previous manga"
-            className="w-10 h-10 rounded-full border border-white/20 bg-black/50 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-90"
+            className="w-10 h-10 rounded-xl border border-white/20 bg-black/50 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-90"
           >
             <CaretLeft weight="bold" size={16} />
           </button>
           <button
             onClick={handleNext}
             aria-label="Next manga"
-            className="w-10 h-10 rounded-full border border-white/20 bg-black/50 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-90"
+            className="w-10 h-10 rounded-xl border border-white/20 bg-black/50 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-90"
           >
             <CaretRight weight="bold" size={16} />
           </button>

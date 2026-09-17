@@ -102,7 +102,7 @@ export function PullToRefresh({ children, onRefresh }: PullToRefreshProps) {
       >
         <div 
           className={cn(
-            "absolute -top-12 bg-surface-glass backdrop-blur-md shadow-md rounded-full w-10 h-10 flex items-center justify-center border border-border-default/30 text-text-primary transition-opacity duration-200",
+            "absolute -top-12 bg-surface-glass backdrop-blur-md shadow-md rounded-xl w-10 h-10 flex items-center justify-center border border-border-default/30 text-text-primary transition-opacity duration-200",
             (isPulling || isRefreshing) ? "opacity-100" : "opacity-0"
           )}
         >

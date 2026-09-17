@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { BookBookmark } from "@phosphor-icons/react";
+import Link from "next/link";
+import { BookBookmark, CalendarBlank, CaretRight } from "@phosphor-icons/react";
 import { PageHeader } from "@/components/app/header";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,11 +11,12 @@ import { MangaCardSkeleton } from "@/components/skeletons/manga-card-skeleton";
 import { useBookmarkReading } from "@/shared/hooks/use-bookmark-reading";
 import { useBookmarkCollection } from "@/shared/hooks/use-bookmark-collection";
 import { useLibraryStore } from "@/shared/store/library-store";
+import { useUpdateStore } from "@/shared/store/update-store";
 import { ReadingTab } from "./reading-tab";
 import { CollectionTab } from "./collection-tab";
-import { UpdatesList } from "@/components/updates/updates-list";
+import { HeaderActions } from "@/components/app/header-actions";
 
-export type BookmarkTab = "reading" | "collection" | "updates";
+export type BookmarkTab = "reading" | "collection";
 
 export function BookmarkPageView() {
   const router = useRouter();
@@ -22,7 +24,7 @@ export function BookmarkPageView() {
   const searchParams = useSearchParams();
   const initialTabParam = searchParams.get("tab") as BookmarkTab | null;
 
-  const validTabs: BookmarkTab[] = ["reading", "collection", "updates"];
+  const validTabs: BookmarkTab[] = ["reading", "collection"];
   const [activeTab, setActiveTab] = React.useState<BookmarkTab>(
     initialTabParam && validTabs.includes(initialTabParam) ? initialTabParam : "reading"
   );
@@ -30,6 +32,8 @@ export function BookmarkPageView() {
   const reading = useBookmarkReading();
   const collection = useBookmarkCollection();
   const libraryItemCount = useLibraryStore((state) => Object.keys(state.items).length);
+  const rawUnread = useUpdateStore((state) => state.getUnreadCount());
+  const unreadCount = typeof rawUnread === "function" ? (rawUnread as () => number)() : (Number(rawUnread) || 0);
 
   const handleTabChange = (tab: BookmarkTab) => {
     setActiveTab(tab);
@@ -55,7 +59,7 @@ export function BookmarkPageView() {
           </div>
         </div>
         <div className="px-4 pt-1 pb-4">
-          <Skeleton className="h-[46px] w-full rounded-full" />
+          <Skeleton className="h-[46px] w-full rounded-2xl" />
         </div>
         <div className="px-4 mt-2 space-y-3">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -73,14 +77,38 @@ export function BookmarkPageView() {
           title="Rak Buku"
           description="Bacaan, koleksi, & pembaruan komik favoritmu"
           icon={<BookBookmark size={24} weight="duotone" />}
-          meta={
-            libraryItemCount > 0 ? (
-              <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-accent/10 border border-accent/20 text-accent">
-                {libraryItemCount} judul
-              </span>
-            ) : undefined
-          }
+          actions={<HeaderActions />}
         />
+      </div>
+
+      {/* Notion-Style Jadwal Rilis Mingguan Shortcut Banner */}
+      <div className="px-4 pb-3 w-full">
+        <Link
+          href="/updates"
+          className="flex items-center justify-between p-3.5 rounded-2xl bg-surface-raised border border-border-subtle hover:border-accent/40 hover:bg-surface-hover transition-all group shadow-xs active:scale-[0.99]"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-accent/15 text-accent flex items-center justify-center shrink-0 border border-accent/20">
+              <CalendarBlank size={20} weight="duotone" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-text-primary group-hover:text-accent transition-colors">
+                  Jadwal Rilis Mingguan
+                </span>
+                {unreadCount > 0 && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-md bg-semantic-error text-white font-extrabold animate-in fade-in shadow-xs">
+                    {unreadCount > 99 ? "99+" : unreadCount} baru
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-text-muted mt-0.5">
+                Pantau jadwal update komik bookmark (Senin – Minggu)
+              </p>
+            </div>
+          </div>
+          <CaretRight size={18} weight="bold" className="text-text-muted group-hover:text-accent group-hover:translate-x-0.5 transition-all shrink-0" />
+        </Link>
       </div>
 
       <div
@@ -91,12 +119,15 @@ export function BookmarkPageView() {
         <SegmentedControl
           options={[
             { value: "reading", label: "Sedang Dibaca" },
-            { value: "collection", label: "Koleksi" },
-            { value: "updates", label: "Updates" },
+            {
+              value: "collection",
+              label: "Koleksi",
+              badge: libraryItemCount > 0 ? libraryItemCount : undefined,
+            },
           ]}
           value={activeTab}
           onChange={(val) => handleTabChange(val as BookmarkTab)}
-          variant="glass-floating"
+          variant="quick-rail"
           fullWidth
           className="h-[46px]"
           layoutId="bookmark-tab-pill"
@@ -144,10 +175,6 @@ export function BookmarkPageView() {
             onRenameCollection={collection.renameCollection}
             onDeleteCollection={collection.deleteCollection}
           />
-        )}
-
-        {activeTab === "updates" && (
-          <UpdatesList />
         )}
       </div>
     </div>

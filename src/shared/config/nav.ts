@@ -1,23 +1,23 @@
-import { Home01Icon, BookOpen01Icon, Bookmark02Icon, Search01Icon, Settings02Icon } from "@hugeicons/core-free-icons";
-import type { IconSvgElement } from "@hugeicons/react";
+import { House, Books, BookmarkSimple, MagnifyingGlass, GearSix } from "@phosphor-icons/react";
+import type { Icon } from "@phosphor-icons/react";
 
 export interface NavItem {
   href: string;
   label: string;
-  icon: IconSvgElement;
+  icon: Icon;
 }
 
 export const MAIN_NAV_ITEMS: NavItem[] = [
-  { href: "/", icon: Home01Icon, label: "Beranda" },
-  { href: "/library", icon: BookOpen01Icon, label: "Jelajah" },
-  { href: "/bookmark", icon: Bookmark02Icon, label: "Rak Buku" },
-  { href: "/search", icon: Search01Icon, label: "Cari" },
+  { href: "/", icon: House, label: "Beranda" },
+  { href: "/library", icon: Books, label: "Library" },
+  { href: "/bookmark", icon: BookmarkSimple, label: "Bookmark" },
+  { href: "/search", icon: MagnifyingGlass, label: "Cari" },
 ];
 
 export const DOCK_NAV_ITEMS: NavItem[] = [
-  { href: "/", icon: Home01Icon, label: "Beranda" },
-  { href: "/library", icon: BookOpen01Icon, label: "Jelajah" },
-  { href: "/bookmark", icon: Bookmark02Icon, label: "Rak Buku" },
-  { href: "/search", icon: Search01Icon, label: "Cari" },
-  { href: "/settings", icon: Settings02Icon, label: "Pengaturan" },
+  { href: "/", icon: House, label: "Beranda" },
+  { href: "/library", icon: Books, label: "Library" },
+  { href: "/bookmark", icon: BookmarkSimple, label: "Bookmark" },
+  { href: "/search", icon: MagnifyingGlass, label: "Cari" },
+  { href: "/settings", icon: GearSix, label: "Pengaturan" },
 ];

@@ -172,7 +172,7 @@ export function ReaderView({
             title="Gagal Memuat Halaman"
             description="Tidak dapat mengambil halaman chapter dari server."
             action={
-              <Button onClick={() => refetch()} variant="outline" className="rounded-full shadow-sm mt-2 font-bold">
+              <Button onClick={() => refetch()} variant="outline" className="rounded-xl shadow-sm mt-2 font-bold">
                 Coba Lagi
               </Button>
             }

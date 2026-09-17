@@ -72,7 +72,7 @@ export function ReaderChapterDrawer({
         variant="ghost" 
         size="default"
         className={cn(
-          "rounded-full min-h-[44px] min-w-[44px] border border-border-subtle shrink-0 transition-colors",
+          "rounded-xl min-h-[44px] min-w-[44px] border border-border-subtle shrink-0 transition-colors",
           sortOrder === "asc" ? "bg-accent/15 text-accent border-accent/20" : "bg-surface-glass text-text-secondary hover:text-text-primary hover:bg-surface-hover"
         )}
         onClick={() => setSortOrder(prev => prev === "desc" ? "asc" : "desc")}

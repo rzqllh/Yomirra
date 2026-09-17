@@ -101,3 +101,9 @@ test-results*.json
 
 # ----
 AUDIT_REPORT.md
+
+redesign-reference/
+
+./"UIUX Redesign Audit & Proposal".md
+.xyeena/
+.claude/
