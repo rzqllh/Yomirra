@@ -56,7 +56,11 @@ next-env.d.ts
 .codex/
 .gemini/
 .antigravity/
+.claude/
+.cursor/
+.windsurf/
 .skills/
+.xyeena/
 .github/agents/
 .github/hooks/
 .github/skills/
@@ -70,17 +74,27 @@ test-results*.json
 # Local AI / planning artifacts — not meant to be public
 /AGENTS.md
 /GEMINI.md
+/CLAUDE.md
 /skills-lock.json
-/implementation_plan.md
-/tasks.md
-/agent.md
+/implementation_plan*.md
+/tasks*.md
+/agent*.md
 /bugs/
 /readme-secret.md
 
+# Internal planning, audit, and execution artifacts
+/AUDIT_REPORT.md
+/AUDIT_2_SPEC.md
+/audit_report*.md
+/MASTER_PLAN*.md
+/EXECUTION_TRACKER*.md
+/UIUX Redesign Audit & Proposal.md
+/redesign-reference/
+/docs/phase-reviews/
+/docs/architecture/*AUDIT*.md
+/docs/_internal/
+
 # Internal documentation that should not be published
-# NOTE: docs/ has since been restructured (ARCHITECTURE.md, COMPONENTS.md, DESIGN.md,
-# SCHEMA.md, STACK.md, TESTING.md, ADDING_A_SOURCE.md now exist instead). Confirm which
-# of these (if any) should stay private and list them below — currently none are covered.
 /docs/GEMINI.components.md
 /docs/master_prompt.md
 /docs/RULES.md
@@ -92,18 +106,9 @@ test-results*.json
 /src/server/lib/sources/adapters/doujindesu-*/
 /src/server/lib/sources/adapters/manhwadesu/
 
-# Generated/cache data — delete this line if this is a maintained snapshot, not a regenerable cache
+# Generated/cache data
 /ext/index.min.json
 
 # Local archives and exports
 *.zip
 *.html
-
-# ----
-AUDIT_REPORT.md
-
-redesign-reference/
-
-./"UIUX Redesign Audit & Proposal".md
-.xyeena/
-.claude/
