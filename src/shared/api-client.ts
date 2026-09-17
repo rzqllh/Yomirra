@@ -22,6 +22,21 @@ class ApiClient {
     return data.data;
   }
 
+  private async fetchSource<T>(sourceId: string, url: string, options?: RequestInit): Promise<T> {
+    const start = performance.now();
+    try {
+      const result = await this.fetcher<T>(url, options);
+      const latency = performance.now() - start;
+      const { useSourceHealthStore } = await import("@/shared/store/source-health-store");
+      useSourceHealthStore.getState().recordSuccess(sourceId, latency);
+      return result;
+    } catch (error: any) {
+      const { useSourceHealthStore } = await import("@/shared/store/source-health-store");
+      useSourceHealthStore.getState().recordError(sourceId, error);
+      throw error;
+    }
+  }
+
   getSources() {
     return this.fetcher<SourceMetadata[]>("/api/sources");
   }
@@ -40,15 +55,15 @@ class ApiClient {
   }
 
   getFilters(sourceId: string) {
-    return this.fetcher<FilterList>(this.appendManifest(`/api/sources/${sourceId}/filters`, sourceId));
+    return this.fetchSource<FilterList>(sourceId, this.appendManifest(`/api/sources/${sourceId}/filters`, sourceId));
   }
 
   getPopular(sourceId: string, page: number = 1) {
-    return this.fetcher<MangaPageResult>(this.appendManifest(`/api/sources/${sourceId}/popular?page=${page}`, sourceId));
+    return this.fetchSource<MangaPageResult>(sourceId, this.appendManifest(`/api/sources/${sourceId}/popular?page=${page}`, sourceId));
   }
 
   getLatest(sourceId: string, page: number = 1) {
-    return this.fetcher<MangaPageResult>(this.appendManifest(`/api/sources/${sourceId}/latest?page=${page}`, sourceId));
+    return this.fetchSource<MangaPageResult>(sourceId, this.appendManifest(`/api/sources/${sourceId}/latest?page=${page}`, sourceId));
   }
 
   search(sourceId: string, query: string, page: number = 1, filters?: Record<string, string | string[]>, isNsfwFiltered: boolean = false, options?: { signal?: AbortSignal }) {
@@ -83,7 +98,7 @@ class ApiClient {
     
     url = this.appendManifest(url, sourceId);
     
-    return this.fetcher<{mangas?: MangaItem[], results?: MangaItem[], hasNextPage?: boolean}>(url, { signal: options?.signal }).then(data => ({
+    return this.fetchSource<{mangas?: MangaItem[], results?: MangaItem[], hasNextPage?: boolean}>(sourceId, url, { signal: options?.signal }).then(data => ({
       sourceId,
       query,
       page,
@@ -126,15 +141,16 @@ class ApiClient {
   }
 
   getDetail(sourceId: string, mangaId: string, options?: RequestInit) {
-    return this.fetcher<MangaDetail>(this.appendManifest(`/api/sources/${sourceId}/manga/${encodeURIComponent(mangaId)}`, sourceId), options);
+    return this.fetchSource<MangaDetail>(sourceId, this.appendManifest(`/api/sources/${sourceId}/manga/${encodeURIComponent(mangaId)}`, sourceId), options);
   }
 
   getChapters(sourceId: string, mangaId: string, options?: RequestInit) {
-    return this.fetcher<Chapter[]>(this.appendManifest(`/api/sources/${sourceId}/manga/${encodeURIComponent(mangaId)}/chapters`, sourceId), options);
+    return this.fetchSource<Chapter[]>(sourceId, this.appendManifest(`/api/sources/${sourceId}/manga/${encodeURIComponent(mangaId)}/chapters`, sourceId), options);
   }
 
   getPages(sourceId: string, mangaId: string, chapterId: string) {
-    return this.fetcher<ChapterPages>(
+    return this.fetchSource<ChapterPages>(
+      sourceId,
       this.appendManifest(`/api/sources/${sourceId}/manga/${encodeURIComponent(mangaId)}/chapters/${encodeURIComponent(chapterId)}/pages`, sourceId)
     );
   }

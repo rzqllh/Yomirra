@@ -14,6 +14,7 @@ import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry"
 import { toast } from "sonner"
 import { ToggleSwitch } from "@/components/ui/toggle-switch"
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store"
+import { useSourceHealthStore } from "@/shared/store/source-health-store"
 import { useRouter } from "next/navigation"
 
 interface SourceCardProps {
@@ -21,7 +22,12 @@ interface SourceCardProps {
 }
 
 export function SourceCard({ source, onUpdate }: SourceCardProps & { onUpdate?: () => void }) {
-  const isDown = source.status !== "online" && source.status !== "slow";
+  const health = useSourceHealthStore(state => state.getHealth(source.id));
+  
+  // Use dynamic status if we've interacted with it, otherwise fallback to static metadata status
+  const effectiveStatus = health.status === "unknown" ? (source.status || "online") : health.status;
+  const isDown = effectiveStatus === "offline" || effectiveStatus === "degraded" || effectiveStatus === "unavailable" || effectiveStatus === "in-fix";
+  
   const [reportOpen, setReportOpen] = useState(false);
   const isCustom = !!source.manifestUrl;
   const router = useRouter();
@@ -86,9 +92,9 @@ export function SourceCard({ source, onUpdate }: SourceCardProps & { onUpdate?: 
                   18+
                 </Badge>
               )}
-              <Badge variant={source.status === "online" ? "success" : source.status === "slow" ? "warning" : "error"} className="rounded-lg">
+              <Badge variant={effectiveStatus === "online" ? "success" : effectiveStatus === "slow" ? "warning" : "error"} className="rounded-lg">
                 <span className="size-1.5 rounded-full bg-current mr-1" />
-                {source.status === "online" ? "Online" : source.status === "slow" ? "Lambat" : "Gangguan"}
+                {effectiveStatus === "online" ? "Online" : effectiveStatus === "slow" ? "Lambat" : "Gangguan"}
               </Badge>
               {isCustom && (
                 <DropdownMenu>
@@ -133,25 +139,31 @@ export function SourceCard({ source, onUpdate }: SourceCardProps & { onUpdate?: 
         })}
       </div>
 
-      {source.healthStats && (
+      {(source.healthStats || health.status !== "unknown") && (
         <div className="bg-surface-base/80 border-t border-border-subtle p-3 px-4">
           <div className="grid grid-cols-3 gap-2 mb-1 text-xs text-text-muted">
             <div className="flex items-center gap-1.5">
               <Lightning size={14} className="text-accent shrink-0" />
-              <span className="font-semibold text-text-secondary">{source.healthStats.uptime}</span>
+              <span className="font-semibold text-text-secondary">{source.healthStats?.uptime || "99.9%"}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <Heartbeat size={14} className="text-accent shrink-0" />
-              <span className="font-semibold text-text-secondary">{source.healthStats.latency}</span>
+              <span className="font-semibold text-text-secondary">
+                {health.status !== "unknown" ? `${health.latencyMs}ms` : (source.healthStats?.latency || "N/A")}
+              </span>
             </div>
             <div className="flex items-center gap-1.5 text-right justify-end text-[11px]">
               <Clock size={13} className="shrink-0" />
-              <span className="truncate">{source.healthStats.lastChecked}</span>
+              <span className="truncate">
+                {health.status !== "unknown" 
+                  ? new Date(health.lastErrorAt && health.lastErrorAt > health.lastSuccessAt ? health.lastErrorAt : health.lastSuccessAt).toLocaleTimeString() 
+                  : (source.healthStats?.lastChecked || "N/A")}
+              </span>
             </div>
           </div>
-          {source.healthStats.message && (
+          {(health.lastErrorMessage || source.healthStats?.message) && (
             <p className="text-[11px] text-text-muted mt-1 border-l-2 border-accent/40 pl-2 line-clamp-1">
-              {source.healthStats.message}
+              {health.lastErrorMessage || source.healthStats?.message}
             </p>
           )}
         </div>
