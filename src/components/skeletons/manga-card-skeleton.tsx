@@ -1,6 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton"
 
-export function MangaCardSkeleton({ variant = "grid" }: { variant?: "grid" | "list" | "editorial" | "shelf" | "history" }) {
+export function MangaCardSkeleton({ variant = "grid" }: { variant?: "grid" | "list" | "editorial" | "shelf" | "history" | "leaderboard" }) {
   if (variant === "history") {
     // Mirrors HistoryCard: flex gap-4 p-3, cover h-[84px] w-[60px] rounded-sm, action h-8 w-8 rounded-lg
     return (
@@ -13,6 +13,20 @@ export function MangaCardSkeleton({ variant = "grid" }: { variant?: "grid" | "li
         </div>
         {/* Play button: real is h-8 w-8 rounded-lg */}
         <Skeleton className="h-8 w-8 rounded-lg shrink-0" />
+      </div>
+    )
+  }
+
+  if (variant === "leaderboard") {
+    // Mirrors LeaderboardRow: flex gap-3.5 py-2.5 px-3, rank w-9, cover w-[50px] h-[68px] sm:w-[60px] sm:h-[80px] rounded-sm
+    return (
+      <div className="flex items-center gap-3.5 py-2.5 px-3 rounded md:rounded-xl bg-surface-base/40 border border-border-subtle/40 w-full">
+        <Skeleton className="w-9 h-8 shrink-0 rounded-md" />
+        <Skeleton className="w-[50px] h-[68px] sm:w-[60px] sm:h-[80px] shrink-0 rounded-sm" />
+        <div className="flex-1 flex flex-col justify-center gap-2 py-0.5">
+          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="h-3 w-1/3" />
+        </div>
       </div>
     )
   }
