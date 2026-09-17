@@ -60,7 +60,7 @@ export function KoleksiTab() {
       <LibraryCollectionRail
         collections={catalog.collections}
         libraryItems={catalog.libraryItems}
-        membershipsByManga={catalog.membershipsByManga}
+        getMemberships={catalog.getMemberships}
         activeSourceId={catalog.activeSourceId}
         selectedCollections={catalog.selectedCollections}
         onPageReset={() => catalog.setPage(1)}

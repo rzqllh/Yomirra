@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { Collection, CollectionState, MangaKey, ReadingStatus } from "../types/collection";
 import { pushCustomCollections } from "@/shared/lib/sync-utils";
+import { useLibraryStore } from "@/shared/store/library-store";
 
 interface CollectionActions {
   createCollection: (name: string) => void;
@@ -16,6 +17,10 @@ interface CollectionActions {
   clearReadingStatus: (mangaKey: MangaKey) => void;
   clearCollections: () => void;
   syncWithCloud: (cloudCollections: Collection[], cloudMemberships: Record<MangaKey, string[]>) => void;
+  
+  // Phase 4: Dual-read helpers
+  getMemberships: (mangaKey: MangaKey) => string[];
+  getResolvedReadingStatus: (mangaKey: MangaKey) => ReadingStatus | undefined;
 }
 
 export type CollectionStore = CollectionState & CollectionActions;
@@ -34,6 +39,38 @@ export const useCollectionStore = create<CollectionStore>()(
         collections: [],
         membershipsByManga: {},
         readingStatusByManga: {},
+
+        getMemberships: (mangaKey: MangaKey) => {
+          const state = get();
+          const legacyMemberships = state.membershipsByManga[mangaKey] || [];
+          
+          if (!mangaKey.includes("::")) return legacyMemberships;
+          
+          // Phase 4: Dual-read
+          const [sourceId, mangaId] = mangaKey.split("::");
+          const canonicalId = useLibraryStore.getState().resolveBySourceRef(sourceId, mangaId)?.id as MangaKey;
+          
+          if (canonicalId && canonicalId !== mangaKey) {
+            const canonicalMemberships = state.membershipsByManga[canonicalId] || [];
+            return Array.from(new Set([...legacyMemberships, ...canonicalMemberships]));
+          }
+          return legacyMemberships;
+        },
+
+        getResolvedReadingStatus: (mangaKey: MangaKey) => {
+          const state = get();
+          const legacyStatus = state.readingStatusByManga[mangaKey];
+          
+          if (!mangaKey.includes("::")) return legacyStatus;
+
+          const [sourceId, mangaId] = mangaKey.split("::");
+          const canonicalId = useLibraryStore.getState().resolveBySourceRef(sourceId, mangaId)?.id as MangaKey;
+          
+          if (canonicalId && canonicalId !== mangaKey) {
+            return state.readingStatusByManga[canonicalId] || legacyStatus;
+          }
+          return legacyStatus;
+        },
 
         clearCollections: () => set({ collections: [], membershipsByManga: {}, readingStatusByManga: {} }),
 

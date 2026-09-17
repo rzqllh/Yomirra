@@ -48,7 +48,7 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
   const chapterIndex = chapters?.findIndex(c => c.id === currentChapterId) ?? -1;
   let prevChapterId: string | undefined;
   let nextChapterId: string | undefined;
-  
+
   if (chapterIndex !== -1 && chapters) {
     if (chapterIndex < chapters.length - 1) {
       prevChapterId = chapters[chapterIndex + 1].id;
@@ -97,12 +97,12 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      
+
       if (e.key === 'Escape' || e.key === 'm' || e.key === 'M') {
         toggleOverlay();
       }
     };
-    
+
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [toggleOverlay]);
@@ -110,7 +110,7 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
   // Wake Lock API
   React.useEffect(() => {
     let wakeLock: WakeLockSentinel | null = null;
-    
+
     const requestWakeLock = async () => {
       if ('wakeLock' in navigator && (preferences.keepScreenAwake ?? true)) {
         try {
@@ -154,7 +154,7 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
         window.requestAnimationFrame(() => {
           const currentScrollY = window.scrollY;
           const diff = currentScrollY - lastScrollY;
-          
+
           setShowBackToTop(currentScrollY > 1200);
 
           // Reset accumulator if scrolling changes direction
@@ -164,7 +164,7 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
           accumulatedDiff += diff;
 
           const isAtBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 300;
-          
+
           if (isAtBottom) {
             setOverlayVisible(false);
           } else if (accumulatedDiff > 80) {
@@ -174,7 +174,7 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
             setOverlayVisible(true);
             accumulatedDiff = 0; // Reset after triggering
           }
-          
+
           lastScrollY = currentScrollY;
           ticking = false;
         });
@@ -187,7 +187,7 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
   }, [setOverlayVisible]);
 
   return (
-    <div 
+    <div
       className={cn(
         "relative min-h-screen w-full transition-[padding] duration-150",
         isDesktopPanelOpen && "md:pr-[320px]",
@@ -195,11 +195,10 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
       )}
       style={{ backgroundColor: getBackgroundColor() }}
     >
-      <ReaderProgress />
       {/* Top Overlay (Option A: Back + Info + Bookmark with Spring Animation & High Contrast) */}
       <AnimatePresence>
         {isOverlayVisible && (
-          <motion.div 
+          <motion.div
             key="reader-top-overlay"
             initial={{ y: -80, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -260,8 +259,8 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
                     isSaved
                       ? "bg-accent text-white shadow-[0_2px_12px_rgba(99,102,241,0.5),inset_0_1px_0_rgba(255,255,255,0.3)] border border-white/20"
                       : preferences.background === 'mist'
-                      ? "text-gray-800 hover:bg-black/5"
-                      : "text-white/85 hover:text-white hover:bg-white/10"
+                        ? "text-gray-800 hover:bg-black/5"
+                        : "text-white/85 hover:text-white hover:bg-white/10"
                   )}
                   onClick={handleToggleBookmark}
                 >
@@ -276,7 +275,7 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
       {/* Bottom Overlay (Option A: Compact High-Contrast Squircle Dock with Spring Animation) */}
       <AnimatePresence>
         {isOverlayVisible && (
-          <motion.div 
+          <motion.div
             key="reader-bottom-overlay"
             initial={{ y: 80, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -318,7 +317,7 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
 
 
                 {/* 2. Prev Chapter (Squircle) */}
-                <button 
+                <button
                   aria-label="Chapter sebelumnya"
                   className={cn(
                     "flex h-10 w-10 items-center justify-center rounded-[12px] active:scale-95 transition-all shrink-0 cursor-pointer outline-none",
@@ -328,8 +327,8 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
                     !prevChapterId && "opacity-25 cursor-not-allowed pointer-events-none"
                   )}
                   disabled={!prevChapterId}
-                  onClick={(e) => { 
-                    e.stopPropagation(); 
+                  onClick={(e) => {
+                    e.stopPropagation();
                     if (prevChapterId) {
                       toast.info("Membuka chapter sebelumnya...", { duration: 1500 });
                       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -339,12 +338,12 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
                 >
                   <CaretLeft size={20} weight="bold" />
                 </button>
-                
+
                 {/* 3. Chapter List Drawer Trigger (Squircle rounded-[12px], NOT Pill!) */}
-                <button 
+                <button
                   className="flex-1 h-10 rounded-[12px] font-bold text-sm bg-accent hover:bg-accent-hover text-white shadow-[0_4px_16px_rgba(108,106,250,0.4),inset_0_1px_0_rgba(255,255,255,0.3)] border border-white/20 transition-all truncate px-2.5 sm:px-3 active:scale-[0.98] flex items-center justify-center cursor-pointer outline-none"
-                  onClick={(e) => { 
-                    e.stopPropagation(); 
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setIsChapterDrawerOpen(true);
                   }}
                 >
@@ -353,7 +352,7 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
                 </button>
 
                 {/* 4. Next Chapter (Squircle) */}
-                <button 
+                <button
                   aria-label="Chapter selanjutnya"
                   className={cn(
                     "flex h-10 w-10 items-center justify-center rounded-[12px] active:scale-95 transition-all shrink-0 cursor-pointer outline-none",
@@ -363,13 +362,13 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
                     !nextChapterId && "opacity-25 cursor-not-allowed pointer-events-none"
                   )}
                   disabled={!nextChapterId}
-                  onClick={(e) => { 
-                    e.stopPropagation(); 
+                  onClick={(e) => {
+                    e.stopPropagation();
                     if (nextChapterId) {
                       toast.info("Membuka chapter selanjutnya...", { duration: 1500 });
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
                       setTimeout(() => router.replace(getReaderHref(sourceId, mangaId, nextChapterId)), 150);
                     }
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
                 >
                   <CaretRight size={20} weight="bold" />
@@ -384,12 +383,12 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
                       ? "text-gray-800 hover:bg-black/5"
                       : "text-white/80 hover:text-white hover:bg-white/10"
                   )}
-                  onClick={(e) => { 
-                    e.stopPropagation(); 
+                  onClick={(e) => {
+                    e.stopPropagation();
                     if (window.innerWidth >= 768) {
                       toggleDesktopPanel();
                     } else {
-                      setIsDrawerOpen(true); 
+                      setIsDrawerOpen(true);
                     }
                   }}
                 >
@@ -400,16 +399,17 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
           </motion.div>
         )}
       </AnimatePresence>
+      <ReaderProgress />
 
       {children}
 
       {/* Settings Drawer */}
-      <ReaderSettingsDrawer 
-        isOpen={isDrawerOpen} 
-        onClose={() => setIsDrawerOpen(false)} 
+      <ReaderSettingsDrawer
+        isOpen={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
       />
 
-      <ReaderChapterDrawer 
+      <ReaderChapterDrawer
         isOpen={isChapterDrawerOpen}
         onClose={() => setIsChapterDrawerOpen(false)}
         chapters={chapters}

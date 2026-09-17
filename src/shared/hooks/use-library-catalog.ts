@@ -53,7 +53,7 @@ export function useLibraryCatalog() {
   } = filterStore;
 
   const libraryItems = useLibraryStore(state => state.items);
-  const { collections, membershipsByManga, readingStatusByManga } = useCollectionStore();
+  const { collections, membershipsByManga, readingStatusByManga, getMemberships } = useCollectionStore();
 
   const initialSort = sortParam || storeSort || "popular";
 
@@ -259,6 +259,7 @@ export function useLibraryCatalog() {
     collections,
     libraryItems,
     membershipsByManga,
+    getMemberships,
     selectedReadingStatuses,
     selectedCollections,
     selectedGenres,

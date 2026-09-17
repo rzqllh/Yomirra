@@ -4,16 +4,18 @@ import * as React from "react";
 import { motion, AnimatePresence } from "motion/react";
 import Image from "next/image";
 import { useAuth } from "@/shared/hooks/use-auth";
+import { useOnboardingStore } from "@/shared/store/onboarding-store";
 
 const MINIMUM_SPLASH_DURATION = 1200;
 const WATCHDOG_TIMEOUT = 10000;
 
 export function SplashScreen({ onComplete }: { onComplete: () => void }) {
   const { loading: authLoading } = useAuth();
+  const { _hasHydrated: hasHydrated } = useOnboardingStore();
   
   const [isMounted, setIsMounted] = React.useState(false);
   const [bootStartTime] = React.useState(() => Date.now());
-  const [statusText, setStatusText] = React.useState("Memulai Yomirra...");
+  const [statusText, setStatusText] = React.useState("Menyiapkan Yomirra...");
   const [isReadyToExit, setIsReadyToExit] = React.useState(false);
   const [isTakingTooLong, setIsTakingTooLong] = React.useState(false);
 
@@ -27,16 +29,14 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
     };
   }, []);
 
-  // Update status based on auth loading
+  // Update status based on actual boot phase (only if it hasn't timed out)
   React.useEffect(() => {
-    if (isMounted) {
-      if (authLoading) {
-        setStatusText("Memulihkan sesi...");
-      } else {
-        setStatusText("Menyiapkan perpustakaan...");
+    if (isMounted && !isTakingTooLong) {
+      if (authLoading || !hasHydrated) {
+        setStatusText("Menyiapkan Yomirra...");
       }
     }
-  }, [authLoading, isMounted]);
+  }, [authLoading, hasHydrated, isMounted, isTakingTooLong]);
 
   // Main Boot Logic
   React.useEffect(() => {
@@ -45,7 +45,7 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
     let timeoutId: NodeJS.Timeout;
     
     // Check if critical boot dependencies are resolved
-    const isBootComplete = !authLoading;
+    const isBootComplete = !authLoading && hasHydrated;
 
     if (isBootComplete && !isTakingTooLong) {
       const elapsed = Date.now() - bootStartTime;
@@ -57,7 +57,7 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
     }
 
     return () => clearTimeout(timeoutId);
-  }, [isMounted, authLoading, bootStartTime, isTakingTooLong]);
+  }, [isMounted, authLoading, hasHydrated, bootStartTime, isTakingTooLong]);
 
   // Watchdog Timer
   React.useEffect(() => {

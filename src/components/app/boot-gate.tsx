@@ -20,6 +20,7 @@ export function BootGate({ children }: { children: React.ReactNode }) {
   const handleSplashComplete = () => {
     if (hasCompletedOnboarding) {
       setPhase("app");
+      import("@/shared/lib/canonical-migration").then(m => m.runCanonicalMigration());
     } else {
       setPhase("onboarding");
     }
@@ -27,6 +28,7 @@ export function BootGate({ children }: { children: React.ReactNode }) {
 
   const handleOnboardingComplete = () => {
     setPhase("app");
+    import("@/shared/lib/canonical-migration").then(m => m.runCanonicalMigration());
   };
 
   if (!isMounted) return null;

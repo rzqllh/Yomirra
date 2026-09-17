@@ -29,7 +29,7 @@ export function MangaCollectionButton({
 }: MangaCollectionButtonProps) {
   const mangaKey: MangaKey = `${sourceId}::${mangaId}`;
   const collections = useCollectionStore((state) => state.collections);
-  const memberships = useCollectionStore((state) => state.membershipsByManga[mangaKey]) || [];
+  const memberships = useCollectionStore((state) => state.getMemberships(mangaKey)) || [];
   const addMangaToCollection = useCollectionStore((state) => state.addMangaToCollection);
   const removeMangaFromCollection = useCollectionStore((state) => state.removeMangaFromCollection);
   const createCollection = useCollectionStore((state) => state.createCollection);

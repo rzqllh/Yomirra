@@ -10,7 +10,7 @@ import type { LibraryItem } from "@/shared/store/library-store";
 export interface LibraryCollectionRailProps {
   collections: Collection[];
   libraryItems: Record<string, LibraryItem>;
-  membershipsByManga: Record<MangaKey, string[]>;
+  getMemberships: (key: MangaKey) => string[];
   activeSourceId: string;
   selectedCollections: string[];
   onPageReset: () => void;
@@ -19,7 +19,7 @@ export interface LibraryCollectionRailProps {
 export function LibraryCollectionRail({
   collections,
   libraryItems,
-  membershipsByManga,
+  getMemberships,
   activeSourceId,
   selectedCollections,
   onPageReset,
@@ -34,7 +34,7 @@ export function LibraryCollectionRail({
   const getCollectionCount = (cId: string) => {
     return sourceItems.filter(item => {
       const key = `${item.sourceId}::${item.mangaId}` as MangaKey;
-      const memberships = membershipsByManga[key] || [];
+      const memberships = getMemberships(key) || [];
       return memberships.includes(cId);
     }).length;
   };
