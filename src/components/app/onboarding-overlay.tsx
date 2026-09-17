@@ -65,7 +65,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
   React.useEffect(() => {
     setIsMounted(true);
     
-    // Extract covers from local stores (to ensure they are cached/fast)
+    // 1. Extract covers from local stores (fast cache)
     const libraryItems = Object.values(useLibraryStore.getState().items || {});
     const historyItems = Object.values(useHistoryStore.getState().items || {});
     
@@ -74,16 +74,50 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
     historyItems.forEach(item => { if (item.coverUrl) extractedCovers.add(item.coverUrl); });
     
     const availableCovers = Array.from(extractedCovers);
-    
-    // Shuffle and pick 3, or fallback
     const shuffled = availableCovers.sort(() => 0.5 - Math.random());
-    const finalCovers = shuffled.slice(0, 3);
+    const cacheCovers = shuffled.slice(0, 3);
     
-    while (finalCovers.length < 3) {
-      finalCovers.push(FALLBACK_COVERS[finalCovers.length]);
+    if (cacheCovers.length >= 3) {
+      setCovers(cacheCovers);
+      return;
     }
     
-    setCovers(finalCovers);
+    // 2. Set branded fallback immediately (non-blocking UI)
+    const initialFallback = [...cacheCovers];
+    while (initialFallback.length < 3) {
+      initialFallback.push(FALLBACK_COVERS[initialFallback.length]);
+    }
+    setCovers(initialFallback);
+
+    // 3. Fetch from existing API in background
+    let isCancelled = false;
+    
+    fetch('/api/sources/komikindo/popular?page=1')
+      .then(res => {
+        if (!res.ok) throw new Error("API response not ok");
+        return res.json();
+      })
+      .then(data => {
+        if (isCancelled) return;
+        const apiCovers = (data?.mangas || [])
+          .map((m: any) => m.coverUrl)
+          .filter(Boolean);
+          
+        if (apiCovers.length >= 3) {
+          // Shuffle API covers for a stable random selection this session
+          const shuffledApi = apiCovers.sort(() => 0.5 - Math.random()).slice(0, 3);
+          setCovers(shuffledApi);
+        }
+      })
+      .catch((err) => {
+        if (process.env.NODE_ENV === "development") {
+          console.log("[Onboarding] Cover API fallback failed, keeping branded fallback.", err.message);
+        }
+      });
+
+    return () => {
+      isCancelled = true;
+    };
   }, []);
 
   React.useEffect(() => {
