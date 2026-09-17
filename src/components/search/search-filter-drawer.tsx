@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Funnel } from "@phosphor-icons/react";
 import { FilterDrawerShell, FilterSection } from "@/components/ui/filter-drawer-shell";
 import { FilterChip } from "@/components/ui/filter-chip";
 import { useSearchFilterStore } from "@/shared/store/search-filter-store";
@@ -113,6 +114,12 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
     setSelectedSort("popular");
   };
 
+  const hasAnyFilter =
+    dynamicFilters.sorts.length > 0 ||
+    dynamicFilters.formats.length > 0 ||
+    dynamicFilters.statuses.length > 0 ||
+    dynamicFilters.genres.length > 0;
+
   const activeCount = storeFilters.genres.length + (storeFilters.formats?.length || 0) + (storeFilters.status ? 1 : 0) + (storeFilters.sort !== "popular" && storeFilters.sort ? 1 : 0);
 
   return (
@@ -125,69 +132,85 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
       onOpen={syncFromStore}
       trigger={children}
     >
-      {/* Urutkan */}
-      {dynamicFilters.sorts.length > 0 && (
-        <FilterSection title="Urutkan">
-          {dynamicFilters.sorts.map(sort => (
-            <FilterChip
-              key={sort.id}
-              onClick={() => setSelectedSort(sort.id)}
-              selected={selectedSort === sort.id}
-              variant={selectedSort === sort.id ? "inverted" : "default"}
-              label={sort.label}
-            />
-          ))}
-        </FilterSection>
-      )}
+      {!hasAnyFilter ? (
+        <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+          <div className="w-12 h-12 rounded-2xl bg-surface-raised flex items-center justify-center mb-3 text-text-muted">
+            <Funnel size={24} weight="duotone" />
+          </div>
+          <p className="text-sm font-semibold text-text-primary">
+            Sumber ini tidak menyediakan filter tambahan
+          </p>
+          <p className="text-xs text-text-muted mt-1 max-w-[280px] leading-relaxed">
+            Anda tetap dapat mencari komik secara langsung menggunakan bilah pencarian.
+          </p>
+        </div>
+      ) : (
+        <>
+          {/* Urutkan */}
+          {dynamicFilters.sorts.length > 0 && (
+            <FilterSection title="Urutkan">
+              {dynamicFilters.sorts.map(sort => (
+                <FilterChip
+                  key={sort.id}
+                  onClick={() => setSelectedSort(sort.id)}
+                  selected={selectedSort === sort.id}
+                  variant={selectedSort === sort.id ? "inverted" : "default"}
+                  label={sort.label}
+                />
+              ))}
+            </FilterSection>
+          )}
 
-      {/* Tipe / Format */}
-      {dynamicFilters.formats.length > 0 && (
-        <FilterSection title="Tipe Komik">
-          {dynamicFilters.formats.map(format => (
-            <FilterChip
-              key={format.id}
-              onClick={() => toggleFormat(format.id)}
-              selected={selectedFormats.includes(format.id)}
-              variant={selectedFormats.includes(format.id) ? "accent-subtle" : "default"}
-              showCheck={selectedFormats.includes(format.id)}
-              label={format.label}
-            />
-          ))}
-        </FilterSection>
-      )}
+          {/* Tipe / Format */}
+          {dynamicFilters.formats.length > 0 && (
+            <FilterSection title="Tipe Komik">
+              {dynamicFilters.formats.map(format => (
+                <FilterChip
+                  key={format.id}
+                  onClick={() => toggleFormat(format.id)}
+                  selected={selectedFormats.includes(format.id)}
+                  variant={selectedFormats.includes(format.id) ? "accent-subtle" : "default"}
+                  showCheck={selectedFormats.includes(format.id)}
+                  label={format.label}
+                />
+              ))}
+            </FilterSection>
+          )}
 
-      {/* Status Rilis */}
-      {dynamicFilters.statuses.length > 0 && (
-        <FilterSection title="Status Rilis">
-          {dynamicFilters.statuses.map(status => (
-            <FilterChip
-              key={status.id}
-              onClick={() => setSelectedStatus(status.id === selectedStatus ? "" : status.id)}
-              selected={selectedStatus === status.id}
-              variant={selectedStatus === status.id ? "accent-subtle" : "default"}
-              showCheck={selectedStatus === status.id}
-              label={status.label}
-            />
-          ))}
-        </FilterSection>
-      )}
+          {/* Status Rilis */}
+          {dynamicFilters.statuses.length > 0 && (
+            <FilterSection title="Status Rilis">
+              {dynamicFilters.statuses.map(status => (
+                <FilterChip
+                  key={status.id}
+                  onClick={() => setSelectedStatus(status.id === selectedStatus ? "" : status.id)}
+                  selected={selectedStatus === status.id}
+                  variant={selectedStatus === status.id ? "accent-subtle" : "default"}
+                  showCheck={selectedStatus === status.id}
+                  label={status.label}
+                />
+              ))}
+            </FilterSection>
+          )}
 
-      {/* Genre */}
-      {dynamicFilters.genres.length > 0 && (
-        <FilterSection title="Genre">
-          {dynamicFilters.genres.map(genre => {
-            const isSelected = selectedGenres.includes(genre.id);
-            return (
-              <FilterChip
-                key={genre.id}
-                onClick={() => toggleGenre(genre.id)}
-                selected={isSelected}
-                variant={isSelected ? "accent-solid" : "default"}
-                label={genre.label}
-              />
-            );
-          })}
-        </FilterSection>
+          {/* Genre */}
+          {dynamicFilters.genres.length > 0 && (
+            <FilterSection title="Genre">
+              {dynamicFilters.genres.map(genre => {
+                const isSelected = selectedGenres.includes(genre.id);
+                return (
+                  <FilterChip
+                    key={genre.id}
+                    onClick={() => toggleGenre(genre.id)}
+                    selected={isSelected}
+                    variant={isSelected ? "accent-solid" : "default"}
+                    label={genre.label}
+                  />
+                );
+              })}
+            </FilterSection>
+          )}
+        </>
       )}
     </FilterDrawerShell>
   );

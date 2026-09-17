@@ -15,39 +15,28 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
   
   const [isMounted, setIsMounted] = React.useState(false);
   const [bootStartTime] = React.useState(() => Date.now());
-  const [statusText, setStatusText] = React.useState("Menyiapkan Yomirra...");
   const [isReadyToExit, setIsReadyToExit] = React.useState(false);
   const [isTakingTooLong, setIsTakingTooLong] = React.useState(false);
 
+  // Preserve previous overflow on mount and restore on unmount
   React.useEffect(() => {
     setIsMounted(true);
-    document.body.style.overflow = "hidden"; // Lock scroll
-    
-    // Cleanup on unmount
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = previousOverflow;
     };
   }, []);
 
-  // Update status based on actual boot phase (only if it hasn't timed out)
-  React.useEffect(() => {
-    if (isMounted && !isTakingTooLong) {
-      if (authLoading || !hasHydrated) {
-        setStatusText("Menyiapkan Yomirra...");
-      }
-    }
-  }, [authLoading, hasHydrated, isMounted, isTakingTooLong]);
-
-  // Main Boot Logic
+  // Main Boot Logic - Watchdog never halts boot if dependencies resolve late
   React.useEffect(() => {
     if (!isMounted) return;
 
     let timeoutId: NodeJS.Timeout;
-    
-    // Check if critical boot dependencies are resolved
     const isBootComplete = !authLoading && hasHydrated;
 
-    if (isBootComplete && !isTakingTooLong) {
+    if (isBootComplete) {
       const elapsed = Date.now() - bootStartTime;
       const remainingTime = Math.max(0, MINIMUM_SPLASH_DURATION - elapsed);
 
@@ -57,16 +46,14 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
     }
 
     return () => clearTimeout(timeoutId);
-  }, [isMounted, authLoading, hasHydrated, bootStartTime, isTakingTooLong]);
+  }, [isMounted, authLoading, hasHydrated, bootStartTime]);
 
-  // Watchdog Timer
+  // Watchdog Timer (>10s notification only)
   React.useEffect(() => {
     if (!isMounted || isReadyToExit) return;
 
     const watchdogId = setTimeout(() => {
-      // If we are still here after 10 seconds, it's taking too long
       setIsTakingTooLong(true);
-      setStatusText("Memuat lebih lama dari biasanya...");
     }, WATCHDOG_TIMEOUT);
 
     return () => clearTimeout(watchdogId);
@@ -75,7 +62,6 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
   // Exit trigger
   React.useEffect(() => {
     if (isReadyToExit) {
-      document.body.style.overflow = ""; // Restore scroll before unmount
       onComplete();
     }
   }, [isReadyToExit, onComplete]);
@@ -125,9 +111,9 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
             src="/icon.png" 
             alt="Yomirra Logo" 
             fill 
+            sizes="100px"
             className="object-contain drop-shadow-md" 
             priority 
-            unoptimized
           />
         </motion.div>
 
@@ -139,13 +125,13 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
           className="flex flex-col items-center text-center gap-2"
         >
           <h1 className="text-3xl font-extrabold tracking-tight text-text-primary">Yomirra</h1>
-          <p className="text-[14px] font-medium text-text-muted max-w-[200px] leading-relaxed">
-            Baca lintas sumber, lebih nyaman.
+          <p className="text-[14px] font-medium text-text-muted max-w-[240px] leading-relaxed">
+            Satu tempat untuk semua manga favoritmu.
           </p>
         </motion.div>
       </div>
 
-      {/* Loading Indicator or Failure State */}
+      {/* Loading Indicator or Non-blocking Warning State */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -171,34 +157,31 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
                   }}
                   transition={{ 
                     duration: 1.5, 
-                    ease: "easeInOut",
+                    ease: "easeInOut", 
                     repeat: Infinity 
                   }}
                 />
               </div>
-              <motion.p 
-                key={statusText}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="text-xs font-semibold text-text-muted"
-              >
-                {statusText}
-              </motion.p>
+              <p className="text-xs font-semibold text-text-muted">
+                Menyiapkan Yomirra...
+              </p>
             </motion.div>
           ) : (
             <motion.div
-              key="failure-state"
+              key="slow-warning-state"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex flex-col items-center gap-4"
+              className="flex flex-col items-center gap-2 text-center"
             >
-              <p className="text-sm font-medium text-text-primary">Yomirra belum siap</p>
-              <p className="text-xs text-text-muted text-center max-w-[250px]">
-                Koneksi atau sistem memuat lebih lama dari biasanya.
+              <p className="text-sm font-medium text-text-primary">
+                Memuat lebih lama dari biasanya
+              </p>
+              <p className="text-xs text-text-muted max-w-[250px] leading-relaxed">
+                Kami masih menyiapkan Yomirra. Periksa koneksi jika proses ini tidak selesai.
               </p>
               <button 
                 onClick={() => window.location.reload()}
-                className="px-6 py-2 rounded-full bg-surface-raised text-text-primary font-semibold text-sm hover:bg-surface-elevated transition-colors border border-border-subtle shadow-sm mt-2"
+                className="px-5 py-2 rounded-full bg-surface-raised text-text-primary font-semibold text-xs hover:bg-surface-elevated transition-colors border border-border-subtle shadow-sm mt-2 active:scale-95"
               >
                 Coba Lagi
               </button>

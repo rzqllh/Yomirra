@@ -41,6 +41,7 @@ export interface MangaItem {
   rank?: number;
   score?: number;
   description?: string;
+  originalTitle?: string;
 }
 
 export interface MangaDetail extends MangaItem {

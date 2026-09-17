@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useDeferredValue, useEffect } from "react";
-import { Play, SortAscending, SortDescending, Book, ShareNetwork, CaretLeft } from "@phosphor-icons/react";
+import { Play, SortAscending, SortDescending, Book, CaretLeft } from "@phosphor-icons/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useMounted } from "@/shared/hooks/use-mounted";
@@ -9,9 +9,7 @@ import { getReaderHref, getSafeMangaDetailBackHref } from "@/shared/lib/routes";
 import { MangaActions } from "@/components/manga/manga-actions";
 import { useHistoryStore } from "@/shared/store/history-store";
 import { Button } from "@/components/ui/button";
-import { IconButton } from "@/components/ui/icon-button";
 import { ChapterRow } from "@/components/manga/chapter-row";
-import { MangaRating } from "@/components/manga/manga-rating";
 import { MangaRecommendations } from "@/components/manga/manga-recommendations";
 import { MangaStatusButton } from "@/components/manga/manga-status-button";
 import { MangaCollectionButton } from "@/components/manga/manga-collection-button";
@@ -20,24 +18,16 @@ import { MangaHeaderActions } from "./manga-header-actions";
 import { Star } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
-import { toast } from "sonner";
 import { useRef } from "react";
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useSearchParams } from "next/navigation";
 import { SearchInput } from "@/components/ui/search-input";
 import { EmptyState } from "@/components/states/empty-state";
 import { cn } from "@/shared/utils/cn";
-import { motion, useScroll, useTransform } from "motion/react";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
-import type { HTMLMotionProps } from "motion/react";
 import type { MangaDetail, Chapter } from "@/shared/types/source";
 
 const CHAPTER_ITEM_ESTIMATED_SIZE = 70;
-const SCROLL_Y_RANGE = [50, 150];
-const HEADER_BG_OPACITY_RANGE = [0, 0.85];
-const HEADER_BLUR_RANGE = [0, 12];
-const HEADER_BORDER_OPACITY_RANGE = [0, 0.1];
-const HEADER_OPACITY_RANGE = [0, 1];
 
 interface MangaDetailViewProps {
   sourceId: string;
@@ -124,65 +114,49 @@ export function MangaDetailView({
     return "Chapter";
   }, [continueChapterId, chapters, historyItem]);
 
-  const { scrollY } = useScroll();
-  const headerBgOpacity = useTransform(scrollY, SCROLL_Y_RANGE, HEADER_BG_OPACITY_RANGE);
-  const headerBlur = useTransform(scrollY, SCROLL_Y_RANGE, HEADER_BLUR_RANGE);
-  const headerBorderOpacity = useTransform(scrollY, SCROLL_Y_RANGE, HEADER_BORDER_OPACITY_RANGE);
-  const headerOpacity = useTransform(scrollY, SCROLL_Y_RANGE, HEADER_OPACITY_RANGE);
-
-  // Parallax for desktop cover
-  const desktopCoverY = useTransform(scrollY, [0, 600], [0, 80]);
-
-  const revealProps: HTMLMotionProps<"div"> = {
-    initial: { opacity: 0, y: 30 },
-    whileInView: { opacity: 1, y: 0 },
-    viewport: { once: true, margin: "-40px" },
-    transition: { duration: 0.5, ease: "easeOut" }
-  };
-
-  // Calculate Progress
-  const continueIdx = chapters ? [...chapters].reverse().findIndex(c => c.id === continueChapterId) + 1 : 0;
-  const progressPercent = chapters?.length ? (continueIdx / chapters.length) * 100 : 0;
-
-
-
-  const renderMainAction = () => (
-    <div className="w-full flex flex-col gap-2 mt-1">
-      {showContinue && continueChapterId ? (
-        <>
-          <Button asChild variant="accent" className="w-full rounded-2xl h-[52px] text-base font-bold active:scale-[0.98] transition-all">
-            <Link href={getReaderHref(sourceId, mangaId, continueChapterId)} aria-label={`Lanjutkan membaca ${continueChapterLabel}`}>
-              <Play className="h-5 w-5 mr-1.5" fill="currentColor" weight="fill" />
-              Lanjutkan {continueChapterLabel}
-            </Link>
+  const renderMainAction = () => {
+    if (!startChapterId && !continueChapterId) {
+      return (
+        <div className="w-full mt-2">
+          <Button disabled variant="outline" className="w-full rounded-[16px] h-[52px] text-base font-bold bg-surface-raised border-border-default opacity-60">
+            Belum ada chapter
           </Button>
-          <div className="flex flex-col gap-1.5 px-1 mt-1">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold tracking-widest text-text-muted">{continueIdx} / {chapters?.length || 0} CHAPTER</span>
-              <span className="text-[10px] font-bold text-text-muted">{Math.round(progressPercent)}%</span>
-            </div>
-            <div className="w-full h-1.5 bg-black/5 dark:bg-white/10 rounded-full overflow-hidden">
-              <div className="h-full bg-accent transition-all duration-500 ease-out" style={{ width: `max(4px, ${progressPercent}%)` }} />
-            </div>
-          </div>
-        </>
-      ) : startChapterId ? (
-        <Button asChild variant="accent" className="w-full rounded-2xl h-[52px] text-base font-bold active:scale-[0.98] transition-all">
-          <Link href={getReaderHref(sourceId, mangaId, startChapterId)} aria-label="Mulai membaca manga">
-            <Play className="h-5 w-5 mr-1.5" fill="currentColor" weight="fill" />
-            Mulai Baca
+        </div>
+      );
+    }
+
+    const isContinue = showContinue && !!continueChapterId;
+    const targetChapterId = (isContinue ? continueChapterId : startChapterId)!;
+    const primaryLabel = isContinue ? "Lanjutkan" : "Mulai Baca";
+    const companionLabel = isContinue 
+      ? continueChapterLabel.replace('Chapter', 'Ch.') 
+      : (firstChapter ? (firstChapter.title?.startsWith('Ch') ? firstChapter.title : `Chapter ${firstChapter.number || 1}`) : "Chapter 1");
+
+    return (
+      <div className="w-full mt-2">
+        <Button
+          asChild
+          variant="accent"
+          className="w-full rounded-[16px] h-[52px] text-base font-bold flex items-center justify-center gap-2.5 bg-[#5B65E9] hover:bg-[#4C55C4] text-white shadow-[0_4px_16px_rgba(91,101,233,0.35)] active:scale-[0.98] transition-all"
+        >
+          <Link
+            href={getReaderHref(sourceId, mangaId, targetChapterId)}
+            aria-label={`${primaryLabel} - ${companionLabel}`}
+          >
+            <Play className="h-[18px] w-[18px] shrink-0" fill="currentColor" weight="fill" />
+            <span className="tracking-tight">{primaryLabel}</span>
+            <span className="text-white/40 font-normal select-none">•</span>
+            <span className="text-[14px] font-medium text-white/90 tracking-tight truncate max-w-[160px]">
+              {companionLabel}
+            </span>
           </Link>
         </Button>
-      ) : (
-        <Button disabled variant="outline" className="w-full rounded-2xl h-[52px] text-base font-bold bg-surface-raised border-border-default opacity-60">
-          Belum ada chapter
-        </Button>
-      )}
-    </div>
-  );
+      </div>
+    );
+  };
 
   const renderActions = () => (
-    <div className="flex w-full mt-2 h-[72px] bg-surface-raised rounded-2xl border border-border-default/50 overflow-hidden divide-x divide-border-default/30">
+    <div className="grid grid-cols-4 w-full mt-2 gap-2 h-[68px]">
       <MangaActions
         sourceId={sourceId}
         mangaId={mangaId}
@@ -206,38 +180,7 @@ export function MangaDetailView({
   );
 
   return (
-    <main className="min-h-screen flex flex-col w-full relative pb-4 md:pb-8 text-text-primary">
-      {/* ── Background (Glassmorphism Tint) ── */}
-      <div className="fixed inset-0 w-full h-full overflow-hidden z-0 pointer-events-none select-none bg-background [contain:strict]">
-        {detail.coverUrl && (
-          <Image
-            src={detail.coverUrl}
-            alt=""
-            fill
-            className="object-cover opacity-[0.6] dark:opacity-40 blur-[80px] scale-[1.2] saturate-[1.5] transform-gpu will-change-transform"
-            unoptimized
-            priority
-          />
-        )}
-        <div className="absolute inset-0 bg-surface-base/20 dark:bg-surface-base/50" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-surface-base/60 to-surface-base/95" />
-      </div>
-
-      <PageHeader
-        title={detail.title}
-        showBack={true}
-        backHref={backHref}
-        mode="detail"
-        variant="auto"
-        actions={
-          <MangaHeaderActions
-            sourceId={sourceId}
-            mangaId={mangaId}
-            title={detail.title}
-          />
-        }
-      />
-
+    <div className="flex-1 flex flex-col w-full relative text-text-primary bg-surface-base">
       <style dangerouslySetInnerHTML={{
         __html: `
         @media (max-width: 767px) { 
@@ -250,202 +193,253 @@ export function MangaDetailView({
         }
       `}} />
 
-      {/* ── Main Content Container ── */}
-      <div className="w-full max-w-5xl mx-auto px-4 md:px-8 pt-20 md:pt-4 relative z-10 flex flex-col md:flex-row gap-5 md:gap-8">
+      {/* ── 1. Hero Scope (Backdrop strictly ends after secondary actions) ── */}
+      <section className="relative w-full overflow-hidden select-none">
+        {/* Backdrop Image with subtle blur, dark scrim for contrast, and smooth bottom fade into solid page background */}
+        <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+          {detail.coverUrl && (
+            <Image
+              src={detail.coverUrl}
+              alt=""
+              fill
+              className="object-cover opacity-80 dark:opacity-60 blur-[6px] scale-105 transform-gpu brightness-[0.75] dark:brightness-[0.45]"
+              unoptimized
+              priority
+            />
+          )}
+          {/* Dark scrim: preserves artwork recognizability in center while guaranteeing header/text contrast */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/85 via-black/45 via-45% to-transparent" />
+          {/* Progressive bottom fade that seamlessly blends artwork into solid page background */}
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-surface-base/60 via-65% to-surface-base" />
+        </div>
 
-        {/* ── Left Column (Desktop Cover & Actions) ── */}
-        <div className="hidden md:flex sticky self-start w-[280px] lg:w-80 shrink-0 flex-col gap-5">
-          <div className="relative w-full aspect-[2/3] rounded-[24px] overflow-hidden shadow-glass border border-border-glass bg-surface-glass/95 backdrop-blur-3xl p-3">
-            <motion.div
-              style={{ y: desktopCoverY }}
-              className="relative w-full h-full rounded-[16px] overflow-hidden shadow-heavy border border-white/10 vt-cover-desktop"
-            >
-              {coverUrl && (
+        {/* Page Header (Contextual Back, Title on scroll, Share, Notification) */}
+        <PageHeader
+          title={detail.title}
+          showBack={true}
+          backHref={backHref}
+          mode="detail"
+          variant="transparent"
+          actions={
+            <MangaHeaderActions
+              sourceId={sourceId}
+              mangaId={mangaId}
+              title={detail.title}
+            />
+          }
+        />
+
+        {/* Hero Content Container */}
+        <div className="w-full max-w-7xl mx-auto px-4 md:px-8 pt-16 md:pt-20 pb-4 md:pb-6 relative z-10">
+          {/* Mobile Hero Flow */}
+          <div className="flex flex-col gap-4 md:hidden">
+            <div className="flex gap-4 relative items-end">
+              <div 
+                className="relative shrink-0 aspect-[2/3] rounded-[18px] overflow-hidden shadow-heavy ring-1 ring-white/20 bg-surface-raised vt-cover-mobile z-20"
+                style={{ width: 'clamp(130px, 36vw, 165px)' }}
+              >
+                {detail.coverUrl ? (
+                  <Image
+                    src={detail.coverUrl}
+                    alt={detail.title}
+                    fill
+                    sizes="(max-width: 768px) 36vw, 165px"
+                    className="object-cover"
+                    unoptimized
+                    priority
+                  />
+                ) : (
+                  <div className="w-full h-full bg-surface-raised flex items-center justify-center">
+                    <Book size={32} weight="duotone" className="text-text-muted" />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-col flex-1 overflow-hidden pb-1">
+                <div className="mb-2">
+                  <span className="inline-flex items-center bg-white/20 dark:bg-white/10 backdrop-blur-sm px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest text-white mb-2 border border-white/20 shadow-xs">
+                    {detail.format || "Manga"}
+                  </span>
+                  <h1 className="text-[22px] sm:text-[26px] font-black tracking-tight text-white leading-[1.1] line-clamp-3 text-balance drop-shadow-sm vt-title-mobile">
+                    {detail.title}
+                  </h1>
+                  {detail.originalTitle && (
+                    <p className="text-[12px] font-medium text-white/70 mt-1 truncate">
+                      {detail.originalTitle}
+                    </p>
+                  )}
+                </div>
+                
+                <div className="flex items-center gap-2 flex-wrap mb-2.5">
+                  <span className="flex items-center gap-1 text-[11px] font-black tracking-wide text-amber-300 bg-black/40 backdrop-blur-sm px-2.5 py-0.5 rounded-full border border-amber-400/30 shadow-xs">
+                    <Star weight="fill" size={12} className="text-amber-400" />
+                    <span suppressHydrationWarning>{Number(displayScore) > 0 ? Number(displayScore).toFixed(1) : "-.-"}</span>
+                  </span>
+                  {detail.status && (
+                    <span className="flex items-center justify-center bg-white/20 dark:bg-white/10 backdrop-blur-sm border border-white/20 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider text-white">
+                      {detail.status}
+                    </span>
+                  )}
+                </div>
+                
+                <div className="mt-auto flex flex-col gap-0.5">
+                  <p className="text-sm font-bold text-white line-clamp-1 drop-shadow-xs">
+                    {detail.author || 'Unknown'}
+                  </p>
+                  <p className="text-[11px] font-medium text-white/75 leading-snug">
+                    Diunggah oleh <span className="text-indigo-300 font-semibold">{sourceName.toLowerCase()}</span> • Sumber: Webtoon
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Primary CTA + Chapter Companion */}
+            {renderMainAction()}
+
+            {/* 4 Secondary Actions */}
+            {renderActions()}
+          </div>
+
+          {/* Desktop Hero Flow */}
+          <div className="hidden md:flex gap-8 items-end">
+            {/* Desktop Cover */}
+            <div className="relative w-[220px] lg:w-[240px] shrink-0 aspect-[2/3] rounded-[20px] overflow-hidden shadow-heavy ring-1 ring-white/20 bg-surface-raised vt-cover-desktop z-20">
+              {coverUrl ? (
                 <Image
                   src={coverUrl}
                   alt={detail.title}
                   fill
-                  sizes="(min-width: 768px) 280px, (min-width: 1024px) 320px, 100vw"
+                  sizes="(min-width: 768px) 220px, 240px"
                   className="object-cover"
                   priority
                   unoptimized
                 />
-              )}
-            </motion.div>
-          </div>
-
-          <div className="bg-surface-glass/95 backdrop-blur-3xl border border-border-glass shadow-glass rounded-[32px] p-6 flex flex-col gap-4">
-            {/* ── Action Buttons ── */}
-            {renderMainAction()}
-            {renderActions()}
-          </div>
-
-        </div>
-
-        {/* ── Right Column / Mobile Main Flow ── */}
-        <div className="flex-1 flex flex-col min-w-0 gap-4 md:gap-6">
-
-          {/* Mobile Cover + Meta + Actions Card */}
-          <div className="relative z-10 w-full mt-[calc(var(--safe-top))] flex flex-col gap-4 md:hidden">
-            <div className="rounded-[32px] border border-border-glass bg-surface-glass/95 dark:bg-surface-glass backdrop-blur-3xl shadow-glass p-5 flex flex-col gap-5">
-
-              <div className="flex gap-4 md:gap-5">
-                <div className="relative w-[104px] shrink-0 aspect-[2/3] rounded-2xl overflow-hidden shadow-glass border border-border-glass bg-surface-glass vt-cover-mobile">
-                  {detail.coverUrl ? (
-                    <Image
-                      src={detail.coverUrl}
-                      alt={detail.title}
-                      fill
-                      className="object-cover"
-                      unoptimized
-                      priority
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-surface-raised flex items-center justify-center">
-                      <Book size={32} weight="duotone" className="text-text-muted" />
-                    </div>
-                  )}
+              ) : (
+                <div className="w-full h-full bg-surface-raised flex items-center justify-center">
+                  <Book size={48} weight="duotone" className="text-text-muted" />
                 </div>
-                <div className="flex flex-col flex-1 py-1 overflow-hidden">
-                  <h1 className="text-xl font-black tracking-tight text-text-primary leading-[1.15] line-clamp-4 text-balance drop-shadow-sm mb-2 vt-title-mobile">
-                    {detail.title}
-                  </h1>
-                  <div className="flex items-center gap-1.5 flex-wrap mb-2">
-                    <span className="flex items-center gap-1 text-[11px] font-black tracking-widest uppercase text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20">
-                      <Star weight="fill" size={10} />
-                      <span suppressHydrationWarning>{Number(displayScore) > 0 ? Number(displayScore).toFixed(1) : "-.-"}</span>
-                    </span>
-                    {detail.status && (
-                      <span className="flex items-center justify-center bg-surface-raised border border-border-default px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider text-text-secondary">
-                        {detail.status}
-                      </span>
-                    )}
-                    {detail.format && (
-                      <span className="flex items-center justify-center bg-accent/10 border border-accent/20 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider text-accent">
-                        {detail.format}
-                      </span>
-                    )}
-                    <span className="flex items-center justify-center bg-surface-raised border border-border-default px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider text-text-secondary">
-                      {sourceName}
-                    </span>
-                  </div>
-                  <p className="text-xs font-semibold text-text-secondary line-clamp-1 mt-auto">
-                    {detail.author || 'Unknown'}
+              )}
+            </div>
+
+            {/* Desktop Metadata + Actions */}
+            <div className="flex-1 flex flex-col gap-3 pb-1">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center bg-white/20 dark:bg-white/10 backdrop-blur-sm border border-white/20 px-2.5 py-0.5 rounded-[6px] text-[10px] font-black uppercase tracking-widest text-white">
+                  {detail.format || "Manga"}
+                </span>
+                <span className="flex items-center gap-1 bg-black/40 backdrop-blur-sm text-amber-300 px-2.5 py-0.5 rounded-[6px] text-[11px] font-black tracking-wide border border-amber-400/30 shadow-xs">
+                  <Star weight="fill" size={12} className="text-amber-400" />
+                  <span suppressHydrationWarning>{Number(displayScore) > 0 ? Number(displayScore).toFixed(1) : "-.-"}</span>
+                </span>
+                {detail.status && (
+                  <span className="flex items-center justify-center bg-white/20 dark:bg-white/10 backdrop-blur-sm border border-white/20 px-2.5 py-0.5 rounded-[6px] text-[10px] font-bold uppercase tracking-wider text-white">
+                    {detail.status}
+                  </span>
+                )}
+              </div>
+
+              <div>
+                <h1 className="text-3xl lg:text-4xl font-black tracking-tight leading-[1.15] text-white drop-shadow-sm vt-title-desktop">
+                  {detail.title}
+                </h1>
+                {detail.originalTitle && (
+                  <p className="text-sm font-medium text-white/70 mt-1">
+                    {detail.originalTitle}
                   </p>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-0.5">
+                <p className="text-base font-bold text-white drop-shadow-xs">
+                  {detail.author || 'Unknown'}
+                </p>
+                <p className="text-xs font-medium text-white/75">
+                  Diunggah oleh <span className="text-indigo-300 font-semibold">{sourceName.toLowerCase()}</span> • Sumber: Webtoon
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2 max-w-2xl">
+                <div className="flex-1 min-w-[280px]">
+                  {renderMainAction()}
+                </div>
+                <div className="w-full sm:w-[320px]">
+                  {renderActions()}
                 </div>
               </div>
-
-              {/* Injected Actions for Mobile */}
-              <div className="flex flex-col gap-3 pt-3 border-t border-border-glass">
-                {renderMainAction()}
-                {renderActions()}
-              </div>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Desktop Title & Info Header */}
-          <div className="hidden md:flex flex-col gap-4">
-            <div className="flex flex-wrap items-center gap-1.5 md:gap-2">
-              <span className="flex items-center gap-1 bg-amber-400/10 text-amber-500 px-2 py-1 rounded-md text-[10px] font-bold tracking-wider">
-                <Star weight="fill" size={12} />
-                <span suppressHydrationWarning>{Number(displayScore) > 0 ? Number(displayScore).toFixed(1) : "-.-"}</span>
-              </span>
-              {detail.status && (
-                <span className="flex items-center justify-center bg-surface-raised px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider text-text-secondary">
-                  {detail.status}
-                </span>
-              )}
-              {detail.format && (
-                <span className="flex items-center justify-center bg-accent/10 px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider text-accent">
-                  {detail.format}
-                </span>
-              )}
-              <span className="flex items-center justify-center bg-surface-raised px-2 py-1 rounded-md text-[10px] font-bold tracking-wider text-text-secondary">
-                {sourceName}
-              </span>
-            </div>
-            <div className="flex items-start justify-between gap-4">
-              <h1 className="text-2xl md:text-3xl font-black tracking-tight leading-[1.1] vt-title-mobile vt-title-desktop line-clamp-3">
-                {detail.title}
-              </h1>
-              <MangaHeaderActions
-                sourceId={sourceId}
-                mangaId={mangaId}
-                title={detail.title}
-              />
-            </div>
-            <p className="text-sm font-semibold text-text-secondary">
-              {detail.author || 'Unknown'}
-            </p>
-          </div>
+      {/* ── 2. Content Surface (Solid Opaque Page Surface - Readability First) ── */}
+      <div className="w-full relative z-10 bg-surface-base">
+        <div className="w-full max-w-7xl mx-auto px-4 md:px-8 py-5 flex flex-col gap-6">
 
-          {/* Synopsis Card (Medium Surface) */}
-          <motion.div
-            {...revealProps}
-            className="rounded-2xl border border-border-default/40 bg-surface-raised/40 backdrop-blur-sm p-4 md:p-5"
-          >
-            <span className="text-[11px] font-black text-text-muted uppercase tracking-widest block mb-2">Sinopsis</span>
+          {/* 1. Synopsis (Solid surface, no glass backdrop) */}
+          <div className="rounded-2xl border border-border-default/80 bg-surface-raised p-4 md:p-5 shadow-xs">
+            <div className="flex items-center justify-between mb-2.5">
+              <span className="text-[11px] font-black text-text-muted uppercase tracking-widest">Sinopsis</span>
+              {detail.description && detail.description.length > 150 && (
+                <button
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="text-[11px] font-bold text-accent hover:text-accent-hover transition-colors inline-flex items-center gap-1"
+                >
+                  {isExpanded ? "Tampilkan lebih sedikit" : "Selengkapnya"}
+                  <CaretLeft size={10} className={cn("transition-transform", isExpanded ? "rotate-90" : "rotate-180")} weight="bold" />
+                </button>
+              )}
+            </div>
+            
             <p className={cn(
               "text-[13px] md:text-sm leading-relaxed text-text-secondary break-words transition-all",
               !isExpanded && "line-clamp-4"
             )}>
               {detail.description?.replace(/\s+/g, ' ').trim() || "Sinopsis belum tersedia."}
             </p>
-            {detail.description && detail.description.length > 150 && (
-              <button
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="mt-1 text-[13px] font-bold text-accent hover:text-accent-hover transition-colors inline-flex items-center gap-1"
-              >
-                {isExpanded ? "Tampilkan lebih sedikit" : "Selengkapnya"}
-              </button>
+
+            {/* 2. Genre Tags beneath synopsis */}
+            {detail.genres && detail.genres.length > 0 && (
+              <div className="mt-3.5 flex flex-wrap gap-1.5">
+                {detail.genres.map((g) => (
+                  <Link
+                    key={g}
+                    href={`/library?source=${sourceId}&genre=${encodeURIComponent(g)}`}
+                    className="rounded-full bg-surface-base border border-border-default/80 px-3 py-1 text-[10px] font-bold text-text-secondary uppercase tracking-wider hover:border-accent hover:text-accent transition-colors"
+                  >
+                    {g}
+                  </Link>
+                ))}
+              </div>
             )}
+          </div>
 
-            <div className="mt-4 flex flex-wrap gap-1.5">
-              {detail.genres?.map((g) => (
-                <Link
-                  key={g}
-                  href={`/library?source=${sourceId}&genre=${encodeURIComponent(g)}`}
-                  className="rounded-md bg-black/5 dark:bg-white/5 px-2 py-1 text-[10px] font-bold text-text-secondary uppercase tracking-wider hover:bg-accent/10 hover:text-accent transition-colors"
-                >
-                  {g}
-                </Link>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Chapters Section (Flattened) */}
-          <motion.div
-            {...revealProps}
-            className="mt-4 flex flex-col"
-          >
-            <div className="sticky top-[60px] z-20 bg-background/80 backdrop-blur-xl py-3 px-1 border-b border-border-default/40 flex flex-col gap-3">
+          {/* 3, 4, 5. Chapter Section (Solid surface, flattened rows) */}
+          <div className="flex flex-col">
+            <div className="sticky top-[60px] z-20 bg-surface-base py-3.5 px-0.5 border-b border-border-default/40 flex flex-col gap-3">
               <div className="flex items-center justify-between">
-                <span className="text-base md:text-lg font-bold tracking-tight text-text-primary">
+                <span className="text-lg md:text-xl font-bold tracking-tight text-text-primary flex items-center gap-2">
                   {chapters?.length || 0} Chapter
                 </span>
-                <span className="text-[11px] font-semibold text-text-muted">
+                <button 
+                  onClick={() => setSortOrder(prev => prev === "desc" ? "asc" : "desc")}
+                  className="flex items-center gap-1.5 text-[12px] font-semibold text-text-muted hover:text-text-primary transition-colors py-1 px-2 rounded-lg hover:bg-surface-hover"
+                >
                   {sortOrder === "desc" ? "Terbaru" : "Terlama"}
-                </span>
+                  {sortOrder === "desc" ? <SortDescending size={16} /> : <SortAscending size={16} />}
+                </button>
               </div>
 
-              <div className="flex items-center gap-2.5 w-full">
-                <SearchInput
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Cari chapter..."
-                  aria-label="Cari chapter"
-                  containerClassName="flex-1 h-[44px]"
-                />
-                <IconButton
-                  variant="surface"
-                  size="default"
-                  className="h-[44px] w-[44px] shrink-0 bg-surface-glass backdrop-blur-md border border-border-subtle rounded-2xl"
-                  onClick={() => setSortOrder(prev => prev === "desc" ? "asc" : "desc")}
-                  aria-label={sortOrder === "desc" ? "Urutkan paling lama" : "Urutkan terbaru"}
-                >
-                  {sortOrder === "desc" ? <SortDescending size={18} /> : <SortAscending size={18} />}
-                </IconButton>
-              </div>
+              {chapters && chapters.length > 20 && (
+                <div className="flex items-center gap-2.5 w-full">
+                  <SearchInput
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Cari chapter..."
+                    aria-label="Cari chapter"
+                    containerClassName="flex-1 h-[42px] rounded-xl bg-surface-raised border border-border-default/80 focus-within:border-accent/50 focus-within:ring-2 focus-within:ring-accent/20"
+                  />
+                </div>
+              )}
             </div>
 
             {!chapters || chapters.length === 0 ? (
@@ -458,7 +452,7 @@ export function MangaDetailView({
             ) : (
               <div
                 ref={parentRef}
-                className="flex flex-col max-h-[60vh] md:max-h-[500px] overflow-y-auto overflow-x-hidden pt-3 pr-2 -mr-2 [scrollbar-width:thin]"
+                className="flex flex-col max-h-[60vh] md:max-h-[500px] overflow-y-auto overflow-x-hidden pt-2 pr-2 -mr-2 [scrollbar-width:thin]"
               >
                 <div
                   style={{
@@ -483,7 +477,7 @@ export function MangaDetailView({
                           left: 0,
                           width: '100%',
                           transform: `translateY(${virtualRow.start}px)`,
-                          paddingBottom: '6px',
+                          paddingBottom: '4px',
                         }}
                       >
                         <ChapterRow
@@ -502,18 +496,19 @@ export function MangaDetailView({
                 </div>
               </div>
             )}
-          </motion.div>
+          </div>
 
-          <motion.div {...revealProps} className="mt-4">
+          {/* 6. Similar Manga */}
+          <div className="pb-1">
             <MangaRecommendations
               sourceId={sourceId}
               currentMangaId={mangaId}
               genres={detail.genres || []}
             />
-          </motion.div>
+          </div>
 
         </div>
       </div>
-    </main>
+    </div>
   );
 }

@@ -39,8 +39,10 @@ import { BootGate } from "@/components/app/boot-gate";
 
 export default function RootLayout({
   children,
+  modal,
 }: Readonly<{
   children: React.ReactNode;
+  modal?: React.ReactNode;
 }>) {
   return (
     <html lang="id" className={plusJakartaSans.variable} suppressHydrationWarning>
@@ -52,6 +54,7 @@ export default function RootLayout({
                 <AppShell>
                   <ErrorBoundary>
                     {children}
+                    {modal}
                     <Toaster position="top-center" />
                     <SpeedInsights />
                   </ErrorBoundary>

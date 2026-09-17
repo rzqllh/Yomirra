@@ -8,7 +8,7 @@ import { Warning, MagnifyingGlass, ArrowClockwise, BookOpen, ArrowLeft } from "@
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useHistoryStore } from "@/shared/store/history-store";
 import { useDownloadStore } from "@/shared/store/download-store";
-import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
+import { getSourceMetadata, getAllSourceMetadata } from "@/shared/sources/source-registry";
 import { apiClient } from "@/shared/api-client";
 import { rankCandidates, type TitleCandidate } from "@/shared/lib/title-matcher";
 import { mapChapterProgress, type ChapterMapResult } from "@/shared/lib/chapter-parser";
@@ -45,7 +45,8 @@ export function DeadSourceRecovery({ sourceId, mangaId }: DeadSourceRecoveryProp
     );
   }, [allDownloads, sourceId, mangaId]);
 
-  const sourceName = dynamicSourceRegistry.get(sourceId)?.name ?? sourceId;
+  const sourceMeta = getSourceMetadata(sourceId);
+  const sourceName = sourceMeta?.name ?? sourceId;
   const knownTitle = libraryItem?.title ?? historyItem?.mangaTitle ?? mangaId;
   const knownCover = libraryItem?.coverUrl ?? historyItem?.coverUrl;
   const knownAuthor = libraryItem?.author;
@@ -63,9 +64,8 @@ export function DeadSourceRecovery({ sourceId, mangaId }: DeadSourceRecoveryProp
     setChapterMapResult(undefined);
 
     try {
-      // Find all available sources except the broken one
-      const enabledSources = dynamicSourceRegistry
-        .getAll()
+      // Find all available sources except the broken one (including built-ins and dynamic)
+      const enabledSources = getAllSourceMetadata()
         .filter((s) => s.capabilities.search && s.id !== sourceId && s.status !== "unavailable");
 
       // Search across enabled sources in parallel
@@ -95,7 +95,7 @@ export function DeadSourceRecovery({ sourceId, mangaId }: DeadSourceRecoveryProp
         mangaId: r.candidate.mangaId,
         sourceDisplayName:
           (r.candidate as any).sourceDisplayName ??
-          dynamicSourceRegistry.get(r.candidate.sourceId)?.name ??
+          getSourceMetadata(r.candidate.sourceId)?.name ??
           r.candidate.sourceId,
         title: r.candidate.title,
         coverUrl: r.candidate.coverUrl,
@@ -191,9 +191,9 @@ export function DeadSourceRecovery({ sourceId, mangaId }: DeadSourceRecoveryProp
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-3 w-full justify-center">
             <Button
-              variant="default"
+              variant="primary"
               onClick={handleFindAlternate}
-              className="gap-2 w-full sm:w-auto"
+              className="gap-2 w-full sm:w-auto font-bold"
             >
               <MagnifyingGlass size={18} weight="bold" />
               Cari Sumber Alternatif

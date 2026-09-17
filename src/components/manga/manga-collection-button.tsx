@@ -102,12 +102,14 @@ export function MangaCollectionButton({
         onClick={() => setIsOpen(true)}
         aria-label="Kelola koleksi"
         className={cn(
-          "flex-1 flex flex-col items-center justify-center gap-1.5 h-full transition-colors outline-none select-none hover:bg-black/5 dark:hover:bg-white/5 active:bg-black/10 dark:active:bg-white/10",
-          memberships.length > 0 && mounted ? "text-accent" : "text-text-secondary hover:text-text-primary"
+          "w-full flex flex-col items-center justify-center gap-1.5 h-full transition-all outline-none select-none rounded-[16px] border shadow-xs active:scale-95 bg-surface-raised",
+          memberships.length > 0 && mounted
+            ? "border-accent/60 text-accent font-bold ring-1 ring-accent/20"
+            : "border-border-default text-text-secondary hover:text-text-primary hover:border-border-strong hover:bg-surface-hover"
         )}
       >
-        <FolderPlus size={24} weight={memberships.length > 0 && mounted ? "fill" : "regular"} />
-        <span className="text-[11px] font-bold tracking-tight">Koleksi</span>
+        <FolderPlus size={22} weight={memberships.length > 0 && mounted ? "fill" : "regular"} />
+        <span className="text-[10px] font-bold tracking-tight">Koleksi</span>
       </button>
 
       <Dialog open={isOpen} onOpenChange={(open) => {

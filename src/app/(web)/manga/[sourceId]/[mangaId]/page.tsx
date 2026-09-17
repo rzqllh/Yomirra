@@ -8,6 +8,8 @@ import { getManifestUrlFromCookie } from "@/server/lib/sources/server-manifest";
 import { cookies } from "next/headers";
 
 import { DeadSourceRecovery } from "@/components/manga/dead-source-recovery";
+import { MangaDetailErrorState } from "@/components/manga/manga-detail-error-state";
+import { getSourceMetadata } from "@/shared/sources/source-registry";
 
 export async function generateMetadata({ 
   params 
@@ -15,9 +17,10 @@ export async function generateMetadata({
   params: Promise<{ sourceId: string; mangaId: string }> 
 }): Promise<Metadata> {
   const { sourceId, mangaId } = await params;
+  const normalizedSourceId = sourceId.toLowerCase().trim();
   try {
-    const manifestUrl = await getManifestUrlFromCookie(sourceId);
-    const source = await sourceManager.getSource(sourceId, manifestUrl);
+    const manifestUrl = await getManifestUrlFromCookie(normalizedSourceId);
+    const source = await sourceManager.getSource(normalizedSourceId, manifestUrl);
     const detail = await source.getDetail(mangaId);
     return {
       title: `${detail.title} - Yomirra`,
@@ -39,6 +42,7 @@ export default async function MangaDetailPage({
   params: Promise<{ sourceId: string; mangaId: string }>;
 }) {
   const { sourceId, mangaId } = await params;
+  const normalizedSourceId = sourceId.toLowerCase().trim();
 
   let detail;
   let chapters;
@@ -47,29 +51,56 @@ export default async function MangaDetailPage({
     const disabledCookie = cookieStore.get("yomirra-disabled-sources");
     const disabledSources = disabledCookie ? JSON.parse(decodeURIComponent(disabledCookie.value)) : [];
     
-    if (disabledSources.includes(sourceId)) {
-      throw new Error("Source is disabled");
+    if (disabledSources.includes(normalizedSourceId)) {
+      return <MangaDetailErrorState sourceId={normalizedSourceId} mangaId={mangaId} type="disabled" />;
     }
 
-    const manifestUrl = await getManifestUrlFromCookie(sourceId);
-    const source = await sourceManager.getSource(sourceId, manifestUrl);
+    const manifestUrl = await getManifestUrlFromCookie(normalizedSourceId);
+    const source = await sourceManager.getSource(normalizedSourceId, manifestUrl);
     
     // Fetch data directly on the server with cache!
     [detail, chapters] = await Promise.all([
-      withCache(`source:v2:${sourceId}:manga:${mangaId}`, () => source.getDetail(mangaId), CACHE_TTL.DETAIL),
-      withCache(`source:v2:${sourceId}:chapters:${mangaId}`, () => source.getChapters(mangaId), CACHE_TTL.CHAPTERS),
+      withCache(`source:v2:${normalizedSourceId}:manga:${mangaId}`, () => source.getDetail(mangaId), CACHE_TTL.DETAIL),
+      withCache(`source:v2:${normalizedSourceId}:chapters:${mangaId}`, () => source.getChapters(mangaId), CACHE_TTL.CHAPTERS),
     ]);
+
+    if (!detail || !detail.title) {
+      return <MangaDetailErrorState sourceId={normalizedSourceId} mangaId={mangaId} type="not_found" />;
+    }
   } catch (error) {
     console.error("Failed to load manga details", error);
-    return <DeadSourceRecovery sourceId={sourceId} mangaId={mangaId} />;
+    const errString = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
+
+    // 1. Not Found / 404
+    if (errString.includes("404") || errString.includes("not found") || errString.includes("tidak ditemukan")) {
+      return <MangaDetailErrorState sourceId={normalizedSourceId} mangaId={mangaId} type="not_found" />;
+    }
+
+    // 2. Confirmed dead / unavailable source in registry or permanently removed
+    const sourceMeta = getSourceMetadata(normalizedSourceId);
+    const isExplicitlyDead = sourceMeta?.status === "unavailable" || sourceMeta?.status === "in-fix" || errString.includes("source is disabled") || errString.includes("source not found");
+    if (isExplicitlyDead) {
+      return <DeadSourceRecovery sourceId={normalizedSourceId} mangaId={mangaId} />;
+    }
+
+    // 3. Network, Timeout, 5xx, or transient error -> Recoverable inline error state with Retry
+    return (
+      <MangaDetailErrorState
+        sourceId={normalizedSourceId}
+        mangaId={mangaId}
+        type="network_error"
+        message={error instanceof Error ? error.message : undefined}
+      />
+    );
   }
 
   return (
     <MangaDetailView 
-      sourceId={sourceId}
+      sourceId={normalizedSourceId}
       mangaId={mangaId}
       detail={detail}
       chapters={chapters}
     />
   );
 }
+

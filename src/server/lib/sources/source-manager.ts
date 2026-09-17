@@ -25,7 +25,8 @@ export class SourceManager {
       }
     }
 
-    const source = sourceMap.get(id);
+    const normalizedId = id.toLowerCase().trim();
+    const source = sourceMap.get(normalizedId);
     if (!source) {
       throw new Error(`Source ${id} not found`);
     }

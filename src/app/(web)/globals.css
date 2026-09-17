@@ -9,6 +9,7 @@
   --color-surface-muted: var(--surface-muted);
   --color-surface-hover: var(--surface-hover);
   --color-surface-glass: var(--surface-glass);
+  --color-background: var(--background);
 
   /* Text */
   --color-text-primary: var(--text-primary);

@@ -99,39 +99,44 @@ export function FilterDrawerShell({
       </Drawer.Trigger>
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]" />
-        <Drawer.Content className="bg-surface-base flex flex-col rounded-t-[32px] mt-24 fixed bottom-0 left-0 right-0 z-[100] outline-none max-h-[90vh] shadow-heavy">
-          <div
-            className="p-4 bg-surface-base rounded-t-[32px] flex-1 overflow-y-auto [scrollbar-width:none] touch-manipulation relative z-0"
-            style={{ WebkitOverflowScrolling: "touch", transform: "translate3d(0,0,0)" }}
-            data-vaul-no-drag
-          >
-            <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-border-strong mb-6" />
+        <Drawer.Content className="bg-surface-base flex flex-col rounded-t-[32px] fixed bottom-0 left-0 right-0 z-[100] outline-none max-h-[85vh] min-h-[220px] shadow-heavy border-t border-border-subtle">
+          {/* 1. Sheet Chrome (Drag Handle + Header / Title) - Non-scrolling & Draggable */}
+          <div className="pt-3 pb-2 px-6 shrink-0 flex flex-col cursor-grab active:cursor-grabbing select-none">
+            <div className="mx-auto w-12 h-1.5 shrink-0 rounded-full bg-border-strong mb-4" />
 
-            <div className="flex items-center justify-between mb-6 px-2">
-              <Drawer.Title className="text-xl font-bold">{title}</Drawer.Title>
+            <div className="flex items-center justify-between">
+              <Drawer.Title className="text-lg font-bold text-text-primary tracking-tight">{title}</Drawer.Title>
               <Drawer.Description className="sr-only">{description}</Drawer.Description>
               {activeCount > 0 && (
                 <button
+                  type="button"
                   onClick={onReset}
-                  className="text-sm font-semibold text-accent hover:text-accent-hover transition-colors"
+                  className="text-sm font-semibold text-accent hover:text-accent-hover transition-colors px-1 py-0.5"
                 >
                   Reset
                 </button>
               )}
             </div>
+          </div>
 
-            <div className="space-y-8 px-2 pb-24">
+          {/* 2. Scrollable Content Body */}
+          <div
+            className="px-6 py-4 flex-1 overflow-y-auto overscroll-contain [scrollbar-width:none] touch-manipulation relative z-0"
+            style={{ WebkitOverflowScrolling: "touch" }}
+          >
+            <div className="space-y-6 pb-6">
               {children}
             </div>
           </div>
 
+          {/* 3. Sticky Footer */}
           <div
-            className="p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] bg-surface-base border-t border-border-subtle shrink-0 relative z-10"
-            style={{ transform: "translate3d(0,0,0)" }}
+            className="p-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] bg-surface-base border-t border-border-subtle shrink-0 relative z-10"
           >
             <Button
+              variant="primary"
               onClick={handleApply}
-              className="w-full h-14 rounded-2xl text-[15px] font-bold bg-text-primary text-surface-base hover:bg-text-primary/90 active:scale-[0.98] transition-transform duration-200"
+              className="w-full h-12 rounded-2xl text-[15px] font-bold"
             >
               {applyLabel}
             </Button>

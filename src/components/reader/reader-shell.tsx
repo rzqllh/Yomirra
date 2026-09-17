@@ -217,8 +217,29 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
               isDesktopPanelOpen ? "md:right-[calc(320px)]" : ""
             )}
           >
-            <div className="w-full pt-[calc(var(--safe-top)+10px)] pb-4 px-3 flex items-center justify-center pointer-events-none">
-              <div className="pointer-events-auto flex items-center justify-between w-full max-w-[420px] h-[52px] px-2 rounded-[18px] liquid-glass text-text-primary transition-all duration-300">
+            {/* Transparent Progressive Backdrop Blur Layer (No painted tint, optical refraction only) */}
+            <div
+              className="absolute inset-x-0 top-0 pointer-events-none -z-10"
+              style={{
+                height: "calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 74px)",
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
+                maskImage:
+                  "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.9) calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 14px), rgba(0,0,0,0.6) calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 46px), rgba(0,0,0,0.2) calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 62px), rgba(0,0,0,0) 100%)",
+                WebkitMaskImage:
+                  "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.9) calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 14px), rgba(0,0,0,0.6) calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 46px), rgba(0,0,0,0.2) calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 62px), rgba(0,0,0,0) 100%)",
+              }}
+            />
+
+            <div className="w-full pt-[calc(var(--safe-top)+10px)] pb-3 px-3 flex items-center justify-center pointer-events-none">
+              <div
+                className={cn(
+                  "pointer-events-auto flex items-center justify-between w-full max-w-[420px] h-[52px] px-2 rounded-[18px] transition-all duration-300 shadow-sm border",
+                  preferences.background === 'mist'
+                    ? "bg-white/35 backdrop-blur-md border-black/10 text-gray-900"
+                    : "bg-black/35 backdrop-blur-md border-white/15 text-white"
+                )}
+              >
                 {/* Left: Back Button (Squircle) */}
                 <motion.button
                   aria-label="Kembali ke detail komik"

@@ -3,6 +3,7 @@ import Link from "next/link"
 import { getReaderHref } from "@/shared/lib/routes"
 import { ChapterDownloadButton } from "@/components/manga/chapter-download-button"
 import { cn } from "@/shared/utils/cn"
+import { CaretLeft } from "@phosphor-icons/react"
 
 interface ChapterRowProps {
   sourceId: string
@@ -39,55 +40,54 @@ export function ChapterRow({
     <Link
       href={getReaderHref(sourceId, mangaId, chapterId)}
       className={cn(
-        "group relative flex items-center gap-3 md:gap-4 py-3 transition-all duration-300 ease-out will-change-transform border-b border-border-default/40 last:border-b-0",
+        "group relative flex items-center justify-between py-4 px-1 border-b border-border-default/30 bg-transparent transition-colors duration-200 ease-out",
         isLastRead
-          ? "bg-accent/5 -mx-2 px-2.5 md:-mx-3 md:px-3.5 z-10 rounded-md"
-          : "hover:bg-surface-hover -mx-2 px-2.5 md:-mx-3 md:px-3.5 rounded-md"
+          ? "bg-accent/5"
+          : "hover:bg-surface-hover",
+        !isRead && !isLastRead ? "opacity-100" : "opacity-70"
       )}
     >
-      {/* Subtle indicator for read status */}
-      {!isRead && !isLastRead && (
-        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-accent/80 rounded-r-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-      )}
-
-      <div className="flex-1 min-w-0 flex flex-col md:flex-row md:items-center md:gap-3">
-        <h4 className={cn(
-          "text-[13px] md:text-sm tracking-tight leading-snug truncate transition-colors duration-300",
-          isLastRead
-            ? "text-accent font-bold"
-            : isRead
-            ? "text-text-muted font-normal"
-            : "text-text-primary font-semibold group-hover:text-accent"
-        )}>
-          {chapterTitle}
-        </h4>
-        <p className="text-[10px] md:text-[11px] text-text-muted/70 mt-1 md:mt-0 font-medium shrink-0 flex items-center gap-1">
+      <div className="flex flex-col flex-1 min-w-0 pr-4">
+        <div className="flex items-center gap-2 mb-0.5">
+          <h4 className={cn(
+            "text-[14px] font-bold tracking-tight truncate transition-colors duration-300",
+            isLastRead ? "text-accent" : "text-text-primary group-hover:text-accent"
+          )}>
+            {chapterTitle}
+          </h4>
+          {!isRead && !isLastRead && (
+            <span className="w-1.5 h-1.5 rounded-full bg-accent shrink-0 shadow-[0_0_8px_rgba(91,101,233,0.5)]" />
+          )}
+        </div>
+        <p className="text-[11px] text-text-muted font-medium truncate">
           {formattedDate}
         </p>
       </div>
 
-      {isLastRead && (
-        <div className="flex items-center">
-          <div className="hidden sm:flex items-center justify-center rounded-md bg-accent/10 px-2.5 py-1 text-2xs font-bold uppercase tracking-widest text-accent ring-1 ring-inset ring-accent/20 shrink-0">
-            Terakhir Dibaca
-          </div>
-          <div className="sm:hidden flex items-center justify-center rounded-md bg-accent/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-accent ring-1 ring-inset ring-accent/20 shrink-0">
+      <div className="flex items-center gap-3 shrink-0">
+        {isLastRead && (
+          <div className="flex items-center justify-center rounded-[6px] bg-accent/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-accent ring-1 ring-inset ring-accent/20">
             Terakhir
           </div>
+        )}
+        {/* Colored-circle wrap adds the depth the reference design has (a plain icon
+            read as flat next to the title). Assumption: ChapterDownloadButton renders
+            an icon-only, transparent-background trigger. If it ships its own bg/padding,
+            this will double up — either drop the wrapper or give ChapterDownloadButton
+            a `bare` prop to disable its own chrome. */}
+        <div
+          className="flex items-center justify-center w-9 h-9 rounded-full bg-accent/10 text-accent transition-opacity opacity-70 group-hover:opacity-100 shrink-0"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <ChapterDownloadButton
+            sourceId={sourceId}
+            mangaId={mangaId}
+            chapterId={chapterId}
+            chapterTitle={chapterTitle}
+            mangaTitle={mangaTitle}
+          />
         </div>
-      )}
-
-      <div 
-        className="pl-3 md:pl-4 border-l border-border-default/50 shrink-0 transition-opacity opacity-70 group-hover:opacity-100" 
-        onClick={(e) => e.stopPropagation()}
-      >
-        <ChapterDownloadButton
-          sourceId={sourceId}
-          mangaId={mangaId}
-          chapterId={chapterId}
-          chapterTitle={chapterTitle}
-          mangaTitle={mangaTitle}
-        />
+        <CaretLeft size={16} className="text-text-muted/40 group-hover:text-accent shrink-0 rotate-180" />
       </div>
     </Link>
   )

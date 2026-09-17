@@ -2,8 +2,8 @@ import * as cheerio from "cheerio";
 import type { SourceFilter, FilterList } from "@/shared/sources/source-types";
 import { withCache } from "@/server/lib/cache/redis-cache";
 
-const KOMIKINDO_MANGA_URL = "https://komikindo.ch/manga/";
-const KOMIKINDO_FILTER_CACHE_KEY = "komikindo:filters";
+const KOMIKINDO_MANGA_URL = "https://komikindo.ch/daftar-manga/";
+const KOMIKINDO_FILTER_CACHE_KEY = "komikindo:filters:v2";
 const FILTER_CACHE_TTL = 86400; // 24 hours
 
 let cachedFilters: FilterList | null = null;
@@ -26,38 +26,37 @@ async function fetchFilters(): Promise<FilterList> {
   const $ = cheerio.load(html);
 
   const genres: SourceFilter[] = [];
-  $('ul.genrez li input').each((_, el) => {
-    const id = $(el).val() as string;
+  $('input[name="genre[]"]').each((_, el) => {
+    const id = ($(el).val() as string || "").trim();
     const name = $(el).parent().text().trim();
-    if (id && name) {
+    if (id && name && !genres.some((g) => g.id === id)) {
       genres.push({ id, name });
     }
   });
 
   const statuses: SourceFilter[] = [];
-  $('select[name="status"] option').each((_, el) => {
-    const id = $(el).val() as string;
-    const name = $(el).text().trim();
-    if (id && name && id !== "0" && id !== "") {
+  $('input[name="status"]').each((_, el) => {
+    const id = ($(el).val() as string || "").trim();
+    const name = $(el).parent().text().trim() || id;
+    if (id && id.toLowerCase() !== "all" && !statuses.some((s) => s.id === id)) {
       statuses.push({ id, name });
     }
   });
 
   const formats: SourceFilter[] = [];
-  $('select[name="type"] option').each((_, el) => {
-    const id = $(el).val() as string;
-    const name = $(el).text().trim();
-    if (id && name && id !== "0" && id !== "") {
+  $('input[name="type"]').each((_, el) => {
+    const id = ($(el).val() as string || "").trim();
+    const name = $(el).parent().text().trim() || id;
+    if (id && id.toLowerCase() !== "all" && !formats.some((f) => f.id === id)) {
       formats.push({ id, name });
     }
   });
 
   const sorts: SourceFilter[] = [];
-  $('select[name="order"] option').each((_, el) => {
-    const id = $(el).val() as string;
-    const name = $(el).text().trim();
-    if (id && name && id !== "0" && id !== "") {
-      // mapping their values if necessary, but we keep id as they have it (update, popular, etc.)
+  $('input[name="order"]').each((_, el) => {
+    const id = ($(el).val() as string || "").trim();
+    const name = $(el).parent().text().trim() || id;
+    if (id && id.toLowerCase() !== "all" && !sorts.some((s) => s.id === id)) {
       sorts.push({ id, name });
     }
   });
