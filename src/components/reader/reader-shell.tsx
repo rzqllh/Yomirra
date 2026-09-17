@@ -220,10 +220,11 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
             <div className="w-full pt-[calc(var(--safe-top)+10px)] pb-4 px-3 flex items-center justify-center pointer-events-none">
               <div className="pointer-events-auto flex items-center justify-between w-full max-w-[420px] h-[52px] px-2 rounded-[18px] liquid-glass text-text-primary transition-all duration-300">
                 {/* Left: Back Button (Squircle) */}
-                <button
+                <motion.button
                   aria-label="Kembali ke detail komik"
+                  whileTap={{ scale: 0.85 }}
                   className={cn(
-                    "flex h-9 w-9 items-center justify-center rounded-[10px] active:scale-95 transition-all shrink-0 cursor-pointer outline-none",
+                    "flex h-9 w-9 items-center justify-center rounded-[10px] transition-all shrink-0 cursor-pointer outline-none",
                     preferences.background === 'mist'
                       ? "text-gray-800 hover:bg-black/5"
                       : "text-white/85 hover:text-white hover:bg-white/10"
@@ -231,7 +232,7 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
                   onClick={handleBack}
                 >
                   <CaretLeft size={20} weight="bold" />
-                </button>
+                </motion.button>
 
                 {/* Center: Title & Page Count */}
                 <div className="flex flex-col items-center justify-center px-2 min-w-0 flex-1 select-none">
@@ -252,10 +253,11 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
                 </div>
 
                 {/* Right: Bookmark Button (Squircle) */}
-                <button
+                <motion.button
                   aria-label={isSaved ? "Hapus dari bookmark" : "Simpan ke bookmark"}
+                  whileTap={{ scale: 0.85 }}
                   className={cn(
-                    "flex h-9 w-9 items-center justify-center rounded-[10px] active:scale-95 transition-all shrink-0 cursor-pointer outline-none",
+                    "flex h-9 w-9 items-center justify-center rounded-[10px] transition-all shrink-0 cursor-pointer outline-none",
                     isSaved
                       ? "bg-accent text-white shadow-[0_2px_12px_rgba(99,102,241,0.5),inset_0_1px_0_rgba(255,255,255,0.3)] border border-white/20"
                       : preferences.background === 'mist'
@@ -264,8 +266,16 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
                   )}
                   onClick={handleToggleBookmark}
                 >
-                  <BookmarkSimple size={19} weight={isSaved ? "fill" : "bold"} />
-                </button>
+                  <motion.div
+                    key={isSaved ? "saved" : "unsaved"}
+                    initial={{ scale: 0.5, opacity: 0, rotate: -30 }}
+                    animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                    className="flex items-center justify-center"
+                  >
+                    <BookmarkSimple size={19} weight={isSaved ? "fill" : "bold"} />
+                  </motion.div>
+                </motion.button>
               </div>
             </div>
           </motion.div>
@@ -317,10 +327,11 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
 
 
                 {/* 2. Prev Chapter (Squircle) */}
-                <button
+                <motion.button
                   aria-label="Chapter sebelumnya"
+                  whileTap={{ scale: 0.85 }}
                   className={cn(
-                    "flex h-10 w-10 items-center justify-center rounded-[12px] active:scale-95 transition-all shrink-0 cursor-pointer outline-none",
+                    "flex h-10 w-10 items-center justify-center rounded-[12px] transition-all shrink-0 cursor-pointer outline-none",
                     preferences.background === 'mist'
                       ? "text-gray-800 hover:bg-black/5"
                       : "text-white/80 hover:text-white hover:bg-white/10",
@@ -337,11 +348,12 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
                   }}
                 >
                   <CaretLeft size={20} weight="bold" />
-                </button>
+                </motion.button>
 
                 {/* 3. Chapter List Drawer Trigger (Squircle rounded-[12px], NOT Pill!) */}
-                <button
-                  className="flex-1 h-10 rounded-[12px] font-bold text-sm bg-accent hover:bg-accent-hover text-white shadow-[0_4px_16px_rgba(108,106,250,0.4),inset_0_1px_0_rgba(255,255,255,0.3)] border border-white/20 transition-all truncate px-2.5 sm:px-3 active:scale-[0.98] flex items-center justify-center cursor-pointer outline-none"
+                <motion.button
+                  whileTap={{ scale: 0.95 }}
+                  className="flex-1 h-10 rounded-[12px] font-bold text-sm bg-accent hover:bg-accent-hover text-white shadow-[0_4px_16px_rgba(108,106,250,0.4),inset_0_1px_0_rgba(255,255,255,0.3)] border border-white/20 transition-all truncate px-2.5 sm:px-3 flex items-center justify-center cursor-pointer outline-none"
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsChapterDrawerOpen(true);
@@ -349,13 +361,14 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
                 >
                   <List size={18} weight="bold" className="mr-1.5 shrink-0" />
                   <span className="truncate">Daftar Chapter</span>
-                </button>
+                </motion.button>
 
                 {/* 4. Next Chapter (Squircle) */}
-                <button
+                <motion.button
                   aria-label="Chapter selanjutnya"
+                  whileTap={{ scale: 0.85 }}
                   className={cn(
-                    "flex h-10 w-10 items-center justify-center rounded-[12px] active:scale-95 transition-all shrink-0 cursor-pointer outline-none",
+                    "flex h-10 w-10 items-center justify-center rounded-[12px] transition-all shrink-0 cursor-pointer outline-none",
                     preferences.background === 'mist'
                       ? "text-gray-800 hover:bg-black/5"
                       : "text-white/80 hover:text-white hover:bg-white/10",
@@ -372,13 +385,14 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
                   }}
                 >
                   <CaretRight size={20} weight="bold" />
-                </button>
+                </motion.button>
 
                 {/* 5. Reader Settings (Squircle) */}
-                <button
+                <motion.button
                   aria-label="Pengaturan pembaca"
+                  whileTap={{ scale: 0.85 }}
                   className={cn(
-                    "flex h-10 w-10 items-center justify-center rounded-[12px] active:scale-95 transition-all shrink-0 cursor-pointer outline-none",
+                    "flex h-10 w-10 items-center justify-center rounded-[12px] transition-all shrink-0 cursor-pointer outline-none",
                     preferences.background === 'mist'
                       ? "text-gray-800 hover:bg-black/5"
                       : "text-white/80 hover:text-white hover:bg-white/10"
@@ -393,7 +407,7 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
                   }}
                 >
                   <Gear size={20} weight="bold" />
-                </button>
+                </motion.button>
               </div>
             </div>
           </motion.div>
