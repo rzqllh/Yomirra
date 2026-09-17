@@ -7,6 +7,8 @@ import { useOnboardingStore } from "@/shared/store/onboarding-store";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useHistoryStore } from "@/shared/store/history-store";
 import { cn } from "@/shared/utils/cn";
+import { usePWAInstall } from "@/shared/hooks/use-pwa-install";
+import { DownloadSimple } from "@phosphor-icons/react";
 
 const STEPS = [
   {
@@ -47,6 +49,7 @@ function getCardStyle(index: number, currentStep: number, totalCards: number) {
 
 export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
   const { completeOnboarding } = useOnboardingStore();
+  const { isInstallable, installPWA } = usePWAInstall();
   const [isMounted, setIsMounted] = React.useState(false);
   const [isReadyToExit, setIsReadyToExit] = React.useState(false);
   const [step, setStep] = React.useState(0);
@@ -241,23 +244,41 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
               ))}
             </div>
 
-            {/* CTA Button */}
-            <button
-              onClick={handleNext}
-              className={cn(
-                "w-full h-14 rounded-[20px] font-bold text-[17px] shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-2",
-                step === STEPS.length - 1 
-                  ? "bg-accent hover:bg-accent-hover text-white shadow-[0_8px_20px_-6px_rgba(var(--accent),0.5)]" 
-                  : "bg-surface-raised border border-border-subtle text-text-primary hover:bg-surface-raised/80"
-              )}
-            >
-              {step === STEPS.length - 1 ? "Mulai Sekarang" : "Lanjut"}
-              {step === STEPS.length - 1 && (
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              )}
-            </button>
+            {/* CTA Buttons */}
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={handleNext}
+                className={cn(
+                  "w-full h-14 rounded-[20px] font-bold text-[17px] shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-2",
+                  step === STEPS.length - 1 
+                    ? "bg-accent hover:bg-accent-hover text-white shadow-[0_8px_20px_-6px_rgba(var(--accent),0.5)]" 
+                    : "bg-surface-raised border border-border-subtle text-text-primary hover:bg-surface-raised/80"
+                )}
+              >
+                {step === STEPS.length - 1 ? "Mulai Sekarang" : "Lanjut"}
+                {step === STEPS.length - 1 && (
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                )}
+              </button>
+              
+              {/* Install PWA Button (Only on final step if installable) */}
+              <AnimatePresence>
+                {step === STEPS.length - 1 && isInstallable && (
+                  <motion.button
+                    initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                    animate={{ opacity: 1, height: 48, marginTop: 12 }}
+                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                    onClick={installPWA}
+                    className="w-full rounded-[16px] font-bold text-[15px] bg-surface-overlay border border-accent/30 text-accent hover:bg-accent/10 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                  >
+                    <DownloadSimple size={20} weight="bold" />
+                    Install Aplikasi Yomirra
+                  </motion.button>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
     </motion.div>
   );
