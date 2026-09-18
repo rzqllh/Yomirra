@@ -221,7 +221,7 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
             <div
               className="absolute inset-x-0 top-0 pointer-events-none -z-10"
               style={{
-                height: "calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 74px)",
+                height: "calc(var(--safe-top, env(safe-area-inset-top, 0px)))",
                 backdropFilter: "blur(20px)",
                 WebkitBackdropFilter: "blur(20px)",
                 maskImage:

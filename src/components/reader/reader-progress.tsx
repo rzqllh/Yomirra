@@ -13,11 +13,10 @@ export function ReaderProgress() {
 
   return (
     <div
-      className="fixed z-[99999] left-0 right-0 h-[2px] pointer-events-none"
-      style={{ top: 'var(--safe-top, 0px)' }}
+      className="fixed z-[99999] top-0 left-0 right-0 h-[3px] pointer-events-none"
     >
       <motion.div
-        className="h-full bg-accent origin-left"
+        className="h-full bg-accent origin-left shadow-[0_0_8px_var(--color-accent),0_1px_2px_rgba(0,0,0,0.3)]"
         style={{ scaleX }}
       />
     </div>

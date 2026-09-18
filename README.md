@@ -1,175 +1,201 @@
-<div align="center">
-
 # Yomirra
 
-**A mobile-first manga, manhwa, and webtoon reader.**  
-Built for reading first: clean navigation, multi-source discovery, personal library, offline support, and a reader that works especially well on phones.
+A modern manga, manhwa, and webtoon reader built around a simple idea: **reading should stay out of your way.**
 
-**Reader manga, manhwa, dan webtoon yang mobile-first.**  
-Fokusnya sederhana: cari, simpan, lanjut baca, dan baca dengan nyaman tanpa UI yang mengganggu.
+Yomirra combines multi-source discovery, Library management, reading progress, offline chapters, and a mobile-first reader in one place.
 
-[Open Yomirra](https://yomirra.vercel.app/) · [Documentation](docs/README.md) · [Changelog](CHANGELOG.md)
-
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
-[![Next.js](https://img.shields.io/badge/Next.js-16-black)](https://nextjs.org/)
-[![React](https://img.shields.io/badge/React-19-149eca)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178c6)](https://www.typescriptlang.org/)
-
-</div>
-
-> [!TIP]
-> **Yomirra is designed mobile-first and is recommended on mobile.** Desktop is supported, but the main navigation, touch targets, reader controls, and responsive layout are designed around phone use.
->
-> **Yomirra dibuat mobile-first dan paling direkomendasikan dipakai di HP.** Desktop tetap didukung, tetapi pengalaman baca utamanya memang dirancang untuk layar sentuh dan viewport mobile.
-
-## Try it / Coba langsung
-
-No installation is required.
-
-**https://yomirra.vercel.app/**
-
-Open it in your browser and start reading. On supported browsers, you can also add Yomirra to your home screen for a more app-like experience.
-
-Buka link di atas lewat browser. Kalau browser/device mendukung, Yomirra juga bisa ditambahkan ke home screen supaya terasa lebih seperti aplikasi.
-
-## What Yomirra does / Yang tersedia
-
-- **Multi-source discovery and search** — browse and search across multiple manga sources, with source-specific filtering and graceful partial-failure handling.
-- **Personal library** — save titles, manage collections and reading statuses, sort, filter, and continue where you left off.
-- **Reading history and updates** — track progress, revisit recent reads, and see title updates without rebuilding your library manually.
-- **Mobile-focused reader** — vertical and paged reading modes, responsive controls, keyboard support on desktop, and retained reader state.
-- **Offline reading** — download chapters and read cached content when available.
-- **Backup and restore** — export and restore supported local data.
-- **Account sync** — Firebase-backed authentication and synchronization for supported stores.
-- **Source resilience** — source health handling, normalized errors, stale-cache fallback where supported, and independent source failure handling.
-
-Singkatnya: Yomirra bukan sekadar halaman baca. Library, history, collections, update tracking, source selection, download, dan reader settings dibuat sebagai satu alur yang nyambung.
-
-## Built-in sources / Sumber bawaan
-
-| Source | Type | Notes |
-| --- | --- | --- |
-| MangaDex | API | International source with bounded rate-limit handling |
-| Shinigami | Web source | Indonesian manga/manhwa/webtoon source |
-| Komiku | Web source | Indonesian manga/manhwa/webtoon source |
-| Komikindo | Web source | Indonesian manga source with stale-cache fallback where available |
-
-Source availability is external to Yomirra. A source can become slow, change its structure, or go offline independently of the app.
-
-Ketersediaan source berada di luar kontrol Yomirra. Kalau satu source sedang bermasalah, source lain tetap bisa digunakan selama tersedia.
-
-## Reader experience
-
-Yomirra is intentionally optimized around actual reading instead of dashboard-style UI.
-
-- Mobile-first navigation and touch targets
-- Responsive manga grids and detail pages
-- Vertical and paged reader modes
-- Chapter and settings panels designed for small screens
-- Reading progress retention
-- Image retry and failure handling
-- Offline chapter support
-- Desktop keyboard navigation where applicable
-
-If you only want to use Yomirra, you can stop here and open the live app:
-
-**https://yomirra.vercel.app/**
+Current release: **v1.18.0**
 
 ---
 
-## For developers / Untuk developer
+# English
 
-Yomirra is a Next.js application with a source-adapter architecture. Public repository documentation covers the stable implementation contracts; temporary planning files, AI-agent artifacts, audits, and local design references are intentionally kept out of version control.
+## Read without fighting the reader
 
-### Stack
+Yomirra is built for actually reading, not for filling the screen with controls.
 
-| Area | Stack |
-| --- | --- |
-| Framework | Next.js 16 App Router |
-| UI | React 19, Tailwind CSS 4, Radix UI, Vaul, Motion |
-| Data fetching | TanStack Query |
-| Client state | Zustand |
-| Validation | Zod |
-| Authentication and sync | Firebase |
-| Server cache | Redis / ioredis |
-| PWA / service worker | Serwist |
-| Testing | Vitest, Testing Library |
-| Package manager | pnpm |
+Search across supported sources, save titles to your Library, continue from where you stopped, download chapters when needed, and keep everything organized without turning the app into a dashboard.
 
-### Local development
+### What you can do
 
-Requirements:
+* **Read manga, manhwa, and webtoons**
 
-- A currently supported Node.js LTS release
-- pnpm
-- Redis for server caching
-- A Firebase project for authentication and cloud synchronization
+  * Vertical reading for long-strip content.
+  * Paged reading for traditional manga layouts.
+  * Reader preferences and controls designed around mobile use.
 
-```bash
-git clone https://github.com/rzqllh/Yomirra.git
-cd Yomirra
-pnpm install
-```
+* **Search across multiple sources**
 
-Create the local environment file:
+  * Browse different supported catalog sources from one app.
+  * Source-specific filters are only shown when they are actually supported.
+  * Problems with one source are isolated from the rest of the app where possible.
 
-```bash
-cp .env.example .env
-```
+* **Build your own Library**
 
-PowerShell:
+  * Save titles you are following.
+  * Organize them using Collections.
+  * Use reading statuses to separate what you are reading, planning, or already finished.
 
-```powershell
-Copy-Item .env.example .env
-```
+* **Continue where you stopped**
 
-Fill the required values from `.env.example`, then run:
+  * Yomirra keeps track of reading history and progress.
+  * Continue Reading gives you a direct way back into your latest chapters.
 
-```bash
-pnpm dev
-```
+* **Keep up with new chapters**
 
-Open `http://localhost:3000`.
+  * Library titles can be checked for chapter updates.
+  * Updates are surfaced separately so you do not need to manually reopen every series.
 
-### Useful commands
+* **Read offline**
 
-```bash
-pnpm dev
-pnpm build
-pnpm start
-pnpm typecheck
-pnpm lint
-pnpm test --run
-```
+  * Download chapters to the device.
+  * Manage saved chapters from Download Manager.
+  * Open downloaded pages directly through the reader without requiring the original source to stay available.
 
-### Public documentation
+* **Keep your data portable**
 
-- [Documentation index](docs/README.md)
-- [Architecture](docs/ARCHITECTURE.md)
-- [Component conventions](docs/COMPONENTS.md)
-- [Design system](docs/DESIGN.md)
-- [Technology stack](docs/STACK.md)
-- [Testing conventions](docs/TESTING.md)
-- [Adding a source](docs/ADDING_A_SOURCE.md)
-- [Schema notes](docs/SCHEMA.md)
-- [Contributing](CONTRIBUTING.md)
-- [Security](SECURITY.md)
-- [Changelog](CHANGELOG.md)
+  * Backup and restore supported local Yomirra data.
+  * Useful when moving devices, reinstalling the app, or keeping a personal copy of your reading data.
 
-## Content and source policy
+* **Use it like an app**
 
-Yomirra is an independent reader client. It does **not** host manga, chapters, or source images. Content is requested from third-party sources, and those sources may change availability or terms without notice.
+  * Yomirra is PWA-enabled and can be installed on supported browsers and devices.
 
-Use Yomirra responsibly and follow applicable laws and the terms of the sources you use.
+## Local-first where it matters
 
-## Contributing
+Core reading data such as Library state, history, reader preferences, and downloaded content is designed to remain useful locally.
 
-Keep changes focused. Reuse existing components and feature boundaries instead of creating parallel implementations for the same behavior. See [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
+Account features and synchronization extend that experience across devices, but the reader is not designed around requiring a permanent connection for every action.
 
-## Security
+## Multi-source by design
 
-Do not report vulnerabilities in a public issue. Follow [SECURITY.md](SECURITY.md).
+Yomirra does not treat every source as if it exposes the same catalog or capabilities.
 
-## License
+Search, filters, chapter data, images, availability, and other behavior can differ between sources. The application keeps those differences behind its source layer instead of leaking them into the reader experience whenever possible.
 
-Licensed under the [Apache License 2.0](LICENSE).
+Content availability ultimately depends on the configured third-party sources. Yomirra itself is a reader and does not host their catalog content.
+
+## Install as an app
+
+On a supported browser:
+
+1. Open Yomirra.
+2. Use the browser's **Add to Home Screen** or **Install App** option.
+3. Launch Yomirra from your home screen like a regular application.
+
+PWA capabilities may vary by browser and operating system.
+
+## For developers
+
+This repository also contains the application source and its supporting architecture.
+
+Yomirra is currently built around:
+
+* Next.js
+* React
+* Zustand-based application state
+* Firebase authentication and sync
+* Source adapters for external catalogs
+* Local-first reading and download state
+* PWA support
+
+Development setup, architecture, source adapter behavior, data boundaries, project structure, and contribution notes are documented separately:
+
+**[`docs/README_DEV.md`](docs/README_DEV.md)**
+
+---
+
+# Bahasa Indonesia
+
+## Baca tanpa ribet sama aplikasinya
+
+Yomirra dibuat supaya UI-nya tidak mengganggu hal yang paling penting: baca komik.
+
+Cari judul dari beberapa source, simpan ke Library, lanjut dari progres terakhir, download chapter untuk dibaca offline, dan atur koleksi tanpa membuat reader terasa penuh dengan menu yang tidak perlu.
+
+### Yang bisa dilakukan di Yomirra
+
+* **Baca manga, manhwa, dan webtoon**
+
+  * Vertical reader untuk format long-strip.
+  * Paged reader untuk format manga tradisional.
+  * Reader preferences dan kontrol yang dirancang terutama untuk penggunaan mobile.
+
+* **Cari dari beberapa source**
+
+  * Jelajahi beberapa catalog source dari satu aplikasi.
+  * Filter hanya muncul ketika memang didukung oleh source tersebut.
+  * Masalah pada satu source sebisa mungkin tidak mengganggu source lainnya.
+
+* **Atur Library sendiri**
+
+  * Simpan judul yang sedang diikuti.
+  * Kelompokkan menggunakan Collections.
+  * Gunakan reading status untuk membedakan bacaan aktif, rencana baca, atau yang sudah selesai.
+
+* **Lanjut dari terakhir baca**
+
+  * Yomirra menyimpan history dan reading progress.
+  * Continue Reading memberi akses langsung ke bacaan terakhir tanpa perlu mencari chapter lagi.
+
+* **Pantau chapter baru**
+
+  * Judul yang ada di Library dapat diperiksa untuk update chapter.
+  * Update ditampilkan terpisah supaya tidak perlu membuka setiap judul satu per satu.
+
+* **Baca secara offline**
+
+  * Download chapter ke perangkat.
+  * Kelola chapter tersimpan melalui Download Manager.
+  * Chapter yang sudah tersimpan dapat dibuka melalui reader tanpa bergantung pada source saat sedang dibaca.
+
+* **Backup data**
+
+  * Data lokal Yomirra yang didukung dapat dibackup dan direstore.
+  * Berguna ketika pindah perangkat, reinstall, atau sekadar ingin menyimpan salinan data baca sendiri.
+
+* **Pasang seperti aplikasi**
+
+  * Yomirra mendukung PWA dan dapat dipasang melalui browser/perangkat yang kompatibel.
+
+## Local-first untuk data yang penting
+
+Library, history, reader preferences, download, dan sebagian besar state membaca dirancang agar tetap berguna secara lokal.
+
+Fitur akun dan sinkronisasi melengkapi pengalaman tersebut untuk penggunaan lintas perangkat, bukan menjadikan koneksi cloud sebagai syarat untuk setiap aktivitas membaca.
+
+## Multi-source dari awal
+
+Setiap source bisa memiliki catalog, filter, struktur chapter, image handling, dan tingkat ketersediaan yang berbeda.
+
+Karena itu Yomirra tidak memaksa semua source mengikuti behavior yang sama. Perbedaan tersebut sebisa mungkin ditangani di source layer agar pengalaman reader tetap konsisten.
+
+Ketersediaan konten tetap bergantung pada source pihak ketiga yang digunakan. Yomirra sendiri berfungsi sebagai reader dan tidak meng-host katalog mereka.
+
+## Pasang sebagai aplikasi
+
+Pada browser yang mendukung:
+
+1. Buka Yomirra.
+2. Pilih **Add to Home Screen** atau **Install App** dari browser.
+3. Jalankan Yomirra dari home screen seperti aplikasi biasa.
+
+Kemampuan PWA dapat berbeda tergantung browser dan sistem operasi.
+
+## Untuk developer
+
+Repository ini juga berisi source code dan arsitektur aplikasi Yomirra.
+
+Stack utama saat ini mencakup:
+
+* Next.js
+* React
+* Zustand untuk application state
+* Firebase authentication dan sync
+* Source adapter untuk external catalog
+* Local-first reading dan download state
+* PWA support
+
+Setup development, architecture, source adapter, data boundaries, struktur project, dan catatan kontribusi dipisahkan supaya README utama tetap fokus pada pengguna:
+
+**[`docs/README_DEV.md`](docs/README_DEV.md)**

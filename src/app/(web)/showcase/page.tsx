@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { 
   CheckCircle, 
   Warning, 
@@ -47,6 +48,42 @@ export default function ComponentShowcasePage() {
           description="Eksplorasi token, geometri konsentris squircle, dan matriks varian interaksi Yomirra."
           icon={<Sparkle size={24} weight="duotone" />}
         />
+
+        {/* Specialized Labs Quick Navigation */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-2 rounded-2xl bg-surface-raised/40 border border-border-subtle">
+          <Link 
+            href="/showcase/toast-demo" 
+            className="p-3.5 rounded-xl bg-surface-raised hover:bg-surface-hover border border-border-default/60 transition-all flex flex-col gap-1 group"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-white group-hover:text-accent transition-colors">Toast Revamp & Motion Lab</span>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-accent/15 text-accent">10x10 Matrix</span>
+            </div>
+            <p className="text-[11px] text-text-muted">10 desain visual toast dan 10 transisi masuk/keluar berfisika spring.</p>
+          </Link>
+
+          <Link 
+            href="/showcase/reader-end-demo" 
+            className="p-3.5 rounded-xl bg-surface-raised hover:bg-surface-hover border border-border-default/60 transition-all flex flex-col gap-1 group"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-white group-hover:text-accent transition-colors">Reader End Dock Lab</span>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-semantic-success/15 text-semantic-success">Production</span>
+            </div>
+            <p className="text-[11px] text-text-muted">10 konsep desain akhir bab reader dan simulasi navigasi komik.</p>
+          </Link>
+
+          <Link 
+            href="/showcase/updates-demo" 
+            className="p-3.5 rounded-xl bg-surface-raised hover:bg-surface-hover border border-border-default/60 transition-all flex flex-col gap-1 group"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-white group-hover:text-accent transition-colors">Updates Timeline Lab</span>
+              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/10 text-white/70">Archive</span>
+            </div>
+            <p className="text-[11px] text-text-muted">Desain timeline pembaruan chapter dan status unread komik.</p>
+          </Link>
+        </div>
 
         {/* 1. Concentric Squircle Geometry Scale */}
         <section className="space-y-4">

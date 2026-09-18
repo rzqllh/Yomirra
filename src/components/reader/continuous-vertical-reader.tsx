@@ -1,4 +1,5 @@
 import * as React from "react"
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useReaderStore } from "@/shared/store/reader-store"
 import { useSettingsStore } from "@/shared/store/settings-store"
@@ -17,7 +18,7 @@ import { useReaderScroll } from "@/shared/hooks/use-reader-scroll"
 import { getSourceMetadata } from "@/shared/sources/source-registry"
 
 import { useReadingTimer } from "@/shared/hooks/use-reading-timer"
-import { CaretLeft, CaretRight } from "@phosphor-icons/react"
+import { CaretLeft, CaretRight, CheckCircle, Flag, BookOpen } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/shared/utils/cn"
 import { motion } from "motion/react"
@@ -35,9 +36,9 @@ interface ContinuousVerticalReaderProps {
   nextChapterId?: string;
 }
 
-export function ContinuousVerticalReader({ 
-  sourceId, 
-  mangaId, 
+export function ContinuousVerticalReader({
+  sourceId,
+  mangaId,
   chapterId,
   chapterTitle = "Chapter",
   pages,
@@ -55,9 +56,9 @@ export function ContinuousVerticalReader({
   const addToLibrary = useLibraryStore(state => state.addToLibrary)
   const source = React.useMemo(() => getSourceMetadata(sourceId), [sourceId]);
   const reportUrl = source?.reportUrl;
-  
+
   const queryClient = useQueryClient()
-  
+
   useReadingTimer()
 
   const streamItems = React.useMemo<StreamItem[]>(() => {
@@ -71,14 +72,14 @@ export function ContinuousVerticalReader({
   }, [pages, chapterId]);
 
   const cacheKey = `yomirra-virtualizer-cache-${sourceId}-${mangaId}-${chapterId}`;
-  
+
   const initialCache = React.useMemo(() => {
     if (typeof sessionStorage !== 'undefined') {
       const cached = sessionStorage.getItem(cacheKey);
       if (cached) {
         try {
           return JSON.parse(cached);
-        } catch (e) {}
+        } catch (e) { }
       }
     }
     return undefined;
@@ -111,8 +112,8 @@ export function ContinuousVerticalReader({
 
   const virtualItems = virtualizer.getVirtualItems();
 
-  const handleImageLoad = React.useCallback(() => {}, [])
-  const handleImageError = React.useCallback(() => {}, [])
+  const handleImageLoad = React.useCallback(() => { }, [])
+  const handleImageError = React.useCallback(() => { }, [])
 
 
 
@@ -172,13 +173,13 @@ export function ContinuousVerticalReader({
 
   const handleNextChapter = React.useCallback(() => {
     if (!nextChapterId) return;
-    
+
     if (!isInLibrary) {
       const readCountKey = `yomirra-read-count-${mangaId}`;
       const currentCount = parseInt(sessionStorage.getItem(readCountKey) || "0");
       const newCount = currentCount + 1;
       sessionStorage.setItem(readCountKey, newCount.toString());
-      
+
       if (newCount >= 3) {
         toast("Kamu sudah membaca 3 chapter dari komik ini. Simpan ke Bookmark?", {
           action: {
@@ -203,15 +204,23 @@ export function ContinuousVerticalReader({
         sessionStorage.setItem(readCountKey, "0"); // Reset count
       }
     }
-    
+
     router.replace(getReaderHref(sourceId, mangaId, nextChapterId));
   }, [nextChapterId, isInLibrary, mangaId, sourceId, getProgress, addToLibrary, router]);
 
+  const handleReport = React.useCallback(() => {
+    const subject = encodeURIComponent(`[Laporan Yomirra] ${chapterTitle} - ${mangaId}`);
+    const body = encodeURIComponent(
+      `Halo Hafizh,\n\nSaya menemukan kendala saat membaca di Yomirra:\n• Sumber: ${sourceId}\n• ID Komik: ${mangaId}\n• Bab: ${chapterTitle} (${chapterId})\n\nKendala:\n`
+    );
+    window.location.href = `mailto:hrizqullah484@gmail.com?subject=${subject}&body=${body}`;
+  }, [chapterTitle, mangaId, sourceId, chapterId]);
+
   return (
     <div className="flex min-h-screen w-full flex-col items-center select-none pb-12 bg-black/95 dark:bg-black">
-      <div 
+      <div
         className="flex w-full max-w-[800px] flex-col items-center pt-[calc(var(--mobile-header-height)+var(--safe-top))]"
-        style={{ 
+        style={{
           height: `${virtualizer.getTotalSize()}px`,
           width: '100%',
           position: 'relative'
@@ -234,7 +243,7 @@ export function ContinuousVerticalReader({
                 paddingBottom: preferences.pageGap === 'none' ? '0px' : preferences.pageGap === 'small' ? '4px' : '16px'
               }}
             >
-              <ReaderImage 
+              <ReaderImage
                 pageIndex={item.pageIndex}
                 pageUrl={item.url}
                 isWebtoon={isWebtoon}
@@ -253,54 +262,102 @@ export function ContinuousVerticalReader({
           );
         })}
       </div>
-      
-      {/* End of Chapter Section */}
-      <div className="w-full max-w-[800px] mx-auto px-4 pt-12 pb-[calc(3rem+env(safe-area-inset-bottom))] flex flex-col gap-4 relative z-10 bg-background/80 backdrop-blur-md sm:bg-transparent border-t border-border-subtle mt-4">
-        
-        {/* Next/Prev Navigation */}
-        <div className="flex items-center justify-between gap-3 w-full">
-          {_prevChapterId ? (
-            <Button
-              className="flex-1 rounded-2xl h-14 font-bold bg-surface-raised hover:bg-surface-hover border border-border-default text-text-primary shadow-sm active:scale-[0.98] transition-all"
-              onClick={() => router.replace(getReaderHref(sourceId, mangaId, _prevChapterId))}
-            >
-              <CaretLeft size={20} className="mr-1.5" weight="bold" /> Sebelumnya
-            </Button>
-          ) : (
-            <div className="flex-1" />
-          )}
 
-          {nextChapterId ? (
-            <Button
-              className="flex-1 rounded-2xl h-14 font-bold bg-accent text-accent-on shadow-md active:scale-[0.98] transition-all"
-              onClick={handleNextChapter}
-            >
-              Selanjutnya <CaretRight size={20} className="ml-1.5" weight="bold" />
-            </Button>
-          ) : (
-            <div className="flex-1" />
-          )}
-        </div>
+      {/* Visual Transition Fader from Comic Pages to Black Canvas */}
+      <div className="w-full max-w-[800px] h-14 bg-gradient-to-b from-transparent via-black/60 to-black pointer-events-none -mt-4 relative z-10" />
 
-        {/* Secondary Actions */}
-        {reportUrl && (
-          <div className="flex justify-center mt-2">
-            <Button
-              variant="ghost"
-              className="rounded-xl h-10 font-bold px-6 text-text-muted hover:text-text-primary hover:bg-surface-raised transition-colors"
-              onClick={() => {
-                try {
-                  const url = new URL(reportUrl);
-                  if (url.protocol === 'http:' || url.protocol === 'https:') {
-                    window.open(url.href, '_blank', 'noopener,noreferrer');
-                  }
-                } catch (e) {}
-              }}
-            >
-              Laporkan Chapter
-            </Button>
+      {/* Hairline Gradient Transition Divider */}
+      <div className="w-full max-w-[280px] h-[1px] bg-gradient-to-r from-transparent via-white/15 to-transparent my-2 relative z-10" />
+
+      {/* End of Chapter Section (Combined Variant 3 Milestone + 10 Unified Dock on Pure Black Canvas) */}
+      <div className="w-full max-w-[420px] mx-auto px-4 pt-4 pb-[calc(5rem+env(safe-area-inset-bottom))] flex flex-col items-center gap-4 relative z-10 select-none">
+        {/* Ambient Glow behind Card Dock */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] h-[200px] bg-accent/12 rounded-full blur-[80px] pointer-events-none -z-10" />
+
+        {/* Milestone Card Dock */}
+        <div className="w-full rounded-2xl bg-zinc-950/85 border border-white/[0.08] backdrop-blur-2xl p-4 sm:p-5 flex flex-col gap-4 shadow-[0_12px_40px_rgba(0,0,0,0.8)] relative">
+          {/* Header Status Line */}
+          <div className="flex items-center justify-between border-b border-white/[0.06] pb-3.5">
+            <div className="flex items-center gap-2 min-w-0 pr-2">
+              <span className="size-2 rounded-full bg-semantic-success shrink-0" />
+              <span className="text-xs font-semibold text-white/90 truncate">
+                {chapterTitle} selesai
+              </span>
+            </div>
+            <span className="text-[11px] font-mono text-white/40 shrink-0">
+              {pages.length} halaman
+            </span>
           </div>
-        )}
+
+          {/* Primary Navigation Buttons (Ergonomic h-11 Apple HIG, Reusable Squircle) */}
+          <div className="flex items-center gap-2.5 w-full">
+            {_prevChapterId && (
+              <Button
+                variant="outline"
+                className="h-11 px-4 font-semibold text-xs sm:text-sm bg-white/[0.05] hover:bg-white/[0.10] active:bg-white/[0.08] border-white/10 text-white/80 hover:text-white flex-1 flex items-center justify-center gap-2 active:scale-[0.98] transition-all cursor-pointer shadow-none"
+                onClick={() => {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                  setTimeout(() => router.replace(getReaderHref(sourceId, mangaId, _prevChapterId)), 100);
+                }}
+              >
+                <CaretLeft size={16} weight="bold" />
+                <span>Sebelumnya</span>
+              </Button>
+            )}
+
+            {nextChapterId ? (
+              <Button
+                className={cn(
+                  "h-11 px-4 font-semibold text-xs sm:text-sm bg-accent hover:bg-accent-hover text-white flex items-center justify-center gap-2 active:scale-[0.98] transition-all cursor-pointer shadow-[0_0_24px_rgba(108,106,250,0.35)]",
+                  _prevChapterId ? "flex-1" : "w-full"
+                )}
+                onClick={handleNextChapter}
+              >
+                <span>{_prevChapterId ? "Selanjutnya" : "Lanjut Bab Berikutnya"}</span>
+                <CaretRight size={16} weight="bold" />
+              </Button>
+            ) : (
+              <Button
+                asChild
+                className={cn(
+                  "h-11 px-4 font-semibold text-xs sm:text-sm bg-accent hover:bg-accent-hover text-white flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-[0_0_24px_rgba(108,106,250,0.35)]",
+                  _prevChapterId ? "flex-1" : "w-full"
+                )}
+              >
+                <Link href={getMangaDetailHref(sourceId, mangaId)} prefetch={false}>
+                  <BookOpen size={16} weight="bold" />
+                  <span>Detail Komik</span>
+                </Link>
+              </Button>
+            )}
+          </div>
+
+          {/* Utility Micro-actions */}
+          <div className="flex items-center justify-center gap-3 text-xs text-white/40 pt-0.5">
+            {nextChapterId && (
+              <>
+                <Link
+                  href={getMangaDetailHref(sourceId, mangaId)}
+                  prefetch={false}
+                  className="hover:text-white/80 transition-colors flex items-center gap-1.5 py-1"
+                >
+                  <BookOpen size={13} />
+                  <span>Detail Komik</span>
+                </Link>
+                <span className="text-white/20">·</span>
+              </>
+            )}
+
+            <button
+              type="button"
+              onClick={handleReport}
+              className="hover:text-semantic-error/90 transition-colors flex items-center gap-1.5 py-1 cursor-pointer"
+            >
+              <Flag size={13} />
+              <span>Laporkan kendala</span>
+            </button>
+          </div>
+        </div>
       </div>
 
     </div>

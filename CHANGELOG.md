@@ -1,115 +1,107 @@
 # Changelog
 
-All notable changes to Yomirra are documented in this file.
+All notable changes to Yomirra are documented here.
 
-The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and released versions follow [Semantic Versioning](https://semver.org/).
+---
 
-## [Unreleased]
+## [1.18.0] — 2026-09-18
 
-### Added
+### English
 
-- Space and Shift+Space continuous reader navigation with input element guards.
-- Generic image error reporting via source metadata mapping.
-- Virtualizer layout cache retention using `sessionStorage` during lifecycle navigation.
-- Built-in Komiku source adapter (`komiku.org`) supporting popular, latest, multi-source search, detail, chapters, and reader pages with signed proxy URLs where required.
-- MangaDex HTTP 429 hardening with bounded `Retry-After` parsing and capped retry delay.
-- Update checker, persisted update records, Updates Page, unread navigation badge, automatic update-check preferences, and per-manga mute preference.
-- Collections management, custom reading statuses, and Library filters based on collections/statuses.
-- Local Backup & Restore schema V2 with backward compatibility for supported older backups.
-- Source health endpoint with normalized public diagnostics.
-- Batch selection and deletion support in Download Manager.
-- Multi-source Search with independent source selection, per-source filter capability discovery, source-specific payloads, partial-failure handling, and safe filter pruning.
-- Canonical `PageHeader` for responsive section/destination headers.
-- Canonical filter presentation through `FilterDrawerShell` and `FilterSection` for Library and Search.
-- Canonical `FilterChip` with explicit selection/ARIA state.
-- Canonical `MangaCover` for cover loading/error/fallback behavior.
-- Canonical `ReadingProgress` for semantic reading-progress rendering.
-- Canonical `MangaGrid` and shared `MANGA_GRID_CLASS` for responsive manga grids.
-- Reader-specific `ReaderPanelShell` for shared chapter/settings panel infrastructure while preserving distinct reader business logic.
-- Feature/controller decomposition for Library, Bookmark, and Search routes, moving complex client orchestration out of large App Router page files.
-- Expanded loading skeleton coverage and page-specific loading states.
-- Public architecture, component, design, stack, testing, contribution, and source-integration documentation.
-- GitHub Actions CI workflow.
+This release brings the current Yomirra experience together into a more complete reader, with major work across reading, library management, multi-source discovery, offline access, and general reliability.
 
-### Changed
+#### Added
 
-- Replaced manual retry loops with native bounded retries for reader images.
-- Missing offline reader entries are preserved using explicit mapping instead of generic filtering.
-- Initial reader virtualizer baseline stabilized at 1200px.
-- Library now composes dedicated toolbar, reading-status rail, collection rail, results view, and `useLibraryCatalog` controller logic.
-- Bookmark now separates Reading and Collection domains with dedicated controller hooks, collection toolbar, selection toolbar, and tab views.
-- Search now composes dedicated toolbar, source rail, results view, and `useSearchCatalog` multi-source controller logic.
-- Search and Library filter drawers now share Vaul presentation infrastructure while keeping feature-specific filter state and source capability logic separate.
-- `ShelfCard` and `HistoryCard` compose shared manga-cover/progress primitives instead of duplicating low-level media behavior.
-- Manga loading grids consume the same responsive grid definition as loaded manga grids, reducing breakpoint mismatch during loading transitions.
-- Route loading states and supporting views have been migrated to the canonical `PageHeader` contract.
-- Deprecated `YomirraPageHeader` and `DesktopPageTitle` compatibility wrappers were removed after remaining consumers migrated.
-- Reader chapter/settings overlays now share reader-specific Motion panel infrastructure instead of duplicating backdrop/header/scroll behavior.
-- Toolbar search/control rows were normalized around the established 44px interaction height where applicable.
-- Updates error presentation uses a dedicated/collapsible error treatment instead of dumping raw error strings into the page.
-- Search cancellation remains scoped to browser-to-Next API requests unless an upstream adapter explicitly supports propagated cancellation.
-- Search requests execute per source so unsupported filters can be omitted without excluding an otherwise usable source.
-- Search pagination avoids re-querying a source after it reports that no next page is available until relevant search state changes.
-- Settings and manga detail flows include update/collection/reading-status/mute management introduced during the current development cycle.
+* Multi-source search and discovery.
+* Collections and custom reading statuses for Library management.
+* Chapter update tracking for titles saved in the Library.
+* Download Manager and offline chapter reading.
+* Backup & Restore with the current backup format and compatibility handling for older backups.
+* Source health handling to better surface unavailable or degraded sources.
+* PWA support for an app-like experience on supported devices.
+* Additional reader preferences and reading controls.
+* Toast Revamp Lab (`/showcase/toast-demo`) featuring 10 distinct designs, 10 motion transitions, slow-motion scrubber, and a simulated Dynamic Island aperture.
+* Reader End Deck Showcase Lab (`/showcase/reader-end-demo`) for visual experimentation with chapter-end transitions.
 
-### Fixed
+#### Changed
 
-- Cleaned up dead `IntersectionObserver`, `decodeQueue`, and divider logic from the reader.
-- Scoped `useVisibilityFlush` correctly to prevent memory leaks during history navigation.
-- Normalized `/api/sources/health` public responses to avoid leaking raw internal stacks or response headers.
-- Fixed Komiku lazy cover extraction by preferring real lazy-load attributes over placeholder images.
-- Fixed Komiku manga-card title/link matching across supported list pages.
-- Corrected the MangaDex health target URL.
-- Stale scan errors are cleared after a successful update scan.
-- Unordered chapter arrays are handled safely during latest-chapter detection.
-- Scan cooldown persists across app reloads.
-- Partial source failure during global scan does not remove successful updates.
-- Collection deletion clears corresponding memberships.
-- BottomDock unread-badge hydration mismatch is prevented.
-- Offline reader fallback no longer loops when a cached image is missing.
-- Offline/local image URLs bypass Next.js image optimization where required.
-- Blob URLs are revoked during reader teardown and chapter changes.
-- Partial download-deletion failures preserve failed items while removing successful items.
-- Filter-chip accessibility no longer infers pressed state only from visual variants.
-- Search filter capability/pruning logic preserves valid user state across incomplete or changing source capability responses.
-- Filter drawer safe-area/footer presentation is shared consistently between Search and Library.
-- Bookmark collection toolbar and loading skeleton geometry were refined to match current responsive content more closely.
+* Reworked the mobile reader UI with cleaner top and bottom controls.
+* Redesigned the continuous vertical reader chapter-end deck with a seamless gradient fader, ambient aura glow, and squircle action buttons.
+* Rebranded application toast notifications to **Dynamic Island Liquid Glass** capsules with top-center placement, specular rim lighting, and Apple HIG spring dynamics.
+* Improved reading progress visibility across light and dark comic pages.
+* Improved transitions and auto-hide behavior for reader controls.
+* Refined Home, Search, Library, Collections, Updates, Downloads, Sources, Manga Detail, Reader, and Settings.
+* Improved Continue Reading behavior using the latest saved reading progress.
+* Search filters now respect the capabilities of the active source instead of assuming every source supports the same options.
+* Improved navigation between Search, Library, Updates, Manga Detail, and Reader.
+* Updated PWA behavior and install flow.
 
-### Verification and Documentation Notes
+#### Fixed
 
-- Canonical UI primitives and feature/controller refactors have focused unit/integration coverage in addition to project-wide typecheck, lint, test, and build workflows.
-- Responsive headers, overlays, state retention, and Reader panel behavior still require targeted browser verification when changed; automated checks are not treated as proof of every browser/PWA interaction.
-- Documentation no longer treats a shared grid skeleton as proof of universally zero CLS or describes structural refactors as automatically guaranteeing identical runtime behavior.
+* Fixed several image-loading and source URL handling cases.
+* Fixed comic detail navigation from the reader end deck to route directly to the manga page.
+* Replaced third-party report links with prefilled direct email reporting for broken chapters.
+* Improved handling of unavailable or partially failing sources.
+* Fixed reader lifecycle issues around local `blob:` and `data:` images.
+* Improved cleanup of temporary object URLs used during offline reading.
+* Improved reading-progress persistence when the app moves to the background.
+* Improved handling of partial or missing downloaded chapter data.
+* Fixed several inconsistent loading, empty, and error states across the app.
 
-### Known Follow-ups
+#### Internal
 
-These are development notes, not shipped fixes:
+* Continued separating source-specific behavior from the rest of the application.
+* Improved local-first data handling for Library, History, Downloads, and reader state.
+* Reduced coupling between reader state, navigation, and source-specific data.
+* General cleanup and reliability improvements across the application.
 
-- Real-device PWA and offline behavior verification across target browsers.
-- Hosted source-health verification from production/serverless infrastructure.
-- Propagate `AbortSignal` through the full upstream request stack where supported.
-- Continue reducing existing lint warnings without mixing unrelated cleanup into feature changes.
-- Continue accessibility verification for complex filter include/exclude and reader overlay interactions.
+---
 
-## [0.1.0] - 2026-06-10
+### Bahasa Indonesia
 
-### Added
+Rilis ini merapikan fitur-fitur utama Yomirra menjadi reader yang lebih lengkap, terutama di area membaca, Library, pencarian multi-source, offline reading, dan stabilitas aplikasi.
 
-- Initial App Router page structure.
-- Source adapter architecture with Shinigami as the first implementation.
-- Manga detail, chapter listing, and reader flows.
-- Vertical and paged reader modes.
-- Zustand stores for reader preferences, library, and history.
-- Firebase authentication and synchronization foundations.
-- Signed image proxy for remote images.
-- Typecheck, lint, test, and build scripts.
-- Security headers and environment validation.
+#### Ditambahkan
 
-### Changed
+* Pencarian dan discovery dari beberapa source.
+* Collections dan custom reading status untuk mengatur Library.
+* Pengecekan update chapter untuk judul yang tersimpan di Library.
+* Download Manager dan dukungan membaca chapter secara offline.
+* Backup & Restore dengan format backup terbaru serta compatibility handling untuk backup lama.
+* Source health handling untuk membantu mendeteksi source yang sedang tidak tersedia atau bermasalah.
+* Dukungan PWA untuk penggunaan seperti aplikasi di perangkat yang mendukung.
+* Tambahan preferensi dan kontrol pada reader.
+* Toast Revamp Lab (`/showcase/toast-demo`) dengan 10 konsep desain, 10 transisi masuk/keluar, dan simulasi Dynamic Island notch morphing.
+* Reader End Deck Showcase Lab (`/showcase/reader-end-demo`) untuk eksplorasi transisi akhir chapter komik.
 
-- Migrated the codebase toward domain-oriented modules.
-- Consolidated icons around Phosphor Icons.
-- Replaced broad untyped API handling with stricter TypeScript contracts.
+#### Diubah
 
-[Unreleased]: https://github.com/rzqllh/Yomirra/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/rzqllh/Yomirra/releases/tag/v0.1.0
+* Reader mobile diperbarui dengan kontrol atas dan bawah yang lebih ringkas.
+* Redesign total tampilan akhir chapter pada vertical reader dengan transisi gradient halus, ambient aura glow, dan tombol squircle ("Sebelumnya", "Selanjutnya", "Detail Komik", "Laporkan").
+* Rebrand sistem toast notifikasi aplikasi menjadi kapsul **Dynamic Island Liquid Glass** di posisi top-center dengan specular rim highlight dan fisika spring iOS.
+* Indikator reading progress dibuat lebih jelas pada halaman terang maupun gelap.
+* Transisi dan auto-hide reader controls diperbaiki.
+* Home, Search, Library, Collections, Updates, Downloads, Sources, Manga Detail, Reader, dan Settings dirapikan agar lebih konsisten.
+* Continue Reading sekarang menggunakan progres baca terakhir yang tersimpan.
+* Search filter mengikuti kemampuan source aktif dan tidak lagi menganggap semua source memiliki filter yang sama.
+* Navigasi antara Search, Library, Updates, Manga Detail, dan Reader diperbaiki.
+* Flow penggunaan dan instalasi PWA diperbarui.
+
+#### Diperbaiki
+
+* Memperbaiki sejumlah kasus image loading dan handling URL dari source.
+* Tombol "Detail Komik" di akhir chapter kini langsung mengarah ke halaman detail komik yang tepat.
+* Tombol "Laporkan" sekarang membuka email dengan detail chapter dan manga yang sudah terisi otomatis.
+* Memperbaiki handling ketika salah satu source sedang tidak tersedia atau gagal sebagian.
+* Memperbaiki lifecycle image lokal `blob:` dan `data:` di reader.
+* Memperbaiki cleanup object URL sementara pada offline reader.
+* Memperbaiki penyimpanan reading progress saat aplikasi berpindah ke background.
+* Memperbaiki handling chapter download yang tidak lengkap atau file lokal yang sudah tidak tersedia.
+* Merapikan loading, empty, dan error state di berbagai halaman.
+
+#### Internal
+
+* Melanjutkan pemisahan logic masing-masing source dari aplikasi utama.
+* Memperbaiki pendekatan local-first untuk Library, History, Downloads, dan reader state.
+* Mengurangi coupling antara reader state, navigation, dan data source.
+* Cleanup dan reliability improvement di berbagai bagian aplikasi.
