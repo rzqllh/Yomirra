@@ -114,4 +114,73 @@ describe("ReaderShell Header & Progress Bar", () => {
     const item = useLibraryStore.getState().getLibraryItem("srcA", "m1");
     expect(item?.title).toBe("Solo Leveling");
   });
+
+  it("renders top-viewport progress bar when header is hidden", () => {
+    useReaderStore.setState({ isOverlayVisible: false });
+
+    render(
+      <ReaderShell
+        mangaTitle="Solo Leveling"
+        chapterTitle="Chapter 1"
+        sourceId="srcA"
+        mangaId="m1"
+      >
+        <div>Content</div>
+      </ReaderShell>
+    );
+
+    // Header capsule is hidden
+    expect(screen.queryByTestId("reader-progress-bar")).toBeNull();
+
+    // Top viewport bar is rendered
+    const topBar = screen.getByTestId("top-viewport-progress-bar");
+    expect(topBar).toBeDefined();
+  });
+
+  it("hides both progress bars when showPageProgress is disabled", () => {
+    useReaderStore.setState({
+      preferences: {
+        imageFit: "width",
+        pageGap: "none",
+        background: "black",
+        toolbarBehavior: "auto-hide",
+        preloadIntensity: "balanced",
+        showPageProgress: false,
+        readingDirection: "ltr",
+        readingMode: "vertical",
+        keepScreenAwake: true,
+      },
+      isOverlayVisible: true,
+    });
+
+    const { rerender } = render(
+      <ReaderShell
+        mangaTitle="Solo Leveling"
+        chapterTitle="Chapter 1"
+        sourceId="srcA"
+        mangaId="m1"
+      >
+        <div>Content</div>
+      </ReaderShell>
+    );
+
+    expect(screen.queryByTestId("reader-progress-bar")).toBeNull();
+    expect(screen.queryByTestId("top-viewport-progress-bar")).toBeNull();
+
+    // When overlay is hidden with showPageProgress false
+    useReaderStore.setState({ isOverlayVisible: false });
+    rerender(
+      <ReaderShell
+        mangaTitle="Solo Leveling"
+        chapterTitle="Chapter 1"
+        sourceId="srcA"
+        mangaId="m1"
+      >
+        <div>Content</div>
+      </ReaderShell>
+    );
+
+    expect(screen.queryByTestId("reader-progress-bar")).toBeNull();
+    expect(screen.queryByTestId("top-viewport-progress-bar")).toBeNull();
+  });
 });

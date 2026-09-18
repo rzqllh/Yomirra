@@ -323,23 +323,25 @@ export function ReaderShell({
                 </motion.button>
 
                 {/* Bottom edge reading progress bar (start to finish) */}
-                <div className="absolute inset-x-0 bottom-0 h-[2.5px] bg-black/10 dark:bg-white/10 pointer-events-none overflow-hidden">
-                  {isPaged ? (
-                    <motion.div
-                      data-testid="reader-progress-bar"
-                      className="h-full bg-accent origin-left shadow-[0_0_8px_var(--color-accent)]"
-                      initial={false}
-                      animate={{ width: `${Math.max(0, Math.min(100, pagedProgress * 100))}%` }}
-                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    />
-                  ) : (
-                    <motion.div
-                      data-testid="reader-progress-bar"
-                      className="h-full bg-accent origin-left shadow-[0_0_8px_var(--color-accent)]"
-                      style={{ scaleX: springScrollProgress }}
-                    />
-                  )}
-                </div>
+                {preferences.showPageProgress && (
+                  <div className="absolute inset-x-0 bottom-0 h-[2.5px] bg-black/10 dark:bg-white/10 pointer-events-none overflow-hidden">
+                    {isPaged ? (
+                      <motion.div
+                        data-testid="reader-progress-bar"
+                        className="h-full bg-accent origin-left shadow-[0_0_8px_var(--color-accent)]"
+                        initial={false}
+                        animate={{ width: `${Math.max(0, Math.min(100, pagedProgress * 100))}%` }}
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      />
+                    ) : (
+                      <motion.div
+                        data-testid="reader-progress-bar"
+                        className="h-full bg-accent origin-left shadow-[0_0_8px_var(--color-accent)]"
+                        style={{ scaleX: springScrollProgress }}
+                      />
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>
@@ -474,6 +476,36 @@ export function ReaderShell({
                 </motion.button>
               </div>
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Top Viewport Reading Progress Bar - Active when header is hidden (Auto-hide transition) */}
+      <AnimatePresence>
+        {!isOverlayVisible && preferences.showPageProgress && (
+          <motion.div
+            key="top-viewport-progress"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed z-[99999] top-0 left-0 right-0 h-[2.5px] pointer-events-none"
+          >
+            {isPaged ? (
+              <motion.div
+                data-testid="top-viewport-progress-bar"
+                className="h-full bg-accent origin-left shadow-[0_0_8px_var(--color-accent),0_1px_2px_rgba(0,0,0,0.3)]"
+                initial={false}
+                animate={{ width: `${Math.max(0, Math.min(100, pagedProgress * 100))}%` }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              />
+            ) : (
+              <motion.div
+                data-testid="top-viewport-progress-bar"
+                className="h-full bg-accent origin-left shadow-[0_0_8px_var(--color-accent),0_1px_2px_rgba(0,0,0,0.3)]"
+                style={{ scaleX: springScrollProgress }}
+              />
+            )}
           </motion.div>
         )}
       </AnimatePresence>
