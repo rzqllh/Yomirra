@@ -5,7 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { DOCK_NAV_ITEMS } from "@/shared/config/nav"
 import { cn } from "@/shared/utils/cn"
-import { motion, AnimatePresence } from "motion/react"
+import { motion } from "motion/react"
 import { useSearchFilterStore } from "@/shared/store/search-filter-store"
 import { Icon } from "@/components/ui/icon"
 
@@ -25,7 +25,7 @@ export function BottomDock() {
       }}
     >
       <div className="pointer-events-auto flex w-full max-w-[360px] mx-auto items-center justify-center">
-        <div className="flex w-full h-[64px] items-center justify-between gap-1.5 rounded-[24px] liquid-glass p-1.5 transition-all duration-300 ease-out">
+        <div className="grid grid-cols-4 w-full h-[64px] items-center gap-1 rounded-[24px] liquid-glass p-1.5 transition-all duration-300 ease-out">
           {navItems.map((item) => {
             const isActive =
               item.href === "/"
@@ -42,12 +42,7 @@ export function BottomDock() {
                   }
                 }}
                 transitionTypes={["nav-lateral"]}
-                className={cn(
-                  "group relative flex items-center justify-center h-full rounded-[20px] outline-none tap-highlight-transparent transition-all duration-300 ease-out active:scale-95 select-none",
-                  isActive
-                    ? "flex-1 px-3.5"
-                    : "w-12 sm:w-14 shrink-0"
-                )}
+                className="group relative flex flex-col items-center justify-center h-full rounded-[20px] outline-none tap-highlight-transparent transition-all duration-200 ease-out active:scale-95 select-none"
                 aria-label={item.label}
                 aria-current={isActive ? "page" : undefined}
               >
@@ -55,11 +50,11 @@ export function BottomDock() {
                   <motion.div
                     className="absolute inset-0 rounded-[20px] bg-accent/15 border border-accent/25 shadow-xs"
                     layoutId="active-dock-tab"
-                    transition={{ type: "spring", bounce: 0.15, duration: 0.35 }}
+                    transition={{ type: "spring", bounce: 0.15, duration: 0.3 }}
                   />
                 )}
 
-                <div className="relative z-10 flex items-center justify-center gap-2">
+                <div className="relative z-10 flex flex-col items-center justify-center gap-1">
                   <Icon
                     icon={item.icon}
                     size={20}
@@ -72,19 +67,11 @@ export function BottomDock() {
                     )}
                   />
 
-                  <AnimatePresence initial={false}>
-                    {isActive && (
-                      <motion.span
-                        initial={{ opacity: 0, width: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, width: "auto", scale: 1 }}
-                        exit={{ opacity: 0, width: 0, scale: 0.9 }}
-                        transition={{ type: "spring", bounce: 0.1, duration: 0.25 }}
-                        className="text-xs font-bold text-accent tracking-tight leading-none overflow-hidden whitespace-nowrap"
-                      >
-                        {item.label}
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
+                  {isActive && (
+                    <span className="text-[10px] tracking-tight leading-none font-bold text-accent transition-all duration-200 animate-in fade-in duration-150">
+                      {item.label}
+                    </span>
+                  )}
                 </div>
               </Link>
             )
