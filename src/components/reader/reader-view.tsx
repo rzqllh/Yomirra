@@ -155,7 +155,13 @@ export function ReaderView({
 
   if (isLoading) {
     return (
-      <ReaderShell chapterTitle="Loading..." currentChapterId={chapterId} sourceId={sourceId} mangaId={mangaId}>
+      <ReaderShell
+        mangaTitle={initialDetail?.title}
+        chapterTitle="Loading..."
+        currentChapterId={chapterId}
+        sourceId={sourceId}
+        mangaId={mangaId}
+      >
         <div className="flex min-h-screen w-full items-center justify-center pt-[calc(var(--mobile-header-height)+var(--safe-top))] px-4">
           <ReaderPageSkeleton />
         </div>
@@ -165,7 +171,13 @@ export function ReaderView({
 
   if (error || !pagesToRender) {
     return (
-      <ReaderShell chapterTitle="Error" currentChapterId={chapterId} sourceId={sourceId} mangaId={mangaId}>
+      <ReaderShell
+        mangaTitle={initialDetail?.title}
+        chapterTitle="Error"
+        currentChapterId={chapterId}
+        sourceId={sourceId}
+        mangaId={mangaId}
+      >
         <div className="flex min-h-screen items-center justify-center pt-16">
           <EmptyState
             icon={<WarningCircle size={48} weight="duotone" className="text-text-muted" />}
@@ -197,6 +209,7 @@ export function ReaderView({
 
   return (
     <ReaderShell 
+      mangaTitle={initialDetail?.title}
       chapterTitle={chapterTitle} 
       pageCount={pagesToRender.length}
       currentChapterId={chapterId}

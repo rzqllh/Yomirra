@@ -10,6 +10,8 @@ interface ReaderState {
   setOverlayVisible: (visible: boolean) => void;
   isDesktopPanelOpen: boolean;
   toggleDesktopPanel: () => void;
+  pagedProgress: number;
+  setPagedProgress: (progress: number) => void;
 }
 
 const defaultPreferences: ReaderPreferences = {
@@ -39,6 +41,8 @@ export const useReaderStore = create<ReaderState>()(
       isDesktopPanelOpen: true,
       toggleDesktopPanel: () =>
         set((state) => ({ isDesktopPanelOpen: !state.isDesktopPanelOpen })),
+      pagedProgress: 0,
+      setPagedProgress: (progress) => set({ pagedProgress: Math.max(0, Math.min(1, progress)) }),
     }),
     {
       name: "manga-reader-settings", // keep the same name for migration

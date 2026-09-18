@@ -6,7 +6,7 @@ import { useReaderStore } from "@/shared/store/reader-store"
 import { CaretLeft, Gear, CaretRight, List, CaretUp, BookmarkSimple, BookOpen } from "@phosphor-icons/react"
 import { useLibraryStore } from "@/shared/store/library-store"
 import { cn } from "@/shared/utils/cn"
-import { motion, AnimatePresence } from "motion/react"
+import { motion, AnimatePresence, useScroll, useSpring } from "motion/react"
 import { transitions } from "@/shared/lib/motion/tokens"
 
 import { getMangaDetailHref, getReaderHref } from "@/shared/lib/routes"
@@ -23,13 +23,13 @@ const ReaderChapterDrawer = dynamic(() => import("./reader-chapter-drawer").then
 
 import { IconButton } from "@/components/ui/icon-button"
 import { Button } from "@/components/ui/button"
-import { ReaderProgress } from "./reader-progress"
 import { toast } from "sonner"
 import { useReaderGesture } from "@/shared/hooks/use-reader-gesture"
 import { useMounted } from "@/shared/hooks/use-mounted"
 
 interface ReaderShellProps {
   children: React.ReactNode
+  mangaTitle?: string
   chapterTitle?: string
   pageCount?: number
   currentChapterId?: string
@@ -38,12 +38,29 @@ interface ReaderShellProps {
   chapters?: Chapter[]
 }
 
-export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sourceId, mangaId, chapters, currentChapterId }: ReaderShellProps) {
+export function ReaderShell({
+  children,
+  mangaTitle,
+  chapterTitle = "Chapter",
+  pageCount,
+  sourceId,
+  mangaId,
+  chapters,
+  currentChapterId,
+}: ReaderShellProps) {
   const router = useRouter()
-  const { preferences, isOverlayVisible, isDesktopPanelOpen, toggleDesktopPanel, toggleOverlay, setOverlayVisible } = useReaderStore()
+  const { preferences, isOverlayVisible, isDesktopPanelOpen, toggleDesktopPanel, toggleOverlay, setOverlayVisible, pagedProgress } = useReaderStore()
   const [isDrawerOpen, setIsDrawerOpen] = React.useState(false)
   const [isChapterDrawerOpen, setIsChapterDrawerOpen] = React.useState(false)
   const [showBackToTop, setShowBackToTop] = React.useState(false)
+
+  const { scrollYProgress } = useScroll()
+  const springScrollProgress = useSpring(scrollYProgress, {
+    stiffness: 120,
+    damping: 30,
+    restDelta: 0.001,
+  })
+  const isPaged = preferences.readingMode === "paged"
 
   const chapterIndex = chapters?.findIndex(c => c.id === currentChapterId) ?? -1;
   let prevChapterId: string | undefined;
@@ -77,7 +94,7 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
     toggleLibrary({
       sourceId,
       mangaId,
-      title: chapterTitle.split(" - ")[0] || "Manga",
+      title: mangaTitle || chapterTitle.split(" - ")[0] || "Komik",
       coverUrl: "",
       addedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -234,10 +251,10 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
             <div className="w-full pt-[calc(var(--safe-top)+10px)] pb-3 px-3 flex items-center justify-center pointer-events-none">
               <div
                 className={cn(
-                  "pointer-events-auto flex items-center justify-between w-full max-w-[420px] h-[52px] px-2 rounded-[18px] transition-all duration-300 shadow-sm border",
+                  "pointer-events-auto relative overflow-hidden flex items-center justify-between w-full max-w-[420px] h-[52px] px-2 rounded-[18px] transition-all duration-300 shadow-sm border",
                   preferences.background === 'mist'
-                    ? "bg-white/35 backdrop-blur-md border-black/10 text-gray-900"
-                    : "bg-black/35 backdrop-blur-md border-white/15 text-white"
+                    ? "bg-white/80 backdrop-blur-xl border-black/10 text-gray-900 shadow-md"
+                    : "bg-black/65 backdrop-blur-xl border-white/15 text-white shadow-lg"
                 )}
               >
                 {/* Left: Back Button (Squircle) */}
@@ -255,22 +272,29 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
                   <CaretLeft size={20} weight="bold" />
                 </motion.button>
 
-                {/* Center: Title & Page Count */}
+                {/* Center: Manga Title (Top) & Chapter (Bottom) */}
                 <div className="flex flex-col items-center justify-center px-2 min-w-0 flex-1 select-none">
                   <span className={cn(
                     "text-sm font-bold truncate max-w-[200px] sm:max-w-[260px] tracking-tight text-center leading-tight",
                     preferences.background === 'mist' ? "text-gray-950" : "text-white"
                   )}>
-                    {chapterTitle}
+                    {mangaTitle || chapterTitle}
                   </span>
-                  {pageCount && (
+                  {mangaTitle && chapterTitle ? (
+                    <span className={cn(
+                      "text-[10px] font-semibold tracking-wider uppercase text-center mt-0.5 truncate max-w-[190px] sm:max-w-[240px]",
+                      preferences.background === 'mist' ? "text-gray-500" : "text-white/60"
+                    )}>
+                      {chapterTitle}
+                    </span>
+                  ) : pageCount ? (
                     <span className={cn(
                       "text-[10px] font-semibold tracking-wider uppercase text-center mt-0.5",
                       preferences.background === 'mist' ? "text-gray-500" : "text-white/60"
                     )}>
                       {pageCount} halaman
                     </span>
-                  )}
+                  ) : null}
                 </div>
 
                 {/* Right: Bookmark Button (Squircle) */}
@@ -297,6 +321,25 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
                     <BookmarkSimple size={19} weight={isSaved ? "fill" : "bold"} />
                   </motion.div>
                 </motion.button>
+
+                {/* Bottom edge reading progress bar (start to finish) */}
+                <div className="absolute inset-x-0 bottom-0 h-[2.5px] bg-black/10 dark:bg-white/10 pointer-events-none overflow-hidden">
+                  {isPaged ? (
+                    <motion.div
+                      data-testid="reader-progress-bar"
+                      className="h-full bg-accent origin-left shadow-[0_0_8px_var(--color-accent)]"
+                      initial={false}
+                      animate={{ width: `${Math.max(0, Math.min(100, pagedProgress * 100))}%` }}
+                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                    />
+                  ) : (
+                    <motion.div
+                      data-testid="reader-progress-bar"
+                      className="h-full bg-accent origin-left shadow-[0_0_8px_var(--color-accent)]"
+                      style={{ scaleX: springScrollProgress }}
+                    />
+                  )}
+                </div>
               </div>
             </div>
           </motion.div>
@@ -336,7 +379,7 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
                     e.stopPropagation();
                     window.scrollTo({ top: 0, behavior: "smooth" });
                   }}
-                  className="pointer-events-auto self-end flex h-10 w-10 items-center justify-center rounded-[12px] liquid-glass text-text-primary transition-all active:scale-95 cursor-pointer outline-none hover:scale-105 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
+                  className="pointer-events-auto self-end flex h-10 w-10 items-center justify-center rounded-[12px] liquid-glass text-white/80 transition-all active:scale-95 cursor-pointer outline-none hover:scale-105 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
                   aria-label="Kembali ke atas"
                 >
                   <CaretUp size={18} weight="bold" />
@@ -374,7 +417,7 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
                 {/* 3. Chapter List Drawer Trigger (Squircle rounded-[12px], NOT Pill!) */}
                 <motion.button
                   whileTap={{ scale: 0.95 }}
-                  className="flex-1 h-10 rounded-[12px] font-bold text-sm bg-accent hover:bg-accent-hover text-white shadow-[0_4px_16px_rgba(108,106,250,0.4),inset_0_1px_0_rgba(255,255,255,0.3)] border border-white/20 transition-all truncate px-2.5 sm:px-3 flex items-center justify-center cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
+                  className="flex-1 h-10 rounded-[12px] font-bold text-sm bg-accent hover:bg-accent-hover text-white shadow-[0_4px_16px_rgba(108,106,250,0.4),inset_0_1px_0_rgba(255,255,255,0.3)] transition-all truncate px-2.5 sm:px-3 flex items-center justify-center cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsChapterDrawerOpen(true);
@@ -434,7 +477,6 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
           </motion.div>
         )}
       </AnimatePresence>
-      <ReaderProgress />
 
       {children}
 

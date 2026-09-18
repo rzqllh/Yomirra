@@ -42,6 +42,7 @@ export function PagedReader({
   const router = useRouter();
   const preferences = useReaderStore(state => state.preferences);
   const toggleOverlay = useReaderStore(state => state.toggleOverlay);
+  const setPagedProgress = useReaderStore(state => state.setPagedProgress);
   const { dataSaver } = useSettingsStore();
   const isDownloaded = useDownloadStore(state => state.isDownloaded(sourceId, mangaId, chapterId));
   const saveProgress = useHistoryStore(state => state.saveProgress);
@@ -67,6 +68,13 @@ export function PagedReader({
   React.useEffect(() => {
     setCurrentPageIndex(prev => Math.max(0, Math.min(prev, pages.length - 1)));
   }, [pages.length]);
+
+  // Sync page progress to reader store for header progress bar
+  React.useEffect(() => {
+    if (totalPages > 0) {
+      setPagedProgress((currentPageIndex + 1) / totalPages);
+    }
+  }, [currentPageIndex, totalPages, setPagedProgress]);
 
   // Persist page progress
   const flushProgress = React.useCallback(() => {

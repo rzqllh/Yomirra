@@ -72,7 +72,7 @@ export default async function ReaderPage({
   } catch (error) {
     console.error("Failed to load reader data:", error);
     return (
-      <ReaderShell chapterTitle="Error" currentChapterId={chapterId} sourceId={sourceId} mangaId={mangaId}>
+      <ReaderShell mangaTitle={detail?.title} chapterTitle="Error" currentChapterId={chapterId} sourceId={sourceId} mangaId={mangaId}>
         <div className="flex min-h-screen items-center justify-center pt-16">
           <EmptyState
             icon={<WarningCircle size={48} weight="duotone" className="text-text-muted" />}
