@@ -233,5 +233,46 @@ describe("UpdateStore (Slice 1.1)", () => {
       expect(useUpdateStore.getState().getUpdate("srcA", "recent")).toBeDefined();
       expect(useUpdateStore.getState().getUpdate("srcA", "old")).toBeDefined();
     });
+
+    it("does not count error items or items without latestChapterId as unread", () => {
+      useUpdateStore.getState().upsertUpdate({
+        sourceId: "srcA",
+        mangaId: "err1",
+        mangaTitle: "Error Manga",
+        error: "Source down",
+      });
+      expect(useUpdateStore.getState().getUnreadCount()).toBe(0);
+    });
+
+    it("heals seenAt when re-scanning same chapter if existing had null seenAt", () => {
+      useUpdateStore.setState({
+        items: {
+          "srcA::m1": {
+            sourceId: "srcA",
+            mangaId: "m1",
+            mangaTitle: "Manga 1",
+            latestChapterId: "ch1",
+            latestChapterNumber: 1,
+            detectedAt: new Date().toISOString(),
+            seenAt: undefined,
+          },
+        },
+      });
+      expect(useUpdateStore.getState().getUnreadCount()).toBe(1);
+
+      const nowIso = new Date().toISOString();
+      useUpdateStore.getState().upsertUpdate({
+        sourceId: "srcA",
+        mangaId: "m1",
+        mangaTitle: "Manga 1",
+        latestChapterId: "ch1",
+        latestChapterNumber: 1,
+        seenAt: nowIso,
+      });
+
+      const item = useUpdateStore.getState().getUpdate("srcA", "m1");
+      expect(item?.seenAt).toBe(nowIso);
+      expect(useUpdateStore.getState().getUnreadCount()).toBe(0);
+    });
   });
 });

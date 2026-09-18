@@ -30,6 +30,8 @@ export const useUpdateStore = create<UpdateState>()(
       items: {},
 
       upsertUpdate: (update) => set((state) => {
+        if (!update || !update.sourceId || !update.mangaId) return state;
+
         // Use savedTitleId if provided (Phase 1 UUID titles), else fall back to composite key
         const key = update.savedTitleId ?? getUpdateKey(update.sourceId, update.mangaId);
         const existing = state.items[key];
@@ -45,18 +47,18 @@ export const useUpdateStore = create<UpdateState>()(
             existing.latestChapterId === update.latestChapterId;
 
           if (isSameChapter) {
-            // Re-scanning same chapter -> retain previous detectedAt & seenAt
+            // Re-scanning same chapter -> retain previous detectedAt & seenAt (or heal if existing was unset)
             finalDetectedAt = existing.detectedAt;
-            finalSeenAt = existing.seenAt;
+            finalSeenAt = existing.seenAt ?? update.seenAt;
           } else {
             // New chapter detected -> update detectedAt
             finalDetectedAt = update.detectedAt || nowIso;
-            finalSeenAt = undefined;
+            finalSeenAt = update.seenAt;
           }
         } else {
           // Brand new record
           if (!finalDetectedAt && update.latestChapterId) {
-            finalDetectedAt = nowIso;
+            finalDetectedAt = update.seenAt || nowIso;
           }
         }
 
@@ -126,6 +128,8 @@ export const useUpdateStore = create<UpdateState>()(
         const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 
         return Object.entries(items).filter(([key, item]) => {
+          if (!item || !item.sourceId || !item.mangaId || key === "undefined::undefined") return false;
+          if (!item.latestChapterId || item.error) return false;
           if (mutedMangaKeys.includes(key)) return false;
           if (!item.detectedAt) return false;
 
@@ -137,7 +141,7 @@ export const useUpdateStore = create<UpdateState>()(
 
           if (!item.seenAt) return true;
           const seenTime = Date.parse(item.seenAt);
-          return !isNaN(seenTime) && detectedTime > seenTime;
+          return !isNaN(seenTime) && (detectedTime - seenTime > 1000);
         }).length;
       },
 
@@ -151,9 +155,36 @@ export const useUpdateStore = create<UpdateState>()(
     }),
     {
       name: "yomirra-updates",
-      version: 1,
-      migrate: (persistedState: any) => {
-        return persistedState || { items: {} };
+      version: 2,
+      migrate: (persistedState: any, version: number) => {
+        if (!persistedState || !persistedState.items) {
+          return { items: {} };
+        }
+
+        if (version < 2) {
+          const cleanedItems: Record<string, MangaUpdateItem> = {};
+          const nowIso = new Date().toISOString();
+
+          for (const [key, item] of Object.entries(persistedState.items as Record<string, any>)) {
+            // Skip corrupted entries (e.g. undefined::undefined or missing IDs)
+            if (!item || !item.sourceId || !item.mangaId || key === "undefined::undefined") {
+              continue;
+            }
+
+            // Heal legacy items: any existing item from legacy scans without seenAt is marked seen
+            cleanedItems[key] = {
+              ...item,
+              seenAt: item.seenAt || item.detectedAt || nowIso,
+            };
+          }
+
+          return {
+            ...persistedState,
+            items: cleanedItems,
+          };
+        }
+
+        return persistedState;
       },
     }
   )

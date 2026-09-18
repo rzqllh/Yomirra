@@ -28,7 +28,8 @@ export interface ScanResult {
 }
 
 export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<ScanResult> {
-  let libraryItems = Object.values(useLibraryStore.getState().items || {});
+  let libraryItems = Object.values(useLibraryStore.getState().items || {})
+    .filter((item) => Boolean(item && item.sourceId && item.mangaId));
   const updateItems = useUpdateStore.getState().items || {};
   const cooldown = options.cooldownMs ?? DEFAULT_COOLDOWN_MS;
   const now = Date.now();
@@ -136,12 +137,21 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
         const isFirstScan = !existingUpdate;
         const isNewChapter =
           !isFirstScan &&
-          (existingUpdate.latestChapterId !== latestChapter.id &&
-            latestChapter.number > (existingUpdate.latestChapterNumber ?? 0));
+          Boolean(
+            existingUpdate.latestChapterId &&
+            latestChapter.id &&
+            existingUpdate.latestChapterId !== latestChapter.id &&
+            latestChapter.number > (existingUpdate.latestChapterNumber ?? 0)
+          );
 
         if (isNewChapter) {
           result.updatesDetected++;
         }
+
+        const checkTimeIso = new Date().toISOString();
+        const resolvedSeenAt = isNewChapter
+          ? undefined
+          : (existingUpdate?.seenAt || checkTimeIso);
 
         useUpdateStore.getState().upsertUpdate({
           sourceId: item.sourceId,
@@ -154,8 +164,9 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
           latestChapterId: latestChapter.id,
           latestChapterNumber: latestChapter.number,
           latestChapterTitle: latestChapter.title,
-          lastCheckedAt: new Date().toISOString(),
-          seenAt: isFirstScan ? new Date().toISOString() : undefined,
+          lastCheckedAt: checkTimeIso,
+          detectedAt: isNewChapter ? checkTimeIso : (existingUpdate?.detectedAt || checkTimeIso),
+          seenAt: resolvedSeenAt,
         });
       } catch (err: any) {
         if (err.name === 'AbortError' || options.signal?.aborted) {
