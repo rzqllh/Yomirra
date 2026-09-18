@@ -46,4 +46,22 @@ describe('BottomDock Navigation', () => {
     expect(bookmarkLink).toBeTruthy();
     expect(bookmarkLink.getAttribute('href')).toBe('/bookmark');
   });
+
+  it('only renders text label for the active tab, hiding text labels for inactive tabs', () => {
+    render(<BottomDock />);
+    
+    // Active tab (Beranda on '/') has visible text label
+    const berandaLink = screen.getByRole('link', { name: /beranda/i });
+    expect(berandaLink.textContent).toContain('Beranda');
+
+    // Inactive tabs (Library, Bookmark, Cari) have NO text label content
+    const libraryLink = screen.getByRole('link', { name: /library/i });
+    expect(libraryLink.textContent).toBe('');
+
+    const bookmarkLink = screen.getByRole('link', { name: /bookmark/i });
+    expect(bookmarkLink.textContent).toBe('');
+
+    const cariLink = screen.getByRole('link', { name: /cari/i });
+    expect(cariLink.textContent).toBe('');
+  });
 });
