@@ -55,12 +55,12 @@ export default function RootLayout({
                   <ErrorBoundary>
                     {children}
                     {modal}
-                    <Toaster position="top-center" />
                     <SpeedInsights />
                   </ErrorBoundary>
                 </AppShell>
               </BootGate>
             </div>
+            <Toaster position="top-center" />
             <DownloadManager />
           </OfflineProvider>
         </Providers>

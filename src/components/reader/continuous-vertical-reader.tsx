@@ -133,7 +133,11 @@ export function ContinuousVerticalReader({
     if (saved && saved.chapterId === chapterId && saved.pageIndex !== undefined) {
       setTimeout(() => {
         virtualizer.scrollToIndex(saved.pageIndex!, { align: 'start' });
-        toast("Melanjutkan bacaan...", { id: 'resume-reading', position: 'top-center' });
+        toast("Melanjutkan bacaan...", { 
+          id: 'resume-reading', 
+          position: 'top-center',
+          icon: <BookOpen size={15} weight="fill" className="text-accent shrink-0" />
+        });
       }, 100);
     }
   }, [sourceId, mangaId, chapterId, getProgress, virtualizer])

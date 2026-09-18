@@ -49,7 +49,7 @@ export function MangaActions({
     });
 
     if (isInLibrary) {
-      toast("Dihapus dari library");
+      toast.error("Dihapus dari library");
     } else {
       toast.success("Ditambahkan ke library");
     }

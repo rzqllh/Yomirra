@@ -489,3 +489,144 @@ body.reader-active {
   background: rgba(255, 255, 255, 0.12);
   border-color: rgba(255, 255, 255, 0.24);
 }
+
+/* ==========================================================================
+   Sonner Toaster — Dynamic Island Liquid Glass Global Overrides
+   ========================================================================== */
+html body [data-sonner-toaster],
+[data-sonner-toaster],
+[data-sonner-toaster][data-sonner-theme="light"],
+[data-sonner-toaster][data-sonner-theme="dark"] {
+  --normal-bg: rgba(0, 0, 0, 0.90) !important;
+  --normal-text: #ffffff !important;
+  --normal-border: rgba(255, 255, 255, 0.20) !important;
+  --border-radius: 9999px !important;
+  font-family: var(--font-plus-jakarta-sans), sans-serif !important;
+  z-index: 999999999 !important;
+  pointer-events: none !important;
+}
+
+html body [data-sonner-toast],
+html body [data-sonner-toast][data-styled="true"],
+[data-sonner-toast],
+[data-sonner-toast][data-styled="true"] {
+  background: rgba(0, 0, 0, 0.90) !important;
+  backdrop-filter: blur(24px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.20) !important;
+  border-radius: 9999px !important;
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.35), inset 0 -1px 1px rgba(0, 0, 0, 0.5), 0 16px 36px -6px rgba(0, 0, 0, 0.85) !important;
+  padding: 8px 18px !important;
+  width: max-content !important;
+  min-width: 220px !important;
+  max-width: min(92vw, 360px) !important;
+  margin: 0 auto !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.01em !important;
+  pointer-events: auto !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+}
+
+/* Force mobile centering and pill geometry (override Sonner mobile full-width box) */
+@media (max-width: 600px) {
+  html body [data-sonner-toaster][data-x-position="center"],
+  [data-sonner-toaster][data-x-position="center"] {
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    width: min(calc(100vw - 32px), 360px) !important;
+    max-width: 95vw !important;
+  }
+  html body [data-sonner-toaster] [data-sonner-toast],
+  [data-sonner-toaster] [data-sonner-toast] {
+    left: 0 !important;
+    right: 0 !important;
+    margin: 0 auto !important;
+    width: fit-content !important;
+    min-width: 200px !important;
+    max-width: min(calc(100vw - 32px), 340px) !important;
+    border-radius: 9999px !important;
+  }
+}
+
+html body [data-sonner-toast] [data-title],
+[data-sonner-toast] [data-title] {
+  color: #ffffff !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.01em !important;
+}
+
+html body [data-sonner-toast] [data-description],
+[data-sonner-toast] [data-description] {
+  color: rgba(255, 255, 255, 0.60) !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+}
+
+html body [data-sonner-toast] [data-button],
+[data-sonner-toast] [data-button] {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  border-radius: 9999px !important;
+  font-weight: 700 !important;
+  font-size: 11px !important;
+  padding: 3px 10px !important;
+  height: 24px !important;
+  transition: background 0.15s ease !important;
+}
+
+html body [data-sonner-toast] [data-button]:hover,
+[data-sonner-toast] [data-button]:hover {
+  background: rgba(255, 255, 255, 0.25) !important;
+}
+
+html body [data-sonner-toast] [data-cancel],
+[data-sonner-toast] [data-cancel] {
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.50) !important;
+  border-radius: 9999px !important;
+}
+
+/* Status variants with specular inner rim */
+html body [data-sonner-toast][data-type="success"],
+[data-sonner-toast][data-type="success"] {
+  border-color: rgba(16, 185, 129, 0.45) !important;
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.4), 0 0 20px rgba(16, 185, 129, 0.25), 0 16px 36px -6px rgba(0, 0, 0, 0.85) !important;
+}
+
+html body [data-sonner-toast][data-type="error"],
+[data-sonner-toast][data-type="error"] {
+  border-color: rgba(244, 63, 94, 0.45) !important;
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.4), 0 0 20px rgba(244, 63, 94, 0.25), 0 16px 36px -6px rgba(0, 0, 0, 0.85) !important;
+}
+
+html body [data-sonner-toast][data-type="info"],
+[data-sonner-toast][data-type="info"] {
+  border-color: rgba(56, 189, 248, 0.45) !important;
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.4), 0 0 20px rgba(56, 189, 248, 0.25), 0 16px 36px -6px rgba(0, 0, 0, 0.85) !important;
+}
+
+html body [data-sonner-toast][data-type="warning"],
+[data-sonner-toast][data-type="warning"] {
+  border-color: rgba(245, 158, 11, 0.45) !important;
+  box-shadow: inset 0 1px 1.5px rgba(255, 255, 255, 0.4), 0 0 20px rgba(245, 158, 11, 0.25), 0 16px 36px -6px rgba(0, 0, 0, 0.85) !important;
+}
+
+/* Icon layout inside Dynamic Island */
+html body [data-sonner-toast] [data-icon],
+[data-sonner-toast] [data-icon] {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin-right: 6px !important;
+  margin-left: 0 !important;
+  flex-shrink: 0 !important;
+}
+

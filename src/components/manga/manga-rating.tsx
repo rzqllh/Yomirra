@@ -51,7 +51,7 @@ export function MangaRating({ sourceId, mangaId, className, variant = "default",
     if (rating !== userRating) {
       toast.success(`Rating ${rating}/10 disimpan`);
     } else {
-      toast("Rating dihapus");
+      toast.error("Rating dihapus");
     }
     setIsOpen(false);
   };

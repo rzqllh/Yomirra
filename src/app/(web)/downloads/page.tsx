@@ -71,7 +71,7 @@ export default function DownloadsPage() {
               onClick={() => {
                 if (window.confirm("Yakin ingin menghapus semua unduhan?")) {
                   clearDownloads();
-                  toast("Semua unduhan dihapus");
+                  toast.error("Semua unduhan dihapus");
                 }
               }}
               className="w-10 h-10 flex items-center justify-center rounded-xl bg-surface-muted hover:bg-semantic-error/20 text-semantic-error transition-colors shrink-0"
@@ -137,7 +137,7 @@ export default function DownloadsPage() {
                   
                   <div className="flex flex-col justify-around shrink-0 border-l border-border-default/50 pl-3 ml-1">
                     {item.status === 'downloading' || item.status === 'queued' ? (
-                      <IconButton onClick={() => { pauseDownload(item.id); toast("Unduhan dijeda"); }} aria-label="Pause" className="text-text-muted hover:text-text-primary">
+                      <IconButton onClick={() => { pauseDownload(item.id); toast.info("Unduhan dijeda"); }} aria-label="Pause" className="text-text-muted hover:text-text-primary">
                         <Pause size={18} />
                       </IconButton>
                     ) : item.status === 'paused' ? (
@@ -150,7 +150,7 @@ export default function DownloadsPage() {
                       </IconButton>
                     ) : null}
                     
-                    <IconButton onClick={() => { cancelDownload(item.id); toast("Unduhan dibatalkan"); }} aria-label="Cancel" className="text-semantic-error hover:text-semantic-error/80">
+                    <IconButton onClick={() => { cancelDownload(item.id); toast.error("Unduhan dibatalkan"); }} aria-label="Cancel" className="text-semantic-error hover:text-semantic-error/80">
                       <X size={18} />
                     </IconButton>
                   </div>
@@ -189,7 +189,7 @@ export default function DownloadsPage() {
                       <p className="text-[10px] text-text-muted mt-1">{item.downloadedPages} Halaman • Selesai</p>
                     </div>
                     <IconButton 
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeDownload(item.id); toast("Unduhan dihapus"); }} 
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); removeDownload(item.id); toast.error("Unduhan dihapus"); }} 
                       aria-label="Delete" 
                       className="text-semantic-error hover:text-semantic-error/80 shrink-0 relative z-20"
                     >

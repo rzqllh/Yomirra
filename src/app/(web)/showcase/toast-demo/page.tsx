@@ -23,6 +23,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence, Transition } from "motion/react";
 import { cn } from "@/shared/utils/cn";
+import { toast as sonnerToast } from "sonner";
 
 // Toast Type definition
 type ToastType = "success" | "error" | "info" | "neutral" | "action";
@@ -727,6 +728,15 @@ export default function ToastDemoPage() {
                 >
                   <ArrowClockwise size={13} weight="bold" />
                   <span>Re-trigger</span>
+                </button>
+
+                <button
+                  onClick={() => sonnerToast("Melanjutkan bacaan...", { position: "top-center" })}
+                  className="h-7 px-2 rounded-lg bg-white/10 hover:bg-white/15 text-white/80 hover:text-white text-[11px] font-semibold flex items-center gap-1 cursor-pointer transition-colors border border-white/10"
+                  title="Uji langsung toast sonner produksi"
+                >
+                  <Sparkle size={12} className="text-accent" />
+                  <span>Test Real Toast</span>
                 </button>
 
                 <button

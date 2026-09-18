@@ -35,7 +35,7 @@ export function MangaStatusButton({ sourceId, mangaId }: MangaStatusButtonProps)
   const handleSelect = (status: ReadingStatus) => {
     if (readingStatus === status) {
       clearReadingStatus(mangaKey);
-      toast("Status membaca dihapus");
+      toast.error("Status membaca dihapus");
     } else {
       setReadingStatus(mangaKey, status);
       toast.success("Status membaca diperbarui");
