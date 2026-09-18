@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { useReaderStore } from "@/shared/store/reader-store"
-import { CaretLeft, Gear, CaretRight, List, CaretUp, BookmarkSimple, BookOpen } from "@phosphor-icons/react"
+import { CaretLeft, Gear, CaretRight, List, CaretUp, BookmarkSimple, BookOpen, ArrowLeft } from "@phosphor-icons/react"
 import { useLibraryStore } from "@/shared/store/library-store"
 import { cn } from "@/shared/utils/cn"
 import { motion, AnimatePresence, useScroll, useSpring } from "motion/react"
@@ -269,7 +269,7 @@ export function ReaderShell({
                   )}
                   onClick={handleBack}
                 >
-                  <CaretLeft size={20} weight="bold" />
+                  <ArrowLeft size={20} weight="bold" />
                 </motion.button>
 
                 {/* Center: Manga Title (Top) & Chapter (Bottom) */}
