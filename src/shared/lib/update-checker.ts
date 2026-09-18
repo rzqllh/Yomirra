@@ -10,6 +10,8 @@ export interface ScanOptions {
   forceRefresh?: boolean;
   cooldownMs?: number;
   signal?: AbortSignal;
+  maxItems?: number;
+  prioritizeRecent?: boolean;
 }
 
 export interface ScanError {
@@ -26,7 +28,7 @@ export interface ScanResult {
 }
 
 export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<ScanResult> {
-  const libraryItems = Object.values(useLibraryStore.getState().items || {});
+  let libraryItems = Object.values(useLibraryStore.getState().items || {});
   const updateItems = useUpdateStore.getState().items || {};
   const cooldown = options.cooldownMs ?? DEFAULT_COOLDOWN_MS;
   const now = Date.now();
@@ -40,6 +42,20 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
 
   if (libraryItems.length === 0) {
     return result;
+  }
+
+  // Prioritize recently read or updated items if requested
+  if (options.prioritizeRecent) {
+    libraryItems = [...libraryItems].sort((a, b) => {
+      const timeA = Date.parse(a.lastReadAt || a.updatedAt || a.addedAt || "0");
+      const timeB = Date.parse(b.lastReadAt || b.updatedAt || b.addedAt || "0");
+      return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA);
+    });
+  }
+
+  // Limit number of items to scan if requested
+  if (options.maxItems !== undefined && options.maxItems > 0) {
+    libraryItems = libraryItems.slice(0, options.maxItems);
   }
 
   // Filter items needing scan
@@ -116,9 +132,10 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
           return prev;
         }, chapters[0]);
 
-        // Check if this is a new update compared to existing record or library last read
+        // Check if this is a first scan (baseline seeding) or a subsequent new release
+        const isFirstScan = !existingUpdate;
         const isNewChapter =
-          !existingUpdate ||
+          !isFirstScan &&
           (existingUpdate.latestChapterId !== latestChapter.id &&
             latestChapter.number > (existingUpdate.latestChapterNumber ?? 0));
 
@@ -138,6 +155,7 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
           latestChapterNumber: latestChapter.number,
           latestChapterTitle: latestChapter.title,
           lastCheckedAt: new Date().toISOString(),
+          seenAt: isFirstScan ? new Date().toISOString() : undefined,
         });
       } catch (err: any) {
         if (err.name === 'AbortError' || options.signal?.aborted) {

@@ -24,7 +24,7 @@ describe("UpdateChecker Engine (Slice 1.2)", () => {
     expect(apiClient.getChapters).not.toHaveBeenCalled();
   });
 
-  it("detects new chapter for library manga and creates update record", async () => {
+  it("seeds baseline on initial scan without triggering unread count", async () => {
     useLibraryStore.setState({
       items: {
         "srcA::m1": {
@@ -46,13 +46,96 @@ describe("UpdateChecker Engine (Slice 1.2)", () => {
     const res = await scanLibraryUpdates({ forceRefresh: true });
 
     expect(res.totalScanned).toBe(1);
-    expect(res.updatesDetected).toBe(1);
+    expect(res.updatesDetected).toBe(0); // Baseline seeded, no new update alert
 
     const update = useUpdateStore.getState().getUpdate("srcA", "m1");
     expect(update).toBeDefined();
     expect(update?.latestChapterId).toBe("ch100");
     expect(update?.latestChapterNumber).toBe(100);
+    expect(update?.seenAt).toBeDefined(); // Seen by default on baseline
+    expect(useUpdateStore.getState().getUnreadCount()).toBe(0);
+  });
+
+  it("detects subsequent new chapter and increments unread count", async () => {
+    useLibraryStore.setState({
+      items: {
+        "srcA::m1": {
+          sourceId: "srcA",
+          mangaId: "m1",
+          title: "Solo Leveling",
+          addedAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:00.000Z",
+        },
+      },
+    });
+
+    // Existing update already established
+    useUpdateStore.setState({
+      items: {
+        "srcA::m1": {
+          sourceId: "srcA",
+          mangaId: "m1",
+          mangaTitle: "Solo Leveling",
+          latestChapterId: "ch100",
+          latestChapterNumber: 100,
+          detectedAt: new Date().toISOString(),
+          seenAt: new Date().toISOString(),
+          lastCheckedAt: new Date(Date.now() - 3600000).toISOString(),
+        },
+      },
+    });
+
+    (apiClient.getChapters as any).mockResolvedValue([
+      { id: "ch101", mangaId: "m1", number: 101, title: "Chapter 101", date: "2026-08-08" },
+      { id: "ch100", mangaId: "m1", number: 100, title: "Chapter 100", date: "2026-08-01" },
+    ]);
+
+    const res = await scanLibraryUpdates({ forceRefresh: true });
+
+    expect(res.totalScanned).toBe(1);
+    expect(res.updatesDetected).toBe(1);
+
+    const update = useUpdateStore.getState().getUpdate("srcA", "m1");
+    expect(update?.latestChapterId).toBe("ch101");
+    expect(update?.seenAt).toBeUndefined();
     expect(useUpdateStore.getState().getUnreadCount()).toBe(1);
+  });
+
+  it("respects maxItems and prioritizeRecent", async () => {
+    useLibraryStore.setState({
+      items: {
+        "srcA::m1": {
+          sourceId: "srcA",
+          mangaId: "m1",
+          title: "Older Manga",
+          lastReadAt: "2026-01-01T00:00:00.000Z",
+          addedAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-01-01T00:00:00.000Z",
+        },
+        "srcA::m2": {
+          sourceId: "srcA",
+          mangaId: "m2",
+          title: "Newer Manga",
+          lastReadAt: "2026-08-01T00:00:00.000Z",
+          addedAt: "2026-01-01T00:00:00.000Z",
+          updatedAt: "2026-08-01T00:00:00.000Z",
+        },
+      },
+    });
+
+    (apiClient.getChapters as any).mockResolvedValue([
+      { id: "ch1", mangaId: "m2", number: 1, title: "Chapter 1" },
+    ]);
+
+    const res = await scanLibraryUpdates({
+      forceRefresh: true,
+      maxItems: 1,
+      prioritizeRecent: true,
+    });
+
+    expect(res.totalScanned).toBe(1);
+    expect(apiClient.getChapters).toHaveBeenCalledTimes(1);
+    expect(apiClient.getChapters).toHaveBeenCalledWith("srcA", "m2", expect.any(Object));
   });
 
   it("respects cooldown and skips network calls when scan interval is within cooldown", async () => {

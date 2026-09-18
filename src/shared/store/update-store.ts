@@ -122,13 +122,22 @@ export const useUpdateStore = create<UpdateState>()(
         if (!notifyForAllLibraryItems) return 0;
 
         const items = get().items;
+        const now = Date.now();
+        const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
+
         return Object.entries(items).filter(([key, item]) => {
           if (mutedMangaKeys.includes(key)) return false;
           if (!item.detectedAt) return false;
-          if (!item.seenAt) return true;
+
           const detectedTime = Date.parse(item.detectedAt);
+          if (isNaN(detectedTime)) return false;
+
+          // Pure 24-hour daily window: only count updates detected in the last 24 hours
+          if (now - detectedTime > TWENTY_FOUR_HOURS_MS) return false;
+
+          if (!item.seenAt) return true;
           const seenTime = Date.parse(item.seenAt);
-          return !isNaN(detectedTime) && !isNaN(seenTime) && detectedTime > seenTime;
+          return !isNaN(seenTime) && detectedTime > seenTime;
         }).length;
       },
 

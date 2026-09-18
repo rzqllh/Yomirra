@@ -29,7 +29,11 @@ describe("useUpdateChecker Integration with Preferences", () => {
 
     expect(updateCheckerLib.scanLibraryUpdates).toHaveBeenCalled();
     expect(updateCheckerLib.scanLibraryUpdates).toHaveBeenCalledWith(
-      expect.objectContaining({ forceRefresh: false })
+      expect.objectContaining({
+        forceRefresh: false,
+        prioritizeRecent: true,
+        maxItems: 15,
+      })
     );
   });
 

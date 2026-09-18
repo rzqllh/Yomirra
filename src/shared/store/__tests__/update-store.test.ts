@@ -202,5 +202,36 @@ describe("UpdateStore (Slice 1.1)", () => {
       const item = useUpdateStore.getState().getUpdate("srcA", "m1");
       expect(item).toBeDefined();
     });
+
+    it("only counts updates detected within the last 24 hours in getUnreadCount", () => {
+      const now = Date.now();
+      const twelveHoursAgo = new Date(now - 12 * 60 * 60 * 1000).toISOString();
+      const twentyFiveHoursAgo = new Date(now - 25 * 60 * 60 * 1000).toISOString();
+
+      // Recent update (<24h)
+      useUpdateStore.getState().upsertUpdate({
+        sourceId: "srcA",
+        mangaId: "recent",
+        mangaTitle: "Recent Manga",
+        latestChapterId: "ch2",
+        detectedAt: twelveHoursAgo,
+      });
+
+      // Old update (>24h)
+      useUpdateStore.getState().upsertUpdate({
+        sourceId: "srcA",
+        mangaId: "old",
+        mangaTitle: "Old Manga",
+        latestChapterId: "ch1",
+        detectedAt: twentyFiveHoursAgo,
+      });
+
+      // getUnreadCount only counts the one within 24 hours
+      expect(useUpdateStore.getState().getUnreadCount()).toBe(1);
+
+      // But both items still exist in store for /updates list
+      expect(useUpdateStore.getState().getUpdate("srcA", "recent")).toBeDefined();
+      expect(useUpdateStore.getState().getUpdate("srcA", "old")).toBeDefined();
+    });
   });
 });
