@@ -245,7 +245,7 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
                   aria-label="Kembali ke detail komik"
                   whileTap={{ scale: 0.85 }}
                   className={cn(
-                    "flex h-9 w-9 items-center justify-center rounded-[10px] transition-all shrink-0 cursor-pointer outline-none",
+                    "flex h-9 w-9 items-center justify-center rounded-[10px] transition-all shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1",
                     preferences.background === 'mist'
                       ? "text-gray-800 hover:bg-black/5"
                       : "text-white/85 hover:text-white hover:bg-white/10"
@@ -278,7 +278,7 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
                   aria-label={isSaved ? "Hapus dari bookmark" : "Simpan ke bookmark"}
                   whileTap={{ scale: 0.85 }}
                   className={cn(
-                    "flex h-9 w-9 items-center justify-center rounded-[10px] transition-all shrink-0 cursor-pointer outline-none",
+                    "flex h-9 w-9 items-center justify-center rounded-[10px] transition-all shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1",
                     isSaved
                       ? "bg-accent text-white shadow-[0_2px_12px_rgba(99,102,241,0.5),inset_0_1px_0_rgba(255,255,255,0.3)] border border-white/20"
                       : preferences.background === 'mist'
@@ -336,7 +336,7 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
                     e.stopPropagation();
                     window.scrollTo({ top: 0, behavior: "smooth" });
                   }}
-                  className="pointer-events-auto self-end flex h-10 w-10 items-center justify-center rounded-[12px] liquid-glass text-text-primary transition-all active:scale-95 cursor-pointer outline-none hover:scale-105"
+                  className="pointer-events-auto self-end flex h-10 w-10 items-center justify-center rounded-[12px] liquid-glass text-text-primary transition-all active:scale-95 cursor-pointer outline-none hover:scale-105 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
                   aria-label="Kembali ke atas"
                 >
                   <CaretUp size={18} weight="bold" />
@@ -352,7 +352,7 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
                   aria-label="Chapter sebelumnya"
                   whileTap={{ scale: 0.85 }}
                   className={cn(
-                    "flex h-10 w-10 items-center justify-center rounded-[12px] transition-all shrink-0 cursor-pointer outline-none",
+                    "flex h-10 w-10 items-center justify-center rounded-[12px] transition-all shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1",
                     preferences.background === 'mist'
                       ? "text-gray-800 hover:bg-black/5"
                       : "text-white/80 hover:text-white hover:bg-white/10",
@@ -374,7 +374,7 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
                 {/* 3. Chapter List Drawer Trigger (Squircle rounded-[12px], NOT Pill!) */}
                 <motion.button
                   whileTap={{ scale: 0.95 }}
-                  className="flex-1 h-10 rounded-[12px] font-bold text-sm bg-accent hover:bg-accent-hover text-white shadow-[0_4px_16px_rgba(108,106,250,0.4),inset_0_1px_0_rgba(255,255,255,0.3)] border border-white/20 transition-all truncate px-2.5 sm:px-3 flex items-center justify-center cursor-pointer outline-none"
+                  className="flex-1 h-10 rounded-[12px] font-bold text-sm bg-accent hover:bg-accent-hover text-white shadow-[0_4px_16px_rgba(108,106,250,0.4),inset_0_1px_0_rgba(255,255,255,0.3)] border border-white/20 transition-all truncate px-2.5 sm:px-3 flex items-center justify-center cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsChapterDrawerOpen(true);
@@ -389,7 +389,7 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
                   aria-label="Chapter selanjutnya"
                   whileTap={{ scale: 0.85 }}
                   className={cn(
-                    "flex h-10 w-10 items-center justify-center rounded-[12px] transition-all shrink-0 cursor-pointer outline-none",
+                    "flex h-10 w-10 items-center justify-center rounded-[12px] transition-all shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1",
                     preferences.background === 'mist'
                       ? "text-gray-800 hover:bg-black/5"
                       : "text-white/80 hover:text-white hover:bg-white/10",
@@ -413,7 +413,7 @@ export function ReaderShell({ children, chapterTitle = "Chapter", pageCount, sou
                   aria-label="Pengaturan pembaca"
                   whileTap={{ scale: 0.85 }}
                   className={cn(
-                    "flex h-10 w-10 items-center justify-center rounded-[12px] transition-all shrink-0 cursor-pointer outline-none",
+                    "flex h-10 w-10 items-center justify-center rounded-[12px] transition-all shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1",
                     preferences.background === 'mist'
                       ? "text-gray-800 hover:bg-black/5"
                       : "text-white/80 hover:text-white hover:bg-white/10"

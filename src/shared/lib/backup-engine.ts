@@ -201,13 +201,13 @@ export function performDryRun(
     isVersionSupported: true,
   };
 
-  // 1. File size check (10MB limit)
+  // File size check (10MB limit)
   if (jsonContent.length > 10 * 1024 * 1024) {
     preview.errors.push({ path: "file", message: "Ukuran file backup melebihi batas 10 MB" });
     return preview;
   }
 
-  // 2. Safe JSON parse
+  // Safe JSON parse
   let rawParsed: any;
   try {
     rawParsed = JSON.parse(jsonContent);
@@ -221,7 +221,7 @@ export function performDryRun(
     return preview;
   }
 
-  // 3. Schema version check
+  // Schema version check
   const schemaVersion = rawParsed.schemaVersion;
   if (typeof schemaVersion === "number" && schemaVersion > 3) {
     preview.isVersionSupported = false;
@@ -230,7 +230,7 @@ export function performDryRun(
     return preview;
   }
 
-  // 4. Zod envelope validation
+  // Zod envelope validation
   const validationResult =
     schemaVersion === 3
       ? yomirraBackupSchemaV3.safeParse(rawParsed)
@@ -251,7 +251,7 @@ export function performDryRun(
   const backupData = validationResult.data;
   preview.backupPayload = backupData;
 
-  // 5. Track duplicates in payload & NSFW exclusions
+  // Track duplicates in payload & NSFW exclusions
   const seenLibKeys = new Set<string>();
   backupData.data.library.forEach((item) => {
     if (item.isNsfw) {
@@ -294,7 +294,7 @@ export function performDryRun(
     });
   }
 
-  // 6. Domain conflict metrics against current store projection
+  // Domain conflict metrics against current store projection
   // Library domain conflict metrics
   const uniqueLibItems = new Map<string, LibraryItemV2Backup>();
   backupData.data.library.forEach((item) => {
@@ -360,7 +360,7 @@ export function executeCoordinatedRestore(
   const snapCol = useCollectionStore.getState();
 
   try {
-    // 1. Compute target Library state
+    // Compute target Library state
     let targetLibraryItems: Record<string, LibraryItem> = {};
     if (mode === "replace") {
       backup.data.library.forEach((item) => {
@@ -388,7 +388,7 @@ export function executeCoordinatedRestore(
       });
     }
 
-    // 2. Compute target History state
+    // Compute target History state
     let targetHistoryItems: Record<string, HistoryItem> = {};
     if (mode === "replace") {
       backup.data.history.forEach((item) => {
@@ -414,7 +414,7 @@ export function executeCoordinatedRestore(
       });
     }
 
-    // 2.5 Compute target Updates state
+    // Compute target Updates state
     let targetUpdateItems: Record<string, MangaUpdateItem> = {};
     if (mode === "replace") {
       if (backup.data.updates) {
@@ -442,14 +442,14 @@ export function executeCoordinatedRestore(
       }
     }
 
-    // 3. Compute target Settings
+    // Compute target Settings
     const targetSettings = {
       dataSaver: backup.data.settings.dataSaver,
       hideNsfw: backup.data.settings.hideNsfw,
       keepScreenAwake: backup.data.settings.keepScreenAwakeDuringDownloads,
     };
 
-    // 4. Compute target Reader Preferences
+    // Compute target Reader Preferences
     const targetReaderPreferences = {
       ...snapRead.preferences,
       imageFit: backup.data.readerPreferences.imageFit,
@@ -463,17 +463,17 @@ export function executeCoordinatedRestore(
       keepScreenAwake: backup.data.readerPreferences.keepScreenAwakeWhileReading,
     };
 
-    // 5. Compute target Source Preferences
+    // Compute target Source Preferences
     const targetDisabledSources = Array.from(new Set(backup.data.sourcePreferences.disabledSources));
     const targetHiddenFromHomeSources = Array.from(new Set(backup.data.sourcePreferences.hiddenFromHomeSources));
 
-    // 6. Compute target Stats
+    // Compute target Stats
     const targetStatsMs =
       mode === "replace"
         ? backup.data.stats.totalReadingTimeMs
         : Math.max(snapStat.totalReadingTimeMs || 0, backup.data.stats.totalReadingTimeMs);
 
-    // 7. Compute target Collections (from V2 or fallback to empty/merge)
+    // Compute target Collections (from V2 or fallback to empty/merge)
     let targetCollections: Collection[] = [];
     let targetMemberships: Record<string, string[]> = {};
     let targetReadingStatus: Record<string, ReadingStatus> = {};

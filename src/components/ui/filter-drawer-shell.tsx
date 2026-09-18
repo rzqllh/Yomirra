@@ -6,9 +6,8 @@ import { Funnel } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/shared/utils/cn";
 
-// ---------------------------------------------------------------------------
 // FilterSection
-// ---------------------------------------------------------------------------
+
 
 interface FilterSectionProps {
   title: string;
@@ -32,9 +31,8 @@ export function FilterSection({ title, layout = "wrap", children }: FilterSectio
   );
 }
 
-// ---------------------------------------------------------------------------
 // FilterDrawerShell
-// ---------------------------------------------------------------------------
+
 
 interface FilterDrawerShellProps {
   /** Drawer title shown in the header */

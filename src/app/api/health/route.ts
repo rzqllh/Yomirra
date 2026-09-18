@@ -11,7 +11,7 @@ export async function GET() {
   const sourcesStatus: Record<string, { status: "ok" | "slow" | "down"; latencyMs?: number; error?: string }> = {};
   let isDegraded = false;
 
-  // 1. Ping Redis
+  // Ping Redis
   let redisStatus = "ok";
   try {
     const start = Date.now();
@@ -24,7 +24,7 @@ export async function GET() {
     logger.error("Redis health check failed", { error });
   }
 
-  // 2. Ping Curated Sources
+  // Ping Curated Sources
   const activeSources = getAllSourceMetadata().filter((s) => s.isEnabled && s.isInstalled);
   
   await Promise.all(

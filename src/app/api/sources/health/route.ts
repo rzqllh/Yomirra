@@ -125,7 +125,7 @@ async function pingSource(source: SourceMetadata) {
 
 export async function GET() {
   try {
-    // 1. Try Cache
+    // Try Cache
     if (redis) {
       const cached = await redis.get(CACHE_KEY);
       if (cached) {
@@ -133,10 +133,10 @@ export async function GET() {
       }
     }
 
-    // 2. Gather all sources
+    // Gather all sources
     const allSources = [...sourceRegistry];
 
-    // 3. Ping in parallel
+    // Ping in parallel
     const results = await Promise.all(allSources.map(pingSource));
 
     const healthData = results.reduce((acc, curr) => {
@@ -144,7 +144,7 @@ export async function GET() {
       return acc;
     }, {} as Record<string, any>);
 
-    // 4. Set Cache
+    // Set Cache
     if (redis) {
       await redis.setex(CACHE_KEY, TTL_SECONDS, JSON.stringify(healthData));
     }

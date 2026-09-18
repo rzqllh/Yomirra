@@ -62,7 +62,7 @@ export function MangaHeaderActions({
       <button
         onClick={handleShare}
         aria-label="Bagikan"
-        className="flex h-10 w-10 items-center justify-center rounded-[12px] liquid-glass text-text-primary active:scale-95 transition-all shrink-0 select-none outline-none cursor-pointer"
+        className="flex h-10 w-10 items-center justify-center rounded-[12px] liquid-glass text-text-primary active:scale-95 transition-all shrink-0 select-none outline-none cursor-pointer focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
       >
         <ShareNetwork size={20} weight="regular" />
       </button>
@@ -77,7 +77,7 @@ export function MangaHeaderActions({
             : "Senyapkan notifikasi"
         }
         className={cn(
-          "flex h-10 w-10 items-center justify-center rounded-[12px] transition-all shrink-0 select-none outline-none active:scale-95 cursor-pointer",
+          "flex h-10 w-10 items-center justify-center rounded-[12px] transition-all shrink-0 select-none outline-none active:scale-95 cursor-pointer focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1",
           isMounted && isMuted
             ? "bg-accent/20 border border-accent/40 text-accent shadow-xs"
             : "liquid-glass text-text-primary"

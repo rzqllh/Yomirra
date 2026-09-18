@@ -33,9 +33,8 @@ export interface MatchResult {
   normalizedCandidateTitle: string;
 }
 
-// ---------------------------------------------------------------------------
 // Normalization
-// ---------------------------------------------------------------------------
+
 
 /**
  * Normalizes a title for comparison purposes.
@@ -52,9 +51,8 @@ export function normalizeTitle(raw: string): string {
     .trim();
 }
 
-// ---------------------------------------------------------------------------
 // Levenshtein distance (for fuzzy matching)
-// ---------------------------------------------------------------------------
+
 
 function levenshtein(a: string, b: string): number {
   const m = a.length;
@@ -108,9 +106,8 @@ function similarityScore(a: string, b: string): number {
   return levScore;
 }
 
-// ---------------------------------------------------------------------------
 // Core match function
-// ---------------------------------------------------------------------------
+
 
 /**
  * Compares a query title/author against a candidate.

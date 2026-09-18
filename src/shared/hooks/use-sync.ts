@@ -57,7 +57,7 @@ export function useSync(options = { autoSync: true }) {
         }
       };
       
-      // 1. Fetch remote libraryV2 (canonical Phase 1 collection)
+      // Fetch remote libraryV2 (canonical Phase 1 collection)
       const remoteLibSnapshot = await getDocs(collection(firestore, `users/${uid}/libraryV2`));
       const remoteLibrary: Record<string, LibraryItem> = {};
       remoteLibSnapshot.forEach(d => {
@@ -65,7 +65,7 @@ export function useSync(options = { autoSync: true }) {
         if (!item._deleted) remoteLibrary[d.id] = item;
       });
 
-      // 1a. First-time migration: if libraryV2 is empty, import from legacy 'library'
+      // First-time migration: if libraryV2 is empty, import from legacy 'library'
       const isMigrationComplete = localStorage.getItem('yomirra-libraryV2-migrated') === 'true';
       if (!isMigrationComplete && remoteLibSnapshot.empty) {
         const legacyItems = await pullLegacyLibraryData();
@@ -90,7 +90,7 @@ export function useSync(options = { autoSync: true }) {
         try { localStorage.setItem('yomirra-libraryV2-migrated', 'true'); } catch { /* ignore */ }
       }
 
-      // 1b. Post-migration V1 import: detect new V1 items not present in libraryV2
+      // Post-migration V1 import: detect new V1 items not present in libraryV2
       if (isMigrationComplete) {
         const legacySnapshot = await getDocs(collection(firestore, `users/${uid}/library`));
         legacySnapshot.forEach(d => {
@@ -118,14 +118,14 @@ export function useSync(options = { autoSync: true }) {
         });
       }
 
-      // 2. Fetch remote history
+      // Fetch remote history
       const remoteHistSnapshot = await getDocs(collection(firestore, `users/${uid}/history`));
       const remoteHistory: Record<string, HistoryItem> = {};
       remoteHistSnapshot.forEach(d => {
         remoteHistory[d.id] = d.data() as HistoryItem;
       });
 
-      // 3. Merge Library (Local wins if newer, otherwise remote wins)
+      // Merge Library (Local wins if newer, otherwise remote wins)
       Object.values(libraryItems).forEach(localItem => {
         const key = localItem.id ?? `${localItem.sourceId}::${localItem.mangaId}`;
         const remoteItem = remoteLibrary[key];
@@ -158,7 +158,7 @@ export function useSync(options = { autoSync: true }) {
         return 0;
       };
 
-      // 4. Merge History
+      // Merge History
       Object.values(historyItems).forEach(localItem => {
         const id = `${localItem.sourceId}::${localItem.mangaId}::${localItem.chapterId}`;
         const remoteItem = remoteHistory[id];
@@ -185,7 +185,7 @@ export function useSync(options = { autoSync: true }) {
         }
       });
 
-      // 5. Sync Source Preferences (Pull from Cloud)
+      // Sync Source Preferences (Pull from Cloud)
       try {
         const cloudPrefs = await pullSourcePreferences();
         if (currentUidRef.current !== uid) return;
@@ -196,7 +196,7 @@ export function useSync(options = { autoSync: true }) {
         console.error("Failed to pull source preferences during sync", e);
       }
 
-      // 6. Sync Custom Collections (Pull from Cloud)
+      // Sync Custom Collections (Pull from Cloud)
       try {
         const cloudCollections = await pullCustomCollections();
         if (currentUidRef.current === uid && cloudCollections) {

@@ -26,9 +26,8 @@ export interface ChapterMeta {
 
 export type SourceChapterList = ChapterMeta[];
 
-// ---------------------------------------------------------------------------
 // Parsing
-// ---------------------------------------------------------------------------
+
 
 /**
  * Parses a chapter number from a chapter title or ID string.
@@ -96,9 +95,8 @@ export function findChapterByNumber(
   return null;
 }
 
-// ---------------------------------------------------------------------------
 // Cross-source chapter progress mapping
-// ---------------------------------------------------------------------------
+
 
 const EXACT_TOLERANCE = 0.001;
 const PROBABLE_TOLERANCE = 1.0; // e.g. Ch 9 vs Ch 10 — within 1 chapter proximity

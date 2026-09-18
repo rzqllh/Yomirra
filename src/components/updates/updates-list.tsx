@@ -60,9 +60,8 @@ export interface WeeklyMangaItem {
   effectiveDay: number;
 }
 
-// ---------------------------------------------------------------------------
 // ErrorBanner
-// ---------------------------------------------------------------------------
+
 
 function ErrorBanner({
   errorItems,
@@ -130,7 +129,7 @@ function ErrorBanner({
                   {item.mangaTitle || item.mangaId}
                 </p>
                 <p className="text-[10px] text-text-muted truncate">
-                  {item.sourceId} — {item.error}
+                  {item.sourceId} · {item.error}
                 </p>
               </div>
             </div>
@@ -436,9 +435,9 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
                 const hasTargetChapter = Boolean(targetChapterId);
 
                 // Distinct destinations per UX hierarchy
-                // 1. Card / Title click -> Manga Detail (with returnTo=/updates for contextual back)
+                // Card / Title click -> Manga Detail (with returnTo=/updates for contextual back)
                 const detailHref = getMangaDetailHref(item.sourceId, item.mangaId, "/updates");
-                // 2. Action button click -> Direct to Reader chapter (or detail if no chapter found)
+                // Action button click -> Direct to Reader chapter (or detail if no chapter found)
                 const readerHref = hasTargetChapter
                   ? getReaderHref(item.sourceId, item.mangaId, targetChapterId!, "/updates")
                   : detailHref;

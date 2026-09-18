@@ -8,9 +8,8 @@ import type { MatchConfidence } from "@/shared/lib/title-matcher";
 import type { ChapterMapResult } from "@/shared/lib/chapter-parser";
 import { cn } from "@/shared/utils/cn";
 
-// ---------------------------------------------------------------------------
 // Types
-// ---------------------------------------------------------------------------
+
 
 export interface AlternateSourceCandidate {
   sourceId: string;
@@ -36,9 +35,8 @@ export interface AlternateSourceModalProps {
   isLoading?: boolean;
 }
 
-// ---------------------------------------------------------------------------
 // Confidence badge
-// ---------------------------------------------------------------------------
+
 
 const confidenceConfig: Record<
   MatchConfidence,
@@ -59,9 +57,8 @@ function ConfidenceBadge({ confidence }: { confidence: MatchConfidence }) {
   );
 }
 
-// ---------------------------------------------------------------------------
 // Chapter map result banner
-// ---------------------------------------------------------------------------
+
 
 function ChapterMapBanner({ result }: { result: ChapterMapResult }) {
   if (result.type === "EXACT") {
@@ -99,9 +96,8 @@ function ChapterMapBanner({ result }: { result: ChapterMapResult }) {
   );
 }
 
-// ---------------------------------------------------------------------------
 // Main modal
-// ---------------------------------------------------------------------------
+
 
 export function AlternateSourceModal({
   isOpen,
@@ -133,7 +129,7 @@ export function AlternateSourceModal({
             </DialogTitle>
             <DialogDescription className="text-xs leading-relaxed text-text-secondary mt-1 truncate">
               <span className="font-semibold text-text-primary">{deadMangaTitle}</span>
-              {" "}— sumber saat ini tidak tersedia
+              {" "} (sumber saat ini tidak tersedia)
             </DialogDescription>
           </div>
         </div>
