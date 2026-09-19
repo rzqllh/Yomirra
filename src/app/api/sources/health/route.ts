@@ -127,9 +127,13 @@ export async function GET() {
   try {
     // Try Cache
     if (redis) {
-      const cached = await redis.get(CACHE_KEY);
-      if (cached) {
-        return NextResponse.json({ data: JSON.parse(cached) });
+      try {
+        const cached = await redis.get(CACHE_KEY);
+        if (cached) {
+          return NextResponse.json({ data: JSON.parse(cached) });
+        }
+      } catch (err) {
+        logger.warn("Redis get failed in sources health route", { error: err });
       }
     }
 
@@ -146,7 +150,11 @@ export async function GET() {
 
     // Set Cache
     if (redis) {
-      await redis.setex(CACHE_KEY, TTL_SECONDS, JSON.stringify(healthData));
+      try {
+        await redis.setex(CACHE_KEY, TTL_SECONDS, JSON.stringify(healthData));
+      } catch (err) {
+        logger.warn("Redis setex failed in sources health route", { error: err });
+      }
     }
 
     return NextResponse.json({ data: healthData });

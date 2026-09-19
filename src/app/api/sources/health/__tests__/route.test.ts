@@ -1,7 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+const mockRedis = {
+  get: vi.fn(),
+  setex: vi.fn(),
+};
+
 vi.mock("@/server/lib/cache/redis", () => ({
-  redis: null,
+  get redis() {
+    return mockRedis;
+  },
 }));
 
 vi.mock("@/shared/logger", () => ({
@@ -18,6 +25,8 @@ import { sourceRegistry } from "@/shared/sources/source-registry";
 describe("GET /api/sources/health", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    mockRedis.get.mockReset();
+    mockRedis.setex.mockReset();
   });
 
   it("includes healthCheckUrl for MangaDex in registry", () => {
@@ -26,7 +35,10 @@ describe("GET /api/sources/health", () => {
   });
 
   it("returns health check data for registered sources", async () => {
-    vi.spyOn(global, "fetch").mockImplementation(async (url) => {
+    mockRedis.get.mockResolvedValue(null);
+    mockRedis.setex.mockResolvedValue("OK");
+
+    vi.spyOn(global, "fetch").mockImplementation(async (url: any) => {
       const urlStr = String(url);
       if (urlStr.includes("shngm.io")) {
         return new Response(JSON.stringify({ status: "ok" }), { status: 200 });
@@ -51,6 +63,8 @@ describe("GET /api/sources/health", () => {
   });
 
   it("normalizes SSL errors into safe public messages", async () => {
+    mockRedis.get.mockResolvedValue(null);
+
     const sslErr = new TypeError("fetch failed");
     (sslErr as any).code = "ERR_TLS_CERT_ALTNAME_INVALID";
 
@@ -63,5 +77,18 @@ describe("GET /api/sources/health", () => {
     expect(json.data.mangadex.message).toBe("Sertifikat SSL/TLS server tidak valid atau kadaluarsa.");
     // Does not leak raw internal error object
     expect(json.data.mangadex.cause).toBeUndefined();
+  });
+
+  it("survives Redis stream errors without failing the health check", async () => {
+    mockRedis.get.mockRejectedValue(new Error("Stream isn't writeable and enableOfflineQueue options is false"));
+    mockRedis.setex.mockRejectedValue(new Error("Stream isn't writeable and enableOfflineQueue options is false"));
+
+    vi.spyOn(global, "fetch").mockResolvedValue(new Response("OK", { status: 200 }));
+
+    const res = await GET();
+    expect(res.status).toBe(200);
+    const json = await res.json();
+    expect(json.data).toBeDefined();
+    expect(json.data.mangadex.status).toBe("online");
   });
 });
