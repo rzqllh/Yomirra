@@ -15,7 +15,10 @@ export async function generateMetadata({
 }: { 
   params: Promise<{ sourceId: string; mangaId: string; chapterId: string }> 
 }): Promise<Metadata> {
-  const { sourceId, mangaId, chapterId } = await params;
+  const rawParams = await params;
+  const sourceId = decodeURIComponent(rawParams.sourceId);
+  const mangaId = decodeURIComponent(rawParams.mangaId);
+  const chapterId = decodeURIComponent(rawParams.chapterId);
   try {
     const manifestUrl = await getManifestUrlFromCookie(sourceId);
     const source = await sourceManager.getSource(sourceId, manifestUrl);
@@ -47,7 +50,10 @@ export default async function ReaderPage({
 }: {
   params: Promise<{ sourceId: string; mangaId: string; chapterId: string }>;
 }) {
-  const { sourceId, mangaId, chapterId } = await params;
+  const rawParams = await params;
+  const sourceId = decodeURIComponent(rawParams.sourceId);
+  const mangaId = decodeURIComponent(rawParams.mangaId);
+  const chapterId = decodeURIComponent(rawParams.chapterId);
 
   let detail: any, chapters: any, pagesResult: any;
   try {

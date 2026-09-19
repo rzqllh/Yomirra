@@ -489,6 +489,7 @@ export function MangaDetailView({
                           date={chapter.date}
                           isRead={isRead}
                           isLastRead={isLastRead}
+                          isLocked={chapter.isLocked}
                         />
                       </div>
                     );

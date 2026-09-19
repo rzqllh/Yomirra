@@ -4,6 +4,7 @@ import { KomikindoSource } from "./komikindo";
 import { MangaDexSource } from "./mangadex";
 import { KomikuSource } from "./komiku";
 import { KomikuIISource } from "./komiku-ii";
+import { AsuraScansSource } from "./asurascans";
 
 // Add new sources here
 export const sources: MangaSource[] = [
@@ -12,6 +13,7 @@ export const sources: MangaSource[] = [
   new MangaDexSource(),
   new KomikuSource(),
   new KomikuIISource(),
+  new AsuraScansSource(),
 ];
 
 export const sourceMap = new Map(sources.map((s) => [s.id, s]));

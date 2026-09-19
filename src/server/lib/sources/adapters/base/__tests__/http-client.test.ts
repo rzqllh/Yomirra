@@ -191,11 +191,11 @@ describe("HttpClient Infrastructure", () => {
 
 describe("Source Registry Phase 1 & 2 State", () => {
   it("exports pendingSourceRegistry with remaining unreleased sources", () => {
-    expect(pendingSourceRegistry).toHaveLength(2);
+    expect(pendingSourceRegistry).toHaveLength(1);
     const ids = pendingSourceRegistry.map((s) => s.id);
-    expect(ids).toContain("asurascans");
     expect(ids).toContain("komiknesia");
     expect(ids).not.toContain("komiku-ii");
+    expect(ids).not.toContain("asurascans");
 
     // All pending sources must be marked disabled and not installed
     for (const pending of pendingSourceRegistry) {
@@ -207,20 +207,19 @@ describe("Source Registry Phase 1 & 2 State", () => {
   });
 
   it("getPendingSourceMetadata retrieves pending sources correctly", () => {
-    const asura = getPendingSourceMetadata("asurascans");
-    expect(asura).toBeDefined();
-    expect(asura?.name).toBe("Asura Scans");
-    expect(asura?.language).toBe("en");
-
     const komiknesia = getPendingSourceMetadata("komiknesia");
     expect(komiknesia).toBeDefined();
     expect(komiknesia?.name).toBe("KomikNesia");
+    expect(komiknesia?.upstreamDomain).toBe("api-be.komiknesia.my.id");
+
+    const asura = getPendingSourceMetadata("asurascans");
+    expect(asura).toBeUndefined();
   });
 
   it("verifies promoted sources are in active sourceRegistry while unimplemented sources remain isolated", () => {
     const activeIds = sourceRegistry.map((s) => s.id);
     expect(activeIds).toContain("komiku-ii");
-    expect(activeIds).not.toContain("asurascans");
+    expect(activeIds).toContain("asurascans");
     expect(activeIds).not.toContain("komiknesia");
   });
 });

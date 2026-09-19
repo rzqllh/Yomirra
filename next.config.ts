@@ -47,6 +47,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "cdnkomiku.xyz",
       },
+      {
+        protocol: "https",
+        hostname: "cdn.asurascans.com",
+      },
     ],
     localPatterns: [
       {

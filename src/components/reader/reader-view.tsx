@@ -12,7 +12,9 @@ import { useHistoryStore } from "@/shared/store/history-store";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useDownloadStore } from "@/shared/store/download-store";
 import { EmptyState } from "@/components/states/empty-state";
-import { WarningCircle } from "@phosphor-icons/react";
+import { WarningCircle, LockKey } from "@phosphor-icons/react";
+import Link from "next/link";
+import { getMangaDetailHref } from "@/shared/lib/routes";
 import { Button } from "@/components/ui/button";
 import { getDownloadChapterId } from "@/shared/utils/download-helpers";
 import type { MangaDetail, Chapter, PageItem } from "@/shared/types/source";
@@ -116,8 +118,14 @@ export function ReaderView({
   useEffect(() => {
     if (!initialDetail) return;
     
+    // Prevent silently advancing reading progress for locked chapters
+    const currentChapterForHistory = initialChapters?.find((c) => c.id === chapterId);
+    if (currentChapterForHistory?.isLocked) {
+      return;
+    }
+
     // Calculate overall series progress based on chapter list
-    const chapterIndex = initialChapters?.findIndex(c => c.id === chapterId) ?? -1;
+    const chapterIndex = initialChapters?.findIndex((c) => c.id === chapterId) ?? -1;
     let seriesProgressPercent = 0;
     
     // Assuming chapters are sorted newest (index 0) to oldest (index N)
@@ -151,7 +159,7 @@ export function ReaderView({
         lastReadAt: new Date().toISOString(),
       });
     }
-  }, [initialDetail, chapterId, sourceId, mangaId, chapterTitle, upsertHistory, getLibraryItem, updateLibraryItem]);
+  }, [initialDetail, chapterId, sourceId, mangaId, chapterTitle, initialChapters, upsertHistory, getLibraryItem, updateLibraryItem]);
 
   if (isLoading) {
     return (
@@ -169,7 +177,48 @@ export function ReaderView({
     );
   }
 
-  if (error || !pagesToRender) {
+  let decodedChapterId = chapterId;
+  try {
+    decodedChapterId = decodeURIComponent(chapterId);
+  } catch {
+    decodedChapterId = chapterId;
+  }
+
+  const currentChapter = initialChapters?.find(
+    (c) => c.id === chapterId || c.id === decodedChapterId
+  );
+  const isLockedChapter = Boolean(
+    currentChapter?.isLocked || (pagesToRender && pagesToRender.length === 0 && currentChapter?.isLocked)
+  );
+
+  if (isLockedChapter) {
+    return (
+      <ReaderShell
+        mangaTitle={initialDetail?.title}
+        chapterTitle={chapterTitle}
+        currentChapterId={chapterId}
+        sourceId={sourceId}
+        mangaId={mangaId}
+      >
+        <div className="flex min-h-screen items-center justify-center pt-16">
+          <EmptyState
+            icon={<LockKey size={48} weight="duotone" className="text-amber-500" />}
+            title="Chapter Terkunci"
+            description="Chapter ini berstatus early access / terkunci di sumber aslinya."
+            action={
+              <Button asChild variant="outline" className="rounded-xl shadow-sm mt-2 font-bold">
+                <Link href={getMangaDetailHref(sourceId, mangaId)}>
+                  Kembali ke Detail
+                </Link>
+              </Button>
+            }
+          />
+        </div>
+      </ReaderShell>
+    );
+  }
+
+  if (error || !pagesToRender || pagesToRender.length === 0) {
     return (
       <ReaderShell
         mangaTitle={initialDetail?.title}

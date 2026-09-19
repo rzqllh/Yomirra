@@ -3,7 +3,7 @@ import Link from "next/link"
 import { getReaderHref } from "@/shared/lib/routes"
 import { ChapterDownloadButton } from "@/components/manga/chapter-download-button"
 import { cn } from "@/shared/utils/cn"
-import { CaretLeft } from "@phosphor-icons/react"
+import { CaretLeft, Lock } from "@phosphor-icons/react"
 
 interface ChapterRowProps {
   sourceId: string
@@ -14,6 +14,7 @@ interface ChapterRowProps {
   date: string | number | Date
   isRead?: boolean
   isLastRead?: boolean
+  isLocked?: boolean
 }
 
 export function ChapterRow({
@@ -24,7 +25,8 @@ export function ChapterRow({
   mangaTitle,
   date,
   isRead = false,
-  isLastRead = false
+  isLastRead = false,
+  isLocked = false
 }: ChapterRowProps) {
   
   // Format date safely
@@ -55,7 +57,13 @@ export function ChapterRow({
           )}>
             {chapterTitle}
           </h4>
-          {!isRead && !isLastRead && (
+          {isLocked && (
+            <div className="flex items-center gap-1 rounded-[5px] bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-amber-500 ring-1 ring-inset ring-amber-500/20 shrink-0">
+              <Lock size={11} weight="bold" />
+              <span>Terkunci</span>
+            </div>
+          )}
+          {!isRead && !isLastRead && !isLocked && (
             <span className="w-1.5 h-1.5 rounded-full bg-accent shrink-0 shadow-[0_0_8px_rgba(91,101,233,0.5)]" />
           )}
         </div>
@@ -70,23 +78,28 @@ export function ChapterRow({
             Terakhir
           </div>
         )}
-        {/* Colored-circle wrap adds the depth the reference design has (a plain icon
-            read as flat next to the title). Assumption: ChapterDownloadButton renders
-            an icon-only, transparent-background trigger. If it ships its own bg/padding,
-            this will double up — either drop the wrapper or give ChapterDownloadButton
-            a `bare` prop to disable its own chrome. */}
-        <div
-          className="flex items-center justify-center w-9 h-9 rounded-full bg-accent/10 text-accent transition-opacity opacity-70 group-hover:opacity-100 shrink-0"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <ChapterDownloadButton
-            sourceId={sourceId}
-            mangaId={mangaId}
-            chapterId={chapterId}
-            chapterTitle={chapterTitle}
-            mangaTitle={mangaTitle}
-          />
-        </div>
+        {isLocked ? (
+          <div
+            className="flex items-center justify-center w-9 h-9 rounded-full bg-amber-500/10 text-amber-500 shrink-0"
+            title="Chapter terkunci di sumber asli"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Lock size={16} weight="bold" />
+          </div>
+        ) : (
+          <div
+            className="flex items-center justify-center w-9 h-9 rounded-full bg-accent/10 text-accent transition-opacity opacity-70 group-hover:opacity-100 shrink-0"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <ChapterDownloadButton
+              sourceId={sourceId}
+              mangaId={mangaId}
+              chapterId={chapterId}
+              chapterTitle={chapterTitle}
+              mangaTitle={mangaTitle}
+            />
+          </div>
+        )}
         <CaretLeft size={16} className="text-text-muted/40 group-hover:text-accent shrink-0 rotate-180" />
       </div>
     </Link>
