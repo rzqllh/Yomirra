@@ -43,7 +43,7 @@ export function formatHealthDigest(
       text += `\`${sourceId.padEnd(12, " ")}\` ✅ HEALTHY   ${latency}\n`;
     } else {
       const code = snap.lastFailureCode || snap.status;
-      text += `\`${sourceId.padEnd(12, " ")}\` ❌ ${snap.status}    ${code} (${latency})\n`;
+      text += `\`${sourceId.padEnd(12, " ")}\` ❌ ${snap.status}    \`${code}\` (${latency})\n`;
     }
   }
 
@@ -62,7 +62,7 @@ export function formatCriticalAlert(snap: SourceHealthSnapshot): string {
   text += `*Failures:*    ${snap.consecutiveFailures}\n`;
   if (snap.lastSuccessAt) text += `*Last success:* \`${snap.lastSuccessAt}\`\n`;
   if (snap.resolvedHost) text += `*Resolved host:* \`${snap.resolvedHost}\`\n`;
-  if (snap.errorMessage) text += `*Detail:*      ${snap.errorMessage}\n`;
+  if (snap.errorMessage) text += `*Detail:*      \`${snap.errorMessage.replace(/[`]/g, "'")}\`\n`;
   return text;
 }
 
@@ -178,6 +178,23 @@ export async function sendTelegramMessage(
     if (!res.ok) {
       const errorText = await res.text();
       logger.error("Failed to send Telegram alert", { error: errorText });
+
+      // Fallback: If Telegram rejected due to markdown formatting/entity parsing, retry sending as plain text
+      if (errorText.includes("can't parse entities")) {
+        const fallbackRes = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: formattedText,
+          }),
+        });
+        if (fallbackRes.ok) {
+          logger.info("Successfully delivered Telegram alert via plain-text fallback");
+          return true;
+        }
+      }
+
       return false;
     }
 

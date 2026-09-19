@@ -109,7 +109,7 @@ describe("Phase 4 — Telegram Ops Runtime V1 Unit Tests", () => {
       expect(text).toContain("shinigami");
       expect(text).toContain("✅ HEALTHY   402ms");
       expect(text).toContain("komikindo");
-      expect(text).toContain("❌ BROKEN    ROUTE_CHANGED (911ms)");
+      expect(text).toContain("❌ BROKEN    `ROUTE_CHANGED` (911ms)");
 
       // Privacy check: no user queries or user emails
       expect(text).not.toContain("query");
@@ -298,6 +298,33 @@ describe("Phase 4 — Telegram Ops Runtime V1 Unit Tests", () => {
       });
       expect(rec3).toBe(false);
       expect(fetchSpy).toHaveBeenCalledTimes(2);
+    });
+
+    it("falls back to plain-text message if Telegram returns 400 with entity parse error", async () => {
+      const fetchSpy = vi.spyOn(global, "fetch")
+        .mockResolvedValueOnce(
+          new Response(
+            JSON.stringify({ ok: false, error_code: 400, description: "Bad Request: can't parse entities" }),
+            { status: 400 }
+          )
+        )
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify({ ok: true }), { status: 200 })
+        );
+
+      const result = await sendTelegramMessage("Unescaped text _with_ issues", {
+        severity: AlertSeverity.INFO,
+      });
+
+      expect(result).toBe(true);
+      expect(fetchSpy).toHaveBeenCalledTimes(2);
+      // Second call does NOT have parse_mode: "Markdown"
+      expect(fetchSpy).toHaveBeenLastCalledWith(
+        expect.stringContaining("sendMessage"),
+        expect.objectContaining({
+          body: expect.not.stringContaining('"parse_mode":"Markdown"'),
+        })
+      );
     });
   });
 

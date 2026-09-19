@@ -123,7 +123,8 @@ export async function POST(req: Request) {
       }
 
       case "/errors": {
-        const snapshots = await sourceHealthStore.getAllSnapshots();
+        const knownSourceIds = sourceRegistry.filter((s) => s.isEnabled).map((s) => s.id);
+        const snapshots = await sourceHealthStore.getAllSnapshots(knownSourceIds);
         const activeErrors = Object.entries(snapshots).filter(
           ([_, snap]) => snap.status !== "HEALTHY"
         );

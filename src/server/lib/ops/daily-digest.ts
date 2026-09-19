@@ -10,9 +10,10 @@ import { logger } from "@/shared/logger";
  */
 export async function sendDailyDigest(): Promise<boolean> {
   try {
-    const snapshots = await sourceHealthStore.getAllSnapshots();
     const allMetadata = getAllSourceMetadata().filter((s) => s.isEnabled && s.isInstalled);
     const totalSources = allMetadata.length;
+    const knownSourceIds = allMetadata.map((s) => s.id);
+    const snapshots = await sourceHealthStore.getAllSnapshots(knownSourceIds);
 
     let healthyCount = 0;
     let degradedCount = 0;

@@ -120,11 +120,24 @@ export class SourceHealthStore {
     return this.memorySnapshots.get(normalizedId) || null;
   }
 
-  async getAllSnapshots(): Promise<Record<string, SourceHealthSnapshot>> {
+  async getAllSnapshots(knownSourceIds?: string[]): Promise<Record<string, SourceHealthSnapshot>> {
     const result: Record<string, SourceHealthSnapshot> = {};
     for (const [id, snap] of this.memorySnapshots.entries()) {
       result[id] = snap;
     }
+
+    if (knownSourceIds && redis) {
+      for (const id of knownSourceIds) {
+        const normalized = id.toLowerCase().trim();
+        if (!result[normalized]) {
+          const snap = await this.getSnapshot(normalized);
+          if (snap) {
+            result[normalized] = snap;
+          }
+        }
+      }
+    }
+
     return result;
   }
 
