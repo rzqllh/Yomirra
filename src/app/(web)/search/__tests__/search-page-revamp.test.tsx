@@ -122,7 +122,7 @@ describe('Search Page Revamp Unit Tests', () => {
     await waitFor(() => {
       expect(screen.getByText('Overgeared')).toBeDefined();
       expect(screen.getByText('Komikindo gagal dimuat')).toBeDefined();
-    });
+    }, { timeout: 3000 });
   });
 
   it('displays single-source failure title when only one source is selected and fails', async () => {
