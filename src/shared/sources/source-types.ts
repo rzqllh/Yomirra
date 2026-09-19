@@ -8,6 +8,9 @@ export interface SourceMetadata {
   baseUrl?: string;
   icon?: string;
   version?: string;
+  adapterVersion?: string; // V1: semantic version of the adapter implementation
+  upstreamDomain?: string; // V1: primary upstream domain or API endpoint host
+  supportedLanguages?: string[]; // V1: e.g. ["id", "en"]
   isEnabled: boolean;
   isInstalled: boolean;
   capabilities: SourceCapabilities;
@@ -59,6 +62,8 @@ export interface Chapter {
   title: string;
   date: string;
   scanlator?: string;
+  isLocked?: boolean; // V1: paywall/early-access boundary indicator
+  url?: string; // V1: upstream URL if available
 }
 
 export interface ChapterPages {
@@ -70,6 +75,8 @@ export interface PageItem {
   index: number;
   url: string;
   referer?: string; // Some sources require a referer header to bypass hotlink protection
+  width?: number; // V1: natural width from upstream if provided
+  height?: number; // V1: natural height from upstream if provided
 }
 
 export interface SourceFilter {
@@ -92,4 +99,7 @@ export interface MangaSource extends SourceMetadata {
   getChapters(mangaId: string): Promise<Chapter[]>;
   getPages(chapterId: string): Promise<ChapterPages>;
   getFilters(): FilterList | Promise<FilterList>;
+  // V1 Optional Capabilities
+  getRelated?(mangaId: string): Promise<MangaItem[]>;
+  resolveDomain?(): Promise<string>;
 }
