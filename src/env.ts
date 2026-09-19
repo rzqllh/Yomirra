@@ -13,6 +13,13 @@ const envSchema = z.object({
   ),
   IMAGE_PROXY_SECRET: z.string().min(32),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+  TELEGRAM_BOT_TOKEN: z.string().optional(),
+  TELEGRAM_CHAT_ID: z.string().optional(),
+  TELEGRAM_ALLOWED_CHAT_IDS: z.string().optional(),
+  OPS_CRON_SECRET: z.string().optional(),
+  CRON_SECRET: z.string().optional(),
+  TELEGRAM_WEBHOOK_SECRET: z.string().optional(),
+  VERCEL_DEPLOY_SECRET: z.string().optional(),
 });
 
 type Env = z.infer<typeof envSchema>;
@@ -26,6 +33,13 @@ function getEnv(): Env {
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     IMAGE_PROXY_SECRET: process.env.IMAGE_PROXY_SECRET,
     NODE_ENV: process.env.NODE_ENV,
+    TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN,
+    TELEGRAM_CHAT_ID: process.env.TELEGRAM_CHAT_ID,
+    TELEGRAM_ALLOWED_CHAT_IDS: process.env.TELEGRAM_ALLOWED_CHAT_IDS,
+    OPS_CRON_SECRET: process.env.OPS_CRON_SECRET,
+    CRON_SECRET: process.env.CRON_SECRET,
+    TELEGRAM_WEBHOOK_SECRET: process.env.TELEGRAM_WEBHOOK_SECRET,
+    VERCEL_DEPLOY_SECRET: process.env.VERCEL_DEPLOY_SECRET,
   });
 
   if (parsed.success) {
@@ -48,6 +62,13 @@ function getEnv(): Env {
       NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || "https://yomirra.vercel.app",
       IMAGE_PROXY_SECRET: "build-placeholder-secret-not-used-at-runtime-32chars",
       NODE_ENV: (process.env.NODE_ENV as "development" | "test" | "production") || "production",
+      TELEGRAM_BOT_TOKEN: undefined,
+      TELEGRAM_CHAT_ID: undefined,
+      TELEGRAM_ALLOWED_CHAT_IDS: undefined,
+      OPS_CRON_SECRET: undefined,
+      CRON_SECRET: undefined,
+      TELEGRAM_WEBHOOK_SECRET: undefined,
+      VERCEL_DEPLOY_SECRET: undefined,
     };
   }
 

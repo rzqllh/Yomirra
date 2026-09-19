@@ -1,0 +1,54 @@
+name: Yomirra Ops Scheduled Runtime
+
+on:
+  schedule:
+    # 6-hour health report at minute 17 of every 6th hour (05:17, 11:17, 17:17, 23:17 UTC)
+    - cron: "17 */6 * * *"
+    # Daily technical digest at 00:37 UTC (07:37 WIB)
+    - cron: "37 0 * * *"
+  workflow_dispatch:
+    inputs:
+      job_type:
+        description: "Ops job to trigger"
+        required: true
+        default: "health-digest"
+        type: choice
+        options:
+          - health-digest
+          - daily-digest
+          - both
+
+jobs:
+  trigger-ops:
+    name: Trigger Yomirra Ops Endpoint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Health Digest Trigger
+        if: |
+          github.event_name == 'schedule' && github.event.schedule == '17 */6 * * *' ||
+          github.event_name == 'workflow_dispatch' && (inputs.job_type == 'health-digest' || inputs.job_type == 'both')
+        run: |
+          echo "Triggering Yomirra 6-Hour Health Digest..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "https://yomirra.vercel.app/api/ops/cron/health-digest" \
+            -H "Authorization: Bearer ${{ secrets.OPS_CRON_SECRET }}" \
+            -H "Content-Type: application/json")
+          echo "Response HTTP Status: $STATUS"
+          if [ "$STATUS" -ne 200 ]; then
+            echo "Failed to trigger health digest (HTTP $STATUS)"
+            exit 1
+          fi
+
+      - name: Daily Digest Trigger
+        if: |
+          github.event_name == 'schedule' && github.event.schedule == '37 0 * * *' ||
+          github.event_name == 'workflow_dispatch' && (inputs.job_type == 'daily-digest' || inputs.job_type == 'both')
+        run: |
+          echo "Triggering Yomirra Daily Digest..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "https://yomirra.vercel.app/api/ops/cron/daily-digest" \
+            -H "Authorization: Bearer ${{ secrets.OPS_CRON_SECRET }}" \
+            -H "Content-Type: application/json")
+          echo "Response HTTP Status: $STATUS"
+          if [ "$STATUS" -ne 200 ]; then
+            echo "Failed to trigger daily digest (HTTP $STATUS)"
+            exit 1
+          fi
