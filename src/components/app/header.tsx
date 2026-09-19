@@ -140,41 +140,44 @@ export function PageHeader({
       </header>
 
       {/* ── Desktop Hero Section Header (hidden md:block) ── */}
-      <div
-        className={cn(
-          "hidden md:block relative overflow-hidden rounded-3xl bg-surface-raised/40 border border-border-default/50 p-6 md:p-8 mb-6 md:mb-8 backdrop-blur-md shadow-xs",
-          className
-        )}
-      >
-        <div className="absolute -right-20 -top-20 w-64 h-64 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
-        <div className="relative flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4 flex-1 min-w-0">
-            {icon && (
-              <div className="shrink-0 p-3.5 bg-gradient-to-br from-accent/15 via-accent/10 to-transparent rounded-2xl shadow-xs border border-accent/25 text-accent">
-                {icon}
-              </div>
-            )}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl md:text-3xl font-black tracking-tight text-text-primary truncate">
-                  {title}
-                </h1>
-                {meta && (
-                  <div className="shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-md bg-surface-base border border-border-default/60 text-xs font-bold text-text-muted">
-                    {meta}
-                  </div>
+      {/* Skipped for mode="detail" — detail pages have their own full hero with h1 */}
+      {mode !== "detail" && (
+        <div
+          className={cn(
+            "hidden md:block relative overflow-hidden rounded-3xl bg-surface-raised/40 border border-border-default/50 p-6 md:p-8 mb-6 md:mb-8 backdrop-blur-md shadow-xs",
+            className
+          )}
+        >
+          <div className="absolute -right-20 -top-20 w-64 h-64 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
+          <div className="relative flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4 flex-1 min-w-0">
+              {icon && (
+                <div className="shrink-0 p-3.5 bg-gradient-to-br from-accent/15 via-accent/10 to-transparent rounded-2xl shadow-xs border border-accent/25 text-accent">
+                  {icon}
+                </div>
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl md:text-3xl font-black tracking-tight text-text-primary truncate">
+                    {title}
+                  </h1>
+                  {meta && (
+                    <div className="shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-md bg-surface-base border border-border-default/60 text-xs font-bold text-text-muted">
+                      {meta}
+                    </div>
+                  )}
+                </div>
+                {description && (
+                  <p className="text-text-muted mt-1 text-sm md:text-base max-w-2xl font-medium leading-relaxed">
+                    {description}
+                  </p>
                 )}
               </div>
-              {description && (
-                <p className="text-text-muted mt-1 text-sm md:text-base max-w-2xl font-medium leading-relaxed">
-                  {description}
-                </p>
-              )}
             </div>
+            {actions && <div className="shrink-0">{actions}</div>}
           </div>
-          {actions && <div className="shrink-0">{actions}</div>}
         </div>
-      </div>
+      )}
     </>
   )
 }

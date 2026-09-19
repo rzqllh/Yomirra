@@ -156,8 +156,9 @@ export function MangaDetailView({
     );
   };
 
+  // Secondary actions — compact horizontal rail (touch-friendly 44px, not desktop-oversized tiles)
   const renderActions = () => (
-    <div className="grid grid-cols-4 w-full mt-2 gap-2 h-[68px]">
+    <div className="flex flex-wrap gap-2 mt-2">
       <MangaActions
         sourceId={sourceId}
         mangaId={mangaId}
@@ -350,7 +351,7 @@ export function MangaDetailView({
               </div>
 
               <div>
-                <h1 className="text-3xl lg:text-4xl font-black tracking-tight leading-[1.15] text-white drop-shadow-sm vt-title-desktop">
+                <h1 className="text-3xl lg:text-4xl xl:text-[42px] font-black tracking-tight leading-[1.15] text-white drop-shadow-sm vt-title-desktop max-w-2xl">
                   {detail.title}
                 </h1>
                 {detail.originalTitle && (
@@ -369,13 +370,11 @@ export function MangaDetailView({
                 </p>
               </div>
 
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2 max-w-2xl">
-                <div className="flex-1 min-w-[280px]">
+              <div className="flex flex-col gap-0 pt-2 max-w-2xl w-full">
+                <div className="w-full">
                   {renderMainAction()}
                 </div>
-                <div className="w-full sm:w-[320px]">
-                  {renderActions()}
-                </div>
+                {renderActions()}
               </div>
             </div>
           </div>
