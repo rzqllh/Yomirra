@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
 import { ReaderPageSkeleton } from "@/components/skeletons/reader-page-skeleton";
@@ -18,6 +18,8 @@ import { getMangaDetailHref } from "@/shared/lib/routes";
 import { Button } from "@/components/ui/button";
 import { getDownloadChapterId } from "@/shared/utils/download-helpers";
 import type { MangaDetail, Chapter, PageItem } from "@/shared/types/source";
+import { useAlternateSource } from "@/shared/hooks/use-alternate-source";
+import { AlternateSourceModal } from "@/components/manga/alternate-source-modal";
 
 interface ReaderViewProps {
   sourceId: string;
@@ -53,6 +55,26 @@ export function ReaderView({
     enabled: !initialPages && downloadStatus !== "downloaded",
     initialData: initialPages ? { chapterId, pages: initialPages } : undefined,
   });
+
+  const chapterTitle = initialChapters?.find(c => c.id === chapterId)?.title || "Chapter";
+
+  const alternateSource = useAlternateSource({
+    sourceId,
+    mangaId,
+    currentChapterId: chapterId,
+    knownTitle: initialDetail?.title,
+    currentChapterTitle: chapterTitle,
+  });
+
+  const refreshChapter = useCallback(async (): Promise<PageItem[] | null> => {
+    try {
+      const res = await refetch();
+      if (res.data?.pages && res.data.pages.length > 0) {
+        return res.data.pages;
+      }
+    } catch {}
+    return null;
+  }, [refetch]);
 
   useEffect(() => {
     setOfflinePages(null);
@@ -112,8 +134,6 @@ export function ReaderView({
 
   const isLoading = downloadStatus === "downloaded" ? offlinePages === null : (!initialPages && isQueryLoading);
   const pagesToRender = offlinePages || initialPages || chapterPages?.pages;
-
-  const chapterTitle = initialChapters?.find(c => c.id === chapterId)?.title || "Chapter";
 
   useEffect(() => {
     if (!initialDetail) return;
@@ -231,14 +251,29 @@ export function ReaderView({
           <EmptyState
             icon={<WarningCircle size={48} weight="duotone" className="text-text-muted" />}
             title="Gagal Memuat Halaman"
-            description="Tidak dapat mengambil halaman chapter dari server."
+            description="Tidak dapat mengambil halaman chapter dari server saat ini."
             action={
-              <Button onClick={() => refetch()} variant="outline" className="rounded-xl shadow-sm mt-2 font-bold">
-                Coba Lagi
-              </Button>
+              <div className="flex flex-col sm:flex-row items-center gap-2 mt-2">
+                <Button onClick={() => refetch()} variant="outline" className="rounded-xl shadow-sm font-bold w-full sm:w-auto">
+                  Coba Lagi
+                </Button>
+                <Button onClick={alternateSource.openAndSearch} variant="secondary" className="rounded-xl shadow-sm font-bold w-full sm:w-auto">
+                  Cari Sumber Alternatif
+                </Button>
+              </div>
             }
           />
         </div>
+        <AlternateSourceModal
+          isOpen={alternateSource.isOpen}
+          onClose={() => alternateSource.setIsOpen(false)}
+          deadSourceId={sourceId}
+          deadMangaTitle={alternateSource.title}
+          candidates={alternateSource.candidates}
+          chapterMapResult={alternateSource.chapterMapResult}
+          onConfirm={alternateSource.handleConfirm}
+          isLoading={alternateSource.isSearching}
+        />
       </ReaderShell>
     );
   }
@@ -276,6 +311,8 @@ export function ReaderView({
           chapters={initialChapters}
           prevChapterId={prevChapterId}
           nextChapterId={nextChapterId}
+          onOpenAlternateSource={alternateSource.openAndSearch}
+          onRefreshChapter={refreshChapter}
         />
       ) : (
         <ContinuousVerticalReader
@@ -287,8 +324,21 @@ export function ReaderView({
           chapters={initialChapters}
           prevChapterId={prevChapterId}
           nextChapterId={nextChapterId}
+          onOpenAlternateSource={alternateSource.openAndSearch}
+          onRefreshChapter={refreshChapter}
         />
       )}
+
+      <AlternateSourceModal
+        isOpen={alternateSource.isOpen}
+        onClose={() => alternateSource.setIsOpen(false)}
+        deadSourceId={sourceId}
+        deadMangaTitle={alternateSource.title}
+        candidates={alternateSource.candidates}
+        chapterMapResult={alternateSource.chapterMapResult}
+        onConfirm={alternateSource.handleConfirm}
+        isLoading={alternateSource.isSearching}
+      />
     </ReaderShell>
   );
 }

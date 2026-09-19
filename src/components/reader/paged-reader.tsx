@@ -13,10 +13,11 @@ import { getReaderHref } from "@/shared/lib/routes";
 import { getSourceMetadata } from "@/shared/sources/source-registry";
 import { useVisibilityFlush } from "@/shared/hooks/use-visibility-flush";
 import { useReadingTimer } from "@/shared/hooks/use-reading-timer";
-import { CaretLeft, CaretRight } from "@phosphor-icons/react";
+import { CaretLeft, CaretRight, Warning } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/shared/utils/cn";
 import { motion, PanInfo } from "motion/react";
+import { toast } from "sonner";
 
 interface PagedReaderProps {
   sourceId: string;
@@ -27,6 +28,8 @@ interface PagedReaderProps {
   chapters?: Chapter[];
   prevChapterId?: string;
   nextChapterId?: string;
+  onOpenAlternateSource?: () => void;
+  onRefreshChapter?: () => Promise<PageItem[] | null>;
 }
 
 export function PagedReader({
@@ -38,6 +41,8 @@ export function PagedReader({
   chapters: _chapters,
   prevChapterId,
   nextChapterId,
+  onOpenAlternateSource,
+  onRefreshChapter,
 }: PagedReaderProps) {
   const router = useRouter();
   const preferences = useReaderStore(state => state.preferences);
@@ -52,6 +57,31 @@ export function PagedReader({
 
   useReadingTimer();
 
+  const [currentPages, setCurrentPages] = React.useState<PageItem[]>(pages);
+  React.useEffect(() => {
+    setCurrentPages(pages);
+  }, [pages]);
+
+  const [failedPageIndices, setFailedPageIndices] = React.useState<Set<number>>(new Set());
+
+  const handleImageLoad = React.useCallback((pageIndex: number) => {
+    setFailedPageIndices((prev) => {
+      if (!prev.has(pageIndex)) return prev;
+      const next = new Set(prev);
+      next.delete(pageIndex);
+      return next;
+    });
+  }, []);
+
+  const handlePermanentFailure = React.useCallback((pageIndex: number) => {
+    setFailedPageIndices((prev) => {
+      if (prev.has(pageIndex)) return prev;
+      const next = new Set(prev);
+      next.add(pageIndex);
+      return next;
+    });
+  }, []);
+
   // Initialize active page from history or 0
   const [currentPageIndex, setCurrentPageIndex] = React.useState<number>(() => {
     const saved = getProgress(sourceId, mangaId);
@@ -61,13 +91,13 @@ export function PagedReader({
     return 0;
   });
 
-  const totalPages = pages.length;
+  const totalPages = currentPages.length;
   const isRtl = preferences.readingDirection === "rtl";
 
   // Clamp page index when pages prop changes
   React.useEffect(() => {
-    setCurrentPageIndex(prev => Math.max(0, Math.min(prev, pages.length - 1)));
-  }, [pages.length]);
+    setCurrentPageIndex(prev => Math.max(0, Math.min(prev, currentPages.length - 1)));
+  }, [currentPages.length]);
 
   // Sync page progress to reader store for header progress bar
   React.useEffect(() => {
@@ -158,10 +188,13 @@ export function PagedReader({
   }, [isRtl, goToNextPage, goToPrevPage]);
 
   // Touch Swipe Handler
-  const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-    const threshold = 40;
+  const handleDragEnd = (
+    _event: MouseEvent | TouchEvent | PointerEvent,
+    info: PanInfo
+  ) => {
     const offset = info.offset.x;
     const velocity = info.velocity.x;
+    const threshold = 50;
 
     if (offset < -threshold || velocity < -300) {
       // Swiped Left
@@ -180,7 +213,7 @@ export function PagedReader({
     }
   };
 
-  const currentPage = pages[currentPageIndex];
+  const currentPage = currentPages[currentPageIndex];
   const currentUrl = isDownloaded
     ? getOfflineImageUrl({ sourceId, mangaId, chapterId, pageIndex: currentPage?.index ?? currentPageIndex })
     : currentPage?.url ?? "";
@@ -190,6 +223,44 @@ export function PagedReader({
 
   return (
     <div className="relative min-h-screen w-full bg-surface-base select-none flex flex-col items-center justify-center pt-[calc(var(--mobile-header-height)+var(--safe-top))] pb-[calc(var(--bottom-dock-height)+var(--safe-bottom))]">
+      {/* Chapter Degraded Recovery Banner */}
+      {failedPageIndices.size > 0 && (
+        <div className="fixed top-[calc(var(--mobile-header-height)+var(--safe-top)+10px)] z-40 max-w-md w-[calc(100%-32px)] mx-auto left-0 right-0 p-3 rounded-2xl bg-surface-raised/95 backdrop-blur-xl border border-semantic-warning/30 shadow-lg flex items-center justify-between gap-3 text-xs animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center gap-2 text-semantic-warning font-medium">
+            <Warning size={18} weight="fill" className="shrink-0" />
+            <span>{failedPageIndices.size} halaman gagal dimuat</span>
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            {onRefreshChapter && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 text-xs px-2.5 rounded-lg"
+                onClick={async () => {
+                  const fresh = await onRefreshChapter();
+                  if (fresh) {
+                    setFailedPageIndices(new Set());
+                    toast.success("Halaman chapter disegarkan");
+                  }
+                }}
+              >
+                Segarkan
+              </Button>
+            )}
+            {onOpenAlternateSource && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs px-2.5 rounded-lg border-semantic-warning/40 text-semantic-warning hover:bg-semantic-warning/10 font-bold"
+                onClick={onOpenAlternateSource}
+              >
+                Ganti Sumber
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Interactive Tap Zones */}
       <button
         type="button"
@@ -230,8 +301,18 @@ export function PagedReader({
             dataSaver={dataSaver}
             isAllowedToLoad={true}
             reportUrl={reportUrl}
-            onLoadComplete={() => {}}
+            onLoadComplete={() => handleImageLoad(currentPageIndex)}
             onError={() => {}}
+            onPermanentFailure={handlePermanentFailure}
+            onRefreshUrl={async () => {
+              if (onRefreshChapter) {
+                const freshPages = await onRefreshChapter();
+                if (freshPages && freshPages[currentPageIndex]) {
+                  return freshPages[currentPageIndex].url;
+                }
+              }
+              return null;
+            }}
           />
         </motion.div>
       ) : null}

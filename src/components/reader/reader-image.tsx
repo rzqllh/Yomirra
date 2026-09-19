@@ -22,6 +22,9 @@ interface ReaderImageProps {
   totalPages?: number;
   priority?: boolean;
   offlineUrl?: string;
+  onRefreshUrl?: (index: number) => Promise<string | null>;
+  fallbackProxyUrl?: string;
+  onPermanentFailure?: (index: number) => void;
 }
 
 export const ReaderImage = React.memo(function ReaderImage({
@@ -34,6 +37,9 @@ export const ReaderImage = React.memo(function ReaderImage({
   onError,
   priority = false,
   offlineUrl,
+  onRefreshUrl,
+  fallbackProxyUrl,
+  onPermanentFailure,
   imageFit = 'width',
   reportUrl,
   dataIndex,
@@ -44,13 +50,18 @@ export const ReaderImage = React.memo(function ReaderImage({
   const [aspectRatio, setAspectRatio] = React.useState<number | null>(null)
   const containerRef = React.useRef<HTMLDivElement>(null)
   
-  const imageId = `${pageUrl}`;
   const [useFallback, setUseFallback] = React.useState(false)
-  const currentUrl = (offlineUrl && !useFallback) 
+  const [refreshedUrl, setRefreshedUrl] = React.useState<string | null>(null)
+  const [hasAttemptedRefresh, setHasAttemptedRefresh] = React.useState(false)
+  const [hasAttemptedProxy, setHasAttemptedProxy] = React.useState(false)
+
+  const activeBaseUrl = refreshedUrl || (useFallback && fallbackProxyUrl ? fallbackProxyUrl : (offlineUrl && !useFallback ? offlineUrl : pageUrl));
+
+  const currentUrl = (offlineUrl && !useFallback && !refreshedUrl) 
     ? offlineUrl 
-    : (retryCount > 0 && !pageUrl.startsWith('blob:') ? `${pageUrl}${pageUrl.includes('?') ? '&' : '?'}retry=${retryCount}` : pageUrl);
-
-
+    : (retryCount > 0 && !activeBaseUrl.startsWith('blob:') && !activeBaseUrl.startsWith('data:')
+        ? `${activeBaseUrl}${activeBaseUrl.includes('?') ? '&' : '?'}retry=${retryCount}` 
+        : activeBaseUrl);
 
   // Zoom motion values (No spring physics loop)
   const scale = useMotionValue(1)
@@ -89,29 +100,59 @@ export const ReaderImage = React.memo(function ReaderImage({
 
   const shouldLoad = isAllowedToLoad;
 
-  const handleImageError = () => {
+  const handleImageError = async () => {
     if (offlineUrl && !useFallback) {
-      // W3.5: Cached page missing + online -> allow network fallback
+      // Offline cached page missing -> allow network fallback
       setUseFallback(true);
       return;
     }
 
+    // Step 1: Bounded retry (up to 3 attempts with backoff)
     if (retryCount < 3) {
       const baseDelay = [1000, 2500, 5000][retryCount]
       const jitter = Math.random() * 500
       setTimeout(() => {
         setRetryCount(c => c + 1)
       }, baseDelay + jitter)
-    } else {
-      setHasError(true)
-      onError(pageIndex)
+      return;
     }
+
+    // Step 2: Attempt page URL re-resolution if provided
+    if (onRefreshUrl && !hasAttemptedRefresh) {
+      setHasAttemptedRefresh(true)
+      try {
+        const freshUrl = await onRefreshUrl(pageIndex)
+        if (freshUrl && freshUrl !== pageUrl) {
+          setRefreshedUrl(freshUrl)
+          setRetryCount(0)
+          return
+        }
+      } catch {
+        // Fall through to proxy or error state
+      }
+    }
+
+    // Step 3: Safe proxy fallback if provided and not yet attempted
+    if (fallbackProxyUrl && !hasAttemptedProxy) {
+      setHasAttemptedProxy(true)
+      setUseFallback(true)
+      setRetryCount(0)
+      return
+    }
+
+    // Step 4: Exhausted recovery ladder -> surface degraded error state
+    setHasError(true)
+    onError(pageIndex)
+    onPermanentFailure?.(pageIndex)
   }
 
   const handleRetry = () => {
     setHasError(false)
     setRetryCount(0)
     setUseFallback(false)
+    setHasAttemptedRefresh(false)
+    setHasAttemptedProxy(false)
+    setRefreshedUrl(null)
   }
 
   const estimatedAspectRatio = aspectRatio ? `${aspectRatio}` : "1 / 1.5"

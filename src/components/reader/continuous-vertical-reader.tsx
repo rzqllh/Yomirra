@@ -18,7 +18,7 @@ import { useReaderScroll } from "@/shared/hooks/use-reader-scroll"
 import { getSourceMetadata } from "@/shared/sources/source-registry"
 
 import { useReadingTimer } from "@/shared/hooks/use-reading-timer"
-import { CaretLeft, CaretRight, CheckCircle, Flag, BookOpen } from "@phosphor-icons/react"
+import { CaretLeft, CaretRight, CheckCircle, Flag, BookOpen, Warning } from "@phosphor-icons/react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/shared/utils/cn"
 import { motion } from "motion/react"
@@ -34,6 +34,8 @@ interface ContinuousVerticalReaderProps {
   chapters?: Chapter[];
   prevChapterId?: string;
   nextChapterId?: string;
+  onOpenAlternateSource?: () => void;
+  onRefreshChapter?: () => Promise<PageItem[] | null>;
 }
 
 export function ContinuousVerticalReader({
@@ -44,7 +46,9 @@ export function ContinuousVerticalReader({
   pages,
   chapters: _chapters,
   prevChapterId: _prevChapterId,
-  nextChapterId
+  nextChapterId,
+  onOpenAlternateSource,
+  onRefreshChapter,
 }: ContinuousVerticalReaderProps) {
   const router = useRouter()
   const preferences = useReaderStore(state => state.preferences)
@@ -61,15 +65,40 @@ export function ContinuousVerticalReader({
 
   useReadingTimer()
 
+  const [currentPages, setCurrentPages] = React.useState<PageItem[]>(pages);
+  React.useEffect(() => {
+    setCurrentPages(pages);
+  }, [pages]);
+
+  const [failedPageIndices, setFailedPageIndices] = React.useState<Set<number>>(new Set());
+
+  const handleImageLoad = React.useCallback((pageIndex: number) => {
+    setFailedPageIndices((prev) => {
+      if (!prev.has(pageIndex)) return prev;
+      const next = new Set(prev);
+      next.delete(pageIndex);
+      return next;
+    });
+  }, []);
+
+  const handlePermanentFailure = React.useCallback((pageIndex: number) => {
+    setFailedPageIndices((prev) => {
+      if (prev.has(pageIndex)) return prev;
+      const next = new Set(prev);
+      next.add(pageIndex);
+      return next;
+    });
+  }, []);
+
   const streamItems = React.useMemo<StreamItem[]>(() => {
-    return pages.map(p => ({
+    return currentPages.map(p => ({
       type: "image",
       chapterId: chapterId,
       pageIndex: p.index,
       url: p.url,
       index: p.index
     }));
-  }, [pages, chapterId]);
+  }, [currentPages, chapterId]);
 
   const cacheKey = `yomirra-virtualizer-cache-${sourceId}-${mangaId}-${chapterId}`;
 
@@ -112,8 +141,7 @@ export function ContinuousVerticalReader({
 
   const virtualItems = virtualizer.getVirtualItems();
 
-  const handleImageLoad = React.useCallback(() => { }, [])
-  const handleImageError = React.useCallback(() => { }, [])
+  const handleImageError = React.useCallback(() => { }, []);
 
 
 
@@ -222,6 +250,44 @@ export function ContinuousVerticalReader({
 
   return (
     <div className="flex min-h-screen w-full flex-col items-center select-none pb-12 bg-black/95 dark:bg-black">
+      {/* Chapter Degraded Recovery Banner */}
+      {failedPageIndices.size > 0 && (
+        <div className="fixed top-[calc(var(--mobile-header-height)+var(--safe-top)+10px)] z-40 max-w-md w-[calc(100%-32px)] mx-auto left-0 right-0 p-3 rounded-2xl bg-surface-raised/95 backdrop-blur-xl border border-semantic-warning/30 shadow-lg flex items-center justify-between gap-3 text-xs animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center gap-2 text-semantic-warning font-medium">
+            <Warning size={18} weight="fill" className="shrink-0" />
+            <span>{failedPageIndices.size} halaman gagal dimuat</span>
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0">
+            {onRefreshChapter && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 text-xs px-2.5 rounded-lg"
+                onClick={async () => {
+                  const fresh = await onRefreshChapter();
+                  if (fresh) {
+                    setFailedPageIndices(new Set());
+                    toast.success("Halaman chapter disegarkan");
+                  }
+                }}
+              >
+                Segarkan
+              </Button>
+            )}
+            {onOpenAlternateSource && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs px-2.5 rounded-lg border-semantic-warning/40 text-semantic-warning hover:bg-semantic-warning/10 font-bold"
+                onClick={onOpenAlternateSource}
+              >
+                Ganti Sumber
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
       <div
         className="flex w-full max-w-[800px] flex-col items-center pt-[calc(var(--mobile-header-height)+var(--safe-top))]"
         style={{
@@ -253,8 +319,18 @@ export function ContinuousVerticalReader({
                 isWebtoon={isWebtoon}
                 dataSaver={dataSaver}
                 isAllowedToLoad={true}
-                onLoadComplete={handleImageLoad}
+                onLoadComplete={() => handleImageLoad(item.pageIndex)}
                 onError={handleImageError}
+                onPermanentFailure={handlePermanentFailure}
+                onRefreshUrl={async () => {
+                  if (onRefreshChapter) {
+                    const fresh = await onRefreshChapter();
+                    if (fresh && fresh[item.pageIndex]) {
+                      return fresh[item.pageIndex].url;
+                    }
+                  }
+                  return null;
+                }}
                 priority={virtualRow.index === 0}
                 offlineUrl={isDownloaded ? getOfflineImageUrl({ sourceId, mangaId, chapterId: item.chapterId, pageIndex: item.pageIndex }) : undefined}
                 imageFit={preferences.imageFit}
