@@ -7,14 +7,11 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   const expectedSecret = env.OPS_CRON_SECRET || env.CRON_SECRET;
+  const authHeader = req.headers.get("authorization");
 
-  // Verify OPS_CRON_SECRET if configured
-  if (expectedSecret) {
-    const authHeader = req.headers.get("authorization");
-    if (authHeader !== `Bearer ${expectedSecret}`) {
-      logger.warn("Unauthorized attempt to trigger daily digest cron");
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  if (!expectedSecret || authHeader !== `Bearer ${expectedSecret}`) {
+    logger.warn("Unauthorized attempt to trigger daily digest cron");
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const success = await sendDailyDigest();

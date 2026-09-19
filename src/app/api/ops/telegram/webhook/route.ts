@@ -14,8 +14,8 @@ export const dynamic = "force-dynamic";
 export async function POST(req: Request) {
   // 1. Validate Secret Token
   const secretToken = req.headers.get("x-telegram-bot-api-secret-token");
-  if (env.TELEGRAM_WEBHOOK_SECRET && secretToken !== env.TELEGRAM_WEBHOOK_SECRET) {
-    logger.warn("Unauthorized webhook attempt: invalid secret token");
+  if (!env.TELEGRAM_WEBHOOK_SECRET || secretToken !== env.TELEGRAM_WEBHOOK_SECRET) {
+    logger.warn("Unauthorized webhook attempt: invalid or missing secret token");
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -31,12 +31,15 @@ export async function POST(req: Request) {
     const text = body.message.text.trim();
 
     // 2. Validate Allowed Chat ID
-    if (env.TELEGRAM_ALLOWED_CHAT_IDS) {
-      const allowed = env.TELEGRAM_ALLOWED_CHAT_IDS.split(",").map((s) => s.trim());
-      if (!allowed.includes(chatId)) {
-        logger.warn(`Unauthorized webhook attempt from chat ID: ${chatId}`);
-        return NextResponse.json({ success: true }); // Return 200 so Telegram stops retrying
-      }
+    if (!env.TELEGRAM_ALLOWED_CHAT_IDS) {
+      logger.warn("Unauthorized webhook attempt: TELEGRAM_ALLOWED_CHAT_IDS is not configured");
+      return NextResponse.json({ success: true });
+    }
+
+    const allowed = env.TELEGRAM_ALLOWED_CHAT_IDS.split(",").map((s) => s.trim());
+    if (!allowed.includes(chatId)) {
+      logger.warn(`Unauthorized webhook attempt from chat ID: ${chatId}`);
+      return NextResponse.json({ success: true }); // Return 200 so Telegram stops retrying
     }
 
     // Only process slash commands
