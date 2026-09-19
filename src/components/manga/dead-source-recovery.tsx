@@ -20,6 +20,10 @@ import {
   type AlternateSourceCandidate,
 } from "./alternate-source-modal";
 import { toast } from "sonner";
+import {
+  resolveSourceFallback,
+  executeSourceMigration,
+} from "@/shared/lib/source-fallback";
 
 interface DeadSourceRecoveryProps {
   sourceId: string;
@@ -130,14 +134,71 @@ export function DeadSourceRecovery({ sourceId, mangaId }: DeadSourceRecoveryProp
     }
   };
 
+  const fallbackEvaluation = useMemo(() => {
+    if (!libraryItem) return null;
+    return resolveSourceFallback({
+      savedTitle: {
+        id: libraryItem.id ?? `${sourceId}::${mangaId}`,
+        title: knownTitle,
+        author: knownAuthor,
+        primarySourceId: sourceId,
+        primaryMangaId: mangaId,
+        linkedSources: libraryItem.linkedSources,
+        lastReadChapterTitle: lastReadChapter,
+      },
+      failedSourceId: sourceId,
+      health: { status: "BROKEN", errorCode: "SOURCE_BROKEN" },
+      availableSources: getAllSourceMetadata(),
+    });
+  }, [libraryItem, sourceId, mangaId, knownTitle, knownAuthor, lastReadChapter]);
+
+  const handleQuickSwitch = () => {
+    if (!libraryItem || !fallbackEvaluation?.candidate) return;
+    executeSourceMigration({
+      libraryItem,
+      fallbackResult: fallbackEvaluation,
+      historyItem,
+      relinkTitleFn: relinkTitle,
+      saveProgressFn: (src, mid, cid, pidx) => useHistoryStore.getState().saveProgress(src, mid, cid, pidx),
+    });
+    toast.success(fallbackEvaluation.notification?.title ?? "Sumber berhasil dialihkan");
+    router.push(`/manga/${fallbackEvaluation.candidate.sourceId}/${fallbackEvaluation.candidate.mangaId}`);
+  };
+
   const handleConfirmRelink = (candidate: AlternateSourceCandidate) => {
     // Relink in library if present
     if (libraryItem) {
-      const savedTitleId = libraryItem.id ?? `${libraryItem.sourceId}::${libraryItem.mangaId}`;
-      relinkTitle(savedTitleId, candidate.sourceId, candidate.mangaId, {
-        title: candidate.title,
-        coverUrl: candidate.coverUrl,
+      const fallbackResult = resolveSourceFallback({
+        savedTitle: {
+          id: libraryItem.id ?? `${sourceId}::${mangaId}`,
+          title: knownTitle,
+          author: knownAuthor,
+          primarySourceId: sourceId,
+          primaryMangaId: mangaId,
+          linkedSources: libraryItem.linkedSources,
+          lastReadChapterTitle: lastReadChapter,
+        },
+        failedSourceId: sourceId,
+        health: { status: "BROKEN", errorCode: "SOURCE_BROKEN" },
+        alternateCandidates: [
+          {
+            sourceId: candidate.sourceId,
+            mangaId: candidate.mangaId,
+            title: candidate.title,
+            coverUrl: candidate.coverUrl,
+            author: knownAuthor,
+          },
+        ],
       });
+
+      executeSourceMigration({
+        libraryItem,
+        fallbackResult,
+        historyItem,
+        relinkTitleFn: relinkTitle,
+        saveProgressFn: (src, mid, cid, pidx) => useHistoryStore.getState().saveProgress(src, mid, cid, pidx),
+      });
+
       toast.success("Manga berhasil dialihkan ke sumber baru");
     }
 
@@ -190,8 +251,18 @@ export function DeadSourceRecovery({ sourceId, mangaId }: DeadSourceRecoveryProp
 
           {/* Actions */}
           <div className="flex flex-col sm:flex-row gap-3 w-full justify-center">
+            {fallbackEvaluation?.status === "AUTO_SAFE" && fallbackEvaluation.candidate && (
+              <Button
+                variant="primary"
+                onClick={handleQuickSwitch}
+                className="gap-2 w-full sm:w-auto font-bold"
+              >
+                <ArrowClockwise size={18} weight="bold" />
+                Alihkan ke {getSourceMetadata(fallbackEvaluation.candidate.sourceId)?.name ?? fallbackEvaluation.candidate.sourceId}
+              </Button>
+            )}
             <Button
-              variant="primary"
+              variant={fallbackEvaluation?.status === "AUTO_SAFE" ? "outline" : "primary"}
               onClick={handleFindAlternate}
               className="gap-2 w-full sm:w-auto font-bold"
             >

@@ -118,6 +118,15 @@ export const useLibraryStore = create<LibraryState>()(
 
           // Re-use existing ID if present, otherwise generate new SavedTitleId
           const savedTitleId = existingItem?.id || item.id || (crypto.randomUUID ? crypto.randomUUID() : legacyId);
+          const existingLinked = existingItem?.linkedSources ?? [];
+          const incomingLinked = item.linkedSources ?? [];
+          const mergedLinked = [...existingLinked];
+          for (const inc of incomingLinked) {
+            if (!mergedLinked.some((l) => l.sourceId === inc.sourceId && l.mangaId === inc.mangaId)) {
+              mergedLinked.push(inc);
+            }
+          }
+
           const enriched: LibraryItem = {
             ...existingItem,
             ...item,
@@ -125,7 +134,7 @@ export const useLibraryStore = create<LibraryState>()(
             schemaVersion: 2,
             primarySourceId: item.primarySourceId ?? existingItem?.primarySourceId ?? item.sourceId,
             primaryMangaId: item.primaryMangaId ?? existingItem?.primaryMangaId ?? item.mangaId,
-            linkedSources: item.linkedSources ?? existingItem?.linkedSources ?? [],
+            linkedSources: mergedLinked,
           };
           itemToPush = enriched;
           const key = existingKey || enriched.id!;

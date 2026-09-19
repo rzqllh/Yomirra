@@ -84,4 +84,28 @@ describe("DeadSourceRecovery Component", () => {
     expect(screen.getByText("Chapter 1")).toBeDefined();
     expect(screen.getByText(/Baca Offline/i)).toBeDefined();
   });
+
+  it("shows quick switch button when AUTO_SAFE linked source is available", () => {
+    useLibraryStore.getState().addToLibrary({
+      sourceId: "komikindo",
+      mangaId: "solo-leveling",
+      title: "Solo Leveling",
+      author: "Chugong",
+      linkedSources: [
+        {
+          sourceId: "alt-src",
+          mangaId: "solo-alt",
+          matchConfidence: "CONFIRMED",
+          addedAt: Date.now(),
+        },
+      ],
+      addedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+
+    render(<DeadSourceRecovery sourceId="komikindo" mangaId="solo-leveling" />);
+
+    expect(screen.getByRole("button", { name: /Alihkan ke ALT-SRC/i })).toBeDefined();
+  });
 });
+

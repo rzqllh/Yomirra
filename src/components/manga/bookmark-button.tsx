@@ -17,13 +17,27 @@ export function BookmarkButton({ sourceId, manga, className }: { sourceId: strin
   const handleBookmarkClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    const effectiveBindings = (manga as any)?.sourceBindings;
+    const linkedSources = Array.isArray(effectiveBindings) && effectiveBindings.length > 0
+      ? effectiveBindings
+          .filter((b: any) => b.sourceId !== sourceId)
+          .map((b: any) => ({
+            sourceId: b.sourceId,
+            mangaId: b.mangaId,
+            addedAt: Date.now(),
+            matchConfidence: "HIGH_CONFIDENCE" as const,
+          }))
+      : undefined;
+
     toggleLibrary({
       sourceId: sourceId,
       mangaId: manga.id,
       title: manga.title,
       coverUrl: manga.coverUrl,
+      author: manga.author,
       status: manga.status,
       format: manga.format,
+      linkedSources,
       addedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
