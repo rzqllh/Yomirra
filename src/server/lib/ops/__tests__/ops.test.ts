@@ -40,6 +40,20 @@ vi.mock("@/shared/logger", () => ({
   },
 }));
 
+vi.mock("@/server/lib/sources/health/probe", () => ({
+  probeSourceHealth: vi.fn(async (sourceId: string) => ({
+    sourceId,
+    status: "HEALTHY",
+    latencyMs: 150,
+    resolvedHost: "test.domain",
+    lastCheckedAt: new Date().toISOString(),
+    lastSuccessAt: new Date().toISOString(),
+    lastFailureAt: null,
+    consecutiveFailures: 0,
+  })),
+  probeAllSourcesHealth: vi.fn(async () => ({})),
+}));
+
 // Mock env
 vi.mock("@/env", () => ({
   env: {
@@ -52,6 +66,10 @@ vi.mock("@/env", () => ({
     NEXT_PUBLIC_APP_URL: "https://yomirra.vercel.app",
   },
 }));
+
+import { POST as handleWebhook } from "@/app/api/ops/telegram/webhook/route";
+import { POST as handleHealthDigestCron } from "@/app/api/ops/cron/health-digest/route";
+import { POST as handleDailyDigestCron } from "@/app/api/ops/cron/daily-digest/route";
 
 describe("Phase 4 — Telegram Ops Runtime V1 Unit Tests", () => {
   beforeEach(() => {
@@ -285,8 +303,6 @@ describe("Phase 4 — Telegram Ops Runtime V1 Unit Tests", () => {
 
   describe("Telegram Webhook Route (/api/ops/telegram/webhook)", () => {
     it("rejects unauthorized webhook secret with 401", async () => {
-      const { POST } = await import("@/app/api/ops/telegram/webhook/route");
-
       const req = new Request("http://localhost/api/ops/telegram/webhook", {
         method: "POST",
         headers: {
@@ -295,13 +311,11 @@ describe("Phase 4 — Telegram Ops Runtime V1 Unit Tests", () => {
         body: JSON.stringify({ message: { chat: { id: 123456 }, text: "/status" } }),
       });
 
-      const res = await POST(req);
+      const res = await handleWebhook(req);
       expect(res.status).toBe(401);
     });
 
     it("rejects unauthorized chat ID silently (returns 200 so Telegram does not retry)", async () => {
-      const { POST } = await import("@/app/api/ops/telegram/webhook/route");
-
       const req = new Request("http://localhost/api/ops/telegram/webhook", {
         method: "POST",
         headers: {
@@ -310,7 +324,7 @@ describe("Phase 4 — Telegram Ops Runtime V1 Unit Tests", () => {
         body: JSON.stringify({ message: { chat: { id: 999999 }, text: "/status" } }),
       });
 
-      const res = await POST(req);
+      const res = await handleWebhook(req);
       expect(res.status).toBe(200);
     });
 
@@ -318,8 +332,6 @@ describe("Phase 4 — Telegram Ops Runtime V1 Unit Tests", () => {
       const fetchSpy = vi.spyOn(global, "fetch").mockResolvedValue(
         new Response(JSON.stringify({ ok: true }), { status: 200 })
       );
-
-      const { POST } = await import("@/app/api/ops/telegram/webhook/route");
 
       const req = new Request("http://localhost/api/ops/telegram/webhook", {
         method: "POST",
@@ -329,7 +341,7 @@ describe("Phase 4 — Telegram Ops Runtime V1 Unit Tests", () => {
         body: JSON.stringify({ message: { chat: { id: 123456 }, text: "/version" } }),
       });
 
-      const res = await POST(req);
+      const res = await handleWebhook(req);
       expect(res.status).toBe(200);
       expect(fetchSpy).toHaveBeenCalledWith(
         expect.stringContaining("sendMessage"),
@@ -344,8 +356,6 @@ describe("Phase 4 — Telegram Ops Runtime V1 Unit Tests", () => {
         new Response(JSON.stringify({ ok: true }), { status: 200 })
       );
 
-      const { POST } = await import("@/app/api/ops/telegram/webhook/route");
-
       const req = new Request("http://localhost/api/ops/telegram/webhook", {
         method: "POST",
         headers: {
@@ -354,7 +364,7 @@ describe("Phase 4 — Telegram Ops Runtime V1 Unit Tests", () => {
         body: JSON.stringify({ message: { chat: { id: 123456 }, text: "/source non_existent_source" } }),
       });
 
-      const res = await POST(req);
+      const res = await handleWebhook(req);
       expect(res.status).toBe(200);
       expect(fetchSpy).toHaveBeenCalledWith(
         expect.stringContaining("sendMessage"),
@@ -367,8 +377,6 @@ describe("Phase 4 — Telegram Ops Runtime V1 Unit Tests", () => {
 
   describe("Scheduled Ops Endpoints Authentication", () => {
     it("rejects health-digest cron call without valid Bearer secret", async () => {
-      const { POST } = await import("@/app/api/ops/cron/health-digest/route");
-
       const req = new Request("http://localhost/api/ops/cron/health-digest", {
         method: "POST",
         headers: {
@@ -376,13 +384,11 @@ describe("Phase 4 — Telegram Ops Runtime V1 Unit Tests", () => {
         },
       });
 
-      const res = await POST(req);
+      const res = await handleHealthDigestCron(req);
       expect(res.status).toBe(401);
     });
 
     it("rejects daily-digest cron call without valid Bearer secret", async () => {
-      const { POST } = await import("@/app/api/ops/cron/daily-digest/route");
-
       const req = new Request("http://localhost/api/ops/cron/daily-digest", {
         method: "POST",
         headers: {
@@ -390,7 +396,7 @@ describe("Phase 4 — Telegram Ops Runtime V1 Unit Tests", () => {
         },
       });
 
-      const res = await POST(req);
+      const res = await handleDailyDigestCron(req);
       expect(res.status).toBe(401);
     });
   });
