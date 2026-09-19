@@ -234,11 +234,12 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
 
       const dedupedItems = Array.from(dedupedMap.values());
 
-      // Sort by detectedAt descending
+      // Sort by detectedAt descending with deterministic tie-breaking by key
       return dedupedItems.sort((a, b) => {
         const timeA = a.detectedAt ? new Date(a.detectedAt).getTime() : 0;
         const timeB = b.detectedAt ? new Date(b.detectedAt).getTime() : 0;
-        return timeB - timeA;
+        if (timeB !== timeA) return timeB - timeA;
+        return a.key.localeCompare(b.key);
       });
     }
 
@@ -283,7 +284,8 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
     return Array.from(dedupedFallbackMap.values()).sort((a, b) => {
       const timeA = a.detectedAt ? new Date(a.detectedAt).getTime() : 0;
       const timeB = b.detectedAt ? new Date(b.detectedAt).getTime() : 0;
-      return timeB - timeA;
+      if (timeB !== timeA) return timeB - timeA;
+      return a.key.localeCompare(b.key);
     });
   }, [libraryItems, updateItems]);
 
