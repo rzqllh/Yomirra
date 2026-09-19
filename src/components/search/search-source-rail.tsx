@@ -37,7 +37,7 @@ export function SearchSourceRail({
               aria-label={`Sumber ${source.name}`}
               onClick={() => onToggleSource(source.id)}
               className={cn(
-                "relative flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all outline-none border min-h-[40px] shadow-xs active:scale-[0.98]",
+                "relative flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-[10px] text-xs font-bold transition-all outline-none border min-h-[36px] shadow-xs active:scale-[0.98]",
                 isSelected
                   ? "border-accent/40 bg-accent/15 text-accent shadow-xs"
                   : "border-border-subtle bg-surface-raised/60 text-text-secondary hover:border-border-strong hover:text-text-primary"

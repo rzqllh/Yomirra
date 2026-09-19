@@ -22,6 +22,21 @@ import { cn } from "@/shared/utils/cn";
 import { useSearchFilterStore } from "@/shared/store/search-filter-store";
 import type { SourceMetadata } from "@/shared/sources/source-types";
 
+function getFriendlyErrorMessage(errorMsg: string): string {
+  const msg = errorMsg.toLowerCase();
+  if (msg.includes("timeout") || msg.includes("aborted") || msg.includes("fetch failed") || msg.includes("econnrefused")) {
+    return "tidak dapat dijangkau (koneksi lambat/putus)";
+  }
+  if (msg.includes("cloudflare") || msg.includes("503") || msg.includes("403")) {
+    return "diblokir perlindungan situs (Cloudflare)";
+  }
+  if (msg.includes("parser") || msg.includes("cheerio") || msg.includes("selector") || msg.includes("parse")) {
+    return "sedang bermasalah (perubahan struktur situs)";
+  }
+  return "gagal dimuat";
+}
+
+
 export interface SearchResultsProps {
   activeSelectedSources: string[];
   searchableSources: SourceMetadata[];
@@ -81,11 +96,13 @@ export function SearchResults({
             return (
               <div
                 key={err.sourceId}
-                className="flex items-center justify-between p-3 rounded-xl bg-semantic-error/10 border border-semantic-error/20 text-xs font-semibold text-semantic-error"
+                className="flex items-center justify-between p-3 rounded-[12px] bg-semantic-error/10 border border-semantic-error/20 text-xs font-semibold text-semantic-error"
               >
                 <div className="flex items-center gap-2 min-w-0">
                   <WarningCircle size={16} weight="fill" className="shrink-0" />
-                  <span className="truncate">{source?.name || err.sourceId} gagal dimuat</span>
+                  <span className="truncate">
+                    {source?.name || err.sourceId} {getFriendlyErrorMessage(err.error)}
+                  </span>
                 </div>
               </div>
             );
