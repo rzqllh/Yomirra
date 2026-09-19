@@ -243,3 +243,41 @@
 - Reader flow filters out or displays locked indicator for unreleased chapters — `PROPOSED`
 
 **Current State:** Verified via live API probing. Paywall boundary cleanly defined and documented.
+
+---
+
+## R-013: Silent Reading Progress Drift / Accidental Chapter Advancement
+
+**Risk:** During automated source fallback, mapping algorithms might silently advance a user's reading progress to a higher chapter number (e.g., user read 57.5, and the system auto-selects chapter 58 because chapter 57.5 is missing from the target source).
+
+**Likelihood:** MEDIUM — scanlation naming discrepancies and decimal/special chapter gaps are common.
+
+**Impact:** CRITICAL — user trust is broken if spoilers or skipped content occur due to silent progress advancement.
+
+**Detection:** Automated tests assert that target chapter number is never greater than lastReadNumber under automatic fallback.
+
+**Mitigation:**
+- Strict `No-Forward-Jump` invariant: `findNearestSafeChapter` strictly selects the nearest chapter $\le$ lastReadNumber.
+- Non-exact chapter mappings (`PROBABLE`, `AMBIGUOUS`, `UNMAPPED`) strictly require explicit user confirmation (`CONFIRM_REQUIRED`).
+- Automatic fallback (`AUTO_SAFE`) is strictly limited to exact chapter matches (`EXACT`).
+
+**Current State:** Fully mitigated and verified in Phase 5 (`source-fallback.test.ts`).
+
+---
+
+## R-014: Page Position Divergence Across Scanlations
+
+**Risk:** Different scanlations have divergent page counts, splash/credit spreads, and split orientations. Blindly copying `pageIndex` (e.g., page 18 from Source A to Source B) causes the reader to open at the wrong scene or throw index out-of-bounds.
+
+**Likelihood:** HIGH — different scanlation teams format images differently.
+
+**Impact:** MEDIUM — disorienting user experience on source switch.
+
+**Detection:** Reader opens at incorrect page or fails to render.
+
+**Mitigation:**
+- Target source `pageIndex` is ALWAYS reset to 0 (start of chapter) upon source switch.
+- Original `pageIndex` is preserved in `SourceMigrationSnapshot` for provenance, auditability, and rollback.
+
+**Current State:** Fully mitigated and verified in Phase 5 (`source-fallback.test.ts`).
+

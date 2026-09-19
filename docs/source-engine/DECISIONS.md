@@ -222,3 +222,23 @@
 
 **Status:** ACTIVE — Implemented in Phase 3.
 
+---
+
+## D-013: Automatic Source Fallback, Reversible Migration Snapshots & Page-Index Reset Policy
+
+**Decision:**
+1. **Temporary Fallback vs Persistent Relink:**
+   - `RATE_LIMITED` or transient upstream errors permit a temporary reading fallback for the current reading session (`isTemporary: true`) without permanently mutating the primary source in the user's library.
+   - Persistent `BROKEN` states or deterministic error codes (`ROUTE_CHANGED`, `PARSER_BROKEN`, `SCHEMA_CHANGED`, `DECRYPT_FAILURE`) permit permanent relinking to a `CONFIRMED` or `HIGH_CONFIDENCE` alternate source, accompanied by a clear in-app notification.
+2. **Chapter Progress vs Page Position Policy:**
+   - Cross-source chapter progress is preserved via `chapterNumber` mapping (`mapChapterProgress`).
+   - Old source `pageIndex` is preserved in the `SourceMigrationSnapshot` for auditability and rollback.
+   - Target source `pageIndex` is ALWAYS reset to 0 (start of mapped chapter). Yomirra NEVER blindly copies page index across sources because different scanlations have divergent page counts, splash/credit spreads, and split orientations.
+3. **No-Forward-Jump Invariant:**
+   - The engine must NEVER automatically advance reading progress to a higher chapter number. When exact mapping is unavailable, the nearest lower safe candidate ($\le$ lastReadNumber) is provided as an option, strictly requiring user confirmation.
+4. **Reversible Migration Snapshots:**
+   - Every source migration produces an auditable, reversible `SourceMigrationSnapshot`. The previous primary source is permanently retained in `linkedSources` as `CONFIRMED`. User library items, reading history, and completed chapters are NEVER deleted or overwritten.
+
+**Status:** ACTIVE — Implemented in Phase 5.
+
+

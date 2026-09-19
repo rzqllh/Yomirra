@@ -1,9 +1,9 @@
 # Source Engine V1 — Development Status
 
 ```
-Current Phase:     4 — Enhanced Search & Canonical Deduplication (DONE)
+Current Phase:     5 — Automatic Source Fallback & Safe Reading Progress Migration (DONE)
 Current Branch:    feat/source-engine-v1
-Last Verified Commit: 4ae9141
+Last Verified Commit: HEAD
 Last Updated:      2026-09-19
 Known Blockers:    None
 
@@ -11,9 +11,18 @@ Known Blockers:    None
 
 ## Test Baseline
 
-**71 test files, 492 tests — ALL PASSING** as of 2026-09-19 (466 Phase 3 baseline + 12 Phase 4 canonical search tests + 14 Telegram Ops tests).
+**72 test files, 527 tests — ALL PASSING** as of 2026-09-19 (466 Phase 3 baseline + 12 Phase 4 canonical search tests + 14 Telegram Ops tests + 35 Phase 5 fallback & migration tests).
 
 Any change must preserve this baseline.
+
+### Phase 5 Automatic Source Fallback & Safe Migration Architecture
+- **Authoritative Fallback Resolver (`source-fallback.ts`):** Centralized fallback resolution engine consuming Phase 3 functional health states (`BROKEN`, `ROUTE_CHANGED`, `PARSER_BROKEN`, `DECRYPT_FAILURE`, `RATE_LIMITED`, `DEGRADED`, `HEALTHY`).
+- **Temporary Fallback vs Persistent Relink:** `RATE_LIMITED` triggers temporary session fallback (`isTemporary: true`) without permanently mutating library primary source; deterministic broken states permit permanent relinking to `CONFIRMED` or `HIGH_CONFIDENCE` alternates.
+- **Strict Reading Progress Discipline:** Exact chapter match auto-applies; non-exact chapters (`PROBABLE`, `AMBIGUOUS`, `UNMAPPED`) strictly require user confirmation. Under no circumstances will reading progress advance forward automatically.
+- **Page Position Policy:** Old source `pageIndex` is preserved in the migration snapshot; target source `pageIndex` is reset to 0 (start of mapped chapter).
+- **Reversible Migration Snapshots:** Implemented `SourceMigrationSnapshot` registry and `rollbackSourceMigration` restoring original source provenance and progress. Old source is permanently kept in `linkedSources` as `CONFIRMED`.
+- **Search Integration:** Canonical search bindings from Phase 4 are preserved as `linkedSources` on save, eliminating redundant rediscovery.
+
 
 ### Phase 3 Key Incident Evidence & Architecture
 - **Komikindo `ROUTE_CHANGED` Incident:** In commit `5f56ad9` (regression test `ed6b21d`), Komikindo upstream search route changed from `/manga/page/{page}/` to `/page/{page}/?s={query}`. While the homepage returned HTTP 200, search was non-functional. Conclusive evidence that transport reachability != functional source health.
