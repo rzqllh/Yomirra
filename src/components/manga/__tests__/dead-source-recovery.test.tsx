@@ -5,9 +5,11 @@ import { DeadSourceRecovery } from "../dead-source-recovery";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useDownloadStore } from "@/shared/store/download-store";
 
+const mockPush = vi.fn();
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
-    push: vi.fn(),
+    push: mockPush,
     back: vi.fn(),
   }),
 }));
@@ -30,6 +32,7 @@ vi.mock("@/shared/api-client", () => ({
 
 describe("DeadSourceRecovery Component", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     useLibraryStore.setState({ items: {} });
     useDownloadStore.setState({ downloads: {} });
   });
@@ -85,10 +88,13 @@ describe("DeadSourceRecovery Component", () => {
     expect(screen.getByText(/Baca Offline/i)).toBeDefined();
   });
 
-  it("shows quick switch button when AUTO_SAFE linked source is available", () => {
+  it("shows quick switch button when AUTO_SAFE linked source is available and handles switch click", () => {
     useLibraryStore.getState().addToLibrary({
+      id: "saved-test-01",
       sourceId: "komikindo",
       mangaId: "solo-leveling",
+      primarySourceId: "komikindo",
+      primaryMangaId: "solo-leveling",
       title: "Solo Leveling",
       author: "Chugong",
       linkedSources: [
@@ -105,7 +111,18 @@ describe("DeadSourceRecovery Component", () => {
 
     render(<DeadSourceRecovery sourceId="komikindo" mangaId="solo-leveling" />);
 
-    expect(screen.getByRole("button", { name: /Alihkan ke ALT-SRC/i })).toBeDefined();
+    const switchBtn = screen.getByRole("button", { name: /Alihkan ke ALT-SRC/i });
+    expect(switchBtn).toBeDefined();
+
+    // Click quick switch
+    fireEvent.click(switchBtn);
+
+    // Verify migration performed
+    const updated = useLibraryStore.getState().getLibraryItemById("saved-test-01");
+    expect(updated?.primarySourceId).toBe("alt-src");
+    expect(updated?.primaryMangaId).toBe("solo-alt");
+    // Verify redirection
+    expect(mockPush).toHaveBeenCalledWith("/manga/alt-src/solo-alt");
   });
 });
 
