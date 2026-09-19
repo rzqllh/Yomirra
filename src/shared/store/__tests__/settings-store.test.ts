@@ -50,4 +50,38 @@ describe('SettingsStore Notification Preferences', () => {
     useSettingsStore.getState().unmuteManga(key);
     expect(useSettingsStore.getState().mutedMangaKeys).toEqual([key2]);
   });
+
+  describe('Phase 6 Source Routing Preferences', () => {
+    it('has correct routing defaults', () => {
+      const state = useSettingsStore.getState();
+      expect(state.routingMode).toBe('PREFERRED');
+      expect(state.globalSourceOrder).toContain('mangadex');
+      expect(state.preferredLanguages).toEqual(['id', 'en']);
+      expect(state.perTitleSourcePreferences).toEqual({});
+    });
+
+    it('updates routing mode', () => {
+      useSettingsStore.getState().setRoutingMode('MANUAL');
+      expect(useSettingsStore.getState().routingMode).toBe('MANUAL');
+
+      useSettingsStore.getState().setRoutingMode('AUTO_SAFE');
+      expect(useSettingsStore.getState().routingMode).toBe('AUTO_SAFE');
+    });
+
+    it('updates global source order and preferred languages', () => {
+      useSettingsStore.getState().setGlobalSourceOrder(['komiku', 'mangadex']);
+      expect(useSettingsStore.getState().globalSourceOrder).toEqual(['komiku', 'mangadex']);
+
+      useSettingsStore.getState().setPreferredLanguages(['en', 'id']);
+      expect(useSettingsStore.getState().preferredLanguages).toEqual(['en', 'id']);
+    });
+
+    it('sets and clears per-title source preference', () => {
+      useSettingsStore.getState().setPerTitleSourcePreference('title-123', 'komiknesia');
+      expect(useSettingsStore.getState().perTitleSourcePreferences['title-123']).toBe('komiknesia');
+
+      useSettingsStore.getState().clearPerTitleSourcePreference('title-123');
+      expect(useSettingsStore.getState().perTitleSourcePreferences['title-123']).toBeUndefined();
+    });
+  });
 });

@@ -1,6 +1,20 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+export type SourceRoutingMode = "MANUAL" | "PREFERRED" | "AUTO_SAFE";
+
+export const DEFAULT_GLOBAL_SOURCE_ORDER: string[] = [
+  "mangadex",
+  "komiku",
+  "komiknesia",
+  "komikindo",
+  "komiku-ii",
+  "asurascans",
+  "shinigami",
+];
+
+export const DEFAULT_PREFERRED_LANGUAGES: string[] = ["id", "en"];
+
 interface SettingsState {
   dataSaver: boolean;
   setDataSaver: (enabled: boolean) => void;
@@ -21,6 +35,17 @@ interface SettingsState {
   mutedMangaKeys: string[];
   muteManga: (key: string) => void;
   unmuteManga: (key: string) => void;
+
+  // Phase 6 Source Preference & Smart Routing
+  routingMode: SourceRoutingMode;
+  setRoutingMode: (mode: SourceRoutingMode) => void;
+  globalSourceOrder: string[];
+  setGlobalSourceOrder: (order: string[]) => void;
+  preferredLanguages: string[];
+  setPreferredLanguages: (langs: string[]) => void;
+  perTitleSourcePreferences: Record<string, string>;
+  setPerTitleSourcePreference: (titleKey: string, sourceId: string) => void;
+  clearPerTitleSourcePreference: (titleKey: string) => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -51,17 +76,42 @@ export const useSettingsStore = create<SettingsState>()(
       unmuteManga: (key) => set((state) => ({
         mutedMangaKeys: state.mutedMangaKeys.filter(k => k !== key)
       })),
+
+      // Phase 6 Source Preference Defaults
+      routingMode: "PREFERRED",
+      setRoutingMode: (mode) => set({ routingMode: mode }),
+      globalSourceOrder: DEFAULT_GLOBAL_SOURCE_ORDER,
+      setGlobalSourceOrder: (order) => set({ globalSourceOrder: order }),
+      preferredLanguages: DEFAULT_PREFERRED_LANGUAGES,
+      setPreferredLanguages: (langs) => set({ preferredLanguages: langs }),
+      perTitleSourcePreferences: {},
+      setPerTitleSourcePreference: (titleKey, sourceId) => set((state) => ({
+        perTitleSourcePreferences: {
+          ...state.perTitleSourcePreferences,
+          [titleKey]: sourceId,
+        }
+      })),
+      clearPerTitleSourcePreference: (titleKey) => set((state) => {
+        const next = { ...state.perTitleSourcePreferences };
+        delete next[titleKey];
+        return { perTitleSourcePreferences: next };
+      }),
     }),
     {
       name: "yomirra-settings",
-      version: 1,
+      version: 2,
       migrate: (persistedState: any, version: number) => {
         if (version === 0) {
-          // Safe migration from v0 to v1
           persistedState.checkOnAppStart = true;
           persistedState.minimumCheckIntervalMinutes = 15;
           persistedState.notifyForAllLibraryItems = true;
           persistedState.mutedMangaKeys = [];
+        }
+        if (version < 2) {
+          persistedState.routingMode = persistedState.routingMode || "PREFERRED";
+          persistedState.globalSourceOrder = persistedState.globalSourceOrder || DEFAULT_GLOBAL_SOURCE_ORDER;
+          persistedState.preferredLanguages = persistedState.preferredLanguages || DEFAULT_PREFERRED_LANGUAGES;
+          persistedState.perTitleSourcePreferences = persistedState.perTitleSourcePreferences || {};
         }
         return persistedState as SettingsState;
       },
