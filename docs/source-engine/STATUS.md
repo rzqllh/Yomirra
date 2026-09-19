@@ -1,9 +1,9 @@
 # Source Engine V1 — Development Status
 
 ```
-Current Phase:     2A — Komiku II Adapter (DONE)
+Current Phase:     2B — Asura Scans Adapter
 Current Branch:    feat/source-engine-v1
-Last Verified Commit: e828303
+Last Verified Commit: c043853
 Last Updated:      2026-09-19
 Known Blockers:    None
 ```
@@ -37,7 +37,8 @@ Any change must preserve this baseline.
 | 15 | Source Registry Preparation (`source-registry.ts`) | DONE | VERIFIED_FROM_REPO | 3 tests passing | e828303 | Isolated pendingSourceRegistry for Phase 2 |
 | 16 | Source Manager & MangaDex fetch audit | DONE | VERIFIED_FROM_REPO | 298 baseline | e828303 | Audited; no breaking changes required for Phase 1 |
 | 17 | Infrastructure Tests & Verification | DONE | VERIFIED_FROM_REPO | 319 passing | e828303 | Typecheck and full test suite passing cleanly |
-| 18 | Phase 2A: Komiku II Adapter (`komiku-ii`) | DONE | VERIFIED_FROM_SOURCE + VERIFIED_FROM_REPO | 26 adapter tests (345 total) | Pending | REST JSON API adapter + fixtures + tests + image redirect fallback + browser flow verified |
+| 18 | Phase 2A: Komiku II Adapter (`komiku-ii`) | DONE | VERIFIED_FROM_SOURCE + VERIFIED_FROM_REPO | 26 adapter tests (345 total) | c043853 | REST JSON API adapter + fixtures + tests + image redirect fallback + browser flow verified |
+| 19 | Phase 2B: Asura Scans Adapter (`asurascans`) | IMPLEMENTING | VERIFIED_FROM_SOURCE | Pending | N/A | REST JSON API adapter + locked content boundary + fixtures + tests |
 
 ---
 
