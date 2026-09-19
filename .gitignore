@@ -112,3 +112,8 @@ test-results*.json
 # Local archives and exports
 *.zip
 *.html
+
+# Internal development / agent tracking
+docs/source-engine/
+docs/telegram-ops/
+component-reuse-audit-*.md
