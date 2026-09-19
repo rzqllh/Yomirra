@@ -2,6 +2,8 @@ import type { MangaSource } from "@/shared/sources/source-types";
 import { sourceMap, sources } from "./adapters";
 import { DynamicSourceAdapter } from "./adapters/dynamic";
 import { MihonSourceManifestSchema } from "@/shared/sources/dynamic-source-registry";
+import { domainResolver } from "./domain-resolver";
+
 
 export class SourceManager {
   async getSource(id: string, manifestUrl?: string | null): Promise<MangaSource> {
@@ -30,8 +32,20 @@ export class SourceManager {
     if (!source) {
       throw new Error(`Source ${id} not found`);
     }
+
+    // D-001: Check runtime domain resolution without altering source identity
+    try {
+      const resolved = await domainResolver.resolveDomain(normalizedId, "frontend");
+      if (resolved && typeof (source as any).setBaseUrl === "function" && source.baseUrl !== resolved) {
+        (source as any).setBaseUrl(resolved);
+      }
+    } catch {
+      // Preserve default adapter baseUrl on resolution error
+    }
+
     return source;
   }
+
 
   getAllSources(): MangaSource[] {
     return sources;

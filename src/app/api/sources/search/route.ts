@@ -7,13 +7,17 @@ import { withCache, CACHE_TTL, getSourceCacheKey } from "@/server/lib/cache/redi
 import { redis } from "@/server/lib/cache/redis";
 import { createHash } from "crypto";
 
+import { SourceError, type SourceErrorCode } from "@/server/lib/sources/error";
+
 export interface GlobalSearchResponse {
   resultsBySource: Record<string, {
     results: MangaItem[];
     hasNextPage?: boolean;
     error?: string;
+    errorCode?: SourceErrorCode;
   }>;
 }
+
 
 export async function GET(req: NextRequest) {
   const rateLimit = await checkRateLimit(req);
@@ -77,7 +81,7 @@ export async function GET(req: NextRequest) {
         const promises = sourceIds.map(async (sourceId) => {
           const source = loadedSources[sourceId];
           if (!source) {
-            results[sourceId] = { results: [], error: "Source not found" };
+            results[sourceId] = { results: [], error: "Source not found", errorCode: "SOURCE_DOWN" };
             return;
           }
 
@@ -87,7 +91,7 @@ export async function GET(req: NextRequest) {
               searchResult = await source.getLatest(page);
             } else {
               if (!source.capabilities.search) {
-                results[sourceId] = { results: [], error: "Search not supported by source" };
+                results[sourceId] = { results: [], error: "Search not supported by source", errorCode: "UNKNOWN" };
                 return;
               }
               searchResult = await source.search(queryStr, page, Object.keys(filters).length > 0 ? filters : undefined);
@@ -97,11 +101,14 @@ export async function GET(req: NextRequest) {
               hasNextPage: searchResult.hasNextPage,
             };
           } catch (error: unknown) {
+            const classified = SourceError.classify(error, sourceId, "search");
             results[sourceId] = {
               results: [],
-              error: error instanceof Error ? error.message : "Search failed",
+              error: classified.message,
+              errorCode: classified.code,
             };
           }
+
         });
 
         await Promise.allSettled(promises);

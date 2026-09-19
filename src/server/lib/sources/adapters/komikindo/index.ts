@@ -36,10 +36,23 @@ export class KomikindoSource implements MangaSource {
     return "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36";
   }
 
-  private client = new HttpClient(this.baseUrl, {
-    "User-Agent": this.getRandomUA(),
-    "Referer": this.baseUrl,
-  });
+  private client: HttpClient;
+
+  constructor(baseUrl?: string) {
+    if (baseUrl) {
+      this.baseUrl = baseUrl.replace(/\/+$/, "");
+    }
+    this.client = new HttpClient(this.baseUrl, {
+      "User-Agent": this.getRandomUA(),
+      "Referer": this.baseUrl,
+    });
+  }
+
+  setBaseUrl(url: string): void {
+    this.baseUrl = url.replace(/\/+$/, "");
+    this.client.setBaseUrl(this.baseUrl);
+  }
+
 
   private parseMangaList(html: string): MangaPageResult {
     const $ = cheerio.load(html);

@@ -54,12 +54,26 @@ export class ShinigamiSource implements MangaSource {
     return uas[Math.floor(Math.random() * uas.length)];
   }
 
-  private client = new HttpClient("https://api.shngm.io", {
-    "User-Agent": this.getRandomUA(),
-    "Referer": "https://c.shinigami.asia/",
-    "Origin": "https://c.shinigami.asia",
-    "DNT": "1",
-  });
+  private apiBaseUrl = "https://api.shngm.io";
+  private client: HttpClient;
+
+  constructor(apiBaseUrl?: string) {
+    if (apiBaseUrl) {
+      this.apiBaseUrl = apiBaseUrl.replace(/\/+$/, "");
+    }
+    this.client = new HttpClient(this.apiBaseUrl, {
+      "User-Agent": this.getRandomUA(),
+      "Referer": "https://c.shinigami.asia/",
+      "Origin": "https://c.shinigami.asia",
+      "DNT": "1",
+    });
+  }
+
+  setApiBaseUrl(url: string): void {
+    this.apiBaseUrl = url.replace(/\/+$/, "");
+    this.client.setBaseUrl(this.apiBaseUrl);
+  }
+
 
   async getPopular(page: number): Promise<MangaPageResult> {
     const res = await this.client.get<ShinigamiMangaListResponse>("/v1/manga/list", {
