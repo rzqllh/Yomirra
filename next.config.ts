@@ -51,6 +51,14 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "cdn.asurascans.com",
       },
+      {
+        protocol: "https",
+        hostname: "data.cdnesia.my.id",
+      },
+      {
+        protocol: "https",
+        hostname: "proxy.cdnesia.my.id",
+      },
     ],
     localPatterns: [
       {

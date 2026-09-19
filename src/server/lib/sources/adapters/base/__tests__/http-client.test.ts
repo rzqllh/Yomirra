@@ -189,37 +189,24 @@ describe("HttpClient Infrastructure", () => {
   });
 });
 
-describe("Source Registry Phase 1 & 2 State", () => {
-  it("exports pendingSourceRegistry with remaining unreleased sources", () => {
-    expect(pendingSourceRegistry).toHaveLength(1);
-    const ids = pendingSourceRegistry.map((s) => s.id);
-    expect(ids).toContain("komiknesia");
-    expect(ids).not.toContain("komiku-ii");
-    expect(ids).not.toContain("asurascans");
-
-    // All pending sources must be marked disabled and not installed
-    for (const pending of pendingSourceRegistry) {
-      expect(pending.isEnabled).toBe(false);
-      expect(pending.isInstalled).toBe(false);
-      expect(pending.status).toBe("in-dev");
-      expect(pending.isDynamic).toBe(false);
-    }
+describe("Source Registry Phase 1, 2A, 2B, 2C State", () => {
+  it("pendingSourceRegistry is empty — all Phase 2 sources are now active", () => {
+    expect(pendingSourceRegistry).toHaveLength(0);
   });
 
-  it("getPendingSourceMetadata retrieves pending sources correctly", () => {
+  it("getPendingSourceMetadata returns undefined for promoted sources", () => {
     const komiknesia = getPendingSourceMetadata("komiknesia");
-    expect(komiknesia).toBeDefined();
-    expect(komiknesia?.name).toBe("KomikNesia");
-    expect(komiknesia?.upstreamDomain).toBe("api-be.komiknesia.my.id");
+    expect(komiknesia).toBeUndefined(); // Promoted to active registry
 
     const asura = getPendingSourceMetadata("asurascans");
-    expect(asura).toBeUndefined();
+    expect(asura).toBeUndefined(); // Already promoted in Phase 2B
   });
 
-  it("verifies promoted sources are in active sourceRegistry while unimplemented sources remain isolated", () => {
+  it("verifies all Phase 2 sources are in active sourceRegistry", () => {
     const activeIds = sourceRegistry.map((s) => s.id);
     expect(activeIds).toContain("komiku-ii");
     expect(activeIds).toContain("asurascans");
-    expect(activeIds).not.toContain("komiknesia");
+    expect(activeIds).toContain("komiknesia"); // Promoted in Phase 2C
   });
 });
+
