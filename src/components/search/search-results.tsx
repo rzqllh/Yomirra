@@ -43,7 +43,7 @@ export interface SearchResultsProps {
   errorsToDisplay: { sourceId: string; error: string }[];
   isInitialLoading: boolean;
   allSourcesFailed: boolean;
-  searchMangas: { manga: any; sourceId: string }[];
+  searchMangas: { manga: any; sourceId: string; sourceBindings?: any[] }[];
   query: string;
   hasActiveFilters: boolean;
   page: number;
@@ -200,6 +200,7 @@ export function SearchResults({
                   key={`${item.sourceId}-${item.manga.id}`}
                   sourceId={item.sourceId}
                   manga={item.manga}
+                  sourceBindings={item.sourceBindings || (item.manga as any)?.sourceBindings}
                   showSourceBadge={true}
                   priority={false}
                 />

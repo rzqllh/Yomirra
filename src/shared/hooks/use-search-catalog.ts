@@ -11,6 +11,7 @@ import { useSearchPruning } from "@/shared/hooks/use-search-pruning";
 import { useSearchReset } from "@/shared/hooks/use-search-reset";
 import { mergeFilters, buildPayloadForSource } from "@/shared/utils/filter-helpers";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
+import { clusterCanonicalResults, type SourceBinding } from "@/shared/lib/canonical-search";
 import type { FilterList, SourceMetadata } from "@/shared/sources/source-types";
 
 export function useSearchCatalog() {
@@ -226,8 +227,7 @@ export function useSearchCatalog() {
   }, [activeSelectedSources, searchQueries, queryClient, dynamicFilters, activeFilters, page, query, isNsfwFiltered]);
 
   const getMergedMangas = (sourceArrays: { sourceId: string, items: any[] }[]) => {
-    const result: { manga: any, sourceId: string }[] = [];
-    const seenTitles = new Set<string>();
+    const flattened: Array<{ manga: any; sourceId: string }> = [];
 
     let maxLen = 0;
     sourceArrays.forEach(arr => {
@@ -237,15 +237,17 @@ export function useSearchCatalog() {
     for (let i = 0; i < maxLen; i++) {
       for (const arr of sourceArrays) {
         if (arr.items[i]) {
-          const titleLower = arr.items[i].title.toLowerCase().trim();
-          if (!seenTitles.has(titleLower)) {
-            seenTitles.add(titleLower);
-            result.push({ manga: arr.items[i], sourceId: arr.sourceId });
-          }
+          flattened.push({ manga: arr.items[i], sourceId: arr.sourceId });
         }
       }
     }
-    return result;
+
+    const clusters = clusterCanonicalResults(flattened);
+    return clusters.map(c => ({
+      manga: c.primaryResult,
+      sourceId: c.primaryResult.sourceId,
+      sourceBindings: c.sourceBindings,
+    }));
   };
 
   const searchMangas = resultsBySource ? getMergedMangas(

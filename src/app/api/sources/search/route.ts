@@ -8,6 +8,7 @@ import { redis } from "@/server/lib/cache/redis";
 import { createHash } from "crypto";
 
 import { SourceError, type SourceErrorCode } from "@/server/lib/sources/error";
+import { deduplicateResultsBySource, type CanonicalSearchResult } from "@/shared/lib/canonical-search";
 
 export interface GlobalSearchResponse {
   resultsBySource: Record<string, {
@@ -16,6 +17,7 @@ export interface GlobalSearchResponse {
     error?: string;
     errorCode?: SourceErrorCode;
   }>;
+  canonicalResults?: CanonicalSearchResult[];
 }
 
 
@@ -88,13 +90,18 @@ export async function GET(req: NextRequest) {
           try {
             let searchResult;
             if (!queryStr && Object.keys(filters).length === 0) {
+              if (!source.capabilities.latest) {
+                results[sourceId] = { results: [], error: "Latest not supported by source", errorCode: "UNKNOWN" };
+                return;
+              }
               searchResult = await source.getLatest(page);
             } else {
               if (!source.capabilities.search) {
                 results[sourceId] = { results: [], error: "Search not supported by source", errorCode: "UNKNOWN" };
                 return;
               }
-              searchResult = await source.search(queryStr, page, Object.keys(filters).length > 0 ? filters : undefined);
+              const activeFilters = Object.keys(filters).length > 0 && source.capabilities.filters ? filters : undefined;
+              searchResult = await source.search(queryStr, page, activeFilters);
             }
             results[sourceId] = {
               results: searchResult.mangas,
@@ -123,9 +130,12 @@ export async function GET(req: NextRequest) {
       await redis.del(cacheKey).catch(() => {});
     }
 
+    const canonicalResults = deduplicateResultsBySource(cachedData);
+
     return NextResponse.json({
       data: {
-        resultsBySource: cachedData
+        resultsBySource: cachedData,
+        canonicalResults,
       }
     });
   } catch {

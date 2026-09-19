@@ -15,9 +15,11 @@ import { useUpdateStore, getUpdateKey } from "@/shared/store/update-store";
 import type { MangaKey } from "@/shared/types/collection";
 import { cn } from "@/shared/utils/cn";
 import type { BaseCardProps } from "./types";
+import type { SourceBinding } from "@/shared/lib/canonical-search";
 
 export interface ShelfCardProps extends BaseCardProps {
   showSourceBadge?: boolean;
+  sourceBindings?: SourceBinding[];
 }
 
 export function ShelfCard({ 
@@ -25,6 +27,7 @@ export function ShelfCard({
   sourceId, 
   priority = false,
   showSourceBadge = false,
+  sourceBindings,
   displayScore
 }: ShelfCardProps) {
   const pathname = usePathname();
@@ -52,6 +55,8 @@ export function ShelfCard({
   const sourceObj = dynamicSourceRegistry.get(sourceId) || sourceRegistry.find(s => s.id === sourceId);
   const sourceName = showSourceBadge ? (sourceObj?.name || sourceId) : null;
   const isUnavailable = sourceObj?.status === "unavailable" || sourceObj?.status === "in-fix";
+  const effectiveBindings = sourceBindings || (manga as any)?.sourceBindings;
+  const isMultiSource = effectiveBindings && effectiveBindings.length > 1;
 
   return (
     <motion.article
@@ -86,6 +91,14 @@ export function ShelfCard({
               </div>
             )}
             
+            {isMultiSource && (
+              <div className="flex items-center gap-1 rounded-md bg-surface-glass backdrop-blur-md px-1.5 py-0.5 shadow-sm border border-border-default/40">
+                <span className="text-[9px] font-black text-accent uppercase tracking-wider">
+                  {effectiveBindings.length} Sumber
+                </span>
+              </div>
+            )}
+
             {manga.rank !== undefined && (
               <div className="flex items-center gap-1 rounded-md bg-surface-glass backdrop-blur-md px-2 py-1 shadow-sm">
                 <TrendUp weight="bold" className="text-accent text-[10px]" />
@@ -136,11 +149,17 @@ export function ShelfCard({
             {manga.format && (
               <span className="text-[10px] font-bold text-text-muted uppercase tracking-wider shrink-0">{manga.format}</span>
             )}
-            {manga.format && showSourceBadge && sourceName && (
+            {manga.format && showSourceBadge && (sourceName || isMultiSource) && (
               <span className="w-[3px] h-[3px] rounded-full bg-border-strong shrink-0" />
             )}
-            {showSourceBadge && sourceName && (
-              <span className="text-[9px] md:text-[10px] font-black text-accent uppercase tracking-wider truncate">{sourceName}</span>
+            {showSourceBadge && (
+              isMultiSource ? (
+                <span className="text-[9px] md:text-[10px] font-black text-accent uppercase tracking-wider truncate">
+                  {effectiveBindings.length} Sumber
+                </span>
+              ) : sourceName ? (
+                <span className="text-[9px] md:text-[10px] font-black text-accent uppercase tracking-wider truncate">{sourceName}</span>
+              ) : null
             )}
           </div>
           {/* Title - 2 lines fixed height */}
