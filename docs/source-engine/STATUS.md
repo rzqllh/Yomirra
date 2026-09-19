@@ -1,16 +1,16 @@
 # Source Engine V1 — Development Status
 
 ```
-Current Phase:     1 — Contract Extension & Source Infrastructure
+Current Phase:     2A — Komiku II Adapter (DONE)
 Current Branch:    feat/source-engine-v1
-Last Verified Commit: c624672
+Last Verified Commit: e828303
 Last Updated:      2026-09-19
 Known Blockers:    None
 ```
 
 ## Test Baseline
 
-**60 test files, 319 tests — ALL PASSING** as of 2026-09-19 (298 historical baseline + 21 Phase 1 infrastructure tests).
+**61 test files, 345 tests — ALL PASSING** as of 2026-09-19 (319 historical baseline + 26 Phase 2A Komiku II adapter tests).
 
 Any change must preserve this baseline.
 
@@ -32,11 +32,12 @@ Any change must preserve this baseline.
 | 10 | Normalized model design | DONE | VERIFIED_FROM_REPO | N/A | N/A | Additive capabilities model designed in PLAN.md |
 | 11 | Implementation plan | DONE | VERIFIED_FROM_REPO | N/A | N/A | Staged 6-phase roadmap documented in PLAN.md |
 | 12 | Feature branch creation | DONE | VERIFIED_FROM_REPO | N/A | N/A | Checked out feat/source-engine-v1 |
-| 13 | Contract Extension (`source-types.ts`, `source-capabilities.ts`) | DONE | VERIFIED_FROM_REPO | 6 tests passing | N/A | Additive capabilities, hasCapability helper, optional fields |
-| 14 | HttpClient Source Configuration (`http-client.ts`) | DONE | VERIFIED_FROM_REPO | 15 tests passing | N/A | Config object, host validation, post/getText, setBaseUrl |
-| 15 | Source Registry Preparation (`source-registry.ts`) | DONE | VERIFIED_FROM_REPO | 3 tests passing | N/A | Isolated pendingSourceRegistry for Phase 2 |
-| 16 | Source Manager & MangaDex fetch audit | DONE | VERIFIED_FROM_REPO | 298 baseline | N/A | Audited; no breaking changes required for Phase 1 |
-| 17 | Infrastructure Tests & Verification | DONE | VERIFIED_FROM_REPO | 319 passing | N/A | Typecheck and full test suite passing cleanly |
+| 13 | Contract Extension (`source-types.ts`, `source-capabilities.ts`) | DONE | VERIFIED_FROM_REPO | 6 tests passing | e828303 | Additive capabilities, hasCapability helper, optional fields |
+| 14 | HttpClient Source Configuration (`http-client.ts`) | DONE | VERIFIED_FROM_REPO | 15 tests passing | e828303 | Config object, host validation, post/getText, setBaseUrl |
+| 15 | Source Registry Preparation (`source-registry.ts`) | DONE | VERIFIED_FROM_REPO | 3 tests passing | e828303 | Isolated pendingSourceRegistry for Phase 2 |
+| 16 | Source Manager & MangaDex fetch audit | DONE | VERIFIED_FROM_REPO | 298 baseline | e828303 | Audited; no breaking changes required for Phase 1 |
+| 17 | Infrastructure Tests & Verification | DONE | VERIFIED_FROM_REPO | 319 passing | e828303 | Typecheck and full test suite passing cleanly |
+| 18 | Phase 2A: Komiku II Adapter (`komiku-ii`) | DONE | VERIFIED_FROM_SOURCE + VERIFIED_FROM_REPO | 26 adapter tests (345 total) | Pending | REST JSON API adapter + fixtures + tests + image redirect fallback + browser flow verified |
 
 ---
 

@@ -6,6 +6,11 @@ import { safeFetch } from "@/server/lib/security/outbound-policy";
 
 const MAX_IMAGE_SIZE = 15 * 1024 * 1024; // 15MB
 
+const ALLOWED_DIRECT_CDN_HOSTS = new Set([
+  "content.komiku.me",
+  "cdnkomiku.xyz",
+]);
+
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const url = searchParams.get("url");
@@ -40,6 +45,18 @@ export async function GET(request: NextRequest) {
     });
 
     if (!response.ok) {
+      // If upstream anti-bot/Cloudflare blocks server-side fetch (403)
+      // for verified direct CDN image hosts, redirect the browser directly to the signed CDN URL.
+      if (response.status === 403) {
+        try {
+          const parsed = new URL(url);
+          if (parsed.protocol === "https:" && ALLOWED_DIRECT_CDN_HOSTS.has(parsed.hostname)) {
+            return NextResponse.redirect(url, 307);
+          }
+        } catch {
+          // ignore parsing error and fall through
+        }
+      }
       return new NextResponse("Failed to fetch image", { status: response.status });
     }
 

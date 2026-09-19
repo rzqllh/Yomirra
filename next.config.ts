@@ -39,6 +39,14 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "*.mangadex.network",
       },
+      {
+        protocol: "https",
+        hostname: "content.komiku.me",
+      },
+      {
+        protocol: "https",
+        hostname: "cdnkomiku.xyz",
+      },
     ],
     localPatterns: [
       {

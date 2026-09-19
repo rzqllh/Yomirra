@@ -116,6 +116,38 @@ export const sourceRegistry: SourceMetadata[] = [
       pages: true,
     },
     isDynamic: false
+  },
+  {
+    id: "komiku-ii",
+    name: "Komiku II",
+    description: "REST API komik Bahasa Indonesia",
+    language: "id",
+    baseUrl: "https://01.komiku.asia",
+    upstreamDomain: "01.komiku.asia",
+    healthCheckUrl: "https://01.komiku.asia/api/v2/comics?page=1",
+    icon: "https://s2.googleusercontent.com/s2/favicons?domain=01.komiku.asia&sz=64",
+    version: "1.0.0",
+    adapterVersion: "1.0.0",
+    isEnabled: true,
+    isInstalled: true,
+    status: "online",
+    healthStats: {
+      uptime: "99.9%",
+      latency: "180ms",
+      lastChecked: "Baru saja",
+      message: "Server merespons dengan baik."
+    },
+    isNsfw: false,
+    capabilities: {
+      popular: true,
+      latest: true,
+      search: true,
+      detail: true,
+      chapters: true,
+      pages: true,
+      filters: true,
+    },
+    isDynamic: false
   }
 ];
 
@@ -136,32 +168,6 @@ export function getAllSourceMetadata(): SourceMetadata[] {
  * before their backend adapters are implemented and verified.
  */
 export const pendingSourceRegistry: SourceMetadata[] = [
-  {
-    id: "komiku-ii",
-    name: "Komiku II",
-    description: "REST API komik Bahasa Indonesia",
-    language: "id",
-    baseUrl: "https://01.komiku.asia",
-    upstreamDomain: "01.komiku.asia",
-    healthCheckUrl: "https://01.komiku.asia/api/v2/comics?page=1",
-    icon: "https://s2.googleusercontent.com/s2/favicons?domain=01.komiku.asia&sz=64",
-    version: "1.0.0",
-    adapterVersion: "1.0.0",
-    isEnabled: false,
-    isInstalled: false,
-    status: "in-dev",
-    isNsfw: false,
-    capabilities: {
-      popular: true,
-      latest: true,
-      search: true,
-      detail: true,
-      chapters: true,
-      pages: true,
-      filters: true,
-    },
-    isDynamic: false,
-  },
   {
     id: "asurascans",
     name: "Asura Scans",
