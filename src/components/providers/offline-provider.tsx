@@ -13,7 +13,15 @@ const OfflineContext = createContext<OfflineContextType>({ isOffline: false });
 
 export const useOffline = () => useContext(OfflineContext);
 
-const OFFLINE_ALLOWED_PATHS = ["/downloads", "/settings"];
+const OFFLINE_ALLOWED_PATHS = [
+  "/",
+  "/library",
+  "/bookmark",
+  "/history",
+  "/downloads",
+  "/settings",
+  "/updates",
+];
 
 export function OfflineProvider({ children }: { children: React.ReactNode }) {
   const [isOffline, setIsOffline] = useState(false);
@@ -37,13 +45,23 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Note: covers SPA navigation only. Hard navigate while offline may show partial render or browser offline page.
+  // Note: covers SPA navigation only.
   const isReaderPath = pathname.includes("/read/");
-  const isAllowedOffline = OFFLINE_ALLOWED_PATHS.includes(pathname) || isReaderPath;
+  const isMangaDetail = pathname.startsWith("/manga/");
+  const isAllowedOffline = OFFLINE_ALLOWED_PATHS.includes(pathname) || isReaderPath || isMangaDetail;
   const showFallback = isOffline && !isAllowedOffline;
 
   return (
     <OfflineContext.Provider value={{ isOffline }}>
+      {isOffline && isAllowedOffline && (
+        <div
+          data-testid="offline-banner"
+          className="fixed top-0 left-0 right-0 z-[60] bg-amber-500/90 text-amber-950 dark:bg-amber-600 dark:text-white px-3 py-1 text-xs font-semibold text-center flex items-center justify-center gap-2 backdrop-blur-md shadow-sm pointer-events-none"
+        >
+          <WifiSlash size={14} weight="bold" />
+          <span>Mode Offline — Menampilkan pustaka dan data lokal</span>
+        </div>
+      )}
       {showFallback ? (
         <div className="fixed inset-0 z-[100] bg-surface-base flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300">
           <div className="w-20 h-20 bg-surface-muted rounded-3xl flex items-center justify-center text-text-muted mb-6">
@@ -51,16 +69,26 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
           </div>
           <h1 className="text-2xl font-bold mb-2">Anda Sedang Offline</h1>
           <p className="text-text-muted mb-8 max-w-sm">
-            Koneksi internet Anda terputus. Anda masih bisa membaca manga yang sudah diunduh.
+            Koneksi internet Anda terputus. Halaman ini memerlukan koneksi, namun Anda masih bisa membaca pustaka lokal dan konten yang sudah diunduh.
           </p>
-          <Button 
-            onClick={() => router.push("/downloads")}
-            size="lg"
-            className="rounded-2xl gap-2 font-bold px-8"
-          >
-            <HardDrives size={20} weight="fill" />
-            Buka Manajer Unduhan
-          </Button>
+          <div className="flex flex-wrap gap-3 justify-center">
+            <Button 
+              onClick={() => router.push("/downloads")}
+              size="lg"
+              className="rounded-2xl gap-2 font-bold px-6"
+            >
+              <HardDrives size={20} weight="fill" />
+              Manajer Unduhan
+            </Button>
+            <Button 
+              onClick={() => router.push("/")}
+              variant="outline"
+              size="lg"
+              className="rounded-2xl gap-2 font-semibold px-6"
+            >
+              Pustaka Saya
+            </Button>
+          </div>
         </div>
       ) : (
         children

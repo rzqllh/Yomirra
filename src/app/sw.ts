@@ -24,6 +24,13 @@ const serwist = new Serwist({
         cacheName: 'yomirra-chapter-cache-v1',
       }),
     },
+    // Phase 9: CacheOnly for bounded reading buffer
+    {
+      matcher: ({ url }) => url.pathname.startsWith('/reading-buffer/'),
+      handler: new CacheOnly({
+        cacheName: 'yomirra-reading-buffer-v1',
+      }),
+    },
     // Phase 2.5: CacheFirst for Image Proxy
     // We aggressively cache manga pages (via image proxy) for offline reading & bandwidth saving.
     {
@@ -44,7 +51,10 @@ const serwist = new Serwist({
     // We intentionally exclude /search, /health, /nsfw-ids to prevent cache bloat or stale data.
     {
       matcher: ({ url }) => {
-        return !!url.pathname.match(/^\/api\/sources\/[^/]+\/(manga|chapters|popular|latest)$/);
+        if (url.pathname.match(/^\/api\/sources\/[^/]+\/(manga|chapters|popular|latest)$/)) return true;
+        if (url.pathname.match(/^\/api\/sources\/[^/]+\/manga\/[^/]+$/)) return true;
+        if (url.pathname.match(/^\/api\/sources\/[^/]+\/manga\/[^/]+\/chapters$/)) return true;
+        return false;
       },
       handler: new StaleWhileRevalidate({
         cacheName: 'yomirra-manga-metadata',
@@ -56,9 +66,15 @@ const serwist = new Serwist({
         ],
       }),
     },
-    // NetworkFirst for dynamic HTML/pages like /library, /browse
+    // NetworkFirst for dynamic HTML/pages like /library, /browse, /bookmark, /history
     {
-      matcher: ({ request, url }) => request.mode === 'navigate' || url.pathname.startsWith('/library'),
+      matcher: ({ request, url }) =>
+        request.mode === 'navigate' ||
+        url.pathname.startsWith('/library') ||
+        url.pathname.startsWith('/bookmark') ||
+        url.pathname.startsWith('/history') ||
+        url.pathname.startsWith('/downloads') ||
+        url.pathname.startsWith('/settings'),
       handler: new NetworkFirst({
         cacheName: 'yomirra-pages',
         networkTimeoutSeconds: 3, // fallback to cache quickly if offline

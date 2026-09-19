@@ -25,6 +25,7 @@ import { id as idLocale } from "date-fns/locale";
 import { ConfirmationModal } from "@/components/ui/confirmation-modal";
 import { SettingsSection, SettingsItem, IconWrapper } from "@/app/(web)/settings/components/settings-ui";
 import { cn } from "@/shared/utils/cn";
+import { clearAutomaticCache, getStorageEstimate } from "@/shared/lib/reading-buffer";
 
 export interface SettingsViewProps {
   isOverlay?: boolean;
@@ -51,6 +52,34 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
 
   const [isClearDataDialogOpen, setIsClearDataDialogOpen] = React.useState(false);
   const [isBackupModalOpen, setIsBackupModalOpen] = React.useState(false);
+  const [isClearingCache, setIsClearingCache] = React.useState(false);
+  const [storageUsage, setStorageUsage] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (mounted) {
+      getStorageEstimate().then((est) => {
+        if (est) {
+          setStorageUsage(`${est.usageMB} MB / ${est.quotaMB} MB`);
+        }
+      });
+    }
+  }, [mounted]);
+
+  const handleClearAutomaticCache = async () => {
+    setIsClearingCache(true);
+    try {
+      await clearAutomaticCache();
+      toast.success("Cache sementara dan buffer baca berhasil dibersihkan");
+      const est = await getStorageEstimate();
+      if (est) {
+        setStorageUsage(`${est.usageMB} MB / ${est.quotaMB} MB`);
+      }
+    } catch {
+      toast.error("Gagal membersihkan cache");
+    } finally {
+      setIsClearingCache(false);
+    }
+  };
 
   const handleClearData = () => {
     setIsClearDataDialogOpen(true);
@@ -378,6 +407,24 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
 
       {/* Data Lokal */}
       <SettingsSection title={user ? "Data Perangkat" : "Data Lokal"}>
+        <SettingsItem
+          icon={<IconWrapper><Broom size={20} weight="duotone" /></IconWrapper>}
+          title="Cache Sementara & Buffer Baca"
+          description={`Bersihkan cache metadata dan buffer bab offline otomatis tanpa menghapus bab yang diunduh.${storageUsage ? ` (Penyimpanan: ${storageUsage})` : ""}`}
+          right={
+            <Button
+              onClick={handleClearAutomaticCache}
+              variant="outline"
+              disabled={isClearingCache}
+              className="w-full sm:w-auto shrink-0 rounded-xl font-bold transition-colors"
+            >
+              {isClearingCache ? "Membersihkan..." : "Bersihkan Cache"}
+            </Button>
+          }
+        />
+
+        <div className="mx-3 my-1 border-b border-border-subtle/50" />
+
         <SettingsItem
           icon={<IconWrapper variant="danger"><Broom size={20} weight="duotone" /></IconWrapper>}
           title={user ? "Bersihkan Cache Perangkat" : "Hapus Data Lokal"}
