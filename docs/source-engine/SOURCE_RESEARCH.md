@@ -99,14 +99,25 @@ Evidence-based research for each target source. Every claim is labeled.
 - Type: **HTML scraping** (cheerio) `VERIFIED_FROM_REPO`
 - Base URL: `https://komikindo.ch` `VERIFIED_FROM_REPO`
 
-### Verified Routes (from existing adapter)
+### Verified Routes (from existing adapter & live verification)
 | Route | Method | Evidence |
 |-------|--------|----------|
 | `/komik-populer/page/{page}/` | GET HTML | `VERIFIED_FROM_REPO` |
 | `/komik-terbaru/page/{page}/` | GET HTML | `VERIFIED_FROM_REPO` |
-| `/manga/page/{page}/` | GET HTML (search) | `VERIFIED_FROM_REPO` |
+| `/page/{page}/?s={query}` | GET HTML (search) | `VERIFIED_FROM_SOURCE` (updated from old `/manga/page/{page}/`) |
+| `/page/{page}/?genre[]={genre}` | GET HTML (genre filter) | `VERIFIED_FROM_SOURCE` (updated from old `/manga/page/{page}/`) |
 | `/komik/{mangaId}/` | GET HTML (detail + chapters) | `VERIFIED_FROM_REPO` |
 | `/{chapterId}/` | GET HTML (pages) | `VERIFIED_FROM_REPO` |
+
+### Incidents & Route Changes
+- **Incident (2026-09):** `ROUTE_CHANGED`
+  - **Old route:** `GET /manga/page/{page}/?s={query}`
+  - **Current route:** `GET /page/{page}/?s={query}` and `GET /page/{page}/?genre[]={genre}`
+  - **Failure Type:** `ROUTE_CHANGED`
+  - **Evidence Classification:** `VERIFIED_FROM_SOURCE`
+  - **Fix Commit:** `5f56ad9` (regression test: `ed6b21d`)
+  - **Key Architecture Takeaway:** Upstream domain/homepage returned HTTP 200 while search route was completely broken (404/redirect). Proves conclusively that transport reachability alone does not equal source health.
+
 
 ### HTML Selectors (from adapter code)
 - List: `.animepost` container, `h3 a` title, `img[itemprop='image']` cover `VERIFIED_FROM_REPO`

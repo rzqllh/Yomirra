@@ -206,3 +206,19 @@
 3. `KomikNesia` (`api-be.komiknesia.my.id/api`): Native AES-256-CBC decrypt transform, embedded chapters list.
 
 **Status:** ACTIVE
+
+---
+
+## D-012: Layered Functional Health Probes, Runtime Domain Resolution & Error Normalization
+
+**Decision:**
+1. **Functional Over Reachability:** Source health checks must evaluate actual operational capabilities across layers (`transport`, `search`, `detail`, `chapters`, `pages`, `cdn`), not merely homepage HTTP 200 reachability. Probes are divided into lightweight probes (transport + popular listing/search + schema sanity) and deep probes (search → detail → chapters → 1 page resolution).
+2. **Deterministic Validation:** Health probes use known listing targets to distinguish valid empty search results from parser/route breakages (`PARSER_BROKEN`, `ROUTE_CHANGED`, `SCHEMA_CHANGED`).
+3. **Runtime Domain Resolution (D-001 Realization):** Domain resolution follows the strict order: `sourceId` → configured env override → cached verified working domain (Redis/memory with 24h TTL) → curated verified fallback mirror(s) → bundled default. Web-crawler discovery is prohibited. Domain state NEVER mutates `sourceId`, library identity, reading progress, or canonical title keys.
+4. **Machine-Readable Error Normalization:** Operational errors are classified into standardized codes (`SOURCE_DOWN`, `DOMAIN_CHANGED`, `ROUTE_CHANGED`, `PARSER_BROKEN`, `SCHEMA_CHANGED`, `RATE_LIMITED`, `UPSTREAM_TIMEOUT`, `UPSTREAM_BLOCKED`, `DECRYPT_FAILURE`, `IMAGE_CDN_FAILURE`, `UNKNOWN`), completely decoupled from human UI messages.
+5. **Search Failure Isolation:** In multi-source search, failures on individual sources attach normalized `errorCode` and error details without throwing a global 500 error or invalidating results from successful sources.
+
+**Reason:** Proven by real-world incident where Komikindo homepage returned HTTP 200 while its search route changed (`ROUTE_CHANGED`), rendering simple ping monitors actively misleading.
+
+**Status:** ACTIVE — Implemented in Phase 3.
+

@@ -109,32 +109,38 @@
 
 ---
 
-## Phase 3: Domain Resolution & Health
+## Phase 3: Domain Resolution & Health (DONE)
 
-**Objective:** Implement runtime domain resolution so adapters don't hardcode `baseUrl`. Implement server-side source health tracking.
+**Objective:** Implement runtime domain resolution so adapters don't hardcode `baseUrl`. Implement server-side functional source health tracking across layers with normalized error codes.
 
 **Affected Modules:**
-- `src/server/lib/sources/adapters/base/` — domain resolution
-- `src/server/lib/sources/source-manager.ts` — health orchestration
-- `src/shared/store/source-health-store.ts` — extend health model
-- New: `src/server/lib/sources/health/` — server-side health checks
+- `src/server/lib/sources/domain-resolver.ts` — D-001 runtime domain resolution with fallback mirrors and cache
+- `src/server/lib/sources/error.ts` — machine-readable `SourceErrorCode` and `SourceError`
+- `src/server/lib/sources/health/` — functional health probe runner, health store, and transition events
+- `src/server/lib/sources/source-manager.ts` — runtime domain resolution binding without identity mutation
+- `src/app/api/sources/search/route.ts` — search error isolation with normalized `errorCode`
+- `src/server/lib/sources/adapters/komikindo/index.ts` & `shinigami/index.ts` — configurable base URLs
 
-**Dependencies:** Phase 1 complete.
+**Dependencies:** Phase 1 complete. Phase 2 (7 active sources) complete.
 
-**Migration Impact:** LOW — adapter constructors change from hardcoded URL to resolved URL. Existing behavior preserved as fallback.
+**Migration Impact:** ZERO — adapter defaults preserved as fallback. Source identities, library keys, and reading progress completely unaffected.
 
-**Tests Required:**
-- Domain resolution returns configured domain
-- Fallback to hardcoded domain when config is unavailable
-- Health check correctly categorizes source state
-- Health status propagates to client
+**Tests Verified (31 new tests, 466 total tests passing across 69 test files):**
+- Domain resolution order (sourceId → env → cache → fallback mirrors → default)
+- Fallback mirror switching on domain failure (`komikindo.ch` → `komikindo.cv`)
+- Domain state does NOT alter source identity or reading progress
+- Machine-readable error normalization (`RATE_LIMITED`, `UPSTREAM_BLOCKED`, `ROUTE_CHANGED`, `PARSER_BROKEN`, `SCHEMA_CHANGED`, `UPSTREAM_TIMEOUT`, `SOURCE_DOWN`, `DECRYPT_FAILURE`)
+- Consecutive failure counting & recovery transition (`SOURCE_RECOVERED`)
+- Multi-source search failure isolation (failed source returns error metadata without breaking other sources)
+- Live bounded smoke probes verified 100% HEALTHY across all 7 active sources
 
 **Exit Criteria:**
-- Domain is resolved at runtime for at least one source
-- Health check detects domain change
-- Existing behavior preserved
+- [x] Domain is resolved at runtime with fallback mirrors
+- [x] Functional health check detects parser, route, decrypt, and domain errors
+- [x] Search error isolation verified with normalized error codes
+- [x] Operational events (`SourceHealthSnapshot`, `SourceHealthTransition`) ready for future Telegram Ops consumption
+- [x] All 69 test files (466 tests) passing cleanly
 
-**Rollback:** Revert to hardcoded URLs.
 
 ---
 

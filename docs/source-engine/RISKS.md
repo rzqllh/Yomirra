@@ -10,36 +10,40 @@
 
 **Impact:** HIGH — hardcoded baseUrl breaks adapter, library items reference stale domain.
 
-**Detection:** Source health check fails, user reports broken source.
+**Detection:** Source health check fails (`DOMAIN_CHANGED` / `SOURCE_DOWN`), user reports broken source.
 
 **Mitigation:**
 - Source identity by stable ID, not domain (D-001) — `IMPLEMENTED`
 - Library items preserve `savedTitleId` and `linkedSources` — `IMPLEMENTED`
-- `PROPOSED`: Domain resolution from runtime config or remote registry instead of hardcoded `baseUrl`
-- `PROPOSED`: Domain fallback list per source
+- Runtime domain resolution via `DomainResolver` (env override → cached domain → fallback mirror → bundled default) — `IMPLEMENTED` (Phase 3)
+- Curated verified mirror list per source (e.g. `komikindo.ch` / `komikindo.cv`) with automatic mirror switching — `IMPLEMENTED` (Phase 3)
+- Separation of frontend domain and backend API endpoints (e.g. Shinigami `api.shngm.io` vs `shinigami.asia`) — `IMPLEMENTED` (Phase 3)
 
-**Current State:** Partially mitigated. Source IDs are stable. Domain is still hardcoded in adapter constructor. Changing domain requires code deploy.
+**Current State:** Fully mitigated. Domain is dynamically resolved and cached. Fallback mirrors switch automatically without requiring code deployments or modifying user library identities.
+
 
 ---
 
-## R-002: Upstream HTML Schema Changes
+## R-002: Upstream HTML Schema & Route Changes
 
-**Risk:** HTML-based sources (Komikindo, Komiku) can change their DOM structure at any time, breaking cheerio selectors.
+**Risk:** HTML-based sources (Komikindo, Komiku) can change their URL routes or DOM structure at any time, breaking cheerio selectors or navigation routes while leaving the homepage/domain alive.
 
-**Likelihood:** MEDIUM — WordPress theme updates, redesigns.
+**Likelihood:** HIGH — observed in Komikindo September 2026 (`ROUTE_CHANGED`).
 
-**Impact:** HIGH — adapter returns empty or incorrect data silently.
+**Impact:** HIGH — adapter returns empty or incorrect data silently, or search route fails (404) while domain HTTP status is 200.
 
 **Detection:**
-- `PROPOSED`: Parser validation (check for minimum expected fields/counts)
-- Current: health check only tests reachability, not parser correctness
+- `PROPOSED`: Layered functional health checks (Transport vs Search vs Detail vs Chapters vs Pages vs CDN)
+- **Observed Incident:** Komikindo homepage returned HTTP 200 while search route `/manga/page/{page}/` returned 404 redirect. A pure reachability check marked Komikindo "healthy" when search was 100% broken.
+- `PROPOSED`: Parser and route validation (check for minimum expected fields/counts on deterministic probe queries)
 
 **Mitigation:**
-- Fixture-based parser tests with known HTML snapshots — `NOT_IMPLEMENTED`
-- Multiple selector fallbacks (Komiku adapter already does this) — `PARTIALLY_IMPLEMENTED`
-- `PROPOSED`: Return `ParserBroken` error if results are suspiciously empty
+- Fixture-based parser and route regression tests (`ed6b21d`) — `PARTIALLY_IMPLEMENTED`
+- Layered health probes in Phase 3 verifying functional stages rather than homepage HTTP 200 — `PHASE_3_TARGET`
+- Structured machine-readable error codes (`ROUTE_CHANGED`, `PARSER_BROKEN`, `SCHEMA_CHANGED`) — `PHASE_3_TARGET`
 
-**Current State:** High fragility. No parser validation tests against fixtures. Breakage is silent.
+**Current State:** Verified from real incident (`5f56ad9`). Pure HTTP 200 reachability checks are actively misleading for source health. Phase 3 health engine must test functional operations.
+
 
 ---
 
