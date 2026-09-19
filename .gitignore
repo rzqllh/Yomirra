@@ -117,3 +117,11 @@ test-results*.json
 docs/source-engine/
 docs/telegram-ops/
 component-reuse-audit-*.md
+docs/decisions_phase6_9.md
+docs/plan_phase6.md
+docs/plan_phase7.md
+docs/plan_phase8.md
+docs/plan_phase9.md
+docs/progress_phase6_9.md
+docs/risks_phase6_9.md
+docs/tasks_phase6_9.md
