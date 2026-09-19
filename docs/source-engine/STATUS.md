@@ -1,9 +1,9 @@
 # Source Engine V1 — Development Status
 
 ```
-Current Phase:     3 — Domain Resolution & Health (DONE)
+Current Phase:     4 — Enhanced Search & Canonical Deduplication (DONE)
 Current Branch:    feat/source-engine-v1
-Last Verified Commit: 1d8ebbc
+Last Verified Commit: 4ae9141
 Last Updated:      2026-09-19
 Known Blockers:    None
 
@@ -11,13 +11,20 @@ Known Blockers:    None
 
 ## Test Baseline
 
-**69 test files, 466 tests — ALL PASSING** as of 2026-09-19 (435 baseline + 31 Phase 3 Domain Resolution & Health tests across 5 test suites).
+**71 test files, 492 tests — ALL PASSING** as of 2026-09-19 (466 Phase 3 baseline + 12 Phase 4 canonical search tests + 14 Telegram Ops tests).
 
 Any change must preserve this baseline.
 
 ### Phase 3 Key Incident Evidence & Architecture
 - **Komikindo `ROUTE_CHANGED` Incident:** In commit `5f56ad9` (regression test `ed6b21d`), Komikindo upstream search route changed from `/manga/page/{page}/` to `/page/{page}/?s={query}`. While the homepage returned HTTP 200, search was non-functional. Conclusive evidence that transport reachability != functional source health.
 - **Phase 3 Resolution:** Built runtime domain resolution (`domain-resolver.ts`) with verified fallback mirrors (`komikindo.ch` → `komikindo.cv`), normalized machine-readable errors (`SourceError`, `SourceErrorCode`), functional layered health probes (`probe.ts`), consecutive failure tracking with recovery events (`health-store.ts`), and multi-source search failure isolation.
+
+### Phase 4 Enhanced Search & Canonical Deduplication Architecture
+- **Canonical Clustering:** Implemented pure local deduplication in `canonical-search.ts` based on `title-matcher.ts` (`matchTitles`, `matchAgainstAlternates`). Deduplication runs in-memory after per-source results return (0 additional upstream calls).
+- **Strict Heuristic Merge Gate:** Clusters only on `HIGH_CONFIDENCE` (or user `CONFIRMED`). `AMBIGUOUS` results and conflicting author matches are never merged silently.
+- **MangaDex Language Binding (D-008):** Language (`id`/`en`) is stored as metadata on the `SourceBinding` rather than fragmenting into fake duplicate sources.
+- **Capability-Aware Search:** Validates `source.capabilities.latest` and `source.capabilities.filters` before invoking adapter operations.
+- **UI Card Integration:** Renders compact multi-source indicators on deduped cards while strictly adhering to Yomirra squircle geometry (`rounded-md` / `rounded-[8px]`, no generic pills).
 
 ---
 
@@ -46,6 +53,7 @@ Any change must preserve this baseline.
 | 19 | Phase 2B: Asura Scans Adapter (`asurascans`) | DONE | VERIFIED_FROM_SOURCE + VERIFIED_FROM_REPO | 24 adapter tests (369 total) | fba2da3 | REST JSON API adapter + locked content boundary + fixtures + tests + browser flow verified |
 | 20 | Phase 2C: KomikNesia Adapter (`komiknesia`) | DONE | VERIFIED_FROM_SOURCE + VERIFIED_FROM_REPO | 65 adapter tests (434 total) | 9b2b49a | AES-256-CBC decrypt adapter + ephemeral X-Device-Id + embedded chapter list + fixtures + tests + CDN allowlist updated |
 | 21 | Phase 3: Domain Resolution & Health (`domain-resolver`, `health-engine`, error normalization) | DONE | VERIFIED_FROM_SOURCE + VERIFIED_FROM_REPO | 31 new tests (466 total) | 1d8ebbc | Runtime domain resolution with fallback mirrors, functional layered probes, normalized SourceError, consecutive failure & recovery tracking |
+| 22 | Phase 4: Enhanced Search & Canonical Deduplication (`canonical-search`, capability checks, squircle multi-source cards) | DONE | VERIFIED_FROM_REPO | 12 new tests (478 total) | 4ae9141 | Local canonical clustering, 0 extra upstream calls, high-confidence merge gate, MangaDex language metadata, error isolation |
 
 
 

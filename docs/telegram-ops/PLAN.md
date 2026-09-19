@@ -54,6 +54,8 @@ Audited:
 
 ### T1 — Telegram Outbound Notifier (Foundation)
 
+**Status:** DONE
+
 **Objective:** Create a typed, centralized notifier module that all alert types will call.
 
 **Proposed files:**
@@ -82,6 +84,8 @@ CRON_SECRET                  — for cron endpoint protection
 
 ### T2 — Health Event Integration
 
+**Status:** DONE
+
 **Objective:** Connect Source Engine health probe to the notifier.
 
 **Proposed approach:**
@@ -105,6 +109,8 @@ DECRYPT_FAILURE      → KomikNesia-specific, after 3 failures → CRITICAL
 ---
 
 ### T3 — 6-Hour Health Digest
+
+**Status:** DONE
 
 **Objective:** Send a scheduled health summary every 6 hours.
 
@@ -146,6 +152,8 @@ Redis         ✅ OK          45ms
 
 ### T4 — Critical / Recovery Alerts
 
+**Status:** DONE
+
 **Objective:** Immediate Telegram notification for critical state transitions.
 
 **Alert message formats:**
@@ -176,6 +184,8 @@ Resolved: 2026-09-19T09:12:00Z
 ---
 
 ### T5 — Read-Only Bot Commands
+
+**Status:** DONE
 
 **Objective:** Implement Telegram webhook to handle informational commands.
 
@@ -208,6 +218,8 @@ Resolved: 2026-09-19T09:12:00Z
 
 ### T6 — Deploy / Security / Backend Events
 
+**Status:** DONE
+
 **Objective:** Surface deployment and security events through existing hooks.
 
 **Deploy smoke test (optional):**
@@ -231,6 +243,8 @@ Resolved: 2026-09-19T09:12:00Z
 ---
 
 ### T7 — Daily Digest
+
+**Status:** DONE
 
 **Objective:** Daily aggregate operational summary.
 

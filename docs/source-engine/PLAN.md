@@ -144,32 +144,40 @@
 
 ---
 
-## Phase 4: Enhanced Search & Capabilities
+## Phase 4: Enhanced Search & Capabilities (DONE)
 
 **Objective:** Implement capabilities model. Enhance multi-source search with error isolation, canonical deduplication, and per-source failure reporting.
 
 **Affected Modules:**
-- `src/shared/sources/source-capabilities.ts` — expanded capability model
-- `src/app/api/sources/search/route.ts` — multi-source search with isolation & canonical dedupe
-- `src/shared/hooks/` — search catalog hooks
-- `src/server/lib/sources/source-manager.ts` — capability-aware source selection
+- `src/shared/lib/canonical-search.ts` — local canonical clustering engine using `title-matcher.ts`
+- `src/app/api/sources/search/route.ts` — multi-source search with capability checks & additive canonical dedupe
+- `src/shared/hooks/use-search-catalog.ts` — consumes canonical clusters for search view
+- `src/components/manga/card/shelf-card.tsx` & `search-results.tsx` — compact multi-source indicators with squircle geometry
+- `src/shared/sources/source-types.ts` — added optional `author`, `alternativeTitles`, and `language` to `MangaItem`
 
-**Dependencies:** Phase 1 complete. At least 2 new adapters from Phase 2 to test multi-source.
+**Dependencies:** Phase 1 complete. Phase 2 & 3 complete.
 
-**Migration Impact:** LOW — additive error metadata in search responses.
+**Migration Impact:** ZERO — additive `canonicalResults` in search responses; existing callers unaffected.
 
-**Tests Required:**
-- One source failing does not invalidate others
-- Capability check prevents calling unsupported methods
-- Search results include per-source error metadata
-- Canonical deduplication clusters equivalent titles accurately
+**Tests Verified (12 new tests passing, 478 total tests across 70 files):**
+- Identical title across two sources → one canonical result with 2 bindings
+- Same title + different author → no unsafe merge (two separate results)
+- Alternate title match → clusters accurately
+- Ambiguous title remains separate (never silently merged)
+- 3-source canonical cluster merges cleanly across sources
+- MangaDex language binding preserved as metadata without creating fake duplicate sources (D-008)
+- Disabled source excluded from search & clusters
+- One failed source does not break dedupe for remaining successful sources
+- All failed sources handled cleanly with empty cluster list
+- Stable deterministic ordering preserved across runs
+- Zero reading/library mutation during search deduplication
+- Library search does not call upstream search APIs
 
 **Exit Criteria:**
-- Aggregated search survives individual source failures
-- Capability model prevents invalid calls
-- Canonical dedupe verified
-
-**Rollback:** Revert to current all-or-nothing search behavior.
+- [x] Aggregated search survives individual source failures (failure isolation)
+- [x] Capability model prevents invalid operations (`latest`, `filters`)
+- [x] Canonical dedupe verified locally without extra upstream requests
+- [x] All tests passing cleanly
 
 ---
 

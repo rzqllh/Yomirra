@@ -97,30 +97,31 @@
 
 ---
 
-## TD-006: Reuse Source Engine Health State
+## TD-006: Consume Phase 3 Source Engine Health State
 
-**Decision:** Telegram monitoring must consume Source Engine health state, not build a second parallel monitoring system.
+**Decision:** Telegram monitoring must consume the Phase 3 Source Engine health engine (`probeAllSourcesHealth`, `sourceHealthStore`), not build a second parallel monitoring system.
 
 **Evidence:**
-- `GET /api/health` already pings all sources and reports `{status, latencyMs, error}` per source. `VERIFIED_FROM_REPO`.
-- `GET /api/sources/health` provides Redis-cached per-source health with 10-minute TTL. `VERIFIED_FROM_REPO`.
-- These can be called by a Vercel Cron route without duplicating probe logic.
+- Phase 3 provides layered functional health probes (`probe.ts`), runtime domain resolution (`domain-resolver.ts`), and machine-readable `SourceErrorCode`.
+- `probeAllSourcesHealth({ deep: false })` executes bounded lightweight probes for scheduled digests.
+- `probeSourceHealth(sourceId, { deep: true })` executes targeted diagnostic probes for `/recheck <id>`.
+- Snapshots and transition history are stored in `sourceHealthStore`.
 
 **Status:** ACTIVE
 
 ---
 
-## TD-007: Vercel Cron for Scheduled Reports
+## TD-007: GitHub Actions for Scheduled Reports (Vercel Cron Rejected)
 
-**Decision:** Use Vercel Cron (via `vercel.json` `crons` config or Next.js App Router `schedule` pattern) for the 6-hour health digest.
+**Decision:** Use GitHub Actions scheduled workflows (`.github/workflows/yomirra-ops.yml`) for the 6-hour health digest (`17 */6 * * *`) and daily digest (`37 0 * * *`), with manual `workflow_dispatch` trigger. Vercel Cron is rejected for sub-daily scheduling due to Vercel Hobby plan limitations.
 
-**Reason:** Already on Vercel. No external scheduler needed. Vercel free tier supports up to 2 cron jobs.
+**Reason:** Vercel Hobby tier does not support sub-daily cron intervals (`*/10 * * * *` or `0 */6 * * *`). GitHub Actions provides free, reliable cron scheduling with non-zero minute offsets to prevent high-load delays.
 
-**Free-tier constraint:** Vercel free tier limits cron to once per day minimum interval on some plan configurations. If `every 6 hours` is unavailable on free tier, fall back to daily digest only or use a GitHub Actions scheduled workflow as an alternative trigger.
+**Endpoints:**
+- `POST /api/ops/cron/health-digest` — protected by `OPS_CRON_SECRET`
+- `POST /api/ops/cron/daily-digest` — protected by `OPS_CRON_SECRET`
 
-**Proposed cron route:** `POST /api/ops/cron/health-digest` — protected by `CRON_SECRET` header.
-
-**Status:** ACTIVE — pending verification against active Vercel plan limits.
+**Status:** ACTIVE
 
 ---
 
