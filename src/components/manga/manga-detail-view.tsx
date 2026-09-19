@@ -15,6 +15,7 @@ import { MangaStatusButton } from "@/components/manga/manga-status-button";
 import { MangaCollectionButton } from "@/components/manga/manga-collection-button";
 import { PageHeader } from "@/components/app/header";
 import { MangaHeaderActions } from "./manga-header-actions";
+import { MangaSourceSelector } from "./manga-source-selector";
 import { Star } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
@@ -280,6 +281,11 @@ export function MangaDetailView({
                       {detail.status}
                     </span>
                   )}
+                  <MangaSourceSelector
+                    sourceId={sourceId}
+                    mangaId={mangaId}
+                    title={detail.title}
+                  />
                 </div>
                 
                 <div className="mt-auto flex flex-col gap-0.5">
@@ -336,6 +342,11 @@ export function MangaDetailView({
                     {detail.status}
                   </span>
                 )}
+                <MangaSourceSelector
+                  sourceId={sourceId}
+                  mangaId={mangaId}
+                  title={detail.title}
+                />
               </div>
 
               <div>

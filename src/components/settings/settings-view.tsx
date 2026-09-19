@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { UserCircle, Broom, Palette, WifiHigh, Fire, ArrowsClockwise, DeviceMobile, FileText, Clock, Bell, X } from "@phosphor-icons/react";
+import { UserCircle, Broom, Palette, WifiHigh, Fire, ArrowsClockwise, DeviceMobile, FileText, Clock, Bell, X, Compass, Globe } from "@phosphor-icons/react";
 import { BackupRestoreModal } from "@/components/settings/backup-restore-modal";
 import { useAuth } from "@/shared/hooks/use-auth";
 import { useSync } from "@/shared/hooks/use-sync";
@@ -10,7 +10,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useHistoryStore } from "@/shared/store/history-store";
 import { useLibraryStore } from "@/shared/store/library-store";
-import { useSettingsStore } from "@/shared/store/settings-store";
+import { useSettingsStore, type SourceRoutingMode } from "@/shared/store/settings-store";
 import { useStatsStore } from "@/shared/store/stats-store";
 import { useTheme } from "next-themes";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
@@ -38,7 +38,8 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
   const {
     dataSaver, setDataSaver, hideNsfw, setHideNsfw, lastSyncedAt, keepScreenAwake, setKeepScreenAwake,
     checkOnAppStart, setCheckOnAppStart, minimumCheckIntervalMinutes, setMinimumCheckIntervalMinutes,
-    notifyForAllLibraryItems, setNotifyForAllLibraryItems
+    notifyForAllLibraryItems, setNotifyForAllLibraryItems,
+    routingMode, setRoutingMode, preferredLanguages, setPreferredLanguages, globalSourceOrder, setGlobalSourceOrder
   } = useSettingsStore();
   const totalReadingTimeMs = useStatsStore((state) => state.totalReadingTimeMs);
   const { theme, setTheme } = useTheme();
@@ -200,6 +201,73 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
               checked={mounted ? notifyForAllLibraryItems : true}
               onCheckedChange={setNotifyForAllLibraryItems}
               label="Tandai update baru sebagai belum dibaca"
+            />
+          }
+        />
+      </SettingsSection>
+
+      {/* Preferensi Sumber & Smart Routing (Phase 6) */}
+      <SettingsSection title="Preferensi Sumber & Routing">
+        <SettingsItem
+          icon={<IconWrapper><Compass size={20} weight="duotone" /></IconWrapper>}
+          title="Mode Routing Sumber"
+          description="Atur cara Yomirra menangani sumber komik yang lambat atau mengalami gangguan."
+          right={
+            <CustomSelect
+              value={mounted ? routingMode : "PREFERRED"}
+              onChange={(val) => setRoutingMode(val as SourceRoutingMode)}
+              options={[
+                { value: "PREFERRED", label: "Prioritas (Rekomendasi)" },
+                { value: "AUTO_SAFE", label: "Otomatis Aman" },
+                { value: "MANUAL", label: "Manual" },
+              ]}
+            />
+          }
+        />
+
+        <div className="mx-3 my-1 border-b border-border-subtle/50" />
+
+        <SettingsItem
+          icon={<IconWrapper><Globe size={20} weight="duotone" /></IconWrapper>}
+          title="Bahasa Utama"
+          description="Bahasa terjemahan yang diprioritaskan saat memilih sumber komik."
+          right={
+            <CustomSelect
+              value={mounted ? (preferredLanguages[0] || "id") : "id"}
+              onChange={(val) => {
+                const rest = preferredLanguages.filter((l) => l !== val);
+                setPreferredLanguages([val, ...rest]);
+              }}
+              options={[
+                { value: "id", label: "Bahasa Indonesia" },
+                { value: "en", label: "English" },
+              ]}
+            />
+          }
+        />
+
+        <div className="mx-3 my-1 border-b border-border-subtle/50" />
+
+        <SettingsItem
+          icon={<IconWrapper><ArrowsClockwise size={20} weight="duotone" /></IconWrapper>}
+          title="Sumber Utama Teratas"
+          description="Sumber urutan pertama yang diprioritaskan ketika membaca."
+          right={
+            <CustomSelect
+              value={mounted ? (globalSourceOrder[0] || "mangadex") : "mangadex"}
+              onChange={(val) => {
+                const rest = globalSourceOrder.filter((s) => s !== val);
+                setGlobalSourceOrder([val, ...rest]);
+              }}
+              options={[
+                { value: "mangadex", label: "MangaDex" },
+                { value: "komiku", label: "Komiku" },
+                { value: "komiknesia", label: "KomikNesia" },
+                { value: "komikindo", label: "Komikindo" },
+                { value: "komiku-ii", label: "Komiku II" },
+                { value: "asurascans", label: "Asura Scans" },
+                { value: "shinigami", label: "Shinigami" },
+              ]}
             />
           }
         />
