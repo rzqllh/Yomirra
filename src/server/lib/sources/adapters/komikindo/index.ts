@@ -113,7 +113,7 @@ export class KomikindoSource implements MangaSource {
     }
 
     // Advanced search endpoint
-    const html = await this.client.getHtml(`/manga/page/${page}/`, params);
+    const html = await this.client.getHtml(`/page/${page}/`, params);
     return this.parseMangaList(html);
   }
 
