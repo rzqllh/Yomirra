@@ -494,7 +494,9 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
                 description="Sesuaikan preferensi aplikasi sesuai keinginanmu."
                 icon={<Gear size={24} weight="duotone" />}
               />
-              {settingsContent}
+              <div className="max-w-3xl">
+                {settingsContent}
+              </div>
             </div>
           </YomirraSurface>
         </div>

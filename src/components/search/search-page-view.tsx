@@ -14,7 +14,7 @@ export function SearchPageView() {
 
   return (
     <main className="min-h-screen bg-surface-base pb-[calc(var(--bottom-nav-height,80px)+24px)]">
-      <div className="px-4 max-w-7xl mx-auto space-y-5">
+      <div className="px-4 md:px-8 max-w-7xl mx-auto space-y-5">
         {/* Document Flow Header */}
         <div className="pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:pt-8">
           <PageHeader

@@ -17,7 +17,7 @@ export default function UpdatesPage() {
         />
       </div>
 
-      <div className="px-4 mt-2 outline-none">
+      <div className="px-4 md:px-8 mt-2 outline-none">
         <UpdatesList hideHeader={true} />
       </div>
     </div>
