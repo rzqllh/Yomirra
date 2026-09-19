@@ -146,7 +146,11 @@ export const useUpdateStore = create<UpdateState>()(
       },
 
       getUpdate: (sourceId, mangaId) => {
-        return get().items[getUpdateKey(sourceId, mangaId)];
+        const direct = get().items[getUpdateKey(sourceId, mangaId)];
+        if (direct) return direct;
+        return Object.values(get().items).find(
+          (i) => i.sourceId === sourceId && i.mangaId === mangaId
+        );
       },
 
       getUpdateById: (savedTitleId) => {

@@ -1,6 +1,10 @@
 import { apiClient } from "@/shared/api-client";
 import { useLibraryStore, type LibraryItem } from "@/shared/store/library-store";
 import { useUpdateStore, getUpdateKey } from "@/shared/store/update-store";
+import { useSettingsStore } from "@/shared/store/settings-store";
+import { useSourceHealthStore } from "@/shared/store/source-health-store";
+import { getSourceMetadata } from "@/shared/sources/source-registry";
+import { parseChapterNumber } from "@/shared/lib/chapter-parser";
 import type { Chapter } from "@/shared/sources/source-types";
 
 export const DEFAULT_COOLDOWN_MS = 15 * 60 * 1000; // 15 minutes
@@ -68,7 +72,8 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
     // Check cooldown unless forceRefresh is true
     if (!options.forceRefresh) {
       const key = getUpdateKey(item.sourceId, item.mangaId);
-      const existingUpdate = updateItems[key];
+      const existingUpdate =
+        (item.id ? updateItems[item.id] : undefined) || updateItems[key];
       if (existingUpdate?.lastCheckedAt) {
         const lastCheckedTime = Date.parse(existingUpdate.lastCheckedAt);
         if (!isNaN(lastCheckedTime) && now - lastCheckedTime < cooldown) {
@@ -88,60 +93,171 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
       if (options.signal?.aborted) break;
 
       result.totalScanned++;
-      const key = getUpdateKey(item.sourceId, item.mangaId);
-      const existingUpdate = updateItems[key];
+      const savedTitleId = item.id || getUpdateKey(item.sourceId, item.mangaId);
+      const existingUpdate =
+        (item.id ? updateItems[item.id] : undefined) ||
+        updateItems[getUpdateKey(item.sourceId, item.mangaId)];
 
-      try {
-        const chapters = await apiClient.getChapters(item.sourceId, item.mangaId, { signal: options.signal });
+      // 1. Resolve candidate sources based on Phase 6 preferences & linked sources
+      const settings = useSettingsStore.getState();
+      const explicitPref =
+        (item.id ? settings.perTitleSourcePreferences?.[item.id] : undefined) ||
+        settings.perTitleSourcePreferences?.[savedTitleId] ||
+        settings.perTitleSourcePreferences?.[getUpdateKey(item.sourceId, item.mangaId)];
 
-        // Self-heal: If item.title is missing, corrupted into a chapter label, or coverUrl is missing
-        let resolvedTitle = item.title;
-        let resolvedCoverUrl = item.coverUrl;
-        const isCorruptedTitle = !resolvedTitle || /^chapter\s*\d+/i.test(resolvedTitle.trim());
-        const needsHealing = isCorruptedTitle || !resolvedCoverUrl;
-        if (needsHealing) {
-          try {
-            const detail = await apiClient.getDetail(item.sourceId, item.mangaId, { signal: options.signal });
-            if (detail?.title) {
-              resolvedTitle = detail.title;
-              resolvedCoverUrl = detail.coverUrl || resolvedCoverUrl;
-              useLibraryStore.getState().updateLibraryItem(item.sourceId, item.mangaId, {
-                title: resolvedTitle,
-                coverUrl: resolvedCoverUrl,
+      const healthState = useSourceHealthStore.getState().healthBySource || {};
+      const isSourceHealthy = (srcId: string) => {
+        const h = healthState[srcId]?.status;
+        return h !== "offline" && h !== "degraded";
+      };
+
+      interface CandidateTarget {
+        sourceId: string;
+        mangaId: string;
+        sourceName?: string;
+        priority: number;
+        isPrimary: boolean;
+      }
+
+      const candidates: CandidateTarget[] = [];
+      // Primary
+      candidates.push({
+        sourceId: item.sourceId,
+        mangaId: item.mangaId,
+        sourceName: item.sourceName,
+        isPrimary: true,
+        priority: 10,
+      });
+
+      // Linked sources
+      if (item.linkedSources && item.linkedSources.length > 0) {
+        for (const ref of item.linkedSources) {
+          if (!ref.sourceId || !ref.mangaId) continue;
+          if (ref.matchConfidence === "NO_MATCH") continue;
+
+          let basePriority = 2;
+          if (ref.matchConfidence === "CONFIRMED") basePriority = 8;
+          else if (ref.matchConfidence === "HIGH_CONFIDENCE") basePriority = 6;
+
+          candidates.push({
+            sourceId: ref.sourceId,
+            mangaId: ref.mangaId,
+            sourceName: getSourceMetadata(ref.sourceId)?.name ?? ref.sourceId,
+            isPrimary: false,
+            priority: basePriority,
+          });
+        }
+      }
+
+      // Apply explicit user choice & health adjustments
+      candidates.forEach((c) => {
+        if (explicitPref && c.sourceId === explicitPref) {
+          c.priority += 100;
+        }
+        if (!isSourceHealthy(c.sourceId)) {
+          c.priority -= 50;
+        }
+      });
+
+      // Deduplicate by sourceId keeping highest priority
+      const candidateMap = new Map<string, CandidateTarget>();
+      for (const c of candidates) {
+        const existing = candidateMap.get(c.sourceId);
+        if (!existing || c.priority > existing.priority) {
+          candidateMap.set(c.sourceId, c);
+        }
+      }
+
+      // Sort candidates by priority descending
+      const sortedCandidates = Array.from(candidateMap.values()).sort(
+        (a, b) => b.priority - a.priority
+      );
+
+      // Bounded fan-out: Poll at most top 2 candidates per item
+      const targetsToPoll = sortedCandidates.slice(0, 2);
+
+      type DiscoveredChapter = {
+        chapter: Chapter;
+        normalizedNumber: number;
+        sourceId: string;
+        sourceName?: string;
+      };
+
+      const discoveredChapters: DiscoveredChapter[] = [];
+      const pollErrors: Array<{ sourceId: string; mangaId: string; error: string }> = [];
+
+      for (const target of targetsToPoll) {
+        if (options.signal?.aborted) break;
+        try {
+          const chapters = await apiClient.getChapters(target.sourceId, target.mangaId, {
+            signal: options.signal,
+          });
+          if (chapters && chapters.length > 0) {
+            for (const ch of chapters) {
+              const parsedNum = parseChapterNumber(ch.title);
+              const normNum =
+                parsedNum ?? (typeof ch.number === "number" && !isNaN(ch.number) ? ch.number : 0);
+              discoveredChapters.push({
+                chapter: ch,
+                normalizedNumber: normNum,
+                sourceId: target.sourceId,
+                sourceName: target.sourceName,
               });
             }
-          } catch {
-            // Non-blocking fallback
           }
-        }
-
-        if (!chapters || chapters.length === 0) {
-          useUpdateStore.getState().upsertUpdate({
-            sourceId: item.sourceId,
-            mangaId: item.mangaId,
-            mangaTitle: resolvedTitle,
-            coverUrl: resolvedCoverUrl,
-            sourceName: item.sourceName,
-            lastCheckedAt: new Date().toISOString(),
+        } catch (err: any) {
+          if (err.name === "AbortError" || options.signal?.aborted) break;
+          const msg = err?.message || "Gagal memuat chapter";
+          pollErrors.push({
+            sourceId: target.sourceId,
+            mangaId: target.mangaId,
+            error: msg,
           });
-          continue;
         }
+      }
 
-        // Identify latest chapter: prefer highest numeric chapter.number, fall back to first chapter
-        const latestChapter: Chapter = chapters.reduce((prev, curr) => {
-          if (curr.number > prev.number) return curr;
+      // Self-heal: If item.title is missing, corrupted into a chapter label, or coverUrl is missing
+      let resolvedTitle = item.title;
+      let resolvedCoverUrl = item.coverUrl;
+      const isCorruptedTitle = !resolvedTitle || /^chapter\s*\d+/i.test(resolvedTitle.trim());
+      const needsHealing = isCorruptedTitle || !resolvedCoverUrl;
+      if (needsHealing) {
+        try {
+          const detail = await apiClient.getDetail(item.sourceId, item.mangaId, {
+            signal: options.signal,
+          });
+          if (detail?.title) {
+            resolvedTitle = detail.title;
+            resolvedCoverUrl = detail.coverUrl || resolvedCoverUrl;
+            useLibraryStore.getState().updateLibraryItem(item.sourceId, item.mangaId, {
+              title: resolvedTitle,
+              coverUrl: resolvedCoverUrl,
+            });
+          }
+        } catch {
+          // Non-blocking fallback
+        }
+      }
+
+      if (discoveredChapters.length > 0) {
+        // Dedup: find latest chapter by normalizedNumber, tie-breaking in favor of primary/preferred source
+        const latest = discoveredChapters.reduce((prev, curr) => {
+          if (curr.normalizedNumber > prev.normalizedNumber) return curr;
+          if (curr.normalizedNumber === prev.normalizedNumber) {
+            if (curr.sourceId === item.sourceId && prev.sourceId !== item.sourceId) return curr;
+          }
           return prev;
-        }, chapters[0]);
+        }, discoveredChapters[0]);
 
-        // Check if this is a first scan (baseline seeding) or a subsequent new release
         const isFirstScan = !existingUpdate;
         const isNewChapter =
           !isFirstScan &&
           Boolean(
             existingUpdate.latestChapterId &&
-            latestChapter.id &&
-            existingUpdate.latestChapterId !== latestChapter.id &&
-            latestChapter.number > (existingUpdate.latestChapterNumber ?? 0)
+            latest.chapter.id &&
+            (latest.normalizedNumber > (existingUpdate.latestChapterNumber ?? 0) ||
+              (existingUpdate.latestChapterId !== latest.chapter.id &&
+                latest.normalizedNumber === (existingUpdate.latestChapterNumber ?? 0)))
           );
 
         if (isNewChapter) {
@@ -149,11 +265,13 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
         }
 
         const checkTimeIso = new Date().toISOString();
-        const resolvedSeenAt = isNewChapter
-          ? undefined
-          : (existingUpdate?.seenAt || checkTimeIso);
+        const resolvedSeenAt = isNewChapter ? undefined : (existingUpdate?.seenAt || checkTimeIso);
+        const resolvedDetectedAt = isNewChapter
+          ? checkTimeIso
+          : (existingUpdate?.detectedAt || checkTimeIso);
 
         useUpdateStore.getState().upsertUpdate({
+          savedTitleId: item.id,
           sourceId: item.sourceId,
           mangaId: item.mangaId,
           mangaTitle: resolvedTitle,
@@ -161,34 +279,46 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
           sourceName: item.sourceName,
           lastKnownChapterId: item.lastReadChapterId,
           lastKnownChapterTitle: item.lastReadChapterTitle,
-          latestChapterId: latestChapter.id,
-          latestChapterNumber: latestChapter.number,
-          latestChapterTitle: latestChapter.title,
+          latestChapterId: latest.chapter.id,
+          latestChapterNumber: latest.normalizedNumber,
+          latestChapterTitle: latest.chapter.title,
+          detectedSourceId: latest.sourceId,
+          detectedSourceName: latest.sourceName || latest.sourceId,
+          isAlternateSource: latest.sourceId !== item.sourceId,
           lastCheckedAt: checkTimeIso,
-          detectedAt: isNewChapter ? checkTimeIso : (existingUpdate?.detectedAt || checkTimeIso),
+          detectedAt: resolvedDetectedAt,
           seenAt: resolvedSeenAt,
         });
-      } catch (err: any) {
-        if (err.name === 'AbortError' || options.signal?.aborted) {
-          break; // Intentionally aborted
-        }
-
-        // Record per-source or per-title failure without failing whole scan
-        const errorMsg = err?.message || "Gagal memuat chapter terbaru";
+      } else if (pollErrors.length > 0) {
+        // All candidate polls errored -> record isolated error
+        const primaryError =
+          pollErrors.find((e) => e.sourceId === item.sourceId)?.error || pollErrors[0].error;
         result.errors.push({
           sourceId: item.sourceId,
           mangaId: item.mangaId,
-          error: errorMsg,
+          error: primaryError,
         });
 
         useUpdateStore.getState().upsertUpdate({
+          savedTitleId: item.id,
           sourceId: item.sourceId,
           mangaId: item.mangaId,
           mangaTitle: item.title,
           coverUrl: item.coverUrl,
           sourceName: item.sourceName,
           lastCheckedAt: new Date().toISOString(),
-          error: errorMsg,
+          error: primaryError,
+        });
+      } else {
+        // 0 chapters returned without error
+        useUpdateStore.getState().upsertUpdate({
+          savedTitleId: item.id,
+          sourceId: item.sourceId,
+          mangaId: item.mangaId,
+          mangaTitle: resolvedTitle,
+          coverUrl: resolvedCoverUrl,
+          sourceName: item.sourceName,
+          lastCheckedAt: new Date().toISOString(),
         });
       }
     }
