@@ -138,7 +138,7 @@ export function MangaDetailView({
         <Button
           asChild
           variant="accent"
-          className="w-full rounded-[16px] h-[52px] text-base font-bold flex items-center justify-center gap-2.5 bg-[#5B65E9] hover:bg-[#4C55C4] text-white shadow-[0_4px_16px_rgba(91,101,233,0.35)] active:scale-[0.98] transition-all"
+          className="w-full rounded-[16px] h-[52px] text-base font-bold flex items-center justify-center gap-2.5 bg-accent hover:bg-accent/90 text-white shadow-md active:scale-[0.98] transition-all"
         >
           <Link
             href={getReaderHref(sourceId, mangaId, targetChapterId)}

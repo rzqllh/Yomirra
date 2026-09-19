@@ -18,7 +18,9 @@ export function useUpdateChecker(options: UseUpdateCheckerOptions = {}) {
   // Stable ref so the mount-only effect doesn't re-fire when caller's options object is recreated
   const checkOnMountRef = useRef(options.checkOnMount);
   const optionsRef = useRef(options);
-  optionsRef.current = options;
+  useEffect(() => {
+    optionsRef.current = options;
+  });
 
   const triggerScan = useCallback(async (scanOptions: ScanOptions = {}): Promise<ScanResult> => {
     if (abortControllerRef.current) {

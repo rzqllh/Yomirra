@@ -2,8 +2,6 @@ import { Metadata } from "next";
 import { sourceManager } from "@/server/lib/sources/source-manager";
 import { withCache, CACHE_TTL } from "@/server/lib/cache/redis-cache";
 import { MangaDetailView } from "@/components/manga/manga-detail-view";
-import { ErrorState } from "@/components/states/error-state";
-import { PageHeader } from "@/components/app/header";
 import { getManifestUrlFromCookie } from "@/server/lib/sources/server-manifest";
 import { cookies } from "next/headers";
 
@@ -29,7 +27,7 @@ export async function generateMetadata({
         images: detail.coverUrl ? [detail.coverUrl] : []
       }
     };
-  } catch (e) {
+  } catch {
     return { title: "Manga tidak ditemukan - Yomirra" };
   }
 }
@@ -46,26 +44,28 @@ export default async function MangaDetailPage({
 
   let detail;
   let chapters;
+  let errorState: { type: "disabled" | "not_found" | "dead" | "network_error"; message?: string } | null = null;
+
   try {
     const cookieStore = await cookies();
     const disabledCookie = cookieStore.get("yomirra-disabled-sources");
     const disabledSources = disabledCookie ? JSON.parse(decodeURIComponent(disabledCookie.value)) : [];
     
     if (disabledSources.includes(normalizedSourceId)) {
-      return <MangaDetailErrorState sourceId={normalizedSourceId} mangaId={mangaId} type="disabled" />;
-    }
+      errorState = { type: "disabled" };
+    } else {
+      const manifestUrl = await getManifestUrlFromCookie(normalizedSourceId);
+      const source = await sourceManager.getSource(normalizedSourceId, manifestUrl);
+      
+      // Fetch data directly on the server with cache!
+      [detail, chapters] = await Promise.all([
+        withCache(`source:v2:${normalizedSourceId}:manga:${mangaId}`, () => source.getDetail(mangaId), CACHE_TTL.DETAIL),
+        withCache(`source:v2:${normalizedSourceId}:chapters:${mangaId}`, () => source.getChapters(mangaId), CACHE_TTL.CHAPTERS),
+      ]);
 
-    const manifestUrl = await getManifestUrlFromCookie(normalizedSourceId);
-    const source = await sourceManager.getSource(normalizedSourceId, manifestUrl);
-    
-    // Fetch data directly on the server with cache!
-    [detail, chapters] = await Promise.all([
-      withCache(`source:v2:${normalizedSourceId}:manga:${mangaId}`, () => source.getDetail(mangaId), CACHE_TTL.DETAIL),
-      withCache(`source:v2:${normalizedSourceId}:chapters:${mangaId}`, () => source.getChapters(mangaId), CACHE_TTL.CHAPTERS),
-    ]);
-
-    if (!detail || !detail.title) {
-      return <MangaDetailErrorState sourceId={normalizedSourceId} mangaId={mangaId} type="not_found" />;
+      if (!detail || !detail.title) {
+        errorState = { type: "not_found" };
+      }
     }
   } catch (error) {
     console.error("Failed to load manga details", error);
@@ -73,23 +73,33 @@ export default async function MangaDetailPage({
 
     // 1. Not Found / 404
     if (errString.includes("404") || errString.includes("not found") || errString.includes("tidak ditemukan")) {
-      return <MangaDetailErrorState sourceId={normalizedSourceId} mangaId={mangaId} type="not_found" />;
+      errorState = { type: "not_found" };
+    } else {
+      // 2. Confirmed dead / unavailable source in registry or permanently removed
+      const sourceMeta = getSourceMetadata(normalizedSourceId);
+      const isExplicitlyDead = sourceMeta?.status === "unavailable" || sourceMeta?.status === "in-fix" || errString.includes("source is disabled") || errString.includes("source not found");
+      if (isExplicitlyDead) {
+        errorState = { type: "dead" };
+      } else {
+        // 3. Network, Timeout, 5xx, or transient error -> Recoverable inline error state with Retry
+        errorState = {
+          type: "network_error",
+          message: error instanceof Error ? error.message : undefined,
+        };
+      }
     }
+  }
 
-    // 2. Confirmed dead / unavailable source in registry or permanently removed
-    const sourceMeta = getSourceMetadata(normalizedSourceId);
-    const isExplicitlyDead = sourceMeta?.status === "unavailable" || sourceMeta?.status === "in-fix" || errString.includes("source is disabled") || errString.includes("source not found");
-    if (isExplicitlyDead) {
+  if (errorState || !detail || !chapters) {
+    if (errorState?.type === "dead") {
       return <DeadSourceRecovery sourceId={normalizedSourceId} mangaId={mangaId} />;
     }
-
-    // 3. Network, Timeout, 5xx, or transient error -> Recoverable inline error state with Retry
     return (
       <MangaDetailErrorState
         sourceId={normalizedSourceId}
         mangaId={mangaId}
-        type="network_error"
-        message={error instanceof Error ? error.message : undefined}
+        type={errorState?.type || "not_found"}
+        message={errorState?.message}
       />
     );
   }

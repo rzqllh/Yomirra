@@ -93,7 +93,7 @@ export async function bufferChapterPages(params: {
   }
 
   const chapterKey = `${sourceId}::${mangaId}::${chapterId}`;
-  let registry = getRegistry();
+  const registry = getRegistry();
 
   // If already buffered recently, update timestamp
   const existingIdx = registry.findIndex((c) => c.chapterKey === chapterKey);

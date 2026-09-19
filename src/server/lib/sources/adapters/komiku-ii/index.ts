@@ -145,8 +145,7 @@ export class KomikuIISource implements MangaSource {
 
   async getDetail(mangaId: string): Promise<MangaDetail> {
     const { slug, comicId } = parseKomikuIIMangaId(mangaId);
-
-    let targetSlug = slug;
+    const targetSlug = slug;
     if (!targetSlug && comicId) {
       throw new Error(`INVALID_MANGA_ID: Komiku II requires a slug to resolve manga detail, got "${mangaId}"`);
     }
