@@ -101,4 +101,31 @@ describe("mapChapterProgress", () => {
       expect(result.delta).toBe(1);
     }
   });
+
+  it("never jumps forward automatically and provides nearest lower safe candidate", () => {
+    // User progress is 57.5, target source only has 57, 58
+    const splitChapters: SourceChapterList = [
+      { chapterId: "ch-57", title: "Chapter 57", chapterNumber: 57 },
+      { chapterId: "ch-58", title: "Chapter 58", chapterNumber: 58 },
+    ];
+    const result = mapChapterProgress(57.5, splitChapters);
+    // Because 57 and 58 are both within PROBABLE_TOLERANCE (0.5), it is AMBIGUOUS
+    expect(result.type).toBe("AMBIGUOUS");
+    expect(result.nearestSafeCandidate).toBeDefined();
+    expect(result.nearestSafeCandidate?.chapterNumber).toBe(57);
+    expect(result.nearestSafeCandidate?.chapterId).toBe("ch-57");
+  });
+
+  it("handles exact volume and chapter matching", () => {
+    const multiVolChapters: SourceChapterList = [
+      { chapterId: "v1-c14", title: "Vol. 1 Chapter 14", chapterNumber: 14, volume: 1 },
+      { chapterId: "v2-c14", title: "Vol. 2 Chapter 14", chapterNumber: 14, volume: 2 },
+    ];
+    const result = mapChapterProgress("Vol. 2 Ch. 14", multiVolChapters);
+    expect(result.type).toBe("EXACT");
+    if (result.type === "EXACT") {
+      expect(result.targetChapterId).toBe("v2-c14");
+    }
+  });
 });
+

@@ -11,10 +11,10 @@
  */
 
 export type ChapterMapResult =
-  | { type: "EXACT"; targetChapterId: string; chapterNumber: number }
-  | { type: "PROBABLE"; targetChapterId: string; chapterNumber: number; delta: number }
-  | { type: "AMBIGUOUS"; candidates: Array<{ chapterId: string; chapterNumber: number }> }
-  | { type: "UNMAPPED"; chapterNumber?: number | null };
+  | { type: "EXACT"; targetChapterId: string; chapterNumber: number; nearestSafeCandidate?: { chapterId: string; chapterNumber: number } }
+  | { type: "PROBABLE"; targetChapterId: string; chapterNumber: number; delta: number; nearestSafeCandidate?: { chapterId: string; chapterNumber: number } }
+  | { type: "AMBIGUOUS"; candidates: Array<{ chapterId: string; chapterNumber: number }>; nearestSafeCandidate?: { chapterId: string; chapterNumber: number } }
+  | { type: "UNMAPPED"; chapterNumber?: number | null; nearestSafeCandidate?: { chapterId: string; chapterNumber: number } };
 
 export interface ChapterMeta {
   chapterId: string;
@@ -78,6 +78,42 @@ export function resolveChapterNumber(chapter: ChapterMeta): number | null {
   // Last resort: try the chapterId itself
   return parseChapterNumber(chapter.chapterId);
 }
+ 
+/**
+ * Parses a volume number from a string, e.g. "Vol. 2 Ch. 14" -> 2.
+ */
+export function parseVolumeNumber(raw: string): number | null {
+  if (!raw) return null;
+  const volMatch = /(?:vol(?:ume)?[.\s]*)([\d]+)/i.exec(raw);
+  if (volMatch) return parseInt(volMatch[1], 10);
+  return null;
+}
+
+/**
+ * Finds the nearest safe candidate chapter whose chapter number is <= lastReadNumber.
+ * Guaranteed to NEVER advance forward.
+ */
+export function findNearestSafeChapter(
+  lastReadNumber: number,
+  chapters: ChapterMeta[]
+): { chapter: ChapterMeta; chapterNumber: number } | null {
+  const numbered: Array<{ number: number; chapter: ChapterMeta }> = [];
+  for (const ch of chapters) {
+    const num = resolveChapterNumber(ch);
+    if (num !== null && num <= lastReadNumber + EXACT_TOLERANCE) {
+      numbered.push({ number: num, chapter: ch });
+    }
+  }
+
+  if (numbered.length === 0) return null;
+
+  // Sort descending to find the closest chapter <= lastReadNumber
+  numbered.sort((a, b) => b.number - a.number);
+  return {
+    chapter: numbered[0].chapter,
+    chapterNumber: numbered[0].number,
+  };
+}
 
 /**
  * Finds a chapter by its exact chapter number in a chapter list.
@@ -113,6 +149,8 @@ export function mapChapterProgress(
   targetChapters: ChapterMeta[]
 ): ChapterMapResult {
   const lastReadNumber = typeof lastRead === "number" ? lastRead : parseChapterNumber(lastRead);
+  const lastReadVolume = typeof lastRead === "string" ? parseVolumeNumber(lastRead) : null;
+
   if (lastReadNumber === null) {
     return { type: "UNMAPPED", chapterNumber: null };
   }
@@ -134,18 +172,44 @@ export function mapChapterProgress(
     return { type: "UNMAPPED", chapterNumber: lastReadNumber };
   }
 
-  // Find exact matches
+  const safeMatch = findNearestSafeChapter(lastReadNumber, targetChapters);
+  const nearestSafeCandidate = safeMatch
+    ? { chapterId: safeMatch.chapter.chapterId, chapterNumber: safeMatch.chapterNumber }
+    : undefined;
+
+  // 1. Exact matches
   const exact = numbered.filter(
     (x) => Math.abs(x.number - lastReadNumber) < EXACT_TOLERANCE
   );
+
   if (exact.length === 1) {
     return {
       type: "EXACT",
       targetChapterId: exact[0].meta.chapterId,
       chapterNumber: exact[0].number,
+      nearestSafeCandidate,
     };
   }
+
   if (exact.length > 1) {
+    // If volume information is available, check for exact volume match
+    if (lastReadVolume !== null) {
+      const volMatch = exact.find((x) => {
+        const chVol = x.meta.volume !== undefined
+          ? (typeof x.meta.volume === "number" ? x.meta.volume : parseInt(String(x.meta.volume), 10))
+          : parseVolumeNumber(x.meta.chapterTitle || x.meta.title || "");
+        return chVol === lastReadVolume;
+      });
+      if (volMatch) {
+        return {
+          type: "EXACT",
+          targetChapterId: volMatch.meta.chapterId,
+          chapterNumber: volMatch.number,
+          nearestSafeCandidate,
+        };
+      }
+    }
+
     // Duplicate chapter numbers in target source — ambiguous
     return {
       type: "AMBIGUOUS",
@@ -153,21 +217,25 @@ export function mapChapterProgress(
         chapterId: x.meta.chapterId,
         chapterNumber: x.number,
       })),
+      nearestSafeCandidate,
     };
   }
 
-  // Find probable matches within tolerance
+  // 2. Probable matches within tolerance (nearest proximity)
   const probable = numbered.filter(
     (x) => Math.abs(x.number - lastReadNumber) <= PROBABLE_TOLERANCE
   );
+
   if (probable.length === 1) {
     return {
       type: "PROBABLE",
       targetChapterId: probable[0].meta.chapterId,
       chapterNumber: probable[0].number,
       delta: Math.abs(probable[0].number - lastReadNumber),
+      nearestSafeCandidate,
     };
   }
+
   if (probable.length > 1) {
     return {
       type: "AMBIGUOUS",
@@ -175,9 +243,14 @@ export function mapChapterProgress(
         chapterId: x.meta.chapterId,
         chapterNumber: x.number,
       })),
+      nearestSafeCandidate,
     };
   }
 
   // Nothing close enough
-  return { type: "UNMAPPED", chapterNumber: lastReadNumber };
+  return {
+    type: "UNMAPPED",
+    chapterNumber: lastReadNumber,
+    nearestSafeCandidate,
+  };
 }

@@ -65,16 +65,27 @@ export function CommandMenu() {
   })
 
   const previewResults = React.useMemo(() => {
-    if (!globalSearchData || !globalSearchData.resultsBySource) return [];
-    const allResults: (MangaItem & { sourceId: string })[] = [];
-    Object.entries(globalSearchData.resultsBySource).forEach(([sourceId, sourceData]) => {
-      if (sourceData.results) {
-        sourceData.results.forEach(manga => {
-          allResults.push({ ...manga, sourceId });
-        });
-      }
-    });
-    return allResults.slice(0, 6);
+    if (!globalSearchData) return [];
+    // Priority: consume backend canonicalResults directly (Single Ownership)
+    if (globalSearchData.canonicalResults && globalSearchData.canonicalResults.length > 0) {
+      return globalSearchData.canonicalResults.map((c) => ({
+        ...c.primaryResult,
+        sourceBindings: c.sourceBindings,
+      })).slice(0, 6);
+    }
+    // Narrow compatibility fallback for raw legacy results
+    if (globalSearchData.resultsBySource) {
+      const allResults: (MangaItem & { sourceId: string })[] = [];
+      Object.entries(globalSearchData.resultsBySource).forEach(([sourceId, sourceData]) => {
+        if (sourceData.results) {
+          sourceData.results.forEach((manga) => {
+            allResults.push({ ...manga, sourceId });
+          });
+        }
+      });
+      return allResults.slice(0, 6);
+    }
+    return [];
   }, [globalSearchData]);
 
   const handleSelect = (href: string) => {
