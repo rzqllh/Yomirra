@@ -93,6 +93,17 @@ test-results*.json
 /docs/phase-reviews/
 /docs/architecture/*AUDIT*.md
 /docs/_internal/
+/docs/internal/
+/internal/
+/aiartefact/
+/ai-artifacts/
+*aiartefact*
+*.aiartefact
+*aiartifact*
+*.aiartifact
+*ai-artifact*
+*audit*.md
+component-reuse-audit-*.md
 
 # Internal documentation that should not be published
 /docs/GEMINI.components.md
@@ -116,12 +127,12 @@ test-results*.json
 # Internal development / agent tracking
 docs/source-engine/
 docs/telegram-ops/
-component-reuse-audit-*.md
-docs/decisions_phase6_9.md
-docs/plan_phase6.md
-docs/plan_phase7.md
-docs/plan_phase8.md
-docs/plan_phase9.md
-docs/progress_phase6_9.md
-docs/risks_phase6_9.md
-docs/tasks_phase6_9.md
+docs/decisions_*.md
+docs/plan_*.md
+docs/progress_*.md
+docs/risks_*.md
+docs/tasks_*.md
+# Internal demo routes
+src/app/(web)/showcase/*demo*/
+public/demo-*.html
+
