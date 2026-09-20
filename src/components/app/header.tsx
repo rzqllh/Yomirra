@@ -84,7 +84,7 @@ export function PageHeader({
       {/* ── Mobile Navigation Bar (md:hidden) ── */}
       <header
         className={cn(
-          "md:hidden fixed top-0 left-0 right-0 z-[var(--z-sticky)] flex w-full items-center justify-between px-4 pt-[calc(var(--safe-top)+10px)] pb-2.5 transition-all duration-300 ease-out pointer-events-none",
+          "md:hidden fixed top-0 left-0 right-0 z-[var(--z-sticky)] flex w-full flex-col justify-end px-4 pt-[var(--safe-top,0px)] pb-1.5 transition-all duration-300 ease-out pointer-events-none",
           isTransparent
             ? "bg-transparent border-transparent shadow-none"
             : isGlass
@@ -93,7 +93,7 @@ export function PageHeader({
           className
         )}
       >
-        <div className="flex items-center justify-between w-full transition-all duration-300 ease-out pointer-events-auto min-h-[48px]">
+        <div className="flex items-center justify-between w-full transition-all duration-300 ease-out pointer-events-auto h-[46px]">
           <div className="flex items-center gap-2.5 flex-1 min-w-0">
             {showBack ? (
               <button

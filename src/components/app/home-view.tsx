@@ -17,7 +17,7 @@ export function HomeView({ children }: HomeViewProps) {
       <YomirraSurface variant="base" className="min-h-screen">
         <h1 className="sr-only">Beranda Yomirra</h1>
 
-        <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:pt-8 md:px-8 pb-4 md:pb-8 max-w-7xl mx-auto flex flex-col gap-7">
+        <div className="px-4 pt-[calc(var(--mobile-header-height,50px)+var(--safe-top,0px)+10px)] md:pt-8 md:px-8 pb-4 md:pb-8 max-w-7xl mx-auto flex flex-col gap-7">
           <PageHeader
             title="Beranda"
             description="Temukan dan baca komik favoritmu di satu tempat."

@@ -234,17 +234,17 @@ export function ReaderShell({
               isDesktopPanelOpen ? "md:right-[calc(320px)]" : ""
             )}
           >
-            {/* Transparent Progressive Backdrop Blur Layer (No painted tint, optical refraction only) */}
+            {/* Compact Transparent Status Bar Blur Layer (Strictly confined to safe-top) */}
             <div
-              className="absolute inset-x-0 top-0 pointer-events-none -z-10"
+              className="absolute inset-x-0 top-0 pointer-events-none -z-10 overflow-hidden"
               style={{
-                height: "calc(var(--safe-top, env(safe-area-inset-top, 0px)))",
-                backdropFilter: "blur(20px)",
-                WebkitBackdropFilter: "blur(20px)",
+                height: "var(--safe-top, env(safe-area-inset-top, 44px))",
+                backdropFilter: "blur(12px)",
+                WebkitBackdropFilter: "blur(12px)",
                 maskImage:
-                  "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.9) calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 14px), rgba(0,0,0,0.6) calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 46px), rgba(0,0,0,0.2) calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 62px), rgba(0,0,0,0) 100%)",
+                  "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) calc(var(--safe-top, env(safe-area-inset-top, 44px)) - 8px), rgba(0,0,0,0) 100%)",
                 WebkitMaskImage:
-                  "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.9) calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 14px), rgba(0,0,0,0.6) calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 46px), rgba(0,0,0,0.2) calc(var(--safe-top, env(safe-area-inset-top, 0px)) + 62px), rgba(0,0,0,0) 100%)",
+                  "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.8) calc(var(--safe-top, env(safe-area-inset-top, 44px)) - 8px), rgba(0,0,0,0) 100%)",
               }}
             />
 

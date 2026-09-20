@@ -122,7 +122,7 @@
   --safe-top: env(safe-area-inset-top);
   --safe-bottom: env(safe-area-inset-bottom);
 
-  --mobile-header-height: 56px;
+  --mobile-header-height: 50px;
   --bottom-nav-content-height: 64px;
   --bottom-nav-height: calc(var(--bottom-nav-content-height) + var(--safe-bottom));
   --page-bottom-safe: calc(var(--bottom-nav-height) + 16px);
