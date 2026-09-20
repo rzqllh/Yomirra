@@ -195,7 +195,6 @@ export function MangaDetailView({
         }
       `}} />
 
-      {/* ── 1. Hero Scope (Backdrop strictly ends after secondary actions) ── */}
       <section className="relative w-full overflow-hidden select-none">
         {/* Backdrop Image with subtle blur, dark scrim for contrast, and smooth bottom fade into solid page background */}
         <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
@@ -381,11 +380,9 @@ export function MangaDetailView({
         </div>
       </section>
 
-      {/* ── 2. Content Surface (Solid Opaque Page Surface - Readability First) ── */}
       <div className="w-full relative z-10 bg-surface-base">
         <div className="w-full max-w-7xl mx-auto px-4 md:px-8 py-5 flex flex-col gap-6">
 
-          {/* 1. Synopsis (Solid surface, no glass backdrop) */}
           <div className="rounded-2xl border border-border-default/80 bg-surface-raised p-4 md:p-5 shadow-xs">
             <div className="flex items-center justify-between mb-2.5">
               <span className="text-[11px] font-black text-text-muted uppercase tracking-widest">Sinopsis</span>
@@ -407,7 +404,6 @@ export function MangaDetailView({
               {detail.description?.replace(/\s+/g, ' ').trim() || "Sinopsis belum tersedia."}
             </p>
 
-            {/* 2. Genre Tags beneath synopsis */}
             {detail.genres && detail.genres.length > 0 && (
               <div className="mt-3.5 flex flex-wrap gap-1.5">
                 {detail.genres.map((g) => (
@@ -509,7 +505,6 @@ export function MangaDetailView({
             )}
           </div>
 
-          {/* 6. Similar Manga */}
           <div className="pb-1">
             <MangaRecommendations
               sourceId={sourceId}

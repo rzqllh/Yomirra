@@ -24,7 +24,6 @@ export type HistoryItem = {
   scrollPercent?: number;
   readAt: number;
   isNsfw?: boolean;
-  // --- Phase 1 Identity Fields (optional, denormalized) ---
   savedTitleId?: string;  // Recoverable via SourceRef lookup if missing
   chapterNumber?: number; // Parsed from chapterTitle for cross-source mapping
 };
@@ -44,11 +43,6 @@ interface HistoryState {
   saveProgress: (sourceId: string, mangaId: string, chapterId: string, pageIndex: number, pageOffset?: number) => void;
   _hasHydrated: boolean;
   setHasHydrated: (state: boolean) => void;
-  /**
-   * Resolve SavedTitleId for a HistoryItem.
-   * Returns the denormalized field if present, otherwise scans Library SourceRefs.
-   * Returns null if unresolvable — item is preserved as unresolved legacy history.
-   */
   resolveSavedTitleId: (sourceId: string, mangaId: string) => string | null;
   syncWithCloud: (cloudItems: HistoryItem[]) => void;
 }
@@ -162,7 +156,6 @@ export const useHistoryStore = create<HistoryState>()(
         const allItems = Object.values(get().items);
         let mangaHistory = allItems.filter(i => i.sourceId === sourceId && i.mangaId === mangaId);
         
-        // W3.4.5 Source Relink Fallback
         if (mangaHistory.length === 0) {
           const savedTitleId = get().resolveSavedTitleId(sourceId, mangaId);
           if (savedTitleId) {
@@ -218,7 +211,6 @@ export const useHistoryStore = create<HistoryState>()(
         const existing = previousState[getHistoryId(sourceId, mangaId, chapterId)];
         if (!existing) return;
 
-        // Phase 2.4: Trigger mark-as-read at 90-95% progress
         let progressPercent = totalPages > 0 ? Math.round((pageIndex / totalPages) * 100) : 0;
         
         if ((scrollPercent ?? 0) > 90 || progressPercent > 90) {
@@ -296,20 +288,17 @@ export const useHistoryStore = create<HistoryState>()(
       }),
 
       resolveSavedTitleId: (sourceId, mangaId) => {
-        // 1. Check denormalized field on any history item for this manga
         const anyItem = Object.values(get().items).find(
           (i) => i.sourceId === sourceId && i.mangaId === mangaId
         );
         if (anyItem?.savedTitleId) return anyItem.savedTitleId;
 
-        // 2. Scan Library SourceRefs
         const libraryState = useLibraryStore.getState();
         if (libraryState?.resolveBySourceRef) {
           const match = libraryState.resolveBySourceRef(sourceId, mangaId);
           if (match?.id) return match.id;
         }
 
-        // 3. Unresolvable — preserve as unresolved legacy history
         return null;
       },
 

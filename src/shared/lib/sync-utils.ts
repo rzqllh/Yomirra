@@ -9,7 +9,6 @@ export async function pushLibraryItem(item: LibraryItem) {
   if (!user) return;
   try {
     const { doc, setDoc } = await import("firebase/firestore");
-    // Phase 1: write to libraryV2 (canonical). V1 clients remain in legacy 'library' collection.
     const savedTitleId = item.id ?? `${item.sourceId}::${item.mangaId}`;
     const cleanItem = Object.fromEntries(Object.entries(item).filter(([, v]) => v !== undefined));
     await setDoc(doc(db, `users/${user.uid}/libraryV2`, savedTitleId), cleanItem);

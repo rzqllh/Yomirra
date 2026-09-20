@@ -127,7 +127,6 @@ export function resolveSourceRoute(options: ResolveSourceRouteOptions): SourceRo
     return match?.mangaId;
   };
 
-  // 1. If no preferred source could be identified at all
   if (!effectivePreferredSourceId) {
     const fallbackSourceId = globalSourceOrder[0] || availableSources[0]?.id || "mangadex";
     return {
@@ -144,7 +143,6 @@ export function resolveSourceRoute(options: ResolveSourceRouteOptions): SourceRo
   const preferredHealthStatus = preferredHealth.status || "HEALTHY";
   const isExplicitUserChoice = !!(perTitleSourcePreference || requestedSourceId);
 
-  // 2. Check DOMAIN_CHANGED invariant
   if (preferredHealthStatus === "DOMAIN_CHANGED") {
     return {
       selectedSourceId: effectivePreferredSourceId,
@@ -158,7 +156,6 @@ export function resolveSourceRoute(options: ResolveSourceRouteOptions): SourceRo
     };
   }
 
-  // 3. Healthy or Degraded preferred source handling
   // In all modes, if the preferred source is HEALTHY, it is selected immediately.
   // Latency is NEVER used to bypass a healthy preferred source.
   if (preferredHealthStatus === "HEALTHY" || preferredHealthStatus === "UNKNOWN") {
@@ -187,7 +184,6 @@ export function resolveSourceRoute(options: ResolveSourceRouteOptions): SourceRo
     };
   }
 
-  // 4. Source is RATE_LIMITED or BROKEN (or deterministic error)
   const isRateLimited = preferredHealthStatus === "RATE_LIMITED";
   const isBroken = preferredHealthStatus === "BROKEN" || !!preferredHealth.errorCode;
 
@@ -364,7 +360,6 @@ export function rankSourcesByPreference(params: {
     const langA = metaA?.language || "id";
     const langB = metaB?.language || "id";
 
-    // 1. Language preference score
     const langScoreA = languagePreference.indexOf(langA) !== -1 ? 100 - languagePreference.indexOf(langA) * 20 : 0;
     const langScoreB = languagePreference.indexOf(langB) !== -1 ? 100 - languagePreference.indexOf(langB) * 20 : 0;
 
@@ -372,7 +367,6 @@ export function rankSourcesByPreference(params: {
       return langScoreB - langScoreA;
     }
 
-    // 2. Global source order score
     const orderIndexA = globalSourceOrder.indexOf(a);
     const orderIndexB = globalSourceOrder.indexOf(b);
     const orderScoreA = orderIndexA !== -1 ? 50 - orderIndexA : 0;
@@ -382,7 +376,6 @@ export function rankSourcesByPreference(params: {
       return orderScoreB - orderScoreA;
     }
 
-    // 3. Health status score
     const healthA = healthMap[a]?.status || "HEALTHY";
     const healthB = healthMap[b]?.status || "HEALTHY";
 
@@ -409,7 +402,6 @@ export function rankSourcesByPreference(params: {
       return healthDiff;
     }
 
-    // 4. Latency strictly as tie-breaker
     const latA = healthMap[a]?.latencyMs ?? 100;
     const latB = healthMap[b]?.latencyMs ?? 100;
     return latA - latB;

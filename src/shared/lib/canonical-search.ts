@@ -82,7 +82,6 @@ export function clusterCanonicalResults(
         author: clusterPrimary.author,
       };
 
-      // 1. Direct title/author match
       let match = matchTitles(
         candidateForMatching.title,
         primaryCandidate.title,
@@ -90,7 +89,6 @@ export function clusterCanonicalResults(
         primaryCandidate.author
       );
 
-      // 2. Check alternate titles if available on either side
       if (
         match.confidence !== "HIGH_CONFIDENCE" &&
         ((candidateForMatching.alternativeTitles && candidateForMatching.alternativeTitles.length > 0) ||

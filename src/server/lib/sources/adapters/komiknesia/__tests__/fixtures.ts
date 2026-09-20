@@ -16,7 +16,6 @@ import type {
  */
 export const TEST_TIME = 1789751534;
 
-// ---------- Encrypted envelopes ----------
 
 export const encryptedListEnvelope: KomikNesiaEnvelope = {
   status: true,
@@ -61,7 +60,6 @@ export const plaintextEnvelope: KomikNesiaEnvelope = {
   time: TEST_TIME,
 };
 
-// ---------- Expected decoded payloads (for asserting normalizer input) ----------
 
 export const expectedListPayload: KomikNesiaListPayload = {
   status: true,

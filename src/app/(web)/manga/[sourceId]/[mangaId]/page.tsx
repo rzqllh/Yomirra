@@ -71,17 +71,14 @@ export default async function MangaDetailPage({
     console.error("Failed to load manga details", error);
     const errString = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
 
-    // 1. Not Found / 404
     if (errString.includes("404") || errString.includes("not found") || errString.includes("tidak ditemukan")) {
       errorState = { type: "not_found" };
     } else {
-      // 2. Confirmed dead / unavailable source in registry or permanently removed
       const sourceMeta = getSourceMetadata(normalizedSourceId);
       const isExplicitlyDead = sourceMeta?.status === "unavailable" || sourceMeta?.status === "in-fix" || errString.includes("source is disabled") || errString.includes("source not found");
       if (isExplicitlyDead) {
         errorState = { type: "dead" };
       } else {
-        // 3. Network, Timeout, 5xx, or transient error -> Recoverable inline error state with Retry
         errorState = {
           type: "network_error",
           message: error instanceof Error ? error.message : undefined,

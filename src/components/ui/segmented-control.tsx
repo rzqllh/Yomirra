@@ -39,7 +39,6 @@ export function SegmentedControl({
   const isQuickRail = variant === "quick-rail";
   const isGlass = variant === "glass-floating";
 
-  // Concentric radius formula:
   // - Pill: Both outer container and inner indicator are rounded-full.
   // - Rounded: Outer rounded-2xl with p-1 padding requires inner rounded-md (14px squircle)
   //   satisfying R_inner = R_outer - padding to prevent corner pinching/bulging.

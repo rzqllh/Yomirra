@@ -1,7 +1,6 @@
 import * as React from "react"
 import { cn } from "@/shared/utils/cn"
 
-// --- Yomirra Surface ---
 export type SurfaceVariant = "base" | "raised" | "elevated" | "floating" | "glass" | "muted"
 
 export interface YomirraSurfaceProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -24,7 +23,6 @@ export const YomirraSurface = React.forwardRef<HTMLDivElement, YomirraSurfacePro
 )
 YomirraSurface.displayName = "YomirraSurface"
 
-// --- Yomirra Section ---
 export interface YomirraSectionProps extends React.HTMLAttributes<HTMLElement> {
   title?: string
   action?: React.ReactNode

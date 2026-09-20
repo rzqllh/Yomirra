@@ -43,7 +43,6 @@ describe("SourceHealthStore", () => {
   });
 
   it("resets consecutive failures to 0 on recovery and emits SOURCE_RECOVERED", async () => {
-    // 1. Initial broken state
     const brokenSnap: SourceHealthSnapshot = {
       sourceId: "komikindo",
       status: "BROKEN",
@@ -57,7 +56,6 @@ describe("SourceHealthStore", () => {
     };
     await store.recordSnapshot(brokenSnap);
 
-    // 2. Recovery transition
     const healthySnap: SourceHealthSnapshot = {
       sourceId: "komikindo",
       status: "HEALTHY",

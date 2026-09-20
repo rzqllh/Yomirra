@@ -25,7 +25,6 @@ export async function probeSourceHealth(
   let resolvedHost = "";
 
   try {
-    // 1. Resolve active domain / API endpoint
     resolvedHost = await domainResolver.resolveDomain(normalizedId, "api");
     if (!resolvedHost) {
       resolvedHost = await domainResolver.resolveDomain(normalizedId, "frontend");
@@ -40,7 +39,6 @@ export async function probeSourceHealth(
       });
     }
 
-    // 2. Stage: SEARCH / LISTING (Lightweight probe)
     stage = "search";
     const popularResult = await adapter.getPopular(1);
 
@@ -59,7 +57,6 @@ export async function probeSourceHealth(
     const sampleManga = popularResult.mangas[0];
     let sampleChapterId: string | undefined;
 
-    // 3. Deep probe: DETAIL -> CHAPTERS -> PAGES
     if (options.deep) {
       // Stage: DETAIL
       stage = "detail";

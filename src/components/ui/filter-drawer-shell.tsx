@@ -98,7 +98,6 @@ export function FilterDrawerShell({
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]" />
         <Drawer.Content className="bg-surface-base flex flex-col rounded-t-[32px] fixed bottom-0 left-0 right-0 z-[100] outline-none max-h-[85vh] min-h-[220px] shadow-heavy border-t border-border-subtle">
-          {/* 1. Sheet Chrome (Drag Handle + Header / Title) - Non-scrolling & Draggable */}
           <div className="pt-3 pb-2 px-6 shrink-0 flex flex-col cursor-grab active:cursor-grabbing select-none">
             <div className="mx-auto w-12 h-1.5 shrink-0 rounded-full bg-border-strong mb-4" />
 
@@ -117,7 +116,6 @@ export function FilterDrawerShell({
             </div>
           </div>
 
-          {/* 2. Scrollable Content Body */}
           <div
             className="px-6 py-4 flex-1 overflow-y-auto overscroll-contain [scrollbar-width:none] touch-manipulation relative z-0"
             style={{ WebkitOverflowScrolling: "touch" }}
@@ -127,7 +125,6 @@ export function FilterDrawerShell({
             </div>
           </div>
 
-          {/* 3. Sticky Footer */}
           <div
             className="p-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] bg-surface-base border-t border-border-subtle shrink-0 relative z-10"
           >

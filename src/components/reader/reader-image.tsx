@@ -107,7 +107,6 @@ export const ReaderImage = React.memo(function ReaderImage({
       return;
     }
 
-    // Step 1: Bounded retry (up to 3 attempts with backoff)
     if (retryCount < 3) {
       const baseDelay = [1000, 2500, 5000][retryCount]
       const jitter = Math.random() * 500
@@ -117,7 +116,6 @@ export const ReaderImage = React.memo(function ReaderImage({
       return;
     }
 
-    // Step 2: Attempt page URL re-resolution if provided
     if (onRefreshUrl && !hasAttemptedRefresh) {
       setHasAttemptedRefresh(true)
       try {
@@ -132,7 +130,6 @@ export const ReaderImage = React.memo(function ReaderImage({
       }
     }
 
-    // Step 3: Safe proxy fallback if provided and not yet attempted
     if (fallbackProxyUrl && !hasAttemptedProxy) {
       setHasAttemptedProxy(true)
       setUseFallback(true)
@@ -140,7 +137,6 @@ export const ReaderImage = React.memo(function ReaderImage({
       return
     }
 
-    // Step 4: Exhausted recovery ladder -> surface degraded error state
     setHasError(true)
     onError(pageIndex)
     onPermanentFailure?.(pageIndex)

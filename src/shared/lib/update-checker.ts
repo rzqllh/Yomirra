@@ -98,7 +98,6 @@ export async function scanLibraryUpdates(options: ScanOptions = {}): Promise<Sca
         (item.id ? updateItems[item.id] : undefined) ||
         updateItems[getUpdateKey(item.sourceId, item.mangaId)];
 
-      // 1. Resolve candidate sources based on Phase 6 preferences & linked sources
       const settings = useSettingsStore.getState();
       const explicitPref =
         (item.id ? settings.perTitleSourcePreferences?.[item.id] : undefined) ||

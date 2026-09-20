@@ -23,9 +23,7 @@ import {
 } from "./fixtures";
 import type { KomikNesiaEnvelope } from "../types";
 
-// ============================================================
 // SECTION 1: Key Derivation
-// ============================================================
 
 describe("KomikNesia / crypto / deriveKey", () => {
   it("derives correct key string for known time", () => {
@@ -51,9 +49,7 @@ describe("KomikNesia / crypto / deriveKey", () => {
   });
 });
 
-// ============================================================
 // SECTION 2: Envelope Decryption
-// ============================================================
 
 describe("KomikNesia / crypto / decryptEnvelope", () => {
   it("decrypts list envelope and returns correct payload", () => {
@@ -135,9 +131,7 @@ describe("KomikNesia / crypto / decryptEnvelope", () => {
   });
 });
 
-// ============================================================
 // SECTION 3: Normalizer — Status
-// ============================================================
 
 describe("KomikNesia / normalizer / status", () => {
   it.each([
@@ -157,9 +151,7 @@ describe("KomikNesia / normalizer / status", () => {
   });
 });
 
-// ============================================================
 // SECTION 4: Normalizer — MangaItem
-// ============================================================
 
 describe("KomikNesia / normalizer / MangaItem", () => {
   const rawItem = expectedListPayload.data![0];
@@ -199,9 +191,7 @@ describe("KomikNesia / normalizer / MangaItem", () => {
   });
 });
 
-// ============================================================
 // SECTION 5: Normalizer — MangaDetail
-// ============================================================
 
 describe("KomikNesia / normalizer / MangaDetail", () => {
   const rawDetail = expectedDetailPayload.data!;
@@ -245,9 +235,7 @@ describe("KomikNesia / normalizer / MangaDetail", () => {
   });
 });
 
-// ============================================================
 // SECTION 6: Normalizer — Chapter
-// ============================================================
 
 describe("KomikNesia / normalizer / Chapter", () => {
   const rawChapter = expectedDetailPayload.data!.chapters![0];
@@ -282,9 +270,7 @@ describe("KomikNesia / normalizer / Chapter", () => {
   });
 });
 
-// ============================================================
 // SECTION 7: Normalizer — Pages
-// ============================================================
 
 describe("KomikNesia / normalizer / Pages", () => {
   it("maps image URLs to PageItem array with index", () => {
@@ -308,9 +294,7 @@ describe("KomikNesia / normalizer / Pages", () => {
   });
 });
 
-// ============================================================
 // SECTION 8: Adapter — with mocked HttpClient
-// ============================================================
 
 function makeSource(mockGet: ReturnType<typeof vi.fn>) {
   const mockClient = {
@@ -468,9 +452,7 @@ describe("KomikNesia / adapter / getFilters", () => {
   });
 });
 
-// ============================================================
 // SECTION 9: Security — allowed-host boundary
-// ============================================================
 
 describe("KomikNesia / security / allowed-host enforcement", () => {
   it("HttpClient is configured with only api-be.komiknesia.my.id in allowedHosts", () => {
@@ -481,9 +463,7 @@ describe("KomikNesia / security / allowed-host enforcement", () => {
   });
 });
 
-// ============================================================
 // SECTION 10: Source Registry placeholder
-// ============================================================
 
 describe("KomikNesia / registry / active entry exists", () => {
   it("sourceRegistry contains komiknesia entry with isEnabled=true", async () => {

@@ -81,7 +81,6 @@ export function PageHeader({
 
   return (
     <>
-      {/* ── Mobile Navigation Bar (md:hidden) ── */}
       <header
         className={cn(
           "md:hidden fixed top-0 left-0 right-0 z-[var(--z-sticky)] flex w-full flex-col justify-end px-4 pt-[calc(var(--safe-top,0px)+8px)] pb-2 transition-all duration-300 ease-out pointer-events-none",
@@ -139,7 +138,6 @@ export function PageHeader({
         </div>
       </header>
 
-      {/* ── Desktop Hero Section Header (hidden md:block) ── */}
       {/* Skipped for mode="detail" — detail pages have their own full hero with h1 */}
       {mode !== "detail" && (
         <div

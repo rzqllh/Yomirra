@@ -16,7 +16,6 @@ const serwist = new Serwist({
   clientsClaim: true,
   navigationPreload: true,
   runtimeCaching: [
-    // Phase 2.6: CacheOnly for offline images
     // We never fetch from network for this virtual route. It's populated by download-store.ts.
     {
       matcher: ({ url }) => url.pathname.startsWith('/offline-images/'),
@@ -24,14 +23,12 @@ const serwist = new Serwist({
         cacheName: 'yomirra-chapter-cache-v1',
       }),
     },
-    // Phase 9: CacheOnly for bounded reading buffer
     {
       matcher: ({ url }) => url.pathname.startsWith('/reading-buffer/'),
       handler: new CacheOnly({
         cacheName: 'yomirra-reading-buffer-v1',
       }),
     },
-    // Phase 2.5: CacheFirst for Image Proxy
     // We aggressively cache manga pages (via image proxy) for offline reading & bandwidth saving.
     {
       matcher: ({ url }) => url.pathname.startsWith('/api/proxy/image'),

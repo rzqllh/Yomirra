@@ -21,9 +21,7 @@ import { DynamicSourceAdapter } from "../index";
 import { isSafeIp } from "../../../../security/outbound-policy";
 import type { MihonSourceManifest } from "@/shared/sources/dynamic-source-registry";
 
-// ---------------------------------------------------------------------------
 // Fixture helpers
-// ---------------------------------------------------------------------------
 
 function makeManifest(overrides: Partial<MihonSourceManifest> = {}): MihonSourceManifest {
   return {
@@ -45,7 +43,6 @@ function makeAdapter(manifest?: Partial<MihonSourceManifest>): DynamicSourceAdap
   return new DynamicSourceAdapter(makeManifest(manifest));
 }
 
-// ---------------------------------------------------------------------------
 // A1 — Call-path proof: search() delegates to safeFetch
 //
 // This test proves the module-level wiring without compromising the security
@@ -53,7 +50,6 @@ function makeAdapter(manifest?: Partial<MihonSourceManifest>): DynamicSourceAdap
 // the pre-flight checks by providing a URL that would pass pre-flight but fail
 // DNS (no real DNS in jsdom). We assert the call was made with the expected URL,
 // confirming search() does not short-circuit to raw fetch.
-// ---------------------------------------------------------------------------
 
 describe("DynamicSourceAdapter.search() — call path through safeFetch", () => {
   it("delegates outbound request to safeFetch, not raw fetch", async () => {
@@ -159,13 +155,11 @@ describe("DynamicSourceAdapter.search() — call path through safeFetch", () => 
   });
 });
 
-// ---------------------------------------------------------------------------
 // A2 — Pre-flight rejections propagate through search()
 //
 // These tests use REAL safeFetch (no mock on security behavior). safeFetch
 // performs pre-flight URL validation synchronously before any DNS lookup,
 // so these pass in jsdom without network access.
-// ---------------------------------------------------------------------------
 
 describe("DynamicSourceAdapter.search() — pre-flight SSRF rejections", () => {
   it("rejects when manifest baseUrl uses file:// protocol", async () => {
@@ -226,7 +220,6 @@ describe("DynamicSourceAdapter.search() — pre-flight SSRF rejections", () => {
   });
 });
 
-// ---------------------------------------------------------------------------
 // A3 — IP-class rejection via isSafeIp (unit-level policy verification)
 //
 // These verify that the IP classification logic underlying safeFetch's DNS guard
@@ -234,7 +227,6 @@ describe("DynamicSourceAdapter.search() — pre-flight SSRF rejections", () => {
 // unit test for the safeLookup behavior without requiring live DNS resolution.
 // Exhaustive coverage lives in outbound-policy.test.ts; this section confirms
 // the classes most relevant to dynamic source SSRF attacks.
-// ---------------------------------------------------------------------------
 
 describe("SSRF IP-class coverage — isSafeIp (policy unit verification)", () => {
   describe("loopback", () => {
@@ -278,12 +270,10 @@ describe("SSRF IP-class coverage — isSafeIp (policy unit verification)", () =>
   });
 });
 
-// ---------------------------------------------------------------------------
 // A4 — IPv4-mapped IPv6 SSRF bypass prevention
 //
 // Attackers can encode private IPs as IPv4-mapped IPv6 addresses (::ffff:10.0.0.1).
 // outbound-policy.ts strips the ::ffff: prefix before checking. Verify.
-// ---------------------------------------------------------------------------
 
 describe("IPv4-mapped IPv6 bypass prevention", () => {
   it("rejects ::ffff:127.0.0.1 (loopback as IPv4-mapped IPv6)", () => {

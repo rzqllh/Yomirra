@@ -14,7 +14,6 @@ export interface MangaUpdateItem {
   latestChapterNumber?: number;
   latestChapterTitle?: string;
 
-  // Phase 8: Provenance & Canonical Update Source
   detectedSourceId?: string;
   detectedSourceName?: string;
   isAlternateSource?: boolean;

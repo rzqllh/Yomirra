@@ -172,7 +172,6 @@ describe('Search Page Integration', () => {
     );
 
     await waitFor(() => {
-      // 1. Source A receives only action genre (webtoon format excluded because not supported)
       expect(apiClient.search).toHaveBeenCalledWith(
         'sourceA',
         'test',
@@ -182,7 +181,6 @@ describe('Search Page Integration', () => {
         { signal: expect.anything() }
       );
 
-      // 2. Source B receives only webtoon format (action genre excluded because not supported)
       expect(apiClient.search).toHaveBeenCalledWith(
         'sourceB',
         'test',
@@ -196,7 +194,6 @@ describe('Search Page Integration', () => {
     // 3. searchGlobal is NOT called by Search Page
     expect(apiClient.searchGlobal).not.toHaveBeenCalled();
 
-    // 4. Combined results are rendered
     await waitFor(() => {
       expect(screen.getByText('Solo Leveling')).toBeDefined();
       expect(screen.getByText('Tower of God')).toBeDefined();

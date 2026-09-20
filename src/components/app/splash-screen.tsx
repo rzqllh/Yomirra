@@ -75,9 +75,7 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden bg-surface-base text-text-primary select-none"
     >
-      {/* Ambient Multi-Layer Radial Glow */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-        {/* Pulsing center aura */}
         <motion.div 
           animate={{ 
             scale: [1, 1.08, 1],
@@ -90,24 +88,19 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
           }}
           className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-accent/25 via-accent/10 to-transparent blur-[110px]" 
         />
-        {/* Top ambient depth */}
         <div className="absolute -top-[15%] left-1/2 -translate-x-1/2 w-[600px] h-[320px] rounded-full bg-accent/10 blur-[130px] opacity-40" />
-        {/* Bottom deep tint */}
         <div className="absolute -bottom-[20%] left-1/2 -translate-x-1/2 w-[600px] h-[360px] rounded-full bg-indigo-950/30 blur-[120px]" />
       </div>
 
       <div className="relative z-10 flex flex-col items-center justify-center w-full h-full pb-20">
-        {/* Floating Concentric Emblem */}
         <motion.div
           initial={{ scale: 0.86, opacity: 0, y: 16 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           className="mb-6 relative group"
         >
-          {/* Ambient Rim & Depth Glow */}
           <div className="absolute -inset-2.5 rounded-[32px] bg-gradient-to-tr from-indigo-600/40 via-accent/35 to-blue-500/20 blur-xl opacity-80" />
           
-          {/* Clean App Icon with Glass Edge */}
           <div className="relative size-24 sm:size-28 rounded-[24px] sm:rounded-[28px] overflow-hidden shadow-[0_20px_50px_rgba(15,10,60,0.8),0_0_30px_rgba(99,102,241,0.35)] border border-white/20">
             <img 
               src="/icon-pwa.png" 
@@ -121,7 +114,6 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
           </div>
         </motion.div>
 
-        {/* High-Contrast Modern Typography */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -137,7 +129,6 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
         </motion.div>
       </div>
 
-      {/* Loading Indicator or Non-blocking Warning State */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

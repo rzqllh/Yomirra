@@ -18,7 +18,6 @@ interface CollectionActions {
   clearCollections: () => void;
   syncWithCloud: (cloudCollections: Collection[], cloudMemberships: Record<MangaKey, string[]>) => void;
   
-  // Phase 4: Dual-read helpers
   getMemberships: (mangaKey: MangaKey) => string[];
   getResolvedReadingStatus: (mangaKey: MangaKey) => ReadingStatus | undefined;
 }
@@ -46,7 +45,6 @@ export const useCollectionStore = create<CollectionStore>()(
           
           if (!mangaKey.includes("::")) return legacyMemberships;
           
-          // Phase 4: Dual-read
           const [sourceId, mangaId] = mangaKey.split("::");
           const canonicalId = useLibraryStore.getState().resolveBySourceRef(sourceId, mangaId)?.id as MangaKey;
           

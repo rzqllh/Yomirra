@@ -48,7 +48,6 @@ export function MangaRecommendations({
 
       const primaryGenres = genres.slice(0, 2);
 
-      // 1. Primary genre search on current source (1–2 primary genres)
       if (primaryGenres.length > 0) {
         try {
           const searchRes = await apiClient.search(currentSourceId, "", 1, {
@@ -72,7 +71,6 @@ export function MangaRecommendations({
         }
       }
 
-      // 2. Fallback to popular/latest on current source
       if (results.length < TARGET_COUNT) {
         try {
           const popularRes = await apiClient.getPopular(currentSourceId, 1);
@@ -91,7 +89,6 @@ export function MangaRecommendations({
         }
       }
 
-      // 3. Fallback to other active sources if still under target
       if (results.length < TARGET_COUNT) {
         try {
           const sources = await apiClient.getSources();

@@ -33,7 +33,6 @@ export async function POST(req: NextRequest) {
           const cachedData = await withCache(
             cacheKey,
             async () => {
-              // 1. Try MangaDex First
               try {
                 // Find manga by title
                 const searchRes = await fetch(`https://api.mangadex.org/manga?title=${encodeURIComponent(normalizedTitle)}&limit=1`, {
@@ -66,7 +65,6 @@ export async function POST(req: NextRequest) {
                 console.error("MangaDex rating fetch error:", e);
               }
 
-              // 2. Fallback to Anilist
               try {
                 const query = `
                   query ($search: String) {

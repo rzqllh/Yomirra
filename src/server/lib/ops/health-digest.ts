@@ -10,10 +10,8 @@ import { logger } from "@/shared/logger";
  */
 export async function sendHealthDigest(): Promise<boolean> {
   try {
-    // 1. Run lightweight functional probe across all enabled sources
     const probedSnapshots = await probeAllSourcesHealth({ deep: false });
 
-    // 2. Fallback to existing snapshots if probe returned empty
     let snapshots = probedSnapshots;
     if (Object.keys(snapshots).length === 0) {
       snapshots = await sourceHealthStore.getAllSnapshots();

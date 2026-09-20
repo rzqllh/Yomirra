@@ -26,7 +26,6 @@ export default function GlobalError({
   return (
     <div className="relative flex min-h-[85vh] w-full flex-col items-center justify-center gap-6 px-6 text-center overflow-hidden">
       
-      {/* ── Background Decor (Floating Panels) ── */}
       <div className="absolute inset-0 pointer-events-none z-0 flex items-center justify-center overflow-hidden">
         {/* Glowing aura */}
         <div className="absolute w-[300px] h-[300px] md:w-[500px] md:h-[500px] bg-accent/15 dark:bg-accent/10 rounded-full blur-[80px] md:blur-[120px]" />
@@ -49,7 +48,6 @@ export default function GlobalError({
         />
       </div>
 
-      {/* ── Hero Visual ── */}
       <motion.div 
         initial={{ opacity: 0, scale: 0.9, filter: "blur(10px)", y: 20 }}
         animate={{ opacity: 1, scale: 1, filter: "blur(0px)", y: 0 }}
@@ -65,7 +63,6 @@ export default function GlobalError({
         />
       </motion.div>
       
-      {/* ── Text Content ── */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -80,7 +77,6 @@ export default function GlobalError({
         </p>
       </motion.div>
 
-      {/* ── Main Actions ── */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -109,7 +105,6 @@ export default function GlobalError({
         )}
       </motion.div>
 
-      {/* ── Secondary Action / Support ── */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

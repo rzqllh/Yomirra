@@ -7,7 +7,6 @@ import { logger } from "@/shared/logger";
 import { redis } from "@/server/lib/cache/redis";
 
 export async function POST(req: Request) {
-  // 1. Verify Deployment Secret
   const authHeader = req.headers.get("authorization");
   if (env.VERCEL_DEPLOY_SECRET && authHeader !== `Bearer ${env.VERCEL_DEPLOY_SECRET}`) {
     logger.warn("Unauthorized attempt to trigger deploy notify");

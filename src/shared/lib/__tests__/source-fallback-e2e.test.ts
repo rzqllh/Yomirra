@@ -17,7 +17,6 @@ describe("Phase 5 E2E — Integrated Source Fallback, Migration & Rollback", () 
   });
 
   it("completes full E2E flow: broken source -> auto safe fallback -> exact chapter map -> safe switch -> rollback", () => {
-    // 1. Initial State: Library item with primary source A (Shinigami)
     const initialLibraryItem: LibraryItem = {
       id: "saved-title-e2e-001",
       title: "Solo Leveling",
@@ -61,7 +60,6 @@ describe("Phase 5 E2E — Integrated Source Fallback, Migration & Rollback", () 
     expect(initialHistory?.chapterId).toBe("ch-100-shini");
     expect(initialHistory?.pageIndex).toBe(12);
 
-    // 2. Inject Source A as BROKEN
     const failedSourceHealth = {
       status: "BROKEN" as const,
       errorCode: "SOURCE_BROKEN" as const,
@@ -77,7 +75,6 @@ describe("Phase 5 E2E — Integrated Source Fallback, Migration & Rollback", () 
       ],
     };
 
-    // 3. Fallback Resolver
     const fallbackResult = resolveSourceFallback({
       savedTitle: initialLibraryItem,
       failedSourceId: "shinigami",
@@ -92,7 +89,6 @@ describe("Phase 5 E2E — Integrated Source Fallback, Migration & Rollback", () 
     expect(fallbackResult.suggestedChapterId).toBe("ch-100-k2");
     expect(fallbackResult.suggestedChapterNumber).toBe(100);
 
-    // 4. Perform Safe Switch (Migration)
     const snapshot = executeSourceMigration({
       libraryItem: initialLibraryItem,
       fallbackResult,
@@ -115,7 +111,6 @@ describe("Phase 5 E2E — Integrated Source Fallback, Migration & Rollback", () 
 
     expect(snapshot.status).toBe("CONFIRMED");
 
-    // 5. Verify Invariants Post-Switch
     // A. SavedTitleId remains unchanged
     const migratedItem = useLibraryStore.getState().getLibraryItemById("saved-title-e2e-001");
     expect(migratedItem).toBeDefined();
@@ -137,7 +132,6 @@ describe("Phase 5 E2E — Integrated Source Fallback, Migration & Rollback", () 
     expect(newHistory?.chapterId).toBe("ch-100-k2");
     expect(newHistory?.pageIndex).toBe(0); // Reset appropriately!
 
-    // 6. Verify Rollback
     const rolledBackSnapshot = rollbackSourceMigration({
       snapshot,
       relinkTitleFn: (key, origSrc, origMid) => {

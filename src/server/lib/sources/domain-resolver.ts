@@ -124,7 +124,6 @@ export class DomainResolver {
     const normalizedId = sourceId.toLowerCase().trim();
     const config = SOURCE_DOMAINS[normalizedId];
 
-    // 1. Check environment variable override
     const envKey = role === "api"
       ? `SOURCE_${normalizedId.replace(/-/g, "_").toUpperCase()}_API_DOMAIN`
       : `SOURCE_${normalizedId.replace(/-/g, "_").toUpperCase()}_DOMAIN`;
@@ -141,7 +140,6 @@ export class DomainResolver {
 
     const targetConfig = role === "api" && config.api ? config.api : config.frontend;
 
-    // 2. Check cached verified domain (Redis / Memory)
     const cached = await this.getCachedDomain(normalizedId, role);
     if (cached && cached.status === "verified") {
       return cached.currentHost;

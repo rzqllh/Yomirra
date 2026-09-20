@@ -107,12 +107,10 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
   return (
     <div className="flex flex-col gap-8 animate-in fade-in zoom-in-[0.98] duration-300 ease-out fill-mode-both pb-12">
 
-      {/* 1. Lanjut Baca */}
       {historyItems.length > 0 && (
         <ContinueReadingList items={historyItems} variant="cyber-editorial" />
       )}
 
-      {/* 2. Sorotan & Peringkat — scoped to active source via chips */}
       {sourcesToShow.length > 0 && (
         <div className="flex flex-col gap-0 rounded-2xl md:rounded-3xl border border-border-subtle/60 bg-surface-glass/40 backdrop-blur-sm overflow-hidden">
 
@@ -170,7 +168,6 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
         </div>
       )}
 
-      {/* 3. Update Hari Ini — all active sources, no chip filter */}
       {updateHariIni.length > 0 && (
         <div className="flex flex-col gap-3">
           <h2 className="text-lg sm:text-xl font-bold text-text-primary">Update Hari Ini</h2>
@@ -193,7 +190,6 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
         </div>
       )}
 
-      {/* 4. Popular Komik — all active sources, no chip filter */}
       {popularKomik.length > 0 && (
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">

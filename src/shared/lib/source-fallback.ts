@@ -120,7 +120,6 @@ export function resolveSourceFallback(options: ResolveFallbackOptions): SourceFa
   const healthStatus = health?.status ?? "BROKEN";
   const errorCode = health?.errorCode;
 
-  // 1. Health gate
   if (healthStatus === "HEALTHY") {
     return {
       status: "NO_FALLBACK",
@@ -152,7 +151,6 @@ export function resolveSourceFallback(options: ResolveFallbackOptions): SourceFa
     return meta.isEnabled !== false && meta.status !== "unavailable" && meta.status !== "broken";
   };
 
-  // 2. Candidate Selection — Priority 1: Existing linkedSources
   const linked = (savedTitle.linkedSources ?? []).filter(
     (ref) => ref.sourceId !== failedSourceId && isSourceAvailable(ref.sourceId)
   );
@@ -211,7 +209,6 @@ export function resolveSourceFallback(options: ResolveFallbackOptions): SourceFa
   // If match confidence is AMBIGUOUS, never auto-switch!
   const isTitleAmbiguous = titleConfidence === "AMBIGUOUS";
 
-  // 3. Chapter Mapping Gate
   const targetChapters = targetChaptersMap[selectedCandidate.sourceId];
   const lastRead =
     savedTitle.lastReadChapterNumber ??
@@ -247,7 +244,6 @@ export function resolveSourceFallback(options: ResolveFallbackOptions): SourceFa
     }
   }
 
-  // 4. Decision Engine
   // Condition for AUTO_SAFE:
   // - Title confidence must be CONFIRMED or HIGH_CONFIDENCE (never AMBIGUOUS or NO_MATCH)
   // - Health must be BROKEN / deterministic failure OR RATE_LIMITED (for temporary fallback)
@@ -430,7 +426,6 @@ export function executeSourceMigration(params: {
   // Record migration snapshot in persistent in-memory / session registry
   migrationSnapshotRegistry.set(snapshot.id, snapshot);
 
-  // 1. Permanent Relink
   if (!isTemporary && relinkTitleFn) {
     relinkTitleFn(savedTitleId, toSourceId, toMangaId, {
       title: candidate.title,
@@ -439,7 +434,6 @@ export function executeSourceMigration(params: {
     });
   }
 
-  // 2. Safe Reading Progress Mapping: Reset pageIndex to 0
   if (toChapterId && saveProgressFn) {
     saveProgressFn(toSourceId, toMangaId, toChapterId, 0, 0);
   }

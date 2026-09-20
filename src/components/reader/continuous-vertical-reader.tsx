@@ -197,7 +197,6 @@ export function ContinuousVerticalReader({
 
   const isWebtoon = true;
 
-  // W3.7 Keyboard Navigation
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement | null;
@@ -368,15 +367,12 @@ export function ContinuousVerticalReader({
         })}
       </div>
 
-      {/* Visual Transition Fader from Comic Pages to Black Canvas */}
       <div className="w-full max-w-[800px] h-14 bg-gradient-to-b from-transparent via-black/60 to-black pointer-events-none -mt-4 relative z-10" />
 
-      {/* Hairline Gradient Transition Divider */}
       <div className="w-full max-w-[280px] h-[1px] bg-gradient-to-r from-transparent via-white/15 to-transparent my-2 relative z-10" />
 
       {/* End of Chapter Section (Combined Variant 3 Milestone + 10 Unified Dock on Pure Black Canvas) */}
       <div className="w-full max-w-[420px] mx-auto px-4 pt-4 pb-[calc(5rem+env(safe-area-inset-bottom))] flex flex-col items-center gap-4 relative z-10 select-none">
-        {/* Ambient Glow behind Card Dock */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] h-[200px] bg-accent/12 rounded-full blur-[80px] pointer-events-none -z-10" />
 
         {/* Milestone Card Dock */}
@@ -394,7 +390,6 @@ export function ContinuousVerticalReader({
             </span>
           </div>
 
-          {/* Primary Navigation Buttons (Ergonomic h-11 Apple HIG, Reusable Squircle) */}
           <div className="flex items-center gap-2.5 w-full">
             {_prevChapterId && (
               <Button
@@ -436,7 +431,6 @@ export function ContinuousVerticalReader({
             )}
           </div>
 
-          {/* Utility Micro-actions */}
           <div className="flex items-center justify-center gap-3 text-xs text-white/70 pt-0.5">
             {nextChapterId && (
               <>

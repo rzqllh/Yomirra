@@ -14,18 +14,15 @@ export type SourceRef = {
 };
 
 export type LibraryItem = {
-  // --- Phase 1 Identity Fields ---
   id?: string;                    // SavedTitleId — undefined on V0 items pre-migration
   schemaVersion?: 2;              // marks item as migrated
   primarySourceId?: string;       // active reading provider
   primaryMangaId?: string;        // active reading manga ID
   linkedSources?: SourceRef[];    // alternate / dead providers
 
-  // --- Legacy Fields (Frozen — do not mutate post-migration) ---
   sourceId: string;
   mangaId: string;
 
-  // --- Common Fields ---
   title: string;
   coverUrl?: string;
   author?: string;
@@ -428,7 +425,6 @@ export const useLibraryStore = create<LibraryState>()(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       migrate: (persistedState: any, version: number) => {
         if (version < 1) {
-          // Phase 1 migration: enrich legacy items with SavedTitleId.
           // Recovery snapshot written BEFORE the transform so it can be restored on failure.
           try {
             const rawSnapshot = localStorage.getItem("yomirra-library");

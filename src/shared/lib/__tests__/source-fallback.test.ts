@@ -15,9 +15,6 @@ describe("Source Fallback Resolver & Reading Migration Engine", () => {
     migrationSnapshotRegistry.clear();
   });
 
-  // ==========================================
-  // 1. TITLE FALLBACK MATRIX
-  // ==========================================
   describe("Title Fallback Matrix", () => {
     it("1. confirmed linked source healthy -> AUTO_SAFE", () => {
       const result = resolveSourceFallback({
@@ -231,9 +228,6 @@ describe("Source Fallback Resolver & Reading Migration Engine", () => {
     });
   });
 
-  // ==========================================
-  // 2. CHAPTER MAPPING MATRIX
-  // ==========================================
   describe("Chapter Mapping Matrix", () => {
     const targetChapters: ChapterMeta[] = [
       { chapterId: "t-1", title: "Chapter 1", chapterNumber: 1 },
@@ -439,9 +433,6 @@ describe("Source Fallback Resolver & Reading Migration Engine", () => {
     });
   });
 
-  // ==========================================
-  // 3. READING PROGRESS & SNAPSHOT SAFETY
-  // ==========================================
   describe("Reading Progress & Migration Snapshot", () => {
     const libraryItem: LibraryItem = {
       id: "saved-title-uuid",
@@ -629,9 +620,6 @@ describe("Source Fallback Resolver & Reading Migration Engine", () => {
     });
   });
 
-  // ==========================================
-  // 4. LIBRARY INVARIANTS MATRIX
-  // ==========================================
   describe("Library Invariants Matrix", () => {
     it("23. no duplicate library item created during relink", () => {
       const item: LibraryItem = {
@@ -737,9 +725,6 @@ describe("Source Fallback Resolver & Reading Migration Engine", () => {
     });
   });
 
-  // ==========================================
-  // 5. HEALTH ENGINE INTEGRATION MATRIX
-  // ==========================================
   describe("Health Engine Integration Matrix", () => {
     it("27. DEGRADED does not unnecessarily permanent-switch", () => {
       const result = resolveSourceFallback({
@@ -818,9 +803,6 @@ describe("Source Fallback Resolver & Reading Migration Engine", () => {
     });
   });
 
-  // ==========================================
-  // 6. SEARCH INTEGRATION MATRIX
-  // ==========================================
   describe("Search Integration Matrix", () => {
     it("31. Phase 4 sourceBindings reused as trusted linkedSources", () => {
       const itemWithBindings: LibraryItem = {

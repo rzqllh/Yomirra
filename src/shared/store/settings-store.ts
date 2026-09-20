@@ -36,7 +36,6 @@ interface SettingsState {
   muteManga: (key: string) => void;
   unmuteManga: (key: string) => void;
 
-  // Phase 6 Source Preference & Smart Routing
   routingMode: SourceRoutingMode;
   setRoutingMode: (mode: SourceRoutingMode) => void;
   globalSourceOrder: string[];
@@ -77,7 +76,6 @@ export const useSettingsStore = create<SettingsState>()(
         mutedMangaKeys: state.mutedMangaKeys.filter(k => k !== key)
       })),
 
-      // Phase 6 Source Preference Defaults
       routingMode: "PREFERRED",
       setRoutingMode: (mode) => set({ routingMode: mode }),
       globalSourceOrder: DEFAULT_GLOBAL_SOURCE_ORDER,

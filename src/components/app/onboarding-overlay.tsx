@@ -67,7 +67,6 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
   React.useEffect(() => {
     setIsMounted(true);
     
-    // 1. Extract covers from local stores (fast cache)
     const libraryItems = Object.values(useLibraryStore.getState().items || {});
     const historyItems = Object.values(useHistoryStore.getState().items || {});
     
@@ -82,7 +81,6 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
       return;
     }
 
-    // 2. Fetch live manga covers from active sources
     let isCancelled = false;
     
     async function loadLiveCovers() {
@@ -148,7 +146,6 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
       transition={{ duration: 0.4, ease: "easeOut" }}
       className="fixed inset-0 z-[9000] flex flex-col bg-background h-[100dvh] overflow-hidden"
     >
-          {/* Ambient Background Gradient (Subtle) */}
           <div className="absolute inset-0 z-0 pointer-events-none opacity-40">
              <div className="absolute top-[-20%] left-[-10%] w-[140%] h-[140%] bg-accent/20 blur-[120px] rounded-full" />
              <div className="absolute bottom-[-20%] right-[-10%] w-[120%] h-[120%] bg-accent/10 blur-[100px] rounded-full" />
@@ -174,7 +171,6 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
             </button>
           </div>
 
-          {/* Cards Hero Area */}
           <div className="relative z-10 flex-1 flex items-center justify-center w-full px-4 min-h-0">
             <div className="relative flex items-center justify-center w-full max-w-[260px] h-[340px] sm:max-w-[280px] sm:h-[380px]">
               {covers.map((url, i) => {
@@ -217,7 +213,6 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
 
           {/* Content & CTA (Safe Area Respected) */}
           <div className="relative z-10 flex flex-col px-6 pb-[calc(var(--safe-bottom,env(safe-area-inset-bottom))+24px)] w-full max-w-[400px] mx-auto">
-            {/* Crossfading Content */}
             <div className="h-[140px] flex flex-col justify-end text-center mb-6">
               <AnimatePresence mode="wait">
                 <motion.div

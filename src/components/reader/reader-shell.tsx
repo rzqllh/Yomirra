@@ -395,7 +395,6 @@ export function ReaderShell({
               <div className="pointer-events-auto flex h-[58px] w-full max-w-[420px] mx-auto items-center justify-between gap-1.5 rounded-[22px] liquid-glass text-text-primary px-2.5 transition-all duration-300">
 
 
-                {/* 2. Prev Chapter (Squircle) */}
                 <motion.button
                   aria-label="Chapter sebelumnya"
                   whileTap={{ scale: 0.85 }}
@@ -418,7 +417,6 @@ export function ReaderShell({
                   <CaretLeft size={20} weight="bold" />
                 </motion.button>
 
-                {/* 3. Chapter List Drawer Trigger (Squircle rounded-[12px], NOT Pill!) */}
                 <motion.button
                   whileTap={{ scale: 0.95 }}
                   className="flex-1 h-10 rounded-[12px] font-bold text-sm bg-accent hover:bg-accent-hover text-white shadow-[0_4px_16px_rgba(108,106,250,0.4),inset_0_1px_0_rgba(255,255,255,0.3)] transition-all truncate px-2.5 sm:px-3 flex items-center justify-center cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
@@ -431,7 +429,6 @@ export function ReaderShell({
                   <span className="truncate">Daftar Chapter</span>
                 </motion.button>
 
-                {/* 4. Next Chapter (Squircle) */}
                 <motion.button
                   aria-label="Chapter selanjutnya"
                   whileTap={{ scale: 0.85 }}
@@ -454,7 +451,6 @@ export function ReaderShell({
                   <CaretRight size={20} weight="bold" />
                 </motion.button>
 
-                {/* 5. Reader Settings (Squircle) */}
                 <motion.button
                   aria-label="Pengaturan pembaca"
                   whileTap={{ scale: 0.85 }}

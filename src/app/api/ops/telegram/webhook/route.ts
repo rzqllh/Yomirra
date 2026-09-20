@@ -12,7 +12,6 @@ import { sendHealthDigest } from "@/server/lib/ops/health-digest";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
-  // 1. Validate Secret Token
   const secretToken = req.headers.get("x-telegram-bot-api-secret-token");
   if (!env.TELEGRAM_WEBHOOK_SECRET || secretToken !== env.TELEGRAM_WEBHOOK_SECRET) {
     logger.warn("Unauthorized webhook attempt: invalid or missing secret token");
@@ -30,7 +29,6 @@ export async function POST(req: Request) {
     const chatId = body.message.chat.id.toString();
     const text = body.message.text.trim();
 
-    // 2. Validate Allowed Chat ID
     if (!env.TELEGRAM_ALLOWED_CHAT_IDS) {
       logger.warn("Unauthorized webhook attempt: TELEGRAM_ALLOWED_CHAT_IDS is not configured");
       return NextResponse.json({ success: true });
@@ -47,7 +45,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true });
     }
 
-    // 3. Command Rate Limiting (10 commands per 60s per chat)
     if (redis) {
       try {
         const rateLimitKey = `yomirra:ops:rl:telegram:${chatId}`;
@@ -66,7 +63,6 @@ export async function POST(req: Request) {
     const args = text.split(/\s+/);
     const command = args[0].toLowerCase();
 
-    // 4. Command Router (Read-Only V1)
     switch (command) {
       case "/status":
         await sendHealthDigest();

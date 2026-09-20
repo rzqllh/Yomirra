@@ -177,7 +177,6 @@ export function mapChapterProgress(
     ? { chapterId: safeMatch.chapter.chapterId, chapterNumber: safeMatch.chapterNumber }
     : undefined;
 
-  // 1. Exact matches
   const exact = numbered.filter(
     (x) => Math.abs(x.number - lastReadNumber) < EXACT_TOLERANCE
   );
@@ -221,7 +220,6 @@ export function mapChapterProgress(
     };
   }
 
-  // 2. Probable matches within tolerance (nearest proximity)
   const probable = numbered.filter(
     (x) => Math.abs(x.number - lastReadNumber) <= PROBABLE_TOLERANCE
   );

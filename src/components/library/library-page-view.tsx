@@ -32,7 +32,6 @@ export function LibraryPageView() {
       <span className="sr-only">Jelajah</span>
       <YomirraSurface variant="base" className="flex-1 w-full max-w-7xl mx-auto md:pb-8">
         <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:pt-8 md:px-8 md:py-8">
-          {/* 1. Header Section */}
           <PageHeader
             title="Library"
             description="Katalog judul dari sumber aktif yang dipilih."
@@ -49,7 +48,6 @@ export function LibraryPageView() {
             actions={<HeaderActions />}
           />
 
-          {/* 2. Search & Filter Row */}
           <LibraryToolbar
             searchInput={catalog.searchInput}
             onSearchInputChange={(e) => catalog.setSearchInput(e.target.value)}
@@ -63,7 +61,6 @@ export function LibraryPageView() {
             activeFilterCount={catalog.activeFilterCount}
           />
 
-          {/* 3. Quick Sort & Format Rail */}
           <LibraryStatusRail
             sort={catalog.sort}
             onTabChange={catalog.handleTabChange}
@@ -72,7 +69,6 @@ export function LibraryPageView() {
             onPageReset={() => catalog.setPage(1)}
           />
 
-          {/* 4. Results Section */}
           <LibraryResults
             isDisabled={catalog.isDisabled}
             isLoading={catalog.isLoading}

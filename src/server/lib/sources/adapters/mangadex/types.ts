@@ -18,7 +18,6 @@ export interface MangaDexListResponse<T> {
   total: number;
 }
 
-// --- Manga ---
 
 export interface MangaDexRelationship {
   id: string;
@@ -62,7 +61,6 @@ export interface MangaDexManga {
   relationships: MangaDexRelationship[];
 }
 
-// --- Chapter ---
 
 export interface MangaDexChapterAttributes {
   title: string | null;
@@ -81,7 +79,6 @@ export interface MangaDexChapter {
   relationships: MangaDexRelationship[];
 }
 
-// --- At-Home (Pages) ---
 
 export interface MangaDexAtHomeResponse {
   result: "ok";
@@ -93,21 +90,18 @@ export interface MangaDexAtHomeResponse {
   };
 }
 
-// --- Cover ---
 
 export interface MangaDexCoverAttributes {
   fileName: string;
   volume: string | null;
 }
 
-// --- Tag ---
 
 export type MangaDexTagListResponse = MangaDexListResponse<MangaDexTag>;
 export type MangaDexMangaListResponse = MangaDexListResponse<MangaDexManga>;
 export type MangaDexChapterListResponse = MangaDexListResponse<MangaDexChapter>;
 export type MangaDexMangaResponse = MangaDexResponse<MangaDexManga>;
 
-// --- Statistics (Rating) ---
 
 export interface MangaDexStatisticsResponse {
   result: "ok";

@@ -21,7 +21,6 @@ export function runCanonicalMigration() {
       let historyChanged = false;
       const updatedHistoryItems: Record<string, HistoryItem> = { ...historyState.items };
 
-      // 1. Backfill History Store
       for (const [key, item] of Object.entries(updatedHistoryItems)) {
         if (!item.savedTitleId) {
           const canonicalMatch = libraryState.resolveBySourceRef(item.sourceId, item.mangaId);
@@ -40,7 +39,6 @@ export function runCanonicalMigration() {
         if (process.env.NODE_ENV === "development") console.log("[Canonical Migration] History backfill complete.");
       }
 
-      // 2. Backfill Collection Store (Additive)
       let collectionsChanged = false;
       const updatedMemberships = { ...collectionState.membershipsByManga };
       const updatedReadingStatus = { ...collectionState.readingStatusByManga };

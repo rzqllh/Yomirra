@@ -64,7 +64,6 @@ export function createBackupPayload(theme: "light" | "dark" | "system" = "system
       // Legacy identity fields (frozen)
       sourceId: item.sourceId,
       mangaId: item.mangaId,
-      // Phase 1 identity fields
       id: item.id ?? `${item.sourceId}::${item.mangaId}`,
       schemaVersion: 2 as const,
       primarySourceId: item.primarySourceId ?? item.sourceId,
