@@ -4,7 +4,7 @@ All notable changes to Yomirra are documented here.
 
 ---
 
-## [1.18.0] — 2026-09-18
+## [1.0.0] — 2026-09-20
 
 ### English
 
