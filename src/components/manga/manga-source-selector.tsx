@@ -58,7 +58,7 @@ export function MangaSourceSelector({
           type="button"
           onClick={() => setIsOpen(true)}
           className={cn(
-            "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide backdrop-blur-md border transition-all cursor-pointer select-none active:scale-95",
+            "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold tracking-wide backdrop-blur-md border transition-all cursor-pointer select-none active:scale-95",
             isCurrentPreferred
               ? "bg-accent/20 border-accent/40 text-accent"
               : isTemporaryFallback
@@ -72,7 +72,7 @@ export function MangaSourceSelector({
             <Star size={12} weight="fill" className="text-accent" />
           )}
           {isTemporaryFallback && (
-            <span className="text-[9px] bg-amber-400/20 px-1.5 py-0.2 rounded-full uppercase font-black tracking-wider">
+            <span className="text-[9px] bg-amber-400/20 px-1.5 py-0.5 rounded-md uppercase font-black tracking-wider">
               Sementara
             </span>
           )}

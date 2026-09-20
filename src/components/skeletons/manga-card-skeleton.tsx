@@ -1,6 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton"
 
-export function MangaCardSkeleton({ variant = "grid" }: { variant?: "grid" | "list" | "editorial" | "shelf" | "history" | "leaderboard" }) {
+export function MangaCardSkeleton({ variant = "grid" }: { variant?: "grid" | "list" | "editorial" | "shelf" | "history" | "leaderboard" | "compact" }) {
   if (variant === "history") {
     // Mirrors HistoryCard: flex gap-4 p-3, cover h-[84px] w-[60px] rounded-sm, action h-8 w-8 rounded-lg
     return (
@@ -74,17 +74,32 @@ export function MangaCardSkeleton({ variant = "grid" }: { variant?: "grid" | "li
     )
   }
 
-  if (variant === "list") {
+  if (variant === "list" || variant === "compact") {
     return (
-      <div className="flex w-full gap-3 p-3">
-        <Skeleton className="h-[90px] w-[64px] rounded-md shrink-0" />
-        <div className="flex-1 space-y-2 py-1">
-          <Skeleton className="h-4 w-3/4" />
-          <Skeleton className="h-3 w-1/2" />
-          <Skeleton className="h-3 w-1/4 mt-2" />
+      <div className="flex items-stretch p-3 sm:p-3.5 rounded-xl bg-surface-raised border border-border-subtle/80 shadow-xs w-full gap-3 sm:gap-4 overflow-hidden">
+        <Skeleton className="w-[84px] sm:w-[96px] md:w-[104px] aspect-[2/3] shrink-0 rounded-lg" />
+        <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
+          <div>
+            <div className="flex items-start justify-between gap-2">
+              <Skeleton className="h-4 w-3/4 rounded-md" />
+              <Skeleton className="h-7 w-7 rounded-lg shrink-0 -mt-0.5 -mr-1" />
+            </div>
+            <div className="flex items-center gap-2 mt-1.5">
+              <Skeleton className="h-3.5 w-16 rounded-[6px]" />
+              <Skeleton className="h-3.5 w-14 rounded-[6px]" />
+            </div>
+            <div className="flex items-center gap-2 mt-2">
+              <Skeleton className="h-3 w-12 rounded-[6px]" />
+              <Skeleton className="h-3 w-16 rounded-[6px]" />
+            </div>
+            <div className="space-y-1 mt-2.5">
+              <Skeleton className="h-3 w-full rounded-md" />
+              <Skeleton className="h-3 w-4/5 rounded-md" />
+            </div>
+          </div>
         </div>
       </div>
-    )
+    );
   }
 
   // Grid / default variant

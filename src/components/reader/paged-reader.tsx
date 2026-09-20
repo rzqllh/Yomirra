@@ -13,7 +13,8 @@ import { getReaderHref } from "@/shared/lib/routes";
 import { getSourceMetadata } from "@/shared/sources/source-registry";
 import { useVisibilityFlush } from "@/shared/hooks/use-visibility-flush";
 import { useReadingTimer } from "@/shared/hooks/use-reading-timer";
-import { CaretLeft, CaretRight, Warning } from "@phosphor-icons/react";
+import { CaretLeft, CaretRight, Warning, Flag } from "@phosphor-icons/react";
+import { ReportSheet } from "@/components/shared/report-sheet";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/shared/utils/cn";
 import { motion, PanInfo } from "motion/react";
@@ -58,7 +59,14 @@ export function PagedReader({
     return state.items[id] || state.getLatestForManga(sourceId, mangaId);
   });
   const source = React.useMemo(() => getSourceMetadata(sourceId), [sourceId]);
-  const reportUrl = source?.reportUrl;
+
+  const [isReportOpen, setIsReportOpen] = React.useState(false);
+  const [reportPageIndex, setReportPageIndex] = React.useState<number | undefined>(undefined);
+
+  const handleReport = React.useCallback((pageIdx?: number) => {
+    setReportPageIndex(typeof pageIdx === "number" ? pageIdx : undefined);
+    setIsReportOpen(true);
+  }, []);
 
   useReadingTimer();
 
@@ -320,7 +328,7 @@ export function PagedReader({
             isWebtoon={false}
             dataSaver={dataSaver}
             isAllowedToLoad={true}
-            reportUrl={reportUrl}
+            onReport={(idx) => handleReport(idx)}
             onLoadComplete={() => handleImageLoad(currentPageIndex)}
             onError={() => {}}
             onPermanentFailure={handlePermanentFailure}
@@ -365,6 +373,18 @@ export function PagedReader({
           <CaretRight size={16} weight="bold" />
         </Button>
       </div>
+
+      <ReportSheet
+        open={isReportOpen}
+        onOpenChange={setIsReportOpen}
+        context="chapter"
+        subject={chapterTitle}
+        sourceId={sourceId}
+        mangaId={mangaId}
+        chapterId={chapterId}
+        chapterTitle={chapterTitle}
+        pageIndex={reportPageIndex}
+      />
     </div>
   );
 }

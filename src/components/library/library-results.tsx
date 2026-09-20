@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence, LayoutGroup } from "motion/react";
 import { 
   Funnel, 
   SmileySad, 
@@ -11,9 +11,10 @@ import {
 } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/states/empty-state";
 import { Button } from "@/components/ui/button";
-import { MangaGrid, MANGA_GRID_CLASS } from "@/components/manga/manga-grid";
-import { ShelfCard, HistoryCard } from "@/components/manga/card";
-import { MangaCardSkeleton } from "@/components/skeletons/manga-card-skeleton";
+import { MangaGrid, MANGA_GRID_CLASS, MANGA_COMPACT_GRID_CLASS } from "@/components/manga/manga-grid";
+import { ShelfCard } from "@/components/manga/card";
+import { CompactCard } from "@/components/manga/card/compact-card";
+import { MangaGridSkeleton } from "@/components/skeletons/manga-grid-skeleton";
 import {
   Pagination,
   PaginationContent,
@@ -34,7 +35,7 @@ export interface LibraryResultsProps {
   isFetching: boolean;
   refetch: () => void;
   mangas: any[];
-  viewMode: "grid" | "list";
+  viewMode: "grid" | "list" | "compact";
   activeSourceId: string;
   libraryItems: Record<string, any>;
   selectedCollections: string[];
@@ -99,10 +100,11 @@ export function LibraryResults({
 
   if (isLoading) {
     return (
-      <div className={cn(viewMode === "grid" ? MANGA_GRID_CLASS : "flex flex-col gap-3")}>
-        {Array.from({ length: 12 }).map((_, i) => (
-          <MangaCardSkeleton key={i} variant={viewMode === "grid" ? "shelf" : "history"} />
-        ))}
+      <div className="mt-4">
+        <MangaGridSkeleton
+          count={12}
+          viewMode={viewMode === "compact" || viewMode === "list" ? "compact" : "grid"}
+        />
       </div>
     );
   }
@@ -167,28 +169,33 @@ export function LibraryResults({
 
   return (
     <>
-      <motion.div
-        layout
-        className={cn(
-          viewMode === "grid" ? MANGA_GRID_CLASS : "flex flex-col gap-3",
-          "transition-opacity duration-200",
-          isFetching ? "opacity-50 pointer-events-none" : "opacity-100"
-        )}
-      >
-        <AnimatePresence>
+      <LayoutGroup id="library-listing-cards">
+        <motion.div
+          layout
+          transition={{ layout: { type: "spring", stiffness: 320, damping: 30 } }}
+          className={cn(
+            viewMode === "compact" || viewMode === "list" ? MANGA_COMPACT_GRID_CLASS : MANGA_GRID_CLASS,
+            "transition-opacity duration-200",
+            isFetching ? "opacity-50 pointer-events-none" : "opacity-100"
+          )}
+        >
           {mangas.map(manga => {
             const itemKey = `${activeSourceId}::${manga.id}`;
             const isSelected = selectedItems?.has(itemKey);
 
-            return viewMode === "grid" ? (
-              <div key={manga.id} className="relative group">
-                <ShelfCard manga={manga} sourceId={activeSourceId} showSourceBadge={true} />
+            return (
+              <div key={manga.id} className="relative group w-full">
+                {viewMode === "grid" ? (
+                  <ShelfCard manga={manga} sourceId={activeSourceId} showSourceBadge={true} />
+                ) : (
+                  <CompactCard manga={manga} sourceId={activeSourceId} showSourceBadge={true} />
+                )}
                 {isSelectionMode && onToggleSelectItem && (
                   <button
                     type="button"
                     onClick={() => onToggleSelectItem(itemKey)}
                     className={cn(
-                      "absolute inset-0 z-20 rounded-2xl flex items-start justify-end p-2.5 transition-all duration-200",
+                      "absolute inset-0 z-20 rounded-xl flex items-start justify-end p-2.5 transition-all duration-200",
                       isSelected
                         ? "bg-accent/20 border-2 border-accent"
                         : "bg-black/40 hover:bg-black/50 border border-white/20"
@@ -208,12 +215,10 @@ export function LibraryResults({
                   </button>
                 )}
               </div>
-            ) : (
-              <HistoryCard key={manga.id} manga={manga} sourceId={activeSourceId} />
             );
           })}
-        </AnimatePresence>
-      </motion.div>
+        </motion.div>
+      </LayoutGroup>
 
       <div className="mt-12 py-4">
         <Pagination>

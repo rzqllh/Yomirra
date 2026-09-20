@@ -45,6 +45,15 @@ interface SettingsState {
   perTitleSourcePreferences: Record<string, string>;
   setPerTitleSourcePreference: (titleKey: string, sourceId: string) => void;
   clearPerTitleSourcePreference: (titleKey: string) => void;
+
+  listingViewMode: "grid" | "compact";
+  setListingViewMode: (mode: "grid" | "compact") => void;
+
+  // Guest Sync Reminder Banner
+  guestBannerSnoozedUntil: number | null;
+  guestBannerDismissCount: number;
+  dismissGuestBanner: (totalItems: number) => void;
+  resetGuestBanner: () => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -93,6 +102,26 @@ export const useSettingsStore = create<SettingsState>()(
         const next = { ...state.perTitleSourcePreferences };
         delete next[titleKey];
         return { perTitleSourcePreferences: next };
+      }),
+
+      listingViewMode: "grid",
+      setListingViewMode: (mode) => set({ listingViewMode: mode }),
+
+      // Guest Sync Reminder Banner Defaults
+      guestBannerSnoozedUntil: null,
+      guestBannerDismissCount: 0,
+      dismissGuestBanner: (totalItems: number) => set((state) => {
+        const isEscalated = totalItems >= 15 && state.guestBannerDismissCount > 0;
+        const days = isEscalated ? 3 : 7;
+        const durationMs = days * 24 * 60 * 60 * 1000;
+        return {
+          guestBannerSnoozedUntil: Date.now() + durationMs,
+          guestBannerDismissCount: state.guestBannerDismissCount + 1,
+        };
+      }),
+      resetGuestBanner: () => set({
+        guestBannerSnoozedUntil: null,
+        guestBannerDismissCount: 0,
       }),
     }),
     {

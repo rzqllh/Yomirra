@@ -250,12 +250,37 @@ export function useSearchCatalog() {
     }));
   };
 
-  const searchMangas = resultsBySource ? getMergedMangas(
-    Object.entries(resultsBySource).map(([sourceId, res]) => ({
-      sourceId,
-      items: res.results || []
-    }))
-  ) : [];
+  const rawSearchMangas = React.useMemo(() => {
+    return resultsBySource ? getMergedMangas(
+      Object.entries(resultsBySource).map(([sourceId, res]) => ({
+        sourceId,
+        items: res.results || []
+      }))
+    ) : [];
+  }, [resultsBySource]);
+
+  const searchMangas = React.useMemo(() => {
+    if (sort !== "rating") return rawSearchMangas;
+    return [...rawSearchMangas].sort((a, b) => {
+      const scoreA = typeof a.manga.score === "number" && a.manga.score > 0 ? a.manga.score : -1;
+      const scoreB = typeof b.manga.score === "number" && b.manga.score > 0 ? b.manga.score : -1;
+
+      // Null-last: unrated titles are kept at the bottom of the list
+      if (scoreA === -1 && scoreB === -1) return 0;
+      if (scoreA === -1) return 1;
+      if (scoreB === -1) return -1;
+
+      // Primary sort: descending by rating
+      if (scoreB !== scoreA) {
+        return scoreB - scoreA;
+      }
+
+      // Tie-break fallback to popularity/rank
+      const rankA = a.manga.rank ?? 0;
+      const rankB = b.manga.rank ?? 0;
+      return rankB - rankA;
+    });
+  }, [rawSearchMangas, sort]);
 
   const hasNextPage = Object.values(resultsBySource || {}).some((res: any) => res.hasNextPage);
 

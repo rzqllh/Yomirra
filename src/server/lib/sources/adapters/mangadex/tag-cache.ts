@@ -65,7 +65,7 @@ export async function getMangaDexFilters(): Promise<FilterList> {
       { id: "followedCount", name: "Populer" },
       { id: "latestUploadedChapter", name: "Terbaru" },
       { id: "relevance", name: "Relevansi" },
-      { id: "rating", name: "Rating" },
+      { id: "rating", name: "Rating Tertinggi" },
       { id: "createdAt", name: "Terbaru Ditambahkan" },
     ],
   };

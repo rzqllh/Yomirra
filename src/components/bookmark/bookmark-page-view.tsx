@@ -6,8 +6,7 @@ import Link from "next/link";
 import { BookBookmark, CalendarBlank, CaretRight } from "@phosphor-icons/react";
 import { PageHeader } from "@/components/app/header";
 import { SegmentedControl } from "@/components/ui/segmented-control";
-import { Skeleton } from "@/components/ui/skeleton";
-import { MangaCardSkeleton } from "@/components/skeletons/manga-card-skeleton";
+import { BookmarkSkeleton } from "@/components/skeletons/bookmark-skeleton";
 import { useBookmarkReading } from "@/shared/hooks/use-bookmark-reading";
 import { useBookmarkCollection } from "@/shared/hooks/use-bookmark-collection";
 import { useLibraryStore } from "@/shared/store/library-store";
@@ -48,26 +47,7 @@ export function BookmarkPageView() {
   };
 
   if (!reading.isMounted || !collection.isMounted) {
-    return (
-      <div className="flex flex-col min-h-screen pb-[calc(var(--bottom-nav-height,80px)+24px)]">
-        <h1 className="sr-only">Rak Buku Yomirra</h1>
-        <div className="px-4 pt-[calc(var(--safe-top)+16px)] pb-4 flex items-center gap-3">
-          <Skeleton className="w-10 h-10 rounded-xl" />
-          <div className="space-y-1.5 flex-1">
-            <Skeleton className="h-6 w-32 rounded-md" />
-            <Skeleton className="h-3.5 w-44 rounded-md" />
-          </div>
-        </div>
-        <div className="px-4 pt-1 pb-4">
-          <Skeleton className="h-[46px] w-full rounded-2xl" />
-        </div>
-        <div className="px-4 mt-2 space-y-3">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <MangaCardSkeleton key={i} variant="history" />
-          ))}
-        </div>
-      </div>
-    );
+    return <BookmarkSkeleton />;
   }
 
   return (

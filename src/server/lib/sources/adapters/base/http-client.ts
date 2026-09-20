@@ -102,11 +102,30 @@ export class HttpClient {
       : AbortSignal.timeout(this.timeoutMs);
   }
 
+  private async fetchWithRetry(url: string, fetchOptions: Parameters<typeof safeFetch>[1]): Promise<Response> {
+    try {
+      return await safeFetch(url, fetchOptions);
+    } catch (err: any) {
+      const msg = err?.message || "";
+      const isTransient =
+        msg.includes("ECONNRESET") ||
+        msg.includes("ETIMEDOUT") ||
+        msg.includes("EPIPE") ||
+        msg.includes("socket hang up");
+
+      if (isTransient && (!fetchOptions?.signal || !fetchOptions.signal.aborted)) {
+        await new Promise((resolve) => setTimeout(resolve, 350));
+        return await safeFetch(url, fetchOptions);
+      }
+      throw err;
+    }
+  }
+
   async get<T>(path: string, params?: Record<string, string | number | boolean | string[]>, init?: RequestInit): Promise<T> {
     const url = this.buildUrl(path, params);
     const requestSignal = this.getRequestSignal(init);
 
-    const res = await safeFetch(url, {
+    const res = await this.fetchWithRetry(url, {
       cache: "no-store",
       maxRedirects: this.maxRedirects,
       maxSize: this.maxResponseSize,
@@ -132,7 +151,7 @@ export class HttpClient {
     const url = this.buildUrl(path, params);
     const requestSignal = this.getRequestSignal(init);
 
-    const res = await safeFetch(url, {
+    const res = await this.fetchWithRetry(url, {
       cache: "no-store",
       maxRedirects: this.maxRedirects,
       maxSize: this.maxResponseSize,
@@ -158,7 +177,7 @@ export class HttpClient {
     const url = this.buildUrl(path, params);
     const requestSignal = this.getRequestSignal(init);
 
-    const res = await safeFetch(url, {
+    const res = await this.fetchWithRetry(url, {
       cache: "no-store",
       maxRedirects: this.maxRedirects,
       maxSize: this.maxResponseSize,
@@ -196,7 +215,7 @@ export class HttpClient {
       }
     }
 
-    const res = await safeFetch(url, {
+    const res = await this.fetchWithRetry(url, {
       cache: "no-store",
       method: "POST",
       body: formattedBody,

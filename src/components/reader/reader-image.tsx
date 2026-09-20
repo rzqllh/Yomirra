@@ -17,7 +17,7 @@ interface ReaderImageProps {
   onLoadComplete: (index: number) => void
   onError: (index: number) => void
   imageFit?: 'width' | 'contained'
-  reportUrl?: string
+  onReport?: (pageIndex: number) => void
   dataIndex?: number;
   totalPages?: number;
   priority?: boolean;
@@ -41,7 +41,7 @@ export const ReaderImage = React.memo(function ReaderImage({
   fallbackProxyUrl,
   onPermanentFailure,
   imageFit = 'width',
-  reportUrl,
+  onReport,
   dataIndex,
   totalPages
 }: ReaderImageProps) {
@@ -170,7 +170,7 @@ export const ReaderImage = React.memo(function ReaderImage({
       }}
     >
       {hasError ? (
-        <PageImageError index={pageIndex} onRetry={handleRetry} reportUrl={reportUrl} />
+        <PageImageError index={pageIndex} onRetry={handleRetry} onReport={onReport} />
       ) : shouldLoad ? (
         <motion.div style={{ x, y, scale }} className="w-full h-full origin-center flex justify-center">
           <Image 

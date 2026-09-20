@@ -268,7 +268,8 @@ export class ShinigamiSource implements MangaSource {
       ],
       sorts: [
         { id: "popular", name: "Populer" },
-        { id: "latest", name: "Terbaru" }
+        { id: "latest", name: "Terbaru" },
+        { id: "rating", name: "Rating Tertinggi" }
       ]
     };
   }

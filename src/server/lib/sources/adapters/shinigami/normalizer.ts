@@ -35,6 +35,8 @@ export function normalizeMangaItem(item: ShinigamiMangaItem & Record<string, unk
     format = item.type;
   }
 
+  const rawDesc = typeof item.description === "string" ? stripHtml(item.description) : undefined;
+
   return {
     id: item.manga_id,
     title: item.title,
@@ -44,6 +46,7 @@ export function normalizeMangaItem(item: ShinigamiMangaItem & Record<string, unk
     latestChapter: item.latest_chapter_number ? `Chapter ${item.latest_chapter_number}` : undefined,
     latestChapterTime: item.latest_chapter_time,
     score: (item.user_rate ?? item.rating) as number | undefined,
+    description: rawDesc,
   };
 }
 

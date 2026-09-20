@@ -202,6 +202,7 @@ export class MangaDexSource implements MangaSource {
         if (sortStr === "popular") mdSort = "followedCount";
         else if (sortStr === "latest") mdSort = "latestUploadedChapter";
         else if (sortStr === "update") mdSort = "latestUploadedChapter";
+        else if (sortStr === "rating") mdSort = "rating";
         else if (sortStr === "title") mdSort = "title";
         
         params[`order[${mdSort}]`] = sortStr === "title" ? "asc" : "desc";

@@ -60,10 +60,14 @@ export function ShelfCard({
 
   return (
     <motion.article
+      layoutId={`manga-card-${sourceId}-${manga.id}`}
       layout="position"
       whileHover={{ y: -4 }}
       whileTap={{ scale: 0.98 }}
-      transition={{ ease: "easeOut", duration: 0.2 }}
+      transition={{ 
+        layout: { type: "spring", stiffness: 320, damping: 30 },
+        duration: 0.2 
+      }}
       className="relative flex flex-col w-full group"
     >
       <Link 
@@ -72,8 +76,9 @@ export function ShelfCard({
         className="group flex flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         aria-label={`Read ${manga.title}`}
       >
-        <div 
-          className="relative w-full aspect-[2/3] overflow-hidden rounded-2xl bg-surface-base border-none shadow-none vt-hover"
+        <motion.div 
+          layoutId={`manga-cover-${sourceId}-${manga.id}`}
+          className="relative w-full aspect-[2/3] overflow-hidden rounded-xl bg-surface-base border-none shadow-none vt-hover"
           style={vtStyle}
         >
           <MangaCover
@@ -141,7 +146,7 @@ export function ShelfCard({
               </div>
             </div>
           )}
-        </div>
+        </motion.div>
 
         <div className="flex flex-col px-2 mt-3" style={vtStyle}>
           {/* Metadata Row */}

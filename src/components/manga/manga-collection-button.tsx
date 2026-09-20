@@ -3,6 +3,8 @@
 import * as React from "react";
 import { useCollectionStore } from "@/shared/store/collection-store";
 import { useLibraryStore } from "@/shared/store/library-store";
+import { useAuth } from "@/shared/hooks/use-auth";
+import { GuestActionGateModal } from "@/components/auth/guest-action-gate-modal";
 import { MangaKey } from "@/shared/types/collection";
 import { Button } from "@/components/ui/button";
 import { FolderPlus } from "@phosphor-icons/react";
@@ -28,6 +30,7 @@ export function MangaCollectionButton({
   mangaId,
   mangaDetail,
 }: MangaCollectionButtonProps) {
+  const { user } = useAuth();
   const mangaKey: MangaKey = `${sourceId}::${mangaId}`;
   const collections = useCollectionStore((state) => state.collections);
   const memberships = useCollectionStore(useShallow((state) => state.getMemberships(mangaKey))) || [];
@@ -37,8 +40,17 @@ export function MangaCollectionButton({
   const mounted = useMounted();
 
   const [isOpen, setIsOpen] = React.useState(false);
+  const [isGateOpen, setIsGateOpen] = React.useState(false);
   const [isCreateMode, setIsCreateMode] = React.useState(false);
   const [newCollectionName, setNewCollectionName] = React.useState("");
+
+  const handleOpenClick = () => {
+    if (!user) {
+      setIsGateOpen(true);
+      return;
+    }
+    setIsOpen(true);
+  };
 
   const ensureInLibrary = () => {
     if (!mangaDetail) return;
@@ -99,7 +111,7 @@ export function MangaCollectionButton({
   return (
     <>
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={handleOpenClick}
         aria-label="Kelola koleksi"
         className={cn(
           "flex items-center justify-center gap-2 min-h-[44px] px-4 transition-all outline-none select-none rounded-[14px] border shadow-xs active:scale-95 bg-surface-raised",
@@ -224,6 +236,14 @@ export function MangaCollectionButton({
           )}
         </DialogContent>
       </Dialog>
+
+      <GuestActionGateModal
+        isOpen={isGateOpen}
+        onOpenChange={setIsGateOpen}
+        actionType="collection"
+        onProceedAsGuest={() => setIsOpen(true)}
+        onLoginSuccess={() => setIsOpen(true)}
+      />
     </>
   );
 }

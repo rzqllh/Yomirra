@@ -84,4 +84,49 @@ describe('SettingsStore Notification Preferences', () => {
       expect(useSettingsStore.getState().perTitleSourcePreferences['title-123']).toBeUndefined();
     });
   });
+
+  describe('Guest Sync Reminder Banner State', () => {
+    beforeEach(() => {
+      useSettingsStore.getState().resetGuestBanner();
+    });
+
+    it('has correct defaults', () => {
+      const state = useSettingsStore.getState();
+      expect(state.guestBannerSnoozedUntil).toBeNull();
+      expect(state.guestBannerDismissCount).toBe(0);
+    });
+
+    it('snoozes for 7 days on initial dismiss with 5 items', () => {
+      const now = Date.now();
+      useSettingsStore.getState().dismissGuestBanner(5);
+      const state = useSettingsStore.getState();
+      expect(state.guestBannerDismissCount).toBe(1);
+      expect(state.guestBannerSnoozedUntil).toBeGreaterThanOrEqual(now + 7 * 86400 * 1000 - 1000);
+      expect(state.guestBannerSnoozedUntil).toBeLessThanOrEqual(now + 7 * 86400 * 1000 + 1000);
+    });
+
+    it('escalates snooze to 3 days when items >= 15 and previously dismissed', () => {
+      const now = Date.now();
+      // First dismiss with 5 items
+      useSettingsStore.getState().dismissGuestBanner(5);
+      expect(useSettingsStore.getState().guestBannerDismissCount).toBe(1);
+
+      // Second dismiss with 16 items -> should escalate to 3 days
+      useSettingsStore.getState().dismissGuestBanner(16);
+      const state = useSettingsStore.getState();
+      expect(state.guestBannerDismissCount).toBe(2);
+      expect(state.guestBannerSnoozedUntil).toBeGreaterThanOrEqual(now + 3 * 86400 * 1000 - 1000);
+      expect(state.guestBannerSnoozedUntil).toBeLessThanOrEqual(now + 3 * 86400 * 1000 + 1000);
+    });
+
+    it('resets snooze and count with resetGuestBanner', () => {
+      useSettingsStore.getState().dismissGuestBanner(10);
+      expect(useSettingsStore.getState().guestBannerDismissCount).toBe(1);
+      expect(useSettingsStore.getState().guestBannerSnoozedUntil).not.toBeNull();
+
+      useSettingsStore.getState().resetGuestBanner();
+      expect(useSettingsStore.getState().guestBannerDismissCount).toBe(0);
+      expect(useSettingsStore.getState().guestBannerSnoozedUntil).toBeNull();
+    });
+  });
 });

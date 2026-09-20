@@ -64,12 +64,17 @@ function getFormat(manga: MangaDexManga): string | undefined {
 }
 
 export function normalizeMangaItem(manga: MangaDexManga): MangaItem {
+  const desc = pickDescription(manga.attributes.description);
+  const lastCh = manga.attributes.lastChapter ? `Chapter ${manga.attributes.lastChapter}` : undefined;
+
   return {
     id: manga.id,
     title: pickTitle(manga.attributes.title),
     coverUrl: buildCoverUrl(manga.id, manga.relationships),
     status: normalizeMangaDexStatus(manga.attributes.status),
     format: getFormat(manga),
+    latestChapter: lastCh,
+    description: desc || undefined,
   };
 }
 

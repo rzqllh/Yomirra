@@ -41,7 +41,7 @@ export function CustomSelect({ value, onChange, options, className, buttonClassN
         <button
           type="button"
           onClick={() => setIsOpen((prev) => !prev)}
-          className={cn("flex items-center justify-between gap-2 h-[44px] px-4 rounded-2xl bg-surface-glass backdrop-blur-md hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 border border-border-subtle shadow-xs text-[13px] font-bold text-text-primary transition-all", className, buttonClassName)}
+          className={cn("flex items-center justify-between gap-2 h-[44px] px-4 rounded-xl bg-surface-glass backdrop-blur-md hover:bg-surface-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 border border-border-subtle shadow-xs text-[13px] font-bold text-text-primary transition-all", className, buttonClassName)}
         >
           <span className="truncate whitespace-nowrap">
             {selectedOption?.label}
@@ -56,7 +56,7 @@ export function CustomSelect({ value, onChange, options, className, buttonClassN
 
       <DropdownMenuContent 
         align={alignMap[align]} 
-        className="w-48 rounded-2xl p-1.5"
+        className="w-48 rounded-xl p-1.5"
       >
         <div className="flex flex-col gap-0.5 max-h-[300px] overflow-y-auto">
           {options.map((option) => {

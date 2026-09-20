@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Star } from "@phosphor-icons/react";
 import { useLibraryStore } from "@/shared/store/library-store";
+import { useAuth } from "@/shared/hooks/use-auth";
+import { GuestActionGateModal } from "@/components/auth/guest-action-gate-modal";
 import { cn } from "@/shared/utils/cn";
 import {
   DropdownMenu,
@@ -25,12 +27,48 @@ interface MangaRatingProps {
 
 export function MangaRating({ sourceId, mangaId, className, variant = "default", mangaDetail }: MangaRatingProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isGateOpen, setIsGateOpen] = useState(false);
+  const [pendingRating, setPendingRating] = useState<number | null>(null);
+
+  const { user } = useAuth();
   const getLibraryItem = useLibraryStore(state => state.getLibraryItem);
   const updateLibraryItem = useLibraryStore(state => state.updateLibraryItem);
   
   const libraryItem = getLibraryItem(sourceId, mangaId);
   const mounted = useMounted();
   const userRating = mounted ? libraryItem?.userRating : undefined;
+
+  const onSelectRating = (rating: number) => {
+    // If removing rating, proceed without gate
+    if (rating === userRating) {
+      handleRating(rating);
+      return;
+    }
+
+    // If guest, trigger soft-nudge modal
+    if (!user) {
+      setPendingRating(rating);
+      setIsOpen(false);
+      setIsGateOpen(true);
+      return;
+    }
+
+    handleRating(rating);
+  };
+
+  const handleProceedGuest = () => {
+    if (pendingRating !== null) {
+      handleRating(pendingRating);
+      setPendingRating(null);
+    }
+  };
+
+  const handleLoginSuccess = () => {
+    if (pendingRating !== null) {
+      handleRating(pendingRating);
+      setPendingRating(null);
+    }
+  };
 
   const handleRating = (rating: number) => {
     const libraryStore = useLibraryStore.getState();
@@ -109,7 +147,7 @@ export function MangaRating({ sourceId, mangaId, className, variant = "default",
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rating) => (
               <button
                 key={rating}
-                onClick={() => handleRating(rating)}
+                onClick={() => onSelectRating(rating)}
                 className={cn(
                   "flex items-center justify-center h-10 rounded-lg text-sm font-bold transition-all duration-200",
                   userRating === rating 
@@ -127,6 +165,15 @@ export function MangaRating({ sourceId, mangaId, className, variant = "default",
           </p>
         </div>
       </DropdownMenuContent>
+
+      <GuestActionGateModal
+        isOpen={isGateOpen}
+        onOpenChange={setIsGateOpen}
+        actionType="rating"
+        titleContext={pendingRating ? `${pendingRating}/10` : undefined}
+        onProceedAsGuest={handleProceedGuest}
+        onLoginSuccess={handleLoginSuccess}
+      />
     </DropdownMenu>
   );
 }

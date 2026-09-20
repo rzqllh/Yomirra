@@ -6,35 +6,30 @@ import { cn } from "@/shared/utils/cn"
 interface PageImageErrorProps {
   index: number;
   onRetry: () => void;
-  reportUrl?: string;
+  onReport?: (pageIndex: number) => void;
   className?: string;
 }
 
-export function PageImageError({ index, onRetry, reportUrl, className }: PageImageErrorProps) {
-  const handleReport = () => {
-    if (!reportUrl) return;
-    try {
-      const url = new URL(reportUrl);
-      if (url.protocol === 'http:' || url.protocol === 'https:') {
-        window.open(url.href, '_blank', 'noopener,noreferrer');
-      }
-    } catch (e) {
-      // Invalid URL, ignore
-    }
-  }
+export function PageImageError({ index, onRetry, onReport, className }: PageImageErrorProps) {
   return (
     <div className={cn("absolute inset-0 flex flex-col items-center justify-center w-full h-full bg-black/40 backdrop-blur-md p-6 text-center z-10", className)}>
       <div className="bg-surface-overlay/80 backdrop-blur-xl rounded-2xl p-6 -2xl flex flex-col items-center max-w-[280px]">
         <WarningCircle size={40} className="text-red-400 mb-3 drop-shadow-md" weight="duotone" />
         <h4 className="text-sm font-bold text-white mb-1 drop-shadow-sm">Gambar {index} Rusak</h4>
-        <p className="text-[10px] text-white/70 mb-5 leading-tight">Terjadi kesalahan saat mengunduh gambar ini. Coba muat ulang halaman atau lapor.</p>
-        
+        <p className="text-[10px] text-white/70 mb-5 leading-tight">Terjadi kesalahan saat mengunduh gambar ini. Coba muat ulang atau lapor ke tim Yomirra.</p>
+
         <div className="flex gap-2 w-full">
           <Button variant="outline" size="sm" onClick={onRetry} className="flex-1 rounded-xl h-10 text-xs font-bold border-white/20 bg-white/5 hover:bg-white/10 text-white shadow-sm">
             Coba Lagi
           </Button>
-          {reportUrl && (
-            <Button onClick={handleReport} aria-label="Laporkan masalah" variant="ghost" size="sm" className="rounded-xl size-10 p-0 shrink-0 border border-white/10 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white shadow-sm">
+          {onReport && (
+            <Button
+              onClick={() => onReport(index)}
+              aria-label="Laporkan masalah gambar ini"
+              variant="ghost"
+              size="sm"
+              className="rounded-xl size-10 p-0 shrink-0 border border-white/10 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white shadow-sm"
+            >
               <Flag size={16} weight="bold" />
             </Button>
           )}

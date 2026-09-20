@@ -78,9 +78,9 @@ describe('SplashScreen', () => {
     });
 
     // Warning copy should be visible
-    expect(screen.getByText('Koneksi lambat')).toBeTruthy();
-    expect(screen.getByText(/Memuat data butuh waktu lebih lama/)).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Muat Ulang' })).toBeTruthy();
+    expect(screen.getByText('Koneksi Lagi Pelan')).toBeTruthy();
+    expect(screen.getByText(/Ini makan waktu lebih lama/)).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Coba Lagi' })).toBeTruthy();
     expect(onComplete).not.toHaveBeenCalled();
 
     // Now dependencies resolve at second 11

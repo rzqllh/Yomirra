@@ -10,8 +10,8 @@ import { UnifiedFeed } from "@/components/app/unified-feed";
 import { SourceFeedSkeleton } from "@/components/app/source-feed-skeleton";
 
 export const metadata: Metadata = {
-  title: "Yomirra - Baca Komik Gratis",
-  description: "Manga, Manhwa, dan Manhua reader cepat, ringan, tanpa iklan.",
+  title: "Yomirra - Reader Komik Multi-Sumber",
+  description: "Baca Manga, Manhwa, dan Manhua dari berbagai sumber dalam satu antarmuka yang cepat dan terpadu.",
 };
 
 export const dynamic = "force-dynamic";

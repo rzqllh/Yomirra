@@ -11,7 +11,7 @@ const WATCHDOG_TIMEOUT = 10000;
 export function SplashScreen({ onComplete }: { onComplete: () => void }) {
   const { loading: authLoading } = useAuth();
   const { _hasHydrated: hasHydrated } = useOnboardingStore();
-  
+
   const [isMounted, setIsMounted] = React.useState(false);
   const [bootStartTime] = React.useState(() => Date.now());
   const [isReadyToExit, setIsReadyToExit] = React.useState(false);
@@ -76,17 +76,17 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
       className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden bg-surface-base text-text-primary select-none"
     >
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-        <motion.div 
-          animate={{ 
+        <motion.div
+          animate={{
             scale: [1, 1.08, 1],
-            opacity: [0.55, 0.75, 0.55] 
+            opacity: [0.55, 0.75, 0.55]
           }}
-          transition={{ 
-            duration: 4, 
-            ease: "easeInOut", 
-            repeat: Infinity 
+          transition={{
+            duration: 4,
+            ease: "easeInOut",
+            repeat: Infinity
           }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-accent/25 via-accent/10 to-transparent blur-[110px]" 
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-accent/25 via-accent/10 to-transparent blur-[110px]"
         />
         <div className="absolute -top-[15%] left-1/2 -translate-x-1/2 w-[600px] h-[320px] rounded-full bg-accent/10 blur-[130px] opacity-40" />
         <div className="absolute -bottom-[20%] left-1/2 -translate-x-1/2 w-[600px] h-[360px] rounded-full bg-indigo-950/30 blur-[120px]" />
@@ -100,14 +100,14 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
           className="mb-6 relative group"
         >
           <div className="absolute -inset-2.5 rounded-[32px] bg-gradient-to-tr from-indigo-600/40 via-accent/35 to-blue-500/20 blur-xl opacity-80" />
-          
+
           <div className="relative size-24 sm:size-28 rounded-[24px] sm:rounded-[28px] overflow-hidden shadow-[0_20px_50px_rgba(15,10,60,0.8),0_0_30px_rgba(99,102,241,0.35)] border border-white/20">
-            <img 
-              src="/icon-pwa.png" 
-              alt="Yomirra Logo" 
-              width={112} 
-              height={112} 
-              className="w-full h-full object-cover select-none" 
+            <img
+              src="/icon-pwa.png"
+              alt="Yomirra Logo"
+              width={112}
+              height={112}
+              className="w-full h-full object-cover select-none"
               loading="eager"
               decoding="sync"
             />
@@ -124,7 +124,7 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
             Yomirra
           </h1>
           <p className="text-xs sm:text-sm font-medium text-text-secondary max-w-[260px] leading-relaxed">
-            Baca komik multi-sumber tanpa iklan
+            Semua Komik, Satu Rumah.
           </p>
         </motion.div>
       </div>
@@ -137,7 +137,7 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
       >
         <AnimatePresence mode="wait">
           {!isTakingTooLong ? (
-            <motion.div 
+            <motion.div
               key="loading-bar"
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -145,22 +145,22 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
               className="flex flex-col items-center gap-3 w-full"
             >
               <div className="w-full max-w-[180px] h-1 rounded-full bg-white/10 overflow-hidden relative backdrop-blur-md">
-                <motion.div 
+                <motion.div
                   className="h-full bg-gradient-to-r from-accent/50 via-accent to-accent-hover rounded-full origin-left shadow-[0_0_12px_rgba(99,102,241,0.8)]"
                   initial={{ scaleX: 0, x: "-100%" }}
-                  animate={{ 
+                  animate={{
                     scaleX: [1, 0.5, 1],
-                    x: ["-100%", "0%", "100%"] 
+                    x: ["-100%", "0%", "100%"]
                   }}
-                  transition={{ 
-                    duration: 1.5, 
-                    ease: "easeInOut", 
-                    repeat: Infinity 
+                  transition={{
+                    duration: 1.5,
+                    ease: "easeInOut",
+                    repeat: Infinity
                   }}
                 />
               </div>
               <p className="text-[11px] font-semibold tracking-wider text-text-secondary uppercase">
-                Menyiapkan aplikasi...
+                Membuka Rak Kamu...
               </p>
             </motion.div>
           ) : (
@@ -171,16 +171,16 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
               className="flex flex-col items-center gap-2 text-center"
             >
               <p className="text-sm font-semibold text-text-primary">
-                Koneksi lambat
+                Koneksi Lagi Pelan
               </p>
               <p className="text-xs text-text-secondary max-w-[260px] leading-relaxed">
-                Memuat data butuh waktu lebih lama. Periksa jaringan kamu jika proses terhenti.
+                Ini makan waktu lebih lama dari biasanya. Cek koneksi kamu, atau coba lagi.
               </p>
-              <button 
+              <button
                 onClick={() => window.location.reload()}
                 className="px-5 py-2 rounded-full bg-surface-raised text-text-primary font-semibold text-xs hover:bg-surface-hover transition-colors border border-white/15 shadow-sm mt-2 active:scale-95 cursor-pointer"
               >
-                Muat Ulang
+                Coba Lagi
               </button>
             </motion.div>
           )}

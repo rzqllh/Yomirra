@@ -102,8 +102,9 @@ export function useLibraryCatalog() {
   const isNsfwFiltered = useSettingsStore(state => state.hideNsfw);
 
   const DYNAMIC_SORTS = filtersData?.sorts || [
-    { id: "popular", name: "🔥 Populer" },
-    { id: "latest", name: "✨ Terbaru" },
+    { id: "popular", name: "Populer" },
+    { id: "latest", name: "Terbaru" },
+    { id: "rating", name: "Rating Tertinggi" },
   ];
 
   // Fallback to supported sort if current sort is not available in the new source
@@ -227,7 +228,35 @@ export function useLibraryCatalog() {
 
   const activeFilterCount = selectedGenres.length + excludedGenres.length + selectedFormats.length + selectedStatuses.length + selectedCollections.length + selectedReadingStatuses.length;
   const rawMangas = data?.mangas || [];
-  const mangas = Array.from(new Map(rawMangas.map(m => [m.id, m])).values());
+  const uniqueMangas = React.useMemo(() => {
+    return Array.from(new Map(rawMangas.map(m => [m.id, m])).values());
+  }, [rawMangas]);
+
+  const mangas = React.useMemo(() => {
+    if (sort !== "rating") return uniqueMangas;
+    return [...uniqueMangas].sort((a, b) => {
+      const scoreA = typeof a.score === "number" && !isNaN(a.score) && a.score > 0 ? a.score : -1;
+      const scoreB = typeof b.score === "number" && !isNaN(b.score) && b.score > 0 ? b.score : -1;
+
+      // Null-last: unrated titles are kept at the bottom of the list
+      if (scoreA === -1 && scoreB === -1) return 0;
+      if (scoreA === -1) return 1;
+      if (scoreB === -1) return -1;
+
+      // Primary sort: descending by rating
+      if (scoreB !== scoreA) {
+        return scoreB - scoreA;
+      }
+
+      // Tie-break fallback to popularity/rank
+      const rankA = a.rank ?? 0;
+      const rankB = b.rank ?? 0;
+      return rankB - rankA;
+    });
+  }, [uniqueMangas, sort]);
+
+  const listingViewMode = useSettingsStore(state => state.listingViewMode);
+  const setListingViewMode = useSettingsStore(state => state.setListingViewMode);
 
   React.useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -245,7 +274,8 @@ export function useLibraryCatalog() {
     sort,
     page,
     setPage,
-    viewMode,
+    viewMode: listingViewMode,
+    setViewMode: setListingViewMode,
     isDisabled,
     isLoading,
     isError,

@@ -31,6 +31,7 @@ const LOCAL_READING_STATUSES = [
 const DEFAULT_SORTS = [
   { id: "popular", label: "Paling Populer" },
   { id: "latest", label: "Update Terbaru" },
+  { id: "rating", label: "Rating Tertinggi" },
   { id: "alphabetical", label: "A-Z" }
 ];
 

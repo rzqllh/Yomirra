@@ -15,10 +15,11 @@ import { toast } from "sonner"
 import { useQueryClient } from "@tanstack/react-query"
 import { useWindowVirtualizer } from "@tanstack/react-virtual"
 import { useReaderScroll } from "@/shared/hooks/use-reader-scroll"
-import { getSourceMetadata } from "@/shared/sources/source-registry"
+
 
 import { useReadingTimer } from "@/shared/hooks/use-reading-timer"
 import { CaretLeft, CaretRight, CheckCircle, Flag, BookOpen, Warning } from "@phosphor-icons/react"
+import { ReportSheet } from "@/components/shared/report-sheet"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/shared/utils/cn"
 import { motion } from "motion/react"
@@ -62,10 +63,11 @@ export function ContinuousVerticalReader({
     return state.items[id] || state.getLatestForManga(sourceId, mangaId);
   })
   const [isRestored, setIsRestored] = React.useState(false)
+  const [isReportOpen, setIsReportOpen] = React.useState(false)
+  const [reportPageIndex, setReportPageIndex] = React.useState<number | undefined>(undefined)
   const isInLibrary = useLibraryStore(state => state.isInLibrary(sourceId, mangaId))
   const addToLibrary = useLibraryStore(state => state.addToLibrary)
-  const source = React.useMemo(() => getSourceMetadata(sourceId), [sourceId]);
-  const reportUrl = source?.reportUrl;
+
 
   const queryClient = useQueryClient()
 
@@ -264,13 +266,10 @@ export function ContinuousVerticalReader({
     router.replace(getReaderHref(sourceId, mangaId, nextChapterId));
   }, [nextChapterId, isInLibrary, mangaId, sourceId, getProgress, addToLibrary, router]);
 
-  const handleReport = React.useCallback(() => {
-    const subject = encodeURIComponent(`[Laporan Yomirra] ${chapterTitle} - ${mangaId}`);
-    const body = encodeURIComponent(
-      `Halo Hafizh,\n\nSaya menemukan kendala saat membaca di Yomirra:\n• Sumber: ${sourceId}\n• ID Komik: ${mangaId}\n• Bab: ${chapterTitle} (${chapterId})\n\nKendala:\n`
-    );
-    window.location.href = `mailto:hrizqullah484@gmail.com?subject=${subject}&body=${body}`;
-  }, [chapterTitle, mangaId, sourceId, chapterId]);
+  const handleReport = React.useCallback((pageIdx?: number) => {
+    setReportPageIndex(typeof pageIdx === "number" ? pageIdx : undefined);
+    setIsReportOpen(true);
+  }, []);
 
   return (
     <div className="flex min-h-screen w-full flex-col items-center select-none pb-12 bg-black/95 dark:bg-black">
@@ -346,6 +345,7 @@ export function ContinuousVerticalReader({
                 onLoadComplete={() => handleImageLoad(item.pageIndex)}
                 onError={handleImageError}
                 onPermanentFailure={handlePermanentFailure}
+                onReport={(idx) => handleReport(idx)}
                 onRefreshUrl={async () => {
                   if (onRefreshChapter) {
                     const fresh = await onRefreshChapter();
@@ -358,7 +358,6 @@ export function ContinuousVerticalReader({
                 priority={virtualRow.index === 0}
                 offlineUrl={isDownloaded ? getOfflineImageUrl({ sourceId, mangaId, chapterId: item.chapterId, pageIndex: item.pageIndex }) : undefined}
                 imageFit={preferences.imageFit}
-                reportUrl={reportUrl}
                 dataIndex={virtualRow.index}
                 totalPages={pages.length}
               />
@@ -448,7 +447,7 @@ export function ContinuousVerticalReader({
 
             <button
               type="button"
-              onClick={handleReport}
+              onClick={() => handleReport(undefined)}
               className="hover:text-semantic-error/90 transition-colors flex items-center gap-1.5 py-1 cursor-pointer"
             >
               <Flag size={13} />
@@ -458,6 +457,17 @@ export function ContinuousVerticalReader({
         </div>
       </div>
 
+      <ReportSheet
+        open={isReportOpen}
+        onOpenChange={setIsReportOpen}
+        context="chapter"
+        subject={chapterTitle}
+        sourceId={sourceId}
+        mangaId={mangaId}
+        chapterId={chapterId}
+        chapterTitle={chapterTitle}
+        pageIndex={reportPageIndex}
+      />
     </div>
   )
 }

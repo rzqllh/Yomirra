@@ -26,6 +26,7 @@ import { SearchInput } from "@/components/ui/search-input";
 import { EmptyState } from "@/components/states/empty-state";
 import { cn } from "@/shared/utils/cn";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
+import { MangaDetailLayout } from "./manga-detail-layout";
 import type { MangaDetail, Chapter } from "@/shared/types/source";
 
 const CHAPTER_ITEM_ESTIMATED_SIZE = 70;
@@ -156,9 +157,9 @@ export function MangaDetailView({
     );
   };
 
-  // Secondary actions — compact horizontal rail (touch-friendly 44px, not desktop-oversized tiles)
+  // Secondary actions — 4 buttons placed inside the shared 2x2 / flex grid
   const renderActions = () => (
-    <div className="flex flex-wrap gap-2 mt-2">
+    <>
       <MangaActions
         sourceId={sourceId}
         mangaId={mangaId}
@@ -178,11 +179,11 @@ export function MangaDetailView({
           status: detail.status,
         }}
       />
-    </div>
+    </>
   );
 
   return (
-    <div className="flex-1 flex flex-col w-full relative text-text-primary bg-surface-base">
+    <>
       <style dangerouslySetInnerHTML={{
         __html: `
         @media (max-width: 767px) { 
@@ -195,195 +196,161 @@ export function MangaDetailView({
         }
       `}} />
 
-      <section className="relative w-full overflow-hidden select-none">
-        {/* Backdrop Image with subtle blur, dark scrim for contrast, and smooth bottom fade into solid page background */}
-        <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-          {detail.coverUrl && (
+      <MangaDetailLayout
+        backdrop={
+          detail.coverUrl ? (
             <Image
               src={detail.coverUrl}
               alt=""
               fill
-              className="object-cover opacity-80 dark:opacity-60 blur-[6px] scale-105 transform-gpu brightness-[0.75] dark:brightness-[0.45]"
+              className="object-cover opacity-85 dark:opacity-70 blur-[8px] scale-110 transform-gpu brightness-[0.85] dark:brightness-[0.55]"
               unoptimized
               priority
             />
-          )}
-          {/* Dark scrim: preserves artwork recognizability in center while guaranteeing header/text contrast */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/85 via-black/45 via-45% to-transparent" />
-          {/* Progressive bottom fade that seamlessly blends artwork into solid page background */}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-surface-base/60 via-65% to-surface-base" />
-        </div>
-
-        {/* Page Header (Contextual Back, Title on scroll, Share, Notification) */}
-        <PageHeader
-          title={detail.title}
-          showBack={true}
-          backHref={backHref}
-          mode="detail"
-          variant="transparent"
-          actions={
-            <MangaHeaderActions
-              sourceId={sourceId}
-              mangaId={mangaId}
-              title={detail.title}
+          ) : null
+        }
+        header={
+          <PageHeader
+            title={detail.title}
+            showBack={true}
+            backHref={backHref}
+            mode="detail"
+            variant="transparent"
+            actions={
+              <MangaHeaderActions
+                sourceId={sourceId}
+                mangaId={mangaId}
+                title={detail.title}
+              />
+            }
+          />
+        }
+        mobileCoverClassName="vt-cover-mobile"
+        mobileCover={
+          detail.coverUrl ? (
+            <Image
+              src={detail.coverUrl}
+              alt={detail.title}
+              fill
+              sizes="(max-width: 768px) 36vw, 165px"
+              className="object-cover"
+              unoptimized
+              priority
             />
-          }
-        />
-
-        {/* Hero Content Container */}
-        <div className="w-full max-w-7xl mx-auto px-4 md:px-8 pt-16 md:pt-20 pb-4 md:pb-6 relative z-10">
-          {/* Mobile Hero Flow */}
-          <div className="flex flex-col gap-4 md:hidden">
-            <div className="flex gap-4 relative items-end">
-              <div 
-                className="relative shrink-0 aspect-[2/3] rounded-[18px] overflow-hidden shadow-heavy ring-1 ring-white/20 bg-surface-raised vt-cover-mobile z-20"
-                style={{ width: 'clamp(130px, 36vw, 165px)' }}
-              >
-                {detail.coverUrl ? (
-                  <Image
-                    src={detail.coverUrl}
-                    alt={detail.title}
-                    fill
-                    sizes="(max-width: 768px) 36vw, 165px"
-                    className="object-cover"
-                    unoptimized
-                    priority
-                  />
-                ) : (
-                  <div className="w-full h-full bg-surface-raised flex items-center justify-center">
-                    <Book size={32} weight="duotone" className="text-text-muted" />
-                  </div>
-                )}
-              </div>
-
-              <div className="flex flex-col flex-1 overflow-hidden pb-1">
-                <div className="mb-2">
-                  <span className="inline-flex items-center bg-white/20 dark:bg-white/10 backdrop-blur-sm px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest text-white mb-2 border border-white/20 shadow-xs">
-                    {detail.format || "Manga"}
-                  </span>
-                  <h1 className="text-[22px] sm:text-[26px] font-black tracking-tight text-white leading-[1.1] line-clamp-3 text-balance drop-shadow-sm vt-title-mobile">
-                    {detail.title}
-                  </h1>
-                  {detail.originalTitle && (
-                    <p className="text-[12px] font-medium text-white/70 mt-1 truncate">
-                      {detail.originalTitle}
-                    </p>
-                  )}
-                </div>
-                
-                <div className="flex items-center gap-2 flex-wrap mb-2.5">
-                  <span className="flex items-center gap-1 text-[11px] font-black tracking-wide text-amber-300 bg-black/40 backdrop-blur-sm px-2.5 py-0.5 rounded-full border border-amber-400/30 shadow-xs">
-                    <Star weight="fill" size={12} className="text-amber-400" />
-                    <span suppressHydrationWarning>{Number(displayScore) > 0 ? Number(displayScore).toFixed(1) : "-.-"}</span>
-                  </span>
-                  {detail.status && (
-                    <span className="flex items-center justify-center bg-white/20 dark:bg-white/10 backdrop-blur-sm border border-white/20 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider text-white">
-                      {detail.status}
-                    </span>
-                  )}
-                  <MangaSourceSelector
-                    sourceId={sourceId}
-                    mangaId={mangaId}
-                    title={detail.title}
-                  />
-                </div>
-                
-                <div className="mt-auto flex flex-col gap-0.5">
-                  <p className="text-sm font-bold text-white line-clamp-1 drop-shadow-xs">
-                    {detail.author || 'Unknown'}
-                  </p>
-                  <p className="text-[11px] font-medium text-white/75 leading-snug">
-                    Diunggah oleh <span className="text-indigo-300 font-semibold">{sourceName.toLowerCase()}</span> • Sumber: Webtoon
-                  </p>
-                </div>
-              </div>
+          ) : (
+            <div className="w-full h-full bg-surface-raised flex items-center justify-center">
+              <Book size={32} weight="duotone" className="text-text-muted" />
             </div>
-
-            {/* Primary CTA + Chapter Companion */}
-            {renderMainAction()}
-
-            {/* 4 Secondary Actions */}
-            {renderActions()}
-          </div>
-
-          {/* Desktop Hero Flow */}
-          <div className="hidden md:flex gap-8 items-end">
-            {/* Desktop Cover */}
-            <div className="relative w-[220px] lg:w-[240px] shrink-0 aspect-[2/3] rounded-[20px] overflow-hidden shadow-heavy ring-1 ring-white/20 bg-surface-raised vt-cover-desktop z-20">
-              {coverUrl ? (
-                <Image
-                  src={coverUrl}
-                  alt={detail.title}
-                  fill
-                  sizes="(min-width: 768px) 220px, 240px"
-                  className="object-cover"
-                  priority
-                  unoptimized
-                />
-              ) : (
-                <div className="w-full h-full bg-surface-raised flex items-center justify-center">
-                  <Book size={48} weight="duotone" className="text-text-muted" />
-                </div>
+          )
+        }
+        mobileMeta={
+          <>
+            <div className="mb-2">
+              <span className="inline-flex items-center bg-white/20 dark:bg-white/10 backdrop-blur-sm px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-widest text-white mb-2 border border-white/20 shadow-xs">
+                {detail.format || "Manga"}
+              </span>
+              <h1 className="text-[22px] sm:text-[26px] font-black tracking-tight text-white leading-[1.1] line-clamp-3 text-balance drop-shadow-sm vt-title-mobile">
+                {detail.title}
+              </h1>
+              {detail.originalTitle && (
+                <p className="text-[12px] font-medium text-white/70 mt-1 truncate">
+                  {detail.originalTitle}
+                </p>
               )}
             </div>
 
-            {/* Desktop Metadata + Actions */}
-            <div className="flex-1 flex flex-col gap-3 pb-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center bg-white/20 dark:bg-white/10 backdrop-blur-sm border border-white/20 px-2.5 py-0.5 rounded-[6px] text-[10px] font-black uppercase tracking-widest text-white">
-                  {detail.format || "Manga"}
+            <div className="flex items-center gap-2 flex-wrap mb-2.5">
+              <span className="flex items-center gap-1 text-[11px] font-black tracking-wide text-amber-300 bg-black/40 backdrop-blur-sm px-2.5 py-0.5 rounded-lg border border-amber-400/30 shadow-xs">
+                <Star weight="fill" size={12} className="text-amber-400" />
+                <span suppressHydrationWarning>{Number(displayScore) > 0 ? Number(displayScore).toFixed(1) : "-.-"}</span>
+              </span>
+              {detail.status && (
+                <span className="flex items-center justify-center bg-white/20 dark:bg-white/10 backdrop-blur-sm border border-white/20 px-2.5 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider text-white">
+                  {detail.status}
                 </span>
-                <span className="flex items-center gap-1 bg-black/40 backdrop-blur-sm text-amber-300 px-2.5 py-0.5 rounded-[6px] text-[11px] font-black tracking-wide border border-amber-400/30 shadow-xs">
-                  <Star weight="fill" size={12} className="text-amber-400" />
-                  <span suppressHydrationWarning>{Number(displayScore) > 0 ? Number(displayScore).toFixed(1) : "-.-"}</span>
-                </span>
-                {detail.status && (
-                  <span className="flex items-center justify-center bg-white/20 dark:bg-white/10 backdrop-blur-sm border border-white/20 px-2.5 py-0.5 rounded-[6px] text-[10px] font-bold uppercase tracking-wider text-white">
-                    {detail.status}
-                  </span>
-                )}
-                <MangaSourceSelector
-                  sourceId={sourceId}
-                  mangaId={mangaId}
-                  title={detail.title}
-                />
-              </div>
-
-              <div>
-                <h1 className="text-3xl lg:text-4xl xl:text-[42px] font-black tracking-tight leading-[1.15] text-white drop-shadow-sm vt-title-desktop max-w-2xl">
-                  {detail.title}
-                </h1>
-                {detail.originalTitle && (
-                  <p className="text-sm font-medium text-white/70 mt-1">
-                    {detail.originalTitle}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex flex-col gap-0.5">
-                <p className="text-base font-bold text-white drop-shadow-xs">
-                  {detail.author || 'Unknown'}
-                </p>
-                <p className="text-xs font-medium text-white/75">
-                  Diunggah oleh <span className="text-indigo-300 font-semibold">{sourceName.toLowerCase()}</span> • Sumber: Webtoon
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-0 pt-2 max-w-2xl w-full">
-                <div className="w-full">
-                  {renderMainAction()}
-                </div>
-                {renderActions()}
-              </div>
+              )}
+              <MangaSourceSelector
+                sourceId={sourceId}
+                mangaId={mangaId}
+                title={detail.title}
+              />
             </div>
-          </div>
-        </div>
-      </section>
 
-      <div className="w-full relative z-10 bg-surface-base">
-        <div className="w-full max-w-7xl mx-auto px-4 md:px-8 py-5 flex flex-col gap-6">
+            <div className="mt-auto flex flex-col gap-0.5">
+              <p className="text-sm font-bold text-white line-clamp-1 drop-shadow-xs">
+                {detail.author || 'Unknown'}
+              </p>
+              <p className="text-[11px] font-medium text-white/75 leading-snug">
+                Diunggah oleh <span className="text-indigo-300 font-semibold">{sourceName.toLowerCase()}</span> • Sumber: Webtoon
+              </p>
+            </div>
+          </>
+        }
+        desktopCoverClassName="vt-cover-desktop"
+        desktopCover={
+          coverUrl ? (
+            <Image
+              src={coverUrl}
+              alt={detail.title}
+              fill
+              sizes="(min-width: 768px) 220px, 240px"
+              className="object-cover"
+              priority
+              unoptimized
+            />
+          ) : (
+            <div className="w-full h-full bg-surface-raised flex items-center justify-center">
+              <Book size={48} weight="duotone" className="text-text-muted" />
+            </div>
+          )
+        }
+        desktopMeta={
+          <>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center bg-white/20 dark:bg-white/10 backdrop-blur-sm border border-white/20 px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-widest text-white">
+                {detail.format || "Manga"}
+              </span>
+              <span className="flex items-center gap-1 bg-black/40 backdrop-blur-sm text-amber-300 px-2.5 py-0.5 rounded-lg text-[11px] font-black tracking-wide border border-amber-400/30 shadow-xs">
+                <Star weight="fill" size={12} className="text-amber-400" />
+                <span suppressHydrationWarning>{Number(displayScore) > 0 ? Number(displayScore).toFixed(1) : "-.-"}</span>
+              </span>
+              {detail.status && (
+                <span className="flex items-center justify-center bg-white/20 dark:bg-white/10 backdrop-blur-sm border border-white/20 px-2.5 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider text-white">
+                  {detail.status}
+                </span>
+              )}
+              <MangaSourceSelector
+                sourceId={sourceId}
+                mangaId={mangaId}
+                title={detail.title}
+              />
+            </div>
 
-          <div className="rounded-2xl border border-border-default/80 bg-surface-raised p-4 md:p-5 shadow-xs">
+            <div>
+              <h1 className="text-3xl lg:text-4xl xl:text-[42px] font-black tracking-tight leading-[1.15] text-white drop-shadow-sm vt-title-desktop max-w-2xl">
+                {detail.title}
+              </h1>
+              {detail.originalTitle && (
+                <p className="text-sm font-medium text-white/70 mt-1">
+                  {detail.originalTitle}
+                </p>
+              )}
+            </div>
+
+            <div className="flex flex-col gap-0.5">
+              <p className="text-base font-bold text-white drop-shadow-xs">
+                {detail.author || 'Unknown'}
+              </p>
+              <p className="text-xs font-medium text-white/75">
+                Diunggah oleh <span className="text-indigo-300 font-semibold">{sourceName.toLowerCase()}</span> • Sumber: Webtoon
+              </p>
+            </div>
+          </>
+        }
+        mainAction={renderMainAction()}
+        actions={renderActions()}
+        synopsis={
+          <>
             <div className="flex items-center justify-between mb-2.5">
               <span className="text-[11px] font-black text-text-muted uppercase tracking-widest">Sinopsis</span>
               {detail.description && detail.description.length > 150 && (
@@ -396,7 +363,7 @@ export function MangaDetailView({
                 </button>
               )}
             </div>
-            
+
             <p className={cn(
               "text-[13px] md:text-sm leading-relaxed text-text-secondary break-words transition-all",
               !isExpanded && "line-clamp-4"
@@ -410,17 +377,17 @@ export function MangaDetailView({
                   <Link
                     key={g}
                     href={`/library?source=${sourceId}&genre=${encodeURIComponent(g)}`}
-                    className="rounded-full bg-surface-base border border-border-default/80 px-3 py-1 text-[10px] font-bold text-text-secondary uppercase tracking-wider hover:border-accent hover:text-accent transition-colors"
+                    className="rounded-xl bg-surface-base border border-border-default/80 px-3 py-1 text-[10px] font-bold text-text-secondary uppercase tracking-wider hover:border-accent hover:text-accent transition-colors"
                   >
                     {g}
                   </Link>
                 ))}
               </div>
             )}
-          </div>
-
-          {/* 3, 4, 5. Chapter Section (Solid surface, flattened rows) */}
-          <div className="flex flex-col">
+          </>
+        }
+        chapters={
+          <>
             <div className="sticky top-[60px] z-20 bg-surface-base py-3.5 px-0.5 border-b border-border-default/40 flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <span className="text-lg md:text-xl font-bold tracking-tight text-text-primary flex items-center gap-2">
@@ -503,18 +470,16 @@ export function MangaDetailView({
                 </div>
               </div>
             )}
-          </div>
-
-          <div className="pb-1">
-            <MangaRecommendations
-              sourceId={sourceId}
-              currentMangaId={mangaId}
-              genres={detail.genres || []}
-            />
-          </div>
-
-        </div>
-      </div>
-    </div>
+          </>
+        }
+        recommendations={
+          <MangaRecommendations
+            sourceId={sourceId}
+            currentMangaId={mangaId}
+            genres={detail.genres || []}
+          />
+        }
+      />
+    </>
   );
 }

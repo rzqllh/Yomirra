@@ -85,8 +85,8 @@ const safeLookup = (
   });
 };
 
-const safeHttpAgent = new http.Agent({ lookup: safeLookup as any });
-const safeHttpsAgent = new https.Agent({ lookup: safeLookup as any });
+const safeHttpAgent = new http.Agent({ lookup: safeLookup as any, keepAlive: false });
+const safeHttpsAgent = new https.Agent({ lookup: safeLookup as any, keepAlive: false });
 
 export interface SafeFetchOptions extends Omit<RequestInit, "window"> {
   maxRedirects?: number;

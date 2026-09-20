@@ -5,8 +5,19 @@ import { MangaCollectionButton } from "../manga-collection-button";
 import { useCollectionStore } from "@/shared/store/collection-store";
 import { useLibraryStore } from "@/shared/store/library-store";
 
+const mockAuthUser = vi.fn();
+vi.mock("@/shared/hooks/use-auth", () => ({
+  useAuth: () => ({
+    user: mockAuthUser(),
+    loading: false,
+    loginWithGoogle: vi.fn(),
+    logout: vi.fn(),
+  }),
+}));
+
 describe("Manga Detail Collection Actions (Slice 2.2)", () => {
   beforeEach(() => {
+    mockAuthUser.mockReturnValue(null);
     useCollectionStore.setState({
       collections: [],
       membershipsByManga: {},
@@ -42,21 +53,46 @@ describe("Manga Detail Collection Actions (Slice 2.2)", () => {
   });
 
   describe("MangaCollectionButton", () => {
-    it("renders and opens collection dialog with empty state", () => {
+    it("shows soft-gate modal for guest and opens collection dialog after choosing Lanjut sebagai Tamu", () => {
+      mockAuthUser.mockReturnValue(null);
       render(<MangaCollectionButton sourceId="srcA" mangaId="m1" />);
       const btn = screen.getByRole("button", { name: /Koleksi/i });
       fireEvent.click(btn);
       
+      // Soft-gate modal appears
+      expect(screen.getByText("Bawa koleksi kustom ke semua perangkat")).toBeDefined();
+      expect(screen.getByText("Masuk dengan Google")).toBeDefined();
+
+      // Click "Lanjut sebagai Tamu"
+      const guestBtn = screen.getByRole("button", { name: /Lanjut sebagai Tamu/i });
+      fireEvent.click(guestBtn);
+
+      // Now collection dialog opens
       expect(screen.getByText("Belum ada koleksi.")).toBeDefined();
       expect(screen.getByRole("button", { name: /Buat Koleksi Baru/i })).toBeDefined();
     });
 
-    it("can add and remove manga from a collection", () => {
+    it("opens collection dialog directly without gate when user is logged in", () => {
+      mockAuthUser.mockReturnValue({ uid: "user-123" });
+      render(<MangaCollectionButton sourceId="srcA" mangaId="m1" />);
+      const btn = screen.getByRole("button", { name: /Koleksi/i });
+      fireEvent.click(btn);
+
+      // Opens collection dialog immediately
+      expect(screen.queryByText("Bawa koleksi kustom ke semua perangkat")).toBeNull();
+      expect(screen.getByText("Belum ada koleksi.")).toBeDefined();
+    });
+
+    it("can add and remove manga from a collection as guest", () => {
+      mockAuthUser.mockReturnValue(null);
       useCollectionStore.getState().createCollection("Favs");
       const cId = useCollectionStore.getState().collections[0].id;
       
       render(<MangaCollectionButton sourceId="srcA" mangaId="m1" />);
       fireEvent.click(screen.getByRole("button", { name: /Koleksi/i }));
+      
+      // Proceed as guest
+      fireEvent.click(screen.getByRole("button", { name: /Lanjut sebagai Tamu/i }));
       
       const colBtn = screen.getByText("Favs");
       
@@ -72,6 +108,7 @@ describe("Manga Detail Collection Actions (Slice 2.2)", () => {
     it("can create collection and auto add manga", () => {
       render(<MangaCollectionButton sourceId="srcA" mangaId="m1" />);
       fireEvent.click(screen.getByRole("button", { name: /Koleksi/i }));
+      fireEvent.click(screen.getByRole("button", { name: /Lanjut sebagai Tamu/i }));
       
       fireEvent.click(screen.getByRole("button", { name: /Buat Koleksi Baru/i }));
       
@@ -106,6 +143,7 @@ describe("Manga Detail Collection Actions (Slice 2.2)", () => {
       );
 
       fireEvent.click(screen.getByRole("button", { name: /Koleksi/i }));
+      fireEvent.click(screen.getByRole("button", { name: /Lanjut sebagai Tamu/i }));
       fireEvent.click(screen.getByText("Reading List"));
 
       expect(useLibraryStore.getState().isInLibrary("srcA", "m1")).toBe(true);

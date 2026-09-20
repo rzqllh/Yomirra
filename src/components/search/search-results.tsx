@@ -1,12 +1,15 @@
 "use client";
 
 import * as React from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence, LayoutGroup } from "motion/react";
 import { WarningCircle, MagnifyingGlass } from "@phosphor-icons/react";
 import { SearchResultSkeleton } from "@/components/skeletons/search-result-skeleton";
 import { EmptyState } from "@/components/states/empty-state";
 import { MangaGrid } from "@/components/manga/manga-grid";
 import { ShelfCard } from "@/components/manga/card";
+import { CompactCard } from "@/components/manga/card/compact-card";
+import { ViewModeToggle } from "@/components/manga/view-mode-toggle";
+import { useSettingsStore } from "@/shared/store/settings-store";
 import {
   Pagination,
   PaginationContent,
@@ -67,6 +70,7 @@ export function SearchResults({
   queryClient,
 }: SearchResultsProps) {
   const sort = useSearchFilterStore((state) => state.sort);
+  const listingViewMode = useSettingsStore((state) => state.listingViewMode);
 
   const headingTitle = React.useMemo(() => {
     if (query.trim().length > 0) {
@@ -78,6 +82,8 @@ export function SearchResults({
       case "latest":
       case "update":
         return "Terbaru";
+      case "rating":
+        return "Rating Tertinggi";
       case "title":
       case "alphabet":
         return "Judul (A-Z)";
@@ -189,23 +195,39 @@ export function SearchResults({
                 <span className="w-2 h-2 rounded-full bg-accent"></span>
                 {headingTitle}
               </h2>
-              <span className="text-xs font-semibold text-text-muted">
-                {searchMangas.length} {query.trim().length === 0 ? "judul" : "hasil"}
-              </span>
+              <div className="flex items-center gap-2.5 sm:gap-3">
+                <span className="text-xs font-semibold text-text-muted">
+                  {searchMangas.length} {query.trim().length === 0 ? "judul" : "hasil"}
+                </span>
+                <ViewModeToggle />
+              </div>
             </div>
 
-            <MangaGrid>
-              {searchMangas.map((item) => (
-                <ShelfCard
-                  key={`${item.sourceId}-${item.manga.id}`}
-                  sourceId={item.sourceId}
-                  manga={item.manga}
-                  sourceBindings={item.sourceBindings || (item.manga as any)?.sourceBindings}
-                  showSourceBadge={true}
-                  priority={false}
-                />
-              ))}
-            </MangaGrid>
+            <LayoutGroup id="search-listing-cards">
+              <MangaGrid viewMode={listingViewMode}>
+                {searchMangas.map((item) =>
+                  listingViewMode === "compact" ? (
+                    <CompactCard
+                      key={`${item.sourceId}-${item.manga.id}`}
+                      sourceId={item.sourceId}
+                      manga={item.manga}
+                      sourceBindings={item.sourceBindings || (item.manga as any)?.sourceBindings}
+                      showSourceBadge={true}
+                      priority={false}
+                    />
+                  ) : (
+                    <ShelfCard
+                      key={`${item.sourceId}-${item.manga.id}`}
+                      sourceId={item.sourceId}
+                      manga={item.manga}
+                      sourceBindings={item.sourceBindings || (item.manga as any)?.sourceBindings}
+                      showSourceBadge={true}
+                      priority={false}
+                    />
+                  )
+                )}
+              </MangaGrid>
+            </LayoutGroup>
 
             {/* Pagination */}
             <div className="mt-8 py-4">

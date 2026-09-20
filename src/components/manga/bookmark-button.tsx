@@ -48,7 +48,7 @@ export function BookmarkButton({ sourceId, manga, className }: { sourceId: strin
       onClick={handleBookmarkClick}
       whileTap={{ scale: 0.85 }}
       className={cn(
-        "relative grid size-8 place-items-center rounded-xl transition-all focus-visible:outline-none bg-black/40 backdrop-blur-md shadow-sm border border-white/10",
+        "relative grid size-8 place-items-center rounded-lg transition-all focus-visible:outline-none bg-black/40 backdrop-blur-md shadow-sm border border-white/10",
         isInLibrary ? 'text-accent hover:text-accent-hover' : 'text-media-muted hover:text-media-foreground',
         className
       )}
