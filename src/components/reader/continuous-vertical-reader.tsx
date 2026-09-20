@@ -364,7 +364,7 @@ export function ContinuousVerticalReader({
                 {chapterTitle} selesai
               </span>
             </div>
-            <span className="text-[11px] font-mono text-white/40 shrink-0">
+            <span className="text-[11px] font-mono text-white/70 shrink-0">
               {pages.length} halaman
             </span>
           </div>
@@ -413,7 +413,7 @@ export function ContinuousVerticalReader({
           </div>
 
           {/* Utility Micro-actions */}
-          <div className="flex items-center justify-center gap-3 text-xs text-white/40 pt-0.5">
+          <div className="flex items-center justify-center gap-3 text-xs text-white/70 pt-0.5">
             {nextChapterId && (
               <>
                 <Link

@@ -2,8 +2,6 @@
 
 import * as React from "react";
 import { motion, AnimatePresence } from "motion/react";
-import Image from "next/image";
-import Logo from "@/logo/icon.png";
 import { useAuth } from "@/shared/hooks/use-auth";
 import { useOnboardingStore } from "@/shared/store/onboarding-store";
 
@@ -113,19 +111,19 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
             {/* Specular highlight rim */}
             <div className="absolute inset-0 rounded-[28px] bg-gradient-to-b from-white/15 to-transparent pointer-events-none" />
             
-            <Image 
-              src={Logo} 
+            <img 
+              src="/icon-pwa.png" 
               alt="Yomirra Logo" 
               width={68} 
               height={68} 
               className="object-contain relative z-10 drop-shadow-md select-none" 
-              priority 
-              unoptimized
+              loading="eager"
+              decoding="sync"
             />
           </div>
         </motion.div>
 
-        {/* High-Contrast Modern Typography */}
+        {/* High-Contrast Modern Typography (WCAG AA Compliant) */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -135,7 +133,7 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
           <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white via-white/95 to-white/70 drop-shadow-sm">
             Yomirra
           </h1>
-          <p className="text-xs sm:text-sm font-medium text-white/50 max-w-[260px] leading-relaxed">
+          <p className="text-xs sm:text-sm font-medium text-text-secondary max-w-[260px] leading-relaxed">
             Satu tempat untuk semua manga favoritmu.
           </p>
         </motion.div>
@@ -172,7 +170,7 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
                   }}
                 />
               </div>
-              <p className="text-[11px] font-semibold tracking-wider text-white/40 uppercase">
+              <p className="text-[11px] font-semibold tracking-wider text-text-secondary uppercase">
                 Menyiapkan Yomirra...
               </p>
             </motion.div>
@@ -183,15 +181,15 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
               animate={{ opacity: 1, y: 0 }}
               className="flex flex-col items-center gap-2 text-center"
             >
-              <p className="text-sm font-medium text-white/90">
+              <p className="text-sm font-medium text-text-primary">
                 Memuat lebih lama dari biasanya
               </p>
-              <p className="text-xs text-white/50 max-w-[260px] leading-relaxed">
+              <p className="text-xs text-text-secondary max-w-[260px] leading-relaxed">
                 Kami masih menyiapkan Yomirra. Periksa koneksi jika proses ini tidak selesai.
               </p>
               <button 
                 onClick={() => window.location.reload()}
-                className="px-5 py-2 rounded-full bg-white/10 text-white font-semibold text-xs hover:bg-white/15 transition-colors border border-white/15 shadow-sm mt-2 active:scale-95 cursor-pointer"
+                className="px-5 py-2 rounded-full bg-surface-raised text-text-primary font-semibold text-xs hover:bg-surface-hover transition-colors border border-white/15 shadow-sm mt-2 active:scale-95 cursor-pointer"
               >
                 Coba Lagi
               </button>

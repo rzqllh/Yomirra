@@ -63,7 +63,7 @@ export function DownloadManager() {
           className="pointer-events-none fixed inset-0 z-[9999] bg-black"
         >
           <div className="absolute inset-0 flex items-center justify-center p-6 text-center">
-            <p className="text-white/30 text-sm">
+            <p className="text-white/70 text-sm">
               Layar diredupkan untuk menghemat daya selama proses unduhan.<br/>
               Sentuh layar untuk membangunkan.
             </p>
