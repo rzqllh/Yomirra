@@ -97,44 +97,42 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
       </div>
 
       <div className="relative z-10 flex flex-col items-center justify-center w-full h-full pb-20">
-        {/* Floating Concentric Squircle Emblem */}
+        {/* Floating Concentric Emblem */}
         <motion.div
-          initial={{ scale: 0.85, opacity: 0, y: 24 }}
+          initial={{ scale: 0.86, opacity: 0, y: 16 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           className="mb-6 relative group"
         >
-          {/* Subtle breathing rim glow */}
-          <div className="absolute -inset-1.5 rounded-[32px] bg-gradient-to-b from-accent/30 to-accent/5 blur-md opacity-60 group-hover:opacity-100 transition-opacity" />
+          {/* Ambient Rim & Depth Glow */}
+          <div className="absolute -inset-2.5 rounded-[32px] bg-gradient-to-tr from-indigo-600/40 via-accent/35 to-blue-500/20 blur-xl opacity-80" />
           
-          <div className="relative size-24 sm:size-28 flex items-center justify-center rounded-[28px] bg-surface-raised/85 border border-white/15 backdrop-blur-2xl shadow-[0_12px_40px_rgba(0,0,0,0.6),0_0_35px_rgba(99,102,241,0.2)] ring-1 ring-white/10">
-            {/* Specular highlight rim */}
-            <div className="absolute inset-0 rounded-[28px] bg-gradient-to-b from-white/15 to-transparent pointer-events-none" />
-            
+          {/* Clean App Icon with Glass Edge */}
+          <div className="relative size-24 sm:size-28 rounded-[24px] sm:rounded-[28px] overflow-hidden shadow-[0_20px_50px_rgba(15,10,60,0.8),0_0_30px_rgba(99,102,241,0.35)] border border-white/20">
             <img 
               src="/icon-pwa.png" 
               alt="Yomirra Logo" 
-              width={68} 
-              height={68} 
-              className="object-contain relative z-10 drop-shadow-md select-none" 
+              width={112} 
+              height={112} 
+              className="w-full h-full object-cover select-none" 
               loading="eager"
               decoding="sync"
             />
           </div>
         </motion.div>
 
-        {/* High-Contrast Modern Typography (WCAG AA Compliant) */}
+        {/* High-Contrast Modern Typography */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
-          className="flex flex-col items-center text-center gap-2"
+          className="flex flex-col items-center text-center gap-1.5"
         >
-          <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-b from-white via-white/95 to-white/70 drop-shadow-sm">
+          <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white drop-shadow-sm">
             Yomirra
           </h1>
           <p className="text-xs sm:text-sm font-medium text-text-secondary max-w-[260px] leading-relaxed">
-            Satu tempat untuk semua manga favoritmu.
+            Baca komik multi-sumber tanpa iklan
           </p>
         </motion.div>
       </div>
@@ -171,7 +169,7 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
                 />
               </div>
               <p className="text-[11px] font-semibold tracking-wider text-text-secondary uppercase">
-                Menyiapkan Yomirra...
+                Menyiapkan aplikasi...
               </p>
             </motion.div>
           ) : (
@@ -181,17 +179,17 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
               animate={{ opacity: 1, y: 0 }}
               className="flex flex-col items-center gap-2 text-center"
             >
-              <p className="text-sm font-medium text-text-primary">
-                Memuat lebih lama dari biasanya
+              <p className="text-sm font-semibold text-text-primary">
+                Koneksi lambat
               </p>
               <p className="text-xs text-text-secondary max-w-[260px] leading-relaxed">
-                Kami masih menyiapkan Yomirra. Periksa koneksi jika proses ini tidak selesai.
+                Memuat data butuh waktu lebih lama. Periksa jaringan kamu jika proses terhenti.
               </p>
               <button 
                 onClick={() => window.location.reload()}
                 className="px-5 py-2 rounded-full bg-surface-raised text-text-primary font-semibold text-xs hover:bg-surface-hover transition-colors border border-white/15 shadow-sm mt-2 active:scale-95 cursor-pointer"
               >
-                Coba Lagi
+                Muat Ulang
               </button>
             </motion.div>
           )}

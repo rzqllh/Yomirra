@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { motion, AnimatePresence } from "motion/react";
-import Image from "next/image";
 import { useOnboardingStore } from "@/shared/store/onboarding-store";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useHistoryStore } from "@/shared/store/history-store";
@@ -12,31 +11,31 @@ import { DownloadSimple } from "@phosphor-icons/react";
 
 const STEPS = [
   {
-    eyebrow: "BACA • JELAJAHI • NIKMATI",
-    title: "Semua Cerita\ndalam Satu Tempat",
-    desc: "Yomirra menyatukan komik dari berbagai sumber ke dalam satu aplikasi yang nyaman.",
+    eyebrow: "KATALOG MULTI-SUMBER",
+    title: "Baca Komik\nBebas Iklan",
+    desc: "Akses Komikindo, Shinigami, Kiryuu, dan MangaDex langsung tanpa pop-up iklan atau pengalihan halaman.",
   },
   {
-    eyebrow: "KOLEKSI PRIBADI",
-    title: "Simpan & Lacak\nFavoritmu",
-    desc: "Library mengikuti sumber komik. Bookmark menyimpan riwayat agar tak pernah tertinggal.",
+    eyebrow: "RIWAYAT & RAK BUKU",
+    title: "Tersimpan Otomatis\nHingga Panel Terakhir",
+    desc: "Riwayat membaca tersimpan di perangkat. Lanjut membaca tepat dari chapter dan halaman terakhir.",
   },
   {
-    eyebrow: "SELALU UPDATE",
-    title: "Pencarian &\nLintas Sumber",
-    desc: "Cari manga favoritmu dengan cepat dan dapatkan chapter baru dari berbagai ekstensi.",
+    eyebrow: "PENCARIAN CEPAT",
+    title: "Cari Satu Judul di\nSemua Sumber Sekaligus",
+    desc: "Bandingkan kecepatan rilis chapter dan kualitas gambar antar-sumber langsung dari satu pencarian.",
   },
   {
-    eyebrow: "READER PREMIUM",
-    title: "Pengalaman\nTanpa Gangguan",
-    desc: "Progress baca tersimpan otomatis. Sesuaikan arah, kecerahan, dan mode baca sesukamu.",
+    eyebrow: "READER FLEKSIBEL",
+    title: "Scroll Vertikal\natau Balik Halaman",
+    desc: "Mendukung Webtoon scroll panjang, preload bab untuk hemat kuota, dan fitur layar tetap menyala.",
   },
 ];
 
 const FALLBACK_COVERS = [
-  "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=600&auto=format&fit=crop&q=80",
-  "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=600&auto=format&fit=crop&q=80",
+  "/covers/cover-1.webp",
+  "/covers/cover-2.webp",
+  "/covers/cover-3.webp",
 ];
 
 function getCardStyle(index: number, currentStep: number, totalCards: number) {
@@ -53,7 +52,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
   const [isMounted, setIsMounted] = React.useState(false);
   const [isReadyToExit, setIsReadyToExit] = React.useState(false);
   const [step, setStep] = React.useState(0);
-  const [covers, setCovers] = React.useState<string[]>([]);
+  const [covers, setCovers] = React.useState<string[]>(FALLBACK_COVERS);
 
   React.useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -77,46 +76,42 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
     historyItems.forEach(item => { if (item.coverUrl) extractedCovers.add(item.coverUrl); });
     
     const availableCovers = Array.from(extractedCovers);
-    const shuffled = availableCovers.sort(() => 0.5 - Math.random());
-    const cacheCovers = shuffled.slice(0, 3);
-    
-    if (cacheCovers.length >= 3) {
-      setCovers(cacheCovers);
+    if (availableCovers.length >= 3) {
+      const shuffled = availableCovers.sort(() => 0.5 - Math.random());
+      setCovers(shuffled.slice(0, 3));
       return;
     }
-    
-    // 2. Set branded fallback immediately (non-blocking UI)
-    const initialFallback = [...cacheCovers];
-    while (initialFallback.length < 3) {
-      initialFallback.push(FALLBACK_COVERS[initialFallback.length]);
-    }
-    setCovers(initialFallback);
 
-    // 3. Fetch from existing API in background
+    // 2. Fetch live manga covers from active sources
     let isCancelled = false;
     
-    fetch('/api/sources/komikindo/popular?page=1')
-      .then(res => {
-        if (!res.ok) throw new Error("API response not ok");
-        return res.json();
-      })
-      .then(data => {
+    async function loadLiveCovers() {
+      const sources = ["shinigami", "komikindo", "mangadex", "kiryuu"];
+      for (const source of sources) {
         if (isCancelled) return;
-        const apiCovers = (data?.mangas || [])
-          .map((m: any) => m.coverUrl)
-          .filter(Boolean);
-          
-        if (apiCovers.length >= 3) {
-          // Shuffle API covers for a stable random selection this session
-          const shuffledApi = apiCovers.sort(() => 0.5 - Math.random()).slice(0, 3);
-          setCovers(shuffledApi);
+        try {
+          const res = await fetch(`/api/sources/${source}/popular?page=1`);
+          if (!res.ok) continue;
+          const data = await res.json();
+          const mangas = data?.data?.mangas || data?.mangas || [];
+          const validCovers = mangas
+            .map((m: any) => m.coverUrl)
+            .filter((url: any) => typeof url === "string" && url.startsWith("http"));
+            
+          if (validCovers.length >= 3) {
+            const shuffledApi = validCovers.sort(() => 0.5 - Math.random()).slice(0, 3);
+            if (!isCancelled) {
+              setCovers(shuffledApi);
+            }
+            break;
+          }
+        } catch {
+          // Continue to next available source
         }
-      })
-      .catch((err) => {
-        if (process.env.NODE_ENV === "development") {
-          console.log("[Onboarding] Cover API fallback failed, keeping branded fallback.", err.message);
-        }
-      });
+      }
+    }
+
+    loadLiveCovers();
 
     return () => {
       isCancelled = true;
@@ -161,10 +156,14 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
 
           {/* Header (Safe Area Respected) */}
           <div className="relative z-10 flex items-center justify-between px-6 pt-[calc(var(--safe-top,env(safe-area-inset-top))+20px)] w-full">
-            <div className="flex items-center gap-2">
-              <div className="relative w-8 h-8">
-                <Image src="/icon.png" alt="Yomirra" fill className="object-contain drop-shadow-sm" priority unoptimized />
-              </div>
+            <div className="flex items-center gap-2.5">
+              <img 
+                src="/icon-pwa.png" 
+                alt="Yomirra" 
+                width={32} 
+                height={32} 
+                className="size-8 rounded-[8px] object-contain drop-shadow-sm select-none" 
+              />
               <span className="font-bold tracking-tight text-lg text-text-primary">Yomirra</span>
             </div>
             <button 
@@ -194,7 +193,21 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
                     className="absolute w-[200px] h-[280px] sm:w-[220px] sm:h-[320px] rounded-[24px] overflow-hidden shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] border border-white/5 bg-surface-raised"
                     style={{ zIndex: style.zIndex }}
                   >
-                    <Image src={url} alt="Cover" fill className="object-cover" unoptimized priority />
+                    <img 
+                      src={url} 
+                      alt="Cover Komik" 
+                      className="w-full h-full object-cover select-none" 
+                      referrerPolicy="no-referrer"
+                      loading="eager"
+                      decoding="async"
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        const fallback = FALLBACK_COVERS[i % FALLBACK_COVERS.length];
+                        if (target.src !== fallback) {
+                          target.src = fallback;
+                        }
+                      }}
+                    />
                     <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent opacity-60" />
                   </motion.div>
                 );
