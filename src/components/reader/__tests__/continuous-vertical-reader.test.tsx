@@ -89,4 +89,27 @@ describe("ContinuousVerticalReader - Keyboard Navigation", () => {
     
     expect(window.scrollBy).not.toHaveBeenCalled();
   });
+
+  it("should navigate to next chapter directly without pre-navigation smooth scrolling", () => {
+    const scrollToMock = vi.fn();
+    vi.stubGlobal("scrollTo", scrollToMock);
+
+    render(
+      <ContinuousVerticalReader
+        {...defaultProps}
+        nextChapterId="test-chapter-2"
+      />
+    );
+
+    // Initial mount on unread chapter calls instant scrollTo(top: 0) to ensure new chapter starts at top
+    expect(scrollToMock).toHaveBeenCalledWith({ top: 0, behavior: "instant" });
+    scrollToMock.mockClear();
+
+    const nextBtn = document.querySelector("button[class*='bg-accent']")!;
+    expect(nextBtn).toBeTruthy();
+    fireEvent.click(nextBtn);
+
+    // Clicking next chapter should NOT trigger smooth scrolling on the old chapter
+    expect(scrollToMock).not.toHaveBeenCalledWith({ top: 0, behavior: "smooth" });
+  });
 });

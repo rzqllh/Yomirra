@@ -303,6 +303,7 @@ export function ReaderView({
     >
       {readingMode === "paged" ? (
         <PagedReader
+          key={`paged-${chapterId}`}
           sourceId={sourceId}
           mangaId={mangaId}
           chapterId={chapterId}
@@ -316,6 +317,7 @@ export function ReaderView({
         />
       ) : (
         <ContinuousVerticalReader
+          key={`continuous-${chapterId}`}
           sourceId={sourceId}
           mangaId={mangaId}
           chapterId={chapterId}

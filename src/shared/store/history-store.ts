@@ -42,6 +42,8 @@ interface HistoryState {
   getHistoryList: () => HistoryItem[];
   markChapterProgress: (sourceId: string, mangaId: string, chapterId: string, pageIndex: number, totalPages: number, scrollPercent?: number) => void;
   saveProgress: (sourceId: string, mangaId: string, chapterId: string, pageIndex: number, pageOffset?: number) => void;
+  _hasHydrated: boolean;
+  setHasHydrated: (state: boolean) => void;
   /**
    * Resolve SavedTitleId for a HistoryItem.
    * Returns the denormalized field if present, otherwise scans Library SourceRefs.
@@ -57,6 +59,8 @@ export const useHistoryStore = create<HistoryState>()(
   persist(
     (set, get) => ({
       items: {},
+      _hasHydrated: false,
+      setHasHydrated: (state) => set({ _hasHydrated: state }),
 
       upsertHistory: (item) => set((state) => {
         if (item.isNsfw === undefined) {
@@ -254,14 +258,31 @@ export const useHistoryStore = create<HistoryState>()(
       saveProgress: (sourceId, mangaId, chapterId, pageIndex, pageOffset) => set((state) => {
         const id = getHistoryId(sourceId, mangaId, chapterId);
         const existing = state.items[id];
-        if (!existing) return state;
-
-        const updatedItem = {
-          ...existing,
-          pageIndex,
-          pageOffset,
-          readAt: Date.now(),
-        };
+        
+        let updatedItem: HistoryItem;
+        if (existing) {
+          updatedItem = {
+            ...existing,
+            pageIndex,
+            pageOffset,
+            readAt: Date.now(),
+          };
+        } else {
+          const anyMangaItem = Object.values(state.items).find(
+            (i) => i.sourceId === sourceId && i.mangaId === mangaId
+          );
+          updatedItem = {
+            sourceId,
+            mangaId,
+            chapterId,
+            mangaTitle: anyMangaItem?.mangaTitle || mangaId,
+            coverUrl: anyMangaItem?.coverUrl,
+            sourceName: anyMangaItem?.sourceName || sourceId,
+            pageIndex,
+            pageOffset,
+            readAt: Date.now(),
+          };
+        }
 
         // Intentionally NOT pushing to cloud to prevent excessive network writes from scroll handler
         // The actual progress will be synced when the user leaves the reader or finishes the chapter
@@ -331,6 +352,9 @@ export const useHistoryStore = create<HistoryState>()(
     {
       name: "yomirra-history",
       version: 1,
+      onRehydrateStorage: () => (state) => {
+        state?.setHasHydrated(true);
+      },
       partialize: (state) => ({
         items: Object.fromEntries(
           Object.entries(state.items).filter(([ , item]) => !item.isNsfw)

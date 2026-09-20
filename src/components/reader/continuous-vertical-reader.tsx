@@ -56,6 +56,12 @@ export function ContinuousVerticalReader({
   const isDownloaded = useDownloadStore(state => state.isDownloaded(sourceId, mangaId, chapterId))
   const saveProgress = useHistoryStore(state => state.saveProgress)
   const getProgress = useHistoryStore(state => state.getLatestForManga)
+  const hasHydrated = useHistoryStore(state => state._hasHydrated)
+  const historyItem = useHistoryStore(state => {
+    const id = `${sourceId}::${mangaId}::${chapterId}`;
+    return state.items[id] || state.getLatestForManga(sourceId, mangaId);
+  })
+  const [isRestored, setIsRestored] = React.useState(false)
   const isInLibrary = useLibraryStore(state => state.isInLibrary(sourceId, mangaId))
   const addToLibrary = useLibraryStore(state => state.addToLibrary)
   const source = React.useMemo(() => getSourceMetadata(sourceId), [sourceId]);
@@ -154,21 +160,40 @@ export function ContinuousVerticalReader({
     nextChapterId,
     saveProgress,
     queryClient,
+    isReadyToTrack: isRestored,
   });
 
-  React.useLayoutEffect(() => {
-    const saved = getProgress(sourceId, mangaId)
-    if (saved && saved.chapterId === chapterId && saved.pageIndex !== undefined) {
-      setTimeout(() => {
-        virtualizer.scrollToIndex(saved.pageIndex!, { align: 'start' });
-        toast("Melanjutkan bacaan...", { 
-          id: 'resume-reading', 
-          position: 'top-center',
-          icon: <BookOpen size={15} weight="fill" className="text-accent shrink-0" />
-        });
-      }, 100);
+  React.useEffect(() => {
+    if (isRestored) return;
+
+    const isStoreReady =
+      hasHydrated ||
+      (useHistoryStore.persist?.hasHydrated ? useHistoryStore.persist.hasHydrated() : false) ||
+      !!historyItem;
+
+    if (!isStoreReady) return;
+
+    const saved = historyItem;
+    if (saved && saved.chapterId === chapterId && typeof saved.pageIndex === "number" && saved.pageIndex > 0) {
+      const targetIndex = Math.min(saved.pageIndex, Math.max(0, streamItems.length - 1));
+
+      virtualizer.scrollToIndex(targetIndex, { align: "start" });
+
+      requestAnimationFrame(() => {
+        virtualizer.scrollToIndex(targetIndex, { align: "start" });
+        setIsRestored(true);
+      });
+
+      toast(`Melanjutkan bacaan hal. ${targetIndex + 1}...`, {
+        id: "resume-reading",
+        position: "top-center",
+        icon: <BookOpen size={15} weight="fill" className="text-accent shrink-0" />,
+      });
+    } else {
+      window.scrollTo({ top: 0, behavior: "instant" });
+      setIsRestored(true);
     }
-  }, [sourceId, mangaId, chapterId, getProgress, virtualizer])
+  }, [hasHydrated, historyItem, chapterId, streamItems.length, virtualizer, isRestored]);
 
   const isWebtoon = true;
 
@@ -376,8 +401,7 @@ export function ContinuousVerticalReader({
                 variant="outline"
                 className="h-11 px-4 font-semibold text-xs sm:text-sm bg-white/[0.05] hover:bg-white/[0.10] active:bg-white/[0.08] border-white/10 text-white/80 hover:text-white flex-1 flex items-center justify-center gap-2 active:scale-[0.98] transition-all cursor-pointer shadow-none"
                 onClick={() => {
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                  setTimeout(() => router.replace(getReaderHref(sourceId, mangaId, _prevChapterId)), 100);
+                  router.replace(getReaderHref(sourceId, mangaId, _prevChapterId));
                 }}
               >
                 <CaretLeft size={16} weight="bold" />

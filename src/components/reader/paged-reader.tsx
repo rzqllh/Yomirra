@@ -52,6 +52,11 @@ export function PagedReader({
   const isDownloaded = useDownloadStore(state => state.isDownloaded(sourceId, mangaId, chapterId));
   const saveProgress = useHistoryStore(state => state.saveProgress);
   const getProgress = useHistoryStore(state => state.getLatestForManga);
+  const hasHydrated = useHistoryStore(state => state._hasHydrated);
+  const historyItem = useHistoryStore(state => {
+    const id = `${sourceId}::${mangaId}::${chapterId}`;
+    return state.items[id] || state.getLatestForManga(sourceId, mangaId);
+  });
   const source = React.useMemo(() => getSourceMetadata(sourceId), [sourceId]);
   const reportUrl = source?.reportUrl;
 
@@ -82,40 +87,55 @@ export function PagedReader({
     });
   }, []);
 
-  // Initialize active page from history or 0
-  const [currentPageIndex, setCurrentPageIndex] = React.useState<number>(() => {
-    const saved = getProgress(sourceId, mangaId);
+  // Initialize active page from history once store is hydrated
+  const [hasInitialized, setHasInitialized] = React.useState(false);
+  const [currentPageIndex, setCurrentPageIndex] = React.useState<number>(0);
+
+  React.useEffect(() => {
+    if (hasInitialized) return;
+    const isStoreReady =
+      hasHydrated ||
+      (useHistoryStore.persist?.hasHydrated ? useHistoryStore.persist.hasHydrated() : false) ||
+      !!historyItem;
+
+    if (!isStoreReady) return;
+
+    const saved = historyItem;
     if (saved && saved.chapterId === chapterId && typeof saved.pageIndex === "number") {
-      return Math.max(0, Math.min(saved.pageIndex, pages.length - 1));
+      setCurrentPageIndex(Math.max(0, Math.min(saved.pageIndex, currentPages.length - 1)));
     }
-    return 0;
-  });
+    setHasInitialized(true);
+  }, [hasHydrated, historyItem, chapterId, currentPages.length, hasInitialized]);
 
   const totalPages = currentPages.length;
   const isRtl = preferences.readingDirection === "rtl";
 
   // Clamp page index when pages prop changes
   React.useEffect(() => {
-    setCurrentPageIndex(prev => Math.max(0, Math.min(prev, currentPages.length - 1)));
-  }, [currentPages.length]);
+    if (hasInitialized) {
+      setCurrentPageIndex(prev => Math.max(0, Math.min(prev, currentPages.length - 1)));
+    }
+  }, [currentPages.length, hasInitialized]);
 
   // Sync page progress to reader store for header progress bar
   React.useEffect(() => {
-    if (totalPages > 0) {
+    if (totalPages > 0 && hasInitialized) {
       setPagedProgress((currentPageIndex + 1) / totalPages);
     }
-  }, [currentPageIndex, totalPages, setPagedProgress]);
+  }, [currentPageIndex, totalPages, setPagedProgress, hasInitialized]);
 
-  // Persist page progress
+  // Persist page progress only after initialization
   const flushProgress = React.useCallback(() => {
-    if (totalPages > 0) {
+    if (totalPages > 0 && hasInitialized) {
       saveProgress(sourceId, mangaId, chapterId, currentPageIndex, totalPages);
     }
-  }, [currentPageIndex, totalPages, sourceId, mangaId, chapterId, saveProgress]);
+  }, [currentPageIndex, totalPages, sourceId, mangaId, chapterId, saveProgress, hasInitialized]);
 
   React.useEffect(() => {
-    flushProgress();
-  }, [flushProgress]);
+    if (hasInitialized) {
+      flushProgress();
+    }
+  }, [flushProgress, hasInitialized]);
 
   useVisibilityFlush(flushProgress);
 

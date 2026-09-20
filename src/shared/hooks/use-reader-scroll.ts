@@ -14,6 +14,7 @@ interface UseReaderScrollOptions {
   nextChapterId?: string;
   saveProgress: (sourceId: string, mangaId: string, chapterId: string, pageIndex: number, pageOffset?: number) => void;
   queryClient: QueryClient;
+  isReadyToTrack?: boolean;
 }
 
 export function useReaderScroll({
@@ -25,6 +26,7 @@ export function useReaderScroll({
   nextChapterId,
   saveProgress,
   queryClient,
+  isReadyToTrack = true,
 }: UseReaderScrollOptions) {
   const lastActiveChapter = React.useRef(chapterId);
   const scrollStopTimer = React.useRef<NodeJS.Timeout>(undefined);
@@ -32,12 +34,12 @@ export function useReaderScroll({
   
   // Flush progress immediately if there's pending save
   const flushProgress = React.useCallback(() => {
-    if (pendingProgressSave.current) {
+    if (pendingProgressSave.current && isReadyToTrack) {
       const { chapterId: cId, pageIndex, offset } = pendingProgressSave.current;
       saveProgress(sourceId, mangaId, cId, pageIndex, offset);
       pendingProgressSave.current = null;
     }
-  }, [saveProgress, sourceId, mangaId]);
+  }, [saveProgress, sourceId, mangaId, isReadyToTrack]);
 
   useVisibilityFlush(flushProgress);
 
@@ -105,19 +107,21 @@ export function useReaderScroll({
               }
 
               // Coalesce write progress on scroll stop (300ms idle)
-              const offset = currentScrollY - centerItem.start;
-              pendingProgressSave.current = {
-                chapterId: activeStreamItem.chapterId,
-                pageIndex: activeStreamItem.pageIndex,
-                offset,
-              };
+              if (isReadyToTrack) {
+                const offset = currentScrollY - centerItem.start;
+                pendingProgressSave.current = {
+                  chapterId: activeStreamItem.chapterId,
+                  pageIndex: activeStreamItem.pageIndex,
+                  offset,
+                };
 
-              if (scrollStopTimer.current) {
-                clearTimeout(scrollStopTimer.current);
+                if (scrollStopTimer.current) {
+                  clearTimeout(scrollStopTimer.current);
+                }
+                scrollStopTimer.current = setTimeout(() => {
+                  flushProgress();
+                }, 300);
               }
-              scrollStopTimer.current = setTimeout(() => {
-                flushProgress();
-              }, 300);
             }
           }
           
@@ -137,5 +141,5 @@ export function useReaderScroll({
       // Flush immediately on unmount to not lose progress
       flushProgress();
     };
-  }, [sourceId, mangaId, nextChapterId, queryClient, streamItems, virtualizer, flushProgress]);
+  }, [sourceId, mangaId, nextChapterId, queryClient, streamItems, virtualizer, flushProgress, isReadyToTrack]);
 }

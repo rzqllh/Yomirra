@@ -411,8 +411,7 @@ export function ReaderShell({
                     e.stopPropagation();
                     if (prevChapterId) {
                       toast.info("Membuka chapter sebelumnya...", { duration: 1500 });
-                      window.scrollTo({ top: 0, behavior: 'smooth' });
-                      setTimeout(() => router.replace(getReaderHref(sourceId, mangaId, prevChapterId)), 150);
+                      router.replace(getReaderHref(sourceId, mangaId, prevChapterId));
                     }
                   }}
                 >
@@ -448,9 +447,8 @@ export function ReaderShell({
                     e.stopPropagation();
                     if (nextChapterId) {
                       toast.info("Membuka chapter selanjutnya...", { duration: 1500 });
-                      setTimeout(() => router.replace(getReaderHref(sourceId, mangaId, nextChapterId)), 150);
+                      router.replace(getReaderHref(sourceId, mangaId, nextChapterId));
                     }
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
                   }}
                 >
                   <CaretRight size={20} weight="bold" />
