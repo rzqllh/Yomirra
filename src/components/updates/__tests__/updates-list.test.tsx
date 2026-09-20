@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { UpdatesList } from '../updates-list';
 import { useUpdateStore } from '@/shared/store/update-store';
+import { useLibraryStore } from '@/shared/store/library-store';
 import { useUpdateChecker } from '@/shared/hooks/use-update-checker';
 
 vi.mock('@/shared/store/update-store', () => ({
@@ -23,6 +24,7 @@ describe('UpdatesList Component', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    useLibraryStore.setState({ items: {} });
     (useUpdateChecker as any).mockReturnValue({
       isScanning: false,
       triggerScan: mockTriggerScan,
@@ -107,8 +109,8 @@ describe('UpdatesList Component', () => {
   it('links title to manga detail with returnTo, and CTA button to reader with adaptive label', () => {
     (useUpdateStore as any).mockReturnValue({
       items: {
-        'sourceA::manga1': { sourceId: 'sourceA', mangaId: 'manga1', mangaTitle: 'Title 1', detectedAt: new Date().toISOString(), latestChapterId: 'chap1' },
-        'sourceB::manga2': { sourceId: 'sourceB', mangaId: 'manga2', mangaTitle: 'Title 2', detectedAt: new Date().toISOString() }, // No chapter ID
+        'sourceA::manga1': { sourceId: 'sourceA', mangaId: 'manga1', mangaTitle: 'Title 1', detectedAt: new Date(Date.now() + 1000).toISOString(), latestChapterId: 'chap1' },
+        'sourceB::manga2': { sourceId: 'sourceB', mangaId: 'manga2', mangaTitle: 'Title 2', detectedAt: new Date(Date.now() - 1000).toISOString() }, // No chapter ID
       },
       markAllAsSeen: mockMarkAllAsSeen,
     });

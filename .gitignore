@@ -25,6 +25,7 @@ test-results/
 Thumbs.db
 *.pem
 *.key
+.vscode/
 
 # Debug logs
 npm-debug.log*
@@ -132,6 +133,7 @@ docs/plan_*.md
 docs/progress_*.md
 docs/risks_*.md
 docs/tasks_*.md
+docs/release_*.md
 # Internal demo routes
 src/app/(web)/showcase/*demo*/
 public/demo-*.html
