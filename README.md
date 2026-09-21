@@ -1,12 +1,10 @@
 # Yomirra
 
-**Baca manga, manhwa, dan manhua dari berbagai sumber dalam satu tempat.**
+**Satu tempat buat semua komik kamu.**
 
-Yomirra adalah reader multi-source yang dirancang supaya pengalaman membaca tetap sederhana meskipun sumber kontennya berbeda-beda.
+Yomirra adalah reader multi-source untuk manga, manhwa, dan manhua. Cari dari beberapa sumber sekaligus, simpan ke library, dan lanjut baca tanpa harus buka-tutup tab atau ingat-ingat domain mana yang masih hidup.
 
-Cari sekali, pilih sumber yang tersedia, simpan ke library, lalu lanjut baca tanpa harus mengelola banyak situs secara terpisah.
-
-> Yomirra masih aktif dikembangkan. Beberapa sumber dapat berubah, berpindah domain, atau mengalami gangguan sewaktu-waktu.
+> Masih aktif dikembangkan. Sumber bisa berubah, pindah domain, atau down sewaktu-waktu.
 
 ## Buka Yomirra
 
@@ -14,40 +12,33 @@ https://yomirra.vercel.app
 
 ---
 
-## Kenapa Yomirra?
+## Kenapa repot pakai banyak situs?
 
-Website manga sering berubah domain, mengubah struktur halaman, atau mengalami gangguan.
+Website komik ganti domain, ubah struktur, atau tiba-tiba down itu bukan hal baru.
 
-Yomirra mencoba memisahkan masalah tersebut dari pengalaman membaca kamu.
+Yomirra coba jadi lapisan di antara kamu dan kekacauan itu. Library, riwayat baca, dan progress tersimpan di satu tempat, tidak terikat ke satu website tertentu.
 
-Library, riwayat baca, dan progress dibuat agar tidak bergantung penuh pada satu website sumber.
-
-Kalau sebuah judul tersedia di beberapa sumber, Yomirra dapat mengenalinya sebagai judul yang sama dan menyimpan hubungan antar sumber tersebut.
+Kalau satu judul tersedia di beberapa sumber sekaligus, Yomirra bisa mengenalinya sebagai judul yang sama.
 
 ---
 
-## Multi-Source Search
+## Search Multi-Source
 
-Cari judul dari beberapa sumber sekaligus.
+Cari dari beberapa sumber dalam satu pencarian.
 
-Yomirra akan:
+Yomirra:
 
-- mencari hanya pada sumber yang kamu pilih
-- menjalankan pencarian secara paralel
+- mencari paralel di semua sumber yang kamu aktifkan
 - menggabungkan hasil yang terdeteksi sebagai judul yang sama
-- tetap menampilkan hasil dari sumber sehat meskipun salah satu sumber gagal
+- tetap menampilkan hasil dari sumber yang sehat kalau ada yang gagal
 
-Contohnya, satu judul dapat tersedia melalui:
+Jadi satu judul yang tersedia di tiga sumber berbeda tidak muncul sebagai tiga kartu terpisah.
 
-`Shinigami · Komiku II · MangaDex`
-
-tanpa harus memenuhi halaman pencarian dengan beberapa kartu duplikat.
+Contoh: `Shinigami · Komiku II · MangaDex` cukup satu kartu.
 
 ---
 
-## Sources
-
-Yomirra saat ini mendukung:
+## Sumber yang Didukung
 
 **Indonesia**
 - Shinigami
@@ -61,120 +52,60 @@ Yomirra saat ini mendukung:
 - Asura Scans
 - MangaDex English
 
-Ketersediaan setiap sumber dapat berubah mengikuti kondisi layanan aslinya.
+Ketersediaan masing-masing sumber mengikuti kondisi layanannya.
 
 ---
 
 ## Library
 
-Simpan judul yang kamu baca ke dalam satu library.
+Simpan judul ke library. Satu judul bisa punya beberapa sumber yang terhubung, jadi library kamu tidak jadi usang kalau sebuah sumber pindah domain atau nonaktif.
 
-Satu judul dapat memiliki beberapa sumber yang terhubung sehingga library tidak harus terkunci pada satu website saja.
-
-Yomirra mempertahankan identitas judul secara terpisah dari domain sumbernya.
-
-Artinya, perubahan domain tidak seharusnya membuat judul di library menjadi judul baru.
+Progress membaca tersimpan sebagai data kamu, bukan milik sumber mana pun.
 
 ---
 
-## Progress yang Tetap Aman
+## Kalau Sumber Bermasalah
 
-Progress membaca adalah data pengguna, bukan milik source.
+Masalah di satu sumber tidak otomatis bikin Yomirra ikut error.
 
-Saat sumber yang sedang digunakan bermasalah, Yomirra dapat mencari sumber alternatif untuk judul yang sama.
+Sumber bisa kena:
 
-Jika mapping chapter dapat dipastikan, Yomirra dapat membantu melanjutkan dari chapter yang sesuai.
+- ganti domain atau route
+- perubahan struktur halaman
+- API error atau rate limit
+- CDN bermasalah
+- maintenance
 
-Jika hasilnya ambigu, Yomirra akan meminta konfirmasi daripada menebak.
-
-Yomirra tidak akan sengaja memajukan progress ke chapter yang belum kamu baca.
-
----
-
-## Source Recovery
-
-Source bisa berubah.
-
-Domain bisa pindah.
-
-API bisa berubah.
-
-Struktur website bisa rusak.
-
-Yomirra memiliki sistem health dan recovery untuk membedakan beberapa kondisi tersebut sehingga satu source yang bermasalah tidak harus membuat seluruh reader ikut gagal.
-
-Untuk source yang punya alternatif valid, Yomirra dapat menawarkan atau menggunakan sumber pengganti dengan tetap menjaga library dan progress.
+Yomirra mencoba mengisolasi kegagalan itu supaya sumber lain tetap bisa dipakai. Untuk sumber yang punya alternatif valid, Yomirra bisa menawarkan pengganti dengan tetap menjaga library dan progress kamu.
 
 ---
 
 ## Reader
 
-Reader Yomirra dibuat untuk pengalaman baca yang bersih dan minim distraksi.
+Reader dibuat clean dan minim distraksi. Continuous reading tersedia untuk chapter berbasis gambar, dan state baca tetap terhubung ke library dan history.
 
-Tersedia pengalaman continuous reading untuk chapter berbasis gambar, dengan state baca yang tetap terhubung ke library dan history.
-
-Konten yang memang terkunci atau premium pada sumber aslinya tetap dihormati sebagai konten terkunci.
-
----
-
-## Search dan Library Itu Berbeda
-
-**Search** digunakan untuk mencari judul dari berbagai sumber.
-
-**Library Search** hanya mencari koleksi yang sudah kamu simpan.
-
-Yomirra sengaja memisahkan keduanya supaya pencarian library tetap cepat dan tidak melakukan request internet yang tidak diperlukan.
-
----
-
-## Jika Source Bermasalah
-
-Gangguan pada satu source tidak otomatis berarti Yomirra sedang down.
-
-Sebuah source dapat mengalami:
-
-- perubahan domain
-- perubahan route
-- perubahan struktur halaman
-- API error
-- rate limit
-- CDN bermasalah
-- maintenance atau downtime
-
-Yomirra mencoba mengisolasi kegagalan tersebut supaya source lain tetap bisa digunakan.
+Konten yang dikunci atau premium pada sumber aslinya tetap diperlakukan sebagai konten terkunci.
 
 ---
 
 ## Privacy
 
-Yomirra tidak membutuhkan data bacaan pribadi untuk melakukan monitoring kesehatan source.
+Riwayat bacaan, judul yang kamu baca, dan query pencarian tidak dipakai sebagai telemetri.
 
-Monitoring operasional berfokus pada kondisi teknis seperti:
-
-- status source
-- latency
-- parser/API failure
-- domain change
-- recovery status
-
-Riwayat bacaan, judul yang sedang dibaca, dan query pencarian pengguna tidak digunakan sebagai telemetry operasional.
+Monitoring operasional sebatas kondisi teknis: status sumber, latency, dan error handling.
 
 ---
 
 ## Status
 
-Yomirra masih berkembang.
-
-Fokus pengembangan saat ini adalah membuat pengalaman multi-source semakin tahan terhadap perubahan source tanpa mengorbankan library dan progress pengguna.
-
-Beberapa fitur dan source dapat berubah seiring pengembangan.
+Yomirra masih berkembang. Fokus saat ini adalah membuat pengalaman multi-source makin tahan terhadap perubahan sumber tanpa mengorbankan library dan progress pengguna.
 
 ---
 
 ## Disclaimer
 
-Yomirra adalah reader dan aggregator interface independen.
+Yomirra adalah reader interface independen yang mengakses konten dari layanan pihak ketiga.
 
-Konten, artwork, manga, manhwa, manhua, serta layanan sumber terkait merupakan milik masing-masing pemegang hak dan penyedianya.
+Semua konten, artwork, manga, manhwa, dan manhua yang ditampilkan merupakan milik masing-masing pemegang hak dan penyedianya. Yomirra tidak mengklaim kepemilikan atas konten tersebut.
 
-Yomirra tidak mengklaim kepemilikan atas konten yang berasal dari layanan pihak ketiga.
+Penggunaan layanan pihak ketiga mengikuti syarat dan ketentuan masing-masing penyedia. Ketersediaan konten bergantung pada kondisi layanan sumber yang bersangkutan.

@@ -38,10 +38,10 @@ describe("GuestActionGateModal", () => {
     );
 
     expect(screen.getByText("Rating Personal")).toBeDefined();
-    expect(screen.getByText("Simpan rating 9/10 ke cloud?")).toBeDefined();
-    expect(screen.getByText(/Rating kamu saat ini hanya tersimpan di browser perangkat ini/i)).toBeDefined();
-    expect(screen.getByRole("button", { name: /Masuk dengan Google/i })).toBeDefined();
-    expect(screen.getByRole("button", { name: /Lanjut di Perangkat Ini/i })).toBeDefined();
+    expect(screen.getByText(/Biar rating 9\/10 kamu nggak hilang pas ganti device/i)).toBeDefined();
+    expect(screen.getByText(/Rating ini baru nempel di browser ini doang/i)).toBeDefined();
+    expect(screen.getByRole("button", { name: /Simpan ke Akun \(Google\)/i })).toBeDefined();
+    expect(screen.getByRole("button", { name: /Lanjut di Device Ini Aja/i })).toBeDefined();
   });
 
   it("renders collection copy correctly", () => {
@@ -55,10 +55,10 @@ describe("GuestActionGateModal", () => {
     );
 
     expect(screen.getByText("Koleksi Kustom")).toBeDefined();
-    expect(screen.getByText("Bawa koleksi kustom ke semua perangkat")).toBeDefined();
-    expect(screen.getByText(/Koleksi kustom mengelompokkan bacaan sesuai seleramu/i)).toBeDefined();
-    expect(screen.getByRole("button", { name: /Masuk dengan Google/i })).toBeDefined();
-    expect(screen.getByRole("button", { name: /Lanjut sebagai Tamu/i })).toBeDefined();
+    expect(screen.getByText(/Bikin playlist komikmu aman di cloud/i)).toBeDefined();
+    expect(screen.getByText(/Udah rapihin folder bacaan, jangan sampai hilang pas ganti HP/i)).toBeDefined();
+    expect(screen.getByRole("button", { name: /Amankan Pake Google/i })).toBeDefined();
+    expect(screen.getByRole("button", { name: /Bikin di Device Ini Dulu/i })).toBeDefined();
   });
 
   it("calls onProceedAsGuest when clicking guest proceed button", () => {
@@ -74,7 +74,7 @@ describe("GuestActionGateModal", () => {
       />
     );
 
-    const guestBtn = screen.getByRole("button", { name: /Lanjut sebagai Tamu/i });
+    const guestBtn = screen.getByRole("button", { name: /Bikin di Device Ini Dulu/i });
     fireEvent.click(guestBtn);
 
     expect(onOpenChange).toHaveBeenCalledWith(false);
@@ -96,7 +96,7 @@ describe("GuestActionGateModal", () => {
       />
     );
 
-    const loginBtn = screen.getByRole("button", { name: /Masuk dengan Google/i });
+    const loginBtn = screen.getByRole("button", { name: /Simpan ke Akun \(Google\)/i });
     fireEvent.click(loginBtn);
 
     expect(mockLoginWithGoogle).toHaveBeenCalledTimes(1);

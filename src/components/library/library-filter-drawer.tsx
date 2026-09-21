@@ -140,7 +140,7 @@ export function LibraryFilterDrawer({ children, activeSourceId }: LibraryFilterD
   return (
     <FilterDrawerShell
       title="Filter Pencarian"
-      description="Atur filter pencarian berdasarkan urutan, status, dan genre manga."
+      description="Saring berdasarkan urutan, status, genre, atau koleksi."
       activeCount={activeCount}
       onApply={handleApply}
       onReset={handleReset}

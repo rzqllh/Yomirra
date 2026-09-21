@@ -72,11 +72,10 @@ export function GuestActionGateModal({
         <DialogHeader className="gap-3 text-left">
           <div className="flex items-center gap-2.5">
             <div
-              className={`size-10 rounded-xl flex items-center justify-center shrink-0 border ${
-                isRating
+              className={`size-10 rounded-xl flex items-center justify-center shrink-0 border ${isRating
                   ? "bg-amber-500/10 border-amber-500/20 text-amber-400"
                   : "bg-accent/10 border-accent/20 text-accent"
-              }`}
+                }`}
             >
               {isRating ? (
                 <Star size={22} weight="fill" />
@@ -98,15 +97,15 @@ export function GuestActionGateModal({
           <DialogTitle className="text-base sm:text-lg font-bold tracking-tight text-text-primary mt-1">
             {isRating
               ? titleContext
-                ? `Simpan rating ${titleContext} ke cloud?`
-                : "Simpan rating ke akun Yomirra?"
-              : "Bawa koleksi kustom ke semua perangkat"}
+                ? `Biar rating ${titleContext} kamu nggak hilang pas ganti device`
+                : "Biar rating komik kamu nggak hilang pas ganti device"
+              : "Bikin playlist komikmu aman di cloud"}
           </DialogTitle>
 
           <DialogDescription className="text-xs sm:text-sm text-text-muted leading-relaxed">
             {isRating
-              ? "Rating kamu saat ini hanya tersimpan di browser perangkat ini. Masuk dengan Google agar penilaian dan riwayat rating komikmu otomatis tersinkronisasi saat membuka Yomirra di perangkat lain."
-              : "Koleksi kustom mengelompokkan bacaan sesuai seleramu. Masuk dengan Google agar daftar folder komik yang kamu buat tetap rapi dan terbawa saat berganti HP atau laptop."}
+              ? "Rating ini baru nempel di browser ini doang. Masuk pake Google biar selera komik & skor yang kamu kasih otomatis kebawa ke mana pun kamu baca."
+              : "Udah rapihin folder bacaan, jangan sampai hilang pas ganti HP. Masuk pake Google biar daftar koleksi komikmu otomatis sinkron ke semua device."}
           </DialogDescription>
         </DialogHeader>
 
@@ -119,7 +118,7 @@ export function GuestActionGateModal({
             className="w-full h-11 rounded-xl font-bold bg-accent hover:bg-accent-hover text-white flex items-center justify-center gap-2 shadow-xs active:scale-[0.99] transition-transform"
           >
             <GoogleLogo size={18} weight="bold" />
-            <span>Masuk dengan Google</span>
+            <span>{isRating ? "Simpan ke Akun (Google)" : "Amankan Pake Google"}</span>
           </Button>
 
           <Button
@@ -130,7 +129,7 @@ export function GuestActionGateModal({
             disabled={isLoggingIn}
             className="w-full h-10 rounded-xl font-medium text-xs text-text-muted hover:text-text-primary hover:bg-surface-hover/70"
           >
-            {isRating ? "Lanjut di Perangkat Ini (Tamu)" : "Lanjut sebagai Tamu"}
+            {isRating ? "Lanjut di Device Ini Aja" : "Bikin di Device Ini Dulu"}
           </Button>
         </div>
       </DialogContent>

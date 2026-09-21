@@ -97,7 +97,7 @@ export function CommandMenu() {
   return (
     <CommandDialog open={open} onOpenChange={setOpen} shouldFilter={false}>
       <CommandInput
-        placeholder="Cari judul atau navigasi..."
+        placeholder="Cari judul atau langsung ke halaman..."
         value={searchQuery}
         onValueChange={setSearchQuery}
       />
@@ -117,7 +117,7 @@ export function CommandMenu() {
               ))}
             </div>
           ) : (
-            "Tidak ada hasil yang cocok."
+            "Ga ketemu. Coba kata lain?"
           )}
         </CommandEmpty>
 

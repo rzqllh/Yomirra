@@ -87,8 +87,8 @@ export function LibraryResults({
     return (
       <EmptyState
         icon={<Funnel size={40} className="text-text-muted" weight="duotone" />}
-        title="Sumber Dinonaktifkan"
-        description="Kamu telah menonaktifkan sumber ini. Aktifkan kembali di halaman Sumber untuk melihat pustaka."
+        title="Sumber Sedang Nonaktif"
+        description="Sumber ini sedang dimatikan. Yuk, aktifkan kembali di halaman Kelola Sumber untuk melihat koleksimu."
         action={
           <Button onClick={() => router.push("/sources")} variant="outline" className="mt-4 rounded-xl shadow-sm font-bold">
             Kelola Sumber
@@ -129,8 +129,8 @@ export function LibraryResults({
       return (
         <EmptyState
           icon={<Books size={40} className="text-text-muted" weight="duotone" />}
-          title="Library Kosong"
-          description="Belum ada manga yang ditambahkan ke Library."
+          title="Library masih kosong"
+          description="Simpan komik pertama kamu dan mulai dari sini."
         />
       );
     }
@@ -147,8 +147,8 @@ export function LibraryResults({
       return (
         <EmptyState
           icon={<Books size={40} className="text-text-muted" weight="duotone" />}
-          title="Koleksi Kosong"
-          description="Koleksi ini belum memiliki manga."
+          title="Koleksi ini masih kosong"
+          description="Tambahkan komik ke koleksi ini dari halaman detail."
         />
       );
     }
@@ -156,8 +156,8 @@ export function LibraryResults({
     return (
       <EmptyState
         icon={<MagnifyingGlass size={40} className="text-text-muted" weight="duotone" />}
-        title="Manga tidak ditemukan"
-        description="Coba ubah kombinasi filter atau kata kunci pencarian."
+        title="Tidak ada yang cocok"
+        description="Coba kata kunci lain atau kurangi filter."
         action={
           <Button onClick={onResetFilters} variant="outline" className="mt-4 rounded-xl shadow-sm font-bold">
             Reset Filter

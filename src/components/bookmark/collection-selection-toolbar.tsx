@@ -70,7 +70,7 @@ export function CollectionSelectionToolbar({
         isOpen={isDeleteDialogOpen}
         onOpenChange={onOpenDeleteDialogChange}
         title="Hapus Bookmark?"
-        description={`Apakah kamu yakin ingin menghapus ${selectedCount} komik dari bookmark? Tindakan ini tidak dapat dibatalkan.`}
+        description={`${selectedCount} komik akan dihapus dari bookmark. Kamu bisa menambahkannya lagi kapan saja dari halaman Pencarian.`}
         confirmLabel="Hapus"
         cancelLabel="Batal"
         variant="danger"

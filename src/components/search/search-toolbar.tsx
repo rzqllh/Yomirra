@@ -23,7 +23,7 @@ export function SearchToolbar({
         value={localQuery}
         onChange={onQueryChange}
         onSubmitAction={onSearchSubmit}
-        placeholder="Cari komik..."
+        placeholder="Cari dari berbagai sumber sekaligus..."
         containerClassName="flex-1 h-[44px]"
         onClear={onQueryClear}
         autoFocus

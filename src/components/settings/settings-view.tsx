@@ -510,12 +510,17 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
         title="Bersihkan Data Perangkat?"
         description={
           user
-            ? "Ini akan menghapus riwayat dan koleksi di perangkat ini. Datamu di cloud akan tetap aman dan akan dimuat ulang saat sinkronisasi."
-            : "Semua riwayat bacaan dan koleksi akan dihapus permanen karena kamu belum login."
+            ? "Ini akan menghapus riwayat dan koleksi di perangkat ini. Data di cloud tetap aman dan akan dimuat ulang saat sinkronisasi berikutnya."
+            : "Semua riwayat bacaan dan koleksi akan dihapus permanen. Karena kamu belum login, data ini tidak bisa dipulihkan."
         }
         confirmLabel="Bersihkan"
         cancelLabel="Batal"
         variant="danger"
+        requireCheckbox={
+          user
+            ? "Saya mengerti data lokal di perangkat ini akan dihapus"
+            : "Saya mengerti data ini akan hilang permanen dan tidak bisa dipulihkan"
+        }
         onConfirm={confirmClearData}
       />
     </>

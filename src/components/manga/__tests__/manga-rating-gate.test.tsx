@@ -79,11 +79,11 @@ describe("MangaRating Guest Gating", () => {
     fireEvent.click(star8);
 
     // Soft-gate modal should appear with context 8/10
-    expect(screen.getByText(/Simpan rating 8\/10 ke cloud\?/i)).toBeDefined();
-    expect(screen.getByRole("button", { name: /Masuk dengan Google/i })).toBeDefined();
+    expect(screen.getByText(/Biar rating 8\/10 kamu nggak hilang pas ganti device/i)).toBeDefined();
+    expect(screen.getByRole("button", { name: /Simpan ke Akun \(Google\)/i })).toBeDefined();
 
-    // Click "Lanjut di Perangkat Ini (Tamu)"
-    const proceedGuestBtn = screen.getByRole("button", { name: /Lanjut di Perangkat Ini/i });
+    // Click "Lanjut di Device Ini Aja"
+    const proceedGuestBtn = screen.getByRole("button", { name: /Lanjut di Device Ini Aja/i });
     fireEvent.click(proceedGuestBtn);
 
     // Rating should be committed to local store
@@ -110,7 +110,7 @@ describe("MangaRating Guest Gating", () => {
     const star10 = screen.getByText("10");
     fireEvent.click(star10);
 
-    const googleBtn = screen.getByRole("button", { name: /Masuk dengan Google/i });
+    const googleBtn = screen.getByRole("button", { name: /Simpan ke Akun \(Google\)/i });
     fireEvent.click(googleBtn);
 
     expect(mockLoginWithGoogle).toHaveBeenCalledTimes(1);

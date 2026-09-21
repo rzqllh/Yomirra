@@ -22,8 +22,8 @@ export function ContinueReadingList({ items }: ContinueReadingListProps) {
             <BookBookmark size={24} weight="duotone" />
           </div>
           <div>
-            <p className="font-bold text-text-primary md:text-lg">Belum ada riwayat baca</p>
-            <p className="text-sm text-text-muted">Mulai baca komik untuk melanjutkan progresmu di sini.</p>
+            <p className="font-bold text-text-primary md:text-lg">Belum ada yang dilanjut</p>
+            <p className="text-sm text-text-muted">Mulai baca dari Library dan progresmu otomatis tersimpan di sini.</p>
           </div>
         </div>
         <Link

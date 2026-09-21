@@ -8,7 +8,7 @@ export default function Loading() {
       <div className="w-full max-w-7xl mx-auto px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:pt-8 md:px-8">
         <PageHeader
           title="Pencarian"
-          description="Cari judul komik, genre, atau filter dari berbagai sumber."
+          description="Cari dari Shinigami, MangaDex, Asura Scans, dan sumber lainnya sekaligus."
           icon={<MagnifyingGlass size={32} weight="duotone" />}
         />
         <div className="mt-8">

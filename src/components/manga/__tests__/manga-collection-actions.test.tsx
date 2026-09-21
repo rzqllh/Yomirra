@@ -60,11 +60,11 @@ describe("Manga Detail Collection Actions (Slice 2.2)", () => {
       fireEvent.click(btn);
       
       // Soft-gate modal appears
-      expect(screen.getByText("Bawa koleksi kustom ke semua perangkat")).toBeDefined();
-      expect(screen.getByText("Masuk dengan Google")).toBeDefined();
+      expect(screen.getByText("Bikin playlist komikmu aman di cloud")).toBeDefined();
+      expect(screen.getByText("Amankan Pake Google")).toBeDefined();
 
-      // Click "Lanjut sebagai Tamu"
-      const guestBtn = screen.getByRole("button", { name: /Lanjut sebagai Tamu/i });
+      // Click "Bikin di Device Ini Dulu"
+      const guestBtn = screen.getByRole("button", { name: /Bikin di Device Ini Dulu/i });
       fireEvent.click(guestBtn);
 
       // Now collection dialog opens
@@ -79,7 +79,7 @@ describe("Manga Detail Collection Actions (Slice 2.2)", () => {
       fireEvent.click(btn);
 
       // Opens collection dialog immediately
-      expect(screen.queryByText("Bawa koleksi kustom ke semua perangkat")).toBeNull();
+      expect(screen.queryByText("Bikin playlist komikmu aman di cloud")).toBeNull();
       expect(screen.getByText("Belum ada koleksi.")).toBeDefined();
     });
 
@@ -92,7 +92,7 @@ describe("Manga Detail Collection Actions (Slice 2.2)", () => {
       fireEvent.click(screen.getByRole("button", { name: /Koleksi/i }));
       
       // Proceed as guest
-      fireEvent.click(screen.getByRole("button", { name: /Lanjut sebagai Tamu/i }));
+      fireEvent.click(screen.getByRole("button", { name: /Bikin di Device Ini Dulu/i }));
       
       const colBtn = screen.getByText("Favs");
       
@@ -108,7 +108,7 @@ describe("Manga Detail Collection Actions (Slice 2.2)", () => {
     it("can create collection and auto add manga", () => {
       render(<MangaCollectionButton sourceId="srcA" mangaId="m1" />);
       fireEvent.click(screen.getByRole("button", { name: /Koleksi/i }));
-      fireEvent.click(screen.getByRole("button", { name: /Lanjut sebagai Tamu/i }));
+      fireEvent.click(screen.getByRole("button", { name: /Bikin di Device Ini Dulu/i }));
       
       fireEvent.click(screen.getByRole("button", { name: /Buat Koleksi Baru/i }));
       
@@ -143,7 +143,7 @@ describe("Manga Detail Collection Actions (Slice 2.2)", () => {
       );
 
       fireEvent.click(screen.getByRole("button", { name: /Koleksi/i }));
-      fireEvent.click(screen.getByRole("button", { name: /Lanjut sebagai Tamu/i }));
+      fireEvent.click(screen.getByRole("button", { name: /Bikin di Device Ini Dulu/i }));
       fireEvent.click(screen.getByText("Reading List"));
 
       expect(useLibraryStore.getState().isInLibrary("srcA", "m1")).toBe(true);

@@ -219,9 +219,9 @@ export function ReaderShell({
           isDesktopPanelOpen && "md:right-[320px]"
         )}
         style={{
-          height: "var(--safe-top, env(safe-area-inset-top, 44px))",
+          height: "var(--safe-top, env(safe-area-inset-top, 0px))",
           backdropFilter: "blur(12px)",
-          WebkitBackdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(4px)",
           maskImage:
             "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) calc(var(--safe-top, env(safe-area-inset-top, 44px)) - 6px), rgba(0,0,0,0) 100%)",
           WebkitMaskImage:

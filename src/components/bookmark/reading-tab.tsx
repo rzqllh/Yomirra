@@ -55,8 +55,8 @@ export function ReadingTab({
     return (
       <EmptyState
         icon={<Clock size={48} className="text-text-muted" weight="duotone" />}
-        title="Belum ada bacaan aktif"
-        description="Komik yang kamu baca akan muncul di sini."
+        title="Belum ada yang dilanjut"
+        description="Komik yang sedang kamu baca otomatis muncul di sini."
         action={
           <Button asChild variant="accent" className="rounded-xl shadow-sm font-bold mt-4">
             <Link href={getLibraryHref()}>

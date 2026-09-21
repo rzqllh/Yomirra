@@ -37,7 +37,7 @@ export function LibraryPageView() {
         <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] pb-28 md:pt-8 md:px-8 md:py-8">
           <PageHeader
             title="Library"
-            description="Katalog judul dari sumber aktif yang dipilih."
+            description="Semua yang kamu simpan, dari berbagai sumber, dalam satu tempat."
             icon={<Books size={24} weight="duotone" />}
             actions={<HeaderActions />}
           />

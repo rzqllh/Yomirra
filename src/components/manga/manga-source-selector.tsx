@@ -165,7 +165,7 @@ export function MangaSourceSelector({
               </div>
             ) : (
               <p className="text-xs text-text-muted px-1 py-2">
-                Belum ada sumber alternatif yang terhubung untuk komik ini. Simpan ke koleksi untuk menemukan alternatif secara otomatis.
+                Belum ada sumber alternatif yang terhubung. Simpan komik ini ke library untuk menemukan sumber lain secara otomatis.
               </p>
             )}
           </div>

@@ -57,7 +57,7 @@ export function GuestSyncBanner({ className }: GuestSyncBannerProps) {
     setIsLoggingIn(true);
     try {
       await loginWithGoogle();
-      toast.success("Berhasil masuk. Data kamu sedang disinkronkan ke cloud.");
+      toast.success("Akun tersambung! Data kamu otomatis aman di cloud.");
     } catch (err: any) {
       if (err?.code !== "auth/popup-closed-by-user") {
         toast.error("Gagal masuk dengan Google. Silakan coba lagi.");
@@ -70,8 +70,8 @@ export function GuestSyncBanner({ className }: GuestSyncBannerProps) {
   const handleDismiss = () => {
     dismissGuestBanner(totalItemCount);
     const isEscalated = totalItemCount >= 15 && guestBannerDismissCount > 0;
-    const days = isEscalated ? 3 : 7;
-    toast.info(`Pengingat disembunyikan selama ${days} hari.`);
+    const msg = isEscalated ? "Siap, diingatkan lagi dalam 3 hari." : "Oke, diingatkan lagi 7 hari ke depan.";
+    toast.info(msg);
   };
 
   if (!isVisible) return null;
@@ -101,24 +101,24 @@ export function GuestSyncBanner({ className }: GuestSyncBannerProps) {
               <div className="space-y-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-[6px] bg-accent/15 text-accent border border-accent/25">
-                    {isEscalated ? `${totalItemCount} Judul Tersimpan` : "Penyimpanan Lokal"}
+                    {isEscalated ? `Perlu Backup • ${totalItemCount} Judul` : "Mode Tamu • Belum Sinkron"}
                   </span>
                   <span className="text-xs text-text-muted flex items-center gap-1">
                     <HardDrives size={12} weight="bold" />
-                    Hanya di Browser Ini
+                    Hanya di Device Ini
                   </span>
                 </div>
 
                 <h3 className="text-sm sm:text-base font-bold text-text-primary tracking-tight">
                   {isEscalated
-                    ? "Koleksimu makin banyak di browser ini"
-                    : `${totalItemCount} komik tersimpan di browser ini`}
+                    ? `Udah ${totalItemCount} komik nih, sayang banget kalau hilang`
+                    : `${totalItemCount} komik kamu masih 'nongkrong' di browser ini`}
                 </h3>
 
                 <p className="text-xs text-text-secondary leading-relaxed max-w-2xl">
                   {isEscalated
-                    ? "Semua riwayat bacaan, status, dan koleksimu saat ini belum terhubung ke akun. Data ini cuma tersimpan di browser/HP ini — kalau ganti device, nggak ikut kebawa. Hubungkan akun Google untuk backup otomatis."
-                    : "Data komik di rak bukumu saat ini cuma tersimpan di browser perangkat ini — kalau ganti device atau bersihkan browser, nggak ikut kebawa. Masuk dengan Google untuk pencadangan otomatis."}
+                    ? "Daftar bacaan & status bacamu udah banyak di browser ini. Kalau ganti HP atau bersihin data, bakal pegel nyarinya satu-satu. Backup ke Google yuk, sekali klik langsung aman."
+                    : "Rak bukumu baru kesimpan di HP ini doang. Kalau kamu ganti device atau clear data browser, komik-komik ini nggak ikut kebawa. Tautkan Google biar aman."}
                 </p>
               </div>
             </div>
@@ -132,7 +132,7 @@ export function GuestSyncBanner({ className }: GuestSyncBannerProps) {
                 className="h-9 px-3 text-xs font-semibold rounded-xl text-text-muted hover:text-text-primary border-border-subtle hover:bg-surface-hover"
                 title={isEscalated ? "Snooze 3 hari" : "Snooze 7 hari"}
               >
-                Nanti saja
+                {isEscalated ? "Snooze 3 Hari" : "Santai Dulu"}
               </Button>
 
               <Button
@@ -143,7 +143,7 @@ export function GuestSyncBanner({ className }: GuestSyncBannerProps) {
                 className="h-9 px-3.5 text-xs font-bold rounded-xl bg-accent hover:bg-accent-hover text-white flex items-center gap-1.5 shadow-xs active:scale-[0.98]"
               >
                 <GoogleLogo size={14} weight="bold" />
-                <span>Cadangkan ke Akun</span>
+                <span>{isEscalated ? "Backup Sekarang" : "Amankan ke Cloud"}</span>
               </Button>
 
               <button
