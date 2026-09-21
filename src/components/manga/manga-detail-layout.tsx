@@ -48,7 +48,7 @@ export function MangaDetailLayout({
   className,
 }: MangaDetailLayoutProps) {
   const { scrollY } = useScroll();
-  const shouldReduceMotion = typeof useReducedMotion === "function" ? useReducedMotion() : false;
+  const shouldReduceMotion = useReducedMotion();
   // Parallax translation: as page scrolls down 0->500px, background glides smoothly down 0->150px
   const rawY = useTransform(scrollY, [-200, 0, 500], [-120, 0, 150], { clamp: true });
   const backdropY = shouldReduceMotion ? 0 : rawY;
