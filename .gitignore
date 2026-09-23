@@ -82,6 +82,10 @@ test-results*.json
 /agent*.md
 /bugs/
 /readme-secret.md
+/future_plan*.md
+/scratch/
+/scratch
+.idea/
 
 # Internal planning, audit, and execution artifacts
 /AUDIT_REPORT.md
