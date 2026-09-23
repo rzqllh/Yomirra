@@ -119,8 +119,8 @@
   --z-toast: 80;
 
   /* Safe Area & Layout Tokens */
-  --safe-top: env(safe-area-inset-top);
-  --safe-bottom: env(safe-area-inset-bottom);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 
   --mobile-header-height: 56px;
   --bottom-nav-content-height: 64px;
@@ -280,6 +280,15 @@
   * {
     border-color: var(--color-border-subtle);
     -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Prevent iOS Safari auto-zoom on input focus */
+  @media screen and (max-width: 768px) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
   }
 
   ::selection {

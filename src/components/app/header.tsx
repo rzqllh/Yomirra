@@ -83,12 +83,7 @@ export function PageHeader({
     <>
       <header
         className={cn(
-          "md:hidden fixed top-0 left-0 right-0 z-[var(--z-sticky)] flex w-full flex-col justify-end px-4 pt-[calc(var(--safe-top,0px)+8px)] pb-2 transition-all duration-300 ease-out pointer-events-none",
-          isTransparent
-            ? "bg-transparent border-transparent shadow-none"
-            : isGlass
-            ? "liquid-glass border-b border-white/10 shadow-xs"
-            : "bg-surface-base border-b border-border-subtle",
+          "md:hidden fixed top-0 left-0 right-0 z-[var(--z-sticky)] flex w-full flex-col justify-end px-4 pt-[calc(var(--safe-top,0px)+8px)] pb-2 transition-all duration-300 ease-out pointer-events-none bg-transparent",
           className
         )}
       >

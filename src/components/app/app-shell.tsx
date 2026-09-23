@@ -11,6 +11,7 @@ import { useUpdateChecker } from "@/shared/hooks/use-update-checker"
 import { TopNav } from "./top-nav"
 import { CommandMenu } from "./command-menu"
 import { DirectionalTransition } from "@/components/ui/directional-transition"
+import { StatusBarBlur } from "@/components/ui/status-bar-blur"
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -28,18 +29,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       document.body.classList.remove("reader-active")
     }
 
-    // Prevent pinch-zoom globally except in reader (for iOS PWA)
+    // Prevent browser viewport pinch-zoom globally (keeps app crisp 1:1, reader handles local pinch per-page)
     const handleTouchMove = (e: TouchEvent) => {
-      if (!isReader && e.touches.length > 1) {
-        e.preventDefault();
+      if (e.touches.length > 1) {
+        // Prevent multi-touch viewport scaling across the whole app,
+        // unless multi-touch is occurring directly on an individual reader page container
+        const isPinchedOnImage = (e.target as HTMLElement | null)?.closest?.(".reader-page-container");
+        if (!isPinchedOnImage) {
+          e.preventDefault();
+        }
       }
     };
 
-    // Prevent double tap to zoom via gesturestart (iOS specific)
+    // Prevent iOS Safari viewport zoom via gesturestart globally
     const handleGestureStart = (e: Event) => {
-      if (!isReader) {
-        e.preventDefault();
-      }
+      e.preventDefault();
     };
 
     document.addEventListener("touchmove", handleTouchMove, { passive: false });
@@ -61,6 +65,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-dvh bg-background text-text-primary w-full max-w-full">
+      {!isReader && <StatusBarBlur />}
       <NetworkStatus />
       
       <div className="flex-1 flex flex-col min-h-dvh transition-all min-w-0 duration-300 ease-in-out w-full">

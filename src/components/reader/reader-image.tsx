@@ -5,7 +5,7 @@ import Image from "next/image"
 import { cn } from "@/shared/utils/cn"
 
 import { PageImageError } from "./page-image-error"
-import { motion, useMotionValue } from "motion/react"
+import { motion, useMotionValue, animate } from "motion/react"
 import { useGesture } from "@use-gesture/react"
 
 interface ReaderImageProps {
@@ -63,31 +63,67 @@ export const ReaderImage = React.memo(function ReaderImage({
         ? `${activeBaseUrl}${activeBaseUrl.includes('?') ? '&' : '?'}retry=${retryCount}` 
         : activeBaseUrl);
 
-  // Zoom motion values (No spring physics loop)
+  // Zoom motion values with spring physics
   const scale = useMotionValue(1)
   const x = useMotionValue(0)
   const y = useMotionValue(0)
+  const [isZoomed, setIsZoomed] = React.useState(false)
+
+  const resetZoom = React.useCallback((smooth = true) => {
+    if (smooth) {
+      animate(scale, 1, { type: "spring", stiffness: 350, damping: 30 })
+      animate(x, 0, { type: "spring", stiffness: 350, damping: 30 })
+      animate(y, 0, { type: "spring", stiffness: 350, damping: 30 })
+    } else {
+      scale.set(1)
+      x.set(0)
+      y.set(0)
+    }
+    setIsZoomed(false)
+    document.documentElement.classList.remove('is-pinching')
+  }, [scale, x, y])
 
   useGesture({
     onPinch: ({ offset: [d], event }) => {
       event.preventDefault()
-      const newScale = Math.max(1, Math.min(d, 4))
+      const newScale = Math.max(0.85, Math.min(d, 4.5))
       scale.set(newScale)
-      if (newScale > 1) {
-        document.documentElement.classList.add('is-pinching');
+      const zoomed = newScale > 1.05
+      setIsZoomed(zoomed)
+      if (zoomed) {
+        document.documentElement.classList.add('is-pinching')
       } else {
-        document.documentElement.classList.remove('is-pinching');
+        document.documentElement.classList.remove('is-pinching')
       }
-      if (newScale === 1) {
-        x.set(0)
-        y.set(0)
+    },
+    onPinchEnd: ({ offset: [d] }) => {
+      if (d <= 1.08) {
+        resetZoom(true)
+      } else {
+        const targetScale = Math.min(Math.max(d, 1), 4)
+        animate(scale, targetScale, { type: "spring", stiffness: 400, damping: 32 })
+        setIsZoomed(targetScale > 1.05)
       }
     },
     onDrag: ({ offset: [ox, oy], pinching, event }) => {
-      if (pinching || scale.get() === 1) return
-      event.preventDefault() // prevent scrolling while dragged
-      x.set(ox)
-      y.set(oy)
+      if (pinching || scale.get() <= 1.05) return
+      event.preventDefault()
+
+      const container = containerRef.current
+      const currentScale = scale.get()
+      const maxDragX = container ? (container.clientWidth * (currentScale - 1)) / 2 : 250
+      const maxDragY = container ? (container.clientHeight * (currentScale - 1)) / 2 : 350
+
+      const boundedX = Math.max(-maxDragX, Math.min(maxDragX, ox))
+      const boundedY = Math.max(-maxDragY, Math.min(maxDragY, oy))
+
+      x.set(boundedX)
+      y.set(boundedY)
+    },
+    onDragEnd: () => {
+      if (scale.get() <= 1.05) {
+        resetZoom(true)
+      }
     }
   }, {
     target: containerRef,
@@ -97,6 +133,26 @@ export const ReaderImage = React.memo(function ReaderImage({
       from: () => [x.get(), y.get()]
     }
   })
+
+  // Double-tap to zoom toggle (1x <-> 2.2x)
+  const lastTapRef = React.useRef<number>(0)
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (!e.isPrimary) return
+    const now = Date.now()
+    const DOUBLE_TAP_DELAY = 300
+    if (now - lastTapRef.current < DOUBLE_TAP_DELAY) {
+      if (scale.get() > 1.1) {
+        resetZoom(true)
+      } else {
+        animate(scale, 2.2, { type: "spring", stiffness: 350, damping: 28 })
+        setIsZoomed(true)
+        document.documentElement.classList.add('is-pinching')
+      }
+      lastTapRef.current = 0
+    } else {
+      lastTapRef.current = now
+    }
+  }
 
   const shouldLoad = isAllowedToLoad;
 
@@ -157,8 +213,10 @@ export const ReaderImage = React.memo(function ReaderImage({
     <div 
       ref={containerRef}
       data-index={dataIndex}
+      onPointerDown={handlePointerDown}
       className={cn(
-        "reader-page-container w-full flex justify-center overflow-hidden touch-pan-y relative",
+        "reader-page-container w-full flex justify-center touch-pan-y relative select-none",
+        isZoomed ? "z-30 overflow-visible" : "z-0 overflow-hidden",
         (!shouldLoad || hasError) && "bg-surface-muted/30"
       )}
       data-page-index={pageIndex}
@@ -172,7 +230,7 @@ export const ReaderImage = React.memo(function ReaderImage({
       {hasError ? (
         <PageImageError index={pageIndex} onRetry={handleRetry} onReport={onReport} />
       ) : shouldLoad ? (
-        <motion.div style={{ x, y, scale }} className="w-full h-full origin-center flex justify-center">
+        <motion.div style={{ x, y, scale }} className="w-full h-full origin-center flex justify-center transform-gpu will-change-transform">
           <Image 
             src={currentUrl}
             alt={`Page ${pageIndex}`}
@@ -183,7 +241,7 @@ export const ReaderImage = React.memo(function ReaderImage({
             )}
             width={800}
             height={1200}
-            sizes={imageFit === 'width' ? "100vw" : "(max-width: 500px) 100vw, 500px"}
+            sizes={imageFit === 'width' ? "100vw" : "(max-width: 768px) 100vw, 1200px"}
             priority={priority}
             fetchPriority={priority ? "high" : "auto"}
             quality={dataSaver ? 60 : 85}
