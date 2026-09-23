@@ -23,7 +23,7 @@ const STEPS = [
   {
     eyebrow: "PENCARIAN LINTAS SUMBER",
     title: "Satu Judul,\nSemua Pilihan Sekaligus.",
-    desc: "Bandingin mana yang rilis duluan, mana yang gambarnya lebih tajam — langsung dari satu pencarian.",
+    desc: "Bandingin mana yang rilis duluan, mana yang gambarnya lebih tajam, langsung dari satu pencarian.",
   },
   {
     eyebrow: "READER YANG NGERTI KAMU",

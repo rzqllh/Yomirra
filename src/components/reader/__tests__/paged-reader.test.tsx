@@ -48,9 +48,18 @@ describe("PagedReader Component & Integration", () => {
     global.IntersectionObserver = MockIntersectionObserver as unknown as typeof IntersectionObserver;
   });
 
+  const testQueryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+    },
+  });
+
+  const renderWithClient = (ui: React.ReactElement) =>
+    render(<QueryClientProvider client={testQueryClient}>{ui}</QueryClientProvider>);
+
   describe("Rendering & Page Counter", () => {
     it("should render page 1 initially and display page counter pill 1 / 3", () => {
-      render(
+      renderWithClient(
         <PagedReader
           sourceId="src1"
           mangaId="manga1"
@@ -65,7 +74,7 @@ describe("PagedReader Component & Integration", () => {
 
   describe("LTR Navigation", () => {
     it("should advance on next page button click and ArrowRight key", async () => {
-      render(
+      renderWithClient(
         <PagedReader
           sourceId="src1"
           mangaId="manga1"
@@ -92,7 +101,7 @@ describe("PagedReader Component & Integration", () => {
     });
 
     it("should return on previous page button click and ArrowLeft key", async () => {
-      render(
+      renderWithClient(
         <PagedReader
           sourceId="src1"
           mangaId="manga1"
@@ -126,7 +135,7 @@ describe("PagedReader Component & Integration", () => {
         },
       });
 
-      render(
+      renderWithClient(
         <PagedReader
           sourceId="src1"
           mangaId="manga1"
@@ -155,7 +164,7 @@ describe("PagedReader Component & Integration", () => {
 
   describe("Boundaries Clamping", () => {
     it("should not navigate before page 1 or past final page when no adjacent chapters exist", async () => {
-      render(
+      renderWithClient(
         <PagedReader
           sourceId="src1"
           mangaId="manga1"

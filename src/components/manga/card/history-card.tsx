@@ -40,12 +40,12 @@ export function HistoryCard({
   return (
     <motion.article 
       layout="position"
-      className="group relative flex items-center gap-4 rounded-xl bg-surface-glass backdrop-blur-sm p-3 border-border-subtle/50 transition-all duration-300 hover:bg-surface-overlay/80 hover:-sm overflow-hidden"
+      className="group relative flex items-center gap-4 rounded-xl bg-surface-raised p-3 border border-border-subtle hover:border-border-default hover:bg-surface-hover/70 transition-all duration-200 shadow-xs overflow-hidden"
     >
       <Link 
         href={targetHref} 
         prefetch={false} 
-        className="relative h-[84px] w-[60px] shrink-0 overflow-hidden rounded-sm bg-surface-glass backdrop-blur-md shadow-sm z-10 vt-hover"
+        className="relative h-[84px] w-[60px] shrink-0 overflow-hidden rounded-sm bg-surface-base shadow-sm z-10 vt-hover"
         style={!chapterId ? vtStyle : undefined}
         aria-label={`Cover of ${manga.title}`}
       >
@@ -85,7 +85,7 @@ export function HistoryCard({
       </div>
       
       {chapterId && (
-        <div className="bg-accent/10 dark:bg-accent/20 backdrop-blur-xl border border-accent/20 rounded-xl p-1 shadow-sm shrink-0 ml-2 z-20 relative">
+        <div className="bg-surface-base border border-border-subtle rounded-xl p-1 shadow-xs shrink-0 ml-2 z-20 relative">
           <Link 
             href={targetHref} 
             className="flex items-center justify-center rounded-lg h-8 w-8 text-accent hover:bg-accent/10 transition-colors"

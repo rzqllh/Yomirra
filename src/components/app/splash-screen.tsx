@@ -99,7 +99,7 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           className="mb-6 relative group"
         >
-          <div className="absolute -inset-2.5 rounded-[32px] bg-gradient-to-tr from-indigo-600/40 via-accent/35 to-blue-500/20 blur-xl opacity-80" />
+          <div className="absolute -inset-2.5 rounded-[32px] bg-accent/20 blur-xl opacity-80" />
 
           <div className="relative size-24 sm:size-28 rounded-[24px] sm:rounded-[28px] overflow-hidden shadow-[0_20px_50px_rgba(15,10,60,0.8),0_0_30px_rgba(99,102,241,0.35)] border border-white/20">
             <img
