@@ -6,21 +6,37 @@ const globalForRedis = globalThis as unknown as {
   redis: Redis | undefined;
 };
 
+let hasLoggedConnError = false;
+
 const createRedisClient = () => {
   const client = new Redis(env.REDIS_URL, {
-    maxRetriesPerRequest: 3,
+    lazyConnect: true,
+    maxRetriesPerRequest: 1,
     enableOfflineQueue: false,
+    connectTimeout: 2000,
     retryStrategy(times) {
-      const delay = Math.min(times * 50, 2000);
-      return delay;
+      if (times > 2) {
+        // Stop retrying quickly in environments without a local Redis server
+        return null;
+      }
+      return 200;
     },
   });
 
   client.on("error", (error) => {
-    logger.error("Redis connection error", { error });
+    // Only log the first connection refusal to avoid flooding test logs and serverless console
+    if (!hasLoggedConnError) {
+      hasLoggedConnError = true;
+      if (env.NODE_ENV === "development" || env.NODE_ENV === "test") {
+        logger.debug("Redis unavailable, graceful in-memory fallback/bypass active", { error: error.message });
+      } else {
+        logger.error("Redis connection error", { error });
+      }
+    }
   });
 
   client.on("connect", () => {
+    hasLoggedConnError = false;
     logger.info("Connected to Redis");
   });
 

@@ -18,6 +18,7 @@ interface ReaderImageProps {
   onError: (index: number) => void
   imageFit?: 'width' | 'contained'
   onReport?: (pageIndex: number) => void
+  onSwitchSource?: () => void;
   dataIndex?: number;
   totalPages?: number;
   priority?: boolean;
@@ -42,6 +43,7 @@ export const ReaderImage = React.memo(function ReaderImage({
   onPermanentFailure,
   imageFit = 'width',
   onReport,
+  onSwitchSource,
   dataIndex,
   totalPages
 }: ReaderImageProps) {
@@ -51,6 +53,7 @@ export const ReaderImage = React.memo(function ReaderImage({
   const containerRef = React.useRef<HTMLDivElement>(null)
   
   const [useFallback, setUseFallback] = React.useState(false)
+  const [bypassOptimizer, setBypassOptimizer] = React.useState(false)
   const [refreshedUrl, setRefreshedUrl] = React.useState<string | null>(null)
   const [hasAttemptedRefresh, setHasAttemptedRefresh] = React.useState(false)
   const [hasAttemptedProxy, setHasAttemptedProxy] = React.useState(false)
@@ -163,6 +166,13 @@ export const ReaderImage = React.memo(function ReaderImage({
       return;
     }
 
+    if (!bypassOptimizer && dataSaver && !currentUrl.startsWith('blob:') && !currentUrl.startsWith('data:')) {
+      // If Next.js image optimizer fails (e.g. unwhitelisted remote CDN on dataSaver 400),
+      // immediately bypass optimizer to let the native <img> load the remote image directly.
+      setBypassOptimizer(true);
+      return;
+    }
+
     if (retryCount < 3) {
       const baseDelay = [1000, 2500, 5000][retryCount]
       const jitter = Math.random() * 500
@@ -200,6 +210,7 @@ export const ReaderImage = React.memo(function ReaderImage({
 
   const handleRetry = () => {
     setHasError(false)
+    setBypassOptimizer(false)
     setRetryCount(0)
     setUseFallback(false)
     setHasAttemptedRefresh(false)
@@ -228,7 +239,7 @@ export const ReaderImage = React.memo(function ReaderImage({
       }}
     >
       {hasError ? (
-        <PageImageError index={pageIndex} onRetry={handleRetry} onReport={onReport} />
+        <PageImageError index={pageIndex} onRetry={handleRetry} onReport={onReport} onSwitchSource={onSwitchSource} />
       ) : shouldLoad ? (
         <motion.div style={{ x, y, scale }} className="w-full h-full origin-center flex justify-center transform-gpu will-change-transform">
           <Image 
@@ -245,7 +256,7 @@ export const ReaderImage = React.memo(function ReaderImage({
             priority={priority}
             fetchPriority={priority ? "high" : "auto"}
             quality={dataSaver ? 60 : 85}
-            unoptimized={!dataSaver || currentUrl.startsWith('blob:') || currentUrl.startsWith('data:')}
+            unoptimized={!dataSaver || bypassOptimizer || currentUrl.startsWith('blob:') || currentUrl.startsWith('data:')}
             loading="eager"
             decoding="async"
             onLoad={(e) => {

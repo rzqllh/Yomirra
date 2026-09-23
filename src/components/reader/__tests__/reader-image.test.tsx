@@ -5,9 +5,15 @@ import { ReaderImage } from "../reader-image";
 
 // Mock next/image to manually trigger error and load
 vi.mock("next/image", () => ({
-  default: (props: any) => {
+  default: ({ unoptimized, priority, ...props }: any) => {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img {...props} />;
+    return (
+      <img
+        {...props}
+        data-unoptimized={unoptimized ? "true" : "false"}
+        data-priority={priority ? "true" : "false"}
+      />
+    );
   },
 }));
 
@@ -138,5 +144,28 @@ describe("ReaderImage - Failure Recovery", () => {
     // Error state cleared, image component rendered again
     expect(screen.queryByText(/Gambar 0 Rusak/i)).toBeNull();
     expect(screen.getByRole("img")).toBeTruthy();
+  });
+
+  it("should bypass image optimizer on error when dataSaver is enabled to prevent remote whitelist crash", async () => {
+    const { container } = render(
+      <ReaderImage
+        {...defaultProps}
+        pageUrl="https://unwhitelisted-cdn.com/chapter-1/page-1.jpg"
+        dataSaver={true}
+      />
+    );
+
+    const initialImg = container.querySelector("img");
+    expect(initialImg?.getAttribute("data-unoptimized")).toBe("false");
+
+    // Optimizer throws error (e.g. 400 Bad Request hostname not configured)
+    await act(async () => {
+      fireEvent.error(initialImg!);
+    });
+
+    // Should immediately re-render with unoptimized=true
+    const bypassedImg = container.querySelector("img");
+    expect(bypassedImg?.getAttribute("data-unoptimized")).toBe("true");
+    expect(screen.queryByText(/Gambar 0 Rusak/i)).toBeNull();
   });
 });

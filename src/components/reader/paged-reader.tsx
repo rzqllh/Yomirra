@@ -2,6 +2,8 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/shared/api-client";
 import { useReaderStore } from "@/shared/store/reader-store";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useHistoryStore } from "@/shared/store/history-store";
@@ -147,6 +149,19 @@ export function PagedReader({
 
   useVisibilityFlush(flushProgress);
 
+  const queryClient = useQueryClient();
+
+  // Predictive preload: prefetch next chapter pages when user reaches last 2 pages
+  React.useEffect(() => {
+    if (nextChapterId && totalPages > 0 && currentPageIndex >= totalPages - 2 && typeof navigator !== "undefined" && navigator.onLine) {
+      queryClient.prefetchQuery({
+        queryKey: ["pages", sourceId, nextChapterId],
+        queryFn: () => apiClient.getPages(sourceId, mangaId, nextChapterId),
+        staleTime: 1000 * 60 * 5,
+      });
+    }
+  }, [nextChapterId, totalPages, currentPageIndex, queryClient, sourceId, mangaId]);
+
   const goToNextPage = React.useCallback(() => {
     if (currentPageIndex < totalPages - 1) {
       setCurrentPageIndex(prev => prev + 1);
@@ -215,7 +230,21 @@ export function PagedReader({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isRtl, goToNextPage, goToPrevPage]);
 
-  // Touch Swipe Handler
+  // Touch Swipe Handler with iOS Edge-Swipe Isolation
+  const [canDrag, setCanDrag] = React.useState(true);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches && e.touches.length > 0) {
+      const touchX = e.touches[0].clientX;
+      const EDGE_THRESHOLD = 24;
+      if (typeof window !== "undefined" && (touchX < EDGE_THRESHOLD || touchX > window.innerWidth - EDGE_THRESHOLD)) {
+        setCanDrag(false);
+        return;
+      }
+    }
+    setCanDrag(true);
+  };
+
   const handleDragEnd = (
     _event: MouseEvent | TouchEvent | PointerEvent,
     info: PanInfo
@@ -313,7 +342,8 @@ export function PagedReader({
       {currentPage ? (
         <motion.div
           key={currentPageIndex}
-          drag="x"
+          drag={canDrag ? "x" : false}
+          onTouchStart={handleTouchStart}
           dragConstraints={{ left: 0, right: 0 }}
           dragElastic={0.15}
           onDragEnd={handleDragEnd}
@@ -329,6 +359,7 @@ export function PagedReader({
             dataSaver={dataSaver}
             isAllowedToLoad={true}
             onReport={(idx) => handleReport(idx)}
+            onSwitchSource={onOpenAlternateSource}
             onLoadComplete={() => handleImageLoad(currentPageIndex)}
             onError={() => {}}
             onPermanentFailure={handlePermanentFailure}

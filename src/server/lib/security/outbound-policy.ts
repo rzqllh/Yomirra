@@ -115,6 +115,17 @@ export async function safeFetch(url: string, options: SafeFetchOptions = {}): Pr
       throw new Error(`SECURITY_REJECTED: URL credentials are not allowed`);
     }
 
+    // If hostname is already an IP literal (or normalized numeric IP e.g. 2130706433 -> 127.0.0.1),
+    // validate it immediately because http.Agent lookup is skipped by net.connect for IP literals.
+    if (isIP(parsedUrl.hostname) && !isSafeIp(parsedUrl.hostname)) {
+      throw new Error(`SECURITY_REJECTED: Unsafe IP address ${parsedUrl.hostname}`);
+    }
+
+    // Block any non-standard numeric IP representations that were not normalized
+    if (/^(\d+|0x[0-9a-fA-F]+)(\.(\d+|0x[0-9a-fA-F]+))*$/.test(parsedUrl.hostname) && !isIP(parsedUrl.hostname)) {
+      throw new Error(`SECURITY_REJECTED: Non-standard numeric IP representation not allowed`);
+    }
+
     const isHttps = parsedUrl.protocol === "https:";
     const agent = isHttps ? safeHttpsAgent : safeHttpAgent;
     const requestFn = isHttps ? https.request : http.request;

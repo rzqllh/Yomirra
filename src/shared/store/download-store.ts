@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
+import { idbStorage } from "../lib/idb-storage";
 import { getDownloadChapterId } from "../utils/download-helpers";
 
 export type DownloadStatus = 'queued' | 'downloading' | 'paused' | 'downloaded' | 'failed';
@@ -231,6 +232,7 @@ export const useDownloadStore = create<DownloadState>()(
     }),
     {
       name: "yomirra-downloads",
+      storage: createJSONStorage(() => idbStorage),
       partialize: (state) => ({ downloads: state.downloads }), // persist only downloads mapping
       onRehydrateStorage: () => (state) => {
         if (state) {

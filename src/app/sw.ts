@@ -36,8 +36,8 @@ const serwist = new Serwist({
         cacheName: 'yomirra-manga-images',
         plugins: [
           new ExpirationPlugin({
-            maxEntries: 1000, // Roughly 20-30 chapters worth of images
-            maxAgeSeconds: 30 * 24 * 60 * 60, // 30 Days
+            maxEntries: 400, // Roughly 10-15 chapters worth of images (balanced for mobile storage)
+            maxAgeSeconds: 14 * 24 * 60 * 60, // 14 Days
             purgeOnQuotaError: true,
           }),
         ],

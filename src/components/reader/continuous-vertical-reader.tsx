@@ -346,6 +346,7 @@ export function ContinuousVerticalReader({
                 onError={handleImageError}
                 onPermanentFailure={handlePermanentFailure}
                 onReport={(idx) => handleReport(idx)}
+                onSwitchSource={onOpenAlternateSource}
                 onRefreshUrl={async () => {
                   if (onRefreshChapter) {
                     const fresh = await onRefreshChapter();

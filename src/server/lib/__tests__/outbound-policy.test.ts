@@ -40,5 +40,13 @@ describe('Outbound Policy Security Regression Suite', () => {
     it('rejects URLs with credentials', async () => {
       await expect(safeFetch('https://user:pass@example.com/')).rejects.toThrowError('SECURITY_REJECTED: URL credentials are not allowed');
     });
+
+    it('rejects direct private IP literals and numeric representations (dword, hex, octal)', async () => {
+      await expect(safeFetch('http://127.0.0.1/')).rejects.toThrowError('SECURITY_REJECTED: Unsafe IP address 127.0.0.1');
+      await expect(safeFetch('http://169.254.169.254/')).rejects.toThrowError('SECURITY_REJECTED: Unsafe IP address 169.254.169.254');
+      await expect(safeFetch('http://2130706433/')).rejects.toThrowError('SECURITY_REJECTED: Unsafe IP address 127.0.0.1');
+      await expect(safeFetch('http://0x7f000001/')).rejects.toThrowError('SECURITY_REJECTED: Unsafe IP address 127.0.0.1');
+      await expect(safeFetch('http://0177.0.0.1/')).rejects.toThrowError('SECURITY_REJECTED: Unsafe IP address 127.0.0.1');
+    });
   });
 });

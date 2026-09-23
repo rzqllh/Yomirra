@@ -30,6 +30,20 @@ export async function GET(
       CACHE_TTL.CHAPTERS
     );
 
+    if (Array.isArray(data) && data.length === 0) {
+      import("@/shared/logger").then(({ logger }) => {
+        logger.warn(`Source ${sourceId} returned 0 chapters for manga ${mangaId}`);
+      });
+      import("@/server/lib/ops/telegram-notifier").then(({ sendTelegramMessage }) => {
+        import("@/server/lib/ops/severity").then(({ AlertSeverity }) => {
+          sendTelegramMessage(
+            `⚠️ *Scraper Degraded Warning*\nSource: \`${sourceId}\`\nManga: \`${mangaId}\`\nReturned 0 chapters (possible broken selector or CF challenge).`,
+            { severity: AlertSeverity.WARNING, sourceId, event: "PARSER_BROKEN" }
+          ).catch(() => {});
+        });
+      });
+    }
+
     return NextResponse.json({ data });
   } catch (error: unknown) {
     return NextResponse.json(
