@@ -137,21 +137,20 @@ export function PageHeader({
       {mode !== "detail" && (
         <div
           className={cn(
-            "hidden md:block relative overflow-hidden rounded-3xl bg-surface-raised/40 border border-border-default/50 p-6 md:p-8 mb-6 md:mb-8 backdrop-blur-md shadow-xs",
+            "hidden md:block relative border-b border-border-subtle px-0 pt-1 pb-6 mb-7",
             className
           )}
         >
-          <div className="absolute -right-20 -top-20 w-64 h-64 bg-accent/5 rounded-full blur-3xl pointer-events-none" />
-          <div className="relative flex items-center justify-between gap-4">
+          <div className="relative flex items-center justify-between gap-6">
             <div className="flex items-center gap-4 flex-1 min-w-0">
               {icon && (
-                <div className="shrink-0 p-3.5 bg-gradient-to-br from-accent/15 via-accent/10 to-transparent rounded-2xl shadow-xs border border-accent/25 text-accent">
+                <div className="shrink-0 p-3 bg-accent/10 rounded-xl border border-accent/20 text-accent">
                   {icon}
                 </div>
               )}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3">
-                  <h1 className="text-2xl md:text-3xl font-black tracking-tight text-text-primary truncate">
+                  <h1 className="text-2xl lg:text-[30px] font-black tracking-tight text-text-primary truncate">
                     {title}
                   </h1>
                   {meta && (
@@ -174,5 +173,4 @@ export function PageHeader({
     </>
   )
 }
-
 

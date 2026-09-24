@@ -10,7 +10,6 @@ import Logo from "@/logo/icon.png";
 import { IconButton } from "@/components/ui/icon-button";
 import { useAuth } from "@/shared/hooks/use-auth";
 import { ThemeToggle } from "./theme-toggle";
-import { MAIN_NAV_ITEMS } from "@/shared/config/nav";
 import { cn } from "@/shared/utils/cn";
 import { useSettingsStore } from "@/shared/store/settings-store";
 
@@ -52,32 +51,6 @@ export function TopNav() {
             Yomirra
           </span>
         </Link>
-
-        {/* CENTER: Navigation Links (Absolute Centered) */}
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden lg:flex items-center gap-8 h-full">
-          {MAIN_NAV_ITEMS.map((item) => {
-  const isActive = pathname === item.href || (item.href !== "/" && pathname?.startsWith(item.href));
-  return (
-    <Link
-      key={item.href}
-      href={item.href}
-      className={cn(
-        "relative flex items-center h-full text-sm transition-colors outline-none",
-        isActive ? "text-text-primary font-semibold" : "text-text-secondary hover:text-text-primary"
-      )}
-    >
-      {item.label}
-      {isActive && (
-        <motion.div
-          layoutId="nav-underline"
-          className="absolute bottom-4 left-0 right-0 h-[2px] rounded-full bg-accent "
-          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-        />
-      )}
-    </Link>
-  );
-})}
-        </div>
 
         {/* RIGHT: Search + Theme + Profile */}
         <div className="flex items-center gap-3 sm:gap-4 lg:gap-6 h-full z-10">

@@ -51,8 +51,8 @@ export function BookmarkPageView() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen pb-[calc(var(--bottom-nav-height,80px)+24px)]">
-      <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:px-8 md:pt-8">
+    <div className="flex flex-col min-h-screen w-full max-w-7xl mx-auto pb-[calc(var(--bottom-nav-height,80px)+24px)] md:pb-10 md:px-8">
+      <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:px-0 md:pt-8">
         <PageHeader
           title="Rak Buku"
           description="Bacaan, koleksi, & pembaruan komik favoritmu"
@@ -62,7 +62,7 @@ export function BookmarkPageView() {
       </div>
 
       {/* Notion-Style Jadwal Rilis Mingguan Shortcut Banner */}
-      <div className="px-4 pb-3 w-full">
+      <div className="px-4 pb-3 w-full md:px-0 md:max-w-2xl">
         <Link
           href="/updates"
           className="flex items-center justify-between p-3.5 rounded-2xl bg-surface-raised border border-border-subtle hover:border-accent/40 hover:bg-surface-hover transition-all group shadow-xs active:scale-[0.99]"
@@ -94,7 +94,7 @@ export function BookmarkPageView() {
       <div
         role="tablist"
         aria-label="Rak Buku"
-        className="px-4 pt-1 pb-4 w-full"
+        className="px-4 pt-1 pb-4 w-full md:px-0 md:max-w-xl"
       >
         <SegmentedControl
           options={[
@@ -114,7 +114,7 @@ export function BookmarkPageView() {
         />
       </div>
 
-      <div className="px-4 mt-1 outline-none">
+      <div className="px-4 mt-1 outline-none md:px-0">
         {activeTab === "reading" && (
           <ReadingTab
             groupedHistory={reading.groupedHistory}

@@ -56,15 +56,17 @@ export default function AccountPage() {
   };
 
   return (
-    <div className="min-h-screen bg-surface-base pb-28">
-      <PageHeader
-        title="Akun & Sinkronisasi"
-        showBack={true}
-        backHref="/settings"
-        description="Kelola profil pembaca dan sinkronisasi data cloud Firebase"
-      />
+    <div className="min-h-screen bg-surface-base pb-28 md:pb-10">
+      <div className="max-w-5xl mx-auto px-4 md:px-8 md:pt-8">
+        <PageHeader
+          title="Akun & Sinkronisasi"
+          showBack={true}
+          backHref="/settings"
+          description="Kelola profil pembaca dan sinkronisasi data cloud Firebase"
+        />
+      </div>
 
-      <main className="max-w-xl mx-auto px-4 pt-4 md:pt-8 space-y-6">
+      <main className="max-w-5xl mx-auto px-4 md:px-8 pt-4 md:pt-0 space-y-6 md:space-y-8">
         {/* Profile Card */}
         {user ? (
           <div className="rounded-[28px] border border-border-glass bg-surface-glass backdrop-blur-2xl p-6 shadow-glass flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">

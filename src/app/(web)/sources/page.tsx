@@ -130,7 +130,7 @@ export default function SourcesPage() {
             />
           </div>
 
-          <div className="p-4 pt-4">
+          <div className="p-4 pt-4 md:px-8 md:pt-0">
             {isLoading ? (
               <SourceListSkeleton />
             ) : isError ? (
