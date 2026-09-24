@@ -25,7 +25,7 @@ export function BottomDock() {
       }}
     >
       <div className="pointer-events-auto flex w-full max-w-[360px] mx-auto items-center justify-center">
-        <div className="grid grid-cols-4 w-full h-[64px] items-center gap-1 rounded-[24px] liquid-glass p-1.5 transition-all duration-300 ease-out">
+        <div className="grid grid-cols-4 w-full h-[64px] items-center gap-1 rounded-[24px] border border-border-subtle bg-surface-overlay/95 p-1.5 shadow-lg backdrop-blur-md transition-colors duration-300">
           {navItems.map((item) => {
             const isActive =
               item.href === "/"
@@ -48,7 +48,7 @@ export function BottomDock() {
               >
                 {isActive && (
                   <motion.div
-                    className="absolute inset-0 rounded-[20px] bg-accent/15 border border-accent/25 shadow-xs"
+                    className="absolute inset-0 rounded-[18px] border border-accent/25 bg-accent-dim"
                     layoutId="active-dock-tab"
                     transition={{ type: "spring", bounce: 0.15, duration: 0.3 }}
                   />
@@ -68,7 +68,7 @@ export function BottomDock() {
                   />
 
                   {isActive && (
-                    <span className="text-[10px] tracking-tight leading-none font-bold text-accent transition-all duration-200 animate-in fade-in duration-150">
+                    <span className="text-xs tracking-tight leading-none font-bold text-accent transition-all duration-200 animate-in fade-in duration-150">
                       {item.label}
                     </span>
                   )}

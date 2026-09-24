@@ -40,7 +40,7 @@ export function TopNav() {
       {/* Spacer to reserve layout space for the fixed nav */}
       <div className="hidden md:block h-[72px] w-full shrink-0" />
       
-      <div className="hidden md:flex fixed top-0 left-0 right-0 z-40 w-full pointer-events-none h-[72px] bg-surface-glass backdrop-blur-3xl border-b items-center px-0">
+      <div className="hidden md:flex fixed top-0 left-0 right-0 z-40 w-full pointer-events-none h-[72px] bg-surface-overlay/95 backdrop-blur-md border-b border-border-subtle items-center px-0">
       <div className="flex items-center justify-between pointer-events-auto w-full h-[72px] px-8 mx-auto max-w-screen-2xl">
         {/* LEFT: Logo & Brand */}
         <Link href="/" className="flex items-center gap-2 outline-none shrink-0 h-full group z-10">
@@ -60,7 +60,7 @@ export function TopNav() {
               {/* Desktop pill */}
               <button 
                 onClick={() => window.dispatchEvent(new CustomEvent("open-command-menu"))}
-                className={cn( "hidden sm:flex items-center gap-2 px-3.5 rounded-xl transition-all text-text-muted hover:text-text-primary text-sm h-9 w-48", "bg-surface-raised border border-border-default/40 backdrop-blur-md hover:bg-surface-hover/50 shadow-xs" )}
+                className={cn( "hidden sm:flex items-center gap-2 px-3.5 rounded-[12px] transition-colors text-text-secondary hover:text-text-primary text-sm h-11 w-48", "bg-surface-raised border border-border-default hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-accent" )}
               >
                 <MagnifyingGlass size={16} weight="duotone" />
                 <span className="flex-1 text-left opacity-70">Cari...</span>

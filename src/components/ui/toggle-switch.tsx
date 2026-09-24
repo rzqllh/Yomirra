@@ -13,7 +13,7 @@ export const ToggleSwitch = React.forwardRef<HTMLInputElement, ToggleSwitchProps
     const elementId = id || defaultId
 
     return (
-      <label htmlFor={elementId} className={cn("relative inline-flex items-center cursor-pointer", className)}>
+      <label htmlFor={elementId} className={cn("relative inline-flex min-h-11 items-center gap-3 cursor-pointer text-sm font-semibold text-text-primary", className)}>
         {label && <span className="sr-only">{label}</span>}
         <input
           type="checkbox"
@@ -24,7 +24,9 @@ export const ToggleSwitch = React.forwardRef<HTMLInputElement, ToggleSwitchProps
           ref={ref}
           {...props}
         />
-        <div className="w-11 h-6 bg-surface-raised border border-border-default rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-transparent after:border after:shadow-sm after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent peer-checked:border-accent"></div>
+        <span aria-hidden="true" className="relative block h-8 w-14 shrink-0 rounded-full border border-border-strong bg-surface-muted motion-safe:transition-[background-color,border-color] motion-safe:duration-300 peer-checked:border-accent peer-checked:bg-accent-dim peer-checked:[&>span]:translate-x-6 peer-checked:[&>span]:bg-accent peer-checked:[&>span]:text-accent-on peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-accent">
+          <span className="absolute left-[3px] top-[3px] grid size-6 place-items-center rounded-full bg-surface-overlay text-text-secondary shadow-sm motion-safe:transition-[transform,background-color,color] motion-safe:duration-[420ms] motion-safe:ease-[cubic-bezier(.18,1.35,.32,1)]" />
+        </span>
       </label>
     )
   }

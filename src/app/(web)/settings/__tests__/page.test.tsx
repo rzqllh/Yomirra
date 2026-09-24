@@ -79,11 +79,11 @@ describe("SettingsPage - Update Checker UI", () => {
     
     // Open select
     await act(async () => {
-      fireEvent.click(selectButton);
+      fireEvent.pointerDown(selectButton, { button: 0, ctrlKey: false });
     });
 
     // Find and click 1 Jam option
-    const oneHourOption = screen.getByText("1 Jam");
+    const oneHourOption = await screen.findByRole("menuitem", { name: "1 Jam" });
     
     await act(async () => {
       fireEvent.click(oneHourOption);
