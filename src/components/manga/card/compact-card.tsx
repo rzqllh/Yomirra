@@ -125,7 +125,7 @@ export function CompactCard({
               <BookmarkButton
                 sourceId={sourceId}
                 manga={manga}
-                className="h-7 w-7 rounded-lg bg-surface-base/80 hover:bg-surface-raised border border-border-subtle hover:border-accent shadow-xs text-text-muted hover:text-accent active:scale-95"
+                className="hover:border-accent hover:text-accent"
               />
             </div>
           </div>

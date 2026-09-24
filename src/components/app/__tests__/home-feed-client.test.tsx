@@ -106,7 +106,7 @@ describe('Home Page Components', () => {
     render(<HomeFeedClient unifiedPopular={samplePopular} unifiedLatest={sampleLatest} />);
     const ctaButton = screen.getByRole('link', { name: /lihat komik/i });
     expect(ctaButton).toBeTruthy();
-    expect(ctaButton.getAttribute('href')).toBe('/manga/shinigami/manga-2');
+    expect(ctaButton.getAttribute('href')).toBe('/manga/shinigami/manga-2?returnTo=%2F');
     expect(screen.getByText('Pilihan hari ini')).toBeTruthy();
   });
 });
