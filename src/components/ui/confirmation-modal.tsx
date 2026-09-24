@@ -10,7 +10,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Trash, Warning, Info, CheckCircle } from "@phosphor-icons/react";
+import { Choice } from "@/components/ui/choice";
+import { Trash, Warning, Info } from "@phosphor-icons/react";
 import { cn } from "@/shared/utils/cn";
 
 export interface ConfirmationModalProps {
@@ -118,37 +119,16 @@ export function ConfirmationModal({
 
           {/* Explicit acknowledgement checkbox for high-stakes actions */}
           {requireCheckbox && (
-            <label
+            <div
               className={cn(
-                "flex items-start gap-2.5 w-full mt-1 cursor-pointer p-3 rounded-2xl border transition-all select-none text-left",
+                "w-full mt-1 p-3 rounded-[12px] border transition-colors text-left",
                 checked
                   ? "bg-semantic-error/[0.06] border-semantic-error/30"
                   : "bg-surface-base border-border-subtle hover:border-border-default"
               )}
             >
-              <div className="relative mt-[1px] shrink-0">
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  onChange={(e) => setChecked(e.target.checked)}
-                  className="peer sr-only"
-                  id="confirmation-checkbox"
-                />
-                <div
-                  className={cn(
-                    "h-4 w-4 rounded-[5px] border-2 flex items-center justify-center transition-all",
-                    checked
-                      ? "bg-semantic-error border-semantic-error"
-                      : "bg-surface-base border-border-default peer-focus-visible:ring-2 peer-focus-visible:ring-semantic-error/30"
-                  )}
-                >
-                  {checked && <CheckCircle size={12} weight="bold" className="text-white" />}
-                </div>
-              </div>
-              <span className="text-xs text-text-muted leading-relaxed">
-                {requireCheckbox}
-              </span>
-            </label>
+              <Choice checked={checked} onChange={(e) => setChecked(e.target.checked)} id="confirmation-checkbox" label={requireCheckbox} />
+            </div>
           )}
         </div>
 
@@ -182,4 +162,3 @@ export function ConfirmationModal({
     </Dialog>
   );
 }
-

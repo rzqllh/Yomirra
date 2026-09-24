@@ -1,13 +1,6 @@
-import * as React from "react"
 import { MangaItem } from "@/shared/sources/source-types";
-import { ShelfCard, LeaderboardRow } from "@/components/manga/card";
-import Link from "next/link";
-import { cn } from "@/shared/utils/cn";
 import { withCache, CACHE_TTL } from "@/server/lib/cache/redis-cache";
 import { sourceManager } from "@/server/lib/sources/source-manager";
-import { ErrorState } from "@/components/states/error-state";
-import { Fire, TrendUp, Compass } from "@phosphor-icons/react/dist/ssr";
-import { FeaturedHeroCarousel } from "@/components/app/featured-hero-carousel";
 import { getManifestUrlFromCookie } from "@/server/lib/sources/server-manifest";
 import { SourceMetadata } from "@/shared/sources/source-types";
 import { HomeFeedClient } from "./home-feed-client";
@@ -80,12 +73,6 @@ export async function UnifiedFeed({ activeSources }: UnifiedFeedProps) {
   if (unifiedPopular.length === 0 && unifiedLatest.length === 0) {
     return null;
   }
-
-  // Shuffle the latest data for the carousel (take top 15 from interleaved)
-  // eslint-disable-next-line react-hooks/purity
-  const shuffledLatest = [...unifiedLatest].sort(() => 0.5 - Math.random()).slice(0, 15);
-  const top5Trending = unifiedPopular.slice(0, 5);
-  const restTrending = unifiedPopular.slice(5, 30);
 
   return (
     <HomeFeedClient 

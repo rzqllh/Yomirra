@@ -4,7 +4,7 @@ import * as React from "react";
 import { useMounted } from "@/shared/hooks/use-mounted";
 import { BookmarkSimple } from "@phosphor-icons/react";
 import type { MangaItem } from "@/shared/types/source";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { cn } from "@/shared/utils/cn";
 
@@ -13,6 +13,7 @@ export function BookmarkButton({ sourceId, manga, className }: { sourceId: strin
   const rawIsInLibrary = useLibraryStore((state) => state.isInLibrary(sourceId, manga.id));
   const isInLibrary = isMounted ? rawIsInLibrary : false;
   const toggleLibrary = useLibraryStore((state) => state.toggleLibrary);
+  const reducedMotion = useReducedMotion();
 
   const handleBookmarkClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -46,40 +47,41 @@ export function BookmarkButton({ sourceId, manga, className }: { sourceId: strin
   return (
     <motion.button 
       onClick={handleBookmarkClick}
-      whileTap={{ scale: 0.85 }}
+      whileTap={reducedMotion ? undefined : { scale: 0.9 }}
       className={cn(
-        "relative grid size-8 place-items-center rounded-lg transition-all focus-visible:outline-none bg-black/40 backdrop-blur-md shadow-sm border border-white/10",
-        isInLibrary ? 'text-accent hover:text-accent-hover' : 'text-media-muted hover:text-media-foreground',
+        "relative grid size-11 place-items-center rounded-[12px] border border-border-subtle bg-surface-overlay/95 text-text-primary shadow-sm transition-colors hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+        isInLibrary && 'text-accent',
         className
       )}
-      aria-label={isInLibrary ? "Hapus dari readlist" : "Simpan ke readlist"}
+      aria-label={isInLibrary ? `Hapus ${manga.title} dari rak` : `Simpan ${manga.title} ke rak`}
+      aria-pressed={isInLibrary}
     >
       <AnimatePresence mode="wait" initial={false}>
         {isInLibrary ? (
           <motion.span
             key="saved"
-            initial={{ scale: 0.3, opacity: 0 }}
+            initial={reducedMotion ? false : { scale: 0.3, opacity: 0 }}
             animate={{ 
-              scale: [0.3, 1.3, 0.9, 1.1, 1],
+              scale: reducedMotion ? 1 : [0.3, 1.3, 0.9, 1.1, 1],
               opacity: 1 
             }}
-            exit={{ scale: 0.3, opacity: 0 }}
+            exit={reducedMotion ? undefined : { scale: 0.3, opacity: 0 }}
             transition={{ 
-              duration: 0.5,
+              duration: reducedMotion ? 0 : 0.5,
               times: [0, 0.4, 0.6, 0.8, 1],
               ease: "easeOut"
             }}
-            className="absolute inset-0 flex items-center justify-center drop-shadow-[0_0_8px_rgba(239,68,68,0.6)]"
+            className="absolute inset-0 flex items-center justify-center"
           >
             <BookmarkSimple size={18} weight="fill" />
           </motion.span>
         ) : (
           <motion.span
             key="idle"
-            initial={{ scale: 0.6, opacity: 0 }}
+            initial={reducedMotion ? false : { scale: 0.6, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.6, opacity: 0 }}
-            transition={{ duration: 0.15 }}
+            exit={reducedMotion ? undefined : { scale: 0.6, opacity: 0 }}
+            transition={{ duration: reducedMotion ? 0 : 0.15 }}
             className="absolute inset-0 flex items-center justify-center"
           >
             <BookmarkSimple size={18} weight="regular" />

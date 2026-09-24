@@ -30,30 +30,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       document.body.classList.remove("reader-active")
     }
 
-    // Prevent browser viewport pinch-zoom globally (keeps app crisp 1:1, reader handles local pinch per-page)
-    const handleTouchMove = (e: TouchEvent) => {
-      if (e.touches.length > 1) {
-        // Prevent multi-touch viewport scaling across the whole app,
-        // unless multi-touch is occurring directly on an individual reader page container
-        const isPinchedOnImage = (e.target as HTMLElement | null)?.closest?.(".reader-page-container");
-        if (!isPinchedOnImage) {
-          e.preventDefault();
-        }
-      }
-    };
-
-    // Prevent iOS Safari viewport zoom via gesturestart globally
-    const handleGestureStart = (e: Event) => {
-      e.preventDefault();
-    };
-
-    document.addEventListener("touchmove", handleTouchMove, { passive: false });
-    document.addEventListener("gesturestart", handleGestureStart, { passive: false });
-
     return () => {
       document.body.classList.remove("reader-active");
-      document.removeEventListener("touchmove", handleTouchMove);
-      document.removeEventListener("gesturestart", handleGestureStart);
     }
   }, [isReader]);
 

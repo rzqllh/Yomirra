@@ -9,9 +9,9 @@ import { useNsfwSourceIds } from "@/shared/hooks/use-nsfw-source-ids";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 
 import { ContinueReadingList } from "./continue-reading-list";
-import { FeaturedHeroCarousel } from "./featured-hero-carousel";
+import { EditorialSpotlight } from "./editorial-spotlight";
 import { LeaderboardRow, ShelfCard } from "@/components/manga/card";
-import { MagnifyingGlass, Fire, Sparkle } from "@phosphor-icons/react";
+import { MagnifyingGlass, Fire } from "@phosphor-icons/react";
 import Link from "next/link";
 import { cn } from "@/shared/utils/cn";
 
@@ -90,6 +90,7 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
     () => filteredLatest.filter(m => m.sourceId === activeSourceId).slice(0, 10),
     [filteredLatest, activeSourceId]
   );
+  const spotlightManga = activeSourceHighlight[0] || activeSourcePopular[0];
 
   // Global feeds — all active sources combined, no chip filter
   const updateHariIni = React.useMemo(() => {
@@ -105,23 +106,19 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
   if (!isMounted) return null;
 
   return (
-    <div className="flex flex-col gap-8 md:gap-10 animate-in fade-in zoom-in-[0.98] duration-300 ease-out fill-mode-both pb-12">
+    <div className="flex flex-col gap-8 md:gap-10 pb-12">
 
       {historyItems.length > 0 && (
         <ContinueReadingList items={historyItems} variant="cyber-editorial" />
       )}
 
       {sourcesToShow.length > 0 && (
-        <div className="flex flex-col gap-0 rounded-2xl md:rounded-3xl border border-border-subtle/60 bg-surface-glass/40 backdrop-blur-sm overflow-hidden">
+        <section aria-labelledby="spotlight-title" className="flex min-w-0 flex-col gap-4">
 
-          {/* Section header + source chips — inside the card */}
-          <div className="flex items-center justify-between gap-3 px-4 pt-4 pb-3">
-            <h2 className="text-sm font-bold text-text-secondary flex items-center gap-1.5 shrink-0">
-              <Sparkle size={14} weight="fill" className="text-accent" />
-              Sorotan &amp; Peringkat
-            </h2>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 id="spotlight-title" className="ink-display text-[28px] text-text-primary sm:text-[34px]">Sorotan &amp; peringkat</h2>
             {/* Chips — right side, scoped filter */}
-            <div className="flex gap-1.5 overflow-x-auto scrollbar-hide py-0.5">
+            <div className="flex max-w-full gap-1.5 overflow-x-auto scrollbar-hide py-0.5" role="group" aria-label="Pilih sumber sorotan">
               {sourcesToShow.map(sourceId => {
                 const name = dynamicSourceRegistry.get(sourceId)?.name || sourceId;
                 const isActive = sourceId === activeSourceId;
@@ -130,11 +127,12 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
                     key={sourceId}
                     onClick={() => setActiveSourceId(sourceId)}
                     className={cn(
-                      "shrink-0 min-h-[30px] px-3 py-1 rounded-xl text-[11px] font-bold transition-all duration-200 outline-none tap-highlight-transparent whitespace-nowrap active:scale-95 shadow-xs",
+                      "shrink-0 min-h-11 px-3 py-1 rounded-[12px] text-xs font-bold transition-[background-color,color,border-color] duration-200 outline-none focus-visible:ring-2 focus-visible:ring-accent whitespace-nowrap",
                       isActive
-                        ? "bg-text-primary text-surface-base shadow-xs font-extrabold"
-                        : "bg-surface-raised/80 text-text-muted border border-border-subtle/60 hover:text-text-primary"
+                        ? "bg-accent text-accent-on"
+                        : "bg-surface-raised text-text-secondary border border-border-subtle hover:text-accent"
                     )}
+                    aria-pressed={isActive}
                   >
                     {name}
                   </button>
@@ -143,37 +141,36 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
             </div>
           </div>
 
-          <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_280px] lg:gap-4 lg:p-4 lg:pt-0">
-          {/* Hero Carousel */}
-          <div className="h-[320px] sm:h-[420px] md:h-[360px] lg:h-[420px] xl:h-[460px] w-full min-w-0 overflow-hidden rounded-2xl md:rounded-3xl">
-            {activeSourceHighlight.length > 0 ? (
-              <FeaturedHeroCarousel sourceId={activeSourceId} mangas={activeSourceHighlight} variant="cyber-editorial" />
+          <div className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1.55fr)_minmax(260px,.8fr)]">
+          <div className="min-w-0">
+            {spotlightManga ? (
+              <EditorialSpotlight sourceId={activeSourceId} manga={spotlightManga} />
             ) : (
-              <div className="w-full h-full bg-surface-raised animate-pulse" />
+              <div className="ink-skeleton min-h-[320px] w-full rounded-[18px]" aria-hidden="true" />
             )}
           </div>
 
           {/* Leaderboard strip */}
           {activeSourcePopular.length > 0 && (
-            <div className="p-3 flex flex-col gap-0.5 border-t border-border-subtle/40 lg:border-t-0 lg:p-0 lg:h-[420px] xl:h-[460px] lg:overflow-y-auto">
+            <div className="ink-panel flex min-w-0 flex-col gap-0.5 p-4 sm:p-5 lg:max-h-[460px] lg:overflow-y-auto">
+              <h3 className="mb-2 text-sm font-bold text-text-primary">Paling banyak dibaca</h3>
               {activeSourcePopular.map((manga, idx) => (
                 <LeaderboardRow
                   key={`${manga.sourceId}-${manga.id}`}
                   manga={{ ...manga, rank: idx + 1 }}
                   sourceId={manga.sourceId}
-                  variant="cyber-editorial"
                 />
               ))}
             </div>
           )}
           </div>
-        </div>
+        </section>
       )}
 
       {updateHariIni.length > 0 && (
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between gap-4">
-            <h2 className="text-lg sm:text-xl font-bold text-text-primary">Update Hari Ini</h2>
+            <h2 className="ink-display text-[28px] text-text-primary sm:text-[34px]">Baru diperbarui</h2>
             <Link href="/library" className="hidden md:inline text-xs font-bold text-accent hover:underline">Lihat Semua</Link>
           </div>
           <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide w-full md:grid md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 md:overflow-visible md:snap-none md:gap-x-4 md:gap-y-6 md:[&>*:nth-child(n+11)]:hidden">
@@ -198,9 +195,9 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
       {popularKomik.length > 0 && (
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg sm:text-xl font-bold text-text-primary flex items-center gap-2">
-              <Fire size={20} weight="fill" className="text-orange-500" />
-              Popular Komik
+            <h2 className="ink-display flex items-center gap-2 text-[28px] text-text-primary sm:text-[34px]">
+              <Fire size={22} weight="fill" className="text-accent" />
+              Banyak dibaca
             </h2>
             <Link href="/popular" className="text-xs font-bold text-accent hover:underline">
               Lihat Semua

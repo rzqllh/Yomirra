@@ -102,10 +102,11 @@ describe('Home Page Components', () => {
     fireEvent.click(sourceChip);
   });
 
-  it('renders featured hero CTA button with correct href', () => {
+  it('renders a static editorial pick linked to the right title', () => {
     render(<HomeFeedClient unifiedPopular={samplePopular} unifiedLatest={sampleLatest} />);
-    const ctaButton = screen.getByRole('link', { name: 'Baca' });
+    const ctaButton = screen.getByRole('link', { name: /lihat komik/i });
     expect(ctaButton).toBeTruthy();
     expect(ctaButton.getAttribute('href')).toBe('/manga/shinigami/manga-2');
+    expect(screen.getByText('Pilihan hari ini')).toBeTruthy();
   });
 });

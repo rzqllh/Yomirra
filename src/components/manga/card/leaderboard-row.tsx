@@ -4,7 +4,6 @@ import * as React from "react";
 import Link from "next/link";
 import { ImageBroken, Star } from "@phosphor-icons/react";
 import { getMangaDetailHref } from "@/shared/lib/routes";
-import { cn } from "@/shared/utils/cn";
 import type { BaseCardProps } from "./types";
 import { usePathname, useSearchParams } from "next/navigation";
 
@@ -20,31 +19,24 @@ export function LeaderboardRow({ manga, sourceId, displayScore }: LeaderboardRow
   const searchParams = useSearchParams();
   const fullPath = pathname + (searchParams.toString() ? `?${searchParams.toString()}` : "");
 
-  const rankNumber = manga.rank || 0;
   const rankStr = manga.rank ? manga.rank.toString().padStart(2, '0') : "00";
 
   return (
     <Link
       href={getMangaDetailHref(sourceId, manga.id, fullPath)}
-      className="group relative flex items-center gap-3.5 py-2.5 px-3 rounded md:rounded-xl bg-surface-base/40 hover:bg-surface-raised/90 border border-border-subtle/40 hover:border-border-default/80 transition-all duration-300 shadow-xs hover:shadow-md"
+      className="group relative flex min-h-[90px] items-center gap-3 border-b border-border-subtle px-1 py-2.5 transition-colors last:border-0 hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-accent"
     >
       {/* Rank Badge */}
       {manga.rank !== undefined && (
         <div className="w-9 shrink-0 flex justify-center items-center">
-          <span className={cn(
-            "text-2xl sm:text-3xl font-black transition-transform group-hover:scale-110 duration-300",
-            rankNumber === 1 && "text-amber-400 drop-shadow-[0_2px_8px_rgba(245,158,11,0.4)]",
-            rankNumber === 2 && "text-slate-400 drop-shadow-[0_2px_8px_rgba(148,163,184,0.4)]",
-            rankNumber === 3 && "text-amber-700 drop-shadow-[0_2px_8px_rgba(180,83,9,0.3)]",
-            rankNumber > 3 && "text-text-muted/30 group-hover:text-text-muted/60"
-          )}>
+          <span className="ink-caption text-[32px] leading-none text-accent">
             {rankStr}
           </span>
         </div>
       )}
 
       {/* Cover */}
-      <div className="relative w-[50px] h-[68px] sm:w-[60px] sm:h-[80px] shrink-0 bg-surface-muted rounded-sm overflow-hidden shadow-sm border border-border-subtle/50 group-hover:shadow-md transition-all">
+      <div className="relative h-[72px] w-[48px] shrink-0 overflow-hidden rounded-[8px] border border-border-subtle bg-surface-muted">
         {manga.coverUrl && !imageError ? (
           <img
             src={manga.coverUrl}
@@ -67,8 +59,8 @@ export function LeaderboardRow({ manga, sourceId, displayScore }: LeaderboardRow
           {manga.title}
         </h4>
         <div className="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-text-secondary">
-          <div className="flex items-center gap-1 bg-surface-raised/80 backdrop-blur-sm px-2 py-0.5 rounded-md border border-border-subtle/60">
-            <Star weight="fill" size={11} className="text-amber-400" />
+          <div className="flex items-center gap-1">
+            <Star weight="fill" size={13} className="text-semantic-warning" />
             <span suppressHydrationWarning>{Number(scoreToDisplay) > 0 ? Number(scoreToDisplay).toFixed(1) : "-.-"}</span>
           </div>
           <span className="truncate max-w-[110px] sm:max-w-[140px] text-text-muted">{manga.latestChapter || "Detail"}</span>

@@ -28,10 +28,10 @@ export function DesktopRail() {
         aria-current={active ? "page" : undefined}
         title={item.label}
         className={cn(
-          "group flex min-h-11 items-center justify-center xl:justify-start gap-3 rounded-xl px-3 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent",
+          "group flex min-h-11 items-center justify-center xl:justify-start gap-3 rounded-[12px] border-l-2 px-3 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent",
           active
-            ? "bg-accent/12 text-accent font-bold"
-            : "text-text-secondary hover:bg-surface-hover hover:text-text-primary"
+            ? "border-accent bg-accent-dim text-accent font-bold"
+            : "border-transparent text-text-secondary hover:bg-surface-hover hover:text-text-primary"
         )}
       >
         <Icon size={21} weight={active ? "fill" : "regular"} className="shrink-0" />
@@ -41,13 +41,13 @@ export function DesktopRail() {
   };
 
   return (
-    <aside className="hidden md:flex fixed top-[72px] bottom-0 left-0 z-30 w-[76px] xl:w-[220px] flex-col border-r border-border-subtle bg-surface-base/95 px-2 xl:px-3 py-6 backdrop-blur-xl">
+    <aside className="hidden md:flex fixed top-[72px] bottom-0 left-0 z-30 w-[76px] xl:w-[220px] flex-col border-r border-border-subtle bg-surface-overlay px-2 xl:px-3 py-6">
       <nav aria-label="Navigasi utama" className="flex flex-col gap-1">
-        <span className="hidden xl:block px-3 pb-2 text-[11px] font-bold uppercase tracking-widest text-text-muted">Jelajah</span>
+        <span className="hidden xl:block px-3 pb-2 text-xs font-bold uppercase tracking-wider text-text-secondary">Jelajah</span>
         {MAIN_NAV_ITEMS.map(renderItem)}
       </nav>
       <nav aria-label="Navigasi lainnya" className="mt-7 flex flex-col gap-1 border-t border-border-subtle pt-5">
-        <span className="hidden xl:block px-3 pb-2 text-[11px] font-bold uppercase tracking-widest text-text-muted">Lainnya</span>
+        <span className="hidden xl:block px-3 pb-2 text-xs font-bold uppercase tracking-wider text-text-secondary">Lainnya</span>
         {MORE_ITEMS.map(renderItem)}
       </nav>
     </aside>
