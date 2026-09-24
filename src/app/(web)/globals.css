@@ -589,6 +589,7 @@ body.reader-active {
 :root, .dark { --skeleton-glow: #383c52; }
 .light { --skeleton-glow: #faf7f2; }
 @keyframes ink-skeleton-flow { 0% { background-position: 135% 0; opacity: .78; } 50% { opacity: 1; } 100% { background-position: -135% 0; opacity: .78; } }
+.ink-dialog-overlay { background: rgb(12 19 40 / 66%); }
 .ink-dialog-overlay[data-state="open"] { animation: ink-backdrop-in 420ms ease-out both; }
 .ink-dialog-overlay[data-state="closed"] { animation: ink-backdrop-in 320ms ease-in reverse both; }
 .ink-dialog-content[data-state="open"] { animation: ink-dialog-in 560ms cubic-bezier(.2,.92,.22,1) both; }
