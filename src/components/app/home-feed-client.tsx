@@ -145,7 +145,7 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
 
           <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_280px] lg:gap-4 lg:p-4 lg:pt-0">
           {/* Hero Carousel */}
-          <div className="h-[320px] sm:h-[420px] xl:h-[460px] w-full min-w-0 overflow-hidden rounded-2xl md:rounded-3xl">
+          <div className="h-[320px] sm:h-[420px] md:h-[360px] lg:h-[420px] xl:h-[460px] w-full min-w-0 overflow-hidden rounded-2xl md:rounded-3xl">
             {activeSourceHighlight.length > 0 ? (
               <FeaturedHeroCarousel sourceId={activeSourceId} mangas={activeSourceHighlight} variant="cyber-editorial" />
             ) : (
