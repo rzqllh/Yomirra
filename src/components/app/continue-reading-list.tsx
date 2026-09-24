@@ -43,10 +43,12 @@ export function ContinueReadingList({ items }: ContinueReadingListProps) {
           <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
           Lanjut Baca
         </h2>
-        <span className="text-xs text-text-muted font-medium">{items.length} judul</span>
+        <Link href="/bookmark" className="text-xs text-text-muted font-medium hover:text-accent transition-colors">
+          {items.length} judul <span className="hidden md:inline">· Lihat rak buku</span>
+        </Link>
       </div>
 
-      <div className="flex gap-3.5 sm:gap-4 overflow-x-auto pb-2 pt-1 snap-x snap-mandatory scrollbar-hide w-full">
+      <div className="flex gap-3.5 sm:gap-4 overflow-x-auto pb-2 pt-1 snap-x snap-mandatory scrollbar-hide w-full md:grid md:grid-cols-2 xl:grid-cols-3 md:overflow-visible md:snap-none md:gap-4">
         {items.map((group) => {
           const progress = group.seriesProgressPercent || group.progressPercent || 0;
           const targetHref = getReaderHref(group.sourceId, group.mangaId, group.chapterId);
@@ -54,7 +56,7 @@ export function ContinueReadingList({ items }: ContinueReadingListProps) {
           return (
             <div
               key={`${group.mangaId}-${group.chapterId}`}
-              className="group relative shrink-0 snap-start w-[80vw] max-w-[320px] sm:w-[350px] md:w-[370px] p-3 md:p-3.5 flex gap-3.5 bg-surface-glass backdrop-blur-xl border border-border-subtle/80 hover:border-accent/40 rounded-2xl md:rounded-3xl shadow-xs hover:shadow-md transition-all duration-300 overflow-hidden"
+              className="group relative shrink-0 snap-start w-[80vw] max-w-[320px] sm:w-[350px] md:w-auto md:max-w-none md:min-w-0 md:[&:nth-child(n+5)]:hidden xl:[&:nth-child(n+4)]:hidden p-3 md:p-3.5 flex gap-3.5 bg-surface-glass backdrop-blur-xl border border-border-subtle/80 hover:border-accent/40 rounded-2xl md:rounded-3xl shadow-xs hover:shadow-md transition-all duration-300 overflow-hidden"
             >
               <Link
                 href={targetHref}

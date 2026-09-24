@@ -30,7 +30,7 @@ export function LibraryToolbar({
   onToggleSelectionMode,
 }: LibraryToolbarProps) {
   return (
-    <div className="flex items-center gap-2 mt-4 md:mt-6">
+    <div className="flex items-center gap-2 mt-4 md:mt-0">
       <SearchInput
         value={searchInput}
         onChange={onSearchInputChange}

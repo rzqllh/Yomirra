@@ -20,11 +20,11 @@ export function SearchSourceRail({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between text-xs text-text-muted px-0.5">
+      <div className="flex flex-wrap items-center justify-between gap-1 text-xs text-text-muted px-0.5">
         <span className="font-semibold text-text-secondary">Pencarian Multi-Sumber:</span>
         <span>{activeSelectedSources.length} dari {searchableSources.length} sumber aktif dicari</span>
       </div>
-      <div className="flex overflow-x-auto [scrollbar-width:none] snap-x pb-1 gap-2">
+      <div className="flex overflow-x-auto [scrollbar-width:none] snap-x pb-1 gap-2 md:flex-wrap md:overflow-visible md:snap-none">
         {searchableSources.map((source) => {
           const isSelected = activeSelectedSources.includes(source.id);
           const isOffline = source.status === "unavailable" || source.status === "in-fix";

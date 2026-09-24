@@ -9,6 +9,7 @@ import { useSync } from "@/shared/hooks/use-sync"
 import { useNsfwPatcher } from "@/shared/hooks/use-nsfw-patcher"
 import { useUpdateChecker } from "@/shared/hooks/use-update-checker"
 import { TopNav } from "./top-nav"
+import { DesktopRail } from "./desktop-rail"
 import { CommandMenu } from "./command-menu"
 import { DirectionalTransition } from "@/components/ui/directional-transition"
 import { StatusBarBlur } from "@/components/ui/status-bar-blur"
@@ -68,8 +69,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       {!isReader && <StatusBarBlur />}
       <NetworkStatus />
       
-      <div className="flex-1 flex flex-col min-h-dvh transition-all min-w-0 duration-300 ease-in-out w-full">
+      <div className={cn(
+        "flex-1 flex flex-col min-h-dvh transition-all min-w-0 duration-300 ease-in-out w-full",
+        !isReader && "md:pl-[76px] xl:pl-[220px]"
+      )}>
         {!isReader && <TopNav />}
+        {!isReader && <DesktopRail />}
         
         <main
           className={cn(

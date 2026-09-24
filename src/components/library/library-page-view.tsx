@@ -53,7 +53,8 @@ export function LibraryPageView() {
             </Link>
           </div>
 
-          <LibraryToolbar
+          <div className="md:rounded-2xl md:border md:border-border-subtle md:bg-surface-raised/30 md:px-5 md:py-4">
+            <LibraryToolbar
             searchInput={catalog.searchInput}
             onSearchInputChange={(e) => catalog.setSearchInput(e.target.value)}
             onSearchSubmit={catalog.handleSearchSubmit}
@@ -66,13 +67,14 @@ export function LibraryPageView() {
             activeFilterCount={catalog.activeFilterCount}
           />
 
-          <LibraryStatusRail
+            <LibraryStatusRail
             sort={catalog.sort}
             onTabChange={catalog.handleTabChange}
             dynamicSorts={catalog.DYNAMIC_SORTS}
             selectedFormats={catalog.selectedFormats}
             onPageReset={() => catalog.setPage(1)}
           />
+          </div>
 
           <GuestSyncBanner />
 

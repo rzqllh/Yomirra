@@ -102,7 +102,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
   };
 
   const settingsContent = (
-    <div className={cn("space-y-6 md:space-y-8", isOverlay ? "pb-8" : "")}>
+    <div className={cn("space-y-6 md:space-y-8", isOverlay ? "pb-8" : "xl:columns-2 xl:gap-6 [&>*]:break-inside-avoid xl:[&>*]:mb-6")}>
       {/* Akun & Profil */}
       <SettingsSection title="Akun & Profil">
         {user ? (
@@ -494,7 +494,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
                 description="Sesuaikan preferensi aplikasi sesuai keinginanmu."
                 icon={<Gear size={24} weight="duotone" />}
               />
-              <div className="max-w-3xl">
+              <div className="w-full">
                 {settingsContent}
               </div>
             </div>

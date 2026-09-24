@@ -105,7 +105,7 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
   if (!isMounted) return null;
 
   return (
-    <div className="flex flex-col gap-8 animate-in fade-in zoom-in-[0.98] duration-300 ease-out fill-mode-both pb-12">
+    <div className="flex flex-col gap-8 md:gap-10 animate-in fade-in zoom-in-[0.98] duration-300 ease-out fill-mode-both pb-12">
 
       {historyItems.length > 0 && (
         <ContinueReadingList items={historyItems} variant="cyber-editorial" />
@@ -143,8 +143,9 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
             </div>
           </div>
 
+          <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_280px] lg:gap-4 lg:p-4 lg:pt-0">
           {/* Hero Carousel */}
-          <div className="h-[320px] sm:h-[420px] w-full overflow-hidden rounded-2xl md:rounded-3xl">
+          <div className="h-[320px] sm:h-[420px] xl:h-[460px] w-full min-w-0 overflow-hidden rounded-2xl md:rounded-3xl">
             {activeSourceHighlight.length > 0 ? (
               <FeaturedHeroCarousel sourceId={activeSourceId} mangas={activeSourceHighlight} variant="cyber-editorial" />
             ) : (
@@ -154,7 +155,7 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
 
           {/* Leaderboard strip */}
           {activeSourcePopular.length > 0 && (
-            <div className="p-3 flex flex-col gap-0.5 border-t border-border-subtle/40">
+            <div className="p-3 flex flex-col gap-0.5 border-t border-border-subtle/40 lg:border-t-0 lg:p-0 lg:h-[420px] xl:h-[460px] lg:overflow-y-auto">
               {activeSourcePopular.map((manga, idx) => (
                 <LeaderboardRow
                   key={`${manga.sourceId}-${manga.id}`}
@@ -165,19 +166,23 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
               ))}
             </div>
           )}
+          </div>
         </div>
       )}
 
       {updateHariIni.length > 0 && (
         <div className="flex flex-col gap-3">
-          <h2 className="text-lg sm:text-xl font-bold text-text-primary">Update Hari Ini</h2>
-          <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide w-full">
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="text-lg sm:text-xl font-bold text-text-primary">Update Hari Ini</h2>
+            <Link href="/library" className="hidden md:inline text-xs font-bold text-accent hover:underline">Lihat Semua</Link>
+          </div>
+          <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide w-full md:grid md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 md:overflow-visible md:snap-none md:gap-x-4 md:gap-y-6 md:[&>*:nth-child(n+11)]:hidden">
             {updateHariIni.map((manga) => (
-              <div key={`${manga.sourceId}-${manga.id}`} className="shrink-0 snap-start w-[140px] sm:w-[155px]">
+              <div key={`${manga.sourceId}-${manga.id}`} className="shrink-0 snap-start w-[140px] sm:w-[155px] md:w-auto md:min-w-0">
                 <ShelfCard manga={manga} sourceId={manga.sourceId} showSourceBadge />
               </div>
             ))}
-            <div className="shrink-0 snap-start w-[140px] sm:w-[155px] flex items-center justify-center p-2">
+            <div className="shrink-0 snap-start w-[140px] sm:w-[155px] md:hidden flex items-center justify-center p-2">
               <Link
                 href="/library"
                 className="w-full aspect-[3/4] rounded-2xl border-2 border-dashed border-border-default hover:border-accent hover:bg-accent/5 text-text-muted hover:text-accent transition-all flex flex-col items-center justify-center gap-2 font-bold"
@@ -201,9 +206,9 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
               Lihat Semua
             </Link>
           </div>
-          <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide w-full">
+          <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide w-full md:grid md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 md:overflow-visible md:snap-none md:gap-x-4 md:gap-y-6 md:[&>*:nth-child(n+11)]:hidden">
             {popularKomik.map((manga) => (
-              <div key={`${manga.sourceId}-${manga.id}`} className="shrink-0 snap-start w-[140px] sm:w-[155px]">
+              <div key={`${manga.sourceId}-${manga.id}`} className="shrink-0 snap-start w-[140px] sm:w-[155px] md:w-auto md:min-w-0">
                 <ShelfCard manga={manga} sourceId={manga.sourceId} showSourceBadge />
               </div>
             ))}
