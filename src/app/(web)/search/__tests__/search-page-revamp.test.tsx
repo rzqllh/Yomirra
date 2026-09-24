@@ -76,7 +76,7 @@ describe('Search Page Revamp Unit Tests', () => {
     );
 
     expect(screen.getByRole('heading', { level: 1, name: /Pencarian/i })).toBeDefined();
-    expect(screen.getByText('Temukan komik dari berbagai sumber')).toBeDefined();
+    expect(screen.getByText('Cari judul dari semua sumber bacaanmu.')).toBeDefined();
   });
 
   it('renders source control chips and prevents deselecting the last source', async () => {
@@ -88,11 +88,11 @@ describe('Search Page Revamp Unit Tests', () => {
       </QueryClientProvider>
     );
 
-    const shinigamiBtn = screen.getByRole('checkbox', { name: /Sumber Shinigami/i });
-    const komikindoBtn = screen.getByRole('checkbox', { name: /Sumber Komikindo/i });
+    const shinigamiBtn = screen.getByRole('button', { name: 'Shinigami' });
+    const komikindoBtn = screen.getByRole('button', { name: 'Komikindo' });
 
-    expect(shinigamiBtn.getAttribute('aria-checked')).toBe('true');
-    expect(komikindoBtn.getAttribute('aria-checked')).toBe('true');
+    expect(shinigamiBtn.getAttribute('aria-pressed')).toBe('true');
+    expect(komikindoBtn.getAttribute('aria-pressed')).toBe('true');
 
     // Deselect Shinigami -> Komikindo remains
     fireEvent.click(shinigamiBtn);

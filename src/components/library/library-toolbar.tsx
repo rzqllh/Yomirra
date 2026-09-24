@@ -6,7 +6,6 @@ import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import { LibraryFilterDrawer } from "./library-filter-drawer";
 import { ViewModeToggle } from "@/components/manga/view-mode-toggle";
-import { cn } from "@/shared/utils/cn";
 
 export interface LibraryToolbarProps {
   searchInput: string;
@@ -36,25 +35,22 @@ export function LibraryToolbar({
         onChange={onSearchInputChange}
         onSubmitAction={onSearchSubmit}
         onClear={onSearchClear}
-        placeholder="Cari di library kamu..."
-        containerClassName="flex-1 min-w-0 h-[42px] rounded-xl"
+        placeholder="Cari di rak bacaan..."
+        containerClassName="flex-1 min-w-0 min-h-11 rounded-xl"
       />
 
-      <ViewModeToggle className="h-[42px]" />
+      <ViewModeToggle className="min-h-11" />
 
       <LibraryFilterDrawer activeSourceId={activeSourceId}>
         <Button
           variant={activeFilterCount > 0 ? "accent" : "outline"}
-          className={cn(
-            "shrink-0 h-[42px] px-3.5 rounded-xl font-bold gap-1.5 transition-all duration-200",
-            activeFilterCount === 0 && "bg-surface-glass backdrop-blur-md text-text-primary border-border-subtle hover:border-border-strong"
-          )}
+          className="shrink-0 min-h-11 px-3 rounded-xl gap-1.5"
           aria-label={`Filter ${activeFilterCount > 0 ? `(${activeFilterCount} aktif)` : ""}`}
         >
           <Funnel size={17} weight={activeFilterCount > 0 ? "fill" : "bold"} />
           <span className="hidden xs:inline sm:inline">Filter</span>
           {activeFilterCount > 0 && (
-            <span className="flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-md text-[10px] font-black bg-accent text-white">
+            <span className="flex min-w-6 min-h-6 items-center justify-center rounded-md bg-accent px-1 text-xs font-bold text-accent-on">
               {activeFilterCount}
             </span>
           )}
@@ -65,10 +61,7 @@ export function LibraryToolbar({
         <Button
           variant={isSelectionMode ? "accent" : "outline"}
           onClick={onToggleSelectionMode}
-          className={cn(
-            "shrink-0 h-[44px] px-4 rounded-2xl font-bold transition-all duration-300",
-            !isSelectionMode && "bg-surface-glass backdrop-blur-md text-text-primary border-border-subtle"
-          )}
+          className="shrink-0 min-h-11 px-4"
           aria-label={isSelectionMode ? "Batal pilih" : "Pilih manga"}
         >
           {isSelectionMode ? "Batal" : "Pilih"}

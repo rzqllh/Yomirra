@@ -23,10 +23,9 @@ export function SearchToolbar({
         value={localQuery}
         onChange={onQueryChange}
         onSubmitAction={onSearchSubmit}
-        placeholder="Cari dari berbagai sumber sekaligus..."
-        containerClassName="flex-1 h-[44px]"
+        placeholder="Judul apa yang mau kamu baca?"
+        containerClassName="flex-1 min-w-0 min-h-11"
         onClear={onQueryClear}
-        autoFocus
       />
       <SearchFilterDrawer />
     </div>

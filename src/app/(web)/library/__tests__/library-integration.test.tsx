@@ -81,9 +81,9 @@ describe("Library & Updates Integration", () => {
     expect(screen.getByTestId("updates-list")).toBeTruthy();
   });
 
-  it("renders catalog Jelajah components", () => {
+  it("renders the library controls and results", () => {
     render(<LibraryPageView />);
-    expect(screen.getAllByText("Jelajah").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Rak Bacaan").length).toBeGreaterThan(0);
     expect(screen.getByTestId("library-toolbar")).toBeTruthy();
     expect(screen.getByTestId("library-results")).toBeTruthy();
   });

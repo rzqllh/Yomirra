@@ -7,7 +7,8 @@ import {
   Funnel, 
   SmileySad, 
   Books, 
-  MagnifyingGlass 
+  MagnifyingGlass,
+  Check
 } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/states/empty-state";
 import { Button } from "@/components/ui/button";
@@ -87,8 +88,8 @@ export function LibraryResults({
     return (
       <EmptyState
         icon={<Funnel size={40} className="text-text-muted" weight="duotone" />}
-        title="Sumber Sedang Nonaktif"
-        description="Sumber ini sedang dimatikan. Yuk, aktifkan kembali di halaman Kelola Sumber untuk melihat koleksimu."
+        title="Sumber ini sedang mati"
+        description="Aktifkan lagi sumbernya untuk melihat komik di rakmu."
         action={
           <Button onClick={() => router.push("/sources")} variant="outline" className="mt-4 rounded-xl shadow-sm font-bold">
             Kelola Sumber
@@ -114,7 +115,7 @@ export function LibraryResults({
       <EmptyState
         icon={<SmileySad size={40} className="text-text-muted" weight="duotone" />}
         title="Gagal memuat katalog"
-        description="Terjadi kesalahan saat mengambil data dari sumber."
+        description="Data dari sumber ini belum bisa dimuat. Coba lagi sebentar."
         action={
           <Button onClick={() => refetch()} variant="outline" className="mt-4 rounded-xl shadow-sm font-bold">
             Coba lagi
@@ -129,8 +130,8 @@ export function LibraryResults({
       return (
         <EmptyState
           icon={<Books size={40} className="text-text-muted" weight="duotone" />}
-          title="Library masih kosong"
-          description="Simpan komik pertama kamu dan mulai dari sini."
+          title="Rakmu masih kosong"
+          description="Temukan komik yang kamu suka, lalu simpan di sini."
         />
       );
     }
@@ -148,7 +149,7 @@ export function LibraryResults({
         <EmptyState
           icon={<Books size={40} className="text-text-muted" weight="duotone" />}
           title="Koleksi ini masih kosong"
-          description="Tambahkan komik ke koleksi ini dari halaman detail."
+          description="Simpan komik ke koleksi ini dari halaman detailnya."
         />
       );
     }
@@ -160,7 +161,7 @@ export function LibraryResults({
         description="Coba kata kunci lain atau kurangi filter."
         action={
           <Button onClick={onResetFilters} variant="outline" className="mt-4 rounded-xl shadow-sm font-bold">
-            Reset Filter
+            Hapus filter
           </Button>
         }
       />
@@ -197,8 +198,8 @@ export function LibraryResults({
                     className={cn(
                       "absolute inset-0 z-20 rounded-xl flex items-start justify-end p-2.5 transition-all duration-200",
                       isSelected
-                        ? "bg-accent/20 border-2 border-accent"
-                        : "bg-black/40 hover:bg-black/50 border border-white/20"
+                        ? "bg-accent/15 border-2 border-accent"
+                        : "bg-surface-overlay/75 hover:bg-surface-overlay/90 border border-border-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                     )}
                     aria-label={`${isSelected ? "Batal pilih" : "Pilih"} ${manga.title}`}
                   >
@@ -206,11 +207,11 @@ export function LibraryResults({
                       className={cn(
                         "w-6 h-6 rounded-lg flex items-center justify-center transition-transform duration-200",
                         isSelected
-                          ? "bg-accent text-white scale-110"
-                          : "bg-surface-glass border border-white/40"
+                          ? "bg-accent text-accent-on scale-110"
+                          : "bg-surface-raised border border-border-strong"
                       )}
                     >
-                      {isSelected && <span className="text-xs font-black">✓</span>}
+                      {isSelected && <Check size={16} weight="bold" aria-hidden="true" />}
                     </div>
                   </button>
                 )}

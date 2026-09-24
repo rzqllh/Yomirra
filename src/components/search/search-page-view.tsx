@@ -4,6 +4,7 @@ import * as React from "react";
 import { MagnifyingGlass } from "@phosphor-icons/react";
 import { PageHeader } from "@/components/app/header";
 import { HeaderActions } from "@/components/app/header-actions";
+import { CatalogControls } from "@/components/ui/catalog-controls";
 import { useSearchCatalog } from "@/shared/hooks/use-search-catalog";
 import { SearchToolbar } from "./search-toolbar";
 import { SearchSourceRail } from "./search-source-rail";
@@ -19,13 +20,13 @@ export function SearchPageView() {
         <div className="pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:pt-8">
           <PageHeader
             title="Pencarian"
-            description="Temukan komik dari berbagai sumber"
+            description="Cari judul dari semua sumber bacaanmu."
             icon={<MagnifyingGlass size={24} weight="duotone" />}
             actions={<HeaderActions />}
           />
         </div>
 
-        <div className="space-y-5 md:space-y-4 md:rounded-2xl md:border md:border-border-subtle md:bg-surface-raised/30 md:p-5">
+        <CatalogControls label="Cari dan saring komik">
           <SearchToolbar
             localQuery={search.localQuery}
             onQueryChange={(e) => search.setLocalQuery(e.target.value)}
@@ -37,7 +38,7 @@ export function SearchPageView() {
             activeSelectedSources={search.activeSelectedSources}
             onToggleSource={search.toggleSource}
           />
-        </div>
+        </CatalogControls>
 
         {/* Results & Pagination */}
         <SearchResults

@@ -57,7 +57,7 @@ export function GuestSyncBanner({ className }: GuestSyncBannerProps) {
     setIsLoggingIn(true);
     try {
       await loginWithGoogle();
-      toast.success("Akun tersambung! Data kamu otomatis aman di cloud.");
+      toast.success("Akun tersambung. Rak bacaanmu sekarang bisa ikut ke perangkat lain.");
     } catch (err: any) {
       if (err?.code !== "auth/popup-closed-by-user") {
         toast.error("Gagal masuk dengan Google. Silakan coba lagi.");
@@ -70,7 +70,7 @@ export function GuestSyncBanner({ className }: GuestSyncBannerProps) {
   const handleDismiss = () => {
     dismissGuestBanner(totalItemCount);
     const isEscalated = totalItemCount >= 15 && guestBannerDismissCount > 0;
-    const msg = isEscalated ? "Siap, diingatkan lagi dalam 3 hari." : "Oke, diingatkan lagi 7 hari ke depan.";
+    const msg = isEscalated ? "Oke, kami ingatkan lagi dalam 3 hari." : "Oke, kami ingatkan lagi minggu depan.";
     toast.info(msg);
   };
 
@@ -87,70 +87,60 @@ export function GuestSyncBanner({ className }: GuestSyncBannerProps) {
         transition={{ duration: 0.25, ease: "easeOut" }}
         className={cn("w-full mb-4 md:mb-6", className)}
       >
-        <div className="relative overflow-hidden rounded-2xl border border-accent/30 bg-surface-raised/90 backdrop-blur-xl p-4 sm:p-5 shadow-xs transition-all">
-          {/* Subtle accent glow in the corner */}
-          <div className="absolute -top-12 -right-12 w-32 h-32 bg-accent/10 rounded-full blur-2xl pointer-events-none" />
-
+        <div className="rounded-[16px] border border-border-default bg-surface-raised p-4 sm:p-5">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            {/* Icon and Text Information */}
             <div className="flex items-start gap-3 sm:gap-3.5 min-w-0 flex-1">
-              <div className="size-10 rounded-xl bg-accent/15 border border-accent/30 flex items-center justify-center text-accent shrink-0 mt-0.5 sm:mt-0 shadow-xs">
+              <div className="size-11 rounded-xl bg-accent-dim border border-accent/20 flex items-center justify-center text-accent shrink-0">
                 <CloudArrowUp size={22} weight="duotone" />
               </div>
 
               <div className="space-y-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-[6px] bg-accent/15 text-accent border border-accent/25">
-                    {isEscalated ? `Perlu Backup • ${totalItemCount} Judul` : "Mode Tamu • Belum Sinkron"}
+                  <span className="text-xs font-semibold text-accent">
+                    {isEscalated ? `${totalItemCount} judul tersimpan` : "Rak bacaan tamu"}
                   </span>
                   <span className="text-xs text-text-muted flex items-center gap-1">
-                    <HardDrives size={12} weight="bold" />
-                    Hanya di Device Ini
+                    <HardDrives size={16} weight="bold" aria-hidden="true" />
+                    Hanya di perangkat ini
                   </span>
                 </div>
 
                 <h3 className="text-sm sm:text-base font-bold text-text-primary tracking-tight">
-                  {isEscalated
-                    ? `Udah ${totalItemCount} komik nih, sayang banget kalau hilang`
-                    : `${totalItemCount} komik kamu masih 'nongkrong' di browser ini`}
+                  {isEscalated ? "Bawa rak bacaanmu ke perangkat lain" : "Simpan rak bacaanmu di akun"}
                 </h3>
 
-                <p className="text-xs text-text-secondary leading-relaxed max-w-2xl">
-                  {isEscalated
-                    ? "Daftar bacaan & status bacamu udah banyak di browser ini. Kalau ganti HP atau bersihin data, bakal pegel nyarinya satu-satu. Backup ke Google yuk, sekali klik langsung aman."
-                    : "Rak bukumu baru kesimpan di HP ini doang. Kalau kamu ganti device atau clear data browser, komik-komik ini nggak ikut kebawa. Tautkan Google biar aman."}
+                <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
+                  {totalItemCount} komik tersimpan di browser ini. Masuk dengan Google agar rak bacaanmu tersedia saat kamu berganti perangkat.
                 </p>
               </div>
             </div>
 
-            {/* Actions */}
             <div className="flex items-center gap-2 w-full sm:w-auto justify-end shrink-0 pt-1 sm:pt-0">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleDismiss}
-                className="h-9 px-3 text-xs font-semibold rounded-xl text-text-muted hover:text-text-primary border-border-subtle hover:bg-surface-hover"
-                title={isEscalated ? "Snooze 3 hari" : "Snooze 7 hari"}
+                className="text-text-secondary"
+                title={isEscalated ? "Ingatkan dalam 3 hari" : "Ingatkan minggu depan"}
               >
-                {isEscalated ? "Snooze 3 Hari" : "Santai Dulu"}
+                Nanti saja
               </Button>
 
               <Button
-                variant="default"
+                variant="primary"
                 size="sm"
                 onClick={handleLogin}
                 loading={isLoggingIn}
-                className="h-9 px-3.5 text-xs font-bold rounded-xl bg-accent hover:bg-accent-hover text-white flex items-center gap-1.5 shadow-xs active:scale-[0.98]"
               >
-                <GoogleLogo size={14} weight="bold" />
-                <span>{isEscalated ? "Backup Sekarang" : "Amankan ke Cloud"}</span>
+                <GoogleLogo size={18} weight="bold" />
+                <span>Masuk dengan Google</span>
               </Button>
 
               <button
                 type="button"
                 onClick={handleDismiss}
                 aria-label="Tutup pengingat"
-                className="hidden sm:flex size-8 items-center justify-center rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-hover transition-colors ml-1"
+                className="hidden sm:flex size-11 items-center justify-center rounded-xl text-text-muted hover:text-text-primary hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-accent transition-colors ml-1"
               >
                 <X size={15} weight="bold" />
               </button>
