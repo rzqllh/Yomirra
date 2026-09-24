@@ -9,6 +9,7 @@ import { MangaGrid } from "@/components/manga/manga-grid";
 import { ShelfCard } from "@/components/manga/card";
 import { CompactCard } from "@/components/manga/card/compact-card";
 import { ViewModeToggle } from "@/components/manga/view-mode-toggle";
+import { Button } from "@/components/ui/button";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import {
   Pagination,
@@ -28,13 +29,13 @@ import type { SourceMetadata } from "@/shared/sources/source-types";
 function getFriendlyErrorMessage(errorMsg: string): string {
   const msg = errorMsg.toLowerCase();
   if (msg.includes("timeout") || msg.includes("aborted") || msg.includes("fetch failed") || msg.includes("econnrefused")) {
-    return "tidak dapat dijangkau (koneksi lambat/putus)";
+    return "belum bisa dihubungi";
   }
   if (msg.includes("cloudflare") || msg.includes("503") || msg.includes("403")) {
-    return "diblokir perlindungan situs (Cloudflare)";
+    return "sementara menolak permintaan";
   }
   if (msg.includes("parser") || msg.includes("cheerio") || msg.includes("selector") || msg.includes("parse")) {
-    return "sedang bermasalah (perubahan struktur situs)";
+    return "sedang bermasalah";
   }
   return "gagal dimuat";
 }
@@ -102,7 +103,7 @@ export function SearchResults({
             return (
               <div
                 key={err.sourceId}
-                className="flex items-center justify-between p-3 rounded-[12px] bg-semantic-error/10 border border-semantic-error/20 text-xs font-semibold text-semantic-error"
+                className="flex items-center justify-between p-3 rounded-[12px] bg-status-error-bg border border-status-error-fg/20 text-sm font-medium text-status-error-fg"
               >
                 <div className="flex items-center gap-2 min-w-0">
                   <WarningCircle size={16} weight="fill" className="shrink-0" />
@@ -128,8 +129,8 @@ export function SearchResults({
           >
             <EmptyState
               icon={<WarningCircle size={40} className="text-accent" weight="duotone" />}
-              title="Tidak ada sumber aktif yang dipilih"
-              description="Pilih setidaknya satu sumber di atas untuk mulai mencari."
+              title="Pilih sumber dulu"
+              description="Pilih satu atau beberapa sumber di atas untuk mencari komik."
             />
           </motion.div>
         ) : isInitialLoading && searchMangas.length === 0 ? (
@@ -157,15 +158,16 @@ export function SearchResults({
                       searchableSources.find((s) => s.id === activeSelectedSources[0])?.name ||
                       activeSelectedSources[0]
                     } tidak dapat dimuat`
-                  : "Terjadi kesalahan pencarian"
+                  : "Pencarian belum berhasil"
               }
               description={
                 activeSelectedSources.length === 1
-                  ? "Gagal terhubung ke sumber ini. Silakan coba lagi beberapa saat."
-                  : "Semua sumber terpilih tidak dapat diakses saat ini."
+                  ? "Sumber ini belum bisa dihubungi. Coba lagi sebentar."
+                  : "Sumber yang kamu pilih belum bisa dihubungi. Coba lagi sebentar."
               }
               action={
-                <button
+                <Button
+                  variant="primary"
                   onClick={() => {
                     if (activeSelectedSources.length === 1) {
                       queryClient.invalidateQueries({
@@ -175,10 +177,9 @@ export function SearchResults({
                       queryClient.invalidateQueries({ queryKey: ["searchSource"] });
                     }
                   }}
-                  className="px-4 py-2 rounded-xl text-xs font-bold bg-accent text-white hover:bg-accent-hover transition-colors"
                 >
-                  Coba Lagi
-                </button>
+                  Coba lagi
+                </Button>
               }
             />
           </motion.div>

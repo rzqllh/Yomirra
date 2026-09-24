@@ -1,9 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { Books } from "@phosphor-icons/react";
+import { ArrowRight, Books } from "@phosphor-icons/react";
 import { PageHeader } from "@/components/app/header";
 import { YomirraSurface } from "@/components/ui/layout";
+import { CatalogControls } from "@/components/ui/catalog-controls";
 import { LibrarySkeleton } from "@/components/skeletons/library-skeleton";
 import { useLibraryCatalog } from "@/shared/hooks/use-library-catalog";
 import { LibraryToolbar } from "./library-toolbar";
@@ -31,50 +32,47 @@ export function LibraryPageView() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <h1 className="sr-only">Library Komik Yomirra</h1>
-      <span className="sr-only">Jelajah</span>
       <YomirraSurface variant="base" className="flex-1 w-full max-w-7xl mx-auto md:pb-8">
         <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] pb-28 md:pt-8 md:px-8 md:py-8">
           <PageHeader
-            title="Library"
-            description="Semua yang kamu simpan, dari berbagai sumber, dalam satu tempat."
+            title="Rak Bacaan"
+            description="Komik yang kamu simpan, siap dibaca lagi kapan saja."
             icon={<Books size={24} weight="duotone" />}
             actions={<HeaderActions />}
           />
 
-          {/* Source context row — below nav bar, above search/filter */}
-          <div className="flex items-center mb-3 md:hidden">
+          <div className="flex items-center mb-4 md:hidden">
             <Link
               href="/sources"
-              className="text-[11px] tracking-wider font-extrabold px-2.5 py-1 rounded-[8px] bg-accent/10 border border-accent/25 text-accent flex items-center gap-1.5 hover:bg-accent/20 transition-all shadow-xs active:scale-95"
+              className="inline-flex min-h-11 items-center gap-2 rounded-[12px] border border-border-default bg-surface-raised px-3 text-sm font-semibold text-text-secondary transition-colors hover:border-accent hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
-              <span>Sumber Aktif: <strong className="uppercase">{catalog.activeSourceId}</strong></span>
-              <span className="text-[10px]">&rarr;</span>
+              <span>Sumber: <strong className="text-text-primary">{catalog.activeSourceId}</strong></span>
+              <ArrowRight size={16} weight="bold" aria-hidden="true" />
             </Link>
           </div>
 
-          <div className="md:rounded-2xl md:border md:border-border-subtle md:bg-surface-raised/30 md:px-5 md:py-4">
+          <CatalogControls label="Cari dan saring rak bacaan">
             <LibraryToolbar
-            searchInput={catalog.searchInput}
-            onSearchInputChange={(e) => catalog.setSearchInput(e.target.value)}
-            onSearchSubmit={catalog.handleSearchSubmit}
-            onSearchClear={() => {
-              catalog.setSearchInput("");
-              catalog.setQuery("");
-              catalog.setPage(1);
-            }}
-            activeSourceId={catalog.activeSourceId}
-            activeFilterCount={catalog.activeFilterCount}
-          />
+              searchInput={catalog.searchInput}
+              onSearchInputChange={(e) => catalog.setSearchInput(e.target.value)}
+              onSearchSubmit={catalog.handleSearchSubmit}
+              onSearchClear={() => {
+                catalog.setSearchInput("");
+                catalog.setQuery("");
+                catalog.setPage(1);
+              }}
+              activeSourceId={catalog.activeSourceId}
+              activeFilterCount={catalog.activeFilterCount}
+            />
 
             <LibraryStatusRail
-            sort={catalog.sort}
-            onTabChange={catalog.handleTabChange}
-            dynamicSorts={catalog.DYNAMIC_SORTS}
-            selectedFormats={catalog.selectedFormats}
-            onPageReset={() => catalog.setPage(1)}
-          />
-          </div>
+              sort={catalog.sort}
+              onTabChange={catalog.handleTabChange}
+              dynamicSorts={catalog.DYNAMIC_SORTS}
+              selectedFormats={catalog.selectedFormats}
+              onPageReset={() => catalog.setPage(1)}
+            />
+          </CatalogControls>
 
           <GuestSyncBanner />
 

@@ -125,7 +125,7 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
   return (
     <FilterDrawerShell
       title="Filter Pencarian"
-      description="Atur filter pencarian berdasarkan urutan, status, dan genre manga."
+      description="Pilih urutan, status, dan genre yang ingin kamu lihat."
       activeCount={activeCount}
       onApply={handleApply}
       onReset={handleReset}
@@ -141,7 +141,7 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
             Sumber ini tidak menyediakan filter tambahan
           </p>
           <p className="text-xs text-text-muted mt-1 max-w-[280px] leading-relaxed">
-            Anda tetap dapat mencari komik secara langsung menggunakan bilah pencarian.
+            Kamu tetap bisa mencari judul lewat kolom di atas.
           </p>
         </div>
       ) : (
