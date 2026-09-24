@@ -4,11 +4,16 @@ import https from "node:https";
 import { isIP } from "node:net";
 
 export function isSafeIp(ip: string): boolean {
+  // WHATWG URL hostnames wrap IPv6 literals in brackets.
+  if (ip.startsWith("[") && ip.endsWith("]")) ip = ip.slice(1, -1);
   if (!isIP(ip)) return false;
 
   // IPv4 mapping in IPv6 (e.g. ::ffff:192.168.1.1)
   if (ip.startsWith("::ffff:")) {
-    ip = ip.substring(7);
+    const mapped = ip.substring(7);
+    // Reject hexadecimal IPv4-mapped forms as well; they can hide private IPv4.
+    if (isIP(mapped) !== 4) return false;
+    ip = mapped;
   }
 
   if (isIP(ip) === 4) {
@@ -117,7 +122,8 @@ export async function safeFetch(url: string, options: SafeFetchOptions = {}): Pr
 
     // If hostname is already an IP literal (or normalized numeric IP e.g. 2130706433 -> 127.0.0.1),
     // validate it immediately because http.Agent lookup is skipped by net.connect for IP literals.
-    if (isIP(parsedUrl.hostname) && !isSafeIp(parsedUrl.hostname)) {
+    const literalHost = parsedUrl.hostname.replace(/^\[|\]$/g, "");
+    if (isIP(literalHost) && !isSafeIp(literalHost)) {
       throw new Error(`SECURITY_REJECTED: Unsafe IP address ${parsedUrl.hostname}`);
     }
 

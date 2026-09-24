@@ -70,6 +70,8 @@ vi.mock("@/env", () => ({
 import { POST as handleWebhook } from "@/app/api/ops/telegram/webhook/route";
 import { POST as handleHealthDigestCron } from "@/app/api/ops/cron/health-digest/route";
 import { POST as handleDailyDigestCron } from "@/app/api/ops/cron/daily-digest/route";
+import { POST as handleObservabilityAlert } from "@/app/api/observability/alert/route";
+import { POST as handleDeployNotify } from "@/app/api/ops/notify/deploy/route";
 
 describe("Phase 4 — Telegram Ops Runtime V1 Unit Tests", () => {
   beforeEach(() => {
@@ -403,6 +405,20 @@ describe("Phase 4 — Telegram Ops Runtime V1 Unit Tests", () => {
   });
 
   describe("Scheduled Ops Endpoints Authentication", () => {
+    it("rejects unauthenticated client alerts", async () => {
+      const res = await handleObservabilityAlert(new Request("http://localhost/api/observability/alert", {
+        method: "POST", body: JSON.stringify({ sourceId: "shinigami", newStatus: "down" }),
+      }));
+      expect(res.status).toBe(401);
+    });
+
+    it("rejects deploy notifications when no deployment secret is configured", async () => {
+      const res = await handleDeployNotify(new Request("http://localhost/api/ops/notify/deploy", {
+        method: "POST", body: "{}",
+      }));
+      expect(res.status).toBe(401);
+    });
+
     it("rejects health-digest cron call without valid Bearer secret", async () => {
       const req = new Request("http://localhost/api/ops/cron/health-digest", {
         method: "POST",

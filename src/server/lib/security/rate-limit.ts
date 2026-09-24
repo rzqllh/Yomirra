@@ -4,8 +4,9 @@ import { NextRequest } from "next/server";
 export async function checkRateLimit(
   request: NextRequest,
   limit: number = process.env.NODE_ENV === "development" ? 1000 : 300, // requests
-  window: number = 60 // seconds
-): Promise<{ success: boolean; headers: Record<string, string> }> {
+  window: number = 60, // seconds
+  failClosed: boolean = false
+): Promise<{ success: boolean; headers: Record<string, string>; unavailable?: boolean }> {
   try {
     const ip =
       request.headers.get("x-real-ip") ||
@@ -42,9 +43,10 @@ export async function checkRateLimit(
       },
     };
   } catch (error) {
-    console.error("Rate limit check failed (Redis might be down), bypassing:", error instanceof Error ? error.message : "Unknown error");
+    console.error("Rate limit check failed:", error instanceof Error ? error.message : "Unknown error");
     return {
-      success: true,
+      success: !failClosed,
+      unavailable: true,
       headers: {
         "X-RateLimit-Limit": limit.toString(),
         "X-RateLimit-Remaining": limit.toString(),

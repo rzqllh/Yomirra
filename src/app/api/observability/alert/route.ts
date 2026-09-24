@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { sendTelegramMessage } from "@/server/lib/ops/telegram-notifier";
 import { AlertSeverity } from "@/server/lib/ops/severity";
+import { env } from "@/env";
 
 export const dynamic = "force-dynamic";
 
@@ -9,6 +10,11 @@ export const dynamic = "force-dynamic";
  * Eliminates duplicate Telegram fetch implementations by delegating to the unified ops notifier.
  */
 export async function POST(req: Request) {
+  const secret = env.OPS_CRON_SECRET || env.CRON_SECRET;
+  if (!secret || req.headers.get("authorization") !== `Bearer ${secret}`) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const body = await req.json();
     const { sourceId, oldStatus, newStatus, message } = body;

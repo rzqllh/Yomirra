@@ -3,6 +3,7 @@ import { sendTelegramMessage } from "@/server/lib/ops/telegram-notifier";
 import { AlertSeverity } from "@/server/lib/ops/severity";
 import { redis } from "@/server/lib/cache/redis";
 import { logger } from "@/shared/logger";
+import { env } from "@/env";
 
 export const dynamic = "force-dynamic";
 
@@ -41,6 +42,13 @@ function formatUserReport(payload: ReportPayload): string {
 }
 
 export async function POST(req: Request) {
+  if (process.env.NODE_ENV === "production") {
+    const origin = req.headers.get("origin");
+    if (origin !== new URL(env.NEXT_PUBLIC_APP_URL).origin) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+  }
+
   let payload: ReportPayload;
 
   try {
@@ -51,22 +59,6 @@ export async function POST(req: Request) {
 
   if (!payload.category || typeof payload.category !== "string") {
     return NextResponse.json({ error: "Missing category" }, { status: 400 });
-  }
-
-  // CSRF / Origin protection in production
-  if (process.env.NODE_ENV === "production") {
-    const origin = req.headers.get("origin");
-    const referer = req.headers.get("referer");
-    const host = req.headers.get("host");
-
-    const isLocal = host?.includes("localhost") || origin?.includes("localhost") || referer?.includes("localhost");
-    const isYomirra = host?.includes("yomirra") || origin?.includes("yomirra") || referer?.includes("yomirra");
-    const isVercel = host?.includes("vercel.app") || origin?.includes("vercel.app") || referer?.includes("vercel.app");
-
-    if (!isLocal && !isYomirra && !isVercel) {
-      logger.warn("User report rejected: invalid origin/referer", { origin, referer, host });
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-    }
   }
 
   // Sanitize inputs
@@ -87,7 +79,8 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Too many reports. Coba lagi dalam 10 menit." }, { status: 429 });
       }
     } catch {
-      logger.warn("Redis unavailable for rate limiting — report will proceed");
+      logger.warn("Redis unavailable for report rate limiting");
+      return NextResponse.json({ error: "Service temporarily unavailable" }, { status: 503 });
     }
   }
 

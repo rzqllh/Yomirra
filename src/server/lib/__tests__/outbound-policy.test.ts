@@ -21,6 +21,8 @@ describe('Outbound Policy Security Regression Suite', () => {
     it('rejects IPv6 private/local addresses', () => {
       expect(isSafeIp('fc00::1')).toBe(false);
       expect(isSafeIp('fe80::1')).toBe(false);
+      expect(isSafeIp('[::1]')).toBe(false);
+      expect(isSafeIp('::ffff:7f00:1')).toBe(false);
     });
 
     it('allows safe external IPs', () => {
@@ -47,6 +49,8 @@ describe('Outbound Policy Security Regression Suite', () => {
       await expect(safeFetch('http://2130706433/')).rejects.toThrowError('SECURITY_REJECTED: Unsafe IP address 127.0.0.1');
       await expect(safeFetch('http://0x7f000001/')).rejects.toThrowError('SECURITY_REJECTED: Unsafe IP address 127.0.0.1');
       await expect(safeFetch('http://0177.0.0.1/')).rejects.toThrowError('SECURITY_REJECTED: Unsafe IP address 127.0.0.1');
+      await expect(safeFetch('http://[::1]/')).rejects.toThrowError('SECURITY_REJECTED: Unsafe IP address');
+      await expect(safeFetch('http://[::ffff:7f00:1]/')).rejects.toThrowError('SECURITY_REJECTED: Unsafe IP address');
     });
   });
 });

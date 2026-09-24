@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { useLibraryStore } from "../library-store";
+import { deleteLibraryItem } from "@/shared/lib/sync-utils";
 
 vi.mock("@/shared/lib/sync-utils", () => ({
   pushLibraryItem: vi.fn().mockResolvedValue(undefined),
@@ -8,7 +9,22 @@ vi.mock("@/shared/lib/sync-utils", () => ({
 
 describe("library-store Phase 1 Identity & Relinking", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     useLibraryStore.setState({ items: {} });
+  });
+
+  it("deletes the cloud document using the saved title ID", () => {
+    useLibraryStore.setState({ items: {
+      "saved-uuid": {
+        id: "saved-uuid", sourceId: "mangadex", mangaId: "manga-1",
+        title: "Test", addedAt: "2026-01-01", updatedAt: "2026-01-01",
+      },
+    } });
+
+    useLibraryStore.getState().removeFromLibrary("mangadex", "manga-1");
+
+    expect(deleteLibraryItem).toHaveBeenCalledWith("mangadex", "manga-1", "saved-uuid");
+    expect(useLibraryStore.getState().items).toEqual({});
   });
 
   it("assigns SavedTitleId and initializes Phase 1 identity fields on new items", () => {
