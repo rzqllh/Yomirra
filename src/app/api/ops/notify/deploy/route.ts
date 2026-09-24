@@ -8,7 +8,7 @@ import { redis } from "@/server/lib/cache/redis";
 
 export async function POST(req: Request) {
   const authHeader = req.headers.get("authorization");
-  if (env.VERCEL_DEPLOY_SECRET && authHeader !== `Bearer ${env.VERCEL_DEPLOY_SECRET}`) {
+  if (!env.VERCEL_DEPLOY_SECRET || authHeader !== `Bearer ${env.VERCEL_DEPLOY_SECRET}`) {
     logger.warn("Unauthorized attempt to trigger deploy notify");
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

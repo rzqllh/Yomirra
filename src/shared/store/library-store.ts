@@ -78,8 +78,8 @@ const enforceItemCap = (items: Record<string, LibraryItem>, maxItems = 1000) => 
   const keysToRemove = sortedKeys.slice(maxItems);
   const newItems = { ...items };
   keysToRemove.forEach(key => {
-    const [sourceId, mangaId] = key.split("::");
-    setTimeout(() => deleteLibraryItem(sourceId, mangaId), 0);
+    const item = newItems[key];
+    setTimeout(() => deleteLibraryItem(item.sourceId, item.mangaId, item.id ?? key), 0);
     delete newItems[key];
   });
   
@@ -157,6 +157,12 @@ export const useLibraryStore = create<LibraryState>()(
 
       removeFromLibrary: (sourceId, mangaId) => {
         const previousState = get().items;
+        const removedItems = Object.entries(previousState).filter(([key, item]) =>
+          key === getLibraryId(sourceId, mangaId) ||
+          (item.primarySourceId === sourceId && item.primaryMangaId === mangaId) ||
+          (item.sourceId === sourceId && item.mangaId === mangaId)
+        );
+        if (removedItems.length === 0) return;
         set((state) => {
           const legacyId = getLibraryId(sourceId, mangaId);
           const newItems = { ...state.items };
@@ -175,7 +181,9 @@ export const useLibraryStore = create<LibraryState>()(
         });
 
         // Async Background sync with rollback
-        deleteLibraryItem(sourceId, mangaId).catch(() => {
+        Promise.all(removedItems.map(([key, item]) =>
+          deleteLibraryItem(item.sourceId, item.mangaId, item.id ?? key)
+        )).catch(() => {
           set({ items: previousState });
           toast.error("Gagal menghapus bookmark dari cloud. Periksa koneksi internet.");
         });

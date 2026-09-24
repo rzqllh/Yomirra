@@ -183,11 +183,15 @@ class ApiClient {
                return;
             }
 
-            const res = await this.fetcher<Record<string, number | undefined>>(`/api/metadata/rating-batch`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ titles })
-            });
+            const res: Record<string, number | undefined> = {};
+            for (let i = 0; i < titles.length; i += 20) {
+              const chunk = titles.slice(i, i + 20);
+              Object.assign(res, await this.fetcher<Record<string, number | undefined>>(`/api/metadata/rating-batch`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ titles: chunk })
+              }));
+            }
 
             currentBatch.forEach(b => {
               b.resolve({ score: res[b.title] });

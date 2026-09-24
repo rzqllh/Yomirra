@@ -1,21 +1,34 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { withCache } from "@/server/lib/cache/redis-cache";
+import { checkRateLimit } from "@/server/lib/security/rate-limit";
+
+const MAX_TITLES = 20;
+const MAX_TITLE_LENGTH = 120;
+const CONCURRENCY = 4;
 
 export async function POST(req: NextRequest) {
+  const rateLimit = await checkRateLimit(req, 30, 60, true);
+  if (!rateLimit.success) {
+    return NextResponse.json({ error: rateLimit.unavailable ? "Service temporarily unavailable" : "Too many requests" }, {
+      status: rateLimit.unavailable ? 503 : 429,
+      headers: rateLimit.headers,
+    });
+  }
   try {
     const body = await req.json();
     const titles: string[] = body.titles;
 
-    if (!Array.isArray(titles) || titles.length === 0) {
+    if (!Array.isArray(titles) || titles.length === 0 || titles.length > MAX_TITLES ||
+        titles.some((title) => typeof title !== "string" || title.length > MAX_TITLE_LENGTH)) {
       return NextResponse.json({ error: "Missing or invalid titles array" }, { status: 400 });
     }
 
     const results: Record<string, number | undefined> = {};
     const uniqueTitles = Array.from(new Set(titles)).filter(Boolean);
 
-    await Promise.all(
-      uniqueTitles.map(async (title) => {
+    for (let i = 0; i < uniqueTitles.length; i += CONCURRENCY) {
+      await Promise.all(uniqueTitles.slice(i, i + CONCURRENCY).map(async (title) => {
         const normalizedTitle = title
           .replace(/chapter\s*\d+/i, "")
           .replace(/\[.*?\]/g, "")
@@ -107,8 +120,8 @@ export async function POST(req: NextRequest) {
           console.error(`Rating batch score error for ${title}:`, error);
           results[title] = undefined;
         }
-      })
-    );
+      }));
+    }
 
     return NextResponse.json({ data: results });
   } catch (error) {
@@ -116,4 +129,3 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
-

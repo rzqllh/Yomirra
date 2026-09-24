@@ -39,20 +39,6 @@ export const useSourceHealthStore = create<SourceHealthState>()(
         let newStatus: HealthStatus = "online";
         if (avgLatency > 5000) newStatus = "slow";
         
-        if (newStatus !== current.status && (current.status === "offline" || current.status === "degraded") && typeof window !== "undefined") {
-          // Fire non-blocking recovery alert
-          fetch("/api/observability/alert", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              sourceId,
-              oldStatus: current.status,
-              newStatus,
-              message: "Source recovered",
-            }),
-          }).catch(console.error);
-        }
-
         return {
           healthBySource: {
             ...state.healthBySource,
@@ -76,20 +62,6 @@ export const useSourceHealthStore = create<SourceHealthState>()(
           newStatus = "offline";
         } else if (failures > 0) {
           newStatus = "degraded";
-        }
-
-        if (newStatus !== current.status && newStatus !== "unknown" && typeof window !== "undefined") {
-          // Fire non-blocking alert
-          fetch("/api/observability/alert", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              sourceId,
-              oldStatus: current.status,
-              newStatus,
-              message: error.message || "Unknown error",
-            }),
-          }).catch(console.error);
         }
 
         return {
