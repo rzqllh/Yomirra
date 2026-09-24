@@ -41,7 +41,7 @@ export function DesktopRail() {
   };
 
   return (
-    <aside className="hidden md:flex fixed inset-y-0 left-0 top-[72px] z-30 w-[76px] xl:w-[220px] flex-col border-r border-border-subtle bg-surface-base/95 px-2 xl:px-3 py-6 backdrop-blur-xl">
+    <aside className="hidden md:flex fixed top-[72px] bottom-0 left-0 z-30 w-[76px] xl:w-[220px] flex-col border-r border-border-subtle bg-surface-base/95 px-2 xl:px-3 py-6 backdrop-blur-xl">
       <nav aria-label="Navigasi utama" className="flex flex-col gap-1">
         <span className="hidden xl:block px-3 pb-2 text-[11px] font-bold uppercase tracking-widest text-text-muted">Jelajah</span>
         {MAIN_NAV_ITEMS.map(renderItem)}
