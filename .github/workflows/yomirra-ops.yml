@@ -29,7 +29,7 @@ jobs:
           github.event_name == 'workflow_dispatch' && (inputs.job_type == 'health-digest' || inputs.job_type == 'both')
         run: |
           echo "Triggering Yomirra 6-Hour Health Digest..."
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "https://yomirra.vercel.app/api/ops/cron/health-digest" \
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "https://www.yomirra.web.id/api/ops/cron/health-digest" \
             -H "Authorization: Bearer ${{ secrets.OPS_CRON_SECRET }}" \
             -H "Content-Type: application/json")
           echo "Response HTTP Status: $STATUS"
@@ -44,7 +44,7 @@ jobs:
           github.event_name == 'workflow_dispatch' && (inputs.job_type == 'daily-digest' || inputs.job_type == 'both')
         run: |
           echo "Triggering Yomirra Daily Digest..."
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "https://yomirra.vercel.app/api/ops/cron/daily-digest" \
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST "https://www.yomirra.web.id/api/ops/cron/daily-digest" \
             -H "Authorization: Bearer ${{ secrets.OPS_CRON_SECRET }}" \
             -H "Content-Type: application/json")
           echo "Response HTTP Status: $STATUS"

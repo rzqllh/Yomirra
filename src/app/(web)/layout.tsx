@@ -12,7 +12,7 @@ const yujiBoku = Yuji_Boku({ variable: "--font-editorial", weight: "400", subset
 const newsreader = Newsreader({ variable: "--font-caption", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://yomirra.vercel.app"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://www.yomirra.web.id"),
   title: "Yomirra",
   description: "A source-powered reader for manga, comics, and webtoons.",
   appleWebApp: {
