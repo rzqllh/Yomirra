@@ -41,11 +41,12 @@ export function MangaSourceSelector({
   const linkedSources = (libraryItem?.linkedSources || []).filter((linked) => {
     if (linked.sourceId === sourceId && linked.mangaId === mangaId) return false;
     const source = getSourceMetadata(linked.sourceId);
+    if (!source) return false;
     return (
-      source?.isEnabled !== false &&
-      source?.isInstalled !== false &&
-      source?.status !== "unavailable" &&
-      source?.status !== "in-fix"
+      source.isEnabled !== false &&
+      source.isInstalled !== false &&
+      source.status !== "unavailable" &&
+      source.status !== "in-fix"
     );
   });
 
