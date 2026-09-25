@@ -275,7 +275,7 @@ export function ContinuousVerticalReader({
     <div className="flex min-h-screen w-full flex-col items-center select-none pb-12 bg-black/95 dark:bg-black">
       {/* Chapter Degraded Recovery Banner */}
       {failedPageIndices.size > 0 && (
-        <div className="fixed top-[calc(var(--mobile-header-height)+var(--safe-top)+10px)] z-40 max-w-md w-[calc(100%-32px)] mx-auto left-0 right-0 p-3 rounded-2xl bg-surface-raised/95 backdrop-blur-xl border border-semantic-warning/30 shadow-lg flex items-center justify-between gap-3 text-xs animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="fixed top-[calc(var(--mobile-header-height)+var(--safe-top)+10px)] z-40 max-w-md w-[calc(100%-32px)] mx-auto left-0 right-0 p-3 rounded-xl bg-surface-raised/95 backdrop-blur-xl border border-semantic-warning/30 shadow-lg flex items-center justify-between gap-3 text-xs animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="flex items-center gap-2 text-semantic-warning font-medium">
             <Warning size={18} weight="fill" className="shrink-0" />
             <span>{failedPageIndices.size} halaman gagal dimuat</span>
@@ -376,7 +376,7 @@ export function ContinuousVerticalReader({
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] h-[200px] bg-accent/12 rounded-full blur-[80px] pointer-events-none -z-10" />
 
         {/* Milestone Card Dock */}
-        <div className="w-full rounded-2xl bg-zinc-950/85 border border-white/[0.08] backdrop-blur-2xl p-4 sm:p-5 flex flex-col gap-4 shadow-[0_12px_40px_rgba(0,0,0,0.8)] relative">
+        <div className="w-full rounded-xl bg-zinc-950/85 border border-white/[0.08] backdrop-blur-2xl p-4 sm:p-5 flex flex-col gap-4 shadow-[0_12px_40px_rgba(0,0,0,0.8)] relative">
           {/* Header Status Line */}
           <div className="flex items-center justify-between border-b border-white/[0.06] pb-3.5">
             <div className="flex items-center gap-2 min-w-0 pr-2">

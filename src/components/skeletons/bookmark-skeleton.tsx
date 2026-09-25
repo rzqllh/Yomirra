@@ -17,7 +17,7 @@ export function BookmarkSkeleton() {
 
       {/* Notion-Style Jadwal Rilis Mingguan Shortcut Banner Placeholder */}
       <div className="px-4 pb-3 w-full">
-        <div className="flex items-center justify-between p-3.5 rounded-2xl bg-surface-raised border border-border-subtle shadow-xs">
+        <div className="flex items-center justify-between p-3.5 rounded-xl bg-surface-raised border border-border-subtle shadow-xs">
           <div className="flex items-center gap-3">
             <Skeleton className="w-10 h-10 rounded-xl" />
             <div className="space-y-1.5">
@@ -30,7 +30,7 @@ export function BookmarkSkeleton() {
 
       {/* SegmentedControl placeholder */}
       <div className="px-4 pt-1 pb-4 w-full">
-        <Skeleton className="h-[46px] w-full rounded-2xl" />
+        <Skeleton className="h-[46px] w-full rounded-xl" />
       </div>
 
       {/* Cards placeholder */}

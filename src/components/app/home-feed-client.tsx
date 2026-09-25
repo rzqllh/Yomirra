@@ -215,7 +215,7 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
               <div className="shrink-0 snap-start w-[140px] sm:w-[155px] md:hidden flex items-center justify-center p-2">
                 <Link
                   href="/library"
-                  className="w-full aspect-[3/4] rounded-2xl border-2 border-dashed border-border-default hover:border-accent hover:bg-accent/5 text-text-muted hover:text-accent transition-all flex flex-col items-center justify-center gap-2 font-bold"
+                  className="w-full aspect-[3/4] rounded-xl border-2 border-dashed border-border-default hover:border-accent hover:bg-accent/5 text-text-muted hover:text-accent transition-all flex flex-col items-center justify-center gap-2 font-bold"
                 >
                   <MagnifyingGlass size={24} />
                   <span className="text-sm">Lihat Semua</span>

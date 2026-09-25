@@ -241,7 +241,7 @@ export function ReaderShell({
             <div className="w-full pt-[calc(var(--safe-top)+10px)] pb-3 px-3 flex items-center justify-center pointer-events-none">
               <div
                 className={cn(
-                  "pointer-events-auto relative overflow-hidden flex items-center justify-between w-full max-w-md md:max-w-2xl h-[52px] sm:h-[56px] px-2.5 sm:px-3 rounded-2xl transition-all duration-300 shadow-xl border",
+                  "pointer-events-auto relative overflow-hidden flex items-center justify-between w-full max-w-md md:max-w-2xl h-[52px] sm:h-[56px] px-2.5 sm:px-3 rounded-xl transition-all duration-300 shadow-xl border",
                   "bg-surface-overlay/95 backdrop-blur-xl border-border-subtle text-text-primary"
                 )}
               >
@@ -378,7 +378,7 @@ export function ReaderShell({
               )}
 
               {/* Yomirra Ink Editorial Bottom Dock */}
-              <div className="pointer-events-auto flex h-[58px] sm:h-[62px] w-full max-w-[440px] sm:max-w-[480px] mx-auto items-center justify-between gap-2 rounded-2xl bg-surface-overlay/95 backdrop-blur-xl border border-border-subtle text-text-primary px-3 shadow-2xl transition-all duration-300">
+              <div className="pointer-events-auto flex h-[58px] sm:h-[62px] w-full max-w-[440px] sm:max-w-[480px] mx-auto items-center justify-between gap-2 rounded-xl bg-surface-overlay/95 backdrop-blur-xl border border-border-subtle text-text-primary px-3 shadow-2xl transition-all duration-300">
                 <motion.button
                   aria-label="Chapter sebelumnya"
                   whileTap={{ scale: 0.9 }}

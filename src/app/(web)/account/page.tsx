@@ -70,7 +70,7 @@ export default function AccountPage() {
         {/* Profile Card */}
         {user ? (
           <div className="rounded-[28px] border border-border-glass bg-surface-glass backdrop-blur-2xl p-6 shadow-glass flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
-            <div className="size-20 rounded-2xl overflow-hidden border border-border-default/60 shrink-0 bg-surface-raised shadow-xs flex items-center justify-center">
+            <div className="size-20 rounded-xl overflow-hidden border border-border-default/60 shrink-0 bg-surface-raised shadow-xs flex items-center justify-center">
               {user.photoURL ? (
                 <img
                   src={user.photoURL}
@@ -102,7 +102,7 @@ export default function AccountPage() {
           </div>
         ) : (
           <div className="rounded-[28px] border border-border-glass bg-surface-glass backdrop-blur-2xl p-6 shadow-glass text-center space-y-4">
-            <div className="size-16 mx-auto rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
+            <div className="size-16 mx-auto rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
               <UserCircle size={36} weight="duotone" />
             </div>
             <div>
@@ -145,7 +145,7 @@ export default function AccountPage() {
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl bg-surface-raised/50 border border-border-subtle/40 text-xs text-text-secondary space-y-2">
+            <div className="p-4 rounded-xl bg-surface-raised/50 border border-border-subtle/40 text-xs text-text-secondary space-y-2">
               <div className="flex items-center justify-between">
                 <span>Database Cloud:</span>
                 <span className="font-bold text-text-primary">Firebase Firestore</span>

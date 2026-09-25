@@ -42,7 +42,7 @@ export function EditorialCard({
         style={vtStyle}
       >
         {/* Cover Bento Cell */}
-        <div className="relative w-[80px] shrink-0 bg-surface-base rounded-2xl overflow-hidden group-hover:shadow-lg group-hover:shadow-accent/5 transition-all">
+        <div className="relative w-[80px] shrink-0 bg-surface-base rounded-xl overflow-hidden group-hover:shadow-lg group-hover:shadow-accent/5 transition-all">
           {manga.coverUrl && !imageError ? (
             <img src={manga.coverUrl} alt={manga.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={() => setImageError(true)} referrerPolicy="no-referrer" loading="lazy" decoding="async" />
           ) : (

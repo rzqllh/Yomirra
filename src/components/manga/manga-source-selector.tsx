@@ -93,7 +93,7 @@ export function MangaSourceSelector({
 
           <div className="flex flex-col gap-3 pt-2">
             {/* Current Active Source */}
-            <div className="flex items-center justify-between p-3 rounded-2xl bg-surface-raised border border-border-default/60">
+            <div className="flex items-center justify-between p-3 rounded-xl bg-surface-raised border border-border-default/60">
               <div className="flex flex-col">
                 <span className="text-sm font-bold text-text-primary flex items-center gap-1.5">
                   {currentSourceName}
@@ -131,7 +131,7 @@ export function MangaSourceSelector({
                   return (
                     <div
                       key={`${linked.sourceId}::${linked.mangaId}`}
-                      className="flex items-center justify-between p-3 rounded-2xl bg-surface-base border border-border-subtle hover:border-border-default transition-all"
+                      className="flex items-center justify-between p-3 rounded-xl bg-surface-base border border-border-subtle hover:border-border-default transition-all"
                     >
                       <div className="flex flex-col">
                         <span className="text-sm font-bold text-text-primary flex items-center gap-1.5">

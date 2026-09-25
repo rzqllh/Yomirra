@@ -133,7 +133,7 @@ export function MangaCollectionButton({
             <>
               <DialogHeader className="gap-3">
                 <div
-                  className="flex h-12 w-12 items-center justify-center rounded-2xl border border-accent/30 bg-gradient-to-br from-accent/20 via-accent/10 to-transparent text-accent shadow-xs shrink-0 select-none"
+                  className="flex h-12 w-12 items-center justify-center rounded-xl border border-accent/30 bg-gradient-to-br from-accent/20 via-accent/10 to-transparent text-accent shadow-xs shrink-0 select-none"
                   aria-hidden="true"
                 >
                   <FolderPlus size={22} weight="duotone" />
@@ -157,7 +157,7 @@ export function MangaCollectionButton({
                         key={col.id}
                         onClick={() => handleToggle(col.id, isMember)}
                         className={cn(
-                          "flex items-center justify-between w-full p-3.5 rounded-2xl transition-all border outline-none font-semibold text-sm select-none active:scale-[0.99]",
+                          "flex items-center justify-between w-full p-3.5 rounded-xl transition-all border outline-none font-semibold text-sm select-none active:scale-[0.99]",
                           isMember
                             ? "bg-accent/15 border-accent/30 text-accent font-bold shadow-xs"
                             : "bg-surface-base border-border-default/60 text-text-primary hover:bg-surface-hover hover:border-border-strong"
@@ -175,7 +175,7 @@ export function MangaCollectionButton({
                 <Button 
                   onClick={() => setIsCreateMode(true)} 
                   variant="outline" 
-                  className="w-full h-11 rounded-2xl font-bold border-dashed border-border-default/80 hover:border-accent hover:text-accent"
+                  className="w-full h-11 rounded-xl font-bold border-dashed border-border-default/80 hover:border-accent hover:text-accent"
                 >
                   <FolderPlus size={18} className="mr-2" /> Buat Koleksi Baru
                 </Button>
@@ -185,7 +185,7 @@ export function MangaCollectionButton({
             <form onSubmit={handleCreate} className="flex flex-col gap-5">
               <DialogHeader className="gap-3">
                 <div
-                  className="flex h-12 w-12 items-center justify-center rounded-2xl border border-accent/30 bg-gradient-to-br from-accent/20 via-accent/10 to-transparent text-accent shadow-xs shrink-0 select-none"
+                  className="flex h-12 w-12 items-center justify-center rounded-xl border border-accent/30 bg-gradient-to-br from-accent/20 via-accent/10 to-transparent text-accent shadow-xs shrink-0 select-none"
                   aria-hidden="true"
                 >
                   <FolderPlus size={22} weight="duotone" />
@@ -210,7 +210,7 @@ export function MangaCollectionButton({
                   onChange={(e) => setNewCollectionName(e.target.value)}
                   placeholder="Nama Koleksi"
                   maxLength={40}
-                  className="w-full bg-surface-base border border-border-default hover:border-border-strong rounded-2xl px-4 py-3 outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 text-text-primary placeholder:text-text-muted transition-all font-medium text-sm"
+                  className="w-full bg-surface-base border border-border-default hover:border-border-strong rounded-xl px-4 py-3 outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 text-text-primary placeholder:text-text-muted transition-all font-medium text-sm"
                 />
               </div>
 
@@ -219,7 +219,7 @@ export function MangaCollectionButton({
                   type="button"
                   variant="ghost"
                   onClick={() => setIsCreateMode(false)}
-                  className="flex-1 sm:flex-none h-11 px-5 rounded-2xl font-bold border border-border-default/40 hover:bg-surface-hover"
+                  className="flex-1 sm:flex-none h-11 px-5 rounded-xl font-bold border border-border-default/40 hover:bg-surface-hover"
                 >
                   Batal
                 </Button>
@@ -227,7 +227,7 @@ export function MangaCollectionButton({
                   type="submit"
                   variant="accent"
                   disabled={!newCollectionName.trim()}
-                  className="flex-1 sm:flex-none h-11 px-5 rounded-2xl font-bold shadow-xs active:scale-95 transition-all"
+                  className="flex-1 sm:flex-none h-11 px-5 rounded-xl font-bold shadow-xs active:scale-95 transition-all"
                 >
                   Buat & Tambahkan
                 </Button>

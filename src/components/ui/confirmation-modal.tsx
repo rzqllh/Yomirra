@@ -140,7 +140,7 @@ export function ConfirmationModal({
               variant="ghost"
               onClick={() => onOpenChange(false)}
               disabled={isBusy}
-              className="flex-1 sm:flex-none h-11 px-5 rounded-2xl font-bold border border-border-default/40 hover:bg-surface-hover"
+              className="flex-1 sm:flex-none h-11 px-5 rounded-xl font-bold border border-border-default/40 hover:bg-surface-hover"
             >
               {cancelLabel}
             </Button>
@@ -150,7 +150,7 @@ export function ConfirmationModal({
               onClick={handleConfirm}
               disabled={isBusy || isConfirmBlocked}
               className={cn(
-                "flex-1 sm:flex-none h-11 px-5 rounded-2xl font-bold shadow-xs active:scale-95 transition-all",
+                "flex-1 sm:flex-none h-11 px-5 rounded-xl font-bold shadow-xs active:scale-95 transition-all",
                 isConfirmBlocked && "opacity-40 cursor-not-allowed active:scale-100"
               )}
             >

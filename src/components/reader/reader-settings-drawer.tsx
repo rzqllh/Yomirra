@@ -123,7 +123,7 @@ export function ReaderSettingsDrawer({ isOpen, onClose }: ReaderSettingsDrawerPr
         </div>
         
         {/* Warna Latar Belakang */}
-        <div className="p-4 bg-surface-base rounded-2xl border border-border-subtle flex flex-col gap-3">
+        <div className="p-4 bg-surface-base rounded-xl border border-border-subtle flex flex-col gap-3">
           <span className="text-sm font-bold text-text-primary">Warna Latar Belakang</span>
           <div className="grid grid-cols-3 gap-2">
             {BACKGROUNDS.map((bg) => {
@@ -162,7 +162,7 @@ export function ReaderSettingsDrawer({ isOpen, onClose }: ReaderSettingsDrawerPr
           <ImageSquare size={14} weight="bold" /> Penyesuaian Gambar
         </div>
 
-        <div className="bg-surface-base rounded-2xl border border-border-subtle divide-y divide-border-subtle">
+        <div className="bg-surface-base rounded-xl border border-border-subtle divide-y divide-border-subtle">
           <ReaderSettingsOption
             icon={<BoundingBox size={18} className="text-accent" weight="bold" />}
             title="Kesesuaian Gambar"
@@ -195,7 +195,7 @@ export function ReaderSettingsDrawer({ isOpen, onClose }: ReaderSettingsDrawerPr
           <Lightning size={14} weight="bold" /> Kontrol & Performa
         </div>
 
-        <div className="bg-surface-base rounded-2xl border border-border-subtle divide-y divide-border-subtle">
+        <div className="bg-surface-base rounded-xl border border-border-subtle divide-y divide-border-subtle">
           <ReaderSettingsOption
             icon={<SlidersHorizontal size={18} className="text-accent" weight="bold" />}
             title="Bar Navigasi Pembaca"

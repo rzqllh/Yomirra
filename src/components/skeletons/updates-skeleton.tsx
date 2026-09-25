@@ -18,7 +18,7 @@ export function UpdatesSkeleton({ count = 6, className }: UpdatesSkeletonProps) 
           <div
             key={index}
             style={{ animationDelay: staggerDelay }}
-            className="p-3 rounded-2xl bg-surface-raised/70 border border-border-subtle shadow-xs flex items-center justify-between gap-3 animate-fade-in"
+            className="p-3 rounded-xl bg-surface-raised/70 border border-border-subtle shadow-xs flex items-center justify-between gap-3 animate-fade-in"
           >
             {/* Left: Thumbnail & Metadata */}
             <div className="flex items-center gap-3 min-w-0 flex-1">

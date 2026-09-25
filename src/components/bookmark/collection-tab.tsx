@@ -301,7 +301,7 @@ export function CollectionTab({
                       type="button"
                       onClick={() => onToggleSelectItem(itemKey)}
                       className={cn(
-                        "absolute inset-0 z-20 rounded-2xl flex items-start justify-end p-2.5 transition-all duration-200",
+                        "absolute inset-0 z-20 rounded-xl flex items-start justify-end p-2.5 transition-all duration-200",
                         isSelected
                           ? "bg-accent/20 border-2 border-accent"
                           : "bg-black/40 hover:bg-black/50 border border-white/20"

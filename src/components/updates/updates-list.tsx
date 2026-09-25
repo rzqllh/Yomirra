@@ -79,7 +79,7 @@ function ErrorBanner({
   const label = count === 1 ? "1 manga" : `${count} manga`;
 
   return (
-    <div className="mb-6 rounded-2xl bg-semantic-error/8 border border-semantic-error/20 overflow-hidden shadow-xs">
+    <div className="mb-6 rounded-xl bg-semantic-error/8 border border-semantic-error/20 overflow-hidden shadow-xs">
       <div className="flex gap-3 items-start p-3.5">
         <WarningCircle
           size={18}
@@ -404,7 +404,7 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
 
           {/* Manga List for Selected Day */}
           {displayedItems.length === 0 ? (
-            <div className="py-12 rounded-2xl bg-surface-raised/50 border border-border-subtle p-6 text-center space-y-3">
+            <div className="py-12 rounded-xl bg-surface-raised/50 border border-border-subtle p-6 text-center space-y-3">
               <CalendarBlank size={36} className="text-text-muted mx-auto" weight="duotone" />
               <div className="space-y-1">
                 <h3 className="text-sm font-bold text-text-primary">

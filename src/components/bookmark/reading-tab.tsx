@@ -99,7 +99,7 @@ export function ReadingTab({
           return (
             <div
               key={`${group.sourceId}::${group.mangaId}`}
-              className="group relative flex flex-col bg-surface-raised/20 hover:bg-surface-raised/50 border border-border-subtle/50 rounded-2xl p-3 shadow-none transition-all duration-200"
+              className="group relative flex flex-col bg-surface-raised/20 hover:bg-surface-raised/50 border border-border-subtle/50 rounded-xl p-3 shadow-none transition-all duration-200"
             >
               <div className="flex gap-3 items-start">
                 <Link

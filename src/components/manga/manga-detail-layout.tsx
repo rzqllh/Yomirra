@@ -132,7 +132,7 @@ export function MangaDetailLayout({
       <div className="w-full relative z-10 bg-surface-base">
         <div className="w-full max-w-7xl mx-auto px-4 md:px-8 py-5 flex flex-col gap-6">
           {/* Synopsis Section */}
-          <div className="rounded-2xl border border-border-default/80 bg-surface-raised p-4 md:p-5 shadow-xs">
+          <div className="rounded-xl border border-border-default/80 bg-surface-raised p-4 md:p-5 shadow-xs">
             {synopsis}
           </div>
 

@@ -68,7 +68,7 @@ export function MangaStatusButton({ sourceId, mangaId }: MangaStatusButtonProps)
         <DialogContent className="max-w-sm sm:max-w-md">
           <DialogHeader className="gap-3">
             <div
-              className="flex h-12 w-12 items-center justify-center rounded-2xl border border-accent/30 bg-gradient-to-br from-accent/20 via-accent/10 to-transparent text-accent shadow-xs shrink-0 select-none"
+              className="flex h-12 w-12 items-center justify-center rounded-xl border border-accent/30 bg-gradient-to-br from-accent/20 via-accent/10 to-transparent text-accent shadow-xs shrink-0 select-none"
               aria-hidden="true"
             >
               <BookOpenText size={22} weight="duotone" />
@@ -89,7 +89,7 @@ export function MangaStatusButton({ sourceId, mangaId }: MangaStatusButtonProps)
                   key={option.value}
                   onClick={() => handleSelect(option.value)}
                   className={cn(
-                    "flex items-center justify-between w-full p-3.5 rounded-2xl transition-all border outline-none font-semibold text-sm select-none active:scale-[0.99]",
+                    "flex items-center justify-between w-full p-3.5 rounded-xl transition-all border outline-none font-semibold text-sm select-none active:scale-[0.99]",
                     isActive
                       ? "bg-accent/15 border-accent/30 text-accent font-bold shadow-xs"
                       : "bg-surface-base border-border-default/60 text-text-primary hover:bg-surface-hover hover:border-border-strong"

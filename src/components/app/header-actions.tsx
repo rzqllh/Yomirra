@@ -24,7 +24,7 @@ export function HeaderActions({ className }: { className?: string } = {}) {
       <Link
         href="/updates"
         transitionTypes={["nav-lateral"]}
-        className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-surface-glass backdrop-blur-md border border-border-default/40 text-text-primary hover:bg-surface-hover hover:border-border-strong active:scale-95 transition-all outline-none select-none shadow-xs"
+        className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-surface-glass backdrop-blur-md border border-border-default/40 text-text-primary hover:bg-surface-hover hover:border-border-strong active:scale-95 transition-all outline-none select-none shadow-xs"
         aria-label={accessibleLabel}
       >
         <Bell size={20} weight={showBadge ? "fill" : "regular"} className="shrink-0" />
@@ -44,7 +44,7 @@ export function HeaderActions({ className }: { className?: string } = {}) {
       <Link
         href="/settings"
         transitionTypes={["nav-lateral"]}
-        className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-surface-glass backdrop-blur-md border border-border-default/40 text-text-primary hover:bg-surface-hover hover:border-border-strong active:scale-95 transition-all outline-none select-none shadow-xs"
+        className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-surface-glass backdrop-blur-md border border-border-default/40 text-text-primary hover:bg-surface-hover hover:border-border-strong active:scale-95 transition-all outline-none select-none shadow-xs"
         aria-label="Pengaturan"
       >
         <Gear size={20} weight="regular" className="shrink-0" />

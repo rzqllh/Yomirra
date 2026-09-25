@@ -28,7 +28,7 @@ export function CollectionSelectionToolbar({
 
   return (
     <>
-      <div className="flex items-center justify-between gap-3 p-3 bg-surface-raised border border-border-subtle rounded-2xl mb-4 animate-in fade-in slide-in-from-top-2 duration-200">
+      <div className="flex items-center justify-between gap-3 p-3 bg-surface-raised border border-border-subtle rounded-xl mb-4 animate-in fade-in slide-in-from-top-2 duration-200">
         <div className="flex items-center gap-3">
           <Button
             variant="outline"

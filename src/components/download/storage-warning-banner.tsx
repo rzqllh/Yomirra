@@ -25,7 +25,7 @@ export function StorageWarningBanner() {
   if (!isVisible) return null;
 
   return (
-    <YomirraSurface variant="elevated" className="rounded-2xl p-4 flex gap-3 relative overflow-hidden bg-semantic-warning/10 border-semantic-warning/20">
+    <YomirraSurface variant="elevated" className="rounded-xl p-4 flex gap-3 relative overflow-hidden bg-semantic-warning/10 border-semantic-warning/20">
       <div className="absolute top-0 left-0 w-1 h-full bg-semantic-warning"></div>
       <div className="text-semantic-warning shrink-0 mt-0.5">
         <Warning size={20} weight="fill" />

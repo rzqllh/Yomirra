@@ -54,7 +54,7 @@ export default function NotFound() {
         <Button 
           variant="accent" 
           asChild
-          className="min-h-[52px] px-8 rounded-2xl shadow-lg shadow-accent/20 font-bold w-full sm:w-auto hover:scale-105 transition-transform"
+          className="min-h-[52px] px-8 rounded-xl shadow-lg shadow-accent/20 font-bold w-full sm:w-auto hover:scale-105 transition-transform"
         >
           <Link href="/">
             <House className="mr-2" size={20} weight="fill" />
@@ -64,7 +64,7 @@ export default function NotFound() {
         <Button 
           variant="secondary" 
           asChild
-          className="min-h-[52px] px-8 rounded-2xl font-bold w-full sm:w-auto hover:scale-105 transition-transform"
+          className="min-h-[52px] px-8 rounded-xl font-bold w-full sm:w-auto hover:scale-105 transition-transform"
         >
           <Link href="/popular">
             <Compass className="mr-2" size={20} weight="fill" />

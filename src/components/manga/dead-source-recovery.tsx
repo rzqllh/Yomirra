@@ -216,7 +216,7 @@ export function DeadSourceRecovery({ sourceId, mangaId }: DeadSourceRecoveryProp
 
       <div className="w-full max-w-2xl mx-auto px-4 pt-12 md:pt-20 flex flex-col items-center">
         {/* Manga Preview Card */}
-        <div className="w-full bg-surface-raised border border-border-subtle rounded-2xl p-6 shadow-sm flex flex-col items-center text-center">
+        <div className="w-full bg-surface-raised border border-border-subtle rounded-xl p-6 shadow-sm flex flex-col items-center text-center">
           {knownCover && (
             <div className="relative w-28 h-40 rounded-xl overflow-hidden shadow-md mb-4 border border-border-subtle shrink-0">
               <Image
@@ -282,7 +282,7 @@ export function DeadSourceRecovery({ sourceId, mangaId }: DeadSourceRecoveryProp
 
         {/* Offline Chapters Available */}
         {offlineChapters.length > 0 && (
-          <div className="w-full mt-6 bg-surface-raised border border-border-subtle rounded-2xl p-6">
+          <div className="w-full mt-6 bg-surface-raised border border-border-subtle rounded-xl p-6">
             <div className="flex items-center gap-2 mb-4">
               <BookOpen size={20} className="text-accent" />
               <h2 className="text-base font-semibold text-text-primary">
