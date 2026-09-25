@@ -161,8 +161,7 @@ export const useLibraryStore = create<LibraryState>()(
             k === targetKey ||
             k === legacyId ||
             (item.id && (k === item.id || existing.id === item.id)) ||
-            (existing.sourceId === item.sourceId && existing.mangaId === item.mangaId) ||
-            (existing.primarySourceId === item.sourceId && existing.primaryMangaId === item.mangaId);
+            itemReferencesSource(existing, item.sourceId, item.mangaId);
           if (!isSame) {
             newItems[k] = existing;
           }
@@ -236,9 +235,7 @@ export const useLibraryStore = create<LibraryState>()(
 
       resolveBySourceRef: (sourceId, mangaId) => {
         return Object.values(get().items).find(
-          (i) =>
-            (i.primarySourceId === sourceId && i.primaryMangaId === mangaId) ||
-            i.linkedSources?.some((r) => r.sourceId === sourceId && r.mangaId === mangaId)
+          (item) => itemReferencesSource(item, sourceId, mangaId)
         );
       },
 
