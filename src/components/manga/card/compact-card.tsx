@@ -171,8 +171,8 @@ export function CompactCard({
               <span
                 className={cn(
                   "font-bold text-[10px] px-2 py-0.5 rounded-xs tracking-wide border",
-                  isOngoing && "border-purple-500/30 bg-purple-500/10 text-purple-400 dark:text-purple-300",
-                  isCompleted && "border-emerald-500/30 bg-emerald-500/10 text-emerald-500 dark:text-emerald-400",
+                  isOngoing && "border-status-info-fg/20 bg-status-info-bg text-status-info-fg",
+                  isCompleted && "border-status-success-fg/20 bg-status-success-bg text-status-success-fg",
                   !isOngoing && !isCompleted && "border-border-subtle bg-surface-base text-text-secondary"
                 )}
               >
