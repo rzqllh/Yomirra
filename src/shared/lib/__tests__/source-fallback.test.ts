@@ -13,6 +13,7 @@ import { TitleCandidate } from "../title-matcher";
 describe("Source Fallback Resolver & Reading Migration Engine", () => {
   beforeEach(() => {
     migrationSnapshotRegistry.clear();
+    localStorage.removeItem("yomirra-source-migrations");
   });
 
   describe("Title Fallback Matrix", () => {
@@ -41,6 +42,30 @@ describe("Source Fallback Resolver & Reading Migration Engine", () => {
       expect(result.candidate?.sourceId).toBe("komiku-ii");
       expect(result.titleConfidence).toBe("CONFIRMED");
       expect(result.requiresUserConfirmation).toBe(false);
+    });
+
+    it("ignores unavailable source bindings", () => {
+      const result = resolveSourceFallback({
+        savedTitle: {
+          id: "saved-disabled",
+          title: "Solo Leveling",
+          primarySourceId: "shinigami",
+          primaryMangaId: "sl-1",
+          linkedSources: [
+            {
+              sourceId: "komiku",
+              mangaId: "sl-komiku",
+              addedAt: Date.now(),
+              matchConfidence: "CONFIRMED",
+            },
+          ],
+        },
+        failedSourceId: "shinigami",
+        health: { status: "BROKEN" },
+        availableSources: [{ id: "komiku", isEnabled: true, isInstalled: true, status: "in-fix" }],
+      });
+
+      expect(result.status).toBe("NO_FALLBACK");
     });
 
     it("2. high-confidence alternate healthy -> AUTO_SAFE", () => {
