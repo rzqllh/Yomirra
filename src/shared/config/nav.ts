@@ -10,7 +10,7 @@ export interface NavItem {
 export const MAIN_NAV_ITEMS: NavItem[] = [
   { href: "/", icon: House, label: "Beranda" },
   { href: "/library", icon: Books, label: "Library" },
-  { href: "/bookmark", icon: BookmarkSimple, label: "Bookmark" },
+  { href: "/bookmark", icon: BookmarkSimple, label: "Rak Buku" },
   { href: "/search", icon: MagnifyingGlass, label: "Cari" },
   { href: "/popular", icon: Fire, label: "Populer" },
 ];
@@ -18,7 +18,7 @@ export const MAIN_NAV_ITEMS: NavItem[] = [
 export const DOCK_NAV_ITEMS: NavItem[] = [
   { href: "/", icon: House, label: "Beranda" },
   { href: "/library", icon: Books, label: "Library" },
-  { href: "/bookmark", icon: BookmarkSimple, label: "Bookmark" },
+  { href: "/bookmark", icon: BookmarkSimple, label: "Rak Buku" },
   { href: "/search", icon: MagnifyingGlass, label: "Cari" },
   { href: "/settings", icon: GearSix, label: "Pengaturan" },
 ];

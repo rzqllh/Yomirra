@@ -142,6 +142,10 @@ export function CollectionTab({
         isSelectionMode={isSelectionMode}
         onToggleSelectionMode={onToggleSelectionMode}
         totalCount={totalItemsCount}
+        onCreateCollectionClick={() => {
+          setNewName("");
+          setIsCreateOpen(true);
+        }}
       />
 
       {/* User Collection Filter Rail */}
@@ -206,19 +210,6 @@ export function CollectionTab({
             </div>
           );
         })}
-
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            setNewName("");
-            setIsCreateOpen(true);
-          }}
-          className="h-[36px] rounded-xl px-3 text-xs font-bold shrink-0 border-dashed border-border-strong hover:border-accent hover:text-accent gap-1"
-        >
-          <Plus size={14} weight="bold" />
-          <span>Koleksi Baru</span>
-        </Button>
       </div>
 
       {isSelectionMode && (
@@ -284,8 +275,8 @@ export function CollectionTab({
               const isSelected = selectedItems.has(itemKey);
 
               return (
-                <div key={itemKey} className="relative group">
-                  <div inert={isSelectionMode ? true : undefined}>
+                <div key={itemKey} className="relative group h-full flex flex-col">
+                  <div inert={isSelectionMode ? true : undefined} className="h-full flex flex-col">
                     <ShelfCard
                       manga={{
                         id: manga.mangaId,

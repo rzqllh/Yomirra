@@ -49,7 +49,7 @@ export function BookmarkPageView() {
 
   if (!reading.isMounted || !collection.isMounted) {
     return (
-      <YomirraSurface variant="base" className="min-h-screen">
+      <YomirraSurface variant="base" className="w-full">
         <div className="mx-auto flex w-full max-w-9xl flex-col pb-[calc(var(--bottom-nav-height,80px)+24px)] md:px-8 md:pb-10">
           <BookmarkSkeleton />
         </div>
@@ -58,7 +58,7 @@ export function BookmarkPageView() {
   }
 
   return (
-    <YomirraSurface variant="base" className="min-h-screen">
+    <YomirraSurface variant="base" className="w-full">
       <div className="mx-auto flex w-full max-w-9xl flex-col pb-[calc(var(--bottom-nav-height,80px)+24px)] md:px-8 md:pb-10">
         <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:px-0 md:pt-8">
         <PageHeader
@@ -69,33 +69,23 @@ export function BookmarkPageView() {
         />
       </div>
 
-      {/* Notion-Style Jadwal Rilis Mingguan Shortcut Banner */}
-      <div className="px-4 pb-3 w-full md:px-0 md:max-w-2xl">
+      {/* Secondary Utility: Jadwal Rilis */}
+      <div className="px-4 pb-3 w-full md:px-0 md:max-w-xl">
         <Link
           href="/updates"
-          className="flex items-center justify-between p-3.5 rounded-xl bg-surface-raised border border-border-subtle hover:border-accent/40 hover:bg-surface-hover transition-all group shadow-xs active:scale-[0.99]"
+          className="flex items-center justify-between px-3 py-2 rounded-lg bg-surface-muted/50 border border-border-subtle hover:bg-surface-hover hover:border-accent/40 transition-colors group"
         >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-accent/15 text-accent flex items-center justify-center shrink-0 border border-accent/20">
-              <CalendarBlank size={20} weight="duotone" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-bold text-text-primary group-hover:text-accent transition-colors">
-                  Jadwal Rilis Mingguan
-                </span>
-                {unreadCount > 0 && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-md bg-semantic-error text-white font-extrabold animate-in fade-in shadow-xs">
-                    {unreadCount > 99 ? "99+" : unreadCount} baru
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-text-muted mt-0.5">
-                Pantau jadwal update komik bookmark (Senin – Minggu)
-              </p>
-            </div>
+          <div className="flex items-center gap-2">
+            <CalendarBlank size={16} weight="duotone" className="text-text-muted group-hover:text-accent transition-colors" />
+            <span className="text-xs font-semibold text-text-secondary group-hover:text-text-primary transition-colors">
+              Jadwal Rilis Mingguan
+            </span>
           </div>
-          <CaretRight size={18} weight="bold" className="text-text-muted group-hover:text-accent group-hover:translate-x-0.5 transition-all shrink-0" />
+          {unreadCount > 0 && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-semantic-error text-white font-bold shadow-xs">
+              {unreadCount > 99 ? "99+" : unreadCount} baru
+            </span>
+          )}
         </Link>
       </div>
 
@@ -109,7 +99,7 @@ export function BookmarkPageView() {
             { value: "reading", label: "Sedang Dibaca" },
             {
               value: "collection",
-              label: "Koleksi",
+              label: "Bookmark",
               badge: libraryItemCount > 0 ? libraryItemCount : undefined,
             },
           ]}

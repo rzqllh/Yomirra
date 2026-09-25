@@ -6,6 +6,13 @@ import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import { LibraryFilterDrawer } from "./library-filter-drawer";
 import { ViewModeToggle } from "@/components/manga/view-mode-toggle";
+import { DotsThreeVertical, CheckCircle } from "@phosphor-icons/react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 
 export interface LibraryToolbarProps {
   searchInput: string;
@@ -58,15 +65,23 @@ export function LibraryToolbar({
       </LibraryFilterDrawer>
 
       {onToggleSelectionMode && (
-        <Button
-          variant={isSelectionMode ? "accent" : "outline"}
-          onClick={onToggleSelectionMode}
-          className="shrink-0 min-h-11 px-4"
-          aria-label={isSelectionMode ? "Batal pilih" : "Pilih manga"}
-          aria-pressed={Boolean(isSelectionMode)}
-        >
-          {isSelectionMode ? "Batal" : "Pilih"}
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant={isSelectionMode ? "accent" : "outline"}
+              className="shrink-0 min-h-11 px-2.5 rounded-xl border-dashed"
+              aria-label="Opsi lainnya"
+            >
+              <DotsThreeVertical size={20} weight="bold" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem onClick={onToggleSelectionMode} className="flex items-center gap-2">
+              <CheckCircle size={16} weight={isSelectionMode ? "fill" : "bold"} />
+              <span>{isSelectionMode ? "Batal Pilih" : "Pilih Komik (Batch)"}</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       )}
     </div>
   );

@@ -17,7 +17,7 @@ import { useSettingsStore } from "@/shared/store/settings-store";
 const ROUTE_LABELS: Record<string, string> = {
   "": "Beranda",
   library: "Library",
-  bookmark: "Bookmark",
+  bookmark: "Rak Buku",
   search: "Cari",
   popular: "Populer",
   sources: "Sumber",

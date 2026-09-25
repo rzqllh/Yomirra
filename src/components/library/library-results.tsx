@@ -186,8 +186,8 @@ export function LibraryResults({
             const isSelected = selectedItems?.has(itemKey);
 
             return (
-              <div key={manga.id} className="relative group w-full">
-                <div inert={isSelectionMode ? true : undefined}>
+              <div key={manga.id} className="relative group w-full h-full flex flex-col">
+                <div inert={isSelectionMode ? true : undefined} className="h-full flex flex-col">
                   {viewMode === "grid" ? (
                     <ShelfCard manga={manga} sourceId={activeSourceId} showSourceBadge={true} />
                   ) : (

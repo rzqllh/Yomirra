@@ -4,7 +4,13 @@ import * as React from "react";
 import { SearchInput } from "@/components/ui/search-input";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { Button } from "@/components/ui/button";
-import { CheckCircle } from "@phosphor-icons/react";
+import { DotsThreeVertical, CheckCircle, Plus } from "@phosphor-icons/react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 
 export interface CollectionToolbarProps {
   searchQuery: string;
@@ -15,6 +21,7 @@ export interface CollectionToolbarProps {
   isSelectionMode: boolean;
   onToggleSelectionMode: () => void;
   totalCount: number;
+  onCreateCollectionClick?: () => void;
 }
 
 export function CollectionToolbar({
@@ -26,6 +33,7 @@ export function CollectionToolbar({
   isSelectionMode,
   onToggleSelectionMode,
   totalCount,
+  onCreateCollectionClick,
 }: CollectionToolbarProps) {
   return (
     <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 mb-4">
@@ -50,16 +58,29 @@ export function CollectionToolbar({
         />
 
         {totalCount > 0 && (
-          <Button
-            variant={isSelectionMode ? "accent" : "outline"}
-            onClick={onToggleSelectionMode}
-            className="h-[44px] w-[44px] sm:w-auto sm:px-4 rounded-full font-bold gap-1.5 shrink-0"
-            aria-label={isSelectionMode ? "Batal pilih manga" : "Pilih manga"}
-            aria-pressed={isSelectionMode}
-          >
-            <CheckCircle size={18} weight={isSelectionMode ? "fill" : "bold"} />
-            <span className="hidden sm:inline">Pilih</span>
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant={isSelectionMode ? "accent" : "outline"}
+                className="h-[44px] px-2.5 rounded-xl font-bold gap-1.5 shrink-0 border-dashed"
+                aria-label="Opsi lainnya"
+              >
+                <DotsThreeVertical size={20} weight="bold" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48">
+              {onCreateCollectionClick && (
+                <DropdownMenuItem onClick={onCreateCollectionClick} className="flex items-center gap-2">
+                  <Plus size={16} weight="bold" />
+                  <span>Buat Koleksi Baru</span>
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem onClick={onToggleSelectionMode} className="flex items-center gap-2">
+                <CheckCircle size={16} weight={isSelectionMode ? "fill" : "bold"} />
+                <span>{isSelectionMode ? "Batal Pilih" : "Pilih Komik (Batch)"}</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
       </div>
 
