@@ -517,3 +517,13 @@ export function hydrateMigrationSnapshots() {
     localStorage.removeItem(MIGRATION_STORAGE_KEY);
   }
 }
+
+export function getMigrationSnapshots() {
+  hydrateMigrationSnapshots();
+  return Array.from(migrationSnapshotRegistry.values()).sort((a, b) => b.createdAt - a.createdAt);
+}
+
+export function getMigrationSnapshot(id: string) {
+  hydrateMigrationSnapshots();
+  return migrationSnapshotRegistry.get(id);
+}
