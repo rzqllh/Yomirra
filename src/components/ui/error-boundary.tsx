@@ -34,7 +34,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
       
       return (
         <div className="flex flex-col items-center justify-center p-8 min-h-[300px] text-center bg-surface-base rounded-xl border border-border-subtle mx-4 my-8">
-          <div className="bg-semantic-error/10 text-semantic-error p-4 rounded-xl mb-4 border border-semantic-error/20">
+          <div className="bg-semantic-error/10 text-semantic-error p-4 rounded-full mb-4 border border-semantic-error/20">
             <Warning weight="duotone" className="w-12 h-12" />
           </div>
           <h2 className="text-lg font-bold text-text-primary mb-2">Terjadi Kesalahan</h2>

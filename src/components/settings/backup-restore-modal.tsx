@@ -100,7 +100,7 @@ export function BackupRestoreModal({ isOpen, onOpenChange }: BackupRestoreModalP
         
         {/* Header Section */}
         <div className="px-6 pt-6 pb-4 border-b border-border-glass/40 flex items-start gap-3.5">
-          <div className="flex size-11 items-center justify-center rounded-xl bg-accent/12 text-accent border border-accent/20 shrink-0">
+          <div className="flex size-11 items-center justify-center rounded-lg bg-accent/12 text-accent border border-accent/20 shrink-0">
             <FileText size={22} weight="duotone" />
           </div>
           <div className="min-w-0 flex-1 pr-6">
@@ -128,7 +128,7 @@ export function BackupRestoreModal({ isOpen, onOpenChange }: BackupRestoreModalP
                   onClick={handleExport}
                   className="group relative w-full flex items-center gap-3.5 p-4 rounded-xl bg-surface-raised border border-border-subtle hover:border-accent/40 hover:bg-accent/5 transition-all text-left overflow-hidden outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-accent"
                 >
-                  <div className="shrink-0 flex items-center justify-center size-11 rounded-xl bg-accent/10 text-accent group-hover:scale-105 transition-transform duration-200">
+                  <div className="shrink-0 flex items-center justify-center size-11 rounded-lg bg-accent/10 text-accent group-hover:scale-105 transition-transform duration-200">
                     <DownloadSimple size={22} weight="duotone" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -141,7 +141,7 @@ export function BackupRestoreModal({ isOpen, onOpenChange }: BackupRestoreModalP
                   onClick={() => fileInputRef.current?.click()}
                   className="group relative w-full flex items-center gap-3.5 p-4 rounded-xl bg-surface-raised border border-border-subtle hover:border-accent/40 hover:bg-accent/5 transition-all text-left overflow-hidden outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-accent"
                 >
-                  <div className="shrink-0 flex items-center justify-center size-11 rounded-xl bg-accent/10 text-accent group-hover:scale-105 transition-transform duration-200">
+                  <div className="shrink-0 flex items-center justify-center size-11 rounded-lg bg-accent/10 text-accent group-hover:scale-105 transition-transform duration-200">
                     <UploadSimple size={22} weight="duotone" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -162,7 +162,7 @@ export function BackupRestoreModal({ isOpen, onOpenChange }: BackupRestoreModalP
                   type="button"
                   variant="ghost"
                   onClick={() => onOpenChange(false)}
-                  className="w-full rounded-xl font-bold h-11 mt-1 text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
+                  className="w-full rounded-full font-bold h-11 mt-1 text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
                 >
                   Tutup
                 </Button>
@@ -275,7 +275,7 @@ export function BackupRestoreModal({ isOpen, onOpenChange }: BackupRestoreModalP
                       onClick={handleExecuteRestore}
                       disabled={isProcessing}
                       variant={importMode === "replace" ? "destructive" : "accent"}
-                      className="w-full h-[52px] rounded-xl font-bold text-[15px] shadow-sm mt-1"
+                      className="w-full h-[52px] rounded-full font-bold text-[15px] shadow-sm mt-1"
                     >
                       {isProcessing ? "Memproses..." : "Pulihkan Data Sekarang"}
                     </Button>

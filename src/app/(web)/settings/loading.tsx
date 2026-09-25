@@ -11,7 +11,7 @@ export default function Loading() {
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="flex flex-col gap-4">
             <Skeleton className="h-5 w-32" />
-            <div className="flex flex-col rounded-xl border border-border-subtle bg-surface-base overflow-hidden">
+            <div className="flex flex-col rounded-2xl border border-border-subtle bg-surface-base overflow-hidden">
               {Array.from({ length: 3 }).map((_, j) => (
                 <div key={j} className="flex items-center justify-between p-4 border-b border-border-subtle last:border-0">
                   <div className="flex flex-col gap-2">

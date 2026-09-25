@@ -68,7 +68,7 @@ export function MangaStatusButton({ sourceId, mangaId }: MangaStatusButtonProps)
         <DialogContent className="max-w-sm sm:max-w-md">
           <DialogHeader className="gap-3">
             <div
-              className="flex h-12 w-12 items-center justify-center rounded-xl border border-accent/30 bg-gradient-to-br from-accent/20 via-accent/10 to-transparent text-accent shadow-xs shrink-0 select-none"
+              className="flex h-12 w-12 items-center justify-center rounded-lg border border-accent/30 bg-gradient-to-br from-accent/20 via-accent/10 to-transparent text-accent shadow-xs shrink-0 select-none"
               aria-hidden="true"
             >
               <BookOpenText size={22} weight="duotone" />

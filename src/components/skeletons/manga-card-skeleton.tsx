@@ -47,11 +47,11 @@ export function MangaCardSkeleton({ variant = "grid" }: { variant?: "grid" | "li
   }
 
   if (variant === "shelf") {
-    // Mirrors ShelfCard: cover aspect-[2/3] rounded-xl, metadata row mb-1.5, title 2-line min-h-[2.4em], bottom chapter/score row
+    // Mirrors ShelfCard: cover aspect-[2/3] rounded-sm, metadata row mb-1.5, title 2-line min-h-[2.4em], bottom chapter/score row
     return (
       <div className="relative flex flex-col w-full">
-        {/* Cover — matches aspect-[2/3] + rounded-xl */}
-        <div className="relative w-full aspect-[2/3] overflow-hidden rounded-xl mb-3">
+        {/* Cover — matches aspect-[2/3] + rounded-sm */}
+        <div className="relative w-full aspect-[2/3] overflow-hidden rounded-sm mb-3">
           <Skeleton className="absolute inset-0 w-full h-full rounded-none" />
           {/* Source/rank badge top-left */}
           <div className="absolute top-2 left-2 z-20">

@@ -105,7 +105,7 @@ export default function SourcesPage() {
             />
             
             {/* Source Mental Model Guidance Banner */}
-            <div className="mt-4 p-3.5 rounded-xl bg-surface-glass border border-border-subtle text-xs text-text-muted flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div className="mt-4 p-3.5 rounded-2xl bg-surface-glass border border-border-subtle text-xs text-text-muted flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
               <p className="leading-relaxed">
                 <span className="font-bold text-text-primary">Model Sumber:</span> Sumber yang <strong className="text-text-primary">Enabled</strong> otomatis dicari secara paralel pada Pencarian Multi-Sumber & Beranda. Klik <em className="text-accent not-italic font-semibold">Buka di Library</em> untuk menjadikannya Sumber Aktif di katalog.
               </p>
@@ -117,7 +117,7 @@ export default function SourcesPage() {
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               placeholder="Cari sumber..."
-              containerClassName="flex-1 rounded-xl"
+              containerClassName="flex-1 rounded-2xl"
             />
           </div>
 
@@ -126,7 +126,7 @@ export default function SourcesPage() {
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               placeholder="Cari sumber..."
-              containerClassName="rounded-xl max-w-md"
+              containerClassName="rounded-2xl max-w-md"
             />
           </div>
 

@@ -63,7 +63,7 @@ function ConfidenceBadge({ confidence }: { confidence: MatchConfidence }) {
 function ChapterMapBanner({ result }: { result: ChapterMapResult }) {
   if (result.type === "EXACT") {
     return (
-      <div className="flex items-center gap-2.5 p-3 rounded-xl bg-semantic-success/10 border border-semantic-success/20 text-semantic-success text-xs font-medium">
+      <div className="flex items-center gap-2.5 p-3 rounded-lg bg-semantic-success/10 border border-semantic-success/20 text-semantic-success text-xs font-medium">
         <CheckCircle size={18} weight="fill" className="shrink-0" />
         <span>Progres chapter terpetakan secara tepat ke Chapter {result.chapterNumber}.</span>
       </div>
@@ -71,7 +71,7 @@ function ChapterMapBanner({ result }: { result: ChapterMapResult }) {
   }
   if (result.type === "PROBABLE") {
     return (
-      <div className="flex items-center gap-2.5 p-3 rounded-xl bg-semantic-warning/10 border border-semantic-warning/20 text-semantic-warning text-xs font-medium">
+      <div className="flex items-center gap-2.5 p-3 rounded-lg bg-semantic-warning/10 border border-semantic-warning/20 text-semantic-warning text-xs font-medium">
         <Warning size={18} weight="fill" className="shrink-0" />
         <span>
           Progres dipetakan ke Chapter {result.chapterNumber} (selisih {result.delta > 0 ? "+" : ""}{result.delta} chapter). Konfirmasi diperlukan.
@@ -81,7 +81,7 @@ function ChapterMapBanner({ result }: { result: ChapterMapResult }) {
   }
   if (result.type === "AMBIGUOUS") {
     return (
-      <div className="flex items-center gap-2.5 p-3 rounded-xl bg-semantic-warning/10 border border-semantic-warning/20 text-semantic-warning text-xs font-medium">
+      <div className="flex items-center gap-2.5 p-3 rounded-lg bg-semantic-warning/10 border border-semantic-warning/20 text-semantic-warning text-xs font-medium">
         <Warning size={18} weight="fill" className="shrink-0" />
         <span>Beberapa kandidat chapter ditemukan. Kamu perlu memilih secara manual.</span>
       </div>
@@ -89,7 +89,7 @@ function ChapterMapBanner({ result }: { result: ChapterMapResult }) {
   }
   // UNMAPPED
   return (
-    <div className="flex items-center gap-2.5 p-3 rounded-xl bg-surface-raised border border-border-subtle text-text-muted text-xs font-medium">
+    <div className="flex items-center gap-2.5 p-3 rounded-lg bg-surface-raised border border-border-subtle text-text-muted text-xs font-medium">
       <Warning size={18} className="shrink-0" />
       <span>Progres chapter tidak dapat dipetakan otomatis. Progres lama dipertahankan; kamu bisa mengaturnya manual.</span>
     </div>
@@ -120,7 +120,7 @@ export function AlternateSourceModal({
       <DialogContent className="max-w-md w-[calc(100vw-32px)] rounded-[28px] p-0 bg-surface-overlay/95 backdrop-blur-2xl border border-border-glass shadow-glass overflow-hidden flex flex-col gap-0">
         {/* Header Section */}
         <div className="px-6 pt-6 pb-4 border-b border-border-glass/40 flex items-start gap-3.5">
-          <div className="flex size-11 items-center justify-center rounded-xl bg-accent/12 text-accent border border-accent/20 shrink-0">
+          <div className="flex size-11 items-center justify-center rounded-lg bg-accent/12 text-accent border border-accent/20 shrink-0">
             <ArrowsClockwise size={22} weight="duotone" />
           </div>
           <div className="min-w-0 flex-1 pr-6">
@@ -144,7 +144,7 @@ export function AlternateSourceModal({
           {/* Candidates */}
           {candidates.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2.5 py-10 text-text-muted">
-              <div className="flex size-12 items-center justify-center rounded-xl bg-surface-raised text-text-muted border border-border-subtle">
+              <div className="flex size-12 items-center justify-center rounded-lg bg-surface-raised text-text-muted border border-border-subtle">
                 <MagnifyingGlass size={24} weight="duotone" />
               </div>
               <p className="text-xs font-medium">Tidak ada sumber ditemukan untuk komik ini.</p>
@@ -161,7 +161,7 @@ export function AlternateSourceModal({
                       aria-selected={isSelected}
                       onClick={() => setSelected(isSelected ? null : c)}
                       className={cn(
-                        "w-full flex items-start gap-3.5 p-3 rounded-xl border text-left transition-all outline-none focus-visible:ring-2 focus-visible:ring-accent",
+                        "w-full flex items-start gap-3.5 p-3 rounded-lg border text-left transition-all outline-none focus-visible:ring-2 focus-visible:ring-accent",
                         isSelected
                           ? "border-accent/60 bg-accent/10 shadow-sm"
                           : "border-border-subtle bg-surface-raised/60 hover:bg-surface-raised hover:border-border-default"
@@ -208,7 +208,7 @@ export function AlternateSourceModal({
             onClick={handleConfirm}
             disabled={!selected || isLoading}
             variant="accent"
-            className="w-full h-11 rounded-xl font-bold text-sm shadow-sm flex items-center justify-center gap-2"
+            className="w-full h-11 rounded-full font-bold text-sm shadow-sm flex items-center justify-center gap-2"
           >
             {isLoading ? (
               <span>Mengganti sumber...</span>
@@ -223,7 +223,7 @@ export function AlternateSourceModal({
             id="alternate-source-cancel-btn"
             variant="ghost"
             onClick={onClose}
-            className="w-full h-11 rounded-xl font-bold text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
+            className="w-full h-11 rounded-full font-bold text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
           >
             Batal
           </Button>

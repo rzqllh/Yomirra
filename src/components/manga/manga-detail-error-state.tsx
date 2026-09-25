@@ -72,7 +72,7 @@ export function MangaDetailErrorState({
 
       <div className="w-full max-w-lg mx-auto px-4 pt-16 md:pt-24 flex flex-col items-center">
         <div className="w-full bg-surface-raised border border-border-subtle rounded-xl p-6 md:p-8 shadow-sm flex flex-col items-center text-center">
-          <div className="w-14 h-14 rounded-xl bg-accent-dim text-accent flex items-center justify-center mb-4">
+          <div className="w-14 h-14 rounded-full bg-accent-dim text-accent flex items-center justify-center mb-4">
             {isDisabled ? (
               <HardDrives size={28} weight="duotone" />
             ) : isNotFound ? (

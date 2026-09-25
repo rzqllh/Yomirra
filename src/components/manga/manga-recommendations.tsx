@@ -134,9 +134,9 @@ export function MangaRecommendations({
       <div className="mt-6 mb-2">
         <h3 className="text-[11px] font-black text-text-muted uppercase tracking-widest block mb-3">Komik Serupa</h3>
         <div className="flex gap-3 md:gap-4">
-          <div className="h-[195px] w-[130px] md:w-[140px] bg-surface-raised animate-pulse rounded-xl shrink-0" />
-          <div className="h-[195px] w-[130px] md:w-[140px] bg-surface-raised animate-pulse rounded-xl shrink-0" />
-          <div className="h-[195px] w-[130px] md:w-[140px] bg-surface-raised animate-pulse rounded-xl shrink-0 hidden sm:block" />
+          <div className="h-[195px] w-[130px] md:w-[140px] bg-surface-raised animate-pulse rounded-sm shrink-0" />
+          <div className="h-[195px] w-[130px] md:w-[140px] bg-surface-raised animate-pulse rounded-sm shrink-0" />
+          <div className="h-[195px] w-[130px] md:w-[140px] bg-surface-raised animate-pulse rounded-sm shrink-0 hidden sm:block" />
         </div>
       </div>
     );
