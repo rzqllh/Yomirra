@@ -16,6 +16,7 @@ import type { MangaKey } from "@/shared/types/collection";
 import { cn } from "@/shared/utils/cn";
 import type { BaseCardProps } from "./types";
 import type { SourceBinding } from "@/shared/lib/canonical-search";
+import { CanonicalSourceDialog, isCanonicalBindingAvailable } from "../canonical-source-dialog";
 import {
   MangaCardCoverFrame,
   MangaCardMeta,
@@ -55,8 +56,10 @@ export function CompactCard({
   const scoreToDisplay = displayScore ?? manga.score;
   const sourceObj = dynamicSourceRegistry.get(sourceId) || sourceRegistry.find((s) => s.id === sourceId);
   const sourceName = showSourceBadge ? (sourceObj?.name || sourceId) : null;
-  const effectiveBindings = sourceBindings || (manga as any)?.sourceBindings;
-  const isMultiSource = effectiveBindings && effectiveBindings.length > 1;
+  const effectiveBindings = (sourceBindings || (manga as any)?.sourceBindings || []) as SourceBinding[];
+  const availableBindings = effectiveBindings.filter(isCanonicalBindingAvailable);
+  const isMultiSource = availableBindings.length > 1;
+  const [isSourceDialogOpen, setIsSourceDialogOpen] = React.useState(false);
 
   const mangaKey = `${sourceId}::${manga.id}` as MangaKey;
   const readingStatus = readingStatusByManga[mangaKey];
@@ -94,7 +97,13 @@ export function CompactCard({
         <Link
           href={getMangaDetailHref(sourceId, manga.id, fullPath)}
           className={cn(mangaCardInteraction.link, "block rounded-xs")}
-          aria-label={`Lihat detail ${manga.title}`}
+          aria-label={isMultiSource ? `Pilih sumber untuk ${manga.title}` : `Lihat detail ${manga.title}`}
+          aria-haspopup={isMultiSource ? "dialog" : undefined}
+          onClick={(event) => {
+            if (!isMultiSource) return;
+            event.preventDefault();
+            setIsSourceDialogOpen(true);
+          }}
         >
           <MangaCardCoverFrame className="w-full shadow-xs transition-shadow group-hover:shadow-sm motion-reduce:transition-none">
             <MangaCover
@@ -129,6 +138,12 @@ export function CompactCard({
             <Link
               href={getMangaDetailHref(sourceId, manga.id, fullPath)}
               className={cn(mangaCardInteraction.link, "min-w-0 flex-1 rounded-sm")}
+              aria-haspopup={isMultiSource ? "dialog" : undefined}
+              onClick={(event) => {
+                if (!isMultiSource) return;
+                event.preventDefault();
+                setIsSourceDialogOpen(true);
+              }}
             >
               <MangaCardTitle lines={1} className={mangaCardInteraction.title}>
                 {manga.title}
@@ -173,7 +188,7 @@ export function CompactCard({
 
             {isMultiSource && (
               <span className="text-[9px] font-bold text-accent px-1.5 py-0.5 rounded-xs bg-accent/10 border border-accent/20">
-                {effectiveBindings.length} Sumber
+                {availableBindings.length} Sumber
               </span>
             )}
 
@@ -229,6 +244,15 @@ export function CompactCard({
           ) : null}
         </div>
       </div>
+      {isMultiSource && (
+        <CanonicalSourceDialog
+          open={isSourceDialogOpen}
+          onOpenChange={setIsSourceDialogOpen}
+          title={manga.title}
+          sourceBindings={availableBindings}
+          returnTo={fullPath}
+        />
+      )}
     </motion.article>
   );
 }
