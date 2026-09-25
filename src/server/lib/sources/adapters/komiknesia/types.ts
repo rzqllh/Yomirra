@@ -16,6 +16,11 @@ export interface KomikNesiaListPayload {
   totalCount?: number;
 }
 
+export interface KomikNesiaPage {
+  items: KomikNesiaItem[];
+  totalPages: number;
+}
+
 export interface KomikNesiaItem {
   id?: number | string;
   title: string;
@@ -48,6 +53,7 @@ export interface KomikNesiaChapterRef {
   title?: string;
   releasedAt?: string;
   createdAt?: string;
+  updatedAt?: string;
 }
 
 /** Decrypted content for /manga/slug/{slug} detail endpoint. */
@@ -58,7 +64,6 @@ export interface KomikNesiaDetailPayload {
 
 export interface KomikNesiaDetail extends KomikNesiaItem {
   chapters?: KomikNesiaChapter[];
-  synopsis?: string;
 }
 
 export interface KomikNesiaChapter {
@@ -68,6 +73,7 @@ export interface KomikNesiaChapter {
   title?: string;
   releasedAt?: string;
   createdAt?: string;
+  updatedAt?: string;
 }
 
 /** Decrypted content for /chapters/slug/{slug} pages endpoint. */

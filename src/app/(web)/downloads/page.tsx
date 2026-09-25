@@ -10,6 +10,13 @@ import { YomirraSurface } from "@/components/ui/layout";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/states/empty-state";
 import { StorageWarningBanner } from "@/components/download/storage-warning-banner";
+import {
+  MangaCardCoverFrame,
+  MangaCardMeta,
+  MangaCardTitle,
+  mangaCardInteraction,
+} from "@/components/manga/card";
+import { MangaCover } from "@/components/manga/manga-cover";
 
 import { PageHeader } from "@/components/app/header";
 
@@ -58,7 +65,7 @@ export default function DownloadsPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1">
           <PageHeader 
             title="Unduhan" 
-            subtitle="Kelola bab komik yang diunduh untuk dibaca saat offline." 
+            description="Kelola bab komik yang diunduh untuk dibaca saat offline."
           />
           {allDownloads.length > 0 && (
             <button
@@ -68,7 +75,7 @@ export default function DownloadsPage() {
                   toast.error("Semua unduhan dihapus");
                 }
               }}
-              className="inline-flex items-center gap-2 self-start sm:self-auto px-3 py-1.5 rounded-sm text-xs font-semibold text-semantic-error hover:bg-semantic-error/10 border border-semantic-error/30 transition-colors"
+              className="inline-flex min-h-11 items-center gap-2 self-start sm:self-auto px-3 py-1.5 rounded-sm text-xs font-semibold text-semantic-error hover:bg-semantic-error/10 border border-semantic-error/30 motion-safe:transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
               <Trash size={16} />
               <span>Hapus Semua</span>
@@ -92,7 +99,7 @@ export default function DownloadsPage() {
               </div>
               <div className="w-full bg-surface-muted rounded-full h-1.5 overflow-hidden">
                 <div
-                  className="bg-accent h-full rounded-full transition-all duration-500"
+                  className="bg-accent h-full rounded-full motion-safe:transition-all motion-safe:duration-500"
                   style={{ width: `${Math.min(100, (storageInfo.usage / (storageInfo.quota || 1)) * 100)}%` }}
                 />
               </div>
@@ -139,20 +146,19 @@ export default function DownloadsPage() {
                       key={item.id}
                       className="rounded-md p-3.5 sm:p-4 flex gap-3.5 sm:gap-4 border border-border-subtle/80"
                     >
-                      <div className="w-14 h-18 sm:w-16 sm:h-20 bg-surface-muted rounded-xs overflow-hidden shrink-0 border border-border-subtle">
-                        {item.coverUrl ? (
-                          <img src={item.coverUrl} alt={item.mangaTitle} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-text-muted text-[10px]">
-                            No Cover
-                          </div>
-                        )}
-                      </div>
+                      <MangaCardCoverFrame className="w-14 sm:w-16">
+                        <MangaCover
+                          src={item.coverUrl}
+                          alt={item.mangaTitle}
+                          fallbackTitle={item.mangaTitle}
+                          className="h-full w-full"
+                        />
+                      </MangaCardCoverFrame>
 
                       <div className="flex-1 min-w-0 flex flex-col justify-between">
                         <div>
-                          <h3 className="font-bold text-text-primary truncate text-sm">{item.mangaTitle}</h3>
-                          <p className="text-xs text-text-secondary truncate mt-0.5">{item.chapterTitle}</p>
+                          <MangaCardTitle density="compact">{item.mangaTitle}</MangaCardTitle>
+                          <MangaCardMeta as="p" className="truncate mt-0.5">{item.chapterTitle}</MangaCardMeta>
                         </div>
 
                         <div className="mt-2.5">
@@ -170,7 +176,7 @@ export default function DownloadsPage() {
                           </div>
                           <div className="w-full bg-surface-muted rounded-full h-1.5 overflow-hidden">
                             <div
-                              className={`h-full rounded-full transition-all duration-300 ${
+                              className={`h-full rounded-full motion-safe:transition-all motion-safe:duration-300 ${
                                 item.status === "failed"
                                   ? "bg-semantic-error"
                                   : item.status === "paused"
@@ -194,7 +200,7 @@ export default function DownloadsPage() {
                               pauseDownload(item.id);
                               toast.info("Unduhan dijeda");
                             }}
-                            aria-label="Jeda Unduhan"
+                            aria-label={`Jeda unduhan ${item.mangaTitle} - ${item.chapterTitle}`}
                             className="text-text-secondary hover:text-text-primary rounded-xs"
                           >
                             <Pause size={17} weight="bold" />
@@ -205,7 +211,7 @@ export default function DownloadsPage() {
                               resumeDownload(item.id);
                               toast.info("Melanjutkan unduhan...");
                             }}
-                            aria-label="Lanjutkan Unduhan"
+                            aria-label={`Lanjutkan unduhan ${item.mangaTitle} - ${item.chapterTitle}`}
                             className="text-accent hover:text-accent-hover rounded-xs"
                           >
                             <Play size={17} weight="fill" />
@@ -216,7 +222,7 @@ export default function DownloadsPage() {
                               retryDownload(item.id);
                               toast.info("Mencoba ulang unduhan...");
                             }}
-                            aria-label="Coba Lagi Unduhan"
+                            aria-label={`Coba lagi unduhan ${item.mangaTitle} - ${item.chapterTitle}`}
                             className="text-accent hover:text-accent-hover rounded-xs"
                           >
                             <ArrowClockwise size={17} weight="bold" />
@@ -228,7 +234,7 @@ export default function DownloadsPage() {
                             cancelDownload(item.id);
                             toast.error("Unduhan dibatalkan");
                           }}
-                          aria-label="Batalkan Unduhan"
+                          aria-label={`Batalkan unduhan ${item.mangaTitle} - ${item.chapterTitle}`}
                           className="text-semantic-error hover:text-semantic-error/80 rounded-xs"
                         >
                           <X size={17} weight="bold" />
@@ -251,48 +257,48 @@ export default function DownloadsPage() {
                 </div>
               ) : (
                 completedItems.map((item) => (
-                  <div key={item.id} className="relative group">
+                  <YomirraSurface
+                    variant="elevated"
+                    key={item.id}
+                    className="group flex items-center gap-1 rounded-md border border-border-subtle/80 p-1.5 motion-safe:transition-colors hover:bg-surface-hover/70 sm:p-2"
+                  >
                     <Link
                       href={`/manga/${item.sourceId}/${item.mangaId}/read/${item.chapterId}`}
-                      className="absolute inset-0 z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-md"
+                      className="flex min-w-0 flex-1 items-center gap-3.5 rounded-sm p-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:gap-4"
                       aria-label={`Baca ${item.mangaTitle} - ${item.chapterTitle}`}
-                    />
-                    <YomirraSurface
-                      variant="elevated"
-                      className="rounded-md p-3.5 sm:p-4 flex gap-3.5 sm:gap-4 items-center group-hover:bg-surface-hover/70 transition-colors border border-border-subtle/80 relative z-0"
                     >
-                      <div className="w-12 h-16 sm:w-14 sm:h-18 bg-surface-muted rounded-xs overflow-hidden shrink-0 border border-border-subtle">
-                        {item.coverUrl ? (
-                          <img src={item.coverUrl} alt={item.mangaTitle} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-text-muted text-[10px]">
-                            No Cover
-                          </div>
-                        )}
-                      </div>
+                      <MangaCardCoverFrame className="w-12 sm:w-14">
+                        <MangaCover
+                          src={item.coverUrl}
+                          alt={item.mangaTitle}
+                          fallbackTitle={item.mangaTitle}
+                          className="h-full w-full"
+                          imageClassName={mangaCardInteraction.coverImage}
+                        />
+                      </MangaCardCoverFrame>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-text-primary truncate text-sm group-hover:text-accent transition-colors">
+                        <MangaCardTitle density="compact" className={mangaCardInteraction.title}>
                           {item.mangaTitle}
-                        </h3>
-                        <p className="text-xs text-text-secondary truncate mt-0.5">{item.chapterTitle}</p>
-                        <p className="text-[11px] font-medium text-text-muted mt-1">
+                        </MangaCardTitle>
+                        <MangaCardMeta as="p" className="mt-0.5 truncate">
+                          {item.chapterTitle}
+                        </MangaCardMeta>
+                        <MangaCardMeta as="p" className="mt-1 text-[11px] text-text-muted">
                           {item.downloadedPages || 0} Halaman • Selesai
-                        </p>
+                        </MangaCardMeta>
                       </div>
-                      <IconButton
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          removeDownload(item.id);
-                          toast.error("Unduhan dihapus");
-                        }}
-                        aria-label="Hapus Unduhan"
-                        className="text-semantic-error hover:text-semantic-error/80 shrink-0 relative z-20 rounded-xs"
-                      >
-                        <Trash size={18} />
-                      </IconButton>
-                    </YomirraSurface>
-                  </div>
+                    </Link>
+                    <IconButton
+                      onClick={() => {
+                        removeDownload(item.id);
+                        toast.error("Unduhan dihapus");
+                      }}
+                      aria-label={`Hapus unduhan ${item.mangaTitle} - ${item.chapterTitle}`}
+                      className="shrink-0 rounded-xs text-semantic-error hover:text-semantic-error/80"
+                    >
+                      <Trash size={18} />
+                    </IconButton>
+                  </YomirraSurface>
                 ))
               )}
             </TabsContent>

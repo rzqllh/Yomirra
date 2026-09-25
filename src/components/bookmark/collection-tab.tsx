@@ -285,32 +285,35 @@ export function CollectionTab({
 
               return (
                 <div key={itemKey} className="relative group">
-                  <ShelfCard
-                    manga={{
-                      id: manga.mangaId,
-                      title: manga.title,
-                      coverUrl: manga.coverUrl,
-                      status: manga.status,
-                    }}
-                    sourceId={manga.sourceId}
-                    showSourceBadge={true}
-                  />
+                  <div inert={isSelectionMode ? true : undefined}>
+                    <ShelfCard
+                      manga={{
+                        id: manga.mangaId,
+                        title: manga.title,
+                        coverUrl: manga.coverUrl,
+                        status: manga.status,
+                      }}
+                      sourceId={manga.sourceId}
+                      showSourceBadge={true}
+                    />
+                  </div>
 
                   {isSelectionMode && (
                     <button
                       type="button"
                       onClick={() => onToggleSelectItem(itemKey)}
                       className={cn(
-                        "absolute inset-0 z-20 rounded-xl flex items-start justify-end p-2.5 transition-all duration-200",
+                        "absolute inset-0 z-20 rounded-xl flex items-start justify-end p-2.5 motion-safe:transition-all motion-safe:duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
                         isSelected
                           ? "bg-accent/20 border-2 border-accent"
                           : "bg-black/40 hover:bg-black/50 border border-white/20"
                       )}
                       aria-label={`${isSelected ? "Batal pilih" : "Pilih"} ${manga.title}`}
+                      aria-pressed={isSelected}
                     >
                       <div
                         className={cn(
-                          "w-6 h-6 rounded-lg flex items-center justify-center transition-transform duration-200",
+                          "w-6 h-6 rounded-lg flex items-center justify-center motion-safe:transition-transform motion-safe:duration-200",
                           isSelected
                             ? "bg-accent text-white scale-110"
                             : "bg-surface-glass border border-white/40"

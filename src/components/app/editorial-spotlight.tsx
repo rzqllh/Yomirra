@@ -53,7 +53,7 @@ export function EditorialSpotlight({
           alt={manga.title}
           fallbackTitle={manga.title}
           className="h-full w-full"
-          imageClassName="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+          imageClassName="h-full w-full object-cover motion-safe:transition-transform motion-safe:duration-500 motion-safe:ease-out motion-safe:group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-surface-overlay/80 via-transparent to-transparent sm:hidden" />
       </Link>
@@ -73,7 +73,7 @@ export function EditorialSpotlight({
           </div>
 
           <Link href={href} className="group block focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent rounded">
-            <h2 className="ink-display line-clamp-2 sm:line-clamp-3 text-[26px] sm:text-[30px] lg:text-[36px] font-normal text-text-primary leading-[1.14] tracking-tight group-hover:text-accent transition-colors">
+            <h2 className="ink-display line-clamp-2 sm:line-clamp-3 text-[26px] sm:text-[30px] lg:text-[36px] font-normal text-text-primary leading-[1.14] tracking-tight group-hover:text-accent motion-safe:transition-colors">
               {manga.title}
             </h2>
           </Link>
@@ -95,7 +95,7 @@ export function EditorialSpotlight({
         <div className="mt-2 pt-3 border-t border-border-subtle/50 flex flex-wrap items-center justify-between gap-3">
           <Link
             href={href}
-            className="inline-flex min-h-10 sm:min-h-11 items-center gap-2 rounded-xl bg-accent px-4 py-2 text-xs sm:text-sm font-bold text-accent-on transition-all hover:bg-accent-hover active:scale-95 focus-visible:outline-2 focus-visible:outline-accent"
+            className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-accent px-4 py-2 text-xs sm:text-sm font-bold text-accent-on motion-safe:transition-all hover:bg-accent-hover motion-safe:active:scale-95 focus-visible:outline-2 focus-visible:outline-accent"
           >
             <BookOpen size={18} weight="bold" aria-hidden="true" />
             <span>Lihat komik</span>
@@ -112,7 +112,7 @@ export function EditorialSpotlight({
                   type="button"
                   onClick={onPrev}
                   aria-label="Komik sebelumnya"
-                  className="flex size-9 items-center justify-center rounded-lg border border-border-subtle bg-surface-base text-text-secondary transition-colors hover:border-accent/40 hover:bg-surface-hover hover:text-text-primary focus-visible:outline-2 focus-visible:outline-accent active:scale-95"
+                  className="flex size-11 items-center justify-center rounded-lg border border-border-subtle bg-surface-base text-text-secondary motion-safe:transition-colors hover:border-accent/40 hover:bg-surface-hover hover:text-text-primary focus-visible:outline-2 focus-visible:outline-accent motion-safe:active:scale-95"
                 >
                   <CaretLeft size={16} weight="bold" />
                 </button>
@@ -120,7 +120,7 @@ export function EditorialSpotlight({
                   type="button"
                   onClick={onNext}
                   aria-label="Komik berikutnya"
-                  className="flex size-9 items-center justify-center rounded-lg border border-border-subtle bg-surface-base text-text-secondary transition-colors hover:border-accent/40 hover:bg-surface-hover hover:text-text-primary focus-visible:outline-2 focus-visible:outline-accent active:scale-95"
+                  className="flex size-11 items-center justify-center rounded-lg border border-border-subtle bg-surface-base text-text-secondary motion-safe:transition-colors hover:border-accent/40 hover:bg-surface-hover hover:text-text-primary focus-visible:outline-2 focus-visible:outline-accent motion-safe:active:scale-95"
                 >
                   <CaretRight size={16} weight="bold" />
                 </button>

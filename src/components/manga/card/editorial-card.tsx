@@ -2,21 +2,29 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ImageBroken, Star } from "@phosphor-icons/react";
+import { Star } from "@phosphor-icons/react";
 import { getMangaDetailHref } from "@/shared/lib/routes";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/shared/utils/cn";
 import { getRelativeTime } from "@/shared/utils/date";
+import { MangaCover } from "../manga-cover";
 import { BookmarkButton } from "../bookmark-button";
 import type { BaseCardProps } from "./types";
+import {
+  MangaCardCoverFrame,
+  MangaCardMeta,
+  MangaCardTitle,
+  mangaCardInteraction,
+  mangaCardSurface,
+} from "./primitives";
 
 export function EditorialCard({ 
   manga, 
   sourceId, 
   displayScore 
 }: BaseCardProps) {
-  const [imageError, setImageError] = React.useState(false);
+  const reducedMotion = useReducedMotion();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const fullPath = pathname + (searchParams.toString() ? `?${searchParams.toString()}` : "");
@@ -30,26 +38,32 @@ export function EditorialCard({
 
   return (
     <motion.article
-      whileHover={{ y: -2 }}
-      whileTap={{ scale: 0.98 }}
+      whileHover={reducedMotion ? undefined : { y: -2 }}
+      whileTap={reducedMotion ? undefined : { scale: 0.98 }}
       transition={{ ease: "easeOut", duration: 0.2 }}
-      className="w-full min-w-[280px]"
+      className={cn(
+        mangaCardSurface({ kind: "enclosed" }),
+        "group flex h-[110px] w-full min-w-[280px] overflow-hidden"
+      )}
     >
       <Link 
         href={getMangaDetailHref(sourceId, manga.id, fullPath)} 
-        className="flex gap-2.5 h-[110px] cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent vt-hover"
-        aria-label={`Read ${manga.title}`}
+        className={cn(
+          mangaCardInteraction.link,
+          "flex min-w-0 flex-1 gap-2.5 cursor-pointer rounded-l-md vt-hover"
+        )}
+        aria-label={`Baca ${manga.title}`}
         style={vtStyle}
       >
         {/* Cover Bento Cell */}
-        <div className="relative w-[80px] shrink-0 bg-surface-base rounded-sm overflow-hidden group-hover:shadow-lg group-hover:shadow-accent/5 transition-all">
-          {manga.coverUrl && !imageError ? (
-            <img src={manga.coverUrl} alt={manga.title} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={() => setImageError(true)} referrerPolicy="no-referrer" loading="lazy" decoding="async" />
-          ) : (
-            <div className="h-full w-full bg-surface-muted flex flex-col items-center justify-center text-text-muted/50 p-2">
-              <ImageBroken size={24} weight="duotone" />
-            </div>
-          )}
+        <MangaCardCoverFrame className="h-full w-[74px] border-y-0 border-l-0 rounded-l-md rounded-r-xs group-hover:shadow-lg group-hover:shadow-accent/5">
+          <MangaCover
+            src={manga.coverUrl}
+            alt={manga.title}
+            fallbackTitle={manga.title}
+            iconSize={24}
+            imageClassName={mangaCardInteraction.coverImage}
+          />
           
           {/* Number Badge */}
           {manga.rank !== undefined && (
@@ -63,43 +77,39 @@ export function EditorialCard({
               {manga.rank}
             </div>
           )}
-        </div>
+        </MangaCardCoverFrame>
 
         {/* Info Bento Cell */}
-        <div className="flex-1 p-3 flex flex-col justify-center min-w-0 transition-all bg-transparent">
+        <div className="flex-1 p-3 flex flex-col justify-center min-w-0 transition-all motion-reduce:transition-none bg-transparent">
           <div className="flex items-center gap-1.5 mb-2">
             <span className="text-[9px] font-bold uppercase text-accent bg-accent/10 px-2 py-0.5 rounded-md">{manga.status || "Ongoing"}</span>
             {manga.format && <span className="text-[9px] font-bold uppercase text-text-secondary bg-surface-base px-2 py-0.5 rounded-md">{manga.format}</span>}
           </div>
-          <h4 className="font-medium text-sm md:text-base text-text-primary leading-normal truncate group-hover:text-accent transition-colors">
+          <MangaCardTitle
+            as="h4"
+            lines={1}
+            className={cn("font-medium leading-normal", mangaCardInteraction.title)}
+          >
             {manga.title}
-          </h4>
+          </MangaCardTitle>
           <div className="mt-1.5 flex items-center justify-between">
-            <span className="text-xs text-text-secondary font-medium truncate pr-2">{manga.latestChapter || "Detail"}</span>
-            {timeText && <span className="text-[10px] text-text-muted whitespace-nowrap">{timeText}</span>}
+            <MangaCardMeta className="truncate pr-2">{manga.latestChapter || "Detail"}</MangaCardMeta>
+            {timeText && <MangaCardMeta className="whitespace-nowrap text-[10px] text-text-muted">{timeText}</MangaCardMeta>}
           </div>
         </div>
-
-        {/* Action/Rating Bento Cell */}
-        <div className="w-[48px] shrink-0 flex flex-col items-center justify-center gap-3 relative overflow-hidden bg-transparent">
-            {/* Bookmark */}
-            <div className="z-10 scale-90 relative" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
-              <BookmarkButton sourceId={sourceId} manga={manga} />
-            </div>
-            
-            {/* Divider */}
-            <div className="w-6 h-px bg-border-subtle z-10" />
-            
-            {/* Rating */}
-            <div className="flex flex-col items-center gap-0.5 text-semantic-warning z-10">
-              <Star weight="fill" size={12} />
-              <span className="text-[10px] font-black" suppressHydrationWarning>{Number(scoreToDisplay) > 0 ? Number(scoreToDisplay).toFixed(1) : "-.-"}</span>
-            </div>
-            
-            {/* Hover Glow */}
-            <div className="absolute inset-0 bg-gradient-to-b from-accent/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-        </div>
       </Link>
+
+      {/* Bookmark remains independent from the primary navigation target. */}
+      <div className="relative flex w-[52px] shrink-0 flex-col items-center justify-center gap-2 bg-transparent">
+        <BookmarkButton sourceId={sourceId} manga={manga} className="size-11" />
+        <div className="h-px w-6 bg-border-subtle" />
+        <div className="flex flex-col items-center gap-0.5 text-semantic-warning">
+          <Star weight="fill" size={12} aria-hidden="true" />
+          <span className="text-[10px] font-black" suppressHydrationWarning>
+            {Number(scoreToDisplay) > 0 ? Number(scoreToDisplay).toFixed(1) : "-.-"}
+          </span>
+        </div>
+      </div>
     </motion.article>
   );
 }

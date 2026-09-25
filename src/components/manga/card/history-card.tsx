@@ -4,11 +4,19 @@ import * as React from "react";
 import Link from "next/link";
 import { Play } from "@phosphor-icons/react";
 import { getMangaDetailHref, getReaderHref } from "@/shared/lib/routes";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { MangaCover } from "../manga-cover";
 import { ReadingProgress } from "@/components/ui/reading-progress";
+import { cn } from "@/shared/utils/cn";
 import type { BaseCardProps } from "./types";
+import {
+  MangaCardCoverFrame,
+  MangaCardMeta,
+  MangaCardTitle,
+  mangaCardInteraction,
+  mangaCardSurface,
+} from "./primitives";
 
 export interface HistoryCardProps extends BaseCardProps {
   chapterId?: string;
@@ -26,6 +34,7 @@ export function HistoryCard({
   timestamp
 }: HistoryCardProps) {
   const pathname = usePathname();
+  const reducedMotion = useReducedMotion();
   const searchParams = useSearchParams();
   const fullPath = pathname + (searchParams.toString() ? `?${searchParams.toString()}` : "");
 
@@ -39,37 +48,46 @@ export function HistoryCard({
 
   return (
     <motion.article 
-      layout="position"
-      className="group relative flex items-center gap-4 rounded-xl bg-surface-raised p-3 border border-border-subtle hover:border-border-default hover:bg-surface-hover/70 transition-all duration-200 shadow-xs overflow-hidden"
+      layout={reducedMotion ? false : "position"}
+      className={cn(
+        mangaCardSurface({ kind: "enclosed" }),
+        "group relative flex items-center gap-4 overflow-hidden p-3"
+      )}
     >
       <Link 
         href={targetHref} 
         prefetch={false} 
-        className="relative h-[84px] w-[60px] shrink-0 overflow-hidden rounded-sm bg-surface-base shadow-sm z-10 vt-hover"
+        className={cn(mangaCardInteraction.link, "z-10 shrink-0 rounded-xs vt-hover")}
         style={!chapterId ? vtStyle : undefined}
-        aria-label={`Cover of ${manga.title}`}
+        aria-label={`Buka ${chapterTitle || manga.title}`}
       >
-        <MangaCover
-          src={manga.coverUrl}
-          alt={manga.title}
-          fallbackTitle={manga.title}
-          iconSize={24}
-        />
+        <MangaCardCoverFrame className="h-[84px] w-[56px] shadow-sm">
+          <MangaCover
+            src={manga.coverUrl}
+            alt={manga.title}
+            fallbackTitle={manga.title}
+            iconSize={24}
+            imageClassName={mangaCardInteraction.coverImage}
+          />
+        </MangaCardCoverFrame>
       </Link>
       
       <div className="flex-1 min-w-0 flex flex-col justify-center z-10">
-        <Link href={getMangaDetailHref(sourceId, manga.id, fullPath)} className="block min-w-0">
-          <h3 className="truncate font-bold text-text-primary text-sm md:text-base leading-snug group-hover:text-accent transition-colors">
+        <Link
+          href={getMangaDetailHref(sourceId, manga.id, fullPath)}
+          className={cn(mangaCardInteraction.link, "block min-w-0 rounded-xs")}
+        >
+          <MangaCardTitle className={cn("text-sm md:text-base", mangaCardInteraction.title)}>
             {manga.title}
-          </h3>
+          </MangaCardTitle>
         </Link>
-        <Link href={targetHref} className="block min-w-0 mt-0.5">
-          <p className="truncate text-sm font-medium text-text-muted group-hover:text-accent transition-colors">
+        <Link href={targetHref} className={cn(mangaCardInteraction.link, "mt-0.5 block min-w-0 rounded-xs")}>
+          <MangaCardMeta as="p" className={cn("truncate text-sm text-text-muted", mangaCardInteraction.title)}>
             {chapterTitle || manga.latestChapter || `Detail`}
-          </p>
+          </MangaCardMeta>
         </Link>
         <div className="mt-1 flex items-center gap-2 text-xs font-semibold text-text-muted">
-          <span className="uppercase tracking-wider">{manga.format || manga.status || "MANGA"}</span>
+          <MangaCardMeta className="uppercase tracking-wider">{manga.format || manga.status || "MANGA"}</MangaCardMeta>
           {timestamp && (
             <>
               <span className="opacity-50">•</span>
@@ -85,10 +103,15 @@ export function HistoryCard({
       </div>
       
       {chapterId && (
-        <div className="bg-surface-base border border-border-subtle rounded-xl p-1 shadow-xs shrink-0 ml-2 z-20 relative">
+        <div className="relative z-20 ml-2 shrink-0">
           <Link 
             href={targetHref} 
-            className="flex items-center justify-center rounded-lg h-8 w-8 text-accent hover:bg-accent/10 transition-colors"
+            className={cn(
+              mangaCardInteraction.link,
+              mangaCardSurface({ kind: "nested" }),
+              "flex size-11 items-center justify-center text-accent transition-colors hover:bg-accent/10 motion-reduce:transition-none"
+            )}
+            aria-label={`Lanjut baca ${chapterTitle || manga.title}`}
           >
             <Play className="h-4 w-4 ml-0.5" weight="fill" />
           </Link>

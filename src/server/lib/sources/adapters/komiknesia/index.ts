@@ -9,12 +9,12 @@ import type {
 import type { SourceCapabilities } from "@/shared/sources/source-capabilities";
 import { HttpClient } from "../base/http-client";
 import { decryptEnvelope } from "./crypto";
-import type {
-  KomikNesiaChapterPayload,
-  KomikNesiaDetailPayload,
-  KomikNesiaEnvelope,
-  KomikNesiaListPayload,
-} from "./types";
+import type { KomikNesiaEnvelope } from "./types";
+import {
+  parseKomikNesiaContents,
+  parseKomikNesiaDetail,
+  parseKomikNesiaSearch,
+} from "./compatibility-parser";
 import {
   normalizeKomikNesiaChapter,
   normalizeKomikNesiaMangaDetail,
@@ -38,8 +38,18 @@ function generateDeviceId(): string {
  * Decodes a KomikNesia encrypted envelope into a typed payload.
  * Encryption details are fully contained in this adapter.
  */
-function decode<T>(envelope: KomikNesiaEnvelope): T {
-  return decryptEnvelope(envelope) as T;
+function decode(envelope: KomikNesiaEnvelope): unknown {
+  return decryptEnvelope(envelope);
+}
+
+function readChapterImages(raw: unknown): string[] {
+  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) return [];
+  const data = (raw as Record<string, unknown>).data;
+  if (typeof data !== "object" || data === null || Array.isArray(data)) return [];
+  const images = (data as Record<string, unknown>).images;
+  return Array.isArray(images)
+    ? images.filter((image): image is string => typeof image === "string")
+    : [];
 }
 
 export class KomikNesiaSource implements MangaSource {
@@ -94,10 +104,10 @@ export class KomikNesiaSource implements MangaSource {
     return { "X-Device-Id": generateDeviceId() };
   }
 
-  private async fetchDecrypted<T>(
+  private async fetchDecrypted(
     path: string,
     params?: Record<string, string | number | boolean | string[]>
-  ): Promise<T> {
+  ): Promise<unknown> {
     const envelope = await this.client.get<KomikNesiaEnvelope>(path, params, {
       headers: this.makeHeaders(),
     });
@@ -110,18 +120,16 @@ export class KomikNesiaSource implements MangaSource {
       throw new Error("KOMIKNESIA_INVALID_ENVELOPE: API returned status=false");
     }
 
-    return decode<T>(envelope);
+    return decode(envelope);
   }
 
   async getPopular(page: number): Promise<MangaPageResult> {
     const pageNum = Math.max(1, page || 1);
-    const payload = await this.fetchDecrypted<KomikNesiaListPayload>("/contents", {
+    const raw = await this.fetchDecrypted("/contents", {
       page: pageNum,
       limit: 20,
     });
-
-    const items = Array.isArray(payload?.data) ? payload.data : [];
-    const totalPages = typeof payload?.totalPages === "number" ? payload.totalPages : 1;
+    const { items, totalPages } = parseKomikNesiaContents(raw);
     const hasNextPage = pageNum < totalPages;
 
     return {
@@ -148,11 +156,8 @@ export class KomikNesiaSource implements MangaSource {
       params.search = trimmedQuery;
     }
 
-    const payload = await this.fetchDecrypted<KomikNesiaListPayload>("/manga", params);
-
-    // /manga returns { manga: [...], totalPages, currentPage, totalCount }
-    const items = Array.isArray(payload?.manga) ? payload.manga : [];
-    const totalPages = typeof payload?.totalPages === "number" ? payload.totalPages : 1;
+    const raw = await this.fetchDecrypted("/manga", params);
+    const { items, totalPages } = parseKomikNesiaSearch(raw);
     const hasNextPage = pageNum < totalPages;
 
     return {
@@ -169,14 +174,10 @@ export class KomikNesiaSource implements MangaSource {
       );
     }
 
-    const payload = await this.fetchDecrypted<KomikNesiaDetailPayload>(
+    const raw = await this.fetchDecrypted(
       `/manga/slug/${encodeURIComponent(slug)}`
     );
-
-    const detail = payload?.data;
-    if (!detail || !detail.title) {
-      throw new Error(`KomikNesia: Manga "${mangaId}" not found`);
-    }
+    const detail = parseKomikNesiaDetail(raw);
 
     return normalizeKomikNesiaMangaDetail(detail);
   }
@@ -190,11 +191,10 @@ export class KomikNesiaSource implements MangaSource {
     }
 
     // Detail endpoint embeds the full chapter list — avoids a second request
-    const payload = await this.fetchDecrypted<KomikNesiaDetailPayload>(
+    const raw = await this.fetchDecrypted(
       `/manga/slug/${encodeURIComponent(slug)}`
     );
-
-    const chapters = payload?.data?.chapters;
+    const chapters = parseKomikNesiaDetail(raw).chapters;
     if (!Array.isArray(chapters)) return [];
 
     return chapters.map((c) => normalizeKomikNesiaChapter(c, slug));
@@ -208,12 +208,11 @@ export class KomikNesiaSource implements MangaSource {
       );
     }
 
-    const payload = await this.fetchDecrypted<KomikNesiaChapterPayload>(
+    const raw = await this.fetchDecrypted(
       `/chapters/slug/${encodeURIComponent(slug)}`
     );
-
-    const images = payload?.data?.images;
-    if (!Array.isArray(images)) {
+    const images = readChapterImages(raw);
+    if (images.length === 0) {
       return { chapterId, pages: [] };
     }
 

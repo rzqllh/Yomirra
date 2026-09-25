@@ -18,14 +18,14 @@ export function UpdatesSkeleton({ count = 6, className }: UpdatesSkeletonProps) 
           <div
             key={index}
             style={{ animationDelay: staggerDelay }}
-            className="p-3 rounded-xl bg-surface-raised/70 border border-border-subtle shadow-xs flex items-center justify-between gap-3 animate-fade-in"
+            className="p-3 rounded-sm bg-surface-raised/70 border border-border-subtle shadow-xs flex items-center justify-between gap-3 motion-safe:animate-fade-in"
           >
             {/* Left: Thumbnail & Metadata */}
             <div className="flex items-center gap-3 min-w-0 flex-1">
-              {/* Cover thumbnail: squircle rounded-lg */}
+              {/* Canonical 2:3 manga cover frame. */}
               <div
                 style={{ animationDelay: staggerDelay }}
-                className="relative w-[52px] h-[72px] rounded-lg overflow-hidden shrink-0 bg-surface-muted/80 border border-border-subtle/60"
+                className="relative w-[52px] sm:w-[58px] aspect-[2/3] rounded-xs overflow-hidden shrink-0 bg-surface-muted/80 border border-border-subtle/60"
               >
                 <Skeleton className="w-full h-full rounded-none" />
               </div>
@@ -58,10 +58,10 @@ export function UpdatesSkeleton({ count = 6, className }: UpdatesSkeletonProps) 
               </div>
             </div>
 
-            {/* Right: Action button squircle */}
+            {/* Right: 44px action target. */}
             <Skeleton
               style={{ animationDelay: staggerDelay }}
-              className="h-8 w-16 rounded-lg shrink-0"
+              className="h-11 w-16 rounded-sm shrink-0"
             />
           </div>
         );

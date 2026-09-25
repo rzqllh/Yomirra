@@ -126,4 +126,28 @@ describe('UpdatesList Component', () => {
     expect(readButtons.length).toBeGreaterThan(0);
     expect(readButtons[0].getAttribute('href')).toMatch(/\/read\/chap1\?returnTo=%2Fupdates/);
   });
+
+  it('renders update rows as articles with 44px schedule and read actions', () => {
+    (useUpdateStore as any).mockReturnValue({
+      items: {
+        'sourceA::manga1': {
+          sourceId: 'sourceA',
+          mangaId: 'manga1',
+          mangaTitle: 'Title 1',
+          detectedAt: new Date().toISOString(),
+          latestChapterId: 'chap1',
+        },
+      },
+      markAllAsSeen: mockMarkAllAsSeen,
+    });
+
+    const { container } = render(<UpdatesList initialDay="all" />);
+    const scheduleButton = screen.getByRole('button', { name: /jadwal rilis untuk title 1/i });
+    const readLink = screen.getByRole('link', { name: /mulai baca title 1/i });
+
+    expect(container.querySelector('article')).not.toBeNull();
+    expect(scheduleButton.className).toContain('min-h-11');
+    expect(scheduleButton.className).not.toContain('min-h-0');
+    expect(readLink.className).toContain('min-h-11');
+  });
 });

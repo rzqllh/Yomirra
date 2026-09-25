@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { Star, TrendUp, Eye } from "@phosphor-icons/react";
 import { getMangaDetailHref } from "@/shared/lib/routes";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import { usePathname, useSearchParams } from "next/navigation";
 import { sourceRegistry } from "@/shared/sources/source-registry";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
@@ -16,6 +16,13 @@ import type { MangaKey } from "@/shared/types/collection";
 import { cn } from "@/shared/utils/cn";
 import type { BaseCardProps } from "./types";
 import type { SourceBinding } from "@/shared/lib/canonical-search";
+import {
+  MangaCardCoverFrame,
+  MangaCardMeta,
+  MangaCardTitle,
+  mangaCardInteraction,
+  mangaCardSurface,
+} from "./primitives";
 
 export interface CompactCardProps extends BaseCardProps {
   showSourceBadge?: boolean;
@@ -31,6 +38,7 @@ export function CompactCard({
   displayScore,
 }: CompactCardProps) {
   const pathname = usePathname();
+  const reducedMotion = useReducedMotion();
   const searchParams = useSearchParams();
   const { readingStatusByManga } = useCollectionStore();
   const updateStore = useUpdateStore();
@@ -65,33 +73,37 @@ export function CompactCard({
 
   return (
     <motion.article
-      layoutId={`manga-card-${sourceId}-${manga.id}`}
-      layout="position"
-      whileHover={{ y: -2 }}
-      whileTap={{ scale: 0.99 }}
+      layoutId={reducedMotion ? undefined : `manga-card-${sourceId}-${manga.id}`}
+      layout={reducedMotion ? false : "position"}
+      whileHover={reducedMotion ? undefined : { y: -2 }}
+      whileTap={reducedMotion ? undefined : { scale: 0.99 }}
       transition={{ 
         layout: { type: "spring", stiffness: 320, damping: 30 },
         duration: 0.2 
       }}
-      className="relative flex items-stretch p-3 sm:p-3.5 rounded-md bg-surface-raised border border-border-subtle/80 hover:border-accent/40 hover:bg-surface-hover/70 transition-all duration-200 shadow-xs group w-full gap-3 sm:gap-4 overflow-hidden"
+      className={cn(
+        mangaCardSurface({ kind: "enclosed" }),
+        "group relative flex w-full items-stretch gap-3 overflow-hidden p-3 sm:gap-4 sm:p-3.5"
+      )}
     >
       {/* Thumbnail Cover (Squircle 2/3 Aspect) */}
       <motion.div
-        layoutId={`manga-cover-${sourceId}-${manga.id}`}
-        className="relative w-[84px] sm:w-[96px] md:w-[104px] aspect-[2/3] shrink-0 rounded-xs overflow-hidden bg-surface-base border border-border-subtle shadow-xs group-hover:shadow-sm transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        layoutId={reducedMotion ? undefined : `manga-cover-${sourceId}-${manga.id}`}
+        className="w-[84px] shrink-0 sm:w-[96px] md:w-[104px]"
       >
         <Link
           href={getMangaDetailHref(sourceId, manga.id, fullPath)}
-          className="block w-full h-full"
+          className={cn(mangaCardInteraction.link, "block rounded-xs")}
           aria-label={`Lihat detail ${manga.title}`}
         >
-          <MangaCover
-            src={manga.coverUrl}
-            alt={manga.title}
-            priority={priority}
-            fallbackTitle={manga.title}
-            imageClassName="transition-transform duration-300 ease-out group-hover:scale-105 object-cover w-full h-full"
-          />
+          <MangaCardCoverFrame className="w-full shadow-xs transition-shadow group-hover:shadow-sm motion-reduce:transition-none">
+            <MangaCover
+              src={manga.coverUrl}
+              alt={manga.title}
+              priority={priority}
+              fallbackTitle={manga.title}
+              imageClassName={cn(mangaCardInteraction.coverImage, "size-full object-cover")}
+            />
 
           {isUnread && (
             <div className="absolute top-1 left-1 z-20 flex items-center rounded-xs bg-semantic-error text-white px-1.5 py-0.5 shadow-sm">
@@ -105,6 +117,7 @@ export function CompactCard({
               <span className="text-[10px] font-black text-white">#{manga.rank}</span>
             </div>
           )}
+          </MangaCardCoverFrame>
         </Link>
       </motion.div>
 
@@ -115,18 +128,18 @@ export function CompactCard({
           <div className="flex items-start justify-between gap-2">
             <Link
               href={getMangaDetailHref(sourceId, manga.id, fullPath)}
-              className="min-w-0 flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-sm"
+              className={cn(mangaCardInteraction.link, "min-w-0 flex-1 rounded-sm")}
             >
-              <h3 className="text-[15px] sm:text-base font-bold tracking-tight text-text-primary group-hover:text-accent transition-colors line-clamp-1">
+              <MangaCardTitle lines={1} className={mangaCardInteraction.title}>
                 {manga.title}
-              </h3>
+              </MangaCardTitle>
             </Link>
 
             <div className="shrink-0 -mt-0.5 -mr-1 relative z-10">
               <BookmarkButton
                 sourceId={sourceId}
                 manga={manga}
-                className="hover:border-accent hover:text-accent"
+                className="size-11 hover:border-accent hover:text-accent"
               />
             </div>
           </div>
@@ -134,9 +147,9 @@ export function CompactCard({
           {/* Row 2: Chapter & Status Pill & Format Tag (Gambar 4 Style) */}
           <div className="flex items-center gap-2 flex-wrap mt-1">
             {manga.latestChapter && (
-              <span className="text-xs font-semibold text-text-secondary truncate">
+              <MangaCardMeta className="truncate font-semibold">
                 {manga.latestChapter}
-              </span>
+              </MangaCardMeta>
             )}
 
             {manga.status && (
@@ -202,22 +215,18 @@ export function CompactCard({
 
           {/* Row 4: Synopsis / Excerpt / Metadata Fallback */}
           {cleanedDescription ? (
-            <p className="text-[12px] text-text-muted/80 line-clamp-2 md:line-clamp-3 leading-relaxed mt-1.5">
+            <MangaCardMeta as="p" className="mt-1.5 line-clamp-2 leading-relaxed text-text-muted/80 md:line-clamp-3">
               {cleanedDescription}
-            </p>
+            </MangaCardMeta>
           ) : manga.author ? (
-            <p className="text-[11px] text-text-muted/70 mt-1.5 font-medium truncate">
+            <MangaCardMeta as="p" className="mt-1.5 truncate text-[11px] text-text-muted/70">
               Karya: {manga.author}
-            </p>
+            </MangaCardMeta>
           ) : (manga as any)?.genres && (manga as any).genres.length > 0 ? (
-            <p className="text-[11px] text-text-muted/70 mt-1.5 font-medium truncate">
+            <MangaCardMeta as="p" className="mt-1.5 truncate text-[11px] text-text-muted/70">
               Genre: {(manga as any).genres.slice(0, 3).join(" · ")}
-            </p>
-          ) : (
-            <p className="text-[11px] text-text-muted/50 mt-1.5 italic">
-              Ketuk untuk melihat sinopsis & daftar bab.
-            </p>
-          )}
+            </MangaCardMeta>
+          ) : null}
         </div>
       </div>
     </motion.article>

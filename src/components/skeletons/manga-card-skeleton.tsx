@@ -2,27 +2,26 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 export function MangaCardSkeleton({ variant = "grid" }: { variant?: "grid" | "list" | "editorial" | "shelf" | "history" | "leaderboard" | "compact" }) {
   if (variant === "history") {
-    // Mirrors HistoryCard: flex gap-4 p-3, cover h-[84px] w-[60px] rounded-sm, action h-8 w-8 rounded-lg
+    // Mirrors HistoryCard: enclosed row, 2:3 cover, and a 44px resume target.
     return (
       <div className="flex items-center gap-4 rounded-xl bg-surface-raised/50 p-3 border border-border-subtle/50 w-full">
-        <Skeleton className="h-[84px] w-[60px] rounded-sm shrink-0" />
+        <Skeleton className="h-[84px] w-[56px] rounded-xs shrink-0" />
         <div className="flex-1 flex flex-col justify-center space-y-2 py-1">
           <Skeleton className="h-4 w-3/4" />
           <Skeleton className="h-3 w-1/2" />
           <Skeleton className="h-3 w-1/3 mt-1" />
         </div>
-        {/* Play button: real is h-8 w-8 rounded-lg */}
-        <Skeleton className="h-8 w-8 rounded-lg shrink-0" />
+        <Skeleton className="size-11 rounded-xs shrink-0" />
       </div>
     )
   }
 
   if (variant === "leaderboard") {
-    // Mirrors LeaderboardRow: flex gap-3.5 py-2.5 px-3, rank w-9, cover w-[50px] h-[68px] sm:w-[60px] sm:h-[80px] rounded-sm
+    // Mirrors the open LeaderboardRow rather than introducing an enclosed card shell.
     return (
-      <div className="flex items-center gap-3.5 py-2.5 px-3 rounded md:rounded-xl bg-surface-base/40 border border-border-subtle/40 w-full">
-        <Skeleton className="w-9 h-8 shrink-0 rounded-md" />
-        <Skeleton className="w-[50px] h-[68px] sm:w-[60px] sm:h-[80px] shrink-0 rounded-sm" />
+      <div className="flex min-h-[62px] items-center gap-3 border-b border-border-subtle/70 px-1 py-1.5 sm:py-2 w-full">
+        <Skeleton className="w-8 h-8 shrink-0 rounded-xs" />
+        <Skeleton className="h-[60px] w-10 shrink-0 rounded-xs" />
         <div className="flex-1 flex flex-col justify-center gap-2 py-0.5">
           <Skeleton className="h-4 w-3/4" />
           <Skeleton className="h-3 w-1/3" />
@@ -33,14 +32,16 @@ export function MangaCardSkeleton({ variant = "grid" }: { variant?: "grid" | "li
 
   if (variant === "editorial") {
     return (
-      <div className="relative flex flex-col w-full rounded-lg overflow-hidden bg-surface-muted border border-border-default shadow-sm aspect-[3/4]">
-        <Skeleton className="absolute inset-0 w-full h-full rounded-none" />
-        <div className="absolute top-2 left-2 flex gap-1 z-20">
-          <Skeleton className="h-4 w-8 rounded-sm bg-black/20" />
+      <div className="flex h-[110px] min-w-[280px] w-full overflow-hidden rounded-md border border-border-subtle/80 bg-surface-raised shadow-xs">
+        <Skeleton className="h-full w-[74px] shrink-0 rounded-l-md rounded-r-xs" />
+        <div className="flex min-w-0 flex-1 flex-col justify-center gap-2 p-3">
+          <Skeleton className="h-3 w-24 rounded-xs" />
+          <Skeleton className="h-4 w-3/4 rounded-xs" />
+          <Skeleton className="h-3 w-1/2 rounded-xs" />
         </div>
-        <div className="absolute bottom-0 left-0 right-0 p-3 z-20 flex flex-col justify-end">
-          <Skeleton className="h-4 w-3/4 mb-2 bg-white/20" />
-          <Skeleton className="h-3 w-1/2 bg-white/20" />
+        <div className="flex w-[52px] shrink-0 flex-col items-center justify-center gap-2">
+          <Skeleton className="size-11 rounded-[12px]" />
+          <Skeleton className="h-3 w-6 rounded-xs" />
         </div>
       </div>
     )
@@ -50,8 +51,8 @@ export function MangaCardSkeleton({ variant = "grid" }: { variant?: "grid" | "li
     // Mirrors ShelfCard: cover aspect-[2/3] rounded-sm, metadata row mb-1.5, title 2-line min-h-[2.4em], bottom chapter/score row
     return (
       <div className="relative flex flex-col w-full">
-        {/* Cover — matches aspect-[2/3] + rounded-sm */}
-        <div className="relative w-full aspect-[2/3] overflow-hidden rounded-sm mb-3">
+        {/* Cover — matches the canonical 2:3 frame and cover radius. */}
+        <div className="relative w-full aspect-[2/3] overflow-hidden rounded-xs mb-3">
           <Skeleton className="absolute inset-0 w-full h-full rounded-none" />
           {/* Source/rank badge top-left */}
           <div className="absolute top-2 left-2 z-20">
@@ -77,12 +78,12 @@ export function MangaCardSkeleton({ variant = "grid" }: { variant?: "grid" | "li
   if (variant === "list" || variant === "compact") {
     return (
       <div className="flex items-stretch p-3 sm:p-3.5 rounded-xl bg-surface-raised border border-border-subtle/80 shadow-xs w-full gap-3 sm:gap-4 overflow-hidden">
-        <Skeleton className="w-[84px] sm:w-[96px] md:w-[104px] aspect-[2/3] shrink-0 rounded-lg" />
+        <Skeleton className="w-[84px] sm:w-[96px] md:w-[104px] aspect-[2/3] shrink-0 rounded-xs" />
         <div className="flex-1 min-w-0 flex flex-col justify-between py-0.5">
           <div>
             <div className="flex items-start justify-between gap-2">
               <Skeleton className="h-4 w-3/4 rounded-md" />
-              <Skeleton className="h-7 w-7 rounded-lg shrink-0 -mt-0.5 -mr-1" />
+              <Skeleton className="size-11 rounded-[12px] shrink-0 -mt-0.5 -mr-1" />
             </div>
             <div className="flex items-center gap-2 mt-1.5">
               <Skeleton className="h-3.5 w-16 rounded-[6px]" />

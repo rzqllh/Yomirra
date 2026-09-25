@@ -47,7 +47,7 @@ export function BookmarkButton({ sourceId, manga, className }: { sourceId: strin
       type="button"
       onClick={handleBookmarkClick}
       className={cn(
-        "relative grid size-10 sm:size-11 place-items-center rounded-[12px] border border-border-subtle bg-surface-base/95 text-text-primary shadow-xs transition-all hover:bg-surface-hover hover:border-accent/40 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer",
+        "relative grid size-11 place-items-center rounded-[12px] border border-border-subtle bg-surface-base/95 text-text-primary shadow-xs transition-all hover:bg-surface-hover hover:border-accent/40 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:transition-none motion-reduce:transform-none cursor-pointer",
         isInLibrary ? "text-accent bg-accent-dim border-accent/40" : "text-text-secondary",
         className
       )}

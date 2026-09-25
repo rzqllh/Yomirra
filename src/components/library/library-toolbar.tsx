@@ -66,10 +66,11 @@ export function LibraryToolbar({
           variant={isSelectionMode ? "accent" : "outline"}
           onClick={onToggleSelectionMode}
           className={cn(
-            "shrink-0 h-[44px] px-4 rounded-full font-bold transition-all duration-300",
+            "shrink-0 h-[44px] px-4 rounded-full font-bold motion-safe:transition-all motion-safe:duration-300",
             !isSelectionMode && "bg-surface-glass backdrop-blur-md text-text-primary border-border-subtle"
           )}
           aria-label={isSelectionMode ? "Batal pilih" : "Pilih manga"}
+          aria-pressed={Boolean(isSelectionMode)}
         >
           {isSelectionMode ? "Batal" : "Pilih"}
         </Button>

@@ -16,6 +16,13 @@ import type { MangaKey } from "@/shared/types/collection";
 import { cn } from "@/shared/utils/cn";
 import type { BaseCardProps } from "./types";
 import type { SourceBinding } from "@/shared/lib/canonical-search";
+import {
+  MangaCardCoverFrame,
+  MangaCardMeta,
+  MangaCardTitle,
+  mangaCardInteraction,
+  mangaCardSurface,
+} from "./primitives";
 
 export interface ShelfCardProps extends BaseCardProps {
   showSourceBadge?: boolean;
@@ -61,34 +68,34 @@ export function ShelfCard({
 
   return (
     <motion.article
-      layoutId={`manga-card-${sourceId}-${manga.id}`}
-      layout="position"
+      layoutId={reducedMotion ? undefined : `manga-card-${sourceId}-${manga.id}`}
+      layout={reducedMotion ? false : "position"}
       whileHover={reducedMotion ? undefined : { y: -3 }}
       whileTap={reducedMotion ? undefined : { scale: 0.98 }}
       transition={{ 
         layout: { type: "spring", stiffness: 320, damping: 30 },
         duration: 0.2 
       }}
-      className="relative flex flex-col w-full group"
+      className={cn(mangaCardSurface({ kind: "open" }), "group relative flex w-full flex-col")}
     >
       <Link 
         href={getMangaDetailHref(sourceId, manga.id, fullPath)} 
         transitionTypes={['nav-forward']}
-        className="group flex flex-col focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        className={cn(mangaCardInteraction.link, "group flex flex-col rounded-xs")}
         aria-label={`Lihat ${manga.title}`}
       >
-        <motion.div 
-          layoutId={`manga-cover-${sourceId}-${manga.id}`}
-          className="ink-cover relative w-full vt-hover"
+        <motion.div
+          layoutId={reducedMotion ? undefined : `manga-cover-${sourceId}-${manga.id}`}
           style={vtStyle}
         >
-          <MangaCover
-            src={manga.coverUrl}
-            alt={manga.title}
-            priority={priority}
-            fallbackTitle={manga.title}
-            imageClassName="transition-transform duration-500 ease-out group-hover:scale-105"
-          />
+          <MangaCardCoverFrame className="w-full shadow-sm vt-hover">
+            <MangaCover
+              src={manga.coverUrl}
+              alt={manga.title}
+              priority={priority}
+              fallbackTitle={manga.title}
+              imageClassName={mangaCardInteraction.coverImage}
+            />
           
           <div className="absolute top-2 left-2 flex flex-col gap-1.5 z-20 items-start">
             {isUnread && (
@@ -143,38 +150,42 @@ export function ShelfCard({
               </div>
             </div>
           )}
+          </MangaCardCoverFrame>
         </motion.div>
 
         <div className="flex flex-col px-2 mt-3" style={vtStyle}>
           {/* Metadata Row */}
           <div className="flex items-center gap-1.5 mb-1.5 min-w-0">
             {manga.format && (
-              <span className="shrink-0 text-xs font-semibold text-text-secondary">{manga.format}</span>
+              <MangaCardMeta className="shrink-0 font-semibold">{manga.format}</MangaCardMeta>
             )}
             {manga.format && showSourceBadge && (sourceName || isMultiSource) && (
               <span className="w-[3px] h-[3px] rounded-full bg-border-strong shrink-0" />
             )}
             {showSourceBadge && (
               isMultiSource ? (
-                <span className="truncate text-xs font-semibold text-accent">
+                <MangaCardMeta className="truncate font-semibold text-accent">
                   {effectiveBindings.length} Sumber
-                </span>
+                </MangaCardMeta>
               ) : sourceName ? (
-                <span className="truncate text-xs font-semibold text-accent">{sourceName}</span>
+                <MangaCardMeta className="truncate font-semibold text-accent">{sourceName}</MangaCardMeta>
               ) : null
             )}
           </div>
           {/* Title - 2 lines fixed height */}
-          <h3 className="mb-2 min-h-[2.4em] line-clamp-2 text-[15px] font-bold leading-snug tracking-tight text-text-primary transition-colors duration-200 group-hover:text-accent">
+          <MangaCardTitle
+            lines={2}
+            className={cn("mb-2 min-h-[2.4em]", mangaCardInteraction.title)}
+          >
             {manga.title}
-          </h3>
+          </MangaCardTitle>
           {/* Bottom Row - Chapter & Score */}
           {(manga.latestChapter || (scoreToDisplay !== undefined && Number(scoreToDisplay) > 0)) && (
             <div className="flex items-center justify-between mt-auto">
               {manga.latestChapter ? (
-                <span className="max-w-[70%] truncate text-xs font-semibold text-text-secondary sm:text-sm">
+                <MangaCardMeta className="max-w-[70%] truncate font-semibold sm:text-sm">
                   {manga.latestChapter}
-                </span>
+                </MangaCardMeta>
               ) : <div />}
               {scoreToDisplay !== undefined && Number(scoreToDisplay) > 0 && (
                 <span className="flex shrink-0 items-center gap-1 text-xs font-bold tracking-tight text-text-secondary sm:text-sm">
@@ -187,7 +198,7 @@ export function ShelfCard({
         </div>
       </Link>
       <div className="absolute right-2 top-2 z-10 flex items-center justify-center">
-        <BookmarkButton sourceId={sourceId} manga={manga} />
+        <BookmarkButton sourceId={sourceId} manga={manga} className="size-11" />
       </div>
     </motion.article>
   );

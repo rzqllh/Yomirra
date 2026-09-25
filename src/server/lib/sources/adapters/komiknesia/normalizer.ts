@@ -55,7 +55,7 @@ export function normalizeKomikNesiaMangaDetail(detail: KomikNesiaDetail): MangaD
   return {
     ...base,
     status: normalizeKomikNesiaStatus(detail.status),
-    description: detail.description || detail.synopsis || "",
+    description: detail.description || "",
     genres,
     author: detail.author || undefined,
     artist: detail.artist || undefined,
@@ -88,7 +88,7 @@ export function normalizeKomikNesiaChapter(
     date:
       chapter.releasedAt ||
       chapter.createdAt ||
-      new Date().toISOString(),
+      "",
   };
 }
 

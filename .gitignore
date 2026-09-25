@@ -142,3 +142,4 @@ docs/release_*.md
 src/app/(web)/showcase/*demo*/
 public/demo-*.html
 
+docs/superpowers

@@ -1,6 +1,7 @@
 import type { SourceFilter, FilterList } from "@/shared/sources/source-types";
 import type { MangaDexTag, MangaDexTagListResponse } from "./types";
 import { withCache } from "@/server/lib/cache/redis-cache";
+import { createMangaDexTransport } from "./transport";
 
 const TAG_API = "https://api.mangadex.org/manga/tag";
 const TAG_CACHE_KEY = "mangadex:tags";
@@ -10,16 +11,25 @@ function pickTagName(tag: MangaDexTag): string {
   return tag.attributes.name.en || Object.values(tag.attributes.name)[0] || "";
 }
 
-async function fetchTags(): Promise<MangaDexTag[]> {
-  const res = await fetch(TAG_API, {
-    headers: { Accept: "application/json" },
-    cache: "no-store",
-    signal: AbortSignal.timeout(10000),
-  });
-  if (!res.ok) throw new Error(`Failed to fetch MangaDex tags: ${res.status}`);
-  const json: MangaDexTagListResponse = await res.json();
-  return json.data;
+type MangaDexTransport = ReturnType<typeof createMangaDexTransport>;
+
+export function createMangaDexTagFetcher(
+  transport: MangaDexTransport = createMangaDexTransport()
+) {
+  return async function fetchTags(): Promise<MangaDexTag[]> {
+    const context = transport.createContext(10000);
+    const { response } = await transport.request(
+      new URL(TAG_API),
+      { headers: { Accept: "application/json" }, cache: "no-store" },
+      context
+    );
+    if (!response.ok) throw new Error(`Failed to fetch MangaDex tags: ${response.status}`);
+    const json: MangaDexTagListResponse = await response.json();
+    return json.data;
+  };
 }
+
+const fetchTags = createMangaDexTagFetcher();
 
 let cachedFilters: FilterList | null = null;
 
