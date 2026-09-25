@@ -11,6 +11,8 @@ import { toast } from "sonner";
 import { EmptyState } from "@/components/states/empty-state";
 import { StorageWarningBanner } from "@/components/download/storage-warning-banner";
 
+import { PageHeader } from "@/components/shared/page-header";
+
 export default function DownloadsPage() {
   const {
     downloads,
@@ -50,18 +52,14 @@ export default function DownloadsPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen pb-20 md:pb-12 bg-surface-base">
+    <YomirraSurface variant="base" className="min-h-screen">
       <div className="px-4 pt-[calc(var(--safe-top,0px)+16px)] md:pt-8 md:px-8 max-w-5xl mx-auto w-full space-y-6">
         {/* Page Title & Subtitle */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1">
-          <div>
-            <h1 className="ink-display text-2xl sm:text-3xl font-normal text-text-primary tracking-tight">
-              Unduhan
-            </h1>
-            <p className="text-xs sm:text-sm text-text-secondary mt-1">
-              Kelola bab komik yang diunduh untuk dibaca saat offline.
-            </p>
-          </div>
+          <PageHeader 
+            title="Unduhan" 
+            subtitle="Kelola bab komik yang diunduh untuk dibaca saat offline." 
+          />
           {allDownloads.length > 0 && (
             <button
               onClick={() => {
@@ -301,6 +299,6 @@ export default function DownloadsPage() {
           </Tabs>
         )}
       </div>
-    </div>
+    </YomirraSurface>
   );
 }
