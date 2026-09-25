@@ -28,7 +28,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
       <form 
         onSubmit={handleSubmit} 
         className={cn(
-          "flex items-center gap-2.5 rounded-2xl bg-surface-glass backdrop-blur-md px-4 h-[44px] border border-border-subtle transition-all duration-200 ease-out w-full",
+          "flex items-center gap-2.5 rounded-sm bg-surface-glass backdrop-blur-md px-4 h-[44px] border border-border-subtle transition-all duration-200 ease-out w-full",
           "hover:bg-surface-hover hover:border-border-strong focus-within:bg-surface-overlay focus-within:border-accent/40 focus-within:ring-2 focus-within:ring-accent/20 focus-within:shadow-xs",
           containerClassName
         )}
@@ -60,7 +60,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
           </IconButton>
         )}
         {shortcut && (
-          <kbd className="hidden lg:inline-flex h-6 select-none items-center gap-1 rounded-md border border-border-default bg-surface-base px-2 font-mono text-[11px] font-bold text-text-muted">
+          <kbd className="hidden lg:inline-flex h-6 select-none items-center gap-1 rounded-xs border border-border-default bg-surface-base px-2 font-mono text-[11px] font-bold text-text-muted">
             {shortcut}
           </kbd>
         )}

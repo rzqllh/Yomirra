@@ -26,9 +26,9 @@ const sizeMap: Record<"sm" | "default" | "lg", ButtonProps["size"]> = {
 }
 
 const radiusMap: Record<"sm" | "default" | "lg", string> = {
-  sm: "rounded-[10px]",
-  default: "rounded-[12px]",
-  lg: "rounded-[14px]",
+  sm: "rounded-xs",
+  default: "rounded-sm",
+  lg: "rounded-sm",
 }
 
 const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(

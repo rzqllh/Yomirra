@@ -7,6 +7,8 @@ import { useNsfwSourceIds } from "@/shared/hooks/use-nsfw-source-ids";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { useMounted } from "@/shared/hooks/use-mounted";
+import { useCollectionStore } from "@/shared/store/collection-store";
+import type { MangaKey } from "@/shared/types/collection";
 import { toast } from "sonner";
 
 export function useBookmarkReading() {
@@ -17,6 +19,7 @@ export function useBookmarkReading() {
   const hideNsfw = useSettingsStore((state) => state.hideNsfw);
   const { status: nsfwStatus, ids: nsfwSourceIds } = useNsfwSourceIds();
   const { isSourceDisabled } = useSourcePreferencesStore();
+  const readingStatusByManga = useCollectionStore((state) => state.readingStatusByManga);
 
   const isFromNsfwSource = React.useCallback(
     (sourceId: string, itemIsNsfw?: boolean) =>
@@ -27,6 +30,8 @@ export function useBookmarkReading() {
   const rawHistoryItems = isMounted ? getHistoryList() : [];
 
   let historyItems = rawHistoryItems.filter((item) => {
+    const mangaKey = `${item.sourceId}::${item.mangaId}` as MangaKey;
+    if (readingStatusByManga[mangaKey] === "completed") return false;
     if (isSourceDisabled(item.sourceId)) return false;
     const source = dynamicSourceRegistry.get(item.sourceId);
     if (source && source.status === "unavailable") return false;

@@ -24,19 +24,19 @@ export function LeaderboardRow({ manga, sourceId, displayScore }: LeaderboardRow
   return (
     <Link
       href={getMangaDetailHref(sourceId, manga.id, fullPath)}
-      className="group relative flex min-h-[90px] items-center gap-3 border-b border-border-subtle px-1 py-2.5 transition-colors last:border-0 hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-accent"
+      className="group relative flex flex-1 min-h-[58px] sm:min-h-[62px] items-center gap-3 border-b border-border-subtle/70 px-1 py-1.5 sm:py-2 transition-colors last:border-0 hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-accent"
     >
       {/* Rank Badge */}
       {manga.rank !== undefined && (
-        <div className="w-9 shrink-0 flex justify-center items-center">
-          <span className="ink-caption text-[32px] leading-none text-accent">
+        <div className="w-8 shrink-0 flex justify-center items-center">
+          <span className="ink-caption text-[26px] sm:text-[28px] leading-none text-accent">
             {rankStr}
           </span>
         </div>
       )}
 
       {/* Cover */}
-      <div className="relative h-[72px] w-[48px] shrink-0 overflow-hidden rounded-[8px] border border-border-subtle bg-surface-muted">
+      <div className="relative h-[56px] w-[38px] sm:h-[60px] sm:w-[42px] shrink-0 overflow-hidden rounded-xs border border-border-subtle bg-surface-muted">
         {manga.coverUrl && !imageError ? (
           <img
             src={manga.coverUrl}
@@ -54,13 +54,13 @@ export function LeaderboardRow({ manga, sourceId, displayScore }: LeaderboardRow
       </div>
 
       {/* Info */}
-      <div className="flex-1 min-w-0 flex flex-col justify-center gap-1 py-0.5">
-        <h4 className="font-bold text-sm sm:text-[15px] text-text-primary leading-snug truncate group-hover:text-accent transition-colors">
+      <div className="flex-1 min-w-0 flex flex-col justify-center gap-0.5 py-0.5">
+        <h4 className="font-bold text-xs sm:text-[13.5px] text-text-primary leading-snug truncate group-hover:text-accent transition-colors">
           {manga.title}
         </h4>
-        <div className="flex items-center gap-2 text-[11px] sm:text-xs font-semibold text-text-secondary">
+        <div className="flex items-center gap-2 text-[10.5px] sm:text-[11.5px] font-semibold text-text-secondary">
           <div className="flex items-center gap-1">
-            <Star weight="fill" size={13} className="text-semantic-warning" />
+            <Star weight="fill" size={12} className="text-semantic-warning" />
             <span suppressHydrationWarning>{Number(scoreToDisplay) > 0 ? Number(scoreToDisplay).toFixed(1) : "-.-"}</span>
           </div>
           <span className="truncate max-w-[110px] sm:max-w-[140px] text-text-muted">{manga.latestChapter || "Detail"}</span>

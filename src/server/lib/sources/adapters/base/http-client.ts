@@ -24,11 +24,11 @@ export class HttpClient {
     if (typeof baseUrlOrConfig === "string") {
       this.baseUrl = baseUrlOrConfig;
       this.defaultHeaders = defaultHeaders;
-      this.timeoutMs = 10000;
+      this.timeoutMs = 20000;
     } else {
       this.baseUrl = baseUrlOrConfig.baseUrl;
       this.defaultHeaders = baseUrlOrConfig.defaultHeaders || {};
-      this.timeoutMs = baseUrlOrConfig.timeoutMs ?? 10000;
+      this.timeoutMs = baseUrlOrConfig.timeoutMs ?? 20000;
       this.allowedHosts = baseUrlOrConfig.allowedHosts;
       this.maxRedirects = baseUrlOrConfig.maxRedirects;
       this.maxResponseSize = baseUrlOrConfig.maxResponseSize;

@@ -92,13 +92,13 @@ export function ShelfCard({
           
           <div className="absolute top-2 left-2 flex flex-col gap-1.5 z-20 items-start">
             {isUnread && (
-              <div className="flex items-center gap-1 rounded-[8px] bg-status-info-bg px-2 py-0.5 text-status-info-fg">
+              <div className="flex items-center gap-1 rounded-xs bg-status-info-bg px-2 py-0.5 text-status-info-fg">
                 <span className="text-xs font-bold">Baru</span>
               </div>
             )}
             
             {isMultiSource && (
-              <div className="flex items-center gap-1 rounded-md bg-surface-glass backdrop-blur-md px-1.5 py-0.5 shadow-sm border border-border-default/40">
+              <div className="flex items-center gap-1 rounded-xs bg-surface-glass backdrop-blur-md px-1.5 py-0.5 shadow-sm border border-border-default/40">
                 <span className="text-xs font-bold text-accent">
                   {effectiveBindings.length} Sumber
                 </span>
@@ -106,7 +106,7 @@ export function ShelfCard({
             )}
 
             {manga.rank !== undefined && (
-              <div className="flex items-center gap-1 rounded-md bg-surface-glass backdrop-blur-md px-2 py-1 shadow-sm">
+              <div className="flex items-center gap-1 rounded-xs bg-surface-glass backdrop-blur-md px-2 py-1 shadow-sm">
                 <TrendUp weight="bold" className="text-accent text-[10px]" />
                 <span className="text-xs font-black text-text-primary">#{manga.rank}</span>
               </div>
@@ -129,7 +129,7 @@ export function ShelfCard({
               if (!config) return null;
 
               return (
-                <div className={cn("rounded-[8px] px-2 py-0.5 text-xs font-bold", config.bg, config.bg.includes('surface') && "border border-border-subtle")}>
+                <div className={cn("rounded-xs px-2 py-0.5 text-xs font-bold", config.bg, config.bg.includes('surface') && "border border-border-subtle")}>
                   {config.label}
                 </div>
               );
@@ -138,7 +138,7 @@ export function ShelfCard({
           
           {isUnavailable && (
             <div className="absolute inset-0 bg-surface-base/60 backdrop-blur-[2px] flex items-center justify-center z-10 transition-opacity group-hover:opacity-100 opacity-90">
-              <div className="rounded-[8px] bg-status-error-bg px-2.5 py-1 text-xs font-bold text-status-error-fg">
+              <div className="rounded-xs bg-status-error-bg px-2.5 py-1 text-xs font-bold text-status-error-fg">
                 Tidak Tersedia
               </div>
             </div>
@@ -186,7 +186,7 @@ export function ShelfCard({
           )}
         </div>
       </Link>
-      <div className="absolute right-2 top-2 z-20 flex items-center justify-center">
+      <div className="absolute right-2 top-2 z-10 flex items-center justify-center">
         <BookmarkButton sourceId={sourceId} manga={manga} />
       </div>
     </motion.article>

@@ -7,7 +7,9 @@ import { useUpdateStore } from "@/shared/store/update-store"
 import { useSettingsStore } from "@/shared/store/settings-store"
 import { useMounted } from "@/shared/hooks/use-mounted"
 
-export function UpdatesBell() {
+import { cn } from "@/shared/utils/cn"
+
+export function UpdatesBell({ className }: { className?: string } = {}) {
   const mounted = useMounted()
   const rawUnread = useUpdateStore((state) => state.getUnreadCount())
   const unreadCount = typeof rawUnread === "function" ? (rawUnread as () => number)() : (Number(rawUnread) || 0)
@@ -26,7 +28,10 @@ export function UpdatesBell() {
     <Link
       href="/updates"
       transitionTypes={["nav-lateral"]}
-      className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-surface-glass backdrop-blur-md border border-border-default/40 text-text-primary hover:bg-surface-hover hover:border-border-strong active:scale-95 transition-all outline-none select-none shrink-0 shadow-xs"
+      className={cn(
+        "relative flex size-9 items-center justify-center rounded-[10px] bg-surface-raised border border-border-subtle hover:border-accent/40 text-text-secondary hover:text-text-primary active:scale-95 transition-all outline-none select-none shrink-0 shadow-xs",
+        className
+      )}
       aria-label={accessibleLabel}
     >
       <Bell size={20} weight={showBadge ? "fill" : "regular"} className="shrink-0" />

@@ -6,7 +6,9 @@ import { Bell, Gear } from "@phosphor-icons/react"
 import { useUpdateStore } from "@/shared/store/update-store"
 import { useMounted } from "@/shared/hooks/use-mounted"
 
-export function HeaderActions() {
+import { cn } from "@/shared/utils/cn"
+
+export function HeaderActions({ className }: { className?: string } = {}) {
   const mounted = useMounted()
   const rawUnread = useUpdateStore((state) => state.getUnreadCount())
   const unreadCount = typeof rawUnread === "function" ? (rawUnread as () => number)() : (Number(rawUnread) || 0)
@@ -18,7 +20,7 @@ export function HeaderActions() {
     : "Pembaruan"
 
   return (
-    <div className="flex items-center gap-2 shrink-0">
+    <div className={cn("flex md:hidden items-center gap-2 shrink-0", className)}>
       <Link
         href="/updates"
         transitionTypes={["nav-lateral"]}

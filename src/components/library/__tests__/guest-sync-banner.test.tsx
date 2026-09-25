@@ -84,10 +84,10 @@ describe("GuestSyncBanner", () => {
 
     render(<GuestSyncBanner />);
 
-    expect(screen.getByText("5 komik kamu masih 'nongkrong' di browser ini")).toBeDefined();
-    expect(screen.getByText(/Rak bukumu baru kesimpan di HP ini doang/i)).toBeDefined();
-    expect(screen.getByRole("button", { name: /Amankan ke Cloud/i })).toBeDefined();
-    expect(screen.getByRole("button", { name: /Santai Dulu/i })).toBeDefined();
+    expect(screen.getByText("Simpan rak bacaanmu di akun")).toBeDefined();
+    expect(screen.getByText(/5 komik tersimpan di browser ini/i)).toBeDefined();
+    expect(screen.getByRole("button", { name: /Masuk dengan Google/i })).toBeDefined();
+    expect(screen.getByRole("button", { name: /Nanti saja/i })).toBeDefined();
   });
 
   it("snoozes for 7 days when dismissed initially", () => {
@@ -103,7 +103,7 @@ describe("GuestSyncBanner", () => {
     });
 
     const { unmount } = render(<GuestSyncBanner />);
-    const dismissBtn = screen.getByRole("button", { name: /Santai Dulu/i });
+    const dismissBtn = screen.getByRole("button", { name: /Nanti saja/i });
     fireEvent.click(dismissBtn);
 
     expect(useSettingsStore.getState().guestBannerDismissCount).toBe(1);
@@ -128,10 +128,10 @@ describe("GuestSyncBanner", () => {
 
     render(<GuestSyncBanner />);
 
-    expect(screen.getByText("Udah 16 komik nih, sayang banget kalau hilang")).toBeDefined();
-    expect(screen.getByText("Perlu Backup • 16 Judul")).toBeDefined();
+    expect(screen.getByText("Bawa rak bacaanmu ke perangkat lain")).toBeDefined();
+    expect(screen.getByText("16 judul tersimpan")).toBeDefined();
 
-    const dismissBtn = screen.getByRole("button", { name: /Snooze 3 Hari/i });
+    const dismissBtn = screen.getByRole("button", { name: /Nanti saja/i });
     fireEvent.click(dismissBtn);
 
     expect(useSettingsStore.getState().guestBannerDismissCount).toBe(2);

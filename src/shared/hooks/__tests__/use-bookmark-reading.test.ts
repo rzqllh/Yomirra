@@ -102,4 +102,38 @@ describe("useBookmarkReading - Chapter Progress Alignment", () => {
     expect(mangaGroup.chapters[0].chapterNumber).toBe(180);
     expect(mangaGroup.chapters[0].chapterTitle).toBe("Chapter 180");
   });
+
+  it("filters out manga marked as 'completed' in collection reading status", async () => {
+    const { useCollectionStore } = await import("@/shared/store/collection-store");
+    useCollectionStore.setState({
+      readingStatusByManga: {
+        "shinigami::sword-hound": "completed",
+      },
+    });
+
+    useHistoryStore.setState({
+      items: {
+        "item-1": {
+          sourceId: "shinigami",
+          mangaId: "sword-hound",
+          chapterId: "ch-180",
+          chapterTitle: "Chapter 180",
+          mangaTitle: "Revenge Of The Iron-Blooded Sword Hound",
+          readAt: 5000,
+        },
+        "item-2": {
+          sourceId: "shinigami",
+          mangaId: "active-manga",
+          chapterId: "ch-1",
+          chapterTitle: "Chapter 1",
+          mangaTitle: "Active Manga",
+          readAt: 4000,
+        },
+      },
+    });
+
+    const { result } = renderHook(() => useBookmarkReading());
+    expect(result.current.groupedHistory.length).toBe(1);
+    expect(result.current.groupedHistory[0].mangaId).toBe("active-manga");
+  });
 });

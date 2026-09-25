@@ -9,11 +9,13 @@ import { SearchToolbar } from "./search-toolbar";
 import { SearchSourceRail } from "./search-source-rail";
 import { SearchResults } from "./search-results";
 
+import { YomirraSurface } from "@/components/ui/layout";
+
 export function SearchPageView() {
   const search = useSearchCatalog();
 
   return (
-    <main className="min-h-screen bg-surface-base pb-[calc(var(--bottom-nav-height,80px)+24px)] md:pb-10">
+    <YomirraSurface variant="base" className="min-h-screen pb-[calc(var(--bottom-nav-height,80px)+24px)] md:pb-10">
       <div className="px-4 md:px-8 max-w-7xl mx-auto space-y-5">
         {/* Document Flow Header */}
         <div className="pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:pt-8">
@@ -25,7 +27,7 @@ export function SearchPageView() {
           />
         </div>
 
-        <div className="space-y-5 md:space-y-4 md:rounded-2xl md:border md:border-border-subtle md:bg-surface-raised/30 md:p-5">
+        <div className="space-y-5 md:space-y-4 md:rounded-xl md:border md:border-border-subtle md:bg-surface-raised/30 md:p-5">
           <SearchToolbar
             localQuery={search.localQuery}
             onQueryChange={(e) => search.setLocalQuery(e.target.value)}
@@ -55,6 +57,6 @@ export function SearchPageView() {
           queryClient={search.queryClient}
         />
       </div>
-    </main>
+    </YomirraSurface>
   );
 }

@@ -3,60 +3,80 @@
 import * as React from "react";
 import { Moon, Sun } from "@phosphor-icons/react";
 import { useTheme } from "next-themes";
-import { motion } from "motion/react";
-import { IconButton } from "@/components/ui/icon-button";
 import { cn } from "@/shared/utils/cn";
 
-export function ThemeToggle() {
+export function ThemeToggle({ className }: { className?: string }) {
   const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
 
   React.useEffect(() => {
-    queueMicrotask(() => {
-      setMounted(true);
-    });
+    setMounted(true);
   }, []);
 
   if (!mounted) {
     return (
-      <div className="w-[68px] h-9 rounded-full bg-surface-raised border border-border-subtle" />
+      <div className={cn("size-9 rounded-[10px] bg-surface-raised border border-border-subtle shrink-0", className)} />
     );
   }
 
   const isDark = resolvedTheme === "dark";
 
+  const handleToggle = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const nextTheme = isDark ? "light" : "dark";
+
+    const button = e.currentTarget;
+    const rect = button.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+    const radius = Math.hypot(
+      Math.max(x, window.innerWidth - x),
+      Math.max(y, window.innerHeight - y)
+    );
+
+    const update = () => {
+      setTheme(nextTheme);
+    };
+
+    const isReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (typeof document !== "undefined" && "startViewTransition" in document && !isReducedMotion) {
+      const transition = (document as any).startViewTransition(update);
+      transition.ready
+        ?.then(() => {
+          document.documentElement.animate(
+            {
+              clipPath: [
+                `circle(0px at ${x}px ${y}px)`,
+                `circle(${radius}px at ${x}px ${y}px)`,
+              ],
+            },
+            {
+              duration: 550,
+              easing: "cubic-bezier(.2, .8, .2, 1)",
+              pseudoElement: "::view-transition-new(root)",
+            }
+          );
+        })
+        .catch(() => {});
+    } else {
+      update();
+    }
+  };
+
   return (
-    <IconButton
-      onClick={() => setTheme(isDark ? "light" : "dark")}
-      variant="ghost"
-      className={cn( "relative w-[68px] h-9 rounded-full p-1 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ", "bg-surface-glass backdrop-blur-md hover:bg-surface-hover/50" )}
-      aria-label="Toggle theme"
+    <button
+      type="button"
+      onClick={handleToggle}
+      aria-label={isDark ? "Aktifkan mode terang" : "Aktifkan mode gelap"}
+      title={isDark ? "Aktifkan mode terang" : "Aktifkan mode gelap"}
+      className={cn(
+        "flex items-center justify-center size-9 rounded-[10px] bg-surface-raised hover:bg-surface-hover active:scale-95 transition-all outline-none border border-border-subtle hover:border-accent/40 text-text-primary shrink-0 cursor-pointer shadow-xs",
+        className
+      )}
     >
-      <div className="relative flex w-full justify-between items-center z-10">
-        <div className="w-7 h-7 flex items-center justify-center">
-          <Moon 
-            size={14} 
-            weight="duotone"
-            className={cn("transition-colors duration-300", isDark ? "text-text-primary" : "text-text-muted")} 
-          />
-        </div>
-        <div className="w-7 h-7 flex items-center justify-center">
-          <Sun 
-            size={14} 
-            weight="duotone"
-            className={cn("transition-colors duration-300", !isDark ? "text-text-primary" : "text-text-muted")} 
-          />
-        </div>
-      </div>
-      
-      {/* Sliding Pill Background */}
-      <motion.div
-        className="absolute top-1 w-7 h-7 rounded-full bg-surface-overlay border border-border-subtle  z-0"
-        animate={{
-          left: isDark ? "4px" : "36px",
-        }}
-        transition={{ duration: 0.3, ease: "easeOut" }}
-      />
-    </IconButton>
+      <span className="icon-morph theme-morph" data-on={isDark ? "true" : "false"} aria-hidden="true">
+        <Moon size={18} weight="duotone" className="text-text-secondary" />
+        <Sun size={18} weight="duotone" className="text-accent" />
+      </span>
+    </button>
   );
 }

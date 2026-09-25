@@ -2,9 +2,10 @@
 
 import * as React from "react"
 import { Command as CommandPrimitive } from "cmdk"
-import { MagnifyingGlass } from "@phosphor-icons/react"
+import * as DialogPrimitive from "@radix-ui/react-dialog"
+import { MagnifyingGlass, X } from "@phosphor-icons/react"
 import { cn } from "@/shared/utils/cn"
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogPortal, DialogOverlay, DialogTitle } from "@/components/ui/dialog"
 
 const Command = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive>,
@@ -13,7 +14,7 @@ const Command = React.forwardRef<
   <CommandPrimitive
     ref={ref}
     className={cn(
-      "flex h-full w-full flex-col overflow-hidden rounded-md bg-surface-overlay text-text-primary",
+      "flex h-full w-full flex-col overflow-hidden rounded-md bg-surface-base text-text-primary",
       className
     )}
     {...props}
@@ -27,16 +28,27 @@ type CommandDialogProps = React.ComponentPropsWithoutRef<typeof Dialog> &
 const CommandDialog = ({ children, shouldFilter, filter, ...props }: CommandDialogProps) => {
   return (
     <Dialog {...props}>
-      <DialogContent className="overflow-hidden p-0 shadow-lg border-border-default">
-        <DialogTitle className="sr-only">Command Menu</DialogTitle>
-        <Command 
-          shouldFilter={shouldFilter} 
-          filter={filter}
-          className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-text-muted [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5"
+      <DialogPortal>
+        <DialogOverlay />
+        <DialogPrimitive.Content
+          className="ink-dialog-content fixed left-1/2 top-1/2 z-[var(--z-overlay)] -translate-x-1/2 -translate-y-1/2 w-[calc(100vw-32px)] max-w-xl sm:max-w-2xl max-h-[85vh] rounded-[20px] border border-border-subtle bg-surface-base text-text-primary shadow-2xl p-0 overflow-hidden outline-none flex flex-col"
         >
-          {children}
-        </Command>
-      </DialogContent>
+          <DialogTitle className="sr-only">Menu Pencarian</DialogTitle>
+          <Command 
+            shouldFilter={shouldFilter} 
+            filter={filter}
+            className="flex flex-col h-full w-full overflow-hidden [&_[cmdk-group-heading]]:px-4 [&_[cmdk-group-heading]]:py-2 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-extrabold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-[0.14em] [&_[cmdk-group-heading]]:text-text-muted"
+          >
+            {children}
+          </Command>
+          <DialogPrimitive.Close 
+            className="absolute right-3.5 top-3.5 flex h-7 w-7 items-center justify-center rounded-[8px] bg-surface-muted text-text-muted hover:text-text-primary hover:bg-surface-hover transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent cursor-pointer z-20"
+            aria-label="Tutup"
+          >
+            <X size={14} weight="bold" />
+          </DialogPrimitive.Close>
+        </DialogPrimitive.Content>
+      </DialogPortal>
     </Dialog>
   )
 }
@@ -45,12 +57,12 @@ const CommandInput = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive.Input>,
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
 >(({ className, ...props }, ref) => (
-  <div className="flex items-center border-b border-border-default px-3" cmdk-input-wrapper="">
-    <MagnifyingGlass className="mr-2 h-4 w-4 shrink-0 text-text-muted" weight="bold" />
+  <div className="relative flex items-center border-b border-border-subtle px-4 h-14 bg-surface-base shrink-0" cmdk-input-wrapper="">
+    <MagnifyingGlass className="mr-3 h-5 w-5 shrink-0 text-text-muted" weight="bold" />
     <CommandPrimitive.Input
       ref={ref}
       className={cn(
-        "flex h-11 w-full rounded-md bg-transparent py-3 text-base md:text-sm outline-none focus-visible:outline-none focus:outline-none placeholder:text-text-muted disabled:cursor-not-allowed disabled:opacity-50",
+        "flex h-full w-full bg-transparent pr-12 text-sm sm:text-base font-semibold outline-none placeholder:text-text-muted placeholder:font-normal text-text-primary disabled:cursor-not-allowed disabled:opacity-50",
         className
       )}
       {...props}
@@ -117,7 +129,7 @@ const CommandItem = React.forwardRef<
   <CommandPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none aria-selected:bg-surface-hover aria-selected:text-text-primary data-[disabled]:pointer-events-none data-[disabled]:opacity-100",
+      "relative flex cursor-pointer select-none items-center rounded-[12px] px-3 py-2.5 text-sm outline-none transition-colors aria-selected:bg-accent-dim aria-selected:text-accent hover:bg-surface-hover active:scale-[0.99]",
       className
     )}
     {...props}

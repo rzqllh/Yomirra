@@ -47,25 +47,17 @@ export default async function MangaDetailPage({
   let errorState: { type: "disabled" | "not_found" | "dead" | "network_error"; message?: string } | null = null;
 
   try {
-    const cookieStore = await cookies();
-    const disabledCookie = cookieStore.get("yomirra-disabled-sources");
-    const disabledSources = disabledCookie ? JSON.parse(decodeURIComponent(disabledCookie.value)) : [];
+    const manifestUrl = await getManifestUrlFromCookie(normalizedSourceId);
+    const source = await sourceManager.getSource(normalizedSourceId, manifestUrl);
     
-    if (disabledSources.includes(normalizedSourceId)) {
-      errorState = { type: "disabled" };
-    } else {
-      const manifestUrl = await getManifestUrlFromCookie(normalizedSourceId);
-      const source = await sourceManager.getSource(normalizedSourceId, manifestUrl);
-      
-      // Fetch data directly on the server with cache!
-      [detail, chapters] = await Promise.all([
-        withCache(`source:v2:${normalizedSourceId}:manga:${mangaId}`, () => source.getDetail(mangaId), CACHE_TTL.DETAIL),
-        withCache(`source:v2:${normalizedSourceId}:chapters:${mangaId}`, () => source.getChapters(mangaId), CACHE_TTL.CHAPTERS),
-      ]);
+    // Fetch data directly on the server with cache!
+    [detail, chapters] = await Promise.all([
+      withCache(`source:v2:${normalizedSourceId}:manga:${mangaId}`, () => source.getDetail(mangaId), CACHE_TTL.DETAIL),
+      withCache(`source:v2:${normalizedSourceId}:chapters:${mangaId}`, () => source.getChapters(mangaId), CACHE_TTL.CHAPTERS),
+    ]);
 
-      if (!detail || !detail.title) {
-        errorState = { type: "not_found" };
-      }
+    if (!detail || !detail.title) {
+      errorState = { type: "not_found" };
     }
   } catch (error) {
     console.error("Failed to load manga details", error);

@@ -77,6 +77,8 @@
 
   /* Typography */
   --font-mono: "JetBrains Mono", "Fira Code", monospace;
+  --font-display: var(--font-editorial), Georgia, serif;
+  --font-editorial: var(--font-editorial), Georgia, serif;
 
   /* Custom text sizes */
   --text-2xs: 10px;
@@ -595,8 +597,8 @@ body.reader-active {
 .ink-dialog-content[data-state="open"] { animation: ink-dialog-in 560ms cubic-bezier(.2,.92,.22,1) both; }
 .ink-dialog-content[data-state="closed"] { animation: ink-dialog-out 320ms cubic-bezier(.4,0,1,1) both; }
 @keyframes ink-backdrop-in { from { opacity: 0; backdrop-filter: blur(0); } to { opacity: 1; backdrop-filter: blur(5px); } }
-@keyframes ink-dialog-in { from { opacity: 0; filter: blur(7px); transform: translate(-50%, -43%) scale(.84) rotate(-2deg); } to { opacity: 1; filter: blur(0); transform: translate(-50%, -50%) scale(1); } }
-@keyframes ink-dialog-out { from { opacity: 1; filter: blur(0); transform: translate(-50%, -50%) scale(1); } to { opacity: 0; filter: blur(5px); transform: translate(-50%, -43%) scale(.92); } }
+@keyframes ink-dialog-in { from { opacity: 0; filter: blur(6px); scale: .94; } to { opacity: 1; filter: blur(0); scale: 1; } }
+@keyframes ink-dialog-out { from { opacity: 1; filter: blur(0); scale: 1; } to { opacity: 0; filter: blur(4px); scale: .94; } }
 /* Existing feature buttons still use white/black utility text on solid semantic fills. */
 .dark .bg-accent.text-white { color: var(--text-on-accent); }
 .dark .bg-semantic-success.text-white { color: var(--status-success-bg); }
@@ -628,3 +630,54 @@ body.reader-active {
 [data-sonner-toast] [data-button] { border-radius: 8px !important; background: var(--color-accent) !important; color: var(--text-on-accent) !important; min-height: 32px; }
 [data-sonner-toast] [data-cancel] { border-radius: 8px !important; background: var(--surface-muted) !important; color: var(--text-primary) !important; }
 @media (prefers-reduced-motion: reduce) { .ink-skeleton { animation: none; background: var(--surface-muted); } .ink-dialog-content,.ink-dialog-overlay { animation: none !important; } }
+
+/* View Transition Theme Ripple Animation */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-old(root) {
+  z-index: 1;
+}
+::view-transition-new(root) {
+  z-index: 9999;
+}
+
+/* Icon Morph (Smooth morphing state transitions for Theme & Bookmark) */
+.icon-morph {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  display: inline-grid;
+  place-items: center;
+}
+.icon-morph > * {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  transition: opacity 300ms cubic-bezier(.2, .8, .2, 1), transform 420ms cubic-bezier(.18, 1.35, .32, 1);
+}
+[aria-pressed="true"] > .icon-morph > *:first-child,
+.theme-morph[data-on="true"] > *:first-child {
+  opacity: 0;
+  transform: rotate(35deg) scale(.35);
+  pointer-events: none;
+}
+[aria-pressed="true"] > .icon-morph > *:last-child,
+.theme-morph[data-on="true"] > *:last-child {
+  opacity: 1;
+  transform: rotate(0) scale(1);
+}
+[aria-pressed="false"] > .icon-morph > *:first-child,
+.theme-morph[data-on="false"] > *:first-child {
+  opacity: 1;
+  transform: rotate(0) scale(1);
+}
+[aria-pressed="false"] > .icon-morph > *:last-child,
+.theme-morph[data-on="false"] > *:last-child {
+  opacity: 0;
+  transform: rotate(-35deg) scale(.35);
+  pointer-events: none;
+}

@@ -12,7 +12,9 @@ import {
   BookBookmark, 
   Sparkle,
   CheckCircle,
-  CaretDown
+  CaretDown,
+  Play,
+  BookOpen
 } from "@phosphor-icons/react";
 import { motion } from "motion/react";
 import { toast } from "sonner";
@@ -453,36 +455,37 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
                 return (
                   <div
                     key={item.key}
-                    className="p-3 rounded-2xl bg-surface-raised border border-border-subtle hover:border-border-strong hover:bg-surface-hover transition-all group shadow-xs flex items-center justify-between gap-3"
+                    className="p-3 sm:p-3.5 rounded-xl bg-surface-raised border border-border-subtle/80 hover:border-accent/40 hover:bg-surface-hover/70 transition-all duration-200 group shadow-xs flex items-center justify-between gap-3 overflow-hidden"
                   >
                     {/* Left: Cover & Info (Clicking leads to Manga Detail) */}
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                       <Link
                         href={detailHref}
-                        className="relative w-[52px] h-[72px] rounded-lg overflow-hidden shrink-0 bg-surface-muted border border-border-subtle/70 shadow-xs group-hover:scale-[1.02] transition-transform"
+                        className="relative w-[52px] sm:w-[58px] aspect-[2/3] rounded-lg overflow-hidden shrink-0 bg-surface-base border border-border-subtle shadow-xs group-hover:scale-[1.02] transition-transform"
                         aria-label={`Lihat detail ${item.mangaTitle}`}
                       >
                         <MangaCover
                           src={item.coverUrl}
                           alt={item.mangaTitle}
-                          iconSize={20}
+                          iconSize={18}
+                          imageClassName="object-cover w-full h-full"
                         />
                       </Link>
 
                       <div className="flex-1 min-w-0 space-y-1">
                         <Link href={detailHref} className="block min-w-0">
-                          <h4 className="font-bold text-sm text-text-primary truncate group-hover:text-accent transition-colors">
+                          <h4 className="font-bold text-[14px] sm:text-[15px] text-text-primary truncate group-hover:text-accent transition-colors tracking-tight">
                             {item.mangaTitle}
                           </h4>
                         </Link>
 
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-surface-muted border border-border-subtle font-medium text-text-secondary">
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-[6px] bg-surface-base border border-border-subtle/70 font-semibold text-text-secondary">
                             {item.sourceName || item.sourceId}
                           </span>
                           {isUnread && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-semantic-error text-white font-extrabold shadow-xs">
-                              NEW
+                            <span className="text-[9px] px-1.5 py-0.5 rounded-[6px] bg-semantic-error text-white font-extrabold uppercase tracking-wider shadow-xs">
+                              Baru
                             </span>
                           )}
                           <span className="text-xs text-text-muted truncate font-medium">
@@ -502,7 +505,7 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
                                 const targetName = val !== undefined ? WEEKDAYS.find((d) => d.dayIndex === val)?.name : "Otomatis";
                                 toast.success(`Jadwal ${item.mangaTitle} diatur ke ${targetName}`);
                               }}
-                              className="appearance-none text-[11px] font-semibold py-1 pl-2.5 pr-6 rounded-md bg-surface-base border border-border-subtle hover:border-accent/40 text-text-secondary hover:text-accent transition-all cursor-pointer outline-none shadow-xs"
+                              className="appearance-none text-[11px] font-semibold py-0.5 pl-2 pr-5 rounded-[6px] bg-surface-base border border-border-subtle hover:border-accent/40 text-text-muted hover:text-text-primary transition-all cursor-pointer outline-none shadow-xs"
                             >
                               <option value="">Auto ({dayName})</option>
                               <option value="1">📅 Senin</option>
@@ -514,22 +517,35 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
                               <option value="0">📅 Minggu</option>
                             </select>
                             <CaretDown
-                              size={12}
+                              size={11}
                               weight="bold"
-                              className="absolute right-2 text-text-muted pointer-events-none"
+                              className="absolute right-1.5 text-text-muted pointer-events-none"
                             />
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Right: Direct Read Button (Squircle rounded-lg, NOT Pill) */}
-                    <Link
-                      href={readerHref}
-                      className="h-8 px-3 rounded-lg bg-accent text-white hover:bg-accent-hover font-bold text-xs shadow-xs active:scale-95 shrink-0 flex items-center justify-center transition-all whitespace-nowrap"
-                    >
-                      {ctaLabel}
-                    </Link>
+                    {/* Right: Direct Read Button */}
+                    {hasHistory ? (
+                      <Link
+                        href={readerHref}
+                        className="h-8 px-2.5 sm:px-3 rounded-lg bg-accent text-white hover:bg-accent-hover font-semibold text-xs shadow-xs active:scale-95 shrink-0 inline-flex items-center gap-1.5 transition-all whitespace-nowrap"
+                        aria-label={`Lanjut baca ${item.mangaTitle}`}
+                      >
+                        <Play size={13} weight="fill" />
+                        <span>Lanjut</span>
+                      </Link>
+                    ) : (
+                      <Link
+                        href={readerHref}
+                        className="h-8 px-2.5 sm:px-3 rounded-lg bg-surface-base border border-border-subtle hover:border-accent/40 hover:bg-surface-hover text-text-primary font-semibold text-xs shadow-xs active:scale-95 shrink-0 inline-flex items-center gap-1.5 transition-all whitespace-nowrap"
+                        aria-label={`Mulai baca ${item.mangaTitle}`}
+                      >
+                        <BookOpen size={14} weight="bold" className="text-text-muted group-hover:text-accent" />
+                        <span>Baca</span>
+                      </Link>
+                    )}
                   </div>
                 );
               })}

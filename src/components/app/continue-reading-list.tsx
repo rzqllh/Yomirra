@@ -2,103 +2,202 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { BookBookmark, Compass, Clock, Play } from "@phosphor-icons/react";
-import { HistoryItem } from "@/shared/store/history-store";
-import { getReaderHref } from "@/shared/lib/routes";
+import { useRouter } from "next/navigation";
+import {
+  BookBookmark,
+  Play,
+  DotsThreeVertical,
+  BookOpen,
+  Trash,
+  ArrowRight,
+} from "@phosphor-icons/react";
+import { HistoryItem, useHistoryStore } from "@/shared/store/history-store";
+import { getReaderHref, getMangaDetailHref } from "@/shared/lib/routes";
 import { MangaCover } from "@/components/manga/manga-cover";
 import { ReadingProgress } from "@/components/ui/reading-progress";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
+import { cn } from "@/shared/utils/cn";
 
-interface ContinueReadingListProps {
+export interface ContinueReadingListProps {
   items: HistoryItem[];
-  variant?: string; // kept for API compat, only cyber-editorial visuals
+  variant?: string; // Kept for backward compatibility
+  className?: string;
 }
 
-export function ContinueReadingList({ items }: ContinueReadingListProps) {
+/**
+ * Editorial Continue Reading shelf with compact cards, clamped progress,
+ * and a functional context menu for history management.
+ */
+export function ContinueReadingList({
+  items,
+  className,
+}: ContinueReadingListProps) {
+  const router = useRouter();
+  const removeMangaHistory = useHistoryStore((state) => state.removeMangaHistory);
+
   if (!items || items.length === 0) {
     return (
-      <div className="w-full relative overflow-hidden p-6 md:p-8 flex flex-col sm:flex-row items-center justify-center sm:justify-between gap-4 rounded-2xl md:rounded-3xl bg-surface-glass backdrop-blur-xl border border-border-subtle/70 shadow-xs">
-        <div className="flex flex-col sm:flex-row items-center gap-3 md:gap-4 text-center sm:text-left text-text-muted">
-          <div className="w-12 h-12 md:w-14 md:h-14 shrink-0 rounded-2xl bg-accent/10 text-accent flex items-center justify-center border border-accent/20">
-            <BookBookmark size={24} weight="duotone" />
-          </div>
-          <div>
-            <p className="font-bold text-text-primary md:text-lg">Belum ada yang dilanjut</p>
-            <p className="text-sm text-text-muted">Mulai baca dari Library dan progresmu otomatis tersimpan di sini.</p>
-          </div>
+      <div className={cn("w-full flex flex-col gap-3.5", className)}>
+        <div className="flex items-center gap-2">
+          <span className="size-2 rounded-full bg-accent" aria-hidden="true" />
+          <h2 className="text-base sm:text-lg font-bold text-text-primary tracking-tight">
+            Lanjut Baca
+          </h2>
         </div>
-        <Link
-          href="/"
-          className="bg-accent text-white px-5 py-2.5 md:py-3 rounded-xl font-bold text-sm hover:bg-accent-hover active:scale-95 transition-all shadow-xs flex items-center gap-2"
-        >
-          <Compass weight="bold" /> Eksplor Manga
-        </Link>
+        <div className="ink-panel p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+          <div className="flex flex-col sm:flex-row items-center gap-3.5">
+            <div className="size-11 rounded-xl bg-accent/10 text-accent flex items-center justify-center border border-accent/20 shrink-0">
+              <BookBookmark size={22} weight="duotone" />
+            </div>
+            <div>
+              <p className="font-bold text-text-primary text-sm sm:text-base">
+                Belum ada bacaan yang sedang kamu lanjutkan
+              </p>
+              <p className="text-xs text-text-muted mt-0.5">
+                Mulai baca manga dari katalog dan progresmu akan otomatis tersimpan di sini.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/library"
+            className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-accent px-4 text-xs font-bold text-accent-on hover:bg-accent-hover transition-colors shrink-0"
+          >
+            <span>Jelajahi komik</span>
+            <ArrowRight size={14} weight="bold" />
+          </Link>
+        </div>
       </div>
     );
   }
 
+  const handleDeleteHistory = (e: React.MouseEvent, item: HistoryItem) => {
+    e.stopPropagation();
+    e.preventDefault();
+    removeMangaHistory(item.sourceId, item.mangaId);
+    toast.success(`"${item.mangaTitle}" dihapus dari riwayat.`);
+  };
+
   return (
-    <div className="w-full flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg sm:text-xl font-bold text-text-primary flex items-center gap-2">
-          <span className="w-2 h-2 rounded-full bg-accent animate-pulse" />
-          Lanjut Baca
+    <section aria-labelledby="continue-reading-title" className={cn("w-full flex flex-col gap-3.5", className)}>
+      {/* Editorial Header */}
+      <div className="flex items-center justify-between gap-3">
+        <h2 id="continue-reading-title" className="text-base sm:text-lg font-bold text-text-primary flex items-center gap-2 tracking-tight">
+          <span className="size-2 rounded-full bg-accent" aria-hidden="true" />
+          <span>Lanjut Baca</span>
         </h2>
-        <Link href="/bookmark" className="text-xs text-text-muted font-medium hover:text-accent transition-colors">
-          {items.length} judul <span className="hidden md:inline">· Lihat rak buku</span>
+        <Link
+          href="/bookmark"
+          className="group inline-flex items-center gap-1 text-xs text-text-muted font-medium hover:text-accent transition-colors"
+        >
+          <span>{items.length} judul</span>
+          <span className="hidden sm:inline">· Lihat rak buku</span>
+          <ArrowRight size={12} weight="bold" className="transition-transform group-hover:translate-x-0.5" />
         </Link>
       </div>
 
-      <div className="flex gap-3.5 sm:gap-4 overflow-x-auto pb-2 pt-1 snap-x snap-mandatory scrollbar-hide w-full md:grid md:grid-cols-2 xl:grid-cols-3 md:overflow-visible md:snap-none md:gap-4">
-        {items.map((group) => {
-          const progress = group.seriesProgressPercent || group.progressPercent || 0;
-          const targetHref = getReaderHref(group.sourceId, group.mangaId, group.chapterId);
+      {/* Responsive Shelf: Snap Rail on Mobile, 2 Cols on Tablet, 3 Cols on Desktop */}
+      <div className="flex gap-3.5 overflow-x-auto pb-2 pt-0.5 snap-x snap-mandatory scrollbar-hide w-full sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:overflow-visible sm:snap-none sm:gap-4">
+        {items.slice(0, 6).map((group) => {
+          const rawProgress = group.seriesProgressPercent ?? group.progressPercent ?? 0;
+          const progress = Math.min(100, Math.max(0, Math.round(rawProgress)));
+          const readerHref = getReaderHref(group.sourceId, group.mangaId, group.chapterId);
+          const detailHref = getMangaDetailHref(group.sourceId, group.mangaId, "/");
+          const chapterLabel = group.chapterTitle || `Ch. ${group.chapterId}`;
 
           return (
             <div
-              key={`${group.mangaId}-${group.chapterId}`}
-              className="group relative shrink-0 snap-start w-[80vw] max-w-[320px] sm:w-[350px] md:w-auto md:max-w-none md:min-w-0 md:[&:nth-child(n+5)]:hidden xl:[&:nth-child(n+4)]:hidden p-3 md:p-3.5 flex gap-3.5 bg-surface-glass backdrop-blur-xl border border-border-subtle/80 hover:border-accent/40 rounded-2xl md:rounded-3xl shadow-xs hover:shadow-md transition-all duration-300 overflow-hidden"
+              key={`${group.sourceId}-${group.mangaId}-${group.chapterId}`}
+              className="group relative shrink-0 snap-start w-[84vw] max-w-[320px] sm:w-auto sm:max-w-none p-3 sm:p-3.5 flex gap-3.5 bg-surface-raised border border-border-subtle hover:border-accent/40 rounded-[16px] shadow-xs hover:shadow-sm transition-all duration-200 overflow-hidden select-none"
             >
+              {/* Primary Card Hit Target -> Reader */}
               <Link
-                href={targetHref}
-                prefetch={true}
-                className="absolute inset-0 z-20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                aria-label={`Lanjut baca ${group.mangaTitle}`}
+                href={readerHref}
+                prefetch={false}
+                className="absolute inset-0 z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-[16px]"
+                aria-label={`Lanjut baca ${group.mangaTitle}, ${chapterLabel}`}
               />
 
-              <div className="relative w-20 sm:w-24 aspect-[3/4] shrink-0 rounded-xl overflow-hidden bg-surface-muted shadow-sm border border-border-subtle/50">
+              {/* Cover */}
+              <div className="relative w-18 sm:w-20 aspect-[3/4] shrink-0 rounded-[8px] overflow-hidden bg-surface-muted border border-border-subtle">
                 <MangaCover
                   src={group.coverUrl}
                   alt={group.mangaTitle}
                   fallbackTitle={group.mangaTitle}
                   className="w-full h-full"
-                  imageClassName="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
+                  imageClassName="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 ease-out"
                 />
               </div>
 
-              <div className="flex flex-col flex-1 min-w-0 py-0.5">
-                <div className="flex items-center justify-between gap-1 mb-1">
-                  <span className="text-accent text-[10px] sm:text-xs font-bold tracking-wider uppercase flex items-center gap-1">
-                    <Clock weight="fill" size={12} /> Progres Baca
-                  </span>
-                  <span className="text-[10px] font-bold text-text-muted bg-surface-muted/80 px-2 py-0.5 rounded-lg border border-border-subtle/40">
-                    {Math.round(progress)}%
-                  </span>
-                </div>
-
-                <h4 className="font-bold text-sm sm:text-base text-text-primary line-clamp-2 leading-tight group-hover:text-accent transition-colors mb-auto">
-                  {group.mangaTitle}
-                </h4>
-
-                <div className="mt-2.5">
-                  <div className="flex justify-between items-center text-[11px] sm:text-xs font-medium mb-1.5">
-                    <span className="truncate mr-2 text-text-muted">
-                      {group.chapterTitle || `Ch. ${group.chapterId}`}
+              {/* Card Meta Frame */}
+              <div className="flex flex-col flex-1 min-w-0 justify-between py-0.5">
+                <div>
+                  <div className="flex items-center justify-between gap-1 mb-1.5">
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-surface-muted text-text-muted border border-border-subtle">
+                      {group.sourceId}
                     </span>
-                    <div className="shrink-0 flex items-center gap-1 text-accent font-bold text-[11px]">
-                      <Play weight="fill" size={10} /> Lanjut
+
+                    <div className="flex items-center gap-1 z-20">
+                      <span className="text-[10.5px] font-mono font-bold text-accent px-1.5 py-0.5 rounded bg-accent/10">
+                        {progress}%
+                      </span>
+
+                      {/* Options Context Menu */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button
+                            type="button"
+                            aria-label={`Opsi untuk ${group.mangaTitle}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="flex size-7 items-center justify-center rounded-md text-text-muted hover:text-text-primary hover:bg-surface-hover transition-colors outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                          >
+                            <DotsThreeVertical size={16} weight="bold" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48 z-50">
+                          <DropdownMenuItem
+                            onClick={() => router.push(readerHref)}
+                            className="flex items-center gap-2 cursor-pointer text-xs"
+                          >
+                            <Play size={14} weight="fill" className="text-accent" />
+                            <span>Lanjutkan membaca</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => router.push(detailHref)}
+                            className="flex items-center gap-2 cursor-pointer text-xs"
+                          >
+                            <BookOpen size={14} />
+                            <span>Buka detail komik</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={(e) => handleDeleteHistory(e, group)}
+                            className="flex items-center gap-2 cursor-pointer text-xs text-semantic-error focus:bg-semantic-error/10 focus:text-semantic-error"
+                          >
+                            <Trash size={14} />
+                            <span>Hapus dari riwayat</span>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </div>
 
+                  <h3 className="font-bold text-xs sm:text-sm text-text-primary line-clamp-2 leading-snug group-hover:text-accent transition-colors">
+                    {group.mangaTitle}
+                  </h3>
+                </div>
+
+                <div className="mt-2.5">
+                  <div className="flex items-center justify-between text-[11px] font-medium text-text-muted mb-1.5">
+                    <span className="truncate mr-2">{chapterLabel}</span>
+                    <span className="shrink-0 flex items-center gap-1 text-accent font-semibold text-[11px]">
+                      <Play size={9} weight="fill" /> Lanjut
+                    </span>
+                  </div>
                   <ReadingProgress value={progress} size="sm" showLabel={false} />
                 </div>
               </div>
@@ -106,6 +205,6 @@ export function ContinueReadingList({ items }: ContinueReadingListProps) {
           );
         })}
       </div>
-    </div>
+    </section>
   );
 }

@@ -58,8 +58,9 @@ export function CompactCard({
   const isOngoing = rawStatus.includes("ONGOING") || rawStatus.includes("RELEASING");
   const isCompleted = rawStatus.includes("COMPLETED");
 
-  const cleanedDescription = manga.description
-    ? manga.description.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim()
+  const rawDesc = manga.description || (manga as any)?.synopsis || (manga as any)?.summary || (manga as any)?.excerpt;
+  const cleanedDescription = rawDesc
+    ? String(rawDesc).replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim()
     : null;
 
   return (
@@ -72,12 +73,12 @@ export function CompactCard({
         layout: { type: "spring", stiffness: 320, damping: 30 },
         duration: 0.2 
       }}
-      className="relative flex items-stretch p-3 sm:p-3.5 rounded-xl bg-surface-raised border border-border-subtle/80 hover:border-accent/40 hover:bg-surface-hover/70 transition-all duration-200 shadow-xs group w-full gap-3 sm:gap-4 overflow-hidden"
+      className="relative flex items-stretch p-3 sm:p-3.5 rounded-md bg-surface-raised border border-border-subtle/80 hover:border-accent/40 hover:bg-surface-hover/70 transition-all duration-200 shadow-xs group w-full gap-3 sm:gap-4 overflow-hidden"
     >
       {/* Thumbnail Cover (Squircle 2/3 Aspect) */}
       <motion.div
         layoutId={`manga-cover-${sourceId}-${manga.id}`}
-        className="relative w-[84px] sm:w-[96px] md:w-[104px] aspect-[2/3] shrink-0 rounded-lg overflow-hidden bg-surface-base border border-border-subtle shadow-xs group-hover:shadow-sm transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        className="relative w-[84px] sm:w-[96px] md:w-[104px] aspect-[2/3] shrink-0 rounded-xs overflow-hidden bg-surface-base border border-border-subtle shadow-xs group-hover:shadow-sm transition-shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
       >
         <Link
           href={getMangaDetailHref(sourceId, manga.id, fullPath)}
@@ -93,13 +94,13 @@ export function CompactCard({
           />
 
           {isUnread && (
-            <div className="absolute top-1 left-1 z-20 flex items-center rounded-[6px] bg-semantic-error text-white px-1.5 py-0.5 shadow-sm">
+            <div className="absolute top-1 left-1 z-20 flex items-center rounded-xs bg-semantic-error text-white px-1.5 py-0.5 shadow-sm">
               <span className="text-[9px] font-black uppercase tracking-widest">Baru</span>
             </div>
           )}
 
           {manga.rank !== undefined && (
-            <div className="absolute bottom-1 right-1 z-20 flex items-center gap-0.5 rounded-[6px] bg-black/75 backdrop-blur-sm px-1.5 py-0.5 shadow-xs border border-white/10">
+            <div className="absolute bottom-1 right-1 z-20 flex items-center gap-0.5 rounded-xs bg-black/75 backdrop-blur-sm px-1.5 py-0.5 shadow-xs border border-white/10">
               <TrendUp weight="bold" className="text-accent text-[9px]" />
               <span className="text-[10px] font-black text-white">#{manga.rank}</span>
             </div>
@@ -114,14 +115,14 @@ export function CompactCard({
           <div className="flex items-start justify-between gap-2">
             <Link
               href={getMangaDetailHref(sourceId, manga.id, fullPath)}
-              className="min-w-0 flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-md"
+              className="min-w-0 flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-sm"
             >
               <h3 className="text-[15px] sm:text-base font-bold tracking-tight text-text-primary group-hover:text-accent transition-colors line-clamp-1">
                 {manga.title}
               </h3>
             </Link>
 
-            <div className="shrink-0 -mt-0.5 -mr-1 z-20">
+            <div className="shrink-0 -mt-0.5 -mr-1 relative z-10">
               <BookmarkButton
                 sourceId={sourceId}
                 manga={manga}
@@ -141,7 +142,7 @@ export function CompactCard({
             {manga.status && (
               <span
                 className={cn(
-                  "font-bold text-[10px] px-2 py-0.5 rounded-[6px] tracking-wide border",
+                  "font-bold text-[10px] px-2 py-0.5 rounded-xs tracking-wide border",
                   isOngoing && "border-purple-500/30 bg-purple-500/10 text-purple-400 dark:text-purple-300",
                   isCompleted && "border-emerald-500/30 bg-emerald-500/10 text-emerald-500 dark:text-emerald-400",
                   !isOngoing && !isCompleted && "border-border-subtle bg-surface-base text-text-secondary"
@@ -152,19 +153,19 @@ export function CompactCard({
             )}
 
             {mangaFormat && (
-              <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-[6px] bg-surface-base border border-border-subtle/80 text-text-muted">
+              <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-xs bg-surface-base border border-border-subtle/80 text-text-muted">
                 {mangaFormat}
               </span>
             )}
 
             {isMultiSource && (
-              <span className="text-[9px] font-bold text-accent px-1.5 py-0.5 rounded-[6px] bg-accent/10 border border-accent/20">
+              <span className="text-[9px] font-bold text-accent px-1.5 py-0.5 rounded-xs bg-accent/10 border border-accent/20">
                 {effectiveBindings.length} Sumber
               </span>
             )}
 
             {readingStatus && (
-              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-[6px] bg-accent/20 text-accent uppercase tracking-wider">
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-xs bg-accent/20 text-accent uppercase tracking-wider">
                 {readingStatus === "reading"
                   ? "Dibaca"
                   : readingStatus === "completed"
@@ -193,22 +194,30 @@ export function CompactCard({
             )}
 
             {sourceName && (
-              <span className="text-[10px] font-semibold text-text-muted/85 px-1.5 py-0.5 rounded-[6px] bg-surface-base/80 border border-border-subtle/50">
+              <span className="text-[10px] font-semibold text-text-muted/85 px-1.5 py-0.5 rounded-xs bg-surface-base/80 border border-border-subtle/50">
                 {sourceName}
               </span>
             )}
           </div>
 
-          {/* Row 4: Synopsis / Excerpt (Like Gambar 4) */}
+          {/* Row 4: Synopsis / Excerpt / Metadata Fallback */}
           {cleanedDescription ? (
             <p className="text-[12px] text-text-muted/80 line-clamp-2 md:line-clamp-3 leading-relaxed mt-1.5">
               {cleanedDescription}
             </p>
           ) : manga.author ? (
-            <p className="text-[11px] text-text-muted/60 mt-1.5">
+            <p className="text-[11px] text-text-muted/70 mt-1.5 font-medium truncate">
               Karya: {manga.author}
             </p>
-          ) : null}
+          ) : (manga as any)?.genres && (manga as any).genres.length > 0 ? (
+            <p className="text-[11px] text-text-muted/70 mt-1.5 font-medium truncate">
+              Genre: {(manga as any).genres.slice(0, 3).join(" · ")}
+            </p>
+          ) : (
+            <p className="text-[11px] text-text-muted/50 mt-1.5 italic">
+              Ketuk untuk melihat sinopsis & daftar bab.
+            </p>
+          )}
         </div>
       </div>
     </motion.article>
