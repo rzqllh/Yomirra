@@ -22,7 +22,7 @@ interface CanonicalSourceDialogProps {
   returnTo?: string;
 }
 
-function isBindingAvailable(binding: SourceBinding) {
+export function isCanonicalBindingAvailable(binding: SourceBinding) {
   const source = getSourceMetadata(binding.sourceId);
   if (!source) return false;
   return (
@@ -41,7 +41,7 @@ export function CanonicalSourceDialog({
   returnTo,
 }: CanonicalSourceDialogProps) {
   const availableBindings = React.useMemo(
-    () => sourceBindings.filter(isBindingAvailable),
+    () => sourceBindings.filter(isCanonicalBindingAvailable),
     [sourceBindings]
   );
 
