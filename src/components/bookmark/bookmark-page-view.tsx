@@ -5,6 +5,7 @@ import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { BookBookmark, CalendarBlank, CaretRight } from "@phosphor-icons/react";
 import { PageHeader } from "@/components/app/header";
+import { YomirraSurface } from "@/components/ui/layout";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { BookmarkSkeleton } from "@/components/skeletons/bookmark-skeleton";
 import { useBookmarkReading } from "@/shared/hooks/use-bookmark-reading";
@@ -47,12 +48,19 @@ export function BookmarkPageView() {
   };
 
   if (!reading.isMounted || !collection.isMounted) {
-    return <BookmarkSkeleton />;
+    return (
+      <YomirraSurface variant="base" className="min-h-screen">
+        <div className="mx-auto flex w-full max-w-7xl flex-col pb-[calc(var(--bottom-nav-height,80px)+24px)] md:px-8 md:pb-10">
+          <BookmarkSkeleton />
+        </div>
+      </YomirraSurface>
+    );
   }
 
   return (
-    <div className="flex flex-col min-h-screen w-full max-w-7xl mx-auto pb-[calc(var(--bottom-nav-height,80px)+24px)] md:pb-10 md:px-8">
-      <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:px-0 md:pt-8">
+    <YomirraSurface variant="base" className="min-h-screen">
+      <div className="mx-auto flex w-full max-w-7xl flex-col pb-[calc(var(--bottom-nav-height,80px)+24px)] md:px-8 md:pb-10">
+        <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:px-0 md:pt-8">
         <PageHeader
           title="Rak Buku"
           description="Bacaan, koleksi, & pembaruan komik favoritmu"
@@ -65,7 +73,7 @@ export function BookmarkPageView() {
       <div className="px-4 pb-3 w-full md:px-0 md:max-w-2xl">
         <Link
           href="/updates"
-          className="flex items-center justify-between p-3.5 rounded-2xl bg-surface-raised border border-border-subtle hover:border-accent/40 hover:bg-surface-hover transition-all group shadow-xs active:scale-[0.99]"
+          className="flex items-center justify-between p-3.5 rounded-xl bg-surface-raised border border-border-subtle hover:border-accent/40 hover:bg-surface-hover transition-all group shadow-xs active:scale-[0.99]"
         >
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-accent/15 text-accent flex items-center justify-center shrink-0 border border-accent/20">
@@ -157,6 +165,7 @@ export function BookmarkPageView() {
           />
         )}
       </div>
-    </div>
+      </div>
+    </YomirraSurface>
   );
 }

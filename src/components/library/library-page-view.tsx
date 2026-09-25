@@ -19,22 +19,20 @@ export function LibraryPageView() {
 
   if (!catalog.isMounted) {
     return (
-      <div className="flex flex-col min-h-screen">
-        <YomirraSurface variant="base" className="flex-1 w-full max-w-7xl mx-auto md:pb-8">
-          <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:pt-8 md:px-8 md:py-8">
-            <LibrarySkeleton />
-          </div>
-        </YomirraSurface>
-      </div>
+      <YomirraSurface variant="base" className="min-h-screen">
+        <div className="mx-auto flex w-full max-w-7xl flex-col pb-8 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:px-8 md:pt-8">
+          <LibrarySkeleton />
+        </div>
+      </YomirraSurface>
     );
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <>
       <h1 className="sr-only">Library Komik Yomirra</h1>
       <span className="sr-only">Jelajah</span>
-      <YomirraSurface variant="base" className="flex-1 w-full max-w-7xl mx-auto md:pb-8">
-        <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] pb-28 md:pt-8 md:px-8 md:py-8">
+      <YomirraSurface variant="base" className="min-h-screen">
+        <div className="mx-auto flex w-full max-w-7xl flex-col px-4 pb-28 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:px-8 md:pt-8 md:pb-8">
           <PageHeader
             title="Library"
             description="Semua yang kamu simpan, dari berbagai sumber, dalam satu tempat."
@@ -53,7 +51,7 @@ export function LibraryPageView() {
             </Link>
           </div>
 
-          <div className="md:rounded-2xl md:border md:border-border-subtle md:bg-surface-raised/30 md:px-5 md:py-4">
+          <div className="md:rounded-xl md:border md:border-border-subtle md:bg-surface-raised/30 md:px-5 md:py-4">
             <LibraryToolbar
             searchInput={catalog.searchInput}
             onSearchInputChange={(e) => catalog.setSearchInput(e.target.value)}
@@ -102,6 +100,6 @@ export function LibraryPageView() {
           />
         </div>
       </YomirraSurface>
-    </div>
+    </>
   );
 }
