@@ -23,6 +23,7 @@ import { useUpdateStore } from "@/shared/store/update-store";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useHistoryStore } from "@/shared/store/history-store";
 import { useUpdateChecker } from "@/shared/hooks/use-update-checker";
+import { CustomSelect } from "@/components/ui/custom-select";
 import { useMounted } from "@/shared/hooks/use-mounted";
 import { getMangaDetailHref, getReaderHref } from "@/shared/lib/routes";
 import { EmptyState } from "@/components/states/empty-state";
@@ -495,33 +496,28 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
 
                         {/* Notion Tag Dropdown with Custom Squircle Chip */}
                         <div className="pt-0.5">
-                          <div className="relative inline-flex items-center">
-                            <select
-                              aria-label={`Jadwal rilis untuk ${item.mangaTitle}`}
-                              value={item.releaseDay !== undefined ? String(item.releaseDay) : ""}
-                              onChange={(e) => {
-                                const val = e.target.value === "" ? undefined : Number(e.target.value);
-                                updateLibraryItem(item.sourceId, item.mangaId, { releaseDay: val });
-                                const targetName = val !== undefined ? WEEKDAYS.find((d) => d.dayIndex === val)?.name : "Otomatis";
-                                toast.success(`Jadwal ${item.mangaTitle} diatur ke ${targetName}`);
-                              }}
-                              className="appearance-none text-[11px] font-semibold py-0.5 pl-2 pr-5 rounded-[6px] bg-surface-base border border-border-subtle hover:border-accent/40 text-text-muted hover:text-text-primary transition-all cursor-pointer outline-none shadow-xs"
-                            >
-                              <option value="">Auto ({dayName})</option>
-                              <option value="1">📅 Senin</option>
-                              <option value="2">📅 Selasa</option>
-                              <option value="3">📅 Rabu</option>
-                              <option value="4">📅 Kamis</option>
-                              <option value="5">📅 Jumat</option>
-                              <option value="6">📅 Sabtu</option>
-                              <option value="0">📅 Minggu</option>
-                            </select>
-                            <CaretDown
-                              size={11}
-                              weight="bold"
-                              className="absolute right-1.5 text-text-muted pointer-events-none"
-                            />
-                          </div>
+                          <CustomSelect
+                            label={`Jadwal rilis untuk ${item.mangaTitle}`}
+                            value={item.releaseDay !== undefined ? String(item.releaseDay) : ""}
+                            onChange={(value) => {
+                              const val = value === "" ? undefined : Number(value);
+                              updateLibraryItem(item.sourceId, item.mangaId, { releaseDay: val });
+                              const targetName = val !== undefined ? WEEKDAYS.find((d) => d.dayIndex === val)?.name : "Otomatis";
+                              toast.success(`Jadwal ${item.mangaTitle} diatur ke ${targetName}`);
+                            }}
+                            options={[
+                              { value: "", label: `Auto (${dayName})` },
+                              { value: "1", label: "📅 Senin" },
+                              { value: "2", label: "📅 Selasa" },
+                              { value: "3", label: "📅 Rabu" },
+                              { value: "4", label: "📅 Kamis" },
+                              { value: "5", label: "📅 Jumat" },
+                              { value: "6", label: "📅 Sabtu" },
+                              { value: "0", label: "📅 Minggu" },
+                            ]}
+                            buttonClassName="min-h-0 h-6 px-2 py-0 text-[11px] font-semibold text-text-muted hover:text-text-primary bg-surface-base hover:bg-surface-hover border border-border-subtle rounded-[6px] gap-1.5 cursor-pointer shadow-xs"
+                            align="left"
+                          />
                         </div>
                       </div>
                     </div>

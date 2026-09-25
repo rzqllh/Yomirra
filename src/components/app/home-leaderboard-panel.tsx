@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { ArrowRight } from "@phosphor-icons/react";
 import { LeaderboardRow } from "@/components/manga/card/leaderboard-row";
+import { CustomSelect } from "@/components/ui/custom-select";
 import { cn } from "@/shared/utils/cn";
 import type { MangaItem } from "@/shared/sources/source-types";
 
@@ -74,21 +75,20 @@ export function HomeLeaderboardPanel({
 
           {/* Compact Source Selector */}
           {availableSources.length > 1 ? (
-            <select
+            <CustomSelect
               value={activeSourceId}
-              onChange={(e) => {
-                setSelectedSource(e.target.value);
-                onSourceChange?.(e.target.value);
+              onChange={(value) => {
+                setSelectedSource(value);
+                onSourceChange?.(value);
               }}
-              aria-label="Pilih sumber peringkat"
-              className="text-[11px] font-bold uppercase tracking-wider text-text-secondary bg-surface-muted hover:bg-surface-hover hover:text-text-primary border border-border-subtle rounded-xs px-2 py-0.5 outline-none cursor-pointer focus-visible:ring-1 focus-visible:ring-accent transition-colors"
-            >
-              {availableSources.map((sId) => (
-                <option key={sId} value={sId} className="bg-surface-raised text-text-primary capitalize">
-                  {sId}
-                </option>
-              ))}
-            </select>
+              label="Pilih sumber peringkat"
+              options={availableSources.map((sId) => ({
+                value: sId,
+                label: <span className="capitalize">{sId}</span>,
+              }))}
+              buttonClassName="min-h-0 h-6 px-2 py-0 text-[11px] font-bold uppercase tracking-wider text-text-secondary bg-surface-muted hover:bg-surface-hover hover:text-text-primary border border-border-subtle rounded-xs gap-1.5 focus-visible:ring-1 focus-visible:ring-accent transition-colors"
+              align="left"
+            />
           ) : (
             <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted bg-surface-muted/60 border border-border-subtle/60 rounded-xs px-1.5 py-0.5 shrink-0">
               {activeSourceId}
