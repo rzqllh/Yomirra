@@ -116,7 +116,6 @@ export function resolveSourceFallback(options: ResolveFallbackOptions): SourceFa
     alternateCandidates = [],
   } = options;
 
-  const currentPrimarySourceId = savedTitle.primarySourceId ?? savedTitle.sourceId ?? failedSourceId;
   const healthStatus = health?.status ?? "BROKEN";
   const errorCode = health?.errorCode;
 
@@ -514,7 +513,11 @@ export function hydrateMigrationSnapshots() {
       migrationSnapshotRegistry.set(snapshot.id, snapshot);
     }
   } catch {
-    localStorage.removeItem(MIGRATION_STORAGE_KEY);
+    try {
+      localStorage.removeItem(MIGRATION_STORAGE_KEY);
+    } catch {
+      // Ignore storage failures; migration state still remains in memory.
+    }
   }
 }
 
