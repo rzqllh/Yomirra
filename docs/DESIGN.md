@@ -18,6 +18,11 @@ Use semantic classes (`bg-surface-*`, `text-text-*`, `text-accent`, `text-accent
 
 Status colors are paired, soft backgrounds and legible foregrounds: `bg-status-success-bg text-status-success-fg`, and corresponding `warning`, `error`, and `info`. Reserve solid semantic colors for existing emphasis or icons. Do not depend on color alone to convey state.
 
+Terminology:
+- **Rak Buku**: User's active tracking domain (Sedang Dibaca + Bookmark).
+- **Bookmark**: Specifically refers to saved items/collections, visually represented by the `ShelfCard` grid.
+- **Library**: The global offline/saved manga domain.
+
 UI font is Plus Jakarta Sans. `ink-display` uses Yuji Boku on editorial headings; `ink-caption` uses Newsreader for ranking numerals. Use those accents sparingly. Body text is 16px where space allows, metadata generally 12–14px. Control/card/panel radii are 12/18/24px. The control target is at least 44px, with visible focus. Browser zoom remains enabled.
 
 ## Component entry points
@@ -40,8 +45,11 @@ Use existing state and source routes. A card link and its bookmark button must b
 
 The home highlight presents a portrait cover and one featured title for the selected source. It does not auto-advance. The source selector uses `aria-pressed`. State changes on bookmark, switch and selection keep text labels and reduced motion behavior. Menus and dialogs retain their Radix keyboard/focus semantics; Sonner retains queue, dismissal and announcements. CSS supplies their appearance.
 
+Secondary and management actions (e.g. batch selection "Pilih" or "Koleksi Baru") must be demoted into overflow/kebab menus (`DropdownMenu` with `DotsThreeVertical`) instead of primary buttons to maintain a clean visual hierarchy. Utilities like "Jadwal Rilis Mingguan" should be kept subtle, usually integrated into `PageHeader` actions or a muted banner.
+
 The shared skeleton uses a slow ambient sweep that stops with `prefers-reduced-motion`. Dialog content enters with a short blur and scale, exits in reverse, and keeps the translation required for true viewport centering. Form controls use their native input underneath the custom indicator, with the native value and keyboard behavior intact.
 
 ## Migration guardrails
 
 Existing feature screens keep their business logic, reader canvas choices, source filtering and persisted state. New feature markup should call the components above and use semantic tokens. Avoid more `text-[9px]`, oversized artwork stretched into horizontal banners, and forced glass on every card. Desktop and tablet are first-class layouts; mobile still has its established navigation pattern. Verify focus, contrast, text scaling and layout at phone, tablet and desktop widths whenever screens are migrated.
+

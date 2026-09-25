@@ -162,8 +162,8 @@ Do not copy the breakpoint string into route-level loading states.
 
 Yomirra intentionally keeps distinct card archetypes under `src/components/manga/card/`:
 
-- `ShelfCard`
-- `HistoryCard`
+- `ShelfCard` (Library and Bookmark collections)
+- `HistoryCard` (Reading progress, used in Beranda's "Lanjut Baca" and Rak Buku's "Sedang Dibaca")
 - `EditorialCard`
 - `LeaderboardRow`
 
@@ -273,6 +273,14 @@ Use this decision order before adding a component:
 // Avoid rebuilding separate mobile + desktop page titles.
 <PageHeader title="..." />
 ```
+
+### Primary Buttons for Secondary Actions
+
+Do not use primary or outlined `<Button>` components for batch actions (e.g., "Pilih") or management actions (e.g., "Koleksi Baru") if they compete with core navigation or search filters. Place them in an overflow `DropdownMenu` (Kebab menu / `DotsThreeVertical`).
+
+### Nested Vertical Scrolling
+
+`AppShell` owns the vertical scrolling. Do not use `h-screen`, `min-h-screen`, or `100vh` on page roots (e.g. `LibraryPageView` or `BookmarkPageView`) as it causes nested scrollbars. Use `w-full` or `flex-1` instead, relying on the document body to scroll.
 
 ### Duplicate filter sheet chrome
 

@@ -81,7 +81,7 @@ Current examples:
       → LibraryCollectionRail
       → LibraryResults
 
-/bookmark
+/bookmark (UI: Rak Buku)
   app/(web)/bookmark/page.tsx
     → components/bookmark/bookmark-page-view.tsx
       → ReadingTab
