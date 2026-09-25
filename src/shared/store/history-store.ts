@@ -65,7 +65,10 @@ export const useHistoryStore = create<HistoryState>()(
         }
         const id = getHistoryId(item.sourceId, item.mangaId, item.chapterId);
         const existing = state.items[id];
-        const finalItem = existing ? { ...existing, ...item, readAt: item.readAt } : item;
+        const savedTitleId = item.savedTitleId ?? get().resolveSavedTitleId(item.sourceId, item.mangaId) ?? undefined;
+        const finalItem = existing
+          ? { ...existing, ...item, savedTitleId: savedTitleId ?? existing.savedTitleId, readAt: item.readAt }
+          : { ...item, savedTitleId };
 
         setTimeout(() => pushHistoryItem(finalItem), 0); // Async Background sync
         
@@ -177,7 +180,7 @@ export const useHistoryStore = create<HistoryState>()(
         const latestPerManga = new Map<string, HistoryItem>();
         
         for (const item of allItems) {
-          const key = `${item.sourceId}::${item.mangaId}`;
+          const key = item.savedTitleId ?? get().resolveSavedTitleId(item.sourceId, item.mangaId) ?? `${item.sourceId}::${item.mangaId}`;
           const existing = latestPerManga.get(key);
           
           if (!existing || item.readAt > existing.readAt) {
@@ -271,6 +274,7 @@ export const useHistoryStore = create<HistoryState>()(
             mangaTitle: anyMangaItem?.mangaTitle || mangaId,
             coverUrl: anyMangaItem?.coverUrl,
             sourceName: anyMangaItem?.sourceName || sourceId,
+            savedTitleId: get().resolveSavedTitleId(sourceId, mangaId) ?? undefined,
             pageIndex,
             pageOffset,
             readAt: Date.now(),
