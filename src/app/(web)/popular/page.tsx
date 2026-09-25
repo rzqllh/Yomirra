@@ -10,7 +10,7 @@ import { EditorialCard } from "@/components/manga/card";
 import Link from "next/link";
 import { getManifestUrlFromCookie } from "@/server/lib/sources/server-manifest";
 import { cookies } from "next/headers";
-import { Button } from "@/components/ui/button";
+import { YomirraSurface } from "@/components/ui/layout";
 
 export const metadata: Metadata = {
   title: "Manga Populer - Yomirra",
@@ -77,7 +77,7 @@ export default async function PopularPage() {
   const activeSources = [...activeBuiltin, ...customSources];
 
   return (
-    <main className="min-h-screen bg-surface-base">
+    <YomirraSurface variant="base" className="min-h-screen">
       <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:pt-8 md:px-8 pb-6 max-w-7xl mx-auto">
         <PageHeader 
           title="Manga Populer" 
@@ -97,6 +97,6 @@ export default async function PopularPage() {
           </div>
         )}
       </div>
-    </main>
+    </YomirraSurface>
   );
 }

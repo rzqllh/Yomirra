@@ -115,12 +115,12 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
                     alt={user.displayName || "User"} 
                     width={56} 
                     height={56} 
-                    className="rounded-2xl border border-border-default/60 shadow-xs object-cover" 
+                    className="rounded-xl border border-border-default/60 shadow-xs object-cover" 
                     referrerPolicy="no-referrer" 
                     unoptimized 
                   />
                 ) : (
-                  <div className="w-14 h-14 rounded-2xl bg-accent/10 text-accent flex items-center justify-center border border-accent/20 shadow-xs">
+                  <div className="w-14 h-14 rounded-xl bg-accent/10 text-accent flex items-center justify-center border border-accent/20 shadow-xs">
                     <UserCircle size={32} weight="duotone" />
                   </div>
                 )}
@@ -485,9 +485,9 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
           </div>
         </div>
       ) : (
-        <div className="flex flex-col min-h-screen">
-          <h1 className="sr-only">Pengaturan Yomirra</h1>
-          <YomirraSurface variant="base" className="flex-1 w-full max-w-7xl mx-auto md:pb-8">
+        <YomirraSurface variant="base" className="min-h-screen">
+          <div className="mx-auto flex w-full max-w-7xl flex-col">
+            <h1 className="sr-only">Pengaturan Yomirra</h1>
             <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:pt-8 pb-6 md:px-8 space-y-8">
               <PageHeader 
                 title="Pengaturan" 
@@ -498,8 +498,8 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
                 {settingsContent}
               </div>
             </div>
-          </YomirraSurface>
-        </div>
+          </div>
+        </YomirraSurface>
       )}
 
       <BackupRestoreModal isOpen={isBackupModalOpen} onOpenChange={setIsBackupModalOpen} />
