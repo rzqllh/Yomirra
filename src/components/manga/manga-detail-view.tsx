@@ -281,7 +281,7 @@ export function MangaDetailView({
                 {detail.author || 'Unknown'}
               </p>
               <p className="text-[11px] font-medium text-white/75 leading-snug">
-                Diunggah oleh <span className="text-indigo-300 font-semibold">{sourceName.toLowerCase()}</span> • Sumber: Webtoon
+                Diunggah oleh <span className="text-accent font-semibold">{sourceName.toLowerCase()}</span> • Sumber: Webtoon
               </p>
             </div>
           </>
@@ -342,7 +342,7 @@ export function MangaDetailView({
                 {detail.author || 'Unknown'}
               </p>
               <p className="text-xs font-medium text-white/75">
-                Diunggah oleh <span className="text-indigo-300 font-semibold">{sourceName.toLowerCase()}</span> • Sumber: Webtoon
+                Diunggah oleh <span className="text-accent font-semibold">{sourceName.toLowerCase()}</span> • Sumber: Webtoon
               </p>
             </div>
           </>
