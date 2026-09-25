@@ -105,4 +105,70 @@ describe("library-store Phase 1 Identity & Relinking", () => {
     const resolvedFromNew = useLibraryStore.getState().resolveBySourceRef("komiku", "frieren-indo");
     expect(resolvedFromNew?.id).toBe(savedTitleId);
   });
+  it("treats linked providers as the same saved title", () => {
+    useLibraryStore.getState().addToLibrary({
+      id: "saved-frieren",
+      sourceId: "mangadex",
+      mangaId: "frieren-md",
+      primarySourceId: "mangadex",
+      primaryMangaId: "frieren-md",
+      title: "Frieren",
+      linkedSources: [
+        {
+          sourceId: "komiku",
+          mangaId: "frieren-id",
+          addedAt: Date.now(),
+          matchConfidence: "CONFIRMED",
+        },
+      ],
+      addedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+
+    expect(useLibraryStore.getState().isInLibrary("komiku", "frieren-id")).toBe(true);
+    expect(useLibraryStore.getState().getLibraryItem("komiku", "frieren-id")?.id).toBe("saved-frieren");
+
+    useLibraryStore.getState().toggleLibrary({
+      sourceId: "komiku",
+      mangaId: "frieren-id",
+      title: "Sousou no Frieren",
+      addedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+
+    expect(Object.keys(useLibraryStore.getState().items)).toHaveLength(0);
+  });
+
+  it("keeps only alternate providers in linkedSources after relink", () => {
+    useLibraryStore.getState().addToLibrary({
+      id: "saved-relink",
+      sourceId: "mangadex",
+      mangaId: "frieren-md",
+      primarySourceId: "mangadex",
+      primaryMangaId: "frieren-md",
+      title: "Frieren",
+      linkedSources: [
+        {
+          sourceId: "komiku",
+          mangaId: "frieren-id",
+          addedAt: Date.now(),
+          matchConfidence: "CONFIRMED",
+        },
+      ],
+      addedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+
+    useLibraryStore.getState().relinkTitle("saved-relink", "komiku", "frieren-id");
+
+    const item = useLibraryStore.getState().getLibraryItemById("saved-relink");
+    expect(item?.primarySourceId).toBe("komiku");
+    expect(item?.linkedSources).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ sourceId: "mangadex", mangaId: "frieren-md" }),
+      ])
+    );
+    expect(item?.linkedSources?.some((source) => source.sourceId === "komiku" && source.mangaId === "frieren-id")).toBe(false);
+  });
+
 });
