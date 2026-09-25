@@ -407,7 +407,7 @@ export function ContinuousVerticalReader({
             {nextChapterId ? (
               <Button
                 className={cn(
-                  "h-11 px-4 font-semibold text-xs sm:text-sm bg-accent hover:bg-accent-hover text-white flex items-center justify-center gap-2 active:scale-[0.98] transition-all cursor-pointer shadow-[0_0_24px_rgba(108,106,250,0.35)]",
+                  "h-11 px-4 font-semibold text-xs sm:text-sm bg-accent hover:bg-accent-hover text-white flex items-center justify-center gap-2 active:scale-[0.98] transition-all cursor-pointer shadow-sm",
                   _prevChapterId ? "flex-1" : "w-full"
                 )}
                 onClick={handleNextChapter}
@@ -419,7 +419,7 @@ export function ContinuousVerticalReader({
               <Button
                 asChild
                 className={cn(
-                  "h-11 px-4 font-semibold text-xs sm:text-sm bg-accent hover:bg-accent-hover text-white flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-[0_0_24px_rgba(108,106,250,0.35)]",
+                  "h-11 px-4 font-semibold text-xs sm:text-sm bg-accent hover:bg-accent-hover text-white flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-sm",
                   _prevChapterId ? "flex-1" : "w-full"
                 )}
               >
