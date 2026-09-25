@@ -9,7 +9,7 @@ import { YomirraSurface } from "@/components/ui/layout";
 export default function UpdatesPage() {
   return (
     <YomirraSurface variant="base" className="min-h-screen">
-      <div className="mx-auto flex w-full max-w-9xl flex-col pb-[calc(var(--bottom-nav-height,80px)+24px)] md:px-8 md:pb-10">
+      <div className="mx-auto flex w-full max-w-7xl flex-col pb-[calc(var(--bottom-nav-height,80px)+24px)] md:px-8 md:pb-10">
         <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:px-0 md:pt-8">
         <PageHeader
           title="Jadwal Rilis Mingguan"
