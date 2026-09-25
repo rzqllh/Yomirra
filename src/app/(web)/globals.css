@@ -140,7 +140,7 @@
 
 @layer base {
   :root {
-    /* Theme-independent Media Overlay (Always Dark) - Adjusted for Indigo */
+    /* Theme-independent media overlay */
     --media-overlay-strong: rgba(5, 5, 10, 0.92);
     --media-overlay-mid: rgba(5, 5, 10, 0.58);
     --media-overlay-soft: rgba(5, 5, 10, 0.12);
