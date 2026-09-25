@@ -63,7 +63,7 @@ export default function SourceBrowsePage({
         <PageHeader title={sourceInfo?.name || sourceId} showBack={true} />
       </div>
 
-      <div className="px-4 pt-2 pb-6 max-w-7xl mx-auto w-full flex-1 flex flex-col">
+      <div className="px-4 pt-2 pb-6 max-w-9xl mx-auto w-full flex-1 flex flex-col">
         <div className="flex items-center justify-between bg-surface-raised p-4 rounded-xl border border-border-subtle mb-6">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-accent/10 rounded-lg text-accent">

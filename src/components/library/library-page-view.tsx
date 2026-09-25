@@ -20,7 +20,7 @@ export function LibraryPageView() {
   if (!catalog.isMounted) {
     return (
       <YomirraSurface variant="base" className="min-h-screen">
-        <div className="mx-auto flex w-full max-w-7xl flex-col pb-8 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:px-8 md:pt-8">
+        <div className="mx-auto flex w-full max-w-9xl flex-col pb-8 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:px-8 md:pt-8">
           <LibrarySkeleton />
         </div>
       </YomirraSurface>
@@ -32,7 +32,7 @@ export function LibraryPageView() {
       <h1 className="sr-only">Library Komik Yomirra</h1>
       <span className="sr-only">Jelajah</span>
       <YomirraSurface variant="base" className="min-h-screen">
-        <div className="mx-auto flex w-full max-w-7xl flex-col px-4 pb-28 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:px-8 md:pt-8 md:pb-8">
+        <div className="mx-auto flex w-full max-w-9xl flex-col px-4 pb-28 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:px-8 md:pt-8 md:pb-8">
           <PageHeader
             title="Library"
             description="Semua yang kamu simpan, dari berbagai sumber, dalam satu tempat."

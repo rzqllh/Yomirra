@@ -96,7 +96,7 @@ export default function SourcesPage() {
   return (
     <PullToRefresh onRefresh={handleRefresh}>
       <YomirraSurface variant="base" className="min-h-screen">
-        <div className="mx-auto flex w-full max-w-7xl flex-col pb-8 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:px-8 md:pt-8">
+        <div className="mx-auto flex w-full max-w-9xl flex-col pb-8 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:px-8 md:pt-8">
           <div className="px-4 pb-4 md:px-0">
             <PageHeader
               title="Sumber"

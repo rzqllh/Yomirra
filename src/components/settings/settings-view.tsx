@@ -486,7 +486,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
         </div>
       ) : (
         <YomirraSurface variant="base" className="min-h-screen">
-          <div className="mx-auto flex w-full max-w-7xl flex-col">
+          <div className="mx-auto flex w-full max-w-9xl flex-col">
             <h1 className="sr-only">Pengaturan Yomirra</h1>
             <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:pt-8 pb-6 md:px-8 space-y-8">
               <PageHeader 

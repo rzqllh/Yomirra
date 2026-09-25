@@ -75,7 +75,7 @@ export function MangaDetailLayout({
         {header}
 
         {/* Hero Content Container */}
-        <div className="w-full max-w-7xl mx-auto px-4 md:px-8 pt-16 md:pt-20 pb-4 md:pb-6 relative z-10 ">
+        <div className="w-full max-w-9xl mx-auto px-4 md:px-8 pt-16 md:pt-20 pb-4 md:pb-6 relative z-10 ">
           {/* Mobile Hero Flow */}
           <div className="flex flex-col gap-4 md:hidden">
             <div className="flex gap-4 relative items-end">
@@ -130,7 +130,7 @@ export function MangaDetailLayout({
 
       {/* Body Content */}
       <div className="w-full relative z-10 bg-surface-base">
-        <div className="w-full max-w-7xl mx-auto px-4 md:px-8 py-5 flex flex-col gap-6">
+        <div className="w-full max-w-9xl mx-auto px-4 md:px-8 py-5 flex flex-col gap-6">
           {/* Synopsis Section */}
           <div className="rounded-xl border border-border-default/80 bg-surface-raised p-4 md:p-5 shadow-xs">
             {synopsis}

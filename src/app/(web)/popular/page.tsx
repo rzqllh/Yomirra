@@ -78,7 +78,7 @@ export default async function PopularPage() {
 
   return (
     <YomirraSurface variant="base" className="min-h-screen">
-      <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:pt-8 md:px-8 pb-6 max-w-7xl mx-auto">
+      <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:pt-8 md:px-8 pb-6 max-w-9xl mx-auto">
         <PageHeader 
           title="Manga Populer" 
           description="Manga, Manhwa, dan Manhua paling populer saat ini."
