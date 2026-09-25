@@ -45,8 +45,8 @@ export function normalizeTitle(raw: string): string {
   return raw
     .toLowerCase()
     .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "") // strip combining diacritics
-    .replace(/[^a-z0-9 ]/g, " ") // non-alnum → space
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\p{L}\p{N}\p{M} ]/gu, " ")
     .replace(/\s+/g, " ")
     .trim();
 }
