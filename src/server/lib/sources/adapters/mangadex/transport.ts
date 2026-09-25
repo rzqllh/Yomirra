@@ -94,10 +94,6 @@ export function classifyMangaDexFallback(error: unknown): MangaDexFallbackRequir
   return "none";
 }
 
-export function isDirectMangaDexFallbackError(error: unknown): boolean {
-  return classifyMangaDexFallback(error) === "direct";
-}
-
 function normalizeDnsName(value: string): string {
   return value.toLowerCase().replace(/\.$/, "");
 }
@@ -271,8 +267,8 @@ async function queryDoh(
     signal,
   });
   if (!response.ok) return { addresses: [], authenticatedData: false };
-  const body = await response.text();
-  if (Buffer.byteLength(body) > MAX_DOH_BODY_BYTES) {
+  const body = await readBoundedText(response, MAX_DOH_BODY_BYTES);
+  if (body === undefined) {
     return { addresses: [], authenticatedData: false };
   }
   const raw = JSON.parse(body) as unknown;
@@ -282,6 +278,33 @@ async function queryDoh(
     addresses: parseMangaDexDohResponse(raw),
     authenticatedData,
   };
+}
+
+async function readBoundedText(response: Response, maxBytes: number): Promise<string | undefined> {
+  const contentLength = response.headers.get("content-length");
+  if (contentLength !== null) {
+    const declaredBytes = Number(contentLength);
+    if (Number.isFinite(declaredBytes) && declaredBytes > maxBytes) {
+      await response.body?.cancel();
+      return undefined;
+    }
+  }
+
+  if (!response.body) return "";
+  const reader = response.body.getReader();
+  const chunks: Buffer[] = [];
+  let totalBytes = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    totalBytes += value.byteLength;
+    if (totalBytes > maxBytes) {
+      await reader.cancel();
+      return undefined;
+    }
+    chunks.push(Buffer.from(value.buffer, value.byteOffset, value.byteLength));
+  }
+  return Buffer.concat(chunks).toString("utf8");
 }
 
 async function resolveDohConsensus(
@@ -304,10 +327,6 @@ async function resolveDohConsensus(
       google: google.authenticatedData,
     },
   };
-}
-
-export async function resolveMangaDexDohConsensus(signal?: AbortSignal): Promise<string[]> {
-  return (await resolveDohConsensus((input, init) => fetch(input, init), signal)).addresses;
 }
 
 export interface MangaDexTransportContext {
