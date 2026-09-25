@@ -4,6 +4,7 @@ import {
   executeSourceMigration,
   rollbackSourceMigration,
   migrationSnapshotRegistry,
+  getMigrationSnapshot,
 } from "../source-fallback";
 import { LibraryItem, SourceRef } from "@/shared/store/library-store";
 import { HistoryItem } from "@/shared/store/history-store";
@@ -520,6 +521,28 @@ describe("Source Fallback Resolver & Reading Migration Engine", () => {
       expect(snapshot.fromSourceId).toBe("shinigami");
       expect(snapshot.toSourceId).toBe("komiku-ii");
       expect(snapshot.status).toBe("CONFIRMED");
+    });
+
+    it("persists migration snapshots across memory resets", () => {
+      const fallbackResult = resolveSourceFallback({
+        savedTitle: libraryItem,
+        failedSourceId: "shinigami",
+        health: { status: "BROKEN" },
+        targetChaptersMap: {
+          "komiku-ii": [{ chapterId: "ch-57-k2", title: "Chapter 57", chapterNumber: 57 }],
+        },
+      });
+
+      const snapshot = executeSourceMigration({
+        libraryItem,
+        fallbackResult,
+        historyItem,
+      });
+
+      migrationSnapshotRegistry.clear();
+
+      expect(getMigrationSnapshot(snapshot.id)?.fromSourceId).toBe("shinigami");
+      expect(getMigrationSnapshot(snapshot.id)?.toSourceId).toBe("komiku-ii");
     });
 
     it("18. old source ID retained in snapshot", () => {
