@@ -8,7 +8,7 @@ Yomirra adalah reader multi-source untuk manga, manhwa, dan manhua. Cari dari be
 
 ## Buka Yomirra
 
-https://yomirra.vercel.app
+https://www.yomirra.web.id/
 
 ---
 

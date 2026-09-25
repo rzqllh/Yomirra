@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { WarningCircle, ArrowClockwise, ArrowLeft, MagnifyingGlass, Gear } from "@phosphor-icons/react";
+import { WarningCircle, ArrowClockwise, ArrowLeft, MagnifyingGlass, Gear, HardDrives } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/app/header";
 import { getSourceMetadata } from "@/shared/sources/source-registry";
@@ -47,13 +47,15 @@ export function MangaDetailErrorState({
       (message.includes("ECONNRESET") ||
         message.includes("ETIMEDOUT") ||
         message.includes("Fetch error") ||
+        message.includes("Request timeout") ||
+        message.includes("aborted") ||
         message.includes("socket hang up") ||
         message.includes("ENOTFOUND") ||
         message.includes("ECONNREFUSED"))
   );
 
   const description = isDisabled
-    ? "Sumber komik ini sedang dinonaktifkan di pengaturan aplikasi Anda. Anda dapat mengaktifkannya kembali untuk membaca komik ini."
+    ? "Sumber komik ini sedang dinonaktifkan di daftar sumber. Anda dapat mengaktifkannya kembali untuk membaca komik ini."
     : isNotFound
     ? `Komik dengan ID "${mangaId}" tidak ditemukan atau telah dihapus pada ${sourceName}. Anda dapat mencari judul ini di sumber lain.`
     : (!isRawSystemError && message)
@@ -69,10 +71,10 @@ export function MangaDetailErrorState({
       </div>
 
       <div className="w-full max-w-lg mx-auto px-4 pt-16 md:pt-24 flex flex-col items-center">
-        <div className="w-full bg-surface-raised border border-border-subtle rounded-2xl p-6 md:p-8 shadow-sm flex flex-col items-center text-center">
-          <div className="w-14 h-14 rounded-2xl bg-accent-dim text-accent flex items-center justify-center mb-4">
+        <div className="w-full bg-surface-raised border border-border-subtle rounded-xl p-6 md:p-8 shadow-sm flex flex-col items-center text-center">
+          <div className="w-14 h-14 rounded-full bg-accent-dim text-accent flex items-center justify-center mb-4">
             {isDisabled ? (
-              <Gear size={28} weight="duotone" />
+              <HardDrives size={28} weight="duotone" />
             ) : isNotFound ? (
               <MagnifyingGlass size={28} weight="duotone" />
             ) : (
@@ -96,9 +98,9 @@ export function MangaDetailErrorState({
           <div className="flex flex-col sm:flex-row gap-3 w-full justify-center">
             {isDisabled ? (
               <Button asChild variant="primary" className="gap-2 w-full sm:w-auto font-bold">
-                <Link href="/settings">
-                  <Gear size={18} weight="bold" />
-                  Buka Pengaturan
+                <Link href="/sources">
+                  <HardDrives size={18} weight="bold" />
+                  Buka Sumber
                 </Link>
               </Button>
             ) : isNotFound ? (

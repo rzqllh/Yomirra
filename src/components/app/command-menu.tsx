@@ -47,8 +47,8 @@ export function CommandMenu() {
     };
   }, []);
 
-  // Search manga globally
-  const debouncedQuery = useDebounce(searchQuery, 300)
+  // Search manga globally with word debounce & timeout limiting
+  const debouncedQuery = useDebounce(searchQuery.trim(), 350)
   const isNsfwFiltered = useSettingsStore((state) => state.hideNsfw)
   const disabledSources = useSourcePreferencesStore((state) => state.disabledSources)
   
@@ -97,85 +97,111 @@ export function CommandMenu() {
   return (
     <CommandDialog open={open} onOpenChange={setOpen} shouldFilter={false}>
       <CommandInput
-        placeholder="Cari judul atau langsung ke halaman..."
+        placeholder="Cari judul komik atau langsung ke halaman..."
         value={searchQuery}
         onValueChange={setSearchQuery}
       />
-      <CommandList>
+      <CommandList className="max-h-[380px] p-2 overflow-y-auto">
         <CommandEmpty>
           {isSearching ? (
-            <div className="flex flex-col gap-2 p-2">
-              <div className="h-6 w-1/3 bg-surface-muted rounded animate-pulse mb-2" />
+            <div className="flex flex-col gap-2 p-3">
+              <div className="h-4 w-1/4 bg-surface-muted rounded animate-pulse mb-1" />
               {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center gap-3 py-2 px-2">
-                  <div className="h-12 w-9 rounded bg-surface-muted animate-pulse shrink-0" />
+                <div key={i} className="flex items-center gap-3 py-2 px-1">
+                  <div className="h-12 w-9 rounded-md bg-surface-muted animate-pulse shrink-0" />
                   <div className="flex flex-col gap-2 flex-1">
-                    <div className="h-4 w-3/4 bg-surface-muted rounded animate-pulse" />
-                    <div className="h-3 w-1/4 bg-surface-muted rounded animate-pulse" />
+                    <div className="h-3.5 w-3/4 bg-surface-muted rounded animate-pulse" />
+                    <div className="h-3 w-1/3 bg-surface-muted rounded animate-pulse" />
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            "Ga ketemu. Coba kata lain?"
+            <div className="py-8 text-center select-none">
+              <p className="font-bold text-text-primary text-sm">Belum ketemu</p>
+              <p className="text-xs text-text-muted mt-1">Coba kata kunci lain atau periksa ejaan.</p>
+            </div>
           )}
         </CommandEmpty>
 
         {/* Search Results */}
-        {searchQuery.length > 0 && (
-          <CommandGroup heading="Aksi">
+        {searchQuery.trim().length > 0 && (
+          <CommandGroup heading="Aksi Langsung">
             <CommandItem
               value={`search-all-${searchQuery}`}
-              onSelect={() => handleSelect(`/search?q=${encodeURIComponent(searchQuery)}`)}
-              className="flex items-center gap-3 py-3 cursor-pointer"
+              onSelect={() => handleSelect(`/search?q=${encodeURIComponent(searchQuery.trim())}`)}
+              onClick={() => handleSelect(`/search?q=${encodeURIComponent(searchQuery.trim())}`)}
+              className="flex items-center gap-3 px-3 py-2.5 rounded-[12px] cursor-pointer hover:bg-surface-hover transition-colors"
             >
-              <div className="flex items-center justify-center h-12 w-9 shrink-0 rounded bg-accent/10 text-accent">
-                <MagnifyingGlass weight="bold" size={20} />
+              <div className="flex items-center justify-center size-9 shrink-0 rounded-lg bg-accent-dim text-accent">
+                <MagnifyingGlass weight="bold" size={17} />
               </div>
-              <span className="font-bold text-text-primary">Lihat semua hasil untuk &quot;{searchQuery}&quot;</span>
+              <div className="flex flex-col min-w-0">
+                <span className="font-bold text-text-primary text-sm truncate">
+                  Lihat semua hasil untuk &ldquo;{searchQuery.trim()}&rdquo;
+                </span>
+                <span className="text-[11px] text-text-muted">Buka halaman pencarian lengkap</span>
+              </div>
             </CommandItem>
           </CommandGroup>
         )}
 
         {previewResults.length > 0 && (
-          <CommandGroup heading="Preview Hasil">
-            {previewResults.map((manga) => (
-              <CommandItem
-                key={`${manga.sourceId}-${manga.id}`}
-                value={`${manga.sourceId}-${manga.id}`}
-                onSelect={() =>
-                  handleSelect(getMangaDetailHref(manga.sourceId, manga.id, pathname))
-                }
-                className="flex items-center gap-3 py-2 cursor-pointer"
-              >
-                {manga.coverUrl ? (
-                  <div className="relative h-12 w-9 shrink-0 overflow-hidden rounded bg-surface-muted shadow-sm">
-                    <Image 
-                      src={manga.coverUrl} 
-                      alt="" 
-                      fill
-                      className="object-cover transition-transform group-hover:scale-105" 
-                      unoptimized
-                    />
+          <CommandGroup heading="Pilihan Judul">
+            {previewResults.map((manga) => {
+              const href = getMangaDetailHref(manga.sourceId, manga.id, pathname);
+              return (
+                <CommandItem
+                  key={`${manga.sourceId}-${manga.id}`}
+                  value={`${manga.title} ${manga.sourceId} ${manga.id}`}
+                  onSelect={() => handleSelect(href)}
+                  onClick={() => handleSelect(href)}
+                  className="flex items-center gap-3 px-3 py-2 rounded-[12px] cursor-pointer hover:bg-surface-hover transition-colors"
+                >
+                  {manga.coverUrl ? (
+                    <div className="relative h-12 w-9 shrink-0 overflow-hidden rounded-[6px] border border-border-subtle bg-surface-muted shadow-xs">
+                      <Image
+                        src={manga.coverUrl}
+                        alt=""
+                        fill
+                        className="object-cover transition-transform group-hover:scale-105"
+                        unoptimized
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-center h-12 w-9 shrink-0 rounded-[6px] bg-surface-muted text-text-muted">
+                      <MagnifyingGlass size={16} weight="bold" />
+                    </div>
+                  )}
+                  <div className="flex flex-col min-w-0 flex-1">
+                    <span className="truncate font-bold text-text-primary text-sm">{manga.title}</span>
+                    <div className="flex items-center gap-2 mt-0.5 text-xs text-text-muted">
+                      <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-accent-dim text-accent uppercase tracking-wider">
+                        {manga.sourceId}
+                      </span>
+                      {manga.latestChapter && (
+                        <span className="truncate text-[11px]">{manga.latestChapter}</span>
+                      )}
+                    </div>
                   </div>
-                ) : (
-                  <MagnifyingGlass className="h-5 w-5 text-text-muted shrink-0" weight="bold" />
-                )}
-                <div className="flex flex-col min-w-0">
-                  <span className="truncate font-bold text-text-primary text-sm">{manga.title}</span>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="truncate text-xs font-medium px-1.5 py-0.5 rounded bg-accent/10 text-accent uppercase tracking-wider">{manga.sourceId}</span>
-                    {manga.latestChapter && (
-                      <span className="truncate text-xs text-text-muted">{manga.latestChapter}</span>
-                    )}
-                  </div>
-                </div>
-              </CommandItem>
-            ))}
+                </CommandItem>
+              );
+            })}
           </CommandGroup>
         )}
       </CommandList>
+
+      <div className="hidden sm:flex items-center justify-between px-4 py-2 bg-surface-muted/30 border-t border-border-subtle text-[11px] text-text-muted select-none">
+        <div className="flex items-center gap-2">
+          <span className="font-bold text-accent uppercase tracking-wider text-[10px]">Yomirra</span>
+          <span>· Ruang Pencarian</span>
+        </div>
+        <div className="flex items-center gap-3 font-mono text-[10px]">
+          <span className="flex items-center gap-1"><kbd className="px-1 py-0.5 rounded bg-surface-base border border-border-subtle">↑↓</kbd> pilih</span>
+          <span className="flex items-center gap-1"><kbd className="px-1 py-0.5 rounded bg-surface-base border border-border-subtle">↵</kbd> buka</span>
+          <span className="flex items-center gap-1"><kbd className="px-1 py-0.5 rounded bg-surface-base border border-border-subtle">esc</kbd> tutup</span>
+        </div>
+      </div>
     </CommandDialog>
   )
 }
-

@@ -2,33 +2,35 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { format, isToday, isYesterday } from "date-fns";
-import { id as localeId } from "date-fns/locale";
 import { 
   Bell, 
   WarningCircle, 
   ArrowsClockwise, 
   CalendarBlank, 
-  BookBookmark, 
-  Sparkle,
-  CheckCircle,
-  CaretDown
+  Play,
+  BookOpen
 } from "@phosphor-icons/react";
-import { motion } from "motion/react";
 import { toast } from "sonner";
 
 import { useUpdateStore } from "@/shared/store/update-store";
 import { useLibraryStore } from "@/shared/store/library-store";
-import { useHistoryStore } from "@/shared/store/history-store";
+import { useHistoryStore, type HistoryItem } from "@/shared/store/history-store";
 import { useUpdateChecker } from "@/shared/hooks/use-update-checker";
+import { CustomSelect } from "@/components/ui/custom-select";
 import { useMounted } from "@/shared/hooks/use-mounted";
 import { getMangaDetailHref, getReaderHref } from "@/shared/lib/routes";
 import { EmptyState } from "@/components/states/empty-state";
 import { Button } from "@/components/ui/button";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { MangaCover } from "@/components/manga/manga-cover";
+import {
+  MangaCardCoverFrame,
+  MangaCardMeta,
+  MangaCardTitle,
+  mangaCardInteraction,
+  mangaCardSurface,
+} from "@/components/manga/card";
 import { UpdatesSkeleton } from "@/components/skeletons/updates-skeleton";
-import { MangaUpdateItem } from "@/shared/types/update";
 import { cn } from "@/shared/utils/cn";
 
 export const WEEKDAYS = [
@@ -60,6 +62,116 @@ export interface WeeklyMangaItem {
   effectiveDay: number;
 }
 
+export interface UpdateCardProps {
+  item: WeeklyMangaItem;
+  historyItem?: HistoryItem;
+  onScheduleChange: (value: string) => void;
+}
+
+export function UpdateCard({ item, historyItem, onScheduleChange }: UpdateCardProps) {
+  const hasHistory = Boolean(historyItem);
+  const targetChapterId = historyItem?.chapterId || item.latestChapterId;
+  const detailHref = getMangaDetailHref(item.sourceId, item.mangaId, "/updates");
+  const readerHref = targetChapterId
+    ? getReaderHref(item.sourceId, item.mangaId, targetChapterId, "/updates")
+    : detailHref;
+  const isUnread = Boolean(item.latestChapterId && !item.seenAt);
+  const dayName = WEEKDAYS.find((day) => day.dayIndex === item.effectiveDay)?.name || "Senin";
+
+  return (
+    <article
+      className={cn(
+        mangaCardSurface({ kind: "nested" }),
+        "p-3 sm:p-3.5 group flex items-center justify-between gap-3 overflow-hidden hover:border-accent/40 hover:bg-surface-hover/70 motion-safe:transition-[background-color,border-color,box-shadow] motion-safe:duration-200"
+      )}
+    >
+      <div className="flex items-center gap-3 min-w-0 flex-1">
+        <Link
+          href={detailHref}
+          className={cn("w-[52px] sm:w-[58px] shrink-0 rounded-xs", mangaCardInteraction.link)}
+          aria-label={`Lihat detail ${item.mangaTitle}`}
+        >
+          <MangaCardCoverFrame className="w-full bg-surface-base shadow-xs">
+            <MangaCover
+              src={item.coverUrl}
+              alt={item.mangaTitle}
+              iconSize={18}
+              imageClassName={cn("object-cover w-full h-full", mangaCardInteraction.coverImage)}
+            />
+          </MangaCardCoverFrame>
+        </Link>
+
+        <div className="flex-1 min-w-0 space-y-1">
+          <Link
+            href={detailHref}
+            className={cn("block min-w-0 rounded-xs", mangaCardInteraction.link)}
+          >
+            <MangaCardTitle
+              as="h4"
+              lines={1}
+              className={mangaCardInteraction.title}
+            >
+              {item.mangaTitle}
+            </MangaCardTitle>
+          </Link>
+
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="text-[10px] px-1.5 py-0.5 rounded-[6px] bg-surface-base border border-border-subtle/70 font-semibold text-text-secondary">
+              {item.sourceName || item.sourceId}
+            </span>
+            {isUnread && (
+              <span className="text-[9px] px-1.5 py-0.5 rounded-[6px] bg-semantic-error text-white font-extrabold uppercase tracking-wider shadow-xs">
+                Baru
+              </span>
+            )}
+            <MangaCardMeta className="text-text-muted truncate">
+              {item.latestChapterTitle || (item.latestChapterNumber ? `Ch. ${item.latestChapterNumber}` : "Siap dibaca")}
+            </MangaCardMeta>
+          </div>
+
+          <div className="pt-0.5">
+            <CustomSelect
+              label={`Jadwal rilis untuk ${item.mangaTitle}`}
+              value={item.releaseDay !== undefined ? String(item.releaseDay) : ""}
+              onChange={onScheduleChange}
+              options={[
+                { value: "", label: `Auto (${dayName})` },
+                { value: "1", label: "📅 Senin" },
+                { value: "2", label: "📅 Selasa" },
+                { value: "3", label: "📅 Rabu" },
+                { value: "4", label: "📅 Kamis" },
+                { value: "5", label: "📅 Jumat" },
+                { value: "6", label: "📅 Sabtu" },
+                { value: "0", label: "📅 Minggu" },
+              ]}
+              buttonClassName="min-h-11 px-2 py-0 text-[11px] font-semibold text-text-muted hover:text-text-primary bg-surface-base hover:bg-surface-hover border border-border-subtle rounded-xs gap-1.5 cursor-pointer shadow-xs"
+              align="left"
+            />
+          </div>
+        </div>
+      </div>
+
+      <Link
+        href={readerHref}
+        className={cn(
+          "min-h-11 px-2.5 sm:px-3 rounded-sm font-semibold text-xs shadow-xs shrink-0 inline-flex items-center gap-1.5 motion-safe:transition-[transform,background-color,border-color] motion-safe:active:scale-95 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+          hasHistory
+            ? "bg-accent text-accent-on hover:bg-accent-hover"
+            : "bg-surface-base border border-border-subtle hover:border-accent/40 hover:bg-surface-hover text-text-primary"
+        )}
+        aria-label={`${hasHistory ? "Lanjut" : "Mulai"} baca ${item.mangaTitle}`}
+      >
+        {hasHistory ? (
+          <Play size={13} weight="fill" />
+        ) : (
+          <BookOpen size={14} weight="bold" className="text-text-muted group-hover:text-accent" />
+        )}
+        <span>{hasHistory ? "Lanjut" : "Baca"}</span>
+      </Link>
+    </article>
+  );
+}
+
 // ErrorBanner
 
 
@@ -77,7 +189,7 @@ function ErrorBanner({
   const label = count === 1 ? "1 manga" : `${count} manga`;
 
   return (
-    <div className="mb-6 rounded-2xl bg-semantic-error/8 border border-semantic-error/20 overflow-hidden shadow-xs">
+    <div className="mb-6 rounded-xl bg-semantic-error/8 border border-semantic-error/20 overflow-hidden shadow-xs">
       <div className="flex gap-3 items-start p-3.5">
         <WarningCircle
           size={18}
@@ -402,7 +514,7 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
 
           {/* Manga List for Selected Day */}
           {displayedItems.length === 0 ? (
-            <div className="py-12 rounded-2xl bg-surface-raised/50 border border-border-subtle p-6 text-center space-y-3">
+            <div className="py-12 rounded-xl bg-surface-raised/50 border border-border-subtle p-6 text-center space-y-3">
               <CalendarBlank size={36} className="text-text-muted mx-auto" weight="duotone" />
               <div className="space-y-1">
                 <h3 className="text-sm font-bold text-text-primary">
@@ -430,107 +542,20 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {displayedItems.map((item) => {
                 const historyItem = isMounted ? getLatestForManga(item.sourceId, item.mangaId) : undefined;
-                const hasHistory = Boolean(historyItem);
-                const targetChapterId = (hasHistory && historyItem?.chapterId)
-                  ? historyItem.chapterId
-                  : item.latestChapterId;
-                const hasTargetChapter = Boolean(targetChapterId);
-
-                // Distinct destinations per UX hierarchy
-                // Card / Title click -> Manga Detail (with returnTo=/updates for contextual back)
-                const detailHref = getMangaDetailHref(item.sourceId, item.mangaId, "/updates");
-                // Action button click -> Direct to Reader chapter (or detail if no chapter found)
-                const readerHref = hasTargetChapter
-                  ? getReaderHref(item.sourceId, item.mangaId, targetChapterId!, "/updates")
-                  : detailHref;
-
-                // Adaptive CTA label: "Lanjut Baca" if previously read, "Mulai Baca" if new
-                const ctaLabel = hasHistory ? "Lanjut Baca" : "Mulai Baca";
-
-                const isUnread = Boolean(item.latestChapterId && !item.seenAt);
-                const dayName = WEEKDAYS.find((d) => d.dayIndex === item.effectiveDay)?.name || "Senin";
-
                 return (
-                  <div
+                  <UpdateCard
                     key={item.key}
-                    className="p-3 rounded-2xl bg-surface-raised border border-border-subtle hover:border-border-strong hover:bg-surface-hover transition-all group shadow-xs flex items-center justify-between gap-3"
-                  >
-                    {/* Left: Cover & Info (Clicking leads to Manga Detail) */}
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <Link
-                        href={detailHref}
-                        className="relative w-[52px] h-[72px] rounded-lg overflow-hidden shrink-0 bg-surface-muted border border-border-subtle/70 shadow-xs group-hover:scale-[1.02] transition-transform"
-                        aria-label={`Lihat detail ${item.mangaTitle}`}
-                      >
-                        <MangaCover
-                          src={item.coverUrl}
-                          alt={item.mangaTitle}
-                          iconSize={20}
-                        />
-                      </Link>
-
-                      <div className="flex-1 min-w-0 space-y-1">
-                        <Link href={detailHref} className="block min-w-0">
-                          <h4 className="font-bold text-sm text-text-primary truncate group-hover:text-accent transition-colors">
-                            {item.mangaTitle}
-                          </h4>
-                        </Link>
-
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-surface-muted border border-border-subtle font-medium text-text-secondary">
-                            {item.sourceName || item.sourceId}
-                          </span>
-                          {isUnread && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-semantic-error text-white font-extrabold shadow-xs">
-                              NEW
-                            </span>
-                          )}
-                          <span className="text-xs text-text-muted truncate font-medium">
-                            {item.latestChapterTitle || (item.latestChapterNumber ? `Ch. ${item.latestChapterNumber}` : "Siap dibaca")}
-                          </span>
-                        </div>
-
-                        {/* Notion Tag Dropdown with Custom Squircle Chip */}
-                        <div className="pt-0.5">
-                          <div className="relative inline-flex items-center">
-                            <select
-                              aria-label={`Jadwal rilis untuk ${item.mangaTitle}`}
-                              value={item.releaseDay !== undefined ? String(item.releaseDay) : ""}
-                              onChange={(e) => {
-                                const val = e.target.value === "" ? undefined : Number(e.target.value);
-                                updateLibraryItem(item.sourceId, item.mangaId, { releaseDay: val });
-                                const targetName = val !== undefined ? WEEKDAYS.find((d) => d.dayIndex === val)?.name : "Otomatis";
-                                toast.success(`Jadwal ${item.mangaTitle} diatur ke ${targetName}`);
-                              }}
-                              className="appearance-none text-[11px] font-semibold py-1 pl-2.5 pr-6 rounded-md bg-surface-base border border-border-subtle hover:border-accent/40 text-text-secondary hover:text-accent transition-all cursor-pointer outline-none shadow-xs"
-                            >
-                              <option value="">Auto ({dayName})</option>
-                              <option value="1">📅 Senin</option>
-                              <option value="2">📅 Selasa</option>
-                              <option value="3">📅 Rabu</option>
-                              <option value="4">📅 Kamis</option>
-                              <option value="5">📅 Jumat</option>
-                              <option value="6">📅 Sabtu</option>
-                              <option value="0">📅 Minggu</option>
-                            </select>
-                            <CaretDown
-                              size={12}
-                              weight="bold"
-                              className="absolute right-2 text-text-muted pointer-events-none"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Right: Direct Read Button (Squircle rounded-lg, NOT Pill) */}
-                    <Link
-                      href={readerHref}
-                      className="h-8 px-3 rounded-lg bg-accent text-white hover:bg-accent-hover font-bold text-xs shadow-xs active:scale-95 shrink-0 flex items-center justify-center transition-all whitespace-nowrap"
-                    >
-                      {ctaLabel}
-                    </Link>
-                  </div>
+                    item={item}
+                    historyItem={historyItem}
+                    onScheduleChange={(value) => {
+                      const releaseDay = value === "" ? undefined : Number(value);
+                      updateLibraryItem(item.sourceId, item.mangaId, { releaseDay });
+                      const targetName = releaseDay !== undefined
+                        ? WEEKDAYS.find((day) => day.dayIndex === releaseDay)?.name
+                        : "Otomatis";
+                      toast.success(`Jadwal ${item.mangaTitle} diatur ke ${targetName}`);
+                    }}
+                  />
                 );
               })}
             </div>
@@ -540,4 +565,3 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
     </div>
   );
 }
-

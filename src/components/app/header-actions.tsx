@@ -6,7 +6,9 @@ import { Bell, Gear } from "@phosphor-icons/react"
 import { useUpdateStore } from "@/shared/store/update-store"
 import { useMounted } from "@/shared/hooks/use-mounted"
 
-export function HeaderActions() {
+import { cn } from "@/shared/utils/cn"
+
+export function HeaderActions({ className }: { className?: string } = {}) {
   const mounted = useMounted()
   const rawUnread = useUpdateStore((state) => state.getUnreadCount())
   const unreadCount = typeof rawUnread === "function" ? (rawUnread as () => number)() : (Number(rawUnread) || 0)
@@ -18,11 +20,11 @@ export function HeaderActions() {
     : "Pembaruan"
 
   return (
-    <div className="flex items-center gap-2 shrink-0">
+    <div className={cn("flex md:hidden items-center gap-2 shrink-0", className)}>
       <Link
         href="/updates"
         transitionTypes={["nav-lateral"]}
-        className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-surface-glass backdrop-blur-md border border-border-default/40 text-text-primary hover:bg-surface-hover hover:border-border-strong active:scale-95 transition-all outline-none select-none shadow-xs"
+        className="relative flex h-10 w-10 items-center justify-center rounded-full bg-surface-glass backdrop-blur-md border border-border-default/40 text-text-primary hover:bg-surface-hover hover:border-border-strong active:scale-95 transition-all outline-none select-none shadow-xs"
         aria-label={accessibleLabel}
       >
         <Bell size={20} weight={showBadge ? "fill" : "regular"} className="shrink-0" />
@@ -42,7 +44,7 @@ export function HeaderActions() {
       <Link
         href="/settings"
         transitionTypes={["nav-lateral"]}
-        className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-surface-glass backdrop-blur-md border border-border-default/40 text-text-primary hover:bg-surface-hover hover:border-border-strong active:scale-95 transition-all outline-none select-none shadow-xs"
+        className="relative flex h-10 w-10 items-center justify-center rounded-full bg-surface-glass backdrop-blur-md border border-border-default/40 text-text-primary hover:bg-surface-hover hover:border-border-strong active:scale-95 transition-all outline-none select-none shadow-xs"
         aria-label="Pengaturan"
       >
         <Gear size={20} weight="regular" className="shrink-0" />

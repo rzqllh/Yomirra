@@ -10,7 +10,7 @@ describe("SegmentedControl - Concentric Radius Architecture & Quick Rail", () =>
     { value: "updates", label: "Updates", badge: "New", badgeVariant: "error" as const },
   ];
 
-  it("applies concentric rounded-2xl to container and rounded-md to buttons by default (quick-rail mode)", () => {
+  it("applies concentric rounded-xl to container and rounded-md to buttons by default (quick-rail mode)", () => {
     const handleChange = vi.fn();
     const { container } = render(
       <SegmentedControl
@@ -21,8 +21,8 @@ describe("SegmentedControl - Concentric Radius Architecture & Quick Rail", () =>
     );
 
     const outerContainer = container.firstElementChild as HTMLElement;
-    // Outer container has rounded-2xl with p-1 padding
-    expect(outerContainer.className).toContain("rounded-2xl");
+    // Outer container has rounded-xl with p-1 padding
+    expect(outerContainer.className).toContain("rounded-xl");
 
     // Inner buttons have rounded-md satisfying R_inner = R_outer - padding
     const buttons = screen.getAllByRole("tab");

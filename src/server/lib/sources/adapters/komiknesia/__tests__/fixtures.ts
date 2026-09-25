@@ -116,6 +116,72 @@ export const expectedDetailPayload: KomikNesiaDetailPayload = {
   },
 };
 
+export const currentDirectDetailPayload = {
+  id: 1,
+  title: "Hantu Kerja",
+  slug: "even-if-i-fall-into-a-ghost-story-i-still-have-to-go-to-work",
+  cover: "https://data.cdnesia.my.id/covers/hantu-kerja.jpg",
+  status: "ongoing",
+  content_type: "manhwa",
+  synopsis: "Sebuah cerita tentang hantu dan pekerjaan",
+  author: "Author A",
+  artist: "Artist B",
+  genres: ["Action", "Comedy"],
+  created_at: "2024-01-01T00:00:00Z",
+  updated_at: "2024-01-10T00:00:00Z",
+  chapters: [
+    {
+      id: 1001,
+      slug: "even-if-i-fall-into-a-ghost-story-i-still-have-to-go-to-work-chapter-36-bahasa-indonesia",
+      chapter_number: "36",
+      title: "Chapter 36",
+      created_at: "2024-01-10T00:00:00Z",
+    },
+    {
+      id: 1000,
+      slug: "even-if-i-fall-into-a-ghost-story-i-still-have-to-go-to-work-chapter-35-bahasa-indonesia",
+      chapter_number: "35",
+      title: "Chapter 35",
+      created_at: "2024-01-03T00:00:00Z",
+    },
+  ],
+};
+
+export const currentDirectDetailEnvelope: KomikNesiaEnvelope = {
+  status: true,
+  encrypted: false,
+  data: JSON.stringify(currentDirectDetailPayload),
+  time: TEST_TIME,
+};
+
+export const currentContentsEnvelope: KomikNesiaEnvelope = {
+  status: true,
+  encrypted: false,
+  data: JSON.stringify({
+    status: true,
+    data: [
+      {
+        id: 1,
+        title: "Hantu Kerja",
+        slug: "even-if-i-fall-into-a-ghost-story-i-still-have-to-go-to-work",
+        cover: "https://data.cdnesia.my.id/covers/hantu-kerja.jpg",
+        status: "ongoing",
+        content_type: "manhwa",
+        sinopsis: "Sebuah cerita tentang hantu dan pekerjaan",
+        lastChapters: [
+          {
+            number: "36",
+            slug: "even-if-i-fall-into-a-ghost-story-i-still-have-to-go-to-work-chapter-36-bahasa-indonesia",
+            created_at: { time: 1704844800 },
+          },
+        ],
+      },
+    ],
+    meta: { page: 1, per_page: 20, total: 80, total_pages: 4 },
+  }),
+  time: TEST_TIME,
+};
+
 export const expectedPagesPayload: KomikNesiaChapterPayload = {
   status: true,
   data: {

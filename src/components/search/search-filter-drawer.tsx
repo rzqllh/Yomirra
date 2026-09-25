@@ -134,7 +134,7 @@ export function SearchFilterDrawer({ children }: SearchFilterDrawerProps) {
     >
       {!hasAnyFilter ? (
         <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
-          <div className="w-12 h-12 rounded-2xl bg-surface-raised flex items-center justify-center mb-3 text-text-muted">
+          <div className="w-12 h-12 rounded-lg bg-surface-raised flex items-center justify-center mb-3 text-text-muted">
             <Funnel size={24} weight="duotone" />
           </div>
           <p className="text-sm font-semibold text-text-primary">

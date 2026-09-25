@@ -20,8 +20,8 @@ export function LibrarySkeleton() {
 
       {/* LibraryToolbar placeholder */}
       <div className="flex items-center gap-2.5 mt-6 md:mt-7">
-        <Skeleton className="flex-1 min-w-0 h-[44px] rounded-2xl" />
-        <Skeleton className="shrink-0 h-[44px] w-24 rounded-2xl" />
+        <Skeleton className="flex-1 min-w-0 h-[44px] rounded-xl" />
+        <Skeleton className="shrink-0 h-[44px] w-24 rounded-full" />
       </div>
 
       {/* LibraryStatusRail placeholder */}

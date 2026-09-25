@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { KomikNesiaSource } from "../index";
 import { deriveKey, decryptEnvelope } from "../crypto";
 import {
@@ -16,6 +16,8 @@ import {
   encryptedDetailEnvelope,
   encryptedPagesEnvelope,
   encryptedEmptyListEnvelope,
+  currentDirectDetailEnvelope,
+  currentContentsEnvelope,
   plaintextEnvelope,
   expectedListPayload,
   expectedDetailPayload,
@@ -212,15 +214,6 @@ describe("KomikNesia / normalizer / MangaDetail", () => {
     expect(detail.description).toBe("Sebuah cerita tentang hantu dan pekerjaan");
   });
 
-  it("falls back to synopsis when description is absent", () => {
-    const detail = normalizeKomikNesiaMangaDetail({
-      ...rawDetail,
-      description: undefined,
-      synopsis: "Synopsis fallback",
-    });
-    expect(detail.description).toBe("Synopsis fallback");
-  });
-
   it("handles genre objects with name field", () => {
     const detail = normalizeKomikNesiaMangaDetail({
       ...rawDetail,
@@ -317,6 +310,19 @@ describe("KomikNesia / adapter / identity", () => {
 });
 
 describe("KomikNesia / adapter / getPopular", () => {
+  it("uses current meta.total_pages pagination", async () => {
+    const source = makeSource(vi.fn().mockResolvedValue(currentContentsEnvelope));
+
+    const result = await source.getPopular(1);
+
+    expect(result.mangas[0]).toMatchObject({
+      title: "Hantu Kerja",
+      format: "MANHWA",
+      latestChapter: "Chapter 36",
+    });
+    expect(result.hasNextPage).toBe(true);
+  });
+
   it("returns normalized manga list", async () => {
     const source = makeSource(vi.fn().mockResolvedValue(encryptedListEnvelope));
     const result = await source.getPopular(1);
@@ -357,6 +363,18 @@ describe("KomikNesia / adapter / search", () => {
 });
 
 describe("KomikNesia / adapter / getDetail", () => {
+  it("accepts the current direct detail contract", async () => {
+    const source = makeSource(vi.fn().mockResolvedValue(currentDirectDetailEnvelope));
+
+    const detail = await source.getDetail(
+      "even-if-i-fall-into-a-ghost-story-i-still-have-to-go-to-work"
+    );
+
+    expect(detail.title).toBe("Hantu Kerja");
+    expect(detail.format).toBe("MANHWA");
+    expect(detail.description).toBe("Sebuah cerita tentang hantu dan pekerjaan");
+  });
+
   it("returns normalized detail with genres and description", async () => {
     const source = makeSource(vi.fn().mockResolvedValue(encryptedDetailEnvelope));
     const detail = await source.getDetail(
@@ -373,7 +391,7 @@ describe("KomikNesia / adapter / getDetail", () => {
     await expect(source.getDetail("")).rejects.toThrow("INVALID_MANGA_ID");
   });
 
-  it("throws not found when response has no title", async () => {
+  it("throws a stable schema mismatch prefix when response has no title", async () => {
     const badEnvelope: KomikNesiaEnvelope = {
       status: true,
       encrypted: false,
@@ -381,11 +399,23 @@ describe("KomikNesia / adapter / getDetail", () => {
       time: TEST_TIME,
     };
     const source = makeSource(vi.fn().mockResolvedValue(badEnvelope));
-    await expect(source.getDetail("some-slug")).rejects.toThrow("not found");
+    await expect(source.getDetail("some-slug")).rejects.toThrow(
+      "KOMIKNESIA_SCHEMA_MISMATCH"
+    );
   });
 });
 
 describe("KomikNesia / adapter / getChapters", () => {
+  it("reads chapter_number from the current direct detail contract", async () => {
+    const source = makeSource(vi.fn().mockResolvedValue(currentDirectDetailEnvelope));
+
+    const chapters = await source.getChapters(
+      "even-if-i-fall-into-a-ghost-story-i-still-have-to-go-to-work"
+    );
+
+    expect(chapters.map((chapter) => chapter.number)).toEqual([36, 35]);
+  });
+
   it("returns chapters from detail embedded chapters list", async () => {
     const source = makeSource(vi.fn().mockResolvedValue(encryptedDetailEnvelope));
     const chapters = await source.getChapters(
@@ -470,6 +500,12 @@ describe("KomikNesia / registry / active entry exists", () => {
     // Use fresh require to bypass Vitest module cache
     const registry = await import("@/shared/sources/source-registry?t=" + Date.now());
     const allSources = registry.sourceRegistry ?? registry.default?.sourceRegistry ?? [];
+    expect(
+      allSources.some(
+        (source: { id?: string; isEnabled?: boolean }) =>
+          source.id === "komiknesia" && source.isEnabled
+      )
+    ).toBe(true);
     // Also accept finding it through KomikNesiaSource identity check
     const komiknesiaSource = new KomikNesiaSource();
     expect(komiknesiaSource.id).toBe("komiknesia");

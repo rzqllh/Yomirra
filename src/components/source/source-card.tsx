@@ -56,7 +56,7 @@ export function SourceCard({ source, onUpdate }: SourceCardProps & { onUpdate?: 
   };
   
   return (
-    <div className="flex flex-col rounded-2xl border border-border-subtle bg-surface-raised transition-all hover:border-border-strong hover:bg-surface-overlay overflow-hidden shadow-xs">
+    <div className="flex flex-col rounded-xl border border-border-subtle bg-surface-raised transition-all hover:border-border-strong hover:bg-surface-overlay overflow-hidden shadow-xs">
       <div className="flex items-start gap-3.5 p-4 pb-3">
         <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-surface-base border border-border-subtle shadow-inner">
           {source.icon ? (

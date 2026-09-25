@@ -61,7 +61,7 @@ describe("MangaDetailErrorState", () => {
     expect(searchLink.getAttribute("href")).toContain("/search?q=solo%20leveling");
   });
 
-  it("renders disabled state with link to settings", () => {
+  it("renders disabled state with link to sources", () => {
     render(
       <MangaDetailErrorState
         sourceId="komikindo"
@@ -71,8 +71,8 @@ describe("MangaDetailErrorState", () => {
     );
 
     expect(screen.getAllByText(/Sumber "Komikindo" Dinonaktifkan/i).length).toBeGreaterThanOrEqual(1);
-    const settingsLink = screen.getByRole("link", { name: /Buka Pengaturan/i });
-    expect(settingsLink).toBeDefined();
-    expect(settingsLink.getAttribute("href")).toBe("/settings");
+    const sourcesLink = screen.getByRole("link", { name: /Buka Sumber/i });
+    expect(sourcesLink).toBeDefined();
+    expect(sourcesLink.getAttribute("href")).toBe("/sources");
   });
 });

@@ -7,9 +7,9 @@ import { z } from "zod";
 const envSchema = z.object({
   REDIS_URL: z.string().url().default("redis://localhost:6379"),
   NEXT_PUBLIC_APP_URL: z.string().url().default(
-    process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL 
-      ? `https://${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}` 
-      : "https://yomirra.vercel.app"
+    process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}`
+      : "https://www.yomirra.web.id"
   ),
   IMAGE_PROXY_SECRET: z.string().min(32),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
@@ -59,7 +59,7 @@ function getEnv(): Env {
     // at the API route level with proper error handling.
     return {
       REDIS_URL: "redis://localhost:6379",
-      NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || "https://yomirra.vercel.app",
+      NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || "https://www.yomirra.web.id",
       IMAGE_PROXY_SECRET: "build-placeholder-secret-not-used-at-runtime-32chars",
       NODE_ENV: (process.env.NODE_ENV as "development" | "test" | "production") || "production",
       TELEGRAM_BOT_TOKEN: undefined,

@@ -241,63 +241,45 @@ export function ReaderShell({
             <div className="w-full pt-[calc(var(--safe-top)+10px)] pb-3 px-3 flex items-center justify-center pointer-events-none">
               <div
                 className={cn(
-                  "pointer-events-auto relative overflow-hidden flex items-center justify-between w-full max-w-[420px] h-[52px] px-2 rounded-[18px] transition-all duration-300 shadow-sm border",
-                  preferences.background === 'mist'
-                    ? "bg-white/80 backdrop-blur-xl border-black/10 text-gray-900 shadow-md"
-                    : "bg-black/65 backdrop-blur-xl border-white/15 text-white shadow-lg"
+                  "pointer-events-auto relative overflow-hidden flex items-center justify-between w-full max-w-md md:max-w-2xl h-[52px] sm:h-[56px] px-2.5 sm:px-3 rounded-full transition-all duration-300 shadow-xl border",
+                  "bg-surface-overlay/95 backdrop-blur-xl border-border-subtle text-text-primary"
                 )}
               >
-                {/* Left: Back Button (Squircle) */}
+                {/* Left: Back Button */}
                 <motion.button
                   aria-label="Kembali ke detail komik"
-                  whileTap={{ scale: 0.85 }}
-                  className={cn(
-                    "flex h-9 w-9 items-center justify-center rounded-[10px] transition-all shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1",
-                    preferences.background === 'mist'
-                      ? "text-gray-800 hover:bg-black/5"
-                      : "text-white/85 hover:text-white hover:bg-white/10"
-                  )}
+                  whileTap={{ scale: 0.9 }}
+                  className="flex size-9 items-center justify-center rounded-xl bg-surface-raised hover:bg-surface-hover active:scale-95 text-text-secondary hover:text-text-primary border border-border-subtle transition-all shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent"
                   onClick={handleBack}
                 >
-                  <ArrowLeft size={20} weight="bold" />
+                  <ArrowLeft size={18} weight="bold" />
                 </motion.button>
 
                 {/* Center: Manga Title (Top) & Chapter (Bottom) */}
-                <div className="flex flex-col items-center justify-center px-2 min-w-0 flex-1 select-none">
-                  <span className={cn(
-                    "text-sm font-bold truncate max-w-[200px] sm:max-w-[260px] tracking-tight text-center leading-tight",
-                    preferences.background === 'mist' ? "text-gray-950" : "text-white"
-                  )}>
+                <div className="flex flex-col items-center justify-center px-3 min-w-0 flex-1 select-none">
+                  <span className="text-sm sm:text-[15px] font-bold truncate max-w-[220px] sm:max-w-[400px] tracking-tight text-center leading-tight text-text-primary">
                     {mangaTitle || chapterTitle}
                   </span>
                   {mangaTitle && chapterTitle ? (
-                    <span className={cn(
-                      "text-[10px] font-semibold tracking-wider uppercase text-center mt-0.5 truncate max-w-[190px] sm:max-w-[240px]",
-                      preferences.background === 'mist' ? "text-gray-500" : "text-white/60"
-                    )}>
+                    <span className="text-[10.5px] font-semibold tracking-wider uppercase text-center mt-0.5 truncate max-w-[200px] sm:max-w-[360px] text-text-muted">
                       {chapterTitle}
                     </span>
                   ) : pageCount ? (
-                    <span className={cn(
-                      "text-[10px] font-semibold tracking-wider uppercase text-center mt-0.5",
-                      preferences.background === 'mist' ? "text-gray-500" : "text-white/60"
-                    )}>
+                    <span className="text-[10.5px] font-semibold tracking-wider uppercase text-center mt-0.5 text-text-muted">
                       {pageCount} halaman
                     </span>
                   ) : null}
                 </div>
 
-                {/* Right: Bookmark Button (Squircle) */}
+                {/* Right: Bookmark Button */}
                 <motion.button
                   aria-label={isSaved ? "Hapus dari bookmark" : "Simpan ke bookmark"}
-                  whileTap={{ scale: 0.85 }}
+                  whileTap={{ scale: 0.9 }}
                   className={cn(
-                    "flex h-9 w-9 items-center justify-center rounded-[10px] transition-all shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1",
+                    "flex size-9 items-center justify-center rounded-xl transition-all shrink-0 cursor-pointer outline-none border focus-visible:ring-2 focus-visible:ring-accent",
                     isSaved
-                      ? "bg-accent text-white shadow-[0_2px_12px_rgba(99,102,241,0.5),inset_0_1px_0_rgba(255,255,255,0.3)] border border-white/20"
-                      : preferences.background === 'mist'
-                        ? "text-gray-800 hover:bg-black/5"
-                        : "text-white/85 hover:text-white hover:bg-white/10"
+                      ? "bg-accent text-white border-accent shadow-xs"
+                      : "bg-surface-raised border-border-subtle text-text-secondary hover:text-text-primary hover:bg-surface-hover"
                   )}
                   onClick={handleToggleBookmark}
                 >
@@ -308,7 +290,7 @@ export function ReaderShell({
                     transition={{ type: "spring", stiffness: 500, damping: 25 }}
                     className="flex items-center justify-center"
                   >
-                    <BookmarkSimple size={19} weight={isSaved ? "fill" : "bold"} />
+                    <BookmarkSimple size={18} weight={isSaved ? "fill" : "bold"} />
                   </motion.div>
                 </motion.button>
 
@@ -378,19 +360,31 @@ export function ReaderShell({
                 </motion.button>
               )}
 
-              {/* iOS Liquid Glass Concentric Squircle Dock */}
-              <div className="pointer-events-auto flex h-[58px] w-full max-w-[420px] mx-auto items-center justify-between gap-1.5 rounded-[22px] liquid-glass text-text-primary px-2.5 transition-all duration-300">
+              {/* Floating Back to Top Button */}
+              {showBackToTop && (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.8, y: 10 }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  className="pointer-events-auto self-end flex size-10 items-center justify-center rounded-xl bg-surface-overlay/95 backdrop-blur-xl border border-border-subtle text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-all active:scale-95 cursor-pointer outline-none shadow-lg focus-visible:ring-2 focus-visible:ring-accent"
+                  aria-label="Kembali ke atas"
+                >
+                  <CaretUp size={18} weight="bold" />
+                </motion.button>
+              )}
 
-
+              {/* Yomirra Ink Editorial Bottom Dock */}
+              <div className="pointer-events-auto flex h-[58px] sm:h-[62px] w-full max-w-[440px] sm:max-w-[480px] mx-auto items-center justify-between gap-2 rounded-full bg-surface-overlay/95 backdrop-blur-xl border border-border-subtle text-text-primary px-3 shadow-2xl transition-all duration-300">
                 <motion.button
                   aria-label="Chapter sebelumnya"
-                  whileTap={{ scale: 0.85 }}
+                  whileTap={{ scale: 0.9 }}
                   className={cn(
-                    "flex h-10 w-10 items-center justify-center rounded-[12px] transition-all shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1",
-                    preferences.background === 'mist'
-                      ? "text-gray-800 hover:bg-black/5"
-                      : "text-white/80 hover:text-white hover:bg-white/10",
-                    !prevChapterId && "opacity-25 cursor-not-allowed pointer-events-none"
+                    "flex size-10 items-center justify-center rounded-xl bg-surface-raised hover:bg-surface-hover text-text-secondary hover:text-text-primary border border-border-subtle transition-all shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent",
+                    !prevChapterId && "opacity-30 cursor-not-allowed pointer-events-none"
                   )}
                   disabled={!prevChapterId}
                   onClick={(e) => {
@@ -405,26 +399,23 @@ export function ReaderShell({
                 </motion.button>
 
                 <motion.button
-                  whileTap={{ scale: 0.95 }}
-                  className="flex-1 h-10 rounded-[12px] font-bold text-sm bg-accent hover:bg-accent-hover text-white shadow-[0_4px_16px_rgba(108,106,250,0.4),inset_0_1px_0_rgba(255,255,255,0.3)] transition-all truncate px-2.5 sm:px-3 flex items-center justify-center cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1"
+                  whileTap={{ scale: 0.97 }}
+                  className="flex-1 h-10 rounded-xl font-bold text-sm bg-accent hover:bg-accent-hover text-white shadow-xs transition-all truncate px-3 flex items-center justify-center gap-1.5 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent active:scale-[0.98]"
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsChapterDrawerOpen(true);
                   }}
                 >
-                  <List size={18} weight="bold" className="mr-1.5 shrink-0" />
+                  <List size={18} weight="bold" className="shrink-0" />
                   <span className="truncate">Daftar Chapter</span>
                 </motion.button>
 
                 <motion.button
                   aria-label="Chapter selanjutnya"
-                  whileTap={{ scale: 0.85 }}
+                  whileTap={{ scale: 0.9 }}
                   className={cn(
-                    "flex h-10 w-10 items-center justify-center rounded-[12px] transition-all shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1",
-                    preferences.background === 'mist'
-                      ? "text-gray-800 hover:bg-black/5"
-                      : "text-white/80 hover:text-white hover:bg-white/10",
-                    !nextChapterId && "opacity-25 cursor-not-allowed pointer-events-none"
+                    "flex size-10 items-center justify-center rounded-xl bg-surface-raised hover:bg-surface-hover text-text-secondary hover:text-text-primary border border-border-subtle transition-all shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent",
+                    !nextChapterId && "opacity-30 cursor-not-allowed pointer-events-none"
                   )}
                   disabled={!nextChapterId}
                   onClick={(e) => {
@@ -440,13 +431,8 @@ export function ReaderShell({
 
                 <motion.button
                   aria-label="Pengaturan pembaca"
-                  whileTap={{ scale: 0.85 }}
-                  className={cn(
-                    "flex h-10 w-10 items-center justify-center rounded-[12px] transition-all shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1",
-                    preferences.background === 'mist'
-                      ? "text-gray-800 hover:bg-black/5"
-                      : "text-white/80 hover:text-white hover:bg-white/10"
-                  )}
+                  whileTap={{ scale: 0.9 }}
+                  className="flex size-10 items-center justify-center rounded-xl bg-surface-raised hover:bg-surface-hover text-text-secondary hover:text-text-primary border border-border-subtle transition-all shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent"
                   onClick={(e) => {
                     e.stopPropagation();
                     if (window.innerWidth >= 768) {

@@ -34,17 +34,17 @@ export default function GlobalError({
         <motion.div
           animate={{ y: [-10, 10, -10], rotate: [-2, 2, -2] }}
           transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-[10%] left-[-5%] md:top-[15%] md:left-[15%] w-32 h-40 bg-white/40 dark:bg-white/5 border border-white/20 rounded-2xl shadow-glass opacity-60 backdrop-blur-md rotate-12"
+          className="absolute top-[10%] left-[-5%] md:top-[15%] md:left-[15%] w-32 h-40 bg-white/40 dark:bg-white/5 border border-white/20 rounded-xl shadow-glass opacity-60 backdrop-blur-md rotate-12"
         />
         <motion.div
           animate={{ y: [15, -15, 15], rotate: [4, -4, 4] }}
           transition={{ duration: 8, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-          className="absolute bottom-[10%] right-[-10%] md:bottom-[20%] md:right-[15%] w-48 h-32 bg-white/40 dark:bg-white/5 border border-white/20 rounded-2xl shadow-glass opacity-50 backdrop-blur-md -rotate-6"
+          className="absolute bottom-[10%] right-[-10%] md:bottom-[20%] md:right-[15%] w-48 h-32 bg-white/40 dark:bg-white/5 border border-white/20 rounded-xl shadow-glass opacity-50 backdrop-blur-md -rotate-6"
         />
         <motion.div
           animate={{ y: [-15, 15, -15], x: [-5, 5, -5] }}
           transition={{ duration: 7, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-          className="absolute top-[30%] right-[0%] md:top-[25%] md:right-[30%] w-20 h-20 bg-white/30 dark:bg-white/5 border border-white/20 rounded-2xl shadow-glass opacity-40 backdrop-blur-sm rotate-45"
+          className="absolute top-[30%] right-[0%] md:top-[25%] md:right-[30%] w-20 h-20 bg-white/30 dark:bg-white/5 border border-white/20 rounded-xl shadow-glass opacity-40 backdrop-blur-sm rotate-45"
         />
       </div>
 
@@ -117,7 +117,7 @@ export default function GlobalError({
           <div className="flex-1 h-px bg-border-default"></div>
         </div>
 
-        <div className="flex items-start gap-4 p-4 rounded-2xl bg-surface-base border border-border-default/50 text-left mt-2">
+        <div className="flex items-start gap-4 p-4 rounded-xl bg-surface-base border border-border-default/50 text-left mt-2">
           <div className="w-10 h-10 rounded-full bg-surface-raised flex items-center justify-center shrink-0 border border-border-default shadow-xs">
             <Question size={20} weight="duotone" className="text-text-secondary" />
           </div>

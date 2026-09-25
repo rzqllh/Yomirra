@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence, LayoutGroup } from "motion/react";
+import { motion, LayoutGroup, useReducedMotion } from "motion/react";
 import { 
   Funnel, 
   SmileySad, 
@@ -12,7 +12,7 @@ import {
 } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/states/empty-state";
 import { Button } from "@/components/ui/button";
-import { MangaGrid, MANGA_GRID_CLASS, MANGA_COMPACT_GRID_CLASS } from "@/components/manga/manga-grid";
+import { MANGA_GRID_CLASS, MANGA_COMPACT_GRID_CLASS } from "@/components/manga/manga-grid";
 import { ShelfCard } from "@/components/manga/card";
 import { CompactCard } from "@/components/manga/card/compact-card";
 import { MangaGridSkeleton } from "@/components/skeletons/manga-grid-skeleton";
@@ -83,6 +83,7 @@ export function LibraryResults({
   onToggleSelectItem,
 }: LibraryResultsProps) {
   const router = useRouter();
+  const reducedMotion = useReducedMotion();
 
   if (isDisabled) {
     return (
@@ -172,11 +173,11 @@ export function LibraryResults({
     <>
       <LayoutGroup id="library-listing-cards">
         <motion.div
-          layout
-          transition={{ layout: { type: "spring", stiffness: 320, damping: 30 } }}
+          layout={reducedMotion ? false : true}
+          transition={reducedMotion ? { duration: 0 } : { layout: { type: "spring", stiffness: 320, damping: 30 } }}
           className={cn(
             viewMode === "compact" || viewMode === "list" ? MANGA_COMPACT_GRID_CLASS : MANGA_GRID_CLASS,
-            "transition-opacity duration-200",
+            "transition-opacity duration-200 motion-reduce:transition-none",
             isFetching ? "opacity-50 pointer-events-none" : "opacity-100"
           )}
         >
@@ -186,26 +187,29 @@ export function LibraryResults({
 
             return (
               <div key={manga.id} className="relative group w-full">
-                {viewMode === "grid" ? (
-                  <ShelfCard manga={manga} sourceId={activeSourceId} showSourceBadge={true} />
-                ) : (
-                  <CompactCard manga={manga} sourceId={activeSourceId} showSourceBadge={true} />
-                )}
+                <div inert={isSelectionMode ? true : undefined}>
+                  {viewMode === "grid" ? (
+                    <ShelfCard manga={manga} sourceId={activeSourceId} showSourceBadge={true} />
+                  ) : (
+                    <CompactCard manga={manga} sourceId={activeSourceId} showSourceBadge={true} />
+                  )}
+                </div>
                 {isSelectionMode && onToggleSelectItem && (
                   <button
                     type="button"
                     onClick={() => onToggleSelectItem(itemKey)}
                     className={cn(
-                      "absolute inset-0 z-20 rounded-xl flex items-start justify-end p-2.5 transition-all duration-200",
+                      "absolute inset-0 z-20 rounded-xl flex items-start justify-end p-2.5 motion-safe:transition-all motion-safe:duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
                       isSelected
                         ? "bg-accent/15 border-2 border-accent"
                         : "bg-surface-overlay/75 hover:bg-surface-overlay/90 border border-border-strong focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                     )}
                     aria-label={`${isSelected ? "Batal pilih" : "Pilih"} ${manga.title}`}
+                    aria-pressed={Boolean(isSelected)}
                   >
-                    <div
+                      <div
                       className={cn(
-                        "w-6 h-6 rounded-lg flex items-center justify-center transition-transform duration-200",
+                        "w-6 h-6 rounded-lg flex items-center justify-center motion-safe:transition-transform motion-safe:duration-200",
                         isSelected
                           ? "bg-accent text-accent-on scale-110"
                           : "bg-surface-raised border border-border-strong"

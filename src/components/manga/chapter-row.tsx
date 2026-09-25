@@ -39,69 +39,70 @@ export function ChapterRow({
   }, [date]);
 
   return (
-    <Link
-      href={getReaderHref(sourceId, mangaId, chapterId)}
+    <article
       className={cn(
-        "group relative flex items-center justify-between py-4 px-1 border-b border-border-default/30 bg-transparent transition-colors duration-200 ease-out",
-        isLastRead
-          ? "bg-accent/5"
-          : "hover:bg-surface-hover",
+        "group relative flex items-center border-b border-border-default/30 bg-transparent motion-safe:transition-colors motion-safe:duration-200 motion-safe:ease-out",
+        isLastRead ? "bg-accent/5" : "hover:bg-surface-hover",
         !isRead && !isLastRead ? "opacity-100" : "opacity-70"
       )}
     >
-      <div className="flex flex-col flex-1 min-w-0 pr-4">
-        <div className="flex items-center gap-2 mb-0.5">
-          <h4 className={cn(
-            "text-[14px] font-bold tracking-tight truncate transition-colors duration-300",
-            isLastRead ? "text-accent" : "text-text-primary group-hover:text-accent"
-          )}>
-            {chapterTitle}
-          </h4>
-          {isLocked && (
-            <div className="flex items-center gap-1 rounded-[5px] bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-amber-500 ring-1 ring-inset ring-amber-500/20 shrink-0">
-              <Lock size={11} weight="bold" />
-              <span>Terkunci</span>
+      <Link
+        href={getReaderHref(sourceId, mangaId, chapterId)}
+        aria-label={`Baca ${chapterTitle}`}
+        className="flex min-w-0 flex-1 items-center justify-between px-1 py-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      >
+        <div className="flex min-w-0 flex-1 flex-col pr-4">
+          <div className="flex items-center gap-2 mb-0.5">
+            <h4 className={cn(
+              "text-[14px] font-bold tracking-tight truncate motion-safe:transition-colors motion-safe:duration-300",
+              isLastRead ? "text-accent" : "text-text-primary group-hover:text-accent"
+            )}>
+              {chapterTitle}
+            </h4>
+            {isLocked && (
+              <div className="flex items-center gap-1 rounded-[5px] bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-amber-500 ring-1 ring-inset ring-amber-500/20 shrink-0">
+                <Lock size={11} weight="bold" />
+                <span>Terkunci</span>
+              </div>
+            )}
+            {!isRead && !isLastRead && !isLocked && (
+              <span className="w-1.5 h-1.5 rounded-full bg-accent shrink-0 shadow-[0_0_8px_rgba(91,101,233,0.5)]" />
+            )}
+          </div>
+          <p className="text-[11px] text-text-muted font-medium truncate">
+            {formattedDate}
+          </p>
+        </div>
+
+        <div className="flex shrink-0 items-center gap-3">
+          {isLastRead && (
+            <div className="flex items-center justify-center rounded-[6px] bg-accent/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-accent ring-1 ring-inset ring-accent/20">
+              Terakhir
             </div>
           )}
-          {!isRead && !isLastRead && !isLocked && (
-            <span className="w-1.5 h-1.5 rounded-full bg-accent shrink-0 shadow-[0_0_8px_rgba(91,101,233,0.5)]" />
+          {isLocked && (
+            <span
+              className="flex size-11 shrink-0 items-center justify-center rounded-full bg-amber-500/10 text-amber-500"
+              title="Chapter terkunci di sumber asli"
+            >
+              <Lock size={16} weight="bold" />
+            </span>
           )}
+          <CaretLeft size={16} className="shrink-0 rotate-180 text-text-muted/40 group-hover:text-accent" />
         </div>
-        <p className="text-[11px] text-text-muted font-medium truncate">
-          {formattedDate}
-        </p>
-      </div>
+      </Link>
 
-      <div className="flex items-center gap-3 shrink-0">
-        {isLastRead && (
-          <div className="flex items-center justify-center rounded-[6px] bg-accent/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-accent ring-1 ring-inset ring-accent/20">
-            Terakhir
-          </div>
-        )}
-        {isLocked ? (
-          <div
-            className="flex items-center justify-center w-9 h-9 rounded-full bg-amber-500/10 text-amber-500 shrink-0"
-            title="Chapter terkunci di sumber asli"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <Lock size={16} weight="bold" />
-          </div>
-        ) : (
-          <div
-            className="flex items-center justify-center w-9 h-9 rounded-full bg-accent/10 text-accent transition-opacity opacity-70 group-hover:opacity-100 shrink-0"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <ChapterDownloadButton
-              sourceId={sourceId}
-              mangaId={mangaId}
-              chapterId={chapterId}
-              chapterTitle={chapterTitle}
-              mangaTitle={mangaTitle}
-            />
-          </div>
-        )}
-        <CaretLeft size={16} className="text-text-muted/40 group-hover:text-accent shrink-0 rotate-180" />
-      </div>
-    </Link>
+      {!isLocked && (
+        <div className="shrink-0 rounded-sm bg-accent/10 text-accent opacity-70 motion-safe:transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+          <ChapterDownloadButton
+            sourceId={sourceId}
+            mangaId={mangaId}
+            chapterId={chapterId}
+            chapterTitle={chapterTitle}
+            mangaTitle={mangaTitle}
+          />
+        </div>
+      )}
+    </article>
   )
 }

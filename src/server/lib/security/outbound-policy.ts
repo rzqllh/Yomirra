@@ -162,6 +162,8 @@ export async function safeFetch(url: string, options: SafeFetchOptions = {}): Pr
       req.on("error", (err) => {
         if (err.message.includes("SECURITY_REJECTED")) {
           reject(new Error(err.message));
+        } else if (options.signal?.aborted || err.name === "AbortError" || err.message.includes("aborted")) {
+          reject(new Error("Request timeout: Permintaan ke server sumber melebihi batas waktu (timeout)."));
         } else {
           reject(new Error(`Fetch error: ${err.message}`));
         }

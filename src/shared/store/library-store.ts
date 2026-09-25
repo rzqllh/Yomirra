@@ -148,10 +148,24 @@ export const useLibraryStore = create<LibraryState>()(
       },
 
       _setItemLocal: (item) => set((state) => {
-        // Use SavedTitleId as key if present, else legacy composite key
-        const key = item.id ?? getLibraryId(item.sourceId, item.mangaId);
+        const legacyId = getLibraryId(item.sourceId, item.mangaId);
+        const targetKey = item.id ?? legacyId;
+        // ponytail: clean duplicate keys for same manga to prevent duplicate render in library
+        const newItems: Record<string, LibraryItem> = {};
+        for (const [k, existing] of Object.entries(state.items)) {
+          const isSame =
+            k === targetKey ||
+            k === legacyId ||
+            (item.id && (k === item.id || existing.id === item.id)) ||
+            (existing.sourceId === item.sourceId && existing.mangaId === item.mangaId) ||
+            (existing.primarySourceId === item.sourceId && existing.primaryMangaId === item.mangaId);
+          if (!isSame) {
+            newItems[k] = existing;
+          }
+        }
+        newItems[targetKey] = item;
         return {
-          items: enforceItemCap({ ...state.items, [key]: item })
+          items: enforceItemCap(newItems)
         };
       }),
 

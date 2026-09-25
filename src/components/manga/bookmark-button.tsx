@@ -4,7 +4,6 @@ import * as React from "react";
 import { useMounted } from "@/shared/hooks/use-mounted";
 import { BookmarkSimple } from "@phosphor-icons/react";
 import type { MangaItem } from "@/shared/types/source";
-import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { cn } from "@/shared/utils/cn";
 
@@ -13,7 +12,6 @@ export function BookmarkButton({ sourceId, manga, className }: { sourceId: strin
   const rawIsInLibrary = useLibraryStore((state) => state.isInLibrary(sourceId, manga.id));
   const isInLibrary = isMounted ? rawIsInLibrary : false;
   const toggleLibrary = useLibraryStore((state) => state.toggleLibrary);
-  const reducedMotion = useReducedMotion();
 
   const handleBookmarkClick = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -45,49 +43,21 @@ export function BookmarkButton({ sourceId, manga, className }: { sourceId: strin
   };
 
   return (
-    <motion.button 
+    <button
+      type="button"
       onClick={handleBookmarkClick}
-      whileTap={reducedMotion ? undefined : { scale: 0.9 }}
       className={cn(
-        "relative grid size-11 place-items-center rounded-[12px] border border-border-subtle bg-surface-overlay/95 text-text-primary shadow-sm transition-colors hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
-        isInLibrary && 'text-accent',
+        "relative grid size-11 place-items-center rounded-[12px] border border-border-subtle bg-surface-base/95 text-text-primary shadow-xs transition-all hover:bg-surface-hover hover:border-accent/40 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent motion-reduce:transition-none motion-reduce:transform-none cursor-pointer",
+        isInLibrary ? "text-accent bg-accent-dim border-accent/40" : "text-text-secondary",
         className
       )}
       aria-label={isInLibrary ? `Hapus ${manga.title} dari rak` : `Simpan ${manga.title} ke rak`}
       aria-pressed={isInLibrary}
     >
-      <AnimatePresence mode="wait" initial={false}>
-        {isInLibrary ? (
-          <motion.span
-            key="saved"
-            initial={reducedMotion ? false : { scale: 0.3, opacity: 0 }}
-            animate={{ 
-              scale: reducedMotion ? 1 : [0.3, 1.3, 0.9, 1.1, 1],
-              opacity: 1 
-            }}
-            exit={reducedMotion ? undefined : { scale: 0.3, opacity: 0 }}
-            transition={{ 
-              duration: reducedMotion ? 0 : 0.5,
-              times: [0, 0.4, 0.6, 0.8, 1],
-              ease: "easeOut"
-            }}
-            className="absolute inset-0 flex items-center justify-center"
-          >
-            <BookmarkSimple size={18} weight="fill" />
-          </motion.span>
-        ) : (
-          <motion.span
-            key="idle"
-            initial={reducedMotion ? false : { scale: 0.6, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={reducedMotion ? undefined : { scale: 0.6, opacity: 0 }}
-            transition={{ duration: reducedMotion ? 0 : 0.15 }}
-            className="absolute inset-0 flex items-center justify-center"
-          >
-            <BookmarkSimple size={18} weight="regular" />
-          </motion.span>
-        )}
-      </AnimatePresence>
-    </motion.button>
+      <span className="icon-morph" aria-hidden="true">
+        <BookmarkSimple size={18} weight="regular" />
+        <BookmarkSimple size={18} weight="fill" className="text-accent" />
+      </span>
+    </button>
   );
 }

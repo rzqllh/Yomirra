@@ -53,7 +53,9 @@ export function CollectionToolbar({
           <Button
             variant={isSelectionMode ? "accent" : "outline"}
             onClick={onToggleSelectionMode}
-            className="h-[44px] w-[44px] sm:w-auto sm:px-4 rounded-2xl font-bold gap-1.5 shrink-0"
+            className="h-[44px] w-[44px] sm:w-auto sm:px-4 rounded-full font-bold gap-1.5 shrink-0"
+            aria-label={isSelectionMode ? "Batal pilih manga" : "Pilih manga"}
+            aria-pressed={isSelectionMode}
           >
             <CheckCircle size={18} weight={isSelectionMode ? "fill" : "bold"} />
             <span className="hidden sm:inline">Pilih</span>

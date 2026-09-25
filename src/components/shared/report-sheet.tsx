@@ -208,7 +208,7 @@ export function ReportSheet({
           <div className="flex gap-2.5">
             <Button
               variant="outline"
-              className="h-11 px-4 rounded-2xl font-semibold border-border-default"
+              className="h-11 px-4 rounded-full font-semibold border-border-default"
               onClick={() => onOpenChange(false)}
               disabled={isSending}
             >
@@ -216,7 +216,7 @@ export function ReportSheet({
             </Button>
             <Button
               variant="accent"
-              className="flex-1 h-11 rounded-2xl font-semibold"
+              className="flex-1 h-11 rounded-full font-semibold"
               onClick={handleSend}
               disabled={isSending || !selected}
             >

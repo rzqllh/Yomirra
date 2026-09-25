@@ -63,6 +63,7 @@ export function LibraryToolbar({
           onClick={onToggleSelectionMode}
           className="shrink-0 min-h-11 px-4"
           aria-label={isSelectionMode ? "Batal pilih" : "Pilih manga"}
+          aria-pressed={Boolean(isSelectionMode)}
         >
           {isSelectionMode ? "Batal" : "Pilih"}
         </Button>

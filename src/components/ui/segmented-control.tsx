@@ -40,9 +40,9 @@ export function SegmentedControl({
   const isGlass = variant === "glass-floating";
 
   // - Pill: Both outer container and inner indicator are rounded-full.
-  // - Rounded: Outer rounded-2xl with p-1 padding requires inner rounded-md (14px squircle)
+  // - Rounded: Outer rounded-xl with p-1 padding requires inner rounded-md (14px squircle)
   //   satisfying R_inner = R_outer - padding to prevent corner pinching/bulging.
-  const containerRadiusClass = isPill ? "rounded-full" : "rounded-2xl";
+  const containerRadiusClass = isPill ? "rounded-full" : "rounded-xl";
   const itemRadiusClass = isPill ? "rounded-full" : "rounded-md";
 
   return (

@@ -49,7 +49,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       
       <div className={cn(
         "flex-1 flex flex-col min-h-dvh transition-all min-w-0 duration-300 ease-in-out w-full",
-        !isReader && "md:pl-[76px] xl:pl-[220px]"
+        !isReader && "md:pl-[76px] xl:pl-[240px]"
       )}>
         {!isReader && <TopNav />}
         {!isReader && <DesktopRail />}

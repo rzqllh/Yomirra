@@ -63,7 +63,7 @@ vi.mock("@/env", () => ({
     TELEGRAM_WEBHOOK_SECRET: "mock-webhook-secret",
     OPS_CRON_SECRET: "mock-cron-secret",
     NODE_ENV: "test",
-    NEXT_PUBLIC_APP_URL: "https://yomirra.vercel.app",
+    NEXT_PUBLIC_APP_URL: "https://www.yomirra.web.id",
   },
 }));
 

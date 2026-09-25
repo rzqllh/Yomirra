@@ -75,7 +75,7 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
             <Button 
               onClick={() => router.push("/downloads")}
               size="lg"
-              className="rounded-2xl gap-2 font-bold px-6"
+              className="rounded-full gap-2 font-bold px-6"
             >
               <HardDrives size={20} weight="fill" />
               Manajer Unduhan
@@ -84,7 +84,7 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
               onClick={() => router.push("/")}
               variant="outline"
               size="lg"
-              className="rounded-2xl gap-2 font-semibold px-6"
+              className="rounded-full gap-2 font-semibold px-6"
             >
               Pustaka Saya
             </Button>

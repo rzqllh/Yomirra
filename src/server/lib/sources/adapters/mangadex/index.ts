@@ -18,7 +18,8 @@ import {
   normalizeChapter,
 } from "./normalizer";
 import { getMangaDexFilters } from "./tag-cache";
-import { acquireToken } from "./throttle";
+import { acquireToken, type AcquireTokenOptions } from "./throttle";
+import { createMangaDexTransport } from "./transport";
 
 const API_BASE = "https://api.mangadex.org";
 const PAGE_SIZE = 24;
@@ -46,54 +47,72 @@ export function parseRetryAfter(headerVal: string | null): number {
   return FALLBACK_RETRY_DELAY_MS;
 }
 
-/** Throttled fetch wrapper for MangaDex API with bounded 429 retry */
-export async function mdFetch<T>(path: string, params?: Record<string, string | string[]>, init?: RequestInit): Promise<T> {
-  const url = new URL(`${API_BASE}${path}`);
-  if (params) {
-    for (const [key, val] of Object.entries(params)) {
-      if (Array.isArray(val)) {
-        val.forEach(v => url.searchParams.append(key, v));
-      } else {
-        url.searchParams.set(key, val);
+type MangaDexTransport = ReturnType<typeof createMangaDexTransport>;
+
+interface MdFetchDependencies {
+  transport?: MangaDexTransport;
+  acquire?: (options?: AcquireTokenOptions) => Promise<void>;
+}
+
+/** Throttled fetch wrapper for MangaDex API with bounded 429 retry. */
+export function createMdFetch(dependencies: MdFetchDependencies = {}) {
+  const transport = dependencies.transport ?? createMangaDexTransport();
+  const acquire = dependencies.acquire ?? acquireToken;
+
+  return async function mdFetch<T>(
+    path: string,
+    params?: Record<string, string | string[]>,
+    init?: RequestInit
+  ): Promise<T> {
+    const url = new URL(`${API_BASE}${path}`);
+    if (params) {
+      for (const [key, val] of Object.entries(params)) {
+        if (Array.isArray(val)) {
+          val.forEach(v => url.searchParams.append(key, v));
+        } else {
+          url.searchParams.set(key, val);
+        }
       }
     }
-  }
 
-  const timeoutSignal = AbortSignal.timeout(15000);
-  const signal = init?.signal ? AbortSignal.any([timeoutSignal, init.signal]) : timeoutSignal;
+    const options: RequestInit = {
+      cache: "no-store",
+      ...init,
+      headers: {
+        Accept: "application/json",
+        "User-Agent": "Yomirra/1.0.0 (https://github.com/rzqllh/Yomirra)",
+        ...(init?.headers || {}),
+      },
+    };
+    const context = transport.createContext(15000, init?.signal ?? undefined);
 
-  const fullUrl = url.toString();
-  const options: RequestInit = {
-    cache: "no-store",
-    ...init,
-    signal,
-    headers: { 
-      Accept: "application/json",
-      "User-Agent": "Yomirra/1.0.0 (https://github.com/rzqllh/Yomirra)",
-      ...(init?.headers || {})
-    },
+    context.callerSignal?.throwIfAborted();
+    await acquire({ signal: context.callerSignal, deadlineMs: context.deadlineMs });
+    let result = await transport.request(url, options, context);
+
+    if (result.response.status === 429) {
+      context.callerSignal?.throwIfAborted();
+      const retryAfterHeader = result.response.headers.get("retry-after");
+      const sleepMs = parseRetryAfter(retryAfterHeader);
+      if (transport.remaining(context) - sleepMs >= 2000) {
+        await transport.sleep(sleepMs, context);
+        context.callerSignal?.throwIfAborted();
+        await acquire({ signal: context.callerSignal, deadlineMs: context.deadlineMs });
+        result = await transport.request(url, options, context, result.route);
+      }
+    }
+
+    if (!result.response.ok) {
+      throw new Error(
+        `MangaDex API error ${result.response.status}: ${result.response.statusText}`
+      );
+    }
+
+    return result.response.json() as Promise<T>;
   };
-
-  await acquireToken();
-  let res = await fetch(fullUrl, options);
-
-  if (res.status === 429) {
-    signal.throwIfAborted?.();
-    const retryAfterHeader = res.headers ? res.headers.get("retry-after") : null;
-    const sleepMs = parseRetryAfter(retryAfterHeader);
-    await new Promise((r) => setTimeout(r, sleepMs));
-    signal.throwIfAborted?.();
-
-    await acquireToken();
-    res = await fetch(fullUrl, options);
-  }
-
-  if (!res.ok) {
-    throw new Error(`MangaDex API error ${res.status}: ${res.statusText}`);
-  }
-
-  return res.json() as Promise<T>;
 }
+
+export const mdFetch = createMdFetch();
 
 export class MangaDexSource implements MangaSource {
   id = "mangadex";
@@ -292,4 +311,3 @@ export class MangaDexSource implements MangaSource {
     return getMangaDexFilters();
   }
 }
-

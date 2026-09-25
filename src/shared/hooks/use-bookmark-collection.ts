@@ -38,7 +38,16 @@ export function useBookmarkCollection() {
 
   const filteredAndSortedLibraryItems = React.useMemo(() => {
     if (!isMounted) return [];
-    let result = [...libraryItems];
+    // ponytail: deduplicate items by sourceId::mangaId to guarantee unique keys in UI
+    const seen = new Set<string>();
+    let result: typeof libraryItems = [];
+    for (const item of libraryItems) {
+      const key = `${item.sourceId}::${item.mangaId}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        result.push(item);
+      }
+    }
 
     result = result.filter((item) => {
       if (isSourceDisabled(item.sourceId)) return false;

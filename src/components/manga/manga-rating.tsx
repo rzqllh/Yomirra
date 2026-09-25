@@ -129,7 +129,7 @@ export function MangaRating({ sourceId, mangaId, className, variant = "default",
       <DropdownMenuTrigger asChild>
         {triggerButton}
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-[280px] p-4 bg-surface-overlay/95 backdrop-blur-xl border-border-default shadow-heavy rounded-2xl">
+      <DropdownMenuContent align="start" className="w-[280px] p-4 bg-surface-overlay/95 backdrop-blur-xl border-border-default shadow-heavy rounded-xl">
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <span className="font-bold text-sm text-text-primary">Beri Rating</span>

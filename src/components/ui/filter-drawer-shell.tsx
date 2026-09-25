@@ -85,7 +85,7 @@ export function FilterDrawerShell({
           <Button
             variant={activeCount > 0 ? "accent" : "outline"}
             className={cn(
-              "rounded-2xl font-bold px-4 h-[44px] gap-1.5 transition-all duration-300 border-border-subtle",
+              "rounded-full font-bold px-4 h-[44px] gap-1.5 transition-all duration-300 border-border-subtle",
               activeCount > 0 ? "border-accent/30" : "bg-surface-glass backdrop-blur-md"
             )}
           >
@@ -131,7 +131,7 @@ export function FilterDrawerShell({
             <Button
               variant="primary"
               onClick={handleApply}
-              className="w-full h-12 rounded-2xl text-[15px] font-bold"
+              className="w-full h-12 rounded-full text-[15px] font-bold"
             >
               {applyLabel}
             </Button>

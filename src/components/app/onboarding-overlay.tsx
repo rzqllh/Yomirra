@@ -40,10 +40,10 @@ const FALLBACK_COVERS = [
 
 function getCardStyle(index: number, currentStep: number, totalCards: number) {
   const offset = (index - (currentStep % totalCards) + totalCards) % totalCards;
-  if (offset === 0) return { rotate: 0, y: 0, scale: 1, zIndex: 10, opacity: 1, x: 0 };
-  if (offset === 1) return { rotate: 7, y: 15, scale: 0.95, zIndex: 5, opacity: 0.9, x: 15 };
-  if (offset === 2) return { rotate: -7, y: 15, scale: 0.95, zIndex: 4, opacity: 0.9, x: -15 };
-  return { rotate: 0, y: 30, scale: 0.9, zIndex: 1, opacity: 0, x: 0 };
+  if (offset === 0) return { y: 0, scale: 1, zIndex: 10, opacity: 1, filter: "brightness(100%)" };
+  if (offset === 1) return { y: -16, scale: 0.92, zIndex: 5, opacity: 0.65, filter: "brightness(88%)" };
+  if (offset === 2) return { y: -30, scale: 0.84, zIndex: 3, opacity: 0.35, filter: "brightness(75%)" };
+  return { y: -42, scale: 0.78, zIndex: 1, opacity: 0, filter: "brightness(60%)" };
 }
 
 export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
@@ -136,43 +136,67 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
     setIsReadyToExit(true);
   };
 
+  // Keyboard navigation support
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        handleNext();
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        setStep(prev => Math.max(0, prev - 1));
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        handleComplete();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [step]);
+
   if (!isMounted) return null;
 
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      exit={{ opacity: 0, scale: 1.05 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-      className="fixed inset-0 z-[9000] flex flex-col bg-background h-[100dvh] overflow-hidden"
+      exit={{ opacity: 0, scale: 1.02 }}
+      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+      className="fixed inset-0 z-[9000] flex flex-col bg-surface-base text-text-primary h-[100dvh] overflow-hidden select-none"
     >
-      <div className="absolute inset-0 z-0 pointer-events-none opacity-40">
-        <div className="absolute top-[-20%] left-[-10%] w-[140%] h-[140%] bg-accent/20 blur-[120px] rounded-full" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[120%] h-[120%] bg-accent/10 blur-[100px] rounded-full" />
+      {/* Subtle adaptive ambient aura */}
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden flex items-center justify-center">
+        <div className="w-[500px] h-[500px] bg-accent/6 dark:bg-accent/14 blur-[120px] rounded-full pointer-events-none" />
       </div>
 
-      {/* Header (Safe Area Respected) */}
-      <div className="relative z-10 flex items-center justify-between px-6 pt-[calc(var(--safe-top,env(safe-area-inset-top))+20px)] w-full">
+      {/* Header */}
+      <header className="relative z-10 flex items-center justify-between px-6 pt-[calc(var(--safe-top,env(safe-area-inset-top))+16px)] w-full">
         <div className="flex items-center gap-2.5">
-          <img
-            src="/icon-pwa.png"
-            alt="Yomirra"
-            width={32}
-            height={32}
-            className="size-8 rounded-[8px] object-contain drop-shadow-sm select-none"
-          />
-          <span className="font-bold tracking-tight text-lg text-text-primary">Yomirra</span>
+          <div className="size-8 rounded-xl overflow-hidden bg-surface-raised border border-border-subtle shadow-xs p-0.5 flex items-center justify-center">
+            <img
+              src="/icon-pwa.png"
+              alt="Yomirra"
+              width={28}
+              height={28}
+              className="w-full h-full object-cover rounded-[8px] select-none"
+            />
+          </div>
+          <span className="font-extrabold tracking-tight text-base sm:text-lg text-text-primary">
+            Yomirra
+          </span>
         </div>
         <button
+          type="button"
           onClick={handleComplete}
-          className="px-4 py-1.5 rounded-full text-sm font-medium text-text-muted hover:text-text-primary hover:bg-surface-raised active:bg-surface-raised/80 transition-colors"
+          className="px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold text-text-muted hover:text-text-primary hover:bg-surface-raised active:scale-95 transition-all cursor-pointer"
         >
           Lewati
         </button>
-      </div>
+      </header>
 
-      <div className="relative z-10 flex-1 flex items-center justify-center w-full px-4 min-h-0">
-        <div className="relative flex items-center justify-center w-full max-w-[260px] h-[340px] sm:max-w-[280px] sm:h-[380px]">
+      {/* Straight Depth Stack Showcase */}
+      <main className="relative z-10 flex-1 flex items-center justify-center w-full px-4 min-h-0">
+        <div className="relative flex items-center justify-center w-full max-w-[260px] h-[320px] sm:max-w-[280px] sm:h-[360px]">
           {covers.map((url, i) => {
             const style = getCardStyle(i, step, covers.length);
             return (
@@ -180,13 +204,12 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
                 key={`cover-${i}`}
                 animate={{
                   y: style.y,
-                  rotate: style.rotate,
                   scale: style.scale,
                   opacity: style.opacity,
-                  x: style.x
+                  filter: style.filter,
                 }}
-                transition={{ type: "spring", stiffness: 300, damping: 25, mass: 1 }}
-                className="absolute w-[200px] h-[280px] sm:w-[220px] sm:h-[320px] rounded-[24px] overflow-hidden shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] border border-white/5 bg-surface-raised"
+                transition={{ type: "spring", stiffness: 280, damping: 26, mass: 1 }}
+                className="absolute w-[190px] h-[270px] sm:w-[210px] sm:h-[300px] rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-border-subtle bg-surface-raised"
                 style={{ zIndex: style.zIndex }}
               >
                 <img
@@ -204,68 +227,70 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
                     }
                   }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-background/60 via-transparent to-transparent opacity-60" />
+                <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-transparent to-transparent opacity-50" />
               </motion.div>
             );
           })}
         </div>
-      </div>
+      </main>
 
-      {/* Content & CTA (Safe Area Respected) */}
-      <div className="relative z-10 flex flex-col px-6 pb-[calc(var(--safe-bottom,env(safe-area-inset-bottom))+24px)] w-full max-w-[400px] mx-auto">
-        <div className="h-[140px] flex flex-col justify-end text-center mb-6">
+      {/* Editorial Content & CTA Actions */}
+      <footer className="relative z-10 flex flex-col px-6 pb-[calc(var(--safe-bottom,env(safe-area-inset-bottom))+20px)] w-full max-w-[400px] mx-auto">
+        <div className="h-[140px] flex flex-col justify-end text-center mb-5">
           <AnimatePresence mode="wait">
             <motion.div
               key={step}
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.3 }}
-              className="flex flex-col gap-2"
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.25 }}
+              className="flex flex-col gap-1.5"
             >
-              <p className="text-[11px] font-bold tracking-[0.25em] text-accent uppercase drop-shadow-sm">
+              <p className="text-[11px] font-bold tracking-[0.2em] text-accent uppercase">
                 {STEPS[step].eyebrow}
               </p>
-              <h2 className="text-[28px] leading-[1.1] font-extrabold tracking-tight text-text-primary whitespace-pre-line">
+              <h2 className="text-2xl sm:text-[28px] leading-tight font-extrabold tracking-tight text-text-primary whitespace-pre-line">
                 {STEPS[step].title}
               </h2>
-              <p className="text-[15px] font-medium text-text-muted mt-2 leading-relaxed">
+              <p className="text-xs sm:text-sm font-normal text-text-muted mt-1 leading-relaxed">
                 {STEPS[step].desc}
               </p>
             </motion.div>
           </AnimatePresence>
         </div>
 
-        {/* Pagination Dots */}
-        <div className="flex items-center justify-center gap-2 mb-8 h-2">
+        {/* Segmented Step Indicator */}
+        <div className="flex items-center justify-center gap-2 mb-6 h-2">
           {STEPS.map((_, i) => (
             <button
               key={i}
+              type="button"
               onClick={() => setStep(i)}
               className={cn(
-                "h-2 rounded-full transition-all duration-300",
+                "h-2 rounded-full transition-all duration-300 cursor-pointer",
                 step === i ? "w-6 bg-accent" : "w-2 bg-border-strong hover:bg-border-subtle"
               )}
-              aria-label={`Step ${i + 1}`}
+              aria-label={`Langkah ${i + 1}`}
               aria-current={step === i ? "step" : undefined}
             />
           ))}
         </div>
 
-        {/* CTA Buttons */}
-        <div className="flex flex-col gap-3">
+        {/* Action Buttons */}
+        <div className="flex flex-col gap-2.5">
           <button
+            type="button"
             onClick={handleNext}
             className={cn(
-              "w-full h-14 rounded-[20px] font-bold text-[17px] shadow-lg active:scale-[0.98] transition-all flex items-center justify-center gap-2",
+              "w-full h-12 sm:h-13 rounded-2xl font-bold text-sm sm:text-base shadow-sm active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer",
               step === STEPS.length - 1
-                ? "bg-accent hover:bg-accent-hover text-white shadow-[0_8px_20px_-6px_rgba(var(--accent),0.5)]"
-                : "bg-surface-raised border border-border-subtle text-text-primary hover:bg-surface-raised/80"
+                ? "bg-accent hover:bg-accent-hover text-white shadow-md shadow-accent/25"
+                : "bg-surface-raised hover:bg-surface-hover border border-border-subtle text-text-primary"
             )}
           >
-            {step === STEPS.length - 1 ? "Mulai Sekarang" : "Lanjut"}
+            {step === STEPS.length - 1 ? "Mulai Membaca" : "Lanjut"}
             {step === STEPS.length - 1 && (
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             )}
@@ -276,18 +301,18 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
             {step === STEPS.length - 1 && isInstallable && (
               <motion.button
                 initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                animate={{ opacity: 1, height: 48, marginTop: 12 }}
+                animate={{ opacity: 1, height: 44, marginTop: 8 }}
                 exit={{ opacity: 0, height: 0, marginTop: 0 }}
                 onClick={installPWA}
-                className="w-full rounded-[16px] font-bold text-[15px] bg-surface-overlay border border-accent/30 text-accent hover:bg-accent/10 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+                className="w-full rounded-2xl font-bold text-xs sm:text-sm bg-surface-overlay border border-border-subtle text-accent hover:bg-accent/10 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
-                <DownloadSimple size={20} weight="bold" />
+                <DownloadSimple size={18} weight="bold" />
                 Install Aplikasi Yomirra
               </motion.button>
             )}
           </AnimatePresence>
         </div>
-      </div>
+      </footer>
     </motion.div>
   );
 }

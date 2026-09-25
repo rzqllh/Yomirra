@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { mdFetch, parseRetryAfter } from "../index";
+import { createMdFetch, mdFetch, parseRetryAfter } from "../index";
+import { createMangaDexTransport } from "../transport";
 
 describe("MangaDex Retry Hardening & Retry-After Parser", () => {
   beforeEach(() => {
@@ -57,6 +58,70 @@ describe("MangaDex Retry Hardening & Retry-After Parser", () => {
   });
 
   describe("mdFetch 429 Retry Behavior", () => {
+    it("reserves 6500ms of the total deadline for secure fallback", async () => {
+      vi.useFakeTimers();
+      const caller = new AbortController();
+      let requestSignal: AbortSignal | undefined;
+
+      vi.spyOn(AbortSignal, "timeout").mockImplementation((delay) => {
+        const timeout = new AbortController();
+        setTimeout(() => timeout.abort(new DOMException("Timed out", "TimeoutError")), delay);
+        return timeout.signal;
+      });
+
+      vi.spyOn(globalThis, "fetch").mockImplementation(async (_url, init) => {
+        requestSignal ??= init?.signal ?? undefined;
+        return new Promise<Response>((_resolve, reject) => {
+          requestSignal?.addEventListener(
+            "abort",
+            () => reject(requestSignal?.reason ?? new DOMException("Aborted", "AbortError")),
+            { once: true }
+          );
+        });
+      });
+
+      const request = mdFetch("/manga", undefined, { signal: caller.signal });
+      const settled = request.catch(() => undefined);
+      await vi.advanceTimersByTimeAsync(0);
+      await vi.advanceTimersByTimeAsync(8500);
+
+      expect(requestSignal?.aborted).toBe(true);
+
+      caller.abort();
+      await settled;
+      vi.useRealTimers();
+    });
+
+    it("requires two-provider DoH consensus after ENOTFOUND", async () => {
+      const calls: string[] = [];
+      vi.spyOn(globalThis, "fetch").mockImplementation(async (input) => {
+        const url = String(input);
+        calls.push(url);
+
+        if (url.startsWith("https://api.mangadex.org")) {
+          const error = new TypeError("fetch failed", {
+            cause: Object.assign(new Error("lookup failed"), { code: "ENOTFOUND" }),
+          });
+          throw error;
+        }
+
+        const address = url.startsWith("https://cloudflare-dns.com")
+          ? "104.17.161.14"
+          : "104.17.160.14";
+        return Response.json({
+          Status: 0,
+          TC: false,
+          AD: true,
+          Question: [{ name: "api.mangadex.org.", type: 1 }],
+          Answer: [{ name: "api.mangadex.org.", type: 1, TTL: 60, data: address }],
+        });
+      });
+
+      await expect(mdFetch("/manga")).rejects.toThrow();
+
+      expect(calls.filter((url) => url.includes("dns-query") || url.includes("dns.google"))).toHaveLength(2);
+    });
+
     it("Scenario 1: HTTP 200 should make exactly one fetch with no retry delay", async () => {
       const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(async () =>
         new Response(JSON.stringify({ result: "ok" }), { status: 200 })
@@ -185,6 +250,45 @@ describe("MangaDex Retry Hardening & Retry-After Parser", () => {
       await expect(mdFetch("/manga", undefined, { signal: controller.signal })).rejects.toThrow();
       // Should stop after 1st attempt because controller was aborted
       expect(fetchSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it("reuses the validated pinned route for the single 429 retry", async () => {
+      let dohCalls = 0;
+      let pinnedCalls = 0;
+      const transport = createMangaDexTransport({
+        normalFetch: async () => {
+          throw new TypeError("fetch failed", {
+            cause: Object.assign(new Error("lookup failed"), { code: "ENOTFOUND" }),
+          });
+        },
+        dohFetch: async () => {
+          dohCalls += 1;
+          return Response.json({
+            Status: 0,
+            TC: false,
+            AD: true,
+            Question: [{ name: "api.mangadex.org.", type: 1 }],
+            Answer: [{
+              name: "api.mangadex.org.",
+              type: 1,
+              TTL: 60,
+              data: "104.17.161.14",
+            }],
+          });
+        },
+        pinnedRequest: async () => {
+          pinnedCalls += 1;
+          return pinnedCalls === 1
+            ? new Response("rate limited", { status: 429, headers: { "retry-after": "0" } })
+            : Response.json({ result: "ok" });
+        },
+        now: () => 0,
+      });
+      const fetchMangaDex = createMdFetch({ transport, acquire: async () => undefined });
+
+      await expect(fetchMangaDex<{ result: string }>("/manga")).resolves.toEqual({ result: "ok" });
+      expect(dohCalls).toBe(2);
+      expect(pinnedCalls).toBe(2);
     });
   });
 });

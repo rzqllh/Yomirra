@@ -168,6 +168,7 @@ export function ReaderView({
       seriesProgressPercent,
       chapterIndex: readCount,
       totalChapters,
+      status: initialDetail.status,
       readAt: Date.now(),
     });
 

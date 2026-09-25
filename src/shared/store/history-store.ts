@@ -26,6 +26,7 @@ export type HistoryItem = {
   isNsfw?: boolean;
   savedTitleId?: string;  // Recoverable via SourceRef lookup if missing
   chapterNumber?: number; // Parsed from chapterTitle for cross-source mapping
+  status?: string;        // Publication status: ONGOING | COMPLETED
 };
 
 interface HistoryState {

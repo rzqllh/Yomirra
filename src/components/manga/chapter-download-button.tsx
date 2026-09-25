@@ -3,7 +3,7 @@
 import { DownloadSimple, CheckCircle, XCircle, CircleNotch, Pause } from "@phosphor-icons/react";
 import { useDownloadStore } from "@/shared/store/download-store";
 import { getDownloadChapterId } from "@/shared/utils/download-helpers";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { IconButton } from "@/components/ui/icon-button";
 import { downloadChapterAsZip } from "@/shared/utils/zip-downloader";
 import { useState, useEffect } from "react";
@@ -26,6 +26,7 @@ export function ChapterDownloadButton({
   chapterTitle,
   mangaTitle,
 }: ChapterDownloadButtonProps) {
+  const reducedMotion = useReducedMotion();
   const id = getDownloadChapterId(sourceId, mangaId, chapterId);
   // Only subscribe to the specific download item to prevent re-rendering the whole list
   const download = useDownloadStore((state) => state.downloads[id]);
@@ -36,6 +37,9 @@ export function ChapterDownloadButton({
   const [isZipDownloading, setIsZipDownloading] = useState(false);
   const [zipProgress, setZipProgress] = useState(0);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const iconInitial = reducedMotion ? false : { scale: 0.8, opacity: 0 };
+  const iconExit = reducedMotion ? { opacity: 0 } : { scale: 0.8, opacity: 0 };
+  const iconTransition = { duration: reducedMotion ? 0 : 0.15 };
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -111,20 +115,20 @@ export function ChapterDownloadButton({
         {!download ? (
           <motion.span
             key="idle"
-            initial={{ scale: 0.8, opacity: 0 }}
+            initial={iconInitial}
             animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.8, opacity: 0 }}
-            transition={{ duration: 0.15 }}
+            exit={iconExit}
+            transition={iconTransition}
           >
             <DownloadSimple size={20} />
           </motion.span>
         ) : download.status === "downloaded" ? (
           <motion.span
             key="downloaded"
-            initial={{ scale: 0.8, opacity: 0 }}
+            initial={iconInitial}
             animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.8, opacity: 0 }}
-            transition={{ duration: 0.15 }}
+            exit={iconExit}
+            transition={iconTransition}
             className="text-accent"
           >
             <CheckCircle size={20} weight="fill" />
@@ -132,10 +136,10 @@ export function ChapterDownloadButton({
         ) : download.status === "failed" ? (
           <motion.span
             key="failed"
-            initial={{ scale: 0.8, opacity: 0 }}
+            initial={iconInitial}
             animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.8, opacity: 0 }}
-            transition={{ duration: 0.15 }}
+            exit={iconExit}
+            transition={iconTransition}
             className="text-error"
           >
             <XCircle size={20} weight="fill" />
@@ -143,10 +147,10 @@ export function ChapterDownloadButton({
         ) : download.status === "paused" ? (
           <motion.span
             key="paused"
-            initial={{ scale: 0.8, opacity: 0 }}
+            initial={iconInitial}
             animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.8, opacity: 0 }}
-            transition={{ duration: 0.15 }}
+            exit={iconExit}
+            transition={iconTransition}
             className="text-text-muted"
           >
             <Pause size={20} weight="fill" />
@@ -154,10 +158,10 @@ export function ChapterDownloadButton({
         ) : isZipDownloading ? (
           <motion.span
             key="zip-downloading"
-            initial={{ scale: 0.8, opacity: 0 }}
+            initial={iconInitial}
             animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.8, opacity: 0 }}
-            transition={{ duration: 0.15 }}
+            exit={iconExit}
+            transition={iconTransition}
             className="text-accent relative flex items-center justify-center"
           >
             <CircleNotch size={20} className="motion-safe:animate-spin" />
@@ -168,10 +172,10 @@ export function ChapterDownloadButton({
         ) : (
           <motion.span
             key="downloading"
-            initial={{ scale: 0.8, opacity: 0 }}
+            initial={iconInitial}
             animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.8, opacity: 0 }}
-            transition={{ duration: 0.15 }}
+            exit={iconExit}
+            transition={iconTransition}
             className="text-accent relative flex items-center justify-center"
           >
             <CircleNotch size={20} className="motion-safe:animate-spin" />
