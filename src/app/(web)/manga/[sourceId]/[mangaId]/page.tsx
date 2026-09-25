@@ -8,6 +8,7 @@ import { cookies } from "next/headers";
 import { DeadSourceRecovery } from "@/components/manga/dead-source-recovery";
 import { MangaDetailErrorState } from "@/components/manga/manga-detail-error-state";
 import { getSourceMetadata } from "@/shared/sources/source-registry";
+import { SourceError, type SourceErrorCode } from "@/server/lib/sources/error";
 
 export async function generateMetadata({ 
   params 
@@ -44,7 +45,15 @@ export default async function MangaDetailPage({
 
   let detail;
   let chapters;
-  let errorState: { type: "disabled" | "not_found" | "dead" | "network_error"; message?: string } | null = null;
+  let errorState: {
+    type: "disabled" | "not_found" | "dead" | "network_error";
+    message?: string;
+    recoveryHealth?: {
+      status: "BROKEN" | "RATE_LIMITED" | "DEGRADED";
+      errorCode?: SourceErrorCode;
+      message?: string;
+    };
+  } | null = null;
 
   try {
     const manifestUrl = await getManifestUrlFromCookie(normalizedSourceId);
@@ -67,13 +76,39 @@ export default async function MangaDetailPage({
       errorState = { type: "not_found" };
     } else {
       const sourceMeta = getSourceMetadata(normalizedSourceId);
-      const isExplicitlyDead = sourceMeta?.status === "unavailable" || sourceMeta?.status === "in-fix" || errString.includes("source is disabled") || errString.includes("source not found");
+      const classified = SourceError.classify(error, normalizedSourceId, "detail");
+      const isExplicitlyDead =
+        sourceMeta?.status === "unavailable" ||
+        sourceMeta?.status === "in-fix" ||
+        errString.includes("source is disabled") ||
+        errString.includes("source not found");
+
       if (isExplicitlyDead) {
-        errorState = { type: "dead" };
+        errorState = {
+          type: "dead",
+          recoveryHealth: { status: "BROKEN", errorCode: classified.code, message: classified.message },
+        };
+      } else if (classified.code === "RATE_LIMITED") {
+        errorState = {
+          type: "dead",
+          recoveryHealth: { status: "RATE_LIMITED", errorCode: classified.code, message: classified.message },
+        };
+      } else if (["UPSTREAM_TIMEOUT", "UPSTREAM_BLOCKED"].includes(classified.code)) {
+        errorState = {
+          type: "dead",
+          recoveryHealth: { status: "DEGRADED", errorCode: classified.code, message: classified.message },
+        };
+      } else if (
+        ["SOURCE_DOWN", "DOMAIN_CHANGED", "ROUTE_CHANGED", "PARSER_BROKEN", "SCHEMA_CHANGED", "DECRYPT_FAILURE"].includes(classified.code)
+      ) {
+        errorState = {
+          type: "dead",
+          recoveryHealth: { status: "BROKEN", errorCode: classified.code, message: classified.message },
+        };
       } else {
         errorState = {
           type: "network_error",
-          message: error instanceof Error ? error.message : undefined,
+          message: classified.message,
         };
       }
     }
@@ -81,7 +116,7 @@ export default async function MangaDetailPage({
 
   if (errorState || !detail || !chapters) {
     if (errorState?.type === "dead") {
-      return <DeadSourceRecovery sourceId={normalizedSourceId} mangaId={mangaId} />;
+      return <DeadSourceRecovery sourceId={normalizedSourceId} mangaId={mangaId} health={errorState.recoveryHealth} />;
     }
     return (
       <MangaDetailErrorState
