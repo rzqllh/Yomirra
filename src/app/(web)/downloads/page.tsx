@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { EmptyState } from "@/components/states/empty-state";
 import { StorageWarningBanner } from "@/components/download/storage-warning-banner";
 
-import { PageHeader } from "@/components/shared/page-header";
+import { PageHeader } from "@/components/app/header";
 
 export default function DownloadsPage() {
   const {
