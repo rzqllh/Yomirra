@@ -79,7 +79,7 @@ export function useSearchCatalog() {
       }
     });
     return s.filter(src => {
-      if (!src.isInstalled || !src.isEnabled || !src.capabilities?.search) return false;
+      if (!src.isInstalled || src.isEnabled === false || !src.capabilities?.search) return false;
       if (disabledSources.includes(src.id)) return false;
       if (src.status !== "online") return false;
       if (src.isNsfw && hideNsfw) return false;
