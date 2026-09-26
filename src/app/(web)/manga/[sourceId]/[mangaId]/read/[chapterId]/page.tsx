@@ -79,24 +79,32 @@ export default async function ReaderPage({
     }
   } catch (error) {
     console.error("Failed to load reader data:", error);
-    const classified = SourceError.classify(error, sourceId, "chapters");
-    const recoveryStatus =
-      classified.code === "RATE_LIMITED"
-        ? "RATE_LIMITED"
-        : classified.code === "UPSTREAM_TIMEOUT" || classified.code === "UPSTREAM_BLOCKED"
-          ? "DEGRADED"
-          : ["SOURCE_DOWN", "DOMAIN_CHANGED", "ROUTE_CHANGED", "PARSER_BROKEN", "SCHEMA_CHANGED", "DECRYPT_FAILURE"].includes(classified.code)
-            ? "BROKEN"
-            : null;
+    const errorText = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
+    const isNotFound =
+      errorText.includes("404") ||
+      errorText.includes("not found") ||
+      errorText.includes("tidak ditemukan");
 
-    if (recoveryStatus) {
-      return (
-        <DeadSourceRecovery
-          sourceId={sourceId}
-          mangaId={mangaId}
-          health={{ status: recoveryStatus, errorCode: classified.code, message: classified.message }}
-        />
-      );
+    if (!isNotFound) {
+      const classified = SourceError.classify(error, sourceId, "chapters");
+      const recoveryStatus =
+        classified.code === "RATE_LIMITED"
+          ? "RATE_LIMITED"
+          : classified.code === "UPSTREAM_TIMEOUT" || classified.code === "UPSTREAM_BLOCKED"
+            ? "DEGRADED"
+            : ["SOURCE_DOWN", "DOMAIN_CHANGED", "ROUTE_CHANGED", "PARSER_BROKEN", "SCHEMA_CHANGED", "DECRYPT_FAILURE"].includes(classified.code)
+              ? "BROKEN"
+              : null;
+
+      if (recoveryStatus) {
+        return (
+          <DeadSourceRecovery
+            sourceId={sourceId}
+            mangaId={mangaId}
+            health={{ status: recoveryStatus, errorCode: classified.code, message: classified.message }}
+          />
+        );
+      }
     }
 
     return (
