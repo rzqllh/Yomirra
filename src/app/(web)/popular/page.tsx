@@ -45,6 +45,8 @@ async function PopularFeed({ sourceId, sourceName }: { sourceId: string; sourceN
               manga={{ ...manga, rank: index + 1 }} 
               sourceId={sourceId} 
               priority={index < 4}
+              index={index}
+              animateReveal={true}
             />
           </div>
         ))}

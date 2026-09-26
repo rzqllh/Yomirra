@@ -206,7 +206,7 @@ export function SearchResults({
 
             <LayoutGroup id="search-listing-cards">
               <MangaGrid viewMode={listingViewMode}>
-                {searchMangas.map((item) =>
+                {searchMangas.map((item, index) =>
                   listingViewMode === "compact" ? (
                     <CompactCard
                       key={`${item.sourceId}-${item.manga.id}`}
@@ -215,6 +215,8 @@ export function SearchResults({
                       sourceBindings={item.sourceBindings || (item.manga as any)?.sourceBindings}
                       showSourceBadge={true}
                       priority={false}
+                      index={index}
+                      animateReveal={true}
                     />
                   ) : (
                     <ShelfCard
@@ -224,6 +226,8 @@ export function SearchResults({
                       sourceBindings={item.sourceBindings || (item.manga as any)?.sourceBindings}
                       showSourceBadge={true}
                       priority={false}
+                      index={index}
+                      animateReveal={true}
                     />
                   )
                 )}

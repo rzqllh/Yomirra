@@ -181,7 +181,7 @@ export function LibraryResults({
             isFetching ? "opacity-50 pointer-events-none" : "opacity-100"
           )}
         >
-          {mangas.map(manga => {
+          {mangas.map((manga, index) => {
             const itemKey = `${activeSourceId}::${manga.id}`;
             const isSelected = selectedItems?.has(itemKey);
 
@@ -189,9 +189,21 @@ export function LibraryResults({
               <div key={manga.id} className="relative group w-full h-full flex flex-col">
                 <div inert={isSelectionMode ? true : undefined} className="h-full flex flex-col">
                   {viewMode === "grid" ? (
-                    <ShelfCard manga={manga} sourceId={activeSourceId} showSourceBadge={true} />
+                    <ShelfCard
+                      manga={manga}
+                      sourceId={activeSourceId}
+                      showSourceBadge={true}
+                      index={index}
+                      animateReveal={true}
+                    />
                   ) : (
-                    <CompactCard manga={manga} sourceId={activeSourceId} showSourceBadge={true} />
+                    <CompactCard
+                      manga={manga}
+                      sourceId={activeSourceId}
+                      showSourceBadge={true}
+                      index={index}
+                      animateReveal={true}
+                    />
                   )}
                 </div>
                 {isSelectionMode && onToggleSelectItem && (
