@@ -9,6 +9,21 @@ describe("Utils: normalize", () => {
     it("should handle empty strings", () => {
       expect(stripHtml("")).toBe("");
     });
+    it("should unescape raw markdown bracket notation (e.g., \\[MENARA UJIAN\\])", () => {
+      expect(stripHtml("Setelah menyelesaikan \\[MENARA UJIAN\\], sang pahlawan...")).toBe(
+        "Setelah menyelesaikan [MENARA UJIAN], sang pahlawan..."
+      );
+    });
+    it("should unescape escaped markdown formatting characters", () => {
+      expect(stripHtml("Fitur \\*spesial\\* dan \\_kemampuan\\_ unik")).toBe(
+        "Fitur *spesial* dan _kemampuan_ unik"
+      );
+    });
+    it("should decode common HTML entities", () => {
+      expect(stripHtml("Hero &amp; Villain &quot;Story&#039;s&quot; &lt;Legend&gt;")).toBe(
+        "Hero & Villain \"Story's\" <Legend>"
+      );
+    });
   });
 
   describe("normalizeTitle", () => {

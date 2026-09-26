@@ -22,4 +22,34 @@ describe('Shinigami Normalizer', () => {
     expect(normalizeMangaDetail).toBeDefined();
     expect(normalizeChapter).toBeDefined();
   });
+
+  it('should sanitize raw template-syntax \\[MENARA UJIAN\\] in normalizeMangaItem', () => {
+    const item = {
+      manga_id: 'solo-max-level-newbie',
+      title: 'Solo Max-Level Newbie',
+      cover_image_url: 'https://example.com/cover.jpg',
+      status: 1,
+      description: 'Jinhyuk menyelesaikan game \\[MENARA UJIAN\\] yang tak tertandingi.',
+    } as any;
+
+    const normalized = normalizeMangaItem(item);
+    expect(normalized.description).toBe('Jinhyuk menyelesaikan game [MENARA UJIAN] yang tak tertandingi.');
+    expect(normalized.description).not.toContain('\\[');
+    expect(normalized.description).not.toContain('\\]');
+  });
+
+  it('should sanitize raw template-syntax \\[MENARA UJIAN\\] in normalizeMangaDetail', () => {
+    const detail = {
+      manga_id: 'solo-max-level-newbie',
+      title: 'Solo Max-Level Newbie',
+      cover_image_url: 'https://example.com/cover.jpg',
+      status: 1,
+      description: '<p>Tantangan terbesar di \\[MENARA UJIAN\\] lantai 100.</p>',
+    } as any;
+
+    const normalized = normalizeMangaDetail(detail);
+    expect(normalized.description).toBe('Tantangan terbesar di [MENARA UJIAN] lantai 100.');
+    expect(normalized.description).not.toContain('\\[');
+    expect(normalized.description).not.toContain('\\]');
+  });
 });
