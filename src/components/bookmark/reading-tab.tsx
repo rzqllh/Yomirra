@@ -8,21 +8,9 @@ import { Button } from "@/components/ui/button";
 import { HistoryCard } from "@/components/manga/card/history-card";
 import { getLibraryHref } from "@/shared/lib/routes";
 import { cn } from "@/shared/utils/cn";
+import { getRelativeTime } from "@/shared/utils/date";
 
-export function getRelativeTime(dateString?: string): string {
-  if (!dateString) return "";
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffInMs = now.getTime() - date.getTime();
-  const diffInMins = Math.floor(diffInMs / (1000 * 60));
-  const diffInHours = Math.floor(diffInMins / 60);
-  const diffInDays = Math.floor(diffInHours / 24);
-
-  if (diffInMins < 60) return `${diffInMins} mnt lalu`;
-  if (diffInHours < 24) return `${diffInHours} jam lalu`;
-  if (diffInDays < 30) return `${diffInDays} hr lalu`;
-  return date.toLocaleDateString("id-ID");
-}
+export { getRelativeTime };
 
 export interface ReadingTabProps {
   groupedHistory: Array<{

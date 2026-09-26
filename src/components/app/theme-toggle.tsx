@@ -4,10 +4,12 @@ import * as React from "react";
 import { Moon, Sun } from "@phosphor-icons/react";
 import { useTheme } from "next-themes";
 import { cn } from "@/shared/utils/cn";
+import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 
 export function ThemeToggle({ className }: { className?: string }) {
   const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
+  const reducedMotion = useReducedMotion();
 
   React.useEffect(() => {
     setMounted(true);
@@ -63,20 +65,44 @@ export function ThemeToggle({ className }: { className?: string }) {
   };
 
   return (
-    <button
+    <motion.button
       type="button"
       onClick={handleToggle}
+      whileTap={reducedMotion ? undefined : { scale: 0.92 }}
       aria-label={isDark ? "Aktifkan mode terang" : "Aktifkan mode gelap"}
       title={isDark ? "Aktifkan mode terang" : "Aktifkan mode gelap"}
       className={cn(
-        "flex items-center justify-center size-9 rounded-[10px] bg-surface-raised hover:bg-surface-hover active:scale-95 transition-all outline-none border border-border-subtle hover:border-accent/40 text-text-primary shrink-0 cursor-pointer shadow-xs",
+        "relative flex items-center justify-center size-9 rounded-[10px] bg-surface-raised hover:bg-surface-hover transition-colors outline-none border border-border-subtle hover:border-accent/40 text-text-primary shrink-0 cursor-pointer shadow-xs overflow-hidden",
         className
       )}
     >
-      <span className="icon-morph theme-morph" data-on={isDark ? "true" : "false"} aria-hidden="true">
-        <Moon size={18} weight="duotone" className="text-text-secondary" />
-        <Sun size={18} weight="duotone" className="text-accent" />
-      </span>
-    </button>
+      <AnimatePresence mode="wait" initial={false}>
+        {isDark ? (
+          <motion.span
+            key="dark-sun"
+            initial={reducedMotion ? false : { opacity: 0, rotate: -90, scale: 0.8 }}
+            animate={{ opacity: 1, rotate: 0, scale: 1 }}
+            exit={reducedMotion ? undefined : { opacity: 0, rotate: 90, scale: 0.8 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="flex items-center justify-center text-accent"
+            aria-hidden="true"
+          >
+            <Sun size={18} weight="duotone" />
+          </motion.span>
+        ) : (
+          <motion.span
+            key="light-moon"
+            initial={reducedMotion ? false : { opacity: 0, rotate: -90, scale: 0.8 }}
+            animate={{ opacity: 1, rotate: 0, scale: 1 }}
+            exit={reducedMotion ? undefined : { opacity: 0, rotate: 90, scale: 0.8 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="flex items-center justify-center text-text-secondary"
+            aria-hidden="true"
+          >
+            <Moon size={18} weight="duotone" />
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </motion.button>
   );
 }

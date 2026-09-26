@@ -5,6 +5,8 @@ import { SquaresFour, Rows } from "@phosphor-icons/react";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { cn } from "@/shared/utils/cn";
 
+import { motion, useReducedMotion } from "motion/react";
+
 export interface ViewModeToggleProps {
   className?: string;
   value?: "grid" | "compact";
@@ -14,6 +16,7 @@ export interface ViewModeToggleProps {
 export function ViewModeToggle({ className, value, onChange }: ViewModeToggleProps) {
   const storeMode = useSettingsStore((state) => state.listingViewMode);
   const setStoreMode = useSettingsStore((state) => state.setListingViewMode);
+  const reducedMotion = useReducedMotion();
 
   const activeMode = value ?? storeMode;
   const handleToggle = (mode: "grid" | "compact") => {
@@ -39,12 +42,19 @@ export function ViewModeToggle({ className, value, onChange }: ViewModeTogglePro
         aria-label="Tampilan Card Grid"
         aria-pressed={activeMode === "grid"}
         className={cn(
-          "flex items-center justify-center h-8 w-8 rounded-lg transition-all duration-150",
+          "relative flex items-center justify-center h-8 w-8 rounded-lg transition-colors duration-150 z-10",
           activeMode === "grid"
-            ? "bg-accent text-white shadow-xs"
-            : "text-text-muted hover:text-text-primary hover:bg-surface-hover active:scale-95"
+            ? "text-white"
+            : "text-text-muted hover:text-text-primary hover:bg-surface-hover/50 active:scale-95"
         )}
       >
+        {activeMode === "grid" && (
+          <motion.div
+            layoutId={reducedMotion ? undefined : "viewmode-pill"}
+            className="absolute inset-0 bg-accent rounded-lg shadow-xs -z-10"
+            transition={{ type: "spring", stiffness: 450, damping: 32 }}
+          />
+        )}
         <SquaresFour size={17} weight={activeMode === "grid" ? "fill" : "bold"} />
       </button>
 
@@ -54,12 +64,19 @@ export function ViewModeToggle({ className, value, onChange }: ViewModeTogglePro
         aria-label="Tampilan Kompak"
         aria-pressed={activeMode === "compact"}
         className={cn(
-          "flex items-center justify-center h-8 w-8 rounded-lg transition-all duration-150",
+          "relative flex items-center justify-center h-8 w-8 rounded-lg transition-colors duration-150 z-10",
           activeMode === "compact"
-            ? "bg-accent text-white shadow-xs"
-            : "text-text-muted hover:text-text-primary hover:bg-surface-hover active:scale-95"
+            ? "text-white"
+            : "text-text-muted hover:text-text-primary hover:bg-surface-hover/50 active:scale-95"
         )}
       >
+        {activeMode === "compact" && (
+          <motion.div
+            layoutId={reducedMotion ? undefined : "viewmode-pill"}
+            className="absolute inset-0 bg-accent rounded-lg shadow-xs -z-10"
+            transition={{ type: "spring", stiffness: 450, damping: 32 }}
+          />
+        )}
         <Rows size={17} weight={activeMode === "compact" ? "fill" : "bold"} />
       </button>
     </div>
