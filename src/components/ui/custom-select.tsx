@@ -26,8 +26,6 @@ interface CustomSelectProps {
 }
 
 export function CustomSelect({ value, onChange, options, className, buttonClassName, align = "right", label = "Pilih opsi" }: CustomSelectProps) {
-  const [isOpen, setIsOpen] = React.useState(false)
-
   const selectedOption = options.find((opt) => opt.value === value) || options[0]
 
   const alignMap = {
@@ -52,12 +50,12 @@ export function CustomSelect({ value, onChange, options, className, buttonClassN
         ))}
       </select>
 
-      <DropdownMenu open={isOpen} onOpenChange={setIsOpen} modal={false}>
+      <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button
             type="button"
             aria-label={`${label}: ${typeof selectedOption?.label === "string" ? selectedOption.label : value}`}
-            className={cn("flex min-h-[48px] items-center justify-between gap-3 rounded-[12px] border border-border-strong bg-surface-overlay px-4 text-sm font-semibold text-text-primary motion-safe:transition-[background-color,border-color,box-shadow] motion-safe:duration-300 hover:border-accent hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent data-[state=open]:border-accent data-[state=open]:ring-[3px] data-[state=open]:ring-accent-dim", className, buttonClassName)}
+            className={cn("group flex min-h-[48px] items-center justify-between gap-3 rounded-[12px] border border-border-strong bg-surface-overlay px-4 text-sm font-semibold text-text-primary motion-safe:transition-[background-color,border-color,box-shadow] motion-safe:duration-300 hover:border-accent hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent data-[state=open]:border-accent data-[state=open]:ring-[3px] data-[state=open]:ring-accent-dim", className, buttonClassName)}
           >
             <span className="truncate whitespace-nowrap">
               {selectedOption?.label}
@@ -65,10 +63,7 @@ export function CustomSelect({ value, onChange, options, className, buttonClassN
             <CaretDown
               size={12}
               weight="bold"
-              className={cn(
-                "shrink-0 text-text-muted motion-safe:transition-transform motion-safe:duration-300",
-                isOpen && "rotate-180 text-accent"
-              )}
+              className="shrink-0 text-text-muted motion-safe:transition-transform motion-safe:duration-300 group-data-[state=open]:rotate-180 group-data-[state=open]:text-accent"
             />
           </button>
         </DropdownMenuTrigger>
@@ -83,6 +78,7 @@ export function CustomSelect({ value, onChange, options, className, buttonClassN
               return (
                 <DropdownMenuItem
                   key={option.value}
+                  onSelect={() => onChange(option.value)}
                   onClick={() => onChange(option.value)}
                   className={cn(
                     "flex min-h-11 items-center justify-between gap-3 rounded-[8px] px-3 py-2 text-sm font-medium transition-colors cursor-pointer",
