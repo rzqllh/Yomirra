@@ -55,6 +55,8 @@ interface FilterDrawerShellProps {
   children: React.ReactNode;
 }
 
+import { motion, useReducedMotion } from "motion/react";
+
 export function FilterDrawerShell({
   title,
   description,
@@ -67,6 +69,7 @@ export function FilterDrawerShell({
   children,
 }: FilterDrawerShellProps) {
   const [isOpen, setIsOpen] = React.useState(false);
+  const reducedMotion = useReducedMotion();
 
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
@@ -85,13 +88,24 @@ export function FilterDrawerShell({
           <Button
             variant={activeCount > 0 ? "accent" : "outline"}
             className={cn(
-              "rounded-full font-bold px-4 h-[44px] gap-1.5 transition-all duration-300 border-border-subtle",
-              activeCount > 0 ? "border-accent/30" : "bg-surface-glass backdrop-blur-md"
+              "relative rounded-full font-bold px-4 h-[44px] gap-1.5 transition-all duration-300 border-border-subtle",
+              activeCount > 0 ? "border-accent/40 bg-accent text-accent-on shadow-xs" : "bg-surface-glass backdrop-blur-md"
             )}
+            aria-label={`Filter${activeCount > 0 ? ` (${activeCount} aktif)` : ""}`}
           >
             <Funnel size={18} weight={activeCount > 0 ? "fill" : "bold"} />
             <span>Filter</span>
-            {activeCount > 0 && <span className="ml-0.5">{activeCount}</span>}
+            {activeCount > 0 && (
+              <motion.span
+                key={activeCount}
+                initial={reducedMotion ? false : { scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.15, ease: "easeOut" }}
+                className="ml-1 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-accent-on text-accent text-[11px] font-black shadow-xs"
+              >
+                {activeCount}
+              </motion.span>
+            )}
           </Button>
         )}
       </Drawer.Trigger>

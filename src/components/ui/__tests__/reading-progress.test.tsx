@@ -35,4 +35,14 @@ describe("ReadingProgress", () => {
 
     expect(screen.queryByText("50%")).toBeNull();
   });
+
+  it("applies success color styling when value is 100% or variant is success", () => {
+    const { container, rerender } = render(<ReadingProgress value={100} showLabel={true} />);
+    const bar = container.querySelector(".bg-status-success-fg");
+    expect(bar).not.toBeNull();
+    expect(screen.getByText("100%").className).toContain("text-status-success-fg");
+
+    rerender(<ReadingProgress value={50} variant="success" showLabel={true} />);
+    expect(container.querySelector(".bg-status-success-fg")).not.toBeNull();
+  });
 });
