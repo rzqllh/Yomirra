@@ -1,3 +1,4 @@
+export * from "./manga-card";
 export * from "./shelf-card";
 export * from "./compact-card";
 export * from "./editorial-card";
