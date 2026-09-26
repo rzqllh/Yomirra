@@ -59,7 +59,7 @@ export function clusterCanonicalResults(
       sourceId,
       mangaId: manga.id,
       title: manga.title,
-      alternativeTitles: manga.alternativeTitles,
+      alternativeTitles: [manga.originalTitle, ...(manga.alternativeTitles ?? [])].filter(Boolean) as string[],
       author: manga.author,
       coverUrl: manga.coverUrl,
     };
@@ -78,7 +78,7 @@ export function clusterCanonicalResults(
         sourceId: clusterPrimary.sourceId,
         mangaId: clusterPrimary.id,
         title: clusterPrimary.title,
-        alternativeTitles: clusterPrimary.alternativeTitles,
+        alternativeTitles: [clusterPrimary.originalTitle, ...(clusterPrimary.alternativeTitles ?? [])].filter(Boolean) as string[],
         author: clusterPrimary.author,
       };
 

@@ -9,6 +9,8 @@ import { EmptyState } from "@/components/states/empty-state";
 import { Button } from "@/components/ui/button";
 import { getMangaDetailHref } from "@/shared/lib/routes";
 import { getManifestUrlFromCookie } from "@/server/lib/sources/server-manifest";
+import { SourceError } from "@/server/lib/sources/error";
+import { DeadSourceRecovery } from "@/components/manga/dead-source-recovery";
 
 export async function generateMetadata({ 
   params 
@@ -77,13 +79,33 @@ export default async function ReaderPage({
     }
   } catch (error) {
     console.error("Failed to load reader data:", error);
+    const classified = SourceError.classify(error, sourceId, "chapters");
+    const recoveryStatus =
+      classified.code === "RATE_LIMITED"
+        ? "RATE_LIMITED"
+        : classified.code === "UPSTREAM_TIMEOUT" || classified.code === "UPSTREAM_BLOCKED"
+          ? "DEGRADED"
+          : ["SOURCE_DOWN", "DOMAIN_CHANGED", "ROUTE_CHANGED", "PARSER_BROKEN", "SCHEMA_CHANGED", "DECRYPT_FAILURE"].includes(classified.code)
+            ? "BROKEN"
+            : null;
+
+    if (recoveryStatus) {
+      return (
+        <DeadSourceRecovery
+          sourceId={sourceId}
+          mangaId={mangaId}
+          health={{ status: recoveryStatus, errorCode: classified.code, message: classified.message }}
+        />
+      );
+    }
+
     return (
       <ReaderShell mangaTitle={detail?.title} chapterTitle="Error" currentChapterId={chapterId} sourceId={sourceId} mangaId={mangaId}>
         <div className="flex min-h-screen items-center justify-center pt-16">
           <EmptyState
             icon={<WarningCircle size={48} weight="duotone" className="text-text-muted" />}
             title="Gagal Memuat Chapter"
-            description="Terjadi kesalahan saat mengambil data chapter dari server."
+            description="Chapter belum bisa dimuat dari sumber ini."
             action={
               <Button asChild variant="outline" className="rounded-xl shadow-sm mt-2 font-bold">
                 <Link href={getMangaDetailHref(sourceId, mangaId)}>

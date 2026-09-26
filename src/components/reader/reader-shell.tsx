@@ -300,7 +300,7 @@ export function ReaderShell({
                     {isPaged ? (
                       <motion.div
                         data-testid="reader-progress-bar"
-                        className="h-full bg-accent origin-left shadow-[0_0_8px_var(--color-accent)]"
+                        className="h-full bg-accent origin-left"
                         initial={false}
                         animate={{ width: `${Math.max(0, Math.min(100, pagedProgress * 100))}%` }}
                         transition={{ type: "spring", stiffness: 300, damping: 30 }}
@@ -308,7 +308,7 @@ export function ReaderShell({
                     ) : (
                       <motion.div
                         data-testid="reader-progress-bar"
-                        className="h-full bg-accent origin-left shadow-[0_0_8px_var(--color-accent)]"
+                        className="h-full bg-accent origin-left"
                         style={{ scaleX: springScrollProgress }}
                       />
                     )}
@@ -467,7 +467,7 @@ export function ReaderShell({
             {isPaged ? (
               <motion.div
                 data-testid="top-viewport-progress-bar"
-                className="h-full bg-accent origin-left shadow-[0_0_8px_var(--color-accent),0_1px_2px_rgba(0,0,0,0.3)]"
+                className="h-full bg-accent origin-left"
                 initial={false}
                 animate={{ width: `${Math.max(0, Math.min(100, pagedProgress * 100))}%` }}
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
@@ -475,7 +475,7 @@ export function ReaderShell({
             ) : (
               <motion.div
                 data-testid="top-viewport-progress-bar"
-                className="h-full bg-accent origin-left shadow-[0_0_8px_var(--color-accent),0_1px_2px_rgba(0,0,0,0.3)]"
+                className="h-full bg-accent origin-left"
                 style={{ scaleX: springScrollProgress }}
               />
             )}

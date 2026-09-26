@@ -16,6 +16,8 @@ import type { MangaKey } from "@/shared/types/collection";
 import { cn } from "@/shared/utils/cn";
 import type { BaseCardProps } from "./types";
 import type { SourceBinding } from "@/shared/lib/canonical-search";
+import { CanonicalSourceDialog, isCanonicalBindingAvailable } from "../canonical-source-dialog";
+import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import {
   MangaCardCoverFrame,
   MangaCardMeta,
@@ -42,6 +44,7 @@ export function ShelfCard({
   const searchParams = useSearchParams();
   const { readingStatusByManga } = useCollectionStore();
   const updateStore = useUpdateStore();
+  const disabledSources = useSourcePreferencesStore((state) => state.disabledSources);
   
   // Check unread status (handle both UUID and legacy keys)
   const isUnread = React.useMemo(() => {
@@ -63,8 +66,10 @@ export function ShelfCard({
   const sourceObj = dynamicSourceRegistry.get(sourceId) || sourceRegistry.find(s => s.id === sourceId);
   const sourceName = showSourceBadge ? (sourceObj?.name || sourceId) : null;
   const isUnavailable = sourceObj?.status === "unavailable" || sourceObj?.status === "in-fix";
-  const effectiveBindings = sourceBindings || (manga as any)?.sourceBindings;
-  const isMultiSource = effectiveBindings && effectiveBindings.length > 1;
+  const effectiveBindings = (sourceBindings || (manga as any)?.sourceBindings || []) as SourceBinding[];
+  const availableBindings = effectiveBindings.filter((binding) => isCanonicalBindingAvailable(binding, disabledSources));
+  const isMultiSource = availableBindings.length > 1;
+  const [isSourceDialogOpen, setIsSourceDialogOpen] = React.useState(false);
 
   return (
     <motion.article
@@ -82,7 +87,13 @@ export function ShelfCard({
         href={getMangaDetailHref(sourceId, manga.id, fullPath)} 
         transitionTypes={['nav-forward']}
         className={cn(mangaCardInteraction.link, "group flex flex-col rounded-xs")}
-        aria-label={`Lihat ${manga.title}`}
+        aria-label={isMultiSource ? `Pilih sumber untuk ${manga.title}` : `Lihat ${manga.title}`}
+        aria-haspopup={isMultiSource ? "dialog" : undefined}
+        onClick={(event) => {
+          if (!isMultiSource) return;
+          event.preventDefault();
+          setIsSourceDialogOpen(true);
+        }}
       >
         <motion.div
           layoutId={reducedMotion ? undefined : `manga-cover-${sourceId}-${manga.id}`}
@@ -107,7 +118,7 @@ export function ShelfCard({
             {isMultiSource && (
               <div className="flex items-center gap-1 rounded-xs bg-surface-glass backdrop-blur-md px-1.5 py-0.5 shadow-sm border border-border-default/40">
                 <span className="text-xs font-bold text-accent">
-                  {effectiveBindings.length} Sumber
+                  {availableBindings.length} Sumber
                 </span>
               </div>
             )}
@@ -165,7 +176,7 @@ export function ShelfCard({
             {showSourceBadge && (
               isMultiSource ? (
                 <MangaCardMeta className="truncate font-semibold text-accent">
-                  {effectiveBindings.length} Sumber
+                  {availableBindings.length} Sumber
                 </MangaCardMeta>
               ) : sourceName ? (
                 <MangaCardMeta className="truncate font-semibold text-accent">{sourceName}</MangaCardMeta>
@@ -200,6 +211,15 @@ export function ShelfCard({
       <div className="absolute right-2 top-2 z-10 flex items-center justify-center">
         <BookmarkButton sourceId={sourceId} manga={manga} className="size-11" />
       </div>
+      {isMultiSource && (
+        <CanonicalSourceDialog
+          open={isSourceDialogOpen}
+          onOpenChange={setIsSourceDialogOpen}
+          title={manga.title}
+          sourceBindings={availableBindings}
+          returnTo={fullPath}
+        />
+      )}
     </motion.article>
   );
 }

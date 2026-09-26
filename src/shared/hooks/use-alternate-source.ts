@@ -12,6 +12,7 @@ import { mapChapterProgress, type ChapterMapResult } from "@/shared/lib/chapter-
 import { executeSourceMigration } from "@/shared/lib/source-fallback";
 import { getReaderHref } from "@/shared/lib/routes";
 import type { AlternateSourceCandidate } from "@/components/manga/alternate-source-modal";
+import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 
 interface UseAlternateSourceOptions {
   sourceId: string;
@@ -38,6 +39,7 @@ export function useAlternateSource({
   const relinkTitle = useLibraryStore((state) => state.relinkTitle);
   const historyItem = useHistoryStore((state) => state.getLatestForManga(sourceId, mangaId));
   const saveProgress = useHistoryStore((state) => state.saveProgress);
+  const disabledSources = useSourcePreferencesStore((state) => state.disabledSources);
 
   const title = initialTitle ?? libraryItem?.title ?? historyItem?.mangaTitle ?? mangaId;
   const author = initialAuthor ?? libraryItem?.author;
@@ -57,7 +59,14 @@ export function useAlternateSource({
 
     try {
       const enabledSources = getAllSourceMetadata().filter(
-        (s) => s.capabilities.search && s.id !== sourceId && s.status !== "unavailable"
+        (s) =>
+          s.capabilities.search &&
+          s.id !== sourceId &&
+          s.isEnabled &&
+          s.isInstalled &&
+          !disabledSources.includes(s.id) &&
+          s.status !== "unavailable" &&
+          s.status !== "in-fix"
       );
 
       const searchPromises = enabledSources.map(async (src) => {
@@ -68,6 +77,8 @@ export function useAlternateSource({
             mangaId: m.id,
             title: m.title,
             coverUrl: m.coverUrl,
+            author: m.author,
+            alternativeTitles: [m.originalTitle, ...(m.alternativeTitles ?? [])].filter(Boolean) as string[],
             sourceDisplayName: src.name,
           }));
         } catch {
@@ -116,14 +127,11 @@ export function useAlternateSource({
     } finally {
       setIsSearching(false);
     }
-  }, [sourceId, title, author, lastReadChapter]);
+  }, [sourceId, title, author, lastReadChapter, disabledSources]);
 
   const handleConfirm = useCallback(
     async (candidate: AlternateSourceCandidate) => {
       try {
-        const savedTitleId = libraryItem?.id ?? `${sourceId}:${mangaId}`;
-
-        // Fetch candidate chapters to map chapter correctly
         let targetChapterId = "";
         try {
           const targetChapters = await apiClient.getChapters(candidate.sourceId, candidate.mangaId);
@@ -146,7 +154,6 @@ export function useAlternateSource({
             }
           }
         } catch {
-          // Ignore chapter fetch failure
         }
 
         const effectiveLibraryItem = libraryItem ?? {

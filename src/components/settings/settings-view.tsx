@@ -125,7 +125,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
                   </div>
                 )}
                 <div className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-surface-overlay flex items-center justify-center">
-                  <div className="w-2.5 h-2.5 rounded-full bg-semantic-success shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-semantic-success" />
                 </div>
               </div>
               

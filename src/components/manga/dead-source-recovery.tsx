@@ -24,14 +24,22 @@ import {
   resolveSourceFallback,
   executeSourceMigration,
 } from "@/shared/lib/source-fallback";
+import type { SourceErrorCode } from "@/server/lib/sources/error";
+import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 
 interface DeadSourceRecoveryProps {
   sourceId: string;
   mangaId: string;
+  health?: {
+    status: "BROKEN" | "RATE_LIMITED" | "DEGRADED";
+    errorCode?: SourceErrorCode;
+    message?: string;
+  };
 }
 
-export function DeadSourceRecovery({ sourceId, mangaId }: DeadSourceRecoveryProps) {
+export function DeadSourceRecovery({ sourceId, mangaId, health = { status: "BROKEN", errorCode: "SOURCE_DOWN" } }: DeadSourceRecoveryProps) {
   const router = useRouter();
+  const disabledSources = useSourcePreferencesStore((state) => state.disabledSources);
 
   const libraryItem = useLibraryStore((state) =>
     state.resolveBySourceRef(sourceId, mangaId) ?? state.getLibraryItem(sourceId, mangaId)
@@ -69,8 +77,16 @@ export function DeadSourceRecovery({ sourceId, mangaId }: DeadSourceRecoveryProp
 
     try {
       // Find all available sources except the broken one (including built-ins and dynamic)
-      const enabledSources = getAllSourceMetadata()
-        .filter((s) => s.capabilities.search && s.id !== sourceId && s.status !== "unavailable");
+      const enabledSources = getAllSourceMetadata().filter(
+        (s) =>
+          s.capabilities.search &&
+          s.id !== sourceId &&
+          s.isEnabled &&
+          s.isInstalled &&
+          !disabledSources.includes(s.id) &&
+          s.status !== "unavailable" &&
+          s.status !== "in-fix"
+      );
 
       // Search across enabled sources in parallel
       const searchPromises = enabledSources.map(async (src) => {
@@ -81,6 +97,8 @@ export function DeadSourceRecovery({ sourceId, mangaId }: DeadSourceRecoveryProp
             mangaId: m.id,
             title: m.title,
             coverUrl: m.coverUrl,
+            author: m.author,
+            alternativeTitles: [m.originalTitle, ...(m.alternativeTitles ?? [])].filter(Boolean) as string[],
             sourceDisplayName: src.name,
           }));
         } catch {
@@ -147,10 +165,13 @@ export function DeadSourceRecovery({ sourceId, mangaId }: DeadSourceRecoveryProp
         lastReadChapterTitle: lastReadChapter,
       },
       failedSourceId: sourceId,
-      health: { status: "BROKEN", errorCode: "SOURCE_BROKEN" },
-      availableSources: getAllSourceMetadata(),
+      health,
+      availableSources: getAllSourceMetadata().map((source) => ({
+        ...source,
+        isEnabled: source.isEnabled && !disabledSources.includes(source.id),
+      })),
     });
-  }, [libraryItem, sourceId, mangaId, knownTitle, knownAuthor, lastReadChapter]);
+  }, [libraryItem, sourceId, mangaId, knownTitle, knownAuthor, lastReadChapter, health, disabledSources]);
 
   const handleQuickSwitch = () => {
     if (!libraryItem || !fallbackEvaluation?.candidate) return;
@@ -237,14 +258,18 @@ export function DeadSourceRecovery({ sourceId, mangaId }: DeadSourceRecoveryProp
           )}
 
           {/* Warning Banner */}
-          <div className="w-full mt-2 mb-6 p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-left flex items-start gap-3">
-            <Warning size={24} weight="fill" className="text-amber-400 shrink-0 mt-0.5" />
+          <div className="w-full mt-2 mb-6 p-4 rounded-xl bg-status-warning-bg border border-status-warning-fg/20 text-left flex items-start gap-3">
+            <Warning size={24} weight="fill" className="text-status-warning-fg shrink-0 mt-0.5" />
             <div className="text-sm">
-              <p className="font-semibold text-amber-300">
-                Sumber &quot;{sourceName}&quot; Tidak Tersedia
+              <p className="font-semibold text-status-warning-fg">
+                {health.status === "RATE_LIMITED"
+                  ? `${sourceName} sedang membatasi permintaan`
+                  : health.status === "DEGRADED"
+                    ? `${sourceName} sedang bermasalah`
+                    : `${sourceName} tidak tersedia`}
               </p>
               <p className="text-text-muted mt-1 leading-relaxed">
-                Sumber komik ini sedang mengalami gangguan atau sudah tidak aktif. Anda dapat mencari dan beralih ke sumber alternatif tanpa kehilangan data koleksi Anda.
+                Kamu bisa mencoba lagi atau pindah ke sumber lain tanpa kehilangan data bacaan.
               </p>
             </div>
           </div>

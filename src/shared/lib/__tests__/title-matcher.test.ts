@@ -23,6 +23,11 @@ describe("normalizeTitle", () => {
   it("replaces non-alnum with spaces", () => {
     expect(normalizeTitle("Boku no Hero-Academia")).toBe("boku no hero academia");
   });
+
+  it("preserves non-Latin titles", () => {
+    expect(normalizeTitle("나 혼자만 레벨업")).toBe("나 혼자만 레벨업");
+    expect(normalizeTitle("進撃の巨人")).toBe("進撃の巨人");
+  });
 });
 
 describe("matchTitles", () => {

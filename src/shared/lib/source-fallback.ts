@@ -63,7 +63,7 @@ export interface ResolveFallbackOptions {
     message?: string;
   };
   targetChaptersMap?: Record<string, ChapterMeta[]>;
-  availableSources?: Array<{ id: string; name?: string; isEnabled?: boolean; status?: string }>;
+  availableSources?: Array<{ id: string; name?: string; isEnabled?: boolean; isInstalled?: boolean; status?: string }>;
   alternateCandidates?: TitleCandidate[];
 }
 
@@ -116,7 +116,6 @@ export function resolveSourceFallback(options: ResolveFallbackOptions): SourceFa
     alternateCandidates = [],
   } = options;
 
-  const currentPrimarySourceId = savedTitle.primarySourceId ?? savedTitle.sourceId ?? failedSourceId;
   const healthStatus = health?.status ?? "BROKEN";
   const errorCode = health?.errorCode;
 
@@ -148,7 +147,7 @@ export function resolveSourceFallback(options: ResolveFallbackOptions): SourceFa
     if (availableSources.length === 0) return true;
     const meta = availableSources.find((s) => s.id === srcId);
     if (!meta) return true;
-    return meta.isEnabled !== false && meta.status !== "unavailable" && meta.status !== "broken";
+    return meta.isEnabled !== false && meta.isInstalled !== false && meta.status !== "unavailable" && meta.status !== "in-fix" && meta.status !== "broken";
   };
 
   const linked = (savedTitle.linkedSources ?? []).filter(
@@ -423,8 +422,7 @@ export function executeSourceMigration(params: {
     createdAt: Date.now(),
   };
 
-  // Record migration snapshot in persistent in-memory / session registry
-  migrationSnapshotRegistry.set(snapshot.id, snapshot);
+  persistMigrationSnapshot(snapshot);
 
   if (!isTemporary && relinkTitleFn) {
     relinkTitleFn(savedTitleId, toSourceId, toMangaId, {
@@ -481,11 +479,55 @@ export function rollbackSourceMigration(params: {
     ...snapshot,
     status: "ROLLED_BACK",
   };
-  migrationSnapshotRegistry.set(snapshot.id, updated);
+  persistMigrationSnapshot(updated);
   return updated;
 }
 
-/**
- * In-memory registry for reversible migration snapshots.
- */
+const MIGRATION_STORAGE_KEY = "yomirra-source-migrations";
+const MAX_MIGRATION_SNAPSHOTS = 20;
+
 export const migrationSnapshotRegistry = new Map<string, SourceMigrationSnapshot>();
+
+function persistMigrationSnapshot(snapshot: SourceMigrationSnapshot) {
+  hydrateMigrationSnapshots();
+  migrationSnapshotRegistry.set(snapshot.id, snapshot);
+  if (typeof window === "undefined") return;
+
+  try {
+    const snapshots = Array.from(migrationSnapshotRegistry.values())
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .slice(0, MAX_MIGRATION_SNAPSHOTS);
+    localStorage.setItem(MIGRATION_STORAGE_KEY, JSON.stringify(snapshots));
+  } catch {
+    // Migration still succeeds when browser storage is unavailable.
+  }
+}
+
+export function hydrateMigrationSnapshots() {
+  if (typeof window === "undefined" || migrationSnapshotRegistry.size > 0) return;
+
+  try {
+    const stored = localStorage.getItem(MIGRATION_STORAGE_KEY);
+    if (!stored) return;
+    const snapshots = JSON.parse(stored) as SourceMigrationSnapshot[];
+    for (const snapshot of snapshots.slice(0, MAX_MIGRATION_SNAPSHOTS)) {
+      migrationSnapshotRegistry.set(snapshot.id, snapshot);
+    }
+  } catch {
+    try {
+      localStorage.removeItem(MIGRATION_STORAGE_KEY);
+    } catch {
+      // Ignore storage failures; migration state still remains in memory.
+    }
+  }
+}
+
+export function getMigrationSnapshots() {
+  hydrateMigrationSnapshots();
+  return Array.from(migrationSnapshotRegistry.values()).sort((a, b) => b.createdAt - a.createdAt);
+}
+
+export function getMigrationSnapshot(id: string) {
+  hydrateMigrationSnapshots();
+  return migrationSnapshotRegistry.get(id);
+}
