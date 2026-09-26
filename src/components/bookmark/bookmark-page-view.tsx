@@ -3,9 +3,8 @@
 import * as React from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { BookBookmark, CalendarBlank, CaretRight } from "@phosphor-icons/react";
-import { PageHeader } from "@/components/app/header";
-import { YomirraSurface } from "@/components/ui/layout";
+import { CalendarBlank } from "@phosphor-icons/react";
+import { YomirraSurface, PageContainer } from "@/components/ui/layout";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { BookmarkSkeleton } from "@/components/skeletons/bookmark-skeleton";
 import { useBookmarkReading } from "@/shared/hooks/use-bookmark-reading";
@@ -50,112 +49,101 @@ export function BookmarkPageView() {
   if (!reading.isMounted || !collection.isMounted) {
     return (
       <YomirraSurface variant="base" className="w-full">
-        <div className="mx-auto flex w-full max-w-9xl flex-col pb-[calc(var(--bottom-nav-height,80px)+24px)] md:px-8 md:pb-10">
+        <PageContainer>
           <BookmarkSkeleton />
-        </div>
+        </PageContainer>
       </YomirraSurface>
     );
   }
 
   return (
     <YomirraSurface variant="base" className="w-full">
-      <div className="mx-auto flex w-full max-w-9xl flex-col pb-[calc(var(--bottom-nav-height,80px)+24px)] md:px-8 md:pb-10">
-        <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:px-0 md:pt-8">
-        <PageHeader
-          title="Rak Buku"
-          description="Bacaan, koleksi, & pembaruan komik favoritmu"
-          icon={<BookBookmark size={24} weight="duotone" />}
-          actions={<HeaderActions />}
-        />
-      </div>
+      <PageContainer>
+        {/* Mobile Utility Actions (hidden on desktop where TopNav is canonical) */}
+        <div className="flex md:hidden items-center justify-between w-full">
+          <span className="font-bold text-xs uppercase tracking-[0.14em] text-accent">Rak Buku</span>
+          <HeaderActions />
+        </div>
 
-      {/* Secondary Utility: Jadwal Rilis */}
-      <div className="px-4 pb-3 w-full md:px-0 md:max-w-xl">
-        <Link
-          href="/updates"
-          className="flex items-center justify-between px-3 py-2 rounded-lg bg-surface-muted/50 border border-border-subtle hover:bg-surface-hover hover:border-accent/40 transition-colors group"
-        >
-          <div className="flex items-center gap-2">
-            <CalendarBlank size={16} weight="duotone" className="text-text-muted group-hover:text-accent transition-colors" />
-            <span className="text-xs font-semibold text-text-secondary group-hover:text-text-primary transition-colors">
-              Jadwal Rilis Mingguan
+        <h1 className="sr-only">Rak Buku</h1>
+
+        {/* Unified Navigation & Utility Row */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 w-full">
+          <SegmentedControl
+            options={[
+              { value: "reading", label: "Sedang Dibaca" },
+              {
+                value: "collection",
+                label: `Bookmark${libraryItemCount > 0 ? ` (${libraryItemCount})` : ""}`,
+              },
+            ]}
+            value={activeTab}
+            onChange={(val) => handleTabChange(val as BookmarkTab)}
+            variant="quick-rail"
+            className="w-full sm:w-auto"
+            layoutId="bookmark-tab-pill"
+          />
+
+          <Link
+            href="/updates"
+            className="inline-flex items-center justify-between sm:justify-start gap-2 px-3 py-2 rounded-lg bg-surface-muted/50 border border-border-subtle hover:bg-surface-hover hover:border-accent/40 text-xs font-semibold text-text-secondary transition-colors shrink-0"
+          >
+            <span className="flex items-center gap-2">
+              <CalendarBlank size={16} weight="duotone" className="text-text-muted" />
+              <span>Jadwal Rilis Mingguan</span>
             </span>
-          </div>
-          {unreadCount > 0 && (
-            <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-semantic-error text-white font-bold shadow-xs">
-              {unreadCount > 99 ? "99+" : unreadCount} baru
-            </span>
+            {unreadCount > 0 && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-semantic-error text-white font-bold">
+                {unreadCount > 99 ? "99+" : unreadCount} baru
+              </span>
+            )}
+          </Link>
+        </div>
+
+        <div>
+          {activeTab === "reading" && (
+            <ReadingTab
+              groupedHistory={reading.groupedHistory}
+              pendingDeletions={reading.pendingDeletions}
+              onRemoveHistory={reading.handleRemoveHistory}
+            />
           )}
-        </Link>
-      </div>
 
-      <div
-        role="tablist"
-        aria-label="Rak Buku"
-        className="px-4 pt-1 pb-4 w-full md:px-0 md:max-w-xl"
-      >
-        <SegmentedControl
-          options={[
-            { value: "reading", label: "Sedang Dibaca" },
-            {
-              value: "collection",
-              label: "Bookmark",
-              badge: libraryItemCount > 0 ? libraryItemCount : undefined,
-            },
-          ]}
-          value={activeTab}
-          onChange={(val) => handleTabChange(val as BookmarkTab)}
-          variant="quick-rail"
-          fullWidth
-          className="h-[46px]"
-          layoutId="bookmark-tab-pill"
-        />
-      </div>
-
-      <div className="px-4 mt-1 outline-none md:px-0">
-        {activeTab === "reading" && (
-          <ReadingTab
-            groupedHistory={reading.groupedHistory}
-            pendingDeletions={reading.pendingDeletions}
-            onRemoveHistory={reading.handleRemoveHistory}
-          />
-        )}
-
-        {activeTab === "collection" && (
-          <CollectionTab
-            searchQuery={collection.searchQuery}
-            onSearchChange={(e) => collection.setSearchQuery(e.target.value)}
-            onSearchClear={() => collection.setSearchQuery("")}
-            sortBy={collection.sortBy}
-            onSortChange={collection.setSortBy}
-            isSelectionMode={collection.isSelectionMode}
-            onToggleSelectionMode={() => {
-              collection.setIsSelectionMode(!collection.isSelectionMode);
-              collection.setSelectedItems(new Set());
-            }}
-            selectedItems={collection.selectedItems}
-            onToggleSelectItem={collection.toggleSelectItem}
-            onSelectAll={collection.handleSelectAll}
-            isDeleteDialogOpen={collection.isDeleteDialogOpen}
-            onOpenDeleteDialogChange={collection.setIsDeleteDialogOpen}
-            onConfirmBulkDelete={collection.handleConfirmBulkDelete}
-            totalItemsCount={collection.filteredAndSortedLibraryItems.length}
-            filteredCount={collection.filteredAndSortedLibraryItems.length}
-            paginatedCollection={collection.paginatedCollection}
-            collectionPage={collection.collectionPage}
-            setCollectionPage={collection.setCollectionPage}
-            totalPages={collection.totalPages}
-            collections={collection.collections}
-            membershipsByManga={collection.membershipsByManga}
-            selectedCollectionId={collection.selectedCollectionId}
-            onSelectCollectionId={collection.setSelectedCollectionId}
-            onCreateCollection={collection.createCollection}
-            onRenameCollection={collection.renameCollection}
-            onDeleteCollection={collection.deleteCollection}
-          />
-        )}
-      </div>
-      </div>
+          {activeTab === "collection" && (
+            <CollectionTab
+              searchQuery={collection.searchQuery}
+              onSearchChange={(e) => collection.setSearchQuery(e.target.value)}
+              onSearchClear={() => collection.setSearchQuery("")}
+              sortBy={collection.sortBy}
+              onSortChange={collection.setSortBy}
+              isSelectionMode={collection.isSelectionMode}
+              onToggleSelectionMode={() => {
+                collection.setIsSelectionMode(!collection.isSelectionMode);
+                collection.setSelectedItems(new Set());
+              }}
+              selectedItems={collection.selectedItems}
+              onToggleSelectItem={collection.toggleSelectItem}
+              onSelectAll={collection.handleSelectAll}
+              isDeleteDialogOpen={collection.isDeleteDialogOpen}
+              onOpenDeleteDialogChange={collection.setIsDeleteDialogOpen}
+              onConfirmBulkDelete={collection.handleConfirmBulkDelete}
+              totalItemsCount={collection.filteredAndSortedLibraryItems.length}
+              filteredCount={collection.filteredAndSortedLibraryItems.length}
+              paginatedCollection={collection.paginatedCollection}
+              collectionPage={collection.collectionPage}
+              setCollectionPage={collection.setCollectionPage}
+              totalPages={collection.totalPages}
+              collections={collection.collections}
+              membershipsByManga={collection.membershipsByManga}
+              selectedCollectionId={collection.selectedCollectionId}
+              onSelectCollectionId={collection.setSelectedCollectionId}
+              onCreateCollection={collection.createCollection}
+              onRenameCollection={collection.renameCollection}
+              onDeleteCollection={collection.deleteCollection}
+            />
+          )}
+        </div>
+      </PageContainer>
     </YomirraSurface>
   );
 }

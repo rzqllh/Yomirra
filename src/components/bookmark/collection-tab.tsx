@@ -23,6 +23,7 @@ import {
   PaginationPrevious,
   PaginationEllipsis,
 } from "@/components/ui/pagination";
+import { PageToolbar } from "@/components/ui/layout";
 import { cn } from "@/shared/utils/cn";
 import type { Collection } from "@/shared/types/collection";
 
@@ -133,84 +134,86 @@ export function CollectionTab({
       aria-labelledby="tab-collection"
       className="space-y-4"
     >
-      <CollectionToolbar
-        searchQuery={searchQuery}
-        onSearchChange={onSearchChange}
-        onSearchClear={onSearchClear}
-        sortBy={sortBy}
-        onSortChange={onSortChange}
-        isSelectionMode={isSelectionMode}
-        onToggleSelectionMode={onToggleSelectionMode}
-        totalCount={totalItemsCount}
-        onCreateCollectionClick={() => {
-          setNewName("");
-          setIsCreateOpen(true);
-        }}
-      />
-
-      {/* User Collection Filter Rail */}
-      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 px-0.5">
-        <FilterChip
-          label={`Semua (${totalItemsCount})`}
-          selected={!selectedCollectionId}
-          variant={!selectedCollectionId ? "accent-solid" : "default"}
-          onClick={() => onSelectCollectionId?.(null)}
-          className="shrink-0"
+      <PageToolbar>
+        <CollectionToolbar
+          searchQuery={searchQuery}
+          onSearchChange={onSearchChange}
+          onSearchClear={onSearchClear}
+          sortBy={sortBy}
+          onSortChange={onSortChange}
+          isSelectionMode={isSelectionMode}
+          onToggleSelectionMode={onToggleSelectionMode}
+          totalCount={totalItemsCount}
+          onCreateCollectionClick={() => {
+            setNewName("");
+            setIsCreateOpen(true);
+          }}
         />
 
-        {collections.map((c) => {
-          const isSelected = selectedCollectionId === c.id;
-          const count = getMangaCount(c.id);
+        {/* User Collection Filter Rail */}
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 px-0.5">
+          <FilterChip
+            label={`Semua (${totalItemsCount})`}
+            selected={!selectedCollectionId}
+            variant={!selectedCollectionId ? "accent-solid" : "default"}
+            onClick={() => onSelectCollectionId?.(null)}
+            className="shrink-0"
+          />
 
-          return (
-            <div key={c.id} className="relative flex items-center shrink-0 group">
-              <FilterChip
-                label={
-                  <span className="flex items-center gap-1.5">
-                    <Folder size={14} weight="duotone" />
-                    <span>{c.name}</span>
-                    <span className="text-[11px] opacity-70">({count})</span>
-                  </span>
-                }
-                selected={isSelected}
-                variant={isSelected ? "accent-solid" : "default"}
-                onClick={() => onSelectCollectionId?.(isSelected ? null : c.id)}
-                className="shrink-0"
-              />
+          {collections.map((c) => {
+            const isSelected = selectedCollectionId === c.id;
+            const count = getMangaCount(c.id);
 
-              {isSelected && (
-                <div className="flex items-center ml-1 gap-1">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setActiveCollectionId(c.id);
-                      setNewName(c.name);
-                      setIsRenameOpen(true);
-                    }}
-                    className="w-7 h-7 rounded-lg bg-surface-raised border border-border-subtle hover:text-text-primary text-text-muted flex items-center justify-center transition-colors"
-                    aria-label={`Ubah nama ${c.name}`}
-                  >
-                    <PencilSimple size={13} weight="duotone" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setActiveCollectionId(c.id);
-                      setIsDeleteOpen(true);
-                    }}
-                    className="w-7 h-7 rounded-lg bg-surface-raised border border-border-subtle hover:text-semantic-error text-text-muted flex items-center justify-center transition-colors"
-                    aria-label={`Hapus ${c.name}`}
-                  >
-                    <Trash size={13} weight="duotone" />
-                  </button>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+            return (
+              <div key={c.id} className="relative flex items-center shrink-0 group">
+                <FilterChip
+                  label={
+                    <span className="flex items-center gap-1.5">
+                      <Folder size={14} weight="duotone" />
+                      <span>{c.name}</span>
+                      <span className="text-[11px] opacity-70">({count})</span>
+                    </span>
+                  }
+                  selected={isSelected}
+                  variant={isSelected ? "accent-solid" : "default"}
+                  onClick={() => onSelectCollectionId?.(isSelected ? null : c.id)}
+                  className="shrink-0"
+                />
+
+                {isSelected && (
+                  <div className="flex items-center ml-1 gap-1">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveCollectionId(c.id);
+                        setNewName(c.name);
+                        setIsRenameOpen(true);
+                      }}
+                      className="w-7 h-7 rounded-lg bg-surface-raised border border-border-subtle hover:text-text-primary text-text-muted flex items-center justify-center transition-colors"
+                      aria-label={`Ubah nama ${c.name}`}
+                    >
+                      <PencilSimple size={13} weight="duotone" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveCollectionId(c.id);
+                        setIsDeleteOpen(true);
+                      }}
+                      className="w-7 h-7 rounded-lg bg-surface-raised border border-border-subtle hover:text-semantic-error text-text-muted flex items-center justify-center transition-colors"
+                      aria-label={`Hapus ${c.name}`}
+                    >
+                      <Trash size={13} weight="duotone" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </PageToolbar>
 
       {isSelectionMode && (
         <CollectionSelectionToolbar

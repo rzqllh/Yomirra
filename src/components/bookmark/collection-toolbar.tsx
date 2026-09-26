@@ -36,7 +36,7 @@ export function CollectionToolbar({
   onCreateCollectionClick,
 }: CollectionToolbarProps) {
   return (
-    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 mb-4">
+    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
       <SearchInput
         value={searchQuery}
         onChange={onSearchChange}

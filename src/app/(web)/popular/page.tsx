@@ -1,6 +1,4 @@
 import { Metadata } from "next";
-import { PageHeader } from "@/components/app/header";
-import { Fire } from "@phosphor-icons/react/dist/ssr";
 import { sourceRegistry } from "@/shared/sources/source-registry";
 import { Suspense } from "react";
 import { SourceFeedSkeleton } from "@/components/app/source-feed-skeleton";
@@ -10,7 +8,7 @@ import { EditorialCard } from "@/components/manga/card";
 import Link from "next/link";
 import { getManifestUrlFromCookie } from "@/server/lib/sources/server-manifest";
 import { cookies } from "next/headers";
-import { YomirraSurface } from "@/components/ui/layout";
+import { YomirraSurface, PageContainer } from "@/components/ui/layout";
 
 export const metadata: Metadata = {
   title: "Manga Populer - Yomirra",
@@ -77,13 +75,13 @@ export default async function PopularPage() {
   const activeSources = [...activeBuiltin, ...customSources];
 
   return (
-    <YomirraSurface variant="base" className="min-h-screen">
-      <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:pt-8 md:px-8 pb-6 max-w-9xl mx-auto">
-        <PageHeader 
-          title="Manga Populer" 
-          description="Manga, Manhwa, dan Manhua paling populer saat ini."
-          icon={<Fire size={24} weight="duotone" />}
-        />
+    <YomirraSurface variant="base" className="w-full">
+      <PageContainer>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-text-primary">
+            Manga Populer
+          </h1>
+        </div>
         
         {activeSources.map(source => (
           <Suspense key={source.id} fallback={<SourceFeedSkeleton />}>
@@ -96,7 +94,7 @@ export default async function PopularPage() {
             <p className="text-text-muted">Tidak ada sumber komik yang aktif.</p>
           </div>
         )}
-      </div>
+      </PageContainer>
     </YomirraSurface>
   );
 }

@@ -1,9 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { MagnifyingGlass } from "@phosphor-icons/react";
-import { PageHeader } from "@/components/app/header";
 import { HeaderActions } from "@/components/app/header-actions";
+import { YomirraSurface, PageContainer, PageToolbar } from "@/components/ui/layout";
 import { CatalogControls } from "@/components/ui/catalog-controls";
 import { useSearchCatalog } from "@/shared/hooks/use-search-catalog";
 import { SearchToolbar } from "./search-toolbar";
@@ -14,30 +13,30 @@ export function SearchPageView() {
   const search = useSearchCatalog();
 
   return (
-    <main className="min-h-screen bg-surface-base pb-[calc(var(--bottom-nav-height,80px)+24px)] md:pb-10">
-      <div className="px-4 md:px-8 max-w-7xl mx-auto space-y-5">
-        {/* Document Flow Header */}
-        <div className="pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:pt-8">
-          <PageHeader
-            title="Pencarian"
-            description="Cari judul dari semua sumber bacaanmu."
-            icon={<MagnifyingGlass size={24} weight="duotone" />}
-            actions={<HeaderActions />}
-          />
+    <YomirraSurface variant="base" className="w-full">
+      <PageContainer>
+        {/* Mobile Utility Actions (hidden on desktop where TopNav is canonical) */}
+        <div className="flex items-center justify-between w-full md:hidden">
+          <span className="font-bold text-xs uppercase tracking-[0.14em] text-accent">Pencarian</span>
+          <HeaderActions />
         </div>
 
+        <h1 className="sr-only">Pencarian</h1>
+
         <CatalogControls label="Cari dan saring komik">
-          <SearchToolbar
-            localQuery={search.localQuery}
-            onQueryChange={(e) => search.setLocalQuery(e.target.value)}
-            onSearchSubmit={search.handleSearchSubmit}
-            onQueryClear={() => search.setLocalQuery("")}
-          />
-          <SearchSourceRail
-            searchableSources={search.searchableSources}
-            activeSelectedSources={search.activeSelectedSources}
-            onToggleSource={search.toggleSource}
-          />
+          <PageToolbar>
+            <SearchToolbar
+              localQuery={search.localQuery}
+              onQueryChange={(e) => search.setLocalQuery(e.target.value)}
+              onSearchSubmit={search.handleSearchSubmit}
+              onQueryClear={() => search.setLocalQuery("")}
+            />
+            <SearchSourceRail
+              searchableSources={search.searchableSources}
+              activeSelectedSources={search.activeSelectedSources}
+              onToggleSource={search.toggleSource}
+            />
+          </PageToolbar>
         </CatalogControls>
 
         {/* Results & Pagination */}
@@ -55,7 +54,7 @@ export function SearchPageView() {
           hasNextPage={search.hasNextPage}
           queryClient={search.queryClient}
         />
-      </div>
-    </main>
+      </PageContainer>
+    </YomirraSurface>
   );
 }

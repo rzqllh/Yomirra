@@ -83,7 +83,7 @@ describe("Library & Updates Integration", () => {
 
   it("renders the library controls and results", () => {
     render(<LibraryPageView />);
-    expect(screen.getAllByText("Rak Bacaan").length).toBeGreaterThan(0);
+    expect(screen.getByRole("heading", { level: 1, name: "Library" })).toBeTruthy();
     expect(screen.getByTestId("library-toolbar")).toBeTruthy();
     expect(screen.getByTestId("library-results")).toBeTruthy();
   });

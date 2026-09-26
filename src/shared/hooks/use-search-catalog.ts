@@ -81,7 +81,6 @@ export function useSearchCatalog() {
     return s.filter(src => {
       if (!src.isInstalled || src.isEnabled === false || !src.capabilities?.search) return false;
       if (disabledSources.includes(src.id)) return false;
-      if (src.status !== "online") return false;
       if (src.isNsfw && hideNsfw) return false;
       return true;
     });
@@ -89,32 +88,18 @@ export function useSearchCatalog() {
 
   const searchFilterStore = useSearchFilterStore();
   const selectedSources = searchFilterStore.selectedSources;
+  const hasCustomizedSources = searchFilterStore.hasCustomizedSources;
 
   const activeSelectedSources = React.useMemo(() => {
-    const sources = selectedSources || [];
     if (!searchableSources.length) return [];
-    return sources.filter((id: string) => searchableSources.some(s => s.id === id));
-  }, [selectedSources, searchableSources]);
-
-  const [isInitialized, setIsInitialized] = React.useState(false);
-
-  React.useEffect(() => {
-    let mounted = true;
-    if (searchableSources.length > 0 && !isInitialized) {
-      setTimeout(() => {
-        if (mounted) {
-          if (searchFilterStore.selectedSources === null) {
-            searchFilterStore.setSelectedSources(searchableSources.map(s => s.id));
-          }
-          setIsInitialized(true);
-        }
-      }, 0);
+    if (!hasCustomizedSources || selectedSources === null) {
+      return searchableSources.map(s => s.id);
     }
-    return () => { mounted = false; };
-  }, [searchableSources, isInitialized, searchFilterStore]);
+    return selectedSources.filter((id: string) => searchableSources.some(s => s.id === id));
+  }, [hasCustomizedSources, selectedSources, searchableSources]);
 
   const toggleSource = (id: string) => {
-    searchFilterStore.toggleSource(id);
+    searchFilterStore.toggleSource(id, searchableSources.map(s => s.id));
   };
 
   const isNsfwFiltered = useSettingsStore((state) => state.hideNsfw);
@@ -170,6 +155,8 @@ export function useSearchCatalog() {
 
   const searchQueries = useQueries({
     queries: activeSelectedSources.map((sourceId: string) => {
+      const sourceMeta = searchableSources.find((s) => s.id === sourceId);
+      const isUnreachable = sourceMeta?.status === "unavailable" || sourceMeta?.status === "in-fix";
       const payload = buildPayloadForSource(sourceId, dynamicFilters, activeFilters);
 
       let isExhausted = false;
@@ -186,7 +173,7 @@ export function useSearchCatalog() {
       return {
         queryKey: ["searchSource", sourceId, query, isNsfwFiltered, payload, page],
         queryFn: ({ signal }: { signal?: AbortSignal }) => apiClient.search(sourceId, query, page, payload, isNsfwFiltered, { signal }),
-        enabled: activeSelectedSources.length > 0 && !isExhausted,
+        enabled: activeSelectedSources.length > 0 && !isExhausted && !isUnreachable,
         placeholderData: keepPreviousData,
       };
     })
@@ -195,6 +182,17 @@ export function useSearchCatalog() {
   const resultsBySource = React.useMemo(() => {
     const acc: Record<string, { results: any[]; hasNextPage?: boolean; error?: string }> = {};
     activeSelectedSources.forEach((sourceId: string, idx: number) => {
+      const sourceMeta = searchableSources.find((s) => s.id === sourceId);
+      const isUnreachable = sourceMeta?.status === "unavailable" || sourceMeta?.status === "in-fix";
+
+      if (isUnreachable) {
+        acc[sourceId] = {
+          error: `Sumber sedang mengalami gangguan (${sourceMeta?.status === "in-fix" ? "dalam perbaikan" : "tidak tersedia"})`,
+          results: [],
+        };
+        return;
+      }
+
       const q = searchQueries[idx];
       if (q?.data) {
         acc[sourceId] = {
@@ -227,7 +225,7 @@ export function useSearchCatalog() {
       }
     });
     return acc;
-  }, [activeSelectedSources, searchQueries, queryClient, dynamicFilters, activeFilters, page, query, isNsfwFiltered]);
+  }, [activeSelectedSources, searchQueries, queryClient, dynamicFilters, activeFilters, page, query, isNsfwFiltered, searchableSources]);
 
   const getMergedMangas = (sourceArrays: { sourceId: string, items: any[] }[]) => {
     const flattened: Array<{ manga: any; sourceId: string }> = [];

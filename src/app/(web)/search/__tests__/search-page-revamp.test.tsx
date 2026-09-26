@@ -66,7 +66,7 @@ describe('Search Page Revamp Unit Tests', () => {
     (apiClient.search as any).mockResolvedValue({ sourceId: 'source1', query: '', page: 1, results: [] });
   });
 
-  it('renders document-flow header "Pencarian" and subtitle', async () => {
+  it('renders accessible sr-only heading "Pencarian" and omits legacy hero subtitle', async () => {
     render(
       <QueryClientProvider client={queryClient}>
         <React.Suspense fallback={<div>Loading...</div>}>
@@ -75,8 +75,10 @@ describe('Search Page Revamp Unit Tests', () => {
       </QueryClientProvider>
     );
 
-    expect(screen.getByRole('heading', { level: 1, name: /Pencarian/i })).toBeDefined();
-    expect(screen.getByText('Cari judul dari semua sumber bacaanmu.')).toBeDefined();
+    const heading = screen.getByRole('heading', { level: 1, name: /Pencarian/i });
+    expect(heading).toBeDefined();
+    expect(heading.className).toContain('sr-only');
+    expect(screen.queryByText('Cari judul dari semua sumber bacaanmu.')).toBeNull();
   });
 
   it('renders source control chips and prevents deselecting the last source', async () => {

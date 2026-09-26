@@ -1,10 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { motion } from "motion/react";
 import { cn } from "@/shared/utils/cn";
 
-export interface MangaGridProps {
+export interface MangaGridProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   className?: string;
   viewMode?: "grid" | "compact";
@@ -18,16 +17,19 @@ export const MANGA_GRID_CLASS =
 export const MANGA_COMPACT_GRID_CLASS =
   "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2.5 sm:gap-3 lg:gap-3.5";
 
-export function MangaGrid({ children, className, viewMode = "grid" }: MangaGridProps) {
-  const baseClass = viewMode === "compact" ? MANGA_COMPACT_GRID_CLASS : MANGA_GRID_CLASS;
+export const MangaGrid = React.forwardRef<HTMLDivElement, MangaGridProps>(
+  ({ children, className, viewMode = "grid", ...props }, ref) => {
+    const baseClass = viewMode === "compact" ? MANGA_COMPACT_GRID_CLASS : MANGA_GRID_CLASS;
 
-  return (
-    <motion.div
-      layout
-      transition={{ layout: { type: "spring", stiffness: 320, damping: 30 } }}
-      className={cn(baseClass, className)}
-    >
-      {children}
-    </motion.div>
-  );
-}
+    return (
+      <div
+        ref={ref}
+        className={cn(baseClass, className)}
+        {...props}
+      >
+        {children}
+      </div>
+    );
+  }
+);
+MangaGrid.displayName = "MangaGrid";
