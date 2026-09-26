@@ -11,12 +11,12 @@ import { toast } from "sonner";
 import { cn } from "@/shared/utils/cn";
 import { motion, AnimatePresence } from "motion/react";
 
-interface BackupRestoreModalProps {
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
+export interface BackupRestoreViewProps {
+  onBack?: () => void;
+  className?: string;
 }
 
-export function BackupRestoreModal({ isOpen, onOpenChange }: BackupRestoreModalProps) {
+export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps) {
   const { theme, setTheme } = useTheme();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [selectedFileName, setSelectedFileName] = React.useState<string | null>(null);
@@ -57,6 +57,13 @@ export function BackupRestoreModal({ isOpen, onOpenChange }: BackupRestoreModalP
     reader.readAsText(file);
   };
 
+  const resetState = () => {
+    setSelectedFileName(null);
+    setDryRun(null);
+    setImportMode("merge");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
   const handleExecuteRestore = () => {
     if (!dryRun?.backupPayload) {
       toast.error("Tidak ada data backup valid untuk dipulihkan");
@@ -75,8 +82,8 @@ export function BackupRestoreModal({ isOpen, onOpenChange }: BackupRestoreModalP
         toast.success(`Restorasi data lokal berhasil (${res.restoredCount} item dipulihkan)`, {
           description: importMode === "merge" ? "Data digabungkan dengan rekonsiliasi timestamp." : "Data lokal diganti total dari backup.",
         });
-        onOpenChange(false);
         resetState();
+        onBack?.();
       }
     } catch (err: any) {
       toast.error("Gagal melakukan restorasi data lokal", {
@@ -87,204 +94,200 @@ export function BackupRestoreModal({ isOpen, onOpenChange }: BackupRestoreModalP
     }
   };
 
-  const resetState = () => {
-    setSelectedFileName(null);
-    setDryRun(null);
-    setImportMode("merge");
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => { onOpenChange(open); if (!open) resetState(); }}>
-      <DialogContent className="max-w-md w-[calc(100vw-32px)] rounded-[28px] p-0 bg-surface-overlay/95 backdrop-blur-2xl border border-border-glass shadow-glass overflow-hidden flex flex-col gap-0">
-        
-        {/* Header Section */}
-        <div className="px-6 pt-6 pb-4 border-b border-border-glass/40 flex items-start gap-3.5">
-          <div className="flex size-11 items-center justify-center rounded-lg bg-accent/12 text-accent border border-accent/20 shrink-0">
-            <FileText size={22} weight="duotone" />
-          </div>
-          <div className="min-w-0 flex-1 pr-6">
-            <DialogTitle className="text-lg font-black tracking-tight text-text-primary">
-              Backup & Restore
-            </DialogTitle>
-            <DialogDescription className="text-xs leading-relaxed text-text-secondary mt-1">
-              Simpan data lokal ke file JSON atau pulihkan data dari backup resmi Yomirra (v1).
-            </DialogDescription>
-          </div>
+    <div className={cn("space-y-4", className)}>
+      <div className="p-4 rounded-2xl bg-surface-raised border border-border-subtle flex items-start gap-3.5">
+        <div className="flex size-10 items-center justify-center rounded-xl bg-accent/10 text-accent shrink-0">
+          <FileText size={22} weight="duotone" />
         </div>
+        <div>
+          <h3 className="text-sm font-bold text-text-primary">Cadangan & Pemulihan Data</h3>
+          <p className="text-xs text-text-muted mt-0.5 leading-relaxed">
+            Simpan data riwayat dan koleksi ke file JSON atau pulihkan data dari file cadangan.
+          </p>
+        </div>
+      </div>
 
-        <div className="p-6 relative bg-surface-base/20">
-          <AnimatePresence mode="wait">
-            {!dryRun ? (
-              <motion.div
-                key="actions"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10, filter: "blur(4px)" }}
-                transition={{ duration: 0.25, ease: "easeOut" }}
-                className="flex flex-col gap-3"
-              >
-                <button
-                  onClick={handleExport}
-                  className="group relative w-full flex items-center gap-3.5 p-4 rounded-xl bg-surface-raised border border-border-subtle hover:border-accent/40 hover:bg-accent/5 transition-all text-left overflow-hidden outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-accent"
-                >
-                  <div className="shrink-0 flex items-center justify-center size-11 rounded-lg bg-accent/10 text-accent group-hover:scale-105 transition-transform duration-200">
-                    <DownloadSimple size={22} weight="duotone" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-bold text-text-primary truncate">Export Data JSON</h3>
-                    <p className="text-xs text-text-muted mt-0.5 truncate">Download backup data lokal</p>
-                  </div>
-                </button>
+      <AnimatePresence mode="wait">
+        {!dryRun ? (
+          <motion.div
+            key="actions"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+            className="flex flex-col gap-3"
+          >
+            <button
+              type="button"
+              onClick={handleExport}
+              className="group relative w-full flex items-center gap-3.5 p-4 rounded-xl bg-surface-raised border border-border-subtle hover:border-accent/40 hover:bg-accent/5 transition-all text-left overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-accent cursor-pointer"
+            >
+              <div className="shrink-0 flex items-center justify-center size-11 rounded-lg bg-accent/10 text-accent group-hover:scale-105 transition-transform duration-200">
+                <DownloadSimple size={22} weight="duotone" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="text-sm font-bold text-text-primary truncate">Export Data JSON</h4>
+                <p className="text-xs text-text-muted mt-0.5 truncate">Unduh cadangan data lokal ke file JSON</p>
+              </div>
+            </button>
 
-                <button
-                  onClick={() => fileInputRef.current?.click()}
-                  className="group relative w-full flex items-center gap-3.5 p-4 rounded-xl bg-surface-raised border border-border-subtle hover:border-accent/40 hover:bg-accent/5 transition-all text-left overflow-hidden outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-accent"
-                >
-                  <div className="shrink-0 flex items-center justify-center size-11 rounded-lg bg-accent/10 text-accent group-hover:scale-105 transition-transform duration-200">
-                    <UploadSimple size={22} weight="duotone" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-sm font-bold text-text-primary truncate">Import File Backup</h3>
-                    <p className="text-xs text-text-muted mt-0.5 truncate">Pulihkan data dari file JSON</p>
-                  </div>
-                </button>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="group relative w-full flex items-center gap-3.5 p-4 rounded-xl bg-surface-raised border border-border-subtle hover:border-accent/40 hover:bg-accent/5 transition-all text-left overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-accent cursor-pointer"
+            >
+              <div className="shrink-0 flex items-center justify-center size-11 rounded-lg bg-accent/10 text-accent group-hover:scale-105 transition-transform duration-200">
+                <UploadSimple size={22} weight="duotone" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="text-sm font-bold text-text-primary truncate">Import File Cadangan</h4>
+                <p className="text-xs text-text-muted mt-0.5 truncate">Pulihkan riwayat dan koleksi dari file JSON</p>
+              </div>
+            </button>
 
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".json,application/json"
-                  onChange={handleFileSelect}
-                  className="hidden"
-                />
-
-                <Button
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json,application/json"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="preview"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+            className="flex flex-col gap-4"
+          >
+            {/* Selected File Box */}
+            <div className="flex flex-col gap-1.5">
+              <span className="text-[11px] font-bold text-text-muted uppercase tracking-wider pl-1">File Terpilih</span>
+              <div className="flex items-center justify-between p-3 rounded-2xl bg-surface-raised border border-border-subtle shadow-xs">
+                <div className="flex items-center gap-3 overflow-hidden">
+                  <div className="size-8 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
+                    <FileText size={16} className="text-accent" weight="duotone" />
+                  </div>
+                  <span className="text-xs font-bold text-text-primary truncate">{selectedFileName}</span>
+                </div>
+                <button 
                   type="button"
-                  variant="ghost"
-                  onClick={() => onOpenChange(false)}
-                  className="w-full rounded-full font-bold h-11 mt-1 text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
+                  onClick={resetState} 
+                  className="text-[11px] font-bold text-text-secondary hover:text-text-primary px-3 py-1 rounded-lg bg-surface-base border border-border-subtle hover:bg-surface-hover transition-colors shrink-0 cursor-pointer"
                 >
-                  Tutup
-                </Button>
-              </motion.div>
+                  Batal
+                </button>
+              </div>
+            </div>
+
+            {/* Validation State */}
+            {dryRun.errors.length > 0 ? (
+              <div className="p-4 rounded-2xl bg-semantic-error/10 border border-semantic-error/20 text-semantic-error shadow-xs">
+                <span className="font-bold flex items-center gap-2 mb-2 text-sm">
+                  <ShieldWarning size={20} weight="fill" /> File Tidak Valid ({dryRun.errors.length})
+                </span>
+                <ul className="list-disc list-inside space-y-1.5 text-[12px] opacity-90 pl-1">
+                  {dryRun.errors.slice(0, 3).map((err, idx) => (
+                    <li key={idx} className="truncate">
+                      <span className="font-mono bg-semantic-error/10 px-1 rounded">{err.path}</span>: {err.message}
+                    </li>
+                  ))}
+                  {dryRun.errors.length > 3 && <li className="italic opacity-80 pt-1">+{dryRun.errors.length - 3} error lainnya</li>}
+                </ul>
+              </div>
             ) : (
-              <motion.div
-                key="preview"
-                initial={{ opacity: 0, y: 10, filter: "blur(4px)" }}
-                animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
-                className="flex flex-col gap-5"
-              >
-                {/* Selected File Box */}
-                <div className="flex flex-col gap-1.5">
-                  <span className="text-[11px] font-bold text-text-muted uppercase tracking-wider pl-1">File Terpilih</span>
-                  <div className="flex items-center justify-between p-3 rounded-[18px] bg-surface-raised border border-border-subtle shadow-sm">
-                    <div className="flex items-center gap-3 overflow-hidden">
-                      <div className="size-8 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
-                        <FileText size={16} className="text-accent" weight="duotone" />
-                      </div>
-                      <span className="text-[13px] font-bold text-text-primary truncate">{selectedFileName}</span>
+              <>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col justify-center p-3.5 rounded-2xl bg-surface-raised border border-border-subtle shadow-xs">
+                    <span className="text-[11px] uppercase font-bold text-text-muted mb-0.5">Item Valid</span>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-2xl font-extrabold text-text-primary">{dryRun.validLibraryCount + dryRun.validHistoryCount}</span>
                     </div>
-                    <button 
-                      onClick={resetState} 
-                      className="text-[11px] font-bold text-text-secondary hover:text-text-primary px-3 py-1.5 rounded-lg bg-surface-base border border-border-subtle hover:bg-surface-hover transition-colors shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                    <div className="flex items-center gap-1.5 text-[11px] font-bold mt-1">
+                      <span className="text-semantic-success bg-semantic-success/10 px-1.5 py-0.5 rounded-md">+{dryRun.addedCount} baru</span>
+                      <span className="text-accent bg-accent/10 px-1.5 py-0.5 rounded-md">{dryRun.replacedCount} update</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-col justify-center p-3.5 rounded-2xl bg-surface-raised border border-border-subtle shadow-xs">
+                    <span className="text-[11px] uppercase font-bold text-text-muted mb-0.5">Konflik / Duplikat</span>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-2xl font-extrabold text-text-primary">{dryRun.existingConflictCount + dryRun.duplicateInPayloadCount}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-[11px] font-bold mt-1">
+                      <span className="text-semantic-warning bg-semantic-warning/10 px-1.5 py-0.5 rounded-md">{dryRun.existingConflictCount} konflik</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2 mt-1">
+                  <span className="text-[11px] font-bold text-text-muted uppercase tracking-wider block pl-1">Mode Import</span>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setImportMode("merge")}
+                      className={cn(
+                        "relative p-3.5 rounded-2xl border text-left transition-all overflow-hidden outline-none cursor-pointer",
+                        importMode === "merge"
+                          ? "border-accent bg-accent/10 shadow-xs"
+                          : "border-border-subtle bg-surface-raised hover:bg-surface-hover"
+                      )}
                     >
-                      Batal
+                      <span className={cn("block text-xs font-bold", importMode === "merge" ? "text-accent" : "text-text-primary")}>Gabung Data</span>
+                      <span className="block text-[11px] text-text-muted mt-1 leading-relaxed">
+                        Data lama tetap aman. Tambahkan item baru.
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setImportMode("replace")}
+                      className={cn(
+                        "relative p-3.5 rounded-2xl border text-left transition-all overflow-hidden outline-none cursor-pointer",
+                        importMode === "replace"
+                          ? "border-semantic-error bg-semantic-error/10 shadow-xs"
+                          : "border-border-subtle bg-surface-raised hover:bg-surface-hover"
+                      )}
+                    >
+                      <span className={cn("block text-xs font-bold", importMode === "replace" ? "text-semantic-error" : "text-text-primary")}>Ganti Total</span>
+                      <span className="block text-[11px] text-text-muted mt-1 leading-relaxed">
+                        Hapus semua data lokal, timpa dari file cadangan.
+                      </span>
                     </button>
                   </div>
                 </div>
 
-                {/* Validation State */}
-                {dryRun.errors.length > 0 ? (
-                  <div className="p-4 rounded-[20px] bg-semantic-error/10 border border-semantic-error/20 text-semantic-error shadow-sm">
-                    <span className="font-bold flex items-center gap-2 mb-2 text-sm">
-                      <ShieldWarning size={20} weight="fill" /> File Tidak Valid ({dryRun.errors.length})
-                    </span>
-                    <ul className="list-disc list-inside space-y-1.5 text-[12px] opacity-90 pl-1">
-                      {dryRun.errors.slice(0, 3).map((err, idx) => (
-                        <li key={idx} className="truncate">
-                          <span className="font-mono bg-semantic-error/10 px-1 rounded">{err.path}</span>: {err.message}
-                        </li>
-                      ))}
-                      {dryRun.errors.length > 3 && <li className="italic opacity-80 pt-1">+{dryRun.errors.length - 3} error lainnya</li>}
-                    </ul>
-                  </div>
-                ) : (
-                  <>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="flex flex-col justify-center p-3.5 rounded-[20px] bg-surface-raised border border-border-subtle shadow-sm">
-                        <span className="text-[11px] uppercase font-bold text-text-muted mb-0.5">Item Valid</span>
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-2xl font-extrabold text-text-primary">{dryRun.validLibraryCount + dryRun.validHistoryCount}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 text-[11px] font-bold mt-1">
-                          <span className="text-semantic-success bg-semantic-success/10 px-1.5 py-0.5 rounded-md">+{dryRun.addedCount} baru</span>
-                          <span className="text-accent bg-accent/10 px-1.5 py-0.5 rounded-md">{dryRun.replacedCount} update</span>
-                        </div>
-                      </div>
-                      
-                      <div className="flex flex-col justify-center p-3.5 rounded-[20px] bg-surface-raised border border-border-subtle shadow-sm">
-                        <span className="text-[11px] uppercase font-bold text-text-muted mb-0.5">Konflik / Duplikat</span>
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-2xl font-extrabold text-text-primary">{dryRun.existingConflictCount + dryRun.duplicateInPayloadCount}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 text-[11px] font-bold mt-1">
-                          <span className="text-semantic-warning bg-semantic-warning/10 px-1.5 py-0.5 rounded-md">{dryRun.existingConflictCount} konflik</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2 mt-1">
-                      <span className="text-[11px] font-bold text-text-muted uppercase tracking-wider block pl-1">Mode Import</span>
-                      <div className="grid grid-cols-2 gap-3">
-                        <button
-                          onClick={() => setImportMode("merge")}
-                          className={cn(
-                            "relative p-3.5 rounded-[20px] border text-left transition-all overflow-hidden outline-none focus-visible:ring-2",
-                            importMode === "merge"
-                              ? "border-accent bg-accent/10 focus-visible:ring-accent shadow-sm"
-                              : "border-border-subtle bg-surface-raised hover:bg-surface-hover focus-visible:ring-accent"
-                          )}
-                        >
-                          {importMode === "merge" && <div className="absolute top-0 right-0 w-10 h-10 bg-accent/20 rounded-bl-3xl" />}
-                          <span className={cn("block text-[13px] font-bold", importMode === "merge" ? "text-accent" : "text-text-primary")}>Gabung Data</span>
-                          <span className="block text-[11px] text-text-muted mt-1 leading-relaxed">
-                            Data lama tetap aman. Perbarui item baru.
-                          </span>
-                        </button>
-                        <button
-                          onClick={() => setImportMode("replace")}
-                          className={cn(
-                            "relative p-3.5 rounded-[20px] border text-left transition-all overflow-hidden outline-none focus-visible:ring-2",
-                            importMode === "replace"
-                              ? "border-semantic-error bg-semantic-error/10 focus-visible:ring-semantic-error shadow-sm"
-                              : "border-border-subtle bg-surface-raised hover:bg-surface-hover focus-visible:ring-accent"
-                          )}
-                        >
-                          {importMode === "replace" && <div className="absolute top-0 right-0 w-10 h-10 bg-semantic-error/20 rounded-bl-3xl" />}
-                          <span className={cn("block text-[13px] font-bold", importMode === "replace" ? "text-semantic-error" : "text-text-primary")}>Ganti Total</span>
-                          <span className="block text-[11px] text-text-muted mt-1 leading-relaxed">
-                            Hapus semua lokal, timpa dari backup.
-                          </span>
-                        </button>
-                      </div>
-                    </div>
-
-                    <Button
-                      onClick={handleExecuteRestore}
-                      disabled={isProcessing}
-                      variant={importMode === "replace" ? "destructive" : "accent"}
-                      className="w-full h-[52px] rounded-full font-bold text-[15px] shadow-sm mt-1"
-                    >
-                      {isProcessing ? "Memproses..." : "Pulihkan Data Sekarang"}
-                    </Button>
-                  </>
-                )}
-              </motion.div>
+                <Button
+                  onClick={handleExecuteRestore}
+                  disabled={isProcessing}
+                  variant={importMode === "replace" ? "destructive" : "accent"}
+                  className="w-full h-12 rounded-xl font-bold text-sm shadow-xs mt-1"
+                >
+                  {isProcessing ? "Memproses..." : "Pulihkan Data Sekarang"}
+                </Button>
+              </>
             )}
-          </AnimatePresence>
-        </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+export interface BackupRestoreModalProps {
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function BackupRestoreModal({ isOpen, onOpenChange }: BackupRestoreModalProps) {
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md w-[calc(100vw-32px)] rounded-[28px] p-6 bg-surface-overlay/95 backdrop-blur-2xl border border-border-glass shadow-glass overflow-hidden flex flex-col gap-0">
+        <DialogTitle className="sr-only">Cadangan & Pemulihan</DialogTitle>
+        <DialogDescription className="sr-only">Ekspor atau impor data lokal Yomirra</DialogDescription>
+        <BackupRestoreView onBack={() => onOpenChange(false)} />
       </DialogContent>
     </Dialog>
   );

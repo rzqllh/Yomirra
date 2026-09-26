@@ -1,13 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { SettingsView } from "@/components/settings/settings-view";
 import { motion } from "motion/react";
 import { transitions } from "@/shared/lib/motion/tokens";
 
 export default function SettingsInterceptedModalPage() {
   const router = useRouter();
+  const pathname = usePathname();
 
   const handleClose = React.useCallback(() => {
     router.back();
@@ -24,8 +25,12 @@ export default function SettingsInterceptedModalPage() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleClose]);
 
+  if (pathname !== "/settings") {
+    return null;
+  }
+
   return (
-    <div className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-auto">
+    <div className="fixed inset-0 z-[var(--z-drawer)] flex items-end sm:items-center justify-center p-0 sm:p-4 pointer-events-auto">
       {/* Backdrop */}
       <motion.div
         initial={{ opacity: 0 }}
