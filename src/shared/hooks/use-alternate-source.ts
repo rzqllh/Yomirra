@@ -118,7 +118,7 @@ export function useAlternateSource({
           );
           setChapterMapResult(mapped);
         } catch {
-          // Non-blocking
+          // Candidate search still works if chapter mapping fails.
         }
       }
     } catch (err) {
@@ -148,7 +148,7 @@ export function useAlternateSource({
               targetChapterId =
                 mapped.type === "EXACT" && mapped.targetChapterId
                   ? mapped.targetChapterId
-                  : mapped.nearestSafeCandidate?.chapterId ?? targetChapters[0].id;
+                  : mapped.nearestSafeCandidate?.chapterId ?? "";
             } else {
               targetChapterId = targetChapters[0].id;
             }

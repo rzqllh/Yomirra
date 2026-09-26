@@ -137,7 +137,7 @@ export function AlternateSourceModal({
         {/* Content Section */}
         <div className="p-6 flex flex-col gap-4 max-h-[60vh] overflow-y-auto">
           {/* Chapter map result */}
-          {selected && chapterMapResult && (
+          {selected && chapterMapResult && candidates[0]?.sourceId === selected.sourceId && candidates[0]?.mangaId === selected.mangaId && (
             <ChapterMapBanner result={chapterMapResult} />
           )}
 

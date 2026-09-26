@@ -263,8 +263,8 @@ export function resolveSourceFallback(options: ResolveFallbackOptions): SourceFa
       reason: "Source is degraded; prefer current source unless user explicitly requests alternate",
       requiresUserConfirmation: true,
       notification: {
-        title: "Koneksi Sumber Lambat",
-        description: `Sumber ${failedSourceId} sedang mengalami kendala. Alternatif tersedia di ${selectedCandidate.sourceId}.`,
+        title: "Sumber sedang lambat",
+        description: `${failedSourceId} sedang lambat. Kamu bisa pindah ke ${selectedCandidate.sourceId}.`,
         actionLabel: "Ganti Sumber",
       },
     };
@@ -284,8 +284,8 @@ export function resolveSourceFallback(options: ResolveFallbackOptions): SourceFa
       reason: "Source is temporarily rate-limited; temporary fallback allowed for current reading session",
       requiresUserConfirmation: !canAutoFallback,
       notification: {
-        title: "Batas Akses Tercapai (Sementara)",
-        description: `Beralih sementara ke ${selectedCandidate.sourceId}. Sumber utama tidak diubah.`,
+        title: "Sumber sedang membatasi akses",
+        description: `Untuk sesi ini, bacaan dialihkan ke ${selectedCandidate.sourceId}. Sumber utama tetap sama.`,
       },
     };
   }
@@ -304,7 +304,7 @@ export function resolveSourceFallback(options: ResolveFallbackOptions): SourceFa
         requiresUserConfirmation: false,
         notification: {
           title: "Sumber bacaan diganti",
-          description: `${failedSourceId} sedang tidak tersedia. Yomirra beralih ke ${selectedCandidate.sourceId}. Progress Chapter ${suggestedChapterNumber ?? ""} tetap disimpan.`,
+          description: `${failedSourceId} tidak tersedia. Bacaan dialihkan ke ${selectedCandidate.sourceId}${suggestedChapterNumber != null ? ` di Chapter ${suggestedChapterNumber}` : ""}.`,
         },
       };
     }
@@ -327,7 +327,7 @@ export function resolveSourceFallback(options: ResolveFallbackOptions): SourceFa
       requiresUserConfirmation: true,
       notification: {
         title: "Sumber alternatif ditemukan",
-        description: `Progress kamu: Chapter ${lastRead ?? "?"}. Sumber baru memiliki chapter yang perlu dikonfirmasi.`,
+        description: `Posisi terakhir: Chapter ${lastRead ?? "?"}. Pilih chapter yang sesuai sebelum pindah.`,
         actionLabel: "Pilih Chapter",
       },
     };
