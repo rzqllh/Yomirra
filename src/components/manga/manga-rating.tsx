@@ -151,7 +151,7 @@ export function MangaRating({ sourceId, mangaId, className, variant = "default",
                 className={cn(
                   "flex items-center justify-center h-10 rounded-lg text-sm font-bold transition-all duration-200",
                   userRating === rating 
-                    ? "bg-accent text-white shadow-[0_0_12px_rgba(91,101,233,0.4)]" 
+                    ? "bg-accent text-white ring-1 ring-accent/30" 
                     : "bg-surface-raised text-text-secondary hover:bg-surface-hover hover:text-text-primary"
                 )}
               >
