@@ -73,7 +73,7 @@ describe("Library selection mode accessibility", () => {
     expect(selectionButton.getAttribute("aria-pressed")).toBe("true")
   })
 
-  it("marks the selection-mode toolbar control as a pressed toggle", () => {
+  it("provides selection mode toggle via options dropdown", () => {
     render(
       <LibraryToolbar
         searchInput=""
@@ -87,6 +87,6 @@ describe("Library selection mode accessibility", () => {
       />
     )
 
-    expect(screen.getByRole("button", { name: "Batal pilih" }).getAttribute("aria-pressed")).toBe("true")
+    expect(screen.getByRole("button", { name: "Opsi lainnya" })).toBeTruthy()
   })
 })

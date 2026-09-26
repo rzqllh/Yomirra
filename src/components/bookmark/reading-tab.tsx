@@ -85,7 +85,14 @@ export function ReadingTab({
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
         {visibleHistory.map((group) => {
-          const item = group.chapters[0];
+          const chapter = group.chapters[0] || {};
+          const item = {
+            ...chapter,
+            sourceId: chapter.sourceId || group.sourceId,
+            mangaId: chapter.mangaId || group.mangaId,
+            mangaTitle: chapter.mangaTitle || group.mangaTitle,
+            coverUrl: chapter.coverUrl || group.coverUrl,
+          };
           return (
             <HistoryCard
               key={`${group.sourceId}::${group.mangaId}`}

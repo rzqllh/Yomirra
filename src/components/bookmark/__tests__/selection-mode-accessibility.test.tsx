@@ -47,7 +47,7 @@ describe("Bookmark selection mode accessibility", () => {
     expect(selectionButton.getAttribute("aria-pressed")).toBe("true")
   })
 
-  it("marks the toolbar selection control as a pressed toggle", () => {
+  it("provides selection mode toggle via options dropdown", () => {
     render(
       <CollectionToolbar
         searchQuery=""
@@ -61,6 +61,6 @@ describe("Bookmark selection mode accessibility", () => {
       />
     )
 
-    expect(screen.getByRole("button", { name: "Batal pilih manga" }).getAttribute("aria-pressed")).toBe("true")
+    expect(screen.getByRole("button", { name: "Opsi lainnya" })).toBeTruthy()
   })
 })

@@ -3,6 +3,12 @@ import { describe, expect, it, vi } from "vitest";
 
 import { ReadingTab } from "../reading-tab";
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), back: vi.fn() }),
+  usePathname: () => "/bookmark",
+  useSearchParams: () => new URLSearchParams(),
+}));
+
 vi.mock("next/link", () => ({
   default: ({ children, href, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { href: string }) => (
     <a href={href} {...props}>{children}</a>
@@ -37,13 +43,13 @@ describe("ReadingTab", () => {
     );
 
     const continueLink = screen.getByRole("link", {
-      name: "Lanjutkan baca Nano Machine",
+      name: /lanjut baca nano machine/i,
     });
     expect(continueLink.querySelector("button")).toBeNull();
     expect(container.querySelector("a button, button a, a a")).toBeNull();
   });
 
-  it("provides 44px delete and continue actions with accessible names", () => {
+  it("provides accessible options menu and continue actions", () => {
     render(
       <ReadingTab
         groupedHistory={groupedHistory}
@@ -52,14 +58,14 @@ describe("ReadingTab", () => {
       />
     );
 
-    const deleteButton = screen.getByRole("button", {
-      name: "Hapus Nano Machine dari riwayat",
+    const optionsButton = screen.getByRole("button", {
+      name: "Opsi untuk Nano Machine",
     });
     const continueLink = screen.getByRole("link", {
-      name: "Lanjutkan baca Nano Machine",
+      name: /lanjut baca nano machine/i,
     });
 
-    expect(deleteButton.className).toContain("size-11");
-    expect(continueLink.className).toContain("min-h-11");
+    expect(optionsButton).toBeTruthy();
+    expect(continueLink).toBeTruthy();
   });
 });

@@ -26,11 +26,11 @@ describe('BottomDock Navigation', () => {
     expect(updatesLink).toBeNull();
   });
 
-  it('contains Beranda, Library, Bookmark, and Cari links', () => {
+  it('contains Beranda, Library, Rak Buku, and Cari links', () => {
     render(<BottomDock />);
     expect(screen.getByRole('link', { name: /beranda/i })).toBeTruthy();
     expect(screen.getByRole('link', { name: /library/i })).toBeTruthy();
-    expect(screen.getByRole('link', { name: /bookmark/i })).toBeTruthy();
+    expect(screen.getByRole('link', { name: /rak buku/i })).toBeTruthy();
     expect(screen.getByRole('link', { name: /cari/i })).toBeTruthy();
   });
 
@@ -40,9 +40,9 @@ describe('BottomDock Navigation', () => {
     expect(settingsLink).toBeNull();
   });
 
-  it('contains a Bookmark link pointing to /bookmark', () => {
+  it('contains a Rak Buku link pointing to /bookmark', () => {
     render(<BottomDock />);
-    const bookmarkLink = screen.getByRole('link', { name: /bookmark/i });
+    const bookmarkLink = screen.getByRole('link', { name: /rak buku/i });
     expect(bookmarkLink).toBeTruthy();
     expect(bookmarkLink.getAttribute('href')).toBe('/bookmark');
   });
@@ -54,11 +54,11 @@ describe('BottomDock Navigation', () => {
     const berandaLink = screen.getByRole('link', { name: /beranda/i });
     expect(berandaLink.textContent).toContain('Beranda');
 
-    // Inactive tabs (Library, Bookmark, Cari) have NO text label content
+    // Inactive tabs (Library, Rak Buku, Cari) have NO text label content
     const libraryLink = screen.getByRole('link', { name: /library/i });
     expect(libraryLink.textContent).toBe('');
 
-    const bookmarkLink = screen.getByRole('link', { name: /bookmark/i });
+    const bookmarkLink = screen.getByRole('link', { name: /rak buku/i });
     expect(bookmarkLink.textContent).toBe('');
 
     const cariLink = screen.getByRole('link', { name: /cari/i });

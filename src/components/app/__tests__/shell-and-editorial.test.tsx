@@ -54,7 +54,7 @@ describe('App Shell & Navigation Deduplication Pass', () => {
       const libraryLink = screen.getByRole('link', { name: 'Library' });
       expect(libraryLink.getAttribute('href')).toBe('/library');
 
-      const bookmarkLink = screen.getByRole('link', { name: 'Bookmark' });
+      const bookmarkLink = screen.getByRole('link', { name: 'Rak Buku' });
       expect(bookmarkLink.getAttribute('href')).toBe('/bookmark');
 
       const cariLink = screen.getByRole('link', { name: 'Cari' });
