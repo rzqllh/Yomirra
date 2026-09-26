@@ -65,6 +65,11 @@ interface LibraryState {
 
 const getLibraryId = (sourceId: string, mangaId: string) => `${sourceId}::${mangaId}`;
 
+const itemReferencesSource = (item: LibraryItem, sourceId: string, mangaId: string) =>
+  (item.sourceId === sourceId && item.mangaId === mangaId) ||
+  (item.primarySourceId === sourceId && item.primaryMangaId === mangaId) ||
+  item.linkedSources?.some((ref) => ref.sourceId === sourceId && ref.mangaId === mangaId) === true;
+
 const enforceItemCap = (items: Record<string, LibraryItem>, maxItems = 1000) => {
   const keys = Object.keys(items);
   if (keys.length <= maxItems) return items;
@@ -106,8 +111,7 @@ export const useLibraryStore = create<LibraryState>()(
             ([k, i]) =>
               k === legacyId ||
               (item.id && (k === item.id || i.id === item.id)) ||
-              (i.primarySourceId === item.sourceId && i.primaryMangaId === item.mangaId) ||
-              (i.sourceId === item.sourceId && i.mangaId === item.mangaId)
+              itemReferencesSource(i, item.sourceId, item.mangaId)
           );
 
           const existingKey = existingEntry?.[0];
@@ -157,8 +161,7 @@ export const useLibraryStore = create<LibraryState>()(
             k === targetKey ||
             k === legacyId ||
             (item.id && (k === item.id || existing.id === item.id)) ||
-            (existing.sourceId === item.sourceId && existing.mangaId === item.mangaId) ||
-            (existing.primarySourceId === item.sourceId && existing.primaryMangaId === item.mangaId);
+            itemReferencesSource(existing, item.sourceId, item.mangaId);
           if (!isSame) {
             newItems[k] = existing;
           }
@@ -173,8 +176,7 @@ export const useLibraryStore = create<LibraryState>()(
         const previousState = get().items;
         const removedItems = Object.entries(previousState).filter(([key, item]) =>
           key === getLibraryId(sourceId, mangaId) ||
-          (item.primarySourceId === sourceId && item.primaryMangaId === mangaId) ||
-          (item.sourceId === sourceId && item.mangaId === mangaId)
+          itemReferencesSource(item, sourceId, mangaId)
         );
         if (removedItems.length === 0) return;
         set((state) => {
@@ -184,8 +186,7 @@ export const useLibraryStore = create<LibraryState>()(
           for (const [k, i] of Object.entries(newItems)) {
             if (
               k === legacyId ||
-              (i.primarySourceId === sourceId && i.primaryMangaId === mangaId) ||
-              (i.sourceId === sourceId && i.mangaId === mangaId)
+              itemReferencesSource(i, sourceId, mangaId)
             ) {
               delete newItems[k];
               deleted = true;
@@ -215,9 +216,8 @@ export const useLibraryStore = create<LibraryState>()(
       isInLibrary: (sourceId, mangaId) => {
         const id = getLibraryId(sourceId, mangaId);
         const items = get().items;
-        // Check by legacy key (handles both legacy and Phase 1 migrated items)
         return !!items[id] || Object.values(items).some(
-          (i) => i.primarySourceId === sourceId && i.primaryMangaId === mangaId
+          (item) => itemReferencesSource(item, sourceId, mangaId)
         );
       },
 
@@ -225,19 +225,17 @@ export const useLibraryStore = create<LibraryState>()(
         const id = getLibraryId(sourceId, mangaId);
         const items = get().items;
         return items[id] ?? Object.values(items).find(
-          (i) => i.primarySourceId === sourceId && i.primaryMangaId === mangaId
+          (item) => itemReferencesSource(item, sourceId, mangaId)
         );
       },
 
       getLibraryItemById: (savedTitleId) => {
-        return get().items[savedTitleId];
+        return get().items[savedTitleId] ?? Object.values(get().items).find((item) => item.id === savedTitleId);
       },
 
       resolveBySourceRef: (sourceId, mangaId) => {
         return Object.values(get().items).find(
-          (i) =>
-            (i.primarySourceId === sourceId && i.primaryMangaId === mangaId) ||
-            i.linkedSources?.some((r) => r.sourceId === sourceId && r.mangaId === mangaId)
+          (item) => itemReferencesSource(item, sourceId, mangaId)
         );
       },
 
@@ -267,9 +265,11 @@ export const useLibraryStore = create<LibraryState>()(
           const currentPrimarySourceId = existing.primarySourceId ?? existing.sourceId;
           const currentPrimaryMangaId = existing.primaryMangaId ?? existing.mangaId;
 
-          const existingLinked = existing.linkedSources ? [...existing.linkedSources] : [];
+          const existingLinked = (existing.linkedSources ?? []).filter(
+            (source) => !(source.sourceId === newSourceId && source.mangaId === newMangaId)
+          );
           const alreadyLinked = existingLinked.some(
-            (s) => s.sourceId === currentPrimarySourceId && s.mangaId === currentPrimaryMangaId
+            (source) => source.sourceId === currentPrimarySourceId && source.mangaId === currentPrimaryMangaId
           );
 
           const newLinked: SourceRef[] = alreadyLinked
@@ -320,8 +320,7 @@ export const useLibraryStore = create<LibraryState>()(
           const entry = Object.entries(state.items).find(
             ([k, i]) =>
               k === legacyId ||
-              (i.primarySourceId === sourceId && i.primaryMangaId === mangaId) ||
-              (i.sourceId === sourceId && i.mangaId === mangaId)
+              itemReferencesSource(i, sourceId, mangaId)
           );
           if (!entry) return state;
 
@@ -369,8 +368,7 @@ export const useLibraryStore = create<LibraryState>()(
             ([k, i]) =>
               (cloudItem.id && (k === cloudItem.id || i.id === cloudItem.id)) ||
               k === legacyId ||
-              (i.primarySourceId === cloudItem.sourceId && i.primaryMangaId === cloudItem.mangaId) ||
-              (i.sourceId === cloudItem.sourceId && i.mangaId === cloudItem.mangaId)
+              itemReferencesSource(i, cloudItem.sourceId, cloudItem.mangaId)
           );
           
           if (!localEntry) {

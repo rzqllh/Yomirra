@@ -10,6 +10,7 @@ import { getSourceMetadata } from "@/shared/sources/source-registry";
 import { toast } from "sonner";
 import Link from "next/link";
 import { cn } from "@/shared/utils/cn";
+import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 
 interface MangaSourceSelectorProps {
   sourceId: string;
@@ -34,20 +35,31 @@ export function MangaSourceSelector({
   const perTitlePref = useSettingsStore((state) => state.perTitleSourcePreferences[titleKey]);
   const setPerTitleSourcePreference = useSettingsStore((state) => state.setPerTitleSourcePreference);
   const clearPerTitleSourcePreference = useSettingsStore((state) => state.clearPerTitleSourcePreference);
+  const disabledSources = useSourcePreferencesStore((state) => state.disabledSources);
 
   const currentSourceName = getSourceMetadata(sourceId)?.name || sourceId;
   const isCurrentPreferred = perTitlePref ? perTitlePref === sourceId : false;
 
-  const linkedSources = libraryItem?.linkedSources || [];
+  const linkedSources = (libraryItem?.linkedSources || []).filter((linked) => {
+    if (linked.sourceId === sourceId && linked.mangaId === mangaId) return false;
+    const source = getSourceMetadata(linked.sourceId);
+    if (!source || disabledSources.includes(linked.sourceId)) return false;
+    return (
+      source.isEnabled !== false &&
+      source.isInstalled !== false &&
+      source.status !== "unavailable" &&
+      source.status !== "in-fix"
+    );
+  });
 
   const handleSetPreferred = (targetSourceId: string) => {
     if (perTitlePref === targetSourceId) {
       clearPerTitleSourcePreference(titleKey);
-      toast.success("Preferensi sumber per-judul dihapus (mengikuti preferensi global)");
+      toast.success("Pilihan sumber direset ke pengaturan umum");
     } else {
       setPerTitleSourcePreference(titleKey, targetSourceId);
       const targetName = getSourceMetadata(targetSourceId)?.name || targetSourceId;
-      toast.success(`Sumber pilihan untuk "${title}" diatur ke ${targetName}`);
+      toast.success(`${targetName} jadi sumber utama untuk ${title}`);
     }
   };
 
@@ -87,7 +99,7 @@ export function MangaSourceSelector({
               <span>Sumber Bacaan</span>
             </DialogTitle>
             <DialogDescription className="text-xs text-text-muted">
-              Pilih sumber yang diprioritaskan saat membaca komik ini.
+              Pilih sumber utama untuk judul ini.
             </DialogDescription>
           </DialogHeader>
 
@@ -121,7 +133,7 @@ export function MangaSourceSelector({
             {linkedSources.length > 0 ? (
               <div className="flex flex-col gap-2 mt-2">
                 <span className="text-[11px] font-bold text-text-muted uppercase tracking-wider px-1">
-                  Sumber Alternatif Terhubung
+                  Sumber lain
                 </span>
 
                 {linkedSources.map((linked) => {
@@ -165,7 +177,7 @@ export function MangaSourceSelector({
               </div>
             ) : (
               <p className="text-xs text-text-muted px-1 py-2">
-                Belum ada sumber alternatif yang terhubung. Simpan komik ini ke library untuk menemukan sumber lain secara otomatis.
+                Belum ada sumber lain yang terhubung untuk judul ini.
               </p>
             )}
           </div>

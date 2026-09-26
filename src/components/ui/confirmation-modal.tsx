@@ -82,12 +82,12 @@ export function ConfirmationModal({
   const iconContainerStyle = React.useMemo(() => {
     switch (variant) {
       case "danger":
-        return "bg-gradient-to-br from-semantic-error/20 via-semantic-error/10 to-transparent border-semantic-error/25 text-semantic-error shadow-[0_0_24px_rgba(255,69,58,0.12)]";
+        return "bg-status-error-bg border-status-error-fg/20 text-status-error-fg";
       case "warning":
-        return "bg-gradient-to-br from-amber-500/20 via-amber-500/10 to-transparent border-amber-500/25 text-amber-500 shadow-[0_0_24px_rgba(245,158,11,0.12)]";
+        return "bg-status-warning-bg border-status-warning-fg/20 text-status-warning-fg";
       case "info":
       default:
-        return "bg-gradient-to-br from-accent/20 via-accent/10 to-transparent border-accent/25 text-accent shadow-[0_0_24px_rgba(108,106,250,0.12)]";
+        return "bg-accent-dim border-accent/20 text-accent";
     }
   }, [variant]);
 

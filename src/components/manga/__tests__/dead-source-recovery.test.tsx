@@ -40,7 +40,7 @@ describe("DeadSourceRecovery Component", () => {
   it("renders warning banner indicating the source is unavailable", () => {
     render(<DeadSourceRecovery sourceId="komikindo" mangaId="solo-leveling" />);
 
-    expect(screen.getByText(/Sumber "KOMIKINDO" Tidak Tersedia/i)).toBeDefined();
+    expect(screen.getByText(/Komikindo tidak tersedia/i)).toBeDefined();
     expect(screen.getByRole("button", { name: /Cari Sumber Alternatif/i })).toBeDefined();
   });
 

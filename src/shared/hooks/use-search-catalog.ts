@@ -11,6 +11,7 @@ import { useSearchPruning } from "@/shared/hooks/use-search-pruning";
 import { useSearchReset } from "@/shared/hooks/use-search-reset";
 import { mergeFilters, buildPayloadForSource } from "@/shared/utils/filter-helpers";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
+import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { clusterCanonicalResults, type SourceBinding } from "@/shared/lib/canonical-search";
 import type { FilterList, SourceMetadata } from "@/shared/sources/source-types";
 
@@ -68,6 +69,7 @@ export function useSearchCatalog() {
   });
 
   const hideNsfw = useSettingsStore(state => state.hideNsfw);
+  const disabledSources = useSourcePreferencesStore(state => state.disabledSources);
 
   const searchableSources = React.useMemo(() => {
     const s = [...(sourcesData || [])];
@@ -77,12 +79,13 @@ export function useSearchCatalog() {
       }
     });
     return s.filter(src => {
-      if (!src.isInstalled || !src.capabilities?.search) return false;
+      if (!src.isInstalled || src.isEnabled === false || !src.capabilities?.search) return false;
+      if (disabledSources.includes(src.id)) return false;
       if (src.status !== "online") return false;
       if (src.isNsfw && hideNsfw) return false;
       return true;
     });
-  }, [sourcesData, localSources, hideNsfw]);
+  }, [sourcesData, localSources, hideNsfw, disabledSources]);
 
   const searchFilterStore = useSearchFilterStore();
   const selectedSources = searchFilterStore.selectedSources;

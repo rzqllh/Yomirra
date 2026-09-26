@@ -60,13 +60,13 @@ export function ChapterRow({
               {chapterTitle}
             </h4>
             {isLocked && (
-              <div className="flex items-center gap-1 rounded-[5px] bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-amber-500 ring-1 ring-inset ring-amber-500/20 shrink-0">
+              <div className="flex items-center gap-1 rounded-[5px] bg-status-warning-bg px-1.5 py-0.5 text-[10px] font-semibold text-status-warning-fg ring-1 ring-inset ring-status-warning-fg/20 shrink-0">
                 <Lock size={11} weight="bold" />
                 <span>Terkunci</span>
               </div>
             )}
             {!isRead && !isLastRead && !isLocked && (
-              <span className="w-1.5 h-1.5 rounded-full bg-accent shrink-0 shadow-[0_0_8px_rgba(91,101,233,0.5)]" />
+              <span className="w-1.5 h-1.5 rounded-full bg-accent shrink-0" />
             )}
           </div>
           <p className="text-[11px] text-text-muted font-medium truncate">
@@ -82,7 +82,7 @@ export function ChapterRow({
           )}
           {isLocked && (
             <span
-              className="flex size-11 shrink-0 items-center justify-center rounded-full bg-amber-500/10 text-amber-500"
+              className="flex size-11 shrink-0 items-center justify-center rounded-full bg-status-warning-bg text-status-warning-fg"
               title="Chapter terkunci di sumber asli"
             >
               <Lock size={16} weight="bold" />

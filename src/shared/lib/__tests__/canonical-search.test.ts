@@ -104,6 +104,31 @@ describe("Phase 4 — Canonical Search Deduplication & Failure Isolation", () =>
     ]);
   });
 
+  it("uses original titles when matching across sources", () => {
+    const clusters = clusterCanonicalResults([
+      {
+        sourceId: "mangadex",
+        manga: {
+          id: "aot-md",
+          title: "Attack on Titan",
+          originalTitle: "進撃の巨人",
+          coverUrl: "/aot.jpg",
+        },
+      },
+      {
+        sourceId: "komiku",
+        manga: {
+          id: "aot-komiku",
+          title: "進撃の巨人",
+          coverUrl: "/aot-indo.jpg",
+        },
+      },
+    ]);
+
+    expect(clusters).toHaveLength(1);
+    expect(clusters[0].sourceBindings).toHaveLength(2);
+  });
+
   it("ambiguous title remains separate (never silently merged)", () => {
     const items: Array<{ manga: MangaItem; sourceId: string }> = [
       {

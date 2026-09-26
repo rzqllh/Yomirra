@@ -90,7 +90,7 @@ describe("MangaSourceSelector (Phase 6 UI)", () => {
 
     expect(useSettingsStore.getState().perTitleSourcePreferences["saved-frieren-123"]).toBe("komiku");
     expect(toast.success).toHaveBeenCalledWith(
-      expect.stringContaining('Sumber pilihan untuk "Sousou no Frieren" diatur ke Komiku')
+      expect.stringContaining("Komiku jadi sumber utama untuk Sousou no Frieren")
     );
   });
 });
