@@ -10,6 +10,8 @@ export interface PageHeaderProps {
   title: string
   /** Section description or subtitle */
   description?: React.ReactNode
+  /** Canonical alias for description */
+  subtitle?: React.ReactNode
   /** Section icon element */
   icon?: React.ReactNode
   /** Show back button on mobile header */
@@ -24,6 +26,8 @@ export interface PageHeaderProps {
   mode?: "standard" | "detail"
   /** Mobile header background variant */
   variant?: "transparent" | "glass" | "auto"
+  /** Hide desktop banner when desktop has separate editorial header (e.g. Beranda) */
+  hideDesktop?: boolean
   /** Outer wrapper className override */
   className?: string
 }
@@ -35,6 +39,7 @@ export interface PageHeaderProps {
 export function PageHeader({
   title,
   description,
+  subtitle,
   icon,
   showBack = false,
   backHref,
@@ -42,10 +47,12 @@ export function PageHeader({
   meta,
   mode = "standard",
   variant = "auto",
+  hideDesktop = false,
   className,
 }: PageHeaderProps) {
   const router = useRouter()
   const [scrollY, setScrollY] = React.useState(0)
+  const sub = subtitle ?? description
 
   React.useEffect(() => {
     const handleScroll = () => {
@@ -108,19 +115,26 @@ export function PageHeader({
 
             <div
               className={cn(
-                "flex items-center gap-2 min-w-0 flex-1 transition-all duration-300 ease-out",
+                "flex flex-col min-w-0 flex-1 transition-all duration-300 ease-out",
                 !isTitleVisible
                   ? "opacity-0 pointer-events-none -translate-y-1"
                   : "opacity-100 translate-y-0"
               )}
             >
-              <h2 className="text-[15px] sm:text-base font-bold tracking-tight text-text-primary truncate select-none">
-                {title}
-              </h2>
-              {meta && (
-                <div className="shrink-0 inline-flex items-center text-xs font-bold text-text-muted">
-                  {meta}
-                </div>
+              <div className="flex items-center gap-2 min-w-0">
+                <h2 className="text-[15px] sm:text-base font-bold tracking-tight text-text-primary truncate select-none">
+                  {title}
+                </h2>
+                {meta && (
+                  <div className="shrink-0 inline-flex items-center text-xs font-bold text-text-muted">
+                    {meta}
+                  </div>
+                )}
+              </div>
+              {sub && (
+                <p className="text-[11px] font-medium text-text-muted truncate leading-snug mt-0.5 select-none">
+                  {sub}
+                </p>
               )}
             </div>
           </div>
@@ -133,8 +147,8 @@ export function PageHeader({
         </div>
       </header>
 
-      {/* Skipped for mode="detail" — detail pages have their own full hero with h1 */}
-      {mode !== "detail" && (
+      {/* Skipped for mode="detail" or hideDesktop — detail pages have their own hero, and some pages (Beranda) have dedicated desktop layouts */}
+      {mode !== "detail" && !hideDesktop && (
         <div
           className={cn(
             "hidden md:block relative border-b border-border-subtle px-0 pt-1 pb-6 mb-7",
@@ -159,9 +173,9 @@ export function PageHeader({
                     </div>
                   )}
                 </div>
-                {description && (
+                {sub && (
                   <p className="text-text-muted mt-1 text-sm md:text-base max-w-2xl font-medium leading-relaxed">
-                    {description}
+                    {sub}
                   </p>
                 )}
               </div>

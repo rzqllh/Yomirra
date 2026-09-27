@@ -4,6 +4,8 @@ import * as React from "react";
 import { YomirraSurface } from "@/components/ui/layout";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { HeaderActions } from "@/components/app/header-actions";
+import { PageHeader } from "@/components/app/header";
+import { House } from "@phosphor-icons/react";
 
 interface HomeViewProps {
   children?: React.ReactNode;
@@ -17,13 +19,13 @@ export function HomeView({ children }: HomeViewProps) {
   return (
     <PullToRefresh>
       <YomirraSurface variant="base" className="min-h-screen">
-        <div className="mx-auto flex max-w-9xl flex-col gap-6 px-4 pb-12 pt-[calc(var(--safe-top,0px)+16px)] md:px-8 md:pt-8 xl:px-10">
-          {/* Mobile Utility Actions (hidden on desktop where TopNav is canonical) */}
-          <div className="flex md:hidden items-center justify-between w-full">
-            <span className="font-bold text-xs uppercase tracking-[0.14em] text-accent">Yomirra</span>
-            <HeaderActions />
-          </div>
-
+        <PageHeader
+          title="Beranda"
+          icon={<House size={20} weight="duotone" />}
+          actions={<HeaderActions />}
+          hideDesktop
+        />
+        <div className="mx-auto flex max-w-9xl flex-col gap-6 px-4 pb-12 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:px-8 md:pt-8 xl:px-10">
           {/* Dynamic Feed Content */}
           <div className="flex flex-col gap-8 md:gap-10">
             {children}

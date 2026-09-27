@@ -60,51 +60,58 @@ export default function DownloadsPage() {
 
   return (
     <YomirraSurface variant="base" className="min-h-screen">
-      <div className="px-4 pt-[calc(var(--safe-top,0px)+16px)] md:pt-8 md:px-8 max-w-5xl mx-auto w-full space-y-6">
+      <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:pt-8 md:px-8 max-w-5xl mx-auto w-full space-y-6">
         {/* Page Title & Subtitle */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-1">
-          <PageHeader
-            title="Unduhan"
-            description="Kelola bab komik yang diunduh untuk dibaca saat offline."
-          />
-          {allDownloads.length > 0 && (
-            <button
-              onClick={() => {
-                if (window.confirm("Yakin ingin menghapus semua unduhan?")) {
-                  clearDownloads();
-                  toast.error("Semua unduhan dihapus");
-                }
-              }}
-              className="inline-flex min-h-11 items-center gap-2 self-start sm:self-auto px-3 py-1.5 rounded-sm text-xs font-semibold text-semantic-error hover:bg-semantic-error/10 border border-semantic-error/30 motion-safe:transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-            >
-              <Trash size={16} />
-              <span>Hapus Semua</span>
-            </button>
-          )}
-        </div>
+        <PageHeader
+          title="Unduhan"
+          subtitle="Kelola bab komik yang diunduh untuk dibaca saat offline."
+          icon={<Download size={24} weight="duotone" />}
+          actions={
+            allDownloads.length > 0 ? (
+              <button
+                type="button"
+                onClick={() => {
+                  if (window.confirm("Yakin ingin menghapus semua unduhan?")) {
+                    clearDownloads();
+                    toast.error("Semua unduhan dihapus");
+                  }
+                }}
+                className="inline-flex min-h-10 items-center gap-2 self-start sm:self-auto px-3.5 py-1.5 rounded-xl text-xs font-bold text-semantic-error hover:bg-semantic-error/10 border border-semantic-error/30 active:scale-95 transition-all shadow-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer"
+              >
+                <Trash size={16} />
+                <span>Hapus Semua</span>
+              </button>
+            ) : undefined
+          }
+        />
 
         <StorageWarningBanner />
 
         {/* Device Storage Status */}
         {storageInfo && (
-          <YomirraSurface variant="elevated" className="rounded-md p-4 flex items-center gap-4 border border-border-subtle/80">
-            <div className="size-11 bg-accent/10 rounded-sm flex items-center justify-center text-accent shrink-0">
-              <HardDrives size={22} weight="fill" />
+          <div className="rounded-2xl p-4 sm:p-5 flex items-center gap-4 bg-surface-raised border border-border-default/80 shadow-xs">
+            <div className="size-12 bg-accent/10 border border-accent/20 rounded-xl flex items-center justify-center text-accent shrink-0 shadow-xs">
+              <HardDrives size={24} weight="duotone" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-text-secondary mb-1">Penyimpanan Perangkat</p>
-              <div className="flex justify-between text-xs mb-1.5">
-                <span className="font-bold text-text-primary">{formatBytes(storageInfo.usage)} terpakai</span>
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-xs font-bold text-text-primary uppercase tracking-wider">Penyimpanan Perangkat</p>
+                <span className="text-[11px] font-bold text-accent">
+                  {((storageInfo.usage / (storageInfo.quota || 1)) * 100).toFixed(1)}%
+                </span>
+              </div>
+              <div className="flex justify-between text-xs mb-2">
+                <span className="font-semibold text-text-secondary">{formatBytes(storageInfo.usage)} terpakai</span>
                 <span className="text-text-muted">{formatBytes(storageInfo.quota)} total</span>
               </div>
-              <div className="w-full bg-surface-muted rounded-full h-1.5 overflow-hidden">
+              <div className="w-full bg-surface-base border border-border-subtle/80 rounded-full h-2 overflow-hidden shadow-inner">
                 <div
-                  className="bg-accent h-full rounded-full motion-safe:transition-all motion-safe:duration-500"
-                  style={{ width: `${Math.min(100, (storageInfo.usage / (storageInfo.quota || 1)) * 100)}%` }}
+                  className="bg-accent h-full rounded-full motion-safe:transition-all motion-safe:duration-500 shadow-xs"
+                  style={{ width: `${Math.min(100, Math.max(1, (storageInfo.usage / (storageInfo.quota || 1)) * 100))}%` }}
                 />
               </div>
             </div>
-          </YomirraSurface>
+          </div>
         )}
 
         {/* Downloads Tabs / Task Lists */}
@@ -118,11 +125,11 @@ export default function DownloadsPage() {
           </div>
         ) : (
           <Tabs defaultValue={queuedItems.length > 0 ? "queue" : "completed"} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6 sm:max-w-xs rounded-sm">
-              <TabsTrigger value="queue" className="rounded-xs text-xs font-semibold">
+            <TabsList className="grid w-full grid-cols-2 mb-6 sm:max-w-xs rounded-xl p-1 bg-surface-raised/80 border border-border-subtle shadow-xs">
+              <TabsTrigger value="queue" className="rounded-lg text-xs font-bold data-[state=active]:bg-surface-base data-[state=active]:text-text-primary data-[state=active]:shadow-xs transition-all">
                 Antrean ({queuedItems.length})
               </TabsTrigger>
-              <TabsTrigger value="completed" className="rounded-xs text-xs font-semibold">
+              <TabsTrigger value="completed" className="rounded-lg text-xs font-bold data-[state=active]:bg-surface-base data-[state=active]:text-text-primary data-[state=active]:shadow-xs transition-all">
                 Selesai ({completedItems.length})
               </TabsTrigger>
             </TabsList>
@@ -141,12 +148,11 @@ export default function DownloadsPage() {
                   const clampedProgress = Math.max(0, Math.min(100, item.progress || 0));
 
                   return (
-                    <YomirraSurface
-                      variant="elevated"
+                    <div
                       key={item.id}
-                      className="rounded-md p-3.5 sm:p-4 flex gap-3.5 sm:gap-4 border border-border-subtle/80"
+                      className="rounded-2xl p-3.5 sm:p-4 flex gap-3.5 sm:gap-4 bg-surface-raised border border-border-subtle/80 shadow-xs hover:border-accent/40 motion-safe:transition-colors"
                     >
-                      <MangaCardCoverFrame className="w-14 sm:w-16">
+                      <MangaCardCoverFrame className="w-14 sm:w-16 rounded-xl">
                         <MangaCover
                           src={item.coverUrl}
                           alt={item.mangaTitle}
@@ -174,9 +180,9 @@ export default function DownloadsPage() {
                             </span>
                             <span className="text-xs font-bold text-accent">{clampedProgress}%</span>
                           </div>
-                          <div className="w-full bg-surface-muted rounded-full h-1.5 overflow-hidden">
+                          <div className="w-full bg-surface-base border border-border-subtle/60 rounded-full h-2 overflow-hidden shadow-inner">
                             <div
-                              className={`h-full rounded-full motion-safe:transition-all motion-safe:duration-300 ${
+                              className={`h-full rounded-full motion-safe:transition-all motion-safe:duration-300 shadow-xs ${
                                 item.status === "failed"
                                   ? "bg-semantic-error"
                                   : item.status === "paused"
@@ -201,7 +207,7 @@ export default function DownloadsPage() {
                               toast.info("Unduhan dijeda");
                             }}
                             aria-label={`Jeda unduhan ${item.mangaTitle} - ${item.chapterTitle}`}
-                            className="text-text-secondary hover:text-text-primary rounded-xs"
+                            className="text-text-secondary hover:text-text-primary rounded-lg active:scale-95 transition-all"
                           >
                             <Pause size={17} weight="bold" />
                           </IconButton>
@@ -212,7 +218,7 @@ export default function DownloadsPage() {
                               toast.info("Melanjutkan unduhan...");
                             }}
                             aria-label={`Lanjutkan unduhan ${item.mangaTitle} - ${item.chapterTitle}`}
-                            className="text-accent hover:text-accent-hover rounded-xs"
+                            className="text-accent hover:text-accent-hover rounded-lg active:scale-95 transition-all"
                           >
                             <Play size={17} weight="fill" />
                           </IconButton>
@@ -223,7 +229,7 @@ export default function DownloadsPage() {
                               toast.info("Mencoba ulang unduhan...");
                             }}
                             aria-label={`Coba lagi unduhan ${item.mangaTitle} - ${item.chapterTitle}`}
-                            className="text-accent hover:text-accent-hover rounded-xs"
+                            className="text-accent hover:text-accent-hover rounded-lg active:scale-95 transition-all"
                           >
                             <ArrowClockwise size={17} weight="bold" />
                           </IconButton>
@@ -235,12 +241,12 @@ export default function DownloadsPage() {
                             toast.error("Unduhan dibatalkan");
                           }}
                           aria-label={`Batalkan unduhan ${item.mangaTitle} - ${item.chapterTitle}`}
-                          className="text-semantic-error hover:text-semantic-error/80 rounded-xs"
+                          className="text-semantic-error hover:text-semantic-error/80 rounded-lg active:scale-95 transition-all"
                         >
                           <X size={17} weight="bold" />
                         </IconButton>
                       </div>
-                    </YomirraSurface>
+                    </div>
                   );
                 })
               )}
@@ -257,17 +263,16 @@ export default function DownloadsPage() {
                 </div>
               ) : (
                 completedItems.map((item) => (
-                  <YomirraSurface
-                    variant="elevated"
+                  <div
                     key={item.id}
-                    className="group flex items-center gap-1 rounded-md border border-border-subtle/80 p-1.5 motion-safe:transition-colors hover:bg-surface-hover/70 sm:p-2"
+                    className="group flex items-center gap-1 rounded-2xl bg-surface-raised border border-border-subtle/80 p-2 sm:p-2.5 shadow-xs hover:border-accent/40 motion-safe:transition-colors"
                   >
                     <Link
                       href={`/manga/${item.sourceId}/${item.mangaId}/read/${item.chapterId}`}
-                      className="flex min-w-0 flex-1 items-center gap-3.5 rounded-sm p-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:gap-4"
+                      className="flex min-w-0 flex-1 items-center gap-3.5 rounded-xl p-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:gap-4"
                       aria-label={`Baca ${item.mangaTitle} - ${item.chapterTitle}`}
                     >
-                      <MangaCardCoverFrame className="w-12 sm:w-14">
+                      <MangaCardCoverFrame className="w-12 sm:w-14 rounded-xl">
                         <MangaCover
                           src={item.coverUrl}
                           alt={item.mangaTitle}
@@ -294,11 +299,11 @@ export default function DownloadsPage() {
                         toast.error("Unduhan dihapus");
                       }}
                       aria-label={`Hapus unduhan ${item.mangaTitle} - ${item.chapterTitle}`}
-                      className="shrink-0 rounded-xs text-semantic-error hover:text-semantic-error/80"
+                      className="shrink-0 rounded-xl text-semantic-error hover:text-semantic-error/80 hover:bg-semantic-error/10 active:scale-95 transition-all"
                     >
                       <Trash size={18} />
                     </IconButton>
-                  </YomirraSurface>
+                  </div>
                 ))
               )}
             </TabsContent>

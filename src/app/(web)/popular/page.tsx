@@ -1,7 +1,7 @@
 import { Metadata } from "next";
 import { sourceRegistry } from "@/shared/sources/source-registry";
 import { Suspense } from "react";
-import { SourceFeedSkeleton } from "@/components/app/source-feed-skeleton";
+import { PopularFeedSkeleton } from "@/components/skeletons/popular-skeleton";
 import { withCache, CACHE_TTL } from "@/server/lib/cache/redis-cache";
 import { sourceManager } from "@/server/lib/sources/source-manager";
 import { EditorialCard } from "@/components/manga/card";
@@ -9,6 +9,8 @@ import Link from "next/link";
 import { getManifestUrlFromCookie } from "@/server/lib/sources/server-manifest";
 import { cookies } from "next/headers";
 import { YomirraSurface, PageContainer } from "@/components/ui/layout";
+import { PageHeader } from "@/components/app/header";
+import { Fire } from "@phosphor-icons/react/dist/ssr";
 
 export const metadata: Metadata = {
   title: "Manga Populer - Yomirra",
@@ -43,6 +45,7 @@ async function PopularFeed({ sourceId, sourceName }: { sourceId: string; sourceN
           <div key={manga.id} className="w-full">
             <EditorialCard 
               manga={{ ...manga, rank: index + 1 }} 
+              rank={index + 1}
               sourceId={sourceId} 
               priority={index < 4}
               index={index}
@@ -79,14 +82,14 @@ export default async function PopularPage() {
   return (
     <YomirraSurface variant="base" className="w-full">
       <PageContainer>
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-text-primary">
-            Manga Populer
-          </h1>
-        </div>
+        <PageHeader
+          title="Manga Populer"
+          subtitle="Manga, Manhwa, dan Manhua paling populer saat ini."
+          icon={<Fire size={24} weight="duotone" />}
+        />
         
         {activeSources.map(source => (
-          <Suspense key={source.id} fallback={<SourceFeedSkeleton />}>
+          <Suspense key={source.id} fallback={<PopularFeedSkeleton />}>
             <PopularFeed sourceId={source.id} sourceName={source.name} />
           </Suspense>
         ))}

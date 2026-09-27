@@ -100,7 +100,7 @@ export default function SourcesPage() {
           <div className="px-4 pb-4 md:px-0">
             <PageHeader
               title="Sumber"
-              description="Kelola ekstensi dan sumber bacaan untuk Yomirra."
+              subtitle="Kelola ekstensi dan sumber bacaan untuk Yomirra."
               icon={<HardDrives size={24} weight="duotone" />}
             />
             
