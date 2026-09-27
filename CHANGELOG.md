@@ -4,6 +4,64 @@ All notable changes to Yomirra are documented here.
 
 ---
 
+## [1.1.0] — 2026-09-27
+
+### English
+
+This release delivers the Discovery Surfaces & Navigation Revamp, standardizing page headers, routing transitions, responsive settings, and visual hierarchy across all main destinations.
+
+#### Added
+
+* **Canonical PageHeader**: Unified `<PageHeader>` component across Beranda, Popular, Sources, Downloads, and Settings with consistent icon container, title scale, subtitle styling, and actions slot.
+* **Routed Settings Destination**: `/settings` is now an authentic routed page with full responsive shell, removing intercepting modal overlays for consistent direct URL access and in-app navigation.
+* **Shape-Matched Route Skeletons**: Structural loading states for Popular, Search, Library, Bookmark, and Manga Detail pages to prevent layout shift.
+* **Route Transitions**: Smooth directional cross-fade page transition honoring `prefers-reduced-motion`.
+* **Notification Bell Popover**: Header updates bell now reveals a quick-glance dropdown with recent updates and seen-state tracking.
+* **Editorial Rank Escalation**: Gold, Silver, and Bronze badge hierarchy for top 3 manga on Popular feed with WCAG AA compliance.
+
+#### Changed
+
+* **Detail Page Scrim**: Streamlined manga detail hero overlay into smooth dual-gradient scrims for optimal cover art visibility and text legibility.
+* **Home Feed Typography**: Standardized section titles to Plus Jakarta Sans for consistent typographic rhythm.
+* **Downloads View Parity**: Integrated Downloads action buttons and storage indicator into the canonical page header and design tokens.
+* **Dropdown Scroll Behavior**: Dropdown menus now default to non-modal interaction, preventing background scroll blocking.
+
+#### Fixed
+
+* **Data & Entity Sanitization**: Global `stripHtml` sanitization across feed cards, search results, and detail synopses, eliminating dirty HTML entities and bracketed scrapings.
+* **Mobile Header Drift**: Resolved title/subtitle duplication between mobile app bar and page content across Sources, Downloads, and Beranda.
+* **Author Formatting**: Prefixed author attribution cleanly and gracefully omitted missing author metadata.
+
+---
+
+### Bahasa Indonesia
+
+Rilis ini menghadirkan Discovery Surfaces & Navigation Revamp, menyelaraskan header halaman, transisi rute, halaman pengaturan responsif, dan hierarki visual di seluruh destinasi utama.
+
+#### Ditambahkan
+
+* **Canonical PageHeader**: Komponen `<PageHeader>` terpadu untuk Beranda, Populer, Sumber, Unduhan, dan Pengaturan dengan wadah ikon, skala judul, tipografi subtitle, dan slot aksi yang konsisten.
+* **Halaman Pengaturan Mandiri**: Rute `/settings` kini merupakan halaman penuh mandiri berbasis shell standar, menggantikan modal overlay untuk navigasi internal maupun akses URL langsung yang stabil.
+* **Skeleton Rute Presisi**: Loading skeleton berstruktur layout presisi untuk halaman Populer, Pencarian, Library, Rak Buku, dan Detail Komik guna mencegah pergeseran tata letak (CLS).
+* **Transisi Rute**: Efek transisi cross-fade halaman yang halus serta ramah aksesibilitas (`prefers-reduced-motion`).
+* **Dropdown Lonceng Notifikasi**: Ikon lonceng header kini membuka dropdown intip cepat pembaruan komik dengan pelacakan status terbaca.
+* **Eskalasi Peringkat Editorial**: Peringkat 1-3 di halaman Populer menggunakan badge visual berjenjang Emas, Perak, dan Perunggu dengan kontras rasio WCAG AA.
+
+#### Diubah
+
+* **Gradient Scrim Detail Komik**: Penyederhanaan lapisan gradien cover hero komik menjadi scrim transparan dua arah yang menjaga keindahan artwork sekaligus keterbacaan teks.
+* **Penyelarasan Font Bagian Beranda**: Mengubah font judul seksi di Beranda ke Plus Jakarta Sans agar selaras dengan halaman lainnya.
+* **Standardisasi Halaman Unduhan**: Menyatukan tombol aksi dan indikator penyimpanan ke dalam header kanonikal dan token desain Yomirra.
+* **Perilaku Scroll Dropdown**: Menghapus scroll-lock bawaan pada menu dropdown agar halaman tetap nyaman digulir.
+
+#### Diperbaiki
+
+* **Sanitasi Entitas dan Data**: Normalisasi teks global dengan `stripHtml` pada kartu feed, hasil pencarian, dan sinopsis detail untuk membersihkan tag kotor dan entitas HTML.
+* **Redundansi Header Mobile**: Mengatasi duplikasi judul/subtitle antara mobile app bar dan konten halaman di Sumber, Unduhan, dan Beranda.
+* **Format Nama Penulis**: Penulisan atribusi nama penulis lebih rapi dan menyembunyikan baris bila data penulis kosong.
+
+---
+
 ## [1.0.0] — 2026-09-20
 
 ### English

@@ -88,6 +88,17 @@ Konten yang dikunci atau premium pada sumber aslinya tetap diperlakukan sebagai 
 
 ---
 
+## Desain & Pengalaman Pengguna
+
+Yomirra dirancang dengan standar antarmuka modern yang cepat dan konsisten:
+
+- **Navigasi Seragam**: Header terstandarisasi di seluruh destinasi utama (Beranda, Populer, Sumber, Unduhan, Pengaturan).
+- **Transisi Rute Mulus**: Perpindahan halaman cross-fade yang halus dan ramah aksesibilitas (`prefers-reduced-motion`).
+- **Loading Tanpa Pergeseran**: Skeleton presisi yang menjaga struktur layout sebelum data selesai dimuat.
+- **Pengaturan Mandiri**: Halaman preferensi terintegrasi untuk tema, buffer cache bacaan, sinkronisasi akun, dan cadangan data lokal.
+
+---
+
 ## Privacy
 
 Riwayat bacaan, judul yang kamu baca, dan query pencarian tidak dipakai sebagai telemetri.
