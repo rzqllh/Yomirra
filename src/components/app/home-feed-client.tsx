@@ -131,7 +131,7 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
         <div className="flex items-center justify-between gap-3">
           <h1
             id="spotlight-title"
-            className="ink-display text-[24px] sm:text-[30px] font-normal text-text-primary tracking-tight"
+            className="text-xl sm:text-2xl font-bold tracking-tight text-text-primary"
           >
             Sorotan &amp; peringkat
           </h1>
@@ -176,7 +176,7 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
           <div className="flex items-center justify-between gap-3">
             <h2
               id="recently-updated-title"
-              className="ink-display text-[22px] sm:text-[28px] font-normal text-text-primary flex items-center gap-2 tracking-tight"
+              className="text-lg sm:text-xl font-bold text-text-primary flex items-center gap-2 tracking-tight"
             >
               <span className="size-2 rounded-full bg-accent" aria-hidden="true" />
               <span>Baru diperbarui</span>

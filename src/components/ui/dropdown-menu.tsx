@@ -6,7 +6,9 @@ import { Check, CaretRight, Circle } from "@phosphor-icons/react"
 
 import { cn } from "@/shared/utils/cn"
 
-const DropdownMenu = DropdownMenuPrimitive.Root
+function DropdownMenu({ modal = false, ...props }: React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Root>) {
+  return <DropdownMenuPrimitive.Root modal={modal} {...props} />
+}
 
 const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger
 

@@ -1,20 +1,15 @@
-import { PageHeader } from "@/components/app/header";
-import { MangaGridSkeleton } from "@/components/skeletons/manga-grid-skeleton";
-import { MagnifyingGlass } from "@phosphor-icons/react/dist/ssr";
+import { YomirraSurface, PageContainer } from "@/components/ui/layout";
+import { SearchResultSkeleton } from "@/components/skeletons/search-result-skeleton";
 
 export default function Loading() {
   return (
-    <main className="min-h-screen flex flex-col w-full relative pb-[calc(var(--bottom-nav-height,80px)+24px)] md:pb-12 text-text-primary">
-      <div className="w-full max-w-9xl mx-auto px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:pt-8 md:px-8">
-        <PageHeader
-          title="Pencarian"
-          description="Cari dari Shinigami, MangaDex, Asura Scans, dan sumber lainnya sekaligus."
-          icon={<MagnifyingGlass size={32} weight="duotone" />}
-        />
-        <div className="mt-8">
-          <MangaGridSkeleton count={12} />
+    <YomirraSurface variant="base" className="w-full min-h-screen">
+      <PageContainer>
+        <div className="flex items-center justify-between w-full md:hidden mb-4">
+          <span className="font-bold text-xs uppercase tracking-[0.14em] text-accent">Pencarian</span>
         </div>
-      </div>
-    </main>
+        <SearchResultSkeleton />
+      </PageContainer>
+    </YomirraSurface>
   );
 }

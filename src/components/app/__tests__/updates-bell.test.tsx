@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { UpdatesBell } from '../updates-bell';
 import { useUpdateStore } from '@/shared/store/update-store';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
@@ -12,32 +12,53 @@ vi.mock('@/shared/store/settings-store', () => ({
 }));
 
 vi.mock('@/shared/hooks/use-mounted', () => ({
-  useMounted: () => true
+  useMounted: () => true,
+}));
+
+vi.mock('motion/react', () => ({
+  motion: {
+    span: ({ children, ...props }: any) => <span {...props}>{children}</span>,
+    div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+  },
+  AnimatePresence: ({ children }: any) => <>{children}</>,
+  useReducedMotion: () => false,
 }));
 
 describe('UpdatesBell Component', () => {
+  const mockMarkAllAsSeen = vi.fn();
+
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('renders link to /updates with accessible label when 0 unread', () => {
-    (useUpdateStore as any).mockReturnValue(0);
+  const setupStore = (unreadCount: number, items: Record<string, any> = {}) => {
+    (useUpdateStore as any).mockImplementation((selector: any) => {
+      const state = {
+        getUnreadCount: () => unreadCount,
+        items,
+        markAllAsSeen: mockMarkAllAsSeen,
+      };
+      return selector(state);
+    });
+  };
+
+  it('renders button trigger with accessible label when 0 unread', () => {
+    setupStore(0);
     render(<UpdatesBell />);
     
-    const bellLink = screen.getByRole('link', { name: 'Pembaruan' });
-    expect(bellLink).toBeTruthy();
-    expect(bellLink.getAttribute('href')).toBe('/updates');
+    const bellBtn = screen.getByRole('button', { name: 'Pembaruan' });
+    expect(bellBtn).toBeTruthy();
     
     const badge = screen.queryByTestId('updates-badge');
     expect(badge).toBeNull();
   });
 
   it('shows badge and correct accessible label when unread count > 0', () => {
-    (useUpdateStore as any).mockReturnValue(5);
+    setupStore(5);
     render(<UpdatesBell />);
     
-    const bellLink = screen.getByRole('link', { name: 'Pembaruan, 5 belum dibaca' });
-    expect(bellLink).toBeTruthy();
+    const bellBtn = screen.getByRole('button', { name: 'Pembaruan, 5 belum dibaca' });
+    expect(bellBtn).toBeTruthy();
     
     const badge = screen.getByTestId('updates-badge');
     expect(badge).toBeTruthy();
@@ -45,13 +66,40 @@ describe('UpdatesBell Component', () => {
   });
 
   it('displays 99+ when unread count exceeds 99', () => {
-    (useUpdateStore as any).mockReturnValue(120);
+    setupStore(120);
     render(<UpdatesBell />);
     
-    const bellLink = screen.getByRole('link', { name: 'Pembaruan, 120 belum dibaca' });
-    expect(bellLink).toBeTruthy();
+    const bellBtn = screen.getByRole('button', { name: 'Pembaruan, 120 belum dibaca' });
+    expect(bellBtn).toBeTruthy();
     
     const badge = screen.getByTestId('updates-badge');
     expect(badge.textContent).toBe('99+');
+  });
+
+  it('opens dropdown on click, triggers markAllAsSeen, and displays recent updates and link to /updates', () => {
+    setupStore(2, {
+      'shinigami::solo-leveling': {
+        sourceId: 'shinigami',
+        mangaId: 'solo-leveling',
+        mangaTitle: 'Solo Leveling',
+        latestChapterId: 'ch-200',
+        latestChapterNumber: 200,
+        latestChapterTitle: 'Chapter 200',
+        detectedAt: new Date().toISOString(),
+      },
+    });
+
+    render(<UpdatesBell />);
+    const bellBtn = screen.getByRole('button', { name: 'Pembaruan, 2 belum dibaca' });
+    fireEvent.pointerDown(bellBtn);
+
+    expect(mockMarkAllAsSeen).toHaveBeenCalled();
+    expect(screen.getByText('Notifikasi Pembaruan')).toBeDefined();
+    expect(screen.getByText('Solo Leveling')).toBeDefined();
+    expect(screen.getByText('Chapter 200')).toBeDefined();
+    
+    const allUpdatesLink = screen.getByRole('menuitem', { name: /Tampilkan semua notifikasi/i });
+    expect(allUpdatesLink).toBeDefined();
+    expect(allUpdatesLink.getAttribute('href')).toBe('/updates');
   });
 });
