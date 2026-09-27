@@ -24,6 +24,12 @@ describe("Utils: normalize", () => {
         "Hero & Villain \"Story's\" <Legend>"
       );
     });
+    it("should clean detail synopsis with mixed HTML, entities, and escaped markdown brackets", () => {
+      const rawSynopsis = "<p>Setelah menyelesaikan \\[MENARA UJIAN\\], sang pahlawan kembali &amp; mendapati dunia &quot;berbeda&quot;.<br/>Musuh baru bermunculan.</p>";
+      expect(stripHtml(rawSynopsis)).toBe(
+        "Setelah menyelesaikan [MENARA UJIAN], sang pahlawan kembali & mendapati dunia \"berbeda\". Musuh baru bermunculan."
+      );
+    });
   });
 
   describe("normalizeTitle", () => {

@@ -27,9 +27,34 @@ import { EmptyState } from "@/components/states/empty-state";
 import { cn } from "@/shared/utils/cn";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { MangaDetailLayout } from "./manga-detail-layout";
+import { stripHtml } from "@/shared/utils/normalize";
 import type { MangaDetail, Chapter } from "@/shared/types/source";
 
 const CHAPTER_ITEM_ESTIMATED_SIZE = 70;
+
+function formatAuthor(author?: string | null): string | null {
+  if (!author) return null;
+  const trimmed = author.trim();
+  const lower = trimmed.toLowerCase();
+  if (
+    !trimmed ||
+    lower === "unknown" ||
+    lower === "-" ||
+    lower === "tbd" ||
+    lower === "n/a" ||
+    lower === "?" ||
+    lower === "undefined"
+  ) {
+    return null;
+  }
+  if (lower === "menyusul") {
+    return "Penulis: Menyusul";
+  }
+  if (lower.startsWith("penulis:")) {
+    return trimmed;
+  }
+  return `Penulis: ${trimmed}`;
+}
 
 interface MangaDetailViewProps {
   sourceId: string;
@@ -48,6 +73,9 @@ export function MangaDetailView({
   const [searchQuery, setSearchQuery] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
   const isMounted = useMounted();
+
+  const authorDisplay = useMemo(() => formatAuthor(detail.author), [detail.author]);
+  const cleanedSynopsis = useMemo(() => stripHtml(detail.description || ""), [detail.description]);
 
   const { data: ratingData } = useQuery({
     queryKey: ["rating-score", sourceId, mangaId],
@@ -246,9 +274,6 @@ export function MangaDetailView({
         mobileMeta={
           <>
             <div className="mb-2">
-              <span className="inline-flex items-center bg-white/20 dark:bg-white/10 backdrop-blur-sm px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-widest text-white mb-2 border border-white/20 shadow-xs">
-                {detail.format || "Manga"}
-              </span>
               <h1 className="text-[22px] sm:text-[26px] font-black tracking-tight text-white leading-[1.1] line-clamp-3 text-balance drop-shadow-sm vt-title-mobile">
                 {detail.title}
               </h1>
@@ -259,13 +284,16 @@ export function MangaDetailView({
               )}
             </div>
 
-            <div className="flex items-center gap-2 flex-wrap mb-2.5">
-              <span className="flex items-center gap-1 text-[11px] font-black tracking-wide text-amber-300 bg-black/40 backdrop-blur-sm px-2.5 py-0.5 rounded-lg border border-amber-400/30 shadow-xs">
+            <div className="flex items-center gap-1.5 flex-wrap mb-2.5">
+              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider backdrop-blur-md border border-white/15 bg-black/40 text-white shadow-xs">
+                {detail.format || "Manga"}
+              </span>
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide backdrop-blur-md border border-amber-400/30 bg-black/40 text-amber-300 shadow-xs">
                 <Star weight="fill" size={12} className="text-amber-400" />
                 <span suppressHydrationWarning>{Number(displayScore) > 0 ? Number(displayScore).toFixed(1) : "-.-"}</span>
               </span>
               {detail.status && (
-                <span className="flex items-center justify-center bg-white/20 dark:bg-white/10 backdrop-blur-sm border border-white/20 px-2.5 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider text-white">
+                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider backdrop-blur-md border border-white/15 bg-black/40 text-white shadow-xs">
                   {detail.status}
                 </span>
               )}
@@ -277,9 +305,11 @@ export function MangaDetailView({
             </div>
 
             <div className="mt-auto flex flex-col gap-0.5">
-              <p className="text-sm font-bold text-white line-clamp-1 drop-shadow-xs">
-                {detail.author || 'Unknown'}
-              </p>
+              {authorDisplay && (
+                <p className="text-sm font-semibold text-white/90 line-clamp-1 drop-shadow-xs">
+                  {authorDisplay}
+                </p>
+              )}
               <p className="text-[11px] font-medium text-white/75 leading-snug">
                 Sumber: <span className="text-accent font-semibold">{sourceName}</span>
               </p>
@@ -306,16 +336,16 @@ export function MangaDetailView({
         }
         desktopMeta={
           <>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="inline-flex items-center bg-white/20 dark:bg-white/10 backdrop-blur-sm border border-white/20 px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-widest text-white">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider backdrop-blur-md border border-white/15 bg-black/40 text-white shadow-xs">
                 {detail.format || "Manga"}
               </span>
-              <span className="flex items-center gap-1 bg-black/40 backdrop-blur-sm text-amber-300 px-2.5 py-0.5 rounded-lg text-[11px] font-black tracking-wide border border-amber-400/30 shadow-xs">
+              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide backdrop-blur-md border border-amber-400/30 bg-black/40 text-amber-300 shadow-xs">
                 <Star weight="fill" size={12} className="text-amber-400" />
                 <span suppressHydrationWarning>{Number(displayScore) > 0 ? Number(displayScore).toFixed(1) : "-.-"}</span>
               </span>
               {detail.status && (
-                <span className="flex items-center justify-center bg-white/20 dark:bg-white/10 backdrop-blur-sm border border-white/20 px-2.5 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider text-white">
+                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider backdrop-blur-md border border-white/15 bg-black/40 text-white shadow-xs">
                   {detail.status}
                 </span>
               )}
@@ -338,9 +368,11 @@ export function MangaDetailView({
             </div>
 
             <div className="flex flex-col gap-0.5">
-              <p className="text-base font-bold text-white drop-shadow-xs">
-                {detail.author || 'Unknown'}
-              </p>
+              {authorDisplay && (
+                <p className="text-base font-semibold text-white/90 drop-shadow-xs">
+                  {authorDisplay}
+                </p>
+              )}
               <p className="text-xs font-medium text-white/75">
                 Sumber: <span className="text-accent font-semibold">{sourceName}</span>
               </p>
@@ -353,7 +385,7 @@ export function MangaDetailView({
           <>
             <div className="flex items-center justify-between mb-2.5">
               <span className="text-[11px] font-black text-text-muted uppercase tracking-widest">Sinopsis</span>
-              {detail.description && detail.description.length > 150 && (
+              {cleanedSynopsis.length > 150 && (
                 <button
                   onClick={() => setIsExpanded(!isExpanded)}
                   className="text-[11px] font-bold text-accent hover:text-accent-hover transition-colors inline-flex items-center gap-1"
@@ -368,7 +400,7 @@ export function MangaDetailView({
               "text-[13px] md:text-sm leading-relaxed text-text-secondary break-words transition-all",
               !isExpanded && "line-clamp-4"
             )}>
-              {detail.description?.replace(/\s+/g, ' ').trim() || "Sinopsis belum tersedia."}
+              {cleanedSynopsis || "Sinopsis belum tersedia."}
             </p>
 
             {detail.genres && detail.genres.length > 0 && (

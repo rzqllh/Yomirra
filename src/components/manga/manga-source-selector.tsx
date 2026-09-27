@@ -70,12 +70,12 @@ export function MangaSourceSelector({
           type="button"
           onClick={() => setIsOpen(true)}
           className={cn(
-            "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold tracking-wide backdrop-blur-md border transition-all cursor-pointer select-none active:scale-95",
+            "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide backdrop-blur-md border shadow-xs transition-all cursor-pointer select-none active:scale-95",
             isCurrentPreferred
               ? "bg-accent/20 border-accent/40 text-accent"
               : isTemporaryFallback
               ? "bg-amber-500/20 border-amber-500/40 text-amber-300"
-              : "bg-white/15 dark:bg-white/10 border-white/20 text-white hover:bg-white/25"
+              : "bg-black/40 border-white/15 text-white hover:bg-black/60"
           )}
         >
           <Compass size={13} weight="duotone" />

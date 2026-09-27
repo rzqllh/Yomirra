@@ -364,13 +364,13 @@ export function MangaCard({
               <div
                 className={cn(
                   "absolute top-0 left-0 backdrop-blur-md font-black flex items-center justify-center rounded-br-xl shadow-md z-10",
-                  effectiveRank === 1
-                    ? "bg-amber-500 text-amber-50 text-[12px] w-7.5 h-7.5 ring-1 ring-amber-300/40"
-                    : effectiveRank === 2
-                    ? "bg-slate-300 text-slate-900 text-[11.5px] w-7 h-7 ring-1 ring-slate-200/50"
-                    : effectiveRank === 3
-                    ? "bg-amber-700 text-amber-50 text-[11px] w-7 h-7 ring-1 ring-amber-500/30"
-                    : "bg-black/80 text-white text-[11px] w-7 h-7"
+                  Number(effectiveRank) === 1
+                    ? "bg-amber-400 text-amber-950 text-[12px] w-[30px] h-[30px] ring-1 ring-amber-300 shadow-amber-500/20"
+                    : Number(effectiveRank) === 2
+                    ? "bg-slate-200 text-slate-900 text-[11.5px] w-[28px] h-[28px] ring-1 ring-slate-100 shadow-slate-400/20"
+                    : Number(effectiveRank) === 3
+                    ? "bg-amber-800 text-amber-100 text-[11px] w-[28px] h-[28px] ring-1 ring-amber-600/40 shadow-amber-900/20"
+                    : "bg-black/85 text-white text-[11px] w-[26px] h-[26px]"
                 )}
               >
                 {effectiveRank}
@@ -678,9 +678,32 @@ export function MangaCard({
               )}
 
               {effectiveRank !== undefined && (
-                <div className="flex items-center gap-1 rounded-xs bg-surface-glass backdrop-blur-md px-2 py-1 shadow-sm">
-                  <TrendUp weight="bold" className="text-accent text-[10px]" />
-                  <span className="text-xs font-black text-text-primary">#{effectiveRank}</span>
+                <div
+                  className={cn(
+                    "flex items-center gap-1 rounded-xs backdrop-blur-md px-2 py-1 shadow-sm font-black text-xs",
+                    Number(effectiveRank) === 1
+                      ? "bg-amber-400 text-amber-950 ring-1 ring-amber-300 shadow-xs"
+                      : Number(effectiveRank) === 2
+                      ? "bg-slate-200 text-slate-900 ring-1 ring-slate-100 shadow-xs"
+                      : Number(effectiveRank) === 3
+                      ? "bg-amber-800 text-amber-100 ring-1 ring-amber-600/40 shadow-xs"
+                      : "bg-surface-glass text-text-primary border border-border-default/40"
+                  )}
+                >
+                  <TrendUp
+                    weight="bold"
+                    className={cn(
+                      "text-[10px]",
+                      Number(effectiveRank) === 1
+                        ? "text-amber-950"
+                        : Number(effectiveRank) === 2
+                        ? "text-slate-900"
+                        : Number(effectiveRank) === 3
+                        ? "text-amber-100"
+                        : "text-accent"
+                    )}
+                  />
+                  <span>#{effectiveRank}</span>
                 </div>
               )}
 

@@ -93,7 +93,8 @@ describe("MangaCard", () => {
 
     const rank1Badge = screen.getByText("1");
     expect(rank1Badge).toBeDefined();
-    expect(rank1Badge.className).toContain("amber-500");
+    expect(rank1Badge.className).toContain("amber-400");
+    expect(rank1Badge.className).toContain("w-[30px]");
 
     rerender(
       <MangaCard
@@ -111,7 +112,56 @@ describe("MangaCard", () => {
     );
 
     const rank2Badge = screen.getByText("2");
-    expect(rank2Badge.className).toContain("slate-300");
+    expect(rank2Badge.className).toContain("slate-200");
+    expect(rank2Badge.className).toContain("w-[28px]");
+
+    rerender(
+      <MangaCard
+        variant="rank"
+        sourceId="shinigami"
+        rank={3}
+        manga={{
+          id: "manga-top-3",
+          title: "Top Manga 3",
+          coverUrl: "https://example.com/cover3.jpg",
+          latestChapter: "Ch. 30",
+          score: 9.3,
+        }}
+      />
+    );
+
+    const rank3Badge = screen.getByText("3");
+    expect(rank3Badge.className).toContain("amber-800");
+
+    // Test string rank coercion (e.g. "1" as string)
+    rerender(
+      <MangaCard
+        variant="rank"
+        sourceId="shinigami"
+        rank={"1" as any}
+        manga={{
+          id: "manga-top-1",
+          title: "Top Manga 1",
+          coverUrl: "https://example.com/cover1.jpg",
+        }}
+      />
+    );
+    expect(screen.getByText("1").className).toContain("amber-400");
+
+    // Test rank > 3 default badge
+    rerender(
+      <MangaCard
+        variant="rank"
+        sourceId="shinigami"
+        rank={15}
+        manga={{
+          id: "manga-top-15",
+          title: "Top Manga 15",
+          coverUrl: "https://example.com/cover15.jpg",
+        }}
+      />
+    );
+    expect(screen.getByText("15").className).toContain("bg-black/85");
   });
 
   it("renders progress variant with percentage, Lanjut button, and 100% color-coding", () => {

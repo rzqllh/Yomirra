@@ -114,14 +114,78 @@ describe("MangaDetailView - Scroll Position Reset", () => {
       />
     );
 
-    // Verify lowered bottom gradient (via-80% to-surface-base)
-    const bottomGradient = container.querySelector('[class*="via-80%"]');
+    // Verify smoothed bottom gradient (via-45% from-[var(--color-surface-base)])
+    const bottomGradient = container.querySelector('[class*="via-45%"]');
     expect(bottomGradient).not.toBeNull();
-    expect(bottomGradient?.className).toContain("to-surface-base");
+    expect(bottomGradient?.className).toContain("from-[var(--color-surface-base)]");
 
     // Verify parallax container overflow positioning
     const parallaxLayer = container.querySelector('[class*="-top-12"]');
     expect(parallaxLayer).not.toBeNull();
     expect(parallaxLayer?.className).toContain("-bottom-24");
+  });
+
+  it("sanitizes dirty synopsis on detail view using shared stripHtml", () => {
+    const { getByText } = render(
+      <MangaDetailView
+        sourceId="shinigami"
+        mangaId="test-manga"
+        detail={{
+          id: "test-manga",
+          title: "Test Manga",
+          coverUrl: "https://example.com/cover.jpg",
+          description: "<p>Setelah menyelesaikan \\[MENARA UJIAN\\], pahlawan kembali &amp; mendapati dunia &quot;baru&quot;.</p>",
+          status: "ONGOING",
+          genres: ["Action"],
+        }}
+        chapters={[]}
+      />
+    );
+
+    expect(
+      getByText('Setelah menyelesaikan [MENARA UJIAN], pahlawan kembali & mendapati dunia "baru".')
+    ).toBeDefined();
+  });
+
+  it("prefixes 'Menyusul' author as 'Penulis: Menyusul' and omits unknown authors", () => {
+    const { getAllByText } = render(
+      <MangaDetailView
+        sourceId="shinigami"
+        mangaId="test-manga-1"
+        detail={{
+          id: "test-manga-1",
+          title: "Test Manga",
+          coverUrl: "https://example.com/cover.jpg",
+          description: "Synopsis",
+          author: "Menyusul",
+          status: "ONGOING",
+          genres: ["Action"],
+        }}
+        chapters={[]}
+      />
+    );
+
+    // Desktop and mobile both render Penulis: Menyusul
+    expect(getAllByText("Penulis: Menyusul", { exact: false })).toHaveLength(2);
+
+    const { queryByText } = render(
+      <MangaDetailView
+        sourceId="shinigami"
+        mangaId="test-manga-2"
+        detail={{
+          id: "test-manga-2",
+          title: "Test Manga",
+          coverUrl: "https://example.com/cover.jpg",
+          description: "Synopsis",
+          author: "unknown",
+          status: "ONGOING",
+          genres: ["Action"],
+        }}
+        chapters={[]}
+      />
+    );
+
+    expect(queryByText("unknown")).toBeNull();
+    expect(queryByText("Unknown")).toBeNull();
   });
 });

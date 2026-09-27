@@ -57,7 +57,7 @@ export function MangaDetailLayout({
     <div className={cn("flex-1 flex flex-col w-full relative text-text-primary bg-surface-base", className)}>
       <section className="relative w-full overflow-hidden select-none">
         {/* Backdrop Scrim */}
-        <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+        <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden bg-neutral-950">
           {/* Parallax layer with vertical overflow so translation never exposes empty gaps */}
           <motion.div
             style={{ y: backdropY }}
@@ -66,9 +66,11 @@ export function MangaDetailLayout({
             {backdrop}
           </motion.div>
 
-          {/* Scrim gradients ensuring high contrast against light or dark theme while keeping artwork vibrant */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/35 via-40% to-transparent pointer-events-none" />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-surface-base/35 via-80% to-surface-base pointer-events-none" />
+          {/* Top vignette — keeps header/back button readable without killing the cover */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/15 via-35% to-transparent pointer-events-none" />
+
+          {/* Bottom gradient — text contrast + seamless surface-base blend in one smooth pass */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-surface-base)] via-black/55 via-45% to-transparent pointer-events-none" />
         </div>
 
         {/* Page Header */}
