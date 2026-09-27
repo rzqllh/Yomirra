@@ -102,7 +102,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
   };
 
   const settingsContent = (
-    <div className={cn("space-y-6 md:space-y-8", isOverlay ? "pb-8" : "xl:columns-2 xl:gap-6 [&>*]:break-inside-avoid xl:[&>*]:mb-6")}>
+    <div className="space-y-6 md:space-y-8 xl:columns-2 xl:gap-6 [&>*]:break-inside-avoid xl:[&>*]:mb-6">
       {/* Akun & Profil */}
       <SettingsSection title="Akun & Profil">
         {user ? (
@@ -423,99 +423,46 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
 
   return (
     <>
-      {isOverlay ? (
-        <div className="flex flex-col h-full max-h-[90vh] bg-surface-base">
-          {/* Overlay Header Chrome */}
-          <div className="pt-3 pb-3 px-5 sm:px-6 shrink-0 flex flex-col border-b border-border-subtle bg-surface-base/95 backdrop-blur-md sticky top-0 z-20">
-            <div className="mx-auto w-12 h-1.5 shrink-0 rounded-full bg-border-strong mb-3 sm:hidden" />
-            <div className="flex items-center justify-between">
-              {subView === "backup" ? (
-                <button
-                  type="button"
-                  onClick={() => setSubView("main")}
-                  className="flex items-center gap-1.5 text-xs font-bold text-text-secondary hover:text-text-primary transition-colors cursor-pointer py-1.5 px-2.5 -ml-2 rounded-xl hover:bg-surface-raised border border-transparent hover:border-border-subtle"
-                >
-                  <CaretLeft size={16} weight="bold" />
-                  <span>Pengaturan</span>
-                </button>
-              ) : (
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-xl bg-accent/10 text-accent flex items-center justify-center">
-                    <Gear size={20} weight="duotone" />
-                  </div>
-                  <div>
-                    <h2 className="text-lg font-bold text-text-primary leading-tight">Pengaturan</h2>
-                    <p className="text-[11px] text-text-muted">Preferensi aplikasi Yomirra</p>
-                  </div>
-                </div>
-              )}
-              {onClose && (
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="w-9 h-9 rounded-xl bg-surface-raised hover:bg-surface-hover flex items-center justify-center text-text-primary transition-colors cursor-pointer border border-border-subtle"
-                  aria-label="Tutup pengaturan"
-                >
-                  <X size={18} weight="bold" />
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Scrollable Overlay Content */}
-          <div
-            className="flex-1 overflow-y-auto overscroll-contain px-4 py-6 sm:px-6 [scrollbar-width:none] touch-manipulation"
-            style={{ WebkitOverflowScrolling: "touch" }}
-          >
+      <YomirraSurface variant="base" className="min-h-screen">
+        <div className="mx-auto flex w-full max-w-7xl flex-col">
+          <h1 className="sr-only">Pengaturan Yomirra</h1>
+          <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:pt-8 pb-6 md:px-8 space-y-8">
             {subView === "backup" ? (
-              <BackupRestoreView onBack={() => setSubView("main")} />
+              <>
+                <PageHeader
+                  title="Cadangan & Pemulihan"
+                  subtitle="Ekspor atau pulihkan data riwayat dan koleksi lokal."
+                  icon={<FileText size={24} weight="duotone" />}
+                  actions={
+                    <Button
+                      variant="secondary"
+                      onClick={() => setSubView("main")}
+                      className="rounded-xl font-bold text-xs"
+                    >
+                      <CaretLeft size={16} weight="bold" className="mr-1" />
+                      Kembali ke Pengaturan
+                    </Button>
+                  }
+                />
+                <div className="w-full max-w-2xl mx-auto">
+                  <BackupRestoreView onBack={() => setSubView("main")} />
+                </div>
+              </>
             ) : (
-              settingsContent
+              <>
+                <PageHeader
+                  title="Pengaturan"
+                  subtitle="Preferensi aplikasi Yomirra"
+                  icon={<Gear size={24} weight="duotone" />}
+                />
+                <div className="w-full">
+                  {settingsContent}
+                </div>
+              </>
             )}
           </div>
         </div>
-      ) : (
-        <YomirraSurface variant="base" className="min-h-screen">
-          <div className="mx-auto flex w-full max-w-7xl flex-col">
-            <h1 className="sr-only">Pengaturan Yomirra</h1>
-            <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:pt-8 pb-6 md:px-8 space-y-8">
-              {subView === "backup" ? (
-                <>
-                  <PageHeader
-                    title="Cadangan & Pemulihan"
-                    description="Ekspor atau pulihkan data riwayat dan koleksi lokal."
-                    icon={<FileText size={24} weight="duotone" />}
-                    actions={
-                      <Button
-                        variant="secondary"
-                        onClick={() => setSubView("main")}
-                        className="rounded-xl font-bold text-xs"
-                      >
-                        <CaretLeft size={16} weight="bold" className="mr-1" />
-                        Kembali ke Pengaturan
-                      </Button>
-                    }
-                  />
-                  <div className="w-full max-w-2xl mx-auto">
-                    <BackupRestoreView onBack={() => setSubView("main")} />
-                  </div>
-                </>
-              ) : (
-                <>
-                  <PageHeader
-                    title="Pengaturan"
-                    description="Sesuaikan preferensi aplikasi sesuai keinginanmu."
-                    icon={<Gear size={24} weight="duotone" />}
-                  />
-                  <div className="w-full">
-                    {settingsContent}
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        </YomirraSurface>
-      )}
+      </YomirraSurface>
 
       <ConfirmationModal
         isOpen={isClearDataDialogOpen}
