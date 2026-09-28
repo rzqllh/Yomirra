@@ -182,7 +182,7 @@ export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
         {/* Search Input Bar Pill */}
         <form
           onSubmit={handleSearch}
-          className="relative flex items-center justify-between w-full max-w-[500px] h-14 sm:h-[58px] rounded-full bg-white dark:bg-[#1a1d28] border border-black/[0.08] dark:border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] px-3.5 sm:px-4 gap-2.5 sm:gap-3 transition-all focus-within:border-accent/40 focus-within:ring-2 focus-within:ring-accent/20"
+          className="relative flex items-center justify-between w-full max-w-[500px] h-14 sm:h-[58px] rounded-full bg-surface-overlay border border-border-subtle shadow-[0_4px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] px-3.5 sm:px-4 gap-2.5 sm:gap-3 transition-all focus-within:border-accent/40 focus-within:ring-2 focus-within:ring-accent/20"
         >
           <MagnifyingGlass size={20} weight="regular" className="text-text-muted shrink-0" />
           <input

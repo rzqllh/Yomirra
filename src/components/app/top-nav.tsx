@@ -138,7 +138,7 @@ export function TopNav() {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 8, scale: 0.95 }}
                     transition={{ duration: 0.15, ease: "easeOut" }}
-                    className="absolute right-0 top-12 w-60 bg-white/95 dark:bg-[#141721]/95 backdrop-blur-2xl shadow-[0_12px_36px_-6px_rgba(0,0,0,0.18)] dark:shadow-[0_16px_40px_-6px_rgba(0,0,0,0.7)] border border-white/60 dark:border-white/10 rounded-2xl p-1.5 z-[100] flex flex-col gap-0.5 select-none"
+                    className="absolute right-0 top-12 w-60 bg-surface-overlay/95 backdrop-blur-2xl shadow-[0_12px_36px_-6px_rgba(0,0,0,0.18)] dark:shadow-[0_16px_40px_-6px_rgba(0,0,0,0.7)] border border-border-subtle rounded-2xl p-1.5 z-[100] flex flex-col gap-0.5 select-none"
                   >
                     <div className="px-3 py-2 border-b border-border-subtle/70 mb-1">
                       <p className="text-[13.5px] font-bold text-text-primary truncate">{user.displayName || "User"}</p>

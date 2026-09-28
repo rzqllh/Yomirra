@@ -126,10 +126,10 @@ export function HeaderActions({ className }: { className?: string } = {}) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 6, scale: 0.95 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className="absolute right-0 top-12 z-[100] w-[230px] rounded-2xl bg-white/95 dark:bg-[#141721]/95 backdrop-blur-2xl border border-white/60 dark:border-white/10 shadow-[0_12px_36px_-6px_rgba(0,0,0,0.18),0_4px_16px_-2px_rgba(0,0,0,0.08)] dark:shadow-[0_16px_40px_-6px_rgba(0,0,0,0.7),0_4px_16px_-2px_rgba(0,0,0,0.4)] p-1.5 flex flex-col gap-0.5 select-none"
+            className="absolute right-0 top-12 z-[100] w-[230px] rounded-2xl bg-surface-overlay/95 backdrop-blur-2xl border border-border-subtle shadow-[0_12px_36px_-6px_rgba(0,0,0,0.18),0_4px_16px_-2px_rgba(0,0,0,0.08)] dark:shadow-[0_16px_40px_-6px_rgba(0,0,0,0.7),0_4px_16px_-2px_rgba(0,0,0,0.4)] p-1.5 flex flex-col gap-0.5 select-none"
           >
             {/* Beak Pointer Notch */}
-            <div className="absolute -top-1.5 right-3.5 size-3 rotate-45 bg-white dark:bg-[#141721] border-l border-t border-white/60 dark:border-white/10 pointer-events-none" />
+            <div className="absolute -top-1.5 right-3.5 size-3 rotate-45 bg-surface-overlay border-l border-t border-border-subtle pointer-events-none" />
 
             {/* User Profile Header (if logged in) */}
             {user && (
