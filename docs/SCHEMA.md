@@ -385,3 +385,53 @@ const getLibraryId = (sourceId: string, mangaId: string) =>
 ```
 
 This same convention is used in Firestore document IDs.
+
+
+---
+
+## 9. Search Intelligence
+
+Search intelligence builds on the canonical multi-source result model.
+
+### Query parsing
+
+The raw Search query may contain deterministic tags:
+
+```text
+solo leveling #fantasy #completed
+```
+
+The parser splits this into:
+
+- text query: `solo leveling`
+- canonical genre: `fantasy`
+- canonical status: `completed`
+
+Canonical filters keep a per-source value map so Yomirra can send each adapter the value it actually supports.
+
+### Opportunistic semantic catalog
+
+Public comic metadata encountered during Search is stored in the existing Redis instance under the `yomirra:search:catalog:*` namespace.
+
+The catalog stores:
+
+- canonical key
+- primary source reference
+- source bindings
+- title and alternate titles
+- author
+- description
+- genre / format / status when available
+- optional embedding
+- update timestamp
+
+No user history, reading progress, account data, or query history is stored in the semantic catalog.
+
+Records expire after 90 days without refresh and the catalog is bounded to 1,200 records.
+
+### Embeddings
+
+`GEMINI_API_KEY` is optional.
+
+When configured, Yomirra uses `gemini-embedding-2` with 768 output dimensions for semantic ranking and related-title matching. Missing or failed embeddings never block provider search.
+

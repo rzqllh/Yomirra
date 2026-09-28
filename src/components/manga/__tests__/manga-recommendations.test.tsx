@@ -11,6 +11,7 @@ vi.mock("@/shared/api-client", () => ({
     getPopular: vi.fn(),
     getLatest: vi.fn(),
     getSources: vi.fn(),
+    getRelatedTitles: vi.fn(),
   },
 }));
 
@@ -27,6 +28,7 @@ describe("MangaRecommendations Component", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    (apiClient.getRelatedTitles as any).mockResolvedValue([]);
     queryClient = new QueryClient({
       defaultOptions: {
         queries: {
@@ -36,10 +38,10 @@ describe("MangaRecommendations Component", () => {
     });
   });
 
-  const renderComponent = (props: { sourceId: string; currentMangaId: string; genres: string[] }) => {
+  const renderComponent = (props: { sourceId: string; currentMangaId: string; genres: string[]; title?: string }) => {
     return render(
       <QueryClientProvider client={queryClient}>
-        <MangaRecommendations {...props} />
+        <MangaRecommendations title={props.title || "Current Manga"} {...props} />
       </QueryClientProvider>
     );
   };

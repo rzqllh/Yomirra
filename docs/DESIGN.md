@@ -458,6 +458,40 @@ When provider choice is useful, surface it deliberately:
 
 The current `Pilih sumber` modal is a valid pattern, but it must obey the active Search scope. A provider excluded by the current query scope must not appear in that picker for the result context unless the user explicitly asks to broaden the search.
 
+## 7.7 Tag-aware and semantic search
+
+**LOCKED**
+
+Search supports explicit filter tags in the main query field.
+
+Examples:
+
+- `solo leveling #fantasy`
+- `romance sekolah #completed #manhwa`
+
+Rules:
+
+- `#tag` is a power-user shortcut, not a required syntax.
+- Recognized tags become deterministic filters and are removed from the text sent to provider title search.
+- Indonesian aliases and clear typos may resolve to one canonical tag.
+- Ambiguous short fragments are suggested, never silently guessed.
+- Canonical filters map back to each provider's native filter value.
+- A provider that cannot satisfy an explicit tag is skipped for that query rather than searched without the constraint.
+- Explicit tags are hard constraints. Semantic similarity must not override them.
+
+Search ranking is hybrid:
+
+1. exact and alternate-title matches;
+2. lexical/fuzzy similarity;
+3. semantic similarity when configured;
+4. provider/catalog order as fallback.
+
+Exact title matches must remain ahead of semantic-only matches.
+
+Semantic indexing is opportunistic. Yomirra indexes public comic metadata encountered during normal use; it does not crawl every provider solely to build an AI index. The semantic layer must fail open: if the embedding provider or catalog cache is unavailable, normal multi-source search continues to work.
+
+Related-title recommendations may use semantic similarity when enough indexed metadata exists, then fall back to deterministic genre/popular recommendations.
+
 ---
 
 # 8. Page archetypes and containers
