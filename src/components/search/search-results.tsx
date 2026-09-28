@@ -54,6 +54,7 @@ export interface SearchResultsProps {
   setPage: React.Dispatch<React.SetStateAction<number>>;
   hasNextPage: boolean;
   queryClient: any;
+  hasSearchIntent: boolean;
 }
 
 export function SearchResults({
@@ -69,6 +70,7 @@ export function SearchResults({
   setPage,
   hasNextPage,
   queryClient,
+  hasSearchIntent,
 }: SearchResultsProps) {
   const sort = useSearchFilterStore((state) => state.sort);
   const listingViewMode = useSettingsStore((state) => state.listingViewMode);
@@ -131,6 +133,20 @@ export function SearchResults({
               icon={<WarningCircle size={40} className="text-accent" weight="duotone" />}
               title="Pilih sumber dulu"
               description="Pilih satu atau beberapa sumber di atas untuk mencari komik."
+            />
+          </motion.div>
+        ) : !hasSearchIntent ? (
+          <motion.div
+            key="search-initial"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="pt-8"
+          >
+            <EmptyState
+              icon={<MagnifyingGlass size={40} className="text-text-muted" weight="duotone" />}
+              title="Cari komik dari semua sumber"
+              description="Ketik judul, kreator, atau gunakan #tag seperti #fantasy."
             />
           </motion.div>
         ) : isInitialLoading && searchMangas.length === 0 ? (

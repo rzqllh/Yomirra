@@ -508,7 +508,14 @@ export function MangaDetailView({
           <MangaRecommendations
             sourceId={sourceId}
             currentMangaId={mangaId}
+            title={detail.title}
             genres={detail.genres || []}
+            description={detail.description}
+            author={detail.author}
+            format={detail.format}
+            status={detail.status}
+            originalTitle={detail.originalTitle}
+            alternativeTitles={detail.alternativeTitles}
           />
         }
       />

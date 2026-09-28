@@ -27,9 +27,10 @@ export function SearchPageView() {
           <PageToolbar>
             <SearchToolbar
               localQuery={search.localQuery}
-              onQueryChange={(e) => search.setLocalQuery(e.target.value)}
+              onQueryChange={search.setLocalQuery}
               onSearchSubmit={search.handleSearchSubmit}
               onQueryClear={() => search.setLocalQuery("")}
+              filters={search.dynamicFilters}
             />
             <SearchSourceRail
               searchableSources={search.searchableSources}
@@ -53,6 +54,7 @@ export function SearchPageView() {
           setPage={search.setPage}
           hasNextPage={search.hasNextPage}
           queryClient={search.queryClient}
+          hasSearchIntent={search.hasSearchIntent}
         />
       </PageContainer>
     </YomirraSurface>
