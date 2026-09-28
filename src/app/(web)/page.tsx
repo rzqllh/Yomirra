@@ -44,8 +44,8 @@ export default async function HomePage() {
         <div className="py-10">
           <EmptyState
             icon={<WarningCircle size={40} className="text-accent" weight="duotone" />}
-            title="Tidak ada sumber komik yang aktif."
-            description="Periksa halaman sumber untuk mengaktifkan sumber komik."
+            title="Tidak ada sumber yang aktif."
+            description="Pilih sumber yang mau tampil di Library dan Populer."
           />
         </div>
       )}

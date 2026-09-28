@@ -9,7 +9,7 @@ import { EmptyState } from "@/components/states/empty-state";
 import { SearchInput } from "@/components/ui/search-input";
 import { SourceCard } from "@/components/source/source-card";
 import { DirectionalTransition } from "@/components/ui/directional-transition";
-import { YomirraSurface } from "@/components/ui/layout";
+import { YomirraSurface, PageContainer } from "@/components/ui/layout";
 import { PageHeader } from "@/components/app/header";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
@@ -73,7 +73,7 @@ export default function SourcesPage() {
           healthStats: {
             latency: health.latency,
             uptime: health.uptime,
-            lastChecked: "Just now",
+            lastChecked: "Baru saja",
             message: health.message,
           }
         };
@@ -96,94 +96,77 @@ export default function SourcesPage() {
   return (
     <PullToRefresh onRefresh={handleRefresh}>
       <YomirraSurface variant="base" className="min-h-screen">
-        <div className="mx-auto flex w-full max-w-9xl flex-col pb-8 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:px-8 md:pt-8">
-          <div className="px-4 pb-4 md:px-0">
-            <PageHeader
-              title="Sumber"
-              subtitle="Kelola ekstensi dan sumber bacaan untuk Yomirra."
-              icon={<HardDrives size={24} weight="duotone" />}
-            />
-            
-            {/* Source Mental Model Guidance Banner */}
-            <div className="mt-4 p-3.5 rounded-2xl bg-surface-glass border border-border-subtle text-xs text-text-muted flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-              <p className="leading-relaxed">
-                <span className="font-bold text-text-primary">Model Sumber:</span> Sumber yang <strong className="text-text-primary">Enabled</strong> otomatis dicari secara paralel pada Pencarian Multi-Sumber & Beranda. Klik <em className="text-accent not-italic font-semibold">Buka di Library</em> untuk menjadikannya Sumber Aktif di katalog.
-              </p>
-            </div>
+        <PageContainer>
+          <PageHeader
+            title="Sumber"
+            subtitle="Kelola ekstensi dan sumber bacaan untuk Yomirra."
+            icon={<HardDrives size={24} weight="duotone" />}
+          />
+
+          {/* Source Mental Model Guidance Banner */}
+          <div className="p-3.5 rounded-2xl bg-surface-glass border border-border-subtle text-xs text-text-muted flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <p className="leading-relaxed">
+              Pilih sumber yang ingin tampil di Library dan Populer. Semua sumber tetap bisa digunakan lewat Cari.
+            </p>
           </div>
 
-          <div className="md:hidden flex gap-2 px-4 py-3 pb-2 border-b border-border-subtle bg-surface-base sticky top-[calc(var(--mobile-header-height)+var(--safe-top))] z-[var(--z-sticky)]">
-            <SearchInput
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              placeholder="Cari sumber..."
-              containerClassName="flex-1 rounded-2xl"
+          <SearchInput
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+            placeholder="Cari sumber..."
+            containerClassName="rounded-2xl max-w-md w-full"
+          />
+
+          {isLoading ? (
+            <SourceListSkeleton />
+          ) : isError ? (
+            <EmptyState
+              variant="compact"
+              icon={<HardDrives size={40} className="text-semantic-error" weight="duotone" />}
+              title="Gagal Memuat Sumber"
+              description="Server sedang sibuk. Silakan coba beberapa saat lagi."
+              className="bg-surface-overlay rounded-xl border border-semantic-error/20 py-16"
             />
-          </div>
-
-          <div className="hidden md:block px-4 md:px-8 pb-6">
-            <SearchInput
-              value={filter}
-              onChange={(e) => setFilter(e.target.value)}
-              placeholder="Cari sumber..."
-              containerClassName="rounded-2xl max-w-md"
+          ) : filteredSources.length === 0 ? (
+            <EmptyState
+              variant="compact"
+              icon={<HardDrives size={40} className="text-text-muted" weight="duotone" />}
+              title="Tidak ada sumber yang cocok"
+              description="Coba gunakan kata kunci pencarian yang lain."
+              className="bg-surface-overlay rounded-xl border border-border-subtle border-dashed py-16"
             />
-          </div>
-
-          <div className="p-4 pt-4 md:px-8 md:pt-0">
-            {isLoading ? (
-              <SourceListSkeleton />
-            ) : isError ? (
-              <EmptyState
-                variant="compact"
-                icon={<HardDrives size={40} className="text-semantic-error" weight="duotone" />}
-                title="Gagal Memuat Sumber"
-                description="Server sedang sibuk. Silakan coba beberapa saat lagi."
-                className="bg-surface-overlay rounded-xl border border-semantic-error/20 py-16"
-              />
-            ) : filteredSources.length === 0 ? (
-              <EmptyState
-                variant="compact"
-                icon={<HardDrives size={40} className="text-text-muted" weight="duotone" />}
-                title="Tidak ada sumber yang cocok"
-                description="Coba gunakan kata kunci pencarian yang lain."
-                className="bg-surface-overlay rounded-xl border border-border-subtle border-dashed py-16"
-              />
-            ) : (
-              <div className="space-y-4 pb-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                  {filteredSources.filter(s => s.status !== 'in-fix' && s.status !== 'in-dev').map((source) => (
-                    <SourceCard key={source.id} source={source} onUpdate={loadLocalSources} />
-                  ))}
-                </div>
-
-                {filteredSources.some(s => s.status === 'in-fix') && (
-                  <div className="pt-6">
-                    <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-4 px-2">In Progress Fixing</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                      {filteredSources.filter(s => s.status === 'in-fix').map((source) => (
-                        <SourceCard key={source.id} source={source} onUpdate={loadLocalSources} />
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {filteredSources.some(s => s.status === 'in-dev') && (
-                  <div className="pt-6">
-                    <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-4 px-2">In Progress Dev</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                      {filteredSources.filter(s => s.status === 'in-dev').map((source) => (
-                        <SourceCard key={source.id} source={source} onUpdate={loadLocalSources} />
-                      ))}
-                    </div>
-                  </div>
-                )}
+          ) : (
+            <div className="space-y-6 pb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {filteredSources.filter(s => s.status !== 'in-fix' && s.status !== 'in-dev').map((source) => (
+                  <SourceCard key={source.id} source={source} onUpdate={loadLocalSources} />
+                ))}
               </div>
-            )}
-          </div>
 
-          {/* Mobile FAB removed as it is now next to search */}
-        </div>
+              {filteredSources.some(s => s.status === 'in-fix') && (
+                <div className="pt-2">
+                  <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-4 px-1">Sedang Diperbaiki</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {filteredSources.filter(s => s.status === 'in-fix').map((source) => (
+                      <SourceCard key={source.id} source={source} onUpdate={loadLocalSources} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {filteredSources.some(s => s.status === 'in-dev') && (
+                <div className="pt-2">
+                  <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-4 px-1">Dalam Pengembangan</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    {filteredSources.filter(s => s.status === 'in-dev').map((source) => (
+                      <SourceCard key={source.id} source={source} onUpdate={loadLocalSources} />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </PageContainer>
       </YomirraSurface>
     </PullToRefresh>
   );

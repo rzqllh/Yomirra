@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { PageHeader } from "@/components/app/header";
+import { PageContainer } from "@/components/ui/layout";
 import { useAuth } from "@/shared/hooks/use-auth";
 import { useSync } from "@/shared/hooks/use-sync";
 import { useSettingsStore } from "@/shared/store/settings-store";
@@ -27,18 +28,26 @@ export default function AccountPage() {
     if (!user) return;
     try {
       await runFullSync();
-      toast.success("Sinkronisasi cloud berhasil diselesaikan");
+      toast.success("Sinkronisasi Selesai", {
+        description: "Semua data bacaanmu berhasil disinkronkan ke akun.",
+      });
     } catch {
-      toast.error("Gagal melakukan sinkronisasi cloud");
+      toast.error("Sinkronisasi Terkendala", {
+        description: "Gagal menyinkronkan data. Periksa sambungan internetmu dan coba lagi.",
+      });
     }
   };
 
   const handleLogout = async () => {
     try {
       await logout();
-      toast.success("Berhasil keluar dari akun");
+      toast.info("Berhasil Keluar", {
+        description: "Kamu telah keluar dari akun dengan aman.",
+      });
     } catch {
-      toast.error("Gagal keluar dari akun");
+      toast.error("Gagal Keluar", {
+        description: "Terjadi gangguan saat memproses keluar akun. Coba sesaat lagi.",
+      });
     }
   };
 
@@ -57,16 +66,15 @@ export default function AccountPage() {
 
   return (
     <div className="min-h-screen bg-surface-base pb-28 md:pb-10">
-      <div className="max-w-5xl mx-auto px-4 md:px-8 md:pt-8">
+      <PageContainer>
         <PageHeader
           title="Akun & Sinkronisasi"
           showBack={true}
           backHref="/settings"
           description="Kelola profil pembaca dan sinkronisasi data cloud Firebase"
         />
-      </div>
 
-      <main className="max-w-5xl mx-auto px-4 md:px-8 pt-4 md:pt-0 space-y-6 md:space-y-8">
+        <main className="w-full space-y-6 md:space-y-8">
         {/* Profile Card */}
         {user ? (
           <div className="rounded-[28px] border border-border-glass bg-surface-glass backdrop-blur-2xl p-6 shadow-glass flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
@@ -184,7 +192,7 @@ export default function AccountPage() {
                 Penyimpanan Lokal Perangkat
               </h3>
               <p className="text-xs text-text-muted">
-                Data disimpan di IndexedDB & LocalStorage perangkat ini
+                Data tersimpan aman di memori perangkat ini
               </p>
             </div>
           </div>
@@ -213,6 +221,7 @@ export default function AccountPage() {
           </div>
         )}
       </main>
+      </PageContainer>
     </div>
   );
 }

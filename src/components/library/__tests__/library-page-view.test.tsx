@@ -74,7 +74,7 @@ describe("LibraryPageView hierarchy", () => {
     render(<LibraryPageView />);
 
     expect(screen.getByTestId("header-actions")).toBeTruthy();
-    expect(screen.getByText("mangadex")).toBeTruthy();
+    expect(screen.getByText("MangaDex")).toBeTruthy();
   });
 
   it("renders toolbar and results inside PageContainer", () => {

@@ -56,11 +56,26 @@ describe("PageContainer", () => {
     expect(className).toContain("gap-6");
 
     // Prohibited classes
-    expect(className).not.toContain("max-w-9xl");
     expect(className).not.toContain("min-h-screen");
     expect(className).not.toContain("h-screen");
     expect(className).not.toContain("overflow-y-auto");
     expect(className).not.toContain("overflow-y-scroll");
+  });
+
+  it("supports container archetype variants with unified fluid width matching Home", async () => {
+    await act(async () => {
+      root.render(
+        <>
+          <PageContainer id="c-wide" variant="wide">Wide</PageContainer>
+          <PageContainer id="c-mgmt" variant="management">Management</PageContainer>
+          <PageContainer id="c-focused" variant="focused">Focused</PageContainer>
+        </>
+      );
+    });
+
+    expect(container.querySelector("#c-wide")?.className).toContain("max-w-none");
+    expect(container.querySelector("#c-mgmt")?.className).toContain("max-w-none");
+    expect(container.querySelector("#c-focused")?.className).toContain("max-w-none");
   });
 
   it("forwards ref to the underlying div", async () => {

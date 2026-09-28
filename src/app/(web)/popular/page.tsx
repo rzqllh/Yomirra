@@ -83,7 +83,7 @@ export default async function PopularPage() {
     <YomirraSurface variant="base" className="w-full">
       <PageContainer>
         <PageHeader
-          title="Manga Populer"
+          title="Populer"
           subtitle="Manga, Manhwa, dan Manhua paling populer saat ini."
           icon={<Fire size={24} weight="duotone" />}
         />

@@ -3,10 +3,10 @@
 import { useDownloadStore } from "@/shared/store/download-store";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEffect, useState } from "react";
-import { HardDrives, Pause, Play, Trash, X, ArrowClockwise, Download, BookOpen } from "@phosphor-icons/react";
+import { Database, Pause, Play, Trash, X, ArrowClockwise, Download, BookOpen } from "@phosphor-icons/react";
 import { IconButton } from "@/components/ui/icon-button";
 import Link from "next/link";
-import { YomirraSurface } from "@/components/ui/layout";
+import { YomirraSurface, PageContainer } from "@/components/ui/layout";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/states/empty-state";
 import { StorageWarningBanner } from "@/components/download/storage-warning-banner";
@@ -60,12 +60,31 @@ export default function DownloadsPage() {
 
   return (
     <YomirraSurface variant="base" className="min-h-screen">
-      <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:pt-8 md:px-8 max-w-5xl mx-auto w-full space-y-6">
+      <PageContainer>
         {/* Page Title & Subtitle */}
         <PageHeader
           title="Unduhan"
           subtitle="Kelola bab komik yang diunduh untuk dibaca saat offline."
           icon={<Download size={24} weight="duotone" />}
+          desktopActions={
+            allDownloads.length > 0 ? (
+              <button
+                type="button"
+                onClick={() => {
+                  if (window.confirm("Yakin ingin menghapus semua unduhan?")) {
+                    clearDownloads();
+                    toast.info("Semua Unduhan Dibersihkan", {
+                      description: "Seluruh bab komik yang tersimpan di perangkat telah dihapus.",
+                    });
+                  }
+                }}
+                className="inline-flex min-h-10 items-center gap-2 self-start sm:self-auto px-3.5 py-1.5 rounded-xl text-xs font-bold text-semantic-error hover:bg-semantic-error/10 border border-semantic-error/30 active:scale-95 transition-all shadow-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer"
+              >
+                <Trash size={16} />
+                <span>Hapus Semua</span>
+              </button>
+            ) : undefined
+          }
           actions={
             allDownloads.length > 0 ? (
               <button
@@ -73,7 +92,9 @@ export default function DownloadsPage() {
                 onClick={() => {
                   if (window.confirm("Yakin ingin menghapus semua unduhan?")) {
                     clearDownloads();
-                    toast.error("Semua unduhan dihapus");
+                    toast.info("Semua Unduhan Dibersihkan", {
+                      description: "Seluruh bab komik yang tersimpan di perangkat telah dihapus.",
+                    });
                   }
                 }}
                 className="inline-flex min-h-10 items-center gap-2 self-start sm:self-auto px-3.5 py-1.5 rounded-xl text-xs font-bold text-semantic-error hover:bg-semantic-error/10 border border-semantic-error/30 active:scale-95 transition-all shadow-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer"
@@ -91,7 +112,7 @@ export default function DownloadsPage() {
         {storageInfo && (
           <div className="rounded-2xl p-4 sm:p-5 flex items-center gap-4 bg-surface-raised border border-border-default/80 shadow-xs">
             <div className="size-12 bg-accent/10 border border-accent/20 rounded-xl flex items-center justify-center text-accent shrink-0 shadow-xs">
-              <HardDrives size={24} weight="duotone" />
+              <Database size={24} weight="duotone" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-1">
@@ -204,7 +225,9 @@ export default function DownloadsPage() {
                           <IconButton
                             onClick={() => {
                               pauseDownload(item.id);
-                              toast.info("Unduhan dijeda");
+                              toast.info("Unduhan Dijeda", {
+                                description: `${item.chapterTitle} dijeda sementara.`,
+                              });
                             }}
                             aria-label={`Jeda unduhan ${item.mangaTitle} - ${item.chapterTitle}`}
                             className="text-text-secondary hover:text-text-primary rounded-lg active:scale-95 transition-all"
@@ -215,7 +238,9 @@ export default function DownloadsPage() {
                           <IconButton
                             onClick={() => {
                               resumeDownload(item.id);
-                              toast.info("Melanjutkan unduhan...");
+                              toast.info("Melanjutkan Unduhan", {
+                                description: `Mengunduh kembali ${item.chapterTitle}...`,
+                              });
                             }}
                             aria-label={`Lanjutkan unduhan ${item.mangaTitle} - ${item.chapterTitle}`}
                             className="text-accent hover:text-accent-hover rounded-lg active:scale-95 transition-all"
@@ -226,7 +251,9 @@ export default function DownloadsPage() {
                           <IconButton
                             onClick={() => {
                               retryDownload(item.id);
-                              toast.info("Mencoba ulang unduhan...");
+                              toast.info("Mencoba Ulang Unduhan", {
+                                description: `Menghubungkan kembali untuk ${item.chapterTitle}...`,
+                              });
                             }}
                             aria-label={`Coba lagi unduhan ${item.mangaTitle} - ${item.chapterTitle}`}
                             className="text-accent hover:text-accent-hover rounded-lg active:scale-95 transition-all"
@@ -238,7 +265,9 @@ export default function DownloadsPage() {
                         <IconButton
                           onClick={() => {
                             cancelDownload(item.id);
-                            toast.error("Unduhan dibatalkan");
+                            toast.info("Unduhan Dibatalkan", {
+                              description: `${item.chapterTitle} dibatalkan dari antrean.`,
+                            });
                           }}
                           aria-label={`Batalkan unduhan ${item.mangaTitle} - ${item.chapterTitle}`}
                           className="text-semantic-error hover:text-semantic-error/80 rounded-lg active:scale-95 transition-all"
@@ -296,7 +325,9 @@ export default function DownloadsPage() {
                     <IconButton
                       onClick={() => {
                         removeDownload(item.id);
-                        toast.error("Unduhan dihapus");
+                        toast.info("Unduhan Dihapus", {
+                          description: `${item.chapterTitle} berhasil dihapus dari perangkat.`,
+                        });
                       }}
                       aria-label={`Hapus unduhan ${item.mangaTitle} - ${item.chapterTitle}`}
                       className="shrink-0 rounded-xl text-semantic-error hover:text-semantic-error/80 hover:bg-semantic-error/10 active:scale-95 transition-all"
@@ -309,7 +340,7 @@ export default function DownloadsPage() {
             </TabsContent>
           </Tabs>
         )}
-      </div>
+      </PageContainer>
     </YomirraSurface>
   );
 }

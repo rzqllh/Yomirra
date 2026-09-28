@@ -58,7 +58,7 @@ export default function RootLayout({
                 </AppShell>
               </BootGate>
             </div>
-            <Toaster position="bottom-right" />
+            <Toaster />
             <DownloadManager />
           </OfflineProvider>
         </Providers>

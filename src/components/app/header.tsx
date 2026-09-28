@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { CaretLeft } from "@phosphor-icons/react"
+import { HeaderActions } from "@/components/app/header-actions"
 import { cn } from "@/shared/utils/cn"
 
 export interface PageHeaderProps {
@@ -18,8 +19,10 @@ export interface PageHeaderProps {
   showBack?: boolean
   /** Back button navigation target */
   backHref?: string
-  /** Header action elements (buttons, links, triggers) */
+  /** Mobile header action elements (buttons, links, triggers; defaults to <HeaderActions />) */
   actions?: React.ReactNode
+  /** Optional custom action elements for desktop header banner (e.g. filter buttons, refresh) */
+  desktopActions?: React.ReactNode
   /** Compositional meta elements (counters, badges, filters status) */
   meta?: React.ReactNode
   /** Header behavior mode: standard (title always visible) or detail (title collapses on top) */
@@ -43,7 +46,8 @@ export function PageHeader({
   icon,
   showBack = false,
   backHref,
-  actions,
+  actions = <HeaderActions />,
+  desktopActions,
   meta,
   mode = "standard",
   variant = "auto",
@@ -100,14 +104,14 @@ export function PageHeader({
               <button
                 type="button"
                 onClick={handleBack}
-                className="flex h-10 w-10 items-center justify-center rounded-[12px] liquid-glass text-text-primary active:scale-95 transition-all shrink-0 select-none outline-none cursor-pointer"
+                className="flex size-10 items-center justify-center rounded-2xl liquid-glass text-text-primary active:scale-95 transition-all shrink-0 select-none outline-none cursor-pointer"
                 aria-label="Kembali"
               >
                 <CaretLeft size={20} weight="bold" />
               </button>
             ) : (
               icon && (
-                <div className="flex h-10 w-10 items-center justify-center rounded-[12px] bg-gradient-to-br from-accent/15 via-accent/10 to-transparent border border-accent/25 text-accent shadow-xs shrink-0 select-none">
+                <div className="flex size-10 items-center justify-center rounded-2xl bg-gradient-to-br from-accent/15 via-accent/10 to-transparent border border-accent/25 text-accent shadow-xs shrink-0 select-none">
                   {icon}
                 </div>
               )
@@ -180,7 +184,7 @@ export function PageHeader({
                 )}
               </div>
             </div>
-            {actions && <div className="shrink-0">{actions}</div>}
+            {desktopActions && <div className="shrink-0">{desktopActions}</div>}
           </div>
         </div>
       )}

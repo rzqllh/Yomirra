@@ -15,7 +15,7 @@ import { useStatsStore } from "@/shared/store/stats-store";
 import { useTheme } from "next-themes";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { CustomSelect } from "@/components/ui/custom-select";
-import { YomirraSurface } from "@/components/ui/layout";
+import { YomirraSurface, PageContainer } from "@/components/ui/layout";
 import { PageHeader } from "@/components/app/header";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Gear, ShieldWarning } from "@phosphor-icons/react/dist/ssr";
@@ -69,13 +69,17 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
     setIsClearingCache(true);
     try {
       await clearAutomaticCache();
-      toast.success("Cache sementara dan buffer baca berhasil dibersihkan");
+      toast.success("Memori Berhasil Dibersihkan", {
+        description: "Berkas bacaan sementara berhasil dihapus untuk melegakan perangkat.",
+      });
       const est = await getStorageEstimate();
       if (est) {
         setStorageUsage(`${est.usageMB} MB / ${est.quotaMB} MB`);
       }
     } catch {
-      toast.error("Gagal membersihkan cache");
+      toast.error("Gagal Membersihkan Memori", {
+        description: "Penyimpanan sementara tidak dapat dibersihkan saat ini. Coba sesaat lagi.",
+      });
     } finally {
       setIsClearingCache(false);
     }
@@ -88,7 +92,9 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
   const confirmClearData = () => {
     clearHistory();
     clearLibrary();
-    toast.success("Data lokal berhasil dibersihkan");
+    toast.info("Data Berhasil Dihapus", {
+      description: "Seluruh riwayat baca dan data lokal di perangkat ini telah dibersihkan.",
+    });
     setIsClearDataDialogOpen(false);
   };
 
@@ -175,8 +181,8 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
         <SettingsItem
           icon={<IconWrapper variant="accent"><Fire size={20} weight="duotone" /></IconWrapper>}
           title="Waktu Membaca"
-          description={formatReadingTime()}
-          right={<div className="text-sm font-semibold text-text-primary hidden sm:block">{formatReadingTime()}</div>}
+          description="Total waktu membaca komik sejak pertama kali."
+          right={<div className="text-sm font-semibold text-text-primary">{formatReadingTime()}</div>}
         />
       </SettingsSection>
 
@@ -367,14 +373,14 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
       </SettingsSection>
 
       {/* Backup & Restore */}
-      <SettingsSection title="Cadangan Data">
+      <SettingsSection title="Cadangan & Pemulihan">
         <SettingsItem
           icon={<IconWrapper variant="accent"><FileText size={20} weight="duotone" /></IconWrapper>}
-          title="Backup & Restore Data"
-          description="Simpan ke file JSON atau pulihkan data riwayat & koleksi lokal."
+          title="Simpan & Pulihkan Data"
+          description="Simpan salinan data komikmu ke berkas cadangan atau pulihkan riwayat dan koleksi kapan saja."
           right={
             <Button onClick={() => setSubView("backup")} variant="outline" className="w-full sm:w-auto shrink-0 border-accent/40 text-accent hover:bg-accent hover:text-white rounded-xl font-bold transition-colors">
-              Kelola Backup
+              Kelola Cadangan
             </Button>
           }
         />
@@ -384,8 +390,8 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
       <SettingsSection title={user ? "Penyimpanan & Data Perangkat" : "Penyimpanan & Data Lokal"}>
         <SettingsItem
           icon={<IconWrapper><Broom size={20} weight="duotone" /></IconWrapper>}
-          title="Bersihkan File Sementara (Cache)"
-          description={`Hapus gambar sampul dan cache browsing sementara untuk menghemat ruang memori. Riwayat baca dan komik unduhan Anda tetap aman.${storageUsage ? ` (Penyimpanan: ${storageUsage})` : ""}`}
+          title="Bersihkan Ruang Penyimpanan Sementara"
+          description={`Hapus berkas gambar dan data bacaan sementara untuk melegakan memori perangkat. Riwayat baca dan komik yang kamu unduh tetap aman.${storageUsage ? ` (Penggunaan memori: ${storageUsage})` : ""}`}
           right={
             <Button
               onClick={handleClearAutomaticCache}
@@ -393,7 +399,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
               disabled={isClearingCache}
               className="w-full sm:w-auto shrink-0 rounded-xl font-bold transition-colors"
             >
-              {isClearingCache ? "Membersihkan..." : "Bersihkan Cache"}
+              {isClearingCache ? "Membersihkan..." : "Bersihkan Memori"}
             </Button>
           }
         />
@@ -402,11 +408,11 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
 
         <SettingsItem
           icon={<IconWrapper variant="danger"><Trash size={20} weight="duotone" /></IconWrapper>}
-          title={user ? "Reset Data di Perangkat Ini" : "Hapus Data Lokal"}
-          description={user ? "Menghapus seluruh riwayat baca dan unduhan di perangkat ini. Koleksi akun di cloud tetap tersimpan." : "Menghapus seluruh riwayat baca dan rak buku lokal secara permanen."}
+          title={user ? "Hapus Data di Perangkat Ini" : "Hapus Data Lokal"}
+          description={user ? "Menghapus seluruh riwayat baca dan unduhan di perangkat ini. Koleksi akunmu tetap aman tersimpan di cloud." : "Menghapus seluruh riwayat baca dan rak koleksi di perangkat ini secara permanen."}
           right={
             <Button onClick={handleClearData} variant="outline" className="w-full sm:w-auto shrink-0 text-semantic-error hover:text-white hover:bg-semantic-error border-semantic-error/50 rounded-xl font-bold transition-colors">
-              Reset Data
+              Hapus Data
             </Button>
           }
         />
@@ -424,9 +430,9 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
   return (
     <>
       <YomirraSurface variant="base" className="min-h-screen">
-        <div className="mx-auto flex w-full max-w-7xl flex-col">
+        <PageContainer>
           <h1 className="sr-only">Pengaturan Yomirra</h1>
-          <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:pt-8 pb-6 md:px-8 space-y-8">
+          <div className="space-y-8">
             {subView === "backup" ? (
               <>
                 <PageHeader
@@ -461,7 +467,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
               </>
             )}
           </div>
-        </div>
+        </PageContainer>
       </YomirraSurface>
 
       <ConfirmationModal
