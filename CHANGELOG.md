@@ -4,7 +4,7 @@ All notable changes to Yomirra are documented here.
 
 ---
 
-## [1.1.0] — 2026-09-27
+## [2.1.0] — 2026-09-27
 
 ### English
 
@@ -62,7 +62,7 @@ Rilis ini menghadirkan Discovery Surfaces & Navigation Revamp, menyelaraskan hea
 
 ---
 
-## [1.0.0] — 2026-09-20
+## [1.1.0] — 2026-09-20
 
 ### English
 
