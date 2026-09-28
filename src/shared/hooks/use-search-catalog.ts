@@ -454,6 +454,11 @@ export function useSearchCatalog() {
             format: candidate.format,
             status: candidate.status,
             score: candidate.score,
+            sourceId: primaryBinding.sourceId,
+            sourceBindings:
+              availableBindings.length > 0
+                ? availableBindings
+                : [primaryBinding],
           },
         },
       ];
