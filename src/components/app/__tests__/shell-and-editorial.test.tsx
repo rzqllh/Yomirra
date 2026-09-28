@@ -86,24 +86,27 @@ describe('App Shell & Navigation Deduplication Pass', () => {
   });
 
   describe('TopNav (Global Breadcrumb & Profile Deduplication)', () => {
-    it('renders global breadcrumb on Beranda (Phase 3)', () => {
+    it('renders global breadcrumb on Beranda and omits duplicated search trigger', () => {
       currentPathname = '/';
       render(<TopNav />);
 
       const breadcrumb = screen.getByRole('navigation', { name: 'Breadcrumb' });
       expect(breadcrumb).toBeTruthy();
       expect(screen.getByText('Beranda')).toBeTruthy();
-      expect(screen.getByText('Cari komik…')).toBeTruthy();
+      // On Beranda ('/'), header search is hidden because HomeHero owns the search pill
+      expect(screen.queryByText('Cari komik…')).toBeNull();
     });
 
-    it('renders localized breadcrumb on non-home pages like /settings and /popular', () => {
+    it('renders localized breadcrumb on non-home pages like /settings and /popular with search trigger', () => {
       currentPathname = '/settings';
       const { rerender } = render(<TopNav />);
       expect(screen.getByText('Pengaturan')).toBeTruthy();
+      expect(screen.getByText('Cari komik…')).toBeTruthy();
 
       currentPathname = '/popular';
       rerender(<TopNav />);
       expect(screen.getByText('Populer')).toBeTruthy();
+      expect(screen.getByText('Cari komik…')).toBeTruthy();
 
       currentPathname = '/downloads';
       rerender(<TopNav />);

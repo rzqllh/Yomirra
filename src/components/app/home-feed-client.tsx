@@ -13,6 +13,7 @@ import type { MangaKey } from "@/shared/types/collection";
 import { ContinueReadingList } from "./continue-reading-list";
 import { EditorialSpotlight } from "./editorial-spotlight";
 import { HomeLeaderboardPanel } from "./home-leaderboard-panel";
+import { HomeHero } from "./home-hero";
 import { ShelfCard } from "@/components/manga/card";
 import { CompactCard } from "@/components/manga/card/compact-card";
 import { ViewModeToggle } from "@/components/manga/view-mode-toggle";
@@ -117,10 +118,23 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
   }, [filteredLatest, personalizedIds]);
 
 
+  // Hero cover candidates from latest updated items (randomly selected on session open)
+  const heroCandidates = React.useMemo(() => {
+    const list = filteredLatest.length > 0 ? filteredLatest : filteredPopular;
+    const candidates = list
+      .filter((item) => Boolean(item.coverUrl && item.title))
+      .map((item) => ({ coverUrl: item.coverUrl, title: item.title }));
+    return candidates;
+  }, [filteredLatest, filteredPopular]);
+
   if (!isMounted) return null;
 
   return (
     <div className="flex flex-col gap-9 sm:gap-11 pb-16">
+      {/* SECTION 0: Hero Greeting & Search Banner (Mockups 3 & 4) */}
+      <section id="hero-section" aria-label="Hero Greeting">
+        <HomeHero candidates={heroCandidates} />
+      </section>
 
       {/* SECTION 1: Spotlight Carousel & Leaderboard */}
       <section

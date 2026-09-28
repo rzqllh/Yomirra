@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { UserCircle, SignOut, MagnifyingGlass } from "@phosphor-icons/react";
+import { UserCircle, SignOut, MagnifyingGlass, Gear, Globe, Question } from "@phosphor-icons/react";
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -82,8 +82,8 @@ export function TopNav() {
 
         {/* RIGHT: Search + Bell + Theme + Profile */}
         <div className="flex items-center gap-2 sm:gap-2.5 h-full">
-          {/* Global Search Trigger */}
-          {pathname !== '/library' && pathname !== '/search' && (
+          {/* Global Search Trigger (hidden on home '/' where hero banner has dedicated search bar, and on '/library' and '/search') */}
+          {pathname !== '/' && pathname !== '/library' && pathname !== '/search' && (
             <div className="flex items-center">
               {/* Desktop pill */}
               <button
@@ -122,48 +122,74 @@ export function TopNav() {
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
                 aria-label="Profil Pengguna"
                 aria-expanded={isProfileOpen}
-                className="flex items-center justify-center size-9 rounded-sm bg-surface-raised hover:scale-105 active:scale-95 transition-all outline-none border border-border-subtle hover:border-accent/40 overflow-hidden"
+                className="flex items-center justify-center size-9 sm:size-10 rounded-2xl bg-surface-raised hover:scale-105 active:scale-95 transition-all outline-none border border-border-subtle hover:border-accent/40 overflow-hidden cursor-pointer"
               >
-                  {user.photoURL ? (
-                    <img src={user.photoURL} alt="User" className="object-cover w-full h-full rounded-sm" referrerPolicy="no-referrer" />
-                  ) : (
-                    <UserCircle size={24} weight="duotone" className="text-accent" />
-                  )}
-                </button>
-
-                <AnimatePresence>
-                  {isProfileOpen && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      transition={{ duration: 0.15, ease: "easeOut" }}
-                      className="absolute right-0 top-12 w-56 bg-surface-overlay/95 backdrop-blur-xl shadow-glass border border-border-subtle rounded-lg p-1.5 z-[100] flex flex-col"
-                    >
-                      <div className="px-3 py-2.5 border-b border-border-subtle/70 mb-1.5">
-                        <p className="text-[14px] font-bold text-text-primary truncate">{user.displayName || "User"}</p>
-                        <p className="text-[12px] text-text-muted truncate mt-0.5">{user.email || ""}</p>
-                      </div>
-                      <Link 
-                        href="/account" 
-                        onClick={() => setIsProfileOpen(false)} 
-                        className="flex items-center gap-3 px-3 py-2 rounded-sm text-[13px] font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors text-left"
-                      >
-                        <UserCircle size={18} weight="duotone" /> Akun & Sinkronisasi
-                      </Link>
-                      <button onClick={() => { setIsProfileOpen(false); logout(); }} className="flex items-center gap-3 px-3 py-2 rounded-sm text-[13px] font-semibold text-semantic-error hover:bg-semantic-error/10 transition-colors text-left mt-0.5">
-                        <SignOut size={18} weight="duotone" /> Keluar
-                      </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            ) : (
-              <button onClick={loginWithGoogle} aria-label="Masuk" className="flex items-center justify-center bg-surface-raised border border-border-subtle shadow-xs hover:bg-surface-hover active:scale-95 transition-all rounded-sm px-4 h-9 gap-2 outline-none">
-                <UserCircle size={20} weight="duotone" className="text-text-secondary" />
-                <span className="text-sm font-semibold text-text-primary">Masuk</span>
+                {user.photoURL ? (
+                  <img src={user.photoURL} alt="User" className="object-cover size-full rounded-2xl" referrerPolicy="no-referrer" />
+                ) : (
+                  <UserCircle size={24} weight="duotone" className="text-accent" />
+                )}
               </button>
-            )}
+
+              <AnimatePresence>
+                {isProfileOpen && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                    transition={{ duration: 0.15, ease: "easeOut" }}
+                    className="absolute right-0 top-12 w-60 bg-white/95 dark:bg-[#141721]/95 backdrop-blur-2xl shadow-[0_12px_36px_-6px_rgba(0,0,0,0.18)] dark:shadow-[0_16px_40px_-6px_rgba(0,0,0,0.7)] border border-white/60 dark:border-white/10 rounded-2xl p-1.5 z-[100] flex flex-col gap-0.5 select-none"
+                  >
+                    <div className="px-3 py-2 border-b border-border-subtle/70 mb-1">
+                      <p className="text-[13.5px] font-bold text-text-primary truncate">{user.displayName || "User"}</p>
+                      <p className="text-[11.5px] text-text-muted truncate mt-0.5">{user.email || ""}</p>
+                    </div>
+
+                    <Link 
+                      href="/account" 
+                      onClick={() => setIsProfileOpen(false)} 
+                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors text-left"
+                    >
+                      <UserCircle size={18} weight="duotone" /> Akun & Sinkronisasi
+                    </Link>
+
+                    <Link 
+                      href="/settings#general" 
+                      onClick={() => setIsProfileOpen(false)} 
+                      className="flex items-center justify-between px-3 py-2 rounded-xl text-[13px] font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors text-left"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Globe size={18} weight="duotone" /> Bahasa
+                      </div>
+                      <span className="text-[11.5px] text-text-muted font-medium">Indonesia</span>
+                    </Link>
+
+                    <Link 
+                      href="/settings#about" 
+                      onClick={() => setIsProfileOpen(false)} 
+                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors text-left"
+                    >
+                      <Question size={18} weight="duotone" /> Pusat bantuan
+                    </Link>
+
+                    <div className="my-1 border-t border-border-subtle/80" />
+
+                    <button 
+                      onClick={() => { setIsProfileOpen(false); logout(); }} 
+                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-semibold text-semantic-error hover:bg-semantic-error/10 transition-colors text-left cursor-pointer w-full"
+                    >
+                      <SignOut size={18} weight="bold" /> Keluar
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          ) : (
+            <button onClick={loginWithGoogle} aria-label="Masuk" className="flex items-center justify-center bg-surface-raised border border-border-subtle shadow-xs hover:bg-surface-hover active:scale-95 transition-all rounded-2xl px-4 h-9 sm:h-10 gap-2 outline-none cursor-pointer">
+              <UserCircle size={20} weight="duotone" className="text-text-secondary" />
+              <span className="text-sm font-semibold text-text-primary">Masuk</span>
+            </button>
+          )}
           </div>
       </header>
     </>
