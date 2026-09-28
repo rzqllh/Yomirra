@@ -12,8 +12,22 @@ import { Icon } from "@/components/ui/icon"
 export function BottomDock() {
   const pathname = usePathname()
 
-  // Primary 4 tabs only: Beranda, Library, Bookmark, Cari
-  const navItems = DOCK_NAV_ITEMS.filter((item) => item.href !== "/settings")
+  // Main navigation items excluding settings and search (which is in its own satellite container)
+  const mainItems = DOCK_NAV_ITEMS.filter(
+    (item) => item.href !== "/settings" && item.href !== "/search"
+  )
+  const searchItem = DOCK_NAV_ITEMS.find((item) => item.href === "/search") ?? {
+    href: "/search",
+    icon: DOCK_NAV_ITEMS[4].icon,
+    label: "Cari",
+  }
+
+  const isMainTabActive = (href: string) => {
+    if (href === "/") return pathname === "/"
+    return pathname?.startsWith(href)
+  }
+
+  const isSearchActive = pathname === "/search" || pathname?.startsWith("/search")
 
   return (
     <nav
@@ -24,51 +38,48 @@ export function BottomDock() {
         paddingBottom: "max(12px, env(safe-area-inset-bottom, 0px))",
       }}
     >
-      <div className="pointer-events-auto flex w-full max-w-[360px] mx-auto items-center justify-center">
-        <div className="grid grid-cols-4 w-full h-[64px] items-center gap-1 rounded-[24px] border border-border-subtle bg-surface-overlay/95 p-1.5 shadow-lg backdrop-blur-md transition-colors duration-300">
-          {navItems.map((item) => {
-            const isActive =
-              item.href === "/"
-                ? pathname === "/"
-                : pathname?.startsWith(item.href)
+      <div className="pointer-events-auto flex w-full max-w-[420px] mx-auto items-center justify-center gap-2 sm:gap-2.5">
+        {/* Main Dock Capsule */}
+        <div className="flex-1 h-[56px] sm:h-[58px] flex items-center justify-between gap-1 rounded-full border border-white/60 dark:border-white/10 bg-white/75 dark:bg-[#0e1017]/75 p-1.5 shadow-[inset_0_1px_1.5px_0_rgba(255,255,255,0.7),0_12px_36px_-4px_rgba(0,0,0,0.12),0_4px_14px_-2px_rgba(0,0,0,0.06)] dark:shadow-[inset_0_1px_1.5px_0_rgba(255,255,255,0.14),0_16px_40px_-6px_rgba(0,0,0,0.6),0_4px_16px_-2px_rgba(0,0,0,0.4)] backdrop-blur-2xl backdrop-saturate-150 transition-colors duration-300">
+          {mainItems.map((item) => {
+            const isActive = isMainTabActive(item.href)
 
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                onClick={() => {
-                  if (item.href === "/search") {
-                    useSearchFilterStore.getState().resetFilters()
-                  }
-                }}
-                transitionTypes={["nav-lateral"]}
-                className="group relative flex flex-col items-center justify-center h-full rounded-[20px] outline-none tap-highlight-transparent transition-all duration-200 ease-out active:scale-95 select-none"
+                className={cn(
+                  "group relative flex items-center justify-center h-full rounded-full outline-none tap-highlight-transparent transition-all duration-200 ease-out select-none active:scale-95",
+                  isActive
+                    ? "shrink-0 px-3.5 sm:px-4"
+                    : "flex-1 min-w-0"
+                )}
                 aria-label={item.label}
                 aria-current={isActive ? "page" : undefined}
               >
                 {isActive && (
                   <motion.div
-                    className="absolute inset-0 rounded-[18px] border border-accent/25 bg-accent-dim"
+                    className="absolute inset-0 rounded-full border border-accent/30 dark:border-accent/40 bg-accent/15 dark:bg-accent/22 shadow-[inset_0_1px_1px_rgba(255,255,255,0.85),0_2px_8px_rgba(206,101,82,0.15)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_2px_12px_rgba(206,101,82,0.25)]"
                     layoutId="active-dock-tab"
-                    transition={{ type: "spring", bounce: 0.15, duration: 0.3 }}
+                    transition={{ type: "spring", stiffness: 420, damping: 32 }}
                   />
                 )}
 
-                <div className="relative z-10 flex flex-col items-center justify-center gap-1">
+                <div className="relative z-10 flex items-center justify-center gap-1.5 sm:gap-2 w-full">
                   <Icon
                     icon={item.icon}
-                    size={20}
+                    size={isActive ? 18 : 20}
                     weight={isActive ? "fill" : "regular"}
                     className={cn(
                       "transition-colors duration-200 shrink-0",
                       isActive
                         ? "text-accent"
-                        : "text-text-secondary group-hover:text-text-primary"
+                        : "text-text-muted hover:text-text-primary dark:text-text-secondary dark:hover:text-text-primary"
                     )}
                   />
 
                   {isActive && (
-                    <span className="text-xs tracking-tight leading-none font-bold text-accent transition-all duration-200 animate-in fade-in duration-150">
+                    <span className="text-[12px] sm:text-[13px] tracking-tight leading-none font-bold text-accent whitespace-nowrap animate-in fade-in duration-150">
                       {item.label}
                     </span>
                   )}
@@ -77,6 +88,34 @@ export function BottomDock() {
             )
           })}
         </div>
+
+        {/* Separated Search Button (iOS liquid glass satellite style) */}
+        <Link
+          href={searchItem.href}
+          onClick={() => {
+            useSearchFilterStore.getState().resetFilters()
+          }}
+          className={cn(
+            "relative flex items-center justify-center size-[56px] sm:size-[58px] shrink-0 rounded-full outline-none tap-highlight-transparent transition-all duration-200 ease-out active:scale-95 select-none",
+            "border border-white/60 dark:border-white/10 bg-white/75 dark:bg-[#0e1017]/75 shadow-[inset_0_1px_1.5px_0_rgba(255,255,255,0.7),0_12px_36px_-4px_rgba(0,0,0,0.12),0_4px_14px_-2px_rgba(0,0,0,0.06)] dark:shadow-[inset_0_1px_1.5px_0_rgba(255,255,255,0.14),0_16px_40px_-6px_rgba(0,0,0,0.6),0_4px_16px_-2px_rgba(0,0,0,0.4)] backdrop-blur-2xl backdrop-saturate-150 transition-colors duration-300",
+            isSearchActive &&
+            "border-accent/35 dark:border-accent/45 bg-accent/15 dark:bg-accent/22 shadow-[inset_0_1px_1px_rgba(255,255,255,0.85),0_4px_14px_rgba(206,101,82,0.22)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_4px_16px_rgba(206,101,82,0.3)]"
+          )}
+          aria-label={searchItem.label}
+          aria-current={isSearchActive ? "page" : undefined}
+        >
+          <Icon
+            icon={searchItem.icon}
+            size={21}
+            weight={isSearchActive ? "bold" : "regular"}
+            className={cn(
+              "transition-colors duration-200 shrink-0",
+              isSearchActive
+                ? "text-accent"
+                : "text-text-muted hover:text-text-primary dark:text-text-secondary dark:hover:text-text-primary"
+            )}
+          />
+        </Link>
       </div>
     </nav>
   )

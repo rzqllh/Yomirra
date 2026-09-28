@@ -26,12 +26,13 @@ describe('BottomDock Navigation', () => {
     expect(updatesLink).toBeNull();
   });
 
-  it('contains Beranda, Library, Rak Buku, and Cari links', () => {
+  it('contains Beranda, Library, Rak Buku, Cari, and Populer links per design.md §28', () => {
     render(<BottomDock />);
     expect(screen.getByRole('link', { name: /beranda/i })).toBeTruthy();
     expect(screen.getByRole('link', { name: /library/i })).toBeTruthy();
     expect(screen.getByRole('link', { name: /rak buku/i })).toBeTruthy();
     expect(screen.getByRole('link', { name: /cari/i })).toBeTruthy();
+    expect(screen.getByRole('link', { name: /populer/i })).toBeTruthy();
   });
 
   it('does NOT contain link to /settings in bottom dock', () => {
@@ -54,7 +55,7 @@ describe('BottomDock Navigation', () => {
     const berandaLink = screen.getByRole('link', { name: /beranda/i });
     expect(berandaLink.textContent).toContain('Beranda');
 
-    // Inactive tabs (Library, Rak Buku, Cari) have NO text label content
+    // Inactive tabs (Library, Rak Buku, Cari, Populer) have NO text label content
     const libraryLink = screen.getByRole('link', { name: /library/i });
     expect(libraryLink.textContent).toBe('');
 
@@ -63,5 +64,8 @@ describe('BottomDock Navigation', () => {
 
     const cariLink = screen.getByRole('link', { name: /cari/i });
     expect(cariLink.textContent).toBe('');
+
+    const populerLink = screen.getByRole('link', { name: /populer/i });
+    expect(populerLink.textContent).toBe('');
   });
 });
