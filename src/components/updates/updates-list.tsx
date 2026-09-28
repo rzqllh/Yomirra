@@ -553,7 +553,9 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
                       const targetName = releaseDay !== undefined
                         ? WEEKDAYS.find((day) => day.dayIndex === releaseDay)?.name
                         : "Otomatis";
-                      toast.success(`Jadwal ${item.mangaTitle} diatur ke ${targetName}`);
+                      toast.success("Jadwal Diperbarui", {
+                        description: `Jadwal ${item.mangaTitle} diatur ke ${targetName}.`,
+                      });
                     }}
                   />
                 );

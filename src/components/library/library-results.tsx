@@ -8,7 +8,8 @@ import {
   SmileySad, 
   Books, 
   MagnifyingGlass,
-  Check
+  Check,
+  HardDrives
 } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/states/empty-state";
 import { Button } from "@/components/ui/button";
@@ -28,6 +29,8 @@ import {
   PaginationEllipsis
 } from "@/components/ui/pagination";
 import { cn } from "@/shared/utils/cn";
+import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
+import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 
 export interface LibraryResultsProps {
   isDisabled: boolean;
@@ -85,15 +88,34 @@ export function LibraryResults({
   const router = useRouter();
   const reducedMotion = useReducedMotion();
 
+  const disabledSources = useSourcePreferencesStore((s) => s.disabledSources);
+  const allSources = React.useMemo(() => dynamicSourceRegistry.getAll(), []);
+  const hasIncludedSources = allSources.length === 0 || allSources.some((s) => !disabledSources.includes(s.id));
+
+  if (!hasIncludedSources) {
+    return (
+      <EmptyState
+        icon={<HardDrives size={40} className="text-text-muted" weight="duotone" />}
+        title="Library belum punya sumber."
+        description="Pilih sumber yang mau tampil di Library dan Populer."
+        action={
+          <Button onClick={() => router.push("/sources")} variant="outline" className="mt-4 rounded-xl shadow-sm font-bold">
+            Atur sumber
+          </Button>
+        }
+      />
+    );
+  }
+
   if (isDisabled) {
     return (
       <EmptyState
-        icon={<Funnel size={40} className="text-text-muted" weight="duotone" />}
-        title="Sumber ini sedang mati"
-        description="Aktifkan lagi sumbernya untuk melihat komik di rakmu."
+        icon={<HardDrives size={40} className="text-text-muted" weight="duotone" />}
+        title="Sumber tidak ditampilkan di Library"
+        description="Pilih sumber yang mau tampil di Library dan Populer."
         action={
           <Button onClick={() => router.push("/sources")} variant="outline" className="mt-4 rounded-xl shadow-sm font-bold">
-            Kelola Sumber
+            Atur sumber
           </Button>
         }
       />
@@ -127,42 +149,38 @@ export function LibraryResults({
   }
 
   if (mangas.length === 0) {
-    if (Object.keys(libraryItems).length === 0) {
-      return (
-        <EmptyState
-          icon={<Books size={40} className="text-text-muted" weight="duotone" />}
-          title="Rakmu masih kosong"
-          description="Temukan komik yang kamu suka, lalu simpan di sini."
-        />
-      );
-    }
+    const hasActiveFilters = Boolean(
+      query ||
+      selectedGenres.length > 0 ||
+      excludedGenres.length > 0 ||
+      selectedFormats.length > 0 ||
+      selectedStatuses.length > 0 ||
+      selectedReadingStatuses.length > 0
+    );
 
-    if (
-      selectedCollections.length > 0 &&
-      !query &&
-      selectedGenres.length === 0 &&
-      excludedGenres.length === 0 &&
-      selectedFormats.length === 0 &&
-      selectedStatuses.length === 0 &&
-      selectedReadingStatuses.length === 0
-    ) {
+    if (hasActiveFilters) {
       return (
         <EmptyState
-          icon={<Books size={40} className="text-text-muted" weight="duotone" />}
-          title="Koleksi ini masih kosong"
-          description="Simpan komik ke koleksi ini dari halaman detailnya."
+          icon={<MagnifyingGlass size={40} className="text-text-muted" weight="duotone" />}
+          title="Tidak ada yang cocok"
+          description="Coba kata kunci lain atau kurangi filter."
+          action={
+            <Button onClick={onResetFilters} variant="outline" className="mt-4 rounded-xl shadow-sm font-bold">
+              Hapus filter
+            </Button>
+          }
         />
       );
     }
 
     return (
       <EmptyState
-        icon={<MagnifyingGlass size={40} className="text-text-muted" weight="duotone" />}
-        title="Tidak ada yang cocok"
-        description="Coba kata kunci lain atau kurangi filter."
+        icon={<Books size={40} className="text-text-muted" weight="duotone" />}
+        title="Katalog belum tersedia"
+        description="Belum ada komik yang dapat dimuat dari sumber ini."
         action={
-          <Button onClick={onResetFilters} variant="outline" className="mt-4 rounded-xl shadow-sm font-bold">
-            Hapus filter
+          <Button onClick={() => refetch()} variant="outline" className="mt-4 rounded-xl shadow-sm font-bold">
+            Coba lagi
           </Button>
         }
       />

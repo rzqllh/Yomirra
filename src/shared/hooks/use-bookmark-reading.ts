@@ -120,9 +120,10 @@ export function useBookmarkReading() {
     const itemKey = `${sourceId}::${mangaId}`;
     setPendingDeletions((prev) => new Set(prev).add(itemKey));
 
-    toast.success(`'${title}' dihapus dari riwayat`, {
+    toast.info("Riwayat Dihapus", {
+      description: `'${title}' dikeluarkan dari riwayat bacaan.`,
       action: {
-        label: "Batal",
+        label: "Urungkan",
         onClick: () => {
           if (deleteTimeouts.current[itemKey]) {
             clearTimeout(deleteTimeouts.current[itemKey]);
@@ -133,10 +134,12 @@ export function useBookmarkReading() {
             next.delete(itemKey);
             return next;
           });
-          toast.info("Penghapusan dibatalkan");
+          toast.info("Penghapusan Dibatalkan", {
+            description: `'${title}' dikembalikan ke riwayat bacamu.`,
+          });
         },
       },
-      duration: 4000,
+      duration: 4500,
     });
 
     deleteTimeouts.current[itemKey] = setTimeout(() => {
@@ -147,13 +150,15 @@ export function useBookmarkReading() {
         return next;
       });
       delete deleteTimeouts.current[itemKey];
-    }, 4000);
+    }, 4500);
   };
 
   const confirmDeleteHistory = () => {
     if (!itemToDelete) return;
     removeMangaHistory(itemToDelete.sourceId, itemToDelete.mangaId);
-    toast.success(`Riwayat '${itemToDelete.mangaTitle}' berhasil dihapus`);
+    toast.info("Riwayat Dihapus", {
+      description: `Riwayat '${itemToDelete.mangaTitle}' berhasil dibersihkan.`,
+    });
     setItemToDelete(null);
   };
 

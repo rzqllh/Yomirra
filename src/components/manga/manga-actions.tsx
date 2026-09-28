@@ -49,9 +49,13 @@ export function MangaActions({
     });
 
     if (isInLibrary) {
-      toast.error("Dihapus dari library");
+      toast.info("Dihapus dari Koleksi", {
+        description: `'${title}' dikeluarkan dari rak bacaanmu.`,
+      });
     } else {
-      toast.success("Ditambahkan ke library");
+      toast.success("Disimpan ke Koleksi", {
+        description: `'${title}' berhasil ditambahkan ke rak bacaanmu.`,
+      });
     }
   };
 

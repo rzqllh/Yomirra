@@ -57,10 +57,14 @@ export function GuestSyncBanner({ className }: GuestSyncBannerProps) {
     setIsLoggingIn(true);
     try {
       await loginWithGoogle();
-      toast.success("Akun tersambung. Rak bacaanmu sekarang bisa ikut ke perangkat lain.");
+      toast.success("Akun Tersambung", {
+        description: "Rak bacaanmu sekarang otomatis tersinkron ke semua perangkat.",
+      });
     } catch (err: any) {
       if (err?.code !== "auth/popup-closed-by-user") {
-        toast.error("Gagal masuk dengan Google. Silakan coba lagi.");
+        toast.error("Gagal Masuk", {
+          description: "Tidak dapat masuk dengan Google. Silakan coba sesaat lagi.",
+        });
       }
     } finally {
       setIsLoggingIn(false);
@@ -71,7 +75,9 @@ export function GuestSyncBanner({ className }: GuestSyncBannerProps) {
     dismissGuestBanner(totalItemCount);
     const isEscalated = totalItemCount >= 15 && guestBannerDismissCount > 0;
     const msg = isEscalated ? "Oke, kami ingatkan lagi dalam 3 hari." : "Oke, kami ingatkan lagi minggu depan.";
-    toast.info(msg);
+    toast.info("Pengingat Ditunda", {
+      description: msg,
+    });
   };
 
   if (!isVisible) return null;

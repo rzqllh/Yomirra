@@ -47,7 +47,7 @@ export function LibraryToolbar({
         onChange={onSearchInputChange}
         onSubmitAction={onSearchSubmit}
         onClear={onSearchClear}
-        placeholder="Cari di rak bacaan..."
+        placeholder="Cari di Library…"
         containerClassName="flex-1 min-w-0 min-h-11 rounded-xl"
       />
 

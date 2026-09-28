@@ -33,7 +33,9 @@ export function GuestActionGateModal({
     setIsLoggingIn(true);
     try {
       await loginWithGoogle();
-      toast.success("Berhasil masuk dengan akun Google");
+      toast.success("Berhasil Masuk", {
+        description: "Selamat datang kembali! Datamu kini tersinkronisasi.",
+      });
       onOpenChange(false);
       if (onLoginSuccess) {
         onLoginSuccess();
@@ -42,7 +44,9 @@ export function GuestActionGateModal({
       }
     } catch (err: any) {
       if (err?.code !== "auth/popup-closed-by-user") {
-        toast.error("Gagal masuk dengan Google. Silakan coba lagi.");
+        toast.error("Gagal Masuk", {
+          description: "Tidak dapat masuk dengan Google. Silakan coba sesaat lagi.",
+        });
       }
     } finally {
       setIsLoggingIn(false);

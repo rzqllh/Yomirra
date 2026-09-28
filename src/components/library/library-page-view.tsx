@@ -8,6 +8,8 @@ import { CatalogControls } from "@/components/ui/catalog-controls";
 import { LibrarySkeleton } from "@/components/skeletons/library-skeleton";
 import { HeaderActions } from "@/components/app/header-actions";
 import { useLibraryCatalog } from "@/shared/hooks/use-library-catalog";
+import { sourceRegistry } from "@/shared/sources/source-registry";
+import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { LibraryToolbar } from "./library-toolbar";
 import { LibraryStatusRail } from "./library-status-rail";
 import { LibraryResults } from "./library-results";
@@ -36,13 +38,13 @@ export function LibraryPageView() {
             href="/sources"
             className="inline-flex min-h-11 items-center gap-2 rounded-[12px] border border-border-default bg-surface-raised px-3 text-sm font-semibold text-text-secondary transition-colors hover:border-accent hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
-            <span>Sumber: <strong className="text-text-primary">{catalog.activeSourceId}</strong></span>
+            <span>Sumber: <strong className="text-text-primary">{sourceRegistry.find(s => s.id === catalog.activeSourceId)?.name ?? dynamicSourceRegistry.getAll().find(s => s.id === catalog.activeSourceId)?.name ?? catalog.activeSourceId}</strong></span>
             <ArrowRight size={16} weight="bold" aria-hidden="true" />
           </Link>
           <HeaderActions />
         </div>
 
-        <CatalogControls label="Cari dan saring rak bacaan">
+        <CatalogControls label="Cari dan saring Library">
           <PageToolbar>
             <LibraryToolbar
               searchInput={catalog.searchInput}

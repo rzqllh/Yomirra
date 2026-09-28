@@ -39,19 +39,30 @@ export function SourceCard({ source, onUpdate }: SourceCardProps & { onUpdate?: 
   const handleDelete = async () => {
     if (confirm(`Hapus sumber ${source.name}?`)) {
       await dynamicSourceRegistry.uninstall(source.id);
-      toast.success("Sumber berhasil dihapus");
+      toast.info("Sumber Dihapus", {
+        description: `Sumber "${source.name}" berhasil dihapus dari perangkat.`,
+      });
       onUpdate?.();
     }
   };
 
   const handleRefresh = async () => {
     try {
-      toast.loading("Memperbarui sumber...", { id: `update-${source.id}` });
+      toast.loading("Memperbarui Sumber", {
+        id: `update-${source.id}`,
+        description: `Mengunduh data terbaru untuk ${source.name}...`,
+      });
       await dynamicSourceRegistry.updateSource(source.id, { manifestUrl: source.manifestUrl });
-      toast.success("Sumber berhasil diperbarui", { id: `update-${source.id}` });
+      toast.success("Sumber Berhasil Diperbarui", {
+        id: `update-${source.id}`,
+        description: `${source.name} telah diperbarui ke versi terbaru.`,
+      });
       onUpdate?.();
     } catch (e) {
-      toast.error("Gagal memperbarui sumber", { id: `update-${source.id}` });
+      toast.error("Pembaruan Gagal", {
+        id: `update-${source.id}`,
+        description: `Gagal memperbarui ${source.name}. Coba beberapa saat lagi.`,
+      });
     }
   };
   
@@ -84,7 +95,7 @@ export function SourceCard({ source, onUpdate }: SourceCardProps & { onUpdate?: 
             <div className="flex items-center gap-1.5 shrink-0">
               {isCustom && (
                 <Badge variant="outline" className="bg-surface-glass border-accent/20 text-accent font-semibold shadow-xs hidden sm:flex rounded-lg">
-                  Extension
+                  Ekstensi
                 </Badge>
               )}
               {source.isNsfw && (
@@ -94,7 +105,7 @@ export function SourceCard({ source, onUpdate }: SourceCardProps & { onUpdate?: 
               )}
               <Badge variant={effectiveStatus === "online" ? "success" : effectiveStatus === "slow" ? "warning" : "error"} className="rounded-lg">
                 <span className="size-1.5 rounded-full bg-current mr-1" />
-                {effectiveStatus === "online" ? "Online" : effectiveStatus === "slow" ? "Lambat" : "Gangguan"}
+                {effectiveStatus === "online" ? "Berfungsi" : effectiveStatus === "slow" ? "Lambat" : "Gangguan"}
               </Badge>
               {isCustom && (
                 <DropdownMenu>
@@ -122,7 +133,7 @@ export function SourceCard({ source, onUpdate }: SourceCardProps & { onUpdate?: 
               <span>v{source.version}</span>
             </span>
             <span className="text-[11px] font-medium text-text-muted">
-              {isEnabled ? "Sumber Aktif" : "Dinonaktifkan"}
+              {isEnabled ? "Ikut Library & Populer" : "Tidak ditampilkan"}
             </span>
           </div>
         </div>
@@ -179,10 +190,10 @@ export function SourceCard({ source, onUpdate }: SourceCardProps & { onUpdate?: 
               window.dispatchEvent(new Event("sources_updated"));
               router.refresh();
             }}
-            title={isEnabled ? "Nonaktifkan Sumber" : "Aktifkan Sumber"}
+            title={isEnabled ? "Keluarkan dari Library & Populer" : "Tampilkan di Library & Populer"}
           />
           <span className="text-xs font-semibold text-text-secondary">
-            {isEnabled ? "Enabled" : "Disabled"}
+            {isEnabled ? "Tampilkan di Library & Populer" : "Tidak ditampilkan"}
           </span>
         </div>
 

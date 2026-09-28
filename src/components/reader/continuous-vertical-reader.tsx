@@ -239,9 +239,10 @@ export function ContinuousVerticalReader({
       sessionStorage.setItem(readCountKey, newCount.toString());
 
       if (newCount >= 3) {
-        toast("Kamu sudah membaca 3 chapter dari komik ini. Simpan ke Bookmark?", {
+        toast.info("Tertarik dengan Komik Ini?", {
+          description: "Kamu sudah membaca 3 bab. Simpan ke koleksi agar mudah dilanjutkan?",
           action: {
-            label: "Bookmark",
+            label: "Simpan",
             onClick: () => {
               const historyItem = getProgress(sourceId, mangaId);
               if (historyItem) {
@@ -253,7 +254,9 @@ export function ContinuousVerticalReader({
                   addedAt: new Date().toISOString(),
                   updatedAt: new Date().toISOString(),
                 });
-                toast.success("Berhasil ditambahkan ke Bookmark!");
+                toast.success("Disimpan ke Bookmark", {
+                  description: "Komik berhasil ditambahkan ke koleksi favoritmu.",
+                });
               }
             }
           },

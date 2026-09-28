@@ -35,10 +35,15 @@ export function MangaStatusButton({ sourceId, mangaId }: MangaStatusButtonProps)
   const handleSelect = (status: ReadingStatus) => {
     if (readingStatus === status) {
       clearReadingStatus(mangaKey);
-      toast.error("Status membaca dihapus");
+      toast.info("Status Membaca Direset", {
+        description: "Status membaca untuk komik ini telah dikembalikan ke awal.",
+      });
     } else {
       setReadingStatus(mangaKey, status);
-      toast.success("Status membaca diperbarui");
+      const label = STATUS_OPTIONS.find((o) => o.value === status)?.label || status;
+      toast.success("Status Membaca Diperbarui", {
+        description: `Komik ini ditandai sebagai "${label}".`,
+      });
     }
     setIsOpen(false);
   };

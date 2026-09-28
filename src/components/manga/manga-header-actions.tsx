@@ -53,7 +53,9 @@ export function MangaHeaderActions({
       }).catch(console.error);
     } else {
       navigator.clipboard.writeText(manifestUrl || window.location.href);
-      toast.success("Link berhasil disalin");
+      toast.success("Tautan Disalin", {
+        description: "Tautan komik berhasil disalin ke papan klip.",
+      });
     }
   };
 

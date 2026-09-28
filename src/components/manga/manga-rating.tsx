@@ -83,13 +83,19 @@ export function MangaRating({ sourceId, mangaId, className, variant = "default",
         addedAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       });
-      toast.success("Otomatis disimpan ke Rak Buku");
+      toast.success("Disimpan ke Koleksi", {
+        description: "Komik otomatis ditambahkan ke rak bacaanmu.",
+      });
     }
     updateLibraryItem(sourceId, mangaId, { userRating: rating === userRating ? undefined : rating });
     if (rating !== userRating) {
-      toast.success(`Rating ${rating}/10 disimpan`);
+      toast.success("Penilaian Disimpan", {
+        description: `Kamu memberi rating ${rating}/10 untuk komik ini.`,
+      });
     } else {
-      toast.error("Rating dihapus");
+      toast.info("Penilaian Dihapus", {
+        description: "Penilaian untuk komik ini telah dibatalkan.",
+      });
     }
     setIsOpen(false);
   };

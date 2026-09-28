@@ -66,7 +66,9 @@ export function MangaCollectionButton({
         addedAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       });
-      toast.success("Otomatis disimpan ke Rak Buku");
+      toast.success("Disimpan ke Koleksi", {
+        description: "Komik otomatis ditambahkan ke rak bacaanmu.",
+      });
     }
   };
 
@@ -83,7 +85,9 @@ export function MangaCollectionButton({
     e.preventDefault();
     try {
       createCollection(newCollectionName);
-      toast.success("Koleksi berhasil dibuat");
+      toast.success("Koleksi Berhasil Dibuat", {
+        description: `Koleksi "${newCollectionName}" siap digunakan.`,
+      });
       
       const state = useCollectionStore.getState();
       const newCol = state.collections.find(c => c.name.toLowerCase() === newCollectionName.trim().toLowerCase());
@@ -95,7 +99,9 @@ export function MangaCollectionButton({
       setIsCreateMode(false);
       setNewCollectionName("");
     } catch (err: any) {
-      toast.error(err.message || "Gagal membuat koleksi");
+      toast.error("Gagal Membuat Koleksi", {
+        description: err?.message || "Periksa kembali nama koleksi dan coba lagi.",
+      });
     }
   };
 
@@ -175,7 +181,7 @@ export function MangaCollectionButton({
                 <Button 
                   onClick={() => setIsCreateMode(true)} 
                   variant="outline" 
-                  className="w-full h-11 rounded-full font-bold border-dashed border-border-default/80 hover:border-accent hover:text-accent"
+                  className="w-full h-11 rounded-xl font-bold border-dashed border-border-default/80 hover:border-accent hover:text-accent"
                 >
                   <FolderPlus size={18} className="mr-2" /> Buat Koleksi Baru
                 </Button>
@@ -219,7 +225,7 @@ export function MangaCollectionButton({
                   type="button"
                   variant="ghost"
                   onClick={() => setIsCreateMode(false)}
-                  className="flex-1 sm:flex-none h-11 px-5 rounded-full font-bold border border-border-default/40 hover:bg-surface-hover"
+                  className="flex-1 sm:flex-none h-11 px-5 rounded-xl font-bold border border-border-default/40 hover:bg-surface-hover"
                 >
                   Batal
                 </Button>
@@ -227,7 +233,7 @@ export function MangaCollectionButton({
                   type="submit"
                   variant="accent"
                   disabled={!newCollectionName.trim()}
-                  className="flex-1 sm:flex-none h-11 px-5 rounded-full font-bold shadow-xs active:scale-95 transition-all"
+                  className="flex-1 sm:flex-none h-11 px-5 rounded-xl font-bold shadow-xs active:scale-95 transition-all"
                 >
                   Buat & Tambahkan
                 </Button>

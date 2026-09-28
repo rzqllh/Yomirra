@@ -72,7 +72,7 @@ export function ChapterDownloadButton({
         });
         toast.success(`Berhasil mengunduh ${chapterTitle}!`, { id: toastId, duration: 4000 });
       } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : "Error tidak diketahui";
+        const msg = err instanceof Error ? err.message : "Terjadi kendala saat mengunduh";
         toast.error(`Gagal mengunduh: ${msg}`, { id: toastId, duration: 5000 });
       } finally {
         setIsZipDownloading(false);
@@ -88,17 +88,23 @@ export function ChapterDownloadButton({
         chapterTitle,
         mangaTitle,
       });
-      toast.success(`Chapter ditambahkan ke antrean`);
+      toast.success("Masuk Antrean Unduhan", {
+        description: `${chapterTitle} ditambahkan ke antrean unduh.`,
+      });
     } else if (download.status === "downloaded" || download.status === "failed") {
       setIsDeleteDialogOpen(true);
     } else if (download.status === "downloading" || download.status === "queued") {
       const pauseDownload = useDownloadStore.getState().pauseDownload;
       pauseDownload(id);
-      toast("Unduhan dijeda");
+      toast.info("Unduhan Dijeda", {
+        description: `${chapterTitle} dijeda sementara.`,
+      });
     } else if (download.status === "paused") {
       const resumeDownload = useDownloadStore.getState().resumeDownload;
       resumeDownload(id);
-      toast.info("Melanjutkan unduhan...");
+      toast.info("Melanjutkan Unduhan", {
+        description: `Mengunduh kembali ${chapterTitle}...`,
+      });
     }
   };
 
@@ -201,7 +207,9 @@ export function ChapterDownloadButton({
         variant="danger"
         onConfirm={() => {
           removeDownload(id);
-          toast.success("Unduhan berhasil dihapus");
+          toast.info("Unduhan Dihapus", {
+            description: `${chapterTitle} berhasil dihapus dari perangkat.`,
+          });
           setIsDeleteDialogOpen(false);
         }}
       />

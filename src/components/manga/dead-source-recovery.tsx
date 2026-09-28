@@ -146,7 +146,9 @@ export function DeadSourceRecovery({ sourceId, mangaId, health = { status: "BROK
       }
     } catch (err) {
       console.error("Failed searching alternate sources:", err);
-      toast.error("Gagal mencari sumber alternatif");
+      toast.error("Sumber Lain Tidak Ditemukan", {
+        description: "Belum ada sumber bacaan lain yang cocok untuk komik ini saat ini.",
+      });
     } finally {
       setIsSearching(false);
     }

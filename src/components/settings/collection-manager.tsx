@@ -24,9 +24,13 @@ export function CollectionManager() {
   const handleCreate = (name: string) => {
     try {
       createCollection(name);
-      toast.success("Koleksi berhasil dibuat");
+      toast.success("Koleksi Berhasil Dibuat", {
+        description: `Koleksi "${name}" siap digunakan.`,
+      });
     } catch (err: any) {
-      toast.error(err.message || "Gagal membuat koleksi");
+      toast.error("Gagal Membuat Koleksi", {
+        description: err?.message || "Periksa kembali nama koleksi dan coba lagi.",
+      });
     }
   };
 
@@ -34,17 +38,23 @@ export function CollectionManager() {
     if (!selectedId) return;
     try {
       renameCollection(selectedId, name);
-      toast.success("Koleksi berhasil diubah");
+      toast.success("Nama Koleksi Diperbarui", {
+        description: `Koleksi diubah menjadi "${name}".`,
+      });
       setSelectedId(null);
     } catch (err: any) {
-      toast.error(err.message || "Gagal mengubah koleksi");
+      toast.error("Gagal Mengubah Koleksi", {
+        description: err?.message || "Periksa kembali nama koleksi dan coba lagi.",
+      });
     }
   };
 
   const handleDelete = () => {
     if (!selectedId) return;
     deleteCollection(selectedId);
-    toast.success("Koleksi berhasil dihapus");
+    toast.info("Koleksi Dihapus", {
+      description: "Koleksi berhasil dikeluarkan dari daftar rak.",
+    });
     setIsDeleteOpen(false);
     setSelectedId(null);
   };

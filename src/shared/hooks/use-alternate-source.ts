@@ -123,7 +123,9 @@ export function useAlternateSource({
       }
     } catch (err) {
       console.error("Failed searching alternate sources:", err);
-      toast.error("Gagal mencari sumber alternatif");
+      toast.info("Sumber Lain Tidak Ditemukan", {
+        description: "Belum ada sumber bacaan alternatif yang cocok saat ini.",
+      });
     } finally {
       setIsSearching(false);
     }
@@ -192,7 +194,9 @@ export function useAlternateSource({
           saveProgressFn: (src, mid, cid, pidx) => saveProgress(src, mid, cid, pidx),
         });
 
-        toast.success(`Berhasil beralih ke ${candidate.sourceDisplayName}`);
+        toast.success("Sumber Berhasil Dialihkan", {
+          description: `Membaca dari ${candidate.sourceDisplayName}.`,
+        });
         setIsOpen(false);
 
         if (targetChapterId) {
@@ -202,7 +206,9 @@ export function useAlternateSource({
         }
       } catch (err) {
         console.error("Migration failed:", err);
-        toast.error("Gagal mengalihkan sumber");
+        toast.error("Pengalihan Sumber Gagal", {
+          description: "Terjadi kesalahan saat memindahkan data komik ke sumber baru.",
+        });
       }
     },
     [

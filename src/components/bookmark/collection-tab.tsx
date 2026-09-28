@@ -95,9 +95,13 @@ export function CollectionTab({
   const handleCreate = (name: string) => {
     try {
       onCreateCollection?.(name);
-      toast.success("Koleksi berhasil dibuat");
+      toast.success("Koleksi Berhasil Dibuat", {
+        description: `Koleksi "${name}" siap digunakan.`,
+      });
     } catch (err: any) {
-      toast.error(err.message || "Gagal membuat koleksi");
+      toast.error("Gagal Membuat Koleksi", {
+        description: err?.message || "Periksa kembali nama koleksi dan coba lagi.",
+      });
     }
   };
 
@@ -105,10 +109,14 @@ export function CollectionTab({
     if (!activeCollectionId) return;
     try {
       onRenameCollection?.(activeCollectionId, name);
-      toast.success("Koleksi berhasil diubah");
+      toast.success("Nama Koleksi Diperbarui", {
+        description: `Koleksi diubah menjadi "${name}".`,
+      });
       setActiveCollectionId(null);
     } catch (err: any) {
-      toast.error(err.message || "Gagal mengubah koleksi");
+      toast.error("Gagal Mengubah Koleksi", {
+        description: err?.message || "Periksa kembali nama koleksi dan coba lagi.",
+      });
     }
   };
 
@@ -118,7 +126,9 @@ export function CollectionTab({
     if (selectedCollectionId === activeCollectionId) {
       onSelectCollectionId?.(null);
     }
-    toast.success("Koleksi berhasil dihapus");
+    toast.info("Koleksi Dihapus", {
+      description: "Koleksi berhasil dikeluarkan dari daftar rak.",
+    });
     setIsDeleteOpen(false);
     setActiveCollectionId(null);
   };

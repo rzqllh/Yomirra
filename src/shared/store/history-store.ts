@@ -132,7 +132,9 @@ export const useHistoryStore = create<HistoryState>()(
 
         deleteHistoryItem(sourceId, mangaId, chapterId).catch(() => {
           set({ items: previousState });
-          toast.error("Gagal menghapus riwayat dari cloud.");
+          toast.error("Gagal Menghapus Riwayat", {
+            description: "Riwayat bacaan belum berhasil dihapus dari akunmu.",
+          });
         });
       },
 
@@ -150,7 +152,9 @@ export const useHistoryStore = create<HistoryState>()(
 
         deleteMangaHistory(sourceId, mangaId).catch(() => {
           set({ items: previousState });
-          toast.error("Gagal menghapus riwayat manga dari cloud.");
+          toast.error("Gagal Menghapus Riwayat", {
+            description: "Riwayat komik belum berhasil dihapus dari akunmu.",
+          });
         });
       },
 
@@ -247,7 +251,9 @@ export const useHistoryStore = create<HistoryState>()(
 
         pushHistoryItem(updatedItem).catch(() => {
           set({ items: previousState });
-          toast.error("Gagal menyinkronkan progres baca ke cloud.");
+          toast.warning("Progres Belum Tersimpan", {
+            description: "Progres membaca belum tersinkron ke akun karena kendala jaringan.",
+          });
         });
       },
 

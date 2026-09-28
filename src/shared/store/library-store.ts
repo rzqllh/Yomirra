@@ -147,7 +147,9 @@ export const useLibraryStore = create<LibraryState>()(
         // Async Background sync with rollback
         pushLibraryItem(itemToPush).catch(() => {
           set({ items: previousState });
-          toast.error("Gagal menyimpan bookmark ke cloud. Periksa koneksi internet.");
+          toast.error("Gagal Menyimpan ke Akun", {
+            description: "Tidak dapat menyinkronkan komik. Periksa sambungan internetmu.",
+          });
         });
       },
 
@@ -200,7 +202,9 @@ export const useLibraryStore = create<LibraryState>()(
           deleteLibraryItem(item.sourceId, item.mangaId, item.id ?? key)
         )).catch(() => {
           set({ items: previousState });
-          toast.error("Gagal menghapus bookmark dari cloud. Periksa koneksi internet.");
+          toast.error("Gagal Menghapus dari Akun", {
+            description: "Tidak dapat menyinkronkan perubahan. Periksa sambungan internetmu.",
+          });
         });
       },
 
@@ -306,7 +310,9 @@ export const useLibraryStore = create<LibraryState>()(
         if (updatedItem) {
           pushLibraryItem(updatedItem).catch(() => {
             set({ items: previousState });
-            toast.error("Gagal memperbarui relink sumber di cloud.");
+            toast.error("Gagal Memperbarui Sumber", {
+              description: "Tautan sumber bacaan belum berhasil disimpan ke akunmu.",
+            });
           });
         }
       },

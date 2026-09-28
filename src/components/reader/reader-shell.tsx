@@ -100,7 +100,15 @@ export function ReaderShell({
       addedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     })
-    toast.success(isSaved ? "Dihapus dari bookmark" : "Disimpan ke bookmark")
+    if (isSaved) {
+      toast.info("Dihapus dari Bookmark", {
+        description: "Komik ini dikeluarkan dari daftar bookmark.",
+      })
+    } else {
+      toast.success("Disimpan ke Bookmark", {
+        description: "Komik ini ditambahkan ke daftar bookmark.",
+      })
+    }
   }
 
   const getBackgroundColor = () => {

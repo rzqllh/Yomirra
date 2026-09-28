@@ -28,9 +28,9 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
     try {
       const activeTheme = (theme as "light" | "dark" | "system") || "system";
       triggerBackupDownload(activeTheme);
-      toast.success("File backup JSON berhasil didownload");
+      toast.success("Salinan cadangan berhasil diunduh");
     } catch {
-      toast.error("Gagal mendownload file backup");
+      toast.error("Salinan cadangan gagal diunduh");
     }
   };
 
@@ -51,7 +51,7 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
       setIsProcessing(false);
     };
     reader.onerror = () => {
-      toast.error("Gagal membaca file JSON");
+      toast.error("Berkas cadangan tidak dapat dibaca");
       setIsProcessing(false);
     };
     reader.readAsText(file);
@@ -66,7 +66,7 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
 
   const handleExecuteRestore = () => {
     if (!dryRun?.backupPayload) {
-      toast.error("Tidak ada data backup valid untuk dipulihkan");
+      toast.error("Tidak ada data yang dapat dipulihkan dari berkas ini");
       return;
     }
 
@@ -79,15 +79,15 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
       );
 
       if (res.success) {
-        toast.success(`Restorasi data lokal berhasil (${res.restoredCount} item dipulihkan)`, {
-          description: importMode === "merge" ? "Data digabungkan dengan rekonsiliasi timestamp." : "Data lokal diganti total dari backup.",
+        toast.success(`Pemulihan data berhasil (${res.restoredCount} komik dipulihkan)`, {
+          description: importMode === "merge" ? "Data baru digabungkan dengan koleksi yang sudah ada." : "Data lama digantikan sepenuhnya dengan cadangan baru.",
         });
         resetState();
         onBack?.();
       }
     } catch (err: any) {
-      toast.error("Gagal melakukan restorasi data lokal", {
-        description: err.message || "Terjadi kesalahan. Snapshot awal telah dipulihkan.",
+      toast.error("Pemulihan data tidak berhasil", {
+        description: "Koleksi bacaan dikembalikan ke kondisi sebelum pemulihan.",
       });
     } finally {
       setIsProcessing(false);

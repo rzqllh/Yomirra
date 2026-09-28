@@ -119,15 +119,23 @@ export function ReportSheet({
       });
 
       if (res.ok) {
-        toast.success("Laporan terkirim — terima kasih!", { position: "top-center" });
+        toast.success("Laporan Terkirim", {
+          description: "Terima kasih atas bantuanmu membuat Yomirra lebih baik!",
+        });
         onOpenChange(false);
       } else if (res.status === 429) {
-        toast.error("Terlalu banyak laporan. Coba lagi dalam 10 menit.");
+        toast.warning("Mohon Tunggu Sebentar", {
+          description: "Terlalu banyak laporan dikirim. Silakan tunggu beberapa saat.",
+        });
       } else {
-        toast.error("Gagal mengirim laporan. Coba lagi.");
+        toast.error("Gagal Mengirim Laporan", {
+          description: "Terjadi gangguan saat mengirim laporan. Coba beberapa saat lagi.",
+        });
       }
     } catch {
-      toast.error("Tidak ada koneksi. Periksa jaringan kamu.");
+      toast.error("Koneksi Terputus", {
+        description: "Tidak ada sambungan. Periksa kembali koneksi internetmu.",
+      });
     } finally {
       setIsSending(false);
     }
@@ -208,7 +216,7 @@ export function ReportSheet({
           <div className="flex gap-2.5">
             <Button
               variant="outline"
-              className="h-11 px-4 rounded-full font-semibold border-border-default"
+              className="h-11 px-4 rounded-xl font-semibold border-border-default"
               onClick={() => onOpenChange(false)}
               disabled={isSending}
             >
@@ -216,7 +224,7 @@ export function ReportSheet({
             </Button>
             <Button
               variant="accent"
-              className="flex-1 h-11 rounded-full font-semibold"
+              className="flex-1 h-11 rounded-xl font-semibold"
               onClick={handleSend}
               disabled={isSending || !selected}
             >

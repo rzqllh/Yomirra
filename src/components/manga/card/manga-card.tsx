@@ -118,18 +118,8 @@ export function MangaCard({
   index,
   className,
 }: MangaCardProps) {
-  let pathname = "";
-  let searchParams: ReturnType<typeof useSearchParams> | null = null;
-  try {
-    if (typeof usePathname === "function") {
-      pathname = usePathname() || "";
-    }
-  } catch {}
-  try {
-    if (typeof useSearchParams === "function") {
-      searchParams = useSearchParams();
-    }
-  } catch {}
+  const pathname = usePathname() || "";
+  const searchParams = useSearchParams();
   const reducedMotion = useReducedMotion();
   const hasIntersectionObserver = typeof window !== "undefined" && typeof (window as any).IntersectionObserver !== "undefined";
   const shouldReveal = Boolean(animateReveal && !reducedMotion && hasIntersectionObserver);
@@ -190,7 +180,9 @@ export function MangaCard({
         onDeleteOverride(sourceId, manga.id, manga.title);
       } else {
         removeMangaHistory(sourceId, manga.id);
-        toast.success(`"${manga.title}" dihapus dari riwayat.`);
+        toast.info("Riwayat Dihapus", {
+          description: `"${manga.title}" dikeluarkan dari riwayat bacaan.`,
+        });
       }
     };
 
