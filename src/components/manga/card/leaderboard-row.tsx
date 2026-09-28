@@ -40,7 +40,7 @@ export function LeaderboardRow({ manga, sourceId, displayScore }: LeaderboardRow
       {/* Rank Badge */}
       {manga.rank !== undefined && (
         <div className="w-8 shrink-0 flex justify-center items-center">
-          <span className="ink-caption text-[26px] sm:text-[28px] leading-none text-accent">
+          <span className="text-[26px] sm:text-[28px] font-black tracking-tight leading-none text-accent tabular-nums">
             {rankStr}
           </span>
         </div>

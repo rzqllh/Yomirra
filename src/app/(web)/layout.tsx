@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, Newsreader, Yuji_Boku } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -8,8 +8,6 @@ const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-ui",
   subsets: ["latin"],
 });
-const yujiBoku = Yuji_Boku({ variable: "--font-editorial", weight: "400", subsets: ["latin"] });
-const newsreader = Newsreader({ variable: "--font-caption", subsets: ["latin"] });
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://www.yomirra.web.id"),
@@ -45,7 +43,7 @@ export default function RootLayout({
   modal?: React.ReactNode;
 }>) {
   return (
-    <html lang="id" className={`${plusJakartaSans.variable} ${yujiBoku.variable} ${newsreader.variable}`} suppressHydrationWarning>
+    <html lang="id" className={plusJakartaSans.variable} suppressHydrationWarning>
       <body className="min-h-dvh antialiased" suppressHydrationWarning>
         <Providers>
           <OfflineProvider>

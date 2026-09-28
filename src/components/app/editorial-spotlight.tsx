@@ -73,7 +73,7 @@ export function EditorialSpotlight({
           </div>
 
           <Link href={href} className="group block focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent rounded">
-            <h2 className="ink-display line-clamp-2 sm:line-clamp-3 text-[26px] sm:text-[30px] lg:text-[36px] font-normal text-text-primary leading-[1.14] tracking-tight group-hover:text-accent motion-safe:transition-colors">
+            <h2 className="line-clamp-2 sm:line-clamp-3 text-[26px] sm:text-[30px] lg:text-[36px] font-bold text-text-primary leading-[1.14] tracking-tight group-hover:text-accent motion-safe:transition-colors">
               {manga.title}
             </h2>
           </Link>
