@@ -30,13 +30,13 @@ export async function POST(req: Request) {
     const activeSources = sourceRegistry.filter(s => s.isEnabled).length;
     const totalSources = sourceRegistry.length;
 
-    const message = `🚀 *Deployment Successful*\n\n` +
-      `*Environment:* \`${environment}\`\n` +
-      `*Commit:* \`${commitHash.substring(0, 7)}\`\n` +
-      `*URL:* [Yomirra](${url})\n\n` +
-      `*Smoke Test:*\n` +
+    const message = `🚀 *Deployment berhasil*\n\n` +
+      `Environment: \`${environment}\`\n` +
+      `Commit: \`${commitHash.substring(0, 7)}\`\n` +
+      `URL: [Yomirra](${url})\n\n` +
+      `*Smoke test*\n` +
       `Redis: ${redisStatus}\n` +
-      `Active Sources: ${activeSources} / ${totalSources}`;
+      `Source aktif: ${activeSources} / ${totalSources}`;
 
     await sendTelegramMessage(message, {
       severity: AlertSeverity.INFO,

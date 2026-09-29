@@ -2,7 +2,7 @@ name: Yomirra Ops Scheduled Runtime
 
 on:
   schedule:
-    # 6-hour health report at minute 17 of every 6th hour (05:17, 11:17, 17:17, 23:17 UTC)
+    # Health report every 6 hours: 00:17, 06:17, 12:17, 18:17 UTC (07:17, 13:17, 19:17, 01:17 WIB)
     - cron: "17 */6 * * *"
     # Daily technical digest at 00:37 UTC (07:37 WIB)
     - cron: "37 0 * * *"

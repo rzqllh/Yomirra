@@ -20,7 +20,7 @@ export async function sendHealthDigest(): Promise<boolean> {
     if (Object.keys(snapshots).length === 0) {
       logger.warn("Health digest skipped: no sources probed or available in store.");
       return await sendTelegramMessage(
-        "📊 *Yomirra Health*\n\n_No source health data currently available._",
+        "📊 *Yomirra · Health*\n\nBelum ada data health yang bisa ditampilkan.",
         { severity: AlertSeverity.INFO }
       );
     }

@@ -8,6 +8,13 @@ import { sourceRegistry, getSourceMetadata } from "@/shared/sources/source-regis
 import { sourceHealthStore } from "@/server/lib/sources/health/health-store";
 import { probeSourceHealth } from "@/server/lib/sources/health/probe";
 import { sendHealthDigest } from "@/server/lib/ops/health-digest";
+import {
+  failureGuidance,
+  formatLatency,
+  formatWibTime,
+  sourceDisplayName,
+  statusIcon,
+} from "@/server/lib/ops/message-format";
 
 export const dynamic = "force-dynamic";
 
@@ -20,8 +27,6 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-
-    // Telegram sends various update types; we only process text messages
     if (!body?.message?.text) {
       return NextResponse.json({ success: true });
     }
@@ -34,30 +39,25 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true });
     }
 
-    const allowed = env.TELEGRAM_ALLOWED_CHAT_IDS.split(",").map((s) => s.trim());
+    const allowed = env.TELEGRAM_ALLOWED_CHAT_IDS.split(",").map((value) => value.trim());
     if (!allowed.includes(chatId)) {
       logger.warn(`Unauthorized webhook attempt from chat ID: ${chatId}`);
-      return NextResponse.json({ success: true }); // Return 200 so Telegram stops retrying
+      return NextResponse.json({ success: true });
     }
 
-    // Only process slash commands
     if (!text.startsWith("/")) {
       return NextResponse.json({ success: true });
     }
 
-    if (redis) {
-      try {
-        const rateLimitKey = `yomirra:ops:rl:telegram:${chatId}`;
-        const currentCount = await redis.incr(rateLimitKey);
-        if (currentCount === 1) {
-          await redis.expire(rateLimitKey, 60);
-        }
-        if (currentCount > 10) {
-          return NextResponse.json({ success: true });
-        }
-      } catch {
-        // Fallback if Redis is unavailable: allow execution
+    try {
+      const rateLimitKey = `yomirra:ops:rl:telegram:${chatId}`;
+      const currentCount = await redis.incr(rateLimitKey);
+      if (currentCount === 1) await redis.expire(rateLimitKey, 60);
+      if (currentCount > 10) {
+        return NextResponse.json({ success: true });
       }
+    } catch {
+      // Commands remain available if Redis is temporarily unavailable.
     }
 
     const args = text.split(/\s+/);
@@ -69,136 +69,140 @@ export async function POST(req: Request) {
         break;
 
       case "/sources": {
-        const activeCount = sourceRegistry.filter((s) => s.isEnabled).length;
-        const listText =
-          `📚 *Yomirra Sources (${activeCount})*\n\n` +
-          sourceRegistry
-            .map((s) => {
-              const status = s.isEnabled ? (s.status === "online" ? "✅" : "⚠️") : "❌";
-              return `${status} \`${s.id.padEnd(12, " ")}\` - ${s.name}`;
-            })
-            .join("\n");
-        await sendTelegramMessage(listText, { severity: AlertSeverity.INFO });
+        const active = sourceRegistry.filter((source) => source.isEnabled && source.isInstalled);
+        const snapshots = await sourceHealthStore.getAllSnapshots(active.map((source) => source.id));
+
+        let message = `📚 *Yomirra · Sources*\n\n${active.length} source aktif\n\n`;
+        for (const source of active) {
+          const snapshot = snapshots[source.id];
+          const status = snapshot?.status || (source.status === "online" ? "HEALTHY" : "UNKNOWN");
+          message += `${statusIcon(status)} *${source.name}* · ${status}`;
+          if (snapshot?.latencyMs) message += ` · ${formatLatency(snapshot.latencyMs)}`;
+          message += "\n";
+        }
+
+        await sendTelegramMessage(message.trim(), { severity: AlertSeverity.INFO });
         break;
       }
 
       case "/source": {
         const sourceId = args[1]?.toLowerCase();
         if (!sourceId) {
-          await sendTelegramMessage("Usage: `/source <id>`", { severity: AlertSeverity.INFO });
+          await sendTelegramMessage("Gunakan: `/source <id>`", { severity: AlertSeverity.INFO });
           break;
         }
 
         const meta = getSourceMetadata(sourceId);
         if (!meta) {
-          await sendTelegramMessage(`Source \`${sourceId}\` not found in registry.`, {
+          await sendTelegramMessage(`Source \`${sourceId}\` tidak ditemukan.`, {
             severity: AlertSeverity.WARNING,
           });
           break;
         }
 
         const snapshot = await sourceHealthStore.getSnapshot(sourceId);
+        const status = snapshot?.status || (meta.status === "online" ? "HEALTHY" : "UNKNOWN");
 
-        let detailText = `🔍 *Source Detail: ${meta.name}*\n\n`;
-        detailText += `*ID:*           \`${meta.id}\`\n`;
-        detailText += `*Status:*       ${meta.isEnabled ? "Enabled" : "Disabled"}\n`;
-        detailText += `*Language:*     ${meta.language || "all"}\n`;
-        detailText += `*Health:*       ${snapshot?.status || "UNKNOWN"}\n`;
-        detailText += `*Latency:*      ${snapshot?.latencyMs !== undefined ? `${snapshot.latencyMs}ms` : "-"}\n`;
-        detailText += `*Resolved Host:* \`${snapshot?.resolvedHost || meta.baseUrl || "-"}\`\n`;
-        detailText += `*Failures:*     ${snapshot?.consecutiveFailures ?? 0}\n`;
-        if (snapshot?.lastFailureCode) {
-          detailText += `*Last Error:*   \`${snapshot.lastFailureCode}\`\n`;
-        }
+        let message = `🔎 *${meta.name}*\n\n`;
+        message += `Status: ${status}\n`;
+        message += `Latency: ${snapshot ? formatLatency(snapshot.latencyMs) : "belum terukur"}\n`;
         if (snapshot?.lastCheckedAt) {
-          detailText += `*Last Checked:* \`${snapshot.lastCheckedAt}\`\n`;
+          message += `Terakhir dicek: ${formatWibTime(snapshot.lastCheckedAt)}\n`;
         }
 
-        await sendTelegramMessage(detailText, { severity: AlertSeverity.INFO });
+        if (snapshot && snapshot.status !== "HEALTHY") {
+          const guidance = failureGuidance(snapshot.lastFailureCode, snapshot.stage);
+          message += "\n*Masalah*\n";
+          message += `\`${snapshot.lastFailureCode || snapshot.status}\``;
+          if (snapshot.stage) message += ` · ${snapshot.stage}`;
+          message += `\n${guidance.cause}\n\n*Tindakan*\n${guidance.action}\n`;
+        }
+
+        message += `\nID: \`${meta.id}\``;
+        await sendTelegramMessage(message, { severity: AlertSeverity.INFO });
         break;
       }
 
       case "/errors": {
-        const knownSourceIds = sourceRegistry.filter((s) => s.isEnabled).map((s) => s.id);
-        const snapshots = await sourceHealthStore.getAllSnapshots(knownSourceIds);
-        const activeErrors = Object.entries(snapshots).filter(
-          ([_, snap]) => snap.status !== "HEALTHY"
-        );
+        const sourceIds = sourceRegistry
+          .filter((source) => source.isEnabled && source.isInstalled)
+          .map((source) => source.id);
+        const snapshots = await sourceHealthStore.getAllSnapshots(sourceIds);
+        const activeErrors = Object.entries(snapshots).filter(([, snap]) => snap.status !== "HEALTHY");
 
         if (activeErrors.length === 0) {
           await sendTelegramMessage(
-            "✅ *No Active Source Errors*\n\nAll measured sources are HEALTHY.",
+            "🟢 *Tidak ada error aktif*\n\nSemua source yang terukur normal.",
             { severity: AlertSeverity.INFO }
           );
-        } else {
-          let errorText = `⚠️ *Active Source Errors (${activeErrors.length})*\n\n`;
-          for (const [id, snap] of activeErrors) {
-            errorText += `❌ \`${id}\`: *${snap.status}*\n`;
-            if (snap.lastFailureCode) errorText += `   Code: \`${snap.lastFailureCode}\`\n`;
-            if (snap.stage) errorText += `   Stage: \`${snap.stage}\`\n`;
-            if (snap.consecutiveFailures) errorText += `   Failures: ${snap.consecutiveFailures}\n`;
-            if (snap.errorMessage) errorText += `   Detail: ${snap.errorMessage.slice(0, 60)}\n`;
-            errorText += "\n";
-          }
-          await sendTelegramMessage(errorText, { severity: AlertSeverity.WARNING });
+          break;
         }
+
+        let message = `⚠️ *Error aktif · ${activeErrors.length}*\n\n`;
+        for (const [sourceId, snapshot] of activeErrors) {
+          const guidance = failureGuidance(snapshot.lastFailureCode, snapshot.stage);
+          message += `${statusIcon(snapshot.status)} *${sourceDisplayName(sourceId)}*\n`;
+          message += `${snapshot.stage || "source"} · \`${snapshot.lastFailureCode || snapshot.status}\`\n`;
+          message += `→ ${guidance.action}\n\n`;
+        }
+
+        await sendTelegramMessage(message.trim(), { severity: AlertSeverity.WARNING });
         break;
       }
 
       case "/recheck": {
-        const targetId = args[1]?.toLowerCase();
-        if (!targetId) {
-          await sendTelegramMessage("Usage: `/recheck <id>`", { severity: AlertSeverity.INFO });
+        const sourceId = args[1]?.toLowerCase();
+        if (!sourceId) {
+          await sendTelegramMessage("Gunakan: `/recheck <id>`", { severity: AlertSeverity.INFO });
           break;
         }
 
-        const meta = getSourceMetadata(targetId);
+        const meta = getSourceMetadata(sourceId);
         if (!meta) {
-          await sendTelegramMessage(`Source \`${targetId}\` not recognized in registry.`, {
+          await sendTelegramMessage(`Source \`${sourceId}\` tidak ditemukan.`, {
             severity: AlertSeverity.WARNING,
           });
           break;
         }
 
-        // Rate limit recheck specifically (max 2 per 60s per target)
-        if (redis) {
-          try {
-            const recheckLimitKey = `yomirra:ops:rl:recheck:${targetId}`;
-            const rcCount = await redis.incr(recheckLimitKey);
-            if (rcCount === 1) await redis.expire(recheckLimitKey, 60);
-            if (rcCount > 2) {
-              await sendTelegramMessage(
-                `Too many rechecks for \`${targetId}\`. Please wait 1 minute.`,
-                { severity: AlertSeverity.WARNING }
-              );
-              break;
-            }
-          } catch {
-            // allow probe if redis fails
+        try {
+          const recheckLimitKey = `yomirra:ops:rl:recheck:${sourceId}`;
+          const count = await redis.incr(recheckLimitKey);
+          if (count === 1) await redis.expire(recheckLimitKey, 60);
+          if (count > 2) {
+            await sendTelegramMessage(
+              `Recheck ${meta.name} terlalu sering. Coba lagi sekitar 1 menit.`,
+              { severity: AlertSeverity.WARNING }
+            );
+            break;
           }
+        } catch {
+          // A probe is still useful when Redis is unavailable.
         }
 
-        await sendTelegramMessage(`Initiating deep functional probe for \`${targetId}\`...`, {
+        await sendTelegramMessage(`Mengecek ulang *${meta.name}*…`, {
           severity: AlertSeverity.INFO,
         });
 
         try {
-          const snapshot = await probeSourceHealth(targetId, { deep: true });
+          const snapshot = await probeSourceHealth(sourceId, { deep: true });
 
           if (snapshot.status === "HEALTHY") {
             await sendTelegramMessage(
-              `✅ *Probe Successful*\n\n*Source:* \`${targetId}\`\n*Status:* HEALTHY\n*Latency:* ${snapshot.latencyMs}ms\n*Host:* \`${snapshot.resolvedHost}\``,
-              { severity: AlertSeverity.RECOVERY }
+              `🟢 *${meta.name} normal*\n\nDeep probe berhasil.\nLatency: ${formatLatency(snapshot.latencyMs)}\n\nTidak ada tindakan lanjutan.`,
+              { severity: AlertSeverity.INFO }
             );
           } else {
-            await sendTelegramMessage(
-              `❌ *Probe Failed*\n\n*Source:* \`${targetId}\`\n*Status:* ${snapshot.status}\n*Code:* \`${snapshot.lastFailureCode || "UNKNOWN"}\`\n*Stage:* \`${snapshot.stage}\`\n*Error:* ${snapshot.errorMessage || "Unknown failure"}`,
-              { severity: AlertSeverity.CRITICAL }
-            );
+            const guidance = failureGuidance(snapshot.lastFailureCode, snapshot.stage);
+            let message = `${statusIcon(snapshot.status)} *${meta.name} masih bermasalah*\n\n`;
+            message += `Code: \`${snapshot.lastFailureCode || snapshot.status}\``;
+            if (snapshot.stage) message += ` · Stage: \`${snapshot.stage}\``;
+            message += `\n\n*Tindakan*\n${guidance.action}`;
+            await sendTelegramMessage(message, { severity: AlertSeverity.WARNING });
           }
-        } catch (err: any) {
+        } catch (error: any) {
           await sendTelegramMessage(
-            `❌ *Probe Error*\n\n*Source:* \`${targetId}\`\n*Error:* ${err.message || "Execution exception"}`,
+            `🔴 *Recheck ${meta.name} gagal*\n\n${error.message || "Probe tidak bisa dijalankan."}`,
             { severity: AlertSeverity.CRITICAL }
           );
         }
@@ -207,13 +211,12 @@ export async function POST(req: Request) {
 
       case "/version":
         await sendTelegramMessage(
-          `⚙️ *Yomirra Ops Runtime*\n\n*Version:* 1.0.0 (Phase 4 + Ops V1)\n*Environment:* ${process.env.NODE_ENV || "development"}\n*Active Sources:* ${sourceRegistry.filter((s) => s.isEnabled).length}`,
+          `⚙️ *Yomirra · Ops*\n\nEnvironment: ${process.env.NODE_ENV || "development"}\nSource aktif: ${sourceRegistry.filter((source) => source.isEnabled && source.isInstalled).length}`,
           { severity: AlertSeverity.INFO }
         );
         break;
 
       default:
-        // Ignore unknown or unhandled commands
         break;
     }
 
