@@ -2114,3 +2114,39 @@ The visual system should reflect the same hierarchy:
 - implementation/debug information last.
 
 That hierarchy is the main criterion for future UI decisions.
+
+
+---
+
+# 46. Telegram ops language
+
+**LOCKED**
+
+Telegram ops messages are written in natural Indonesian. Machine codes and technical terms remain in English when they are useful for debugging.
+
+Incident messages answer these questions in order:
+
+1. apa yang terdampak;
+2. kemungkinan penyebab;
+3. tindakan berikutnya;
+4. status teknis.
+
+Do not dump raw probe fields as the primary message.
+
+Health digest should summarize the whole system, then list only sources that need attention or are meaningfully slow. Healthy sources do not need one line each.
+
+Daily digest is a concise operational summary, not a duplicate health dump. Do not claim incident counts or trends that are not actually stored.
+
+Recovery messages state that the source is normal again, include duration when known, and say whether follow-up is still needed.
+
+User reports keep user-facing context first. Raw IDs belong under a small technical section when they are needed for debugging.
+
+Telegram commands stay limited and operational:
+
+- `/status`
+- `/errors`
+- `/source <id>`
+- `/sources`
+- `/recheck <id>`
+
+Do not add AI diagnosis, auto-fix, auto-deploy, or speculative root-cause claims.

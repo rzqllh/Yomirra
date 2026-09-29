@@ -1,8 +1,16 @@
 import { env } from "@/env";
 import { logger } from "@/shared/logger";
-import { AlertSeverity, SEVERITY_EMOJIS } from "./severity";
+import { AlertSeverity } from "./severity";
 import { getAlertState, saveAlertState } from "./alert-state";
 import type { SourceHealthSnapshot } from "@/server/lib/sources/health/types";
+import {
+  failureGuidance,
+  formatLatency,
+  formatWibTime,
+  impactForStage,
+  sourceDisplayName,
+  statusIcon,
+} from "./message-format";
 
 export interface TelegramMessageOptions {
   severity: AlertSeverity;
@@ -19,69 +27,91 @@ const FAST_ESCALATION_EVENTS = new Set([
   "DOMAIN_CHANGED",
 ]);
 
-/**
- * Formats a compact 6-hour health digest.
- */
 export function formatHealthDigest(
   snapshots: Record<string, SourceHealthSnapshot>,
   timestamp = new Date()
 ): string {
-  // Format WIB (UTC+7)
-  const wibHours = (timestamp.getUTCHours() + 7) % 24;
-  const minutes = timestamp.getUTCMinutes().toString().padStart(2, "0");
-  const timeStr = `${wibHours.toString().padStart(2, "0")}:${minutes} WIB`;
+  const entries = Object.entries(snapshots);
+  const unhealthy = entries.filter(([, snapshot]) => snapshot.status !== "HEALTHY");
+  const measuredLatencies = entries
+    .map(([, snapshot]) => snapshot.latencyMs)
+    .filter((latency) => Number.isFinite(latency) && latency > 0);
+  const averageLatency = measuredLatencies.length
+    ? Math.round(
+        measuredLatencies.reduce((sum, latency) => sum + latency, 0) /
+          measuredLatencies.length
+      )
+    : 0;
+  const slow = entries
+    .filter(([, snapshot]) => snapshot.status === "HEALTHY" && snapshot.latencyMs >= 1500)
+    .sort((a, b) => b[1].latencyMs - a[1].latencyMs)
+    .slice(0, 2);
+  const healthyCount = entries.length - unhealthy.length;
 
-  let text = `📊 *Yomirra Health — ${timeStr}*\n\n`;
+  let text = `📊 *Yomirra · Health*\n${formatWibTime(timestamp)}\n\n`;
+  text += `${entries.length} source diperiksa\n`;
+  text += unhealthy.length
+    ? `${healthyCount} normal · ${unhealthy.length} perlu perhatian\n`
+    : `${healthyCount}/${entries.length} source normal\n`;
 
-  for (const [sourceId, snap] of Object.entries(snapshots)) {
-    const isHealthy = snap.status === "HEALTHY";
-    const latency = snap.latencyMs >= 1000 
-      ? `${(snap.latencyMs / 1000).toFixed(1)}s` 
-      : `${snap.latencyMs}ms`;
-
-    if (isHealthy) {
-      text += `\`${sourceId.padEnd(12, " ")}\` ✅ HEALTHY   ${latency}\n`;
-    } else {
-      const code = snap.lastFailureCode || snap.status;
-      text += `\`${sourceId.padEnd(12, " ")}\` ❌ ${snap.status}    \`${code}\` (${latency})\n`;
+  if (unhealthy.length) {
+    text += "\n*Perlu perhatian*\n";
+    for (const [sourceId, snapshot] of unhealthy) {
+      const guidance = failureGuidance(snapshot.lastFailureCode, snapshot.stage);
+      text += `${statusIcon(snapshot.status)} *${sourceDisplayName(sourceId)}*\n`;
+      text += `${snapshot.stage || "source"} · \`${snapshot.lastFailureCode || snapshot.status}\` · ${formatLatency(snapshot.latencyMs)}\n`;
+      text += `→ ${guidance.action}\n\n`;
     }
   }
 
+  if (slow.length) {
+    text += "*Lambat*\n";
+    for (const [sourceId, snapshot] of slow) {
+      text += `🟠 ${sourceDisplayName(sourceId)} · ${formatLatency(snapshot.latencyMs)}\n`;
+    }
+    text += "\n";
+  }
+
+  if (!unhealthy.length && !slow.length) {
+    if (averageLatency) text += `Rata-rata ${formatLatency(averageLatency)}\n`;
+    text += "Tidak ada tindakan.";
+  }
+
+  return text.trim();
+}
+
+export function formatCriticalAlert(snapshot: SourceHealthSnapshot): string {
+  const guidance = failureGuidance(snapshot.lastFailureCode, snapshot.stage);
+  let text = `${statusIcon(snapshot.status)} *${sourceDisplayName(snapshot.sourceId)} bermasalah*\n\n`;
+
+  text += `*Dampak*\n${impactForStage(snapshot.stage)}\n\n`;
+  text += `*Kemungkinan penyebab*\n${guidance.cause}\n\n`;
+  text += `*Tindakan*\n${guidance.action}\n\n`;
+  text += "*Status*\n";
+  text += `${snapshot.consecutiveFailures} kegagalan berturut-turut\n`;
+  if (snapshot.lastSuccessAt) {
+    text += `Terakhir normal: ${formatWibTime(snapshot.lastSuccessAt)}\n`;
+  }
+  text += `Code: \`${snapshot.lastFailureCode || snapshot.status}\``;
+  if (snapshot.stage) text += ` · Stage: \`${snapshot.stage}\``;
+  if (snapshot.resolvedHost) text += `\nHost: \`${snapshot.resolvedHost}\``;
+  text += `\n\n/recheck ${snapshot.sourceId}`;
+
   return text;
 }
 
-/**
- * Formats a critical alert for a broken/degraded source.
- */
-export function formatCriticalAlert(snap: SourceHealthSnapshot): string {
-  let text = `🚨 *Yomirra Source Alert*\n\n`;
-  text += `*Source:*      \`${snap.sourceId}\`\n`;
-  text += `*Status:*      \`${snap.status}\`\n`;
-  if (snap.lastFailureCode) text += `*Code:*        \`${snap.lastFailureCode}\`\n`;
-  if (snap.stage) text += `*Stage:*       \`${snap.stage}\`\n`;
-  text += `*Failures:*    ${snap.consecutiveFailures}\n`;
-  if (snap.lastSuccessAt) text += `*Last success:* \`${snap.lastSuccessAt}\`\n`;
-  if (snap.resolvedHost) text += `*Resolved host:* \`${snap.resolvedHost}\`\n`;
-  if (snap.errorMessage) text += `*Detail:*      \`${snap.errorMessage.replace(/[`]/g, "'")}\`\n`;
+export function formatRecoveryAlert(
+  snapshot: SourceHealthSnapshot,
+  downtime?: string
+): string {
+  let text = `🟢 *${sourceDisplayName(snapshot.sourceId)} pulih*\n\n`;
+  text += "Source kembali normal.\n";
+  if (downtime) text += `Gangguan berlangsung ${downtime}.\n`;
+  text += `Latency sekarang ${formatLatency(snapshot.latencyMs)}.\n\n`;
+  text += "Tidak ada tindakan lanjutan.";
   return text;
 }
 
-/**
- * Formats a recovery alert when a source transitions back to healthy.
- */
-export function formatRecoveryAlert(snap: SourceHealthSnapshot, downtime?: string): string {
-  let text = `✅ *${snap.sourceId} recovered*\n\n`;
-  text += `*Transition:*  DEGRADED/BROKEN → HEALTHY\n`;
-  if (downtime) text += `*Downtime:*    ${downtime}\n`;
-  if (snap.resolvedHost) text += `*Host:*        \`${snap.resolvedHost}\`\n`;
-  text += `*Latency:*     ${snap.latencyMs}ms\n`;
-  return text;
-}
-
-/**
- * Sends a message to the configured Telegram chat.
- * Implements deduplication if a fingerprint is provided.
- */
 export async function sendTelegramMessage(
   text: string,
   options: TelegramMessageOptions
@@ -99,9 +129,11 @@ export async function sendTelegramMessage(
 
   const now = new Date();
 
-  // Deduplication & threshold logic
   if (options.fingerprint) {
-    if (options.severity === AlertSeverity.CRITICAL || options.severity === AlertSeverity.WARNING) {
+    if (
+      options.severity === AlertSeverity.CRITICAL ||
+      options.severity === AlertSeverity.WARNING
+    ) {
       let state = await getAlertState(options.fingerprint);
 
       if (!state) {
@@ -119,9 +151,8 @@ export async function sendTelegramMessage(
         state.consecutiveFailures += 1;
       }
 
-      // Fast-path escalation: deterministic errors alert on 1st failure; transient on 3rd
-      const isFastEscalation = options.event && FAST_ESCALATION_EVENTS.has(options.event);
-      const threshold = isFastEscalation ? 1 : 3;
+      const threshold =
+        options.event && FAST_ESCALATION_EVENTS.has(options.event) ? 1 : 3;
 
       if (state.consecutiveFailures < threshold) {
         await saveAlertState(state);
@@ -131,19 +162,18 @@ export async function sendTelegramMessage(
         return false;
       }
 
-      // Check cooldown if already alerted
       if (state.cooldownUntil && new Date(state.cooldownUntil) > now) {
         await saveAlertState(state);
-        logger.info(`Suppressing alert for ${options.fingerprint} (in cooldown until ${state.cooldownUntil})`);
+        logger.info(
+          `Suppressing alert for ${options.fingerprint} (in cooldown until ${state.cooldownUntil})`
+        );
         return false;
       }
 
-      // Commit alert state: 30-minute cooldown
       state.alertedAt = now.toISOString();
       state.cooldownUntil = new Date(now.getTime() + 30 * 60 * 1000).toISOString();
       await saveAlertState(state);
     } else if (options.severity === AlertSeverity.RECOVERY) {
-      // Send recovery only if we previously alerted on this fingerprint
       const state = await getAlertState(options.fingerprint);
       if (!state || !state.alertedAt) {
         if (state) {
@@ -157,39 +187,38 @@ export async function sendTelegramMessage(
     }
   }
 
-  // Prepend emoji header if text doesn't already contain emoji
-  const emoji = SEVERITY_EMOJIS[options.severity] || "";
-  let formattedText = text;
-  if (!text.includes(emoji) && options.severity !== AlertSeverity.INFO) {
-    formattedText = `${emoji} *${options.severity}*\n\n${text}`;
-  }
-
   try {
-    const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: formattedText,
-        parse_mode: "Markdown",
-      }),
-    });
+    const response = await fetch(
+      `https://api.telegram.org/bot${botToken}/sendMessage`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text,
+          parse_mode: "Markdown",
+        }),
+      }
+    );
 
-    if (!res.ok) {
-      const errorText = await res.text();
+    if (!response.ok) {
+      const errorText = await response.text();
       logger.error("Failed to send Telegram alert", { error: errorText });
 
-      // Fallback: If Telegram rejected due to markdown formatting/entity parsing, retry sending as plain text
       if (errorText.includes("can't parse entities")) {
-        const fallbackRes = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            chat_id: chatId,
-            text: formattedText,
-          }),
-        });
-        if (fallbackRes.ok) {
+        const fallbackResponse = await fetch(
+          `https://api.telegram.org/bot${botToken}/sendMessage`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              chat_id: chatId,
+              text,
+            }),
+          }
+        );
+
+        if (fallbackResponse.ok) {
           logger.info("Successfully delivered Telegram alert via plain-text fallback");
           return true;
         }
@@ -198,7 +227,6 @@ export async function sendTelegramMessage(
       return false;
     }
 
-    // Reset alert state upon successful recovery delivery
     if (options.fingerprint && options.severity === AlertSeverity.RECOVERY) {
       const state = await getAlertState(options.fingerprint);
       if (state) {

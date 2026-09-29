@@ -30,7 +30,11 @@ export async function POST(req: Request) {
         ? AlertSeverity.RECOVERY
         : AlertSeverity.WARNING;
 
-    const text = `*Source:* \`${sourceId}\`\n*Status:* \`${oldStatus || "unknown"}\` ➡️ \`${newStatus}\`${message ? `\n*Details:* ${message}` : ""}`;
+    const isRecovery = severity === AlertSeverity.RECOVERY;
+    const text =
+      `${isRecovery ? "🟢" : "🔴"} *${sourceId} ${isRecovery ? "pulih" : "bermasalah"}*\n\n` +
+      `Status: \`${oldStatus || "UNKNOWN"}\` → \`${newStatus}\`` +
+      (message ? `\nDetail: ${message}` : "");
 
     const delivered = await sendTelegramMessage(text, {
       severity,

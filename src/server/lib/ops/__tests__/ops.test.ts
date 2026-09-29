@@ -72,6 +72,7 @@ import { POST as handleHealthDigestCron } from "@/app/api/ops/cron/health-digest
 import { POST as handleDailyDigestCron } from "@/app/api/ops/cron/daily-digest/route";
 import { POST as handleObservabilityAlert } from "@/app/api/observability/alert/route";
 import { POST as handleDeployNotify } from "@/app/api/ops/notify/deploy/route";
+import { formatUserReport } from "../message-format";
 
 describe("Phase 4 — Telegram Ops Runtime V1 Unit Tests", () => {
   beforeEach(() => {
@@ -95,6 +96,7 @@ describe("Phase 4 — Telegram Ops Runtime V1 Unit Tests", () => {
         komikindo: {
           sourceId: "komikindo",
           status: "BROKEN",
+          stage: "search",
           latencyMs: 911,
           resolvedHost: "komikindo.ch",
           lastCheckedAt: "2026-09-19T10:00:00Z",
@@ -107,11 +109,11 @@ describe("Phase 4 — Telegram Ops Runtime V1 Unit Tests", () => {
 
       const text = formatHealthDigest(snapshots, new Date("2026-09-19T05:17:00Z"));
 
-      expect(text).toContain("Yomirra Health — 12:17 WIB");
-      expect(text).toContain("shinigami");
-      expect(text).toContain("✅ HEALTHY   402ms");
-      expect(text).toContain("komikindo");
-      expect(text).toContain("❌ BROKEN    `ROUTE_CHANGED` (911ms)");
+      expect(text).toContain("Yomirra · Health");
+      expect(text).toContain("2 source diperiksa");
+      expect(text).toContain("1 normal · 1 perlu perhatian");
+      expect(text).toContain("`ROUTE_CHANGED`");
+      expect(text).toContain("Cek route adapter pada stage search.");
 
       // Privacy check: no user queries or user emails
       expect(text).not.toContain("query");
@@ -136,12 +138,14 @@ describe("Phase 4 — Telegram Ops Runtime V1 Unit Tests", () => {
 
       const text = formatCriticalAlert(snap);
 
-      expect(text).toContain("Yomirra Source Alert");
-      expect(text).toContain("`komikindo`");
-      expect(text).toContain("`BROKEN`");
+      expect(text).toContain("bermasalah");
+      expect(text).toContain("*Dampak*");
+      expect(text).toContain("Pencarian dari sumber ini bisa gagal.");
+      expect(text).toContain("*Kemungkinan penyebab*");
+      expect(text).toContain("*Tindakan*");
       expect(text).toContain("`ROUTE_CHANGED`");
-      expect(text).toContain("Failures:*    3");
-      expect(text).toContain("`komikindo.ch`");
+      expect(text).toContain("3 kegagalan berturut-turut");
+      expect(text).toContain("/recheck komikindo");
     });
 
     it("formatRecoveryAlert formats clean recovery notice", () => {
@@ -158,11 +162,32 @@ describe("Phase 4 — Telegram Ops Runtime V1 Unit Tests", () => {
 
       const text = formatRecoveryAlert(snap, "15m");
 
-      expect(text).toContain("komikindo recovered");
-      expect(text).toContain("DEGRADED/BROKEN → HEALTHY");
-      expect(text).toContain("15m");
-      expect(text).toContain("340ms");
+      expect(text).toContain("pulih");
+      expect(text).toContain("Gangguan berlangsung 15m.");
+      expect(text).toContain("Latency sekarang 340ms.");
+      expect(text).toContain("Tidak ada tindakan lanjutan.");
     });
+  });
+
+  it("formats user reports with context first and raw IDs last", () => {
+    const text = formatUserReport({
+      type: "image_broken",
+      category: "Gambar tidak muncul",
+      sourceId: "shinigami",
+      mangaId: "raw-manga-id",
+      mangaTitle: "Nano Machine",
+      chapterId: "raw-chapter-id",
+      chapterTitle: "Chapter 263",
+      pageIndex: 7,
+      detail: "blank putih terus",
+    });
+
+    expect(text).toContain("*Masalah*\nGambar tidak tampil");
+    expect(text).toContain("Komik: Nano Machine");
+    expect(text).toContain("Chapter 263");
+    expect(text).toContain("Halaman 8");
+    expect(text).toContain("*Langkah*\n/recheck shinigami");
+    expect(text.indexOf("Manga ID:")).toBeGreaterThan(text.indexOf("*Langkah*"));
   });
 
   describe("Outbound Sender & Deduplication Thresholds", () => {
@@ -375,7 +400,7 @@ describe("Phase 4 — Telegram Ops Runtime V1 Unit Tests", () => {
       expect(fetchSpy).toHaveBeenCalledWith(
         expect.stringContaining("sendMessage"),
         expect.objectContaining({
-          body: expect.stringContaining("Yomirra Ops Runtime"),
+          body: expect.stringContaining("Yomirra · Ops"),
         })
       );
     });
@@ -398,7 +423,7 @@ describe("Phase 4 — Telegram Ops Runtime V1 Unit Tests", () => {
       expect(fetchSpy).toHaveBeenCalledWith(
         expect.stringContaining("sendMessage"),
         expect.objectContaining({
-          body: expect.stringContaining("not found in registry"),
+          body: expect.stringContaining("tidak ditemukan"),
         })
       );
     });

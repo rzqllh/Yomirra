@@ -4,42 +4,9 @@ import { AlertSeverity } from "@/server/lib/ops/severity";
 import { redis } from "@/server/lib/cache/redis";
 import { logger } from "@/shared/logger";
 import { env } from "@/env";
+import { formatUserReport, type ReportPayload } from "@/server/lib/ops/message-format";
 
 export const dynamic = "force-dynamic";
-
-export type ReportType = "chapter_error" | "source_broken" | "image_broken" | "other";
-
-interface ReportPayload {
-  type: ReportType;
-  category: string;
-  detail?: string;
-  sourceId?: string;
-  mangaId?: string;
-  chapterId?: string;
-  chapterTitle?: string;
-  pageIndex?: number;
-}
-
-function formatUserReport(payload: ReportPayload): string {
-  let text = `🚩 *Laporan User*\n\n`;
-  text += `*Kategori:* ${payload.category}\n`;
-
-  if (payload.sourceId) text += `*Sumber:*   \`${payload.sourceId}\`\n`;
-  if (payload.mangaId) text += `*Komik:*    \`${payload.mangaId}\`\n`;
-  if (payload.chapterTitle || payload.chapterId) {
-    const label = payload.chapterTitle || payload.chapterId;
-    text += `*Bab:*      ${label}\n`;
-  }
-  if (typeof payload.pageIndex === "number") {
-    text += `*Halaman:*  ${payload.pageIndex + 1}\n`;
-  }
-
-  if (payload.detail?.trim()) {
-    text += `\n*Catatan:* ${payload.detail.trim()}`;
-  }
-
-  return text;
-}
 
 export async function POST(req: Request) {
   if (process.env.NODE_ENV === "production") {
