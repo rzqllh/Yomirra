@@ -67,7 +67,7 @@ describe("smart collections", () => {
     expect(itemsFor("recently-added", collections)).toEqual(["new"]);
     expect(itemsFor("highly-rated", collections)).toEqual(["rated"]);
     expect(itemsFor("stale", collections)).toEqual(["stale"]);
-    expect(itemsFor("format-manga", collections)).toEqual(["rated", "unread"]);
+    expect(itemsFor("format-manga", collections)).toEqual(["unread", "rated"]);
     expect(itemsFor("format-manhwa", collections)).toEqual(["reading", "stale"]);
     expect(itemsFor("format-manhua", collections)).toEqual(["new"]);
   });
