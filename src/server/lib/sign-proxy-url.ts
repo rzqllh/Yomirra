@@ -3,7 +3,8 @@ import { env } from "@/env";
 
 export function signImageUrl(url: string, referer?: string): string {
   if (!url) return "";
-  
+  if (!env.IMAGE_PROXY_SECRET) return url;
+
   const hmac = createHmac("sha256", env.IMAGE_PROXY_SECRET);
   hmac.update(url);
   if (referer) {
@@ -22,7 +23,7 @@ export function signImageUrl(url: string, referer?: string): string {
 }
 
 export function verifyImageUrl(url: string, signature: string, referer?: string): boolean {
-  if (!url || !signature) return false;
+  if (!url || !signature || !env.IMAGE_PROXY_SECRET) return false;
 
   const hmac = createHmac("sha256", env.IMAGE_PROXY_SECRET);
   hmac.update(url);

@@ -11,7 +11,7 @@ const envSchema = z.object({
       ? `https://${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}`
       : "https://www.yomirra.web.id"
   ),
-  IMAGE_PROXY_SECRET: z.string().min(32),
+  IMAGE_PROXY_SECRET: z.string().min(32).optional(),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   TELEGRAM_BOT_TOKEN: z.string().optional(),
   TELEGRAM_CHAT_ID: z.string().optional(),
