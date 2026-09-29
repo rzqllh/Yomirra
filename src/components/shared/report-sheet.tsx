@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Spinner, Flag, PaperPlaneRight, X } from "@phosphor-icons/react";
 import { cn } from "@/shared/utils/cn";
-import type { ReportType } from "@/app/api/ops/report/route";
+import type { ReportType } from "@/server/lib/ops/message-format";
 
 // ─── Template Definitions ──────────────────────────────────────────────────
 
