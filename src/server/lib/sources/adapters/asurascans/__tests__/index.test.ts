@@ -144,8 +144,7 @@ describe("AsuraScansSource Adapter", () => {
         page: 1,
         order: "popular",
       });
-      expect(res.mangas).toHaveLength(1);
-      expect(res.mangas[0].title).toBe("War of Extinction");
+      expect(res.mangas).toHaveLength(2);
       expect(res.hasNextPage).toBe(true);
       expect(res.mangas[0].title).toBe("War of Extinction");
     });
@@ -179,7 +178,8 @@ describe("AsuraScansSource Adapter", () => {
         type: "manhwa",
         order: "popular",
       });
-      expect(res.mangas).toHaveLength(2);
+      expect(res.mangas).toHaveLength(1);
+      expect(res.mangas[0].title).toBe("War of Extinction");
     });
 
     it("search with empty query returns results without search param", async () => {

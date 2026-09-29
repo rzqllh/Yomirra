@@ -247,11 +247,11 @@ describe("KomikuIISource", () => {
         items: mockSearchResults,
       });
 
-      const result = await source.search("", 1, { type: "Manhwa", status: "Ongoing" });
+      const result = await source.search("", 1, { type: "Manhwa", status: "Completed" });
       expect(getSpy).toHaveBeenCalledWith("/comics", {
         page: 1,
         type: "Manhwa",
-        status: "Ongoing",
+        status: "Completed",
       });
       expect(result.mangas).toHaveLength(1);
     });
