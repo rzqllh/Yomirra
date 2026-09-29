@@ -182,6 +182,21 @@ describe("AsuraScansSource Adapter", () => {
       expect(res.mangas[0].title).toBe("War of Extinction");
     });
 
+    it("treats negative genre tokens as exclusions", async () => {
+      mockHttpClient.get.mockResolvedValueOnce(mockAsuraSeriesList);
+
+      const res = await adapter.search("demon", 1, {
+        "genre[]": ["-fantasy"],
+      });
+
+      expect(mockHttpClient.get).toHaveBeenCalledWith("/series", {
+        page: 1,
+        search: "demon",
+      });
+      expect(res.mangas).toHaveLength(1);
+      expect(res.mangas[0].title).toBe("The Return of the Crazy Demon");
+    });
+
     it("search with empty query returns results without search param", async () => {
       mockHttpClient.get.mockResolvedValueOnce(mockAsuraSeriesList);
 

@@ -43,17 +43,14 @@ export function MangaRecommendations({
     queryFn: async () => {
       const TARGET_COUNT = 10;
       const results: RecommendedManga[] = [];
-      const seenTitles = new Set<string>();
-      const seenKeys = new Set<string>();
-
-      // Exclude current manga
-      seenKeys.add(`${currentSourceId}::${currentMangaId}`);
+      const seenTitles = new Set<string>([normalizeTitle(title)]);
+      const seenKeys = new Set<string>([`${currentSourceId}::${currentMangaId}`]);
 
       const addItems = (items: MangaItem[], srcId: string) => {
         for (const item of items) {
           if (results.length >= TARGET_COUNT) break;
           const key = `${srcId}::${item.id}`;
-          const normalizedTitle = item.title.trim().toLowerCase();
+          const normalizedTitle = normalizeTitle(item.title);
 
           if (seenKeys.has(key) || seenTitles.has(normalizedTitle)) continue;
 
@@ -70,7 +67,7 @@ export function MangaRecommendations({
           const srcId = binding?.sourceId ?? item.sourceId;
           const mangaId = binding?.mangaId ?? item.mangaId;
           const key = `${srcId}::${mangaId}`;
-          const normalizedTitle = item.title.trim().toLowerCase();
+          const normalizedTitle = normalizeTitle(item.title);
           if (seenKeys.has(key) || seenTitles.has(normalizedTitle)) continue;
 
           seenKeys.add(key);
@@ -97,7 +94,13 @@ export function MangaRecommendations({
       try {
         const semantic = await apiClient.getRelatedTitles(
           {
-            canonicalKey: `canonical:${normalizeTitle(title) || `${currentSourceId}-${currentMangaId}`}`,
+            canonicalKey: (() => {
+              const normalizedTitle = normalizeTitle(title) || `${currentSourceId}-${currentMangaId}`;
+              const normalizedAuthor = normalizeTitle(author || "");
+              return normalizedAuthor
+                ? `canonical:${normalizedTitle}:author:${normalizedAuthor}`
+                : `canonical:${normalizedTitle}`;
+            })(),
             sourceId: currentSourceId,
             mangaId: currentMangaId,
             title,

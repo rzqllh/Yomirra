@@ -5,14 +5,15 @@ export async function checkRateLimit(
   request: NextRequest,
   limit: number = process.env.NODE_ENV === "development" ? 1000 : 300, // requests
   window: number = 60, // seconds
-  failClosed: boolean = false
+  failClosed: boolean = false,
+  namespace?: string
 ): Promise<{ success: boolean; headers: Record<string, string>; unavailable?: boolean }> {
   try {
     const ip =
       request.headers.get("x-real-ip") ||
       request.headers.get("x-forwarded-for")?.split(",").at(-1)?.trim() ||
       "unknown";
-    const key = `rate-limit:${ip}`;
+    const key = namespace ? `rate-limit:${namespace}:${ip}` : `rate-limit:${ip}`;
 
     // Force clear for development (temporary fix to unstuck 429)
     if (process.env.NODE_ENV === "development") {

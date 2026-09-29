@@ -48,11 +48,17 @@ const bodySchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  const rateLimit = await checkRateLimit(request);
+  const rateLimit = await checkRateLimit(request, 10, 60, true, "search-intelligence");
   if (!rateLimit.success) {
     return NextResponse.json(
-      { error: { message: "Too Many Requests" } },
-      { status: 429, headers: rateLimit.headers }
+      {
+        error: {
+          message: rateLimit.unavailable
+            ? "Search intelligence temporarily unavailable"
+            : "Too Many Requests",
+        },
+      },
+      { status: rateLimit.unavailable ? 503 : 429, headers: rateLimit.headers }
     );
   }
 

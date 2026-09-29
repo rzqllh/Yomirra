@@ -107,6 +107,10 @@ export class KomikuIISource implements MangaSource {
         .filter((item) => item && item.toLowerCase() !== "semua");
 
     const requestedGenres = values(filters?.["genre[]"] ?? filters?.genres);
+    const includedGenres = requestedGenres.filter((genre) => !genre.startsWith("-"));
+    const excludedGenres = requestedGenres
+      .filter((genre) => genre.startsWith("-"))
+      .map((genre) => genre.slice(1));
     const requestedFormats = values(filters?.["format[]"] ?? filters?.type);
     const requestedStatuses = values(filters?.status);
     const normalize = (value?: string) => value?.trim().toLowerCase() ?? "";
@@ -115,8 +119,8 @@ export class KomikuIISource implements MangaSource {
       items.filter((item) => {
         const itemGenres = (item.genres ?? []).map(normalize);
         const matchesGenres =
-          requestedGenres.length === 0 ||
-          requestedGenres.map(normalize).every((genre) => itemGenres.includes(genre));
+          includedGenres.map(normalize).every((genre) => itemGenres.includes(genre)) &&
+          excludedGenres.map(normalize).every((genre) => !itemGenres.includes(genre));
         const matchesFormat =
           requestedFormats.length === 0 ||
           requestedFormats.map(normalize).includes(normalize(item.type));

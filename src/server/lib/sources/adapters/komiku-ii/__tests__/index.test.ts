@@ -221,6 +221,20 @@ describe("KomikuIISource", () => {
       expect(rejected.mangas).toHaveLength(0);
     });
 
+    it("keeps safe titles when negative genre filters are present", async () => {
+      vi.spyOn((source as any).client, "get").mockResolvedValue(mockSearchResults);
+
+      const safe = await source.search("solo", 1, {
+        "genre[]": ["-adult", "-mature"],
+      });
+      expect(safe.mangas).toHaveLength(1);
+
+      const excluded = await source.search("solo", 1, {
+        "genre[]": ["-fantasy"],
+      });
+      expect(excluded.mangas).toHaveLength(0);
+    });
+
     it("returns empty results for page > 1 on text search without network call", async () => {
       const getSpy = vi.spyOn((source as any).client, "get");
 

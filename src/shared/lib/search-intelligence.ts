@@ -246,8 +246,13 @@ export function parseSearchExpression(
     }
   }
 
+  const resolvedTokens = new Set(tags.map((tag) => tag.raw.toLowerCase()));
   const textQuery = raw
-    .replace(tagPattern, " ")
+    .replace(tagPattern, (_match, prefix: string, token: string) =>
+      resolvedTokens.has(token.toLowerCase())
+        ? prefix
+        : `${prefix}${token.slice(1)}`
+    )
     .replace(/\s+/g, " ")
     .trim();
 
@@ -274,6 +279,50 @@ export function applySearchTagsToFilters(
     status,
     sort: base.sort,
   };
+}
+
+export function buildHardFilterTags(
+  active: { genres: string[]; formats: string[]; status: string },
+  filters: MergedFilterList
+): ResolvedSearchTag[] {
+  const labelFor = (category: SearchTagCategory, id: string) => {
+    const list =
+      category === "genre"
+        ? filters.genres
+        : category === "format"
+          ? filters.formats
+          : filters.statuses;
+    return list.find((item) => item.id.toLowerCase() === id.toLowerCase())?.label ?? id;
+  };
+
+  const tags: ResolvedSearchTag[] = [
+    ...active.genres.map((id) => ({
+      raw: `#${id}`,
+      id,
+      label: labelFor("genre", id),
+      category: "genre" as const,
+      confidence: 1,
+    })),
+    ...active.formats.map((id) => ({
+      raw: `#${id}`,
+      id,
+      label: labelFor("format", id),
+      category: "format" as const,
+      confidence: 1,
+    })),
+  ];
+
+  if (active.status) {
+    tags.push({
+      raw: `#${active.status}`,
+      id: active.status,
+      label: labelFor("status", active.status),
+      category: "status",
+      confidence: 1,
+    });
+  }
+
+  return tags;
 }
 
 export function isSourceCompatibleWithTags(
