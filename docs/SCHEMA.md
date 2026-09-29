@@ -1,76 +1,35 @@
-# SCHEMA — Yomirra Types, Stores & API Contracts
+# Schema
 
----
+Ringkasan contract data utama Yomirra. Untuk detail field terbaru, type source code tetap menjadi source of truth.
 
-## 1. Core Domain Types (`src/shared/sources/source-types.ts`)
+## Source contract
 
-### `SourceMetadata`
-```typescript
-interface SourceMetadata {
-  id: string;
-  name: string;
-  description?: string;
-  language?: string;
-  baseUrl?: string;
-  icon?: string;
-  version?: string;
-  isEnabled: boolean;
-  isInstalled: boolean;
-  capabilities: SourceCapabilities;
-  status?: "online" | "slow" | "unavailable" | "unknown";
-  healthStats?: {
-    uptime: string;
-    latency: string;
-    lastChecked: string;
-    message?: string;
-  };
-  isNsfw: boolean;
-  manifestUrl?: string;
-  healthCheckUrl?: string;
-}
-```
+Shared source types berada di `src/shared/sources/source-types.ts`.
 
-### `SourceCapabilities`
-```typescript
-interface SourceCapabilities {
-  popular: boolean;
-  latest: boolean;
-  search: boolean;
-  detail: boolean;
-  chapters: boolean;
-  pages: boolean;
-}
-```
+### SourceMetadata
 
-### `MangaItem` (list/card data)
-```typescript
-interface MangaItem {
-  id: string;
-  title: string;
-  coverUrl: string;
-  status?: string;
-  format?: string;
-  latestChapter?: string;
-  latestChapterTime?: string;
-  rank?: number;
-  score?: number;
-  description?: string;
-}
-```
+Metadata penting:
 
-### `MangaDetail` (extends MangaItem)
-```typescript
-interface MangaDetail extends MangaItem {
-  author?: string;
-  artist?: string;
-  description: string;
-  genres: string[];
-  status: "ONGOING" | "COMPLETED" | "CANCELLED" | "UNKNOWN";
-}
-```
+- `id`, `name`, `language`;
+- `baseUrl`, `healthCheckUrl`, `upstreamDomain`;
+- `isEnabled`, `isInstalled`, `isDynamic`;
+- `isNsfw`;
+- `capabilities`;
+- status: `online | slow | unavailable | unknown | in-dev | in-fix`.
 
-### `Chapter`
-```typescript
+### MangaItem
+
+List/search item dapat membawa:
+
+- `id`, `title`, `coverUrl`;
+- `originalTitle`, `alternativeTitles`;
+- `author`, `description`;
+- `status`, `format`, `language`;
+- `latestChapter`, `score`, `rank`.
+
+### Chapter
+
+```ts
 interface Chapter {
   id: string;
   mangaId: string;
@@ -78,360 +37,142 @@ interface Chapter {
   title: string;
   date: string;
   scanlator?: string;
+  isLocked?: boolean;
+  url?: string;
 }
 ```
 
-### `ChapterPages`
-```typescript
-interface ChapterPages {
-  chapterId: string;
-  pages: PageItem[];
-}
-```
+### PageItem
 
-### `PageItem`
-```typescript
+```ts
 interface PageItem {
   index: number;
   url: string;
-  referer?: string; // Required by some sources to bypass hotlink protection
+  referer?: string;
+  width?: number;
+  height?: number;
 }
 ```
 
-### `MangaPageResult`
-```typescript
-interface MangaPageResult {
-  mangas: MangaItem[];
-  hasNextPage: boolean;
-}
-```
+## Library
 
-### `FilterList`
-```typescript
-interface FilterList {
-  genres: SourceFilter[];
-  formats: SourceFilter[];
-  statuses: SourceFilter[];
-  sorts: SourceFilter[];
-}
+`LibraryItem` berada di `src/shared/store/library-store.ts`.
 
-interface SourceFilter {
-  id: string;
-  name: string;
-}
-```
+Field identity utama:
 
----
+```ts
+type LibraryItem = {
+  id?: string;
+  schemaVersion?: 2;
+  primarySourceId?: string;
+  primaryMangaId?: string;
+  linkedSources?: SourceRef[];
 
-## 2. Reader Types (`src/shared/types/manga.ts`)
-
-### `ReaderPreferences`
-```typescript
-interface ReaderPreferences {
-  imageFit: 'width' | 'contained';
-  pageGap: 'none' | 'small' | 'comfortable';
-  background: 'black' | 'deepLagoon' | 'mist';
-  toolbarBehavior: 'auto-hide' | 'always-visible';
-  preloadIntensity: 'light' | 'balanced' | 'aggressive';
-  showPageProgress: boolean;
-  readingDirection: 'ltr' | 'rtl';
-  readingMode: 'vertical' | 'paged';
-  keepScreenAwake?: boolean;
-}
-```
-
----
-
-## 3. Zustand Store Contracts
-
-### `useLibraryStore` (`src/shared/store/library-store.ts`)
-
-**State shape:**
-```typescript
-interface LibraryItem {
   sourceId: string;
   mangaId: string;
   title: string;
-  coverUrl?: string;
-  author?: string;
-  status?: string;
-  format?: string;
-  sourceName?: string;
-  addedAt: string;        // ISO string
-  updatedAt: string;      // ISO string
+  addedAt: string;
+  updatedAt: string;
+
   lastReadChapterId?: string;
   lastReadChapterTitle?: string;
-  lastReadAt?: string;    // ISO string
-  userRating?: number;    // 1–10, optional
-  isNsfw?: boolean;
-}
-
-interface LibraryState {
-  items: Record<string, LibraryItem>;  // key: `${sourceId}::${mangaId}`
-}
+  lastReadAt?: string;
+  userRating?: number;
+  status?: string;
+  format?: string;
+};
 ```
 
-**Key actions:**
-```typescript
-addToLibrary(item: LibraryItem): void         // Also triggers Firebase sync
-removeFromLibrary(sourceId, mangaId): void
-toggleLibrary(item: LibraryItem): void
-isInLibrary(sourceId, mangaId): boolean
-getLibraryItem(sourceId, mangaId): LibraryItem | undefined
-updateLibraryItem(sourceId, mangaId, patch): void
-syncWithCloud(cloudItems: LibraryItem[]): void
-```
+Library dibatasi 1000 item oleh store.
 
-**Cap:** Max 1000 items (LRU eviction by `updatedAt`)
+## History
 
----
+History disimpan per physical chapter dan dapat membawa `savedTitleId` untuk menghubungkan chapter tersebut ke SavedTitle.
 
-### `useHistoryStore` (`src/shared/store/history-store.ts`)
+Progress dapat mencakup page progress, series progress, chapter index, total chapters, dan `readAt`.
 
-**Key:** Reading history per-chapter with page-level progress.
+## Collections
 
-```typescript
-interface HistoryEntry {
-  sourceId: string;
-  mangaId: string;
-  mangaTitle: string;
-  coverUrl?: string;
-  chapterId: string;
-  chapterTitle?: string;
-  chapterNumber?: number;
-  pageIndex: number;       // Last read page index (0-based)
-  totalPages?: number;
-  readAt: string;          // ISO string
-}
-```
+Persisted collection state menyimpan:
 
----
+- `collections`;
+- `membershipsByManga`;
+- `readingStatusByManga`.
 
-### `useReaderStore` (`src/shared/store/reader-store.ts`)
+Smart Collections tidak masuk schema persisted ini.
 
-**Persisted key:** `"manga-reader-settings"` (legacy migration included)
+## Source preferences
 
-```typescript
-interface ReaderState {
-  preferences: ReaderPreferences;
-  isOverlayVisible: boolean;
-  isDesktopPanelOpen: boolean;
-}
-```
+Store menyimpan:
 
-**Actions:** `updatePreferences`, `toggleOverlay`, `setOverlayVisible`, `toggleDesktopPanel`
+- `disabledSources`;
+- `hiddenFromHomeSources`.
 
----
+Global Search tidak memakai disabled-source preference sebagai filter user.
 
-### `useDownloadStore` (`src/shared/store/download-store.ts`)
+## API response
 
-```typescript
-type DownloadStatus = 'queued' | 'downloading' | 'paused' | 'downloaded' | 'failed';
-type DownloadPageStatus = 'pending' | 'downloading' | 'cached' | 'failed';
+Normal API route memakai:
 
-interface DownloadChapter {
-  id: string;            // from getDownloadChapterId()
-  sourceId: string;
-  mangaId: string;
-  mangaTitle: string;
-  chapterId: string;
-  chapterTitle: string;
-  coverUrl?: string;
-  status: DownloadStatus;
-  progress: number;      // 0–100
-  totalPages: number;
-  downloadedPages: number;
-  pages: DownloadPage[];
-  createdAt: number;     // timestamp
-  updatedAt: number;     // timestamp
-  error?: string;
-}
-
-interface DownloadState {
-  downloads: Record<string, DownloadChapter>;
-  queue: string[];
-  activeDownloads: string[];
-  maxConcurrency: number;
-}
-```
-
-Cache name constant: `CACHE_NAME = "yomirra-chapter-cache-v1"`
-
----
-
-### `useSourcePreferencesStore` (`src/shared/store/source-preferences-store.ts`)
-
-**Persisted key:** `"yomirra-source-preferences"`
-
-Manages which sources are disabled. Syncs to Firebase AND to cookie (`yomirra-disabled-sources`) for server-side filtering.
-
-```typescript
-interface SourcePreferencesState {
-  disabledSources: string[];
-
-  toggleSource: (sourceId: string) => void;
-  isSourceDisabled: (sourceId: string) => boolean;
-  syncWithCloud: (cloudDisabledSources: string[]) => void;
-}
-```
-
-**Cookie sync:** On every toggle and rehydration, writes `yomirra-disabled-sources` cookie (JSON-encoded `string[]`, 1-year TTL). This allows API routes to filter sources server-side without store access.
-
-**Firebase sync:** Calls `pushSourcePreferences()` on toggle. Cloud data stored at `users/{uid}/preferences/sources`.
-
----
-
-### `useSettingsStore` (`src/shared/store/settings-store.ts`)
-### `useSearchFilterStore` (`src/shared/store/search-filter-store.ts`)
-### `useRouteStateStore` (`src/shared/store/route-state-store.ts`)
-
-> Refer to source files directly for detailed shapes.
-
----
-
-## 4. API Response Contract
-
-All API routes return a consistent shape:
-
-**Success:**
-```typescript
+```ts
 { data: T }
 ```
 
-**Error:**
-```typescript
+Error public:
+
+```ts
 {
   error: {
-    code: string;    // e.g. "SOURCE_NOT_FOUND"
-    message: string; // human-readable
+    code: string;
+    message: string;
   }
 }
 ```
 
-**ApiClient** (`src/shared/api-client.ts`) handles unwrapping `data` automatically and throws on error.
+## Search filters
 
----
-
-## 5. Source Adapter Interface (`src/shared/sources/source-types.ts`)
-
-```typescript
-interface MangaSource extends SourceMetadata {
-  getPopular(page: number): Promise<MangaPageResult>;
-  getLatest(page: number): Promise<MangaPageResult>;
-  search(
-    query: string,
-    page: number,
-    filters?: Record<string, string | string[]>
-  ): Promise<MangaPageResult>;
-  getDetail(mangaId: string): Promise<MangaDetail>;
-  getChapters(mangaId: string): Promise<Chapter[]>;
-  getPages(chapterId: string): Promise<ChapterPages>;
-  getFilters(): FilterList;
-}
-```
-
----
-
-## 6. Dynamic Source Manifest (Mihon-compatible)
-
-Dynamic sources use a JSON manifest format compatible with Mihon extensions:
-
-```typescript
-// Validated with: MihonSourceManifestSchema (Zod)
-// Location: src/shared/sources/dynamic-source-registry.ts
-{
-  id: string;
-  name: string;
-  baseUrl: string;
-  // ... Mihon manifest fields
-}
-```
-
----
-
-## 7. Environment Variables
-
-All env vars are validated at runtime via Zod in `src/env.ts`.
-
-**Server-side (never exposed to client):**
-```
-REDIS_URL              Upstash Redis connection string
-IMAGE_PROXY_SECRET     HMAC signing secret (min 32 chars)
-SECRET_EXTENSION_SOURCES  JSON array of private source configs
-```
-
-**Client-side (`NEXT_PUBLIC_*`):**
-```
-NEXT_PUBLIC_APP_URL
-NEXT_PUBLIC_FIREBASE_API_KEY
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-NEXT_PUBLIC_FIREBASE_PROJECT_ID
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-NEXT_PUBLIC_FIREBASE_APP_ID
-```
-
-**Adding new env vars:** Add to `src/env.ts` schema + `.env.example`. Never access `process.env.*` directly outside of `src/env.ts`.
-
----
-
-## 8. Library Key Format
-
-Library items are keyed as: `${sourceId}::${mangaId}`
-
-```typescript
-const getLibraryId = (sourceId: string, mangaId: string) =>
-  `${sourceId}::${mangaId}`;
-```
-
-This same convention is used in Firestore document IDs.
-
-
----
-
-## 9. Search Intelligence
-
-Search intelligence builds on the canonical multi-source result model.
-
-### Query parsing
-
-The raw Search query may contain deterministic tags:
+Canonical filter keys:
 
 ```text
-solo leveling #fantasy #completed
+genre[]
+format[]
+status
+sort
 ```
 
-The parser splits this into:
+Adapter bertanggung jawab memetakan canonical value ke parameter upstream.
 
-- text query: `solo leveling`
-- canonical genre: `fantasy`
-- canonical status: `completed`
+## Search catalog
 
-Canonical filters keep a per-source value map so Yomirra can send each adapter the value it actually supports.
+Redis catalog dapat menyimpan metadata manga publik yang ditemukan dari trusted source flow, termasuk canonical key, source bindings, title metadata, filter metadata, optional embedding, dan timestamp.
 
-### Opportunistic semantic catalog
+Catalog tidak boleh menyimpan private user state.
 
-Public comic metadata encountered during Search is stored in the existing Redis instance under the `yomirra:search:catalog:*` namespace.
+## Backup
 
-The catalog stores:
+Current backup schema: **v3**.
 
-- canonical key
-- primary source reference
-- source bindings
-- title and alternate titles
-- author
-- description
-- genre / format / status when available
-- optional embedding
-- update timestamp
+v3 menambahkan identity fields Library sambil mempertahankan import compatibility untuk v1/v2 yang didukung.
 
-No user history, reading progress, account data, or query history is stored in the semantic catalog.
+## Environment
 
-Records expire after 90 days without refresh and the catalog is bounded to 1,200 records.
+Validated di `src/env.ts`.
 
-### Embeddings
+Server/runtime variables:
 
-`GEMINI_API_KEY` is optional.
+```text
+REDIS_URL
+IMAGE_PROXY_SECRET
+TELEGRAM_BOT_TOKEN
+TELEGRAM_CHAT_ID
+TELEGRAM_ALLOWED_CHAT_IDS
+OPS_CRON_SECRET
+CRON_SECRET
+TELEGRAM_WEBHOOK_SECRET
+VERCEL_DEPLOY_SECRET
+GEMINI_API_KEY
+```
 
-When configured, Yomirra uses `gemini-embedding-2` with 768 output dimensions for semantic ranking and related-title matching. Missing or failed embeddings never block provider search.
+Public/browser config menggunakan `NEXT_PUBLIC_*`, termasuk app URL dan Firebase config.
 
+Jika env contract berubah, update `src/env.ts`, `.env.example`, dan dokumen terkait dalam PR yang sama.

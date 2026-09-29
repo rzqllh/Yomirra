@@ -1,122 +1,117 @@
 # Yomirra
 
-**Satu tempat buat semua komik kamu.**
+Yomirra adalah web reader multi-source untuk manga, manhwa, dan manhua. Tujuannya sederhana: pencarian, library, progress baca, dan reader tetap berada di satu aplikasi walaupun sumber kontennya berbeda-beda atau berubah.
 
-Yomirra adalah reader multi-source untuk manga, manhwa, dan manhua. Cari dari beberapa sumber sekaligus, simpan ke library, dan lanjut baca tanpa harus buka-tutup tab atau ingat-ingat domain mana yang masih hidup.
+**Aplikasi:** https://www.yomirra.web.id/
 
-> Masih aktif dikembangkan. Sumber bisa berubah, pindah domain, atau down sewaktu-waktu.
+> Yomirra masih aktif dikembangkan. Ketersediaan judul dan source mengikuti layanan pihak ketiga yang dipakai.
 
-## Buka Yomirra
+## Yang sudah tersedia
 
-https://www.yomirra.web.id/
+### Multi-source search
 
----
+Search berjalan ke beberapa source dan menggabungkan hasil yang terdeteksi sebagai judul yang sama.
 
-## Kenapa repot pakai banyak situs?
+Fitur search saat ini mencakup:
 
-Website komik ganti domain, ubah struktur, atau tiba-tiba down itu bukan hal baru.
+- canonical title matching lintas source;
+- alternate/original title matching;
+- `#tag` untuk genre, format, dan status;
+- alias Indonesia/English untuk tag;
+- typo handling dan lexical/fuzzy ranking;
+- filter mapping ke nilai yang dimengerti masing-masing source;
+- optional semantic ranking bila `GEMINI_API_KEY` tersedia.
 
-Yomirra coba jadi lapisan di antara kamu dan kekacauan itu. Library, riwayat baca, dan progress tersimpan di satu tempat, tidak terikat ke satu website tertentu.
+Search global tidak mengikuti toggle source di Library/Populer. Source yang benar-benar unavailable tetap dikeluarkan dari pencarian.
 
-Kalau satu judul tersedia di beberapa sumber sekaligus, Yomirra bisa mengenalinya sebagai judul yang sama.
+### Library, Rak Buku, dan progress
 
----
+Judul yang disimpan memakai identitas yang tidak bergantung pada satu source saja. Satu judul dapat memiliki primary source dan linked source, sehingga relink atau migrasi source tidak harus memutus library dan progress baca.
 
-## Search Multi-Source
+Rak Buku menyediakan:
 
-Cari dari beberapa sumber dalam satu pencarian.
+- sedang dibaca dan riwayat;
+- bookmark;
+- koleksi buatan user;
+- Smart Collections yang dihitung dari state lokal, seperti Lanjut Dibaca, Belum Dibaca, Baru Ditambahkan, Rating Tinggi, dan Lama Tidak Dibuka.
 
-Yomirra:
+Smart Collections tidak membuat salinan membership baru. Isinya dihitung dari Library dan reading history.
 
-- mencari paralel di semua sumber yang kamu aktifkan
-- menggabungkan hasil yang terdeteksi sebagai judul yang sama
-- tetap menampilkan hasil dari sumber yang sehat kalau ada yang gagal
+### Rekomendasi
 
-Jadi satu judul yang tersedia di tiga sumber berbeda tidak muncul sebagai tiga kartu terpisah.
+Rekomendasi utama bersifat deterministic dan tidak membutuhkan AI. Ranking menggunakan sinyal yang sudah ada, seperti source, format, rating user, status, dan riwayat baca.
 
-Contoh: `Shinigami · Komiku II · MangaDex` cukup satu kartu.
+Judul yang sedang dibuka, sudah disimpan, atau sudah dibaca tidak diprioritaskan sebagai rekomendasi baru.
 
----
+### Source recovery
 
-## Sumber yang Didukung
+Jika source utama bermasalah, Yomirra dapat mencari source alternatif untuk judul yang sama. Relink tidak dilakukan secara agresif untuk match yang ambigu, dan progress lama tetap dipertahankan bila chapter tidak bisa dipetakan dengan aman.
 
-**Indonesia**
+### Reader dan offline
+
+Reader mendukung chapter berbasis gambar, progress baca, chapter navigator, preferensi reader, serta download/offline flow pada browser yang mendukung.
+
+Offline dan PWA bergantung pada kemampuan browser, Service Worker, dan storage perangkat.
+
+## Source bawaan
+
+Saat ini registry bawaan berisi:
+
 - Shinigami
 - Komikindo
+- MangaDex
 - Komiku
 - Komiku II
-- KomikNesia
-- MangaDex Indonesia
-
-**English**
 - Asura Scans
-- MangaDex English
+- KomikNesia
 
-Ketersediaan masing-masing sumber mengikuti kondisi layanannya.
+Source dapat berubah status atau berhenti bekerja tanpa perubahan di Yomirra.
 
----
+## Search intelligence dan AI
 
-## Library
+AI bukan dependency untuk fungsi utama Yomirra.
 
-Simpan judul ke library. Satu judul bisa punya beberapa sumber yang terhubung, jadi library kamu tidak jadi usang kalau sebuah sumber pindah domain atau nonaktif.
+Tanpa `GEMINI_API_KEY`, search tetap menyediakan tag parsing, canonical filters, typo handling, lexical ranking, dan multi-source search biasa.
 
-Progress membaca tersimpan sebagai data kamu, bukan milik sumber mana pun.
+Jika `GEMINI_API_KEY` tersedia, Yomirra dapat menggunakan embedding untuk semantic ranking. Catalog semantic hanya menyimpan metadata manga publik yang ditemukan saat penggunaan normal; library, history, progress baca, dan data akun tidak dimasukkan ke catalog tersebut.
 
----
+## Menjalankan secara lokal
 
-## Kalau Sumber Bermasalah
+Butuh Node.js yang kompatibel dengan Next.js 16 dan pnpm.
 
-Masalah di satu sumber tidak otomatis bikin Yomirra ikut error.
+```bash
+pnpm install
+cp .env.example .env
+pnpm dev
+```
 
-Sumber bisa kena:
+Verifikasi penuh:
 
-- ganti domain atau route
-- perubahan struktur halaman
-- API error atau rate limit
-- CDN bermasalah
-- maintenance
+```bash
+pnpm typecheck
+pnpm lint
+pnpm test --run
+pnpm build
+```
 
-Yomirra mencoba mengisolasi kegagalan itu supaya sumber lain tetap bisa dipakai. Untuk sumber yang punya alternatif valid, Yomirra bisa menawarkan pengganti dengan tetap menjaga library dan progress kamu.
+Lihat [Developer Guide](docs/README_DEV.md) untuk struktur project dan [Adding a Source](docs/ADDING_A_SOURCE.md) untuk integrasi source.
 
----
+## Dokumentasi
 
-## Reader
-
-Reader dibuat clean dan minim distraksi. Continuous reading tersedia untuk chapter berbasis gambar, dan state baca tetap terhubung ke library dan history.
-
-Konten yang dikunci atau premium pada sumber aslinya tetap diperlakukan sebagai konten terkunci.
-
----
-
-## Desain & Pengalaman Pengguna
-
-Yomirra dirancang dengan standar antarmuka modern yang cepat dan konsisten:
-
-- **Navigasi Seragam**: Header terstandarisasi di seluruh destinasi utama (Beranda, Populer, Sumber, Unduhan, Pengaturan).
-- **Transisi Rute Mulus**: Perpindahan halaman cross-fade yang halus dan ramah aksesibilitas (`prefers-reduced-motion`).
-- **Loading Tanpa Pergeseran**: Skeleton presisi yang menjaga struktur layout sebelum data selesai dimuat.
-- **Pengaturan Mandiri**: Halaman preferensi terintegrasi untuk tema, buffer cache bacaan, sinkronisasi akun, dan cadangan data lokal.
-
----
-
-## Privacy
-
-Riwayat bacaan, judul yang kamu baca, dan query pencarian tidak dipakai sebagai telemetri.
-
-Monitoring operasional sebatas kondisi teknis: status sumber, latency, dan error handling.
-
----
-
-## Status
-
-Yomirra masih berkembang. Fokus saat ini adalah membuat pengalaman multi-source makin tahan terhadap perubahan sumber tanpa mengorbankan library dan progress pengguna.
-
----
+- [Architecture](docs/ARCHITECTURE.md)
+- [Components](docs/COMPONENTS.md)
+- [Design](docs/DESIGN.md)
+- [Identity](docs/IDENTITY.md)
+- [Schema](docs/SCHEMA.md)
+- [Stack](docs/STACK.md)
+- [Testing](docs/TESTING.md)
+- [Adding a Source](docs/ADDING_A_SOURCE.md)
+- [Contributing](CONTRIBUTING.md)
+- [Security](SECURITY.md)
+- [Changelog](CHANGELOG.md)
 
 ## Disclaimer
 
-Yomirra adalah reader interface independen yang mengakses konten dari layanan pihak ketiga.
+Yomirra adalah reader interface independen. Konten, artwork, manga, manhwa, dan manhua yang ditampilkan berasal dari layanan pihak ketiga dan tetap menjadi milik pemegang hak masing-masing.
 
-Semua konten, artwork, manga, manhwa, dan manhua yang ditampilkan merupakan milik masing-masing pemegang hak dan penyedianya. Yomirra tidak mengklaim kepemilikan atas konten tersebut.
-
-Penggunaan layanan pihak ketiga mengikuti syarat dan ketentuan masing-masing penyedia. Ketersediaan konten bergantung pada kondisi layanan sumber yang bersangkutan.
+Penggunaan source pihak ketiga mengikuti aturan dan ketersediaan layanan tersebut. Yomirra tidak menjamin source tertentu akan selalu tersedia.
