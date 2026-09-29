@@ -1,11 +1,17 @@
 "use client";
 
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
 import { ShelfCard } from "@/components/manga/card/shelf-card";
 import { MangaItem } from "@/shared/types/source";
 import { normalizeTitle } from "@/shared/lib/title-matcher";
-import type { SearchCatalogBinding, SearchCatalogCandidate } from "@/shared/lib/search-intelligence";
+import { useHistoryStore } from "@/shared/store/history-store";
+import { useLibraryStore } from "@/shared/store/library-store";
+import {
+  buildRecommendationProfile,
+  rankRecommendationCandidates,
+} from "@/shared/lib/recommendations";
 
 interface MangaRecommendationsProps {
   sourceId: string;
@@ -23,7 +29,6 @@ interface MangaRecommendationsProps {
 interface RecommendedManga {
   manga: MangaItem;
   sourceId: string;
-  sourceBindings?: SearchCatalogBinding[];
 }
 
 export function MangaRecommendations({
@@ -38,17 +43,27 @@ export function MangaRecommendations({
   originalTitle,
   alternativeTitles,
 }: MangaRecommendationsProps) {
-  const { data: recommendations = [], isLoading } = useQuery({
+  const libraryItems = useLibraryStore((state) => state.items);
+  const historyItems = useHistoryStore((state) => state.items);
+  const profile = useMemo(
+    () => buildRecommendationProfile(
+      Object.values(libraryItems),
+      Object.values(historyItems)
+    ),
+    [libraryItems, historyItems]
+  );
+
+  const { data: candidatePool = [], isLoading } = useQuery({
     queryKey: ["recommendations", currentSourceId, currentMangaId, genres],
     queryFn: async () => {
-      const TARGET_COUNT = 10;
+      const CANDIDATE_LIMIT = 30;
       const results: RecommendedManga[] = [];
       const seenTitles = new Set<string>([normalizeTitle(title)]);
       const seenKeys = new Set<string>([`${currentSourceId}::${currentMangaId}`]);
 
       const addItems = (items: MangaItem[], srcId: string) => {
         for (const item of items) {
-          if (results.length >= TARGET_COUNT) break;
+          if (results.length >= CANDIDATE_LIMIT) break;
           const key = `${srcId}::${item.id}`;
           const normalizedTitle = normalizeTitle(item.title);
 
@@ -60,75 +75,9 @@ export function MangaRecommendations({
         }
       };
 
-      const addCatalogItems = (items: SearchCatalogCandidate[]) => {
-        for (const item of items) {
-          if (results.length >= TARGET_COUNT) break;
-          const binding = item.sourceBindings?.[0];
-          const srcId = binding?.sourceId ?? item.sourceId;
-          const mangaId = binding?.mangaId ?? item.mangaId;
-          const key = `${srcId}::${mangaId}`;
-          const normalizedTitle = normalizeTitle(item.title);
-          if (seenKeys.has(key) || seenTitles.has(normalizedTitle)) continue;
-
-          seenKeys.add(key);
-          seenTitles.add(normalizedTitle);
-          results.push({
-            sourceId: srcId,
-            sourceBindings: item.sourceBindings,
-            manga: {
-              id: mangaId,
-              title: item.title,
-              coverUrl: item.coverUrl || binding?.coverUrl || "",
-              originalTitle: item.originalTitle,
-              alternativeTitles: item.alternativeTitles,
-              author: item.author,
-              description: item.description,
-              format: item.format,
-              status: item.status,
-              score: item.score,
-            },
-          });
-        }
-      };
-
-      try {
-        const semantic = await apiClient.getRelatedTitles(
-          {
-            canonicalKey: (() => {
-              const normalizedTitle = normalizeTitle(title) || `${currentSourceId}-${currentMangaId}`;
-              const normalizedAuthor = normalizeTitle(author || "");
-              return normalizedAuthor
-                ? `canonical:${normalizedTitle}:author:${normalizedAuthor}`
-                : `canonical:${normalizedTitle}`;
-            })(),
-            sourceId: currentSourceId,
-            mangaId: currentMangaId,
-            title,
-            description,
-            author,
-            genres,
-            format,
-            status,
-            originalTitle,
-            alternativeTitles,
-            sourceBindings: [
-              {
-                sourceId: currentSourceId,
-                mangaId: currentMangaId,
-                title,
-              },
-            ],
-          },
-          TARGET_COUNT
-        );
-        addCatalogItems(semantic);
-      } catch {
-        // Deterministic recommendations below remain available.
-      }
-
       const primaryGenres = genres.slice(0, 2);
 
-      if (primaryGenres.length > 0 && results.length < TARGET_COUNT) {
+      if (primaryGenres.length > 0 && results.length < CANDIDATE_LIMIT) {
         try {
           const searchRes = await apiClient.search(currentSourceId, "", 1, {
             "genre[]": primaryGenres,
@@ -139,7 +88,7 @@ export function MangaRecommendations({
           // Suppress error to allow fallback
         }
 
-        if (results.length < TARGET_COUNT) {
+        if (results.length < CANDIDATE_LIMIT) {
           try {
             const singleGenreRes = await apiClient.search(currentSourceId, "", 1, {
               "genre[]": [primaryGenres[0]],
@@ -151,7 +100,7 @@ export function MangaRecommendations({
         }
       }
 
-      if (results.length < TARGET_COUNT) {
+      if (results.length < CANDIDATE_LIMIT) {
         try {
           const popularRes = await apiClient.getPopular(currentSourceId, 1);
           addItems(popularRes.mangas || (popularRes as any).results || [], currentSourceId);
@@ -160,7 +109,7 @@ export function MangaRecommendations({
         }
       }
 
-      if (results.length < TARGET_COUNT) {
+      if (results.length < CANDIDATE_LIMIT) {
         try {
           const latestRes = await apiClient.getLatest(currentSourceId, 1);
           addItems(latestRes.mangas || (latestRes as any).results || [], currentSourceId);
@@ -169,7 +118,7 @@ export function MangaRecommendations({
         }
       }
 
-      if (results.length < TARGET_COUNT) {
+      if (results.length < CANDIDATE_LIMIT) {
         try {
           const sources = await apiClient.getSources();
           const otherSources = (sources || []).filter(
@@ -177,7 +126,7 @@ export function MangaRecommendations({
           );
 
           for (const otherSource of otherSources) {
-            if (results.length >= TARGET_COUNT) break;
+            if (results.length >= CANDIDATE_LIMIT) break;
 
             if (primaryGenres.length > 0) {
               try {
@@ -190,7 +139,7 @@ export function MangaRecommendations({
               }
             }
 
-            if (results.length < TARGET_COUNT) {
+            if (results.length < CANDIDATE_LIMIT) {
               try {
                 const otherPopularRes = await apiClient.getPopular(otherSource.id, 1);
                 addItems(otherPopularRes.mangas || (otherPopularRes as any).results || [], otherSource.id);
@@ -204,10 +153,21 @@ export function MangaRecommendations({
         }
       }
 
-      return results.slice(0, TARGET_COUNT);
+      return results.slice(0, CANDIDATE_LIMIT);
     },
     staleTime: 1000 * 60 * 30,
   });
+
+  const recommendations = useMemo(
+    () => rankRecommendationCandidates(candidatePool, {
+      currentTitle: title,
+      currentSourceId,
+      currentFormat: format,
+      currentStatus: status,
+      profile,
+    }).slice(0, 10),
+    [candidatePool, currentSourceId, format, profile, status, title]
+  );
 
   if (isLoading) {
     return (
@@ -233,7 +193,6 @@ export function MangaRecommendations({
             <ShelfCard
               sourceId={item.sourceId}
               manga={item.manga}
-              sourceBindings={item.sourceBindings}
             />
           </div>
         ))}

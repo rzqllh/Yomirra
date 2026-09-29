@@ -127,7 +127,7 @@ export function BookmarkPageView() {
               isDeleteDialogOpen={collection.isDeleteDialogOpen}
               onOpenDeleteDialogChange={collection.setIsDeleteDialogOpen}
               onConfirmBulkDelete={collection.handleConfirmBulkDelete}
-              totalItemsCount={collection.filteredAndSortedLibraryItems.length}
+              totalItemsCount={collection.totalLibraryItemsCount}
               filteredCount={collection.filteredAndSortedLibraryItems.length}
               paginatedCollection={collection.paginatedCollection}
               collectionPage={collection.collectionPage}
@@ -137,6 +137,10 @@ export function BookmarkPageView() {
               membershipsByManga={collection.membershipsByManga}
               selectedCollectionId={collection.selectedCollectionId}
               onSelectCollectionId={collection.setSelectedCollectionId}
+              smartCollections={collection.smartCollections}
+              selectedSmartCollectionId={collection.selectedSmartCollectionId}
+              onSelectSmartCollectionId={collection.setSelectedSmartCollectionId}
+              onClearCollectionFilters={collection.clearCollectionFilters}
               onCreateCollection={collection.createCollection}
               onRenameCollection={collection.renameCollection}
               onDeleteCollection={collection.deleteCollection}
