@@ -13,10 +13,11 @@ describe("StatusBarBlur Component", () => {
     expect(blurElement.className).toContain("fixed");
     expect(blurElement.className).toContain("top-0");
     expect(blurElement.className).toContain("pointer-events-none");
-    expect(blurElement.className).toContain("h-[env(safe-area-inset-top,0px)]");
-    expect(blurElement.className).toContain("max-h-[env(safe-area-inset-top,0px)]");
     const styleAttr = blurElement.getAttribute("style") || "";
-    expect(styleAttr).toContain("clip-path: inset(0 0 0 0)");
+    expect(styleAttr).toContain("height: env(safe-area-inset-top, 0px)");
+    expect(styleAttr).toContain("max-height: env(safe-area-inset-top, 0px)");
+    expect(styleAttr).toContain("contain: paint");
+    expect(styleAttr).toContain("clip-path: inset(0)");
   });
 
   it("applies progressive blur mask and custom className", () => {
@@ -24,7 +25,9 @@ describe("StatusBarBlur Component", () => {
     const blurElement = container.firstElementChild as HTMLElement;
 
     expect(blurElement.className).toContain("custom-class");
-    const styleAttr = blurElement.getAttribute("style") || "";
+    const blurLayer = blurElement.firstElementChild as HTMLElement;
+    expect(blurLayer).toBeDefined();
+    const styleAttr = blurLayer.getAttribute("style") || "";
     expect(styleAttr).toContain("mask-image");
     expect(styleAttr).toContain("linear-gradient");
   });

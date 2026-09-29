@@ -2,6 +2,10 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { LibraryPageView } from "../library-page-view";
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), back: vi.fn() }),
+}));
+
 vi.mock("@/shared/hooks/use-library-catalog", () => ({
   useLibraryCatalog: () => ({
     isMounted: true,
@@ -70,11 +74,12 @@ describe("LibraryPageView hierarchy", () => {
     ).toBeNull();
   });
 
-  it("renders mobile utility header with source link and HeaderActions", () => {
+  it("renders the shared mobile page header and HeaderActions", () => {
     render(<LibraryPageView />);
 
     expect(screen.getByTestId("header-actions")).toBeTruthy();
-    expect(screen.getByText("MangaDex")).toBeTruthy();
+    expect(screen.getByRole("heading", { level: 2, name: "Library" })).toBeTruthy();
+    expect(screen.getByText("Jelajahi komik dari sumber pilihanmu.")).toBeTruthy();
   });
 
   it("renders toolbar and results inside PageContainer", () => {
