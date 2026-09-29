@@ -28,7 +28,6 @@ describe("MangaRecommendations Component", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (apiClient.getRelatedTitles as any).mockResolvedValue([]);
     queryClient = new QueryClient({
       defaultOptions: {
         queries: {
@@ -67,26 +66,23 @@ describe("MangaRecommendations Component", () => {
   });
 
   it("does not recommend the current title from another source", async () => {
-    (apiClient.getRelatedTitles as any).mockResolvedValueOnce([
-      {
-        canonicalKey: "canonical:current manga:author:author a",
-        sourceId: "sourceB",
-        mangaId: "same-title",
-        title: "Current Manga",
-        author: "Author A",
-        sourceBindings: [
-          {
-            sourceId: "sourceB",
-            mangaId: "same-title",
-            title: "Current Manga",
-          },
-        ],
-      },
-    ]);
-    (apiClient.search as any).mockResolvedValue({ results: [] });
+    (apiClient.search as any).mockImplementation((sourceId: string) => {
+      if (sourceId === "sourceB") {
+        return Promise.resolve({
+          results: [
+            { id: "same-title", title: "Current Manga", coverUrl: "" },
+            { id: "different-title", title: "Different Manga", coverUrl: "" },
+          ],
+        });
+      }
+      return Promise.resolve({ results: [] });
+    });
     (apiClient.getPopular as any).mockResolvedValue({ mangas: [], hasNextPage: false });
     (apiClient.getLatest as any).mockResolvedValue({ mangas: [], hasNextPage: false });
-    (apiClient.getSources as any).mockResolvedValue([]);
+    (apiClient.getSources as any).mockResolvedValue([
+      { id: "sourceA", isEnabled: true, isNsfw: false },
+      { id: "sourceB", isEnabled: true, isNsfw: false },
+    ]);
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -95,12 +91,15 @@ describe("MangaRecommendations Component", () => {
           currentMangaId="current-manga"
           title="Current Manga"
           author="Author A"
-          genres={[]}
+          genres={["Action"]}
         />
       </QueryClientProvider>
     );
 
-    expect(await screen.queryByTestId("shelf-card")).toBeNull();
+    const cards = await screen.findAllByTestId("shelf-card");
+    expect(cards).toHaveLength(1);
+    expect(cards[0].getAttribute("data-manga-id")).toBe("different-title");
+    expect(apiClient.getRelatedTitles).not.toHaveBeenCalled();
   });
 
   it("falls back to popular items on the same source when genre search is empty", async () => {
