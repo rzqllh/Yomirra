@@ -66,6 +66,43 @@ describe("MangaRecommendations Component", () => {
     expect(cards[1].getAttribute("data-manga-id")).toBe("manga-2");
   });
 
+  it("does not recommend the current title from another source", async () => {
+    (apiClient.getRelatedTitles as any).mockResolvedValueOnce([
+      {
+        canonicalKey: "canonical:current manga:author:author a",
+        sourceId: "sourceB",
+        mangaId: "same-title",
+        title: "Current Manga",
+        author: "Author A",
+        sourceBindings: [
+          {
+            sourceId: "sourceB",
+            mangaId: "same-title",
+            title: "Current Manga",
+          },
+        ],
+      },
+    ]);
+    (apiClient.search as any).mockResolvedValue({ results: [] });
+    (apiClient.getPopular as any).mockResolvedValue({ mangas: [], hasNextPage: false });
+    (apiClient.getLatest as any).mockResolvedValue({ mangas: [], hasNextPage: false });
+    (apiClient.getSources as any).mockResolvedValue([]);
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MangaRecommendations
+          sourceId="sourceA"
+          currentMangaId="current-manga"
+          title="Current Manga"
+          author="Author A"
+          genres={[]}
+        />
+      </QueryClientProvider>
+    );
+
+    expect(await screen.queryByTestId("shelf-card")).toBeNull();
+  });
+
   it("falls back to popular items on the same source when genre search is empty", async () => {
     (apiClient.search as any).mockResolvedValue({ results: [] });
     (apiClient.getPopular as any).mockResolvedValueOnce({

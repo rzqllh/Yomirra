@@ -115,6 +115,10 @@ export class AsuraScansSource implements MangaSource {
         .filter((item) => item && item.toLowerCase() !== "all");
 
     const requestedGenres = values(filters?.["genre[]"] ?? filters?.genres);
+    const includedGenres = requestedGenres.filter((genre) => !genre.startsWith("-"));
+    const excludedGenres = requestedGenres
+      .filter((genre) => genre.startsWith("-"))
+      .map((genre) => genre.slice(1));
     const requestedFormats = values(filters?.["format[]"] ?? filters?.type);
     const requestedStatuses = values(filters?.status);
 
@@ -123,7 +127,7 @@ export class AsuraScansSource implements MangaSource {
     };
 
     if (trimmedQuery.length > 0) params.search = trimmedQuery;
-    if (requestedGenres.length > 0) params.genres = requestedGenres.join(",");
+    if (includedGenres.length > 0) params.genres = includedGenres.join(",");
     if (requestedFormats.length === 1) params.type = requestedFormats[0];
     if (requestedStatuses.length === 1) params.status = requestedStatuses[0];
 
@@ -136,14 +140,18 @@ export class AsuraScansSource implements MangaSource {
     let items = Array.isArray(res?.data) ? res.data : [];
 
     const normalize = (value?: string) => value?.trim().toLowerCase() ?? "";
-    if (requestedGenres.length > 0) {
-      const required = requestedGenres.map(normalize);
+    if (includedGenres.length > 0 || excludedGenres.length > 0) {
+      const required = includedGenres.map(normalize);
+      const excluded = excludedGenres.map(normalize);
       items = items.filter((item) => {
         const itemGenres = (item.genres ?? []).flatMap((genre) => [
           normalize(genre.slug),
           normalize(genre.name),
         ]);
-        return required.every((genre) => itemGenres.includes(genre));
+        return (
+          required.every((genre) => itemGenres.includes(genre)) &&
+          excluded.every((genre) => !itemGenres.includes(genre))
+        );
       });
     }
     if (requestedFormats.length > 0) {

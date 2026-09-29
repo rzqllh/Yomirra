@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildHardFilterTags,
   parseSearchExpression,
   resolveSearchTag,
   rankHybridScore,
@@ -22,6 +23,43 @@ describe("search intelligence", () => {
     expect(resolveSearchTag("#fantassy")?.id).toBe("fantasy");
     expect(resolveSearchTag("#rom")).toBeNull();
     expect(suggestSearchTags("rom")[0]?.id).toBe("romance");
+  });
+
+  it("keeps unknown hashtags as ordinary search text", () => {
+    const parsed = parseSearchExpression("#onepiece bajak laut");
+
+    expect(parsed.textQuery).toBe("onepiece bajak laut");
+    expect(parsed.tags).toEqual([]);
+    expect(parsed.unresolvedTags).toEqual(["#onepiece"]);
+  });
+
+  it("turns drawer selections into the same hard-filter tag shape", () => {
+    const merged = mergeFilters([
+      {
+        sourceId: "source-a",
+        filters: {
+          genres: [{ id: "fantasy", name: "Fantasy" }],
+          formats: [{ id: "manhwa", name: "Manhwa" }],
+          statuses: [{ id: "completed", name: "Completed" }],
+          sorts: [],
+        },
+      },
+    ]);
+
+    expect(
+      buildHardFilterTags(
+        {
+          genres: ["fantasy"],
+          formats: ["manhwa"],
+          status: "completed",
+        },
+        merged
+      ).map((tag) => [tag.category, tag.id])
+    ).toEqual([
+      ["genre", "fantasy"],
+      ["format", "manhwa"],
+      ["status", "completed"],
+    ]);
   });
 
   it("maps canonical filters back to each source value", () => {

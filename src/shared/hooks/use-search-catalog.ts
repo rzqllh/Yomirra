@@ -22,6 +22,7 @@ import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry"
 import { clusterCanonicalResults } from "@/shared/lib/canonical-search";
 import {
   applySearchTagsToFilters,
+  buildHardFilterTags,
   isSourceCompatibleWithTags,
   parseSearchExpression,
   rankHybridScore,
@@ -176,6 +177,11 @@ export function useSearchCatalog() {
     [genres, formats, status, sort, parsedQuery.tags]
   );
 
+  const hardFilterTags = React.useMemo(
+    () => buildHardFilterTags(activeFilters, dynamicFilters),
+    [activeFilters, dynamicFilters]
+  );
+
   const hasDrawerFilters =
     genres.length > 0 ||
     formats.length > 0 ||
@@ -206,12 +212,12 @@ export function useSearchCatalog() {
           !unavailable &&
           isSourceCompatibleWithTags(
             sourceId,
-            parsedQuery.tags,
+            hardFilterTags,
             dynamicFilters
           )
         );
       }),
-    [activeSelectedSources, searchableSources, parsedQuery.tags, dynamicFilters]
+    [activeSelectedSources, searchableSources, hardFilterTags, dynamicFilters]
   );
 
   const queryClient = useQueryClient();
@@ -223,7 +229,7 @@ export function useSearchCatalog() {
         source?.status === "unavailable" || source?.status === "in-fix";
       const isTagCompatible = isSourceCompatibleWithTags(
         sourceId,
-        parsedQuery.tags,
+        hardFilterTags,
         dynamicFilters
       );
       const payload = buildPayloadForSource(
@@ -290,7 +296,7 @@ export function useSearchCatalog() {
         source?.status === "unavailable" || source?.status === "in-fix";
       const isTagCompatible = isSourceCompatibleWithTags(
         sourceId,
-        parsedQuery.tags,
+        hardFilterTags,
         dynamicFilters
       );
 
@@ -328,7 +334,7 @@ export function useSearchCatalog() {
     hasSearchIntent,
     activeSelectedSources,
     searchableSources,
-    parsedQuery.tags,
+    hardFilterTags,
     dynamicFilters,
     searchQueries,
   ]);
@@ -392,7 +398,7 @@ export function useSearchCatalog() {
   const candidateSignature = intelligenceCandidates
     .map((candidate) => candidate.canonicalKey)
     .join("|");
-  const tagSignature = parsedQuery.tags
+  const tagSignature = hardFilterTags
     .map((tag) => `${tag.category}:${tag.id}`)
     .join("|");
 
@@ -406,13 +412,13 @@ export function useSearchCatalog() {
     queryFn: () =>
       apiClient.rankSearchIntelligence(
         parsedQuery.textQuery,
-        parsedQuery.tags,
+        hardFilterTags,
         intelligenceCandidates
       ),
     enabled:
       hasSearchIntent &&
       sourceSearchSettled &&
-      (Boolean(parsedQuery.textQuery) || parsedQuery.tags.length > 0),
+      (Boolean(parsedQuery.textQuery) || hardFilterTags.length > 0),
     retry: false,
     staleTime: 5 * 60 * 1000,
   });
