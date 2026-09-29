@@ -586,6 +586,21 @@ Use the small accent dot + section title for page subsections such as:
 
 Do not use it as a page-level title.
 
+## 9.2 Mobile page chrome
+
+**LOCKED**
+
+All ordinary mobile pages use the same fixed `PageHeader` chrome and reserve its height in the page container.
+
+Exceptions:
+
+- comic detail may be transparent at the top and gain the shared chrome surface after scrolling;
+- reader uses focused reader chrome.
+
+Do not recreate mobile headers with page-local title/action rows. The notification bell opens its compact dropdown first; the full Pembaruan page is a secondary action from that dropdown.
+
+The status-bar blur is clipped to the safe-area strip only. It must not soften page content below the system status bar.
+
 ---
 
 # 10. Beranda
@@ -690,6 +705,10 @@ Format chips may include:
 - Manhua
 
 Do not hard-code formats as presentation if the underlying source metadata cannot support them reliably. Unknown remains a valid metadata state.
+
+Search and Library use the same filter-drawer shell. On mobile the drawer opens at a compact half-height snap point and expands toward full height when the user scrolls or drags upward.
+
+Provider-specific duplicate labels, catch-all values, and compound genre aliases should be normalized before presentation. Keep the provider's raw value only for the outgoing adapter payload.
 
 ## Cards
 
@@ -1113,6 +1132,14 @@ Bottom chrome:
 - reading-mode controls when appropriate.
 
 Controls should auto-hide after a short idle period and reappear predictably.
+
+**LOCKED CHROME RULES**
+
+- reader header and reader dock use the same chrome surface language as the main mobile dock;
+- reading progress sits above the status-bar blur but below reader controls and drawers;
+- opening the chapter navigator centers the currently active chapter;
+- the default chapter navigator is compact and number-first; verbose timestamps are not primary reader UI;
+- reader drawers belong to the same bottom-sheet family as other Yomirra drawers.
 
 ## 19.4 Desktop controls
 

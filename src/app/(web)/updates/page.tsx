@@ -12,7 +12,7 @@ export default function UpdatesPage() {
       <PageContainer className="pb-[calc(var(--bottom-nav-height,80px)+24px)] md:pb-10">
         <PageHeader
           title="Jadwal Rilis Mingguan"
-          description="Pantau kalender update komik bookmark ala Notion (Senin – Minggu)"
+          description="Lihat jadwal update komik yang kamu simpan."
           icon={<CalendarBlank size={24} weight="duotone" />}
           showBack={true}
         />

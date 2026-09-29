@@ -4,7 +4,6 @@ import * as React from "react"
 import Link from "next/link"
 import { useTheme } from "next-themes"
 import {
-  Bell,
   Gear,
   Palette,
   Globe,
@@ -15,8 +14,8 @@ import {
   UserCircle,
 } from "@phosphor-icons/react"
 import { motion, AnimatePresence } from "motion/react"
-import { useUpdateStore } from "@/shared/store/update-store"
 import { useMounted } from "@/shared/hooks/use-mounted"
+import { UpdatesBell } from "@/components/app/updates-bell"
 import { useAuth } from "@/shared/hooks/use-auth"
 import { cn } from "@/shared/utils/cn"
 
@@ -24,9 +23,6 @@ export function HeaderActions({ className }: { className?: string } = {}) {
   const mounted = useMounted()
   const { theme, resolvedTheme, setTheme } = useTheme()
   const { user, loginWithGoogle, logout } = useAuth()
-  const rawUnread = useUpdateStore((state) => state.getUnreadCount())
-  const unreadCount = typeof rawUnread === "function" ? (rawUnread as () => number)() : (Number(rawUnread) || 0)
-
   const [isMenuOpen, setIsMenuOpen] = React.useState(false)
   const menuRef = React.useRef<HTMLDivElement>(null)
 
@@ -47,12 +43,6 @@ export function HeaderActions({ className }: { className?: string } = {}) {
     }
   }, [isMenuOpen])
 
-  const displayCount = unreadCount > 99 ? "99+" : unreadCount
-  const showBadge = mounted && unreadCount > 0
-  const accessibleLabel = showBadge
-    ? `Pembaruan, ${unreadCount} belum dibaca`
-    : "Pembaruan"
-
   const toggleTheme = () => {
     const nextTheme = resolvedTheme === "dark" ? "light" : "dark"
     setTheme(nextTheme)
@@ -68,26 +58,7 @@ export function HeaderActions({ className }: { className?: string } = {}) {
 
   return (
     <div className={cn("relative flex items-center gap-2 shrink-0", className)} ref={menuRef}>
-      {/* Notification Bell Button (Squircle rounded-2xl) */}
-      <Link
-        href="/updates"
-        transitionTypes={["nav-lateral"]}
-        className="relative flex size-10 items-center justify-center rounded-2xl bg-surface-glass backdrop-blur-md border border-border-default/40 text-text-primary hover:bg-surface-hover hover:border-border-strong active:scale-95 transition-all outline-none select-none shadow-xs"
-        aria-label={accessibleLabel}
-      >
-        <Bell size={20} weight={showBadge ? "fill" : "regular"} className="shrink-0" />
-        {showBadge && (
-          <div
-            data-testid="updates-badge"
-            aria-hidden="true"
-            className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-semantic-error text-white flex items-center justify-center border-2 border-surface-base shadow-xs animate-in zoom-in-50 duration-150"
-          >
-            <span className="text-[10px] font-bold text-white leading-none tracking-tight">
-              {displayCount}
-            </span>
-          </div>
-        )}
-      </Link>
+      <UpdatesBell className="size-10 rounded-2xl bg-surface-glass backdrop-blur-md border-border-default/40 text-text-primary hover:bg-surface-hover hover:border-border-strong shadow-xs" />
 
       {/* Settings / Profile Trigger Button (Squircle rounded-2xl) */}
       <button

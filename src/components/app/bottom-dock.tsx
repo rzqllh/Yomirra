@@ -38,9 +38,9 @@ export function BottomDock() {
         paddingBottom: "max(12px, env(safe-area-inset-bottom, 0px))",
       }}
     >
-      <div className="pointer-events-auto flex w-full max-w-[420px] mx-auto items-center justify-center gap-2 sm:gap-2.5">
+      <div className="pointer-events-auto flex w-full max-w-[404px] mx-auto items-center justify-center gap-2">
         {/* Main Dock Capsule */}
-        <div className="flex-1 h-[56px] sm:h-[58px] flex items-center justify-between gap-1 rounded-full border border-border-subtle bg-surface-overlay/80 p-1.5 shadow-[inset_0_1px_1.5px_0_rgba(255,255,255,0.7),0_12px_36px_-4px_rgba(0,0,0,0.12),0_4px_14px_-2px_rgba(0,0,0,0.06)] dark:shadow-[inset_0_1px_1.5px_0_rgba(255,255,255,0.14),0_16px_40px_-6px_rgba(0,0,0,0.6),0_4px_16px_-2px_rgba(0,0,0,0.4)] backdrop-blur-2xl backdrop-saturate-150 transition-colors duration-300">
+        <div className="yomirra-chrome flex-1 h-[56px] flex items-center justify-between gap-1 rounded-full p-1.5 transition-colors duration-200">
           {mainItems.map((item) => {
             const isActive = isMainTabActive(item.href)
 
@@ -59,7 +59,7 @@ export function BottomDock() {
               >
                 {isActive && (
                   <motion.div
-                    className="absolute inset-0 rounded-full border border-accent/30 dark:border-accent/40 bg-accent/15 dark:bg-accent/22 shadow-[inset_0_1px_1px_rgba(255,255,255,0.85),0_2px_8px_rgba(206,101,82,0.15)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_2px_12px_rgba(206,101,82,0.25)]"
+                    className="absolute inset-0 rounded-full border border-accent/25 bg-accent-dim shadow-xs"
                     layoutId="active-dock-tab"
                     transition={{ type: "spring", stiffness: 420, damping: 32 }}
                   />
@@ -96,10 +96,8 @@ export function BottomDock() {
             useSearchFilterStore.getState().resetFilters()
           }}
           className={cn(
-            "relative flex items-center justify-center size-[56px] sm:size-[58px] shrink-0 rounded-full outline-none tap-highlight-transparent transition-all duration-200 ease-out active:scale-95 select-none",
-            "border border-border-subtle bg-surface-overlay/80 shadow-[inset_0_1px_1.5px_0_rgba(255,255,255,0.7),0_12px_36px_-4px_rgba(0,0,0,0.12),0_4px_14px_-2px_rgba(0,0,0,0.06)] dark:shadow-[inset_0_1px_1.5px_0_rgba(255,255,255,0.14),0_16px_40px_-6px_rgba(0,0,0,0.6),0_4px_16px_-2px_rgba(0,0,0,0.4)] backdrop-blur-2xl backdrop-saturate-150 transition-colors duration-300",
-            isSearchActive &&
-            "border-accent/35 dark:border-accent/45 bg-accent/15 dark:bg-accent/22 shadow-[inset_0_1px_1px_rgba(255,255,255,0.85),0_4px_14px_rgba(206,101,82,0.22)] dark:shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_4px_16px_rgba(206,101,82,0.3)]"
+            "yomirra-chrome relative flex items-center justify-center size-[56px] shrink-0 rounded-full outline-none tap-highlight-transparent transition-all duration-200 ease-out active:scale-95 select-none",
+            isSearchActive && "border-accent/30 bg-accent-dim"
           )}
           aria-label={searchItem.label}
           aria-current={isSearchActive ? "page" : undefined}

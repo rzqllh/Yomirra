@@ -10,7 +10,7 @@ export default function SearchPage() {
     <React.Suspense
       fallback={
         <YomirraSurface variant="base" className="w-full">
-          <PageContainer>
+          <PageContainer hasMobileHeader>
             <SearchResultSkeleton />
           </PageContainer>
         </YomirraSurface>

@@ -45,13 +45,13 @@ export function ReaderPanelShell({
 
   const containerClasses =
     desktopMode === "side-panel"
-      ? "fixed inset-x-0 bottom-0 z-[70] max-h-[85vh] md:max-h-screen md:inset-y-0 md:left-auto md:right-0 md:w-80 md:bottom-auto bg-surface-base border-t md:border-t-0 md:border-l border-border-subtle flex flex-col rounded-t-[32px] md:rounded-none overflow-hidden shadow-xl"
-      : "fixed bottom-0 left-0 right-0 z-[70] max-h-[85vh] min-h-[50vh] bg-surface-base border-t border-border-subtle rounded-t-[32px] flex flex-col md:max-w-md md:mx-auto md:mb-6 md:bottom-6 md:rounded-3xl shadow-xl overflow-hidden"
+      ? "fixed inset-x-0 bottom-0 z-[70] max-h-[88dvh] md:max-h-screen md:inset-y-0 md:left-auto md:right-0 md:w-80 md:bottom-auto bg-surface-base border-t md:border-t-0 md:border-l border-border-subtle flex flex-col rounded-t-[28px] md:rounded-none overflow-hidden shadow-heavy"
+      : "fixed bottom-0 left-0 right-0 z-[70] max-h-[88dvh] min-h-[44dvh] bg-surface-base border-t border-border-subtle rounded-t-[28px] flex flex-col md:max-w-md md:mx-auto md:mb-6 md:bottom-6 md:rounded-3xl shadow-heavy overflow-hidden"
 
   const backdropClasses =
     desktopMode === "side-panel"
-      ? "fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm md:hidden"
-      : "fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm"
+      ? "fixed inset-0 z-[60] bg-black/45 backdrop-blur-[2px] md:hidden"
+      : "fixed inset-0 z-[60] bg-black/45 backdrop-blur-[2px]"
 
   return (
     <AnimatePresence>
@@ -76,7 +76,8 @@ export function ReaderPanelShell({
             className={cn(containerClasses, className)}
           >
             {/* Header */}
-            <div className="flex flex-col gap-4 px-5 py-4 shrink-0 bg-surface-raised z-10 border-b border-border-subtle">
+            <div className="flex flex-col gap-3 px-5 pt-3 pb-4 shrink-0 bg-surface-base/96 backdrop-blur-xl z-10 border-b border-border-subtle">
+              <div className="mx-auto h-1 w-11 rounded-full bg-border-strong/80" />
               <div className="flex items-center justify-between">
                 <h2 className="text-base font-bold text-text-primary flex items-center gap-2">
                   {icon && <span className="text-accent">{icon}</span>}
@@ -86,7 +87,7 @@ export function ReaderPanelShell({
                   aria-label="Tutup panel"
                   variant="ghost"
                   size="sm"
-                  className="rounded-xl bg-surface-glass border border-border-subtle hover:bg-surface-hover text-text-primary transition-colors"
+                  className="yomirra-chrome-control rounded-xl hover:bg-surface-hover text-text-primary transition-colors"
                   onClick={onClose}
                 >
                   <X size={16} weight="bold" />

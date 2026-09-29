@@ -13,7 +13,7 @@ import { useLibraryStore } from "@/shared/store/library-store";
 import { useUpdateStore } from "@/shared/store/update-store";
 import { ReadingTab } from "./reading-tab";
 import { CollectionTab } from "./collection-tab";
-import { HeaderActions } from "@/components/app/header-actions";
+import { PageHeader } from "@/components/app/header";
 
 export type BookmarkTab = "reading" | "collection";
 
@@ -49,7 +49,7 @@ export function BookmarkPageView() {
   if (!reading.isMounted || !collection.isMounted) {
     return (
       <YomirraSurface variant="base" className="w-full">
-        <PageContainer>
+        <PageContainer hasMobileHeader>
           <BookmarkSkeleton />
         </PageContainer>
       </YomirraSurface>
@@ -58,12 +58,12 @@ export function BookmarkPageView() {
 
   return (
     <YomirraSurface variant="base" className="w-full">
-      <PageContainer>
-        {/* Mobile Utility Actions (hidden on desktop where TopNav is canonical) */}
-        <div className="flex md:hidden items-center justify-between w-full">
-          <span className="font-bold text-xs uppercase tracking-[0.14em] text-accent">Rak Buku</span>
-          <HeaderActions />
-        </div>
+      <PageContainer hasMobileHeader>
+        <PageHeader
+          title="Rak Buku"
+          subtitle="Lanjutkan bacaan atau kelola bookmark."
+          hideDesktop
+        />
 
         <h1 className="sr-only">Rak Buku</h1>
 

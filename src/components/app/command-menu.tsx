@@ -7,17 +7,11 @@ import { useQuery } from "@tanstack/react-query"
 import { apiClient } from "@/shared/api-client"
 import { useDebounce } from "@/shared/hooks/use-debounce"
 import { useSettingsStore } from "@/shared/store/settings-store"
-import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store"
 import { sourceRegistry } from "@/shared/sources/source-registry"
 import { MangaItem } from "@/shared/types/source"
 import {
-  House,
-  Books,
-  Compass,
-  Gear,
   MagnifyingGlass,
-  CircleNotch,
-  BookmarkSimple,
+  ArrowRight,
 } from "@phosphor-icons/react"
 import {
   CommandDialog,
@@ -26,7 +20,6 @@ import {
   CommandEmpty,
   CommandGroup,
   CommandItem,
-  CommandSeparator,
 } from "@/components/ui/command"
 import { getMangaDetailHref } from "@/shared/lib/routes"
 
@@ -39,24 +32,48 @@ export function CommandMenu() {
   const pathname = usePathname()
 
   React.useEffect(() => {
-    const handleCustomOpen = () => setOpen(true);
+    const openSearch = (query = "") => {
+      if (pathname === "/search") {
+        window.dispatchEvent(new CustomEvent("focus-search-input", { detail: { query } }));
+        return;
+      }
+      setSearchQuery(query);
+      setOpen(true);
+    };
+
+    const handleCustomOpen = (event: Event) => {
+      const customEvent = event as CustomEvent<{ query?: string }>;
+      openSearch(customEvent.detail?.query ?? "");
+    };
+
+    const handleShortcut = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        openSearch();
+      }
+    };
+
     window.addEventListener("open-command-menu", handleCustomOpen);
-    
+    window.addEventListener("keydown", handleShortcut);
     return () => {
       window.removeEventListener("open-command-menu", handleCustomOpen);
+      window.removeEventListener("keydown", handleShortcut);
     };
-  }, []);
+  }, [pathname]);
 
   // Search manga globally with word debounce & timeout limiting
   const debouncedQuery = useDebounce(searchQuery.trim(), 350)
   const isNsfwFiltered = useSettingsStore((state) => state.hideNsfw)
-  const disabledSources = useSourcePreferencesStore((state) => state.disabledSources)
-  
   const activeSources = React.useMemo(() => {
     return sourceRegistry
-      .filter(s => s.isEnabled && s.isInstalled && s.status !== "unavailable" && !disabledSources.includes(s.id))
-      .map(s => s.id);
-  }, [disabledSources]);
+      .filter((source) =>
+        source.isEnabled &&
+        source.isInstalled &&
+        source.status !== "unavailable" &&
+        source.status !== "in-fix"
+      )
+      .map((source) => source.id);
+  }, []);
 
   const { data: globalSearchData, isLoading: isSearching } = useQuery({
     queryKey: ["command-search-global", debouncedQuery, isNsfwFiltered, activeSources],
@@ -71,7 +88,7 @@ export function CommandMenu() {
       return globalSearchData.canonicalResults.map((c) => ({
         ...c.primaryResult,
         sourceBindings: c.sourceBindings,
-      })).slice(0, 6);
+      })).slice(0, 5);
     }
     // Narrow compatibility fallback for raw legacy results
     if (globalSearchData.resultsBySource) {
@@ -83,7 +100,7 @@ export function CommandMenu() {
           });
         }
       });
-      return allResults.slice(0, 6);
+      return allResults.slice(0, 5);
     }
     return [];
   }, [globalSearchData]);
@@ -97,13 +114,18 @@ export function CommandMenu() {
   return (
     <CommandDialog open={open} onOpenChange={setOpen} shouldFilter={false}>
       <CommandInput
-        placeholder="Cari judul komik atau langsung ke halaman..."
+        placeholder="Cari judul, kreator, atau #tag…"
         value={searchQuery}
         onValueChange={setSearchQuery}
       />
       <CommandList className="max-h-[380px] p-2 overflow-y-auto">
         <CommandEmpty>
-          {isSearching ? (
+          {searchQuery.trim().length < 2 ? (
+            <div className="py-8 text-center select-none">
+              <p className="font-bold text-text-primary text-sm">Mulai ketik judul</p>
+              <p className="text-xs text-text-muted mt-1">Minimal 2 karakter untuk menampilkan saran.</p>
+            </div>
+          ) : isSearching ? (
             <div className="flex flex-col gap-2 p-3">
               <div className="h-4 w-1/4 bg-surface-muted rounded animate-pulse mb-1" />
               {[1, 2, 3].map((i) => (
@@ -119,33 +141,12 @@ export function CommandMenu() {
           ) : (
             <div className="py-8 text-center select-none">
               <p className="font-bold text-text-primary text-sm">Belum ketemu</p>
-              <p className="text-xs text-text-muted mt-1">Coba kata kunci lain atau periksa ejaan.</p>
+              <p className="text-xs text-text-muted mt-1">Coba kata kunci lain, atau lanjutkan ke halaman Cari.</p>
             </div>
           )}
         </CommandEmpty>
 
         {/* Search Results */}
-        {searchQuery.trim().length > 0 && (
-          <CommandGroup heading="Aksi Langsung">
-            <CommandItem
-              value={`search-all-${searchQuery}`}
-              onSelect={() => handleSelect(`/search?q=${encodeURIComponent(searchQuery.trim())}`)}
-              onClick={() => handleSelect(`/search?q=${encodeURIComponent(searchQuery.trim())}`)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-[12px] cursor-pointer hover:bg-surface-hover transition-colors"
-            >
-              <div className="flex items-center justify-center size-9 shrink-0 rounded-lg bg-accent-dim text-accent">
-                <MagnifyingGlass weight="bold" size={17} />
-              </div>
-              <div className="flex flex-col min-w-0">
-                <span className="font-bold text-text-primary text-sm truncate">
-                  Lihat semua hasil untuk &ldquo;{searchQuery.trim()}&rdquo;
-                </span>
-                <span className="text-[11px] text-text-muted">Buka halaman pencarian lengkap</span>
-              </div>
-            </CommandItem>
-          </CommandGroup>
-        )}
-
         {previewResults.length > 0 && (
           <CommandGroup heading="Pilihan Judul">
             {previewResults.map((manga) => {
@@ -187,6 +188,27 @@ export function CommandMenu() {
                 </CommandItem>
               );
             })}
+          </CommandGroup>
+        )}
+
+        {searchQuery.trim().length > 0 && (
+          <CommandGroup>
+            <CommandItem
+              value={`search-all-${searchQuery}`}
+              onSelect={() => handleSelect(`/search?q=${encodeURIComponent(searchQuery.trim())}`)}
+              onClick={() => handleSelect(`/search?q=${encodeURIComponent(searchQuery.trim())}`)}
+              className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-[12px] cursor-pointer border border-border-subtle bg-surface-raised hover:bg-surface-hover"
+            >
+              <div className="min-w-0">
+                <span className="block text-sm font-bold text-text-primary truncate">
+                  Lihat hasil lainnya di Cari
+                </span>
+                <span className="block text-[11px] text-text-muted truncate">
+                  Cari &ldquo;{searchQuery.trim()}&rdquo; di semua sumber
+                </span>
+              </div>
+              <ArrowRight size={16} weight="bold" className="text-accent shrink-0" />
+            </CommandItem>
           </CommandGroup>
         )}
       </CommandList>

@@ -94,9 +94,10 @@ export function useLibraryCatalog() {
   const { data: filtersData } = useQuery({
     queryKey: ["filters", activeSourceId],
     queryFn: () => apiClient.getFilters(activeSourceId),
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60 * 15,
     retry: 1,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
   });
 
   const isNsfwFiltered = useSettingsStore(state => state.hideNsfw);
@@ -190,9 +191,10 @@ export function useLibraryCatalog() {
   } = useQuery({
     queryKey: ["library-v2", activeSourceId, query, sort, selectedGenres, excludedGenres, selectedFormats, selectedStatuses, selectedCollections, selectedReadingStatuses, page, isNsfwFiltered],
     queryFn: () => fetchCatalog(page),
-    staleTime: 1000 * 60,
+    staleTime: 1000 * 60 * 5,
     retry: 1,
     refetchOnWindowFocus: false,
+    refetchOnMount: false,
     enabled: !isDisabled,
     placeholderData: keepPreviousData,
   });

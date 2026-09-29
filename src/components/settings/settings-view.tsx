@@ -430,7 +430,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
   return (
     <>
       <YomirraSurface variant="base" className="min-h-screen">
-        <PageContainer>
+        <PageContainer hasMobileHeader>
           <h1 className="sr-only">Pengaturan Yomirra</h1>
           <div className="space-y-8">
             {subView === "backup" ? (
@@ -458,7 +458,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
               <>
                 <PageHeader
                   title="Pengaturan"
-                  subtitle="Preferensi aplikasi Yomirra"
+                  subtitle="Atur tampilan, bacaan, dan data Yomirra."
                   icon={<Gear size={24} weight="duotone" />}
                 />
                 <div className="w-full">

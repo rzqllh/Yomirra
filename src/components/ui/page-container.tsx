@@ -11,6 +11,7 @@ const containerMaxWidth: Record<ContainerVariant, string> = {
 
 export interface PageContainerProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: ContainerVariant;
+  hasMobileHeader?: boolean;
 }
 
 /**
@@ -18,12 +19,15 @@ export interface PageContainerProps extends React.HTMLAttributes<HTMLDivElement>
  * Enforces Home-equivalent fluid width, horizontal gutters (px-4 md:px-8 xl:px-10), and vertical rhythm.
  */
 export const PageContainer = React.forwardRef<HTMLDivElement, PageContainerProps>(
-  ({ className, variant = "wide", children, ...props }, ref) => {
+  ({ className, variant = "wide", hasMobileHeader = false, children, ...props }, ref) => {
     return (
       <div
         ref={ref}
         className={cn(
-          "w-full max-w-none mx-auto px-4 pb-12 pt-[calc(var(--safe-top,0px)+16px)] md:px-8 md:pt-8 md:pb-16 xl:px-10 flex flex-col gap-6",
+          "w-full max-w-none mx-auto px-4 pb-12 md:px-8 md:pt-8 md:pb-16 xl:px-10 flex flex-col gap-6",
+          hasMobileHeader
+            ? "pt-[calc(var(--safe-top,0px)+var(--mobile-header-height)+16px)]"
+            : "pt-[calc(var(--safe-top,0px)+16px)]",
           containerMaxWidth[variant],
           className
         )}

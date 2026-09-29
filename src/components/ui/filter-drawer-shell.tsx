@@ -18,7 +18,7 @@ interface FilterSectionProps {
 export function FilterSection({ title, layout = "wrap", children }: FilterSectionProps) {
   return (
     <div>
-      <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-3">{title}</h3>
+      <h3 className="text-[12px] font-bold text-text-muted uppercase tracking-[0.12em] mb-2.5">{title}</h3>
       <div
         className={cn(
           "gap-2",
@@ -69,12 +69,21 @@ export function FilterDrawerShell({
   children,
 }: FilterDrawerShellProps) {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [activeSnapPoint, setActiveSnapPoint] = React.useState<number | string | null>(0.52);
+  const touchStartY = React.useRef<number | null>(null);
   const reducedMotion = useReducedMotion();
 
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
-    if (open) onOpen?.();
+    if (open) {
+      setActiveSnapPoint(0.52);
+      onOpen?.();
+    }
   };
+
+  const expandDrawer = React.useCallback(() => {
+    if (activeSnapPoint !== 0.92) setActiveSnapPoint(0.92);
+  }, [activeSnapPoint]);
 
   const handleApply = () => {
     onApply();
@@ -82,7 +91,15 @@ export function FilterDrawerShell({
   };
 
   return (
-    <Drawer.Root open={isOpen} onOpenChange={handleOpenChange}>
+    <Drawer.Root
+      open={isOpen}
+      onOpenChange={handleOpenChange}
+      snapPoints={[0.52, 0.92]}
+      activeSnapPoint={activeSnapPoint}
+      setActiveSnapPoint={setActiveSnapPoint}
+      fadeFromIndex={1}
+      snapToSequentialPoint
+    >
       <Drawer.Trigger asChild>
         {trigger || (
           <Button
@@ -110,10 +127,10 @@ export function FilterDrawerShell({
         )}
       </Drawer.Trigger>
       <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100]" />
-        <Drawer.Content className="bg-surface-base flex flex-col rounded-t-[32px] fixed bottom-0 left-0 right-0 z-[100] outline-none max-h-[85vh] min-h-[220px] shadow-heavy border-t border-border-subtle">
-          <div className="pt-3 pb-2 px-6 shrink-0 flex flex-col cursor-grab active:cursor-grabbing select-none">
-            <div className="mx-auto w-12 h-1.5 shrink-0 rounded-full bg-border-strong mb-4" />
+        <Drawer.Overlay className="fixed inset-0 bg-black/45 backdrop-blur-[2px] z-[100]" />
+        <Drawer.Content className="bg-surface-base flex h-[92dvh] max-h-[92dvh] flex-col rounded-t-[28px] fixed bottom-0 left-0 right-0 z-[100] outline-none shadow-heavy border-t border-border-subtle">
+          <div className="pt-2.5 pb-2 px-5 sm:px-6 shrink-0 flex flex-col cursor-grab active:cursor-grabbing select-none">
+            <div className="mx-auto w-11 h-1 shrink-0 rounded-full bg-border-strong/80 mb-3.5" />
 
             <div className="flex items-center justify-between">
               <Drawer.Title className="text-lg font-bold text-text-primary tracking-tight">{title}</Drawer.Title>
@@ -131,16 +148,33 @@ export function FilterDrawerShell({
           </div>
 
           <div
-            className="px-6 py-4 flex-1 overflow-y-auto overscroll-contain [scrollbar-width:none] touch-manipulation relative z-0"
+            className="px-5 sm:px-6 py-3.5 flex-1 overflow-y-auto overscroll-contain [scrollbar-width:none] touch-pan-y relative z-0"
             style={{ WebkitOverflowScrolling: "touch" }}
+            onWheelCapture={(event) => {
+              if (event.deltaY > 6) expandDrawer();
+            }}
+            onScrollCapture={(event) => {
+              if (event.currentTarget.scrollTop > 0) expandDrawer();
+            }}
+            onTouchStart={(event) => {
+              touchStartY.current = event.touches[0]?.clientY ?? null;
+            }}
+            onTouchMove={(event) => {
+              const start = touchStartY.current;
+              const current = event.touches[0]?.clientY;
+              if (start != null && current != null && start - current > 14) expandDrawer();
+            }}
+            onTouchEnd={() => {
+              touchStartY.current = null;
+            }}
           >
-            <div className="space-y-6 pb-6">
+            <div className="space-y-5 pb-6">
               {children}
             </div>
           </div>
 
           <div
-            className="p-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] bg-surface-base border-t border-border-subtle shrink-0 relative z-10"
+            className="px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] bg-surface-base/96 backdrop-blur-xl border-t border-border-subtle shrink-0 relative z-10"
           >
             <Button
               variant="primary"

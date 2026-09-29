@@ -436,7 +436,7 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
               Jadwal Rilis Mingguan
             </h2>
             <p className="text-xs sm:text-sm text-text-muted mt-0.5">
-              Komik bookmark yang dijadwalkan update per hari (ala Notion)
+              Jadwal update komik yang kamu simpan.
             </p>
           </div>
 
@@ -481,7 +481,7 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
           <EmptyState
             icon={<Bell size={48} className="text-text-muted" weight="duotone" />}
             title="Tidak ada update komik di koleksimu"
-            description="Bookmark komik favoritmu untuk memantau jadwal rilis mingguan (Senin–Minggu) di sini."
+            description="Simpan komik yang kamu ikuti supaya jadwal update-nya muncul di sini."
             action={
               <Button asChild variant="primary" className="rounded-xl mt-4">
                 <Link href="/library">Jelajah Komik</Link>
@@ -491,7 +491,7 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
         </div>
       ) : (
         <>
-          {/* 7-Day Notion Weekly Quick Rail */}
+          {/* Weekly day rail */}
           <div className="space-y-2.5">
             <div className="overflow-x-auto [scrollbar-width:none] pb-1">
               <SegmentedControl
@@ -508,7 +508,7 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
             <p className="text-[11px] text-text-muted px-1 flex items-center gap-1.5">
               <span>* Hari ini</span>
               <span>•</span>
-              <span>Klik jadwal di kartu komik untuk mengatur hari rilis manual</span>
+              <span>Ketuk jadwal di kartu kalau kamu mau mengatur harinya sendiri</span>
             </p>
           </div>
 
@@ -534,7 +534,7 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
                   variant="outline"
                   onClick={() => setSelectedDayKey("all")}
                 >
-                  Lihat Semua Hari
+                  Lihat semua hari
                 </Button>
               </div>
             </div>
@@ -553,7 +553,7 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
                       const targetName = releaseDay !== undefined
                         ? WEEKDAYS.find((day) => day.dayIndex === releaseDay)?.name
                         : "Otomatis";
-                      toast.success("Jadwal Diperbarui", {
+                      toast.success("Jadwal diperbarui", {
                         description: `Jadwal ${item.mangaTitle} diatur ke ${targetName}.`,
                       });
                     }}

@@ -243,7 +243,7 @@ export function MangaDetailView({
             showBack={true}
             backHref={backHref}
             mode="detail"
-            variant="transparent"
+            variant="auto"
             actions={
               <MangaHeaderActions
                 sourceId={sourceId}

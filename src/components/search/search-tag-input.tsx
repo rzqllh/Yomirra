@@ -31,6 +31,20 @@ export function SearchTagInput({
   onClear,
   filters,
 }: SearchTagInputProps) {
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  React.useEffect(() => {
+    const handleFocusRequest = (event: Event) => {
+      const customEvent = event as CustomEvent<{ query?: string }>;
+      if (typeof customEvent.detail?.query === "string" && customEvent.detail.query) {
+        onChange(customEvent.detail.query);
+      }
+      requestAnimationFrame(() => inputRef.current?.focus());
+    };
+    window.addEventListener("focus-search-input", handleFocusRequest);
+    return () => window.removeEventListener("focus-search-input", handleFocusRequest);
+  }, [onChange]);
+
   const parsed = React.useMemo(
     () => parseSearchExpression(value, filters),
     [value, filters]
@@ -63,6 +77,7 @@ export function SearchTagInput({
   return (
     <div className="relative flex-1 min-w-0">
       <SearchInput
+        ref={inputRef}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         onSubmitAction={onSubmit}
