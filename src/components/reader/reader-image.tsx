@@ -246,9 +246,9 @@ export const ReaderImage = React.memo(function ReaderImage({
         transition: "aspect-ratio 0.3s ease-out"
       }}
     >
-      {hasError ? (
+      {hasError && isAllowedToReveal ? (
         <PageImageError index={pageIndex} onRetry={handleRetry} onReport={onReport} onSwitchSource={onSwitchSource} />
-      ) : shouldLoad ? (
+      ) : shouldLoad && !hasError ? (
         <>
           <motion.div
             style={{ x, y, scale }}
