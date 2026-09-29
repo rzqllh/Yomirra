@@ -23,6 +23,8 @@ import { ReportSheet } from "@/components/shared/report-sheet"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/shared/utils/cn"
 import { motion } from "motion/react"
+import { beginNavigationIntent } from "@/shared/lib/navigation-intent"
+import { advanceReaderReveal, getReaderPageLoadState } from "@/shared/lib/reader-load-order"
 
 export type StreamItem = { type: "image"; chapterId: string; pageIndex: number; url: string; index: number };
 
@@ -56,7 +58,6 @@ export function ContinuousVerticalReader({
   const { dataSaver } = useSettingsStore()
   const isDownloaded = useDownloadStore(state => state.isDownloaded(sourceId, mangaId, chapterId))
   const saveProgress = useHistoryStore(state => state.saveProgress)
-  const getProgress = useHistoryStore(state => state.getLatestForManga)
   const hasHydrated = useHistoryStore(state => state._hasHydrated)
   const historyItem = useHistoryStore(state => {
     const id = `${sourceId}::${mangaId}::${chapterId}`;
@@ -66,7 +67,6 @@ export function ContinuousVerticalReader({
   const [isReportOpen, setIsReportOpen] = React.useState(false)
   const [reportPageIndex, setReportPageIndex] = React.useState<number | undefined>(undefined)
   const isInLibrary = useLibraryStore(state => state.isInLibrary(sourceId, mangaId))
-  const addToLibrary = useLibraryStore(state => state.addToLibrary)
 
 
   const queryClient = useQueryClient()
@@ -79,24 +79,50 @@ export function ContinuousVerticalReader({
   }, [pages]);
 
   const [failedPageIndices, setFailedPageIndices] = React.useState<Set<number>>(new Set());
+  const settledPageIndicesRef = React.useRef<Set<number>>(new Set());
+  const [queueStartIndex, setQueueStartIndex] = React.useState(0);
+  const [revealedThrough, setRevealedThrough] = React.useState(-1);
 
-  const handleImageLoad = React.useCallback((pageIndex: number) => {
+  const resetLoadQueue = React.useCallback((startIndex = 0) => {
+    settledPageIndicesRef.current = new Set();
+    setQueueStartIndex(startIndex);
+    setRevealedThrough(startIndex - 1);
+  }, []);
+
+  React.useEffect(() => {
+    resetLoadQueue(0);
+  }, [chapterId, resetLoadQueue]);
+
+  const markPageSettled = React.useCallback((virtualIndex: number) => {
+    settledPageIndicesRef.current.add(virtualIndex);
+    setRevealedThrough((current) =>
+      advanceReaderReveal(
+        settledPageIndicesRef.current,
+        current,
+        currentPages.length
+      )
+    );
+  }, [currentPages.length]);
+
+  const handleImageLoad = React.useCallback((pageIndex: number, virtualIndex: number) => {
     setFailedPageIndices((prev) => {
       if (!prev.has(pageIndex)) return prev;
       const next = new Set(prev);
       next.delete(pageIndex);
       return next;
     });
-  }, []);
+    markPageSettled(virtualIndex);
+  }, [markPageSettled]);
 
-  const handlePermanentFailure = React.useCallback((pageIndex: number) => {
+  const handlePermanentFailure = React.useCallback((pageIndex: number, virtualIndex: number) => {
     setFailedPageIndices((prev) => {
       if (prev.has(pageIndex)) return prev;
       const next = new Set(prev);
       next.add(pageIndex);
       return next;
     });
-  }, []);
+    markPageSettled(virtualIndex);
+  }, [markPageSettled]);
 
   const streamItems = React.useMemo<StreamItem[]>(() => {
     return currentPages.map(p => ({
@@ -179,6 +205,7 @@ export function ContinuousVerticalReader({
     if (saved && saved.chapterId === chapterId && typeof saved.pageIndex === "number" && saved.pageIndex > 0) {
       const targetIndex = Math.min(saved.pageIndex, Math.max(0, streamItems.length - 1));
 
+      resetLoadQueue(targetIndex);
       virtualizer.scrollToIndex(targetIndex, { align: "start" });
 
       requestAnimationFrame(() => {
@@ -232,6 +259,9 @@ export function ContinuousVerticalReader({
   const handleNextChapter = React.useCallback(() => {
     if (!nextChapterId) return;
 
+    const href = getReaderHref(sourceId, mangaId, nextChapterId);
+    if (!beginNavigationIntent(href)) return;
+
     if (!isInLibrary) {
       const readCountKey = `yomirra-read-count-${mangaId}`;
       const currentCount = parseInt(sessionStorage.getItem(readCountKey) || "0");
@@ -239,35 +269,13 @@ export function ContinuousVerticalReader({
       sessionStorage.setItem(readCountKey, newCount.toString());
 
       if (newCount >= 3) {
-        toast.info("Tertarik dengan Komik Ini?", {
-          description: "Kamu sudah membaca 3 bab. Simpan ke koleksi agar mudah dilanjutkan?",
-          action: {
-            label: "Simpan",
-            onClick: () => {
-              const historyItem = getProgress(sourceId, mangaId);
-              if (historyItem) {
-                addToLibrary({
-                  sourceId,
-                  mangaId,
-                  title: historyItem.mangaTitle,
-                  coverUrl: historyItem.coverUrl,
-                  addedAt: new Date().toISOString(),
-                  updatedAt: new Date().toISOString(),
-                });
-                toast.success("Disimpan ke Bookmark", {
-                  description: "Komik berhasil ditambahkan ke koleksi favoritmu.",
-                });
-              }
-            }
-          },
-          duration: 8000,
-        });
-        sessionStorage.setItem(readCountKey, "0"); // Reset count
+        sessionStorage.setItem(`yomirra-pending-save-prompt-${mangaId}`, "1");
+        sessionStorage.setItem(readCountKey, "0");
       }
     }
 
-    router.replace(getReaderHref(sourceId, mangaId, nextChapterId));
-  }, [nextChapterId, isInLibrary, mangaId, sourceId, getProgress, addToLibrary, router]);
+    router.replace(href);
+  }, [nextChapterId, isInLibrary, mangaId, sourceId, router]);
 
   const handleReport = React.useCallback((pageIdx?: number) => {
     setReportPageIndex(typeof pageIdx === "number" ? pageIdx : undefined);
@@ -325,6 +333,12 @@ export function ContinuousVerticalReader({
       >
         {virtualItems.map((virtualRow) => {
           const item = streamItems[virtualRow.index];
+          const loadState = getReaderPageLoadState(
+            virtualRow.index,
+            queueStartIndex,
+            revealedThrough,
+            2
+          );
           return (
             <div
               key={virtualRow.key}
@@ -344,10 +358,11 @@ export function ContinuousVerticalReader({
                 pageUrl={item.url}
                 isWebtoon={isWebtoon}
                 dataSaver={dataSaver}
-                isAllowedToLoad={true}
-                onLoadComplete={() => handleImageLoad(item.pageIndex)}
+                isAllowedToLoad={loadState.shouldLoad}
+                isAllowedToReveal={loadState.shouldReveal}
+                onLoadComplete={() => handleImageLoad(item.pageIndex, virtualRow.index)}
                 onError={handleImageError}
-                onPermanentFailure={handlePermanentFailure}
+                onPermanentFailure={() => handlePermanentFailure(item.pageIndex, virtualRow.index)}
                 onReport={(idx) => handleReport(idx)}
                 onSwitchSource={onOpenAlternateSource}
                 onRefreshUrl={async () => {
@@ -359,7 +374,7 @@ export function ContinuousVerticalReader({
                   }
                   return null;
                 }}
-                priority={virtualRow.index === 0}
+                priority={virtualRow.index === queueStartIndex}
                 offlineUrl={isDownloaded ? getOfflineImageUrl({ sourceId, mangaId, chapterId: item.chapterId, pageIndex: item.pageIndex }) : undefined}
                 imageFit={preferences.imageFit}
                 dataIndex={virtualRow.index}
@@ -399,7 +414,8 @@ export function ContinuousVerticalReader({
                 variant="outline"
                 className="h-11 px-4 font-semibold text-xs sm:text-sm bg-white/[0.05] hover:bg-white/[0.10] active:bg-white/[0.08] border-white/10 text-white/80 hover:text-white flex-1 flex items-center justify-center gap-2 active:scale-[0.98] transition-all cursor-pointer shadow-none"
                 onClick={() => {
-                  router.replace(getReaderHref(sourceId, mangaId, _prevChapterId));
+                  const href = getReaderHref(sourceId, mangaId, _prevChapterId);
+                  if (beginNavigationIntent(href)) router.replace(href);
                 }}
               >
                 <CaretLeft size={16} weight="bold" />

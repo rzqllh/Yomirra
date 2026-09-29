@@ -35,6 +35,17 @@ describe('BottomDock Navigation', () => {
     expect(screen.getByRole('link', { name: /populer/i })).toBeTruthy();
   });
 
+  it('moves the active state to a pending destination before pathname commits', () => {
+    render(<BottomDock pendingHref="/library" />);
+
+    const berandaLink = screen.getByRole('link', { name: /beranda/i });
+    const libraryLink = screen.getByRole('link', { name: /library/i });
+
+    expect(berandaLink.textContent).toBe('');
+    expect(libraryLink.textContent).toContain('Library');
+    expect(libraryLink.getAttribute('aria-current')).toBe('page');
+  });
+
   it('does NOT contain link to /settings in bottom dock', () => {
     render(<BottomDock />);
     const settingsLink = screen.queryByRole('link', { name: /pengaturan|settings/i });

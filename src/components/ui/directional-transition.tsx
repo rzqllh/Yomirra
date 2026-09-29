@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { usePathname } from "next/navigation";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 
 /**
  * Route-level cross-fade transition for Yomirra discovery and destination pages.
@@ -14,20 +14,17 @@ export function DirectionalTransition({ children }: { children: React.ReactNode 
   const reducedMotion = useReducedMotion();
 
   return (
-    <AnimatePresence initial={false} mode="popLayout">
-      <motion.div
-        key={pathname}
-        initial={reducedMotion ? false : { opacity: 0.94, x: 5 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={reducedMotion ? undefined : { opacity: 0.98, x: -3 }}
-        transition={{
-          duration: reducedMotion ? 0 : 0.16,
-          ease: [0.16, 1, 0.3, 1],
-        }}
-        className="flex-1 flex flex-col min-w-0 w-full"
-      >
-        {children}
-      </motion.div>
-    </AnimatePresence>
+    <motion.div
+      key={pathname}
+      initial={reducedMotion ? false : { opacity: 0.96, y: 2 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{
+        duration: reducedMotion ? 0 : 0.1,
+        ease: [0.16, 1, 0.3, 1],
+      }}
+      className="flex-1 flex flex-col min-w-0 w-full"
+    >
+      {children}
+    </motion.div>
   );
 }

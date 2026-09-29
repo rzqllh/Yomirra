@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { getReaderHref } from "@/shared/lib/routes"
 import { SearchInput } from "@/components/ui/search-input"
 import { ReaderPanelShell } from "./reader-panel-shell"
+import { beginNavigationIntent } from "@/shared/lib/navigation-intent"
 
 interface ReaderChapterDrawerProps {
   isOpen: boolean;
@@ -135,8 +136,11 @@ export function ReaderChapterDrawer({
                       ref={isCurrent ? activeChapterRef : null}
                       onClick={() => {
                         if (!isCurrent) {
-                          router.replace(getReaderHref(sourceId, mangaId, chapter.id))
-                          onClose()
+                          const href = getReaderHref(sourceId, mangaId, chapter.id)
+                          if (beginNavigationIntent(href)) {
+                            onClose()
+                            router.replace(href)
+                          }
                         }
                       }}
                       className={cn(
