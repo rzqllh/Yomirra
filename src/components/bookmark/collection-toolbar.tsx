@@ -41,7 +41,7 @@ export function CollectionToolbar({
         value={searchQuery}
         onChange={onSearchChange}
         onClear={onSearchClear}
-        placeholder="Cari di koleksi..."
+        placeholder="Cari di bookmark…"
         containerClassName="sm:flex-1 min-w-0 h-[44px]"
       />
 
@@ -72,12 +72,12 @@ export function CollectionToolbar({
               {onCreateCollectionClick && (
                 <DropdownMenuItem onClick={onCreateCollectionClick} className="flex items-center gap-2">
                   <Plus size={16} weight="bold" />
-                  <span>Buat Koleksi Baru</span>
+                  <span>Buat koleksi</span>
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem onClick={onToggleSelectionMode} className="flex items-center gap-2">
                 <CheckCircle size={16} weight={isSelectionMode ? "fill" : "bold"} />
-                <span>{isSelectionMode ? "Batal Pilih" : "Pilih Komik (Batch)"}</span>
+                <span>{isSelectionMode ? "Batal memilih" : "Pilih beberapa"}</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
