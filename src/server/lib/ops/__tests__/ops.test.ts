@@ -96,6 +96,7 @@ describe("Phase 4 — Telegram Ops Runtime V1 Unit Tests", () => {
         komikindo: {
           sourceId: "komikindo",
           status: "BROKEN",
+          stage: "search",
           latencyMs: 911,
           resolvedHost: "komikindo.ch",
           lastCheckedAt: "2026-09-19T10:00:00Z",
