@@ -83,18 +83,21 @@ export function PageHeader({
 
   // Header surface glass state & title visibility threshold
   // For detail mode: title only reveals once hero cover has scrolled fully past (~320px) to prevent redundancy
-  const isScrolled = scrollY > 20
+  const isScrolled = scrollY > 12
   const isTitleVisible = mode === "detail" ? scrollY > 320 : true
   const isGlass =
     variant === "glass" ||
-    (variant === "auto" && (mode === "detail" ? isTitleVisible : isScrolled))
-  const isTransparent = variant === "transparent" || (variant === "auto" && !isGlass)
+    (variant === "auto" && (mode === "detail" ? isScrolled : true))
+  const isTransparent = variant === "transparent" || (variant === "auto" && mode === "detail" && !isGlass)
 
   return (
     <>
       <header
         className={cn(
-          "md:hidden fixed top-0 left-0 right-0 z-[var(--z-sticky)] flex w-full flex-col justify-end px-4 pt-[calc(var(--safe-top,0px)+8px)] pb-2 transition-all duration-300 ease-out pointer-events-none bg-transparent",
+          "md:hidden fixed top-0 left-0 right-0 z-[var(--z-sticky)] flex w-full flex-col justify-end px-4 pt-[calc(var(--safe-top,0px)+8px)] pb-2 transition-[background-color,border-color,box-shadow,backdrop-filter] duration-200 ease-out pointer-events-none",
+          mode === "standard" && "yomirra-chrome border-x-0 border-t-0 rounded-none",
+          mode === "detail" && isGlass && "yomirra-chrome border-x-0 border-t-0 rounded-none",
+          isTransparent && "bg-transparent border-transparent shadow-none backdrop-blur-none",
           className
         )}
       >
@@ -104,14 +107,14 @@ export function PageHeader({
               <button
                 type="button"
                 onClick={handleBack}
-                className="flex size-10 items-center justify-center rounded-2xl liquid-glass text-text-primary active:scale-95 transition-all shrink-0 select-none outline-none cursor-pointer"
+                className="yomirra-chrome-control flex size-10 items-center justify-center rounded-2xl text-text-primary active:scale-95 transition-all shrink-0 select-none outline-none cursor-pointer"
                 aria-label="Kembali"
               >
                 <CaretLeft size={20} weight="bold" />
               </button>
             ) : (
               icon && (
-                <div className="flex size-10 items-center justify-center rounded-2xl bg-gradient-to-br from-accent/15 via-accent/10 to-transparent border border-accent/25 text-accent shadow-xs shrink-0 select-none">
+                <div className="yomirra-chrome-control flex size-10 items-center justify-center rounded-2xl text-accent shrink-0 select-none">
                   {icon}
                 </div>
               )

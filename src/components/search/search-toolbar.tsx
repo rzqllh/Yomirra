@@ -1,14 +1,16 @@
 "use client";
 
 import * as React from "react";
-import { SearchInput } from "@/components/ui/search-input";
+import { SearchTagInput } from "@/components/search/search-tag-input";
+import type { MergedFilterList } from "@/shared/utils/filter-helpers";
 import { SearchFilterDrawer } from "@/components/search/search-filter-drawer";
 
 export interface SearchToolbarProps {
   localQuery: string;
-  onQueryChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onQueryChange: (value: string) => void;
   onSearchSubmit: (e: React.FormEvent) => void;
   onQueryClear: () => void;
+  filters: MergedFilterList;
 }
 
 export function SearchToolbar({
@@ -16,16 +18,16 @@ export function SearchToolbar({
   onQueryChange,
   onSearchSubmit,
   onQueryClear,
+  filters,
 }: SearchToolbarProps) {
   return (
     <div className="flex gap-2.5 items-center">
-      <SearchInput
+      <SearchTagInput
         value={localQuery}
         onChange={onQueryChange}
-        onSubmitAction={onSearchSubmit}
-        placeholder="Judul apa yang mau kamu baca?"
-        containerClassName="flex-1 min-w-0 min-h-11"
+        onSubmit={onSearchSubmit}
         onClear={onQueryClear}
+        filters={filters}
       />
       <SearchFilterDrawer />
     </div>

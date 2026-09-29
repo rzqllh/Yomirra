@@ -9,7 +9,7 @@ import { apiClient } from '@/shared/api-client';
 import { dynamicSourceRegistry } from '@/shared/sources/dynamic-source-registry';
 
 vi.mock('next/navigation', () => ({
-  useSearchParams: () => new URLSearchParams(''),
+  useSearchParams: () => new URLSearchParams('?q=test'),
   usePathname: () => '/search',
   useRouter: () => ({
     push: vi.fn(),
@@ -22,6 +22,7 @@ vi.mock('@/shared/api-client', () => ({
     getFilters: vi.fn(),
     search: vi.fn(),
     searchGlobal: vi.fn(),
+    rankSearchIntelligence: vi.fn(),
   }
 }));
 
@@ -63,7 +64,12 @@ describe('Search Page Revamp Unit Tests', () => {
       { id: 'source2', name: 'Komikindo', isInstalled: true, capabilities: { search: true }, status: 'online' },
     ]);
     (apiClient.getFilters as any).mockResolvedValue({ genres: [], formats: [], statuses: [], sorts: [] });
-    (apiClient.search as any).mockResolvedValue({ sourceId: 'source1', query: '', page: 1, results: [] });
+    (apiClient.search as any).mockResolvedValue({ sourceId: 'source1', query: 'test', page: 1, results: [] });
+    (apiClient.rankSearchIntelligence as any).mockResolvedValue({
+      semanticAvailable: false,
+      scores: {},
+      catalogMatches: [],
+    });
   });
 
   it('renders accessible sr-only heading "Pencarian" and omits legacy hero subtitle', async () => {

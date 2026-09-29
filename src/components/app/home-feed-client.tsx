@@ -130,7 +130,7 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
   if (!isMounted) return null;
 
   return (
-    <div className="flex flex-col gap-9 sm:gap-11 pb-16">
+    <div className="flex flex-col gap-11 sm:gap-12 pb-16">
       {/* SECTION 0: Hero Greeting & Search Banner (Mockups 3 & 4) */}
       <section id="hero-section" aria-label="Hero Greeting">
         <HomeHero candidates={heroCandidates} />
@@ -140,7 +140,7 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
       <section
         id="spotlight-section"
         aria-labelledby="spotlight-title"
-        className="flex min-w-0 flex-col gap-4 sm:gap-5"
+        className="flex min-w-0 flex-col gap-3.5 sm:gap-4"
       >
         <div className="flex items-center justify-between gap-3">
           <h1
@@ -185,7 +185,7 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
         <section
           id="recently-updated-section"
           aria-labelledby="recently-updated-title"
-          className="flex flex-col gap-4"
+          className="flex flex-col gap-3.5"
         >
           <div className="flex items-center justify-between gap-3">
             <h2

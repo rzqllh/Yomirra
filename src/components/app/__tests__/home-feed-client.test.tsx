@@ -122,8 +122,8 @@ describe('Yomirra Editorial Home Components', () => {
 
       expect(screen.getByTestId('feed-child')).toBeTruthy();
       // Mobile bell notification button exists
-      const bellLinks = screen.getAllByRole('link', { name: /pembaruan/i });
-      expect(bellLinks.length).toBeGreaterThan(0);
+      const bellButtons = screen.getAllByRole('button', { name: /pembaruan/i });
+      expect(bellButtons.length).toBeGreaterThan(0);
     });
   });
 

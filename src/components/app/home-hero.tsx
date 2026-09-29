@@ -1,11 +1,9 @@
 "use client"
 
 import * as React from "react"
-import { useRouter } from "next/navigation"
 import { MagnifyingGlass } from "@phosphor-icons/react"
 import { useAuth } from "@/shared/hooks/use-auth"
 import { useHistoryStore } from "@/shared/store/history-store"
-import { useSearchFilterStore } from "@/shared/store/search-filter-store"
 import { useMounted } from "@/shared/hooks/use-mounted"
 import { cn } from "@/shared/utils/cn"
 
@@ -22,7 +20,6 @@ export interface HomeHeroProps {
 const HERO_COVER_CACHE_KEY = "yomirra_hero_manga_cover"
 
 export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
-  const router = useRouter()
   const mounted = useMounted()
   const { user } = useAuth()
   const [query, setQuery] = React.useState("")
@@ -66,15 +63,17 @@ export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
     }
   }, [mounted, candidates])
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    useSearchFilterStore.getState().resetFilters()
-    const trimmed = query.trim()
-    if (trimmed) {
-      router.push(`/search?q=${encodeURIComponent(trimmed)}`)
-    } else {
-      router.push("/search")
-    }
+  const openGlobalSearch = React.useCallback((value = query) => {
+    window.dispatchEvent(
+      new CustomEvent("open-command-menu", {
+        detail: { query: value.trim() },
+      })
+    )
+  }, [query])
+
+  const handleSearch = (event: React.FormEvent) => {
+    event.preventDefault()
+    openGlobalSearch()
   }
 
   const showCover = Boolean(heroCover?.coverUrl && !imageError)
@@ -170,26 +169,31 @@ export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
       <div className="relative z-10 flex flex-col justify-end md:justify-center w-full min-h-[300px] sm:min-h-[320px] md:min-h-[275px] lg:min-h-[295px] p-5 sm:p-7 md:p-8 lg:p-10 md:w-[58%] lg:w-[54%]">
         {/* Eyebrow Label */}
         <span className="text-[11px] sm:text-[12.5px] font-extrabold uppercase tracking-[0.14em] text-accent mb-1.5 sm:mb-2 leading-none">
-          {isReturning ? "SELAMAT DATANG KEMBALI," : "SELAMAT DATANG,"}
+          {isReturning ? "LANJUT LAGI DI YOMIRRA" : "MULAI DARI YOMIRRA"}
         </span>
 
         {/* Heading */}
         <h1 className="text-[23px] leading-[1.18] sm:text-3xl md:text-3xl lg:text-[34px] font-black tracking-tight text-text-primary mb-5 sm:mb-6">
-          Temukan komik <br className="hidden sm:inline" />
-          favoritmu di <span className="text-accent font-black">Yomirra</span>
+          Cari komik yang <br className="hidden sm:inline" />
+          mau kamu baca
         </h1>
 
         {/* Search Input Bar Pill */}
         <form
           onSubmit={handleSearch}
-          className="relative flex items-center justify-between w-full max-w-[500px] h-14 sm:h-[58px] rounded-full bg-white dark:bg-[#1a1d28] border border-black/[0.08] dark:border-white/10 shadow-[0_4px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] px-3.5 sm:px-4 gap-2.5 sm:gap-3 transition-all focus-within:border-accent/40 focus-within:ring-2 focus-within:ring-accent/20"
+          className="relative flex items-center justify-between w-full max-w-[500px] h-14 sm:h-[58px] rounded-full bg-surface-overlay border border-border-subtle shadow-[0_4px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] px-3.5 sm:px-4 gap-2.5 sm:gap-3 transition-all focus-within:border-accent/40 focus-within:ring-2 focus-within:ring-accent/20"
         >
           <MagnifyingGlass size={20} weight="regular" className="text-text-muted shrink-0" />
           <input
             type="text"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Cari judul, genre, author, atau source..."
+            onChange={(event) => {
+              const next = event.target.value
+              setQuery(next)
+              openGlobalSearch(next)
+            }}
+            onFocus={() => openGlobalSearch()}
+            placeholder="Cari judul, kreator, genre, atau #tag…"
             className="flex-1 min-w-0 bg-transparent text-[13px] sm:text-sm text-text-primary placeholder:text-text-muted/80 outline-none font-medium"
           />
           <button

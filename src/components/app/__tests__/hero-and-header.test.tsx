@@ -32,8 +32,10 @@ vi.mock('@/shared/hooks/use-mounted', () => ({
   useMounted: () => true,
 }));
 
-vi.mock('@/shared/store/update-store', () => ({
-  useUpdateStore: (selector: any) => selector({ getUnreadCount: () => 3 }),
+vi.mock('@/components/app/updates-bell', () => ({
+  UpdatesBell: ({ className }: { className?: string }) => (
+    <button type="button" aria-label="Pembaruan" className={className}>Bell</button>
+  ),
 }));
 
 vi.mock('@/shared/store/history-store', () => ({
@@ -48,22 +50,26 @@ describe('Header & Hero System (Squircle & Reusable)', () => {
   describe('HomeHero', () => {
     it('renders greeting, title, and search input', () => {
       render(<HomeHero />);
-      expect(screen.getByText(/Temukan komik/i)).toBeTruthy();
+      expect(screen.getByText(/Cari komik/i)).toBeTruthy();
       expect(screen.getByText(/Yomirra/i)).toBeTruthy();
 
-      const input = screen.getByPlaceholderText(/Cari judul, genre, author, atau source.../i);
+      const input = screen.getByPlaceholderText(/Cari judul, kreator, genre, atau #tag/i);
       expect(input).toBeTruthy();
     });
 
-    it('submits search query and navigates to /search?q=...', () => {
+    it('hands Home search to the shared global search surface', () => {
+      const listener = vi.fn();
+      window.addEventListener('open-command-menu', listener);
+
       render(<HomeHero />);
-      const input = screen.getByPlaceholderText(/Cari judul, genre, author, atau source.../i);
+      const input = screen.getByPlaceholderText(/Cari judul, kreator, genre, atau #tag/i);
       fireEvent.change(input, { target: { value: 'solo leveling' } });
 
-      const searchBtn = screen.getByRole('button', { name: /cari/i });
-      fireEvent.click(searchBtn);
+      expect(listener).toHaveBeenCalled();
+      const lastEvent = listener.mock.calls.at(-1)?.[0] as CustomEvent;
+      expect(lastEvent.detail).toEqual({ query: 'solo leveling' });
 
-      expect(pushMock).toHaveBeenCalledWith('/search?q=solo%20leveling');
+      window.removeEventListener('open-command-menu', listener);
     });
 
     it('renders skeleton pulse and does not fallback to AI image when candidates are empty', () => {
@@ -87,8 +93,8 @@ describe('Header & Hero System (Squircle & Reusable)', () => {
   describe('HeaderActions & Dropdown Popover', () => {
     it('uses squircle rounded-2xl geometry for bell and settings trigger', () => {
       render(<HeaderActions />);
-      const bellLink = screen.getByRole('link', { name: /pembaruan/i });
-      expect(bellLink.className).toContain('rounded-2xl');
+      const bellButton = screen.getByRole('button', { name: /pembaruan/i });
+      expect(bellButton.className).toContain('rounded-2xl');
 
       const settingsBtn = screen.getByRole('button', { name: /pengaturan dan profil/i });
       expect(settingsBtn.className).toContain('rounded-2xl');
@@ -125,7 +131,7 @@ describe('Header & Hero System (Squircle & Reusable)', () => {
       // Mobile header element contains HeaderActions
       const mobileHeader = container.querySelector('header.md\\:hidden');
       expect(mobileHeader).toBeTruthy();
-      expect(mobileHeader?.querySelector('a[href="/updates"]')).toBeTruthy();
+      expect(mobileHeader?.querySelector('button[aria-label="Pembaruan"]')).toBeTruthy();
 
       // Desktop banner element should NOT contain mobile HeaderActions
       const desktopBanner = container.querySelector('div.hidden.md\\:block');

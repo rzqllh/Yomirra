@@ -458,6 +458,40 @@ When provider choice is useful, surface it deliberately:
 
 The current `Pilih sumber` modal is a valid pattern, but it must obey the active Search scope. A provider excluded by the current query scope must not appear in that picker for the result context unless the user explicitly asks to broaden the search.
 
+## 7.7 Tag-aware and semantic search
+
+**LOCKED**
+
+Search supports explicit filter tags in the main query field.
+
+Examples:
+
+- `solo leveling #fantasy`
+- `romance sekolah #completed #manhwa`
+
+Rules:
+
+- `#tag` is a power-user shortcut, not a required syntax.
+- Recognized tags become deterministic filters and are removed from the text sent to provider title search.
+- Indonesian aliases and clear typos may resolve to one canonical tag.
+- Ambiguous short fragments are suggested, never silently guessed.
+- Canonical filters map back to each provider's native filter value.
+- A provider that cannot satisfy an explicit tag is skipped for that query rather than searched without the constraint.
+- Explicit tags are hard constraints. Semantic similarity must not override them.
+
+Search ranking is hybrid:
+
+1. exact and alternate-title matches;
+2. lexical/fuzzy similarity;
+3. semantic similarity when configured;
+4. provider/catalog order as fallback.
+
+Exact title matches must remain ahead of semantic-only matches.
+
+Semantic indexing is opportunistic. Yomirra indexes public comic metadata encountered during normal use; it does not crawl every provider solely to build an AI index. The semantic layer must fail open: if the embedding provider or catalog cache is unavailable, normal multi-source search continues to work.
+
+Related-title recommendations may use semantic similarity when enough indexed metadata exists, then fall back to deterministic genre/popular recommendations.
+
 ---
 
 # 8. Page archetypes and containers
@@ -551,6 +585,21 @@ Use the small accent dot + section title for page subsections such as:
 - Populer
 
 Do not use it as a page-level title.
+
+## 9.2 Mobile page chrome
+
+**LOCKED**
+
+All ordinary mobile pages use the same fixed `PageHeader` chrome and reserve its height in the page container.
+
+Exceptions:
+
+- comic detail may be transparent at the top and gain the shared chrome surface after scrolling;
+- reader uses focused reader chrome.
+
+Do not recreate mobile headers with page-local title/action rows. The notification bell opens its compact dropdown first; the full Pembaruan page is a secondary action from that dropdown.
+
+The status-bar blur is clipped to the safe-area strip only. It must not soften page content below the system status bar.
 
 ---
 
@@ -656,6 +705,10 @@ Format chips may include:
 - Manhua
 
 Do not hard-code formats as presentation if the underlying source metadata cannot support them reliably. Unknown remains a valid metadata state.
+
+Search and Library use the same filter-drawer shell. On mobile the drawer opens at a compact half-height snap point and expands toward full height when the user scrolls or drags upward.
+
+Provider-specific duplicate labels, catch-all values, and compound genre aliases should be normalized before presentation. Keep the provider's raw value only for the outgoing adapter payload.
 
 ## Cards
 
@@ -1079,6 +1132,14 @@ Bottom chrome:
 - reading-mode controls when appropriate.
 
 Controls should auto-hide after a short idle period and reappear predictably.
+
+**LOCKED CHROME RULES**
+
+- reader header and reader dock use the same chrome surface language as the main mobile dock;
+- reading progress sits above the status-bar blur but below reader controls and drawers;
+- opening the chapter navigator centers the currently active chapter;
+- the default chapter navigator is compact and number-first; verbose timestamps are not primary reader UI;
+- reader drawers belong to the same bottom-sheet family as other Yomirra drawers.
 
 ## 19.4 Desktop controls
 

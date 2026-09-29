@@ -1,15 +1,11 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
-import { ArrowRight } from "@phosphor-icons/react";
 import { YomirraSurface, PageContainer, PageToolbar } from "@/components/ui/layout";
 import { CatalogControls } from "@/components/ui/catalog-controls";
 import { LibrarySkeleton } from "@/components/skeletons/library-skeleton";
-import { HeaderActions } from "@/components/app/header-actions";
+import { PageHeader } from "@/components/app/header";
 import { useLibraryCatalog } from "@/shared/hooks/use-library-catalog";
-import { sourceRegistry } from "@/shared/sources/source-registry";
-import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { LibraryToolbar } from "./library-toolbar";
 import { LibraryStatusRail } from "./library-status-rail";
 import { LibraryResults } from "./library-results";
@@ -21,7 +17,7 @@ export function LibraryPageView() {
   if (!catalog.isMounted) {
     return (
       <YomirraSurface variant="base" className="w-full">
-        <PageContainer>
+        <PageContainer hasMobileHeader>
           <LibrarySkeleton />
         </PageContainer>
       </YomirraSurface>
@@ -30,19 +26,14 @@ export function LibraryPageView() {
 
   return (
     <YomirraSurface variant="base" className="w-full">
-      <PageContainer>
-        <h1 className="sr-only">Library</h1>
+      <PageContainer hasMobileHeader>
+        <PageHeader
+          title="Library"
+          subtitle="Jelajahi komik dari sumber pilihanmu."
+          hideDesktop
+        />
 
-        <div className="flex items-center justify-between gap-3 md:hidden">
-          <Link
-            href="/sources"
-            className="inline-flex min-h-11 items-center gap-2 rounded-[12px] border border-border-default bg-surface-raised px-3 text-sm font-semibold text-text-secondary transition-colors hover:border-accent hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-          >
-            <span>Sumber: <strong className="text-text-primary">{sourceRegistry.find(s => s.id === catalog.activeSourceId)?.name ?? dynamicSourceRegistry.getAll().find(s => s.id === catalog.activeSourceId)?.name ?? catalog.activeSourceId}</strong></span>
-            <ArrowRight size={16} weight="bold" aria-hidden="true" />
-          </Link>
-          <HeaderActions />
-        </div>
+        <h1 className="sr-only">Library</h1>
 
         <CatalogControls label="Cari dan saring Library">
           <PageToolbar>

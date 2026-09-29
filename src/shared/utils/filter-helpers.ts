@@ -1,9 +1,11 @@
 import type { FilterList, SourceFilter } from "@/shared/sources/source-types";
+import { canonicalizeFilterValue, type SearchTagCategory } from "@/shared/lib/search-intelligence";
 
 export interface MergedFilter {
   id: string;
   label: string;
   supportedBy: string[];
+  sourceValues: Record<string, string>;
 }
 
 export interface MergedFilterList {
@@ -23,29 +25,39 @@ export function mergeFilters(sourceFilters: { sourceId: string; filters: FilterL
   const statusesMap = new Map<string, MergedFilter>();
   const sortsMap = new Map<string, MergedFilter>();
 
-  const processCategory = (map: Map<string, MergedFilter>, items: SourceFilter[] | undefined, sourceId: string) => {
+  const processCategory = (
+    map: Map<string, MergedFilter>,
+    items: SourceFilter[] | undefined,
+    sourceId: string,
+    category?: SearchTagCategory
+  ) => {
     if (!items) return;
     for (const item of items) {
-      const canonicalId = item.id.toLowerCase();
+      const canonical = category
+        ? canonicalizeFilterValue(category, item.id, item.name)
+        : { id: item.id, label: item.name };
+      const canonicalId = canonical.id.toLowerCase();
       if (map.has(canonicalId)) {
         const existing = map.get(canonicalId)!;
         if (!existing.supportedBy.includes(sourceId)) {
           existing.supportedBy.push(sourceId);
         }
+        existing.sourceValues[sourceId] = item.id;
       } else {
         map.set(canonicalId, {
-          id: item.id,
-          label: item.name,
-          supportedBy: [sourceId]
+          id: canonical.id,
+          label: canonical.label,
+          supportedBy: [sourceId],
+          sourceValues: { [sourceId]: item.id },
         });
       }
     }
   };
 
   for (const { sourceId, filters } of sourceFilters) {
-    processCategory(genresMap, filters.genres, sourceId);
-    processCategory(formatsMap, filters.formats, sourceId);
-    processCategory(statusesMap, filters.statuses, sourceId);
+    processCategory(genresMap, filters.genres, sourceId, "genre");
+    processCategory(formatsMap, filters.formats, sourceId, "format");
+    processCategory(statusesMap, filters.statuses, sourceId, "status");
     processCategory(sortsMap, filters.sorts, sourceId);
   }
 
@@ -90,19 +102,27 @@ export function buildPayloadForSource(
     return found ? found.supportedBy.includes(sourceId) : false;
   };
 
+  const sourceValue = (category: MergedFilter[], value: string) => {
+    const found = category.find((item) => item.id.toLowerCase() === value.toLowerCase());
+    return found?.sourceValues[sourceId] ?? value;
+  };
+
   const validGenres = activeFilters.genres.filter(g => isSupported(mergedFilters.genres, g));
-  if (validGenres.length > 0) payload["genre[]"] = validGenres;
-
-  const validFormats = activeFilters.formats.filter(f => isSupported(mergedFilters.formats, f));
-  if (validFormats.length > 0) payload["format[]"] = validFormats;
-
-  if (isSupported(mergedFilters.statuses, activeFilters.status)) {
-    payload["status"] = activeFilters.status;
+  if (validGenres.length > 0) {
+    payload["genre[]"] = validGenres.map((genre) => sourceValue(mergedFilters.genres, genre));
   }
 
-  // Sort is usually a special case, if it's supported we pass it
+  const validFormats = activeFilters.formats.filter(f => isSupported(mergedFilters.formats, f));
+  if (validFormats.length > 0) {
+    payload["format[]"] = validFormats.map((format) => sourceValue(mergedFilters.formats, format));
+  }
+
+  if (isSupported(mergedFilters.statuses, activeFilters.status)) {
+    payload["status"] = sourceValue(mergedFilters.statuses, activeFilters.status);
+  }
+
   if (isSupported(mergedFilters.sorts, activeFilters.sort)) {
-    payload["sort"] = activeFilters.sort;
+    payload["sort"] = sourceValue(mergedFilters.sorts, activeFilters.sort);
   }
 
   return payload;

@@ -66,12 +66,12 @@ export default function AccountPage() {
 
   return (
     <div className="min-h-screen bg-surface-base pb-28 md:pb-10">
-      <PageContainer>
+      <PageContainer hasMobileHeader>
         <PageHeader
           title="Akun & Sinkronisasi"
           showBack={true}
           backHref="/settings"
-          description="Kelola profil pembaca dan sinkronisasi data cloud Firebase"
+          description="Kelola akun dan sinkronisasi bacaanmu."
         />
 
         <main className="w-full space-y-6 md:space-y-8">
@@ -118,7 +118,7 @@ export default function AccountPage() {
                 Masuk ke Akun Yomirra
               </h2>
               <p className="text-sm text-text-muted mt-1 max-w-sm mx-auto">
-                Sinkronkan rak buku, progres baca, dan koleksi pribadi Anda di semua perangkat secara real-time.
+                Sinkronkan rak buku, progres baca, dan koleksimu di semua perangkat.
               </p>
             </div>
             <Button
@@ -206,7 +206,7 @@ export default function AccountPage() {
                 Keluar dari Akun
               </h3>
               <p className="text-xs text-text-muted mt-0.5">
-                Data lokal perangkat akan tetap ada dan akan disinkronkan kembali saat Anda masuk.
+                Data di perangkat tetap ada dan bisa disinkronkan lagi saat kamu masuk.
               </p>
             </div>
             <Button

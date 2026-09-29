@@ -4,7 +4,6 @@ import * as React from "react"
 import Link from "next/link"
 import { useTheme } from "next-themes"
 import {
-  Bell,
   Gear,
   Palette,
   Globe,
@@ -15,8 +14,8 @@ import {
   UserCircle,
 } from "@phosphor-icons/react"
 import { motion, AnimatePresence } from "motion/react"
-import { useUpdateStore } from "@/shared/store/update-store"
 import { useMounted } from "@/shared/hooks/use-mounted"
+import { UpdatesBell } from "@/components/app/updates-bell"
 import { useAuth } from "@/shared/hooks/use-auth"
 import { cn } from "@/shared/utils/cn"
 
@@ -24,9 +23,6 @@ export function HeaderActions({ className }: { className?: string } = {}) {
   const mounted = useMounted()
   const { theme, resolvedTheme, setTheme } = useTheme()
   const { user, loginWithGoogle, logout } = useAuth()
-  const rawUnread = useUpdateStore((state) => state.getUnreadCount())
-  const unreadCount = typeof rawUnread === "function" ? (rawUnread as () => number)() : (Number(rawUnread) || 0)
-
   const [isMenuOpen, setIsMenuOpen] = React.useState(false)
   const menuRef = React.useRef<HTMLDivElement>(null)
 
@@ -47,12 +43,6 @@ export function HeaderActions({ className }: { className?: string } = {}) {
     }
   }, [isMenuOpen])
 
-  const displayCount = unreadCount > 99 ? "99+" : unreadCount
-  const showBadge = mounted && unreadCount > 0
-  const accessibleLabel = showBadge
-    ? `Pembaruan, ${unreadCount} belum dibaca`
-    : "Pembaruan"
-
   const toggleTheme = () => {
     const nextTheme = resolvedTheme === "dark" ? "light" : "dark"
     setTheme(nextTheme)
@@ -68,26 +58,7 @@ export function HeaderActions({ className }: { className?: string } = {}) {
 
   return (
     <div className={cn("relative flex items-center gap-2 shrink-0", className)} ref={menuRef}>
-      {/* Notification Bell Button (Squircle rounded-2xl) */}
-      <Link
-        href="/updates"
-        transitionTypes={["nav-lateral"]}
-        className="relative flex size-10 items-center justify-center rounded-2xl bg-surface-glass backdrop-blur-md border border-border-default/40 text-text-primary hover:bg-surface-hover hover:border-border-strong active:scale-95 transition-all outline-none select-none shadow-xs"
-        aria-label={accessibleLabel}
-      >
-        <Bell size={20} weight={showBadge ? "fill" : "regular"} className="shrink-0" />
-        {showBadge && (
-          <div
-            data-testid="updates-badge"
-            aria-hidden="true"
-            className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-semantic-error text-white flex items-center justify-center border-2 border-surface-base shadow-xs animate-in zoom-in-50 duration-150"
-          >
-            <span className="text-[10px] font-bold text-white leading-none tracking-tight">
-              {displayCount}
-            </span>
-          </div>
-        )}
-      </Link>
+      <UpdatesBell className="size-10 rounded-2xl bg-surface-glass backdrop-blur-md border-border-default/40 text-text-primary hover:bg-surface-hover hover:border-border-strong shadow-xs" />
 
       {/* Settings / Profile Trigger Button (Squircle rounded-2xl) */}
       <button
@@ -126,10 +97,10 @@ export function HeaderActions({ className }: { className?: string } = {}) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 6, scale: 0.95 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className="absolute right-0 top-12 z-[100] w-[230px] rounded-2xl bg-white/95 dark:bg-[#141721]/95 backdrop-blur-2xl border border-white/60 dark:border-white/10 shadow-[0_12px_36px_-6px_rgba(0,0,0,0.18),0_4px_16px_-2px_rgba(0,0,0,0.08)] dark:shadow-[0_16px_40px_-6px_rgba(0,0,0,0.7),0_4px_16px_-2px_rgba(0,0,0,0.4)] p-1.5 flex flex-col gap-0.5 select-none"
+            className="absolute right-0 top-12 z-[100] w-[230px] rounded-2xl bg-surface-overlay/95 backdrop-blur-2xl border border-border-subtle shadow-[0_12px_36px_-6px_rgba(0,0,0,0.18),0_4px_16px_-2px_rgba(0,0,0,0.08)] dark:shadow-[0_16px_40px_-6px_rgba(0,0,0,0.7),0_4px_16px_-2px_rgba(0,0,0,0.4)] p-1.5 flex flex-col gap-0.5 select-none"
           >
             {/* Beak Pointer Notch */}
-            <div className="absolute -top-1.5 right-3.5 size-3 rotate-45 bg-white dark:bg-[#141721] border-l border-t border-white/60 dark:border-white/10 pointer-events-none" />
+            <div className="absolute -top-1.5 right-3.5 size-3 rotate-45 bg-surface-overlay border-l border-t border-border-subtle pointer-events-none" />
 
             {/* User Profile Header (if logged in) */}
             {user && (

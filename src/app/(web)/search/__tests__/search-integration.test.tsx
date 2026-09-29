@@ -23,6 +23,7 @@ vi.mock('@/shared/api-client', () => ({
     getFilters: vi.fn(),
     search: vi.fn(),
     searchGlobal: vi.fn(),
+    rankSearchIntelligence: vi.fn(),
   }
 }));
 
@@ -68,6 +69,11 @@ describe('Search Page Integration', () => {
     ]);
     (apiClient.search as any).mockResolvedValue({ sourceId: 'sourceA', query: 'test', page: 1, results: [] });
     (apiClient.searchGlobal as any).mockResolvedValue({ resultsBySource: {} });
+    (apiClient.rankSearchIntelligence as any).mockResolvedValue({
+      semanticAvailable: false,
+      scores: {},
+      catalogMatches: [],
+    });
   });
 
   it('orchestrates pruning, resets, and preserves valid filters even when drawer is closed', async () => {

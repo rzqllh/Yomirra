@@ -12,6 +12,8 @@ import { useQuery, useQueries } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { mergeFilters } from "@/shared/utils/filter-helpers";
+import { canonicalizeFilterValue, resolveSearchTag, type SearchTagCategory } from "@/shared/lib/search-intelligence";
+import { normalizeTitle } from "@/shared/lib/title-matcher";
 import type { FilterList } from "@/shared/sources/source-types";
 
 const NSFW_GENRE_IDENTIFIERS = new Set([
@@ -48,11 +50,72 @@ const LOCAL_READING_STATUSES = [
 ];
 
 const DEFAULT_SORTS = [
-  { id: "popular", label: "Paling Populer" },
-  { id: "latest", label: "Update Terbaru" },
+  { id: "popular", label: "Populer" },
+  { id: "latest", label: "Terbaru" },
   { id: "rating", label: "Rating Tertinggi" },
   { id: "alphabetical", label: "A-Z" },
 ];
+
+function isCatchAllOption(id: string, label: string) {
+  const value = normalizeTitle(`${id} ${label}`).replace(/\s+/g, "");
+  return ["all", "alltypes", "alltype", "allstatus", "semua", "semuatipe", "semuastatus"].some(
+    (token) => value === token || value.startsWith(token)
+  );
+}
+
+function normalizeSourceOptions(
+  items: Array<{ id: string; name: string }> | undefined,
+  category: SearchTagCategory
+) {
+  const merged = new Map<string, { id: string; label: string; canonicalId: string }>();
+  for (const item of items ?? []) {
+    if (isCatchAllOption(item.id, item.name)) continue;
+    const canonical = canonicalizeFilterValue(category, item.id, item.name);
+    if (!merged.has(canonical.id)) {
+      merged.set(canonical.id, {
+        id: item.id,
+        label: canonical.label,
+        canonicalId: canonical.id,
+      });
+    }
+  }
+
+  const options = Array.from(merged.values());
+  if (category !== "genre") return options;
+
+  const canonicalIds = new Set(options.map((option) => option.canonicalId));
+  return options.filter((option) => {
+    const words = normalizeTitle(option.label).split(" ").filter(Boolean);
+    if (words.length < 2) return true;
+    const resolved = words
+      .map((word) => resolveSearchTag(word))
+      .filter((tag) => tag?.category === "genre")
+      .map((tag) => tag!.id);
+    const unique = Array.from(new Set(resolved));
+    return unique.length < 2 || !unique.every((id) => canonicalIds.has(id));
+  });
+}
+
+function normalizeSortOptions(items: Array<{ id: string; name: string }> | undefined) {
+  const source = items && items.length > 0 ? items : DEFAULT_SORTS.map((item) => ({ id: item.id, name: item.label }));
+  const aliases = [
+    { id: "popular", label: "Populer", terms: ["popular", "populer", "popularity"] },
+    { id: "latest", label: "Terbaru", terms: ["latest", "update", "latest update", "terbaru"] },
+    { id: "rating", label: "Rating Tertinggi", terms: ["rating", "highest rating", "rating tertinggi"] },
+    { id: "alphabetical", label: "A-Z", terms: ["a-z", "alphabetical", "alphabet", "title asc"] },
+    { id: "reverse-alphabetical", label: "Z-A", terms: ["z-a", "title desc"] },
+  ];
+  const seen = new Set<string>();
+  return source.flatMap((item) => {
+    if (isCatchAllOption(item.id, item.name)) return [];
+    const normalized = normalizeTitle(`${item.id} ${item.name}`);
+    const match = aliases.find((alias) => alias.terms.some((term) => normalized.includes(term)));
+    const key = match?.id ?? normalizeTitle(item.id || item.name);
+    if (!key || seen.has(key)) return [];
+    seen.add(key);
+    return [{ id: item.id, label: match?.label ?? item.name }];
+  });
+}
 
 export interface UnifiedFilterDrawerProps {
   context: "search" | "library";
@@ -168,31 +231,22 @@ export function UnifiedFilterDrawer({
         genres: safeGenres,
       };
     } else {
-      const rawGenres =
-        libraryFiltersData?.genres?.map((g: any) => ({
-          id: g.id,
-          label: g.name,
-        })) || [];
+      const normalizedGenres = normalizeSourceOptions(libraryFiltersData?.genres, "genre");
       const safeGenres = hideNsfw
-        ? rawGenres.filter((g) => !isNsfwGenre(g))
-        : rawGenres;
-
-      const finalStatuses =
-        libraryFiltersData?.statuses && libraryFiltersData.statuses.length > 0
-          ? libraryFiltersData.statuses.map((s: any) => ({ id: s.id, label: s.name }))
-          : DEFAULT_STATUSES;
-      const finalSorts =
-        libraryFiltersData?.sorts && libraryFiltersData.sorts.length > 0
-          ? libraryFiltersData.sorts.map((s: any) => ({ id: s.id, label: s.name }))
-          : DEFAULT_SORTS;
-      const finalFormats =
-        libraryFiltersData?.formats?.map((f: any) => ({ id: f.id, label: f.name })) || [];
+        ? normalizedGenres.filter((genre) => !isNsfwGenre(genre))
+        : normalizedGenres;
+      const statuses = normalizeSourceOptions(
+        libraryFiltersData?.statuses?.length ? libraryFiltersData.statuses : DEFAULT_STATUSES.map((item) => ({ id: item.id, name: item.label })),
+        "status"
+      );
+      const formats = normalizeSourceOptions(libraryFiltersData?.formats, "format");
+      const sorts = normalizeSortOptions(libraryFiltersData?.sorts);
 
       return {
         genres: safeGenres,
-        statuses: finalStatuses,
-        sorts: finalSorts,
-        formats: finalFormats,
+        statuses,
+        sorts,
+        formats,
       };
     }
   }, [context, sourcesToFetch, searchFiltersQueries, libraryFiltersData, hideNsfw]);
@@ -314,8 +368,8 @@ export function UnifiedFilterDrawer({
 
   return (
     <FilterDrawerShell
-      title="Filter Pencarian"
-      description="Pilih urutan, status, dan genre yang ingin kamu lihat."
+      title={context === "search" ? "Filter Pencarian" : "Filter Library"}
+      description="Atur urutan, tipe, status, dan genre yang mau ditampilkan."
       activeCount={activeCount}
       onApply={handleApply}
       onReset={handleReset}

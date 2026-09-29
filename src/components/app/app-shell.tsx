@@ -35,11 +35,38 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
   }, [isReader]);
 
-  // Reset scroll to top on route navigation (prevents preserving feed scroll on new pages)
   React.useEffect(() => {
-    if (!isReader) {
-      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+    if (isReader || !pathname) return;
+
+    const storageKey = `yomirra:scroll:${pathname}`;
+    const previousRestoration = window.history.scrollRestoration;
+    window.history.scrollRestoration = "manual";
+
+    let target = 0;
+    try {
+      const saved = sessionStorage.getItem(storageKey);
+      target = saved ? Number(saved) : 0;
+    } catch {
+      target = 0;
     }
+
+    const frame = requestAnimationFrame(() => {
+      window.scrollTo({
+        top: Number.isFinite(target) ? target : 0,
+        left: 0,
+        behavior: "instant",
+      });
+    });
+
+    return () => {
+      cancelAnimationFrame(frame);
+      try {
+        sessionStorage.setItem(storageKey, String(window.scrollY));
+      } catch {
+        // Scroll restoration is optional.
+      }
+      window.history.scrollRestoration = previousRestoration;
+    };
   }, [pathname, isReader]);
 
   return (

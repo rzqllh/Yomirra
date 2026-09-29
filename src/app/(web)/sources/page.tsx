@@ -96,7 +96,7 @@ export default function SourcesPage() {
   return (
     <PullToRefresh onRefresh={handleRefresh}>
       <YomirraSurface variant="base" className="min-h-screen">
-        <PageContainer>
+        <PageContainer hasMobileHeader>
           <PageHeader
             title="Sumber"
             subtitle="Kelola ekstensi dan sumber bacaan untuk Yomirra."

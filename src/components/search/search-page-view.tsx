@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { HeaderActions } from "@/components/app/header-actions";
+import { PageHeader } from "@/components/app/header";
 import { YomirraSurface, PageContainer, PageToolbar } from "@/components/ui/layout";
 import { CatalogControls } from "@/components/ui/catalog-controls";
 import { useSearchCatalog } from "@/shared/hooks/use-search-catalog";
@@ -14,12 +14,12 @@ export function SearchPageView() {
 
   return (
     <YomirraSurface variant="base" className="w-full">
-      <PageContainer>
-        {/* Mobile Utility Actions (hidden on desktop where TopNav is canonical) */}
-        <div className="flex items-center justify-between w-full md:hidden">
-          <span className="font-bold text-xs uppercase tracking-[0.14em] text-accent">Pencarian</span>
-          <HeaderActions />
-        </div>
+      <PageContainer hasMobileHeader>
+        <PageHeader
+          title="Cari"
+          subtitle="Cari judul dari semua sumber."
+          hideDesktop
+        />
 
         <h1 className="sr-only">Pencarian</h1>
 
@@ -27,9 +27,10 @@ export function SearchPageView() {
           <PageToolbar>
             <SearchToolbar
               localQuery={search.localQuery}
-              onQueryChange={(e) => search.setLocalQuery(e.target.value)}
+              onQueryChange={search.setLocalQuery}
               onSearchSubmit={search.handleSearchSubmit}
               onQueryClear={() => search.setLocalQuery("")}
+              filters={search.dynamicFilters}
             />
             <SearchSourceRail
               searchableSources={search.searchableSources}
@@ -53,6 +54,7 @@ export function SearchPageView() {
           setPage={search.setPage}
           hasNextPage={search.hasNextPage}
           queryClient={search.queryClient}
+          hasSearchIntent={search.hasSearchIntent}
         />
       </PageContainer>
     </YomirraSurface>

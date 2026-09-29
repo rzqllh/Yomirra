@@ -109,37 +109,55 @@ export class AsuraScansSource implements MangaSource {
   ): Promise<MangaPageResult> {
     const trimmedQuery = query?.trim() || "";
     const pageNum = Math.max(1, page || 1);
+    const values = (value?: string | string[]) =>
+      (Array.isArray(value) ? value : value ? [value] : [])
+        .map((item) => item.trim())
+        .filter((item) => item && item.toLowerCase() !== "all");
+
+    const requestedGenres = values(filters?.["genre[]"] ?? filters?.genres);
+    const requestedFormats = values(filters?.["format[]"] ?? filters?.type);
+    const requestedStatuses = values(filters?.status);
 
     const params: Record<string, string | number | boolean | string[]> = {
       page: pageNum,
     };
 
-    if (trimmedQuery.length > 0) {
-      params.search = trimmedQuery;
-    }
+    if (trimmedQuery.length > 0) params.search = trimmedQuery;
+    if (requestedGenres.length > 0) params.genres = requestedGenres.join(",");
+    if (requestedFormats.length === 1) params.type = requestedFormats[0];
+    if (requestedStatuses.length === 1) params.status = requestedStatuses[0];
 
-    if (filters) {
-      if (typeof filters.genres === "string" && filters.genres !== "all") {
-        params.genres = filters.genres;
-      }
-      if (typeof filters.status === "string" && filters.status !== "all") {
-        params.status = filters.status;
-      }
-      if (typeof filters.type === "string" && filters.type !== "all") {
-        params.type = filters.type;
-      }
-      if (typeof filters.sort === "string" && filters.sort !== "all") {
-        params.order = filters.sort;
-      }
+    const sortValue = filters?.sort;
+    if (typeof sortValue === "string" && sortValue !== "all") {
+      params.order = sortValue;
     }
 
     const res = await this.client.get<AsuraSeriesListResponse>("/series", params);
-    const items = Array.isArray(res?.data) ? res.data : [];
-    const hasNextPage = Boolean(res?.meta?.has_more);
+    let items = Array.isArray(res?.data) ? res.data : [];
+
+    const normalize = (value?: string) => value?.trim().toLowerCase() ?? "";
+    if (requestedGenres.length > 0) {
+      const required = requestedGenres.map(normalize);
+      items = items.filter((item) => {
+        const itemGenres = (item.genres ?? []).flatMap((genre) => [
+          normalize(genre.slug),
+          normalize(genre.name),
+        ]);
+        return required.every((genre) => itemGenres.includes(genre));
+      });
+    }
+    if (requestedFormats.length > 0) {
+      const allowed = new Set(requestedFormats.map(normalize));
+      items = items.filter((item) => allowed.has(normalize(item.type)));
+    }
+    if (requestedStatuses.length > 0) {
+      const allowed = new Set(requestedStatuses.map(normalize));
+      items = items.filter((item) => allowed.has(normalize(item.status)));
+    }
 
     return {
       mangas: items.map(normalizeAsuraMangaItem),
-      hasNextPage,
+      hasNextPage: Boolean(res?.meta?.has_more),
     };
   }
 

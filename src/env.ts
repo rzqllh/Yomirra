@@ -11,7 +11,7 @@ const envSchema = z.object({
       ? `https://${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}`
       : "https://www.yomirra.web.id"
   ),
-  IMAGE_PROXY_SECRET: z.string().min(32),
+  IMAGE_PROXY_SECRET: z.string().min(32).optional(),
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   TELEGRAM_BOT_TOKEN: z.string().optional(),
   TELEGRAM_CHAT_ID: z.string().optional(),
@@ -20,6 +20,7 @@ const envSchema = z.object({
   CRON_SECRET: z.string().optional(),
   TELEGRAM_WEBHOOK_SECRET: z.string().optional(),
   VERCEL_DEPLOY_SECRET: z.string().optional(),
+  GEMINI_API_KEY: z.string().optional(),
 });
 
 type Env = z.infer<typeof envSchema>;
@@ -40,6 +41,7 @@ function getEnv(): Env {
     CRON_SECRET: process.env.CRON_SECRET,
     TELEGRAM_WEBHOOK_SECRET: process.env.TELEGRAM_WEBHOOK_SECRET,
     VERCEL_DEPLOY_SECRET: process.env.VERCEL_DEPLOY_SECRET,
+    GEMINI_API_KEY: process.env.GEMINI_API_KEY,
   });
 
   if (parsed.success) {
@@ -69,6 +71,7 @@ function getEnv(): Env {
       CRON_SECRET: undefined,
       TELEGRAM_WEBHOOK_SECRET: undefined,
       VERCEL_DEPLOY_SECRET: undefined,
+      GEMINI_API_KEY: undefined,
     };
   }
 

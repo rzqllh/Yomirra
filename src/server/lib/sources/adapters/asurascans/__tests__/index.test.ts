@@ -164,9 +164,9 @@ describe("AsuraScansSource Adapter", () => {
       mockHttpClient.get.mockResolvedValueOnce(mockAsuraSeriesList);
 
       const res = await adapter.search("sword", 1, {
-        genres: "action",
+        "genre[]": ["action"],
         status: "ongoing",
-        type: "manhwa",
+        "format[]": ["manhwa"],
         sort: "popular",
       });
 
@@ -178,7 +178,8 @@ describe("AsuraScansSource Adapter", () => {
         type: "manhwa",
         order: "popular",
       });
-      expect(res.mangas).toHaveLength(2);
+      expect(res.mangas).toHaveLength(1);
+      expect(res.mangas[0].title).toBe("War of Extinction");
     });
 
     it("search with empty query returns results without search param", async () => {

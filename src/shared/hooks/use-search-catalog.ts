@@ -2,16 +2,31 @@
 
 import * as React from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { useQuery, useQueries, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import {
+  useQuery,
+  useQueries,
+  useQueryClient,
+  keepPreviousData,
+} from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useSearchFilterStore } from "@/shared/store/search-filter-store";
 import { useDebounce } from "@/shared/hooks/use-debounce";
 import { useSearchPruning } from "@/shared/hooks/use-search-pruning";
 import { useSearchReset } from "@/shared/hooks/use-search-reset";
-import { mergeFilters, buildPayloadForSource } from "@/shared/utils/filter-helpers";
+import {
+  mergeFilters,
+  buildPayloadForSource,
+} from "@/shared/utils/filter-helpers";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
-import { clusterCanonicalResults, type SourceBinding } from "@/shared/lib/canonical-search";
+import { clusterCanonicalResults } from "@/shared/lib/canonical-search";
+import {
+  applySearchTagsToFilters,
+  isSourceCompatibleWithTags,
+  parseSearchExpression,
+  rankHybridScore,
+  type SearchCatalogCandidate,
+} from "@/shared/lib/search-intelligence";
 import type { FilterList, SourceMetadata } from "@/shared/sources/source-types";
 
 export function useSearchCatalog() {
@@ -40,11 +55,13 @@ export function useSearchCatalog() {
     }
   }, [debouncedQuery, query, router, searchParams]);
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSearchSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
     if (localQuery.trim() !== query) {
       const params = new URLSearchParams(searchParams?.toString() || "");
-      params.set("q", localQuery.trim());
+      if (localQuery.trim()) params.set("q", localQuery.trim());
+      else params.delete("q");
+      setPage(1);
       router.push(`/search?${params.toString()}`);
     }
   };
@@ -67,18 +84,21 @@ export function useSearchCatalog() {
     queryFn: () => apiClient.getSources(),
   });
 
-  const hideNsfw = useSettingsStore(state => state.hideNsfw);
+  const hideNsfw = useSettingsStore((state) => state.hideNsfw);
 
   const searchableSources = React.useMemo(() => {
-    const s = [...(sourcesData || [])];
-    localSources.forEach(ls => {
-      if (!s.find(x => x.id === ls.id)) {
-        s.push(ls);
+    const sources = [...(sourcesData || [])];
+    localSources.forEach((localSource) => {
+      if (!sources.find((source) => source.id === localSource.id)) {
+        sources.push(localSource);
       }
     });
-    return s.filter(src => {
-      if (!src.isInstalled || src.isEnabled === false || !src.capabilities?.search) return false;
-      if (src.isNsfw && hideNsfw) return false;
+
+    return sources.filter((source) => {
+      if (!source.isInstalled || source.isEnabled === false || !source.capabilities?.search) {
+        return false;
+      }
+      if (source.isNsfw && hideNsfw) return false;
       return true;
     });
   }, [sourcesData, localSources, hideNsfw]);
@@ -90,16 +110,19 @@ export function useSearchCatalog() {
   const activeSelectedSources = React.useMemo(() => {
     if (!searchableSources.length) return [];
     if (!hasCustomizedSources || selectedSources === null) {
-      return searchableSources.map(s => s.id);
+      return searchableSources.map((source) => source.id);
     }
-    return selectedSources.filter((id: string) => searchableSources.some(s => s.id === id));
+    return selectedSources.filter((id) =>
+      searchableSources.some((source) => source.id === id)
+    );
   }, [hasCustomizedSources, selectedSources, searchableSources]);
 
   const toggleSource = (id: string) => {
-    searchFilterStore.toggleSource(id, searchableSources.map(s => s.id));
+    searchFilterStore.toggleSource(
+      id,
+      searchableSources.map((source) => source.id)
+    );
   };
-
-  const isNsfwFiltered = useSettingsStore((state) => state.hideNsfw);
 
   const genres = searchFilterStore.genres;
   const formats = searchFilterStore.formats;
@@ -107,23 +130,26 @@ export function useSearchCatalog() {
   const sort = searchFilterStore.sort;
 
   const filtersQueries = useQueries({
-    queries: activeSelectedSources.map((sourceId: string) => ({
+    queries: activeSelectedSources.map((sourceId) => ({
       queryKey: ["sourceFilters", sourceId],
       queryFn: (): Promise<FilterList> => apiClient.getFilters(sourceId),
       staleTime: 5 * 60 * 1000,
-    }))
+    })),
   });
 
-  const isFiltersLoading = filtersQueries.some(q => q.isLoading || q.isFetching);
-  const hasFiltersError = filtersQueries.some(q => q.isError);
-  const isCapabilitiesLoaded = filtersQueries.filter(q => q.isSuccess).length === activeSelectedSources.length;
+  const isFiltersLoading = filtersQueries.some(
+    (filterQuery) => filterQuery.isLoading || filterQuery.isFetching
+  );
+  const hasFiltersError = filtersQueries.some((filterQuery) => filterQuery.isError);
+  const isCapabilitiesLoaded =
+    filtersQueries.filter((filterQuery) => filterQuery.isSuccess).length ===
+    activeSelectedSources.length;
 
   const dynamicFilters = React.useMemo(() => {
-    const sourceFilters = activeSelectedSources.flatMap((sourceId: string, idx: number) => {
-      const filters = filtersQueries[idx]?.data;
+    const sourceFilters = activeSelectedSources.flatMap((sourceId, index) => {
+      const filters = filtersQueries[index]?.data;
       return filters ? [{ sourceId, filters }] : [];
     });
-
     return mergeFilters(sourceFilters);
   }, [activeSelectedSources, filtersQueries]);
 
@@ -133,8 +159,32 @@ export function useSearchCatalog() {
     hasError: hasFiltersError,
     isCapabilitiesLoaded,
     dynamicFilters,
-    pruneFilters: searchFilterStore.pruneFilters
+    pruneFilters: searchFilterStore.pruneFilters,
   });
+
+  const parsedQuery = React.useMemo(
+    () => parseSearchExpression(query, dynamicFilters),
+    [query, dynamicFilters]
+  );
+
+  const activeFilters = React.useMemo(
+    () =>
+      applySearchTagsToFilters(
+        { genres, formats, status, sort },
+        parsedQuery.tags
+      ),
+    [genres, formats, status, sort, parsedQuery.tags]
+  );
+
+  const hasDrawerFilters =
+    genres.length > 0 ||
+    formats.length > 0 ||
+    Boolean(status) ||
+    (Boolean(sort) && sort !== "popular");
+  const hasSearchIntent =
+    Boolean(parsedQuery.textQuery.trim()) ||
+    parsedQuery.tags.length > 0 ||
+    hasDrawerFilters;
 
   useSearchReset({
     activeSelectedSources,
@@ -143,154 +193,372 @@ export function useSearchCatalog() {
     status,
     sort,
     query,
-    setPage
+    setPage,
   });
 
-  const activeFilters = React.useMemo(() => ({ genres, formats, status, sort }), [genres, formats, status, sort]);
+  const eligibleSourceIds = React.useMemo(
+    () =>
+      activeSelectedSources.filter((sourceId) => {
+        const source = searchableSources.find((item) => item.id === sourceId);
+        const unavailable =
+          source?.status === "unavailable" || source?.status === "in-fix";
+        return (
+          !unavailable &&
+          isSourceCompatibleWithTags(
+            sourceId,
+            parsedQuery.tags,
+            dynamicFilters
+          )
+        );
+      }),
+    [activeSelectedSources, searchableSources, parsedQuery.tags, dynamicFilters]
+  );
 
   const queryClient = useQueryClient();
 
   const searchQueries = useQueries({
-    queries: activeSelectedSources.map((sourceId: string) => {
-      const sourceMeta = searchableSources.find((s) => s.id === sourceId);
-      const isUnreachable = sourceMeta?.status === "unavailable" || sourceMeta?.status === "in-fix";
-      const payload = buildPayloadForSource(sourceId, dynamicFilters, activeFilters);
+    queries: activeSelectedSources.map((sourceId) => {
+      const source = searchableSources.find((item) => item.id === sourceId);
+      const isUnreachable =
+        source?.status === "unavailable" || source?.status === "in-fix";
+      const isTagCompatible = isSourceCompatibleWithTags(
+        sourceId,
+        parsedQuery.tags,
+        dynamicFilters
+      );
+      const payload = buildPayloadForSource(
+        sourceId,
+        dynamicFilters,
+        activeFilters
+      );
 
       let isExhausted = false;
-      for (let p = 1; p < page; p++) {
-        const prevData = queryClient.getQueryData<{ hasNextPage?: boolean }>(
-          ["searchSource", sourceId, query, isNsfwFiltered, payload, p]
-        );
-        if (prevData && prevData.hasNextPage === false) {
+      for (let previousPage = 1; previousPage < page; previousPage++) {
+        const previous = queryClient.getQueryData<{ hasNextPage?: boolean }>([
+          "searchSource",
+          sourceId,
+          parsedQuery.textQuery,
+          hideNsfw,
+          payload,
+          previousPage,
+        ]);
+        if (previous?.hasNextPage === false) {
           isExhausted = true;
           break;
         }
       }
 
       return {
-        queryKey: ["searchSource", sourceId, query, isNsfwFiltered, payload, page],
-        queryFn: ({ signal }: { signal?: AbortSignal }) => apiClient.search(sourceId, query, page, payload, isNsfwFiltered, { signal }),
-        enabled: activeSelectedSources.length > 0 && !isExhausted && !isUnreachable,
+        queryKey: [
+          "searchSource",
+          sourceId,
+          parsedQuery.textQuery,
+          hideNsfw,
+          payload,
+          page,
+        ],
+        queryFn: ({ signal }: { signal?: AbortSignal }) =>
+          apiClient.search(
+            sourceId,
+            parsedQuery.textQuery,
+            page,
+            payload,
+            hideNsfw,
+            { signal }
+          ),
+        enabled:
+          hasSearchIntent &&
+          !isExhausted &&
+          !isUnreachable &&
+          isTagCompatible,
         placeholderData: keepPreviousData,
       };
-    })
+    }),
   });
 
   const resultsBySource = React.useMemo(() => {
-    const acc: Record<string, { results: any[]; hasNextPage?: boolean; error?: string }> = {};
-    activeSelectedSources.forEach((sourceId: string, idx: number) => {
-      const sourceMeta = searchableSources.find((s) => s.id === sourceId);
-      const isUnreachable = sourceMeta?.status === "unavailable" || sourceMeta?.status === "in-fix";
+    const results: Record<
+      string,
+      { results: any[]; hasNextPage?: boolean; error?: string }
+    > = {};
+
+    if (!hasSearchIntent) return results;
+
+    activeSelectedSources.forEach((sourceId, index) => {
+      const source = searchableSources.find((item) => item.id === sourceId);
+      const isUnreachable =
+        source?.status === "unavailable" || source?.status === "in-fix";
+      const isTagCompatible = isSourceCompatibleWithTags(
+        sourceId,
+        parsedQuery.tags,
+        dynamicFilters
+      );
+
+      if (!isTagCompatible) {
+        results[sourceId] = { results: [], hasNextPage: false };
+        return;
+      }
 
       if (isUnreachable) {
-        acc[sourceId] = {
-          error: `Sumber sedang mengalami gangguan (${sourceMeta?.status === "in-fix" ? "dalam perbaikan" : "tidak tersedia"})`,
+        results[sourceId] = {
+          error: `Sumber sedang mengalami gangguan (${
+            source?.status === "in-fix" ? "dalam perbaikan" : "tidak tersedia"
+          })`,
           results: [],
         };
         return;
       }
 
-      const q = searchQueries[idx];
-      if (q?.data) {
-        acc[sourceId] = {
-          results: q.data.results || [],
-          hasNextPage: q.data.hasNextPage,
+      const searchQuery = searchQueries[index];
+      if (searchQuery?.data) {
+        results[sourceId] = {
+          results: searchQuery.data.results || [],
+          hasNextPage: searchQuery.data.hasNextPage,
         };
-      } else if (q?.error) {
-        acc[sourceId] = {
-          error: (q.error as Error).message || "Error",
+      } else if (searchQuery?.error) {
+        results[sourceId] = {
+          error: (searchQuery.error as Error).message || "Error",
           results: [],
         };
-      } else {
-        const payload = buildPayloadForSource(sourceId, dynamicFilters, activeFilters);
-        let isExhausted = false;
-        for (let p = 1; p < page; p++) {
-          const prevData = queryClient.getQueryData<{ hasNextPage?: boolean }>(
-            ["searchSource", sourceId, query, isNsfwFiltered, payload, p]
-          );
-          if (prevData && prevData.hasNextPage === false) {
-            isExhausted = true;
-            break;
-          }
-        }
-        if (isExhausted) {
-          acc[sourceId] = {
-            results: [],
-            hasNextPage: false,
-          };
-        }
       }
     });
-    return acc;
-  }, [activeSelectedSources, searchQueries, queryClient, dynamicFilters, activeFilters, page, query, isNsfwFiltered, searchableSources]);
 
-  const getMergedMangas = (sourceArrays: { sourceId: string, items: any[] }[]) => {
+    return results;
+  }, [
+    hasSearchIntent,
+    activeSelectedSources,
+    searchableSources,
+    parsedQuery.tags,
+    dynamicFilters,
+    searchQueries,
+  ]);
+
+  const rawSearchMangas = React.useMemo(() => {
     const flattened: Array<{ manga: any; sourceId: string }> = [];
+    const sourceArrays = Object.entries(resultsBySource).map(
+      ([sourceId, result]) => ({
+        sourceId,
+        items: result.results || [],
+      })
+    );
 
-    let maxLen = 0;
-    sourceArrays.forEach(arr => {
-      if (arr.items.length > maxLen) maxLen = arr.items.length;
+    let maxLength = 0;
+    sourceArrays.forEach((source) => {
+      maxLength = Math.max(maxLength, source.items.length);
     });
 
-    for (let i = 0; i < maxLen; i++) {
-      for (const arr of sourceArrays) {
-        if (arr.items[i]) {
-          flattened.push({ manga: arr.items[i], sourceId: arr.sourceId });
+    for (let index = 0; index < maxLength; index++) {
+      for (const source of sourceArrays) {
+        if (source.items[index]) {
+          flattened.push({
+            manga: source.items[index],
+            sourceId: source.sourceId,
+          });
         }
       }
     }
 
-    const clusters = clusterCanonicalResults(flattened);
-    return clusters.map(c => ({
-      manga: c.primaryResult,
-      sourceId: c.primaryResult.sourceId,
-      sourceBindings: c.sourceBindings,
+    return clusterCanonicalResults(flattened).map((cluster) => ({
+      canonicalKey: cluster.canonicalKey,
+      manga: cluster.primaryResult,
+      sourceId: cluster.primaryResult.sourceId,
+      sourceBindings: cluster.sourceBindings,
     }));
-  };
-
-  const rawSearchMangas = React.useMemo(() => {
-    return resultsBySource ? getMergedMangas(
-      Object.entries(resultsBySource).map(([sourceId, res]) => ({
-        sourceId,
-        items: res.results || []
-      }))
-    ) : [];
   }, [resultsBySource]);
 
-  const searchMangas = React.useMemo(() => {
-    if (sort !== "rating") return rawSearchMangas;
-    return [...rawSearchMangas].sort((a, b) => {
-      const scoreA = typeof a.manga.score === "number" && a.manga.score > 0 ? a.manga.score : -1;
-      const scoreB = typeof b.manga.score === "number" && b.manga.score > 0 ? b.manga.score : -1;
+  const intelligenceCandidates = React.useMemo<SearchCatalogCandidate[]>(
+    () =>
+      rawSearchMangas.map((item) => ({
+        canonicalKey: item.canonicalKey,
+        sourceId: item.sourceId,
+        mangaId: item.manga.id,
+        title: item.manga.title,
+        coverUrl: item.manga.coverUrl,
+        originalTitle: item.manga.originalTitle,
+        alternativeTitles: item.manga.alternativeTitles,
+        author: item.manga.author,
+        description: item.manga.description,
+        format: item.manga.format,
+        status: item.manga.status,
+        score: item.manga.score,
+        sourceBindings: item.sourceBindings,
+      })),
+    [rawSearchMangas]
+  );
 
-      // Null-last: unrated titles are kept at the bottom of the list
-      if (scoreA === -1 && scoreB === -1) return 0;
-      if (scoreA === -1) return 1;
-      if (scoreB === -1) return -1;
+  const sourceSearchSettled = searchQueries.every(
+    (sourceQuery) => sourceQuery.fetchStatus !== "fetching"
+  );
+  const candidateSignature = intelligenceCandidates
+    .map((candidate) => candidate.canonicalKey)
+    .join("|");
+  const tagSignature = parsedQuery.tags
+    .map((tag) => `${tag.category}:${tag.id}`)
+    .join("|");
 
-      // Primary sort: descending by rating
-      if (scoreB !== scoreA) {
-        return scoreB - scoreA;
-      }
+  const intelligenceQuery = useQuery({
+    queryKey: [
+      "searchIntelligence",
+      parsedQuery.textQuery,
+      tagSignature,
+      candidateSignature,
+    ],
+    queryFn: () =>
+      apiClient.rankSearchIntelligence(
+        parsedQuery.textQuery,
+        parsedQuery.tags,
+        intelligenceCandidates
+      ),
+    enabled:
+      hasSearchIntent &&
+      sourceSearchSettled &&
+      (Boolean(parsedQuery.textQuery) || parsedQuery.tags.length > 0),
+    retry: false,
+    staleTime: 5 * 60 * 1000,
+  });
 
-      // Tie-break fallback to popularity/rank
-      const rankA = a.manga.rank ?? 0;
-      const rankB = b.manga.rank ?? 0;
-      return rankB - rankA;
+  const catalogMatches = React.useMemo(() => {
+    const matches = intelligenceQuery.data?.catalogMatches ?? [];
+
+    return matches.flatMap((candidate) => {
+      const availableBindings = (candidate.sourceBindings ?? []).filter(
+        (binding) => eligibleSourceIds.includes(binding.sourceId)
+      );
+      const fallbackBinding = eligibleSourceIds.includes(candidate.sourceId)
+        ? {
+            sourceId: candidate.sourceId,
+            mangaId: candidate.mangaId,
+            title: candidate.title,
+            coverUrl: candidate.coverUrl,
+          }
+        : undefined;
+      const primaryBinding = availableBindings[0] ?? fallbackBinding;
+      if (!primaryBinding) return [];
+
+      return [
+        {
+          canonicalKey: candidate.canonicalKey,
+          sourceId: primaryBinding.sourceId,
+          sourceBindings:
+            availableBindings.length > 0
+              ? availableBindings
+              : [primaryBinding],
+          manga: {
+            id: primaryBinding.mangaId,
+            title: candidate.title,
+            coverUrl: candidate.coverUrl || primaryBinding.coverUrl || "",
+            originalTitle: candidate.originalTitle,
+            alternativeTitles: candidate.alternativeTitles,
+            author: candidate.author,
+            description: candidate.description,
+            format: candidate.format,
+            status: candidate.status,
+            score: candidate.score,
+            sourceId: primaryBinding.sourceId,
+            sourceBindings:
+              availableBindings.length > 0
+                ? availableBindings
+                : [primaryBinding],
+          },
+        },
+      ];
     });
-  }, [rawSearchMangas, sort]);
+  }, [intelligenceQuery.data?.catalogMatches, eligibleSourceIds]);
 
-  const hasNextPage = Object.values(resultsBySource || {}).some((res: any) => res.hasNextPage);
+  const combinedResults = React.useMemo(() => {
+    const merged = new Map(
+      rawSearchMangas.map((item) => [item.canonicalKey, item])
+    );
+    catalogMatches.forEach((item) => {
+      if (!merged.has(item.canonicalKey)) merged.set(item.canonicalKey, item);
+    });
+    return Array.from(merged.values());
+  }, [rawSearchMangas, catalogMatches]);
 
-  const errorsToDisplay = resultsBySource
-    ? (Object.entries(resultsBySource)
-        .map(([sourceId, res]) => res.error ? { sourceId, error: res.error } : null)
-        .filter(Boolean) as { sourceId: string; error: string }[])
-    : [];
+  const searchMangas = React.useMemo(() => {
+    const results = [...combinedResults];
 
-  const isInitialLoading = searchQueries.some(q => q.fetchStatus === "fetching" && !q.data);
-  const allSourcesFailed = activeSelectedSources.length > 0 && errorsToDisplay.length === activeSelectedSources.length;
-  const hasActiveFilters = genres.length > 0 || (formats && formats.length > 0) || Boolean(status) || (Boolean(sort) && sort !== "popular");
+    if (sort === "rating") {
+      return results.sort((a, b) => {
+        const scoreA =
+          typeof a.manga.score === "number" && a.manga.score > 0
+            ? a.manga.score
+            : -1;
+        const scoreB =
+          typeof b.manga.score === "number" && b.manga.score > 0
+            ? b.manga.score
+            : -1;
+        if (scoreA === -1 && scoreB === -1) return 0;
+        if (scoreA === -1) return 1;
+        if (scoreB === -1) return -1;
+        return scoreB - scoreA;
+      });
+    }
+
+    if (!parsedQuery.textQuery) return results;
+
+    const semanticScores = intelligenceQuery.data?.scores ?? {};
+    return results.sort((a, b) => {
+      const candidateA: SearchCatalogCandidate = {
+        canonicalKey: a.canonicalKey,
+        sourceId: a.sourceId,
+        mangaId: a.manga.id,
+        title: a.manga.title,
+        originalTitle: a.manga.originalTitle,
+        alternativeTitles: a.manga.alternativeTitles,
+        author: a.manga.author,
+      };
+      const candidateB: SearchCatalogCandidate = {
+        canonicalKey: b.canonicalKey,
+        sourceId: b.sourceId,
+        mangaId: b.manga.id,
+        title: b.manga.title,
+        originalTitle: b.manga.originalTitle,
+        alternativeTitles: b.manga.alternativeTitles,
+        author: b.manga.author,
+      };
+      return (
+        rankHybridScore(
+          parsedQuery.textQuery,
+          candidateB,
+          semanticScores[b.canonicalKey]
+        ) -
+        rankHybridScore(
+          parsedQuery.textQuery,
+          candidateA,
+          semanticScores[a.canonicalKey]
+        )
+      );
+    });
+  }, [
+    combinedResults,
+    sort,
+    parsedQuery.textQuery,
+    intelligenceQuery.data?.scores,
+  ]);
+
+  const hasNextPage = Object.values(resultsBySource).some(
+    (result) => result.hasNextPage
+  );
+
+  const errorsToDisplay = Object.entries(resultsBySource)
+    .filter(([sourceId]) => eligibleSourceIds.includes(sourceId))
+    .map(([sourceId, result]) =>
+      result.error ? { sourceId, error: result.error } : null
+    )
+    .filter(Boolean) as { sourceId: string; error: string }[];
+
+  const isInitialLoading =
+    hasSearchIntent &&
+    searchQueries.some(
+      (sourceQuery) =>
+        sourceQuery.fetchStatus === "fetching" && !sourceQuery.data
+    );
+  const allSourcesFailed =
+    eligibleSourceIds.length > 0 &&
+    errorsToDisplay.length === eligibleSourceIds.length;
+  const hasActiveFilters =
+    hasDrawerFilters || parsedQuery.tags.length > 0;
 
   return {
     localQuery,
@@ -307,7 +575,11 @@ export function useSearchCatalog() {
     isInitialLoading,
     allSourcesFailed,
     hasActiveFilters,
+    hasSearchIntent,
     handleSearchSubmit,
     queryClient,
+    dynamicFilters,
+    parsedQuery,
+    semanticAvailable: Boolean(intelligenceQuery.data?.semanticAvailable),
   };
 }

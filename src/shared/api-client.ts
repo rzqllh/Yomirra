@@ -1,5 +1,6 @@
 import type { MangaDetail, MangaPageResult, Chapter, ChapterPages, MangaItem, SourceMetadata, FilterList } from "@/shared/sources/source-types";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
+import type { ResolvedSearchTag, SearchCatalogCandidate } from "@/shared/lib/search-intelligence";
 
 export interface SearchResponse {
   sourceId: string;
@@ -138,6 +139,30 @@ class ApiClient {
     }
     
     return this.fetcher<import("@/app/api/sources/search/route").GlobalSearchResponse>(url);
+  }
+
+  rankSearchIntelligence(
+    query: string,
+    tags: ResolvedSearchTag[],
+    candidates: SearchCatalogCandidate[]
+  ) {
+    return this.fetcher<{
+      semanticAvailable: boolean;
+      scores: Record<string, number>;
+      catalogMatches: SearchCatalogCandidate[];
+    }>("/api/search/intelligence", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query, tags, candidates }),
+    });
+  }
+
+  getRelatedTitles(target: SearchCatalogCandidate, limit = 8) {
+    return this.fetcher<SearchCatalogCandidate[]>("/api/search/related", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ target, limit }),
+    });
   }
 
   getDetail(sourceId: string, mangaId: string, options?: RequestInit) {

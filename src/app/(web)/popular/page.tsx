@@ -81,7 +81,7 @@ export default async function PopularPage() {
 
   return (
     <YomirraSurface variant="base" className="w-full">
-      <PageContainer>
+      <PageContainer hasMobileHeader>
         <PageHeader
           title="Populer"
           subtitle="Manga, Manhwa, dan Manhua paling populer saat ini."

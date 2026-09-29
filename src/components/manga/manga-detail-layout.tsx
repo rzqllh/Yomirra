@@ -77,7 +77,7 @@ export function MangaDetailLayout({
         {header}
 
         {/* Hero Content Container */}
-        <div className="w-full max-w-9xl mx-auto px-4 md:px-8 pt-16 md:pt-20 pb-4 md:pb-6 relative z-10 ">
+        <div className="w-full max-w-9xl mx-auto px-4 md:px-8 pt-[calc(var(--safe-top,0px)+72px)] md:pt-20 pb-4 md:pb-6 relative z-10">
           {/* Mobile Hero Flow */}
           <div className="flex flex-col gap-4 md:hidden">
             <div className="flex gap-4 relative items-end">
