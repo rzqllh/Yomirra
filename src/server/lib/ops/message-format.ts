@@ -124,3 +124,55 @@ export function statusIcon(status: string): string {
   if (status === "UNKNOWN") return "⚪";
   return "🔴";
 }
+
+
+export type ReportType = "chapter_error" | "source_broken" | "image_broken" | "other";
+
+export interface ReportPayload {
+  type: ReportType;
+  category: string;
+  detail?: string;
+  sourceId?: string;
+  mangaId?: string;
+  mangaTitle?: string;
+  chapterId?: string;
+  chapterTitle?: string;
+  pageIndex?: number;
+}
+
+export function formatUserReport(payload: ReportPayload): string {
+  const issueLabel: Record<ReportType, string> = {
+    chapter_error: "Chapter bermasalah",
+    source_broken: "Source tidak bisa dipakai",
+    image_broken: "Gambar tidak tampil",
+    other: payload.category,
+  };
+
+  let text = "🟡 *Laporan pengguna*\n\n";
+  text += `*Masalah*\n${issueLabel[payload.type] || payload.category}\n`;
+
+  if (payload.sourceId || payload.chapterTitle || typeof payload.pageIndex === "number") {
+    text += "\n*Lokasi*\n";
+    if (payload.sourceId) text += `Source: ${sourceDisplayName(payload.sourceId)}\n`;
+    if (payload.mangaTitle) text += `Komik: ${payload.mangaTitle}\n`;
+    if (payload.chapterTitle) text += `${payload.chapterTitle}\n`;
+    if (typeof payload.pageIndex === "number") text += `Halaman ${payload.pageIndex + 1}\n`;
+  }
+
+  if (payload.detail?.trim()) {
+    text += `\n*Catatan*\n${payload.detail.trim()}\n`;
+  }
+
+  text += "\n*Langkah*\n";
+  text += payload.sourceId
+    ? `/recheck ${payload.sourceId}`
+    : "Cek laporan di aplikasi.";
+
+  if (payload.mangaId || payload.chapterId) {
+    text += "\n\n*Teknis*\n";
+    if (payload.mangaId) text += `Manga ID: \`${payload.mangaId}\`\n`;
+    if (payload.chapterId) text += `Chapter ID: \`${payload.chapterId}\`\n`;
+  }
+
+  return text.trim();
+}

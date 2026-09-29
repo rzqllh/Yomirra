@@ -72,7 +72,7 @@ import { POST as handleHealthDigestCron } from "@/app/api/ops/cron/health-digest
 import { POST as handleDailyDigestCron } from "@/app/api/ops/cron/daily-digest/route";
 import { POST as handleObservabilityAlert } from "@/app/api/observability/alert/route";
 import { POST as handleDeployNotify } from "@/app/api/ops/notify/deploy/route";
-import { formatUserReport } from "@/app/api/ops/report/route";
+import { formatUserReport } from "../message-format";
 
 describe("Phase 4 — Telegram Ops Runtime V1 Unit Tests", () => {
   beforeEach(() => {
