@@ -138,7 +138,7 @@ describe('Search Page Integration', () => {
     expect(state.genres).toContain('invalid');
   });
 
-  it('executes parallel per-source search with source-specific payloads and does not call searchGlobal', async () => {
+  it('skips sources that cannot satisfy all active hard filters', async () => {
     useSearchFilterStore.setState({
       selectedSources: ['sourceA', 'sourceB'],
       genres: ['action'],
@@ -149,24 +149,29 @@ describe('Search Page Integration', () => {
 
     (apiClient.getFilters as any).mockImplementation(async (sourceId: string) => {
       if (sourceId === 'sourceA') {
-        // Source A supports action genre, but NOT webtoon format
-        return { genres: [{ id: 'action', name: 'Action' }], formats: [{ id: 'manga', name: 'Manga' }], sorts: [], statuses: [] };
+        return {
+          genres: [{ id: 'action', name: 'Action' }],
+          formats: [{ id: 'webtoon', name: 'Webtoon' }],
+          sorts: [],
+          statuses: []
+        };
       }
       if (sourceId === 'sourceB') {
-        // Source B supports webtoon format, but NOT action genre
-        return { genres: [{ id: 'romance', name: 'Romance' }], formats: [{ id: 'webtoon', name: 'Webtoon' }], sorts: [], statuses: [] };
+        return {
+          genres: [{ id: 'romance', name: 'Romance' }],
+          formats: [{ id: 'webtoon', name: 'Webtoon' }],
+          sorts: [],
+          statuses: []
+        };
       }
       return null;
     });
 
-    (apiClient.search as any).mockImplementation(async (sourceId: string) => {
-      if (sourceId === 'sourceA') {
-        return { sourceId: 'sourceA', query: 'test', page: 1, results: [{ id: 'm1', title: 'Solo Leveling', coverUrl: '/cover1.jpg' }] };
-      }
-      if (sourceId === 'sourceB') {
-        return { sourceId: 'sourceB', query: 'test', page: 1, results: [{ id: 'm2', title: 'Tower of God', coverUrl: '/cover2.jpg' }] };
-      }
-      return { sourceId, query: 'test', page: 1, results: [] };
+    (apiClient.search as any).mockResolvedValue({
+      sourceId: 'sourceA',
+      query: 'test',
+      page: 1,
+      results: [{ id: 'm1', title: 'Solo Leveling', coverUrl: '/cover1.jpg' }]
     });
 
     render(
@@ -182,27 +187,24 @@ describe('Search Page Integration', () => {
         'sourceA',
         'test',
         1,
-        { 'genre[]': ['action'] },
-        false,
-        { signal: expect.anything() }
-      );
-
-      expect(apiClient.search).toHaveBeenCalledWith(
-        'sourceB',
-        'test',
-        1,
-        { 'format[]': ['webtoon'] },
+        { 'genre[]': ['action'], 'format[]': ['webtoon'] },
         false,
         { signal: expect.anything() }
       );
     });
 
-    // 3. searchGlobal is NOT called by Search Page
+    expect(apiClient.search).not.toHaveBeenCalledWith(
+      'sourceB',
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+      expect.anything(),
+      expect.anything()
+    );
     expect(apiClient.searchGlobal).not.toHaveBeenCalled();
 
     await waitFor(() => {
       expect(screen.getByText('Solo Leveling')).toBeDefined();
-      expect(screen.getByText('Tower of God')).toBeDefined();
     });
   });
 
