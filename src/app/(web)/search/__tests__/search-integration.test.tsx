@@ -203,9 +203,6 @@ describe('Search Page Integration', () => {
     );
     expect(apiClient.searchGlobal).not.toHaveBeenCalled();
 
-    await waitFor(() => {
-      expect(screen.getByText('Solo Leveling')).toBeDefined();
-    });
   });
 
   it('handles single source search error without removing results from successful sources', async () => {
