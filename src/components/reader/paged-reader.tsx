@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/shared/utils/cn";
 import { motion, PanInfo } from "motion/react";
 import { toast } from "sonner";
+import { beginNavigationIntent } from "@/shared/lib/navigation-intent";
 
 interface PagedReaderProps {
   sourceId: string;
@@ -154,19 +155,22 @@ export function PagedReader({
   // Predictive preload: prefetch next chapter pages when user reaches last 2 pages
   React.useEffect(() => {
     if (nextChapterId && totalPages > 0 && currentPageIndex >= totalPages - 2 && typeof navigator !== "undefined" && navigator.onLine) {
+      const href = getReaderHref(sourceId, mangaId, nextChapterId);
+      router.prefetch(href);
       queryClient.prefetchQuery({
         queryKey: ["pages", sourceId, nextChapterId],
         queryFn: () => apiClient.getPages(sourceId, mangaId, nextChapterId),
         staleTime: 1000 * 60 * 5,
       });
     }
-  }, [nextChapterId, totalPages, currentPageIndex, queryClient, sourceId, mangaId]);
+  }, [nextChapterId, totalPages, currentPageIndex, queryClient, router, sourceId, mangaId]);
 
   const goToNextPage = React.useCallback(() => {
     if (currentPageIndex < totalPages - 1) {
       setCurrentPageIndex(prev => prev + 1);
     } else if (nextChapterId) {
-      router.replace(getReaderHref(sourceId, mangaId, nextChapterId));
+      const href = getReaderHref(sourceId, mangaId, nextChapterId);
+      if (beginNavigationIntent(href)) router.replace(href);
     }
   }, [currentPageIndex, totalPages, nextChapterId, router, sourceId, mangaId]);
 
@@ -174,7 +178,8 @@ export function PagedReader({
     if (currentPageIndex > 0) {
       setCurrentPageIndex(prev => prev - 1);
     } else if (prevChapterId) {
-      router.replace(getReaderHref(sourceId, mangaId, prevChapterId));
+      const href = getReaderHref(sourceId, mangaId, prevChapterId);
+      if (beginNavigationIntent(href)) router.replace(href);
     }
   }, [currentPageIndex, prevChapterId, router, sourceId, mangaId]);
 

@@ -116,7 +116,7 @@ export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
             onLoad={() => setIsImageLoaded(true)}
             onError={() => setImageError(true)}
             className={cn(
-              "size-full object-cover object-[center_top] transition-opacity duration-700",
+              "size-full object-cover object-[center_top] transition-opacity duration-150",
               isImageLoaded ? "opacity-100" : "opacity-0"
             )}
           />
@@ -149,7 +149,7 @@ export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
             onLoad={() => setIsImageLoaded(true)}
             onError={() => setImageError(true)}
             className={cn(
-              "size-full object-cover object-[center_top] transition-opacity duration-700",
+              "size-full object-cover object-[center_top] transition-opacity duration-150",
               isImageLoaded ? "opacity-100" : "opacity-0"
             )}
           />

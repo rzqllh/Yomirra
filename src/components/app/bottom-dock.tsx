@@ -8,9 +8,11 @@ import { cn } from "@/shared/utils/cn"
 import { motion } from "motion/react"
 import { useSearchFilterStore } from "@/shared/store/search-filter-store"
 import { Icon } from "@/components/ui/icon"
+import { beginNavigationIntent, getNavigationPathname } from "@/shared/lib/navigation-intent"
 
-export function BottomDock() {
+export function BottomDock({ pendingHref }: { pendingHref?: string | null }) {
   const pathname = usePathname()
+  const activePathname = pendingHref ? getNavigationPathname(pendingHref) : pathname
 
   // Main navigation items excluding settings and search (which is in its own satellite container)
   const mainItems = DOCK_NAV_ITEMS.filter(
@@ -23,11 +25,11 @@ export function BottomDock() {
   }
 
   const isMainTabActive = (href: string) => {
-    if (href === "/") return pathname === "/"
-    return pathname?.startsWith(href)
+    if (href === "/") return activePathname === "/"
+    return activePathname?.startsWith(href)
   }
 
-  const isSearchActive = pathname === "/search" || pathname?.startsWith("/search")
+  const isSearchActive = activePathname === "/search" || activePathname?.startsWith("/search")
 
   return (
     <nav
@@ -48,6 +50,11 @@ export function BottomDock() {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={(event) => {
+                  if (isActive || !beginNavigationIntent(item.href)) {
+                    event.preventDefault()
+                  }
+                }}
                 className={cn(
                   "group relative flex items-center justify-center h-full rounded-full outline-none tap-highlight-transparent transition-all duration-200 ease-out select-none active:scale-95",
                   isActive
@@ -92,7 +99,11 @@ export function BottomDock() {
         {/* Separated Search Button (iOS liquid glass satellite style) */}
         <Link
           href={searchItem.href}
-          onClick={() => {
+          onClick={(event) => {
+            if (isSearchActive || !beginNavigationIntent(searchItem.href)) {
+              event.preventDefault()
+              return
+            }
             useSearchFilterStore.getState().resetFilters()
           }}
           className={cn(

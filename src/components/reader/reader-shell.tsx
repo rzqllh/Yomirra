@@ -27,6 +27,7 @@ import { StatusBarBlur } from "@/components/ui/status-bar-blur"
 import { toast } from "sonner"
 import { useReaderGesture } from "@/shared/hooks/use-reader-gesture"
 import { useMounted } from "@/shared/hooks/use-mounted"
+import { beginNavigationIntent } from "@/shared/lib/navigation-intent"
 
 interface ReaderShellProps {
   children: React.ReactNode
@@ -87,7 +88,10 @@ export function ReaderShell({
       typeof window !== "undefined"
         ? new URLSearchParams(window.location.search).get("returnTo") || undefined
         : undefined
-    router.replace(getMangaDetailHref(sourceId, mangaId, returnTo))
+    const href = getMangaDetailHref(sourceId, mangaId, returnTo)
+    if (beginNavigationIntent(href)) {
+      router.replace(href)
+    }
   }
 
   const handleToggleBookmark = (e: React.MouseEvent) => {
@@ -119,6 +123,31 @@ export function ReaderShell({
       default: return '#000000';
     }
   }
+
+  React.useEffect(() => {
+    const promptKey = `yomirra-pending-save-prompt-${mangaId}`
+    if (sessionStorage.getItem(promptKey) !== "1" || isSaved) return
+
+    sessionStorage.removeItem(promptKey)
+    toast.info("Mau simpan komik ini?", {
+      description: "Kamu sudah membaca beberapa chapter. Simpan supaya lebih mudah dilanjutkan.",
+      action: {
+        label: "Simpan",
+        onClick: () => {
+          toggleLibrary({
+            sourceId,
+            mangaId,
+            title: mangaTitle || chapterTitle.split(" - ")[0] || "Komik",
+            coverUrl: "",
+            addedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          })
+          toast.success("Disimpan ke Bookmark")
+        },
+      },
+      duration: 8000,
+    })
+  }, [chapterTitle, isSaved, mangaId, mangaTitle, sourceId, toggleLibrary])
 
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -380,8 +409,8 @@ export function ReaderShell({
                   onClick={(e) => {
                     e.stopPropagation();
                     if (prevChapterId) {
-                      toast.info("Membuka chapter sebelumnya...", { duration: 1500 });
-                      router.replace(getReaderHref(sourceId, mangaId, prevChapterId));
+                      const href = getReaderHref(sourceId, mangaId, prevChapterId);
+                      if (beginNavigationIntent(href)) router.replace(href);
                     }
                   }}
                 >
@@ -411,8 +440,8 @@ export function ReaderShell({
                   onClick={(e) => {
                     e.stopPropagation();
                     if (nextChapterId) {
-                      toast.info("Membuka chapter selanjutnya...", { duration: 1500 });
-                      router.replace(getReaderHref(sourceId, mangaId, nextChapterId));
+                      const href = getReaderHref(sourceId, mangaId, nextChapterId);
+                      if (beginNavigationIntent(href)) router.replace(href);
                     }
                   }}
                 >

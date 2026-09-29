@@ -14,6 +14,7 @@ interface ReaderImageProps {
   isWebtoon: boolean
   dataSaver: boolean
   isAllowedToLoad: boolean
+  isAllowedToReveal?: boolean
   onLoadComplete: (index: number) => void
   onError: (index: number) => void
   imageFit?: 'width' | 'contained'
@@ -34,6 +35,7 @@ export const ReaderImage = React.memo(function ReaderImage({
   isWebtoon,
   dataSaver,
   isAllowedToLoad,
+  isAllowedToReveal = true,
   onLoadComplete,
   onError,
   priority = false,
@@ -50,6 +52,7 @@ export const ReaderImage = React.memo(function ReaderImage({
   const [hasError, setHasError] = React.useState(false)
   const [retryCount, setRetryCount] = React.useState(0)
   const [aspectRatio, setAspectRatio] = React.useState<number | null>(null)
+  const [hasLoaded, setHasLoaded] = React.useState(false)
   const containerRef = React.useRef<HTMLDivElement>(null)
   
   const [useFallback, setUseFallback] = React.useState(false)
@@ -158,6 +161,11 @@ export const ReaderImage = React.memo(function ReaderImage({
   }
 
   const shouldLoad = isAllowedToLoad;
+  const shouldReveal = isAllowedToReveal && hasLoaded;
+
+  React.useEffect(() => {
+    setHasLoaded(false)
+  }, [currentUrl])
 
   const handleImageError = async () => {
     if (offlineUrl && !useFallback) {
@@ -228,7 +236,7 @@ export const ReaderImage = React.memo(function ReaderImage({
       className={cn(
         "reader-page-container w-full flex justify-center touch-pan-y relative select-none",
         isZoomed ? "z-30 overflow-visible" : "z-0 overflow-hidden",
-        (!shouldLoad || hasError) && "bg-surface-muted/30"
+        (!shouldLoad || !shouldReveal || hasError) && "bg-surface-muted/30"
       )}
       data-page-index={pageIndex}
       style={{ 
@@ -238,41 +246,53 @@ export const ReaderImage = React.memo(function ReaderImage({
         transition: "aspect-ratio 0.3s ease-out"
       }}
     >
-      {hasError ? (
+      {hasError && isAllowedToReveal ? (
         <PageImageError index={pageIndex} onRetry={handleRetry} onReport={onReport} onSwitchSource={onSwitchSource} />
-      ) : shouldLoad ? (
-        <motion.div style={{ x, y, scale }} className="w-full h-full origin-center flex justify-center transform-gpu will-change-transform">
-          <Image 
-            src={currentUrl}
-            alt={`Page ${pageIndex}`}
+      ) : shouldLoad && !hasError ? (
+        <>
+          <motion.div
+            style={{ x, y, scale }}
             className={cn(
-              "block w-full",
-              isWebtoon ? "h-auto" : "h-full object-contain shadow-soft",
-              "motion-safe:animate-in motion-safe:fade-in motion-safe:duration-150"
+              "w-full h-full origin-center flex justify-center transform-gpu will-change-transform transition-opacity duration-100",
+              shouldReveal ? "opacity-100" : "opacity-0"
             )}
-            width={800}
-            height={1200}
-            sizes={imageFit === 'width' ? "100vw" : "(max-width: 768px) 100vw, 1200px"}
-            priority={priority}
-            fetchPriority={priority ? "high" : "auto"}
-            quality={dataSaver ? 60 : 85}
-            unoptimized={!dataSaver || bypassOptimizer || currentUrl.startsWith('blob:') || currentUrl.startsWith('data:')}
-            loading="eager"
-            decoding="async"
-            onLoad={(e) => {
-              const target = e.currentTarget;
-              if (target.naturalWidth === 0) {
-                handleImageError();
-                return;
-              }
-              // Update aspect ratio for progressive height correction
-              setAspectRatio(target.naturalWidth / target.naturalHeight);
-              
-              setTimeout(() => onLoadComplete(pageIndex), 0)
-            }}
-            onError={handleImageError}
-          />
-        </motion.div>
+          >
+            <Image 
+              src={currentUrl}
+              alt={`Page ${pageIndex + 1}`}
+              className={cn(
+                "block w-full",
+                isWebtoon ? "h-auto" : "h-full object-contain shadow-soft"
+              )}
+              width={800}
+              height={1200}
+              sizes={imageFit === 'width' ? "100vw" : "(max-width: 768px) 100vw, 1200px"}
+              priority={priority}
+              fetchPriority={priority ? "high" : "auto"}
+              quality={dataSaver ? 60 : 85}
+              unoptimized={!dataSaver || bypassOptimizer || currentUrl.startsWith('blob:') || currentUrl.startsWith('data:')}
+              loading="eager"
+              decoding="async"
+              onLoad={(e) => {
+                const target = e.currentTarget;
+                if (target.naturalWidth === 0) {
+                  handleImageError();
+                  return;
+                }
+                setAspectRatio(target.naturalWidth / target.naturalHeight);
+                setHasLoaded(true);
+                setTimeout(() => onLoadComplete(pageIndex), 0)
+              }}
+              onError={handleImageError}
+            />
+          </motion.div>
+
+          {!shouldReveal && (
+            <div className="absolute inset-0 flex items-center justify-center bg-surface-muted/10">
+              <div className="size-8 rounded-full border-[3px] border-border-strong border-t-accent animate-spin" />
+            </div>
+          )}
+        </>
       ) : (
         <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-surface-muted/10 overflow-hidden">
           <div className="w-full h-full absolute inset-0 bg-gradient-to-b from-transparent via-white/[0.02] to-transparent animate-pulse-slow" />

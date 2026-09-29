@@ -76,14 +76,18 @@ export function useReaderScroll({
                 queryClient.prefetchQuery({
                   queryKey,
                   queryFn: () => m.apiClient.getPages(sourceId, mangaId, nextChapterId)
-                }).then(() => {
+                }).then(async () => {
                   // After JSON is fetched, preload images via fetch to populate browser cache
                   const data = queryClient.getQueryData<{ pages: { url: string }[] }>(queryKey);
                   if (data && data.pages) {
-                    // Preload first 3 pages of next chapter
-                    data.pages.slice(0, 3).forEach((p) => {
-                      fetch(p.url, { mode: 'no-cors' }).catch(() => {});
-                    });
+                    // Keep next-chapter warmup ordered so page requests do not race ahead.
+                    for (const page of data.pages.slice(0, 2)) {
+                      try {
+                        await fetch(page.url, { mode: 'no-cors' });
+                      } catch {
+                        break;
+                      }
+                    }
                   }
                 });
               });
