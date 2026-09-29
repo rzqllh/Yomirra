@@ -1,14 +1,14 @@
-## Summary
+## Ringkasan
 
-Describe the problem and the smallest coherent change that solves it.
+Jelaskan masalah yang diselesaikan dan perubahan utama di PR ini.
 
 ## Scope
 
-Changed:
+Diubah:
 
 - 
 
-Intentionally unchanged:
+Sengaja tidak diubah:
 
 - 
 
@@ -20,37 +20,36 @@ Intentionally unchanged:
 - [ ] `pnpm build`
 - [ ] `git diff --check`
 
-Focused tests:
+Focused checks:
 
 ```text
-Add commands and results here.
+Tambahkan command dan hasil penting di sini.
 ```
 
-## Runtime Evidence
+## Runtime / Visual Check
 
-- [ ] Not applicable
-- [ ] Browser verified
-- [ ] Device/PWA verified
-- [ ] Code inspection only
+- [ ] Tidak relevan
+- [ ] Browser diverifikasi
+- [ ] Device/PWA diverifikasi
+- [ ] Hanya code/automated verification
 
-Add routes, viewport/device details, screenshots, logs, or network evidence where relevant.
+Untuk perubahan UI/runtime, tulis route, viewport/device, screenshot, log, atau evidence yang relevan.
 
 ## Source Changes
 
-Complete this section for source adapters or manifests.
+Isi bila PR menyentuh adapter/manifest.
 
-- [ ] Source use is permitted.
-- [ ] No credentials or private cookies are included.
-- [ ] Pagination behavior is tested.
-- [ ] Filter capability and mapping behavior is tested.
-- [ ] Remote failures are handled safely.
+- [ ] Integrasi source diperbolehkan.
+- [ ] Tidak ada credential atau private cookie.
+- [ ] Pagination diverifikasi.
+- [ ] Filter capability/mapping diverifikasi.
+- [ ] Failure upstream tidak memutus source lain.
 
-## Documentation
+## Dokumentasi
 
-- [ ] README or setup docs updated when needed.
-- [ ] `CHANGELOG.md` updated for notable changes.
-- [ ] New public files are not added to `.gitignore`.
+- [ ] Public docs diperbarui bila contract berubah.
+- [ ] `CHANGELOG.md` diperbarui untuk perubahan yang layak masuk release note.
 
-## Risks and Follow-ups
+## Risiko / Follow-up
 
-List known limitations, unresolved checks, migrations, or intentionally deferred work.
+Tulis limitation, migration, verification yang belum bisa dilakukan, atau pekerjaan yang sengaja ditunda.

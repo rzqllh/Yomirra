@@ -1,165 +1,107 @@
 # Changelog
 
-All notable changes to Yomirra are documented here.
+Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan perubahan yang sudah masuk ke repository; eksperimen internal dan rencana masa depan tidak diperlakukan sebagai fitur rilis.
 
----
+## [Unreleased]
+
+Belum ada perubahan yang dijadwalkan untuk rilis berikutnya.
+
+## [2.2.0] — 2026-09-29
+
+Rilis ini berfokus pada search lintas source, rekomendasi yang lebih berguna, Rak Buku, dan perapihan runtime.
+
+### Search dan source
+
+- Search sekarang memahami `#tag`, alias Indonesia/English, typo ringan, dan lexical/fuzzy matching.
+- Filter canonical dipetakan ke nilai yang didukung masing-masing source, lalu tetap diperlakukan sebagai hard filter.
+- Hasil dari source berbeda dapat digabung ke satu identitas canonical ketika match cukup kuat.
+- Search global tetap independen dari toggle source di Library/Populer; source yang unavailable tetap dikeluarkan.
+- Optional semantic ranking tersedia melalui Gemini embedding. Tanpa API key, search biasa tetap berfungsi.
+- Catalog search di Redis hanya diisi dari metadata source yang dipercaya dan tidak menerima data private user.
+- Post-merge hardening memperbaiki negative genre token, unresolved hashtag, current-title exclusion, dan batas endpoint embedding.
+
+### Rekomendasi dan Rak Buku
+
+- Rekomendasi utama sekarang deterministic dan tidak membutuhkan Gemini/GPT.
+- Ranking mempertimbangkan source, format, rating, status, dan reading history yang sudah ada.
+- Judul yang sedang dibuka, sudah disimpan, atau sudah dibaca tidak diprioritaskan sebagai rekomendasi baru.
+- Rak Buku mendapat Smart Collections berbasis derived state: Lanjut Dibaca, Belum Dibaca, Baru Ditambahkan, Rating Tinggi, Lama Tidak Dibuka, Tamat tapi Belum Selesai, Manga, Manhwa, dan Manhua.
+- Smart Collections tidak membuat membership baru di storage dan tetap memahami linked source dari judul yang sama.
+- Filter otomatis dipisahkan dari koleksi buatan user agar keduanya tidak saling membingungkan.
+
+### UI, reader, dan navigasi
+
+- Header mobile dan chrome utama dibuat lebih konsisten antar halaman.
+- Search dan Library memakai filter drawer yang sama secara visual, dengan snap point compact sebelum diperluas.
+- Reader header/dock diselaraskan dengan bahasa visual aplikasi.
+- Chapter drawer dibuat lebih compact dan membuka posisi chapter yang sedang dibaca.
+- Status-bar blur dan progress layer dirapikan agar tidak bocor ke konten.
+- Notification bell membuka quick dropdown sebelum menuju halaman Pembaruan.
+- Cache/query defaults dan route transition disesuaikan untuk mengurangi refetch yang tidak perlu saat berpindah halaman.
+
+### Operasional dan runtime
+
+- Format laporan Telegram ops dirapikan menjadi masalah, dampak, kemungkinan penyebab, tindakan, lalu detail teknis.
+- Health, recovery, daily digest, user report, dan command bot memakai copy Indonesia yang lebih ringkas tanpa AI diagnosis.
+- Preview deployment tidak lagi crash hanya karena `IMAGE_PROXY_SECRET` belum diset. Signed proxy tetap digunakan saat secret tersedia; tanpa secret, cover dapat fallback ke direct URL.
+- CI tetap menjalankan typecheck, lint, tests, dan production build.
 
 ## [2.1.0] — 2026-09-27
 
-### English
+Rilis ini menyatukan identitas multi-source dan merapikan struktur navigasi utama.
 
-This release delivers the Discovery Surfaces & Navigation Revamp, standardizing page headers, routing transitions, responsive settings, and visual hierarchy across all main destinations.
+### Multi-source identity dan recovery
 
-#### Added
+- Judul yang sama dari beberapa source dapat tampil sebagai satu hasil canonical.
+- Library, bookmark, history, dan source recovery memakai identitas judul yang lebih tahan terhadap perpindahan source.
+- Original title, alternate title, Unicode, dan author dipakai untuk memperkuat matching.
+- Source picker hanya menawarkan source yang layak dipakai untuk membaca.
+- Relink source mempertahankan progress lama dan tidak memindahkan chapter ambigu secara otomatis.
+- Recovery diperluas ke error detail/reader tanpa menganggap semua 404 sebagai source mati.
 
-* **Canonical PageHeader**: Unified `<PageHeader>` component across Beranda, Popular, Sources, Downloads, and Settings with consistent icon container, title scale, subtitle styling, and actions slot.
-* **Routed Settings Destination**: `/settings` is now an authentic routed page with full responsive shell, removing intercepting modal overlays for consistent direct URL access and in-app navigation.
-* **Shape-Matched Route Skeletons**: Structural loading states for Popular, Search, Library, Bookmark, and Manga Detail pages to prevent layout shift.
-* **Route Transitions**: Smooth directional cross-fade page transition honoring `prefers-reduced-motion`.
-* **Notification Bell Popover**: Header updates bell now reveals a quick-glance dropdown with recent updates and seen-state tracking.
-* **Editorial Rank Escalation**: Gold, Silver, and Bronze badge hierarchy for top 3 manga on Popular feed with WCAG AA compliance.
+### UI dan navigasi
 
-#### Changed
+- `PageHeader` menjadi pola header utama untuk destination page.
+- Settings menjadi route mandiri, bukan modal yang menumpuk di atas halaman lain.
+- Search, Library, Rak Buku, Populer, Sources, Downloads, Manga Detail, dan Reader mendapat penyelarasan loading, spacing, dan mobile navigation.
+- Notification bell mendapat quick popover dan seen state.
+- Route transition dan skeleton route dibuat lebih konsisten.
+- Toast dan area yang disentuh mulai dibersihkan dari palette/glow lama.
 
-* **Detail Page Scrim**: Streamlined manga detail hero overlay into smooth dual-gradient scrims for optimal cover art visibility and text legibility.
-* **Home Feed Typography**: Standardized section titles to Plus Jakarta Sans for consistent typographic rhythm.
-* **Downloads View Parity**: Integrated Downloads action buttons and storage indicator into the canonical page header and design tokens.
-* **Dropdown Scroll Behavior**: Dropdown menus now default to non-modal interaction, preventing background scroll blocking.
+### Reliability
 
-#### Fixed
-
-* **Data & Entity Sanitization**: Global `stripHtml` sanitization across feed cards, search results, and detail synopses, eliminating dirty HTML entities and bracketed scrapings.
-* **Mobile Header Drift**: Resolved title/subtitle duplication between mobile app bar and page content across Sources, Downloads, and Beranda.
-* **Author Formatting**: Prefixed author attribution cleanly and gracefully omitted missing author metadata.
-
----
-
-### Bahasa Indonesia
-
-Rilis ini menghadirkan Discovery Surfaces & Navigation Revamp, menyelaraskan header halaman, transisi rute, halaman pengaturan responsif, dan hierarki visual di seluruh destinasi utama.
-
-#### Ditambahkan
-
-* **Canonical PageHeader**: Komponen `<PageHeader>` terpadu untuk Beranda, Populer, Sumber, Unduhan, dan Pengaturan dengan wadah ikon, skala judul, tipografi subtitle, dan slot aksi yang konsisten.
-* **Halaman Pengaturan Mandiri**: Rute `/settings` kini merupakan halaman penuh mandiri berbasis shell standar, menggantikan modal overlay untuk navigasi internal maupun akses URL langsung yang stabil.
-* **Skeleton Rute Presisi**: Loading skeleton berstruktur layout presisi untuk halaman Populer, Pencarian, Library, Rak Buku, dan Detail Komik guna mencegah pergeseran tata letak (CLS).
-* **Transisi Rute**: Efek transisi cross-fade halaman yang halus serta ramah aksesibilitas (`prefers-reduced-motion`).
-* **Dropdown Lonceng Notifikasi**: Ikon lonceng header kini membuka dropdown intip cepat pembaruan komik dengan pelacakan status terbaca.
-* **Eskalasi Peringkat Editorial**: Peringkat 1-3 di halaman Populer menggunakan badge visual berjenjang Emas, Perak, dan Perunggu dengan kontras rasio WCAG AA.
-
-#### Diubah
-
-* **Gradient Scrim Detail Komik**: Penyederhanaan lapisan gradien cover hero komik menjadi scrim transparan dua arah yang menjaga keindahan artwork sekaligus keterbacaan teks.
-* **Penyelarasan Font Bagian Beranda**: Mengubah font judul seksi di Beranda ke Plus Jakarta Sans agar selaras dengan halaman lainnya.
-* **Standardisasi Halaman Unduhan**: Menyatukan tombol aksi dan indikator penyimpanan ke dalam header kanonikal dan token desain Yomirra.
-* **Perilaku Scroll Dropdown**: Menghapus scroll-lock bawaan pada menu dropdown agar halaman tetap nyaman digulir.
-
-#### Diperbaiki
-
-* **Sanitasi Entitas dan Data**: Normalisasi teks global dengan `stripHtml` pada kartu feed, hasil pencarian, dan sinopsis detail untuk membersihkan tag kotor dan entitas HTML.
-* **Redundansi Header Mobile**: Mengatasi duplikasi judul/subtitle antara mobile app bar dan konten halaman di Sumber, Unduhan, dan Beranda.
-* **Format Nama Penulis**: Penulisan atribusi nama penulis lebih rapi dan menyembunyikan baris bila data penulis kosong.
-
----
+- Teks dari source disanitasi sebelum masuk ke kartu dan detail.
+- Per-source failure di search tidak membatalkan hasil dari source lain.
+- Source disabled/unavailable tidak dipakai sebagai kandidat recovery.
+- Tidak ada dependency baru untuk canonical multi-source flow.
 
 ## [1.1.0] — 2026-09-20
 
-### English
+Rilis ini membentuk fondasi reader Yomirra yang sekarang.
 
-This release brings the current Yomirra experience together into a more complete reader, with major work across reading, library management, multi-source discovery, offline access, and general reliability.
+### Ditambahkan
 
-#### Added
+- multi-source search dan discovery;
+- Library, collections, custom reading status, history, dan Continue Reading;
+- chapter update tracking;
+- Download Manager dan offline reading;
+- Backup & Restore;
+- source health handling;
+- PWA support;
+- reader preferences dan reading controls.
 
-* Multi-source search and discovery.
-* Collections and custom reading statuses for Library management.
-* Chapter update tracking for titles saved in the Library.
-* Download Manager and offline chapter reading.
-* Backup & Restore with the current backup format and compatibility handling for older backups.
-* Source health handling to better surface unavailable or degraded sources.
-* PWA support for an app-like experience on supported devices.
-* Additional reader preferences and reading controls.
-* Toast Revamp Lab (`/showcase/toast-demo`) featuring 10 distinct designs, 10 motion transitions, slow-motion scrubber, and a simulated Dynamic Island aperture.
-* Reader End Deck Showcase Lab (`/showcase/reader-end-demo`) for visual experimentation with chapter-end transitions.
+### Diperbaiki
 
-#### Changed
+- reader mobile dan progress persistence;
+- image loading dan URL handling untuk beberapa source;
+- handling source yang unavailable atau gagal sebagian;
+- lifecycle `blob:` / `data:` image pada offline reader;
+- cleanup object URL sementara;
+- partial/missing downloaded chapter handling;
+- loading, empty, dan error state di beberapa halaman.
 
-* Reworked the mobile reader UI with cleaner top and bottom controls.
-* Redesigned the continuous vertical reader chapter-end deck with a seamless gradient fader, ambient aura glow, and squircle action buttons.
-* Rebranded application toast notifications to **Dynamic Island Liquid Glass** capsules with top-center placement, specular rim lighting, and Apple HIG spring dynamics.
-* Improved reading progress visibility across light and dark comic pages.
-* Improved transitions and auto-hide behavior for reader controls.
-* Refined Home, Search, Library, Collections, Updates, Downloads, Sources, Manga Detail, Reader, and Settings.
-* Improved Continue Reading behavior using the latest saved reading progress.
-* Search filters now respect the capabilities of the active source instead of assuming every source supports the same options.
-* Improved navigation between Search, Library, Updates, Manga Detail, and Reader.
-* Updated PWA behavior and install flow.
+### Internal
 
-#### Fixed
-
-* Fixed several image-loading and source URL handling cases.
-* Fixed comic detail navigation from the reader end deck to route directly to the manga page.
-* Replaced third-party report links with prefilled direct email reporting for broken chapters.
-* Improved handling of unavailable or partially failing sources.
-* Fixed reader lifecycle issues around local `blob:` and `data:` images.
-* Improved cleanup of temporary object URLs used during offline reading.
-* Improved reading-progress persistence when the app moves to the background.
-* Improved handling of partial or missing downloaded chapter data.
-* Fixed several inconsistent loading, empty, and error states across the app.
-
-#### Internal
-
-* Continued separating source-specific behavior from the rest of the application.
-* Improved local-first data handling for Library, History, Downloads, and reader state.
-* Reduced coupling between reader state, navigation, and source-specific data.
-* General cleanup and reliability improvements across the application.
-
----
-
-### Bahasa Indonesia
-
-Rilis ini merapikan fitur-fitur utama Yomirra menjadi reader yang lebih lengkap, terutama di area membaca, Library, pencarian multi-source, offline reading, dan stabilitas aplikasi.
-
-#### Ditambahkan
-
-* Pencarian dan discovery dari beberapa source.
-* Collections dan custom reading status untuk mengatur Library.
-* Pengecekan update chapter untuk judul yang tersimpan di Library.
-* Download Manager dan dukungan membaca chapter secara offline.
-* Backup & Restore dengan format backup terbaru serta compatibility handling untuk backup lama.
-* Source health handling untuk membantu mendeteksi source yang sedang tidak tersedia atau bermasalah.
-* Dukungan PWA untuk penggunaan seperti aplikasi di perangkat yang mendukung.
-* Tambahan preferensi dan kontrol pada reader.
-* Toast Revamp Lab (`/showcase/toast-demo`) dengan 10 konsep desain, 10 transisi masuk/keluar, dan simulasi Dynamic Island notch morphing.
-* Reader End Deck Showcase Lab (`/showcase/reader-end-demo`) untuk eksplorasi transisi akhir chapter komik.
-
-#### Diubah
-
-* Reader mobile diperbarui dengan kontrol atas dan bawah yang lebih ringkas.
-* Redesign total tampilan akhir chapter pada vertical reader dengan transisi gradient halus, ambient aura glow, dan tombol squircle ("Sebelumnya", "Selanjutnya", "Detail Komik", "Laporkan").
-* Rebrand sistem toast notifikasi aplikasi menjadi kapsul **Dynamic Island Liquid Glass** di posisi top-center dengan specular rim highlight dan fisika spring iOS.
-* Indikator reading progress dibuat lebih jelas pada halaman terang maupun gelap.
-* Transisi dan auto-hide reader controls diperbaiki.
-* Home, Search, Library, Collections, Updates, Downloads, Sources, Manga Detail, Reader, dan Settings dirapikan agar lebih konsisten.
-* Continue Reading sekarang menggunakan progres baca terakhir yang tersimpan.
-* Search filter mengikuti kemampuan source aktif dan tidak lagi menganggap semua source memiliki filter yang sama.
-* Navigasi antara Search, Library, Updates, Manga Detail, dan Reader diperbaiki.
-* Flow penggunaan dan instalasi PWA diperbarui.
-
-#### Diperbaiki
-
-* Memperbaiki sejumlah kasus image loading dan handling URL dari source.
-* Tombol "Detail Komik" di akhir chapter kini langsung mengarah ke halaman detail komik yang tepat.
-* Tombol "Laporkan" sekarang membuka email dengan detail chapter dan manga yang sudah terisi otomatis.
-* Memperbaiki handling ketika salah satu source sedang tidak tersedia atau gagal sebagian.
-* Memperbaiki lifecycle image lokal `blob:` dan `data:` di reader.
-* Memperbaiki cleanup object URL sementara pada offline reader.
-* Memperbaiki penyimpanan reading progress saat aplikasi berpindah ke background.
-* Memperbaiki handling chapter download yang tidak lengkap atau file lokal yang sudah tidak tersedia.
-* Merapikan loading, empty, dan error state di berbagai halaman.
-
-#### Internal
-
-* Melanjutkan pemisahan logic masing-masing source dari aplikasi utama.
-* Memperbaiki pendekatan local-first untuk Library, History, Downloads, dan reader state.
-* Mengurangi coupling antara reader state, navigation, dan data source.
-* Cleanup dan reliability improvement di berbagai bagian aplikasi.
+- source-specific behavior mulai dipisahkan dari UI;
+- Library, History, Downloads, dan reader state dibuat local-first;
+- state reader dan navigation dikurangi ketergantungannya pada response source langsung.

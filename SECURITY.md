@@ -1,73 +1,66 @@
 # Security Policy
 
-## Supported Version
+Security fix diterapkan ke kode terbaru di `main`. Commit lama, fork, dan unofficial deployment tidak dijamin mendapat perbaikan.
 
-Security fixes are applied to the latest code on `main`. Older commits, forks, preview deployments, and unofficial builds are not guaranteed to receive updates.
+## Melaporkan vulnerability
 
-## Reporting a Vulnerability
+Jangan membuka public issue untuk vulnerability.
 
-Do not open a public GitHub issue for a vulnerability.
+Gunakan GitHub private vulnerability reporting jika tersedia. Jika tidak, hubungi maintainer melalui contact method yang tertera di profil GitHub.
 
-Use GitHub private vulnerability reporting when it is enabled for the repository. Otherwise, contact the maintainer privately through a verified contact method listed on the maintainer's GitHub profile.
+Sertakan:
 
-Include:
+- komponen/route/source yang terdampak;
+- langkah reproduksi;
+- impact;
+- expected vs actual behavior;
+- proof of concept minimal bila aman.
 
-- A clear description of the issue.
-- Affected route, component, or source adapter.
-- Reproduction steps.
-- Expected and actual behavior.
-- Impact assessment.
-- A minimal proof of concept, when safe.
-- Suggested remediation, when available.
+Jangan kirim credential production, data user nyata, atau payload destruktif.
 
-Do not include real user data, production credentials, or destructive payloads.
+## Boundary utama
 
-## Security Boundaries
+### Environment variables
 
-### Environment Variables
-
-- Never commit `.env` or `.env.local`.
-- `IMAGE_PROXY_SECRET` must be long, random, and private.
-- Browser-exposed Firebase variables are configuration values, not authorization controls.
-- Server-only values must not use the `NEXT_PUBLIC_` prefix.
+- Jangan commit `.env` atau `.env.local`.
+- Server-only secret tidak boleh memakai prefix `NEXT_PUBLIC_`.
+- Firebase `NEXT_PUBLIC_*` adalah konfigurasi browser, bukan authorization layer.
+- `IMAGE_PROXY_SECRET` diperlukan untuk signed image proxy. Jika tidak tersedia, Yomirra dapat memakai direct image URL; jangan menggantinya dengan secret default yang lemah.
+- `GEMINI_API_KEY`, Telegram token, cron secret, dan Redis URL tetap server-side.
 
 ### Firebase
 
-Authentication alone is not authorization. Firestore access must be enforced through security rules, and users must only be able to read or modify their own synchronized data.
+Authentication bukan authorization. Firestore rules harus membatasi data per user. Client tidak boleh dianggap trusted hanya karena sudah login.
 
-### Redis
+### Redis dan search catalog
 
-Redis is used for server-side caching. Do not expose `REDIS_URL` to the browser. Production Redis instances should require authentication and encrypted transport where supported.
+Redis dipakai untuk server cache dan catalog search. `REDIS_URL` tidak boleh dikirim ke browser.
 
-### Image Proxy
+Catalog semantic hanya boleh menerima metadata manga publik dari jalur source yang dipercaya. Jangan memasukkan library, reading history, progress, account data, atau payload bebas dari client ke catalog bersama.
 
-The image proxy handles untrusted remote URLs and may attach source-specific referer behavior. Changes must preserve:
+### Image proxy
 
-- Request validation.
-- Signature verification.
-- Safe host handling.
-- Response size and timeout limits.
-- Protection against open-proxy abuse and server-side request forgery.
+Perubahan pada image proxy harus mempertahankan validasi URL, signature saat proxy signing aktif, host safety, timeout/size limits, dan perlindungan terhadap open proxy/SSRF.
 
-### Source Adapters
+### Source adapters
 
-Source responses are untrusted input.
+Response source adalah untrusted input.
 
-- Validate or normalize remote responses.
-- Apply request timeouts.
-- Avoid reflecting remote error details or secrets to clients.
-- Do not log credentials, signed URLs, cookies, or authorization headers.
-- Treat HTML scraping as hostile input.
-- Respect source terms and rate limits.
+- normalisasi data di boundary;
+- pakai timeout;
+- sanitasi error yang dikirim ke client;
+- jangan log token, cookie, authorization header, atau signed URL;
+- jangan bypass access control upstream;
+- hormati rate limit dan aturan source.
 
-### Dynamic Source Manifests
+### Dynamic source manifests
 
-A dynamic source manifest can direct the server to remote endpoints. Only install manifests from trusted publishers. The current manifest model is intended for normalized JSON APIs, not arbitrary code execution.
+Manifest dynamic hanya untuk publisher/API yang dipercaya. Model ini tidak menjalankan arbitrary transformation code dan bukan sandbox untuk source yang tidak dikenal.
 
-### PWA and Offline Data
+### PWA dan offline data
 
-Downloaded chapters may remain in browser storage after logout unless explicitly removed. Do not use offline storage for secrets. Shared-device users should clear downloads and site data when needed.
+Chapter yang didownload dapat tetap berada di browser storage setelah logout. Jangan simpan secret di Cache Storage. Pada perangkat bersama, user perlu menghapus download/site data bila diperlukan.
 
 ## Disclosure
 
-Please allow maintainers reasonable time to investigate and release a fix before public disclosure. The project does not offer a bug bounty or guaranteed response time.
+Beri maintainer waktu yang wajar untuk investigasi dan perbaikan sebelum disclosure publik. Project tidak menjanjikan bug bounty atau SLA response.
