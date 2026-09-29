@@ -187,6 +187,7 @@ describe("KomikuIISource", () => {
         title: "Solo Leveling",
         type: "Manhwa",
         status: "Completed",
+        genres: ["Action", "Fantasy"],
         coverUrl: "https://content.komiku.me/solo.jpg",
         rating: 10,
         latestChapter: "179",
@@ -202,6 +203,22 @@ describe("KomikuIISource", () => {
       expect(result.mangas[0].id).toBe("100828::solo-leveling");
       expect(result.mangas[0].title).toBe("Solo Leveling");
       expect(result.hasNextPage).toBe(false);
+    });
+
+    it("enforces generic hard filters during text search", async () => {
+      vi.spyOn((source as any).client, "get").mockResolvedValue(mockSearchResults);
+
+      const matched = await source.search("solo", 1, {
+        "genre[]": ["Action"],
+        "format[]": ["Manhwa"],
+        status: "Completed",
+      });
+      expect(matched.mangas).toHaveLength(1);
+
+      const rejected = await source.search("solo", 1, {
+        "format[]": ["Manga"],
+      });
+      expect(rejected.mangas).toHaveLength(0);
     });
 
     it("returns empty results for page > 1 on text search without network call", async () => {

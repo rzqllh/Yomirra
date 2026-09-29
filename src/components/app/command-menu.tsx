@@ -64,6 +64,8 @@ export function CommandMenu() {
   // Search manga globally with word debounce & timeout limiting
   const debouncedQuery = useDebounce(searchQuery.trim(), 350)
   const isNsfwFiltered = useSettingsStore((state) => state.hideNsfw)
+  // Global Search intentionally ignores Library/Popular source toggles.
+  // Only sources that are operationally unavailable are excluded here.
   const activeSources = React.useMemo(() => {
     return sourceRegistry
       .filter((source) =>

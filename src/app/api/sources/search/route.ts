@@ -9,6 +9,7 @@ import { createHash } from "crypto";
 
 import { SourceError, type SourceErrorCode } from "@/server/lib/sources/error";
 import { deduplicateResultsBySource, type CanonicalSearchResult } from "@/shared/lib/canonical-search";
+import { upsertSearchCatalogRecords } from "@/server/lib/search/semantic-catalog";
 
 export interface GlobalSearchResponse {
   resultsBySource: Record<string, {
@@ -131,6 +132,24 @@ export async function GET(req: NextRequest) {
     }
 
     const canonicalResults = deduplicateResultsBySource(cachedData);
+
+    await upsertSearchCatalogRecords(
+      canonicalResults.slice(0, 24).map((cluster) => ({
+        canonicalKey: cluster.canonicalKey,
+        sourceId: cluster.primaryResult.sourceId,
+        mangaId: cluster.primaryResult.id,
+        title: cluster.primaryResult.title,
+        coverUrl: cluster.primaryResult.coverUrl,
+        originalTitle: cluster.primaryResult.originalTitle,
+        alternativeTitles: cluster.primaryResult.alternativeTitles,
+        author: cluster.primaryResult.author,
+        description: cluster.primaryResult.description,
+        format: cluster.primaryResult.format,
+        status: cluster.primaryResult.status,
+        score: cluster.primaryResult.score,
+        sourceBindings: cluster.sourceBindings,
+      }))
+    );
 
     return NextResponse.json({
       data: {

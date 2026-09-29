@@ -101,9 +101,32 @@ export class KomikuIISource implements MangaSource {
   ): Promise<MangaPageResult> {
     const trimmedQuery = query?.trim() || "";
     const pageNum = Math.max(1, page || 1);
+    const values = (value?: string | string[]) =>
+      (Array.isArray(value) ? value : value ? [value] : [])
+        .map((item) => item.trim())
+        .filter((item) => item && item.toLowerCase() !== "semua");
+
+    const requestedGenres = values(filters?.["genre[]"] ?? filters?.genres);
+    const requestedFormats = values(filters?.["format[]"] ?? filters?.type);
+    const requestedStatuses = values(filters?.status);
+    const normalize = (value?: string) => value?.trim().toLowerCase() ?? "";
+
+    const applyFilters = (items: KomikuIIItem[]) =>
+      items.filter((item) => {
+        const itemGenres = (item.genres ?? []).map(normalize);
+        const matchesGenres =
+          requestedGenres.length === 0 ||
+          requestedGenres.map(normalize).every((genre) => itemGenres.includes(genre));
+        const matchesFormat =
+          requestedFormats.length === 0 ||
+          requestedFormats.map(normalize).includes(normalize(item.type));
+        const matchesStatus =
+          requestedStatuses.length === 0 ||
+          requestedStatuses.map(normalize).includes(normalize(item.status));
+        return matchesGenres && matchesFormat && matchesStatus;
+      });
 
     if (trimmedQuery.length > 0) {
-      // Upstream search endpoint returns all matches directly as an array
       if (pageNum > 1) {
         return { mangas: [], hasNextPage: false };
       }
@@ -112,30 +135,26 @@ export class KomikuIISource implements MangaSource {
         q: trimmedQuery,
       });
 
-      const items = Array.isArray(res) ? res : [];
+      const items = applyFilters(Array.isArray(res) ? res : []);
       return {
         mangas: items.map(normalizeKomikuIIMangaItem),
         hasNextPage: false,
       };
     }
 
-    // Filter-based browse without text query
     const params: Record<string, string | number | boolean | string[]> = {
       page: pageNum,
     };
-
-    if (filters) {
-      if (typeof filters.type === "string" && filters.type !== "Semua") {
-        params.type = filters.type;
-      }
-      if (typeof filters.status === "string" && filters.status !== "Semua") {
-        params.status = filters.status;
-      }
-    }
+    if (requestedFormats.length === 1) params.type = requestedFormats[0];
+    if (requestedStatuses.length === 1) params.status = requestedStatuses[0];
 
     const res = await this.client.get<KomikuIIComicsListResponse>("/comics", params);
-    const items = Array.isArray(res?.items) ? res.items : [];
-    const hasNextPage = typeof res?.totalPages === "number" ? pageNum < res.totalPages : items.length >= 12;
+    const rawItems = Array.isArray(res?.items) ? res.items : [];
+    const items = applyFilters(rawItems);
+    const hasNextPage =
+      typeof res?.totalPages === "number"
+        ? pageNum < res.totalPages
+        : rawItems.length >= 12;
 
     return {
       mangas: items.map(normalizeKomikuIIMangaItem),

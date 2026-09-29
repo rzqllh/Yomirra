@@ -71,6 +71,7 @@ describe("Phase 4 — Canonical Search Deduplication & Failure Isolation", () =>
     expect(clusters[1].sourceBindings).toHaveLength(1);
     expect(clusters[0].sourceBindings[0].sourceId).toBe("shinigami");
     expect(clusters[1].sourceBindings[0].sourceId).toBe("asurascans");
+    expect(clusters[0].canonicalKey).not.toBe(clusters[1].canonicalKey);
   });
 
   it("alternate title match → clusters accurately", () => {

@@ -58,8 +58,6 @@ export async function rankSearchIntelligence(params: {
     new Map(params.candidates.slice(0, 40).map((candidate) => [candidate.canonicalKey, candidate])).values()
   );
 
-  await upsertSearchCatalogRecords(candidates);
-
   const recent = await getRecentSearchCatalogRecords(240);
   const recentByKey = new Map(recent.map((record) => [record.canonicalKey, record]));
   const scores: Record<string, number> = {};
@@ -95,10 +93,6 @@ export async function rankSearchIntelligence(params: {
         if (pair.embedding) generated.set(pair.candidate.canonicalKey, pair.embedding);
       }
 
-      if (generated.size > 0) {
-        await upsertSearchCatalogRecords(candidates, generated);
-      }
-
       for (const candidate of candidates) {
         const embedding =
           generated.get(candidate.canonicalKey)?.values ??
@@ -109,9 +103,31 @@ export async function rankSearchIntelligence(params: {
         );
       }
 
+      const trustedMissing = recent
+        .filter((record) => !record.embedding && candidateMatchesTags(record, params.tags))
+        .sort((a, b) => lexicalSearchScore(query, b) - lexicalSearchScore(query, a))
+        .slice(0, 6);
+
+      const trustedPairs = await Promise.all(
+        trustedMissing.map(async (record) => ({
+          record,
+          embedding: await ensureCandidateEmbedding(record, record),
+        }))
+      );
+      const trustedGenerated = new Map<string, { values: number[]; textHash: string }>();
+      for (const pair of trustedPairs) {
+        if (pair.embedding) trustedGenerated.set(pair.record.canonicalKey, pair.embedding);
+      }
+      if (trustedGenerated.size > 0) {
+        await upsertSearchCatalogRecords(trustedMissing, trustedGenerated);
+      }
+
       for (const record of recent) {
-        if (!record.embedding || !candidateMatchesTags(record, params.tags)) continue;
-        const semantic = clampSimilarity(cosineSimilarity(queryVector, record.embedding));
+        const embedding =
+          trustedGenerated.get(record.canonicalKey)?.values ??
+          record.embedding;
+        if (!embedding || !candidateMatchesTags(record, params.tags)) continue;
+        const semantic = clampSimilarity(cosineSimilarity(queryVector, embedding));
         if (semantic > (scores[record.canonicalKey] ?? 0)) {
           scores[record.canonicalKey] = semantic;
         }
@@ -158,11 +174,6 @@ export async function findRelatedSearchTitles(
   const storedTarget = await getSearchCatalogRecord(target.canonicalKey);
   const targetEmbedding = await ensureCandidateEmbedding(target, storedTarget);
   if (!targetEmbedding) return [];
-
-  await upsertSearchCatalogRecords(
-    [target],
-    new Map([[target.canonicalKey, targetEmbedding]])
-  );
 
   const recent = await getRecentSearchCatalogRecords(300);
   return recent

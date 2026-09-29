@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { redis } from "@/server/lib/cache/redis";
 import { logger } from "@/shared/logger";
+import type { MangaItem } from "@/shared/sources/source-types";
 import type { SearchCatalogCandidate } from "@/shared/lib/search-intelligence";
 
 const INDEX_KEY = "yomirra:search:catalog:index";
@@ -12,6 +13,38 @@ export interface StoredSearchCatalogRecord extends SearchCatalogCandidate {
   embedding?: number[];
   embeddingTextHash?: string;
   updatedAt: number;
+}
+
+export function buildTrustedCatalogCandidate(
+  sourceId: string,
+  manga: MangaItem
+): SearchCatalogCandidate {
+  return {
+    canonicalKey: `source:${sourceId}:${manga.id}`,
+    sourceId,
+    mangaId: manga.id,
+    title: manga.title,
+    coverUrl: manga.coverUrl,
+    originalTitle: manga.originalTitle,
+    alternativeTitles: manga.alternativeTitles,
+    author: manga.author,
+    description: manga.description,
+    format: manga.format,
+    status: manga.status,
+    score: manga.score,
+    sourceBindings: [
+      {
+        sourceId,
+        mangaId: manga.id,
+        title: manga.title,
+        coverUrl: manga.coverUrl,
+        latestChapter: manga.latestChapter,
+        language: manga.language,
+        format: manga.format,
+        score: manga.score,
+      },
+    ],
+  };
 }
 
 function recordKey(canonicalKey: string): string {

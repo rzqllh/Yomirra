@@ -122,7 +122,14 @@ export function clusterCanonicalResults(
       matchedCluster.sourceBindings.push(candidateBinding);
       matchedCluster.primaryResult.sourceBindings = matchedCluster.sourceBindings;
     } else {
-      const canonicalKey = `canonical:${normalizeTitle(manga.title) || `${sourceId}-${manga.id}`}`;
+      const normalizedTitle = normalizeTitle(manga.title) || `${sourceId}-${manga.id}`;
+      const normalizedAuthor = normalizeTitle(manga.author || "");
+      const baseKey = normalizedAuthor
+        ? `canonical:${normalizedTitle}:author:${normalizedAuthor}`
+        : `canonical:${normalizedTitle}`;
+      const canonicalKey = clusters.some((cluster) => cluster.canonicalKey === baseKey)
+        ? `${baseKey}:source:${sourceId}:${manga.id}`
+        : baseKey;
       const primaryWithSource = {
         ...manga,
         sourceId,
