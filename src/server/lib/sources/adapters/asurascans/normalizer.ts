@@ -16,6 +16,10 @@ export function normalizeSynopsis(html: string): string {
   return normalizeSharedSynopsis(html);
 }
 
+export function stripHtml(html: string): string {
+  return normalizeSharedSynopsis(html);
+}
+
 export function normalizeAsuraStatus(status?: string): "ONGOING" | "COMPLETED" | "CANCELLED" | "UNKNOWN" {
   if (!status) return "UNKNOWN";
   const lower = status.toLowerCase();
