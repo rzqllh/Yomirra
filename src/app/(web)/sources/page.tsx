@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
+import { sourceQueryOptions } from "@/shared/sources/source-query-options";
 import { HardDrives, ShieldWarning } from "@phosphor-icons/react";
 import { SourceListSkeleton } from "@/components/skeletons/source-list-skeleton";
 import { EmptyState } from "@/components/states/empty-state";
@@ -38,10 +39,7 @@ export default function SourcesPage() {
     return () => window.removeEventListener("sources_updated", handleUpdate);
   }, [loadLocalSources]);
 
-  const { data: serverSources, isLoading, isError, refetch: refetchSources } = useQuery({
-    queryKey: ["sources"],
-    queryFn: () => apiClient.getSources(),
-  });
+  const { data: serverSources, isLoading, isError, refetch: refetchSources } = useQuery(sourceQueryOptions);
 
   const { data: healthStats, refetch: refetchHealth } = useQuery({
     queryKey: ["sources-health"],

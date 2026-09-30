@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useTheme } from "next-themes"
 import {
   Gear,
+  Stack,
   Palette,
   Globe,
   Question,
@@ -122,6 +123,18 @@ export function HeaderActions({ className }: { className?: string } = {}) {
             >
               <Gear size={18} weight="fill" className="text-accent shrink-0" />
               <span>Pengaturan aplikasi</span>
+            </Link>
+
+            <Link
+              href="/sources"
+              onClick={() => setIsMenuOpen(false)}
+              className="flex items-center justify-between px-3 py-2 rounded-xl text-[13px] font-medium text-text-primary hover:bg-surface-hover active:scale-98 transition-all"
+            >
+              <div className="flex items-center gap-2.5">
+                <Stack size={18} className="text-text-muted shrink-0" />
+                <span>Sumber</span>
+              </div>
+              <CaretRight size={13} className="text-text-muted/70" />
             </Link>
 
             {/* 2. Tema tampilan */}
