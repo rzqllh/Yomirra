@@ -5,6 +5,7 @@ import { redis } from "@/server/lib/cache/redis";
 import { logger } from "@/shared/logger";
 import { env } from "@/env";
 import { formatUserReport, type ReportPayload } from "@/server/lib/ops/message-format";
+import { enqueueUserReport } from "@/server/lib/ops/admin-report-service";
 
 export const dynamic = "force-dynamic";
 
@@ -56,6 +57,9 @@ export async function POST(req: Request) {
     category,
     detail,
   };
+
+  // Enqueue report for Admin Dashboard Inbox
+  await enqueueUserReport(sanitizedPayload);
 
   const message = formatUserReport(sanitizedPayload);
 

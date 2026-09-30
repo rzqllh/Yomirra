@@ -21,6 +21,8 @@ const envSchema = z.object({
   TELEGRAM_WEBHOOK_SECRET: z.string().optional(),
   VERCEL_DEPLOY_SECRET: z.string().optional(),
   GEMINI_API_KEY: z.string().optional(),
+  FIREBASE_SERVICE_ACCOUNT_KEY: z.string().optional(),
+  ADMIN_EMAILS: z.string().optional(),
 });
 
 type Env = z.infer<typeof envSchema>;
@@ -42,6 +44,8 @@ function getEnv(): Env {
     TELEGRAM_WEBHOOK_SECRET: process.env.TELEGRAM_WEBHOOK_SECRET,
     VERCEL_DEPLOY_SECRET: process.env.VERCEL_DEPLOY_SECRET,
     GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+    FIREBASE_SERVICE_ACCOUNT_KEY: process.env.FIREBASE_SERVICE_ACCOUNT_KEY,
+    ADMIN_EMAILS: process.env.ADMIN_EMAILS,
   });
 
   if (parsed.success) {
@@ -72,6 +76,8 @@ function getEnv(): Env {
       TELEGRAM_WEBHOOK_SECRET: undefined,
       VERCEL_DEPLOY_SECRET: undefined,
       GEMINI_API_KEY: undefined,
+      FIREBASE_SERVICE_ACCOUNT_KEY: undefined,
+      ADMIN_EMAILS: undefined,
     };
   }
 
