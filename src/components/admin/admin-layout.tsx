@@ -384,7 +384,10 @@ export function AdminLayout() {
   const groups: NavItem["group"][] = ["Overview", "Discovery", "Operations"];
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 antialiased selection:bg-red-500/30 selection:text-white md:flex">
+    <div
+      style={{ colorScheme: "dark" }}
+      className="min-h-screen bg-zinc-950 text-zinc-100 antialiased selection:bg-red-500/30 selection:text-white md:flex"
+    >
       <aside className="sticky top-0 hidden h-screen w-[260px] shrink-0 flex-col border-r border-zinc-800/80 bg-zinc-900 md:flex">
         <div className="border-b border-zinc-800/80 px-4 py-4">
           <div className="flex items-center justify-between gap-3">

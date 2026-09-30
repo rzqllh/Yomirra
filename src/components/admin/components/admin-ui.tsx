@@ -2,6 +2,7 @@
 
 import React from "react";
 import {
+  CaretDown,
   CheckCircle,
   Info,
   WarningCircle,
@@ -145,6 +146,36 @@ export function OpsButton({
     </button>
   );
 }
+
+export interface OpsSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+  wrapperClassName?: string;
+}
+
+export const OpsSelect = React.forwardRef<HTMLSelectElement, OpsSelectProps>(
+  ({ className, wrapperClassName, children, ...props }, ref) => {
+    return (
+      <div className={cx("relative w-full", wrapperClassName)}>
+        <select
+          ref={ref}
+          {...props}
+          className={cx(
+            "h-10 w-full appearance-none rounded-xl border border-zinc-800 bg-zinc-950/70 pl-3 pr-9 text-xs text-zinc-200 outline-none transition-colors",
+            "focus:border-red-500/50 focus:ring-2 focus:ring-red-500/10",
+            "disabled:cursor-not-allowed disabled:opacity-50",
+            className,
+          )}
+        >
+          {children}
+        </select>
+        <CaretDown
+          className="pointer-events-none absolute right-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-500"
+          weight="bold"
+        />
+      </div>
+    );
+  },
+);
+OpsSelect.displayName = "OpsSelect";
 
 export function FeedbackBanner({
   message,

@@ -187,6 +187,31 @@ export function TelemetryTab({ initialTelemetry, getToken, onRefresh }: Telemetr
           <MetricCell label="Clients" value={telemetry?.connectedClients || 0} hint="Connected clients / instances" />
           <MetricCell label="Sampled keys" value={telemetry?.totalSampledKeys || 0} hint="Pattern yomirra:*" tone="brand" />
         </div>
+        {!connected ? (
+          <div className="border-t border-zinc-800/80 bg-zinc-950/40 p-4 sm:p-5">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="space-y-1">
+                <p className="text-xs font-semibold text-amber-300">Penyelesaian status Redis Fallback / Unavailable:</p>
+                <p className="text-[11px] leading-relaxed text-zinc-400">
+                  Instance saat ini tidak terhubung ke Redis terpusat dan beroperasi dengan in-memory fallback. Variabel lingkungan <code className="rounded bg-zinc-900 px-1.5 py-0.5 font-mono text-zinc-200">REDIS_URL</code> belum disetel atau endpoint tidak dapat dihubungi.
+                </p>
+                <p className="text-[10px] text-zinc-500">
+                  Langkah: Tambahkan connection string Redis (misal dari Upstash Redis / Redis Cloud: <code className="rounded bg-zinc-900 px-1 py-0.5 font-mono text-zinc-300">rediss://default:token@host:port</code>) di Dashboard Vercel &rarr; Settings &rarr; Environment Variables, lalu redeploy.
+                </p>
+              </div>
+              <OpsButton
+                type="button"
+                size="sm"
+                variant="secondary"
+                onClick={() => void onRefresh()}
+                className="shrink-0"
+              >
+                <ArrowsClockwise className="h-3.5 w-3.5" />
+                Cek Ulang Koneksi
+              </OpsButton>
+            </div>
+          </div>
+        ) : null}
       </OpsCard>
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.35fr)_minmax(320px,0.65fr)]">

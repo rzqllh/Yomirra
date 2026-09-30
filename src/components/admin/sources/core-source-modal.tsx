@@ -78,7 +78,13 @@ export function CoreSourceModal({ source, isOpen, onClose, onSaved, getToken }: 
 
   return (
     <div className="fixed inset-0 z-[140] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
-      <div role="dialog" aria-modal="true" aria-labelledby="core-source-title" className="flex max-h-[92vh] w-full max-w-xl flex-col overflow-hidden rounded-[24px] border border-zinc-800 bg-zinc-900 shadow-2xl shadow-black/50">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="core-source-title"
+        style={{ colorScheme: "dark" }}
+        className="flex max-h-[92vh] w-full max-w-xl flex-col overflow-hidden rounded-[24px] border border-zinc-800 bg-zinc-900 shadow-2xl shadow-black/50"
+      >
         <div className="flex items-start justify-between gap-4 border-b border-zinc-800/90 px-5 py-4">
           <div className="flex min-w-0 items-start gap-3">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-red-500/25 bg-red-500/10 text-red-300"><SlidersHorizontal className="h-4 w-4" /></div>

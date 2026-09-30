@@ -18,6 +18,7 @@ import {
   FeedbackBanner,
   InlineNotice,
   OpsButton,
+  OpsSelect,
   StatusPill,
   cx,
 } from "../components/admin-ui";
@@ -133,7 +134,13 @@ export function CustomSourceModal({ initialSource, isOpen, onClose, onSaved, get
 
   return (
     <div className="fixed inset-0 z-[150] flex items-center justify-center overflow-y-auto bg-black/75 p-3 backdrop-blur-sm sm:p-5">
-      <div role="dialog" aria-modal="true" aria-labelledby="custom-source-title" className="my-auto flex max-h-[94vh] w-full max-w-3xl flex-col overflow-hidden rounded-[24px] border border-zinc-800 bg-zinc-900 shadow-2xl shadow-black/50">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="custom-source-title"
+        style={{ colorScheme: "dark" }}
+        className="my-auto flex max-h-[94vh] w-full max-w-3xl flex-col overflow-hidden rounded-[24px] border border-zinc-800 bg-zinc-900 shadow-2xl shadow-black/50"
+      >
         <div className="flex items-start justify-between gap-4 border-b border-zinc-800/90 px-5 py-4 sm:px-6">
           <div className="flex min-w-0 items-start gap-3">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-red-500/25 bg-red-500/10 text-red-300"><SlidersHorizontal className="h-4 w-4" /></div>
@@ -178,7 +185,14 @@ export function CustomSourceModal({ initialSource, isOpen, onClose, onSaved, get
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 <div>
                   <label htmlFor="custom-type" className="mb-1.5 block text-[11px] font-medium text-zinc-400">Parser</label>
-                  <select id="custom-type" value={formData.type} onChange={(event) => setFormData({ ...formData, type: event.target.value as "html" | "api" })} className="h-10 w-full rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 text-xs text-zinc-200 outline-none focus:border-red-500/50"><option value="html">HTML</option><option value="api">REST API</option></select>
+                  <OpsSelect
+                    id="custom-type"
+                    value={formData.type}
+                    onChange={(event) => setFormData({ ...formData, type: event.target.value as "html" | "api" })}
+                  >
+                    <option value="html" className="bg-zinc-900 text-zinc-200">HTML</option>
+                    <option value="api" className="bg-zinc-900 text-zinc-200">REST API</option>
+                  </OpsSelect>
                 </div>
                 <div>
                   <label htmlFor="custom-lang" className="mb-1.5 block text-[11px] font-medium text-zinc-400">Language</label>
@@ -186,11 +200,25 @@ export function CustomSourceModal({ initialSource, isOpen, onClose, onSaved, get
                 </div>
                 <div>
                   <label htmlFor="custom-enabled" className="mb-1.5 block text-[11px] font-medium text-zinc-400">Status</label>
-                  <select id="custom-enabled" value={formData.isEnabled ? "true" : "false"} onChange={(event) => setFormData({ ...formData, isEnabled: event.target.value === "true" })} className="h-10 w-full rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 text-xs text-zinc-200 outline-none focus:border-red-500/50"><option value="true">Enabled</option><option value="false">Disabled</option></select>
+                  <OpsSelect
+                    id="custom-enabled"
+                    value={formData.isEnabled ? "true" : "false"}
+                    onChange={(event) => setFormData({ ...formData, isEnabled: event.target.value === "true" })}
+                  >
+                    <option value="true" className="bg-zinc-900 text-zinc-200">Enabled</option>
+                    <option value="false" className="bg-zinc-900 text-zinc-200">Disabled</option>
+                  </OpsSelect>
                 </div>
                 <div>
                   <label htmlFor="custom-nsfw" className="mb-1.5 block text-[11px] font-medium text-zinc-400">Content</label>
-                  <select id="custom-nsfw" value={formData.isNsfw ? "true" : "false"} onChange={(event) => setFormData({ ...formData, isNsfw: event.target.value === "true" })} className="h-10 w-full rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 text-xs text-zinc-200 outline-none focus:border-red-500/50"><option value="false">General</option><option value="true">18+ / NSFW</option></select>
+                  <OpsSelect
+                    id="custom-nsfw"
+                    value={formData.isNsfw ? "true" : "false"}
+                    onChange={(event) => setFormData({ ...formData, isNsfw: event.target.value === "true" })}
+                  >
+                    <option value="false" className="bg-zinc-900 text-zinc-200">General</option>
+                    <option value="true" className="bg-zinc-900 text-zinc-200">18+ / NSFW</option>
+                  </OpsSelect>
                 </div>
               </div>
             </section>

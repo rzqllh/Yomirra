@@ -106,7 +106,7 @@ export function OverviewTab({
         id: "redis",
         level: "warning",
         title: "Redis tidak terhubung",
-        detail: "Runtime sedang mengandalkan fallback cache jika tersedia.",
+        detail: "Runtime memakai fallback cache. Setel REDIS_URL di Vercel env untuk sinkronisasi antrian & TTL.",
         tab: "telemetry",
       });
     }

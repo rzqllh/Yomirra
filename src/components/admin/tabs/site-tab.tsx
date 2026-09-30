@@ -18,6 +18,7 @@ import {
   OpsButton,
   OpsCard,
   OpsSectionHeader,
+  OpsSelect,
   StatusPill,
   cx,
 } from "../components/admin-ui";
@@ -162,16 +163,15 @@ export function SiteTab({ initialConfig, onRefresh, getToken }: SiteTabProps) {
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <label htmlFor="announcement-type" className="mb-1.5 block text-[11px] font-medium text-zinc-400">Severity</label>
-                  <select
+                  <OpsSelect
                     id="announcement-type"
                     value={config.announcement.type}
                     onChange={(event) => setConfig({ ...config, announcement: { ...config.announcement, type: event.target.value as AnnouncementType } })}
-                    className="h-10 w-full rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 text-xs text-zinc-200 outline-none focus:border-red-500/50 focus:ring-2 focus:ring-red-500/10"
                   >
-                    <option value="info">Info</option>
-                    <option value="warning">Warning</option>
-                    <option value="alert">Critical</option>
-                  </select>
+                    <option value="info" className="bg-zinc-900 text-zinc-200">Info</option>
+                    <option value="warning" className="bg-zinc-900 text-zinc-200">Warning</option>
+                    <option value="alert" className="bg-zinc-900 text-zinc-200">Critical</option>
+                  </OpsSelect>
                 </div>
                 <div>
                   <label htmlFor="announcement-link" className="mb-1.5 block text-[11px] font-medium text-zinc-400">Link tambahan</label>

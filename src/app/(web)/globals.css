@@ -148,6 +148,7 @@
   }
 
   :root, .dark {
+    color-scheme: dark;
     /* Ink: dark reading chrome. The reader canvas has its own background control. */
     --surface-base: #05050a;
     --surface-raised: #101118;
@@ -212,6 +213,7 @@
   }
 
   .light {
+    color-scheme: light;
     /* Washi canvas, restrained hanko red. */
     --surface-base: #f7f5f0;
     --surface-raised: #ffffff;
@@ -344,6 +346,12 @@
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
+}
+
+::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 ::-webkit-scrollbar-track {
