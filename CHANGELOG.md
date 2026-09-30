@@ -15,9 +15,10 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
 
 ### P0 Core Stability & P1 Core Reading Experience (Phase 1 & 2)
 
-- Audit & hardening Shinigami adapter: defensive handling saat response payload `null`/`undefined` pada `getPopular`, `getLatest`, `getChapters`, dan `getPages`, pembatasan `allowedHosts: ["api.shngm.io"]`, serta constructor dependency injection untuk pengujian terisolasi.
-- Regression test suite untuk Shinigami adapter (`src/server/lib/sources/adapters/shinigami/__tests__/adapter.test.ts`) dengan 9 test case baru (12/12 Shinigami tests PASS).
-- Verifikasi penuh Phase 2 Gate: 123 test file (833 tests) PASS, typecheck PASS (0 error), lint PASS (0 error), production build (`next build --webpack`) PASS.
+- Audit & hardening Shinigami adapter: defensive handling saat response payload `null`/`undefined` pada `getPopular`, `getLatest`, `getChapters`, dan `getPages`, pembatasan `allowedHosts: ["api.shngm.io"]`, standarisasi metadata Source Engine V1 (`upstreamDomain`, `adapterVersion`, `supportedLanguages`), serta constructor dependency injection untuk pengujian terisolasi.
+- PagedReader image priority & controlled concurrency predictive preloading: halaman aktif dimuat dengan `priority={true}` dan `fetchPriority="high"`, sementara 1–3 halaman berikutnya (berdasarkan `preloadIntensity` dan `dataSaver`) di-preload secara background dalam hidden container dengan `fetchPriority="low"`, mencegah delay dan blank screen saat navigasi halaman.
+- Regression test suite untuk Shinigami adapter (`src/server/lib/sources/adapters/shinigami/__tests__/adapter.test.ts`, 18 tests PASS) dan PagedReader (`src/components/reader/__tests__/paged-reader.test.tsx`, 8 tests PASS).
+- Verifikasi penuh Phase 2 Gate: 124 test file (849 tests) PASS, typecheck PASS (0 error), lint PASS (0 error), production build (`next build --webpack`) PASS.
 
 ### P2 Search Intelligence Foundation (Phase 3)
 

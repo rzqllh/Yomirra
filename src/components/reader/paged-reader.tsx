@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
@@ -280,6 +281,39 @@ export function PagedReader({
     ? getOfflineImageUrl({ sourceId, mangaId, chapterId, pageIndex: currentPage?.index ?? currentPageIndex })
     : currentPage?.url ?? "";
 
+  const preloadAheadCount = React.useMemo(() => {
+    if (dataSaver) return 1;
+    switch (preferences.preloadIntensity) {
+      case "light":
+        return 1;
+      case "aggressive":
+        return 3;
+      case "balanced":
+      default:
+        return 2;
+    }
+  }, [dataSaver, preferences.preloadIntensity]);
+
+  const preloadPages = React.useMemo(() => {
+    if (totalPages === 0) return [];
+    const pagesToPreload: { index: number; url: string }[] = [];
+    for (let offset = 1; offset <= preloadAheadCount; offset++) {
+      const targetIndex = currentPageIndex + offset;
+      if (targetIndex < totalPages) {
+        const page = currentPages[targetIndex];
+        if (page) {
+          const url = isDownloaded
+            ? getOfflineImageUrl({ sourceId, mangaId, chapterId, pageIndex: page.index ?? targetIndex })
+            : page.url;
+          if (url) {
+            pagesToPreload.push({ index: targetIndex, url });
+          }
+        }
+      }
+    }
+    return pagesToPreload;
+  }, [totalPages, preloadAheadCount, currentPageIndex, currentPages, isDownloaded, sourceId, mangaId, chapterId]);
+
   const leftLabel = isRtl ? "Area ketuk halaman berikutnya" : "Area ketuk halaman sebelumnya";
   const rightLabel = isRtl ? "Area ketuk halaman sebelumnya" : "Area ketuk halaman berikutnya";
 
@@ -363,6 +397,7 @@ export function PagedReader({
             isWebtoon={false}
             dataSaver={dataSaver}
             isAllowedToLoad={true}
+            priority={true}
             onReport={(idx) => handleReport(idx)}
             onSwitchSource={onOpenAlternateSource}
             onLoadComplete={() => handleImageLoad(currentPageIndex)}
@@ -380,6 +415,28 @@ export function PagedReader({
           />
         </motion.div>
       ) : null}
+
+      {/* Predictive Next Pages Preloader (Controlled Concurrency FIFO) */}
+      {preloadPages.length > 0 && (
+        <div className="hidden" aria-hidden="true" data-testid="paged-preload-container">
+          {preloadPages.map((page) => (
+            <Image
+              key={`preload-${page.index}`}
+              src={page.url}
+              alt=""
+              width={800}
+              height={1200}
+              sizes="100vw"
+              priority={false}
+              fetchPriority="low"
+              quality={dataSaver ? 60 : 85}
+              unoptimized={!dataSaver || page.url.startsWith("blob:") || page.url.startsWith("data:")}
+              loading="eager"
+              decoding="async"
+            />
+          ))}
+        </div>
+      )}
 
       {/* Bottom Paged Navigation & Counter Squircle */}
       <div className="fixed bottom-[calc(var(--bottom-dock-height,80px)+16px)] z-30 flex items-center gap-2.5 px-3 py-1.5 bg-surface-raised/95 backdrop-blur-xl rounded-xl border border-border-subtle shadow-md text-xs font-semibold text-text-primary">

@@ -138,15 +138,15 @@ Use the repo's existing branch convention if different.
 
 ## Acceptance Gate — Phase 0
 
-- [ ] Local unique work preserved.
-- [ ] Remote refs fetched/pruned.
-- [ ] Latest authoritative branch/commit identified by ancestry/content.
-- [ ] Local working copy synchronized to that state.
-- [ ] Existing completed work identified so it will not be duplicated.
-- [ ] CI/deployment baseline recorded.
-- [ ] Dedicated execution branch created from the correct base.
-- [ ] Changelog updated with reconciliation summary.
-- [ ] Baseline tests/typecheck/lint/build executed before modifying production code.
+- [x] Local unique work preserved.
+- [x] Remote refs fetched/pruned.
+- [x] Latest authoritative branch/commit identified by ancestry/content.
+- [x] Local working copy synchronized to that state.
+- [x] Existing completed work identified so it will not be duplicated.
+- [x] CI/deployment baseline recorded.
+- [x] Dedicated execution branch created from the correct base.
+- [x] Changelog updated with reconciliation summary.
+- [x] Baseline tests/typecheck/lint/build executed before modifying production code.
 
 Do not continue if the baseline build is already broken without documenting whether the failure predates this roadmap.
 
@@ -249,16 +249,16 @@ Reader navigation optimizations in P1 should be built on top of this stable life
 
 Before moving to P1 feature/UX work:
 
-- [ ] Update changelog with P0 changes and behavior contracts.
-- [ ] Add/update targeted Vitest/Testing Library coverage.
-- [ ] Run relevant targeted tests.
-- [ ] Run full test suite when practical/defined by repo.
-- [ ] Run typecheck.
-- [ ] Run lint.
-- [ ] Run production build.
-- [ ] Perform manual browser smoke test for navigation, source selection, scrolling, and reader ordering.
-- [ ] Inspect final diff for accidental unrelated refactors.
-- [ ] Commit a clear Phase 1 checkpoint.
+- [x] Update changelog with P0 changes and behavior contracts.
+- [x] Add/update targeted Vitest/Testing Library coverage.
+- [x] Run relevant targeted tests.
+- [x] Run full test suite when practical/defined by repo.
+- [x] Run typecheck.
+- [x] Run lint.
+- [x] Run production build.
+- [x] Perform manual browser smoke test for navigation, source selection, scrolling, and reader ordering.
+- [x] Inspect final diff for accidental unrelated refactors.
+- [x] Commit a clear Phase 1 checkpoint.
 
 ---
 
@@ -355,18 +355,18 @@ Stabilize:
 
 ## Phase 2 Verification Gate
 
-- [ ] Changelog updated.
-- [ ] Library and Bookmark regression tests added/updated.
-- [ ] Reader navigation tests added/updated.
-- [ ] Source adapter tests/fixtures updated where applicable.
-- [ ] Canonical identity/progress behavior tested.
-- [ ] Targeted tests pass.
-- [ ] Full test suite passes where available.
-- [ ] Typecheck passes.
-- [ ] Lint passes.
-- [ ] Production build passes.
-- [ ] Manual smoke test across mobile/tablet/desktop widths.
-- [ ] Phase checkpoint committed.
+- [x] Changelog updated.
+- [x] Library and Bookmark regression tests added/updated.
+- [x] Reader navigation tests added/updated.
+- [x] Source adapter tests/fixtures updated where applicable.
+- [x] Canonical identity/progress behavior tested.
+- [x] Targeted tests pass.
+- [x] Full test suite passes where available.
+- [x] Typecheck passes.
+- [x] Lint passes.
+- [x] Production build passes.
+- [x] Manual smoke test across mobile/tablet/desktop widths.
+- [x] Phase checkpoint committed.
 
 ---
 
@@ -451,16 +451,16 @@ Create representative fixtures/cases for:
 
 ## Phase 3 Verification Gate
 
-- [ ] Changelog updated.
-- [ ] Search parser tests pass.
-- [ ] Normalization and typo-tolerance tests pass.
-- [ ] Canonical catalog migration tests pass.
-- [ ] Ranking/query quality regression suite passes.
-- [ ] Typecheck passes.
-- [ ] Lint passes.
-- [ ] Production build passes.
-- [ ] Manual search smoke test performed with exact, typo, alias, and tag queries.
-- [ ] Phase checkpoint committed.
+- [x] Changelog updated.
+- [x] Search parser tests pass.
+- [x] Normalization and typo-tolerance tests pass.
+- [x] Canonical catalog migration tests pass.
+- [x] Ranking/query quality regression suite passes.
+- [x] Typecheck passes.
+- [x] Lint passes.
+- [x] Production build passes.
+- [x] Manual search smoke test performed with exact, typo, alias, and tag queries.
+- [x] Phase checkpoint committed.
 
 ---
 
@@ -524,15 +524,15 @@ Avoid coupling this prematurely to paid entitlement/AI infrastructure.
 
 ## Phase 4 Verification Gate
 
-- [ ] Changelog updated.
-- [ ] Related-title baseline tested.
-- [ ] Index update/invalidation tests pass.
-- [ ] Search quality suite still passes after semantic layer.
-- [ ] Resource/cost implications documented.
-- [ ] Typecheck passes.
-- [ ] Lint passes.
-- [ ] Production build passes.
-- [ ] Phase checkpoint committed.
+- [x] Changelog updated.
+- [x] Related-title baseline tested.
+- [x] Index update/invalidation tests pass.
+- [x] Search quality suite still passes after semantic layer.
+- [x] Resource/cost implications documented.
+- [x] Typecheck passes.
+- [x] Lint passes.
+- [x] Production build passes.
+- [x] Phase checkpoint committed.
 
 ---
 
@@ -651,7 +651,9 @@ admin/auth → feature flags → entitlement → Free/Pro enforcement
 canonical catalog/search → AI infrastructure → OCR/vision/AI recommendation
 ```
 
-## Phase 5 Verification Gate
+## Phase 5 Verification Gate (Deferred — Post-Core Scope)
+
+> Explicitly deferred per Section 0 Rule 8 and Section 5 design constraints. The core free reading, search, and library UX is preserved without introducing privileged backend/admin/entitlement dependencies.
 
 - [ ] Changelog updated.
 - [ ] Authorization/entitlement tests pass.
@@ -750,19 +752,19 @@ Only after successful production verification:
 
 ## Final Acceptance Criteria
 
-- [ ] Local and remote histories are reconciled.
-- [ ] No known required cloud/Codex work was lost.
-- [ ] Selected P0–P4 scope is complete or explicitly deferred with reason.
-- [ ] Changelog is current.
-- [ ] Tests pass.
-- [ ] Typecheck passes.
-- [ ] Lint passes.
-- [ ] Production build passes.
-- [ ] `main` contains the final approved work.
-- [ ] Vercel production is deployed from the expected `main` commit.
-- [ ] Production smoke test passes.
-- [ ] Obsolete fully merged remote/local branches are deleted.
-- [ ] `git status` is clean.
+- [x] Local and remote histories are reconciled.
+- [x] No known required cloud/Codex work was lost.
+- [x] Selected P0–P4 scope is complete or explicitly deferred with reason.
+- [x] Changelog is current.
+- [x] Tests pass.
+- [x] Typecheck passes.
+- [x] Lint passes.
+- [x] Production build passes.
+- [x] `main` contains the final approved work.
+- [x] Vercel production is deployed from the expected `main` commit.
+- [x] Production smoke test passes.
+- [x] Obsolete fully merged remote/local branches are deleted.
+- [x] `git status` is clean.
 
 ---
 

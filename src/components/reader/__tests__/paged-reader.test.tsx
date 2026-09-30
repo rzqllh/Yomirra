@@ -198,6 +198,55 @@ describe("PagedReader Component & Integration", () => {
     });
   });
 
+  describe("Predictive Preloading & Image Priority", () => {
+    it("should render active page with priority and preload upcoming pages", () => {
+      renderWithClient(
+        <PagedReader
+          sourceId="src1"
+          mangaId="manga1"
+          chapterId="ch1"
+          pages={mockPages}
+        />
+      );
+
+      // Active image should have fetchpriority="high"
+      const activeImage = screen.getByAltText("Page 1");
+      expect(activeImage.getAttribute("fetchpriority")).toBe("high");
+
+      // Preload container should render next pages (balanced = 2 ahead: page 1 and page 2)
+      const preloadContainer = screen.getByTestId("paged-preload-container");
+      expect(preloadContainer).toBeDefined();
+
+      const preloadedImages = preloadContainer.querySelectorAll("img");
+      expect(preloadedImages.length).toBe(2);
+      expect(preloadedImages[0].getAttribute("src")).toContain("page-1.jpg");
+      expect(preloadedImages[1].getAttribute("src")).toContain("page-2.jpg");
+    });
+
+    it("should obey preloadIntensity light by only preloading 1 page ahead", () => {
+      useReaderStore.setState({
+        preferences: {
+          ...useReaderStore.getState().preferences,
+          preloadIntensity: "light",
+        },
+      });
+
+      renderWithClient(
+        <PagedReader
+          sourceId="src1"
+          mangaId="manga1"
+          chapterId="ch1"
+          pages={mockPages}
+        />
+      );
+
+      const preloadContainer = screen.getByTestId("paged-preload-container");
+      const preloadedImages = preloadContainer.querySelectorAll("img");
+      expect(preloadedImages.length).toBe(1);
+      expect(preloadedImages[0].getAttribute("src")).toContain("page-1.jpg");
+    });
+  });
+
   describe("Mode Integration in ReaderView", () => {
     it("should render PagedReader when readingMode === 'paged'", () => {
       useReaderStore.setState({
