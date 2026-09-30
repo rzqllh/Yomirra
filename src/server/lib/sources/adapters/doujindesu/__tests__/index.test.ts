@@ -21,7 +21,7 @@ describe("DoujinDesuSource", () => {
       expect(source.id).toBe("doujindesu");
       expect(source.name).toBe("Doujindesu");
       expect(source.isNsfw).toBe(true);
-      expect(source.isEnabled).toBe(false); // Default disabled as requested
+      expect(source.isEnabled).toBe(true);
       expect(source.status).toBe("online");
       expect(source.upstreamDomain).toBe("doujin.desu.xxx");
       expect(source.language).toBe("id");
@@ -36,11 +36,11 @@ describe("DoujinDesuSource", () => {
       expect(source.capabilities.pages).toBe(true);
     });
 
-    it("is registered in sourceRegistry with isNsfw=true and isEnabled=false", () => {
+    it("is registered in sourceRegistry with isNsfw=true and isEnabled=true", () => {
       const entry = sourceRegistry.find((s) => s.id === "doujindesu");
       expect(entry).toBeDefined();
       expect(entry?.isNsfw).toBe(true);
-      expect(entry?.isEnabled).toBe(false);
+      expect(entry?.isEnabled).toBe(true);
       expect(entry?.name).toBe("Doujindesu");
     });
   });
