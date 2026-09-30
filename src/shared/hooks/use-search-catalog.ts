@@ -547,7 +547,7 @@ export function useSearchCatalog() {
     }
 
     if (!parsedQuery.textQuery) {
-      if (sort === "title" || sort === "alphabet") {
+      if (sort === "title" || sort === "alphabet" || sort === "alphabetical") {
         return results.sort((a, b) =>
           String(a.manga.title || "").localeCompare(
             String(b.manga.title || ""),
