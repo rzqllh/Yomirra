@@ -1,3 +1,4 @@
+import { normalizeSynopsis } from "@/shared/utils/normalize";
 import type {
   MangaItem,
   MangaDetail,
@@ -64,7 +65,7 @@ function getFormat(manga: MangaDexManga): string | undefined {
 }
 
 export function normalizeMangaItem(manga: MangaDexManga): MangaItem {
-  const desc = pickDescription(manga.attributes.description);
+  const desc = normalizeSynopsis(pickDescription(manga.attributes.description));
   const lastCh = manga.attributes.lastChapter ? `Chapter ${manga.attributes.lastChapter}` : undefined;
 
   return {
@@ -87,7 +88,7 @@ export function normalizeMangaDetail(manga: MangaDexManga): MangaDetail {
     id: manga.id,
     title: pickTitle(manga.attributes.title),
     coverUrl: buildCoverUrl(manga.id, manga.relationships),
-    description: pickDescription(manga.attributes.description),
+    description: normalizeSynopsis(pickDescription(manga.attributes.description)),
     author: getCreator(manga.relationships, "author"),
     artist: getCreator(manga.relationships, "artist"),
     genres,
