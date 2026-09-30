@@ -1,6 +1,6 @@
 import { getAllSourceMetadata } from "@/shared/sources/source-registry";
 import { sourceHealthStore } from "@/server/lib/sources/health/health-store";
-import { domainResolver, SOURCE_DOMAINS } from "@/server/lib/sources/domain-resolver";
+import * as domainResolverModule from "@/server/lib/sources/domain-resolver";
 import { redis } from "@/server/lib/cache/redis";
 import { logger } from "@/shared/logger";
 import { sourceManager } from "@/server/lib/sources/source-manager";
@@ -12,8 +12,8 @@ export interface SourceHealthMatrixItem {
   isEnabled: boolean;
   isInstalled: boolean;
   status: "HEALTHY" | "DEGRADED" | "DOWN" | "UNMEASURED";
-  healthStatus?: SourceHealthStatus;
-  consecutiveFailures?: number;
+  healthStatus: SourceHealthStatus;
+  consecutiveFailures: number;
   latencyMs: number;
   lastCheckedAt?: string;
   mirrors: string[];
@@ -32,14 +32,40 @@ export interface ProbeResult {
 
 export async function getSourceHealthMatrix(): Promise<SourceHealthMatrixItem[]> {
   const sources = getAllSourceMetadata();
-  const snapshots = await sourceHealthStore.getAllSnapshots(sources.map((s) => s.id));
+  let snapshots: Record<string, any> = {};
+
+  if (typeof sourceHealthStore.getAllSnapshots === "function") {
+    snapshots = await sourceHealthStore.getAllSnapshots(sources.map((s) => s.id));
+  } else if (typeof (sourceHealthStore as any).getHealth === "function") {
+    for (const s of sources) {
+      snapshots[s.id] = (sourceHealthStore as any).getHealth(s.id);
+    }
+  }
 
   return Promise.all(
     sources.map(async (meta) => {
       const snapshot = snapshots[meta.id];
-      const activeDomain = await domainResolver.resolveDomain(meta.id).catch(() => meta.baseUrl || "");
-      const config = SOURCE_DOMAINS[meta.id.toLowerCase()];
-      const mirrors = config?.frontend?.mirrors || [];
+      let activeDomain = meta.baseUrl || "";
+      try {
+        const resolver = (domainResolverModule as any).domainResolver;
+        if (resolver && typeof resolver.resolveDomain === "function") {
+          activeDomain = await resolver.resolveDomain(meta.id);
+        } else if (resolver && typeof resolver.resolve === "function") {
+          activeDomain = resolver.resolve(meta.id);
+        }
+      } catch {
+        activeDomain = meta.baseUrl || "";
+      }
+
+      let mirrors: string[] = [];
+      try {
+        const domains = (domainResolverModule as any).SOURCE_DOMAINS;
+        if (domains && domains[meta.id.toLowerCase()]) {
+          mirrors = domains[meta.id.toLowerCase()]?.frontend?.mirrors || [];
+        }
+      } catch {
+        mirrors = [];
+      }
 
       let status: "HEALTHY" | "DEGRADED" | "DOWN" | "UNMEASURED" = "UNMEASURED";
       if (snapshot) {
@@ -103,7 +129,7 @@ export async function flushSourceCache(sourceId?: string): Promise<{ success: bo
   }
 
   try {
-    const pattern = sourceId ? `yomirra:*:${sourceId}:*` : "yomirra:source:*";
+    const pattern = sourceId ? `source:${sourceId}:*` : "source:*";
     const keys = await redis.keys(pattern);
 
     if (keys.length > 0) {

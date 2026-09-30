@@ -5,9 +5,12 @@ import { Info, Warning, WarningOctagon, X, ArrowSquareOut } from "@phosphor-icon
 import { cn } from "@/shared/utils/cn";
 import type { SiteConfig, AnnouncementType } from "@/shared/types/site-config";
 
+import { usePathname } from "next/navigation";
+
 const DISMISSED_KEY = "yomirra-dismissed-announcement";
 
 export function SiteAnnouncementBanner() {
+  const pathname = usePathname();
   const [config, setConfig] = React.useState<SiteConfig | null>(null);
   const [isDismissed, setIsDismissed] = React.useState(false);
 
@@ -36,6 +39,10 @@ export function SiteAnnouncementBanner() {
       isCancelled = true;
     };
   }, []);
+
+  if (pathname?.startsWith("/admin")) {
+    return null;
+  }
 
   const announcement = config?.announcement;
   if (!announcement || !announcement.enabled || !announcement.message || isDismissed) {
