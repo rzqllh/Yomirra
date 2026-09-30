@@ -241,7 +241,7 @@ export const sourceRegistry: SourceMetadata[] = [
       detail: true,
       chapters: true,
       pages: true,
-      filters: false,
+      filters: true,
     },
     isDynamic: false
   },
