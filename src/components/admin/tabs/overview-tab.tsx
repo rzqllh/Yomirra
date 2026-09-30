@@ -58,7 +58,11 @@ export function OverviewTab({
       });
       const data = await res.json();
       if (res.ok) {
-        setActionFeedback({ message: `Probe berhasil untuk ${data.results?.length || 0} source`, ok: true });
+        const s = data.summary;
+        const msg = s
+          ? `Probe selesai: ${s.success}/${s.total} source sehat${s.failed ? `, ${s.failed} gagal` : ""}`
+          : `Probe selesai untuk ${data.results?.length || 0} source`;
+        setActionFeedback({ message: msg, ok: s ? s.failed === 0 : true });
         await onRefresh();
       } else {
         setActionFeedback({ message: data.error || "Gagal probe source", ok: false });

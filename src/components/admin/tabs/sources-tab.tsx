@@ -79,12 +79,19 @@ export function SourcesTab({ sources, onRefresh, getToken }: SourcesTabProps) {
       });
       const data = await res.json();
       if (res.ok) {
-        setStatusMessage({
-          text: sourceId
-            ? `Probe ${sourceId} selesai: ${data.probe?.status || "OK"} (${data.probe?.latencyMs || 0}ms)`
-            : `Probe seluruh source selesai`,
-          ok: true,
-        });
+        let text: string;
+        if (sourceId) {
+          const p = data.probe;
+          text = p
+            ? `Probe ${sourceId}: ${p.success ? "OK" : "Gagal"} (${p.latencyMs ?? 0}ms)${p.message ? ` — ${p.message}` : ""}`
+            : `Probe ${sourceId} selesai`;
+        } else {
+          const s = data.summary;
+          text = s
+            ? `Probe selesai: ${s.success}/${s.total} source sehat${s.failed ? `, ${s.failed} gagal` : ""}`
+            : `Probe seluruh source selesai`;
+        }
+        setStatusMessage({ text, ok: true });
         await onRefresh();
       } else {
         setStatusMessage({ text: data.error || "Gagal melakukan probe", ok: false });
