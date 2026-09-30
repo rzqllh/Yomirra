@@ -8,6 +8,7 @@ import type {
   FilterList,
 } from "@/shared/sources/source-types";
 import { HttpClient } from "../base/http-client";
+import { normalizeSynopsis } from "@/shared/utils/normalize";
 import { getKomikindoFilters } from "./filter-cache";
 
 export class KomikindoSource implements MangaSource {
@@ -162,7 +163,7 @@ export class KomikindoSource implements MangaSource {
       id: mangaId,
       title,
       coverUrl,
-      description,
+      description: normalizeSynopsis(description),
       author,
       status: status as any,
       format,
