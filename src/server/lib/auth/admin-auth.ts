@@ -59,8 +59,10 @@ export function getValidAdminKeys(): string[] {
   if (process.env.ADMIN_SECRET?.trim()) keys.push(process.env.ADMIN_SECRET.trim());
   if (process.env.OPS_CRON_SECRET?.trim()) keys.push(process.env.OPS_CRON_SECRET.trim());
   if (process.env.TELEGRAM_WEBHOOK_SECRET?.trim()) keys.push(process.env.TELEGRAM_WEBHOOK_SECRET.trim());
-  // Standard emergency/fallback passkey for Hafizh
-  keys.push("yomirra-ops-master-2026");
+  // Standard emergency/fallback passkey for local development & test or unconfigured servers
+  if (process.env.NODE_ENV !== "production" || keys.length === 0) {
+    keys.push("yomirra-ops-master-2026");
+  }
   return keys;
 }
 

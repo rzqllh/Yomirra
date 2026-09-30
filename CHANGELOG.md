@@ -4,6 +4,19 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
 
 ## [Unreleased]
 
+### P4 Backend, Entitlement, Admin Hardening, and AI (Phase 6)
+
+- **Admin Auth & Security Hardening** (`src/server/lib/auth/admin-auth.ts`, `src/shared/lib/__tests__/phase6-backend-entitlement.test.ts`):
+  - Memperketat `getValidAdminKeys()` dengan membatasi fallback passkey darurat hanya untuk development dan test lokal atau server yang belum terkonfigurasi, mengeliminasi risiko pembukaan celah default di lingkungan production.
+  - Memvalidasi bahwa seluruh verifikasi hak akses privileged bersifat server-authoritative dan tidak ada kredensial privileged yang masuk ke client bundle.
+- **Entitlement Foundation (Task 02)** (`src/shared/lib/entitlement.ts`):
+  - Mengimplementasikan model kapabilitas Free vs Pro dengan proteksi ketat agar fitur gratis (membaca tanpa batas, pencarian penuh, multi-source switch, perpustakaan offline, sinkronisasi riwayat) selalu aktif dan tidak dapat didegradasi atau dikunci secara tidak sengaja.
+  - Menyediakan gateway fitur Pro yang aman untuk fitur tambahan berbasis AI dan prioritas bandwidth.
+- **Feature Flags Framework** (`src/shared/lib/feature-flags.ts`):
+  - Menyediakan flag fitur modular dengan default aman dan dukungan override lingkungan server.
+- **AI Infrastructure & Resilient Guardrails** (`src/server/lib/search/gemini-embeddings.ts`):
+  - Mengunci penggunaan kunci API AI secara ketat di sisi server (tidak ada exposure di client bundle browser), dengan timeout jaringan 8 detik, caching hasil di Redis selama 7 hari, dan degradasi anggun (graceful non-AI fallback) saat kuota atau jaringan terputus.
+
 ### P3 Advanced Discovery (Phase 5)
 
 - **Related Titles Discovery — Lexical & Metadata Baseline** (`src/server/lib/search/search-intelligence-service.ts`, `src/app/api/search/related/route.ts`):
