@@ -53,7 +53,13 @@ export function useLibraryCatalog() {
   } = filterStore;
 
   const libraryItems = useLibraryStore(state => state.items);
-  const { collections, membershipsByManga, readingStatusByManga, getMemberships } = useCollectionStore();
+  const {
+    collections,
+    membershipsByManga,
+    readingStatusByManga,
+    getMemberships,
+    getResolvedReadingStatus,
+  } = useCollectionStore();
 
   const initialSort = sortParam || storeSort || "popular";
 
@@ -62,19 +68,51 @@ export function useLibraryCatalog() {
   const [sort, setSort] = React.useState<string>(initialSort);
   const [page, setPage] = React.useState(1);
 
-  // Sync initial URL params or reset on page reload
+  const genreSignature = genreParams.join("|");
+  const previousSourceRef = React.useRef(activeSourceId);
+
+  // A direct reload clears session-scoped filters, but explicit URL tags remain an intent
+  // and are applied again immediately below.
   React.useEffect(() => {
-    if (typeof window !== "undefined") {
-      const nav = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
-      if (nav?.type === "reload") {
-        filterStore.resetFilters();
-        setSearchInput("");
-        setQuery("");
-      } else if (genreParams.length > 0 && selectedGenres.length === 0 && excludedGenres.length === 0) {
-        filterStore.setFilters({ selectedGenres: genreParams });
+    if (typeof window === "undefined") return;
+    const nav = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming | undefined;
+    if (nav?.type !== "reload") return;
+
+    filterStore.resetFilters();
+    setSearchInput("");
+    setQuery("");
+    setSort(sortParam || "popular");
+  }, []);
+
+  // Provider filter values are source-specific. Clear them when the source changes,
+  // then synchronize any genre/tag route coming from the manga detail chips.
+  React.useEffect(() => {
+    const sourceChanged = previousSourceRef.current !== activeSourceId;
+    const nextGenres = genreParams;
+
+    if (sourceChanged) {
+      previousSourceRef.current = activeSourceId;
+      filterStore.setFilters({
+        selectedGenres: nextGenres,
+        excludedGenres: [],
+        selectedFormats: [],
+        selectedStatuses: [],
+      });
+      setPage(1);
+      return;
+    }
+
+    if (nextGenres.length > 0) {
+      const current = selectedGenres.join("|");
+      if (current !== genreSignature || excludedGenres.length > 0) {
+        filterStore.setFilters({
+          selectedGenres: nextGenres,
+          excludedGenres: [],
+        });
+        setPage(1);
       }
     }
-  }, []);
+  }, [activeSourceId, genreSignature]);
 
   const { isSourceDisabled } = useSourcePreferencesStore();
   const sourceObj = dynamicSourceRegistry.get(activeSourceId);
@@ -102,10 +140,11 @@ export function useLibraryCatalog() {
 
   const isNsfwFiltered = useSettingsStore(state => state.hideNsfw);
 
-  const DYNAMIC_SORTS = filtersData?.sorts || [
+  const DYNAMIC_SORTS = filtersData?.sorts?.length ? filtersData.sorts : [
     { id: "popular", name: "Populer" },
     { id: "latest", name: "Terbaru" },
     { id: "rating", name: "Rating Tertinggi" },
+    { id: "alphabetical", name: "A-Z" },
   ];
 
   // Fallback to supported sort if current sort is not available in the new source
@@ -157,16 +196,17 @@ export function useLibraryCatalog() {
       if (sort === "latest") {
         const res = await apiClient.getLatest(activeSourceId, currentPage);
         return { mangas: res.mangas, hasNextPage: !!res.hasNextPage };
-      } else if (sort === "popular" || sort === "all") {
-        const res = await apiClient.getPopular(activeSourceId, currentPage);
-        return { mangas: res.mangas, hasNextPage: !!res.hasNextPage };
       }
+
+      // Rating and alphabetical ordering are applied client-side so they work
+      // consistently even when a provider has no native sort support.
+      const res = await apiClient.getPopular(activeSourceId, currentPage);
+      return { mangas: res.mangas, hasNextPage: !!res.hasNextPage };
     }
 
     const filters: Record<string, string | string[]> = {};
     if (sort === "latest") filters.sort = "latest";
     else if (sort === "popular" || sort === "all") filters.sort = "popularity";
-    else filters.sort = sort;
 
     if (selectedGenres.length > 0 || excludedGenres.length > 0) {
       const genreParams: string[] = [];
@@ -226,36 +266,76 @@ export function useLibraryCatalog() {
     setSearchInput("");
     setSort("popular");
     setPage(1);
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("genre");
+    params.delete("sort");
+    const suffix = params.toString();
+    router.replace(suffix ? `${pathname}?${suffix}` : pathname, { scroll: false });
   };
 
-  const activeFilterCount = selectedGenres.length + excludedGenres.length + selectedFormats.length + selectedStatuses.length + selectedCollections.length + selectedReadingStatuses.length;
+  const activeFilterCount =
+    selectedGenres.length +
+    excludedGenres.length +
+    selectedFormats.length +
+    selectedStatuses.length +
+    selectedCollections.length +
+    selectedReadingStatuses.length +
+    (sort !== "popular" && sort !== "all" ? 1 : 0);
   const rawMangas = data?.mangas || [];
   const uniqueMangas = React.useMemo(() => {
     return Array.from(new Map(rawMangas.map(m => [m.id, m])).values());
   }, [rawMangas]);
 
   const mangas = React.useMemo(() => {
-    if (sort !== "rating") return uniqueMangas;
-    return [...uniqueMangas].sort((a, b) => {
+    let result = [...uniqueMangas];
+
+    if (selectedCollections.length > 0) {
+      result = result.filter((manga) => {
+        const key = `${activeSourceId}::${manga.id}` as MangaKey;
+        const memberships = getMemberships(key);
+        return selectedCollections.some((collectionId) => memberships.includes(collectionId));
+      });
+    }
+
+    if (selectedReadingStatuses.length > 0) {
+      result = result.filter((manga) => {
+        const key = `${activeSourceId}::${manga.id}` as MangaKey;
+        const readingStatus = getResolvedReadingStatus(key);
+        return Boolean(readingStatus && selectedReadingStatuses.includes(readingStatus));
+      });
+    }
+
+    if (sort === "alphabetical" || sort === "alphabet" || sort === "title") {
+      return result.sort((a, b) =>
+        String(a.title || "").localeCompare(String(b.title || ""), "id", { sensitivity: "base" })
+      );
+    }
+
+    if (sort !== "rating") return result;
+
+    return result.sort((a, b) => {
       const scoreA = typeof a.score === "number" && !isNaN(a.score) && a.score > 0 ? a.score : -1;
       const scoreB = typeof b.score === "number" && !isNaN(b.score) && b.score > 0 ? b.score : -1;
 
-      // Null-last: unrated titles are kept at the bottom of the list
       if (scoreA === -1 && scoreB === -1) return 0;
       if (scoreA === -1) return 1;
       if (scoreB === -1) return -1;
+      if (scoreB !== scoreA) return scoreB - scoreA;
 
-      // Primary sort: descending by rating
-      if (scoreB !== scoreA) {
-        return scoreB - scoreA;
-      }
-
-      // Tie-break fallback to popularity/rank
       const rankA = a.rank ?? 0;
       const rankB = b.rank ?? 0;
       return rankB - rankA;
     });
-  }, [uniqueMangas, sort]);
+  }, [
+    uniqueMangas,
+    sort,
+    activeSourceId,
+    selectedCollections,
+    selectedReadingStatuses,
+    getMemberships,
+    getResolvedReadingStatus,
+  ]);
 
   const listingViewMode = useSettingsStore(state => state.listingViewMode);
   const setListingViewMode = useSettingsStore(state => state.setListingViewMode);
