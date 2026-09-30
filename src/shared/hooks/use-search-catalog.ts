@@ -191,15 +191,23 @@ export function useSearchCatalog() {
     [activeFilters, dynamicFilters]
   );
 
-  const hasDrawerFilters =
+  const hasStructuredFilters =
     genres.length > 0 ||
     formats.length > 0 ||
     Boolean(status) ||
+    parsedQuery.tags.length > 0;
+  const hasDrawerFilters =
+    hasStructuredFilters ||
     (Boolean(sort) && sort !== "popular");
-  const hasSearchIntent =
-    Boolean(parsedQuery.textQuery.trim()) ||
-    parsedQuery.tags.length > 0 ||
-    hasDrawerFilters;
+
+  // /search doubles as a discovery catalog. An empty text query is still
+  // actionable: the default sort shows the popular catalog, while "latest"
+  // switches to each source's latest feed.
+  const hasSearchIntent = activeSelectedSources.length > 0;
+  const useCatalogEndpoint =
+    !parsedQuery.textQuery.trim() && !hasStructuredFilters;
+  const catalogMode =
+    sort === "latest" || sort === "update" ? "latest" : "popular";
 
   useSearchReset({
     activeSelectedSources,
@@ -247,11 +255,16 @@ export function useSearchCatalog() {
         activeFilters
       );
 
+      const requestMode = useCatalogEndpoint
+        ? `catalog:${catalogMode}`
+        : "search";
+
       let isExhausted = false;
       for (let previousPage = 1; previousPage < page; previousPage++) {
         const previous = queryClient.getQueryData<{ hasNextPage?: boolean }>([
           "searchSource",
           sourceId,
+          requestMode,
           parsedQuery.textQuery,
           hideNsfw,
           payload,
@@ -267,20 +280,43 @@ export function useSearchCatalog() {
         queryKey: [
           "searchSource",
           sourceId,
+          requestMode,
           parsedQuery.textQuery,
           hideNsfw,
           payload,
           page,
         ],
-        queryFn: ({ signal }: { signal?: AbortSignal }) =>
-          apiClient.search(
+        queryFn: async ({ signal }: { signal?: AbortSignal }) => {
+          if (useCatalogEndpoint) {
+            let catalogResult;
+            if (catalogMode === "latest" && source?.capabilities.latest) {
+              catalogResult = await apiClient.getLatest(sourceId, page);
+            } else if (source?.capabilities.popular) {
+              catalogResult = await apiClient.getPopular(sourceId, page);
+            } else if (source?.capabilities.latest) {
+              catalogResult = await apiClient.getLatest(sourceId, page);
+            }
+
+            if (catalogResult) {
+              return {
+                sourceId,
+                query: "",
+                page,
+                results: catalogResult.mangas || [],
+                hasNextPage: catalogResult.hasNextPage,
+              };
+            }
+          }
+
+          return apiClient.search(
             sourceId,
             parsedQuery.textQuery,
             page,
             payload,
             hideNsfw,
             { signal }
-          ),
+          );
+        },
         enabled:
           hasSearchIntent &&
           !isExhausted &&
@@ -510,7 +546,18 @@ export function useSearchCatalog() {
       });
     }
 
-    if (!parsedQuery.textQuery) return results;
+    if (!parsedQuery.textQuery) {
+      if (sort === "title" || sort === "alphabet") {
+        return results.sort((a, b) =>
+          String(a.manga.title || "").localeCompare(
+            String(b.manga.title || ""),
+            "id",
+            { sensitivity: "base" }
+          )
+        );
+      }
+      return results;
+    }
 
     const semanticScores = intelligenceQuery.data?.scores ?? {};
     return results.sort((a, b) => {
