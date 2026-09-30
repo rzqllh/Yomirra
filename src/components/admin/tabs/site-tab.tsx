@@ -43,6 +43,12 @@ export function SiteTab({ initialConfig, onRefresh, getToken }: SiteTabProps) {
   const handleSave = async (partial: Partial<SiteConfig>) => {
     setSaving(true);
     setMessage(null);
+    // Generate a fresh announcement ID on every save so the public site
+    // treats it as a new announcement (clears any previous sessionStorage dismiss)
+    const payload =
+      partial.announcement
+        ? { ...partial, announcement: { ...partial.announcement, id: `ann-${Date.now()}` } }
+        : partial;
     try {
       const token = await getToken();
       const res = await fetch("/api/admin/site/config", {
@@ -51,7 +57,7 @@ export function SiteTab({ initialConfig, onRefresh, getToken }: SiteTabProps) {
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify(partial),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (res.ok && data.config) {
@@ -147,7 +153,6 @@ export function SiteTab({ initialConfig, onRefresh, getToken }: SiteTabProps) {
                   announcement: {
                     ...config.announcement,
                     message: e.target.value,
-                    id: `ann-${Date.now()}`,
                   },
                 })
               }

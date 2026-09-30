@@ -49,8 +49,8 @@ export default function RootLayout({
         <Providers>
           <OfflineProvider>
             <div vaul-drawer-wrapper="" className="bg-background min-h-dvh">
+              <SiteAnnouncementBanner />
               <BootGate>
-                <SiteAnnouncementBanner />
                 <AppShell>
                   <ErrorBoundary>
                     {children}
