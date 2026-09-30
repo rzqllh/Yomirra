@@ -1,4 +1,4 @@
-import { parseDate, stripHtml } from "@/shared/utils/normalize";
+import { parseDate, normalizeSynopsis } from "@/shared/utils/normalize";
 import type { Chapter, ChapterPages, MangaDetail, MangaItem } from "@/shared/types/source";
 import type {
   KomikuIIChapterItem,
@@ -128,7 +128,7 @@ export function normalizeKomikuIIMangaDetail(detail: KomikuIIDetail): MangaDetai
 
   return {
     ...baseItem,
-    description: stripHtml(detail.synopsis || "Belum ada sinopsis."),
+    description: normalizeSynopsis(detail.synopsis || "Belum ada sinopsis."),
     author: detail.author?.trim() || undefined,
     artist: detail.artist?.trim() || undefined,
     genres: Array.isArray(detail.genres) ? detail.genres.filter(Boolean) : [],
