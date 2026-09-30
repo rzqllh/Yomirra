@@ -51,6 +51,7 @@ export function useBookmarkCollection() {
     const seen = new Set<string>();
     let result: typeof libraryItems = [];
     for (const item of libraryItems) {
+      if (item.isBookmarked === false) continue;
       const key = item.id ?? `${item.sourceId}::${item.mangaId}`;
       if (!seen.has(key)) {
         seen.add(key);

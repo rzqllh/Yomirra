@@ -30,7 +30,9 @@ export function BookmarkPageView() {
 
   const reading = useBookmarkReading();
   const collection = useBookmarkCollection();
-  const libraryItemCount = useLibraryStore((state) => Object.keys(state.items).length);
+  const libraryItemCount = useLibraryStore((state) =>
+    Object.values(state.items).filter((i) => i.isBookmarked !== false).length
+  );
   const rawUnread = useUpdateStore((state) => state.getUnreadCount());
   const unreadCount = typeof rawUnread === "function" ? (rawUnread as () => number)() : (Number(rawUnread) || 0);
 

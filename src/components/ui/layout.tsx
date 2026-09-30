@@ -52,4 +52,5 @@ YomirraSection.displayName = "YomirraSection"
 
 export * from "./page-container"
 export * from "./page-toolbar"
+export * from "./section-heading"
 

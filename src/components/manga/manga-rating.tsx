@@ -72,8 +72,9 @@ export function MangaRating({ sourceId, mangaId, className, variant = "default",
 
   const handleRating = (rating: number) => {
     const libraryStore = useLibraryStore.getState();
-    if (!libraryStore.isInLibrary(sourceId, mangaId)) {
-      libraryStore.addToLibrary({
+    const existing = libraryStore.getLibraryItem(sourceId, mangaId);
+    if (!existing) {
+      libraryStore._setItemLocal({
         sourceId,
         mangaId,
         title: mangaDetail?.title || "Manga",
@@ -82,12 +83,12 @@ export function MangaRating({ sourceId, mangaId, className, variant = "default",
         status: mangaDetail?.status,
         addedAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        isBookmarked: false,
+        userRating: rating === userRating ? undefined : rating,
       });
-      toast.success("Disimpan ke Koleksi", {
-        description: "Komik otomatis ditambahkan ke rak bacaanmu.",
-      });
+    } else {
+      updateLibraryItem(sourceId, mangaId, { userRating: rating === userRating ? undefined : rating });
     }
-    updateLibraryItem(sourceId, mangaId, { userRating: rating === userRating ? undefined : rating });
     if (rating !== userRating) {
       toast.success("Penilaian Disimpan", {
         description: `Kamu memberi rating ${rating}/10 untuk komik ini.`,

@@ -35,6 +35,7 @@ export type LibraryItem = {
   lastReadChapterTitle?: string;
   lastReadAt?: string;
   userRating?: number; // 1-10 rating
+  isBookmarked?: boolean;
   isNsfw?: boolean;
   releaseDay?: number; // 0=Minggu, 1=Senin, 2=Selasa, 3=Rabu, 4=Kamis, 5=Jumat, 6=Sabtu
 };
@@ -131,6 +132,7 @@ export const useLibraryStore = create<LibraryState>()(
           const enriched: LibraryItem = {
             ...existingItem,
             ...item,
+            isBookmarked: true,
             id: savedTitleId,
             schemaVersion: 2,
             primarySourceId: item.primarySourceId ?? existingItem?.primarySourceId ?? item.sourceId,
@@ -184,17 +186,21 @@ export const useLibraryStore = create<LibraryState>()(
         set((state) => {
           const legacyId = getLibraryId(sourceId, mangaId);
           const newItems = { ...state.items };
-          let deleted = false;
+          let changed = false;
           for (const [k, i] of Object.entries(newItems)) {
             if (
               k === legacyId ||
               itemReferencesSource(i, sourceId, mangaId)
             ) {
-              delete newItems[k];
-              deleted = true;
+              if (i.userRating !== undefined) {
+                newItems[k] = { ...i, isBookmarked: false, updatedAt: new Date().toISOString() };
+              } else {
+                delete newItems[k];
+              }
+              changed = true;
             }
           }
-          return deleted ? { items: newItems } : state;
+          return changed ? { items: newItems } : state;
         });
 
         // Async Background sync with rollback
@@ -220,9 +226,10 @@ export const useLibraryStore = create<LibraryState>()(
       isInLibrary: (sourceId, mangaId) => {
         const id = getLibraryId(sourceId, mangaId);
         const items = get().items;
-        return !!items[id] || Object.values(items).some(
+        const found = items[id] ?? Object.values(items).find(
           (item) => itemReferencesSource(item, sourceId, mangaId)
         );
+        return Boolean(found && found.isBookmarked !== false);
       },
 
       getLibraryItem: (sourceId, mangaId) => {

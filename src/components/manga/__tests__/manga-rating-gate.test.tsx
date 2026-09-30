@@ -53,9 +53,10 @@ describe("MangaRating Guest Gating", () => {
     // Soft-gate modal should NOT be present
     expect(screen.queryByText(/Simpan rating 9\/10 ke cloud\?/i)).toBeNull();
 
-    // Rating should be saved in library store
+    // Rating should be saved in library store, but NOT auto-added to Library/Bookmark
     const item = useLibraryStore.getState().getLibraryItem("shinigami", "m1");
     expect(item?.userRating).toBe(9);
+    expect(useLibraryStore.getState().isInLibrary("shinigami", "m1")).toBe(false);
   });
 
   it("triggers soft-nudge modal when guest selects a rating, and saves upon clicking Lanjut di Perangkat Ini", () => {

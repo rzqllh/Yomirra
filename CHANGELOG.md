@@ -4,6 +4,22 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
 
 ## [Unreleased]
 
+### P1 Core Reading Experience (Phase 3)
+
+- **Explicit Bookmark Semantics & Rating Isolation** (`src/shared/store/library-store.ts`, `src/components/manga/manga-rating.tsx`, `src/shared/hooks/use-bookmark-collection.ts`, `src/components/bookmark/bookmark-page-view.tsx`):
+  - Penegakan aturan produk bahwa Bookmark bersifat eksplisit: memberi rating tidak lagi otomatis memasukkan manga ke Library/Rak Buku ataupun memicu toast "Disimpan ke Koleksi".
+  - `LibraryItem` kini dilengkapi field `isBookmarked?: boolean`, sehingga data rating dapat tersimpan secara lokal dan aman tanpa mengotori daftar bookmark aktif.
+  - Menghapus manga dari Library tetap menjaga nilai rating yang sudah diberikan pengguna (`isBookmarked: false`), mencegah hilangnya preferensi rating saat komik dikeluarkan dari bookmark.
+- **Scoped Reusable UI Consolidation** (`src/components/ui/section-heading.tsx`, `src/components/ui/layout.tsx`):
+  - Mengonsolidasikan primitif `SectionHeading` standar dengan dukungan aksi, subtitle, dan badge yang selaras dengan `PageContainer` dan `PageToolbar`.
+- **Reader Navigation & Chapter Drawer Polish** (`src/components/reader/reader-chapter-drawer.tsx`):
+  - Chapter drawer secara otomatis melakukan auto-centering ke chapter yang sedang aktif saat dibuka, menggunakan chip kompak terstruktur, dan memicu intent navigasi instan.
+- **Adapter Reliability & Canonical Multi-Source Hardening** (`src/server/lib/sources/adapters/shinigami/`, `src/server/lib/sources/adapters/mangadex/`, `src/shared/lib/__tests__/canonical-search.test.ts`):
+  - Mengaudit dan memvalidasi adapter Shinigami (18 tests) dan MangaDex (73 tests) tanpa kompromi pada outbound policy `safeFetch`.
+  - Memverifikasi kontinuitas canonical identity, chapter mapping presisi, dan reading progress saat beralih sumber.
+- **Regression Testing** (`src/shared/lib/__tests__/phase3-reading-experience.test.ts`):
+  - Menambahkan suite pengujian terfokus untuk isolasi rating, preservasi unbookmark, dan navigasi chapter.
+
 ### P0 Core Stability (Phase 2)
 
 - **Navigation Perceived-Performance Foundation** (`src/components/app/desktop-rail.tsx`, `src/components/app/app-shell.tsx`):
