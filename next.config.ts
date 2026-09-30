@@ -10,6 +10,10 @@ const withSerwist = withSerwistInit({
 const nextConfig: NextConfig = {
   // Turbopack is enabled by default in Next.js 15 dev mode
   reactStrictMode: true,
+  onDemandEntries: {
+    maxInactiveAge: 60 * 1000,
+    pagesBufferLength: 2,
+  },
   serverExternalPackages: ["firebase-admin", "ioredis"],
   images: {
     unoptimized: process.env.NODE_ENV === "development",
@@ -107,4 +111,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default withSerwist(nextConfig);
+export default process.env.NODE_ENV === "development" ? nextConfig : withSerwist(nextConfig);
