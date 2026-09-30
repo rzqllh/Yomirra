@@ -41,6 +41,13 @@ describe("Utils: normalize", () => {
         "Cerita & konflik."
       );
     });
+    it("should strip entity-encoded tags that contain encoded attributes", () => {
+      expect(
+        stripHtml(
+          '&lt;a href=&quot;https://example.com/file&quot; target=&quot;_blank&quot;&gt;Chapter 01-10&lt;/a&gt;'
+        )
+      ).toBe("Chapter 01-10");
+    });
   });
 
   describe("normalizeSynopsis", () => {
