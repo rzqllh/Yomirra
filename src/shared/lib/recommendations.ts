@@ -86,7 +86,7 @@ function relativeWeight(map: Map<string, number>, key: string | undefined): numb
 export function rankRecommendationCandidates<T extends RecommendationCandidate>(
   candidates: T[],
   options: {
-    currentTitle: string;
+    currentTitle?: string;
     currentSourceId: string;
     currentFormat?: string;
     currentStatus?: string;
@@ -99,8 +99,8 @@ export function rankRecommendationCandidates<T extends RecommendationCandidate>(
 
   return candidates
     .map((candidate, index) => {
-      const normalizedTitle = normalizeTitle(candidate.manga.title);
-      if (!normalizedTitle || normalizedTitle === currentTitle) return null;
+      const normalizedTitle = normalizeTitle(candidate.manga?.title);
+      if (!normalizedTitle || (currentTitle && normalizedTitle === currentTitle)) return null;
       if (options.profile.seenTitles.has(normalizedTitle)) return null;
 
       const format = candidate.manga.format?.trim().toLowerCase();

@@ -112,6 +112,17 @@ export const SOURCE_DOMAINS: Record<string, SourceDomainConfig> = {
       mirrors: [],
     },
   },
+  westmanga: {
+    sourceId: "westmanga",
+    frontend: {
+      defaultDomain: "https://v1.westmanga.my",
+      mirrors: ["https://v1.westmanga.top"],
+    },
+    api: {
+      defaultDomain: "https://data.mantweh.online",
+      mirrors: [],
+    },
+  },
 };
 
 const CACHE_TTL_SECONDS = 86400; // 24 hours

@@ -244,6 +244,38 @@ export const sourceRegistry: SourceMetadata[] = [
       filters: false,
     },
     isDynamic: false
+  },
+  {
+    id: "westmanga",
+    name: "WestManga",
+    description: "Baca manga, manhwa & manhua online terlengkap bahasa Indonesia",
+    language: "id",
+    baseUrl: "https://v1.westmanga.my",
+    upstreamDomain: "data.mantweh.online",
+    healthCheckUrl: "https://data.mantweh.online/api/framework/config",
+    icon: "https://assets.westmanga.site/images/static/logo.webp",
+    version: "1.0.0",
+    adapterVersion: "1.0.0",
+    isEnabled: true,
+    isInstalled: true,
+    status: "online",
+    healthStats: {
+      uptime: "99.9%",
+      latency: "150ms",
+      lastChecked: "Baru saja",
+      message: "Server merespons dengan baik."
+    },
+    isNsfw: false,
+    capabilities: {
+      popular: true,
+      latest: true,
+      search: true,
+      detail: true,
+      chapters: true,
+      pages: true,
+      filters: true,
+    },
+    isDynamic: false
   }
 ];
 

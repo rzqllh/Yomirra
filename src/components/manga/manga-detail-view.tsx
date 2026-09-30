@@ -106,8 +106,11 @@ export function MangaDetailView({
     if (!chapters) return [];
     let result = chapters;
     if (deferredSearchQuery.trim()) {
-      const lowerQuery = deferredSearchQuery.toLowerCase();
-      result = result.filter(c => c.title.toLowerCase().includes(lowerQuery));
+      const lowerQuery = deferredSearchQuery.trim().toLowerCase();
+      result = result.filter(c => 
+        (c.title || "").toLowerCase().includes(lowerQuery) || 
+        String(c.number).includes(lowerQuery)
+      );
     }
     if (sortOrder === "asc") return [...result].reverse();
     return result;

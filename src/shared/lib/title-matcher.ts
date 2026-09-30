@@ -41,7 +41,8 @@ export interface MatchResult {
  * Lowercases, strips accents, removes non-alphanumeric characters except spaces,
  * collapses whitespace.
  */
-export function normalizeTitle(raw: string): string {
+export function normalizeTitle(raw?: string | null): string {
+  if (!raw || typeof raw !== "string") return "";
   return raw
     .toLowerCase()
     .normalize("NFKD")

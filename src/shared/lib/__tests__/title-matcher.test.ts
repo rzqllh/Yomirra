@@ -28,6 +28,13 @@ describe("normalizeTitle", () => {
     expect(normalizeTitle("나 혼자만 레벨업")).toBe("나 혼자만 레벨업");
     expect(normalizeTitle("進撃の巨人")).toBe("進撃の巨人");
   });
+
+  it("handles null, undefined, and non-string gracefully without throwing", () => {
+    expect(normalizeTitle(null)).toBe("");
+    expect(normalizeTitle(undefined)).toBe("");
+    expect(normalizeTitle("" as any)).toBe("");
+    expect(normalizeTitle(123 as any)).toBe("");
+  });
 });
 
 describe("matchTitles", () => {

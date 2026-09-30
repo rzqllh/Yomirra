@@ -58,7 +58,8 @@ export function MangaRecommendations({
     queryFn: async () => {
       const CANDIDATE_LIMIT = 30;
       const results: RecommendedManga[] = [];
-      const seenTitles = new Set<string>([normalizeTitle(title)]);
+      const initialTitle = normalizeTitle(title);
+      const seenTitles = new Set<string>(initialTitle ? [initialTitle] : []);
       const seenKeys = new Set<string>([`${currentSourceId}::${currentMangaId}`]);
 
       const addItems = (items: MangaItem[], srcId: string) => {
@@ -67,10 +68,10 @@ export function MangaRecommendations({
           const key = `${srcId}::${item.id}`;
           const normalizedTitle = normalizeTitle(item.title);
 
-          if (seenKeys.has(key) || seenTitles.has(normalizedTitle)) continue;
+          if (seenKeys.has(key) || (normalizedTitle && seenTitles.has(normalizedTitle))) continue;
 
           seenKeys.add(key);
-          seenTitles.add(normalizedTitle);
+          if (normalizedTitle) seenTitles.add(normalizedTitle);
           results.push({ manga: item, sourceId: srcId });
         }
       };

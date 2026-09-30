@@ -18,14 +18,15 @@ import type {
 } from "./types";
 
 function normalizeMangaItem(item: DoujinMangaItem): MangaItem {
+  const statusLower = item.status?.toLowerCase();
   return {
     id: item.slug || item.id,
     title: item.title,
     coverUrl: item.cover_url,
     status:
-      item.status?.toLowerCase() === "ongoing"
+      statusLower === "ongoing" || statusLower === "publishing"
         ? "ONGOING"
-        : item.status?.toLowerCase() === "completed"
+        : statusLower === "completed"
           ? "COMPLETED"
           : "UNKNOWN",
   };
@@ -36,6 +37,7 @@ function normalizeMangaDetail(item: DoujinMangaDetail): MangaDetail {
     .map((g) => g.genres?.name)
     .filter((name): name is string => typeof name === "string" && name.length > 0);
 
+  const statusLower = item.status?.toLowerCase();
   return {
     ...normalizeMangaItem(item),
     description: item.description || "",
@@ -43,9 +45,9 @@ function normalizeMangaDetail(item: DoujinMangaDetail): MangaDetail {
     artist: item.artist || undefined,
     genres,
     status:
-      item.status?.toLowerCase() === "ongoing"
+      statusLower === "ongoing" || statusLower === "publishing"
         ? "ONGOING"
-        : item.status?.toLowerCase() === "completed"
+        : statusLower === "completed"
           ? "COMPLETED"
           : "UNKNOWN",
   };
