@@ -8,6 +8,7 @@ import type {
   FilterList,
 } from "@/shared/sources/source-types";
 import { HttpClient } from "../base/http-client";
+import { normalizeSynopsis } from "@/shared/utils/normalize";
 
 export class KomikuSource implements MangaSource {
   id = "komiku";
@@ -245,7 +246,7 @@ export class KomikuSource implements MangaSource {
       id: mangaId,
       title: title || mangaId,
       coverUrl: coverUrl.startsWith("//") ? `https:${coverUrl}` : coverUrl,
-      description,
+      description: normalizeSynopsis(description),
       author: author || undefined,
       status,
       format,
