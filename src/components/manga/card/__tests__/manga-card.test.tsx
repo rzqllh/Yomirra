@@ -1,5 +1,7 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { apiClient } from "@/shared/api-client";
 import { MangaCard, CollapsibleBadgeRow } from "../manga-card";
 
 vi.mock("next/navigation", () => ({
@@ -12,6 +14,12 @@ vi.mock("../../bookmark-button", () => ({
   BookmarkButton: ({ manga }: { manga: { title: string } }) => (
     <button type="button" className="size-11" aria-label={`Simpan ${manga.title} ke rak`} />
   ),
+}));
+
+vi.mock("@/shared/api-client", () => ({
+  apiClient: {
+    getDetail: vi.fn(),
+  },
 }));
 
 describe("CollapsibleBadgeRow", () => {
@@ -51,6 +59,28 @@ describe("CollapsibleBadgeRow", () => {
 describe("MangaCard", () => {
   beforeEach(() => {
     document.body.innerHTML = "";
+    vi.clearAllMocks();
+
+    class ImmediateIntersectionObserver {
+      private callback: IntersectionObserverCallback;
+      constructor(callback: IntersectionObserverCallback) {
+        this.callback = callback;
+      }
+      observe(target: Element) {
+        this.callback(
+          [{ isIntersecting: true, target } as IntersectionObserverEntry],
+          this as unknown as IntersectionObserver
+        );
+      }
+      disconnect() {}
+      unobserve() {}
+      takeRecords() { return []; }
+      root = null;
+      rootMargin = "0px";
+      thresholds = [0];
+    }
+
+    vi.stubGlobal("IntersectionObserver", ImmediateIntersectionObserver);
   });
 
   it("renders discovery variant with title, cover, and metadata", () => {
@@ -72,6 +102,44 @@ describe("MangaCard", () => {
     expect(screen.getByRole("heading", { name: "Solo Max-Level Newbie" })).toBeDefined();
     expect(screen.getByText("Chapter 150")).toBeDefined();
     expect(screen.getByText("9.2")).toBeDefined();
+  });
+
+  it("lazily hydrates and sanitizes a missing compact-card synopsis", async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    vi.mocked(apiClient.getDetail).mockResolvedValue({
+      id: "missing-synopsis",
+      title: "Missing Synopsis",
+      coverUrl: "https://example.com/cover.jpg",
+      description:
+        "&lt;p&gt;&lt;strong&gt;Sinopsis:&lt;/strong&gt;&lt;br /&gt;Cerita bersih dari detail.&lt;/p&gt;&lt;p&gt;&lt;strong&gt;Download Batch&lt;/strong&gt; Chapter 01-10&lt;/p&gt;",
+      status: "ONGOING",
+      genres: [],
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MangaCard
+          variant="discovery"
+          viewMode="compact"
+          sourceId="doujindesu"
+          manga={{
+            id: "missing-synopsis",
+            title: "Missing Synopsis",
+            coverUrl: "https://example.com/cover.jpg",
+          }}
+        />
+      </QueryClientProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Cerita bersih dari detail.")).toBeDefined();
+    });
+    expect(apiClient.getDetail).toHaveBeenCalledWith("doujindesu", "missing-synopsis");
+
+    queryClient.clear();
   });
 
   it("renders rank variant with ranking number and top-3 visual hierarchy", () => {
