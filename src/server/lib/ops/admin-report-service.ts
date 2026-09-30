@@ -9,6 +9,7 @@ export interface StoredUserReport {
   detail?: string;
   sourceId?: string;
   mangaId?: string;
+  mangaTitle?: string;
   chapterId?: string;
   chapterTitle?: string;
   pageIndex?: number;
@@ -16,6 +17,7 @@ export interface StoredUserReport {
   createdAt: string;
   resolvedAt?: string;
 }
+
 
 export type UserReport = StoredUserReport;
 
@@ -30,6 +32,7 @@ export async function enqueueUserReport(payload: ReportPayload): Promise<StoredU
     detail: payload.detail,
     sourceId: payload.sourceId,
     mangaId: payload.mangaId,
+    mangaTitle: payload.mangaTitle,
     chapterId: payload.chapterId,
     chapterTitle: payload.chapterTitle,
     pageIndex: payload.pageIndex,
