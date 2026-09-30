@@ -224,7 +224,7 @@ export const sourceRegistry: SourceMetadata[] = [
     icon: "https://pic.desu.xxx/content/web/1217a30e-c660-4212-9d80-548df7aa166d.webp",
     version: "1.0.0",
     adapterVersion: "1.0.0",
-    isEnabled: false,
+    isEnabled: true,
     isInstalled: true,
     status: "online",
     healthStats: {
@@ -241,7 +241,7 @@ export const sourceRegistry: SourceMetadata[] = [
       detail: true,
       chapters: true,
       pages: true,
-      filters: false,
+      filters: true,
     },
     isDynamic: false
   },

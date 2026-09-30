@@ -5,6 +5,13 @@ import { useLibraryFilterStore } from "@/shared/store/library-filter-store";
 import { useCollectionStore } from "@/shared/store/collection-store";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import React from "react";
+import { apiClient } from "@/shared/api-client";
+
+vi.mock("@/shared/api-client", () => ({
+  apiClient: {
+    getFilters: vi.fn(),
+  },
+}));
 
 // Mock the ResizeObserver which is needed by Radix UI / Vaul
 global.ResizeObserver = class ResizeObserver {
@@ -38,6 +45,21 @@ describe("LibraryFilterDrawer (Slice 2.3)", () => {
   );
 
   beforeEach(() => {
+    queryClient.clear();
+    vi.clearAllMocks();
+    vi.mocked(apiClient.getFilters).mockResolvedValue({
+      genres: [{ id: "harem", name: "Harem" }],
+      formats: [],
+      statuses: [
+        { id: "ongoing", name: "Ongoing" },
+        { id: "completed", name: "Completed" },
+      ],
+      sorts: [
+        { id: "popular", name: "Populer" },
+        { id: "latest", name: "Terbaru" },
+      ],
+    });
+
     useLibraryFilterStore.setState({
       selectedGenres: [],
       excludedGenres: [],
@@ -80,6 +102,22 @@ describe("LibraryFilterDrawer (Slice 2.3)", () => {
     const state = useLibraryFilterStore.getState();
     expect(state.selectedCollections).toContain("c1");
     expect(state.selectedReadingStatuses).toContain("reading");
+  });
+
+  it("applies provider genre filters returned for Doujindesu", async () => {
+    render(<LibraryFilterDrawer activeSourceId="doujindesu" />, { wrapper });
+
+    fireEvent.click(screen.getByRole("button", { name: /Filter/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Harem")).toBeDefined();
+    });
+
+    fireEvent.click(screen.getByText("Harem"));
+    fireEvent.click(screen.getByRole("button", { name: "Terapkan Filter" }));
+
+    expect(apiClient.getFilters).toHaveBeenCalledWith("doujindesu");
+    expect(useLibraryFilterStore.getState().selectedGenres).toEqual(["harem"]);
   });
 
   it("resets local filters", async () => {

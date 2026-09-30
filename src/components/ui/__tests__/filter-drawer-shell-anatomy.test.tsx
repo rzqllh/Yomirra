@@ -45,5 +45,16 @@ describe("FilterDrawerShell Anatomy", () => {
     expect(screen.getByRole("button", { name: /Terapkan Filter/i })).toBeDefined();
     // Verify Child is present
     expect(screen.getByTestId("filter-child")).toBeDefined();
+
+    const content = screen.getByTestId("drawer-content");
+    expect(content.className).toContain("overflow-hidden");
+
+    const child = screen.getByTestId("filter-child");
+    const scrollRegion = child.parentElement?.parentElement;
+    expect(scrollRegion?.className).toContain("min-h-0");
+
+    const applyButton = screen.getByRole("button", { name: /Terapkan Filter/i });
+    const footer = applyButton.parentElement;
+    expect(footer?.getAttribute("style")).toContain("safe-area-inset-bottom");
   });
 });

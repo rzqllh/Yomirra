@@ -19,6 +19,8 @@ export interface DoujinMangaItem {
   type?: string;
   rating?: number;
   views?: number;
+  description?: string;
+  sinopsis?: string;
   created_at?: string;
   updated_at?: string;
   chapters?: DoujinChapterItem[];
@@ -28,7 +30,6 @@ export interface DoujinMangaItem {
 }
 
 export interface DoujinMangaDetail extends DoujinMangaItem {
-  description?: string;
   author?: string;
   artist?: string;
   banner_url?: string;

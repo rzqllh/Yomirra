@@ -1,3 +1,4 @@
+import { normalizeSynopsis } from "@/shared/utils/normalize";
 import type {
   Chapter,
   ChapterPages,
@@ -44,7 +45,7 @@ export function normalizeKomikNesiaMangaItem(item: KomikNesiaItem): MangaItem {
     format: item.type ? item.type.toUpperCase() : undefined,
     latestChapter: latestChNum,
     latestChapterTime: latestChTime,
-    description: item.description || undefined,
+    description: item.description ? normalizeSynopsis(item.description) : undefined,
   };
 }
 
@@ -55,7 +56,7 @@ export function normalizeKomikNesiaMangaDetail(detail: KomikNesiaDetail): MangaD
   return {
     ...base,
     status: normalizeKomikNesiaStatus(detail.status),
-    description: detail.description || "",
+    description: normalizeSynopsis(detail.description || ""),
     genres,
     author: detail.author || undefined,
     artist: detail.artist || undefined,

@@ -15,6 +15,7 @@ import { mergeFilters } from "@/shared/utils/filter-helpers";
 import { canonicalizeFilterValue, resolveSearchTag, type SearchTagCategory } from "@/shared/lib/search-intelligence";
 import { normalizeTitle } from "@/shared/lib/title-matcher";
 import type { FilterList } from "@/shared/sources/source-types";
+import { sourceQueryOptions } from "@/shared/sources/source-query-options";
 
 const NSFW_GENRE_IDENTIFIERS = new Set([
   "adult",
@@ -162,8 +163,7 @@ export function UnifiedFilterDrawer({
   }, [context]);
 
   const { data: sourcesData } = useQuery({
-    queryKey: ["sources"],
-    queryFn: () => apiClient.getSources(),
+    ...sourceQueryOptions,
     enabled: context === "search",
   });
 
@@ -177,7 +177,7 @@ export function UnifiedFilterDrawer({
     });
 
     return s.filter((item) => {
-      if (!item.isInstalled || !item.capabilities?.search) return false;
+      if (!item.isInstalled || item.isEnabled === false || !item.capabilities?.search) return false;
       if (item.isNsfw && hideNsfw) return false;
       return true;
     });

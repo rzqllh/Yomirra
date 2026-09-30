@@ -19,6 +19,8 @@ vi.mock("@/shared/api-client", () => ({
   apiClient: {
     getSources: vi.fn(async () => []),
     getFilters: vi.fn(async () => ({ genres: [], formats: [], statuses: [], sorts: [] })),
+    getPopular: vi.fn(async () => ({ mangas: [], hasNextPage: false })),
+    getLatest: vi.fn(async () => ({ mangas: [], hasNextPage: false })),
     search: vi.fn(async () => ({ results: [], hasNextPage: false })),
     rankSearchIntelligence: vi.fn(async () => ({ scores: {}, catalogMatches: [] })),
   },
@@ -122,5 +124,79 @@ describe("search URL navigation", () => {
     act(() => focusManager.setFocused(true));
     await act(async () => { await vi.advanceTimersByTimeAsync(10); });
     expect(apiClient.getSources).toHaveBeenCalledTimes(2);
+  });
+
+  it("loads the default popular catalog when the query is empty", async () => {
+    navigation.params = "";
+    vi.mocked(apiClient.getSources).mockResolvedValue([
+      {
+        id: "source-a",
+        name: "Source A",
+        isEnabled: true,
+        isInstalled: true,
+        isNsfw: false,
+        status: "online",
+        capabilities: { search: true, popular: true, latest: true },
+      } as any,
+    ]);
+    vi.mocked(apiClient.getPopular).mockResolvedValue({
+      mangas: [{ id: "m1", title: "Popular One", coverUrl: "/popular.jpg" }],
+      hasNextPage: false,
+    });
+
+    const { result } = mountSearch();
+    await act(async () => { await vi.advanceTimersByTimeAsync(50); });
+
+    expect(apiClient.getPopular).toHaveBeenCalledWith("source-a", 1);
+    expect(apiClient.search).not.toHaveBeenCalled();
+    expect(result.current.hasSearchIntent).toBe(true);
+    expect(result.current.searchMangas.map((item) => item.manga.title)).toEqual([
+      "Popular One",
+    ]);
+  });
+
+  it("uses the latest feed for an empty-query latest sort", async () => {
+    navigation.params = "";
+    useSearchFilterStore.setState({
+      genres: [],
+      formats: [],
+      status: "",
+      sort: "latest",
+      selectedSources: null,
+      hasCustomizedSources: false,
+    });
+    vi.mocked(apiClient.getSources).mockResolvedValue([
+      {
+        id: "source-a",
+        name: "Source A",
+        isEnabled: true,
+        isInstalled: true,
+        isNsfw: false,
+        status: "online",
+        capabilities: { search: true, popular: true, latest: true },
+      } as any,
+    ]);
+    vi.mocked(apiClient.getFilters).mockResolvedValue({
+      genres: [],
+      formats: [],
+      statuses: [],
+      sorts: [
+        { id: "popular", name: "Populer" },
+        { id: "latest", name: "Terbaru" },
+      ],
+    });
+    vi.mocked(apiClient.getLatest).mockResolvedValue({
+      mangas: [{ id: "m2", title: "Latest One", coverUrl: "/latest.jpg" }],
+      hasNextPage: false,
+    });
+
+    const { result } = mountSearch();
+    await act(async () => { await vi.advanceTimersByTimeAsync(50); });
+
+    expect(apiClient.getLatest).toHaveBeenCalledWith("source-a", 1);
+    expect(apiClient.search).not.toHaveBeenCalled();
+    expect(result.current.searchMangas.map((item) => item.manga.title)).toEqual([
+      "Latest One",
+    ]);
   });
 });

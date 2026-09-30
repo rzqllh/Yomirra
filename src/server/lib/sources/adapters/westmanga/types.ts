@@ -33,12 +33,12 @@ export interface WestMangaItem {
   is_safe?: boolean;
   total_views?: number;
   rating?: number;
+  sinopsis?: string;
   lastChapters?: WestMangaChapterItem[];
 }
 
 export interface WestMangaDetail extends WestMangaItem {
   alternative_name?: string;
-  sinopsis?: string;
   author?: string | null;
   release?: number | string;
   bookmark_count?: number;

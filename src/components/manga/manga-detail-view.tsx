@@ -27,7 +27,7 @@ import { EmptyState } from "@/components/states/empty-state";
 import { cn } from "@/shared/utils/cn";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { MangaDetailLayout } from "./manga-detail-layout";
-import { stripHtml } from "@/shared/utils/normalize";
+import { normalizeSynopsis } from "@/shared/utils/normalize";
 import type { MangaDetail, Chapter } from "@/shared/types/source";
 
 const CHAPTER_ITEM_ESTIMATED_SIZE = 70;
@@ -75,7 +75,7 @@ export function MangaDetailView({
   const isMounted = useMounted();
 
   const authorDisplay = useMemo(() => formatAuthor(detail.author), [detail.author]);
-  const cleanedSynopsis = useMemo(() => stripHtml(detail.description || ""), [detail.description]);
+  const cleanedSynopsis = useMemo(() => normalizeSynopsis(detail.description || ""), [detail.description]);
 
   const { data: ratingData } = useQuery({
     queryKey: ["rating-score", sourceId, mangaId],

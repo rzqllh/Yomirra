@@ -89,6 +89,7 @@ export function SearchResults({
         return "Rating Tertinggi";
       case "title":
       case "alphabet":
+      case "alphabetical":
         return "Judul (A-Z)";
       default:
         return "Populer";

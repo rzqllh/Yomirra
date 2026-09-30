@@ -1,3 +1,4 @@
+import { normalizeSynopsis as normalizeSharedSynopsis } from "@/shared/utils/normalize";
 import type {
   Chapter,
   ChapterPages,
@@ -11,23 +12,12 @@ import type {
   AsuraSeriesItem,
 } from "./types";
 
+export function normalizeSynopsis(html: string): string {
+  return normalizeSharedSynopsis(html);
+}
+
 export function stripHtml(html: string): string {
-  if (!html) return "";
-  return html
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/p>/gi, "\n\n")
-    .replace(/<[^>]+>/g, "")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#039;/g, "'")
-    .replace(/&rsquo;/g, "'")
-    .replace(/&lsquo;/g, "'")
-    .replace(/&rdquo;/g, '"')
-    .replace(/&ldquo;/g, '"')
-    .replace(/\n\s*\n/g, "\n\n")
-    .trim();
+  return normalizeSharedSynopsis(html);
 }
 
 export function normalizeAsuraStatus(status?: string): "ONGOING" | "COMPLETED" | "CANCELLED" | "UNKNOWN" {
@@ -54,7 +44,7 @@ export function normalizeAsuraMangaItem(item: AsuraSeriesItem): MangaItem {
     latestChapterTime: latestCh?.published_at || item.last_chapter_at || undefined,
     rank: typeof item.popularity_rank === "number" ? item.popularity_rank : undefined,
     score: typeof item.rating === "number" ? Math.round(item.rating * 10) / 10 : undefined,
-    description: item.description ? stripHtml(item.description) : undefined,
+    description: item.description ? normalizeSynopsis(item.description) : undefined,
   };
 }
 
@@ -66,7 +56,7 @@ export function normalizeAsuraMangaDetail(series: AsuraSeriesItem): MangaDetail 
 
   return {
     ...base,
-    description: series.description ? stripHtml(series.description) : "",
+    description: series.description ? normalizeSynopsis(series.description) : "",
     genres,
     status: normalizeAsuraStatus(series.status),
   };

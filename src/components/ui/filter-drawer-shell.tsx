@@ -128,7 +128,7 @@ export function FilterDrawerShell({
       </Drawer.Trigger>
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-black/45 backdrop-blur-[2px] z-[100]" />
-        <Drawer.Content className="bg-surface-base flex h-[92dvh] max-h-[92dvh] flex-col rounded-t-[28px] fixed bottom-0 left-0 right-0 z-[100] outline-none shadow-heavy border-t border-border-subtle">
+        <Drawer.Content className="bg-surface-base flex h-[92dvh] max-h-[92dvh] flex-col overflow-hidden rounded-t-[28px] fixed bottom-0 left-0 right-0 z-[100] outline-none shadow-heavy border-t border-border-subtle">
           <div className="pt-2.5 pb-2 px-5 sm:px-6 shrink-0 flex flex-col cursor-grab active:cursor-grabbing select-none">
             <div className="mx-auto w-11 h-1 shrink-0 rounded-full bg-border-strong/80 mb-3.5" />
 
@@ -148,7 +148,7 @@ export function FilterDrawerShell({
           </div>
 
           <div
-            className="px-5 sm:px-6 py-3.5 flex-1 overflow-y-auto overscroll-contain [scrollbar-width:none] touch-pan-y relative z-0"
+            className="px-5 sm:px-6 py-3.5 min-h-0 flex-1 overflow-y-auto overscroll-contain [scrollbar-width:none] touch-pan-y relative z-0"
             style={{ WebkitOverflowScrolling: "touch" }}
             onWheelCapture={(event) => {
               if (event.deltaY > 6) expandDrawer();
@@ -174,7 +174,8 @@ export function FilterDrawerShell({
           </div>
 
           <div
-            className="px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] bg-surface-base/96 backdrop-blur-xl border-t border-border-subtle shrink-0 relative z-10"
+            className="px-4 pt-3 bg-surface-base/96 backdrop-blur-xl border-t border-border-subtle shrink-0 relative z-10"
+            style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom, 0px))" }}
           >
             <Button
               variant="primary"

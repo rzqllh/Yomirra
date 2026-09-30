@@ -13,6 +13,7 @@ import {
   Eye,
 } from "@phosphor-icons/react";
 import { motion, useReducedMotion } from "motion/react";
+import { useQuery } from "@tanstack/react-query";
 import { getMangaDetailHref, getReaderHref } from "@/shared/lib/routes";
 import { sourceRegistry } from "@/shared/sources/source-registry";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
@@ -35,7 +36,8 @@ import type { MangaKey } from "@/shared/types/collection";
 import type { BaseCardProps } from "./types";
 import { cn } from "@/shared/utils/cn";
 import { getRelativeTime } from "@/shared/utils/date";
-import { stripHtml } from "@/shared/utils/normalize";
+import { normalizeSynopsis } from "@/shared/utils/normalize";
+import { apiClient } from "@/shared/api-client";
 import { toast } from "sonner";
 import {
   MangaCardCoverFrame,
@@ -77,6 +79,61 @@ export function CollapsibleBadgeRow({
           +{overflowCount}
         </span>
       )}
+    </div>
+  );
+}
+
+function LazySynopsisPreview({
+  sourceId,
+  mangaId,
+  author,
+}: {
+  sourceId: string;
+  mangaId: string;
+  author?: string;
+}) {
+  const anchorRef = React.useRef<HTMLDivElement>(null);
+  const [shouldFetch, setShouldFetch] = React.useState(false);
+
+  React.useEffect(() => {
+    const element = anchorRef.current;
+    if (!element || typeof IntersectionObserver === "undefined") return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting) return;
+        setShouldFetch(true);
+        observer.disconnect();
+      },
+      { rootMargin: "240px 0px" }
+    );
+
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  const { data } = useQuery({
+    queryKey: ["manga-card-synopsis", sourceId, mangaId],
+    queryFn: () => apiClient.getDetail(sourceId, mangaId),
+    enabled: shouldFetch,
+    staleTime: 30 * 60 * 1000,
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
+
+  const synopsis = normalizeSynopsis(data?.description || "");
+
+  return (
+    <div ref={anchorRef} className="min-h-px">
+      {synopsis ? (
+        <MangaCardMeta as="p" className="mt-1.5 line-clamp-2 leading-relaxed text-text-muted/80 md:line-clamp-3">
+          {synopsis}
+        </MangaCardMeta>
+      ) : author ? (
+        <MangaCardMeta as="p" className="mt-1.5 truncate text-[11px] text-text-muted/70">
+          Karya: {author}
+        </MangaCardMeta>
+      ) : null}
     </div>
   );
 }
@@ -429,7 +486,7 @@ export function MangaCard({
     const isCompleted = rawStatus.includes("COMPLETED");
 
     const rawDesc = manga.description || (manga as any)?.synopsis || (manga as any)?.summary || (manga as any)?.excerpt;
-    const cleanedDescription = rawDesc ? stripHtml(String(rawDesc)) : null;
+    const cleanedDescription = rawDesc ? normalizeSynopsis(String(rawDesc)) : "";
 
     const badgesList: React.ReactNode[] = [
       manga.status ? (
@@ -576,11 +633,13 @@ export function MangaCard({
               <MangaCardMeta as="p" className="mt-1.5 line-clamp-2 leading-relaxed text-text-muted/80 md:line-clamp-3">
                 {cleanedDescription}
               </MangaCardMeta>
-            ) : manga.author ? (
-              <MangaCardMeta as="p" className="mt-1.5 truncate text-[11px] text-text-muted/70">
-                Karya: {manga.author}
-              </MangaCardMeta>
-            ) : null}
+            ) : (
+              <LazySynopsisPreview
+                sourceId={sourceId}
+                mangaId={manga.id}
+                author={manga.author}
+              />
+            )}
           </div>
         </div>
 
