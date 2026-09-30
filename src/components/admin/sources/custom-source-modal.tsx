@@ -1,18 +1,26 @@
 "use client";
 
-import React, { useState } from "react";
-import { 
-  X, 
-  CircleNotch, 
-  CheckCircle, 
-  WarningCircle, 
-  Lightning, 
-  FloppyDisk, 
+import React, { useEffect, useState } from "react";
+import {
+  CheckCircle,
+  CircleNotch,
   Code,
-  SlidersHorizontal
+  FloppyDisk,
+  Globe,
+  Lightning,
+  SlidersHorizontal,
+  WarningCircle,
+  X,
 } from "@phosphor-icons/react";
 import type { CustomSourceDefinition } from "@/shared/sources/custom-source-schema";
 import type { ParserTestResult } from "@/server/lib/sources/custom-source-service";
+import {
+  FeedbackBanner,
+  InlineNotice,
+  OpsButton,
+  StatusPill,
+  cx,
+} from "../components/admin-ui";
 
 interface CustomSourceModalProps {
   initialSource?: CustomSourceDefinition | null;
@@ -22,47 +30,49 @@ interface CustomSourceModalProps {
   getToken: () => Promise<string | null>;
 }
 
-export function CustomSourceModal({
-  initialSource,
-  isOpen,
-  onClose,
-  onSaved,
-  getToken,
-}: CustomSourceModalProps) {
+const EMPTY_SOURCE: CustomSourceDefinition = {
+  id: "",
+  name: "",
+  baseUrl: "",
+  mirrors: [],
+  lang: "id",
+  version: "1.0.0",
+  type: "html",
+  isNsfw: false,
+  isEnabled: true,
+  selectors: {
+    popularPath: "/daftar-komik?order=popular",
+    popularListSelector: ".list-update_item",
+    titleSelector: "h3.title",
+    coverSelector: "img",
+    linkSelector: "a",
+    chapterListSelector: ".chapter-list li",
+    chapterTitleSelector: ".chapter-title",
+    pagesSelector: "#readerarea img",
+  },
+};
+
+export function CustomSourceModal({ initialSource, isOpen, onClose, onSaved, getToken }: CustomSourceModalProps) {
   const isEditing = Boolean(initialSource);
-
-  const [formData, setFormData] = useState<CustomSourceDefinition>(
-    initialSource || {
-      id: "",
-      name: "",
-      baseUrl: "",
-      mirrors: [],
-      lang: "id",
-      version: "1.0.0",
-      type: "html",
-      isNsfw: false,
-      isEnabled: true,
-      selectors: {
-        popularPath: "/daftar-komik?order=popular",
-        popularListSelector: ".list-update_item",
-        titleSelector: "h3.title",
-        coverSelector: "img",
-        linkSelector: "a",
-        chapterListSelector: ".chapter-list li",
-        chapterTitleSelector: ".chapter-title",
-        pagesSelector: "#readerarea img",
-      },
-    }
-  );
-
-  const [mirrorsText, setMirrorsText] = useState(
-    (initialSource?.mirrors || []).join("\n")
-  );
-
+  const [formData, setFormData] = useState<CustomSourceDefinition>(initialSource || EMPTY_SOURCE);
+  const [mirrorsText, setMirrorsText] = useState((initialSource?.mirrors || []).join("\n"));
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<ParserTestResult | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const nextSource = initialSource || EMPTY_SOURCE;
+    setFormData({
+      ...nextSource,
+      mirrors: [...(nextSource.mirrors || [])],
+      selectors: nextSource.selectors ? { ...nextSource.selectors } : EMPTY_SOURCE.selectors,
+    });
+    setMirrorsText((nextSource.mirrors || []).join("\n"));
+    setTestResult(null);
+    setError(null);
+  }, [initialSource, isOpen]);
 
   if (!isOpen) return null;
 
@@ -72,56 +82,33 @@ export function CustomSourceModal({
     setError(null);
     try {
       const token = await getToken();
-      const mirrors = mirrorsText
-        .split("\n")
-        .map((s) => s.trim())
-        .filter((s) => s.length > 0);
-
-      const payload = {
-        ...formData,
-        mirrors,
-      };
-
+      const mirrors = mirrorsText.split("\n").map((value) => value.trim()).filter(Boolean);
       const res = await fetch("/api/admin/sources/custom/test", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ ...formData, mirrors }),
       });
-
       const data = await res.json();
-      if (res.ok && data.result) {
-        setTestResult(data.result);
-      } else {
-        setError(data.error || "Gagal menguji parser");
-      }
+      if (res.ok && data.result) setTestResult(data.result);
+      else setError(data.error || "Parser test gagal dijalankan.");
     } catch {
-      setError("Gagal menghubungi server untuk live test");
+      setError("Server tidak dapat dihubungi untuk live parser test.");
     } finally {
       setTesting(false);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     setSaving(true);
     setError(null);
-
     try {
       const token = await getToken();
-      const mirrors = mirrorsText
-        .split("\n")
-        .map((s) => s.trim())
-        .filter((s) => s.length > 0);
-
-      const payload = {
-        ...formData,
-        id: formData.id.toLowerCase().trim(),
-        mirrors,
-      };
-
+      const mirrors = mirrorsText.split("\n").map((value) => value.trim()).filter(Boolean);
+      const payload = { ...formData, id: formData.id.toLowerCase().trim(), mirrors };
       const res = await fetch("/api/admin/sources/custom", {
         method: "POST",
         headers: {
@@ -130,348 +117,157 @@ export function CustomSourceModal({
         },
         body: JSON.stringify(payload),
       });
-
       const data = await res.json();
       if (res.ok) {
         await onSaved();
         onClose();
       } else {
-        setError(data.error || "Gagal menyimpan konfigurasi sumber");
+        setError(data.error || "Custom source gagal disimpan.");
       }
     } catch {
-      setError("Gagal menghubungi server");
+      setError("Server tidak dapat dihubungi saat menyimpan custom source.");
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
-      <div className="w-full max-w-2xl bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl overflow-hidden my-8 flex flex-col max-h-[90vh]">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-zinc-800 bg-zinc-950/60">
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
-              <SlidersHorizontal className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-sm font-bold text-zinc-100">
-                {isEditing ? `Edit & Perbaiki Sumber: ${formData.name}` : "Studio Sumber Manga Kustom"}
-              </h3>
-              <p className="text-[11px] text-zinc-400">
-                Konfigurasi scraping dinamis (CSS Selectors / REST API) langsung dari browser.
-              </p>
+    <div className="fixed inset-0 z-[150] flex items-center justify-center overflow-y-auto bg-black/75 p-3 backdrop-blur-sm sm:p-5">
+      <div role="dialog" aria-modal="true" aria-labelledby="custom-source-title" className="my-auto flex max-h-[94vh] w-full max-w-3xl flex-col overflow-hidden rounded-[24px] border border-zinc-800 bg-zinc-900 shadow-2xl shadow-black/50">
+        <div className="flex items-start justify-between gap-4 border-b border-zinc-800/90 px-5 py-4 sm:px-6">
+          <div className="flex min-w-0 items-start gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-red-500/25 bg-red-500/10 text-red-300"><SlidersHorizontal className="h-4 w-4" /></div>
+            <div className="min-w-0">
+              <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-red-400/90">Dynamic source studio</p>
+              <h2 id="custom-source-title" className="mt-1 truncate text-base font-semibold text-zinc-100">{isEditing ? `Edit ${formData.name || formData.id}` : "Tambah custom source"}</h2>
+              <p className="mt-1 text-[11px] leading-4 text-zinc-600">Konfigurasi adapter HTML/API dan validasi parser sebelum disimpan.</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 text-zinc-400 hover:text-zinc-200 rounded-lg hover:bg-zinc-800"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <button type="button" onClick={onClose} className="rounded-lg p-1.5 text-zinc-600 transition hover:bg-zinc-900 hover:text-zinc-200" aria-label="Tutup modal"><X className="h-5 w-5" /></button>
         </div>
 
-        {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-5 overflow-y-auto space-y-4 text-xs">
-          {error && (
-            <div className="p-3 bg-red-500/10 border border-red-500/30 text-red-300 rounded-xl flex items-center gap-2">
-              <WarningCircle className="w-4 h-4 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+          <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-5 py-5 sm:px-6">
+            {error ? <FeedbackBanner message={error} ok={false} /> : null}
 
-          {/* Basic Info */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-zinc-400 font-medium mb-1">Source ID (Kunci Unik)</label>
-              <input
-                type="text"
-                disabled={isEditing}
-                value={formData.id}
-                onChange={(e) => setFormData({ ...formData, id: e.target.value })}
-                placeholder="contoh: komikcast"
-                className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 font-mono disabled:opacity-50 focus:outline-none focus:border-purple-500"
-                required
-              />
-            </div>
+            <section className="space-y-3">
+              <div className="flex items-center justify-between gap-3"><div><p className="text-xs font-medium text-zinc-300">Identity & endpoint</p><p className="mt-0.5 text-[10px] text-zinc-700">Metadata utama untuk mengenali source dan upstream.</p></div><StatusPill tone={formData.isEnabled ? "success" : "neutral"} dot>{formData.isEnabled ? "Enabled" : "Disabled"}</StatusPill></div>
 
-            <div>
-              <label className="block text-zinc-400 font-medium mb-1">Nama Tampilan</label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="contoh: Komikcast ID"
-                className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 focus:outline-none focus:border-purple-500"
-                required
-              />
-            </div>
-          </div>
-
-          {/* URLs */}
-          <div>
-            <label className="block text-zinc-400 font-medium mb-1">Base URL Utama</label>
-            <input
-              type="url"
-              value={formData.baseUrl}
-              onChange={(e) => setFormData({ ...formData, baseUrl: e.target.value })}
-              placeholder="https://komikcast.bz"
-              className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 font-mono focus:outline-none focus:border-purple-500"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-zinc-400 font-medium mb-1">
-              Domain Mirrors (Cadangan jika domain utama diblokir, 1 baris per URL)
-            </label>
-            <textarea
-              rows={2}
-              value={mirrorsText}
-              onChange={(e) => setMirrorsText(e.target.value)}
-              placeholder="https://komikcast.me&#10;https://komikcast.site"
-              className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 font-mono focus:outline-none focus:border-purple-500"
-            />
-          </div>
-
-          {/* Type & Lang */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div>
-              <label className="block text-zinc-400 font-medium mb-1">Tipe Parser</label>
-              <select
-                value={formData.type}
-                onChange={(e) => setFormData({ ...formData, type: e.target.value as "html" | "api" })}
-                className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 focus:outline-none focus:border-purple-500"
-              >
-                <option value="html">HTML (CSS Selector)</option>
-                <option value="api">REST API (JSON)</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-zinc-400 font-medium mb-1">Bahasa</label>
-              <input
-                type="text"
-                value={formData.lang}
-                onChange={(e) => setFormData({ ...formData, lang: e.target.value })}
-                placeholder="id"
-                maxLength={2}
-                className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 uppercase focus:outline-none focus:border-purple-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-zinc-400 font-medium mb-1">Status</label>
-              <select
-                value={formData.isEnabled ? "true" : "false"}
-                onChange={(e) => setFormData({ ...formData, isEnabled: e.target.value === "true" })}
-                className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 focus:outline-none focus:border-purple-500"
-              >
-                <option value="true">Aktif (Enabled)</option>
-                <option value="false">Nonaktif (Disabled)</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-zinc-400 font-medium mb-1">Konten 18+ (NSFW)</label>
-              <select
-                value={formData.isNsfw ? "true" : "false"}
-                onChange={(e) => setFormData({ ...formData, isNsfw: e.target.value === "true" })}
-                className="w-full p-2 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 focus:outline-none focus:border-purple-500"
-              >
-                <option value="false">Tidak (Aman)</option>
-                <option value="true">Ya (NSFW)</option>
-              </select>
-            </div>
-          </div>
-
-          {/* HTML Selectors Section */}
-          {formData.type === "html" && (
-            <div className="p-4 bg-zinc-950/70 border border-zinc-800/80 rounded-xl space-y-3">
-              <span className="font-semibold text-zinc-300 flex items-center gap-1.5 uppercase text-[11px] tracking-wider">
-                <Code className="w-4 h-4 text-purple-400" /> CSS Selectors (Cheerio Engine)
-              </span>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="block text-zinc-400 font-mono text-[11px] mb-1">Popular Path</label>
-                  <input
-                    type="text"
-                    value={formData.selectors?.popularPath || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        selectors: {
-                          ...formData.selectors!,
-                          popularPath: e.target.value,
-                        },
-                      })
-                    }
-                    placeholder="/daftar-komik?order=popular"
-                    className="w-full p-2 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-200 font-mono"
-                  />
+                  <label htmlFor="custom-source-id" className="mb-1.5 block text-[11px] font-medium text-zinc-400">Source ID</label>
+                  <input id="custom-source-id" type="text" disabled={isEditing} required value={formData.id} onChange={(event) => setFormData({ ...formData, id: event.target.value })} placeholder="komikcast" className="h-10 w-full rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 font-mono text-xs text-zinc-200 outline-none placeholder:text-zinc-700 focus:border-red-500/50 focus:ring-2 focus:ring-red-500/10 disabled:cursor-not-allowed disabled:opacity-50" />
                 </div>
-
                 <div>
-                  <label className="block text-zinc-400 font-mono text-[11px] mb-1">Manga Item Container</label>
-                  <input
-                    type="text"
-                    value={formData.selectors?.popularListSelector || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        selectors: {
-                          ...formData.selectors!,
-                          popularListSelector: e.target.value,
-                        },
-                      })
-                    }
-                    placeholder=".list-update_item"
-                    className="w-full p-2 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-200 font-mono"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-zinc-400 font-mono text-[11px] mb-1">Title Selector</label>
-                  <input
-                    type="text"
-                    value={formData.selectors?.titleSelector || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        selectors: {
-                          ...formData.selectors!,
-                          titleSelector: e.target.value,
-                        },
-                      })
-                    }
-                    placeholder="h3.title"
-                    className="w-full p-2 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-200 font-mono"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-zinc-400 font-mono text-[11px] mb-1">Cover Image Selector</label>
-                  <input
-                    type="text"
-                    value={formData.selectors?.coverSelector || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        selectors: {
-                          ...formData.selectors!,
-                          coverSelector: e.target.value,
-                        },
-                      })
-                    }
-                    placeholder="img"
-                    className="w-full p-2 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-200 font-mono"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-zinc-400 font-mono text-[11px] mb-1">Chapter List Selector</label>
-                  <input
-                    type="text"
-                    value={formData.selectors?.chapterListSelector || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        selectors: {
-                          ...formData.selectors!,
-                          chapterListSelector: e.target.value,
-                        },
-                      })
-                    }
-                    placeholder=".chapter-list li"
-                    className="w-full p-2 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-200 font-mono"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-zinc-400 font-mono text-[11px] mb-1">Pages Image Selector</label>
-                  <input
-                    type="text"
-                    value={formData.selectors?.pagesSelector || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        selectors: {
-                          ...formData.selectors!,
-                          pagesSelector: e.target.value,
-                        },
-                      })
-                    }
-                    placeholder="#readerarea img"
-                    className="w-full p-2 bg-zinc-900 border border-zinc-800 rounded-lg text-zinc-200 font-mono"
-                  />
+                  <label htmlFor="custom-source-name" className="mb-1.5 block text-[11px] font-medium text-zinc-400">Display name</label>
+                  <input id="custom-source-name" type="text" required value={formData.name} onChange={(event) => setFormData({ ...formData, name: event.target.value })} placeholder="Komikcast ID" className="h-10 w-full rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 text-xs text-zinc-200 outline-none placeholder:text-zinc-700 focus:border-red-500/50 focus:ring-2 focus:ring-red-500/10" />
                 </div>
               </div>
-            </div>
-          )}
 
-          {/* Test Sandbox Feedback */}
-          {testResult && (
-            <div className={`p-3 rounded-xl border text-xs ${testResult.success ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300" : "bg-red-500/10 border-red-500/30 text-red-300"}`}>
-              <div className="flex items-center gap-2 mb-2 font-semibold">
-                {testResult.success ? <CheckCircle className="w-4 h-4" /> : <WarningCircle className="w-4 h-4" />}
-                <span>
-                  {testResult.success ? `Live Test Berhasil (${testResult.latencyMs}ms, ${testResult.extractedCount} item)` : "Live Test Gagal"}
-                </span>
+              <div>
+                <label htmlFor="custom-base-url" className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium text-zinc-400"><Globe className="h-3.5 w-3.5 text-zinc-600" />Base URL</label>
+                <input id="custom-base-url" type="url" required value={formData.baseUrl} onChange={(event) => setFormData({ ...formData, baseUrl: event.target.value })} placeholder="https://source.example" className="h-10 w-full rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 font-mono text-xs text-zinc-200 outline-none placeholder:text-zinc-700 focus:border-red-500/50 focus:ring-2 focus:ring-red-500/10" />
               </div>
 
-              {testResult.errorMessage && (
-                <p className="text-red-300 mb-2">{testResult.errorMessage}</p>
-              )}
+              <div>
+                <label htmlFor="custom-mirrors" className="mb-1.5 block text-[11px] font-medium text-zinc-400">Mirror domains</label>
+                <textarea id="custom-mirrors" rows={3} value={mirrorsText} onChange={(event) => setMirrorsText(event.target.value)} placeholder={"https://mirror-one.example\nhttps://mirror-two.example"} className="w-full resize-y rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 py-2.5 font-mono text-xs leading-5 text-zinc-200 outline-none placeholder:text-zinc-700 focus:border-red-500/50 focus:ring-2 focus:ring-red-500/10" />
+                <p className="mt-1.5 text-[10px] text-zinc-700">Satu URL per baris.</p>
+              </div>
 
-              {testResult.items.length > 0 && (
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-emerald-500/20">
-                  {testResult.items.slice(0, 4).map((it, idx) => (
-                    <div key={idx} className="p-1.5 bg-zinc-900 rounded-lg border border-zinc-800">
-                      {it.coverUrl && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={it.coverUrl} alt={it.title} className="w-full h-16 object-cover rounded mb-1" />
-                      )}
-                      <span className="font-medium text-zinc-200 truncate block text-[10px]">{it.title}</span>
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div>
+                  <label htmlFor="custom-type" className="mb-1.5 block text-[11px] font-medium text-zinc-400">Parser</label>
+                  <select id="custom-type" value={formData.type} onChange={(event) => setFormData({ ...formData, type: event.target.value as "html" | "api" })} className="h-10 w-full rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 text-xs text-zinc-200 outline-none focus:border-red-500/50"><option value="html">HTML</option><option value="api">REST API</option></select>
+                </div>
+                <div>
+                  <label htmlFor="custom-lang" className="mb-1.5 block text-[11px] font-medium text-zinc-400">Language</label>
+                  <input id="custom-lang" type="text" maxLength={2} value={formData.lang} onChange={(event) => setFormData({ ...formData, lang: event.target.value })} className="h-10 w-full rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 text-xs uppercase text-zinc-200 outline-none focus:border-red-500/50" />
+                </div>
+                <div>
+                  <label htmlFor="custom-enabled" className="mb-1.5 block text-[11px] font-medium text-zinc-400">Status</label>
+                  <select id="custom-enabled" value={formData.isEnabled ? "true" : "false"} onChange={(event) => setFormData({ ...formData, isEnabled: event.target.value === "true" })} className="h-10 w-full rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 text-xs text-zinc-200 outline-none focus:border-red-500/50"><option value="true">Enabled</option><option value="false">Disabled</option></select>
+                </div>
+                <div>
+                  <label htmlFor="custom-nsfw" className="mb-1.5 block text-[11px] font-medium text-zinc-400">Content</label>
+                  <select id="custom-nsfw" value={formData.isNsfw ? "true" : "false"} onChange={(event) => setFormData({ ...formData, isNsfw: event.target.value === "true" })} className="h-10 w-full rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 text-xs text-zinc-200 outline-none focus:border-red-500/50"><option value="false">General</option><option value="true">18+ / NSFW</option></select>
+                </div>
+              </div>
+            </section>
+
+            {formData.type === "html" ? (
+              <section className="overflow-hidden rounded-2xl border border-zinc-800/90 bg-zinc-950/30">
+                <div className="border-b border-zinc-800/80 px-4 py-3">
+                  <div className="flex items-center gap-2"><Code className="h-4 w-4 text-red-400" /><p className="text-xs font-medium text-zinc-300">HTML selector contract</p></div>
+                  <p className="mt-1 text-[10px] text-zinc-700">Selector inti yang digunakan parser Cheerio untuk catalog dan reader.</p>
+                </div>
+                <div className="grid gap-3 p-4 sm:grid-cols-2">
+                  <SelectorField label="Popular path" value={formData.selectors?.popularPath || ""} placeholder="/daftar-komik?order=popular" onChange={(value) => setFormData({ ...formData, selectors: { ...formData.selectors!, popularPath: value } })} />
+                  <SelectorField label="List item" value={formData.selectors?.popularListSelector || ""} placeholder=".list-update_item" onChange={(value) => setFormData({ ...formData, selectors: { ...formData.selectors!, popularListSelector: value } })} />
+                  <SelectorField label="Title" value={formData.selectors?.titleSelector || ""} placeholder="h3.title" onChange={(value) => setFormData({ ...formData, selectors: { ...formData.selectors!, titleSelector: value } })} />
+                  <SelectorField label="Cover image" value={formData.selectors?.coverSelector || ""} placeholder="img" onChange={(value) => setFormData({ ...formData, selectors: { ...formData.selectors!, coverSelector: value } })} />
+                  <SelectorField label="Chapter list" value={formData.selectors?.chapterListSelector || ""} placeholder=".chapter-list li" onChange={(value) => setFormData({ ...formData, selectors: { ...formData.selectors!, chapterListSelector: value } })} />
+                  <SelectorField label="Reader pages" value={formData.selectors?.pagesSelector || ""} placeholder="#readerarea img" onChange={(value) => setFormData({ ...formData, selectors: { ...formData.selectors!, pagesSelector: value } })} />
+                </div>
+              </section>
+            ) : (
+              <InlineNotice tone="neutral">REST API mode memakai kontrak parser API yang sudah tersedia pada service. Selector HTML tidak digunakan.</InlineNotice>
+            )}
+
+            <section className="space-y-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div><p className="text-xs font-medium text-zinc-300">Parser validation</p><p className="mt-0.5 text-[10px] text-zinc-700">Jalankan live test sebelum menyimpan perubahan selector atau domain.</p></div>
+                <OpsButton type="button" variant="secondary" onClick={() => void handleTestParser()} disabled={testing || !formData.baseUrl}>{testing ? <CircleNotch className="h-4 w-4 animate-spin" /> : <Lightning className="h-4 w-4 text-amber-400" />}Run live test</OpsButton>
+              </div>
+
+              {testResult ? (
+                <div className={cx("rounded-2xl border p-4", testResult.success ? "border-emerald-500/25 bg-emerald-500/[0.06]" : "border-rose-500/25 bg-rose-500/[0.06]")}> 
+                  <div className="flex items-start gap-2.5">
+                    {testResult.success ? <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-emerald-300" weight="fill" /> : <WarningCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-300" weight="fill" />}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2"><p className={cx("text-xs font-medium", testResult.success ? "text-emerald-200" : "text-rose-200")}>{testResult.success ? "Parser test passed" : "Parser test failed"}</p>{testResult.success ? <StatusPill tone="neutral" className="font-mono">{testResult.latencyMs} ms</StatusPill> : null}{testResult.success ? <StatusPill tone="neutral">{testResult.extractedCount} item</StatusPill> : null}</div>
+                      {testResult.errorMessage ? <p className="mt-1.5 text-[11px] leading-5 text-rose-300">{testResult.errorMessage}</p> : null}
                     </div>
-                  ))}
+                  </div>
+
+                  {testResult.items.length > 0 ? (
+                    <div className="mt-4 grid grid-cols-2 gap-2 border-t border-zinc-800/70 pt-4 sm:grid-cols-4">
+                      {testResult.items.slice(0, 4).map((item, index) => (
+                        <div key={`${item.title}-${index}`} className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950/60 p-2">
+                          {item.coverUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={item.coverUrl} alt="" className="h-20 w-full rounded-lg object-cover" />
+                          ) : <div className="h-20 rounded-lg bg-zinc-900" />}
+                          <p className="mt-2 truncate text-[10px] font-medium text-zinc-300">{item.title}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
                 </div>
+              ) : (
+                <div className="rounded-xl border border-dashed border-zinc-800 px-4 py-5 text-center text-[11px] text-zinc-700">Belum ada hasil live test pada sesi ini.</div>
               )}
-            </div>
-          )}
+            </section>
+          </div>
 
-          {/* Modal Actions */}
-          <div className="flex items-center justify-between pt-4 border-t border-zinc-800">
-            <button
-              type="button"
-              onClick={handleTestParser}
-              disabled={testing || !formData.baseUrl}
-              className="flex items-center gap-1.5 px-3 py-2 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-zinc-200 font-medium rounded-xl transition"
-            >
-              {testing ? <CircleNotch className="w-4 h-4 animate-spin text-purple-400" /> : <Lightning className="w-4 h-4 text-purple-400" />}
-              Uji Selector (Live Test)
-            </button>
-
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-3 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 rounded-xl transition"
-              >
-                Batal
-              </button>
-              <button
-                type="submit"
-                disabled={saving || !formData.id || !formData.name || !formData.baseUrl}
-                className="flex items-center gap-1.5 px-4 py-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white font-semibold rounded-xl transition"
-              >
-                {saving ? <CircleNotch className="w-4 h-4 animate-spin" /> : <FloppyDisk className="w-4 h-4" />}
-                {isEditing ? "Simpan Perbaikan" : "Tambah Sumber"}
-              </button>
+          <div className="flex flex-col-reverse gap-2 border-t border-zinc-800/90 bg-zinc-950 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
+            <div className="text-[10px] text-zinc-700">Perubahan disimpan ke konfigurasi source dinamis.</div>
+            <div className="flex justify-end gap-2">
+              <OpsButton type="button" variant="ghost" onClick={onClose} disabled={saving}>Batal</OpsButton>
+              <OpsButton type="submit" variant="primary" disabled={saving || !formData.id || !formData.name || !formData.baseUrl}>{saving ? <CircleNotch className="h-4 w-4 animate-spin" /> : <FloppyDisk className="h-4 w-4" />}{saving ? "Menyimpan…" : isEditing ? "Simpan perubahan" : "Tambah source"}</OpsButton>
             </div>
           </div>
         </form>
       </div>
+    </div>
+  );
+}
+
+function SelectorField({ label, value, placeholder, onChange }: { label: string; value: string; placeholder: string; onChange: (value: string) => void }) {
+  return (
+    <div>
+      <label className="mb-1.5 block font-mono text-[10px] text-zinc-500">{label}</label>
+      <input type="text" value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="h-9 w-full rounded-lg border border-zinc-800 bg-zinc-900/70 px-2.5 font-mono text-[11px] text-zinc-300 outline-none placeholder:text-zinc-700 focus:border-red-500/45" />
     </div>
   );
 }

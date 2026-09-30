@@ -1,9 +1,8 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import React from "react";
-import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { AdminLayout } from "../admin-layout";
 
-// Mock fetch
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
@@ -11,25 +10,27 @@ describe("Admin Portal Component (<AdminLayout />)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     sessionStorage.clear();
+    window.history.replaceState({}, "", "/admin");
   });
 
-  it("should render Admin Passkey Gate when unauthenticated", async () => {
+  it("renders the explicit administrator gate when unauthenticated", async () => {
     render(<AdminLayout />);
+
     await waitFor(() => {
-      expect(screen.getByText(/yomirra ops gate/i)).toBeDefined();
-      expect(screen.getByPlaceholderText(/masuk.*kunci akses admin/i)).toBeDefined();
+      expect(screen.getByText(/administrator gate/i)).toBeDefined();
+      expect(screen.getByPlaceholderText(/masukkan kunci akses admin/i)).toBeDefined();
     });
+
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 
-  it("should unlock and render sidebar navigation when valid passkey is entered", async () => {
-    // 1. Initial check for unlock attempt
+  it("unlocks and renders the Yomirra Ink Ops navigation when the passkey is valid", async () => {
     mockFetch.mockResolvedValueOnce({
       ok: true,
       status: 200,
       json: async () => ({ sources: [] }),
     });
 
-    // 2. Parallel 4 requests on dashboard load
     mockFetch
       .mockResolvedValueOnce({
         ok: true,
@@ -60,6 +61,7 @@ describe("Admin Portal Component (<AdminLayout />)", () => {
             usedMemory: "12M",
             uptimeDays: 2,
             connectedClients: 1,
+            totalSampledKeys: 10,
             status: "connected",
           },
         }),
@@ -69,7 +71,7 @@ describe("Admin Portal Component (<AdminLayout />)", () => {
         status: 200,
         json: async () => ({
           config: {
-            announcement: { enabled: false, message: "" },
+            announcement: { enabled: false, message: "", type: "info" },
             maintenanceMode: { enabled: false },
           },
         }),
@@ -77,17 +79,15 @@ describe("Admin Portal Component (<AdminLayout />)", () => {
 
     render(<AdminLayout />);
 
-    const input = await screen.findByPlaceholderText(/masuk.*kunci akses admin/i);
-    fireEvent.change(input, { target: { value: "yomirra-ops-master-2026" } });
-
-    const submitBtn = screen.getByText(/buka portal admin/i);
-    fireEvent.click(submitBtn);
+    const input = await screen.findByPlaceholderText(/masukkan kunci akses admin/i);
+    fireEvent.change(input, { target: { value: "test-admin-key" } });
+    fireEvent.click(screen.getByRole("button", { name: /buka operations portal/i }));
 
     await waitFor(() => {
-      expect(screen.getByText(/admin ops v2.2/i)).toBeDefined();
-      expect(screen.getAllByText(/source engine/i).length).toBeGreaterThan(0);
-      expect(screen.getAllByText(/ringkasan/i).length).toBeGreaterThan(0);
-      expect(screen.getAllByText(/telemetri/i).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/source health/i).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/reader reports/i).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/infrastructure/i).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/operational pulse/i).length).toBeGreaterThan(0);
     });
   });
 });

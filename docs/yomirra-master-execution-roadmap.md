@@ -1,41 +1,41 @@
 # Yomirra — Master Execution Roadmap P0–P4
 
-**Status:** Execution-ready  
+**Status:** Execution-ready after current Admin Dashboard revamp handoff  
 **Target repo path:** `docs/yomirra-master-execution-roadmap.md`  
-**Role:** Single source of truth for the remaining Yomirra work covered here.  
-**Execution model:** Phase-by-phase, with hard verification gates before moving forward.
+**Role:** Single source of truth for the remaining Yomirra work covered by this roadmap.  
+**Execution model:** Reconcile the newest Git/cloud state first, then execute strictly phase-by-phase with a mandatory verification gate after every phase.
 
 ---
 
 ## 0. Non-Negotiable Execution Rules
 
-1. **Do not start implementation from a stale local checkout.** Phase 0 must determine the most complete/latest authoritative state between local work, `origin`, existing remote branches, merged/unmerged PR branches, and recent cloud/Codex work.
-2. **Never overwrite uncommitted local work.** If local changes exist, preserve them first with a safe branch/commit/stash strategy after inspecting what they are.
-3. **Do not assume `main` is the newest source of truth.** Cloud/Codex work may live on another remote branch or PR. Determine actual ancestry and unique commits before choosing the base.
-4. **Do not repeat completed work.** Inspect the current code, Git history, PR history, CI state, and docs first. Mark already-completed items as verified instead of reimplementing them.
-5. **No destructive Git operations** such as blind `reset --hard`, forced pushes, or deleting unmerged branches without proving the commits are preserved elsewhere.
-6. **No Codex/GPT bot comments or automated PR commentary.** Keep PR/review communication manual unless explicitly requested.
-7. **TDD baseline:** for behavior changes, add or update tests before/with implementation where practical. Regression-prone paths must have tests.
-8. **Scope discipline:** do not fold unrelated repo-wide cleanup into a phase just because it is discovered. Record out-of-scope findings in this document/changelog and continue the scoped work.
-9. **No unnecessary dependencies.** Reuse the existing stack and patterns unless a new package is clearly justified.
-10. **Preserve Yomirra behavior contracts:**
-    - Bookmark is explicit only. Rating/collection must not auto-add to Library.
-    - Search source selection is independent from source enable/disable toggles used by Library/Popular/normal browsing.
-    - Only available/healthy sources are usable for reading.
-    - Existing canonical/progress/bookmark data must not be silently discarded.
-11. **Every phase ends with a hard gate:**
-    - update changelog;
-    - run relevant tests;
-    - run typecheck;
-    - run lint;
-    - run production build;
-    - inspect diff and Git status;
-    - only then continue to the next phase.
-12. Use the actual scripts defined in `package.json`. Expected commands are likely `pnpm test`, `pnpm typecheck`, `pnpm lint`, and `pnpm build`, but the executor must confirm the repo scripts instead of inventing commands.
+1. **Do not start from a stale local checkout.** Recent work has been performed in cloud/Codex, including an Admin Dashboard revamp that may still be on a remote branch/PR when execution starts.
+2. **The current Admin Dashboard revamp is an upstream workstream, not a task to reimplement.** First locate its latest branch/commit/PR and reconcile it into the authoritative base. Verify it; do not duplicate its UI work.
+3. **Never overwrite unique local work.** Inspect before stash/reset/switching branches. No blind `reset --hard`, force-push, or destructive cleanup.
+4. **Do not assume `main` is newest.** Determine the authoritative state using ancestry, unique commits, actual code content, PR state, and deployment state—not timestamps alone.
+5. **Do not repeat completed work.** Mark existing implementation as `VERIFIED/DONE` after inspection and tests.
+6. **One master roadmap.** This file is the execution source of truth. Existing detailed plans may remain as historical/reference documents, but conflicting instructions are reconciled into this file.
+7. **TDD/regression baseline.** Add/update tests for behavior changes where practical; high-risk source, reader, auth, search, migration, and entitlement paths require regression coverage.
+8. **No unrelated repo-wide refactors.** Record out-of-scope findings separately.
+9. **No unnecessary packages.** Reuse Next.js 16, React 19, TypeScript, Zustand, Vitest/Testing Library, existing Redis/server utilities, and current UI primitives unless evidence requires otherwise.
+10. **No Codex/GPT bot comments or automated PR commentary.** Keep review/PR communication manual unless explicitly requested.
+11. **Do not blindly paste plan snippets.** File paths, signatures, line numbers, and example code in prior plans are intent/specification; reconcile them with the actual latest types and architecture before implementation.
+12. **Admin secrets must never be hardcoded into the browser bundle.** Any development fallback/default passkey visible in client code must be removed or replaced with a server-only/local-development-safe mechanism before production verification.
+13. **Preserve product contracts:**
+    - Bookmark is explicit only; rating/collection must not auto-add to Library.
+    - User source toggles govern Library/Popular/normal browsing.
+    - Search ignores the user's ordinary browsing toggle and may list all runtime-available sources.
+    - **Admin kill-switch is authoritative globally:** an admin-disabled source is not usable publicly, including Search/Reader, while internal admin diagnostics may explicitly bypass the kill-switch.
+    - Unavailable/down sources must not be offered as active reading sources.
+    - Canonical identity, progress, bookmarks, and update state must not be silently discarded.
+    - Built-in adapters must be preserved unless a separate explicit migration/removal decision exists.
+14. **Redis/runtime configuration must fail safe.** Redis outage, cold start, latency spike, malformed runtime state, or Standby must not crash public SSR. Fall back immediately to the hardcoded built-in registry where appropriate.
+15. **Every phase has a hard gate:** update changelog → targeted tests → full relevant tests → typecheck → lint → production build → manual smoke checks → diff/status review → clean checkpoint commit.
+16. Confirm actual commands from `package.json`; do not invent scripts. Expected equivalents are `pnpm vitest run`, `pnpm typecheck`, `pnpm lint`, and `pnpm build`.
 
 ---
 
-# Phase 0 — Local / Remote / Cloud State Reconciliation
+# Phase 0 — Local / Remote / Cloud / Admin-Revamp Reconciliation
 
 **Priority:** P0 / mandatory prerequisite  
 **Difficulty:** Easy–Medium  
@@ -43,736 +43,907 @@
 
 ## Goal
 
-Bring the local repository to the most complete and current Yomirra state before starting any new roadmap work.
+Make the local repository match the newest safe Yomirra state, including the Admin Dashboard revamp currently being developed in cloud/Codex, before any new roadmap work begins.
 
-## Procedure
-
-### 0.1 Inspect local state before touching anything
+## 0.1 Inspect local state before touching anything
 
 Capture:
 
-- current branch;
-- `git status`;
-- local uncommitted/untracked changes;
-- local branches and tracking status;
+- current branch and HEAD SHA;
+- `git status` including untracked files;
+- local branches/tracking status;
 - configured remotes;
-- current HEAD SHA;
-- recent local history.
+- recent local history;
+- local unique commits/uncommitted changes.
 
-Do not stash/reset immediately. First determine whether any local work is unique.
+Do not stash/reset first. Determine whether the local state contains unique work.
 
-### 0.2 Fetch all remote information
+## 0.2 Fetch and inspect all remote/cloud state
 
-Safely update refs using the equivalent of:
+Run the safe equivalent of:
 
 ```bash
 git fetch --all --prune
 ```
 
-Then inspect:
+Inspect:
 
 - `origin/main`;
-- all active `origin/*` feature branches;
-- branch ahead/behind counts;
-- recent commit graph across all refs;
-- PR branches if GitHub CLI/API access is available;
-- CI/deployment state associated with recent branches/PRs.
+- active remote feature branches;
+- cloud/Codex branches;
+- open/recent PRs when GitHub access is available;
+- CI status;
+- current Vercel production deployment;
+- ahead/behind counts and unique commits.
 
 Useful inspection commands may include:
 
 ```bash
 git branch -vv
 git branch -a
-git log --all --graph --decorate --oneline --date-order -n 100
-git rev-list --left-right --count <local>...<remote>
+git log --all --graph --decorate --oneline --date-order -n 150
+git rev-list --left-right --count <A>...<B>
 git log <A>..<B> --oneline
 git log <B>..<A> --oneline
 ```
 
-Use `gh pr list`, `gh pr view`, or equivalent only if available and already authenticated.
+## 0.3 Locate the current Admin Dashboard revamp
 
-### 0.3 Determine the authoritative latest state
+The latest known revamp touches the Admin portal UI around:
 
-Do **not** select a base by timestamp alone. Determine it by commit ancestry and actual content.
+- `admin-layout.tsx`;
+- Overview;
+- Sources;
+- Search;
+- Reports;
+- Site;
+- Telemetry;
+- core source modal;
+- custom source modal;
+- admin portal tests.
+
+Do not assume these exact paths are unchanged. Identify the real current branch/commit by Git evidence.
+
+Required actions:
+
+1. Locate the branch/PR/commit containing the latest Admin revamp.
+2. Compare it with local and `origin/main`.
+3. Preserve any unique commits.
+4. If the Admin revamp is complete and valid, reconcile it into the authoritative base before Phase 1.
+5. If it is already merged, verify rather than reimplement.
+6. If it is incomplete but contains required unique work, preserve it and finish/reconcile only what is necessary to establish a coherent handoff; do not silently discard it.
+
+## 0.4 Security handoff check for Admin
+
+Before treating the Admin revamp as production-ready, inspect authentication behavior and client bundles.
+
+Mandatory requirement:
+
+- no production/default admin passkey, secret, token, or equivalent privileged credential may be embedded in a Client Component or browser bundle;
+- development-only convenience must be gated safely and remain server/local-only;
+- admin APIs remain server-authorized regardless of UI state.
+
+This is a **P0 production blocker**.
+
+## 0.5 Determine authoritative latest state
 
 Decision rules:
 
-1. If local is clean and `origin/main` contains all cloud/Codex work, fast-forward local `main`.
-2. If a remote feature/PR branch contains newer completed work not yet in `main`, inspect whether it is intended to be kept.
-3. If that remote work is valid and is the current continuation point, preserve/integrate it first before creating the new roadmap branch.
-4. If local contains unique commits or uncommitted work, preserve them before switching/updating.
-5. If local and remote have diverged, compare unique commits and reconcile intentionally; never blindly reset one side over the other.
-6. If duplicate/obsolete cloud branches exist, leave deletion until the final cleanup phase unless they are provably disposable and interfere with execution.
+1. If `origin/main` contains all required local/cloud/Admin work, fast-forward local safely.
+2. If a remote feature/PR branch contains newer valid work not in `main`, inspect and reconcile it first.
+3. If local has unique commits/uncommitted work, preserve before switching/updating.
+4. If histories diverge, compare unique commits and reconcile intentionally.
+5. Leave branch deletion for the final phase.
 
-### 0.4 Verify previous Yomirra work before new implementation
+## 0.6 Verify previous work instead of repeating it
 
-Specifically inspect current status of:
+Inspect the actual status of:
 
-- PR16 and any successor PRs;
-- latest CI result;
-- latest Vercel deployment;
-- bot/Codex automation state;
-- prior navigation/perceived-performance changes;
-- source fixes already merged;
-- existing canonical/search work;
-- existing docs such as `future_dev.md`, specs, plans, or roadmap fragments.
+- PR16 and successors;
+- navigation/perceived-performance work;
+- previous source fixes;
+- canonical/search work;
+- `future_dev.md` and prior specs/plans;
+- Admin APIs/services used by the new UI;
+- `admin-source-service`;
+- `custom-source-service`;
+- source health/probe flow;
+- any existing runtime-source merger/wiring already produced by another worker.
 
-Anything already finished should be marked **VERIFIED / DONE** rather than implemented again.
+Mark completed items `VERIFIED/DONE`.
 
-### 0.5 Establish the execution branch
+## 0.7 Establish roadmap execution branch
 
 After reconciliation:
 
-1. Make sure the chosen base contains all work that must be retained.
-2. Update local `main` if appropriate.
-3. Create **one dedicated roadmap execution branch** from the authoritative base to minimize branch sprawl.
-4. Record the base SHA and branch name in the execution log/changelog.
+1. ensure the base contains all work that must be retained;
+2. synchronize local `main` if appropriate;
+3. create one dedicated roadmap branch from the authoritative base;
+4. record branch name + base SHA in changelog/execution notes.
 
-Recommended naming pattern:
+Recommended naming:
 
 ```text
 feat/yomirra-master-roadmap
 ```
 
-Use the repo's existing branch convention if different.
+## Phase 0 Acceptance Gate
 
-## Acceptance Gate — Phase 0
-
-- [x] Local unique work preserved.
-- [x] Remote refs fetched/pruned.
-- [x] Latest authoritative branch/commit identified by ancestry/content.
-- [x] Local working copy synchronized to that state.
-- [x] Existing completed work identified so it will not be duplicated.
-- [x] CI/deployment baseline recorded.
-- [x] Dedicated execution branch created from the correct base.
-- [x] Changelog updated with reconciliation summary.
-- [x] Baseline tests/typecheck/lint/build executed before modifying production code.
-
-Do not continue if the baseline build is already broken without documenting whether the failure predates this roadmap.
+- [ ] Unique local work preserved.
+- [ ] Remote refs fetched/pruned.
+- [ ] Latest Admin revamp branch/commit found and reconciled or verified merged.
+- [ ] No privileged admin credential is shipped in the client bundle.
+- [ ] Authoritative base selected by ancestry/content.
+- [ ] Existing completed roadmap work identified to avoid duplication.
+- [ ] CI/deployment baseline recorded.
+- [ ] Dedicated roadmap branch created.
+- [ ] Changelog updated with reconciliation summary.
+- [ ] Baseline targeted/full tests as appropriate pass or pre-existing failures are documented.
+- [ ] Typecheck passes or baseline failure documented.
+- [ ] Lint passes or baseline failure documented.
+- [ ] Production build passes or baseline failure documented.
+- [ ] Clean checkpoint commit created.
 
 ---
 
-# Phase 1 — P0 Core Stability
+# Phase 1 — P0 Admin Runtime Source Overrides & Public Frontend Wiring
 
 **Priority:** P0  
-**Difficulty order:** Easy → Hard  
-**Dependencies:** Phase 0 complete
+**Difficulty:** Medium  
+**Dependencies:** Phase 0 complete; current Admin revamp and existing admin source/custom-source services reconciled  
+**Origin:** Incorporates `docs/superpowers/plans/2026-09-30-connect-admin-sources-to-frontend.md`
 
-## 1.1 Repository / PR / CI / deployment hygiene
+## Goal
 
-- Resolve any remaining stale PR/CI state that could block the roadmap.
-- Ensure no Codex/GPT bot comments/actions are being introduced into PRs.
+Connect the Admin source configuration to public runtime behavior without making Redis a public availability dependency.
+
+The hardcoded `sourceRegistry` remains the safe baseline. Runtime core overrides and custom sources are layered on top at request/runtime time.
+
+## Architecture Contract
+
+```text
+client-safe sourceRegistry
+        ↓
+server-only runtime-sources merger
+        ├── core overrides from Redis
+        └── custom sources from Redis
+        ↓
+public API / SSR feeds / source resolution
+```
+
+Redis failure path:
+
+```text
+Redis unavailable / cold / timeout / malformed runtime state
+        ↓
+catch + log
+        ↓
+hardcoded built-in sourceRegistry
+        ↓
+public app continues rendering
+```
+
+Admin kill-switch path:
+
+```text
+admin override isEnabled=false
+        ↓
+public source resolution rejects SOURCE_DISABLED
+        ↓
+Home/Popular/Search/Reader cannot use source
+
+admin health probe
+        ↓
+explicit allowDisabled=true
+        ↓
+probe may still diagnose disabled source
+```
+
+## 1.1 Runtime Source Merger Service
+
+Expected files, adjusted to actual repo layout if necessary:
+
+- Create: `src/server/lib/sources/runtime-sources.ts`
+- Test: `src/server/lib/sources/__tests__/runtime-sources.test.ts`
+
+Expected public server interfaces:
+
+```ts
+getRuntimeSources(): Promise<SourceMetadata[]>
+getRuntimeSource(id: string): Promise<SourceMetadata | null>
+isSourceEnabledServer(id: string): Promise<boolean>
+```
+
+Consumes:
+
+- client-safe hardcoded `sourceRegistry`;
+- `getCoreSourceOverrides()`;
+- `getCustomSources()`.
+
+Required behavior/tests:
+
+- baseline registry returned when runtime config is empty;
+- `isEnabled` core override applied;
+- active-domain override applied to effective server metadata;
+- custom Redis sources merged and marked dynamic using the actual current schema;
+- one Redis dependency failing must not necessarily destroy valid data from the other if they are independently recoverable;
+- total/unhandled runtime failure falls back to built-in registry;
+- normalization handles source IDs consistently;
+- malformed runtime entries cannot crash SSR;
+- `source-registry.ts` remains client-safe and imports no Redis/server module.
+
+TDD gate:
+
+```bash
+pnpm vitest run src/server/lib/sources/__tests__/runtime-sources.test.ts
+```
+
+Write/confirm failing tests before implementing missing behavior.
+
+## 1.2 SourceManager Admin Kill-Switch Enforcement
+
+Expected files:
+
+- Modify current source manager implementation.
+- Add a focused override/kill-switch test file.
+
+Required contract:
+
+```ts
+sourceManager.getSource(
+  id,
+  manifestUrl?,
+  options?: { allowDisabled?: boolean }
+)
+```
+
+Behavior:
+
+- core source with admin `isEnabled=false` rejects public resolution with structured/recognizable `SOURCE_DISABLED` semantics;
+- `allowDisabled: true` bypasses only this runtime kill-switch for internal diagnostics;
+- Redis read failure is fail-open to the hardcoded built-in behavior, not a public outage;
+- the kill-switch exception itself must not be swallowed by the Redis fallback catch;
+- preserve existing source resolution/caching semantics unless evidence requires change.
+
+Prefer a typed/domain error if the existing error architecture supports it. Do not force a string-only error contract if the latest repo has a better established error type.
+
+## 1.3 Public API Wiring
+
+Update public source metadata API to consume `getRuntimeSources()` rather than a raw static registry helper.
+
+Requirements:
+
+- preserve existing rate limit/security behavior;
+- endpoint is runtime/dynamic where required;
+- response exposes effective source metadata without leaking admin-only secrets/config internals;
+- admin-disabled sources may be represented as disabled metadata if that matches current public API contract, but clients must not treat them as usable.
+
+## 1.4 Home SSR Wiring
+
+Update Home server-side source selection to start from runtime sources.
+
+Required filtering semantics:
+
+```text
+Admin runtime enabled
+AND installed/usable
+AND not unavailable
+AND not user-disabled for browsing
+```
+
+User-disabled-source cookie parsing must fail safely. Invalid cookie data must not crash SSR.
+
+## 1.5 Popular SSR Wiring
+
+Use runtime sources instead of raw `sourceRegistry`.
+
+Popular follows browsing toggles/availability contracts, not Search independence rules.
+
+## 1.6 Admin Health Probe Bypass
+
+Internal Admin diagnostics must use the explicit bypass:
+
+```ts
+{ allowDisabled: true }
+```
+
+This bypass must be narrowly scoped to authorized admin/internal diagnostic paths.
+
+## 1.7 Search Contract Reconciliation
+
+Because Phase 1 changes the server authority of source state, explicitly verify this distinction:
+
+- **admin-disabled:** unavailable publicly everywhere until re-enabled;
+- **user-disabled browsing toggle:** hidden from Library/Popular/home browsing, but still available to Search if runtime/admin availability permits;
+- **runtime unavailable/down:** not usable for active reading;
+- **custom source:** follows its actual runtime/admin availability and capability metadata.
+
+Do not accidentally make `/api/sources` user-preference-aware if it is intended to represent global runtime availability.
+
+## 1.8 Runtime Plan Regression Tests
+
+At minimum cover:
+
+- no overrides/custom sources;
+- disabled core override;
+- active domain override;
+- custom source merge;
+- Redis timeout/offline fallback;
+- source-manager public rejection;
+- admin diagnostic bypass;
+- API behavior;
+- Home/Popular runtime filtering where test architecture permits;
+- Search does not conflate user browsing toggle with admin kill-switch.
+
+## Phase 1 Acceptance Gate
+
+- [ ] Runtime merger implemented/verified.
+- [ ] Built-in adapters remain intact.
+- [ ] `sourceRegistry` remains client-safe.
+- [ ] SourceManager kill-switch works.
+- [ ] Admin probe bypass is explicit and authorized.
+- [ ] Public `/api/sources` uses runtime metadata.
+- [ ] Home and Popular SSR use runtime metadata.
+- [ ] Search/admin/user-toggle semantics remain distinct.
+- [ ] Redis failure cannot take public SSR down.
+- [ ] Changelog updated.
+- [ ] Targeted source/API tests pass.
+- [ ] Full relevant Vitest suite passes.
+- [ ] Typecheck passes.
+- [ ] Lint passes.
+- [ ] Production build passes.
+- [ ] Manual smoke test covers admin disable → public effect → admin probe → re-enable.
+- [ ] Diff/status checked for unrelated changes.
+- [ ] Clean checkpoint commit created.
+
+Suggested task-level commits may be used if they fit repo convention, but the phase gate above is mandatory regardless of commit granularity.
+
+---
+
+# Phase 2 — P0 Core Stability
+
+**Priority:** P0  
+**Difficulty:** Easy → Hard  
+**Dependencies:** Phase 1 complete
+
+## 2.1 Repository / PR / CI hygiene
+
+- Resolve stale PR/CI state that blocks roadmap execution.
 - Preserve manual review flow.
-- Do not perform branch deletion yet except clearly disposable temporary refs.
+- Do not delete active branches yet.
 
-## 1.2 Consolidate execution documentation
-
-This master file is the execution source of truth for the work below.
-
-- Reconcile previous task/spec fragments into this document where needed.
-- Do not create another competing roadmap.
-- Task 02/entitlement remains future work until P4.
-- If an existing `future_dev.md` must remain for repository convention, keep it as a lightweight pointer/reference rather than duplicating the full roadmap.
-
-## 1.3 Navigation perceived-performance foundation
+## 2.2 Navigation perceived-performance foundation
 
 Implement/verify:
 
-- dock/navigation active state changes immediately on user intent;
-- route transition begins immediately;
-- destination shell/page is allowed to render before slower content finishes;
-- page loading feedback is visible for PWA/navigation latency;
-- avoid duplicate navigation events;
-- preserve accessibility/focus behavior;
-- avoid routine toast noise for normal navigation.
+- dock/navigation active state changes immediately on intent;
+- route transition starts immediately;
+- destination shell may render before slow content finishes;
+- visible PWA/page loading feedback;
+- no duplicate navigation events;
+- accessibility/focus preserved;
+- routine navigation does not generate noisy toasts.
 
-### Dependency
+## 2.3 Single scroll owner + page hierarchy cleanup
 
-This is required before final page hierarchy and reader navigation cleanup.
-
-## 1.4 Single scroll owner + page hierarchy cleanup
-
-Standardize high-level page structure for the primary affected pages:
+Standardize primary shells for:
 
 - Home;
 - Library;
 - Bookcase/Bookmark;
 - Search;
-- Popular/other browsing pages that share the shell.
+- Popular and related browsing pages.
 
 Resolve:
 
 - duplicated headers;
 - nested/parent scroll conflicts;
-- inconsistent page containers;
-- inconsistent toolbar/section spacing;
+- inconsistent containers/toolbars/section spacing;
 - responsive shell mismatch.
 
-Prefer reusable patterns only where the structure is already stable.
+## 2.4 Source Registry / Search-State Reconciliation
 
-### Dependency
+Build on Phase 1 runtime authority.
 
-`Navigation foundation → page hierarchy → Library/Bookmark finishing`
+- Search source selection lists every runtime/admin-available source even when the user's ordinary browsing toggle is OFF.
+- Library/Popular/Home obey user browsing toggles.
+- Admin kill-switch wins globally.
+- Runtime unavailable source cannot be selected for reading.
+- Migrate/remove stale persisted source/search state safely.
+- Ensure custom runtime sources participate according to capabilities.
 
-## 1.5 Source registry / search-state reconciliation
+## 2.5 Reader FIFO Image Loading
 
-Enforce the existing contract:
+Implement deterministic top-to-bottom reader scheduling:
 
-- Search source selection lists all available sources regardless of normal browsing enable/disable state.
-- Library/Popular/other browsing still obey source activation toggles.
-- A source that is actually unavailable/down must not be offered as usable reading source.
-- Remove or migrate stale persisted search/source filter state safely.
-- Verify source registry and persisted settings do not contradict one another.
+- controlled concurrency, target ~2 unless measurement justifies otherwise;
+- later pages do not visibly reveal ahead of earlier queued pages in confusing order;
+- image failure does not deadlock queue;
+- current/next page priority in paged mode;
+- resume-reading preserved;
+- existing virtualization/placeholders preserved or improved;
+- verify long chapters/slow network.
 
-### Dependency
+## Phase 2 Acceptance Gate
 
-Required before per-source reliability work and canonical multi-source hardening.
-
-## 1.6 Reader FIFO image loading
-
-Implement deterministic reader image scheduling:
-
-- load images in top-to-bottom order;
-- controlled concurrency, target approximately 2 concurrent requests unless measurement justifies otherwise;
-- later pages must not visibly complete/reveal ahead of earlier queued pages in a way that makes the chapter look scrambled;
-- an image error must not deadlock the queue;
-- current/next page priority for paged mode;
-- preserve resume-reading behavior;
-- preserve virtualization/placeholders if already present;
-- verify long chapters and slow networks.
-
-### Dependency
-
-Reader navigation optimizations in P1 should be built on top of this stable lifecycle.
-
-## Phase 1 Verification Gate
-
-Before moving to P1 feature/UX work:
-
-- [x] Update changelog with P0 changes and behavior contracts.
-- [x] Add/update targeted Vitest/Testing Library coverage.
-- [x] Run relevant targeted tests.
-- [x] Run full test suite when practical/defined by repo.
-- [x] Run typecheck.
-- [x] Run lint.
-- [x] Run production build.
-- [x] Perform manual browser smoke test for navigation, source selection, scrolling, and reader ordering.
-- [x] Inspect final diff for accidental unrelated refactors.
-- [x] Commit a clear Phase 1 checkpoint.
+- [ ] Changelog updated.
+- [ ] Navigation/page/source/reader regression tests updated.
+- [ ] Targeted tests pass.
+- [ ] Full relevant suite passes.
+- [ ] Typecheck passes.
+- [ ] Lint passes.
+- [ ] Production build passes.
+- [ ] Browser smoke test: navigation, source settings, Search independence, scroll ownership, FIFO reader.
+- [ ] Diff/status clean and scoped.
+- [ ] Clean checkpoint commit created.
 
 ---
 
-# Phase 2 — P1 Core Reading Experience
+# Phase 3 — P1 Core Reading Experience
 
 **Priority:** P1  
-**Difficulty order:** Easy → Hard  
-**Dependencies:** P0 shell/source/reader foundation complete
+**Difficulty:** Easy → Hard  
+**Dependencies:** P0 runtime/source/shell/reader foundations complete
 
-## 2.1 Library UX finishing
+## 3.1 Library UX finishing
 
-Finish and verify:
-
-- hierarchy/header aligned with Home;
+- Home-aligned hierarchy/header;
 - list/grid/compact behavior;
-- progress state;
-- update indicators;
+- progress/update indicators;
 - quick actions;
-- deterministic filtering/pagination if present;
-- mobile/tablet/desktop responsive behavior.
+- deterministic filtering/pagination;
+- mobile/tablet/desktop behavior;
+- explicit-bookmark semantics preserved.
 
-Preserve explicit-bookmark semantics.
+## 3.2 Bookmark / Bookcase UX finishing
 
-## 2.2 Bookmark / Bookcase UX finishing
+- reduce visual noise;
+- clear batch delete/edit behavior;
+- consistent compact/grid/list modes;
+- sticky controls only when useful;
+- rating/collection never auto-adds to Library.
 
-Finish and verify:
+## 3.3 Scoped reusable-component consolidation
 
-- remove unnecessary visual noise;
-- batch actions only where useful;
-- batch delete/edit behavior clear;
-- compact/grid/list consistency;
-- sticky controls only when they improve usability;
-- no auto-library side effects from rating/collection.
-
-## 2.3 Scoped reusable-component cleanup
-
-Only consolidate components now proven across the stabilized pages, including as needed:
+Consolidate only components proven by stabilized pages:
 
 - PageContainer;
 - SectionHeading;
 - PageToolbar;
-- search input;
+- Search Input;
 - tabs/segmented controls;
-- badges/chips;
+- badge/chip;
 - content cards;
 - list/grid toggle;
 - confirmation modal;
 - settings row;
 - loading/skeleton/empty/error states.
 
-Do **not** perform a repo-wide aesthetic refactor for its own sake.
+No aesthetic repo-wide rewrite.
 
-## 2.4 Reader navigation cleanup
-
-Build on P0 reader lifecycle:
+## 3.4 Reader navigation cleanup
 
 - next/previous chapter transition;
-- immediate navigation feedback;
-- reduce unnecessary toast notifications;
-- chapter list opens around/current chapter;
+- immediate feedback;
+- remove unnecessary toast noise;
+- chapter list centers/opens around current chapter;
 - compact chapter chips where appropriate;
-- drawer/sheet uses the same design language;
-- current reading position survives navigation correctly.
+- drawer/sheet language matches product;
+- reading position survives navigation.
 
-## 2.5 Shinigami / Amgadex reliability
+## 3.5 Shinigami / Amgadex reliability
 
 Audit adapters independently:
 
 - request path;
 - parsing;
-- source availability detection;
-- rate-limit/error handling;
+- runtime availability detection;
+- rate limit/error handling;
 - contract compatibility;
-- data normalization;
-- fallback behavior where applicable.
+- normalization;
+- fallback behavior.
 
-Do not weaken global `safeFetch` or global network policy to accommodate a single adapter unless evidence proves the global layer is wrong.
+Do not weaken global `safeFetch` for one adapter without evidence.
 
-## 2.6 Canonical multi-source hardening — foundation
+## 3.6 Canonical multi-source hardening — foundation
 
 Stabilize:
 
 - canonical title identity;
 - source aliases/title normalization;
-- default preferred source versus current session source;
-- source switch without losing title identity;
+- default preferred source vs current session source;
+- source switch without identity loss;
 - reading progress continuity;
 - bookmark continuity;
-- update-store cleanup/orphan prevention.
+- update-store orphan cleanup.
 
-### Dependency chain
+Dependency:
 
-`source registry → source reliability → canonical identity`
+```text
+runtime source authority → source reliability → canonical identity
+```
 
-## Phase 2 Verification Gate
+## Phase 3 Acceptance Gate
 
-- [x] Changelog updated.
-- [x] Library and Bookmark regression tests added/updated.
-- [x] Reader navigation tests added/updated.
-- [x] Source adapter tests/fixtures updated where applicable.
-- [x] Canonical identity/progress behavior tested.
-- [x] Targeted tests pass.
-- [x] Full test suite passes where available.
-- [x] Typecheck passes.
-- [x] Lint passes.
-- [x] Production build passes.
-- [x] Manual smoke test across mobile/tablet/desktop widths.
-- [x] Phase checkpoint committed.
+- [ ] Changelog updated.
+- [ ] Library/Bookmark tests updated.
+- [ ] Reader navigation tests updated.
+- [ ] Adapter tests/fixtures updated.
+- [ ] Canonical/progress behavior tested.
+- [ ] Targeted/full relevant tests pass.
+- [ ] Typecheck passes.
+- [ ] Lint passes.
+- [ ] Production build passes.
+- [ ] Responsive smoke test completed.
+- [ ] Clean checkpoint commit created.
 
 ---
 
-# Phase 3 — P2 Search Intelligence Foundation
+# Phase 4 — P2 Search Intelligence Foundation
 
 **Priority:** P2  
-**Difficulty order:** Medium → Hard  
+**Difficulty:** Medium → Hard  
 **Dependencies:** stable canonical model from P1
 
-## 3.1 Search tag parser + filter chips
+## 4.1 Search tag parser + filter chips
 
-Implement structured query/filter UX:
+- structured recognized tags/filters;
+- removable chips;
+- include/exclude semantics;
+- plain-text resilience;
+- persist URL/state only if it does not reintroduce stale-source bugs.
 
-- recognized tags/filters;
-- clear removable chips;
-- include/exclude semantics where planned;
-- resilient handling of plain-text queries;
-- URL/state persistence only if it improves navigation and does not reintroduce stale-source bugs.
+## 4.2 Alias / title normalization
 
-## 3.2 Alias / title normalization
-
-Build deterministic normalization for:
+Normalize:
 
 - alternate titles;
-- punctuation/casing differences;
+- punctuation/casing;
 - common romanization differences;
-- source-specific title formatting.
+- source-specific formatting.
 
-Keep canonical identity separate from fuzzy query matching.
+Canonical identity remains separate from fuzzy matching.
 
-## 3.3 Typo tolerance
+## 4.3 Typo tolerance
 
-Add typo-tolerant lexical matching without making exact search worse.
-
-Requirements:
-
-- exact/strong matches remain dominant;
-- typo tolerance is bounded;
+- exact/strong matches stay dominant;
+- bounded fuzzy matching;
 - short queries do not explode into unrelated results;
-- tests cover common misspellings and near-matches.
+- regression tests for misspellings/near matches.
 
-## 3.4 Persistent canonical catalog
+## 4.4 Persistent canonical catalog
 
-Move canonical/search identity from purely ephemeral runtime assumptions to durable storage appropriate for the current architecture.
-
-Design requirements:
+Introduce durable catalog/storage appropriate to current architecture:
 
 - stable IDs;
 - source mappings;
 - aliases;
-- metadata normalization;
+- normalized metadata;
 - migration strategy;
 - incremental updates;
-- no accidental dependence on Pro/backend features planned for P4.
+- no accidental dependency on paid/P4 features.
 
-## 3.5 Exact chapter fallback + durable migration
+## 4.5 Exact chapter fallback + durable migration
 
-Strengthen cross-source migration:
-
-- exact chapter mapping where possible;
-- deterministic fallback strategy;
-- durable migration snapshot/state, not only in-memory;
+- exact mapping where possible;
+- deterministic fallback;
+- durable migration state/snapshot;
 - progress remains attached to canonical title/chapter;
-- migration failure must not silently corrupt reading state.
+- failures do not silently corrupt reading state.
 
-## 3.6 Search/ranking quality test suite
+## 4.6 Search/ranking quality suite
 
-Create representative fixtures/cases for:
+Fixtures/cases:
 
 - exact title;
 - alias;
 - typo;
-- tag filters;
-- include/exclude filters;
-- multi-source duplicate titles;
+- tag/include/exclude;
+- duplicated multi-source title;
+- admin-disabled source;
 - unavailable source;
-- chapter/source migration edge cases.
+- user-disabled browsing source still searchable where allowed;
+- custom runtime source;
+- chapter/source migration edges.
 
-## Dependency chain
+## Phase 4 Acceptance Gate
 
-`canonical identity → normalization → persistent canonical catalog → migration/search quality`
-
-## Phase 3 Verification Gate
-
-- [x] Changelog updated.
-- [x] Search parser tests pass.
-- [x] Normalization and typo-tolerance tests pass.
-- [x] Canonical catalog migration tests pass.
-- [x] Ranking/query quality regression suite passes.
-- [x] Typecheck passes.
-- [x] Lint passes.
-- [x] Production build passes.
-- [x] Manual search smoke test performed with exact, typo, alias, and tag queries.
-- [x] Phase checkpoint committed.
+- [ ] Changelog updated.
+- [ ] Parser/normalization/typo tests pass.
+- [ ] Canonical catalog migration tests pass.
+- [ ] Ranking quality suite passes.
+- [ ] Typecheck passes.
+- [ ] Lint passes.
+- [ ] Production build passes.
+- [ ] Manual exact/alias/typo/tag/source-state search smoke test passes.
+- [ ] Clean checkpoint commit created.
 
 ---
 
-# Phase 4 — P3 Advanced Discovery
+# Phase 5 — P3 Advanced Discovery
 
 **Priority:** P3  
 **Difficulty:** Medium → Very Hard  
-**Dependencies:** persistent canonical catalog and search quality baseline
+**Dependencies:** persistent canonical catalog + search-quality baseline
 
-## 4.1 Related titles — lexical/metadata first
+## 5.1 Related titles — lexical/metadata first
 
-Implement a non-AI baseline using existing normalized metadata/tags.
+Implement deterministic non-AI baseline first.
 
-This provides measurable value before introducing embeddings.
+## 5.2 Smart collections — basic
 
-## 4.2 Smart collections — basic
+Use explainable metadata/history rules before semantic recommendation.
 
-Create deterministic collections from metadata/history rules where appropriate.
+## 5.3 Progressive indexing
 
-Do not introduce recommendation opacity before baseline behavior is understood.
+- incremental updates;
+- index version/migrations;
+- recovery path;
+- bounded serverless resource usage.
 
-## 4.3 Progressive indexing
+## 5.4 Embeddings / vector layer
 
-Introduce incremental/indexed search updates suitable for the current deployment constraints.
-
-Requirements:
-
-- no full expensive rebuild on every small update;
-- index versioning/migration strategy;
-- failure recovery;
-- bounded resource usage compatible with Vercel/serverless constraints.
-
-## 4.4 Embeddings / vector layer
-
-Only start after catalog/indexing is stable.
+Only after catalog/indexing stability.
 
 Define:
 
-- what content is embedded;
-- stable embedding IDs;
-- update/invalidation policy;
-- storage choice;
+- embedded content;
+- stable IDs;
+- invalidation/update policy;
+- storage;
 - cost/resource limits;
 - privacy/security boundaries.
 
-## 4.5 Hybrid lexical + semantic search
+## 5.5 Hybrid lexical + semantic search
 
-Combine lexical precision and semantic recall.
+Semantic recall must not bury obvious exact lexical matches.
 
-Lexical/exact signals must remain available so semantic search cannot bury obvious exact matches.
+## 5.6 Recommendation system
 
-## 4.6 Recommendation system
+Start with auditable signals and add semantic signals only where they improve measured quality.
 
-Build recommendations using explicit, auditable signals first, then semantic signals where useful.
+Dependency:
 
-Avoid coupling this prematurely to paid entitlement/AI infrastructure.
+```text
+persistent catalog → progressive indexing → embeddings → hybrid search → recommendations
+```
 
-## Dependency chain
+## Phase 5 Acceptance Gate
 
-`persistent catalog → progressive indexing → embeddings → hybrid search → recommendations`
-
-## Phase 4 Verification Gate
-
-- [x] Changelog updated.
-- [x] Related-title baseline tested.
-- [x] Index update/invalidation tests pass.
-- [x] Search quality suite still passes after semantic layer.
-- [x] Resource/cost implications documented.
-- [x] Typecheck passes.
-- [x] Lint passes.
-- [x] Production build passes.
-- [x] Phase checkpoint committed.
+- [ ] Changelog updated.
+- [ ] Related-title baseline tested.
+- [ ] Index invalidation/update tests pass.
+- [ ] Search quality suite remains green.
+- [ ] Cost/resource impact documented.
+- [ ] Typecheck passes.
+- [ ] Lint passes.
+- [ ] Production build passes.
+- [ ] Clean checkpoint commit created.
 
 ---
 
-# Phase 5 — P4 Backend, Entitlement, Admin, and AI
+# Phase 6 — P4 Backend, Entitlement, Admin Hardening, and AI
 
 **Priority:** P4  
 **Difficulty:** Medium → Very Hard  
-**Dependencies:** core free product and canonical/search foundation stable
+**Dependencies:** core free product + canonical/search foundation stable
 
-> P4 must not be pulled forward merely because individual pieces look easy. These features introduce backend/auth/security/product-tier coupling.
+> The Admin portal itself is no longer treated as a future greenfield foundation. Its current implementation/revamp is reconciled in Phase 0 and connected to runtime source behavior in Phase 1. P4 contains deeper auth/product/backend evolution rather than rebuilding the Admin UI.
 
-## 5.1 Admin foundation
+## 6.1 Admin auth/security hardening
 
-Create the minimal secure admin architecture needed for operational control.
-
-Potential areas:
-
-- admin route/shell;
-- authorization boundary;
-- source status/health views;
-- feature configuration;
-- audit visibility.
-
-Do not expose privileged controls client-side without server verification.
-
-## 5.2 Server-side auth / admin integration
-
-Implement the chosen backend/admin auth pattern using the project's selected platform.
-
-If Firebase Admin remains the chosen direction, ensure secrets and privileged operations are server-only.
-
-## 5.3 Source health/admin controls
-
-Expose useful operational state for source availability without conflating temporary errors with user source preferences.
-
-## 5.4 Feature flags
-
-Introduce flags only after admin/auth boundaries exist.
+Reassess the temporary/current admin authorization model after the core product is stable.
 
 Requirements:
 
-- safe defaults;
-- server authority where needed;
-- clear fallback behavior;
-- no hidden permanent forks of core UX.
+- privileged verification is server-authoritative;
+- no browser-embedded secret;
+- session/token handling appropriate to deployment;
+- auditability for sensitive mutations;
+- rate limiting/CSRF/request validation as applicable;
+- preserve existing admin UI instead of rebuilding it unnecessarily.
 
-## 5.5 Task 02 — Entitlement Foundation
+## 6.2 Feature flags
 
-Implement only now.
+Introduce only with safe defaults and clear server authority where required.
 
-Cover:
+## 6.3 Task 02 — Entitlement Foundation
 
 - Free vs Pro capability model;
 - server-authoritative entitlement;
 - UI consumption pattern;
-- offline/cache behavior where relevant;
-- migration/defaults for existing users;
-- tests preventing accidental privilege escalation or accidental locking of free features.
+- offline/cache semantics where relevant;
+- existing-user migration/defaults;
+- tests against privilege escalation and accidental free-feature locking.
 
-## 5.6 Free / Pro enforcement
+## 6.4 Free / Pro enforcement
 
-Apply entitlement checks to approved features only after the foundation is stable.
+Apply only to approved features after entitlement foundation is stable. Do not degrade completed free reader/search flows.
 
-Do not degrade the completed free reading/search experience.
+## 6.5 AI infrastructure
 
-## 5.7 AI infrastructure
-
-Introduce provider abstraction/security only when required by actual features.
-
-Requirements:
-
-- keys server-side;
+- server-side keys;
 - quotas/rate limits;
-- model/provider abstraction where justified;
 - cost observability;
-- failure fallback;
-- no direct privileged API key exposure to browser clients.
+- provider/model abstraction only where justified;
+- resilient failure path;
+- no browser exposure of privileged keys.
 
-## 5.8 AI Text V1
+## 6.6 AI Text V1
 
-Ship the lowest-risk/highest-value text feature first.
+Ship the lowest-risk/high-value optional text feature first.
 
-Keep it optional and non-blocking to normal reading/search flows.
-
-## 5.9 OCR / Translation
-
-Add only after AI/backend infrastructure is operationally safe.
-
-Requirements:
+## 6.7 OCR / Translation
 
 - explicit invocation;
-- clear source/target handling;
-- image/page limits;
+- input/page limits;
+- source/target clarity;
 - failure recovery;
 - cost controls;
-- do not silently mutate the original manga content.
+- no silent mutation of original content.
 
-## 5.10 Vision
+## 6.8 Vision
 
-Add broader vision features after OCR/translation infrastructure is proven.
+Add broader vision features only after OCR/translation infrastructure proves stable.
 
-## 5.11 AI-assisted recommendation
+## 6.9 AI-assisted recommendation
 
-This is last because it depends on both:
+Last because it depends on both P3 recommendation infrastructure and P4 secure AI infrastructure.
 
-- P3 discovery/recommendation infrastructure; and
-- P4 AI/backend infrastructure.
-
-## Dependency chains
+Dependency chains:
 
 ```text
-admin/auth → feature flags → entitlement → Free/Pro enforcement
+secure admin/backend authority → feature flags → entitlement → Free/Pro enforcement
 ```
 
 ```text
-canonical catalog/search → AI infrastructure → OCR/vision/AI recommendation
+canonical/search foundation + secure AI backend → AI Text → OCR/Translation → Vision → AI-assisted recommendation
 ```
 
-## Phase 5 Verification Gate (Deferred — Post-Core Scope)
-
-> Explicitly deferred per Section 0 Rule 8 and Section 5 design constraints. The core free reading, search, and library UX is preserved without introducing privileged backend/admin/entitlement dependencies.
+## Phase 6 Acceptance Gate
 
 - [ ] Changelog updated.
-- [ ] Authorization/entitlement tests pass.
-- [ ] Feature flag tests pass.
-- [ ] Server/client secret boundaries reviewed.
+- [ ] Admin auth/security tests pass.
+- [ ] Feature flag/entitlement tests pass.
+- [ ] Server/client secret boundary reviewed.
 - [ ] AI failure/rate-limit behavior tested.
-- [ ] Existing free core flows regression-tested.
+- [ ] Free core flows regression-tested.
 - [ ] Typecheck passes.
 - [ ] Lint passes.
 - [ ] Production build passes.
-- [ ] Phase checkpoint committed.
+- [ ] Clean checkpoint commit created.
 
 ---
 
-# Phase 6 — Final Integration, Main Merge, Production Deploy, Branch Cleanup
+# Phase 7 — Final Integration, Merge Main, Production Deploy, Branch Cleanup
 
 **Priority:** Final gate  
-**Dependencies:** All selected phases complete and verified
+**Dependencies:** All selected P0–P4 phases complete or explicitly deferred without violating dependencies
 
-## 6.1 Final full regression
+## 7.1 Final full regression
 
-Run the repository's complete validation suite:
+Run complete repository validation:
 
 - all tests;
 - typecheck;
 - lint;
 - production build;
-- any repo-specific static checks;
-- browser smoke tests for critical flows.
+- repo-specific static checks;
+- critical browser smoke tests.
 
 Critical manual flows:
 
-1. Home → Library → Bookmark → Search navigation.
-2. Active nav and route loading feedback.
-3. Search with enabled and disabled browsing sources.
-4. Search unavailable/down source behavior.
-5. Open manga → chapter → next/previous chapter.
-6. FIFO reader load under throttled network.
-7. Bookmark add/remove without rating/collection side effects.
-8. Multi-source switch preserving canonical identity/progress.
-9. Search alias/typo/tag behavior.
-10. Any admin/entitlement/AI flows implemented in P4.
+1. Admin login/auth boundary and dashboard load.
+2. Admin source disable → public source unavailable.
+3. Admin health probe can diagnose disabled source.
+4. Admin re-enable → public availability restored.
+5. Redis unavailable simulation/fallback → public app still works from built-ins.
+6. Home → Library → Bookmark → Search navigation.
+7. Active nav + route loading feedback.
+8. User browsing-disabled source remains searchable if admin/runtime available.
+9. Admin-disabled/down source is not readable/search-usable.
+10. Manga → chapter → next/previous chapter.
+11. FIFO reader under throttled network.
+12. Bookmark add/remove without rating/collection side effects.
+13. Multi-source switch preserves canonical identity/progress.
+14. Search exact/alias/typo/tag behavior.
+15. Any entitlement/AI features actually implemented.
 
-## 6.2 Changelog finalization
+## 7.2 Changelog finalization
 
-Ensure the changelog contains phase-by-phase entries describing:
+Ensure phase-by-phase entries cover:
 
-- added;
-- changed;
-- fixed;
+- Added;
+- Changed;
+- Fixed;
+- Security;
 - migrations;
-- notable behavior contracts;
-- known deferred items.
+- runtime/admin behavior;
+- deferred items and known issues.
 
-Do not hide unresolved defects; document them explicitly.
-
-## 6.3 Reconcile execution branch with latest `main`
+## 7.3 Reconcile roadmap branch with latest `main`
 
 Before final merge:
 
 1. fetch/prune again;
-2. inspect whether `main` changed during execution;
-3. integrate/rebase/merge safely according to repository convention;
-4. rerun the full verification if integration changes code.
+2. inspect whether `main` moved during execution;
+3. reconcile safely using repo convention;
+4. rerun full validation if integration changed code.
 
-## 6.4 Merge to `main`
+## 7.4 Merge to `main`
 
-Merge only after CI and local/cloud verification are green.
+Only after local and CI verification are green. Do not force-push protected `main`.
 
-Use the repository's established merge strategy. Do not force-push protected `main`.
+## 7.5 Production deploy
 
-## 6.5 Production deploy
+- verify Vercel production is built from intended final `main` SHA;
+- confirm deployment succeeds;
+- verify production domain;
+- run production smoke suite;
+- compare deployed SHA with merged `main` SHA where possible.
 
-After `main` is updated:
+If deployment fails, fix/revert intentionally before cleanup.
 
-- verify Vercel production deployment starts from the intended `main` commit;
-- confirm deployment success;
-- verify the production domain;
-- perform a production smoke test of the critical flows above;
-- compare deployed commit SHA with merged `main` SHA where possible.
+## 7.6 Remote + local branch cleanup
 
-If production deploy fails, fix/revert intentionally before branch cleanup.
+Only after production is confirmed healthy:
 
-## 6.6 Remote branch cleanup
+1. fetch/prune and enumerate remote branches;
+2. preserve `main` and protected/permanent branches;
+3. inspect every remaining work branch for unique commits;
+4. delete only fully merged/obsolete remote branches;
+5. delete corresponding obsolete local branches;
+6. prune stale remote-tracking refs;
+7. preserve/reconcile any branch containing unique unmerged work.
 
-Only after successful production verification:
-
-1. fetch/prune and list all remote branches;
-2. preserve `main` and any intentionally protected/permanent branches;
-3. verify each remaining feature/work branch is fully merged or its unique commits are preserved elsewhere;
-4. delete merged/obsolete remote branches, including roadmap/cloud/Codex work branches no longer needed;
-5. prune local remote-tracking refs;
-6. delete corresponding obsolete local branches where safe.
-
-**Never delete an unmerged branch merely to make the branch list clean.** If a branch has unique commits, reconcile/preserve them first.
+Never delete an unmerged branch merely to make the branch list clean.
 
 ## Final Acceptance Criteria
 
-- [x] Local and remote histories are reconciled.
-- [x] No known required cloud/Codex work was lost.
-- [x] Selected P0–P4 scope is complete or explicitly deferred with reason.
-- [x] Changelog is current.
-- [x] Tests pass.
-- [x] Typecheck passes.
-- [x] Lint passes.
-- [x] Production build passes.
-- [x] `main` contains the final approved work.
-- [x] Vercel production is deployed from the expected `main` commit.
-- [x] Production smoke test passes.
-- [x] Obsolete fully merged remote/local branches are deleted.
-- [x] `git status` is clean.
+- [ ] Authoritative initial SHA recorded.
+- [ ] Admin revamp preserved and integrated.
+- [ ] Runtime source wiring works with Redis fallback.
+- [ ] No client-bundled privileged admin credential.
+- [ ] Required P0–P4 scope complete or explicitly deferred with exact reason.
+- [ ] Changelog current.
+- [ ] Tests pass.
+- [ ] Typecheck passes.
+- [ ] Lint passes.
+- [ ] Production build passes.
+- [ ] `main` contains final approved work.
+- [ ] Vercel production is deployed from expected `main` SHA.
+- [ ] Production smoke tests pass.
+- [ ] Obsolete fully merged branches deleted.
+- [ ] Unique/unmerged branches preserved.
+- [ ] Final `git status` clean.
 
 ---
 
 # Master Dependency Map
 
 ```text
-Phase 0 — State reconciliation
+CURRENT CLOUD/CODEX ADMIN REVAMP
         ↓
+Phase 0 reconcile + verify + remove client-side secret risk
+        ↓
+P0 Runtime Source Merger
+        ↓
+P0 SourceManager Admin Kill-Switch
+        ↓
+P0 Public API + Home/Popular SSR wiring
+        ↓
+P0 Search/user-toggle/admin-toggle reconciliation
+        ↓
+P1 Source reliability
+        ↓
+P1 Canonical identity
+        ↓
+P2 Persistent canonical catalog
+        ↓
+P2/P3 Search intelligence
+```
+
+```text
 P0 Navigation foundation
         ↓
 P0 Page hierarchy
@@ -783,19 +954,7 @@ Scoped design-system consolidation
 ```
 
 ```text
-P0 Source registry/state
-        ↓
-P1 Source reliability
-        ↓
-P1 Canonical identity
-        ↓
-P2 Persistent canonical catalog
-        ↓
-P2 Search intelligence foundation
-```
-
-```text
-P0 Reader lifecycle/FIFO
+P0 Reader FIFO lifecycle
         ↓
 P1 Reader navigation
         ↓
@@ -815,7 +974,7 @@ Recommendations
 ```
 
 ```text
-Admin/server auth
+Admin auth/security hardening
         ↓
 Feature flags
         ↓
@@ -843,137 +1002,186 @@ AI-assisted recommendation
 # Execution Order Summary
 
 ```text
-PHASE 0 — SYNC / RECOVERY
+PHASE 0 — SYNC / ADMIN HANDOFF / RECOVERY [P0]
 01. Inspect local Git state
 02. Fetch/prune all remotes
-03. Inspect remote/cloud/Codex branches + PR/CI/deploy state
-04. Determine authoritative latest state by ancestry/content
-05. Preserve and reconcile unique local/remote work
-06. Establish clean execution branch
-07. Baseline test/typecheck/lint/build
+03. Inspect remote/cloud/Codex branches + PR/CI/Vercel
+04. Locate latest Admin Dashboard revamp
+05. Preserve/reconcile Admin revamp and any unique local/remote work
+06. Remove/block any client-bundled privileged admin credential
+07. Determine authoritative latest state by ancestry/content
+08. Create dedicated roadmap branch
+09. Baseline tests + typecheck + lint + production build
 
-P0
-08. Repo/PR/CI hygiene
-09. Navigation instant active-state
-10. Route loading/progress feedback
-11. Single scroll owner + duplicate header/page hierarchy
-12. Source registry/search-state reconciliation
-13. Reader FIFO image queue
+PHASE 1 — ADMIN RUNTIME SOURCE WIRING [P0]
+10. Runtime source merger service + tests
+11. SourceManager admin kill-switch + diagnostic bypass
+12. Public /api/sources runtime wiring
+13. Home SSR runtime wiring
+14. Popular SSR runtime wiring
+15. Search/admin/user-toggle contract regression coverage
+16. Phase validation + changelog + checkpoint
 
-P1
-14. Library UX finishing
-15. Bookmark UX finishing
-16. Scoped reusable-component consolidation
-17. Reader navigation cleanup
-18. Shinigami/Amgadex reliability
-19. Canonical identity hardening
-20. Source-switch/progress/session behavior
+PHASE 2 — CORE STABILITY [P0]
+17. Repo/PR/CI hygiene
+18. Navigation instant active-state
+19. Route loading/progress feedback
+20. Single scroll owner + duplicate header/page hierarchy
+21. Source registry/search-state reconciliation on runtime authority
+22. Reader FIFO image queue
+23. Phase validation + changelog + checkpoint
 
-P2
-21. Search tag parser + chips
-22. Alias/title normalization
-23. Typo tolerance
-24. Persistent canonical catalog
-25. Exact chapter fallback + durable migration
-26. Search/ranking quality tests
+PHASE 3 — CORE READING [P1]
+24. Library UX finishing
+25. Bookmark UX finishing
+26. Scoped reusable-component consolidation
+27. Reader navigation cleanup
+28. Shinigami/Amgadex reliability
+29. Canonical identity hardening
+30. Source-switch/progress/session behavior
+31. Phase validation + changelog + checkpoint
 
-P3
-27. Related titles lexical baseline
-28. Smart collections
-29. Progressive indexing
-30. Embeddings/vector layer
-31. Hybrid lexical-semantic search
-32. Recommendation system
+PHASE 4 — SEARCH FOUNDATION [P2]
+32. Search tag parser + chips
+33. Alias/title normalization
+34. Typo tolerance
+35. Persistent canonical catalog
+36. Exact chapter fallback + durable migration
+37. Search/ranking quality suite
+38. Phase validation + changelog + checkpoint
 
-P4
-33. Admin foundation
-34. Server-side auth/admin
-35. Source health/admin controls
-36. Feature flags
-37. Task 02 entitlement foundation
-38. Free/Pro enforcement
-39. AI infrastructure
-40. AI Text V1
-41. OCR/translation
-42. Vision
-43. AI-assisted recommendation
+PHASE 5 — ADVANCED DISCOVERY [P3]
+39. Related titles lexical baseline
+40. Smart collections
+41. Progressive indexing
+42. Embeddings/vector layer
+43. Hybrid lexical-semantic search
+44. Recommendation system
+45. Phase validation + changelog + checkpoint
+
+PHASE 6 — BACKEND / ENTITLEMENT / AI [P4]
+46. Admin auth/security hardening
+47. Feature flags
+48. Task 02 entitlement foundation
+49. Free/Pro enforcement
+50. AI infrastructure
+51. AI Text V1
+52. OCR/translation
+53. Vision
+54. AI-assisted recommendation
+55. Phase validation + changelog + checkpoint
 
 FINAL
-44. Full regression + changelog finalization
-45. Reconcile with latest main
-46. Merge to main
-47. Verify Vercel production deployment
-48. Production smoke test
-49. Delete obsolete fully merged remote/local branches
-50. Final clean-state verification
+56. Complete regression + final changelog
+57. Fetch/reconcile latest main again
+58. Merge roadmap branch to main
+59. Verify CI
+60. Verify Vercel production deployment SHA
+61. Production smoke tests
+62. Inspect all remaining branches for unique commits
+63. Delete obsolete fully merged remote branches
+64. Delete corresponding obsolete local branches
+65. Prune refs + final clean-state verification
 ```
 
 ---
 
 # Executor Prompt
 
-Copy this prompt to the coding executor/agent together with this Markdown file:
+Copy this prompt to the coding executor together with this Markdown file:
 
 ```text
-You are executing the Yomirra master roadmap defined in `docs/yomirra-master-execution-roadmap.md`.
+Execute `docs/yomirra-master-execution-roadmap.md` as the single source of truth for the remaining Yomirra roadmap.
 
-Treat that Markdown file as the single source of truth for task order, dependencies, acceptance gates, and final delivery requirements.
+IMPORTANT CONTEXT:
+Recent Yomirra development was performed in cloud/Codex. The local checkout may be stale. In addition, an Admin Dashboard revamp is being completed in another Codex/cloud workstream. That Admin revamp is upstream work: do not recreate it from scratch. Locate its actual latest Git branch/commit/PR and reconcile it first.
 
-CRITICAL START CONDITION:
-The local repository may be stale because recent work was performed in the cloud with Codex. DO NOT begin new implementation immediately.
+Do not begin new production implementation until Phase 0 is complete.
 
-Start with Phase 0 exactly as written:
-1. Inspect the current local Git state, uncommitted work, branches, remotes, HEAD, and recent history.
-2. Fetch all remote refs with prune.
-3. Inspect `origin/main`, all relevant remote feature branches, recent Codex/cloud branches, open/recent PRs when accessible, CI state, and latest Vercel deployment state.
-4. Determine the true latest/most complete authoritative state using commit ancestry, unique commits, and actual content — not timestamps alone.
-5. Preserve any unique local work. Never blindly reset or overwrite it.
-6. If remote/cloud work is newer than local and should be retained, reconcile it first.
-7. Identify work from previous tasks that is already finished and VERIFY it instead of reimplementing it.
-8. Only after local and remote/cloud state are reconciled, create one dedicated execution branch from the correct authoritative base and begin this roadmap.
+PHASE 0 — MANDATORY START:
+1. Inspect current local branch, HEAD, git status, untracked files, local branches, remotes, and recent history.
+2. Fetch all remotes with prune.
+3. Inspect origin/main, relevant remote feature branches, recent Codex/cloud branches, PR state where accessible, CI, and latest Vercel deployment.
+4. Locate the latest Admin Dashboard revamp and compare it against local and main using commit ancestry, unique commits, and actual content. Do not choose based on timestamps alone.
+5. Preserve every unique local or remote commit. Never blindly reset, force-push, or overwrite work.
+6. Reconcile the completed/latest valid Admin revamp into the authoritative base before executing the new runtime-source plan. If it is already merged, verify it instead of reimplementing it.
+7. Inspect the Admin auth boundary before production work. No privileged/default admin passkey, token, or secret may be embedded in a Client Component/browser bundle. Remove or safely replace any such fallback while preserving server authorization.
+8. Inspect previous Yomirra work and mark already-completed roadmap items VERIFIED/DONE instead of repeating them.
+9. Once the authoritative state is reconciled, create one dedicated roadmap execution branch from that base.
+10. Run baseline relevant tests, typecheck, lint, and production build before new production changes. Document any failure proven to predate this roadmap.
 
-EXECUTION RULES:
-- Execute phases strictly in order unless the roadmap explicitly permits otherwise.
-- Respect every dependency in the document.
+NEXT, EXECUTE PHASE 1 BEFORE THE OTHER SOURCE/SEARCH TASKS:
+Implement the Runtime Source Overrides & Public Frontend Wiring defined in the roadmap:
+- create/verify a server-only runtime source merger that overlays Redis core overrides and custom sources onto the hardcoded client-safe sourceRegistry;
+- maintain immediate fallback to the built-in sourceRegistry when Redis is cold/offline/slow/malformed;
+- enforce the admin source kill-switch in SourceManager for public resolution;
+- allow only authorized internal admin diagnostics to bypass the kill-switch via an explicit allowDisabled option;
+- wire GET /api/sources to effective runtime metadata;
+- wire Home and Popular SSR source selection to runtime metadata;
+- keep source-registry.ts client-safe and preserve all built-in adapters;
+- preserve the distinction between admin kill-switch and user browsing toggles: Search ignores ordinary user browsing disable state, but an admin-disabled or genuinely unavailable source is not publicly usable;
+- reconcile exact code against the current repo/types rather than blindly pasting stale snippets from an older plan.
+
+GLOBAL EXECUTION RULES:
+- Execute all remaining phases strictly in roadmap order and respect dependency chains.
 - Do not redo completed work.
-- Do not make unrelated refactors outside the active phase.
-- Preserve Yomirra's existing bookmark/search/source/canonical behavior contracts.
-- Use TDD/regression tests for behavior changes where practical.
-- Do not introduce unnecessary packages.
-- Do not weaken global infrastructure to fix a single source adapter without evidence.
+- Do not introduce unrelated refactors.
+- Preserve explicit bookmark semantics and canonical/progress data.
+- Do not weaken global safeFetch/network/security policy to fix one source without evidence.
+- Use TDD/regression coverage where practical and mandatory on high-risk behavior.
+- Do not add unnecessary dependencies.
 - Do not add Codex/GPT bot comments to PRs.
-- Keep implementation and commit messages professional and repo-native.
 
-PHASE GATE — MANDATORY AFTER EVERY PHASE:
-Before continuing to the next phase:
-1. update the existing project changelog with what was added/changed/fixed and any migration/deferred notes;
-2. run relevant targeted tests;
-3. run the full test suite where defined/practical;
+MANDATORY PHASE GATE — AFTER EVERY PHASE:
+1. update CHANGELOG.md (or the repository's canonical changelog) with added/changed/fixed/security/migration/deferred notes for that phase;
+2. run targeted tests;
+3. run the full relevant test suite where defined/practical;
 4. run typecheck;
 5. run lint;
 6. run the production build;
-7. inspect the diff and Git status for accidental/unrelated changes;
-8. fix failures introduced by the phase;
-9. create a clear phase checkpoint commit only when the phase is clean.
+7. manually smoke-test the critical behavior changed in that phase;
+8. inspect git diff/status for accidental unrelated changes;
+9. fix regressions introduced by the phase;
+10. create a clean checkpoint commit;
+11. only then continue to the next phase.
 
-If a test/build failure already existed before your changes, prove/document that baseline rather than silently claiming the phase caused or fixed it.
+Do not stop for routine implementation decisions. Make the safest decision supported by repository evidence. Stop only for a genuine blocker involving data-loss risk, unavailable credentials/access, security ambiguity, or another destructive uncertainty.
 
-Do not stop merely because an item is difficult. Work through the roadmap sequentially, but if an item is impossible because of a real external blocker (missing credential/service/access), document the blocker precisely, keep the repository safe, and continue only where doing so does not violate dependencies.
+FINALIZATION — ONLY AFTER ALL SELECTED P0–P4 PHASES PASS:
+1. Run complete regression tests, typecheck, lint, production build, and final changelog review.
+2. Fetch/prune again and inspect whether main changed during execution.
+3. Safely reconcile the roadmap branch with latest main and rerun validation if code changed.
+4. Merge the completed roadmap branch into main using the repository's normal safe merge strategy. Do not force-push protected main.
+5. Verify CI is green.
+6. Verify Vercel production deployed the intended final main SHA.
+7. Perform production smoke tests, including:
+   - Admin access/security boundary;
+   - Admin source disable/re-enable;
+   - Admin diagnostic probe on a disabled source;
+   - Redis runtime fallback;
+   - Home/Popular runtime source behavior;
+   - Search independence from user browsing toggles while respecting admin kill-switch/unavailable state;
+   - navigation/loading behavior;
+   - Library/Bookmark;
+   - reader FIFO + chapter navigation;
+   - canonical source switching/progress;
+   - search exact/alias/typo/tag behavior;
+   - any entitlement/AI features actually implemented.
+8. Only after production is healthy, inspect every remaining remote branch for unique commits.
+9. Delete only obsolete fully merged remote branches and corresponding obsolete local branches.
+10. Preserve main, protected/permanent branches, and any branch with unique unmerged commits; reconcile unique work before deletion.
+11. Prune stale remote-tracking refs.
+12. Finish with clean git status.
 
-FINALIZATION:
-After all selected roadmap phases are complete:
-1. run the complete regression suite and production build;
-2. finalize the changelog;
-3. fetch/prune again and reconcile any new changes on `main`;
-4. rerun verification if reconciliation changes code;
-5. merge the completed roadmap branch into `main` using the repository's normal safe merge strategy;
-6. verify CI;
-7. verify the Vercel production deployment corresponds to the intended `main` commit;
-8. perform production smoke tests for navigation, Library/Bookmark, Search/source behavior, reader FIFO and chapter navigation, canonical progress/source switching, and any P4/admin/entitlement/AI features that were actually implemented;
-9. only after production is confirmed healthy, inspect all remaining remote branches;
-10. delete obsolete fully merged remote branches and matching obsolete local branches, preserving `main`, protected/permanent branches, and any branch that still contains unique unmerged commits;
-11. prune remote-tracking refs;
-12. finish with a clean `git status` and report the final main SHA, deployed SHA/status, branches deleted, tests/build results, and any explicitly deferred items.
-
-Do not ask for confirmation between normal implementation steps. Make the safest reasonable decision from the repository evidence and continue. Only stop for a true blocker that would risk data loss, credentials/security, or destructive ambiguity.
+FINAL REPORT MUST INCLUDE:
+- authoritative starting SHA selected in Phase 0;
+- Admin revamp SHA/PR/branch that was reconciled or verified;
+- final main SHA;
+- deployed production SHA/status;
+- phases completed;
+- test/typecheck/lint/build results by phase;
+- production smoke-test result;
+- remote/local branches deleted;
+- any deferred item and exact reason;
+- confirmation that no privileged admin credential is exposed in the client bundle.
 ```

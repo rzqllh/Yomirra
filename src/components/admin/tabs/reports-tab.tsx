@@ -1,25 +1,32 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
-  Flag,
   ArrowSquareOut,
-  Trash,
-  Lightning,
+  BookOpen,
   Check,
   CircleNotch,
-  CheckCircle,
-  WarningCircle,
-  BookOpen,
-  Image,
-  Question,
-  Wrench,
-  Clock,
-  MagnifyingGlass,
-  SealCheck,
+  Flag,
   Hash,
+  Image,
+  Lightning,
+  MagnifyingGlass,
+  Question,
+  SealCheck,
+  Trash,
+  Wrench,
 } from "@phosphor-icons/react";
 import type { UserReport } from "@/server/lib/ops/admin-report-service";
+import {
+  EmptyState,
+  FeedbackBanner,
+  MetricCell,
+  OpsButton,
+  OpsCard,
+  OpsSectionHeader,
+  StatusPill,
+  cx,
+} from "../components/admin-ui";
 
 interface ReportsTabProps {
   reports: UserReport[];
@@ -27,68 +34,68 @@ interface ReportsTabProps {
   getToken: () => Promise<string | null>;
 }
 
-const TYPE_CONFIG: Record<string, { label: string; icon: React.ReactNode; color: string }> = {
-  chapter_error: {
-    label: "Chapter Error",
-    icon: <BookOpen className="w-4 h-4" />,
-    color: "text-amber-400 bg-amber-500/10 border-amber-500/30",
-  },
-  image_broken: {
-    label: "Gambar Rusak",
-    icon: <Image className="w-4 h-4" />,
-    color: "text-red-400 bg-red-500/10 border-red-500/30",
-  },
-  source_broken: {
-    label: "Source Bermasalah",
-    icon: <Wrench className="w-4 h-4" />,
-    color: "text-orange-400 bg-orange-500/10 border-orange-500/30",
-  },
-  other: {
-    label: "Lainnya",
-    icon: <Question className="w-4 h-4" />,
-    color: "text-zinc-400 bg-zinc-500/10 border-zinc-500/30",
-  },
+const TYPE_CONFIG: Record<string, { label: string; icon: React.ReactNode; tone: "neutral" | "warning" | "danger" }> = {
+  chapter_error: { label: "Chapter error", icon: <BookOpen className="h-4 w-4" />, tone: "warning" },
+  image_broken: { label: "Gambar rusak", icon: <Image className="h-4 w-4" />, tone: "danger" },
+  source_broken: { label: "Source bermasalah", icon: <Wrench className="h-4 w-4" />, tone: "danger" },
+  other: { label: "Lainnya", icon: <Question className="h-4 w-4" />, tone: "neutral" },
 };
 
-const STATUS_CONFIG: Record<string, { label: string; icon: React.ReactNode; badge: string }> = {
-  pending: {
-    label: "Pending",
-    icon: <Clock className="w-3.5 h-3.5" />,
-    badge: "bg-amber-500/15 text-amber-300 border-amber-500/30",
-  },
-  investigating: {
-    label: "Investigating",
-    icon: <MagnifyingGlass className="w-3.5 h-3.5" />,
-    badge: "bg-blue-500/15 text-blue-300 border-blue-500/30",
-  },
-  resolved: {
-    label: "Resolved",
-    icon: <SealCheck className="w-3.5 h-3.5" />,
-    badge: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
-  },
-};
+function ticketId(id: string) {
+  return id.replace("rep_", "").split("_").pop()?.toUpperCase() ?? id.slice(-5).toUpperCase();
+}
 
-function TicketId({ id }: { id: string }) {
-  // Extract short ticket number from rep_TIMESTAMP_RAND
-  const short = id.replace("rep_", "").split("_").pop()?.toUpperCase() ?? id.slice(-5).toUpperCase();
-  return (
-    <span className="flex items-center gap-1 font-mono text-[10px] text-zinc-500">
-      <Hash className="w-3 h-3" />
-      {short}
-    </span>
-  );
+function reportTone(status: string): "neutral" | "warning" | "success" | "brand" {
+  if (status === "pending") return "warning";
+  if (status === "resolved") return "success";
+  if (status === "investigating") return "brand";
+  return "neutral";
+}
+
+function reportLabel(status: string) {
+  if (status === "pending") return "Pending";
+  if (status === "investigating") return "Investigating";
+  if (status === "resolved") return "Resolved";
+  return status;
+}
+
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat("id-ID", {
+    timeZone: "Asia/Jakarta",
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
 }
 
 export function ReportsTab({ reports, onRefresh, getToken }: ReportsTabProps) {
-  const [filter, setFilter] = useState<string>("ALL");
+  const [filter, setFilter] = useState("ALL");
+  const [query, setQuery] = useState("");
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<{ text: string; ok: boolean } | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const filteredReports = reports.filter((r) => {
-    if (filter === "ALL") return true;
-    return r.status.toLowerCase() === filter.toLowerCase();
-  });
+  const counts = useMemo(
+    () => ({
+      pending: reports.filter((report) => report.status === "pending").length,
+      investigating: reports.filter((report) => report.status === "investigating").length,
+      resolved: reports.filter((report) => report.status === "resolved").length,
+    }),
+    [reports],
+  );
+
+  const filteredReports = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    return reports.filter((report) => {
+      const statusMatch = filter === "ALL" || report.status.toLowerCase() === filter.toLowerCase();
+      if (!statusMatch) return false;
+      if (!normalized) return true;
+      return [report.mangaTitle, report.mangaId, report.chapterTitle, report.sourceId, report.detail, report.category, report.type, report.id]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(normalized));
+    });
+  }, [filter, query, reports]);
 
   const handleUpdateStatus = async (reportId: string, status: "pending" | "investigating" | "resolved") => {
     setActionLoadingId(`${reportId}-${status}`);
@@ -105,13 +112,13 @@ export function ReportsTab({ reports, onRefresh, getToken }: ReportsTabProps) {
       });
       const data = await res.json();
       if (res.ok) {
-        setFeedback({ text: `Tiket #${reportId.slice(-5).toUpperCase()} diupdate ke ${status}`, ok: true });
+        setFeedback({ text: `Tiket #${ticketId(reportId)} diubah ke ${reportLabel(status)}.`, ok: true });
         await onRefresh();
       } else {
-        setFeedback({ text: data.error || "Gagal mengubah status", ok: false });
+        setFeedback({ text: data.error || "Status tiket gagal diperbarui.", ok: false });
       }
     } catch {
-      setFeedback({ text: "Gagal menghubungkan ke server", ok: false });
+      setFeedback({ text: "Server tidak dapat dihubungi saat memperbarui tiket.", ok: false });
     } finally {
       setActionLoadingId(null);
     }
@@ -120,7 +127,7 @@ export function ReportsTab({ reports, onRefresh, getToken }: ReportsTabProps) {
   const handleReportAction = async (
     reportId: string,
     sourceId?: string,
-    action: "flush_source_cache" | "probe_source" = "probe_source"
+    action: "flush_source_cache" | "probe_source" = "probe_source",
   ) => {
     setActionLoadingId(`${reportId}-${action}`);
     setFeedback(null);
@@ -136,292 +143,172 @@ export function ReportsTab({ reports, onRefresh, getToken }: ReportsTabProps) {
       });
       const data = await res.json();
       if (res.ok) {
-        setFeedback({ text: data.message || "Tindakan berhasil dieksekusi", ok: true });
+        setFeedback({ text: data.message || "Tindakan operasional selesai.", ok: true });
         await onRefresh();
       } else {
-        setFeedback({ text: data.error || "Gagal mengeksekusi tindakan", ok: false });
+        setFeedback({ text: data.error || "Tindakan operasional gagal.", ok: false });
       }
     } catch {
-      setFeedback({ text: "Gagal menghubungkan ke server", ok: false });
+      setFeedback({ text: "Server tidak dapat dihubungi saat menjalankan tindakan.", ok: false });
     } finally {
       setActionLoadingId(null);
     }
   };
 
-  const pendingCount = reports.filter((r) => r.status === "pending").length;
-
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-zinc-900/40 border border-zinc-800/80 rounded-xl">
-        <div>
-          <h2 className="text-base font-semibold text-zinc-100 flex items-center gap-2">
-            <Flag className="w-5 h-5 text-amber-400" />
-            Inbox Laporan Pengguna
-            {pendingCount > 0 && (
-              <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-full">
-                {pendingCount} baru
-              </span>
-            )}
-          </h2>
-          <p className="text-xs text-zinc-400 mt-1">
-            Tiket masuk dari reader — gambar rusak, chapter error, atau source bermasalah.
-          </p>
+    <div className="space-y-6">
+      <OpsSectionHeader
+        eyebrow="Reader operations"
+        title="Reader Reports"
+        description="Inbox untuk triage laporan gambar rusak, chapter error, dan source bermasalah dari pembaca."
+      />
+
+      {feedback ? <FeedbackBanner message={feedback.text} ok={feedback.ok} onDismiss={() => setFeedback(null)} /> : null}
+
+      <OpsCard className="overflow-hidden">
+        <div className="grid divide-y divide-zinc-800/80 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+          <MetricCell label="Pending" value={counts.pending} hint="Belum masuk investigasi" tone={counts.pending ? "warning" : "neutral"} />
+          <MetricCell label="Investigating" value={counts.investigating} hint="Sedang ditangani operator" tone={counts.investigating ? "brand" : "neutral"} />
+          <MetricCell label="Resolved" value={counts.resolved} hint={`${reports.length} total tiket`} tone="success" />
         </div>
+      </OpsCard>
 
-        {/* Filter Pills */}
-        <div className="flex flex-wrap gap-1 p-1 bg-zinc-950/80 border border-zinc-800/80 rounded-xl">
-          {["ALL", "pending", "investigating", "resolved"].map((status) => (
-            <button
-              key={status}
-              onClick={() => setFilter(status)}
-              className={`px-2.5 py-1 text-xs rounded-lg font-medium uppercase transition ${
-                filter === status
-                  ? "bg-zinc-800 text-zinc-100 shadow-sm"
-                  : "text-zinc-400 hover:text-zinc-200"
-              }`}
-            >
-              {status}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {feedback && (
-        <div
-          className={`flex items-center gap-2 p-3 rounded-xl border text-xs ${
-            feedback.ok
-              ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
-              : "bg-red-500/10 border-red-500/30 text-red-300"
-          }`}
-        >
-          {feedback.ok ? (
-            <CheckCircle className="w-4 h-4 shrink-0" />
-          ) : (
-            <WarningCircle className="w-4 h-4 shrink-0" />
-          )}
-          <span>{feedback.text}</span>
-        </div>
-      )}
-
-      {/* Ticket List */}
-      {filteredReports.length === 0 ? (
-        <div className="p-12 text-center bg-zinc-900/30 border border-zinc-800/60 rounded-xl">
-          <Flag className="w-8 h-8 text-zinc-700 mx-auto mb-3" />
-          <p className="text-zinc-400 text-sm font-medium">Tidak ada tiket</p>
-          <p className="text-zinc-600 text-xs mt-1">Filter: {filter}</p>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {filteredReports.map((report) => {
-            const typeConf = TYPE_CONFIG[report.type] ?? TYPE_CONFIG.other;
-            const statusConf = STATUS_CONFIG[report.status] ?? STATUS_CONFIG.pending;
-            const isExpanded = expandedId === report.id;
-
-            return (
-              <div
-                key={report.id}
-                className={`bg-zinc-900/60 border rounded-xl overflow-hidden transition-all ${
-                  report.status === "resolved"
-                    ? "border-zinc-800/50 opacity-70"
-                    : report.status === "investigating"
-                      ? "border-blue-500/20"
-                      : "border-zinc-800"
-                }`}
-              >
-                {/* Ticket Header — always visible */}
-                <button
-                  onClick={() => setExpandedId(isExpanded ? null : report.id)}
-                  className="w-full text-left p-4 flex items-start gap-3 hover:bg-zinc-800/20 transition"
-                >
-                  {/* Type icon pill */}
-                  <div className={`shrink-0 flex items-center justify-center w-8 h-8 rounded-lg border ${typeConf.color}`}>
-                    {typeConf.icon}
-                  </div>
-
-                  <div className="flex-1 min-w-0 space-y-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      {/* Status badge */}
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${statusConf.badge}`}>
-                        {statusConf.icon}
-                        {statusConf.label}
-                      </span>
-
-                      {/* Type label */}
-                      <span className="text-xs font-semibold text-zinc-200">
-                        {typeConf.label}
-                      </span>
-
-                      {/* Source badge */}
-                      {report.sourceId && (
-                        <span className="px-1.5 py-0.5 rounded bg-zinc-800 text-[10px] font-mono text-zinc-400 uppercase">
-                          {report.sourceId}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Manga title or ID */}
-                    <p className="text-sm font-semibold text-zinc-100 truncate">
-                      {report.mangaTitle || report.mangaId || "—"}
-                    </p>
-
-                    {/* Chapter if available */}
-                    {report.chapterTitle && (
-                      <p className="text-xs text-zinc-400 truncate">{report.chapterTitle}</p>
-                    )}
-                  </div>
-
-                  {/* Right: ticket ID + time */}
-                  <div className="shrink-0 text-right space-y-1">
-                    <TicketId id={report.id} />
-                    <p className="text-[10px] text-zinc-500">
-                      {new Date(report.createdAt).toLocaleString("id-ID", {
-                        timeZone: "Asia/Jakarta",
-                        day: "2-digit",
-                        month: "short",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })} WIB
-                    </p>
-                  </div>
-                </button>
-
-                {/* Expanded detail body */}
-                {isExpanded && (
-                  <div className="border-t border-zinc-800/60 px-4 pb-4 pt-3 space-y-4">
-                    {/* Detail block */}
-                    <div className="space-y-2 text-xs">
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                        <div className="bg-zinc-950/50 rounded-lg p-2.5 border border-zinc-800/60">
-                          <p className="text-zinc-500 mb-0.5">Kategori</p>
-                          <p className="text-zinc-200 font-medium">{report.category || report.type}</p>
-                        </div>
-                        {report.sourceId && (
-                          <div className="bg-zinc-950/50 rounded-lg p-2.5 border border-zinc-800/60">
-                            <p className="text-zinc-500 mb-0.5">Source</p>
-                            <p className="text-zinc-200 font-mono uppercase">{report.sourceId}</p>
-                          </div>
-                        )}
-                        {typeof report.pageIndex === "number" && (
-                          <div className="bg-zinc-950/50 rounded-lg p-2.5 border border-zinc-800/60">
-                            <p className="text-zinc-500 mb-0.5">Halaman</p>
-                            <p className="text-zinc-200 font-medium">#{report.pageIndex + 1}</p>
-                          </div>
-                        )}
-                        {report.resolvedAt && (
-                          <div className="bg-zinc-950/50 rounded-lg p-2.5 border border-zinc-800/60">
-                            <p className="text-zinc-500 mb-0.5">Diselesaikan</p>
-                            <p className="text-zinc-200 font-medium">
-                              {new Date(report.resolvedAt).toLocaleString("id-ID", {
-                                timeZone: "Asia/Jakarta",
-                                day: "2-digit",
-                                month: "short",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })} WIB
-                            </p>
-                          </div>
-                        )}
-                      </div>
-
-                      {report.detail && (
-                        <div className="bg-zinc-950/50 rounded-lg p-3 border border-zinc-800/60">
-                          <p className="text-zinc-500 mb-1 text-[10px] uppercase tracking-wide">Catatan dari pengguna</p>
-                          <p className="text-zinc-300 leading-relaxed">{report.detail}</p>
-                        </div>
-                      )}
-
-                      {/* Technical IDs */}
-                      <div className="text-[10px] text-zinc-600 font-mono space-y-0.5 pt-1">
-                        <p>Tiket ID: {report.id}</p>
-                        {report.mangaId && <p>Manga ID: {report.mangaId}</p>}
-                        {report.chapterId && <p>Chapter ID: {report.chapterId}</p>}
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-zinc-800/40">
-                      {report.chapterId && report.sourceId && (
-                        <a
-                          href={`/reader/${report.sourceId}/${encodeURIComponent(report.chapterId)}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-medium rounded-lg transition"
-                        >
-                          <ArrowSquareOut className="w-3.5 h-3.5 text-zinc-400" />
-                          Inspeksi Reader
-                        </a>
-                      )}
-
-                      {report.sourceId && (
-                        <>
-                          <button
-                            onClick={() => handleReportAction(report.id, report.sourceId, "flush_source_cache")}
-                            disabled={!!actionLoadingId}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-zinc-200 text-xs font-medium rounded-lg transition"
-                          >
-                            {actionLoadingId === `${report.id}-flush_source_cache` ? (
-                              <CircleNotch className="w-3.5 h-3.5 animate-spin" />
-                            ) : (
-                              <Trash className="w-3.5 h-3.5 text-red-400" />
-                            )}
-                            Flush Cache
-                          </button>
-
-                          <button
-                            onClick={() => handleReportAction(report.id, report.sourceId, "probe_source")}
-                            disabled={!!actionLoadingId}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-zinc-200 text-xs font-medium rounded-lg transition"
-                          >
-                            {actionLoadingId === `${report.id}-probe_source` ? (
-                              <CircleNotch className="w-3.5 h-3.5 animate-spin" />
-                            ) : (
-                              <Lightning className="w-3.5 h-3.5 text-emerald-400" />
-                            )}
-                            Probe Source
-                          </button>
-                        </>
-                      )}
-
-                      <div className="ml-auto flex gap-2">
-                        {report.status === "pending" && (
-                          <button
-                            onClick={() => handleUpdateStatus(report.id, "investigating")}
-                            disabled={!!actionLoadingId}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600/80 hover:bg-blue-600 disabled:opacity-50 text-white text-xs font-medium rounded-lg transition"
-                          >
-                            {actionLoadingId === `${report.id}-investigating` ? (
-                              <CircleNotch className="w-3.5 h-3.5 animate-spin" />
-                            ) : (
-                              <MagnifyingGlass className="w-3.5 h-3.5" />
-                            )}
-                            Investigasi
-                          </button>
-                        )}
-
-                        {report.status !== "resolved" && (
-                          <button
-                            onClick={() => handleUpdateStatus(report.id, "resolved")}
-                            disabled={!!actionLoadingId}
-                            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600/80 hover:bg-emerald-600 disabled:opacity-50 text-white text-xs font-medium rounded-lg transition"
-                          >
-                            {actionLoadingId === `${report.id}-resolved` ? (
-                              <CircleNotch className="w-3.5 h-3.5 animate-spin" />
-                            ) : (
-                              <Check className="w-3.5 h-3.5" />
-                            )}
-                            Selesaikan
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
+      <OpsCard className="overflow-hidden">
+        <div className="border-b border-zinc-800/80 px-4 py-4 sm:px-5">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-xs font-medium text-zinc-300">Inbox</p>
+              <p className="mt-1 text-[11px] text-zinc-600">{filteredReports.length} tiket pada view saat ini.</p>
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <div className="relative min-w-[220px]">
+                <MagnifyingGlass className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-700" />
+                <input
+                  type="search"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  placeholder="Cari judul, source, tiket…"
+                  className="h-9 w-full rounded-xl border border-zinc-800 bg-zinc-950/70 pl-8 pr-3 text-[11px] text-zinc-200 outline-none placeholder:text-zinc-700 focus:border-red-500/50 focus:ring-2 focus:ring-red-500/10"
+                />
               </div>
-            );
-          })}
+              <div className="flex rounded-xl border border-zinc-800 bg-zinc-950/60 p-1">
+                {["ALL", "pending", "investigating", "resolved"].map((status) => (
+                  <button
+                    key={status}
+                    type="button"
+                    onClick={() => setFilter(status)}
+                    className={cx(
+                      "rounded-lg px-2.5 py-1 text-[10px] font-medium transition",
+                      filter === status ? "bg-zinc-800 text-zinc-100" : "text-zinc-600 hover:text-zinc-300",
+                    )}
+                  >
+                    {status === "ALL" ? "Semua" : reportLabel(status)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
-      )}
+
+        {filteredReports.length === 0 ? (
+          <EmptyState icon={<Flag className="h-5 w-5" />} title="Tidak ada tiket pada filter ini" description="Ubah status filter atau kata pencarian untuk melihat tiket lain." />
+        ) : (
+          <div className="divide-y divide-zinc-800/80">
+            {filteredReports.map((report) => {
+              const typeConfig = TYPE_CONFIG[report.type] ?? TYPE_CONFIG.other;
+              const status = report.status.toLowerCase();
+              const isExpanded = expandedId === report.id;
+
+              return (
+                <article key={report.id} className={cx("transition-colors", status === "resolved" && "opacity-65")}>
+                  <button
+                    type="button"
+                    onClick={() => setExpandedId(isExpanded ? null : report.id)}
+                    className="grid w-full gap-3 px-4 py-4 text-left transition hover:bg-zinc-900/60 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:px-5"
+                    aria-expanded={isExpanded}
+                  >
+                    <div className={cx("flex h-9 w-9 items-center justify-center rounded-xl border", typeConfig.tone === "danger" ? "border-rose-500/20 bg-rose-500/10 text-rose-300" : typeConfig.tone === "warning" ? "border-amber-500/20 bg-amber-500/10 text-amber-300" : "border-zinc-800 bg-zinc-950/60 text-zinc-500")}>{typeConfig.icon}</div>
+
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <StatusPill tone={reportTone(status)} dot>{reportLabel(status)}</StatusPill>
+                        <span className="text-[11px] font-medium text-zinc-400">{typeConfig.label}</span>
+                        {report.sourceId ? <span className="rounded-md bg-zinc-950 px-1.5 py-0.5 font-mono text-[9px] uppercase text-zinc-700">{report.sourceId}</span> : null}
+                      </div>
+                      <p className="mt-2 truncate text-sm font-medium text-zinc-200">{report.mangaTitle || report.mangaId || "Untitled manga"}</p>
+                      <p className="mt-0.5 truncate text-[11px] text-zinc-600">{report.chapterTitle || report.detail || report.category || report.type}</p>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-4 sm:block sm:text-right">
+                      <span className="inline-flex items-center gap-1 font-mono text-[10px] text-zinc-700"><Hash className="h-3 w-3" />{ticketId(report.id)}</span>
+                      <p className="mt-0 sm:mt-1 text-[10px] text-zinc-700">{formatDate(report.createdAt)} WIB</p>
+                    </div>
+                  </button>
+
+                  {isExpanded ? (
+                    <div className="border-t border-zinc-800/70 bg-zinc-950/20 px-4 py-4 sm:px-5">
+                      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto]">
+                        <div className="space-y-3">
+                          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                            <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/45 px-3 py-2.5"><p className="text-[9px] uppercase tracking-wide text-zinc-700">Category</p><p className="mt-1 text-xs text-zinc-300">{report.category || report.type}</p></div>
+                            {report.sourceId ? <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/45 px-3 py-2.5"><p className="text-[9px] uppercase tracking-wide text-zinc-700">Source</p><p className="mt-1 font-mono text-xs uppercase text-zinc-300">{report.sourceId}</p></div> : null}
+                            {typeof report.pageIndex === "number" ? <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/45 px-3 py-2.5"><p className="text-[9px] uppercase tracking-wide text-zinc-700">Page</p><p className="mt-1 text-xs text-zinc-300">#{report.pageIndex + 1}</p></div> : null}
+                            {report.resolvedAt ? <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/45 px-3 py-2.5"><p className="text-[9px] uppercase tracking-wide text-zinc-700">Resolved</p><p className="mt-1 text-xs text-zinc-300">{formatDate(report.resolvedAt)}</p></div> : null}
+                          </div>
+
+                          {report.detail ? (
+                            <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/45 px-3 py-3">
+                              <p className="text-[9px] font-semibold uppercase tracking-[0.14em] text-zinc-700">Catatan pengguna</p>
+                              <p className="mt-1.5 text-xs leading-5 text-zinc-400">{report.detail}</p>
+                            </div>
+                          ) : null}
+
+                          <div className="font-mono text-[9px] leading-4 text-zinc-800">
+                            <p>ticket: {report.id}</p>
+                            {report.mangaId ? <p>manga: {report.mangaId}</p> : null}
+                            {report.chapterId ? <p>chapter: {report.chapterId}</p> : null}
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap content-start gap-2 lg:max-w-72 lg:justify-end">
+                          {report.chapterId && report.sourceId ? (
+                            <a href={`/reader/${report.sourceId}/${encodeURIComponent(report.chapterId)}`} target="_blank" rel="noreferrer" className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900 px-3 text-[11px] font-medium text-zinc-300 transition hover:border-zinc-700 hover:text-zinc-100"><ArrowSquareOut className="h-3.5 w-3.5" />Inspect reader</a>
+                          ) : null}
+
+                          {report.sourceId ? (
+                            <>
+                              <OpsButton type="button" size="sm" variant="secondary" onClick={() => void handleReportAction(report.id, report.sourceId, "probe_source")} disabled={Boolean(actionLoadingId)}>
+                                {actionLoadingId === `${report.id}-probe_source` ? <CircleNotch className="h-3.5 w-3.5 animate-spin" /> : <Lightning className="h-3.5 w-3.5 text-emerald-400" />}Probe
+                              </OpsButton>
+                              <OpsButton type="button" size="sm" variant="danger" onClick={() => void handleReportAction(report.id, report.sourceId, "flush_source_cache")} disabled={Boolean(actionLoadingId)}>
+                                {actionLoadingId === `${report.id}-flush_source_cache` ? <CircleNotch className="h-3.5 w-3.5 animate-spin" /> : <Trash className="h-3.5 w-3.5" />}Flush
+                              </OpsButton>
+                            </>
+                          ) : null}
+
+                          {status === "pending" ? (
+                            <OpsButton type="button" size="sm" variant="secondary" onClick={() => void handleUpdateStatus(report.id, "investigating")} disabled={Boolean(actionLoadingId)}>
+                              {actionLoadingId === `${report.id}-investigating` ? <CircleNotch className="h-3.5 w-3.5 animate-spin" /> : <MagnifyingGlass className="h-3.5 w-3.5" />}Investigasi
+                            </OpsButton>
+                          ) : null}
+
+                          {status !== "resolved" ? (
+                            <OpsButton type="button" size="sm" variant="primary" onClick={() => void handleUpdateStatus(report.id, "resolved")} disabled={Boolean(actionLoadingId)}>
+                              {actionLoadingId === `${report.id}-resolved` ? <CircleNotch className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}Resolve
+                            </OpsButton>
+                          ) : (
+                            <StatusPill tone="success"><SealCheck className="h-3 w-3" weight="fill" />Closed</StatusPill>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
+                </article>
+              );
+            })}
+          </div>
+        )}
+      </OpsCard>
     </div>
   );
 }

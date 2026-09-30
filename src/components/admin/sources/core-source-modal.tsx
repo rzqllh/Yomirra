@@ -1,16 +1,21 @@
 "use client";
 
-import React, { useState } from "react";
-import { 
-  X, 
-  CircleNotch, 
-  CheckCircle, 
-  WarningCircle, 
-  FloppyDisk, 
+import React, { useEffect, useState } from "react";
+import {
+  CircleNotch,
+  FloppyDisk,
+  Globe,
   SlidersHorizontal,
-  Globe
+  X,
 } from "@phosphor-icons/react";
 import type { SourceHealthMatrixItem } from "@/server/lib/sources/admin-source-service";
+import {
+  FeedbackBanner,
+  InlineNotice,
+  OpsButton,
+  StatusPill,
+  cx,
+} from "../components/admin-ui";
 
 interface CoreSourceModalProps {
   source: SourceHealthMatrixItem | null;
@@ -20,43 +25,31 @@ interface CoreSourceModalProps {
   getToken: () => Promise<string | null>;
 }
 
-export function CoreSourceModal({
-  source,
-  isOpen,
-  onClose,
-  onSaved,
-  getToken,
-}: CoreSourceModalProps) {
-  const [activeDomain, setActiveDomain] = useState(source?.activeDomain || "");
-  const [mirrorsText, setMirrorsText] = useState((source?.mirrors || []).join(", "));
-  const [isEnabled, setIsEnabled] = useState(source?.isEnabled ?? true);
+export function CoreSourceModal({ source, isOpen, onClose, onSaved, getToken }: CoreSourceModalProps) {
+  const [activeDomain, setActiveDomain] = useState("");
+  const [mirrorsText, setMirrorsText] = useState("");
+  const [isEnabled, setIsEnabled] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null);
 
-  // Sync state when source changes
-  React.useEffect(() => {
-    if (source) {
-      setActiveDomain(source.activeDomain || "");
-      setMirrorsText((source.mirrors || []).join(", "));
-      setIsEnabled(source.isEnabled ?? true);
-      setMessage(null);
-    }
-  }, [source]);
+  useEffect(() => {
+    if (!source) return;
+    setActiveDomain(source.activeDomain || "");
+    setMirrorsText((source.mirrors || []).join(", "));
+    setIsEnabled(source.isEnabled ?? true);
+    setMessage(null);
+  }, [source, isOpen]);
 
   if (!isOpen || !source) return null;
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = async (event: React.FormEvent) => {
+    event.preventDefault();
     setSaving(true);
     setMessage(null);
 
     try {
       const token = await getToken();
-      const mirrors = mirrorsText
-        .split(",")
-        .map((m) => m.trim())
-        .filter((m) => m.length > 0);
-
+      const mirrors = mirrorsText.split(",").map((value) => value.trim()).filter(Boolean);
       const res = await fetch("/api/admin/sources", {
         method: "PATCH",
         headers: {
@@ -70,143 +63,75 @@ export function CoreSourceModal({
           isEnabled,
         }),
       });
-
       const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Gagal memperbarui konfigurasi sumber core");
-      }
+      if (!res.ok) throw new Error(data.error || "Konfigurasi source gagal diperbarui.");
 
-      setMessage({ text: data.message || "Konfigurasi dinamis berhasil disimpan!", ok: true });
+      setMessage({ text: data.message || "Override source berhasil disimpan.", ok: true });
       await onSaved();
-      setTimeout(() => {
-        onClose();
-      }, 1200);
-    } catch (err: unknown) {
-      setMessage({
-        text: err instanceof Error ? err.message : "Terjadi kesalahan saat menyimpan",
-        ok: false,
-      });
+      onClose();
+    } catch (error: unknown) {
+      setMessage({ text: error instanceof Error ? error.message : "Terjadi kesalahan saat menyimpan source.", ok: false });
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-zinc-900 border border-zinc-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl flex flex-col max-h-[90vh]">
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-zinc-800 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400">
-              <SlidersHorizontal className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-base font-bold text-zinc-100 flex items-center gap-2">
-                Override Dinamis: {source.name}
-              </h2>
-              <p className="text-xs text-zinc-400">
-                Ubah domain aktif & status sumber bawaan tanpa redeploy kode.
-              </p>
+    <div className="fixed inset-0 z-[140] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
+      <div role="dialog" aria-modal="true" aria-labelledby="core-source-title" className="flex max-h-[92vh] w-full max-w-xl flex-col overflow-hidden rounded-[24px] border border-zinc-800 bg-zinc-900 shadow-2xl shadow-black/50">
+        <div className="flex items-start justify-between gap-4 border-b border-zinc-800/90 px-5 py-4">
+          <div className="flex min-w-0 items-start gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-red-500/25 bg-red-500/10 text-red-300"><SlidersHorizontal className="h-4 w-4" /></div>
+            <div className="min-w-0">
+              <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-red-400/90">Core source override</p>
+              <h2 id="core-source-title" className="mt-1 truncate text-base font-semibold text-zinc-100">{source.name}</h2>
+              <p className="mt-1 text-[11px] leading-4 text-zinc-600">Ubah domain, mirrors, dan availability tanpa redeploy aplikasi.</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <button type="button" onClick={onClose} className="rounded-lg p-1.5 text-zinc-600 transition hover:bg-zinc-900 hover:text-zinc-200" aria-label="Tutup modal"><X className="h-5 w-5" /></button>
         </div>
 
-        {/* Form Body */}
-        <form onSubmit={handleSave} className="p-6 space-y-4 overflow-y-auto">
-          {message && (
-            <div
-              className={`p-3 rounded-xl border text-xs flex items-center gap-2 ${
-                message.ok
-                  ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
-                  : "bg-red-500/10 border-red-500/30 text-red-300"
-              }`}
-            >
-              {message.ok ? <CheckCircle className="w-4 h-4 shrink-0" /> : <WarningCircle className="w-4 h-4 shrink-0" />}
-              <span>{message.text}</span>
+        <form onSubmit={handleSave} className="flex min-h-0 flex-1 flex-col">
+          <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-5 py-5">
+            {message ? <FeedbackBanner message={message.text} ok={message.ok} /> : null}
+
+            <div className="flex flex-wrap items-center gap-2 rounded-xl border border-zinc-800/80 bg-zinc-950/45 px-3 py-2.5">
+              <StatusPill tone="neutral" className="font-mono uppercase">{source.id}</StatusPill>
+              <StatusPill tone={source.status === "HEALTHY" ? "success" : source.status === "DEGRADED" ? "warning" : source.status === "DOWN" ? "danger" : "neutral"} dot>{source.status}</StatusPill>
+              <span className="ml-auto font-mono text-[10px] text-zinc-700">{source.latencyMs > 0 ? `${source.latencyMs} ms` : "no latency sample"}</span>
             </div>
-          )}
 
-          <div>
-            <label className="block text-xs font-semibold text-zinc-400 mb-1.5 flex items-center gap-1.5">
-              <Globe className="w-3.5 h-3.5 text-purple-400" />
-              Domain / Base URL Aktif
-            </label>
-            <input
-              type="url"
-              required
-              value={activeDomain}
-              onChange={(e) => setActiveDomain(e.target.value)}
-              placeholder="https://shinigami03.com"
-              className="w-full px-3.5 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 text-xs font-mono focus:outline-none focus:border-purple-500"
-            />
-            <span className="text-[11px] text-zinc-500 mt-1 block">
-              Ketika website upstream mengganti domain (misal .asia ke .id atau .com), ganti di sini untuk langsung mengaktifkannya secara global.
-            </span>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-zinc-400 mb-1.5">
-              Daftar Domain Mirror (Dipisahkan koma)
-            </label>
-            <textarea
-              rows={2}
-              value={mirrorsText}
-              onChange={(e) => setMirrorsText(e.target.value)}
-              placeholder="https://mirror1.com, https://mirror2.com"
-              className="w-full px-3.5 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 text-xs font-mono focus:outline-none focus:border-purple-500"
-            />
-          </div>
-
-          <div className="pt-2 border-t border-zinc-800/80 flex items-center justify-between">
             <div>
-              <span className="text-xs font-semibold text-zinc-200 block">Status Sumber</span>
-              <span className="text-[11px] text-zinc-500 block">
-                Nonaktifkan sementara jika website sedang down atau maintenance.
-              </span>
+              <label htmlFor="core-domain" className="mb-1.5 flex items-center gap-1.5 text-[11px] font-medium text-zinc-400"><Globe className="h-3.5 w-3.5 text-zinc-600" />Active domain / base URL</label>
+              <input id="core-domain" type="url" required value={activeDomain} onChange={(event) => setActiveDomain(event.target.value)} placeholder="https://source.example" className="h-10 w-full rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 font-mono text-xs text-zinc-200 outline-none placeholder:text-zinc-700 focus:border-red-500/50 focus:ring-2 focus:ring-red-500/10" />
+              <p className="mt-1.5 text-[10px] leading-4 text-zinc-700">Gunakan ketika upstream mengganti domain atau primary host.</p>
             </div>
-            <label className="relative inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={isEnabled}
-                onChange={(e) => setIsEnabled(e.target.checked)}
-                className="sr-only peer"
-              />
-              <div className="w-11 h-6 bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-            </label>
+
+            <div>
+              <label htmlFor="core-mirrors" className="mb-1.5 block text-[11px] font-medium text-zinc-400">Mirror domains</label>
+              <textarea id="core-mirrors" rows={3} value={mirrorsText} onChange={(event) => setMirrorsText(event.target.value)} placeholder="https://mirror1.example, https://mirror2.example" className="w-full resize-y rounded-xl border border-zinc-800 bg-zinc-950/70 px-3 py-2.5 font-mono text-xs leading-5 text-zinc-200 outline-none placeholder:text-zinc-700 focus:border-red-500/50 focus:ring-2 focus:ring-red-500/10" />
+              <p className="mt-1.5 text-[10px] text-zinc-700">Pisahkan tiap mirror dengan koma.</p>
+            </div>
+
+            <div className="rounded-xl border border-zinc-800/80 bg-zinc-950/35 p-3">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs font-medium text-zinc-300">Source availability</p>
+                  <p className="mt-1 text-[10px] leading-4 text-zinc-700">Nonaktifkan sementara jika upstream sedang down atau tidak layak digunakan.</p>
+                </div>
+                <button type="button" role="switch" aria-checked={isEnabled} onClick={() => setIsEnabled((value) => !value)} className="flex shrink-0 items-center gap-2">
+                  <span className={cx("text-[10px] font-medium", isEnabled ? "text-emerald-300" : "text-zinc-600")}>{isEnabled ? "Enabled" : "Disabled"}</span>
+                  <span className={cx("relative h-5 w-9 rounded-full border transition", isEnabled ? "border-emerald-500/45 bg-emerald-500/20" : "border-zinc-700 bg-zinc-900")}><span className={cx("absolute top-0.5 h-3.5 w-3.5 rounded-full bg-zinc-200 transition-transform", isEnabled ? "translate-x-[17px]" : "translate-x-0.5")} /></span>
+                </button>
+              </div>
+            </div>
+
+            {!isEnabled ? <InlineNotice tone="warning">Source yang dinonaktifkan dapat hilang dari flow reader yang menghormati source activation state.</InlineNotice> : null}
           </div>
 
-          {/* Footer actions */}
-          <div className="pt-4 border-t border-zinc-800 flex items-center justify-end gap-2.5">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-medium rounded-xl transition"
-            >
-              Batal
-            </button>
-            <button
-              type="submit"
-              disabled={saving}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold rounded-xl transition disabled:opacity-50 shadow-lg shadow-purple-600/20"
-            >
-              {saving ? (
-                <>
-                  <CircleNotch className="w-3.5 h-3.5 animate-spin" />
-                  Menyimpan...
-                </>
-              ) : (
-                <>
-                  <FloppyDisk className="w-3.5 h-3.5" />
-                  Simpan Override ke Redis
-                </>
-              )}
-            </button>
+          <div className="flex justify-end gap-2 border-t border-zinc-800/90 bg-zinc-950 px-5 py-4">
+            <OpsButton type="button" variant="ghost" onClick={onClose} disabled={saving}>Batal</OpsButton>
+            <OpsButton type="submit" variant="primary" disabled={saving || !activeDomain.trim()}>{saving ? <CircleNotch className="h-4 w-4 animate-spin" /> : <FloppyDisk className="h-4 w-4" />}{saving ? "Menyimpan…" : "Simpan override"}</OpsButton>
           </div>
         </form>
       </div>

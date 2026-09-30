@@ -1,16 +1,25 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { 
-  MagnifyingGlass, 
-  Flame, 
-  CircleNotch, 
+import React, { useCallback, useEffect, useState } from "react";
+import {
+  CircleNotch,
+  Database,
+  Flame,
+  MagnifyingGlass,
   SlidersHorizontal,
-  CheckCircle,
   WarningCircle,
-  Database
 } from "@phosphor-icons/react";
 import type { SearchIntelligenceStats, SearchSimulationResultItem } from "@/server/lib/search/admin-search-service";
+import {
+  EmptyState,
+  FeedbackBanner,
+  InlineNotice,
+  MetricCell,
+  OpsButton,
+  OpsCard,
+  OpsSectionHeader,
+  StatusPill,
+} from "../components/admin-ui";
 
 interface SearchTabProps {
   getToken: () => Promise<string | null>;
@@ -20,9 +29,8 @@ export function SearchTab({ getToken }: SearchTabProps) {
   const [stats, setStats] = useState<SearchIntelligenceStats | null>(null);
   const [loadingStats, setLoadingStats] = useState(false);
   const [warming, setWarming] = useState(false);
-  const [warmMessage, setWarmMessage] = useState<string | null>(null);
+  const [warmFeedback, setWarmFeedback] = useState<{ text: string; ok: boolean } | null>(null);
 
-  // Simulator state
   const [simQuery, setSimQuery] = useState("solo leveling");
   const [simulating, setSimulating] = useState(false);
   const [simResults, setSimResults] = useState<SearchSimulationResultItem[]>([]);
@@ -30,33 +38,27 @@ export function SearchTab({ getToken }: SearchTabProps) {
   const [simCatalogEmpty, setSimCatalogEmpty] = useState(false);
   const [simDone, setSimDone] = useState(false);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     setLoadingStats(true);
     try {
       const token = await getToken();
       const res = await fetch("/api/admin/search/stats", {
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       const data = await res.json();
-      if (res.ok && data.stats) {
-        setStats(data.stats);
-      }
-    } catch {
-      // Ignored
+      if (res.ok && data.stats) setStats(data.stats);
     } finally {
       setLoadingStats(false);
     }
-  };
+  }, [getToken]);
 
   useEffect(() => {
-    fetchStats();
-  }, []);
+    void fetchStats();
+  }, [fetchStats]);
 
   const handleWarmCatalog = async () => {
     setWarming(true);
-    setWarmMessage(null);
+    setWarmFeedback(null);
     try {
       const token = await getToken();
       const res = await fetch("/api/admin/search/warm", {
@@ -69,20 +71,20 @@ export function SearchTab({ getToken }: SearchTabProps) {
       });
       const data = await res.json();
       if (res.ok) {
-        setWarmMessage(`Berhasil: ${data.message || `Memanaskan ${data.warmedCount || 0} item`}`);
+        setWarmFeedback({ text: data.message || `Catalog warm selesai untuk ${data.warmedCount || 0} item.`, ok: true });
         await fetchStats();
       } else {
-        setWarmMessage(`Gagal: ${data.error || "Gagal memanaskan katalog"}`);
+        setWarmFeedback({ text: data.error || "Gagal memanaskan search catalog.", ok: false });
       }
     } catch {
-      setWarmMessage("Gagal menghubungi server");
+      setWarmFeedback({ text: "Server tidak dapat dihubungi saat warming catalog.", ok: false });
     } finally {
       setWarming(false);
     }
   };
 
-  const handleSimulate = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSimulate = async (event: React.FormEvent) => {
+    event.preventDefault();
     if (!simQuery.trim()) return;
 
     setSimulating(true);
@@ -102,14 +104,13 @@ export function SearchTab({ getToken }: SearchTabProps) {
       const data = await res.json();
       if (res.ok) {
         setSimResults(data.results || []);
-        setSimCatalogEmpty(!!data.catalogEmpty);
+        setSimCatalogEmpty(Boolean(data.catalogEmpty));
         setSimDone(true);
       } else {
-        setSimError(data.error || "Gagal mensimulasikan ranking");
-        setSimDone(false);
+        setSimError(data.error || "Ranking simulator gagal dijalankan.");
       }
     } catch {
-      setSimError("Gagal menghubungi server");
+      setSimError("Server tidak dapat dihubungi saat menjalankan simulator.");
     } finally {
       setSimulating(false);
     }
@@ -117,159 +118,141 @@ export function SearchTab({ getToken }: SearchTabProps) {
 
   return (
     <div className="space-y-6">
-      {/* Top Banner & Warm runner */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-zinc-900/40 border border-zinc-800/80 rounded-xl">
-        <div>
-          <h2 className="text-base font-semibold text-zinc-100 flex items-center gap-2">
-            <SlidersHorizontal className="w-5 h-5 text-indigo-400" />
-            Search Intelligence & Simulator Ranking
-          </h2>
-          <p className="text-xs text-zinc-400 mt-1">
-            Pantau katalog pencarian Redis dan uji coba bobot ranking (exact title, sinopsis, tag, popularitas).
-          </p>
-        </div>
-        <button
-          onClick={handleWarmCatalog}
-          disabled={warming}
-          className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white text-xs font-medium rounded-xl transition"
-        >
-          {warming ? (
-            <CircleNotch className="w-4 h-4 animate-spin" />
-          ) : (
-            <Flame className="w-4 h-4" />
-          )}
-          Warm Search Catalog
-        </button>
-      </div>
+      <OpsSectionHeader
+        eyebrow="Discovery diagnostics"
+        title="Search Lab"
+        description="Uji ranking secara terisolasi, inspeksi sinyal scoring, dan kelola warm catalog tanpa masuk ke reader publik."
+        action={
+          <OpsButton type="button" variant="secondary" onClick={() => void handleWarmCatalog()} disabled={warming}>
+            {warming ? <CircleNotch className="h-4 w-4 animate-spin" /> : <Flame className="h-4 w-4 text-red-400" />}
+            Warm catalog
+          </OpsButton>
+        }
+      />
 
-      {warmMessage && (
-        <div className="p-3 bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs rounded-xl flex items-center gap-2">
-          <CheckCircle className="w-4 h-4 shrink-0" />
-          <span>{warmMessage}</span>
-        </div>
-      )}
+      {warmFeedback ? <FeedbackBanner message={warmFeedback.text} ok={warmFeedback.ok} onDismiss={() => setWarmFeedback(null)} /> : null}
 
-      {/* Catalog stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="p-4 bg-zinc-900/60 border border-zinc-800 rounded-xl">
-          <div className="flex items-center gap-2 text-zinc-400 text-xs mb-1">
-            <Database className="w-4 h-4 text-indigo-400" />
-            Total Item di Katalog
-          </div>
-          <span className="text-2xl font-bold text-zinc-100">
-            {loadingStats ? "..." : stats?.totalCatalogItems ?? 0}
-          </span>
-          <span className="text-[11px] text-zinc-500 block mt-1">Tersimpan di cache Redis</span>
+      <OpsCard className="overflow-hidden">
+        <div className="grid divide-y divide-zinc-800/80 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+          <MetricCell label="Catalog items" value={loadingStats ? "…" : stats?.totalCatalogItems ?? 0} hint="Item yang tersedia pada search cache" />
+          <MetricCell label="Search mode" value={stats?.embeddingsActive ? "Embeddings" : "Hybrid fallback"} hint="Multi-signal query parser" tone={stats?.embeddingsActive ? "success" : "warning"} />
+          <MetricCell
+            label="Last warm"
+            value={stats?.lastWarmedAt ? new Intl.DateTimeFormat("id-ID", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(stats.lastWarmedAt)) : "Never"}
+            hint="Waktu terakhir catalog dipanaskan"
+          />
+        </div>
+      </OpsCard>
+
+      <OpsCard className="overflow-hidden">
+        <div className="border-b border-zinc-800/80 px-4 py-4 sm:px-5">
+          <OpsSectionHeader
+            eyebrow="Ranking sandbox"
+            title="Query simulator"
+            description="Menjalankan ranking admin terhadap catalog saat ini tanpa mengubah state pencarian publik."
+          />
         </div>
 
-        <div className="p-4 bg-zinc-900/60 border border-zinc-800 rounded-xl">
-          <div className="flex items-center gap-2 text-zinc-400 text-xs mb-1">
-            <MagnifyingGlass className="w-4 h-4 text-emerald-400" />
-            Status Embeddings / Hybrid
+        <div className="p-4 sm:p-5">
+          <form onSubmit={handleSimulate} className="flex flex-col gap-2 sm:flex-row">
+            <div className="relative flex-1">
+              <MagnifyingGlass className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-700" />
+              <input
+                type="search"
+                value={simQuery}
+                onChange={(event) => setSimQuery(event.target.value)}
+                placeholder="Contoh: solo leveling"
+                className="h-10 w-full rounded-xl border border-zinc-800 bg-zinc-950/70 pl-9 pr-3 text-xs text-zinc-100 outline-none transition placeholder:text-zinc-700 focus:border-red-500/50 focus:ring-2 focus:ring-red-500/10"
+              />
+            </div>
+            <OpsButton type="submit" variant="primary" className="h-10 px-4" disabled={simulating || !simQuery.trim()}>
+              {simulating ? <CircleNotch className="h-4 w-4 animate-spin" /> : <SlidersHorizontal className="h-4 w-4" />}
+              Run simulation
+            </OpsButton>
+          </form>
+
+          <div className="mt-4 space-y-3">
+            {simCatalogEmpty && simDone ? (
+              <InlineNotice tone="warning">
+                Catalog Redis kosong. Hasil menggunakan metadata source statis, jadi hasil ini tidak mewakili catalog production penuh.
+              </InlineNotice>
+            ) : null}
+            {simError ? <InlineNotice tone="danger">{simError}</InlineNotice> : null}
           </div>
-          <span className="text-base font-semibold text-emerald-400">
-            {stats?.embeddingsActive ? "Aktif" : "Hybrid Fallback"}
-          </span>
-          <span className="text-[11px] text-zinc-500 block mt-1">Multi-signal query parser</span>
         </div>
 
-        <div className="p-4 bg-zinc-900/60 border border-zinc-800 rounded-xl">
-          <div className="flex items-center gap-2 text-zinc-400 text-xs mb-1">
-            <SlidersHorizontal className="w-4 h-4 text-purple-400" />
-            Terakhir Dipanaskan
-          </div>
-          <span className="text-sm font-medium text-zinc-300">
-            {stats?.lastWarmedAt
-              ? new Date(stats.lastWarmedAt).toLocaleString("id-ID", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  day: "numeric",
-                  month: "short",
-                })
-              : "Belum pernah"}
-          </span>
-          <span className="text-[11px] text-zinc-500 block mt-1">Warm runner interval</span>
-        </div>
-      </div>
+        {simResults.length > 0 ? (
+          <div className="border-t border-zinc-800/80">
+            <div className="flex items-center justify-between px-4 py-3 sm:px-5">
+              <div>
+                <p className="text-xs font-medium text-zinc-300">Ranking result</p>
+                <p className="mt-0.5 text-[10px] text-zinc-700">{simResults.length} result · query “{simQuery}”</p>
+              </div>
+              <StatusPill tone="brand">Simulation</StatusPill>
+            </div>
 
-      {/* Search Ranking Simulator Box */}
-      <div className="p-4 bg-zinc-900/40 border border-zinc-800/80 rounded-xl space-y-4">
-        <h3 className="text-sm font-semibold text-zinc-200">Uji Simulator Ranking Pencarian</h3>
-        <form onSubmit={handleSimulate} className="flex gap-2">
-          <div className="relative flex-1">
-            <MagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
-            <input
-              type="text"
-              value={simQuery}
-              onChange={(e) => setSimQuery(e.target.value)}
-              placeholder="Masukkan query pencarian (contoh: solo leveling, return of mount hua)..."
-              className="w-full pl-9 pr-3 py-2 bg-zinc-950 border border-zinc-800 rounded-xl text-xs text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-indigo-500"
-            />
-          </div>
-          <button
-            type="submit"
-            disabled={simulating || !simQuery.trim()}
-            className="flex items-center gap-1.5 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-zinc-100 text-xs font-medium rounded-xl transition"
-          >
-            {simulating ? <CircleNotch className="w-4 h-4 animate-spin" /> : "Simulasikan"}
-          </button>
-        </form>
+            <div className="hidden overflow-x-auto md:block">
+              <table className="w-full min-w-[760px] text-left">
+                <thead className="border-y border-zinc-800/80 bg-zinc-950/35 text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-700">
+                  <tr>
+                    <th className="w-14 px-5 py-2.5">Rank</th>
+                    <th className="px-3 py-2.5">Title</th>
+                    <th className="w-28 px-3 py-2.5">Source</th>
+                    <th className="w-28 px-3 py-2.5 text-right">Exact</th>
+                    <th className="w-28 px-3 py-2.5 text-right">Tag</th>
+                    <th className="w-28 px-3 py-2.5 text-right">Popularity</th>
+                    <th className="w-28 px-5 py-2.5 text-right">Final</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-800/70">
+                  {simResults.map((item, index) => (
+                    <tr key={item.id || index} className="hover:bg-zinc-900/55">
+                      <td className="px-5 py-3 font-mono text-xs text-zinc-700">{String(index + 1).padStart(2, "0")}</td>
+                      <td className="px-3 py-3 text-xs font-medium text-zinc-200">{item.title}</td>
+                      <td className="px-3 py-3"><StatusPill tone="neutral" className="font-mono uppercase">{item.sourceId}</StatusPill></td>
+                      <td className="px-3 py-3 text-right font-mono text-[11px] tabular-nums text-zinc-500">{item.exactMatchScore}</td>
+                      <td className="px-3 py-3 text-right font-mono text-[11px] tabular-nums text-zinc-500">{item.tagMatchScore}</td>
+                      <td className="px-3 py-3 text-right font-mono text-[11px] tabular-nums text-zinc-500">{item.popularityScore}</td>
+                      <td className="px-5 py-3 text-right font-mono text-xs font-semibold tabular-nums text-red-300">{item.finalScore.toFixed(2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-        {simCatalogEmpty && simDone && (
-          <div className="p-2 bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs rounded-lg flex items-center gap-2">
-            <WarningCircle className="w-4 h-4 shrink-0" />
-            <span>Katalog Redis kosong — hasil di bawah adalah simulasi dari metadata source statis. Klik <b>Warm Search Catalog</b> untuk mengisi katalog dengan data manga nyata.</span>
-          </div>
-        )}
-
-        {simError && (
-          <div className="p-2 bg-red-500/10 border border-red-500/30 text-red-300 text-xs rounded-lg flex items-center gap-2">
-            <WarningCircle className="w-4 h-4" />
-            <span>{simError}</span>
-          </div>
-        )}
-
-        {simDone && !simError && simResults.length === 0 && (
-          <div className="p-4 text-center text-xs text-zinc-500">
-            Tidak ada hasil untuk query ini.
-          </div>
-        )}
-
-        {/* Results */}
-        {simResults.length > 0 && (
-          <div className="space-y-2 mt-4">
-            <h4 className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
-              Hasil Simulasi Ranking ({simResults.length} item)
-            </h4>
-            <div className="divide-y divide-zinc-800/60 border border-zinc-800 rounded-xl overflow-hidden">
-              {simResults.map((item, idx) => (
-                <div key={item.id || idx} className="p-3 bg-zinc-900/50 flex items-center justify-between text-xs">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-zinc-500 w-5">#{idx + 1}</span>
-                      <span className="font-semibold text-zinc-100">{item.title}</span>
-                      <span className="px-1.5 py-0.2 rounded bg-zinc-800 text-[10px] font-mono text-zinc-400 uppercase">
-                        {item.sourceId}
-                      </span>
+            <div className="divide-y divide-zinc-800/80 md:hidden">
+              {simResults.map((item, index) => (
+                <div key={item.id || index} className="p-4">
+                  <div className="flex items-start gap-3">
+                    <span className="font-mono text-xs text-zinc-700">{String(index + 1).padStart(2, "0")}</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-xs font-medium text-zinc-200">{item.title}</p>
+                        <StatusPill tone="neutral" className="font-mono uppercase">{item.sourceId}</StatusPill>
+                      </div>
+                      <div className="mt-2 grid grid-cols-3 gap-2 text-[10px] text-zinc-600">
+                        <span>Exact <b className="font-mono text-zinc-400">{item.exactMatchScore}</b></span>
+                        <span>Tag <b className="font-mono text-zinc-400">{item.tagMatchScore}</b></span>
+                        <span>Pop <b className="font-mono text-zinc-400">{item.popularityScore}</b></span>
+                      </div>
                     </div>
-                    <div className="flex flex-wrap gap-2 text-[10px] text-zinc-400 pl-7">
-                      <span>Exact Match: <b className="text-zinc-200">{item.exactMatchScore}</b></span>
-                      <span>Tag Match: <b className="text-zinc-200">{item.tagMatchScore}</b></span>
-                      <span>Popularity: <b className="text-zinc-200">{item.popularityScore}</b></span>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <span className="text-[10px] text-zinc-500 block">Final Score</span>
-                    <span className="text-sm font-mono font-bold text-indigo-400">
-                      {item.finalScore.toFixed(2)}
-                    </span>
+                    <span className="font-mono text-sm font-semibold text-red-300">{item.finalScore.toFixed(2)}</span>
                   </div>
                 </div>
               ))}
             </div>
           </div>
+        ) : simDone && !simError ? (
+          <div className="border-t border-zinc-800/80">
+            <EmptyState icon={<Database className="h-5 w-5" />} title="Tidak ada hasil" description={`Query “${simQuery}” tidak mengembalikan kandidat ranking.`} />
+          </div>
+        ) : (
+          <div className="border-t border-zinc-800/80 px-5 py-8 text-center">
+            <WarningCircle className="mx-auto h-5 w-5 text-zinc-800" />
+            <p className="mt-2 text-xs text-zinc-700">Jalankan query untuk melihat breakdown ranking.</p>
+          </div>
         )}
-      </div>
+      </OpsCard>
     </div>
   );
 }
