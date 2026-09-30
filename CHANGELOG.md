@@ -13,6 +13,12 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
 - Deferred: P4 admin/auth/entitlement/AI (roadmap explicit).
 - `docs/yomirra-master-execution-roadmap.md` ditambahkan sebagai single source of truth.
 
+### P0 Core Stability & P1 Core Reading Experience (Phase 1 & 2)
+
+- Audit & hardening Shinigami adapter: defensive handling saat response payload `null`/`undefined` pada `getPopular`, `getLatest`, `getChapters`, dan `getPages`, pembatasan `allowedHosts: ["api.shngm.io"]`, serta constructor dependency injection untuk pengujian terisolasi.
+- Regression test suite untuk Shinigami adapter (`src/server/lib/sources/adapters/shinigami/__tests__/adapter.test.ts`) dengan 9 test case baru (12/12 Shinigami tests PASS).
+- Verifikasi penuh Phase 2 Gate: 123 test file (833 tests) PASS, typecheck PASS (0 error), lint PASS (0 error), production build (`next build --webpack`) PASS.
+
 ## [2.2.0] — 2026-09-29
 
 Rilis ini berfokus pada search lintas source, rekomendasi yang lebih berguna, Rak Buku, dan perapihan runtime.

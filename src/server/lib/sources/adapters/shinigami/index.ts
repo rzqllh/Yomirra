@@ -57,21 +57,36 @@ export class ShinigamiSource implements MangaSource {
   private apiBaseUrl = "https://api.shngm.io";
   private client: HttpClient;
 
-  constructor(apiBaseUrl?: string) {
+  constructor(apiBaseUrl?: string, client?: HttpClient) {
     if (apiBaseUrl) {
       this.apiBaseUrl = apiBaseUrl.replace(/\/+$/, "");
     }
-    this.client = new HttpClient(this.apiBaseUrl, {
-      "User-Agent": this.getRandomUA(),
-      "Referer": "https://c.shinigami.asia/",
-      "Origin": "https://c.shinigami.asia",
-      "DNT": "1",
+    this.client = client ?? new HttpClient({
+      baseUrl: this.apiBaseUrl,
+      timeoutMs: 15000,
+      allowedHosts: ["api.shngm.io"],
+      defaultHeaders: {
+        "User-Agent": this.getRandomUA(),
+        "Referer": "https://c.shinigami.asia/",
+        "Origin": "https://c.shinigami.asia",
+        "DNT": "1",
+      },
     });
   }
 
   setApiBaseUrl(url: string): void {
     this.apiBaseUrl = url.replace(/\/+$/, "");
-    this.client.setBaseUrl(this.apiBaseUrl);
+    this.client = new HttpClient({
+      baseUrl: this.apiBaseUrl,
+      timeoutMs: 15000,
+      allowedHosts: ["api.shngm.io"],
+      defaultHeaders: {
+        "User-Agent": this.getRandomUA(),
+        "Referer": "https://c.shinigami.asia/",
+        "Origin": "https://c.shinigami.asia",
+        "DNT": "1",
+      },
+    });
   }
 
 
@@ -82,9 +97,10 @@ export class ShinigamiSource implements MangaSource {
       sort: "popularity",
     });
 
+    const items = Array.isArray(res?.data) ? res.data : [];
     return {
-      mangas: res.data.map(normalizeMangaItem),
-      hasNextPage: res.meta.page < res.meta.total_page,
+      mangas: items.map(normalizeMangaItem),
+      hasNextPage: (res?.meta?.page ?? 0) < (res?.meta?.total_page ?? 0),
     };
   }
 
@@ -95,9 +111,10 @@ export class ShinigamiSource implements MangaSource {
       sort: "latest",
     });
 
+    const latestItems = Array.isArray(res?.data) ? res.data : [];
     return {
-      mangas: res.data.map(normalizeMangaItem),
-      hasNextPage: res.meta.page < res.meta.total_page,
+      mangas: latestItems.map(normalizeMangaItem),
+      hasNextPage: (res?.meta?.page ?? 0) < (res?.meta?.total_page ?? 0),
     };
   }
 
@@ -172,7 +189,7 @@ export class ShinigamiSource implements MangaSource {
 
     return {
       mangas: filteredData.map(normalizeMangaItem),
-      hasNextPage: res.meta.page < res.meta.total_page,
+      hasNextPage: (res?.meta?.page ?? 0) < (res?.meta?.total_page ?? 0),
     };
   }
 
@@ -188,21 +205,23 @@ export class ShinigamiSource implements MangaSource {
       `/v1/chapter/${mangaId}/list`,
       { page_size: 3000 }
     );
-    return res.data.map((c) => normalizeChapter(c, mangaId));
+    const chapters = Array.isArray(res?.data) ? res.data : [];
+    return chapters.map((c) => normalizeChapter(c, mangaId));
   }
 
   async getPages(chapterId: string): Promise<ChapterPages> {
     const res = await this.client.get<ShinigamiChapterPagesResponse>(
       `/v1/chapter/detail/${chapterId}`
     );
-    const data = res.data;
+    const data = res?.data;
+    const filenames: string[] = Array.isArray(data?.chapter?.data) ? data.chapter.data : [];
 
     return {
       chapterId,
-      pages: data.chapter.data.map((filename: any, index: number) => ({
+      pages: filenames.map((filename, index) => ({
         index,
         url: `${data.base_url}${data.chapter.path}${filename}`,
-        referer: "https://c.shinigami.asia"
+        referer: "https://c.shinigami.asia",
       })),
     };
   }
