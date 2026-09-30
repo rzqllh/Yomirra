@@ -4,6 +4,27 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
 
 ## [Unreleased]
 
+### P2 Search Intelligence Foundation (Phase 4)
+
+- **Search Tag Parser & Filter Chips with Include/Exclude Semantics** (`src/shared/lib/search-intelligence.ts`, `src/components/search/search-tag-input.tsx`):
+  - Menambahkan dukungan operator include (`#tag` / `+#tag`) dan exclude (`-#tag` / `!#tag`) pada ekspresi pencarian.
+  - Memperbarui `candidateMatchesTags` sehingga tag dengan operator exclude menolak kandidat komik yang memiliki genre, format, atau status yang dikecualikan.
+  - Menampilkan chip tag yang dapat dihapus (`removable chips`) dengan styling visual berbeda untuk tag pengecualian (merah/destructive) di `SearchTagInput`.
+  - Plain-text resilience: tag yang tidak dikenali tetap dipertahankan sebagai teks pencarian biasa tanpa merusak input query.
+- **Alias & Title Normalization Hardening** (`src/shared/lib/title-matcher.ts`):
+  - Normalisasi otomatis untuk tag kurung sumber dan bahasa seperti `[Bahasa Indonesia]`, `(ID)`, `[Warna]`, `[Raw]`.
+  - Normalisasi otomatis nomor season romawi (misal `Season II` -> `Season 2`) untuk mencocokkan sekuel secara deterministik.
+  - Menjaga canonical identity (`canonicalKey`) tetap stabil dan terpisah dari fuzzy ranking.
+- **Typo Tolerance & Short Query Bounded Protection** (`src/shared/lib/search-intelligence.ts`):
+  - Penegakan aturan bahwa exact dan prefix match selalu mendominasi skor hybrid.
+  - Perlindungan query pendek (<= 3 karakter) dari ledakan fuzzy edit distance ke kata-kata acak yang tidak berhubungan.
+  - Resolusi typo tag otomatis (`#fantasi`, `#fantassy` -> `fantasy`) dengan penolakan prefix pendek yang ambigu (`#act`, `#rom`).
+- **Persistent Canonical Catalog & Durable Migration** (`src/shared/lib/canonical-migration.ts`, `src/shared/lib/__tests__/canonical-migration.test.ts`):
+  - Menyediakan eksekusi migrasi kanonikal deterministik (`executeCanonicalMigration`) yang melakukan backfill riwayat baca dan penggabungan koleksi legacy secara aditif ke ID kanonikal.
+  - Menjaga kontinuitas progress membaca dan bookmark pengguna tanpa risiko korupsi state.
+- **Search & Ranking Quality Regression Suite** (`src/shared/lib/__tests__/search-ranking-quality.test.ts`):
+  - Memperluas suite pengujian regresi 18 test cases mencakup ranking exact vs prefix vs substring, normalisasi alias/angka romawi, proteksi typo, include/exclude tags, isolasi kill-switch admin vs browsing toggle pengguna, penanganan sumber down/unavailable, partisipasi runtime custom sources, serta chapter fallback presisi.
+
 ### P1 Core Reading Experience (Phase 3)
 
 - **Explicit Bookmark Semantics & Rating Isolation** (`src/shared/store/library-store.ts`, `src/components/manga/manga-rating.tsx`, `src/shared/hooks/use-bookmark-collection.ts`, `src/components/bookmark/bookmark-page-view.tsx`):

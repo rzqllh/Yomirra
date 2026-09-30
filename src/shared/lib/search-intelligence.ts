@@ -16,6 +16,7 @@ export interface ResolvedSearchTag {
   label: string;
   category: SearchTagCategory;
   confidence: number;
+  operator?: "include" | "exclude";
 }
 
 export interface ParsedSearchExpression {
@@ -84,7 +85,7 @@ const TAGS: SearchTagDefinition[] = [
 ];
 
 function normalizeTagText(value: string): string {
-  return normalizeTitle(value.replace(/^#/, ""))
+  return normalizeTitle(value.replace(/^[-!]?#/, ""))
     .replace(/[\s_-]+/g, "")
     .trim();
 }
@@ -198,6 +199,8 @@ export function resolveSearchTag(
   raw: string,
   filters?: MergedFilterList
 ): ResolvedSearchTag | null {
+  const isExclude = raw.startsWith("-") || raw.startsWith("!");
+  const operator: "include" | "exclude" = isExclude ? "exclude" : "include";
   const needle = normalizeTagText(raw);
   if (!needle) return null;
 
@@ -223,6 +226,7 @@ export function resolveSearchTag(
     label: best.label,
     category: best.category,
     confidence: best.score,
+    operator,
   };
 }
 
@@ -232,15 +236,17 @@ export function parseSearchExpression(
 ): ParsedSearchExpression {
   const tags: ResolvedSearchTag[] = [];
   const unresolvedTags: string[] = [];
-  const tagPattern = /(^|\s)(#[\p{L}\p{N}_-]+)/gu;
+  const tagPattern = /(^|\s)([-!]?#[\p{L}\p{N}_-]+)/gu;
   let match: RegExpExecArray | null;
 
   while ((match = tagPattern.exec(raw)) !== null) {
     const token = match[2];
     const resolved = resolveSearchTag(token, filters);
     if (resolved) {
-      const key = `${resolved.category}:${resolved.id}`;
-      if (!tags.some((tag) => `${tag.category}:${tag.id}` === key)) tags.push(resolved);
+      const key = `${resolved.operator ?? "include"}:${resolved.category}:${resolved.id}`;
+      if (!tags.some((tag) => `${tag.operator ?? "include"}:${tag.category}:${tag.id}` === key)) {
+        tags.push(resolved);
+      }
     } else {
       unresolvedTags.push(token);
     }
@@ -251,7 +257,7 @@ export function parseSearchExpression(
     .replace(tagPattern, (_match, prefix: string, token: string) =>
       resolvedTokens.has(token.toLowerCase())
         ? prefix
-        : `${prefix}${token.slice(1)}`
+        : `${prefix}${token.replace(/^[-!]?#/, "")}`
     )
     .replace(/\s+/g, " ")
     .trim();
@@ -268,6 +274,7 @@ export function applySearchTagsToFilters(
   let status = base.status;
 
   for (const tag of tags) {
+    if (tag.operator === "exclude") continue;
     if (tag.category === "genre") genres.add(tag.id);
     if (tag.category === "format") formats.add(tag.id);
     if (tag.category === "status") status = tag.id;
@@ -363,7 +370,11 @@ export function lexicalSearchScore(query: string, candidate: SearchCatalogCandid
     if (value === normalizedQuery) best = Math.max(best, 1);
     else if (value.startsWith(normalizedQuery)) best = Math.max(best, 0.95);
     else if (value.includes(normalizedQuery)) best = Math.max(best, 0.9);
-    else best = Math.max(best, similarity(normalizedQuery, value));
+    else {
+      // Short queries (<= 3 chars) must not match via edit distance to avoid noisy explosions
+      if (normalizedQuery.length <= 3) continue;
+      best = Math.max(best, similarity(normalizedQuery, value));
+    }
   }
   return best;
 }
@@ -395,18 +406,36 @@ export function candidateMatchesTags(
   tags: ResolvedSearchTag[]
 ): boolean {
   for (const tag of tags) {
+    const isExclude = tag.operator === "exclude";
+
     if (tag.category === "genre") {
       const genres = (candidate.genres ?? []).map(normalizeTagText);
-      if (!genres.includes(normalizeTagText(tag.id)) && !genres.includes(normalizeTagText(tag.label))) {
-        return false;
-      }
+      const hasGenre =
+        genres.includes(normalizeTagText(tag.id)) ||
+        genres.includes(normalizeTagText(tag.label));
+
+      if (isExclude && hasGenre) return false;
+      if (!isExclude && !hasGenre) return false;
     }
+
     if (tag.category === "format") {
-      if (normalizeTagText(candidate.format ?? "") !== normalizeTagText(tag.id)) return false;
+      const formatMatch =
+        normalizeTagText(candidate.format ?? "") === normalizeTagText(tag.id);
+
+      if (isExclude && formatMatch) return false;
+      if (!isExclude && !formatMatch) return false;
     }
+
     if (tag.category === "status") {
-      const status = canonicalizeFilterValue("status", candidate.status ?? "", candidate.status ?? "").id;
-      if (status !== tag.id) return false;
+      const status = canonicalizeFilterValue(
+        "status",
+        candidate.status ?? "",
+        candidate.status ?? ""
+      ).id;
+      const statusMatch = status === tag.id;
+
+      if (isExclude && statusMatch) return false;
+      if (!isExclude && !statusMatch) return false;
     }
   }
   return true;

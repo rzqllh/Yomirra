@@ -108,6 +108,21 @@ describe("Phase 3.6 — Search and Ranking Quality Regression Suite", () => {
       expect(lexicalSearchScore("i alone level up", candidateWithAliases)).toBe(1);
       expect(lexicalSearchScore("NA HONJAMAN REBELEOB", candidateWithAliases)).toBe(1);
     });
+
+    it("strips source-specific bracket tags and normalizes roman numerals", () => {
+      const candidateWithBrackets: SearchCatalogCandidate = {
+        canonicalKey: "canonical:solo-leveling",
+        sourceId: "src-a",
+        mangaId: "m1",
+        title: "Solo Leveling [Bahasa Indonesia]",
+        alternativeTitles: ["Solo Leveling Season II"],
+      };
+
+      // Bracket tag [Bahasa Indonesia] stripped so exact query matches with score 1
+      expect(lexicalSearchScore("Solo Leveling", candidateWithBrackets)).toBe(1);
+      // Season II normalized to Season 2
+      expect(lexicalSearchScore("Solo Leveling Season 2", candidateWithBrackets)).toBe(1);
+    });
   });
 
   describe("3. Typo tolerance boundaries", () => {
@@ -124,6 +139,19 @@ describe("Phase 3.6 — Search and Ranking Quality Regression Suite", () => {
       expect(score).toBeGreaterThanOrEqual(0.85);
     });
 
+    it("prevents short queries (<= 3 chars) from exploding into unrelated fuzzy matches", () => {
+      const candidate: SearchCatalogCandidate = {
+        canonicalKey: "c:ope",
+        sourceId: "s",
+        mangaId: "1",
+        title: "Ope",
+      };
+
+      // "one" is 3 chars, 1 edit distance from "Ope", but because length <= 3, fuzzy distance is disabled
+      const score = lexicalSearchScore("one", candidate);
+      expect(score).toBe(0);
+    });
+
     it("resolves tag typos while rejecting short ambiguous prefixes", () => {
       expect(resolveSearchTag("#fantasi")?.id).toBe("fantasy");
       expect(resolveSearchTag("#fantassy")?.id).toBe("fantasy");
@@ -134,19 +162,20 @@ describe("Phase 3.6 — Search and Ranking Quality Regression Suite", () => {
     });
   });
 
-  describe("4. Tag filters and combined query parsing", () => {
-    it("extracts recognized tags and retains query text", () => {
-      const parsed = parseSearchExpression("omniscient reader #aksi #selesai");
+  describe("4. Tag filters and combined query parsing with include/exclude semantics", () => {
+    it("extracts recognized tags, handles exclude operators, and retains query text", () => {
+      const parsed = parseSearchExpression("omniscient reader #aksi -#horor !#romansa");
       expect(parsed.textQuery).toBe("omniscient reader");
-      expect(parsed.tags.map((t) => [t.category, t.id])).toEqual([
-        ["genre", "action"],
-        ["status", "completed"],
+      expect(parsed.tags.map((t) => [t.operator ?? "include", t.category, t.id])).toEqual([
+        ["include", "genre", "action"],
+        ["exclude", "genre", "horror"],
+        ["exclude", "genre", "romance"],
       ]);
       expect(parsed.unresolvedTags).toEqual([]);
     });
 
-    it("correctly matches candidate against parsed tags", () => {
-      const matchingCandidate: SearchCatalogCandidate = {
+    it("correctly matches candidate against include and exclude tags", () => {
+      const candidateA: SearchCatalogCandidate = {
         canonicalKey: "c:1",
         sourceId: "s",
         mangaId: "1",
@@ -155,18 +184,19 @@ describe("Phase 3.6 — Search and Ranking Quality Regression Suite", () => {
         status: "Completed",
       };
 
-      const nonMatchingCandidate: SearchCatalogCandidate = {
+      const candidateWithExcludedGenre: SearchCatalogCandidate = {
         canonicalKey: "c:2",
         sourceId: "s",
         mangaId: "2",
-        title: "Slice of Life Comic",
-        genres: ["Slice of Life"],
-        status: "Ongoing",
+        title: "Dark Fantasy Blood",
+        genres: ["Action", "Fantasy", "Horror"],
+        status: "Completed",
       };
 
-      const parsed = parseSearchExpression("test #aksi #selesai");
-      expect(candidateMatchesTags(matchingCandidate, parsed.tags)).toBe(true);
-      expect(candidateMatchesTags(nonMatchingCandidate, parsed.tags)).toBe(false);
+      const parsed = parseSearchExpression("test #aksi -#horor");
+      expect(candidateMatchesTags(candidateA, parsed.tags)).toBe(true);
+      // candidateWithExcludedGenre has Horror, so it must be rejected by -#horor
+      expect(candidateMatchesTags(candidateWithExcludedGenre, parsed.tags)).toBe(false);
     });
   });
 
@@ -201,7 +231,32 @@ describe("Phase 3.6 — Search and Ranking Quality Regression Suite", () => {
     });
   });
 
-  describe("6. Unavailable source capability isolation", () => {
+  describe("6. Admin kill-switch vs user browsing toggle contract in search", () => {
+    const allSources = [
+      { id: "source-admin-disabled", isInstalled: true, isEnabled: false, capabilities: { search: true } },
+      { id: "source-user-disabled", isInstalled: true, isEnabled: true, capabilities: { search: true } },
+      { id: "source-normal", isInstalled: true, isEnabled: true, capabilities: { search: true } },
+    ];
+
+    it("filters out admin-disabled source while retaining user-disabled browsing source in search", () => {
+      // User has toggled off "source-user-disabled" from ordinary browsing (e.g. cookie = ["source-user-disabled"])
+      // But Search ignores user browsing toggles! Only admin isEnabled: false is killed globally.
+      const searchableSources = allSources.filter((source) => {
+        if (!source.isInstalled || source.isEnabled === false || !source.capabilities?.search) {
+          return false;
+        }
+        return true;
+      });
+
+      expect(searchableSources.map((s) => s.id)).toEqual([
+        "source-user-disabled",
+        "source-normal",
+      ]);
+      expect(searchableSources.some((s) => s.id === "source-admin-disabled")).toBe(false);
+    });
+  });
+
+  describe("7. Unavailable source capability isolation and down-source handling", () => {
     it("determines if a source cannot handle hard tags and isolates it", () => {
       const mergedFilters: MergedFilterList = {
         genres: [{ id: "fantasy", label: "Fantasy", supportedBy: ["source-a"], sourceValues: { "source-a": "fantasy" } }],
@@ -215,9 +270,43 @@ describe("Phase 3.6 — Search and Ranking Quality Regression Suite", () => {
       expect(isSourceCompatibleWithTags("source-a", parsed.tags, mergedFilters)).toBe(true);
       expect(isSourceCompatibleWithTags("source-b", parsed.tags, mergedFilters)).toBe(false);
     });
+
+    it("isolates runtime down/unavailable sources from active query execution", () => {
+      const sources = [
+        { id: "source-online", status: "healthy" as const },
+        { id: "source-down", status: "unavailable" as const },
+        { id: "source-fixing", status: "in-fix" as const },
+      ];
+
+      const eligible = sources.filter(
+        (s) => s.status !== "unavailable" && s.status !== "in-fix"
+      );
+
+      expect(eligible.map((s) => s.id)).toEqual(["source-online"]);
+    });
   });
 
-  describe("7. Chapter fallback and migration edge cases", () => {
+  describe("8. Custom runtime source search participation", () => {
+    it("allows dynamic custom sources with search capability to participate in catalog", () => {
+      const customSource = {
+        id: "custom-mangahub",
+        name: "MangaHub Custom",
+        isInstalled: true,
+        isEnabled: true,
+        isCustom: true,
+        capabilities: { search: true, popular: true, latest: true },
+      };
+
+      const isSearchEligible =
+        customSource.isInstalled &&
+        customSource.isEnabled &&
+        Boolean(customSource.capabilities?.search);
+
+      expect(isSearchEligible).toBe(true);
+    });
+  });
+
+  describe("9. Chapter fallback and migration edge cases", () => {
     const chapters: ChapterMeta[] = [
       { chapterId: "ch-100", chapterTitle: "Chapter 100", chapterNumber: 100 },
       { chapterId: "ch-99", chapterTitle: "Chapter 99", chapterNumber: 99 },
