@@ -7,7 +7,29 @@ import { safeFetch } from "../security/outbound-policy";
 
 
 export class SourceManager {
-  async getSource(id: string, manifestUrl?: string | null): Promise<MangaSource> {
+  async getSource(
+    id: string, 
+    manifestUrl?: string | null,
+    options?: { allowDisabled?: boolean }
+  ): Promise<MangaSource> {
+    const normalizedId = id.toLowerCase().trim();
+
+    // Check admin override kill-switch
+    if (!options?.allowDisabled) {
+      try {
+        const { getCoreSourceOverrides } = await import("./admin-source-service");
+        const overrides = await getCoreSourceOverrides();
+        const override = overrides[normalizedId];
+        if (override && override.isEnabled === false) {
+          throw new Error(`SOURCE_DISABLED: Source '${id}' is currently disabled by administrator.`);
+        }
+      } catch (err) {
+        if (err instanceof Error && err.message.startsWith("SOURCE_DISABLED")) {
+          throw err;
+        }
+        // Fail-open on Redis error
+      }
+    }
     if (manifestUrl) {
       if (sourceMap.has(id)) {
         throw new Error("SECURITY_REJECTED: Cannot use dynamic manifest with a built-in source identity.");
@@ -32,7 +54,6 @@ export class SourceManager {
       }
     }
 
-    const normalizedId = id.toLowerCase().trim();
     let source = sourceMap.get(normalizedId);
     if (!source) {
       try {
