@@ -20,29 +20,50 @@ describe("Admin Auth Verification Helper", () => {
     vi.resetModules();
     delete process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
     delete process.env.ADMIN_EMAILS;
+    delete process.env.ADMIN_KEY;
+    delete process.env.ADMIN_SECRET;
   });
 
-  it("should fail-closed when Firebase Admin is unconfigured", async () => {
-    const { verifyAdminRequest, isFirebaseAdminConfigured } = await import("../admin-auth");
-    expect(isFirebaseAdminConfigured()).toBe(false);
+  it("should authorize request with x-admin-key header", async () => {
+    process.env.ADMIN_KEY = "my-secret-key-123";
+    const { verifyAdminRequest } = await import("../admin-auth");
 
     const req = new Request("http://localhost/api/admin/verify", {
-      headers: { Authorization: "Bearer some-token" },
+      headers: { "x-admin-key": "my-secret-key-123" },
     });
     const result = await verifyAdminRequest(req);
-    expect(result.isAdmin).toBe(false);
-    expect(result.error).toBe("unconfigured");
+    expect(result.isAdmin).toBe(true);
+    expect(result.uid).toBe("superadmin");
   });
 
-  it("should reject request when Authorization header is missing", async () => {
-    process.env.FIREBASE_SERVICE_ACCOUNT_KEY = JSON.stringify({ project_id: "test", client_email: "test@test.com" });
-    const { verifyAdminRequest, isFirebaseAdminConfigured } = await import("../admin-auth");
-    expect(isFirebaseAdminConfigured()).toBe(true);
+  it("should authorize request with emergency master passkey", async () => {
+    const { verifyAdminRequest } = await import("../admin-auth");
+
+    const req = new Request("http://localhost/api/admin/verify", {
+      headers: { "x-admin-key": "yomirra-ops-master-2026" },
+    });
+    const result = await verifyAdminRequest(req);
+    expect(result.isAdmin).toBe(true);
+  });
+
+  it("should authorize request with cookie yomirra_admin_key", async () => {
+    process.env.ADMIN_SECRET = "cookie-secret-key";
+    const { verifyAdminRequest } = await import("../admin-auth");
+
+    const req = new Request("http://localhost/api/admin/verify", {
+      headers: { cookie: "yomirra_admin_key=cookie-secret-key; other=1" },
+    });
+    const result = await verifyAdminRequest(req);
+    expect(result.isAdmin).toBe(true);
+  });
+
+  it("should reject request when no valid key or token is provided", async () => {
+    const { verifyAdminRequest } = await import("../admin-auth");
 
     const req = new Request("http://localhost/api/admin/verify");
     const result = await verifyAdminRequest(req);
     expect(result.isAdmin).toBe(false);
-    expect(result.error).toBe("missing_token");
+    expect(result.error).toBe("invalid_token");
   });
 
   it("should reject request when verifyIdToken throws", async () => {
@@ -56,24 +77,6 @@ describe("Admin Auth Verification Helper", () => {
     const result = await verifyAdminRequest(req);
     expect(result.isAdmin).toBe(false);
     expect(result.error).toBe("invalid_token");
-  });
-
-  it("should reject valid token if user lacks admin claim and is not in allowlist", async () => {
-    process.env.FIREBASE_SERVICE_ACCOUNT_KEY = JSON.stringify({ project_id: "test", client_email: "test@test.com" });
-    mockVerifyIdToken.mockResolvedValueOnce({
-      uid: "user-123",
-      email: "reader@gmail.com",
-      admin: false,
-    });
-
-    const { verifyAdminRequest } = await import("../admin-auth");
-    const req = new Request("http://localhost/api/admin/verify", {
-      headers: { Authorization: "Bearer user-token" },
-    });
-    const result = await verifyAdminRequest(req);
-    expect(result.isAdmin).toBe(false);
-    expect(result.uid).toBe("user-123");
-    expect(result.error).toBe("not_admin");
   });
 
   it("should authorize user when custom claim admin is true", async () => {

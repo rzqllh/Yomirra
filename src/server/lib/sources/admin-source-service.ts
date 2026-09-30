@@ -30,9 +30,72 @@ export interface ProbeResult {
   itemCount?: number;
 }
 
+export interface CoreSourceOverride {
+  id: string;
+  isEnabled?: boolean;
+  activeDomain?: string;
+  mirrors?: string[];
+  rateLimit?: number;
+  updatedAt?: string;
+}
+
+const CORE_OVERRIDES_KEY = "yomirra:sources:core:overrides";
+
+export async function getCoreSourceOverrides(): Promise<Record<string, CoreSourceOverride>> {
+  if (!redis) return {};
+  try {
+    const raw = await redis.get(CORE_OVERRIDES_KEY);
+    if (!raw) return {};
+    return JSON.parse(raw);
+  } catch {
+    return {};
+  }
+}
+
+export async function saveCoreSourceOverride(
+  sourceId: string,
+  override: Partial<CoreSourceOverride>
+): Promise<CoreSourceOverride> {
+  const normId = sourceId.toLowerCase().trim();
+  const current = await getCoreSourceOverrides();
+  const existing = current[normId] || { id: normId };
+
+  const updated: CoreSourceOverride = {
+    ...existing,
+    ...override,
+    id: normId,
+    updatedAt: new Date().toISOString(),
+  };
+
+  current[normId] = updated;
+
+  if (redis) {
+    await redis.set(CORE_OVERRIDES_KEY, JSON.stringify(current));
+    // If activeDomain is changed, sync directly to DomainResolver cache in Redis
+    if (updated.activeDomain) {
+      const cleanHost = updated.activeDomain.replace(/\/+$/, "");
+      await redis.set(
+        `yomirra:domain:${normId}:frontend`,
+        JSON.stringify({
+          sourceId: normId,
+          role: "frontend",
+          currentHost: cleanHost,
+          verifiedAt: new Date().toISOString(),
+          status: "verified",
+        }),
+        "EX",
+        86400 * 30
+      );
+    }
+  }
+
+  return updated;
+}
+
 export async function getSourceHealthMatrix(): Promise<SourceHealthMatrixItem[]> {
   const sources = getAllSourceMetadata();
   let snapshots: Record<string, any> = {};
+  const coreOverrides = await getCoreSourceOverrides();
 
   if (typeof sourceHealthStore.getAllSnapshots === "function") {
     snapshots = await sourceHealthStore.getAllSnapshots(sources.map((s) => s.id));
@@ -45,30 +108,40 @@ export async function getSourceHealthMatrix(): Promise<SourceHealthMatrixItem[]>
   return Promise.all(
     sources.map(async (meta) => {
       const snapshot = snapshots[meta.id];
-      let activeDomain = meta.baseUrl || "";
-      try {
-        const resolver = (domainResolverModule as any).domainResolver;
-        if (resolver && typeof resolver.resolveDomain === "function") {
-          activeDomain = await resolver.resolveDomain(meta.id);
-        } else if (resolver && typeof resolver.resolve === "function") {
-          activeDomain = resolver.resolve(meta.id);
+      const override = coreOverrides[meta.id.toLowerCase()];
+
+      let activeDomain = override?.activeDomain || meta.baseUrl || "";
+      if (!override?.activeDomain) {
+        try {
+          const resolver = (domainResolverModule as any).domainResolver;
+          if (resolver && typeof resolver.resolveDomain === "function") {
+            activeDomain = await resolver.resolveDomain(meta.id);
+          } else if (resolver && typeof resolver.resolve === "function") {
+            activeDomain = resolver.resolve(meta.id);
+          }
+        } catch {
+          activeDomain = meta.baseUrl || "";
         }
-      } catch {
-        activeDomain = meta.baseUrl || "";
       }
 
-      let mirrors: string[] = [];
-      try {
-        const domains = (domainResolverModule as any).SOURCE_DOMAINS;
-        if (domains && domains[meta.id.toLowerCase()]) {
-          mirrors = domains[meta.id.toLowerCase()]?.frontend?.mirrors || [];
+      let mirrors: string[] = override?.mirrors || [];
+      if (mirrors.length === 0) {
+        try {
+          const domains = (domainResolverModule as any).SOURCE_DOMAINS;
+          if (domains && domains[meta.id.toLowerCase()]) {
+            mirrors = domains[meta.id.toLowerCase()]?.frontend?.mirrors || [];
+          }
+        } catch {
+          mirrors = [];
         }
-      } catch {
-        mirrors = [];
       }
+
+      const isEnabled = typeof override?.isEnabled === "boolean" ? override.isEnabled : meta.isEnabled;
 
       let status: "HEALTHY" | "DEGRADED" | "DOWN" | "UNMEASURED" = "UNMEASURED";
-      if (snapshot) {
+      if (!isEnabled) {
+        status = "DOWN";
+      } else if (snapshot) {
         if (snapshot.status === "HEALTHY") status = "HEALTHY";
         else if (snapshot.status === "DEGRADED") status = "DEGRADED";
         else status = "DOWN";
@@ -79,10 +152,10 @@ export async function getSourceHealthMatrix(): Promise<SourceHealthMatrixItem[]>
       return {
         id: meta.id,
         name: meta.name,
-        isEnabled: meta.isEnabled,
+        isEnabled,
         isInstalled: meta.isInstalled,
         status,
-        healthStatus: snapshot?.status || "HEALTHY",
+        healthStatus: snapshot?.status || (isEnabled ? "HEALTHY" : "DOWN"),
         consecutiveFailures: snapshot?.consecutiveFailures ?? 0,
         latencyMs: snapshot?.latencyMs ?? 0,
         lastCheckedAt: snapshot?.lastCheckedAt,

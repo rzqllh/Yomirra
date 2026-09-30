@@ -1,27 +1,33 @@
-import { NextResponse } from "next/server";
-import { verifyAdminRequest } from "@/server/lib/auth/admin-auth";
+import { NextRequest, NextResponse } from "next/server";
+import { requireAdminAuth } from "@/server/lib/auth/admin-auth";
 import { getStoredUserReports, updateReportStatus } from "@/server/lib/ops/admin-report-service";
+import { logger } from "@/shared/logger";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(req: Request) {
-  const auth = await verifyAdminRequest(req);
-  if (!auth.isAdmin) {
-    return NextResponse.json({ error: "Unauthorized", code: auth.error }, { status: 401 });
+export async function GET(req: NextRequest) {
+  const auth = await requireAdminAuth(req);
+  if (!auth.authorized) {
+    return auth.response;
   }
 
-  const { searchParams } = new URL(req.url);
-  const status = searchParams.get("status") || "all";
-  const type = searchParams.get("type") || "all";
+  try {
+    const { searchParams } = new URL(req.url);
+    const status = searchParams.get("status") || "all";
+    const type = searchParams.get("type") || "all";
 
-  const reports = await getStoredUserReports(status, type);
-  return NextResponse.json({ reports });
+    const reports = await getStoredUserReports(status, type);
+    return NextResponse.json({ reports });
+  } catch (error) {
+    logger.error("Gagal mengambil laporan pengguna", { error });
+    return NextResponse.json({ reports: [] });
+  }
 }
 
-export async function PATCH(req: Request) {
-  const auth = await verifyAdminRequest(req);
-  if (!auth.isAdmin) {
-    return NextResponse.json({ error: "Unauthorized", code: auth.error }, { status: 401 });
+export async function PATCH(req: NextRequest) {
+  const auth = await requireAdminAuth(req);
+  if (!auth.authorized) {
+    return auth.response;
   }
 
   try {
@@ -36,7 +42,8 @@ export async function PATCH(req: Request) {
     }
 
     return NextResponse.json({ success: true, report: updated });
-  } catch {
+  } catch (error) {
+    logger.error("Gagal memperbarui status laporan", { error });
     return NextResponse.json({ error: "Invalid request payload" }, { status: 400 });
   }
 }

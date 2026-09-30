@@ -16,6 +16,7 @@ import {
 import type { SourceHealthMatrixItem } from "@/server/lib/sources/admin-source-service";
 import type { CustomSourceDefinition } from "@/shared/sources/custom-source-schema";
 import { CustomSourceModal } from "../sources/custom-source-modal";
+import { CoreSourceModal } from "../sources/core-source-modal";
 
 interface SourcesTabProps {
   sources: SourceHealthMatrixItem[];
@@ -27,6 +28,10 @@ export function SourcesTab({ sources, onRefresh, getToken }: SourcesTabProps) {
   const [probingId, setProbingId] = useState<string | null>(null);
   const [flushingId, setFlushingId] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<{ text: string; ok: boolean } | null>(null);
+
+  // Core sources dynamic edit state
+  const [editingCoreSource, setEditingCoreSource] = useState<SourceHealthMatrixItem | null>(null);
+  const [coreModalOpen, setCoreModalOpen] = useState(false);
 
   // Custom sources state
   const [customSources, setCustomSources] = useState<CustomSourceDefinition[]>([]);
@@ -379,6 +384,14 @@ export function SourcesTab({ sources, onRefresh, getToken }: SourcesTabProps) {
                   </div>
                 </div>
 
+                {/* Active Domain */}
+                <div className="mb-3">
+                  <span className="text-[10px] text-zinc-500 uppercase font-semibold block mb-1">Domain / URL Aktif:</span>
+                  <p className="text-xs font-mono text-zinc-300 truncate bg-zinc-950 p-2 rounded-lg border border-zinc-850">
+                    {item.activeDomain || item.upstreamDomain}
+                  </p>
+                </div>
+
                 {/* Mirror domains */}
                 <div className="space-y-1 mb-4">
                   <span className="text-[10px] text-zinc-500 flex items-center gap-1 uppercase font-semibold">
@@ -400,22 +413,34 @@ export function SourcesTab({ sources, onRefresh, getToken }: SourcesTabProps) {
               {/* Actions for this source */}
               <div className="flex items-center gap-2 pt-3 border-t border-zinc-800/60">
                 <button
+                  onClick={() => {
+                    setEditingCoreSource(item);
+                    setCoreModalOpen(true);
+                  }}
+                  className="flex-1 flex items-center justify-center gap-1 py-1.5 bg-purple-950/40 hover:bg-purple-900/60 border border-purple-500/30 text-purple-300 text-xs font-medium rounded-lg transition"
+                  title="Ubah domain aktif & status bawaan secara dinamis"
+                >
+                  <PencilSimple className="w-3.5 h-3.5" />
+                  Ubah Domain
+                </button>
+
+                <button
                   onClick={() => handleProbe(item.id)}
                   disabled={probingId === item.id}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-zinc-200 text-xs font-medium rounded-lg transition"
+                  className="px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-zinc-200 text-xs font-medium rounded-lg transition flex items-center gap-1"
                 >
                   {probingId === item.id ? (
                     <CircleNotch className="w-3.5 h-3.5 animate-spin text-emerald-400" />
                   ) : (
                     <Lightning className="w-3.5 h-3.5 text-emerald-400" />
                   )}
-                  Live Probe
+                  Probe
                 </button>
 
                 <button
                   onClick={() => handleFlush(item.id)}
                   disabled={flushingId === item.id}
-                  className="px-2.5 py-1.5 bg-zinc-800 hover:bg-red-950/40 text-zinc-400 hover:text-red-400 disabled:opacity-50 text-xs font-medium rounded-lg transition"
+                  className="px-2 py-1.5 bg-zinc-800 hover:bg-red-950/40 text-zinc-400 hover:text-red-400 disabled:opacity-50 text-xs font-medium rounded-lg transition"
                   title={`Flush cache untuk ${item.id}`}
                 >
                   {flushingId === item.id ? (
@@ -429,6 +454,18 @@ export function SourcesTab({ sources, onRefresh, getToken }: SourcesTabProps) {
           ))}
         </div>
       </div>
+
+      {/* Core Source Dynamic Override Modal */}
+      <CoreSourceModal
+        isOpen={coreModalOpen}
+        source={editingCoreSource}
+        onClose={() => {
+          setCoreModalOpen(false);
+          setEditingCoreSource(null);
+        }}
+        onSaved={onRefresh}
+        getToken={getToken}
+      />
 
       {/* Custom Source Studio Modal */}
       <CustomSourceModal

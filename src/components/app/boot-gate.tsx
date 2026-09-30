@@ -2,11 +2,14 @@
 
 import * as React from "react";
 import { AnimatePresence } from "motion/react";
+import { usePathname } from "next/navigation";
 import { SplashScreen } from "./splash-screen";
 import { OnboardingOverlay } from "./onboarding-overlay";
 import { useOnboardingStore } from "@/shared/store/onboarding-store";
 
 export function BootGate({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const isAdmin = pathname?.startsWith("/admin");
   const { hasCompletedOnboarding } = useOnboardingStore();
   
   // start in boot phase
@@ -16,6 +19,10 @@ export function BootGate({ children }: { children: React.ReactNode }) {
   React.useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  if (isAdmin) {
+    return <>{children}</>;
+  }
 
   const handleSplashComplete = () => {
     if (hasCompletedOnboarding) {

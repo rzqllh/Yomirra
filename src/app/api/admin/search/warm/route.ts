@@ -1,15 +1,24 @@
-import { NextResponse } from "next/server";
-import { verifyAdminRequest } from "@/server/lib/auth/admin-auth";
+import { NextRequest, NextResponse } from "next/server";
+import { requireAdminAuth } from "@/server/lib/auth/admin-auth";
 import { warmSearchCatalog } from "@/server/lib/search/admin-search-service";
+import { logger } from "@/shared/logger";
 
 export const dynamic = "force-dynamic";
 
-export async function POST(req: Request) {
-  const auth = await verifyAdminRequest(req);
-  if (!auth.isAdmin) {
-    return NextResponse.json({ error: "Unauthorized", code: auth.error }, { status: 401 });
+export async function POST(req: NextRequest) {
+  const auth = await requireAdminAuth(req);
+  if (!auth.authorized) {
+    return auth.response;
   }
 
-  const result = await warmSearchCatalog();
-  return NextResponse.json({ success: true, ...result });
+  try {
+    const result = await warmSearchCatalog();
+    return NextResponse.json({ success: true, ...result });
+  } catch (error) {
+    logger.error("Gagal melakukan pemanasan katalog pencarian", { error });
+    return NextResponse.json(
+      { error: "Gagal memanaskan katalog pencarian" },
+      { status: 500 }
+    );
+  }
 }

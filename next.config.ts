@@ -10,6 +10,7 @@ const withSerwist = withSerwistInit({
 const nextConfig: NextConfig = {
   // Turbopack is enabled by default in Next.js 15 dev mode
   reactStrictMode: true,
+  serverExternalPackages: ["firebase-admin", "ioredis"],
   images: {
     unoptimized: process.env.NODE_ENV === "development",
     qualities: [25, 50, 60, 75, 85, 100],

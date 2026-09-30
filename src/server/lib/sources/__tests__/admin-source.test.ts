@@ -3,10 +3,14 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 // Mock redis
 const mockKeys = vi.fn();
 const mockDel = vi.fn();
+const mockGet = vi.fn();
+const mockSet = vi.fn();
 vi.mock("@/server/lib/cache/redis", () => ({
   redis: {
     keys: (...args: any[]) => mockKeys(...args),
     del: (...args: any[]) => mockDel(...args),
+    get: (...args: any[]) => mockGet(...args),
+    set: (...args: any[]) => mockSet(...args),
   },
 }));
 
@@ -68,5 +72,21 @@ describe("Admin Source Service", () => {
 
     expect(mockKeys).toHaveBeenCalledWith("source:*");
     expect(result.deletedCount).toBe(2);
+  });
+
+  it("should save and apply dynamic core source override", async () => {
+    mockGet.mockResolvedValueOnce(null);
+    mockSet.mockResolvedValue("OK");
+
+    const { saveCoreSourceOverride } = await import("../admin-source-service");
+    const saved = await saveCoreSourceOverride("shinigami", {
+      activeDomain: "https://shinigami-new.id",
+      isEnabled: false,
+    });
+
+    expect(saved.id).toBe("shinigami");
+    expect(saved.activeDomain).toBe("https://shinigami-new.id");
+    expect(saved.isEnabled).toBe(false);
+    expect(mockSet).toHaveBeenCalled();
   });
 });
