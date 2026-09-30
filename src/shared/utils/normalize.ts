@@ -51,7 +51,7 @@ export function normalizeSynopsis(value: string): string {
     .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
     .replace(/(?:\*\*|__)(.*?)(?:\*\*|__)/g, "$1")
     .replace(/(^|\s)[#>~]+(?=\S)/g, "$1")
-    .replace(/\\s+/g, " ")
+    .replace(/\s+/g, " ")
     .trim();
 
   // Provider descriptions sometimes append download mirrors or batch-link blocks.
