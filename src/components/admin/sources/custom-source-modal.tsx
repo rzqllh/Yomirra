@@ -462,8 +462,8 @@ export function CustomSourceModal({ initialSource, isOpen, onClose, onSaved, get
             </section>
 
             {formData.type === "html" ? (
-              <section className="overflow-hidden rounded-2xl border border-zinc-800/90 bg-zinc-950/30">
-                <div className="flex flex-col gap-2.5 border-b border-zinc-800/80 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <section className="rounded-2xl border border-zinc-800/90 bg-zinc-950/30">
+                <div className="flex flex-col gap-2.5 rounded-t-2xl border-b border-zinc-800/80 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <div className="flex items-center gap-2">
                       <Code className="h-4 w-4 text-red-400" />
@@ -493,7 +493,7 @@ export function CustomSourceModal({ initialSource, isOpen, onClose, onSaved, get
                   </div>
                 </div>
 
-                <div className="grid gap-3.5 p-4 sm:grid-cols-2">
+                <div className="grid items-start gap-3.5 p-4 sm:grid-cols-2">
                   <SelectorFieldWithHelp
                     fieldKey="popularPath"
                     label="Popular path"
@@ -705,18 +705,22 @@ function SelectorFieldWithHelp({
   const help = SELECTOR_HELP[fieldKey];
 
   return (
-    <div className="relative">
+    <div className="flex flex-col">
       <div className="mb-1.5 flex items-center justify-between">
         <label className="font-mono text-[10px] font-medium text-zinc-400">{label}</label>
         {help ? (
           <button
             type="button"
             onClick={() => setShowHelp((prev) => !prev)}
-            className="flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] text-zinc-500 transition hover:bg-zinc-800 hover:text-red-400"
+            className={`flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] transition ${
+              showHelp
+                ? "border border-red-500/30 bg-red-500/15 text-red-300 font-medium"
+                : "text-zinc-500 hover:bg-zinc-800 hover:text-red-400"
+            }`}
             title={`Panduan cara mengisi ${help.title}`}
           >
             <Question className="h-3 w-3" />
-            <span className="text-[9px]">Cara isi</span>
+            <span className="text-[9px]">{showHelp ? "Tutup" : "Cara isi"}</span>
           </button>
         ) : null}
       </div>
@@ -730,16 +734,16 @@ function SelectorFieldWithHelp({
       />
 
       {showHelp && help ? (
-        <div className="absolute left-0 right-0 top-full z-30 mt-1.5 rounded-xl border border-zinc-700 bg-zinc-900 p-3.5 shadow-2xl shadow-black/80">
+        <div className="mt-2.5 rounded-xl border border-zinc-700/80 bg-zinc-900/95 p-3.5 shadow-xl shadow-black/40">
           <div className="flex items-start justify-between gap-2 border-b border-zinc-800 pb-2">
             <div>
               <p className="text-xs font-semibold text-zinc-100">{help.title}</p>
-              <p className="text-[10px] text-zinc-400">{help.meaning}</p>
+              <p className="mt-0.5 text-[10px] leading-relaxed text-zinc-400">{help.meaning}</p>
             </div>
             <button
               type="button"
               onClick={() => setShowHelp(false)}
-              className="rounded p-1 text-zinc-500 hover:bg-zinc-800 hover:text-zinc-200"
+              className="rounded p-1 text-zinc-500 transition hover:bg-zinc-800 hover:text-zinc-200"
               aria-label="Tutup panduan"
             >
               <X className="h-3.5 w-3.5" />
@@ -754,7 +758,7 @@ function SelectorFieldWithHelp({
 
             <div>
               <p className="font-semibold text-zinc-400">📄 Contoh Kode HTML di Browser:</p>
-              <pre className="mt-1 overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-950 p-2 font-mono text-[10px] text-emerald-400/90 whitespace-pre-wrap">
+              <pre className="mt-1 overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-950 p-2 font-mono text-[10px] leading-relaxed text-emerald-400/90 whitespace-pre-wrap">
                 {help.htmlExample}
               </pre>
             </div>
@@ -770,7 +774,7 @@ function SelectorFieldWithHelp({
                       onChange(sug);
                       setShowHelp(false);
                     }}
-                    className="rounded-md border border-zinc-800 bg-zinc-950 px-2 py-0.5 font-mono text-[10px] text-red-300 transition hover:border-red-500/40 hover:bg-red-500/10"
+                    className="rounded-md border border-zinc-800 bg-zinc-950 px-2 py-0.5 font-mono text-[10px] text-red-300 transition hover:border-red-500/40 hover:bg-red-500/10 active:scale-95"
                   >
                     {sug}
                   </button>
