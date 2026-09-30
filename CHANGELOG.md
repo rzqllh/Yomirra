@@ -4,7 +4,14 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
 
 ## [Unreleased]
 
-Belum ada perubahan yang dijadwalkan untuk rilis berikutnya.
+### Rekonsiliasi dan eksekusi roadmap (Phase 0)
+
+- Local main di-fast-forward ke `origin/main` (`8a20262`) — 33 commit cloud/Codex berhasil diintegrasikan.
+- Execution branch `feat/yomirra-master-roadmap` dibuat dari base yang authoritative.
+- Audit previous work: navigasi perceived-perf (PR #22), FIFO reader (PR #22), source registry/search-state (PR #15,16), canonical multi-source (PR #15), hybrid search (PR #16), deterministic recommendations + smart collections (PR #19) semua VERIFIED/DONE.
+- Baseline: typecheck PASS, lint PASS (0 error), tests 822/822 PASS, production build PASS.
+- Deferred: P4 admin/auth/entitlement/AI (roadmap explicit).
+- `docs/yomirra-master-execution-roadmap.md` ditambahkan sebagai single source of truth.
 
 ## [2.2.0] — 2026-09-29
 
