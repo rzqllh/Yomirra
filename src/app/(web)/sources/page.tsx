@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
-import { HardDrives, Plus } from "@phosphor-icons/react";
+import { HardDrives, ShieldWarning } from "@phosphor-icons/react";
 import { SourceListSkeleton } from "@/components/skeletons/source-list-skeleton";
 import { EmptyState } from "@/components/states/empty-state";
 import { SearchInput } from "@/components/ui/search-input";
@@ -16,10 +16,12 @@ import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { Button } from "@/components/ui/button";
 import { useMounted } from "@/shared/hooks/use-mounted";
 import { useSettingsStore } from "@/shared/store/settings-store";
+import { cn } from "@/shared/utils/cn";
 
 export default function SourcesPage() {
   const isMounted = useMounted();
   const hideNsfw = useSettingsStore(state => state.hideNsfw);
+  const setHideNsfw = useSettingsStore(state => state.setHideNsfw);
   const [filter, setFilter] = React.useState("");
   const [localSources, setLocalSources] = React.useState<import("@/shared/sources/source-types").SourceMetadata[]>([]);
 
@@ -82,6 +84,10 @@ export default function SourcesPage() {
     });
   }, [serverSources, localSources, healthStats]);
 
+  const nsfwCount = React.useMemo(() => {
+    return allSources.filter(s => s.isNsfw).length;
+  }, [allSources]);
+
   const filteredSources = React.useMemo(() => {
     let result = allSources;
     if (isMounted && hideNsfw) {
@@ -110,12 +116,30 @@ export default function SourcesPage() {
             </p>
           </div>
 
-          <SearchInput
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            placeholder="Cari sumber..."
-            containerClassName="rounded-2xl max-w-md w-full"
-          />
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <SearchInput
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+              placeholder="Cari sumber..."
+              containerClassName="rounded-2xl max-w-md w-full"
+            />
+            {isMounted && nsfwCount > 0 ? (
+              <button
+                type="button"
+                onClick={() => setHideNsfw(!hideNsfw)}
+                className={cn(
+                  "inline-flex items-center gap-1.5 self-start sm:self-auto rounded-xl border px-3 py-2 text-xs transition-colors shrink-0",
+                  hideNsfw
+                    ? "border-border-subtle bg-surface-muted/60 text-text-muted hover:border-border-strong hover:text-text-primary"
+                    : "border-semantic-error/40 bg-semantic-error/10 text-semantic-error font-semibold"
+                )}
+                title={hideNsfw ? "Tampilkan sumber 18+ / NSFW" : "Sembunyikan sumber 18+ / NSFW"}
+              >
+                <ShieldWarning size={16} weight={hideNsfw ? "regular" : "duotone"} />
+                <span>{hideNsfw ? `18+ Disembunyikan (${nsfwCount})` : "18+ Ditampilkan"}</span>
+              </button>
+            ) : null}
+          </div>
 
           {isLoading ? (
             <SourceListSkeleton />
