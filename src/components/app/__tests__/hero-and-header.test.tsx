@@ -112,6 +112,7 @@ describe('Header & Hero System (Squircle & Reusable)', () => {
 
       // Verify all items are rendered
       expect(screen.getByText(/Pengaturan aplikasi/i)).toBeTruthy();
+      expect(screen.getByRole('link', { name: 'Sumber' }).getAttribute('href')).toBe('/sources');
       expect(screen.getByText(/Tema tampilan/i)).toBeTruthy();
       expect(screen.getByText(/Bahasa/i)).toBeTruthy();
       expect(screen.getByText(/Pusat bantuan/i)).toBeTruthy();

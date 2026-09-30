@@ -11,7 +11,6 @@ import {
 import { apiClient } from "@/shared/api-client";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useSearchFilterStore } from "@/shared/store/search-filter-store";
-import { useDebounce } from "@/shared/hooks/use-debounce";
 import { useSearchPruning } from "@/shared/hooks/use-search-pruning";
 import { useSearchReset } from "@/shared/hooks/use-search-reset";
 import {
@@ -19,6 +18,7 @@ import {
   buildPayloadForSource,
 } from "@/shared/utils/filter-helpers";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
+import { sourceQueryOptions } from "@/shared/sources/source-query-options";
 import { clusterCanonicalResults } from "@/shared/lib/canonical-search";
 import {
   applySearchTagsToFilters,
@@ -36,35 +36,46 @@ export function useSearchCatalog() {
   const [localQuery, setLocalQuery] = React.useState(query);
   const [page, setPage] = React.useState(1);
   const router = useRouter();
+  const searchParamsString = searchParams?.toString() || "";
+  const previousQuery = React.useRef(query);
+  const searchTimeout = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  React.useEffect(() => {
-    setLocalQuery(query);
-  }, [query]);
-
-  const debouncedQuery = useDebounce(localQuery, 800);
-
-  React.useEffect(() => {
-    if (debouncedQuery !== query) {
-      const params = new URLSearchParams(searchParams?.toString() || "");
-      if (debouncedQuery.trim() === "") {
-        params.delete("q");
-      } else {
-        params.set("q", debouncedQuery.trim());
-      }
-      setPage(1);
-      router.push(`/search?${params.toString()}`);
+  const cancelPendingSearch = React.useCallback(() => {
+    if (searchTimeout.current !== null) {
+      clearTimeout(searchTimeout.current);
+      searchTimeout.current = null;
     }
-  }, [debouncedQuery, query, router, searchParams]);
+  }, []);
+
+  const navigateToQuery = React.useCallback((value: string) => {
+    const nextQuery = value.trim();
+    if (nextQuery === query) return;
+    const params = new URLSearchParams(searchParamsString);
+    if (nextQuery) params.set("q", nextQuery);
+    else params.delete("q");
+    setPage(1);
+    const suffix = params.toString();
+    router.push(suffix ? `/search?${suffix}` : "/search");
+  }, [query, router, searchParamsString]);
+
+  React.useEffect(() => {
+    cancelPendingSearch();
+    // URL navigation (including Back/Forward) wins over a pending input edit.
+    // Never submit a stale debounced value when the committed URL changes.
+    if (previousQuery.current !== query) {
+      previousQuery.current = query;
+      setLocalQuery(query);
+      return;
+    }
+    if (localQuery.trim() === query) return;
+    searchTimeout.current = setTimeout(() => navigateToQuery(localQuery), 800);
+    return cancelPendingSearch;
+  }, [localQuery, query, navigateToQuery, cancelPendingSearch]);
 
   const handleSearchSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    if (localQuery.trim() !== query) {
-      const params = new URLSearchParams(searchParams?.toString() || "");
-      if (localQuery.trim()) params.set("q", localQuery.trim());
-      else params.delete("q");
-      setPage(1);
-      router.push(`/search?${params.toString()}`);
-    }
+    cancelPendingSearch();
+    navigateToQuery(localQuery);
   };
 
   const [localSources, setLocalSources] = React.useState<SourceMetadata[]>([]);
@@ -80,10 +91,7 @@ export function useSearchCatalog() {
     return () => window.removeEventListener("sources_updated", handleUpdate);
   }, [loadLocalSources]);
 
-  const { data: sourcesData } = useQuery({
-    queryKey: ["sources"],
-    queryFn: () => apiClient.getSources(),
-  });
+  const { data: sourcesData } = useQuery(sourceQueryOptions);
 
   const hideNsfw = useSettingsStore((state) => state.hideNsfw);
 
