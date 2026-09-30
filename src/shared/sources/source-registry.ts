@@ -212,6 +212,38 @@ export const sourceRegistry: SourceMetadata[] = [
       filters: false,
     },
     isDynamic: false
+  },
+  {
+    id: "doujindesu",
+    name: "Doujindesu",
+    description: "Baca Doujinshi, Manga & Manhwa Bahasa Indonesia",
+    language: "id",
+    baseUrl: "https://doujin.desu.xxx",
+    upstreamDomain: "doujin.desu.xxx",
+    healthCheckUrl: "https://doujin.desu.xxx/api/manga?limit=1",
+    icon: "https://pic.desu.xxx/content/web/1217a30e-c660-4212-9d80-548df7aa166d.webp",
+    version: "1.0.0",
+    adapterVersion: "1.0.0",
+    isEnabled: false,
+    isInstalled: true,
+    status: "online",
+    healthStats: {
+      uptime: "99.9%",
+      latency: "180ms",
+      lastChecked: "Baru saja",
+      message: "Server merespons dengan baik."
+    },
+    isNsfw: true,
+    capabilities: {
+      popular: true,
+      latest: true,
+      search: true,
+      detail: true,
+      chapters: true,
+      pages: true,
+      filters: false,
+    },
+    isDynamic: false
   }
 ];
 

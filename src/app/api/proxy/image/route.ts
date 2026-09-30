@@ -9,6 +9,8 @@ const MAX_IMAGE_SIZE = 15 * 1024 * 1024; // 15MB
 const ALLOWED_DIRECT_CDN_HOSTS = new Set([
   "content.komiku.me",
   "cdnkomiku.xyz",
+  "pic.desu.xxx",
+  "amz-ch.desu.pics",
 ]);
 
 export async function GET(request: NextRequest) {

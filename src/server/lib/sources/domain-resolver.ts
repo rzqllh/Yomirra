@@ -101,6 +101,17 @@ export const SOURCE_DOMAINS: Record<string, SourceDomainConfig> = {
       mirrors: [],
     },
   },
+  doujindesu: {
+    sourceId: "doujindesu",
+    frontend: {
+      defaultDomain: "https://doujin.desu.xxx",
+      mirrors: [],
+    },
+    api: {
+      defaultDomain: "https://doujin.desu.xxx/api",
+      mirrors: [],
+    },
+  },
 };
 
 const CACHE_TTL_SECONDS = 86400; // 24 hours
