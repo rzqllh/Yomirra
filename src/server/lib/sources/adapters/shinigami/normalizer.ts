@@ -1,4 +1,4 @@
-import { parseDate, stripHtml } from "@/shared/utils/normalize";
+import { parseDate, normalizeSynopsis } from "@/shared/utils/normalize";
 import type { Chapter, MangaDetail, MangaItem } from "@/shared/types/source";
 import type {
   ShinigamiChapterItem,
@@ -35,7 +35,7 @@ export function normalizeMangaItem(item: ShinigamiMangaItem & Record<string, unk
     format = item.type;
   }
 
-  const rawDesc = typeof item.description === "string" ? stripHtml(item.description) : undefined;
+  const rawDesc = typeof item.description === "string" ? normalizeSynopsis(item.description) : undefined;
 
   return {
     id: item.manga_id,
@@ -74,7 +74,7 @@ export function normalizeMangaDetail(detail: ShinigamiMangaDetail): MangaDetail 
     id: detail.manga_id,
     title: detail.title,
     coverUrl: coverUrl,
-    description: stripHtml(detail.description),
+    description: normalizeSynopsis(detail.description),
     author,
     artist,
     genres,
