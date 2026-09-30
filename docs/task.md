@@ -6,13 +6,21 @@
 
 ## T0 — Preflight
 
-- [ ] **T0.1** Fetch/reconcile latest `main`; inspect active PRs and avoid duplicate work.
-- [ ] **T0.2** Record baseline SHA for the implementation PR.
-- [ ] **T0.3** Run baseline typecheck, lint, relevant tests, and build.
-- [ ] **T0.4** Record proven pre-existing failures before changing production code.
-- [ ] **T0.5** Confirm no public docs/PR prose requires provider-specific naming.
+- [x] **T0.1** Fetch/reconcile latest `main`; inspect active PRs and avoid duplicate work.
+- [x] **T0.2** Record baseline SHA for the implementation PR.
+- [x] **T0.3** Run baseline typecheck, lint, relevant tests, and build.
+- [x] **T0.4** Record proven pre-existing failures before changing production code.
+- [x] **T0.5** Confirm no public docs/PR prose requires provider-specific naming.
 
 **Gate:** clean scoped branch, known baseline, no duplicated work.
+
+**T0 execution record (2026-10-01):**
+- authoritative base: `main@63377000eed88c4c53341ff94becafdbadaa1bc6`;
+- active implementation branch: `fix/security-boundary-hardening`;
+- open PRs at branch creation: none;
+- baseline CI from the docs-only planning PR: typecheck PASS, lint PASS, tests FAIL with four pre-existing regressions (listing compact-card QueryClient provider, two synopsis-normalizer expectations, one source-detail synopsis expectation);
+- baseline production/preview build: Vercel READY on the same docs-only code path, so production build succeeds independently of the failing test gate;
+- public planning docs were checked for provider-specific restricted naming and credential literals: none found.
 
 ---
 
