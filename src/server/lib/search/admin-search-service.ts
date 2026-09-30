@@ -32,9 +32,11 @@ export interface SearchSimulationResultItem {
 export interface SearchSimulationResult {
   query: string;
   semanticAvailable: boolean;
+  catalogEmpty?: boolean;
   results: SearchSimulationResultItem[];
   rankedResults: SearchSimulationResultItem[];
 }
+
 
 export async function getSearchIntelligenceStats(): Promise<SearchIntelligenceStats> {
   const records = await getRecentSearchCatalogRecords(500);
@@ -85,7 +87,26 @@ export async function simulateSearchRanking(rawQuery: string): Promise<SearchSim
   const { textQuery: query, tags } = parseSearchExpression(rawQuery);
   const records = await getRecentSearchCatalogRecords(100);
 
-  const candidates: SearchCatalogCandidate[] = records;
+  let candidates: SearchCatalogCandidate[];
+  let catalogEmpty = false;
+
+  if (records.length === 0) {
+    // Fallback: build synthetic candidates from source registry metadata
+    catalogEmpty = true;
+    candidates = sourceRegistry
+      .filter((s) => s.isEnabled && s.isInstalled)
+      .map((s) => ({
+        canonicalKey: `source:${s.id}:__meta`,
+        sourceId: s.id,
+        mangaId: "__meta",
+        title: s.name,
+        description: s.description,
+        score: 0,
+        sourceBindings: [],
+      }));
+  } else {
+    candidates = records;
+  }
 
   const result = await rankSearchIntelligence({
     query,
@@ -111,7 +132,9 @@ export async function simulateSearchRanking(rawQuery: string): Promise<SearchSim
   return {
     query,
     semanticAvailable: result.semanticAvailable,
+    catalogEmpty,
     results: rankedResults,
     rankedResults,
   };
 }
+

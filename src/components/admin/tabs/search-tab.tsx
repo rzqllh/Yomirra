@@ -27,6 +27,8 @@ export function SearchTab({ getToken }: SearchTabProps) {
   const [simulating, setSimulating] = useState(false);
   const [simResults, setSimResults] = useState<SearchSimulationResultItem[]>([]);
   const [simError, setSimError] = useState<string | null>(null);
+  const [simCatalogEmpty, setSimCatalogEmpty] = useState(false);
+  const [simDone, setSimDone] = useState(false);
 
   const fetchStats = async () => {
     setLoadingStats(true);
@@ -85,6 +87,8 @@ export function SearchTab({ getToken }: SearchTabProps) {
 
     setSimulating(true);
     setSimError(null);
+    setSimDone(false);
+    setSimCatalogEmpty(false);
     try {
       const token = await getToken();
       const res = await fetch("/api/admin/search/simulate", {
@@ -98,8 +102,11 @@ export function SearchTab({ getToken }: SearchTabProps) {
       const data = await res.json();
       if (res.ok) {
         setSimResults(data.results || []);
+        setSimCatalogEmpty(!!data.catalogEmpty);
+        setSimDone(true);
       } else {
         setSimError(data.error || "Gagal mensimulasikan ranking");
+        setSimDone(false);
       }
     } catch {
       setSimError("Gagal menghubungi server");
@@ -208,10 +215,23 @@ export function SearchTab({ getToken }: SearchTabProps) {
           </button>
         </form>
 
+        {simCatalogEmpty && simDone && (
+          <div className="p-2 bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs rounded-lg flex items-center gap-2">
+            <WarningCircle className="w-4 h-4 shrink-0" />
+            <span>Katalog Redis kosong — hasil di bawah adalah simulasi dari metadata source statis. Klik <b>Warm Search Catalog</b> untuk mengisi katalog dengan data manga nyata.</span>
+          </div>
+        )}
+
         {simError && (
           <div className="p-2 bg-red-500/10 border border-red-500/30 text-red-300 text-xs rounded-lg flex items-center gap-2">
             <WarningCircle className="w-4 h-4" />
             <span>{simError}</span>
+          </div>
+        )}
+
+        {simDone && !simError && simResults.length === 0 && (
+          <div className="p-4 text-center text-xs text-zinc-500">
+            Tidak ada hasil untuk query ini.
           </div>
         )}
 
