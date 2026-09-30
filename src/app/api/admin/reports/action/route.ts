@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
-import { verifyAdminRequest } from "@/server/lib/auth/admin-auth";
+import { requireAdminAuth } from "@/server/lib/auth/admin-auth";
 import { flushSourceCache, probeSource } from "@/server/lib/sources/admin-source-service";
 import { updateReportStatus } from "@/server/lib/ops/admin-report-service";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
-  const auth = await verifyAdminRequest(req);
-  if (!auth.isAdmin) {
-    return NextResponse.json({ error: "Unauthorized", code: auth.error }, { status: 401 });
+  const auth = await requireAdminAuth(req);
+  if (!auth.authorized) {
+    return auth.response;
   }
 
   try {
