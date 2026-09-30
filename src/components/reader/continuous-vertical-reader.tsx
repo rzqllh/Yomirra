@@ -175,6 +175,19 @@ export function ContinuousVerticalReader({
 
   const virtualItems = virtualizer.getVirtualItems();
 
+  const firstVisibleVirtualIndex = virtualItems[0]?.index;
+  React.useEffect(() => {
+    if (
+      isRestored &&
+      typeof firstVisibleVirtualIndex === "number" &&
+      firstVisibleVirtualIndex > queueStartIndex + 2 &&
+      firstVisibleVirtualIndex > revealedThrough + 2
+    ) {
+      setQueueStartIndex(firstVisibleVirtualIndex);
+      setRevealedThrough((prev) => Math.max(prev, firstVisibleVirtualIndex - 1));
+    }
+  }, [isRestored, firstVisibleVirtualIndex, queueStartIndex, revealedThrough]);
+
   const handleImageError = React.useCallback(() => { }, []);
 
 

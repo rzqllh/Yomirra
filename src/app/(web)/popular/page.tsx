@@ -61,24 +61,24 @@ async function PopularFeed({ sourceId, sourceName }: { sourceId: string; sourceN
 export const dynamic = "force-dynamic";
 
 export default async function PopularPage() {
-  const allRuntime = await getRuntimeSources();
-  const activeBuiltin = allRuntime.filter(s => s.isEnabled && s.isInstalled && s.status === "online").map(s => ({ id: s.id, name: s.name }));
-  
-  // Also get custom sources from cookie
-  const customSources: { id: string, name: string }[] = [];
-  try {
-    const cookieStore = await cookies();
-    const urlsCookie = cookieStore.get("yomirra_dynamic_sources_urls")?.value;
-    const sourcesCookie = cookieStore.get("yomirra_dynamic_sources")?.value;
-    if (urlsCookie && sourcesCookie) {
-      const parsedSources = JSON.parse(decodeURIComponent(sourcesCookie));
-      for (const [id, manifest] of Object.entries(parsedSources)) {
-        customSources.push({ id, name: (manifest as any).name || id });
-      }
-    }
-  } catch(e) {}
+  const cookieStore = await cookies();
+  const disabledSourcesCookie = cookieStore.get("yomirra-disabled-sources")?.value;
+  let userDisabledSources: string[] = [];
 
-  const activeSources = [...activeBuiltin, ...customSources];
+  if (disabledSourcesCookie) {
+    try {
+      userDisabledSources = JSON.parse(decodeURIComponent(disabledSourcesCookie));
+    } catch (_e) {}
+  }
+
+  const allRuntime = await getRuntimeSources();
+  const activeSources = allRuntime.filter(
+    (s) =>
+      s.isEnabled &&
+      s.isInstalled &&
+      s.status !== "unavailable" &&
+      !userDisabledSources.includes(s.id)
+  );
 
   return (
     <YomirraSurface variant="base" className="w-full">
@@ -87,7 +87,10 @@ export default async function PopularPage() {
           title="Populer"
           subtitle="Manga, Manhwa, dan Manhua paling populer saat ini."
           icon={<Fire size={24} weight="duotone" />}
+          hideDesktop
         />
+
+        <h1 className="sr-only">Populer</h1>
         
         {activeSources.map(source => (
           <Suspense key={source.id} fallback={<PopularFeedSkeleton />}>

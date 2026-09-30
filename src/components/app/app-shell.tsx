@@ -198,7 +198,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         !isReader && "md:pl-[76px] xl:pl-[240px]"
       )}>
         {!isReader && <TopNav />}
-        {!isReader && <DesktopRail />}
+        {!isReader && <DesktopRail pendingHref={pendingHref} />}
         
         <main
           className={cn(

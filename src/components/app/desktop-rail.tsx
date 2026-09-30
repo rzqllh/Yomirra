@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { BookOpen, DownloadSimple, GearSix, HardDrives } from "@phosphor-icons/react";
 import { MAIN_NAV_ITEMS, type NavItem } from "@/shared/config/nav";
 import { cn } from "@/shared/utils/cn";
+import { beginNavigationIntent, getNavigationPathname } from "@/shared/lib/navigation-intent";
 
 const MORE_ITEMS: NavItem[] = [
   { href: "/sources", label: "Sumber", icon: HardDrives },
@@ -12,11 +13,12 @@ const MORE_ITEMS: NavItem[] = [
   { href: "/settings", label: "Pengaturan", icon: GearSix },
 ];
 
-export function DesktopRail() {
+export function DesktopRail({ pendingHref }: { pendingHref?: string | null } = {}) {
   const pathname = usePathname();
+  const activePathname = pendingHref ? getNavigationPathname(pendingHref) : pathname;
 
   const renderItem = (item: NavItem) => {
-    const active = item.href === "/" ? pathname === "/" : pathname?.startsWith(item.href);
+    const active = item.href === "/" ? activePathname === "/" : activePathname?.startsWith(item.href);
     const Icon = item.icon;
 
     return (
@@ -26,6 +28,11 @@ export function DesktopRail() {
         aria-label={item.label}
         aria-current={active ? "page" : undefined}
         title={item.label}
+        onClick={(event) => {
+          if (active || !beginNavigationIntent(item.href)) {
+            event.preventDefault();
+          }
+        }}
         className={cn(
           "group flex min-h-[36px] items-center justify-center xl:justify-start gap-2.5 rounded-xs px-2.5 py-1.5 transition-all duration-150 outline-none focus-visible:ring-2 focus-visible:ring-accent",
           active

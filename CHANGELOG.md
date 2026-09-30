@@ -4,6 +4,23 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
 
 ## [Unreleased]
 
+### P0 Core Stability (Phase 2)
+
+- **Navigation Perceived-Performance Foundation** (`src/components/app/desktop-rail.tsx`, `src/components/app/app-shell.tsx`):
+  - Menambahkan dukungan `pendingHref` ke `DesktopRail` sehingga transisi navigasi di desktop memiliki indikator aktif seketika dan progress bar top nav sama seperti `BottomDock` mobile.
+  - Mencegah duplikasi event navigasi pada tujuan yang sama dan menjaga konsistensi state tanpa toast berisik saat navigasi rutin.
+- **Single Scroll Owner & Page Hierarchy Cleanup** (`src/app/(web)/popular/page.tsx`):
+  - Menyelaraskan hierarki header `PopularPage` dengan `hideDesktop` dan `<h1 className="sr-only">Populer</h1>`, menghilangkan duplikasi banner desktop di bawah `TopNav` dan menyelaraskan struktur shell dengan Home, Library, Bookmark, dan Search.
+- **Source Registry & Search-State Reconciliation** (`src/shared/hooks/use-search-catalog.ts`, `src/app/(web)/popular/page.tsx`):
+  - `useSearchCatalog` secara otomatis membersihkan ID sumber usang dari penyimpanan persisten: jika pilihan custom pengguna menghasilkan 0 sumber valid, sistem otomatis pulih ke seluruh sumber yang dapat dicari.
+  - Halaman `PopularPage` kini mematuhi cookie preferensi browsing `yomirra-disabled-sources`, sementara `Search` tetap dapat mencari semua sumber yang aktif secara runtime dan diizinkan admin.
+- **Reader FIFO Image Scheduling & Deadlock Prevention** (`src/components/reader/continuous-vertical-reader.tsx`, `src/shared/lib/reader-load-order.ts`):
+  - Menegakkan penjadwalan pemuatan halaman reader top-to-bottom dengan controlled concurrency window sebesar 2.
+  - Menambahkan re-anchoring otomatis saat pengguna melakukan scroll cepat ke bawah agar viewport langsung memuat halaman aktif tanpa tertahan antrean halaman jauh di atas.
+  - Memverifikasi pencegahan deadlock antrean saat terjadi kegagalan permanen gambar sehingga sisa chapter tetap dapat dibaca.
+- **Regression Testing** (`src/shared/lib/__tests__/phase2-stability.test.ts`):
+  - Menambahkan suite pengujian regresi menyeluruh untuk intent navigasi, sanitasi sumber usang, isolasi toggle browsing vs search, dan FIFO lifecycle reader.
+
 ### P0 Admin Runtime Source Overrides & Public Frontend Wiring (Phase 1)
 
 - **Runtime Source Merger Service** (`src/server/lib/sources/runtime-sources.ts`): Menyediakan resolver server-side `getRuntimeSources()` yang menggabungkan baseline hardcoded `sourceRegistry` dengan runtime overrides (`getCoreSourceOverrides`) dan custom sources (`getCustomSources`) dari Redis. Dilengkapi fallback fail-safe seketika ke baseline statis jika Redis down atau cold start.

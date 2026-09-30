@@ -83,6 +83,17 @@ describe('App Shell & Navigation Deduplication Pass', () => {
       const berandaLink = screen.getByRole('link', { name: 'Beranda' });
       expect(berandaLink.getAttribute('aria-current')).toBeNull();
     });
+
+    it('moves the active state to a pending destination before pathname commits', () => {
+      currentPathname = '/';
+      render(<DesktopRail pendingHref="/library" />);
+
+      const berandaLink = screen.getByRole('link', { name: 'Beranda' });
+      const libraryLink = screen.getByRole('link', { name: 'Library' });
+
+      expect(berandaLink.getAttribute('aria-current')).toBeNull();
+      expect(libraryLink.getAttribute('aria-current')).toBe('page');
+    });
   });
 
   describe('TopNav (Global Breadcrumb & Profile Deduplication)', () => {

@@ -113,9 +113,10 @@ export function useSearchCatalog() {
     if (!hasCustomizedSources || selectedSources === null) {
       return searchableSources.map((source) => source.id);
     }
-    return selectedSources.filter((id) =>
+    const filtered = selectedSources.filter((id) =>
       searchableSources.some((source) => source.id === id)
     );
+    return filtered.length > 0 ? filtered : searchableSources.map((source) => source.id);
   }, [hasCustomizedSources, selectedSources, searchableSources]);
 
   const toggleSource = (id: string) => {

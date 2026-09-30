@@ -53,4 +53,30 @@ describe("reader load order", () => {
       shouldReveal: false,
     });
   });
+
+  it("advances reveal past failed/settled pages without deadlocking queue", () => {
+    const settled = new Set<number>([0, 1]);
+    // Page 2 failed permanently and was added to settled set
+    settled.add(2);
+    // Page 3 loaded successfully
+    settled.add(3);
+
+    const revealed = advanceReaderReveal(settled, -1, 10);
+    // Queue successfully advances to 3 despite page 2 failing
+    expect(revealed).toBe(3);
+
+    // Page 4 and 5 are now eligible to load
+    expect(getReaderPageLoadState(4, 0, revealed, 2)).toEqual({
+      shouldLoad: true,
+      shouldReveal: false,
+    });
+    expect(getReaderPageLoadState(5, 0, revealed, 2)).toEqual({
+      shouldLoad: true,
+      shouldReveal: false,
+    });
+    expect(getReaderPageLoadState(6, 0, revealed, 2)).toEqual({
+      shouldLoad: false,
+      shouldReveal: false,
+    });
+  });
 });
