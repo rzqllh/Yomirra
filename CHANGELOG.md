@@ -4,6 +4,25 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
 
 ## [Unreleased]
 
+### P3 Advanced Discovery (Phase 5)
+
+- **Related Titles Discovery — Lexical & Metadata Baseline** (`src/server/lib/search/search-intelligence-service.ts`, `src/app/api/search/related/route.ts`):
+  - Mengimplementasikan `metadataRelatedScore` berbasis author matching (bobot 0.35), format similarity (0.15), Jaccard genre overlap (0.35), dan lexical title similarity (0.25) sebagai baseline deterministik tanpa dependensi wajib pada model AI eksternal.
+  - Endpoint `/api/search/related` diamankan dengan rate-limiting ketat (12 req/menit) dan input schema validation via Zod.
+- **Smart Collections Engine** (`src/shared/lib/smart-collections.ts`, `src/shared/lib/__tests__/smart-collections.test.ts`):
+  - Menyediakan derivasi koleksi pintar yang transparan dan berbasis aturan: `continue-reading`, `unread`, `recently-added`, `highly-rated`, `stale`, dan grouping format (`Manga`, `Manhwa`, `Manhua`) tanpa dependensi semantik hitam.
+  - Memperhitungkan provenance `linkedSources` sehingga riwayat baca dari sumber sekunder tetap terakumulasi ke judul tersimpan.
+- **Progressive Indexing & Vector Catalog Invalidation** (`src/server/lib/search/semantic-catalog.ts`, `src/server/lib/search/__tests__/semantic-catalog.test.ts`):
+  - Penyimpanan katalog kanonikal persisten di Redis (`yomirra:search:catalog:record:*` dan index set `yomirra:search:catalog:index`) dengan TTL 90 hari.
+  - Invalidation otomatis berbasis `embeddingTextHash` (SHA-256): jika metadata teks komik berubah, vektor embedding secara otomatis diperbarui.
+  - Bounded resource cap: indeks dibatasi maksimal 1.200 record dengan eviction otomatis record terlama untuk mencegah kebocoran memori Redis.
+  - Fail-safe resilience: seluruh operasi katalog Redis dibungkus safe try-catch sehingga kegagalan koneksi atau timeout Redis tidak pernah menggagalkan fungsi pencarian ataupun SSR.
+- **Hybrid Lexical + Semantic Search Ranking** (`src/shared/lib/search-intelligence.ts`, `src/server/lib/search/search-intelligence-service.ts`):
+  - Memastikan pencocokan leksikal yang tepat (exact/prefix match) selalu mempertahankan keunggulan mutlak atas recall semantik fuzzy.
+  - Batas batching semantik serverless: maksimal 6 missing embeddings per query untuk membatasi konsumsi resource dan latensi komputasi.
+- **Recommendation System Baseline** (`src/shared/lib/recommendations.ts`, `src/shared/lib/__tests__/recommendations.test.ts`):
+  - Membangun profil rekomendasi pengguna berbasis bobot preferensi sumber dan format dari riwayat baca aktif, mengecualikan judul yang sudah pernah dibaca atau di-bookmark secara deterministik.
+
 ### P2 Search Intelligence Foundation (Phase 4)
 
 - **Search Tag Parser & Filter Chips with Include/Exclude Semantics** (`src/shared/lib/search-intelligence.ts`, `src/components/search/search-tag-input.tsx`):
