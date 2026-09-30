@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import { HomeView } from "@/components/app/home-view";
-import { sourceRegistry } from "@/shared/sources/source-registry";
+import { getRuntimeSources } from "@/server/lib/sources/runtime-sources";
 import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { DirectionalTransition } from "@/components/ui/directional-transition";
@@ -19,19 +19,21 @@ export const dynamic = "force-dynamic";
 export default async function HomePage() {
   const cookieStore = await cookies();
   const disabledSourcesCookie = cookieStore.get('yomirra-disabled-sources')?.value;
-  let disabledSources: string[] = [];
+  let userDisabledSources: string[] = [];
   
   if (disabledSourcesCookie) {
     try {
-      disabledSources = JSON.parse(decodeURIComponent(disabledSourcesCookie));
+      userDisabledSources = JSON.parse(decodeURIComponent(disabledSourcesCookie));
     } catch(e) {}
   }
 
-  const activeSources = sourceRegistry.filter(s => 
+  const allRuntimeSources = await getRuntimeSources();
+
+  const activeSources = allRuntimeSources.filter(s => 
     s.isEnabled && 
     s.isInstalled && 
     s.status !== "unavailable" &&
-    !disabledSources.includes(s.id)
+    !userDisabledSources.includes(s.id)
   );
 
   return (

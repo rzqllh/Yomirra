@@ -30,7 +30,7 @@ export async function probeSourceHealth(
       resolvedHost = await domainResolver.resolveDomain(normalizedId, "frontend");
     }
 
-    const adapter = await sourceManager.getSource(normalizedId);
+    const adapter = await sourceManager.getSource(normalizedId, null, { allowDisabled: true });
     if (!adapter) {
       throw new SourceError(`Source adapter '${normalizedId}' not registered`, {
         code: "SOURCE_DOWN",

@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { sourceRegistry } from "@/shared/sources/source-registry";
+import { getRuntimeSources } from "@/server/lib/sources/runtime-sources";
 import { Suspense } from "react";
 import { PopularFeedSkeleton } from "@/components/skeletons/popular-skeleton";
 import { withCache, CACHE_TTL } from "@/server/lib/cache/redis-cache";
@@ -61,7 +61,8 @@ async function PopularFeed({ sourceId, sourceName }: { sourceId: string; sourceN
 export const dynamic = "force-dynamic";
 
 export default async function PopularPage() {
-  const activeBuiltin = sourceRegistry.filter(s => s.isEnabled && s.isInstalled && s.status === "online").map(s => ({ id: s.id, name: s.name }));
+  const allRuntime = await getRuntimeSources();
+  const activeBuiltin = allRuntime.filter(s => s.isEnabled && s.isInstalled && s.status === "online").map(s => ({ id: s.id, name: s.name }));
   
   // Also get custom sources from cookie
   const customSources: { id: string, name: string }[] = [];
