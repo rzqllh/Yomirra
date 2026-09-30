@@ -4,6 +4,16 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
 
 ## [Unreleased]
 
+### P0 Admin Runtime Source Overrides & Public Frontend Wiring (Phase 1)
+
+- **Runtime Source Merger Service** (`src/server/lib/sources/runtime-sources.ts`): Menyediakan resolver server-side `getRuntimeSources()` yang menggabungkan baseline hardcoded `sourceRegistry` dengan runtime overrides (`getCoreSourceOverrides`) dan custom sources (`getCustomSources`) dari Redis. Dilengkapi fallback fail-safe seketika ke baseline statis jika Redis down atau cold start.
+- **Admin Kill-Switch Enforcement**: `SourceManager.getSource()` kini mematuhi kill-switch admin dengan structured error `SOURCE_DISABLED: Source '<id>' is currently disabled by administrator.` untuk seluruh pembaca publik, dengan opsi bypass eksplisit `{ allowDisabled: true }` khusus untuk diagnostic probe ops admin.
+- **Public API & SSR Wiring**:
+  - `GET /api/sources` beralih ke `getRuntimeSources()`, mengekspos metadata efektif secara dinamis.
+  - `HomePage` (`src/app/(web)/page.tsx`) dan `PopularPage` (`src/app/(web)/popular/page.tsx`) mengonsumsi runtime sources sehingga toggle enable/disable dan perubahan domain dari admin langsung berefek ke feed publik.
+- **Client Security Boundary**: Audit dan regression test statis memastikan tidak ada default passkey atau kredensial privileged yang masuk ke client bundle browser (`src/components/admin/__tests__/admin-security-bundle.test.ts`).
+- **Dev Performance Optimization**: Mem-bypass `@serwist/next` di dev mode dan membatasi `onDemandEntries` memory buffer di `next.config.ts` untuk meringankan beban memori dan lag laptop lokal saat menjalankan `pnpm dev`.
+
 ### Admin Portal & Ops (v2.3.0 preview)
 
 - **Admin portal** (`/admin`) dengan passkey gate, sidebar navigasi 6 tab, dan layout responsif.

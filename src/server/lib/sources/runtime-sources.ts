@@ -22,8 +22,9 @@ export async function getRuntimeSources(): Promise<SourceMetadata[]> {
     ]);
 
     // 1. Map built-in sources dengan runtime overrides
+    const overridesMap = overrides as Record<string, any>;
     const mergedBuiltin: SourceMetadata[] = sourceRegistry.map((base) => {
-      const override = overrides[base.id.toLowerCase()];
+      const override = overridesMap[base.id.toLowerCase()];
       if (!override) return { ...base };
 
       return {
