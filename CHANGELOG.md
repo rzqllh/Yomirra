@@ -19,6 +19,17 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
 - Regression test suite untuk Shinigami adapter (`src/server/lib/sources/adapters/shinigami/__tests__/adapter.test.ts`) dengan 9 test case baru (12/12 Shinigami tests PASS).
 - Verifikasi penuh Phase 2 Gate: 123 test file (833 tests) PASS, typecheck PASS (0 error), lint PASS (0 error), production build (`next build --webpack`) PASS.
 
+### P2 Search Intelligence Foundation (Phase 3)
+
+- Pembuatan regression test suite terpadu untuk kualitas search dan ranking (`src/shared/lib/__tests__/search-ranking-quality.test.ts`, 13 tests PASS).
+- Verifikasi komprehensif: exact title dominance over prefix/contains, alternate/alias title normalization, toleransi typo berbatas dengan proteksi prefix pendek, pemisahan query teks dan hard-tag filter (#genre, #status), isolasi kapabilitas source terhadap hard tags, deduplikasi multi-source, serta fallback chapter aman saat nomor chapter target tidak persis ada.
+
+### P3 Advanced Discovery (Phase 4)
+
+- Non-AI metadata baseline untuk related titles (`metadataRelatedScore` dan `findRelatedSearchTitles` di `src/server/lib/search/search-intelligence-service.ts`): menghitung relevansi berdasarkan author, format, Jaccard genre overlap, dan title similarity saat embedding Gemini tidak dikonfigurasi atau sedang offline.
+- Hybrid discovery: saat embedding tersedia, skor embedding diintegrasikan ke metadata baseline untuk memperluas semantic recall tanpa mengorbankan ketepatan metadata.
+- Unit test coverage untuk related titles metadata baseline di `src/server/lib/search/__tests__/search-intelligence-service.test.ts`.
+
 ## [2.2.0] — 2026-09-29
 
 Rilis ini berfokus pada search lintas source, rekomendasi yang lebih berguna, Rak Buku, dan perapihan runtime.
