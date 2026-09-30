@@ -127,7 +127,9 @@ export function CoreSourceModal({ source, isOpen, onClose, onSaved, getToken }: 
                 </div>
                 <button type="button" role="switch" aria-checked={isEnabled} onClick={() => setIsEnabled((value) => !value)} className="flex shrink-0 items-center gap-2">
                   <span className={cx("text-[10px] font-medium", isEnabled ? "text-emerald-300" : "text-zinc-600")}>{isEnabled ? "Enabled" : "Disabled"}</span>
-                  <span className={cx("relative h-5 w-9 rounded-full border transition", isEnabled ? "border-emerald-500/45 bg-emerald-500/20" : "border-zinc-700 bg-zinc-900")}><span className={cx("absolute top-0.5 h-3.5 w-3.5 rounded-full bg-zinc-200 transition-transform", isEnabled ? "translate-x-[17px]" : "translate-x-0.5")} /></span>
+                  <span className={cx("relative inline-flex h-5 w-9 shrink-0 items-center rounded-full border transition-colors", isEnabled ? "border-emerald-500/45 bg-emerald-500/20" : "border-zinc-700 bg-zinc-900")}>
+                    <span className={cx("absolute left-0.5 top-0.5 h-3.5 w-3.5 rounded-full bg-zinc-200 shadow-sm transition-transform", isEnabled ? "translate-x-4" : "translate-x-0")} />
+                  </span>
                 </button>
               </div>
             </div>

@@ -51,8 +51,8 @@ function Switch({
       <span className={cx("text-[11px] font-medium", checked ? (danger ? "text-rose-300" : "text-emerald-300") : "text-zinc-600")}>
         {checked ? "Aktif" : "Nonaktif"}
       </span>
-      <span className={cx("relative h-5 w-9 rounded-full border transition", checked ? (danger ? "border-rose-500/50 bg-rose-500/25" : "border-emerald-500/50 bg-emerald-500/25") : "border-zinc-700 bg-zinc-900")}>
-        <span className={cx("absolute top-0.5 h-3.5 w-3.5 rounded-full bg-zinc-200 transition-transform", checked ? "translate-x-[17px]" : "translate-x-0.5")} />
+      <span className={cx("relative inline-flex h-5 w-9 shrink-0 items-center rounded-full border transition-colors", checked ? (danger ? "border-rose-500/50 bg-rose-500/25" : "border-emerald-500/50 bg-emerald-500/25") : "border-zinc-700 bg-zinc-900")}>
+        <span className={cx("absolute left-0.5 top-0.5 h-3.5 w-3.5 rounded-full bg-zinc-200 shadow-sm transition-transform", checked ? "translate-x-4" : "translate-x-0")} />
       </span>
       <span className="sr-only">{label}</span>
     </button>
