@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { stripHtml, normalizeTitle, parseDate } from "../normalize";
+import { stripHtml, normalizeSynopsis, normalizeTitle, parseDate } from "../normalize";
 
 describe("Utils: normalize", () => {
   describe("stripHtml", () => {
@@ -28,6 +28,33 @@ describe("Utils: normalize", () => {
       const rawSynopsis = "<p>Setelah menyelesaikan \\[MENARA UJIAN\\], sang pahlawan kembali &amp; mendapati dunia &quot;berbeda&quot;.<br/>Musuh baru bermunculan.</p>";
       expect(stripHtml(rawSynopsis)).toBe(
         "Setelah menyelesaikan [MENARA UJIAN], sang pahlawan kembali & mendapati dunia \"berbeda\". Musuh baru bermunculan."
+      );
+    });
+    it("should strip entity-encoded HTML tags before rendering", () => {
+      expect(stripHtml("&lt;p&gt;&lt;strong&gt;Sinopsis:&lt;/strong&gt;&lt;br /&gt;Cerita utama.&lt;/p&gt;")).toBe(
+        "Sinopsis: Cerita utama."
+      );
+    });
+
+    it("should handle double-encoded provider markup", () => {
+      expect(stripHtml("&amp;lt;p&amp;gt;Cerita &amp;amp; konflik.&amp;lt;/p&amp;gt;")).toBe(
+        "Cerita & konflik."
+      );
+    });
+  });
+
+  describe("normalizeSynopsis", () => {
+    it("removes provider synopsis labels and download-batch boilerplate", () => {
+      const raw =
+        "&lt;p&gt;&lt;strong&gt;Sinopsis:&lt;/strong&gt;&lt;br /&gt;Cerita utama yang harus tampil.&lt;/p&gt;" +
+        "&lt;p&gt;&lt;strong&gt;Download Batch&lt;/strong&gt; Chapter 01-10 Chapter 11-20&lt;/p&gt;";
+
+      expect(normalizeSynopsis(raw)).toBe("Cerita utama yang harus tampil.");
+    });
+
+    it("converts markdown links into readable synopsis text", () => {
+      expect(normalizeSynopsis("Baca [cerita utama](https://example.com) **sekarang**.")).toBe(
+        "Baca cerita utama sekarang."
       );
     });
   });
