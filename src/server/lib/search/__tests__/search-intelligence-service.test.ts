@@ -63,4 +63,53 @@ describe("search intelligence trust boundary", () => {
 
     expect(mocks.upsert).not.toHaveBeenCalled();
   });
+
+  it("finds related titles using metadata baseline when embeddings are absent", async () => {
+    mocks.getRecent.mockResolvedValue([
+      {
+        canonicalKey: "canonical:target",
+        sourceId: "shinigami",
+        mangaId: "target-id",
+        title: "Solo Leveling",
+        author: "Chugong",
+        format: "Manhwa",
+        genres: ["Action", "Fantasy"],
+      },
+      {
+        canonicalKey: "canonical:ragnarok",
+        sourceId: "shinigami",
+        mangaId: "rag-id",
+        title: "Solo Leveling: Ragnarok",
+        author: "Daul",
+        format: "Manhwa",
+        genres: ["Action", "Fantasy"],
+      },
+      {
+        canonicalKey: "canonical:overpowered-sword",
+        sourceId: "shinigami",
+        mangaId: "sword-id",
+        title: "The Overpowered Sword",
+        author: "Different Author",
+        format: "Manga",
+        genres: ["Slice of Life"],
+      },
+    ]);
+
+    const results = await findRelatedSearchTitles(
+      {
+        canonicalKey: "canonical:target",
+        sourceId: "shinigami",
+        mangaId: "target-id",
+        title: "Solo Leveling",
+        author: "Chugong",
+        format: "Manhwa",
+        genres: ["Action", "Fantasy"],
+      },
+      5
+    );
+
+    // Ragnarok shares title similarity, format (Manhwa), and genres (Action, Fantasy)
+    expect(results).toHaveLength(1);
+    expect(results[0].canonicalKey).toBe("canonical:ragnarok");
+  });
 });

@@ -3,9 +3,11 @@ import {
   candidateMatchesTags,
   lexicalSearchScore,
   shouldUseSemanticSearch,
+  similarity,
   type ResolvedSearchTag,
   type SearchCatalogCandidate,
 } from "@/shared/lib/search-intelligence";
+import { normalizeTitle } from "@/shared/lib/title-matcher";
 import {
   getRecentSearchCatalogRecords,
   getSearchCatalogRecord,
@@ -165,24 +167,82 @@ export async function rankSearchIntelligence(params: {
   };
 }
 
+export function metadataRelatedScore(
+  target: SearchCatalogCandidate,
+  candidate: SearchCatalogCandidate
+): number {
+  let score = 0;
+
+  // Author match (strong signal)
+  if (target.author && candidate.author) {
+    const targetAuthor = normalizeTitle(target.author);
+    const candAuthor = normalizeTitle(candidate.author);
+    if (targetAuthor && candAuthor && targetAuthor === candAuthor) {
+      score += 0.35;
+    }
+  }
+
+  // Format match (e.g. Manga, Manhwa, Manhua)
+  if (target.format && candidate.format && target.format.toLowerCase() === candidate.format.toLowerCase()) {
+    score += 0.15;
+  }
+
+  // Genre overlap (Jaccard similarity)
+  if (target.genres && target.genres.length > 0 && candidate.genres && candidate.genres.length > 0) {
+    const targetSet = new Set(target.genres.map((g) => g.toLowerCase().trim()));
+    const candSet = new Set(candidate.genres.map((g) => g.toLowerCase().trim()));
+    let intersection = 0;
+    for (const g of candSet) {
+      if (targetSet.has(g)) intersection++;
+    }
+    const union = new Set([...targetSet, ...candSet]).size;
+    if (union > 0) {
+      score += (intersection / union) * 0.35;
+    }
+  }
+
+  // Title lexical similarity (sequels, spin-offs, adaptations)
+  const normTarget = normalizeTitle(target.title);
+  const normCand = normalizeTitle(candidate.title);
+  if (normTarget && normCand) {
+    const titleSim = similarity(normTarget, normCand);
+    if (titleSim > 0.4) {
+      score += titleSim * 0.25;
+    }
+  }
+
+  return Math.min(1, score);
+}
+
 export async function findRelatedSearchTitles(
   target: SearchCatalogCandidate,
   limit = 8
 ): Promise<SearchCatalogCandidate[]> {
-  if (!isSemanticEmbeddingConfigured()) return [];
-
-  const storedTarget = await getSearchCatalogRecord(target.canonicalKey);
-  const targetEmbedding = await ensureCandidateEmbedding(target, storedTarget);
-  if (!targetEmbedding) return [];
-
   const recent = await getRecentSearchCatalogRecords(300);
-  return recent
-    .filter((record) => record.canonicalKey !== target.canonicalKey && record.embedding)
-    .map((record) => ({
-      record,
-      score: clampSimilarity(cosineSimilarity(targetEmbedding.values, record.embedding!)),
-    }))
-    .filter(({ score }) => score >= 0.55)
+  const otherRecords = recent.filter((record) => record.canonicalKey !== target.canonicalKey);
+  if (otherRecords.length === 0) return [];
+
+  const semanticEnabled = isSemanticEmbeddingConfigured();
+  let targetEmbedding: { values: number[]; textHash: string } | null = null;
+
+  if (semanticEnabled) {
+    const storedTarget = await getSearchCatalogRecord(target.canonicalKey);
+    targetEmbedding = await ensureCandidateEmbedding(target, storedTarget);
+  }
+
+  return otherRecords
+    .map((record) => {
+      const metaScore = metadataRelatedScore(target, record);
+      let finalScore = metaScore;
+
+      if (targetEmbedding && record.embedding) {
+        const semScore = clampSimilarity(cosineSimilarity(targetEmbedding.values, record.embedding));
+        finalScore = Math.max(metaScore, semScore * 0.7 + metaScore * 0.3);
+      }
+
+      return { record, score: finalScore };
+    })
+    .filter(({ score }) => score >= 0.35)
     .sort((a, b) => b.score - a.score)
     .slice(0, Math.max(1, Math.min(limit, 12)))
     .map(({ record }) => {

@@ -108,7 +108,7 @@ function levenshtein(a: string, b: string): number {
   return matrix[a.length][b.length];
 }
 
-function similarity(a: string, b: string): number {
+export function similarity(a: string, b: string): number {
   if (!a || !b) return 0;
   if (a === b) return 1;
   const maxLength = Math.max(a.length, b.length);
