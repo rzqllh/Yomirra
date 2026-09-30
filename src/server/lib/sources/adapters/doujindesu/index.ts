@@ -63,7 +63,7 @@ export class DoujinDesuSource implements MangaSource {
   public readonly supportedLanguages = ["id"];
   public readonly version = "1.0.0";
   public readonly adapterVersion = "1.0.0";
-  public readonly isEnabled = false; // Default disabled per user instruction
+  public readonly isEnabled = true;
   public readonly isInstalled = true;
   public readonly isNsfw = true; // Adult / NSFW attribute per user instruction
   public readonly isDynamic = false;
