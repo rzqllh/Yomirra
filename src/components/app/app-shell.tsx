@@ -64,6 +64,7 @@ function PendingNavigationSurface({ reader }: { reader: boolean }) {
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const isReader = pathname?.includes("/read/")
+  const isAdmin = pathname?.startsWith("/admin")
   const [pendingHref, setPendingHref] = React.useState<string | null>(null)
   
   useSync()
@@ -150,6 +151,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const pendingIsReader = pendingHref
     ? getNavigationPathname(pendingHref).includes("/read/")
     : false
+
+  if (isAdmin) {
+    return <>{children}</>
+  }
 
   return (
     <div className="flex min-h-dvh bg-background text-text-primary w-full max-w-full">

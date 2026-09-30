@@ -33,7 +33,33 @@ export class SourceManager {
     }
 
     const normalizedId = id.toLowerCase().trim();
-    const source = sourceMap.get(normalizedId);
+    let source = sourceMap.get(normalizedId);
+    if (!source) {
+      try {
+        const { getCustomSourceById } = await import("./custom-source-service");
+        const custom = await getCustomSourceById(normalizedId);
+        if (custom) {
+          if (custom.type === "html") {
+            const { DynamicHtmlSourceAdapter } = await import("./adapters/dynamic/html-adapter");
+            source = new DynamicHtmlSourceAdapter(custom);
+          } else {
+            source = new DynamicSourceAdapter({
+              id: custom.id,
+              name: custom.name,
+              baseUrl: custom.baseUrl,
+              lang: custom.lang,
+              version: custom.version,
+              capabilities: ["popular", "latest", "search", "detail", "chapters", "pages"],
+              endpoints: custom.endpoints,
+              nsfw: custom.isNsfw,
+            });
+          }
+        }
+      } catch {
+        // ignore and let next check handle
+      }
+    }
+
     if (!source) {
       throw new Error(`Source ${id} not found`);
     }

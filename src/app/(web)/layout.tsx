@@ -34,6 +34,7 @@ import { OfflineProvider } from "@/components/providers/offline-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { DownloadManager } from "@/components/download/download-manager";
 import { BootGate } from "@/components/app/boot-gate";
+import { SiteAnnouncementBanner } from "@/components/layout/site-announcement-banner";
 
 export default function RootLayout({
   children,
@@ -49,6 +50,7 @@ export default function RootLayout({
           <OfflineProvider>
             <div vaul-drawer-wrapper="" className="bg-background min-h-dvh">
               <BootGate>
+                <SiteAnnouncementBanner />
                 <AppShell>
                   <ErrorBoundary>
                     {children}
