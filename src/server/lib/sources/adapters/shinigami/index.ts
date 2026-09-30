@@ -20,20 +20,23 @@ import type {
 } from "./types";
 
 export class ShinigamiSource implements MangaSource {
-  id = "shinigami";
-  name = "Shinigami";
-  description = "Indonesian translation source for manga and manhwa.";
-  language = "id";
-  baseUrl = "https://shinigami.asia";
-  healthCheckUrl = "https://api.shngm.io/v1/manga/list?page=1&page_size=1";
-  version = "1.0.0";
-  icon = "https://s2.googleusercontent.com/s2/favicons?domain=shinigami.asia&sz=64";
-  isEnabled = true;
-  isInstalled = true;
-  status = "online" as const;
-  isNsfw = false;
-  isDynamic = false;
-  capabilities = {
+  public readonly id = "shinigami";
+  public readonly name = "Shinigami";
+  public readonly description = "Indonesian translation source for manga and manhwa.";
+  public readonly language = "id";
+  public readonly baseUrl = "https://shinigami.asia";
+  public readonly healthCheckUrl = "https://api.shngm.io/v1/manga/list?page=1&page_size=1";
+  public readonly upstreamDomain = "api.shngm.io";
+  public readonly supportedLanguages = ["id"];
+  public readonly version = "1.0.0";
+  public readonly adapterVersion = "1.1.0";
+  public readonly icon = "https://s2.googleusercontent.com/s2/favicons?domain=shinigami.asia&sz=64";
+  public readonly isEnabled = true;
+  public readonly isInstalled = true;
+  public readonly status = "online" as const;
+  public readonly isNsfw = false;
+  public readonly isDynamic = false;
+  public readonly capabilities = {
     popular: true,
     latest: true,
     search: true,
@@ -173,7 +176,7 @@ export class ShinigamiSource implements MangaSource {
 
     const res = await this.client.get<ShinigamiMangaListResponse>("/v1/manga/list", params);
     
-    let filteredData = res.data;
+    let filteredData = Array.isArray(res?.data) ? res.data : [];
     if (included.length > 0) {
       filteredData = filteredData.filter(manga => {
         const mangaGenres = manga.taxonomy?.Genre?.map(g => g.slug) || [];
@@ -197,6 +200,9 @@ export class ShinigamiSource implements MangaSource {
     const res = await this.client.get<ShinigamiMangaDetailResponse>(
       `/v1/manga/detail/${mangaId}`
     );
+    if (!res?.data) {
+      throw new Error(`Shinigami detail returned empty response for ${mangaId}`);
+    }
     return normalizeMangaDetail(res.data);
   }
 

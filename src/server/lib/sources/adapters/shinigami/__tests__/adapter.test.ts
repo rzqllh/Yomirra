@@ -111,4 +111,75 @@ describe("ShinigamiSource — reliability hardening", () => {
       expect(result.pages[0].index).toBe(0);
     });
   });
+
+  describe("search", () => {
+    it("returns empty list when search response data is null", async () => {
+      const { source, get } = makeAdapter();
+      get.mockResolvedValue({ data: null, meta: {} });
+      const result = await source.search("solo leveling", 1);
+      expect(result.mangas).toEqual([]);
+      expect(result.hasNextPage).toBe(false);
+    });
+
+    it("returns empty list when search response is empty object", async () => {
+      const { source, get } = makeAdapter();
+      get.mockResolvedValue({});
+      const result = await source.search("test", 1);
+      expect(result.mangas).toEqual([]);
+      expect(result.hasNextPage).toBe(false);
+    });
+
+    it("maps search results properly", async () => {
+      const { source, get } = makeAdapter();
+      get.mockResolvedValue({
+        data: [{ manga_id: "m-1", title: "Manga 1", cover_image_url: "https://c.jpg", status: 1 }],
+        meta: { page: 1, total_page: 2 },
+      });
+      const result = await source.search("manga", 1);
+      expect(result.mangas).toHaveLength(1);
+      expect(result.mangas[0].id).toBe("m-1");
+      expect(result.hasNextPage).toBe(true);
+    });
+  });
+
+  describe("getDetail", () => {
+    it("throws when detail response has no data", async () => {
+      const { source, get } = makeAdapter();
+      get.mockResolvedValue({});
+      await expect(source.getDetail("invalid-id")).rejects.toThrow(
+        "Shinigami detail returned empty response for invalid-id"
+      );
+    });
+
+    it("maps valid detail correctly", async () => {
+      const { source, get } = makeAdapter();
+      get.mockResolvedValue({
+        data: {
+          manga_id: "m-1",
+          title: "Manga 1",
+          description: "<p>Sinopsis</p>",
+          status: 1,
+          author: "Author 1",
+          genres: [{ name: "Action" }],
+        },
+      });
+      const detail = await source.getDetail("m-1");
+      expect(detail.id).toBe("m-1");
+      expect(detail.title).toBe("Manga 1");
+      expect(detail.description).toBe("Sinopsis");
+      expect(detail.status).toBe("ONGOING");
+    });
+  });
+
+  describe("metadata parity", () => {
+    it("exposes V1 Source Engine metadata fields", () => {
+      const { source } = makeAdapter();
+      expect(source.id).toBe("shinigami");
+      expect(source.adapterVersion).toBe("1.1.0");
+      expect(source.upstreamDomain).toBe("api.shngm.io");
+      expect(source.supportedLanguages).toEqual(["id"]);
+      expect(source.capabilities.search).toBe(true);
+      expect(source.capabilities.popular).toBe(true);
+    });
+  });
 });
