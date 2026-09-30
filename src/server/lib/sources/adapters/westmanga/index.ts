@@ -9,6 +9,7 @@ import type {
   PageItem,
 } from "@/shared/sources/source-types";
 import type { SourceCapabilities } from "@/shared/sources/source-capabilities";
+import { normalizeSynopsis } from "@/shared/utils/normalize";
 import { HttpClient } from "../base/http-client";
 import { getWestMangaHeaders } from "./crypto";
 import type {
@@ -25,6 +26,7 @@ function normalizeMangaItem(item: WestMangaItem): MangaItem {
     id: item.slug || String(item.id),
     title: item.title,
     coverUrl: item.cover,
+    description: item.sinopsis ? normalizeSynopsis(item.sinopsis) : undefined,
     status:
       statusLower === "ongoing" || statusLower === "publishing"
         ? "ONGOING"
@@ -43,7 +45,7 @@ function normalizeMangaDetail(item: WestMangaDetail): MangaDetail {
   const statusLower = item.status?.toLowerCase();
   return {
     ...normalizeMangaItem(item),
-    description: item.sinopsis || "",
+    description: normalizeSynopsis(item.sinopsis || ""),
     author: item.author || undefined,
     genres,
     status:
