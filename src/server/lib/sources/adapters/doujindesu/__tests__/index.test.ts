@@ -34,6 +34,7 @@ describe("DoujinDesuSource", () => {
       expect(source.capabilities.detail).toBe(true);
       expect(source.capabilities.chapters).toBe(true);
       expect(source.capabilities.pages).toBe(true);
+      expect(source.capabilities.filters).toBe(true);
     });
 
     it("is registered in sourceRegistry with isNsfw=true and isEnabled=true", () => {
@@ -97,7 +98,27 @@ describe("DoujinDesuSource", () => {
       expect(result.mangas).toHaveLength(1);
       expect(result.mangas[0].title).toBe("Sample Doujin");
       expect(result.mangas[0].id).toBe("sample-doujin");
-      expect(result.mangas[0].status).toBe("ONGOING");
+      expect(mockHttpClient.get).toHaveBeenCalledWith("/manga", {
+        offset: 0,
+        limit: 20,
+        sort: "latest_chapter",
+      });
+    });
+
+    it("normalizes encoded synopsis on list cards", async () => {
+      vi.spyOn(mockHttpClient, "get").mockResolvedValueOnce([
+        {
+          id: "sample-2",
+          title: "Encoded Synopsis",
+          slug: "encoded-synopsis",
+          cover_url: "https://pic.desu.xxx/cover.webp",
+          description:
+            "&lt;p&gt;&lt;strong&gt;Sinopsis:&lt;/strong&gt;&lt;br /&gt;Cerita utama.&lt;/p&gt;&lt;p&gt;&lt;strong&gt;Download Batch&lt;/strong&gt; Chapter 01-10&lt;/p&gt;",
+        },
+      ]);
+
+      const result = await source.getPopular(1);
+      expect(result.mangas[0].description).toBe("Cerita utama.");
     });
 
     it("search passes query correctly", async () => {
@@ -106,10 +127,60 @@ describe("DoujinDesuSource", () => {
       const result = await source.search("naruto", 1);
       expect(mockHttpClient.get).toHaveBeenCalledWith("/manga", {
         search: "naruto",
-        page: 1,
+        offset: 0,
         limit: 20,
       });
       expect(result.mangas).toEqual([]);
+    });
+
+    it("passes genre filter to upstream and applies status filtering", async () => {
+      vi.spyOn(mockHttpClient, "get").mockResolvedValueOnce([
+        {
+          id: "g1",
+          title: "Matching",
+          slug: "matching",
+          cover_url: "",
+          status: "ongoing",
+          manga_genres: [{ genres: { name: "Harem", slug: "harem" } }],
+        },
+        {
+          id: "g2",
+          title: "Completed",
+          slug: "completed",
+          cover_url: "",
+          status: "completed",
+          manga_genres: [{ genres: { name: "Harem", slug: "harem" } }],
+        },
+      ]);
+
+      const result = await source.search("", 2, {
+        "genre[]": ["harem"],
+        status: "ongoing",
+        sort: "rating",
+      });
+
+      expect(mockHttpClient.get).toHaveBeenCalledWith("/manga", {
+        offset: 20,
+        limit: 20,
+        genre: "harem",
+      });
+      expect(result.mangas.map((item) => item.title)).toEqual(["Matching"]);
+    });
+
+    it("loads genre metadata for the filter drawer", async () => {
+      vi.spyOn(mockHttpClient, "get").mockResolvedValueOnce([
+        { id: 1, name: "Harem", slug: "harem" },
+        { id: 2, name: "Fantasy", slug: "fantasy" },
+      ]);
+
+      const filters = await source.getFilters();
+
+      expect(mockHttpClient.get).toHaveBeenCalledWith("/genres", undefined);
+      expect(filters.genres).toEqual([
+        { id: "harem", name: "Harem" },
+        { id: "fantasy", name: "Fantasy" },
+      ]);
+      expect(filters.sorts.map((item) => item.id)).toContain("alphabetical");
     });
 
     it("getDetail maps manga detail and genres correctly", async () => {
