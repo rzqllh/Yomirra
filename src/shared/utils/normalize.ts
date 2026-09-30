@@ -1,41 +1,54 @@
-function decodeHtmlEntities(value: string): string {
+const ENCODED_MARKUP_TAG =
+  /&lt;(\/?(?:p|div|span|strong|b|em|i|br|a|img|ul|ol|li|section|article|blockquote|pre|code|h[1-6])\b[^&]*?)&gt;/gi;
+
+function decodeAmpLayers(value: string): string {
   let decoded = value;
-
-  // Some providers return HTML that is entity-encoded once or even twice.
-  // Decode a few bounded passes before stripping tags so encoded markup never leaks to UI.
   for (let pass = 0; pass < 3; pass++) {
-    const next = decoded
-      .replace(/&amp;/gi, "&")
-      .replace(/&lt;/gi, "<")
-      .replace(/&gt;/gi, ">")
-      .replace(/&quot;/gi, '"')
-      .replace(/&#0*39;/gi, "'")
-      .replace(/&apos;/gi, "'")
-      .replace(/&nbsp;/gi, " ")
-      .replace(/&hellip;/gi, "…")
-      .replace(/&rsquo;/gi, "'")
-      .replace(/&lsquo;/gi, "'")
-      .replace(/&rdquo;/gi, '"')
-      .replace(/&ldquo;/gi, '"')
-      .replace(/&#x([0-9a-f]+);/gi, (_, code) => String.fromCodePoint(parseInt(code, 16)))
-      .replace(/&#(\d+);/g, (_, code) => String.fromCodePoint(Number(code)));
-
+    const next = decoded.replace(/&amp;/gi, "&");
     if (next === decoded) break;
     decoded = next;
   }
-
   return decoded;
+}
+
+function decodeTextEntities(value: string): string {
+  return value
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#0*39;/gi, "'")
+    .replace(/&apos;/gi, "'")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&hellip;/gi, "…")
+    .replace(/&rsquo;/gi, "'")
+    .replace(/&lsquo;/gi, "'")
+    .replace(/&rdquo;/gi, '"')
+    .replace(/&ldquo;/gi, '"')
+    .replace(/&#x([0-9a-f]+);/gi, (_, code) => String.fromCodePoint(parseInt(code, 16)))
+    .replace(/&#(\d+);/g, (_, code) => String.fromCodePoint(Number(code)));
+}
+
+function exposeEncodedMarkup(value: string): string {
+  let exposed = decodeAmpLayers(value);
+  for (let pass = 0; pass < 3; pass++) {
+    const next = exposed.replace(ENCODED_MARKUP_TAG, "<$1>");
+    if (next === exposed) break;
+    exposed = next;
+  }
+  return exposed;
 }
 
 export function stripHtml(html: string): string {
   if (!html) return "";
 
-  return decodeHtmlEntities(html)
+  const withoutMarkup = exposeEncodedMarkup(html)
     .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, " ")
     .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, " ")
     .replace(/<br\s*\/?>/gi, " ")
     .replace(/<\/(?:p|div|li|section|article|h[1-6])>/gi, " ")
-    .replace(/<[^>]*>?/gm, "")
+    .replace(/<[^>]*>?/gm, "");
+
+  return decodeTextEntities(withoutMarkup)
     .replace(/\\([\[\]*\_~#\\()+\-.!{}])/g, "$1")
     .replace(/\s+/g, " ")
     .trim();
@@ -46,7 +59,6 @@ export function normalizeSynopsis(value: string): string {
 
   let cleaned = stripHtml(value)
     .replace(/^\s*(?:sinopsis|synopsis)\s*:?\s*/i, "")
-    // Markdown links/images from providers such as MangaDex should render as readable prose.
     .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
     .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
     .replace(/(?:\*\*|__)(.*?)(?:\*\*|__)/g, "$1")
@@ -54,8 +66,6 @@ export function normalizeSynopsis(value: string): string {
     .replace(/\s+/g, " ")
     .trim();
 
-  // Provider descriptions sometimes append download mirrors or batch-link blocks.
-  // Those are not synopsis content and make the expanded detail view unreadable.
   const boilerplateIndex = cleaned.search(
     /\b(?:download\s+batch|batch\s+download|download\s+chapter|download\s+komik)\b/i
   );
