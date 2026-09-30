@@ -1,5 +1,5 @@
 const ENCODED_MARKUP_TAG =
-  /&lt;(\/?(?:p|div|span|strong|b|em|i|br|a|img|ul|ol|li|section|article|blockquote|pre|code|h[1-6])\b[^&]*?)&gt;/gi;
+  /&lt;(\/?(?:p|div|span|strong|b|em|i|br|a|img|ul|ol|li|section|article|blockquote|pre|code|table|thead|tbody|tr|td|th|h[1-6])\b[\s\S]*?)&gt;/gi;
 
 function decodeAmpLayers(value: string): string {
   let decoded = value;
