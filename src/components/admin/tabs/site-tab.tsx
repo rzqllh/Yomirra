@@ -309,123 +309,44 @@ export function SiteTab({ initialConfig, onRefresh, getToken }: SiteTabProps) {
         </button>
       </div>
 
-      {/* 3. Feature Flags Card */}
-      <div className="p-5 bg-zinc-900/60 border border-zinc-800 rounded-xl space-y-4">
-        <h3 className="text-sm font-semibold text-zinc-100 flex items-center gap-2">
-          <SlidersHorizontal className="w-4 h-4 text-cyan-400" />
-          Feature Flags
-        </h3>
-
-        <div className="space-y-3 divide-y divide-zinc-800/60">
-          <div className="flex items-center justify-between pt-2">
-            <div>
-              <span className="text-xs font-medium text-zinc-200">Semantic Search (Gemini)</span>
-              <p className="text-[11px] text-zinc-500">Pencarian cerdas berbasis sinonim dan pemahaman makna</p>
-            </div>
-            <button
-              type="button"
-              onClick={() =>
-                setConfig({
-                  ...config,
-                  features: {
-                    ...config.features,
-                    semanticSearchEnabled: !config.features.semanticSearchEnabled,
-                  },
-                })
-              }
-            >
-              {config.features.semanticSearchEnabled ? (
-                <ToggleRight className="w-6 h-6 text-emerald-400" />
-              ) : (
-                <ToggleLeft className="w-6 h-6 text-zinc-500" />
-              )}
-            </button>
-          </div>
-
-          <div className="flex items-center justify-between pt-3">
-            <div>
-              <span className="text-xs font-medium text-zinc-200">Auto Source Fallback</span>
-              <p className="text-[11px] text-zinc-500">Otomatis beralih ke source cadangan jika source utama mengalami gangguan</p>
-            </div>
-            <button
-              type="button"
-              onClick={() =>
-                setConfig({
-                  ...config,
-                  features: {
-                    ...config.features,
-                    sourceFallbackAutoSwitch: !config.features.sourceFallbackAutoSwitch,
-                  },
-                })
-              }
-            >
-              {config.features.sourceFallbackAutoSwitch ? (
-                <ToggleRight className="w-6 h-6 text-emerald-400" />
-              ) : (
-                <ToggleLeft className="w-6 h-6 text-zinc-500" />
-              )}
-            </button>
-          </div>
-
-          <div className="flex items-center justify-between pt-3">
-            <div>
-              <span className="text-xs font-medium text-zinc-200">Telegram Ops Alerts</span>
-              <p className="text-[11px] text-zinc-500">Kirim notifikasi outage dan alert otomatis ke Telegram</p>
-            </div>
-            <button
-              type="button"
-              onClick={() =>
-                setConfig({
-                  ...config,
-                  features: {
-                    ...config.features,
-                    telegramAlertsEnabled: !config.features.telegramAlertsEnabled,
-                  },
-                })
-              }
-            >
-              {config.features.telegramAlertsEnabled ? (
-                <ToggleRight className="w-6 h-6 text-emerald-400" />
-              ) : (
-                <ToggleLeft className="w-6 h-6 text-zinc-500" />
-              )}
-            </button>
-          </div>
-
-          <div className="flex items-center justify-between pt-3">
-            <div>
-              <span className="text-xs font-medium text-zinc-200">Data Saver Default</span>
-              <p className="text-[11px] text-zinc-500">Kompresi gambar webp default untuk pengguna koneksi lambat</p>
-            </div>
-            <button
-              type="button"
-              onClick={() =>
-                setConfig({
-                  ...config,
-                  features: {
-                    ...config.features,
-                    dataSaverDefault: !config.features.dataSaverDefault,
-                  },
-                })
-              }
-            >
-              {config.features.dataSaverDefault ? (
-                <ToggleRight className="w-6 h-6 text-emerald-400" />
-              ) : (
-                <ToggleLeft className="w-6 h-6 text-zinc-500" />
-              )}
-            </button>
-          </div>
+      {/* 3. Feature Flags Card — Coming Soon */}
+      <div className="p-5 bg-zinc-900/40 border border-zinc-800/60 rounded-xl space-y-4 opacity-70">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-zinc-300 flex items-center gap-2">
+            <SlidersHorizontal className="w-4 h-4 text-zinc-500" />
+            Feature Flags
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-zinc-800 text-zinc-500 border border-zinc-700">
+              Segera
+            </span>
+          </h3>
+          <span
+            title="Toggle ini tersimpan di konfigurasi, tapi belum terhubung ke runtime. Fitur ini sedang dalam pengembangan."
+            className="text-[10px] text-zinc-600 cursor-help border-b border-dashed border-zinc-700"
+          >
+            belum aktif
+          </span>
         </div>
 
-        <button
-          onClick={() => handleSave({ features: config.features })}
-          disabled={saving}
-          className="flex items-center justify-center gap-2 px-4 py-2 bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-zinc-100 text-xs font-semibold rounded-xl transition"
-        >
-          {saving ? <CircleNotch className="w-4 h-4 animate-spin" /> : <FloppyDisk className="w-4 h-4" />}
-          Simpan Feature Flags
-        </button>
+        <p className="text-xs text-zinc-500 leading-relaxed">
+          Toggle di bawah ini belum terhubung ke runtime. Pengaturannya tersimpan, tapi belum ada efek pada sistem yang berjalan. Akan diaktifkan bertahap.
+        </p>
+
+        <div className="space-y-2">
+          {[
+            { label: "Semantic Search (Gemini)", desc: "Pencarian berbasis pemahaman makna dan sinonim" },
+            { label: "Auto Source Fallback", desc: "Ganti source otomatis jika source utama tidak merespons" },
+            { label: "Telegram Ops Alerts", desc: "Kirim notifikasi gangguan ke Telegram" },
+            { label: "Data Saver Default", desc: "Kompresi gambar default untuk koneksi lambat" },
+          ].map((flag) => (
+            <div key={flag.label} className="flex items-center justify-between p-2.5 bg-zinc-900/50 rounded-lg border border-zinc-800/50">
+              <div>
+                <span className="text-xs font-medium text-zinc-400">{flag.label}</span>
+                <p className="text-[10px] text-zinc-600">{flag.desc}</p>
+              </div>
+              <div className="w-10 h-5 rounded-full bg-zinc-800 border border-zinc-700 opacity-40 cursor-not-allowed" />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );

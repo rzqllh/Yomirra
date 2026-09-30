@@ -4,6 +4,24 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
 
 ## [Unreleased]
 
+### Admin Portal & Ops (v2.3.0 preview)
+
+- **Admin portal** (`/admin`) dengan passkey gate, sidebar navigasi 6 tab, dan layout responsif.
+- **Source Engine tab** — health matrix real-time, probe per-source, toggle aktif/nonaktif, override URL, dan flush cache. Probe per-source tidak lagi menguji semua source sekaligus; tombol "Probe All" di header tetap tersedia untuk uji menyeluruh.
+- **Laporan Reader tab** — inbox laporan pengguna dalam format ticket: type icon (chapter error, gambar rusak, source bermasalah), status badge (pending/investigating/resolved), judul manga, ticket ID pendek, timestamp WIB, dan detail collapsible. Action tersedia per tiket: Investigasi, Selesaikan, Flush Cache, Probe Source.
+- `mangaTitle` kini disimpan bersama laporan sehingga tiket menampilkan judul manga yang readable, bukan ID mentah.
+- **Situs & Banner tab** — kontrol banner pengumuman publik (teks, tipe tampilan, link opsional, toggle aktif/nonaktif) dan mode pemeliharaan dengan pesan kustom.
+- **Telemetri & Redis tab** — status koneksi Redis, penggunaan memori, uptime, dan uji notifikasi Telegram dengan ringkasan health matrix live.
+- **Search Simulator** — fallback ke metadata source registry bila Redis search catalog kosong, sehingga simulator tetap bisa dijalankan meskipun catalog belum diisi.
+- Banner pengumuman dipindah ke luar `BootGate` sehingga tampil langsung tanpa menunggu splash screen.
+- `announcement.id` hanya diperbarui saat simpan (bukan setiap keystroke), sehingga dismiss tracking di `sessionStorage` tidak terus reset saat mengetik.
+- Telegram test route kini mengembalikan ringkasan health matrix live (jumlah healthy/degraded/down dan rata-rata latensi).
+- Probe all vs. single-source probe mengembalikan format response yang berbeda dan sesuai.
+
+### Changed
+
+- **Feature Flags** di admin portal dinonaktifkan sementara karena belum terhubung ke runtime. Semua 4 flag (Semantic Search, Auto Fallback, Telegram Alerts, Data Saver) tersimpan di konfigurasi tapi tidak mengubah perilaku sistem. Akan diaktifkan bertahap setelah implementasi guard di masing-masing service.
+
 ### Rekonsiliasi dan eksekusi roadmap (Phase 0)
 
 - Local main di-fast-forward ke `origin/main` (`8a20262`) — 33 commit cloud/Codex berhasil diintegrasikan.

@@ -19,8 +19,7 @@ import {
   Eye,
   EyeSlash,
   ArrowSquareOut,
-  Lightning,
-  Sparkle
+  Lightning
 } from "@phosphor-icons/react";
 import { OverviewTab } from "./tabs/overview-tab";
 import { SourcesTab } from "./tabs/sources-tab";
@@ -173,12 +172,12 @@ export function AdminLayout() {
 
   // Nav Items Config
   const navItems = [
-    { id: "overview", label: "Ringkasan", icon: House, badge: null },
-    { id: "sources", label: "Source Engine", icon: Heartbeat, badge: `${sources.filter(s => s.isEnabled).length}/${sources.length}` },
-    { id: "search", label: "Pencarian", icon: MagnifyingGlass, badge: null },
-    { id: "reports", label: "Laporan Reader", icon: Flag, badge: reports.filter(r => r.status === "pending").length || null },
-    { id: "site", label: "Situs & Banner", icon: Megaphone, badge: siteConfig?.announcement.enabled ? "Active" : null },
-    { id: "telemetry", label: "Telemetri & Redis", icon: HardDrives, badge: telemetry?.status === "connected" ? "OK" : null },
+    { id: "overview", label: "Ringkasan", subtitle: "Kondisi sistem secara keseluruhan", icon: House, badge: null },
+    { id: "sources", label: "Source Engine", subtitle: "Kelola dan pantau source manga", icon: Heartbeat, badge: `${sources.filter(s => s.isEnabled).length}/${sources.length}` },
+    { id: "search", label: "Pencarian", subtitle: "Simulator ranking dan pencarian", icon: MagnifyingGlass, badge: null },
+    { id: "reports", label: "Laporan Reader", subtitle: "Tiket laporan masuk dari pengguna", icon: Flag, badge: reports.filter(r => r.status === "pending").length || null },
+    { id: "site", label: "Situs & Banner", subtitle: "Pengumuman publik dan mode pemeliharaan", icon: Megaphone, badge: siteConfig?.announcement.enabled ? "Aktif" : null },
+    { id: "telemetry", label: "Telemetri & Redis", subtitle: "Cache, memori, dan notifikasi ops", icon: HardDrives, badge: telemetry?.status === "connected" ? "OK" : null },
   ];
 
   // 1. Initial verifying screen
@@ -282,12 +281,12 @@ export function AdminLayout() {
           {/* Brand Header */}
           <div className="p-5 border-b border-zinc-800/80 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-purple-600 flex items-center justify-center shadow-lg shadow-purple-600/30">
-                <Sparkle className="w-5 h-5 text-white" weight="fill" />
+              <div className="w-9 h-9 rounded-xl bg-zinc-800 border border-zinc-700 flex items-center justify-center font-black text-zinc-200 text-base tracking-tight select-none">
+                Y
               </div>
               <div>
-                <span className="font-extrabold tracking-tight text-zinc-100 text-sm block">YOMIRRA</span>
-                <span className="text-[10px] font-mono text-purple-400 font-bold tracking-wider">ADMIN OPS v2.2</span>
+                <span className="font-bold tracking-tight text-zinc-100 text-sm block">Yomirra</span>
+                <span className="text-[10px] text-zinc-500">Ops Portal</span>
               </div>
             </div>
 
@@ -298,10 +297,7 @@ export function AdminLayout() {
           </div>
 
           {/* Navigation Links */}
-          <nav className="p-3 space-y-1">
-            <span className="px-3 text-[10px] font-semibold text-zinc-500 uppercase tracking-wider block mb-2">
-              Menu Kontrol
-            </span>
+          <nav className="p-3 space-y-0.5">
             {navItems.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -435,19 +431,26 @@ export function AdminLayout() {
               <List className="w-5 h-5" />
             </button>
             <div>
-              <h1 className="text-sm font-bold text-zinc-100 flex items-center gap-2">
+              <h1 className="text-sm font-bold text-zinc-100">
                 {activeTabMeta.label}
               </h1>
               <span className="text-[11px] text-zinc-500 hidden sm:block">
-                Portal Kontrol & Operasional Yomirra Manga Reader
+                {activeTabMeta.subtitle}
               </span>
             </div>
           </div>
 
           <div className="flex items-center gap-2.5">
-            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-[11px] text-zinc-400 font-mono">
-              <Lightning className="w-3.5 h-3.5 text-amber-400" />
-              <span>Redis: {telemetry?.status === "connected" ? "Connected" : "Standby"}</span>
+            <div
+              title={telemetry?.status === "connected"
+                ? "Redis tersambung. Cache aktif dan semua operasi berjalan normal."
+                : "Redis tidak tersambung. Sistem berjalan dengan fallback in-memory. Data mungkin tidak persisten antar instance."}
+              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-[11px] font-mono cursor-help"
+            >
+              <Lightning className={`w-3.5 h-3.5 ${telemetry?.status === "connected" ? "text-emerald-400" : "text-amber-400"}`} />
+              <span className={telemetry?.status === "connected" ? "text-emerald-400" : "text-amber-400"}>
+                Redis: {telemetry?.status === "connected" ? "Connected" : "Standby"}
+              </span>
             </div>
 
             <button
