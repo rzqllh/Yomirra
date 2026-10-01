@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useSearchParams } from "next/navigation";
 import { apiClient } from "@/shared/api-client";
 import { ReaderPageSkeleton } from "@/components/skeletons/reader-page-skeleton";
 import { ReaderShell } from "@/components/reader/reader-shell";
@@ -14,7 +15,7 @@ import { useDownloadStore } from "@/shared/store/download-store";
 import { EmptyState } from "@/components/states/empty-state";
 import { WarningCircle, LockKey } from "@phosphor-icons/react";
 import Link from "next/link";
-import { getMangaDetailHref } from "@/shared/lib/routes";
+import { getMangaDetailHref, getSafeMangaDetailBackHref } from "@/shared/lib/routes";
 import { Button } from "@/components/ui/button";
 import { getDownloadChapterId } from "@/shared/utils/download-helpers";
 import type { MangaDetail, Chapter, PageItem } from "@/shared/types/source";
@@ -38,6 +39,9 @@ export function ReaderView({
   initialChapters,
   initialPages,
 }: ReaderViewProps) {
+  const searchParams = useSearchParams();
+  const returnTo = getSafeMangaDetailBackHref(searchParams.get("returnTo"));
+  const detailHref = getMangaDetailHref(sourceId, mangaId, returnTo);
   const upsertHistory = useHistoryStore(state => state.upsertHistory);
   const getLibraryItem = useLibraryStore(state => state.getLibraryItem);
   const updateLibraryItem = useLibraryStore(state => state.updateLibraryItem);
@@ -228,7 +232,7 @@ export function ReaderView({
             description="Chapter ini berstatus early access / terkunci di sumber aslinya."
             action={
               <Button asChild variant="outline" className="rounded-xl shadow-sm mt-2 font-bold">
-                <Link href={getMangaDetailHref(sourceId, mangaId)}>
+                <Link href={detailHref} replace>
                   Kembali ke Detail
                 </Link>
               </Button>
