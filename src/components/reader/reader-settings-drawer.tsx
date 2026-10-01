@@ -35,7 +35,7 @@ const READING_DIRECTIONS = [
 ] as const;
 
 const TOOLBAR_BEHAVIORS = [
-  { id: 'auto-hide', label: 'Auto Sembunyi' },
+  { id: 'auto-hide', label: 'Sembunyikan otomatis' },
   { id: 'always-visible', label: 'Selalu Tampil' },
 ] as const;
 
@@ -111,7 +111,7 @@ export function ReaderSettingsDrawer({ isOpen, onClose }: ReaderSettingsDrawerPr
     <ReaderPanelShell
       isOpen={effectiveIsOpen}
       onClose={handleClose}
-      title="Pengaturan Pembaca"
+      title="Pengaturan pembaca"
       icon={<SlidersHorizontal size={20} weight="bold" />}
       desktopMode="side-panel"
       contentClassName="p-5 space-y-6 overscroll-contain pb-[calc(24px+var(--safe-bottom))]"
@@ -165,7 +165,7 @@ export function ReaderSettingsDrawer({ isOpen, onClose }: ReaderSettingsDrawerPr
         <div className="bg-surface-base rounded-xl border border-border-subtle divide-y divide-border-subtle">
           <ReaderSettingsOption
             icon={<BoundingBox size={18} className="text-accent" weight="bold" />}
-            title="Kesesuaian Gambar"
+            title="Ukuran gambar"
             options={IMAGE_FITS}
             value={preferences.imageFit}
             onChange={(val) => updatePreferences({ imageFit: val })}
@@ -181,7 +181,7 @@ export function ReaderSettingsDrawer({ isOpen, onClose }: ReaderSettingsDrawerPr
 
           <ReaderSettingsOption
             icon={<Layout size={18} className="text-accent" weight="bold" />}
-            title="Arah Membaca"
+            title="Arah baca"
             options={READING_DIRECTIONS}
             value={preferences.readingDirection}
             onChange={(val) => updatePreferences({ readingDirection: val })}
@@ -198,7 +198,7 @@ export function ReaderSettingsDrawer({ isOpen, onClose }: ReaderSettingsDrawerPr
         <div className="bg-surface-base rounded-xl border border-border-subtle divide-y divide-border-subtle">
           <ReaderSettingsOption
             icon={<SlidersHorizontal size={18} className="text-accent" weight="bold" />}
-            title="Bar Navigasi Pembaca"
+            title="Kontrol pembaca"
             options={TOOLBAR_BEHAVIORS}
             value={preferences.toolbarBehavior}
             onChange={(val) => updatePreferences({ toolbarBehavior: val })}
@@ -206,19 +206,19 @@ export function ReaderSettingsDrawer({ isOpen, onClose }: ReaderSettingsDrawerPr
 
           <ReaderSettingsOption
             icon={<Lightning size={18} className="text-accent" weight="bold" />}
-            title="Preload Gambar"
+            title="Muat awal gambar"
             options={PRELOAD_INTENSITIES}
             value={preferences.preloadIntensity}
             onChange={(val) => updatePreferences({ preloadIntensity: val })}
           />
 
           <div className="p-4 flex items-center justify-between">
-            <span className="text-sm font-bold text-text-primary">Progress Halaman</span>
+            <span className="text-sm font-bold text-text-primary">Progres halaman</span>
             <ToggleSwitch
               id="show-page-progress"
               checked={preferences.showPageProgress}
               onCheckedChange={(checked) => updatePreferences({ showPageProgress: checked })}
-              label="Progress Halaman"
+              label="Progres halaman"
             />
           </div>
         </div>
