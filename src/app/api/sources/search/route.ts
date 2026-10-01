@@ -1,5 +1,5 @@
 export const dynamic = "force-dynamic";
-import { checkRateLimit } from "@/server/lib/security/rate-limit";
+import { applyRateLimitHeaders, checkRateLimitPolicy, createRateLimitRejection } from "@/server/lib/security/rate-limit";
 import { NextRequest, NextResponse } from "next/server";
 import { sourceManager } from "@/server/lib/sources/source-manager";
 import { MangaItem } from "@/shared/sources/source-types";
@@ -23,10 +23,13 @@ export interface GlobalSearchResponse {
 
 
 export async function GET(req: NextRequest) {
-  const rateLimit = await checkRateLimit(req);
+  const rateLimit = await checkRateLimitPolicy(req, "publicSearch");
   if (!rateLimit.success) {
-    return NextResponse.json({ error: { message: "Too Many Requests" } }, { status: 429, headers: rateLimit.headers });
+    return createRateLimitRejection(rateLimit);
   }
+
+  const limitedJson = (body: unknown, init?: ResponseInit) =>
+    applyRateLimitHeaders(NextResponse.json(body, init), rateLimit);
 
   const searchParams = req.nextUrl.searchParams;
   const q = searchParams.get("q");
@@ -49,7 +52,7 @@ export async function GET(req: NextRequest) {
   const queryStr = q || "";
 
   if (!sourcesParam) {
-    return NextResponse.json({ error: { message: "Missing 'sources' parameter (comma separated)" } }, { status: 400 });
+    return limitedJson({ error: { message: "Missing 'sources' parameter (comma separated)" } }, { status: 400 });
   }
 
   const sourceIds = sourcesParam.split(",").filter(Boolean);
@@ -151,14 +154,14 @@ export async function GET(req: NextRequest) {
       }))
     );
 
-    return NextResponse.json({
+    return limitedJson({
       data: {
         resultsBySource: cachedData,
         canonicalResults,
       }
     });
   } catch {
-    return NextResponse.json({ error: { message: "Internal server error" } }, { status: 500 });
+    return limitedJson({ error: { message: "Internal server error" } }, { status: 500 });
   }
 }
 
