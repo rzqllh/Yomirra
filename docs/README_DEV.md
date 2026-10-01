@@ -138,6 +138,8 @@ Gunakan policy bersama di `src/server/lib/security/rate-limit.ts` untuk route se
 
 Admin browser auth memakai signed HttpOnly session; jangan menyimpan raw passkey di browser storage.
 
+Browser CSP saat ini sengaja `Report-Only`. Perubahan directive harus diuji pada preview deployment untuk Next.js chunks, Firebase auth, HTTPS assets/API, WebSocket, manifest, dan Service Worker sebelum enforcement. Generic UI error tidak boleh meneruskan raw `error.message`; simpan detail diagnosis di server log melalui shared logger.
+
 ## Dokumentasi lanjut
 
 - [Architecture](ARCHITECTURE.md)
