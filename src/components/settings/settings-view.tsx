@@ -387,7 +387,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
       </SettingsSection>
 
       {/* Data & Penyimpanan */}
-      <SettingsSection title={user ? "Penyimpanan & Data Perangkat" : "Penyimpanan & Data Lokal"}>
+      <SettingsSection title={user ? "Penyimpanan & data perangkat" : "Penyimpanan & data lokal"}>
         <SettingsItem
           icon={<IconWrapper><Broom size={20} weight="duotone" /></IconWrapper>}
           title="Bersihkan cache bacaan"
@@ -408,7 +408,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
 
         <SettingsItem
           icon={<IconWrapper variant="danger"><Trash size={20} weight="duotone" /></IconWrapper>}
-          title={user ? "Hapus Data di Perangkat Ini" : "Hapus Data Lokal"}
+          title={user ? "Hapus data lokal di perangkat ini" : "Hapus data lokal"}
           description={user ? "Hapus riwayat baca dan bookmark lokal di perangkat ini. Unduhan tetap tersimpan, dan data cloud dapat muncul lagi setelah sinkronisasi." : "Hapus riwayat baca dan bookmark lokal dari perangkat ini. Unduhan tetap tersimpan."}
           right={
             <Button onClick={handleClearData} variant="outline" className="w-full sm:w-auto shrink-0 text-semantic-error hover:text-white hover:bg-semantic-error border-semantic-error/50 rounded-xl font-bold transition-colors">
@@ -436,8 +436,8 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
             {subView === "backup" ? (
               <>
                 <PageHeader
-                  title="Cadangan & Pemulihan"
-                  subtitle="Ekspor atau pulihkan data riwayat dan koleksi lokal."
+                  title="Cadangan data"
+                  subtitle="Ekspor atau pulihkan riwayat baca, bookmark, dan koleksi lokal."
                   icon={<FileText size={24} weight="duotone" />}
                   actions={
                     <Button
@@ -446,7 +446,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
                       className="rounded-xl font-bold text-xs"
                     >
                       <CaretLeft size={16} weight="bold" className="mr-1" />
-                      Kembali ke Pengaturan
+                      Kembali ke pengaturan
                     </Button>
                   }
                 />
