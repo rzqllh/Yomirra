@@ -9,6 +9,7 @@ import { motion } from "motion/react"
 import { useSearchFilterStore } from "@/shared/store/search-filter-store"
 import { Icon } from "@/components/ui/icon"
 import { beginNavigationIntent, getNavigationPathname } from "@/shared/lib/navigation-intent"
+import { transitions } from "@/shared/lib/motion/tokens"
 
 export function BottomDock({ pendingHref }: { pendingHref?: string | null }) {
   const pathname = usePathname()
@@ -68,7 +69,7 @@ export function BottomDock({ pendingHref }: { pendingHref?: string | null }) {
                   <motion.div
                     className="absolute inset-0 rounded-full border border-accent/25 bg-accent-dim shadow-xs"
                     layoutId="active-dock-tab"
-                    transition={{ type: "spring", stiffness: 420, damping: 32 }}
+                    transition={transitions.layout}
                   />
                 )}
 
