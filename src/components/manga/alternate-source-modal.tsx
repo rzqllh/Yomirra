@@ -43,9 +43,9 @@ const confidenceConfig: Record<
   { label: string; className: string }
 > = {
   CONFIRMED: { label: "Terkonfirmasi", className: "text-semantic-success bg-semantic-success/10 border-semantic-success/20" },
-  HIGH_CONFIDENCE: { label: "Sangat Cocok", className: "text-accent bg-accent/10 border-accent/20" },
-  AMBIGUOUS: { label: "Mungkin Cocok", className: "text-semantic-warning bg-semantic-warning/10 border-semantic-warning/20" },
-  NO_MATCH: { label: "Tidak Cocok", className: "text-text-muted bg-surface-raised border-border-subtle" },
+  HIGH_CONFIDENCE: { label: "Cocok", className: "text-accent bg-accent/10 border-accent/20" },
+  AMBIGUOUS: { label: "Kemungkinan besar cocok", className: "text-semantic-warning bg-semantic-warning/10 border-semantic-warning/20" },
+  NO_MATCH: { label: "Perlu diperiksa", className: "text-text-muted bg-surface-raised border-border-subtle" },
 };
 
 function ConfidenceBadge({ confidence }: { confidence: MatchConfidence }) {
