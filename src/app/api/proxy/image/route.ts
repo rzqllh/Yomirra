@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyImageUrl } from "@/server/lib/sign-proxy-url";
 import { logger } from "@/shared/logger";
 import { safeFetch } from "@/server/lib/security/outbound-policy";
+import { applyRateLimitHeaders, checkRateLimitPolicy, createRateLimitRejection } from "@/server/lib/security/rate-limit";
 
 const MAX_IMAGE_SIZE = 15 * 1024 * 1024; // 15MB
 
@@ -23,11 +24,19 @@ export async function GET(request: NextRequest) {
     return new NextResponse("Missing url or sig", { status: 400 });
   }
 
-  // Verify HMAC signature to prevent SSRF
+  // Verify HMAC signature to prevent SSRF before spending limiter capacity.
   if (!verifyImageUrl(url, signature, referer)) {
     logger.warn(`Invalid image proxy signature for url: ${url}`);
     return new NextResponse("Forbidden: Invalid signature", { status: 403 });
   }
+
+  const rateLimit = await checkRateLimitPolicy(request, "imageProxy");
+  if (!rateLimit.success) {
+    return createRateLimitRejection(rateLimit);
+  }
+
+  const limited = <T extends Response>(response: T) =>
+    applyRateLimitHeaders(response, rateLimit);
 
   try {
     const headers: Record<string, string> = {
@@ -53,19 +62,19 @@ export async function GET(request: NextRequest) {
         try {
           const parsed = new URL(url);
           if (parsed.protocol === "https:" && ALLOWED_DIRECT_CDN_HOSTS.has(parsed.hostname)) {
-            return NextResponse.redirect(url, 307);
+            return limited(NextResponse.redirect(url, 307));
           }
         } catch {
           // ignore parsing error and fall through
         }
       }
-      return new NextResponse("Failed to fetch image", { status: response.status });
+      return limited(new NextResponse("Failed to fetch image", { status: response.status }));
     }
 
     const contentType = response.headers.get("content-type");
     if (contentType && !contentType.startsWith("image/")) {
       logger.warn(`Invalid content type for image proxy: ${contentType}`);
-      return new NextResponse("Invalid content type", { status: 400 });
+      return limited(new NextResponse("Invalid content type", { status: 400 }));
     }
 
     const responseHeaders = new Headers();
@@ -73,13 +82,13 @@ export async function GET(request: NextRequest) {
     responseHeaders.set("Cache-Control", "public, max-age=31536000, immutable");
 
     // Stream the response directly instead of buffering in memory
-    return new NextResponse(response.body, {
+    return limited(new NextResponse(response.body, {
       status: 200,
       headers: responseHeaders,
-    });
+    }));
   } catch (error) {
     logger.error("Image proxy error", { error, url });
-    return new NextResponse("Internal Server Error", { status: 500 });
+    return limited(new NextResponse("Internal Server Error", { status: 500 }));
   }
 }
 
