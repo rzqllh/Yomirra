@@ -32,7 +32,11 @@ Prioritaskan boundary yang kalau rusak dapat merusak data atau banyak feature:
 - download lifecycle;
 - recommendation ranking;
 - Smart Collections derivation;
-- partial source failure.
+- partial source failure;
+- admin authentication/session boundaries;
+- server-only credential configuration and missing-config isolation;
+- rate-limit namespace, fail-open/fail-closed behavior, rejection status, dan response headers;
+- log redaction untuk token/cookie/authorization/signed URL.
 
 ## UI tests
 
@@ -65,6 +69,19 @@ Cover setidaknya:
 - bounded retry bila ada.
 
 Live source health adalah verification layer yang berbeda.
+
+## Security boundaries
+
+Untuk rate limiting, cover minimal:
+
+- namespace/key identity yang diharapkan;
+- limit/remaining/reset headers;
+- 429 saat bucket habis;
+- 503 saat policy fail-closed tidak dapat mengakses limiter;
+- fail-open hanya pada route yang memang availability-first;
+- trusted proxy-chain identity agar client tidak bisa memilih bucket sendiri lewat forwarded header palsu.
+
+Untuk credential server-only, test harus memastikan missing/malformed configuration gagal sebelum upstream request dilakukan tanpa membuat registry source lain gagal diinisialisasi.
 
 ## Search dan recommendation
 
