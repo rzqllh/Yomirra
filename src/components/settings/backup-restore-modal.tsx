@@ -80,7 +80,7 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
 
       if (res.success) {
         toast.success(`Pemulihan data berhasil (${res.restoredCount} komik dipulihkan)`, {
-          description: importMode === "merge" ? "Data baru digabungkan dengan koleksi yang sudah ada." : "Data lama digantikan sepenuhnya dengan cadangan baru.",
+          description: importMode === "merge" ? "Data baru digabungkan dengan data yang sudah ada." : "Data saat ini diganti dengan data dari cadangan.",
         });
         resetState();
         onBack?.();
@@ -189,14 +189,9 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
                 <span className="font-bold flex items-center gap-2 mb-2 text-sm">
                   <ShieldWarning size={20} weight="fill" /> Berkas tidak dapat digunakan ({dryRun.errors.length})
                 </span>
-                <ul className="list-disc list-inside space-y-1.5 text-[12px] opacity-90 pl-1">
-                  {dryRun.errors.slice(0, 3).map((err, idx) => (
-                    <li key={idx} className="truncate">
-                      <span className="font-mono bg-semantic-error/10 px-1 rounded">{err.path}</span>: {err.message}
-                    </li>
-                  ))}
-                  {dryRun.errors.length > 3 && <li className="italic opacity-80 pt-1">+{dryRun.errors.length - 3} error lainnya</li>}
-                </ul>
+                <p className="text-[12px] opacity-90">
+                  Periksa kembali berkas cadangan lalu coba lagi.
+                </p>
               </div>
             ) : (
               <>
@@ -208,7 +203,7 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
                     </div>
                     <div className="flex items-center gap-1.5 text-[11px] font-bold mt-1">
                       <span className="text-semantic-success bg-semantic-success/10 px-1.5 py-0.5 rounded-md">+{dryRun.addedCount} baru</span>
-                      <span className="text-accent bg-accent/10 px-1.5 py-0.5 rounded-md">{dryRun.replacedCount} update</span>
+                      <span className="text-accent bg-accent/10 px-1.5 py-0.5 rounded-md">{dryRun.replacedCount} diperbarui</span>
                     </div>
                   </div>
                   
