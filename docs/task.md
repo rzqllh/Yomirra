@@ -240,7 +240,7 @@
 - native browser history owns catalog/Back scroll restoration; focused contracts verify Yomirra no longer overrides it with pathname-only session storage/manual restoration;
 - reduced-motion behavior is covered for the shared motion primitives and page transition;
 - CI at `5292442bcbe6df094ce6a9c5fe1390711f6c214e`: typecheck PASS, lint PASS, **154/154 test files PASS, 1017/1017 tests PASS**, production build PASS, and static generation 24/24 PASS;
-- the latest Vercel preview reached READY and its root route returns 200 with the report-only CSP header; protected preview subroutes still do not provide an interactive browser/device surface here, so browser/device-only gates remain open instead of being inferred from HTTP fetches;
+- a branch preview containing the T2 implementation reached READY and its root route returns 200 with the report-only CSP header; later docs-only preview attempts may be skipped by the Hobby build-rate limit, and protected subroutes still do not provide an interactive browser/device surface here, so browser/device-only gates remain open instead of being inferred from HTTP fetches;
 - production deployment smoke confirms CSP report-only, manifest, and Service Worker delivery, but interactive Firebase popup + installed-PWA/iOS Safari verification remains T1.20/manual gate work.
 
 ---
