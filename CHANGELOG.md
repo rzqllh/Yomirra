@@ -85,6 +85,14 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
 
 ### P0 Core Stability (Phase 2)
 
+- **Reader History Semantics & Back Navigation** (`src/components/manga/manga-detail-view.tsx`, `src/components/reader/reader-shell.tsx`, `src/shared/lib/routes.ts`):
+  - Detail → reader sekarang mengganti slot route detail alih-alih menumpuk reader route baru, sementara chapter switch tetap memakai replace semantics.
+  - Parent page dibawa melalui `returnTo` yang tervalidasi sebagai internal route, sehingga Reader → Detail → Back kembali ke halaman asal dan tidak masuk lagi ke reader.
+  - Reader footer/fallback detail links mengikuti kontrak yang sama, dan direct continue-reading menyimpan parent page untuk alur kembali yang konsisten.
+  - Menambahkan regression coverage untuk logical parent, safe return target, dan reader back replacement.
+- **Test Contract Repair**:
+  - Menambahkan QueryClient test harness untuk CompactCard dan menyelaraskan fixture/expectation adapter dengan shared synopsis normalizer yang berlaku.
+
 - **Navigation Perceived-Performance Foundation** (`src/components/app/desktop-rail.tsx`, `src/components/app/app-shell.tsx`):
   - Menambahkan dukungan `pendingHref` ke `DesktopRail` sehingga transisi navigasi di desktop memiliki indikator aktif seketika dan progress bar top nav sama seperti `BottomDock` mobile.
   - Mencegah duplikasi event navigasi pada tujuan yang sama dan menjaga konsistensi state tanpa toast berisik saat navigasi rutin.
