@@ -8,7 +8,7 @@ import { useSettingsStore } from "@/shared/store/settings-store";
 
 export function LibrarySkeleton() {
   const listingViewMode = useSettingsStore((state) => state.listingViewMode);
-  const skeletonViewMode = listingViewMode === "compact" || listingViewMode === "list" ? "compact" : "grid";
+  const skeletonViewMode = listingViewMode === "compact" ? "compact" : "grid";
 
   return (
     <div className="w-full flex flex-col">
