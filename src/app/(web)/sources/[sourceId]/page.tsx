@@ -8,7 +8,6 @@ import { ShelfCard } from "@/components/manga/card";
 import { SearchResultSkeleton } from "@/components/skeletons/search-result-skeleton";
 import { useSearchParams } from "next/navigation";
 import { WarningCircle, Compass } from "@phosphor-icons/react/dist/ssr";
-import { DirectionalTransition } from "@/components/ui/directional-transition";
 import Link from "next/link";
 import { cn } from "@/shared/utils/cn";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
