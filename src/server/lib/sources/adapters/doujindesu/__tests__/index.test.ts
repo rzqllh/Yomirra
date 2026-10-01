@@ -17,12 +17,31 @@ describe("DoujinDesuSource", () => {
   });
 
   describe("Credential boundary", () => {
-    it("fails closed when the server-only credential is missing", () => {
+    it("keeps source registration available but fails closed on upstream use when the credential is missing", async () => {
       const previous = process.env.RESTRICTED_SOURCE_APP_SECRET;
       delete process.env.RESTRICTED_SOURCE_APP_SECRET;
 
       try {
-        expect(() => new DoujinDesuSource()).toThrow(
+        const unconfigured = new DoujinDesuSource();
+        await expect(unconfigured.getPopular(1)).rejects.toThrow(
+          "Restricted source credential is not configured",
+        );
+      } finally {
+        if (previous === undefined) {
+          delete process.env.RESTRICTED_SOURCE_APP_SECRET;
+        } else {
+          process.env.RESTRICTED_SOURCE_APP_SECRET = previous;
+        }
+      }
+    });
+
+    it("treats a whitespace-only credential as missing", async () => {
+      const previous = process.env.RESTRICTED_SOURCE_APP_SECRET;
+      process.env.RESTRICTED_SOURCE_APP_SECRET = "   ";
+
+      try {
+        const unconfigured = new DoujinDesuSource();
+        await expect(unconfigured.getPopular(1)).rejects.toThrow(
           "Restricted source credential is not configured",
         );
       } finally {
