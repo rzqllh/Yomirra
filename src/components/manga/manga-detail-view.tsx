@@ -291,7 +291,7 @@ export function MangaDetailView({
 
             <div className="flex items-center gap-1.5 flex-wrap mb-2.5">
               <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider backdrop-blur-md border border-white/15 bg-black/40 text-white shadow-xs">
-                {detail.format || "Manga"}
+                {detail.format || "Komik"}
               </span>
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide backdrop-blur-md border border-amber-400/30 bg-black/40 text-amber-300 shadow-xs">
                 <Star weight="fill" size={12} className="text-amber-400" />
@@ -343,7 +343,7 @@ export function MangaDetailView({
           <>
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider backdrop-blur-md border border-white/15 bg-black/40 text-white shadow-xs">
-                {detail.format || "Manga"}
+                {detail.format || "Komik"}
               </span>
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide backdrop-blur-md border border-amber-400/30 bg-black/40 text-amber-300 shadow-xs">
                 <Star weight="fill" size={12} className="text-amber-400" />
@@ -444,7 +444,7 @@ export function MangaDetailView({
                   <SearchInput
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Cari chapter..."
+                    placeholder="Cari chapter…"
                     aria-label="Cari chapter"
                     containerClassName="flex-1 h-[42px] rounded-xl bg-surface-raised border border-border-default/80 focus-within:border-accent/50 focus-within:ring-2 focus-within:ring-accent/20"
                   />
@@ -456,7 +456,7 @@ export function MangaDetailView({
               <EmptyState
                 icon={<Book size={32} weight="duotone" />}
                 title="Belum ada chapter"
-                description="Manga ini belum memiliki chapter atau sedang error saat memuat data."
+                description="Chapter belum tersedia atau gagal dimuat dari sumber ini."
                 className="my-6"
               />
             ) : (
