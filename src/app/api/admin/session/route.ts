@@ -7,6 +7,7 @@ import {
 } from "@/server/lib/auth/admin-auth";
 
 const ADMIN_SESSION_MAX_AGE = 8 * 60 * 60;
+const LEGACY_ADMIN_KEY_COOKIE = "yomirra_admin_key";
 
 function setSessionCookie(response: NextResponse, token: string) {
   response.cookies.set({
@@ -32,16 +33,30 @@ function clearSessionCookie(response: NextResponse) {
   });
 }
 
+function clearLegacyAdminKeyCookie(response: NextResponse) {
+  response.cookies.set({
+    name: LEGACY_ADMIN_KEY_COOKIE,
+    value: "",
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    path: "/",
+    maxAge: 0,
+  });
+}
+
 export async function GET(request: NextRequest) {
   const auth = await verifyAdminRequest(request);
   if (!auth.isAdmin) {
-    return NextResponse.json(
+    const response = NextResponse.json(
       { authenticated: false, code: auth.error || "unauthorized" },
       { status: auth.error === "unconfigured" ? 503 : 401 },
     );
+    clearLegacyAdminKeyCookie(response);
+    return response;
   }
 
-  return NextResponse.json({
+  const response = NextResponse.json({
     authenticated: true,
     admin: {
       uid: auth.uid,
@@ -49,6 +64,8 @@ export async function GET(request: NextRequest) {
       method: auth.method,
     },
   });
+  clearLegacyAdminKeyCookie(response);
+  return response;
 }
 
 export async function POST(request: NextRequest) {
@@ -107,11 +124,13 @@ export async function POST(request: NextRequest) {
     },
   });
   setSessionCookie(response, token);
+  clearLegacyAdminKeyCookie(response);
   return response;
 }
 
 export async function DELETE() {
   const response = NextResponse.json({ authenticated: false });
   clearSessionCookie(response);
+  clearLegacyAdminKeyCookie(response);
   return response;
 }
