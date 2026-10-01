@@ -32,7 +32,7 @@ function SpotlightSkeleton() {
 
 function RankingSkeleton() {
   return (
-    <div className="ink-panel flex min-h-[300px] flex-col p-4 sm:p-5 lg:h-[340px] lg:p-5">
+    <div className="ink-panel flex min-h-[300px] flex-col p-4 sm:p-5 lg:h-[340px] lg:p-4">
       <div className="flex min-h-11 items-center justify-between gap-3 border-b border-border-subtle/60 pb-2.5">
         <Skeleton className="h-4 w-36 rounded-xs" />
         <Skeleton className="h-11 w-28 rounded-[10px]" />
@@ -43,8 +43,8 @@ function RankingSkeleton() {
             key={index}
             className={
               index === 0
-                ? "flex min-h-[68px] flex-1 items-center gap-3 px-1 py-1.5"
-                : "flex min-h-[52px] flex-1 items-center gap-3 px-1 py-1"
+                ? "flex min-h-[72px] flex-1 items-center gap-3 px-1 py-1"
+                : "flex min-h-[44px] flex-1 items-center gap-3 px-1 py-0.5"
             }
           >
             <Skeleton
@@ -57,8 +57,8 @@ function RankingSkeleton() {
             <Skeleton
               className={
                 index === 0
-                  ? "h-[66px] w-11 shrink-0 rounded-xs"
-                  : "h-[51px] w-[34px] shrink-0 rounded-xs"
+                  ? "h-[72px] w-12 shrink-0 rounded-xs"
+                  : "h-[45px] w-[30px] shrink-0 rounded-xs"
               }
             />
             <div className="min-w-0 flex-1 space-y-1.5">
