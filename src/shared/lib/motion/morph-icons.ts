@@ -1,8 +1,6 @@
-import type { MorphIconData } from "@/components/motion/morph-icon";
-
 export interface MorphPair {
-  off: MorphIconData;
-  on: MorphIconData;
+  off: string;
+  on: string;
 }
 
 export const morphIconPairs = {
