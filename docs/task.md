@@ -226,13 +226,22 @@
 
 ### Motion/navigation PR gate
 
-- [ ] Fast route transitions do not flash a loader.
-- [ ] Slow route transitions clearly acknowledge input.
-- [ ] No blank frame/double skeleton.
-- [ ] Back/Forward scroll works.
-- [ ] Reduced-motion flow works.
+- [x] Fast route transitions do not flash a loader.
+- [x] Slow route transitions clearly acknowledge input.
+- [x] No blank frame/double skeleton.
+- [ ] Back/Forward scroll works in a real browser/device smoke.
+- [x] Reduced-motion flow works.
 - [ ] iOS Safari/PWA smoke passes.
-- [ ] Typecheck/lint/tests/build pass.
+- [x] Typecheck/lint/tests/build pass.
+
+**Final T2 verification record (2026-10-01):**
+- delayed navigation feedback is covered by focused timing tests; optimistic active-state and duplicate-intent cleanup remain intact;
+- AppShell no longer owns a second full-screen pending skeleton, so route `loading.tsx` boundaries are the single loading-surface owner;
+- native browser history owns catalog/Back scroll restoration; focused contracts verify Yomirra no longer overrides it with pathname-only session storage/manual restoration;
+- reduced-motion behavior is covered for the shared motion primitives and page transition;
+- CI at `5292442bcbe6df094ce6a9c5fe1390711f6c214e`: typecheck PASS, lint PASS, **154/154 test files PASS, 1017/1017 tests PASS**, production build PASS, and static generation 24/24 PASS;
+- Vercel preview creation for the latest branch head is currently blocked by the Hobby-plan build-rate limit, so browser/device-only gates are intentionally left open instead of being inferred from CI;
+- production deployment smoke confirms CSP report-only, manifest, and Service Worker delivery, but interactive Firebase popup + installed-PWA/iOS Safari verification remains T1.20/manual gate work.
 
 ---
 
