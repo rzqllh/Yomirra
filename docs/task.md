@@ -124,15 +124,23 @@
 - CI at `909ca43839ef87e9f0f99ba34c9250d0a3406c6d`: typecheck PASS, lint PASS, security-surface and disclosure tests PASS; the full suite remains limited to the four pre-existing T0 failures;
 - **T1.20 remains open** for interactive Firebase auth + installed-PWA/Service Worker browser smoke; deployment protection prevented a meaningful non-interactive manifest/worker fetch, so this check is not being marked complete from static evidence alone.
 
+**Final stabilization record (2026-10-01):**
+- the four T0 baseline failures were repaired without weakening production contracts: CompactCard tests now provide QueryClient context, and stale adapter synopsis fixtures/expectations now follow the shared normalizer contract;
+- reader history semantics were corrected so detail → reader and reader → detail use replace semantics where appropriate, internal `returnTo` preserves the logical parent, and chapter changes do not leave stale reader routes in history;
+- regression coverage now includes safe return-target validation, parent-preserving chapter/continue-reading links, and ReaderShell back replacement;
+- final CI at `62859d2e2642700bd411d8c94502ca916c8dd671`: typecheck PASS, lint PASS, **150/150 test files PASS, 1000/1000 tests PASS**, and production build PASS;
+- public documentation was re-aligned in README/CHANGELOG and provider-neutral security/developer docs; no production credential value is documented;
+- T1.20 and manual admin browser smoke remain separate interactive checks; CSP stays report-only until that browser/PWA verification is completed.
+
 ### Security PR gate
 
-- [ ] Focused auth/security tests pass.
-- [ ] Typecheck passes.
-- [ ] Lint passes.
-- [ ] Full relevant test suite passes.
-- [ ] Production build passes.
+- [x] Focused auth/security tests pass.
+- [x] Typecheck passes.
+- [x] Lint passes.
+- [x] Full relevant test suite passes.
+- [x] Production build passes.
 - [ ] Manual admin unauthorized/authorized smoke passes.
-- [ ] No secret appears in client bundle/public docs.
+- [x] No secret appears in client bundle/public docs.
 
 ---
 
