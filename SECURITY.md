@@ -61,6 +61,16 @@ Response limit/rejection harus membawa header limit/reset yang konsisten, dan pe
 
 Perubahan pada image proxy harus mempertahankan validasi URL, signature saat proxy signing aktif, host safety, timeout/size limits, dan perlindungan terhadap open proxy/SSRF.
 
+### Browser security headers dan CSP
+
+Browser response memakai `Content-Security-Policy-Report-Only` sebagai baseline observability sebelum enforcement. Baseline harus tetap kompatibel dengan asset/chunk Next.js, Firebase authentication, HTTPS API/assets, WebSocket connection, font/image data/blob URL yang memang diperlukan, manifest, dan Service Worker/PWA.
+
+Jangan beralih dari report-only ke enforced CSP sebelum pelanggaran pada browser/PWA utama sudah ditinjau. Penambahan directive/host harus berbasis kebutuhan runtime nyata, bukan wildcard credential/provider-specific yang tidak diperlukan.
+
+### Error disclosure
+
+Public UI dan generic API failure tidak boleh menampilkan raw exception message, stack, URL bertanda tangan, credential, atau response upstream. User menerima pesan generik; detail diagnosis tetap berada di server log yang melewati sanitizer. Digest/correlation identifier yang tidak sensitif boleh dipertahankan untuk troubleshooting.
+
 ### Source adapters
 
 Response source adalah untrusted input.
