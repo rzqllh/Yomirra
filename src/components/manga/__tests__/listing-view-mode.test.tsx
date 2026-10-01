@@ -1,10 +1,24 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { ViewModeToggle } from "../view-mode-toggle";
 import { CompactCard } from "../card/compact-card";
 import { useSettingsStore } from "@/shared/store/settings-store";
 
+function renderWithQuery(ui: React.ReactElement) {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+    },
+  });
+
+  return render(
+    <QueryClientProvider client={queryClient}>
+      {ui}
+    </QueryClientProvider>
+  );
+}
 
 describe("Listing View Mode & CompactCard", () => {
   beforeEach(() => {
@@ -40,7 +54,7 @@ describe("Listing View Mode & CompactCard", () => {
       description: "A world-renowned hunter journeys through perilous gates.",
     };
 
-    render(
+    renderWithQuery(
       <CompactCard
         sourceId="shinigami"
         manga={mockManga}
@@ -101,7 +115,7 @@ describe("Listing View Mode & CompactCard", () => {
       description: "Karena dia memiliki warisan Ancient Demonic emperor...",
     };
 
-    render(
+    renderWithQuery(
       <CompactCard
         sourceId="shinigami"
         manga={mockManga}
@@ -119,7 +133,7 @@ describe("Listing View Mode & CompactCard", () => {
       coverUrl: "https://example.com/cover.jpg",
     };
 
-    render(
+    renderWithQuery(
       <CompactCard
         sourceId="shinigami"
         manga={mockMangaWithoutDesc}
