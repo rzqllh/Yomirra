@@ -79,7 +79,7 @@ describe("LibraryPageView hierarchy", () => {
 
     expect(screen.getByTestId("header-actions")).toBeTruthy();
     expect(screen.getByRole("heading", { level: 2, name: "Library" })).toBeTruthy();
-    expect(screen.getByText("Jelajahi komik dari sumber pilihanmu.")).toBeTruthy();
+    expect(screen.getByText("Jelajahi katalog dari sumber yang kamu pilih.")).toBeTruthy();
   });
 
   it("renders toolbar and results inside PageContainer", () => {
