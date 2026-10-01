@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     logger.error("Gagal menguji parser custom source", { error });
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Terjadi kesalahan saat menguji parser" },
+      { error: "Terjadi kesalahan saat menguji parser" },
       { status: 500 }
     );
   }
