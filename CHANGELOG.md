@@ -6,9 +6,15 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
 
 ### P4 Backend, Entitlement, Admin Hardening, and AI (Phase 6)
 
-- **Admin Auth & Security Hardening** (`src/server/lib/auth/admin-auth.ts`, `src/shared/lib/__tests__/phase6-backend-entitlement.test.ts`):
-  - Memperketat `getValidAdminKeys()` dengan membatasi fallback passkey darurat hanya untuk development dan test lokal atau server yang belum terkonfigurasi, mengeliminasi risiko pembukaan celah default di lingkungan production.
-  - Memvalidasi bahwa seluruh verifikasi hak akses privileged bersifat server-authoritative dan tidak ada kredensial privileged yang masuk ke client bundle.
+- **Admin Auth & Security Hardening** (`src/server/lib/auth/admin-auth.ts`, `src/app/api/admin/session/route.ts`, `src/shared/__tests__/logger-security.test.ts`):
+  - Menghapus fallback credential privileged dan hard-coded privileged identity dari production path; missing admin configuration sekarang fail-closed.
+  - Browser admin menukar passkey dengan signed HttpOnly session berumur pendek, sementara raw passkey tidak disimpan di browser storage; mutation berbasis session memvalidasi same-origin request.
+  - Menstandardisasi server-side authorization di seluruh admin API dan menambahkan redaction logger untuk authorization header, cookie, token, secret, passkey/password, API key, signature, dan signed URL.
+- **Server Credential Isolation & Route Rate Limiting** (`src/server/lib/security/rate-limit.ts`, `src/app/api/sources/search/route.ts`, `src/app/api/proxy/image/route.ts`):
+  - Memindahkan reusable privileged upstream credential ke konfigurasi server-only tanpa fallback literal; missing optional configuration gagal tertutup ketika request upstream dijalankan tanpa menggagalkan konstruksi registry source lain.
+  - Menambahkan policy rate-limit bernamespace untuk admin mutation, admin operation mahal, public search, search intelligence, signed image proxy, dan laporan pengguna.
+  - Mutation admin dan optional expensive compute fail-closed saat limiter tidak tersedia; public search dan image delivery memakai policy fail-open untuk menjaga availability.
+  - Menambahkan response limit/reset headers, `Retry-After` pada rejection, trusted proxy-chain identity, serta regression test untuk 429/503 dan limiter availability behavior.
 - **Entitlement Foundation (Task 02)** (`src/shared/lib/entitlement.ts`):
   - Mengimplementasikan model kapabilitas Free vs Pro dengan proteksi ketat agar fitur gratis (membaca tanpa batas, pencarian penuh, multi-source switch, perpustakaan offline, sinkronisasi riwayat) selalu aktif dan tidak dapat didegradasi atau dikunci secara tidak sengaja.
   - Menyediakan gateway fitur Pro yang aman untuk fitur tambahan berbasis AI dan prioritas bandwidth.
