@@ -116,7 +116,8 @@
 - the public Service Worker is served as JavaScript;
 - the CSP includes the current Next.js self/inline bootstrap requirement, HTTPS assets/API, WebSocket, Firebase auth frame hosts, blob workers, and manifest;
 - the merged production deployment showed no warning/error runtime logs during this verification window;
-- **remaining:** interactive Firebase popup flow plus installed-PWA/iOS Safari smoke. This item stays open until a real browser surface is available; report-only CSP must not be promoted to enforcement before that check.
+- unauthenticated admin smoke fails closed as designed, but production currently reports admin auth as **unconfigured** (HTTP 503), which means an authorized admin smoke cannot pass until the production admin credential/Firebase Admin configuration is provisioned;
+- **remaining:** provision/confirm production admin auth, then run authorized admin smoke, interactive Firebase popup flow, and installed-PWA/iOS Safari smoke. This item stays open until those real-browser/configuration checks are available; report-only CSP must not be promoted to enforcement before that check.
 
 - [x] **T1.21** Document required directives in code/config comments, not credential values.
 - [x] **T1.22** Remove raw internal `error.message` from user-facing generic error surfaces.
