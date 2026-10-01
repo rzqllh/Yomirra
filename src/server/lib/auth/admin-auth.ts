@@ -2,6 +2,8 @@ import {
   createHmac,
   timingSafeEqual,
 } from "node:crypto";
+import type { App } from "firebase-admin/app";
+import type { Auth } from "firebase-admin/auth";
 import { logger } from "@/shared/logger";
 import { NextResponse } from "next/server";
 
@@ -24,8 +26,8 @@ interface AdminSessionPayload {
   exp: number;
 }
 
-let adminAppInstance: unknown = null;
-let adminAuthInstance: { verifyIdToken: (token: string) => Promise<Record<string, unknown>> } | null = null;
+let adminAppInstance: App | null = null;
+let adminAuthInstance: Auth | null = null;
 
 export function isFirebaseAdminConfigured(): boolean {
   const key = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
@@ -50,7 +52,7 @@ async function getAdminAuth() {
       });
     }
 
-    adminAuthInstance = getAuth(adminAppInstance) as typeof adminAuthInstance;
+    adminAuthInstance = getAuth(adminAppInstance);
     return adminAuthInstance;
   } catch (error) {
     logger.error("Failed to initialize Firebase Admin SDK", { error });
