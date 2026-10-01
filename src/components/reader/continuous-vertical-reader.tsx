@@ -1,12 +1,12 @@
 import * as React from "react"
 import Link from "next/link"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { useReaderStore } from "@/shared/store/reader-store"
 import { useSettingsStore } from "@/shared/store/settings-store"
 import { useHistoryStore } from "@/shared/store/history-store"
 import { useLibraryStore } from "@/shared/store/library-store"
 import { PageItem } from "@/shared/types/source"
-import { getReaderHref, getMangaDetailHref, getSafeMangaDetailBackHref } from "@/shared/lib/routes"
+import { getReaderHref, getMangaDetailHref } from "@/shared/lib/routes"
 import { ReaderImage } from "./reader-image"
 import { Chapter } from "@/shared/types/source"
 import { useDownloadStore } from "@/shared/store/download-store"
@@ -39,6 +39,7 @@ interface ContinuousVerticalReaderProps {
   nextChapterId?: string;
   onOpenAlternateSource?: () => void;
   onRefreshChapter?: () => Promise<PageItem[] | null>;
+  returnTo?: string;
 }
 
 export function ContinuousVerticalReader({
@@ -52,10 +53,9 @@ export function ContinuousVerticalReader({
   nextChapterId,
   onOpenAlternateSource,
   onRefreshChapter,
+  returnTo,
 }: ContinuousVerticalReaderProps) {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const returnTo = getSafeMangaDetailBackHref(searchParams.get("returnTo"))
   const detailHref = getMangaDetailHref(sourceId, mangaId, returnTo)
   const preferences = useReaderStore(state => state.preferences)
   const { dataSaver } = useSettingsStore()
