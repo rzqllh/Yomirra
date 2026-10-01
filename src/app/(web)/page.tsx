@@ -3,7 +3,6 @@ import { HomeView } from "@/components/app/home-view";
 import { getRuntimeSources } from "@/server/lib/sources/runtime-sources";
 import { Suspense } from "react";
 import { cookies } from "next/headers";
-import { DirectionalTransition } from "@/components/ui/directional-transition";
 import { EmptyState } from "@/components/states/empty-state";
 import { WarningCircle } from "@phosphor-icons/react/dist/ssr";
 import { UnifiedFeed } from "@/components/app/unified-feed";
