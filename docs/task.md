@@ -57,10 +57,18 @@
 - a separate decryption salt in that adapter is protocol material rather than an authorization credential and is not treated as the same risk class;
 - moving the privileged header to server-only configuration requires provisioning/rotating the corresponding deployment secret before removing the literal, otherwise that source would be intentionally taken offline;
 - T1.10/T1.11/T1.13 remain blocked on deployment-secret provisioning rather than shipping an unsafe fallback.
-- [ ] **T1.10** Move required secrets to server-only configuration.
-- [ ] **T1.11** Define safe behavior when optional provider credentials are missing.
+- [x] **T1.10** Move required secrets to server-only configuration.
+- [x] **T1.11** Define safe behavior when optional provider credentials are missing.
 - [ ] **T1.12** Ensure logs redact credential-bearing headers, signed URLs, cookies, and tokens.
-- [ ] **T1.13** Add focused tests for missing/malformed provider configuration.
+- [x] **T1.13** Add focused tests for missing/malformed provider configuration.
+
+**Provider-credential remediation record:**
+- the reusable privileged upstream header is now sourced only from server environment configuration;
+- the committed literal credential and duplicate header spelling were removed from the adapter;
+- missing configuration fails closed before any upstream request is attempted;
+- dependency-injected test clients remain usable without production credentials;
+- focused regression coverage verifies the missing-credential boundary;
+- the required server-only variable is declared in `.env.example` without documenting its value.
 
 ## Rate limiting
 
