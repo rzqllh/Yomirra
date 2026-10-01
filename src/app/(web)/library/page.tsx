@@ -10,7 +10,7 @@ export default function LibraryPage() {
     <React.Suspense
       fallback={
         <YomirraSurface variant="base" className="w-full">
-          <PageContainer>
+          <PageContainer hasMobileHeader>
             <LibrarySkeleton />
           </PageContainer>
         </YomirraSurface>

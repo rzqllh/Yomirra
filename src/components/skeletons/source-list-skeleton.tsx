@@ -1,32 +1,42 @@
-import { Skeleton } from "@/components/ui/skeleton"
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function SourceListSkeleton({ count = 6 }: { count?: number }) {
   return (
-    <div className="flex flex-col gap-2 w-full">
+    <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
       {Array.from({ length: count }).map((_, i) => (
-        // Mirrors SourceCard: rounded-lg border flex-col, inner p-4 header row
-        <div key={i} className="rounded-lg border border-border-subtle bg-surface-raised overflow-hidden">
-          {/* Header row: icon size-12 rounded-xl, name + lang/version subtitle, badges + toggle */}
-          <div className="flex items-center gap-4 p-4 pb-3">
-            <Skeleton className="size-12 rounded-xl shrink-0" />
-            <div className="flex-1 min-w-0 space-y-2">
-              <Skeleton className="h-4 w-2/5" />
-              <Skeleton className="h-3 w-1/4" />
-            </div>
-            {/* Status badge + toggle */}
-            <div className="flex items-center gap-3 shrink-0">
-              <Skeleton className="h-5 w-14 rounded-md" />
-              <Skeleton className="h-5 w-9 rounded-xl" />
+        <div
+          key={i}
+          className="flex flex-col overflow-hidden rounded-xl border border-border-subtle bg-surface-raised shadow-xs"
+        >
+          <div className="flex items-start gap-3.5 p-4 pb-3">
+            <Skeleton className="size-12 shrink-0 rounded-xl" />
+            <div className="min-w-0 flex-1 space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <Skeleton className="h-4 w-2/5 rounded-md" />
+                <Skeleton className="h-5 w-16 shrink-0 rounded-lg" />
+              </div>
+              <div className="flex items-center justify-between gap-2">
+                <Skeleton className="h-3 w-20 rounded-md" />
+                <Skeleton className="h-3 w-28 rounded-md" />
+              </div>
             </div>
           </div>
-          {/* Capabilities badges row */}
-          <div className="px-4 pb-3 flex gap-1.5">
+
+          <div className="flex flex-wrap gap-1.5 px-4 pb-3">
             <Skeleton className="h-4 w-12 rounded-md" />
             <Skeleton className="h-4 w-16 rounded-md" />
             <Skeleton className="h-4 w-10 rounded-md" />
           </div>
+
+          <div className="mt-auto flex items-center justify-between gap-3 border-t border-border-subtle bg-surface-base/40 px-4 py-3">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <Skeleton className="h-5 w-9 shrink-0 rounded-xl" />
+              <Skeleton className="h-3 w-32 rounded-md" />
+            </div>
+            <Skeleton className="h-7 w-24 shrink-0 rounded-lg" />
+          </div>
         </div>
       ))}
     </div>
-  )
+  );
 }

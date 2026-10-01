@@ -5,7 +5,7 @@ import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
 import { PageHeader } from "@/components/app/header";
 import { ShelfCard } from "@/components/manga/card";
-import { SearchResultSkeleton } from "@/components/skeletons/search-result-skeleton";
+import { MangaGridSkeleton } from "@/components/skeletons/manga-grid-skeleton";
 import { useSearchParams } from "next/navigation";
 import { WarningCircle, Compass } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
@@ -79,10 +79,10 @@ export default function SourceBrowsePage({
         </div>
 
         {status === "pending" || isLoading ? (
-          <div className="flex flex-col gap-10">
-            <SearchResultSkeleton />
-            <SearchResultSkeleton />
-          </div>
+          <MangaGridSkeleton
+            count={12}
+            className="gap-y-6 sm:gap-y-8 md:gap-y-10"
+          />
         ) : status === "error" ? (
           <div className="flex flex-col items-center justify-center py-20 text-center bg-surface-raised rounded-xl border border-border-subtle">
             <WarningCircle size={48} className="mb-4 text-semantic-error" weight="duotone" />
