@@ -53,21 +53,21 @@
 - [x] **T1.9** Search server/adapters for literal reusable credentials or privileged headers.
 
 **Provider-credential audit record:**
-- one built-in restricted adapter contains a reusable privileged request-header value committed as a literal;
+- one built-in restricted adapter contained a reusable privileged request-header value committed as a literal;
 - a separate decryption salt in that adapter is protocol material rather than an authorization credential and is not treated as the same risk class;
-- moving the privileged header to server-only configuration requires provisioning/rotating the corresponding deployment secret before removing the literal, otherwise that source would be intentionally taken offline;
-- T1.10/T1.11/T1.13 remain blocked on deployment-secret provisioning rather than shipping an unsafe fallback.
+- deployment-secret availability was confirmed before removing the literal so remediation did not require an unsafe fallback.
 - [x] **T1.10** Move required secrets to server-only configuration.
 - [x] **T1.11** Define safe behavior when optional provider credentials are missing.
-- [ ] **T1.12** Ensure logs redact credential-bearing headers, signed URLs, cookies, and tokens.
+- [x] **T1.12** Ensure logs redact credential-bearing headers, signed URLs, cookies, and tokens.
 - [x] **T1.13** Add focused tests for missing/malformed provider configuration.
 
 **Provider-credential remediation record:**
 - the reusable privileged upstream header is now sourced only from server environment configuration;
 - the committed literal credential and duplicate header spelling were removed from the adapter;
-- missing configuration fails closed before any upstream request is attempted;
+- missing configuration fails closed before any upstream request is attempted, while source registry construction remains available so failure stays isolated to that optional source;
 - dependency-injected test clients remain usable without production credentials;
-- focused regression coverage verifies the missing-credential boundary;
+- focused regression coverage verifies missing and whitespace-only configuration;
+- shared logger regression coverage verifies redaction for credential-bearing fields, cookies/tokens, signatures, signed URLs, nested error data, and circular/truncated structures;
 - the required server-only variable is declared in `.env.example` without documenting its value.
 
 ## Rate limiting
@@ -76,13 +76,13 @@
 
 **Rate-limit classification record:**
 - admin destructive/expensive mutations (source flush/probe, search warm/simulate, report actions, custom-source test/write) require tight namespaced limits and fail closed when the limiter is unavailable;
-- public expensive compute/search endpoints use namespaced limits; search-intelligence already has a strict fail-closed policy, while global source search currently uses the generic limiter and should be made explicit;
+- public expensive compute/search endpoints use namespaced limits; search-intelligence keeps its strict fail-closed policy and global source search now uses an explicit public-search policy;
 - signed image proxy is bandwidth-expensive but high-volume by design, so any limiter must be materially looser and must not interfere with sequential reader image loading;
 - authenticated cron/webhook endpoints keep credential verification as the primary boundary; the Telegram command path already has a chat-scoped Redis limiter and should not receive a redundant IP limiter;
 - lightweight health/site/source metadata reads are not priority targets for the first hardening pass;
 - limiter identity must follow the trusted deployment proxy chain rather than accepting an arbitrary client-supplied forwarded address.
 - [x] **T1.15** Define namespaces + limits per route class.
-- [ ] **T1.16** Attach the existing rate-limit utility to intended routes.
+- [x] **T1.16** Attach the existing rate-limit utility to intended routes.
 - [x] **T1.17** Explicitly choose fail-open/fail-closed behavior per route class.
 
 **Rate-limit policy contract:**
@@ -91,9 +91,19 @@
 - `public-search`: 120 requests / 60 s, fail open when Redis is unavailable so ordinary discovery does not become an availability dependency;
 - `search-intelligence`: retain 10 requests / 60 s, fail closed because it is optional expensive compute;
 - `image-proxy`: 600 requests / 60 s, fail open; high ceiling protects bandwidth abuse without fighting reader page bursts;
+- `user-report`: 5 requests / 600 s, fail closed;
 - authenticated cron/webhook: no additional generic IP policy in this phase; retain credential boundary and existing command-scoped limiter;
 - low-cost public metadata/health reads: no limiter in the first pass.
-- [ ] **T1.18** Add response-header and rejection tests.
+- [x] **T1.18** Add response-header and rejection tests.
+
+**Rate-limit implementation/verification record:**
+- common policies are centralized in `src/server/lib/security/rate-limit.ts` and use per-operation namespaces;
+- public global search, search intelligence, signed image proxy, and user reports are wired to their explicit policies;
+- admin session exchange, source config/write/delete/test, source probe/flush, search warm/simulate, report actions/status, site config, Redis key deletion, and manual ops triggers are rate-limited after authorization where applicable;
+- limiter identity uses the right-most forwarded proxy hop with `x-real-ip` fallback instead of trusting the left-most client-supplied forwarded value;
+- rejection responses return 429 or 503 according to policy and include limit/remaining/reset plus `Retry-After`; public success responses that expose the limiter include the same rate-limit headers;
+- focused tests cover trusted proxy identity, fail-open public search, fail-closed admin mutation, 429/503 rejection headers, global-search response headers, and admin-session rejection;
+- CI at `1f30154293de468b7d1c38396d13da0493b0360b`: typecheck PASS, lint PASS, new credential/rate-limit/admin-session/search regressions PASS; full suite is back to the four pre-existing T0 failures only.
 
 ## CSP + error disclosure
 
