@@ -39,12 +39,11 @@ export function CommandMenu() {
         window.dispatchEvent(new CustomEvent("focus-search-input", { detail: { query } }));
         return;
       }
-      if (
+      triggerRef.current =
         document.activeElement instanceof HTMLElement &&
         document.activeElement !== document.body
-      ) {
-        triggerRef.current = document.activeElement;
-      }
+          ? document.activeElement
+          : null;
       restoreFocusOnCloseRef.current = true;
       setSearchQuery(query);
       setOpen(true);
