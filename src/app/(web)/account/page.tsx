@@ -28,11 +28,11 @@ export default function AccountPage() {
     if (!user) return;
     try {
       await runFullSync();
-      toast.success("Sinkronisasi Selesai", {
+      toast.success("Sinkronisasi selesai", {
         description: "Semua data bacaanmu berhasil disinkronkan ke akun.",
       });
     } catch {
-      toast.error("Sinkronisasi Terkendala", {
+      toast.error("Sinkronisasi gagal", {
         description: "Gagal menyinkronkan data. Periksa sambungan internetmu dan coba lagi.",
       });
     }
@@ -41,11 +41,11 @@ export default function AccountPage() {
   const handleLogout = async () => {
     try {
       await logout();
-      toast.info("Berhasil Keluar", {
+      toast.info("Berhasil keluar", {
         description: "Kamu telah keluar dari akun dengan aman.",
       });
     } catch {
-      toast.error("Gagal Keluar", {
+      toast.error("Gagal keluar", {
         description: "Terjadi gangguan saat memproses keluar akun. Coba sesaat lagi.",
       });
     }
@@ -97,14 +97,11 @@ export default function AccountPage() {
                   {user.displayName || "Pembaca Yomirra"}
                 </h1>
                 <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-accent/15 text-accent px-2 py-0.5 rounded-md border border-accent/25">
-                  <ShieldCheck size={12} weight="bold" /> Google Auth
+                  <ShieldCheck size={12} weight="bold" /> Terhubung dengan Google
                 </span>
               </div>
               <p className="text-sm text-text-muted truncate mt-1">
                 {user.email || "Tidak ada email"}
-              </p>
-              <p className="text-xs text-text-secondary/70 mt-2">
-                UID: <span className="font-mono text-[11px]">{user.uid}</span>
               </p>
             </div>
           </div>
@@ -115,7 +112,7 @@ export default function AccountPage() {
             </div>
             <div>
               <h2 className="text-lg font-bold text-text-primary">
-                Masuk ke Akun Yomirra
+                Masuk ke Yomirra
               </h2>
               <p className="text-sm text-text-muted mt-1 max-w-sm mx-auto">
                 Sinkronkan rak buku, progres baca, dan koleksimu di semua perangkat.
@@ -144,7 +141,7 @@ export default function AccountPage() {
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-text-primary">
-                    Status Sinkronisasi Cloud
+                    Sinkronisasi cloud
                   </h3>
                   <p className="text-xs text-text-muted">
                     Terakhir disinkronkan: {formatLastSync(lastSyncedAt)}
@@ -176,7 +173,7 @@ export default function AccountPage() {
                 weight="bold"
                 className={cn(isSyncing && "animate-spin")}
               />
-              {isSyncing ? "Menyinkronkan..." : "Sinkronkan Sekarang"}
+              {isSyncing ? "Menyinkronkan…" : "Sinkronkan sekarang"}
             </Button>
           </div>
         )}
@@ -203,7 +200,7 @@ export default function AccountPage() {
           <div className="rounded-[28px] border border-semantic-error/20 bg-semantic-error/5 p-6 space-y-4">
             <div>
               <h3 className="text-sm font-bold text-semantic-error">
-                Keluar dari Akun
+                Keluar
               </h3>
               <p className="text-xs text-text-muted mt-0.5">
                 Data di perangkat tetap ada dan bisa disinkronkan lagi saat kamu masuk.
@@ -216,7 +213,7 @@ export default function AccountPage() {
               className="w-full rounded-xl"
             >
               <SignOut size={18} weight="bold" />
-              Keluar dari Akun
+              Keluar
             </Button>
           </div>
         )}
