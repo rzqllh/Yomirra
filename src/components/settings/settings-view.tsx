@@ -69,7 +69,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
     setIsClearingCache(true);
     try {
       await clearAutomaticCache();
-      toast.success("Memori Berhasil Dibersihkan", {
+      toast.success("Cache bacaan dibersihkan", {
         description: "Berkas bacaan sementara berhasil dihapus untuk melegakan perangkat.",
       });
       const est = await getStorageEstimate();
@@ -77,7 +77,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
         setStorageUsage(`${est.usageMB} MB / ${est.quotaMB} MB`);
       }
     } catch {
-      toast.error("Gagal Membersihkan Memori", {
+      toast.error("Cache gagal dibersihkan", {
         description: "Penyimpanan sementara tidak dapat dibersihkan saat ini. Coba sesaat lagi.",
       });
     } finally {
@@ -92,7 +92,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
   const confirmClearData = () => {
     clearHistory();
     clearLibrary();
-    toast.info("Data Berhasil Dihapus", {
+    toast.info("Data lokal dihapus", {
       description: "Seluruh riwayat baca dan data lokal di perangkat ini telah dibersihkan.",
     });
     setIsClearDataDialogOpen(false);
@@ -154,7 +154,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
               <Button variant="secondary" className="w-full rounded-xl justify-between h-10 px-4 text-xs font-bold">
                 <span className="flex items-center gap-2">
                   <UserCircle size={18} weight="duotone" className="text-accent" />
-                  Kelola Akun & Sinkronisasi Cloud
+                  Kelola akun & sinkronisasi
                 </span>
                 <span>&rarr;</span>
               </Button>
@@ -163,13 +163,13 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
         ) : (
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-3">
             <div>
-              <h3 className="text-base font-bold text-text-primary">Login untuk Sinkronisasi</h3>
-              <p className="text-xs text-text-secondary mt-1 max-w-md">Masuk dengan Google untuk mengaktifkan sinkronisasi otomatis History dan Readlist lintas perangkat.</p>
+              <h3 className="text-base font-bold text-text-primary">Masuk untuk sinkronisasi</h3>
+              <p className="text-xs text-text-secondary mt-1 max-w-md">Masuk dengan Google untuk menyinkronkan bookmark, riwayat baca, dan koleksi lintas perangkat.</p>
             </div>
             <Link href="/account" className="w-full sm:w-auto">
               <Button variant="primary" className="w-full sm:w-auto rounded-xl font-bold shadow-xs text-xs">
                 <UserCircle size={18} className="mr-1.5" weight="bold" />
-                Buka Halaman Akun
+                Buka akun
               </Button>
             </Link>
           </div>
@@ -177,11 +177,11 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
       </SettingsSection>
 
       {/* Statistik Membaca */}
-      <SettingsSection title="Statistik Membaca">
+      <SettingsSection title="Statistik membaca">
         <SettingsItem
           icon={<IconWrapper variant="accent"><Fire size={20} weight="duotone" /></IconWrapper>}
-          title="Waktu Membaca"
-          description="Total waktu membaca komik sejak pertama kali."
+          title="Waktu membaca"
+          description="Total waktu yang tercatat saat membaca di Yomirra."
           right={<div className="text-sm font-semibold text-text-primary">{formatReadingTime()}</div>}
         />
       </SettingsSection>
@@ -190,14 +190,14 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
       <SettingsSection title="Pembaruan Library">
         <SettingsItem
           icon={<IconWrapper><ArrowsClockwise size={20} weight="duotone" /></IconWrapper>}
-          title="Cek Otomatis Saat Dibuka"
+          title="Cek otomatis saat dibuka"
           description="Periksa chapter baru secara otomatis saat aplikasi dimulai."
           right={
             <ToggleSwitch
               id="check-on-start"
               checked={mounted ? checkOnAppStart : true}
               onCheckedChange={setCheckOnAppStart}
-              label="Cek Otomatis Saat Dibuka"
+              label="Cek otomatis saat dibuka"
             />
           }
         />
@@ -206,8 +206,8 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
 
         <SettingsItem
           icon={<IconWrapper><Clock size={20} weight="duotone" /></IconWrapper>}
-          title="Interval Pengecekan"
-          description="Batas waktu jeda (cooldown) untuk pengecekan otomatis berikutnya."
+          title="Jeda pengecekan"
+          description="Jeda sebelum pengecekan otomatis berikutnya."
           right={
             <CustomSelect
               value={String(mounted ? minimumCheckIntervalMinutes : 15)}
@@ -228,33 +228,33 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
 
         <SettingsItem
           icon={<IconWrapper><Bell size={20} weight="duotone" /></IconWrapper>}
-          title="Notifikasi Global"
-          description="Tandai update baru sebagai belum dibaca pada badge navigasi."
+          title="Tandai pembaruan baru"
+          description="Tampilkan jumlah pembaruan yang belum dilihat pada navigasi."
           right={
             <ToggleSwitch
               id="notify-all"
               checked={mounted ? notifyForAllLibraryItems : true}
               onCheckedChange={setNotifyForAllLibraryItems}
-              label="Tandai update baru sebagai belum dibaca"
+              label="Tandai pembaruan baru"
             />
           }
         />
       </SettingsSection>
 
       {/* Preferensi Sumber & Bahasa */}
-      <SettingsSection title="Pengalihan Sumber & Bahasa">
+      <SettingsSection title="Sumber & bahasa">
         <SettingsItem
           icon={<IconWrapper><Compass size={20} weight="duotone" /></IconWrapper>}
-          title="Mode Pengalihan Sumber"
-          description="Tindakan saat komik lambat atau gagal dimuat: tetap utamakan pilihanmu, otomatis cari sumber lain, atau selalu tanyakan dulu."
+          title="Saat sumber bermasalah"
+          description="Pilih tindakan saat sumber lambat atau gagal dimuat."
           right={
             <CustomSelect
               value={mounted ? routingMode : "PREFERRED"}
               onChange={(val) => setRoutingMode(val as SourceRoutingMode)}
               options={[
-                { value: "PREFERRED", label: "Utamakan Sumber Pilihan" },
-                { value: "AUTO_SAFE", label: "Otomatis Cari Sumber Lain" },
-                { value: "MANUAL", label: "Tanyakan Dulu" },
+                { value: "PREFERRED", label: "Tetap gunakan pilihan saya" },
+                { value: "AUTO_SAFE", label: "Cari sumber lain otomatis" },
+                { value: "MANUAL", label: "Tanyakan terlebih dahulu" },
               ]}
             />
           }
@@ -264,7 +264,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
 
         <SettingsItem
           icon={<IconWrapper><Globe size={20} weight="duotone" /></IconWrapper>}
-          title="Bahasa Utama"
+          title="Bahasa utama"
           description="Bahasa terjemahan yang diprioritaskan saat memilih sumber komik."
           right={
             <CustomSelect
@@ -283,12 +283,12 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
       </SettingsSection>
 
       {/* Preferensi Tampilan */}
-      <SettingsSection title="Preferensi Tampilan">
+      <SettingsSection title="Tampilan">
         <SettingsItem
           className="md:hidden"
           wrapOnMobile
           icon={<IconWrapper><Palette size={20} weight="duotone" /></IconWrapper>}
-          title="Tema Aplikasi"
+          title="Tema"
           description="Pilih tema terang atau gelap."
           right={
             mounted ? (
@@ -325,14 +325,14 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
 
         <SettingsItem
           icon={<IconWrapper><WifiHigh size={20} weight="duotone" /></IconWrapper>}
-          title="Penghemat Data"
+          title="Hemat data"
           description="Muat gambar resolusi rendah."
           right={
             <ToggleSwitch
               id="data-saver"
               checked={mounted ? dataSaver : false}
               onCheckedChange={setDataSaver}
-              label="Penghemat Data"
+              label="Hemat data"
             />
           }
         />
@@ -342,45 +342,45 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
         <SettingsItem
           className="lg:hidden"
           icon={<IconWrapper><DeviceMobile size={20} weight="duotone" /></IconWrapper>}
-          title="Layar Selalu Menyala"
-          description="Layar tetap menyala saat mendownload chapter offline."
+          title="Jaga layar tetap menyala"
+          description="Cegah layar mati otomatis selama unduhan berlangsung."
           right={
             <ToggleSwitch
               id="keep-awake"
               checked={mounted ? keepScreenAwake : true}
               onCheckedChange={setKeepScreenAwake}
-              label="Layar Selalu Menyala"
+              label="Jaga layar tetap menyala"
             />
           }
         />
       </SettingsSection>
 
       {/* Konten & Keamanan */}
-      <SettingsSection title="Konten & Keamanan">
+      <SettingsSection title="Konten">
         <SettingsItem
           icon={<IconWrapper><ShieldWarning size={20} weight="duotone" /></IconWrapper>}
-          title="Sembunyikan NSFW"
-          description="Saring konten dewasa di sumber."
+          title="Sembunyikan konten dewasa"
+          description="Sembunyikan sumber dan konten yang ditandai 18+."
           right={
             <ToggleSwitch
               id="nsfw-toggle"
               checked={mounted ? hideNsfw : true}
               onCheckedChange={setHideNsfw}
-              label="Sembunyikan NSFW"
+              label="Sembunyikan konten dewasa"
             />
           }
         />
       </SettingsSection>
 
       {/* Backup & Restore */}
-      <SettingsSection title="Cadangan & Pemulihan">
+      <SettingsSection title="Cadangan data">
         <SettingsItem
           icon={<IconWrapper variant="accent"><FileText size={20} weight="duotone" /></IconWrapper>}
-          title="Simpan & Pulihkan Data"
+          title="Ekspor atau pulihkan data"
           description="Simpan salinan data komikmu ke berkas cadangan atau pulihkan riwayat dan koleksi kapan saja."
           right={
             <Button onClick={() => setSubView("backup")} variant="outline" className="w-full sm:w-auto shrink-0 border-accent/40 text-accent hover:bg-accent hover:text-white rounded-xl font-bold transition-colors">
-              Kelola Cadangan
+              Kelola cadangan
             </Button>
           }
         />
@@ -390,8 +390,8 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
       <SettingsSection title={user ? "Penyimpanan & Data Perangkat" : "Penyimpanan & Data Lokal"}>
         <SettingsItem
           icon={<IconWrapper><Broom size={20} weight="duotone" /></IconWrapper>}
-          title="Bersihkan Ruang Penyimpanan Sementara"
-          description={`Hapus berkas gambar dan data bacaan sementara untuk melegakan memori perangkat. Riwayat baca dan komik yang kamu unduh tetap aman.${storageUsage ? ` (Penggunaan memori: ${storageUsage})` : ""}`}
+          title="Bersihkan cache bacaan"
+          description={`Hapus gambar dan data sementara tanpa menghapus riwayat atau unduhan.${storageUsage ? ` (Terpakai: ${storageUsage})` : ""}`}
           right={
             <Button
               onClick={handleClearAutomaticCache}
@@ -399,7 +399,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
               disabled={isClearingCache}
               className="w-full sm:w-auto shrink-0 rounded-xl font-bold transition-colors"
             >
-              {isClearingCache ? "Membersihkan..." : "Bersihkan Memori"}
+              {isClearingCache ? "Membersihkan…" : "Bersihkan cache"}
             </Button>
           }
         />
@@ -409,7 +409,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
         <SettingsItem
           icon={<IconWrapper variant="danger"><Trash size={20} weight="duotone" /></IconWrapper>}
           title={user ? "Hapus Data di Perangkat Ini" : "Hapus Data Lokal"}
-          description={user ? "Menghapus seluruh riwayat baca dan unduhan di perangkat ini. Koleksi akunmu tetap aman tersimpan di cloud." : "Menghapus seluruh riwayat baca dan rak koleksi di perangkat ini secara permanen."}
+          description={user ? "Hapus riwayat baca dan bookmark lokal di perangkat ini. Unduhan tetap tersimpan, dan data cloud dapat muncul lagi setelah sinkronisasi." : "Hapus riwayat baca dan bookmark lokal dari perangkat ini. Unduhan tetap tersimpan."}
           right={
             <Button onClick={handleClearData} variant="outline" className="w-full sm:w-auto shrink-0 text-semantic-error hover:text-white hover:bg-semantic-error border-semantic-error/50 rounded-xl font-bold transition-colors">
               Hapus Data
@@ -473,19 +473,19 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
       <ConfirmationModal
         isOpen={isClearDataDialogOpen}
         onOpenChange={setIsClearDataDialogOpen}
-        title={user ? "Reset Data Perangkat?" : "Hapus Semua Data Lokal?"}
+        title={user ? "Hapus data lokal di perangkat ini?" : "Hapus data lokal?"}
         description={
           user
-            ? "Ini akan menghapus riwayat dan unduhan di perangkat ini. Data di cloud tetap aman dan akan dimuat ulang saat sinkronisasi berikutnya."
-            : "Semua riwayat bacaan dan koleksi akan dihapus permanen. Karena kamu belum login, data ini tidak bisa dipulihkan."
+            ? "Riwayat baca dan bookmark lokal akan dihapus. Unduhan tetap tersimpan, dan data cloud dapat muncul lagi setelah sinkronisasi."
+            : "Riwayat baca dan bookmark lokal akan dihapus. Unduhan tetap tersimpan."
         }
-        confirmLabel={user ? "Reset Data" : "Hapus Permanen"}
+        confirmLabel="Hapus data lokal"
         cancelLabel="Batal"
         variant="danger"
         requireCheckbox={
           user
-            ? "Saya mengerti data lokal di perangkat ini akan dihapus"
-            : "Saya mengerti data ini akan hilang permanen dan tidak bisa dipulihkan"
+            ? "Saya mengerti riwayat baca dan bookmark lokal akan dihapus"
+            : "Saya mengerti riwayat baca dan bookmark lokal akan dihapus"
         }
         onConfirm={confirmClearData}
       />
