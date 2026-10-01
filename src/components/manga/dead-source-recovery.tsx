@@ -146,7 +146,7 @@ export function DeadSourceRecovery({ sourceId, mangaId, health = { status: "BROK
       }
     } catch (err) {
       console.error("Failed searching alternate sources:", err);
-      toast.error("Sumber Lain Tidak Ditemukan", {
+      toast.error("Belum ada sumber lain yang cocok", {
         description: "Belum ada sumber bacaan lain yang cocok untuk komik ini saat ini.",
       });
     } finally {
@@ -222,7 +222,7 @@ export function DeadSourceRecovery({ sourceId, mangaId, health = { status: "BROK
         saveProgressFn: (src, mid, cid, pidx) => useHistoryStore.getState().saveProgress(src, mid, cid, pidx),
       });
 
-      toast.success("Manga berhasil dialihkan ke sumber baru");
+      toast.success("Sumber bacaan berhasil diganti");
     }
 
     setIsModalOpen(false);
@@ -233,7 +233,7 @@ export function DeadSourceRecovery({ sourceId, mangaId, health = { status: "BROK
     <main className="min-h-screen flex flex-col w-full relative pb-24">
       <div className="md:hidden">
         <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:px-8 md:pt-8">
-          <PageHeader title="Sumber Bermasalah" showBack={true} />
+          <PageHeader title="Sumber sedang bermasalah" showBack={true} />
         </div>
       </div>
 
