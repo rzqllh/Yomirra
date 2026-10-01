@@ -82,6 +82,8 @@ Boundary privileged tetap berada di server:
 - admin API memakai authorization server-side dan browser admin memakai session bertanda tangan, HttpOnly, dan berumur pendek; raw passkey tidak disimpan di browser storage;
 - reusable upstream credential dibaca dari environment server-only dan konfigurasi yang hilang gagal tertutup pada saat request upstream tanpa menjatuhkan registry source lain;
 - route yang mahal atau sensitif memakai rate-limit namespace terpisah: mutation admin dan optional expensive compute gagal tertutup bila limiter tidak tersedia, sedangkan public search/image delivery mempertahankan availability dengan policy fail-open;
+- browser response memakai baseline Content Security Policy dalam mode report-only untuk mengamati compatibility Next.js, Firebase, remote assets, dan PWA sebelum enforcement;
+- generic public error surfaces tidak menampilkan raw exception/upstream error; detail diagnosis tetap dicatat melalui jalur server/log yang disanitasi;
 - logger men-sanitasi authorization header, cookie, token, secret, API key, signature, signed URL, dan field sensitif lain sebelum ditulis ke log.
 
 Detail threat boundary dan aturan implementasi ada di [Security Policy](SECURITY.md).
