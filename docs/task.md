@@ -109,6 +109,15 @@
 
 - [x] **T1.19** Add CSP report-only baseline.
 - [ ] **T1.20** Verify Next/Firebase/assets/connect requirements in browser/PWA.
+
+**T1.20 deployment-level verification (partial):**
+- production Home and Account return HTTP 200 with the expected report-only CSP;
+- the public PWA manifest is served as `application/manifest+json`;
+- the public Service Worker is served as JavaScript;
+- the CSP includes the current Next.js self/inline bootstrap requirement, HTTPS assets/API, WebSocket, Firebase auth frame hosts, blob workers, and manifest;
+- the merged production deployment showed no warning/error runtime logs during this verification window;
+- **remaining:** interactive Firebase popup flow plus installed-PWA/iOS Safari smoke. This item stays open until a real browser surface is available; report-only CSP must not be promoted to enforcement before that check.
+
 - [x] **T1.21** Document required directives in code/config comments, not credential values.
 - [x] **T1.22** Remove raw internal `error.message` from user-facing generic error surfaces.
 - [x] **T1.23** Preserve safe logging/digest identifiers.
@@ -148,43 +157,70 @@
 
 ## Motion tokens and primitives
 
-- [ ] **T2.1** Inventory feature-local animation durations/springs.
-- [ ] **T2.2** Reconcile semantic motion tokens in `src/shared/lib/motion/`.
-- [ ] **T2.3** Update `MotionProvider` defaults only if evidence requires it.
-- [ ] **T2.4** Create `AnimatedStateIcon` primitive.
-- [ ] **T2.5** Create `MorphIcon` wrapper with reduced-motion fallback.
-- [ ] **T2.6** Create/reconcile shared press/tap preset.
-- [ ] **T2.7** Create/reconcile shared layout-transition preset.
-- [ ] **T2.8** Create/reconcile `PageTransition` behavior.
-- [ ] **T2.9** Add primitive tests including reduced-motion behavior.
+- [x] **T2.1** Inventory feature-local animation durations/springs.
+- [x] **T2.2** Reconcile semantic motion tokens in `src/shared/lib/motion/`.
+- [x] **T2.3** Update `MotionProvider` defaults only if evidence requires it.
+- [x] **T2.4** Create `AnimatedStateIcon` primitive.
+- [x] **T2.5** Create `MorphIcon` wrapper with reduced-motion fallback.
+- [x] **T2.6** Create/reconcile shared press/tap preset.
+- [x] **T2.7** Create/reconcile shared layout-transition preset.
+- [x] **T2.8** Create/reconcile `PageTransition` behavior.
+- [x] **T2.9** Add primitive tests including reduced-motion behavior.
+
+**Motion-foundation record:**
+- feature-local motion had multiple hard-coded springs/durations, including a 100 ms page transition, a separate dock spring, and immediate navigation feedback; semantic tokens now own page, layout, press, and navigation-feedback timing;
+- the global MotionProvider keeps the same proven spring behavior but consumes the shared layout token;
+- `AnimatedStateIcon` and `PageTransition` respect user reduced-motion preference and have focused regressions;
+- `DirectionalTransition` remains only as a compatibility alias so new code has one page-transition owner.
 
 ## Morphicons
 
-- [ ] **T2.10** Verify current package API/version/license at implementation time.
-- [ ] **T2.11** Add dependency only after wrapper design is fixed.
+- [x] **T2.10** Verify current package API/version/license at implementation time.
+- [x] **T2.11** Add dependency only after wrapper design is fixed.
 - [ ] **T2.12** Measure bundle delta.
-- [ ] **T2.13** Keep package-specific imports out of feature components.
-- [ ] **T2.14** Implement only approved morph pairs first: bookmark, grid/list, disclosure, play/pause or equivalent supported pairs.
-- [ ] **T2.15** Keep stable route identities non-morphing.
+- [x] **T2.13** Keep package-specific imports out of feature components.
+- [x] **T2.14** Implement only approved morph pairs first: bookmark, grid/list, disclosure, play/pause or equivalent supported pairs.
+- [x] **T2.15** Keep stable route identities non-morphing.
+
+**Morphicons record:**
+- package/API checked at implementation time: `morphicons` 1.7.1, MIT, React binding at `morphicons/react`, raw SVG path input supported, and user reduced-motion supported;
+- dependency is isolated behind `src/components/motion/morph-icon.tsx`; a regression test rejects direct package imports from feature components;
+- only the approved first pair data is staged (bookmark, grid/list, disclosure, playback); route/navigation identity icons are intentionally unchanged;
+- **T2.12 remains open:** byte-level application bundle delta will be recorded from the final production/preview build before this PR is considered complete. The wrapper is not yet consumed by production feature components, so no mass icon migration is included here.
 
 ## Navigation continuity
 
-- [ ] **T2.16** Audit `AppShell`, navigation intent, route loading, page loading, and `DirectionalTransition`.
-- [ ] **T2.17** Identify and remove duplicate full-screen pending/skeleton behavior.
-- [ ] **T2.18** Preserve optimistic dock active state.
-- [ ] **T2.19** Delay progress indicator so fast navigation does not flash it.
-- [ ] **T2.20** Ensure recovery timeout does not become the normal completion mechanism.
+- [x] **T2.16** Audit `AppShell`, navigation intent, route loading, page loading, and `DirectionalTransition`.
+- [x] **T2.17** Identify and remove duplicate full-screen pending/skeleton behavior.
+- [x] **T2.18** Preserve optimistic dock active state.
+- [x] **T2.19** Delay progress indicator so fast navigation does not flash it.
+- [x] **T2.20** Ensure recovery timeout does not become the normal completion mechanism.
 - [ ] **T2.21** Align each route skeleton geometry with its final page.
-- [ ] **T2.22** Add tests for quick navigation, delayed navigation, duplicate-click prevention, and pending cleanup.
+- [x] **T2.22** Add tests for quick navigation, delayed navigation, duplicate-click prevention, and pending cleanup.
+
+**Navigation-continuity record:**
+- `AppShell` keeps `pendingHref` immediately for optimistic dock/rail selection but delays the visible progress bar by 180 ms;
+- the AppShell full-screen pending skeleton was removed, leaving route `loading.tsx` boundaries as the single loading-surface owner;
+- pending cleanup follows actual pathname completion first; the 12-second timer is recovery-only;
+- duplicate navigation intent suppression is preserved and covered;
+- Home loading geometry was aligned to its final hero/spotlight/continue-reading structure; missing account/source/source-detail loading boundaries were added;
+- T2.21 stays open until visual preview verification confirms all route skeletons match their final geometry.
 
 ## Scroll/focus
 
-- [ ] **T2.23** Replace pathname-only restoration with intent-aware restoration if current behavior fails intended flows.
+- [x] **T2.23** Replace pathname-only restoration with intent-aware restoration if current behavior fails intended flows.
 - [ ] **T2.24** Restore catalog position after detail → back.
 - [ ] **T2.25** Preserve browser Back/Forward restoration.
-- [ ] **T2.26** Keep reader progress independent from page-scroll restoration.
+- [x] **T2.26** Keep reader progress independent from page-scroll restoration.
 - [ ] **T2.27** Verify focus behavior for pointer and keyboard navigation.
-- [ ] **T2.28** Return overlay focus to trigger.
+- [x] **T2.28** Return overlay focus to trigger.
+
+**Scroll/focus record:**
+- pathname-only sessionStorage scroll restoration and forced `history.scrollRestoration = "manual"` were removed from AppShell so browser/Next Back/Forward restoration is no longer overridden;
+- PageHeader prefers native history for Back and only uses a replace fallback when no browser history entry exists;
+- reader progress remains isolated from page scroll restoration;
+- the triggerless global search overlay records the focused trigger and restores focus on close without navigation;
+- T2.24, T2.25, and T2.27 remain open for browser-level verification of catalog restoration, Back/Forward scroll, and keyboard/pointer focus behavior.
 
 ### Motion/navigation PR gate
 
