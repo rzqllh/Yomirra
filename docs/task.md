@@ -211,18 +211,18 @@
 ## Scroll/focus
 
 - [x] **T2.23** Replace pathname-only restoration with intent-aware restoration if current behavior fails intended flows.
-- [ ] **T2.24** Restore catalog position after detail → back.
-- [ ] **T2.25** Preserve browser Back/Forward restoration.
+- [x] **T2.24** Restore catalog position after detail → back.
+- [x] **T2.25** Preserve browser Back/Forward restoration.
 - [x] **T2.26** Keep reader progress independent from page-scroll restoration.
-- [ ] **T2.27** Verify focus behavior for pointer and keyboard navigation.
+- [x] **T2.27** Verify focus behavior for pointer and keyboard navigation.
 - [x] **T2.28** Return overlay focus to trigger.
 
 **Scroll/focus record:**
 - pathname-only sessionStorage scroll restoration and forced `history.scrollRestoration = "manual"` were removed from AppShell so browser/Next Back/Forward restoration is no longer overridden;
-- PageHeader prefers native history for Back and only uses a replace fallback when no browser history entry exists;
+- PageHeader prefers native history for Back and only uses a replace fallback when no browser history entry exists, preserving the browser-owned catalog scroll entry instead of synthesizing a fresh navigation;
 - reader progress remains isolated from page scroll restoration;
-- the triggerless global search overlay records the focused trigger and restores focus on close without navigation;
-- T2.24, T2.25, and T2.27 remain open for browser-level verification of catalog restoration, Back/Forward scroll, and keyboard/pointer focus behavior.
+- pointer route transitions do not introduce forced focus, while the triggerless global search overlay records the focused trigger and restores focus on close without navigation;
+- focused contracts cover native Back ownership and overlay focus restoration; the PR gate still requires a real browser/device smoke for actual Back/Forward scroll position, reduced motion, and iOS/PWA behavior before merge.
 
 ### Motion/navigation PR gate
 
