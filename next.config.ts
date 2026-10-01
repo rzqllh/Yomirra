@@ -27,7 +27,7 @@ const contentSecurityPolicyReportOnly = [
   "img-src 'self' data: blob: https:",
   "font-src 'self' data:",
   "connect-src 'self' https: wss:",
-  "frame-src 'self' https://accounts.google.com https://*.firebaseapp.com",
+  "frame-src 'self' https://accounts.google.com https://*.firebaseapp.com https://*.web.app",
   "worker-src 'self' blob:",
   "manifest-src 'self'",
 ].join("; ");
