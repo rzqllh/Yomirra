@@ -51,6 +51,8 @@ Jika source utama bermasalah, Yomirra dapat mencari source alternatif untuk judu
 
 Reader mendukung chapter berbasis gambar, progress baca, chapter navigator, preferensi reader, serta download/offline flow pada browser yang mendukung.
 
+Navigasi reader menjaga parent page secara eksplisit: perpindahan detail → reader dan antar-chapter tidak meninggalkan reader route lama di belakang tombol kembali, sehingga keluar ke detail lalu kembali lagi mengarah ke halaman asal, bukan ke reader sebelumnya.
+
 Offline dan PWA bergantung pada kemampuan browser, Service Worker, dan storage perangkat.
 
 ## Source bawaan
