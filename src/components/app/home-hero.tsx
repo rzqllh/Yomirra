@@ -1,210 +1,209 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { MagnifyingGlass } from "@phosphor-icons/react"
-import { useAuth } from "@/shared/hooks/use-auth"
-import { useHistoryStore } from "@/shared/store/history-store"
-import { useMounted } from "@/shared/hooks/use-mounted"
-import { cn } from "@/shared/utils/cn"
+import * as React from "react";
+import { MagnifyingGlass } from "@phosphor-icons/react";
+import { useAuth } from "@/shared/hooks/use-auth";
+import { useHistoryStore } from "@/shared/store/history-store";
+import { useMounted } from "@/shared/hooks/use-mounted";
+import { cn } from "@/shared/utils/cn";
 
 export interface HeroCandidate {
-  coverUrl: string
-  title: string
+  coverUrl: string;
+  title: string;
 }
 
 export interface HomeHeroProps {
-  className?: string
-  candidates?: HeroCandidate[]
+  className?: string;
+  candidates?: HeroCandidate[];
 }
 
-const HERO_COVER_CACHE_KEY = "yomirra_hero_manga_cover"
+export const HERO_COLLAGE_CACHE_KEY = "yomirra_home_hero_collage_v1";
 
-export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
-  const mounted = useMounted()
-  const { user } = useAuth()
-  const [query, setQuery] = React.useState("")
-  const [heroCover, setHeroCover] = React.useState<HeroCandidate | null>(null)
-  const [imageError, setImageError] = React.useState(false)
-  const [isImageLoaded, setIsImageLoaded] = React.useState(false)
+function pickSessionCovers(candidates: HeroCandidate[], count = 3): HeroCandidate[] {
+  const pool = candidates.slice(0, 15);
+  const selected: HeroCandidate[] = [];
 
-  const hasHistory = useHistoryStore((state) => (state?.items ? Object.keys(state.items).length > 0 : false))
-  const isReturning = mounted && (Boolean(user) || hasHistory)
-
-  // Pick random updated manga cover and cache it in sessionStorage
-  React.useEffect(() => {
-    if (!mounted || candidates.length === 0) return
-
-    try {
-      const cached = sessionStorage.getItem(HERO_COVER_CACHE_KEY)
-      if (cached) {
-        const parsed = JSON.parse(cached)
-        if (parsed?.coverUrl) {
-          setHeroCover(parsed)
-          return
-        }
-      }
-
-      // Random from top 15 latest updated mangas
-      const pool = candidates.slice(0, 15)
-      const randomIndex = Math.floor(Math.random() * pool.length)
-      const selected = pool[randomIndex]
-
-      if (selected?.coverUrl) {
-        setHeroCover(selected)
-        sessionStorage.setItem(HERO_COVER_CACHE_KEY, JSON.stringify(selected))
-      }
-    } catch {
-      // If sessionStorage fails, pick random in memory
-      const pool = candidates.slice(0, 15)
-      const selected = pool[Math.floor(Math.random() * pool.length)]
-      if (selected?.coverUrl) {
-        setHeroCover(selected)
-      }
-    }
-  }, [mounted, candidates])
-
-  const openGlobalSearch = React.useCallback((value = query) => {
-    window.dispatchEvent(
-      new CustomEvent("open-command-menu", {
-        detail: { query: value.trim() },
-      })
-    )
-  }, [query])
-
-  const handleSearch = (event: React.FormEvent) => {
-    event.preventDefault()
-    openGlobalSearch()
+  while (pool.length > 0 && selected.length < count) {
+    const index = Math.floor(Math.random() * pool.length);
+    selected.push(pool.splice(index, 1)[0]);
   }
 
-  const showCover = Boolean(heroCover?.coverUrl && !imageError)
+  return selected;
+}
+
+const coverPositions = [
+  "right-[42%] top-3 w-[58px] sm:right-[46%] sm:top-7 sm:w-[78px] lg:w-[86px]",
+  "right-[14%] top-1 w-[64px] sm:right-[22%] sm:top-3 sm:w-[90px] lg:w-[98px]",
+  "hidden sm:block right-[-2%] top-8 w-[80px] lg:w-[88px]",
+] as const;
+
+export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
+  const mounted = useMounted();
+  const { user } = useAuth();
+  const [query, setQuery] = React.useState("");
+  const [sessionCovers, setSessionCovers] = React.useState<HeroCandidate[]>([]);
+  const [loadedCovers, setLoadedCovers] = React.useState<Set<string>>(() => new Set());
+  const [failedCovers, setFailedCovers] = React.useState<Set<string>>(() => new Set());
+  const hasChosenCovers = React.useRef(false);
+
+  const hasHistory = useHistoryStore((state) =>
+    state?.items ? Object.keys(state.items).length > 0 : false
+  );
+  const isReturning = mounted && (Boolean(user) || hasHistory);
+
+  React.useEffect(() => {
+    if (!mounted || hasChosenCovers.current) return;
+
+    try {
+      const cached = sessionStorage.getItem(HERO_COLLAGE_CACHE_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (
+          Array.isArray(parsed) &&
+          parsed.length > 0 &&
+          parsed.every((item) => item?.coverUrl && item?.title)
+        ) {
+          hasChosenCovers.current = true;
+          setSessionCovers(parsed.slice(0, 3));
+          return;
+        }
+      }
+    } catch {
+      // Session storage is optional. Keep the in-memory selection stable instead.
+    }
+
+    if (candidates.length === 0) return;
+
+    const selected = pickSessionCovers(candidates);
+    hasChosenCovers.current = true;
+    setSessionCovers(selected);
+
+    try {
+      sessionStorage.setItem(HERO_COLLAGE_CACHE_KEY, JSON.stringify(selected));
+    } catch {
+      // Decorative artwork must never block the usable Hero.
+    }
+  }, [mounted, candidates]);
+
+  const openGlobalSearch = React.useCallback(
+    (value = query) => {
+      window.dispatchEvent(
+        new CustomEvent("open-command-menu", {
+          detail: { query: value.trim() },
+        })
+      );
+    },
+    [query]
+  );
+
+  const handleSearch = (event: React.FormEvent) => {
+    event.preventDefault();
+    openGlobalSearch();
+  };
 
   return (
-    <div
+    <section
+      aria-labelledby="home-hero-title"
       className={cn(
-        "relative w-full rounded-3xl overflow-hidden border border-black/[0.06] dark:border-white/10 select-none",
-        "bg-gradient-to-br from-[#fcf9f6] via-[#f7f2ed] to-[#eee4da] dark:from-[#191b26] dark:via-[#13151f] dark:to-[#0d0f16]",
-        "shadow-[0_8px_30px_rgb(0,0,0,0.06)] dark:shadow-[0_16px_40px_rgb(0,0,0,0.4)]",
+        "relative w-full overflow-hidden rounded-[18px] border border-border-subtle bg-surface-raised",
         className
       )}
     >
-      {/* Ambient Lighting Glows */}
       <div
         aria-hidden="true"
-        className="absolute top-0 right-1/4 w-[280px] sm:w-[380px] h-[280px] sm:h-[380px] bg-accent/10 dark:bg-accent/18 rounded-full blur-[100px] pointer-events-none"
-      />
-
-      {/* Desktop / Landscape Character Artwork (Image 4 reference) */}
-      <div
-        aria-hidden="true"
-        className="hidden md:block absolute right-0 top-0 bottom-0 w-[420px] lg:w-[480px] xl:w-[540px] max-w-[48%] h-full pointer-events-none overflow-hidden"
+        className="pointer-events-none absolute right-0 top-0 h-[132px] w-[50%] overflow-hidden sm:inset-y-0 sm:h-auto sm:w-[46%] lg:w-[42%]"
         style={{
-          maskImage: "linear-gradient(to right, transparent 0%, rgba(0,0,0,0.08) 12%, rgba(0,0,0,0.5) 45%, black 80%)",
-          WebkitMaskImage: "linear-gradient(to right, transparent 0%, rgba(0,0,0,0.08) 12%, rgba(0,0,0,0.5) 45%, black 80%)",
+          maskImage: "linear-gradient(to right, transparent 0%, black 42%)",
+          WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 42%)",
         }}
       >
-        {/* Skeleton loading when candidates pending or image fetching */}
-        {(!showCover || !isImageLoaded) && !imageError && (
-          <div className="absolute inset-0 bg-neutral-200/40 dark:bg-white/[0.04] animate-pulse" />
-        )}
+        {sessionCovers.map((cover, index) => {
+          if (failedCovers.has(cover.coverUrl)) return null;
+          const loaded = loadedCovers.has(cover.coverUrl);
 
-        {showCover && (
-          <img
-            src={heroCover!.coverUrl}
-            alt=""
-            referrerPolicy="no-referrer"
-            decoding="async"
-            onLoad={() => setIsImageLoaded(true)}
-            onError={() => setImageError(true)}
-            className={cn(
-              "size-full object-cover object-[center_top] transition-opacity duration-150",
-              isImageLoaded ? "opacity-100" : "opacity-0"
-            )}
-          />
-        )}
-
-        {/* Soft edge blend overlay */}
-        <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-[#fcf9f6] via-[#fcf9f6]/40 to-transparent dark:from-[#191b26] dark:via-[#191b26]/40" />
+          return (
+            <div
+              key={`${cover.coverUrl}-${index}`}
+              className={cn(
+                "absolute aspect-[2/3] overflow-hidden rounded-[10px] border border-border-subtle bg-surface-muted",
+                coverPositions[index] ?? coverPositions[2]
+              )}
+            >
+              <img
+                src={cover.coverUrl}
+                alt=""
+                referrerPolicy="no-referrer"
+                decoding="async"
+                loading="eager"
+                onLoad={() =>
+                  setLoadedCovers((current) => {
+                    const next = new Set(current);
+                    next.add(cover.coverUrl);
+                    return next;
+                  })
+                }
+                onError={() =>
+                  setFailedCovers((current) => {
+                    const next = new Set(current);
+                    next.add(cover.coverUrl);
+                    return next;
+                  })
+                }
+                className={cn(
+                  "size-full object-cover transition-opacity duration-200",
+                  loaded ? "opacity-75 sm:opacity-85" : "opacity-0"
+                )}
+              />
+            </div>
+          );
+        })}
       </div>
 
-      {/* Mobile Top-Right Character Artwork (Image 3 reference) */}
-      <div
-        aria-hidden="true"
-        className="md:hidden absolute top-0 right-0 w-[80%] sm:w-[70%] h-[230px] sm:h-[250px] pointer-events-none overflow-hidden"
-        style={{
-          maskImage: "radial-gradient(ellipse at 85% 20%, black 45%, rgba(0,0,0,0.4) 70%, transparent 100%)",
-          WebkitMaskImage: "radial-gradient(ellipse at 85% 20%, black 45%, rgba(0,0,0,0.4) 70%, transparent 100%)",
-        }}
-      >
-        {/* Skeleton loading when candidates pending or image fetching */}
-        {(!showCover || !isImageLoaded) && !imageError && (
-          <div className="absolute inset-0 bg-neutral-200/40 dark:bg-white/[0.04] animate-pulse" />
-        )}
+      <div className="relative z-10 flex min-h-[218px] flex-col justify-center p-5 sm:min-h-[220px] sm:max-w-[64%] sm:p-6 lg:max-w-[60%] lg:px-7">
+        <p className="mb-2 max-w-[78%] text-[11px] font-extrabold uppercase tracking-[0.14em] text-accent sm:max-w-none">
+          {isReturning ? "LANJUT LAGI DI YOMIRRA" : "BACAANMU DIMULAI DI SINI"}
+        </p>
 
-        {showCover && (
-          <img
-            src={heroCover!.coverUrl}
-            alt=""
-            referrerPolicy="no-referrer"
-            decoding="async"
-            onLoad={() => setIsImageLoaded(true)}
-            onError={() => setImageError(true)}
-            className={cn(
-              "size-full object-cover object-[center_top] transition-opacity duration-150",
-              isImageLoaded ? "opacity-100" : "opacity-0"
-            )}
-          />
-        )}
-
-        {/* Seamless edge blend overlay */}
-        <div className="absolute inset-y-0 left-0 w-16 bg-gradient-to-r from-[#fcf9f6] via-[#fcf9f6]/60 to-transparent dark:from-[#191b26] dark:via-[#191b26]/60" />
-      </div>
-
-      {/* Mobile Bottom Readability Mask Overlay */}
-      <div
-        aria-hidden="true"
-        className="md:hidden absolute inset-0 bg-gradient-to-t from-[#fcf9f6] via-[#fcf9f6]/80 to-transparent dark:from-[#191b26] dark:via-[#191b26]/80 pointer-events-none"
-      />
-
-      {/* Content Layout */}
-      <div className="relative z-10 flex flex-col justify-end md:justify-center w-full min-h-[300px] sm:min-h-[320px] md:min-h-[275px] lg:min-h-[295px] p-5 sm:p-7 md:p-8 lg:p-10 md:w-[58%] lg:w-[54%]">
-        {/* Eyebrow Label */}
-        <span className="text-[11px] sm:text-[12.5px] font-extrabold uppercase tracking-[0.14em] text-accent mb-1.5 sm:mb-2 leading-none">
-          {isReturning ? "LANJUT LAGI DI YOMIRRA" : "MULAI DARI YOMIRRA"}
-        </span>
-
-        {/* Heading */}
-        <h1 className="text-[23px] leading-[1.18] sm:text-3xl md:text-3xl lg:text-[34px] font-black tracking-tight text-text-primary mb-5 sm:mb-6">
-          Cari komik yang <br className="hidden sm:inline" />
-          mau kamu baca
+        <h1
+          id="home-hero-title"
+          className="mb-5 max-w-[78%] text-[28px] font-black leading-[1.12] tracking-tight text-text-primary sm:max-w-none sm:text-[30px] lg:text-[32px]"
+        >
+          Mau baca apa hari ini?
         </h1>
 
-        {/* Search Input Bar Pill */}
         <form
           onSubmit={handleSearch}
-          className="relative flex items-center justify-between w-full max-w-[500px] h-14 sm:h-[58px] rounded-full bg-surface-overlay border border-border-subtle shadow-[0_4px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.4)] px-3.5 sm:px-4 gap-2.5 sm:gap-3 transition-all focus-within:border-accent/40 focus-within:ring-2 focus-within:ring-accent/20"
+          role="search"
+          className="flex h-12 w-full max-w-[500px] items-center gap-2.5 rounded-[12px] border border-border-strong bg-surface-overlay px-2.5 shadow-xs transition-colors focus-within:border-accent"
         >
-          <MagnifyingGlass size={20} weight="regular" className="text-text-muted shrink-0" />
+          <MagnifyingGlass
+            size={19}
+            weight="regular"
+            className="ml-1 shrink-0 text-text-muted"
+            aria-hidden="true"
+          />
           <input
-            type="text"
+            type="search"
             value={query}
             onChange={(event) => {
-              const next = event.target.value
-              setQuery(next)
-              openGlobalSearch(next)
+              const next = event.target.value;
+              setQuery(next);
+              openGlobalSearch(next);
             }}
             onFocus={() => openGlobalSearch()}
             placeholder="Cari judul, kreator, genre, atau #tag…"
-            className="flex-1 min-w-0 bg-transparent text-[13px] sm:text-sm text-text-primary placeholder:text-text-muted/80 outline-none font-medium"
+            aria-label="Cari komik"
+            className="min-w-0 flex-1 bg-transparent text-sm font-medium text-text-primary outline-none placeholder:text-text-muted"
           />
           <button
             type="submit"
             aria-label="Cari"
-            className="size-10 sm:size-11 rounded-full bg-accent hover:bg-accent-hover text-white flex items-center justify-center shrink-0 shadow-sm active:scale-95 transition-all outline-none cursor-pointer"
+            className="flex size-11 shrink-0 items-center justify-center rounded-[10px] bg-accent text-accent-on transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
-            <MagnifyingGlass size={18} weight="bold" />
+            <MagnifyingGlass size={18} weight="bold" aria-hidden="true" />
           </button>
         </form>
       </div>
-    </div>
-  )
+    </section>
+  );
 }

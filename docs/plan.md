@@ -584,6 +584,33 @@ Error surfaces should prioritize:
 
 ---
 
+# Scoped Follow-up — Home Opening & Skeleton Geometry
+
+Home opening revamp berjalan sebagai PR terpisah setelah Motion & Navigation Foundation.
+
+## Home opening scope
+
+- compact Home Hero dengan shared global-search entry;
+- session-stable decorative cover collage tanpa artwork skeleton;
+- source-aware `SOROTAN TERBARU` maksimal lima item;
+- conservative cross-source duplicate handling;
+- landscape desktop + purpose-built compact mobile Spotlight;
+- 6-second restrained carousel autoplay dengan pause/reset dan reduced-motion opt-out;
+- source-scoped Top 5 ranking dengan restrained rank-1 hierarchy;
+- Home-specific loading geometry yang sama antara route loading, Suspense fallback, dan client hydration.
+
+Lower Home sections tidak didesain ulang kecuali spacing/integration yang langsung dibutuhkan oleh opening baru.
+
+## Separate skeleton geometry workstream
+
+Setelah Home selesai dan visual gate-nya benar-benar diverifikasi, audit skeleton seluruh aplikasi dalam branch/PR terpisah.
+
+Minimum routes: Home, Library, Popular, Search, Rak Buku/Bookmark, Downloads, Updates, Manga Detail, Reader, Settings, dan source-related pages.
+
+Audit membandingkan skeleton terhadap **current final page**, termasuk section order, responsive columns, card ratios, toolbar/header geometry, persisted shell ownership, dan layout shift. Jangan mencampur global skeleton cleanup ke Home PR.
+
+---
+
 # Recommended Implementation PR Split
 
 Do not implement this plan in one production PR.

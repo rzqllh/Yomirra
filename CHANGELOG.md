@@ -4,6 +4,20 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
 
 ## [Unreleased]
 
+### Home Editorial Opening Revamp
+
+- **Compact Home Hero**:
+  - Mengubah pembuka Beranda menjadi surface ringkas dengan heading `Mau baca apa hari ini?`, shared global-search entry, dan collage cover dekoratif yang stabil selama browser session.
+  - Artwork Hero tidak memiliki skeleton dan kegagalannya tidak menghalangi heading/search.
+- **Sorotan terbaru**:
+  - Mengganti label kurasi yang menyesatkan menjadi `SOROTAN TERBARU` karena data berasal dari latest feed.
+  - Memilih maksimal lima item dengan diversity pass satu item per sumber lebih dulu serta dedupe lintas sumber yang konservatif.
+  - Menjaga card container stabil; autoplay 6 detik berhenti saat hover/focus/touch/document hidden dan nonaktif pada reduced motion.
+- **Source-scoped Top 5**:
+  - Menjaga ranking per sumber, menggunakan display name, memberi emphasis ringan pada rank #1, dan mempertahankan source context pada `Lihat semua`.
+- **Home Loading Geometry**:
+  - Menyatukan route loading, nested Suspense fallback, dan client hydration pada urutan Hero → Sorotan & peringkat → Lanjut Baca → Baru diperbarui.
+
 ### Motion & Navigation Foundation
 
 - **Semantic Motion System** (`src/shared/lib/motion/`, `src/components/motion/`):

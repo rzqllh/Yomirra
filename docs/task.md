@@ -245,6 +245,47 @@
 
 ---
 
+# Home Opening Revamp — separate stacked PR
+
+**Base:** Motion & Navigation Foundation head; jangan campur ke PR #29.
+
+- [x] Reconcile current Home implementation against the agreed contract.
+- [x] Add source-aware Spotlight selection with a one-per-source first pass.
+- [x] Keep cross-source dedupe conservative; title-only equality is not sufficient.
+- [x] Replace the oversized decorative Hero with a compact shared-search opening surface.
+- [x] Keep Hero artwork session-stable, decorative, failure-tolerant, and free of artwork skeletons.
+- [x] Rename misleading Spotlight semantics to `SOROTAN TERBARU`.
+- [x] Recompose Spotlight for landscape desktop and compact mobile layouts.
+- [x] Keep explicit cover/title/CTA targets and a stable carousel container.
+- [x] Add 6-second autoplay with hover/focus/touch/visibility pause, manual reset, swipe, and reduced-motion opt-out.
+- [x] Keep ranking source-scoped, show Top 5, preserve source context in `Lihat semua`, and use display names.
+- [x] Give rank #1 restrained emphasis without podium/gamification.
+- [x] Align Home route/Suspense/client loading to one final geometry contract.
+- [x] Add focused Hero/Spotlight/selection/ranking/loading regression coverage.
+- [x] No new runtime dependency added.
+- [ ] Responsive visual matrix is verified in a real browser at ~1440/1280/1024/768–900/430/390/360px.
+- [ ] Hover/focus/swipe/reduced-motion behavior is smoke-tested in a real browser.
+- [x] Final latest-head typecheck/lint/tests/build pass.
+- [x] Final latest-head Vercel preview is READY.
+- [x] Final diff is reviewed for unrelated work and provider/secret leakage.
+
+**Automated final checkpoint (2026-10-01):** Home head `127701d0f39b35856e98c9c97d97bd4e93f66576` passed the latest GitHub CI pipeline and its Vercel preview reached READY. The stacked Home-only diff against `feat/motion-navigation-foundation` was reviewed as scoped to the agreed Home opening implementation/tests/docs, with no restricted provider wording or credential value found in the public documentation audit. Real-browser responsive and interaction smoke remains open and is not inferred from CI/Vercel.
+
+**Manual-gate note:** Chromium exists in the execution container, but the container cannot resolve/reach the public preview host. Do not infer the responsive/browser matrix from jsdom, static source inspection, HTTP metadata, or Vercel READY alone.
+
+## Skeleton Geometry Consistency — follow-up PR only after Home visual gate
+
+- [ ] Compare every route skeleton against the current final page.
+- [ ] Remove obsolete section orders and legacy card geometry.
+- [ ] Match responsive columns, card ratios, toolbar/header placement, and container width.
+- [ ] Avoid redundantly skeletonizing persisted shell.
+- [ ] Verify grid/compact modes where applicable.
+- [ ] Verify mobile + desktop replacement does not create obvious CLS.
+- [ ] Keep final diff skeleton/loading scoped.
+- [ ] Typecheck/lint/tests/build pass.
+
+---
+
 # T3 — Component Continuity + Layout PR
 
 ## Shared elements

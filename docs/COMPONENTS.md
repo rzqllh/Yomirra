@@ -48,6 +48,26 @@ Komponen motion canonical berada di `src/components/motion/` dan semantic timing
 
 Route/navigation identity icon tetap stabil dan tidak dimorph hanya untuk efek visual. Untuk press/layout behavior gunakan shared preset sebelum membuat spring baru secara lokal.
 
+## Home
+
+Home opening sengaja dibagi menurut responsibility, bukan dijadikan satu mega component.
+
+| Component | Tanggung jawab |
+| --- | --- |
+| `HomeHero` | eyebrow/heading, entry shared global search, decorative session-stable cover collage |
+| `EditorialSpotlight` | presentasi satu item Sorotan terbaru, explicit detail targets, restrained content transition |
+| `HomeLeaderboardPanel` | selector sumber, source-scoped Top 5, contextual `Lihat semua` |
+| `HomeFeedClient` | orchestration, source-aware Spotlight selection, confident dedupe, Hero candidate derivation, carousel state/autoplay |
+| `SourceFeedSkeleton` | content-less geometry Home yang mengikuti urutan dan breakpoint final |
+
+`HomeHero` tidak memiliki artwork skeleton. Decorative cover failure tidak boleh mengubah usable Hero.
+
+`EditorialSpotlight` tidak memiliki business logic ranking atau source selection. Container tetap stabil ketika item carousel berubah.
+
+`HomeLeaderboardPanel` tidak membuat ranking global sintetis dari feed beberapa sumber.
+
+Skeleton feature/page harus mengikuti geometry final UI; jangan membuat placeholder layout generik yang diwariskan dari desain lama.
+
 ## Filter drawer
 
 Search dan Library share presentation shell, bukan business logic.
