@@ -188,8 +188,21 @@ function isSafeSessionMutation(req: Request): boolean {
   }
 }
 
+function secretsEqual(left: string, right: string): boolean {
+  const leftBuffer = Buffer.from(left, "utf8");
+  const rightBuffer = Buffer.from(right, "utf8");
+  return leftBuffer.length === rightBuffer.length && timingSafeEqual(leftBuffer, rightBuffer);
+}
+
 function authorizeConfiguredAdminKey(token: string): AdminAuthResult | null {
-  if (!token || !getValidAdminKeys().includes(token.trim())) return null;
+  const candidate = token.trim();
+  if (!candidate) return null;
+
+  const isValid = getValidAdminKeys().some((configuredKey) =>
+    secretsEqual(candidate, configuredKey),
+  );
+  if (!isValid) return null;
+
   return {
     isAdmin: true,
     uid: "admin-key",
