@@ -37,10 +37,10 @@ export default function NotFound() {
         className="space-y-4 z-10 max-w-md"
       >
         <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-text-primary">
-          Halaman Tidak Ditemukan
+          Halaman tidak ditemukan
         </h2>
         <p className="text-base text-text-secondary leading-relaxed font-medium">
-          Mungkin URL-nya salah, atau komik yang kamu cari telah dihapus. Jangan khawatir, masih banyak cerita menarik lainnya yang menunggu.
+          Alamat ini mungkin sudah berubah atau tidak tersedia.
         </p>
       </motion.div>
 
@@ -58,7 +58,7 @@ export default function NotFound() {
         >
           <Link href="/">
             <House className="mr-2" size={20} weight="fill" />
-            Kembali ke Beranda
+            Ke Beranda
           </Link>
         </Button>
         <Button 
@@ -68,7 +68,7 @@ export default function NotFound() {
         >
           <Link href="/popular">
             <Compass className="mr-2" size={20} weight="fill" />
-            Eksplor Komik Populer
+            Jelajahi komik
           </Link>
         </Button>
       </motion.div>
