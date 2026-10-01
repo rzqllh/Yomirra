@@ -81,9 +81,18 @@
 - authenticated cron/webhook endpoints keep credential verification as the primary boundary; the Telegram command path already has a chat-scoped Redis limiter and should not receive a redundant IP limiter;
 - lightweight health/site/source metadata reads are not priority targets for the first hardening pass;
 - limiter identity must follow the trusted deployment proxy chain rather than accepting an arbitrary client-supplied forwarded address.
-- [ ] **T1.15** Define namespaces + limits per route class.
+- [x] **T1.15** Define namespaces + limits per route class.
 - [ ] **T1.16** Attach the existing rate-limit utility to intended routes.
-- [ ] **T1.17** Explicitly choose fail-open/fail-closed behavior per route class.
+- [x] **T1.17** Explicitly choose fail-open/fail-closed behavior per route class.
+
+**Rate-limit policy contract:**
+- `admin-mutation`: 30 requests / 60 s per trusted client identity, fail closed; individual high-cost operations may use a stricter sub-namespace;
+- `admin-expensive` (probe all, search warm/simulate, custom-source test): 10 requests / 60 s, fail closed;
+- `public-search`: 120 requests / 60 s, fail open when Redis is unavailable so ordinary discovery does not become an availability dependency;
+- `search-intelligence`: retain 10 requests / 60 s, fail closed because it is optional expensive compute;
+- `image-proxy`: 600 requests / 60 s, fail open; high ceiling protects bandwidth abuse without fighting reader page bursts;
+- authenticated cron/webhook: no additional generic IP policy in this phase; retain credential boundary and existing command-scoped limiter;
+- low-cost public metadata/health reads: no limiter in the first pass.
 - [ ] **T1.18** Add response-header and rejection tests.
 
 ## CSP + error disclosure
