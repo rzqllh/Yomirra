@@ -43,4 +43,28 @@ describe("navigation continuity contracts", () => {
     expect(menu).toContain("trigger?.focus({ preventScroll: true })");
     expect(menu).toContain("restoreFocusOnCloseRef.current = false");
   });
+
+  it("keeps catalog loading shells aligned with their final route geometry", () => {
+    const sourceList = read("src/components/skeletons/source-list-skeleton.tsx");
+    const sourceLoading = read("src/app/(web)/sources/[sourceId]/loading.tsx");
+    const sourcePage = read("src/app/(web)/sources/[sourceId]/page.tsx");
+    const searchPage = read("src/app/(web)/search/page.tsx");
+    const libraryPage = read("src/app/(web)/library/page.tsx");
+    const bookmarkPage = read("src/app/(web)/bookmark/page.tsx");
+
+    expect(sourceList).toContain("grid-cols-1");
+    expect(sourceList).toContain("md:grid-cols-2");
+    expect(sourceList).toContain("xl:grid-cols-3");
+
+    expect(sourceLoading).toContain("MangaGridSkeleton");
+    expect(sourceLoading).not.toContain("SearchResultSkeleton");
+    expect(sourcePage).toContain("MangaGridSkeleton");
+    expect(sourcePage).not.toContain("SearchResultSkeleton");
+
+    expect(searchPage).toContain("<PageHeader");
+    expect(searchPage).toContain("hasMobileHeader");
+    expect(libraryPage).toContain("<PageContainer hasMobileHeader>");
+    expect(bookmarkPage).toContain("<BookmarkSkeleton />");
+    expect(bookmarkPage).not.toContain("fallback={null}");
+  });
 });
