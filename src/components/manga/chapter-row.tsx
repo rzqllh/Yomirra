@@ -15,6 +15,7 @@ interface ChapterRowProps {
   isRead?: boolean
   isLastRead?: boolean
   isLocked?: boolean
+  returnTo?: string
 }
 
 export function ChapterRow({
@@ -26,7 +27,8 @@ export function ChapterRow({
   date,
   isRead = false,
   isLastRead = false,
-  isLocked = false
+  isLocked = false,
+  returnTo
 }: ChapterRowProps) {
   
   // Format date safely
@@ -47,7 +49,8 @@ export function ChapterRow({
       )}
     >
       <Link
-        href={getReaderHref(sourceId, mangaId, chapterId)}
+        href={getReaderHref(sourceId, mangaId, chapterId, returnTo)}
+        replace
         aria-label={`Baca ${chapterTitle}`}
         className="flex min-w-0 flex-1 items-center justify-between px-1 py-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       >

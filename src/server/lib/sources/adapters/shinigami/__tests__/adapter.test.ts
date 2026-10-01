@@ -157,7 +157,7 @@ describe("ShinigamiSource — reliability hardening", () => {
         data: {
           manga_id: "m-1",
           title: "Manga 1",
-          description: "<p>Sinopsis</p>",
+          description: "<p>Cerita utama.</p>",
           status: 1,
           author: "Author 1",
           genres: [{ name: "Action" }],
@@ -166,7 +166,7 @@ describe("ShinigamiSource — reliability hardening", () => {
       const detail = await source.getDetail("m-1");
       expect(detail.id).toBe("m-1");
       expect(detail.title).toBe("Manga 1");
-      expect(detail.description).toBe("Sinopsis");
+      expect(detail.description).toBe("Cerita utama.");
       expect(detail.status).toBe("ONGOING");
     });
   });

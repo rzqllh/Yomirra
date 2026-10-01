@@ -213,7 +213,7 @@ describe('Yomirra Editorial Home Components', () => {
 
       const continueLink = screen.getByRole('link', { name: /lanjut baca solo leveling/i });
       expect(continueLink).toBeTruthy();
-      expect(continueLink.getAttribute('href')).toBe('/manga/shinigami/solo-leveling/read/100');
+      expect(continueLink.getAttribute('href')).toBe('/manga/shinigami/solo-leveling/read/100?returnTo=%2F');
 
       const optionsBtn = screen.getByRole('button', { name: /opsi untuk solo leveling/i });
       expect(optionsBtn).toBeTruthy();

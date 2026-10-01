@@ -11,6 +11,25 @@ vi.mock("@/components/manga/chapter-download-button", () => ({
 }))
 
 describe("ChapterRow accessibility", () => {
+  it("preserves the logical parent in reader links", () => {
+    render(
+      <ChapterRow
+        sourceId="source-a"
+        mangaId="manga-a"
+        chapterId="chapter-12"
+        chapterTitle="Chapter 12"
+        mangaTitle="Manga A"
+        date="2026-09-25"
+        returnTo="/library?source=source-a"
+      />
+    )
+
+    const chapterLink = screen.getByRole("link", { name: /baca chapter 12/i })
+    expect(chapterLink.getAttribute("href")).toContain(
+      "returnTo=%2Flibrary%3Fsource%3Dsource-a"
+    )
+  })
+
   it("keeps the chapter link and download action as sibling controls", () => {
     render(
       <ChapterRow

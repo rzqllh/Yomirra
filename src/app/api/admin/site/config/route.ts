@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdminAuth } from "@/server/lib/auth/admin-auth";
+import { checkRateLimitPolicy, createRateLimitRejection } from "@/server/lib/security/rate-limit";
 import { getSiteConfig, updateSiteConfig } from "@/server/lib/site/site-config-service";
 import { logger } from "@/shared/logger";
 
@@ -28,6 +29,11 @@ export async function PATCH(req: NextRequest) {
   const auth = await requireAdminAuth(req);
   if (!auth.authorized) {
     return auth.response;
+  }
+
+  const rateLimit = await checkRateLimitPolicy(req, "adminMutation", "site-config");
+  if (!rateLimit.success) {
+    return createRateLimitRejection(rateLimit);
   }
 
   try {

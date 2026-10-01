@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdminAuth } from "@/server/lib/auth/admin-auth";
+import { checkRateLimitPolicy, createRateLimitRejection } from "@/server/lib/security/rate-limit";
 import { probeSource, getSourceHealthMatrix } from "@/server/lib/sources/admin-source-service";
 import { logger } from "@/shared/logger";
 
@@ -9,6 +10,11 @@ export async function POST(req: NextRequest) {
   const auth = await requireAdminAuth(req);
   if (!auth.authorized) {
     return auth.response;
+  }
+
+  const rateLimit = await checkRateLimitPolicy(req, "adminExpensive", "source-probe");
+  if (!rateLimit.success) {
+    return createRateLimitRejection(rateLimit);
   }
 
   try {

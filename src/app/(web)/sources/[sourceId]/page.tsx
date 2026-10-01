@@ -41,8 +41,7 @@ export default function SourceBrowsePage({
     data,
     isLoading,
     isFetching,
-    status,
-    error
+    status
   } = useQuery({
     queryKey: ["sourceBrowse", sourceId, sort, currentPage],
     queryFn: () => 
@@ -89,7 +88,7 @@ export default function SourceBrowsePage({
           <div className="flex flex-col items-center justify-center py-20 text-center bg-surface-raised rounded-xl border border-border-subtle">
             <WarningCircle size={48} className="mb-4 text-semantic-error" weight="duotone" />
             <p className="text-base font-medium text-text-primary">Gagal memuat data dari {sourceName}.</p>
-            <p className="text-sm text-text-muted mt-1">{(error as Error).message}</p>
+            <p className="text-sm text-text-muted mt-1">Sumber ini sedang tidak dapat dimuat. Coba lagi sebentar.</p>
           </div>
         ) : data?.mangas.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center bg-surface-raised rounded-xl border border-border-subtle">

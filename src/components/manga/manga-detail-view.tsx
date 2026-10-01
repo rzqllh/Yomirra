@@ -95,6 +95,7 @@ export function MangaDetailView({
   const searchParams = useSearchParams();
   const returnTo = searchParams.get("returnTo");
   const backHref = getSafeMangaDetailBackHref(returnTo);
+  const readerReturnTo = backHref;
 
   const getLatestForManga = useHistoryStore((state) => state.getLatestForManga);
   const historyItems = useHistoryStore((state) => state.items); // keep subscription
@@ -173,7 +174,8 @@ export function MangaDetailView({
           className="w-full rounded-[16px] h-[52px] text-base font-bold flex items-center justify-center gap-2.5 bg-accent hover:bg-accent/90 text-white shadow-md active:scale-[0.98] transition-all"
         >
           <Link
-            href={getReaderHref(sourceId, mangaId, targetChapterId)}
+            href={getReaderHref(sourceId, mangaId, targetChapterId, readerReturnTo)}
+            replace
             aria-label={`${primaryLabel} - ${companionLabel}`}
           >
             <Play className="h-[18px] w-[18px] shrink-0" fill="currentColor" weight="fill" />
@@ -494,6 +496,7 @@ export function MangaDetailView({
                           chapterId={chapter.id}
                           chapterTitle={chapter.title}
                           mangaTitle={detail.title}
+                          returnTo={readerReturnTo}
                           date={chapter.date}
                           isRead={isRead}
                           isLastRead={isLastRead}

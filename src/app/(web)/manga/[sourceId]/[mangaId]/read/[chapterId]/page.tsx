@@ -7,7 +7,7 @@ import { ReaderView } from "@/components/reader/reader-view";
 import { ReaderShell } from "@/components/reader/reader-shell";
 import { EmptyState } from "@/components/states/empty-state";
 import { Button } from "@/components/ui/button";
-import { getMangaDetailHref } from "@/shared/lib/routes";
+import { getMangaDetailHref, getSafeMangaDetailBackHref } from "@/shared/lib/routes";
 import { getManifestUrlFromCookie } from "@/server/lib/sources/server-manifest";
 import { SourceError } from "@/server/lib/sources/error";
 import { DeadSourceRecovery } from "@/components/manga/dead-source-recovery";
@@ -49,13 +49,21 @@ export const viewport: Viewport = {
 
 export default async function ReaderPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ sourceId: string; mangaId: string; chapterId: string }>;
+  searchParams: Promise<{ returnTo?: string | string[] }>;
 }) {
   const rawParams = await params;
+  const rawSearchParams = await searchParams;
   const sourceId = decodeURIComponent(rawParams.sourceId);
   const mangaId = decodeURIComponent(rawParams.mangaId);
   const chapterId = decodeURIComponent(rawParams.chapterId);
+  const rawReturnTo = Array.isArray(rawSearchParams.returnTo)
+    ? rawSearchParams.returnTo[0]
+    : rawSearchParams.returnTo;
+  const returnTo = getSafeMangaDetailBackHref(rawReturnTo ?? null);
+  const detailHref = getMangaDetailHref(sourceId, mangaId, returnTo);
 
   let detail: any, chapters: any, pagesResult: any;
   try {
@@ -116,7 +124,7 @@ export default async function ReaderPage({
             description="Chapter belum bisa dimuat dari sumber ini."
             action={
               <Button asChild variant="outline" className="rounded-xl shadow-sm mt-2 font-bold">
-                <Link href={getMangaDetailHref(sourceId, mangaId)}>
+                <Link href={detailHref} replace>
                   Kembali ke Detail
                 </Link>
               </Button>
@@ -135,6 +143,7 @@ export default async function ReaderPage({
       initialDetail={detail}
       initialChapters={chapters}
       initialPages={pagesResult?.pages || null}
+      returnTo={returnTo}
     />
   );
 }

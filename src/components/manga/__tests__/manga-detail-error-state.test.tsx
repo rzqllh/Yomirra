@@ -61,6 +61,21 @@ describe("MangaDetailErrorState", () => {
     expect(searchLink.getAttribute("href")).toContain("/search?q=solo%20leveling");
   });
 
+  it("does not render raw internal error messages", () => {
+    render(
+      <MangaDetailErrorState
+        sourceId="komikindo"
+        mangaId="solo-leveling"
+        type="network_error"
+        message="ETIMEDOUT https://upstream.example?token=super-secret"
+      />
+    );
+
+    expect(screen.queryByText(/super-secret/i)).toBeNull();
+    expect(screen.queryByText(/ETIMEDOUT/i)).toBeNull();
+    expect(screen.getByText(/Gagal terhubung ke server Komikindo/i)).toBeDefined();
+  });
+
   it("renders disabled state with link to sources", () => {
     render(
       <MangaDetailErrorState

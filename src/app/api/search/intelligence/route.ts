@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { checkRateLimit } from "@/server/lib/security/rate-limit";
+import { applyRateLimitHeaders, checkRateLimitPolicy, createRateLimitRejection } from "@/server/lib/security/rate-limit";
 import { rankSearchIntelligence } from "@/server/lib/search/search-intelligence-service";
 
 export const dynamic = "force-dynamic";
@@ -48,28 +48,24 @@ const bodySchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  const rateLimit = await checkRateLimit(request, 10, 60, true, "search-intelligence");
+  const rateLimit = await checkRateLimitPolicy(request, "searchIntelligence");
   if (!rateLimit.success) {
-    return NextResponse.json(
-      {
-        error: {
-          message: rateLimit.unavailable
-            ? "Search intelligence temporarily unavailable"
-            : "Too Many Requests",
-        },
-      },
-      { status: rateLimit.unavailable ? 503 : 429, headers: rateLimit.headers }
-    );
+    return createRateLimitRejection(rateLimit, {
+      unavailableMessage: "Search intelligence temporarily unavailable",
+    });
   }
 
   const parsed = bodySchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
-    return NextResponse.json(
-      { error: { message: "Invalid search intelligence payload" } },
-      { status: 400 }
+    return applyRateLimitHeaders(
+      NextResponse.json(
+        { error: { message: "Invalid search intelligence payload" } },
+        { status: 400 }
+      ),
+      rateLimit
     );
   }
 
   const result = await rankSearchIntelligence(parsed.data);
-  return NextResponse.json({ data: result });
+  return applyRateLimitHeaders(NextResponse.json({ data: result }), rateLimit);
 }

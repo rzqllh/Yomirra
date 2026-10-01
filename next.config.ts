@@ -7,6 +7,31 @@ const withSerwist = withSerwistInit({
   disable: process.env.NODE_ENV === "development",
 });
 
+const cspScriptSrc =
+  process.env.NODE_ENV === "development"
+    ? "'self' 'unsafe-inline' 'unsafe-eval'"
+    : "'self' 'unsafe-inline'";
+
+// Report-only first: capture compatibility gaps before enforcing CSP.
+// The baseline intentionally covers current Next.js inline bootstrapping,
+// Firebase/browser auth flows, remote HTTPS assets, WebSocket/API calls,
+// and Serwist workers without enumerating provider-specific hosts.
+const contentSecurityPolicyReportOnly = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+  "object-src 'none'",
+  `script-src ${cspScriptSrc}`,
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob: https:",
+  "font-src 'self' data:",
+  "connect-src 'self' https: wss:",
+  "frame-src 'self' https://accounts.google.com https://*.firebaseapp.com https://*.web.app",
+  "worker-src 'self' blob:",
+  "manifest-src 'self'",
+].join("; ");
+
 const nextConfig: NextConfig = {
   // Turbopack is enabled by default in Next.js 15 dev mode
   reactStrictMode: true,
@@ -94,6 +119,10 @@ const nextConfig: NextConfig = {
           {
             key: "Permissions-Policy",
             value: "camera=(), microphone=(), geolocation=()",
+          },
+          {
+            key: "Content-Security-Policy-Report-Only",
+            value: contentSecurityPolicyReportOnly,
           },
         ],
       },

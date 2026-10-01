@@ -5,6 +5,7 @@ import {
   isAdminAuthConfigured,
   verifyAdminRequest,
 } from "@/server/lib/auth/admin-auth";
+import { checkRateLimitPolicy, createRateLimitRejection } from "@/server/lib/security/rate-limit";
 
 const ADMIN_SESSION_MAX_AGE = 8 * 60 * 60;
 const LEGACY_ADMIN_KEY_COOKIE = "yomirra_admin_key";
@@ -74,6 +75,13 @@ export async function POST(request: NextRequest) {
       { error: "Admin authentication is not configured", code: "unconfigured" },
       { status: 503 },
     );
+  }
+
+  const rateLimit = await checkRateLimitPolicy(request, "adminMutation", "session-login");
+  if (!rateLimit.success) {
+    return createRateLimitRejection(rateLimit, {
+      unavailableMessage: "Admin authentication temporarily unavailable",
+    });
   }
 
   let passkey = "";

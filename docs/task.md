@@ -53,41 +53,94 @@
 - [x] **T1.9** Search server/adapters for literal reusable credentials or privileged headers.
 
 **Provider-credential audit record:**
-- one built-in restricted adapter contains a reusable privileged request-header value committed as a literal;
+- one built-in restricted adapter contained a reusable privileged request-header value committed as a literal;
 - a separate decryption salt in that adapter is protocol material rather than an authorization credential and is not treated as the same risk class;
-- moving the privileged header to server-only configuration requires provisioning/rotating the corresponding deployment secret before removing the literal, otherwise that source would be intentionally taken offline;
-- T1.10/T1.11/T1.13 remain blocked on deployment-secret provisioning rather than shipping an unsafe fallback.
-- [ ] **T1.10** Move required secrets to server-only configuration.
-- [ ] **T1.11** Define safe behavior when optional provider credentials are missing.
-- [ ] **T1.12** Ensure logs redact credential-bearing headers, signed URLs, cookies, and tokens.
-- [ ] **T1.13** Add focused tests for missing/malformed provider configuration.
+- deployment-secret availability was confirmed before removing the literal so remediation did not require an unsafe fallback.
+- [x] **T1.10** Move required secrets to server-only configuration.
+- [x] **T1.11** Define safe behavior when optional provider credentials are missing.
+- [x] **T1.12** Ensure logs redact credential-bearing headers, signed URLs, cookies, and tokens.
+- [x] **T1.13** Add focused tests for missing/malformed provider configuration.
+
+**Provider-credential remediation record:**
+- the reusable privileged upstream header is now sourced only from server environment configuration;
+- the committed literal credential and duplicate header spelling were removed from the adapter;
+- missing configuration fails closed before any upstream request is attempted, while source registry construction remains available so failure stays isolated to that optional source;
+- dependency-injected test clients remain usable without production credentials;
+- focused regression coverage verifies missing and whitespace-only configuration;
+- shared logger regression coverage verifies redaction for credential-bearing fields, cookies/tokens, signatures, signed URLs, nested error data, and circular/truncated structures;
+- the required server-only variable is declared in `.env.example` without documenting its value.
 
 ## Rate limiting
 
-- [ ] **T1.14** Enumerate public browse/search, proxy, account/sync, report, admin read, admin mutation, and probe routes.
-- [ ] **T1.15** Define namespaces + limits per route class.
-- [ ] **T1.16** Attach the existing rate-limit utility to intended routes.
-- [ ] **T1.17** Explicitly choose fail-open/fail-closed behavior per route class.
-- [ ] **T1.18** Add response-header and rejection tests.
+- [x] **T1.14** Enumerate public browse/search, proxy, account/sync, report, admin read, admin mutation, and probe routes.
+
+**Rate-limit classification record:**
+- admin destructive/expensive mutations (source flush/probe, search warm/simulate, report actions, custom-source test/write) require tight namespaced limits and fail closed when the limiter is unavailable;
+- public expensive compute/search endpoints use namespaced limits; search-intelligence keeps its strict fail-closed policy and global source search now uses an explicit public-search policy;
+- signed image proxy is bandwidth-expensive but high-volume by design, so any limiter must be materially looser and must not interfere with sequential reader image loading;
+- authenticated cron/webhook endpoints keep credential verification as the primary boundary; the Telegram command path already has a chat-scoped Redis limiter and should not receive a redundant IP limiter;
+- lightweight health/site/source metadata reads are not priority targets for the first hardening pass;
+- limiter identity must follow the trusted deployment proxy chain rather than accepting an arbitrary client-supplied forwarded address.
+- [x] **T1.15** Define namespaces + limits per route class.
+- [x] **T1.16** Attach the existing rate-limit utility to intended routes.
+- [x] **T1.17** Explicitly choose fail-open/fail-closed behavior per route class.
+
+**Rate-limit policy contract:**
+- `admin-mutation`: 30 requests / 60 s per trusted client identity, fail closed; individual high-cost operations may use a stricter sub-namespace;
+- `admin-expensive` (probe all, search warm/simulate, custom-source test): 10 requests / 60 s, fail closed;
+- `public-search`: 120 requests / 60 s, fail open when Redis is unavailable so ordinary discovery does not become an availability dependency;
+- `search-intelligence`: retain 10 requests / 60 s, fail closed because it is optional expensive compute;
+- `image-proxy`: 600 requests / 60 s, fail open; high ceiling protects bandwidth abuse without fighting reader page bursts;
+- `user-report`: 5 requests / 600 s, fail closed;
+- authenticated cron/webhook: no additional generic IP policy in this phase; retain credential boundary and existing command-scoped limiter;
+- low-cost public metadata/health reads: no limiter in the first pass.
+- [x] **T1.18** Add response-header and rejection tests.
+
+**Rate-limit implementation/verification record:**
+- common policies are centralized in `src/server/lib/security/rate-limit.ts` and use per-operation namespaces;
+- public global search, search intelligence, signed image proxy, and user reports are wired to their explicit policies;
+- admin session exchange, source config/write/delete/test, source probe/flush, search warm/simulate, report actions/status, site config, Redis key deletion, and manual ops triggers are rate-limited after authorization where applicable;
+- limiter identity uses the right-most forwarded proxy hop with `x-real-ip` fallback instead of trusting the left-most client-supplied forwarded value;
+- rejection responses return 429 or 503 according to policy and include limit/remaining/reset plus `Retry-After`; public success responses that expose the limiter include the same rate-limit headers;
+- focused tests cover trusted proxy identity, fail-open public search, fail-closed admin mutation, 429/503 rejection headers, global-search response headers, and admin-session rejection;
+- CI at `1f30154293de468b7d1c38396d13da0493b0360b`: typecheck PASS, lint PASS, new credential/rate-limit/admin-session/search regressions PASS; full suite is back to the four pre-existing T0 failures only.
 
 ## CSP + error disclosure
 
-- [ ] **T1.19** Add CSP report-only baseline.
+- [x] **T1.19** Add CSP report-only baseline.
 - [ ] **T1.20** Verify Next/Firebase/assets/connect requirements in browser/PWA.
-- [ ] **T1.21** Document required directives in code/config comments, not credential values.
-- [ ] **T1.22** Remove raw internal `error.message` from user-facing generic error surfaces.
-- [ ] **T1.23** Preserve safe logging/digest identifiers.
-- [ ] **T1.24** Add security regression tests.
+- [x] **T1.21** Document required directives in code/config comments, not credential values.
+- [x] **T1.22** Remove raw internal `error.message` from user-facing generic error surfaces.
+- [x] **T1.23** Preserve safe logging/digest identifiers.
+- [x] **T1.24** Add security regression tests.
+
+**CSP/error-disclosure implementation record:**
+- browser responses now carry a `Content-Security-Policy-Report-Only` baseline covering self-hosted Next.js boot/chunks, inline boot/style requirements, HTTPS images/assets/API calls, WebSocket connections, Firebase auth frame hosts, blob workers, fonts, and the PWA manifest;
+- required directives are documented next to the header configuration and deliberately remain report-only until interactive browser/PWA smoke is complete;
+- generic ErrorBoundary, source-browse failure, manga-detail failure, and custom-source admin API failures no longer echo raw exception/upstream messages to users;
+- global error reporting keeps only non-sensitive correlation data (digest, error name, pathname) while shared server logging retains sanitized diagnostic detail;
+- focused regression coverage for CSP/error-disclosure passes together with logger, rate-limit, search-failure, admin-session, and manga-detail security coverage;
+- Vercel preview for the report-only CSP build returned HTTP 200 with the expected CSP report-only header, and a later preview containing the error-disclosure changes reached READY;
+- CI at `909ca43839ef87e9f0f99ba34c9250d0a3406c6d`: typecheck PASS, lint PASS, security-surface and disclosure tests PASS; the full suite remains limited to the four pre-existing T0 failures;
+- **T1.20 remains open** for interactive Firebase auth + installed-PWA/Service Worker browser smoke; deployment protection prevented a meaningful non-interactive manifest/worker fetch, so this check is not being marked complete from static evidence alone.
+
+**Final stabilization record (2026-10-01):**
+- the four T0 baseline failures were repaired without weakening production contracts: CompactCard tests now provide QueryClient context, and stale adapter synopsis fixtures/expectations now follow the shared normalizer contract;
+- reader history semantics were corrected so detail → reader and reader → detail use replace semantics where appropriate, internal `returnTo` preserves the logical parent, and chapter changes do not leave stale reader routes in history;
+- regression coverage now includes safe return-target validation, parent-preserving chapter/continue-reading links, and ReaderShell back replacement;
+- final CI at `62859d2e2642700bd411d8c94502ca916c8dd671`: typecheck PASS, lint PASS, **150/150 test files PASS, 1000/1000 tests PASS**, and production build PASS;
+- public documentation was re-aligned in README/CHANGELOG and provider-neutral security/developer docs; no production credential value is documented;
+- T1.20 and manual admin browser smoke remain separate interactive checks; CSP stays report-only until that browser/PWA verification is completed.
 
 ### Security PR gate
 
-- [ ] Focused auth/security tests pass.
-- [ ] Typecheck passes.
-- [ ] Lint passes.
-- [ ] Full relevant test suite passes.
-- [ ] Production build passes.
+- [x] Focused auth/security tests pass.
+- [x] Typecheck passes.
+- [x] Lint passes.
+- [x] Full relevant test suite passes.
+- [x] Production build passes.
 - [ ] Manual admin unauthorized/authorized smoke passes.
-- [ ] No secret appears in client bundle/public docs.
+- [x] No secret appears in client bundle/public docs.
 
 ---
 

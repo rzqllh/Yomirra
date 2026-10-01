@@ -113,31 +113,41 @@ export class DoujinDesuSource implements MangaSource {
     download: true,
   };
 
-  private client: HttpClient;
+  private client?: HttpClient;
 
   constructor(client?: HttpClient) {
-    this.client =
-      client ??
-      new HttpClient({
-        baseUrl: this.baseUrl,
-        timeoutMs: 15000,
-        allowedHosts: ["doujin.desu.xxx"],
-        defaultHeaders: {
-          "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-          Referer: "https://doujin.desu.xxx/",
-          Accept: "application/json",
-          "X-App-Secret": "dfdf72051dbfdc7d76889ebd31324e74",
-          "x-app-secret": "dfdf72051dbfdc7d76889ebd31324e74",
-        },
-      });
+    this.client = client;
+  }
+
+  private getClient(): HttpClient {
+    if (this.client) return this.client;
+
+    const appSecret = process.env.RESTRICTED_SOURCE_APP_SECRET?.trim();
+    if (!appSecret) {
+      throw new Error("Restricted source credential is not configured");
+    }
+
+    this.client = new HttpClient({
+      baseUrl: this.baseUrl,
+      timeoutMs: 15000,
+      allowedHosts: ["doujin.desu.xxx"],
+      defaultHeaders: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        Referer: "https://doujin.desu.xxx/",
+        Accept: "application/json",
+        "X-App-Secret": appSecret,
+      },
+    });
+
+    return this.client;
   }
 
   private async fetchDecrypted<T>(
     path: string,
     params?: Record<string, string | number | boolean | string[]>
   ): Promise<T> {
-    const raw = await this.client.get<unknown>(path, params);
+    const raw = await this.getClient().get<unknown>(path, params);
     return decryptDoujinPayload<T>(raw);
   }
 

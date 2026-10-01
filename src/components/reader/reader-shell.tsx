@@ -9,7 +9,7 @@ import { cn } from "@/shared/utils/cn"
 import { motion, AnimatePresence, useScroll, useSpring } from "motion/react"
 import { transitions } from "@/shared/lib/motion/tokens"
 
-import { getMangaDetailHref, getReaderHref } from "@/shared/lib/routes"
+import { getMangaDetailHref, getReaderHref, getSafeMangaDetailBackHref } from "@/shared/lib/routes"
 import { Chapter } from "@/shared/types/source"
 import dynamic from "next/dynamic"
 
@@ -84,10 +84,11 @@ export function ReaderShell({
 
   const handleBack = (e: React.MouseEvent) => {
     e.stopPropagation()
-    const returnTo =
+    const rawReturnTo =
       typeof window !== "undefined"
-        ? new URLSearchParams(window.location.search).get("returnTo") || undefined
-        : undefined
+        ? new URLSearchParams(window.location.search).get("returnTo")
+        : null
+    const returnTo = getSafeMangaDetailBackHref(rawReturnTo)
     const href = getMangaDetailHref(sourceId, mangaId, returnTo)
     if (beginNavigationIntent(href)) {
       router.replace(href)

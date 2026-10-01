@@ -123,7 +123,22 @@ Source adalah external boundary dan dapat berubah tanpa warning.
 - failure satu source tidak boleh membatalkan source lain;
 - remote response harus dianggap untrusted;
 - retry harus bounded;
-- public errors tidak boleh membocorkan raw response/secret.
+- public errors tidak boleh membocorkan raw response/secret;
+- credential optional harus di-resolve di server pada saat request upstream, bukan dijadikan syarat konstruksi registry source.
+
+## Security route boundary
+
+Gunakan policy bersama di `src/server/lib/security/rate-limit.ts` untuk route sensitif/mahal. Jangan membuat limiter ad-hoc baru bila kebutuhan dapat diekspresikan sebagai namespace/policy yang sudah ada.
+
+- admin mutation/expensive operation: fail-closed;
+- public search/image delivery: availability-first sesuai policy;
+- report user: strict fail-closed;
+- response rejection harus membawa limit/reset dan `Retry-After`;
+- jangan memakai left-most forwarded header secara langsung sebagai identity limiter.
+
+Admin browser auth memakai signed HttpOnly session; jangan menyimpan raw passkey di browser storage.
+
+Browser CSP saat ini sengaja `Report-Only`. Perubahan directive harus diuji pada preview deployment untuk Next.js chunks, Firebase auth, HTTPS assets/API, WebSocket, manifest, dan Service Worker sebelum enforcement. Generic UI error tidak boleh meneruskan raw `error.message`; simpan detail diagnosis di server log melalui shared logger.
 
 ## Dokumentasi lanjut
 

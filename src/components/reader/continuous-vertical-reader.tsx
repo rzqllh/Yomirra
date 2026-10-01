@@ -39,6 +39,7 @@ interface ContinuousVerticalReaderProps {
   nextChapterId?: string;
   onOpenAlternateSource?: () => void;
   onRefreshChapter?: () => Promise<PageItem[] | null>;
+  returnTo?: string;
 }
 
 export function ContinuousVerticalReader({
@@ -52,8 +53,10 @@ export function ContinuousVerticalReader({
   nextChapterId,
   onOpenAlternateSource,
   onRefreshChapter,
+  returnTo,
 }: ContinuousVerticalReaderProps) {
   const router = useRouter()
+  const detailHref = getMangaDetailHref(sourceId, mangaId, returnTo)
   const preferences = useReaderStore(state => state.preferences)
   const { dataSaver } = useSettingsStore()
   const isDownloaded = useDownloadStore(state => state.isDownloaded(sourceId, mangaId, chapterId))
@@ -455,7 +458,7 @@ export function ContinuousVerticalReader({
                   _prevChapterId ? "flex-1" : "w-full"
                 )}
               >
-                <Link href={getMangaDetailHref(sourceId, mangaId)} prefetch={false}>
+                <Link href={detailHref} replace prefetch={false}>
                   <BookOpen size={16} weight="bold" />
                   <span>Detail Komik</span>
                 </Link>
@@ -467,7 +470,8 @@ export function ContinuousVerticalReader({
             {nextChapterId && (
               <>
                 <Link
-                  href={getMangaDetailHref(sourceId, mangaId)}
+                  href={detailHref}
+                  replace
                   prefetch={false}
                   className="hover:text-white/80 transition-colors flex items-center gap-1.5 py-1"
                 >

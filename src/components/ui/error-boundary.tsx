@@ -11,7 +11,6 @@ interface Props {
 
 interface State {
   hasError: boolean;
-  error?: Error;
 }
 
 export class ErrorBoundary extends React.Component<Props, State> {
@@ -20,12 +19,15 @@ export class ErrorBoundary extends React.Component<Props, State> {
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
+  static getDerivedStateFromError(_error: Error): State {
+    return { hasError: true };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error("ErrorBoundary caught an error:", error, errorInfo);
+    console.error("ErrorBoundary caught an error", {
+      name: error.name,
+      componentStack: errorInfo.componentStack,
+    });
   }
 
   render() {
@@ -39,7 +41,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
           </div>
           <h2 className="text-lg font-bold text-text-primary mb-2">Terjadi Kesalahan</h2>
           <p className="text-sm text-text-secondary mb-6 max-w-md">
-            {this.state.error?.message || "Komponen ini gagal dimuat."}
+            Komponen ini gagal dimuat.
           </p>
           <Button onClick={() => this.setState({ hasError: false })}>
             Coba Lagi

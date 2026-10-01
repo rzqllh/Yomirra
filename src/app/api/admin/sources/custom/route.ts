@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdminAuth } from "@/server/lib/auth/admin-auth";
+import { checkRateLimitPolicy, createRateLimitRejection } from "@/server/lib/security/rate-limit";
 import { 
   getCustomSources, 
   saveCustomSource, 
@@ -36,6 +37,11 @@ export async function POST(req: NextRequest) {
     return auth.response;
   }
 
+  const rateLimit = await checkRateLimitPolicy(req, "adminMutation", "custom-source-write");
+  if (!rateLimit.success) {
+    return createRateLimitRejection(rateLimit);
+  }
+
   try {
     const body = await req.json();
     const parsed = CustomSourceSchema.safeParse(body);
@@ -57,7 +63,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     logger.error("Gagal menyimpan custom source", { error });
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Gagal menyimpan konfigurasi sumber" },
+      { error: "Gagal menyimpan konfigurasi sumber" },
       { status: 500 }
     );
   }
@@ -67,6 +73,11 @@ export async function DELETE(req: NextRequest) {
   const auth = await requireAdminAuth(req);
   if (!auth.authorized) {
     return auth.response;
+  }
+
+  const rateLimit = await checkRateLimitPolicy(req, "adminMutation", "custom-source-delete");
+  if (!rateLimit.success) {
+    return createRateLimitRejection(rateLimit);
   }
 
   try {

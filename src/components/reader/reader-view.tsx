@@ -28,6 +28,7 @@ interface ReaderViewProps {
   initialDetail: MangaDetail;
   initialChapters: Chapter[];
   initialPages: PageItem[] | null; // null if error on server
+  returnTo?: string;
 }
 
 export function ReaderView({
@@ -37,7 +38,9 @@ export function ReaderView({
   initialDetail,
   initialChapters,
   initialPages,
+  returnTo,
 }: ReaderViewProps) {
+  const detailHref = getMangaDetailHref(sourceId, mangaId, returnTo);
   const upsertHistory = useHistoryStore(state => state.upsertHistory);
   const getLibraryItem = useLibraryStore(state => state.getLibraryItem);
   const updateLibraryItem = useLibraryStore(state => state.updateLibraryItem);
@@ -228,7 +231,7 @@ export function ReaderView({
             description="Chapter ini berstatus early access / terkunci di sumber aslinya."
             action={
               <Button asChild variant="outline" className="rounded-xl shadow-sm mt-2 font-bold">
-                <Link href={getMangaDetailHref(sourceId, mangaId)}>
+                <Link href={detailHref} replace>
                   Kembali ke Detail
                 </Link>
               </Button>
@@ -329,6 +332,7 @@ export function ReaderView({
           nextChapterId={nextChapterId}
           onOpenAlternateSource={alternateSource.openAndSearch}
           onRefreshChapter={refreshChapter}
+          returnTo={returnTo}
         />
       )}
 

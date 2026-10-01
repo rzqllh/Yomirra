@@ -6,9 +6,19 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
 
 ### P4 Backend, Entitlement, Admin Hardening, and AI (Phase 6)
 
-- **Admin Auth & Security Hardening** (`src/server/lib/auth/admin-auth.ts`, `src/shared/lib/__tests__/phase6-backend-entitlement.test.ts`):
-  - Memperketat `getValidAdminKeys()` dengan membatasi fallback passkey darurat hanya untuk development dan test lokal atau server yang belum terkonfigurasi, mengeliminasi risiko pembukaan celah default di lingkungan production.
-  - Memvalidasi bahwa seluruh verifikasi hak akses privileged bersifat server-authoritative dan tidak ada kredensial privileged yang masuk ke client bundle.
+- **Admin Auth & Security Hardening** (`src/server/lib/auth/admin-auth.ts`, `src/app/api/admin/session/route.ts`, `src/shared/__tests__/logger-security.test.ts`):
+  - Menghapus fallback credential privileged dan hard-coded privileged identity dari production path; missing admin configuration sekarang fail-closed.
+  - Browser admin menukar passkey dengan signed HttpOnly session berumur pendek, sementara raw passkey tidak disimpan di browser storage; mutation berbasis session memvalidasi same-origin request.
+  - Menstandardisasi server-side authorization di seluruh admin API dan menambahkan redaction logger untuk authorization header, cookie, token, secret, passkey/password, API key, signature, dan signed URL.
+- **Server Credential Isolation & Route Rate Limiting** (`src/server/lib/security/rate-limit.ts`, `src/app/api/sources/search/route.ts`, `src/app/api/proxy/image/route.ts`):
+  - Memindahkan reusable privileged upstream credential ke konfigurasi server-only tanpa fallback literal; missing optional configuration gagal tertutup ketika request upstream dijalankan tanpa menggagalkan konstruksi registry source lain.
+  - Menambahkan policy rate-limit bernamespace untuk admin mutation, admin operation mahal, public search, search intelligence, signed image proxy, dan laporan pengguna.
+  - Mutation admin dan optional expensive compute fail-closed saat limiter tidak tersedia; public search dan image delivery memakai policy fail-open untuk menjaga availability.
+  - Menambahkan response limit/reset headers, `Retry-After` pada rejection, trusted proxy-chain identity, serta regression test untuk 429/503 dan limiter availability behavior.
+- **Browser Security & Error Disclosure** (`next.config.ts`, `src/components/ui/error-boundary.tsx`, `src/shared/__tests__/security-surface.test.ts`):
+  - Menambahkan baseline `Content-Security-Policy-Report-Only` untuk Next.js, Firebase auth, HTTPS assets/connect, WebSocket, manifest, dan Service Worker sebelum policy diterapkan secara enforced.
+  - Menghapus raw exception/upstream message dari generic public error surfaces serta generic admin API failure; detail diagnosis tetap disimpan melalui logging server yang disanitasi.
+  - Mempertahankan digest/error-name/pathname yang tidak sensitif sebagai correlation signal dan menambahkan regression contract untuk CSP serta error-disclosure boundary.
 - **Entitlement Foundation (Task 02)** (`src/shared/lib/entitlement.ts`):
   - Mengimplementasikan model kapabilitas Free vs Pro dengan proteksi ketat agar fitur gratis (membaca tanpa batas, pencarian penuh, multi-source switch, perpustakaan offline, sinkronisasi riwayat) selalu aktif dan tidak dapat didegradasi atau dikunci secara tidak sengaja.
   - Menyediakan gateway fitur Pro yang aman untuk fitur tambahan berbasis AI dan prioritas bandwidth.
@@ -74,6 +84,14 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
   - Menambahkan suite pengujian terfokus untuk isolasi rating, preservasi unbookmark, dan navigasi chapter.
 
 ### P0 Core Stability (Phase 2)
+
+- **Reader History Semantics & Back Navigation** (`src/components/manga/manga-detail-view.tsx`, `src/components/reader/reader-shell.tsx`, `src/shared/lib/routes.ts`):
+  - Detail → reader sekarang mengganti slot route detail alih-alih menumpuk reader route baru, sementara chapter switch tetap memakai replace semantics.
+  - Parent page dibawa melalui `returnTo` yang tervalidasi sebagai internal route, sehingga Reader → Detail → Back kembali ke halaman asal dan tidak masuk lagi ke reader.
+  - Reader footer/fallback detail links mengikuti kontrak yang sama, dan direct continue-reading menyimpan parent page untuk alur kembali yang konsisten.
+  - Menambahkan regression coverage untuk logical parent, safe return target, dan reader back replacement.
+- **Test Contract Repair**:
+  - Menambahkan QueryClient test harness untuk CompactCard dan menyelaraskan fixture/expectation adapter dengan shared synopsis normalizer yang berlaku.
 
 - **Navigation Perceived-Performance Foundation** (`src/components/app/desktop-rail.tsx`, `src/components/app/app-shell.tsx`):
   - Menambahkan dukungan `pendingHref` ke `DesktopRail` sehingga transisi navigasi di desktop memiliki indikator aktif seketika dan progress bar top nav sama seperti `BottomDock` mobile.
