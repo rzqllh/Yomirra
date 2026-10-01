@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { MangaItem } from "@/shared/sources/source-types";
+import { useReducedMotion } from "motion/react";
 import { useHistoryStore } from "@/shared/store/history-store";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { useSettingsStore } from "@/shared/store/settings-store";
@@ -9,28 +9,34 @@ import { useNsfwSourceIds } from "@/shared/hooks/use-nsfw-source-ids";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { useCollectionStore } from "@/shared/store/collection-store";
 import type { MangaKey } from "@/shared/types/collection";
-
 import { ContinueReadingList } from "./continue-reading-list";
 import { EditorialSpotlight } from "./editorial-spotlight";
 import { HomeLeaderboardPanel } from "./home-leaderboard-panel";
 import { HomeHero } from "./home-hero";
+import {
+  selectHeroCandidates,
+  selectSpotlightItems,
+  type HomeFeedManga,
+} from "./home-feed-selection";
+import { SourceFeedSkeleton } from "./source-feed-skeleton";
 import { ShelfCard } from "@/components/manga/card";
 import { CompactCard } from "@/components/manga/card/compact-card";
 import { ViewModeToggle } from "@/components/manga/view-mode-toggle";
 import { MagnifyingGlass, ArrowRight } from "@phosphor-icons/react";
 import Link from "next/link";
-import { cn } from "@/shared/utils/cn";
 
 export interface HomeFeedClientProps {
-  unifiedPopular: (MangaItem & { sourceId: string })[];
-  unifiedLatest: (MangaItem & { sourceId: string })[];
+  unifiedPopular: HomeFeedManga[];
+  unifiedLatest: HomeFeedManga[];
 }
 
-/**
- * Client coordinator for Yomirra editorial feed.
- * Manages carousel index state, source filtering, and shelf layout modes.
- */
-export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClientProps) {
+export const SPOTLIGHT_AUTOPLAY_MS = 6_000;
+const SWIPE_THRESHOLD_PX = 40;
+
+export function HomeFeedClient({
+  unifiedPopular,
+  unifiedLatest,
+}: HomeFeedClientProps) {
   const [isMounted, setIsMounted] = React.useState(false);
   React.useEffect(() => setIsMounted(true), []);
 
@@ -41,6 +47,10 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
   const hideNsfw = useSettingsStore((state) => state.hideNsfw);
   const listingViewMode = useSettingsStore((state) => state.listingViewMode);
   const { status: nsfwStatus, ids: nsfwSourceIds } = useNsfwSourceIds();
+  const readingStatusByManga = useCollectionStore(
+    (state) => state.readingStatusByManga
+  );
+  const reducedMotion = useReducedMotion();
 
   const isFromNsfwSource = React.useCallback(
     (sourceId: string, itemIsNsfw?: boolean) =>
@@ -48,16 +58,14 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
     [nsfwSourceIds]
   );
 
-  const readingStatusByManga = useCollectionStore((state) => state.readingStatusByManga);
-
-  // History / Continue Reading items
   const historyItems = React.useMemo(() => {
     let result = rawHistoryItems.filter((item) => {
       const mangaKey = `${item.sourceId}::${item.mangaId}` as MangaKey;
       if (readingStatusByManga[mangaKey] === "completed") return false;
       if (isSourceDisabled(item.sourceId)) return false;
+
       const source = dynamicSourceRegistry.get(item.sourceId);
-      if (source && source.status === "unavailable") return false;
+      if (source?.status === "unavailable") return false;
       return true;
     });
 
@@ -65,119 +73,247 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
       if (nsfwStatus !== "KNOWN") {
         result = [];
       } else {
-        result = result.filter((item) => !isFromNsfwSource(item.sourceId, item.isNsfw));
+        result = result.filter(
+          (item) => !isFromNsfwSource(item.sourceId, item.isNsfw)
+        );
       }
     }
+
     return result.slice(0, 10);
-  }, [rawHistoryItems, readingStatusByManga, isSourceDisabled, hideNsfw, nsfwStatus, isFromNsfwSource]);
+  }, [
+    rawHistoryItems,
+    readingStatusByManga,
+    isSourceDisabled,
+    hideNsfw,
+    nsfwStatus,
+    isFromNsfwSource,
+  ]);
 
-  const personalizedIds = new Set<string>();
-  historyItems.forEach((item) => personalizedIds.add(`${item.sourceId}-${item.mangaId}`));
+  const personalizedIds = React.useMemo(() => {
+    const ids = new Set<string>();
+    historyItems.forEach((item) =>
+      ids.add(`${item.sourceId}-${item.mangaId}`)
+    );
+    return ids;
+  }, [historyItems]);
 
-  // Filtered feeds
   const filteredPopular = React.useMemo(() => {
     if (!hideNsfw) return unifiedPopular;
     if (nsfwStatus !== "KNOWN") return [];
-    return unifiedPopular.filter((m) => !isFromNsfwSource(m.sourceId));
-  }, [unifiedPopular, hideNsfw, nsfwStatus, isFromNsfwSource]);
+
+    return unifiedPopular.filter(
+      (manga) => !isFromNsfwSource(manga.sourceId)
+    );
+  }, [
+    unifiedPopular,
+    hideNsfw,
+    nsfwStatus,
+    isFromNsfwSource,
+  ]);
 
   const filteredLatest = React.useMemo(() => {
     if (!hideNsfw) return unifiedLatest;
     if (nsfwStatus !== "KNOWN") return [];
-    return unifiedLatest.filter((m) => !isFromNsfwSource(m.sourceId));
-  }, [unifiedLatest, hideNsfw, nsfwStatus, isFromNsfwSource]);
 
-  // Unified Spotlight items (up to 5 items)
-  const spotlightItems = React.useMemo(() => {
-    const list = filteredLatest.length > 0 ? filteredLatest : filteredPopular;
-    const candidates = list.filter((item) => Boolean(item.coverUrl && item.title));
-    return candidates.slice(0, 5);
-  }, [filteredLatest, filteredPopular]);
+    return unifiedLatest.filter(
+      (manga) => !isFromNsfwSource(manga.sourceId)
+    );
+  }, [
+    unifiedLatest,
+    hideNsfw,
+    nsfwStatus,
+    isFromNsfwSource,
+  ]);
 
-  // Spotlight carousel index state
+  const discoveryItems =
+    filteredLatest.length > 0 ? filteredLatest : filteredPopular;
+
+  const spotlightItems = React.useMemo(
+    () => selectSpotlightItems(discoveryItems, 5),
+    [discoveryItems]
+  );
+
+  const heroCandidates = React.useMemo(
+    () =>
+      selectHeroCandidates(discoveryItems, spotlightItems, 15).map((item) => ({
+        coverUrl: item.coverUrl,
+        title: item.title,
+      })),
+    [discoveryItems, spotlightItems]
+  );
+
   const [spotlightIndex, setSpotlightIndex] = React.useState(0);
+  const [spotlightDirection, setSpotlightDirection] = React.useState<1 | -1>(1);
+  const [isHoveringSpotlight, setIsHoveringSpotlight] = React.useState(false);
+  const [isFocusInsideSpotlight, setIsFocusInsideSpotlight] = React.useState(false);
+  const [isTouchingSpotlight, setIsTouchingSpotlight] = React.useState(false);
+  const [isDocumentHidden, setIsDocumentHidden] = React.useState(false);
+  const touchStartX = React.useRef<number | null>(null);
+
   const totalSpotlights = spotlightItems.length;
 
-  const handleNext = React.useCallback(() => {
-    if (totalSpotlights <= 1) return;
-    setSpotlightIndex((prev) => (prev + 1) % totalSpotlights);
-  }, [totalSpotlights]);
+  React.useEffect(() => {
+    if (spotlightIndex < totalSpotlights) return;
+    setSpotlightIndex(totalSpotlights > 0 ? totalSpotlights - 1 : 0);
+  }, [spotlightIndex, totalSpotlights]);
 
-  const handlePrev = React.useCallback(() => {
-    if (totalSpotlights <= 1) return;
-    setSpotlightIndex((prev) => (prev - 1 + totalSpotlights) % totalSpotlights);
-  }, [totalSpotlights]);
+  React.useEffect(() => {
+    const handleVisibilityChange = () => setIsDocumentHidden(document.hidden);
+    handleVisibilityChange();
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, []);
 
-  const currentSpotlight = spotlightItems[spotlightIndex] || spotlightItems[0];
+  const moveSpotlight = React.useCallback(
+    (direction: 1 | -1) => {
+      if (totalSpotlights <= 1) return;
 
-  // Recently updated items (excluding continuing reading)
-  const updateHariIni = React.useMemo(() => {
-    return filteredLatest
-      .filter((item) => !personalizedIds.has(`${item.sourceId}-${item.id}`))
-      .slice(0, 18);
-  }, [filteredLatest, personalizedIds]);
+      setSpotlightDirection(direction);
+      setSpotlightIndex((current) =>
+        direction === 1
+          ? (current + 1) % totalSpotlights
+          : (current - 1 + totalSpotlights) % totalSpotlights
+      );
+    },
+    [totalSpotlights]
+  );
 
+  const isAutoplayPaused =
+    isHoveringSpotlight ||
+    isFocusInsideSpotlight ||
+    isTouchingSpotlight ||
+    isDocumentHidden;
 
-  // Hero cover candidates from latest updated items (randomly selected on session open)
-  const heroCandidates = React.useMemo(() => {
-    const list = filteredLatest.length > 0 ? filteredLatest : filteredPopular;
-    const candidates = list
-      .filter((item) => Boolean(item.coverUrl && item.title))
-      .map((item) => ({ coverUrl: item.coverUrl, title: item.title }));
-    return candidates;
-  }, [filteredLatest, filteredPopular]);
+  React.useEffect(() => {
+    if (
+      reducedMotion ||
+      isAutoplayPaused ||
+      totalSpotlights <= 1
+    ) {
+      return;
+    }
 
-  if (!isMounted) return null;
+    const timeout = window.setTimeout(
+      () => moveSpotlight(1),
+      SPOTLIGHT_AUTOPLAY_MS
+    );
+
+    return () => window.clearTimeout(timeout);
+  }, [
+    reducedMotion,
+    isAutoplayPaused,
+    totalSpotlights,
+    spotlightIndex,
+    moveSpotlight,
+  ]);
+
+  const currentSpotlight =
+    spotlightItems[spotlightIndex] ?? spotlightItems[0];
+
+  const updateHariIni = React.useMemo(
+    () =>
+      filteredLatest
+        .filter(
+          (item) =>
+            !personalizedIds.has(`${item.sourceId}-${item.id}`)
+        )
+        .slice(0, 18),
+    [filteredLatest, personalizedIds]
+  );
+
+  if (!isMounted) {
+    return <SourceFeedSkeleton />;
+  }
 
   return (
-    <div className="flex flex-col gap-11 sm:gap-12 pb-16">
-      {/* SECTION 0: Hero Greeting & Search Banner (Mockups 3 & 4) */}
-      <section id="hero-section" aria-label="Hero Greeting">
+    <div className="pb-16">
+      <section id="hero-section" aria-label="Pembuka Beranda">
         <HomeHero candidates={heroCandidates} />
       </section>
 
-      {/* SECTION 1: Spotlight Carousel & Leaderboard */}
       <section
         id="spotlight-section"
         aria-labelledby="spotlight-title"
-        className="flex min-w-0 flex-col gap-3.5 sm:gap-4"
+        className="mt-8 flex min-w-0 flex-col gap-3.5 sm:gap-4"
       >
-        <div className="flex items-center justify-between gap-3">
-          <h1
+        <div className="flex items-center gap-2">
+          <span
+            className="size-1.5 rounded-full bg-accent"
+            aria-hidden="true"
+          />
+          <h2
             id="spotlight-title"
-            className="text-xl sm:text-2xl font-bold tracking-tight text-text-primary"
+            className="text-lg font-bold tracking-tight text-text-primary sm:text-xl"
           >
             Sorotan &amp; peringkat
-          </h1>
+          </h2>
         </div>
 
         <div className="grid min-w-0 items-stretch gap-4 sm:gap-5 lg:grid-cols-[minmax(0,1.38fr)_minmax(290px,0.82fr)]">
-          {/* Spotlight Hero Box */}
-          <div className="min-w-0 h-full flex flex-col">
+          <div
+            data-testid="spotlight-carousel"
+            className="min-w-0"
+            onMouseEnter={() => setIsHoveringSpotlight(true)}
+            onMouseLeave={() => setIsHoveringSpotlight(false)}
+            onFocusCapture={() => setIsFocusInsideSpotlight(true)}
+            onBlurCapture={(event) => {
+              const nextTarget = event.relatedTarget;
+              if (
+                !(nextTarget instanceof Node) ||
+                !event.currentTarget.contains(nextTarget)
+              ) {
+                setIsFocusInsideSpotlight(false);
+              }
+            }}
+            onTouchStart={(event) => {
+              touchStartX.current = event.touches[0]?.clientX ?? null;
+              setIsTouchingSpotlight(true);
+            }}
+            onTouchEnd={(event) => {
+              const startX = touchStartX.current;
+              const endX = event.changedTouches[0]?.clientX;
+              touchStartX.current = null;
+              setIsTouchingSpotlight(false);
+
+              if (startX === null || endX === undefined) return;
+              const delta = startX - endX;
+
+              if (Math.abs(delta) < SWIPE_THRESHOLD_PX) return;
+              moveSpotlight(delta > 0 ? 1 : -1);
+            }}
+            onTouchCancel={() => {
+              touchStartX.current = null;
+              setIsTouchingSpotlight(false);
+            }}
+          >
             {currentSpotlight ? (
               <EditorialSpotlight
                 manga={currentSpotlight}
                 sourceId={currentSpotlight.sourceId}
+                sourceName={currentSpotlight.sourceName}
+                direction={spotlightDirection}
                 currentIndex={spotlightIndex}
                 totalCount={totalSpotlights}
-                onNext={handleNext}
-                onPrev={handlePrev}
-                className="h-full"
+                onNext={() => moveSpotlight(1)}
+                onPrev={() => moveSpotlight(-1)}
               />
             ) : (
-              <div className="ink-skeleton min-h-[300px] h-full w-full rounded-[18px]" aria-hidden="true" />
+              <div
+                className="ink-panel h-[268px] sm:h-[310px] lg:h-[340px]"
+                aria-hidden="true"
+              />
             )}
           </div>
 
-          {/* Leaderboard Panel (Top 5) */}
-          <div className="min-w-0 h-full flex flex-col">
-            <HomeLeaderboardPanel items={filteredPopular} />
-          </div>
+          <HomeLeaderboardPanel items={filteredPopular} />
         </div>
       </section>
 
-      {/* SECTION 2: Lanjut Baca (Continue Reading) */}
-      <section id="continue-reading-section" className="flex flex-col">
+      <section
+        id="continue-reading-section"
+        className="mt-11 flex flex-col sm:mt-12"
+      >
         <ContinueReadingList items={historyItems} />
       </section>
 
@@ -185,14 +321,17 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
         <section
           id="recently-updated-section"
           aria-labelledby="recently-updated-title"
-          className="flex flex-col gap-3.5"
+          className="mt-10 flex flex-col gap-3.5 sm:mt-11"
         >
           <div className="flex items-center justify-between gap-3">
             <h2
               id="recently-updated-title"
-              className="text-lg sm:text-xl font-bold text-text-primary flex items-center gap-2 tracking-tight"
+              className="flex items-center gap-2 text-lg font-bold tracking-tight text-text-primary sm:text-xl"
             >
-              <span className="size-2 rounded-full bg-accent" aria-hidden="true" />
+              <span
+                className="size-2 rounded-full bg-accent"
+                aria-hidden="true"
+              />
               <span>Baru diperbarui</span>
             </h2>
 
@@ -200,16 +339,21 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
               <ViewModeToggle />
               <Link
                 href="/library"
-                className="group inline-flex items-center gap-1 text-xs font-bold text-accent hover:underline focus-visible:outline-2 focus-visible:outline-accent rounded"
+                className="group inline-flex min-h-11 items-center gap-1 rounded-[10px] px-1.5 text-xs font-bold text-accent hover:bg-accent/5 focus-visible:outline-2 focus-visible:outline-accent"
               >
-                <span>Lihat Semua</span>
-                <ArrowRight size={13} weight="bold" className="transition-transform group-hover:translate-x-0.5" />
+                <span>Lihat semua</span>
+                <ArrowRight
+                  size={13}
+                  weight="bold"
+                  className="transition-transform group-hover:translate-x-0.5"
+                  aria-hidden="true"
+                />
               </Link>
             </div>
           </div>
 
           {listingViewMode === "compact" ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
               {updateHariIni.slice(0, 12).map((manga) => (
                 <CompactCard
                   key={`${manga.sourceId}-${manga.id}`}
@@ -220,27 +364,32 @@ export function HomeFeedClient({ unifiedPopular, unifiedLatest }: HomeFeedClient
               ))}
             </div>
           ) : (
-            <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-2 snap-x snap-mandatory scrollbar-hide w-full md:grid md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 md:overflow-visible md:snap-none md:gap-x-4 md:gap-y-6 md:[&>*:nth-child(n+11)]:hidden">
+            <div className="scrollbar-hide flex w-full snap-x snap-mandatory gap-3 overflow-x-auto pb-2 sm:gap-4 md:grid md:grid-cols-3 md:gap-x-4 md:gap-y-6 md:overflow-visible md:snap-none lg:grid-cols-4 xl:grid-cols-5 md:[&>*:nth-child(n+11)]:hidden">
               {updateHariIni.map((manga) => (
-                <div key={`${manga.sourceId}-${manga.id}`} className="shrink-0 snap-start w-[140px] sm:w-[155px] md:w-auto md:min-w-0">
-                  <ShelfCard manga={manga} sourceId={manga.sourceId} showSourceBadge />
+                <div
+                  key={`${manga.sourceId}-${manga.id}`}
+                  className="w-[140px] shrink-0 snap-start sm:w-[155px] md:w-auto md:min-w-0"
+                >
+                  <ShelfCard
+                    manga={manga}
+                    sourceId={manga.sourceId}
+                    showSourceBadge
+                  />
                 </div>
               ))}
-              <div className="shrink-0 snap-start w-[140px] sm:w-[155px] md:hidden flex items-center justify-center p-2">
+              <div className="flex aspect-[3/4] w-[140px] shrink-0 snap-start items-center justify-center p-2 sm:w-[155px] md:hidden">
                 <Link
                   href="/library"
-                  className="w-full aspect-[3/4] rounded-xl border-2 border-dashed border-border-default hover:border-accent hover:bg-accent/5 text-text-muted hover:text-accent transition-all flex flex-col items-center justify-center gap-2 font-bold"
+                  className="flex size-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border-default font-bold text-text-muted transition-colors hover:border-accent hover:bg-accent/5 hover:text-accent"
                 >
-                  <MagnifyingGlass size={24} />
-                  <span className="text-sm">Lihat Semua</span>
+                  <MagnifyingGlass size={24} aria-hidden="true" />
+                  <span className="text-sm">Lihat semua</span>
                 </Link>
               </div>
             </div>
           )}
         </section>
       )}
-
-
     </div>
   );
 }

@@ -6,10 +6,10 @@ import { ArrowRight } from "@phosphor-icons/react";
 import { LeaderboardRow } from "@/components/manga/card/leaderboard-row";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { cn } from "@/shared/utils/cn";
-import type { MangaItem } from "@/shared/sources/source-types";
+import type { HomeFeedManga } from "./home-feed-selection";
 
 export interface HomeLeaderboardPanelProps {
-  items: (MangaItem & { sourceId?: string })[];
+  items: HomeFeedManga[];
   title?: string;
   defaultSourceId?: string;
   onSourceChange?: (sourceId: string) => void;
@@ -17,10 +17,6 @@ export interface HomeLeaderboardPanelProps {
   className?: string;
 }
 
-/**
- * Editorial Leaderboard panel showcasing top-ranked manga.
- * Source-aware: filters rankings strictly by active source (01-05).
- */
 export function HomeLeaderboardPanel({
   items,
   title = "Paling banyak dibaca",
@@ -29,52 +25,66 @@ export function HomeLeaderboardPanel({
   seeAllHref,
   className,
 }: HomeLeaderboardPanelProps) {
-  // Extract unique available sources from the items
   const availableSources = React.useMemo(() => {
-    const set = new Set<string>();
-    items.forEach((m) => {
-      if (m.sourceId) set.add(m.sourceId);
-    });
-    return Array.from(set);
+    const sources = new Map<string, string>();
+
+    for (const item of items) {
+      if (!sources.has(item.sourceId)) {
+        sources.set(item.sourceId, item.sourceName);
+      }
+    }
+
+    return Array.from(sources, ([id, name]) => ({ id, name }));
   }, [items]);
 
-  const [selectedSource, setSelectedSource] = React.useState<string | undefined>(defaultSourceId);
+  const [selectedSource, setSelectedSource] = React.useState<string | undefined>(
+    defaultSourceId
+  );
 
-  // Compute active source ID
   const activeSourceId = React.useMemo(() => {
-    if (selectedSource && (availableSources.includes(selectedSource) || availableSources.length === 0)) {
+    const availableIds = new Set(availableSources.map((source) => source.id));
+
+    if (selectedSource && availableIds.has(selectedSource)) {
       return selectedSource;
     }
-    if (availableSources.includes("shinigami")) return "shinigami";
-    return availableSources[0] || defaultSourceId || "shinigami";
+
+    if (defaultSourceId && availableIds.has(defaultSourceId)) {
+      return defaultSourceId;
+    }
+
+    return availableSources[0]?.id;
   }, [selectedSource, availableSources, defaultSourceId]);
 
-  // Filter items strictly by active source
+  const activeSourceName =
+    availableSources.find((source) => source.id === activeSourceId)?.name ?? "Sumber";
+
   const displayItems = React.useMemo(() => {
+    if (!activeSourceId) return [];
+
     return items
-      .filter((m) => (m.sourceId || "shinigami") === activeSourceId)
+      .filter((item) => item.sourceId === activeSourceId)
       .slice(0, 5);
   }, [items, activeSourceId]);
 
-  const targetSeeAllHref = seeAllHref || (activeSourceId ? `/sources/${activeSourceId}?sort=popular` : "/popular");
+  const targetSeeAllHref = activeSourceId
+    ? `/sources/${activeSourceId}?sort=popular`
+    : seeAllHref ?? "/popular";
 
   return (
     <section
       aria-label={title}
       className={cn(
-        "ink-panel flex h-full min-w-0 flex-col p-4 sm:p-5 lg:p-6",
+        "ink-panel flex h-full min-w-0 flex-col p-4 sm:p-5 lg:p-5",
         className
       )}
     >
-      {/* Panel Header */}
-      <div className="flex items-center justify-between gap-3 pb-3 mb-1 border-b border-border-subtle/60 shrink-0">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <h3 className="text-sm font-bold text-text-primary tracking-tight truncate">
-            {title}
-          </h3>
+      <div className="flex min-h-11 shrink-0 items-center justify-between gap-3 border-b border-border-subtle/60 pb-2.5">
+        <h3 className="min-w-0 truncate text-sm font-bold tracking-tight text-text-primary">
+          {title}
+        </h3>
 
-          {/* Compact Source Selector */}
-          {availableSources.length > 1 ? (
+        <div className="flex shrink-0 items-center gap-2">
+          {availableSources.length > 1 && activeSourceId ? (
             <CustomSelect
               value={activeSourceId}
               onChange={(value) => {
@@ -82,46 +92,48 @@ export function HomeLeaderboardPanel({
                 onSourceChange?.(value);
               }}
               label="Pilih sumber peringkat"
-              options={availableSources.map((sId) => ({
-                value: sId,
-                label: <span className="capitalize">{sId}</span>,
+              options={availableSources.map((source) => ({
+                value: source.id,
+                label: source.name,
               }))}
-              buttonClassName="min-h-0 h-6 px-2 py-0 text-[11px] font-bold uppercase tracking-wider text-text-secondary bg-surface-muted hover:bg-surface-hover hover:text-text-primary border border-border-subtle rounded-xs gap-1.5 focus-visible:ring-1 focus-visible:ring-accent transition-colors"
-              align="left"
+              buttonClassName="h-11 min-h-11 max-w-[132px] rounded-[10px] border-border-subtle bg-surface-muted px-2.5 py-0 text-[11px] font-semibold text-text-secondary shadow-none hover:bg-surface-hover"
+              align="right"
             />
-          ) : (
-            <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted bg-surface-muted/60 border border-border-subtle/60 rounded-xs px-1.5 py-0.5 shrink-0">
-              {activeSourceId}
+          ) : activeSourceId ? (
+            <span className="max-w-[120px] truncate text-[11px] font-semibold text-text-muted">
+              {activeSourceName}
             </span>
+          ) : null}
+
+          {activeSourceId && (
+            <Link
+              href={targetSeeAllHref}
+              className="group inline-flex min-h-11 items-center gap-1 rounded-[10px] px-1.5 text-xs font-bold text-accent hover:bg-accent/5 focus-visible:outline-2 focus-visible:outline-accent"
+            >
+              <span className="hidden sm:inline">Lihat semua</span>
+              <ArrowRight
+                size={13}
+                weight="bold"
+                className="transition-transform group-hover:translate-x-0.5"
+                aria-hidden="true"
+              />
+            </Link>
           )}
         </div>
-
-        <Link
-          href={targetSeeAllHref}
-          className="group inline-flex items-center gap-1 text-xs font-bold text-accent hover:underline focus-visible:outline-2 focus-visible:outline-accent rounded shrink-0"
-        >
-          <span>Lihat semua</span>
-          <ArrowRight
-            size={13}
-            weight="bold"
-            className="transition-transform group-hover:translate-x-0.5"
-            aria-hidden="true"
-          />
-        </Link>
       </div>
 
-      {/* Rows Container */}
       {displayItems.length > 0 ? (
-        <div className="flex flex-1 flex-col justify-between divide-y divide-border-subtle/50">
-          {displayItems.map((manga, idx) => {
-            const rank = idx + 1;
-            const sourceId = manga.sourceId || activeSourceId;
+        <div className="flex flex-1 flex-col divide-y divide-border-subtle/50">
+          {displayItems.map((manga, index) => {
+            const rank = index + 1;
 
             return (
               <LeaderboardRow
-                key={`${sourceId}-${manga.id}-${rank}`}
+                key={`${manga.sourceId}-${manga.id}-${rank}`}
                 manga={{ ...manga, rank }}
-                sourceId={sourceId}
+                sourceId={manga.sourceId}
+                density="home"
+                emphasized={rank === 1}
               />
             );
           })}
