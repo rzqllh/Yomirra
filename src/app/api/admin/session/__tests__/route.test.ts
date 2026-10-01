@@ -60,6 +60,7 @@ describe("Admin session route", () => {
     expect(setCookie.toLowerCase()).toContain("httponly");
     expect(setCookie.toLowerCase()).toContain("samesite=strict");
     expect(setCookie).not.toContain("configured-admin-key");
+    expect(setCookie).toContain("yomirra_admin_key=");
   });
 
   it("reports an authenticated signed session", async () => {
@@ -86,5 +87,6 @@ describe("Admin session route", () => {
     expect(response.status).toBe(200);
     expect(setCookie).toContain(`${ADMIN_SESSION_COOKIE}=`);
     expect(setCookie).toMatch(/Max-Age=0/i);
+    expect(setCookie).toContain("yomirra_admin_key=");
   });
 });
