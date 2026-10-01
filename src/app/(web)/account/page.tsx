@@ -150,15 +150,8 @@ export default function AccountPage() {
               </div>
             </div>
 
-            <div className="p-4 rounded-2xl bg-surface-raised/50 border border-border-subtle/40 text-xs text-text-secondary space-y-2">
-              <div className="flex items-center justify-between">
-                <span>Database Cloud:</span>
-                <span className="font-bold text-text-primary">Firebase Firestore</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span>Data yang Disinkronkan:</span>
-                <span className="font-bold text-text-primary">Library, History, Koleksi</span>
-              </div>
+            <div className="p-4 rounded-2xl bg-surface-raised/50 border border-border-subtle/40 text-xs text-text-secondary">
+              Tersinkron: bookmark, riwayat baca, koleksi, dan preferensi yang didukung.
             </div>
 
             <Button
