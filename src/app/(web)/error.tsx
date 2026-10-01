@@ -15,12 +15,17 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  useEffect(() => {
-    // Log the error to an error reporting service
-    console.error("Global Error Caught:", error);
-  }, [error]);
-
   const pathname = usePathname();
+
+  useEffect(() => {
+    // Keep a correlation identifier without echoing raw message/stack data.
+    console.error("Global Error Caught", {
+      digest: error.digest ?? null,
+      name: error.name,
+      pathname,
+    });
+  }, [error.digest, error.name, pathname]);
+
   const isHome = pathname === "/";
 
   return (
