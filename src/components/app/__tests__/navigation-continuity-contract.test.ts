@@ -50,6 +50,7 @@ describe("navigation continuity contracts", () => {
     const sourcePage = read("src/app/(web)/sources/[sourceId]/page.tsx");
     const searchPage = read("src/app/(web)/search/page.tsx");
     const libraryPage = read("src/app/(web)/library/page.tsx");
+    const librarySkeleton = read("src/components/skeletons/library-skeleton.tsx");
     const bookmarkPage = read("src/app/(web)/bookmark/page.tsx");
 
     expect(sourceList).toContain("grid-cols-1");
@@ -64,6 +65,8 @@ describe("navigation continuity contracts", () => {
     expect(searchPage).toContain("<PageHeader");
     expect(searchPage).toContain("hasMobileHeader");
     expect(libraryPage).toContain("<PageContainer hasMobileHeader>");
+    expect(librarySkeleton).toContain("useSettingsStore");
+    expect(librarySkeleton).toContain("viewMode={skeletonViewMode}");
     expect(bookmarkPage).toContain("<BookmarkSkeleton />");
     expect(bookmarkPage).not.toContain("fallback={null}");
   });
