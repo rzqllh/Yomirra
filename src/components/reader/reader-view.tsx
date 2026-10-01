@@ -318,7 +318,6 @@ export function ReaderView({
           nextChapterId={nextChapterId}
           onOpenAlternateSource={alternateSource.openAndSearch}
           onRefreshChapter={refreshChapter}
-          returnTo={returnTo}
         />
       ) : (
         <ContinuousVerticalReader
@@ -333,6 +332,7 @@ export function ReaderView({
           nextChapterId={nextChapterId}
           onOpenAlternateSource={alternateSource.openAndSearch}
           onRefreshChapter={refreshChapter}
+          returnTo={returnTo}
         />
       )}
 
