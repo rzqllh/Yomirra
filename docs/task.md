@@ -28,14 +28,25 @@
 
 ## Admin authentication
 
-- [ ] **T1.1** Audit `src/server/lib/auth/admin-auth.ts` for production fallback credentials and hard-coded privileged identities.
-- [ ] **T1.2** Remove production fallback credential behavior.
-- [ ] **T1.3** Make missing production admin configuration fail closed.
-- [ ] **T1.4** Move allowlists/privileged identities to server configuration or verified claims.
-- [ ] **T1.5** Verify every admin API uses server-side authorization.
-- [ ] **T1.6** Add tests for configured, unconfigured, invalid, expired/invalid-token, and authorized states.
-- [ ] **T1.7** Decide whether browser admin auth remains direct-token based or moves to a short-lived server-issued session.
-- [ ] **T1.8** If cookie mutation auth is used, add CSRF protection/validation and tests.
+- [x] **T1.1** Audit `src/server/lib/auth/admin-auth.ts` for production fallback credentials and hard-coded privileged identities.
+- [x] **T1.2** Remove production fallback credential behavior.
+- [x] **T1.3** Make missing production admin configuration fail closed.
+- [x] **T1.4** Move allowlists/privileged identities to server configuration or verified claims.
+- [x] **T1.5** Verify every admin API uses server-side authorization.
+- [x] **T1.6** Add tests for configured, unconfigured, invalid, expired/invalid-token, and authorized states.
+- [x] **T1.7** Decide whether browser admin auth remains direct-token based or moves to a short-lived server-issued session.
+- [x] **T1.8** If cookie mutation auth is used, add CSRF protection/validation and tests.
+
+**Admin-auth task record:**
+- production fallback credential behavior removed; unrelated operational secrets are no longer accepted as admin credentials;
+- hard-coded privileged identity allowlisting removed in favor of configured emails or verified Firebase admin claims;
+- browser passkeys are exchanged server-side for an 8-hour signed HttpOnly, Secure-in-production, SameSite=Strict session scoped to admin APIs;
+- the legacy browser key cookie is actively expired and raw passkeys are no longer stored in browser storage;
+- session-authenticated mutations require same-origin `Origin` validation; direct server/API-key automation remains separately authenticated;
+- all admin API routes were audited for server authorization, with the report-action route standardized on the common guard;
+- regression coverage now includes unconfigured, invalid, valid API key, signed session, expired/tampered session, CSRF rejection, Firebase claim/allowlist, portal unlock, and legacy-cookie cleanup;
+- verification on CI after the auth changes: typecheck PASS, lint PASS, auth/admin regressions PASS; the only remaining full-suite failures are the four pre-existing T0 baseline failures;
+- Vercel preview build for the same auth implementation is READY.
 
 ## Provider credential hygiene
 
