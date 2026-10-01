@@ -16,13 +16,13 @@ export function PageImageError({ index, onRetry, onReport, onSwitchSource, class
     <div className={cn("absolute inset-0 flex flex-col items-center justify-center w-full h-full bg-black/40 backdrop-blur-md p-6 text-center z-10", className)}>
       <div className="bg-surface-overlay/80 backdrop-blur-xl rounded-xl p-6 flex flex-col items-center max-w-[280px]">
         <WarningCircle size={40} className="text-red-400 mb-3 drop-shadow-md" weight="duotone" />
-        <h4 className="text-sm font-bold text-white mb-1 drop-shadow-sm">Gambar {index} Rusak</h4>
-        <p className="text-[10px] text-white/70 mb-5 leading-tight">Terjadi kesalahan saat mengunduh gambar ini. Coba muat ulang atau lapor ke tim Yomirra.</p>
+        <h4 className="text-sm font-bold text-white mb-1 drop-shadow-sm">Halaman {index} gagal dimuat</h4>
+        <p className="text-[10px] text-white/70 mb-5 leading-tight">Coba muat ulang. Jika masih gagal, kirim laporan.</p>
 
         <div className="flex flex-col gap-2 w-full">
           <div className="flex gap-2 w-full">
             <Button variant="outline" size="sm" onClick={onRetry} className="flex-1 rounded-xl h-10 text-xs font-bold border-white/20 bg-white/5 hover:bg-white/10 text-white shadow-sm">
-              Coba Lagi
+              Coba lagi
             </Button>
             {onReport && (
               <Button
@@ -43,7 +43,7 @@ export function PageImageError({ index, onRetry, onReport, onSwitchSource, class
               onClick={onSwitchSource}
               className="w-full rounded-xl h-9 text-xs font-semibold border-semantic-warning/40 text-semantic-warning bg-semantic-warning/10 hover:bg-semantic-warning/20 shadow-sm"
             >
-              Baca di Sumber Lain
+              Baca dari sumber lain
             </Button>
           )}
         </div>
