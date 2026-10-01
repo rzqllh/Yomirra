@@ -28,6 +28,8 @@ import { getMangaDetailHref } from "@/shared/lib/routes"
 export function CommandMenu() {
   const [open, setOpen] = React.useState(false)
   const [searchQuery, setSearchQuery] = React.useState("")
+  const triggerRef = React.useRef<HTMLElement | null>(null)
+  const restoreFocusOnCloseRef = React.useRef(true)
   const router = useRouter()
   const pathname = usePathname()
 
@@ -37,6 +39,13 @@ export function CommandMenu() {
         window.dispatchEvent(new CustomEvent("focus-search-input", { detail: { query } }));
         return;
       }
+      if (
+        document.activeElement instanceof HTMLElement &&
+        document.activeElement !== document.body
+      ) {
+        triggerRef.current = document.activeElement;
+      }
+      restoreFocusOnCloseRef.current = true;
       setSearchQuery(query);
       setOpen(true);
     };
@@ -107,14 +116,26 @@ export function CommandMenu() {
     return [];
   }, [globalSearchData]);
 
+  const handleOpenChange = React.useCallback((nextOpen: boolean) => {
+    setOpen(nextOpen)
+
+    if (!nextOpen && restoreFocusOnCloseRef.current) {
+      const trigger = triggerRef.current
+      requestAnimationFrame(() => {
+        trigger?.focus({ preventScroll: true })
+      })
+    }
+  }, [])
+
   const handleSelect = (href: string) => {
+    restoreFocusOnCloseRef.current = false
     setOpen(false)
     setSearchQuery("")
     router.push(href)
   }
 
   return (
-    <CommandDialog open={open} onOpenChange={setOpen} shouldFilter={false}>
+    <CommandDialog open={open} onOpenChange={handleOpenChange} shouldFilter={false}>
       <CommandInput
         placeholder="Cari judul, kreator, atau #tag…"
         value={searchQuery}
