@@ -64,7 +64,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     const timeout = window.setTimeout(() => {
       endNavigationIntent()
       setPendingHref(null)
-    }, 12000)
+    }, navigationTiming.recoveryTimeoutMs)
     return () => window.clearTimeout(timeout)
   }, [pendingHref])
 
