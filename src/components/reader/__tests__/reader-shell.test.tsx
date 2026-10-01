@@ -4,9 +4,18 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { ReaderShell } from "../reader-shell";
 import { useReaderStore } from "@/shared/store/reader-store";
 import { useLibraryStore } from "@/shared/store/library-store";
+import { endNavigationIntent } from "@/shared/lib/navigation-intent";
+
+const mockRouterBack = vi.fn();
+const mockRouterPush = vi.fn();
+const mockRouterReplace = vi.fn();
 
 vi.mock("next/navigation", () => ({
-  useRouter: vi.fn(() => ({ back: vi.fn(), push: vi.fn(), replace: vi.fn() })),
+  useRouter: vi.fn(() => ({
+    back: mockRouterBack,
+    push: mockRouterPush,
+    replace: mockRouterReplace,
+  })),
 }));
 
 vi.mock("next/dynamic", () => ({
@@ -26,6 +35,8 @@ vi.mock("motion/react", async (importOriginal) => {
 describe("ReaderShell Header & Progress Bar", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    endNavigationIntent();
+    window.history.replaceState({}, "", "/");
     useReaderStore.setState({
       preferences: {
         imageFit: "width",
@@ -43,6 +54,34 @@ describe("ReaderShell Header & Progress Bar", () => {
       pagedProgress: 0.25,
     });
     useLibraryStore.setState({ items: {} });
+  });
+
+  it("returns to detail with the logical parent without pushing a reader route behind it", () => {
+    window.history.replaceState(
+      {},
+      "",
+      "/manga/srcA/m1/read/ch-1?returnTo=%2Flibrary%3Fsource%3DsrcA"
+    );
+
+    render(
+      <ReaderShell
+        mangaTitle="Solo Leveling"
+        chapterTitle="Chapter 1"
+        sourceId="srcA"
+        mangaId="m1"
+      >
+        <div>Content</div>
+      </ReaderShell>
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Kembali ke detail komik" })
+    );
+
+    expect(mockRouterPush).not.toHaveBeenCalled();
+    expect(mockRouterReplace).toHaveBeenCalledWith(
+      "/manga/srcA/m1?returnTo=%2Flibrary%3Fsource%3DsrcA"
+    );
   });
 
   it("renders manga title on the top line and chapter title on the bottom line", () => {
