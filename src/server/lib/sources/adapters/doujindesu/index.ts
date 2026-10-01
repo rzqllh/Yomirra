@@ -113,13 +113,14 @@ export class DoujinDesuSource implements MangaSource {
     download: true,
   };
 
-  private client: HttpClient;
+  private client?: HttpClient;
 
   constructor(client?: HttpClient) {
-    if (client) {
-      this.client = client;
-      return;
-    }
+    this.client = client;
+  }
+
+  private getClient(): HttpClient {
+    if (this.client) return this.client;
 
     const appSecret = process.env.RESTRICTED_SOURCE_APP_SECRET?.trim();
     if (!appSecret) {
@@ -138,13 +139,15 @@ export class DoujinDesuSource implements MangaSource {
         "X-App-Secret": appSecret,
       },
     });
+
+    return this.client;
   }
 
   private async fetchDecrypted<T>(
     path: string,
     params?: Record<string, string | number | boolean | string[]>
   ): Promise<T> {
-    const raw = await this.client.get<unknown>(path, params);
+    const raw = await this.getClient().get<unknown>(path, params);
     return decryptDoujinPayload<T>(raw);
   }
 
