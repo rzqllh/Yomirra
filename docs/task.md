@@ -132,7 +132,7 @@
 - focused regression coverage for CSP/error-disclosure passes together with logger, rate-limit, search-failure, admin-session, and manga-detail security coverage;
 - Vercel preview for the report-only CSP build returned HTTP 200 with the expected CSP report-only header, and a later preview containing the error-disclosure changes reached READY;
 - CI at `909ca43839ef87e9f0f99ba34c9250d0a3406c6d`: typecheck PASS, lint PASS, security-surface and disclosure tests PASS; the full suite remains limited to the four pre-existing T0 failures;
-- **T1.20 remains open** for interactive Firebase auth + installed-PWA/Service Worker browser smoke; deployment protection prevented a meaningful non-interactive manifest/worker fetch, so this check is not being marked complete from static evidence alone.
+- **T1.20 remains open** for interactive Firebase auth + installed-PWA/iOS browser smoke and production admin authorized smoke; public manifest/Service Worker delivery is now verified, but static/deployment evidence alone does not prove the interactive flows.
 
 **Final stabilization record (2026-10-01):**
 - the four T0 baseline failures were repaired without weakening production contracts: CompactCard tests now provide QueryClient context, and stale adapter synopsis fixtures/expectations now follow the shared normalizer contract;
