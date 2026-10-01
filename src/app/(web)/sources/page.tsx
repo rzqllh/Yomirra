@@ -102,7 +102,7 @@ export default function SourcesPage() {
         <PageContainer hasMobileHeader>
           <PageHeader
             title="Sumber"
-            subtitle="Kelola ekstensi dan sumber bacaan untuk Yomirra."
+            subtitle="Pilih sumber yang digunakan untuk menjelajah dan membaca komik."
             icon={<HardDrives size={24} weight="duotone" />}
           />
 
@@ -117,7 +117,7 @@ export default function SourcesPage() {
             <SearchInput
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              placeholder="Cari sumber..."
+              placeholder="Cari sumber…"
               containerClassName="rounded-2xl max-w-md w-full"
             />
             {isMounted && nsfwCount > 0 ? (
@@ -130,7 +130,7 @@ export default function SourcesPage() {
                     ? "border-border-subtle bg-surface-muted/60 text-text-muted hover:border-border-strong hover:text-text-primary"
                     : "border-semantic-error/40 bg-semantic-error/10 text-semantic-error font-semibold"
                 )}
-                title={hideNsfw ? "Tampilkan sumber 18+ / NSFW" : "Sembunyikan sumber 18+ / NSFW"}
+                title={hideNsfw ? "Tampilkan sumber 18+" : "Sembunyikan sumber 18+"}
               >
                 <ShieldWarning size={16} weight={hideNsfw ? "regular" : "duotone"} />
                 <span>{hideNsfw ? `18+ Disembunyikan (${nsfwCount})` : "18+ Ditampilkan"}</span>
@@ -144,7 +144,7 @@ export default function SourcesPage() {
             <EmptyState
               variant="compact"
               icon={<HardDrives size={40} className="text-semantic-error" weight="duotone" />}
-              title="Gagal Memuat Sumber"
+              title="Sumber gagal dimuat"
               description="Server sedang sibuk. Silakan coba beberapa saat lagi."
               className="bg-surface-overlay rounded-xl border border-semantic-error/20 py-16"
             />
