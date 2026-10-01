@@ -168,11 +168,21 @@ Firebase memperluas state local-first untuk account/sync flow. Normal reading ti
 
 Authentication tidak menggantikan Firestore authorization rules.
 
-## 13. Operational reporting
+## 13. Security boundary
+
+Privileged behavior tetap server-side:
+
+- admin authorization memakai common server guard; browser admin memakai short-lived signed HttpOnly session;
+- reusable upstream credential di-resolve hanya saat adapter benar-benar melakukan request, sehingga missing optional configuration gagal tertutup tanpa merusak konstruksi registry source lain;
+- `src/server/lib/security/rate-limit.ts` menjadi policy boundary tunggal untuk namespace, limit, fail-open/fail-closed, dan response headers pada route yang sensitif/mahal;
+- public search dan image proxy dipisahkan dari admin mutation/expensive operation agar availability policy tidak tercampur;
+- logger shared melakukan redaction credential-bearing fields sebelum data masuk ke server log.
+
+## 14. Operational reporting
 
 Telegram ops bersifat deterministic. Error/stage diubah menjadi report yang membantu diagnosis, tetapi tidak menjalankan AI diagnosis, auto-fix, atau auto-deploy.
 
-## 14. Boundary yang sengaja dipertahankan
+## 15. Boundary yang sengaja dipertahankan
 
 - Search/Library filter drawer: Vaul.
 - Reader panel: Motion.
