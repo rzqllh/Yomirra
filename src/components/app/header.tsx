@@ -69,16 +69,20 @@ export function PageHeader({
   }, [])
 
   const handleBack = () => {
-    if (backHref) {
-      router.push(backHref)
-    } else if (typeof window !== "undefined" && window.history.length > 2) {
-      // Only use router.back() if we are deep enough in the history stack (length > 2).
-      // If length is 1 or 2, we might be on the first page load or just one step away,
-      // where router.back() can get stuck or behave like a refresh.
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      // Prefer the browser history entry so Back/Forward keeps native scroll
+      // restoration. Reader routes now replace their detail slot, so the
+      // previous entry is the logical parent instead of a stale reader page.
       router.back()
-    } else {
-      router.push("/")
+      return
     }
+
+    if (backHref) {
+      router.replace(backHref)
+      return
+    }
+
+    router.replace("/")
   }
 
   // Header surface glass state & title visibility threshold
