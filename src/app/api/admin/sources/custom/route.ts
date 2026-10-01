@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     logger.error("Gagal menyimpan custom source", { error });
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Gagal menyimpan konfigurasi sumber" },
+      { error: "Gagal menyimpan konfigurasi sumber" },
       { status: 500 }
     );
   }
