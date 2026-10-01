@@ -1,17 +1,13 @@
 "use client";
 
 import { MotionConfig } from "motion/react";
+import { transitions } from "@/shared/lib/motion/tokens";
 
 export function MotionProvider({ children }: { children: React.ReactNode }) {
   return (
     <MotionConfig
       reducedMotion="user"
-      transition={{
-        type: "spring",
-        stiffness: 420,
-        damping: 34,
-        mass: 0.8,
-      }}
+      transition={transitions.layout}
     >
       {children}
     </MotionConfig>

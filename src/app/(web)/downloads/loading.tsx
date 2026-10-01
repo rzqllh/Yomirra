@@ -1,39 +1,42 @@
 import { PageHeader } from "@/components/app/header";
 import { Skeleton } from "@/components/ui/skeleton";
+import { YomirraSurface, PageContainer } from "@/components/ui/layout";
 import { Download } from "@phosphor-icons/react/dist/ssr";
 
 export default function Loading() {
   return (
-    <main className="min-h-screen flex flex-col w-full relative pb-[calc(var(--bottom-nav-height,80px)+24px)] md:pb-12 text-text-primary">
-      <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:px-8 md:pt-8">
+    <YomirraSurface variant="base" className="min-h-screen">
+      <PageContainer hasMobileHeader>
         <PageHeader
           title="Unduhan"
-          subtitle="Komik offline yang telah diunduh"
+          subtitle="Kelola bab komik yang diunduh untuk dibaca saat offline."
           icon={<Download size={24} weight="duotone" />}
         />
-      </div>
-      <div className="w-full max-w-2xl mx-auto px-4 md:px-8 pt-20 md:pt-24 relative z-10 flex flex-col gap-6">
-        
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-6 w-32" />
-          <Skeleton className="h-4 w-48" />
-        </div>
 
-        <div className="flex flex-col gap-4">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex gap-4 p-4 rounded-2xl border border-border-subtle bg-surface-base">
-              <Skeleton className="h-20 w-[60px] rounded-lg shrink-0" />
-              <div className="flex flex-col flex-1 gap-2 py-1 justify-center">
-                <Skeleton className="h-5 w-3/4" />
-                <Skeleton className="h-4 w-1/2" />
+        <Skeleton className="h-20 w-full rounded-2xl" />
+
+        <div className="w-full">
+          <Skeleton className="mb-6 h-10 w-full max-w-xs rounded-xl" />
+          <div className="space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div
+                key={i}
+                className="flex gap-3.5 rounded-2xl border border-border-subtle/80 bg-surface-raised p-3.5 sm:gap-4 sm:p-4"
+              >
+                <Skeleton className="h-24 w-16 shrink-0 rounded-xl" />
+                <div className="flex flex-1 flex-col justify-between py-1">
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-3/4 rounded-md" />
+                    <Skeleton className="h-3 w-1/2 rounded-md" />
+                  </div>
+                  <Skeleton className="h-2 w-full rounded-full" />
+                </div>
+                <Skeleton className="size-10 shrink-0 rounded-xl" />
               </div>
-              <div className="flex items-center justify-center shrink-0">
-                <Skeleton className="h-8 w-8 rounded-lg" />
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
-    </main>
+      </PageContainer>
+    </YomirraSurface>
   );
 }

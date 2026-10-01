@@ -36,6 +36,18 @@ Komponen penting di `src/components/ui/`:
 
 Gunakan primitive yang sudah ada sebelum membuat versi lokal.
 
+## Motion primitives
+
+Komponen motion canonical berada di `src/components/motion/` dan semantic timing/preset berada di `src/shared/lib/motion/`.
+
+| Component | Tanggung jawab |
+| --- | --- |
+| `PageTransition` | subtle route transition non-reader + reduced-motion fallback |
+| `AnimatedStateIcon` | transisi dua state icon dengan wrapper geometry stabil |
+| `MorphIcon` | satu-satunya boundary package Morphicons; feature tidak boleh import package langsung |
+
+Route/navigation identity icon tetap stabil dan tidak dimorph hanya untuk efek visual. Untuk press/layout behavior gunakan shared preset sebelum membuat spring baru secara lokal.
+
 ## Filter drawer
 
 Search dan Library share presentation shell, bukan business logic.

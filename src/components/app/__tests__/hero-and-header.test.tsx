@@ -5,9 +5,11 @@ import { HeaderActions } from '../header-actions';
 import { PageHeader } from '../header';
 
 const pushMock = vi.fn();
+const backMock = vi.fn();
+const replaceMock = vi.fn();
 
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: pushMock }),
+  useRouter: () => ({ push: pushMock, back: backMock, replace: replaceMock }),
   usePathname: () => '/',
   useSearchParams: () => new URLSearchParams(),
 }));
@@ -140,6 +142,24 @@ describe('Header & Hero System (Squircle & Reusable)', () => {
       expect(desktopBanner?.querySelector('a[href="/updates"]')).toBeNull();
       expect(desktopBanner?.textContent).toContain('Populer');
       expect(desktopBanner?.textContent).toContain('Manga, Manhwa, dan Manhua paling populer saat ini.');
+    });
+
+    it('prefers native browser history for logical back navigation', () => {
+      window.history.pushState({}, '', '/library');
+      window.history.pushState({}, '', '/manga/source-a/title-a?returnTo=%2Flibrary');
+
+      render(
+        <PageHeader
+          title="Detail"
+          showBack
+          backHref="/library"
+        />
+      );
+
+      fireEvent.click(screen.getByRole('button', { name: 'Kembali' }));
+
+      expect(backMock).toHaveBeenCalledTimes(1);
+      expect(replaceMock).not.toHaveBeenCalled();
     });
 
     it('renders custom desktopActions on desktop banner when provided', () => {

@@ -2,15 +2,14 @@ import * as React from "react";
 import { MangaGridSkeleton } from "./manga-grid-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/app/header";
-import { Books } from "@phosphor-icons/react/dist/ssr";
 
 export function LibrarySkeleton() {
   return (
     <div className="w-full flex flex-col">
       <PageHeader
         title="Library"
-        description="Katalog judul dari sumber aktif yang dipilih."
-        icon={<Books size={24} weight="duotone" />}
+        subtitle="Jelajahi komik dari sumber pilihanmu."
+        hideDesktop
       />
 
       {/* Mobile active source row placeholder */}

@@ -4,6 +4,26 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
 
 ## [Unreleased]
 
+### Motion & Navigation Foundation
+
+- **Semantic Motion System** (`src/shared/lib/motion/`, `src/components/motion/`):
+  - Mengonsolidasikan duration, easing, spring, press feedback, layout transition, page transition, dan navigation-feedback timing ke semantic tokens bersama.
+  - Menambahkan `AnimatedStateIcon` dan `PageTransition` dengan fallback `prefers-reduced-motion`.
+  - Menambahkan boundary tunggal `MorphIcon` untuk Morphicons dan membatasi pasangan awal ke bookmark, grid/list, disclosure, dan playback tanpa mengganti identitas icon route/navigation.
+- **Seamless Navigation Feedback** (`src/components/app/app-shell.tsx`, `src/shared/lib/navigation-intent.ts`):
+  - Mempertahankan optimistic dock/rail selection saat intent dimulai, tetapi menunda progress bar 180 ms agar route cepat tidak mem-flash loading state.
+  - Menghapus full-screen pending skeleton milik AppShell sehingga skeleton hanya dimiliki route `loading.tsx`, mencegah blank frame/double skeleton.
+  - Menjadikan pathname completion sebagai cleanup utama; timeout 12 detik hanya recovery fallback.
+- **Native Back/Forward & Focus Continuity** (`src/components/app/header.tsx`, `src/components/app/command-menu.tsx`):
+  - Menghapus pathname-only manual scroll restoration agar browser/Next dapat memulihkan scroll Back/Forward secara native.
+  - PageHeader memprioritaskan native history Back, sementara fallback tanpa history memakai replace.
+  - Global search overlay yang tidak memiliki Radix trigger eksplisit mengembalikan focus ke elemen pemicu saat ditutup tanpa navigasi.
+- **Route-shaped Loading Boundaries**:
+  - Menyelaraskan Home loading state dengan hero/spotlight/continue-reading geometry dan menambahkan loading boundary untuk Account, Sources, serta Source Detail.
+- **PWA/CSP Deployment Verification**:
+  - Production Home/Account terverifikasi mengirim CSP report-only; public manifest dan Service Worker terlayani dengan content type yang benar.
+  - Interactive Firebase popup + installed-PWA/iOS Safari smoke tetap menjadi gate terpisah sebelum CSP dapat dipertimbangkan untuk enforcement.
+
 ### P4 Backend, Entitlement, Admin Hardening, and AI (Phase 6)
 
 - **Admin Auth & Security Hardening** (`src/server/lib/auth/admin-auth.ts`, `src/app/api/admin/session/route.ts`, `src/shared/__tests__/logger-security.test.ts`):

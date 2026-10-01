@@ -38,7 +38,11 @@ Prioritaskan boundary yang kalau rusak dapat merusak data atau banyak feature:
 - rate-limit namespace, fail-open/fail-closed behavior, rejection status, dan response headers;
 - log redaction untuk token/cookie/authorization/signed URL;
 - CSP report-only directives dan browser/PWA asset/connect compatibility;
-- generic error surfaces tidak merender raw internal exception/upstream detail.
+- generic error surfaces tidak merender raw internal exception/upstream detail;
+- reduced-motion fallback untuk motion primitives;
+- navigation intent duplicate suppression dan pending cleanup;
+- fast navigation tidak menampilkan delayed feedback, slow navigation menampilkannya;
+- overlay tanpa trigger eksplisit mengembalikan focus saat ditutup.
 
 ## UI tests
 
@@ -120,8 +124,9 @@ Automated test tidak cukup untuk:
 
 - fixed mobile header/safe area;
 - filter drawer geometry dan snap behavior;
-- route transition;
-- browser-back state;
+- route transition dan delayed navigation feedback;
+- browser Back/Forward state + scroll restoration;
+- keyboard/pointer focus continuity setelah overlay;
 - reader overlays;
 - chapter drawer auto-position;
 - PWA installation;
@@ -144,3 +149,5 @@ Jangan melemahkan assertion hanya supaya suite hijau.
 ## Completion gate
 
 Jangan menyatakan task selesai dari diff atau lint saja. Fresh verification harus dijalankan setelah tree terakhir berubah.
+
+Untuk motion/navigation, gate minimal mencakup typecheck, lint, full test suite, production build, preview deployment, reduced-motion regression, dan browser smoke untuk Back/Forward scroll. iOS/PWA behavior tidak boleh dinyatakan lulus hanya dari jsdom atau static source inspection.

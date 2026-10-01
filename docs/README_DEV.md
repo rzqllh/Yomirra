@@ -116,6 +116,20 @@ Reader punya interaction family sendiri. `ReaderPanelShell` tidak sama dengan Va
 
 Reader UI sebaiknya tetap fokus pada reading flow; source recovery, account sync, atau global app concerns tidak perlu dipindahkan ke reader state.
 
+## Motion dan navigation
+
+Gunakan semantic motion layer; jangan menambah spring/duration baru langsung di feature component bila preset yang sesuai sudah ada.
+
+- timing/easing/spring: `src/shared/lib/motion/tokens.ts`;
+- press/layout preset: `src/shared/lib/motion/variants.ts`;
+- route transition: `src/components/motion/page-transition.tsx`;
+- state icon transition: `src/components/motion/animated-state-icon.tsx`;
+- path morphing: hanya melalui `src/components/motion/morph-icon.tsx`, bukan import package langsung dari feature code.
+
+Navigation intent harus memberi optimistic state segera, tetapi visible loading feedback baru muncul setelah delay. Jangan menambahkan full-screen pending skeleton ke AppShell; gunakan segment `loading.tsx` yang bentuknya mengikuti final page.
+
+Normal Back/Forward harus membiarkan browser/Next mengelola history dan scroll restoration. Reader progress adalah state terpisah dan tidak boleh bergantung pada page scroll.
+
 ## Source reliability
 
 Source adalah external boundary dan dapat berubah tanpa warning.

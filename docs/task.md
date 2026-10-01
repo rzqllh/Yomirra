@@ -109,6 +109,16 @@
 
 - [x] **T1.19** Add CSP report-only baseline.
 - [ ] **T1.20** Verify Next/Firebase/assets/connect requirements in browser/PWA.
+
+**T1.20 deployment-level verification (partial):**
+- production Home and Account return HTTP 200 with the expected report-only CSP;
+- the public PWA manifest is served as `application/manifest+json`;
+- the public Service Worker is served as JavaScript;
+- the CSP includes the current Next.js self/inline bootstrap requirement, HTTPS assets/API, WebSocket, Firebase auth frame hosts, blob workers, and manifest;
+- the merged production deployment showed no warning/error runtime logs during this verification window;
+- unauthenticated admin smoke fails closed as designed, but production currently reports admin auth as **unconfigured** (HTTP 503), which means an authorized admin smoke cannot pass until the production admin credential/Firebase Admin configuration is provisioned;
+- **remaining:** provision/confirm production admin auth, then run authorized admin smoke, interactive Firebase popup flow, and installed-PWA/iOS Safari smoke. This item stays open until those real-browser/configuration checks are available; report-only CSP must not be promoted to enforcement before that check.
+
 - [x] **T1.21** Document required directives in code/config comments, not credential values.
 - [x] **T1.22** Remove raw internal `error.message` from user-facing generic error surfaces.
 - [x] **T1.23** Preserve safe logging/digest identifiers.
@@ -122,7 +132,7 @@
 - focused regression coverage for CSP/error-disclosure passes together with logger, rate-limit, search-failure, admin-session, and manga-detail security coverage;
 - Vercel preview for the report-only CSP build returned HTTP 200 with the expected CSP report-only header, and a later preview containing the error-disclosure changes reached READY;
 - CI at `909ca43839ef87e9f0f99ba34c9250d0a3406c6d`: typecheck PASS, lint PASS, security-surface and disclosure tests PASS; the full suite remains limited to the four pre-existing T0 failures;
-- **T1.20 remains open** for interactive Firebase auth + installed-PWA/Service Worker browser smoke; deployment protection prevented a meaningful non-interactive manifest/worker fetch, so this check is not being marked complete from static evidence alone.
+- **T1.20 remains open** for interactive Firebase auth + installed-PWA/iOS browser smoke and production admin authorized smoke; public manifest/Service Worker delivery is now verified, but static/deployment evidence alone does not prove the interactive flows.
 
 **Final stabilization record (2026-10-01):**
 - the four T0 baseline failures were repaired without weakening production contracts: CompactCard tests now provide QueryClient context, and stale adapter synopsis fixtures/expectations now follow the shared normalizer contract;
@@ -148,53 +158,90 @@
 
 ## Motion tokens and primitives
 
-- [ ] **T2.1** Inventory feature-local animation durations/springs.
-- [ ] **T2.2** Reconcile semantic motion tokens in `src/shared/lib/motion/`.
-- [ ] **T2.3** Update `MotionProvider` defaults only if evidence requires it.
-- [ ] **T2.4** Create `AnimatedStateIcon` primitive.
-- [ ] **T2.5** Create `MorphIcon` wrapper with reduced-motion fallback.
-- [ ] **T2.6** Create/reconcile shared press/tap preset.
-- [ ] **T2.7** Create/reconcile shared layout-transition preset.
-- [ ] **T2.8** Create/reconcile `PageTransition` behavior.
-- [ ] **T2.9** Add primitive tests including reduced-motion behavior.
+- [x] **T2.1** Inventory feature-local animation durations/springs.
+- [x] **T2.2** Reconcile semantic motion tokens in `src/shared/lib/motion/`.
+- [x] **T2.3** Update `MotionProvider` defaults only if evidence requires it.
+- [x] **T2.4** Create `AnimatedStateIcon` primitive.
+- [x] **T2.5** Create `MorphIcon` wrapper with reduced-motion fallback.
+- [x] **T2.6** Create/reconcile shared press/tap preset.
+- [x] **T2.7** Create/reconcile shared layout-transition preset.
+- [x] **T2.8** Create/reconcile `PageTransition` behavior.
+- [x] **T2.9** Add primitive tests including reduced-motion behavior.
+
+**Motion-foundation record:**
+- feature-local motion had multiple hard-coded springs/durations, including a 100 ms page transition, a separate dock spring, and immediate navigation feedback; semantic tokens now own page, layout, press, and navigation-feedback timing;
+- the global MotionProvider keeps the same proven spring behavior but consumes the shared layout token;
+- `AnimatedStateIcon` and `PageTransition` respect user reduced-motion preference and have focused regressions;
+- `DirectionalTransition` remains only as a compatibility alias so new code has one page-transition owner.
 
 ## Morphicons
 
-- [ ] **T2.10** Verify current package API/version/license at implementation time.
-- [ ] **T2.11** Add dependency only after wrapper design is fixed.
-- [ ] **T2.12** Measure bundle delta.
-- [ ] **T2.13** Keep package-specific imports out of feature components.
-- [ ] **T2.14** Implement only approved morph pairs first: bookmark, grid/list, disclosure, play/pause or equivalent supported pairs.
-- [ ] **T2.15** Keep stable route identities non-morphing.
+- [x] **T2.10** Verify current package API/version/license at implementation time.
+- [x] **T2.11** Add dependency only after wrapper design is fixed.
+- [x] **T2.12** Measure bundle delta.
+- [x] **T2.13** Keep package-specific imports out of feature components.
+- [x] **T2.14** Implement only approved morph pairs first: bookmark, grid/list, disclosure, play/pause or equivalent supported pairs.
+- [x] **T2.15** Keep stable route identities non-morphing.
+
+**Morphicons record:**
+- package/API checked at implementation time: `morphicons` 1.7.1, MIT, React binding at `morphicons/react`, raw SVG path input supported, and user reduced-motion supported;
+- dependency is isolated behind `src/components/motion/morph-icon.tsx`; a regression test rejects direct package imports from feature components;
+- only the approved first pair data is staged (bookmark, grid/list, disclosure, playback); route/navigation identity icons are intentionally unchanged;
+- active production import-graph delta for Morphicons is **0 B at this foundation stage**: the wrapper is intentionally not imported by any production feature/route yet, and a regression test locks that zero-consumer state; package cost becomes measurable in the application bundle only when T3 adopts an approved pair.
 
 ## Navigation continuity
 
-- [ ] **T2.16** Audit `AppShell`, navigation intent, route loading, page loading, and `DirectionalTransition`.
-- [ ] **T2.17** Identify and remove duplicate full-screen pending/skeleton behavior.
-- [ ] **T2.18** Preserve optimistic dock active state.
-- [ ] **T2.19** Delay progress indicator so fast navigation does not flash it.
-- [ ] **T2.20** Ensure recovery timeout does not become the normal completion mechanism.
-- [ ] **T2.21** Align each route skeleton geometry with its final page.
-- [ ] **T2.22** Add tests for quick navigation, delayed navigation, duplicate-click prevention, and pending cleanup.
+- [x] **T2.16** Audit `AppShell`, navigation intent, route loading, page loading, and `DirectionalTransition`.
+- [x] **T2.17** Identify and remove duplicate full-screen pending/skeleton behavior.
+- [x] **T2.18** Preserve optimistic dock active state.
+- [x] **T2.19** Delay progress indicator so fast navigation does not flash it.
+- [x] **T2.20** Ensure recovery timeout does not become the normal completion mechanism.
+- [x] **T2.21** Align each route skeleton geometry with its final page.
+- [x] **T2.22** Add tests for quick navigation, delayed navigation, duplicate-click prevention, and pending cleanup.
+
+**Navigation-continuity record:**
+- `AppShell` keeps `pendingHref` immediately for optimistic dock/rail selection but delays the visible progress bar by 180 ms;
+- the AppShell full-screen pending skeleton was removed, leaving route `loading.tsx` boundaries as the single loading-surface owner;
+- pending cleanup follows actual pathname completion first; the 12-second timer is recovery-only;
+- duplicate navigation intent suppression is preserved and covered;
+- Home loading geometry was aligned to its final hero/spotlight/continue-reading structure; missing account/source/source-detail loading boundaries were added;
+- existing Search, Library, Rak Buku, Popular, Downloads, Settings, and Updates boundaries were normalized to the same PageContainer/header geometry as their final routes; reader/detail keep their dedicated reading geometry;
+- visual preview verification remains part of the PR gate, but route skeleton ownership/geometry implementation is complete.
 
 ## Scroll/focus
 
-- [ ] **T2.23** Replace pathname-only restoration with intent-aware restoration if current behavior fails intended flows.
-- [ ] **T2.24** Restore catalog position after detail → back.
-- [ ] **T2.25** Preserve browser Back/Forward restoration.
-- [ ] **T2.26** Keep reader progress independent from page-scroll restoration.
-- [ ] **T2.27** Verify focus behavior for pointer and keyboard navigation.
-- [ ] **T2.28** Return overlay focus to trigger.
+- [x] **T2.23** Replace pathname-only restoration with intent-aware restoration if current behavior fails intended flows.
+- [x] **T2.24** Restore catalog position after detail → back.
+- [x] **T2.25** Preserve browser Back/Forward restoration.
+- [x] **T2.26** Keep reader progress independent from page-scroll restoration.
+- [x] **T2.27** Verify focus behavior for pointer and keyboard navigation.
+- [x] **T2.28** Return overlay focus to trigger.
+
+**Scroll/focus record:**
+- pathname-only sessionStorage scroll restoration and forced `history.scrollRestoration = "manual"` were removed from AppShell so browser/Next Back/Forward restoration is no longer overridden;
+- PageHeader prefers native history for Back and only uses a replace fallback when no browser history entry exists, preserving the browser-owned catalog scroll entry instead of synthesizing a fresh navigation;
+- reader progress remains isolated from page scroll restoration;
+- pointer route transitions do not introduce forced focus, while the triggerless global search overlay records the focused trigger and restores focus on close without navigation;
+- focused contracts cover native Back ownership and overlay focus restoration; the PR gate still requires a real browser/device smoke for actual Back/Forward scroll position, reduced motion, and iOS/PWA behavior before merge.
 
 ### Motion/navigation PR gate
 
-- [ ] Fast route transitions do not flash a loader.
-- [ ] Slow route transitions clearly acknowledge input.
-- [ ] No blank frame/double skeleton.
-- [ ] Back/Forward scroll works.
-- [ ] Reduced-motion flow works.
+- [x] Fast route transitions do not flash a loader.
+- [x] Slow route transitions clearly acknowledge input.
+- [x] No blank frame/double skeleton.
+- [ ] Back/Forward scroll works in a real browser/device smoke.
+- [x] Reduced-motion flow works.
 - [ ] iOS Safari/PWA smoke passes.
-- [ ] Typecheck/lint/tests/build pass.
+- [x] Typecheck/lint/tests/build pass.
+
+**Final T2 verification record (2026-10-01):**
+- delayed navigation feedback is covered by focused timing tests; optimistic active-state and duplicate-intent cleanup remain intact;
+- AppShell no longer owns a second full-screen pending skeleton, so route `loading.tsx` boundaries are the single loading-surface owner;
+- native browser history owns catalog/Back scroll restoration; focused contracts verify Yomirra no longer overrides it with pathname-only session storage/manual restoration;
+- reduced-motion behavior is covered for the shared motion primitives and page transition;
+- CI at `5292442bcbe6df094ce6a9c5fe1390711f6c214e`: typecheck PASS, lint PASS, **154/154 test files PASS, 1017/1017 tests PASS**, production build PASS, and static generation 24/24 PASS;
+- a branch preview containing the T2 implementation reached READY and its root route returns 200 with the report-only CSP header; later docs-only preview attempts may be skipped by the Hobby build-rate limit, and protected subroutes still do not provide an interactive browser/device surface here, so browser/device-only gates remain open instead of being inferred from HTTP fetches;
+- production deployment smoke confirms CSP report-only, manifest, and Service Worker delivery, but interactive Firebase popup + installed-PWA/iOS Safari verification remains T1.20/manual gate work.
 
 ---
 

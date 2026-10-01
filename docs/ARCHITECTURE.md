@@ -168,7 +168,20 @@ Firebase memperluas state local-first untuk account/sync flow. Normal reading ti
 
 Authentication tidak menggantikan Firestore authorization rules.
 
-## 13. Security boundary
+## 13. Motion dan navigation boundary
+
+Route-level continuity dimiliki AppShell dan semantic motion layer, bukan feature page individual.
+
+- semantic timing/spring ada di `src/shared/lib/motion/`;
+- `PageTransition` adalah route transition owner untuk non-reader pages;
+- route `loading.tsx` adalah satu-satunya owner skeleton saat segment menunggu, sehingga AppShell tidak menumpuk pending skeleton kedua;
+- `pendingHref` tetap aktif seketika untuk optimistic dock/rail state, sedangkan visible progress feedback ditunda agar navigasi cepat tidak berkedip;
+- pathname completion membersihkan navigation intent; timeout hanya recovery fallback;
+- normal Back/Forward memakai browser history restoration, bukan pathname-only sessionStorage scroll restore;
+- reader progress tetap domain reader dan tidak digabungkan dengan page scroll restoration;
+- package-specific morphing hanya boleh masuk melalui `src/components/motion/morph-icon.tsx` dan harus menghormati reduced motion.
+
+## 14. Security boundary
 
 Privileged behavior tetap server-side:
 
@@ -180,11 +193,11 @@ Privileged behavior tetap server-side:
 - generic public error tidak meneruskan raw exception/upstream detail; digest/correlation signal yang aman boleh dipertahankan;
 - logger shared melakukan redaction credential-bearing fields sebelum data masuk ke server log.
 
-## 14. Operational reporting
+## 15. Operational reporting
 
 Telegram ops bersifat deterministic. Error/stage diubah menjadi report yang membantu diagnosis, tetapi tidak menjalankan AI diagnosis, auto-fix, atau auto-deploy.
 
-## 15. Boundary yang sengaja dipertahankan
+## 16. Boundary yang sengaja dipertahankan
 
 - Search/Library filter drawer: Vaul.
 - Reader panel: Motion.
