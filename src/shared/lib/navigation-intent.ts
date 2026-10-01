@@ -27,3 +27,11 @@ export function getNavigationPathname(href: string): string {
   const path = href.split(/[?#]/, 1)[0];
   return path || "/";
 }
+
+export function isNavigationIntentComplete(
+  pendingHref: string | null,
+  pathname: string | null
+): boolean {
+  if (!pendingHref || !pathname) return false;
+  return getNavigationPathname(pendingHref) === pathname;
+}
