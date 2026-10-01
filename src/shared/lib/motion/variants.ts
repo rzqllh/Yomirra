@@ -1,8 +1,22 @@
+import { transitions } from "./tokens";
+
+export const pressMotion = {
+  rest: { scale: 1, y: 0 },
+  hover: { scale: 1.01, y: -1 },
+  tap: { scale: 0.97, y: 0 },
+  transition: transitions.snappy,
+} as const;
+
+export const layoutMotion = {
+  layout: true,
+  transition: transitions.layout,
+} as const;
+
 export const variants = {
   pressable: {
-    rest: { scale: 1, y: 0 },
-    hover: { scale: 1.01, y: -1 },
-    tap: { scale: 0.97, y: 0 },
+    rest: pressMotion.rest,
+    hover: pressMotion.hover,
+    tap: pressMotion.tap,
   },
   fadeUp: {
     hidden: { opacity: 0, y: 8 },
