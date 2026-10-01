@@ -36,7 +36,9 @@ Prioritaskan boundary yang kalau rusak dapat merusak data atau banyak feature:
 - admin authentication/session boundaries;
 - server-only credential configuration and missing-config isolation;
 - rate-limit namespace, fail-open/fail-closed behavior, rejection status, dan response headers;
-- log redaction untuk token/cookie/authorization/signed URL.
+- log redaction untuk token/cookie/authorization/signed URL;
+- CSP report-only directives dan browser/PWA asset/connect compatibility;
+- generic error surfaces tidak merender raw internal exception/upstream detail.
 
 ## UI tests
 
@@ -82,6 +84,13 @@ Untuk rate limiting, cover minimal:
 - trusted proxy-chain identity agar client tidak bisa memilih bucket sendiri lewat forwarded header palsu.
 
 Untuk credential server-only, test harus memastikan missing/malformed configuration gagal sebelum upstream request dilakukan tanpa membuat registry source lain gagal diinisialisasi.
+
+Untuk CSP/error disclosure:
+
+- static regression test memastikan baseline directive tidak hilang tanpa review;
+- preview deployment harus menunjukkan header `Content-Security-Policy-Report-Only`;
+- manifest, Service Worker, self-hosted Next chunks, Firebase auth host, HTTPS asset/API, dan WebSocket requirement harus tetap tercakup;
+- raw exception/upstream message tidak boleh muncul pada generic public error surface.
 
 ## Search dan recommendation
 
