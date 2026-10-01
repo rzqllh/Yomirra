@@ -52,4 +52,23 @@ describe("MorphIcon package boundary", () => {
 
     expect(offenders).toEqual([]);
   });
+
+  it("keeps MorphIcon out of the active production route graph until feature adoption", () => {
+    const srcRoot = path.resolve(process.cwd(), "src");
+    const wrapperPath = path.resolve(
+      process.cwd(),
+      "src/components/motion/morph-icon.tsx"
+    );
+
+    const consumers = collectSourceFiles(srcRoot)
+      .filter((file) => file !== wrapperPath)
+      .filter((file) => !file.includes(`${path.sep}__tests__${path.sep}`))
+      .filter((file) =>
+        fs
+          .readFileSync(file, "utf-8")
+          .includes("@/components/motion/morph-icon")
+      );
+
+    expect(consumers).toEqual([]);
+  });
 });
