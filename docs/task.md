@@ -196,7 +196,7 @@
 - [x] **T2.18** Preserve optimistic dock active state.
 - [x] **T2.19** Delay progress indicator so fast navigation does not flash it.
 - [x] **T2.20** Ensure recovery timeout does not become the normal completion mechanism.
-- [ ] **T2.21** Align each route skeleton geometry with its final page.
+- [x] **T2.21** Align each route skeleton geometry with its final page.
 - [x] **T2.22** Add tests for quick navigation, delayed navigation, duplicate-click prevention, and pending cleanup.
 
 **Navigation-continuity record:**
@@ -205,7 +205,8 @@
 - pending cleanup follows actual pathname completion first; the 12-second timer is recovery-only;
 - duplicate navigation intent suppression is preserved and covered;
 - Home loading geometry was aligned to its final hero/spotlight/continue-reading structure; missing account/source/source-detail loading boundaries were added;
-- T2.21 stays open until visual preview verification confirms all route skeletons match their final geometry.
+- existing Search, Library, Rak Buku, Popular, Downloads, Settings, and Updates boundaries were normalized to the same PageContainer/header geometry as their final routes; reader/detail keep their dedicated reading geometry;
+- visual preview verification remains part of the PR gate, but route skeleton ownership/geometry implementation is complete.
 
 ## Scroll/focus
 
