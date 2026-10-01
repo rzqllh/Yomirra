@@ -65,7 +65,7 @@ describe("Header & Hero System (Squircle & Reusable)", () => {
       ).toBeTruthy();
       expect(screen.getByText("BACAANMU DIMULAI DI SINI")).toBeTruthy();
       expect(
-        screen.getByPlaceholderText(/Cari judul, kreator, genre, atau #tag/i)
+        screen.getByPlaceholderText(/Cari judul atau kreator/i)
       ).toBeTruthy();
     });
 
@@ -84,7 +84,7 @@ describe("Header & Hero System (Squircle & Reusable)", () => {
 
       render(<HomeHero />);
       const input = screen.getByPlaceholderText(
-        /Cari judul, kreator, genre, atau #tag/i
+        /Cari judul atau kreator/i
       );
       fireEvent.change(input, { target: { value: "solo leveling" } });
 
@@ -159,7 +159,7 @@ describe("Header & Hero System (Squircle & Reusable)", () => {
       expect(bellButton.className).toContain("rounded-2xl");
 
       const settingsBtn = screen.getByRole("button", {
-        name: /pengaturan dan profil/i,
+        name: /buka menu akun/i,
       });
       expect(settingsBtn.className).toContain("rounded-2xl");
     });
@@ -167,7 +167,7 @@ describe("Header & Hero System (Squircle & Reusable)", () => {
     it("opens dropdown menu on settings button click with all required options in squircle geometry", () => {
       render(<HeaderActions />);
       const settingsBtn = screen.getByRole("button", {
-        name: /pengaturan dan profil/i,
+        name: /buka menu akun/i,
       });
 
       expect(screen.queryByText(/Pengaturan aplikasi/i)).toBeNull();
