@@ -1,22 +1,40 @@
+import {
+  createHmac,
+  timingSafeEqual,
+} from "node:crypto";
+import type { App } from "firebase-admin/app";
+import type { Auth } from "firebase-admin/auth";
 import { logger } from "@/shared/logger";
 import { NextResponse } from "next/server";
+
+export const ADMIN_SESSION_COOKIE = "yomirra_admin_session";
+const ADMIN_SESSION_TTL_SECONDS = 8 * 60 * 60;
 
 export interface AdminAuthResult {
   isAdmin: boolean;
   uid: string;
   email?: string;
-  error?: "unconfigured" | "missing_token" | "invalid_token" | "not_admin";
+  method?: "api_key" | "firebase" | "session";
+  error?: "unconfigured" | "missing_token" | "invalid_token" | "not_admin" | "csrf_rejected";
 }
 
-let adminAppInstance: any = null;
-let adminAuthInstance: any = null;
+interface AdminSessionPayload {
+  v: 1;
+  sub: string;
+  email?: string;
+  iat: number;
+  exp: number;
+}
+
+let adminAppInstance: App | null = null;
+let adminAuthInstance: Auth | null = null;
 
 export function isFirebaseAdminConfigured(): boolean {
   const key = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
   return typeof key === "string" && key.trim().length > 0;
 }
 
-async function getAdminAuth(): Promise<any> {
+async function getAdminAuth() {
   if (adminAuthInstance) return adminAuthInstance;
   if (!isFirebaseAdminConfigured()) return null;
 
@@ -43,89 +61,229 @@ async function getAdminAuth(): Promise<any> {
 }
 
 function parseAdminEmails(envVar?: string): Set<string> {
-  const emails = new Set<string>(["hrizqullah484@gmail.com"]);
-  if (!envVar) return emails;
-  envVar
-    .split(",")
-    .map((e) => e.trim().toLowerCase())
-    .filter((e) => e.length > 0)
-    .forEach((e) => emails.add(e));
-  return emails;
+  if (!envVar) return new Set();
+  return new Set(
+    envVar
+      .split(",")
+      .map((email) => email.trim().toLowerCase())
+      .filter(Boolean),
+  );
 }
 
 export function getValidAdminKeys(): string[] {
-  const keys: string[] = [];
-  if (process.env.ADMIN_KEY?.trim()) keys.push(process.env.ADMIN_KEY.trim());
-  if (process.env.ADMIN_SECRET?.trim()) keys.push(process.env.ADMIN_SECRET.trim());
-  if (process.env.OPS_CRON_SECRET?.trim()) keys.push(process.env.OPS_CRON_SECRET.trim());
-  if (process.env.TELEGRAM_WEBHOOK_SECRET?.trim()) keys.push(process.env.TELEGRAM_WEBHOOK_SECRET.trim());
-  // Standard emergency/fallback passkey for local development & test or unconfigured servers
-  if (process.env.NODE_ENV !== "production" || keys.length === 0) {
-    keys.push("yomirra-ops-master-2026");
+  return [process.env.ADMIN_KEY, process.env.ADMIN_SECRET]
+    .map((value) => value?.trim())
+    .filter((value): value is string => Boolean(value));
+}
+
+export function isAdminAuthConfigured(): boolean {
+  return getValidAdminKeys().length > 0 || isFirebaseAdminConfigured();
+}
+
+function getAdminSessionSigningKey(): string | null {
+  const key =
+    process.env.ADMIN_SESSION_SECRET?.trim() ||
+    process.env.ADMIN_SECRET?.trim() ||
+    process.env.ADMIN_KEY?.trim();
+
+  return key || null;
+}
+
+function encodePayload(payload: AdminSessionPayload): string {
+  return Buffer.from(JSON.stringify(payload), "utf8").toString("base64url");
+}
+
+function signPayload(encodedPayload: string, secret: string): string {
+  return createHmac("sha256", secret).update(encodedPayload).digest("base64url");
+}
+
+function signaturesEqual(left: string, right: string): boolean {
+  const leftBuffer = Buffer.from(left);
+  const rightBuffer = Buffer.from(right);
+  return leftBuffer.length === rightBuffer.length && timingSafeEqual(leftBuffer, rightBuffer);
+}
+
+export function createAdminSessionToken(
+  subject: string,
+  email?: string,
+  maxAgeSeconds: number = ADMIN_SESSION_TTL_SECONDS,
+): string | null {
+  const secret = getAdminSessionSigningKey();
+  if (!secret) return null;
+
+  const now = Math.floor(Date.now() / 1000);
+  const payload: AdminSessionPayload = {
+    v: 1,
+    sub: subject,
+    ...(email ? { email } : {}),
+    iat: now,
+    exp: now + maxAgeSeconds,
+  };
+  const encodedPayload = encodePayload(payload);
+  return `${encodedPayload}.${signPayload(encodedPayload, secret)}`;
+}
+
+export function verifyAdminSessionToken(token: string): AdminAuthResult {
+  const secret = getAdminSessionSigningKey();
+  if (!secret) {
+    return { isAdmin: false, uid: "", error: "unconfigured" };
   }
-  return keys;
+
+  const [encodedPayload, signature, extra] = token.split(".");
+  if (!encodedPayload || !signature || extra) {
+    return { isAdmin: false, uid: "", error: "invalid_token" };
+  }
+
+  const expectedSignature = signPayload(encodedPayload, secret);
+  if (!signaturesEqual(signature, expectedSignature)) {
+    return { isAdmin: false, uid: "", error: "invalid_token" };
+  }
+
+  try {
+    const payload = JSON.parse(
+      Buffer.from(encodedPayload, "base64url").toString("utf8"),
+    ) as AdminSessionPayload;
+    const now = Math.floor(Date.now() / 1000);
+
+    if (
+      payload.v !== 1 ||
+      !payload.sub ||
+      !Number.isFinite(payload.exp) ||
+      payload.exp <= now
+    ) {
+      return { isAdmin: false, uid: "", error: "invalid_token" };
+    }
+
+    return {
+      isAdmin: true,
+      uid: payload.sub,
+      email: payload.email,
+      method: "session",
+    };
+  } catch {
+    return { isAdmin: false, uid: "", error: "invalid_token" };
+  }
+}
+
+function getCookieValue(cookieHeader: string, name: string): string | null {
+  const match = cookieHeader.match(
+    new RegExp(`(?:^|;\\s*)${name}=([^;]+)`),
+  );
+  return match?.[1] ? decodeURIComponent(match[1]) : null;
+}
+
+function isSafeSessionMutation(req: Request): boolean {
+  const method = req.method.toUpperCase();
+  if (method === "GET" || method === "HEAD" || method === "OPTIONS") {
+    return true;
+  }
+
+  const origin = req.headers.get("origin");
+  if (!origin) return false;
+
+  try {
+    return new URL(origin).origin === new URL(req.url).origin;
+  } catch {
+    return false;
+  }
+}
+
+function secretsEqual(left: string, right: string): boolean {
+  const leftBuffer = Buffer.from(left, "utf8");
+  const rightBuffer = Buffer.from(right, "utf8");
+  return leftBuffer.length === rightBuffer.length && timingSafeEqual(leftBuffer, rightBuffer);
+}
+
+function authorizeConfiguredAdminKey(token: string): AdminAuthResult | null {
+  const candidate = token.trim();
+  if (!candidate) return null;
+
+  const isValid = getValidAdminKeys().some((configuredKey) =>
+    secretsEqual(candidate, configuredKey),
+  );
+  if (!isValid) return null;
+
+  return {
+    isAdmin: true,
+    uid: "admin-key",
+    method: "api_key",
+  };
 }
 
 export async function verifyAdminRequest(req: Request): Promise<AdminAuthResult> {
   try {
-    const validKeys = getValidAdminKeys();
-
-    // 1. Direct custom header (x-admin-key)
-    const directKey = req.headers.get("x-admin-key") || req.headers.get("X-Admin-Key");
-    if (directKey && validKeys.includes(directKey.trim())) {
+    if (!isAdminAuthConfigured()) {
       return {
-        isAdmin: true,
-        uid: "superadmin",
-        email: "hrizqullah484@gmail.com",
+        isAdmin: false,
+        uid: "",
+        error: "unconfigured",
       };
     }
 
-    // 2. Cookie header
-    const cookieHeader = req.headers.get("cookie") || "";
-    const cookieMatch = cookieHeader.match(/(?:^|;\s*)yomirra_admin_key=([^;]+)/);
-    if (cookieMatch && cookieMatch[1] && validKeys.includes(decodeURIComponent(cookieMatch[1]).trim())) {
-      return {
-        isAdmin: true,
-        uid: "superadmin",
-        email: "hrizqullah484@gmail.com",
-      };
-    }
+    const directKey = req.headers.get("x-admin-key");
+    const directResult = directKey ? authorizeConfiguredAdminKey(directKey) : null;
+    if (directResult) return directResult;
 
-    // 3. Authorization Bearer
-    const authHeader = req.headers.get("authorization") || req.headers.get("Authorization");
-    if (authHeader && authHeader.startsWith("Bearer ")) {
+    const authHeader = req.headers.get("authorization");
+    if (authHeader?.startsWith("Bearer ")) {
       const token = authHeader.slice(7).trim();
-      if (token && validKeys.includes(token)) {
-        return {
-          isAdmin: true,
-          uid: "superadmin",
-          email: "hrizqullah484@gmail.com",
-        };
-      }
+      const keyResult = authorizeConfiguredAdminKey(token);
+      if (keyResult) return keyResult;
 
-      // Check if Firebase token verification is possible
       if (token && isFirebaseAdminConfigured()) {
         const auth = await getAdminAuth();
         if (auth) {
           try {
             const decoded = await auth.verifyIdToken(token);
-            const email = decoded.email?.toLowerCase();
+            const uid = typeof decoded.uid === "string" ? decoded.uid : "";
+            const email =
+              typeof decoded.email === "string"
+                ? decoded.email.toLowerCase()
+                : undefined;
             const hasAdminClaim = decoded.admin === true;
             const allowedEmails = parseAdminEmails(process.env.ADMIN_EMAILS);
-            const isAllowedEmail = email ? (allowedEmails.has(email) || email === "hrizqullah484@gmail.com") : false;
+            const isAllowedEmail = email ? allowedEmails.has(email) : false;
 
-            if (hasAdminClaim || isAllowedEmail) {
+            if (uid && (hasAdminClaim || isAllowedEmail)) {
               return {
                 isAdmin: true,
-                uid: decoded.uid,
-                email: decoded.email,
+                uid,
+                email,
+                method: "firebase",
               };
             }
+
+            return {
+              isAdmin: false,
+              uid,
+              email,
+              error: "not_admin",
+            };
           } catch (tokenErr) {
-            logger.warn("Admin verifyIdToken failed", { tokenErr });
+            logger.warn("Admin verifyIdToken failed", {
+              error:
+                tokenErr instanceof Error
+                  ? tokenErr.message
+                  : "token verification failed",
+            });
           }
         }
       }
+    }
+
+    const cookieHeader = req.headers.get("cookie") || "";
+    const sessionToken = getCookieValue(cookieHeader, ADMIN_SESSION_COOKIE);
+    if (sessionToken) {
+      const sessionResult = verifyAdminSessionToken(sessionToken);
+      if (!sessionResult.isAdmin) return sessionResult;
+      if (!isSafeSessionMutation(req)) {
+        return {
+          isAdmin: false,
+          uid: "",
+          error: "csrf_rejected",
+        };
+      }
+      return sessionResult;
     }
 
     return {
@@ -134,7 +292,9 @@ export async function verifyAdminRequest(req: Request): Promise<AdminAuthResult>
       error: "invalid_token",
     };
   } catch (error) {
-    logger.error("verifyAdminRequest failed", { error });
+    logger.error("verifyAdminRequest failed", {
+      error: error instanceof Error ? error.message : "unknown auth error",
+    });
     return {
       isAdmin: false,
       uid: "",
@@ -154,25 +314,31 @@ export async function requireAdminAuth(req: Request): Promise<AdminAuthGuard> {
       return {
         authorized: false,
         response: NextResponse.json(
-          { 
-            error: "Unauthorized: Kunci akses admin tidak valid atau belum diberikan", 
-            code: result.error || "unauthorized" 
-          }, 
-          { status: 401 }
+          {
+            error:
+              result.error === "unconfigured"
+                ? "Admin authentication is not configured"
+                : "Unauthorized",
+            code: result.error || "unauthorized",
+          },
+          { status: result.error === "unconfigured" ? 503 : 401 },
         ),
       };
     }
+
     return {
       authorized: true,
       admin: result,
     };
-  } catch (err) {
-    logger.error("requireAdminAuth unexpected error", { err });
+  } catch (error) {
+    logger.error("requireAdminAuth unexpected error", {
+      error: error instanceof Error ? error.message : "unknown auth error",
+    });
     return {
       authorized: false,
       response: NextResponse.json(
-        { error: "Terjadi kesalahan internal saat memverifikasi autentikasi admin" },
-        { status: 500 }
+        { error: "Internal authorization error" },
+        { status: 500 },
       ),
     };
   }

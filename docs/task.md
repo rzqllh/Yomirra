@@ -6,13 +6,21 @@
 
 ## T0 — Preflight
 
-- [ ] **T0.1** Fetch/reconcile latest `main`; inspect active PRs and avoid duplicate work.
-- [ ] **T0.2** Record baseline SHA for the implementation PR.
-- [ ] **T0.3** Run baseline typecheck, lint, relevant tests, and build.
-- [ ] **T0.4** Record proven pre-existing failures before changing production code.
-- [ ] **T0.5** Confirm no public docs/PR prose requires provider-specific naming.
+- [x] **T0.1** Fetch/reconcile latest `main`; inspect active PRs and avoid duplicate work.
+- [x] **T0.2** Record baseline SHA for the implementation PR.
+- [x] **T0.3** Run baseline typecheck, lint, relevant tests, and build.
+- [x] **T0.4** Record proven pre-existing failures before changing production code.
+- [x] **T0.5** Confirm no public docs/PR prose requires provider-specific naming.
 
 **Gate:** clean scoped branch, known baseline, no duplicated work.
+
+**T0 execution record (2026-10-01):**
+- authoritative base: `main@63377000eed88c4c53341ff94becafdbadaa1bc6`;
+- active implementation branch: `fix/security-boundary-hardening`;
+- open PRs at branch creation: none;
+- baseline CI from the docs-only planning PR: typecheck PASS, lint PASS, tests FAIL with four pre-existing regressions (listing compact-card QueryClient provider, two synopsis-normalizer expectations, one source-detail synopsis expectation);
+- baseline production/preview build: Vercel READY on the same docs-only code path, so production build succeeds independently of the failing test gate;
+- public planning docs were checked for provider-specific restricted naming and credential literals: none found.
 
 ---
 
@@ -20,18 +28,35 @@
 
 ## Admin authentication
 
-- [ ] **T1.1** Audit `src/server/lib/auth/admin-auth.ts` for production fallback credentials and hard-coded privileged identities.
-- [ ] **T1.2** Remove production fallback credential behavior.
-- [ ] **T1.3** Make missing production admin configuration fail closed.
-- [ ] **T1.4** Move allowlists/privileged identities to server configuration or verified claims.
-- [ ] **T1.5** Verify every admin API uses server-side authorization.
-- [ ] **T1.6** Add tests for configured, unconfigured, invalid, expired/invalid-token, and authorized states.
-- [ ] **T1.7** Decide whether browser admin auth remains direct-token based or moves to a short-lived server-issued session.
-- [ ] **T1.8** If cookie mutation auth is used, add CSRF protection/validation and tests.
+- [x] **T1.1** Audit `src/server/lib/auth/admin-auth.ts` for production fallback credentials and hard-coded privileged identities.
+- [x] **T1.2** Remove production fallback credential behavior.
+- [x] **T1.3** Make missing production admin configuration fail closed.
+- [x] **T1.4** Move allowlists/privileged identities to server configuration or verified claims.
+- [x] **T1.5** Verify every admin API uses server-side authorization.
+- [x] **T1.6** Add tests for configured, unconfigured, invalid, expired/invalid-token, and authorized states.
+- [x] **T1.7** Decide whether browser admin auth remains direct-token based or moves to a short-lived server-issued session.
+- [x] **T1.8** If cookie mutation auth is used, add CSRF protection/validation and tests.
+
+**Admin-auth task record:**
+- production fallback credential behavior removed; unrelated operational secrets are no longer accepted as admin credentials;
+- hard-coded privileged identity allowlisting removed in favor of configured emails or verified Firebase admin claims;
+- browser passkeys are exchanged server-side for an 8-hour signed HttpOnly, Secure-in-production, SameSite=Strict session scoped to admin APIs;
+- the legacy browser key cookie is actively expired and raw passkeys are no longer stored in browser storage;
+- session-authenticated mutations require same-origin `Origin` validation; direct server/API-key automation remains separately authenticated;
+- all admin API routes were audited for server authorization, with the report-action route standardized on the common guard;
+- regression coverage now includes unconfigured, invalid, valid API key, signed session, expired/tampered session, CSRF rejection, Firebase claim/allowlist, portal unlock, and legacy-cookie cleanup;
+- verification on CI after the auth changes: typecheck PASS, lint PASS, auth/admin regressions PASS; the only remaining full-suite failures are the four pre-existing T0 baseline failures;
+- Vercel preview build for the same auth implementation is READY.
 
 ## Provider credential hygiene
 
-- [ ] **T1.9** Search server/adapters for literal reusable credentials or privileged headers.
+- [x] **T1.9** Search server/adapters for literal reusable credentials or privileged headers.
+
+**Provider-credential audit record:**
+- one built-in restricted adapter contains a reusable privileged request-header value committed as a literal;
+- a separate decryption salt in that adapter is protocol material rather than an authorization credential and is not treated as the same risk class;
+- moving the privileged header to server-only configuration requires provisioning/rotating the corresponding deployment secret before removing the literal, otherwise that source would be intentionally taken offline;
+- T1.10/T1.11/T1.13 remain blocked on deployment-secret provisioning rather than shipping an unsafe fallback.
 - [ ] **T1.10** Move required secrets to server-only configuration.
 - [ ] **T1.11** Define safe behavior when optional provider credentials are missing.
 - [ ] **T1.12** Ensure logs redact credential-bearing headers, signed URLs, cookies, and tokens.

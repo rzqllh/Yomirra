@@ -1,10 +1,21 @@
-import { describe, it, expect } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { getEntitlements, isFeatureEntitled } from "../entitlement";
 import { getFeatureFlags, isFeatureFlagEnabled } from "../feature-flags";
-import { verifyAdminRequest, getValidAdminKeys } from "@/server/lib/auth/admin-auth";
+import {
+  ADMIN_SESSION_COOKIE,
+  createAdminSessionToken,
+  verifyAdminRequest,
+} from "@/server/lib/auth/admin-auth";
 
 describe("Phase 6 — Backend, Entitlement, Admin Hardening, and AI", () => {
   describe("6.1 Admin Auth & Security Hardening", () => {
+    beforeEach(() => {
+      process.env.ADMIN_KEY = "phase6-admin-key";
+      process.env.ADMIN_SESSION_SECRET = "phase6-session-secret";
+      delete process.env.ADMIN_SECRET;
+      delete process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+    });
+
     it("rejects unauthorized requests with invalid tokens", async () => {
       const request = new Request("http://localhost:3000/api/admin/sources", {
         headers: {
@@ -18,42 +29,43 @@ describe("Phase 6 — Backend, Entitlement, Admin Hardening, and AI", () => {
     });
 
     it("accepts authorized requests with valid x-admin-key header", async () => {
-      const validKey = getValidAdminKeys()[0];
       const request = new Request("http://localhost:3000/api/admin/sources", {
         headers: {
-          "x-admin-key": validKey,
+          "x-admin-key": "phase6-admin-key",
         },
       });
 
       const result = await verifyAdminRequest(request);
       expect(result.isAdmin).toBe(true);
-      expect(result.uid).toBe("superadmin");
+      expect(result.uid).toBe("admin-key");
+      expect(result.method).toBe("api_key");
     });
 
-    it("accepts authorized requests with valid cookie header", async () => {
-      const validKey = getValidAdminKeys()[0];
+    it("accepts authorized requests with a signed session cookie", async () => {
+      const token = createAdminSessionToken("admin-key")!;
       const request = new Request("http://localhost:3000/api/admin/sources", {
         headers: {
-          cookie: `yomirra_admin_key=${encodeURIComponent(validKey)}`,
+          cookie: `${ADMIN_SESSION_COOKIE}=${token}`,
         },
       });
 
       const result = await verifyAdminRequest(request);
       expect(result.isAdmin).toBe(true);
-      expect(result.uid).toBe("superadmin");
+      expect(result.uid).toBe("admin-key");
+      expect(result.method).toBe("session");
     });
 
     it("accepts authorized requests with Bearer token", async () => {
-      const validKey = getValidAdminKeys()[0];
       const request = new Request("http://localhost:3000/api/admin/sources", {
         headers: {
-          authorization: `Bearer ${validKey}`,
+          authorization: "Bearer phase6-admin-key",
         },
       });
 
       const result = await verifyAdminRequest(request);
       expect(result.isAdmin).toBe(true);
-      expect(result.uid).toBe("superadmin");
+      expect(result.uid).toBe("admin-key");
+      expect(result.method).toBe("api_key");
     });
   });
 

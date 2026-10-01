@@ -1,6 +1,5 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// Mock firebase-admin/app and firebase-admin/auth
 vi.mock("firebase-admin/app", () => ({
   initializeApp: vi.fn(() => ({ name: "[DEFAULT]" })),
   getApps: vi.fn(() => []),
@@ -18,99 +17,266 @@ describe("Admin Auth Verification Helper", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.resetModules();
+    vi.unstubAllEnvs();
+
     delete process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
     delete process.env.ADMIN_EMAILS;
     delete process.env.ADMIN_KEY;
     delete process.env.ADMIN_SECRET;
+    delete process.env.ADMIN_SESSION_SECRET;
+    delete process.env.OPS_CRON_SECRET;
+    delete process.env.TELEGRAM_WEBHOOK_SECRET;
   });
 
-  it("should authorize request with x-admin-key header", async () => {
-    process.env.ADMIN_KEY = "my-secret-key-123";
+  it("fails closed when admin authentication is unconfigured", async () => {
     const { verifyAdminRequest } = await import("../admin-auth");
 
-    const req = new Request("http://localhost/api/admin/verify", {
-      headers: { "x-admin-key": "my-secret-key-123" },
+    const result = await verifyAdminRequest(
+      new Request("https://yomirra.example/api/admin/sources"),
+    );
+
+    expect(result).toMatchObject({
+      isAdmin: false,
+      uid: "",
+      error: "unconfigured",
     });
-    const result = await verifyAdminRequest(req);
-    expect(result.isAdmin).toBe(true);
-    expect(result.uid).toBe("superadmin");
   });
 
-  it("should authorize request with emergency master passkey", async () => {
+  it("authorizes a configured x-admin-key", async () => {
+    process.env.ADMIN_KEY = "configured-admin-key";
     const { verifyAdminRequest } = await import("../admin-auth");
 
-    const req = new Request("http://localhost/api/admin/verify", {
-      headers: { "x-admin-key": "yomirra-ops-master-2026" },
+    const result = await verifyAdminRequest(
+      new Request("https://yomirra.example/api/admin/sources", {
+        headers: { "x-admin-key": "configured-admin-key" },
+      }),
+    );
+
+    expect(result).toMatchObject({
+      isAdmin: true,
+      uid: "admin-key",
+      method: "api_key",
     });
-    const result = await verifyAdminRequest(req);
-    expect(result.isAdmin).toBe(true);
   });
 
-  it("should authorize request with cookie yomirra_admin_key", async () => {
-    process.env.ADMIN_SECRET = "cookie-secret-key";
+  it("does not accept unrelated operational secrets as admin keys", async () => {
+    process.env.ADMIN_KEY = "real-admin-key";
+    process.env.OPS_CRON_SECRET = "cron-secret";
+    process.env.TELEGRAM_WEBHOOK_SECRET = "telegram-secret";
     const { verifyAdminRequest } = await import("../admin-auth");
 
-    const req = new Request("http://localhost/api/admin/verify", {
-      headers: { cookie: "yomirra_admin_key=cookie-secret-key; other=1" },
-    });
-    const result = await verifyAdminRequest(req);
-    expect(result.isAdmin).toBe(true);
+    const cronResult = await verifyAdminRequest(
+      new Request("https://yomirra.example/api/admin/sources", {
+        headers: { "x-admin-key": "cron-secret" },
+      }),
+    );
+    const telegramResult = await verifyAdminRequest(
+      new Request("https://yomirra.example/api/admin/sources", {
+        headers: { "x-admin-key": "telegram-secret" },
+      }),
+    );
+
+    expect(cronResult.isAdmin).toBe(false);
+    expect(telegramResult.isAdmin).toBe(false);
   });
 
-  it("should reject request when no valid key or token is provided", async () => {
+  it("does not accept the legacy raw admin-key cookie", async () => {
+    process.env.ADMIN_KEY = "configured-admin-key";
     const { verifyAdminRequest } = await import("../admin-auth");
 
-    const req = new Request("http://localhost/api/admin/verify");
-    const result = await verifyAdminRequest(req);
+    const result = await verifyAdminRequest(
+      new Request("https://yomirra.example/api/admin/sources", {
+        headers: { cookie: "yomirra_admin_key=configured-admin-key" },
+      }),
+    );
+
     expect(result.isAdmin).toBe(false);
     expect(result.error).toBe("invalid_token");
   });
 
-  it("should reject request when verifyIdToken throws", async () => {
-    process.env.FIREBASE_SERVICE_ACCOUNT_KEY = JSON.stringify({ project_id: "test", client_email: "test@test.com" });
+  it("authorizes a valid signed admin session for GET requests", async () => {
+    process.env.ADMIN_KEY = "configured-admin-key";
+    process.env.ADMIN_SESSION_SECRET = "session-secret";
+    const { ADMIN_SESSION_COOKIE, createAdminSessionToken, verifyAdminRequest } =
+      await import("../admin-auth");
+    const token = createAdminSessionToken("admin-key");
+
+    expect(token).toBeTruthy();
+
+    const result = await verifyAdminRequest(
+      new Request("https://yomirra.example/api/admin/sources", {
+        headers: { cookie: `${ADMIN_SESSION_COOKIE}=${token}` },
+      }),
+    );
+
+    expect(result).toMatchObject({
+      isAdmin: true,
+      uid: "admin-key",
+      method: "session",
+    });
+  });
+
+  it("rejects session-authenticated mutations without a same-origin Origin header", async () => {
+    process.env.ADMIN_KEY = "configured-admin-key";
+    process.env.ADMIN_SESSION_SECRET = "session-secret";
+    const { ADMIN_SESSION_COOKIE, createAdminSessionToken, verifyAdminRequest } =
+      await import("../admin-auth");
+    const token = createAdminSessionToken("admin-key")!;
+
+    const result = await verifyAdminRequest(
+      new Request("https://yomirra.example/api/admin/sources", {
+        method: "POST",
+        headers: { cookie: `${ADMIN_SESSION_COOKIE}=${token}` },
+      }),
+    );
+
+    expect(result.isAdmin).toBe(false);
+    expect(result.error).toBe("csrf_rejected");
+  });
+
+  it("allows session-authenticated mutations with a same-origin Origin header", async () => {
+    process.env.ADMIN_KEY = "configured-admin-key";
+    process.env.ADMIN_SESSION_SECRET = "session-secret";
+    const { ADMIN_SESSION_COOKIE, createAdminSessionToken, verifyAdminRequest } =
+      await import("../admin-auth");
+    const token = createAdminSessionToken("admin-key")!;
+
+    const result = await verifyAdminRequest(
+      new Request("https://yomirra.example/api/admin/sources", {
+        method: "POST",
+        headers: {
+          cookie: `${ADMIN_SESSION_COOKIE}=${token}`,
+          origin: "https://yomirra.example",
+        },
+      }),
+    );
+
+    expect(result.isAdmin).toBe(true);
+  });
+
+  it("rejects expired signed sessions", async () => {
+    process.env.ADMIN_KEY = "configured-admin-key";
+    process.env.ADMIN_SESSION_SECRET = "session-secret";
+    const { createAdminSessionToken, verifyAdminSessionToken } =
+      await import("../admin-auth");
+    const token = createAdminSessionToken("admin-key", undefined, -1)!;
+
+    const result = verifyAdminSessionToken(token);
+
+    expect(result.isAdmin).toBe(false);
+    expect(result.error).toBe("invalid_token");
+  });
+
+  it("rejects tampered signed sessions", async () => {
+    process.env.ADMIN_KEY = "configured-admin-key";
+    process.env.ADMIN_SESSION_SECRET = "session-secret";
+    const { createAdminSessionToken, verifyAdminSessionToken } =
+      await import("../admin-auth");
+    const token = createAdminSessionToken("admin-key")!;
+    const tampered = `${token.slice(0, -1)}${token.endsWith("a") ? "b" : "a"}`;
+
+    const result = verifyAdminSessionToken(tampered);
+
+    expect(result.isAdmin).toBe(false);
+    expect(result.error).toBe("invalid_token");
+  });
+
+  it("rejects a request without credentials when admin auth is configured", async () => {
+    process.env.ADMIN_KEY = "configured-admin-key";
+    const { verifyAdminRequest } = await import("../admin-auth");
+
+    const result = await verifyAdminRequest(
+      new Request("https://yomirra.example/api/admin/sources"),
+    );
+
+    expect(result.isAdmin).toBe(false);
+    expect(result.error).toBe("invalid_token");
+  });
+
+  it("rejects an invalid Firebase token", async () => {
+    process.env.FIREBASE_SERVICE_ACCOUNT_KEY = JSON.stringify({
+      project_id: "test",
+      client_email: "test@test.com",
+    });
     mockVerifyIdToken.mockRejectedValueOnce(new Error("Token expired"));
 
     const { verifyAdminRequest } = await import("../admin-auth");
-    const req = new Request("http://localhost/api/admin/verify", {
-      headers: { Authorization: "Bearer bad-token" },
-    });
-    const result = await verifyAdminRequest(req);
+    const result = await verifyAdminRequest(
+      new Request("https://yomirra.example/api/admin/sources", {
+        headers: { authorization: "Bearer bad-token" },
+      }),
+    );
+
     expect(result.isAdmin).toBe(false);
     expect(result.error).toBe("invalid_token");
   });
 
-  it("should authorize user when custom claim admin is true", async () => {
-    process.env.FIREBASE_SERVICE_ACCOUNT_KEY = JSON.stringify({ project_id: "test", client_email: "test@test.com" });
+  it("authorizes Firebase users with the admin custom claim", async () => {
+    process.env.FIREBASE_SERVICE_ACCOUNT_KEY = JSON.stringify({
+      project_id: "test",
+      client_email: "test@test.com",
+    });
     mockVerifyIdToken.mockResolvedValueOnce({
       uid: "admin-456",
-      email: "boss@yomirra.com",
+      email: "boss@example.com",
       admin: true,
     });
 
     const { verifyAdminRequest } = await import("../admin-auth");
-    const req = new Request("http://localhost/api/admin/verify", {
-      headers: { Authorization: "Bearer admin-token" },
+    const result = await verifyAdminRequest(
+      new Request("https://yomirra.example/api/admin/sources", {
+        headers: { authorization: "Bearer admin-token" },
+      }),
+    );
+
+    expect(result).toMatchObject({
+      isAdmin: true,
+      uid: "admin-456",
+      email: "boss@example.com",
+      method: "firebase",
     });
-    const result = await verifyAdminRequest(req);
-    expect(result.isAdmin).toBe(true);
-    expect(result.uid).toBe("admin-456");
-    expect(result.email).toBe("boss@yomirra.com");
   });
 
-  it("should authorize user when email is in ADMIN_EMAILS allowlist", async () => {
-    process.env.FIREBASE_SERVICE_ACCOUNT_KEY = JSON.stringify({ project_id: "test", client_email: "test@test.com" });
-    process.env.ADMIN_EMAILS = "hafizh@yomirra.web.id, owner@yomirra.com";
+  it("authorizes Firebase users in the configured email allowlist", async () => {
+    process.env.FIREBASE_SERVICE_ACCOUNT_KEY = JSON.stringify({
+      project_id: "test",
+      client_email: "test@test.com",
+    });
+    process.env.ADMIN_EMAILS = "admin@example.com, owner@example.com";
     mockVerifyIdToken.mockResolvedValueOnce({
       uid: "allowlist-user",
-      email: "hafizh@yomirra.web.id",
+      email: "admin@example.com",
     });
 
     const { verifyAdminRequest } = await import("../admin-auth");
-    const req = new Request("http://localhost/api/admin/verify", {
-      headers: { Authorization: "Bearer allowlist-token" },
-    });
-    const result = await verifyAdminRequest(req);
+    const result = await verifyAdminRequest(
+      new Request("https://yomirra.example/api/admin/sources", {
+        headers: { authorization: "Bearer allowlist-token" },
+      }),
+    );
+
     expect(result.isAdmin).toBe(true);
     expect(result.uid).toBe("allowlist-user");
+  });
+
+  it("rejects Firebase users without an admin claim or allowlisted email", async () => {
+    process.env.FIREBASE_SERVICE_ACCOUNT_KEY = JSON.stringify({
+      project_id: "test",
+      client_email: "test@test.com",
+    });
+    mockVerifyIdToken.mockResolvedValueOnce({
+      uid: "regular-user",
+      email: "reader@example.com",
+    });
+
+    const { verifyAdminRequest } = await import("../admin-auth");
+    const result = await verifyAdminRequest(
+      new Request("https://yomirra.example/api/admin/sources", {
+        headers: { authorization: "Bearer reader-token" },
+      }),
+    );
+
+    expect(result.isAdmin).toBe(false);
+    expect(result.error).toBe("not_admin");
   });
 });

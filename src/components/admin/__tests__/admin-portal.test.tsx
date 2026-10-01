@@ -6,14 +6,25 @@ import { AdminLayout } from "../admin-layout";
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
+function jsonResponse(payload: unknown, status = 200) {
+  return {
+    ok: status >= 200 && status < 300,
+    status,
+    json: async () => payload,
+  };
+}
+
 describe("Admin Portal Component (<AdminLayout />)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    sessionStorage.clear();
     window.history.replaceState({}, "", "/admin");
   });
 
   it("renders the explicit administrator gate when unauthenticated", async () => {
+    mockFetch.mockResolvedValueOnce(
+      jsonResponse({ authenticated: false, code: "invalid_token" }, 401),
+    );
+
     render(<AdminLayout />);
 
     await waitFor(() => {
@@ -21,21 +32,23 @@ describe("Admin Portal Component (<AdminLayout />)", () => {
       expect(screen.getByPlaceholderText(/masukkan kunci akses admin/i)).toBeDefined();
     });
 
-    expect(mockFetch).not.toHaveBeenCalled();
+    expect(mockFetch).toHaveBeenCalledTimes(1);
+    expect(mockFetch).toHaveBeenCalledWith("/api/admin/session");
   });
 
   it("unlocks and renders the Yomirra Ink Ops navigation when the passkey is valid", async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      status: 200,
-      json: async () => ({ sources: [] }),
-    });
-
     mockFetch
-      .mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => ({
+      .mockResolvedValueOnce(
+        jsonResponse({ authenticated: false, code: "invalid_token" }, 401),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse({
+          authenticated: true,
+          admin: { uid: "admin-key", method: "session" },
+        }),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse({
           sources: [
             {
               id: "komiku",
@@ -47,16 +60,10 @@ describe("Admin Portal Component (<AdminLayout />)", () => {
             },
           ],
         }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => ({ reports: [] }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => ({
+      )
+      .mockResolvedValueOnce(jsonResponse({ reports: [] }))
+      .mockResolvedValueOnce(
+        jsonResponse({
           telemetry: {
             usedMemory: "12M",
             uptimeDays: 2,
@@ -65,17 +72,15 @@ describe("Admin Portal Component (<AdminLayout />)", () => {
             status: "connected",
           },
         }),
-      })
-      .mockResolvedValueOnce({
-        ok: true,
-        status: 200,
-        json: async () => ({
+      )
+      .mockResolvedValueOnce(
+        jsonResponse({
           config: {
             announcement: { enabled: false, message: "", type: "info" },
             maintenanceMode: { enabled: false },
           },
         }),
-      });
+      );
 
     render(<AdminLayout />);
 
@@ -88,6 +93,12 @@ describe("Admin Portal Component (<AdminLayout />)", () => {
       expect(screen.getAllByText(/reader reports/i).length).toBeGreaterThan(0);
       expect(screen.getAllByText(/infrastructure/i).length).toBeGreaterThan(0);
       expect(screen.getAllByText(/operational pulse/i).length).toBeGreaterThan(0);
+    });
+
+    expect(mockFetch).toHaveBeenCalledWith("/api/admin/session", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ passkey: "test-admin-key" }),
     });
   });
 });

@@ -70,7 +70,6 @@ function formatClock(date: Date | null) {
 }
 
 export function AdminLayout() {
-  const [adminKey, setAdminKey] = useState("");
   const [isAuthorized, setIsAuthorized] = useState<boolean | null>(null);
   const [verifying, setVerifying] = useState(true);
   const [passkeyInput, setPasskeyInput] = useState("");
@@ -87,40 +86,33 @@ export function AdminLayout() {
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
-  const getToken = useCallback(async (): Promise<string | null> => {
-    if (adminKey) return adminKey;
-    if (typeof window === "undefined") return null;
-    return sessionStorage.getItem("yomirra_admin_key");
-  }, [adminKey]);
+  const getToken = useCallback(async (): Promise<string | null> => null, []);
 
-  const loadAdminData = useCallback(async (keyToUse: string) => {
-    if (!keyToUse) return;
+  const loadAdminData = useCallback(async () => {
     setRefreshing(true);
     setAuthError(null);
 
     try {
-      const headers = {
-        "x-admin-key": keyToUse,
-        Authorization: `Bearer ${keyToUse}`,
-      };
-
       const [srcRes, repRes, telemRes, siteRes] = await Promise.all([
-        fetch("/api/admin/sources", { headers }),
-        fetch("/api/admin/reports", { headers }),
-        fetch("/api/admin/ops/telemetry", { headers }),
-        fetch("/api/admin/site/config", { headers }),
+        fetch("/api/admin/sources"),
+        fetch("/api/admin/reports"),
+        fetch("/api/admin/ops/telemetry"),
+        fetch("/api/admin/site/config"),
       ]);
 
-      if ([srcRes, repRes, telemRes, siteRes].some((res) => res.status === 401 || res.status === 403)) {
+      const responses = [srcRes, repRes, telemRes, siteRes];
+      if (responses.some((res) => res.status === 401 || res.status === 403)) {
         setIsAuthorized(false);
-        setAdminKey("");
-        setAuthError("Kunci akses ditolak oleh server. Masukkan ulang passkey administrator.");
-        sessionStorage.removeItem("yomirra_admin_key");
+        setAuthError("Sesi administrator tidak valid atau sudah berakhir.");
+        return;
+      }
+      if (responses.some((res) => res.status === 503)) {
+        setIsAuthorized(false);
+        setAuthError("Autentikasi administrator belum dikonfigurasi di server.");
         return;
       }
 
       setIsAuthorized(true);
-      setAdminKey(keyToUse);
 
       if (srcRes.ok) {
         const data = await srcRes.json();
@@ -154,14 +146,24 @@ export function AdminLayout() {
     const handlePopState = () => setActiveTab(readTabFromUrl());
     window.addEventListener("popstate", handlePopState);
 
-    const saved = sessionStorage.getItem("yomirra_admin_key");
-    if (saved) {
-      setAdminKey(saved);
-      void loadAdminData(saved);
-    } else {
-      setVerifying(false);
-      setIsAuthorized(false);
-    }
+    void (async () => {
+      try {
+        const sessionRes = await fetch("/api/admin/session");
+        if (!sessionRes.ok) {
+          setIsAuthorized(false);
+          if (sessionRes.status === 503) {
+            setAuthError("Autentikasi administrator belum dikonfigurasi di server.");
+          }
+          return;
+        }
+        await loadAdminData();
+      } catch {
+        setIsAuthorized(false);
+        setAuthError("Server tidak dapat dihubungi untuk memvalidasi sesi.");
+      } finally {
+        setVerifying(false);
+      }
+    })();
 
     return () => window.removeEventListener("popstate", handlePopState);
   }, [loadAdminData]);
@@ -185,25 +187,26 @@ export function AdminLayout() {
     setAuthError(null);
 
     try {
-      const res = await fetch("/api/admin/sources", {
-        headers: {
-          "x-admin-key": key,
-          Authorization: `Bearer ${key}`,
-        },
+      const res = await fetch("/api/admin/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ passkey: key }),
       });
 
       if (!res.ok) {
         setIsAuthorized(false);
-        setAuthError("Kunci akses salah atau tidak memiliki izin administrator.");
+        setAuthError(
+          res.status === 503
+            ? "Autentikasi administrator belum dikonfigurasi di server."
+            : "Kunci akses salah atau tidak memiliki izin administrator.",
+        );
         setVerifying(false);
         return;
       }
 
-      sessionStorage.setItem("yomirra_admin_key", key);
-      document.cookie = `yomirra_admin_key=${encodeURIComponent(key)}; path=/; max-age=604800; samesite=lax`;
-      setAdminKey(key);
+      setPasskeyInput("");
       setIsAuthorized(true);
-      await loadAdminData(key);
+      await loadAdminData();
     } catch {
       setAuthError("Server tidak dapat dihubungi untuk memvalidasi akses.");
       setVerifying(false);
@@ -211,9 +214,7 @@ export function AdminLayout() {
   };
 
   const handleLock = () => {
-    sessionStorage.removeItem("yomirra_admin_key");
-    document.cookie = "yomirra_admin_key=; path=/; max-age=0";
-    setAdminKey("");
+    void fetch("/api/admin/session", { method: "DELETE" });
     setIsAuthorized(false);
     setPasskeyInput("");
     setAuthError(null);
@@ -572,7 +573,7 @@ export function AdminLayout() {
                 <kbd className="rounded border border-zinc-800 bg-zinc-950 px-1 py-0.5 font-mono text-[9px]">⌘K</kbd>
               </button>
 
-              <OpsButton type="button" size="sm" variant="secondary" onClick={() => void loadAdminData(adminKey)} disabled={refreshing}>
+              <OpsButton type="button" size="sm" variant="secondary" onClick={() => void loadAdminData()} disabled={refreshing}>
                 <ArrowsClockwise className={cx("h-3.5 w-3.5", refreshing && "animate-spin text-red-400")} />
                 <span className="hidden sm:inline">Segarkan</span>
               </OpsButton>
@@ -599,28 +600,28 @@ export function AdminLayout() {
               reports={reports}
               telemetry={telemetry}
               siteConfig={siteConfig}
-              onRefresh={() => loadAdminData(adminKey)}
+              onRefresh={() => loadAdminData()}
               getToken={getToken}
               onNavigateTab={(tab) => navigateTo(tab as AdminTab)}
             />
           ) : null}
 
           {activeTab === "sources" ? (
-            <SourcesTab sources={sources} onRefresh={() => loadAdminData(adminKey)} getToken={getToken} />
+            <SourcesTab sources={sources} onRefresh={() => loadAdminData()} getToken={getToken} />
           ) : null}
 
           {activeTab === "search" ? <SearchTab getToken={getToken} /> : null}
 
           {activeTab === "reports" ? (
-            <ReportsTab reports={reports} onRefresh={() => loadAdminData(adminKey)} getToken={getToken} />
+            <ReportsTab reports={reports} onRefresh={() => loadAdminData()} getToken={getToken} />
           ) : null}
 
           {activeTab === "site" ? (
-            <SiteTab initialConfig={siteConfig} onRefresh={() => loadAdminData(adminKey)} getToken={getToken} />
+            <SiteTab initialConfig={siteConfig} onRefresh={() => loadAdminData()} getToken={getToken} />
           ) : null}
 
           {activeTab === "telemetry" ? (
-            <TelemetryTab initialTelemetry={telemetry} onRefresh={() => loadAdminData(adminKey)} getToken={getToken} />
+            <TelemetryTab initialTelemetry={telemetry} onRefresh={() => loadAdminData()} getToken={getToken} />
           ) : null}
         </div>
       </main>
