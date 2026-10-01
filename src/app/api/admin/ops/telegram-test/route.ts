@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdminAuth } from "@/server/lib/auth/admin-auth";
+import { checkRateLimitPolicy, createRateLimitRejection } from "@/server/lib/security/rate-limit";
 import { sendTelegramMessage } from "@/server/lib/ops/telegram-notifier";
 import { AlertSeverity } from "@/server/lib/ops/severity";
 import { getSourceHealthMatrix } from "@/server/lib/sources/admin-source-service";
@@ -10,6 +11,11 @@ export async function POST(req: NextRequest) {
   const auth = await requireAdminAuth(req);
   if (!auth.authorized) {
     return auth.response;
+  }
+
+  const rateLimit = await checkRateLimitPolicy(req, "adminMutation", "telegram-test");
+  if (!rateLimit.success) {
+    return createRateLimitRejection(rateLimit);
   }
 
   try {
