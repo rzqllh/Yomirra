@@ -43,13 +43,13 @@ export function ReadingTab({
     return (
       <EmptyState
         icon={<Clock size={48} className="text-text-muted" weight="duotone" />}
-        title="Belum ada yang dilanjut"
-        description="Komik yang sedang kamu baca otomatis muncul di sini."
+        title="Belum ada bacaan"
+        description="Komik yang kamu mulai baca akan muncul di sini."
         action={
           <Button asChild variant="accent" className="rounded-xl shadow-sm font-bold mt-4">
             <Link href={getLibraryHref()}>
               <Compass size={20} weight="bold" className="mr-1.5" />
-              Eksplor Manga
+              Cari bacaan
             </Link>
           </Button>
         }
@@ -66,7 +66,7 @@ export function ReadingTab({
     >
       <div className="flex items-center justify-between px-1">
         <span className="text-xs font-bold text-text-muted uppercase tracking-wider">
-          {visibleHistory.length} Bacaan Aktif
+          {visibleHistory.length} bacaan aktif
         </span>
         <span className="text-2xs text-text-muted/60">Terakhir dibaca</span>
       </div>

@@ -72,7 +72,7 @@ describe('Search Page Revamp Unit Tests', () => {
     });
   });
 
-  it('renders accessible sr-only heading "Pencarian" and omits legacy hero subtitle', async () => {
+  it('renders accessible sr-only heading "Cari" and omits legacy hero subtitle', async () => {
     render(
       <QueryClientProvider client={queryClient}>
         <React.Suspense fallback={<div>Loading...</div>}>
@@ -81,7 +81,7 @@ describe('Search Page Revamp Unit Tests', () => {
       </QueryClientProvider>
     );
 
-    const heading = screen.getByRole('heading', { level: 1, name: /Pencarian/i });
+    const heading = screen.getByRole('heading', { level: 1, name: /Cari/i });
     expect(heading).toBeDefined();
     expect(heading.className).toContain('sr-only');
     expect(screen.queryByText('Cari judul dari semua sumber bacaanmu.')).toBeNull();

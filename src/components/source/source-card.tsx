@@ -39,7 +39,7 @@ export function SourceCard({ source, onUpdate }: SourceCardProps & { onUpdate?: 
   const handleDelete = async () => {
     if (confirm(`Hapus sumber ${source.name}?`)) {
       await dynamicSourceRegistry.uninstall(source.id);
-      toast.info("Sumber Dihapus", {
+      toast.info("Sumber dihapus", {
         description: `Sumber "${source.name}" berhasil dihapus dari perangkat.`,
       });
       onUpdate?.();
@@ -48,12 +48,12 @@ export function SourceCard({ source, onUpdate }: SourceCardProps & { onUpdate?: 
 
   const handleRefresh = async () => {
     try {
-      toast.loading("Memperbarui Sumber", {
+      toast.loading("Memperbarui sumber", {
         id: `update-${source.id}`,
         description: `Mengunduh data terbaru untuk ${source.name}...`,
       });
       await dynamicSourceRegistry.updateSource(source.id, { manifestUrl: source.manifestUrl });
-      toast.success("Sumber Berhasil Diperbarui", {
+      toast.success("Sumber diperbarui", {
         id: `update-${source.id}`,
         description: `${source.name} telah diperbarui ke versi terbaru.`,
       });
@@ -133,7 +133,7 @@ export function SourceCard({ source, onUpdate }: SourceCardProps & { onUpdate?: 
               <span>v{source.version}</span>
             </span>
             <span className="text-[11px] font-medium text-text-muted">
-              {isEnabled ? "Ikut Library & Populer" : "Tidak ditampilkan"}
+              {isEnabled ? "Tampil di Library & Populer" : "Disembunyikan"}
             </span>
           </div>
         </div>
@@ -190,10 +190,10 @@ export function SourceCard({ source, onUpdate }: SourceCardProps & { onUpdate?: 
               window.dispatchEvent(new Event("sources_updated"));
               router.refresh();
             }}
-            title={isEnabled ? "Keluarkan dari Library & Populer" : "Tampilkan di Library & Populer"}
+            title={isEnabled ? "Sembunyikan dari Library & Populer" : "Tampilkan di Library & Populer"}
           />
           <span className="text-xs font-semibold text-text-secondary">
-            {isEnabled ? "Tampilkan di Library & Populer" : "Tidak ditampilkan"}
+            {isEnabled ? "Tampilkan di Library & Populer" : "Disembunyikan"}
           </span>
         </div>
 

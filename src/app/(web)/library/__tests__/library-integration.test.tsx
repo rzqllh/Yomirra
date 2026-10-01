@@ -77,7 +77,7 @@ describe("Library & Updates Integration", () => {
 
   it("renders UpdatesPage with weekly calendar updates list", () => {
     render(<UpdatesPage />);
-    expect(screen.getAllByText("Jadwal Rilis Mingguan").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Jadwal Mingguan").length).toBeGreaterThan(0);
     expect(screen.getByTestId("updates-list")).toBeTruthy();
   });
 

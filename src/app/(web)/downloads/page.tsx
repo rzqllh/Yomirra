@@ -64,7 +64,7 @@ export default function DownloadsPage() {
         {/* Page Title & Subtitle */}
         <PageHeader
           title="Unduhan"
-          subtitle="Kelola bab komik yang diunduh untuk dibaca saat offline."
+          subtitle="Kelola chapter yang tersimpan untuk dibaca offline."
           icon={<Download size={24} weight="duotone" />}
           desktopActions={
             allDownloads.length > 0 ? (
@@ -73,8 +73,8 @@ export default function DownloadsPage() {
                 onClick={() => {
                   if (window.confirm("Yakin ingin menghapus semua unduhan?")) {
                     clearDownloads();
-                    toast.info("Semua Unduhan Dibersihkan", {
-                      description: "Seluruh bab komik yang tersimpan di perangkat telah dihapus.",
+                    toast.info("Semua unduhan dihapus", {
+                      description: "Seluruh chapter offline di perangkat telah dihapus.",
                     });
                   }
                 }}
@@ -92,8 +92,8 @@ export default function DownloadsPage() {
                 onClick={() => {
                   if (window.confirm("Yakin ingin menghapus semua unduhan?")) {
                     clearDownloads();
-                    toast.info("Semua Unduhan Dibersihkan", {
-                      description: "Seluruh bab komik yang tersimpan di perangkat telah dihapus.",
+                    toast.info("Semua unduhan dihapus", {
+                      description: "Seluruh chapter offline di perangkat telah dihapus.",
                     });
                   }
                 }}
@@ -140,7 +140,7 @@ export default function DownloadsPage() {
           <div className="py-16 text-center">
             <EmptyState
               icon={<Download size={44} className="text-text-muted" weight="duotone" />}
-              title="Belum ada unduhan."
+              title="Belum ada unduhan"
               description="Komik yang kamu unduh akan muncul di sini."
             />
           </div>
@@ -161,7 +161,7 @@ export default function DownloadsPage() {
                 <div className="py-12">
                   <EmptyState
                     icon={<Download size={40} className="text-text-muted" weight="duotone" />}
-                    title="Tidak ada antrean unduhan aktif."
+                    title="Tidak ada unduhan aktif"
                   />
                 </div>
               ) : (
@@ -225,7 +225,7 @@ export default function DownloadsPage() {
                           <IconButton
                             onClick={() => {
                               pauseDownload(item.id);
-                              toast.info("Unduhan Dijeda", {
+                              toast.info("Unduhan dijeda", {
                                 description: `${item.chapterTitle} dijeda sementara.`,
                               });
                             }}
@@ -238,7 +238,7 @@ export default function DownloadsPage() {
                           <IconButton
                             onClick={() => {
                               resumeDownload(item.id);
-                              toast.info("Melanjutkan Unduhan", {
+                              toast.info("Unduhan dilanjutkan", {
                                 description: `Mengunduh kembali ${item.chapterTitle}...`,
                               });
                             }}
@@ -251,7 +251,7 @@ export default function DownloadsPage() {
                           <IconButton
                             onClick={() => {
                               retryDownload(item.id);
-                              toast.info("Mencoba Ulang Unduhan", {
+                              toast.info("Mencoba lagi…", {
                                 description: `Menghubungkan kembali untuk ${item.chapterTitle}...`,
                               });
                             }}
@@ -265,7 +265,7 @@ export default function DownloadsPage() {
                         <IconButton
                           onClick={() => {
                             cancelDownload(item.id);
-                            toast.info("Unduhan Dibatalkan", {
+                            toast.info("Unduhan dibatalkan", {
                               description: `${item.chapterTitle} dibatalkan dari antrean.`,
                             });
                           }}
@@ -287,7 +287,7 @@ export default function DownloadsPage() {
                 <div className="py-12">
                   <EmptyState
                     icon={<BookOpen size={40} className="text-text-muted" weight="duotone" />}
-                    title="Belum ada chapter yang diunduh."
+                    title="Belum ada chapter offline"
                   />
                 </div>
               ) : (
@@ -325,7 +325,7 @@ export default function DownloadsPage() {
                     <IconButton
                       onClick={() => {
                         removeDownload(item.id);
-                        toast.info("Unduhan Dihapus", {
+                        toast.info("Unduhan dihapus", {
                           description: `${item.chapterTitle} berhasil dihapus dari perangkat.`,
                         });
                       }}

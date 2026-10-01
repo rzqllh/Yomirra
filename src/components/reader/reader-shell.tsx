@@ -427,11 +427,11 @@ export function ReaderShell({
                   }}
                 >
                   <List size={18} weight="bold" className="shrink-0" />
-                  <span className="truncate">Daftar Chapter</span>
+                  <span className="truncate">Daftar chapter</span>
                 </motion.button>
 
                 <motion.button
-                  aria-label="Chapter selanjutnya"
+                  aria-label="Chapter berikutnya"
                   whileTap={{ scale: 0.9 }}
                   className={cn(
                     "yomirra-chrome-control flex size-10 items-center justify-center rounded-xl text-text-secondary hover:text-text-primary transition-all shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent",

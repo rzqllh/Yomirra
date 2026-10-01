@@ -135,7 +135,7 @@ export function UpdateCard({ item, historyItem, onScheduleChange }: UpdateCardPr
               value={item.releaseDay !== undefined ? String(item.releaseDay) : ""}
               onChange={onScheduleChange}
               options={[
-                { value: "", label: `Auto (${dayName})` },
+                { value: "", label: `Otomatis · ${dayName}` },
                 { value: "1", label: "📅 Senin" },
                 { value: "2", label: "📅 Selasa" },
                 { value: "3", label: "📅 Rabu" },
@@ -186,7 +186,7 @@ function ErrorBanner({
 }) {
   const [expanded, setExpanded] = useState(false);
   const count = errorItems.length;
-  const label = count === 1 ? "1 manga" : `${count} manga`;
+  const label = `${count} komik`;
 
   return (
     <div className="mb-6 rounded-xl bg-semantic-error/8 border border-semantic-error/20 overflow-hidden shadow-xs">
@@ -223,7 +223,7 @@ function ErrorBanner({
             </div>
           </div>
           <p className="text-xs text-text-muted mt-0.5">
-            Server penyedia komik mungkin sedang sibuk atau tidak bisa dijangkau.
+            Sumber bacaan mungkin sedang sibuk atau tidak bisa dijangkau.
           </p>
         </div>
       </div>
@@ -433,10 +433,10 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-text-primary">
-              Jadwal Rilis Mingguan
+              Jadwal Mingguan
             </h2>
             <p className="text-xs sm:text-sm text-text-muted mt-0.5">
-              Jadwal update komik yang kamu simpan.
+              Perkiraan jadwal chapter baru dari komik yang kamu simpan.
             </p>
           </div>
 
@@ -458,7 +458,7 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
                 weight="bold"
                 className={isScanning ? "animate-spin" : ""}
               />
-              <span className="hidden sm:inline">Refresh</span>
+              <span className="hidden sm:inline">Perbarui</span>
             </Button>
           )}
         </div>
@@ -480,11 +480,11 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
         <div className="py-12">
           <EmptyState
             icon={<Bell size={48} className="text-text-muted" weight="duotone" />}
-            title="Tidak ada update komik di koleksimu"
-            description="Simpan komik yang kamu ikuti supaya jadwal update-nya muncul di sini."
+            title="Belum ada jadwal untuk ditampilkan"
+            description="Simpan komik ke Rak Buku agar jadwal pembaruannya muncul di sini."
             action={
               <Button asChild variant="primary" className="rounded-xl mt-4">
-                <Link href="/library">Jelajah Komik</Link>
+                <Link href="/library">Jelajahi komik</Link>
               </Button>
             }
           />
@@ -508,7 +508,7 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
             <p className="text-[11px] text-text-muted px-1 flex items-center gap-1.5">
               <span>* Hari ini</span>
               <span>•</span>
-              <span>Ketuk jadwal di kartu kalau kamu mau mengatur harinya sendiri</span>
+              <span>Kamu bisa mengubah hari rilis dari setiap kartu.</span>
             </p>
           </div>
 

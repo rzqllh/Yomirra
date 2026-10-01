@@ -136,7 +136,7 @@ export function CommandMenu() {
   return (
     <CommandDialog open={open} onOpenChange={handleOpenChange} shouldFilter={false}>
       <CommandInput
-        placeholder="Cari judul, kreator, atau #tag…"
+        placeholder="Cari judul atau kreator…"
         value={searchQuery}
         onValueChange={setSearchQuery}
       />
@@ -223,7 +223,7 @@ export function CommandMenu() {
             >
               <div className="min-w-0">
                 <span className="block text-sm font-bold text-text-primary truncate">
-                  Lihat hasil lainnya di Cari
+                  Lihat hasil lainnya
                 </span>
                 <span className="block text-[11px] text-text-muted truncate">
                   Cari &ldquo;{searchQuery.trim()}&rdquo; di semua sumber
@@ -238,7 +238,7 @@ export function CommandMenu() {
       <div className="hidden sm:flex items-center justify-between px-4 py-2 bg-surface-muted/30 border-t border-border-subtle text-[11px] text-text-muted select-none">
         <div className="flex items-center gap-2">
           <span className="font-bold text-accent uppercase tracking-wider text-[10px]">Yomirra</span>
-          <span>· Ruang Pencarian</span>
+          <span>· Pencarian</span>
         </div>
         <div className="flex items-center gap-3 font-mono text-[10px]">
           <span className="flex items-center gap-1"><kbd className="px-1 py-0.5 rounded bg-surface-base border border-border-subtle">↑↓</kbd> pilih</span>

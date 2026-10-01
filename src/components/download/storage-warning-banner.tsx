@@ -31,9 +31,9 @@ export function StorageWarningBanner() {
         <Warning size={20} weight="fill" />
       </div>
       <div className="flex-1 pr-6">
-        <h4 className="text-sm font-bold text-text-primary mb-1">Batas Penyimpanan iOS</h4>
+        <h4 className="text-sm font-bold text-text-primary mb-1">Penyimpanan di iPhone/iPad</h4>
         <p className="text-xs text-text-muted leading-relaxed">
-          Safari membatasi penyimpanan offline sekitar 50MB. Kosongkan unduhan yang sudah selesai jika unduhan baru mulai gagal atau terhenti.
+          Browser dapat membersihkan data offline saat ruang penyimpanan menipis. Simpan ulang chapter jika data offline terhapus.
         </p>
       </div>
       <IconButton
@@ -41,7 +41,7 @@ export function StorageWarningBanner() {
           setIsVisible(false);
           localStorage.setItem("yomirra_storage_warning_dismissed", "true");
         }}
-        aria-label="Tutup Peringatan"
+        aria-label="Tutup peringatan"
         variant="ghost"
         className="absolute top-2 right-2 h-8 w-8 text-semantic-warning hover:bg-semantic-warning/10 transition-colors"
       >

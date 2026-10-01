@@ -282,7 +282,7 @@ describe('Search Page Integration', () => {
     expect(apiClient.search).toHaveBeenCalledWith('sourceB', 'test', 1, {}, false, { signal: expect.anything() });
 
     // Trigger page 2 by clicking Next button
-    const nextBtn = screen.getByLabelText('Go to next page');
+    const nextBtn = screen.getByLabelText('Ke halaman berikutnya');
     act(() => {
       fireEvent.click(nextBtn);
     });
@@ -336,7 +336,7 @@ describe('Search Page Integration', () => {
     }, { timeout: 3000 });
 
     // Go to page 2 -> sourceA becomes exhausted for key ("sourceA", "test", false, {}, 1)
-    const nextBtn = screen.getByLabelText('Go to next page');
+    const nextBtn = screen.getByLabelText('Ke halaman berikutnya');
     act(() => {
       fireEvent.click(nextBtn);
     });

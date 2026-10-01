@@ -65,7 +65,7 @@ export function HeaderActions({ className }: { className?: string } = {}) {
       <button
         type="button"
         onClick={() => setIsMenuOpen((prev) => !prev)}
-        aria-label="Pengaturan dan Profil"
+        aria-label="Buka menu akun"
         aria-expanded={isMenuOpen}
         className={cn(
           "relative flex size-10 items-center justify-center rounded-2xl transition-all outline-none select-none active:scale-95 shadow-xs cursor-pointer",
@@ -122,7 +122,7 @@ export function HeaderActions({ className }: { className?: string } = {}) {
               className="group flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-bold text-accent bg-accent/10 hover:bg-accent/15 active:scale-98 transition-all"
             >
               <Gear size={18} weight="fill" className="text-accent shrink-0" />
-              <span>Pengaturan aplikasi</span>
+              <span>Pengaturan</span>
             </Link>
 
             <Link
@@ -196,7 +196,7 @@ export function HeaderActions({ className }: { className?: string } = {}) {
                 className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-semibold text-semantic-error hover:bg-semantic-error/10 active:scale-98 transition-all w-full text-left cursor-pointer"
               >
                 <SignOut size={18} weight="bold" className="shrink-0" />
-                <span>Keluar akun</span>
+                <span>Keluar</span>
               </button>
             ) : (
               <button
@@ -208,7 +208,7 @@ export function HeaderActions({ className }: { className?: string } = {}) {
                 className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-semibold text-accent hover:bg-accent/10 active:scale-98 transition-all w-full text-left cursor-pointer"
               >
                 <SignIn size={18} weight="bold" className="shrink-0" />
-                <span>Masuk akun</span>
+                <span>Masuk</span>
               </button>
             )}
           </motion.div>

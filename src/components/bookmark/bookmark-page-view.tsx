@@ -63,7 +63,7 @@ export function BookmarkPageView() {
       <PageContainer hasMobileHeader>
         <PageHeader
           title="Rak Buku"
-          subtitle="Lanjutkan bacaan atau kelola bookmark."
+          subtitle="Lanjutkan bacaan dan kelola komik yang kamu simpan."
           hideDesktop
         />
 

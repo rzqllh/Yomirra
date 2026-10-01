@@ -38,7 +38,7 @@ describe('UpdatesList Component', () => {
     });
 
     render(<UpdatesList />);
-    expect(screen.getByText(/Tidak ada update/i)).toBeTruthy();
+    expect(screen.getByText(/Belum ada jadwal/i)).toBeTruthy();
   });
 
   it('groups updates by day and sorts them by detectedAt descending', () => {
@@ -76,7 +76,7 @@ describe('UpdatesList Component', () => {
     });
   });
 
-  it('calls scanLibraryUpdates with forceRefresh when refresh button clicked', () => {
+  it('calls scanLibraryUpdates with forceRefresh when Perbarui button clicked', () => {
     (useUpdateStore as any).mockReturnValue({
       items: {},
       markAllAsSeen: mockMarkAllAsSeen,
@@ -84,8 +84,8 @@ describe('UpdatesList Component', () => {
 
     render(<UpdatesList />);
     
-    const refreshBtn = screen.getByRole('button', { name: /refresh/i });
-    fireEvent.click(refreshBtn);
+    const PerbaruiBtn = screen.getByRole('button', { name: /Perbarui/i });
+    fireEvent.click(PerbaruiBtn);
     
     expect(mockTriggerScan).toHaveBeenCalledWith({ forceRefresh: true });
   });

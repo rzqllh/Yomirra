@@ -29,13 +29,13 @@ export function LibraryPageView() {
       <PageContainer hasMobileHeader>
         <PageHeader
           title="Library"
-          subtitle="Jelajahi komik dari sumber pilihanmu."
+          subtitle="Jelajahi katalog dari sumber yang kamu pilih."
           hideDesktop
         />
 
         <h1 className="sr-only">Library</h1>
 
-        <CatalogControls label="Cari dan saring Library">
+        <CatalogControls label="Pencarian dan filter Library">
           <PageToolbar>
             <LibraryToolbar
               searchInput={catalog.searchInput}

@@ -13,8 +13,8 @@ import { PageHeader } from "@/components/app/header";
 import { Fire } from "@phosphor-icons/react/dist/ssr";
 
 export const metadata: Metadata = {
-  title: "Manga Populer - Yomirra",
-  description: "Manga, Manhwa, dan Manhua paling populer saat ini.",
+  title: "Komik Populer — Yomirra",
+  description: "Komik yang sedang populer dari sumber aktif.",
 };
 
 async function PopularFeed({ sourceId, sourceName }: { sourceId: string; sourceName: string }) {
@@ -85,7 +85,7 @@ export default async function PopularPage() {
       <PageContainer hasMobileHeader>
         <PageHeader
           title="Populer"
-          subtitle="Manga, Manhwa, dan Manhua paling populer saat ini."
+          subtitle="Komik yang sedang populer dari sumber aktif."
           icon={<Fire size={24} weight="duotone" />}
           hideDesktop
         />

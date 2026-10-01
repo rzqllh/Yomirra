@@ -132,8 +132,8 @@ export function SearchResults({
           >
             <EmptyState
               icon={<WarningCircle size={40} className="text-accent" weight="duotone" />}
-              title="Pilih sumber dulu"
-              description="Pilih satu atau beberapa sumber di atas untuk mencari komik."
+              title="Pilih sumber untuk mulai mencari"
+              description="Aktifkan setidaknya satu sumber pencarian."
             />
           </motion.div>
         ) : !hasSearchIntent ? (
@@ -146,8 +146,8 @@ export function SearchResults({
           >
             <EmptyState
               icon={<MagnifyingGlass size={40} className="text-text-muted" weight="duotone" />}
-              title="Cari komik dari semua sumber"
-              description="Ketik judul, kreator, atau gunakan #tag seperti #fantasy."
+              title="Cari komik"
+              description="Ketik judul atau kreator untuk mulai mencari."
             />
           </motion.div>
         ) : isInitialLoading && searchMangas.length === 0 ? (
@@ -175,7 +175,7 @@ export function SearchResults({
                       searchableSources.find((s) => s.id === activeSelectedSources[0])?.name ||
                       activeSelectedSources[0]
                     } tidak dapat dimuat`
-                  : "Pencarian belum berhasil"
+                  : "Pencarian gagal"
               }
               description={
                 activeSelectedSources.length === 1
@@ -340,7 +340,7 @@ export function SearchResults({
               }
               description={
                 hasActiveFilters
-                  ? "Coba sesuaikan atau reset filter pencarian."
+                  ? "Coba kurangi atau ubah filter."
                   : query.length > 0
                   ? "Coba gunakan kata kunci lain."
                   : "Pilih sumber lain untuk menampilkan komik."

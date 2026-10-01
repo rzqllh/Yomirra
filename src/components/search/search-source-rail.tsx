@@ -21,11 +21,11 @@ export function SearchSourceRail({
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-1 text-sm text-text-secondary">
-        <span className="font-semibold text-text-primary">Cari dari</span>
+        <span className="font-semibold text-text-primary">Sumber</span>
         <span>
           {activeSelectedSources.length === searchableSources.length
             ? "Semua sumber"
-            : `${activeSelectedSources.length} dari ${searchableSources.length} sumber dipilih`}
+            : `${activeSelectedSources.length} dipilih`}
         </span>
       </div>
       <div className="flex overflow-x-auto [scrollbar-width:none] snap-x pb-1 gap-2 md:flex-wrap md:overflow-visible md:snap-none">

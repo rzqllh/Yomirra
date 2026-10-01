@@ -69,7 +69,7 @@ export default function SourceBrowsePage({
             </div>
             <div>
               <p className="font-bold text-text-primary">Tampilkan di Beranda</p>
-              <p className="text-xs text-text-muted">Munculkan komik populer dan terbaru dari sumber ini di halaman utama</p>
+              <p className="text-xs text-text-muted">Sertakan komik dari sumber ini di rekomendasi Beranda.</p>
             </div>
           </div>
           <ToggleSwitch
@@ -87,7 +87,7 @@ export default function SourceBrowsePage({
           <div className="flex flex-col items-center justify-center py-20 text-center bg-surface-raised rounded-xl border border-border-subtle">
             <WarningCircle size={48} className="mb-4 text-semantic-error" weight="duotone" />
             <p className="text-base font-medium text-text-primary">Gagal memuat data dari {sourceName}.</p>
-            <p className="text-sm text-text-muted mt-1">Sumber ini sedang tidak dapat dimuat. Coba lagi sebentar.</p>
+            <p className="text-sm text-text-muted mt-1">Sumber ini sedang tidak dapat dimuat. Coba lagi nanti.</p>
           </div>
         ) : data?.mangas.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center bg-surface-raised rounded-xl border border-border-subtle">

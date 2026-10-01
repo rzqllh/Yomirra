@@ -3,7 +3,7 @@ import type { MetadataRoute } from 'next';
 const APP_NAME = 'Yomirra';
 const APP_SHORT_NAME = 'Yomirra';
 const APP_DESCRIPTION =
-  'A premium webtoon-first manga reader with offline reading, source extensions, and a cinematic Deep Lagoon interface.';
+  'Baca dan kelola komik dari berbagai sumber dalam satu tempat.';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -14,7 +14,7 @@ export default function manifest(): MetadataRoute.Manifest {
 
     start_url: '/',
     scope: '/',
-    lang: 'en',
+    lang: 'id',
     dir: 'ltr',
 
     display: 'fullscreen',
@@ -56,9 +56,9 @@ export default function manifest(): MetadataRoute.Manifest {
 
     shortcuts: [
       {
-        name: 'Continue Reading',
-        short_name: 'Continue',
-        description: 'Jump back into your latest manga chapter.',
+        name: 'Lanjut Baca',
+        short_name: 'Lanjut',
+        description: 'Lanjutkan chapter terakhir yang kamu baca.',
         url: '/bookmark?tab=history',
         icons: [
           {
@@ -69,10 +69,10 @@ export default function manifest(): MetadataRoute.Manifest {
         ],
       },
       {
-        name: 'My Library',
-        short_name: 'Library',
-        description: 'Open your saved manga library.',
-        url: '/library',
+        name: 'Rak Buku',
+        short_name: 'Rak Buku',
+        description: 'Buka bookmark dan bacaan yang kamu simpan.',
+        url: '/bookmark',
         icons: [
           {
             src: '/icons/shortcut-library.png',
@@ -82,9 +82,9 @@ export default function manifest(): MetadataRoute.Manifest {
         ],
       },
       {
-        name: 'Downloads',
-        short_name: 'Downloads',
-        description: 'Manage offline manga chapters.',
+        name: 'Unduhan',
+        short_name: 'Unduhan',
+        description: 'Kelola chapter yang tersimpan untuk dibaca offline.',
         url: '/downloads',
         icons: [
           {
@@ -95,9 +95,9 @@ export default function manifest(): MetadataRoute.Manifest {
         ],
       },
       {
-        name: 'Sources',
-        short_name: 'Sources',
-        description: 'Browse and manage manga sources.',
+        name: 'Sumber',
+        short_name: 'Sumber',
+        description: 'Pilih sumber untuk menjelajah dan membaca komik.',
         url: '/sources',
         icons: [
           {
@@ -115,21 +115,21 @@ export default function manifest(): MetadataRoute.Manifest {
         sizes: '390x844',
         type: 'image/png',
         form_factor: 'narrow',
-        label: 'Yomirra home feed on mobile',
+        label: 'Beranda Yomirra di ponsel',
       },
       {
         src: '/screenshots/mobile-reader.png',
         sizes: '390x844',
         type: 'image/png',
         form_factor: 'narrow',
-        label: 'Webtoon-first vertical reader',
+        label: 'Pembaca vertikal Yomirra',
       },
       {
         src: '/screenshots/desktop-library.png',
         sizes: '1440x900',
         type: 'image/png',
         form_factor: 'wide',
-        label: 'Yomirra library on desktop',
+        label: 'Library Yomirra di desktop',
       },
     ],
   };
