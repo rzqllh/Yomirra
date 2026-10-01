@@ -2,6 +2,8 @@ import * as React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MangaCardSkeleton } from "./manga-card-skeleton";
 import { YomirraSurface, PageContainer } from "@/components/ui/layout";
+import { PageHeader } from "@/components/app/header";
+import { Fire } from "@phosphor-icons/react/dist/ssr";
 
 export function PopularFeedSkeleton({ cardCount = 6 }: { cardCount?: number }) {
   return (
@@ -25,10 +27,13 @@ export function PopularFeedSkeleton({ cardCount = 6 }: { cardCount?: number }) {
 export function PopularPageSkeleton() {
   return (
     <YomirraSurface variant="base" className="w-full min-h-screen">
-      <PageContainer>
-        <div className="flex items-center justify-between mb-6">
-          <Skeleton className="h-8 w-48 rounded-md" />
-        </div>
+      <PageContainer hasMobileHeader>
+        <PageHeader
+          title="Populer"
+          subtitle="Manga, Manhwa, dan Manhua paling populer saat ini."
+          icon={<Fire size={24} weight="duotone" />}
+          hideDesktop
+        />
 
         <PopularFeedSkeleton cardCount={6} />
         <PopularFeedSkeleton cardCount={6} />
