@@ -107,11 +107,11 @@ export function CollectionTab({
   const handleCreate = (name: string) => {
     try {
       onCreateCollection?.(name);
-      toast.success("Koleksi Berhasil Dibuat", {
+      toast.success("Koleksi dibuat", {
         description: `Koleksi "${name}" siap digunakan.`,
       });
     } catch (err: any) {
-      toast.error("Gagal Membuat Koleksi", {
+      toast.error("Koleksi gagal dibuat", {
         description: err?.message || "Periksa kembali nama koleksi dan coba lagi.",
       });
     }
@@ -121,12 +121,12 @@ export function CollectionTab({
     if (!activeCollectionId) return;
     try {
       onRenameCollection?.(activeCollectionId, name);
-      toast.success("Nama Koleksi Diperbarui", {
+      toast.success("Nama koleksi diperbarui", {
         description: `Koleksi diubah menjadi "${name}".`,
       });
       setActiveCollectionId(null);
     } catch (err: any) {
-      toast.error("Gagal Mengubah Koleksi", {
+      toast.error("Nama koleksi gagal diperbarui", {
         description: err?.message || "Periksa kembali nama koleksi dan coba lagi.",
       });
     }
@@ -138,8 +138,8 @@ export function CollectionTab({
     if (selectedCollectionId === activeCollectionId) {
       onSelectCollectionId?.(null);
     }
-    toast.info("Koleksi Dihapus", {
-      description: "Koleksi berhasil dikeluarkan dari daftar rak.",
+    toast.info("Koleksi dihapus", {
+      description: "Komik di dalamnya tetap tersimpan di Rak Buku.",
     });
     setIsDeleteOpen(false);
     setActiveCollectionId(null);
@@ -499,7 +499,7 @@ export function CollectionTab({
       <ConfirmationModal
         isOpen={isDeleteOpen}
         onOpenChange={setIsDeleteOpen}
-        title="Hapus Koleksi?"
+        title="Hapus koleksi?"
         description="Folder koleksi ini akan dihapus. Komik di dalamnya tidak akan terhapus dari Rak Buku."
         confirmLabel="Hapus"
         cancelLabel="Batal"
