@@ -176,6 +176,8 @@ Privileged behavior tetap server-side:
 - reusable upstream credential di-resolve hanya saat adapter benar-benar melakukan request, sehingga missing optional configuration gagal tertutup tanpa merusak konstruksi registry source lain;
 - `src/server/lib/security/rate-limit.ts` menjadi policy boundary tunggal untuk namespace, limit, fail-open/fail-closed, dan response headers pada route yang sensitif/mahal;
 - public search dan image proxy dipisahkan dari admin mutation/expensive operation agar availability policy tidak tercampur;
+- browser security header memakai CSP report-only lebih dulu untuk mengobservasi kebutuhan Next.js/Firebase/PWA sebelum enforcement;
+- generic public error tidak meneruskan raw exception/upstream detail; digest/correlation signal yang aman boleh dipertahankan;
 - logger shared melakukan redaction credential-bearing fields sebelum data masuk ke server log.
 
 ## 14. Operational reporting
