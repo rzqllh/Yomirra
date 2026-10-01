@@ -9,7 +9,6 @@ import { SourceListSkeleton } from "@/components/skeletons/source-list-skeleton"
 import { EmptyState } from "@/components/states/empty-state";
 import { SearchInput } from "@/components/ui/search-input";
 import { SourceCard } from "@/components/source/source-card";
-import { DirectionalTransition } from "@/components/ui/directional-transition";
 import { YomirraSurface, PageContainer } from "@/components/ui/layout";
 import { PageHeader } from "@/components/app/header";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
