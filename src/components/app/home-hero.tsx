@@ -191,7 +191,7 @@ export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
               openGlobalSearch(next);
             }}
             onFocus={() => openGlobalSearch()}
-            placeholder="Cari judul, kreator, genre, atau #tag…"
+            placeholder="Cari judul atau kreator…"
             aria-label="Cari komik"
             className="min-w-0 flex-1 bg-transparent text-sm font-medium text-text-primary outline-none placeholder:text-text-muted"
           />
