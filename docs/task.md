@@ -265,11 +265,11 @@
 - [x] No new runtime dependency added.
 - [ ] Responsive visual matrix is verified in a real browser at ~1440/1280/1024/768–900/430/390/360px.
 - [ ] Hover/focus/swipe/reduced-motion behavior is smoke-tested in a real browser.
-- [ ] Final latest-head typecheck/lint/tests/build pass.
-- [ ] Final latest-head Vercel preview is READY.
-- [ ] Final diff is reviewed for unrelated work and provider/secret leakage.
+- [x] Final latest-head typecheck/lint/tests/build pass.
+- [x] Final latest-head Vercel preview is READY.
+- [x] Final diff is reviewed for unrelated work and provider/secret leakage.
 
-**Automated checkpoint before docs-final head:** code head `48f0388186badb33093d81044c21bc91b7770768` passed typecheck, lint, and **155/155 test files / 1029/1029 tests**. Final docs/geometry head still requires the normal latest-head CI/build gate before merge.
+**Automated final checkpoint (2026-10-01):** Home head `127701d0f39b35856e98c9c97d97bd4e93f66576` passed the latest GitHub CI pipeline and its Vercel preview reached READY. The stacked Home-only diff against `feat/motion-navigation-foundation` was reviewed as scoped to the agreed Home opening implementation/tests/docs, with no restricted provider wording or credential value found in the public documentation audit. Real-browser responsive and interaction smoke remains open and is not inferred from CI/Vercel.
 
 **Manual-gate note:** Chromium exists in the execution container, but the container cannot resolve/reach the public preview host. Do not infer the responsive/browser matrix from jsdom, static source inspection, HTTP metadata, or Vercel READY alone.
 
