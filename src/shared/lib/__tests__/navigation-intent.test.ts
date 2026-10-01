@@ -3,6 +3,7 @@ import {
   beginNavigationIntent,
   endNavigationIntent,
   getNavigationPathname,
+  isNavigationIntentComplete,
   NAVIGATION_INTENT_EVENT,
 } from "../navigation-intent";
 
@@ -34,5 +35,11 @@ describe("navigation intent", () => {
   it("extracts the pathname without query or hash", () => {
     expect(getNavigationPathname("/search?q=solo#results")).toBe("/search");
     expect(getNavigationPathname("/")).toBe("/");
+  });
+
+  it("cleans pending navigation only after the target pathname is reached", () => {
+    expect(isNavigationIntentComplete("/library?source=a", "/search")).toBe(false);
+    expect(isNavigationIntentComplete("/library?source=a", "/library")).toBe(true);
+    expect(isNavigationIntentComplete(null, "/library")).toBe(false);
   });
 });
