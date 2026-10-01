@@ -17,13 +17,13 @@ export function SearchPageView() {
       <PageContainer hasMobileHeader>
         <PageHeader
           title="Cari"
-          subtitle="Cari judul dari semua sumber."
+          subtitle="Temukan komik dari berbagai sumber."
           hideDesktop
         />
 
-        <h1 className="sr-only">Pencarian</h1>
+        <h1 className="sr-only">Cari</h1>
 
-        <CatalogControls label="Cari dan saring komik">
+        <CatalogControls label="Pencarian dan filter">
           <PageToolbar>
             <SearchToolbar
               localQuery={search.localQuery}
