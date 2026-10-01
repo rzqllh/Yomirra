@@ -92,7 +92,7 @@ export function LibraryToolbar({
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem onClick={onToggleSelectionMode} className="flex items-center gap-2">
               <CheckCircle size={16} weight={isSelectionMode ? "fill" : "bold"} />
-              <span>{isSelectionMode ? "Batal Pilih" : "Pilih Komik (Batch)"}</span>
+              <span>{isSelectionMode ? "Selesai memilih" : "Pilih beberapa"}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
