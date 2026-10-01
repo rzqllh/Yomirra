@@ -107,12 +107,22 @@
 
 ## CSP + error disclosure
 
-- [ ] **T1.19** Add CSP report-only baseline.
+- [x] **T1.19** Add CSP report-only baseline.
 - [ ] **T1.20** Verify Next/Firebase/assets/connect requirements in browser/PWA.
-- [ ] **T1.21** Document required directives in code/config comments, not credential values.
-- [ ] **T1.22** Remove raw internal `error.message` from user-facing generic error surfaces.
-- [ ] **T1.23** Preserve safe logging/digest identifiers.
-- [ ] **T1.24** Add security regression tests.
+- [x] **T1.21** Document required directives in code/config comments, not credential values.
+- [x] **T1.22** Remove raw internal `error.message` from user-facing generic error surfaces.
+- [x] **T1.23** Preserve safe logging/digest identifiers.
+- [x] **T1.24** Add security regression tests.
+
+**CSP/error-disclosure implementation record:**
+- browser responses now carry a `Content-Security-Policy-Report-Only` baseline covering self-hosted Next.js boot/chunks, inline boot/style requirements, HTTPS images/assets/API calls, WebSocket connections, Firebase auth frame hosts, blob workers, fonts, and the PWA manifest;
+- required directives are documented next to the header configuration and deliberately remain report-only until interactive browser/PWA smoke is complete;
+- generic ErrorBoundary, source-browse failure, manga-detail failure, and custom-source admin API failures no longer echo raw exception/upstream messages to users;
+- global error reporting keeps only non-sensitive correlation data (digest, error name, pathname) while shared server logging retains sanitized diagnostic detail;
+- focused regression coverage for CSP/error-disclosure passes together with logger, rate-limit, search-failure, admin-session, and manga-detail security coverage;
+- Vercel preview for the report-only CSP build returned HTTP 200 with the expected CSP report-only header, and a later preview containing the error-disclosure changes reached READY;
+- CI at `909ca43839ef87e9f0f99ba34c9250d0a3406c6d`: typecheck PASS, lint PASS, security-surface and disclosure tests PASS; the full suite remains limited to the four pre-existing T0 failures;
+- **T1.20 remains open** for interactive Firebase auth + installed-PWA/Service Worker browser smoke; deployment protection prevented a meaningful non-interactive manifest/worker fetch, so this check is not being marked complete from static evidence alone.
 
 ### Security PR gate
 
