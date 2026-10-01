@@ -61,7 +61,7 @@ describe("AsuraScansSource Adapter", () => {
     it("stripHtml cleanly removes HTML tags and decodes entities", () => {
       const dirty = "<p>Warriors &amp; heroes gather.</p><p>Defeat means &quot;death&quot;.</p>";
       const clean = stripHtml(dirty);
-      expect(clean).toBe('Warriors & heroes gather.\n\nDefeat means "death".');
+      expect(clean).toBe('Warriors & heroes gather. Defeat means "death".');
     });
 
     it("normalizeAsuraStatus maps statuses accurately", () => {
@@ -89,7 +89,7 @@ describe("AsuraScansSource Adapter", () => {
       const detail = normalizeAsuraMangaDetail(mockAsuraSeriesDetail.series);
       expect(detail.id).toBe("war-of-extinction");
       expect(detail.genres).toEqual(["Action", "Adventure", "Fantasy"]);
-      expect(detail.description).toBe("Heavenly Demons. Hunters. Giant robots.\n\nWith video-game powers & abilities.");
+      expect(detail.description).toBe("Heavenly Demons. Hunters. Giant robots. With video-game powers & abilities.");
       expect(detail.status).toBe("ONGOING");
     });
 
