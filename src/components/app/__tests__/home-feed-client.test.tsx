@@ -300,7 +300,9 @@ describe("Yomirra Editorial Home Components", () => {
         })
       ).toBeTruthy();
 
-      fireEvent.click(nextButton);
+      fireEvent.click(
+        screen.getByRole("button", { name: /komik berikutnya/i })
+      );
       expect(
         screen.getByRole("heading", {
           level: 2,
@@ -516,7 +518,11 @@ describe("Yomirra Editorial Home Components", () => {
 
       expect(screen.getByText("Manga Source B")).toBeTruthy();
       expect(screen.queryByText("Manga Test 1")).toBeNull();
-      expect(screen.getByText("Source B")).toBeTruthy();
+      expect(
+        screen.getByRole("button", {
+          name: "Pilih sumber peringkat: Source B",
+        })
+      ).toBeTruthy();
       expect(screen.queryByText("source-b")).toBeNull();
       expect(
         screen.getByRole("link", { name: /lihat semua/i }).getAttribute("href")
