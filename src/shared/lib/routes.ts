@@ -42,12 +42,16 @@ export function getMangaDetailHref(sourceId: string, mangaId: string, returnTo?:
 }
 
 export function getSafeMangaDetailBackHref(returnTo: string | null): string | undefined {
-  // If returnTo exists and is not pointing to a reader route, use it
-  if (returnTo && !returnTo.includes('/read/')) {
-    return returnTo;
+  if (!returnTo) return undefined;
+
+  // Back targets are internal app routes only. Reader routes are explicitly
+  // excluded so leaving detail never walks back into the reader stack.
+  const isInternalPath = returnTo.startsWith("/") && !returnTo.startsWith("//");
+  if (!isInternalPath || returnTo.includes("/read/")) {
+    return undefined;
   }
-  // Otherwise return undefined so PageHeader falls back to natural history back (router.back())
-  return undefined;
+
+  return returnTo;
 }
 
 export function getReaderHref(sourceId: string, mangaId: string, chapterId: string, returnTo?: string): string {
