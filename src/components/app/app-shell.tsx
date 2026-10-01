@@ -18,7 +18,6 @@ import { useDelayedFlag } from "@/shared/hooks/use-delayed-flag"
 import { navigationTiming, transitions } from "@/shared/lib/motion/tokens"
 import {
   endNavigationIntent,
-  getNavigationPathname,
   isNavigationIntentComplete,
   NAVIGATION_INTENT_EVENT,
   type NavigationIntentDetail,
