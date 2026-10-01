@@ -1,9 +1,15 @@
+"use client";
+
 import * as React from "react";
 import { MangaGridSkeleton } from "./manga-grid-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/app/header";
+import { useSettingsStore } from "@/shared/store/settings-store";
 
 export function LibrarySkeleton() {
+  const listingViewMode = useSettingsStore((state) => state.listingViewMode);
+  const skeletonViewMode = listingViewMode === "compact" || listingViewMode === "list" ? "compact" : "grid";
+
   return (
     <div className="w-full flex flex-col">
       <PageHeader
@@ -39,7 +45,7 @@ export function LibrarySkeleton() {
 
       {/* Grid */}
       <div className="mt-4">
-        <MangaGridSkeleton count={12} className="w-full" />
+        <MangaGridSkeleton count={12} className="w-full" viewMode={skeletonViewMode} />
       </div>
     </div>
   );
