@@ -21,11 +21,6 @@ export async function generateMetadata({
   const sourceId = decodeURIComponent(rawParams.sourceId);
   const mangaId = decodeURIComponent(rawParams.mangaId);
   const chapterId = decodeURIComponent(rawParams.chapterId);
-  const rawReturnTo = Array.isArray(rawSearchParams.returnTo)
-    ? rawSearchParams.returnTo[0]
-    : rawSearchParams.returnTo;
-  const returnTo = getSafeMangaDetailBackHref(rawReturnTo ?? null);
-  const detailHref = getMangaDetailHref(sourceId, mangaId, returnTo);
   try {
     const manifestUrl = await getManifestUrlFromCookie(sourceId);
     const source = await sourceManager.getSource(sourceId, manifestUrl);
@@ -64,6 +59,11 @@ export default async function ReaderPage({
   const sourceId = decodeURIComponent(rawParams.sourceId);
   const mangaId = decodeURIComponent(rawParams.mangaId);
   const chapterId = decodeURIComponent(rawParams.chapterId);
+  const rawReturnTo = Array.isArray(rawSearchParams.returnTo)
+    ? rawSearchParams.returnTo[0]
+    : rawSearchParams.returnTo;
+  const returnTo = getSafeMangaDetailBackHref(rawReturnTo ?? null);
+  const detailHref = getMangaDetailHref(sourceId, mangaId, returnTo);
 
   let detail: any, chapters: any, pagesResult: any;
   try {
