@@ -50,7 +50,13 @@
 
 ## Provider credential hygiene
 
-- [ ] **T1.9** Search server/adapters for literal reusable credentials or privileged headers.
+- [x] **T1.9** Search server/adapters for literal reusable credentials or privileged headers.
+
+**Provider-credential audit record:**
+- one built-in restricted adapter contains a reusable privileged request-header value committed as a literal;
+- a separate decryption salt in that adapter is protocol material rather than an authorization credential and is not treated as the same risk class;
+- moving the privileged header to server-only configuration requires provisioning/rotating the corresponding deployment secret before removing the literal, otherwise that source would be intentionally taken offline;
+- T1.10/T1.11/T1.13 remain blocked on deployment-secret provisioning rather than shipping an unsafe fallback.
 - [ ] **T1.10** Move required secrets to server-only configuration.
 - [ ] **T1.11** Define safe behavior when optional provider credentials are missing.
 - [ ] **T1.12** Ensure logs redact credential-bearing headers, signed URLs, cookies, and tokens.
