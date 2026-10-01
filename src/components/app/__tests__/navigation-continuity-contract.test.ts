@@ -39,7 +39,7 @@ describe("navigation continuity contracts", () => {
   it("returns trigger focus when the command overlay closes without navigation", () => {
     const menu = read("src/components/app/command-menu.tsx");
 
-    expect(menu).toContain("triggerRef.current = document.activeElement");
+    expect(menu).toContain("document.activeElement instanceof HTMLElement");
     expect(menu).toContain("trigger?.focus({ preventScroll: true })");
     expect(menu).toContain("restoreFocusOnCloseRef.current = false");
   });
