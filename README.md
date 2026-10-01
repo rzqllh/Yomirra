@@ -55,6 +55,14 @@ Navigasi reader menjaga parent page secara eksplisit: perpindahan detail → rea
 
 Offline dan PWA bergantung pada kemampuan browser, Service Worker, dan storage perangkat.
 
+### Motion dan navigasi
+
+Motion memakai semantic tokens bersama untuk page transition, layout spring, press feedback, dan delayed navigation feedback. Fast route transition tidak memunculkan loader sesaat; bila navigasi cukup lama, progress tipis baru muncul setelah delay singkat sementara skeleton tetap dimiliki route `loading.tsx`.
+
+Back/Forward tidak dioverride dengan scroll restoration custom. Browser history tetap menjadi sumber utama untuk scroll restoration, sedangkan reader progress disimpan terpisah dari scroll halaman aplikasi.
+
+Stateful icon morphing dibatasi melalui wrapper internal yang menghormati `prefers-reduced-motion`; package animasi tidak diimport langsung dari feature components dan tidak dipakai untuk identitas route/navigation yang harus stabil.
+
 ## Source bawaan
 
 Saat ini registry bawaan berisi:
