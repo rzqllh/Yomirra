@@ -143,6 +143,7 @@ export default async function ReaderPage({
       initialDetail={detail}
       initialChapters={chapters}
       initialPages={pagesResult?.pages || null}
+      returnTo={returnTo}
     />
   );
 }
