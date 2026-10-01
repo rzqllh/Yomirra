@@ -8,7 +8,15 @@ vi.mock("@/server/lib/cache/redis", () => ({
 }));
 
 vi.mock("@/server/lib/security/rate-limit", () => ({
-  checkRateLimit: vi.fn().mockResolvedValue({ success: true, headers: {} }),
+  checkRateLimitPolicy: vi.fn().mockResolvedValue({
+    success: true,
+    headers: { "X-RateLimit-Limit": "120" },
+  }),
+  createRateLimitRejection: vi.fn(),
+  applyRateLimitHeaders: vi.fn((response: Response, rateLimit: { headers: Record<string, string> }) => {
+    Object.entries(rateLimit.headers).forEach(([key, value]) => response.headers.set(key, value));
+    return response;
+  }),
 }));
 
 describe("Global Search Failure Isolation", () => {
@@ -52,6 +60,7 @@ describe("Global Search Failure Isolation", () => {
     const res = await GET(req);
 
     expect(res.status).toBe(200);
+    expect(res.headers.get("X-RateLimit-Limit")).toBe("120");
 
     const json = await res.json();
     const results = json.data.resultsBySource;
