@@ -75,6 +75,17 @@ Tanpa `GEMINI_API_KEY`, search tetap menyediakan tag parsing, canonical filters,
 
 Jika `GEMINI_API_KEY` tersedia, Yomirra dapat menggunakan embedding untuk semantic ranking. Catalog semantic hanya menyimpan metadata manga publik yang ditemukan saat penggunaan normal; library, history, progress baca, dan data akun tidak dimasukkan ke catalog tersebut.
 
+## Security dan reliability
+
+Boundary privileged tetap berada di server:
+
+- admin API memakai authorization server-side dan browser admin memakai session bertanda tangan, HttpOnly, dan berumur pendek; raw passkey tidak disimpan di browser storage;
+- reusable upstream credential dibaca dari environment server-only dan konfigurasi yang hilang gagal tertutup pada saat request upstream tanpa menjatuhkan registry source lain;
+- route yang mahal atau sensitif memakai rate-limit namespace terpisah: mutation admin dan optional expensive compute gagal tertutup bila limiter tidak tersedia, sedangkan public search/image delivery mempertahankan availability dengan policy fail-open;
+- logger men-sanitasi authorization header, cookie, token, secret, API key, signature, signed URL, dan field sensitif lain sebelum ditulis ke log.
+
+Detail threat boundary dan aturan implementasi ada di [Security Policy](SECURITY.md).
+
 ## Menjalankan secara lokal
 
 Butuh Node.js yang kompatibel dengan Next.js 16 dan pnpm.
