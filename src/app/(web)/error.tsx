@@ -61,7 +61,7 @@ export default function GlobalError({
       >
         <Image
           src="/assets/error-cat.png"
-          alt="500 Error"
+          alt=""
           fill
           className="object-contain"
           priority
@@ -75,10 +75,10 @@ export default function GlobalError({
         className="space-y-3 z-10 max-w-[320px] md:max-w-md"
       >
         <h2 className="text-[28px] md:text-3xl font-black tracking-tight text-text-primary">
-          Terjadi Kesalahan
+          Yomirra mengalami kendala
         </h2>
         <p className="text-[15px] md:text-base text-text-secondary leading-relaxed font-medium">
-          Aplikasi mengalami masalah yang tidak terduga. Silakan coba muat ulang halaman{isHome ? "." : " atau kembali ke beranda."}
+          Coba muat ulang halaman{isHome ? "." : " atau kembali ke Beranda."}
         </p>
       </motion.div>
 
@@ -94,7 +94,7 @@ export default function GlobalError({
           className="h-[52px] rounded-[18px] shadow-lg shadow-accent/25 font-bold w-full text-[15px] hover:scale-[1.02] active:scale-[0.98] transition-all"
         >
           <ArrowCounterClockwise className="mr-2.5" size={20} weight="bold" />
-          Coba Lagi
+          Coba lagi
         </Button>
         {!isHome && (
           <Button 
@@ -104,7 +104,7 @@ export default function GlobalError({
           >
             <Link href="/">
               <House className="mr-2.5" size={20} weight="fill" />
-              Kembali ke Beranda
+              Ke Beranda
             </Link>
           </Button>
         )}
