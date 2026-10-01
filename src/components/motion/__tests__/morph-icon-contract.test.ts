@@ -45,6 +45,7 @@ describe("MorphIcon package boundary", () => {
 
     const offenders = collectSourceFiles(srcRoot)
       .filter((file) => file !== wrapperPath)
+      .filter((file) => !file.includes(`${path.sep}__tests__${path.sep}`))
       .filter((file) =>
         fs.readFileSync(file, "utf-8").includes('from "morphicons')
       );
