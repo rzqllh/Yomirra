@@ -19,6 +19,7 @@ import { navigationTiming, transitions } from "@/shared/lib/motion/tokens"
 import {
   endNavigationIntent,
   getNavigationPathname,
+  isNavigationIntentComplete,
   NAVIGATION_INTENT_EVENT,
   type NavigationIntentDetail,
 } from "@/shared/lib/navigation-intent"
@@ -52,8 +53,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [])
 
   React.useEffect(() => {
-    if (!pendingHref || !pathname) return
-    if (getNavigationPathname(pendingHref) !== pathname) return
+    if (!isNavigationIntentComplete(pendingHref, pathname)) return
 
     endNavigationIntent()
     setPendingHref(null)
