@@ -170,17 +170,17 @@ describe("Header & Hero System (Squircle & Reusable)", () => {
         name: /buka menu akun/i,
       });
 
-      expect(screen.queryByText(/Pengaturan aplikasi/i)).toBeNull();
+      expect(screen.queryByText(/^Pengaturan$/i)).toBeNull();
       fireEvent.click(settingsBtn);
 
-      expect(screen.getByText(/Pengaturan aplikasi/i)).toBeTruthy();
+      expect(screen.getByText(/^Pengaturan$/i)).toBeTruthy();
       expect(screen.getByRole("link", { name: "Sumber" }).getAttribute("href")).toBe(
         "/sources"
       );
       expect(screen.getByText(/Tema tampilan/i)).toBeTruthy();
       expect(screen.getByText(/Bahasa/i)).toBeTruthy();
       expect(screen.getByText(/Pusat bantuan/i)).toBeTruthy();
-      expect(screen.getByText(/Masuk akun/i)).toBeTruthy();
+      expect(screen.getByText(/^Masuk$/i)).toBeTruthy();
     });
   });
 
