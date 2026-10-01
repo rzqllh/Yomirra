@@ -6,7 +6,7 @@ import { cn } from "@/shared/utils/cn"
 const Pagination = ({ className, ...props }: React.ComponentProps<"nav">) => (
   <nav
     role="navigation"
-    aria-label="pagination"
+    aria-label="Paginasi"
     className={cn("mx-auto flex w-full justify-center", className)}
     {...props}
   />
@@ -66,7 +66,7 @@ const PaginationPrevious = ({
   ...props
 }: React.ComponentProps<typeof PaginationLink>) => (
   <PaginationLink
-    aria-label="Go to previous page"
+    aria-label="Ke halaman sebelumnya"
     size="default"
     className={cn("gap-1 pl-2.5", className)}
     {...props}
@@ -82,7 +82,7 @@ const PaginationNext = ({
   ...props
 }: React.ComponentProps<typeof PaginationLink>) => (
   <PaginationLink
-    aria-label="Go to next page"
+    aria-label="Ke halaman berikutnya"
     size="default"
     className={cn("gap-1 pr-2.5", className)}
     {...props}
@@ -98,7 +98,7 @@ const PaginationPrevious10 = ({
   ...props
 }: React.ComponentProps<typeof PaginationLink>) => (
   <PaginationLink
-    aria-label="Go backward 10 pages"
+    aria-label="Mundur 10 halaman"
     size="icon"
     className={cn("", className)}
     {...props}
@@ -113,7 +113,7 @@ const PaginationNext10 = ({
   ...props
 }: React.ComponentProps<typeof PaginationLink>) => (
   <PaginationLink
-    aria-label="Go forward 10 pages"
+    aria-label="Maju 10 halaman"
     size="icon"
     className={cn("", className)}
     {...props}
@@ -133,7 +133,7 @@ const PaginationEllipsis = ({
     {...props}
   >
     <DotsThree size={16} weight="bold" className="text-text-muted" />
-    <span className="sr-only">More pages</span>
+    <span className="sr-only">Halaman lainnya</span>
   </span>
 )
 PaginationEllipsis.displayName = "PaginationEllipsis"
