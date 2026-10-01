@@ -16,6 +16,40 @@ describe("DoujinDesuSource", () => {
     source = new DoujinDesuSource(mockHttpClient);
   });
 
+  describe("Credential boundary", () => {
+    it("fails closed when the server-only credential is missing", () => {
+      const previous = process.env.RESTRICTED_SOURCE_APP_SECRET;
+      delete process.env.RESTRICTED_SOURCE_APP_SECRET;
+
+      try {
+        expect(() => new DoujinDesuSource()).toThrow(
+          "Restricted source credential is not configured",
+        );
+      } finally {
+        if (previous === undefined) {
+          delete process.env.RESTRICTED_SOURCE_APP_SECRET;
+        } else {
+          process.env.RESTRICTED_SOURCE_APP_SECRET = previous;
+        }
+      }
+    });
+
+    it("accepts dependency-injected clients without requiring the production credential", () => {
+      const previous = process.env.RESTRICTED_SOURCE_APP_SECRET;
+      delete process.env.RESTRICTED_SOURCE_APP_SECRET;
+
+      try {
+        expect(() => new DoujinDesuSource(mockHttpClient)).not.toThrow();
+      } finally {
+        if (previous === undefined) {
+          delete process.env.RESTRICTED_SOURCE_APP_SECRET;
+        } else {
+          process.env.RESTRICTED_SOURCE_APP_SECRET = previous;
+        }
+      }
+    });
+  });
+
   describe("Metadata & Capabilities", () => {
     it("has correct identification and default settings", () => {
       expect(source.id).toBe("doujindesu");
