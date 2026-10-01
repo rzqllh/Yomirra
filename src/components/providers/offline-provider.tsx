@@ -59,7 +59,7 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
           className="fixed top-0 left-0 right-0 z-[60] bg-amber-500/90 text-amber-950 dark:bg-amber-600 dark:text-white px-3 py-1 text-xs font-semibold text-center flex items-center justify-center gap-2 backdrop-blur-md shadow-sm pointer-events-none"
         >
           <WifiSlash size={14} weight="bold" />
-          <span>Mode Offline — Menampilkan pustaka dan data lokal</span>
+          <span>Offline — menampilkan data yang tersimpan di perangkat</span>
         </div>
       )}
       {showFallback ? (
@@ -67,9 +67,9 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
           <div className="w-20 h-20 bg-surface-muted rounded-3xl flex items-center justify-center text-text-muted mb-6">
             <WifiSlash size={40} weight="duotone" />
           </div>
-          <h1 className="text-2xl font-bold mb-2">Anda Sedang Offline</h1>
+          <h1 className="text-2xl font-bold mb-2">Kamu sedang offline</h1>
           <p className="text-text-muted mb-8 max-w-sm">
-            Koneksi internet Anda terputus. Halaman ini memerlukan koneksi, namun Anda masih bisa membaca pustaka lokal dan konten yang sudah diunduh.
+            Halaman ini memerlukan koneksi internet. Kamu masih bisa membuka data lokal dan chapter yang sudah diunduh.
           </p>
           <div className="flex flex-wrap gap-3 justify-center">
             <Button 
@@ -78,7 +78,7 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
               className="rounded-xl gap-2 font-bold px-6"
             >
               <HardDrives size={20} weight="fill" />
-              Manajer Unduhan
+              Buka Unduhan
             </Button>
             <Button 
               onClick={() => router.push("/")}
