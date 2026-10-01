@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useSearchParams } from "next/navigation";
 import { apiClient } from "@/shared/api-client";
 import { ReaderPageSkeleton } from "@/components/skeletons/reader-page-skeleton";
 import { ReaderShell } from "@/components/reader/reader-shell";
@@ -15,7 +14,7 @@ import { useDownloadStore } from "@/shared/store/download-store";
 import { EmptyState } from "@/components/states/empty-state";
 import { WarningCircle, LockKey } from "@phosphor-icons/react";
 import Link from "next/link";
-import { getMangaDetailHref, getSafeMangaDetailBackHref } from "@/shared/lib/routes";
+import { getMangaDetailHref } from "@/shared/lib/routes";
 import { Button } from "@/components/ui/button";
 import { getDownloadChapterId } from "@/shared/utils/download-helpers";
 import type { MangaDetail, Chapter, PageItem } from "@/shared/types/source";
@@ -29,6 +28,7 @@ interface ReaderViewProps {
   initialDetail: MangaDetail;
   initialChapters: Chapter[];
   initialPages: PageItem[] | null; // null if error on server
+  returnTo?: string;
 }
 
 export function ReaderView({
@@ -38,9 +38,8 @@ export function ReaderView({
   initialDetail,
   initialChapters,
   initialPages,
+  returnTo,
 }: ReaderViewProps) {
-  const searchParams = useSearchParams();
-  const returnTo = getSafeMangaDetailBackHref(searchParams.get("returnTo"));
   const detailHref = getMangaDetailHref(sourceId, mangaId, returnTo);
   const upsertHistory = useHistoryStore(state => state.upsertHistory);
   const getLibraryItem = useLibraryStore(state => state.getLibraryItem);
@@ -319,6 +318,7 @@ export function ReaderView({
           nextChapterId={nextChapterId}
           onOpenAlternateSource={alternateSource.openAndSearch}
           onRefreshChapter={refreshChapter}
+          returnTo={returnTo}
         />
       ) : (
         <ContinuousVerticalReader
