@@ -15,6 +15,10 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
   - Menambahkan policy rate-limit bernamespace untuk admin mutation, admin operation mahal, public search, search intelligence, signed image proxy, dan laporan pengguna.
   - Mutation admin dan optional expensive compute fail-closed saat limiter tidak tersedia; public search dan image delivery memakai policy fail-open untuk menjaga availability.
   - Menambahkan response limit/reset headers, `Retry-After` pada rejection, trusted proxy-chain identity, serta regression test untuk 429/503 dan limiter availability behavior.
+- **Browser Security & Error Disclosure** (`next.config.ts`, `src/components/ui/error-boundary.tsx`, `src/shared/__tests__/security-surface.test.ts`):
+  - Menambahkan baseline `Content-Security-Policy-Report-Only` untuk Next.js, Firebase auth, HTTPS assets/connect, WebSocket, manifest, dan Service Worker sebelum policy diterapkan secara enforced.
+  - Menghapus raw exception/upstream message dari generic public error surfaces serta generic admin API failure; detail diagnosis tetap disimpan melalui logging server yang disanitasi.
+  - Mempertahankan digest/error-name/pathname yang tidak sensitif sebagai correlation signal dan menambahkan regression contract untuk CSP serta error-disclosure boundary.
 - **Entitlement Foundation (Task 02)** (`src/shared/lib/entitlement.ts`):
   - Mengimplementasikan model kapabilitas Free vs Pro dengan proteksi ketat agar fitur gratis (membaca tanpa batas, pencarian penuh, multi-source switch, perpustakaan offline, sinkronisasi riwayat) selalu aktif dan tidak dapat didegradasi atau dikunci secara tidak sengaja.
   - Menyediakan gateway fitur Pro yang aman untuk fitur tambahan berbasis AI dan prioritas bandwidth.
