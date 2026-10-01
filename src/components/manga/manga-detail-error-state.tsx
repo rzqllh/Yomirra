@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { WarningCircle, ArrowClockwise, ArrowLeft, MagnifyingGlass, Gear, HardDrives } from "@phosphor-icons/react";
+import { WarningCircle, ArrowClockwise, ArrowLeft, MagnifyingGlass, HardDrives } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/app/header";
 import { getSourceMetadata } from "@/shared/sources/source-registry";
@@ -19,7 +19,6 @@ export function MangaDetailErrorState({
   sourceId,
   mangaId,
   type,
-  message,
 }: MangaDetailErrorStateProps) {
   const router = useRouter();
   const [isRetrying, setIsRetrying] = React.useState(false);
@@ -42,24 +41,10 @@ export function MangaDetailErrorState({
     ? "Manga Tidak Ditemukan"
     : `Gagal Terhubung ke ${sourceName}`;
 
-  const isRawSystemError = Boolean(
-    message &&
-      (message.includes("ECONNRESET") ||
-        message.includes("ETIMEDOUT") ||
-        message.includes("Fetch error") ||
-        message.includes("Request timeout") ||
-        message.includes("aborted") ||
-        message.includes("socket hang up") ||
-        message.includes("ENOTFOUND") ||
-        message.includes("ECONNREFUSED"))
-  );
-
   const description = isDisabled
     ? "Sumber komik ini sedang dinonaktifkan di daftar sumber. Anda dapat mengaktifkannya kembali untuk membaca komik ini."
     : isNotFound
     ? `Komik dengan ID "${mangaId}" tidak ditemukan atau telah dihapus pada ${sourceName}. Anda dapat mencari judul ini di sumber lain.`
-    : (!isRawSystemError && message)
-    ? message
     : `Gagal terhubung ke server ${sourceName}. Server sumber mungkin sedang mengalami gangguan atau koneksi terputus. Silakan coba lagi.`;
 
   return (
@@ -88,11 +73,6 @@ export function MangaDetailErrorState({
 
           <p className="text-sm text-text-muted leading-relaxed mb-6 max-w-sm">
             {description}
-            {isRawSystemError && process.env.NODE_ENV === "development" && (
-              <span className="block mt-2 text-[11px] font-mono text-text-muted/60 bg-surface-base px-2 py-1 rounded-md border border-border-subtle truncate">
-                {message}
-              </span>
-            )}
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 w-full justify-center">
