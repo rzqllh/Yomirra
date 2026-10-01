@@ -227,7 +227,7 @@ export function MangaCard({
     const progress = Math.min(100, Math.max(0, Math.round(rawProgress)));
     const effChapterId = chapterId || historyItem?.chapterId || "";
     const effChapterTitle = chapterTitle || historyItem?.chapterTitle || (effChapterId ? `Ch. ${effChapterId}` : "Detail");
-    const readerHref = effChapterId ? getReaderHref(sourceId, manga.id, effChapterId) : getMangaDetailHref(sourceId, manga.id, fullPath);
+    const readerHref = effChapterId ? getReaderHref(sourceId, manga.id, effChapterId, fullPath) : getMangaDetailHref(sourceId, manga.id, fullPath);
     const detailHref = getMangaDetailHref(sourceId, manga.id, fullPath);
     const isCompleted = progress === 100;
 
