@@ -24,6 +24,12 @@ Fitur search saat ini mencakup:
 
 Search global tidak mengikuti toggle source di Library/Populer. Source yang benar-benar unavailable tetap dikeluarkan dari pencarian.
 
+### Beranda dan discovery
+
+Beranda memprioritaskan komik, bukan banner dekoratif. Bagian pembuka memakai Hero ringkas dengan pencarian global, lalu `Sorotan terbaru` dan peringkat Top 5 per sumber sebelum Lanjut Baca dan daftar yang baru diperbarui.
+
+Sorotan menjaga variasi sumber lebih dulu, menghindari penggabungan judul lintas sumber bila identitasnya belum cukup pasti, dan menghormati `prefers-reduced-motion`. Peringkat tetap scoped ke satu sumber agar posisi numeriknya tidak diperlakukan sebagai ranking global yang tidak dapat dibandingkan.
+
 ### Library, Rak Buku, dan progress
 
 Judul yang disimpan memakai identitas yang tidak bergantung pada satu source saja. Satu judul dapat memiliki primary source dan linked source, sehingga relink atau migrasi source tidak harus memutus library dan progress baca.

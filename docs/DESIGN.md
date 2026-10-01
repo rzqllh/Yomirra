@@ -607,41 +607,80 @@ The status-bar blur is clipped to the safe-area strip only. It must not soften p
 
 ## Purpose
 
-A concise home dashboard combining editorial/discovery content and continuation.
+Beranda adalah pembuka ringkas untuk pencarian, discovery, dan kembali membaca. Prioritas visualnya adalah konten komik, bukan banner dekoratif.
 
 ## Structure
 
-1. Page title / context
-2. Spotlight area
-   - featured hero
-   - top ranking card
+1. Hero kompak
+2. Sorotan & peringkat
+   - Sorotan terbaru
+   - Peringkat Top 5 per sumber
 3. Lanjut Baca
-4. Optional additional discovery sections only when they add real value
+4. Baru diperbarui
 
-## Hero
+Spotlight selalu mendahului peringkat dalam urutan konten. Pada lebar di bawah 1024px keduanya ditumpuk; mulai 1024px keduanya dapat tampil berdampingan.
 
-Current structure is valid:
+## Home Hero
 
-- image/cover side;
-- text side;
-- micro-label;
-- title;
-- concise synopsis;
-- metadata;
-- CTA;
-- carousel counter and navigation.
+`HomeHero` adalah utility opening surface, bukan featured-content card.
 
-### Correction
+Kontrak:
 
-Do not vertically pin description to the top and CTA to the bottom if it creates a large dead zone. Use a deliberate content stack and let the footer controls sit after the content with flexible but bounded spacing.
+- tinggi desktop sekitar 210–230px;
+- heading utama: `Mau baca apa hari ini?`;
+- eyebrow kontekstual membedakan pengguna baru dan pengguna yang kembali;
+- entry global search tetap memakai shared global-search behavior;
+- artwork hanya dekoratif: 2–3 cover di desktop dan sekitar 1–2 cover di mobile;
+- pemilihan cover stabil selama browser session dan tidak diacak ulang pada navigasi normal;
+- artwork tidak memiliki skeleton sendiri dan tidak boleh memblokir heading/search;
+- kegagalan artwork menghasilkan Hero cream yang tetap terasa selesai, bukan broken state;
+- hindari glow, parallax, looping motion, glassmorphism, dan dekorasi yang mengalahkan search.
 
-Hero title uses the primary sans family. Brush/display type is restricted to brand/splash/onboarding/rare expressive empty states.
+## Sorotan terbaru
+
+Sorotan berasal dari feed terbaru, bukan kurasi manual. Label yang benar adalah `SOROTAN TERBARU`.
+
+Selection contract:
+
+1. ambil maksimal satu item eligible per sumber lebih dulu;
+2. isi slot tersisa setelah diversity pass;
+3. maksimal lima item;
+4. dedupe lintas sumber hanya ketika identity confidence cukup kuat; title-only equality tidak cukup.
+
+Desktop memakai landscape editorial composition sekitar 330–360px. Cover tetap terbaca sebagai cover vertikal lengkap, sementara ambient art dari cover yang sama hanya memberi atmosfer ringan.
+
+Mobile memakai komposisi kompak cover-kiri/content-kanan; jangan kembali ke poster vertikal besar sebelum teks.
+
+Source ditampilkan sebagai metadata inline dengan display name. Raw source ID tidak boleh menjadi copy normal.
+
+Interactive targets tetap eksplisit: cover, title, CTA `Lihat komik`, dan kontrol carousel. Seluruh card tidak dibungkus menjadi satu giant link.
+
+## Spotlight carousel
+
+- interval autoplay: 6 detik;
+- manual next/previous/swipe mereset interval;
+- pause saat hover, focus berada di dalam Spotlight, touch interaction aktif, atau document hidden;
+- `prefers-reduced-motion` mematikan autoplay;
+- container tidak bergeser; hanya content/artwork yang berubah dengan opacity + translate kecil sekitar 6–10px;
+- motion harus tenang, tanpa bounce/scale-up/spring dramatis.
 
 ## Ranking card
 
-Current per-source selector is structurally sound because numeric provider rankings are meaningful within a source.
+Ranking tetap source-scoped. Posisi numerik dari beberapa sumber tidak dianggap satu ranking global.
 
-Do not fabricate a global `01–05` ranking across incomparable providers without a defined aggregation algorithm.
+- selector sumber memakai display name dan tetap sekunder secara visual;
+- Top 5 selalu terlihat, termasuk di mobile;
+- rank #1 hanya mendapat emphasis ringan: cover sekitar 48px, title sedikit lebih kuat, dan angka `01` lebih menonjol;
+- rank #2–#5 tetap row kompak;
+- tidak ada podium, medal, atau gamification tambahan;
+- `Lihat semua` mempertahankan source context menuju listing populer sumber yang sedang dipilih.
+
+## Vertical rhythm
+
+- Hero → sekitar 32px → Sorotan & peringkat;
+- Sorotan & peringkat → sekitar 40–48px → Lanjut Baca.
+
+Jarak yang lebih besar sebelum Lanjut Baca menandai transisi dari discovery menuju konten personal.
 
 ## Lanjut Baca
 
@@ -1551,7 +1590,20 @@ A thick ring should appear only for keyboard focus, not as the permanent style o
 
 ## Skeleton
 
-Skeleton must preserve the final layout footprint to reduce shifting.
+Canonical rule: skeleton adalah **content-less geometry** dari UI final, bukan placeholder generik.
+
+Skeleton harus mempertahankan section order, major dimensions, card aspect ratio, toolbar/control placement, responsive columns, container width, section spacing, dan breakpoint composition.
+
+Home mengikuti urutan yang sama dari loading sampai final:
+
+1. Hero;
+2. Sorotan & peringkat;
+3. Lanjut Baca;
+4. Baru diperbarui.
+
+Hero text/search boleh langsung hadir; artwork dekoratif Hero tidak mempunyai skeleton. Spotlight skeleton harus menyerupai komposisi editorial final dan ranking skeleton harus menyerupai lima row final.
+
+Route `loading.tsx` dan nested Suspense fallback harus berbagi geometry contract yang sama agar navigasi tidak melewati wrong skeleton → blank state → final layout.
 
 Use subtle movement only.
 
@@ -1560,13 +1612,18 @@ Avoid:
 - harsh shimmer;
 - excessive pulse contrast;
 - skeletons for elements that load almost instantly;
-- random placeholder geometry that does not resemble the final content.
+- random anonymous rectangles yang tidak menyerupai final content;
+- obsolete section order atau card ratio;
+- skeleton untuk shell persisten yang sudah hadir;
+- card count yang membuat tinggi halaman berbeda ekstrem dari final state.
 
 ## Progressive source loading
 
-Search and aggregated catalog pages may receive data from providers at different speeds.
+Search and aggregated catalog pages may receive data from sources at different speeds.
 
-Prefer progressive rendering with stable positions over blocking the whole grid until every provider responds.
+Prefer progressive rendering with stable positions over blocking the whole grid until every source responds.
+
+Whole-app skeleton geometry tetap diaudit sebagai workstream terpisah dari Home revamp.
 
 ---
 
