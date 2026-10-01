@@ -1,12 +1,12 @@
 import * as React from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useReaderStore } from "@/shared/store/reader-store"
 import { useSettingsStore } from "@/shared/store/settings-store"
 import { useHistoryStore } from "@/shared/store/history-store"
 import { useLibraryStore } from "@/shared/store/library-store"
 import { PageItem } from "@/shared/types/source"
-import { getReaderHref, getMangaDetailHref } from "@/shared/lib/routes"
+import { getReaderHref, getMangaDetailHref, getSafeMangaDetailBackHref } from "@/shared/lib/routes"
 import { ReaderImage } from "./reader-image"
 import { Chapter } from "@/shared/types/source"
 import { useDownloadStore } from "@/shared/store/download-store"
@@ -54,6 +54,9 @@ export function ContinuousVerticalReader({
   onRefreshChapter,
 }: ContinuousVerticalReaderProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const returnTo = getSafeMangaDetailBackHref(searchParams.get("returnTo"))
+  const detailHref = getMangaDetailHref(sourceId, mangaId, returnTo)
   const preferences = useReaderStore(state => state.preferences)
   const { dataSaver } = useSettingsStore()
   const isDownloaded = useDownloadStore(state => state.isDownloaded(sourceId, mangaId, chapterId))
@@ -455,7 +458,7 @@ export function ContinuousVerticalReader({
                   _prevChapterId ? "flex-1" : "w-full"
                 )}
               >
-                <Link href={getMangaDetailHref(sourceId, mangaId)} prefetch={false}>
+                <Link href={detailHref} replace prefetch={false}>
                   <BookOpen size={16} weight="bold" />
                   <span>Detail Komik</span>
                 </Link>
@@ -467,7 +470,8 @@ export function ContinuousVerticalReader({
             {nextChapterId && (
               <>
                 <Link
-                  href={getMangaDetailHref(sourceId, mangaId)}
+                  href={detailHref}
+                  replace
                   prefetch={false}
                   className="hover:text-white/80 transition-colors flex items-center gap-1.5 py-1"
                 >
