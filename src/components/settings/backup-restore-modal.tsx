@@ -28,9 +28,9 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
     try {
       const activeTheme = (theme as "light" | "dark" | "system") || "system";
       triggerBackupDownload(activeTheme);
-      toast.success("Salinan cadangan berhasil diunduh");
+      toast.success("Cadangan berhasil diekspor");
     } catch {
-      toast.error("Salinan cadangan gagal diunduh");
+      toast.error("Cadangan gagal diekspor");
     }
   };
 
@@ -51,7 +51,7 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
       setIsProcessing(false);
     };
     reader.onerror = () => {
-      toast.error("Berkas cadangan tidak dapat dibaca");
+      toast.error("Berkas cadangan tidak dapat digunakan");
       setIsProcessing(false);
     };
     reader.readAsText(file);
@@ -86,7 +86,7 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
         onBack?.();
       }
     } catch (err: any) {
-      toast.error("Pemulihan data tidak berhasil", {
+      toast.error("Data gagal dipulihkan", {
         description: "Koleksi bacaan dikembalikan ke kondisi sebelum pemulihan.",
       });
     } finally {
@@ -101,7 +101,7 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
           <FileText size={22} weight="duotone" />
         </div>
         <div>
-          <h3 className="text-sm font-bold text-text-primary">Cadangan & Pemulihan Data</h3>
+          <h3 className="text-sm font-bold text-text-primary">Cadangan data</h3>
           <p className="text-xs text-text-muted mt-0.5 leading-relaxed">
             Simpan data riwayat dan koleksi ke file JSON atau pulihkan data dari file cadangan.
           </p>
@@ -127,7 +127,7 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
                 <DownloadSimple size={22} weight="duotone" />
               </div>
               <div className="flex-1 min-w-0">
-                <h4 className="text-sm font-bold text-text-primary truncate">Export Data JSON</h4>
+                <h4 className="text-sm font-bold text-text-primary truncate">Ekspor cadangan</h4>
                 <p className="text-xs text-text-muted mt-0.5 truncate">Unduh cadangan data lokal ke file JSON</p>
               </div>
             </button>
@@ -141,8 +141,8 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
                 <UploadSimple size={22} weight="duotone" />
               </div>
               <div className="flex-1 min-w-0">
-                <h4 className="text-sm font-bold text-text-primary truncate">Import File Cadangan</h4>
-                <p className="text-xs text-text-muted mt-0.5 truncate">Pulihkan riwayat dan koleksi dari file JSON</p>
+                <h4 className="text-sm font-bold text-text-primary truncate">Pulihkan dari cadangan</h4>
+                <p className="text-xs text-text-muted mt-0.5 truncate">Pulihkan data dari berkas cadangan Yomirra.</p>
               </div>
             </button>
 
@@ -165,7 +165,7 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
           >
             {/* Selected File Box */}
             <div className="flex flex-col gap-1.5">
-              <span className="text-[11px] font-bold text-text-muted uppercase tracking-wider pl-1">File Terpilih</span>
+              <span className="text-[11px] font-bold text-text-muted uppercase tracking-wider pl-1">Berkas dipilih</span>
               <div className="flex items-center justify-between p-3 rounded-2xl bg-surface-raised border border-border-subtle shadow-xs">
                 <div className="flex items-center gap-3 overflow-hidden">
                   <div className="size-8 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
@@ -187,7 +187,7 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
             {dryRun.errors.length > 0 ? (
               <div className="p-4 rounded-2xl bg-semantic-error/10 border border-semantic-error/20 text-semantic-error shadow-xs">
                 <span className="font-bold flex items-center gap-2 mb-2 text-sm">
-                  <ShieldWarning size={20} weight="fill" /> File Tidak Valid ({dryRun.errors.length})
+                  <ShieldWarning size={20} weight="fill" /> Berkas tidak dapat digunakan ({dryRun.errors.length})
                 </span>
                 <ul className="list-disc list-inside space-y-1.5 text-[12px] opacity-90 pl-1">
                   {dryRun.errors.slice(0, 3).map((err, idx) => (
@@ -202,7 +202,7 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
               <>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="flex flex-col justify-center p-3.5 rounded-2xl bg-surface-raised border border-border-subtle shadow-xs">
-                    <span className="text-[11px] uppercase font-bold text-text-muted mb-0.5">Item Valid</span>
+                    <span className="text-[11px] uppercase font-bold text-text-muted mb-0.5">Data valid</span>
                     <div className="flex items-baseline gap-2">
                       <span className="text-2xl font-extrabold text-text-primary">{dryRun.validLibraryCount + dryRun.validHistoryCount}</span>
                     </div>
@@ -213,7 +213,7 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
                   </div>
                   
                   <div className="flex flex-col justify-center p-3.5 rounded-2xl bg-surface-raised border border-border-subtle shadow-xs">
-                    <span className="text-[11px] uppercase font-bold text-text-muted mb-0.5">Konflik / Duplikat</span>
+                    <span className="text-[11px] uppercase font-bold text-text-muted mb-0.5">Data yang perlu diperiksa</span>
                     <div className="flex items-baseline gap-2">
                       <span className="text-2xl font-extrabold text-text-primary">{dryRun.existingConflictCount + dryRun.duplicateInPayloadCount}</span>
                     </div>
@@ -224,7 +224,7 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
                 </div>
 
                 <div className="space-y-2 mt-1">
-                  <span className="text-[11px] font-bold text-text-muted uppercase tracking-wider block pl-1">Mode Import</span>
+                  <span className="text-[11px] font-bold text-text-muted uppercase tracking-wider block pl-1">Cara memulihkan</span>
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
@@ -236,7 +236,7 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
                           : "border-border-subtle bg-surface-raised hover:bg-surface-hover"
                       )}
                     >
-                      <span className={cn("block text-xs font-bold", importMode === "merge" ? "text-accent" : "text-text-primary")}>Gabung Data</span>
+                      <span className={cn("block text-xs font-bold", importMode === "merge" ? "text-accent" : "text-text-primary")}>Gabungkan</span>
                       <span className="block text-[11px] text-text-muted mt-1 leading-relaxed">
                         Data lama tetap aman. Tambahkan item baru.
                       </span>
@@ -251,7 +251,7 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
                           : "border-border-subtle bg-surface-raised hover:bg-surface-hover"
                       )}
                     >
-                      <span className={cn("block text-xs font-bold", importMode === "replace" ? "text-semantic-error" : "text-text-primary")}>Ganti Total</span>
+                      <span className={cn("block text-xs font-bold", importMode === "replace" ? "text-semantic-error" : "text-text-primary")}>Ganti data saat ini</span>
                       <span className="block text-[11px] text-text-muted mt-1 leading-relaxed">
                         Hapus semua data lokal, timpa dari file cadangan.
                       </span>
@@ -265,7 +265,7 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
                   variant={importMode === "replace" ? "destructive" : "accent"}
                   className="w-full h-12 rounded-xl font-bold text-sm shadow-xs mt-1"
                 >
-                  {isProcessing ? "Memproses..." : "Pulihkan Data Sekarang"}
+                  {isProcessing ? "Memproses…" : "Pulihkan data"}
                 </Button>
               </>
             )}
