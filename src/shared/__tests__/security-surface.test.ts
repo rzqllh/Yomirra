@@ -17,6 +17,7 @@ describe("security surface contracts", () => {
     expect(config).toContain('"worker-src \'self\' blob:"');
     expect(config).toContain("https://accounts.google.com");
     expect(config).toContain("https://*.firebaseapp.com");
+    expect(config).toContain("https://*.web.app");
   });
 
   it("does not render raw generic client error messages", () => {
