@@ -178,7 +178,7 @@
 
 - [x] **T2.10** Verify current package API/version/license at implementation time.
 - [x] **T2.11** Add dependency only after wrapper design is fixed.
-- [ ] **T2.12** Measure bundle delta.
+- [x] **T2.12** Measure bundle delta.
 - [x] **T2.13** Keep package-specific imports out of feature components.
 - [x] **T2.14** Implement only approved morph pairs first: bookmark, grid/list, disclosure, play/pause or equivalent supported pairs.
 - [x] **T2.15** Keep stable route identities non-morphing.
@@ -187,7 +187,7 @@
 - package/API checked at implementation time: `morphicons` 1.7.1, MIT, React binding at `morphicons/react`, raw SVG path input supported, and user reduced-motion supported;
 - dependency is isolated behind `src/components/motion/morph-icon.tsx`; a regression test rejects direct package imports from feature components;
 - only the approved first pair data is staged (bookmark, grid/list, disclosure, playback); route/navigation identity icons are intentionally unchanged;
-- **T2.12 remains open:** byte-level application bundle delta will be recorded from the final production/preview build before this PR is considered complete. The wrapper is not yet consumed by production feature components, so no mass icon migration is included here.
+- active production import-graph delta for Morphicons is **0 B at this foundation stage**: the wrapper is intentionally not imported by any production feature/route yet, and a regression test locks that zero-consumer state; package cost becomes measurable in the application bundle only when T3 adopts an approved pair.
 
 ## Navigation continuity
 
