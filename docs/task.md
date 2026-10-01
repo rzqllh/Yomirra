@@ -72,7 +72,15 @@
 
 ## Rate limiting
 
-- [ ] **T1.14** Enumerate public browse/search, proxy, account/sync, report, admin read, admin mutation, and probe routes.
+- [x] **T1.14** Enumerate public browse/search, proxy, account/sync, report, admin read, admin mutation, and probe routes.
+
+**Rate-limit classification record:**
+- admin destructive/expensive mutations (source flush/probe, search warm/simulate, report actions, custom-source test/write) require tight namespaced limits and fail closed when the limiter is unavailable;
+- public expensive compute/search endpoints use namespaced limits; search-intelligence already has a strict fail-closed policy, while global source search currently uses the generic limiter and should be made explicit;
+- signed image proxy is bandwidth-expensive but high-volume by design, so any limiter must be materially looser and must not interfere with sequential reader image loading;
+- authenticated cron/webhook endpoints keep credential verification as the primary boundary; the Telegram command path already has a chat-scoped Redis limiter and should not receive a redundant IP limiter;
+- lightweight health/site/source metadata reads are not priority targets for the first hardening pass;
+- limiter identity must follow the trusted deployment proxy chain rather than accepting an arbitrary client-supplied forwarded address.
 - [ ] **T1.15** Define namespaces + limits per route class.
 - [ ] **T1.16** Attach the existing rate-limit utility to intended routes.
 - [ ] **T1.17** Explicitly choose fail-open/fail-closed behavior per route class.
