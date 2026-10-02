@@ -357,23 +357,34 @@
 
 ---
 
-# T4 — Filter Capability PR (only if gaps remain)
+# T4 — Filter Capability PR — merged in PRs #36–#37
 
-- [ ] **T4.1** Build a provider capability matrix from runtime metadata and adapter filter contracts.
-- [ ] **T4.2** Render provider-backed filter sections only when supported.
-- [ ] **T4.3** Keep local Collection/Reading Status independent.
-- [ ] **T4.4** Clear incompatible provider filter values on source switch.
-- [ ] **T4.5** Synchronize URL/tag intent into drawer state.
-- [ ] **T4.6** Make Reset clear both store state and relevant route params.
-- [ ] **T4.7** Add representative capability matrix tests.
-- [ ] **T4.8** Verify no control is shown as functional when its capability is unavailable.
+- [x] **T4.1** Build a provider capability matrix from runtime metadata and adapter filter contracts.
+- [x] **T4.2** Render provider-backed filter sections only when supported.
+- [x] **T4.3** Keep local Collection/Reading Status independent.
+- [x] **T4.4** Clear incompatible provider filter values on source switch.
+- [x] **T4.5** Synchronize include/exclude URL tag intent into drawer state without duplicating route-owned state into persisted filters.
+- [x] **T4.6** Make Reset clear both store state and relevant route params while preserving ordinary search text.
+- [x] **T4.7** Add representative capability matrix, dynamic-source, pruning, and drawer-state tests.
+- [x] **T4.8** Verify no provider filter control is presented as functional when its capability is unavailable; route-owned exclusions are rendered explicitly disabled.
 
 ### Filter PR gate
 
-- [ ] Capability tests pass.
-- [ ] URL/drawer/store state agree.
-- [ ] Provider switching cannot leak stale filter state.
-- [ ] Typecheck/lint/tests/build pass.
+- [x] Capability tests pass.
+- [x] URL/drawer/store state agree for persisted filters and route-owned include/exclude tag intent.
+- [x] Provider switching cannot leak stale provider filter state; Library-local Collection/Reading Status remain independent.
+- [x] Typecheck/lint/tests/build pass.
+
+**T4 implementation record (PRs #36–#37, 2026-10-02):**
+- PR #36 merged as `818a4725673d096e0c71822f623f5047cec4ea23`; PR #37 merged as `0dd8da08ba019bda52a9e9e83ef0f69581251361`;
+- built-in/runtime metadata now advertise provider filters only when the corresponding adapter/search path actually supports them; the filter API and drawers honor that capability boundary;
+- dynamic manifests may declare an optional filter endpoint, but filter capability is true only when both the capability and endpoint are present; other custom runtime sources remain filter-safe by default;
+- Search fetches and merges filter metadata only from active filter-capable sources, then prunes incompatible persisted provider filters after capability resolution;
+- Library provider filter state is cleared when switching to a source without provider-filter support, while local Collection and Reading Status state remain independent;
+- positive URL tags are reflected in drawer state without being redundantly persisted; excluded URL tags are shown as route-owned disabled exclusion chips and participate in the active-filter count;
+- Reset clears filter stores and relevant route intent while retaining ordinary search text;
+- GitHub CI #327 passed typecheck, lint, the full unit/integration suite, and production build for the capability contract; CI #329 passed the same full gate for excluded-tag synchronization;
+- Vercel preview remains operationally deployment-rate-limited on the Hobby project and is not treated as a compile/test failure.
 
 ---
 
