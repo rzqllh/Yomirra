@@ -173,7 +173,10 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
         const last = focusable[focusable.length - 1];
         const active = document.activeElement;
 
-        if (e.shiftKey && active === first) {
+        if (!(active instanceof Node) || !root.contains(active)) {
+          e.preventDefault();
+          (e.shiftKey ? last : first).focus();
+        } else if (e.shiftKey && active === first) {
           e.preventDefault();
           last.focus();
         } else if (!e.shiftKey && active === last) {
@@ -316,7 +319,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
               key={i}
               type="button"
               onClick={() => setStep(i)}
-              className="flex size-11 items-center justify-center rounded-full cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              className="group flex size-11 items-center justify-center rounded-full cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
               aria-label={`Langkah ${i + 1}`}
               aria-current={step === i ? "step" : undefined}
             >
