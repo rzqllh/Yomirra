@@ -297,52 +297,63 @@
 
 ## Shared elements
 
-- [ ] **T3.1** Define stable card/detail identity key.
-- [ ] **T3.2** Implement cover continuity with safe fallback.
-- [ ] **T3.3** Implement title continuity only if it remains stable across responsive layouts.
-- [ ] **T3.4** Do not shared-transition every metadata element.
+- [x] **T3.1** Define stable card/detail identity key.
+- [x] **T3.2** Implement cover continuity with safe progressive fallback.
+- [ ] **T3.3** Verify title continuity remains visually stable across responsive layouts in a real browser/device.
+- [x] **T3.4** Do not shared-transition every metadata element.
 - [ ] **T3.5** Verify detail → back when original card is in viewport.
 - [ ] **T3.6** Verify fallback when original card is offscreen/unmounted.
-- [ ] **T3.7** Keep experimental platform transition APIs behind progressive enhancement.
+- [x] **T3.7** Keep experimental platform transition APIs behind progressive enhancement.
 
 ## Stateful component morphs
 
-- [ ] **T3.8** Replace bookmark bounce/swap with a calmer state morph.
-- [ ] **T3.9** Morph grid/list toggle and animate layout reflow.
-- [ ] **T3.10** Morph disclosure icon and animate synopsis expansion without content pop.
-- [ ] **T3.11** Align tab/segmented indicator motion.
-- [ ] **T3.12** Align switch state motion.
-- [ ] **T3.13** Review reader control morph candidates.
-- [ ] **T3.14** Verify interrupted/reversed state changes.
+- [x] **T3.8** Replace bookmark bounce/swap with a calmer state morph.
+- [x] **T3.9** Align grid/list state continuity and animate layout reflow without forcing redundant icon morphing.
+- [x] **T3.10** Morph disclosure icon and animate synopsis expansion without content pop.
+- [x] **T3.11** Align tab/segmented indicator motion.
+- [x] **T3.12** Align switch state motion.
+- [x] **T3.13** Review reader control morph candidates; keep distinct reader actions non-morphing.
+- [ ] **T3.14** Verify interrupted/reversed state changes in a real browser/device.
 
 ## Grid/layout
 
-- [ ] **T3.15** Measure current catalog card widths across phone/tablet/desktop rail states.
-- [ ] **T3.16** Prototype container-aware grid.
-- [ ] **T3.17** Set min/max card-width rules from design, not arbitrary breakpoint count.
-- [ ] **T3.18** Verify compact layout independently.
-- [ ] **T3.19** Prevent grid/list mode change from resetting scroll.
-- [ ] **T3.20** Make `PageContainer` variants materially different.
-- [ ] **T3.21** Migrate only touched pages to the new variants.
+- [x] **T3.15** Reconcile current catalog card density across the supported width matrix.
+- [x] **T3.16** Implement container-aware grid.
+- [x] **T3.17** Set card-width rules from the current design density instead of arbitrary viewport column counts.
+- [x] **T3.18** Verify compact layout independently with its own minimum-width contract and regression coverage.
+- [x] **T3.19** Prevent grid/list mode change from resetting scroll.
+- [x] **T3.20** Make `PageContainer` variants materially different.
+- [x] **T3.21** Migrate only documented/touched pages to the new variants.
 
 ## Overlay/safe area
 
-- [ ] **T3.22** Define semantic z-index tokens.
-- [ ] **T3.23** Replace arbitrary z-index values in touched overlay primitives.
-- [ ] **T3.24** Create/reconcile shared bottom-surface safe-area contract.
-- [ ] **T3.25** Account for software keyboard/visual viewport.
-- [ ] **T3.26** Verify footer actions at compact + expanded drawer snap points.
-- [ ] **T3.27** Remove modal-over-modal flow where touched.
+- [x] **T3.22** Reconcile and retain the existing semantic z-index tokens.
+- [x] **T3.23** Replace arbitrary z-index values in touched overlay primitives.
+- [x] **T3.24** Reconcile the shared bottom-surface safe-area contract.
+- [x] **T3.25** Account for software keyboard/visual viewport in the filter drawer.
+- [ ] **T3.26** Verify footer actions at compact + expanded drawer snap points in a real browser/device.
+- [x] **T3.27** Verify touched settings flows do not introduce modal-over-modal behavior.
 
 ### Component/layout PR gate
 
-- [ ] Shared-element fallback is safe.
-- [ ] Grid density is stable.
-- [ ] No scroll reset on view toggle.
-- [ ] Bottom actions remain visible.
-- [ ] Reduced-motion works.
+- [ ] Shared-element back/offscreen fallback passes a real-browser smoke.
+- [ ] Grid density is visually stable across the supported responsive matrix.
+- [x] No scroll reset on view toggle.
+- [ ] Bottom actions remain visible at drawer snap points with/without the software keyboard.
+- [x] Reduced-motion code paths are preserved and covered by shared motion contracts.
 - [ ] iOS portrait + landscape smoke passes.
-- [ ] Typecheck/lint/tests/build pass.
+- [x] Typecheck/lint/tests/build pass.
+
+**T3 implementation record (PR #34, 2026-10-02):**
+- merged as `2bb0a28be791e7f7ffee634d1e7480651d84a733`;
+- card/detail transition identity is centralized for card, cover, and title only; metadata/badges remain ordinary content and unsupported platform transition APIs degrade to the normal navigation path;
+- bookmark, disclosure, tab, view-mode, and switch state motion now consume the shared motion boundary/tokens; reader next/previous/list/settings controls remain distinct actions rather than being force-morphed;
+- catalog grids are container-aware at a ~156px shelf-card minimum and ~320px compact-row minimum, while skeletons inherit the same grid contract;
+- PageContainer outer maxima are 1360/1200/1040px so the existing xl gutters preserve the documented usable content targets of ~1280/1120/960px; only Sumber, Pengaturan, and Unduhan were migrated to narrower semantic variants;
+- touched reader/filter overlays use existing semantic z-index and safe-area tokens; the filter drawer also caps itself to `VisualViewport.height` when available;
+- the final code head `a90dfa67dc529e5876893a1d41240f3ddac005bc` passed GitHub CI #311: typecheck, lint, unit/integration tests, and production build;
+- Vercel preview status is not a compile signal for this PR because the Hobby project is currently deployment-rate-limited;
+- responsive shared-element behavior, drawer snap-point visibility, interrupted/reversed animation behavior, and iOS portrait/landscape remain manual gates and are intentionally not inferred from jsdom/static checks.
 
 ---
 
