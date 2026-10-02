@@ -24,7 +24,9 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
 - Menghapus desktop title banner yang redundan pada Sumber, Unduhan, dan Pengaturan sambil mempertahankan shared fixed mobile header.
 - Mengganti CSS multi-column Pengaturan dengan dua stack desktop yang eksplisit dan hierarchy yang tetap deterministik saat collapse ke mobile.
 - Menyatukan policy partisipasi sumber untuk Beranda/Library/Populer, memilih default Library dari sumber eligible pertama, dan mempertahankan Search sebagai scope independen.
+- Search tetap mengabaikan toggle penjelajahan pengguna, tetapi tidak menawarkan sumber yang runtime-disabled, belum terpasang, tidak mendukung Search, unavailable, sedang diperbaiki, atau masih dalam pengembangan.
 - Populer tidak lagi menghilangkan sumber pilihan secara diam-diam ketika feed gagal/empty; status sumber tetap terlihat secara compact.
+- Loading state Sumber, Unduhan, Pengaturan, dan Populer mengikuti frame/column geometry final agar pergantian skeleton ke konten tidak mengubah lebar atau jumlah kolom utama.
 - Merapikan safe inset collage Hero, sparse Spotlight composition, dan bottom density Top 5 tanpa menambah dependency visual baru.
 
 ### Motion & Navigation Foundation

@@ -555,22 +555,14 @@ Use:
 - simple page title;
 - no decorative icon well unless it provides meaning.
 
-### Management header
+### Management destination
 
-For configuration/utility pages.
+For configuration/utility pages such as Sumber, Unduhan, and Pengaturan:
 
-Use:
-
-- icon well;
-- H1;
-- one-line subtitle;
-- divider when it helps separate header from controls.
-
-Applies to:
-
-- Sumber
-- Unduhan
-- Pengaturan
+- mobile uses the shared fixed `PageHeader` with icon, title, and compact subtitle;
+- desktop uses TopNav/breadcrumb context and starts directly with the functional content;
+- do not add a second desktop title banner below TopNav;
+- management/focused width, when needed, belongs to an inner `ContentLane`, not the whole route frame.
 
 ### Task-first page
 
