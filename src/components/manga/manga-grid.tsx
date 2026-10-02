@@ -9,13 +9,16 @@ export interface MangaGridProps extends React.HTMLAttributes<HTMLDivElement> {
   viewMode?: "grid" | "compact";
 }
 
-// Optimized desktop card grid: tighter vertical spacing and consistent columns
+/**
+ * Container-aware listing density derived from the existing supported-width matrix:
+ * shelf cards stay at roughly 156–193px, while compact rows keep enough room
+ * for cover, metadata, and the 44px bookmark target.
+ */
 export const MANGA_GRID_CLASS =
-  "grid grid-cols-2 gap-x-3 gap-y-5 sm:grid-cols-3 sm:gap-x-4 sm:gap-y-6 md:grid-cols-4 md:gap-x-5 md:gap-y-7 lg:grid-cols-5 xl:grid-cols-6 xl:gap-x-5 xl:gap-y-8";
+  "grid [grid-template-columns:repeat(auto-fit,minmax(min(100%,156px),1fr))] gap-x-3 gap-y-5 sm:gap-x-4 sm:gap-y-6 md:gap-x-5 md:gap-y-7 xl:gap-y-8";
 
-// Responsive compact row grid: 1 col on mobile, 2 cols on tablet/laptop, 3 cols on large desktop
 export const MANGA_COMPACT_GRID_CLASS =
-  "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2.5 sm:gap-3 lg:gap-3.5";
+  "grid [grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr))] gap-2.5 sm:gap-3 lg:gap-3.5";
 
 export const MangaGrid = React.forwardRef<HTMLDivElement, MangaGridProps>(
   ({ children, className, viewMode = "grid", ...props }, ref) => {
