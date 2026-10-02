@@ -110,6 +110,37 @@ describe("UnifiedFilterDrawer — Section Consistency & NSFW Gating", () => {
     expect(useSearchFilterStore.getState().genres).toEqual([]);
   });
 
+  it("reset clears filter store and invokes route-intent cleanup", async () => {
+    const onResetRouteIntent = vi.fn();
+    useSearchFilterStore.setState({
+      genres: ["action"],
+      formats: ["manga"],
+      status: "ongoing",
+      sort: "latest",
+    });
+
+    render(
+      <UnifiedFilterDrawer
+        context="search"
+        onResetRouteIntent={onResetRouteIntent}
+      />,
+      { wrapper }
+    );
+    fireEvent.click(screen.getByRole("button", { name: /Filter/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Reset" })).toBeDefined();
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Reset" }));
+
+    const state = useSearchFilterStore.getState();
+    expect(state.genres).toEqual([]);
+    expect(state.formats).toEqual([]);
+    expect(state.status).toBe("");
+    expect(state.sort).toBe("popular");
+    expect(onResetRouteIntent).toHaveBeenCalledTimes(1);
+  });
+
   it("filters out mature genres when hideNsfw is true in Search context", async () => {
     useSettingsStore.setState({ hideNsfw: true });
 
