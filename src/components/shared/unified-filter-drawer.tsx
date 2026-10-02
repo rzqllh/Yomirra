@@ -12,7 +12,7 @@ import { useQuery, useQueries } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { mergeFilters } from "@/shared/utils/filter-helpers";
-import { canonicalizeFilterValue, resolveSearchTag, type SearchTagCategory } from "@/shared/lib/search-intelligence";
+import { canonicalizeFilterValue, parseSearchExpression, resolveSearchTag, type SearchTagCategory } from "@/shared/lib/search-intelligence";
 import { normalizeTitle } from "@/shared/lib/title-matcher";
 import type { FilterList, SourceMetadata } from "@/shared/sources/source-types";
 import { sourceQueryOptions } from "@/shared/sources/source-query-options";
@@ -107,6 +107,7 @@ function normalizeSortOptions(items: Array<{ id: string; name: string }> | undef
 export interface UnifiedFilterDrawerProps {
   context: "search" | "library";
   activeSourceId?: string;
+  searchQuery?: string;
   trigger?: React.ReactNode;
   children?: React.ReactNode;
 }
@@ -114,6 +115,7 @@ export interface UnifiedFilterDrawerProps {
 export function UnifiedFilterDrawer({
   context,
   activeSourceId = "",
+  searchQuery = "",
   trigger,
   children,
 }: UnifiedFilterDrawerProps) {
@@ -244,12 +246,43 @@ export function UnifiedFilterDrawer({
     }
   }, [context, filterSourcesToFetch, searchFiltersQueries, libraryFiltersData, hideNsfw]);
 
+  const searchTagIntent = React.useMemo(() => {
+    if (context !== "search" || !searchQuery.trim()) {
+      return { genres: [] as string[], formats: [] as string[], status: "" };
+    }
+
+    const positiveTags = parseSearchExpression(searchQuery, dynamicFilters).tags.filter(
+      (tag) => tag.operator !== "exclude"
+    );
+
+    return {
+      genres: positiveTags
+        .filter((tag) => tag.category === "genre")
+        .map((tag) => tag.id),
+      formats: positiveTags
+        .filter((tag) => tag.category === "format")
+        .map((tag) => tag.id),
+      status:
+        positiveTags.find((tag) => tag.category === "status")?.id ?? "",
+    };
+  }, [context, searchQuery, dynamicFilters]);
+
   // Sync state when drawer opens
   const syncFromStore = () => {
     if (context === "search") {
-      setSelectedGenres(searchStore.genres);
-      setSelectedFormats(searchStore.formats || []);
-      setSelectedStatus(searchStore.status ? [searchStore.status] : []);
+      setSelectedGenres(
+        Array.from(new Set([...searchStore.genres, ...searchTagIntent.genres]))
+      );
+      setSelectedFormats(
+        Array.from(new Set([...(searchStore.formats || []), ...searchTagIntent.formats]))
+      );
+      setSelectedStatus(
+        searchTagIntent.status
+          ? [searchTagIntent.status]
+          : searchStore.status
+            ? [searchStore.status]
+            : []
+      );
       setSelectedSort(searchStore.sort || "popular");
     } else {
       setSelectedGenres(libraryStore.selectedGenres || []);
@@ -310,10 +343,25 @@ export function UnifiedFilterDrawer({
 
   const handleApply = () => {
     if (context === "search") {
+      const persistedGenres = selectedGenres.filter(
+        (id) => !searchTagIntent.genres.includes(id) || searchStore.genres.includes(id)
+      );
+      const persistedFormats = selectedFormats.filter(
+        (id) =>
+          !searchTagIntent.formats.includes(id) ||
+          (searchStore.formats || []).includes(id)
+      );
+      const selectedStatusValue = selectedStatus[0] || "";
+      const persistedStatus =
+        selectedStatusValue === searchTagIntent.status &&
+        searchStore.status !== searchTagIntent.status
+          ? searchStore.status
+          : selectedStatusValue;
+
       searchStore.applyFilters({
-        genres: selectedGenres,
-        formats: selectedFormats,
-        status: selectedStatus[0] || "",
+        genres: persistedGenres,
+        formats: persistedFormats,
+        status: persistedStatus,
         sort: selectedSort,
       });
     } else {
@@ -339,12 +387,15 @@ export function UnifiedFilterDrawer({
     setSelectedSort("popular");
   };
 
+  const searchActiveCount =
+    new Set([...searchStore.genres, ...searchTagIntent.genres]).size +
+    new Set([...(searchStore.formats || []), ...searchTagIntent.formats]).size +
+    (searchTagIntent.status || searchStore.status ? 1 : 0) +
+    (searchStore.sort !== "popular" && searchStore.sort ? 1 : 0);
+
   const activeCount =
     context === "search"
-      ? searchStore.genres.length +
-        (searchStore.formats?.length || 0) +
-        (searchStore.status ? 1 : 0) +
-        (searchStore.sort !== "popular" && searchStore.sort ? 1 : 0)
+      ? searchActiveCount
       : (libraryStore.selectedGenres?.length || 0) +
         (libraryStore.excludedGenres?.length || 0) +
         (libraryStore.selectedFormats?.length || 0) +
