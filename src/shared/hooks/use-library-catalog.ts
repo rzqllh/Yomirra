@@ -35,7 +35,10 @@ export function useLibraryCatalog() {
   const disabledSources = useSourcePreferencesStore((state) => state.disabledSources);
   const isNsfwFiltered = useSettingsStore((state) => state.hideNsfw);
   const { data: runtimeSources, isError: isSourceRegistryError } = useQuery(sourceQueryOptions);
-  const sourceCandidates = runtimeSources ?? (isSourceRegistryError ? dynamicSourceRegistry.getAll() : []);
+  const sourceCandidates = React.useMemo(
+    () => runtimeSources ?? (isSourceRegistryError ? dynamicSourceRegistry.getAll() : []),
+    [runtimeSources, isSourceRegistryError]
+  );
 
   const sourceParam = searchParams.get("source");
   const genreParams = React.useMemo(
