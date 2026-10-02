@@ -104,4 +104,49 @@ describe('OnboardingOverlay', () => {
     expect(mockCompleteOnboarding).toHaveBeenCalled();
     expect(onComplete).toHaveBeenCalled();
   });
+  it('exposes modal semantics, traps keyboard focus, and restores prior focus on unmount', async () => {
+    const previousButton = document.createElement('button');
+    previousButton.textContent = 'Previous trigger';
+    document.body.appendChild(previousButton);
+    previousButton.focus();
+
+    const { unmount } = render(<OnboardingOverlay onComplete={vi.fn()} />);
+
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog.getAttribute('aria-modal')).toBe('true');
+    expect(dialog.getAttribute('aria-labelledby')).toBe('onboarding-title');
+    expect(dialog.getAttribute('aria-describedby')).toBe('onboarding-description');
+
+    const skipButton = screen.getByRole('button', { name: 'Lewati' });
+    const nextButton = screen.getByRole('button', { name: 'Lanjut' });
+
+    await waitFor(() => {
+      expect(document.activeElement).toBe(skipButton);
+    });
+
+    fireEvent.keyDown(window, { key: 'Tab', shiftKey: true });
+    expect(document.activeElement).toBe(nextButton);
+
+    fireEvent.keyDown(window, { key: 'Tab' });
+    expect(document.activeElement).toBe(skipButton);
+
+    unmount();
+    expect(document.activeElement).toBe(previousButton);
+    previousButton.remove();
+  });
+
+  it('keeps onboarding navigation controls at the shared 44px touch-target baseline', async () => {
+    render(<OnboardingOverlay onComplete={vi.fn()} />);
+
+    const skipButton = screen.getByRole('button', { name: 'Lewati' });
+    const firstStepButton = screen.getByRole('button', { name: 'Langkah 1' });
+
+    expect(skipButton.className).toContain('min-h-11');
+    expect(firstStepButton.className).toContain('size-11');
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Lanjut' })).toBeTruthy();
+    });
+  });
+
 });
