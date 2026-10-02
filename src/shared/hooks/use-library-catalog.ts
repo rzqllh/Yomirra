@@ -129,8 +129,8 @@ export function useLibraryCatalog() {
 
   const activeSourceMetadata = React.useMemo(
     () =>
-      dynamicSourceRegistry.get(activeSourceId) ||
-      runtimeSources?.find((source) => source.id === activeSourceId),
+      runtimeSources?.find((source) => source.id === activeSourceId) ||
+      dynamicSourceRegistry.get(activeSourceId),
     [activeSourceId, runtimeSources]
   );
 
@@ -287,7 +287,7 @@ export function useLibraryCatalog() {
     retry: 1,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
-    enabled: !isDisabled,
+    enabled: Boolean(sourceParam || runtimeSources) && !isDisabled,
     placeholderData: keepPreviousData,
   });
 
