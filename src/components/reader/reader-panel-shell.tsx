@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { X } from "@phosphor-icons/react"
-import { motion, AnimatePresence } from "motion/react"
+import { motion, AnimatePresence, useReducedMotion } from "motion/react"
 import { cn } from "@/shared/utils/cn"
 import { IconButton } from "@/components/ui/icon-button"
 
@@ -31,14 +31,67 @@ export function ReaderPanelShell({
   className,
   contentClassName,
 }: ReaderPanelShellProps) {
-  // Handle Escape key to close panel
+  const reducedMotion = useReducedMotion()
+  const panelRef = React.useRef<HTMLDivElement>(null)
+  const previousFocusRef = React.useRef<HTMLElement | null>(null)
+  const titleId = React.useId()
+
+  React.useLayoutEffect(() => {
+    if (!isOpen) return
+
+    previousFocusRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null
+
+    const panel = panelRef.current
+    panel?.focus()
+
+    return () => {
+      const previous = previousFocusRef.current
+      if (previous?.isConnected) previous.focus()
+      previousFocusRef.current = null
+    }
+  }, [isOpen])
+
   React.useEffect(() => {
     if (!isOpen) return
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault()
         onClose()
+        return
+      }
+
+      if (event.key !== "Tab") return
+
+      const panel = panelRef.current
+      if (!panel) return
+
+      const focusable = Array.from(
+        panel.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter((element) => !element.hasAttribute("aria-hidden"))
+
+      if (focusable.length === 0) {
+        event.preventDefault()
+        panel.focus()
+        return
+      }
+
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+      const active = document.activeElement
+
+      if (event.shiftKey && (active === first || !panel.contains(active))) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && (active === last || !panel.contains(active))) {
+        event.preventDefault()
+        first.focus()
       }
     }
+
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [isOpen, onClose])
@@ -59,27 +112,33 @@ export function ReaderPanelShell({
         <>
           {/* Backdrop */}
           <motion.div
-            initial={{ opacity: 0 }}
+            aria-hidden="true"
+            initial={reducedMotion ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            exit={reducedMotion ? { opacity: 1 } : { opacity: 0 }}
+            transition={reducedMotion ? { duration: 0 } : { duration: 0.2 }}
             className={backdropClasses}
             onClick={onClose}
           />
 
           {/* Panel Container */}
           <motion.div
-            initial={{ y: "100%", opacity: 0 }}
+            ref={panelRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
+            tabIndex={-1}
+            initial={reducedMotion ? false : { y: "100%", opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            exit={{ y: "100%", opacity: 0 }}
-            transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+            exit={reducedMotion ? { opacity: 1 } : { y: "100%", opacity: 0 }}
+            transition={reducedMotion ? { duration: 0 } : { type: "spring", bounce: 0, duration: 0.4 }}
             className={cn(containerClasses, className)}
           >
             {/* Header */}
             <div className="flex flex-col gap-3 px-5 pt-3 pb-4 shrink-0 bg-surface-base/96 backdrop-blur-xl z-10 border-b border-border-subtle">
               <div className="mx-auto h-1 w-11 rounded-full bg-border-strong/80" />
               <div className="flex items-center justify-between">
-                <h2 className="text-base font-bold text-text-primary flex items-center gap-2">
+                <h2 id={titleId} className="text-base font-bold text-text-primary flex items-center gap-2">
                   {icon && <span className="text-accent">{icon}</span>}
                   {title}
                 </h2>
