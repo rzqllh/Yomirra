@@ -611,6 +611,35 @@ Audit membandingkan skeleton terhadap **current final page**, termasuk section o
 
 ---
 
+# Scoped Follow-up — Page Frame & Discovery Consistency
+
+This follow-up supersedes the earlier assumption that whole routes need different outer maxima.
+
+## Locked contract
+
+- all ordinary destination pages share one canonical outer frame/gutter;
+- `PageContainer` owns route alignment, not page-specific max-width;
+- narrower utility/management content uses an inner `ContentLane`;
+- Sumber, Unduhan, and Pengaturan keep the canonical mobile `PageHeader` but do not duplicate a desktop title banner below TopNav;
+- Pengaturan uses explicit desktop stacks, never CSS newspaper columns;
+- the user's discovery toggle controls Beranda + Library + Populer;
+- Search remains independent from that user toggle;
+- runtime/system eligibility remains separate from user preference;
+- Library without an explicit source resolves to the first eligible discovery source instead of a hard-coded provider;
+- Populer must not silently disappear an eligible source solely because its feed request failed.
+
+## Verification
+
+- compare left/right route edges at desktop widths;
+- verify mobile fixed headers remain present and reserve safe space;
+- verify focused/management lanes constrain only inner content;
+- verify source toggle behavior across Home, Library, Popular, and Search;
+- verify Settings one-column and two-column hierarchy;
+- verify Home Hero/Spotlight/Top-5 residual geometry;
+- run focused tests, full test suite, typecheck, lint, build, and browser/preview smoke when the environment permits.
+
+---
+
 # Recommended Implementation PR Split
 
 Do not implement this plan in one production PR.

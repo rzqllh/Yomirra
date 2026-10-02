@@ -22,11 +22,11 @@ Fitur search saat ini mencakup:
 - filter mapping ke nilai yang dimengerti masing-masing source;
 - optional semantic ranking bila `GEMINI_API_KEY` tersedia.
 
-Search global tidak mengikuti toggle source di Library/Populer. Source yang benar-benar unavailable tetap dikeluarkan dari pencarian.
+Search global tidak mengikuti toggle penjelajahan di Beranda/Library/Populer. Source yang benar-benar unavailable tetap dikeluarkan dari pencarian.
 
 ### Beranda dan discovery
 
-Beranda memprioritaskan komik, bukan banner dekoratif. Bagian pembuka memakai Hero ringkas dengan pencarian global, lalu `Sorotan terbaru` dan peringkat Top 5 per sumber sebelum Lanjut Baca dan daftar yang baru diperbarui.
+Beranda memprioritaskan komik, bukan banner dekoratif. Bagian pembuka memakai Hero ringkas dengan pencarian global, lalu `Sorotan terbaru` dan peringkat Top 5 per sumber sebelum Lanjut Baca dan daftar yang baru diperbarui. Toggle penjelajahan pada halaman Sumber berlaku konsisten ke Beranda, Library, dan Populer; Search tetap independen.
 
 Sorotan menjaga variasi sumber lebih dulu, menghindari penggabungan judul lintas sumber bila identitasnya belum cukup pasti, dan menghormati `prefers-reduced-motion`. Peringkat tetap scoped ke satu sumber agar posisi numeriknya tidak diperlakukan sebagai ranking global yang tidak dapat dibandingkan.
 
@@ -71,15 +71,7 @@ Stateful icon morphing dibatasi melalui wrapper internal yang menghormati `prefe
 
 ## Source bawaan
 
-Saat ini registry bawaan berisi:
-
-- Shinigami
-- Komikindo
-- MangaDex
-- Komiku
-- Komiku II
-- Asura Scans
-- KomikNesia
+Yomirra memiliki beberapa adapter source bawaan dan mendukung konfigurasi source runtime. Daftar source, status availability, dan kemampuan masing-masing source ditampilkan oleh aplikasi pada saat runtime agar dokumentasi publik tidak bergantung pada nama provider yang dapat berubah.
 
 Source dapat berubah status atau berhenti bekerja tanpa perubahan di Yomirra.
 

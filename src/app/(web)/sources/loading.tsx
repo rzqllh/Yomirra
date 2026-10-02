@@ -10,9 +10,11 @@ export default function Loading() {
       <PageContainer hasMobileHeader>
         <PageHeader
           title="Sumber"
-          subtitle="Kelola ekstensi dan sumber bacaan untuk Yomirra."
+          subtitle="Pilih sumber yang digunakan untuk menjelajah dan membaca komik."
           icon={<HardDrives size={24} weight="duotone" />}
+          hideDesktop
         />
+        <h1 className="sr-only">Sumber</h1>
         <Skeleton className="h-16 w-full rounded-2xl" />
         <Skeleton className="h-11 w-full max-w-md rounded-2xl" />
         <SourceListSkeleton />

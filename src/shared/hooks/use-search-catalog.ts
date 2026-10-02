@@ -29,6 +29,7 @@ import {
   type SearchCatalogCandidate,
 } from "@/shared/lib/search-intelligence";
 import type { FilterList, SourceMetadata } from "@/shared/sources/source-types";
+import { isSearchSourceSystemEligible } from "@/shared/sources/discovery-source-policy";
 
 export function useSearchCatalog() {
   const searchParams = useSearchParams();
@@ -104,9 +105,7 @@ export function useSearchCatalog() {
     });
 
     return sources.filter((source) => {
-      if (!source.isInstalled || source.isEnabled === false || !source.capabilities?.search) {
-        return false;
-      }
+      if (!isSearchSourceSystemEligible(source)) return false;
       if (source.isNsfw && hideNsfw) return false;
       return true;
     });

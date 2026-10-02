@@ -144,7 +144,7 @@ export function ReaderChapterDrawer({
                         }
                       }}
                       className={cn(
-                        "min-h-10 rounded-xl border px-2 text-sm font-bold transition-[background-color,border-color,color,transform] outline-none active:scale-[0.97]",
+                        "min-h-11 rounded-xl border px-2 text-sm font-bold motion-safe:transition-[background-color,border-color,color,transform] outline-none motion-safe:active:scale-[0.97]",
                         isCurrent
                           ? "border-accent bg-accent text-accent-on shadow-xs"
                           : "border-border-subtle bg-surface-raised text-text-secondary hover:border-border-strong hover:text-text-primary hover:bg-surface-hover"

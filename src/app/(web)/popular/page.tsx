@@ -10,7 +10,8 @@ import { getManifestUrlFromCookie } from "@/server/lib/sources/server-manifest";
 import { cookies } from "next/headers";
 import { YomirraSurface, PageContainer } from "@/components/ui/layout";
 import { PageHeader } from "@/components/app/header";
-import { Fire } from "@phosphor-icons/react/dist/ssr";
+import { Fire, WarningCircle } from "@phosphor-icons/react/dist/ssr";
+import { parseDisabledSourceIdsCookie, selectDiscoverySources } from "@/shared/sources/discovery-source-policy";
 
 export const metadata: Metadata = {
   title: "Komik Populer — Yomirra",
@@ -19,15 +20,33 @@ export const metadata: Metadata = {
 
 async function PopularFeed({ sourceId, sourceName }: { sourceId: string; sourceName: string }) {
   let popular: any;
+  let loadFailed = false;
+
   try {
     const manifestUrl = await getManifestUrlFromCookie(sourceId);
     const source = await sourceManager.getSource(sourceId, manifestUrl);
     popular = await withCache(`source:${sourceId}:popular:1`, () => source.getPopular(1), CACHE_TTL.DISCOVERY);
   } catch (_error) {
-    return null;
+    loadFailed = true;
   }
 
-  if (!popular?.mangas.length) return null;
+  if (loadFailed || !popular?.mangas?.length) {
+    return (
+      <section className="mb-8 rounded-2xl border border-border-subtle bg-surface-raised p-4 sm:p-5">
+        <div className="flex items-start gap-3">
+          <WarningCircle size={20} weight="duotone" className="mt-0.5 shrink-0 text-text-muted" />
+          <div className="min-w-0">
+            <h2 className="text-base font-bold text-text-primary">{sourceName}</h2>
+            <p className="mt-1 text-sm text-text-muted">
+              {loadFailed
+                ? "Data populer dari sumber ini belum bisa dimuat."
+                : "Belum ada data populer dari sumber ini."}
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="mb-12">
@@ -40,7 +59,7 @@ async function PopularFeed({ sourceId, sourceName }: { sourceId: string; sourceN
         </Link>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 w-full">
+      <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
         {popular.mangas.slice(0, 15).map((manga: any, index: number) => (
           <div key={manga.id} className="w-full">
             <EditorialCard 
@@ -62,22 +81,14 @@ export const dynamic = "force-dynamic";
 
 export default async function PopularPage() {
   const cookieStore = await cookies();
-  const disabledSourcesCookie = cookieStore.get("yomirra-disabled-sources")?.value;
-  let userDisabledSources: string[] = [];
-
-  if (disabledSourcesCookie) {
-    try {
-      userDisabledSources = JSON.parse(decodeURIComponent(disabledSourcesCookie));
-    } catch (_e) {}
-  }
+  const userDisabledSources = parseDisabledSourceIdsCookie(
+    cookieStore.get("yomirra-disabled-sources")?.value
+  );
 
   const allRuntime = await getRuntimeSources();
-  const activeSources = allRuntime.filter(
-    (s) =>
-      s.isEnabled &&
-      s.isInstalled &&
-      s.status !== "unavailable" &&
-      !userDisabledSources.includes(s.id)
+  const activeSources = selectDiscoverySources(
+    allRuntime,
+    userDisabledSources
   );
 
   return (

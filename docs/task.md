@@ -118,7 +118,9 @@
 - the CSP includes the current Next.js self/inline bootstrap requirement, HTTPS assets/API, WebSocket, Firebase auth frame hosts, blob workers, and manifest;
 - the merged production deployment showed no warning/error runtime logs during this verification window;
 - unauthenticated admin smoke fails closed as designed, but production currently reports admin auth as **unconfigured** (HTTP 503), which means an authorized admin smoke cannot pass until the production admin credential/Firebase Admin configuration is provisioned;
-- **remaining:** provision/confirm production admin auth, then run authorized admin smoke, interactive Firebase popup flow, and installed-PWA/iOS Safari smoke. This item stays open until those real-browser/configuration checks are available; report-only CSP must not be promoted to enforcement before that check.
+- latest production deployment `dpl_BtfG7gms2nMxrAgyzZ5VAbeUtMAA` is READY on code commit `e84bdd29efd6d70b75c8df4351ef27ddaafd46f7`; Home, Account, Admin, manifest, and Service Worker all return HTTP 200 through the current production alias;
+- current production `sw.js` contains the v2 reading-buffer/image/page cache names and sensitive route prefixes for `/account`, `/admin`, and `/api/auth`; production manifest/SW responses carry the expected report-only CSP, and Vercel reported no runtime errors in the latest one-hour verification window;
+- **remaining:** provision/confirm production admin auth, then run authorized admin smoke, interactive Firebase popup flow, and installed-PWA/iOS Safari smoke. Static HTTP/SW inspection still does not prove browser interaction or installed-PWA upgrade behavior, so report-only CSP must not be promoted to enforcement before those checks.
 
 - [x] **T1.21** Document required directives in code/config comments, not credential values.
 - [x] **T1.22** Remove raw internal `error.message` from user-facing generic error surfaces.
@@ -349,7 +351,7 @@
 - card/detail transition identity is centralized for card, cover, and title only; metadata/badges remain ordinary content and unsupported platform transition APIs degrade to the normal navigation path;
 - bookmark, disclosure, tab, view-mode, and switch state motion now consume the shared motion boundary/tokens; reader next/previous/list/settings controls remain distinct actions rather than being force-morphed;
 - catalog grids are container-aware at a ~156px shelf-card minimum and ~320px compact-row minimum, while skeletons inherit the same grid contract;
-- PageContainer outer maxima are 1360/1200/1040px so the existing xl gutters preserve the documented usable content targets of ~1280/1120/960px; only Sumber, Pengaturan, and Unduhan were migrated to narrower semantic variants;
+- the original PR #34 implementation used 1360/1200/1040px route-level maxima; this historical choice is superseded by PR #43, which keeps one outer frame and moves management/focused width to inner content lanes;
 - touched reader/filter overlays use existing semantic z-index and safe-area tokens; the filter drawer also caps itself to `VisualViewport.height` when available;
 - the final code head `a90dfa67dc529e5876893a1d41240f3ddac005bc` passed GitHub CI #311: typecheck, lint, unit/integration tests, and production build;
 - Vercel preview status is not a compile signal for this PR because the Hobby project is currently deployment-rate-limited;
@@ -456,41 +458,82 @@
 
 ---
 
-# T7 — Accessibility + Performance Cleanup PR
+# T7 — Accessibility + Performance Cleanup — code integrated on main
 
 ## Accessibility
 
-- [ ] **T7.1** Reduced-motion audit across navigation, morphs, drawer, grid/list, shared elements, and error states.
-- [ ] **T7.2** Keyboard/focus audit.
-- [ ] **T7.3** Focus-return audit for overlays.
-- [ ] **T7.4** Touch-target audit.
-- [ ] **T7.5** Accessible-name/state audit.
-- [ ] **T7.6** Contrast audit on accent, muted metadata, selected chips, disabled states.
-- [ ] **T7.7** Remove continuous decorative motion from critical/error surfaces.
+- [x] **T7.1** Audit shared navigation/motion primitives, state morphs, drawers, grid/list cards, reader panels, and critical/error surfaces for `prefers-reduced-motion`; close the custom reader-panel gap and make filter badge transitions instant under reduced motion.
+- [x] **T7.2** Audit keyboard/focus behavior on shared overlays and add an explicit focus trap to the custom reader panel.
+- [x] **T7.3** Audit focus-return behavior; reader panels now restore the invoking control only after exit animation completes, while existing Radix/Vaul/command-overlay focus behavior remains under their established regression coverage.
+- [x] **T7.4** Audit shared touch targets and raise remaining dialog-close, filter-reset, and reader-chapter controls to the shared 44px minimum.
+- [x] **T7.5** Audit accessible names/states on shared controls: icon buttons require an `aria-label`, reader panels expose dialog semantics, and active reader chapters retain `aria-current`.
+- [x] **T7.6** Verify dark/light accent, muted metadata, and selected-chip token pairs at >= 4.5:1; disabled buttons remain semantically `disabled`/`aria-disabled` rather than relying on color alone.
+- [x] **T7.7** Verify critical `ErrorState` surfaces contain no continuous decorative spin/pulse/infinite animation.
 
 ## Performance
 
-- [ ] **T7.8** Record client-JS delta from motion/icon work.
-- [ ] **T7.9** Record navigation interaction latency before/after.
-- [ ] **T7.10** Record LCP on Home and detail.
-- [ ] **T7.11** Record CLS around skeleton replacement/navigation.
-- [ ] **T7.12** Measure card-detail enrichment request concurrency.
-- [ ] **T7.13** Add a small card-enrichment queue/budget if N+1 bursts remain.
-- [ ] **T7.14** Confirm React Query dedupe/cache prevents duplicate detail requests.
-- [ ] **T7.15** Record reader image concurrency.
+- [ ] **T7.8** Record client-JS delta from motion/icon work in a browser/bundle measurement environment. No new runtime dependency was introduced by this cleanup, but an exact client-JS byte delta is not claimed from CI alone.
+- [ ] **T7.9** Record navigation interaction latency before/after in a real browser profile.
+- [ ] **T7.10** Record LCP on Home and detail in a real browser/profile or production Web Vitals dataset.
+- [ ] **T7.11** Record CLS around skeleton replacement/navigation in a real browser/profile or production Web Vitals dataset.
+- [x] **T7.12** Measure card-detail enrichment concurrency in deterministic tests: compact-card synopsis enrichment is capped at 4 active detail requests, with excess work queued.
+- [x] **T7.13** Add a scoped FIFO card-detail enrichment budget because simultaneous IntersectionObserver activation could otherwise produce N+1 request bursts.
+- [x] **T7.14** Confirm React Query dedupe/cache behavior: simultaneous compact cards with the same `sourceId + mangaId` issue one detail request, while the shared budget preserves AbortSignal cancellation.
+- [x] **T7.15** Record reader scheduler concurrency policy from T5: data-saver/light = 1 page look-ahead, balanced = 2, aggressive = 3; actual browser/network connection concurrency remains browser-managed.
 
 ### Final quality gate
 
-- [ ] Tests pass.
-- [ ] Typecheck passes.
-- [ ] Lint passes.
-- [ ] Production build passes.
+- [x] Tests pass.
+- [x] Typecheck passes.
+- [x] Lint passes.
+- [x] Production build passes.
 - [ ] Mobile Safari/PWA smoke passes.
-- [ ] Reduced-motion smoke passes.
-- [ ] Throttled reader smoke passes.
-- [ ] No credential appears in client bundle/public docs.
-- [ ] Public docs remain provider-neutral.
-- [ ] Final diff is scoped.
+- [ ] Reduced-motion smoke passes in a real browser/OS preference.
+- [ ] Throttled reader smoke passes on a real browser/device profile.
+- [x] No new credential was introduced by the T7 diff; existing client/public-doc secret gate from T1 remains intact.
+- [x] Public README/CHANGELOG are provider-neutral and protected by a regression test.
+- [x] Final diff is scoped to accessibility, card enrichment, tests, and public-doc neutrality.
+
+**T7 implementation record (draft PR #42 CI harness, 2026-10-02):**
+- integrated to `main` as squash commit `e84bdd29efd6d70b75c8df4351ef27ddaafd46f7`; draft PR #42 was closed without being marked ready, so no automated Codex review was triggered;
+- custom `ReaderPanelShell` now exposes modal dialog semantics, traps Tab/Shift+Tab, closes on Escape, honors reduced motion, and restores focus after exit completion;
+- remaining sub-44px targets in the audited shared surfaces were normalized to the 44px minimum;
+- token-level contrast regression coverage verifies the audited light/dark pairs at >= 4.5:1;
+- compact-card synopsis hydration now uses a shared 4-request budget while React Query continues to dedupe identical detail queries and propagate cancellation;
+- README/CHANGELOG source-provider names were removed and a provider-neutral public-doc regression guard was added;
+- GitHub CI #349 passed typecheck, lint, **170 test files / 1,093 tests**, and production build; Next.js compiled successfully in 33.0s;
+- production deployment `dpl_BtfG7gms2nMxrAgyzZ5VAbeUtMAA` is READY on `e84bdd29efd6d70b75c8df4351ef27ddaafd46f7`; the public production aliases now serve the T7 code slice, and Vercel reported no runtime errors in the latest one-hour verification window;
+- exact client-JS byte delta, navigation latency, LCP, CLS, Mobile Safari/PWA, OS reduced-motion, and real throttled-reader measurements remain open because the available deployment/log interfaces do not provide an interactive browser/DevTools performance profile.
+
+---
+
+# Follow-up — Page Frame & Discovery Consistency (PR #43)
+
+- [x] Replace route-level max-width differences with one canonical outer `PageContainer` frame.
+- [x] Add `ContentLane` for intentional management/focused inner widths.
+- [x] Align Home and Rak Buku to the same canonical outer frame contract.
+- [x] Keep Sumber, Unduhan, and Pengaturan mobile headers while suppressing redundant desktop title banners.
+- [x] Keep Unduhan task/storage content in a focused inner lane without narrowing the whole route.
+- [x] Replace Pengaturan CSS multi-column flow with explicit desktop stacks and preserve the newer shared-device cleanup controls.
+- [x] Centralize discovery-source eligibility for Beranda, Library, and Populer.
+- [x] Keep Search independent from the user discovery toggle.
+- [x] Make Library resolve its no-URL default from the first eligible discovery source.
+- [x] Keep eligible Populer sources visible with compact failure/empty states instead of silently dropping them.
+- [x] Clarify Source-card copy so user preference and runtime eligibility are not conflated.
+- [x] Tighten Home Hero safe inset, sparse Spotlight balance, and Top-5 bottom geometry.
+- [x] Focused regression tests pass.
+- [x] Full tests/typecheck/lint/build pass.
+- [ ] Desktop/tablet/mobile browser smoke passes where preview access is available.
+- [x] Final diff is reconciled with the latest `main` and contains no unrelated changes.
+
+This follow-up supersedes the T3 width implementation detail that used 1360/1200/1040px as **outer route maxima**. The semantic archetypes remain useful only as inner content-lane intent.
+
+**PR #43 verification record (2026-10-02):**
+- GitHub CI #370 passed typecheck, lint, **171 test files / 1,100 tests**, and the Next.js production build; compilation completed successfully in 44s.
+- Focused coverage includes the canonical PageContainer/ContentLane contract, Library source resolution, discovery/search source eligibility, Home leaderboard geometry, and route-loading geometry exercised by the full suite.
+- The branch was reconciled against `main` with no behind commits and the final changed-file set remains scoped to page framing, discovery/search source participation, Home residual geometry, loading states, tests, and aligned documentation.
+- Vercel produced a READY preview at commit `3ad27e91991d0092fa58f07ed13e839d53895302` with no preview runtime error/fatal logs in the checked window. Later preview builds are subject to the Hobby deployment-rate limit, so the final two incremental commits are verified by GitHub production build rather than a newer Vercel preview.
+- Interactive desktop/tablet/mobile visual smoke remains manual because the available execution environment cannot open the preview in a browser.
 
 ---
 

@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/states/empty-state";
 import { WarningCircle } from "@phosphor-icons/react/dist/ssr";
 import { UnifiedFeed } from "@/components/app/unified-feed";
 import { SourceFeedSkeleton } from "@/components/app/source-feed-skeleton";
+import { parseDisabledSourceIdsCookie, selectDiscoverySources } from "@/shared/sources/discovery-source-policy";
 
 export const metadata: Metadata = {
   title: "Yomirra - Reader Komik Multi-Sumber",
@@ -17,22 +18,14 @@ export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const cookieStore = await cookies();
-  const disabledSourcesCookie = cookieStore.get('yomirra-disabled-sources')?.value;
-  let userDisabledSources: string[] = [];
-  
-  if (disabledSourcesCookie) {
-    try {
-      userDisabledSources = JSON.parse(decodeURIComponent(disabledSourcesCookie));
-    } catch(e) {}
-  }
+  const userDisabledSources = parseDisabledSourceIdsCookie(
+    cookieStore.get("yomirra-disabled-sources")?.value
+  );
 
   const allRuntimeSources = await getRuntimeSources();
-
-  const activeSources = allRuntimeSources.filter(s => 
-    s.isEnabled && 
-    s.isInstalled && 
-    s.status !== "unavailable" &&
-    !userDisabledSources.includes(s.id)
+  const activeSources = selectDiscoverySources(
+    allRuntimeSources,
+    userDisabledSources
   );
 
   return (
@@ -46,7 +39,7 @@ export default async function HomePage() {
           <EmptyState
             icon={<WarningCircle size={40} className="text-accent" weight="duotone" />}
             title="Tidak ada sumber yang aktif."
-            description="Pilih sumber yang mau tampil di Library dan Populer."
+            description="Pilih sumber yang mau tampil di Beranda, Library, dan Populer."
           />
         </div>
       )}

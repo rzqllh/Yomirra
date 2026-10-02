@@ -97,7 +97,7 @@ export function LibraryResults({
       <EmptyState
         icon={<HardDrives size={40} className="text-text-muted" weight="duotone" />}
         title="Belum ada sumber aktif"
-        description="Pilih sumber yang mau tampil di Library dan Populer."
+        description="Pilih sumber yang mau tampil di Beranda, Library, dan Populer."
         action={
           <Button onClick={() => router.push("/sources")} variant="outline" className="mt-4 rounded-xl shadow-sm font-bold">
             Atur sumber
@@ -112,7 +112,7 @@ export function LibraryResults({
       <EmptyState
         icon={<HardDrives size={40} className="text-text-muted" weight="duotone" />}
         title="Sumber ini tidak ditampilkan"
-        description="Pilih sumber yang mau tampil di Library dan Populer."
+        description="Pilih sumber yang mau tampil di Beranda, Library, dan Populer."
         action={
           <Button onClick={() => router.push("/sources")} variant="outline" className="mt-4 rounded-xl shadow-sm font-bold">
             Atur sumber

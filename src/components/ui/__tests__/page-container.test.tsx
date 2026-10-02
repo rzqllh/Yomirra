@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
 import { act } from "react";
-import { PageContainer } from "../page-container";
+import { ContentLane, PageContainer } from "../page-container";
 
 describe("PageContainer", () => {
   let container: HTMLDivElement;
@@ -36,7 +36,7 @@ describe("PageContainer", () => {
     expect(el?.textContent).toBe("Hello PageContainer");
   });
 
-  it("applies the canonical layout classes and avoids undefined/scroll tokens", async () => {
+  it("applies the canonical fluid page frame and avoids nested page scrolling", async () => {
     await act(async () => {
       root.render(<PageContainer id="test-container">Content</PageContainer>);
     });
@@ -45,9 +45,8 @@ describe("PageContainer", () => {
     expect(el).not.toBeNull();
     const className = el?.getAttribute("class") || "";
 
-    // Required classes
     expect(className).toContain("w-full");
-    expect(className).toContain("max-w-[1360px]");
+    expect(className).toContain("max-w-none");
     expect(className).toContain("px-4");
     expect(className).toContain("md:px-8");
     expect(className).toContain("xl:px-10");
@@ -55,14 +54,13 @@ describe("PageContainer", () => {
     expect(className).toContain("flex-col");
     expect(className).toContain("gap-6");
 
-    // Prohibited classes
     expect(className).not.toContain("min-h-screen");
     expect(className).not.toContain("h-screen");
     expect(className).not.toContain("overflow-y-auto");
     expect(className).not.toContain("overflow-y-scroll");
   });
 
-  it("supports distinct documented container archetype widths", async () => {
+  it("keeps every page archetype on the same outer frame", async () => {
     await act(async () => {
       root.render(
         <>
@@ -73,9 +71,33 @@ describe("PageContainer", () => {
       );
     });
 
-    expect(container.querySelector("#c-wide")?.className).toContain("max-w-[1360px]");
-    expect(container.querySelector("#c-mgmt")?.className).toContain("max-w-[1200px]");
-    expect(container.querySelector("#c-focused")?.className).toContain("max-w-[1040px]");
+    for (const id of ["#c-wide", "#c-mgmt", "#c-focused"]) {
+      const element = container.querySelector(id);
+      expect(element?.className).toContain("max-w-none");
+      expect(element?.className).not.toContain("max-w-[1360px]");
+      expect(element?.className).not.toContain("max-w-[1200px]");
+      expect(element?.className).not.toContain("max-w-[1040px]");
+    }
+
+    expect(container.querySelector("#c-wide")?.getAttribute("data-container-variant")).toBe("wide");
+    expect(container.querySelector("#c-mgmt")?.getAttribute("data-container-variant")).toBe("management");
+    expect(container.querySelector("#c-focused")?.getAttribute("data-container-variant")).toBe("focused");
+  });
+
+  it("uses inner lanes for intentionally narrower content", async () => {
+    await act(async () => {
+      root.render(
+        <>
+          <ContentLane id="lane-full">Full</ContentLane>
+          <ContentLane id="lane-mgmt" variant="management">Management</ContentLane>
+          <ContentLane id="lane-focused" variant="focused">Focused</ContentLane>
+        </>
+      );
+    });
+
+    expect(container.querySelector("#lane-full")?.className).toContain("max-w-none");
+    expect(container.querySelector("#lane-mgmt")?.className).toContain("max-w-[1200px]");
+    expect(container.querySelector("#lane-focused")?.className).toContain("max-w-[1040px]");
   });
 
   it("forwards ref to the underlying div", async () => {

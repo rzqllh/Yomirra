@@ -35,6 +35,7 @@ export function EditorialSpotlight({
 }: EditorialSpotlightProps) {
   const reducedMotion = useReducedMotion();
   const href = getMangaDetailHref(sourceId, manga.id, "/");
+  const hasDescription = Boolean(manga.description?.trim());
   const metadata = [manga.format, manga.latestChapter, sourceName].filter(Boolean);
 
   return (
@@ -53,11 +54,11 @@ export function EditorialSpotlight({
             aria-hidden="true"
             referrerPolicy="no-referrer"
             decoding="async"
-            className="pointer-events-none absolute inset-0 size-full scale-105 object-cover opacity-[0.08]"
+            className="pointer-events-none absolute inset-0 size-full scale-105 object-cover opacity-[0.14]"
           />
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-0 bg-surface-raised/90"
+            className="pointer-events-none absolute inset-0 bg-gradient-to-r from-surface-raised via-surface-raised/90 to-surface-raised/72"
           />
         </>
       )}
@@ -89,7 +90,7 @@ export function EditorialSpotlight({
           </div>
         </Link>
 
-        <div className="relative flex min-w-0 flex-col justify-between gap-2.5 p-3.5 sm:gap-3 sm:p-5 lg:p-6">
+        <div className="relative flex min-w-0 flex-col gap-2.5 p-3.5 sm:gap-3 sm:p-5 lg:p-6">
           <div className="min-w-0">
             <p className="mb-1.5 text-[10px] font-extrabold uppercase tracking-[0.14em] text-accent sm:text-[11px]">
               SOROTAN TERBARU
@@ -122,7 +123,7 @@ export function EditorialSpotlight({
             )}
           </div>
 
-          <div className="flex min-w-0 items-end justify-between gap-2 border-t border-border-subtle/60 pt-2.5">
+          <div className={cn("flex min-w-0 items-end justify-between gap-2 border-t border-border-subtle/60 pt-2.5", hasDescription ? "mt-auto" : "mt-5 sm:mt-6")}>
             <Link
               href={href}
               className="inline-flex min-h-11 items-center gap-1.5 rounded-[10px] px-2 text-xs font-bold text-accent transition-colors hover:bg-accent/5 focus-visible:outline-2 focus-visible:outline-accent sm:text-sm"

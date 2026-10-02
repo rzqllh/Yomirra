@@ -18,6 +18,17 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
 - **Home Loading Geometry**:
   - Menyatukan route loading, nested Suspense fallback, dan client hydration pada urutan Hero → Sorotan & peringkat → Lanjut Baca → Baru diperbarui.
 
+### Page Frame & Discovery Consistency
+
+- Menyatukan Beranda, Library, Rak Buku, Populer, Cari, Sumber, Unduhan, dan Pengaturan pada outer page frame/gutter yang sama; management/focused width dipindahkan menjadi inner `ContentLane` agar canvas tidak berubah ukuran antar-route.
+- Menghapus desktop title banner yang redundan pada Sumber, Unduhan, dan Pengaturan sambil mempertahankan shared fixed mobile header.
+- Mengganti CSS multi-column Pengaturan dengan dua stack desktop yang eksplisit dan hierarchy yang tetap deterministik saat collapse ke mobile.
+- Menyatukan policy partisipasi sumber untuk Beranda/Library/Populer, memilih default Library dari sumber eligible pertama, dan mempertahankan Search sebagai scope independen.
+- Search tetap mengabaikan toggle penjelajahan pengguna, tetapi tidak menawarkan sumber yang runtime-disabled, belum terpasang, tidak mendukung Search, unavailable, sedang diperbaiki, atau masih dalam pengembangan.
+- Populer tidak lagi menghilangkan sumber pilihan secara diam-diam ketika feed gagal/empty; status sumber tetap terlihat secara compact.
+- Loading state Sumber, Unduhan, Pengaturan, dan Populer mengikuti frame/column geometry final agar pergantian skeleton ke konten tidak mengubah lebar atau jumlah kolom utama.
+- Merapikan safe inset collage Hero, sparse Spotlight composition, dan bottom density Top 5 tanpa menambah dependency visual baru.
+
 ### Motion & Navigation Foundation
 
 - **Semantic Motion System** (`src/shared/lib/motion/`, `src/components/motion/`):
@@ -111,8 +122,8 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
   - Mengonsolidasikan primitif `SectionHeading` standar dengan dukungan aksi, subtitle, dan badge yang selaras dengan `PageContainer` dan `PageToolbar`.
 - **Reader Navigation & Chapter Drawer Polish** (`src/components/reader/reader-chapter-drawer.tsx`):
   - Chapter drawer secara otomatis melakukan auto-centering ke chapter yang sedang aktif saat dibuka, menggunakan chip kompak terstruktur, dan memicu intent navigasi instan.
-- **Adapter Reliability & Canonical Multi-Source Hardening** (`src/server/lib/sources/adapters/shinigami/`, `src/server/lib/sources/adapters/mangadex/`, `src/shared/lib/__tests__/canonical-search.test.ts`):
-  - Mengaudit dan memvalidasi adapter Shinigami (18 tests) dan MangaDex (73 tests) tanpa kompromi pada outbound policy `safeFetch`.
+- **Adapter Reliability & Canonical Multi-Source Hardening** (`src/server/lib/sources/adapters/`, `src/shared/lib/__tests__/canonical-search.test.ts`):
+  - Mengaudit dan memvalidasi dua adapter bawaan prioritas (18 dan 73 regression tests) tanpa kompromi pada outbound policy `safeFetch`.
   - Memverifikasi kontinuitas canonical identity, chapter mapping presisi, dan reading progress saat beralih sumber.
 - **Regression Testing** (`src/shared/lib/__tests__/phase3-reading-experience.test.ts`):
   - Menambahkan suite pengujian terfokus untuk isolasi rating, preservasi unbookmark, dan navigasi chapter.
@@ -181,9 +192,9 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
 
 ### P0 Core Stability & P1 Core Reading Experience (Phase 1 & 2)
 
-- Audit & hardening Shinigami adapter: defensive handling saat response payload `null`/`undefined` pada `getPopular`, `getLatest`, `getChapters`, dan `getPages`, pembatasan `allowedHosts: ["api.shngm.io"]`, standarisasi metadata Source Engine V1 (`upstreamDomain`, `adapterVersion`, `supportedLanguages`), serta constructor dependency injection untuk pengujian terisolasi.
+- Audit & hardening salah satu adapter bawaan: defensive handling saat response payload `null`/`undefined` pada `getPopular`, `getLatest`, `getChapters`, dan `getPages`, pembatasan outbound host allowlist, standarisasi metadata Source Engine V1 (`upstreamDomain`, `adapterVersion`, `supportedLanguages`), serta constructor dependency injection untuk pengujian terisolasi.
 - PagedReader image priority & controlled concurrency predictive preloading: halaman aktif dimuat dengan `priority={true}` dan `fetchPriority="high"`, sementara 1–3 halaman berikutnya (berdasarkan `preloadIntensity` dan `dataSaver`) di-preload secara background dalam hidden container dengan `fetchPriority="low"`, mencegah delay dan blank screen saat navigasi halaman.
-- Regression test suite untuk Shinigami adapter (`src/server/lib/sources/adapters/shinigami/__tests__/adapter.test.ts`, 18 tests PASS) dan PagedReader (`src/components/reader/__tests__/paged-reader.test.tsx`, 8 tests PASS).
+- Regression test suite untuk adapter bawaan yang diaudit (18 tests PASS) dan PagedReader (`src/components/reader/__tests__/paged-reader.test.tsx`, 8 tests PASS).
 - Verifikasi penuh Phase 2 Gate: 124 test file (849 tests) PASS, typecheck PASS (0 error), lint PASS (0 error), production build (`next build --webpack`) PASS.
 
 ### P2 Search Intelligence Foundation (Phase 3)
