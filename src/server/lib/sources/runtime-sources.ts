@@ -53,6 +53,7 @@ export async function getRuntimeSources(): Promise<SourceMetadata[]> {
         detail: true,
         chapters: true,
         pages: true,
+        filters: false,
       },
       isDynamic: true,
     }));
