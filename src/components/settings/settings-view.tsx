@@ -1,10 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { UserCircle, Broom, Palette, WifiHigh, Fire, ArrowsClockwise, DeviceMobile, FileText, Clock, Bell, X, Compass, Globe, Trash, CaretLeft } from "@phosphor-icons/react";
+import { UserCircle, Broom, Palette, WifiHigh, Fire, ArrowsClockwise, DeviceMobile, FileText, Clock, Bell, Compass, Globe, Trash, CaretLeft } from "@phosphor-icons/react";
 import { BackupRestoreView } from "@/components/settings/backup-restore-modal";
 import { useAuth } from "@/shared/hooks/use-auth";
-import { useSync } from "@/shared/hooks/use-sync";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
@@ -20,11 +19,8 @@ import { PageHeader } from "@/components/app/header";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Gear, ShieldWarning } from "@phosphor-icons/react/dist/ssr";
 import { toast } from "sonner";
-import { format } from "date-fns";
-import { id as idLocale } from "date-fns/locale";
 import { ConfirmationModal } from "@/components/ui/confirmation-modal";
 import { SettingsSection, SettingsItem, IconWrapper } from "@/app/(web)/settings/components/settings-ui";
-import { cn } from "@/shared/utils/cn";
 import { clearAutomaticCache, getStorageEstimate } from "@/shared/lib/reading-buffer";
 import { clearSharedDeviceData } from "@/shared/lib/local-data-cleanup";
 
@@ -38,7 +34,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
   const clearHistory = useHistoryStore((state) => state.clearHistory);
   const clearLibrary = useLibraryStore((state) => state.clearLibrary);
   const {
-    dataSaver, setDataSaver, hideNsfw, setHideNsfw, lastSyncedAt, keepScreenAwake, setKeepScreenAwake,
+    dataSaver, setDataSaver, hideNsfw, setHideNsfw, keepScreenAwake, setKeepScreenAwake,
     checkOnAppStart, setCheckOnAppStart, minimumCheckIntervalMinutes, setMinimumCheckIntervalMinutes,
     notifyForAllLibraryItems, setNotifyForAllLibraryItems,
     routingMode, setRoutingMode, preferredLanguages, setPreferredLanguages
