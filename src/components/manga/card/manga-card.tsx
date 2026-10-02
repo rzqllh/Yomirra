@@ -36,6 +36,7 @@ import type { MangaKey } from "@/shared/types/collection";
 import type { BaseCardProps } from "./types";
 import { cn } from "@/shared/utils/cn";
 import { getRelativeTime } from "@/shared/utils/date";
+import { getMangaTransitionNames } from "@/shared/lib/motion/transition-identity";
 import { normalizeSynopsis } from "@/shared/utils/normalize";
 import { apiClient } from "@/shared/api-client";
 import { toast } from "sonner";
@@ -188,10 +189,11 @@ export function MangaCard({
 
   const fullPath = (pathname || "") + (searchParams?.toString() ? `?${searchParams.toString()}` : "");
 
-  const safeId = `${sourceId}-${manga.id}`.replace(/[^a-zA-Z0-9-]/g, "-");
-  const vtName = `manga-cover-${safeId}`;
-  const vtTitleName = `manga-title-${safeId}`;
-  const vtStyle = { "--vt-name": vtName, "--vt-title-name": vtTitleName } as React.CSSProperties;
+  const transitionNames = getMangaTransitionNames(sourceId, manga.id);
+  const vtStyle = {
+    "--vt-name": transitionNames.cover,
+    "--vt-title-name": transitionNames.title,
+  } as React.CSSProperties;
 
   const scoreToDisplay = displayScore ?? manga.score;
   const effectiveRank = rank ?? manga.rank;
@@ -387,18 +389,18 @@ export function MangaCard({
           "group flex h-[110px] w-full min-w-[280px] overflow-hidden",
           className
         )}
+        style={vtStyle}
       >
         <Link
           href={getMangaDetailHref(sourceId, manga.id, fullPath)}
           className={cn(
             mangaCardInteraction.link,
-            "flex min-w-0 flex-1 gap-2.5 cursor-pointer rounded-l-md vt-hover"
+            "flex min-w-0 flex-1 gap-2.5 cursor-pointer rounded-l-md"
           )}
           aria-label={`Baca ${manga.title}`}
-          style={vtStyle}
         >
           {/* Cover Frame with Ranking Badge Overlay */}
-          <MangaCardCoverFrame className="h-full w-[74px] border-y-0 border-l-0 rounded-l-md rounded-r-xs group-hover:shadow-lg group-hover:shadow-accent/5">
+          <MangaCardCoverFrame className="vt-hover h-full w-[74px] border-y-0 border-l-0 rounded-l-md rounded-r-xs group-hover:shadow-lg group-hover:shadow-accent/5">
             <MangaCover
               src={manga.coverUrl}
               alt={manga.title}
@@ -448,7 +450,7 @@ export function MangaCard({
             <MangaCardTitle
               as="h4"
               lines={1}
-              className={cn("font-medium leading-normal", mangaCardInteraction.title)}
+              className={cn("vt-title-hover font-medium leading-normal", mangaCardInteraction.title)}
               title={manga.title}
             >
               {manga.title}
@@ -523,7 +525,7 @@ export function MangaCard({
 
     return (
       <motion.article
-        layoutId={reducedMotion ? undefined : `manga-card-${sourceId}-${manga.id}`}
+        layoutId={reducedMotion ? undefined : transitionNames.card}
         layout={reducedMotion ? false : "position"}
         initial={shouldReveal ? { opacity: 0, y: 16 } : undefined}
         whileInView={shouldReveal ? { opacity: 1, y: 0 } : undefined}
@@ -541,9 +543,10 @@ export function MangaCard({
           "group relative flex w-full items-stretch gap-3 overflow-hidden p-3 sm:gap-4 sm:p-3.5",
           className
         )}
+        style={vtStyle}
       >
         <motion.div
-          layoutId={reducedMotion ? undefined : `manga-cover-${sourceId}-${manga.id}`}
+          layoutId={reducedMotion ? undefined : transitionNames.cover}
           className="w-[84px] shrink-0 sm:w-[96px] md:w-[104px]"
         >
           <Link
@@ -556,7 +559,7 @@ export function MangaCard({
               setIsSourceDialogOpen(true);
             }}
           >
-            <MangaCardCoverFrame className="h-full w-full rounded-sm shadow-xs border-border-subtle/60">
+            <MangaCardCoverFrame className="vt-hover h-full w-full rounded-sm shadow-xs border-border-subtle/60">
               <MangaCover
                 src={manga.coverUrl}
                 alt={manga.title}
@@ -581,7 +584,7 @@ export function MangaCard({
                   setIsSourceDialogOpen(true);
                 }}
               >
-                <MangaCardTitle lines={1} className={mangaCardInteraction.title} title={manga.title}>
+                <MangaCardTitle lines={1} className={cn("vt-title-hover", mangaCardInteraction.title)} title={manga.title}>
                   {manga.title}
                 </MangaCardTitle>
               </Link>
@@ -672,7 +675,7 @@ export function MangaCard({
 
   return (
     <motion.article
-      layoutId={reducedMotion ? undefined : `manga-card-${sourceId}-${manga.id}`}
+      layoutId={reducedMotion ? undefined : transitionNames.card}
       layout={reducedMotion ? false : "position"}
       initial={shouldReveal ? { opacity: 0, y: 16 } : undefined}
       whileInView={shouldReveal ? { opacity: 1, y: 0 } : undefined}
@@ -686,6 +689,7 @@ export function MangaCard({
         delay: shouldReveal ? staggerDelay : 0,
       }}
       className={cn(mangaCardSurface({ kind: "open" }), "group relative flex w-full flex-col", className)}
+      style={vtStyle}
     >
       <Link
         href={getMangaDetailHref(sourceId, manga.id, fullPath)}
@@ -700,8 +704,7 @@ export function MangaCard({
         }}
       >
         <motion.div
-          layoutId={reducedMotion ? undefined : `manga-cover-${sourceId}-${manga.id}`}
-          style={vtStyle}
+          layoutId={reducedMotion ? undefined : transitionNames.cover}
         >
           <MangaCardCoverFrame className="w-full shadow-sm vt-hover">
             <MangaCover
@@ -781,7 +784,7 @@ export function MangaCard({
           </MangaCardCoverFrame>
         </motion.div>
 
-        <div className="flex flex-col px-2 mt-3" style={vtStyle}>
+        <div className="flex flex-col px-2 mt-3">
           {/* Capped Badge / Metadata Row — single line strictly fixed height */}
           <CollapsibleBadgeRow
             maxVisible={2}
@@ -814,7 +817,7 @@ export function MangaCard({
           {/* Title - 2 lines fixed height with title attribute for native tooltip fallback */}
           <MangaCardTitle
             lines={2}
-            className={cn("mb-2 min-h-[2.4em]", mangaCardInteraction.title)}
+            className={cn("vt-title-hover mb-2 min-h-[2.4em]", mangaCardInteraction.title)}
             title={manga.title}
           >
             {manga.title}
