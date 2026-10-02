@@ -9,7 +9,7 @@ import { useSettingsStore } from "@/shared/store/settings-store";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { sourceQueryOptions } from "@/shared/sources/source-query-options";
-import { isDiscoverySourceSystemEligible, selectDiscoverySources } from "@/shared/sources/discovery-source-policy";
+import { isDiscoverySourceSystemEligible, resolveDiscoverySourceId, selectDiscoverySources } from "@/shared/sources/discovery-source-policy";
 import { useLibraryFilterStore } from "@/shared/store/library-filter-store";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useCollectionStore } from "@/shared/store/collection-store";
@@ -52,7 +52,7 @@ export function useLibraryCatalog() {
       ),
     [sourceCandidates, disabledSources, isNsfwFiltered]
   );
-  const activeSourceId = sourceParam || eligibleSources[0]?.id || "";
+  const activeSourceId = resolveDiscoverySourceId(sourceParam, eligibleSources);
   const sortParam = searchParams.get("sort");
 
   const filterStore = useLibraryFilterStore();
