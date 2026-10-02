@@ -260,12 +260,19 @@ export function UnifiedFilterDrawer({
 
   const searchTagIntent = React.useMemo(() => {
     if (context !== "search" || !searchQuery.trim()) {
-      return { genres: [] as string[], formats: [] as string[], status: "" };
+      return {
+        genres: [] as string[],
+        formats: [] as string[],
+        status: "",
+        excludedGenres: [] as string[],
+        excludedFormats: [] as string[],
+        excludedStatuses: [] as string[],
+      };
     }
 
-    const positiveTags = parseSearchExpression(searchQuery, dynamicFilters).tags.filter(
-      (tag) => tag.operator !== "exclude"
-    );
+    const tags = parseSearchExpression(searchQuery, dynamicFilters).tags;
+    const positiveTags = tags.filter((tag) => tag.operator !== "exclude");
+    const excludedTags = tags.filter((tag) => tag.operator === "exclude");
 
     return {
       genres: positiveTags
@@ -276,6 +283,15 @@ export function UnifiedFilterDrawer({
         .map((tag) => tag.id),
       status:
         positiveTags.find((tag) => tag.category === "status")?.id ?? "",
+      excludedGenres: excludedTags
+        .filter((tag) => tag.category === "genre")
+        .map((tag) => tag.id),
+      excludedFormats: excludedTags
+        .filter((tag) => tag.category === "format")
+        .map((tag) => tag.id),
+      excludedStatuses: excludedTags
+        .filter((tag) => tag.category === "status")
+        .map((tag) => tag.id),
     };
   }, [context, searchQuery, dynamicFilters]);
 
@@ -415,11 +431,21 @@ export function UnifiedFilterDrawer({
     onResetRouteIntent?.();
   };
 
-  const searchActiveCount =
-    new Set([...searchStore.genres, ...searchTagIntent.genres]).size +
-    new Set([...(searchStore.formats || []), ...searchTagIntent.formats]).size +
-    (searchTagIntent.status || searchStore.status ? 1 : 0) +
-    (searchStore.sort !== "popular" && searchStore.sort ? 1 : 0);
+  const searchActiveCount = new Set([
+    ...searchStore.genres.map((id) => `genre:+:${id}`),
+    ...searchTagIntent.genres.map((id) => `genre:+:${id}`),
+    ...searchTagIntent.excludedGenres.map((id) => `genre:-:${id}`),
+    ...(searchStore.formats || []).map((id) => `format:+:${id}`),
+    ...searchTagIntent.formats.map((id) => `format:+:${id}`),
+    ...searchTagIntent.excludedFormats.map((id) => `format:-:${id}`),
+    ...(searchTagIntent.status || searchStore.status
+      ? [`status:+:${searchTagIntent.status || searchStore.status}`]
+      : []),
+    ...searchTagIntent.excludedStatuses.map((id) => `status:-:${id}`),
+    ...(searchStore.sort !== "popular" && searchStore.sort
+      ? [`sort:+:${searchStore.sort}`]
+      : []),
+  ]).size;
 
   const activeCount =
     context === "search"
@@ -488,14 +514,27 @@ export function UnifiedFilterDrawer({
           {dynamicFilters.formats.length > 0 && (
             <FilterSection title="Tipe Komik">
               {dynamicFilters.formats.map((format: any) => {
+                const isRouteExcluded =
+                  context === "search" &&
+                  searchTagIntent.excludedFormats.includes(format.id);
                 const isSelected = selectedFormats.includes(format.id);
                 return (
                   <FilterChip
                     key={format.id}
                     onClick={() => toggleFormat(format.id)}
-                    selected={isSelected}
-                    variant={isSelected ? "accent-subtle" : "default"}
-                    showCheck={isSelected}
+                    selected={isSelected || isRouteExcluded}
+                    variant={
+                      isRouteExcluded
+                        ? "error-solid"
+                        : isSelected
+                          ? "accent-subtle"
+                          : "default"
+                    }
+                    showCheck={isSelected && !isRouteExcluded}
+                    showMinus={isRouteExcluded}
+                    disabled={isRouteExcluded}
+                    title={isRouteExcluded ? "Dari tag pencarian" : undefined}
+                    className={isRouteExcluded ? "cursor-not-allowed opacity-80 active:scale-100" : undefined}
                     label={format.label}
                   />
                 );
@@ -507,14 +546,27 @@ export function UnifiedFilterDrawer({
           {dynamicFilters.statuses.length > 0 && (
             <FilterSection title="Status Rilis">
               {dynamicFilters.statuses.map((status: any) => {
+                const isRouteExcluded =
+                  context === "search" &&
+                  searchTagIntent.excludedStatuses.includes(status.id);
                 const isSelected = selectedStatus.includes(status.id);
                 return (
                   <FilterChip
                     key={status.id}
                     onClick={() => toggleStatus(status.id)}
-                    selected={isSelected}
-                    variant={isSelected ? "accent-subtle" : "default"}
-                    showCheck={isSelected}
+                    selected={isSelected || isRouteExcluded}
+                    variant={
+                      isRouteExcluded
+                        ? "error-solid"
+                        : isSelected
+                          ? "accent-subtle"
+                          : "default"
+                    }
+                    showCheck={isSelected && !isRouteExcluded}
+                    showMinus={isRouteExcluded}
+                    disabled={isRouteExcluded}
+                    title={isRouteExcluded ? "Dari tag pencarian" : undefined}
+                    className={isRouteExcluded ? "cursor-not-allowed opacity-80 active:scale-100" : undefined}
                     label={status.label}
                   />
                 );
@@ -527,13 +579,25 @@ export function UnifiedFilterDrawer({
             <FilterSection title="Genre" layout="wrap">
               {dynamicFilters.genres.map((genre: any) => {
                 if (context === "search") {
+                  const isRouteExcluded =
+                    searchTagIntent.excludedGenres.includes(genre.id);
                   const isSelected = selectedGenres.includes(genre.id);
                   return (
                     <FilterChip
                       key={genre.id}
                       onClick={() => toggleGenre(genre.id)}
-                      selected={isSelected}
-                      variant={isSelected ? "accent-solid" : "default"}
+                      selected={isSelected || isRouteExcluded}
+                      variant={
+                        isRouteExcluded
+                          ? "error-solid"
+                          : isSelected
+                            ? "accent-solid"
+                            : "default"
+                      }
+                      showMinus={isRouteExcluded}
+                      disabled={isRouteExcluded}
+                      title={isRouteExcluded ? "Dari tag pencarian" : undefined}
+                      className={isRouteExcluded ? "cursor-not-allowed opacity-80 active:scale-100" : undefined}
                       label={genre.label}
                     />
                   );
