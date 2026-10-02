@@ -47,7 +47,7 @@ describe("PageContainer", () => {
 
     // Required classes
     expect(className).toContain("w-full");
-    expect(className).toContain("max-w-[1280px]");
+    expect(className).toContain("max-w-[1360px]");
     expect(className).toContain("px-4");
     expect(className).toContain("md:px-8");
     expect(className).toContain("xl:px-10");
@@ -73,9 +73,9 @@ describe("PageContainer", () => {
       );
     });
 
-    expect(container.querySelector("#c-wide")?.className).toContain("max-w-[1280px]");
-    expect(container.querySelector("#c-mgmt")?.className).toContain("max-w-[1120px]");
-    expect(container.querySelector("#c-focused")?.className).toContain("max-w-[960px]");
+    expect(container.querySelector("#c-wide")?.className).toContain("max-w-[1360px]");
+    expect(container.querySelector("#c-mgmt")?.className).toContain("max-w-[1200px]");
+    expect(container.querySelector("#c-focused")?.className).toContain("max-w-[1040px]");
   });
 
   it("forwards ref to the underlying div", async () => {
