@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useDeferredValue, useEffect } from "react";
-import { Play, SortAscending, SortDescending, Book, CaretLeft } from "@phosphor-icons/react";
+import { Play, SortAscending, SortDescending, Book } from "@phosphor-icons/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useMounted } from "@/shared/hooks/use-mounted";
@@ -29,6 +29,10 @@ import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry"
 import { MangaDetailLayout } from "./manga-detail-layout";
 import { normalizeSynopsis } from "@/shared/utils/normalize";
 import { getMangaTransitionNames } from "@/shared/lib/motion/transition-identity";
+import { MorphIcon } from "@/components/motion/morph-icon";
+import { morphIconPairs } from "@/shared/lib/motion/morph-icons";
+import { transitions } from "@/shared/lib/motion/tokens";
+import { motion, useReducedMotion } from "motion/react";
 import type { MangaDetail, Chapter } from "@/shared/types/source";
 
 const CHAPTER_ITEM_ESTIMATED_SIZE = 70;
@@ -74,6 +78,7 @@ export function MangaDetailView({
   const [searchQuery, setSearchQuery] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
   const isMounted = useMounted();
+  const reducedMotion = useReducedMotion();
 
   const authorDisplay = useMemo(() => formatAuthor(detail.author), [detail.author]);
   const cleanedSynopsis = useMemo(() => normalizeSynopsis(detail.description || ""), [detail.description]);
@@ -397,17 +402,27 @@ export function MangaDetailView({
                   className="text-[11px] font-bold text-accent hover:text-accent-hover transition-colors inline-flex items-center gap-1"
                 >
                   {isExpanded ? "Tampilkan lebih sedikit" : "Selengkapnya"}
-                  <CaretLeft size={10} className={cn("transition-transform", isExpanded ? "rotate-90" : "rotate-180")} weight="bold" />
+                  <MorphIcon
+                    icon={isExpanded ? morphIconPairs.disclosure.on : morphIconPairs.disclosure.off}
+                    className="size-3"
+                    aria-hidden="true"
+                  />
                 </button>
               )}
             </div>
 
-            <p className={cn(
-              "text-[13px] md:text-sm leading-relaxed text-text-secondary break-words transition-all",
-              !isExpanded && "line-clamp-4"
-            )}>
-              {cleanedSynopsis || "Sinopsis belum tersedia."}
-            </p>
+            <motion.div
+              layout={reducedMotion ? false : "size"}
+              transition={reducedMotion ? { duration: 0 } : transitions.layout}
+              className="overflow-hidden"
+            >
+              <p className={cn(
+                "text-[13px] md:text-sm leading-relaxed text-text-secondary break-words",
+                !isExpanded && "line-clamp-4"
+              )}>
+                {cleanedSynopsis || "Sinopsis belum tersedia."}
+              </p>
+            </motion.div>
 
             {detail.genres && detail.genres.length > 0 && (
               <div className="mt-3.5 flex flex-wrap gap-1.5">
