@@ -8,11 +8,12 @@ import { useMounted } from "@/shared/hooks/use-mounted";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
+import { sourceQueryOptions } from "@/shared/sources/source-query-options";
+import { isDiscoverySourceSystemEligible, resolveDiscoverySourceId, selectDiscoverySources } from "@/shared/sources/discovery-source-policy";
 import { useLibraryFilterStore } from "@/shared/store/library-filter-store";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useCollectionStore } from "@/shared/store/collection-store";
 import type { MangaKey } from "@/shared/types/collection";
-import { sourceQueryOptions } from "@/shared/sources/source-query-options";
 
 const FORMATS = [
   { id: "manga", name: "Manga" },
@@ -31,13 +32,27 @@ export function useLibraryCatalog() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
+  const disabledSources = useSourcePreferencesStore((state) => state.disabledSources);
+  const isNsfwFiltered = useSettingsStore((state) => state.hideNsfw);
+  const { data: runtimeSources, isError: isSourceRegistryError } = useQuery(sourceQueryOptions);
+  const sourceCandidates = React.useMemo(
+    () => runtimeSources ?? (isSourceRegistryError ? dynamicSourceRegistry.getAll() : []),
+    [runtimeSources, isSourceRegistryError]
+  );
 
   const sourceParam = searchParams.get("source");
   const genreParams = React.useMemo(
     () => searchParams.getAll("genre").map(g => g.toLowerCase().replace(/\s+/g, "-")),
     [searchParams]
   );
-  const activeSourceId = sourceParam || "shinigami";
+  const eligibleSources = React.useMemo(
+    () =>
+      selectDiscoverySources(sourceCandidates, disabledSources).filter(
+        (source) => !(isNsfwFiltered && source.isNsfw)
+      ),
+    [sourceCandidates, disabledSources, isNsfwFiltered]
+  );
+  const activeSourceId = resolveDiscoverySourceId(sourceParam, eligibleSources);
   const sortParam = searchParams.get("sort");
 
   const filterStore = useLibraryFilterStore();
@@ -115,17 +130,20 @@ export function useLibraryCatalog() {
     }
   }, [activeSourceId, genreSignature]);
 
-  const { data: sourcesData } = useQuery(sourceQueryOptions);
   const activeSourceMetadata = React.useMemo(
     () =>
-      dynamicSourceRegistry.get(activeSourceId) ||
-      sourcesData?.find((source) => source.id === activeSourceId),
-    [activeSourceId, sourcesData]
+      sourceCandidates.find((source) => source.id === activeSourceId) ||
+      dynamicSourceRegistry.get(activeSourceId),
+    [activeSourceId, sourceCandidates]
   );
 
-  const { isSourceDisabled } = useSourcePreferencesStore();
-  const isDown = activeSourceMetadata?.status === "unavailable";
-  const isDisabled = isSourceDisabled(activeSourceId) || isDown;
+  const isDisabled =
+    !activeSourceId ||
+    disabledSources.includes(activeSourceId) ||
+    Boolean(
+      activeSourceMetadata &&
+      !isDiscoverySourceSystemEligible(activeSourceMetadata)
+    );
   const supportsProviderFilters =
     activeSourceMetadata?.capabilities?.filters === true;
 
@@ -177,7 +195,6 @@ export function useLibraryCatalog() {
     filterStore,
   ]);
 
-  const isNsfwFiltered = useSettingsStore(state => state.hideNsfw);
 
   const DYNAMIC_SORTS = filtersData?.sorts?.length ? filtersData.sorts : [
     { id: "popular", name: "Populer" },
@@ -274,7 +291,7 @@ export function useLibraryCatalog() {
     retry: 1,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
-    enabled: !isDisabled,
+    enabled: Boolean(activeSourceId) && !isDisabled,
     placeholderData: keepPreviousData,
   });
 

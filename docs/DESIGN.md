@@ -99,22 +99,25 @@ This distinction is fundamental. Pages may reuse the same card primitives, but t
 
 The toggle on the **Sumber** page controls whether that source participates in the user's everyday discovery surfaces:
 
+- ON → included in **Beranda** discovery.
 - ON → included in **Library**.
 - ON → included in **Populer**.
-- OFF → excluded from **Library**.
-- OFF → excluded from **Populer**.
-- Search remains able to access the source regardless of this toggle.
+- OFF → excluded from **Beranda**, **Library**, and **Populer**.
+- Search remains able to access the source regardless of this toggle, as long as the source is runtime-enabled, installed, available, and supports Search.
 
-Therefore the current generic label `Enabled` is semantically wrong. OFF does **not** mean the provider has been disabled from Yomirra.
+User preference and system eligibility are separate. A source may remain selected by the user while temporarily unavailable or disabled by runtime configuration; the UI must not present that as healthy participation.
+
+Therefore the generic label `Enabled` is semantically wrong. OFF does **not** mean the provider has been disabled from Yomirra.
 
 ### Preferred UI terminology
 
-**RECOMMENDED**
+**LOCKED**
 
-Use one of these labels:
+Use contextual discovery copy:
 
-- `Tampilkan di Library & Populer`
-- or shorter contextual copy: `Ikut Library & Populer`
+- `Tampil di Beranda, Library & Populer`
+- `Disembunyikan dari penjelajahan`
+- `Tidak tersedia untuk penjelajahan` when runtime/system eligibility prevents participation
 
 Avoid:
 
@@ -143,7 +146,7 @@ A source can be:
 - excluded + degraded
 - excluded + offline
 
-Never infer health from the Library/Populer inclusion toggle.
+Never infer health from the discovery inclusion toggle.
 
 ### Health display rules
 
@@ -494,40 +497,44 @@ Related-title recommendations may use semantic similarity when enough indexed me
 
 ---
 
-# 8. Page archetypes and containers
+# 8. Page frame and content lanes
 
-Do not force every page into the same width. Standardize the **reason** for width differences.
+**LOCKED**
 
-## 8.1 Container tokens
+Ordinary destination pages share one canonical outer page frame. Route changes must not visibly resize the whole content canvas.
 
-Recommended starting tokens:
+The outer frame owns:
 
-- `content-wide` — catalog/discovery pages; up to ~1280px usable content width.
-- `content-management` — structured management pages; up to ~1120px.
-- `content-focused` — focused utility/state pages; up to ~960px.
+- the same left/right edges beneath desktop chrome;
+- `px-4 / md:px-8 / xl:px-10` responsive gutters;
+- mobile-header safe spacing;
+- page-bottom spacing;
+- no nested full-page scroll.
 
-Use consistent outer padding at the shell level. Internal components may add padding, but pages should not invent unrelated left edges.
+This applies to Beranda, Library, Cari, Rak Buku, Populer, Sumber, Unduhan, and Pengaturan.
 
-## 8.2 Archetypes
+## 8.1 Inner content lanes
 
-### Wide discovery/content
+Narrower content is an **inner composition decision**, not a different route width.
 
-- Beranda
-- Library
-- Cari
-- Rak Buku
-- Populer
+Canonical inner lanes:
 
-### Management
+- `full` — catalog/discovery surfaces that benefit from the available canvas;
+- `management` — structured forms/settings where line length and card width need restraint;
+- `focused` — utilities such as download/storage tasks and backup flows.
 
-- Sumber
-- Pengaturan
+`PageContainer` owns the canonical outer frame. `ContentLane` may constrain a specific inner block while preserving the route's outer alignment.
 
-### Focused utility
+Do not use a narrower `PageContainer` to make an entire destination page jump inward.
 
-- Unduhan
+## 8.2 Page usage
 
-The exact CSS values can be tuned against visual regression, but the token assignment should remain stable.
+- **Beranda / Library / Cari / Rak Buku / Populer** — full outer frame; content uses the full lane unless a component has its own density rule.
+- **Sumber** — full outer frame; source guidance, search, and source grid share one edge.
+- **Unduhan** — full outer frame with a focused inner lane for storage/task content.
+- **Pengaturan** — full outer frame with a management inner lane and explicit two-column desktop stacks.
+
+The desktop TopNav breadcrumb already provides destination context. Sumber, Unduhan, and Pengaturan therefore keep the shared fixed mobile `PageHeader` but suppress the redundant desktop title banner.
 
 ---
 
@@ -548,22 +555,14 @@ Use:
 - simple page title;
 - no decorative icon well unless it provides meaning.
 
-### Management header
+### Management destination
 
-For configuration/utility pages.
+For configuration/utility pages such as Sumber, Unduhan, and Pengaturan:
 
-Use:
-
-- icon well;
-- H1;
-- one-line subtitle;
-- divider when it helps separate header from controls.
-
-Applies to:
-
-- Sumber
-- Unduhan
-- Pengaturan
+- mobile uses the shared fixed `PageHeader` with icon, title, and compact subtitle;
+- desktop uses TopNav/breadcrumb context and starts directly with the functional content;
+- do not add a second desktop title banner below TopNav;
+- management/focused width, when needed, belongs to an inner `ContentLane`, not the whole route frame.
 
 ### Task-first page
 
@@ -712,7 +711,7 @@ It is not the user's personal saved collection. That role belongs to Rak Buku.
 
 ## Data scope
 
-- only sources toggled ON for Library & Populer;
+- only sources participating in everyday discovery (Beranda, Library, and Populer);
 - normalized/merged across those sources;
 - source failures degrade the catalog gracefully rather than crashing the page.
 

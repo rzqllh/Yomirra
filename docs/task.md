@@ -351,7 +351,7 @@
 - card/detail transition identity is centralized for card, cover, and title only; metadata/badges remain ordinary content and unsupported platform transition APIs degrade to the normal navigation path;
 - bookmark, disclosure, tab, view-mode, and switch state motion now consume the shared motion boundary/tokens; reader next/previous/list/settings controls remain distinct actions rather than being force-morphed;
 - catalog grids are container-aware at a ~156px shelf-card minimum and ~320px compact-row minimum, while skeletons inherit the same grid contract;
-- PageContainer outer maxima are 1360/1200/1040px so the existing xl gutters preserve the documented usable content targets of ~1280/1120/960px; only Sumber, Pengaturan, and Unduhan were migrated to narrower semantic variants;
+- the original PR #34 implementation used 1360/1200/1040px route-level maxima; this historical choice is superseded by PR #43, which keeps one outer frame and moves management/focused width to inner content lanes;
 - touched reader/filter overlays use existing semantic z-index and safe-area tokens; the filter drawer also caps itself to `VisualViewport.height` when available;
 - the final code head `a90dfa67dc529e5876893a1d41240f3ddac005bc` passed GitHub CI #311: typecheck, lint, unit/integration tests, and production build;
 - Vercel preview status is not a compile signal for this PR because the Hobby project is currently deployment-rate-limited;
@@ -504,6 +504,36 @@
 - GitHub CI #349 passed typecheck, lint, **170 test files / 1,093 tests**, and production build; Next.js compiled successfully in 33.0s;
 - production deployment `dpl_BtfG7gms2nMxrAgyzZ5VAbeUtMAA` is READY on `e84bdd29efd6d70b75c8df4351ef27ddaafd46f7`; the public production aliases now serve the T7 code slice, and Vercel reported no runtime errors in the latest one-hour verification window;
 - exact client-JS byte delta, navigation latency, LCP, CLS, Mobile Safari/PWA, OS reduced-motion, and real throttled-reader measurements remain open because the available deployment/log interfaces do not provide an interactive browser/DevTools performance profile.
+
+---
+
+# Follow-up — Page Frame & Discovery Consistency (PR #43)
+
+- [x] Replace route-level max-width differences with one canonical outer `PageContainer` frame.
+- [x] Add `ContentLane` for intentional management/focused inner widths.
+- [x] Align Home and Rak Buku to the same canonical outer frame contract.
+- [x] Keep Sumber, Unduhan, and Pengaturan mobile headers while suppressing redundant desktop title banners.
+- [x] Keep Unduhan task/storage content in a focused inner lane without narrowing the whole route.
+- [x] Replace Pengaturan CSS multi-column flow with explicit desktop stacks and preserve the newer shared-device cleanup controls.
+- [x] Centralize discovery-source eligibility for Beranda, Library, and Populer.
+- [x] Keep Search independent from the user discovery toggle.
+- [x] Make Library resolve its no-URL default from the first eligible discovery source.
+- [x] Keep eligible Populer sources visible with compact failure/empty states instead of silently dropping them.
+- [x] Clarify Source-card copy so user preference and runtime eligibility are not conflated.
+- [x] Tighten Home Hero safe inset, sparse Spotlight balance, and Top-5 bottom geometry.
+- [x] Focused regression tests pass.
+- [x] Full tests/typecheck/lint/build pass.
+- [ ] Desktop/tablet/mobile browser smoke passes where preview access is available.
+- [x] Final diff is reconciled with the latest `main` and contains no unrelated changes.
+
+This follow-up supersedes the T3 width implementation detail that used 1360/1200/1040px as **outer route maxima**. The semantic archetypes remain useful only as inner content-lane intent.
+
+**PR #43 verification record (2026-10-02):**
+- GitHub CI #370 passed typecheck, lint, **171 test files / 1,100 tests**, and the Next.js production build; compilation completed successfully in 44s.
+- Focused coverage includes the canonical PageContainer/ContentLane contract, Library source resolution, discovery/search source eligibility, Home leaderboard geometry, and route-loading geometry exercised by the full suite.
+- The branch was reconciled against `main` with no behind commits and the final changed-file set remains scoped to page framing, discovery/search source participation, Home residual geometry, loading states, tests, and aligned documentation.
+- Vercel produced a READY preview at commit `3ad27e91991d0092fa58f07ed13e839d53895302` with no preview runtime error/fatal logs in the checked window. Later preview builds are subject to the Hobby deployment-rate limit, so the final two incremental commits are verified by GitHub production build rather than a newer Vercel preview.
+- Interactive desktop/tablet/mobile visual smoke remains manual because the available execution environment cannot open the preview in a browser.
 
 ---
 

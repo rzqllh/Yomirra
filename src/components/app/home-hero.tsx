@@ -32,9 +32,9 @@ function pickSessionCovers(candidates: HeroCandidate[], count = 3): HeroCandidat
 }
 
 const coverPositions = [
-  "right-[42%] top-3 w-[58px] sm:right-[46%] sm:top-7 sm:w-[78px] lg:w-[86px]",
-  "right-[14%] top-1 w-[64px] sm:right-[22%] sm:top-3 sm:w-[90px] lg:w-[98px]",
-  "hidden sm:block right-[-2%] top-8 w-[80px] lg:w-[88px]",
+  "right-[44%] top-3 w-[58px] sm:right-[46%] sm:top-7 sm:w-[78px] lg:w-[86px]",
+  "right-[16%] top-1 w-[64px] sm:right-[22%] sm:top-3 sm:w-[90px] lg:w-[98px]",
+  "hidden sm:block right-[3%] top-8 w-[80px] lg:w-[88px]",
 ] as const;
 
 export function HomeHero({ className, candidates = [] }: HomeHeroProps) {

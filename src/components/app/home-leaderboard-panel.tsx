@@ -123,7 +123,7 @@ export function HomeLeaderboardPanel({
       </div>
 
       {displayItems.length > 0 ? (
-        <div className="flex flex-1 flex-col divide-y divide-border-subtle/50">
+        <div className="flex flex-1 flex-col divide-y divide-border-subtle/50 pb-1">
           {displayItems.map((manga, index) => {
             const rank = index + 1;
 

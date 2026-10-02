@@ -1,6 +1,6 @@
 import { PageHeader } from "@/components/app/header";
 import { Skeleton } from "@/components/ui/skeleton";
-import { YomirraSurface, PageContainer } from "@/components/ui/layout";
+import { YomirraSurface, PageContainer, ContentLane } from "@/components/ui/layout";
 import { Download } from "@phosphor-icons/react/dist/ssr";
 
 export default function Loading() {
@@ -9,15 +9,18 @@ export default function Loading() {
       <PageContainer hasMobileHeader>
         <PageHeader
           title="Unduhan"
-          subtitle="Kelola bab komik yang diunduh untuk dibaca saat offline."
+          subtitle="Kelola chapter yang tersimpan untuk dibaca offline."
           icon={<Download size={24} weight="duotone" />}
+          hideDesktop
         />
+        <h1 className="sr-only">Unduhan</h1>
 
-        <Skeleton className="h-20 w-full rounded-2xl" />
+        <ContentLane variant="focused" className="flex flex-col gap-6">
+          <Skeleton className="h-20 w-full rounded-2xl" />
 
-        <div className="w-full">
-          <Skeleton className="mb-6 h-10 w-full max-w-xs rounded-xl" />
-          <div className="space-y-3">
+          <div className="w-full">
+            <Skeleton className="mb-6 h-10 w-full max-w-xs rounded-xl" />
+            <div className="space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
               <div
                 key={i}
@@ -34,8 +37,9 @@ export default function Loading() {
                 <Skeleton className="size-10 shrink-0 rounded-xl" />
               </div>
             ))}
+            </div>
           </div>
-        </div>
+        </ContentLane>
       </PageContainer>
     </YomirraSurface>
   );
