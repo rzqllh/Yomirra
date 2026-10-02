@@ -9,12 +9,11 @@ import { useSettingsStore } from "@/shared/store/settings-store";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { sourceQueryOptions } from "@/shared/sources/source-query-options";
-import { selectDiscoverySources } from "@/shared/sources/discovery-source-policy";
+import { isDiscoverySourceSystemEligible, selectDiscoverySources } from "@/shared/sources/discovery-source-policy";
 import { useLibraryFilterStore } from "@/shared/store/library-filter-store";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useCollectionStore } from "@/shared/store/collection-store";
 import type { MangaKey } from "@/shared/types/collection";
-import { sourceQueryOptions } from "@/shared/sources/source-query-options";
 
 const FORMATS = [
   { id: "manga", name: "Manga" },
@@ -128,17 +127,19 @@ export function useLibraryCatalog() {
     }
   }, [activeSourceId, genreSignature]);
 
-  const { data: sourcesData } = useQuery(sourceQueryOptions);
   const activeSourceMetadata = React.useMemo(
     () =>
       dynamicSourceRegistry.get(activeSourceId) ||
-      sourcesData?.find((source) => source.id === activeSourceId),
-    [activeSourceId, sourcesData]
+      runtimeSources?.find((source) => source.id === activeSourceId),
+    [activeSourceId, runtimeSources]
   );
 
-  const { isSourceDisabled } = useSourcePreferencesStore();
-  const isDown = activeSourceMetadata?.status === "unavailable";
-  const isDisabled = isSourceDisabled(activeSourceId) || isDown;
+  const isDisabled =
+    disabledSources.includes(activeSourceId) ||
+    Boolean(
+      activeSourceMetadata &&
+      !isDiscoverySourceSystemEligible(activeSourceMetadata)
+    );
   const supportsProviderFilters =
     activeSourceMetadata?.capabilities?.filters === true;
 
