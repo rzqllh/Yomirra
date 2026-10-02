@@ -119,7 +119,7 @@ export function FilterDrawerShell({
           <Button
             variant={activeCount > 0 ? "accent" : "outline"}
             className={cn(
-              "relative rounded-full font-bold px-4 h-[44px] gap-1.5 transition-all duration-300 border-border-subtle",
+              "relative rounded-full font-bold px-4 h-[44px] gap-1.5 motion-safe:transition-[background-color,color,border-color,box-shadow,transform] motion-safe:duration-300 border-border-subtle",
               activeCount > 0 ? "border-accent/40 bg-accent text-accent-on shadow-xs" : "bg-surface-glass backdrop-blur-md"
             )}
             aria-label={`Filter${activeCount > 0 ? ` (${activeCount} aktif)` : ""}`}
@@ -131,7 +131,7 @@ export function FilterDrawerShell({
                 key={activeCount}
                 initial={reducedMotion ? false : { scale: 0.5, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.15, ease: "easeOut" }}
+                transition={reducedMotion ? { duration: 0 } : { duration: 0.15, ease: "easeOut" }}
                 className="ml-1 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-accent-on text-accent text-[11px] font-black shadow-xs"
               >
                 {activeCount}
@@ -156,7 +156,7 @@ export function FilterDrawerShell({
                 <button
                   type="button"
                   onClick={onReset}
-                  className="text-sm font-semibold text-accent hover:text-accent-hover transition-colors px-1 py-0.5"
+                  className="min-h-11 px-3 text-sm font-semibold text-accent hover:text-accent-hover motion-safe:transition-colors rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                 >
                   Reset
                 </button>
