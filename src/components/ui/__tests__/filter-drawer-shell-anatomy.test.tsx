@@ -55,6 +55,8 @@ describe("FilterDrawerShell Anatomy", () => {
 
     const applyButton = screen.getByRole("button", { name: /Terapkan Filter/i });
     const footer = applyButton.parentElement;
-    expect(footer?.getAttribute("style")).toContain("safe-area-inset-bottom");
+    expect(footer?.getAttribute("style")).toContain("var(--safe-bottom)");
+    expect(screen.getByTestId("drawer-overlay").className).toContain("z-[var(--z-drawer)]");
+    expect(content.className).toContain("z-[var(--z-overlay)]");
   });
 });
