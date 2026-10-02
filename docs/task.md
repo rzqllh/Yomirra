@@ -388,31 +388,40 @@
 
 ---
 
-# T5 — Reader FIFO PR
+# T5 — Reader FIFO PR — merged in PR #39
 
-- [ ] **T5.1** Inspect existing reader image scheduling, virtualization, preloading, and retry behavior.
-- [ ] **T5.2** Define queue item state: idle/queued/loading/decoded/failed/cancelled.
-- [ ] **T5.3** Implement bounded concurrency.
-- [ ] **T5.4** Prioritize current/nearest pages.
-- [ ] **T5.5** Add small configurable look-ahead window.
-- [ ] **T5.6** Prevent later pages from starving earlier pages.
-- [ ] **T5.7** Ensure one failed image releases queue capacity.
-- [ ] **T5.8** Cancel/reprioritize on chapter change.
-- [ ] **T5.9** Reserve geometry before image decode.
-- [ ] **T5.10** Reveal after decode where practical.
-- [ ] **T5.11** Test long chapter + throttled network.
-- [ ] **T5.12** Test one failed image.
-- [ ] **T5.13** Test rapid chapter navigation.
-- [ ] **T5.14** Test resume position.
-- [ ] **T5.15** Test offline-downloaded chapter.
+- [x] **T5.1** Inspect existing reader image scheduling, virtualization, preloading, retry/error flow, offline resolution, chapter teardown, resume behavior, and geometry reservation.
+- [x] **T5.2** Define queue item state: idle/queued/loading/decoded/failed/cancelled.
+- [x] **T5.3** Keep image work bounded by a small configurable load window instead of unbounded chapter-wide loading.
+- [x] **T5.4** Prioritize current/resumed/visible work and nearest pages before later FIFO work.
+- [x] **T5.5** Share a small configurable look-ahead window across continuous and paged readers.
+- [x] **T5.6** Prevent later pages from revealing ahead of unresolved earlier queued pages.
+- [x] **T5.7** Ensure permanent image failure settles its slot and cannot deadlock ordered reveal.
+- [x] **T5.8** Invalidate stale retry/decode jobs on page/chapter teardown and reprioritize the active chapter.
+- [x] **T5.9** Reserve geometry before decode when upstream width/height are known, including downloaded chapters.
+- [x] **T5.10** Reveal after image decode where the browser exposes decode support.
+- [x] **T5.11** Cover a 100-page throttled/out-of-order settlement sequence in deterministic scheduler tests.
+- [x] **T5.12** Test failed-image queue release/deadlock prevention.
+- [x] **T5.13** Test stale decode cancellation across rapid page/job replacement.
+- [x] **T5.14** Test resume position after history hydration.
+- [x] **T5.15** Test downloaded chapter URL resolution and offline-to-network page fallback.
 
 ### Reader PR gate
 
-- [ ] Queue is bounded and deterministic.
-- [ ] Failure cannot deadlock.
-- [ ] Earlier pages receive priority.
-- [ ] Reader position is stable.
-- [ ] Typecheck/lint/tests/build pass.
+- [x] Queue is bounded and deterministic.
+- [x] Failure cannot deadlock.
+- [x] Earlier pages receive priority.
+- [x] Reader position is stable in machine-verifiable resume/geometry tests.
+- [x] Typecheck/lint/tests/build pass.
+
+**T5 implementation record (PR #39, 2026-10-02):**
+- merged as `e9502f290495b06a0ad1d943312a85fe1d72342e`;
+- retained the existing virtualized/ordered reader architecture and closed only proven lifecycle, decode, look-ahead, and geometry gaps;
+- reader jobs now use an explicit lifecycle and stale async completions are invalidated before paint with layout-effect teardown;
+- continuous and paged modes share the same light/balanced/aggressive look-ahead policy, with data saver capped to one page ahead;
+- known page dimensions are preserved through the offline path and passed to the image element/container before decode;
+- GitHub CI #335 passed typecheck, lint, 1,061 unit/integration tests, and production build after the stale-decode race fix;
+- manual throttled-device, browser, iOS Safari, and installed-PWA smoke gates remain open and are not claimed by these machine tests.
 
 ---
 
