@@ -1,4 +1,5 @@
-import { DownloadChapter, CACHE_NAME } from "../store/download-store";
+import type { DownloadChapter } from "../store/download-store";
+import { EXPLICIT_DOWNLOADS_CACHE_NAME } from "./pwa-cache-policy";
 import { getOfflineImageUrl } from "../utils/download-helpers";
 
 export const abortControllers: Record<string, AbortController> = {};
@@ -93,7 +94,7 @@ export async function processDownloadQueue(options: DownloadEngineOptions) {
         updateDownload(id, { pages, totalPages: pages.length });
       }
 
-      const cache = await caches.open(CACHE_NAME);
+      const cache = await caches.open(EXPLICIT_DOWNLOADS_CACHE_NAME);
       const CONCURRENCY = 2; // Batasi 2 koneksi per chapter untuk kestabilan offline
       
       for (let i = 0; i < pages.length; i += CONCURRENCY) {
