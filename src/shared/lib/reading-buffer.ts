@@ -1,18 +1,22 @@
 /**
- * Reading Buffer and Automatic Cache Management (Phase 9)
+ * Reading Buffer and Automatic Cache Management
  *
- * Implements bounded automatic prefetching and caching for active reading:
- * - Owns `yomirra-reading-buffer-v1`
- * - Bounded to current chapter + next chapter (max 2 chapters)
- * - LRU eviction when budget is exceeded
- * - Strictly protects explicit downloads (`yomirra-chapter-cache-v1`) from eviction
- * - Excludes locked / premium chapters
+ * Automatic caches are versioned centrally so service-worker upgrades can discard
+ * stale data without touching explicit user downloads.
  */
 
-export const READING_BUFFER_CACHE_NAME = "yomirra-reading-buffer-v1";
-export const EXPLICIT_DOWNLOADS_CACHE_NAME = "yomirra-chapter-cache-v1";
-export const MANGA_IMAGES_CACHE_NAME = "yomirra-manga-images";
-export const MANGA_METADATA_CACHE_NAME = "yomirra-manga-metadata";
+import {
+  EXPLICIT_DOWNLOADS_CACHE_NAME,
+  READING_BUFFER_CACHE_NAME,
+  clearAutomaticAppCaches,
+} from "./pwa-cache-policy";
+
+export {
+  EXPLICIT_DOWNLOADS_CACHE_NAME,
+  MANGA_IMAGES_CACHE_NAME,
+  MANGA_METADATA_CACHE_NAME,
+  READING_BUFFER_CACHE_NAME,
+} from "./pwa-cache-policy";
 
 export const MAX_BUFFERED_CHAPTERS = 2;
 export const MAX_BUFFER_BYTES = 100 * 1024 * 1024; // 100MB bounded buffer
@@ -26,7 +30,8 @@ export interface BufferedChapterMeta {
   bufferedAt: number;
 }
 
-const REGISTRY_STORAGE_KEY = "yomirra_reading_buffer_registry";
+const REGISTRY_STORAGE_KEY = "yomirra_reading_buffer_registry_v2";
+const LEGACY_REGISTRY_STORAGE_KEYS = ["yomirra_reading_buffer_registry"] as const;
 
 function getRegistry(): BufferedChapterMeta[] {
   if (typeof window === "undefined" || typeof localStorage === "undefined") return [];
@@ -210,39 +215,21 @@ export async function getBufferedPageBlobUrl(
  * while strictly preserving explicit user downloads (`yomirra-chapter-cache-v1`).
  */
 export async function clearAutomaticCache(): Promise<{ clearedCaches: string[]; preserved: string }> {
-  const cleared: string[] = [];
-
   if (typeof caches === "undefined") {
     return { clearedCaches: [], preserved: EXPLICIT_DOWNLOADS_CACHE_NAME };
   }
 
-  try {
-    const allKeys = await caches.keys();
-    for (const key of allKeys) {
-      // INVARIANT: Explicit downloads are NEVER deleted by automatic cache clear
-      if (key === EXPLICIT_DOWNLOADS_CACHE_NAME) {
-        continue;
-      }
+  const clearedCaches = await clearAutomaticAppCaches(caches);
 
-      if (
-        key === READING_BUFFER_CACHE_NAME ||
-        key === MANGA_IMAGES_CACHE_NAME ||
-        key === MANGA_METADATA_CACHE_NAME ||
-        key.startsWith("yomirra-")
-      ) {
-        await caches.delete(key);
-        cleared.push(key);
-      }
+  if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
+    localStorage.removeItem(REGISTRY_STORAGE_KEY);
+    for (const key of LEGACY_REGISTRY_STORAGE_KEYS) {
+      localStorage.removeItem(key);
     }
-
-    // Reset buffer registry in localStorage
-    saveRegistry([]);
-  } catch (err) {
-    console.error("Failed clearing automatic cache:", err);
   }
 
   return {
-    clearedCaches: cleared,
+    clearedCaches,
     preserved: EXPLICIT_DOWNLOADS_CACHE_NAME,
   };
 }
