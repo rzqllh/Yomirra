@@ -39,8 +39,10 @@ describe("FilterDrawerShell Anatomy", () => {
 
     // Verify Title is present
     expect(screen.getByText("Filter Pencarian")).toBeDefined();
-    // Verify Reset is present
-    expect(screen.getByRole("button", { name: /Reset/i })).toBeDefined();
+    // Verify Reset is present and keeps the shared 44px minimum target.
+    const resetButton = screen.getByRole("button", { name: /Reset/i });
+    expect(resetButton).toBeDefined();
+    expect(resetButton.className).toContain("min-h-11");
     // Verify Apply button is present
     expect(screen.getByRole("button", { name: /Terapkan Filter/i })).toBeDefined();
     // Verify Child is present
