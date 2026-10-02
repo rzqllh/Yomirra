@@ -7,6 +7,7 @@ import { useSourcePreferencesStore } from "@/shared/store/source-preferences-sto
 import { useStatsStore } from "@/shared/store/stats-store";
 import { useUpdateStore } from "@/shared/store/update-store";
 import { clearLocalDataOwnerUid } from "./local-data-owner";
+import { initFirebase } from "./firebase";
 import { clearAutomaticCache } from "./reading-buffer";
 
 const READER_SESSION_PREFIX = "yomirra-virtualizer-cache-";
@@ -39,10 +40,20 @@ function clearReaderSessionState(): void {
   }
 }
 
+async function clearFirebasePersistentCache(): Promise<void> {
+  const { db } = await initFirebase();
+  if (!db) return;
+
+  const { clearIndexedDbPersistence, terminate } = await import("firebase/firestore");
+  await terminate(db);
+  await clearIndexedDbPersistence(db);
+}
+
 export async function clearSharedDeviceData(): Promise<void> {
   clearUserScopedReadingState();
   await useDownloadStore.getState().clearDownloads();
   await clearAutomaticCache();
   clearReaderSessionState();
   clearLocalDataOwnerUid();
+  await clearFirebasePersistentCache();
 }
