@@ -466,12 +466,11 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
 
       <div className="xl:col-span-2">
         {/* Version */}
-              <div className="flex justify-center pt-2 pb-2">
-                <span className="text-xs text-text-muted font-medium select-none">
-                  Yomirra v2.1.0
-                </span>
-              </div>
-            </div>
+        <div className="flex justify-center pt-2 pb-2">
+          <span className="text-xs text-text-muted font-medium select-none">
+            Yomirra v2.1.0
+          </span>
+        </div>
       </div>
     </div>
   );
