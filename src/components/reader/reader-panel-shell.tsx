@@ -45,13 +45,13 @@ export function ReaderPanelShell({
 
   const containerClasses =
     desktopMode === "side-panel"
-      ? "fixed inset-x-0 bottom-0 z-[70] max-h-[88dvh] md:max-h-screen md:inset-y-0 md:left-auto md:right-0 md:w-80 md:bottom-auto bg-surface-base border-t md:border-t-0 md:border-l border-border-subtle flex flex-col rounded-t-[28px] md:rounded-none overflow-hidden shadow-heavy"
-      : "fixed bottom-0 left-0 right-0 z-[70] max-h-[88dvh] min-h-[44dvh] bg-surface-base border-t border-border-subtle rounded-t-[28px] flex flex-col md:max-w-md md:mx-auto md:mb-6 md:bottom-6 md:rounded-3xl shadow-heavy overflow-hidden"
+      ? "fixed inset-x-0 bottom-0 z-[var(--z-overlay)] max-h-[88dvh] md:max-h-screen md:inset-y-0 md:left-auto md:right-0 md:w-80 md:bottom-auto bg-surface-base border-t md:border-t-0 md:border-l border-border-subtle flex flex-col rounded-t-[28px] md:rounded-none overflow-hidden shadow-heavy"
+      : "fixed bottom-0 left-0 right-0 z-[var(--z-overlay)] max-h-[88dvh] min-h-[44dvh] bg-surface-base border-t border-border-subtle rounded-t-[28px] flex flex-col md:max-w-md md:mx-auto md:mb-6 md:bottom-6 md:rounded-3xl shadow-heavy overflow-hidden"
 
   const backdropClasses =
     desktopMode === "side-panel"
-      ? "fixed inset-0 z-[60] bg-black/45 backdrop-blur-[2px] md:hidden"
-      : "fixed inset-0 z-[60] bg-black/45 backdrop-blur-[2px]"
+      ? "fixed inset-0 z-[var(--z-drawer)] bg-black/45 backdrop-blur-[2px] md:hidden"
+      : "fixed inset-0 z-[var(--z-drawer)] bg-black/45 backdrop-blur-[2px]"
 
   return (
     <AnimatePresence>
