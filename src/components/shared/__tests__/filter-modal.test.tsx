@@ -71,8 +71,17 @@ describe("UnifiedFilterDrawer — Section Consistency & NSFW Gating", () => {
   );
 
   beforeEach(() => {
+    queryClient.clear();
+    vi.clearAllMocks();
     useSettingsStore.setState({ hideNsfw: true });
-    useSearchFilterStore.getState().resetFilters();
+    useSearchFilterStore.setState({
+      hasCustomizedSources: false,
+      selectedSources: null,
+      genres: [],
+      formats: [],
+      status: "",
+      sort: "popular",
+    });
     useLibraryFilterStore.getState().resetFilters();
   });
 
