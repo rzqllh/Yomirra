@@ -11,7 +11,7 @@ import { useCollectionStore } from "@/shared/store/collection-store";
 import { useQuery, useQueries } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
-import { mergeFilters } from "@/shared/utils/filter-helpers";
+import { mergeFilters, type MergedFilterList } from "@/shared/utils/filter-helpers";
 import { canonicalizeFilterValue, parseSearchExpression, resolveSearchTag, type SearchTagCategory } from "@/shared/lib/search-intelligence";
 import { normalizeTitle } from "@/shared/lib/title-matcher";
 import type { FilterList, SourceMetadata } from "@/shared/sources/source-types";
@@ -210,7 +210,7 @@ export function UnifiedFilterDrawer({
   // ----------------------------------------------------
   // Unified Dynamic Filters with NSFW filtering applied
   // ----------------------------------------------------
-  const dynamicFilters = React.useMemo(() => {
+  const dynamicFilters = React.useMemo<MergedFilterList>(() => {
     if (context === "search") {
       const sourceFilters = filterSourcesToFetch
         .map((source, idx) => ({
@@ -239,11 +239,21 @@ export function UnifiedFilterDrawer({
       const formats = normalizeSourceOptions(libraryFiltersData?.formats, "format");
       const sorts = normalizeSortOptions(libraryFiltersData?.sorts);
 
+      const withSourceSupport = (
+        items: Array<{ id: string; label: string }>
+      ) =>
+        items.map((item) => ({
+          id: item.id,
+          label: item.label,
+          supportedBy: activeSourceId ? [activeSourceId] : [],
+          sourceValues: activeSourceId ? { [activeSourceId]: item.id } : {},
+        }));
+
       return {
-        genres: safeGenres,
-        statuses,
-        sorts,
-        formats,
+        genres: withSourceSupport(safeGenres),
+        statuses: withSourceSupport(statuses),
+        sorts: withSourceSupport(sorts),
+        formats: withSourceSupport(formats),
       };
     }
   }, [context, filterSourcesToFetch, searchFiltersQueries, libraryFiltersData, hideNsfw]);
