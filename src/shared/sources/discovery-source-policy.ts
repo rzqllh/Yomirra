@@ -48,3 +48,13 @@ export function selectDiscoverySources(
 
   return sources.filter((source) => isDiscoverySourceSelected(source, disabled));
 }
+
+
+export function resolveDiscoverySourceId(
+  explicitSourceId: string | null | undefined,
+  eligibleSources: SourceMetadata[]
+): string {
+  const explicit = explicitSourceId?.trim();
+  if (explicit) return explicit;
+  return eligibleSources[0]?.id || "";
+}
