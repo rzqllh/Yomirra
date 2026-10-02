@@ -194,7 +194,7 @@ export const ReaderImage = React.memo(function ReaderImage({
   const shouldLoad = isAllowedToLoad;
   const shouldReveal = isAllowedToReveal && hasLoaded;
 
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
     const generation = ++loadGenerationRef.current
     clearRetryTimer()
     setHasLoaded(false)
