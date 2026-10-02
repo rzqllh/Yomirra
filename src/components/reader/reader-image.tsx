@@ -338,8 +338,8 @@ export const ReaderImage = React.memo(function ReaderImage({
                 "block w-full",
                 isWebtoon ? "h-auto" : "h-full object-contain shadow-soft"
               )}
-              width={800}
-              height={1200}
+              width={pageWidth && pageWidth > 0 ? pageWidth : 800}
+              height={pageHeight && pageHeight > 0 ? pageHeight : 1200}
               sizes={imageFit === 'width' ? "100vw" : "(max-width: 768px) 100vw, 1200px"}
               priority={priority}
               fetchPriority={priority ? "high" : "auto"}
