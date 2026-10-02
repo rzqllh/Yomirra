@@ -10,7 +10,7 @@ Dokumen ini mencatat reusable UI seams yang sudah canonical di Yomirra. Tujuanny
 
 Dipakai sebagai header destination page. Ia memiliki responsive mobile/desktop contract sendiri.
 
-Jangan membangun mobile header baru per halaman jika `PageHeader` sudah cukup.
+Jangan membangun mobile header baru per halaman jika `PageHeader` sudah cukup. Pada route yang desktop context-nya sudah jelas dari TopNav, gunakan `hideDesktop` agar banner judul desktop tidak terduplikasi; mobile header tetap dipertahankan.
 
 ### Bottom dock
 
@@ -33,6 +33,8 @@ Komponen penting di `src/components/ui/`:
 | `Skeleton` | loading primitive |
 | `Pagination` | shared pagination |
 | `ReadingProgress` | semantic progress 0–100 |
+| `PageContainer` | canonical outer frame/gutters untuk ordinary destination pages |
+| `ContentLane` | optional inner max-width untuk management/focused content tanpa mengubah outer frame |
 
 Gunakan primitive yang sudah ada sebelum membuat versi lokal.
 
@@ -173,3 +175,12 @@ Jika jawaban nomor 4 iya, biasanya abstraction itu terlalu besar.
 - universal drawer abstraction;
 - local copy dari canonical filter/search primitives;
 - state baru untuk data yang sudah dimiliki store existing, kecuali draft/transient UI state.
+
+
+## Page frame ownership
+
+`PageContainer` tidak lagi menentukan lebar route berdasarkan archetype. Semua ordinary destination page memakai outer frame yang sama.
+
+Gunakan `ContentLane variant="management"` atau `ContentLane variant="focused"` hanya untuk blok internal yang memang perlu lebih sempit. Jangan mengembalikan `max-width` berbeda ke level route karena itu membuat canvas bergeser saat navigasi.
+
+Settings desktop memakai dua stack eksplisit, bukan CSS multi-column/masonry flow. Urutan DOM dan hierarchy harus tetap dapat dipahami ketika layout collapse menjadi satu kolom.

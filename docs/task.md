@@ -507,6 +507,29 @@
 
 ---
 
+# Follow-up — Page Frame & Discovery Consistency (PR #43)
+
+- [x] Replace route-level max-width differences with one canonical outer `PageContainer` frame.
+- [x] Add `ContentLane` for intentional management/focused inner widths.
+- [x] Align Home and Rak Buku to the same canonical outer frame contract.
+- [x] Keep Sumber, Unduhan, and Pengaturan mobile headers while suppressing redundant desktop title banners.
+- [x] Keep Unduhan task/storage content in a focused inner lane without narrowing the whole route.
+- [x] Replace Pengaturan CSS multi-column flow with explicit desktop stacks and preserve the newer shared-device cleanup controls.
+- [x] Centralize discovery-source eligibility for Beranda, Library, and Populer.
+- [x] Keep Search independent from the user discovery toggle.
+- [x] Make Library resolve its no-URL default from the first eligible discovery source.
+- [x] Keep eligible Populer sources visible with compact failure/empty states instead of silently dropping them.
+- [x] Clarify Source-card copy so user preference and runtime eligibility are not conflated.
+- [x] Tighten Home Hero safe inset, sparse Spotlight balance, and Top-5 bottom geometry.
+- [ ] Focused regression tests pass.
+- [ ] Full tests/typecheck/lint/build pass.
+- [ ] Desktop/tablet/mobile browser smoke passes where preview access is available.
+- [ ] Final diff is reconciled with the latest `main` and contains no unrelated changes.
+
+This follow-up supersedes the T3 width implementation detail that used 1360/1200/1040px as **outer route maxima**. The semantic archetypes remain useful only as inner content-lane intent.
+
+---
+
 # Stop Conditions
 
 Pause execution and ask for a decision only when one of these is true:

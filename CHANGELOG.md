@@ -18,6 +18,15 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
 - **Home Loading Geometry**:
   - Menyatukan route loading, nested Suspense fallback, dan client hydration pada urutan Hero → Sorotan & peringkat → Lanjut Baca → Baru diperbarui.
 
+### Page Frame & Discovery Consistency
+
+- Menyatukan Beranda, Library, Rak Buku, Populer, Cari, Sumber, Unduhan, dan Pengaturan pada outer page frame/gutter yang sama; management/focused width dipindahkan menjadi inner `ContentLane` agar canvas tidak berubah ukuran antar-route.
+- Menghapus desktop title banner yang redundan pada Sumber, Unduhan, dan Pengaturan sambil mempertahankan shared fixed mobile header.
+- Mengganti CSS multi-column Pengaturan dengan dua stack desktop yang eksplisit dan hierarchy yang tetap deterministik saat collapse ke mobile.
+- Menyatukan policy partisipasi sumber untuk Beranda/Library/Populer, memilih default Library dari sumber eligible pertama, dan mempertahankan Search sebagai scope independen.
+- Populer tidak lagi menghilangkan sumber pilihan secara diam-diam ketika feed gagal/empty; status sumber tetap terlihat secara compact.
+- Merapikan safe inset collage Hero, sparse Spotlight composition, dan bottom density Top 5 tanpa menambah dependency visual baru.
+
 ### Motion & Navigation Foundation
 
 - **Semantic Motion System** (`src/shared/lib/motion/`, `src/components/motion/`):
