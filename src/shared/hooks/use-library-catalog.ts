@@ -12,6 +12,7 @@ import { useLibraryFilterStore } from "@/shared/store/library-filter-store";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useCollectionStore } from "@/shared/store/collection-store";
 import type { MangaKey } from "@/shared/types/collection";
+import { sourceQueryOptions } from "@/shared/sources/source-query-options";
 
 const FORMATS = [
   { id: "manga", name: "Manga" },
@@ -114,10 +115,19 @@ export function useLibraryCatalog() {
     }
   }, [activeSourceId, genreSignature]);
 
+  const { data: sourcesData } = useQuery(sourceQueryOptions);
+  const activeSourceMetadata = React.useMemo(
+    () =>
+      dynamicSourceRegistry.get(activeSourceId) ||
+      sourcesData?.find((source) => source.id === activeSourceId),
+    [activeSourceId, sourcesData]
+  );
+
   const { isSourceDisabled } = useSourcePreferencesStore();
-  const sourceObj = dynamicSourceRegistry.get(activeSourceId);
-  const isDown = sourceObj?.status === "unavailable";
+  const isDown = activeSourceMetadata?.status === "unavailable";
   const isDisabled = isSourceDisabled(activeSourceId) || isDown;
+  const supportsProviderFilters =
+    activeSourceMetadata?.capabilities?.filters === true;
 
   const deferredSearchInput = React.useDeferredValue(searchInput);
 
@@ -136,7 +146,36 @@ export function useLibraryCatalog() {
     retry: 1,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
+    enabled: !isDisabled && supportsProviderFilters,
   });
+
+  React.useEffect(() => {
+    if (!activeSourceMetadata || supportsProviderFilters) return;
+    if (
+      selectedGenres.length === 0 &&
+      excludedGenres.length === 0 &&
+      selectedFormats.length === 0 &&
+      selectedStatuses.length === 0
+    ) {
+      return;
+    }
+
+    filterStore.setFilters({
+      selectedGenres: [],
+      excludedGenres: [],
+      selectedFormats: [],
+      selectedStatuses: [],
+    });
+    setPage(1);
+  }, [
+    activeSourceMetadata,
+    supportsProviderFilters,
+    selectedGenres,
+    excludedGenres,
+    selectedFormats,
+    selectedStatuses,
+    filterStore,
+  ]);
 
   const isNsfwFiltered = useSettingsStore(state => state.hideNsfw);
 
