@@ -72,6 +72,20 @@ export function FilterDrawerShell({
   const [activeSnapPoint, setActiveSnapPoint] = React.useState<number | string | null>(0.52);
   const touchStartY = React.useRef<number | null>(null);
   const reducedMotion = useReducedMotion();
+  const [visualViewportHeight, setVisualViewportHeight] = React.useState<number | null>(null);
+
+  React.useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+
+    const updateHeight = () => {
+      setVisualViewportHeight(Math.round(viewport.height));
+    };
+
+    updateHeight();
+    viewport.addEventListener("resize", updateHeight);
+    return () => viewport.removeEventListener("resize", updateHeight);
+  }, []);
 
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
@@ -128,7 +142,10 @@ export function FilterDrawerShell({
       </Drawer.Trigger>
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-black/45 backdrop-blur-[2px] z-[var(--z-drawer)]" />
-        <Drawer.Content className="bg-surface-base flex h-[92dvh] max-h-[92dvh] flex-col overflow-hidden rounded-t-[28px] fixed bottom-0 left-0 right-0 z-[var(--z-overlay)] outline-none shadow-heavy border-t border-border-subtle">
+        <Drawer.Content
+          className="bg-surface-base flex h-[92dvh] max-h-[92dvh] flex-col overflow-hidden rounded-t-[28px] fixed bottom-0 left-0 right-0 z-[var(--z-overlay)] outline-none shadow-heavy border-t border-border-subtle"
+          style={visualViewportHeight ? { maxHeight: `${visualViewportHeight}px` } : undefined}
+        >
           <div className="pt-2.5 pb-2 px-5 sm:px-6 shrink-0 flex flex-col cursor-grab active:cursor-grabbing select-none">
             <div className="mx-auto w-11 h-1 shrink-0 rounded-full bg-border-strong/80 mb-3.5" />
 
