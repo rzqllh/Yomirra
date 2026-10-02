@@ -38,13 +38,13 @@ export function LeaderboardRow({
 
   const rowGeometry = isHomeDensity
     ? emphasized
-      ? "min-h-[66px] py-1"
+      ? "min-h-[68px] py-1"
       : "min-h-[42px] py-0.5"
     : "min-h-[62px] py-1.5 sm:py-2";
 
   const coverGeometry = isHomeDensity
     ? emphasized
-      ? "h-[68px] w-[46px]"
+      ? "h-[68px] w-12"
       : "h-[42px] w-7"
     : "h-[60px] w-10";
 
