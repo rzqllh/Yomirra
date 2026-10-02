@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { Database, Pause, Play, Trash, X, ArrowClockwise, Download, BookOpen } from "@phosphor-icons/react";
 import { IconButton } from "@/components/ui/icon-button";
 import Link from "next/link";
-import { YomirraSurface, PageContainer } from "@/components/ui/layout";
+import { YomirraSurface, PageContainer, ContentLane } from "@/components/ui/layout";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/states/empty-state";
 import { StorageWarningBanner } from "@/components/download/storage-warning-banner";
@@ -50,6 +50,24 @@ export default function DownloadsPage() {
   );
   const completedItems = allDownloads.filter((d) => d.status === "downloaded");
 
+  const clearAllAction = allDownloads.length > 0 ? (
+    <button
+      type="button"
+      onClick={() => {
+        if (window.confirm("Yakin ingin menghapus semua unduhan?")) {
+          clearDownloads();
+          toast.info("Semua unduhan dihapus", {
+            description: "Seluruh chapter offline di perangkat telah dihapus.",
+          });
+        }
+      }}
+      className="inline-flex min-h-10 items-center gap-2 self-start sm:self-auto px-3.5 py-1.5 rounded-xl text-xs font-bold text-semantic-error hover:bg-semantic-error/10 border border-semantic-error/30 active:scale-95 transition-all shadow-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer"
+    >
+      <Trash size={16} />
+      <span>Hapus Semua</span>
+    </button>
+  ) : undefined;
+
   const formatBytes = (bytes: number) => {
     if (bytes === 0) return "0 B";
     const k = 1024;
@@ -61,52 +79,24 @@ export default function DownloadsPage() {
   return (
     <YomirraSurface variant="base" className="min-h-screen">
       <PageContainer variant="focused" hasMobileHeader>
-        {/* Page Title & Subtitle */}
         <PageHeader
           title="Unduhan"
           subtitle="Kelola chapter yang tersimpan untuk dibaca offline."
           icon={<Download size={24} weight="duotone" />}
-          desktopActions={
-            allDownloads.length > 0 ? (
-              <button
-                type="button"
-                onClick={() => {
-                  if (window.confirm("Yakin ingin menghapus semua unduhan?")) {
-                    clearDownloads();
-                    toast.info("Semua unduhan dihapus", {
-                      description: "Seluruh chapter offline di perangkat telah dihapus.",
-                    });
-                  }
-                }}
-                className="inline-flex min-h-10 items-center gap-2 self-start sm:self-auto px-3.5 py-1.5 rounded-xl text-xs font-bold text-semantic-error hover:bg-semantic-error/10 border border-semantic-error/30 active:scale-95 transition-all shadow-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer"
-              >
-                <Trash size={16} />
-                <span>Hapus Semua</span>
-              </button>
-            ) : undefined
-          }
-          actions={
-            allDownloads.length > 0 ? (
-              <button
-                type="button"
-                onClick={() => {
-                  if (window.confirm("Yakin ingin menghapus semua unduhan?")) {
-                    clearDownloads();
-                    toast.info("Semua unduhan dihapus", {
-                      description: "Seluruh chapter offline di perangkat telah dihapus.",
-                    });
-                  }
-                }}
-                className="inline-flex min-h-10 items-center gap-2 self-start sm:self-auto px-3.5 py-1.5 rounded-xl text-xs font-bold text-semantic-error hover:bg-semantic-error/10 border border-semantic-error/30 active:scale-95 transition-all shadow-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer"
-              >
-                <Trash size={16} />
-                <span>Hapus Semua</span>
-              </button>
-            ) : undefined
-          }
+          actions={clearAllAction}
+          hideDesktop
         />
 
-        <StorageWarningBanner />
+        <h1 className="sr-only">Unduhan</h1>
+
+        <ContentLane variant="focused" className="flex flex-col gap-6">
+          {clearAllAction && (
+            <div className="hidden md:flex justify-end">
+              {clearAllAction}
+            </div>
+          )}
+
+          <StorageWarningBanner />
 
         {/* Device Storage Status */}
         {storageInfo && (
@@ -340,6 +330,7 @@ export default function DownloadsPage() {
             </TabsContent>
           </Tabs>
         )}
+        </ContentLane>
       </PageContainer>
     </YomirraSurface>
   );
