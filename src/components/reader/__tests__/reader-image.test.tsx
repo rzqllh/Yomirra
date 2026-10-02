@@ -289,7 +289,13 @@ describe("ReaderImage - Failure Recovery", () => {
   });
 
   it("cancels a pending retry when the image job unmounts", () => {
-    const { unmount } = render(<ReaderImage {...defaultProps} />);
+    const onError = vi.fn();
+    const { unmount } = render(
+      <ReaderImage
+        {...defaultProps}
+        onError={onError}
+      />
+    );
     fireEvent.error(screen.getByRole("img"));
     unmount();
 
@@ -297,7 +303,7 @@ describe("ReaderImage - Failure Recovery", () => {
       vi.runAllTimers();
     });
 
-    expect(defaultProps.onError).not.toHaveBeenCalled();
+    expect(onError).not.toHaveBeenCalled();
   });
 
 });
