@@ -299,6 +299,17 @@ export function useLibraryCatalog() {
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
+  const resetFilterRouteIntent = React.useCallback(() => {
+    setSort("popular");
+    setPage(1);
+
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("genre");
+    params.delete("sort");
+    const suffix = params.toString();
+    router.replace(suffix ? `${pathname}?${suffix}` : pathname, { scroll: false });
+  }, [pathname, router, searchParams]);
+
   const resetFilters = () => {
     filterStore.resetFilters();
     setQuery("");
@@ -420,6 +431,7 @@ export function useLibraryCatalog() {
     filterStore,
     handleSearchSubmit,
     handleTabChange,
+    resetFilterRouteIntent,
     resetFilters,
   };
 }
