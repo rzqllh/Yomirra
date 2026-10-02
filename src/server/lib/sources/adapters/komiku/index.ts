@@ -30,6 +30,7 @@ export class KomikuSource implements MangaSource {
     detail: true,
     chapters: true,
     pages: true,
+    filters: false,
   };
 
   private client = new HttpClient(this.baseUrl, {
