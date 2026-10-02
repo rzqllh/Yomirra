@@ -12,6 +12,7 @@ export interface SearchToolbarProps {
   onQueryClear: () => void;
   filters: MergedFilterList;
   committedQuery: string;
+  onResetRouteIntent?: () => void;
 }
 
 export function SearchToolbar({
@@ -21,6 +22,7 @@ export function SearchToolbar({
   onQueryClear,
   filters,
   committedQuery,
+  onResetRouteIntent,
 }: SearchToolbarProps) {
   return (
     <div className="flex gap-2.5 items-center">
@@ -31,7 +33,10 @@ export function SearchToolbar({
         onClear={onQueryClear}
         filters={filters}
       />
-      <SearchFilterDrawer committedQuery={committedQuery} />
+      <SearchFilterDrawer
+        committedQuery={committedQuery}
+        onResetRouteIntent={onResetRouteIntent}
+      />
     </div>
   );
 }
