@@ -18,7 +18,16 @@ declare global {
   }
 }
 
-declare const self: WorkerGlobalScope;
+interface ServiceWorkerActivateEvent {
+  waitUntil(promise: Promise<unknown>): void;
+}
+
+declare const self: WorkerGlobalScope & {
+  addEventListener(
+    type: "activate",
+    listener: (event: ServiceWorkerActivateEvent) => void
+  ): void;
+};
 
 const serwist = new Serwist({
   precacheEntries: self.__SW_MANIFEST,
