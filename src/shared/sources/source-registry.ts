@@ -29,6 +29,7 @@ export const sourceRegistry: SourceMetadata[] = [
       detail: true,
       chapters: true,
       pages: true,
+      filters: true,
     },
     isDynamic: false
   },
@@ -57,6 +58,7 @@ export const sourceRegistry: SourceMetadata[] = [
       detail: true,
       chapters: true,
       pages: true,
+      filters: true,
     },
     isDynamic: false
   },
@@ -85,6 +87,7 @@ export const sourceRegistry: SourceMetadata[] = [
       detail: true,
       chapters: true,
       pages: true,
+      filters: true,
     },
     healthCheckUrl: "https://api.mangadex.org/manga?limit=1",
     isDynamic: false
@@ -114,6 +117,7 @@ export const sourceRegistry: SourceMetadata[] = [
       detail: true,
       chapters: true,
       pages: true,
+      filters: false,
     },
     isDynamic: false
   },
@@ -273,7 +277,7 @@ export const sourceRegistry: SourceMetadata[] = [
       detail: true,
       chapters: true,
       pages: true,
-      filters: true,
+      filters: false,
     },
     isDynamic: false
   }
