@@ -456,41 +456,51 @@
 
 ---
 
-# T7 — Accessibility + Performance Cleanup PR
+# T7 — Accessibility + Performance Cleanup — code integrated on main
 
 ## Accessibility
 
-- [ ] **T7.1** Reduced-motion audit across navigation, morphs, drawer, grid/list, shared elements, and error states.
-- [ ] **T7.2** Keyboard/focus audit.
-- [ ] **T7.3** Focus-return audit for overlays.
-- [ ] **T7.4** Touch-target audit.
-- [ ] **T7.5** Accessible-name/state audit.
-- [ ] **T7.6** Contrast audit on accent, muted metadata, selected chips, disabled states.
-- [ ] **T7.7** Remove continuous decorative motion from critical/error surfaces.
+- [x] **T7.1** Audit shared navigation/motion primitives, state morphs, drawers, grid/list cards, reader panels, and critical/error surfaces for `prefers-reduced-motion`; close the custom reader-panel gap and make filter badge transitions instant under reduced motion.
+- [x] **T7.2** Audit keyboard/focus behavior on shared overlays and add an explicit focus trap to the custom reader panel.
+- [x] **T7.3** Audit focus-return behavior; reader panels now restore the invoking control only after exit animation completes, while existing Radix/Vaul/command-overlay focus behavior remains under their established regression coverage.
+- [x] **T7.4** Audit shared touch targets and raise remaining dialog-close, filter-reset, and reader-chapter controls to the shared 44px minimum.
+- [x] **T7.5** Audit accessible names/states on shared controls: icon buttons require an `aria-label`, reader panels expose dialog semantics, and active reader chapters retain `aria-current`.
+- [x] **T7.6** Verify dark/light accent, muted metadata, and selected-chip token pairs at >= 4.5:1; disabled buttons remain semantically `disabled`/`aria-disabled` rather than relying on color alone.
+- [x] **T7.7** Verify critical `ErrorState` surfaces contain no continuous decorative spin/pulse/infinite animation.
 
 ## Performance
 
-- [ ] **T7.8** Record client-JS delta from motion/icon work.
-- [ ] **T7.9** Record navigation interaction latency before/after.
-- [ ] **T7.10** Record LCP on Home and detail.
-- [ ] **T7.11** Record CLS around skeleton replacement/navigation.
-- [ ] **T7.12** Measure card-detail enrichment request concurrency.
-- [ ] **T7.13** Add a small card-enrichment queue/budget if N+1 bursts remain.
-- [ ] **T7.14** Confirm React Query dedupe/cache prevents duplicate detail requests.
-- [ ] **T7.15** Record reader image concurrency.
+- [ ] **T7.8** Record client-JS delta from motion/icon work in a browser/bundle measurement environment. No new runtime dependency was introduced by this cleanup, but an exact client-JS byte delta is not claimed from CI alone.
+- [ ] **T7.9** Record navigation interaction latency before/after in a real browser profile.
+- [ ] **T7.10** Record LCP on Home and detail in a real browser/profile or production Web Vitals dataset.
+- [ ] **T7.11** Record CLS around skeleton replacement/navigation in a real browser/profile or production Web Vitals dataset.
+- [x] **T7.12** Measure card-detail enrichment concurrency in deterministic tests: compact-card synopsis enrichment is capped at 4 active detail requests, with excess work queued.
+- [x] **T7.13** Add a scoped FIFO card-detail enrichment budget because simultaneous IntersectionObserver activation could otherwise produce N+1 request bursts.
+- [x] **T7.14** Confirm React Query dedupe/cache behavior: simultaneous compact cards with the same `sourceId + mangaId` issue one detail request, while the shared budget preserves AbortSignal cancellation.
+- [x] **T7.15** Record reader scheduler concurrency policy from T5: data-saver/light = 1 page look-ahead, balanced = 2, aggressive = 3; actual browser/network connection concurrency remains browser-managed.
 
 ### Final quality gate
 
-- [ ] Tests pass.
-- [ ] Typecheck passes.
-- [ ] Lint passes.
-- [ ] Production build passes.
+- [x] Tests pass.
+- [x] Typecheck passes.
+- [x] Lint passes.
+- [x] Production build passes.
 - [ ] Mobile Safari/PWA smoke passes.
-- [ ] Reduced-motion smoke passes.
-- [ ] Throttled reader smoke passes.
-- [ ] No credential appears in client bundle/public docs.
-- [ ] Public docs remain provider-neutral.
-- [ ] Final diff is scoped.
+- [ ] Reduced-motion smoke passes in a real browser/OS preference.
+- [ ] Throttled reader smoke passes on a real browser/device profile.
+- [x] No new credential was introduced by the T7 diff; existing client/public-doc secret gate from T1 remains intact.
+- [x] Public README/CHANGELOG are provider-neutral and protected by a regression test.
+- [x] Final diff is scoped to accessibility, card enrichment, tests, and public-doc neutrality.
+
+**T7 implementation record (draft PR #42 CI harness, 2026-10-02):**
+- integrated to `main` as squash commit `e84bdd29efd6d70b75c8df4351ef27ddaafd46f7`; draft PR #42 was closed without being marked ready, so no automated Codex review was triggered;
+- custom `ReaderPanelShell` now exposes modal dialog semantics, traps Tab/Shift+Tab, closes on Escape, honors reduced motion, and restores focus after exit completion;
+- remaining sub-44px targets in the audited shared surfaces were normalized to the 44px minimum;
+- token-level contrast regression coverage verifies the audited light/dark pairs at >= 4.5:1;
+- compact-card synopsis hydration now uses a shared 4-request budget while React Query continues to dedupe identical detail queries and propagate cancellation;
+- README/CHANGELOG source-provider names were removed and a provider-neutral public-doc regression guard was added;
+- GitHub CI #349 passed typecheck, lint, **170 test files / 1,093 tests**, and production build; Next.js compiled successfully in 33.0s;
+- exact client-JS byte delta, navigation latency, LCP, CLS, Mobile Safari/PWA, OS reduced-motion, and real throttled-reader measurements remain open because they require a browser/deployment measurement environment rather than repository/CI evidence.
 
 ---
 
