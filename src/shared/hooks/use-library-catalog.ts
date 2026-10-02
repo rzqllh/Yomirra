@@ -8,6 +8,8 @@ import { useMounted } from "@/shared/hooks/use-mounted";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
+import { sourceQueryOptions } from "@/shared/sources/source-query-options";
+import { selectDiscoverySources } from "@/shared/sources/discovery-source-policy";
 import { useLibraryFilterStore } from "@/shared/store/library-filter-store";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useCollectionStore } from "@/shared/store/collection-store";
@@ -31,13 +33,24 @@ export function useLibraryCatalog() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
+  const disabledSources = useSourcePreferencesStore((state) => state.disabledSources);
+  const isNsfwFiltered = useSettingsStore((state) => state.hideNsfw);
+  const { data: runtimeSources } = useQuery(sourceQueryOptions);
 
   const sourceParam = searchParams.get("source");
   const genreParams = React.useMemo(
     () => searchParams.getAll("genre").map(g => g.toLowerCase().replace(/\s+/g, "-")),
     [searchParams]
   );
-  const activeSourceId = sourceParam || "shinigami";
+  const eligibleSources = React.useMemo(
+    () =>
+      selectDiscoverySources(runtimeSources || [], disabledSources).filter(
+        (source) => !(isNsfwFiltered && source.isNsfw)
+      ),
+    [runtimeSources, disabledSources, isNsfwFiltered]
+  );
+  const activeSourceId =
+    sourceParam || eligibleSources[0]?.id || "shinigami";
   const sortParam = searchParams.get("sort");
 
   const filterStore = useLibraryFilterStore();
@@ -177,7 +190,6 @@ export function useLibraryCatalog() {
     filterStore,
   ]);
 
-  const isNsfwFiltered = useSettingsStore(state => state.hideNsfw);
 
   const DYNAMIC_SORTS = filtersData?.sorts?.length ? filtersData.sorts : [
     { id: "popular", name: "Populer" },

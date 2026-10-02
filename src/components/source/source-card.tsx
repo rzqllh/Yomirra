@@ -16,6 +16,7 @@ import { ToggleSwitch } from "@/components/ui/toggle-switch"
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store"
 import { useSourceHealthStore } from "@/shared/store/source-health-store"
 import { useRouter } from "next/navigation"
+import { isDiscoverySourceSystemEligible } from "@/shared/sources/discovery-source-policy"
 
 interface SourceCardProps {
   source: SourceMetadata
@@ -33,8 +34,14 @@ export function SourceCard({ source, onUpdate }: SourceCardProps & { onUpdate?: 
   const router = useRouter();
   
   const { isSourceDisabled, toggleSource } = useSourcePreferencesStore();
-  // The source is considered "enabled" locally if it is NOT in the disabledSources array
-  const isEnabled = !isSourceDisabled(source.id);
+  const isPreferenceEnabled = !isSourceDisabled(source.id);
+  const isSystemEligible = isDiscoverySourceSystemEligible(source);
+  const isParticipating = isPreferenceEnabled && isSystemEligible;
+  const participationLabel = !isSystemEligible
+    ? "Tidak tersedia untuk penjelajahan"
+    : isPreferenceEnabled
+      ? "Tampil di Beranda, Library & Populer"
+      : "Disembunyikan dari penjelajahan";
 
   const handleDelete = async () => {
     if (confirm(`Hapus sumber ${source.name}?`)) {
@@ -133,7 +140,7 @@ export function SourceCard({ source, onUpdate }: SourceCardProps & { onUpdate?: 
               <span>v{source.version}</span>
             </span>
             <span className="text-[11px] font-medium text-text-muted">
-              {isEnabled ? "Tampil di Library & Populer" : "Disembunyikan"}
+              {participationLabel}
             </span>
           </div>
         </div>
@@ -184,20 +191,20 @@ export function SourceCard({ source, onUpdate }: SourceCardProps & { onUpdate?: 
       <div className="border-t border-border-subtle bg-surface-base/40 p-3 px-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <ToggleSwitch 
-            checked={isEnabled}
+            checked={isPreferenceEnabled}
             onCheckedChange={() => {
               toggleSource(source.id);
               window.dispatchEvent(new Event("sources_updated"));
               router.refresh();
             }}
-            title={isEnabled ? "Sembunyikan dari Library & Populer" : "Tampilkan di Library & Populer"}
+            title={isPreferenceEnabled ? "Sembunyikan dari penjelajahan" : "Tampilkan di penjelajahan"}
           />
           <span className="text-xs font-semibold text-text-secondary">
-            {isEnabled ? "Tampilkan di Library & Populer" : "Disembunyikan"}
+            {participationLabel}
           </span>
         </div>
 
-        {isEnabled && (
+        {isParticipating && (
           <button
             type="button"
             onClick={() => router.push(`/library?source=${encodeURIComponent(source.id)}`)}
