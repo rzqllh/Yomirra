@@ -47,7 +47,7 @@ describe("PageContainer", () => {
 
     // Required classes
     expect(className).toContain("w-full");
-    expect(className).toContain("max-w-none");
+    expect(className).toContain("max-w-[1280px]");
     expect(className).toContain("px-4");
     expect(className).toContain("md:px-8");
     expect(className).toContain("xl:px-10");
@@ -62,7 +62,7 @@ describe("PageContainer", () => {
     expect(className).not.toContain("overflow-y-scroll");
   });
 
-  it("supports container archetype variants with unified fluid width matching Home", async () => {
+  it("supports distinct documented container archetype widths", async () => {
     await act(async () => {
       root.render(
         <>
@@ -73,9 +73,9 @@ describe("PageContainer", () => {
       );
     });
 
-    expect(container.querySelector("#c-wide")?.className).toContain("max-w-none");
-    expect(container.querySelector("#c-mgmt")?.className).toContain("max-w-none");
-    expect(container.querySelector("#c-focused")?.className).toContain("max-w-none");
+    expect(container.querySelector("#c-wide")?.className).toContain("max-w-[1280px]");
+    expect(container.querySelector("#c-mgmt")?.className).toContain("max-w-[1120px]");
+    expect(container.querySelector("#c-focused")?.className).toContain("max-w-[960px]");
   });
 
   it("forwards ref to the underlying div", async () => {
