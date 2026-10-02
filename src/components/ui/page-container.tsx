@@ -4,9 +4,9 @@ import { cn } from "@/shared/utils/cn";
 export type ContainerVariant = "wide" | "management" | "focused";
 
 const containerMaxWidth: Record<ContainerVariant, string> = {
-  wide: "max-w-[1280px]",
-  management: "max-w-[1120px]",
-  focused: "max-w-[960px]",
+  wide: "max-w-[1360px]",
+  management: "max-w-[1200px]",
+  focused: "max-w-[1040px]",
 };
 
 export interface PageContainerProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -20,7 +20,8 @@ export interface PageContainerProps extends React.HTMLAttributes<HTMLDivElement>
  * - management: structured settings/source management
  * - focused: utility/task surfaces
  *
- * Outer gutters remain shared so page archetypes keep one left-edge rhythm.
+ * Max widths include the xl 40px gutters on both sides, preserving the documented
+ * usable content targets of ~1280px / ~1120px / ~960px.
  */
 export const PageContainer = React.forwardRef<HTMLDivElement, PageContainerProps>(
   ({ className, variant = "wide", hasMobileHeader = false, children, ...props }, ref) => {
