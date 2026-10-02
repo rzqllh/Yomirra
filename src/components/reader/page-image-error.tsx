@@ -30,7 +30,7 @@ export function PageImageError({ index, onRetry, onReport, onSwitchSource, class
                 aria-label="Laporkan masalah gambar ini"
                 variant="ghost"
                 size="sm"
-                className="rounded-xl size-10 p-0 shrink-0 border border-white/10 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white shadow-sm"
+                className="rounded-xl size-11 p-0 shrink-0 border border-white/10 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white shadow-sm"
               >
                 <Flag size={16} weight="bold" />
               </Button>
