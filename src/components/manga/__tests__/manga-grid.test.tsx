@@ -15,8 +15,10 @@ describe("MangaGrid deterministic layout", () => {
     const gridEl = container.firstElementChild as HTMLElement;
     expect(gridEl.tagName).toBe("DIV");
     expect(gridEl.className).toContain("grid");
-    // Verify standard grid classes are applied
-    expect(gridEl.className).toContain("grid-cols-2");
+    // Density follows the grid container rather than viewport column breakpoints.
+    expect(gridEl.className).toContain("repeat(auto-fit");
+    expect(gridEl.className).toContain("156px");
+    expect(gridEl.className).not.toContain("grid-cols-2");
   });
 
   it("applies standard grid classes in default grid viewMode", () => {
@@ -39,5 +41,7 @@ describe("MangaGrid deterministic layout", () => {
 
     const gridEl = container.firstElementChild as HTMLElement;
     expect(gridEl.className).toBe(MANGA_COMPACT_GRID_CLASS);
+    expect(gridEl.className).toContain("repeat(auto-fit");
+    expect(gridEl.className).toContain("320px");
   });
 });

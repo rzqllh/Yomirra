@@ -2,12 +2,14 @@
 
 import * as React from "react"
 import * as TabsPrimitive from "@radix-ui/react-tabs"
-import { motion } from "motion/react"
+import { motion, useReducedMotion } from "motion/react"
 import { cn } from "@/shared/utils/cn"
+import { transitions } from "@/shared/lib/motion/tokens"
 
 const TabsContext = React.createContext<{
   value?: string
   onValueChange?: (value: string) => void
+  indicatorId?: string
 }>({})
 
 const Tabs = React.forwardRef<
@@ -15,6 +17,7 @@ const Tabs = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.Root>
 >(({ value, defaultValue, onValueChange, children, ...props }, ref) => {
   const [activeTab, setActiveTab] = React.useState(value || defaultValue)
+  const indicatorId = React.useId()
   
   const handleValueChange = (val: string) => {
     setActiveTab(val)
@@ -22,7 +25,7 @@ const Tabs = React.forwardRef<
   }
 
   return (
-    <TabsContext.Provider value={{ value: value || activeTab, onValueChange: handleValueChange }}>
+    <TabsContext.Provider value={{ value: value || activeTab, onValueChange: handleValueChange, indicatorId }}>
       <TabsPrimitive.Root
         ref={ref}
         value={value || activeTab}
@@ -56,6 +59,7 @@ const TabsTrigger = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>
 >(({ className, value, children, ...props }, ref) => {
   const context = React.useContext(TabsContext)
+  const reducedMotion = useReducedMotion()
   const isActive = context.value === value
 
   return (
@@ -71,9 +75,9 @@ const TabsTrigger = React.forwardRef<
       <span className="relative z-10">{children}</span>
       {isActive && (
         <motion.div
-          layoutId="tab-indicator"
+          layoutId={reducedMotion ? undefined : `tab-indicator-${context.indicatorId ?? "root"}`}
           className="absolute inset-0 z-0 rounded-xs bg-accent shadow-xs"
-          transition={{ type: "spring", stiffness: 500, damping: 35 }}
+          transition={reducedMotion ? { duration: 0 } : transitions.layout}
         />
       )}
     </TabsPrimitive.Trigger>

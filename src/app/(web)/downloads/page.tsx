@@ -60,7 +60,7 @@ export default function DownloadsPage() {
 
   return (
     <YomirraSurface variant="base" className="min-h-screen">
-      <PageContainer hasMobileHeader>
+      <PageContainer variant="focused" hasMobileHeader>
         {/* Page Title & Subtitle */}
         <PageHeader
           title="Unduhan"

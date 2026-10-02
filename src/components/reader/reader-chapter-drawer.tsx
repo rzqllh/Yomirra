@@ -102,7 +102,7 @@ export function ReaderChapterDrawer({
       headerControls={headerControls}
       desktopMode="bottom-dialog"
     >
-      <div ref={containerRef} className="h-full overflow-y-auto pb-safe-bottom custom-scrollbar">
+      <div ref={containerRef} className="h-full overflow-y-auto pb-[var(--safe-bottom)] custom-scrollbar">
         {!chapters ? (
           <div className="flex items-center justify-center h-full text-text-muted text-sm font-medium py-10">
             Loading chapters...
