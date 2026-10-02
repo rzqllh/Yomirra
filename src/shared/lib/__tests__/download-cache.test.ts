@@ -4,7 +4,7 @@ import { EXPLICIT_DOWNLOADS_CACHE_NAME } from "../pwa-cache-policy";
 
 describe("download cache cleanup", () => {
   it("deletes only entries belonging to the cancelled download", async () => {
-    const deleteMock = vi.fn(async () => true);
+    const deleteMock = vi.fn(async (_request: Request) => true);
     const cache = {
       keys: vi.fn(async () => [
         new Request("https://app.test/offline-images/src::manga::ch-1/0"),
