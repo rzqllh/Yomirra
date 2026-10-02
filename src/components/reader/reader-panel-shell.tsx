@@ -36,21 +36,24 @@ export function ReaderPanelShell({
   const previousFocusRef = React.useRef<HTMLElement | null>(null)
   const titleId = React.useId()
 
+  const restorePreviousFocus = React.useCallback(() => {
+    const previous = previousFocusRef.current
+    if (previous?.isConnected) previous.focus()
+    previousFocusRef.current = null
+  }, [])
+
   React.useLayoutEffect(() => {
     if (!isOpen) return
 
     previousFocusRef.current =
       document.activeElement instanceof HTMLElement ? document.activeElement : null
 
-    const panel = panelRef.current
-    panel?.focus()
-
-    return () => {
-      const previous = previousFocusRef.current
-      if (previous?.isConnected) previous.focus()
-      previousFocusRef.current = null
-    }
+    panelRef.current?.focus()
   }, [isOpen])
+
+  React.useEffect(() => {
+    return () => restorePreviousFocus()
+  }, [restorePreviousFocus])
 
   React.useEffect(() => {
     if (!isOpen) return
@@ -107,7 +110,7 @@ export function ReaderPanelShell({
       : "fixed inset-0 z-[var(--z-drawer)] bg-black/45 backdrop-blur-[2px]"
 
   return (
-    <AnimatePresence>
+    <AnimatePresence onExitComplete={restorePreviousFocus}>
       {isOpen && (
         <>
           {/* Backdrop */}
