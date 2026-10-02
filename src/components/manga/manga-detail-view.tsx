@@ -28,6 +28,7 @@ import { cn } from "@/shared/utils/cn";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { MangaDetailLayout } from "./manga-detail-layout";
 import { normalizeSynopsis } from "@/shared/utils/normalize";
+import { getMangaTransitionNames } from "@/shared/lib/motion/transition-identity";
 import type { MangaDetail, Chapter } from "@/shared/types/source";
 
 const CHAPTER_ITEM_ESTIMATED_SIZE = 70;
@@ -88,9 +89,9 @@ export function MangaDetailView({
   const displayScore = ratingScore ?? detail.score;
   const sourceName = dynamicSourceRegistry.get(sourceId)?.name || sourceId;
 
-  const safeId = `${sourceId}-${mangaId}`.replace(/[^a-zA-Z0-9-]/g, '-');
-  const coverTransitionName = `manga-cover-${safeId}`;
-  const titleTransitionName = `manga-title-${safeId}`;
+  const transitionNames = getMangaTransitionNames(sourceId, mangaId);
+  const coverTransitionName = transitionNames.cover;
+  const titleTransitionName = transitionNames.title;
 
   const searchParams = useSearchParams();
   const returnTo = searchParams.get("returnTo");
