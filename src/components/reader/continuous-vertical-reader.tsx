@@ -24,9 +24,13 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/shared/utils/cn"
 import { motion } from "motion/react"
 import { beginNavigationIntent } from "@/shared/lib/navigation-intent"
-import { advanceReaderReveal, getReaderPageLoadState } from "@/shared/lib/reader-load-order"
+import {
+  advanceReaderReveal,
+  getReaderLookAheadWindow,
+  getReaderPageLoadState,
+} from "@/shared/lib/reader-load-order"
 
-export type StreamItem = { type: "image"; chapterId: string; pageIndex: number; url: string; index: number };
+export type StreamItem = { type: "image"; chapterId: string; pageIndex: number; url: string; index: number; width?: number; height?: number };
 
 interface ContinuousVerticalReaderProps {
   sourceId: string;
@@ -85,6 +89,10 @@ export function ContinuousVerticalReader({
   const settledPageIndicesRef = React.useRef<Set<number>>(new Set());
   const [queueStartIndex, setQueueStartIndex] = React.useState(0);
   const [revealedThrough, setRevealedThrough] = React.useState(-1);
+  const lookAheadWindow = React.useMemo(
+    () => getReaderLookAheadWindow(preferences.preloadIntensity, dataSaver),
+    [preferences.preloadIntensity, dataSaver]
+  );
 
   const resetLoadQueue = React.useCallback((startIndex = 0) => {
     settledPageIndicesRef.current = new Set();
@@ -133,7 +141,9 @@ export function ContinuousVerticalReader({
       chapterId: chapterId,
       pageIndex: p.index,
       url: p.url,
-      index: p.index
+      index: p.index,
+      width: p.width,
+      height: p.height
     }));
   }, [currentPages, chapterId]);
 
@@ -183,13 +193,13 @@ export function ContinuousVerticalReader({
     if (
       isRestored &&
       typeof firstVisibleVirtualIndex === "number" &&
-      firstVisibleVirtualIndex > queueStartIndex + 2 &&
-      firstVisibleVirtualIndex > revealedThrough + 2
+      firstVisibleVirtualIndex > queueStartIndex + lookAheadWindow &&
+      firstVisibleVirtualIndex > revealedThrough + lookAheadWindow
     ) {
       setQueueStartIndex(firstVisibleVirtualIndex);
       setRevealedThrough((prev) => Math.max(prev, firstVisibleVirtualIndex - 1));
     }
-  }, [isRestored, firstVisibleVirtualIndex, queueStartIndex, revealedThrough]);
+  }, [isRestored, firstVisibleVirtualIndex, queueStartIndex, revealedThrough, lookAheadWindow]);
 
   const handleImageError = React.useCallback(() => { }, []);
 
@@ -353,7 +363,7 @@ export function ContinuousVerticalReader({
             virtualRow.index,
             queueStartIndex,
             revealedThrough,
-            2
+            lookAheadWindow
           );
           return (
             <div
@@ -395,6 +405,8 @@ export function ContinuousVerticalReader({
                 imageFit={preferences.imageFit}
                 dataIndex={virtualRow.index}
                 totalPages={pages.length}
+                pageWidth={item.width}
+                pageHeight={item.height}
               />
             </div>
           );

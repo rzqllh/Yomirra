@@ -104,7 +104,9 @@ export function ReaderView({
 
           const blobUrls: PageItem[] = Array.from({ length: pageCount }).map((_, i) => ({
             index: i,
-            url: basePages[i]?.url || "" // fallback to network url if missing
+            url: basePages[i]?.url || "", // fallback to network url if missing
+            width: basePages[i]?.width,
+            height: basePages[i]?.height,
           }));
 
           await Promise.all(parsedKeys.map(async ({ req, index }) => {
@@ -113,7 +115,12 @@ export function ReaderView({
             if (blob && isMounted && index < pageCount) {
               const url = URL.createObjectURL(blob);
               createdUrls.push(url);
-              blobUrls[index] = { index, url };
+              blobUrls[index] = {
+                index,
+                url,
+                width: basePages[index]?.width,
+                height: basePages[index]?.height,
+              };
             }
           }));
           

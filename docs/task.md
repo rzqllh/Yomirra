@@ -118,7 +118,9 @@
 - the CSP includes the current Next.js self/inline bootstrap requirement, HTTPS assets/API, WebSocket, Firebase auth frame hosts, blob workers, and manifest;
 - the merged production deployment showed no warning/error runtime logs during this verification window;
 - unauthenticated admin smoke fails closed as designed, but production currently reports admin auth as **unconfigured** (HTTP 503), which means an authorized admin smoke cannot pass until the production admin credential/Firebase Admin configuration is provisioned;
-- **remaining:** provision/confirm production admin auth, then run authorized admin smoke, interactive Firebase popup flow, and installed-PWA/iOS Safari smoke. This item stays open until those real-browser/configuration checks are available; report-only CSP must not be promoted to enforcement before that check.
+- latest production deployment `dpl_BtfG7gms2nMxrAgyzZ5VAbeUtMAA` is READY on code commit `e84bdd29efd6d70b75c8df4351ef27ddaafd46f7`; Home, Account, Admin, manifest, and Service Worker all return HTTP 200 through the current production alias;
+- current production `sw.js` contains the v2 reading-buffer/image/page cache names and sensitive route prefixes for `/account`, `/admin`, and `/api/auth`; production manifest/SW responses carry the expected report-only CSP, and Vercel reported no runtime errors in the latest one-hour verification window;
+- **remaining:** provision/confirm production admin auth, then run authorized admin smoke, interactive Firebase popup flow, and installed-PWA/iOS Safari smoke. Static HTTP/SW inspection still does not prove browser interaction or installed-PWA upgrade behavior, so report-only CSP must not be promoted to enforcement before those checks.
 
 - [x] **T1.21** Document required directives in code/config comments, not credential values.
 - [x] **T1.22** Remove raw internal `error.message` from user-facing generic error surfaces.
@@ -388,91 +390,120 @@
 
 ---
 
-# T5 — Reader FIFO PR
+# T5 — Reader FIFO PR — merged in PR #39
 
-- [ ] **T5.1** Inspect existing reader image scheduling, virtualization, preloading, and retry behavior.
-- [ ] **T5.2** Define queue item state: idle/queued/loading/decoded/failed/cancelled.
-- [ ] **T5.3** Implement bounded concurrency.
-- [ ] **T5.4** Prioritize current/nearest pages.
-- [ ] **T5.5** Add small configurable look-ahead window.
-- [ ] **T5.6** Prevent later pages from starving earlier pages.
-- [ ] **T5.7** Ensure one failed image releases queue capacity.
-- [ ] **T5.8** Cancel/reprioritize on chapter change.
-- [ ] **T5.9** Reserve geometry before image decode.
-- [ ] **T5.10** Reveal after decode where practical.
-- [ ] **T5.11** Test long chapter + throttled network.
-- [ ] **T5.12** Test one failed image.
-- [ ] **T5.13** Test rapid chapter navigation.
-- [ ] **T5.14** Test resume position.
-- [ ] **T5.15** Test offline-downloaded chapter.
+- [x] **T5.1** Inspect existing reader image scheduling, virtualization, preloading, retry/error flow, offline resolution, chapter teardown, resume behavior, and geometry reservation.
+- [x] **T5.2** Define queue item state: idle/queued/loading/decoded/failed/cancelled.
+- [x] **T5.3** Keep image work bounded by a small configurable load window instead of unbounded chapter-wide loading.
+- [x] **T5.4** Prioritize current/resumed/visible work and nearest pages before later FIFO work.
+- [x] **T5.5** Share a small configurable look-ahead window across continuous and paged readers.
+- [x] **T5.6** Prevent later pages from revealing ahead of unresolved earlier queued pages.
+- [x] **T5.7** Ensure permanent image failure settles its slot and cannot deadlock ordered reveal.
+- [x] **T5.8** Invalidate stale retry/decode jobs on page/chapter teardown and reprioritize the active chapter.
+- [x] **T5.9** Reserve geometry before decode when upstream width/height are known, including downloaded chapters.
+- [x] **T5.10** Reveal after image decode where the browser exposes decode support.
+- [x] **T5.11** Cover a 100-page throttled/out-of-order settlement sequence in deterministic scheduler tests.
+- [x] **T5.12** Test failed-image queue release/deadlock prevention.
+- [x] **T5.13** Test stale decode cancellation across rapid page/job replacement.
+- [x] **T5.14** Test resume position after history hydration.
+- [x] **T5.15** Test downloaded chapter URL resolution and offline-to-network page fallback.
 
 ### Reader PR gate
 
-- [ ] Queue is bounded and deterministic.
-- [ ] Failure cannot deadlock.
-- [ ] Earlier pages receive priority.
-- [ ] Reader position is stable.
-- [ ] Typecheck/lint/tests/build pass.
+- [x] Queue is bounded and deterministic.
+- [x] Failure cannot deadlock.
+- [x] Earlier pages receive priority.
+- [x] Reader position is stable in machine-verifiable resume/geometry tests.
+- [x] Typecheck/lint/tests/build pass.
+
+**T5 implementation record (PR #39, 2026-10-02):**
+- merged as `e9502f290495b06a0ad1d943312a85fe1d72342e`;
+- retained the existing virtualized/ordered reader architecture and closed only proven lifecycle, decode, look-ahead, and geometry gaps;
+- reader jobs now use an explicit lifecycle and stale async completions are invalidated before paint with layout-effect teardown;
+- continuous and paged modes share the same light/balanced/aggressive look-ahead policy, with data saver capped to one page ahead;
+- known page dimensions are preserved through the offline path and passed to the image element/container before decode;
+- GitHub CI #335 passed typecheck, lint, 1,061 unit/integration tests, and production build after the stale-decode race fix;
+- manual throttled-device, browser, iOS Safari, and installed-PWA smoke gates remain open and are not claimed by these machine tests.
 
 ---
 
-# T6 — PWA/Offline Hygiene PR
+# T6 — PWA/Offline Hygiene PR — code integrated on main
 
-- [ ] **T6.1** Inventory Cache Storage, persisted Zustand stores, downloads, and reading buffer.
-- [ ] **T6.2** Define cache versions and migration policy.
-- [ ] **T6.3** Define cleanup for partial/abandoned downloads.
-- [ ] **T6.4** Verify clear-offline-data removes intended stores/caches.
-- [ ] **T6.5** Keep account sign-out distinct from deleting device-local reading data.
-- [ ] **T6.6** Add an explicit shared-device cleanup flow if absent.
-- [ ] **T6.7** Verify private/session-sensitive responses are not cached as reusable public data.
-- [ ] **T6.8** Test service-worker update from the previous production version.
-- [ ] **T6.9** Test offline navigation and offline reader.
+- [x] **T6.1** Inventory Cache Storage, persisted Zustand stores, explicit downloads, reading buffer, reader session cache, auth ownership, and Firestore persistent local cache.
+- [x] **T6.2** Define explicit automatic-cache versions and activation-time migration policy while preserving the durable explicit-download cache.
+- [x] **T6.3** Clean partial/abandoned download cache after active work settles; pause remains resumable.
+- [x] **T6.4** Verify automatic-cache clear and shared-device cleanup remove their intended stores/caches without deleting explicit downloads from the ordinary cache-clear action.
+- [x] **T6.5** Keep ordinary account sign-out distinct from deleting device-local reading data; clear user-scoped local state before a different account takes ownership.
+- [x] **T6.6** Add an explicit shared-device cleanup flow that signs out and removes local reading state, downloads, runtime caches, reader session traces, ownership metadata, and Firestore persistent cache while leaving cloud data intact.
+- [x] **T6.7** Route account/admin/auth surfaces through NetworkOnly ahead of Serwist default runtime caching.
+- [ ] **T6.8** Installed-PWA service-worker upgrade smoke from the previous production version. Cache-name migration from the previous production runtime names is covered by deterministic unit tests, but the real installed-PWA lifecycle is not claimed yet.
+- [x] **T6.9** Cover offline navigation eligibility and offline-reader/download fallback in the automated suite; real installed-PWA/browser smoke remains part of the manual gate.
 
 ### PWA PR gate
 
-- [ ] Offline reading remains functional.
-- [ ] Cleanup is deterministic.
-- [ ] Service-worker upgrade works.
-- [ ] Security/session behavior is not overridden by stale cache.
-- [ ] Typecheck/lint/tests/build pass.
+- [x] Offline reading remains functional in automated reader/download coverage.
+- [x] Cleanup is deterministic in cache, download-cancellation, auth-ownership, and shared-device cleanup tests.
+- [ ] Installed service-worker upgrade works on a real previous-production PWA installation.
+- [x] Session-sensitive account/admin/auth routes are excluded from reusable offline runtime caching.
+- [x] Typecheck/lint/tests/build pass.
+
+**T6 implementation record (draft PR #40 CI harness, 2026-10-02):**
+- integrated to `main` as squash commit `b78687cb602c1e49c098ca267b3699910561eafd`; draft PR #40 was closed without being marked ready, avoiding automated Codex review;
+- automatic runtime caches now use an explicit v2 policy and service-worker activation deletes stale `yomirra-*` cache generations while preserving `yomirra-chapter-cache-v1` explicit downloads;
+- cancelled/removed downloads wait for active work to settle before cache deletion, preventing late writes from recreating abandoned pages; cancelled items reset page metadata so retry cannot trust deleted cached pages;
+- logout preserves local reading data; a local ownership marker prevents cross-account leakage by clearing user-scoped local state before a different authenticated account syncs;
+- Settings now exposes a separate shared-device wipe that also clears downloaded chapters, automatic caches, reader session traces, and Firestore IndexedDB persistence;
+- GitHub CI #340 passed typecheck, lint, 165 test files / 1,074 tests, and production build; the production build compiled successfully;
+- Vercel preview remained quota-limited and was not treated as a code failure; installed-PWA/service-worker-upgrade smoke remains open.
 
 ---
 
-# T7 — Accessibility + Performance Cleanup PR
+# T7 — Accessibility + Performance Cleanup — code integrated on main
 
 ## Accessibility
 
-- [ ] **T7.1** Reduced-motion audit across navigation, morphs, drawer, grid/list, shared elements, and error states.
-- [ ] **T7.2** Keyboard/focus audit.
-- [ ] **T7.3** Focus-return audit for overlays.
-- [ ] **T7.4** Touch-target audit.
-- [ ] **T7.5** Accessible-name/state audit.
-- [ ] **T7.6** Contrast audit on accent, muted metadata, selected chips, disabled states.
-- [ ] **T7.7** Remove continuous decorative motion from critical/error surfaces.
+- [x] **T7.1** Audit shared navigation/motion primitives, state morphs, drawers, grid/list cards, reader panels, and critical/error surfaces for `prefers-reduced-motion`; close the custom reader-panel gap and make filter badge transitions instant under reduced motion.
+- [x] **T7.2** Audit keyboard/focus behavior on shared overlays and add an explicit focus trap to the custom reader panel.
+- [x] **T7.3** Audit focus-return behavior; reader panels now restore the invoking control only after exit animation completes, while existing Radix/Vaul/command-overlay focus behavior remains under their established regression coverage.
+- [x] **T7.4** Audit shared touch targets and raise remaining dialog-close, filter-reset, and reader-chapter controls to the shared 44px minimum.
+- [x] **T7.5** Audit accessible names/states on shared controls: icon buttons require an `aria-label`, reader panels expose dialog semantics, and active reader chapters retain `aria-current`.
+- [x] **T7.6** Verify dark/light accent, muted metadata, and selected-chip token pairs at >= 4.5:1; disabled buttons remain semantically `disabled`/`aria-disabled` rather than relying on color alone.
+- [x] **T7.7** Verify critical `ErrorState` surfaces contain no continuous decorative spin/pulse/infinite animation.
 
 ## Performance
 
-- [ ] **T7.8** Record client-JS delta from motion/icon work.
-- [ ] **T7.9** Record navigation interaction latency before/after.
-- [ ] **T7.10** Record LCP on Home and detail.
-- [ ] **T7.11** Record CLS around skeleton replacement/navigation.
-- [ ] **T7.12** Measure card-detail enrichment request concurrency.
-- [ ] **T7.13** Add a small card-enrichment queue/budget if N+1 bursts remain.
-- [ ] **T7.14** Confirm React Query dedupe/cache prevents duplicate detail requests.
-- [ ] **T7.15** Record reader image concurrency.
+- [ ] **T7.8** Record client-JS delta from motion/icon work in a browser/bundle measurement environment. No new runtime dependency was introduced by this cleanup, but an exact client-JS byte delta is not claimed from CI alone.
+- [ ] **T7.9** Record navigation interaction latency before/after in a real browser profile.
+- [ ] **T7.10** Record LCP on Home and detail in a real browser/profile or production Web Vitals dataset.
+- [ ] **T7.11** Record CLS around skeleton replacement/navigation in a real browser/profile or production Web Vitals dataset.
+- [x] **T7.12** Measure card-detail enrichment concurrency in deterministic tests: compact-card synopsis enrichment is capped at 4 active detail requests, with excess work queued.
+- [x] **T7.13** Add a scoped FIFO card-detail enrichment budget because simultaneous IntersectionObserver activation could otherwise produce N+1 request bursts.
+- [x] **T7.14** Confirm React Query dedupe/cache behavior: simultaneous compact cards with the same `sourceId + mangaId` issue one detail request, while the shared budget preserves AbortSignal cancellation.
+- [x] **T7.15** Record reader scheduler concurrency policy from T5: data-saver/light = 1 page look-ahead, balanced = 2, aggressive = 3; actual browser/network connection concurrency remains browser-managed.
 
 ### Final quality gate
 
-- [ ] Tests pass.
-- [ ] Typecheck passes.
-- [ ] Lint passes.
-- [ ] Production build passes.
+- [x] Tests pass.
+- [x] Typecheck passes.
+- [x] Lint passes.
+- [x] Production build passes.
 - [ ] Mobile Safari/PWA smoke passes.
-- [ ] Reduced-motion smoke passes.
-- [ ] Throttled reader smoke passes.
-- [ ] No credential appears in client bundle/public docs.
-- [ ] Public docs remain provider-neutral.
-- [ ] Final diff is scoped.
+- [ ] Reduced-motion smoke passes in a real browser/OS preference.
+- [ ] Throttled reader smoke passes on a real browser/device profile.
+- [x] No new credential was introduced by the T7 diff; existing client/public-doc secret gate from T1 remains intact.
+- [x] Public README/CHANGELOG are provider-neutral and protected by a regression test.
+- [x] Final diff is scoped to accessibility, card enrichment, tests, and public-doc neutrality.
+
+**T7 implementation record (draft PR #42 CI harness, 2026-10-02):**
+- integrated to `main` as squash commit `e84bdd29efd6d70b75c8df4351ef27ddaafd46f7`; draft PR #42 was closed without being marked ready, so no automated Codex review was triggered;
+- custom `ReaderPanelShell` now exposes modal dialog semantics, traps Tab/Shift+Tab, closes on Escape, honors reduced motion, and restores focus after exit completion;
+- remaining sub-44px targets in the audited shared surfaces were normalized to the 44px minimum;
+- token-level contrast regression coverage verifies the audited light/dark pairs at >= 4.5:1;
+- compact-card synopsis hydration now uses a shared 4-request budget while React Query continues to dedupe identical detail queries and propagate cancellation;
+- README/CHANGELOG source-provider names were removed and a provider-neutral public-doc regression guard was added;
+- GitHub CI #349 passed typecheck, lint, **170 test files / 1,093 tests**, and production build; Next.js compiled successfully in 33.0s;
+- production deployment `dpl_BtfG7gms2nMxrAgyzZ5VAbeUtMAA` is READY on `e84bdd29efd6d70b75c8df4351ef27ddaafd46f7`; the public production aliases now serve the T7 code slice, and Vercel reported no runtime errors in the latest one-hour verification window;
+- exact client-JS byte delta, navigation latency, LCP, CLS, Mobile Safari/PWA, OS reduced-motion, and real throttled-reader measurements remain open because the available deployment/log interfaces do not provide an interactive browser/DevTools performance profile.
 
 ---
 

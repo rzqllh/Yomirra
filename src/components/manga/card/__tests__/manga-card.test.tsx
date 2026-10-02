@@ -137,7 +137,59 @@ describe("MangaCard", () => {
     await waitFor(() => {
       expect(screen.getByText("Cerita bersih dari detail.")).toBeDefined();
     });
-    expect(apiClient.getDetail).toHaveBeenCalledWith("doujindesu", "missing-synopsis");
+    expect(apiClient.getDetail).toHaveBeenCalledWith(
+      "doujindesu",
+      "missing-synopsis",
+      expect.objectContaining({ signal: expect.anything() })
+    );
+
+    queryClient.clear();
+  });
+
+  it("deduplicates simultaneous synopsis enrichment for the same manga", async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    vi.mocked(apiClient.getDetail).mockResolvedValue({
+      id: "same-manga",
+      title: "Same Manga",
+      coverUrl: "https://example.com/cover.jpg",
+      description: "Sinopsis yang sama.",
+      status: "ONGOING",
+      genres: [],
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <>
+          <MangaCard
+            variant="discovery"
+            viewMode="compact"
+            sourceId="shinigami"
+            manga={{
+              id: "same-manga",
+              title: "Same Manga",
+              coverUrl: "https://example.com/cover.jpg",
+            }}
+          />
+          <MangaCard
+            variant="discovery"
+            viewMode="compact"
+            sourceId="shinigami"
+            manga={{
+              id: "same-manga",
+              title: "Same Manga Copy",
+              coverUrl: "https://example.com/cover.jpg",
+            }}
+          />
+        </>
+      </QueryClientProvider>
+    );
+
+    await waitFor(() => {
+      expect(apiClient.getDetail).toHaveBeenCalledTimes(1);
+    });
 
     queryClient.clear();
   });

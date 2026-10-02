@@ -247,6 +247,73 @@ describe("PagedReader Component & Integration", () => {
     });
   });
 
+  describe("Resume & Offline Reader Contract", () => {
+    it("restores the saved page after history hydration", async () => {
+      useHistoryStore.setState({
+        _hasHydrated: true,
+        items: {
+          "src1::manga1::ch1": {
+            sourceId: "src1",
+            mangaId: "manga1",
+            chapterId: "ch1",
+            mangaTitle: "Manga 1",
+            pageIndex: 2,
+            readAt: Date.now(),
+          },
+        },
+      });
+
+      renderWithClient(
+        <PagedReader
+          sourceId="src1"
+          mangaId="manga1"
+          chapterId="ch1"
+          pages={mockPages}
+        />
+      );
+
+      expect(await screen.findByText("3 / 3")).toBeDefined();
+    });
+
+    it("uses the downloaded chapter URL for the active page", () => {
+      const downloadId = "src1::manga1::ch1";
+      useDownloadStore.setState({
+        downloads: {
+          [downloadId]: {
+            id: downloadId,
+            sourceId: "src1",
+            mangaId: "manga1",
+            mangaTitle: "Manga 1",
+            chapterId: "ch1",
+            chapterTitle: "Chapter 1",
+            status: "downloaded",
+            progress: 100,
+            totalPages: mockPages.length,
+            downloadedPages: mockPages.length,
+            pages: [],
+            createdAt: Date.now(),
+            updatedAt: Date.now(),
+          },
+        },
+        queue: [],
+        activeDownloads: [],
+      });
+
+      renderWithClient(
+        <PagedReader
+          sourceId="src1"
+          mangaId="manga1"
+          chapterId="ch1"
+          pages={mockPages}
+        />
+      );
+
+      expect(screen.getByAltText("Page 1").getAttribute("src")).toContain(
+        "/offline-images/src1::manga1::ch1/0"
+      );
+    });
+  });
+
   describe("Mode Integration in ReaderView", () => {
     it("should render PagedReader when readingMode === 'paged'", () => {
       useReaderStore.setState({

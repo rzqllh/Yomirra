@@ -1,9 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { UserCircle, Broom, Palette, WifiHigh, Fire, ArrowsClockwise, DeviceMobile, FileText, Clock, Bell, Compass, Globe, Trash, CaretLeft } from "@phosphor-icons/react";
+import { UserCircle, Broom, Palette, WifiHigh, Fire, ArrowsClockwise, DeviceMobile, FileText, Clock, Bell, X, Compass, Globe, Trash, CaretLeft } from "@phosphor-icons/react";
 import { BackupRestoreView } from "@/components/settings/backup-restore-modal";
 import { useAuth } from "@/shared/hooks/use-auth";
+import { useSync } from "@/shared/hooks/use-sync";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
@@ -19,9 +20,13 @@ import { PageHeader } from "@/components/app/header";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Gear, ShieldWarning } from "@phosphor-icons/react/dist/ssr";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { id as idLocale } from "date-fns/locale";
 import { ConfirmationModal } from "@/components/ui/confirmation-modal";
 import { SettingsSection, SettingsItem, IconWrapper } from "@/app/(web)/settings/components/settings-ui";
+import { cn } from "@/shared/utils/cn";
 import { clearAutomaticCache, getStorageEstimate } from "@/shared/lib/reading-buffer";
+import { clearSharedDeviceData } from "@/shared/lib/local-data-cleanup";
 
 export interface SettingsViewProps {
   isOverlay?: boolean;
@@ -29,7 +34,7 @@ export interface SettingsViewProps {
 }
 
 export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const clearHistory = useHistoryStore((state) => state.clearHistory);
   const clearLibrary = useLibraryStore((state) => state.clearLibrary);
   const {
@@ -48,7 +53,9 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
 
   const [subView, setSubView] = React.useState<"main" | "backup">("main");
   const [isClearDataDialogOpen, setIsClearDataDialogOpen] = React.useState(false);
+  const [isSharedDeviceDialogOpen, setIsSharedDeviceDialogOpen] = React.useState(false);
   const [isClearingCache, setIsClearingCache] = React.useState(false);
+  const [isClearingDevice, setIsClearingDevice] = React.useState(false);
   const [storageUsage, setStorageUsage] = React.useState<string | null>(null);
 
   React.useEffect(() => {
@@ -88,10 +95,31 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
   const confirmClearData = () => {
     clearHistory();
     clearLibrary();
-    toast.info("Data lokal dihapus", {
-      description: "Seluruh riwayat baca dan data lokal di perangkat ini telah dibersihkan.",
+    toast.info("Riwayat & bookmark lokal dihapus", {
+      description: "Unduhan dan cache bacaan tetap tersimpan di perangkat ini.",
     });
     setIsClearDataDialogOpen(false);
+  };
+
+  const confirmSharedDeviceCleanup = async () => {
+    setIsClearingDevice(true);
+    try {
+      if (user) {
+        await logout();
+      }
+      await clearSharedDeviceData();
+      setIsSharedDeviceDialogOpen(false);
+      toast.success("Data perangkat dibersihkan", {
+        description: "Akun, data baca lokal, unduhan, dan cache perangkat telah dibersihkan.",
+      });
+      window.location.replace("/");
+    } catch {
+      toast.error("Data perangkat gagal dibersihkan", {
+        description: "Sebagian data mungkin masih tersimpan. Coba lagi sebelum menyerahkan perangkat.",
+      });
+    } finally {
+      setIsClearingDevice(false);
+    }
   };
 
   const formatReadingTime = () => {
@@ -407,11 +435,29 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
         
         <SettingsItem
         icon={<IconWrapper variant="danger"><Trash size={20} weight="duotone" /></IconWrapper>}
-        title={user ? "Hapus data lokal di perangkat ini" : "Hapus data lokal"}
+        title="Hapus riwayat & bookmark lokal"
         description={user ? "Hapus riwayat baca dan bookmark lokal di perangkat ini. Unduhan tetap tersimpan, dan data cloud dapat muncul lagi setelah sinkronisasi." : "Hapus riwayat baca dan bookmark lokal dari perangkat ini. Unduhan tetap tersimpan."}
         right={
         <Button onClick={handleClearData} variant="outline" className="w-full sm:w-auto shrink-0 text-semantic-error hover:text-white hover:bg-semantic-error border-semantic-error/50 rounded-xl font-bold transition-colors">
         Hapus Data
+        </Button>
+        }
+        />
+        
+        <div className="mx-3 my-1 border-b border-border-subtle/50" />
+        
+        <SettingsItem
+        icon={<IconWrapper variant="danger"><DeviceMobile size={20} weight="duotone" /></IconWrapper>}
+        title="Bersihkan untuk perangkat bersama"
+        description="Keluar dari akun dan hapus data baca lokal, koleksi, unduhan, serta cache dari perangkat ini. Data cloud tidak dihapus."
+        right={
+        <Button
+        onClick={() => setIsSharedDeviceDialogOpen(true)}
+        variant="outline"
+        disabled={isClearingDevice}
+        className="w-full sm:w-auto shrink-0 text-semantic-error hover:text-white hover:bg-semantic-error border-semantic-error/50 rounded-xl font-bold transition-colors"
+        >
+        {isClearingDevice ? "Membersihkan…" : "Bersihkan perangkat"}
         </Button>
         }
         />
@@ -488,7 +534,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
       <ConfirmationModal
         isOpen={isClearDataDialogOpen}
         onOpenChange={setIsClearDataDialogOpen}
-        title={user ? "Hapus data lokal di perangkat ini?" : "Hapus data lokal?"}
+        title="Hapus riwayat & bookmark lokal?"
         description={
           user
             ? "Riwayat baca dan bookmark lokal akan dihapus. Unduhan tetap tersimpan, dan data cloud dapat muncul lagi setelah sinkronisasi."
@@ -497,12 +543,20 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
         confirmLabel="Hapus data lokal"
         cancelLabel="Batal"
         variant="danger"
-        requireCheckbox={
-          user
-            ? "Saya mengerti riwayat baca dan bookmark lokal akan dihapus"
-            : "Saya mengerti riwayat baca dan bookmark lokal akan dihapus"
-        }
+        requireCheckbox="Saya mengerti riwayat baca dan bookmark lokal akan dihapus"
         onConfirm={confirmClearData}
+      />
+
+      <ConfirmationModal
+        isOpen={isSharedDeviceDialogOpen}
+        onOpenChange={setIsSharedDeviceDialogOpen}
+        title="Bersihkan semua data perangkat?"
+        description="Akun akan dikeluarkan dan seluruh data baca lokal, koleksi, unduhan, serta cache Yomirra pada perangkat ini akan dihapus. Data cloud tetap ada."
+        confirmLabel={isClearingDevice ? "Membersihkan…" : "Bersihkan perangkat"}
+        cancelLabel="Batal"
+        variant="danger"
+        requireCheckbox="Saya mengerti semua data Yomirra di perangkat ini akan dihapus"
+        onConfirm={confirmSharedDeviceCleanup}
       />
     </>
   );
