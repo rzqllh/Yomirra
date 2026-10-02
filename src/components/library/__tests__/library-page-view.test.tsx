@@ -90,7 +90,9 @@ describe("LibraryPageView hierarchy", () => {
     expect(screen.getByTestId("library-results")).toBeTruthy();
 
     // Check that PageContainer classes are present
-    const pageContainer = container.querySelector(".max-w-none");
+    const pageContainer = Array.from(container.querySelectorAll("div")).find((element) =>
+      element.className.includes("max-w-[1360px]")
+    );
     expect(pageContainer).not.toBeNull();
     expect(pageContainer?.className).toContain("w-full");
     expect(pageContainer?.className).toContain("px-4");
