@@ -93,7 +93,9 @@ describe("BookmarkPageView hierarchy & standardization", () => {
   it("renders controls within PageContainer", () => {
     const { container } = render(<BookmarkPageView />);
 
-    const pageContainer = container.querySelector(".max-w-none");
+    const pageContainer = Array.from(container.querySelectorAll("div")).find((element) =>
+      element.className.includes("max-w-[1360px]")
+    );
     expect(pageContainer).not.toBeNull();
     expect(pageContainer?.className).toContain("w-full");
     expect(pageContainer?.className).toContain("px-4");
