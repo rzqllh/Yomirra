@@ -5,6 +5,7 @@ import {
   isDiscoverySourceSystemEligible,
   parseDisabledSourceIdsCookie,
   selectDiscoverySources,
+  resolveDiscoverySourceId,
 } from "../discovery-source-policy";
 
 const source = (overrides: Partial<SourceMetadata> = {}) =>
@@ -58,6 +59,14 @@ describe("discovery source policy", () => {
     ];
 
     expect(selectDiscoverySources(sources, ["b"]).map((item) => item.id)).toEqual(["a"]);
+  });
+
+  it("resolves Library default from the first eligible source without a provider hard-code", () => {
+    const eligible = [source({ id: "first" }), source({ id: "second" })];
+
+    expect(resolveDiscoverySourceId(null, eligible)).toBe("first");
+    expect(resolveDiscoverySourceId("second", eligible)).toBe("second");
+    expect(resolveDiscoverySourceId(null, [])).toBe("");
   });
 
   it("parses the persisted disabled-source cookie defensively", () => {
