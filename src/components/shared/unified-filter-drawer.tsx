@@ -108,6 +108,7 @@ export interface UnifiedFilterDrawerProps {
   context: "search" | "library";
   activeSourceId?: string;
   searchQuery?: string;
+  onResetRouteIntent?: () => void;
   trigger?: React.ReactNode;
   children?: React.ReactNode;
 }
@@ -116,6 +117,7 @@ export function UnifiedFilterDrawer({
   context,
   activeSourceId = "",
   searchQuery = "",
+  onResetRouteIntent,
   trigger,
   children,
 }: UnifiedFilterDrawerProps) {
@@ -385,6 +387,22 @@ export function UnifiedFilterDrawer({
     setSelectedCollections([]);
     setSelectedReadingStatuses([]);
     setSelectedSort("popular");
+
+    if (context === "search") {
+      searchStore.resetFilters();
+    } else {
+      libraryStore.setFilters({
+        selectedGenres: [],
+        excludedGenres: [],
+        selectedFormats: [],
+        selectedStatuses: [],
+        selectedCollections: [],
+        selectedReadingStatuses: [],
+        sort: "popular",
+      });
+    }
+
+    onResetRouteIntent?.();
   };
 
   const searchActiveCount =
