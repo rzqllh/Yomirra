@@ -632,6 +632,26 @@ export function useSearchCatalog() {
   const hasActiveFilters =
     hasDrawerFilters || parsedQuery.tags.length > 0;
 
+  const resetFilterRouteIntent = React.useCallback(() => {
+    const resolvedTagTokens = new Set(
+      parsedQuery.tags.map((tag) => tag.raw.toLowerCase())
+    );
+    const nextQuery = query
+      .split(/\s+/)
+      .filter((token) => !resolvedTagTokens.has(token.toLowerCase()))
+      .join(" ")
+      .trim();
+
+    const params = new URLSearchParams(searchParamsString);
+    if (nextQuery) params.set("q", nextQuery);
+    else params.delete("q");
+
+    setLocalQuery(nextQuery);
+    setPage(1);
+    const suffix = params.toString();
+    router.replace(suffix ? `/search?${suffix}` : "/search", { scroll: false });
+  }, [parsedQuery.tags, query, router, searchParamsString]);
+
   return {
     localQuery,
     setLocalQuery,
@@ -649,6 +669,7 @@ export function useSearchCatalog() {
     hasActiveFilters,
     hasSearchIntent,
     handleSearchSubmit,
+    resetFilterRouteIntent,
     queryClient,
     dynamicFilters,
     parsedQuery,
