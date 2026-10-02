@@ -34,7 +34,8 @@ export function useLibraryCatalog() {
   const pathname = usePathname();
   const disabledSources = useSourcePreferencesStore((state) => state.disabledSources);
   const isNsfwFiltered = useSettingsStore((state) => state.hideNsfw);
-  const { data: runtimeSources } = useQuery(sourceQueryOptions);
+  const { data: runtimeSources, isError: isSourceRegistryError } = useQuery(sourceQueryOptions);
+  const sourceCandidates = runtimeSources ?? (isSourceRegistryError ? dynamicSourceRegistry.getAll() : []);
 
   const sourceParam = searchParams.get("source");
   const genreParams = React.useMemo(
@@ -43,13 +44,12 @@ export function useLibraryCatalog() {
   );
   const eligibleSources = React.useMemo(
     () =>
-      selectDiscoverySources(runtimeSources || [], disabledSources).filter(
+      selectDiscoverySources(sourceCandidates, disabledSources).filter(
         (source) => !(isNsfwFiltered && source.isNsfw)
       ),
-    [runtimeSources, disabledSources, isNsfwFiltered]
+    [sourceCandidates, disabledSources, isNsfwFiltered]
   );
-  const activeSourceId =
-    sourceParam || eligibleSources[0]?.id || "shinigami";
+  const activeSourceId = sourceParam || eligibleSources[0]?.id || "";
   const sortParam = searchParams.get("sort");
 
   const filterStore = useLibraryFilterStore();
@@ -129,12 +129,13 @@ export function useLibraryCatalog() {
 
   const activeSourceMetadata = React.useMemo(
     () =>
-      runtimeSources?.find((source) => source.id === activeSourceId) ||
+      sourceCandidates.find((source) => source.id === activeSourceId) ||
       dynamicSourceRegistry.get(activeSourceId),
-    [activeSourceId, runtimeSources]
+    [activeSourceId, sourceCandidates]
   );
 
   const isDisabled =
+    !activeSourceId ||
     disabledSources.includes(activeSourceId) ||
     Boolean(
       activeSourceMetadata &&
@@ -287,7 +288,7 @@ export function useLibraryCatalog() {
     retry: 1,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
-    enabled: Boolean(sourceParam || runtimeSources) && !isDisabled,
+    enabled: Boolean(activeSourceId) && !isDisabled,
     placeholderData: keepPreviousData,
   });
 
