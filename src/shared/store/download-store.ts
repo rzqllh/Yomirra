@@ -2,6 +2,8 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { idbStorage } from "../lib/idb-storage";
 import { getDownloadChapterId } from "../utils/download-helpers";
+import { deleteDownloadCacheEntries } from "../lib/download-cache";
+import { EXPLICIT_DOWNLOADS_CACHE_NAME } from "../lib/pwa-cache-policy";
 
 export type DownloadStatus = 'queued' | 'downloading' | 'paused' | 'downloaded' | 'failed';
 export type DownloadPageStatus = 'pending' | 'downloading' | 'cached' | 'failed';
@@ -42,10 +44,10 @@ interface DownloadState {
   addDownload: (item: Omit<DownloadChapter, "id" | "status" | "progress" | "downloadedPages" | "totalPages" | "createdAt" | "updatedAt" | "pages">) => void;
   pauseDownload: (id: string) => void;
   resumeDownload: (id: string) => void;
-  cancelDownload: (id: string) => void;
+  cancelDownload: (id: string) => Promise<void>;
   retryDownload: (id: string) => void;
-  removeDownload: (id: string) => void;
-  clearDownloads: () => void;
+  removeDownload: (id: string) => Promise<void>;
+  clearDownloads: () => Promise<void>;
   
   // Internal
   _updateDownload: (id: string, updates: Partial<DownloadChapter>) => void;
@@ -53,9 +55,9 @@ interface DownloadState {
   isDownloaded: (sourceId: string, mangaId: string, chapterId: string) => boolean;
 }
 
-export const CACHE_NAME = "yomirra-chapter-cache-v1";
+export const CACHE_NAME = EXPLICIT_DOWNLOADS_CACHE_NAME;
 
-import { processDownloadQueue, abortControllers } from "../lib/download-engine";
+import { processDownloadQueue, abortControllers, waitForDownloadCompletion } from "../lib/download-engine";
 
 export const useDownloadStore = create<DownloadState>()(
   persist(
@@ -124,19 +126,48 @@ export const useDownloadStore = create<DownloadState>()(
         get()._processQueue();
       },
 
-      cancelDownload: (id) => {
+      cancelDownload: async (id) => {
         if (abortControllers[id]) {
           abortControllers[id].abort();
-          delete abortControllers[id];
         }
+
         set((state) => ({
-          downloads: {
-            ...state.downloads,
-            [id]: { ...state.downloads[id], status: "failed", error: "Dibatalkan pengguna", updatedAt: Date.now() }
-          },
           queue: state.queue.filter(q => q !== id),
-          activeDownloads: state.activeDownloads.filter(a => a !== id)
         }));
+
+        await waitForDownloadCompletion(id);
+        await deleteDownloadCacheEntries(id);
+
+        set((state) => {
+          const item = state.downloads[id];
+          if (!item) {
+            return {
+              activeDownloads: state.activeDownloads.filter(a => a !== id),
+            };
+          }
+
+          return {
+            downloads: {
+              ...state.downloads,
+              [id]: {
+                ...item,
+                status: "failed",
+                error: "Dibatalkan pengguna",
+                progress: 0,
+                downloadedPages: 0,
+                pages: item.pages.map((page) => ({
+                  ...page,
+                  status: "pending" as const,
+                  contentType: undefined,
+                  sizeBytes: undefined,
+                })),
+                updatedAt: Date.now(),
+              },
+            },
+            activeDownloads: state.activeDownloads.filter(a => a !== id),
+          };
+        });
+
         get()._processQueue();
       },
 
@@ -147,39 +178,35 @@ export const useDownloadStore = create<DownloadState>()(
       removeDownload: async (id) => {
         if (abortControllers[id]) {
           abortControllers[id].abort();
-          delete abortControllers[id];
         }
-        
+
+        set((state) => ({
+          queue: state.queue.filter((qId) => qId !== id),
+        }));
+
+        await waitForDownloadCompletion(id);
+        await deleteDownloadCacheEntries(id);
+
         set((state) => {
           const newDownloads = { ...state.downloads };
           delete newDownloads[id];
           return {
             downloads: newDownloads,
-            queue: state.queue.filter((qId) => qId !== id),
-            activeDownloads: state.activeDownloads.filter(a => a !== id)
+            activeDownloads: state.activeDownloads.filter(a => a !== id),
           };
         });
 
-        if (typeof caches !== "undefined") {
-          try {
-            const cache = await caches.open(CACHE_NAME);
-            const keys = await cache.keys();
-            const prefix = `/offline-images/${id}/`;
-            for (const request of keys) {
-              if (request.url.includes(prefix)) {
-                await cache.delete(request);
-              }
-            }
-          } catch (e) {
-            console.error("Failed to clear cache for", id, e);
-          }
-        }
         get()._processQueue();
       },
 
       clearDownloads: async () => {
+        const activeIds = Object.keys(abortControllers);
         Object.values(abortControllers).forEach(controller => controller.abort());
-        
+
+        set({ queue: [] });
+
+        await Promise.all(activeIds.map((id) => waitForDownloadCompletion(id)));
+
         set({
           downloads: {},
           queue: [],

@@ -1,8 +1,31 @@
-import { DownloadChapter, CACHE_NAME } from "../store/download-store";
+import type { DownloadChapter } from "../store/download-store";
+import { EXPLICIT_DOWNLOADS_CACHE_NAME } from "./pwa-cache-policy";
 import { getOfflineImageUrl } from "../utils/download-helpers";
 
 export const abortControllers: Record<string, AbortController> = {};
 export let processingLock = false;
+
+const completionPromises = new Map<string, Promise<void>>();
+const completionResolvers = new Map<string, () => void>();
+
+export async function waitForDownloadCompletion(id: string): Promise<void> {
+  await (completionPromises.get(id) ?? Promise.resolve());
+}
+
+function registerDownloadCompletion(id: string): void {
+  let resolveCompletion: (() => void) | undefined;
+  const promise = new Promise<void>((resolve) => {
+    resolveCompletion = resolve;
+  });
+  completionPromises.set(id, promise);
+  completionResolvers.set(id, () => resolveCompletion?.());
+}
+
+function resolveDownloadCompletion(id: string): void {
+  completionResolvers.get(id)?.();
+  completionResolvers.delete(id);
+  completionPromises.delete(id);
+}
 
 interface DownloadEngineOptions {
   getDownloads: () => Record<string, DownloadChapter>;
@@ -42,6 +65,7 @@ export async function processDownloadQueue(options: DownloadEngineOptions) {
 
     setQueue(queue.slice(1));
     setActiveDownloads([...activeDownloads, id]);
+    registerDownloadCompletion(id);
     
     updateDownload(id, { status: "downloading", error: undefined });
 
@@ -70,7 +94,7 @@ export async function processDownloadQueue(options: DownloadEngineOptions) {
         updateDownload(id, { pages, totalPages: pages.length });
       }
 
-      const cache = await caches.open(CACHE_NAME);
+      const cache = await caches.open(EXPLICIT_DOWNLOADS_CACHE_NAME);
       const CONCURRENCY = 2; // Batasi 2 koneksi per chapter untuk kestabilan offline
       
       for (let i = 0; i < pages.length; i += CONCURRENCY) {
@@ -131,7 +155,13 @@ export async function processDownloadQueue(options: DownloadEngineOptions) {
           }
         });
 
-        await Promise.all(promises);
+        const results = await Promise.allSettled(promises);
+        const rejected = results.find(
+          (result): result is PromiseRejectedResult => result.status === "rejected"
+        );
+        if (rejected) {
+          throw rejected.reason;
+        }
       }
 
       const finalPages = getDownloads()[id].pages;
@@ -155,6 +185,7 @@ export async function processDownloadQueue(options: DownloadEngineOptions) {
     } finally {
       delete abortControllers[id];
       setActiveDownloads(getActiveDownloads().filter(a => a !== id));
+      resolveDownloadCompletion(id);
     }
   } finally {
     processingLock = false;
