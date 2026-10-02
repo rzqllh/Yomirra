@@ -22,9 +22,9 @@ export async function GET(
       }, { status: 404 });
     }
 
-    if (!source.getFilters) {
-      return NextResponse.json({ 
-        data: { genres: [], formats: [], statuses: [], sorts: [] } 
+    if (!source.capabilities.filters) {
+      return NextResponse.json({
+        data: { genres: [], formats: [], statuses: [], sorts: [] }
       });
     }
 
