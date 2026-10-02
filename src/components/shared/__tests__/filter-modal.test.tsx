@@ -87,6 +87,20 @@ describe("UnifiedFilterDrawer — Section Consistency & NSFW Gating", () => {
     expect(isNsfwGenre({ id: "comedy", label: "Comedy" })).toBe(false);
   });
 
+  it("reflects positive URL tag intent without persisting it to the search store", async () => {
+    render(<UnifiedFilterDrawer context="search" searchQuery="#action" />, { wrapper });
+    fireEvent.click(screen.getByRole("button", { name: /Filter/i }));
+
+    const actionChip = await screen.findByRole("button", {
+      name: "Action, disertakan",
+    });
+    expect(actionChip.getAttribute("aria-pressed")).toBe("true");
+
+    fireEvent.click(screen.getByRole("button", { name: "Terapkan Filter" }));
+
+    expect(useSearchFilterStore.getState().genres).toEqual([]);
+  });
+
   it("filters out mature genres when hideNsfw is true in Search context", async () => {
     useSettingsStore.setState({ hideNsfw: true });
 
