@@ -23,6 +23,7 @@ import { cn } from "@/shared/utils/cn";
 import { motion, PanInfo } from "motion/react";
 import { toast } from "sonner";
 import { beginNavigationIntent } from "@/shared/lib/navigation-intent";
+import { getReaderLookAheadWindow } from "@/shared/lib/reader-load-order";
 
 interface PagedReaderProps {
   sourceId: string;
@@ -281,18 +282,10 @@ export function PagedReader({
     ? getOfflineImageUrl({ sourceId, mangaId, chapterId, pageIndex: currentPage?.index ?? currentPageIndex })
     : currentPage?.url ?? "";
 
-  const preloadAheadCount = React.useMemo(() => {
-    if (dataSaver) return 1;
-    switch (preferences.preloadIntensity) {
-      case "light":
-        return 1;
-      case "aggressive":
-        return 3;
-      case "balanced":
-      default:
-        return 2;
-    }
-  }, [dataSaver, preferences.preloadIntensity]);
+  const preloadAheadCount = React.useMemo(
+    () => getReaderLookAheadWindow(preferences.preloadIntensity, dataSaver),
+    [preferences.preloadIntensity, dataSaver]
+  );
 
   const preloadPages = React.useMemo(() => {
     if (totalPages === 0) return [];
@@ -403,6 +396,8 @@ export function PagedReader({
             onLoadComplete={() => handleImageLoad(currentPageIndex)}
             onError={() => {}}
             onPermanentFailure={handlePermanentFailure}
+            pageWidth={currentPage.width}
+            pageHeight={currentPage.height}
             onRefreshUrl={async () => {
               if (onRefreshChapter) {
                 const freshPages = await onRefreshChapter();

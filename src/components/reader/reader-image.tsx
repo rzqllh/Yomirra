@@ -3,6 +3,10 @@
 import * as React from "react"
 import Image from "next/image"
 import { cn } from "@/shared/utils/cn"
+import {
+  transitionReaderPageQueueState,
+  type ReaderPageQueueState,
+} from "@/shared/lib/reader-load-order"
 
 import { PageImageError } from "./page-image-error"
 import { motion, useMotionValue, animate } from "motion/react"
@@ -27,6 +31,8 @@ interface ReaderImageProps {
   onRefreshUrl?: (index: number) => Promise<string | null>;
   fallbackProxyUrl?: string;
   onPermanentFailure?: (index: number) => void;
+  pageWidth?: number;
+  pageHeight?: number;
 }
 
 export const ReaderImage = React.memo(function ReaderImage({
@@ -43,17 +49,42 @@ export const ReaderImage = React.memo(function ReaderImage({
   onRefreshUrl,
   fallbackProxyUrl,
   onPermanentFailure,
+  pageWidth,
+  pageHeight,
   imageFit = 'width',
   onReport,
   onSwitchSource,
   dataIndex,
   totalPages
 }: ReaderImageProps) {
+  const knownAspectRatio =
+    pageWidth && pageHeight && pageWidth > 0 && pageHeight > 0
+      ? pageWidth / pageHeight
+      : null
   const [hasError, setHasError] = React.useState(false)
   const [retryCount, setRetryCount] = React.useState(0)
-  const [aspectRatio, setAspectRatio] = React.useState<number | null>(null)
+  const [aspectRatio, setAspectRatio] = React.useState<number | null>(knownAspectRatio)
   const [hasLoaded, setHasLoaded] = React.useState(false)
+  const [queueState, setQueueState] = React.useState<ReaderPageQueueState>("idle")
+  const queueStateRef = React.useRef<ReaderPageQueueState>("idle")
+  const retryTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
+  const loadGenerationRef = React.useRef(0)
+  const mountedRef = React.useRef(true)
   const containerRef = React.useRef<HTMLDivElement>(null)
+
+  const moveQueueState = React.useCallback((event: Parameters<typeof transitionReaderPageQueueState>[1]) => {
+    const next = transitionReaderPageQueueState(queueStateRef.current, event)
+    queueStateRef.current = next
+    if (mountedRef.current) setQueueState(next)
+    return next
+  }, [])
+
+  const clearRetryTimer = React.useCallback(() => {
+    if (retryTimerRef.current) {
+      clearTimeout(retryTimerRef.current)
+      retryTimerRef.current = null
+    }
+  }, [])
   
   const [useFallback, setUseFallback] = React.useState(false)
   const [bypassOptimizer, setBypassOptimizer] = React.useState(false)
@@ -163,44 +194,78 @@ export const ReaderImage = React.memo(function ReaderImage({
   const shouldLoad = isAllowedToLoad;
   const shouldReveal = isAllowedToReveal && hasLoaded;
 
-  React.useEffect(() => {
+  React.useLayoutEffect(() => {
+    const generation = ++loadGenerationRef.current
+    clearRetryTimer()
     setHasLoaded(false)
-  }, [currentUrl])
+    setAspectRatio(knownAspectRatio)
 
-  const handleImageError = async () => {
+    queueStateRef.current = transitionReaderPageQueueState(queueStateRef.current, "reset")
+    queueStateRef.current = transitionReaderPageQueueState(
+      queueStateRef.current,
+      isAllowedToLoad ? "queue" : "cancel"
+    )
+    if (isAllowedToLoad) {
+      queueStateRef.current = transitionReaderPageQueueState(queueStateRef.current, "start")
+    }
+    setQueueState(queueStateRef.current)
+
+    return () => {
+      if (loadGenerationRef.current === generation) {
+        loadGenerationRef.current += 1
+        clearRetryTimer()
+        queueStateRef.current = transitionReaderPageQueueState(queueStateRef.current, "cancel")
+      }
+    }
+  }, [currentUrl, isAllowedToLoad, knownAspectRatio, clearRetryTimer])
+
+  React.useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+      loadGenerationRef.current += 1
+      clearRetryTimer()
+      queueStateRef.current = transitionReaderPageQueueState(queueStateRef.current, "cancel")
+    }
+  }, [clearRetryTimer])
+
+  const handleImageError = async (generation = loadGenerationRef.current) => {
+    if (!mountedRef.current || generation !== loadGenerationRef.current) return
+
     if (offlineUrl && !useFallback) {
-      // Offline cached page missing -> allow network fallback
-      setUseFallback(true);
-      return;
+      setUseFallback(true)
+      return
     }
 
     if (!bypassOptimizer && dataSaver && !currentUrl.startsWith('blob:') && !currentUrl.startsWith('data:')) {
-      // If Next.js image optimizer fails (e.g. unwhitelisted remote CDN on dataSaver 400),
-      // immediately bypass optimizer to let the native <img> load the remote image directly.
-      setBypassOptimizer(true);
-      return;
+      setBypassOptimizer(true)
+      return
     }
 
     if (retryCount < 3) {
       const baseDelay = [1000, 2500, 5000][retryCount]
       const jitter = Math.random() * 500
-      setTimeout(() => {
+      clearRetryTimer()
+      retryTimerRef.current = setTimeout(() => {
+        retryTimerRef.current = null
+        if (!mountedRef.current || generation !== loadGenerationRef.current) return
         setRetryCount(c => c + 1)
       }, baseDelay + jitter)
-      return;
+      return
     }
 
     if (onRefreshUrl && !hasAttemptedRefresh) {
       setHasAttemptedRefresh(true)
       try {
         const freshUrl = await onRefreshUrl(pageIndex)
+        if (!mountedRef.current || generation !== loadGenerationRef.current) return
         if (freshUrl && freshUrl !== pageUrl) {
           setRefreshedUrl(freshUrl)
           setRetryCount(0)
           return
         }
       } catch {
-        // Fall through to proxy or error state
+        if (!mountedRef.current || generation !== loadGenerationRef.current) return
       }
     }
 
@@ -211,13 +276,21 @@ export const ReaderImage = React.memo(function ReaderImage({
       return
     }
 
+    moveQueueState("fail")
     setHasError(true)
     onError(pageIndex)
     onPermanentFailure?.(pageIndex)
   }
 
   const handleRetry = () => {
+    clearRetryTimer()
+    loadGenerationRef.current += 1
+    queueStateRef.current = transitionReaderPageQueueState(queueStateRef.current, "reset")
+    queueStateRef.current = transitionReaderPageQueueState(queueStateRef.current, "queue")
+    queueStateRef.current = transitionReaderPageQueueState(queueStateRef.current, "start")
+    setQueueState(queueStateRef.current)
     setHasError(false)
+    setHasLoaded(false)
     setBypassOptimizer(false)
     setRetryCount(0)
     setUseFallback(false)
@@ -239,9 +312,10 @@ export const ReaderImage = React.memo(function ReaderImage({
         (!shouldLoad || !shouldReveal || hasError) && "bg-surface-muted/30"
       )}
       data-page-index={pageIndex}
+      data-load-state={queueState}
       style={{ 
         touchAction: "pan-y",
-        aspectRatio: isWebtoon ? "auto" : estimatedAspectRatio,
+        aspectRatio: aspectRatio ? estimatedAspectRatio : (isWebtoon ? "auto" : estimatedAspectRatio),
         minHeight: aspectRatio ? "auto" : "50vh",
         transition: "aspect-ratio 0.3s ease-out"
       }}
@@ -264,8 +338,8 @@ export const ReaderImage = React.memo(function ReaderImage({
                 "block w-full",
                 isWebtoon ? "h-auto" : "h-full object-contain shadow-soft"
               )}
-              width={800}
-              height={1200}
+              width={pageWidth && pageWidth > 0 ? pageWidth : 800}
+              height={pageHeight && pageHeight > 0 ? pageHeight : 1200}
               sizes={imageFit === 'width' ? "100vw" : "(max-width: 768px) 100vw, 1200px"}
               priority={priority}
               fetchPriority={priority ? "high" : "auto"}
@@ -273,17 +347,31 @@ export const ReaderImage = React.memo(function ReaderImage({
               unoptimized={!dataSaver || bypassOptimizer || currentUrl.startsWith('blob:') || currentUrl.startsWith('data:')}
               loading="eager"
               decoding="async"
-              onLoad={(e) => {
-                const target = e.currentTarget;
+              onLoad={async (e) => {
+                const target = e.currentTarget
+                const generation = loadGenerationRef.current
                 if (target.naturalWidth === 0) {
-                  handleImageError();
-                  return;
+                  await handleImageError(generation)
+                  return
                 }
-                setAspectRatio(target.naturalWidth / target.naturalHeight);
-                setHasLoaded(true);
-                setTimeout(() => onLoadComplete(pageIndex), 0)
+
+                try {
+                  if (typeof target.decode === "function") {
+                    await target.decode()
+                  }
+                } catch {
+                  await handleImageError(generation)
+                  return
+                }
+
+                if (!mountedRef.current || generation !== loadGenerationRef.current) return
+
+                setAspectRatio(target.naturalWidth / target.naturalHeight)
+                moveQueueState("decode")
+                setHasLoaded(true)
+                onLoadComplete(pageIndex)
               }}
-              onError={handleImageError}
+              onError={() => void handleImageError()}
             />
           </motion.div>
 

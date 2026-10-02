@@ -168,4 +168,142 @@ describe("ReaderImage - Failure Recovery", () => {
     expect(bypassedImg?.getAttribute("data-unoptimized")).toBe("true");
     expect(screen.queryByText(/Halaman 0 gagal dimuat/i)).toBeNull();
   });
+
+  it("waits for decode before revealing a loaded page", async () => {
+    let resolveDecode: (() => void) | undefined;
+    const onLoadComplete = vi.fn();
+
+    const { container } = render(
+      <ReaderImage
+        {...defaultProps}
+        onLoadComplete={onLoadComplete}
+        isAllowedToReveal={true}
+      />
+    );
+
+    const img = screen.getByRole("img") as HTMLImageElement;
+    Object.defineProperty(img, "naturalWidth", { configurable: true, value: 800 });
+    Object.defineProperty(img, "naturalHeight", { configurable: true, value: 1200 });
+    Object.defineProperty(img, "decode", {
+      configurable: true,
+      value: vi.fn(
+        () =>
+          new Promise<void>((resolve) => {
+            resolveDecode = resolve;
+          })
+      ),
+    });
+
+    fireEvent.load(img);
+    expect(onLoadComplete).not.toHaveBeenCalled();
+    expect(container.querySelector("[data-page-index='0']")?.getAttribute("data-load-state")).toBe("loading");
+
+    await act(async () => {
+      resolveDecode?.();
+      await Promise.resolve();
+    });
+
+    expect(onLoadComplete).toHaveBeenCalledWith(0);
+    expect(container.querySelector("[data-page-index='0']")?.getAttribute("data-load-state")).toBe("decoded");
+  });
+
+  it("ignores a stale decode completion after the page job changes", async () => {
+    let resolveOldDecode: (() => void) | undefined;
+    const onLoadComplete = vi.fn();
+
+    const { rerender } = render(
+      <ReaderImage
+        {...defaultProps}
+        pageUrl="http://example.com/old.jpg"
+        onLoadComplete={onLoadComplete}
+      />
+    );
+
+    const oldImg = screen.getByRole("img") as HTMLImageElement;
+    Object.defineProperty(oldImg, "naturalWidth", { configurable: true, value: 800 });
+    Object.defineProperty(oldImg, "naturalHeight", { configurable: true, value: 1200 });
+    Object.defineProperty(oldImg, "decode", {
+      configurable: true,
+      value: vi.fn(
+        () =>
+          new Promise<void>((resolve) => {
+            resolveOldDecode = resolve;
+          })
+      ),
+    });
+
+    fireEvent.load(oldImg);
+
+    rerender(
+      <ReaderImage
+        {...defaultProps}
+        pageUrl="http://example.com/new.jpg"
+        onLoadComplete={onLoadComplete}
+      />
+    );
+
+    await act(async () => {
+      resolveOldDecode?.();
+      await Promise.resolve();
+    });
+
+    expect(onLoadComplete).not.toHaveBeenCalled();
+    expect(screen.getByRole("img").getAttribute("src")).toContain("new.jpg");
+  });
+
+  it("reserves known page geometry before decode", () => {
+    const { container } = render(
+      <ReaderImage
+        {...defaultProps}
+        isWebtoon={true}
+        pageWidth={1600}
+        pageHeight={2400}
+      />
+    );
+
+    const page = container.querySelector("[data-page-index='0']") as HTMLElement;
+    expect(Number.parseFloat(page.style.aspectRatio)).toBeCloseTo(1600 / 2400);
+    expect(page.style.minHeight).toBe("auto");
+
+    const img = screen.getByRole("img");
+    expect(img.getAttribute("width")).toBe("1600");
+    expect(img.getAttribute("height")).toBe("2400");
+  });
+
+  it("falls back from a missing offline page to the network URL without failing the job", async () => {
+    render(
+      <ReaderImage
+        {...defaultProps}
+        offlineUrl="blob:offline-page"
+      />
+    );
+
+    expect(screen.getByRole("img").getAttribute("src")).toBe("blob:offline-page");
+
+    await act(async () => {
+      fireEvent.error(screen.getByRole("img"));
+    });
+
+    expect(screen.getByRole("img").getAttribute("src")).toContain("http://example.com/test.jpg");
+    expect(screen.queryByText(/Halaman 0 gagal dimuat/i)).toBeNull();
+  });
+
+  it("cancels a pending retry when the image job unmounts", () => {
+    const onError = vi.fn();
+    const { unmount } = render(
+      <ReaderImage
+        {...defaultProps}
+        onError={onError}
+      />
+    );
+    fireEvent.error(screen.getByRole("img"));
+    unmount();
+
+    act(() => {
+      vi.runAllTimers();
+    });
+
+    expect(onError).not.toHaveBeenCalled();
+  });
+
 });
