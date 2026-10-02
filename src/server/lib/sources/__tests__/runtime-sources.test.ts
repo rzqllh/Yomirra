@@ -78,6 +78,7 @@ describe("runtime-sources", () => {
     expect(custom).toBeDefined();
     expect(custom?.name).toBe("Custom Test Source");
     expect(custom?.isDynamic).toBe(true);
+    expect(custom?.capabilities.filters).toBe(false);
   });
 
   it("falls back to baseline sourceRegistry if Redis calls throw error", async () => {
