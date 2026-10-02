@@ -136,7 +136,7 @@ describe("search URL navigation", () => {
         isInstalled: true,
         isNsfw: false,
         status: "online",
-        capabilities: { search: true, popular: true, latest: true },
+        capabilities: { search: true, popular: true, latest: true, filters: true },
       } as any,
     ]);
     vi.mocked(apiClient.getPopular).mockResolvedValue({
@@ -173,7 +173,7 @@ describe("search URL navigation", () => {
         isInstalled: true,
         isNsfw: false,
         status: "online",
-        capabilities: { search: true, popular: true, latest: true },
+        capabilities: { search: true, popular: true, latest: true, filters: true },
       } as any,
     ]);
     vi.mocked(apiClient.getFilters).mockResolvedValue({

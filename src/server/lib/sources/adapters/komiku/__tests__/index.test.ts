@@ -20,6 +20,7 @@ describe("KomikuSource", () => {
       detail: true,
       chapters: true,
       pages: true,
+      filters: false,
     });
   });
 

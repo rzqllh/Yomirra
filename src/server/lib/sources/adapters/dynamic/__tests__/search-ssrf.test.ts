@@ -155,6 +155,65 @@ describe("DynamicSourceAdapter.search() — call path through safeFetch", () => 
   });
 });
 
+describe("DynamicSourceAdapter filter capability", () => {
+  it("requires both the filters capability and a filters endpoint", () => {
+    expect(
+      makeAdapter({
+        capabilities: ["search", "filters"],
+        endpoints: { search: "/search?q={q}&page={page}" },
+      }).capabilities.filters
+    ).toBe(false);
+
+    expect(
+      makeAdapter({
+        capabilities: ["search", "filters"],
+        endpoints: {
+          search: "/search?q={q}&page={page}",
+          filters: "/filters",
+        },
+      }).capabilities.filters
+    ).toBe(true);
+  });
+
+  it("loads FilterList through safeFetch only when supported", async () => {
+    const safeFetchSpy = vi.spyOn(
+      await import("../../../../security/outbound-policy"),
+      "safeFetch"
+    );
+    safeFetchSpy.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          genres: [{ id: "action", name: "Action" }],
+          formats: [],
+          statuses: [],
+          sorts: [],
+        }),
+        { status: 200, headers: { "content-type": "application/json" } }
+      )
+    );
+
+    const adapter = makeAdapter({
+      capabilities: ["search", "filters"],
+      endpoints: {
+        search: "/search?q={q}&page={page}",
+        filters: "/filters",
+      },
+    });
+
+    await expect(adapter.getFilters()).resolves.toEqual({
+      genres: [{ id: "action", name: "Action" }],
+      formats: [],
+      statuses: [],
+      sorts: [],
+    });
+    expect(safeFetchSpy).toHaveBeenCalledWith(
+      "https://safe-external-manga-api.example.com/filters"
+    );
+
+    safeFetchSpy.mockRestore();
+  });
+});
+
 // A2 — Pre-flight rejections propagate through search()
 //
 // These tests use REAL safeFetch (no mock on security behavior). safeFetch

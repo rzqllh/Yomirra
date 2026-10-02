@@ -27,14 +27,14 @@ describe("WestMangaSource", () => {
       expect(source.language).toBe("id");
     });
 
-    it("declares standard reading capabilities", () => {
+    it("declares reading capabilities without advertising unsupported provider filters", () => {
       expect(source.capabilities.popular).toBe(true);
       expect(source.capabilities.latest).toBe(true);
       expect(source.capabilities.search).toBe(true);
       expect(source.capabilities.detail).toBe(true);
       expect(source.capabilities.chapters).toBe(true);
       expect(source.capabilities.pages).toBe(true);
-      expect(source.capabilities.filters).toBe(true);
+      expect(source.capabilities.filters).toBe(false);
     });
 
     it("is registered in sourceRegistry with isNsfw=false and isEnabled=true", () => {

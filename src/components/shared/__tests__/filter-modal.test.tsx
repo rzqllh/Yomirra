@@ -36,7 +36,7 @@ vi.mock("@/shared/api-client", () => ({
         id: "shinigami",
         name: "Shinigami",
         isInstalled: true,
-        capabilities: { search: true },
+        capabilities: { search: true, filters: true },
         isNsfw: false,
       },
     ]),
@@ -71,8 +71,17 @@ describe("UnifiedFilterDrawer — Section Consistency & NSFW Gating", () => {
   );
 
   beforeEach(() => {
+    queryClient.clear();
+    vi.clearAllMocks();
     useSettingsStore.setState({ hideNsfw: true });
-    useSearchFilterStore.getState().resetFilters();
+    useSearchFilterStore.setState({
+      hasCustomizedSources: false,
+      selectedSources: null,
+      genres: [],
+      formats: [],
+      status: "",
+      sort: "popular",
+    });
     useLibraryFilterStore.getState().resetFilters();
   });
 
@@ -85,6 +94,51 @@ describe("UnifiedFilterDrawer — Section Consistency & NSFW Gating", () => {
     expect(isNsfwGenre({ id: "yuri", label: "Yuri" })).toBe(true);
     expect(isNsfwGenre({ id: "action", label: "Action" })).toBe(false);
     expect(isNsfwGenre({ id: "comedy", label: "Comedy" })).toBe(false);
+  });
+
+  it("reflects positive URL tag intent without persisting it to the search store", async () => {
+    render(<UnifiedFilterDrawer context="search" searchQuery="#action" />, { wrapper });
+    fireEvent.click(screen.getByRole("button", { name: /Filter/i }));
+
+    const actionChip = await screen.findByRole("button", {
+      name: "Action, disertakan",
+    });
+    expect(actionChip.getAttribute("aria-pressed")).toBe("true");
+
+    fireEvent.click(screen.getByRole("button", { name: "Terapkan Filter" }));
+
+    expect(useSearchFilterStore.getState().genres).toEqual([]);
+  });
+
+  it("reset clears filter store and invokes route-intent cleanup", async () => {
+    const onResetRouteIntent = vi.fn();
+    useSearchFilterStore.setState({
+      genres: ["action"],
+      formats: ["manga"],
+      status: "ongoing",
+      sort: "latest",
+    });
+
+    render(
+      <UnifiedFilterDrawer
+        context="search"
+        onResetRouteIntent={onResetRouteIntent}
+      />,
+      { wrapper }
+    );
+    fireEvent.click(screen.getByRole("button", { name: /Filter/i }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Reset" })).toBeDefined();
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Reset" }));
+
+    const state = useSearchFilterStore.getState();
+    expect(state.genres).toEqual([]);
+    expect(state.formats).toEqual([]);
+    expect(state.status).toBe("");
+    expect(state.sort).toBe("popular");
+    expect(onResetRouteIntent).toHaveBeenCalledTimes(1);
   });
 
   it("filters out mature genres when hideNsfw is true in Search context", async () => {
@@ -118,6 +172,29 @@ describe("UnifiedFilterDrawer — Section Consistency & NSFW Gating", () => {
 
     expect(screen.getByText("Adult")).toBeDefined();
     expect(screen.getByText("Ecchi")).toBeDefined();
+  });
+
+  it("keeps local Library filters available when provider filters are unsupported", async () => {
+    const { apiClient } = await import("@/shared/api-client");
+    vi.mocked(apiClient.getSources).mockResolvedValueOnce([
+      {
+        id: "local-only",
+        name: "Local-only source",
+        isInstalled: true,
+        isEnabled: true,
+        capabilities: { search: true, filters: false },
+        isNsfw: false,
+        isDynamic: false,
+      } as any,
+    ]);
+
+    render(<UnifiedFilterDrawer context="library" activeSourceId="local-only" />, { wrapper });
+    fireEvent.click(screen.getByRole("button", { name: /Filter/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Status Membaca (Lokal)")).toBeDefined();
+    });
+    expect(screen.queryByText("Status Rilis")).toBeNull();
   });
 
   it("uses unified 'Status Rilis' label in Library context", async () => {

@@ -60,12 +60,12 @@ describe('Search Page Integration', () => {
 
     // Mock sources
     (dynamicSourceRegistry.getAll as any).mockReturnValue([
-      { id: 'sourceA', name: 'Source A', isInstalled: true, capabilities: { search: true }, status: 'online' },
-      { id: 'sourceB', name: 'Source B', isInstalled: true, capabilities: { search: true }, status: 'online' },
+      { id: 'sourceA', name: 'Source A', isInstalled: true, capabilities: { search: true, filters: true }, status: 'online' },
+      { id: 'sourceB', name: 'Source B', isInstalled: true, capabilities: { search: true, filters: true }, status: 'online' },
     ]);
     (apiClient.getSources as any).mockResolvedValue([
-      { id: 'sourceA', name: 'Source A', isInstalled: true, capabilities: { search: true }, status: 'online' },
-      { id: 'sourceB', name: 'Source B', isInstalled: true, capabilities: { search: true }, status: 'online' },
+      { id: 'sourceA', name: 'Source A', isInstalled: true, capabilities: { search: true, filters: true }, status: 'online' },
+      { id: 'sourceB', name: 'Source B', isInstalled: true, capabilities: { search: true, filters: true }, status: 'online' },
     ]);
     (apiClient.search as any).mockResolvedValue({ sourceId: 'sourceA', query: 'test', page: 1, results: [] });
     (apiClient.searchGlobal as any).mockResolvedValue({ resultsBySource: {} });

@@ -11,10 +11,10 @@ import { useCollectionStore } from "@/shared/store/collection-store";
 import { useQuery, useQueries } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
-import { mergeFilters } from "@/shared/utils/filter-helpers";
-import { canonicalizeFilterValue, resolveSearchTag, type SearchTagCategory } from "@/shared/lib/search-intelligence";
+import { mergeFilters, type MergedFilterList } from "@/shared/utils/filter-helpers";
+import { canonicalizeFilterValue, parseSearchExpression, resolveSearchTag, type SearchTagCategory } from "@/shared/lib/search-intelligence";
 import { normalizeTitle } from "@/shared/lib/title-matcher";
-import type { FilterList } from "@/shared/sources/source-types";
+import type { FilterList, SourceMetadata } from "@/shared/sources/source-types";
 import { sourceQueryOptions } from "@/shared/sources/source-query-options";
 
 const NSFW_GENRE_IDENTIFIERS = new Set([
@@ -35,26 +35,12 @@ export function isNsfwGenre(genre: { id: string; label?: string; name?: string }
   return NSFW_GENRE_IDENTIFIERS.has(id) || NSFW_GENRE_IDENTIFIERS.has(name);
 }
 
-const DEFAULT_STATUSES = [
-  { id: "ongoing", label: "Ongoing" },
-  { id: "completed", label: "Completed" },
-  { id: "hiatus", label: "Hiatus" },
-  { id: "cancelled", label: "Cancelled" },
-];
-
 const LOCAL_READING_STATUSES = [
   { id: "reading", label: "Sedang Dibaca" },
   { id: "completed", label: "Selesai" },
   { id: "on-hold", label: "Ditunda" },
   { id: "dropped", label: "Dihentikan" },
   { id: "plan-to-read", label: "Akan Dibaca" },
-];
-
-const DEFAULT_SORTS = [
-  { id: "popular", label: "Populer" },
-  { id: "latest", label: "Terbaru" },
-  { id: "rating", label: "Rating Tertinggi" },
-  { id: "alphabetical", label: "A-Z" },
 ];
 
 function isCatchAllOption(id: string, label: string) {
@@ -98,7 +84,7 @@ function normalizeSourceOptions(
 }
 
 function normalizeSortOptions(items: Array<{ id: string; name: string }> | undefined) {
-  const source = items && items.length > 0 ? items : DEFAULT_SORTS.map((item) => ({ id: item.id, name: item.label }));
+  const source = items ?? [];
   const aliases = [
     { id: "popular", label: "Populer", terms: ["popular", "populer", "popularity"] },
     { id: "latest", label: "Terbaru", terms: ["latest", "update", "latest update", "terbaru"] },
@@ -121,6 +107,8 @@ function normalizeSortOptions(items: Array<{ id: string; name: string }> | undef
 export interface UnifiedFilterDrawerProps {
   context: "search" | "library";
   activeSourceId?: string;
+  searchQuery?: string;
+  onResetRouteIntent?: () => void;
   trigger?: React.ReactNode;
   children?: React.ReactNode;
 }
@@ -128,6 +116,8 @@ export interface UnifiedFilterDrawerProps {
 export function UnifiedFilterDrawer({
   context,
   activeSourceId = "",
+  searchQuery = "",
+  onResetRouteIntent,
   trigger,
   children,
 }: UnifiedFilterDrawerProps) {
@@ -148,51 +138,54 @@ export function UnifiedFilterDrawer({
   const [selectedFormats, setSelectedFormats] = React.useState<string[]>([]);
   const [selectedCollections, setSelectedCollections] = React.useState<string[]>([]);
   const [selectedReadingStatuses, setSelectedReadingStatuses] = React.useState<string[]>([]);
-  const [localSources, setLocalSources] = React.useState<any[]>([]);
+  const [localSources, setLocalSources] = React.useState<SourceMetadata[]>([]);
 
   // ----------------------------------------------------
   // Dynamic Sources & Filters for Search context
   // ----------------------------------------------------
   React.useEffect(() => {
-    if (context !== "search") return;
     const loadLocal = () => setLocalSources(dynamicSourceRegistry.getAll());
     loadLocal();
     const handleUpdate = () => loadLocal();
     window.addEventListener("sources_updated", handleUpdate);
     return () => window.removeEventListener("sources_updated", handleUpdate);
-  }, [context]);
+  }, []);
 
-  const { data: sourcesData } = useQuery({
-    ...sourceQueryOptions,
-    enabled: context === "search",
-  });
+  const { data: sourcesData } = useQuery(sourceQueryOptions);
+
+  const allSources = React.useMemo(() => {
+    const sources = [...(sourcesData || [])];
+    localSources.forEach((localSource) => {
+      if (!sources.some((source) => source.id === localSource.id)) {
+        sources.push(localSource);
+      }
+    });
+    return sources;
+  }, [sourcesData, localSources]);
 
   const searchableSources = React.useMemo(() => {
     if (context !== "search") return [];
-    const s = [...(sourcesData || [])];
-    localSources.forEach((ls) => {
-      if (!s.find((x) => x.id === ls.id)) {
-        s.push(ls);
-      }
-    });
 
-    return s.filter((item) => {
+    return allSources.filter((item) => {
       if (!item.isInstalled || item.isEnabled === false || !item.capabilities?.search) return false;
       if (item.isNsfw && hideNsfw) return false;
       return true;
     });
-  }, [context, sourcesData, localSources, hideNsfw]);
+  }, [context, allSources, hideNsfw]);
 
   const activeSelectedSources = searchStore.selectedSources || [];
   const sourcesToFetch =
     activeSelectedSources.length > 0
-      ? searchableSources.filter((s) => activeSelectedSources.includes(s.id))
+      ? searchableSources.filter((source) => activeSelectedSources.includes(source.id))
       : searchableSources;
+  const filterSourcesToFetch = sourcesToFetch.filter(
+    (source) => source.capabilities?.filters === true
+  );
 
   const searchFiltersQueries = useQueries({
-    queries: (context === "search" ? sourcesToFetch : []).map((s) => ({
-      queryKey: ["filters", s.id],
-      queryFn: () => apiClient.getFilters(s.id),
+    queries: (context === "search" ? filterSourcesToFetch : []).map((source) => ({
+      queryKey: ["filters", source.id],
+      queryFn: () => apiClient.getFilters(source.id),
       staleTime: Infinity,
     })),
   });
@@ -200,21 +193,28 @@ export function UnifiedFilterDrawer({
   // ----------------------------------------------------
   // Single Source Filters for Library context
   // ----------------------------------------------------
+  const activeLibrarySource = allSources.find((source) => source.id === activeSourceId);
+  const supportsLibraryProviderFilters =
+    activeLibrarySource?.capabilities?.filters === true;
+
   const { data: libraryFiltersData } = useQuery({
     queryKey: ["filters", activeSourceId],
     queryFn: () => apiClient.getFilters(activeSourceId),
     staleTime: Infinity,
-    enabled: context === "library" && Boolean(activeSourceId),
+    enabled:
+      context === "library" &&
+      Boolean(activeSourceId) &&
+      supportsLibraryProviderFilters,
   });
 
   // ----------------------------------------------------
   // Unified Dynamic Filters with NSFW filtering applied
   // ----------------------------------------------------
-  const dynamicFilters = React.useMemo(() => {
+  const dynamicFilters = React.useMemo<MergedFilterList>(() => {
     if (context === "search") {
-      const sourceFilters = sourcesToFetch
-        .map((s, idx) => ({
-          sourceId: s.id,
+      const sourceFilters = filterSourcesToFetch
+        .map((source, idx) => ({
+          sourceId: source.id,
           filters: searchFiltersQueries[idx]?.data,
         }))
         .filter((x) => x.filters) as { sourceId: string; filters: FilterList }[];
@@ -235,28 +235,66 @@ export function UnifiedFilterDrawer({
       const safeGenres = hideNsfw
         ? normalizedGenres.filter((genre) => !isNsfwGenre(genre))
         : normalizedGenres;
-      const statuses = normalizeSourceOptions(
-        libraryFiltersData?.statuses?.length ? libraryFiltersData.statuses : DEFAULT_STATUSES.map((item) => ({ id: item.id, name: item.label })),
-        "status"
-      );
+      const statuses = normalizeSourceOptions(libraryFiltersData?.statuses, "status");
       const formats = normalizeSourceOptions(libraryFiltersData?.formats, "format");
       const sorts = normalizeSortOptions(libraryFiltersData?.sorts);
 
+      const withSourceSupport = (
+        items: Array<{ id: string; label: string }>
+      ) =>
+        items.map((item) => ({
+          id: item.id,
+          label: item.label,
+          supportedBy: activeSourceId ? [activeSourceId] : [],
+          sourceValues: activeSourceId ? { [activeSourceId]: item.id } : {},
+        }));
+
       return {
-        genres: safeGenres,
-        statuses,
-        sorts,
-        formats,
+        genres: withSourceSupport(safeGenres),
+        statuses: withSourceSupport(statuses),
+        sorts: withSourceSupport(sorts),
+        formats: withSourceSupport(formats),
       };
     }
-  }, [context, sourcesToFetch, searchFiltersQueries, libraryFiltersData, hideNsfw]);
+  }, [context, filterSourcesToFetch, searchFiltersQueries, libraryFiltersData, hideNsfw]);
+
+  const searchTagIntent = React.useMemo(() => {
+    if (context !== "search" || !searchQuery.trim()) {
+      return { genres: [] as string[], formats: [] as string[], status: "" };
+    }
+
+    const positiveTags = parseSearchExpression(searchQuery, dynamicFilters).tags.filter(
+      (tag) => tag.operator !== "exclude"
+    );
+
+    return {
+      genres: positiveTags
+        .filter((tag) => tag.category === "genre")
+        .map((tag) => tag.id),
+      formats: positiveTags
+        .filter((tag) => tag.category === "format")
+        .map((tag) => tag.id),
+      status:
+        positiveTags.find((tag) => tag.category === "status")?.id ?? "",
+    };
+  }, [context, searchQuery, dynamicFilters]);
 
   // Sync state when drawer opens
   const syncFromStore = () => {
     if (context === "search") {
-      setSelectedGenres(searchStore.genres);
-      setSelectedFormats(searchStore.formats || []);
-      setSelectedStatus(searchStore.status ? [searchStore.status] : []);
+      setSelectedGenres(
+        Array.from(new Set([...searchStore.genres, ...searchTagIntent.genres]))
+      );
+      setSelectedFormats(
+        Array.from(new Set([...(searchStore.formats || []), ...searchTagIntent.formats]))
+      );
+      setSelectedStatus(
+        searchTagIntent.status
+          ? [searchTagIntent.status]
+          : searchStore.status
+            ? [searchStore.status]
+            : []
+      );
       setSelectedSort(searchStore.sort || "popular");
     } else {
       setSelectedGenres(libraryStore.selectedGenres || []);
@@ -317,10 +355,25 @@ export function UnifiedFilterDrawer({
 
   const handleApply = () => {
     if (context === "search") {
+      const persistedGenres = selectedGenres.filter(
+        (id) => !searchTagIntent.genres.includes(id) || searchStore.genres.includes(id)
+      );
+      const persistedFormats = selectedFormats.filter(
+        (id) =>
+          !searchTagIntent.formats.includes(id) ||
+          (searchStore.formats || []).includes(id)
+      );
+      const selectedStatusValue = selectedStatus[0] || "";
+      const persistedStatus =
+        selectedStatusValue === searchTagIntent.status &&
+        searchStore.status !== searchTagIntent.status
+          ? searchStore.status
+          : selectedStatusValue;
+
       searchStore.applyFilters({
-        genres: selectedGenres,
-        formats: selectedFormats,
-        status: selectedStatus[0] || "",
+        genres: persistedGenres,
+        formats: persistedFormats,
+        status: persistedStatus,
         sort: selectedSort,
       });
     } else {
@@ -344,14 +397,33 @@ export function UnifiedFilterDrawer({
     setSelectedCollections([]);
     setSelectedReadingStatuses([]);
     setSelectedSort("popular");
+
+    if (context === "search") {
+      searchStore.resetFilters();
+    } else {
+      libraryStore.setFilters({
+        selectedGenres: [],
+        excludedGenres: [],
+        selectedFormats: [],
+        selectedStatuses: [],
+        selectedCollections: [],
+        selectedReadingStatuses: [],
+        sort: "popular",
+      });
+    }
+
+    onResetRouteIntent?.();
   };
+
+  const searchActiveCount =
+    new Set([...searchStore.genres, ...searchTagIntent.genres]).size +
+    new Set([...(searchStore.formats || []), ...searchTagIntent.formats]).size +
+    (searchTagIntent.status || searchStore.status ? 1 : 0) +
+    (searchStore.sort !== "popular" && searchStore.sort ? 1 : 0);
 
   const activeCount =
     context === "search"
-      ? searchStore.genres.length +
-        (searchStore.formats?.length || 0) +
-        (searchStore.status ? 1 : 0) +
-        (searchStore.sort !== "popular" && searchStore.sort ? 1 : 0)
+      ? searchActiveCount
       : (libraryStore.selectedGenres?.length || 0) +
         (libraryStore.excludedGenres?.length || 0) +
         (libraryStore.selectedFormats?.length || 0) +
@@ -360,11 +432,15 @@ export function UnifiedFilterDrawer({
         (libraryStore.selectedReadingStatuses?.length || 0) +
         (libraryStore.sort !== "popular" && libraryStore.sort ? 1 : 0);
 
-  const hasAnyFilter =
+  const hasProviderFilter =
     dynamicFilters.sorts.length > 0 ||
     dynamicFilters.formats.length > 0 ||
     dynamicFilters.statuses.length > 0 ||
     dynamicFilters.genres.length > 0;
+  const hasLocalLibraryFilter =
+    context === "library" &&
+    (collections.length > 0 || LOCAL_READING_STATUSES.length > 0);
+  const hasAnyFilter = hasProviderFilter || hasLocalLibraryFilter;
 
   return (
     <FilterDrawerShell

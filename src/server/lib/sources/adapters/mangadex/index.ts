@@ -134,6 +134,7 @@ export class MangaDexSource implements MangaSource {
     detail: true,
     chapters: true,
     pages: true,
+    filters: true,
   };
 
   private baseParams(): Record<string, string | string[]> {

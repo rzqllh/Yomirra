@@ -48,6 +48,7 @@ export function LibraryPageView() {
               }}
               activeSourceId={catalog.activeSourceId}
               activeFilterCount={catalog.activeFilterCount}
+              onResetRouteIntent={catalog.resetFilterRouteIntent}
             />
 
             <LibraryStatusRail

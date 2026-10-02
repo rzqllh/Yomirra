@@ -16,6 +16,7 @@ export const MihonSourceManifestSchema = z.object({
     detail: z.string().optional(),
     chapters: z.string().optional(),
     pages: z.string().optional(),
+    filters: z.string().optional(),
   }).optional(),
   nsfw: z.boolean().default(false),
   icon: z.string().optional(),
@@ -173,6 +174,9 @@ export class DynamicSourceRegistry {
         detail: manifest.capabilities.includes("detail"),
         chapters: manifest.capabilities.includes("chapters"),
         pages: manifest.capabilities.includes("pages"),
+        filters:
+          manifest.capabilities.includes("filters") &&
+          Boolean(manifest.endpoints?.filters),
       },
     };
   }

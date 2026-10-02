@@ -43,6 +43,7 @@ export class ShinigamiSource implements MangaSource {
     detail: true,
     chapters: true,
     pages: true,
+    filters: true,
   };
 
   private getRandomUA() {

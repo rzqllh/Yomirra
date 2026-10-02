@@ -86,6 +86,19 @@ describe('useSearchPruning', () => {
     expect(mockPruneFilters).toHaveBeenCalledTimes(2);
   });
 
+  it('clears provider filters when selected sources expose no filter capability', () => {
+    renderHook(() => useSearchPruning({
+      isStillLoading: false,
+      hasError: false,
+      isCapabilitiesLoaded: true,
+      activeSelectedSources: ['source-without-filters'],
+      dynamicFilters: { genres: [], formats: [], statuses: [], sorts: [] },
+      pruneFilters: mockPruneFilters as any
+    }));
+
+    expect(mockPruneFilters).toHaveBeenCalledWith([], [], [], []);
+  });
+
   it('should NOT prune if activeSelectedSources is empty (preserves old behavior)', () => {
     renderHook(() => useSearchPruning({
       isStillLoading: false,

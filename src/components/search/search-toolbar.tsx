@@ -11,6 +11,8 @@ export interface SearchToolbarProps {
   onSearchSubmit: (e: React.FormEvent) => void;
   onQueryClear: () => void;
   filters: MergedFilterList;
+  committedQuery: string;
+  onResetRouteIntent?: () => void;
 }
 
 export function SearchToolbar({
@@ -19,6 +21,8 @@ export function SearchToolbar({
   onSearchSubmit,
   onQueryClear,
   filters,
+  committedQuery,
+  onResetRouteIntent,
 }: SearchToolbarProps) {
   return (
     <div className="flex gap-2.5 items-center">
@@ -29,7 +33,10 @@ export function SearchToolbar({
         onClear={onQueryClear}
         filters={filters}
       />
-      <SearchFilterDrawer />
+      <SearchFilterDrawer
+        committedQuery={committedQuery}
+        onResetRouteIntent={onResetRouteIntent}
+      />
     </div>
   );
 }

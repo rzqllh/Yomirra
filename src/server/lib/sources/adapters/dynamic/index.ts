@@ -37,6 +37,9 @@ export class DynamicSourceAdapter implements MangaSource {
       detail: manifest.capabilities.includes("detail"),
       chapters: manifest.capabilities.includes("chapters"),
       pages: manifest.capabilities.includes("pages"),
+      filters:
+        manifest.capabilities.includes("filters") &&
+        Boolean(manifest.endpoints?.filters),
     };
   }
 
@@ -115,12 +118,16 @@ export class DynamicSourceAdapter implements MangaSource {
     return this.fetchApi<ChapterPages>(this.manifest.endpoints?.pages, { id: chapterId });
   }
 
-  getFilters(): FilterList {
-    return {
-      genres: [],
-      formats: [],
-      statuses: [],
-      sorts: [],
-    };
+  async getFilters(): Promise<FilterList> {
+    if (!this.capabilities.filters || !this.manifest.endpoints?.filters) {
+      return {
+        genres: [],
+        formats: [],
+        statuses: [],
+        sorts: [],
+      };
+    }
+
+    return this.fetchApi<FilterList>(this.manifest.endpoints.filters, {});
   }
 }

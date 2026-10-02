@@ -9,6 +9,7 @@ import { apiClient } from "@/shared/api-client";
 
 vi.mock("@/shared/api-client", () => ({
   apiClient: {
+    getSources: vi.fn(),
     getFilters: vi.fn(),
   },
 }));
@@ -47,6 +48,26 @@ describe("LibraryFilterDrawer (Slice 2.3)", () => {
   beforeEach(() => {
     queryClient.clear();
     vi.clearAllMocks();
+    vi.mocked(apiClient.getSources).mockResolvedValue([
+      {
+        id: "testSrc",
+        name: "Test Source",
+        isInstalled: true,
+        isEnabled: true,
+        capabilities: { search: true, filters: true },
+        isNsfw: false,
+        isDynamic: false,
+      },
+      {
+        id: "doujindesu",
+        name: "Provider Source",
+        isInstalled: true,
+        isEnabled: true,
+        capabilities: { search: true, filters: true },
+        isNsfw: false,
+        isDynamic: false,
+      },
+    ] as any);
     vi.mocked(apiClient.getFilters).mockResolvedValue({
       genres: [{ id: "harem", name: "Harem" }],
       formats: [],

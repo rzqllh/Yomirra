@@ -31,6 +31,7 @@ export class KomikindoSource implements MangaSource {
     detail: true,
     chapters: true,
     pages: true,
+    filters: true,
   };
 
   private getRandomUA() {
