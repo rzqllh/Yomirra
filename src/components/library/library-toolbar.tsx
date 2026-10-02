@@ -24,6 +24,7 @@ export interface LibraryToolbarProps {
   onSearchClear: () => void;
   activeSourceId: string;
   activeFilterCount: number;
+  onResetRouteIntent?: () => void;
   isSelectionMode?: boolean;
   onToggleSelectionMode?: () => void;
 }
@@ -35,6 +36,7 @@ export function LibraryToolbar({
   onSearchClear,
   activeSourceId,
   activeFilterCount,
+  onResetRouteIntent,
   isSelectionMode,
   onToggleSelectionMode,
 }: LibraryToolbarProps) {
@@ -53,7 +55,10 @@ export function LibraryToolbar({
 
       <ViewModeToggle className="min-h-11" />
 
-      <LibraryFilterDrawer activeSourceId={activeSourceId}>
+      <LibraryFilterDrawer
+        activeSourceId={activeSourceId}
+        onResetRouteIntent={onResetRouteIntent}
+      >
         <Button
           variant={activeFilterCount > 0 ? "accent" : "outline"}
           className={cn(
