@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import type { User } from 'firebase/auth';
 import { initFirebase } from '@/shared/lib/firebase';
-import { useLibraryStore } from '@/shared/store/library-store';
-import { useHistoryStore } from '@/shared/store/history-store';
-
-let globalLastKnownUid: string | null | undefined = undefined;
+import {
+  getLocalDataOwnerUid,
+  setLocalDataOwnerUid,
+  shouldResetLocalDataForAccount,
+} from "@/shared/lib/local-data-owner";
+import { clearUserScopedReadingState } from "@/shared/lib/local-data-cleanup";
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -23,23 +25,14 @@ export function useAuth() {
         unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
           const newUid = currentUser?.uid || null;
 
-          if (globalLastKnownUid !== undefined && globalLastKnownUid !== null && globalLastKnownUid !== newUid) {
-            // User changed from a known UID to a different one (or logged out/expired)
-            useLibraryStore.getState().clearLibrary();
-            useHistoryStore.getState().clearHistory();
-            
-            const { useCollectionStore } = await import('@/shared/store/collection-store');
-            const { useUpdateStore } = await import('@/shared/store/update-store');
-            const { useStatsStore } = await import('@/shared/store/stats-store');
-            const { useSourcePreferencesStore } = await import('@/shared/store/source-preferences-store');
-            
-            useCollectionStore.getState().clearCollections();
-            useUpdateStore.getState().clearUpdates();
-            useStatsStore.getState().clearStats();
-            useSourcePreferencesStore.getState().clearPreferences();
+          if (newUid) {
+            const currentOwnerUid = getLocalDataOwnerUid();
+            if (shouldResetLocalDataForAccount(currentOwnerUid, newUid)) {
+              clearUserScopedReadingState();
+            }
+            setLocalDataOwnerUid(newUid);
           }
 
-          globalLastKnownUid = newUid;
           setUser(currentUser);
           setLoading(false);
         });
@@ -72,19 +65,8 @@ export function useAuth() {
     const { signOut } = await import('firebase/auth');
     try {
       await signOut(auth);
-      // Clear local user-scoped state on explicit logout
-      useLibraryStore.getState().clearLibrary();
-      useHistoryStore.getState().clearHistory();
-      
-      const { useCollectionStore } = await import('@/shared/store/collection-store');
-      const { useUpdateStore } = await import('@/shared/store/update-store');
-      const { useStatsStore } = await import('@/shared/store/stats-store');
-      const { useSourcePreferencesStore } = await import('@/shared/store/source-preferences-store');
-      
-      useCollectionStore.getState().clearCollections();
-      useUpdateStore.getState().clearUpdates();
-      useStatsStore.getState().clearStats();
-      useSourcePreferencesStore.getState().clearPreferences();
+      // Explicit logout intentionally keeps device-local reading data.
+      // If another account signs in, the ownership guard above clears it before sync.
     } catch (error) {
       console.error("Error signing out", error);
     }
