@@ -36,7 +36,7 @@ vi.mock("@/shared/api-client", () => ({
         id: "shinigami",
         name: "Shinigami",
         isInstalled: true,
-        capabilities: { search: true },
+        capabilities: { search: true, filters: true },
         isNsfw: false,
       },
     ]),
@@ -118,6 +118,29 @@ describe("UnifiedFilterDrawer — Section Consistency & NSFW Gating", () => {
 
     expect(screen.getByText("Adult")).toBeDefined();
     expect(screen.getByText("Ecchi")).toBeDefined();
+  });
+
+  it("keeps local Library filters available when provider filters are unsupported", async () => {
+    const { apiClient } = await import("@/shared/api-client");
+    vi.mocked(apiClient.getSources).mockResolvedValueOnce([
+      {
+        id: "local-only",
+        name: "Local-only source",
+        isInstalled: true,
+        isEnabled: true,
+        capabilities: { search: true, filters: false },
+        isNsfw: false,
+        isDynamic: false,
+      } as any,
+    ]);
+
+    render(<UnifiedFilterDrawer context="library" activeSourceId="local-only" />, { wrapper });
+    fireEvent.click(screen.getByRole("button", { name: /Filter/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Status Membaca (Lokal)")).toBeDefined();
+    });
+    expect(screen.queryByText("Status Rilis")).toBeNull();
   });
 
   it("uses unified 'Status Rilis' label in Library context", async () => {
