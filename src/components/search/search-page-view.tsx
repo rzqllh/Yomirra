@@ -31,6 +31,7 @@ export function SearchPageView() {
               onSearchSubmit={search.handleSearchSubmit}
               onQueryClear={() => search.setLocalQuery("")}
               filters={search.dynamicFilters}
+              committedQuery={search.query}
             />
             <SearchSourceRail
               searchableSources={search.searchableSources}
