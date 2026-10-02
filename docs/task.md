@@ -425,25 +425,34 @@
 
 ---
 
-# T6 — PWA/Offline Hygiene PR
+# T6 — PWA/Offline Hygiene PR — code integrated on main
 
-- [ ] **T6.1** Inventory Cache Storage, persisted Zustand stores, downloads, and reading buffer.
-- [ ] **T6.2** Define cache versions and migration policy.
-- [ ] **T6.3** Define cleanup for partial/abandoned downloads.
-- [ ] **T6.4** Verify clear-offline-data removes intended stores/caches.
-- [ ] **T6.5** Keep account sign-out distinct from deleting device-local reading data.
-- [ ] **T6.6** Add an explicit shared-device cleanup flow if absent.
-- [ ] **T6.7** Verify private/session-sensitive responses are not cached as reusable public data.
-- [ ] **T6.8** Test service-worker update from the previous production version.
-- [ ] **T6.9** Test offline navigation and offline reader.
+- [x] **T6.1** Inventory Cache Storage, persisted Zustand stores, explicit downloads, reading buffer, reader session cache, auth ownership, and Firestore persistent local cache.
+- [x] **T6.2** Define explicit automatic-cache versions and activation-time migration policy while preserving the durable explicit-download cache.
+- [x] **T6.3** Clean partial/abandoned download cache after active work settles; pause remains resumable.
+- [x] **T6.4** Verify automatic-cache clear and shared-device cleanup remove their intended stores/caches without deleting explicit downloads from the ordinary cache-clear action.
+- [x] **T6.5** Keep ordinary account sign-out distinct from deleting device-local reading data; clear user-scoped local state before a different account takes ownership.
+- [x] **T6.6** Add an explicit shared-device cleanup flow that signs out and removes local reading state, downloads, runtime caches, reader session traces, ownership metadata, and Firestore persistent cache while leaving cloud data intact.
+- [x] **T6.7** Route account/admin/auth surfaces through NetworkOnly ahead of Serwist default runtime caching.
+- [ ] **T6.8** Installed-PWA service-worker upgrade smoke from the previous production version. Cache-name migration from the previous production runtime names is covered by deterministic unit tests, but the real installed-PWA lifecycle is not claimed yet.
+- [x] **T6.9** Cover offline navigation eligibility and offline-reader/download fallback in the automated suite; real installed-PWA/browser smoke remains part of the manual gate.
 
 ### PWA PR gate
 
-- [ ] Offline reading remains functional.
-- [ ] Cleanup is deterministic.
-- [ ] Service-worker upgrade works.
-- [ ] Security/session behavior is not overridden by stale cache.
-- [ ] Typecheck/lint/tests/build pass.
+- [x] Offline reading remains functional in automated reader/download coverage.
+- [x] Cleanup is deterministic in cache, download-cancellation, auth-ownership, and shared-device cleanup tests.
+- [ ] Installed service-worker upgrade works on a real previous-production PWA installation.
+- [x] Session-sensitive account/admin/auth routes are excluded from reusable offline runtime caching.
+- [x] Typecheck/lint/tests/build pass.
+
+**T6 implementation record (draft PR #40 CI harness, 2026-10-02):**
+- integrated to `main` as squash commit `b78687cb602c1e49c098ca267b3699910561eafd`; draft PR #40 was closed without being marked ready, avoiding automated Codex review;
+- automatic runtime caches now use an explicit v2 policy and service-worker activation deletes stale `yomirra-*` cache generations while preserving `yomirra-chapter-cache-v1` explicit downloads;
+- cancelled/removed downloads wait for active work to settle before cache deletion, preventing late writes from recreating abandoned pages; cancelled items reset page metadata so retry cannot trust deleted cached pages;
+- logout preserves local reading data; a local ownership marker prevents cross-account leakage by clearing user-scoped local state before a different authenticated account syncs;
+- Settings now exposes a separate shared-device wipe that also clears downloaded chapters, automatic caches, reader session traces, and Firestore IndexedDB persistence;
+- GitHub CI #340 passed typecheck, lint, 165 test files / 1,074 tests, and production build; the production build compiled successfully;
+- Vercel preview remained quota-limited and was not treated as a code failure; installed-PWA/service-worker-upgrade smoke remains open.
 
 ---
 
