@@ -71,15 +71,7 @@ Stateful icon morphing dibatasi melalui wrapper internal yang menghormati `prefe
 
 ## Source bawaan
 
-Saat ini registry bawaan berisi:
-
-- Shinigami
-- Komikindo
-- MangaDex
-- Komiku
-- Komiku II
-- Asura Scans
-- KomikNesia
+Yomirra memiliki beberapa adapter source bawaan dan mendukung konfigurasi source runtime. Daftar source, status availability, dan kemampuan masing-masing source ditampilkan oleh aplikasi pada saat runtime agar dokumentasi publik tidak bergantung pada nama provider yang dapat berubah.
 
 Source dapat berubah status atau berhenti bekerja tanpa perubahan di Yomirra.
 
