@@ -118,7 +118,9 @@
 - the CSP includes the current Next.js self/inline bootstrap requirement, HTTPS assets/API, WebSocket, Firebase auth frame hosts, blob workers, and manifest;
 - the merged production deployment showed no warning/error runtime logs during this verification window;
 - unauthenticated admin smoke fails closed as designed, but production currently reports admin auth as **unconfigured** (HTTP 503), which means an authorized admin smoke cannot pass until the production admin credential/Firebase Admin configuration is provisioned;
-- **remaining:** provision/confirm production admin auth, then run authorized admin smoke, interactive Firebase popup flow, and installed-PWA/iOS Safari smoke. This item stays open until those real-browser/configuration checks are available; report-only CSP must not be promoted to enforcement before that check.
+- latest production deployment `dpl_BtfG7gms2nMxrAgyzZ5VAbeUtMAA` is READY on code commit `e84bdd29efd6d70b75c8df4351ef27ddaafd46f7`; Home, Account, Admin, manifest, and Service Worker all return HTTP 200 through the current production alias;
+- current production `sw.js` contains the v2 reading-buffer/image/page cache names and sensitive route prefixes for `/account`, `/admin`, and `/api/auth`; production manifest/SW responses carry the expected report-only CSP, and Vercel reported no runtime errors in the latest one-hour verification window;
+- **remaining:** provision/confirm production admin auth, then run authorized admin smoke, interactive Firebase popup flow, and installed-PWA/iOS Safari smoke. Static HTTP/SW inspection still does not prove browser interaction or installed-PWA upgrade behavior, so report-only CSP must not be promoted to enforcement before those checks.
 
 - [x] **T1.21** Document required directives in code/config comments, not credential values.
 - [x] **T1.22** Remove raw internal `error.message` from user-facing generic error surfaces.
@@ -500,7 +502,8 @@
 - compact-card synopsis hydration now uses a shared 4-request budget while React Query continues to dedupe identical detail queries and propagate cancellation;
 - README/CHANGELOG source-provider names were removed and a provider-neutral public-doc regression guard was added;
 - GitHub CI #349 passed typecheck, lint, **170 test files / 1,093 tests**, and production build; Next.js compiled successfully in 33.0s;
-- exact client-JS byte delta, navigation latency, LCP, CLS, Mobile Safari/PWA, OS reduced-motion, and real throttled-reader measurements remain open because they require a browser/deployment measurement environment rather than repository/CI evidence.
+- production deployment `dpl_BtfG7gms2nMxrAgyzZ5VAbeUtMAA` is READY on `e84bdd29efd6d70b75c8df4351ef27ddaafd46f7`; the public production aliases now serve the T7 code slice, and Vercel reported no runtime errors in the latest one-hour verification window;
+- exact client-JS byte delta, navigation latency, LCP, CLS, Mobile Safari/PWA, OS reduced-motion, and real throttled-reader measurements remain open because the available deployment/log interfaces do not provide an interactive browser/DevTools performance profile.
 
 ---
 
