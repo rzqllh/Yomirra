@@ -110,6 +110,21 @@ describe("UnifiedFilterDrawer — Section Consistency & NSFW Gating", () => {
     expect(useSearchFilterStore.getState().genres).toEqual([]);
   });
 
+  it("reflects excluded URL tag intent as route-owned disabled state", async () => {
+    render(<UnifiedFilterDrawer context="search" searchQuery="-#action" />, { wrapper });
+    fireEvent.click(screen.getByRole("button", { name: /Filter \(1 aktif\)/i }));
+
+    const actionChip = await screen.findByRole("button", {
+      name: "Action, dikecualikan",
+    });
+    expect(actionChip.getAttribute("aria-pressed")).toBe("true");
+    expect(actionChip.hasAttribute("disabled")).toBe(true);
+    expect(actionChip.getAttribute("title")).toBe("Dari tag pencarian");
+
+    fireEvent.click(screen.getByRole("button", { name: "Terapkan Filter" }));
+    expect(useSearchFilterStore.getState().genres).toEqual([]);
+  });
+
   it("reset clears filter store and invokes route-intent cleanup", async () => {
     const onResetRouteIntent = vi.fn();
     useSearchFilterStore.setState({
