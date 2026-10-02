@@ -430,7 +430,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
   return (
     <>
       <YomirraSurface variant="base" className="min-h-screen">
-        <PageContainer hasMobileHeader>
+        <PageContainer variant="management" hasMobileHeader>
           <h1 className="sr-only">Pengaturan Yomirra</h1>
           <div className="space-y-8">
             {subView === "backup" ? (
