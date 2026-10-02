@@ -67,10 +67,21 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
     };
   }, [isReadyToExit]);
 
-  // Init phase
   React.useEffect(() => {
     previousFocusRef.current =
       document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
+    return () => {
+      const previous = previousFocusRef.current;
+      if (previous?.isConnected) {
+        previous.focus();
+      }
+      previousFocusRef.current = null;
+    };
+  }, []);
+
+  // Init phase
+  React.useEffect(() => {
     setIsMounted(true);
 
     const libraryItems = Object.values(useLibraryStore.getState().items || {});
@@ -119,10 +130,6 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
 
     return () => {
       isCancelled = true;
-      const previous = previousFocusRef.current;
-      if (previous?.isConnected) {
-        previous.focus();
-      }
     };
   }, []);
 
