@@ -39,6 +39,7 @@ import { getRelativeTime } from "@/shared/utils/date";
 import { getMangaTransitionNames } from "@/shared/lib/motion/transition-identity";
 import { normalizeSynopsis } from "@/shared/utils/normalize";
 import { apiClient } from "@/shared/api-client";
+import { runCardEnrichment } from "@/shared/lib/card-enrichment-queue";
 import { toast } from "sonner";
 import {
   MangaCardCoverFrame,
@@ -115,7 +116,7 @@ function LazySynopsisPreview({
 
   const { data } = useQuery({
     queryKey: ["manga-card-synopsis", sourceId, mangaId],
-    queryFn: () => apiClient.getDetail(sourceId, mangaId),
+    queryFn: () => runCardEnrichment(() => apiClient.getDetail(sourceId, mangaId)),
     enabled: shouldFetch,
     staleTime: 30 * 60 * 1000,
     retry: 1,
