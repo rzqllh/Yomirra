@@ -80,7 +80,7 @@ export class WestMangaSource implements MangaSource {
     detail: true,
     chapters: true,
     pages: true,
-    filters: true,
+    filters: false,
     multiLanguage: false,
     auth: false,
     related: false,
