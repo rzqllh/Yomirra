@@ -19,8 +19,8 @@ export default function Loading() {
           <Skeleton className="h-20 w-full rounded-2xl" />
 
           <div className="w-full">
-          <Skeleton className="mb-6 h-10 w-full max-w-xs rounded-xl" />
-          <div className="space-y-3">
+            <Skeleton className="mb-6 h-10 w-full max-w-xs rounded-xl" />
+            <div className="space-y-3">
             {Array.from({ length: 5 }).map((_, i) => (
               <div
                 key={i}
@@ -37,7 +37,7 @@ export default function Loading() {
                 <Skeleton className="size-10 shrink-0 rounded-xl" />
               </div>
             ))}
-          </div>
+            </div>
           </div>
         </ContentLane>
       </PageContainer>

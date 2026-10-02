@@ -46,6 +46,9 @@ export default function Loading() {
                 ))}
               </div>
             ))}
+            <div className="xl:col-span-2 flex justify-center pt-2 pb-2">
+              <Skeleton className="h-3 w-24 rounded-md" />
+            </div>
           </div>
         </ContentLane>
       </PageContainer>
