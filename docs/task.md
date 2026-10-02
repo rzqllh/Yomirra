@@ -1,8 +1,9 @@
 # Yomirra Quality, Motion, and Seamless UX Tasks
 
-**Status:** Execution checklist for `docs/plan.md`.  
-**Rule:** Do not start implementation from this document until the planning PR is approved/merged.  
-**Completion:** A task is complete only when implementation, focused verification, and the listed acceptance criteria pass.
+**Status:** Active execution checklist for `docs/plan.md`.  
+**Current baseline:** `main@f3317d38352000096f20dff9c847cd19a65fef89` after merged PRs #29–#32.  
+**Rule:** Continue from the first genuinely incomplete task; do not repeat merged implementation because a stale checkbox remained open.  
+**Completion:** A task is complete only when implementation and the verification that can be proven in the available environment pass. Real-browser/device-only gates remain open until they are actually exercised.
 
 ## T0 — Preflight
 
@@ -273,16 +274,22 @@
 
 **Manual-gate note:** Chromium exists in the execution container, but the container cannot resolve/reach the public preview host. Do not infer the responsive/browser matrix from jsdom, static source inspection, HTTP metadata, or Vercel READY alone.
 
-## Skeleton Geometry Consistency — follow-up PR only after Home visual gate
+## Skeleton Geometry Consistency — merged in PR #31
 
-- [ ] Compare every route skeleton against the current final page.
-- [ ] Remove obsolete section orders and legacy card geometry.
-- [ ] Match responsive columns, card ratios, toolbar/header placement, and container width.
-- [ ] Avoid redundantly skeletonizing persisted shell.
-- [ ] Verify grid/compact modes where applicable.
-- [ ] Verify mobile + desktop replacement does not create obvious CLS.
-- [ ] Keep final diff skeleton/loading scoped.
-- [ ] Typecheck/lint/tests/build pass.
+- [x] Compare route skeletons against the current final pages and fix proven mismatches.
+- [x] Remove obsolete section orders and legacy card geometry where a mismatch was proven.
+- [x] Match responsive columns, card ratios, toolbar/header placement, and container width in the touched loading surfaces.
+- [x] Avoid redundantly skeletonizing persisted shell.
+- [x] Verify grid/compact mode behavior in the applicable persisted-view skeleton path.
+- [ ] Verify mobile + desktop replacement does not create obvious CLS in a real browser/device smoke.
+- [x] Keep final diff skeleton/loading scoped.
+- [x] Typecheck/lint/tests/build pass.
+
+**PR #31 reconciliation record (2026-10-02):**
+- merged as `157bac9193ed86cd5753d5d0a4bf31e5470f6ff0`;
+- source-list/source-detail loading geometry, Search/Library/Bookmark suspense shells, and persisted grid/compact loading behavior were aligned without rewriting routes that had no proven mismatch;
+- final branch CI passed typecheck, lint, unit/integration tests, and production build;
+- the remaining CLS item is intentionally manual because static inspection/jsdom cannot prove browser replacement behavior.
 
 ---
 
