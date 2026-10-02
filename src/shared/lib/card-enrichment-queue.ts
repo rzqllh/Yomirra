@@ -28,11 +28,18 @@ export function createCardEnrichmentQueue(
       pending.push(() => {
         Promise.resolve()
           .then(task)
-          .then(resolve, reject)
-          .finally(() => {
-            activeCount -= 1;
-            pump();
-          });
+          .then(
+            (result) => {
+              activeCount -= 1;
+              pump();
+              resolve(result);
+            },
+            (error) => {
+              activeCount -= 1;
+              pump();
+              reject(error);
+            }
+          );
       });
       pump();
     });
