@@ -6,6 +6,7 @@ import { useSettingsStore } from "@/shared/store/settings-store";
 import { cn } from "@/shared/utils/cn";
 
 import { motion, useReducedMotion } from "motion/react";
+import { transitions } from "@/shared/lib/motion/tokens";
 
 export interface ViewModeToggleProps {
   className?: string;
@@ -17,6 +18,7 @@ export function ViewModeToggle({ className, value, onChange }: ViewModeTogglePro
   const storeMode = useSettingsStore((state) => state.listingViewMode);
   const setStoreMode = useSettingsStore((state) => state.setListingViewMode);
   const reducedMotion = useReducedMotion();
+  const indicatorId = React.useId();
 
   const activeMode = value ?? storeMode;
   const handleToggle = (mode: "grid" | "compact") => {
@@ -50,9 +52,9 @@ export function ViewModeToggle({ className, value, onChange }: ViewModeTogglePro
       >
         {activeMode === "grid" && (
           <motion.div
-            layoutId={reducedMotion ? undefined : "viewmode-pill"}
+            layoutId={reducedMotion ? undefined : `viewmode-pill-${indicatorId}`}
             className="absolute inset-0 bg-accent rounded-lg shadow-xs -z-10"
-            transition={{ type: "spring", stiffness: 450, damping: 32 }}
+            transition={reducedMotion ? { duration: 0 } : transitions.layout}
           />
         )}
         <SquaresFour size={17} weight={activeMode === "grid" ? "fill" : "bold"} />
@@ -72,9 +74,9 @@ export function ViewModeToggle({ className, value, onChange }: ViewModeTogglePro
       >
         {activeMode === "compact" && (
           <motion.div
-            layoutId={reducedMotion ? undefined : "viewmode-pill"}
+            layoutId={reducedMotion ? undefined : `viewmode-pill-${indicatorId}`}
             className="absolute inset-0 bg-accent rounded-lg shadow-xs -z-10"
-            transition={{ type: "spring", stiffness: 450, damping: 32 }}
+            transition={reducedMotion ? { duration: 0 } : transitions.layout}
           />
         )}
         <Rows size={17} weight={activeMode === "compact" ? "fill" : "bold"} />
