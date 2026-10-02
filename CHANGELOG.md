@@ -29,6 +29,13 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
 - Loading state Sumber, Unduhan, Pengaturan, dan Populer mengikuti frame/column geometry final agar pergantian skeleton ke konten tidak mengubah lebar atau jumlah kolom utama.
 - Merapikan safe inset collage Hero, sparse Spotlight composition, dan bottom density Top 5 tanpa menambah dependency visual baru.
 
+### Accessibility Hardening
+
+- Onboarding kini memakai modal semantics, focus containment, focus return pada seluruh exit path, serta reduced-motion handling yang eksplisit.
+- Close/reset controls pada shared overlays, sheet, filter drawer, dan reader error mempertahankan baseline target sentuh 44px serta focus-visible styling yang konsisten.
+- Contract test kontras diperluas untuk metadata dan semantic status pada tema gelap/terang dengan ambang WCAG AA untuk small text.
+- Implementasi card-detail enrichment yang lebih baru di `main` tetap dipertahankan: request dibatasi, abort-aware, dan tidak digantikan oleh queue lama dari branch accessibility.
+
 ### Motion & Navigation Foundation
 
 - **Semantic Motion System** (`src/shared/lib/motion/`, `src/components/motion/`):

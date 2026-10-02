@@ -46,12 +46,22 @@ describe("design-token contrast", () => {
   it.each([
     ["dark accent button", darkBlock, "color-accent", "text-on-accent"],
     ["dark muted metadata", darkBlock, "text-muted", "surface-base"],
+    ["dark secondary metadata", darkBlock, "text-secondary", "surface-base"],
     ["dark muted raised", darkBlock, "text-muted", "surface-raised"],
     ["dark selected chip", darkBlock, "color-accent", "color-accent-dim"],
+    ["dark success status", darkBlock, "status-success-fg", "status-success-bg"],
+    ["dark warning status", darkBlock, "status-warning-fg", "status-warning-bg"],
+    ["dark error status", darkBlock, "status-error-fg", "status-error-bg"],
+    ["dark info status", darkBlock, "status-info-fg", "status-info-bg"],
     ["light accent button", lightBlock, "color-accent", "text-on-accent"],
     ["light muted metadata", lightBlock, "text-muted", "surface-base"],
+    ["light secondary metadata", lightBlock, "text-secondary", "surface-base"],
     ["light muted raised", lightBlock, "text-muted", "surface-raised"],
     ["light selected chip", lightBlock, "color-accent", "color-accent-dim"],
+    ["light success status", lightBlock, "status-success-fg", "status-success-bg"],
+    ["light warning status", lightBlock, "status-warning-fg", "status-warning-bg"],
+    ["light error status", lightBlock, "status-error-fg", "status-error-bg"],
+    ["light info status", lightBlock, "status-info-fg", "status-info-bg"],
   ])("%s remains at least 4.5:1", (_label, block, foreground, background) => {
     expect(
       contrastRatio(token(block, foreground), token(block, background))

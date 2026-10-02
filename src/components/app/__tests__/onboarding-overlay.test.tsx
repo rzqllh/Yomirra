@@ -5,6 +5,7 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 const mockCompleteOnboarding = vi.fn();
 const mockIsInstallable = false;
 const mockInstallPWA = vi.fn();
+let mockLibraryItems: Record<string, { coverUrl?: string }> = {};
 
 vi.mock('@/shared/store/onboarding-store', () => ({
   useOnboardingStore: () => ({
@@ -21,7 +22,7 @@ vi.mock('@/shared/hooks/use-pwa-install', () => ({
 
 vi.mock('@/shared/store/library-store', () => ({
   useLibraryStore: {
-    getState: () => ({ items: {} }),
+    getState: () => ({ items: mockLibraryItems }),
   },
 }));
 
@@ -34,6 +35,7 @@ vi.mock('@/shared/store/history-store', () => ({
 describe('OnboardingOverlay', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockLibraryItems = {};
   });
 
   it('renders initial step and allows stepping forward to final step', async () => {
@@ -104,4 +106,72 @@ describe('OnboardingOverlay', () => {
     expect(mockCompleteOnboarding).toHaveBeenCalled();
     expect(onComplete).toHaveBeenCalled();
   });
+  it('exposes modal semantics, traps keyboard focus, and restores prior focus on unmount', async () => {
+    const previousButton = document.createElement('button');
+    previousButton.textContent = 'Previous trigger';
+    document.body.appendChild(previousButton);
+    previousButton.focus();
+
+    const { unmount } = render(<OnboardingOverlay onComplete={vi.fn()} />);
+
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog.getAttribute('aria-modal')).toBe('true');
+    expect(dialog.getAttribute('aria-labelledby')).toBe('onboarding-title');
+    expect(dialog.getAttribute('aria-describedby')).toBe('onboarding-description');
+
+    const skipButton = screen.getByRole('button', { name: 'Lewati' });
+    const nextButton = screen.getByRole('button', { name: 'Lanjut' });
+
+    await waitFor(() => {
+      expect(document.activeElement).toBe(skipButton);
+    });
+
+    fireEvent.keyDown(window, { key: 'Tab', shiftKey: true });
+    expect(document.activeElement).toBe(nextButton);
+
+    fireEvent.keyDown(window, { key: 'Tab' });
+    expect(document.activeElement).toBe(skipButton);
+
+    unmount();
+    expect(document.activeElement).toBe(previousButton);
+    previousButton.remove();
+  });
+
+  it('restores prior focus when local covers satisfy the early cover path', async () => {
+    mockLibraryItems = {
+      one: { coverUrl: 'https://example.com/one.jpg' },
+      two: { coverUrl: 'https://example.com/two.jpg' },
+      three: { coverUrl: 'https://example.com/three.jpg' },
+    };
+
+    const previousButton = document.createElement('button');
+    previousButton.textContent = 'Previous local-cover trigger';
+    document.body.appendChild(previousButton);
+    previousButton.focus();
+
+    const { unmount } = render(<OnboardingOverlay onComplete={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Lewati' }));
+    });
+
+    unmount();
+    expect(document.activeElement).toBe(previousButton);
+    previousButton.remove();
+  });
+
+  it('keeps onboarding navigation controls at the shared 44px touch-target baseline', async () => {
+    render(<OnboardingOverlay onComplete={vi.fn()} />);
+
+    const skipButton = screen.getByRole('button', { name: 'Lewati' });
+    const firstStepButton = screen.getByRole('button', { name: 'Langkah 1' });
+
+    expect(skipButton.className).toContain('min-h-11');
+    expect(firstStepButton.className).toContain('size-11');
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Lanjut' })).toBeTruthy();
+    });
+  });
+
 });

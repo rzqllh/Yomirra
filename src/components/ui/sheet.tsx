@@ -58,9 +58,9 @@ const SheetContent = React.forwardRef<
       {...props}
     >
       {children}
-      <SheetPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-border-strong disabled:pointer-events-none data-[state=open]:bg-surface-hover">
+      <SheetPrimitive.Close className="absolute right-3 top-3 flex size-11 items-center justify-center rounded-sm opacity-70 ring-offset-background motion-safe:transition-opacity hover:opacity-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent disabled:pointer-events-none data-[state=open]:bg-surface-hover">
         <X size={16} weight="bold" />
-        <span className="sr-only">Close</span>
+        <span className="sr-only">Tutup</span>
       </SheetPrimitive.Close>
     </SheetPrimitive.Content>
   </SheetPortal>

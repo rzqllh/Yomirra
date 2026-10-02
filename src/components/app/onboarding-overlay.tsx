@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { useOnboardingStore } from "@/shared/store/onboarding-store";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useHistoryStore } from "@/shared/store/history-store";
@@ -49,6 +49,10 @@ function getCardStyle(index: number, currentStep: number, totalCards: number) {
 export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
   const { completeOnboarding } = useOnboardingStore();
   const { isInstallable, installPWA } = usePWAInstall();
+  const reducedMotion = useReducedMotion();
+  const dialogRef = React.useRef<HTMLDivElement>(null);
+  const skipButtonRef = React.useRef<HTMLButtonElement>(null);
+  const previousFocusRef = React.useRef<HTMLElement | null>(null);
   const [isMounted, setIsMounted] = React.useState(false);
   const [isReadyToExit, setIsReadyToExit] = React.useState(false);
   const [step, setStep] = React.useState(0);
@@ -62,6 +66,19 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
       }
     };
   }, [isReadyToExit]);
+
+  React.useEffect(() => {
+    previousFocusRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+
+    return () => {
+      const previous = previousFocusRef.current;
+      if (previous?.isConnected) {
+        previous.focus();
+      }
+      previousFocusRef.current = null;
+    };
+  }, []);
 
   // Init phase
   React.useEffect(() => {
@@ -117,6 +134,11 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
   }, []);
 
   React.useEffect(() => {
+    if (!isMounted) return;
+    queueMicrotask(() => skipButtonRef.current?.focus());
+  }, [isMounted]);
+
+  React.useEffect(() => {
     if (isReadyToExit) {
       document.body.style.overflow = "";
       completeOnboarding();
@@ -136,9 +158,41 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
     setIsReadyToExit(true);
   };
 
-  // Keyboard navigation support
+  // Keyboard navigation + focus containment for the full-screen onboarding dialog.
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Tab") {
+        const root = dialogRef.current;
+        if (!root) return;
+
+        const focusable = Array.from(
+          root.querySelectorAll<HTMLElement>(
+            'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+          )
+        ).filter((element) => !element.hasAttribute("aria-hidden"));
+
+        if (focusable.length === 0) {
+          e.preventDefault();
+          return;
+        }
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        const active = document.activeElement;
+
+        if (!(active instanceof Node) || !root.contains(active)) {
+          e.preventDefault();
+          (e.shiftKey ? last : first).focus();
+        } else if (e.shiftKey && active === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && active === last) {
+          e.preventDefault();
+          first.focus();
+        }
+        return;
+      }
+
       if (e.key === "ArrowRight") {
         e.preventDefault();
         handleNext();
@@ -158,10 +212,15 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="onboarding-title"
+      aria-describedby="onboarding-description"
+      initial={reducedMotion ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
-      exit={{ opacity: 0, scale: 1.02 }}
-      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+      exit={reducedMotion ? { opacity: 1 } : { opacity: 0, scale: 1.02 }}
+      transition={reducedMotion ? { duration: 0 } : { duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
       className="fixed inset-0 z-[9000] flex flex-col bg-surface-base text-text-primary h-[100dvh] overflow-hidden select-none"
     >
       {/* Subtle adaptive ambient aura */}
@@ -186,9 +245,10 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
           </span>
         </div>
         <button
+          ref={skipButtonRef}
           type="button"
           onClick={handleComplete}
-          className="px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold text-text-muted hover:text-text-primary hover:bg-surface-raised active:scale-95 transition-all cursor-pointer"
+          className="min-h-11 px-3.5 rounded-full text-xs sm:text-sm font-semibold text-text-muted hover:text-text-primary hover:bg-surface-raised motion-safe:active:scale-95 motion-safe:transition-[transform,background-color,color] cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           Lewati
         </button>
@@ -208,7 +268,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
                   opacity: style.opacity,
                   filter: style.filter,
                 }}
-                transition={{ type: "spring", stiffness: 280, damping: 26, mass: 1 }}
+                transition={reducedMotion ? { duration: 0 } : { type: "spring", stiffness: 280, damping: 26, mass: 1 }}
                 className="absolute w-[190px] h-[270px] sm:w-[210px] sm:h-[300px] rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-border-subtle bg-surface-raised"
                 style={{ zIndex: style.zIndex }}
               >
@@ -240,19 +300,19 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
           <AnimatePresence mode="wait">
             <motion.div
               key={step}
-              initial={{ opacity: 0, y: 8 }}
+              initial={reducedMotion ? false : { opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.25 }}
+              exit={reducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: -8 }}
+              transition={reducedMotion ? { duration: 0 } : { duration: 0.25 }}
               className="flex flex-col gap-1.5"
             >
               <p className="text-[11px] font-bold tracking-[0.2em] text-accent uppercase">
                 {STEPS[step].eyebrow}
               </p>
-              <h2 className="text-2xl sm:text-[28px] leading-tight font-extrabold tracking-tight text-text-primary whitespace-pre-line">
+              <h2 id="onboarding-title" className="text-2xl sm:text-[28px] leading-tight font-extrabold tracking-tight text-text-primary whitespace-pre-line">
                 {STEPS[step].title}
               </h2>
-              <p className="text-xs sm:text-sm font-normal text-text-muted mt-1 leading-relaxed">
+              <p id="onboarding-description" className="text-xs sm:text-sm font-normal text-text-muted mt-1 leading-relaxed">
                 {STEPS[step].desc}
               </p>
             </motion.div>
@@ -260,19 +320,24 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
         </div>
 
         {/* Segmented Step Indicator */}
-        <div className="flex items-center justify-center gap-2 mb-6 h-2">
+        <div className="flex items-center justify-center gap-1 mb-3 min-h-11">
           {STEPS.map((_, i) => (
             <button
               key={i}
               type="button"
               onClick={() => setStep(i)}
-              className={cn(
-                "h-2 rounded-full transition-all duration-300 cursor-pointer",
-                step === i ? "w-6 bg-accent" : "w-2 bg-border-strong hover:bg-border-subtle"
-              )}
+              className="group flex size-11 items-center justify-center rounded-full cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
               aria-label={`Langkah ${i + 1}`}
               aria-current={step === i ? "step" : undefined}
-            />
+            >
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "h-2 rounded-full motion-safe:transition-[width,background-color] motion-safe:duration-300",
+                  step === i ? "w-6 bg-accent" : "w-2 bg-border-strong group-hover:bg-border-subtle"
+                )}
+              />
+            </button>
           ))}
         </div>
 
@@ -282,7 +347,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
             type="button"
             onClick={handleNext}
             className={cn(
-              "w-full h-12 sm:h-13 rounded-2xl font-bold text-sm sm:text-base shadow-sm active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer",
+              "w-full h-12 sm:h-13 rounded-2xl font-bold text-sm sm:text-base shadow-sm motion-safe:active:scale-[0.98] motion-safe:transition-[transform,background-color,color,border-color,box-shadow] flex items-center justify-center gap-2 cursor-pointer",
               step === STEPS.length - 1
                 ? "bg-accent hover:bg-accent-hover text-white shadow-md shadow-accent/25"
                 : "bg-surface-raised hover:bg-surface-hover border border-border-subtle text-text-primary"
@@ -300,11 +365,12 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
           <AnimatePresence>
             {step === STEPS.length - 1 && isInstallable && (
               <motion.button
-                initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                initial={reducedMotion ? false : { opacity: 0, height: 0, marginTop: 0 }}
                 animate={{ opacity: 1, height: 44, marginTop: 8 }}
-                exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                exit={reducedMotion ? { opacity: 1, height: 44, marginTop: 8 } : { opacity: 0, height: 0, marginTop: 0 }}
+                transition={reducedMotion ? { duration: 0 } : undefined}
                 onClick={installPWA}
-                className="w-full rounded-2xl font-bold text-xs sm:text-sm bg-surface-overlay border border-border-subtle text-accent hover:bg-accent/10 active:scale-[0.98] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full min-h-11 rounded-2xl font-bold text-xs sm:text-sm bg-surface-overlay border border-border-subtle text-accent hover:bg-accent/10 motion-safe:active:scale-[0.98] motion-safe:transition-[transform,background-color,color,border-color] flex items-center justify-center gap-2 cursor-pointer"
               >
                 <DownloadSimple size={18} weight="bold" />
                 Install Aplikasi Yomirra

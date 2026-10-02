@@ -119,7 +119,7 @@ export function FilterDrawerShell({
           <Button
             variant={activeCount > 0 ? "accent" : "outline"}
             className={cn(
-              "relative rounded-full font-bold px-4 h-[44px] gap-1.5 transition-all duration-300 border-border-subtle",
+              "relative rounded-full font-bold px-4 h-[44px] gap-1.5 motion-safe:transition-[background-color,color,border-color,box-shadow,transform] motion-safe:duration-300 border-border-subtle",
               activeCount > 0 ? "border-accent/40 bg-accent text-accent-on shadow-xs" : "bg-surface-glass backdrop-blur-md"
             )}
             aria-label={`Filter${activeCount > 0 ? ` (${activeCount} aktif)` : ""}`}
@@ -156,7 +156,7 @@ export function FilterDrawerShell({
                 <button
                   type="button"
                   onClick={onReset}
-                  className="min-h-11 px-3 text-sm font-semibold text-accent hover:text-accent-hover motion-safe:transition-colors"
+                  className="min-h-11 px-3 text-sm font-semibold text-accent hover:text-accent-hover motion-safe:transition-colors rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                 >
                   Reset
                 </button>
