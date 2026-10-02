@@ -3,6 +3,7 @@ import type { SourceMetadata } from "@/shared/sources/source-types";
 import {
   isDiscoverySourceSelected,
   isDiscoverySourceSystemEligible,
+  isSearchSourceSystemEligible,
   parseDisabledSourceIdsCookie,
   selectDiscoverySources,
   resolveDiscoverySourceId,
@@ -40,6 +41,21 @@ describe("discovery source policy", () => {
     expect(isDiscoverySourceSystemEligible(source({ status: "unavailable" }))).toBe(false);
     expect(isDiscoverySourceSystemEligible(source({ status: "in-fix" }))).toBe(false);
     expect(isDiscoverySourceSystemEligible(source({ status: "in-dev" }))).toBe(false);
+  });
+
+  it("keeps Search independent from discovery preference but excludes non-operational sources", () => {
+    expect(isSearchSourceSystemEligible(source())).toBe(true);
+    expect(isSearchSourceSystemEligible(source({ status: "slow" }))).toBe(true);
+    expect(isSearchSourceSystemEligible(source({ status: "unknown" }))).toBe(true);
+    expect(isSearchSourceSystemEligible(source({ status: "unavailable" }))).toBe(false);
+    expect(isSearchSourceSystemEligible(source({ status: "in-fix" }))).toBe(false);
+    expect(isSearchSourceSystemEligible(source({ status: "in-dev" }))).toBe(false);
+    expect(isSearchSourceSystemEligible(source({ isEnabled: false }))).toBe(false);
+    expect(
+      isSearchSourceSystemEligible(
+        source({ capabilities: { ...source().capabilities, search: false } })
+      )
+    ).toBe(false);
   });
 
   it("applies the user discovery preference only after system eligibility", () => {

@@ -112,7 +112,7 @@ export default function SourcesPage() {
           {/* Source Mental Model Guidance Banner */}
           <div className="p-3.5 rounded-2xl bg-surface-glass border border-border-subtle text-xs text-text-muted flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
             <p className="leading-relaxed">
-              Pilih sumber yang ingin tampil di Beranda, Library, dan Populer. Semua sumber tetap bisa digunakan lewat Cari.
+              Pilih sumber yang ingin tampil di Beranda, Library, dan Populer. Toggle ini tidak membatasi Cari; sumber yang tersedia tetap bisa digunakan di sana.
             </p>
           </div>
 

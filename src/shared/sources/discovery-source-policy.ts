@@ -1,6 +1,6 @@
 import type { SourceMetadata } from "@/shared/sources/source-types";
 
-const NON_DISCOVERY_STATUSES = new Set(["unavailable", "in-fix", "in-dev"]);
+const NON_OPERATIONAL_STATUSES = new Set(["unavailable", "in-fix", "in-dev"]);
 
 export function parseDisabledSourceIdsCookie(value?: string): string[] {
   if (!value) return [];
@@ -21,7 +21,16 @@ export function isDiscoverySourceSystemEligible(source: SourceMetadata): boolean
   return (
     source.isEnabled !== false &&
     source.isInstalled === true &&
-    !NON_DISCOVERY_STATUSES.has(String(source.status || ""))
+    !NON_OPERATIONAL_STATUSES.has(String(source.status || ""))
+  );
+}
+
+export function isSearchSourceSystemEligible(source: SourceMetadata): boolean {
+  return (
+    source.isEnabled !== false &&
+    source.isInstalled === true &&
+    source.capabilities?.search === true &&
+    !NON_OPERATIONAL_STATUSES.has(String(source.status || ""))
   );
 }
 
