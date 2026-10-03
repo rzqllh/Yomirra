@@ -30,12 +30,13 @@ import {
 } from "@/shared/lib/search-intelligence";
 import type { FilterList, SourceMetadata } from "@/shared/sources/source-types";
 import { isSearchSourceSystemEligible } from "@/shared/sources/discovery-source-policy";
+import { useUrlPagination } from "@/shared/hooks/use-url-pagination";
 
 export function useSearchCatalog() {
   const searchParams = useSearchParams();
   const query = searchParams?.get("q") || "";
   const [localQuery, setLocalQuery] = React.useState(query);
-  const [page, setPage] = React.useState(1);
+  const [page, setPage] = useUrlPagination();
   const router = useRouter();
   const searchParamsString = searchParams?.toString() || "";
   const previousQuery = React.useRef(query);
@@ -52,6 +53,7 @@ export function useSearchCatalog() {
     const nextQuery = value.trim();
     if (nextQuery === query) return;
     const params = new URLSearchParams(searchParamsString);
+    params.delete("page");
     if (nextQuery) params.set("q", nextQuery);
     else params.delete("q");
     setPage(1);
@@ -642,6 +644,7 @@ export function useSearchCatalog() {
       .trim();
 
     const params = new URLSearchParams(searchParamsString);
+    params.delete("page");
     if (nextQuery) params.set("q", nextQuery);
     else params.delete("q");
 
