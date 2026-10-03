@@ -12,7 +12,7 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://www.yomirra.web.id"),
   title: "Yomirra",
-  description: "A source-powered reader for manga, comics, and webtoons.",
+  description: "Baca komik dari berbagai sumber dalam satu aplikasi.",
   appleWebApp: {
     capable: true,
     title: "Yomirra",

@@ -84,4 +84,18 @@ describe("public copy contracts", () => {
     expect(recovery).toContain('?? "Komik ini"');
     expect(detailError).toContain('?? "sumber ini"');
   });
+
+  it("keeps reader-facing route metadata in Indonesian", () => {
+    const root = read("src/app/(web)/layout.tsx");
+    const library = read("src/app/(web)/library/layout.tsx");
+    const sources = read("src/app/(web)/sources/layout.tsx");
+    const settings = read("src/app/(web)/settings/layout.tsx");
+    const updates = read("src/app/(web)/updates/layout.tsx");
+
+    expect(root).not.toContain("A source-powered reader");
+    expect(library).not.toContain("Browse the manga catalog");
+    expect(sources).not.toContain("Manage manga sources");
+    expect(settings).not.toContain("App settings and preferences");
+    expect(updates).toContain('title: "Jadwal Mingguan - Yomirra"');
+  });
 });
