@@ -250,6 +250,23 @@ describe("Yomirra Editorial Home Components", () => {
   });
 
   describe("Spotlight Carousel & Leaderboard", () => {
+    it("renders supplied feed immediately instead of replacing it with a hydration skeleton", () => {
+      render(
+        <HomeFeedClient
+          unifiedPopular={samplePopular}
+          unifiedLatest={sampleLatest}
+        />
+      );
+
+      expect(
+        screen.getByRole("heading", {
+          level: 1,
+          name: "Mau baca apa hari ini?",
+        })
+      ).toBeTruthy();
+    });
+
+
     it("uses the Hero as H1 and keeps Sorotan & peringkat as the next heading level", () => {
       render(
         <HomeFeedClient
@@ -535,7 +552,7 @@ describe("Yomirra Editorial Home Components", () => {
       const first = screen.getByRole("link", { name: /Manga Test 1/i });
       const second = screen.getByRole("link", { name: /Manga Test 2/i });
 
-      expect(first.className).toContain("min-h-[68px]");
+      expect(first.className).toContain("min-h-[76px]");
       expect(second.className).toContain("min-h-[42px]");
       expect(screen.getByText("01")).toBeTruthy();
       expect(screen.getByText("02")).toBeTruthy();

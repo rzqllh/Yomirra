@@ -18,7 +18,6 @@ import {
   selectSpotlightItems,
   type HomeFeedManga,
 } from "./home-feed-selection";
-import { SourceFeedSkeleton } from "./source-feed-skeleton";
 import { ShelfCard } from "@/components/manga/card";
 import { CompactCard } from "@/components/manga/card/compact-card";
 import { ViewModeToggle } from "@/components/manga/view-mode-toggle";
@@ -222,12 +221,8 @@ export function HomeFeedClient({
     [filteredLatest, personalizedIds]
   );
 
-  if (!isMounted) {
-    return <SourceFeedSkeleton />;
-  }
-
   return (
-    <div className="pb-16">
+    <div>
       <section id="hero-section" aria-label="Pembuka Beranda">
         <HomeHero candidates={heroCandidates} />
       </section>
