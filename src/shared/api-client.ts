@@ -157,11 +157,28 @@ class ApiClient {
     });
   }
 
-  getRelatedTitles(target: SearchCatalogCandidate, limit = 8) {
+  getRelatedTitles(
+    target: {
+      canonicalKey?: string;
+      sourceId: string;
+      mangaId: string;
+      title: string;
+      coverUrl?: string;
+      originalTitle?: string;
+      alternativeTitles?: string[];
+      author?: string;
+      description?: string;
+      genres?: string[];
+      format?: string;
+      status?: string;
+    },
+    limit = 8
+  ) {
+    const canonicalKey = target.canonicalKey || `${target.sourceId}::${target.mangaId}::${encodeURIComponent(target.title)}`;
     return this.fetcher<SearchCatalogCandidate[]>("/api/search/related", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ target, limit }),
+      body: JSON.stringify({ target: { ...target, canonicalKey }, limit }),
     });
   }
 
@@ -228,6 +245,7 @@ class ApiClient {
       }
     });
   }
+
 }
 
 export const apiClient = new ApiClient();

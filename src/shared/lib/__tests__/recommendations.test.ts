@@ -115,4 +115,73 @@ describe("deterministic recommendations", () => {
     expect(profile.sourceWeights.get("source-a")).toBeCloseTo(0.975);
     expect(profile.sourceWeights.get("source-b")).toBeCloseTo(1);
   });
+
+  it("ranks genre-matched titles above genre-mismatched titles of equal rating", () => {
+    const profile = buildRecommendationProfile([], []);
+
+    const ranked = rankRecommendationCandidates(
+      [
+        candidate("no-match", "No Genre Match", "source-b", { genres: ["Sports", "Comedy"] }),
+        candidate("full-match", "Full Genre Match", "source-b", {
+          genres: ["Action", "Fantasy", "Adventure"],
+        }),
+        candidate("partial-match", "Partial Genre Match", "source-c", {
+          genres: ["Action", "Sports"],
+        }),
+      ],
+      {
+        currentTitle: "Current",
+        currentSourceId: "source-a",
+        currentGenres: ["Action", "Fantasy", "Adventure"],
+        profile,
+      }
+    );
+
+    expect(ranked[0].manga.id).toBe("full-match");
+    expect(ranked[1].manga.id).toBe("partial-match");
+    expect(ranked[2].manga.id).toBe("no-match");
+  });
+
+  it("genre overlap beats same-source bias for cross-source discovery", () => {
+    const profile = buildRecommendationProfile([], []);
+
+    const ranked = rankRecommendationCandidates(
+      [
+        candidate("same-source-different-genre", "Same Source", "source-a", {
+          genres: ["Sports", "Slice of Life"],
+        }),
+        candidate("other-source-matching-genre", "Other Source Match", "source-b", {
+          genres: ["Action", "Adventure", "Fantasy"],
+        }),
+      ],
+      {
+        currentTitle: "Current",
+        currentSourceId: "source-a",
+        currentGenres: ["Action", "Adventure", "Fantasy"],
+        profile,
+      }
+    );
+
+    expect(ranked[0].manga.id).toBe("other-source-matching-genre");
+  });
+
+  it("handles empty currentGenres gracefully without crashing", () => {
+    const profile = buildRecommendationProfile([], []);
+
+    const ranked = rankRecommendationCandidates(
+      [
+        candidate("a", "Manga A"),
+        candidate("b", "Manga B"),
+      ],
+      {
+        currentTitle: "Current",
+        currentSourceId: "other-source",
+        currentGenres: [],
+        profile,
+      }
+    );
+
+    expect(ranked.map((item) => item.manga.id)).toEqual(["a", "b"]);
+  });
 });
+

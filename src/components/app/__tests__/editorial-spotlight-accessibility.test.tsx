@@ -12,7 +12,7 @@ const manga = {
 };
 
 describe("EditorialSpotlight accessibility", () => {
-  it("reserves synopsis and metadata geometry when optional metadata is missing", () => {
+  it("renders synopsis-absent slot and fallback text when synopsis is missing", () => {
     const { container } = render(
       <EditorialSpotlight
         manga={{ id: "manga-b", title: "Manga B", coverUrl: "/cover-b.jpg" }}
@@ -22,7 +22,9 @@ describe("EditorialSpotlight accessibility", () => {
     );
 
     expect(screen.getByText("Sinopsis belum tersedia")).toBeTruthy();
-    expect(container.querySelector('[data-spotlight-slot="synopsis"]')).toBeTruthy();
+    // When synopsis is absent, a dedicated slot is rendered instead of reserving empty geometry
+    expect(container.querySelector('[data-spotlight-slot="synopsis-absent"]')).toBeTruthy();
+    expect(container.querySelector('[data-spotlight-slot="synopsis"]')).toBeNull();
     expect(container.querySelector('[data-spotlight-slot="metadata"]')).toBeTruthy();
   });
 

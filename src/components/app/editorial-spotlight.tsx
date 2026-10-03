@@ -35,7 +35,8 @@ export function EditorialSpotlight({
 }: EditorialSpotlightProps) {
   const reducedMotion = useReducedMotion();
   const href = getMangaDetailHref(sourceId, manga.id, "/");
-  const description = manga.description?.trim() || "Sinopsis belum tersedia";
+  const rawDescription = manga.description?.trim();
+  const hasSynopsis = Boolean(rawDescription);
   const metadata = [manga.format, manga.latestChapter, sourceName].filter(Boolean);
 
   return (
@@ -100,20 +101,29 @@ export function EditorialSpotlight({
               href={href}
               className="group rounded focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
-              <h2 className="min-h-[46px] line-clamp-2 text-xl font-bold leading-[1.15] tracking-tight text-text-primary transition-colors group-hover:text-accent sm:min-h-[58px] sm:text-2xl lg:min-h-[74px] lg:text-[32px]">
+              <h2 className="line-clamp-2 text-xl font-bold leading-[1.15] tracking-tight text-text-primary transition-colors group-hover:text-accent sm:text-2xl lg:text-[32px]">
                 {manga.title}
               </h2>
             </Link>
 
-            <p
-              className="mt-2 min-h-[34px] line-clamp-2 text-[11.5px] leading-relaxed text-text-secondary sm:min-h-[60px] sm:line-clamp-3 sm:text-sm"
-              data-spotlight-slot="synopsis"
-            >
-              {description}
-            </p>
+            {hasSynopsis ? (
+              <p
+                className="mt-2 line-clamp-2 text-[11.5px] leading-relaxed text-text-secondary sm:line-clamp-3 sm:text-sm"
+                data-spotlight-slot="synopsis"
+              >
+                {rawDescription}
+              </p>
+            ) : (
+              <p
+                className="mt-2 text-[10.5px] font-semibold italic text-text-muted"
+                data-spotlight-slot="synopsis-absent"
+              >
+                Sinopsis belum tersedia
+              </p>
+            )}
 
             <p
-              className="mt-2 min-h-4 line-clamp-1 text-[10.5px] font-semibold text-text-muted sm:text-xs"
+              className="mt-2 line-clamp-1 text-[10.5px] font-semibold text-text-muted sm:text-xs"
               data-spotlight-slot="metadata"
             >
               {metadata.map((item, index) => (
