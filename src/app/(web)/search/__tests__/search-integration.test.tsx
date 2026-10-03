@@ -14,6 +14,7 @@ vi.mock('next/navigation', () => ({
   usePathname: () => '/search',
   useRouter: () => ({
     push: vi.fn(),
+    replace: vi.fn(),
   }),
 }));
 
