@@ -32,6 +32,10 @@ import {
 } from "@/components/manga/card";
 import { UpdatesSkeleton } from "@/components/skeletons/updates-skeleton";
 import { cn } from "@/shared/utils/cn";
+import {
+  isWeeklyScheduleEligibleStatus,
+  normalizePublicationStatus,
+} from "@/shared/lib/schedule-policy";
 
 export const WEEKDAYS = [
   { key: "all", name: "Semua", dayIndex: -1 },
@@ -60,6 +64,7 @@ export interface WeeklyMangaItem {
   releaseDay?: number;
   inferredDay: number;
   effectiveDay: number;
+  publicationStatus?: ReturnType<typeof normalizePublicationStatus>;
 }
 
 export interface UpdateCardProps {
@@ -122,6 +127,11 @@ export function UpdateCard({ item, historyItem, onScheduleChange }: UpdateCardPr
             {isUnread && (
               <span className="text-[9px] px-1.5 py-0.5 rounded-[6px] bg-semantic-error text-white font-extrabold uppercase tracking-wider shadow-xs">
                 Baru
+              </span>
+            )}
+            {item.publicationStatus === "hiatus" && (
+              <span className="text-[9px] px-1.5 py-0.5 rounded-[6px] bg-status-warning-bg text-status-warning-fg font-bold uppercase tracking-wider">
+                Hiatus
               </span>
             )}
             <MangaCardMeta className="text-text-muted truncate">
@@ -241,7 +251,7 @@ function ErrorBanner({
                   {item.mangaTitle || item.mangaId}
                 </p>
                 <p className="text-[10px] text-text-muted truncate">
-                  {item.sourceId} · {item.error}
+                  {item.sourceName || "Sumber"} · Pemeriksaan terakhir gagal.
                 </p>
               </div>
             </div>
@@ -284,7 +294,10 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
   // Combine library bookmarks with update store data
   const allItems = useMemo<WeeklyMangaItem[]>(() => {
     const validLibEntries = Object.values(libraryItems).filter(
-      (lib) => Boolean(lib && lib.sourceId && lib.mangaId)
+      (lib) =>
+        Boolean(lib && lib.sourceId && lib.mangaId) &&
+        lib.isBookmarked !== false &&
+        isWeeklyScheduleEligibleStatus(lib.status)
     );
 
     if (validLibEntries.length > 0) {
@@ -323,6 +336,7 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
           releaseDay: lib.releaseDay,
           inferredDay,
           effectiveDay,
+          publicationStatus: normalizePublicationStatus(lib.status),
         };
       });
 
@@ -492,7 +506,7 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
       ) : (
         <>
           {/* Weekly day rail */}
-          <div className="space-y-2.5">
+          <div className="sticky top-[var(--secondary-sticky-top)] z-20 -mx-1 space-y-2.5 border-b border-border-subtle/60 bg-surface-base/92 px-1 py-2 backdrop-blur-md">
             <div className="overflow-x-auto [scrollbar-width:none] pb-1">
               <SegmentedControl
                 options={quickSegmentOptions}

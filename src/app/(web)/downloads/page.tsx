@@ -204,7 +204,9 @@ export default function DownloadsPage() {
                             />
                           </div>
                           {item.error && (
-                            <p className="text-[11px] text-semantic-error mt-1 truncate">{item.error}</p>
+                            <p className="text-[11px] text-semantic-error mt-1 truncate">
+                              Unduhan gagal. Coba lagi.
+                            </p>
                           )}
                         </div>
                       </div>
