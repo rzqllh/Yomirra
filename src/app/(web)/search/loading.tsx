@@ -8,7 +8,7 @@ export default function Loading() {
       <PageContainer hasMobileHeader>
         <PageHeader
           title="Cari"
-          subtitle="Cari judul dari semua sumber."
+          subtitle="Temukan komik dari berbagai sumber."
           hideDesktop
         />
         <SearchResultSkeleton />

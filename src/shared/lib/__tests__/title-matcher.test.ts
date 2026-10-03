@@ -4,6 +4,7 @@ import {
   matchTitles,
   matchAgainstAlternates,
   rankCandidates,
+  isExactNormalizedTitleMatch,
   type TitleCandidate,
 } from "../title-matcher";
 
@@ -110,5 +111,28 @@ describe("rankCandidates", () => {
   it("returns empty array when no candidates match", () => {
     const results = rankCandidates("Completely Different Title", candidates);
     expect(results.length).toBe(0);
+  });
+});
+
+
+describe("isExactNormalizedTitleMatch", () => {
+  it("accepts exact normalized primary or alternate titles", () => {
+    expect(isExactNormalizedTitleMatch("One Piece!", "One Piece")).toBe(true);
+    expect(
+      isExactNormalizedTitleMatch("Only I Level Up", "Solo Leveling", [
+        "Only I Level Up",
+        "나 혼자만 레벨업",
+      ])
+    ).toBe(true);
+  });
+
+  it("rejects merely similar or neighboring titles", () => {
+    expect(
+      isExactNormalizedTitleMatch(
+        "Solo Leveling",
+        "Solo Leveling: Side Story"
+      )
+    ).toBe(false);
+    expect(isExactNormalizedTitleMatch("Naruto", "Naruto Shippuden")).toBe(false);
   });
 });

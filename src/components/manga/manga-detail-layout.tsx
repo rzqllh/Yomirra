@@ -99,8 +99,8 @@ export function MangaDetailLayout({
             {/* Primary CTA */}
             {mainAction}
 
-            {/* Secondary Actions (2x2 grid mobile, horizontal tablet/desktop) */}
-            <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 mt-2 w-full [&>button]:w-full [&>button]:justify-center sm:[&>button]:w-auto">
+            {/* Secondary actions share one compact four-item rail across viewports. */}
+            <div className="grid grid-cols-4 gap-2 mt-2 w-full [&>button]:w-full [&>button]:min-w-0 [&>button]:justify-center [&>button]:px-2">
               {actions}
             </div>
           </div>
@@ -121,7 +121,7 @@ export function MangaDetailLayout({
 
               <div className="flex flex-col gap-0 pt-2 max-w-2xl w-full">
                 <div className="w-full">{mainAction}</div>
-                <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 mt-2 w-full [&>button]:w-full [&>button]:justify-center sm:[&>button]:w-auto">
+                <div className="grid grid-cols-4 gap-2 mt-2 w-full [&>button]:w-full [&>button]:min-w-0 [&>button]:justify-center [&>button]:px-2">
                   {actions}
                 </div>
               </div>

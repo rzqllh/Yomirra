@@ -21,15 +21,15 @@ export default function ReaderError({
     <div className="flex min-h-screen w-full items-center justify-center p-4 bg-surface-base">
       <EmptyState
         icon={<WarningCircle size={48} weight="duotone" className="text-semantic-error" />}
-        title="Terjadi Kesalahan"
-        description="Maaf, terjadi masalah saat merender atau memuat pembaca chapter ini."
+        title="Chapter belum bisa dibuka"
+        description="Coba lagi. Jika masih gagal, kembali ke detail komik."
         action={
           <Button 
             onClick={() => reset()} 
             variant="outline" 
             className="rounded-xl shadow-sm mt-4 font-bold px-6"
           >
-            Coba Lagi
+            Coba lagi
           </Button>
         }
       />

@@ -32,6 +32,10 @@ import {
 } from "@/components/manga/card";
 import { UpdatesSkeleton } from "@/components/skeletons/updates-skeleton";
 import { cn } from "@/shared/utils/cn";
+import {
+  isWeeklyScheduleEligibleStatus,
+  normalizePublicationStatus,
+} from "@/shared/lib/schedule-policy";
 
 export const WEEKDAYS = [
   { key: "all", name: "Semua", dayIndex: -1 },
@@ -60,6 +64,7 @@ export interface WeeklyMangaItem {
   releaseDay?: number;
   inferredDay: number;
   effectiveDay: number;
+  publicationStatus?: ReturnType<typeof normalizePublicationStatus>;
 }
 
 export interface UpdateCardProps {
@@ -124,6 +129,11 @@ export function UpdateCard({ item, historyItem, onScheduleChange }: UpdateCardPr
                 Baru
               </span>
             )}
+            {item.publicationStatus === "hiatus" && (
+              <span className="text-[9px] px-1.5 py-0.5 rounded-[6px] bg-status-warning-bg text-status-warning-fg font-bold uppercase tracking-wider">
+                Hiatus
+              </span>
+            )}
             <MangaCardMeta className="text-text-muted truncate">
               {item.latestChapterTitle || (item.latestChapterNumber ? `Ch. ${item.latestChapterNumber}` : "Siap dibaca")}
             </MangaCardMeta>
@@ -153,18 +163,13 @@ export function UpdateCard({ item, historyItem, onScheduleChange }: UpdateCardPr
 
       <Link
         href={readerHref}
-        className={cn(
-          "min-h-11 px-2.5 sm:px-3 rounded-sm font-semibold text-xs shadow-xs shrink-0 inline-flex items-center gap-1.5 motion-safe:transition-[transform,background-color,border-color] motion-safe:active:scale-95 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-          hasHistory
-            ? "bg-accent text-accent-on hover:bg-accent-hover"
-            : "bg-surface-base border border-border-subtle hover:border-accent/40 hover:bg-surface-hover text-text-primary"
-        )}
+        className="min-h-11 px-2.5 sm:px-3 rounded-sm bg-accent text-accent-on hover:bg-accent-hover font-semibold text-xs shadow-xs shrink-0 inline-flex items-center gap-1.5 motion-safe:transition-[transform,background-color,border-color] motion-safe:active:scale-95 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         aria-label={`${hasHistory ? "Lanjut" : "Mulai"} baca ${item.mangaTitle}`}
       >
         {hasHistory ? (
           <Play size={13} weight="fill" />
         ) : (
-          <BookOpen size={14} weight="bold" className="text-text-muted group-hover:text-accent" />
+          <BookOpen size={14} weight="bold" />
         )}
         <span>{hasHistory ? "Lanjut" : "Baca"}</span>
       </Link>
@@ -241,7 +246,7 @@ function ErrorBanner({
                   {item.mangaTitle || item.mangaId}
                 </p>
                 <p className="text-[10px] text-text-muted truncate">
-                  {item.sourceId} · {item.error}
+                  {item.sourceName || "Sumber"} · Pemeriksaan terakhir gagal.
                 </p>
               </div>
             </div>
@@ -284,7 +289,10 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
   // Combine library bookmarks with update store data
   const allItems = useMemo<WeeklyMangaItem[]>(() => {
     const validLibEntries = Object.values(libraryItems).filter(
-      (lib) => Boolean(lib && lib.sourceId && lib.mangaId)
+      (lib) =>
+        Boolean(lib && lib.sourceId && lib.mangaId) &&
+        lib.isBookmarked !== false &&
+        isWeeklyScheduleEligibleStatus(lib.status)
     );
 
     if (validLibEntries.length > 0) {
@@ -323,6 +331,7 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
           releaseDay: lib.releaseDay,
           inferredDay,
           effectiveDay,
+          publicationStatus: normalizePublicationStatus(lib.status),
         };
       });
 
@@ -492,7 +501,7 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
       ) : (
         <>
           {/* Weekly day rail */}
-          <div className="space-y-2.5">
+          <div className="sticky top-[var(--secondary-sticky-top)] z-20 -mx-1 space-y-2.5 border-b border-border-subtle/60 bg-surface-base/92 px-1 py-2 backdrop-blur-md">
             <div className="overflow-x-auto [scrollbar-width:none] pb-1">
               <SegmentedControl
                 options={quickSegmentOptions}

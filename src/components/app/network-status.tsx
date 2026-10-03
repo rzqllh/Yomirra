@@ -58,12 +58,12 @@ export function NetworkStatus() {
             {isOnline ? (
               <>
                 <WifiHigh size={14} weight="bold" />
-                <span>Kembali online</span>
+                <span>Koneksi kembali tersedia</span>
               </>
             ) : (
               <>
                 <WifiSlash size={14} weight="bold" />
-                <span>Kamu sedang offline</span>
+                <span>Tidak ada koneksi internet</span>
               </>
             )}
           </div>

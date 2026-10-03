@@ -3,6 +3,7 @@ import { SourceHealthStore } from "../health-store";
 import type { SourceHealthSnapshot } from "../types";
 
 vi.mock("@/server/lib/cache/redis", () => ({
+  isRedisConfigured: false,
   redis: null,
 }));
 

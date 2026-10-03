@@ -3,6 +3,7 @@ import { withCache, CACHE_TTL } from '../redis-cache';
 
 // Mock redis client
 vi.mock("../redis", () => ({
+  isRedisConfigured: true,
   redis: {
     get: vi.fn(),
     setex: vi.fn(),

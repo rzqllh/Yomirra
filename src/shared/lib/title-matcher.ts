@@ -69,6 +69,25 @@ export function normalizeTitle(raw?: string | null): string {
     .trim();
 }
 
+/**
+ * Strict identity check for metadata enrichment.
+ *
+ * Fuzzy similarity is intentionally not accepted here: enrichment must never
+ * attach metadata from a neighboring title just because the names look close.
+ */
+export function isExactNormalizedTitleMatch(
+  queryTitle: string,
+  candidateTitle: string,
+  alternativeTitles: string[] = []
+): boolean {
+  const normalizedQuery = normalizeTitle(queryTitle);
+  if (!normalizedQuery) return false;
+
+  return [candidateTitle, ...alternativeTitles].some(
+    (title) => normalizeTitle(title) === normalizedQuery
+  );
+}
+
 // Levenshtein distance (for fuzzy matching)
 
 

@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { redis } from "@/server/lib/cache/redis";
+import { isRedisConfigured, redis } from "@/server/lib/cache/redis";
 import { logger } from "@/shared/logger";
 import type { MangaItem } from "@/shared/sources/source-types";
 import type { SearchCatalogCandidate } from "@/shared/lib/search-intelligence";
@@ -60,7 +60,7 @@ export async function upsertSearchCatalogRecords(
   candidates: SearchCatalogCandidate[],
   embeddings: Map<string, { values: number[]; textHash: string }> = new Map()
 ): Promise<void> {
-  if (candidates.length === 0) return;
+  if (candidates.length === 0 || !isRedisConfigured) return;
 
   try {
     const unique = Array.from(
@@ -121,6 +121,7 @@ export async function upsertSearchCatalogRecords(
 export async function getSearchCatalogRecord(
   canonicalKey: string
 ): Promise<StoredSearchCatalogRecord | null> {
+  if (!isRedisConfigured) return null;
   try {
     const raw = await redis.get(recordKey(canonicalKey));
     return raw ? (JSON.parse(raw) as StoredSearchCatalogRecord) : null;
@@ -132,6 +133,7 @@ export async function getSearchCatalogRecord(
 export async function getRecentSearchCatalogRecords(
   limit = 250
 ): Promise<StoredSearchCatalogRecord[]> {
+  if (!isRedisConfigured) return [];
   try {
     const ids = await redis.zrevrange(INDEX_KEY, 0, Math.max(0, Math.min(limit, MAX_RECORDS) - 1));
     if (ids.length === 0) return [];

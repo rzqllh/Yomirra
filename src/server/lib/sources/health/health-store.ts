@@ -1,4 +1,4 @@
-import { redis } from "@/server/lib/cache/redis";
+import { isRedisConfigured, redis } from "@/server/lib/cache/redis";
 import { logger } from "@/shared/logger";
 import type { SourceHealthSnapshot, SourceHealthTransition, SourceHealthStatus } from "./types";
 
@@ -53,7 +53,7 @@ export class SourceHealthStore {
     this.memorySnapshots.set(sourceId, updatedSnapshot);
 
     // Save in Redis if available
-    if (redis) {
+    if (isRedisConfigured) {
       try {
         await redis.setex(
           `${SNAPSHOT_KEY_PREFIX}${sourceId}`,
@@ -106,7 +106,7 @@ export class SourceHealthStore {
   async getSnapshot(sourceId: string): Promise<SourceHealthSnapshot | null> {
     const normalizedId = sourceId.toLowerCase().trim();
 
-    if (redis) {
+    if (isRedisConfigured) {
       try {
         const raw = await redis.get(`${SNAPSHOT_KEY_PREFIX}${normalizedId}`);
         if (raw) {
@@ -126,7 +126,7 @@ export class SourceHealthStore {
       result[id] = snap;
     }
 
-    if (knownSourceIds && redis) {
+    if (knownSourceIds && isRedisConfigured) {
       for (const id of knownSourceIds) {
         const normalized = id.toLowerCase().trim();
         if (!result[normalized]) {

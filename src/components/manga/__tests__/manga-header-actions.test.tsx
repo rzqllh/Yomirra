@@ -34,8 +34,16 @@ describe("MangaHeaderActions", () => {
       />
     );
 
-    expect(screen.getByRole("button", { name: /Bagikan/i })).toBeDefined();
-    expect(screen.getByRole("button", { name: /Notifikasi pembaruan/i })).toBeDefined();
+    const shareButton = screen.getByRole("button", { name: /Bagikan/i });
+    const bellButton = screen.getByRole("button", { name: /Notifikasi pembaruan/i });
+    expect(shareButton).toBeDefined();
+    expect(bellButton).toBeDefined();
+    expect(shareButton.className).toContain("bg-transparent");
+    expect(shareButton.className).toContain("shadow-none");
+    expect(shareButton.className).not.toContain("liquid-glass");
+    expect(bellButton.className).toContain("bg-transparent");
+    expect(bellButton.className).toContain("shadow-none");
+    expect(bellButton.className).not.toContain("liquid-glass");
     expect(screen.queryByRole("button", { name: /Salin link/i })).toBeNull();
   });
 

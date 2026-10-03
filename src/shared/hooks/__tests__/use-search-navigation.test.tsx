@@ -8,11 +8,12 @@ import { useSearchFilterStore } from "@/shared/store/search-filter-store";
 
 const navigation = vi.hoisted(() => ({
   params: "q=solo+leveling&keep=1",
-  router: { push: vi.fn() },
+  router: { push: vi.fn(), replace: vi.fn() },
 }));
 
 vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(navigation.params),
+  usePathname: () => "/search",
   useRouter: () => navigation.router,
 }));
 vi.mock("@/shared/api-client", () => ({

@@ -35,7 +35,7 @@ export function EditorialSpotlight({
 }: EditorialSpotlightProps) {
   const reducedMotion = useReducedMotion();
   const href = getMangaDetailHref(sourceId, manga.id, "/");
-  const hasDescription = Boolean(manga.description?.trim());
+  const description = manga.description?.trim() || "Sinopsis belum tersedia";
   const metadata = [manga.format, manga.latestChapter, sourceName].filter(Boolean);
 
   return (
@@ -90,8 +90,8 @@ export function EditorialSpotlight({
           </div>
         </Link>
 
-        <div className="relative flex min-w-0 flex-col gap-2.5 p-3.5 sm:gap-3 sm:p-5 lg:p-6">
-          <div className="min-w-0">
+        <div className="relative flex min-w-0 flex-col p-3.5 sm:p-5 lg:p-6">
+          <div className="flex min-h-0 flex-1 flex-col">
             <p className="mb-1.5 text-[10px] font-extrabold uppercase tracking-[0.14em] text-accent sm:text-[11px]">
               SOROTAN TERBARU
             </p>
@@ -100,30 +100,32 @@ export function EditorialSpotlight({
               href={href}
               className="group rounded focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
-              <h2 className="line-clamp-2 text-xl font-bold leading-[1.15] tracking-tight text-text-primary transition-colors group-hover:text-accent sm:text-2xl lg:text-[32px]">
+              <h2 className="min-h-[46px] line-clamp-2 text-xl font-bold leading-[1.15] tracking-tight text-text-primary transition-colors group-hover:text-accent sm:min-h-[58px] sm:text-2xl lg:min-h-[74px] lg:text-[32px]">
                 {manga.title}
               </h2>
             </Link>
 
-            {manga.description && (
-              <p className="mt-2 line-clamp-2 text-[11.5px] leading-relaxed text-text-secondary sm:line-clamp-3 sm:text-sm">
-                {manga.description}
-              </p>
-            )}
+            <p
+              className="mt-2 min-h-[34px] line-clamp-2 text-[11.5px] leading-relaxed text-text-secondary sm:min-h-[60px] sm:line-clamp-3 sm:text-sm"
+              data-spotlight-slot="synopsis"
+            >
+              {description}
+            </p>
 
-            {metadata.length > 0 && (
-              <p className="mt-2 line-clamp-1 text-[10.5px] font-semibold text-text-muted sm:text-xs">
-                {metadata.map((item, index) => (
-                  <React.Fragment key={`${item}-${index}`}>
-                    {index > 0 && <span aria-hidden="true"> · </span>}
-                    <span>{item}</span>
-                  </React.Fragment>
-                ))}
-              </p>
-            )}
+            <p
+              className="mt-2 min-h-4 line-clamp-1 text-[10.5px] font-semibold text-text-muted sm:text-xs"
+              data-spotlight-slot="metadata"
+            >
+              {metadata.map((item, index) => (
+                <React.Fragment key={`${item}-${index}`}>
+                  {index > 0 && <span aria-hidden="true"> · </span>}
+                  <span>{item}</span>
+                </React.Fragment>
+              ))}
+            </p>
           </div>
 
-          <div className={cn("flex min-w-0 items-end justify-between gap-2 border-t border-border-subtle/60 pt-2.5", hasDescription ? "mt-auto" : "mt-5 sm:mt-6")}>
+          <div className="mt-auto flex min-w-0 items-end justify-between gap-2 border-t border-border-subtle/60 pt-2.5">
             <Link
               href={href}
               className="inline-flex min-h-11 items-center gap-1.5 rounded-[10px] px-2 text-xs font-bold text-accent transition-colors hover:bg-accent/5 focus-visible:outline-2 focus-visible:outline-accent sm:text-sm"

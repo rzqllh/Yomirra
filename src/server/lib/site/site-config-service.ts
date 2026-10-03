@@ -1,4 +1,4 @@
-import { redis } from "@/server/lib/cache/redis";
+import { isRedisConfigured, redis } from "@/server/lib/cache/redis";
 import { logger } from "@/shared/logger";
 import { DEFAULT_SITE_CONFIG, type SiteConfig } from "@/shared/types/site-config";
 
@@ -7,7 +7,7 @@ const SITE_CONFIG_KEY = "yomirra:site:config";
 let inMemoryConfig: SiteConfig = { ...DEFAULT_SITE_CONFIG };
 
 export async function getSiteConfig(): Promise<SiteConfig> {
-  if (redis) {
+  if (isRedisConfigured) {
     try {
       const raw = await redis.get(SITE_CONFIG_KEY);
       if (raw) {
@@ -64,7 +64,7 @@ export async function updateSiteConfig(partial: Partial<SiteConfig>): Promise<Si
 
   inMemoryConfig = next;
 
-  if (redis) {
+  if (isRedisConfigured) {
     try {
       await redis.set(SITE_CONFIG_KEY, JSON.stringify(next));
     } catch (err) {

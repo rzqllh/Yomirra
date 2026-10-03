@@ -1,4 +1,4 @@
-import { redis } from "@/server/lib/cache/redis";
+import { isRedisConfigured, redis } from "@/server/lib/cache/redis";
 import { logger } from "@/shared/logger";
 
 export type DomainRole = "frontend" | "api" | "cdn";
@@ -199,7 +199,7 @@ export class DomainResolver {
     const key = getCacheKey(normalizedId, role);
     memoryCache.set(key, record);
 
-    if (redis) {
+    if (isRedisConfigured) {
       try {
         await redis.setex(key, CACHE_TTL_SECONDS, JSON.stringify(record));
       } catch (err) {
@@ -253,7 +253,7 @@ export class DomainResolver {
   async getCachedDomain(sourceId: string, role: DomainRole = "frontend"): Promise<DomainRecord | null> {
     const key = getCacheKey(sourceId.toLowerCase().trim(), role);
 
-    if (redis) {
+    if (isRedisConfigured) {
       try {
         const raw = await redis.get(key);
         if (raw) {
@@ -273,7 +273,7 @@ export class DomainResolver {
       for (const role of ["frontend", "api", "cdn"] as DomainRole[]) {
         const key = getCacheKey(normalizedId, role);
         memoryCache.delete(key);
-        if (redis) await redis.del(key).catch(() => {});
+        if (isRedisConfigured) await redis.del(key).catch(() => {});
       }
     } else {
       memoryCache.clear();

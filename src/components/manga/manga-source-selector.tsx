@@ -19,6 +19,12 @@ interface MangaSourceSelectorProps {
   isTemporaryFallback?: boolean;
 }
 
+function getMatchLabel(confidence?: string): string {
+  if (confidence === "CONFIRMED") return "Terverifikasi";
+  if (confidence === "HIGH_CONFIDENCE") return "Cocok";
+  return "Terhubung";
+}
+
 export function MangaSourceSelector({
   sourceId,
   mangaId,
@@ -37,7 +43,7 @@ export function MangaSourceSelector({
   const clearPerTitleSourcePreference = useSettingsStore((state) => state.clearPerTitleSourcePreference);
   const disabledSources = useSourcePreferencesStore((state) => state.disabledSources);
 
-  const currentSourceName = getSourceMetadata(sourceId)?.name || sourceId;
+  const currentSourceName = getSourceMetadata(sourceId)?.name || "Sumber";
   const isCurrentPreferred = perTitlePref ? perTitlePref === sourceId : false;
 
   const linkedSources = (libraryItem?.linkedSources || []).filter((linked) => {
@@ -58,7 +64,7 @@ export function MangaSourceSelector({
       toast.success("Pilihan sumber direset ke pengaturan umum");
     } else {
       setPerTitleSourcePreference(titleKey, targetSourceId);
-      const targetName = getSourceMetadata(targetSourceId)?.name || targetSourceId;
+      const targetName = getSourceMetadata(targetSourceId)?.name || "Sumber";
       toast.success(`${targetName} jadi sumber utama untuk ${title}`);
     }
   };
@@ -114,7 +120,7 @@ export function MangaSourceSelector({
                   </span>
                 </span>
                 <span className="text-[11px] text-text-muted mt-0.5">
-                  ID: {mangaId}
+                  Digunakan untuk membaca judul ini
                 </span>
               </div>
 
@@ -137,7 +143,7 @@ export function MangaSourceSelector({
                 </span>
 
                 {linkedSources.map((linked) => {
-                  const linkedName = getSourceMetadata(linked.sourceId)?.name || linked.sourceId;
+                  const linkedName = getSourceMetadata(linked.sourceId)?.name || "Sumber lain";
                   const isPref = perTitlePref === linked.sourceId;
 
                   return (
@@ -149,7 +155,7 @@ export function MangaSourceSelector({
                         <span className="text-sm font-bold text-text-primary flex items-center gap-1.5">
                           {linkedName}
                           <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-surface-raised text-text-muted font-medium border border-border-subtle">
-                            {linked.matchConfidence}
+                            {getMatchLabel(linked.matchConfidence)}
                           </span>
                         </span>
                         <Link

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/server/lib/cache/redis", () => ({
+  isRedisConfigured: true,
   redis: {
     incr: vi.fn(),
     ttl: vi.fn(),

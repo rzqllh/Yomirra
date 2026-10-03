@@ -34,7 +34,7 @@ describe("MangaDetailErrorState", () => {
       />
     );
 
-    expect(screen.getAllByText("Gagal Terhubung ke Komikindo").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Belum bisa terhubung ke Komikindo").length).toBeGreaterThanOrEqual(1);
     const retryBtn = screen.getByRole("button", { name: /Coba Lagi/i });
     expect(retryBtn).toBeDefined();
 
@@ -55,7 +55,7 @@ describe("MangaDetailErrorState", () => {
       />
     );
 
-    expect(screen.getAllByText("Manga Tidak Ditemukan").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText("Komik tidak ditemukan").length).toBeGreaterThanOrEqual(1);
     const searchLink = screen.getByRole("link", { name: /Cari di Sumber Lain/i });
     expect(searchLink).toBeDefined();
     expect(searchLink.getAttribute("href")).toContain("/search?q=solo%20leveling");
@@ -73,7 +73,9 @@ describe("MangaDetailErrorState", () => {
 
     expect(screen.queryByText(/super-secret/i)).toBeNull();
     expect(screen.queryByText(/ETIMEDOUT/i)).toBeNull();
-    expect(screen.getByText(/Gagal terhubung ke server Komikindo/i)).toBeDefined();
+    expect(screen.getByText(/Komikindo sedang tidak dapat digunakan/i)).toBeDefined();
+    expect(screen.queryByText(/server/i)).toBeNull();
+    expect(screen.queryByText(/solo-leveling/i)).toBeNull();
   });
 
   it("renders disabled state with link to sources", () => {

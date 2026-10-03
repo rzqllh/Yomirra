@@ -79,7 +79,9 @@ export const sourceRegistry: SourceMetadata[] = [
       lastChecked: "Baru saja",
       message: "Server merespons dengan baik."
     },
-    isNsfw: true,
+    // Mixed catalog: content-level filtering handles restricted titles.
+    // Do not classify the whole source as restricted.
+    isNsfw: false,
     capabilities: {
       popular: true,
       latest: true,

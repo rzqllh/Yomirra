@@ -105,7 +105,7 @@ export function ReaderChapterDrawer({
       <div ref={containerRef} className="h-full overflow-y-auto pb-[var(--safe-bottom)] custom-scrollbar">
         {!chapters ? (
           <div className="flex items-center justify-center h-full text-text-muted text-sm font-medium py-10">
-            Loading chapters...
+            Memuat daftar chapter…
           </div>
         ) : (
           <div className="p-4 sm:p-5">

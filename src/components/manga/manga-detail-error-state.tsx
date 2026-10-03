@@ -21,31 +21,31 @@ export function MangaDetailErrorState({
   type,
 }: MangaDetailErrorStateProps) {
   const router = useRouter();
-  const [isRetrying, setIsRetrying] = React.useState(false);
+  const [isRetrying, startRetry] = React.useTransition();
 
   const sourceMeta = getSourceMetadata(sourceId);
-  const sourceName = sourceMeta?.name ?? sourceId;
+  const sourceName = sourceMeta?.name ?? "sumber ini";
 
   const handleRetry = () => {
-    setIsRetrying(true);
-    router.refresh();
-    setTimeout(() => setIsRetrying(false), 2000);
+    startRetry(() => {
+      router.refresh();
+    });
   };
 
   const isNotFound = type === "not_found";
   const isDisabled = type === "disabled";
 
   const title = isDisabled
-    ? `Sumber "${sourceName}" Dinonaktifkan`
+    ? `Sumber "${sourceName}" dinonaktifkan`
     : isNotFound
-    ? "Manga Tidak Ditemukan"
-    : `Gagal Terhubung ke ${sourceName}`;
+    ? "Komik tidak ditemukan"
+    : `Belum bisa terhubung ke ${sourceName}`;
 
   const description = isDisabled
-    ? "Sumber komik ini sedang dinonaktifkan di daftar sumber. Anda dapat mengaktifkannya kembali untuk membaca komik ini."
+    ? "Sumber ini sedang dinonaktifkan. Aktifkan kembali dari halaman Sumber untuk membaca komik ini."
     : isNotFound
-    ? `Komik dengan ID "${mangaId}" tidak ditemukan atau telah dihapus pada ${sourceName}. Anda dapat mencari judul ini di sumber lain.`
-    : `Gagal terhubung ke server ${sourceName}. Server sumber mungkin sedang mengalami gangguan atau koneksi terputus. Silakan coba lagi.`;
+    ? `Komik ini tidak ditemukan di ${sourceName}. Kamu bisa mencarinya di sumber lain.`
+    : `${sourceName} sedang tidak dapat digunakan. Coba lagi beberapa saat lagi.`;
 
   return (
     <main className="min-h-screen flex flex-col w-full relative pb-24">

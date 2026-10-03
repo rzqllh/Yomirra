@@ -59,4 +59,43 @@ describe("public copy contracts", () => {
     expect(warning).toContain("Penyimpanan di iPhone/iPad");
     expect(warning).not.toContain("50MB");
   });
+
+  it("keeps source selection and download failures free of internal identifiers", () => {
+    const selector = read("src/components/manga/manga-source-selector.tsx");
+    const download = read("src/components/manga/chapter-download-button.tsx");
+
+    expect(selector).toContain("Digunakan untuk membaca judul ini");
+    expect(selector).toContain("Terverifikasi");
+    expect(selector).not.toContain("ID: {mangaId}");
+    expect(selector).not.toContain("{linked.matchConfidence}");
+    expect(download).toContain("Unduhan belum berhasil");
+    expect(download).toContain("Coba lagi beberapa saat.");
+    expect(download).not.toContain("Gagal mengunduh: ${msg}");
+  });
+
+  it("uses reader-safe fallbacks instead of raw route identifiers", () => {
+    const search = read("src/components/search/search-results.tsx");
+    const sourcePage = read("src/app/(web)/sources/[sourceId]/page.tsx");
+    const recovery = read("src/components/manga/dead-source-recovery.tsx");
+    const detailError = read("src/components/manga/manga-detail-error-state.tsx");
+
+    expect(search).not.toContain("source?.name || err.sourceId");
+    expect(sourcePage).toContain('const sourceName = sourceInfo?.name || "Sumber"');
+    expect(recovery).toContain('?? "Komik ini"');
+    expect(detailError).toContain('?? "sumber ini"');
+  });
+
+  it("keeps reader-facing route metadata in Indonesian", () => {
+    const root = read("src/app/(web)/layout.tsx");
+    const library = read("src/app/(web)/library/layout.tsx");
+    const sources = read("src/app/(web)/sources/layout.tsx");
+    const settings = read("src/app/(web)/settings/layout.tsx");
+    const updates = read("src/app/(web)/updates/layout.tsx");
+
+    expect(root).not.toContain("A source-powered reader");
+    expect(library).not.toContain("Browse the manga catalog");
+    expect(sources).not.toContain("Manage manga sources");
+    expect(settings).not.toContain("App settings and preferences");
+    expect(updates).toContain('title: "Jadwal Mingguan - Yomirra"');
+  });
 });

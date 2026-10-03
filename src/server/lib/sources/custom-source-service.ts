@@ -1,5 +1,5 @@
 import * as cheerio from "cheerio";
-import { redis } from "@/server/lib/cache/redis";
+import { isRedisConfigured, redis } from "@/server/lib/cache/redis";
 import { logger } from "@/shared/logger";
 import { safeFetch } from "@/server/lib/security/outbound-policy";
 import { CustomSourceSchema, type CustomSourceDefinition } from "@/shared/sources/custom-source-schema";
@@ -14,7 +14,7 @@ const inMemoryCustomSources = new Map<string, CustomSourceDefinition>();
  * Mengambil semua custom dynamic source dari Redis (dengan fallback ke memory).
  */
 export async function getCustomSources(): Promise<CustomSourceDefinition[]> {
-  if (redis) {
+  if (isRedisConfigured) {
     try {
       const ids = await redis.smembers(CUSTOM_SOURCE_INDEX);
       if (ids.length === 0) {
@@ -50,7 +50,7 @@ export async function getCustomSources(): Promise<CustomSourceDefinition[]> {
  */
 export async function getCustomSourceById(id: string): Promise<CustomSourceDefinition | null> {
   const normalizedId = id.toLowerCase().trim();
-  if (redis) {
+  if (isRedisConfigured) {
     try {
       const raw = await redis.get(`${CUSTOM_SOURCE_PREFIX}${normalizedId}`);
       if (raw) {
@@ -76,7 +76,7 @@ export async function saveCustomSource(source: CustomSourceDefinition): Promise<
 
   inMemoryCustomSources.set(validated.id, validated);
 
-  if (redis) {
+  if (isRedisConfigured) {
     try {
       await redis.set(`${CUSTOM_SOURCE_PREFIX}${validated.id}`, JSON.stringify(validated));
       await redis.sadd(CUSTOM_SOURCE_INDEX, validated.id);
@@ -95,7 +95,7 @@ export async function deleteCustomSource(id: string): Promise<boolean> {
   const normalizedId = id.toLowerCase().trim();
   inMemoryCustomSources.delete(normalizedId);
 
-  if (redis) {
+  if (isRedisConfigured) {
     try {
       await redis.del(`${CUSTOM_SOURCE_PREFIX}${normalizedId}`);
       await redis.srem(CUSTOM_SOURCE_INDEX, normalizedId);

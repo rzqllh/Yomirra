@@ -14,6 +14,7 @@ import { useLibraryFilterStore } from "@/shared/store/library-filter-store";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useCollectionStore } from "@/shared/store/collection-store";
 import type { MangaKey } from "@/shared/types/collection";
+import { useUrlPagination } from "@/shared/hooks/use-url-pagination";
 
 const FORMATS = [
   { id: "manga", name: "Manga" },
@@ -22,8 +23,8 @@ const FORMATS = [
 ];
 
 const STATUSES = [
-  { id: "ongoing", name: "Ongoing" },
-  { id: "completed", name: "Completed" },
+  { id: "ongoing", name: "Berjalan" },
+  { id: "completed", name: "Selesai" },
   { id: "hiatus", name: "Hiatus" },
 ];
 
@@ -82,7 +83,7 @@ export function useLibraryCatalog() {
   const [searchInput, setSearchInput] = React.useState(storeQuery);
   const [query, setQuery] = React.useState(storeQuery);
   const [sort, setSort] = React.useState<string>(initialSort);
-  const [page, setPage] = React.useState(1);
+  const [page, setPage] = useUrlPagination();
 
   const genreSignature = genreParams.join("|");
   const previousSourceRef = React.useRef(activeSourceId);
@@ -218,6 +219,7 @@ export function useLibraryCatalog() {
     if (storeSort && storeSort !== sort) {
       setSort(storeSort);
       const params = new URLSearchParams(searchParams.toString());
+      params.delete("page");
       if (storeSort === "all" || storeSort === "popular") {
         params.delete("sort");
       } else {
@@ -307,6 +309,7 @@ export function useLibraryCatalog() {
     setPage(1);
 
     const params = new URLSearchParams(searchParams.toString());
+    params.delete("page");
     if (newSort === "all" || newSort === "popular") {
       params.delete("sort");
     } else {
@@ -321,6 +324,7 @@ export function useLibraryCatalog() {
     setPage(1);
 
     const params = new URLSearchParams(searchParams.toString());
+    params.delete("page");
     params.delete("genre");
     params.delete("sort");
     const suffix = params.toString();
@@ -407,7 +411,10 @@ export function useLibraryCatalog() {
   const listingViewMode = useSettingsStore(state => state.listingViewMode);
   const setListingViewMode = useSettingsStore(state => state.setListingViewMode);
 
+  const previousPageRef = React.useRef(page);
   React.useEffect(() => {
+    if (previousPageRef.current === page) return;
+    previousPageRef.current = page;
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [page]);
 

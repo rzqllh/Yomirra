@@ -38,13 +38,13 @@ export function LeaderboardRow({
 
   const rowGeometry = isHomeDensity
     ? emphasized
-      ? "min-h-[68px] py-1"
+      ? "min-h-[76px] py-1.5"
       : "min-h-[42px] py-0.5"
     : "min-h-[62px] py-1.5 sm:py-2";
 
   const coverGeometry = isHomeDensity
     ? emphasized
-      ? "h-[68px] w-12"
+      ? "h-[64px] w-12"
       : "h-[42px] w-7"
     : "h-[60px] w-10";
 
@@ -107,11 +107,11 @@ export function LeaderboardRow({
             <span suppressHydrationWarning>
               {Number(scoreToDisplay) > 0
                 ? Number(scoreToDisplay).toFixed(1)
-                : "-.-"}
+                : "—"}
             </span>
           </div>
           <MangaCardMeta className="max-w-[110px] truncate text-[10.5px] text-text-muted sm:max-w-[140px] sm:text-[11.5px]">
-            {manga.latestChapter || "Detail"}
+            {manga.latestChapter || "Chapter belum tersedia"}
           </MangaCardMeta>
         </div>
       </div>

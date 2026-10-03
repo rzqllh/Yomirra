@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { domainResolver, SOURCE_DOMAINS } from "../domain-resolver";
 
 vi.mock("@/server/lib/cache/redis", () => ({
+  isRedisConfigured: false,
   redis: null,
 }));
 

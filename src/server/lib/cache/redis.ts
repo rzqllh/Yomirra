@@ -8,6 +8,13 @@ const globalForRedis = globalThis as unknown as {
 
 let hasLoggedConnError = false;
 
+/**
+ * Redis is optional for normal reader flows. env.REDIS_URL keeps a local
+ * development default, but production/preview code must not interpret that
+ * default as a configured remote cache.
+ */
+export const isRedisConfigured = Boolean(process.env.REDIS_URL);
+
 const createRedisClient = () => {
   const client = new Redis(env.REDIS_URL, {
     lazyConnect: true,

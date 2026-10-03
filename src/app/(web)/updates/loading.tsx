@@ -7,10 +7,10 @@ import { CalendarBlank } from "@phosphor-icons/react/dist/ssr";
 export default function Loading() {
   return (
     <YomirraSurface variant="base" className="min-h-screen">
-      <PageContainer className="pb-[calc(var(--bottom-nav-height,80px)+24px)] md:pb-10">
+      <PageContainer hasMobileHeader>
         <PageHeader
-          title="Jadwal Rilis Mingguan"
-          description="Lihat jadwal update komik yang kamu simpan."
+          title="Jadwal Mingguan"
+          description="Lihat perkiraan jadwal chapter baru dari komik yang kamu simpan."
           icon={<CalendarBlank size={24} weight="duotone" />}
           showBack
         />

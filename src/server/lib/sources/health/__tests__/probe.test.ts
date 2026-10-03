@@ -6,6 +6,7 @@ import { sourceHealthStore } from "../health-store";
 import { SourceError } from "../../error";
 
 vi.mock("@/server/lib/cache/redis", () => ({
+  isRedisConfigured: false,
   redis: null,
 }));
 

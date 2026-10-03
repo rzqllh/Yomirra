@@ -1,7 +1,7 @@
 import { getAllSourceMetadata } from "@/shared/sources/source-registry";
 import { sourceHealthStore } from "@/server/lib/sources/health/health-store";
 import * as domainResolverModule from "@/server/lib/sources/domain-resolver";
-import { redis } from "@/server/lib/cache/redis";
+import { isRedisConfigured, redis } from "@/server/lib/cache/redis";
 import { logger } from "@/shared/logger";
 import { sourceManager } from "@/server/lib/sources/source-manager";
 import type { SourceHealthStatus } from "@/server/lib/sources/health/types";
@@ -42,7 +42,7 @@ export interface CoreSourceOverride {
 const CORE_OVERRIDES_KEY = "yomirra:sources:core:overrides";
 
 export async function getCoreSourceOverrides(): Promise<Record<string, CoreSourceOverride>> {
-  if (!redis) return {};
+  if (!isRedisConfigured) return {};
   try {
     const raw = await redis.get(CORE_OVERRIDES_KEY);
     if (!raw) return {};
@@ -69,7 +69,7 @@ export async function saveCoreSourceOverride(
 
   current[normId] = updated;
 
-  if (redis) {
+  if (isRedisConfigured) {
     await redis.set(CORE_OVERRIDES_KEY, JSON.stringify(current));
     // If activeDomain is changed, sync directly to DomainResolver cache in Redis
     if (updated.activeDomain) {
@@ -197,7 +197,7 @@ export async function probeSource(sourceId: string): Promise<ProbeResult> {
 }
 
 export async function flushSourceCache(sourceId?: string): Promise<{ success: boolean; message: string; flushedCount: number; deletedCount: number }> {
-  if (!redis) {
+  if (!isRedisConfigured) {
     return { success: true, message: "Redis unconfigured, in-memory cache implicitly empty", flushedCount: 0, deletedCount: 0 };
   }
 

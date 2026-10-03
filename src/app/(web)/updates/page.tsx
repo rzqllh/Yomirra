@@ -9,7 +9,7 @@ import { YomirraSurface, PageContainer } from "@/components/ui/layout";
 export default function UpdatesPage() {
   return (
     <YomirraSurface variant="base" className="min-h-screen">
-      <PageContainer className="pb-[calc(var(--bottom-nav-height,80px)+24px)] md:pb-10">
+      <PageContainer hasMobileHeader>
         <PageHeader
           title="Jadwal Mingguan"
           description="Lihat perkiraan jadwal chapter baru dari komik yang kamu simpan."
