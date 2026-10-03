@@ -1,4 +1,4 @@
-import { redis } from "./redis";
+import { isRedisConfigured, redis } from "./redis";
 import { logger } from "@/shared/logger";
 
 export const CACHE_TTL = {
@@ -33,7 +33,7 @@ export async function withCache<T>(
 ): Promise<T> {
   let staleEntry: CacheEntry<T> | null = null;
   
-  try {
+  if (isRedisConfigured) try {
     const cached = await redis.get(key);
     if (cached) {
       const parsed = JSON.parse(cached);
@@ -55,7 +55,7 @@ export async function withCache<T>(
   try {
     const data = await fetcher();
     
-    try {
+    if (isRedisConfigured) try {
       if (data) {
         const entry: CacheEntry<T> = {
           data,

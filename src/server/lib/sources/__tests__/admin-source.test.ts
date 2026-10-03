@@ -6,6 +6,7 @@ const mockDel = vi.fn();
 const mockGet = vi.fn();
 const mockSet = vi.fn();
 vi.mock("@/server/lib/cache/redis", () => ({
+  isRedisConfigured: true,
   redis: {
     keys: (...args: any[]) => mockKeys(...args),
     del: (...args: any[]) => mockDel(...args),
