@@ -7,6 +7,7 @@ import {
   deleteCustomSource 
 } from "@/server/lib/sources/custom-source-service";
 import { CustomSourceSchema } from "@/shared/sources/custom-source-schema";
+import { recordAdminAudit } from "@/server/lib/admin/audit-service";
 import { logger } from "@/shared/logger";
 
 export async function GET(req: NextRequest) {
@@ -55,6 +56,20 @@ export async function POST(req: NextRequest) {
     const saved = await saveCustomSource(parsed.data);
     logger.info("Custom source berhasil disimpan", { id: saved.id, name: saved.name });
 
+    await recordAdminAudit({
+      actor: { uid: auth.admin.uid, email: auth.admin.email },
+      action: "custom_source.save",
+      targetType: "custom_source",
+      targetId: saved.id,
+      summary: `Menyimpan custom source '${saved.name}' (${saved.id})`,
+      metadata: {
+        id: saved.id,
+        name: saved.name,
+        baseUrl: saved.baseUrl,
+        type: saved.type,
+      },
+    }).catch(() => null);
+
     return NextResponse.json({
       success: true,
       source: saved,
@@ -92,6 +107,16 @@ export async function DELETE(req: NextRequest) {
     }
 
     const success = await deleteCustomSource(id);
+
+    await recordAdminAudit({
+      actor: { uid: auth.admin.uid, email: auth.admin.email },
+      action: "custom_source.delete",
+      targetType: "custom_source",
+      targetId: id,
+      summary: `Menghapus custom source '${id}'`,
+      metadata: { id, success },
+    }).catch(() => null);
+
     return NextResponse.json({
       success,
       id,

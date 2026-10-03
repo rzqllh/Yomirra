@@ -149,3 +149,20 @@ export const useSettingsStore = create<SettingsState>()(
     }
   )
 );
+
+/**
+ * Precedence: explicit user setting > site default > hardcoded fallback
+ */
+export function resolveEffectiveDataSaver(
+  userExplicitSetting?: boolean | null,
+  siteDefault?: boolean | null,
+  hardcodedFallback: boolean = false
+): boolean {
+  if (typeof userExplicitSetting === "boolean") {
+    return userExplicitSetting;
+  }
+  if (typeof siteDefault === "boolean") {
+    return siteDefault;
+  }
+  return hardcodedFallback;
+}

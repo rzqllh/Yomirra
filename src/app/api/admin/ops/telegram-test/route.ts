@@ -91,6 +91,7 @@ export async function POST(req: NextRequest) {
     const sent = await sendTelegramMessage(text, {
       severity: AlertSeverity.INFO,
       fingerprint: `admin-test-${Date.now()}`,
+      isManualTest: true,
     });
 
     return NextResponse.json({

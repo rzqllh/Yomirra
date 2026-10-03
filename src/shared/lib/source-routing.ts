@@ -40,6 +40,7 @@ export interface ResolveSourceRouteOptions {
   targetChaptersMap?: Record<string, ChapterMeta[]>;
   availableSources?: Array<{ id: string; name?: string; isEnabled?: boolean; status?: string; language?: string }>;
   alternateCandidates?: TitleCandidate[];
+  sourceFallbackAutoSwitch?: boolean;
 }
 
 export type RoutingRuleApplied =
@@ -99,6 +100,7 @@ export function resolveSourceRoute(options: ResolveSourceRouteOptions): SourceRo
     targetChaptersMap = {},
     availableSources = getAllSourceMetadata(),
     alternateCandidates = [],
+    sourceFallbackAutoSwitch = true,
   } = options;
 
   // Determine initial preferred source
@@ -206,6 +208,33 @@ export function resolveSourceRoute(options: ResolveSourceRouteOptions): SourceRo
       selectedSourceId: effectivePreferredSourceId,
       selectedMangaId: defaultMangaId,
       reason: `MANUAL mode: preferred source is ${preferredHealthStatus}; holding source without automatic switch`,
+      ruleApplied: "FALLBACK_MANUAL_HOLD",
+      isTemporary: false,
+      requiresUserConfirmation: true,
+      fallbackResult: fallbackSuggestion,
+      suggestedChapterId: fallbackSuggestion?.suggestedChapterId,
+      suggestedChapterNumber: fallbackSuggestion?.suggestedChapterNumber,
+    };
+  }
+
+  // Feature Flag: If sourceFallbackAutoSwitch is disabled by site config, do not auto-switch
+  if (sourceFallbackAutoSwitch === false) {
+    let fallbackSuggestion: SourceFallbackResult | undefined;
+    if (savedTitle) {
+      fallbackSuggestion = resolveSourceFallback({
+        savedTitle,
+        failedSourceId: effectivePreferredSourceId,
+        health: preferredHealth,
+        targetChaptersMap,
+        availableSources,
+        alternateCandidates,
+      });
+    }
+
+    return {
+      selectedSourceId: effectivePreferredSourceId,
+      selectedMangaId: defaultMangaId,
+      reason: `sourceFallbackAutoSwitch is disabled; holding source without automatic switch`,
       ruleApplied: "FALLBACK_MANUAL_HOLD",
       isTemporary: false,
       requiresUserConfirmation: true,

@@ -18,6 +18,7 @@ export interface TelegramMessageOptions {
   event?: string;
   stage?: string;
   fingerprint?: string;
+  isManualTest?: boolean;
 }
 
 const FAST_ESCALATION_EVENTS = new Set([
@@ -125,6 +126,22 @@ export async function sendTelegramMessage(
       fingerprint: options.fingerprint,
     });
     return false;
+  }
+
+  // Feature Flag: If automatic alerts are disabled, suppress non-manual alerts
+  if (!options.isManualTest) {
+    try {
+      const { getSiteConfig } = await import("@/server/lib/site/site-config-service");
+      const siteConfig = await getSiteConfig().catch(() => null);
+      if (siteConfig?.features?.telegramAlertsEnabled === false) {
+        logger.info("Automatic Telegram alerts disabled by site config feature flag. Skipping alert.", {
+          fingerprint: options.fingerprint,
+        });
+        return false;
+      }
+    } catch {
+      // Fail-open: continue sending if config read fails
+    }
   }
 
   const now = new Date();

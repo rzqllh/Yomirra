@@ -258,26 +258,73 @@ export function SiteTab({ initialConfig, onRefresh, getToken }: SiteTabProps) {
             </div>
           </OpsCard>
 
-          <OpsCard className="overflow-hidden opacity-75">
+          <OpsCard className="overflow-hidden">
             <div className="border-b border-zinc-800/80 px-4 py-4 sm:px-5">
               <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2"><SlidersHorizontal className="h-4 w-4 text-zinc-600" /><h3 className="text-sm font-medium text-zinc-400">Feature availability</h3></div>
-                <StatusPill tone="neutral">Future</StatusPill>
+                <div className="flex items-center gap-2">
+                  <SlidersHorizontal className="h-4 w-4 text-emerald-400" />
+                  <h3 className="text-sm font-medium text-zinc-200">Feature Flags</h3>
+                </div>
+                <StatusPill tone="success" dot>Live</StatusPill>
               </div>
-              <p className="mt-1 text-[11px] leading-5 text-zinc-700">Kontrol berikut belum terhubung ke runtime dan tidak dapat diubah dari portal.</p>
+              <p className="mt-1 text-[11px] leading-5 text-zinc-500">
+                Kontrol runtime feature flags sistem yang terhubung langsung ke service boundary.
+              </p>
             </div>
             <div className="divide-y divide-zinc-800/70">
               {[
-                ["Semantic Search", "Gemini/semantic understanding"],
-                ["Auto Source Fallback", "Fallback source ketika upstream gagal"],
-                ["Telegram Ops Alerts", "Alert gangguan otomatis"],
-                ["Data Saver Default", "Default kompresi untuk reader"],
-              ].map(([label, description]) => (
-                <div key={label} className="flex items-center justify-between gap-3 px-4 py-3 sm:px-5">
-                  <div><p className="text-xs text-zinc-500">{label}</p><p className="mt-0.5 text-[10px] text-zinc-700">{description}</p></div>
-                  <span className="h-5 w-9 rounded-full border border-zinc-800 bg-zinc-900" />
+                {
+                  key: "semanticSearchEnabled" as const,
+                  label: "Semantic Search",
+                  description: "Gemini vector similarity untuk query natural",
+                },
+                {
+                  key: "sourceFallbackAutoSwitch" as const,
+                  label: "Auto Source Fallback",
+                  description: "Fallback source otomatis ketika upstream gagal",
+                },
+                {
+                  key: "telegramAlertsEnabled" as const,
+                  label: "Telegram Ops Alerts",
+                  description: "Alert otomatis ke Telegram ops channel",
+                },
+                {
+                  key: "dataSaverDefault" as const,
+                  label: "Data Saver Default",
+                  description: "Default kompresi gambar saat user belum memilih",
+                },
+              ].map(({ key, label, description }) => (
+                <div key={key} className="flex items-center justify-between gap-3 px-4 py-3 sm:px-5">
+                  <div>
+                    <p className="text-xs font-medium text-zinc-300">{label}</p>
+                    <p className="mt-0.5 text-[10px] text-zinc-500">{description}</p>
+                  </div>
+                  <Switch
+                    label={label}
+                    checked={Boolean(config.features[key])}
+                    onChange={(checked) =>
+                      setConfig({
+                        ...config,
+                        features: {
+                          ...config.features,
+                          [key]: checked,
+                        },
+                      })
+                    }
+                  />
                 </div>
               ))}
+            </div>
+            <div className="flex justify-end border-t border-zinc-800/80 p-4 sm:px-5">
+              <OpsButton
+                type="button"
+                variant="primary"
+                onClick={() => void handleSave({ features: config.features })}
+                disabled={saving}
+              >
+                {saving ? <CircleNotch className="h-4 w-4 animate-spin" /> : <FloppyDisk className="h-4 w-4" />}
+                Simpan feature flags
+              </OpsButton>
             </div>
           </OpsCard>
         </div>

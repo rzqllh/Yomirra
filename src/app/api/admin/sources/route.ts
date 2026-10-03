@@ -6,6 +6,7 @@ import {
   saveCoreSourceOverride,
   type CoreSourceOverride 
 } from "@/server/lib/sources/admin-source-service";
+import { recordAdminAudit } from "@/server/lib/admin/audit-service";
 import { logger } from "@/shared/logger";
 
 export const dynamic = "force-dynamic";
@@ -63,6 +64,19 @@ export async function PATCH(req: NextRequest) {
     });
 
     logger.info("Core source override berhasil disimpan ke Redis", { saved });
+
+    await recordAdminAudit({
+      actor: { uid: auth.admin.uid, email: auth.admin.email },
+      action: "source.override.update",
+      targetType: "source",
+      targetId: body.sourceId,
+      summary: `Memperbarui konfigurasi runtime untuk '${body.sourceId}'`,
+      metadata: {
+        isEnabled: body.isEnabled,
+        activeDomain: body.activeDomain,
+        mirrors: body.mirrors,
+      },
+    }).catch(() => null);
 
     return NextResponse.json({
       success: true,

@@ -4,6 +4,46 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
 
 ## [Unreleased]
 
+### Runtime Source Merger, Admin Kill-Switch & Health Probe Isolation
+
+- Memperketat validasi `getRuntimeSources`: mencegah custom source menimpa ID built-in, mengabaikan record custom source yang malformed, serta menormalisasi ID secara konsisten.
+- Menegakkan runtime admin kill-switch pada `SourceManager` untuk custom source dan built-in source dengan structured error `SOURCE_DISABLED`.
+- Mempertahankan bypass diagnosa admin via `allowDisabled: true` pada health probe langsung, serta membatasi `probeAllSourcesHealth` hanya pada sumber yang aktif runtime.
+- Menyediakan endpoint dinamis `GET /api/sources` berbasis `getRuntimeSources` dengan perlindungan rate limiting tanpa membocorkan kredensial rahasia server.
+
+### Runtime Feature Flags & Operational Guards
+
+- Menegakkan runtime guard untuk empat flag konfigurasi operasional:
+  - `semanticSearchEnabled`: menonaktifkan call embedding Gemini saat false tanpa merusak pencarian leksikal, parsing tag, dan filter kanonikal.
+  - `sourceFallbackAutoSwitch`: menghentikan peralihan sumber otomatis tanpa konfirmasi pengguna saat false, menahan pembaca pada sumber awal dengan instruksi manual hold.
+  - `telegramAlertsEnabled`: mengontrol pengiriman notifikasi otomatis Telegram tanpa menghalangi tindakan pengujian manual dari Admin portal.
+  - `dataSaverDefault`: menerapkan default preferensi hemat kuota pada level situs tanpa menimpa setting eksplisit pengguna (`user preference > site default > hardcoded fallback`).
+- Mengaktifkan kembali toggle interaktif di tab Pengaturan Situs Admin setelah runtime guards dan pengujian lulus.
+
+### Maintenance Mode Gate
+
+- Menegakkan server-authoritative maintenance gate pada layout publik (`src/components/layout/maintenance-gate.tsx` & `maintenance-view.tsx`).
+- Menampilkan halaman pemeliharaan ramah pengguna berbasis konfigurasi situs dengan pesan khusus dan branding Yomirra.
+- Melewati rute operasional penting seperti `/admin`, webhook, dan health probes secara aman.
+- Menerapkan arsitektur fail-safe: kegagalan membaca konfigurasi dari Redis tidak akan mengunci situs publik ke status maintenance.
+
+### Admin Audit Trail
+
+- Mengimplementasikan audit trail berbasis Redis bounded list (`admin:audit_log`) untuk melacak mutasi administratif berisiko tinggi.
+- Mencatat aksi perubahan konfigurasi situs, aktivasi/deaktivasi sumber, pembuatan/pembaruan custom source, flushing cache sumber, dan penyelesaian laporan ops.
+- Membersihkan payload metadata secara otomatis untuk menjamin tidak ada secret, token otentikasi, atau kredensial yang tersimpan di log audit.
+- Menyediakan API `GET /api/admin/audit` terproteksi untuk memantau riwayat audit operasional.
+
+### AI Text, OCR, Translation & Vision Foundations
+
+- Membangun provider server-only Gemini (`src/server/lib/ai/ai-provider.ts`) dengan validasi timeout, rate limiting, pembatasan ukuran gambar (max 4MB), dan sanitasi input.
+- Menyediakan endpoint API server-authoritative terisolasi:
+  - `POST /api/ai/summary`: metadata ringkasan manga/chapter berbasis AI tanpa mengekspos API key ke browser.
+  - `POST /api/ai/ocr`: ekstraksi teks balon komik berbasis tindakan eksplisit pengguna pada halaman tertentu dengan validasi format buffer gambar.
+  - `POST /api/ai/translate`: alih bahasa teks manga bertarget eksplisit dengan pemisahan kegagalan OCR vs Translation.
+  - `POST /api/ai/vision`: analisis layout dan deteksi panel/speech bubble berbasis AI vision terisolasi.
+- Memastikan kegagalan layanan AI bersifat graceful dan tidak mengganggu alur membaca normal komik.
+
 ### Public Reader UX Stability
 
 - Menyatukan header dan bottom dock mobile pada surface blurred-glass tanpa inset/shadow, memakai sticky/safe-area token bersama, serta mempertahankan native browser Back/Forward.

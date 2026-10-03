@@ -60,6 +60,9 @@ export class SourceManager {
         const { getCustomSourceById } = await import("./custom-source-service");
         const custom = await getCustomSourceById(normalizedId);
         if (custom) {
+          if (!options?.allowDisabled && custom.isEnabled === false) {
+            throw new Error(`SOURCE_DISABLED: Source '${id}' is currently disabled by administrator.`);
+          }
           if (custom.type === "html") {
             const { DynamicHtmlSourceAdapter } = await import("./adapters/dynamic/html-adapter");
             source = new DynamicHtmlSourceAdapter(custom);
@@ -76,7 +79,10 @@ export class SourceManager {
             });
           }
         }
-      } catch {
+      } catch (err) {
+        if (err instanceof Error && err.message.startsWith("SOURCE_DISABLED")) {
+          throw err;
+        }
         // ignore and let next check handle
       }
     }
