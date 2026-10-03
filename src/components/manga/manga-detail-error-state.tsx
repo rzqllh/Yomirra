@@ -21,15 +21,15 @@ export function MangaDetailErrorState({
   type,
 }: MangaDetailErrorStateProps) {
   const router = useRouter();
-  const [isRetrying, setIsRetrying] = React.useState(false);
+  const [isRetrying, startRetry] = React.useTransition();
 
   const sourceMeta = getSourceMetadata(sourceId);
   const sourceName = sourceMeta?.name ?? sourceId;
 
   const handleRetry = () => {
-    setIsRetrying(true);
-    router.refresh();
-    setTimeout(() => setIsRetrying(false), 2000);
+    startRetry(() => {
+      router.refresh();
+    });
   };
 
   const isNotFound = type === "not_found";
