@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { sourceManager } from "@/server/lib/sources/source-manager";
 import { MangaItem } from "@/shared/sources/source-types";
 import { withCache, CACHE_TTL, getSourceCacheKey } from "@/server/lib/cache/redis-cache";
-import { redis } from "@/server/lib/cache/redis";
+import { isRedisConfigured, redis } from "@/server/lib/cache/redis";
 import { createHash } from "crypto";
 
 import { SourceError, type SourceErrorCode } from "@/server/lib/sources/error";
@@ -130,7 +130,7 @@ export async function GET(req: NextRequest) {
 
     // If all results are errors, we might want to delete the cache key so it retries next time
     const allErrors = Object.values(cachedData).every(r => r.error);
-    if (allErrors && redis) {
+    if (allErrors && isRedisConfigured) {
       await redis.del(cacheKey).catch(() => {});
     }
 

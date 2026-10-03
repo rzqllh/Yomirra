@@ -4,6 +4,7 @@ import { GET } from "../route";
 import { sourceManager } from "@/server/lib/sources/source-manager";
 
 vi.mock("@/server/lib/cache/redis", () => ({
+  isRedisConfigured: false,
   redis: null,
 }));
 

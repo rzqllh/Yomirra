@@ -1,4 +1,4 @@
-import { redis } from "@/server/lib/cache/redis";
+import { isRedisConfigured, redis } from "@/server/lib/cache/redis";
 import { logger } from "@/shared/logger";
 import { NextResponse } from "next/server";
 
@@ -79,6 +79,18 @@ export async function checkRateLimit(
     if (process.env.NODE_ENV === "development") {
       return {
         success: true,
+        headers: {
+          "X-RateLimit-Limit": limit.toString(),
+          "X-RateLimit-Remaining": limit.toString(),
+          "X-RateLimit-Reset": window.toString(),
+        },
+      };
+    }
+
+    if (!isRedisConfigured) {
+      return {
+        success: !failClosed,
+        unavailable: true,
         headers: {
           "X-RateLimit-Limit": limit.toString(),
           "X-RateLimit-Remaining": limit.toString(),

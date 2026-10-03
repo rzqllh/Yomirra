@@ -55,6 +55,7 @@ const redisMock = vi.hoisted(() => {
 });
 
 vi.mock("@/server/lib/cache/redis", () => ({
+  isRedisConfigured: true,
   redis: redisMock,
 }));
 
