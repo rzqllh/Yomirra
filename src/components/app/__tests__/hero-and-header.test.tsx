@@ -157,11 +157,15 @@ describe("Header & Hero System (Squircle & Reusable)", () => {
       render(<HeaderActions />);
       const bellButton = screen.getByRole("button", { name: /pembaruan/i });
       expect(bellButton.className).toContain("rounded-2xl");
+      expect(bellButton.className).toContain("bg-transparent");
+      expect(bellButton.className).toContain("shadow-none");
 
       const settingsBtn = screen.getByRole("button", {
         name: /buka menu akun/i,
       });
       expect(settingsBtn.className).toContain("rounded-2xl");
+      expect(settingsBtn.className).toContain("bg-transparent");
+      expect(settingsBtn.className).toContain("shadow-none");
     });
 
     it("opens dropdown menu on settings button click with all required options in squircle geometry", () => {

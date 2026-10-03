@@ -59,7 +59,7 @@ export function HeaderActions({ className }: { className?: string } = {}) {
 
   return (
     <div className={cn("relative flex items-center gap-2 shrink-0", className)} ref={menuRef}>
-      <UpdatesBell className="size-10 rounded-2xl bg-surface-glass backdrop-blur-md border-border-default/40 text-text-primary hover:bg-surface-hover hover:border-border-strong shadow-xs" />
+      <UpdatesBell className="size-10 rounded-2xl border-transparent bg-transparent text-text-primary shadow-none hover:border-transparent hover:bg-surface-hover/60" />
 
       {/* Settings / Profile Trigger Button (Squircle rounded-2xl) */}
       <button
@@ -68,10 +68,10 @@ export function HeaderActions({ className }: { className?: string } = {}) {
         aria-label="Buka menu akun"
         aria-expanded={isMenuOpen}
         className={cn(
-          "relative flex size-10 items-center justify-center rounded-2xl transition-all outline-none select-none active:scale-95 shadow-xs cursor-pointer",
+          "relative flex size-10 items-center justify-center rounded-2xl border border-transparent bg-transparent shadow-none transition-colors outline-none select-none active:scale-95 cursor-pointer",
           isMenuOpen
-            ? "border border-accent/40 bg-accent/15 text-accent shadow-sm"
-            : "bg-surface-glass backdrop-blur-md border border-border-default/40 text-text-primary hover:bg-surface-hover hover:border-border-strong"
+            ? "border-accent/30 bg-accent/15 text-accent"
+            : "text-text-primary hover:bg-surface-hover/60"
         )}
       >
         {user?.photoURL ? (
