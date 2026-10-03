@@ -13,6 +13,7 @@ import { cn } from "@/shared/utils/cn";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { House } from "@phosphor-icons/react/dist/ssr";
+import { YomirraSurface, PageContainer } from "@/components/ui/layout";
 
 export const dynamic = "force-dynamic";
 
@@ -56,13 +57,15 @@ export default function SourceBrowsePage({
   const isHiddenFromHome = isSourceHiddenFromHome(sourceId);
 
   return (
-    <main className="min-h-screen bg-surface-base flex flex-col">
-      <div className="px-4 pt-[calc(var(--mobile-header-height,56px)+var(--safe-top,0px)+16px)] md:px-8 md:pt-8">
-        <PageHeader title={sourceInfo?.name || sourceId} showBack={true} />
-      </div>
-
-      <div className="px-4 pt-2 pb-6 max-w-9xl mx-auto w-full flex-1 flex flex-col">
-        <div className="flex items-center justify-between bg-surface-raised p-4 rounded-xl border border-border-subtle mb-6">
+    <YomirraSurface variant="base" className="w-full">
+      <PageContainer hasMobileHeader>
+        <PageHeader
+          title={sourceInfo?.name || sourceId}
+          subtitle="Jelajahi komik dari sumber ini."
+          showBack
+          hideDesktop
+        />
+        <div className="mb-6 flex items-center justify-between rounded-xl border border-border-subtle bg-surface-raised/70 p-3 sm:p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-accent/10 rounded-lg text-accent">
               <House size={24} weight="duotone" />
@@ -92,7 +95,7 @@ export default function SourceBrowsePage({
         ) : data?.mangas.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center bg-surface-raised rounded-xl border border-border-subtle">
             <Compass size={48} className="mb-4 text-text-muted" weight="duotone" />
-            <p className="text-base font-medium text-text-primary">Tidak ada manga yang ditemukan.</p>
+            <p className="text-base font-medium text-text-primary">Belum ada komik yang ditemukan.</p>
           </div>
         ) : (
           <>
@@ -138,7 +141,7 @@ export default function SourceBrowsePage({
             </div>
           </>
         )}
-      </div>
-    </main>
+      </PageContainer>
+    </YomirraSurface>
   );
 }
