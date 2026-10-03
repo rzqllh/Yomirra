@@ -37,7 +37,13 @@ describe("MangaRecommendations Component", () => {
     });
   });
 
-  const renderComponent = (props: { sourceId: string; currentMangaId: string; genres: string[]; title?: string }) => {
+  const renderComponent = (props: {
+    sourceId: string;
+    currentMangaId: string;
+    genres: string[];
+    title?: string;
+    author?: string;
+  }) => {
     return render(
       <QueryClientProvider client={queryClient}>
         <MangaRecommendations title={props.title || "Current Manga"} {...props} />
@@ -45,13 +51,53 @@ describe("MangaRecommendations Component", () => {
     );
   };
 
-  it("renders 'Komik Serupa' header and recommendations from primary genre search", async () => {
-    (apiClient.search as any).mockResolvedValueOnce({
+  it("renders 'Komik Serupa' header and recommendations from server catalog primary path", async () => {
+    (apiClient.getRelatedTitles as ReturnType<typeof vi.fn>).mockResolvedValueOnce([
+      {
+        canonicalKey: "src::manga-1::Title+One",
+        sourceId: "sourceA",
+        mangaId: "manga-1",
+        title: "Manga One",
+        coverUrl: "/cover1.jpg",
+        genres: ["Action"],
+      },
+      {
+        canonicalKey: "src::manga-2::Title+Two",
+        sourceId: "sourceA",
+        mangaId: "manga-2",
+        title: "Manga Two",
+        coverUrl: "/cover2.jpg",
+        genres: ["Action"],
+      },
+    ]);
+    (apiClient.search as ReturnType<typeof vi.fn>).mockResolvedValue({ results: [] });
+    (apiClient.getPopular as ReturnType<typeof vi.fn>).mockResolvedValue({ mangas: [], hasNextPage: false });
+    (apiClient.getLatest as ReturnType<typeof vi.fn>).mockResolvedValue({ mangas: [], hasNextPage: false });
+    (apiClient.getSources as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+
+    renderComponent({
+      sourceId: "sourceA",
+      currentMangaId: "current-manga",
+      genres: ["Action", "Adventure"],
+    });
+
+    const cards = await screen.findAllByTestId("shelf-card");
+    expect(cards).toHaveLength(2);
+    expect(cards[0].getAttribute("data-manga-id")).toBe("manga-1");
+    expect(cards[1].getAttribute("data-manga-id")).toBe("manga-2");
+  });
+
+  it("falls back to genre search when catalog returns empty", async () => {
+    (apiClient.getRelatedTitles as ReturnType<typeof vi.fn>).mockResolvedValueOnce([]);
+    (apiClient.search as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       results: [
         { id: "manga-1", title: "Manga One", coverUrl: "/cover1.jpg" },
         { id: "manga-2", title: "Manga Two", coverUrl: "/cover2.jpg" },
       ],
     });
+    (apiClient.getPopular as ReturnType<typeof vi.fn>).mockResolvedValue({ mangas: [], hasNextPage: false });
+    (apiClient.getLatest as ReturnType<typeof vi.fn>).mockResolvedValue({ mangas: [], hasNextPage: false });
+    (apiClient.getSources as ReturnType<typeof vi.fn>).mockResolvedValue([]);
 
     renderComponent({
       sourceId: "sourceA",
@@ -65,24 +111,45 @@ describe("MangaRecommendations Component", () => {
     expect(cards[1].getAttribute("data-manga-id")).toBe("manga-2");
   });
 
-  it("does not recommend the current title from another source", async () => {
-    (apiClient.search as any).mockImplementation((sourceId: string) => {
-      if (sourceId === "sourceB") {
-        return Promise.resolve({
-          results: [
-            { id: "same-title", title: "Current Manga", coverUrl: "" },
-            { id: "different-title", title: "Different Manga", coverUrl: "" },
-          ],
-        });
-      }
-      return Promise.resolve({ results: [] });
+  it("falls back to genre search when catalog call throws", async () => {
+    (apiClient.getRelatedTitles as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error("Catalog unavailable"));
+    (apiClient.search as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      results: [{ id: "manga-fallback", title: "Fallback Manga", coverUrl: "" }],
     });
-    (apiClient.getPopular as any).mockResolvedValue({ mangas: [], hasNextPage: false });
-    (apiClient.getLatest as any).mockResolvedValue({ mangas: [], hasNextPage: false });
-    (apiClient.getSources as any).mockResolvedValue([
-      { id: "sourceA", isEnabled: true, isNsfw: false },
-      { id: "sourceB", isEnabled: true, isNsfw: false },
+    (apiClient.getPopular as ReturnType<typeof vi.fn>).mockResolvedValue({ mangas: [], hasNextPage: false });
+    (apiClient.getLatest as ReturnType<typeof vi.fn>).mockResolvedValue({ mangas: [], hasNextPage: false });
+    (apiClient.getSources as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+
+    renderComponent({
+      sourceId: "sourceA",
+      currentMangaId: "current-manga",
+      genres: ["Action"],
+    });
+
+    const cards = await screen.findAllByTestId("shelf-card");
+    expect(cards).toHaveLength(1);
+    expect(cards[0].getAttribute("data-manga-id")).toBe("manga-fallback");
+  });
+
+  it("does not recommend the current title when it comes from catalog", async () => {
+    (apiClient.getRelatedTitles as ReturnType<typeof vi.fn>).mockResolvedValueOnce([
+      {
+        canonicalKey: "src::same-title::Current+Manga",
+        sourceId: "sourceB",
+        mangaId: "same-title",
+        title: "Current Manga",
+      },
+      {
+        canonicalKey: "src::different::Different+Manga",
+        sourceId: "sourceB",
+        mangaId: "different-title",
+        title: "Different Manga",
+      },
     ]);
+    (apiClient.search as ReturnType<typeof vi.fn>).mockResolvedValue({ results: [] });
+    (apiClient.getPopular as ReturnType<typeof vi.fn>).mockResolvedValue({ mangas: [], hasNextPage: false });
+    (apiClient.getLatest as ReturnType<typeof vi.fn>).mockResolvedValue({ mangas: [], hasNextPage: false });
+    (apiClient.getSources as ReturnType<typeof vi.fn>).mockResolvedValue([]);
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -99,15 +166,17 @@ describe("MangaRecommendations Component", () => {
     const cards = await screen.findAllByTestId("shelf-card");
     expect(cards).toHaveLength(1);
     expect(cards[0].getAttribute("data-manga-id")).toBe("different-title");
-    expect(apiClient.getRelatedTitles).not.toHaveBeenCalled();
   });
 
   it("falls back to popular items on the same source when genre search is empty", async () => {
-    (apiClient.search as any).mockResolvedValue({ results: [] });
-    (apiClient.getPopular as any).mockResolvedValueOnce({
+    (apiClient.getRelatedTitles as ReturnType<typeof vi.fn>).mockResolvedValueOnce([]);
+    (apiClient.search as ReturnType<typeof vi.fn>).mockResolvedValue({ results: [] });
+    (apiClient.getPopular as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       mangas: [{ id: "popular-1", title: "Popular One" }],
       hasNextPage: false,
     });
+    (apiClient.getLatest as ReturnType<typeof vi.fn>).mockResolvedValue({ mangas: [], hasNextPage: false });
+    (apiClient.getSources as ReturnType<typeof vi.fn>).mockResolvedValue([]);
 
     renderComponent({
       sourceId: "sourceA",
@@ -120,15 +189,16 @@ describe("MangaRecommendations Component", () => {
     expect(cards[0].getAttribute("data-manga-id")).toBe("popular-1");
   });
 
-  it("falls back to secondary active sources when current source results are under target", async () => {
-    (apiClient.search as any).mockResolvedValue({ results: [] });
-    (apiClient.getPopular as any).mockImplementation((srcId: string) => {
+  it("falls back to secondary active sources when all primary results are under target", async () => {
+    (apiClient.getRelatedTitles as ReturnType<typeof vi.fn>).mockResolvedValueOnce([]);
+    (apiClient.search as ReturnType<typeof vi.fn>).mockResolvedValue({ results: [] });
+    (apiClient.getPopular as ReturnType<typeof vi.fn>).mockImplementation((srcId: string) => {
       if (srcId === "sourceA") return Promise.resolve({ mangas: [{ id: "manga-a", title: "Manga A" }], hasNextPage: false });
       if (srcId === "sourceB") return Promise.resolve({ mangas: [{ id: "manga-b", title: "Manga B" }], hasNextPage: false });
       return Promise.resolve({ mangas: [], hasNextPage: false });
     });
-    (apiClient.getLatest as any).mockResolvedValue({ mangas: [], hasNextPage: false });
-    (apiClient.getSources as any).mockResolvedValue([
+    (apiClient.getLatest as ReturnType<typeof vi.fn>).mockResolvedValue({ mangas: [], hasNextPage: false });
+    (apiClient.getSources as ReturnType<typeof vi.fn>).mockResolvedValue([
       { id: "sourceA", isEnabled: true, isNsfw: false },
       { id: "sourceB", isEnabled: true, isNsfw: false },
     ]);
@@ -144,20 +214,24 @@ describe("MangaRecommendations Component", () => {
     expect(cards.some((c) => c.getAttribute("data-source") === "sourceB")).toBe(true);
   });
 
-  it("excludes currentMangaId and deduplicates titles", async () => {
-    (apiClient.search as any).mockResolvedValueOnce({
+  it("excludes currentMangaId and deduplicates titles from genre fallback", async () => {
+    (apiClient.getRelatedTitles as ReturnType<typeof vi.fn>).mockResolvedValueOnce([]);
+    (apiClient.search as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       results: [
         { id: "current-manga", title: "Current Manga Title" },
         { id: "manga-unique", title: "Unique Manga" },
         { id: "manga-dup", title: "Unique Manga" },
       ],
     });
-    (apiClient.getPopular as any).mockResolvedValue({ mangas: [], hasNextPage: false });
+    (apiClient.getPopular as ReturnType<typeof vi.fn>).mockResolvedValue({ mangas: [], hasNextPage: false });
+    (apiClient.getLatest as ReturnType<typeof vi.fn>).mockResolvedValue({ mangas: [], hasNextPage: false });
+    (apiClient.getSources as ReturnType<typeof vi.fn>).mockResolvedValue([]);
 
     renderComponent({
       sourceId: "sourceA",
       currentMangaId: "current-manga",
       genres: ["Romance"],
+      title: "Current Manga Title",
     });
 
     const cards = await screen.findAllByTestId("shelf-card");

@@ -3,7 +3,7 @@ import { normalizeTitle } from "@/shared/lib/title-matcher";
 
 export interface RecommendationCandidate {
   sourceId: string;
-  manga: MangaItem;
+  manga: MangaItem & { genres?: string[] };
 }
 
 interface LibrarySignal {
@@ -88,6 +88,7 @@ export function rankRecommendationCandidates<T extends RecommendationCandidate>(
   options: {
     currentTitle?: string;
     currentSourceId: string;
+    currentGenres?: string[];
     currentFormat?: string;
     currentStatus?: string;
     profile: RecommendationProfile;
@@ -96,6 +97,9 @@ export function rankRecommendationCandidates<T extends RecommendationCandidate>(
   const currentTitle = normalizeTitle(options.currentTitle);
   const currentFormat = options.currentFormat?.trim().toLowerCase();
   const currentStatus = options.currentStatus?.trim().toLowerCase();
+  const currentGenreSet = new Set(
+    (options.currentGenres ?? []).map((g) => g.toLowerCase().trim()).filter(Boolean)
+  );
 
   return candidates
     .map((candidate, index) => {
@@ -110,13 +114,32 @@ export function rankRecommendationCandidates<T extends RecommendationCandidate>(
         : 0;
 
       let score = 0;
-      if (candidate.sourceId === options.currentSourceId) score += 3;
-      if (currentFormat && format === currentFormat) score += 4;
+
+      // Genre overlap — Jaccard similarity (highest weight: content-centrism)
+      if (currentGenreSet.size > 0) {
+        const candGenres = (candidate.manga.genres ?? []).map((g: string) => g.toLowerCase().trim()).filter(Boolean);
+        if (candGenres.length > 0) {
+          const candSet = new Set<string>(candGenres);
+          let intersection = 0;
+          for (const g of candSet) {
+            if (currentGenreSet.has(g)) intersection++;
+          }
+          const union = new Set([...currentGenreSet, ...candSet]).size;
+          if (union > 0) {
+            score += (intersection / union) * 5;
+          }
+        }
+      }
+
+      if (currentFormat && format === currentFormat) score += 3;
       if (currentStatus && status === currentStatus) score += 0.5;
 
       score += relativeWeight(options.profile.sourceWeights, candidate.sourceId) * 2;
-      score += relativeWeight(options.profile.formatWeights, format) * 2;
+      score += relativeWeight(options.profile.formatWeights, format) * 1.5;
       score += (rating / 10) * 1.5;
+
+      // Mild same-source preference (lower than before to allow cross-source surfacing)
+      if (candidate.sourceId === options.currentSourceId) score += 1;
 
       return { candidate, score, index };
     })
@@ -124,3 +147,4 @@ export function rankRecommendationCandidates<T extends RecommendationCandidate>(
     .sort((a, b) => b.score - a.score || a.index - b.index)
     .map((entry) => entry.candidate);
 }
+

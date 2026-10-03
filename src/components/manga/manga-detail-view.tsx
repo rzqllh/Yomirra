@@ -583,6 +583,7 @@ export function MangaDetailView({
             status={detail.status}
             originalTitle={detail.originalTitle}
             alternativeTitles={detail.alternativeTitles}
+            coverUrl={detail.coverUrl}
           />
         }
       />
