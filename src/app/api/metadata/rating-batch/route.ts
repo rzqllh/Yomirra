@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { withCache } from "@/server/lib/cache/redis-cache";
 import { checkRateLimit } from "@/server/lib/security/rate-limit";
+import { isExactNormalizedTitleMatch } from "@/shared/lib/title-matcher";
 
 const MAX_TITLES = 20;
 const MAX_TITLE_LENGTH = 120;
@@ -55,21 +56,41 @@ export async function POST(req: NextRequest) {
                 if (searchRes.ok) {
                   const searchJson = await searchRes.json();
                   if (searchJson.data && searchJson.data.length > 0) {
-                    const mangaId = searchJson.data[0].id;
-                    
-                    // Fetch statistics for rating
-                    const statRes = await fetch(`https://api.mangadex.org/statistics/manga/${mangaId}`, {
-                      signal: AbortSignal.timeout(5000),
-                    });
-                    
-                    if (statRes.ok) {
-                      const statJson = await statRes.json();
-                      const stats = statJson.statistics[mangaId];
-                      const rating = stats?.rating?.bayesian || stats?.rating?.average;
+                    const candidate = searchJson.data[0];
+                    const mangaId = candidate.id;
+                    const attributes = candidate.attributes ?? {};
+                    const primaryTitles = Object.values(attributes.title ?? {}).filter(
+                      (value): value is string => typeof value === "string"
+                    );
+                    const alternateTitles = Array.isArray(attributes.altTitles)
+                      ? attributes.altTitles.flatMap((entry: Record<string, unknown>) =>
+                          Object.values(entry).filter(
+                            (value): value is string => typeof value === "string"
+                          )
+                        )
+                      : [];
+                    const [candidateTitle = "", ...otherPrimaryTitles] = primaryTitles;
+
+                    if (
+                      isExactNormalizedTitleMatch(normalizedTitle, candidateTitle, [
+                        ...otherPrimaryTitles,
+                        ...alternateTitles,
+                      ])
+                    ) {
+                      // Fetch statistics only after strict title identity validation.
+                      const statRes = await fetch(`https://api.mangadex.org/statistics/manga/${mangaId}`, {
+                        signal: AbortSignal.timeout(5000),
+                      });
                       
-                      if (typeof rating === "number") {
-                        // MangaDex rating is already out of 10
-                        return { score: Number(rating.toFixed(1)) };
+                      if (statRes.ok) {
+                        const statJson = await statRes.json();
+                        const stats = statJson.statistics[mangaId];
+                        const rating = stats?.rating?.bayesian || stats?.rating?.average;
+                        
+                        if (typeof rating === "number") {
+                          // MangaDex rating is already out of 10
+                          return { score: Number(rating.toFixed(1)) };
+                        }
                       }
                     }
                   }
@@ -83,6 +104,13 @@ export async function POST(req: NextRequest) {
                   query ($search: String) {
                     Media (search: $search, type: MANGA) {
                       averageScore
+                      title {
+                        romaji
+                        english
+                        native
+                        userPreferred
+                      }
+                      synonyms
                     }
                   }
                 `;
@@ -100,9 +128,25 @@ export async function POST(req: NextRequest) {
 
                 if (res.ok) {
                   const json = await res.json();
-                  const averageScore = json?.data?.Media?.averageScore;
+                  const media = json?.data?.Media;
+                  const averageScore = media?.averageScore;
+                  const candidateTitles = [
+                    media?.title?.userPreferred,
+                    media?.title?.romaji,
+                    media?.title?.english,
+                    media?.title?.native,
+                    ...(Array.isArray(media?.synonyms) ? media.synonyms : []),
+                  ].filter((value): value is string => typeof value === "string");
+                  const [candidateTitle = "", ...alternateTitles] = candidateTitles;
                   
-                  if (typeof averageScore === "number") {
+                  if (
+                    typeof averageScore === "number" &&
+                    isExactNormalizedTitleMatch(
+                      normalizedTitle,
+                      candidateTitle,
+                      alternateTitles
+                    )
+                  ) {
                     return { score: Number((averageScore / 10).toFixed(1)) };
                   }
                 }
