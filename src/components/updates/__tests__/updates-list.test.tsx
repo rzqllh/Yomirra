@@ -149,5 +149,6 @@ describe('UpdatesList Component', () => {
     expect(scheduleButton.className).toContain('min-h-11');
     expect(scheduleButton.className).not.toContain('min-h-0');
     expect(readLink.className).toContain('min-h-11');
+    expect(readLink.className).toContain('bg-accent');
   });
 });

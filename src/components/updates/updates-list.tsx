@@ -163,18 +163,13 @@ export function UpdateCard({ item, historyItem, onScheduleChange }: UpdateCardPr
 
       <Link
         href={readerHref}
-        className={cn(
-          "min-h-11 px-2.5 sm:px-3 rounded-sm font-semibold text-xs shadow-xs shrink-0 inline-flex items-center gap-1.5 motion-safe:transition-[transform,background-color,border-color] motion-safe:active:scale-95 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-          hasHistory
-            ? "bg-accent text-accent-on hover:bg-accent-hover"
-            : "bg-surface-base border border-border-subtle hover:border-accent/40 hover:bg-surface-hover text-text-primary"
-        )}
+        className="min-h-11 px-2.5 sm:px-3 rounded-sm bg-accent text-accent-on hover:bg-accent-hover font-semibold text-xs shadow-xs shrink-0 inline-flex items-center gap-1.5 motion-safe:transition-[transform,background-color,border-color] motion-safe:active:scale-95 whitespace-nowrap focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         aria-label={`${hasHistory ? "Lanjut" : "Mulai"} baca ${item.mangaTitle}`}
       >
         {hasHistory ? (
           <Play size={13} weight="fill" />
         ) : (
-          <BookOpen size={14} weight="bold" className="text-text-muted group-hover:text-accent" />
+          <BookOpen size={14} weight="bold" />
         )}
         <span>{hasHistory ? "Lanjut" : "Baca"}</span>
       </Link>
