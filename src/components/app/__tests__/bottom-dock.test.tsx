@@ -46,6 +46,14 @@ describe('BottomDock Navigation', () => {
     expect(libraryLink.getAttribute('aria-current')).toBe('page');
   });
 
+  it('keeps inactive destinations on a square 44px visual footprint', () => {
+    render(<BottomDock />);
+
+    const libraryLink = screen.getByRole('link', { name: /library/i });
+    expect(libraryLink.className).toContain('size-11');
+    expect(libraryLink.className).toContain('shrink-0');
+  });
+
   it('does NOT contain link to /settings in bottom dock', () => {
     render(<BottomDock />);
     const settingsLink = screen.queryByRole('link', { name: /pengaturan|settings/i });

@@ -12,6 +12,20 @@ const manga = {
 };
 
 describe("EditorialSpotlight accessibility", () => {
+  it("reserves synopsis and metadata geometry when optional metadata is missing", () => {
+    const { container } = render(
+      <EditorialSpotlight
+        manga={{ id: "manga-b", title: "Manga B", coverUrl: "/cover-b.jpg" }}
+        sourceId="source-b"
+        sourceName="Source B"
+      />
+    );
+
+    expect(screen.getByText("Sinopsis belum tersedia")).toBeTruthy();
+    expect(container.querySelector('[data-spotlight-slot="synopsis"]')).toBeTruthy();
+    expect(container.querySelector('[data-spotlight-slot="metadata"]')).toBeTruthy();
+  });
+
   it("uses truthful semantics, explicit detail targets, display source names, and 44px carousel controls", () => {
     const { container } = render(
       <EditorialSpotlight

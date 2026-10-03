@@ -43,7 +43,7 @@ export function BottomDock({ pendingHref }: { pendingHref?: string | null }) {
     >
       <div className="pointer-events-auto flex w-full max-w-[404px] mx-auto items-center justify-center gap-2">
         {/* Main Dock Capsule */}
-        <div className="yomirra-chrome flex-1 h-[56px] flex items-center justify-between gap-1 rounded-full p-1.5 transition-colors duration-200">
+        <div className="yomirra-chrome flex-1 h-[56px] flex items-center justify-center gap-1 rounded-full p-1.5 transition-colors duration-200">
           {mainItems.map((item) => {
             const isActive = isMainTabActive(item.href)
 
@@ -60,14 +60,14 @@ export function BottomDock({ pendingHref }: { pendingHref?: string | null }) {
                   "group relative flex items-center justify-center h-full rounded-full outline-none tap-highlight-transparent transition-all duration-200 ease-out select-none active:scale-95",
                   isActive
                     ? "shrink-0 px-3.5 sm:px-4"
-                    : "flex-1 min-w-0"
+                    : "size-11 shrink-0"
                 )}
                 aria-label={item.label}
                 aria-current={isActive ? "page" : undefined}
               >
                 {isActive && (
                   <motion.div
-                    className="absolute inset-0 rounded-full border border-accent/25 bg-accent-dim shadow-xs"
+                    className="absolute inset-0 rounded-full border border-accent/25 bg-accent-dim"
                     layoutId="active-dock-tab"
                     transition={transitions.layout}
                   />
