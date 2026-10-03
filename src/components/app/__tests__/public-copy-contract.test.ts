@@ -59,4 +59,17 @@ describe("public copy contracts", () => {
     expect(warning).toContain("Penyimpanan di iPhone/iPad");
     expect(warning).not.toContain("50MB");
   });
+
+  it("keeps source selection and download failures free of internal identifiers", () => {
+    const selector = read("src/components/manga/manga-source-selector.tsx");
+    const download = read("src/components/manga/chapter-download-button.tsx");
+
+    expect(selector).toContain("Digunakan untuk membaca judul ini");
+    expect(selector).toContain("Terverifikasi");
+    expect(selector).not.toContain("ID: {mangaId}");
+    expect(selector).not.toContain("{linked.matchConfidence}");
+    expect(download).toContain("Unduhan belum berhasil");
+    expect(download).toContain("Coba lagi beberapa saat.");
+    expect(download).not.toContain("Gagal mengunduh: ${msg}");
+  });
 });

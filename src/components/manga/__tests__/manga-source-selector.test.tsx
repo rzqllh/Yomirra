@@ -82,6 +82,10 @@ describe("MangaSourceSelector (Phase 6 UI)", () => {
 
     expect(screen.getByText("Sumber Bacaan")).toBeDefined();
     expect(screen.getByText("MangaDex")).toBeDefined();
+    expect(screen.getByText("Digunakan untuk membaca judul ini")).toBeDefined();
+    expect(screen.getByText("Terverifikasi")).toBeDefined();
+    expect(screen.queryByText(/ID:/i)).toBeNull();
+    expect(screen.queryByText("CONFIRMED")).toBeNull();
 
     // Click "Jadikan Pilihan" for current source
     const buttons = screen.getAllByRole("button", { name: /Jadikan Pilihan/i });

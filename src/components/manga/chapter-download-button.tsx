@@ -72,8 +72,12 @@ export function ChapterDownloadButton({
         });
         toast.success(`Berhasil mengunduh ${chapterTitle}!`, { id: toastId, duration: 4000 });
       } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : "Terjadi kendala saat mengunduh";
-        toast.error(`Gagal mengunduh: ${msg}`, { id: toastId, duration: 5000 });
+        console.error("Chapter ZIP download failed", err);
+        toast.error("Unduhan belum berhasil", {
+          id: toastId,
+          duration: 5000,
+          description: "Coba lagi beberapa saat.",
+        });
       } finally {
         setIsZipDownloading(false);
       }
