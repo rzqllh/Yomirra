@@ -51,7 +51,7 @@ export default function SourceBrowsePage({
     placeholderData: keepPreviousData,
   });
 
-  const sourceName = sourceInfo?.name || sourceId;
+  const sourceName = sourceInfo?.name || "Sumber";
 
   const { isSourceHiddenFromHome, toggleHomeSource } = useSourcePreferencesStore();
   const isHiddenFromHome = isSourceHiddenFromHome(sourceId);
@@ -60,7 +60,7 @@ export default function SourceBrowsePage({
     <YomirraSurface variant="base" className="w-full">
       <PageContainer hasMobileHeader>
         <PageHeader
-          title={sourceInfo?.name || sourceId}
+          title={sourceName}
           subtitle="Jelajahi komik dari sumber ini."
           showBack
           hideDesktop

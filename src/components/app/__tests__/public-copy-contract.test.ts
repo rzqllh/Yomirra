@@ -72,4 +72,16 @@ describe("public copy contracts", () => {
     expect(download).toContain("Coba lagi beberapa saat.");
     expect(download).not.toContain("Gagal mengunduh: ${msg}");
   });
+
+  it("uses reader-safe fallbacks instead of raw route identifiers", () => {
+    const search = read("src/components/search/search-results.tsx");
+    const sourcePage = read("src/app/(web)/sources/[sourceId]/page.tsx");
+    const recovery = read("src/components/manga/dead-source-recovery.tsx");
+    const detailError = read("src/components/manga/manga-detail-error-state.tsx");
+
+    expect(search).not.toContain("source?.name || err.sourceId");
+    expect(sourcePage).toContain('const sourceName = sourceInfo?.name || "Sumber"');
+    expect(recovery).toContain('?? "Komik ini"');
+    expect(detailError).toContain('?? "sumber ini"');
+  });
 });

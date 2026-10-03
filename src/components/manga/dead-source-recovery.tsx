@@ -58,8 +58,8 @@ export function DeadSourceRecovery({ sourceId, mangaId, health = { status: "BROK
   }, [allDownloads, sourceId, mangaId]);
 
   const sourceMeta = getSourceMetadata(sourceId);
-  const sourceName = sourceMeta?.name ?? sourceId;
-  const knownTitle = libraryItem?.title ?? historyItem?.mangaTitle ?? mangaId;
+  const sourceName = sourceMeta?.name ?? "Sumber ini";
+  const knownTitle = libraryItem?.title ?? historyItem?.mangaTitle ?? "Komik ini";
   const knownCover = libraryItem?.coverUrl ?? historyItem?.coverUrl;
   const knownAuthor = libraryItem?.author;
   const lastReadChapter = historyItem?.chapterTitle ?? libraryItem?.lastReadChapterTitle;

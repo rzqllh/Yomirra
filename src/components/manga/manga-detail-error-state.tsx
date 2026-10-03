@@ -24,7 +24,7 @@ export function MangaDetailErrorState({
   const [isRetrying, startRetry] = React.useTransition();
 
   const sourceMeta = getSourceMetadata(sourceId);
-  const sourceName = sourceMeta?.name ?? sourceId;
+  const sourceName = sourceMeta?.name ?? "sumber ini";
 
   const handleRetry = () => {
     startRetry(() => {

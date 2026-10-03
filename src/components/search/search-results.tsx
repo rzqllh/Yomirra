@@ -111,7 +111,7 @@ export function SearchResults({
                 <div className="flex items-center gap-2 min-w-0">
                   <WarningCircle size={16} weight="fill" className="shrink-0" />
                   <span className="truncate">
-                    {source?.name || err.sourceId} {getFriendlyErrorMessage(err.error)}
+                    {source?.name || "Sumber"} {getFriendlyErrorMessage(err.error)}
                   </span>
                 </div>
               </div>
@@ -173,7 +173,7 @@ export function SearchResults({
                 activeSelectedSources.length === 1
                   ? `${
                       searchableSources.find((s) => s.id === activeSelectedSources[0])?.name ||
-                      activeSelectedSources[0]
+                      "Sumber"
                     } tidak dapat dimuat`
                   : "Pencarian gagal"
               }
