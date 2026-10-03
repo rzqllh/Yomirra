@@ -29,6 +29,8 @@ export interface PageHeaderProps {
   mode?: "standard" | "detail"
   /** Mobile header background variant */
   variant?: "transparent" | "glass" | "auto"
+  /** Hero-title element observed in detail mode before showing the sticky title */
+  detailTitleAnchorId?: string
   /** Hide desktop banner when desktop has separate editorial header (e.g. Beranda) */
   hideDesktop?: boolean
   /** Outer wrapper className override */
@@ -51,11 +53,13 @@ export function PageHeader({
   meta,
   mode = "standard",
   variant = "auto",
+  detailTitleAnchorId,
   hideDesktop = false,
   className,
 }: PageHeaderProps) {
   const router = useRouter()
   const [scrollY, setScrollY] = React.useState(0)
+  const [detailTitleVisible, setDetailTitleVisible] = React.useState(false)
   const sub = subtitle ?? description
 
   React.useEffect(() => {
@@ -67,6 +71,31 @@ export function PageHeader({
     handleScroll()
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
+
+  React.useEffect(() => {
+    if (mode !== "detail") {
+      setDetailTitleVisible(false)
+      return
+    }
+
+    const anchor = detailTitleAnchorId
+      ? document.getElementById(detailTitleAnchorId)
+      : null
+    if (!anchor || typeof IntersectionObserver === "undefined") {
+      setDetailTitleVisible(false)
+      return
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setDetailTitleVisible(!entry.isIntersecting),
+      {
+        threshold: 0,
+        rootMargin: "-56px 0px 0px 0px",
+      }
+    )
+    observer.observe(anchor)
+    return () => observer.disconnect()
+  }, [detailTitleAnchorId, mode])
 
   const handleBack = () => {
     if (typeof window !== "undefined" && window.history.length > 1) {
@@ -85,10 +114,10 @@ export function PageHeader({
     router.replace("/")
   }
 
-  // Header surface glass state & title visibility threshold
-  // For detail mode: title only reveals once hero cover has scrolled fully past (~320px) to prevent redundancy
+  // Glass reacts to scroll, while detail-title visibility is tied to the actual
+  // hero title leaving the viewport rather than a viewport-specific magic number.
   const isScrolled = scrollY > 12
-  const isTitleVisible = mode === "detail" ? scrollY > 320 : true
+  const isTitleVisible = mode === "detail" ? detailTitleVisible : true
   const isGlass =
     variant === "glass" ||
     (variant === "auto" && (mode === "detail" ? isScrolled : true))

@@ -25,7 +25,7 @@ import { useSearchParams } from "next/navigation";
 import { SearchInput } from "@/components/ui/search-input";
 import { EmptyState } from "@/components/states/empty-state";
 import { cn } from "@/shared/utils/cn";
-import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
+import { getSourceMetadata } from "@/shared/sources/source-registry";
 import { MangaDetailLayout } from "./manga-detail-layout";
 import { normalizeSynopsis } from "@/shared/utils/normalize";
 import { getMangaTransitionNames } from "@/shared/lib/motion/transition-identity";
@@ -34,6 +34,10 @@ import { morphIconPairs } from "@/shared/lib/motion/morph-icons";
 import { transitions } from "@/shared/lib/motion/tokens";
 import { motion, useReducedMotion } from "motion/react";
 import type { MangaDetail, Chapter } from "@/shared/types/source";
+import {
+  resolveChapterAnchorIndex,
+  resolveContinueChapterId,
+} from "@/shared/lib/chapter-continuity";
 
 const CHAPTER_ITEM_ESTIMATED_SIZE = 70;
 
@@ -92,7 +96,7 @@ export function MangaDetailView({
 
   const ratingScore = ratingData?.score;
   const displayScore = ratingScore ?? detail.score;
-  const sourceName = dynamicSourceRegistry.get(sourceId)?.name || sourceId;
+  const sourceName = getSourceMetadata(sourceId)?.name || sourceId;
 
   const transitionNames = getMangaTransitionNames(sourceId, mangaId);
   const coverTransitionName = transitionNames.cover;
@@ -131,26 +135,62 @@ export function MangaDetailView({
     overscan: 20,
   });
 
-  // Always reset scroll to the top when viewing manga details
+  // Entering a new detail starts at its hero, while the chapter viewport is
+  // anchored separately to reading history below.
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
-    if (parentRef.current) {
-      parentRef.current.scrollTop = 0;
-    }
   }, [sourceId, mangaId]);
+
+  const anchorKeyRef = useRef("");
+  const chapterAnchorIndex = useMemo(
+    () => resolveChapterAnchorIndex(sortedChapters, historyItem?.chapterId),
+    [sortedChapters, historyItem?.chapterId]
+  );
+
+  useEffect(() => {
+    if (
+      !isMounted ||
+      !historyItem?.chapterId ||
+      deferredSearchQuery.trim() ||
+      chapterAnchorIndex < 0
+    ) {
+      return;
+    }
+
+    const anchorKey = `${sourceId}::${mangaId}::${historyItem.chapterId}::${sortOrder}`;
+    if (anchorKeyRef.current === anchorKey) return;
+
+    const frame = requestAnimationFrame(() => {
+      rowVirtualizer.scrollToIndex(chapterAnchorIndex, { align: "center" });
+      anchorKeyRef.current = anchorKey;
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [
+    chapterAnchorIndex,
+    deferredSearchQuery,
+    historyItem?.chapterId,
+    isMounted,
+    mangaId,
+    rowVirtualizer,
+    sortOrder,
+    sourceId,
+  ]);
 
   const coverUrl = detail.coverUrl;
   const firstChapter = chapters?.[chapters.length - 1];
 
   const showContinue = !!historyItem;
-  const continueChapterId = historyItem?.chapterId;
+  const continueChapterId = resolveContinueChapterId(chapters, historyItem);
   const startChapterId = firstChapter?.id;
 
   const continueChapterLabel = useMemo(() => {
     if (!continueChapterId) return "";
     const match = chapters?.find(c => c.id === continueChapterId);
     if (match) return match.title || `Chapter ${match.number}`;
-    if (historyItem?.chapterTitle) return historyItem.chapterTitle;
+    if (historyItem?.chapterId === continueChapterId && historyItem?.chapterTitle) {
+      return historyItem.chapterTitle;
+    }
     return "Chapter";
   }, [continueChapterId, chapters, historyItem]);
 
@@ -196,7 +236,7 @@ export function MangaDetailView({
     );
   };
 
-  // Secondary actions — 4 buttons placed inside the shared 2x2 / flex grid
+  // Secondary actions — compact four-item rail composed by MangaDetailLayout
   const renderActions = () => (
     <>
       <MangaActions
@@ -255,6 +295,7 @@ export function MangaDetailView({
             backHref={backHref}
             mode="detail"
             variant="auto"
+            detailTitleAnchorId="manga-detail-title-mobile"
             actions={
               <MangaHeaderActions
                 sourceId={sourceId}
@@ -285,7 +326,7 @@ export function MangaDetailView({
         mobileMeta={
           <>
             <div className="mb-2">
-              <h1 className="text-[22px] sm:text-[26px] font-black tracking-tight text-white leading-[1.1] line-clamp-3 text-balance drop-shadow-sm vt-title-mobile">
+              <h1 id="manga-detail-title-mobile" className="text-[22px] sm:text-[26px] font-black tracking-tight text-white leading-[1.1] line-clamp-3 text-balance drop-shadow-sm vt-title-mobile">
                 {detail.title}
               </h1>
               {detail.originalTitle && (
@@ -296,14 +337,16 @@ export function MangaDetailView({
             </div>
 
             <div className="flex items-center gap-1.5 flex-wrap mb-2.5">
-              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider backdrop-blur-md border border-white/15 bg-black/40 text-white shadow-xs">
-                {detail.format || "Komik"}
-              </span>
+              {detail.format && (
+                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider backdrop-blur-md border border-white/15 bg-black/40 text-white shadow-xs">
+                  {detail.format}
+                </span>
+              )}
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide backdrop-blur-md border border-amber-400/30 bg-black/40 text-amber-300 shadow-xs">
                 <Star weight="fill" size={12} className="text-amber-400" />
-                <span suppressHydrationWarning>{Number(displayScore) > 0 ? Number(displayScore).toFixed(1) : "-.-"}</span>
+                <span suppressHydrationWarning>{Number(displayScore) > 0 ? Number(displayScore).toFixed(1) : "—"}</span>
               </span>
-              {detail.status && (
+              {detail.status && detail.status !== "UNKNOWN" && (
                 <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider backdrop-blur-md border border-white/15 bg-black/40 text-white shadow-xs">
                   {detail.status}
                 </span>
@@ -348,14 +391,16 @@ export function MangaDetailView({
         desktopMeta={
           <>
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider backdrop-blur-md border border-white/15 bg-black/40 text-white shadow-xs">
-                {detail.format || "Komik"}
-              </span>
+              {detail.format && (
+                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider backdrop-blur-md border border-white/15 bg-black/40 text-white shadow-xs">
+                  {detail.format}
+                </span>
+              )}
               <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide backdrop-blur-md border border-amber-400/30 bg-black/40 text-amber-300 shadow-xs">
                 <Star weight="fill" size={12} className="text-amber-400" />
-                <span suppressHydrationWarning>{Number(displayScore) > 0 ? Number(displayScore).toFixed(1) : "-.-"}</span>
+                <span suppressHydrationWarning>{Number(displayScore) > 0 ? Number(displayScore).toFixed(1) : "—"}</span>
               </span>
-              {detail.status && (
+              {detail.status && detail.status !== "UNKNOWN" && (
                 <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider backdrop-blur-md border border-white/15 bg-black/40 text-white shadow-xs">
                   {detail.status}
                 </span>
@@ -368,7 +413,7 @@ export function MangaDetailView({
             </div>
 
             <div>
-              <h1 className="text-3xl lg:text-4xl xl:text-[42px] font-black tracking-tight leading-[1.15] text-white drop-shadow-sm vt-title-desktop max-w-2xl">
+              <h1 id="manga-detail-title-desktop" className="text-3xl lg:text-4xl xl:text-[42px] font-black tracking-tight leading-[1.15] text-white drop-shadow-sm vt-title-desktop max-w-2xl">
                 {detail.title}
               </h1>
               {detail.originalTitle && (
@@ -420,7 +465,7 @@ export function MangaDetailView({
                 "text-[13px] md:text-sm leading-relaxed text-text-secondary break-words",
                 !isExpanded && "line-clamp-4"
               )}>
-                {cleanedSynopsis || "Sinopsis belum tersedia."}
+                {cleanedSynopsis || "Sinopsis belum tersedia"}
               </p>
             </motion.div>
 
@@ -441,7 +486,7 @@ export function MangaDetailView({
         }
         chapters={
           <>
-            <div className="sticky top-[60px] z-20 bg-surface-base py-3.5 px-0.5 border-b border-border-default/40 flex flex-col gap-3">
+            <div className="sticky top-[var(--secondary-sticky-top)] z-20 bg-surface-base/95 py-3.5 px-0.5 border-b border-border-default/40 flex flex-col gap-3 backdrop-blur-md">
               <div className="flex items-center justify-between">
                 <span className="text-lg md:text-xl font-bold tracking-tight text-text-primary flex items-center gap-2">
                   {chapters?.length || 0} Chapter

@@ -49,12 +49,12 @@ export function MangaActions({
     });
 
     if (isInLibrary) {
-      toast.info("Dihapus dari Koleksi", {
-        description: `'${title}' dikeluarkan dari rak bacaanmu.`,
+      toast.info("Dihapus dari Rak Buku", {
+        description: `'${title}' tidak lagi tersimpan.`,
       });
     } else {
-      toast.success("Disimpan ke Koleksi", {
-        description: `'${title}' berhasil ditambahkan ke rak bacaanmu.`,
+      toast.success("Disimpan ke Rak Buku", {
+        description: `'${title}' berhasil disimpan.`,
       });
     }
   };
@@ -63,7 +63,7 @@ export function MangaActions({
     <>
       <button
         onClick={handleToggle}
-        aria-label={isInLibrary ? "Hapus dari library" : "Tambah ke library"}
+        aria-label={isInLibrary ? "Hapus dari Rak Buku" : "Simpan ke Rak Buku"}
         className={cn(
           "flex items-center justify-center gap-2 min-h-[44px] px-4 transition-all outline-none select-none rounded-[14px] border shadow-xs active:scale-95 bg-surface-raised",
           isInLibrary
