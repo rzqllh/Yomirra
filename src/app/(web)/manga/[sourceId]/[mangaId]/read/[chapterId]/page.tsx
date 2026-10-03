@@ -116,11 +116,11 @@ export default async function ReaderPage({
     }
 
     return (
-      <ReaderShell mangaTitle={detail?.title} chapterTitle="Error" currentChapterId={chapterId} sourceId={sourceId} mangaId={mangaId}>
+      <ReaderShell mangaTitle={detail?.title} chapterTitle="Tidak tersedia" currentChapterId={chapterId} sourceId={sourceId} mangaId={mangaId}>
         <div className="flex min-h-screen items-center justify-center pt-16">
           <EmptyState
             icon={<WarningCircle size={48} weight="duotone" className="text-text-muted" />}
-            title="Gagal Memuat Chapter"
+            title="Chapter belum bisa dimuat"
             description="Chapter belum bisa dimuat dari sumber ini."
             action={
               <Button asChild variant="outline" className="rounded-xl shadow-sm mt-2 font-bold">

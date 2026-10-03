@@ -9,8 +9,8 @@ export default function Loading() {
     <YomirraSurface variant="base" className="min-h-screen">
       <PageContainer hasMobileHeader>
         <PageHeader
-          title="Jadwal Rilis Mingguan"
-          description="Lihat jadwal update komik yang kamu simpan."
+          title="Jadwal Mingguan"
+          description="Lihat perkiraan jadwal chapter baru dari komik yang kamu simpan."
           icon={<CalendarBlank size={24} weight="duotone" />}
           showBack
         />
