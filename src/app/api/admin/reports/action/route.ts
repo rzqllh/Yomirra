@@ -3,6 +3,7 @@ import { requireAdminAuth } from "@/server/lib/auth/admin-auth";
 import { checkRateLimitPolicy, createRateLimitRejection } from "@/server/lib/security/rate-limit";
 import { flushSourceCache, probeSource } from "@/server/lib/sources/admin-source-service";
 import { updateReportStatus } from "@/server/lib/ops/admin-report-service";
+import { recordAdminAudit } from "@/server/lib/admin/audit-service";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,15 @@ export async function POST(req: Request) {
 
     if (action === "resolve" && reportId) {
       const updated = await updateReportStatus(reportId, "resolved");
+
+      await recordAdminAudit({
+        actor: { uid: auth.admin.uid, email: auth.admin.email },
+        action: "report.resolve",
+        targetType: "report",
+        targetId: reportId,
+        summary: `Menandai laporan '${reportId}' sebagai resolved`,
+      }).catch(() => null);
+
       return NextResponse.json({ success: true, action, report: updated });
     }
 

@@ -90,4 +90,45 @@ describe("runtime-sources", () => {
     const shinigami = sources.find((s) => s.id === "shinigami");
     expect(shinigami?.isEnabled).toBe(true);
   });
+
+  it("prevents custom sources from shadowing built-in source IDs", async () => {
+    vi.mocked(getCoreSourceOverrides).mockResolvedValue({});
+    vi.mocked(getCustomSources).mockResolvedValue([
+      {
+        id: "komiku",
+        name: "Fake Malicious Komiku",
+        baseUrl: "https://evil-komiku.example",
+      } as any,
+    ]);
+
+    const sources = await getRuntimeSources();
+    const komikuInstances = sources.filter((s) => s.id === "komiku");
+    expect(komikuInstances.length).toBe(1);
+    expect(komikuInstances[0].name).not.toBe("Fake Malicious Komiku");
+  });
+
+  it("skips malformed custom source records gracefully", async () => {
+    vi.mocked(getCoreSourceOverrides).mockResolvedValue({});
+    vi.mocked(getCustomSources).mockResolvedValue([
+      null as any,
+      {} as any,
+      { id: "", name: "No ID", baseUrl: "https://example.com" } as any,
+      { id: "valid-custom", name: "Valid Custom", baseUrl: "https://valid.example" } as any,
+    ]);
+
+    const sources = await getRuntimeSources();
+    const validCustom = sources.find((s) => s.id === "valid-custom");
+    expect(validCustom).toBeDefined();
+    expect(validCustom?.name).toBe("Valid Custom");
+  });
+
+  it("returns null for unknown or invalid source lookups", async () => {
+    const { getRuntimeSource } = await import("../runtime-sources");
+    vi.mocked(getCoreSourceOverrides).mockResolvedValue({});
+    vi.mocked(getCustomSources).mockResolvedValue([]);
+
+    expect(await getRuntimeSource("non-existent-source")).toBeNull();
+    expect(await getRuntimeSource("")).toBeNull();
+    expect(await isSourceEnabledServer("non-existent-source")).toBe(false);
+  });
 });

@@ -202,4 +202,66 @@ describe("Functional Health Probe (probeSourceHealth)", () => {
     const cached = await domainResolver.getCachedDomain("komikindo", "frontend");
     expect(cached?.currentHost).toBe("https://komikindo.cv");
   });
+
+  it("passes allowDisabled: true to sourceManager so disabled sources can be diagnostically probed", async () => {
+    const mockAdapter: any = {
+      id: "disabled-source",
+      baseUrl: "https://disabled.example",
+      getPopular: vi.fn().mockResolvedValue({
+        mangas: [{ id: "test", title: "Test", coverUrl: "https://example.com/cover.jpg" }],
+        hasNextPage: false,
+      }),
+    };
+    const getSourceSpy = vi.spyOn(sourceManager, "getSource").mockResolvedValue(mockAdapter);
+
+    const snapshot = await probeSourceHealth("disabled-source");
+    expect(snapshot.status).toBe("HEALTHY");
+    expect(getSourceSpy).toHaveBeenCalledWith("disabled-source", null, { allowDisabled: true });
+  });
+
+  it("probes only runtime-enabled sources in probeAllSourcesHealth", async () => {
+    const { probeAllSourcesHealth } = await import("../probe");
+    const runtimeSourcesModule = await import("../../runtime-sources");
+
+    vi.spyOn(runtimeSourcesModule, "getRuntimeSources").mockResolvedValue([
+      {
+        id: "source-a",
+        name: "Source A",
+        isEnabled: true,
+        isInstalled: true,
+        status: "online",
+        baseUrl: "https://a.example",
+        version: "1.0.0",
+        isNsfw: false,
+        capabilities: { popular: true, latest: true, search: true, detail: true, chapters: true, pages: true, filters: false },
+        isDynamic: false,
+      },
+      {
+        id: "source-b",
+        name: "Source B",
+        isEnabled: false,
+        isInstalled: true,
+        status: "online",
+        baseUrl: "https://b.example",
+        version: "1.0.0",
+        isNsfw: false,
+        capabilities: { popular: true, latest: true, search: true, detail: true, chapters: true, pages: true, filters: false },
+        isDynamic: false,
+      },
+    ]);
+
+    const mockAdapter: any = {
+      id: "source-a",
+      baseUrl: "https://a.example",
+      getPopular: vi.fn().mockResolvedValue({
+        mangas: [{ id: "test", title: "Test", coverUrl: "https://example.com/cover.jpg" }],
+        hasNextPage: false,
+      }),
+    };
+    vi.spyOn(sourceManager, "getSource").mockResolvedValue(mockAdapter);
+
+    const results = await probeAllSourcesHealth();
+    expect(results["source-a"]).toBeDefined();
+    expect(results["source-b"]).toBeUndefined();
+  });
 });

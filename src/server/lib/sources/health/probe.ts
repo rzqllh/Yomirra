@@ -8,6 +8,7 @@ import type {
   SourceHealthStatus,
 } from "./types";
 import { getAllSourceMetadata } from "@/shared/sources/source-registry";
+import { getRuntimeSources } from "@/server/lib/sources/runtime-sources";
 import { logger } from "@/shared/logger";
 
 /**
@@ -181,7 +182,8 @@ export async function probeSourceHealth(
 export async function probeAllSourcesHealth(
   options: HealthProbeOptions = {}
 ): Promise<Record<string, SourceHealthSnapshot>> {
-  const activeSources = getAllSourceMetadata().filter((s) => s.isEnabled && s.isInstalled);
+  const runtimeSources = await getRuntimeSources().catch(() => getAllSourceMetadata());
+  const activeSources = runtimeSources.filter((s) => s.isEnabled && s.isInstalled);
   const results: Record<string, SourceHealthSnapshot> = {};
 
   await Promise.all(

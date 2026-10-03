@@ -36,29 +36,37 @@ import { DownloadManager } from "@/components/download/download-manager";
 import { BootGate } from "@/components/app/boot-gate";
 import { SiteAnnouncementBanner } from "@/components/layout/site-announcement-banner";
 
-export default function RootLayout({
+import { MaintenanceGate } from "@/components/layout/maintenance-gate";
+import { getSiteConfig } from "@/server/lib/site/site-config-service";
+
+export default async function RootLayout({
   children,
   modal,
 }: Readonly<{
   children: React.ReactNode;
   modal?: React.ReactNode;
 }>) {
+  const siteConfig = await getSiteConfig().catch(() => null);
+  const maintenanceConfig = siteConfig?.maintenanceMode;
+
   return (
     <html lang="id" className={plusJakartaSans.variable} suppressHydrationWarning>
       <body className="min-h-dvh antialiased" suppressHydrationWarning>
         <Providers>
           <OfflineProvider>
             <div vaul-drawer-wrapper="" className="bg-background min-h-dvh">
-              <SiteAnnouncementBanner />
-              <BootGate>
-                <AppShell>
-                  <ErrorBoundary>
-                    {children}
-                    {modal}
-                    <SpeedInsights />
-                  </ErrorBoundary>
-                </AppShell>
-              </BootGate>
+              <MaintenanceGate initialConfig={maintenanceConfig}>
+                <SiteAnnouncementBanner />
+                <BootGate>
+                  <AppShell>
+                    <ErrorBoundary>
+                      {children}
+                      {modal}
+                      <SpeedInsights />
+                    </ErrorBoundary>
+                  </AppShell>
+                </BootGate>
+              </MaintenanceGate>
             </div>
             <Toaster />
             <DownloadManager />

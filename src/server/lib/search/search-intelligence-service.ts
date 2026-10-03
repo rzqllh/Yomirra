@@ -20,6 +20,7 @@ import {
   embedSearchText,
   isSemanticEmbeddingConfigured,
 } from "./gemini-embeddings";
+import { getSiteConfig } from "@/server/lib/site/site-config-service";
 
 export interface SearchIntelligenceResult {
   semanticAvailable: boolean;
@@ -63,7 +64,11 @@ export async function rankSearchIntelligence(params: {
   const recent = await getRecentSearchCatalogRecords(240);
   const recentByKey = new Map(recent.map((record) => [record.canonicalKey, record]));
   const scores: Record<string, number> = {};
+  const siteConfig = await getSiteConfig().catch(() => null);
+  const isFeatureFlagEnabled = siteConfig?.features?.semanticSearchEnabled !== false;
+
   const semanticEnabled =
+    isFeatureFlagEnabled &&
     isSemanticEmbeddingConfigured() &&
     shouldUseSemanticSearch(query);
 

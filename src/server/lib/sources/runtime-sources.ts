@@ -23,8 +23,13 @@ export async function getRuntimeSources(): Promise<SourceMetadata[]> {
 
     // 1. Map built-in sources dengan runtime overrides
     const overridesMap = overrides as Record<string, any>;
+    const builtInIds = new Set<string>();
+
     const mergedBuiltin: SourceMetadata[] = sourceRegistry.map((base) => {
-      const override = overridesMap[base.id.toLowerCase()];
+      const normalizedBaseId = base.id.toLowerCase().trim();
+      builtInIds.add(normalizedBaseId);
+
+      const override = overridesMap[normalizedBaseId];
       if (!override) return { ...base };
 
       return {
@@ -34,29 +39,47 @@ export async function getRuntimeSources(): Promise<SourceMetadata[]> {
       };
     });
 
-    // 2. Map custom sources dari Redis menjadi SourceMetadata
-    const mappedCustom: SourceMetadata[] = (customSources || []).map((c) => ({
-      id: c.id,
-      name: c.name,
-      description: `Custom source (${(c.type || "html").toUpperCase()})`,
-      language: c.lang || "id",
-      baseUrl: c.baseUrl,
-      version: c.version || "1.0.0",
-      isEnabled: typeof (c as any).isEnabled === "boolean" ? (c as any).isEnabled : true,
-      isInstalled: true,
-      status: "online" as const,
-      isNsfw: c.isNsfw || false,
-      capabilities: {
-        popular: true,
-        latest: true,
-        search: true,
-        detail: true,
-        chapters: true,
-        pages: true,
-        filters: false,
-      },
-      isDynamic: true,
-    }));
+    // 2. Map custom sources dari Redis (cegah shadow built-in & validasi format)
+    const seenCustomIds = new Set<string>();
+    const mappedCustom: SourceMetadata[] = [];
+
+    for (const c of customSources || []) {
+      if (!c || typeof c.id !== "string" || !c.name || !c.baseUrl) continue;
+      const normalizedCustomId = c.id.toLowerCase().trim();
+      if (!normalizedCustomId) continue;
+
+      // Custom source tidak boleh menimpa ID built-in
+      if (builtInIds.has(normalizedCustomId)) {
+        logger.warn(`Custom source ID '${normalizedCustomId}' conflict dengan built-in source dan diabaikan`);
+        continue;
+      }
+
+      if (seenCustomIds.has(normalizedCustomId)) continue;
+      seenCustomIds.add(normalizedCustomId);
+
+      mappedCustom.push({
+        id: normalizedCustomId,
+        name: String(c.name).trim(),
+        description: `Custom source (${(c.type || "html").toUpperCase()})`,
+        language: c.lang || "id",
+        baseUrl: c.baseUrl,
+        version: c.version || "1.0.0",
+        isEnabled: typeof (c as any).isEnabled === "boolean" ? (c as any).isEnabled : true,
+        isInstalled: true,
+        status: "online" as const,
+        isNsfw: Boolean(c.isNsfw),
+        capabilities: {
+          popular: true,
+          latest: true,
+          search: true,
+          detail: true,
+          chapters: true,
+          pages: true,
+          filters: false,
+        },
+        isDynamic: true,
+      });
+    }
 
     return [...mergedBuiltin, ...mappedCustom];
   } catch (error) {
@@ -69,8 +92,10 @@ export async function getRuntimeSources(): Promise<SourceMetadata[]> {
  * Mengambil satu source metadata berdasarkan ID (dengan runtime override).
  */
 export async function getRuntimeSource(id: string): Promise<SourceMetadata | null> {
-  const sources = await getRuntimeSources();
+  if (!id || typeof id !== "string") return null;
   const normalized = id.toLowerCase().trim();
+  if (!normalized) return null;
+  const sources = await getRuntimeSources();
   return sources.find((s) => s.id === normalized) || null;
 }
 

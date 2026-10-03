@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdminAuth } from "@/server/lib/auth/admin-auth";
 import { checkRateLimitPolicy, createRateLimitRejection } from "@/server/lib/security/rate-limit";
 import { getSiteConfig, updateSiteConfig } from "@/server/lib/site/site-config-service";
+import { recordAdminAudit } from "@/server/lib/admin/audit-service";
 import { logger } from "@/shared/logger";
 
 export async function GET(req: NextRequest) {
@@ -43,6 +44,19 @@ export async function PATCH(req: NextRequest) {
       admin: auth.admin?.email,
       updates: Object.keys(body),
     });
+
+    await recordAdminAudit({
+      actor: { uid: auth.admin.uid, email: auth.admin.email },
+      action: "site.config.update",
+      targetType: "site_config",
+      summary: `Memperbarui konfigurasi situs: ${Object.keys(body).join(", ")}`,
+      metadata: {
+        keys: Object.keys(body),
+        announcementEnabled: body.announcement?.enabled,
+        maintenanceEnabled: body.maintenanceMode?.enabled,
+        features: body.features,
+      },
+    }).catch(() => null);
 
     return NextResponse.json({
       success: true,

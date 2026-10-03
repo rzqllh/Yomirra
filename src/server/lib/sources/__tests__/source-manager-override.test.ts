@@ -4,8 +4,13 @@ vi.mock("@/server/lib/sources/admin-source-service", () => ({
   getCoreSourceOverrides: vi.fn(),
 }));
 
+vi.mock("@/server/lib/sources/custom-source-service", () => ({
+  getCustomSourceById: vi.fn(),
+}));
+
 import { sourceManager } from "../source-manager";
 import { getCoreSourceOverrides } from "../admin-source-service";
+import { getCustomSourceById } from "../custom-source-service";
 
 describe("SourceManager Kill-Switch", () => {
   beforeEach(() => {
@@ -36,5 +41,31 @@ describe("SourceManager Kill-Switch", () => {
 
     const source = await sourceManager.getSource("shinigami");
     expect(source.id).toBe("shinigami");
+  });
+
+  it("falls back to normal behavior if Redis lookup throws an error", async () => {
+    vi.mocked(getCoreSourceOverrides).mockRejectedValue(new Error("Redis offline"));
+
+    const source = await sourceManager.getSource("shinigami");
+    expect(source.id).toBe("shinigami");
+  });
+
+  it("throws error when a custom source is disabled by administrator", async () => {
+    vi.mocked(getCoreSourceOverrides).mockResolvedValue({});
+    vi.mocked(getCustomSourceById).mockResolvedValue({
+      id: "custom-komik",
+      name: "Custom Komik",
+      baseUrl: "https://custom.example",
+      type: "html",
+      isEnabled: false,
+    } as any);
+
+    await expect(sourceManager.getSource("custom-komik")).rejects.toThrow(
+      "SOURCE_DISABLED: Source 'custom-komik' is currently disabled by administrator."
+    );
+
+    // Bypassed with allowDisabled
+    const bypassed = await sourceManager.getSource("custom-komik", null, { allowDisabled: true });
+    expect(bypassed.id).toBe("custom-komik");
   });
 });
