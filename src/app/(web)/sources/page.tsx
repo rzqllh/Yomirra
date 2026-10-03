@@ -102,7 +102,7 @@ export default function SourcesPage() {
         <PageContainer variant="management" hasMobileHeader>
           <PageHeader
             title="Sumber"
-            subtitle="Pilih sumber yang digunakan untuk menjelajah dan membaca komik."
+            subtitle="Atur sumber yang digunakan saat menjelajah."
             icon={<HardDrives size={24} weight="duotone" />}
             hideDesktop
           />
@@ -112,7 +112,7 @@ export default function SourcesPage() {
           {/* Source Mental Model Guidance Banner */}
           <div className="p-3.5 rounded-2xl bg-surface-glass border border-border-subtle text-xs text-text-muted flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
             <p className="leading-relaxed">
-              Pilih sumber yang ingin tampil di Beranda, Library, dan Populer. Toggle ini tidak membatasi Cari; sumber yang tersedia tetap bisa digunakan di sana.
+              Pengaturan ini berlaku untuk Beranda, Library, dan Populer. Pencarian tetap dapat memakai sumber yang tersedia meski dinonaktifkan di sini.
             </p>
           </div>
 
@@ -148,7 +148,7 @@ export default function SourcesPage() {
               variant="compact"
               icon={<HardDrives size={40} className="text-semantic-error" weight="duotone" />}
               title="Sumber gagal dimuat"
-              description="Server sedang sibuk. Silakan coba beberapa saat lagi."
+              description="Daftar sumber belum bisa dimuat. Coba lagi sebentar."
               className="bg-surface-overlay rounded-xl border border-semantic-error/20 py-16"
             />
           ) : filteredSources.length === 0 ? (
