@@ -51,6 +51,8 @@ Shared contract ada di `src/shared/sources/source-types.ts`.
 
 Satu source gagal tidak boleh menggagalkan hasil source lain.
 
+Health runtime dan preferensi user adalah dua domain terpisah. Health menjelaskan apakah source saat ini dapat digunakan; preference menjelaskan apakah source ikut Beranda/Library/Populer. Recovery source tidak boleh menghapus preference user.
+
 ## 4. Multi-source identity
 
 Saved title memakai identity yang terpisah dari physical source reference.
@@ -94,6 +96,10 @@ Catalog tidak menyimpan user library, history, progress, account data, atau raw 
 
 Embedding dengan Gemini optional. Normal search tetap berjalan tanpa embedding.
 
+### Popular aggregation
+
+Mode Populer gabungan tidak membandingkan raw view/popularity metric antar-provider. Feed per source dinormalisasi, judul hanya digabung saat identitas title/alias aman dan author tidak bertentangan, lalu setiap source memberi kontribusi reciprocal-rank `1 / (K + rank)`. Mode per-source selalu mempertahankan urutan native provider.
+
 ## 6. Recommendation
 
 Recommendation utama deterministic:
@@ -134,6 +140,8 @@ Dipakai untuk persistent/local application state, misalnya:
 ### TanStack Query
 
 Dipakai untuk remote request state, caching di browser, dan request lifecycle.
+
+Catalog query key harus memuat context yang mengubah hasil, seperti source, query, filter, sort, page, dan policy konten. Revisit memakai cache yang masih valid/previous data tanpa menyimpan response besar ke localStorage. Pagination disimpan di URL dan filter Library yang perlu bertahan selama Back navigation disimpan secara session-scoped.
 
 Jangan memindahkan query state ke Zustand hanya untuk mengurangi jumlah hook.
 

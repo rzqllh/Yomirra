@@ -4,6 +4,16 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
 
 ## [Unreleased]
 
+### Public Reader UX Stability
+
+- Menyatukan header dan bottom dock mobile pada surface blurred-glass tanpa inset/shadow, memakai sticky/safe-area token bersama, serta mempertahankan native browser Back/Forward.
+- Menstabilkan geometry Spotlight dan card saat synopsis, rating, chapter, atau metadata opsional tidak tersedia; fallback reader-facing tidak menampilkan raw exception, source ID, atau enum internal.
+- Halaman Populer memakai mode `Gabungan` sebagai default dengan deduplikasi konservatif dan reciprocal-rank aggregation; mode `Per Sumber` mempertahankan urutan native masing-masing source.
+- Jadwal Mingguan mengecualikan status selesai/dibatalkan sebelum manual release-day diterapkan, menandai hiatus dengan jelas, dan menjadikan `Baca/Lanjut` aksi utama.
+- Detail komik menampilkan title header berdasarkan posisi hero melalui `IntersectionObserver`, memakai action rail empat item, serta membuka daftar chapter di sekitar chapter terakhir yang relevan.
+- Pagination Library/Search disimpan pada URL sementara payload tetap berada di TanStack Query cache; filter Library tetap session-scoped sehingga Back kembali ke konteks sebelumnya tanpa menjadikan localStorage cache response besar.
+- Halaman Sumber memisahkan health sistem dari preferensi penjelajahan dan memindahkan capability teknis ke detail sekunder.
+
 ### Home Editorial Opening Revamp
 
 - **Compact Home Hero**:
