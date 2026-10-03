@@ -21,7 +21,7 @@ const ROUTE_LABELS: Record<string, string> = {
   search: "Cari",
   popular: "Populer",
   sources: "Sumber",
-  updates: "Pembaruan",
+  updates: "Jadwal",
   downloads: "Unduhan",
   settings: "Pengaturan",
   account: "Akun & Sinkronisasi",

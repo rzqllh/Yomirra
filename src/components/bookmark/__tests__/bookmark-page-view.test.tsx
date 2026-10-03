@@ -82,7 +82,7 @@ describe("BookmarkPageView hierarchy & standardization", () => {
     render(<BookmarkPageView />);
 
     expect(screen.getByText("Sedang Dibaca")).toBeTruthy();
-    expect(screen.getByText("Bookmark")).toBeTruthy();
+    expect(screen.getByText("Tersimpan")).toBeTruthy();
 
     const updateLink = screen.getByRole("link", { name: /Jadwal Rilis Mingguan/i });
     expect(updateLink).toBeTruthy();

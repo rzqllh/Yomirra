@@ -76,7 +76,7 @@ export function BookmarkPageView() {
               { value: "reading", label: "Sedang Dibaca" },
               {
                 value: "collection",
-                label: `Bookmark${libraryItemCount > 0 ? ` (${libraryItemCount})` : ""}`,
+                label: `Tersimpan${libraryItemCount > 0 ? ` (${libraryItemCount})` : ""}`,
               },
             ]}
             value={activeTab}

@@ -63,7 +63,15 @@ export function CollapsibleBadgeRow({
   maxVisible = 2,
 }: CollapsibleBadgeRowProps) {
   const validBadges = badges.filter(Boolean);
-  if (validBadges.length === 0) return null;
+  if (validBadges.length === 0) {
+    return (
+      <div
+        aria-hidden="true"
+        className={cn("h-5 min-w-0", className)}
+        data-card-slot="badges"
+      />
+    );
+  }
 
   const visible = validBadges.slice(0, maxVisible);
   const overflowCount = validBadges.length - maxVisible;
@@ -130,7 +138,11 @@ function LazySynopsisPreview({
   const synopsis = normalizeSynopsis(data?.description || "");
 
   return (
-    <div ref={anchorRef} className="min-h-px">
+    <div
+      ref={anchorRef}
+      className="min-h-[2.75rem]"
+      data-card-slot="synopsis"
+    >
       {synopsis ? (
         <MangaCardMeta as="p" className="mt-1.5 line-clamp-2 leading-relaxed text-text-muted/80 md:line-clamp-3">
           {synopsis}
@@ -139,7 +151,11 @@ function LazySynopsisPreview({
         <MangaCardMeta as="p" className="mt-1.5 truncate text-[11px] text-text-muted/70">
           Karya: {author}
         </MangaCardMeta>
-      ) : null}
+      ) : (
+        <MangaCardMeta as="p" className="mt-1.5 text-[11px] text-text-muted/70">
+          Sinopsis belum tersedia
+        </MangaCardMeta>
+      )}
     </div>
   );
 }
@@ -205,7 +221,8 @@ export function MangaCard({
   const effectiveTime = latestChapterTime ?? manga.latestChapterTime;
 
   const sourceObj = dynamicSourceRegistry.get(sourceId) || sourceRegistry.find((s) => s.id === sourceId);
-  const sourceName = showSourceBadge ? (sourceObj?.name || sourceId) : null;
+  const sourceDisplayName = sourceObj?.name || sourceId;
+  const sourceName = showSourceBadge ? sourceDisplayName : null;
   const isUnavailable = sourceObj?.status === "unavailable" || sourceObj?.status === "in-fix";
 
   const effectiveBindings = (sourceBindings || (manga as any)?.sourceBindings || []) as SourceBinding[];
@@ -233,7 +250,7 @@ export function MangaCard({
     const rawProgress = progressPercent ?? historyItem?.seriesProgressPercent ?? historyItem?.progressPercent ?? 0;
     const progress = Math.min(100, Math.max(0, Math.round(rawProgress)));
     const effChapterId = chapterId || historyItem?.chapterId || "";
-    const effChapterTitle = chapterTitle || historyItem?.chapterTitle || (effChapterId ? `Ch. ${effChapterId}` : "Detail");
+    const effChapterTitle = chapterTitle || historyItem?.chapterTitle || (effChapterId ? "Chapter" : "Detail");
     const readerHref = effChapterId ? getReaderHref(sourceId, manga.id, effChapterId, fullPath) : getMangaDetailHref(sourceId, manga.id, fullPath);
     const detailHref = getMangaDetailHref(sourceId, manga.id, fullPath);
     const isCompleted = progress === 100;
@@ -281,7 +298,7 @@ export function MangaCard({
             <div>
               <div className="flex items-center gap-1.5 mb-1.5">
                 <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-surface-muted text-text-muted border border-border-subtle">
-                  {sourceId}
+                  {sourceDisplayName}
                 </span>
                 <span
                   className={cn(
@@ -402,7 +419,13 @@ export function MangaCard({
             mangaCardInteraction.link,
             "flex min-w-0 flex-1 gap-2.5 cursor-pointer rounded-l-md"
           )}
-          aria-label={`Baca ${manga.title}`}
+          aria-label={isMultiSource ? `Pilih sumber untuk ${manga.title}` : `Baca ${manga.title}`}
+          aria-haspopup={isMultiSource ? "dialog" : undefined}
+          onClick={(event) => {
+            if (!isMultiSource) return;
+            event.preventDefault();
+            setIsSourceDialogOpen(true);
+          }}
         >
           {/* Cover Frame with Ranking Badge Overlay */}
           <MangaCardCoverFrame className="vt-hover h-full w-[74px] border-y-0 border-l-0 rounded-l-md rounded-r-xs group-hover:shadow-lg group-hover:shadow-accent/5">
@@ -441,9 +464,11 @@ export function MangaCard({
               maxVisible={2}
               className="mb-2"
               badges={[
-                <span key="status" className="text-[9px] font-bold uppercase text-accent bg-accent/10 px-2 py-0.5 rounded-md shrink-0">
-                  {manga.status || "Ongoing"}
-                </span>,
+                manga.status ? (
+                  <span key="status" className="text-[9px] font-bold uppercase text-accent bg-accent/10 px-2 py-0.5 rounded-md shrink-0">
+                    {manga.status}
+                  </span>
+                ) : null,
                 manga.format ? (
                   <span key="format" className="text-[9px] font-bold uppercase text-text-secondary bg-surface-base px-2 py-0.5 rounded-md shrink-0">
                     {manga.format}
@@ -462,7 +487,7 @@ export function MangaCard({
             </MangaCardTitle>
 
             <div className="mt-1.5 flex items-center justify-between">
-              <MangaCardMeta className="truncate pr-2">{manga.latestChapter || "Detail"}</MangaCardMeta>
+              <MangaCardMeta className="truncate pr-2">{manga.latestChapter || "Chapter belum tersedia"}</MangaCardMeta>
               {timeText && <MangaCardMeta className="whitespace-nowrap text-[10px] text-text-muted">{timeText}</MangaCardMeta>}
             </div>
           </div>
@@ -475,10 +500,20 @@ export function MangaCard({
           <div className="flex flex-col items-center gap-0.5 text-semantic-warning">
             <Star weight="fill" size={12} aria-hidden="true" />
             <span className="text-[10px] font-black" suppressHydrationWarning>
-              {Number(scoreToDisplay) > 0 ? Number(scoreToDisplay).toFixed(1) : "-.-"}
+              {Number(scoreToDisplay) > 0 ? Number(scoreToDisplay).toFixed(1) : "—"}
             </span>
           </div>
         </div>
+
+        {isMultiSource && (
+          <CanonicalSourceDialog
+            open={isSourceDialogOpen}
+            onOpenChange={setIsSourceDialogOpen}
+            title={manga.title}
+            sourceBindings={availableBindings}
+            returnTo={fullPath}
+          />
+        )}
       </motion.article>
     );
   }
@@ -604,12 +639,10 @@ export function MangaCard({
             </div>
 
             {/* Row 2: Capped Badge Row to prevent height shifts */}
-            <div className="flex items-center gap-2 mt-1">
-              {manga.latestChapter && (
-                <MangaCardMeta className="truncate font-semibold shrink-0">
-                  {manga.latestChapter}
-                </MangaCardMeta>
-              )}
+            <div className="flex min-h-5 items-center gap-2 mt-1">
+              <MangaCardMeta className="truncate font-semibold shrink-0">
+                {manga.latestChapter || "Chapter belum tersedia"}
+              </MangaCardMeta>
               <CollapsibleBadgeRow badges={badgesList} maxVisible={2} />
             </div>
 
@@ -828,24 +861,18 @@ export function MangaCard({
             {manga.title}
           </MangaCardTitle>
 
-          {/* Bottom Row - Chapter & Score */}
-          {(manga.latestChapter || (scoreToDisplay !== undefined && Number(scoreToDisplay) > 0)) && (
-            <div className="flex items-center justify-between mt-auto">
-              {manga.latestChapter ? (
-                <MangaCardMeta className="max-w-[70%] truncate font-semibold sm:text-sm">
-                  {manga.latestChapter}
-                </MangaCardMeta>
-              ) : (
-                <div />
-              )}
-              {scoreToDisplay !== undefined && Number(scoreToDisplay) > 0 && (
-                <span className="flex shrink-0 items-center gap-1 text-xs font-bold tracking-tight text-text-secondary sm:text-sm">
-                  <Star weight="fill" className="text-semantic-warning text-sm" />
-                  <span suppressHydrationWarning>{Number(scoreToDisplay).toFixed(1)}</span>
-                </span>
-              )}
-            </div>
-          )}
+          {/* Bottom Row - keep geometry stable when optional chapter/rating data is absent. */}
+          <div className="mt-auto flex min-h-5 items-center justify-between">
+            <MangaCardMeta className="max-w-[70%] truncate font-semibold sm:text-sm">
+              {manga.latestChapter || "Chapter belum tersedia"}
+            </MangaCardMeta>
+            <span className="flex shrink-0 items-center gap-1 text-xs font-bold tracking-tight text-text-secondary sm:text-sm">
+              <Star weight="fill" className="text-semantic-warning text-sm" aria-hidden="true" />
+              <span suppressHydrationWarning>
+                {Number(scoreToDisplay) > 0 ? Number(scoreToDisplay).toFixed(1) : "—"}
+              </span>
+            </span>
+          </div>
         </div>
       </Link>
 
