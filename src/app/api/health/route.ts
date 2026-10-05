@@ -1,74 +1,47 @@
 import { NextResponse } from "next/server";
 import { redis } from "@/server/lib/cache/redis";
-import { getAllSourceMetadata } from "@/shared/sources/source-registry";
-import { sourceManager } from "@/server/lib/sources/source-manager";
+import { probeAllSourcesHealth } from "@/server/lib/sources/health/probe";
+import { toLivenessSourceHealth } from "@/server/lib/sources/health/public-health";
 import { logger } from "@/shared/logger";
 
-export const dynamic = "force-dynamic"; // Always fresh ping
+export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
 export async function GET() {
-  const sourcesStatus: Record<string, { status: "ok" | "slow" | "down"; latencyMs?: number; error?: string }> = {};
   let isDegraded = false;
+  let redisStatus: "ok" | "slow" | "down" = "ok";
 
-  // Ping Redis
-  let redisStatus = "ok";
   try {
     const start = Date.now();
     await redis.ping();
-    const latency = Date.now() - start;
-    if (latency > 1000) redisStatus = "slow";
+    if (Date.now() - start > 1000) redisStatus = "slow";
   } catch (error) {
     redisStatus = "down";
     isDegraded = true;
     logger.error("Redis health check failed", { error });
   }
 
-  // Ping Curated Sources
-  const activeSources = getAllSourceMetadata().filter((s) => s.isEnabled && s.isInstalled);
-  
-  await Promise.all(
-    activeSources.map(async (meta) => {
-      try {
-        const adapter = await sourceManager.getSource(meta.id);
-        const start = Date.now();
-        if (!adapter) throw new Error("Adapter not found");
-
-        // Ping by fetching popular page 1
-        await adapter.getPopular(1);
-        
-        const latency = Date.now() - start;
-        let status: "ok" | "slow" | "down" = "ok";
-        
-        if (latency > 3000) {
-          status = "down";
-          isDegraded = true;
-        } else if (latency > 1000) {
-          status = "slow";
-        }
-        
-        sourcesStatus[meta.id] = { status, latencyMs: latency };
-      } catch (error) {
-        sourcesStatus[meta.id] = { 
-          status: "down", 
-          error: error instanceof Error ? error.message : "Unknown error" 
-        };
-        isDegraded = true;
-      }
+  const snapshots = await probeAllSourcesHealth({ deep: false });
+  const sources = Object.fromEntries(
+    Object.entries(snapshots).map(([sourceId, snapshot]) => {
+      const health = toLivenessSourceHealth(snapshot);
+      if (health.status === "down") isDegraded = true;
+      return [sourceId, health];
     })
   );
 
-  const payload = {
-    status: isDegraded ? "degraded" : "ok",
-    redis: redisStatus,
-    sources: sourcesStatus,
-    timestamp: new Date().toISOString(),
-  };
-
-  return NextResponse.json(payload, {
-    status: isDegraded ? 503 : 200,
-    headers: {
-      "Cache-Control": "no-store, max-age=0",
+  return NextResponse.json(
+    {
+      status: isDegraded ? "degraded" : "ok",
+      redis: redisStatus,
+      sources,
+      timestamp: new Date().toISOString(),
     },
-  });
+    {
+      status: isDegraded ? 503 : 200,
+      headers: {
+        "Cache-Control": "no-store, max-age=0",
+      },
+    }
+  );
 }

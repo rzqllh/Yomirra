@@ -9,6 +9,8 @@ export default defineConfig({
     globals: true,
     setupFiles: './vitest.setup.ts',
     include: ['src/**/*.{test,spec}.{ts,tsx,js,jsx}'],
+    // Keep jsdom forks below the machine's logical-core count to avoid import-time contention.
+    maxWorkers: 8,
     alias: {
       '@': path.resolve(__dirname, './src'),
     },

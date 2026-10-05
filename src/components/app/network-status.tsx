@@ -38,6 +38,7 @@ export function NetworkStatus() {
     }
 
     return () => {
+      clearTimeout(timer);
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };

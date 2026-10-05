@@ -1,18 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { UserCircle, SignOut, MagnifyingGlass, Gear, Globe, Question } from "@phosphor-icons/react";
-import { useRouter, usePathname } from "next/navigation";
-import Image from "next/image";
+import { UserCircle, SignOut, MagnifyingGlass, Globe, Question } from "@phosphor-icons/react";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
-import Logo from "@/logo/icon.png";
-import { IconButton } from "@/components/ui/icon-button";
 import { useAuth } from "@/shared/hooks/use-auth";
 import { ThemeToggle } from "./theme-toggle";
 import { UpdatesBell } from "./updates-bell";
 import { cn } from "@/shared/utils/cn";
-import { useSettingsStore } from "@/shared/store/settings-store";
 
 const ROUTE_LABELS: Record<string, string> = {
   "": "Beranda",
@@ -29,7 +25,6 @@ const ROUTE_LABELS: Record<string, string> = {
 };
 
 export function TopNav() {
-  const router = useRouter();
   const pathname = usePathname();
   const { user, loginWithGoogle, logout } = useAuth();
 

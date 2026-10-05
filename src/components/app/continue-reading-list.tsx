@@ -2,33 +2,11 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   BookBookmark,
-  Play,
-  DotsThreeVertical,
-  BookOpen,
-  Trash,
   ArrowRight,
 } from "@phosphor-icons/react";
-import { useHistoryStore, type HistoryItem } from "@/shared/store/history-store";
-import { getReaderHref, getMangaDetailHref } from "@/shared/lib/routes";
-import { MangaCover } from "@/components/manga/manga-cover";
-import {
-  MangaCardCoverFrame,
-  MangaCardMeta,
-  MangaCardTitle,
-  mangaCardInteraction,
-  mangaCardSurface,
-} from "@/components/manga/card";
-import { ReadingProgress } from "@/components/ui/reading-progress";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
-import { toast } from "sonner";
+import type { HistoryItem } from "@/shared/store/history-store";
 import { cn } from "@/shared/utils/cn";
 
 export interface ContinueReadingListProps {

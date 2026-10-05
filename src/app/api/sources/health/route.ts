@@ -1,166 +1,84 @@
-export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
-import { sourceRegistry } from "@/shared/sources/source-registry";
-import type { SourceMetadata } from "@/shared/sources/source-types";
-import { redis } from "@/server/lib/cache/redis";
-
+import { isRedisConfigured, redis } from "@/server/lib/cache/redis";
+import { probeAllSourcesHealth } from "@/server/lib/sources/health/probe";
+import {
+  toPublicSourceHealth,
+  type PublicSourceHealth,
+} from "@/server/lib/sources/health/public-health";
 import { logger } from "@/shared/logger";
 
-export const revalidate = 0; // Disable Next.js cache, we use Redis
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
-const CACHE_KEY = "yomirra:sources:health:v6";
-const TTL_SECONDS = 600; // 10 minutes
+const CACHE_KEY = "yomirra:sources:health:v7";
+const TTL_SECONDS = 600;
 
-async function pingSource(source: SourceMetadata) {
-  const start = Date.now();
+interface HealthResponseMeta {
+  cached: boolean;
+  checkedAt: string;
+  probeType: "functional";
+}
 
-  if (source.status === "unavailable") {
-    return {
-      id: source.id,
-      status: source.status,
-      latency: source.healthStats?.latency || "-",
-      uptime: source.healthStats?.uptime || "-",
-      message: source.healthStats?.message || "Sumber sedang dinonaktifkan dari sistem.",
-    };
-  }
+interface CachedHealthPayload {
+  data: Record<string, PublicSourceHealth>;
+  meta: HealthResponseMeta;
+}
 
-  const targetUrl = source.healthCheckUrl || source.baseUrl || "";
-
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
-
-    const headers: Record<string, string> = {
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-      "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    };
-
-    if (targetUrl.includes("mangadex.org")) {
-      headers["User-Agent"] = "Yomirra/1.0";
-      headers["Accept"] = "application/json,*/*";
-    }
-
-    const res = await fetch(targetUrl, {
-      method: "GET",
-      headers,
-      signal: controller.signal,
-    });
-
-    clearTimeout(timeoutId);
-
-    const latency = Date.now() - start;
-
-    // 200-299, 301-302 redirect = online
-    if (res.ok || (res.status >= 301 && res.status <= 302)) {
-      return {
-        id: source.id,
-        status: "online",
-        latency: `${latency}ms`,
-        uptime: "99.9%",
-        message: "Server merespons dengan baik.",
-      };
-    }
-    
-    // 401, 403 = Access Denied (scraper blocked)
-    if (res.status === 401 || res.status === 403) {
-      return {
-        id: source.id,
-        status: "unavailable",
-        latency: "-",
-        uptime: "0%",
-        message: `Akses ditolak (HTTP ${res.status}).`,
-      };
-    }
-
-    // 503, 522, 521 = Cloudflare challenge / server down
-    if (res.status === 503 || res.status === 522 || res.status === 521) {
-      return {
-        id: source.id,
-        status: "unavailable",
-        latency: "-",
-        uptime: "-",
-        message: "Terhalang proteksi Cloudflare.",
-      };
-    }
-
-    return {
-      id: source.id,
-      status: "unavailable",
-      latency: "-",
-      uptime: "-",
-      message: `HTTP Error: ${res.status}`,
-    };
-  } catch (err: any) {
-    const isTimeout = err.name === "AbortError" || err.message?.includes("aborted");
-    const errCode = err.code || err.cause?.code;
-
-    // Log internal error details with logger without leaking sensitive headers to public
-    logger.warn("Source health ping failed", {
-      sourceId: source.id,
-      targetUrl,
-      errorName: err.name,
-      errorMessage: err.message,
-      errorCode: errCode,
-      causeMessage: err.cause?.message,
-    });
-
-    let safeMessage = "Gagal menghubungi server.";
-    if (isTimeout) {
-      safeMessage = "Koneksi ke server timeout.";
-    } else if (errCode === "CERT_HAS_EXPIRED" || errCode === "ERR_TLS_CERT_ALTNAME_INVALID") {
-      safeMessage = "Sertifikat SSL/TLS server tidak valid atau kadaluarsa.";
-    } else if (errCode === "ENOTFOUND") {
-      safeMessage = "Domain tidak dapat ditemukan (DNS Error).";
-    }
-
-    return {
-      id: source.id,
-      status: "unavailable",
-      latency: "-",
-      uptime: "0%",
-      message: safeMessage,
-    };
-  }
+function withCacheState(payload: CachedHealthPayload, cached: boolean): CachedHealthPayload {
+  return {
+    ...payload,
+    meta: {
+      ...payload.meta,
+      cached,
+    },
+  };
 }
 
 export async function GET() {
+  if (isRedisConfigured) {
+    try {
+      const cached = await redis.get(CACHE_KEY);
+      if (cached) {
+        const payload = JSON.parse(cached) as CachedHealthPayload;
+        return NextResponse.json(withCacheState(payload, true));
+      }
+    } catch (error) {
+      logger.warn("Redis get failed in sources health route", { error });
+    }
+  }
+
   try {
-    // Try Cache
-    if (redis) {
+    const snapshots = await probeAllSourcesHealth({ deep: false });
+    const data = Object.fromEntries(
+      Object.entries(snapshots).map(([sourceId, snapshot]) => [
+        sourceId,
+        toPublicSourceHealth(snapshot),
+      ])
+    );
+    const checkedAt = Object.values(snapshots)
+      .map((snapshot) => snapshot.lastCheckedAt)
+      .sort()
+      .at(-1) ?? new Date().toISOString();
+    const payload: CachedHealthPayload = {
+      data,
+      meta: {
+        cached: false,
+        checkedAt,
+        probeType: "functional",
+      },
+    };
+
+    if (isRedisConfigured) {
       try {
-        const cached = await redis.get(CACHE_KEY);
-        if (cached) {
-          return NextResponse.json({ data: JSON.parse(cached) });
-        }
-      } catch (err) {
-        logger.warn("Redis get failed in sources health route", { error: err });
+        await redis.setex(CACHE_KEY, TTL_SECONDS, JSON.stringify(payload));
+      } catch (error) {
+        logger.warn("Redis setex failed in sources health route", { error });
       }
     }
 
-    // Gather all sources
-    const allSources = [...sourceRegistry];
-
-    // Ping in parallel
-    const results = await Promise.all(allSources.map(pingSource));
-
-    const healthData = results.reduce((acc, curr) => {
-      acc[curr.id] = curr;
-      return acc;
-    }, {} as Record<string, any>);
-
-    // Set Cache
-    if (redis) {
-      try {
-        await redis.setex(CACHE_KEY, TTL_SECONDS, JSON.stringify(healthData));
-      } catch (err) {
-        logger.warn("Redis setex failed in sources health route", { error: err });
-      }
-    }
-
-    return NextResponse.json({ data: healthData });
+    return NextResponse.json(payload);
   } catch (error) {
-    console.error("Health check error:", error);
+    logger.error("Functional source health check failed", { error });
     return NextResponse.json({ error: "Failed to check health" }, { status: 500 });
   }
 }
-

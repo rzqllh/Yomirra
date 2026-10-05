@@ -43,7 +43,12 @@ class ApiClient {
   }
 
   getHealth() {
-    return this.fetcher<Record<string, { status: string; latency: string; uptime: string; message: string; }>>("/api/sources/health");
+    return this.fetcher<Record<string, {
+      status: NonNullable<SourceMetadata["status"]>;
+      latency: string;
+      uptime: string;
+      message: string;
+    }>>("/api/sources/health");
   }
 
   private appendManifest(url: string, sourceId: string): string {

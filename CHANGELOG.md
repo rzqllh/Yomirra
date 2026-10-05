@@ -4,6 +4,15 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
 
 ## [Unreleased]
 
+## [2.3.0] - 2026-10-05
+
+### Release Readiness
+
+- Menyatukan `GET /api/health` dan `GET /api/sources/health` pada functional source probe yang sama agar status live dan cached tidak lagi saling bertentangan.
+- Menyaring detail error internal dari public health response serta membedakan status `slow`, `degraded`, dan `unavailable` secara konsisten.
+- Membatasi worker Vitest untuk menghindari import-time contention dan timeout semu pada full suite di mesin multi-core.
+- Membersihkan obsolete ESLint ignore, dead imports, dan lifecycle timer tanpa mengubah dependency runtime.
+
 ### Runtime Source Merger, Admin Kill-Switch & Health Probe Isolation
 
 - Memperketat validasi `getRuntimeSources`: mencegah custom source menimpa ID built-in, mengabaikan record custom source yang malformed, serta menormalisasi ID secara konsisten.

@@ -13,7 +13,6 @@ import { YomirraSurface, PageContainer } from "@/components/ui/layout";
 import { PageHeader } from "@/components/app/header";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
-import { Button } from "@/components/ui/button";
 import { useMounted } from "@/shared/hooks/use-mounted";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { cn } from "@/shared/utils/cn";
@@ -68,7 +67,7 @@ export default function SourcesPage() {
       if (health) {
         return {
           ...source,
-          status: health.status as any,
+          status: health.status,
           healthStats: {
             latency: health.latency,
             uptime: health.uptime,

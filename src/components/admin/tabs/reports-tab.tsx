@@ -8,7 +8,7 @@ import {
   CircleNotch,
   Flag,
   Hash,
-  Image,
+  Image as ImageIcon,
   Lightning,
   MagnifyingGlass,
   Question,
@@ -36,7 +36,7 @@ interface ReportsTabProps {
 
 const TYPE_CONFIG: Record<string, { label: string; icon: React.ReactNode; tone: "neutral" | "warning" | "danger" }> = {
   chapter_error: { label: "Chapter error", icon: <BookOpen className="h-4 w-4" />, tone: "warning" },
-  image_broken: { label: "Gambar rusak", icon: <Image className="h-4 w-4" />, tone: "danger" },
+  image_broken: { label: "Gambar rusak", icon: <ImageIcon className="h-4 w-4" />, tone: "danger" },
   source_broken: { label: "Source bermasalah", icon: <Wrench className="h-4 w-4" />, tone: "danger" },
   other: { label: "Lainnya", icon: <Question className="h-4 w-4" />, tone: "neutral" },
 };

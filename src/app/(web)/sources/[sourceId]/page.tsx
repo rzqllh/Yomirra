@@ -40,7 +40,6 @@ export default function SourceBrowsePage({
   const {
     data,
     isLoading,
-    isFetching,
     status
   } = useQuery({
     queryKey: ["sourceBrowse", sourceId, sort, currentPage],
