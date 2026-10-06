@@ -54,14 +54,14 @@ describe("MorphIcon package boundary", () => {
   });
 
   it("adopts MorphIcon through the package boundary for approved feature state", () => {
-    const bookmarkButton = fs.readFileSync(
-      path.resolve(process.cwd(), "src/components/manga/bookmark-button.tsx"),
+    const mangaDetailView = fs.readFileSync(
+      path.resolve(process.cwd(), "src/components/manga/manga-detail-view.tsx"),
       "utf-8"
     );
 
-    expect(bookmarkButton).toContain(
+    expect(mangaDetailView).toContain(
       'from "@/components/motion/morph-icon"'
     );
-    expect(bookmarkButton).toContain("morphIconPairs.bookmark");
+    expect(mangaDetailView).toContain("morphIconPairs.disclosure");
   });
 });
