@@ -41,9 +41,9 @@ export function BottomDock({ pendingHref }: { pendingHref?: string | null }) {
         paddingBottom: "max(12px, env(safe-area-inset-bottom, 0px))",
       }}
     >
-      <div className="pointer-events-auto flex w-full max-w-[404px] mx-auto items-center justify-center gap-2">
+      <div className="pointer-events-auto flex w-fit max-w-[calc(100vw-24px)] mx-auto items-center justify-center gap-2">
         {/* Main Dock Capsule */}
-        <div className="yomirra-chrome flex-1 h-[56px] flex items-center justify-center gap-1 rounded-full p-1.5 transition-colors duration-200">
+        <div className="yomirra-chrome h-[56px] flex items-center justify-center gap-1 rounded-full px-1.5 py-1.5 transition-colors duration-200">
           {mainItems.map((item) => {
             const isActive = isMainTabActive(item.href)
 

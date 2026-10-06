@@ -40,17 +40,54 @@ export function SiteAnnouncementBanner() {
     };
   }, []);
 
-  if (pathname?.startsWith("/admin")) {
-    return null;
-  }
-
+  const bannerRef = React.useRef<HTMLElement>(null);
   const announcement = config?.announcement;
-  if (!announcement || !announcement.enabled || !announcement.message || isDismissed) {
+  const isVisible = Boolean(
+    !pathname?.startsWith("/admin") &&
+    announcement &&
+    announcement.enabled &&
+    announcement.message &&
+    !isDismissed
+  );
+
+  React.useEffect(() => {
+    if (!isVisible || !bannerRef.current) {
+      document.documentElement.style.setProperty("--announcement-height", "0px");
+      return;
+    }
+
+    const updateHeight = () => {
+      if (bannerRef.current) {
+        const height = bannerRef.current.offsetHeight;
+        document.documentElement.style.setProperty("--announcement-height", `${height}px`);
+      } else {
+        document.documentElement.style.setProperty("--announcement-height", "0px");
+      }
+    };
+
+    updateHeight();
+
+    const observer = typeof ResizeObserver !== "undefined"
+      ? new ResizeObserver(updateHeight)
+      : null;
+
+    if (observer && bannerRef.current) {
+      observer.observe(bannerRef.current);
+    }
+
+    return () => {
+      observer?.disconnect();
+      document.documentElement.style.setProperty("--announcement-height", "0px");
+    };
+  }, [isVisible]);
+
+  if (!isVisible || !announcement) {
     return null;
   }
 
   const handleDismiss = () => {
     setIsDismissed(true);
+    document.documentElement.style.setProperty("--announcement-height", "0px");
     if (announcement.id) {
       sessionStorage.setItem(DISMISSED_KEY, announcement.id);
     }
@@ -84,9 +121,10 @@ export function SiteAnnouncementBanner() {
 
   return (
     <aside
+      ref={bannerRef}
       aria-label="Pengumuman Situs"
       className={cn(
-        "relative z-40 w-full border-b backdrop-blur-md px-3.5 py-2 text-xs transition-all animate-in fade-in duration-200",
+        "relative z-50 w-full border-b backdrop-blur-md px-3.5 py-2 text-xs transition-all animate-in fade-in duration-200",
         style.bg,
         style.border
       )}

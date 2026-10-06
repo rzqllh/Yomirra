@@ -22,11 +22,13 @@ import {
   NAVIGATION_INTENT_EVENT,
   type NavigationIntentDetail,
 } from "@/shared/lib/navigation-intent"
+import { useSidebarStore } from "@/shared/store/sidebar-store"
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const isReader = pathname?.includes("/read/")
   const isAdmin = pathname?.startsWith("/admin")
+  const isCollapsed = useSidebarStore((state) => state.isCollapsed)
   const [pendingHref, setPendingHref] = React.useState<string | null>(null)
   const showNavigationProgress = useDelayedFlag(
     Boolean(pendingHref),
@@ -37,6 +39,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   useNsfwPatcher()
   // Trigger background chapter scan on app open (respects checkOnAppStart + cooldown settings)
   useUpdateChecker({ checkOnMount: true })
+
+  React.useEffect(() => {
+    void useSidebarStore.persist.rehydrate()
+  }, [])
 
   React.useEffect(() => {
     const handleNavigationIntent = (event: Event) => {
@@ -107,8 +113,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </AnimatePresence>
 
       <div className={cn(
-        "flex-1 flex flex-col min-h-dvh transition-all min-w-0 duration-300 ease-in-out w-full",
-        !isReader && "md:pl-[76px] xl:pl-[240px]"
+        "flex-1 flex flex-col min-h-dvh transition-[padding-left] min-w-0 duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none w-full",
+        !isReader && (isCollapsed ? "md:pl-[76px]" : "md:pl-[76px] xl:pl-[240px]")
       )}>
         {!isReader && <TopNav />}
         {!isReader && <DesktopRail pendingHref={pendingHref} />}

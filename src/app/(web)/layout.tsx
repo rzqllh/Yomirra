@@ -51,6 +51,13 @@ export default async function RootLayout({
 
   return (
     <html lang="id" className={plusJakartaSans.variable} suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var s=localStorage.getItem('yomirra-sidebar');if(s&&JSON.parse(s)?.state?.isCollapsed){document.documentElement.dataset.sidebarCollapsed='true'}}catch(e){}`,
+          }}
+        />
+      </head>
       <body className="min-h-dvh antialiased" suppressHydrationWarning>
         <Providers>
           <OfflineProvider>
