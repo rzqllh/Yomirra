@@ -33,7 +33,7 @@ export function MangaRating({ sourceId, mangaId, className, variant = "default",
   const { user } = useAuth();
   const getLibraryItem = useLibraryStore(state => state.getLibraryItem);
   const updateLibraryItem = useLibraryStore(state => state.updateLibraryItem);
-  
+
   const libraryItem = getLibraryItem(sourceId, mangaId);
   const mounted = useMounted();
   const userRating = mounted ? libraryItem?.userRating : undefined;
@@ -106,19 +106,19 @@ export function MangaRating({ sourceId, mangaId, className, variant = "default",
       onClick={() => setIsOpen(true)}
       aria-label="Beri Rating"
       className={cn(
-        "flex items-center justify-center gap-2 min-h-[44px] px-4 transition-all outline-none select-none rounded-[14px] border shadow-xs active:scale-95 bg-surface-raised",
+        "flex items-center justify-center gap-1.5 h-[52px] md:h-[48px] px-1 md:px-3.5 transition-all outline-none select-none rounded-[14px] border shadow-xs active:scale-95 bg-surface-raised",
         userRating && mounted
           ? "border-accent/60 text-accent font-bold ring-1 ring-accent/20"
           : "border-border-default text-text-secondary hover:text-text-primary hover:border-border-strong hover:bg-surface-hover"
       )}
     >
-      <Star size={18} weight={userRating && mounted ? "fill" : "regular"} />
-      <span className="text-[11px] font-bold tracking-tight">
+      <Star size={18} weight={userRating && mounted ? "fill" : "regular"} className="shrink-0" />
+      <span className="hidden md:inline text-xs font-bold tracking-tight leading-none whitespace-nowrap">
         {userRating && mounted ? `${userRating}/10` : "Rating"}
       </span>
     </button>
   ) : (
-    <button 
+    <button
       className={cn(
         "flex items-center gap-1.5 px-2 py-1 rounded-md transition-colors",
         userRating ? "text-accent bg-accent/10 font-bold" : "text-text-muted hover:text-text-primary hover:bg-surface-hover font-medium",
@@ -141,7 +141,7 @@ export function MangaRating({ sourceId, mangaId, className, variant = "default",
           <div className="flex items-center justify-between">
             <span className="font-bold text-sm text-text-primary">Beri Rating</span>
             {userRating && (
-              <button 
+              <button
                 onClick={() => handleRating(userRating)}
                 className="text-xs text-semantic-error hover:underline font-medium"
               >
@@ -149,7 +149,7 @@ export function MangaRating({ sourceId, mangaId, className, variant = "default",
               </button>
             )}
           </div>
-          
+
           <div className="grid grid-cols-5 gap-1.5">
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rating) => (
               <button
@@ -157,8 +157,8 @@ export function MangaRating({ sourceId, mangaId, className, variant = "default",
                 onClick={() => onSelectRating(rating)}
                 className={cn(
                   "flex items-center justify-center h-10 rounded-lg text-sm font-bold transition-all duration-200",
-                  userRating === rating 
-                    ? "bg-accent text-white ring-1 ring-accent/30" 
+                  userRating === rating
+                    ? "bg-accent text-white ring-1 ring-accent/30"
                     : "bg-surface-raised text-text-secondary hover:bg-surface-hover hover:text-text-primary"
                 )}
               >
@@ -166,7 +166,7 @@ export function MangaRating({ sourceId, mangaId, className, variant = "default",
               </button>
             ))}
           </div>
-          
+
           <p className="text-xs text-text-muted text-center mt-1">
             {userRating ? `Kamu memberi rating ${userRating}/10` : "Pilih dari 1 hingga 10"}
           </p>

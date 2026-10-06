@@ -65,14 +65,14 @@ export function MangaActions({
         onClick={handleToggle}
         aria-label={isInLibrary ? "Hapus dari Rak Buku" : "Simpan ke Rak Buku"}
         className={cn(
-          "flex items-center justify-center gap-2 min-h-[44px] px-4 transition-all outline-none select-none rounded-[14px] border shadow-xs active:scale-95 bg-surface-raised",
+          "flex items-center justify-center gap-1.5 h-[52px] md:h-[48px] px-1 md:px-3.5 transition-all outline-none select-none rounded-[14px] border shadow-xs active:scale-95 bg-surface-raised",
           isInLibrary
             ? "border-accent/60 text-accent font-bold ring-1 ring-accent/20"
             : "border-border-default text-text-secondary hover:text-text-primary hover:border-border-strong hover:bg-surface-hover"
         )}
       >
-        <BookmarkSimple size={18} weight={isInLibrary ? "fill" : "regular"} />
-        <span className="text-[11px] font-bold tracking-tight">
+        <BookmarkSimple size={18} weight={isInLibrary ? "fill" : "regular"} className="shrink-0" />
+        <span className="hidden md:inline text-xs font-bold tracking-tight leading-none whitespace-nowrap">
           {isInLibrary ? "Tersimpan" : "Simpan"}
         </span>
       </button>

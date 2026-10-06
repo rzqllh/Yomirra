@@ -15,6 +15,7 @@ import {
 import { motion, useReducedMotion } from "motion/react";
 import { useQuery } from "@tanstack/react-query";
 import { getMangaDetailHref, getReaderHref } from "@/shared/lib/routes";
+import { beginNavigationIntent } from "@/shared/lib/navigation-intent";
 import { sourceRegistry } from "@/shared/sources/source-registry";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { MangaCover } from "../manga-cover";
@@ -247,13 +248,37 @@ export function MangaCard({
   // PROGRESS VARIANT (Bookmark / Riwayat)
   // ==========================================
   if (variant === "progress") {
-    const rawProgress = progressPercent ?? historyItem?.seriesProgressPercent ?? historyItem?.progressPercent ?? 0;
-    const progress = Math.min(100, Math.max(0, Math.round(rawProgress)));
     const effChapterId = chapterId || historyItem?.chapterId || "";
     const effChapterTitle = chapterTitle || historyItem?.chapterTitle || (effChapterId ? "Chapter" : "Detail");
     const readerHref = effChapterId ? getReaderHref(sourceId, manga.id, effChapterId, fullPath) : getMangaDetailHref(sourceId, manga.id, fullPath);
     const detailHref = getMangaDetailHref(sourceId, manga.id, fullPath);
-    const isCompleted = progress === 100;
+
+    const updateItem =
+      (historyItem?.savedTitleId ? updateStore.items[historyItem.savedTitleId] : undefined) ||
+      updateStore.items[manga.id] ||
+      updateStore.items[getUpdateKey(sourceId, manga.id)];
+
+    const hasNewChapter = Boolean(
+      (updateItem && !updateItem.seenAt) ||
+      (updateItem?.latestChapterId && effChapterId && updateItem.latestChapterId !== effChapterId)
+    );
+
+    const isOngoingStatus = historyItem?.status?.toUpperCase() === "ONGOING" || (manga as any).status?.toUpperCase() === "ONGOING";
+
+    const rawProgress = progressPercent ?? historyItem?.seriesProgressPercent ?? historyItem?.progressPercent ?? 0;
+    let progress = Math.min(100, Math.max(0, Math.round(rawProgress)));
+
+    // Badge "Baru" only displays if user was previously caught up (rawProgress >= 100) and a new release dropped
+    const wasCaughtUp = rawProgress >= 100;
+    const hasFreshUpdate = Boolean(hasNewChapter || isUnread);
+    const showNewBadge = hasFreshUpdate && wasCaughtUp;
+
+    // If there is an unread update / new chapter or manga is ongoing, it cannot be 100% completed
+    if ((hasFreshUpdate || isOngoingStatus) && progress === 100) {
+      progress = 95;
+    }
+
+    const isCompleted = progress === 100 && !hasFreshUpdate && !isOngoingStatus;
 
     const handleDeleteHistory = (event: React.MouseEvent) => {
       event.stopPropagation();
@@ -278,6 +303,7 @@ export function MangaCard({
         <Link
           href={readerHref}
           prefetch={false}
+          onClick={() => beginNavigationIntent(readerHref)}
           className={cn(
             "flex min-h-full gap-3.5 p-3 pr-13 sm:p-3.5 sm:pr-14 rounded-md focus-visible:ring-inset",
             mangaCardInteraction.link
@@ -300,6 +326,11 @@ export function MangaCard({
                 <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-surface-muted text-text-muted border border-border-subtle">
                   {sourceDisplayName}
                 </span>
+                {showNewBadge && (
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-status-info-bg text-status-info-fg border border-status-info-fg/30">
+                    Baru
+                  </span>
+                )}
                 <span
                   className={cn(
                     "text-[10.5px] font-mono font-bold px-1.5 py-0.5 rounded",
@@ -362,13 +393,21 @@ export function MangaCard({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48 z-50">
               <DropdownMenuItem asChild className="cursor-pointer text-xs">
-                <Link href={readerHref} className="flex items-center gap-2">
+                <Link
+                  href={readerHref}
+                  onClick={() => beginNavigationIntent(readerHref)}
+                  className="flex items-center gap-2"
+                >
                   <Play size={14} weight="fill" className="text-accent" />
                   <span>Lanjutkan membaca</span>
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild className="cursor-pointer text-xs">
-                <Link href={detailHref} className="flex items-center gap-2">
+                <Link
+                  href={detailHref}
+                  onClick={() => beginNavigationIntent(detailHref)}
+                  className="flex items-center gap-2"
+                >
                   <BookOpen size={14} />
                   <span>Buka detail komik</span>
                 </Link>
@@ -701,11 +740,11 @@ export function MangaCard({
   // DISCOVERY VARIANT — GRID VIEW (Canonical baseline)
   // ==========================================
   const readingStatusMap: Record<string, { label: string; bg: string }> = {
-    reading: { label: "Sedang dibaca", bg: "bg-accent-dim text-accent" },
+    reading: { label: "Dibaca", bg: "bg-accent-dim text-accent" },
     completed: { label: "Selesai", bg: "bg-status-success-bg text-status-success-fg" },
     "on-hold": { label: "Ditunda", bg: "bg-status-warning-bg text-status-warning-fg" },
     dropped: { label: "Dihentikan", bg: "bg-status-error-bg text-status-error-fg" },
-    "plan-to-read": { label: "Akan Dibaca", bg: "bg-surface-raised text-text-primary" },
+    "plan-to-read": { label: "Rencana", bg: "bg-surface-raised text-text-primary" },
   };
 
   const currentReadingConfig = readingStatus ? readingStatusMap[readingStatus] : null;
@@ -754,7 +793,7 @@ export function MangaCard({
             />
 
             {/* Over-cover Badges */}
-            <div className="absolute top-2 left-2 flex flex-col gap-1.5 z-20 items-start">
+            <div className="absolute top-2 left-2 flex flex-col gap-1.5 z-20 items-start max-w-[calc(100%-48px)]">
               {isUnread && (
                 <div className="flex items-center gap-1 rounded-xs bg-status-info-bg px-2 py-0.5 text-status-info-fg">
                   <span className="text-xs font-bold">Baru</span>
@@ -876,8 +915,8 @@ export function MangaCard({
         </div>
       </Link>
 
-      <div className="absolute right-2 top-2 z-10 flex items-center justify-center">
-        <BookmarkButton sourceId={sourceId} manga={manga} className="size-11" />
+      <div className="absolute right-2 top-2 z-20 flex items-center justify-center">
+        <BookmarkButton sourceId={sourceId} manga={manga} className="size-8.5 sm:size-9 rounded-lg" />
       </div>
 
       {isMultiSource && (

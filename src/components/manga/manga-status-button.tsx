@@ -15,12 +15,12 @@ interface MangaStatusButtonProps {
   mangaId: string;
 }
 
-const STATUS_OPTIONS: { value: ReadingStatus; label: string }[] = [
-  { value: "reading", label: "Sedang Dibaca" },
-  { value: "completed", label: "Selesai" },
-  { value: "on-hold", label: "Ditunda" },
-  { value: "dropped", label: "Dihentikan" },
-  { value: "plan-to-read", label: "Akan Dibaca" },
+const STATUS_OPTIONS: { value: ReadingStatus; label: string; shortLabel: string }[] = [
+  { value: "reading", label: "Sedang Dibaca", shortLabel: "Dibaca" },
+  { value: "completed", label: "Selesai", shortLabel: "Selesai" },
+  { value: "on-hold", label: "Ditunda", shortLabel: "Ditunda" },
+  { value: "dropped", label: "Dihentikan", shortLabel: "Batal" },
+  { value: "plan-to-read", label: "Akan Dibaca", shortLabel: "Rencana" },
 ];
 
 export function MangaStatusButton({ sourceId, mangaId }: MangaStatusButtonProps) {
@@ -49,8 +49,8 @@ export function MangaStatusButton({ sourceId, mangaId }: MangaStatusButtonProps)
   };
 
   const getLabel = () => {
-    if (!mounted || !readingStatus) return "Status Membaca";
-    return STATUS_OPTIONS.find((o) => o.value === readingStatus)?.label || "Status Membaca";
+    if (!mounted || !readingStatus) return "Status";
+    return STATUS_OPTIONS.find((o) => o.value === readingStatus)?.shortLabel || "Status";
   };
 
   return (
@@ -59,14 +59,16 @@ export function MangaStatusButton({ sourceId, mangaId }: MangaStatusButtonProps)
         onClick={() => setIsOpen(true)}
         aria-label="Atur status baca"
         className={cn(
-          "flex items-center justify-center gap-2 min-h-[44px] px-4 transition-all outline-none select-none rounded-[14px] border shadow-xs active:scale-95 bg-surface-raised",
+          "flex items-center justify-center gap-1.5 h-[52px] md:h-[48px] px-1 md:px-3.5 transition-all outline-none select-none rounded-[14px] border shadow-xs active:scale-95 bg-surface-raised",
           readingStatus && mounted
             ? "border-accent/60 text-accent font-bold ring-1 ring-accent/20"
             : "border-border-default text-text-secondary hover:text-text-primary hover:border-border-strong hover:bg-surface-hover"
         )}
       >
-        <BookOpenText size={18} weight={readingStatus && mounted ? "fill" : "regular"} />
-        <span className="text-[11px] font-bold tracking-tight">{getLabel()}</span>
+        <BookOpenText size={18} weight={readingStatus && mounted ? "fill" : "regular"} className="shrink-0" />
+        <span className="hidden md:inline text-xs font-bold tracking-tight leading-none whitespace-nowrap">
+          {getLabel()}
+        </span>
       </button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -85,7 +87,7 @@ export function MangaStatusButton({ sourceId, mangaId }: MangaStatusButtonProps)
               </DialogDescription>
             </div>
           </DialogHeader>
-          
+
           <div className="flex flex-col gap-2 mt-1">
             {STATUS_OPTIONS.map((option) => {
               const isActive = readingStatus === option.value;

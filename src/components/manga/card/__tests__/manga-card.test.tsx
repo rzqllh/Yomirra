@@ -2,6 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
+import { useUpdateStore } from "@/shared/store/update-store";
 import { MangaCard, CollapsibleBadgeRow } from "../manga-card";
 
 vi.mock("next/navigation", () => ({
@@ -341,5 +342,59 @@ describe("MangaCard", () => {
 
     expect(screen.getByRole("heading", { name: "Reveal Manga" })).toBeDefined();
     expect(container.firstChild).toBeDefined();
+  });
+
+  it("caps progress to 95% and displays Baru badge when new chapter release exists in updateStore", () => {
+    useUpdateStore.setState({
+      items: {
+        "shinigami::machinaots": {
+          sourceId: "shinigami",
+          mangaId: "machinaots",
+          mangaTitle: "Machinaots",
+          latestChapterId: "ch-51",
+          seenAt: undefined,
+        },
+      },
+    });
+
+    render(
+      <MangaCard
+        variant="progress"
+        sourceId="shinigami"
+        progressPercent={100}
+        chapterTitle="Chapter 50"
+        chapterId="ch-50"
+        manga={{
+          id: "machinaots",
+          title: "Machinaots",
+          coverUrl: "https://example.com/cover.jpg",
+        }}
+      />
+    );
+
+    expect(screen.getByText("Baru")).toBeDefined();
+    expect(screen.getByText("95%")).toBeDefined();
+    expect(screen.queryByText("100%")).toBeNull();
+  });
+
+  it("caps progress to 95% and avoids 100% completed badge when manga status is ongoing", () => {
+    render(
+      <MangaCard
+        variant="progress"
+        sourceId="shinigami"
+        progressPercent={100}
+        chapterTitle="Chapter 50"
+        chapterId="ch-50"
+        manga={{
+          id: "ongoing-series",
+          title: "Ongoing Series",
+          coverUrl: "https://example.com/cover.jpg",
+          status: "ONGOING",
+        }}
+      />
+    );
+
+    expect(screen.getByText("95%")).toBeDefined();
+    expect(screen.queryByText("100%")).toBeNull();
   });
 });

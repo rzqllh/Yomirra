@@ -1,6 +1,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { getReaderHref } from "@/shared/lib/routes"
+import { beginNavigationIntent } from "@/shared/lib/navigation-intent"
 import { ChapterDownloadButton } from "@/components/manga/chapter-download-button"
 import { cn } from "@/shared/utils/cn"
 import { CaretLeft, Lock } from "@phosphor-icons/react"
@@ -40,6 +41,8 @@ export function ChapterRow({
     return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
   }, [date]);
 
+  const readerHref = getReaderHref(sourceId, mangaId, chapterId, returnTo);
+
   return (
     <article
       className={cn(
@@ -49,10 +52,16 @@ export function ChapterRow({
       )}
     >
       <Link
-        href={getReaderHref(sourceId, mangaId, chapterId, returnTo)}
-        replace
+        href={readerHref}
+        onClick={(e) => {
+          if (isLocked) {
+            e.preventDefault();
+            return;
+          }
+          beginNavigationIntent(readerHref);
+        }}
         aria-label={`Baca ${chapterTitle}`}
-        className="flex min-w-0 flex-1 items-center justify-between px-1 py-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        className="flex min-w-0 flex-1 items-center justify-between px-1 py-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:scale-[0.99] active:bg-accent/10 transition-transform"
       >
         <div className="flex min-w-0 flex-1 flex-col pr-4">
           <div className="flex items-center gap-2 mb-0.5">

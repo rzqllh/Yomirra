@@ -88,14 +88,14 @@ export function MangaCollectionButton({
       toast.success("Koleksi Berhasil Dibuat", {
         description: `Koleksi "${newCollectionName}" siap digunakan.`,
       });
-      
+
       const state = useCollectionStore.getState();
       const newCol = state.collections.find(c => c.name.toLowerCase() === newCollectionName.trim().toLowerCase());
       if (newCol) {
         ensureInLibrary();
         addMangaToCollection(mangaKey, newCol.id);
       }
-      
+
       setIsCreateMode(false);
       setNewCollectionName("");
     } catch (err: any) {
@@ -106,10 +106,10 @@ export function MangaCollectionButton({
   };
 
   const getLabel = () => {
-    if (!mounted || memberships.length === 0) return "Kelola Koleksi";
+    if (!mounted || memberships.length === 0) return "Koleksi";
     if (memberships.length === 1) {
       const col = collections.find(c => c.id === memberships[0]);
-      return col ? col.name : "Kelola Koleksi";
+      return col ? col.name : "Koleksi";
     }
     return `${memberships.length} Koleksi`;
   };
@@ -120,14 +120,16 @@ export function MangaCollectionButton({
         onClick={handleOpenClick}
         aria-label="Kelola koleksi"
         className={cn(
-          "flex items-center justify-center gap-2 min-h-[44px] px-4 transition-all outline-none select-none rounded-[14px] border shadow-xs active:scale-95 bg-surface-raised",
+          "flex items-center justify-center gap-1.5 h-[52px] md:h-[48px] px-1 md:px-3.5 transition-all outline-none select-none rounded-[14px] border shadow-xs active:scale-95 bg-surface-raised",
           memberships.length > 0 && mounted
             ? "border-accent/60 text-accent font-bold ring-1 ring-accent/20"
             : "border-border-default text-text-secondary hover:text-text-primary hover:border-border-strong hover:bg-surface-hover"
         )}
       >
-        <FolderPlus size={18} weight={memberships.length > 0 && mounted ? "fill" : "regular"} />
-        <span className="text-[11px] font-bold tracking-tight">{getLabel()}</span>
+        <FolderPlus size={18} weight={memberships.length > 0 && mounted ? "fill" : "regular"} className="shrink-0" />
+        <span className="hidden md:inline text-xs font-bold tracking-tight leading-none whitespace-nowrap">
+          {getLabel()}
+        </span>
       </button>
 
       <Dialog open={isOpen} onOpenChange={(open) => {
@@ -151,7 +153,7 @@ export function MangaCollectionButton({
                   </DialogDescription>
                 </div>
               </DialogHeader>
-              
+
               <div className="flex flex-col gap-2 mt-1 max-h-[300px] overflow-y-auto pr-1">
                 {collections.length === 0 ? (
                   <p className="text-sm text-text-muted text-center py-6 font-medium">Belum ada koleksi.</p>
@@ -178,9 +180,9 @@ export function MangaCollectionButton({
               </div>
 
               <div className="mt-2 pt-3 border-t border-border-default/40">
-                <Button 
-                  onClick={() => setIsCreateMode(true)} 
-                  variant="outline" 
+                <Button
+                  onClick={() => setIsCreateMode(true)}
+                  variant="outline"
                   className="w-full h-11 rounded-xl font-bold border-dashed border-border-default/80 hover:border-accent hover:text-accent"
                 >
                   <FolderPlus size={18} className="mr-2" /> Buat Koleksi Baru

@@ -5,8 +5,7 @@ import { useMounted } from "@/shared/hooks/use-mounted";
 import type { MangaItem } from "@/shared/types/source";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { cn } from "@/shared/utils/cn";
-import { MorphIcon } from "@/components/motion/morph-icon";
-import { morphIconPairs } from "@/shared/lib/motion/morph-icons";
+import { BookmarkSimple } from "@phosphor-icons/react";
 import { transitions } from "@/shared/lib/motion/tokens";
 
 import { motion, useReducedMotion } from "motion/react";
@@ -54,16 +53,20 @@ export function BookmarkButton({ sourceId, manga, className }: { sourceId: strin
       whileTap={reducedMotion ? undefined : { scale: 0.97 }}
       transition={reducedMotion ? { duration: 0 } : transitions.snappy}
       className={cn(
-        "relative grid size-11 place-items-center rounded-[12px] border border-border-subtle bg-surface-base/95 text-text-primary shadow-xs transition-colors hover:bg-surface-hover hover:border-accent/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer",
+        "group relative grid size-11 place-items-center rounded-[12px] border border-border-subtle bg-surface-base/95 text-text-primary shadow-xs transition-colors hover:bg-surface-hover hover:border-accent/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer",
         isInLibrary ? "text-accent bg-accent-dim border-accent/40" : "text-text-secondary",
         className
       )}
       aria-label={isInLibrary ? `Hapus ${manga.title} dari rak` : `Simpan ${manga.title} ke rak`}
       aria-pressed={isInLibrary}
     >
-      <MorphIcon
-        icon={isInLibrary ? morphIconPairs.bookmark.on : morphIconPairs.bookmark.off}
-        className={cn("size-5", isInLibrary ? "text-accent" : "text-text-secondary")}
+      <BookmarkSimple
+        size={19}
+        weight={isInLibrary ? "fill" : "regular"}
+        className={cn(
+          "transition-all duration-150",
+          isInLibrary ? "text-accent scale-105" : "text-text-secondary group-hover:text-text-primary"
+        )}
         aria-hidden="true"
       />
     </motion.button>

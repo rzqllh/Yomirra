@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useMounted } from "@/shared/hooks/use-mounted";
 import { getReaderHref, getSafeMangaDetailBackHref } from "@/shared/lib/routes";
+import { beginNavigationIntent } from "@/shared/lib/navigation-intent";
 import { MangaActions } from "@/components/manga/manga-actions";
 import { useHistoryStore } from "@/shared/store/history-store";
 import { Button } from "@/components/ui/button";
@@ -197,8 +198,8 @@ export function MangaDetailView({
   const renderMainAction = () => {
     if (!startChapterId && !continueChapterId) {
       return (
-        <div className="w-full mt-2">
-          <Button disabled variant="outline" className="w-full rounded-[16px] h-[52px] text-base font-bold bg-surface-raised border-border-default opacity-60">
+        <div className="w-full md:w-auto mt-2 md:mt-0">
+          <Button disabled variant="outline" className="w-full md:w-auto md:min-w-[210px] rounded-[14px] h-[52px] md:h-[48px] text-base font-bold bg-surface-raised border-border-default opacity-60">
             Belum ada chapter
           </Button>
         </div>
@@ -212,16 +213,18 @@ export function MangaDetailView({
       ? continueChapterLabel.replace('Chapter', 'Ch.') 
       : (firstChapter ? (firstChapter.title?.startsWith('Ch') ? firstChapter.title : `Chapter ${firstChapter.number || 1}`) : "Chapter 1");
 
+    const targetHref = getReaderHref(sourceId, mangaId, targetChapterId, readerReturnTo);
+
     return (
-      <div className="w-full mt-2">
+      <div className="w-full md:w-auto mt-2 md:mt-0">
         <Button
           asChild
           variant="accent"
-          className="w-full rounded-[16px] h-[52px] text-base font-bold flex items-center justify-center gap-2.5 bg-accent hover:bg-accent/90 text-white shadow-md active:scale-[0.98] transition-all"
+          className="w-full md:w-auto md:min-w-[210px] md:px-6 rounded-[14px] h-[52px] md:h-[48px] text-base font-bold flex items-center justify-center gap-2.5 bg-accent hover:bg-accent/90 text-white shadow-md active:scale-[0.98] transition-all"
         >
           <Link
-            href={getReaderHref(sourceId, mangaId, targetChapterId, readerReturnTo)}
-            replace
+            href={targetHref}
+            onClick={() => beginNavigationIntent(targetHref)}
             aria-label={`${primaryLabel} - ${companionLabel}`}
           >
             <Play className="h-[18px] w-[18px] shrink-0" fill="currentColor" weight="fill" />
@@ -364,9 +367,6 @@ export function MangaDetailView({
                   {authorDisplay}
                 </p>
               )}
-              <p className="text-[11px] font-medium text-white/75 leading-snug">
-                Sumber: <span className="text-accent font-semibold">{sourceName}</span>
-              </p>
             </div>
           </>
         }
@@ -429,9 +429,6 @@ export function MangaDetailView({
                   {authorDisplay}
                 </p>
               )}
-              <p className="text-xs font-medium text-white/75">
-                Sumber: <span className="text-accent font-semibold">{sourceName}</span>
-              </p>
             </div>
           </>
         }
