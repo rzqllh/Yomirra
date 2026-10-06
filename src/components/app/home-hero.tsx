@@ -32,15 +32,15 @@ function pickSessionCovers(candidates: HeroCandidate[], count = 3): HeroCandidat
 }
 
 const coverPositions = [
-  "right-[44%] top-3 w-[58px] sm:right-[46%] sm:top-7 sm:w-[78px] lg:w-[86px]",
-  "right-[16%] top-1 w-[64px] sm:right-[22%] sm:top-3 sm:w-[90px] lg:w-[98px]",
+  "right-[28%] sm:right-[46%] top-3 sm:top-7 w-[58px] sm:w-[78px] lg:w-[86px]",
+  "right-[4%] sm:right-[22%] top-1 sm:top-3 w-[64px] sm:w-[90px] lg:w-[98px]",
   "hidden sm:block right-[3%] top-8 w-[80px] lg:w-[88px]",
 ] as const;
 
 export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
   const mounted = useMounted();
   const { user } = useAuth();
-  const [query, setQuery] = React.useState("");
+
   const [sessionCovers, setSessionCovers] = React.useState<HeroCandidate[]>([]);
   const [loadedCovers, setLoadedCovers] = React.useState<Set<string>>(() => new Set());
   const [failedCovers, setFailedCovers] = React.useState<Set<string>>(() => new Set());
@@ -85,21 +85,6 @@ export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
     }
   }, [mounted, candidates]);
 
-  const openGlobalSearch = React.useCallback(
-    (value = query) => {
-      window.dispatchEvent(
-        new CustomEvent("open-command-menu", {
-          detail: { query: value.trim() },
-        })
-      );
-    },
-    [query]
-  );
-
-  const handleSearch = (event: React.FormEvent) => {
-    event.preventDefault();
-    openGlobalSearch();
-  };
 
   return (
     <section
@@ -109,12 +94,13 @@ export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
         className
       )}
     >
+      {/* Decorative cover collage */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute right-0 top-0 h-[132px] w-[50%] overflow-hidden sm:inset-y-0 sm:h-auto sm:w-[46%] lg:w-[42%]"
+        className="pointer-events-none absolute right-0 top-0 h-[140px] w-[50%] overflow-hidden sm:inset-y-0 sm:h-auto sm:w-[46%] lg:w-[42%]"
         style={{
-          maskImage: "linear-gradient(to right, transparent 0%, black 42%)",
-          WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 42%)",
+          maskImage: "linear-gradient(to right, transparent 0%, black 38%)",
+          WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 38%)",
         }}
       >
         {sessionCovers.map((cover, index) => {
@@ -151,7 +137,7 @@ export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
                 }
                 className={cn(
                   "size-full object-cover transition-opacity duration-200",
-                  loaded ? "opacity-75 sm:opacity-85" : "opacity-0"
+                  loaded ? "opacity-75 sm:opacity-85 lg:opacity-90" : "opacity-0"
                 )}
               />
             </div>
@@ -160,50 +146,53 @@ export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
       </div>
 
       <div className="relative z-10 flex min-h-[218px] flex-col justify-center p-5 sm:min-h-[220px] sm:max-w-[64%] sm:p-6 lg:max-w-[60%] lg:px-7">
-        <p className="mb-2 max-w-[78%] text-[11px] font-extrabold uppercase tracking-[0.14em] text-accent sm:max-w-none">
+        <p className="mb-2 text-[11px] font-extrabold uppercase tracking-[0.14em] text-accent">
           {isReturning ? "LANJUT LAGI DI YOMIRRA" : "BACAANMU DIMULAI DI SINI"}
         </p>
 
         <h1
           id="home-hero-title"
-          className="mb-5 max-w-[78%] text-[28px] font-black leading-[1.12] tracking-tight text-text-primary sm:max-w-none sm:text-[30px] lg:text-[32px]"
+          className="mb-4 text-[26px] sm:text-[30px] lg:text-[32px] font-black leading-[1.15] tracking-tight text-text-primary"
         >
           Mau baca apa hari ini?
         </h1>
 
-        <form
-          onSubmit={handleSearch}
+        <div
           role="search"
-          className="flex h-12 w-full max-w-[500px] items-center gap-2.5 rounded-[12px] border border-border-strong bg-surface-overlay px-2.5 shadow-xs transition-colors focus-within:border-accent"
+          aria-label="Pencarian Beranda"
+          className="w-full max-w-[500px]"
         >
-          <MagnifyingGlass
-            size={19}
-            weight="regular"
-            className="ml-1 shrink-0 text-text-muted"
-            aria-hidden="true"
-          />
-          <input
-            type="search"
-            value={query}
-            onChange={(event) => {
-              const next = event.target.value;
-              setQuery(next);
-              openGlobalSearch(next);
-            }}
-            onFocus={() => openGlobalSearch()}
-            placeholder="Cari judul atau kreator…"
-            aria-label="Cari komik"
-            className="min-w-0 flex-1 bg-transparent text-sm font-medium text-text-primary outline-none placeholder:text-text-muted"
-          />
           <button
-            type="submit"
-            aria-label="Cari"
-            className="flex size-11 shrink-0 items-center justify-center rounded-[10px] bg-accent text-accent-on transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            type="button"
+            id="home-hero-search"
+            aria-label="Cari judul atau kreator…"
+            onClick={() => window.dispatchEvent(new CustomEvent("open-command-menu"))}
+            className="flex h-12 w-full items-center gap-2.5 rounded-[12px] border border-border-strong bg-surface-overlay px-2.5 shadow-xs transition-colors hover:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer select-none text-left active:scale-[0.995]"
           >
-            <MagnifyingGlass size={18} weight="bold" aria-hidden="true" />
+            <MagnifyingGlass
+              size={19}
+              weight="regular"
+              className="ml-1 shrink-0 text-text-muted"
+              aria-hidden="true"
+            />
+            <input
+              type="text"
+              readOnly
+              tabIndex={-1}
+              placeholder="Cari judul atau kreator…"
+              className="min-w-0 flex-1 bg-transparent text-sm font-medium text-text-primary outline-none placeholder:text-text-muted cursor-pointer pointer-events-none"
+            />
+            <div
+              aria-hidden="true"
+              className="flex size-11 shrink-0 items-center justify-center rounded-[10px] bg-accent text-accent-on transition-colors hover:bg-accent-hover"
+            >
+              <MagnifyingGlass size={18} weight="bold" />
+            </div>
           </button>
-        </form>
+        </div>
       </div>
     </section>
   );
 }
+
+

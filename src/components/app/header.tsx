@@ -58,13 +58,13 @@ export function PageHeader({
   className,
 }: PageHeaderProps) {
   const router = useRouter()
-  const [scrollY, setScrollY] = React.useState(0)
+  const [isScrolled, setIsScrolled] = React.useState(false)
   const [detailTitleVisible, setDetailTitleVisible] = React.useState(false)
   const sub = subtitle ?? description
 
   React.useEffect(() => {
     const handleScroll = () => {
-      setScrollY(window.scrollY)
+      setIsScrolled(window.scrollY > 12)
     }
 
     window.addEventListener("scroll", handleScroll, { passive: true })
@@ -78,22 +78,33 @@ export function PageHeader({
       return
     }
 
-    const anchor = detailTitleAnchorId
+    const desktopAnchor = document.getElementById("manga-detail-title-desktop")
+    const mobileAnchor = detailTitleAnchorId
       ? document.getElementById(detailTitleAnchorId)
       : null
-    if (!anchor || typeof IntersectionObserver === "undefined") {
+
+    const anchors = [desktopAnchor, mobileAnchor].filter(Boolean) as HTMLElement[]
+    if (anchors.length === 0 || typeof IntersectionObserver === "undefined") {
       setDetailTitleVisible(false)
       return
     }
 
     const observer = new IntersectionObserver(
-      ([entry]) => setDetailTitleVisible(!entry.isIntersecting),
+      (entries) => {
+        const isDesktop = typeof window !== "undefined" && window.innerWidth >= 768
+        const targetEntry = isDesktop
+          ? entries.find((e) => e.target.id === "manga-detail-title-desktop") || entries[0]
+          : entries.find((e) => e.target.id === detailTitleAnchorId) || entries[0]
+        if (targetEntry) {
+          setDetailTitleVisible(!targetEntry.isIntersecting)
+        }
+      },
       {
         threshold: 0,
         rootMargin: "-56px 0px 0px 0px",
       }
     )
-    observer.observe(anchor)
+    anchors.forEach((a) => observer.observe(a))
     return () => observer.disconnect()
   }, [detailTitleAnchorId, mode])
 
@@ -116,7 +127,6 @@ export function PageHeader({
 
   // Glass reacts to scroll, while detail-title visibility is tied to the actual
   // hero title leaving the viewport rather than a viewport-specific magic number.
-  const isScrolled = scrollY > 12
   const isTitleVisible = mode === "detail" ? detailTitleVisible : true
   const isGlass =
     variant === "glass" ||
@@ -140,7 +150,12 @@ export function PageHeader({
               <button
                 type="button"
                 onClick={handleBack}
-                className="yomirra-chrome-control flex size-10 items-center justify-center rounded-2xl text-text-primary active:scale-95 transition-all shrink-0 select-none outline-none cursor-pointer"
+                className={cn(
+                  "flex size-10 items-center justify-center rounded-2xl active:scale-95 transition-all shrink-0 select-none outline-none cursor-pointer",
+                  mode === "detail" && !isGlass
+                    ? "bg-black/40 hover:bg-black/60 text-white backdrop-blur-md border border-white/20 shadow-sm"
+                    : "yomirra-chrome-control text-text-primary"
+                )}
                 aria-label="Kembali"
               >
                 <CaretLeft size={20} weight="bold" />
@@ -180,7 +195,12 @@ export function PageHeader({
           </div>
 
           {actions && (
-            <div className="flex items-center gap-1.5 shrink-0 ml-2">
+            <div
+              className={cn(
+                "flex items-center gap-1.5 shrink-0 ml-2",
+                mode === "detail" && !isGlass && "[&_button]:bg-black/40 [&_button]:hover:bg-black/60 [&_button]:text-white [&_button]:backdrop-blur-md [&_button]:border-white/20 [&_button]:shadow-sm"
+              )}
+            >
               {actions}
             </div>
           )}

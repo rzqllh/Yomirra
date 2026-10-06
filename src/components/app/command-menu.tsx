@@ -70,7 +70,7 @@ export function CommandMenu() {
   }, [pathname]);
 
   // Search manga globally with word debounce & timeout limiting
-  const debouncedQuery = useDebounce(searchQuery.trim(), 350)
+  const debouncedQuery = useDebounce(searchQuery.trim(), 180)
   const isNsfwFiltered = useSettingsStore((state) => state.hideNsfw)
   // Global Search intentionally ignores Library/Popular source toggles.
   // Only sources that are operationally unavailable are excluded here.
@@ -120,9 +120,13 @@ export function CommandMenu() {
 
     if (!nextOpen && restoreFocusOnCloseRef.current) {
       const trigger = triggerRef.current
-      requestAnimationFrame(() => {
-        trigger?.focus({ preventScroll: true })
-      })
+      if (trigger instanceof HTMLInputElement) {
+        trigger.blur()
+      } else {
+        requestAnimationFrame(() => {
+          trigger?.focus({ preventScroll: true })
+        })
+      }
     }
   }, [])
 

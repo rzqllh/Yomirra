@@ -9,6 +9,7 @@ import { useAuth } from "@/shared/hooks/use-auth";
 import { ThemeToggle } from "./theme-toggle";
 import { UpdatesBell } from "./updates-bell";
 import { cn } from "@/shared/utils/cn";
+import { useSidebarStore } from "@/shared/store/sidebar-store";
 
 const ROUTE_LABELS: Record<string, string> = {
   "": "Beranda",
@@ -27,16 +28,38 @@ const ROUTE_LABELS: Record<string, string> = {
 export function TopNav() {
   const pathname = usePathname();
   const { user, loginWithGoogle, logout } = useAuth();
+  const isCollapsed = useSidebarStore((state) => state.isCollapsed);
 
   const segments = (pathname || "").split("/").filter(Boolean);
   const primarySegment = segments[0] || "";
   const pageLabel = ROUTE_LABELS[primarySegment] || primarySegment;
-  
-  // No scroll-morph — always full-width nav (H7)
+  const isHome = pathname === "/";
 
   // Profile dropdown state
   const [isProfileOpen, setIsProfileOpen] = React.useState(false);
   const profileRef = React.useRef<HTMLDivElement>(null);
+  const [scrolledPastHero, setScrolledPastHero] = React.useState(!isHome);
+
+  const shouldShowSearch =
+    pathname !== "/library" &&
+    pathname !== "/search" &&
+    (!isHome || scrolledPastHero);
+
+  React.useEffect(() => {
+    if (!isHome) {
+      setScrolledPastHero(true);
+      return;
+    }
+
+    const checkScroll = () => {
+      // Reveal search pill in header when user scrolls past hero search area (> 180px)
+      setScrolledPastHero(window.scrollY > 180);
+    };
+
+    window.addEventListener("scroll", checkScroll, { passive: true });
+    checkScroll();
+    return () => window.removeEventListener("scroll", checkScroll);
+  }, [isHome]);
 
   React.useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -54,7 +77,13 @@ export function TopNav() {
       {/* Spacer to reserve layout space for the fixed nav */}
       <div className="hidden md:block h-[68px] w-full shrink-0" />
       
-      <header className="hidden md:flex fixed top-0 left-0 md:left-[76px] xl:left-[240px] right-0 z-40 h-[68px] bg-surface-base/85 backdrop-blur-md border-b border-border-subtle items-center px-6 lg:px-8 justify-between transition-[left] duration-300">
+      <header
+        style={{ top: "var(--announcement-height, 0px)" }}
+        className={cn(
+          "hidden md:flex fixed right-0 z-40 h-[68px] bg-surface-base/85 backdrop-blur-md border-b border-border-subtle items-center px-6 lg:px-8 justify-between transition-[left,top] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
+          isCollapsed ? "left-[76px]" : "left-[76px] xl:left-[240px]"
+        )}
+      >
         {/* LEFT: Global Editorial Breadcrumb (Phase 3) */}
         <nav aria-label="Breadcrumb" className="flex items-center gap-2">
           <ol className="flex items-center gap-2 text-xs">
@@ -77,32 +106,28 @@ export function TopNav() {
 
         {/* RIGHT: Search + Bell + Theme + Profile */}
         <div className="flex items-center gap-2 sm:gap-2.5 h-full">
-          {/* Global Search Trigger (hidden on home '/' where hero banner has dedicated search bar, and on '/library' and '/search') */}
-          {pathname !== '/' && pathname !== '/library' && pathname !== '/search' && (
-            <div className="flex items-center">
-              {/* Desktop pill */}
+          {/* Sticky search pill: visible on non-home pages or when scrolled past hero */}
+          {shouldShowSearch && (
+            <div className="hidden md:flex h-9 w-48 lg:w-56 shrink-0 items-center justify-end">
               <button
+                type="button"
                 onClick={() => window.dispatchEvent(new CustomEvent("open-command-menu"))}
+                aria-label="Cari komik (Tekan ⌘K)"
                 className={cn(
-                  "hidden sm:flex items-center gap-2.5 px-3 rounded-sm transition-colors text-text-secondary hover:text-text-primary text-xs font-semibold h-9 w-48 lg:w-56",
-                  "bg-surface-raised border border-border-subtle hover:border-accent/40 hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-accent"
+                  "flex items-center gap-2.5 px-3 rounded-sm text-text-secondary hover:text-text-primary text-xs font-semibold h-9 w-full cursor-pointer select-none",
+                  "bg-surface-raised border border-border-subtle hover:border-accent/40 hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-accent",
+                  "transition-all duration-200 ease-out"
                 )}
               >
-                <MagnifyingGlass size={16} weight="regular" className="text-text-muted shrink-0" />
-                <span className="flex-1 text-left opacity-70">Cari komik…</span>
-                <kbd className="hidden lg:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono text-text-muted bg-surface-muted rounded-xs border border-border-subtle">⌘K</kbd>
-              </button>
-              
-              {/* Mobile icon only */}
-              <button 
-                onClick={() => window.dispatchEvent(new CustomEvent("open-command-menu"))}
-                className="sm:hidden flex items-center justify-center size-9 rounded-sm bg-surface-raised border border-border-subtle hover:bg-surface-hover text-text-secondary outline-none"
-                aria-label="Cari"
-              >
-                <MagnifyingGlass size={18} weight="duotone" />
+                <MagnifyingGlass size={16} weight="regular" className="text-text-muted shrink-0" aria-hidden="true" />
+                <span className="flex-1 text-left opacity-70 truncate">Cari komik…</span>
+                <kbd className="hidden lg:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono text-text-muted bg-surface-muted rounded-xs border border-border-subtle">
+                  ⌘K
+                </kbd>
               </button>
             </div>
           )}
+
           
           {/* Notification Bell */}
           <UpdatesBell />

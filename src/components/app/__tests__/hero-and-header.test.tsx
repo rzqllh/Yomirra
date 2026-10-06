@@ -83,14 +83,12 @@ describe("Header & Hero System (Squircle & Reusable)", () => {
       window.addEventListener("open-command-menu", listener);
 
       render(<HomeHero />);
-      const input = screen.getByPlaceholderText(
-        /Cari judul atau kreator/i
-      );
-      fireEvent.change(input, { target: { value: "solo leveling" } });
+      const button = screen.getByRole("button", {
+        name: /Cari judul atau kreator/i,
+      });
+      fireEvent.click(button);
 
       expect(listener).toHaveBeenCalled();
-      const lastEvent = listener.mock.calls.at(-1)?.[0] as CustomEvent;
-      expect(lastEvent.detail).toEqual({ query: "solo leveling" });
 
       window.removeEventListener("open-command-menu", listener);
     });
