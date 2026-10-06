@@ -4,9 +4,6 @@ import * as React from "react"
 import {
   ArrowsClockwise,
   Bug,
-  CaretDown,
-  CaretUp,
-  Clock,
   DotsThreeVertical,
   Plug,
   Trash,
@@ -43,28 +40,11 @@ type ReaderHealth = {
 }
 
 function getReaderHealth(status: string): ReaderHealth {
-  if (status === "online") return { label: "Berfungsi", variant: "success" }
+  if (status === "online") return { label: "Normal", variant: "success" }
   if (status === "slow") return { label: "Lambat", variant: "warning" }
   if (status === "degraded") return { label: "Gangguan", variant: "warning" }
-  if (status === "unknown") return { label: "Belum diperiksa", variant: "muted" }
-  if (status === "in-dev") return { label: "Belum tersedia", variant: "muted" }
-  return { label: "Tidak tersedia", variant: "error" }
-}
-
-function formatLastChecked(timestamp: number, fallback?: string): string {
-  if (timestamp > 0) {
-    return new Intl.DateTimeFormat("id-ID", {
-      hour: "2-digit",
-      minute: "2-digit",
-    }).format(new Date(timestamp))
-  }
-  return fallback?.trim() || "Belum diperiksa"
-}
-
-function joinContexts(items: string[]): string {
-  if (items.length <= 1) return items[0] ?? ""
-  if (items.length === 2) return `${items[0]} dan ${items[1]}`
-  return `${items.slice(0, -1).join(", ")}, dan ${items.at(-1)}`
+  if (status === "unknown") return { label: "Normal", variant: "success" }
+  return { label: "Tidak dapat digunakan", variant: "error" }
 }
 
 export function SourceCard({ source, onUpdate }: SourceCardProps) {
@@ -72,7 +52,6 @@ export function SourceCard({ source, onUpdate }: SourceCardProps) {
   const health = useSourceHealthStore((state) => state.getHealth(source.id))
   const { isSourceDisabled, toggleSource } = useSourcePreferencesStore()
   const [reportOpen, setReportOpen] = React.useState(false)
-  const [detailsOpen, setDetailsOpen] = React.useState(false)
 
   const effectiveStatus =
     health.status === "unknown" ? source.status || "unknown" : health.status
@@ -82,31 +61,7 @@ export function SourceCard({ source, onUpdate }: SourceCardProps) {
   )
   const isPreferenceEnabled = !isSourceDisabled(source.id)
   const discoveryEligible = isDiscoverySourceSystemEligible(source)
-  const searchEligible = isSearchSourceSystemEligible(source)
   const isCustom = Boolean(source.manifestUrl)
-
-  const checkedAt = Math.max(health.lastSuccessAt || 0, health.lastErrorAt || 0)
-  const lastChecked = formatLastChecked(checkedAt, source.healthStats?.lastChecked)
-
-  const availableContexts = [
-    ...(discoveryEligible ? ["Beranda", "Library", "Populer"] : []),
-    ...(searchEligible ? ["pencarian"] : []),
-  ]
-  const availabilityCopy = isUnavailable
-    ? "Untuk sementara sumber ini tidak dapat digunakan."
-    : availableContexts.length > 0
-      ? `Dapat digunakan di ${joinContexts(availableContexts)}.`
-      : "Sumber ini belum tersedia untuk penjelajahan."
-
-  const capabilityLabels = [
-    source.capabilities.popular && "Populer",
-    source.capabilities.latest && "Terbaru",
-    source.capabilities.search && "Pencarian",
-    source.capabilities.detail && "Detail komik",
-    source.capabilities.chapters && "Daftar chapter",
-    source.capabilities.pages && "Pembaca",
-    source.capabilities.filters && "Filter",
-  ].filter((value): value is string => Boolean(value))
 
   const handleDelete = async () => {
     if (!confirm(`Hapus sumber ${source.name}?`)) return
@@ -172,6 +127,9 @@ export function SourceCard({ source, onUpdate }: SourceCardProps) {
               </h2>
               <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                 <Badge variant={readerHealth.variant}>{readerHealth.label}</Badge>
+                {source.language && (
+                  <Badge variant="muted">{source.language.toUpperCase()}</Badge>
+                )}
                 {source.isNsfw && (
                   <Badge variant="error" aria-label="Sumber khusus 18 tahun ke atas">
                     18+
@@ -208,53 +166,27 @@ export function SourceCard({ source, onUpdate }: SourceCardProps) {
             )}
           </div>
 
-          <p className="mt-3 text-sm leading-relaxed text-text-secondary">
-            {availabilityCopy}
-          </p>
-          <p className="mt-1.5 flex items-center gap-1.5 text-xs text-text-muted">
-            <Clock size={14} aria-hidden="true" />
-            Terakhir diperiksa {lastChecked}
-          </p>
-
-          <button
-            type="button"
-            onClick={() => setDetailsOpen((open) => !open)}
-            className="mt-2 inline-flex min-h-11 items-center gap-1.5 rounded-lg px-1 text-xs font-bold text-text-muted transition-colors hover:text-text-primary focus-visible:outline-2 focus-visible:outline-accent"
-            aria-expanded={detailsOpen}
-          >
-            {detailsOpen ? <CaretUp size={14} /> : <CaretDown size={14} />}
-            {detailsOpen ? "Sembunyikan detail" : "Lihat detail"}
-          </button>
+          {isUnavailable ? (
+            <div className="mt-2.5 flex items-center justify-between gap-2">
+              <p className="text-xs font-medium text-semantic-error">
+                Sumber tidak dapat digunakan saat ini.
+              </p>
+              <button
+                type="button"
+                onClick={() => setReportOpen(true)}
+                className="inline-flex items-center gap-1 text-xs font-semibold text-text-muted hover:text-text-primary transition-colors shrink-0"
+              >
+                <Bug size={13} aria-hidden="true" />
+                <span>Laporkan</span>
+              </button>
+            </div>
+          ) : source.description ? (
+            <p className="mt-2.5 text-xs text-text-secondary line-clamp-2 leading-relaxed">
+              {source.description}
+            </p>
+          ) : null}
         </div>
       </div>
-
-      {detailsOpen && (
-        <div className="border-t border-border-subtle bg-surface-base/45 px-4 py-3 text-xs text-text-muted">
-          <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5">
-            <dt className="font-semibold text-text-secondary">Bahasa</dt>
-            <dd>{source.language?.toUpperCase() || "—"}</dd>
-            {source.version && (
-              <>
-                <dt className="font-semibold text-text-secondary">Versi</dt>
-                <dd>{source.version}</dd>
-              </>
-            )}
-            <dt className="font-semibold text-text-secondary">Tersedia</dt>
-            <dd>{capabilityLabels.join(", ") || "—"}</dd>
-          </dl>
-
-          {isUnavailable && (
-            <button
-              type="button"
-              onClick={() => setReportOpen(true)}
-              className="mt-3 inline-flex min-h-11 items-center gap-1.5 rounded-lg px-1 font-semibold text-text-secondary transition-colors hover:text-text-primary focus-visible:outline-2 focus-visible:outline-accent"
-            >
-              <Bug size={14} aria-hidden="true" />
-              Laporkan masalah
-            </button>
-          )}
-        </div>
-      )}
 
       <div className="flex items-center justify-between gap-3 border-t border-border-subtle bg-surface-base/35 px-4 py-2.5">
         <div className="flex min-w-0 items-center gap-2.5">

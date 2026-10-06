@@ -53,6 +53,9 @@ describe("design-token contrast", () => {
     ["dark warning status", darkBlock, "status-warning-fg", "status-warning-bg"],
     ["dark error status", darkBlock, "status-error-fg", "status-error-bg"],
     ["dark info status", darkBlock, "status-info-fg", "status-info-bg"],
+    ["dark hover accent on-accent", darkBlock, "color-accent-hover", "text-on-accent"],
+    ["dark hover surface primary", darkBlock, "text-primary", "surface-hover"],
+    ["dark hover surface muted", darkBlock, "text-muted", "surface-hover"],
     ["light accent button", lightBlock, "color-accent", "text-on-accent"],
     ["light muted metadata", lightBlock, "text-muted", "surface-base"],
     ["light secondary metadata", lightBlock, "text-secondary", "surface-base"],
@@ -62,6 +65,9 @@ describe("design-token contrast", () => {
     ["light warning status", lightBlock, "status-warning-fg", "status-warning-bg"],
     ["light error status", lightBlock, "status-error-fg", "status-error-bg"],
     ["light info status", lightBlock, "status-info-fg", "status-info-bg"],
+    ["light hover accent on-accent", lightBlock, "color-accent-hover", "text-on-accent"],
+    ["light hover surface primary", lightBlock, "text-primary", "surface-hover"],
+    ["light hover surface muted", lightBlock, "text-muted", "surface-hover"],
   ])("%s remains at least 4.5:1", (_label, block, foreground, background) => {
     expect(
       contrastRatio(token(block, foreground), token(block, background))

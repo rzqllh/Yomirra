@@ -51,19 +51,37 @@ export function UpdatesBell({ className }: { className?: string } = {}) {
     }
   }
 
-  // Get recent updates sorted by detectedAt
+  // Get recent updates sorted by detectedAt and deduplicated by manga key
   const recentUpdates = React.useMemo(() => {
     if (!itemsMap || typeof itemsMap !== "object") return []
     const list = Object.values(itemsMap).filter(
       (item) => Boolean(item && item.sourceId && item.mangaId && item.latestChapterId && !item.error)
     )
-    return list
-      .sort((a, b) => {
-        const timeA = a.detectedAt ? new Date(a.detectedAt).getTime() : 0
-        const timeB = b.detectedAt ? new Date(b.detectedAt).getTime() : 0
-        return timeB - timeA
-      })
-      .slice(0, 5)
+
+    const sorted = list.sort((a, b) => {
+      const timeA = a.detectedAt ? new Date(a.detectedAt).getTime() : 0
+      const timeB = b.detectedAt ? new Date(b.detectedAt).getTime() : 0
+      return timeB - timeA
+    })
+
+    const seenManga = new Set<string>()
+    const seenSaved = new Set<string>()
+    const deduped: typeof list = []
+
+    for (const item of sorted) {
+      const mangaKey = `${item.sourceId}::${item.mangaId}`
+      const savedKey = item.savedTitleId
+
+      if (seenManga.has(mangaKey) || (savedKey && seenSaved.has(savedKey))) {
+        continue
+      }
+
+      seenManga.add(mangaKey)
+      if (savedKey) seenSaved.add(savedKey)
+      deduped.push(item)
+    }
+
+    return deduped.slice(0, 5)
   }, [itemsMap])
 
   const displayCount = unreadCount > 99 ? "99+" : unreadCount
@@ -154,12 +172,14 @@ export function UpdatesBell({ className }: { className?: string } = {}) {
                 ? `/manga/${item.sourceId}/${item.mangaId}/read/${item.latestChapterId}`
                 : `/manga/${item.sourceId}/${item.mangaId}`
 
+              const uniqueKey = item.savedTitleId ? `update-${item.savedTitleId}` : `update-${item.sourceId}::${item.mangaId}`
+
               return (
-                <DropdownMenuItem asChild key={`${item.sourceId}::${item.mangaId}`}>
+                <DropdownMenuItem asChild key={uniqueKey}>
                   <Link
                     href={targetHref}
                     onClick={() => setIsOpen(false)}
-                    className="flex items-center gap-3 px-3.5 py-2.5 hover:bg-surface-hover/80 transition-colors cursor-pointer group"
+                    className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl hover:bg-surface-hover/80 focus:bg-surface-hover transition-colors cursor-pointer group outline-none"
                   >
                     <div className="relative w-10 h-14 rounded-md overflow-hidden bg-surface-base shrink-0 border border-border-subtle shadow-xs">
                       <MangaCover
@@ -194,7 +214,7 @@ export function UpdatesBell({ className }: { className?: string } = {}) {
             <Link
               href="/updates"
               onClick={() => setIsOpen(false)}
-              className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-bold text-accent hover:text-accent-hover hover:bg-accent/10 transition-colors cursor-pointer"
+              className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-bold text-accent hover:text-accent-hover hover:bg-accent-dim focus:bg-accent-dim focus:text-accent-hover transition-colors cursor-pointer outline-none"
             >
               <span>Tampilkan semua notifikasi</span>
               <ArrowRight size={14} weight="bold" />

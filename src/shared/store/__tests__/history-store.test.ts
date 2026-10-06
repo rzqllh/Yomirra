@@ -100,4 +100,9 @@ describe('history-store', () => {
     expect(continueReading[0].savedTitleId).toBe('canonical');
   });
 
+  it('safely handles resolveSavedTitleId when library is not yet hydrated or resolved', () => {
+    const store = useHistoryStore.getState();
+    const resolved = store.resolveSavedTitleId('unknownSource', 'unknownManga');
+    expect(resolved).toBeNull();
+  });
 });

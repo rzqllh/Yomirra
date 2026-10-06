@@ -128,7 +128,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
   };
 
   const settingsContent = (
-    <div className="grid gap-6 xl:grid-cols-2 xl:items-start">
+    <div className="grid gap-6 lg:grid-cols-2 lg:items-start">
       <div className="flex min-w-0 flex-col gap-6">
         {/* Akun & Profil */}
         <SettingsSection title="Akun & Profil">

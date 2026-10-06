@@ -304,6 +304,10 @@ export const useHistoryStore = create<HistoryState>()(
         );
         if (anyItem?.savedTitleId) return anyItem.savedTitleId;
 
+        if (typeof useLibraryStore.persist?.hasHydrated === "function" && !useLibraryStore.persist.hasHydrated()) {
+          return null;
+        }
+
         const libraryState = useLibraryStore.getState();
         if (libraryState?.resolveBySourceRef) {
           const match = libraryState.resolveBySourceRef(sourceId, mangaId);

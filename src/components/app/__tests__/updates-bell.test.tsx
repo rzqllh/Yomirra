@@ -102,4 +102,36 @@ describe('UpdatesBell Component', () => {
     expect(allUpdatesLink).toBeDefined();
     expect(allUpdatesLink.getAttribute('href')).toBe('/updates');
   });
+
+  it('deduplicates multiple entries for the same manga to prevent duplicate keys and duplicate rows', () => {
+    setupStore(2, {
+      'legacy-key': {
+        sourceId: 'shinigami',
+        mangaId: 'eefbdd4d-a794-43da-9725-180c98114d40',
+        mangaTitle: 'The Regressed Mercenary',
+        latestChapterId: 'ch-108',
+        latestChapterTitle: 'Chapter 108',
+        detectedAt: new Date(Date.now() - 300000).toISOString(),
+      },
+      'saved-key': {
+        sourceId: 'shinigami',
+        mangaId: 'eefbdd4d-a794-43da-9725-180c98114d40',
+        savedTitleId: 'eefbdd4d-a794-43da-9725-180c98114d40',
+        mangaTitle: 'The Regressed Mercenary',
+        latestChapterId: 'ch-109',
+        latestChapterTitle: 'Chapter 109',
+        detectedAt: new Date(Date.now() - 60000).toISOString(),
+      },
+    });
+
+    render(<UpdatesBell />);
+    const bellBtn = screen.getByRole('button', { name: 'Pembaruan, 2 belum dibaca' });
+    fireEvent.pointerDown(bellBtn);
+
+    const titleElements = screen.getAllByText('The Regressed Mercenary');
+    // Should be deduplicated to exactly 1 item in the list
+    expect(titleElements).toHaveLength(1);
+    expect(screen.getByText('Chapter 109')).toBeDefined();
+    expect(screen.queryByText('Chapter 108')).toBeNull();
+  });
 });

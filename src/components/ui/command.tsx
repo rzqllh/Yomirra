@@ -31,7 +31,10 @@ const CommandDialog = ({ children, shouldFilter, filter, ...props }: CommandDial
       <DialogPortal>
         <DialogOverlay />
         <DialogPrimitive.Content
-          className="ink-dialog-content fixed left-1/2 top-1/2 z-[var(--z-overlay)] -translate-x-1/2 -translate-y-1/2 w-[calc(100vw-32px)] max-w-xl sm:max-w-2xl max-h-[85vh] rounded-[20px] border border-border-subtle bg-surface-base text-text-primary shadow-2xl p-0 overflow-hidden outline-none flex flex-col"
+          className="command-dialog-content fixed left-1/2 top-[12vh] sm:top-[16vh] z-[var(--z-overlay)] -translate-x-1/2 w-[calc(100vw-32px)] max-w-xl sm:max-w-2xl max-h-[78vh] rounded-[20px] border border-border-subtle bg-surface-base text-text-primary shadow-2xl p-0 overflow-hidden outline-none flex flex-col"
+          onCloseAutoFocus={(e) => {
+            e.preventDefault();
+          }}
         >
           <DialogTitle className="sr-only">Menu Pencarian</DialogTitle>
           <Command
