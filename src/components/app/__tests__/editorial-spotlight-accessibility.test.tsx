@@ -1,6 +1,14 @@
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { apiClient } from "@/shared/api-client";
 import { EditorialSpotlight } from "../editorial-spotlight";
+
+vi.mock("@/shared/api-client", () => ({
+  apiClient: {
+    getDetail: vi.fn(),
+  },
+}));
 
 const manga = {
   id: "manga-a",
@@ -12,7 +20,7 @@ const manga = {
 };
 
 describe("EditorialSpotlight accessibility", () => {
-  it("renders synopsis-absent slot and fallback text when synopsis is missing", () => {
+  it("renders synopsis-absent slot with truthful metadata composition and no placeholder text when synopsis is missing", () => {
     const { container } = render(
       <EditorialSpotlight
         manga={{ id: "manga-b", title: "Manga B", coverUrl: "/cover-b.jpg" }}
@@ -21,8 +29,9 @@ describe("EditorialSpotlight accessibility", () => {
       />
     );
 
-    expect(screen.getByText("Sinopsis belum tersedia")).toBeTruthy();
-    // When synopsis is absent, a dedicated slot is rendered instead of reserving empty geometry
+    // Per Gate Decision: no fake placeholder string like "Sinopsis belum tersedia"
+    expect(screen.queryByText("Sinopsis belum tersedia")).toBeNull();
+    // When synopsis is absent, a dedicated slot is rendered with metadata composition
     expect(container.querySelector('[data-spotlight-slot="synopsis-absent"]')).toBeTruthy();
     expect(container.querySelector('[data-spotlight-slot="synopsis"]')).toBeNull();
     expect(container.querySelector('[data-spotlight-slot="metadata"]')).toBeTruthy();
@@ -60,4 +69,53 @@ describe("EditorialSpotlight accessibility", () => {
     );
     expect(coverImage?.className).not.toContain("group-hover:scale");
   });
+
+  it("renders normalized synopsis when alternate fields like synopsis or summary are provided", () => {
+    const { container } = render(
+      <EditorialSpotlight
+        manga={{
+          id: "manga-c",
+          title: "Manga C",
+          coverUrl: "/cover-c.jpg",
+          synopsis: "  <p>Cerita tentang petualangan &amp; sihir heroik.</p>  ",
+        } as any}
+        sourceId="source-c"
+        sourceName="Source C"
+      />
+    );
+
+    expect(screen.getByText("Cerita tentang petualangan & sihir heroik.")).toBeTruthy();
+    expect(container.querySelector('[data-spotlight-slot="synopsis"]')).toBeTruthy();
+    expect(container.querySelector('[data-spotlight-slot="synopsis-absent"]')).toBeNull();
+  });
+
+  it("lazily enriches missing synopsis via query client when mounted in app context", async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    vi.mocked(apiClient.getDetail).mockResolvedValueOnce({
+      id: "manga-d",
+      title: "Manga D",
+      description: "Petualangan seru terisi setelah detail dimuat secara lazy.",
+    } as any);
+
+    const { container } = render(
+      <QueryClientProvider client={queryClient}>
+        <EditorialSpotlight
+          manga={{ id: "manga-d", title: "Manga D", coverUrl: "/cover-d.jpg" }}
+          sourceId="source-d"
+          sourceName="Source D"
+        />
+      </QueryClientProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Petualangan seru terisi setelah detail dimuat secara lazy.")).toBeTruthy();
+    });
+
+    expect(container.querySelector('[data-spotlight-slot="synopsis"]')).toBeTruthy();
+    expect(container.querySelector('[data-spotlight-slot="synopsis-absent"]')).toBeNull();
+  });
 });
+

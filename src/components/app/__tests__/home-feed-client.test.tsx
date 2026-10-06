@@ -92,9 +92,13 @@ vi.mock("@/shared/hooks/use-auth", () => ({
   useAuth: () => ({ user: null }),
 }));
 
-vi.mock("@tanstack/react-query", () => ({
-  useQuery: () => ({ data: null, isLoading: false }),
-}));
+vi.mock("@tanstack/react-query", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@tanstack/react-query")>();
+  return {
+    ...actual,
+    useQuery: () => ({ data: null, isLoading: false }),
+  };
+});
 
 const samplePopular: HomeFeedManga[] = [
   {

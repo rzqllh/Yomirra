@@ -2,13 +2,145 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { ArrowRight, CaretLeft, CaretRight } from "@phosphor-icons/react";
+import { ArrowRight, CaretLeft, CaretRight, Star } from "@phosphor-icons/react";
 import { motion, useReducedMotion } from "motion/react";
+import { useQuery, QueryClientContext } from "@tanstack/react-query";
+import { apiClient } from "@/shared/api-client";
+import { runCardDetailEnrichment } from "@/shared/lib/card-detail-enrichment";
 import { MangaCover } from "@/components/manga/manga-cover";
 import { getMangaDetailHref } from "@/shared/lib/routes";
 import { transitions } from "@/shared/lib/motion/tokens";
 import { cn } from "@/shared/utils/cn";
+import { normalizeSynopsis } from "@/shared/utils/normalize";
 import type { MangaItem } from "@/shared/sources/source-types";
+
+function SpotlightMetadataFallback({
+  manga,
+  sourceName,
+}: {
+  manga: MangaItem;
+  sourceName: string;
+}) {
+  const hasStatus = Boolean(manga.status);
+  const hasFormat = Boolean(manga.format);
+  const hasChapter = Boolean(manga.latestChapter);
+  const hasScore = Number(manga.score) > 0;
+  const genres = Array.isArray((manga as any).genres) ? (manga as any).genres.slice(0, 3) : [];
+
+  return (
+    <div
+      className="mt-2.5 flex flex-wrap items-center gap-1.5"
+      data-spotlight-slot="synopsis-absent"
+    >
+      {hasStatus && (
+        <span className="inline-flex items-center rounded-md bg-accent/10 px-2 py-0.5 text-[10px] sm:text-[11px] font-bold uppercase text-accent border border-accent/20">
+          {manga.status}
+        </span>
+      )}
+      {hasFormat && (
+        <span className="inline-flex items-center rounded-md bg-surface-base px-2 py-0.5 text-[10px] sm:text-[11px] font-bold uppercase text-text-secondary border border-border-subtle">
+          {manga.format}
+        </span>
+      )}
+      {hasChapter && (
+        <span className="inline-flex items-center rounded-md bg-surface-base px-2 py-0.5 text-[10px] sm:text-[11px] font-semibold text-text-primary border border-border-subtle">
+          {manga.latestChapter!.startsWith("Ch") ? manga.latestChapter : `Ch. ${manga.latestChapter}`}
+        </span>
+      )}
+      {hasScore && (
+        <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2 py-0.5 text-[10px] sm:text-[11px] font-bold text-amber-500 border border-amber-500/20">
+          <Star size={11} weight="fill" />
+          <span>{Number(manga.score).toFixed(1)}</span>
+        </span>
+      )}
+      {genres.map((g: string) => (
+        <span
+          key={g}
+          className="inline-flex items-center rounded-md bg-surface-base/80 px-2 py-0.5 text-[10px] sm:text-[11px] font-medium text-text-muted border border-border-subtle/60"
+        >
+          {g}
+        </span>
+      ))}
+      <span className="inline-flex items-center rounded-md bg-surface-muted px-2 py-0.5 text-[10px] sm:text-[11px] font-bold text-text-muted border border-border-subtle">
+        {sourceName}
+      </span>
+    </div>
+  );
+}
+
+function SpotlightSynopsis({
+  manga,
+  sourceId,
+  sourceName,
+  initialSynopsis,
+}: {
+  manga: MangaItem;
+  sourceId: string;
+  sourceName: string;
+  initialSynopsis: string;
+}) {
+  const hasQueryClient = Boolean(React.useContext(QueryClientContext));
+
+  if (initialSynopsis) {
+    return (
+      <p
+        className="mt-2 line-clamp-2 text-[11.5px] leading-relaxed text-text-secondary sm:line-clamp-3 sm:text-sm"
+        data-spotlight-slot="synopsis"
+      >
+        {initialSynopsis}
+      </p>
+    );
+  }
+
+  if (hasQueryClient && sourceId && manga.id) {
+    return <SpotlightLazySynopsis manga={manga} sourceId={sourceId} sourceName={sourceName} />;
+  }
+
+  return <SpotlightMetadataFallback manga={manga} sourceName={sourceName} />;
+}
+
+function SpotlightLazySynopsis({
+  manga,
+  sourceId,
+  sourceName,
+}: {
+  manga: MangaItem;
+  sourceId: string;
+  sourceName: string;
+}) {
+  const { data } = useQuery({
+    queryKey: ["manga-card-synopsis", sourceId, manga.id],
+    queryFn: ({ signal }) =>
+      runCardDetailEnrichment(
+        () => apiClient.getDetail(sourceId, manga.id, { signal }),
+        signal
+      ),
+    enabled: Boolean(sourceId && manga.id),
+    staleTime: 30 * 60 * 1000,
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
+
+  const raw =
+    data?.description ||
+    (data as any)?.synopsis ||
+    (data as any)?.summary ||
+    (data as any)?.excerpt;
+  const synopsis = raw ? normalizeSynopsis(String(raw)).trim() : "";
+
+  if (!synopsis) {
+    return <SpotlightMetadataFallback manga={manga} sourceName={sourceName} />;
+  }
+
+  return (
+    <p
+      className="mt-2 line-clamp-2 text-[11.5px] leading-relaxed text-text-secondary sm:line-clamp-3 sm:text-sm"
+      data-spotlight-slot="synopsis"
+    >
+      {synopsis}
+    </p>
+  );
+}
 
 export interface EditorialSpotlightProps {
   manga: MangaItem;
@@ -35,8 +167,8 @@ export function EditorialSpotlight({
 }: EditorialSpotlightProps) {
   const reducedMotion = useReducedMotion();
   const href = getMangaDetailHref(sourceId, manga.id, "/");
-  const rawDescription = manga.description?.trim();
-  const hasSynopsis = Boolean(rawDescription);
+  const rawDesc = manga.description || (manga as any)?.synopsis || (manga as any)?.summary || (manga as any)?.excerpt;
+  const cleanedDescription = rawDesc ? normalizeSynopsis(String(rawDesc)).trim() : "";
   const metadata = [manga.format, manga.latestChapter, sourceName].filter(Boolean);
 
   return (
@@ -106,33 +238,42 @@ export function EditorialSpotlight({
               </h2>
             </Link>
 
-            {hasSynopsis ? (
-              <p
-                className="mt-2 line-clamp-2 text-[11.5px] leading-relaxed text-text-secondary sm:line-clamp-3 sm:text-sm"
-                data-spotlight-slot="synopsis"
-              >
-                {rawDescription}
-              </p>
-            ) : (
-              <p
-                className="mt-2 text-[10.5px] font-semibold italic text-text-muted"
-                data-spotlight-slot="synopsis-absent"
-              >
-                Sinopsis belum tersedia
-              </p>
-            )}
+            <SpotlightSynopsis
+              manga={manga}
+              sourceId={sourceId}
+              sourceName={sourceName}
+              initialSynopsis={cleanedDescription}
+            />
 
-            <p
-              className="mt-2 line-clamp-1 text-[10.5px] font-semibold text-text-muted sm:text-xs"
+            <div
+              className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-semibold text-text-muted sm:text-xs"
               data-spotlight-slot="metadata"
             >
-              {metadata.map((item, index) => (
-                <React.Fragment key={`${item}-${index}`}>
-                  {index > 0 && <span aria-hidden="true"> · </span>}
-                  <span>{item}</span>
-                </React.Fragment>
-              ))}
-            </p>
+              {Number(manga.score) > 0 && (
+                <>
+                  <span className="inline-flex items-center gap-1 font-bold text-amber-500">
+                    <Star size={13} weight="fill" aria-hidden="true" />
+                    <span>{Number(manga.score).toFixed(1)}</span>
+                  </span>
+                  <span aria-hidden="true" className="text-border-default/80">·</span>
+                </>
+              )}
+              {manga.latestChapter && (
+                <>
+                  <span className="text-text-primary">
+                    {manga.latestChapter.startsWith("Ch") ? manga.latestChapter : `Ch. ${manga.latestChapter}`}
+                  </span>
+                  <span aria-hidden="true" className="text-border-default/80">·</span>
+                </>
+              )}
+              <span className="font-bold text-accent">{sourceName}</span>
+              {manga.format && (
+                <>
+                  <span aria-hidden="true" className="text-border-default/80">·</span>
+                  <span className="uppercase text-[10px] tracking-wider text-text-muted">{manga.format}</span>
+                </>
+              )}
+            </div>
           </div>
 
           <div className="mt-auto flex min-w-0 items-end justify-between gap-2 border-t border-border-subtle/60 pt-2.5">
