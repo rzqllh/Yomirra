@@ -70,12 +70,16 @@ export default async function ReaderPage({
     const manifestUrl = await getManifestUrlFromCookie(sourceId);
     const source = await sourceManager.getSource(sourceId, manifestUrl);
     
-    // Fetch detail, chapters, and pages in parallel on the server
+    // Fetch detail, chapters, and fast-race pages cache to prevent blocking RSC commit on slow scrapers
+    const fastPagesPromise = Promise.race([
+      withCache(`source:${sourceId}:pages:${mangaId}:${chapterId}`, () => source.getPages(chapterId), CACHE_TTL.PAGES).catch(() => null),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 250)),
+    ]);
+
     [detail, chapters, pagesResult] = await Promise.all([
       withCache(`source:${sourceId}:manga:${mangaId}`, () => source.getDetail(mangaId), CACHE_TTL.DETAIL),
       withCache(`source:${sourceId}:chapters:${mangaId}`, () => source.getChapters(mangaId), CACHE_TTL.CHAPTERS),
-      // Pages might fail, so we catch error and return null to let client retry or use offline cache
-      withCache(`source:${sourceId}:pages:${mangaId}:${chapterId}`, () => source.getPages(chapterId), CACHE_TTL.PAGES).catch(() => null),
+      fastPagesPromise,
     ]);
 
     if (pagesResult?.pages) {

@@ -90,7 +90,11 @@ export function ReaderShell({
         : null
     const returnTo = getSafeMangaDetailBackHref(rawReturnTo)
     const href = getMangaDetailHref(sourceId, mangaId, returnTo)
-    if (beginNavigationIntent(href)) {
+    beginNavigationIntent(href)
+
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back()
+    } else {
       router.replace(href)
     }
   }

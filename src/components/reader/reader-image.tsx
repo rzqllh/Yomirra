@@ -376,21 +376,16 @@ export const ReaderImage = React.memo(function ReaderImage({
           </motion.div>
 
           {!shouldReveal && (
-            <div className="absolute inset-0 flex items-center justify-center bg-surface-muted/10">
-              <div className="size-8 rounded-full border-[3px] border-border-strong border-t-accent animate-spin" />
-            </div>
+            <div className="absolute inset-0 bg-surface-muted/10 pointer-events-none" />
           )}
         </>
       ) : (
         <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-surface-muted/10 overflow-hidden">
-          <div className="w-full h-full absolute inset-0 bg-gradient-to-b from-transparent via-white/[0.02] to-transparent animate-pulse-slow" />
-          <div className="flex flex-col items-center gap-4 z-10">
-            <div className="size-10 rounded-full border-[3px] border-border-strong border-t-accent animate-spin drop-shadow-md" />
-            <div className="flex flex-col items-center">
-              <span className="text-sm font-semibold tracking-wide text-text-primary/90 animate-pulse">
-                Memuat halaman {pageIndex + 1}{totalPages ? ` / ${totalPages}` : ''}...
-              </span>
-            </div>
+          <div className="w-full h-full absolute inset-0 bg-gradient-to-b from-transparent via-white/[0.02] to-transparent animate-pulse-slow pointer-events-none" />
+          <div className="flex flex-col items-center z-10 select-none">
+            <span className="text-xs font-medium tracking-wide text-text-muted/60">
+              Halaman {pageIndex + 1}{totalPages ? ` / ${totalPages}` : ''}
+            </span>
           </div>
         </div>
       )}

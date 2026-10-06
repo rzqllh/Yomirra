@@ -158,13 +158,23 @@ export function ReaderView({
     const chapterIndex = initialChapters?.findIndex((c) => c.id === chapterId) ?? -1;
     let seriesProgressPercent = 0;
     
-    // Assuming chapters are sorted newest (index 0) to oldest (index N)
+    // Chapters are sorted newest (index 0) to oldest (index N-1)
     let readCount = 0;
     let totalChapters = 0;
+    const isCompletedStatus = initialDetail.status?.toUpperCase() === "COMPLETED";
+
     if (chapterIndex !== -1 && initialChapters?.length > 0) {
-       totalChapters = initialChapters.length;
-       readCount = totalChapters - chapterIndex; // Latest chapter = 100%
-       seriesProgressPercent = Math.round((readCount / totalChapters) * 100);
+      totalChapters = initialChapters.length;
+      readCount = totalChapters - chapterIndex;
+      const rawPercent = Math.round((readCount / totalChapters) * 100);
+
+      // On initial open, reading is in-progress (not finished yet)
+      // Ongoing manga can never be 100% series-complete since new chapters are expected
+      if (isCompletedStatus) {
+        seriesProgressPercent = chapterIndex === 0 ? 99 : rawPercent;
+      } else {
+        seriesProgressPercent = Math.min(95, rawPercent);
+      }
     }
     
     upsertHistory({
@@ -196,7 +206,7 @@ export function ReaderView({
     return (
       <ReaderShell
         mangaTitle={initialDetail?.title}
-        chapterTitle="Loading..."
+        chapterTitle={chapterTitle}
         currentChapterId={chapterId}
         sourceId={sourceId}
         mangaId={mangaId}
