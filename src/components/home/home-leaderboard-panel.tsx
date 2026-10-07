@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { ArrowRight } from "@phosphor-icons/react";
-import { LeaderboardRow } from "@/components/manga/card/leaderboard-row";
+import { LeaderboardRow } from "@/components/komik/card/leaderboard-row";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { cn } from "@/shared/utils/cn";
 import type { HomeFeedManga } from "./home-feed-selection";

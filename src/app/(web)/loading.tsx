@@ -1,5 +1,5 @@
-import { HomeView } from "@/components/app/home-view";
-import { SourceFeedSkeleton } from "@/components/app/source-feed-skeleton";
+import { HomeView } from "@/components/home/home-view";
+import { SourceFeedSkeleton } from "@/components/home/source-feed-skeleton";
 
 export default function Loading() {
   return (

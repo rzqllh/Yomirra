@@ -4,7 +4,7 @@ import Link from "next/link"
 import { CollectionTab } from "../collection-tab"
 import { CollectionToolbar } from "../collection-toolbar"
 
-vi.mock("@/components/manga/card", () => ({
+vi.mock("@/components/komik/card", () => ({
   ShelfCard: ({ manga }: { manga: { title: string } }) => (
     <Link href="/manga" data-testid="bookmark-card">
       {manga.title}

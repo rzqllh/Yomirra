@@ -1,8 +1,8 @@
 import { render, screen, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { HomeHero, HERO_COLLAGE_CACHE_KEY } from "../home-hero";
-import { HeaderActions } from "../header-actions";
-import { PageHeader } from "../header";
+import { HomeHero, HERO_COLLAGE_CACHE_KEY } from "@/components/home/home-hero";
+import { HeaderActions } from "@/components/chrome/header-actions";
+import { PageHeader } from "@/components/chrome/header";
 
 const pushMock = vi.fn();
 const backMock = vi.fn();
@@ -36,7 +36,7 @@ vi.mock("@/shared/hooks/use-mounted", () => ({
   useMounted: () => true,
 }));
 
-vi.mock("@/components/app/updates-bell", () => ({
+vi.mock("@/components/overlays/updates-bell", () => ({
   UpdatesBell: ({ className }: { className?: string }) => (
     <button type="button" aria-label="Pembaruan" className={className}>
       Bell

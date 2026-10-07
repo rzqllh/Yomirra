@@ -1,8 +1,8 @@
 import * as React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MangaCardSkeleton } from "./manga-card-skeleton";
+import { MangaCardSkeleton } from "@/components/komik/manga-card-skeleton";
 import { YomirraSurface, PageContainer } from "@/components/ui/layout";
-import { PageHeader } from "@/components/app/header";
+import { PageHeader } from "@/components/chrome/header";
 import { Fire } from "@phosphor-icons/react/dist/ssr";
 
 export function PopularFeedSkeleton({ cardCount = 8 }: { cardCount?: number }) {

@@ -8,7 +8,7 @@ import {
   SlidersHorizontal,
   X,
 } from "@phosphor-icons/react";
-import type { SourceHealthMatrixItem } from "@/server/lib/sources/admin-source-service";
+import type { SourceHealthMatrixItem } from "@/shared/types/admin";
 import {
   FeedbackBanner,
   InlineNotice,

@@ -1,5 +1,5 @@
 import { MangaCardSkeleton } from "./manga-card-skeleton";
-import { MANGA_GRID_CLASS, MANGA_COMPACT_GRID_CLASS } from "@/components/manga/manga-grid";
+import { MANGA_GRID_CLASS, MANGA_COMPACT_GRID_CLASS } from "@/components/komik/manga-grid";
 import { cn } from "@/shared/utils/cn";
 
 export interface MangaGridSkeletonProps {

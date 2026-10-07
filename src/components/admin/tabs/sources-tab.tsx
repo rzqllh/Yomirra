@@ -12,7 +12,7 @@ import {
   SlidersHorizontal,
   Trash,
 } from "@phosphor-icons/react";
-import type { SourceHealthMatrixItem } from "@/server/lib/sources/admin-source-service";
+import type { SourceHealthMatrixItem } from "@/shared/types/admin";
 import type { CustomSourceDefinition } from "@/shared/sources/custom-source-schema";
 import { CustomSourceModal } from "../sources/custom-source-modal";
 import { CoreSourceModal } from "../sources/core-source-modal";

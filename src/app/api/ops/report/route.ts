@@ -3,9 +3,10 @@ import { sendTelegramMessage } from "@/server/lib/ops/telegram-notifier";
 import { AlertSeverity } from "@/server/lib/ops/severity";
 import { logger } from "@/shared/logger";
 import { env } from "@/env";
-import { formatUserReport, type ReportPayload } from "@/server/lib/ops/message-format";
+import { formatUserReport } from "@/server/lib/ops/message-format";
 import { enqueueUserReport } from "@/server/lib/ops/admin-report-service";
 import { applyRateLimitHeaders, checkRateLimitPolicy, createRateLimitRejection } from "@/server/lib/security/rate-limit";
+import type { UserReportPayload } from "@/shared/types/report";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +29,7 @@ export async function POST(req: Request) {
   const limitedJson = (body: unknown, init?: ResponseInit) =>
     applyRateLimitHeaders(NextResponse.json(body, init), rateLimit);
 
-  let payload: ReportPayload;
+  let payload: UserReportPayload;
 
   try {
     payload = await req.json();
@@ -44,7 +45,7 @@ export async function POST(req: Request) {
   const category = payload.category.slice(0, 100);
   const detail = payload.detail?.slice(0, 500) ?? undefined;
 
-  const sanitizedPayload: ReportPayload = {
+  const sanitizedPayload: UserReportPayload = {
     ...payload,
     category,
     detail,

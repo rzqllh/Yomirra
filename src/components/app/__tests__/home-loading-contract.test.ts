@@ -15,7 +15,7 @@ describe("Home loading geometry contract", () => {
   });
 
   it("matches final Home section order and includes recently updated geometry", () => {
-    const skeleton = read("src/components/app/source-feed-skeleton.tsx");
+    const skeleton = read("src/components/home/source-feed-skeleton.tsx");
     const hero = skeleton.indexOf('data-home-loading-section="hero"');
     const spotlight = skeleton.indexOf(
       'data-home-loading-section="spotlight-ranking"'
@@ -34,8 +34,8 @@ describe("Home loading geometry contract", () => {
   });
 
   it("renders the usable Hero instead of an artwork placeholder", () => {
-    const skeleton = read("src/components/app/source-feed-skeleton.tsx");
-    const hero = read("src/components/app/home-hero.tsx");
+    const skeleton = read("src/components/home/source-feed-skeleton.tsx");
+    const hero = read("src/components/home/home-hero.tsx");
 
     expect(skeleton).toContain("<HomeHero candidates={[]} />");
     expect(hero).not.toContain("animate-pulse");

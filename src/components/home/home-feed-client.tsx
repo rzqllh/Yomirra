@@ -18,9 +18,9 @@ import {
   selectSpotlightItems,
   type HomeFeedManga,
 } from "./home-feed-selection";
-import { ShelfCard } from "@/components/manga/card";
-import { CompactCard } from "@/components/manga/card/compact-card";
-import { ViewModeToggle } from "@/components/manga/view-mode-toggle";
+import { ShelfCard } from "@/components/komik/card";
+import { CompactCard } from "@/components/komik/card/compact-card";
+import { ViewModeToggle } from "@/components/komik/view-mode-toggle";
 import { MagnifyingGlass, ArrowRight } from "@phosphor-icons/react";
 import Link from "next/link";
 

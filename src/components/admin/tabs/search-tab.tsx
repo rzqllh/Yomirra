@@ -9,7 +9,7 @@ import {
   SlidersHorizontal,
   WarningCircle,
 } from "@phosphor-icons/react";
-import type { SearchIntelligenceStats, SearchSimulationResultItem } from "@/server/lib/search/admin-search-service";
+import type { SearchIntelligenceStats, SearchSimulationResultItem } from "@/shared/types/admin";
 import {
   EmptyState,
   FeedbackBanner,

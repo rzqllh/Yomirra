@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { OnboardingOverlay } from '../onboarding-overlay';
+import { OnboardingOverlay } from '@/components/overlays/onboarding-overlay';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 const mockCompleteOnboarding = vi.fn();

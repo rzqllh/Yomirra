@@ -1,4 +1,4 @@
-import { PageHeader } from "@/components/app/header";
+import { PageHeader } from "@/components/chrome/header";
 import { PageContainer } from "@/components/ui/layout";
 import { Skeleton } from "@/components/ui/skeleton";
 

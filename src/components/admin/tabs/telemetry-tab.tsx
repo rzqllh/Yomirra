@@ -11,7 +11,7 @@ import {
   Trash,
   X,
 } from "@phosphor-icons/react";
-import type { RedisTelemetry, RedisKeyItem, RedisKeyDetail } from "@/server/lib/cache/admin-redis-service";
+import type { RedisTelemetry, RedisKeyItem, RedisKeyDetail } from "@/shared/types/admin";
 import {
   ConfirmDialog,
   EmptyState,

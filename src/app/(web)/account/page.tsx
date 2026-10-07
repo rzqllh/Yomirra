@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { PageHeader } from "@/components/app/header";
+import { PageHeader } from "@/components/chrome/header";
 import { PageContainer } from "@/components/ui/layout";
 import { useAuth } from "@/shared/hooks/use-auth";
 import { useSync } from "@/shared/hooks/use-sync";

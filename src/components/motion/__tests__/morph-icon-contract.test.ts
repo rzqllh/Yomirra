@@ -55,7 +55,7 @@ describe("MorphIcon package boundary", () => {
 
   it("adopts MorphIcon through the package boundary for approved feature state", () => {
     const mangaDetailView = fs.readFileSync(
-      path.resolve(process.cwd(), "src/components/manga/manga-detail-view.tsx"),
+      path.resolve(process.cwd(), "src/components/komik/manga-detail-view.tsx"),
       "utf-8"
     );
 

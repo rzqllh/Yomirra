@@ -6,7 +6,7 @@ import { SearchInput } from "@/components/ui/search-input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/shared/utils/cn";
 import { LibraryFilterDrawer } from "./library-filter-drawer";
-import { ViewModeToggle } from "@/components/manga/view-mode-toggle";
+import { ViewModeToggle } from "@/components/komik/view-mode-toggle";
 import { DotsThreeVertical, CheckCircle } from "@phosphor-icons/react";
 import {
   DropdownMenu,

@@ -1,6 +1,6 @@
 "use client";
 
-import { MangaGridSkeleton } from "./manga-grid-skeleton";
+import { MangaGridSkeleton } from "@/components/komik/manga-grid-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSettingsStore } from "@/shared/store/settings-store";
 

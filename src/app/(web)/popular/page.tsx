@@ -12,7 +12,7 @@ import {
 import type { MangaItem } from "@/shared/sources/source-types";
 import type { PopularSourceFeed } from "@/shared/lib/popular-ranking";
 import { YomirraSurface, PageContainer } from "@/components/ui/layout";
-import { PageHeader } from "@/components/app/header";
+import { PageHeader } from "@/components/chrome/header";
 import { PopularPageView } from "@/components/popular/popular-page-view";
 
 export const metadata: Metadata = {

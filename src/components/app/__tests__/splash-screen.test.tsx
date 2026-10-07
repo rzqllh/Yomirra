@@ -1,5 +1,5 @@
 import { render, screen, act, waitFor } from '@testing-library/react';
-import { SplashScreen } from '../splash-screen';
+import { SplashScreen } from '@/components/overlays/splash-screen';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 
 const mockUseAuth = vi.fn();

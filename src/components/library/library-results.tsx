@@ -13,10 +13,10 @@ import {
 } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/states/empty-state";
 import { Button } from "@/components/ui/button";
-import { MANGA_GRID_CLASS, MANGA_COMPACT_GRID_CLASS } from "@/components/manga/manga-grid";
-import { ShelfCard } from "@/components/manga/card";
-import { CompactCard } from "@/components/manga/card/compact-card";
-import { MangaGridSkeleton } from "@/components/skeletons/manga-grid-skeleton";
+import { MANGA_GRID_CLASS, MANGA_COMPACT_GRID_CLASS } from "@/components/komik/manga-grid";
+import { ShelfCard } from "@/components/komik/card";
+import { CompactCard } from "@/components/komik/card/compact-card";
+import { MangaGridSkeleton } from "@/components/komik/manga-grid-skeleton";
 import {
   Pagination,
   PaginationContent,

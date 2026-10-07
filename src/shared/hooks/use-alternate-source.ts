@@ -11,7 +11,7 @@ import { rankCandidates, type TitleCandidate } from "@/shared/lib/title-matcher"
 import { mapChapterProgress, type ChapterMapResult } from "@/shared/lib/chapter-parser";
 import { executeSourceMigration } from "@/shared/lib/source-fallback";
 import { getReaderHref } from "@/shared/lib/routes";
-import type { AlternateSourceCandidate } from "@/components/manga/alternate-source-modal";
+import type { AlternateSourceCandidate } from "@/components/komik/alternate-source-modal";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 
 interface UseAlternateSourceOptions {

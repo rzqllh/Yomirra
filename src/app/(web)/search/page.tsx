@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { PageHeader } from "@/components/app/header";
+import { PageHeader } from "@/components/chrome/header";
 import { SearchPageView } from "@/components/search/search-page-view";
 import { SearchResultSkeleton } from "@/components/skeletons/search-result-skeleton";
 import { YomirraSurface, PageContainer } from "@/components/ui/layout";

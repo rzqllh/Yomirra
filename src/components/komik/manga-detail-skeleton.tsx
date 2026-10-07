@@ -1,5 +1,5 @@
 import * as React from "react";
-import { PageHeader } from "@/components/app/header";
+import { PageHeader } from "@/components/chrome/header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MangaDetailLayout } from "./manga-detail-layout";
 

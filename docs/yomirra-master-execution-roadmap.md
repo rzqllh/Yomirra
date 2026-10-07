@@ -1,17 +1,17 @@
 # Yomirra — Master Execution Roadmap P0–P4
 
-**Status:** Implemented baseline reconciled on 2026-10-05; remaining manual/release gates listed below
+**Status:** Post-restructure architecture reconciled on 2026-10-07; remaining external/manual gates listed below
 **Target repo path:** `docs/yomirra-master-execution-roadmap.md`  
 **Role:** Single source of truth for the remaining Yomirra work covered by this roadmap.  
 **Execution model:** Reconcile the newest Git/cloud state first, then execute strictly phase-by-phase with a mandatory verification gate after every phase.
 
-## Current Reconciliation — 2026-10-05
+## Current Reconciliation — 2026-10-07
 
-- Local `main` and `origin/main` were reconciled at `0b69980`; no unique patch remained on the inspected backup/feature branches.
-- Production deployment was Ready at the same commit when audited. Public homepage and source registry responded, while functional source health still reported upstream/configuration degradation.
-- Admin Dashboard, Source Engine, Telegram Ops, runtime source merger, and public reader work described below are present in the current tree. Historical unchecked boxes are acceptance records, not evidence that implementation is absent.
-- Automated release gates are tracked from the current baseline of 187 Vitest files and 1,197 tests. Browser interaction, authenticated Admin flows, real-device PWA/iOS behavior, and production credentials remain explicit manual gates.
-- Release publication is not implied by this document: commit, tag, push, deployment, and destructive branch cleanup require separate authorization.
+- Post-restructure audit menetapkan `components/chrome`, `components/overlays`, `components/home`, dan `components/komik` sebagai implementation owner tunggal; duplicate implementation dan compatibility proxy lama sudah dihapus.
+- Public route `/manga/*`, existing `Manga*` naming, UI behavior, dan persistent data contract tetap dipertahankan.
+- Client-safe report, admin, dan source-health contracts dimiliki shared modules; static runtime graph tidak menemukan circular dependency atau client-to-server implementation leak.
+- Automated release baseline saat ini adalah 189 Vitest files dan 1.231 tests. Typecheck, full suite, lint tanpa error, production build, dan local production HTTP smoke menjadi gate batch ini.
+- Browser interaction, authenticated Admin flows, real-device PWA/iOS behavior, production credentials, deployment, tag, dan destructive branch cleanup tetap merupakan gate/aksi terpisah.
 
 ---
 

@@ -69,6 +69,12 @@ Back/Forward tidak dioverride dengan scroll restoration custom. Browser history 
 
 Stateful icon morphing dibatasi melalui wrapper internal yang menghormati `prefers-reduced-motion`; package animasi tidak diimport langsung dari feature components dan tidak dipakai untuk identitas route/navigation yang harus stabil.
 
+## Arsitektur internal
+
+UI utama dipisahkan menurut ownership: `chrome` untuk shell/navigation, `overlays` untuk overlay lintas halaman, `home` untuk Beranda, dan `komik` untuk presentasi manga/manhwa/manhua. Nama internal `Manga*` yang sudah menjadi contract tetap dipertahankan, begitu juga public route `/manga/*` agar deep link dan bookmark tidak berubah.
+
+Client code hanya memakai contract browser-safe dari `src/shared/`; adapter, Redis, credential, dan service privileged tetap berada di `src/server/`. Import production mengarah langsung ke module pemiliknya sehingga tidak bergantung pada legacy folder atau barrel tanpa consumer.
+
 ## Source bawaan
 
 Yomirra memiliki beberapa adapter source bawaan dan mendukung konfigurasi source runtime. Daftar source, status availability, dan kemampuan masing-masing source ditampilkan oleh aplikasi pada saat runtime agar dokumentasi publik tidak bergantung pada nama provider yang dapat berubah.
@@ -127,6 +133,7 @@ Lihat [Developer Guide](docs/README_DEV.md) untuk struktur project dan [Adding a
 - [Stack](docs/STACK.md)
 - [Testing](docs/TESTING.md)
 - [Adding a Source](docs/ADDING_A_SOURCE.md)
+- [Execution Roadmap](docs/yomirra-master-execution-roadmap.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security](SECURITY.md)
 - [Changelog](CHANGELOG.md)

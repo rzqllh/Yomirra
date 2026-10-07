@@ -4,6 +4,7 @@ import { logger } from "@/shared/logger";
 import { safeFetch } from "@/server/lib/security/outbound-policy";
 import { CustomSourceSchema, type CustomSourceDefinition } from "@/shared/sources/custom-source-schema";
 import type { SourceMetadata, MangaItem } from "@/shared/sources/source-types";
+import type { ParserTestResult } from "@/shared/types/admin";
 
 const CUSTOM_SOURCE_PREFIX = "yomirra:sources:custom:";
 const CUSTOM_SOURCE_INDEX = "yomirra:sources:custom:index";
@@ -140,18 +141,6 @@ export function customSourceToMetadata(source: CustomSourceDefinition): SourceMe
     },
     isDynamic: true,
   };
-}
-
-export interface ParserTestResult {
-  success: boolean;
-  latencyMs: number;
-  extractedCount: number;
-  items: Array<{
-    title: string;
-    coverUrl?: string;
-    mangaId?: string;
-  }>;
-  errorMessage?: string;
 }
 
 /**

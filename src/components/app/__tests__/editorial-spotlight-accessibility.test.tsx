@@ -2,7 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
-import { EditorialSpotlight } from "../editorial-spotlight";
+import { EditorialSpotlight } from "@/components/home/editorial-spotlight";
 
 vi.mock("@/shared/api-client", () => ({
   apiClient: {
@@ -118,4 +118,3 @@ describe("EditorialSpotlight accessibility", () => {
     expect(container.querySelector('[data-spotlight-slot="synopsis-absent"]')).toBeNull();
   });
 });
-

@@ -1,6 +1,6 @@
-import { HomeHero } from "@/components/app/home-hero";
+import { HomeHero } from "./home-hero";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MangaCardSkeleton } from "@/components/skeletons/manga-card-skeleton";
+import { MangaCardSkeleton } from "@/components/komik/manga-card-skeleton";
 
 function SpotlightSkeleton() {
   return (

@@ -7,7 +7,7 @@ const read = (relativePath: string) =>
 
 describe("public copy contracts", () => {
   it("keeps Home language aligned with the accepted editorial contract", () => {
-    const hero = read("src/components/app/home-hero.tsx");
+    const hero = read("src/components/home/home-hero.tsx");
 
     expect(hero).toContain("LANJUT LAGI DI YOMIRRA");
     expect(hero).toContain("BACAANMU DIMULAI DI SINI");
@@ -61,8 +61,8 @@ describe("public copy contracts", () => {
   });
 
   it("keeps source selection and download failures free of internal identifiers", () => {
-    const selector = read("src/components/manga/manga-source-selector.tsx");
-    const download = read("src/components/manga/chapter-download-button.tsx");
+    const selector = read("src/components/komik/manga-source-selector.tsx");
+    const download = read("src/components/komik/chapter-download-button.tsx");
 
     expect(selector).toContain("Digunakan untuk membaca judul ini");
     expect(selector).toContain("Terverifikasi");
@@ -76,8 +76,8 @@ describe("public copy contracts", () => {
   it("uses reader-safe fallbacks instead of raw route identifiers", () => {
     const search = read("src/components/search/search-results.tsx");
     const sourcePage = read("src/app/(web)/sources/[sourceId]/page.tsx");
-    const recovery = read("src/components/manga/dead-source-recovery.tsx");
-    const detailError = read("src/components/manga/manga-detail-error-state.tsx");
+    const recovery = read("src/components/komik/dead-source-recovery.tsx");
+    const detailError = read("src/components/komik/manga-detail-error-state.tsx");
 
     expect(search).not.toContain("source?.name || err.sourceId");
     expect(sourcePage).toContain('const sourceName = sourceInfo?.name || "Sumber"');

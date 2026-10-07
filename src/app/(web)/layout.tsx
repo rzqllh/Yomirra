@@ -28,12 +28,12 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-import { AppShell } from "@/components/app/app-shell";
+import { AppShell } from "@/components/chrome/app-shell";
 import { ErrorBoundary } from "@/components/ui/error-boundary";
 import { OfflineProvider } from "@/components/providers/offline-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { DownloadManager } from "@/components/download/download-manager";
-import { BootGate } from "@/components/app/boot-gate";
+import { BootGate } from "@/components/overlays/boot-gate";
 import { SiteAnnouncementBanner } from "@/components/layout/site-announcement-banner";
 
 import { MaintenanceGate } from "@/components/layout/maintenance-gate";

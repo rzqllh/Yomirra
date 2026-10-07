@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { PageHeader } from "@/components/app/header";
+import { PageHeader } from "@/components/chrome/header";
 import { YomirraSurface, PageContainer, PageToolbar } from "@/components/ui/layout";
 import { CatalogControls } from "@/components/ui/catalog-controls";
 import { useSearchCatalog } from "@/shared/hooks/use-search-catalog";

@@ -6,8 +6,8 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import { useAuth } from "@/shared/hooks/use-auth";
-import { ThemeToggle } from "./theme-toggle";
-import { UpdatesBell } from "./updates-bell";
+import { ThemeToggle } from "@/components/overlays/theme-toggle";
+import { UpdatesBell } from "@/components/overlays/updates-bell";
 import { cn } from "@/shared/utils/cn";
 import { useSidebarStore } from "@/shared/store/sidebar-store";
 

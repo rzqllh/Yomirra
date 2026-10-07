@@ -4,22 +4,7 @@ import * as domainResolverModule from "@/server/lib/sources/domain-resolver";
 import { isRedisConfigured, redis } from "@/server/lib/cache/redis";
 import { logger } from "@/shared/logger";
 import { sourceManager } from "@/server/lib/sources/source-manager";
-import type { SourceHealthStatus } from "@/server/lib/sources/health/types";
-
-export interface SourceHealthMatrixItem {
-  id: string;
-  name: string;
-  isEnabled: boolean;
-  isInstalled: boolean;
-  status: "HEALTHY" | "DEGRADED" | "DOWN" | "UNMEASURED";
-  healthStatus: SourceHealthStatus;
-  consecutiveFailures: number;
-  latencyMs: number;
-  lastCheckedAt?: string;
-  mirrors: string[];
-  activeDomain: string;
-  upstreamDomain: string;
-}
+import type { SourceHealthMatrixItem } from "@/shared/types/admin";
 
 export interface ProbeResult {
   sourceId: string;

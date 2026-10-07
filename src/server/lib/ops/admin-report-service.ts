@@ -1,31 +1,12 @@
 import { redis } from "@/server/lib/cache/redis";
 import { logger } from "@/shared/logger";
-import type { ReportPayload } from "./message-format";
-
-export interface StoredUserReport {
-  id: string;
-  type: string;
-  category: string;
-  detail?: string;
-  sourceId?: string;
-  mangaId?: string;
-  mangaTitle?: string;
-  chapterId?: string;
-  chapterTitle?: string;
-  pageIndex?: number;
-  status: "pending" | "investigating" | "resolved";
-  createdAt: string;
-  resolvedAt?: string;
-}
-
-
-export type UserReport = StoredUserReport;
+import type { UserReport, UserReportPayload } from "@/shared/types/report";
 
 const REPORTS_LIST_KEY = "yomirra:reports:list";
-const inMemoryReports: StoredUserReport[] = [];
+const inMemoryReports: UserReport[] = [];
 
-export async function enqueueUserReport(payload: ReportPayload): Promise<StoredUserReport> {
-  const report: StoredUserReport = {
+export async function enqueueUserReport(payload: UserReportPayload): Promise<UserReport> {
+  const report: UserReport = {
     id: `rep_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
     type: payload.type,
     category: payload.category,
@@ -60,8 +41,8 @@ export async function enqueueUserReport(payload: ReportPayload): Promise<StoredU
 export async function getStoredUserReports(
   statusFilter?: string,
   typeFilter?: string
-): Promise<StoredUserReport[]> {
-  let reports: StoredUserReport[] = [];
+): Promise<UserReport[]> {
+  let reports: UserReport[] = [];
 
   if (redis) {
     try {
@@ -69,12 +50,12 @@ export async function getStoredUserReports(
       reports = items
         .map((raw) => {
           try {
-            return JSON.parse(raw) as StoredUserReport;
+            return JSON.parse(raw) as UserReport;
           } catch {
             return null;
           }
         })
-        .filter((r): r is StoredUserReport => r !== null);
+        .filter((r): r is UserReport => r !== null);
     } catch (err) {
       logger.warn("Failed to read reports from Redis, using in-memory", { err });
       reports = inMemoryReports;
@@ -97,7 +78,7 @@ export async function getStoredUserReports(
 export async function updateReportStatus(
   reportId: string,
   status: "pending" | "investigating" | "resolved"
-): Promise<StoredUserReport | null> {
+): Promise<UserReport | null> {
   const reports = await getStoredUserReports();
   const target = reports.find((r) => r.id === reportId);
   if (!target) return null;

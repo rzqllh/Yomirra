@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { UpdatesBell } from '../updates-bell';
+import { UpdatesBell } from '@/components/overlays/updates-bell';
 import { useUpdateStore } from '@/shared/store/update-store';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 

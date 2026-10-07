@@ -3,7 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { CaretLeft } from "@phosphor-icons/react"
-import { HeaderActions } from "@/components/app/header-actions"
+import { HeaderActions } from "./header-actions"
 import { cn } from "@/shared/utils/cn"
 
 export interface PageHeaderProps {

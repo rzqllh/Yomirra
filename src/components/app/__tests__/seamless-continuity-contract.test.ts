@@ -71,8 +71,8 @@ describe("Seamless Continuity Contracts (WS5)", () => {
 
   describe("Navigation & History Stack Contracts (WS3 Contract)", () => {
     it("ensures ChapterRow and Mulai Baca use push navigation and trigger navigation intent", () => {
-      const chapterRow = read("src/components/manga/chapter-row.tsx");
-      const detailView = read("src/components/manga/manga-detail-view.tsx");
+      const chapterRow = read("src/components/komik/chapter-row.tsx");
+      const detailView = read("src/components/komik/manga-detail-view.tsx");
 
       // Entry points from detail must NOT use replace, they must use push and beginNavigationIntent
       expect(chapterRow).not.toMatch(/<Link[\s\S]*?replace[\s\S]*?aria-label/);
@@ -115,13 +115,13 @@ describe("Seamless Continuity Contracts (WS5)", () => {
 
   describe("Continuity Pairs & Focus Ring Damping (WS2 Contract)", () => {
     it("ensures DesktopRail damps mouse focus rings via onPointerDown blur and active:ring-0", () => {
-      const desktopRail = read("src/components/app/desktop-rail.tsx");
+      const desktopRail = read("src/components/chrome/desktop-rail.tsx");
       expect(desktopRail).toContain("active:ring-0");
       expect(desktopRail).toContain("e.currentTarget.blur()");
     });
 
     it("ensures PageHeader supports both desktop and mobile title anchors for crossfade", () => {
-      const header = read("src/components/app/header.tsx");
+      const header = read("src/components/chrome/header.tsx");
       expect(header).toContain("manga-detail-title-desktop");
       expect(header).toContain("detailTitleAnchorId");
     });
@@ -129,7 +129,7 @@ describe("Seamless Continuity Contracts (WS5)", () => {
 
   describe("Editorial Spotlight Empty State & Fixed Height Contract (WS4 Contract)", () => {
     it("ensures EditorialSpotlight maintains fixed height and avoids placeholder string", () => {
-      const spotlight = read("src/components/app/editorial-spotlight.tsx");
+      const spotlight = read("src/components/home/editorial-spotlight.tsx");
       expect(spotlight).toContain("h-[268px] min-w-0 overflow-hidden sm:h-[310px] lg:h-[340px]");
       expect(spotlight).not.toContain("Sinopsis belum tersedia");
       expect(spotlight).toContain("SpotlightMetadataFallback");
@@ -139,8 +139,8 @@ describe("Seamless Continuity Contracts (WS5)", () => {
 
   describe("TopNav Sticky Search & Hero Search Contract (WS1/WS5)", () => {
     it("renders hero search trigger natively in home hero and sticky search pill in TopNav", () => {
-      const topNav = read("src/components/app/top-nav.tsx");
-      const homeHero = read("src/components/app/home-hero.tsx");
+      const topNav = read("src/components/chrome/top-nav.tsx");
+      const homeHero = read("src/components/home/home-hero.tsx");
       expect(topNav).toContain("scrolledPastHero");
       expect(homeHero).toContain('id="home-hero-search"');
       expect(homeHero).toContain('role="search"');

@@ -24,7 +24,7 @@ describe("security surface contracts", () => {
     const boundary = readRepoFile("src/components/ui/error-boundary.tsx");
     const sourcePage = readRepoFile("src/app/(web)/sources/[sourceId]/page.tsx");
     const mangaError = readRepoFile(
-      "src/components/manga/manga-detail-error-state.tsx"
+      "src/components/komik/manga-detail-error-state.tsx"
     );
     const globalError = readRepoFile("src/app/(web)/error.tsx");
 

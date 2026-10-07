@@ -15,7 +15,7 @@ export interface ContinueReadingListProps {
   className?: string;
 }
 
-import { HistoryCard } from "@/components/manga/card/history-card";
+import { HistoryCard } from "@/components/komik/card/history-card";
 
 /**
  * Editorial Continue Reading shelf with compact cards, clamped progress,

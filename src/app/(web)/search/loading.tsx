@@ -1,4 +1,4 @@
-import { PageHeader } from "@/components/app/header";
+import { PageHeader } from "@/components/chrome/header";
 import { YomirraSurface, PageContainer } from "@/components/ui/layout";
 import { SearchResultSkeleton } from "@/components/skeletons/search-result-skeleton";
 

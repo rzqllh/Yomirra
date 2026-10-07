@@ -61,7 +61,7 @@ vi.mock("@/shared/store/update-store", () => ({
   useUpdateStore: (selector: any) => selector({ getUnreadCount: () => 5 }),
 }));
 
-vi.mock("@/components/app/header-actions", () => ({
+vi.mock("@/components/chrome/header-actions", () => ({
   HeaderActions: () => <div data-testid="header-actions" />,
 }));
 

@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Spinner, Flag, PaperPlaneRight, X } from "@phosphor-icons/react";
 import { cn } from "@/shared/utils/cn";
-import type { ReportType } from "@/server/lib/ops/message-format";
+import type { ReportType, UserReportPayload } from "@/shared/types/report";
 
 // ─── Template Definitions ──────────────────────────────────────────────────
 
@@ -103,19 +103,20 @@ export function ReportSheet({
 
     setIsSending(true);
     try {
+      const payload: UserReportPayload = {
+        type: selected.type,
+        category: selected.label,
+        detail: detail.trim() || undefined,
+        sourceId,
+        mangaId,
+        chapterId,
+        chapterTitle,
+        pageIndex,
+      };
       const res = await fetch("/api/ops/report", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: selected.type,
-          category: selected.label,
-          detail: detail.trim() || undefined,
-          sourceId,
-          mangaId,
-          chapterId,
-          chapterTitle,
-          pageIndex,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (res.ok) {

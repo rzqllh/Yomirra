@@ -106,3 +106,32 @@ export interface MangaSource extends SourceMetadata {
   getRelated?(mangaId: string): Promise<MangaItem[]>;
   resolveDomain?(): Promise<string>;
 }
+
+export type SourceErrorCode =
+  | "SOURCE_DOWN"
+  | "DOMAIN_CHANGED"
+  | "ROUTE_CHANGED"
+  | "PARSER_BROKEN"
+  | "SCHEMA_CHANGED"
+  | "RATE_LIMITED"
+  | "UPSTREAM_TIMEOUT"
+  | "UPSTREAM_BLOCKED"
+  | "DECRYPT_FAILURE"
+  | "IMAGE_CDN_FAILURE"
+  | "UNKNOWN";
+
+export type SourceHealthStage =
+  | "transport"
+  | "search"
+  | "detail"
+  | "chapters"
+  | "pages"
+  | "cdn";
+
+export type SourceHealthStatus =
+  | "HEALTHY"
+  | "DEGRADED"
+  | "BROKEN"
+  | "RATE_LIMITED"
+  | "DOMAIN_CHANGED"
+  | "UNKNOWN";

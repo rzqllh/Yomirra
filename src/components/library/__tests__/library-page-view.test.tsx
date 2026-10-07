@@ -56,7 +56,7 @@ vi.mock("../guest-sync-banner", () => ({
   GuestSyncBanner: () => <div data-testid="guest-sync-banner" />,
 }));
 
-vi.mock("@/components/app/header-actions", () => ({
+vi.mock("@/components/chrome/header-actions", () => ({
   HeaderActions: () => <div data-testid="header-actions" />,
 }));
 

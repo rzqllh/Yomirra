@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react';
-import { BottomDock } from '../bottom-dock';
+import { BottomDock } from '@/components/chrome/bottom-dock';
 import { usePathname } from 'next/navigation';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 

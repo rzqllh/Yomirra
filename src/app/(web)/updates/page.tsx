@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { CalendarBlank } from "@phosphor-icons/react";
-import { PageHeader } from "@/components/app/header";
+import { PageHeader } from "@/components/chrome/header";
 import { UpdatesList } from "@/components/updates/updates-list";
 import { YomirraSurface, PageContainer } from "@/components/ui/layout";
 

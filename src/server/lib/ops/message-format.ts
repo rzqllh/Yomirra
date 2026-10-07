@@ -1,5 +1,6 @@
 import { getSourceMetadata } from "@/shared/sources/source-registry";
-import type { SourceErrorCode, SourceHealthStage } from "@/server/lib/sources/error";
+import type { SourceErrorCode, SourceHealthStage } from "@/shared/sources/source-types";
+import type { ReportType, UserReportPayload } from "@/shared/types/report";
 
 export function sourceDisplayName(sourceId: string): string {
   return getSourceMetadata(sourceId)?.name || sourceId;
@@ -124,23 +125,7 @@ export function statusIcon(status: string): string {
   if (status === "UNKNOWN") return "⚪";
   return "🔴";
 }
-
-
-export type ReportType = "chapter_error" | "source_broken" | "image_broken" | "other";
-
-export interface ReportPayload {
-  type: ReportType;
-  category: string;
-  detail?: string;
-  sourceId?: string;
-  mangaId?: string;
-  mangaTitle?: string;
-  chapterId?: string;
-  chapterTitle?: string;
-  pageIndex?: number;
-}
-
-export function formatUserReport(payload: ReportPayload): string {
+export function formatUserReport(payload: UserReportPayload): string {
   const issueLabel: Record<ReportType, string> = {
     chapter_error: "Chapter bermasalah",
     source_broken: "Source tidak bisa dipakai",

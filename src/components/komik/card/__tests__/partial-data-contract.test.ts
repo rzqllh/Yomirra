@@ -3,7 +3,7 @@ import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 const source = fs.readFileSync(
-  path.resolve(process.cwd(), "src/components/manga/card/manga-card.tsx"),
+  path.resolve(process.cwd(), "src/components/komik/card/manga-card.tsx"),
   "utf-8"
 );
 

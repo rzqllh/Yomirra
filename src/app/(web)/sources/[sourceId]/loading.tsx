@@ -1,5 +1,5 @@
-import { PageHeader } from "@/components/app/header";
-import { MangaGridSkeleton } from "@/components/skeletons/manga-grid-skeleton";
+import { PageHeader } from "@/components/chrome/header";
+import { MangaGridSkeleton } from "@/components/komik/manga-grid-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { YomirraSurface, PageContainer } from "@/components/ui/layout";
 

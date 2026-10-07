@@ -4,7 +4,7 @@ import * as React from "react";
 import { YomirraSurface, PageContainer, PageToolbar } from "@/components/ui/layout";
 import { CatalogControls } from "@/components/ui/catalog-controls";
 import { LibrarySkeleton } from "@/components/skeletons/library-skeleton";
-import { PageHeader } from "@/components/app/header";
+import { PageHeader } from "@/components/chrome/header";
 import { useLibraryCatalog } from "@/shared/hooks/use-library-catalog";
 import { LibraryToolbar } from "./library-toolbar";
 import { LibraryStatusRail } from "./library-status-rail";

@@ -4,6 +4,13 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
 
 ## [Unreleased]
 
+### Post-Restructure Architecture Cleanup
+
+- Menetapkan `components/chrome`, `components/overlays`, `components/home`, dan `components/komik` sebagai ownership canonical tanpa mengubah public route `/manga/*` atau existing `Manga*` contracts.
+- Menghapus duplicate implementation pada legacy `components/app` dan `components/manga`, duplicate skeleton, compatibility proxy, serta barrel tanpa consumer; test tetap menguji behavior yang sama melalui module canonical.
+- Memindahkan contract report, admin, dan source-health yang dipakai browser ke shared modules agar Client Components tidak bergantung pada server implementation.
+- Memastikan import graph runtime bebas cycle dan client-to-server implementation leak, lalu menyelaraskan dokumentasi publik dengan boundary final.
+
 ## [2.3.0] - 2026-10-05
 
 ### Release Readiness
@@ -101,11 +108,11 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
   - Mengonsolidasikan duration, easing, spring, press feedback, layout transition, page transition, dan navigation-feedback timing ke semantic tokens bersama.
   - Menambahkan `AnimatedStateIcon` dan `PageTransition` dengan fallback `prefers-reduced-motion`.
   - Menambahkan boundary tunggal `MorphIcon` untuk Morphicons dan membatasi pasangan awal ke bookmark, grid/list, disclosure, dan playback tanpa mengganti identitas icon route/navigation.
-- **Seamless Navigation Feedback** (`src/components/app/app-shell.tsx`, `src/shared/lib/navigation-intent.ts`):
+- **Seamless Navigation Feedback** (`src/components/chrome/app-shell.tsx`, `src/shared/lib/navigation-intent.ts`):
   - Mempertahankan optimistic dock/rail selection saat intent dimulai, tetapi menunda progress bar 180 ms agar route cepat tidak mem-flash loading state.
   - Menghapus full-screen pending skeleton milik AppShell sehingga skeleton hanya dimiliki route `loading.tsx`, mencegah blank frame/double skeleton.
   - Menjadikan pathname completion sebagai cleanup utama; timeout 12 detik hanya recovery fallback.
-- **Native Back/Forward & Focus Continuity** (`src/components/app/header.tsx`, `src/components/app/command-menu.tsx`):
+- **Native Back/Forward & Focus Continuity** (`src/components/chrome/header.tsx`, `src/components/overlays/command-menu.tsx`):
   - Menghapus pathname-only manual scroll restoration agar browser/Next dapat memulihkan scroll Back/Forward secara native.
   - PageHeader memprioritaskan native history Back, sementara fallback tanpa history memakai replace.
   - Global search overlay yang tidak memiliki Radix trigger eksplisit mengembalikan focus ke elemen pemicu saat ditutup tanpa navigasi.
@@ -180,7 +187,7 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
 
 ### P1 Core Reading Experience (Phase 3)
 
-- **Explicit Bookmark Semantics & Rating Isolation** (`src/shared/store/library-store.ts`, `src/components/manga/manga-rating.tsx`, `src/shared/hooks/use-bookmark-collection.ts`, `src/components/bookmark/bookmark-page-view.tsx`):
+- **Explicit Bookmark Semantics & Rating Isolation** (`src/shared/store/library-store.ts`, `src/components/komik/manga-rating.tsx`, `src/shared/hooks/use-bookmark-collection.ts`, `src/components/bookmark/bookmark-page-view.tsx`):
   - Penegakan aturan produk bahwa Bookmark bersifat eksplisit: memberi rating tidak lagi otomatis memasukkan manga ke Library/Rak Buku ataupun memicu toast "Disimpan ke Koleksi".
   - `LibraryItem` kini dilengkapi field `isBookmarked?: boolean`, sehingga data rating dapat tersimpan secara lokal dan aman tanpa mengotori daftar bookmark aktif.
   - Menghapus manga dari Library tetap menjaga nilai rating yang sudah diberikan pengguna (`isBookmarked: false`), mencegah hilangnya preferensi rating saat komik dikeluarkan dari bookmark.
@@ -196,7 +203,7 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
 
 ### P0 Core Stability (Phase 2)
 
-- **Reader History Semantics & Back Navigation** (`src/components/manga/manga-detail-view.tsx`, `src/components/reader/reader-shell.tsx`, `src/shared/lib/routes.ts`):
+- **Reader History Semantics & Back Navigation** (`src/components/komik/manga-detail-view.tsx`, `src/components/reader/reader-shell.tsx`, `src/shared/lib/routes.ts`):
   - Detail → reader sekarang mengganti slot route detail alih-alih menumpuk reader route baru, sementara chapter switch tetap memakai replace semantics.
   - Parent page dibawa melalui `returnTo` yang tervalidasi sebagai internal route, sehingga Reader → Detail → Back kembali ke halaman asal dan tidak masuk lagi ke reader.
   - Reader footer/fallback detail links mengikuti kontrak yang sama, dan direct continue-reading menyimpan parent page untuk alur kembali yang konsisten.
@@ -204,7 +211,7 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
 - **Test Contract Repair**:
   - Menambahkan QueryClient test harness untuk CompactCard dan menyelaraskan fixture/expectation adapter dengan shared synopsis normalizer yang berlaku.
 
-- **Navigation Perceived-Performance Foundation** (`src/components/app/desktop-rail.tsx`, `src/components/app/app-shell.tsx`):
+- **Navigation Perceived-Performance Foundation** (`src/components/chrome/desktop-rail.tsx`, `src/components/chrome/app-shell.tsx`):
   - Menambahkan dukungan `pendingHref` ke `DesktopRail` sehingga transisi navigasi di desktop memiliki indikator aktif seketika dan progress bar top nav sama seperti `BottomDock` mobile.
   - Mencegah duplikasi event navigasi pada tujuan yang sama dan menjaga konsistensi state tanpa toast berisik saat navigasi rutin.
 - **Single Scroll Owner & Page Hierarchy Cleanup** (`src/app/(web)/popular/page.tsx`):

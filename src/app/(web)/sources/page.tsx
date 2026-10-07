@@ -10,7 +10,7 @@ import { EmptyState } from "@/components/states/empty-state";
 import { SearchInput } from "@/components/ui/search-input";
 import { SourceCard } from "@/components/source/source-card";
 import { YomirraSurface, PageContainer } from "@/components/ui/layout";
-import { PageHeader } from "@/components/app/header";
+import { PageHeader } from "@/components/chrome/header";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { useMounted } from "@/shared/hooks/use-mounted";

@@ -13,7 +13,7 @@ import { useLibraryStore } from "@/shared/store/library-store";
 import { useUpdateStore } from "@/shared/store/update-store";
 import { ReadingTab } from "./reading-tab";
 import { CollectionTab } from "./collection-tab";
-import { PageHeader } from "@/components/app/header";
+import { PageHeader } from "@/components/chrome/header";
 
 export type BookmarkTab = "reading" | "collection";
 

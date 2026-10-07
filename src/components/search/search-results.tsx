@@ -5,10 +5,10 @@ import { motion, AnimatePresence, LayoutGroup } from "motion/react";
 import { WarningCircle, MagnifyingGlass } from "@phosphor-icons/react";
 import { SearchResultSkeleton } from "@/components/skeletons/search-result-skeleton";
 import { EmptyState } from "@/components/states/empty-state";
-import { MangaGrid } from "@/components/manga/manga-grid";
-import { ShelfCard } from "@/components/manga/card";
-import { CompactCard } from "@/components/manga/card/compact-card";
-import { ViewModeToggle } from "@/components/manga/view-mode-toggle";
+import { MangaGrid } from "@/components/komik/manga-grid";
+import { ShelfCard } from "@/components/komik/card";
+import { CompactCard } from "@/components/komik/card/compact-card";
+import { ViewModeToggle } from "@/components/komik/view-mode-toggle";
 import { Button } from "@/components/ui/button";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import {

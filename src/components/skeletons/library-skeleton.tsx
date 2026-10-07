@@ -1,9 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { MangaGridSkeleton } from "./manga-grid-skeleton";
+import { MangaGridSkeleton } from "@/components/komik/manga-grid-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PageHeader } from "@/components/app/header";
+import { PageHeader } from "@/components/chrome/header";
 import { useSettingsStore } from "@/shared/store/settings-store";
 
 export function LibrarySkeleton() {

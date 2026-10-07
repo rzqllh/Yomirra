@@ -15,10 +15,10 @@ import {
   MangaCardMeta,
   MangaCardTitle,
   mangaCardInteraction,
-} from "@/components/manga/card";
-import { MangaCover } from "@/components/manga/manga-cover";
+} from "@/components/komik/card";
+import { MangaCover } from "@/components/komik/manga-cover";
 
-import { PageHeader } from "@/components/app/header";
+import { PageHeader } from "@/components/chrome/header";
 
 export default function DownloadsPage() {
   const {

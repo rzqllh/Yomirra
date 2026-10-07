@@ -1,27 +1,6 @@
-/**
- * Normalized machine-readable source failure codes.
- * Separates operational error codes from human-facing UI copy.
- */
-export type SourceErrorCode =
-  | "SOURCE_DOWN"
-  | "DOMAIN_CHANGED"
-  | "ROUTE_CHANGED"
-  | "PARSER_BROKEN"
-  | "SCHEMA_CHANGED"
-  | "RATE_LIMITED"
-  | "UPSTREAM_TIMEOUT"
-  | "UPSTREAM_BLOCKED"
-  | "DECRYPT_FAILURE"
-  | "IMAGE_CDN_FAILURE"
-  | "UNKNOWN";
+import type { SourceErrorCode, SourceHealthStage } from "@/shared/sources/source-types";
 
-export type SourceHealthStage =
-  | "transport"
-  | "search"
-  | "detail"
-  | "chapters"
-  | "pages"
-  | "cdn";
+export type { SourceErrorCode, SourceHealthStage };
 
 export interface SourceErrorOptions {
   code: SourceErrorCode;

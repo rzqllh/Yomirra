@@ -13,6 +13,7 @@ Folder ini berisi dokumentasi public untuk contributor dan maintainer. Untuk ove
 - [Testing](TESTING.md) — verification gate dan risk-based testing.
 - [Adding a Source](ADDING_A_SOURCE.md) — built-in adapter dan dynamic source.
 - [Developer Guide](README_DEV.md) — onboarding developer.
+- [Execution Roadmap](yomirra-master-execution-roadmap.md) — status rekonsiliasi dan remaining release gates.
 - [Contributing](../CONTRIBUTING.md)
 - [Security](../SECURITY.md)
 - [Changelog](../CHANGELOG.md)
@@ -25,6 +26,8 @@ Jika docs dan repository berbeda, urutan prioritasnya:
 2. `package.json` dan runtime config;
 3. `docs/DESIGN.md` untuk design contract;
 4. public docs lain.
+
+Dokumen plan/task lain adalah catatan eksekusi historis. Untuk status kerja lintas fase yang masih berlaku, gunakan `yomirra-master-execution-roadmap.md` sebagai roadmap tunggal.
 
 Jangan mempertahankan dokumentasi yang sudah tidak sesuai hanya karena pernah benar.
 

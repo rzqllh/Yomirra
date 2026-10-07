@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { DesktopRail } from '../desktop-rail';
-import { TopNav } from '../top-nav';
-import { HomeView } from '../home-view';
+import { DesktopRail } from '@/components/chrome/desktop-rail';
+import { TopNav } from '@/components/chrome/top-nav';
+import { HomeView } from '@/components/home/home-view';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 let currentPathname = '/';

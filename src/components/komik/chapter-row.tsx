@@ -2,7 +2,7 @@ import * as React from "react"
 import Link from "next/link"
 import { getReaderHref } from "@/shared/lib/routes"
 import { beginNavigationIntent } from "@/shared/lib/navigation-intent"
-import { ChapterDownloadButton } from "@/components/manga/chapter-download-button"
+import { ChapterDownloadButton } from "@/components/komik/chapter-download-button"
 import { cn } from "@/shared/utils/cn"
 import { CaretLeft, Lock } from "@phosphor-icons/react"
 

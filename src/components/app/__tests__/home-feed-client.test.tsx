@@ -12,14 +12,14 @@ import {
   it,
   vi,
 } from "vitest";
-import { HomeFeedClient, SPOTLIGHT_AUTOPLAY_MS } from "../home-feed-client";
-import { HomeView } from "../home-view";
-import { HomeLeaderboardPanel } from "../home-leaderboard-panel";
+import { HomeFeedClient, SPOTLIGHT_AUTOPLAY_MS } from "@/components/home/home-feed-client";
+import { HomeView } from "@/components/home/home-view";
+import { HomeLeaderboardPanel } from "@/components/home/home-leaderboard-panel";
 import {
   isConfidentHomeDuplicate,
   selectSpotlightItems,
   type HomeFeedManga,
-} from "../home-feed-selection";
+} from "@/components/home/home-feed-selection";
 
 const motionState = vi.hoisted(() => ({ reduced: false }));
 

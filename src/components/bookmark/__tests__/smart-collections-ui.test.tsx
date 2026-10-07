@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { CollectionTab } from "../collection-tab";
 
-vi.mock("@/components/manga/card", () => ({
+vi.mock("@/components/komik/card", () => ({
   ShelfCard: ({ manga }: { manga: { title: string } }) => (
     <div data-testid="shelf-card">{manga.title}</div>
   ),

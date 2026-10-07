@@ -14,7 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { MangaCover } from "@/components/manga/manga-cover"
+import { MangaCover } from "@/components/komik/manga-cover"
 import { cn } from "@/shared/utils/cn"
 import { motion, AnimatePresence, useReducedMotion } from "motion/react"
 

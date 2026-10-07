@@ -16,7 +16,7 @@ import {
   Trash,
   Wrench,
 } from "@phosphor-icons/react";
-import type { UserReport } from "@/server/lib/ops/admin-report-service";
+import type { UserReport } from "@/shared/types/report";
 import {
   EmptyState,
   FeedbackBanner,

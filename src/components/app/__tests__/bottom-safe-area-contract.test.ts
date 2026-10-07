@@ -7,7 +7,7 @@ const read = (file: string) =>
 
 describe("mobile bottom safe-area ownership", () => {
   it("keeps dock reservation in AppShell rather than stacking it in PageContainer", () => {
-    const shell = read("src/components/app/app-shell.tsx");
+    const shell = read("src/components/chrome/app-shell.tsx");
     const container = read("src/components/ui/page-container.tsx");
 
     expect(shell).toContain('pb-[var(--page-bottom-safe)] md:pb-0');
@@ -16,7 +16,7 @@ describe("mobile bottom safe-area ownership", () => {
   });
 
   it("does not add another fixed bottom reservation on Home feed content", () => {
-    const home = read("src/components/app/home-feed-client.tsx");
+    const home = read("src/components/home/home-feed-client.tsx");
     expect(home).not.toContain('className="pb-16"');
   });
 });

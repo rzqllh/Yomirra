@@ -15,7 +15,7 @@ vi.mock("@/shared/api-client", () => ({
   },
 }));
 
-vi.mock("@/components/manga/card/shelf-card", () => ({
+vi.mock("@/components/komik/card/shelf-card", () => ({
   ShelfCard: ({ sourceId, manga }: { sourceId: string; manga: { id: string; title: string } }) => (
     <div data-testid="shelf-card" data-source={sourceId} data-manga-id={manga.id}>
       {manga.title}

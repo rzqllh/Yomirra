@@ -38,6 +38,8 @@ pnpm dev
 - Reuse primitive, helper, dan contract yang sudah ada sebelum membuat abstraksi baru.
 - Source-specific behavior tetap di adapter/server boundary.
 - Client tidak boleh import implementasi dari `src/server/`.
+- Import UI production dari owner canonical di `components/chrome`, `components/overlays`, `components/home`, atau `components/komik`; jangan menambah compatibility proxy atau barrel tanpa consumer nyata.
+- Nama grouping internal `komik` tidak mengubah public route `/manga/*` atau mewajibkan mass rename type/component `Manga*`.
 - Zustand dipakai untuk state lokal/persisted yang sudah established; TanStack Query untuk remote request state.
 - Jangan menambah dependency hanya untuk mengganti util kecil yang sudah bisa ditangani platform atau dependency existing.
 - Perubahan schema persisted/backup harus menjaga backward compatibility secara sengaja.

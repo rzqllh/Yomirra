@@ -1,9 +1,9 @@
 import * as React from "react";
 import { render, screen, fireEvent, act, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { DesktopRail } from "../desktop-rail";
-import { TopNav } from "../top-nav";
-import { HomeHero } from "../home-hero";
+import { DesktopRail } from "@/components/chrome/desktop-rail";
+import { TopNav } from "@/components/chrome/top-nav";
+import { HomeHero } from "@/components/home/home-hero";
 import { SiteAnnouncementBanner } from "@/components/layout/site-announcement-banner";
 import { useSidebarStore } from "@/shared/store/sidebar-store";
 import fs from "node:fs";
@@ -33,11 +33,11 @@ vi.mock("@/shared/store/history-store", () => ({
   useHistoryStore: () => false,
 }));
 
-vi.mock("@/components/app/updates-bell", () => ({
+vi.mock("@/components/overlays/updates-bell", () => ({
   UpdatesBell: () => <button type="button" aria-label="Pembaruan">Bell</button>,
 }));
 
-vi.mock("@/components/app/theme-toggle", () => ({
+vi.mock("@/components/overlays/theme-toggle", () => ({
   ThemeToggle: () => <button type="button" aria-label="Ganti tema">Theme</button>,
 }));
 
@@ -121,7 +121,7 @@ describe("Shell Revamp Regression Coverage", () => {
     it("ensures DesktopRail keeps 76px compact base class and toggle is hidden on non-desktop", () => {
       const read = (file: string) =>
         fs.readFileSync(path.resolve(process.cwd(), file), "utf-8");
-      const railCode = read("src/components/app/desktop-rail.tsx");
+      const railCode = read("src/components/chrome/desktop-rail.tsx");
 
       // Toggle container must be hidden on mobile/tablet (hidden xl:flex)
       expect(railCode).toContain("hidden xl:flex mt-auto");
@@ -184,7 +184,7 @@ describe("Shell Revamp Regression Coverage", () => {
     it("does not use overlapping max-w-[78%] mobile width contract", () => {
       const read = (file: string) =>
         fs.readFileSync(path.resolve(process.cwd(), file), "utf-8");
-      const heroCode = read("src/components/app/home-hero.tsx");
+      const heroCode = read("src/components/home/home-hero.tsx");
 
       // Ensure max-w-[78%] is eliminated
       expect(heroCode).not.toContain("max-w-[78%]");

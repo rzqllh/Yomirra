@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { WarningCircle } from "@phosphor-icons/react";
-import { EditorialCard } from "@/components/manga/card";
+import { EditorialCard } from "@/components/komik/card";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { EmptyState } from "@/components/states/empty-state";
 import {

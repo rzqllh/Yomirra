@@ -3,8 +3,8 @@
 import * as React from "react";
 import { YomirraSurface, PageContainer } from "@/components/ui/layout";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
-import { HeaderActions } from "@/components/app/header-actions";
-import { PageHeader } from "@/components/app/header";
+import { HeaderActions } from "@/components/chrome/header-actions";
+import { PageHeader } from "@/components/chrome/header";
 import { House } from "@phosphor-icons/react";
 
 interface HomeViewProps {

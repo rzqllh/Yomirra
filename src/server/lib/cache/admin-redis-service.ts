@@ -1,23 +1,6 @@
 import { redis } from "./redis";
 import { logger } from "@/shared/logger";
-
-export interface RedisTelemetry {
-  usedMemory: string;
-  uptimeDays: number;
-  connectedClients: number;
-  totalSampledKeys: number;
-  status: "connected" | "degraded" | "disconnected";
-}
-
-export interface RedisKeyItem {
-  key: string;
-  type: string;
-  ttl: number;
-}
-
-export interface RedisKeyDetail extends RedisKeyItem {
-  value: string;
-}
+import type { RedisKeyDetail, RedisKeyItem, RedisTelemetry } from "@/shared/types/admin";
 
 /**
  * Mengambil ringkasan telemetri Redis (penggunaan memori, uptime, client, total key yomirra).

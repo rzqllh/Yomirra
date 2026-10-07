@@ -7,7 +7,7 @@ import { motion, useReducedMotion } from "motion/react";
 import { useQuery, QueryClientContext } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
 import { runCardDetailEnrichment } from "@/shared/lib/card-detail-enrichment";
-import { MangaCover } from "@/components/manga/manga-cover";
+import { MangaCover } from "@/components/komik/manga-cover";
 import { getMangaDetailHref } from "@/shared/lib/routes";
 import { transitions } from "@/shared/lib/motion/tokens";
 import { cn } from "@/shared/utils/cn";

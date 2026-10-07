@@ -29,9 +29,11 @@ src/
 │   ├── (web)/        user-facing routes
 │   └── api/          server routes
 ├── components/
-│   ├── app/          app shell, nav, PageHeader
+│   ├── chrome/       app shell, nav, PageHeader
+│   ├── overlays/     cross-page overlays dan boot state
+│   ├── home/         Home composition dan feed
 │   ├── ui/           canonical UI primitives
-│   ├── manga/        cards, detail, recommendation
+│   ├── komik/        cards, detail, recommendation
 │   ├── library/      source browsing
 │   ├── bookmark/     Rak Buku
 │   ├── search/       global search
@@ -61,6 +63,8 @@ Client component tidak boleh import source adapter atau Redis code dari `src/ser
 
 Browser-facing code berjalan melalui API route / `apiClient`.
 
+Client-safe contract lintas boundary berada di `src/shared/types/` atau `src/shared/sources/`. Import production menargetkan module canonical secara langsung; jangan menghidupkan kembali legacy `components/app`, `components/manga`, atau barrel tanpa consumer.
+
 ### Source adapters
 
 Setiap source mengubah response upstream menjadi shared Yomirra types. Generic UI tidak seharusnya mengenal bentuk response asli source.
@@ -83,6 +87,8 @@ App Router route
 ```
 
 Contoh yang sudah ada: Search, Library, dan Rak Buku.
+
+Grouping internal `components/komik` tidak mengubah nama type/component `Manga*` yang sudah established atau public route `/manga/*`.
 
 ## Multi-source identity
 

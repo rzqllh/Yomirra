@@ -1,6 +1,6 @@
 import { initFirebase } from "./firebase";
-import { LibraryItem } from "@/shared/store/library-store";
-import { HistoryItem } from "@/shared/store/history-store";
+import type { LibraryItem } from "@/shared/store/library-store";
+import type { HistoryItem } from "@/shared/store/history-store";
 
 export async function pushLibraryItem(item: LibraryItem) {
   const { auth, db } = await initFirebase();
@@ -239,4 +239,3 @@ export async function pullCustomCollections(): Promise<CustomCollectionsSyncData
     return null;
   }
 }
-

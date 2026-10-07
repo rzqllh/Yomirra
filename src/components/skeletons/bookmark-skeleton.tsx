@@ -1,7 +1,7 @@
 import * as React from "react";
-import { PageHeader } from "@/components/app/header";
+import { PageHeader } from "@/components/chrome/header";
 import { Skeleton } from "@/components/ui/skeleton";
-import { MangaCardSkeleton } from "@/components/skeletons/manga-card-skeleton";
+import { MangaCardSkeleton } from "@/components/komik/manga-card-skeleton";
 
 export function BookmarkSkeleton() {
   return (

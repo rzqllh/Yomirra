@@ -26,9 +26,9 @@ describe("accessibility cleanup contracts", () => {
   });
 
   it("keeps onboarding modal semantics and reduced-motion behavior explicit", () => {
-    const onboarding = read("src/components/app/onboarding-overlay.tsx");
+    const onboarding = read("src/components/overlays/onboarding-overlay.tsx");
     const pageTransition = read("src/components/motion/page-transition.tsx");
-    const mangaCard = read("src/components/manga/card/manga-card.tsx");
+    const mangaCard = read("src/components/komik/card/manga-card.tsx");
 
     expect(onboarding).toContain("useReducedMotion");
     expect(onboarding).toContain('role="dialog"');
@@ -46,7 +46,7 @@ describe("accessibility cleanup contracts", () => {
     const filterDrawer = read("src/components/ui/filter-drawer-shell.tsx");
     const chapterDrawer = read("src/components/reader/reader-chapter-drawer.tsx");
     const readerError = read("src/components/reader/page-image-error.tsx");
-    const onboarding = read("src/components/app/onboarding-overlay.tsx");
+    const onboarding = read("src/components/overlays/onboarding-overlay.tsx");
 
     expect(dialog).toContain("size-11");
     expect(sheet).toContain("size-11");

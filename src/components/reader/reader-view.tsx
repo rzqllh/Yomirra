@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { getDownloadChapterId } from "@/shared/utils/download-helpers";
 import type { MangaDetail, Chapter, PageItem } from "@/shared/types/source";
 import { useAlternateSource } from "@/shared/hooks/use-alternate-source";
-import { AlternateSourceModal } from "@/components/manga/alternate-source-modal";
+import { AlternateSourceModal } from "@/components/komik/alternate-source-modal";
 
 interface ReaderViewProps {
   sourceId: string;

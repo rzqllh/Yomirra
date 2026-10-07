@@ -22,14 +22,14 @@ import { getMangaDetailHref, getReaderHref } from "@/shared/lib/routes";
 import { EmptyState } from "@/components/states/empty-state";
 import { Button } from "@/components/ui/button";
 import { SegmentedControl } from "@/components/ui/segmented-control";
-import { MangaCover } from "@/components/manga/manga-cover";
+import { MangaCover } from "@/components/komik/manga-cover";
 import {
   MangaCardCoverFrame,
   MangaCardMeta,
   MangaCardTitle,
   mangaCardInteraction,
   mangaCardSurface,
-} from "@/components/manga/card";
+} from "@/components/komik/card";
 import { UpdatesSkeleton } from "@/components/skeletons/updates-skeleton";
 import { cn } from "@/shared/utils/cn";
 import {

@@ -2,11 +2,22 @@
 
 Dokumen ini mencatat reusable UI seams yang sudah canonical di Yomirra. Tujuannya bukan membuat satu komponen universal untuk semua hal.
 
+Canonical ownership:
+
+| Folder | Tanggung jawab |
+| --- | --- |
+| `src/components/chrome/` | app shell, header, dan navigation |
+| `src/components/overlays/` | boot state dan overlay lintas halaman |
+| `src/components/home/` | composition dan feed Beranda |
+| `src/components/komik/` | detail, card, chapter, dan action komik |
+
+Production code mengimpor file pemilik secara langsung. Legacy implementation di `components/app` dan `components/manga` tidak dipertahankan; folder test lama bukan API import. Nama `Manga*` dan public route `/manga/*` tetap dipakai walaupun grouping internal bernama `komik`.
+
 ## App chrome
 
 ### PageHeader
 
-`src/components/app/header.tsx`
+`src/components/chrome/header.tsx`
 
 Dipakai sebagai header destination page. Ia memiliki responsive mobile/desktop contract sendiri.
 

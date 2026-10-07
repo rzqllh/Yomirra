@@ -1,12 +1,7 @@
 import type { SourceErrorCode, SourceHealthStage } from "../error";
+import type { SourceHealthStatus } from "@/shared/sources/source-types";
 
-export type SourceHealthStatus =
-  | "HEALTHY"
-  | "DEGRADED"
-  | "BROKEN"
-  | "RATE_LIMITED"
-  | "DOMAIN_CHANGED"
-  | "UNKNOWN";
+export type { SourceHealthStatus };
 
 export interface SourceHealthSnapshot {
   sourceId: string;

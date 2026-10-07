@@ -15,7 +15,7 @@ import { useTheme } from "next-themes";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { YomirraSurface, PageContainer, ContentLane } from "@/components/ui/layout";
-import { PageHeader } from "@/components/app/header";
+import { PageHeader } from "@/components/chrome/header";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Gear, ShieldWarning } from "@phosphor-icons/react/dist/ssr";
 import { toast } from "sonner";

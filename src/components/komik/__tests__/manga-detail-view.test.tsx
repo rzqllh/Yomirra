@@ -19,11 +19,11 @@ vi.mock("@tanstack/react-query", () => ({
   useQuery: () => ({ data: null }),
 }));
 
-vi.mock("@/components/manga/manga-recommendations", () => ({
+vi.mock("@/components/komik/manga-recommendations", () => ({
   MangaRecommendations: () => <div data-testid="manga-recommendations" />,
 }));
 
-vi.mock("@/components/app/header", () => ({
+vi.mock("@/components/chrome/header", () => ({
   PageHeader: (props: any) => (
     <div data-testid="page-header" data-backhref={props.backHref} data-showback={props.showBack}>
       {props.title}

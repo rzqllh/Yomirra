@@ -16,7 +16,7 @@ import {
 } from "@phosphor-icons/react"
 import { motion, AnimatePresence } from "motion/react"
 import { useMounted } from "@/shared/hooks/use-mounted"
-import { UpdatesBell } from "@/components/app/updates-bell"
+import { UpdatesBell } from "@/components/overlays/updates-bell"
 import { useAuth } from "@/shared/hooks/use-auth"
 import { cn } from "@/shared/utils/cn"
 

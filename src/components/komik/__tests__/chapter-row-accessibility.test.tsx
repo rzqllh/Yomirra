@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react"
 import { describe, expect, it, vi } from "vitest"
 import { ChapterRow } from "../chapter-row"
 
-vi.mock("@/components/manga/chapter-download-button", () => ({
+vi.mock("@/components/komik/chapter-download-button", () => ({
   ChapterDownloadButton: ({ chapterTitle }: { chapterTitle: string }) => (
     <button type="button" aria-label={`Unduh ${chapterTitle}`}>
       Unduh

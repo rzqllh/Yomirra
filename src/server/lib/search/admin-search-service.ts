@@ -5,37 +5,11 @@ import { sourceManager } from "@/server/lib/sources/source-manager";
 import { sourceRegistry } from "@/shared/sources/source-registry";
 import { parseSearchExpression, type SearchCatalogCandidate } from "@/shared/lib/search-intelligence";
 import { logger } from "@/shared/logger";
-
-export interface SearchIntelligenceStats {
-  totalCatalogItems: number;
-  totalCatalogRecords: number;
-  embeddedRecordsCount: number;
-  embeddingsActive: boolean;
-  embeddingCoveragePercent: number;
-  isGeminiConfigured: boolean;
-  model: string;
-  lastWarmedAt?: string;
-}
-
-export interface SearchSimulationResultItem {
-  id: string;
-  canonicalKey: string;
-  title: string;
-  sourceId: string;
-  exactMatchScore: number;
-  tagMatchScore: number;
-  popularityScore: number;
-  finalScore: number;
-  hasEmbedding: boolean;
-}
-
-export interface SearchSimulationResult {
-  query: string;
-  semanticAvailable: boolean;
-  catalogEmpty?: boolean;
-  results: SearchSimulationResultItem[];
-  rankedResults: SearchSimulationResultItem[];
-}
+import type {
+  SearchIntelligenceStats,
+  SearchSimulationResult,
+  SearchSimulationResultItem,
+} from "@/shared/types/admin";
 
 
 export async function getSearchIntelligenceStats(): Promise<SearchIntelligenceStats> {
@@ -137,4 +111,3 @@ export async function simulateSearchRanking(rawQuery: string): Promise<SearchSim
     rankedResults,
   };
 }
-

@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ContinueReadingList } from "../continue-reading-list";
+import { ContinueReadingList } from "@/components/home/continue-reading-list";
 import type { HistoryItem } from "@/shared/store/history-store";
 
 const push = vi.fn();

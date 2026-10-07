@@ -14,7 +14,7 @@ import {
   X,
 } from "@phosphor-icons/react";
 import type { CustomSourceDefinition } from "@/shared/sources/custom-source-schema";
-import type { ParserTestResult } from "@/server/lib/sources/custom-source-service";
+import type { ParserTestResult } from "@/shared/types/admin";
 import {
   FeedbackBanner,
   InlineNotice,

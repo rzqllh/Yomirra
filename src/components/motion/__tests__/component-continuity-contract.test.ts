@@ -9,7 +9,7 @@ describe("component continuity contracts", () => {
       "utf-8"
     );
     const viewMode = fs.readFileSync(
-      path.resolve(process.cwd(), "src/components/manga/view-mode-toggle.tsx"),
+      path.resolve(process.cwd(), "src/components/komik/view-mode-toggle.tsx"),
       "utf-8"
     );
 

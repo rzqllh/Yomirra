@@ -36,6 +36,19 @@ route
 
 Search, Library, dan Rak Buku sudah memakai pola ini.
 
+Ownership komponen lintas feature saat ini:
+
+```text
+src/components/chrome/    shell, header, dan navigation
+src/components/overlays/  overlay lintas halaman dan boot state
+src/components/home/      composition dan feed Beranda
+src/components/komik/     detail, card, chapter, dan action komik
+```
+
+Folder lama `src/components/app/` dan `src/components/manga/` bukan production boundary. Test contract lama masih dapat berada di folder test asal, tetapi import-nya harus menargetkan module canonical. Import production memakai path module langsung; barrel tanpa consumer tidak dipertahankan.
+
+`komik` adalah nama grouping UI untuk manga, manhwa, dan manhua. Existing type/component `Manga*` serta public route `/manga/[sourceId]/[mangaId]` dan `/manga/[sourceId]/[mangaId]/read/[chapterId]` tetap menjadi contract.
+
 ## 3. Source layer
 
 Built-in adapters ada di `src/server/lib/sources/adapters/`. Adapter bertugas:

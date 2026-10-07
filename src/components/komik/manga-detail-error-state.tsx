@@ -4,7 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { WarningCircle, ArrowClockwise, ArrowLeft, MagnifyingGlass, HardDrives } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
-import { PageHeader } from "@/components/app/header";
+import { PageHeader } from "@/components/chrome/header";
 import { getSourceMetadata } from "@/shared/sources/source-registry";
 import Link from "next/link";
 

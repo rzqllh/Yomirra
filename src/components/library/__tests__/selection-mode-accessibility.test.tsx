@@ -12,11 +12,11 @@ vi.mock("../library-filter-drawer", () => ({
   LibraryFilterDrawer: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }))
 
-vi.mock("@/components/manga/view-mode-toggle", () => ({
+vi.mock("@/components/komik/view-mode-toggle", () => ({
   ViewModeToggle: () => <div data-testid="view-mode-toggle" />,
 }))
 
-vi.mock("@/components/manga/card", () => ({
+vi.mock("@/components/komik/card", () => ({
   ShelfCard: ({ manga }: { manga: { title: string } }) => (
     <Link href="/manga" data-testid="shelf-card">
       {manga.title}
@@ -24,7 +24,7 @@ vi.mock("@/components/manga/card", () => ({
   ),
 }))
 
-vi.mock("@/components/manga/card/compact-card", () => ({
+vi.mock("@/components/komik/card/compact-card", () => ({
   CompactCard: ({ manga }: { manga: { title: string } }) => (
     <Link href="/manga" data-testid="compact-card">
       {manga.title}

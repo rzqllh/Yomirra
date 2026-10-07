@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Clock, Compass, Trash, Play } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/states/empty-state";
 import { Button } from "@/components/ui/button";
-import { HistoryCard } from "@/components/manga/card/history-card";
+import { HistoryCard } from "@/components/komik/card/history-card";
 import { getLibraryHref } from "@/shared/lib/routes";
 import { cn } from "@/shared/utils/cn";
 import { getRelativeTime } from "@/shared/utils/date";

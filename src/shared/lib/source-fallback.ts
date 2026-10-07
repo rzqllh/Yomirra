@@ -11,7 +11,7 @@ import {
   type MatchConfidence,
   type TitleCandidate,
 } from "./title-matcher";
-import { SourceErrorCode } from "@/server/lib/sources/error";
+import type { SourceErrorCode } from "@/shared/sources/source-types";
 
 export type SourceFallbackStatus = "NO_FALLBACK" | "AUTO_SAFE" | "CONFIRM_REQUIRED";
 

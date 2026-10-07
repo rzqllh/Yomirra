@@ -1,6 +1,6 @@
 import * as React from "react";
 import { QueryClient } from "@tanstack/react-query";
-import { StreamItem } from "@/components/reader/continuous-vertical-reader";
+import type { StreamItem } from "@/components/reader/continuous-vertical-reader";
 import { getReaderHref } from "@/shared/lib/routes";
 import { Virtualizer } from "@tanstack/react-virtual";
 import { useVisibilityFlush } from "./use-visibility-flush";

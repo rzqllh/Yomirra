@@ -1,12 +1,12 @@
 import { Metadata } from "next";
-import { HomeView } from "@/components/app/home-view";
+import { HomeView } from "@/components/home/home-view";
 import { getRuntimeSources } from "@/server/lib/sources/runtime-sources";
 import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { EmptyState } from "@/components/states/empty-state";
 import { WarningCircle } from "@phosphor-icons/react/dist/ssr";
-import { UnifiedFeed } from "@/components/app/unified-feed";
-import { SourceFeedSkeleton } from "@/components/app/source-feed-skeleton";
+import { UnifiedFeed } from "@/components/home/unified-feed";
+import { SourceFeedSkeleton } from "@/components/home/source-feed-skeleton";
 import { parseDisabledSourceIdsCookie, selectDiscoverySources } from "@/shared/sources/discovery-source-policy";
 
 export const metadata: Metadata = {

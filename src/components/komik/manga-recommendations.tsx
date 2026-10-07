@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
-import { ShelfCard } from "@/components/manga/card/shelf-card";
+import { ShelfCard } from "@/components/komik/card/shelf-card";
 import { MangaItem } from "@/shared/types/source";
 import { normalizeTitle } from "@/shared/lib/title-matcher";
 import { useHistoryStore } from "@/shared/store/history-store";

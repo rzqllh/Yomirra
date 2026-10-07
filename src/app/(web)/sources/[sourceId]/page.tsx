@@ -3,9 +3,9 @@
 import * as React from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
-import { PageHeader } from "@/components/app/header";
-import { ShelfCard } from "@/components/manga/card";
-import { MangaGridSkeleton } from "@/components/skeletons/manga-grid-skeleton";
+import { PageHeader } from "@/components/chrome/header";
+import { ShelfCard } from "@/components/komik/card";
+import { MangaGridSkeleton } from "@/components/komik/manga-grid-skeleton";
 import { useSearchParams } from "next/navigation";
 import { WarningCircle, Compass } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";

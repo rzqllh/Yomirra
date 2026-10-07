@@ -13,7 +13,7 @@ import { apiClient } from "@/shared/api-client";
 import { rankCandidates, type TitleCandidate } from "@/shared/lib/title-matcher";
 import { mapChapterProgress, type ChapterMapResult } from "@/shared/lib/chapter-parser";
 import { Button } from "@/components/ui/button";
-import { PageHeader } from "@/components/app/header";
+import { PageHeader } from "@/components/chrome/header";
 import { getReaderHref } from "@/shared/lib/routes";
 import {
   AlternateSourceModal,
@@ -24,7 +24,7 @@ import {
   resolveSourceFallback,
   executeSourceMigration,
 } from "@/shared/lib/source-fallback";
-import type { SourceErrorCode } from "@/server/lib/sources/error";
+import type { SourceErrorCode } from "@/shared/sources/source-types";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 
 interface DeadSourceRecoveryProps {

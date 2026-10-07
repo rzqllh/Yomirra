@@ -1,10 +1,10 @@
 import { Metadata } from "next";
 import { sourceManager } from "@/server/lib/sources/source-manager";
 import { withCache, CACHE_TTL } from "@/server/lib/cache/redis-cache";
-import { MangaDetailView } from "@/components/manga/manga-detail-view";
+import { MangaDetailView } from "@/components/komik/manga-detail-view";
 import { getManifestUrlFromCookie } from "@/server/lib/sources/server-manifest";
-import { DeadSourceRecovery } from "@/components/manga/dead-source-recovery";
-import { MangaDetailErrorState } from "@/components/manga/manga-detail-error-state";
+import { DeadSourceRecovery } from "@/components/komik/dead-source-recovery";
+import { MangaDetailErrorState } from "@/components/komik/manga-detail-error-state";
 import { getSourceMetadata } from "@/shared/sources/source-registry";
 import { SourceError, type SourceErrorCode } from "@/server/lib/sources/error";
 

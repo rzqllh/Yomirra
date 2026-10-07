@@ -23,9 +23,8 @@ import {
   StatusPill,
   cx,
 } from "../components/admin-ui";
-import type { SourceHealthMatrixItem } from "@/server/lib/sources/admin-source-service";
-import type { UserReport } from "@/server/lib/ops/admin-report-service";
-import type { RedisTelemetry } from "@/server/lib/cache/admin-redis-service";
+import type { RedisTelemetry, SourceHealthMatrixItem } from "@/shared/types/admin";
+import type { UserReport } from "@/shared/types/report";
 import type { SiteConfig } from "@/shared/types/site-config";
 
 interface OverviewTabProps {

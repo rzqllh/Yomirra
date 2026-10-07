@@ -1,4 +1,4 @@
-import { PageHeader } from "@/components/app/header";
+import { PageHeader } from "@/components/chrome/header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { YomirraSurface, PageContainer, ContentLane } from "@/components/ui/layout";
 import { Gear } from "@phosphor-icons/react/dist/ssr";

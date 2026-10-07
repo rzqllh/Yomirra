@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { getMangaDetailHref, getSafeMangaDetailBackHref } from "@/shared/lib/routes";
 import { getManifestUrlFromCookie } from "@/server/lib/sources/server-manifest";
 import { SourceError } from "@/server/lib/sources/error";
-import { DeadSourceRecovery } from "@/components/manga/dead-source-recovery";
+import { DeadSourceRecovery } from "@/components/komik/dead-source-recovery";
 
 export async function generateMetadata({ 
   params 
