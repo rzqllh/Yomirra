@@ -93,7 +93,11 @@ export const useHistoryStore = create<HistoryState>()(
           const evictedItem = newItems[oldestKey];
           delete newItems[oldestKey];
           
-          setTimeout(() => deleteHistoryItem(evictedItem.sourceId, evictedItem.mangaId, evictedItem.chapterId), 0);
+          setTimeout(() => {
+            deleteHistoryItem(evictedItem.sourceId, evictedItem.mangaId, evictedItem.chapterId).catch((error) => {
+              console.error("Failed to delete evicted history item", error);
+            });
+          }, 0);
         }
 
         return { items: newItems };
