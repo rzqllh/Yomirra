@@ -119,14 +119,14 @@ describe('BottomDock Navigation', () => {
     expect(searchLink.querySelector('span[aria-hidden="true"]')).toBeTruthy();
   });
 
-  it('provides a compact layout for narrow screens without shrinking standard touch targets', () => {
+  it('keeps 44px tab targets and adapts label spacing for narrow screens', () => {
     render(<BottomDock />);
 
     const inactiveLink = screen.getByRole('link', { name: 'Library' });
     const searchLink = screen.getByRole('link', { name: 'Cari' });
 
     expect(inactiveLink.className).toContain('size-11');
-    expect(inactiveLink.className).toContain('max-[359px]:size-10');
+    expect(screen.getByRole('link', { name: 'Rak Buku' }).className).toContain('size-11');
     expect(searchLink.className).toContain('size-14');
     expect(searchLink.className).toContain('max-[359px]:size-12');
   });
