@@ -4,6 +4,7 @@ import * as React from "react";
 import { cn } from "@/shared/utils/cn";
 
 import { motion, useReducedMotion } from "motion/react";
+import { transitions } from "@/shared/lib/motion/tokens";
 
 export interface ReadingProgressProps {
   /** Progress percentage between 0 and 100 */
@@ -46,7 +47,7 @@ export function ReadingProgress({
           )}
           initial={reducedMotion ? false : { width: 0 }}
           animate={{ width: `${clampedValue}%` }}
-          transition={{ duration: 0.45, ease: "easeOut" }}
+          transition={reducedMotion ? { duration: 0 } : transitions.gentle}
         />
       </div>
       {showLabel && (

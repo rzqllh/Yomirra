@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { motion, useSpring, useMotionValueEvent } from "motion/react";
+import * as React from "react";
+import { motion, useReducedMotion, useSpring, useTransform } from "motion/react";
 import { ArrowDown, ArrowsClockwise } from "@phosphor-icons/react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/shared/utils/cn";
@@ -13,114 +13,174 @@ interface PullToRefreshProps {
 
 const THRESHOLD = 80;
 const MAX_PULL = 150;
+const GESTURE_SLOP = 10;
+const EDGE_SWIPE_ZONE = 24;
 
 export function PullToRefresh({ children, onRefresh }: PullToRefreshProps) {
-  const [isPulling, setIsPulling] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isPulling, setIsPulling] = React.useState(false);
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
+  const refreshingRef = React.useRef(false);
+  const refreshActionRef = React.useRef(onRefresh);
+  const reducedMotion = useReducedMotion();
   const pullDistance = useSpring(0, { stiffness: 300, damping: 25, bounce: 0 });
+  const rotation = useTransform(pullDistance, [0, THRESHOLD], [0, 180], { clamp: true });
   const router = useRouter();
-  const [rotation, setRotation] = useState(0);
+  const routerRef = React.useRef(router);
 
-  useMotionValueEvent(pullDistance, "change", (latest) => {
-    if (!isRefreshing && isPulling) {
-      // Map 0 -> THRESHOLD to 0 -> 180 degrees
-      const rot = Math.min((latest / THRESHOLD) * 180, 180);
-      setRotation(rot);
-    }
-  });
+  React.useEffect(() => {
+    refreshActionRef.current = onRefresh;
+  }, [onRefresh]);
 
-  useEffect(() => {
+  React.useEffect(() => {
+    routerRef.current = router;
+  }, [router]);
+
+  React.useEffect(() => {
+    let tracking = false;
+    let pulling = false;
+    let startX = 0;
     let startY = 0;
-    let isAtTop = false;
+    let distance = 0;
 
-    const handleTouchStart = (e: TouchEvent) => {
-      // Only allow pull to refresh if we are at the absolute top of the page
-      if (window.scrollY <= 0) {
-        isAtTop = true;
-        startY = e.touches[0].clientY;
-      } else {
-        isAtTop = false;
-      }
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      if (!isAtTop || isRefreshing) return;
-      const currentY = e.touches[0].clientY;
-      const distance = currentY - startY;
-
-      if (distance > 0) {
-        // Prevent default scroll (pull-to-refresh native browser behavior)
-        if (e.cancelable) e.preventDefault();
-        setIsPulling(true);
-        // Add heavy resistance
-        const resistantDistance = distance * 0.4;
-        pullDistance.set(Math.min(resistantDistance, MAX_PULL));
-      }
-    };
-
-    const handleTouchEnd = async () => {
-      if (!isPulling) return;
+    const resetGesture = () => {
+      tracking = false;
+      pulling = false;
+      distance = 0;
       setIsPulling(false);
+      if (!refreshingRef.current) pullDistance.set(0);
+    };
 
-      if (pullDistance.get() > THRESHOLD) {
-        setIsRefreshing(true);
-        pullDistance.set(60); // Hold the spinner visible
+    const handleTouchStart = (event: TouchEvent) => {
+      if (refreshingRef.current || event.touches.length !== 1 || window.scrollY > 0) {
+        tracking = false;
+        return;
+      }
 
+      const target = event.target;
+      if (target instanceof Element && target.closest('[role="dialog"], [data-vaul-drawer], [data-pull-refresh-ignore]')) {
+        tracking = false;
+        return;
+      }
+      // Don't steal vertical scrolling from nested scrollable panels.
+      let ancestor = target instanceof Element ? target : null;
+      while (ancestor && ancestor !== document.body) {
+        const overflowY = window.getComputedStyle(ancestor).overflowY;
+        if (ancestor.scrollHeight > ancestor.clientHeight + 1 && /^(auto|scroll)$/.test(overflowY)) {
+          tracking = false;
+          return;
+        }
+        ancestor = ancestor.parentElement;
+      }
+
+      const touch = event.touches[0];
+      // Keep native iOS edge-swipe Back and horizontal content scrolling intact.
+      if (touch.clientX <= EDGE_SWIPE_ZONE || touch.clientX >= window.innerWidth - EDGE_SWIPE_ZONE) {
+        tracking = false;
+        return;
+      }
+
+      tracking = true;
+      pulling = false;
+      distance = 0;
+      startX = touch.clientX;
+      startY = touch.clientY;
+    };
+
+    const handleTouchMove = (event: TouchEvent) => {
+      if (!tracking || refreshingRef.current || event.touches.length !== 1) return;
+
+      const touch = event.touches[0];
+      const deltaX = touch.clientX - startX;
+      const deltaY = touch.clientY - startY;
+
+      if (!pulling && Math.abs(deltaX) > GESTURE_SLOP && Math.abs(deltaX) >= Math.abs(deltaY)) {
+        tracking = false;
+        return;
+      }
+
+      if (deltaY <= GESTURE_SLOP || window.scrollY > 0) {
+        if (pulling) resetGesture();
+        return;
+      }
+
+      if (!pulling) {
+        pulling = true;
+        setIsPulling(true);
+      }
+      distance = Math.min(deltaY * 0.4, MAX_PULL);
+      if (event.cancelable) event.preventDefault();
+      pullDistance.set(reducedMotion ? 0 : distance);
+    };
+
+    const handleTouchEnd = () => {
+      if (!tracking) return;
+      const shouldRefresh = pulling && distance >= THRESHOLD;
+      resetGesture();
+      if (!shouldRefresh || refreshingRef.current) return;
+
+      refreshingRef.current = true;
+      setIsRefreshing(true);
+      pullDistance.set(reducedMotion ? 0 : 60);
+
+      void (async () => {
         try {
-          if (onRefresh) {
-            await onRefresh();
+          if (refreshActionRef.current) {
+            await refreshActionRef.current();
           } else {
-            router.refresh();
-            // Minimum spinner duration
-            await new Promise(r => setTimeout(r, 800));
+            routerRef.current.refresh();
+            // Next.js router.refresh() does not return a completion promise.
+            await new Promise<void>((resolve) => window.setTimeout(resolve, 350));
           }
+        } catch (error) {
+          console.error("Pull-to-refresh failed", error);
         } finally {
+          refreshingRef.current = false;
           setIsRefreshing(false);
           pullDistance.set(0);
         }
-      } else {
-        pullDistance.set(0);
-      }
+      })();
     };
 
-    window.addEventListener('touchstart', handleTouchStart, { passive: true });
-    window.addEventListener('touchmove', handleTouchMove, { passive: false });
-    window.addEventListener('touchend', handleTouchEnd);
+    window.addEventListener("touchstart", handleTouchStart, { passive: true });
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
+    window.addEventListener("touchend", handleTouchEnd);
+    window.addEventListener("touchcancel", resetGesture);
 
     return () => {
-      window.removeEventListener('touchstart', handleTouchStart);
-      window.removeEventListener('touchmove', handleTouchMove);
-      window.removeEventListener('touchend', handleTouchEnd);
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleTouchEnd);
+      window.removeEventListener("touchcancel", resetGesture);
     };
-  }, [isRefreshing, pullDistance, router, onRefresh, isPulling]);
+  }, [pullDistance, reducedMotion]);
 
   return (
     <>
       <motion.div
-        className="fixed top-0 left-0 right-0 z-[100] flex justify-center pointer-events-none"
+        className="pointer-events-none fixed inset-x-0 top-0 z-[100] flex justify-center"
         style={{ y: pullDistance }}
       >
-        <div 
+        <div
           className={cn(
-            "absolute -top-12 bg-surface-glass backdrop-blur-md shadow-md rounded-xl w-10 h-10 flex items-center justify-center border border-border-default/30 text-text-primary transition-opacity duration-200",
-            (isPulling || isRefreshing) ? "opacity-100" : "opacity-0"
+            "absolute -top-12 flex size-10 items-center justify-center rounded-xl border border-border-default/30 bg-surface-glass text-text-primary shadow-md backdrop-blur-md motion-safe:transition-opacity motion-safe:duration-200",
+            isPulling || isRefreshing ? "opacity-100" : "opacity-0"
           )}
         >
           {isRefreshing ? (
             <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ repeat: Infinity, ease: "linear", duration: 1 }}
+              animate={reducedMotion ? undefined : { rotate: 360 }}
+              transition={reducedMotion ? { duration: 0 } : { repeat: Infinity, ease: "linear", duration: 1 }}
             >
-              <ArrowsClockwise size={20} weight="bold" className="text-accent" />
+              <ArrowsClockwise size={20} weight="bold" className="text-accent" aria-hidden="true" />
             </motion.div>
           ) : (
-            <motion.div style={{ rotate: rotation }}>
-              <ArrowDown size={20} weight="bold" className="text-text-secondary" />
+            <motion.div style={{ rotate: reducedMotion ? 0 : rotation }}>
+              <ArrowDown size={20} weight="bold" className="text-text-secondary" aria-hidden="true" />
             </motion.div>
           )}
         </div>
       </motion.div>
-      
+      {isRefreshing && <span role="status" className="sr-only">Memuat ulang halaman…</span>}
       {children}
     </>
   );

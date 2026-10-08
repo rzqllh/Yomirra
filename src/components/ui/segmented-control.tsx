@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import { cn } from "@/shared/utils/cn";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
+import { transitions } from "@/shared/lib/motion/tokens";
 
 export interface SegmentedControlOption {
   value: string;
@@ -22,6 +23,7 @@ export interface SegmentedControlProps {
   className?: string;
   fullWidth?: boolean;
   layoutId?: string;
+  ariaLabel?: string;
 }
 
 export function SegmentedControl({
@@ -34,7 +36,11 @@ export function SegmentedControl({
   className,
   fullWidth = false,
   layoutId = "segmented-pill",
+  ariaLabel,
 }: SegmentedControlProps) {
+  const instanceId = React.useId();
+  const reducedMotion = useReducedMotion();
+  const scopedLayoutId = `${layoutId}-${instanceId}`;
   const isPill = shape === "pill";
   const isQuickRail = variant === "quick-rail";
   const isGlass = variant === "glass-floating";
@@ -47,9 +53,10 @@ export function SegmentedControl({
 
   return (
     <div
-      role="tablist"
+      role="group"
+      aria-label={ariaLabel}
       className={cn(
-        "relative flex items-center p-1 transition-all duration-200 select-none",
+        "relative flex items-center p-1 select-none",
         containerRadiusClass,
         isQuickRail && "bg-surface-raised/90 border border-border-subtle shadow-xs",
         isGlass && "bg-surface-glass backdrop-blur-md border border-border-subtle shadow-xs",
@@ -67,9 +74,9 @@ export function SegmentedControl({
             key={option.value}
             type="button"
             onClick={() => onChange(option.value)}
-            whileTap={{ scale: 0.96 }}
+            whileTap={reducedMotion ? undefined : { scale: 0.97 }}
             className={cn(
-              "relative z-10 flex items-center justify-center gap-1.5 transition-colors duration-200 outline-none whitespace-nowrap font-bold",
+              "relative z-10 flex min-h-11 items-center justify-center gap-1.5 motion-safe:transition-colors motion-safe:duration-200 outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 whitespace-nowrap font-bold",
               itemRadiusClass,
               size === "sm" && "py-1.5 px-3 text-xs",
               size === "md" && "py-2 px-3.5 text-xs sm:text-sm",
@@ -81,14 +88,11 @@ export function SegmentedControl({
                   : "text-text-primary"
                 : "text-text-secondary hover:text-text-primary hover:bg-surface-hover/40"
             )}
-            role="tab"
-            id={`tab-${option.value}`}
-            aria-controls={`tabpanel-${option.value}`}
-            aria-selected={isActive}
+            aria-pressed={isActive}
           >
             {isActive && (
               <motion.div
-                layoutId={layoutId}
+                layoutId={reducedMotion ? undefined : scopedLayoutId}
                 className={cn(
                   "absolute inset-0 z-0 transition-shadow",
                   itemRadiusClass,
@@ -97,11 +101,7 @@ export function SegmentedControl({
                   variant === "soft-inset" && "bg-surface-base shadow-xs border border-border-subtle/60"
                 )}
                 initial={false}
-                transition={{
-                  type: "spring",
-                  stiffness: 500,
-                  damping: 35,
-                }}
+                transition={reducedMotion ? { duration: 0 } : transitions.layout}
               />
             )}
             {option.icon && (

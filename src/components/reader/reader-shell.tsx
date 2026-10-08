@@ -6,7 +6,7 @@ import { useReaderStore } from "@/shared/store/reader-store"
 import { CaretLeft, Gear, CaretRight, List, CaretUp, BookmarkSimple, BookOpen, ArrowLeft } from "@phosphor-icons/react"
 import { useLibraryStore } from "@/shared/store/library-store"
 import { cn } from "@/shared/utils/cn"
-import { motion, AnimatePresence, useScroll, useSpring } from "motion/react"
+import { motion, AnimatePresence, useScroll, useSpring, useReducedMotion } from "motion/react"
 import { transitions } from "@/shared/lib/motion/tokens"
 
 import { getMangaDetailHref, getReaderHref, getSafeMangaDetailBackHref } from "@/shared/lib/routes"
@@ -51,6 +51,7 @@ export function ReaderShell({
   currentChapterId,
 }: ReaderShellProps) {
   const router = useRouter()
+  const reducedMotion = useReducedMotion()
   const { preferences, isOverlayVisible, isDesktopPanelOpen, toggleDesktopPanel, toggleOverlay, setOverlayVisible, pagedProgress } = useReaderStore()
   const [isDrawerOpen, setIsDrawerOpen] = React.useState(false)
   const [isChapterDrawerOpen, setIsChapterDrawerOpen] = React.useState(false)
@@ -62,6 +63,7 @@ export function ReaderShell({
     damping: 30,
     restDelta: 0.001,
   })
+  const visibleScrollProgress = reducedMotion ? scrollYProgress : springScrollProgress
   const isPaged = preferences.readingMode === "paged"
 
   const chapterIndex = chapters?.findIndex(c => c.id === currentChapterId) ?? -1;
@@ -263,10 +265,10 @@ export function ReaderShell({
         {isOverlayVisible && (
           <motion.div
             key="reader-top-overlay"
-            initial={{ y: -80, opacity: 0 }}
+            initial={reducedMotion ? false : { y: -80, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -80, opacity: 0 }}
-            transition={transitions.smooth}
+            exit={reducedMotion ? { opacity: 0 } : { y: -80, opacity: 0 }}
+            transition={reducedMotion ? { duration: 0 } : transitions.smooth}
             drag="y"
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={{ top: 0.2, bottom: 0 }}
@@ -289,8 +291,8 @@ export function ReaderShell({
                 {/* Left: Back Button */}
                 <motion.button
                   aria-label="Kembali ke detail komik"
-                  whileTap={{ scale: 0.9 }}
-                  className="yomirra-chrome-control flex size-9 items-center justify-center rounded-xl active:scale-95 text-text-secondary hover:text-text-primary transition-all shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                  whileTap={reducedMotion ? undefined : { scale: 0.97 }}
+                  className="yomirra-chrome-control flex size-9 items-center justify-center rounded-xl  text-text-secondary hover:text-text-primary transition-all shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent"
                   onClick={handleBack}
                 >
                   <ArrowLeft size={18} weight="bold" />
@@ -315,7 +317,7 @@ export function ReaderShell({
                 {/* Right: Bookmark Button */}
                 <motion.button
                   aria-label={isSaved ? "Hapus dari bookmark" : "Simpan ke bookmark"}
-                  whileTap={{ scale: 0.9 }}
+                  whileTap={reducedMotion ? undefined : { scale: 0.97 }}
                   className={cn(
                     "yomirra-chrome-control flex size-9 items-center justify-center rounded-xl transition-all shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent",
                     isSaved
@@ -326,9 +328,9 @@ export function ReaderShell({
                 >
                   <motion.div
                     key={isSaved ? "saved" : "unsaved"}
-                    initial={{ scale: 0.5, opacity: 0, rotate: -30 }}
+                    initial={reducedMotion ? false : { scale: 0.5, opacity: 0, rotate: -30 }}
                     animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                    transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                    transition={reducedMotion ? { duration: 0 } : transitions.snappy}
                     className="flex items-center justify-center"
                   >
                     <BookmarkSimple size={18} weight={isSaved ? "fill" : "bold"} />
@@ -344,13 +346,13 @@ export function ReaderShell({
                         className="h-full bg-accent origin-left"
                         initial={false}
                         animate={{ width: `${Math.max(0, Math.min(100, pagedProgress * 100))}%` }}
-                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                        transition={reducedMotion ? { duration: 0 } : transitions.layout}
                       />
                     ) : (
                       <motion.div
                         data-testid="reader-progress-bar"
                         className="h-full bg-accent origin-left"
-                        style={{ scaleX: springScrollProgress }}
+                        style={{ scaleX: visibleScrollProgress }}
                       />
                     )}
                   </div>
@@ -366,10 +368,10 @@ export function ReaderShell({
         {isOverlayVisible && (
           <motion.div
             key="reader-bottom-overlay"
-            initial={{ y: 80, opacity: 0 }}
+            initial={reducedMotion ? false : { y: 80, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 80, opacity: 0 }}
-            transition={transitions.smooth}
+            exit={reducedMotion ? { opacity: 0 } : { y: 80, opacity: 0 }}
+            transition={reducedMotion ? { duration: 0 } : transitions.smooth}
             drag="y"
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={{ top: 0, bottom: 0.2 }}
@@ -387,14 +389,15 @@ export function ReaderShell({
               {/* Floating Back to Top Button */}
               {showBackToTop && (
                 <motion.button
-                  initial={{ opacity: 0, scale: 0.8, y: 10 }}
+                  initial={reducedMotion ? false : { opacity: 0, scale: 0.8, y: 10 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.8, y: 10 }}
+                  exit={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.8, y: 10 }}
+                   transition={reducedMotion ? { duration: 0 } : transitions.gentle}
                   onClick={(e) => {
                     e.stopPropagation();
-                    window.scrollTo({ top: 0, behavior: "smooth" });
+                    window.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" });
                   }}
-                  className="yomirra-chrome pointer-events-auto self-end flex size-10 items-center justify-center rounded-xl text-text-secondary hover:text-text-primary transition-all active:scale-95 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                  className="yomirra-chrome pointer-events-auto self-end flex size-10 items-center justify-center rounded-xl text-text-secondary hover:text-text-primary transition-all  cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent"
                   aria-label="Kembali ke atas"
                 >
                   <CaretUp size={18} weight="bold" />
@@ -405,7 +408,7 @@ export function ReaderShell({
               <div className="yomirra-chrome pointer-events-auto flex h-[58px] w-full max-w-[440px] mx-auto items-center justify-between gap-2 rounded-full text-text-primary px-3 transition-all duration-200">
                 <motion.button
                   aria-label="Chapter sebelumnya"
-                  whileTap={{ scale: 0.9 }}
+                  whileTap={reducedMotion ? undefined : { scale: 0.97 }}
                   className={cn(
                     "yomirra-chrome-control flex size-10 items-center justify-center rounded-xl text-text-secondary hover:text-text-primary transition-all shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent",
                     !prevChapterId && "opacity-30 cursor-not-allowed pointer-events-none"
@@ -423,8 +426,8 @@ export function ReaderShell({
                 </motion.button>
 
                 <motion.button
-                  whileTap={{ scale: 0.97 }}
-                  className="flex-1 h-10 rounded-xl font-bold text-sm bg-accent hover:bg-accent-hover text-white shadow-xs transition-all truncate px-3 flex items-center justify-center gap-1.5 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent active:scale-[0.98]"
+                  whileTap={reducedMotion ? undefined : { scale: 0.97 }}
+                  className="flex-1 h-10 rounded-xl font-bold text-sm bg-accent hover:bg-accent-hover text-white shadow-xs transition-all truncate px-3 flex items-center justify-center gap-1.5 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent "
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsChapterDrawerOpen(true);
@@ -436,7 +439,7 @@ export function ReaderShell({
 
                 <motion.button
                   aria-label="Chapter berikutnya"
-                  whileTap={{ scale: 0.9 }}
+                  whileTap={reducedMotion ? undefined : { scale: 0.97 }}
                   className={cn(
                     "yomirra-chrome-control flex size-10 items-center justify-center rounded-xl text-text-secondary hover:text-text-primary transition-all shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent",
                     !nextChapterId && "opacity-30 cursor-not-allowed pointer-events-none"
@@ -455,7 +458,7 @@ export function ReaderShell({
 
                 <motion.button
                   aria-label="Pengaturan pembaca"
-                  whileTap={{ scale: 0.9 }}
+                  whileTap={reducedMotion ? undefined : { scale: 0.97 }}
                   className="yomirra-chrome-control flex size-10 items-center justify-center rounded-xl text-text-secondary hover:text-text-primary transition-all shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent"
                   onClick={(e) => {
                     e.stopPropagation();
@@ -479,10 +482,10 @@ export function ReaderShell({
         {!isOverlayVisible && preferences.showPageProgress && (
           <motion.div
             key="top-viewport-progress"
-            initial={{ opacity: 0, y: -2 }}
+            initial={reducedMotion ? false : { opacity: 0, y: -2 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -2 }}
-            transition={{ duration: 0.2 }}
+            exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -2 }}
+            transition={reducedMotion ? { duration: 0 } : transitions.gentle}
             className={cn(
               "fixed z-[61] top-[calc(var(--safe-top,0px)-3px)] md:top-0 left-0 right-0 h-[3px] pointer-events-none bg-transparent overflow-hidden transition-[padding] duration-150",
               isDesktopPanelOpen && "md:right-[320px]"

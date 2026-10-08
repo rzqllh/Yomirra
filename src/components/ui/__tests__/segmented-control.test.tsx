@@ -25,7 +25,7 @@ describe("SegmentedControl - Concentric Radius Architecture & Quick Rail", () =>
     expect(outerContainer.className).toContain("rounded-xl");
 
     // Inner buttons have rounded-md satisfying R_inner = R_outer - padding
-    const buttons = screen.getAllByRole("tab");
+    const buttons = screen.getAllByRole("button");
     buttons.forEach((button) => {
       expect(button.className).toContain("rounded-md");
     });
@@ -45,7 +45,7 @@ describe("SegmentedControl - Concentric Radius Architecture & Quick Rail", () =>
     const outerContainer = container.firstElementChild as HTMLElement;
     expect(outerContainer.className).toContain("rounded-full");
 
-    const buttons = screen.getAllByRole("tab");
+    const buttons = screen.getAllByRole("button");
     buttons.forEach((button) => {
       expect(button.className).toContain("rounded-full");
     });
@@ -61,9 +61,34 @@ describe("SegmentedControl - Concentric Radius Architecture & Quick Rail", () =>
       />
     );
 
-    const collectionTab = screen.getByRole("tab", { name: /koleksi/i });
+    const collectionTab = screen.getByRole("button", { name: /koleksi/i });
     fireEvent.click(collectionTab);
     expect(handleChange).toHaveBeenCalledWith("collection");
+  });
+
+  it("exposes the selected state as pressed buttons rather than unlinked tabs", () => {
+    render(
+      <SegmentedControl
+        options={options}
+        value="reading"
+        onChange={vi.fn()}
+        ariaLabel="Tampilan rak buku"
+      />
+    );
+
+    const group = screen.getByRole("group", { name: "Tampilan rak buku" });
+    expect(group).toBeDefined();
+    expect(screen.getByRole("button", { name: /sedang dibaca/i }).getAttribute("aria-pressed")).toBe("true");
+    expect(screen.getByRole("button", { name: /koleksi/i }).getAttribute("aria-pressed")).toBe("false");
+    expect(group.querySelector("[role=tab]")).toBeNull();
+  });
+
+  it("preserves a minimum 44px hit area and keyboard focus feedback", () => {
+    render(<SegmentedControl options={options} value="reading" onChange={vi.fn()} />);
+
+    const button = screen.getByRole("button", { name: /koleksi/i });
+    expect(button.className).toContain("min-h-11");
+    expect(button.className).toContain("focus-visible:ring-2");
   });
 
   it("renders badges for options that provide them", () => {

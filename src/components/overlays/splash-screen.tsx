@@ -1,15 +1,17 @@
 "use client";
 
 import * as React from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence, useReducedMotion } from "motion/react";
+import { transitions } from "@/shared/lib/motion/tokens";
 import { useAuth } from "@/shared/hooks/use-auth";
 import { useOnboardingStore } from "@/shared/store/onboarding-store";
 
-const MINIMUM_SPLASH_DURATION = 950;
+const MINIMUM_SPLASH_DURATION = 450;
 const WATCHDOG_TIMEOUT = 10000;
 
 export function SplashScreen({ onComplete }: { onComplete: () => void }) {
   const { loading: authLoading } = useAuth();
+  const reducedMotion = useReducedMotion();
   const { _hasHydrated: hasHydrated } = useOnboardingStore();
 
   const [isMounted, setIsMounted] = React.useState(false);
@@ -71,18 +73,18 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
   return (
     <motion.div
       initial={{ opacity: 1 }}
-      exit={{ opacity: 0, scale: 1.015 }}
-      transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+      exit={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 1.015 }}
+      transition={reducedMotion ? { duration: 0 } : transitions.gentle}
       className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden bg-surface-base text-text-primary select-none"
     >
       {/* Subtle adaptive ambient aura */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden flex items-center justify-center">
         <motion.div
-          animate={{
+          animate={reducedMotion ? { scale: 1, opacity: 0.35 } : {
             scale: [1, 1.06, 1],
             opacity: [0.35, 0.55, 0.35],
           }}
-          transition={{
+          transition={reducedMotion ? { duration: 0 } : {
             duration: 3.5,
             ease: "easeInOut",
             repeat: Infinity,
@@ -94,9 +96,9 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
       {/* Brand Identity Showcase */}
       <div className="relative z-10 flex flex-col items-center justify-center w-full h-full pb-16">
         <motion.div
-          initial={{ scale: 0.9, opacity: 0, y: 12 }}
+          initial={reducedMotion ? false : { scale: 0.9, opacity: 0, y: 12 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          transition={reducedMotion ? { duration: 0 } : transitions.gentle}
           className="mb-5 relative"
         >
           <div className="absolute -inset-2 rounded-[28px] sm:rounded-[32px] bg-accent/10 blur-xl opacity-60 dark:opacity-80" />
@@ -115,9 +117,9 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
         </motion.div>
 
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={reducedMotion ? false : { opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+          transition={reducedMotion ? { duration: 0 } : { ...transitions.gentle, delay: 0.1 }}
           className="flex flex-col items-center text-center gap-1.5"
         >
           <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-text-primary">
@@ -131,29 +133,29 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
 
       {/* Hairline Progress & Watchdog Status */}
       <motion.div
-        initial={{ opacity: 0 }}
+        initial={reducedMotion ? false : { opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.4, delay: 0.3 }}
+        transition={reducedMotion ? { duration: 0 } : { ...transitions.gentle, delay: 0.15 }}
         className="absolute bottom-16 left-0 right-0 flex flex-col items-center gap-3.5 w-full px-6"
       >
         <AnimatePresence mode="wait">
           {!isTakingTooLong ? (
             <motion.div
               key="loading-bar"
-              initial={{ opacity: 0, y: 8 }}
+              initial={reducedMotion ? false : { opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
+              exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -8 }}
               className="flex flex-col items-center gap-3 w-full"
             >
               <div className="w-full max-w-[160px] h-1.5 rounded-full bg-border-subtle overflow-hidden relative">
                 <motion.div
                   className="h-full bg-accent rounded-full origin-left"
                   initial={{ scaleX: 0, x: "-100%" }}
-                  animate={{
+                  animate={reducedMotion ? { scaleX: 1, x: 0 } : {
                     scaleX: [0.6, 0.4, 0.6],
                     x: ["-100%", "30%", "160%"],
                   }}
-                  transition={{
+                  transition={reducedMotion ? { duration: 0 } : {
                     duration: 1.4,
                     ease: "easeInOut",
                     repeat: Infinity,
@@ -161,8 +163,8 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
                 />
               </div>
               <motion.p
-                animate={{ opacity: [0.55, 0.95, 0.55] }}
-                transition={{ duration: 2, ease: "easeInOut", repeat: Infinity }}
+                animate={reducedMotion ? { opacity: 1 } : { opacity: [0.55, 0.95, 0.55] }}
+                transition={reducedMotion ? { duration: 0 } : { duration: 2, ease: "easeInOut", repeat: Infinity }}
                 className="text-[11px] font-semibold tracking-wider text-text-muted uppercase"
               >
                 Membuka Rak Kamu...
@@ -171,8 +173,9 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
           ) : (
             <motion.div
               key="slow-warning-state"
-              initial={{ opacity: 0, y: 8 }}
+              initial={reducedMotion ? false : { opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
+              transition={reducedMotion ? { duration: 0 } : transitions.gentle}
               className="flex flex-col items-center gap-2 text-center p-5 rounded-2xl bg-surface-raised border border-border-subtle shadow-md max-w-xs"
             >
               <p className="text-sm font-bold text-text-primary">
@@ -183,7 +186,7 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
               </p>
               <button
                 onClick={() => window.location.reload()}
-                className="px-5 py-2 rounded-xl bg-surface-overlay text-text-primary font-semibold text-xs hover:bg-surface-hover transition-colors border border-border-subtle shadow-xs mt-1 active:scale-95 cursor-pointer"
+                className="px-5 min-h-11 py-2 rounded-xl bg-surface-overlay text-text-primary font-semibold text-xs hover:bg-surface-hover motion-safe:transition-colors border border-border-subtle shadow-xs mt-1 motion-safe:active:scale-95 cursor-pointer focus-visible:outline-2 focus-visible:outline-accent"
               >
                 Coba Lagi
               </button>
