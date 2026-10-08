@@ -60,8 +60,8 @@ export function BottomDock({ pendingHref }: { pendingHref?: string | null }) {
                 className={cn(
                   "group relative flex h-11 items-center justify-center rounded-full outline-none transition-all duration-200 ease-out select-none tap-highlight-transparent active:scale-95 motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
                   isActive
-                    ? "shrink-0 px-3 sm:px-3.5"
-                    : "size-11 shrink-0 max-[359px]:size-10"
+                    ? "shrink-0 px-2.5 min-[360px]:px-3 sm:px-3.5"
+                    : "size-11 shrink-0"
                 )}
                 aria-label={item.label}
                 aria-current={isActive ? "page" : undefined}
@@ -89,7 +89,7 @@ export function BottomDock({ pendingHref }: { pendingHref?: string | null }) {
                   />
 
                   {isActive && (
-                    <span className="whitespace-nowrap text-[12px] font-semibold leading-none tracking-tight text-text-primary">
+                    <span className="whitespace-nowrap text-[11px] min-[360px]:text-[12px] font-semibold leading-none tracking-tight text-text-primary">
                       {item.label}
                     </span>
                   )}
