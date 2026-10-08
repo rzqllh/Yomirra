@@ -46,6 +46,15 @@ describe("Yomirra fluid interaction contracts", () => {
     expect(reader).toContain("transitions.snappy");
   });
 
+  it("keeps reading progress and ratings responsive and accessible", () => {
+    const readingProgress = source("src/components/ui/reading-progress.tsx");
+    const rating = source("src/components/komik/manga-rating.tsx");
+
+    expect(readingProgress).toContain("transition={reducedMotion ? { duration: 0 } : transitions.gentle}");
+    expect(rating).toContain("aria-pressed={userRating === rating}");
+    expect(rating).toContain("min-h-11");
+  });
+
   it("avoids excessive reader tap motion and respects reduced motion during startup", () => {
     const reader = source("src/components/reader/reader-shell.tsx");
     const splash = source("src/components/overlays/splash-screen.tsx");
