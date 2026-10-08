@@ -27,6 +27,38 @@ describe("library-store Phase 1 Identity & Relinking", () => {
     expect(useLibraryStore.getState().items).toEqual({});
   });
 
+  it("restores local state when cloud deletion rejects", async () => {
+    const item = {
+      id: "saved-uuid", sourceId: "mangadex", mangaId: "manga-1",
+      title: "Test", addedAt: "2026-01-01", updatedAt: "2026-01-01",
+    };
+    vi.mocked(deleteLibraryItem).mockRejectedValueOnce(new Error("Firebase is unavailable for deletion."));
+    useLibraryStore.setState({ items: { "saved-uuid": item } });
+
+    useLibraryStore.getState().removeFromLibrary("mangadex", "manga-1");
+    await vi.waitFor(() => expect(useLibraryStore.getState().items["saved-uuid"]).toEqual(item));
+  });
+
+  it("handles a rejected cloud delete for cap eviction without an unhandled rejection", async () => {
+    vi.useFakeTimers();
+    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    vi.mocked(deleteLibraryItem).mockRejectedValueOnce(new Error("offline"));
+    const items = Object.fromEntries(Array.from({ length: 1000 }, (_, index) => [
+      `saved-${index}`,
+      { id: `saved-${index}`, sourceId: "source", mangaId: `manga-${index}`, title: "Title", addedAt: "2026-01-01", updatedAt: "2026-01-01" },
+    ]));
+    useLibraryStore.setState({ items });
+
+    useLibraryStore.getState().addToLibrary({
+      id: "saved-new", sourceId: "source", mangaId: "manga-new", title: "New", addedAt: "2026-01-02", updatedAt: "2026-01-02",
+    });
+    await vi.runAllTimersAsync();
+
+    expect(error).toHaveBeenCalledWith("Failed to delete evicted library item", expect.any(Error));
+    error.mockRestore();
+    vi.useRealTimers();
+  });
+
   it("assigns SavedTitleId and initializes Phase 1 identity fields on new items", () => {
     useLibraryStore.getState().addToLibrary({
       sourceId: "mangadex",

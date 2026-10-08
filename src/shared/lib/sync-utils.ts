@@ -20,17 +20,25 @@ export async function pushLibraryItem(item: LibraryItem) {
 
 export async function deleteLibraryItem(sourceId: string, mangaId: string, savedTitleId?: string) {
   const { auth, db } = await initFirebase();
-  if (!auth || !db) return;
+  if (!auth || !db) throw new Error("Firebase is unavailable for deletion.");
   const user = auth.currentUser;
-  if (!user) return;
+  if (!user) throw new Error("No authenticated user is available for deletion.");
   try {
-    const { doc, deleteDoc, setDoc } = await import("firebase/firestore");
+    const { doc, writeBatch } = await import("firebase/firestore");
     const v2Id = savedTitleId ?? `${sourceId}::${mangaId}`;
-    // Remove from canonical libraryV2
-    await deleteDoc(doc(db, `users/${user.uid}/libraryV2`, v2Id));
+    const deletedAt = new Date().toISOString();
+    const batch = writeBatch(db);
+    batch.set(doc(db, `users/${user.uid}/libraryV2`, v2Id), {
+      _deleted: true,
+      deletedAt,
+      id: v2Id,
+      sourceId,
+      mangaId,
+    });
     // Write tombstone to legacy library so V1 clients see deletion
     const legacyId = `${sourceId}::${mangaId}`;
-    await setDoc(doc(db, `users/${user.uid}/library`, legacyId), { _deleted: true, deletedAt: new Date().toISOString() });
+    batch.set(doc(db, `users/${user.uid}/library`, legacyId), { _deleted: true, deletedAt });
+    await batch.commit();
   } catch (e) {
     console.error("Failed to delete library item from sync", e);
     throw e;
@@ -55,13 +63,19 @@ export async function pushHistoryItem(item: HistoryItem) {
 
 export async function deleteHistoryItem(sourceId: string, mangaId: string, chapterId: string) {
   const { auth, db } = await initFirebase();
-  if (!auth || !db) return;
+  if (!auth || !db) throw new Error("Firebase is unavailable for deletion.");
   const user = auth.currentUser;
-  if (!user) return;
+  if (!user) throw new Error("No authenticated user is available for deletion.");
   try {
-    const { doc, deleteDoc } = await import("firebase/firestore");
+    const { doc, setDoc } = await import("firebase/firestore");
     const id = `${sourceId}::${mangaId}::${chapterId}`;
-    await deleteDoc(doc(db, `users/${user.uid}/history`, id));
+    await setDoc(doc(db, `users/${user.uid}/history`, id), {
+      _deleted: true,
+      deletedAt: new Date().toISOString(),
+      sourceId,
+      mangaId,
+      chapterId,
+    });
   } catch (e) {
     console.error("Failed to delete history item from sync", e);
     throw e;
@@ -70,9 +84,9 @@ export async function deleteHistoryItem(sourceId: string, mangaId: string, chapt
 
 export async function deleteMangaHistory(sourceId: string, mangaId: string) {
   const { auth, db } = await initFirebase();
-  if (!auth || !db) return;
+  if (!auth || !db) throw new Error("Firebase is unavailable for deletion.");
   const user = auth.currentUser;
-  if (!user) return;
+  if (!user) throw new Error("No authenticated user is available for deletion.");
   try {
     const { collection, query, where, getDocs, writeBatch } = await import("firebase/firestore");
     const historyRef = collection(db, `users/${user.uid}/history`);
@@ -87,8 +101,15 @@ export async function deleteMangaHistory(sourceId: string, mangaId: string) {
     const batch = writeBatch(db);
     let count = 0;
     
-    snapshot.docs.forEach(doc => {
-      batch.delete(doc.ref);
+    snapshot.docs.forEach(historyDoc => {
+      const historyItem = historyDoc.data() as HistoryItem;
+      batch.set(historyDoc.ref, {
+        _deleted: true,
+        deletedAt: new Date().toISOString(),
+        sourceId: historyItem.sourceId,
+        mangaId: historyItem.mangaId,
+        chapterId: historyItem.chapterId,
+      });
       count++;
     });
     
@@ -120,7 +141,7 @@ export async function pullLibraryData(): Promise<LibraryItem[]> {
 }
 
 /** Pull from legacy 'library' collection — used once at migration time and for V1 import detection. */
-export async function pullLegacyLibraryData(): Promise<LibraryItem[]> {
+export async function pullLegacyLibraryData(options: { strict?: boolean } = {}): Promise<LibraryItem[]> {
   const { auth, db } = await initFirebase();
   if (!auth || !db) return [];
   const user = auth.currentUser;
@@ -133,6 +154,7 @@ export async function pullLegacyLibraryData(): Promise<LibraryItem[]> {
       .filter(item => !(item as Record<string, unknown>)._deleted);
   } catch (e) {
     console.error("Failed to pull legacy library data", e);
+    if (options.strict) throw e;
     return [];
   }
 }
@@ -145,7 +167,9 @@ export async function pullHistoryData(): Promise<HistoryItem[]> {
   try {
     const { collection, getDocs } = await import("firebase/firestore");
     const querySnapshot = await getDocs(collection(db, `users/${user.uid}/history`));
-    return querySnapshot.docs.map(doc => doc.data() as HistoryItem);
+    return querySnapshot.docs
+      .map(doc => doc.data() as HistoryItem)
+      .filter(item => !(item as Record<string, unknown>)._deleted);
   } catch (e) {
     console.error("Failed to pull history data", e);
     return [];

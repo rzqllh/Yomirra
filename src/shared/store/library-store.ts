@@ -85,7 +85,11 @@ const enforceItemCap = (items: Record<string, LibraryItem>, maxItems = 1000) => 
   const newItems = { ...items };
   keysToRemove.forEach(key => {
     const item = newItems[key];
-    setTimeout(() => deleteLibraryItem(item.sourceId, item.mangaId, item.id ?? key), 0);
+    setTimeout(() => {
+      deleteLibraryItem(item.sourceId, item.mangaId, item.id ?? key).catch((error) => {
+        console.error("Failed to delete evicted library item", error);
+      });
+    }, 0);
     delete newItems[key];
   });
   

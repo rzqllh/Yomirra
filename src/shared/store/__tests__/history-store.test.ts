@@ -1,6 +1,13 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useHistoryStore } from '../history-store';
 import { useLibraryStore } from '../library-store';
+import { deleteHistoryItem } from '@/shared/lib/sync-utils';
+
+vi.mock('@/shared/lib/sync-utils', () => ({
+  pushHistoryItem: vi.fn().mockResolvedValue(undefined),
+  deleteHistoryItem: vi.fn().mockResolvedValue(undefined),
+  deleteMangaHistory: vi.fn().mockResolvedValue(undefined),
+}));
 
 describe('history-store', () => {
   beforeEach(() => {
@@ -104,5 +111,25 @@ describe('history-store', () => {
     const store = useHistoryStore.getState();
     const resolved = store.resolveSavedTitleId('unknownSource', 'unknownManga');
     expect(resolved).toBeNull();
+  });
+
+  it('handles a rejected cloud delete for cap eviction without an unhandled rejection', async () => {
+    vi.useFakeTimers();
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    vi.mocked(deleteHistoryItem).mockRejectedValueOnce(new Error('offline'));
+    const items = Object.fromEntries(Array.from({ length: 1000 }, (_, index) => [
+      `source::manga::chapter-${index}`,
+      { sourceId: 'source', mangaId: 'manga', chapterId: `chapter-${index}`, mangaTitle: 'Title', readAt: index },
+    ]));
+    useHistoryStore.setState({ items });
+
+    useHistoryStore.getState().upsertHistory({
+      sourceId: 'source', mangaId: 'manga', chapterId: 'chapter-new', mangaTitle: 'New', readAt: 2000,
+    });
+    await vi.runAllTimersAsync();
+
+    expect(error).toHaveBeenCalledWith('Failed to delete evicted history item', expect.any(Error));
+    error.mockRestore();
+    vi.useRealTimers();
   });
 });
