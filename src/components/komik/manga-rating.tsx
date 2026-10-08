@@ -154,9 +154,10 @@ export function MangaRating({ sourceId, mangaId, className, variant = "default",
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rating) => (
               <button
                 key={rating}
+                aria-pressed={userRating === rating}
                 onClick={() => onSelectRating(rating)}
                 className={cn(
-                  "flex items-center justify-center h-10 rounded-lg text-sm font-bold transition-all duration-200",
+                  "flex min-h-11 items-center justify-center rounded-lg text-sm font-bold motion-safe:transition-colors motion-safe:duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
                   userRating === rating
                     ? "bg-accent text-white ring-1 ring-accent/30"
                     : "bg-surface-raised text-text-secondary hover:bg-surface-hover hover:text-text-primary"
