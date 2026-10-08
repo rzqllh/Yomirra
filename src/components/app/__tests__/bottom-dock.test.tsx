@@ -87,4 +87,48 @@ describe('BottomDock Navigation', () => {
     const populerLink = screen.getByRole('link', { name: /populer/i });
     expect(populerLink.textContent).toBe('');
   });
+
+  it('preserves four primary destinations and a detached glass search action', () => {
+    render(<BottomDock />);
+
+    const nav = screen.getByRole('navigation', { name: 'Navigasi utama' });
+    const mainDock = nav.querySelector('.yomirra-chrome');
+    const glassSurfaces = nav.querySelectorAll('.yomirra-chrome');
+
+    expect(glassSurfaces).toHaveLength(2);
+    expect(mainDock?.querySelectorAll('a')).toHaveLength(4);
+    expect(glassSurfaces[1].querySelector('a')).toBeNull();
+    expect(screen.getByRole('link', { name: 'Cari' }).className).toContain('yomirra-chrome');
+  });
+
+  it('uses a restrained primary-text label and accent icon for the selected destination', () => {
+    render(<BottomDock />);
+
+    const activeLink = screen.getByRole('link', { name: 'Beranda' });
+    expect(activeLink.getAttribute('aria-current')).toBe('page');
+    expect(screen.getByText('Beranda').className).toContain('text-text-primary');
+    expect(activeLink.querySelector('svg')?.getAttribute('class')).toContain('text-accent');
+  });
+
+  it('moves the pending selected state to the detached search action', () => {
+    render(<BottomDock pendingHref="/search" />);
+
+    const searchLink = screen.getByRole('link', { name: 'Cari' });
+    expect(searchLink.getAttribute('aria-current')).toBe('page');
+    expect(screen.getByRole('link', { name: 'Beranda' }).getAttribute('aria-current')).toBeNull();
+    expect(searchLink.querySelector('span[aria-hidden="true"]')).toBeTruthy();
+  });
+
+  it('keeps 44px tab targets and adapts label spacing for narrow screens', () => {
+    render(<BottomDock />);
+
+    const inactiveLink = screen.getByRole('link', { name: 'Library' });
+    const searchLink = screen.getByRole('link', { name: 'Cari' });
+
+    expect(inactiveLink.className).toContain('size-11');
+    expect(screen.getByRole('link', { name: 'Rak Buku' }).className).toContain('size-11');
+    expect(searchLink.className).toContain('size-14');
+    expect(searchLink.className).toContain('max-[359px]:size-12');
+  });
+
 });
