@@ -52,6 +52,12 @@ export function PullToRefresh({ children, onRefresh }: PullToRefreshProps) {
         return;
       }
 
+      const target = event.target;
+      if (target instanceof Element && target.closest('[role="dialog"], [data-vaul-drawer], [data-pull-refresh-ignore]')) {
+        tracking = false;
+        return;
+      }
+
       const touch = event.touches[0];
       // Keep native iOS edge-swipe Back and horizontal content scrolling intact.
       if (touch.clientX <= EDGE_SWIPE_ZONE || touch.clientX >= window.innerWidth - EDGE_SWIPE_ZONE) {
