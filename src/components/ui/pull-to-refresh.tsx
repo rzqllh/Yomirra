@@ -25,10 +25,15 @@ export function PullToRefresh({ children, onRefresh }: PullToRefreshProps) {
   const pullDistance = useSpring(0, { stiffness: 300, damping: 25, bounce: 0 });
   const rotation = useTransform(pullDistance, [0, THRESHOLD], [0, 180], { clamp: true });
   const router = useRouter();
+  const routerRef = React.useRef(router);
 
   React.useEffect(() => {
     refreshActionRef.current = onRefresh;
   }, [onRefresh]);
+
+  React.useEffect(() => {
+    routerRef.current = router;
+  }, [router]);
 
   React.useEffect(() => {
     let tracking = false;
@@ -122,7 +127,7 @@ export function PullToRefresh({ children, onRefresh }: PullToRefreshProps) {
           if (refreshActionRef.current) {
             await refreshActionRef.current();
           } else {
-            router.refresh();
+            routerRef.current.refresh();
             // Next.js router.refresh() does not return a completion promise.
             await new Promise<void>((resolve) => window.setTimeout(resolve, 350));
           }
@@ -147,7 +152,7 @@ export function PullToRefresh({ children, onRefresh }: PullToRefreshProps) {
       window.removeEventListener("touchend", handleTouchEnd);
       window.removeEventListener("touchcancel", resetGesture);
     };
-  }, [pullDistance, reducedMotion, router]);
+  }, [pullDistance, reducedMotion]);
 
   return (
     <>
