@@ -36,7 +36,6 @@ export function PullToRefresh({ children, onRefresh }: PullToRefreshProps) {
     let startX = 0;
     let startY = 0;
     let distance = 0;
-    let disposed = false;
 
     const resetGesture = () => {
       tracking = false;
@@ -56,6 +55,16 @@ export function PullToRefresh({ children, onRefresh }: PullToRefreshProps) {
       if (target instanceof Element && target.closest('[role="dialog"], [data-vaul-drawer], [data-pull-refresh-ignore]')) {
         tracking = false;
         return;
+      }
+      // Don't steal vertical scrolling from nested scrollable panels.
+      let ancestor = target instanceof Element ? target : null;
+      while (ancestor && ancestor !== document.body) {
+        const overflowY = window.getComputedStyle(ancestor).overflowY;
+        if (ancestor.scrollHeight > ancestor.clientHeight + 1 && /^(auto|scroll)$/.test(overflowY)) {
+          tracking = false;
+          return;
+        }
+        ancestor = ancestor.parentElement;
       }
 
       const touch = event.touches[0];
@@ -89,9 +98,11 @@ export function PullToRefresh({ children, onRefresh }: PullToRefreshProps) {
         return;
       }
 
-      pulling = true;
+      if (!pulling) {
+        pulling = true;
+        setIsPulling(true);
+      }
       distance = Math.min(deltaY * 0.4, MAX_PULL);
-      setIsPulling(true);
       if (event.cancelable) event.preventDefault();
       pullDistance.set(reducedMotion ? 0 : distance);
     };
@@ -119,10 +130,8 @@ export function PullToRefresh({ children, onRefresh }: PullToRefreshProps) {
           console.error("Pull-to-refresh failed", error);
         } finally {
           refreshingRef.current = false;
-          if (!disposed) {
-            setIsRefreshing(false);
-            pullDistance.set(0);
-          }
+          setIsRefreshing(false);
+          pullDistance.set(0);
         }
       })();
     };
@@ -133,7 +142,6 @@ export function PullToRefresh({ children, onRefresh }: PullToRefreshProps) {
     window.addEventListener("touchcancel", resetGesture);
 
     return () => {
-      disposed = true;
       window.removeEventListener("touchstart", handleTouchStart);
       window.removeEventListener("touchmove", handleTouchMove);
       window.removeEventListener("touchend", handleTouchEnd);
