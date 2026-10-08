@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { motion, useReducedMotion } from "motion/react"
+import { motion } from "motion/react"
 import { DOCK_NAV_ITEMS } from "@/shared/config/nav"
 import { cn } from "@/shared/utils/cn"
 import { useSearchFilterStore } from "@/shared/store/search-filter-store"
@@ -12,7 +12,6 @@ import { transitions } from "@/shared/lib/motion/tokens"
 
 export function BottomDock({ pendingHref }: { pendingHref?: string | null }) {
   const pathname = usePathname()
-  const reduceMotion = useReducedMotion()
   const activePathname = pendingHref ? getNavigationPathname(pendingHref) : pathname
 
   // Keep the existing four primary destinations and detached search action.
@@ -31,7 +30,6 @@ export function BottomDock({ pendingHref }: { pendingHref?: string | null }) {
   }
 
   const isSearchActive = activePathname === "/search" || activePathname?.startsWith("/search")
-  const activeTransition = reduceMotion ? { duration: 0 } : transitions.layout
 
   return (
     <nav
@@ -71,7 +69,7 @@ export function BottomDock({ pendingHref }: { pendingHref?: string | null }) {
                     aria-hidden="true"
                     className="pointer-events-none absolute inset-0 rounded-full bg-accent-dim"
                     layoutId="active-dock-tab"
-                    transition={activeTransition}
+                    transition={transitions.layout}
                   />
                 )}
 
@@ -117,7 +115,7 @@ export function BottomDock({ pendingHref }: { pendingHref?: string | null }) {
               aria-hidden="true"
               className="pointer-events-none absolute inset-1 rounded-full bg-accent-dim"
               layoutId="active-dock-tab"
-              transition={activeTransition}
+              transition={transitions.layout}
             />
           )}
           <Icon
