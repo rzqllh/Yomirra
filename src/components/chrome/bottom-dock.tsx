@@ -1,11 +1,10 @@
 "use client"
 
-import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { motion, useReducedMotion } from "motion/react"
 import { DOCK_NAV_ITEMS } from "@/shared/config/nav"
 import { cn } from "@/shared/utils/cn"
-import { motion } from "motion/react"
 import { useSearchFilterStore } from "@/shared/store/search-filter-store"
 import { Icon } from "@/components/ui/icon"
 import { beginNavigationIntent, getNavigationPathname } from "@/shared/lib/navigation-intent"
@@ -13,9 +12,10 @@ import { transitions } from "@/shared/lib/motion/tokens"
 
 export function BottomDock({ pendingHref }: { pendingHref?: string | null }) {
   const pathname = usePathname()
+  const reduceMotion = useReducedMotion()
   const activePathname = pendingHref ? getNavigationPathname(pendingHref) : pathname
 
-  // Main navigation items excluding settings and search (which is in its own satellite container)
+  // Keep the existing four primary destinations and detached search action.
   const mainItems = DOCK_NAV_ITEMS.filter(
     (item) => item.href !== "/settings" && item.href !== "/search"
   )
@@ -31,19 +31,20 @@ export function BottomDock({ pendingHref }: { pendingHref?: string | null }) {
   }
 
   const isSearchActive = activePathname === "/search" || activePathname?.startsWith("/search")
+  const activeTransition = reduceMotion ? { duration: 0 } : transitions.layout
 
   return (
     <nav
-      className="md:hidden fixed left-0 right-0 bottom-0 w-full z-[var(--z-sticky)] pointer-events-none"
+      aria-label="Navigasi utama"
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-[var(--z-sticky)] w-full md:hidden"
       style={{
         paddingLeft: "max(12px, env(safe-area-inset-left, 0px))",
         paddingRight: "max(12px, env(safe-area-inset-right, 0px))",
         paddingBottom: "max(12px, env(safe-area-inset-bottom, 0px))",
       }}
     >
-      <div className="pointer-events-auto flex w-fit max-w-[calc(100vw-24px)] mx-auto items-center justify-center gap-2">
-        {/* Main Dock Capsule */}
-        <div className="yomirra-chrome h-[56px] flex items-center justify-center gap-1 rounded-full px-1.5 py-1.5 transition-colors duration-200">
+      <div className="pointer-events-auto mx-auto flex w-fit max-w-full items-center justify-center gap-2 max-[359px]:gap-1.5">
+        <div className="yomirra-chrome flex h-14 min-w-0 items-center justify-center gap-0.5 rounded-full px-1 py-1 sm:gap-1 sm:px-1.5">
           {mainItems.map((item) => {
             const isActive = isMainTabActive(item.href)
 
@@ -57,23 +58,24 @@ export function BottomDock({ pendingHref }: { pendingHref?: string | null }) {
                   }
                 }}
                 className={cn(
-                  "group relative flex items-center justify-center h-full rounded-full outline-none tap-highlight-transparent transition-all duration-200 ease-out select-none active:scale-95",
+                  "group relative flex h-11 items-center justify-center rounded-full outline-none transition-all duration-200 ease-out select-none tap-highlight-transparent active:scale-95 motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
                   isActive
-                    ? "shrink-0 px-3.5 sm:px-4"
-                    : "size-11 shrink-0"
+                    ? "shrink-0 px-3 sm:px-3.5"
+                    : "size-11 shrink-0 max-[359px]:size-10"
                 )}
                 aria-label={item.label}
                 aria-current={isActive ? "page" : undefined}
               >
                 {isActive && (
-                  <motion.div
-                    className="absolute inset-0 rounded-full border border-accent/25 bg-accent-dim"
+                  <motion.span
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-0 rounded-full bg-accent-dim"
                     layoutId="active-dock-tab"
-                    transition={transitions.layout}
+                    transition={activeTransition}
                   />
                 )}
 
-                <div className="relative z-10 flex items-center justify-center gap-1.5 sm:gap-2 w-full">
+                <span className="relative z-10 flex w-full items-center justify-center gap-1.5">
                   <Icon
                     icon={item.icon}
                     size={isActive ? 18 : 20}
@@ -82,22 +84,21 @@ export function BottomDock({ pendingHref }: { pendingHref?: string | null }) {
                       "transition-colors duration-200 shrink-0",
                       isActive
                         ? "text-accent"
-                        : "text-text-muted hover:text-text-primary dark:text-text-secondary dark:hover:text-text-primary"
+                        : "text-text-muted group-hover:text-text-primary"
                     )}
                   />
 
                   {isActive && (
-                    <span className="text-[12px] sm:text-[13px] tracking-tight leading-none font-bold text-accent whitespace-nowrap animate-in fade-in duration-150">
+                    <span className="whitespace-nowrap text-[12px] font-semibold leading-none tracking-tight text-text-primary">
                       {item.label}
                     </span>
                   )}
-                </div>
+                </span>
               </Link>
             )
           })}
         </div>
 
-        {/* Separated Search Button (iOS liquid glass satellite style) */}
         <Link
           href={searchItem.href}
           onClick={(event) => {
@@ -107,22 +108,27 @@ export function BottomDock({ pendingHref }: { pendingHref?: string | null }) {
             }
             useSearchFilterStore.getState().resetFilters()
           }}
-          className={cn(
-            "yomirra-chrome relative flex items-center justify-center size-[56px] shrink-0 rounded-full outline-none tap-highlight-transparent transition-all duration-200 ease-out active:scale-95 select-none",
-            isSearchActive && "border-accent/30 bg-accent-dim"
-          )}
+          className="yomirra-chrome relative flex size-14 shrink-0 items-center justify-center rounded-full outline-none transition-transform duration-200 ease-out select-none tap-highlight-transparent active:scale-95 motion-reduce:transition-none max-[359px]:size-12 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           aria-label={searchItem.label}
           aria-current={isSearchActive ? "page" : undefined}
         >
+          {isSearchActive && (
+            <motion.span
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-1 rounded-full bg-accent-dim"
+              layoutId="active-dock-tab"
+              transition={activeTransition}
+            />
+          )}
           <Icon
             icon={searchItem.icon}
             size={21}
             weight={isSearchActive ? "bold" : "regular"}
             className={cn(
-              "transition-colors duration-200 shrink-0",
+              "relative z-10 transition-colors duration-200",
               isSearchActive
                 ? "text-accent"
-                : "text-text-muted hover:text-text-primary dark:text-text-secondary dark:hover:text-text-primary"
+                : "text-text-muted hover:text-text-primary"
             )}
           />
         </Link>
