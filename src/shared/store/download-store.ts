@@ -59,6 +59,19 @@ export const CACHE_NAME = EXPLICIT_DOWNLOADS_CACHE_NAME;
 
 import { processDownloadQueue, abortControllers, waitForDownloadCompletion } from "../lib/download-engine";
 
+let queueProcessTimer: ReturnType<typeof setTimeout> | null = null;
+
+function clearQueueProcessTimer() {
+  if (queueProcessTimer !== null) {
+    clearTimeout(queueProcessTimer);
+    queueProcessTimer = null;
+  }
+}
+
+export function isQueueProcessingTimerActive(): boolean {
+  return queueProcessTimer !== null;
+}
+
 export const useDownloadStore = create<DownloadState>()(
   persist(
     (set, get) => ({
@@ -101,14 +114,20 @@ export const useDownloadStore = create<DownloadState>()(
           abortControllers[id].abort();
           delete abortControllers[id];
         }
-        set((state) => ({
-          downloads: {
-            ...state.downloads,
-            [id]: { ...state.downloads[id], status: "paused", updatedAt: Date.now() }
-          },
-          queue: state.queue.filter(q => q !== id),
-          activeDownloads: state.activeDownloads.filter(a => a !== id)
-        }));
+        set((state) => {
+          const nextQueue = state.queue.filter(q => q !== id);
+          if (nextQueue.length === 0) {
+            clearQueueProcessTimer();
+          }
+          return {
+            downloads: {
+              ...state.downloads,
+              [id]: { ...state.downloads[id], status: "paused", updatedAt: Date.now() }
+            },
+            queue: nextQueue,
+            activeDownloads: state.activeDownloads.filter(a => a !== id)
+          };
+        });
         get()._processQueue();
       },
 
@@ -131,9 +150,15 @@ export const useDownloadStore = create<DownloadState>()(
           abortControllers[id].abort();
         }
 
-        set((state) => ({
-          queue: state.queue.filter(q => q !== id),
-        }));
+        set((state) => {
+          const nextQueue = state.queue.filter(q => q !== id);
+          if (nextQueue.length === 0) {
+            clearQueueProcessTimer();
+          }
+          return {
+            queue: nextQueue,
+          };
+        });
 
         await waitForDownloadCompletion(id);
         await deleteDownloadCacheEntries(id);
@@ -200,6 +225,7 @@ export const useDownloadStore = create<DownloadState>()(
       },
 
       clearDownloads: async () => {
+        clearQueueProcessTimer();
         const activeIds = Object.keys(abortControllers);
         Object.values(abortControllers).forEach(controller => controller.abort());
 
@@ -241,7 +267,8 @@ export const useDownloadStore = create<DownloadState>()(
       },
 
       _processQueue: async () => {
-        processDownloadQueue({
+        clearQueueProcessTimer();
+        await processDownloadQueue({
           getDownloads: () => get().downloads,
           getQueue: () => get().queue,
           getActiveDownloads: () => get().activeDownloads,
@@ -250,8 +277,15 @@ export const useDownloadStore = create<DownloadState>()(
           setActiveDownloads: (a) => set({ activeDownloads: a }),
           updateDownload: get()._updateDownload,
           onProcessComplete: () => {
-            if (get().queue.length > 0 || get().activeDownloads.length < get().maxConcurrency) {
-              setTimeout(() => get()._processQueue(), 50);
+            const { queue, activeDownloads, maxConcurrency } = get();
+            if (queue.length > 0 && activeDownloads.length < maxConcurrency) {
+              clearQueueProcessTimer();
+              queueProcessTimer = setTimeout(() => {
+                queueProcessTimer = null;
+                get()._processQueue();
+              }, 50);
+            } else {
+              clearQueueProcessTimer();
             }
           }
         });
