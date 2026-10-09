@@ -328,4 +328,21 @@ describe("ensureRedisReady", () => {
     client.status = "ready";
     expect(isRedisReady()).toBe(true);
   });
+
+  it("keeps waiting when initial connect() rejects while client is reconnecting", async () => {
+    const { client, ensureRedisReady } = await loadRedis();
+    client.status = "wait";
+    client.connect = vi.fn(() => {
+      client.status = "reconnecting";
+      return Promise.reject(new Error("Connection is closed."));
+    });
+
+    const readiness = ensureRedisReady();
+    expect(client.connect).toHaveBeenCalledTimes(1);
+
+    client.status = "ready";
+    client.emit("ready");
+
+    await expect(readiness).resolves.toBeUndefined();
+  });
 });

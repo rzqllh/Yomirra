@@ -99,6 +99,12 @@ const waitForRedisReady = (connectPromise?: Promise<void>) =>
         })
         .catch((error: unknown) => {
           if (settled) return;
+          if (
+            redis.status === "reconnecting" ||
+            redis.status === "connecting"
+          ) {
+            return;
+          }
           settled = true;
           cleanup();
           reject(
