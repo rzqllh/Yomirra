@@ -40,29 +40,33 @@ interface DownloadEngineOptions {
 
 export async function processDownloadQueue(options: DownloadEngineOptions) {
   if (processingLock) return;
+
+  const {
+    getDownloads, getQueue, getActiveDownloads, getMaxConcurrency,
+    setQueue, setActiveDownloads, updateDownload, onProcessComplete
+  } = options;
+
+  const queue = getQueue();
+  const activeDownloads = getActiveDownloads();
+  const maxConcurrency = getMaxConcurrency();
+
+  if (activeDownloads.length >= maxConcurrency || queue.length === 0) return;
+
   processingLock = true;
+  let didProcessItem = false;
 
   try {
-    const { 
-      getDownloads, getQueue, getActiveDownloads, getMaxConcurrency, 
-      setQueue, setActiveDownloads, updateDownload, onProcessComplete 
-    } = options;
-
-    const queue = getQueue();
-    const activeDownloads = getActiveDownloads();
-    const maxConcurrency = getMaxConcurrency();
-
-    if (activeDownloads.length >= maxConcurrency || queue.length === 0) return;
-
     const id = queue[0];
     const downloads = getDownloads();
     const item = downloads[id];
 
     if (!item || item.status !== "queued") {
       setQueue(queue.slice(1));
+      didProcessItem = true;
       return;
     }
 
+    didProcessItem = true;
     setQueue(queue.slice(1));
     setActiveDownloads([...activeDownloads, id]);
     registerDownloadCompletion(id);
@@ -75,8 +79,15 @@ export async function processDownloadQueue(options: DownloadEngineOptions) {
 
     try {
       let pages = item.pages;
+      const needsPageRefresh =
+        pages.length === 0 ||
+        pages.some(
+          (p) =>
+            p.status !== "cached" &&
+            (!p.originalUrl.startsWith("/api/proxy/image") || !p.originalUrl.includes("sig="))
+        );
       
-      if (pages.length === 0) {
+      if (needsPageRefresh) {
         const res = await fetch(`/api/sources/${item.sourceId}/manga/${encodeURIComponent(item.mangaId)}/chapters/${encodeURIComponent(item.chapterId)}/pages`, { signal });
         if (!res.ok) throw new Error("Gagal mengambil daftar halaman chapter");
         const result = await res.json();
@@ -84,12 +95,21 @@ export async function processDownloadQueue(options: DownloadEngineOptions) {
 
         if (!fetchedPages || fetchedPages.length === 0) throw new Error("Halaman tidak ditemukan");
 
-        pages = fetchedPages.map(p => ({
-          index: p.index,
-          originalUrl: p.url,
-          offlineUrl: getOfflineImageUrl({ sourceId: item.sourceId, mangaId: item.mangaId, chapterId: item.chapterId, pageIndex: p.index }),
-          status: 'pending'
-        }));
+        if (pages.length === 0) {
+          pages = fetchedPages.map(p => ({
+            index: p.index,
+            originalUrl: p.url,
+            offlineUrl: getOfflineImageUrl({ sourceId: item.sourceId, mangaId: item.mangaId, chapterId: item.chapterId, pageIndex: p.index }),
+            status: 'pending'
+          }));
+        } else {
+          // Upgrade legacy/unsigned URLs while preserving existing cached status and offlineUrls
+          pages = pages.map(p => {
+            if (p.status === 'cached') return p;
+            const fresh = fetchedPages.find(fp => fp.index === p.index);
+            return fresh ? { ...p, originalUrl: fresh.url } : p;
+          });
+        }
 
         updateDownload(id, { pages, totalPages: pages.length });
       }
@@ -189,6 +209,8 @@ export async function processDownloadQueue(options: DownloadEngineOptions) {
     }
   } finally {
     processingLock = false;
-    options.onProcessComplete();
+    if (didProcessItem) {
+      onProcessComplete();
+    }
   }
 }
