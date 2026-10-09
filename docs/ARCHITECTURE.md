@@ -169,6 +169,12 @@ Server dapat memakai Redis untuk:
 
 Redis failure tidak boleh membuat normal source search gagal hanya karena semantic/catalog layer tidak tersedia.
 
+### Readiness Redis pada rate limiting
+
+`src/server/lib/cache/redis.ts` menyediakan `ensureRedisReady()` dan `isRedisReady()`. Client memakai lazy connection; request fail-closed menunggu readiness melalui in-flight promise bersama, bukan memanggil `INCR` sebelum Redis siap. Penantian dibatasi 2.500 ms pada jalur cold-start maupun reconnect, termasuk ketika ioredis masih melakukan retry.
+
+`src/server/lib/security/rate-limit.ts` mempertahankan dua kebijakan yang berbeda: fail-closed menunggu readiness atau menghasilkan unavailable (503), sedangkan fail-open publik melewati Redis dengan cepat saat client belum ready sambil memulai recovery non-blocking. Ketika Redis ready, counter/TTL kembali digunakan dan limit exhaustion dapat menghasilkan 429. Konsumen Redis lain belum otomatis memiliki jaminan readiness atau durabilitas yang sama.
+
 ## 10. Reader dan offline
 
 Offline chapter menggunakan browser storage/Cache Storage dan Service Worker melalui Serwist.
@@ -176,6 +182,8 @@ Offline chapter menggunakan browser storage/Cache Storage dan Service Worker mel
 Reader dapat memakai local/blob-backed URL untuk cached page. Object URL sementara harus dibersihkan dengan benar.
 
 PWA/offline behavior harus diverifikasi di browser/device, bukan hanya unit test.
+
+Antrian unduhan eksplisit berhenti membuat follow-up timer ketika tidak ada pekerjaan eligible; proses pause/cancel/clear juga melepas timer terkait. Untuk unduhan lama dengan URL proxy tanpa signature, engine dapat mengambil ulang daftar halaman dari API sumber dan menggunakan URL baru tanpa mengunduh ulang gambar yang sudah berstatus `cached`. Gagal mengambil halaman dari upstream tidak membenarkan bypass signing atau SSRF protection.
 
 ## 11. Image handling
 
@@ -188,6 +196,10 @@ Source/reader flow tertentu dapat memakai signed image proxy. Jika `IMAGE_PROXY_
 Firebase memperluas state local-first untuk account/sync flow. Normal reading tidak seharusnya menunggu cloud round trip.
 
 Authentication tidak menggantikan Firestore authorization rules.
+
+Full/realtime sync memakai canonical `users/{uid}/libraryV2` dan `users/{uid}/history`. Penghapusan dicatat dengan `_deleted` dan `deletedAt`; pada timestamp sama tombstone menang, tetapi re-add/progress eksplisit yang lebih baru bisa dipertahankan. Listener `removed` dan full sync harus menghormati penghapusan agar item lama tidak hidup kembali. Operasi full sync dikoordinasikan per UID; kegagalan manual sync tidak boleh ditutupi.
+
+Custom collection dan membership didukung pada sinkronisasi akun; `readingStatusByManga` masih local-only. Jangan mengklaim semua state Rak Buku sudah cloud-synced.
 
 ## 13. Motion dan navigation boundary
 

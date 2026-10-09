@@ -4,6 +4,14 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
 
 ## [Unreleased]
 
+### Reliability — Cloud Sync, Unduhan, dan Redis (8–9 Oktober 2026)
+
+- **Cloud Sync ([PR #49](https://github.com/rzqllh/Yomirra/pull/49))** — Tombstone penghapusan Library/History mencegah item lama muncul lagi akibat full/realtime sync; listener canonical `libraryV2` menangani `removed`, operasi dikoordinasikan per UID, dan kegagalan sinkronisasi manual tidak lagi ditampilkan sebagai sukses.
+- **Download Engine ([PR #50](https://github.com/rzqllh/Yomirra/pull/50))** — Menghentikan pemrosesan antrian kosong yang menjadwalkan timer berulang; pause/cancel/clear melepas timer, sedangkan URL legacy tanpa signature dapat disegarkan lewat endpoint halaman sumber tanpa menghapus gambar yang telah di-cache atau melemahkan proxy.
+- **Redis rate limiting ([PR #51](https://github.com/rzqllh/Yomirra/pull/51))** — Readiness cold-start dan in-flight connection dipakai bersama pada request konkurensi, menunggu maksimal 2.500 ms untuk policy fail-closed, dan memberi ruang bagi retry ioredis. Policy publik fail-open melewati penantian ketika Redis belum siap dan kembali menegakkan counter/TTL pada koneksi ready.
+- PR CI telah diverifikasi untuk perubahan tersebut. Real Redis serverless cold/warm/recovery, profiling timer browser, cross-device sync, serta Safari/PWA tetap memiliki gerbang manual terpisah. Kode merged bukan bukti otomatis semua smoke test lulus.
+
+
 ### Post-Restructure Architecture Cleanup
 
 - Menetapkan `components/chrome`, `components/overlays`, `components/home`, dan `components/komik` sebagai ownership canonical tanpa mengubah public route `/manga/*` atau existing `Manga*` contracts.

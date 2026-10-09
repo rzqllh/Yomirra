@@ -39,6 +39,8 @@ Mutation yang memakai session cookie wajib memvalidasi same-origin request. Miss
 
 Authentication bukan authorization. Firestore rules harus membatasi data per user. Client tidak boleh dianggap trusted hanya karena sudah login.
 
+Cloud Sync harus menghormati tombstone penghapusan Library/History dan boundary UID agar perangkat lama tidak menghidupkan data terhapus atau menimpa data akun lain. Firestore rules tetap menjadi otoritas akses.
+
 ### Redis dan search catalog
 
 Redis dipakai untuk server cache dan catalog search. `REDIS_URL` tidak boleh dikirim ke browser.
@@ -53,6 +55,8 @@ Rate limit route memakai namespace terpisah per kelas operasi agar satu flow tid
 - optional expensive compute seperti search intelligence bersifat fail-closed;
 - public search dan signed image proxy memakai policy availability-first/fail-open bila Redis limiter tidak tersedia;
 - user report tetap dibatasi ketat dan fail-closed;
+- pada cold-start Redis, policy fail-closed menunggu shared readiness yang dibatasi 2.500 ms; koneksi belum siap tidak dianggap enforcement berhasil;
+- policy fail-open publik mengizinkan bypass cepat ketika Redis belum `ready`; penghitungan Redis kembali berlaku setelah koneksi pulih;
 - identity limiter harus berasal dari trusted proxy chain, bukan nilai forwarded client yang dipakai tanpa validasi.
 
 Response limit/rejection harus membawa header limit/reset yang konsisten, dan perubahan policy wajib memiliki regression test.

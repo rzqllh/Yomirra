@@ -43,6 +43,10 @@ Rak Buku menyediakan:
 
 Smart Collections tidak membuat salinan membership baru. Isinya dihitung dari Library dan reading history.
 
+**Cloud Sync (opsional)** memakai Firebase untuk menyelaraskan Library, riwayat baca, preferensi sumber, dan koleksi buatan pengguna saat akun tersedia. Penghapusan Library dan riwayat memakai penanda penghapusan (*tombstone*) agar data lama tidak muncul kembali dari perangkat lain. Kegagalan sync manual dilaporkan sebagai kegagalan, bukan keberhasilan.
+
+Bookmark hanya ditambahkan lewat tindakan menyimpan yang eksplisit; rating atau koleksi tidak otomatis membuat bookmark. Status baca `readingStatusByManga` masih lokal, bukan bagian dari Cloud Sync. Sinkronisasi dua perangkat nyata tetap memerlukan uji manual.
+
 ### Rekomendasi
 
 Rekomendasi utama bersifat deterministic dan tidak membutuhkan AI. Ranking menggunakan sinyal yang sudah ada, seperti source, format, rating user, status, dan riwayat baca.
@@ -60,6 +64,8 @@ Reader mendukung chapter berbasis gambar, progress baca, chapter navigator, pref
 Navigasi reader menjaga parent page secara eksplisit: perpindahan detail → reader dan antar-chapter tidak meninggalkan reader route lama di belakang tombol kembali, sehingga keluar ke detail lalu kembali lagi mengarah ke halaman asal, bukan ke reader sebelumnya.
 
 Offline dan PWA bergantung pada kemampuan browser, Service Worker, dan storage perangkat.
+
+Unduhan eksplisit tidak terus menjadwalkan pemrosesan saat antrian kosong. Untuk unduhan lama dengan URL gambar tanpa tanda tangan, engine dapat mencoba mengambil ulang URL resmi dari endpoint halaman sumber tanpa membuang halaman yang sudah di-cache. Pemulihan bergantung pada ketersediaan sumber dan tidak melemahkan validasi signed image proxy. Profiling timer browser dan smoke Safari masih merupakan verifikasi manual.
 
 ### Motion dan navigasi
 
@@ -96,6 +102,7 @@ Boundary privileged tetap berada di server:
 - admin API memakai authorization server-side dan browser admin memakai session bertanda tangan, HttpOnly, dan berumur pendek; raw passkey tidak disimpan di browser storage;
 - reusable upstream credential dibaca dari environment server-only dan konfigurasi yang hilang gagal tertutup pada saat request upstream tanpa menjatuhkan registry source lain;
 - route yang mahal atau sensitif memakai rate-limit namespace terpisah: mutation admin dan optional expensive compute gagal tertutup bila limiter tidak tersedia, sedangkan public search/image delivery mempertahankan availability dengan policy fail-open;
+- rate limiting yang fail-closed menunggu readiness Redis secara terbatas pada cold-start; policy fail-open publik tidak menunggu saat Redis belum siap, lalu kembali menghitung limit normal setelah client siap;
 - browser response memakai baseline Content Security Policy dalam mode report-only untuk mengamati compatibility Next.js, Firebase, remote assets, dan PWA sebelum enforcement;
 - generic public error surfaces tidak menampilkan raw exception/upstream error; detail diagnosis tetap dicatat melalui jalur server/log yang disanitasi;
 - logger men-sanitasi authorization header, cookie, token, secret, API key, signature, signed URL, dan field sensitif lain sebelum ditulis ke log.

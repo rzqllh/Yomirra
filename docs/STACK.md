@@ -46,7 +46,7 @@ Gunakan `motion/react`, bukan dependency animation paralel.
 ## Server dan infrastructure
 
 - Firebase `^12.14.0` — auth + supported cloud sync.
-- ioredis `^5.10.1` — Redis cache/search catalog.
+- ioredis `^5.10.1` — Redis cache/search catalog dan readiness rate limiting.
 - Zod `^4.4.3` — runtime validation.
 - Cheerio `^1.2.0` — HTML parsing pada adapter tertentu.
 
