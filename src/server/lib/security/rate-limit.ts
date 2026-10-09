@@ -1,4 +1,8 @@
-import { isRedisConfigured, redis } from "@/server/lib/cache/redis";
+import {
+  ensureRedisReady,
+  isRedisConfigured,
+  redis,
+} from "@/server/lib/cache/redis";
 import { logger } from "@/shared/logger";
 import { NextResponse } from "next/server";
 
@@ -98,6 +102,8 @@ export async function checkRateLimit(
         },
       };
     }
+
+    await ensureRedisReady();
 
     const requests = await redis.incr(key);
 
