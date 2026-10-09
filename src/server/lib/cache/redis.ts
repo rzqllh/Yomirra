@@ -56,9 +56,11 @@ let connectionPromise: Promise<void> | null = null;
 
 const isRedisReady = () => redis.status === "ready";
 
-const waitForRedisReady = () =>
+const waitForRedisReady = (connectPromise?: Promise<void>) =>
   new Promise<void>((resolve, reject) => {
     let timer: NodeJS.Timeout | null = null;
+    let settled = false;
+
     const cleanup = () => {
       if (timer) {
         clearTimeout(timer);
@@ -68,15 +70,21 @@ const waitForRedisReady = () =>
       redis.removeListener("end", handleEnd);
     };
     const handleReady = () => {
+      if (settled) return;
+      settled = true;
       cleanup();
       resolve();
     };
     const handleEnd = () => {
+      if (settled) return;
+      settled = true;
       cleanup();
       reject(new Error("Redis connection ended before becoming ready"));
     };
 
     timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
       cleanup();
       reject(new Error("Redis connection timed out waiting for ready state"));
     }, 2500);
@@ -84,15 +92,38 @@ const waitForRedisReady = () =>
     redis.once("ready", handleReady);
     redis.once("end", handleEnd);
 
+    if (connectPromise) {
+      connectPromise
+        .then(() => {
+          handleReady();
+        })
+        .catch((error: unknown) => {
+          if (settled) return;
+          settled = true;
+          cleanup();
+          reject(
+            error instanceof Error
+              ? error
+              : new Error("Redis connection ended before becoming ready")
+          );
+        });
+    }
+
     if (isRedisReady()) handleReady();
-    else if (redis.status === "end") handleEnd();
+    else if (redis.status === "end" && !connectPromise) handleEnd();
   });
 
 const establishRedisConnection = async () => {
   if (isRedisReady()) return;
 
   if (redis.status === "wait" || redis.status === "end") {
-    await redis.connect();
+    let connectPromise: Promise<void> | undefined;
+    try {
+      connectPromise = redis.connect();
+    } catch (error) {
+      connectPromise = Promise.reject(error);
+    }
+    await waitForRedisReady(connectPromise);
   } else {
     await waitForRedisReady();
   }

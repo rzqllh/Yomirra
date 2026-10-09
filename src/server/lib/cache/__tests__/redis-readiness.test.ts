@@ -227,4 +227,87 @@ describe("ensureRedisReady", () => {
 
     await expect(readiness).resolves.toBeUndefined();
   });
+
+  it("times out when initiating connection from wait state if connection never settles", async () => {
+    vi.useFakeTimers();
+    try {
+      const { client, ensureRedisReady } = await loadRedis();
+      client.status = "wait";
+      client.connect = vi.fn(() => new Promise<void>(() => {}));
+
+      const readiness = ensureRedisReady();
+      expect(client.connect).toHaveBeenCalledTimes(1);
+
+      vi.advanceTimersByTime(2600);
+
+      await expect(readiness).rejects.toThrow(
+        "Redis connection timed out waiting for ready state"
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("times out when reconnecting from end state if connection never settles", async () => {
+    vi.useFakeTimers();
+    try {
+      const { client, ensureRedisReady } = await loadRedis();
+      client.status = "end";
+      client.connect = vi.fn(() => new Promise<void>(() => {}));
+
+      const readiness = ensureRedisReady();
+      expect(client.connect).toHaveBeenCalledTimes(1);
+
+      vi.advanceTimersByTime(2600);
+
+      await expect(readiness).rejects.toThrow(
+        "Redis connection timed out waiting for ready state"
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("handles late rejection after caller timeout without throwing unhandled rejection", async () => {
+    vi.useFakeTimers();
+    try {
+      const { client, ensureRedisReady } = await loadRedis();
+      client.status = "wait";
+      let rejectLateConnect!: (error: Error) => void;
+      client.connect = vi.fn(
+        () =>
+          new Promise<void>((_, reject) => {
+            rejectLateConnect = reject;
+          })
+      );
+
+      const readiness = ensureRedisReady();
+      expect(client.connect).toHaveBeenCalledTimes(1);
+
+      vi.advanceTimersByTime(2600);
+
+      await expect(readiness).rejects.toThrow(
+        "Redis connection timed out waiting for ready state"
+      );
+
+      // Late rejection must not cause unhandled rejection
+      expect(() => {
+        rejectLateConnect(new Error("Late connection closed"));
+      }).not.toThrow();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("propagates synchronous connect rejection", async () => {
+    const { client, ensureRedisReady } = await loadRedis();
+    client.status = "wait";
+    client.connect = vi.fn(() => {
+      throw new Error("Immediate synchronous failure");
+    });
+
+    await expect(ensureRedisReady()).rejects.toThrow(
+      "Immediate synchronous failure"
+    );
+  });
 });
