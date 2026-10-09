@@ -1,6 +1,7 @@
 import {
   ensureRedisReady,
   isRedisConfigured,
+  isRedisReady,
   redis,
 } from "@/server/lib/cache/redis";
 import { logger } from "@/shared/logger";
@@ -94,6 +95,19 @@ export async function checkRateLimit(
     if (!isRedisConfigured) {
       return {
         success: !failClosed,
+        unavailable: true,
+        headers: {
+          "X-RateLimit-Limit": limit.toString(),
+          "X-RateLimit-Remaining": limit.toString(),
+          "X-RateLimit-Reset": window.toString(),
+        },
+      };
+    }
+
+    if (!failClosed && !isRedisReady()) {
+      void ensureRedisReady().catch(() => {});
+      return {
+        success: true,
         unavailable: true,
         headers: {
           "X-RateLimit-Limit": limit.toString(),

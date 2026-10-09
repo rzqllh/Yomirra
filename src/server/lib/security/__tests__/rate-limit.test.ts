@@ -1,11 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 let mockIsRedisConfigured = true;
+let mockIsRedisReady = true;
 
 vi.mock("@/server/lib/cache/redis", () => ({
   ensureRedisReady: vi.fn(),
   get isRedisConfigured() {
     return mockIsRedisConfigured;
+  },
+  get isRedisReady() {
+    return () => mockIsRedisReady;
   },
   redis: {
     incr: vi.fn(),
@@ -24,6 +28,7 @@ describe("route rate-limit policies", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockIsRedisConfigured = true;
+    mockIsRedisReady = true;
     vi.stubEnv("NODE_ENV", "production");
   });
 
@@ -189,5 +194,121 @@ describe("route rate-limit policies", () => {
     expect(redis.incr).toHaveBeenCalledWith(
       "rate-limit:public-search:198.51.100.2"
     );
+  });
+
+  it("bypasses Redis commands immediately and fails open for publicSearch when Redis is not ready", async () => {
+    mockIsRedisReady = false;
+    vi.mocked(ensureRedisReady).mockReturnValue(new Promise<void>(() => {}));
+
+    const result = await checkRateLimitPolicy(
+      new Request("https://yomirra.example/api/sources/search"),
+      "publicSearch"
+    );
+
+    expect(result).toMatchObject({
+      success: true,
+      unavailable: true,
+    });
+    expect(result.headers["X-RateLimit-Limit"]).toBe("120");
+    expect(redis.incr).not.toHaveBeenCalled();
+    expect(ensureRedisReady).toHaveBeenCalledTimes(1);
+  });
+
+  it("bypasses Redis commands immediately and fails open for imageProxy when Redis is not ready", async () => {
+    mockIsRedisReady = false;
+    vi.mocked(ensureRedisReady).mockReturnValue(new Promise<void>(() => {}));
+
+    const result = await checkRateLimitPolicy(
+      new Request("https://yomirra.example/api/proxy/image"),
+      "imageProxy"
+    );
+
+    expect(result).toMatchObject({
+      success: true,
+      unavailable: true,
+    });
+    expect(result.headers["X-RateLimit-Limit"]).toBe("600");
+    expect(redis.incr).not.toHaveBeenCalled();
+    expect(ensureRedisReady).toHaveBeenCalledTimes(1);
+  });
+
+  it("blocks and fails closed for admin mutations when Redis is not ready and times out", async () => {
+    mockIsRedisReady = false;
+    vi.mocked(ensureRedisReady).mockRejectedValueOnce(
+      new Error("Redis connection timed out waiting for ready state")
+    );
+
+    const result = await checkRateLimitPolicy(
+      new Request("https://yomirra.example/api/admin/site/config"),
+      "adminMutation",
+      "site-config"
+    );
+
+    expect(result).toMatchObject({
+      success: false,
+      unavailable: true,
+    });
+    expect(ensureRedisReady).toHaveBeenCalledTimes(1);
+    expect(redis.incr).not.toHaveBeenCalled();
+
+    const response = createRateLimitRejection(result);
+    expect(response.status).toBe(503);
+  });
+
+  it("resumes normal rate limiting and counting after Redis recovers from outage", async () => {
+    mockIsRedisReady = false;
+    vi.mocked(ensureRedisReady).mockReturnValue(new Promise<void>(() => {}));
+
+    const outageResult = await checkRateLimitPolicy(
+      new Request("https://yomirra.example/api/sources/search"),
+      "publicSearch"
+    );
+    expect(outageResult.success).toBe(true);
+    expect(outageResult.unavailable).toBe(true);
+    expect(redis.incr).not.toHaveBeenCalled();
+
+    // Redis recovers
+    mockIsRedisReady = true;
+    vi.mocked(ensureRedisReady).mockResolvedValue();
+    vi.mocked(redis.incr).mockResolvedValueOnce(5);
+    vi.mocked(redis.ttl).mockResolvedValueOnce(45);
+
+    const recoveredResult = await checkRateLimitPolicy(
+      new Request("https://yomirra.example/api/sources/search"),
+      "publicSearch"
+    );
+    expect(recoveredResult.success).toBe(true);
+    expect(recoveredResult.unavailable).toBeUndefined();
+    expect(recoveredResult.headers["X-RateLimit-Remaining"]).toBe("115");
+    expect(recoveredResult.headers["X-RateLimit-Reset"]).toBe("45");
+    expect(redis.incr).toHaveBeenCalledTimes(1);
+  });
+
+  it("allows multiple concurrent fail-open requests to return immediately during outage", async () => {
+    mockIsRedisReady = false;
+    vi.mocked(ensureRedisReady).mockReturnValue(new Promise<void>(() => {}));
+
+    const requests = [
+      new Request("https://yomirra.example/api/sources/search", {
+        headers: { "x-forwarded-for": "198.51.100.10" },
+      }),
+      new Request("https://yomirra.example/api/sources/search", {
+        headers: { "x-forwarded-for": "198.51.100.11" },
+      }),
+      new Request("https://yomirra.example/api/sources/search", {
+        headers: { "x-forwarded-for": "198.51.100.12" },
+      }),
+    ];
+
+    const results = await Promise.all(
+      requests.map((r) => checkRateLimitPolicy(r, "publicSearch"))
+    );
+
+    for (const res of results) {
+      expect(res.success).toBe(true);
+      expect(res.unavailable).toBe(true);
+    }
+    expect(redis.incr).not.toHaveBeenCalled();
+    expect(ensureRedisReady).toHaveBeenCalledTimes(3);
   });
 });

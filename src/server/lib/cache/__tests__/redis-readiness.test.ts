@@ -310,4 +310,22 @@ describe("ensureRedisReady", () => {
       "Immediate synchronous failure"
     );
   });
+
+  it("reflects readiness state correctly through isRedisReady", async () => {
+    const { client, isRedisReady } = await loadRedis();
+    client.status = "wait";
+    expect(isRedisReady()).toBe(false);
+
+    client.status = "connecting";
+    expect(isRedisReady()).toBe(false);
+
+    client.status = "reconnecting";
+    expect(isRedisReady()).toBe(false);
+
+    client.status = "end";
+    expect(isRedisReady()).toBe(false);
+
+    client.status = "ready";
+    expect(isRedisReady()).toBe(true);
+  });
 });

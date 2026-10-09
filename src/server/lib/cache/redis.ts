@@ -54,7 +54,7 @@ export const redis = globalForRedis.redis ?? createRedisClient();
 
 let connectionPromise: Promise<void> | null = null;
 
-const isRedisReady = () => redis.status === "ready";
+export const isRedisReady = () => redis.status === "ready";
 
 const waitForRedisReady = (connectPromise?: Promise<void>) =>
   new Promise<void>((resolve, reject) => {
