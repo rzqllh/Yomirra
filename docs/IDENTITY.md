@@ -59,11 +59,15 @@ sourceId + mangaId + chapterId
 
 History yang tidak bisa di-resolve tidak boleh dihapus hanya karena identity migration gagal.
 
+Penghapusan Library/History yang disinkronkan menulis tombstone pada data cloud agar perangkat yang tertinggal tidak mengunggah ulang item lama. Delete menang pada timestamp yang sama, sedangkan re-add atau progress eksplisit dengan timestamp lebih baru dapat dipertahankan. Aturan ini tidak mengubah `SavedTitleId` yang opaque.
+
 ## Collections dan Updates
 
 User-created collection membership menggunakan SavedTitle-compatible key.
 
 Smart Collections berbeda: ia derived dari Library + History dan tidak menulis membership otomatis ke persisted collection state.
+
+Bookmark harus ditambahkan secara eksplisit; rating dan membership koleksi tidak boleh otomatis membuat bookmark. Custom collections/membership dapat disinkronkan, sedangkan `readingStatusByManga` masih local-only.
 
 ## Source recovery
 

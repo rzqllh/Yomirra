@@ -99,7 +99,13 @@ Persisted collection state menyimpan:
 - `membershipsByManga`;
 - `readingStatusByManga`.
 
-Smart Collections tidak masuk schema persisted ini.
+Smart Collections tidak masuk schema persisted ini. `readingStatusByManga` saat ini lokal dan belum termasuk kontrak Cloud Sync.
+
+## Cloud Sync dan tombstone
+
+Canonical Library tersimpan di `users/{uid}/libraryV2/{savedTitleId}`, History di `users/{uid}/history/{historyId}`. Penghapusan disinkronkan sebagai tombstone dengan `_deleted: true` dan `deletedAt` (timestamp numerik); dokumen `users/{uid}/library` legacy menerima penanda penghapusan untuk kompatibilitas.
+
+Saat full/realtime merge, delete menang pada timestamp sama; re-add atau progress eksplisit yang lebih baru dapat menang. Tombstone adalah representasi data sync, bukan field wajib dari `LibraryItem` lokal. Firestore rules per UID tetap wajib. Preferensi sumber dan koleksi buatan user memakai dokumen preference akun yang sesuai.
 
 ## Source preferences
 

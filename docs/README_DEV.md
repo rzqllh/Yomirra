@@ -75,6 +75,8 @@ Zustand memegang state browser yang memang perlu persisted atau dipakai lintas f
 
 TanStack Query memegang remote request state.
 
+Untuk akun Firebase, full sync beroperasi per UID, memakai `libraryV2`/History tombstones, dan harus meneruskan kegagalan ke caller. Jangan menulis merge yang menghidupkan kembali item terhapus atau mencampurkan state dua akun. `readingStatusByManga` tetap local-only sampai ada keputusan schema dan migrasi terpisah.
+
 ### Route → view → controller
 
 Route kompleks sebaiknya tipis:
@@ -122,6 +124,8 @@ Reader punya interaction family sendiri. `ReaderPanelShell` tidak sama dengan Va
 
 Reader UI sebaiknya tetap fokus pada reading flow; source recovery, account sync, atau global app concerns tidak perlu dipindahkan ke reader state.
 
+Perubahan antrian unduhan harus menjaga zero-idle-timer, concurrency, pause/resume/cancel, Cache Storage, dan validasi signed proxy untuk URL lama. Jangan menjadikan legacy URL sebagai alasan membuka proxy tanpa signature.
+
 ## Motion dan navigation
 
 Gunakan semantic motion layer; jangan menambah spring/duration baru langsung di feature component bila preset yang sesuai sudah ada.
@@ -152,6 +156,7 @@ Gunakan policy bersama di `src/server/lib/security/rate-limit.ts` untuk route se
 
 - admin mutation/expensive operation: fail-closed;
 - public search/image delivery: availability-first sesuai policy;
+- Redis readiness: gunakan shared `ensureRedisReady()` untuk jalur fail-closed, bukan inisialisasi `redis.connect()` ad-hoc; jalur fail-open boleh bypass segera ketika Redis belum ready sambil melakukan recovery non-blocking;
 - report user: strict fail-closed;
 - response rejection harus membawa limit/reset dan `Retry-After`;
 - jangan memakai left-most forwarded header secara langsung sebagai identity limiter.

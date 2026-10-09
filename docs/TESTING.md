@@ -28,6 +28,7 @@ Prioritaskan boundary yang kalau rusak dapat merusak data atau banyak feature:
 - search tag/filter behavior;
 - validation dan request signing;
 - persistent store migration;
+- Cloud Sync deletion tombstone, equal-timestamp precedence, dan lifecycle per UID;
 - backup/restore;
 - download lifecycle;
 - recommendation ranking;
@@ -87,6 +88,10 @@ Untuk rate limiting, cover minimal:
 - fail-open hanya pada route yang memang availability-first;
 - trusted proxy-chain identity agar client tidak bisa memilih bucket sendiri lewat forwarded header palsu.
 
+Untuk Redis cold-start dan limiter, gunakan `src/server/lib/cache/__tests__/redis-readiness.test.ts` dan `src/server/lib/security/__tests__/rate-limit.test.ts`. Cover `wait`, `connecting`, `reconnecting`, `end`, late rejection, 2.500 ms bounded deadline, shared initial connection, fail-closed 503, serta bypass fail-open yang tidak tertahan saat Redis down.
+
+Untuk Cloud Sync, uji delete/tombstone Library/History, precedence pada timestamp sama, re-add/progress baru, perubahan realtime `libraryV2` `removed`, propagasi error manual sync, dan pergantian UID. Untuk unduhan, uji antrian idle tanpa timer berulang, pause/resume/cancel, concurrency, cached pages, dan URL legacy yang tetap melalui signed proxy.
+
 Untuk credential server-only, test harus memastikan missing/malformed configuration gagal sebelum upstream request dilakukan tanpa membuat registry source lain gagal diinisialisasi.
 
 Untuk CSP/error disclosure:
@@ -133,6 +138,9 @@ Automated test tidak cukup untuk:
 - Service Worker/cache storage;
 - offline reading;
 - actual source WAF/rate-limit behavior.
+- Redis serverless cold/warm/concurrent requests, outage dan recovery pada environment terkonfigurasi;
+- profiling CPU/timer antrian unduhan idle dan pemeriksaan URL legacy pada Safari;
+- sinkronisasi dua perangkat dengan penghapusan, re-add, dan account switch.
 
 Catat browser/device/deployment environment saat melaporkan hasil manual.
 

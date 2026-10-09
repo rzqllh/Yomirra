@@ -1,9 +1,17 @@
 # Yomirra — Master Execution Roadmap P0–P4
 
-**Status:** Post-restructure architecture reconciled on 2026-10-07; remaining external/manual gates listed below
+**Status:** Roadmap historis (baseline 2026-10-07); lihat checkpoint integrasi baru di bawah. Gerbang manual dan eksternal tetap terbuka.
 **Target repo path:** `docs/yomirra-master-execution-roadmap.md`  
 **Role:** Single source of truth for the remaining Yomirra work covered by this roadmap.  
 **Execution model:** Reconcile the newest Git/cloud state first, then execute strictly phase-by-phase with a mandatory verification gate after every phase.
+
+## Checkpoint integrasi — 2026-10-09
+
+- `main@e407c46` memuat [Cloud Sync PR #49](https://github.com/rzqllh/Yomirra/pull/49), [Download Engine PR #50](https://github.com/rzqllh/Yomirra/pull/50), dan [Redis Cold-Start PR #51](https://github.com/rzqllh/Yomirra/pull/51), semuanya squash-merged. Ini checkpoint integrasi, bukan penandaan semua item roadmap selesai.
+- Angka 189 file / 1.231 tests pada audit 2026-10-07 adalah historis. PR #51 melaporkan 195 file / 1.311 tests lulus sebelum merge; verifikasi CI pada squash commit harus dibaca terpisah.
+- Manual smoke Redis remote/serverless, timer download di browser, signed URL lama di Safari, Cloud Sync dua perangkat, dan installed PWA/iOS tetap terbuka; jangan tandai PASS hanya karena CI hijau.
+- Perubahan policy AI endpoint, source routing, health semantics, status baca lintas perangkat, CSP, dan durabilitas Redis lanjutan memerlukan keputusan serta scope terpisah. Code dan regression tests di `main` mengungguli checklist historis.
+
 
 ## Current Reconciliation — 2026-10-07
 
