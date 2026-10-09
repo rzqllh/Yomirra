@@ -1,4 +1,9 @@
-import { isRedisConfigured, redis } from "@/server/lib/cache/redis";
+import {
+  ensureRedisReady,
+  isRedisConfigured,
+  isRedisReady,
+  redis,
+} from "@/server/lib/cache/redis";
 import { logger } from "@/shared/logger";
 import { NextResponse } from "next/server";
 
@@ -98,6 +103,21 @@ export async function checkRateLimit(
         },
       };
     }
+
+    if (!failClosed && !isRedisReady()) {
+      void ensureRedisReady().catch(() => {});
+      return {
+        success: true,
+        unavailable: true,
+        headers: {
+          "X-RateLimit-Limit": limit.toString(),
+          "X-RateLimit-Remaining": limit.toString(),
+          "X-RateLimit-Reset": window.toString(),
+        },
+      };
+    }
+
+    await ensureRedisReady();
 
     const requests = await redis.incr(key);
 

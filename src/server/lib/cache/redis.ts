@@ -52,4 +52,107 @@ const createRedisClient = () => {
 
 export const redis = globalForRedis.redis ?? createRedisClient();
 
+let connectionPromise: Promise<void> | null = null;
+
+export const isRedisReady = () => redis.status === "ready";
+
+const waitForRedisReady = (connectPromise?: Promise<void>) =>
+  new Promise<void>((resolve, reject) => {
+    let timer: NodeJS.Timeout | null = null;
+    let settled = false;
+
+    const cleanup = () => {
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+      redis.removeListener("ready", handleReady);
+      redis.removeListener("end", handleEnd);
+    };
+    const handleReady = () => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      resolve();
+    };
+    const handleEnd = () => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(new Error("Redis connection ended before becoming ready"));
+    };
+
+    timer = setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(new Error("Redis connection timed out waiting for ready state"));
+    }, 2500);
+
+    redis.once("ready", handleReady);
+    redis.once("end", handleEnd);
+
+    if (connectPromise) {
+      connectPromise
+        .then(() => {
+          handleReady();
+        })
+        .catch((error: unknown) => {
+          if (settled) return;
+          if (
+            redis.status === "reconnecting" ||
+            redis.status === "connecting"
+          ) {
+            return;
+          }
+          settled = true;
+          cleanup();
+          reject(
+            error instanceof Error
+              ? error
+              : new Error("Redis connection ended before becoming ready")
+          );
+        });
+    }
+
+    if (isRedisReady()) handleReady();
+    else if (redis.status === "end" && !connectPromise) handleEnd();
+  });
+
+const establishRedisConnection = async () => {
+  if (isRedisReady()) return;
+
+  if (redis.status === "wait" || redis.status === "end") {
+    let connectPromise: Promise<void> | undefined;
+    try {
+      connectPromise = redis.connect();
+    } catch (error) {
+      connectPromise = Promise.reject(error);
+    }
+    await waitForRedisReady(connectPromise);
+  } else {
+    await waitForRedisReady();
+  }
+
+  if (!isRedisReady()) {
+    throw new Error("Redis unavailable after connection attempt");
+  }
+};
+
+export const ensureRedisReady = async () => {
+  if (!isRedisConfigured) {
+    throw new Error("Redis is not configured");
+  }
+
+  if (isRedisReady()) return;
+
+  if (!connectionPromise) {
+    connectionPromise = establishRedisConnection().finally(() => {
+      connectionPromise = null;
+    });
+  }
+
+  await connectionPromise;
+};
+
 if (env.NODE_ENV !== "production") globalForRedis.redis = redis;
