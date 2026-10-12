@@ -2,24 +2,16 @@ export const dynamic = "force-dynamic";
 import { applyRateLimitHeaders, checkRateLimitPolicy, createRateLimitRejection } from "@/server/lib/security/rate-limit";
 import { NextRequest, NextResponse } from "next/server";
 import { sourceManager } from "@/server/lib/sources/source-manager";
-import { MangaItem } from "@/shared/sources/source-types";
 import { withCache, CACHE_TTL, getSourceCacheKey } from "@/server/lib/cache/redis-cache";
 import { isRedisConfigured, redis } from "@/server/lib/cache/redis";
 import { createHash } from "crypto";
 
-import { SourceError, type SourceErrorCode } from "@/server/lib/sources/error";
-import { deduplicateResultsBySource, type CanonicalSearchResult } from "@/shared/lib/canonical-search";
+import { SourceError } from "@/server/lib/sources/error";
+import { deduplicateResultsBySource } from "@/shared/lib/canonical-search";
 import { upsertSearchCatalogRecords } from "@/server/lib/search/semantic-catalog";
+import type { GlobalSearchResponse } from "@/shared/types/search";
 
-export interface GlobalSearchResponse {
-  resultsBySource: Record<string, {
-    results: MangaItem[];
-    hasNextPage?: boolean;
-    error?: string;
-    errorCode?: SourceErrorCode;
-  }>;
-  canonicalResults?: CanonicalSearchResult[];
-}
+export type { GlobalSearchResponse };
 
 
 export async function GET(req: NextRequest) {
