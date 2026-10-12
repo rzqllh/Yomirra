@@ -126,7 +126,7 @@ export default function manifest(): MetadataRoute.Manifest {
       },
       {
         src: '/screenshots/desktop-library.png',
-        sizes: '1440x900',
+        sizes: '1920x940',
         type: 'image/png',
         form_factor: 'wide',
         label: 'Library Yomirra di desktop',

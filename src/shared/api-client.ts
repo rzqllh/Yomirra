@@ -1,6 +1,9 @@
 import type { MangaDetail, MangaPageResult, Chapter, ChapterPages, MangaItem, SourceMetadata, FilterList } from "@/shared/sources/source-types";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import type { ResolvedSearchTag, SearchCatalogCandidate } from "@/shared/lib/search-intelligence";
+import type { GlobalSearchResponse } from "@/shared/types/search";
+
+export type { GlobalSearchResponse };
 
 export interface SearchResponse {
   sourceId: string;
@@ -143,7 +146,7 @@ class ApiClient {
       url += `&${sp.toString()}`;
     }
     
-    return this.fetcher<import("@/app/api/sources/search/route").GlobalSearchResponse>(url);
+    return this.fetcher<GlobalSearchResponse>(url);
   }
 
   rankSearchIntelligence(
