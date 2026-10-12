@@ -256,7 +256,7 @@ export function UnifiedFilterDrawer({
         formats: withSourceSupport(formats),
       };
     }
-  }, [context, filterSourcesToFetch, searchFiltersQueries, libraryFiltersData, hideNsfw]);
+  }, [context, filterSourcesToFetch, searchFiltersQueries, libraryFiltersData, hideNsfw, activeSourceId]);
 
   const searchTagIntent = React.useMemo(() => {
     if (context !== "search" || !searchQuery.trim()) {

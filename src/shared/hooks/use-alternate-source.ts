@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useLibraryStore } from "@/shared/store/library-store";
@@ -26,7 +26,7 @@ interface UseAlternateSourceOptions {
 export function useAlternateSource({
   sourceId,
   mangaId,
-  currentChapterId,
+  currentChapterId: _currentChapterId,
   knownTitle: initialTitle,
   knownAuthor: initialAuthor,
   currentChapterTitle: initialChapterTitle,
@@ -215,11 +215,12 @@ export function useAlternateSource({
       libraryItem,
       sourceId,
       mangaId,
-      currentChapterId,
       lastReadChapter,
       relinkTitle,
       saveProgress,
       router,
+      historyItem,
+      title,
     ]
   );
 
