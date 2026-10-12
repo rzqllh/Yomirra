@@ -20,7 +20,7 @@ export async function getSiteConfig(): Promise<SiteConfig> {
       if (raw) {
         const parsed = JSON.parse(raw);
         // Deep merge with defaults to protect against missing keys
-        return {
+        const merged: SiteConfig = {
           ...DEFAULT_SITE_CONFIG,
           ...parsed,
           announcement: {
@@ -40,6 +40,8 @@ export async function getSiteConfig(): Promise<SiteConfig> {
             ...(parsed.features || {}),
           },
         };
+        inMemoryConfig = merged;
+        return merged;
       }
     } catch (err) {
       logger.warn("Failed to get site config from Redis, using fallback", { err });
@@ -55,6 +57,15 @@ export async function updateSiteConfig(partial: Partial<SiteConfig>): Promise<Si
   if (isProduction && !isRedisConfigured) {
     logger.error("Admin site config mutation rejected: Redis durable storage is required in production");
     throw new Error("Failed to persist site config: durable storage is required in production");
+  }
+
+  if (isRedisConfigured) {
+    try {
+      await ensureRedisReady();
+    } catch (err) {
+      logger.error("Failed to connect to Redis for site config update", { err });
+      throw new Error("Failed to persist site config to durable storage", { cause: err });
+    }
   }
 
   const current = await getSiteConfig();
@@ -78,7 +89,6 @@ export async function updateSiteConfig(partial: Partial<SiteConfig>): Promise<Si
 
   if (isRedisConfigured) {
     try {
-      await ensureRedisReady();
       await redis.set(SITE_CONFIG_KEY, JSON.stringify(next));
       inMemoryConfig = next;
     } catch (err) {
@@ -92,3 +102,4 @@ export async function updateSiteConfig(partial: Partial<SiteConfig>): Promise<Si
 
   return next;
 }
+

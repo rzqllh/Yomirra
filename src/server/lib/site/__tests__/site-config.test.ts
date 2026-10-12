@@ -15,8 +15,8 @@ vi.mock("@/server/lib/cache/redis", () => ({
   isRedisReady: () => mockIsRedisReady,
   ensureRedisReady: () => mockEnsureRedisReady(),
   redis: {
-    get: (...args: any[]) => mockRedisGet(...args),
-    set: (...args: any[]) => mockRedisSet(...args),
+    get: (...args: unknown[]) => mockRedisGet(...args),
+    set: (...args: unknown[]) => mockRedisSet(...args),
   },
 }));
 
@@ -156,5 +156,41 @@ describe("Site Config Service", () => {
     expect(updated.announcement.message).toBe("Dev in-memory test");
     const current = await getSiteConfig();
     expect(current.announcement.message).toBe("Dev in-memory test");
+  });
+
+  it("should wait for Redis readiness and load merge base from Redis during update on cold worker", async () => {
+    mockIsRedisReady = false;
+    const existingStored: Partial<SiteConfig> = {
+      maintenanceMode: {
+        enabled: true,
+        message: "Scheduled maintenance",
+      },
+    };
+    mockEnsureRedisReady.mockImplementationOnce(async () => {
+      mockIsRedisReady = true;
+    });
+    mockRedisGet.mockResolvedValueOnce(JSON.stringify(existingStored));
+    mockRedisSet.mockResolvedValueOnce("OK");
+
+    const { updateSiteConfig } = await import("../site-config-service");
+
+    const updated = await updateSiteConfig({
+      announcement: {
+        id: "a-1",
+        enabled: true,
+        message: "Important notice",
+        type: "info",
+      },
+    });
+
+    expect(mockEnsureRedisReady).toHaveBeenCalled();
+    expect(mockRedisGet).toHaveBeenCalledWith("yomirra:site:config");
+    expect(updated.maintenanceMode.enabled).toBe(true);
+    expect(updated.maintenanceMode.message).toBe("Scheduled maintenance");
+    expect(updated.announcement.enabled).toBe(true);
+    expect(mockRedisSet).toHaveBeenCalledWith(
+      "yomirra:site:config",
+      expect.stringContaining('"maintenanceMode":{"enabled":true,"message":"Scheduled maintenance"}')
+    );
   });
 });
