@@ -26,7 +26,6 @@ interface UseAlternateSourceOptions {
 export function useAlternateSource({
   sourceId,
   mangaId,
-  currentChapterId: _currentChapterId,
   knownTitle: initialTitle,
   knownAuthor: initialAuthor,
   currentChapterTitle: initialChapterTitle,

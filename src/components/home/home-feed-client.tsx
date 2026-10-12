@@ -58,7 +58,7 @@ export function HomeFeedClient({
   );
 
   const historyItems = React.useMemo(() => {
-    if (!isMounted) return [];
+    if (!isMounted || !historyItemsMap) return [];
 
     const rawHistoryItems = getContinueReading(50);
     let result = rawHistoryItems.filter((item) => {
