@@ -6,11 +6,13 @@ const mockRedisGet = vi.fn();
 const mockRedisSet = vi.fn();
 const mockEnsureRedisReady = vi.fn().mockResolvedValue(undefined);
 let mockIsRedisConfigured = true;
+let mockIsRedisReady = true;
 
 vi.mock("@/server/lib/cache/redis", () => ({
   get isRedisConfigured() {
     return mockIsRedisConfigured;
   },
+  isRedisReady: () => mockIsRedisReady,
   ensureRedisReady: () => mockEnsureRedisReady(),
   redis: {
     get: (...args: any[]) => mockRedisGet(...args),
@@ -22,6 +24,7 @@ describe("Site Config Service", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockIsRedisConfigured = true;
+    mockIsRedisReady = true;
     vi.stubEnv("NODE_ENV", "test");
   });
 
@@ -29,7 +32,7 @@ describe("Site Config Service", () => {
     vi.unstubAllEnvs();
   });
 
-  it("should return default config if redis has no value", async () => {
+  it("should return default config if redis has no value when ready", async () => {
     mockRedisGet.mockResolvedValueOnce(null);
 
     const { getSiteConfig } = await import("../site-config-service");
@@ -37,10 +40,32 @@ describe("Site Config Service", () => {
     const config = await getSiteConfig();
     expect(config.announcement.enabled).toBe(false);
     expect(config.features.semanticSearchEnabled).toBe(true);
-    expect(mockEnsureRedisReady).toHaveBeenCalled();
+    expect(mockRedisGet).toHaveBeenCalledWith("yomirra:site:config");
   });
 
-  it("should parse and return stored config from Redis", async () => {
+  it("should immediately fallback without waiting when Redis is not ready (fail-open)", async () => {
+    mockIsRedisReady = false;
+    // ensureRedisReady hangs or takes the full deadline
+    mockEnsureRedisReady.mockImplementationOnce(
+      () => new Promise((resolve) => setTimeout(resolve, 2500))
+    );
+
+    const { getSiteConfig } = await import("../site-config-service");
+
+    const start = Date.now();
+    const config = await getSiteConfig();
+    const duration = Date.now() - start;
+
+    expect(duration).toBeLessThan(100);
+    expect(config.announcement.enabled).toBe(false);
+    // ensureRedisReady was called in background without blocking
+    expect(mockEnsureRedisReady).toHaveBeenCalled();
+    // redis.get was bypassed
+    expect(mockRedisGet).not.toHaveBeenCalled();
+  });
+
+  it("should parse and return stored config from Redis when ready", async () => {
+    mockIsRedisReady = true;
     const mockStored: Partial<SiteConfig> = {
       announcement: {
         id: "announce-1",

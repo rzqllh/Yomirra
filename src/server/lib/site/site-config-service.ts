@@ -1,4 +1,4 @@
-import { isRedisConfigured, redis, ensureRedisReady } from "@/server/lib/cache/redis";
+import { isRedisConfigured, isRedisReady, redis, ensureRedisReady } from "@/server/lib/cache/redis";
 import { logger } from "@/shared/logger";
 import { DEFAULT_SITE_CONFIG, type SiteConfig } from "@/shared/types/site-config";
 
@@ -8,8 +8,14 @@ let inMemoryConfig: SiteConfig = { ...DEFAULT_SITE_CONFIG };
 
 export async function getSiteConfig(): Promise<SiteConfig> {
   if (isRedisConfigured) {
+    if (!isRedisReady()) {
+      // Keep public config reads fail-open without blocking on the 2,500 ms readiness deadline.
+      // Trigger background readiness attempt without unhandled rejection.
+      void ensureRedisReady().catch(() => {});
+      return inMemoryConfig;
+    }
+
     try {
-      await ensureRedisReady();
       const raw = await redis.get(SITE_CONFIG_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
