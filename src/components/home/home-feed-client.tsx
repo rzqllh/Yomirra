@@ -39,8 +39,8 @@ export function HomeFeedClient({
   const [isMounted, setIsMounted] = React.useState(false);
   React.useEffect(() => setIsMounted(true), []);
 
+  const historyItemsMap = useHistoryStore((state) => state.items);
   const getContinueReading = useHistoryStore((state) => state.getContinueReading);
-  const rawHistoryItems = isMounted ? getContinueReading(50) : [];
 
   const { isSourceDisabled } = useSourcePreferencesStore();
   const hideNsfw = useSettingsStore((state) => state.hideNsfw);
@@ -58,6 +58,9 @@ export function HomeFeedClient({
   );
 
   const historyItems = React.useMemo(() => {
+    if (!isMounted || !historyItemsMap) return [];
+
+    const rawHistoryItems = getContinueReading(50);
     let result = rawHistoryItems.filter((item) => {
       const mangaKey = `${item.sourceId}::${item.mangaId}` as MangaKey;
       if (readingStatusByManga[mangaKey] === "completed") return false;
@@ -80,7 +83,9 @@ export function HomeFeedClient({
 
     return result.slice(0, 10);
   }, [
-    rawHistoryItems,
+    isMounted,
+    historyItemsMap,
+    getContinueReading,
     readingStatusByManga,
     isSourceDisabled,
     hideNsfw,

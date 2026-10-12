@@ -23,7 +23,7 @@ export function useNsfwPatcher() {
       let patchedCount = 0;
 
       // Patch Library
-      Object.entries(libraryStore.items).forEach(([id, item]) => {
+      Object.entries(libraryStore.items).forEach(([, item]) => {
         if (nsfwSourceIds.has(item.sourceId) && item.isNsfw !== true) {
           libraryStore.updateLibraryItem(item.sourceId, item.mangaId, { isNsfw: true });
           patchedCount++;
@@ -31,7 +31,7 @@ export function useNsfwPatcher() {
       });
 
       // Patch History
-      Object.entries(historyStore.items).forEach(([id, item]) => {
+      Object.entries(historyStore.items).forEach(([, item]) => {
         if (nsfwSourceIds.has(item.sourceId) && item.isNsfw !== true) {
           historyStore._setItemLocal({ ...item, isNsfw: true });
           patchedCount++;
@@ -48,5 +48,5 @@ export function useNsfwPatcher() {
     };
 
     runPatcher();
-  }, [nsfwSourceIds]);
+  }, [nsfwSourceIds, status]);
 }

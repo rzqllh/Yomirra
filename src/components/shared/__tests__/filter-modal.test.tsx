@@ -223,4 +223,48 @@ describe("UnifiedFilterDrawer — Section Consistency & NSFW Gating", () => {
     // Make sure old inconsistent "STATUS" alone is not the heading
     expect(screen.getByRole("heading", { name: "Status Rilis" })).toBeDefined();
   });
+
+  it("updates supported filter sections when activeSourceId transitions", async () => {
+    const { apiClient } = await import("@/shared/api-client");
+    vi.mocked(apiClient.getSources).mockResolvedValue([
+      {
+        id: "local-only",
+        name: "Local-only source",
+        isInstalled: true,
+        isEnabled: true,
+        capabilities: { search: true, filters: false },
+        isNsfw: false,
+        isDynamic: false,
+      } as any,
+      {
+        id: "source-with-filters",
+        name: "Source With Filters",
+        isInstalled: true,
+        isEnabled: true,
+        capabilities: { search: true, filters: true },
+        isNsfw: false,
+        isDynamic: false,
+      } as any,
+    ]);
+
+    const { rerender } = render(
+      <UnifiedFilterDrawer context="library" activeSourceId="local-only" />,
+      { wrapper }
+    );
+    fireEvent.click(screen.getByRole("button", { name: /Filter/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Status Membaca (Lokal)")).toBeDefined();
+    });
+    expect(screen.queryByText("Status Rilis")).toBeNull();
+
+    // Transition activeSourceId
+    rerender(
+      <UnifiedFilterDrawer context="library" activeSourceId="source-with-filters" />
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText("Status Rilis")).toBeDefined();
+    });
+  });
 });
