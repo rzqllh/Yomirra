@@ -1,72 +1,248 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
-import { DEFAULT_SITE_CONFIG, type SiteConfig } from "@/shared/types/site-config";
+import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import type { SiteConfig } from "@/shared/types/site-config";
 
 // Mock redis
 const mockRedisGet = vi.fn();
 const mockRedisSet = vi.fn();
+const mockEnsureRedisReady = vi.fn().mockResolvedValue(undefined);
+let mockIsRedisConfigured = true;
+let mockIsRedisReady = true;
 
 vi.mock("@/server/lib/cache/redis", () => ({
-  isRedisConfigured: true,
+  get isRedisConfigured() {
+    return mockIsRedisConfigured;
+  },
+  isRedisReady: () => mockIsRedisReady,
+  ensureRedisReady: () => mockEnsureRedisReady(),
   redis: {
-    get: (...args: any[]) => mockRedisGet(...args),
-    set: (...args: any[]) => mockRedisSet(...args),
+    get: (...args: unknown[]) => mockRedisGet(...args),
+    set: (...args: unknown[]) => mockRedisSet(...args),
   },
 }));
 
 describe("Site Config Service", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
+    mockIsRedisConfigured = true;
+    mockIsRedisReady = true;
+    vi.stubEnv("NODE_ENV", "test");
+    const { _resetSiteConfigForTesting } = await import("../site-config-service");
+    _resetSiteConfigForTesting();
   });
 
-  it("should return DEFAULT_SITE_CONFIG when Redis is empty or null", async () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("should return default config if redis has no value when ready", async () => {
     mockRedisGet.mockResolvedValueOnce(null);
+
     const { getSiteConfig } = await import("../site-config-service");
 
     const config = await getSiteConfig();
     expect(config.announcement.enabled).toBe(false);
     expect(config.features.semanticSearchEnabled).toBe(true);
+    expect(mockRedisGet).toHaveBeenCalledWith("yomirra:site:config");
   });
 
-  it("should parse and return stored config from Redis", async () => {
-    const stored: Partial<SiteConfig> = {
+  it("should immediately fallback without waiting when Redis is not ready (fail-open)", async () => {
+    mockIsRedisReady = false;
+    // ensureRedisReady hangs or takes the full deadline
+    mockEnsureRedisReady.mockImplementationOnce(
+      () => new Promise((resolve) => setTimeout(resolve, 2500))
+    );
+
+    const { getSiteConfig } = await import("../site-config-service");
+
+    const start = Date.now();
+    const config = await getSiteConfig();
+    const duration = Date.now() - start;
+
+    expect(duration).toBeLessThan(100);
+    expect(config.announcement.enabled).toBe(false);
+    // ensureRedisReady was called in background without blocking
+    expect(mockEnsureRedisReady).toHaveBeenCalled();
+    // redis.get was bypassed
+    expect(mockRedisGet).not.toHaveBeenCalled();
+  });
+
+  it("should parse and return stored config from Redis when ready", async () => {
+    mockIsRedisReady = true;
+    const mockStored: Partial<SiteConfig> = {
       announcement: {
+        id: "announce-1",
         enabled: true,
-        message: "Server maintenance at 02:00 WIB",
+        message: "Scheduled maintenance tonight",
         type: "warning",
-        id: "msg-123",
       },
-      updatedAt: "2026-09-30T10:00:00Z",
+      updatedAt: "2026-03-30T10:00:00Z",
     };
-    mockRedisGet.mockResolvedValueOnce(JSON.stringify(stored));
+    mockRedisGet.mockResolvedValueOnce(JSON.stringify(mockStored));
+
     const { getSiteConfig } = await import("../site-config-service");
 
     const config = await getSiteConfig();
     expect(config.announcement.enabled).toBe(true);
-    expect(config.announcement.message).toBe("Server maintenance at 02:00 WIB");
-    expect(config.announcement.type).toBe("warning");
-    // Merged with defaults
-    expect(config.features.semanticSearchEnabled).toBe(true);
+    expect(config.announcement.message).toBe("Scheduled maintenance tonight");
+    expect(config.features.semanticSearchEnabled).toBe(true); // default maintained
   });
 
-  it("should merge partial updates and persist to Redis", async () => {
+  it("should update and persist config to Redis when configured", async () => {
     mockRedisGet.mockResolvedValueOnce(null);
     mockRedisSet.mockResolvedValueOnce("OK");
 
     const { updateSiteConfig } = await import("../site-config-service");
+
     const updated = await updateSiteConfig({
       announcement: {
+        id: "announce-2",
         enabled: true,
         message: "New update available!",
         type: "info",
-        id: "msg-new",
       },
     });
 
     expect(updated.announcement.enabled).toBe(true);
     expect(updated.announcement.message).toBe("New update available!");
+    expect(mockEnsureRedisReady).toHaveBeenCalled();
     expect(mockRedisSet).toHaveBeenCalledWith(
       "yomirra:site:config",
       expect.stringContaining("New update available!")
     );
   });
+
+  it("should reject when Redis durable write fails and prevent false persistence success", async () => {
+    mockRedisGet.mockResolvedValueOnce(null);
+    mockRedisSet.mockRejectedValueOnce(new Error("Connection is closed."));
+
+    const { updateSiteConfig, getSiteConfig } = await import("../site-config-service");
+
+    await expect(
+      updateSiteConfig({
+        maintenanceMode: {
+          enabled: true,
+          message: "Down for emergency maintenance",
+        },
+      })
+    ).rejects.toThrow("Failed to persist site config to durable storage");
+
+    // Ensure fallback did not optimistically record maintenance mode
+    const current = await getSiteConfig();
+    expect(current.maintenanceMode.enabled).toBe(false);
+  });
+
+  it("should reject in production when Redis is not configured", async () => {
+    mockIsRedisConfigured = false;
+    vi.stubEnv("NODE_ENV", "production");
+
+    const { updateSiteConfig } = await import("../site-config-service");
+
+    await expect(
+      updateSiteConfig({
+        announcement: { id: "announce-prod", enabled: true, message: "Prod without Redis", type: "info" },
+      })
+    ).rejects.toThrow("Failed to persist site config: durable storage is required in production");
+  });
+
+  it("should permit in-memory fallback in test/development when Redis is not configured", async () => {
+    mockIsRedisConfigured = false;
+    vi.stubEnv("NODE_ENV", "test");
+
+    const { updateSiteConfig, getSiteConfig } = await import("../site-config-service");
+
+    const updated = await updateSiteConfig({
+      announcement: { id: "announce-dev", enabled: true, message: "Dev in-memory test", type: "info" },
+    });
+
+    expect(updated.announcement.enabled).toBe(true);
+    expect(updated.announcement.message).toBe("Dev in-memory test");
+    const current = await getSiteConfig();
+    expect(current.announcement.message).toBe("Dev in-memory test");
+  });
+
+  it("should wait for Redis readiness and load merge base from Redis during update on cold worker", async () => {
+    mockIsRedisReady = false;
+    const existingStored: Partial<SiteConfig> = {
+      maintenanceMode: {
+        enabled: true,
+        message: "Scheduled maintenance",
+      },
+    };
+    mockEnsureRedisReady.mockImplementationOnce(async () => {
+      mockIsRedisReady = true;
+    });
+    mockRedisGet.mockResolvedValueOnce(JSON.stringify(existingStored));
+    mockRedisSet.mockResolvedValueOnce("OK");
+
+    const { updateSiteConfig } = await import("../site-config-service");
+
+    const updated = await updateSiteConfig({
+      announcement: {
+        id: "a-1",
+        enabled: true,
+        message: "Important notice",
+        type: "info",
+      },
+    });
+
+    expect(mockEnsureRedisReady).toHaveBeenCalled();
+    expect(mockRedisGet).toHaveBeenCalledWith("yomirra:site:config");
+    expect(updated.maintenanceMode.enabled).toBe(true);
+    expect(updated.maintenanceMode.message).toBe("Scheduled maintenance");
+    expect(updated.announcement.enabled).toBe(true);
+    expect(mockRedisSet).toHaveBeenCalledWith(
+      "yomirra:site:config",
+      expect.stringContaining('"maintenanceMode":{"enabled":true,"message":"Scheduled maintenance"}')
+    );
+  });
+
+  it("should reject update and avoid writing corrupted/stale state if Redis read fails during admin mutation", async () => {
+    mockIsRedisReady = true;
+    mockRedisGet.mockRejectedValueOnce(new Error("Transient Redis read timeout"));
+    mockRedisSet.mockResolvedValueOnce("OK");
+
+    const { updateSiteConfig, getSiteConfig } = await import("../site-config-service");
+
+    await expect(
+      updateSiteConfig({
+        announcement: {
+          id: "a-fail",
+          enabled: true,
+          message: "Should not be persisted over failed read",
+          type: "info",
+        },
+      })
+    ).rejects.toThrow("Failed to persist site config to durable storage");
+
+    // Critical assertion: Redis SET must NOT have been called with stale merge base
+    expect(mockRedisSet).not.toHaveBeenCalled();
+
+    // inMemoryConfig must remain uncorrupted/unmutated
+    const current = await getSiteConfig();
+    expect(current.announcement.enabled).toBe(false);
+  });
+
+  it("should clear the fallback cache when the Redis key is absent/deleted", async () => {
+    mockIsRedisReady = true;
+    const mockStored: Partial<SiteConfig> = {
+      announcement: {
+        id: "active-announcement",
+        enabled: true,
+        message: "Active before deletion",
+        type: "info",
+      },
+    };
+
+    // First read populates inMemoryConfig from Redis
+    mockRedisGet.mockResolvedValueOnce(JSON.stringify(mockStored));
+    const { getSiteConfig } = await import("../site-config-service");
+    const initial = await getSiteConfig();
+    expect(initial.announcement.enabled).toBe(true);
+
+    // Second read simulates key deletion (admin deleted key in Redis)
+    mockRedisGet.mockResolvedValueOnce(null);
+    const afterDeletion = await getSiteConfig();
+    expect(afterDeletion.announcement.enabled).toBe(false);
+  });
 });
+
