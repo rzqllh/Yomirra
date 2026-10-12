@@ -37,23 +37,27 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
+let mockHistoryState = {
+  items: {} as Record<string, any>,
+  getContinueReading: () => [
+    {
+      sourceId: "source-a",
+      mangaId: "solo-leveling",
+      mangaTitle: "Solo Leveling",
+      chapterId: "100",
+      chapterTitle: "Chapter 100",
+      coverUrl: "https://example.com/cover.jpg",
+      progressPercent: 50,
+    },
+  ],
+  removeMangaHistory: vi.fn(),
+};
+
 vi.mock("@/shared/store/history-store", () => ({
   useHistoryStore: (selector: any) =>
-    selector({
-      items: {},
-      getContinueReading: () => [
-        {
-          sourceId: "source-a",
-          mangaId: "solo-leveling",
-          mangaTitle: "Solo Leveling",
-          chapterId: "100",
-          chapterTitle: "Chapter 100",
-          coverUrl: "https://example.com/cover.jpg",
-          progressPercent: 50,
-        },
-      ],
-      removeMangaHistory: vi.fn(),
-    }),
+    typeof selector === "function"
+      ? selector(mockHistoryState)
+      : mockHistoryState,
 }));
 
 vi.mock("@/shared/store/source-preferences-store", () => ({
@@ -621,6 +625,50 @@ describe("Yomirra Editorial Home Components", () => {
       expect(
         screen.getByRole("button", { name: /opsi untuk solo leveling/i })
       ).toBeTruthy();
+    });
+
+    it("recomputes history items when history store items update, but stays stable without changes", () => {
+      const { rerender } = render(
+        <HomeFeedClient
+          unifiedPopular={samplePopular}
+          unifiedLatest={sampleLatest}
+        />
+      );
+
+      expect(screen.getByText("Solo Leveling")).toBeTruthy();
+
+      // Update mock history state to new items and new reading list
+      mockHistoryState = {
+        ...mockHistoryState,
+        items: {
+          "source-b::tower-of-god::1": {
+            sourceId: "source-b",
+            mangaId: "tower-of-god",
+            chapterId: "1",
+            readAt: 2000,
+          },
+        },
+        getContinueReading: () => [
+          {
+            sourceId: "source-b",
+            mangaId: "tower-of-god",
+            mangaTitle: "Tower of God",
+            chapterId: "1",
+            chapterTitle: "Chapter 1",
+            coverUrl: "https://example.com/tog.jpg",
+            progressPercent: 20,
+          },
+        ],
+      };
+
+      rerender(
+        <HomeFeedClient
+          unifiedPopular={samplePopular}
+          unifiedLatest={sampleLatest}
+        />
+      );
+
+      expect(screen.getByText("Tower of God")).toBeTruthy();
     });
   });
 

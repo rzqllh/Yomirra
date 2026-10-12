@@ -39,6 +39,7 @@ export function HomeFeedClient({
   const [isMounted, setIsMounted] = React.useState(false);
   React.useEffect(() => setIsMounted(true), []);
 
+  const historyItemsMap = useHistoryStore((state) => state.items);
   const getContinueReading = useHistoryStore((state) => state.getContinueReading);
 
   const { isSourceDisabled } = useSourcePreferencesStore();
@@ -83,6 +84,7 @@ export function HomeFeedClient({
     return result.slice(0, 10);
   }, [
     isMounted,
+    historyItemsMap,
     getContinueReading,
     readingStatusByManga,
     isSourceDisabled,
