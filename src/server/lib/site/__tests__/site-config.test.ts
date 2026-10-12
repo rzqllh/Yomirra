@@ -221,5 +221,28 @@ describe("Site Config Service", () => {
     const current = await getSiteConfig();
     expect(current.announcement.enabled).toBe(false);
   });
+
+  it("should clear the fallback cache when the Redis key is absent/deleted", async () => {
+    mockIsRedisReady = true;
+    const mockStored: Partial<SiteConfig> = {
+      announcement: {
+        id: "active-announcement",
+        enabled: true,
+        message: "Active before deletion",
+        type: "info",
+      },
+    };
+
+    // First read populates inMemoryConfig from Redis
+    mockRedisGet.mockResolvedValueOnce(JSON.stringify(mockStored));
+    const { getSiteConfig } = await import("../site-config-service");
+    const initial = await getSiteConfig();
+    expect(initial.announcement.enabled).toBe(true);
+
+    // Second read simulates key deletion (admin deleted key in Redis)
+    mockRedisGet.mockResolvedValueOnce(null);
+    const afterDeletion = await getSiteConfig();
+    expect(afterDeletion.announcement.enabled).toBe(false);
+  });
 });
 

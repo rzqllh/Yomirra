@@ -42,7 +42,8 @@ export async function getDurableSiteConfig(): Promise<SiteConfig> {
       inMemoryConfig = merged;
       return merged;
     }
-    return { ...DEFAULT_SITE_CONFIG };
+    inMemoryConfig = { ...DEFAULT_SITE_CONFIG };
+    return inMemoryConfig;
   }
   return inMemoryConfig;
 }
@@ -63,6 +64,8 @@ export async function getSiteConfig(): Promise<SiteConfig> {
         inMemoryConfig = merged;
         return merged;
       }
+      inMemoryConfig = { ...DEFAULT_SITE_CONFIG };
+      return inMemoryConfig;
     } catch (err) {
       logger.warn("Failed to get site config from Redis, using fallback", { err });
     }
