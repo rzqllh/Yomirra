@@ -6,6 +6,47 @@ const SITE_CONFIG_KEY = "yomirra:site:config";
 
 let inMemoryConfig: SiteConfig = { ...DEFAULT_SITE_CONFIG };
 
+export function _resetSiteConfigForTesting(): void {
+  inMemoryConfig = { ...DEFAULT_SITE_CONFIG };
+}
+function parseStoredSiteConfig(raw: string): SiteConfig {
+  const parsed = JSON.parse(raw);
+  return {
+    ...DEFAULT_SITE_CONFIG,
+    ...parsed,
+    announcement: {
+      ...DEFAULT_SITE_CONFIG.announcement,
+      ...(parsed.announcement || {}),
+    },
+    maintenanceMode: {
+      ...DEFAULT_SITE_CONFIG.maintenanceMode,
+      ...(parsed.maintenanceMode || {}),
+    },
+    spotlight: {
+      ...DEFAULT_SITE_CONFIG.spotlight,
+      ...(parsed.spotlight || {}),
+    },
+    features: {
+      ...DEFAULT_SITE_CONFIG.features,
+      ...(parsed.features || {}),
+    },
+  };
+}
+
+export async function getDurableSiteConfig(): Promise<SiteConfig> {
+  if (isRedisConfigured) {
+    await ensureRedisReady();
+    const raw = await redis.get(SITE_CONFIG_KEY);
+    if (raw) {
+      const merged = parseStoredSiteConfig(raw);
+      inMemoryConfig = merged;
+      return merged;
+    }
+    return { ...DEFAULT_SITE_CONFIG };
+  }
+  return inMemoryConfig;
+}
+
 export async function getSiteConfig(): Promise<SiteConfig> {
   if (isRedisConfigured) {
     if (!isRedisReady()) {
@@ -18,28 +59,7 @@ export async function getSiteConfig(): Promise<SiteConfig> {
     try {
       const raw = await redis.get(SITE_CONFIG_KEY);
       if (raw) {
-        const parsed = JSON.parse(raw);
-        // Deep merge with defaults to protect against missing keys
-        const merged: SiteConfig = {
-          ...DEFAULT_SITE_CONFIG,
-          ...parsed,
-          announcement: {
-            ...DEFAULT_SITE_CONFIG.announcement,
-            ...(parsed.announcement || {}),
-          },
-          maintenanceMode: {
-            ...DEFAULT_SITE_CONFIG.maintenanceMode,
-            ...(parsed.maintenanceMode || {}),
-          },
-          spotlight: {
-            ...DEFAULT_SITE_CONFIG.spotlight,
-            ...(parsed.spotlight || {}),
-          },
-          features: {
-            ...DEFAULT_SITE_CONFIG.features,
-            ...(parsed.features || {}),
-          },
-        };
+        const merged = parseStoredSiteConfig(raw);
         inMemoryConfig = merged;
         return merged;
       }
@@ -59,16 +79,14 @@ export async function updateSiteConfig(partial: Partial<SiteConfig>): Promise<Si
     throw new Error("Failed to persist site config: durable storage is required in production");
   }
 
-  if (isRedisConfigured) {
-    try {
-      await ensureRedisReady();
-    } catch (err) {
-      logger.error("Failed to connect to Redis for site config update", { err });
-      throw new Error("Failed to persist site config to durable storage", { cause: err });
-    }
+  let current: SiteConfig;
+  try {
+    current = await getDurableSiteConfig();
+  } catch (err) {
+    logger.error("Failed to read durable site config from Redis before update", { err });
+    throw new Error("Failed to persist site config to durable storage", { cause: err });
   }
 
-  const current = await getSiteConfig();
   const next: SiteConfig = {
     ...current,
     ...partial,
@@ -102,4 +120,5 @@ export async function updateSiteConfig(partial: Partial<SiteConfig>): Promise<Si
 
   return next;
 }
+
 

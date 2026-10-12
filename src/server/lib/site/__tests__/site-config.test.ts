@@ -21,11 +21,13 @@ vi.mock("@/server/lib/cache/redis", () => ({
 }));
 
 describe("Site Config Service", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
     mockIsRedisConfigured = true;
     mockIsRedisReady = true;
     vi.stubEnv("NODE_ENV", "test");
+    const { _resetSiteConfigForTesting } = await import("../site-config-service");
+    _resetSiteConfigForTesting();
   });
 
   afterEach(() => {
@@ -193,4 +195,31 @@ describe("Site Config Service", () => {
       expect.stringContaining('"maintenanceMode":{"enabled":true,"message":"Scheduled maintenance"}')
     );
   });
+
+  it("should reject update and avoid writing corrupted/stale state if Redis read fails during admin mutation", async () => {
+    mockIsRedisReady = true;
+    mockRedisGet.mockRejectedValueOnce(new Error("Transient Redis read timeout"));
+    mockRedisSet.mockResolvedValueOnce("OK");
+
+    const { updateSiteConfig, getSiteConfig } = await import("../site-config-service");
+
+    await expect(
+      updateSiteConfig({
+        announcement: {
+          id: "a-fail",
+          enabled: true,
+          message: "Should not be persisted over failed read",
+          type: "info",
+        },
+      })
+    ).rejects.toThrow("Failed to persist site config to durable storage");
+
+    // Critical assertion: Redis SET must NOT have been called with stale merge base
+    expect(mockRedisSet).not.toHaveBeenCalled();
+
+    // inMemoryConfig must remain uncorrupted/unmutated
+    const current = await getSiteConfig();
+    expect(current.announcement.enabled).toBe(false);
+  });
 });
+
