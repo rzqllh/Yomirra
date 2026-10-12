@@ -1,4 +1,4 @@
-import { isRedisConfigured, redis } from "@/server/lib/cache/redis";
+import { isRedisConfigured, redis, ensureRedisReady } from "@/server/lib/cache/redis";
 import { logger } from "@/shared/logger";
 import { DEFAULT_SITE_CONFIG, type SiteConfig } from "@/shared/types/site-config";
 
@@ -9,6 +9,7 @@ let inMemoryConfig: SiteConfig = { ...DEFAULT_SITE_CONFIG };
 export async function getSiteConfig(): Promise<SiteConfig> {
   if (isRedisConfigured) {
     try {
+      await ensureRedisReady();
       const raw = await redis.get(SITE_CONFIG_KEY);
       if (raw) {
         const parsed = JSON.parse(raw);
@@ -43,6 +44,13 @@ export async function getSiteConfig(): Promise<SiteConfig> {
 }
 
 export async function updateSiteConfig(partial: Partial<SiteConfig>): Promise<SiteConfig> {
+  const isProduction = process.env.NODE_ENV === "production";
+
+  if (isProduction && !isRedisConfigured) {
+    logger.error("Admin site config mutation rejected: Redis durable storage is required in production");
+    throw new Error("Failed to persist site config: durable storage is required in production");
+  }
+
   const current = await getSiteConfig();
   const next: SiteConfig = {
     ...current,
@@ -62,14 +70,18 @@ export async function updateSiteConfig(partial: Partial<SiteConfig>): Promise<Si
     updatedAt: new Date().toISOString(),
   };
 
-  inMemoryConfig = next;
-
   if (isRedisConfigured) {
     try {
+      await ensureRedisReady();
       await redis.set(SITE_CONFIG_KEY, JSON.stringify(next));
+      inMemoryConfig = next;
     } catch (err) {
       logger.error("Failed to persist site config to Redis", { err });
+      throw new Error("Failed to persist site config to durable storage", { cause: err });
     }
+  } else {
+    // Explicitly scoped development/test memory fallback
+    inMemoryConfig = next;
   }
 
   return next;
