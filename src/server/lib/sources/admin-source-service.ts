@@ -141,10 +141,6 @@ enc = string.gsub(enc, '"mirrors":%s*{}', '"mirrors":[]')
 
 redis.call('set', KEYS[1], enc)
 
-if ARGV[4] and ARGV[4] ~= '' and ARGV[5] and ARGV[5] ~= '' then
-  redis.call('set', ARGV[4], ARGV[5], 'EX', 2592000)
-end
-
 local existing_enc = cjson.encode(existing)
 existing_enc = string.gsub(existing_enc, '"mirrors":%s*{}', '"mirrors":[]')
 
@@ -189,10 +185,16 @@ export async function saveCoreSourceOverride(
         CORE_OVERRIDES_KEY,
         normId,
         JSON.stringify(override),
-        updatedAt,
-        domainKey,
-        domainVal
+        updatedAt
       );
+
+      if (domainKey && domainVal) {
+        try {
+          await redis.set(domainKey, domainVal, "EX", 2592000);
+        } catch (domainErr) {
+          logger.warn("Failed to update domain cache in Redis after saving core override", { normId, err: domainErr });
+        }
+      }
 
       const parsedRes: unknown = typeof res === "string" ? JSON.parse(res) : res;
       let fullMap: Record<string, CoreSourceOverride> = {};
