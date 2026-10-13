@@ -136,24 +136,19 @@ existing['updatedAt'] = ARGV[3]
 
 current[ARGV[1]] = existing
 
-local empty_arr = cjson.empty_array
-for _, src in pairs(current) do
-  if type(src) == 'table' and src.mirrors and type(src.mirrors) == 'table' and #src.mirrors == 0 then
-    src.mirrors = empty_arr
-  end
-end
+local enc = cjson.encode(current)
+enc = string.gsub(enc, '"mirrors":%s*{}', '"mirrors":[]')
 
-redis.call('set', KEYS[1], cjson.encode(current))
+redis.call('set', KEYS[1], enc)
 
 if ARGV[4] and ARGV[4] ~= '' and ARGV[5] and ARGV[5] ~= '' then
   redis.call('set', ARGV[4], ARGV[5], 'EX', 2592000)
 end
 
-local payload = {
-  current = current,
-  updated = existing
-}
-return cjson.encode(payload)
+local existing_enc = cjson.encode(existing)
+existing_enc = string.gsub(existing_enc, '"mirrors":%s*{}', '"mirrors":[]')
+
+return '{"current":' .. enc .. ',"updated":' .. existing_enc .. '}'
 `;
 
 /**
