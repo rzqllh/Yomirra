@@ -1,17 +1,41 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
 // Mock redis
-const mockKeys = vi.fn();
+const mockScan = vi.fn();
 const mockDel = vi.fn();
 const mockGet = vi.fn();
 const mockSet = vi.fn();
+const mockWatch = vi.fn().mockResolvedValue("OK");
+const mockUnwatch = vi.fn().mockResolvedValue("OK");
+
+const mockMulti = {
+  set: vi.fn().mockReturnThis(),
+  exec: vi.fn().mockResolvedValue([[null, "OK"]]),
+};
+
+const mockEval = vi.fn(async (...args: any[]) => {
+  const [, , , sourceId, overrideJson, updatedAt] = args;
+  const parsed = JSON.parse(overrideJson);
+  return JSON.stringify({
+    id: sourceId,
+    ...parsed,
+    updatedAt,
+  });
+});
+
 vi.mock("@/server/lib/cache/redis", () => ({
   isRedisConfigured: true,
+  isRedisReady: vi.fn().mockReturnValue(true),
+  ensureRedisReady: vi.fn().mockResolvedValue(undefined),
   redis: {
-    keys: (...args: any[]) => mockKeys(...args),
+    scan: (...args: any[]) => mockScan(...args),
     del: (...args: any[]) => mockDel(...args),
     get: (...args: any[]) => mockGet(...args),
     set: (...args: any[]) => mockSet(...args),
+    watch: (...args: any[]) => mockWatch(...args),
+    unwatch: (...args: any[]) => mockUnwatch(...args),
+    multi: vi.fn().mockReturnValue(mockMulti),
+    eval: (...args: any[]) => mockEval(...args),
   },
 }));
 
@@ -52,33 +76,30 @@ describe("Admin Source Service", () => {
     expect(shinigami?.consecutiveFailures).toBe(0);
   });
 
-  it("should flush specific source cache keys in Redis", async () => {
-    mockKeys.mockResolvedValueOnce(["source:shinigami:popular:1", "source:shinigami:latest:1"]);
+  it("should flush specific source cache keys in Redis using SCAN", async () => {
+    mockScan.mockResolvedValueOnce(["0", ["source:shinigami:popular:1", "source:shinigami:latest:1"]]);
     mockDel.mockResolvedValueOnce(2);
 
     const { flushSourceCache } = await import("../admin-source-service");
     const result = await flushSourceCache("shinigami");
 
-    expect(mockKeys).toHaveBeenCalledWith("source:shinigami:*");
+    expect(mockScan).toHaveBeenCalled();
     expect(mockDel).toHaveBeenCalledWith("source:shinigami:popular:1", "source:shinigami:latest:1");
     expect(result.deletedCount).toBe(2);
   });
 
-  it("should flush all source cache keys if no sourceId provided", async () => {
-    mockKeys.mockResolvedValueOnce(["source:shinigami:1", "source:komikindo:1"]);
+  it("should flush all source cache keys if no sourceId provided using SCAN", async () => {
+    mockScan.mockResolvedValueOnce(["0", ["source:shinigami:1", "source:komikindo:1"]]);
     mockDel.mockResolvedValueOnce(2);
 
     const { flushSourceCache } = await import("../admin-source-service");
     const result = await flushSourceCache();
 
-    expect(mockKeys).toHaveBeenCalledWith("source:*");
+    expect(mockScan).toHaveBeenCalled();
     expect(result.deletedCount).toBe(2);
   });
 
-  it("should save and apply dynamic core source override", async () => {
-    mockGet.mockResolvedValueOnce(null);
-    mockSet.mockResolvedValue("OK");
-
+  it("should save and apply dynamic core source override using atomic Lua script", async () => {
     const { saveCoreSourceOverride } = await import("../admin-source-service");
     const saved = await saveCoreSourceOverride("shinigami", {
       activeDomain: "https://shinigami-new.id",
@@ -88,6 +109,6 @@ describe("Admin Source Service", () => {
     expect(saved.id).toBe("shinigami");
     expect(saved.activeDomain).toBe("https://shinigami-new.id");
     expect(saved.isEnabled).toBe(false);
-    expect(mockSet).toHaveBeenCalled();
+    expect(mockEval).toHaveBeenCalled();
   });
 });

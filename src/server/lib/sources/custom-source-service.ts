@@ -1,9 +1,9 @@
 import * as cheerio from "cheerio";
-import { isRedisConfigured, redis } from "@/server/lib/cache/redis";
+import { isRedisConfigured, isRedisReady, redis, ensureRedisReady } from "@/server/lib/cache/redis";
 import { logger } from "@/shared/logger";
 import { safeFetch } from "@/server/lib/security/outbound-policy";
 import { CustomSourceSchema, type CustomSourceDefinition } from "@/shared/sources/custom-source-schema";
-import type { SourceMetadata, MangaItem } from "@/shared/sources/source-types";
+import type { SourceMetadata } from "@/shared/sources/source-types";
 import type { ParserTestResult } from "@/shared/types/admin";
 
 const CUSTOM_SOURCE_PREFIX = "yomirra:sources:custom:";
@@ -11,20 +11,115 @@ const CUSTOM_SOURCE_INDEX = "yomirra:sources:custom:index";
 
 const inMemoryCustomSources = new Map<string, CustomSourceDefinition>();
 
+export function _resetCustomSourcesForTesting(): void {
+  inMemoryCustomSources.clear();
+}
+
+const SAVE_CUSTOM_SOURCE_LUA = `
+local dataKey = KEYS[1]
+local idxKey = KEYS[2]
+local id = ARGV[1]
+local data = ARGV[2]
+
+local t = redis.call('TYPE', idxKey)
+if type(t) == 'table' then t = t.ok end
+if t ~= 'set' and t ~= 'none' then
+  return redis.error_reply('WRONGTYPE Operation against a key holding the wrong kind of value')
+end
+
+local prevData = redis.call('GET', dataKey)
+redis.call('SET', dataKey, data)
+local ok, err = pcall(redis.call, 'SADD', idxKey, id)
+if not ok then
+  if prevData then
+    redis.call('SET', dataKey, prevData)
+  else
+    redis.call('DEL', dataKey)
+  end
+  return redis.error_reply(tostring(err))
+end
+return 'OK'
+`;
+
+const DELETE_CUSTOM_SOURCE_LUA = `
+local dataKey = KEYS[1]
+local idxKey = KEYS[2]
+local id = ARGV[1]
+
+local t = redis.call('TYPE', idxKey)
+if type(t) == 'table' then t = t.ok end
+if t ~= 'set' and t ~= 'none' then
+  return redis.error_reply('WRONGTYPE Operation against a key holding the wrong kind of value')
+end
+
+redis.call('SREM', idxKey, id)
+return redis.call('DEL', dataKey)
+`;
+
+/**
+ * Cursor-based non-blocking SCAN helper to scan matching keys through full cursor completion.
+ */
+export async function scanRedisKeys(pattern: string, batchSize = 100): Promise<string[]> {
+  let cursor = "0";
+  const matchedKeys: string[] = [];
+
+  do {
+    const res = await redis.scan(cursor, "MATCH", pattern, "COUNT", batchSize);
+    if (!res || !Array.isArray(res)) break;
+    const [nextCursor, keys] = res;
+    cursor = nextCursor;
+    if (keys && Array.isArray(keys) && keys.length > 0) {
+      matchedKeys.push(...keys);
+    }
+  } while (cursor !== "0");
+
+  return matchedKeys;
+}
+
+/**
+ * Scans all matching keys through full cursor completion and deletes them in bounded batches.
+ * Avoids blocking Redis, unbounded memory consumption, and leaving partial keys behind.
+ */
+export async function deleteMatchedRedisKeys(pattern: string, batchSize = 100): Promise<number> {
+  let cursor = "0";
+  let totalDeleted = 0;
+
+  do {
+    const res = await redis.scan(cursor, "MATCH", pattern, "COUNT", batchSize);
+    if (!res || !Array.isArray(res)) break;
+    const [nextCursor, keys] = res;
+    cursor = nextCursor;
+    if (keys && Array.isArray(keys) && keys.length > 0) {
+      await redis.del(...keys);
+      totalDeleted += keys.length;
+    }
+  } while (cursor !== "0");
+
+  return totalDeleted;
+}
+
 /**
  * Mengambil semua custom dynamic source dari Redis (dengan fallback ke memory).
  */
 export async function getCustomSources(): Promise<CustomSourceDefinition[]> {
   if (isRedisConfigured) {
+    if (!isRedisReady()) {
+      void ensureRedisReady().catch(() => {});
+      return Array.from(inMemoryCustomSources.values());
+    }
+
     try {
       const ids = await redis.smembers(CUSTOM_SOURCE_INDEX);
       if (ids.length === 0) {
-        return Array.from(inMemoryCustomSources.values());
+        // Authoritative clean empty response: evict in-memory cache to prevent serving deleted sources
+        inMemoryCustomSources.clear();
+        return [];
       }
 
       const keys = ids.map((id) => `${CUSTOM_SOURCE_PREFIX}${id}`);
       const rawItems = await redis.mget(...keys);
 
+      const activeIds = new Set<string>();
       const list: CustomSourceDefinition[] = [];
       for (const raw of rawItems) {
         if (!raw) continue;
@@ -32,10 +127,20 @@ export async function getCustomSources(): Promise<CustomSourceDefinition[]> {
           const parsed = JSON.parse(raw);
           const validated = CustomSourceSchema.parse(parsed);
           list.push(validated);
+          activeIds.add(validated.id);
+          inMemoryCustomSources.set(validated.id, validated);
         } catch {
           // ignore corrupted record
         }
       }
+
+      // Evict any in-memory sources that were deleted in Redis
+      for (const memId of inMemoryCustomSources.keys()) {
+        if (!activeIds.has(memId)) {
+          inMemoryCustomSources.delete(memId);
+        }
+      }
+
       return list;
     } catch (err) {
       logger.warn("Failed to load custom sources from Redis, fallback to in-memory", { err });
@@ -52,22 +157,39 @@ export async function getCustomSources(): Promise<CustomSourceDefinition[]> {
 export async function getCustomSourceById(id: string): Promise<CustomSourceDefinition | null> {
   const normalizedId = id.toLowerCase().trim();
   if (isRedisConfigured) {
+    if (!isRedisReady()) {
+      void ensureRedisReady().catch(() => {});
+      return inMemoryCustomSources.get(normalizedId) || null;
+    }
+
     try {
       const raw = await redis.get(`${CUSTOM_SOURCE_PREFIX}${normalizedId}`);
       if (raw) {
-        return CustomSourceSchema.parse(JSON.parse(raw));
+        const validated = CustomSourceSchema.parse(JSON.parse(raw));
+        inMemoryCustomSources.set(validated.id, validated);
+        return validated;
       }
+      // Authoritative miss from Redis: evict cached definition so deleted sources are not resurrected
+      inMemoryCustomSources.delete(normalizedId);
+      return null;
     } catch {
-      // fallback
+      // Redis outage / error fallback
+      return inMemoryCustomSources.get(normalizedId) || null;
     }
   }
   return inMemoryCustomSources.get(normalizedId) || null;
 }
 
 /**
- * Menyimpan atau memperbarui custom source di Redis.
+ * Menyimpan atau memperbarui custom source di Redis dengan fail-closed durability dan eksekusi atomik.
  */
 export async function saveCustomSource(source: CustomSourceDefinition): Promise<CustomSourceDefinition> {
+  const isProduction = process.env.NODE_ENV === "production";
+  if (isProduction && !isRedisConfigured) {
+    logger.error("Admin custom source mutation rejected: Redis durable storage is required in production");
+    throw new Error("Failed to persist custom source: durable storage is required in production");
+  }
+
   const validated = CustomSourceSchema.parse({
     ...source,
     id: source.id.toLowerCase().trim(),
@@ -75,43 +197,81 @@ export async function saveCustomSource(source: CustomSourceDefinition): Promise<
     createdAt: source.createdAt || new Date().toISOString(),
   });
 
-  inMemoryCustomSources.set(validated.id, validated);
-
   if (isRedisConfigured) {
+    await ensureRedisReady();
+
     try {
-      await redis.set(`${CUSTOM_SOURCE_PREFIX}${validated.id}`, JSON.stringify(validated));
-      await redis.sadd(CUSTOM_SOURCE_INDEX, validated.id);
+      await redis.eval(
+        SAVE_CUSTOM_SOURCE_LUA,
+        2,
+        `${CUSTOM_SOURCE_PREFIX}${validated.id}`,
+        CUSTOM_SOURCE_INDEX,
+        validated.id,
+        JSON.stringify(validated)
+      );
+
+      // Update in-memory state ONLY after successful Redis persistence
+      inMemoryCustomSources.set(validated.id, validated);
     } catch (err) {
+      // Lua script guarantees atomic isolation (rolls back dataKey if SADD fails, and leaves dataKey untouched if TYPE precheck fails).
+      // We do not delete dataKey or evict valid memory state here so pre-existing sources are not wiped out on failed updates.
       logger.error("Failed to persist custom source to Redis", { id: validated.id, err });
+      throw new Error("Failed to persist custom source to durable storage", { cause: err });
     }
+  } else {
+    // Explicitly scoped development/test memory fallback
+    inMemoryCustomSources.set(validated.id, validated);
   }
 
   return validated;
 }
 
 /**
- * Menghapus custom source dari Redis.
+ * Menghapus custom source dari Redis secara atomik dengan fail-closed durability.
  */
 export async function deleteCustomSource(id: string): Promise<boolean> {
+  const isProduction = process.env.NODE_ENV === "production";
+  if (isProduction && !isRedisConfigured) {
+    logger.error("Admin custom source deletion rejected: Redis durable storage is required in production");
+    throw new Error("Failed to delete custom source: durable storage is required in production");
+  }
+
   const normalizedId = id.toLowerCase().trim();
-  inMemoryCustomSources.delete(normalizedId);
 
   if (isRedisConfigured) {
+    await ensureRedisReady();
+
     try {
-      await redis.del(`${CUSTOM_SOURCE_PREFIX}${normalizedId}`);
-      await redis.srem(CUSTOM_SOURCE_INDEX, normalizedId);
-      // Flush cache jika ada
-      const cacheKeys = await redis.keys(`yomirra:*:${normalizedId}:*`);
-      if (cacheKeys.length > 0) {
-        await redis.del(...cacheKeys);
+      await redis.eval(
+        DELETE_CUSTOM_SOURCE_LUA,
+        2,
+        `${CUSTOM_SOURCE_PREFIX}${normalizedId}`,
+        CUSTOM_SOURCE_INDEX,
+        normalizedId
+      );
+
+      // Flush associated cache through full cursor completion without unbounded KEYS
+      try {
+        await deleteMatchedRedisKeys(`yomirra:*:${normalizedId}:*`);
+      } catch (cacheErr) {
+        logger.warn("Non-fatal: failed to flush associated cache keys on custom source deletion", {
+          id: normalizedId,
+          cacheErr,
+        });
       }
+
+      // Evict from in-memory state ONLY after successful Redis persistence
+      inMemoryCustomSources.delete(normalizedId);
       return true;
     } catch (err) {
+      // State reconciliation: ensure in-memory cache does not resurrect partially deleted record
+      inMemoryCustomSources.delete(normalizedId);
       logger.error("Failed to delete custom source from Redis", { id: normalizedId, err });
-      return false;
+      throw new Error("Failed to delete custom source from durable storage", { cause: err });
     }
   }
 
+  inMemoryCustomSources.delete(normalizedId);
   return true;
 }
 
