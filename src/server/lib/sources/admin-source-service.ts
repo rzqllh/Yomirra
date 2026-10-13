@@ -1,7 +1,8 @@
 import { getAllSourceMetadata } from "@/shared/sources/source-registry";
 import { sourceHealthStore } from "@/server/lib/sources/health/health-store";
 import * as domainResolverModule from "@/server/lib/sources/domain-resolver";
-import { isRedisConfigured, redis } from "@/server/lib/cache/redis";
+import { isRedisConfigured, isRedisReady, redis, ensureRedisReady } from "@/server/lib/cache/redis";
+import { scanRedisKeys } from "@/server/lib/sources/custom-source-service";
 import { logger } from "@/shared/logger";
 import { sourceManager } from "@/server/lib/sources/source-manager";
 import type { SourceHealthMatrixItem } from "@/shared/types/admin";
@@ -26,54 +27,155 @@ export interface CoreSourceOverride {
 
 const CORE_OVERRIDES_KEY = "yomirra:sources:core:overrides";
 
-export async function getCoreSourceOverrides(): Promise<Record<string, CoreSourceOverride>> {
-  if (!isRedisConfigured) return {};
+let inMemoryCoreOverrides: Record<string, CoreSourceOverride> = {};
+
+export function _resetAdminSourceServiceForTesting(): void {
+  inMemoryCoreOverrides = {};
+}
+
+/**
+ * Membaca core source overrides secara durabel dari Redis untuk mutasi admin (fail-closed).
+ */
+export async function getDurableCoreSourceOverrides(): Promise<Record<string, CoreSourceOverride>> {
+  if (!isRedisConfigured) {
+    const isProduction = process.env.NODE_ENV === "production";
+    if (isProduction) {
+      throw new Error("Failed to read core source overrides: durable storage is required in production");
+    }
+    return inMemoryCoreOverrides;
+  }
+
+  await ensureRedisReady();
+  const raw = await redis.get(CORE_OVERRIDES_KEY);
+  if (!raw) return {};
   try {
-    const raw = await redis.get(CORE_OVERRIDES_KEY);
-    if (!raw) return {};
-    return JSON.parse(raw);
-  } catch {
-    return {};
+    const parsed = JSON.parse(raw);
+    inMemoryCoreOverrides = parsed;
+    return parsed;
+  } catch (err) {
+    logger.error("Corrupted core source overrides in Redis", { err });
+    throw new Error("Failed to parse core source overrides from durable storage", { cause: err });
   }
 }
 
+/**
+ * Mengambil core source overrides untuk consumer publik/pembaca (fail-open graceful fallback).
+ */
+export async function getCoreSourceOverrides(): Promise<Record<string, CoreSourceOverride>> {
+  if (!isRedisConfigured) return inMemoryCoreOverrides;
+
+  if (!isRedisReady()) {
+    void ensureRedisReady().catch(() => {});
+    return inMemoryCoreOverrides;
+  }
+
+  try {
+    const raw = await redis.get(CORE_OVERRIDES_KEY);
+    if (!raw) return inMemoryCoreOverrides;
+    const parsed = JSON.parse(raw);
+    inMemoryCoreOverrides = parsed;
+    return parsed;
+  } catch {
+    return inMemoryCoreOverrides;
+  }
+}
+
+const SAVE_CORE_OVERRIDE_LUA = `
+local raw = redis.call('get', KEYS[1])
+local current = {}
+if raw then
+  local ok, decoded = pcall(cjson.decode, raw)
+  if ok and decoded then
+    current = decoded
+  end
+end
+
+local existing = current[ARGV[1]]
+if not existing or type(existing) ~= 'table' then
+  existing = { id = ARGV[1] }
+end
+
+local ok2, incoming = pcall(cjson.decode, ARGV[2])
+if ok2 and incoming then
+  for k, v in pairs(incoming) do
+    existing[k] = v
+  end
+end
+
+existing['id'] = ARGV[1]
+existing['updatedAt'] = ARGV[3]
+
+current[ARGV[1]] = existing
+redis.call('set', KEYS[1], cjson.encode(current))
+
+if ARGV[4] and ARGV[4] ~= '' and ARGV[5] and ARGV[5] ~= '' then
+  redis.call('set', ARGV[4], ARGV[5], 'EX', 2592000)
+end
+
+return cjson.encode(existing)
+`;
+
+/**
+ * Menyimpan core source override dengan fail-closed durability dan proteksi concurrency atomik.
+ */
 export async function saveCoreSourceOverride(
   sourceId: string,
   override: Partial<CoreSourceOverride>
 ): Promise<CoreSourceOverride> {
-  const normId = sourceId.toLowerCase().trim();
-  const current = await getCoreSourceOverrides();
-  const existing = current[normId] || { id: normId };
+  const isProduction = process.env.NODE_ENV === "production";
+  if (isProduction && !isRedisConfigured) {
+    logger.error("Admin core source override mutation rejected: Redis durable storage is required in production");
+    throw new Error("Failed to persist core source override: durable storage is required in production");
+  }
 
+  const normId = sourceId.toLowerCase().trim();
+
+  if (isRedisConfigured) {
+    await ensureRedisReady();
+
+    const domainKey = override.activeDomain ? `yomirra:domain:${normId}:frontend` : "";
+    const domainVal = override.activeDomain
+      ? JSON.stringify({
+          sourceId: normId,
+          role: "frontend",
+          currentHost: override.activeDomain.replace(/\/+$/, ""),
+          verifiedAt: new Date().toISOString(),
+          status: "verified",
+        })
+      : "";
+
+    const updatedAt = new Date().toISOString();
+
+    try {
+      const res = await redis.eval(
+        SAVE_CORE_OVERRIDE_LUA,
+        1,
+        CORE_OVERRIDES_KEY,
+        normId,
+        JSON.stringify(override),
+        updatedAt,
+        domainKey,
+        domainVal
+      );
+
+      const updated: CoreSourceOverride = typeof res === "string" ? JSON.parse(res) : (res as any);
+      inMemoryCoreOverrides[normId] = updated;
+      return updated;
+    } catch (err) {
+      logger.error("Failed to persist core source override to Redis", { normId, err });
+      throw new Error("Failed to persist core source override to durable storage", { cause: err });
+    }
+  }
+
+  // Development/test memory fallback
+  const existing = inMemoryCoreOverrides[normId] || { id: normId };
   const updated: CoreSourceOverride = {
     ...existing,
     ...override,
     id: normId,
     updatedAt: new Date().toISOString(),
   };
-
-  current[normId] = updated;
-
-  if (isRedisConfigured) {
-    await redis.set(CORE_OVERRIDES_KEY, JSON.stringify(current));
-    // If activeDomain is changed, sync directly to DomainResolver cache in Redis
-    if (updated.activeDomain) {
-      const cleanHost = updated.activeDomain.replace(/\/+$/, "");
-      await redis.set(
-        `yomirra:domain:${normId}:frontend`,
-        JSON.stringify({
-          sourceId: normId,
-          role: "frontend",
-          currentHost: cleanHost,
-          verifiedAt: new Date().toISOString(),
-          status: "verified",
-        }),
-        "EX",
-        86400 * 30
-      );
-    }
-  }
-
+  inMemoryCoreOverrides[normId] = updated;
   return updated;
 }
 
@@ -188,7 +290,7 @@ export async function flushSourceCache(sourceId?: string): Promise<{ success: bo
 
   try {
     const pattern = sourceId ? `source:${sourceId}:*` : "source:*";
-    const keys = await redis.keys(pattern);
+    const keys = await scanRedisKeys(pattern);
 
     if (keys.length > 0) {
       await redis.del(...keys);

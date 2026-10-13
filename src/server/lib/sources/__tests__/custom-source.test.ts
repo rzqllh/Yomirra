@@ -1,5 +1,15 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
+let mockMultiExecResults: any[] = [[null, "OK"], [null, 1]];
+
+const mockMulti = {
+  set: vi.fn().mockReturnThis(),
+  sadd: vi.fn().mockReturnThis(),
+  del: vi.fn().mockReturnThis(),
+  srem: vi.fn().mockReturnThis(),
+  exec: vi.fn().mockImplementation(async () => mockMultiExecResults),
+};
+
 const mockRedis = {
   smembers: vi.fn(),
   mget: vi.fn(),
@@ -8,11 +18,14 @@ const mockRedis = {
   sadd: vi.fn(),
   del: vi.fn(),
   srem: vi.fn(),
-  keys: vi.fn(),
+  scan: vi.fn(),
+  multi: vi.fn().mockReturnValue(mockMulti),
 };
 
 vi.mock("@/server/lib/cache/redis", () => ({
   isRedisConfigured: true,
+  isRedisReady: vi.fn().mockReturnValue(true),
+  ensureRedisReady: vi.fn().mockResolvedValue(undefined),
   redis: mockRedis,
 }));
 
@@ -48,8 +61,9 @@ describe("Custom Dynamic Source Service", () => {
 
     expect(source.id).toBe("komikcast");
     expect(source.name).toBe("Komikcast");
-    expect(mockRedis.set).toHaveBeenCalled();
-    expect(mockRedis.sadd).toHaveBeenCalledWith("yomirra:sources:custom:index", "komikcast");
+    expect(mockMulti.set).toHaveBeenCalled();
+    expect(mockMulti.sadd).toHaveBeenCalledWith("yomirra:sources:custom:index", "komikcast");
+    expect(mockMulti.exec).toHaveBeenCalled();
 
     const meta = customSourceToMetadata(source);
     expect(meta.id).toBe("komikcast");
@@ -58,15 +72,15 @@ describe("Custom Dynamic Source Service", () => {
   });
 
   it("should delete custom source and flush associated cache", async () => {
+    mockMultiExecResults = [[null, 1], [null, 1]];
     mockRedis.del.mockResolvedValue(1);
-    mockRedis.srem.mockResolvedValueOnce(1);
-    mockRedis.keys.mockResolvedValueOnce(["yomirra:cache:komikcast:ch1"]);
+    mockRedis.scan.mockResolvedValueOnce(["0", ["yomirra:cache:komikcast:ch1"]]);
 
     const { deleteCustomSource } = await import("../custom-source-service");
     const result = await deleteCustomSource("komikcast");
 
     expect(result).toBe(true);
-    expect(mockRedis.del).toHaveBeenCalledWith("yomirra:sources:custom:komikcast");
-    expect(mockRedis.srem).toHaveBeenCalledWith("yomirra:sources:custom:index", "komikcast");
+    expect(mockMulti.del).toHaveBeenCalledWith("yomirra:sources:custom:komikcast");
+    expect(mockMulti.srem).toHaveBeenCalledWith("yomirra:sources:custom:index", "komikcast");
   });
 });
