@@ -2,7 +2,7 @@ import { getAllSourceMetadata } from "@/shared/sources/source-registry";
 import { sourceHealthStore } from "@/server/lib/sources/health/health-store";
 import * as domainResolverModule from "@/server/lib/sources/domain-resolver";
 import { isRedisConfigured, isRedisReady, redis, ensureRedisReady } from "@/server/lib/cache/redis";
-import { scanRedisKeys } from "@/server/lib/sources/custom-source-service";
+import { deleteMatchedRedisKeys } from "@/server/lib/sources/custom-source-service";
 import { logger } from "@/shared/logger";
 import { sourceManager } from "@/server/lib/sources/source-manager";
 import type { SourceHealthMatrixItem } from "@/shared/types/admin";
@@ -290,17 +290,13 @@ export async function flushSourceCache(sourceId?: string): Promise<{ success: bo
 
   try {
     const pattern = sourceId ? `source:${sourceId}:*` : "source:*";
-    const keys = await scanRedisKeys(pattern);
-
-    if (keys.length > 0) {
-      await redis.del(...keys);
-    }
+    const deletedCount = await deleteMatchedRedisKeys(pattern);
 
     return {
       success: true,
-      flushedCount: keys.length,
-      deletedCount: keys.length,
-      message: `Berhasil membersihkan ${keys.length} cache key untuk ${sourceId || "semua source"}`,
+      flushedCount: deletedCount,
+      deletedCount: deletedCount,
+      message: `Berhasil membersihkan ${deletedCount} cache key untuk ${sourceId || "semua source"}`,
     };
   } catch (error: any) {
     logger.error("Failed to flush source cache", { error });

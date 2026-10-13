@@ -20,6 +20,7 @@ const mockRedis = {
   srem: vi.fn(),
   scan: vi.fn(),
   multi: vi.fn().mockReturnValue(mockMulti),
+  eval: vi.fn().mockResolvedValue("OK"),
 };
 
 vi.mock("@/server/lib/cache/redis", () => ({
@@ -35,8 +36,7 @@ describe("Custom Dynamic Source Service", () => {
   });
 
   it("should save and retrieve custom dynamic source", async () => {
-    mockRedis.set.mockResolvedValueOnce("OK");
-    mockRedis.sadd.mockResolvedValueOnce(1);
+    mockRedis.eval.mockResolvedValueOnce("OK");
 
     const { saveCustomSource, customSourceToMetadata } = await import("../custom-source-service");
 
@@ -61,9 +61,14 @@ describe("Custom Dynamic Source Service", () => {
 
     expect(source.id).toBe("komikcast");
     expect(source.name).toBe("Komikcast");
-    expect(mockMulti.set).toHaveBeenCalled();
-    expect(mockMulti.sadd).toHaveBeenCalledWith("yomirra:sources:custom:index", "komikcast");
-    expect(mockMulti.exec).toHaveBeenCalled();
+    expect(mockRedis.eval).toHaveBeenCalledWith(
+      expect.stringContaining("SET"),
+      2,
+      "yomirra:sources:custom:komikcast",
+      "yomirra:sources:custom:index",
+      "komikcast",
+      expect.any(String)
+    );
 
     const meta = customSourceToMetadata(source);
     expect(meta.id).toBe("komikcast");
@@ -72,7 +77,7 @@ describe("Custom Dynamic Source Service", () => {
   });
 
   it("should delete custom source and flush associated cache", async () => {
-    mockMultiExecResults = [[null, 1], [null, 1]];
+    mockRedis.eval.mockResolvedValueOnce(1);
     mockRedis.del.mockResolvedValue(1);
     mockRedis.scan.mockResolvedValueOnce(["0", ["yomirra:cache:komikcast:ch1"]]);
 
@@ -80,7 +85,13 @@ describe("Custom Dynamic Source Service", () => {
     const result = await deleteCustomSource("komikcast");
 
     expect(result).toBe(true);
-    expect(mockMulti.del).toHaveBeenCalledWith("yomirra:sources:custom:komikcast");
-    expect(mockMulti.srem).toHaveBeenCalledWith("yomirra:sources:custom:index", "komikcast");
+    expect(mockRedis.eval).toHaveBeenCalledWith(
+      expect.stringContaining("DEL"),
+      2,
+      "yomirra:sources:custom:komikcast",
+      "yomirra:sources:custom:index",
+      "komikcast"
+    );
+    expect(mockRedis.del).toHaveBeenCalledWith("yomirra:cache:komikcast:ch1");
   });
 });

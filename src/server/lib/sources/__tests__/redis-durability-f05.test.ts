@@ -15,7 +15,7 @@ let simulatedRedisState: {
 
 let redisReady = true;
 let readinessError: Error | null = null;
-let setFailMode: "none" | "throw" | "transaction_error" | "sadd_error" = "none";
+let setFailMode: "none" | "throw" | "transaction_error" | "sadd_error" | "srem_error" = "none";
 let getFailMode: "none" | "throw" = "none";
 let scanFailMode: "none" | "throw" = "none";
 let lastWatchedVersion: number | null = null;
@@ -156,18 +156,45 @@ const mockRedis = {
   }),
   eval: vi.fn(
     async (
-      _script: string,
+      script: string,
       _numkeys: number,
-      key: string,
-      sourceId: string,
-      overrideJson: string,
-      updatedAt: string,
-      domainKey?: string,
-      domainVal?: string
+      ...args: any[]
     ) => {
       if (setFailMode === "throw") throw new Error("Redis write connection refused");
       if (getFailMode === "throw") throw new Error("Redis read connection reset");
 
+      // Custom Source Save Lua
+      if (script.includes("SAVE_CUSTOM_SOURCE_LUA") || (script.includes("SET") && script.includes("SADD"))) {
+        if (setFailMode === "sadd_error" || setFailMode === "transaction_error") {
+          throw new Error("WRONGTYPE Operation against a key holding the wrong kind of value");
+        }
+        const [dataKey, idxKey, id, data] = args;
+        simulatedRedisState.strings.set(dataKey, data);
+        let s = simulatedRedisState.sets.get(idxKey);
+        if (!s) {
+          s = new Set();
+          simulatedRedisState.sets.set(idxKey, s);
+        }
+        s.add(id);
+        simulatedRedisState.version++;
+        return "OK";
+      }
+
+      // Custom Source Delete Lua
+      if (script.includes("DELETE_CUSTOM_SOURCE_LUA") || (script.includes("SREM") && script.includes("DEL"))) {
+        if (setFailMode === "srem_error") {
+          throw new Error("WRONGTYPE Operation against a key holding the wrong kind of value");
+        }
+        const [dataKey, idxKey, id] = args;
+        const s = simulatedRedisState.sets.get(idxKey);
+        if (s) s.delete(id);
+        const deleted = simulatedRedisState.strings.delete(dataKey) ? 1 : 0;
+        simulatedRedisState.version++;
+        return deleted;
+      }
+
+      // Core Source Override Lua
+      const [key, sourceId, overrideJson, updatedAt, domainKey, domainVal] = args;
       const raw = simulatedRedisState.strings.get(key);
       const current = raw ? JSON.parse(raw) : {};
       const existing = current[sourceId] || { id: sourceId };
@@ -434,5 +461,84 @@ describe("W4 / F05: Redis Durability Reproduction & Verification Matrix", () => 
     const single = await getCustomSourceById("sample-custom");
     expect(single).toBeDefined();
     expect(single?.name).toBe("Sample Custom Manga");
+  });
+
+  it("Scenario 10 (P1 Codex Review): Authoritative Redis miss evicts stale hydrated in-memory cache", async () => {
+    const { saveCustomSource, getCustomSourceById, getCustomSources } = await import("../custom-source-service");
+
+    // 1. Save and hydrate into memory on this instance
+    await saveCustomSource(sampleSource);
+    expect(await getCustomSourceById("sample-custom")).not.toBeNull();
+    expect(await getCustomSources()).toHaveLength(1);
+
+    // 2. Simulate another instance deleting the source directly from Redis
+    simulatedRedisState.strings.delete("yomirra:sources:custom:sample-custom");
+    simulatedRedisState.sets.delete("yomirra:sources:custom:index");
+
+    // 3. Authoritative Redis GET miss MUST evict in-memory cache and return null (not stale object)
+    const afterDeleteById = await getCustomSourceById("sample-custom");
+    expect(afterDeleteById).toBeNull();
+
+    // 4. Authoritative Redis smembers miss MUST return [] and clear in-memory cache
+    const afterDeleteAll = await getCustomSources();
+    expect(afterDeleteAll).toHaveLength(0);
+  });
+
+  it("Scenario 11 (P2 Codex Review): SADD failure during custom source save does not leave un-indexed orphan record", async () => {
+    setFailMode = "sadd_error"; // Simulates WRONGTYPE on CUSTOM_SOURCE_INDEX
+    const { saveCustomSource, getCustomSourceById } = await import("../custom-source-service");
+
+    await expect(saveCustomSource(sampleSource)).rejects.toThrow(
+      /Failed to persist custom source to durable storage/
+    );
+
+    // Critical assertion: Lua atomic check or compensating rollback ensures NO data key survived
+    expect(simulatedRedisState.strings.has("yomirra:sources:custom:sample-custom")).toBe(false);
+
+    // Direct lookup must be null
+    expect(await getCustomSourceById("sample-custom")).toBeNull();
+  });
+
+  it("Scenario 12 (P2 Codex Review): SREM failure during deletion reconciles state and evicts in-memory cache", async () => {
+    const { saveCustomSource, deleteCustomSource, getCustomSourceById } = await import("../custom-source-service");
+
+    // Save baseline
+    await saveCustomSource(sampleSource);
+    expect(await getCustomSourceById("sample-custom")).not.toBeNull();
+
+    // Now deletion encounters SREM failure, while durable record key was removed
+    setFailMode = "srem_error";
+    simulatedRedisState.strings.delete("yomirra:sources:custom:sample-custom");
+
+    await expect(deleteCustomSource("sample-custom")).rejects.toThrow(
+      /Failed to delete custom source from durable storage/
+    );
+
+    // Critical assertion: in-memory cache was evicted in catch block and authoritative miss prevents ghost resurrection
+    expect(await getCustomSourceById("sample-custom")).toBeNull();
+  });
+
+  it("Scenario 13 (P2 Codex Review): SCAN cleanup continues through full cursor completion without arbitrary key limit", async () => {
+    mockRedis.del.mockClear();
+    const { deleteMatchedRedisKeys } = await import("../custom-source-service");
+
+    // Simulate multi-page Redis scan across 3 iterations (cursor "10" -> "20" -> "0")
+    let scanCallCount = 0;
+    mockRedis.scan.mockImplementation(async (cursor: string) => {
+      scanCallCount++;
+      if (cursor === "0" && scanCallCount === 1) {
+        return ["10", ["key1", "key2"]];
+      }
+      if (cursor === "10") {
+        return ["20", ["key3", "key4"]];
+      }
+      return ["0", ["key5"]];
+    });
+
+    const deletedTotal = await deleteMatchedRedisKeys("yomirra:cache:test:*", 2);
+
+    expect(scanCallCount).toBe(3);
+    expect(deletedTotal).toBe(5);
+    expect(mockRedis.del).toHaveBeenCalledTimes(3);
   });
 });
