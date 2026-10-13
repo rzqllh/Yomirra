@@ -50,6 +50,12 @@ export async function getDurableCoreSourceOverrides(): Promise<Record<string, Co
   if (!raw) return {};
   try {
     const parsed = JSON.parse(raw);
+    for (const key of Object.keys(parsed)) {
+      const item = parsed[key];
+      if (item && typeof item === "object" && item.mirrors && !Array.isArray(item.mirrors)) {
+        item.mirrors = [];
+      }
+    }
     inMemoryCoreOverrides = parsed;
     return parsed;
   } catch (err) {
@@ -73,6 +79,12 @@ export async function getCoreSourceOverrides(): Promise<Record<string, CoreSourc
     const raw = await redis.get(CORE_OVERRIDES_KEY);
     if (!raw) return inMemoryCoreOverrides;
     const parsed = JSON.parse(raw);
+    for (const key of Object.keys(parsed)) {
+      const item = parsed[key];
+      if (item && typeof item === "object" && item.mirrors && !Array.isArray(item.mirrors)) {
+        item.mirrors = [];
+      }
+    }
     inMemoryCoreOverrides = parsed;
     return parsed;
   } catch {
@@ -106,6 +118,14 @@ existing['id'] = ARGV[1]
 existing['updatedAt'] = ARGV[3]
 
 current[ARGV[1]] = existing
+
+local empty_arr = cjson.empty_array
+for _, src in pairs(current) do
+  if type(src) == 'table' and src.mirrors and type(src.mirrors) == 'table' and #src.mirrors == 0 then
+    src.mirrors = empty_arr
+  end
+end
+
 redis.call('set', KEYS[1], cjson.encode(current))
 
 if ARGV[4] and ARGV[4] ~= '' and ARGV[5] and ARGV[5] ~= '' then
@@ -159,6 +179,9 @@ export async function saveCoreSourceOverride(
       );
 
       const updated: CoreSourceOverride = typeof res === "string" ? JSON.parse(res) : (res as any);
+      if (updated.mirrors && !Array.isArray(updated.mirrors)) {
+        updated.mirrors = [];
+      }
       inMemoryCoreOverrides[normId] = updated;
       return updated;
     } catch (err) {
@@ -175,6 +198,9 @@ export async function saveCoreSourceOverride(
     id: normId,
     updatedAt: new Date().toISOString(),
   };
+  if (updated.mirrors && !Array.isArray(updated.mirrors)) {
+    updated.mirrors = [];
+  }
   inMemoryCoreOverrides[normId] = updated;
   return updated;
 }
@@ -211,7 +237,7 @@ export async function getSourceHealthMatrix(): Promise<SourceHealthMatrixItem[]>
         }
       }
 
-      let mirrors: string[] = override?.mirrors || [];
+      let mirrors: string[] = Array.isArray(override?.mirrors) ? override.mirrors : [];
       if (mirrors.length === 0) {
         try {
           const domains = (domainResolverModule as any).SOURCE_DOMAINS;

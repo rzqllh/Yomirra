@@ -27,8 +27,17 @@ if t ~= 'set' and t ~= 'none' then
   return redis.error_reply('WRONGTYPE Operation against a key holding the wrong kind of value')
 end
 
+local prevData = redis.call('GET', dataKey)
 redis.call('SET', dataKey, data)
-redis.call('SADD', idxKey, id)
+local ok, err = pcall(redis.call, 'SADD', idxKey, id)
+if not ok then
+  if prevData then
+    redis.call('SET', dataKey, prevData)
+  else
+    redis.call('DEL', dataKey)
+  end
+  return redis.error_reply(tostring(err))
+end
 return 'OK'
 `;
 
@@ -204,14 +213,8 @@ export async function saveCustomSource(source: CustomSourceDefinition): Promise<
       // Update in-memory state ONLY after successful Redis persistence
       inMemoryCustomSources.set(validated.id, validated);
     } catch (err) {
-      // Deterministic reconciliation: ensure no partial orphan write survived in Redis
-      try {
-        await redis.del(`${CUSTOM_SOURCE_PREFIX}${validated.id}`);
-      } catch {
-        // ignore secondary cleanup error
-      }
-      inMemoryCustomSources.delete(validated.id);
-
+      // Lua script guarantees atomic isolation (rolls back dataKey if SADD fails, and leaves dataKey untouched if TYPE precheck fails).
+      // We do not delete dataKey or evict valid memory state here so pre-existing sources are not wiped out on failed updates.
       logger.error("Failed to persist custom source to Redis", { id: validated.id, err });
       throw new Error("Failed to persist custom source to durable storage", { cause: err });
     }

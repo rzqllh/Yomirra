@@ -541,4 +541,69 @@ describe("W4 / F05: Redis Durability Reproduction & Verification Matrix", () => 
     expect(deletedTotal).toBe(5);
     expect(mockRedis.del).toHaveBeenCalledTimes(3);
   });
+
+  it("Scenario 14 (P1 Codex Review): Failed update to an existing custom source preserves previously valid durable record", async () => {
+    const { saveCustomSource, getCustomSourceById } = await import("../custom-source-service");
+
+    // 1. Initial valid save
+    await saveCustomSource(sampleSource);
+    const initial = await getCustomSourceById("sample-custom");
+    expect(initial).not.toBeNull();
+    expect(initial?.name).toBe("Sample Custom Manga");
+
+    // 2. Admin attempts to update the source, but Redis encounters an error during execution (e.g. index WRONGTYPE)
+    setFailMode = "transaction_error";
+    const updateAttempt = {
+      ...sampleSource,
+      name: "Attempted Malformed Update",
+    };
+
+    await expect(saveCustomSource(updateAttempt)).rejects.toThrow(
+      /Failed to persist custom source to durable storage/
+    );
+
+    // 3. Clear failure mode and verify the previous durable record was NOT deleted
+    setFailMode = "none";
+    const preserved = await getCustomSourceById("sample-custom");
+    expect(preserved).not.toBeNull();
+    expect(preserved?.name).toBe("Sample Custom Manga");
+    expect(simulatedRedisState.strings.has("yomirra:sources:custom:sample-custom")).toBe(true);
+  });
+
+  it("Scenario 15 (P1 Codex Review): Preserves empty arrays when saving and loading core source overrides", async () => {
+    const { saveCoreSourceOverride, getCoreSourceOverrides, getSourceHealthMatrix } = await import(
+      "../admin-source-service"
+    );
+
+    // 1. Save core override with mirrors set to an empty array
+    const saved = await saveCoreSourceOverride("mangadex", {
+      isEnabled: true,
+      mirrors: [],
+    });
+
+    expect(Array.isArray(saved.mirrors)).toBe(true);
+    expect(saved.mirrors).toHaveLength(0);
+
+    // 2. Verify durable Redis JSON representation preserves array [] and not object {}
+    const raw = simulatedRedisState.strings.get("yomirra:sources:core:overrides");
+    expect(raw).toBeDefined();
+    const parsed = JSON.parse(raw!);
+    expect(Array.isArray(parsed.mangadex.mirrors)).toBe(true);
+    expect(parsed.mangadex.mirrors).toEqual([]);
+
+    // 3. Verify getCoreSourceOverrides preserves array
+    const allOverrides = await getCoreSourceOverrides();
+    expect(Array.isArray(allOverrides.mangadex.mirrors)).toBe(true);
+    expect(allOverrides.mangadex.mirrors).toHaveLength(0);
+
+    // 4. Verify getSourceHealthMatrix passes array safely and does not throw on .join()
+    const matrix = await getSourceHealthMatrix();
+    const mangadexItem = matrix.find((item) => item.id.toLowerCase() === "mangadex");
+    expect(mangadexItem).toBeDefined();
+    // Simulate what CoreSourceModal does: mirrors.join(", ")
+    expect(() => {
+      const mirrorsStr = (allOverrides.mangadex.mirrors || []).join(", ");
+      expect(mirrorsStr).toBe("");
+    }).not.toThrow();
+  });
 });
