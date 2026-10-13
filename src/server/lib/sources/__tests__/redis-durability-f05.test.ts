@@ -196,7 +196,17 @@ const mockRedis = {
       // Core Source Override Lua
       const [key, sourceId, overrideJson, updatedAt, domainKey, domainVal] = args;
       const raw = simulatedRedisState.strings.get(key);
-      const current = raw ? JSON.parse(raw) : {};
+      let current: any = {};
+      if (raw) {
+        try {
+          current = JSON.parse(raw);
+          if (typeof current !== "object" || current === null || Array.isArray(current)) {
+            throw new Error("ERR_CORRUPTED_CORE_OVERRIDES");
+          }
+        } catch {
+          throw new Error("ERR_CORRUPTED_CORE_OVERRIDES");
+        }
+      }
       const existing = current[sourceId] || { id: sourceId };
       const incoming = JSON.parse(overrideJson);
 
@@ -605,5 +615,38 @@ describe("W4 / F05: Redis Durability Reproduction & Verification Matrix", () => 
       const mirrorsStr = (allOverrides.mangadex.mirrors || []).join(", ");
       expect(mirrorsStr).toBe("");
     }).not.toThrow();
+  });
+
+  it("Scenario 16 (P2 Codex Review): Corrupted core override in Redis rejects mutation instead of replacing it with {}", async () => {
+    const { saveCoreSourceOverride } = await import("../admin-source-service");
+
+    // Populate corrupted JSON string in Redis
+    simulatedRedisState.strings.set("yomirra:sources:core:overrides", "{malformed-json-here");
+
+    // Attempting to update any core override must reject and NOT overwrite Redis with empty state
+    await expect(
+      saveCoreSourceOverride("mangadex", { isEnabled: true })
+    ).rejects.toThrow(/Failed to persist core source override/);
+
+    // Verify raw Redis state was NOT wiped out
+    expect(simulatedRedisState.strings.get("yomirra:sources:core:overrides")).toBe("{malformed-json-here");
+  });
+
+  it("Scenario 17 (P2 Codex Review): Clear cached overrides after an authoritative Redis miss", async () => {
+    const { saveCoreSourceOverride, getCoreSourceOverrides } = await import("../admin-source-service");
+
+    // 1. Save and hydrate an override
+    await saveCoreSourceOverride("komiku", { isEnabled: true });
+    const hydrated = await getCoreSourceOverrides();
+    expect(hydrated.komiku).toBeDefined();
+    expect(hydrated.komiku.isEnabled).toBe(true);
+
+    // 2. Simulate operator deletion or cache eviction in Redis (authoritative miss)
+    simulatedRedisState.strings.delete("yomirra:sources:core:overrides");
+
+    // 3. getCoreSourceOverrides must clear in-memory cache and return empty object {}
+    const afterMiss = await getCoreSourceOverrides();
+    expect(afterMiss).toEqual({});
+    expect(afterMiss.komiku).toBeUndefined();
   });
 });

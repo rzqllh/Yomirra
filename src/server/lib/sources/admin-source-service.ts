@@ -47,7 +47,10 @@ export async function getDurableCoreSourceOverrides(): Promise<Record<string, Co
 
   await ensureRedisReady();
   const raw = await redis.get(CORE_OVERRIDES_KEY);
-  if (!raw) return {};
+  if (!raw) {
+    inMemoryCoreOverrides = {};
+    return {};
+  }
   try {
     const parsed = JSON.parse(raw);
     for (const key of Object.keys(parsed)) {
@@ -77,7 +80,11 @@ export async function getCoreSourceOverrides(): Promise<Record<string, CoreSourc
 
   try {
     const raw = await redis.get(CORE_OVERRIDES_KEY);
-    if (!raw) return inMemoryCoreOverrides;
+    if (!raw) {
+      // Authoritative miss from Redis: evict cached overrides so deleted records are not resurrected
+      inMemoryCoreOverrides = {};
+      return {};
+    }
     const parsed = JSON.parse(raw);
     for (const key of Object.keys(parsed)) {
       const item = parsed[key];
@@ -97,9 +104,10 @@ local raw = redis.call('get', KEYS[1])
 local current = {}
 if raw then
   local ok, decoded = pcall(cjson.decode, raw)
-  if ok and decoded then
-    current = decoded
+  if not ok or not decoded or type(decoded) ~= 'table' then
+    return redis.error_reply('ERR_CORRUPTED_CORE_OVERRIDES')
   end
+  current = decoded
 end
 
 local existing = current[ARGV[1]]
