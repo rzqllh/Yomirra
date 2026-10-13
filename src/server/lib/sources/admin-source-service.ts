@@ -189,11 +189,7 @@ export async function saveCoreSourceOverride(
       );
 
       if (domainKey && domainVal) {
-        try {
-          await redis.set(domainKey, domainVal, "EX", 2592000);
-        } catch (domainErr) {
-          logger.warn("Failed to update domain cache in Redis after saving core override", { normId, err: domainErr });
-        }
+        await redis.set(domainKey, domainVal, "EX", 2592000);
       }
 
       const parsedRes: unknown = typeof res === "string" ? JSON.parse(res) : res;
