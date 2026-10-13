@@ -53,6 +53,9 @@ export async function getDurableCoreSourceOverrides(): Promise<Record<string, Co
   }
   try {
     const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      throw new Error("Invalid core source overrides structure: expected object dictionary");
+    }
     for (const key of Object.keys(parsed)) {
       const item = parsed[key];
       if (item && typeof item === "object" && item.mirrors && !Array.isArray(item.mirrors)) {
@@ -86,6 +89,9 @@ export async function getCoreSourceOverrides(): Promise<Record<string, CoreSourc
       return {};
     }
     const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return inMemoryCoreOverrides;
+    }
     for (const key of Object.keys(parsed)) {
       const item = parsed[key];
       if (item && typeof item === "object" && item.mirrors && !Array.isArray(item.mirrors)) {
@@ -103,8 +109,11 @@ const SAVE_CORE_OVERRIDE_LUA = `
 local raw = redis.call('get', KEYS[1])
 local current = {}
 if raw then
+  if not raw:match('^%s*%{') then
+    return redis.error_reply('ERR_CORRUPTED_CORE_OVERRIDES')
+  end
   local ok, decoded = pcall(cjson.decode, raw)
-  if not ok or not decoded or type(decoded) ~= 'table' then
+  if not ok or not decoded or type(decoded) ~= 'table' or #decoded > 0 then
     return redis.error_reply('ERR_CORRUPTED_CORE_OVERRIDES')
   end
   current = decoded

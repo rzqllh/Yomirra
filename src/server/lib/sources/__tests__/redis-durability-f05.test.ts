@@ -617,19 +617,29 @@ describe("W4 / F05: Redis Durability Reproduction & Verification Matrix", () => 
     }).not.toThrow();
   });
 
-  it("Scenario 16 (P2 Codex Review): Corrupted core override in Redis rejects mutation instead of replacing it with {}", async () => {
+  it("Scenario 16 (P2 Codex Review): Corrupted core override in Redis (malformed JSON or top-level array) rejects mutation instead of replacing it with {}", async () => {
     const { saveCoreSourceOverride } = await import("../admin-source-service");
 
-    // Populate corrupted JSON string in Redis
+    // 1. Malformed JSON string in Redis
     simulatedRedisState.strings.set("yomirra:sources:core:overrides", "{malformed-json-here");
-
-    // Attempting to update any core override must reject and NOT overwrite Redis with empty state
     await expect(
       saveCoreSourceOverride("mangadex", { isEnabled: true })
     ).rejects.toThrow(/Failed to persist core source override/);
-
-    // Verify raw Redis state was NOT wiped out
     expect(simulatedRedisState.strings.get("yomirra:sources:core:overrides")).toBe("{malformed-json-here");
+
+    // 2. Top-level array in Redis (e.g. "[]")
+    simulatedRedisState.strings.set("yomirra:sources:core:overrides", "[]");
+    await expect(
+      saveCoreSourceOverride("mangadex", { isEnabled: true })
+    ).rejects.toThrow(/Failed to persist core source override/);
+    expect(simulatedRedisState.strings.get("yomirra:sources:core:overrides")).toBe("[]");
+
+    // 3. Top-level array with items in Redis (e.g. "[1, 2]")
+    simulatedRedisState.strings.set("yomirra:sources:core:overrides", "[1, 2]");
+    await expect(
+      saveCoreSourceOverride("mangadex", { isEnabled: true })
+    ).rejects.toThrow(/Failed to persist core source override/);
+    expect(simulatedRedisState.strings.get("yomirra:sources:core:overrides")).toBe("[1, 2]");
   });
 
   it("Scenario 17 (P2 Codex Review): Clear cached overrides after an authoritative Redis miss", async () => {
