@@ -1,13 +1,11 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 
-let mockMultiExecResults: any[] = [[null, "OK"], [null, 1]];
-
 const mockMulti = {
   set: vi.fn().mockReturnThis(),
   sadd: vi.fn().mockReturnThis(),
   del: vi.fn().mockReturnThis(),
   srem: vi.fn().mockReturnThis(),
-  exec: vi.fn().mockImplementation(async () => mockMultiExecResults),
+  exec: vi.fn().mockResolvedValue([[null, "OK"], [null, 1]]),
 };
 
 const mockRedis = {
