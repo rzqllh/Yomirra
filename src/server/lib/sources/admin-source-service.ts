@@ -140,7 +140,11 @@ if ARGV[4] and ARGV[4] ~= '' and ARGV[5] and ARGV[5] ~= '' then
   redis.call('set', ARGV[4], ARGV[5], 'EX', 2592000)
 end
 
-return cjson.encode(existing)
+local payload = {
+  current = current,
+  updated = existing
+}
+return cjson.encode(payload)
 `;
 
 /**
@@ -186,11 +190,33 @@ export async function saveCoreSourceOverride(
         domainVal
       );
 
-      const updated: CoreSourceOverride = typeof res === "string" ? JSON.parse(res) : (res as any);
-      if (updated.mirrors && !Array.isArray(updated.mirrors)) {
+      const parsedRes: unknown = typeof res === "string" ? JSON.parse(res) : res;
+      let fullMap: Record<string, CoreSourceOverride> = {};
+      let updated: CoreSourceOverride;
+
+      if (parsedRes && typeof parsedRes === "object" && "current" in parsedRes && "updated" in parsedRes) {
+        const container = parsedRes as {
+          current?: Record<string, CoreSourceOverride>;
+          updated?: CoreSourceOverride;
+        };
+        fullMap = container.current || {};
+        updated = container.updated || { id: normId };
+      } else {
+        updated = (parsedRes as CoreSourceOverride) || { id: normId };
+        fullMap = { ...inMemoryCoreOverrides, [normId]: updated };
+      }
+
+      for (const key of Object.keys(fullMap)) {
+        const item = fullMap[key];
+        if (item && typeof item === "object" && item.mirrors && !Array.isArray(item.mirrors)) {
+          item.mirrors = [];
+        }
+      }
+      inMemoryCoreOverrides = fullMap;
+
+      if (updated && updated.mirrors && !Array.isArray(updated.mirrors)) {
         updated.mirrors = [];
       }
-      inMemoryCoreOverrides[normId] = updated;
       return updated;
     } catch (err) {
       logger.error("Failed to persist core source override to Redis", { normId, err });

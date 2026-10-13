@@ -223,7 +223,7 @@ const mockRedis = {
         simulatedRedisState.strings.set(domainKey, domainVal);
       }
       simulatedRedisState.version++;
-      return JSON.stringify(merged);
+      return JSON.stringify({ current, updated: merged });
     }
   ),
 };
@@ -649,4 +649,54 @@ describe("W4 / F05: Redis Durability Reproduction & Verification Matrix", () => 
     expect(afterMiss).toEqual({});
     expect(afterMiss.komiku).toBeUndefined();
   });
+
+  it("Scenario 18 (P2 Codex Review): Refresh complete fallback map after saving a single core override on a cold instance", async () => {
+    const { saveCoreSourceOverride, getCoreSourceOverrides } = await import("../admin-source-service");
+
+    // 1. Seed Redis with an existing disabled core override (e.g. komiku is disabled)
+    simulatedRedisState.strings.set(
+      "yomirra:sources:core:overrides",
+      JSON.stringify({
+        komiku: {
+          id: "komiku",
+          isEnabled: false,
+          updatedAt: new Date().toISOString(),
+        },
+      })
+    );
+
+    // 2. Clear in-memory cache to simulate a cold instance
+    // Note: an authoritative miss clears it, or we trigger it by querying an empty key, but here we can call an authoritative miss:
+    simulatedRedisState.strings.delete("yomirra:sources:core:overrides");
+    await getCoreSourceOverrides(); // caches are now empty: inMemoryCoreOverrides = {}
+
+    // Restore Redis with komiku disabled
+    simulatedRedisState.strings.set(
+      "yomirra:sources:core:overrides",
+      JSON.stringify({
+        komiku: {
+          id: "komiku",
+          isEnabled: false,
+          updatedAt: new Date().toISOString(),
+        },
+      })
+    );
+
+    // 3. Save a different core override (e.g. shinigami) on this instance
+    const saved = await saveCoreSourceOverride("shinigami", { isEnabled: true });
+    expect(saved.id).toBe("shinigami");
+    expect(saved.isEnabled).toBe(true);
+
+    // 4. Simulate a Redis outage immediately after save
+    getFailMode = "throw";
+    redisReady = false;
+
+    // 5. getCoreSourceOverrides during outage must return the complete fallback map containing BOTH komiku and shinigami
+    const fallbackOverrides = await getCoreSourceOverrides();
+    expect(fallbackOverrides.shinigami).toBeDefined();
+    expect(fallbackOverrides.shinigami.isEnabled).toBe(true);
+    expect(fallbackOverrides.komiku).toBeDefined();
+    expect(fallbackOverrides.komiku.isEnabled).toBe(false);
+  });
 });
+
