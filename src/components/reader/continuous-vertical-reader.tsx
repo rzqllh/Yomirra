@@ -61,7 +61,11 @@ export function ContinuousVerticalReader({
 }: ContinuousVerticalReaderProps) {
   const router = useRouter()
   const detailHref = getMangaDetailHref(sourceId, mangaId, returnTo)
-  const preferences = useReaderStore(state => state.preferences)
+  const preferences = useReaderStore(state => {
+    const titleKey = `${sourceId}::${mangaId}`;
+    const perTitle = state.perTitlePreferences[titleKey];
+    return perTitle ? { ...state.preferences, ...perTitle } : state.preferences;
+  })
   const { dataSaver } = useSettingsStore()
   const isDownloaded = useDownloadStore(state => state.isDownloaded(sourceId, mangaId, chapterId))
   const saveProgress = useHistoryStore(state => state.saveProgress)

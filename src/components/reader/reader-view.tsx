@@ -44,7 +44,10 @@ export function ReaderView({
   const upsertHistory = useHistoryStore(state => state.upsertHistory);
   const getLibraryItem = useLibraryStore(state => state.getLibraryItem);
   const updateLibraryItem = useLibraryStore(state => state.updateLibraryItem);
-  const readingMode = useReaderStore(state => state.preferences.readingMode);
+  const readingMode = useReaderStore(state => {
+    const titleKey = `${sourceId}::${mangaId}`;
+    return state.perTitlePreferences[titleKey]?.readingMode ?? state.preferences.readingMode;
+  });
 
   const downloadId = getDownloadChapterId(sourceId, mangaId, chapterId);
   const downloadStatus = useDownloadStore(state => state.downloads[downloadId]?.status);

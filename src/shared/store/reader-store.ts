@@ -5,6 +5,10 @@ import type { ReaderPreferences } from "@/shared/types/manga";
 interface ReaderState {
   preferences: ReaderPreferences;
   updatePreferences: (prefs: Partial<ReaderPreferences>) => void;
+  perTitlePreferences: Record<string, Partial<ReaderPreferences>>;
+  getTitlePreferences: (sourceId: string, mangaId: string) => ReaderPreferences;
+  updateTitlePreferences: (sourceId: string, mangaId: string, prefs: Partial<ReaderPreferences>) => void;
+  resetTitlePreferences: (sourceId: string, mangaId: string) => void;
   isOverlayVisible: boolean;
   toggleOverlay: () => void;
   setOverlayVisible: (visible: boolean) => void;
@@ -28,12 +32,37 @@ const defaultPreferences: ReaderPreferences = {
 
 export const useReaderStore = create<ReaderState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       preferences: defaultPreferences,
       updatePreferences: (newPrefs) =>
         set((state) => ({
           preferences: { ...state.preferences, ...newPrefs },
         })),
+      perTitlePreferences: {},
+      getTitlePreferences: (sourceId, mangaId) => {
+        const key = `${sourceId}::${mangaId}`;
+        const titleSpecific = get().perTitlePreferences[key];
+        if (!titleSpecific) return get().preferences;
+        return { ...get().preferences, ...titleSpecific };
+      },
+      updateTitlePreferences: (sourceId, mangaId, newPrefs) =>
+        set((state) => {
+          const key = `${sourceId}::${mangaId}`;
+          const current = state.perTitlePreferences[key] || {};
+          return {
+            perTitlePreferences: {
+              ...state.perTitlePreferences,
+              [key]: { ...current, ...newPrefs },
+            },
+          };
+        }),
+      resetTitlePreferences: (sourceId, mangaId) =>
+        set((state) => {
+          const key = `${sourceId}::${mangaId}`;
+          const next = { ...state.perTitlePreferences };
+          delete next[key];
+          return { perTitlePreferences: next };
+        }),
       isOverlayVisible: true,
       toggleOverlay: () =>
         set((state) => ({ isOverlayVisible: !state.isOverlayVisible })),
@@ -46,7 +75,11 @@ export const useReaderStore = create<ReaderState>()(
     }),
     {
       name: "manga-reader-settings", // keep the same name for migration
-      partialize: (state) => ({ preferences: state.preferences, isDesktopPanelOpen: state.isDesktopPanelOpen }),
+      partialize: (state) => ({ 
+        preferences: state.preferences, 
+        perTitlePreferences: state.perTitlePreferences, 
+        isDesktopPanelOpen: state.isDesktopPanelOpen 
+      }),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- persistedState can be anything from localStorage including legacy versions
       merge: (persistedState: any, currentState: ReaderState) => {
         // Safe migration from old `settings` to new `preferences`

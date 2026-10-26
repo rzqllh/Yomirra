@@ -10,6 +10,8 @@ import { ReaderPanelShell } from "./reader-panel-shell"
 interface ReaderSettingsDrawerProps {
   isOpen: boolean;
   onClose: () => void;
+  sourceId?: string;
+  mangaId?: string;
 }
 
 const BACKGROUNDS = [
@@ -88,8 +90,35 @@ function ReaderSettingsOption<T extends string>({
   )
 }
 
-export function ReaderSettingsDrawer({ isOpen, onClose }: ReaderSettingsDrawerProps) {
-  const { preferences, updatePreferences, isDesktopPanelOpen, toggleDesktopPanel } = useReaderStore()
+export function ReaderSettingsDrawer({ isOpen, onClose, sourceId, mangaId }: ReaderSettingsDrawerProps) {
+  const { 
+    preferences: globalPrefs, 
+    updatePreferences, 
+    perTitlePreferences, 
+    getTitlePreferences, 
+    updateTitlePreferences, 
+    resetTitlePreferences, 
+    isDesktopPanelOpen, 
+    toggleDesktopPanel 
+  } = useReaderStore();
+
+  const isPerTitleContext = Boolean(sourceId && mangaId);
+  const [savePerTitle, setSavePerTitle] = React.useState(true);
+
+  const preferences = React.useMemo(() => {
+    if (isPerTitleContext && sourceId && mangaId) {
+      return getTitlePreferences(sourceId, mangaId);
+    }
+    return globalPrefs;
+  }, [isPerTitleContext, sourceId, mangaId, getTitlePreferences, globalPrefs, perTitlePreferences]);
+
+  const handleUpdate = React.useCallback((patch: Parameters<typeof updatePreferences>[0]) => {
+    if (isPerTitleContext && savePerTitle && sourceId && mangaId) {
+      updateTitlePreferences(sourceId, mangaId, patch);
+    } else {
+      handleUpdate(patch);
+    }
+  }, [isPerTitleContext, savePerTitle, sourceId, mangaId, updateTitlePreferences, updatePreferences]);
 
   // On desktop (>=768px), settings drawer visibility is also driven by store's isDesktopPanelOpen
   const effectiveIsOpen = React.useMemo(() => {
@@ -131,7 +160,7 @@ export function ReaderSettingsDrawer({ isOpen, onClose }: ReaderSettingsDrawerPr
               return (
                 <button
                   key={bg.value}
-                  onClick={() => updatePreferences({ background: bg.value })}
+                  onClick={() => handleUpdate({ background: bg.value })}
                   className={cn(
                     "flex flex-col items-center gap-2 p-2.5 rounded-xl border transition-all outline-none",
                     isSelected 
@@ -168,7 +197,7 @@ export function ReaderSettingsDrawer({ isOpen, onClose }: ReaderSettingsDrawerPr
             title="Ukuran gambar"
             options={IMAGE_FITS}
             value={preferences.imageFit}
-            onChange={(val) => updatePreferences({ imageFit: val })}
+            onChange={(val) => handleUpdate({ imageFit: val })}
           />
 
           <ReaderSettingsOption
@@ -176,7 +205,7 @@ export function ReaderSettingsDrawer({ isOpen, onClose }: ReaderSettingsDrawerPr
             title="Jarak Antar Halaman"
             options={PAGE_GAPS}
             value={preferences.pageGap}
-            onChange={(val) => updatePreferences({ pageGap: val })}
+            onChange={(val) => handleUpdate({ pageGap: val })}
           />
 
           <ReaderSettingsOption
@@ -184,7 +213,7 @@ export function ReaderSettingsDrawer({ isOpen, onClose }: ReaderSettingsDrawerPr
             title="Arah baca"
             options={READING_DIRECTIONS}
             value={preferences.readingDirection}
-            onChange={(val) => updatePreferences({ readingDirection: val })}
+            onChange={(val) => handleUpdate({ readingDirection: val })}
           />
         </div>
       </div>
@@ -201,7 +230,7 @@ export function ReaderSettingsDrawer({ isOpen, onClose }: ReaderSettingsDrawerPr
             title="Kontrol pembaca"
             options={TOOLBAR_BEHAVIORS}
             value={preferences.toolbarBehavior}
-            onChange={(val) => updatePreferences({ toolbarBehavior: val })}
+            onChange={(val) => handleUpdate({ toolbarBehavior: val })}
           />
 
           <ReaderSettingsOption
@@ -209,7 +238,7 @@ export function ReaderSettingsDrawer({ isOpen, onClose }: ReaderSettingsDrawerPr
             title="Muat awal gambar"
             options={PRELOAD_INTENSITIES}
             value={preferences.preloadIntensity}
-            onChange={(val) => updatePreferences({ preloadIntensity: val })}
+            onChange={(val) => handleUpdate({ preloadIntensity: val })}
           />
 
           <div className="p-4 flex items-center justify-between">
@@ -217,7 +246,7 @@ export function ReaderSettingsDrawer({ isOpen, onClose }: ReaderSettingsDrawerPr
             <ToggleSwitch
               id="show-page-progress"
               checked={preferences.showPageProgress}
-              onCheckedChange={(checked) => updatePreferences({ showPageProgress: checked })}
+              onCheckedChange={(checked) => handleUpdate({ showPageProgress: checked })}
               label="Progres halaman"
             />
           </div>
