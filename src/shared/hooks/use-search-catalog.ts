@@ -125,7 +125,8 @@ export function useSearchCatalog() {
     const filtered = selectedSources.filter((id) =>
       searchableSources.some((source) => source.id === id)
     );
-    return filtered.length > 0 ? filtered : searchableSources.map((source) => source.id);
+    // Explicit zero-selected-source state: user intentionally unchecked all sources
+    return filtered;
   }, [hasCustomizedSources, selectedSources, searchableSources]);
 
   const toggleSource = (id: string) => {
