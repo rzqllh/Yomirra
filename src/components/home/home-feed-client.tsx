@@ -232,10 +232,21 @@ export function HomeFeedClient({
         <HomeHero candidates={heroCandidates} />
       </section>
 
+      {/* Adaptive Reading Shelf (Hero Position for Returning Readers) */}
+      {historyItems.length > 0 && (
+        <section
+          id="continue-reading-section"
+          className="mt-8 flex flex-col sm:mt-10"
+        >
+          <ContinueReadingList items={historyItems} />
+        </section>
+      )}
+
+      {/* Discovery & Peringkat (Immediate entry for Zero History, Secondary for Returning) */}
       <section
         id="spotlight-section"
         aria-labelledby="spotlight-title"
-        className="mt-8 flex min-w-0 flex-col gap-3.5 sm:gap-4"
+        className="mt-8 flex min-w-0 flex-col gap-3.5 sm:mt-10 sm:gap-4"
       >
         <div className="flex items-center gap-2">
           <span
@@ -308,13 +319,6 @@ export function HomeFeedClient({
 
           <HomeLeaderboardPanel items={filteredPopular} />
         </div>
-      </section>
-
-      <section
-        id="continue-reading-section"
-        className="mt-11 flex flex-col sm:mt-12"
-      >
-        <ContinueReadingList items={historyItems} />
       </section>
 
       {updateHariIni.length > 0 && (

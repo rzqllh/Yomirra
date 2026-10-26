@@ -26,38 +26,8 @@ export function ContinueReadingList({
   className,
 }: ContinueReadingListProps) {
   if (!items || items.length === 0) {
-    return (
-      <div className={cn("w-full flex flex-col gap-3.5", className)}>
-        <div className="flex items-center gap-2">
-          <span className="size-2 rounded-full bg-accent" aria-hidden="true" />
-          <h2 className="text-base sm:text-lg font-bold text-text-primary tracking-tight">
-            Lanjut Baca
-          </h2>
-        </div>
-        <div className="ink-panel p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
-          <div className="flex flex-col sm:flex-row items-center gap-3.5">
-            <div className="size-11 rounded-xl bg-accent/10 text-accent flex items-center justify-center border border-accent/20 shrink-0">
-              <BookBookmark size={22} weight="duotone" />
-            </div>
-            <div>
-              <p className="font-bold text-text-primary text-sm sm:text-base">
-                Belum ada bacaan yang sedang kamu lanjutkan
-              </p>
-              <p className="text-xs text-text-muted mt-0.5">
-                Mulai baca manga dari katalog dan progresmu akan otomatis tersimpan di sini.
-              </p>
-            </div>
-          </div>
-          <Link
-            href="/library"
-            className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-accent px-4 text-xs font-bold text-accent-on hover:bg-accent-hover transition-colors shrink-0"
-          >
-            <span>Jelajahi komik</span>
-            <ArrowRight size={14} weight="bold" />
-          </Link>
-        </div>
-      </div>
-    );
+    // Zero-history users seamlessly enter Discovery without layout-pushing empty cards
+    return null;
   }
 
   return (
