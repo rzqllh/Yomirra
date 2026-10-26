@@ -54,7 +54,7 @@ export function NetworkStatus() {
           className="fixed top-[env(safe-area-inset-top,0px)] left-0 right-0 z-[100] flex justify-center mt-2 pointer-events-none"
         >
           <div
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-medium shadow-md backdrop-blur-md ${ isOnline ? "bg-semantic-success/20 text-semantic-success border border-semantic-success/30" : "bg-surface-muted/90 text-text-muted shadow-default border border-border-subtle"}`}
+            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-medium shadow-md backdrop-blur-md ${ isOnline ? "bg-semantic-success/20 text-semantic-success border border-semantic-success/30" : "bg-surface-overlay/95 text-status-warning-fg border border-status-warning-fg/30 shadow-md"}`}
           >
             {isOnline ? (
               <>

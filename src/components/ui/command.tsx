@@ -31,7 +31,7 @@ const CommandDialog = ({ children, shouldFilter, filter, ...props }: CommandDial
       <DialogPortal>
         <DialogOverlay />
         <DialogPrimitive.Content
-          className="command-dialog-content fixed left-1/2 top-[12vh] sm:top-[16vh] z-[var(--z-overlay)] -translate-x-1/2 w-[calc(100vw-32px)] max-w-xl sm:max-w-2xl max-h-[78vh] rounded-[20px] border border-border-subtle bg-surface-base text-text-primary shadow-2xl p-0 overflow-hidden outline-none flex flex-col"
+          className="command-dialog-content fixed left-1/2 top-[12vh] sm:top-[16vh] z-[var(--z-overlay)] -translate-x-1/2 w-[calc(100vw-32px)] max-w-xl sm:max-w-2xl max-h-[78vh] rounded-[24px] border border-border-default bg-surface-overlay text-text-primary shadow-2xl backdrop-blur-xl p-0 overflow-hidden outline-none flex flex-col"
           onCloseAutoFocus={(e) => {
             e.preventDefault();
           }}
