@@ -44,7 +44,7 @@ export default async function RootLayout({
   modal,
 }: Readonly<{
   children: React.ReactNode;
-  modal?: React.ReactNode;
+  modal: React.ReactNode;
 }>) {
   const siteConfig = await getSiteConfig().catch(() => null);
   const maintenanceConfig = siteConfig?.maintenanceMode;

@@ -3,7 +3,6 @@ import { useHistoryStore } from "../history-store";
 import { useLibraryStore } from "../library-store";
 import { resolveContinueChapterId } from "@/shared/lib/chapter-continuity";
 import { executeSourceMigration } from "@/shared/lib/source-fallback";
-import { parseChapterNumber } from "@/shared/lib/chapter-parser";
 
 vi.mock("@/shared/lib/sync-utils", () => ({
   pushHistoryItem: vi.fn().mockResolvedValue(undefined),

@@ -2,7 +2,6 @@ import { SourceRef, LibraryItem } from "@/shared/store/library-store";
 import { HistoryItem } from "@/shared/store/history-store";
 import {
   mapChapterProgress,
-  findNearestSafeChapter,
   parseChapterNumber,
   type ChapterMapResult,
   type ChapterMeta,

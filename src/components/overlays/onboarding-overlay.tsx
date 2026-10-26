@@ -409,7 +409,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
                 2
               </span>
               <p className="leading-relaxed">
-                Gulir ke bawah dan pilih <strong>"Tambah ke Layar Utama" (Add to Home Screen)</strong> <PlusSquare size={14} className="inline mx-0.5 text-accent" weight="bold" />.
+                Gulir ke bawah dan pilih <strong>&quot;Tambah ke Layar Utama&quot; (Add to Home Screen)</strong> <PlusSquare size={14} className="inline mx-0.5 text-accent" weight="bold" />.
               </p>
             </div>
 
@@ -418,7 +418,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
                 3
               </span>
               <p className="leading-relaxed">
-                Ketuk <strong>"Tambah"</strong> di sudut kanan atas untuk membuka Yomirra layaknya aplikasi native.
+                Ketuk <strong>&quot;Tambah&quot;</strong> di sudut kanan atas untuk membuka Yomirra layaknya aplikasi native.
               </p>
             </div>
           </div>
