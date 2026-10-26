@@ -243,7 +243,7 @@ export function PagedReader({
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches && e.touches.length > 0) {
       const touchX = e.touches[0].clientX;
-      const EDGE_THRESHOLD = 24;
+      const EDGE_THRESHOLD = 32; // Apple HIG 32px safe margin for native Safari edge gestures
       if (typeof window !== "undefined" && (touchX < EDGE_THRESHOLD || touchX > window.innerWidth - EDGE_THRESHOLD)) {
         setCanDrag(false);
         return;

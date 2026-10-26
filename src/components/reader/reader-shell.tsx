@@ -292,7 +292,7 @@ export function ReaderShell({
                 <motion.button
                   aria-label="Kembali ke detail komik"
                   whileTap={reducedMotion ? undefined : { scale: 0.97 }}
-                  className="yomirra-chrome-control flex size-9 items-center justify-center rounded-xl  text-text-secondary hover:text-text-primary transition-all shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                  className="yomirra-chrome-control flex size-11 items-center justify-center rounded-xl text-text-secondary hover:text-text-primary transition-all shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent"
                   onClick={handleBack}
                 >
                   <ArrowLeft size={18} weight="bold" />
@@ -319,7 +319,7 @@ export function ReaderShell({
                   aria-label={isSaved ? "Hapus dari bookmark" : "Simpan ke bookmark"}
                   whileTap={reducedMotion ? undefined : { scale: 0.97 }}
                   className={cn(
-                    "yomirra-chrome-control flex size-9 items-center justify-center rounded-xl transition-all shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent",
+                    "yomirra-chrome-control flex size-11 items-center justify-center rounded-xl transition-all shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent",
                     isSaved
                       ? "bg-accent text-white border-accent shadow-xs"
                       : "text-text-secondary hover:text-text-primary hover:bg-surface-hover"
@@ -404,13 +404,13 @@ export function ReaderShell({
                 </motion.button>
               )}
 
-              {/* Yomirra Ink Editorial Bottom Dock */}
-              <div className="yomirra-chrome pointer-events-auto flex h-[58px] w-full max-w-[440px] mx-auto items-center justify-between gap-2 rounded-full text-text-primary px-3 transition-all duration-200">
+              {/* Yomirra Reader Control Dock */}
+              <div className="yomirra-chrome pointer-events-auto flex h-[60px] w-full max-w-[440px] mx-auto items-center justify-between gap-2 rounded-full text-text-primary px-3 transition-all duration-200">
                 <motion.button
                   aria-label="Chapter sebelumnya"
                   whileTap={reducedMotion ? undefined : { scale: 0.97 }}
                   className={cn(
-                    "yomirra-chrome-control flex size-10 items-center justify-center rounded-xl text-text-secondary hover:text-text-primary transition-all shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent",
+                    "yomirra-chrome-control flex size-11 items-center justify-center rounded-xl text-text-secondary hover:text-text-primary transition-all shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent",
                     !prevChapterId && "opacity-30 cursor-not-allowed pointer-events-none"
                   )}
                   disabled={!prevChapterId}
@@ -427,7 +427,7 @@ export function ReaderShell({
 
                 <motion.button
                   whileTap={reducedMotion ? undefined : { scale: 0.97 }}
-                  className="flex-1 h-10 rounded-xl font-bold text-sm bg-accent hover:bg-accent-hover text-white shadow-xs transition-all truncate px-3 flex items-center justify-center gap-1.5 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent "
+                  className="flex-1 h-11 rounded-xl font-bold text-sm bg-accent hover:bg-accent-hover text-white shadow-xs transition-all truncate px-3.5 flex items-center justify-center gap-1.5 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent"
                   onClick={(e) => {
                     e.stopPropagation();
                     setIsChapterDrawerOpen(true);
@@ -441,7 +441,7 @@ export function ReaderShell({
                   aria-label="Chapter berikutnya"
                   whileTap={reducedMotion ? undefined : { scale: 0.97 }}
                   className={cn(
-                    "yomirra-chrome-control flex size-10 items-center justify-center rounded-xl text-text-secondary hover:text-text-primary transition-all shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent",
+                    "yomirra-chrome-control flex size-11 items-center justify-center rounded-xl text-text-secondary hover:text-text-primary transition-all shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent",
                     !nextChapterId && "opacity-30 cursor-not-allowed pointer-events-none"
                   )}
                   disabled={!nextChapterId}
@@ -459,7 +459,7 @@ export function ReaderShell({
                 <motion.button
                   aria-label="Pengaturan pembaca"
                   whileTap={reducedMotion ? undefined : { scale: 0.97 }}
-                  className="yomirra-chrome-control flex size-10 items-center justify-center rounded-xl text-text-secondary hover:text-text-primary transition-all shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                  className="yomirra-chrome-control flex size-11 items-center justify-center rounded-xl text-text-secondary hover:text-text-primary transition-all shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent"
                   onClick={(e) => {
                     e.stopPropagation();
                     if (window.innerWidth >= 768) {
