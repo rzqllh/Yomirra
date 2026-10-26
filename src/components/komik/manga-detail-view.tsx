@@ -109,8 +109,11 @@ export function MangaDetailView({
   const readerReturnTo = backHref;
 
   const getLatestForManga = useHistoryStore((state) => state.getLatestForManga);
+  const getHighestMilestoneForManga = useHistoryStore((state) => state.getHighestMilestoneForManga);
   const historyItems = useHistoryStore((state) => state.items); // keep subscription
-  const historyItem = isMounted ? getLatestForManga(sourceId, mangaId) : undefined;
+  const highestMilestone = isMounted ? getHighestMilestoneForManga(sourceId, mangaId) : undefined;
+  const latestRead = isMounted ? getLatestForManga(sourceId, mangaId) : undefined;
+  const historyItem = highestMilestone || latestRead;
 
   const deferredSearchQuery = useDeferredValue(searchQuery);
 
@@ -490,7 +493,7 @@ export function MangaDetailView({
                 </span>
                 <button 
                   onClick={() => setSortOrder(prev => prev === "desc" ? "asc" : "desc")}
-                  className="flex items-center gap-1.5 text-[12px] font-semibold text-text-muted hover:text-text-primary transition-colors py-1 px-2 rounded-lg hover:bg-surface-hover"
+                  className="flex items-center gap-1.5 min-h-[44px] text-[12px] font-semibold text-text-muted hover:text-text-primary transition-colors py-1 px-3 rounded-lg hover:bg-surface-hover"
                 >
                   {sortOrder === "desc" ? "Terbaru" : "Terlama"}
                   {sortOrder === "desc" ? <SortDescending size={16} /> : <SortAscending size={16} />}
@@ -504,7 +507,7 @@ export function MangaDetailView({
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Cari chapter…"
                     aria-label="Cari chapter"
-                    containerClassName="flex-1 h-[42px] rounded-xl bg-surface-raised border border-border-default/80 focus-within:border-accent/50 focus-within:ring-2 focus-within:ring-accent/20"
+                    containerClassName="flex-1 h-[44px] rounded-xl bg-surface-raised border border-border-default/80 focus-within:border-accent/50 focus-within:ring-2 focus-within:ring-accent/20"
                   />
                 </div>
               )}

@@ -83,7 +83,7 @@ export function MangaDetailLayout({
             <div className="flex gap-4 relative items-end">
               <div
                 className={cn(
-                  "relative shrink-0 aspect-[2/3] rounded-[18px] overflow-hidden shadow-heavy ring-1 ring-white/20 bg-surface-raised z-20",
+                  "relative shrink-0 aspect-[2/3] rounded-[18px] overflow-hidden shadow-lg border border-white/10 dark:border-white/10 bg-surface-raised z-20",
                   mobileCoverClassName
                 )}
                 style={{ width: "clamp(130px, 36vw, 165px)" }}
@@ -109,7 +109,7 @@ export function MangaDetailLayout({
           <div className="hidden md:flex gap-8 items-end">
             <div
               className={cn(
-                "relative w-[220px] lg:w-[240px] shrink-0 aspect-[2/3] rounded-[20px] overflow-hidden shadow-heavy ring-1 ring-white/20 bg-surface-raised z-20",
+                "relative w-[220px] lg:w-[240px] shrink-0 aspect-[2/3] rounded-[20px] overflow-hidden shadow-lg border border-white/10 dark:border-white/10 bg-surface-raised z-20",
                 desktopCoverClassName
               )}
             >

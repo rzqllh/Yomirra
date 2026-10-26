@@ -38,6 +38,7 @@ interface HistoryState {
   removeMangaHistory: (sourceId: string, mangaId: string) => void;
   clearHistory: () => void;
   getLatestForManga: (sourceId: string, mangaId: string) => HistoryItem | undefined;
+  getHighestMilestoneForManga: (sourceId: string, mangaId: string) => HistoryItem | undefined;
   getContinueReading: (limit?: number) => HistoryItem[];
   getHistoryList: () => HistoryItem[];
   markChapterProgress: (sourceId: string, mangaId: string, chapterId: string, pageIndex: number, totalPages: number, scrollPercent?: number) => void;
@@ -181,23 +182,71 @@ export const useHistoryStore = create<HistoryState>()(
         return mangaHistory.sort((a, b) => b.readAt - a.readAt)[0];
       },
 
+      getHighestMilestoneForManga: (sourceId, mangaId) => {
+        const allItems = Object.values(get().items);
+        let mangaHistory = allItems.filter(i => i.sourceId === sourceId && i.mangaId === mangaId);
+        
+        if (mangaHistory.length === 0) {
+          const savedTitleId = get().resolveSavedTitleId(sourceId, mangaId);
+          if (savedTitleId) {
+            mangaHistory = allItems.filter(i => i.savedTitleId === savedTitleId || get().resolveSavedTitleId(i.sourceId, i.mangaId) === savedTitleId);
+          }
+        }
+
+        if (mangaHistory.length === 0) return undefined;
+        
+        // Return item with highest verified milestone (Q52/Q63)
+        return [...mangaHistory].sort((a, b) => {
+          if (typeof a.chapterNumber === "number" && typeof b.chapterNumber === "number") {
+            if (b.chapterNumber !== a.chapterNumber) return b.chapterNumber - a.chapterNumber;
+          }
+          if (typeof a.chapterIndex === "number" && typeof b.chapterIndex === "number") {
+            if (b.chapterIndex !== a.chapterIndex) return b.chapterIndex - a.chapterIndex;
+          }
+          if (a.chapterId === b.chapterId) {
+            return (b.progressPercent ?? 0) - (a.progressPercent ?? 0);
+          }
+          return b.readAt - a.readAt;
+        })[0];
+      },
+
       getContinueReading: (limit) => {
         const allItems = Object.values(get().items);
         
-        // Group by manga to only get the latest chapter read for each manga
-        const latestPerManga = new Map<string, HistoryItem>();
+        // Group by manga to only get the highest milestone chapter read for each manga (Q52)
+        const latestPerManga = new Map<string, { milestoneItem: HistoryItem; latestActivity: number }>();
         
         for (const item of allItems) {
           const key = item.savedTitleId ?? get().resolveSavedTitleId(item.sourceId, item.mangaId) ?? `${item.sourceId}::${item.mangaId}`;
           const existing = latestPerManga.get(key);
           
-          if (!existing || item.readAt > existing.readAt) {
-            latestPerManga.set(key, item);
+          if (!existing) {
+            latestPerManga.set(key, { milestoneItem: item, latestActivity: item.readAt });
+          } else {
+            const latestActivity = Math.max(existing.latestActivity, item.readAt);
+            let isHigherMilestone = false;
+            const currentMilestone = existing.milestoneItem;
+            
+            if (typeof item.chapterNumber === "number" && typeof currentMilestone.chapterNumber === "number") {
+              isHigherMilestone = item.chapterNumber > currentMilestone.chapterNumber;
+            } else if (typeof item.chapterIndex === "number" && typeof currentMilestone.chapterIndex === "number") {
+              isHigherMilestone = item.chapterIndex > currentMilestone.chapterIndex;
+            } else if (item.chapterId === currentMilestone.chapterId) {
+              isHigherMilestone = (item.progressPercent ?? 0) > (currentMilestone.progressPercent ?? 0);
+            } else {
+              isHigherMilestone = item.readAt > currentMilestone.readAt;
+            }
+            
+            latestPerManga.set(key, {
+              milestoneItem: isHigherMilestone ? item : currentMilestone,
+              latestActivity,
+            });
           }
         }
         
         const sorted = Array.from(latestPerManga.values())
-          .sort((a, b) => b.readAt - a.readAt);
+          .sort((a, b) => b.latestActivity - a.latestActivity)
+          .map(entry => entry.milestoneItem);
           
         return limit ? sorted.slice(0, limit) : sorted;
       },
