@@ -85,7 +85,7 @@ export function ReadingTab({
             <HistoryCard
               key={`${group.sourceId}::${group.mangaId}`}
               item={item}
-              className="bg-surface-raised/20 hover:bg-surface-raised/50 shadow-none w-full max-w-none snap-none"
+              className="bg-surface-raised border border-border-subtle hover:border-border-default shadow-xs w-full max-w-none snap-none"
               onDeleteOverride={(sourceId, mangaId, title) => onRemoveHistory(sourceId, mangaId, title)}
             />
           );

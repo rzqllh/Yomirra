@@ -88,7 +88,7 @@ export function BookmarkPageView() {
 
           <Link
             href="/updates"
-            className="inline-flex items-center justify-between sm:justify-start gap-2 px-3 py-2 rounded-lg bg-surface-muted/50 border border-border-subtle hover:bg-surface-hover hover:border-accent/40 text-xs font-semibold text-text-secondary transition-colors shrink-0"
+            className="inline-flex min-h-[44px] items-center justify-between sm:justify-start gap-2 px-3.5 py-2 rounded-[12px] bg-surface-raised border border-border-subtle hover:bg-surface-hover hover:border-border-default text-xs font-semibold text-text-secondary transition-colors shrink-0"
           >
             <span className="flex items-center gap-2">
               <CalendarBlank size={16} weight="duotone" className="text-text-muted" />
