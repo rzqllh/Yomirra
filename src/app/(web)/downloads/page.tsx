@@ -61,7 +61,7 @@ export default function DownloadsPage() {
           });
         }
       }}
-      className="inline-flex min-h-10 items-center gap-2 self-start sm:self-auto px-3.5 py-1.5 rounded-xl text-xs font-bold text-semantic-error hover:bg-semantic-error/10 border border-semantic-error/30 active:scale-95 transition-all shadow-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer"
+      className="inline-flex min-h-11 items-center gap-2 self-start sm:self-auto px-3.5 py-2 rounded-xl text-xs font-bold text-semantic-error hover:bg-semantic-error/10 border border-semantic-error/30 active:scale-95 transition-all shadow-xs focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer"
     >
       <Trash size={16} />
       <span>Hapus Semua</span>

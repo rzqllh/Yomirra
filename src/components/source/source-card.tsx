@@ -43,7 +43,7 @@ function getReaderHealth(status: string): ReaderHealth {
   if (status === "online") return { label: "Normal", variant: "success" }
   if (status === "slow") return { label: "Lambat", variant: "warning" }
   if (status === "degraded") return { label: "Gangguan", variant: "warning" }
-  if (status === "unknown") return { label: "Normal", variant: "success" }
+  if (status === "unknown") return { label: "Belum diperiksa", variant: "muted" }
   return { label: "Tidak dapat digunakan", variant: "error" }
 }
 
