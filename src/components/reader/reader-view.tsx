@@ -197,10 +197,17 @@ export function ReaderView({
 
     const libItem = getLibraryItem(sourceId, mangaId);
     if (libItem) {
+      const prevMilestoneIndex = libItem.highestMilestoneIndex ?? 0;
+      const isHigher = !libItem.highestMilestoneChapterId || readCount >= prevMilestoneIndex;
       updateLibraryItem(sourceId, mangaId, {
         lastReadChapterId: chapterId,
         lastReadChapterTitle: chapterTitle,
         lastReadAt: new Date().toISOString(),
+        ...(isHigher ? {
+          highestMilestoneChapterId: chapterId,
+          highestMilestoneChapterTitle: chapterTitle,
+          highestMilestoneIndex: readCount,
+        } : {}),
       });
     }
   }, [initialDetail, chapterId, sourceId, mangaId, chapterTitle, initialChapters, upsertHistory, getLibraryItem, updateLibraryItem]);

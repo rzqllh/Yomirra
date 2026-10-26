@@ -34,6 +34,9 @@ export type LibraryItem = {
   lastReadChapterId?: string;
   lastReadChapterTitle?: string;
   lastReadAt?: string;
+  highestMilestoneChapterId?: string;
+  highestMilestoneChapterTitle?: string;
+  highestMilestoneIndex?: number;
   userRating?: number; // 1-10 rating
   isBookmarked?: boolean;
   isNsfw?: boolean;

@@ -389,8 +389,8 @@ export function executeSourceMigration(params: {
   const savedTitleId = libraryItem.id ?? `${libraryItem.sourceId}::${libraryItem.mangaId}`;
   const fromSourceId = libraryItem.primarySourceId ?? libraryItem.sourceId;
   const fromMangaId = libraryItem.primaryMangaId ?? libraryItem.mangaId;
-  const fromChapterId = historyItem?.chapterId ?? libraryItem.lastReadChapterId;
-  const fromChapterTitle = historyItem?.chapterTitle ?? libraryItem.lastReadChapterTitle;
+  const fromChapterId = historyItem?.chapterId ?? libraryItem.highestMilestoneChapterId ?? libraryItem.lastReadChapterId;
+  const fromChapterTitle = historyItem?.chapterTitle ?? libraryItem.highestMilestoneChapterTitle ?? libraryItem.lastReadChapterTitle;
   const fromChapterNumber = historyItem?.chapterNumber;
   const fromPageIndex = historyItem?.pageIndex ?? 0;
 
