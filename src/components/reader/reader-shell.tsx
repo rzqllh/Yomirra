@@ -300,11 +300,11 @@ export function ReaderShell({
 
                 {/* Center: Manga Title (Top) & Chapter (Bottom) */}
                 <div className="flex flex-col items-center justify-center px-3 min-w-0 flex-1 select-none">
-                  <span className="text-sm sm:text-[15px] font-bold truncate max-w-[220px] sm:max-w-[400px] tracking-tight text-center leading-tight text-text-primary">
+                  <span className="text-sm sm:text-[15px] font-bold truncate w-full max-w-full tracking-tight text-center leading-tight text-text-primary">
                     {mangaTitle || chapterTitle}
                   </span>
                   {mangaTitle && chapterTitle ? (
-                    <span className="text-[10.5px] font-semibold tracking-wider uppercase text-center mt-0.5 truncate max-w-[200px] sm:max-w-[360px] text-text-muted">
+                    <span className="text-[10.5px] font-semibold tracking-wider uppercase text-center mt-0.5 truncate w-full max-w-full text-text-muted">
                       {chapterTitle}
                     </span>
                   ) : pageCount ? (
