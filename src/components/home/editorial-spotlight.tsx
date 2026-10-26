@@ -226,7 +226,7 @@ export function EditorialSpotlight({
         <div className="relative flex min-w-0 flex-col p-3.5 sm:p-5 lg:p-6">
           <div className="flex min-h-0 flex-1 flex-col">
             <p className="mb-1.5 text-[10px] font-extrabold uppercase tracking-[0.14em] text-accent sm:text-[11px]">
-              REKOMENDASI MINGGU INI
+              SOROTAN TERBARU
             </p>
 
             <Link

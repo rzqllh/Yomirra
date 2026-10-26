@@ -60,20 +60,22 @@ describe('UpdatesList Component', () => {
     expect(titles[1]).toBe('Title 1');
   });
 
-  it('marks all as seen on unmount', async () => {
+  it('does not mark all as seen on unmount (Q121), and allows explicit mark all as seen', () => {
     (useUpdateStore as any).mockReturnValue({
       items: {
-        'sourceA::manga1': { sourceId: 'sourceA', mangaId: 'manga1', mangaTitle: 'Title 1', detectedAt: new Date().toISOString() }
+        'sourceA::manga1': { sourceId: 'sourceA', mangaId: 'manga1', mangaTitle: 'Title 1', detectedAt: new Date().toISOString(), latestChapterId: 'chap1' }
       },
       markAllAsSeen: mockMarkAllAsSeen,
     });
 
-    const { unmount } = render(<UpdatesList />);
-    unmount();
+    const { unmount } = render(<UpdatesList initialDay="all" />);
     
-    await waitFor(() => {
-      expect(mockMarkAllAsSeen).toHaveBeenCalled();
-    });
+    const markAllBtn = screen.getByRole('button', { name: /Tandai Semua Dilihat/i });
+    fireEvent.click(markAllBtn);
+    expect(mockMarkAllAsSeen).toHaveBeenCalledTimes(1);
+
+    unmount();
+    expect(mockMarkAllAsSeen).toHaveBeenCalledTimes(1);
   });
 
   it('calls scanLibraryUpdates with forceRefresh when Perbarui button clicked', () => {
