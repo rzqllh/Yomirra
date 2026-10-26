@@ -7,7 +7,8 @@ import { useLibraryStore } from "@/shared/store/library-store";
 import { useHistoryStore } from "@/shared/store/history-store";
 import { cn } from "@/shared/utils/cn";
 import { usePWAInstall } from "@/shared/hooks/use-pwa-install";
-import { DownloadSimple } from "@phosphor-icons/react";
+import { DownloadSimple, Export, PlusSquare, X } from "@phosphor-icons/react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const STEPS = [
   {
@@ -48,7 +49,7 @@ function getCardStyle(index: number, currentStep: number, totalCards: number) {
 
 export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
   const { completeOnboarding } = useOnboardingStore();
-  const { isInstallable, installPWA } = usePWAInstall();
+  const { isInstallable, installPWA, isIOS, showIOSGuide, setShowIOSGuide } = usePWAInstall();
   const reducedMotion = useReducedMotion();
   const dialogRef = React.useRef<HTMLDivElement>(null);
   const skipButtonRef = React.useRef<HTMLButtonElement>(null);
@@ -379,6 +380,58 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
           </AnimatePresence>
         </div>
       </footer>
+
+      {/* iOS Safari Add to Home Screen Guidance Dialog (Q134-Q147) */}
+      <Dialog open={showIOSGuide} onOpenChange={setShowIOSGuide}>
+        <DialogContent className="max-w-sm rounded-2xl bg-surface-overlay border border-border-default/80 p-5 text-text-primary">
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold flex items-center gap-2">
+              <Export size={20} className="text-accent" weight="bold" />
+              <span>Pasang di iPhone / iPad</span>
+            </DialogTitle>
+            <DialogDescription className="text-xs text-text-muted">
+              Yomirra dirancang sebagai PWA mandiri tanpa browser chrome.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex flex-col gap-3.5 pt-2 text-xs text-text-secondary">
+            <div className="flex items-start gap-3 p-3 rounded-xl bg-surface-raised border border-border-subtle">
+              <span className="flex size-6 items-center justify-center rounded-full bg-accent/15 text-accent font-bold shrink-0">
+                1
+              </span>
+              <p className="leading-relaxed">
+                Ketuk tombol <strong>Bagikan (Share)</strong> <Export size={14} className="inline mx-0.5 text-accent" weight="bold" /> di bilah navigasi Safari.
+              </p>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 rounded-xl bg-surface-raised border border-border-subtle">
+              <span className="flex size-6 items-center justify-center rounded-full bg-accent/15 text-accent font-bold shrink-0">
+                2
+              </span>
+              <p className="leading-relaxed">
+                Gulir ke bawah dan pilih <strong>"Tambah ke Layar Utama" (Add to Home Screen)</strong> <PlusSquare size={14} className="inline mx-0.5 text-accent" weight="bold" />.
+              </p>
+            </div>
+
+            <div className="flex items-start gap-3 p-3 rounded-xl bg-surface-raised border border-border-subtle">
+              <span className="flex size-6 items-center justify-center rounded-full bg-accent/15 text-accent font-bold shrink-0">
+                3
+              </span>
+              <p className="leading-relaxed">
+                Ketuk <strong>"Tambah"</strong> di sudut kanan atas untuk membuka Yomirra layaknya aplikasi native.
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setShowIOSGuide(false)}
+            className="w-full mt-2 min-h-11 rounded-xl bg-accent text-white font-bold text-xs hover:bg-accent-hover transition-colors cursor-pointer"
+          >
+            Mengerti
+          </button>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 }
