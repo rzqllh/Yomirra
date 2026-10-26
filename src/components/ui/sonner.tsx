@@ -83,27 +83,27 @@ const Toaster = ({ position: propPosition, ...props }: ToasterProps) => {
       visibleToasts={4}
       icons={{
         success: (
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white shadow-sm ring-2 ring-emerald-500/25">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-semantic-success text-white shadow-xs">
             <Check size={16} weight="bold" />
           </div>
         ),
         error: (
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-rose-500 text-white shadow-sm ring-2 ring-rose-500/25">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-semantic-error text-white shadow-xs">
             <X size={16} weight="bold" />
           </div>
         ),
         warning: (
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-500 text-white shadow-sm ring-2 ring-amber-500/25">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-status-warning-bg text-status-warning-fg border border-status-warning-fg/30 shadow-xs">
             <Warning size={16} weight="bold" />
           </div>
         ),
         info: (
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-500 text-white shadow-sm ring-2 ring-blue-500/25">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-raised border border-border-default text-text-primary shadow-xs">
             <Info size={16} weight="bold" />
           </div>
         ),
         loading: (
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-500 text-white shadow-sm ring-2 ring-indigo-500/25">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-white shadow-xs">
             <CircleNotch size={16} weight="bold" className="motion-safe:animate-spin" />
           </div>
         ),

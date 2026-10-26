@@ -56,7 +56,7 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
       {isOffline && isAllowedOffline && (
         <div
           data-testid="offline-banner"
-          className="fixed top-0 left-0 right-0 z-[60] bg-amber-500/90 text-amber-950 dark:bg-amber-600 dark:text-white px-3 py-1 text-xs font-semibold text-center flex items-center justify-center gap-2 backdrop-blur-md shadow-sm pointer-events-none"
+          className="fixed top-0 left-0 right-0 z-[60] bg-surface-raised/95 text-text-primary border-b border-border-default pt-[calc(var(--safe-top,0px)+4px)] pb-1.5 px-3 text-xs font-semibold text-center flex items-center justify-center gap-2 backdrop-blur-md shadow-xs pointer-events-none"
         >
           <WifiSlash size={14} weight="bold" />
           <span>Offline — menampilkan data yang tersimpan di perangkat</span>

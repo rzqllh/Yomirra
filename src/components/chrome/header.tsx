@@ -144,14 +144,14 @@ export function PageHeader({
           className
         )}
       >
-        <div className="flex items-center justify-between w-full transition-all duration-300 ease-out pointer-events-auto h-10">
+        <div className="flex items-center justify-between w-full transition-all duration-300 ease-out pointer-events-auto h-11">
           <div className="flex items-center gap-2.5 flex-1 min-w-0">
             {showBack ? (
               <button
                 type="button"
                 onClick={handleBack}
                 className={cn(
-                  "flex size-10 items-center justify-center rounded-2xl active:scale-95 transition-all shrink-0 select-none outline-none cursor-pointer",
+                  "flex size-11 items-center justify-center rounded-2xl active:scale-95 transition-all shrink-0 select-none outline-none cursor-pointer",
                   mode === "detail" && !isGlass
                     ? "bg-black/40 hover:bg-black/60 text-white backdrop-blur-md border border-white/20 shadow-sm"
                     : "yomirra-chrome-control text-text-primary"
@@ -162,7 +162,7 @@ export function PageHeader({
               </button>
             ) : (
               icon && (
-                <div className="yomirra-chrome-control flex size-10 items-center justify-center rounded-2xl text-accent shrink-0 select-none">
+                <div className="yomirra-chrome-control flex size-11 items-center justify-center rounded-2xl text-accent shrink-0 select-none">
                   {icon}
                 </div>
               )
