@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
-import { useReaderStore } from "@/shared/store/reader-store";
+import { useReaderStore, useEffectiveReaderPreferences } from "@/shared/store/reader-store";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useHistoryStore } from "@/shared/store/history-store";
 import { useDownloadStore } from "@/shared/store/download-store";
@@ -51,7 +51,7 @@ export function PagedReader({
   onRefreshChapter,
 }: PagedReaderProps) {
   const router = useRouter();
-  const preferences = useReaderStore(state => state.preferences);
+  const preferences = useEffectiveReaderPreferences(sourceId, mangaId);
   const toggleOverlay = useReaderStore(state => state.toggleOverlay);
   const setPagedProgress = useReaderStore(state => state.setPagedProgress);
   const { dataSaver } = useSettingsStore();

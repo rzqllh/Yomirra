@@ -3,6 +3,7 @@ import { HistoryItem } from "@/shared/store/history-store";
 import {
   mapChapterProgress,
   findNearestSafeChapter,
+  parseChapterNumber,
   type ChapterMapResult,
   type ChapterMeta,
 } from "./chapter-parser";
@@ -357,6 +358,7 @@ export function executeSourceMigration(params: {
   libraryItem: LibraryItem;
   fallbackResult: SourceFallbackResult;
   historyItem?: HistoryItem;
+  milestoneItem?: HistoryItem;
   isPermanent?: boolean;
   relinkTitleFn?: (
     savedTitleIdOrKey: string,
@@ -389,10 +391,40 @@ export function executeSourceMigration(params: {
   const savedTitleId = libraryItem.id ?? `${libraryItem.sourceId}::${libraryItem.mangaId}`;
   const fromSourceId = libraryItem.primarySourceId ?? libraryItem.sourceId;
   const fromMangaId = libraryItem.primaryMangaId ?? libraryItem.mangaId;
-  const fromChapterId = historyItem?.chapterId ?? libraryItem.highestMilestoneChapterId ?? libraryItem.lastReadChapterId;
-  const fromChapterTitle = historyItem?.chapterTitle ?? libraryItem.highestMilestoneChapterTitle ?? libraryItem.lastReadChapterTitle;
-  const fromChapterNumber = historyItem?.chapterNumber;
-  const fromPageIndex = historyItem?.pageIndex ?? 0;
+  // Q52/Q63: Anchor migration to highest verified milestone, never regressing to an older reread chapter
+  let fromChapterId = libraryItem.highestMilestoneChapterId;
+  let fromChapterTitle = libraryItem.highestMilestoneChapterTitle;
+  let fromChapterNumber: number | undefined;
+  let fromPageIndex = 0;
+
+  if (params.milestoneItem) {
+    fromChapterId = params.milestoneItem.chapterId;
+    fromChapterTitle = params.milestoneItem.chapterTitle;
+    fromChapterNumber = params.milestoneItem.chapterNumber ?? (params.milestoneItem.chapterTitle ? parseChapterNumber(params.milestoneItem.chapterTitle) ?? undefined : undefined);
+    fromPageIndex = params.milestoneItem.pageIndex ?? 0;
+  } else if (historyItem) {
+    const historyNum = historyItem.chapterNumber ?? (historyItem.chapterTitle ? parseChapterNumber(historyItem.chapterTitle) : null);
+    const libNum = libraryItem.highestMilestoneChapterTitle ? parseChapterNumber(libraryItem.highestMilestoneChapterTitle) : null;
+
+    if (libNum !== null && historyNum !== null && historyNum < libNum) {
+      // Q52: Reread lower chapter does not regress the milestone! Keep library milestone.
+    } else if (historyItem.chapterIndex !== undefined && libraryItem.highestMilestoneIndex !== undefined && historyItem.chapterIndex < libraryItem.highestMilestoneIndex) {
+      // Q52: Reread lower index does not regress the milestone!
+    } else {
+      fromChapterId = historyItem.chapterId || fromChapterId;
+      fromChapterTitle = historyItem.chapterTitle || fromChapterTitle;
+      fromChapterNumber = historyNum ?? undefined;
+      fromPageIndex = historyItem.pageIndex ?? 0;
+    }
+  }
+
+  if (!fromChapterId) {
+    fromChapterId = libraryItem.lastReadChapterId;
+    fromChapterTitle = libraryItem.lastReadChapterTitle;
+  }
+  if (fromChapterNumber === undefined && fromChapterTitle) {
+    fromChapterNumber = parseChapterNumber(fromChapterTitle) ?? undefined;
+  }
 
   const toSourceId = candidate.sourceId;
   const toMangaId = candidate.mangaId;

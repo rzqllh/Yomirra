@@ -20,6 +20,7 @@ import { getDownloadChapterId } from "@/shared/utils/download-helpers";
 import type { MangaDetail, Chapter, PageItem } from "@/shared/types/source";
 import { useAlternateSource } from "@/shared/hooks/use-alternate-source";
 import { AlternateSourceModal } from "@/components/komik/alternate-source-modal";
+import { parseChapterNumber } from "@/shared/lib/chapter-parser";
 
 interface ReaderViewProps {
   sourceId: string;
@@ -44,10 +45,12 @@ export function ReaderView({
   const upsertHistory = useHistoryStore(state => state.upsertHistory);
   const getLibraryItem = useLibraryStore(state => state.getLibraryItem);
   const updateLibraryItem = useLibraryStore(state => state.updateLibraryItem);
-  const readingMode = useReaderStore(state => {
-    const titleKey = `${sourceId}::${mangaId}`;
-    return state.perTitlePreferences[titleKey]?.readingMode ?? state.preferences.readingMode;
-  });
+  const titleKey = sourceId && mangaId ? `${sourceId}::${mangaId}` : null;
+  const perTitleReadingMode = useReaderStore((state) =>
+    titleKey ? state.perTitlePreferences[titleKey]?.readingMode : undefined
+  );
+  const globalReadingMode = useReaderStore((state) => state.preferences.readingMode);
+  const readingMode = perTitleReadingMode ?? globalReadingMode;
 
   const downloadId = getDownloadChapterId(sourceId, mangaId, chapterId);
   const downloadStatus = useDownloadStore(state => state.downloads[downloadId]?.status);
@@ -180,6 +183,8 @@ export function ReaderView({
       }
     }
     
+    const parsedChapterNumber = currentChapterForHistory?.number ?? parseChapterNumber(chapterTitle) ?? undefined;
+
     upsertHistory({
       sourceId,
       mangaId,
@@ -191,6 +196,7 @@ export function ReaderView({
       seriesProgressPercent,
       chapterIndex: readCount,
       totalChapters,
+      chapterNumber: parsedChapterNumber,
       status: initialDetail.status,
       readAt: Date.now(),
     });

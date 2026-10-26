@@ -46,9 +46,13 @@ export function DeadSourceRecovery({ sourceId, mangaId, health = { status: "BROK
   );
   const relinkTitle = useLibraryStore((state) => state.relinkTitle);
 
-  const historyItem = useHistoryStore((state) =>
+  const highestMilestone = useHistoryStore((state) =>
+    state.getHighestMilestoneForManga(sourceId, mangaId)
+  );
+  const latestRead = useHistoryStore((state) =>
     state.getLatestForManga(sourceId, mangaId)
   );
+  const historyItem = highestMilestone || latestRead;
 
   const allDownloads = useDownloadStore((state) => state.downloads);
   const offlineChapters = useMemo(() => {
@@ -62,7 +66,7 @@ export function DeadSourceRecovery({ sourceId, mangaId, health = { status: "BROK
   const knownTitle = libraryItem?.title ?? historyItem?.mangaTitle ?? "Komik ini";
   const knownCover = libraryItem?.coverUrl ?? historyItem?.coverUrl;
   const knownAuthor = libraryItem?.author;
-  const lastReadChapter = historyItem?.chapterTitle ?? libraryItem?.lastReadChapterTitle;
+  const lastReadChapter = highestMilestone?.chapterTitle ?? libraryItem?.highestMilestoneChapterTitle ?? latestRead?.chapterTitle ?? libraryItem?.lastReadChapterTitle;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
@@ -181,6 +185,7 @@ export function DeadSourceRecovery({ sourceId, mangaId, health = { status: "BROK
       libraryItem,
       fallbackResult: fallbackEvaluation,
       historyItem,
+      milestoneItem: highestMilestone,
       relinkTitleFn: relinkTitle,
       saveProgressFn: (src, mid, cid, pidx) => useHistoryStore.getState().saveProgress(src, mid, cid, pidx),
     });
@@ -218,6 +223,7 @@ export function DeadSourceRecovery({ sourceId, mangaId, health = { status: "BROK
         libraryItem,
         fallbackResult,
         historyItem,
+        milestoneItem: highestMilestone,
         relinkTitleFn: relinkTitle,
         saveProgressFn: (src, mid, cid, pidx) => useHistoryStore.getState().saveProgress(src, mid, cid, pidx),
       });

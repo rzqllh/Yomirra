@@ -1,3 +1,4 @@
+import * as React from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { ReaderPreferences } from "@/shared/types/manga";
@@ -119,3 +120,19 @@ export const useReaderStore = create<ReaderState>()(
     }
   )
 );
+
+/**
+ * Hook to select effective reader preferences stably for a title context.
+ * Uses separate stable Zustand selectors and memoizes the merged object,
+ * preventing referential inequality and getSnapshot re-render thrashing.
+ */
+export function useEffectiveReaderPreferences(sourceId?: string, mangaId?: string): ReaderPreferences {
+  const globalPreferences = useReaderStore((state) => state.preferences);
+  const titleKey = sourceId && mangaId ? `${sourceId}::${mangaId}` : null;
+  const perTitle = useReaderStore((state) => (titleKey ? state.perTitlePreferences[titleKey] : undefined));
+
+  return React.useMemo(() => {
+    if (!perTitle) return globalPreferences;
+    return { ...globalPreferences, ...perTitle };
+  }, [globalPreferences, perTitle]);
+}

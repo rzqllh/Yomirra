@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
-import { useReaderStore } from "@/shared/store/reader-store"
+import { useReaderStore, useEffectiveReaderPreferences } from "@/shared/store/reader-store"
 import { CaretLeft, Gear, CaretRight, List, CaretUp, BookmarkSimple, BookOpen, ArrowLeft } from "@phosphor-icons/react"
 import { useLibraryStore } from "@/shared/store/library-store"
 import { cn } from "@/shared/utils/cn"
@@ -52,7 +52,13 @@ export function ReaderShell({
 }: ReaderShellProps) {
   const router = useRouter()
   const reducedMotion = useReducedMotion()
-  const { preferences, isOverlayVisible, isDesktopPanelOpen, toggleDesktopPanel, toggleOverlay, setOverlayVisible, pagedProgress } = useReaderStore()
+  const isOverlayVisible = useReaderStore(state => state.isOverlayVisible);
+  const isDesktopPanelOpen = useReaderStore(state => state.isDesktopPanelOpen);
+  const toggleDesktopPanel = useReaderStore(state => state.toggleDesktopPanel);
+  const toggleOverlay = useReaderStore(state => state.toggleOverlay);
+  const setOverlayVisible = useReaderStore(state => state.setOverlayVisible);
+  const pagedProgress = useReaderStore(state => state.pagedProgress);
+  const preferences = useEffectiveReaderPreferences(sourceId, mangaId);
   const [isDrawerOpen, setIsDrawerOpen] = React.useState(false)
   const [isChapterDrawerOpen, setIsChapterDrawerOpen] = React.useState(false)
   const [showBackToTop, setShowBackToTop] = React.useState(false)
@@ -516,6 +522,8 @@ export function ReaderShell({
       <ReaderSettingsDrawer
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
+        sourceId={sourceId}
+        mangaId={mangaId}
       />
 
       <ReaderChapterDrawer

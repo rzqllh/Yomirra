@@ -91,34 +91,45 @@ function ReaderSettingsOption<T extends string>({
 }
 
 export function ReaderSettingsDrawer({ isOpen, onClose, sourceId, mangaId }: ReaderSettingsDrawerProps) {
-  const { 
-    preferences: globalPrefs, 
-    updatePreferences, 
-    perTitlePreferences, 
-    getTitlePreferences, 
-    updateTitlePreferences, 
-    resetTitlePreferences, 
-    isDesktopPanelOpen, 
-    toggleDesktopPanel 
-  } = useReaderStore();
+  const globalPrefs = useReaderStore((state) => state.preferences);
+  const updatePreferences = useReaderStore((state) => state.updatePreferences);
+  const titleKey = sourceId && mangaId ? `${sourceId}::${mangaId}` : null;
+  const perTitlePrefs = useReaderStore((state) => (titleKey ? state.perTitlePreferences[titleKey] : undefined));
+  const updateTitlePreferences = useReaderStore((state) => state.updateTitlePreferences);
+  const resetTitlePreferences = useReaderStore((state) => state.resetTitlePreferences);
+  const isDesktopPanelOpen = useReaderStore((state) => state.isDesktopPanelOpen);
+  const toggleDesktopPanel = useReaderStore((state) => state.toggleDesktopPanel);
 
   const isPerTitleContext = Boolean(sourceId && mangaId);
-  const [savePerTitle, setSavePerTitle] = React.useState(true);
+  const hasPerTitleOverride = Boolean(perTitlePrefs && Object.keys(perTitlePrefs).length > 0);
 
+  // Scope: 'title' (Khusus judul ini) or 'global' (Semua komik)
+  const [scope, setScope] = React.useState<"title" | "global">("title");
+
+  // Effective preferences:
   const preferences = React.useMemo(() => {
-    if (isPerTitleContext && sourceId && mangaId) {
-      return getTitlePreferences(sourceId, mangaId);
+    if (isPerTitleContext && perTitlePrefs) {
+      return { ...globalPrefs, ...perTitlePrefs };
     }
     return globalPrefs;
-  }, [isPerTitleContext, sourceId, mangaId, getTitlePreferences, globalPrefs, perTitlePreferences]);
+  }, [isPerTitleContext, globalPrefs, perTitlePrefs]);
 
-  const handleUpdate = React.useCallback((patch: Parameters<typeof updatePreferences>[0]) => {
-    if (isPerTitleContext && savePerTitle && sourceId && mangaId) {
-      updateTitlePreferences(sourceId, mangaId, patch);
-    } else {
-      handleUpdate(patch);
+  const handleUpdate = React.useCallback(
+    (patch: Partial<Parameters<typeof updatePreferences>[0]>) => {
+      if (isPerTitleContext && scope === "title" && sourceId && mangaId) {
+        updateTitlePreferences(sourceId, mangaId, patch);
+      } else {
+        updatePreferences(patch);
+      }
+    },
+    [isPerTitleContext, scope, sourceId, mangaId, updateTitlePreferences, updatePreferences]
+  );
+
+  const handleResetTitle = React.useCallback(() => {
+    if (sourceId && mangaId) {
+      resetTitlePreferences(sourceId, mangaId);
     }
-  }, [isPerTitleContext, savePerTitle, sourceId, mangaId, updateTitlePreferences, updatePreferences]);
+  }, [sourceId, mangaId, resetTitlePreferences]);
 
   // On desktop (>=768px), settings drawer visibility is also driven by store's isDesktopPanelOpen
   const effectiveIsOpen = React.useMemo(() => {
@@ -145,6 +156,56 @@ export function ReaderSettingsDrawer({ isOpen, onClose, sourceId, mangaId }: Rea
       desktopMode="side-panel"
       contentClassName="p-5 space-y-6 overscroll-contain pb-[calc(24px+var(--safe-bottom))]"
     >
+
+      {/* Scope Selector: Khusus judul ini vs Semua komik (Q8/Q86) */}
+      {isPerTitleContext && (
+        <div className="p-3 bg-surface-raised rounded-xl border border-border-subtle space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-text-secondary">Cakupan Pengaturan</span>
+            {hasPerTitleOverride && (
+              <button
+                type="button"
+                onClick={handleResetTitle}
+                className="text-[11px] font-semibold text-accent hover:underline cursor-pointer"
+              >
+                Reset ke default
+              </button>
+            )}
+          </div>
+          <div className="flex bg-surface-base p-1 rounded-lg border border-border-subtle">
+            <button
+              type="button"
+              onClick={() => setScope("title")}
+              className={cn(
+                "flex-1 py-1.5 px-2 text-xs font-bold rounded-md transition-colors outline-none cursor-pointer",
+                scope === "title"
+                  ? "bg-accent text-white shadow-xs"
+                  : "text-text-secondary hover:text-text-primary"
+              )}
+            >
+              Khusus judul ini {hasPerTitleOverride && "•"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setScope("global")}
+              className={cn(
+                "flex-1 py-1.5 px-2 text-xs font-bold rounded-md transition-colors outline-none cursor-pointer",
+                scope === "global"
+                  ? "bg-accent text-white shadow-xs"
+                  : "text-text-secondary hover:text-text-primary"
+              )}
+            >
+              Semua komik
+            </button>
+          </div>
+          <p className="text-[11px] text-text-muted leading-tight">
+            {scope === "title"
+              ? "Perubahan hanya berlaku untuk komik yang sedang dibaca."
+              : "Perubahan akan menjadi preferensi default untuk semua komik."}
+          </p>
+        </div>
+      )}
+
       {/* Tampilan */}
       <div className="space-y-3">
         <div className="text-xs font-bold uppercase tracking-wider text-text-muted px-1 flex items-center gap-1.5">

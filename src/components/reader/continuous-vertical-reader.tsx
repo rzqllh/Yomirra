@@ -1,7 +1,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useReaderStore } from "@/shared/store/reader-store"
+import { useReaderStore, useEffectiveReaderPreferences } from "@/shared/store/reader-store"
 import { useSettingsStore } from "@/shared/store/settings-store"
 import { useHistoryStore } from "@/shared/store/history-store"
 import { useLibraryStore } from "@/shared/store/library-store"
@@ -61,11 +61,7 @@ export function ContinuousVerticalReader({
 }: ContinuousVerticalReaderProps) {
   const router = useRouter()
   const detailHref = getMangaDetailHref(sourceId, mangaId, returnTo)
-  const preferences = useReaderStore(state => {
-    const titleKey = `${sourceId}::${mangaId}`;
-    const perTitle = state.perTitlePreferences[titleKey];
-    return perTitle ? { ...state.preferences, ...perTitle } : state.preferences;
-  })
+  const preferences = useEffectiveReaderPreferences(sourceId, mangaId)
   const { dataSaver } = useSettingsStore()
   const isDownloaded = useDownloadStore(state => state.isDownloaded(sourceId, mangaId, chapterId))
   const saveProgress = useHistoryStore(state => state.saveProgress)

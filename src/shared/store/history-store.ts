@@ -5,6 +5,7 @@ import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry"
 import { sourceRegistry } from "@/shared/sources/source-registry";
 import { toast } from "sonner";
 import { useLibraryStore } from "@/shared/store/library-store";
+import { parseChapterNumber } from "@/shared/lib/chapter-parser";
 
 export type HistoryItem = {
   sourceId: string;
@@ -67,6 +68,10 @@ export const useHistoryStore = create<HistoryState>()(
         const id = getHistoryId(item.sourceId, item.mangaId, item.chapterId);
         const existing = state.items[id];
         const savedTitleId = item.savedTitleId ?? get().resolveSavedTitleId(item.sourceId, item.mangaId) ?? undefined;
+        if (item.chapterNumber === undefined) {
+          const parsedNum = item.chapterTitle ? parseChapterNumber(item.chapterTitle) : (item.chapterId ? parseChapterNumber(item.chapterId) : null);
+          if (parsedNum !== null) item.chapterNumber = parsedNum;
+        }
         const finalItem = existing
           ? { ...existing, ...item, savedTitleId: savedTitleId ?? existing.savedTitleId, readAt: item.readAt }
           : { ...item, savedTitleId };
@@ -197,8 +202,14 @@ export const useHistoryStore = create<HistoryState>()(
         
         // Return item with highest verified milestone (Q52/Q63)
         return [...mangaHistory].sort((a, b) => {
-          if (typeof a.chapterNumber === "number" && typeof b.chapterNumber === "number") {
-            if (b.chapterNumber !== a.chapterNumber) return b.chapterNumber - a.chapterNumber;
+          const aNum = a.chapterNumber ?? (a.chapterTitle ? parseChapterNumber(a.chapterTitle) : null);
+          const bNum = b.chapterNumber ?? (b.chapterTitle ? parseChapterNumber(b.chapterTitle) : null);
+          if (aNum !== null && bNum !== null) {
+            if (bNum !== aNum) return bNum - aNum;
+          } else if (bNum !== null && aNum === null) {
+            return 1;
+          } else if (aNum !== null && bNum === null) {
+            return -1;
           }
           if (typeof a.chapterIndex === "number" && typeof b.chapterIndex === "number") {
             if (b.chapterIndex !== a.chapterIndex) return b.chapterIndex - a.chapterIndex;
@@ -227,14 +238,18 @@ export const useHistoryStore = create<HistoryState>()(
             let isHigherMilestone = false;
             const currentMilestone = existing.milestoneItem;
             
-            if (typeof item.chapterNumber === "number" && typeof currentMilestone.chapterNumber === "number") {
-              isHigherMilestone = item.chapterNumber > currentMilestone.chapterNumber;
+            const itemNum = item.chapterNumber ?? (item.chapterTitle ? parseChapterNumber(item.chapterTitle) : null);
+            const curNum = currentMilestone.chapterNumber ?? (currentMilestone.chapterTitle ? parseChapterNumber(currentMilestone.chapterTitle) : null);
+
+            if (itemNum !== null && curNum !== null) {
+              isHigherMilestone = itemNum > curNum;
             } else if (typeof item.chapterIndex === "number" && typeof currentMilestone.chapterIndex === "number") {
               isHigherMilestone = item.chapterIndex > currentMilestone.chapterIndex;
             } else if (item.chapterId === currentMilestone.chapterId) {
               isHigherMilestone = (item.progressPercent ?? 0) > (currentMilestone.progressPercent ?? 0);
             } else {
-              isHigherMilestone = item.readAt > currentMilestone.readAt;
+              // Q52: If no semantic order exists, preserve existing verified milestone rather than regressing on readAt
+              isHigherMilestone = false;
             }
             
             latestPerManga.set(key, {

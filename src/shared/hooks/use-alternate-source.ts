@@ -36,7 +36,9 @@ export function useAlternateSource({
     state.resolveBySourceRef(sourceId, mangaId) ?? state.getLibraryItem(sourceId, mangaId)
   );
   const relinkTitle = useLibraryStore((state) => state.relinkTitle);
-  const historyItem = useHistoryStore((state) => state.getLatestForManga(sourceId, mangaId));
+  const highestMilestone = useHistoryStore((state) => state.getHighestMilestoneForManga(sourceId, mangaId));
+  const latestRead = useHistoryStore((state) => state.getLatestForManga(sourceId, mangaId));
+  const historyItem = highestMilestone || latestRead;
   const saveProgress = useHistoryStore((state) => state.saveProgress);
   const disabledSources = useSourcePreferencesStore((state) => state.disabledSources);
 
@@ -188,6 +190,7 @@ export function useAlternateSource({
           libraryItem: effectiveLibraryItem,
           fallbackResult,
           historyItem: historyItem ?? undefined,
+          milestoneItem: highestMilestone ?? undefined,
           isPermanent: true,
           relinkTitleFn: libraryItem ? relinkTitle : undefined,
           saveProgressFn: (src, mid, cid, pidx) => saveProgress(src, mid, cid, pidx),
