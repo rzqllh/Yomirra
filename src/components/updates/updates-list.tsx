@@ -71,9 +71,10 @@ export interface UpdateCardProps {
   item: WeeklyMangaItem;
   historyItem?: HistoryItem;
   onScheduleChange: (value: string) => void;
+  onMarkSeen?: (sourceId: string, mangaId: string) => void;
 }
 
-export function UpdateCard({ item, historyItem, onScheduleChange }: UpdateCardProps) {
+export function UpdateCard({ item, historyItem, onScheduleChange, onMarkSeen }: UpdateCardProps) {
   const hasHistory = Boolean(historyItem);
   const targetChapterId = historyItem?.chapterId || item.latestChapterId;
   const detailHref = getMangaDetailHref(item.sourceId, item.mangaId, "/updates");
@@ -94,6 +95,7 @@ export function UpdateCard({ item, historyItem, onScheduleChange }: UpdateCardPr
         <Link
           href={detailHref}
           className={cn("w-[52px] sm:w-[58px] shrink-0 rounded-xs", mangaCardInteraction.link)}
+          onClick={() => onMarkSeen?.(item.sourceId, item.mangaId)}
           aria-label={`Lihat detail ${item.mangaTitle}`}
         >
           <MangaCardCoverFrame className="w-full bg-surface-base shadow-xs">
@@ -273,18 +275,13 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
   const isMounted = useMounted();
   const libraryItems = useLibraryStore((state) => state.items || {});
   const updateLibraryItem = useLibraryStore((state) => state.updateLibraryItem);
-  const { items: updateItems, markAllAsSeen } = useUpdateStore();
+  const { items: updateItems, markAllAsSeen, markAsSeen } = useUpdateStore();
   const { isScanning, triggerScan } = useUpdateChecker();
   const getLatestForManga = useHistoryStore((state) => state.getLatestForManga);
   const todayKey = useMemo(() => String(new Date().getDay()), []);
   const [selectedDayKey, setSelectedDayKey] = useState<string>(initialDay ?? todayKey);
 
-  useEffect(() => {
-    // Mark all as seen on unmount
-    return () => {
-      markAllAsSeen();
-    };
-  }, [markAllAsSeen]);
+// Q118: Retain unread badges across route transitions until user actually interacts with or marks them seen
 
   // Combine library bookmarks with update store data
   const allItems = useMemo<WeeklyMangaItem[]>(() => {
@@ -503,16 +500,30 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
           {/* Weekly day rail */}
           <div className="sticky top-[var(--secondary-sticky-top)] z-20 -mx-1 space-y-2.5 border-b border-border-subtle/60 bg-surface-base/92 px-1 py-2 backdrop-blur-md">
             <div className="overflow-x-auto [scrollbar-width:none] pb-1">
-              <SegmentedControl
-                options={quickSegmentOptions}
-                value={selectedDayKey}
-                onChange={setSelectedDayKey}
-                variant="quick-rail"
-                layoutId="weekly-calendar-pill"
-                size="sm"
-                fullWidth
-                className="min-w-[620px]"
-              />
+              <div className="flex items-center gap-2">
+                {allItems.some((i) => i.latestChapterId && !i.seenAt) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      markAllAsSeen();
+                      toast.success("Semua pembaruan ditandai telah dilihat");
+                    }}
+                    className="min-h-11 px-3 rounded-xl text-xs font-semibold text-text-muted hover:text-text-primary hover:bg-surface-hover transition-colors cursor-pointer shrink-0"
+                  >
+                    Tandai Semua Dilihat
+                  </button>
+                )}
+                <SegmentedControl
+                  options={quickSegmentOptions}
+                  value={selectedDayKey}
+                  onChange={setSelectedDayKey}
+                  variant="quick-rail"
+                  layoutId="weekly-calendar-pill"
+                  size="sm"
+                  fullWidth
+                  className="min-w-[620px]"
+                />
+              </div>
             </div>
             <p className="text-[11px] text-text-muted px-1 flex items-center gap-1.5">
               <span>* Hari ini</span>
@@ -556,6 +567,7 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
                     key={item.key}
                     item={item}
                     historyItem={historyItem}
+                    onMarkSeen={markAsSeen}
                     onScheduleChange={(value) => {
                       const releaseDay = value === "" ? undefined : Number(value);
                       updateLibraryItem(item.sourceId, item.mangaId, { releaseDay });
