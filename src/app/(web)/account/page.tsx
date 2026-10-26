@@ -29,7 +29,7 @@ export default function AccountPage() {
     try {
       await runFullSync();
       toast.success("Sinkronisasi selesai", {
-        description: "Semua data bacaanmu berhasil disinkronkan ke akun.",
+        description: "Data bacaan lokal telah diperbarui dan diselaraskan dengan akun.",
       });
     } catch {
       toast.error("Sinkronisasi gagal", {
@@ -77,7 +77,7 @@ export default function AccountPage() {
         <main className="w-full space-y-6 md:space-y-8">
         {/* Profile Card */}
         {user ? (
-          <div className="rounded-[28px] border border-border-glass bg-surface-glass backdrop-blur-2xl p-6 shadow-glass flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
+          <div className="rounded-2xl border border-border-default/80 bg-surface-raised p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
             <div className="size-20 rounded-2xl overflow-hidden border border-border-default/60 shrink-0 bg-surface-raised shadow-xs flex items-center justify-center">
               {user.photoURL ? (
                 <img
@@ -106,7 +106,7 @@ export default function AccountPage() {
             </div>
           </div>
         ) : (
-          <div className="rounded-[28px] border border-border-glass bg-surface-glass backdrop-blur-2xl p-6 shadow-glass text-center space-y-4">
+          <div className="rounded-2xl border border-border-default/80 bg-surface-raised p-5 sm:p-6 shadow-xs text-center space-y-4">
             <div className="size-16 mx-auto rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
               <UserCircle size={36} weight="duotone" />
             </div>
@@ -123,7 +123,7 @@ export default function AccountPage() {
               size="lg"
               onClick={loginWithGoogle}
               loading={authLoading}
-              className="w-full max-w-xs mx-auto"
+              className="w-full max-w-xs mx-auto min-h-11 text-sm font-bold"
             >
               <GoogleLogo size={18} weight="bold" />
               Masuk dengan Google
@@ -133,7 +133,7 @@ export default function AccountPage() {
 
         {/* Cloud Sync Section */}
         {user && (
-          <div className="rounded-[28px] border border-border-glass bg-surface-glass backdrop-blur-2xl p-6 shadow-glass space-y-5">
+          <div className="rounded-2xl border border-border-default/80 bg-surface-raised p-5 sm:p-6 shadow-xs space-y-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="size-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent shrink-0">
@@ -159,7 +159,7 @@ export default function AccountPage() {
               size="default"
               onClick={handleSyncNow}
               loading={isSyncing}
-              className="w-full rounded-xl"
+              className="w-full rounded-xl min-h-11 text-sm font-bold"
             >
               <ArrowsClockwise
                 size={18}
@@ -172,7 +172,7 @@ export default function AccountPage() {
         )}
 
         {/* Device & PWA Status */}
-        <div className="rounded-[28px] border border-border-glass bg-surface-glass backdrop-blur-2xl p-6 shadow-glass space-y-3">
+        <div className="rounded-2xl border border-border-default/80 bg-surface-raised p-5 sm:p-6 shadow-xs space-y-3">
           <div className="flex items-center gap-3">
             <div className="size-10 rounded-xl bg-surface-raised border border-border-default flex items-center justify-center text-text-secondary shrink-0">
               <DeviceMobile size={22} weight="duotone" />
@@ -203,7 +203,7 @@ export default function AccountPage() {
               variant="destructive"
               size="default"
               onClick={handleLogout}
-              className="w-full rounded-xl"
+              className="w-full rounded-xl min-h-11 text-sm font-bold"
             >
               <SignOut size={18} weight="bold" />
               Keluar
