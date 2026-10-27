@@ -11,8 +11,14 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
   - **Returning Reader:** Mempromosikan Lanjut Baca ke posisi hero teratas langsung di bawah baris pencarian, menyajikan milestone pembacaan aktual (Q52 & Q63), track progres 4px, dan CTA 1-tap langsung ke reader.
   - **Zero-History Reader:** Memprioritaskan Discovery (Sorotan & Peringkat per Sumber) tanpa kotak kosong yang membuang ruang, disertai kartu edukasi kontekstual satu baris untuk Rak Buku tanpa paksaan login.
   - **Unified Search Bar:** Menghilangkan kolase cover acak dan tombol oranye ganda pada hero; menerapkan input pencarian terpadu tunggal 46px dengan badge shortcut `⌘K` dan responsivitas penuh terhadap Fitts's Law.
-- **Guest-to-Account Merge Engine (Q64):** Mengimplementasikan alur verifikasi data nyata: autentikasi Google, pembacaan aman snapshot cloud tanpa mutasi dini, pratinjau diff dan resolusi konflik (milestone Q52 & kursor chapter Q63), pemilihan strategi (Gabung Cerdas vs Ganti Data Cloud dengan konfirmasi destruktif eksplisit), eksekusi atomik dengan rollback otomatis saat gagal, dan penghormatan tombstone.
-- **Honest Sync Diagnostics (Q127):** Menyajikan status diagnostik sinkronisasi jujur berdasarkan lifecycle nyata (idle, syncing, successful commit, pending, failed, offline), memisahkan konektivitas jaringan dari reachability Firebase, menghapus checkmark palsu sebelum ada commit cloud yang terverifikasi, serta membatasi rincian per-domain hanya jika terdapat bukti operasi aktual.
+- **Guest-to-Account Merge Engine & Fail-Closed Safety (Q64):**
+  - Mengubah kontrak `executeGuestMerge()` sehingga commit batch ke Firestore bersifat wajib dan harus diverifikasi berhasil sebelum state lokal diterapkan atau pengakuan sukses ditampilkan.
+  - Memusatkan koordinasi autentikasi ke singleton module coordinator (`use-auth.ts`) untuk mencegah alur bersaing saat transisi akun, serta mengisolasi auto-sync, manual sync, dan listener real-time `onSnapshot` selama peninjauan merge berlangsung.
+  - Menegakkan prinsip fail-closed saat pengambilan snapshot cloud gagal: kepemilikan lokal tidak diambil alih, status tamu lokal tetap aman, sinkronisasi diblokir, dan dialog menyediakan opsi Coba Lagi atau Batalkan Masuk Akun.
+  - Menghitung resolusi milestone Q52 menggunakan `parseChapterNumber` terverifikasi (bukan sekadar ordinal numerik), mempertahankan kursor aktif bacaan mandiri (Q63) dan status completion, serta membuat cadangan sesi tamu lokal yang dapat dipulihkan (`restoreGuestBackup()`) sebelum eksekusi Cloud Replace.
+- **Honest Sync Diagnostics & Write Separation (Q127):**
+  - Memisahkan secara ketat pencatatan jumlah item yang baru di-commit (`successfulWriteCount`) dari item yang sudah ada dan terverifikasi di cloud (`verifiedReadCount`), menghilangkan klaim sukses palsu atas pembacaan lokal.
+  - Mengisolasi riwayat diagnostik sinkronisasi per UID pengguna aktif dan mereset total state diagnostik saat pergantian akun maupun logout untuk mencegah kebocoran data antar-pengguna.
 - **Typography & Character Integrity:** Memperbaiki karakter separator bullet yang terkorupsi pada komponen Sorotan dan Lanjut Baca.
 
 ### Dokumentasi & Penyelarasan Terminologi Publik
