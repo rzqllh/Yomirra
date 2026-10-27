@@ -72,9 +72,7 @@ export default async function PopularPage() {
           title="Populer"
           subtitle="Peringkat dari sumber yang kamu aktifkan."
           icon={<Fire size={24} weight="duotone" />}
-          hideDesktop
         />
-        <h1 className="sr-only">Populer</h1>
         <PopularPageView feeds={feeds} />
       </PageContainer>
     </YomirraSurface>

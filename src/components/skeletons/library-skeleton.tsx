@@ -15,7 +15,6 @@ export function LibrarySkeleton() {
       <PageHeader
         title="Library"
         subtitle="Jelajahi komik dari sumber pilihanmu."
-        hideDesktop
       />
 
       {/* Mobile active source row placeholder */}

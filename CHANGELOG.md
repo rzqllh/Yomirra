@@ -4,6 +4,19 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
 
 ## [Unreleased]
 
+### Hardening Sinkronisasi & Atomicity Firestore (Q64 & Q127)
+
+- **Sequential Atomic Batch Committer:** Menggantikan konkurensi `Promise.all(commits)` tanpa koordinasi dengan `commitMergedDataSequentially()`. Setiap batch dibatasi maksimal 400 mutasi, dijalankan secara sekuensial dengan retry backoff eksponensial (3x), dan mencatat recovery journal ke `localStorage` (`yomirra_merge_recovery_<uid>`) untuk pemulihan kegagalan parsial (`PartialBatchCommitError`).
+- **Milestone Comparator Terstruktur (Q52 & Q63):** Menghilangkan perbandingan cacat `Math.max(idx, parsedNum)` antar-metrik yang tidak setara. Nomor chapter diparse dan dibandingkan secara numerik (termasuk chapter desimal seperti 10.5 vs 10). Perbandingan ordinal index hanya diizinkan untuk sumber yang identik, dan chapter non-numerik lintas-sumber diselesaikan secara aman menggunakan timestamp terbaru.
+- **Fail-Closed Verifiable Backup pada Cloud Replace:** Penimpaan cloud replace mewajibkan verifikasi baca-ulang langsung atas backup sesi tamu di `localStorage` sebelum eksekusi dilanjutkan; jika verifikasi gagal, mutasi cloud dibatalkan secara total.
+- **Isolasi Transisi Akun Monotonik:** Menambahkan counter generasi `authTransitionSeq` pada koordinator autentikasi agar snapshot cloud yang in-flight saat pergantian akun atau logout otomatis diabaikan tanpa mencemari UID baru.
+
+### Standardisasi Struktur Header Desktop & Mobile Parity
+
+- **Restorasi Banner Header Desktop:** Menghapus `hideDesktop` yang sebelumnya menonaktifkan header visual di desktop pada Populer, Library, Rak Buku, Sumber, Unduhan, Pengaturan, dan Pencarian. Setiap halaman kini memiliki struktur hierarki visual yang konsisten: badge ikon beraksen, judul halaman tegas (`h1`), dan subjudul deskriptif.
+- **Penataan Aksi Desktop:** Memindahkan tombol utilitas (seperti "Hapus semua" pada Unduhan dan "Kembali ke pengaturan" pada subview Cadangan) ke dalam slot `desktopActions` di banner header, menghilangkan duplikasi baris kontrol yang terpisah.
+- **Sinkronisasi Skeleton Loading:** Menyelaraskan seluruh skeleton loading (`popular-skeleton`, `library-skeleton`, `bookmark-skeleton`, serta loading Sumber, Unduhan, Pengaturan, dan Pencarian) dengan struktur header aktual untuk mencegah cumulative layout shift (CLS).
+
 ### Visual & UX Revamp — Japanese-Modern Calm Chrome, Beranda State Hierarchy & Parity Closeout (Slice 20)
 
 - **Calm Glass Chrome:** Menghilangkan `box-shadow` pada `.yomirra-chrome` sesuai arsitektur liquid glass yang disetujui (translucent canvas, subtle hairline border, medium backdrop blur, zero drop shadow).

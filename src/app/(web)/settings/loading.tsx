@@ -11,9 +11,7 @@ export default function Loading() {
           title="Pengaturan"
           subtitle="Atur tampilan, bacaan, dan data Yomirra."
           icon={<Gear size={24} weight="duotone" />}
-          hideDesktop
         />
-        <h1 className="sr-only">Pengaturan Yomirra</h1>
 
         <ContentLane variant="management">
           <div className="grid gap-6 xl:grid-cols-2 xl:items-start">

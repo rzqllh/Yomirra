@@ -103,10 +103,7 @@ export default function SourcesPage() {
             title="Sumber"
             subtitle="Atur sumber yang digunakan saat menjelajah."
             icon={<HardDrives size={24} weight="duotone" />}
-            hideDesktop
           />
-
-          <h1 className="sr-only">Sumber</h1>
 
           {/* Source Mental Model Guidance Banner */}
           <div className="p-3.5 rounded-2xl bg-surface-glass border border-border-subtle text-xs text-text-muted flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">

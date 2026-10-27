@@ -5,6 +5,7 @@ import { YomirraSurface, PageContainer, PageToolbar } from "@/components/ui/layo
 import { CatalogControls } from "@/components/ui/catalog-controls";
 import { LibrarySkeleton } from "@/components/skeletons/library-skeleton";
 import { PageHeader } from "@/components/chrome/header";
+import { Books } from "@phosphor-icons/react";
 import { useLibraryCatalog } from "@/shared/hooks/use-library-catalog";
 import { LibraryToolbar } from "./library-toolbar";
 import { LibraryStatusRail } from "./library-status-rail";
@@ -30,10 +31,8 @@ export function LibraryPageView() {
         <PageHeader
           title="Library"
           subtitle="Jelajahi katalog dari sumber yang kamu pilih."
-          hideDesktop
+          icon={<Books size={24} weight="duotone" />}
         />
-
-        <h1 className="sr-only">Library</h1>
 
         <CatalogControls label="Pencarian dan filter Library">
           <PageToolbar>

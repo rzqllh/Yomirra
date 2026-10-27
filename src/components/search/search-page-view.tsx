@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { PageHeader } from "@/components/chrome/header";
+import { MagnifyingGlass } from "@phosphor-icons/react";
 import { YomirraSurface, PageContainer, PageToolbar } from "@/components/ui/layout";
 import { CatalogControls } from "@/components/ui/catalog-controls";
 import { useSearchCatalog } from "@/shared/hooks/use-search-catalog";
@@ -18,10 +19,8 @@ export function SearchPageView() {
         <PageHeader
           title="Cari"
           subtitle="Temukan komik dari berbagai sumber."
-          hideDesktop
+          icon={<MagnifyingGlass size={24} weight="duotone" />}
         />
-
-        <h1 className="sr-only">Cari</h1>
 
         <CatalogControls label="Pencarian dan filter">
           <PageToolbar>

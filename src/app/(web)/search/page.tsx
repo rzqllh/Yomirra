@@ -15,7 +15,6 @@ export default function SearchPage() {
             <PageHeader
               title="Cari"
               subtitle="Cari judul dari semua sumber."
-              hideDesktop
             />
             <SearchResultSkeleton />
           </PageContainer>

@@ -9,7 +9,6 @@ export function BookmarkSkeleton() {
       <PageHeader
         title="Rak Buku"
         subtitle="Lanjutkan bacaan atau kelola bookmark."
-        hideDesktop
       />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

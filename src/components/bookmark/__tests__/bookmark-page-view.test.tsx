@@ -66,12 +66,12 @@ vi.mock("@/components/chrome/header-actions", () => ({
 }));
 
 describe("BookmarkPageView hierarchy & standardization", () => {
-  it("renders accessible sr-only h1 and omits legacy PageHeader", () => {
+  it("renders accessible page heading and omits legacy PageHeader", () => {
     render(<BookmarkPageView />);
 
     const heading = screen.getByRole("heading", { level: 1 });
     expect(heading.textContent).toBe("Rak Buku");
-    expect(heading.className).toContain("sr-only");
+    expect(heading.className).toContain("text-text-primary");
 
     expect(
       screen.queryByText("Bacaan, koleksi, & pembaruan komik favoritmu")

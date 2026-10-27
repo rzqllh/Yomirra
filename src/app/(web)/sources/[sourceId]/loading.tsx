@@ -7,7 +7,7 @@ export default function Loading() {
   return (
     <YomirraSurface variant="base" className="w-full">
       <PageContainer hasMobileHeader>
-        <PageHeader title="Sumber" subtitle="Memuat katalog…" showBack hideDesktop />
+        <PageHeader title="Sumber" subtitle="Memuat katalog…" showBack />
         <div className="mb-6 flex items-center justify-between rounded-xl border border-border-subtle bg-surface-raised p-4">
           <div className="flex min-w-0 items-center gap-3">
             <Skeleton className="size-10 shrink-0 rounded-lg" />

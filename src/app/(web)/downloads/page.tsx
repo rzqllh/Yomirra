@@ -84,17 +84,10 @@ export default function DownloadsPage() {
           subtitle="Kelola chapter yang tersimpan untuk dibaca offline."
           icon={<Download size={24} weight="duotone" />}
           actions={clearAllAction}
-          hideDesktop
+          desktopActions={clearAllAction}
         />
 
-        <h1 className="sr-only">Unduhan</h1>
-
         <ContentLane variant="focused" className="flex flex-col gap-6">
-          {clearAllAction && (
-            <div className="hidden md:flex justify-end">
-              {clearAllAction}
-            </div>
-          )}
 
           <StorageWarningBanner />
 

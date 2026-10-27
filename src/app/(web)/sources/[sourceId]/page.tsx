@@ -62,7 +62,6 @@ export default function SourceBrowsePage({
           title={sourceName}
           subtitle="Jelajahi komik dari sumber ini."
           showBack
-          hideDesktop
         />
         <div className="mb-6 flex items-center justify-between rounded-xl border border-border-subtle bg-surface-raised/70 p-3 sm:p-4">
           <div className="flex items-center gap-3">

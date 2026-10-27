@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { CalendarBlank } from "@phosphor-icons/react";
+import { CalendarBlank, Bookmarks } from "@phosphor-icons/react";
 import { YomirraSurface, PageContainer } from "@/components/ui/layout";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { BookmarkSkeleton } from "@/components/skeletons/bookmark-skeleton";
@@ -64,10 +64,8 @@ export function BookmarkPageView() {
         <PageHeader
           title="Rak Buku"
           subtitle="Lanjutkan bacaan dan kelola komik yang kamu simpan."
-          hideDesktop
+          icon={<Bookmarks size={24} weight="duotone" />}
         />
-
-        <h1 className="sr-only">Rak Buku</h1>
 
         {/* Unified Navigation & Utility Row */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 w-full">

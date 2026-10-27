@@ -11,9 +11,7 @@ export default function Loading() {
           title="Unduhan"
           subtitle="Kelola chapter yang tersimpan untuk dibaca offline."
           icon={<Download size={24} weight="duotone" />}
-          hideDesktop
         />
-        <h1 className="sr-only">Unduhan</h1>
 
         <ContentLane variant="focused" className="flex flex-col gap-6">
           <Skeleton className="h-20 w-full rounded-2xl" />

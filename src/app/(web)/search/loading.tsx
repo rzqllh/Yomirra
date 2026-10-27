@@ -9,7 +9,6 @@ export default function Loading() {
         <PageHeader
           title="Cari"
           subtitle="Temukan komik dari berbagai sumber."
-          hideDesktop
         />
         <SearchResultSkeleton />
       </PageContainer>

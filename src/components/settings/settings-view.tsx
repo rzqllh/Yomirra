@@ -475,7 +475,6 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
     <>
       <YomirraSurface variant="base" className="min-h-screen">
         <PageContainer variant="management" hasMobileHeader>
-          <h1 className="sr-only">{subView === "backup" ? "Cadangan data" : "Pengaturan Yomirra"}</h1>
           <div className="space-y-8">
             {subView === "backup" ? (
               <>
@@ -493,10 +492,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
                       Kembali ke pengaturan
                     </Button>
                   }
-                  hideDesktop
-                />
-                <ContentLane variant="focused" className="flex flex-col gap-4">
-                  <div className="hidden md:flex">
+                  desktopActions={
                     <Button
                       variant="secondary"
                       onClick={() => setSubView("main")}
@@ -505,7 +501,9 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
                       <CaretLeft size={16} weight="bold" className="mr-1" />
                       Kembali ke pengaturan
                     </Button>
-                  </div>
+                  }
+                />
+                <ContentLane variant="focused" className="flex flex-col gap-4">
                   <BackupRestoreView onBack={() => setSubView("main")} />
                 </ContentLane>
               </>
@@ -515,7 +513,6 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
                   title="Pengaturan"
                   subtitle="Atur tampilan, bacaan, dan data Yomirra."
                   icon={<Gear size={24} weight="duotone" />}
-                  hideDesktop
                 />
                 <ContentLane variant="management">
                   {settingsContent}
