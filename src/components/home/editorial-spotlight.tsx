@@ -255,7 +255,7 @@ export function EditorialSpotlight({
                     <Star size={13} weight="fill" aria-hidden="true" />
                     <span>{Number(manga.score).toFixed(1)}</span>
                   </span>
-                  <span aria-hidden="true" className="text-border-default/80">·</span>
+                  <span aria-hidden="true" className="text-border-default/80">&bull;</span>
                 </>
               )}
               {manga.latestChapter && (
@@ -263,13 +263,13 @@ export function EditorialSpotlight({
                   <span className="text-text-primary">
                     {manga.latestChapter.startsWith("Ch") ? manga.latestChapter : `Ch. ${manga.latestChapter}`}
                   </span>
-                  <span aria-hidden="true" className="text-border-default/80">·</span>
+                  <span aria-hidden="true" className="text-border-default/80">&bull;</span>
                 </>
               )}
               <span className="font-bold text-accent">{sourceName}</span>
               {manga.format && (
                 <>
-                  <span aria-hidden="true" className="text-border-default/80">·</span>
+                  <span aria-hidden="true" className="text-border-default/80">&bull;</span>
                   <span className="uppercase text-[10px] tracking-wider text-text-muted">{manga.format}</span>
                 </>
               )}

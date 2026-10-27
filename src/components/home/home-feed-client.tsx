@@ -21,7 +21,7 @@ import {
 import { ShelfCard } from "@/components/komik/card";
 import { CompactCard } from "@/components/komik/card/compact-card";
 import { ViewModeToggle } from "@/components/komik/view-mode-toggle";
-import { MagnifyingGlass, ArrowRight } from "@phosphor-icons/react";
+import { MagnifyingGlass, ArrowRight, BookmarkSimple } from "@phosphor-icons/react";
 import Link from "next/link";
 
 export interface HomeFeedClientProps {
@@ -394,6 +394,33 @@ export function HomeFeedClient({
           )}
         </section>
       )}
+      {historyItems.length === 0 && (
+        <aside
+          aria-label="Info Rak Buku"
+          className="mt-10 rounded-2xl border border-border-subtle/80 bg-surface-raised/40 p-4 sm:p-5 flex items-center justify-between gap-4"
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="size-9 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent shrink-0">
+              <BookmarkSimple size={18} weight="fill" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs sm:text-sm font-semibold text-text-primary truncate">
+                Simpan &amp; tandai komik favoritmu di Rak Buku
+              </p>
+              <p className="text-[11px] sm:text-xs text-text-muted truncate">
+                Data tersimpan otomatis di perangkatmu, tanpa perlu akun.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/bookmark"
+            className="shrink-0 text-xs font-bold text-accent hover:underline py-1 px-2.5 rounded-lg hover:bg-accent/5 transition-colors"
+          >
+            Buka Rak Buku &rarr;
+          </Link>
+        </aside>
+      )}
     </div>
   );
 }
+

@@ -43,7 +43,7 @@ export function ContinueReadingList({
           className="group inline-flex items-center gap-1 text-xs text-text-muted font-medium hover:text-accent transition-colors"
         >
           <span>{items.length} judul</span>
-          <span className="hidden sm:inline">· Lihat rak buku</span>
+          <span className="hidden sm:inline">&bull; Lihat rak buku</span>
           <ArrowRight size={12} weight="bold" className="transition-transform group-hover:translate-x-0.5" />
         </Link>
       </div>

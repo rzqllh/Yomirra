@@ -85,16 +85,16 @@ export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
     }
   }, [mounted, candidates]);
 
-
   return (
     <section
       aria-labelledby="home-hero-title"
       className={cn(
-        "relative w-full overflow-hidden rounded-[18px] border border-border-subtle bg-surface-raised",
+        "relative w-full overflow-hidden rounded-[20px] border border-border-subtle/80 bg-surface-raised/70 transition-all",
+        isReturning ? "min-h-[170px] sm:min-h-[185px]" : "min-h-[200px] sm:min-h-[215px]",
         className
       )}
     >
-      {/* Decorative cover collage */}
+      {/* Subtle decorative cover collage */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute right-0 top-0 h-[140px] w-[50%] overflow-hidden sm:inset-y-0 sm:h-auto sm:w-[46%] lg:w-[42%]"
@@ -111,7 +111,7 @@ export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
             <div
               key={`${cover.coverUrl}-${index}`}
               className={cn(
-                "absolute aspect-[2/3] overflow-hidden rounded-[10px] border border-border-subtle bg-surface-muted",
+                "absolute aspect-[2/3] overflow-hidden rounded-[10px] border border-border-subtle/60 bg-surface-muted",
                 coverPositions[index] ?? coverPositions[2]
               )}
             >
@@ -137,7 +137,7 @@ export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
                 }
                 className={cn(
                   "size-full object-cover transition-opacity duration-200",
-                  loaded ? "opacity-75 sm:opacity-85 lg:opacity-90" : "opacity-0"
+                  loaded ? "opacity-60 sm:opacity-75 lg:opacity-80" : "opacity-0"
                 )}
               />
             </div>
@@ -145,14 +145,17 @@ export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
         })}
       </div>
 
-      <div className="relative z-10 flex min-h-[218px] flex-col justify-center p-5 sm:min-h-[220px] sm:max-w-[64%] sm:p-6 lg:max-w-[60%] lg:px-7">
-        <p className="mb-2 text-[11px] font-extrabold uppercase tracking-[0.14em] text-accent">
+      <div className={cn(
+        "relative z-10 flex flex-col justify-center p-5 sm:max-w-[64%] sm:p-6 lg:max-w-[60%] lg:px-7",
+        isReturning ? "min-h-[170px] sm:min-h-[185px]" : "min-h-[200px] sm:min-h-[215px]"
+      )}>
+        <p className="mb-1.5 text-[10.5px] sm:text-[11px] font-extrabold uppercase tracking-[0.14em] text-accent">
           {isReturning ? "LANJUT LAGI DI YOMIRRA" : "BACAANMU DIMULAI DI SINI"}
         </p>
 
         <h1
           id="home-hero-title"
-          className="mb-4 text-[26px] sm:text-[30px] lg:text-[32px] font-black leading-[1.15] tracking-tight text-text-primary"
+          className="mb-3.5 text-[22px] sm:text-[28px] lg:text-[30px] font-black leading-[1.15] tracking-tight text-text-primary"
         >
           Mau baca apa hari ini?
         </h1>
@@ -160,19 +163,19 @@ export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
         <div
           role="search"
           aria-label="Pencarian Beranda"
-          className="w-full max-w-[500px]"
+          className="w-full max-w-[480px]"
         >
           <button
             type="button"
             id="home-hero-search"
-            aria-label="Cari judul atau kreator…"
+            aria-label="Cari judul atau kreator."
             onClick={() => window.dispatchEvent(new CustomEvent("open-command-menu"))}
-            className="flex h-12 w-full items-center gap-2.5 rounded-[12px] border border-border-strong bg-surface-overlay px-2.5 shadow-xs transition-colors hover:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer select-none text-left active:scale-[0.995]"
+            className="group flex h-11 sm:h-12 w-full items-center gap-3 rounded-full border border-border-default/70 bg-surface-base/90 px-3.5 sm:px-4 shadow-none transition-all hover:border-accent/60 hover:bg-surface-hover/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer select-none text-left active:scale-[0.995]"
           >
             <MagnifyingGlass
-              size={19}
+              size={18}
               weight="regular"
-              className="ml-1 shrink-0 text-text-muted"
+              className="shrink-0 text-text-muted transition-colors group-hover:text-accent"
               aria-hidden="true"
             />
             <input
@@ -180,19 +183,14 @@ export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
               readOnly
               tabIndex={-1}
               placeholder="Cari judul atau kreator…"
-              className="min-w-0 flex-1 bg-transparent text-sm font-medium text-text-primary outline-none placeholder:text-text-muted cursor-pointer pointer-events-none"
+              className="min-w-0 flex-1 bg-transparent text-[13px] sm:text-sm font-medium text-text-primary outline-none placeholder:text-text-muted cursor-pointer pointer-events-none"
             />
-            <div
-              aria-hidden="true"
-              className="flex size-11 shrink-0 items-center justify-center rounded-[10px] bg-accent text-accent-on transition-colors hover:bg-accent-hover"
-            >
-              <MagnifyingGlass size={18} weight="bold" />
-            </div>
+            <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded px-2 py-0.5 text-[10px] font-mono font-semibold text-text-muted bg-surface-muted/80 border border-border-subtle/80">
+              ⌘K
+            </kbd>
           </button>
         </div>
       </div>
     </section>
   );
 }
-
-
