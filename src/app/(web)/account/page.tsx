@@ -7,8 +7,9 @@ import { useAuth } from "@/shared/hooks/use-auth";
 import { useSync } from "@/shared/hooks/use-sync";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useHistoryStore } from "@/shared/store/history-store";
-import { useCollectionStore } from "@/shared/store/collection-store";
 import { useLibraryStore } from "@/shared/store/library-store";
+import { useSyncDiagnosticsStore } from "@/shared/store/sync-diagnostics-store";
+import { GuestMergeDialog } from "@/components/account/guest-merge-dialog";
 import { Button } from "@/components/ui/button";
 import {
   UserCircle,
@@ -21,9 +22,10 @@ import {
   CheckCircle,
   Clock,
   WarningCircle,
-  GitMerge,
   Bookmarks,
   ClockCounterClockwise,
+  WifiHigh,
+  WifiSlash,
 } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { cn } from "@/shared/utils/cn";
@@ -38,25 +40,17 @@ export default function AccountPage() {
   const historyCount = Object.keys(historyItems || {}).length;
   const bookmarkCount = Object.keys(bookmarkItems || {}).length;
 
-  const [isOnline, setIsOnline] = React.useState(true);
-  const [mergePreference, setMergePreference] = React.useState<"merge" | "replace">("merge");
-
-  React.useEffect(() => {
-    if (typeof window === "undefined") return;
-    setIsOnline(navigator.onLine);
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
-    return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
-    };
-  }, []);
+  const {
+    lifecycleState,
+    networkOnline,
+    cloudReachable,
+    domainRecords,
+    lastSyncError,
+  } = useSyncDiagnosticsStore();
 
   const handleSyncNow = async () => {
     if (!user) return;
-    if (!isOnline) {
+    if (!networkOnline) {
       toast.warning("Koneksi offline", {
         description: "Tidak dapat menyinkronkan data saat offline. Data tersimpan aman di perangkat lokal.",
       });
@@ -69,7 +63,7 @@ export default function AccountPage() {
       });
     } catch {
       toast.error("Sinkronisasi gagal", {
-        description: "Gagal menyinkronkan data. Periksa sambungan internetmu dan coba lagi.",
+        description: "Gagal menyinkronkan data ke Cloud. Periksa sambungan internetmu dan coba lagi.",
       });
     }
   };
@@ -100,8 +94,13 @@ export default function AccountPage() {
     }
   };
 
+  const libRecord = domainRecords["library"];
+  const histRecord = domainRecords["history"];
+
   return (
     <div className="min-h-screen bg-surface-base pb-28 md:pb-10">
+      <GuestMergeDialog />
+
       <PageContainer hasMobileHeader>
         <PageHeader
           title="Akun & Sinkronisasi"
@@ -155,68 +154,21 @@ export default function AccountPage() {
                 </p>
               </div>
 
-              {/* Q64: Guest-to-Account Merge Preview & Conflict Resolution */}
+              {/* Guest Session Notice (Q64 Protected) */}
               {(bookmarkCount > 0 || historyCount > 0) && (
-                <div className="rounded-xl border border-border-subtle bg-surface-base/80 p-4 text-left space-y-3">
+                <div className="rounded-xl border border-border-subtle bg-surface-base/80 p-4 text-left space-y-2.5">
                   <div className="flex items-center justify-between gap-2">
                     <span className="inline-flex items-center gap-1.5 text-xs font-bold text-text-primary">
-                      <GitMerge size={16} weight="bold" className="text-accent" />
-                      Pratinjau Penggabungan Tamu
+                      <Bookmarks size={16} weight="duotone" className="text-accent" />
+                      Data Sesi Tamu Tersedia
                     </span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-accent/10 text-accent border border-accent/20">
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-status-success-bg text-status-success-fg border border-status-success-fg/30">
                       Q64 Terlindungi
                     </span>
                   </div>
                   <p className="text-xs text-text-secondary leading-relaxed">
-                    Data lokal di perangkatmu saat ini akan diselaraskan dengan akun Google:
+                    Kamu memiliki <strong className="text-text-primary">{bookmarkCount} judul</strong> di rak buku dan <strong className="text-text-primary">{historyCount} riwayat</strong> baca lokal. Saat kamu masuk, kamu dapat meninjau diff dan memilih strategi penggabungan tanpa risiko data tertimpa atau hilang.
                   </p>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div className="flex items-center gap-2 p-2.5 rounded-lg bg-surface-raised border border-border-subtle/60">
-                      <Bookmarks size={16} weight="duotone" className="text-accent shrink-0" />
-                      <div>
-                        <p className="font-bold text-text-primary">{bookmarkCount} Judul</p>
-                        <p className="text-[10.5px] text-text-muted">di Rak Buku</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 p-2.5 rounded-lg bg-surface-raised border border-border-subtle/60">
-                      <ClockCounterClockwise size={16} weight="duotone" className="text-accent shrink-0" />
-                      <div>
-                        <p className="font-bold text-text-primary">{historyCount} Riwayat</p>
-                        <p className="text-[10.5px] text-text-muted">Progres Baca</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="pt-1">
-                    <label className="text-[11px] font-medium text-text-muted block mb-1.5">
-                      Resolusi Konflik Progres:
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setMergePreference("merge")}
-                        className={cn(
-                          "flex-1 text-xs py-1.5 px-2.5 rounded-lg border font-semibold transition-colors",
-                          mergePreference === "merge"
-                            ? "bg-accent/15 border-accent text-accent"
-                            : "bg-surface-raised border-border-subtle text-text-muted hover:text-text-primary"
-                        )}
-                      >
-                        Gabung Progres (Q52/Q63)
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setMergePreference("replace")}
-                        className={cn(
-                          "flex-1 text-xs py-1.5 px-2.5 rounded-lg border font-semibold transition-colors",
-                          mergePreference === "replace"
-                            ? "bg-accent/15 border-accent text-accent"
-                            : "bg-surface-raised border-border-subtle text-text-muted hover:text-text-primary"
-                        )}
-                      >
-                        Gunakan Data Cloud
-                      </button>
-                    </div>
-                  </div>
                 </div>
               )}
 
@@ -236,7 +188,7 @@ export default function AccountPage() {
           {/* Cloud Sync Section */}
           {user && (
             <div className="rounded-2xl border border-border-default/80 bg-surface-raised p-5 sm:p-6 shadow-xs space-y-5">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-3">
                   <div className="size-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent shrink-0">
                     <CloudCheck size={22} weight="duotone" />
@@ -250,16 +202,43 @@ export default function AccountPage() {
                     </p>
                   </div>
                 </div>
-                <span
-                  className={cn(
-                    "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border",
-                    isOnline
-                      ? "bg-status-success-bg text-status-success-fg border-status-success-fg/30"
-                      : "bg-status-warning-bg text-status-warning-fg border-status-warning-fg/30"
-                  )}
-                >
-                  {isOnline ? "Online" : "Offline"}
-                </span>
+
+                <div className="flex items-center gap-2">
+                  <span
+                    className={cn(
+                      "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border inline-flex items-center gap-1",
+                      networkOnline
+                        ? "bg-status-success-bg text-status-success-fg border-status-success-fg/30"
+                        : "bg-status-warning-bg text-status-warning-fg border-status-warning-fg/30"
+                    )}
+                  >
+                    {networkOnline ? <WifiHigh size={12} weight="bold" /> : <WifiSlash size={12} weight="bold" />}
+                    {networkOnline ? "Online" : "Offline"}
+                  </span>
+
+                  <span
+                    className={cn(
+                      "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border",
+                      lifecycleState === "successful commit"
+                        ? "bg-status-success-bg text-status-success-fg border-status-success-fg/30"
+                        : lifecycleState === "syncing"
+                        ? "bg-status-info-bg text-status-info-fg border-status-info-fg/30"
+                        : lifecycleState === "failed"
+                        ? "bg-status-error-bg text-status-error-fg border-status-error-fg/30"
+                        : "bg-surface-base text-text-muted border-border-default"
+                    )}
+                  >
+                    {lifecycleState === "successful commit"
+                      ? "Tersinkron"
+                      : lifecycleState === "syncing"
+                      ? "Menyinkronkan…"
+                      : lifecycleState === "failed"
+                      ? "Gagal"
+                      : lifecycleState === "offline"
+                      ? "Offline"
+                      : "Siap"}
+                  </span>
+                </div>
               </div>
 
               <div className="p-4 rounded-2xl bg-surface-raised/50 border border-border-subtle/40 text-xs text-text-secondary">
@@ -267,34 +246,68 @@ export default function AccountPage() {
               </div>
 
               {/* Q127: Honest Cloud Sync Diagnostics Breakdown */}
-              <div className="space-y-2 pt-1 border-t border-border-subtle/50">
-                <div className="flex items-center justify-between text-xs py-1">
+              <div className="space-y-2.5 pt-1 border-t border-border-subtle/50 text-xs">
+                {/* Domain: Library */}
+                <div className="flex items-center justify-between py-1">
                   <span className="text-text-muted">Rak Buku &amp; Koleksi</span>
-                  <span className="inline-flex items-center gap-1 font-semibold text-text-primary">
-                    <CheckCircle size={14} weight="fill" className="text-status-success-fg" />
-                    {bookmarkCount} item tersinkron
+                  <span className="inline-flex items-center gap-1.5 font-semibold text-text-primary">
+                    {libRecord && libRecord.status === "synced" ? (
+                      <>
+                        <CheckCircle size={14} weight="fill" className="text-status-success-fg" />
+                        <span>{libRecord.committedCount} item terverifikasi di cloud</span>
+                      </>
+                    ) : (
+                      <>
+                        <Clock size={14} weight="bold" className="text-text-muted" />
+                        <span className="text-text-muted">Menunggu sinkronisasi</span>
+                      </>
+                    )}
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-xs py-1">
+
+                {/* Domain: History */}
+                <div className="flex items-center justify-between py-1">
                   <span className="text-text-muted">Riwayat Baca (Milestone Q52 &amp; Q63)</span>
-                  <span className="inline-flex items-center gap-1 font-semibold text-text-primary">
-                    <CheckCircle size={14} weight="fill" className="text-status-success-fg" />
-                    {historyCount} chapter aktif
+                  <span className="inline-flex items-center gap-1.5 font-semibold text-text-primary">
+                    {histRecord && histRecord.status === "synced" ? (
+                      <>
+                        <CheckCircle size={14} weight="fill" className="text-status-success-fg" />
+                        <span>{histRecord.committedCount} riwayat terverifikasi di cloud</span>
+                      </>
+                    ) : (
+                      <>
+                        <Clock size={14} weight="bold" className="text-text-muted" />
+                        <span className="text-text-muted">Menunggu sinkronisasi</span>
+                      </>
+                    )}
                   </span>
                 </div>
-                <div className="flex items-center justify-between text-xs py-1">
-                  <span className="text-text-muted">Preferensi Tampilan &amp; Sumber</span>
-                  <span className="inline-flex items-center gap-1 font-semibold text-text-primary">
-                    <CheckCircle size={14} weight="fill" className="text-status-success-fg" />
-                    Tersimpan lokal &amp; cloud
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-xs py-1">
-                  <span className="text-text-muted">Kanal Sambungan</span>
+
+                {/* Connection Channel: Network Connectivity vs Firebase Reachability */}
+                <div className="flex items-center justify-between py-1">
+                  <span className="text-text-muted">Kanal Jaringan (Network)</span>
                   <span className="font-semibold text-text-primary">
-                    {isOnline ? "Terhubung ke Cloud Sync" : "Menunggu Sambungan Online"}
+                    {networkOnline ? "Koneksi Internet Aktif" : "Perangkat Offline"}
                   </span>
                 </div>
+
+                <div className="flex items-center justify-between py-1">
+                  <span className="text-text-muted">Akses Cloud (Firebase)</span>
+                  <span className="font-semibold text-text-primary">
+                    {cloudReachable === true
+                      ? "Terhubung ke Firebase Cloud"
+                      : cloudReachable === false
+                      ? "Tidak Dapat Menjangkau Server"
+                      : "Menunggu Operasi Pertama"}
+                  </span>
+                </div>
+
+                {lastSyncError && (
+                  <div className="p-2.5 rounded-xl bg-status-error-bg/30 border border-status-error-fg/30 text-[11px] text-status-error-fg flex items-start gap-1.5">
+                    <WarningCircle size={14} weight="bold" className="shrink-0 mt-0.5" />
+                    <span>Error sinkronisasi terakhir: {lastSyncError}</span>
+                  </div>
+                )}
               </div>
 
               <Button
@@ -302,7 +315,7 @@ export default function AccountPage() {
                 size="default"
                 onClick={handleSyncNow}
                 loading={isSyncing}
-                disabled={!isOnline}
+                disabled={!networkOnline}
                 className="w-full rounded-xl min-h-11 text-sm font-bold"
               >
                 <ArrowsClockwise
@@ -310,7 +323,7 @@ export default function AccountPage() {
                   weight="bold"
                   className={cn(isSyncing && "animate-spin")}
                 />
-                {isSyncing ? "Menyinkronkan." : "Sinkronkan sekarang"}
+                {isSyncing ? "Menyinkronkan…" : "Sinkronkan sekarang"}
               </Button>
             </div>
           )}
@@ -326,7 +339,7 @@ export default function AccountPage() {
                   Penyimpanan Lokal Perangkat
                 </h3>
                 <p className="text-xs text-text-muted">
-                  Data tersimpan aman di IndexedDB perangkat ini
+                  Data tersimpan aman di IndexedDB perangkat ini ({bookmarkCount} buku, {historyCount} riwayat)
                 </p>
               </div>
             </div>

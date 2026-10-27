@@ -11,8 +11,8 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
   - **Returning Reader:** Mempromosikan Lanjut Baca ke posisi hero teratas langsung di bawah baris pencarian, menyajikan milestone pembacaan aktual (Q52 & Q63), track progres 4px, dan CTA 1-tap langsung ke reader.
   - **Zero-History Reader:** Memprioritaskan Discovery (Sorotan & Peringkat per Sumber) tanpa kotak kosong yang membuang ruang, disertai kartu edukasi kontekstual satu baris untuk Rak Buku tanpa paksaan login.
   - **Unified Search Bar:** Menghilangkan kolase cover acak dan tombol oranye ganda pada hero; menerapkan input pencarian terpadu tunggal 46px dengan badge shortcut `⌘K` dan responsivitas penuh terhadap Fitts's Law.
-- **Guest-to-Account Merge Preview (Q64):** Menyediakan pratinjau transparan jumlah komik di Rak Buku dan riwayat bacaan lokal bagi pengguna tamu sebelum login dengan opsi resolusi konflik terpandu.
-- **Honest Sync Diagnostics (Q127):** Menyajikan rincian diagnostik sinkronisasi per domain (Rak Buku, Riwayat Baca milestone Q52/Q63, preferensi, dan status konektivitas online/offline) tanpa status semu.
+- **Guest-to-Account Merge Engine (Q64):** Mengimplementasikan alur verifikasi data nyata: autentikasi Google, pembacaan aman snapshot cloud tanpa mutasi dini, pratinjau diff dan resolusi konflik (milestone Q52 & kursor chapter Q63), pemilihan strategi (Gabung Cerdas vs Ganti Data Cloud dengan konfirmasi destruktif eksplisit), eksekusi atomik dengan rollback otomatis saat gagal, dan penghormatan tombstone.
+- **Honest Sync Diagnostics (Q127):** Menyajikan status diagnostik sinkronisasi jujur berdasarkan lifecycle nyata (idle, syncing, successful commit, pending, failed, offline), memisahkan konektivitas jaringan dari reachability Firebase, menghapus checkmark palsu sebelum ada commit cloud yang terverifikasi, serta membatasi rincian per-domain hanya jika terdapat bukti operasi aktual.
 - **Typography & Character Integrity:** Memperbaiki karakter separator bullet yang terkorupsi pada komponen Sorotan dan Lanjut Baca.
 
 ### Dokumentasi & Penyelarasan Terminologi Publik

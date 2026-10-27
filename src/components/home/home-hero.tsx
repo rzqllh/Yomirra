@@ -163,32 +163,35 @@ export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
         <div
           role="search"
           aria-label="Pencarian Beranda"
-          className="w-full max-w-[480px]"
+          className="relative w-full max-w-[480px]"
         >
           <button
             type="button"
             id="home-hero-search"
-            aria-label="Cari judul atau kreator."
+            aria-label="Cari judul atau kreator…"
             onClick={() => window.dispatchEvent(new CustomEvent("open-command-menu"))}
             className="group flex h-11 sm:h-12 w-full items-center gap-3 rounded-full border border-border-default/70 bg-surface-base/90 px-3.5 sm:px-4 shadow-none transition-all hover:border-accent/60 hover:bg-surface-hover/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer select-none text-left active:scale-[0.995]"
           >
             <MagnifyingGlass
               size={18}
-              weight="regular"
               className="shrink-0 text-text-muted transition-colors group-hover:text-accent"
               aria-hidden="true"
             />
-            <input
-              type="text"
-              readOnly
-              tabIndex={-1}
-              placeholder="Cari judul atau kreator…"
-              className="min-w-0 flex-1 bg-transparent text-[13px] sm:text-sm font-medium text-text-primary outline-none placeholder:text-text-muted cursor-pointer pointer-events-none"
-            />
+            <span className="min-w-0 flex-1 bg-transparent text-[13px] sm:text-sm font-medium text-text-muted truncate select-none">
+              Cari judul atau kreator…
+            </span>
             <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded px-2 py-0.5 text-[10px] font-mono font-semibold text-text-muted bg-surface-muted/80 border border-border-subtle/80">
               ⌘K
             </kbd>
           </button>
+          <input
+            type="text"
+            readOnly
+            tabIndex={-1}
+            aria-hidden="true"
+            placeholder="Cari judul atau kreator…"
+            className="sr-only"
+          />
         </div>
       </div>
     </section>

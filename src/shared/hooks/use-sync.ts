@@ -1,3 +1,5 @@
+import { useSyncDiagnosticsStore } from "@/shared/store/sync-diagnostics-store";
+import { useGuestMergeStore } from "@/shared/store/guest-merge-store";
 import { useEffect, useRef, useState } from 'react';
 import { useAuth } from './use-auth';
 import { useLibraryStore, LibraryItem } from "@/shared/store/library-store";
@@ -72,6 +74,7 @@ const removeHistoryItemLocal = (id: string, item?: Partial<HistoryItem>) => {
 };
 
 export function useSync(options = { autoSync: true }) {
+  const isMergePending = useGuestMergeStore((state) => state.isMergePending);
   const { user } = useAuth();
   const userUid = user?.uid;
   const [isSyncing, setIsSyncing] = useState(false);
@@ -84,6 +87,7 @@ export function useSync(options = { autoSync: true }) {
   }, [userUid]);
 
   const runFullSync = (): Promise<void> => {
+    useSyncDiagnosticsStore.getState().recordSyncStart();
     const uid = userUid;
     if (!uid) return Promise.reject(new Error("No authenticated user is available for sync."));
 
@@ -111,6 +115,10 @@ export function useSync(options = { autoSync: true }) {
       let batch = writeBatch(firestore);
       let batchCount = 0;
       let totalSynced = 0;
+      let syncedLibCount = 0;
+      let syncedHistCount = 0;
+      let cloudPrefsResult: unknown = null;
+      let cloudCollectionsResult: unknown = null;
       const commits: Promise<void>[] = [];
       const isCurrentUser = () => currentUidRef.current === uid;
       const commitCurrentBatch = () => {
@@ -154,7 +162,7 @@ export function useSync(options = { autoSync: true }) {
               primaryMangaId: legacyItem.mangaId,
               linkedSources: legacyItem.linkedSources ?? [],
             };
-            pushToBatch(doc(firestore, `users/${uid}/libraryV2`, savedTitleId), cleanRecord(enriched));
+            pushToBatch(doc(firestore, `users/${uid}/libraryV2`, savedTitleId), cleanRecord(enriched)); syncedLibCount++;
             remoteLibrary[savedTitleId] = enriched;
           }
         }
@@ -195,7 +203,7 @@ export function useSync(options = { autoSync: true }) {
               primaryMangaId: legacyItem.mangaId,
               linkedSources: legacyItem.linkedSources ?? [],
             };
-            pushToBatch(doc(firestore, `users/${uid}/libraryV2`, savedTitleId), cleanRecord(enriched));
+            pushToBatch(doc(firestore, `users/${uid}/libraryV2`, savedTitleId), cleanRecord(enriched)); syncedLibCount++;
             remoteLibrary[savedTitleId] = enriched;
           }
         });
@@ -221,13 +229,13 @@ export function useSync(options = { autoSync: true }) {
           if (getSafeTimestamp(tombstone.deletedAt) >= getSafeTimestamp(localItem.updatedAt)) {
             removeLibraryItemLocal(id, localItem);
           } else {
-            pushToBatch(doc(firestore, `users/${uid}/libraryV2`, id), cleanRecord(localItem));
+            pushToBatch(doc(firestore, `users/${uid}/libraryV2`, id), cleanRecord(localItem)); syncedLibCount++;
           }
           continue;
         }
         const remoteItem = remoteLibrary[id];
         if (!remoteItem || getSafeTimestamp(localItem.updatedAt) > getSafeTimestamp(remoteItem.updatedAt)) {
-          pushToBatch(doc(firestore, `users/${uid}/libraryV2`, id), cleanRecord(localItem));
+          pushToBatch(doc(firestore, `users/${uid}/libraryV2`, id), cleanRecord(localItem)); syncedLibCount++;
         }
       }
 
@@ -248,13 +256,13 @@ export function useSync(options = { autoSync: true }) {
           if (getSafeTimestamp(tombstone.deletedAt) >= getSafeTimestamp(localItem.readAt)) {
             removeHistoryItemLocal(id, localItem);
           } else {
-            pushToBatch(doc(firestore, `users/${uid}/history`, id), cleanRecord({ ...localItem, readAt: getSafeTimestamp(localItem.readAt) }));
+            pushToBatch(doc(firestore, `users/${uid}/history`, id), cleanRecord({ ...localItem, readAt: getSafeTimestamp(localItem.readAt) })); syncedHistCount++;
           }
           continue;
         }
         const remoteItem = remoteHistory[id];
         if (!remoteItem || getSafeTimestamp(localItem.readAt) > getSafeTimestamp(remoteItem.readAt)) {
-          pushToBatch(doc(firestore, `users/${uid}/history`, id), cleanRecord({ ...localItem, readAt: getSafeTimestamp(localItem.readAt) }));
+          pushToBatch(doc(firestore, `users/${uid}/history`, id), cleanRecord({ ...localItem, readAt: getSafeTimestamp(localItem.readAt) })); syncedHistCount++;
         }
       }
 
@@ -273,7 +281,7 @@ export function useSync(options = { autoSync: true }) {
 
       // Source preferences and custom collections remain best-effort.
       try {
-        const cloudPrefs = await pullSourcePreferences();
+        const cloudPrefs = await pullSourcePreferences(); cloudPrefsResult = cloudPrefs;
         if (isCurrentUser() && cloudPrefs) {
           useSourcePreferencesStore.getState().syncWithCloud(cloudPrefs.disabledSources, cloudPrefs.hiddenFromHomeSources);
         }
@@ -282,7 +290,7 @@ export function useSync(options = { autoSync: true }) {
       }
 
       try {
-        const cloudCollections = await pullCustomCollections();
+        const cloudCollections = await pullCustomCollections(); cloudCollectionsResult = cloudCollections;
         if (isCurrentUser() && cloudCollections) {
           useCollectionStore.getState().syncWithCloud(cloudCollections.collections, cloudCollections.membershipsByManga);
         }
@@ -294,8 +302,30 @@ export function useSync(options = { autoSync: true }) {
       if (totalSynced > 0 && process.env.NODE_ENV === 'development') {
         console.log(`[Sync] Synced ${totalSynced} local items to Cloud`);
       }
-      useSettingsStore.getState().setLastSyncedAt(new Date().toISOString());
-    })();
+      const now = new Date().toISOString();
+      useSettingsStore.getState().setLastSyncedAt(now);
+      useSyncDiagnosticsStore.getState().recordSuccessfulCommit({
+        domains: [
+          {
+            domain: "library",
+            committedCount: syncedLibCount,
+            pulledCount: Object.keys(remoteLibrary).length,
+          },
+          {
+            domain: "history",
+            committedCount: syncedHistCount,
+            pulledCount: Object.keys(remoteHistory).length,
+          },
+          ...(cloudPrefsResult ? [{ domain: "preferences" as const, committedCount: 1, pulledCount: 1 }] : []),
+          ...(cloudCollectionsResult ? [{ domain: "collections" as const, committedCount: 1, pulledCount: 1 }] : []),
+        ],
+        timestamp: now,
+      });
+    })().catch((err) => {
+      const isCloudUnreachable = typeof window !== "undefined" && (!window.navigator.onLine || /network|unavailable|timeout|offline/i.test(err?.message || ""));
+      useSyncDiagnosticsStore.getState().recordSyncFailure(err?.message || "Sync failed", isCloudUnreachable);
+      throw err;
+    });
 
     inFlightSyncs.set(uid, operation);
     const clearInFlight = () => {
@@ -308,7 +338,7 @@ export function useSync(options = { autoSync: true }) {
 
   useEffect(() => {
     if (!options.autoSync) return;
-    if (!userUid) {
+    if (!userUid || isMergePending) {
       initialSyncUidRef.current = undefined;
       return;
     }
@@ -318,12 +348,20 @@ export function useSync(options = { autoSync: true }) {
     runFullSync().catch((error) => console.error("Initial sync failed", error));
 
     const handleOnline = () => {
+      useSyncDiagnosticsStore.getState().setNetworkOnline(true);
       runFullSync().catch((error) => console.error("Online sync failed", error));
     };
+    const handleOffline = () => {
+      useSyncDiagnosticsStore.getState().setNetworkOnline(false);
+    };
     window.addEventListener("online", handleOnline);
-    return () => window.removeEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userUid, options.autoSync]);
+  }, [userUid, options.autoSync, isMergePending]);
 
   useEffect(() => {
     if (!userUid) return;
