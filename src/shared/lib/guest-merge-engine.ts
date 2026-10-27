@@ -1,9 +1,14 @@
+export { compareMilestones } from "@/shared/lib/milestone-comparator";
+export type { MilestoneComparison } from "@/shared/lib/milestone-comparator";
+export { commitMergedDataToFirestore, PartialBatchCommitError } from "@/shared/lib/firestore-merge-committer";
+export type { MergeRecoveryJournal } from "@/shared/lib/firestore-merge-committer";
+import { compareMilestones } from "@/shared/lib/milestone-comparator";
+import { commitMergedDataToFirestore } from "@/shared/lib/firestore-merge-committer";
 import type { LibraryItem } from "@/shared/store/library-store";
 import type { HistoryItem } from "@/shared/store/history-store";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useHistoryStore } from "@/shared/store/history-store";
 import { setLocalDataOwnerUid } from "@/shared/lib/local-data-owner";
-import { parseChapterNumber } from "@/shared/lib/chapter-parser";
 
 export interface GuestSnapshot {
   library: Record<string, LibraryItem>;
@@ -67,12 +72,6 @@ function getSafeTime(val: string | number | undefined | null): number {
     return Number.isNaN(t) ? 0 : t;
   }
   return 0;
-}
-
-function cleanRecord(item: object): Record<string, unknown> {
-  return Object.fromEntries(
-    Object.entries(item).filter(([, value]) => value !== undefined)
-  );
 }
 
 export function shouldPromptGuestMerge(guest: GuestSnapshot): boolean {
@@ -140,31 +139,6 @@ export async function fetchCloudSnapshot(uid: string): Promise<CloudSnapshot> {
   };
 }
 
-/**
- * Verified milestone resolution adhering strictly to Q52.
- * Compares highest verified milestone progress using index and parsed chapter number.
- */
-function getVerifiedMilestoneMetric(item: LibraryItem): {
-  metric: number;
-  chapterTitle: string;
-} {
-  const idx = typeof item.highestMilestoneIndex === "number" && !Number.isNaN(item.highestMilestoneIndex)
-    ? item.highestMilestoneIndex
-    : -1;
-
-  const candidateTitle =
-    item.highestMilestoneChapterTitle ||
-    item.lastReadChapterTitle ||
-    "";
-  const parsedNum = parseChapterNumber(candidateTitle) ?? -1;
-
-  const metric = Math.max(idx, parsedNum);
-  return {
-    metric,
-    chapterTitle: candidateTitle || `Chapter ${metric > 0 ? metric : 0}`,
-  };
-}
-
 export function computeMergeDiff(
   guest: GuestSnapshot,
   cloud: CloudSnapshot
@@ -187,23 +161,17 @@ export function computeMergeDiff(
       guestOnlyLibrary.push(guestItem);
     } else {
       const cloudItem = cloud.library[key];
-      const guestM = getVerifiedMilestoneMetric(guestItem);
-      const cloudM = getVerifiedMilestoneMetric(cloudItem);
-
-      const guestWins = guestM.metric >= cloudM.metric;
-      const resolvedChapter = guestWins ? guestM.chapterTitle : cloudM.chapterTitle;
+      const comparison = compareMilestones(guestItem, cloudItem);
 
       conflictingLibrary.push({
         id: key,
         title: guestItem.title || cloudItem.title,
-        guestChapterTitle: guestM.chapterTitle,
-        cloudChapterTitle: cloudM.chapterTitle,
-        guestMilestoneIndex: guestM.metric,
-        cloudMilestoneIndex: cloudM.metric,
-        resolvedMilestoneChapter: resolvedChapter,
-        resolutionReason: guestWins
-          ? "Milestone lokal lebih tinggi atau sama (Q52 dipertahankan)"
-          : "Milestone cloud lebih tinggi (Q52 dipertahankan)",
+        guestChapterTitle: comparison.guestChapterTitle,
+        cloudChapterTitle: comparison.cloudChapterTitle,
+        guestMilestoneIndex: comparison.guestMilestoneIndex,
+        cloudMilestoneIndex: comparison.cloudMilestoneIndex,
+        resolvedMilestoneChapter: comparison.resolvedChapter,
+        resolutionReason: comparison.reason,
       });
     }
   }
@@ -260,9 +228,8 @@ export function resolveMergedState(
     if (!cloudItem) {
       mergedLibrary[key] = { ...guestItem };
     } else {
-      const guestM = getVerifiedMilestoneMetric(guestItem);
-      const cloudM = getVerifiedMilestoneMetric(cloudItem);
-      const guestWinsMilestone = guestM.metric >= cloudM.metric;
+      const comparison = compareMilestones(guestItem, cloudItem);
+      const guestWinsMilestone = comparison.guestWins;
 
       // Deduplicate linked sources
       const linkedMap = new Map<string, unknown>();
@@ -349,66 +316,6 @@ export function resolveMergedState(
  * Direct Firestore committer for merged data.
  * Executes writes in atomic batches (up to 450 items per batch).
  */
-export async function commitMergedDataToFirestore({
-  uid,
-  library,
-  history,
-}: {
-  uid: string;
-  library: Record<string, LibraryItem>;
-  history: Record<string, HistoryItem>;
-}): Promise<{ libraryWrites: number; historyWrites: number; totalWrites: number }> {
-  const { initFirebase } = await import("@/shared/lib/firebase");
-  const { loadFirestore } = await import("@/shared/lib/firestore-runtime");
-
-  const { db: firestore } = await initFirebase();
-  if (!firestore) {
-    throw new Error("Koneksi Firebase tidak tersedia untuk melakukan commit.");
-  }
-
-  const { doc, writeBatch } = await loadFirestore();
-
-  let batch = writeBatch(firestore);
-  let batchCount = 0;
-  let libraryWrites = 0;
-  let historyWrites = 0;
-  const commits: Promise<void>[] = [];
-
-  const commitBatch = () => {
-    if (batchCount > 0) {
-      commits.push(batch.commit());
-      batch = writeBatch(firestore);
-      batchCount = 0;
-    }
-  };
-
-  for (const [id, item] of Object.entries(library)) {
-    batch.set(doc(firestore, `users/${uid}/libraryV2`, id), cleanRecord(item));
-    batchCount++;
-    libraryWrites++;
-    if (batchCount === 450) commitBatch();
-  }
-
-  for (const [id, item] of Object.entries(history)) {
-    batch.set(
-      doc(firestore, `users/${uid}/history`, id),
-      cleanRecord({ ...item, readAt: getSafeTime(item.readAt) })
-    );
-    batchCount++;
-    historyWrites++;
-    if (batchCount === 450) commitBatch();
-  }
-
-  commitBatch();
-  await Promise.all(commits);
-
-  return {
-    libraryWrites,
-    historyWrites,
-    totalWrites: libraryWrites + historyWrites,
-  };
-}
-
 export function restoreGuestBackup(): GuestSnapshot | null {
   try {
     const key = localStorage.getItem("yomirra_last_guest_backup_key");
@@ -457,12 +364,33 @@ export async function executeGuestMerge({
 
     if (strategy === "cloud-replace") {
       // 1. Create a verifiable local backup before destructive replacement
-      backupKey = `yomirra_guest_backup_${Date.now()}`;
+      backupKey = `yomirra_guest_backup_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      let backupVerified = false;
       try {
-        localStorage.setItem(backupKey, JSON.stringify(guestSnapshot));
+        const payload = JSON.stringify(guestSnapshot);
+        localStorage.setItem(backupKey, payload);
         localStorage.setItem("yomirra_last_guest_backup_key", backupKey);
-      } catch (e) {
-        console.warn("Could not save pre-replace backup to localStorage", e);
+
+        const readBack = localStorage.getItem(backupKey);
+        if (readBack) {
+          const parsed = JSON.parse(readBack);
+          if (
+            parsed &&
+            typeof parsed === "object" &&
+            parsed.library !== undefined &&
+            parsed.history !== undefined
+          ) {
+            backupVerified = true;
+          }
+        }
+      } catch {
+        backupVerified = false;
+      }
+
+      if (!backupVerified) {
+        throw new Error(
+          "Gagal membuat atau memverifikasi backup lokal sebelum Cloud Replace. Operasi dibatalkan demi keamanan data."
+        );
       }
 
       finalLibrary = { ...cloudSnapshot.library };

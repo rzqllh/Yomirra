@@ -324,5 +324,36 @@ describe("GuestMergeEngine (Q64 Engine)", () => {
       // Owner UID must NOT be transitioned on failure!
       expect(getLocalDataOwnerUid()).toBeNull();
     });
+    it("aborts Cloud-Replace and throws error when local backup cannot be verified (fail-closed)", async () => {
+      const initialGuestLib = {
+        "precious-local": { id: "precious-local", title: "Cannot Be Lost" } as LibraryItem,
+      };
+      const cloud: CloudSnapshot = {
+        library: {
+          "cloud-item": { id: "cloud-item", title: "Cloud Item" } as LibraryItem,
+        },
+        history: {},
+      };
+
+      useLibraryStore.setState({ items: initialGuestLib });
+
+      vi.spyOn(Storage.prototype, "setItem").mockImplementation((key) => {
+        if (typeof key === "string" && key.startsWith("yomirra_guest_backup_")) {
+          throw new Error("QuotaExceededError: storage full");
+        }
+      });
+
+      await expect(
+        executeGuestMerge({
+          uid: "user-backup-fail",
+          strategy: "cloud-replace",
+          guestSnapshot: { library: initialGuestLib, history: {} },
+          cloudSnapshot: cloud,
+        })
+      ).rejects.toThrow("Gagal membuat atau memverifikasi backup lokal sebelum Cloud Replace");
+
+      expect(useLibraryStore.getState().items).toEqual(initialGuestLib);
+      expect(getLocalDataOwnerUid()).toBeNull();
+    });
   });
 });

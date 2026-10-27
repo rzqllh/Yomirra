@@ -23,6 +23,7 @@ let globalLoading = true;
 let globalUnsubscribe: (() => void) | null = null;
 let isSettingUpAuth = false;
 let currentProcessingUid: string | null = null;
+let authTransitionSeq = 0;
 
 const subscribers = new Set<(user: User | null, loading: boolean) => void>();
 
@@ -33,6 +34,7 @@ function notifySubscribers() {
 }
 
 async function handleAuthStateTransition(currentUser: User | null) {
+  const seq = ++authTransitionSeq;
   const newUid = currentUser?.uid || null;
 
   if (newUid === currentProcessingUid && globalUser?.uid === newUid) {
@@ -64,6 +66,7 @@ async function handleAuthStateTransition(currentUser: User | null) {
     if (shouldPromptGuestMerge(guestSnapshot)) {
       try {
         const cloudSnapshot = await fetchCloudSnapshot(newUid);
+        if (seq !== authTransitionSeq) return;
         const diff = computeMergeDiff(guestSnapshot, cloudSnapshot);
 
         if (diff.hasCloudData || diff.conflictingLibrary.length > 0) {
@@ -89,6 +92,7 @@ async function handleAuthStateTransition(currentUser: User | null) {
           useSyncDiagnosticsStore.getState().handleUserSwitch(newUid);
         }
       } catch (e: any) {
+        if (seq !== authTransitionSeq) return;
         console.error("Failed to read cloud snapshot for guest merge", e);
         // FAIL-CLOSED: Do NOT setLocalDataOwnerUid!
         useGuestMergeStore.getState().setMergeError({
@@ -159,6 +163,7 @@ export function _resetGlobalAuthForTesting() {
   globalLoading = true;
   isSettingUpAuth = false;
   currentProcessingUid = null;
+  authTransitionSeq = 0;
   subscribers.clear();
 }
 
