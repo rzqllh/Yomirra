@@ -164,8 +164,9 @@ export async function commitMergedDataToFirestore({
           localStorage.setItem(recoveryKey, JSON.stringify(journal));
         } catch {}
 
+        const errDetail = lastErr?.message ? ": " + lastErr.message : "";
         throw new PartialBatchCommitError(
-          "Gagal melakukan commit batch " + (bIndex + 1) + " dari " + totalBatches + " ke cloud Firestore. Jurnal pemulihan tersimpan (" + recoveryKey + ").",
+          "Gagal melakukan commit batch " + (bIndex + 1) + " dari " + totalBatches + " ke cloud Firestore" + errDetail + ". Jurnal pemulihan tersimpan (" + recoveryKey + ").",
           {
             uid,
             completedBatches: bIndex,
