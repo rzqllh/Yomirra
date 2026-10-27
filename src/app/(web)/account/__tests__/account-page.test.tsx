@@ -74,9 +74,10 @@ describe("AccountPage & Q127 Honest Diagnostics & Q64 Guest Merge UI", () => {
     mockUser = { uid: "user-test", displayName: "Tester", email: "test@example.com" };
 
     useSyncDiagnosticsStore.getState().recordSuccessfulCommit({
+      uid: "user-test",
       domains: [
-        { domain: "library", committedCount: 12, pulledCount: 15 },
-        { domain: "history", committedCount: 34, pulledCount: 40 },
+        { domain: "library", successfulWriteCount: 0, verifiedReadCount: 12 },
+        { domain: "history", successfulWriteCount: 0, verifiedReadCount: 34 },
       ],
       timestamp: "2026-10-27T12:00:00Z",
     });
@@ -86,6 +87,24 @@ describe("AccountPage & Q127 Honest Diagnostics & Q64 Guest Merge UI", () => {
     expect(screen.getByText("12 item terverifikasi di cloud")).toBeTruthy();
     expect(screen.getByText("34 riwayat terverifikasi di cloud")).toBeTruthy();
     expect(screen.getByText("Tersinkron")).toBeTruthy();
+  });
+
+  it("displays honest write count breakdown when new items were actually committed", () => {
+    mockUser = { uid: "user-test", displayName: "Tester", email: "test@example.com" };
+
+    useSyncDiagnosticsStore.getState().recordSuccessfulCommit({
+      uid: "user-test",
+      domains: [
+        { domain: "library", successfulWriteCount: 5, verifiedReadCount: 12 },
+        { domain: "history", successfulWriteCount: 10, verifiedReadCount: 34 },
+      ],
+      timestamp: "2026-10-27T12:00:00Z",
+    });
+
+    render(<AccountPage />);
+
+    expect(screen.getByText("5 item baru di-commit (12 terverifikasi)")).toBeTruthy();
+    expect(screen.getByText("10 riwayat baru di-commit (34 terverifikasi)")).toBeTruthy();
   });
 
   it("renders GuestMergeDialog when isMergePending is active", () => {
@@ -121,5 +140,22 @@ describe("AccountPage & Q127 Honest Diagnostics & Q64 Guest Merge UI", () => {
     expect(screen.getByText(/Penyelarasan Data Tamu & Akun/i)).toBeTruthy();
     expect(screen.getByText(/1\. Gabungkan Data/i)).toBeTruthy();
     expect(screen.getByText(/2. Gunakan Data Cloud/i)).toBeTruthy();
+  });
+
+  it("renders fail-closed error view in GuestMergeDialog when snapshot fetch failed", () => {
+    mockUser = { uid: "user-test", displayName: "Tester", email: "test@example.com" };
+
+    useGuestMergeStore.getState().setMergeError({
+      user: { uid: "user-test", displayName: "Tester", email: "test@example.com" },
+      errorMessage: "Koneksi cloud gagal membaca snapshot akun",
+    });
+
+    render(<AccountPage />);
+
+    expect(screen.getByRole("dialog")).toBeTruthy();
+    expect(screen.getByText(/Gagal Membaca Data Cloud/i)).toBeTruthy();
+    expect(screen.getByText(/Koneksi cloud gagal membaca snapshot akun/i)).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Coba Lagi/i })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Batalkan Masuk Akun/i })).toBeTruthy();
   });
 });

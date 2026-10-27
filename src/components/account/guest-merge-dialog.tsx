@@ -2,8 +2,15 @@
 
 import * as React from "react";
 import { useGuestMergeStore } from "@/shared/store/guest-merge-store";
-import { executeGuestMerge, MergeStrategy } from "@/shared/lib/guest-merge-engine";
+import {
+  executeGuestMerge,
+  fetchCloudSnapshot,
+  computeMergeDiff,
+  MergeStrategy,
+} from "@/shared/lib/guest-merge-engine";
 import { useAuth } from "@/shared/hooks/use-auth";
+import { useLibraryStore } from "@/shared/store/library-store";
+import { useHistoryStore } from "@/shared/store/history-store";
 import { useSyncDiagnosticsStore } from "@/shared/store/sync-diagnostics-store";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +22,8 @@ import {
   CloudCheck,
   ShieldCheck,
   ArrowsClockwise,
+  WarningCircle,
+  ArrowClockwise,
 } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { cn } from "@/shared/utils/cn";
@@ -26,6 +35,8 @@ export function GuestMergeDialog() {
     guestSnapshot,
     cloudSnapshot,
     diff,
+    mergeError,
+    startMergeReview,
     resolveMergeReview,
     cancelMergeReview,
   } = useGuestMergeStore();
@@ -34,8 +45,104 @@ export function GuestMergeDialog() {
   const [strategy, setStrategy] = React.useState<MergeStrategy>("merge");
   const [confirmedDestructive, setConfirmedDestructive] = React.useState(false);
   const [isExecuting, setIsExecuting] = React.useState(false);
+  const [isRetryingSnapshot, setIsRetryingSnapshot] = React.useState(false);
 
-  if (!isMergePending || !pendingUser || !guestSnapshot || !cloudSnapshot || !diff) {
+  if (!isMergePending) {
+    return null;
+  }
+
+  // Fail-closed snapshot error state
+  if (mergeError) {
+    const handleRetry = async () => {
+      setIsRetryingSnapshot(true);
+      try {
+        const guestLib = useLibraryStore.getState().items || {};
+        const guestHist = useHistoryStore.getState().items || {};
+        const currentGuestSnapshot = { library: guestLib, history: guestHist };
+
+        const fetchedCloud = await fetchCloudSnapshot(mergeError.user.uid);
+        const computedDiff = computeMergeDiff(currentGuestSnapshot, fetchedCloud);
+
+        startMergeReview({
+          user: mergeError.user,
+          guestSnapshot: currentGuestSnapshot,
+          cloudSnapshot: fetchedCloud,
+          diff: computedDiff,
+        });
+        toast.success("Snapshot Cloud Berhasil Dibaca");
+      } catch (err: any) {
+        toast.error("Gagal Membaca Cloud", {
+          description: err?.message || "Koneksi cloud masih terganggu. Coba lagi sesaat lagi.",
+        });
+      } finally {
+        setIsRetryingSnapshot(false);
+      }
+    };
+
+    const handleCancelAuth = async () => {
+      try {
+        await logout();
+      } finally {
+        cancelMergeReview();
+        toast.info("Masuk akun dibatalkan", {
+          description: "Data lokal tetap terlindungi dan kamu kembali ke mode tamu.",
+        });
+      }
+    };
+
+    return (
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="merge-error-title"
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+      >
+        <div className="relative w-full max-w-md rounded-2xl border border-status-error-fg/30 bg-surface-raised p-5 sm:p-6 shadow-2xl space-y-4">
+          <div className="flex items-start gap-3">
+            <div className="size-10 rounded-xl bg-status-error-bg/60 border border-status-error-fg/30 flex items-center justify-center text-status-error-fg shrink-0 mt-0.5">
+              <WarningCircle size={22} weight="bold" />
+            </div>
+            <div>
+              <h2 id="merge-error-title" className="text-base font-bold text-text-primary">
+                Gagal Membaca Data Cloud
+              </h2>
+              <p className="text-xs text-text-muted mt-1 leading-relaxed">
+                Yomirra mendeteksi akunmu memiliki sesi aktif, namun gagal membaca snapshot data cloud untuk verifikasi penggabungan: <strong className="text-status-error-fg">{mergeError.errorMessage}</strong>.
+              </p>
+              <p className="text-[11px] text-text-secondary mt-1.5">
+                Data bacaan lokalmu di perangkat ini tetap aman dan tidak diubah. Sinkronisasi diblokir sampai data cloud berhasil diverifikasi.
+              </p>
+            </div>
+          </div>
+
+          <div className="pt-2 flex flex-col sm:flex-row items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={handleCancelAuth}
+              disabled={isRetryingSnapshot}
+              className="w-full sm:w-auto flex-1 rounded-xl min-h-10 text-xs font-bold"
+            >
+              Batalkan Masuk Akun
+            </Button>
+
+            <Button
+              type="button"
+              variant="primary"
+              onClick={handleRetry}
+              loading={isRetryingSnapshot}
+              className="w-full sm:w-auto flex-1 rounded-xl min-h-10 text-xs font-bold"
+            >
+              <ArrowClockwise size={16} weight="bold" className={cn(isRetryingSnapshot && "animate-spin")} />
+              Coba Lagi
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!pendingUser || !guestSnapshot || !cloudSnapshot || !diff) {
     return null;
   }
 
@@ -47,13 +154,11 @@ export function GuestMergeDialog() {
   const handleCancel = async () => {
     try {
       await logout();
+    } finally {
       cancelMergeReview();
       toast.info("Masuk akun dibatalkan", {
         description: "Data lokal tetap aman di perangkat ini tanpa perubahan apa pun.",
       });
-    } catch (e) {
-      console.error(e);
-      cancelMergeReview();
     }
   };
 
@@ -74,29 +179,49 @@ export function GuestMergeDialog() {
         cloudSnapshot,
       });
 
-      useSyncDiagnosticsStore.getState().recordSuccessfulCommit({
-        domains: [
-          {
-            domain: "library",
-            committedCount: result.stats.libraryCount,
-            pulledCount: cloudLibCount,
-          },
-          {
-            domain: "history",
-            committedCount: result.stats.historyCount,
-            pulledCount: cloudHistCount,
-          },
-        ],
-      });
+      if (strategy === "merge") {
+        useSyncDiagnosticsStore.getState().recordSuccessfulCommit({
+          uid: pendingUser.uid,
+          domains: [
+            {
+              domain: "library",
+              successfulWriteCount: result.stats.actualCloudWrites > 0 ? guestLibCount : 0,
+              verifiedReadCount: cloudLibCount,
+            },
+            {
+              domain: "history",
+              successfulWriteCount: result.stats.actualCloudWrites > 0 ? guestHistCount : 0,
+              verifiedReadCount: cloudHistCount,
+            },
+          ],
+        });
+      } else {
+        // Cloud-replace: cloud data adopted locally, 0 cloud writes
+        useSyncDiagnosticsStore.getState().recordSuccessfulCommit({
+          uid: pendingUser.uid,
+          domains: [
+            {
+              domain: "library",
+              successfulWriteCount: 0,
+              verifiedReadCount: cloudLibCount,
+            },
+            {
+              domain: "history",
+              successfulWriteCount: 0,
+              verifiedReadCount: cloudHistCount,
+            },
+          ],
+        });
+      }
 
       resolveMergeReview();
       toast.success(
-        strategy === "merge" ? "Data Berhasil Digabungkan!" : "Data Cloud Diterapkan",
+        strategy === "merge" ? "Data Berhasil Digabungkan & Tersinkron!" : "Data Cloud Berhasil Diterapkan",
         {
           description:
             strategy === "merge"
-              ? `${result.stats.libraryCount} komik dan ${result.stats.historyCount} riwayat telah diselaraskan dengan akun Google-mu.`
-              : "Data akun Google telah diterapkan ke perangkat ini.",
+              ? `${result.stats.libraryCount} komik dan ${result.stats.historyCount} riwayat berhasil diselaraskan dengan akun Google-mu.`
+              : "Data akun Google telah diterapkan ke perangkat ini. Salinan cadangan sesi tamu tersimpan secara lokal.",
         }
       );
     } catch (err: any) {
@@ -170,7 +295,7 @@ export function GuestMergeDialog() {
           <div className="p-3 rounded-xl bg-status-info-bg/40 border border-status-info-fg/20 text-xs space-y-2">
             <div className="flex items-center gap-1.5 font-bold text-text-primary">
               <ShieldCheck size={16} weight="bold" className="text-accent" />
-              <span>Resolusi Konflik Otomatis (Milestone Q52 &amp; Q63)</span>
+              <span>Resolusi Konflik Terverifikasi (Milestone Q52 &amp; Q63)</span>
             </div>
             <p className="text-[11.5px] text-text-secondary leading-relaxed">
               Ditemukan {diff.conflictingLibrary.length} komik tumpang-tindih. Jika memilih <strong>Gabungkan</strong>, Yomirra mempertahankan milestone tertinggi yang terverifikasi dan kursor chapter independen tanpa kehilangan progres bacaan.
@@ -260,7 +385,7 @@ export function GuestMergeDialog() {
                 </span>
               </div>
               <p className="text-[11px] text-text-muted mt-1 leading-relaxed">
-                Abaikan data yang dibuat selama sesi tamu di perangkat ini, dan gunakan data akun Google sepenuhnya.
+                Abaikan data yang dibuat selama sesi tamu di perangkat ini, dan gunakan data akun Google sepenuhnya. Salinan cadangan sesi tamu akan disimpan secara lokal.
               </p>
             </div>
           </button>
@@ -274,7 +399,7 @@ export function GuestMergeDialog() {
               <span>Konfirmasi Tindakan Destruktif</span>
             </div>
             <p className="text-[11px] text-text-secondary leading-relaxed">
-              Tindakan ini akan menghapus data sesi tamu lokal yang belum tersimpan di akun Google. Operasi ini tidak dapat dibatalkan setelah dijalankan.
+              Tindakan ini akan menggantikan data sesi tamu lokal dengan data akun Google. Cadangan lokal otomatis dibuat sebelum penggantian.
             </p>
             <label className="flex items-start gap-2 pt-1 cursor-pointer select-none">
               <input
@@ -285,7 +410,7 @@ export function GuestMergeDialog() {
                 className="mt-0.5 rounded border-border-default text-accent focus:ring-accent"
               />
               <span className="text-[11px] font-semibold text-text-primary">
-                Saya mengerti bahwa data lokal sesi tamu akan dihapus dan digantikan data cloud.
+                Saya mengerti bahwa data lokal sesi tamu akan digantikan data cloud.
               </span>
             </label>
           </div>

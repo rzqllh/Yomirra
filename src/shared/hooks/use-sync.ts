@@ -75,6 +75,8 @@ const removeHistoryItemLocal = (id: string, item?: Partial<HistoryItem>) => {
 
 export function useSync(options = { autoSync: true }) {
   const isMergePending = useGuestMergeStore((state) => state.isMergePending);
+  const mergeError = useGuestMergeStore((state) => state.mergeError);
+  const isBlockedByMerge = isMergePending || Boolean(mergeError);
   const { user } = useAuth();
   const userUid = user?.uid;
   const [isSyncing, setIsSyncing] = useState(false);
@@ -84,9 +86,12 @@ export function useSync(options = { autoSync: true }) {
 
   useEffect(() => {
     currentUidRef.current = userUid;
-  }, [userUid]);
+  }, [userUid, isBlockedByMerge]);
 
   const runFullSync = (): Promise<void> => {
+    if (isBlockedByMerge) {
+      return Promise.reject(new Error("Sync is blocked while guest merge review is active."));
+    }
     useSyncDiagnosticsStore.getState().recordSyncStart();
     const uid = userUid;
     if (!uid) return Promise.reject(new Error("No authenticated user is available for sync."));
@@ -305,19 +310,20 @@ export function useSync(options = { autoSync: true }) {
       const now = new Date().toISOString();
       useSettingsStore.getState().setLastSyncedAt(now);
       useSyncDiagnosticsStore.getState().recordSuccessfulCommit({
+        uid,
         domains: [
           {
             domain: "library",
-            committedCount: syncedLibCount,
-            pulledCount: Object.keys(remoteLibrary).length,
+            successfulWriteCount: syncedLibCount,
+            verifiedReadCount: Object.keys(remoteLibrary).length,
           },
           {
             domain: "history",
-            committedCount: syncedHistCount,
-            pulledCount: Object.keys(remoteHistory).length,
+            successfulWriteCount: syncedHistCount,
+            verifiedReadCount: Object.keys(remoteHistory).length,
           },
-          ...(cloudPrefsResult ? [{ domain: "preferences" as const, committedCount: 1, pulledCount: 1 }] : []),
-          ...(cloudCollectionsResult ? [{ domain: "collections" as const, committedCount: 1, pulledCount: 1 }] : []),
+          ...(cloudPrefsResult ? [{ domain: "preferences" as const, successfulWriteCount: 1, verifiedReadCount: 1 }] : []),
+          ...(cloudCollectionsResult ? [{ domain: "collections" as const, successfulWriteCount: 1, verifiedReadCount: 1 }] : []),
         ],
         timestamp: now,
       });
@@ -338,7 +344,7 @@ export function useSync(options = { autoSync: true }) {
 
   useEffect(() => {
     if (!options.autoSync) return;
-    if (!userUid || isMergePending) {
+    if (!userUid || isBlockedByMerge) {
       initialSyncUidRef.current = undefined;
       return;
     }
@@ -361,10 +367,10 @@ export function useSync(options = { autoSync: true }) {
       window.removeEventListener("offline", handleOffline);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userUid, options.autoSync, isMergePending]);
+  }, [userUid, options.autoSync, isBlockedByMerge]);
 
   useEffect(() => {
-    if (!userUid) return;
+    if (!userUid || isBlockedByMerge) return;
     let isCancelled = false;
     let unsubscribeLibrary: (() => void) | undefined;
     let unsubscribeHistory: (() => void) | undefined;
@@ -435,7 +441,7 @@ export function useSync(options = { autoSync: true }) {
       unsubscribeHistory?.();
       unsubscribePreferences?.();
     };
-  }, [userUid]);
+  }, [userUid, isBlockedByMerge]);
 
   const syncLibraryItem = async (item: LibraryItem) => {
     const { db: firestore } = await initFirebase();

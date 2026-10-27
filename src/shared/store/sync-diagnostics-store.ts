@@ -12,12 +12,13 @@ export type SyncLifecycleState =
 export interface DomainSyncRecord {
   domain: "library" | "history" | "collections" | "preferences";
   status: "synced" | "pending" | "failed";
-  committedCount: number;
-  pulledCount: number;
+  successfulWriteCount: number;
+  verifiedReadCount: number;
   lastCommittedAt: string;
 }
 
 export interface SyncDiagnosticsState {
+  currentUid: string | null;
   lifecycleState: SyncLifecycleState;
   networkOnline: boolean;
   cloudReachable: boolean | null;
@@ -25,15 +26,17 @@ export interface SyncDiagnosticsState {
   lastSyncError: string | null;
   domainRecords: Record<string, DomainSyncRecord>;
 
+  handleUserSwitch: (newUid: string | null) => void;
   setLifecycleState: (state: SyncLifecycleState) => void;
   setNetworkOnline: (online: boolean) => void;
   setCloudReachable: (reachable: boolean | null) => void;
   recordSyncStart: () => void;
   recordSuccessfulCommit: (params: {
+    uid: string;
     domains: Array<{
       domain: "library" | "history" | "collections" | "preferences";
-      committedCount: number;
-      pulledCount: number;
+      successfulWriteCount: number;
+      verifiedReadCount: number;
     }>;
     timestamp?: string;
   }) => void;
@@ -44,6 +47,7 @@ export interface SyncDiagnosticsState {
 export const useSyncDiagnosticsStore = create<SyncDiagnosticsState>()(
   persist(
     (set) => ({
+      currentUid: null,
       lifecycleState: "idle",
       networkOnline: typeof window !== "undefined" ? window.navigator.onLine : true,
       cloudReachable: null,
@@ -51,7 +55,22 @@ export const useSyncDiagnosticsStore = create<SyncDiagnosticsState>()(
       lastSyncError: null,
       domainRecords: {},
 
+      handleUserSwitch: (newUid) => {
+        set((state) => {
+          if (state.currentUid === newUid) return {};
+          return {
+            currentUid: newUid,
+            lifecycleState: "idle",
+            cloudReachable: null,
+            lastSuccessfulSyncAt: null,
+            lastSyncError: null,
+            domainRecords: {},
+          };
+        });
+      },
+
       setLifecycleState: (lifecycleState) => set({ lifecycleState }),
+
       setNetworkOnline: (networkOnline) => {
         set((state) => {
           if (!networkOnline) {
@@ -67,14 +86,17 @@ export const useSyncDiagnosticsStore = create<SyncDiagnosticsState>()(
           };
         });
       },
+
       setCloudReachable: (cloudReachable) => set({ cloudReachable }),
+
       recordSyncStart: () => {
         set((state) => ({
           lifecycleState: state.networkOnline ? "syncing" : "offline",
           lastSyncError: null,
         }));
       },
-      recordSuccessfulCommit: ({ domains, timestamp }) => {
+
+      recordSuccessfulCommit: ({ uid, domains, timestamp }) => {
         const commitTime = timestamp || new Date().toISOString();
         set((state) => {
           const nextRecords = { ...state.domainRecords };
@@ -82,12 +104,13 @@ export const useSyncDiagnosticsStore = create<SyncDiagnosticsState>()(
             nextRecords[d.domain] = {
               domain: d.domain,
               status: "synced",
-              committedCount: d.committedCount,
-              pulledCount: d.pulledCount,
+              successfulWriteCount: d.successfulWriteCount,
+              verifiedReadCount: d.verifiedReadCount,
               lastCommittedAt: commitTime,
             };
           }
           return {
+            currentUid: uid,
             lifecycleState: "successful commit",
             cloudReachable: true,
             lastSuccessfulSyncAt: commitTime,
@@ -96,6 +119,7 @@ export const useSyncDiagnosticsStore = create<SyncDiagnosticsState>()(
           };
         });
       },
+
       recordSyncFailure: (errorMessage, isCloudUnreachable = false) => {
         set((state) => ({
           lifecycleState: state.networkOnline ? "failed" : "offline",
@@ -103,8 +127,10 @@ export const useSyncDiagnosticsStore = create<SyncDiagnosticsState>()(
           lastSyncError: errorMessage,
         }));
       },
+
       resetDiagnostics: () => {
         set({
+          currentUid: null,
           lifecycleState: "idle",
           cloudReachable: null,
           lastSuccessfulSyncAt: null,
@@ -117,6 +143,7 @@ export const useSyncDiagnosticsStore = create<SyncDiagnosticsState>()(
       name: "yomirra-sync-diagnostics",
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
+        currentUid: state.currentUid,
         lastSuccessfulSyncAt: state.lastSuccessfulSyncAt,
         domainRecords: state.domainRecords,
       }),

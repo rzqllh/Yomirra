@@ -8,12 +8,18 @@ export interface PendingUser {
   photoURL?: string | null;
 }
 
+export interface MergeErrorState {
+  user: PendingUser;
+  errorMessage: string;
+}
+
 export interface GuestMergeState {
   isMergePending: boolean;
   pendingUser: PendingUser | null;
   guestSnapshot: GuestSnapshot | null;
   cloudSnapshot: CloudSnapshot | null;
   diff: MergeDiff | null;
+  mergeError: MergeErrorState | null;
 
   startMergeReview: (params: {
     user: PendingUser;
@@ -21,6 +27,8 @@ export interface GuestMergeState {
     cloudSnapshot: CloudSnapshot;
     diff: MergeDiff;
   }) => void;
+  setMergeError: (params: MergeErrorState) => void;
+  clearMergeError: () => void;
   resolveMergeReview: () => void;
   cancelMergeReview: () => void;
 }
@@ -31,6 +39,7 @@ export const useGuestMergeStore = create<GuestMergeState>((set) => ({
   guestSnapshot: null,
   cloudSnapshot: null,
   diff: null,
+  mergeError: null,
 
   startMergeReview: ({ user, guestSnapshot, cloudSnapshot, diff }) =>
     set({
@@ -39,6 +48,19 @@ export const useGuestMergeStore = create<GuestMergeState>((set) => ({
       guestSnapshot,
       cloudSnapshot,
       diff,
+      mergeError: null,
+    }),
+
+  setMergeError: (errorState) =>
+    set({
+      isMergePending: true, // Remains pending/blocked to prevent race conditions
+      pendingUser: errorState.user,
+      mergeError: errorState,
+    }),
+
+  clearMergeError: () =>
+    set({
+      mergeError: null,
     }),
 
   resolveMergeReview: () =>
@@ -48,6 +70,7 @@ export const useGuestMergeStore = create<GuestMergeState>((set) => ({
       guestSnapshot: null,
       cloudSnapshot: null,
       diff: null,
+      mergeError: null,
     }),
 
   cancelMergeReview: () =>
@@ -57,5 +80,6 @@ export const useGuestMergeStore = create<GuestMergeState>((set) => ({
       guestSnapshot: null,
       cloudSnapshot: null,
       diff: null,
+      mergeError: null,
     }),
 }));

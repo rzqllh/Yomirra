@@ -31,10 +31,11 @@ vi.mock("firebase/auth", () => ({
   GoogleAuthProvider: class GoogleAuthProvider {},
 }));
 
-import { useAuth } from "../use-auth";
+import { useAuth, _resetGlobalAuthForTesting } from "../use-auth";
 
 describe("useAuth local data contract", () => {
   beforeEach(() => {
+    _resetGlobalAuthForTesting();
     vi.clearAllMocks();
     localStorage.clear();
     authMocks.currentUser = { uid: "uid-a" };

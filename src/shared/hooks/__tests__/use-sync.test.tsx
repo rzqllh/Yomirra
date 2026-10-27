@@ -1,3 +1,4 @@
+import { useGuestMergeStore } from "@/shared/store/guest-merge-store";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useSync } from "../use-sync";
@@ -90,6 +91,7 @@ describe("useSync cloud correctness", () => {
     localStorage.setItem("yomirra-libraryV2-migrated", "true");
     useLibraryStore.setState({ items: {} });
     useHistoryStore.setState({ items: {} });
+    useGuestMergeStore.getState().cancelMergeReview();
   });
 
   it("subscribes to canonical libraryV2 and applies remote tombstone and removed changes locally", async () => {
@@ -475,6 +477,46 @@ describe("useSync cloud correctness", () => {
 
     await act(async () => {
       await expect(result.current.runFullSync()).rejects.toThrow(/Firebase/i);
+    });
+  });
+  it("blocks manual sync, auto-sync, and realtime listeners when guest merge is pending or errored", async () => {
+    useGuestMergeStore.getState().startMergeReview({
+      user: { uid: "user-a" },
+      guestSnapshot: { library: {}, history: {} },
+      cloudSnapshot: { library: {}, history: {} },
+      diff: {
+        hasGuestData: false,
+        hasCloudData: false,
+        guestOnlyLibrary: [],
+        cloudOnlyLibrary: [],
+        conflictingLibrary: [],
+        guestOnlyHistoryCount: 0,
+        cloudOnlyHistoryCount: 0,
+        conflictingHistoryCount: 0,
+        totalMergedLibraryCount: 0,
+        totalMergedHistoryCount: 0,
+      },
+    });
+
+    const { result, rerender } = renderHook(() => useSync({ autoSync: true }));
+
+    // Manual sync must reject!
+    await act(async () => {
+      await expect(result.current.runFullSync()).rejects.toThrow(/blocked while guest merge review is active/i);
+    });
+
+    // Realtime listeners must NOT have been attached for user-a!
+    expect(mocks.listeners.has("users/user-a/libraryV2")).toBe(false);
+    expect(mocks.listeners.has("users/user-a/history")).toBe(false);
+
+    // Cancel merge review -> sync is unblocked
+    act(() => {
+      useGuestMergeStore.getState().cancelMergeReview();
+    });
+    rerender();
+
+    await waitFor(() => {
+      expect(mocks.listeners.has("users/user-a/libraryV2")).toBe(true);
     });
   });
 });

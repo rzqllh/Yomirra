@@ -254,7 +254,11 @@ export default function AccountPage() {
                     {libRecord && libRecord.status === "synced" ? (
                       <>
                         <CheckCircle size={14} weight="fill" className="text-status-success-fg" />
-                        <span>{libRecord.committedCount} item terverifikasi di cloud</span>
+                        <span>
+                          {libRecord.successfulWriteCount > 0
+                            ? `${libRecord.successfulWriteCount} item baru di-commit (${libRecord.verifiedReadCount} terverifikasi)`
+                            : `${libRecord.verifiedReadCount} item terverifikasi di cloud`}
+                        </span>
                       </>
                     ) : (
                       <>
@@ -272,7 +276,11 @@ export default function AccountPage() {
                     {histRecord && histRecord.status === "synced" ? (
                       <>
                         <CheckCircle size={14} weight="fill" className="text-status-success-fg" />
-                        <span>{histRecord.committedCount} riwayat terverifikasi di cloud</span>
+                        <span>
+                          {histRecord.successfulWriteCount > 0
+                            ? `${histRecord.successfulWriteCount} riwayat baru di-commit (${histRecord.verifiedReadCount} terverifikasi)`
+                            : `${histRecord.verifiedReadCount} riwayat terverifikasi di cloud`}
+                        </span>
                       </>
                     ) : (
                       <>
