@@ -4,6 +4,17 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
 
 ## [Unreleased]
 
+### Visual & UX Revamp — Japanese-Modern Calm Chrome, Beranda State Hierarchy & Parity Closeout (Slice 20)
+
+- **Calm Glass Chrome:** Menghilangkan `box-shadow` pada `.yomirra-chrome` sesuai arsitektur liquid glass yang disetujui (translucent canvas, subtle hairline border, medium backdrop blur, zero drop shadow).
+- **Beranda State Hierarchy:**
+  - **Returning Reader:** Mempromosikan Lanjut Baca ke posisi hero teratas langsung di bawah baris pencarian, menyajikan milestone pembacaan aktual (Q52 & Q63), track progres 4px, dan CTA 1-tap langsung ke reader.
+  - **Zero-History Reader:** Memprioritaskan Discovery (Sorotan & Peringkat per Sumber) tanpa kotak kosong yang membuang ruang, disertai kartu edukasi kontekstual satu baris untuk Rak Buku tanpa paksaan login.
+  - **Unified Search Bar:** Menghilangkan kolase cover acak dan tombol oranye ganda pada hero; menerapkan input pencarian terpadu tunggal 46px dengan badge shortcut `⌘K` dan responsivitas penuh terhadap Fitts's Law.
+- **Guest-to-Account Merge Preview (Q64):** Menyediakan pratinjau transparan jumlah komik di Rak Buku dan riwayat bacaan lokal bagi pengguna tamu sebelum login dengan opsi resolusi konflik terpandu.
+- **Honest Sync Diagnostics (Q127):** Menyajikan rincian diagnostik sinkronisasi per domain (Rak Buku, Riwayat Baca milestone Q52/Q63, preferensi, dan status konektivitas online/offline) tanpa status semu.
+- **Typography & Character Integrity:** Memperbaiki karakter separator bullet yang terkorupsi pada komponen Sorotan dan Lanjut Baca.
+
 ### Dokumentasi & Penyelarasan Terminologi Publik
 
 - Menetapkan identitas publik aplikasi sebagai web reader “Komik” dengan tetap mempertahankan klasifikasi manga, manhwa, manhua, dan jenis komik lainnya.

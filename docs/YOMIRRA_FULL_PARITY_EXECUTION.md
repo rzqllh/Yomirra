@@ -147,7 +147,7 @@ All 175 product and architecture decisions (Q1–Q175) from the authoritative Gr
 | ID | Topic | Requirement | Status | Evidence Files / Tests |
 | :--- | :--- | :--- | :--- | :--- |
 | **Q63** | Independent Cursor | Per-chapter cursor preserved across rereads | `DONE` | `src/shared/store/__tests__/reading-continuity-q52-q63.test.ts` |
-| **Q64** | Merge Preview | Visual diff of local guest items vs cloud items on login | `PARTIAL` | `src/shared/lib/__tests__/auth-lifecycle.test.ts`, `src/app/(web)/account/page.tsx` |
+| **Q64** | Merge Preview | Visual diff of local guest items vs cloud items on login | `DONE` | `src/shared/lib/__tests__/auth-lifecycle.test.ts`, `src/app/(web)/account/page.tsx` |
 | **Q65** | Multi-Account Safety | Switching accounts clears private local cache of prior user | `DONE` | `src/shared/lib/__tests__/auth-lifecycle.test.ts`, `src/shared/store/history-store.ts` |
 | **Q66** | Undo Delete | Temporary undo toast on bookmark removal | `DONE` | `src/components/komik/manga-actions.tsx` |
 | **Q67** | Unmapped Records | Imports preserve unmapped sources in separate view | `DONE` | `src/shared/lib/backup-engine.ts` |
@@ -226,7 +226,7 @@ All 175 product and architecture decisions (Q1–Q175) from the authoritative Gr
 | **Q124** | Cache Repair | Tool to verify and purge corrupted cached chapter images | `DONE` | `src/shared/lib/download-cache.ts` |
 | **Q125** | Honest Storage UI | Clear breakdown of offline images vs cache vs metadata | `DONE` | `src/app/(web)/downloads/page.tsx` |
 | **Q126** | Human Settings | Simplified settings with plain Indonesian explanations | `DONE` | `src/app/(web)/settings/page.tsx` |
-| **Q127** | Sync Diagnostics | Clear indicator of cloud sync status (Synced, Pending, Offline) | `PARTIAL` | `src/shared/store/history-store.ts`, `src/shared/lib/__tests__/auth-lifecycle.test.ts` |
+| **Q127** | Sync Diagnostics | Clear indicator of cloud sync status (Synced, Pending, Offline) | `DONE` | `src/shared/store/history-store.ts`, `src/shared/lib/__tests__/auth-lifecycle.test.ts` |
 | **Q128** | Explicit Logout | Logout offers option to retain or delete local offline files | `DONE` | `src/app/(web)/account/page.tsx` |
 | **Q129** | Gemini Quota UI | Visual indicators when free-tier Gemini API quota exhausted | `DONE` | `src/server/lib/search/gemini-embeddings.ts`, `src/app/api/search/intelligence/route.ts` |
 | **Q130** | Non-Blocking AI | Reader AI toolbar deferred; non-blocking AI used for search | `DEFERRED` | `src/server/lib/search/gemini-embeddings.ts` |

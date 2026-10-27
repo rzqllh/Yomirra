@@ -26,7 +26,7 @@ Search global tidak mengikuti toggle penjelajahan di Beranda/Library/Populer. So
 
 ### Beranda dan discovery
 
-Beranda memprioritaskan komik, bukan banner dekoratif. Bagian pembuka memakai Hero ringkas dengan pencarian global, lalu `Sorotan terbaru` dan peringkat Top 5 per sumber sebelum Lanjut Baca dan daftar yang baru diperbarui. Toggle penjelajahan pada halaman Sumber berlaku konsisten ke Beranda, Library, dan Populer; Search tetap independen.
+Beranda memprioritaskan komik dan mengadaptasi hierarki tampilan sesuai status riwayat: pembaca yang kembali (*returning reader*) memperoleh prioritas `Lanjut Baca` tepat di bawah baris pencarian global untuk melanjutkan milestone membaca secara instan (Q52 & Q63). Bagi pembaca tanpa riwayat (*zero-history*), Beranda memprioritaskan Discovery dengan langsung menyajikan `Sorotan terbaru` dan peringkat per sumber tanpa kotak kosong, disertai kartu pengenalan Rak Buku ringkas. Toggle penjelajahan pada halaman Sumber berlaku konsisten ke Beranda, Library, dan Populer; Search tetap independen.
 
 Sorotan menjaga variasi sumber lebih dulu, menghindari penggabungan judul lintas sumber bila identitasnya belum cukup pasti, dan menghormati `prefers-reduced-motion`. Top 5 di Beranda tetap source-scoped. Halaman Populer memiliki mode `Gabungan` yang mengagregasi posisi per sumber tanpa membandingkan angka popularity mentah, serta mode `Per Sumber` yang mempertahankan urutan native masing-masing source.
 
