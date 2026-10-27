@@ -4,6 +4,13 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
 
 ## [Unreleased]
 
+### Dokumentasi & Penyelarasan Terminologi Publik
+
+- Menetapkan identitas publik aplikasi sebagai web reader “Komik” dengan tetap mempertahankan klasifikasi manga, manhwa, manhua, dan jenis komik lainnya.
+- Memperjelas bahwa dukungan format dan gaya penyajian dibatasi pada kemampuan masing-masing sumber (source) serta fitur yang didukung oleh reader Yomirra.
+- Memperbarui disclaimer publik dengan frasa “dan jenis komik lainnya”.
+- Menegaskan bahwa kontrak internal `Manga*`, `mangaId`, `chapterId`, dan rute publik `/manga/*` tetap dipertahankan tanpa perubahan untuk menjaga stabilitas arsitektur, deep link, dan bookmark.
+
 ### Reliability — Cloud Sync, Unduhan, dan Redis (8–9 Oktober 2026)
 
 - **Cloud Sync ([PR #49](https://github.com/rzqllh/Yomirra/pull/49))** — Tombstone penghapusan Library/History mencegah item lama muncul lagi akibat full/realtime sync; listener canonical `libraryV2` menangani `removed`, operasi dikoordinasikan per UID, dan kegagalan sinkronisasi manual tidak lagi ditampilkan sebagai sukses.

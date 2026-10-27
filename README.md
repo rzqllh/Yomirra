@@ -1,6 +1,6 @@
 # Yomirra
 
-Yomirra adalah web reader multi-source untuk manga, manhwa, dan manhua. Tujuannya sederhana: pencarian, library, progress baca, dan reader tetap berada di satu aplikasi walaupun sumber kontennya berbeda-beda atau berubah.
+Yomirra adalah web reader komik multi-source yang mendukung manga, manhwa, manhua, dan jenis komik lainnya. Tujuannya sederhana: pencarian, library, progress baca, dan reader tetap berada di satu aplikasi walaupun sumber kontennya berbeda-beda atau berubah.
 
 **Aplikasi:** https://www.yomirra.web.id/
 
@@ -59,7 +59,7 @@ Jika source utama bermasalah, Yomirra dapat mencari source alternatif untuk judu
 
 ### Reader dan offline
 
-Reader mendukung chapter berbasis gambar, progress baca, chapter navigator, preferensi reader, serta download/offline flow pada browser yang mendukung.
+Reader mendukung chapter berbasis gambar, progress baca, chapter navigator, preferensi reader, serta download/offline flow pada browser yang mendukung. Dukungan format dan gaya penyajian (seperti mode paginasi atau strip vertikal) dibatasi pada kemampuan masing-masing sumber (source) serta fitur yang didukung oleh reader Yomirra.
 
 Navigasi reader menjaga parent page secara eksplisit: perpindahan detail → reader dan antar-chapter tidak meninggalkan reader route lama di belakang tombol kembali, sehingga keluar ke detail lalu kembali lagi mengarah ke halaman asal, bukan ke reader sebelumnya.
 
@@ -147,6 +147,6 @@ Lihat [Developer Guide](docs/README_DEV.md) untuk struktur project dan [Adding a
 
 ## Disclaimer
 
-Yomirra adalah reader interface independen. Konten, artwork, manga, manhwa, dan manhua yang ditampilkan berasal dari layanan pihak ketiga dan tetap menjadi milik pemegang hak masing-masing.
+Yomirra adalah reader interface independen. Konten, artwork, manga, manhwa, manhua, dan jenis komik lainnya yang ditampilkan berasal dari layanan pihak ketiga dan tetap menjadi milik pemegang hak masing-masing.
 
 Penggunaan source pihak ketiga mengikuti aturan dan ketersediaan layanan tersebut. Yomirra tidak menjamin source tertentu akan selalu tersedia.
