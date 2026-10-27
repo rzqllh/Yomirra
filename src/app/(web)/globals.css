@@ -141,6 +141,7 @@
   --app-header-stack-height: calc(var(--safe-top) + var(--mobile-header-height));
   --secondary-sticky-top: var(--app-header-stack-height);
   --bottom-nav-content-height: 64px;
+  --bottom-dock-height: var(--bottom-nav-content-height);
   --bottom-nav-height: calc(var(--bottom-nav-content-height) + var(--safe-bottom));
   --page-bottom-safe: calc(var(--bottom-nav-height) + 16px);
 }
@@ -303,6 +304,10 @@
 @layer base {
   html, body {
     /* overflow-x: hidden moved to main wrapper to prevent iOS safe-area fixed position bugs */
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
   }
 
   body {

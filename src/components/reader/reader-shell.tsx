@@ -493,7 +493,7 @@ export function ReaderShell({
             exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -2 }}
             transition={reducedMotion ? { duration: 0 } : transitions.gentle}
             className={cn(
-              "fixed z-[61] top-[calc(var(--safe-top,0px)-3px)] md:top-0 left-0 right-0 h-[3px] pointer-events-none bg-transparent overflow-hidden transition-[padding] duration-150",
+              "fixed z-[61] top-[max(0px,calc(var(--safe-top,0px)-3px))] md:top-0 left-0 right-0 h-[3px] pointer-events-none bg-transparent overflow-hidden transition-[padding] duration-150",
               isDesktopPanelOpen && "md:right-[320px]"
             )}
           >

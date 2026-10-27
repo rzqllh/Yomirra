@@ -23,7 +23,11 @@ export function usePWAInstall() {
       /iPad|iPhone|iPod/.test(navigator.userAgent) ||
       (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
     );
-    const standalone = typeof window !== "undefined" && window.matchMedia('(display-mode: standalone)').matches;
+    const standalone = typeof window !== "undefined" && (
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.matchMedia('(display-mode: fullscreen)').matches ||
+      Boolean((window.navigator as any)?.standalone)
+    );
     
     setIsIOS(isIOSDevice);
     setIsStandalone(standalone);

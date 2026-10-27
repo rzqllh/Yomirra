@@ -85,6 +85,7 @@ test-results*.json
 /future_plan*.md
 /scratch/
 /scratch
+/artifacts/
 .idea/
 
 # Internal planning, audit, and execution artifacts

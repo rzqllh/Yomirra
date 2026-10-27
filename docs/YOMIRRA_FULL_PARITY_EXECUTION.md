@@ -21,6 +21,9 @@ All 175 product and architecture decisions (Q1–Q175) from the authoritative Gr
 | **ESLint Static Analysis** | `npm run lint` | Repository-wide ESLint 9 | 0 errors | 0 errors | **PASS (100%)** |
 | **Production Build** | `npm run build` (`next build --webpack`) | 24 static routes + dynamic | 24 / 24 | 0 | **PASS (100%)** |
 | **Service Worker Bundling** | Serwist precache generation | SW scope `/` at `/sw.js` | Bundled | 0 | **PASS (100%)** |
+| **Playwright WebKit (iOS 27 Profile)** | `npx playwright test --project=webkit-mobile-safari` | 6 regression tests | 5 passed, 1 skipped | **PASS (100% of runnable)** |
+| **BrowserStack Real iOS 27** | `playwright.browserstack.config.ts` | Cloud iPhone 16 Pro real iOS 27 | 0 (Creds unset) | 0 | **BLOCKED (Awaiting Credentials)** |
+| **Physical Hardware PWA Validation** | Real device manual testing | Standalone Add-to-HomeScreen | Not run | 0 | **PENDING / NOT TESTED** |
 
 ---
 
@@ -314,6 +317,25 @@ npm run build
 ```
 - **Result:** Code 0. Next.js 16.3.5 webpack build succeeded in 40s. All 24 static and dynamic routes compiled, Serwist service worker precache bundled.
 
+### 5. Playwright Mobile Safari / WebKit Regression Suite
+```bash
+npx playwright test --project=webkit-mobile-safari
+```
+- **Result:** Code 0. 5 passed, 1 skipped (BrowserStack skipped).
+- **Duration:** 14.7s
+- **Coverage:** Viewport auto-zoom immunity (16px base on mobile inputs), text-size-adjust 100%, bottom dock CSS variable presence, drawer overscroll containment, reader progress bar clamping.
+
+### 6. Slice 19 - iOS 27 Safari Compatibility & PWA QA Audit
+- **Canonical QA Document:** `docs/IOS27_SAFARI_QA.md`
+- **Audit Findings & Fixes:**
+  - Auto-zoom prevention: Input font-size set to 16px (`text-base sm:text-sm`) across command palette and modal inputs.
+  - Text auto-inflation prevention: `-webkit-text-size-adjust: 100%` in `globals.css`.
+  - CSS variable fix: `--bottom-dock-height: var(--bottom-nav-content-height)` added to avoid `calc()` failure in `paged-reader.tsx`.
+  - Top reader progress bar positioning clamped to `top-[max(0px,calc(var(--safe-top,0px)-3px))]`.
+  - Chapter drawer scroll isolation: `overscroll-contain`.
+  - Standalone PWA detection enhanced in `use-pwa-install.ts`.
+  - Viewport adaptive `themeColor` added to `layout.tsx`.
+
 ---
 
 ## 5. Parity & Release Readiness Verdict
@@ -321,4 +343,4 @@ npm run build
 - **Feature Parity:** All agreed features from Q1–Q175 are implemented or have appropriate PWA-adapted contracts.
 - **Quality & Craftsmanship:** Apple HIG 44px tap targets, squircle geometry tokens, WCAG AA 4.5:1 contrast ratios, fluid animations with reduced motion guards.
 - **Rollback Safety:** No destruction of main; 11 staged files on main preserved; implementation branch `feat/yomirra-full-uiux-revamp-20261026` self-contained and verified.
-- **Release Status:** **READY FOR PULL REQUEST REVIEW**.
+- **Release Status:** **READY FOR PULL REQUEST REVIEW** (Slice 19 iOS 27 Safari Compatibility, PWA Auto-Zoom Defense, and Automated Playwright Regression Suite incorporated).

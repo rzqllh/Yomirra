@@ -80,7 +80,7 @@ export function CreateCollectionModal({
               onChange={(e) => setName(e.target.value)}
               placeholder="Nama Koleksi"
               maxLength={40}
-              className="w-full bg-surface-base border border-border-default hover:border-border-strong rounded-xl px-4 py-3 outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 text-text-primary placeholder:text-text-muted transition-all font-medium text-sm"
+              className="w-full bg-surface-base border border-border-default hover:border-border-strong rounded-xl px-4 py-3 outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 text-text-primary placeholder:text-text-muted transition-all font-medium text-base sm:text-sm"
             />
           </div>
 
@@ -177,7 +177,7 @@ export function RenameCollectionModal({
               onChange={(e) => setName(e.target.value)}
               placeholder="Nama Koleksi"
               maxLength={40}
-              className="w-full bg-surface-base border border-border-default hover:border-border-strong rounded-xl px-4 py-3 outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 text-text-primary placeholder:text-text-muted transition-all font-medium text-sm"
+              className="w-full bg-surface-base border border-border-default hover:border-border-strong rounded-xl px-4 py-3 outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 text-text-primary placeholder:text-text-muted transition-all font-medium text-base sm:text-sm"
             />
           </div>
 
