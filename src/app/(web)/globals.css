@@ -310,6 +310,10 @@
     -webkit-text-size-adjust: 100%;
   }
 
+  .overscroll-contain {
+    overscroll-behavior: contain;
+  }
+
   body {
     background-color: var(--color-surface-base);
     color: var(--color-text-primary);

@@ -9,20 +9,20 @@ const BASE_URL = process.env.BASE_URL || "http://localhost:3000";
 const ARTIFACTS_DIR = path.resolve(__dirname, "../artifacts/ios27-safari");
 if (!fs.existsSync(ARTIFACTS_DIR)) fs.mkdirSync(ARTIFACTS_DIR, { recursive: true });
 
-const IPHONE_16_PRO = {
-  name: "iPhone 16 Pro (iOS 27 Safari-like)",
+const IPHONE_15_PRO = {
+  name: "iPhone 15 Pro (Desktop WebKit Mobile Profile)",
   viewport: { width: 393, height: 852 },
-  userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 27_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/27.0 Mobile/15E148 Safari/604.1",
+  userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1",
   deviceScaleFactor: 3,
   isMobile: true,
   hasTouch: true,
   defaultBrowserType: "webkit"
 };
 
-const IPHONE_16_PRO_LANDSCAPE = {
-  name: "iPhone 16 Pro Landscape (iOS 27 Safari-like)",
+const IPHONE_15_PRO_LANDSCAPE = {
+  name: "iPhone 15 Pro Landscape (Desktop WebKit Mobile Profile)",
   viewport: { width: 852, height: 393 },
-  userAgent: IPHONE_16_PRO.userAgent,
+  userAgent: IPHONE_15_PRO.userAgent,
   deviceScaleFactor: 3,
   isMobile: true,
   hasTouch: true,
@@ -168,7 +168,7 @@ async function auditRoute(browser, contextOptions, routePath, name) {
   const results = [];
   for (const r of routes) {
     try {
-      const res = await auditRoute(browser, IPHONE_16_PRO, r.path, r.name);
+      const res = await auditRoute(browser, IPHONE_15_PRO, r.path, r.name);
       results.push(res);
     } catch (err) {
       console.error("Failed route " + r.path + ":", err.message);
@@ -178,7 +178,7 @@ async function auditRoute(browser, contextOptions, routePath, name) {
 
   // Landscape
   try {
-    const resLandscape = await auditRoute(browser, IPHONE_16_PRO_LANDSCAPE, "/", "ios27_safari_home_landscape");
+    const resLandscape = await auditRoute(browser, IPHONE_15_PRO_LANDSCAPE, "/", "ios27_safari_home_landscape");
     results.push(resLandscape);
   } catch (err) {
     console.error("Failed landscape:", err.message);
@@ -188,7 +188,7 @@ async function auditRoute(browser, contextOptions, routePath, name) {
   // Audit Search Input Focus & Auto-Zoom Check
   console.log("\n=== Auditing Search Input Focus & iOS Auto-zoom Behavior ===");
   try {
-    const ctx = await browser.newContext(IPHONE_16_PRO);
+    const ctx = await browser.newContext(IPHONE_15_PRO);
     const page = await ctx.newPage();
     await page.addInitScript(() => {
       try { localStorage.setItem("yomirra-onboarding", JSON.stringify({ state: { hasCompletedOnboarding: true, _hasHydrated: true }, version: 0 })); } catch(e){}
