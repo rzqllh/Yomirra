@@ -2,7 +2,7 @@
 
 Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan perubahan yang sudah masuk ke repository; eksperimen internal dan rencana masa depan tidak diperlakukan sebagai fitur rilis.
 
-## [Unreleased]
+## [2.3.1] - 2026-10-28
 
 ### Hardening Sinkronisasi & Atomicity Firestore (Q64 & Q127)
 
@@ -21,8 +21,8 @@ Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan peru
 
 - **Calm Glass Chrome:** Menghilangkan `box-shadow` pada `.yomirra-chrome` sesuai arsitektur liquid glass yang disetujui (translucent canvas, subtle hairline border, medium backdrop blur, zero drop shadow).
 - **Beranda State Hierarchy:**
-  - **Returning Reader:** Mempromosikan Lanjut Baca ke posisi hero teratas langsung di bawah baris pencarian, menyajikan milestone pembacaan aktual (Q52 & Q63), track progres 4px, dan CTA 1-tap langsung ke reader.
-  - **Zero-History Reader:** Memprioritaskan Discovery (Sorotan & Peringkat per Sumber) tanpa kotak kosong yang membuang ruang, disertai kartu edukasi kontekstual satu baris untuk Rak Buku tanpa paksaan login.
+  - **Returning Reader:** Mengeliminasi hero box promosi 215px dan kolase cover acak. Mempromosikan Lanjut Baca langsung ke bagian atas di bawah baris pencarian terpadu, menyajikan milestone pembacaan aktual (Q52 & Q63), track progres 4px, dan CTA 1-tap langsung ke reader.
+  - **Zero-History Reader:** Menghilangkan tampilan Lanjut Baca kosong; langsung menyajikan Discovery (Sorotan & Peringkat per Sumber) dengan baris pencarian terpadu dan panduan Rak Buku kontekstual. Akun yang diautentikasi dengan 0 riwayat tidak lagi diklasifikasikan secara keliru sebagai returning reader.
   - **Unified Search Bar:** Menghilangkan kolase cover acak dan tombol oranye ganda pada hero; menerapkan input pencarian terpadu tunggal 46px dengan badge shortcut `⌘K` dan responsivitas penuh terhadap Fitts's Law.
 - **Guest-to-Account Merge Engine & Fail-Closed Safety (Q64):**
   - Mengubah kontrak `executeGuestMerge()` sehingga commit batch ke Firestore bersifat wajib dan harus diverifikasi berhasil sebelum state lokal diterapkan atau pengakuan sukses ditampilkan.
