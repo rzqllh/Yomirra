@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+﻿import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
   commitMergedDataToFirestore,
   PartialBatchCommitError,
@@ -79,5 +79,27 @@ describe("FirestoreMergeCommitter (Q64/Q127 Sequential Batch Safety)", () => {
     expect(journal.status).toBe("failed");
     expect(journal.uid).toBe("user-fail");
     expect(journal.completedBatches).toBe(0);
+  });
+
+  it("exports commitMergedDataSequentially alias and utility recovery functions", async () => {
+    const { commitMergedDataSequentially, getMergeRecoveryJournal, clearMergeRecoveryJournal } = await import("../firestore-merge-committer");
+    expect(commitMergedDataSequentially).toBe(commitMergedDataToFirestore);
+
+    localStorage.setItem("yomirra_merge_recovery_user-journal-test", JSON.stringify({
+      uid: "user-journal-test",
+      startedAt: 123456,
+      totalBatches: 2,
+      completedBatches: 1,
+      successfulWrites: 400,
+      status: "failed",
+    }));
+
+    const retrieved = getMergeRecoveryJournal("user-journal-test");
+    expect(retrieved).not.toBeNull();
+    expect(retrieved?.status).toBe("failed");
+    expect(retrieved?.completedBatches).toBe(1);
+
+    clearMergeRecoveryJournal("user-journal-test");
+    expect(getMergeRecoveryJournal("user-journal-test")).toBeNull();
   });
 });

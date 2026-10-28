@@ -1,6 +1,6 @@
-export { compareMilestones } from "@/shared/lib/milestone-comparator";
+﻿export { compareMilestones } from "@/shared/lib/milestone-comparator";
 export type { MilestoneComparison } from "@/shared/lib/milestone-comparator";
-export { commitMergedDataToFirestore, PartialBatchCommitError } from "@/shared/lib/firestore-merge-committer";
+export { commitMergedDataToFirestore, commitMergedDataSequentially, PartialBatchCommitError, getMergeRecoveryJournal, clearMergeRecoveryJournal } from "@/shared/lib/firestore-merge-committer";
 export type { MergeRecoveryJournal } from "@/shared/lib/firestore-merge-committer";
 import { compareMilestones } from "@/shared/lib/milestone-comparator";
 import { commitMergedDataToFirestore } from "@/shared/lib/firestore-merge-committer";
@@ -322,10 +322,31 @@ export function restoreGuestBackup(): GuestSnapshot | null {
     if (!key) return null;
     const raw = localStorage.getItem(key);
     if (!raw) return null;
-    return JSON.parse(raw) as GuestSnapshot;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object" && typeof parsed.library === "object" && typeof parsed.history === "object") {
+      return parsed as GuestSnapshot;
+    }
+    return null;
   } catch (e) {
     console.error("Failed to restore guest backup", e);
     return null;
+  }
+}
+
+/**
+ * Safely restores the last verified guest session backup directly to active client stores.
+ * Returns true if the backup was found, valid, and applied; false otherwise.
+ */
+export function restoreGuestBackupToStores(): boolean {
+  try {
+    const backup = restoreGuestBackup();
+    if (!backup) return false;
+    useLibraryStore.setState({ items: backup.library });
+    useHistoryStore.setState({ items: backup.history });
+    return true;
+  } catch (e) {
+    console.error("Failed to restore guest backup to stores", e);
+    return false;
   }
 }
 

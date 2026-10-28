@@ -1,4 +1,4 @@
-import type { LibraryItem } from "@/shared/store/library-store";
+﻿import type { LibraryItem } from "@/shared/store/library-store";
 import { parseChapterNumber } from "@/shared/lib/chapter-parser";
 
 export interface MilestoneComparison {
@@ -108,15 +108,39 @@ export function compareMilestones(
   }
   // Tier 3: One has parsed chapter number and the other is unparsed/special (e.g. Chapter 1 vs Prologue)
   else if (guestNum !== null && cloudNum === null) {
-    guestWins = guestNum > 0;
-    reason = guestWins
-      ? "Lokal memiliki nomor chapter terverifikasi (Ch. " + guestNum + ")"
-      : "Milestone cloud dipertahankan berdasarkan timestamp";
+    const isSpecialPrologue = /prolog|ch(?:apter)?\.?\s*0\b/i.test(cloudTitle);
+    const isSpecialEpilogue = /epilog|tamat|extra|oneshot/i.test(cloudTitle);
+    if (isSpecialPrologue) {
+      guestWins = guestNum >= 0;
+      reason = "Nomor chapter lokal (Ch. " + guestNum + ") lebih tinggi dari prologue cloud (Lokal memiliki nomor chapter terverifikasi)";
+    } else if (isSpecialEpilogue) {
+      const guestTime = getSafeTime(guestItem.lastReadAt || guestItem.updatedAt);
+      const cloudTime = getSafeTime(cloudItem.lastReadAt || cloudItem.updatedAt);
+      guestWins = guestTime > cloudTime;
+      reason = guestWins ? "Timestamp lokal lebih baru" : "Epilog cloud dipertahankan";
+    } else {
+      guestWins = guestNum > 0;
+      reason = guestWins
+        ? "Lokal memiliki nomor chapter terverifikasi (Ch. " + guestNum + ")"
+        : "Milestone cloud dipertahankan berdasarkan timestamp";
+    }
   } else if (cloudNum !== null && guestNum === null) {
-    guestWins = cloudNum <= 0;
-    reason = !guestWins
-      ? "Cloud memiliki nomor chapter terverifikasi (Ch. " + cloudNum + ")"
-      : "Milestone lokal dipertahankan berdasarkan timestamp";
+    const isSpecialPrologue = /prolog|ch(?:apter)?\.?\s*0\b/i.test(guestTitle);
+    const isSpecialEpilogue = /epilog|tamat|extra|oneshot/i.test(guestTitle);
+    if (isSpecialPrologue) {
+      guestWins = false;
+      reason = "Nomor chapter cloud (Ch. " + cloudNum + ") lebih tinggi dari prologue lokal (Cloud memiliki nomor chapter terverifikasi)";
+    } else if (isSpecialEpilogue) {
+      const guestTime = getSafeTime(guestItem.lastReadAt || guestItem.updatedAt);
+      const cloudTime = getSafeTime(cloudItem.lastReadAt || cloudItem.updatedAt);
+      guestWins = guestTime >= cloudTime;
+      reason = guestWins ? "Epilog lokal dipertahankan" : "Timestamp cloud lebih baru";
+    } else {
+      guestWins = cloudNum <= 0;
+      reason = !guestWins
+        ? "Cloud memiliki nomor chapter terverifikasi (Ch. " + cloudNum + ")"
+        : "Milestone lokal dipertahankan berdasarkan timestamp";
+    }
   }
   // Tier 4: Fallback to reading timestamp
   else {
