@@ -236,7 +236,7 @@ export function HomeFeedClient({
       {historyItems.length > 0 && (
         <section
           id="continue-reading-section"
-          className="mt-8 flex flex-col sm:mt-10"
+          className="mt-4 flex flex-col sm:mt-5"
         >
           <ContinueReadingList items={historyItems} />
         </section>

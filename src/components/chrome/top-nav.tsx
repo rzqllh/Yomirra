@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import * as React from "react";
 import { UserCircle, SignOut, MagnifyingGlass, Globe, Question } from "@phosphor-icons/react";
@@ -121,9 +121,7 @@ export function TopNav() {
               >
                 <MagnifyingGlass size={16} weight="regular" className="text-text-muted shrink-0" aria-hidden="true" />
                 <span className="flex-1 text-left opacity-70 truncate">Cari komik…</span>
-                <kbd className="hidden lg:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono text-text-muted bg-surface-muted rounded-xs border border-border-subtle">
-                  ⌘K
-                </kbd>
+                <kbd className="hidden lg:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono text-text-muted bg-surface-muted rounded-xs border border-border-subtle">⌘K</kbd>
               </button>
             </div>
           )}

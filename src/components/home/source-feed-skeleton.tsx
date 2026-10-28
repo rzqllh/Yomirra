@@ -77,25 +77,9 @@ export function SourceFeedSkeleton() {
     <div className="pb-16" aria-label="Memuat Beranda">
       <div data-home-loading-section="hero">
         <HomeHero candidates={[]} />
-      </div>
-
-      <section
-        data-home-loading-section="spotlight-ranking"
-        className="mt-8 flex min-w-0 flex-col gap-3.5 sm:gap-4"
-      >
-        <div className="flex items-center gap-2">
-          <span className="size-1.5 rounded-full bg-accent" aria-hidden="true" />
-          <Skeleton className="h-5 w-44 rounded-xs" />
-        </div>
-        <div className="grid min-w-0 items-stretch gap-4 sm:gap-5 lg:grid-cols-[minmax(0,1.38fr)_minmax(290px,0.82fr)]">
-          <SpotlightSkeleton />
-          <RankingSkeleton />
-        </div>
-      </section>
-
-      <section
+      </div>`n`n      <section
         data-home-loading-section="continue-reading"
-        className="mt-11 sm:mt-12"
+        className="mt-5 sm:mt-6"
       >
         <div className="mb-3.5 flex items-center gap-2">
           <span className="size-2 rounded-full bg-accent" aria-hidden="true" />
@@ -110,6 +94,20 @@ export function SourceFeedSkeleton() {
               <MangaCardSkeleton variant="history" />
             </div>
           ))}
+        </div>
+      </section>
+
+      <section
+        data-home-loading-section="spotlight-ranking"
+        className="mt-8 flex min-w-0 flex-col gap-3.5 sm:gap-4"
+      >
+        <div className="flex items-center gap-2">
+          <span className="size-1.5 rounded-full bg-accent" aria-hidden="true" />
+          <Skeleton className="h-5 w-44 rounded-xs" />
+        </div>
+        <div className="grid min-w-0 items-stretch gap-4 sm:gap-5 lg:grid-cols-[minmax(0,1.38fr)_minmax(290px,0.82fr)]">
+          <SpotlightSkeleton />
+          <RankingSkeleton />
         </div>
       </section>
 
