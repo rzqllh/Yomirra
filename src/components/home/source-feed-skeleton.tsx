@@ -7,7 +7,7 @@ function SpotlightSkeleton() {
     <div className="ink-panel relative h-[268px] overflow-hidden sm:h-[310px] lg:h-[340px]">
       <div className="absolute inset-0 grid grid-cols-[120px_minmax(0,1fr)] sm:grid-cols-[150px_minmax(0,1fr)] lg:grid-cols-[210px_minmax(0,1fr)]">
         <div className="flex items-center justify-center p-2 sm:p-3 lg:p-4">
-          <Skeleton className="aspect-[2/3] w-full max-w-[104px] rounded-[10px] sm:max-w-[126px] lg:max-w-[176px]" />
+          <Skeleton className="aspect-[2/3] w-full max-w-[104px] rounded-sm sm:max-w-[126px] lg:max-w-[176px]" />
         </div>
         <div className="flex min-w-0 flex-col justify-between gap-3 p-3.5 sm:p-5 lg:p-6">
           <div>
@@ -18,10 +18,10 @@ function SpotlightSkeleton() {
             <Skeleton className="mt-3 h-3 w-2/3 rounded-xs" />
           </div>
           <div className="flex items-center justify-between border-t border-border-subtle/60 pt-2.5">
-            <Skeleton className="h-11 w-28 rounded-[10px]" />
+            <Skeleton className="h-11 w-28 rounded-sm" />
             <div className="flex gap-1.5">
-              <Skeleton className="size-11 rounded-[10px]" />
-              <Skeleton className="size-11 rounded-[10px]" />
+              <Skeleton className="size-11 rounded-xs" />
+              <Skeleton className="size-11 rounded-xs" />
             </div>
           </div>
         </div>
@@ -35,7 +35,7 @@ function RankingSkeleton() {
     <div className="ink-panel flex min-h-[300px] flex-col p-4 sm:p-5 lg:h-[340px] lg:p-4">
       <div className="flex min-h-11 items-center justify-between gap-3 border-b border-border-subtle/60 pb-2.5">
         <Skeleton className="h-4 w-36 rounded-xs" />
-        <Skeleton className="h-11 w-28 rounded-[10px]" />
+        <Skeleton className="h-11 w-28 rounded-sm" />
       </div>
       <div className="flex flex-1 flex-col divide-y divide-border-subtle/50">
         {Array.from({ length: 5 }).map((_, index) => (
@@ -77,7 +77,9 @@ export function SourceFeedSkeleton() {
     <div className="pb-16" aria-label="Memuat Beranda">
       <div data-home-loading-section="hero">
         <HomeHero candidates={[]} />
-      </div>`n`n      <section
+      </div>
+
+      <section
         data-home-loading-section="continue-reading"
         className="mt-5 sm:mt-6"
       >
@@ -121,8 +123,8 @@ export function SourceFeedSkeleton() {
             <Skeleton className="h-5 w-36 rounded-xs" />
           </div>
           <div className="flex items-center gap-2.5">
-            <Skeleton className="h-11 w-20 rounded-[10px]" />
-            <Skeleton className="h-11 w-20 rounded-[10px]" />
+            <Skeleton className="h-11 w-20 rounded-sm" />
+            <Skeleton className="h-11 w-20 rounded-sm" />
           </div>
         </div>
 

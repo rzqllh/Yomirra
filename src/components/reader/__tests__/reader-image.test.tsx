@@ -85,6 +85,7 @@ describe("ReaderImage - Failure Recovery", () => {
     act(() => { vi.advanceTimersByTime(6000); });
 
     // 4th error triggers onRefreshUrl
+    vi.useRealTimers();
     await act(async () => {
       fireEvent.error(screen.getByRole("img"));
     });
@@ -96,7 +97,7 @@ describe("ReaderImage - Failure Recovery", () => {
     expect(screen.queryByText(/Halaman 0 gagal dimuat/i)).toBeNull();
   });
 
-  it("should attempt proxy fallback when fallbackProxyUrl is provided", async () => {
+  it("should attempt proxy fallback when fallbackProxyUrl is provided", () => {
     const fallbackProxyUrl = "/api/proxy/image?url=http%3A%2F%2Fexample.com%2Ftest.jpg&sig=abc";
 
     render(
@@ -115,7 +116,7 @@ describe("ReaderImage - Failure Recovery", () => {
     act(() => { vi.advanceTimersByTime(6000); });
 
     // 4th error switches to proxy fallback
-    await act(async () => {
+    act(() => {
       fireEvent.error(screen.getByRole("img"));
     });
 
@@ -159,7 +160,7 @@ describe("ReaderImage - Failure Recovery", () => {
     expect(initialImg?.getAttribute("data-unoptimized")).toBe("false");
 
     // Optimizer throws error (e.g. 400 Bad Request hostname not configured)
-    await act(async () => {
+    act(() => {
       fireEvent.error(initialImg!);
     });
 
@@ -194,13 +195,13 @@ describe("ReaderImage - Failure Recovery", () => {
       ),
     });
 
+    vi.useRealTimers();
     fireEvent.load(img);
     expect(onLoadComplete).not.toHaveBeenCalled();
     expect(container.querySelector("[data-page-index='0']")?.getAttribute("data-load-state")).toBe("loading");
 
     await act(async () => {
       resolveDecode?.();
-      await Promise.resolve();
     });
 
     expect(onLoadComplete).toHaveBeenCalledWith(0);
@@ -242,10 +243,11 @@ describe("ReaderImage - Failure Recovery", () => {
       />
     );
 
-    await act(async () => {
+    act(() => {
       resolveOldDecode?.();
-      await Promise.resolve();
     });
+    await Promise.resolve();
+    await Promise.resolve();
 
     expect(onLoadComplete).not.toHaveBeenCalled();
     expect(screen.getByRole("img").getAttribute("src")).toContain("new.jpg");
@@ -270,7 +272,7 @@ describe("ReaderImage - Failure Recovery", () => {
     expect(img.getAttribute("height")).toBe("2400");
   });
 
-  it("falls back from a missing offline page to the network URL without failing the job", async () => {
+  it("falls back from a missing offline page to the network URL without failing the job", () => {
     render(
       <ReaderImage
         {...defaultProps}
@@ -280,7 +282,7 @@ describe("ReaderImage - Failure Recovery", () => {
 
     expect(screen.getByRole("img").getAttribute("src")).toBe("blob:offline-page");
 
-    await act(async () => {
+    act(() => {
       fireEvent.error(screen.getByRole("img"));
     });
 

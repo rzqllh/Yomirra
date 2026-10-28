@@ -40,7 +40,7 @@ export function MangaCardSkeleton({ variant = "grid" }: { variant?: "grid" | "li
           <Skeleton className="h-3 w-1/2 rounded-xs" />
         </div>
         <div className="flex w-[52px] shrink-0 flex-col items-center justify-center gap-2">
-          <Skeleton className="size-11 rounded-[12px]" />
+          <Skeleton className="size-11 rounded-xs" />
           <Skeleton className="h-3 w-6 rounded-xs" />
         </div>
       </div>
@@ -56,7 +56,7 @@ export function MangaCardSkeleton({ variant = "grid" }: { variant?: "grid" | "li
           <Skeleton className="absolute inset-0 w-full h-full rounded-none" />
           {/* Source/rank badge top-left */}
           <div className="absolute top-2 left-2 z-20">
-            <Skeleton className="h-4 w-10 rounded-md bg-black/20" />
+            <Skeleton className="h-4 w-10 rounded-xs bg-black/20" />
           </div>
         </div>
         <div className="flex flex-col px-0.5">
@@ -83,15 +83,15 @@ export function MangaCardSkeleton({ variant = "grid" }: { variant?: "grid" | "li
           <div>
             <div className="flex items-start justify-between gap-2">
               <Skeleton className="h-4 w-3/4 rounded-md" />
-              <Skeleton className="size-11 rounded-[12px] shrink-0 -mt-0.5 -mr-1" />
+              <Skeleton className="size-11 rounded-xs shrink-0 -mt-0.5 -mr-1" />
             </div>
             <div className="flex items-center gap-2 mt-1.5">
-              <Skeleton className="h-3.5 w-16 rounded-[6px]" />
-              <Skeleton className="h-3.5 w-14 rounded-[6px]" />
+              <Skeleton className="h-3.5 w-16 rounded-xs" />
+              <Skeleton className="h-3.5 w-14 rounded-xs" />
             </div>
             <div className="flex items-center gap-2 mt-2">
-              <Skeleton className="h-3 w-12 rounded-[6px]" />
-              <Skeleton className="h-3 w-16 rounded-[6px]" />
+              <Skeleton className="h-3 w-12 rounded-xs" />
+              <Skeleton className="h-3 w-16 rounded-xs" />
             </div>
             <div className="space-y-1 mt-2.5">
               <Skeleton className="h-3 w-full rounded-md" />

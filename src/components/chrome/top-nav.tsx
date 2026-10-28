@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import * as React from "react";
 import { UserCircle, SignOut, MagnifyingGlass, Globe, Question } from "@phosphor-icons/react";
@@ -10,6 +10,7 @@ import { ThemeToggle } from "@/components/overlays/theme-toggle";
 import { UpdatesBell } from "@/components/overlays/updates-bell";
 import { cn } from "@/shared/utils/cn";
 import { useSidebarStore } from "@/shared/store/sidebar-store";
+import { usePlatformShortcut } from "@/shared/hooks/use-platform-shortcut";
 
 const ROUTE_LABELS: Record<string, string> = {
   "": "Beranda",
@@ -29,6 +30,7 @@ export function TopNav() {
   const pathname = usePathname();
   const { user, loginWithGoogle, logout } = useAuth();
   const isCollapsed = useSidebarStore((state) => state.isCollapsed);
+  const { searchShortcut, searchAriaLabel } = usePlatformShortcut();
 
   const segments = (pathname || "").split("/").filter(Boolean);
   const primarySegment = segments[0] || "";
@@ -112,7 +114,7 @@ export function TopNav() {
               <button
                 type="button"
                 onClick={() => window.dispatchEvent(new CustomEvent("open-command-menu"))}
-                aria-label="Cari komik (Tekan ⌘K)"
+                aria-label={searchAriaLabel}
                 className={cn(
                   "flex items-center gap-2.5 px-3 rounded-sm text-text-secondary hover:text-text-primary text-xs font-semibold h-9 w-full cursor-pointer select-none",
                   "bg-surface-raised border border-border-subtle hover:border-accent/40 hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-accent",
@@ -121,7 +123,7 @@ export function TopNav() {
               >
                 <MagnifyingGlass size={16} weight="regular" className="text-text-muted shrink-0" aria-hidden="true" />
                 <span className="flex-1 text-left opacity-70 truncate">Cari komik…</span>
-                <kbd className="hidden lg:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono text-text-muted bg-surface-muted rounded-xs border border-border-subtle">⌘K</kbd>
+                <kbd className="hidden lg:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono text-text-muted bg-surface-muted rounded-xs border border-border-subtle">{searchShortcut}</kbd>
               </button>
             </div>
           )}

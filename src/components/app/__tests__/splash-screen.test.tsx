@@ -44,9 +44,9 @@ describe('SplashScreen', () => {
     render(<SplashScreen onComplete={onComplete} />);
     expect(onComplete).not.toHaveBeenCalled();
 
-    // Fast-forward past MINIMUM_SPLASH_DURATION (1200ms)
+    // Fast-forward past MINIMUM_SPLASH_DURATION (450ms)
     act(() => {
-      vi.advanceTimersByTime(1250);
+      vi.advanceTimersByTime(500);
     });
 
     expect(onComplete).toHaveBeenCalledTimes(1);
@@ -62,34 +62,30 @@ describe('SplashScreen', () => {
 
     const { rerender } = render(<SplashScreen onComplete={onComplete} />);
 
-    // Allow mount effect to set isMounted = true
-    await act(async () => {
-      await Promise.resolve();
-    });
-
     // Fast-forward 10.5 seconds (past WATCHDOG_TIMEOUT of 10s)
     act(() => {
       vi.advanceTimersByTime(10500);
     });
 
-    // Allow state update to flush
-    await act(async () => {
-      await Promise.resolve();
+    // AnimatePresence in motion/react requires real timers/RAF to complete exit transitions
+    vi.useRealTimers();
+
+    await waitFor(() => {
+      expect(screen.getByText('Koneksi Lagi Pelan')).toBeTruthy();
+      expect(screen.getByText(/Ini makan waktu lebih lama/)).toBeTruthy();
+      expect(screen.getByRole('button', { name: 'Coba Lagi' })).toBeTruthy();
     });
 
-    // Warning copy should be visible
-    expect(screen.getByText('Koneksi Lagi Pelan')).toBeTruthy();
-    expect(screen.getByText(/Ini makan waktu lebih lama/)).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Coba Lagi' })).toBeTruthy();
     expect(onComplete).not.toHaveBeenCalled();
 
-    // Now dependencies resolve at second 11
+    // Now switch back to fake timers to test resolving boot at second 11
+    vi.useFakeTimers();
     authLoading = false;
     hydrated = true;
     rerender(<SplashScreen onComplete={onComplete} />);
 
     act(() => {
-      vi.advanceTimersByTime(100);
+      vi.advanceTimersByTime(500);
     });
 
     // Boot should complete and call onComplete! (Never locked out)

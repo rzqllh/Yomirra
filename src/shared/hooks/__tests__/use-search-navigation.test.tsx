@@ -1,5 +1,5 @@
 import React from "react";
-import { act, renderHook } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { QueryClient, QueryClientProvider, focusManager } from "@tanstack/react-query";
 import { useSearchCatalog } from "../use-search-catalog";
@@ -41,7 +41,7 @@ function mountSearch() {
 
 describe("search URL navigation", () => {
   beforeEach(() => {
-    vi.useFakeTimers();
+    vi.useFakeTimers({ shouldAdvanceTime: true });
     vi.clearAllMocks();
     navigation.params = "q=solo+leveling&keep=1";
     useSearchFilterStore.setState({ genres: [], formats: [], status: "", sort: "popular", selectedSources: null, hasCustomizedSources: false });
@@ -66,7 +66,7 @@ describe("search URL navigation", () => {
     expect(navigation.router.push).toHaveBeenCalledWith("/search?q=naruto&keep=1");
     navigation.params = "q=naruto&keep=1";
     rerender();
-    await act(async () => { await vi.advanceTimersByTimeAsync(1600); });
+    act(() => { vi.advanceTimersByTime(1600); });
     expect(navigation.router.push).toHaveBeenCalledTimes(1);
     expect(result.current.localQuery).toBe("naruto");
   });
@@ -76,7 +76,7 @@ describe("search URL navigation", () => {
     act(() => result.current.setLocalQuery("unfinished"));
     navigation.params = "q=bleach&keep=1";
     rerender();
-    await act(async () => { await vi.advanceTimersByTimeAsync(1600); });
+    act(() => { vi.advanceTimersByTime(1600); });
     expect(result.current.localQuery).toBe("bleach");
     expect(navigation.router.push).not.toHaveBeenCalled();
   });
@@ -84,26 +84,26 @@ describe("search URL navigation", () => {
   it("debounces the latest edit once and preserves other parameters", async () => {
     const { result, rerender } = mountSearch();
     act(() => result.current.setLocalQuery("naru"));
-    await act(async () => { await vi.advanceTimersByTimeAsync(400); });
+    act(() => { vi.advanceTimersByTime(400); });
     act(() => result.current.setLocalQuery("naruto  "));
-    await act(async () => { await vi.advanceTimersByTimeAsync(799); });
+    act(() => { vi.advanceTimersByTime(799); });
     expect(navigation.router.push).not.toHaveBeenCalled();
-    await act(async () => { await vi.advanceTimersByTimeAsync(1); });
+    act(() => { vi.advanceTimersByTime(1); });
     expect(navigation.router.push).toHaveBeenCalledExactlyOnceWith("/search?q=naruto&keep=1");
     navigation.params = "q=naruto&keep=1";
     rerender();
-    await act(async () => { await vi.advanceTimersByTimeAsync(1600); });
+    act(() => { vi.advanceTimersByTime(1600); });
     expect(navigation.router.push).toHaveBeenCalledTimes(1);
   });
 
   it("clears the query without restoring the previous search", async () => {
     const { result, rerender } = mountSearch();
     act(() => result.current.setLocalQuery(""));
-    await act(async () => { await vi.advanceTimersByTimeAsync(800); });
+    act(() => { vi.advanceTimersByTime(800); });
     expect(navigation.router.push).toHaveBeenCalledExactlyOnceWith("/search?keep=1");
     navigation.params = "keep=1";
     rerender();
-    await act(async () => { await vi.advanceTimersByTimeAsync(1600); });
+    act(() => { vi.advanceTimersByTime(1600); });
     expect(result.current.localQuery).toBe("");
     expect(navigation.router.push).toHaveBeenCalledTimes(1);
   });
@@ -112,22 +112,23 @@ describe("search URL navigation", () => {
     const { result, unmount } = mountSearch();
     act(() => result.current.setLocalQuery("naruto"));
     unmount();
-    await act(async () => { await vi.advanceTimersByTimeAsync(800); });
+    act(() => { vi.advanceTimersByTime(800); });
     expect(navigation.router.push).not.toHaveBeenCalled();
   });
 
   it("refreshes cached source metadata on mount and when the PWA returns to focus", async () => {
     client.setQueryData(["sources"], []);
     mountSearch();
-    await act(async () => { await vi.advanceTimersByTimeAsync(10); });
+    await act(async () => { vi.runOnlyPendingTimers(); });
     expect(apiClient.getSources).toHaveBeenCalledTimes(1);
     act(() => focusManager.setFocused(false));
     act(() => focusManager.setFocused(true));
-    await act(async () => { await vi.advanceTimersByTimeAsync(10); });
+    await act(async () => { vi.runOnlyPendingTimers(); });
     expect(apiClient.getSources).toHaveBeenCalledTimes(2);
   });
 
   it("loads the default popular catalog when the query is empty", async () => {
+    vi.useRealTimers();
     navigation.params = "";
     vi.mocked(apiClient.getSources).mockResolvedValue([
       {
@@ -146,17 +147,21 @@ describe("search URL navigation", () => {
     });
 
     const { result } = mountSearch();
-    await act(async () => { await vi.advanceTimersByTimeAsync(50); });
+    await waitFor(() => {
+      expect(apiClient.getPopular).toHaveBeenCalledWith("source-a", 1);
+    });
 
-    expect(apiClient.getPopular).toHaveBeenCalledWith("source-a", 1);
     expect(apiClient.search).not.toHaveBeenCalled();
     expect(result.current.hasSearchIntent).toBe(true);
-    expect(result.current.searchMangas.map((item) => item.manga.title)).toEqual([
-      "Popular One",
-    ]);
+    await waitFor(() => {
+      expect(result.current.searchMangas.map((item) => item.manga.title)).toEqual([
+        "Popular One",
+      ]);
+    });
   });
 
   it("uses the latest feed for an empty-query latest sort", async () => {
+    vi.useRealTimers();
     navigation.params = "";
     useSearchFilterStore.setState({
       genres: [],
@@ -192,12 +197,15 @@ describe("search URL navigation", () => {
     });
 
     const { result } = mountSearch();
-    await act(async () => { await vi.advanceTimersByTimeAsync(50); });
+    await waitFor(() => {
+      expect(apiClient.getLatest).toHaveBeenCalledWith("source-a", 1);
+    });
 
-    expect(apiClient.getLatest).toHaveBeenCalledWith("source-a", 1);
     expect(apiClient.search).not.toHaveBeenCalled();
-    expect(result.current.searchMangas.map((item) => item.manga.title)).toEqual([
-      "Latest One",
-    ]);
+    await waitFor(() => {
+      expect(result.current.searchMangas.map((item) => item.manga.title)).toEqual([
+        "Latest One",
+      ]);
+    });
   });
 });

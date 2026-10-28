@@ -45,10 +45,10 @@ const CommandDialog = ({ children, shouldFilter, filter, ...props }: CommandDial
             {children}
           </Command>
           <DialogPrimitive.Close
-            className="absolute right-3.5 top-3.5 flex h-7 w-7 items-center justify-center rounded-[8px] bg-surface-muted text-text-muted hover:text-text-primary hover:bg-surface-hover transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent cursor-pointer z-20"
+            className="absolute right-3.5 top-3.5 flex size-9 items-center justify-center rounded-xs bg-surface-muted text-text-muted hover:text-text-primary hover:bg-surface-hover transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent cursor-pointer z-20"
             aria-label="Tutup"
           >
-            <X size={14} weight="bold" />
+            <X size={16} weight="bold" />
           </DialogPrimitive.Close>
         </DialogPrimitive.Content>
       </DialogPortal>
