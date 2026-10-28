@@ -125,6 +125,7 @@
   --z-sticky: 50;
   --z-drawer: 60;
   --z-overlay: 70;
+  --z-popover: 80;
   --z-toast: 100000;
 
   /* Safe Area & Layout Tokens */
