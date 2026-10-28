@@ -21,7 +21,7 @@ All 175 product and architecture decisions (Q1–Q175) from the authoritative Gr
 | **ESLint Static Analysis** | `npm run lint` | Repository-wide ESLint 9 | 0 errors | 0 errors | **PASS (100%)** |
 | **Production Build** | `npm run build` (`next build --webpack`) | 24 static routes + dynamic | 24 / 24 | 0 | **PASS (100%)** |
 | **Service Worker Bundling** | Serwist precache generation | SW scope `/` at `/sw.js` | Bundled | 0 | **PASS (100%)** |
-| **Playwright WebKit (iPhone 15 Pro Profile)** | `npx playwright test --project=webkit-mobile-safari` | 11 interactive tests | 10 passed, 1 skipped | **PASS (100% of runnable)** |
+| **Playwright WebKit (iPhone 15 Pro Profile)** | `npx playwright test --project=webkit-mobile-safari` | 17 interactive tests | 16 passed, 1 skipped | **PASS (100% of runnable)** |
 | **BrowserStack Real iOS 27** | `playwright.browserstack.config.ts` | Cloud iPhone 16 Pro real iOS 27 | 0 (Creds unset) | 0 | **BLOCKED (Awaiting Credentials)** |
 | **Physical Hardware PWA Validation** | Real device manual testing | Standalone Add-to-HomeScreen | Not run | 0 | **PENDING / NOT TESTED** |
 
@@ -322,7 +322,7 @@ npm run build
 ```bash
 npx playwright test --project=webkit-mobile-safari
 ```
-- **Result:** Code 0. 10 passed, 1 skipped (BrowserStack skipped cleanly).
+- **Result:** Code 0. 16 passed, 1 skipped (BrowserStack skipped cleanly). Duration: 1.1m.
 - **Target Profile:** iPhone 15 Pro WebKit profile (393 × 852 @ 3x DPR, Touch, Mobile Safari UA).
 - **Interactive Coverage:**
   1. Viewport-fit=cover & dynamic theme-color meta tags
@@ -336,6 +336,12 @@ npx playwright test --project=webkit-mobile-safari
   9. Accessibility prefers-reduced-motion compliance
   10. Reader CSS variable --bottom-dock-height token definition
   11. BrowserStack cloud execution gate (BLOCKED without credentials)
+  12. First-time reader state: renders zero-history guidance without layout breaks
+  13. Returning reader state: displays continue reading card with milestone data
+  14. Command palette (⌘K) search modal lifecycle & focus trap
+  15. Navigation between primary destinations via BottomDock
+  16. Toast notification system lifecycle on real user action
+  17. Multi-viewport overflow immunity across 1440px, 834px, 390px, and 320px
 
 ### 6. Slice 19 - Mobile WebKit & Safari QA Audit & Q1–Q175 Ledger Reconciliation
 - **Canonical QA Document:** `docs/IOS27_SAFARI_QA.md`
