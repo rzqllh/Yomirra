@@ -35,13 +35,13 @@ describe("useReaderStore - Q8 & Q87 Title Preferences & Q98 In-App Controls", ()
   it("updates global preferences cleanly via updatePreferences", () => {
     useReaderStore.getState().updatePreferences({
       readingMode: "paged",
-      imageFit: "contain",
+      imageFit: "contained",
       background: "deepLagoon",
     });
 
     const prefs = useReaderStore.getState().preferences;
     expect(prefs.readingMode).toBe("paged");
-    expect(prefs.imageFit).toBe("contain");
+    expect(prefs.imageFit).toBe("contained");
     expect(prefs.background).toBe("deepLagoon");
     // Other preferences preserved
     expect(prefs.readingDirection).toBe("ltr");
@@ -62,14 +62,14 @@ describe("useReaderStore - Q8 & Q87 Title Preferences & Q98 In-App Controls", ()
     useReaderStore.getState().updateTitlePreferences("asurascans", "solo-leveling", {
       readingMode: "paged",
       readingDirection: "rtl",
-      imageFit: "height",
+      imageFit: "contained",
     });
 
     // Check title preferences
     const titlePrefs = useReaderStore.getState().getTitlePreferences("asurascans", "solo-leveling");
     expect(titlePrefs.readingMode).toBe("paged");
     expect(titlePrefs.readingDirection).toBe("rtl");
-    expect(titlePrefs.imageFit).toBe("height");
+    expect(titlePrefs.imageFit).toBe("contained");
     // Unset title preference inherits global default
     expect(titlePrefs.background).toBe("black");
 

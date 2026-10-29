@@ -6,7 +6,7 @@ import type { StreamItem } from "@/components/reader/continuous-vertical-reader"
 
 describe("useReaderScroll - Q80 Durability & Q84 Debounce Throttle", () => {
   let queryClient: QueryClient;
-  let saveProgress: ReturnType<typeof vi.fn>;
+  let saveProgress: any;
 
   beforeEach(() => {
     vi.useFakeTimers();
@@ -27,9 +27,9 @@ describe("useReaderScroll - Q80 Durability & Q84 Debounce Throttle", () => {
   });
 
   const mockStreamItems: StreamItem[] = [
-    { type: "image", chapterId: "ch-1", pageIndex: 0, url: "https://example.com/p0.jpg" },
-    { type: "image", chapterId: "ch-1", pageIndex: 1, url: "https://example.com/p1.jpg" },
-    { type: "image", chapterId: "ch-1", pageIndex: 2, url: "https://example.com/p2.jpg" },
+    { type: "image", index: 0, chapterId: "ch-1", pageIndex: 0, url: "https://example.com/p0.jpg" },
+    { type: "image", index: 1, chapterId: "ch-1", pageIndex: 1, url: "https://example.com/p1.jpg" },
+    { type: "image", index: 2, chapterId: "ch-1", pageIndex: 2, url: "https://example.com/p2.jpg" },
   ];
 
   const createMockVirtualizer = (centerIndex = 1) => {
