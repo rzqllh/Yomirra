@@ -366,7 +366,7 @@ export const useLibraryStore = create<LibraryState>()(
 
         if (updatedItem) {
           const checkpoint = captureMutation(previousState, get().items);
-          void queueTitleWrite(updatedItem.id ?? savedTitleIdOrKey, () =>
+          void queueTitleWrite((updatedItem as LibraryItem).id ?? savedTitleIdOrKey, () =>
             pushLibraryItem(updatedItem!)
           ).catch(() => {
             if (rollbackMutation(checkpoint, set)) {
@@ -416,7 +416,7 @@ export const useLibraryStore = create<LibraryState>()(
 
         if (updatedItem) {
           const checkpoint = captureMutation(previousState, get().items);
-          void queueTitleWrite(updatedItem.id ?? getLibraryId(sourceId, mangaId), () =>
+          void queueTitleWrite((updatedItem as LibraryItem).id ?? getLibraryId(sourceId, mangaId), () =>
             pushLibraryItem(updatedItem!)
           ).catch(() => {
             rollbackMutation(checkpoint, set);
