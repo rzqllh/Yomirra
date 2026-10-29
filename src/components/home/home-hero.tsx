@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { MagnifyingGlass } from "@phosphor-icons/react";
-import { useAuth } from "@/shared/hooks/use-auth";
+import { usePlatformShortcut } from "@/shared/hooks/use-platform-shortcut";
 import { useHistoryStore } from "@/shared/store/history-store";
 import { useMounted } from "@/shared/hooks/use-mounted";
 import { cn } from "@/shared/utils/cn";
@@ -39,7 +39,7 @@ const coverPositions = [
 
 export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
   const mounted = useMounted();
-  const { user } = useAuth();
+  const { searchShortcut } = usePlatformShortcut();
 
   const [sessionCovers, setSessionCovers] = React.useState<HeroCandidate[]>([]);
   const [loadedCovers, setLoadedCovers] = React.useState<Set<string>>(() => new Set());
@@ -132,7 +132,7 @@ export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
               <span className="min-w-0 flex-1 bg-transparent text-[13px] sm:text-sm font-medium text-text-muted truncate select-none">
                 Cari judul atau kreator…
               </span>
-              <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded px-2 py-0.5 text-[10px] font-mono font-semibold text-text-muted bg-surface-muted/80 border border-border-subtle/80">⌘K</kbd>
+              <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded px-2 py-0.5 text-[10px] font-mono font-semibold text-text-muted bg-surface-muted/80 border border-border-subtle/80">{searchShortcut}</kbd>
             </button>
             <input
               type="text"
@@ -246,7 +246,7 @@ export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
             <span className="min-w-0 flex-1 bg-transparent text-[13px] sm:text-sm font-medium text-text-muted truncate select-none">
               Cari judul atau kreator…
             </span>
-            <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded px-2 py-0.5 text-[10px] font-mono font-semibold text-text-muted bg-surface-muted/80 border border-border-subtle/80">⌘K</kbd>
+            <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded px-2 py-0.5 text-[10px] font-mono font-semibold text-text-muted bg-surface-muted/80 border border-border-subtle/80">{searchShortcut}</kbd>
           </button>
           <input
             type="text"
