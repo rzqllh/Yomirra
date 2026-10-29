@@ -194,14 +194,16 @@ describe("Shell Revamp Regression Coverage", () => {
       expect(heroCode).toContain("pointer-events-none");
     });
 
-    it("renders headline and full-width search input cleanly", () => {
+    it("renders headline and accessible full-width search trigger cleanly", () => {
       render(<HomeHero />);
 
       const heading = screen.getByRole("heading", { level: 1, name: "Mau baca apa hari ini?" });
       expect(heading).toBeTruthy();
 
-      const searchInput = screen.getByPlaceholderText(/Cari judul atau kreator/i);
-      expect(searchInput).toBeTruthy();
+      const searchTrigger = screen.getByRole("button", { name: /Cari judul atau kreator/i });
+      expect(searchTrigger).toBeTruthy();
+      expect(searchTrigger.getAttribute("aria-label")).toContain("Tekan");
+      expect(screen.queryByRole("textbox")).toBeNull();
     });
   });
 });
