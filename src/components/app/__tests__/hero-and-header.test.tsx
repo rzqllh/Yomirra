@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/chrome/header";
 const pushMock = vi.fn();
 const backMock = vi.fn();
 const replaceMock = vi.fn();
+const platformShortcut = vi.hoisted(() => ({ searchShortcut: "Ctrl+K" }));
 let mockUser: unknown = null;
 let mockHistoryItems: Record<string, unknown> = {};
 
@@ -32,6 +33,10 @@ vi.mock("@/shared/hooks/use-auth", () => ({
   }),
 }));
 
+vi.mock("@/shared/hooks/use-platform-shortcut", () => ({
+  usePlatformShortcut: () => ({ searchShortcut: platformShortcut.searchShortcut }),
+}));
+
 vi.mock("@/shared/hooks/use-mounted", () => ({
   useMounted: () => true,
 }));
@@ -53,6 +58,7 @@ describe("Header & Hero System (Squircle & Reusable)", () => {
     vi.clearAllMocks();
     mockUser = null;
     mockHistoryItems = {};
+    platformShortcut.searchShortcut = "Ctrl+K";
     sessionStorage.clear();
   });
 
@@ -65,8 +71,9 @@ describe("Header & Hero System (Squircle & Reusable)", () => {
       ).toBeTruthy();
       expect(screen.getByText("BACAANMU DIMULAI DI SINI")).toBeTruthy();
       expect(
-        screen.getByPlaceholderText(/Cari judul atau kreator/i)
+        screen.getByRole("button", { name: /Cari judul atau kreator/i })
       ).toBeTruthy();
+      expect(screen.queryByRole("textbox")).toBeNull();
     });
 
     it("switches to the returning-reader eyebrow when local reading history exists", () => {
@@ -76,6 +83,22 @@ describe("Header & Hero System (Squircle & Reusable)", () => {
 
       expect(screen.getByText("LANJUT LAGI DI YOMIRRA")).toBeTruthy();
       expect(screen.queryByText("BACAANMU DIMULAI DI SINI")).toBeNull();
+    });
+
+    it("uses the platform shortcut in both the visible badge and accessible search label", () => {
+      const first = render(<HomeHero />);
+      const search = screen.getByRole("button", { name: /Cari judul atau kreator/i });
+      expect(search.getAttribute("aria-label")).toContain("Ctrl+K");
+      expect(screen.getByText("Ctrl+K")).toBeTruthy();
+
+      first.unmount();
+      platformShortcut.searchShortcut = "⌘K";
+      mockHistoryItems = { "source-a::title-a": { chapterId: "1" } };
+      render(<HomeHero />);
+      const returningSearch = screen.getByRole("button", { name: /Cari judul atau kreator/i });
+      expect(returningSearch.getAttribute("aria-label")).toContain("⌘K");
+      expect(screen.getByText("⌘K")).toBeTruthy();
+      expect(screen.queryByRole("textbox")).toBeNull();
     });
 
     it("hands Home search to the shared global search surface", () => {
