@@ -1,0 +1,51 @@
+name: Content rights report
+description: Report a copyright, translation, artwork or source-rights concern to the Yomirra maintainers.
+title: "[Content rights] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This issue is public. Do not post personal documents, private contact information, credentials, private messages, or full copyrighted works. See docs/CONTENT_RIGHTS_REPORTING.md.
+  - type: input
+    id: yomirra-url
+    attributes:
+      label: Affected Yomirra URL
+      description: Paste the exact route or page, if available.
+      placeholder: https://www.yomirra.web.id/...
+    validations:
+      required: true
+  - type: input
+    id: source-url
+    attributes:
+      label: External provider URL (if relevant)
+      description: Provide a publicly accessible source link only.
+    validations:
+      required: false
+  - type: textarea
+    id: affected-content
+    attributes:
+      label: Content and nature of concern
+      description: Identify the material and explain the concern without reproducing full copyrighted text or images.
+    validations:
+      required: true
+  - type: textarea
+    id: authority
+    attributes:
+      label: Reporting authority
+      description: State whether you are the rights holder, their authorized representative, or reporting a potential issue. Do not post identity documents publicly.
+    validations:
+      required: true
+  - type: textarea
+    id: action
+    attributes:
+      label: Requested action and non-sensitive evidence
+      description: Explain the requested review/remediation and provide only public, non-sensitive evidence.
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Public issue safety
+      options:
+        - label: I understand this issue is public and have excluded confidential personal information and full copyrighted works.
+          required: true
