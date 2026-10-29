@@ -113,23 +113,29 @@ describe('history-store', () => {
     expect(resolved).toBeNull();
   });
 
-  it('handles a rejected cloud delete for cap eviction without an unhandled rejection', async () => {
+  it('retains every chapter beyond 1,000 items without issuing automatic cloud tombstones', async () => {
     vi.useFakeTimers();
-    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    vi.mocked(deleteHistoryItem).mockRejectedValueOnce(new Error('offline'));
-    const items = Object.fromEntries(Array.from({ length: 1000 }, (_, index) => [
-      `source::manga::chapter-${index}`,
-      { sourceId: 'source', mangaId: 'manga', chapterId: `chapter-${index}`, mangaTitle: 'Title', readAt: index },
-    ]));
-    useHistoryStore.setState({ items });
+    try {
+      vi.mocked(deleteHistoryItem).mockClear();
+      const items = Object.fromEntries(Array.from({ length: 1200 }, (_, index) => [
+        `source::manga::chapter-${index}`,
+        { sourceId: 'source', mangaId: 'manga', chapterId: `chapter-${index}`, mangaTitle: 'Title', readAt: index },
+      ]));
+      useHistoryStore.setState({ items });
 
-    useHistoryStore.getState().upsertHistory({
-      sourceId: 'source', mangaId: 'manga', chapterId: 'chapter-new', mangaTitle: 'New', readAt: 2000,
-    });
-    await vi.runAllTimersAsync();
+      useHistoryStore.getState().upsertHistory({
+        sourceId: 'source', mangaId: 'manga', chapterId: 'chapter-new', mangaTitle: 'Title', readAt: 2000,
+      });
+      await vi.runAllTimersAsync();
 
-    expect(error).toHaveBeenCalledWith('Failed to delete evicted history item', expect.any(Error));
-    error.mockRestore();
-    vi.useRealTimers();
-  });
+      const current = useHistoryStore.getState().items;
+      expect(Object.keys(current)).toHaveLength(1201);
+      expect(current['source::manga::chapter-0']).toBeDefined();
+      expect(current['source::manga::chapter-1199']).toBeDefined();
+      expect(current['source::manga::chapter-new']).toBeDefined();
+      expect(deleteHistoryItem).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });;
 });
