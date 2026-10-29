@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useHistoryStore } from '../history-store';
 import { useLibraryStore } from '../library-store';
 import { setLocalDataOwnerUid, clearLocalDataOwnerUid } from '@/shared/lib/local-data-owner';
-import { deleteHistoryItem, deleteMangaHistory, pushHistoryItem } from '@/shared/lib/sync-utils';
+import { deleteHistoryItem, deleteMangaHistory, pushHistoryItem, PartialHistoryDeletionError } from '@/shared/lib/sync-utils';
 
 vi.mock('@/shared/lib/sync-utils', () => ({
   pushHistoryItem: vi.fn().mockResolvedValue(undefined),
@@ -245,6 +245,30 @@ describe('history-store', () => {
       clearLocalDataOwnerUid();
       vi.useRealTimers();
     }
+  });
+
+
+  it('does not resurrect cloud-committed chapters after a partial bulk deletion failure', async () => {
+    useHistoryStore.setState({ items: {
+      'source::manga::chapter1': {
+        sourceId: 'source', mangaId: 'manga', chapterId: 'chapter1',
+        mangaTitle: 'Title', readAt: 1,
+      },
+      'source::manga::chapter2': {
+        sourceId: 'source', mangaId: 'manga', chapterId: 'chapter2',
+        mangaTitle: 'Title', readAt: 2,
+      },
+    } });
+    vi.mocked(deleteMangaHistory).mockRejectedValueOnce(
+      new PartialHistoryDeletionError(['chapter1'])
+    );
+    useHistoryStore.getState().removeMangaHistory('source', 'manga');
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const items = useHistoryStore.getState().items;
+    expect(items['source::manga::chapter1']).toBeUndefined();
+    expect(items['source::manga::chapter2']).toBeDefined();
   });
 
 });
