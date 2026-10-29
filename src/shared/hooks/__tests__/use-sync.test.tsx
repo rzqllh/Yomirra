@@ -85,6 +85,11 @@ describe("useSync cloud correctness", () => {
     mocks.snapshots.clear();
     mocks.listeners.clear();
     mocks.writes.length = 0;
+    mocks.firestore.writeBatch.mockReset();
+    mocks.firestore.writeBatch.mockImplementation(() => ({
+      set: (reference: { path: string }, data: unknown) => mocks.writes.push({ path: reference.path, data }),
+      commit: vi.fn(async () => undefined),
+    }));
     mocks.firestore.getDocs.mockImplementation(async (reference: { path: string }) =>
       mocks.snapshots.get(reference.path) ?? snapshot([]),
     );
