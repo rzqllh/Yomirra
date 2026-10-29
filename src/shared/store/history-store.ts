@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { pushHistoryItem, deleteHistoryItem, deleteMangaHistory } from "@/shared/lib/sync-utils";
+import { getLocalDataOwnerUid } from "@/shared/lib/local-data-owner";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { sourceRegistry } from "@/shared/sources/source-registry";
 import { toast } from "sonner";
@@ -86,7 +87,12 @@ export const useHistoryStore = create<HistoryState>()(
           ? { ...existing, ...item, savedTitleId: savedTitleId ?? existing.savedTitleId, readAt: item.readAt }
           : { ...item, savedTitleId };
 
-        setTimeout(() => pushHistoryItem(finalItem), 0); // Async Background sync
+        const expectedOwnerUid = getLocalDataOwnerUid();
+        setTimeout(() => {
+          void pushHistoryItem(finalItem, expectedOwnerUid).catch(() => {
+            // Local cursor remains durable; a later sync can retry the cloud write.
+          });
+        }, 0);
         
         // Reading history is user data, not a cache: never evict and cloud-delete
         // old records simply because the collection exceeds an arbitrary limit.
@@ -131,7 +137,8 @@ export const useHistoryStore = create<HistoryState>()(
           return { items };
         });
 
-        void deleteHistoryItem(sourceId, mangaId, chapterId).catch(() => {
+        const expectedOwnerUid = getLocalDataOwnerUid();
+        void deleteHistoryItem(sourceId, mangaId, chapterId, expectedOwnerUid).catch(() => {
           let restored = false;
           set((state) => {
             if (generation !== historyClearGeneration ||
@@ -162,7 +169,8 @@ export const useHistoryStore = create<HistoryState>()(
           return { items };
         });
 
-        void deleteMangaHistory(sourceId, mangaId).catch(() => {
+        const expectedOwnerUid = getLocalDataOwnerUid();
+        void deleteMangaHistory(sourceId, mangaId, expectedOwnerUid).catch(() => {
           let restored = false;
           set((state) => {
             if (generation !== historyClearGeneration) return state;
@@ -338,7 +346,7 @@ export const useHistoryStore = create<HistoryState>()(
           }
         });
 
-        pushHistoryItem(updatedItem).catch(() => {
+        pushHistoryItem(updatedItem, getLocalDataOwnerUid()).catch(() => {
           // Keep local reading progress. Cloud failure must not erase newer local edits.
           toast.warning("Progres Belum Tersimpan", {
             description: "Progres membaca belum tersinkron ke akun karena kendala jaringan.",
@@ -427,7 +435,12 @@ export const useHistoryStore = create<HistoryState>()(
               hasChanges = true;
             } else if (localTime > cloudTime) {
               // Local is newer, push to cloud to sync up
-              setTimeout(() => pushHistoryItem(localItem), 0);
+              const expectedOwnerUid = getLocalDataOwnerUid();
+              setTimeout(() => {
+                void pushHistoryItem(localItem, expectedOwnerUid).catch(() => {
+                  // Preserve local data for the next explicit sync attempt.
+                });
+              }, 0);
             }
           }
         }
@@ -436,7 +449,12 @@ export const useHistoryStore = create<HistoryState>()(
         const cloudIds = new Set(cloudItems.map(item => getHistoryId(item.sourceId, item.mangaId, item.chapterId)));
         for (const [id, localItem] of Object.entries(state.items)) {
           if (!cloudIds.has(id)) {
-            setTimeout(() => pushHistoryItem(localItem), 0);
+            const expectedOwnerUid = getLocalDataOwnerUid();
+              setTimeout(() => {
+                void pushHistoryItem(localItem, expectedOwnerUid).catch(() => {
+                  // Preserve local data for the next explicit sync attempt.
+                });
+              }, 0);
           }
         }
 
