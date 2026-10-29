@@ -253,7 +253,7 @@ export function GuestMergeDialog() {
       );
     } catch (err: any) {
       console.error("Failed to execute guest merge", err);
-      if (err instanceof PartialBatchCommitError) {
+      if (err instanceof PartialBatchCommitError && err.completedBatches > 0) {
         setRequiresCloudRefresh(true);
         toast.error("Sinkronisasi Cloud Belum Tuntas", {
           description: `${err.completedBatches} dari ${err.totalBatches} batch tersimpan. Data lokal tidak diganti; cloud perlu diperiksa ulang.`,
