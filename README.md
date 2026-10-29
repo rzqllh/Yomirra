@@ -150,3 +150,5 @@ Lihat [Developer Guide](docs/README_DEV.md) untuk struktur project dan [Adding a
 Yomirra adalah reader interface independen. Konten, artwork, manga, manhwa, manhua, dan jenis komik lainnya yang ditampilkan berasal dari layanan pihak ketiga dan tetap menjadi milik pemegang hak masing-masing.
 
 Penggunaan source pihak ketiga mengikuti aturan dan ketersediaan layanan tersebut. Yomirra tidak menjamin source tertentu akan selalu tersedia.
+
+Pemegang hak cipta atau perwakilan yang berwenang dapat melaporkan masalah melalui [formulir laporan hak cipta](https://github.com/rzqllh/Yomirra/issues/new?template=content-rights.yml). Lihat [alur peninjauan laporan](docs/CONTENT_RIGHTS_REPORTING.md). Formulir GitHub bersifat publik: jangan sertakan informasi pribadi atau bukti rahasia. Penerimaan laporan tidak menyatakan bahwa konten atau source telah mendapatkan izin penggunaan.
