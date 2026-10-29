@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { deleteHistoryItem, deleteLibraryItem, deleteMangaHistory, pullHistoryData, pullLegacyLibraryData, pushLibraryItem } from '../sync-utils';
+import { deleteHistoryItem, deleteLibraryItem, deleteMangaHistory, pullHistoryData, pullLegacyLibraryData, pushHistoryItem, pushLibraryItem } from '../sync-utils';
 import { initFirebase } from '../firebase';
 
 vi.mock('../firebase', () => ({
@@ -190,6 +190,35 @@ describe('Firestore Sync Utils Regression Suite', () => {
 
     await expect(deleteMangaHistory('source', 'manga')).rejects.toThrow(/Account changed/);
     expect(vi.mocked(firestore.writeBatch).mock.calls.length).toBe(priorBatches);
+  });
+
+
+  it('keeps guest history mutations local-only, including bulk removal', async () => {
+    const firestore = await import('firebase/firestore');
+    const initialWrites = vi.mocked(firestore.setDoc).mock.calls.length;
+    const initialBatches = vi.mocked(firestore.writeBatch).mock.calls.length;
+    const initialQueries = vi.mocked(firestore.getDocs).mock.calls.length;
+
+    await pushHistoryItem({
+      sourceId: 'source', mangaId: 'guest', chapterId: 'chapter-1',
+      mangaTitle: 'Guest', readAt: 10,
+    }, null);
+    await deleteHistoryItem('source', 'guest', 'chapter-1', null);
+    await deleteMangaHistory('source', 'guest', null);
+
+    expect(vi.mocked(firestore.setDoc).mock.calls.length).toBe(initialWrites);
+    expect(vi.mocked(firestore.writeBatch).mock.calls.length).toBe(initialBatches);
+    expect(vi.mocked(firestore.getDocs).mock.calls.length).toBe(initialQueries);
+  });
+
+  it('rejects queued history writes and deletes after an account switch', async () => {
+    const history = {
+      sourceId: 'source', mangaId: 'manga', chapterId: 'ch1',
+      mangaTitle: 'Title', readAt: 100,
+    };
+    await expect(pushHistoryItem(history, 'different-owner')).rejects.toThrow(/Account changed/);
+    await expect(deleteHistoryItem('source', 'manga', 'ch1', 'different-owner')).rejects.toThrow(/Account changed/);
+    await expect(deleteMangaHistory('source', 'manga', 'different-owner')).rejects.toThrow(/Account changed/);
   });
 
 });
