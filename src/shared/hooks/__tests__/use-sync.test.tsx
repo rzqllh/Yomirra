@@ -547,4 +547,13 @@ describe("useSync cloud correctness", () => {
     expect(mocks.writes).toContainEqual(expect.objectContaining({ data: expect.objectContaining({ readAt: 3000 }) }));
   });
 
+  it("does not rewrite unchanged cloud history when field order differs", async () => {
+    mocks.snapshots.set("users/user-a/history", snapshot([["source::manga::chapter", {
+      readAt: 1000, mangaTitle: "Title", chapterId: "chapter", mangaId: "manga", sourceId: "source",
+    }]]));
+    const { result } = renderHook(() => useSync({ autoSync: false }));
+    await act(async () => { await result.current.runFullSync(); });
+    expect(mocks.writes.filter(write => write.path.includes("/history/"))).toHaveLength(0);
+  });
+
 });

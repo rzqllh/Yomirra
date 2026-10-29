@@ -4,7 +4,7 @@
 
 Bagian ini mengoreksi klaim penyelesaian menyeluruh dalam catatan historis di bawah. Pekerjaan saat ini menangani tujuh temuan pada history, penulisan lintas akun, rollback progres, backup/restore, batas impor, dan integritas download. Kontrak perilaku ada di [READING_DATA.md](READING_DATA.md).
 
-- Implementasi dan regresi sudah disiapkan pada branch `fix/reading-data-safety-20261030`; CI PR masih menunggu hasil.
+- Implementasi dan regresi tersedia di [PR #64](https://github.com/rzqllh/Yomirra/pull/64), branch `fix/reading-data-safety-20261030`. Status CI dan merge mengikuti checks pada PR tersebut; release gates eksternal di bawah tetap berlaku.
 - Pemeriksaan lokal terisolasi: 8 skenario lulus pada kode perubahan; baseline gagal pada 8 skenario yang sama. Ini bukan seluruh suite Vitest atau pengujian layanan nyata.
 - Retensi: 512 detail terbaru ditambah ringkasan resume dan milestone per judul. Tidak ada penghapusan otomatis setelah tiga bulan; definisi ketidakaktifan masih keputusan pemilik.
 - Release gates tetap terbuka: Firebase lintas perangkat/recovery nyata, iOS/iPadOS PWA terpasang, verifikasi independen Q1–Q175, serta review hak konten/publikasi. Fitur partial dan blocked pada tracker tidak otomatis berubah menjadi verified.
@@ -48,7 +48,7 @@ Bagian ini mengoreksi klaim penyelesaian menyeluruh dalam catatan historis di ba
 | 12 | Q148–Q164 | Agreed — feature parity and interoperability, with explicit platform limits |
 | 13 | **Q50**, Q165–Q175 | Agreed — verified reusable/motion gate, public documentation, independence, licensing and scope boundary |
 
-See [GRILL_DECISIONS.md](GRILL_DECISIONS.md), [PARITY_GAP_AUDIT.md](YOMIRRA_FULL_PARITY_EXECUTION.md), [REFERENCE_LICENSING_REVIEW.md](REFERENCE_LICENSING_REVIEW.md) and [GLOSSARY.md](../GLOSSARY.md) for detailed scope and evidence.
+See [GRILL_DECISIONS.md](GRILL_DECISIONS.md), [tracker parity](YOMIRRA_FULL_PARITY_EXECUTION.md), [REFERENCE_LICENSING_REVIEW.md](REFERENCE_LICENSING_REVIEW.md) and [GLOSSARY.md](../GLOSSARY.md) for detailed scope and evidence.
 
 ## 3. Critical revised behavior
 

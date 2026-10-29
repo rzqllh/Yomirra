@@ -274,8 +274,14 @@ export function useSync(options = { autoSync: true }) {
         const data = retained ? cleanRecord(retained) : {
           _compacted: true, deletedAt: item.readAt,
           sourceId: item.sourceId, mangaId: item.mangaId, chapterId: item.chapterId,
+          mangaTitle: item.mangaTitle, readAt: item.readAt,
         };
-        if (!retained || !remote || JSON.stringify(cleanRecord(retained)) !== JSON.stringify(cleanRecord(remote))) {
+        const retainedRecord = retained ? cleanRecord(retained) : undefined;
+        const remoteRecord = remote ? cleanRecord(remote) : undefined;
+        const unchanged = retainedRecord && remoteRecord &&
+          Object.keys(retainedRecord).length === Object.keys(remoteRecord).length &&
+          Object.entries(retainedRecord).every(([key, value]) => remoteRecord[key] === value);
+        if (!unchanged) {
           pushToBatch(doc(firestore, `users/${uid}/history`, id), data);
           syncedHistCount++;
         }

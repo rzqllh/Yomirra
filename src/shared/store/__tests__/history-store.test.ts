@@ -144,4 +144,29 @@ describe('history-store', () => {
     localStorage.removeItem('yomirra-local-data-owner-uid');
   });
 
+  it('migrates version 1 persistence to 512 details without dropping old-title cursors', async () => {
+    const items = Object.fromEntries(Array.from({ length: 700 }, (_, index) => [
+      `source::title-${index}::c`, { sourceId: 'source', mangaId: `title-${index}`, chapterId: 'c', mangaTitle: 'Title', readAt: index + 1, pageIndex: 7 },
+    ]));
+    localStorage.setItem('yomirra-history', JSON.stringify({ state: { items }, version: 1 }));
+    await useHistoryStore.persist.rehydrate();
+    const retained = Object.values(useHistoryStore.getState().items);
+    expect(retained.filter(item => !item.isCompact)).toHaveLength(512);
+    expect(retained).toHaveLength(700);
+    expect(useHistoryStore.getState().items['source::title-0::c'].pageIndex).toBe(7);
+  });
+
+  it('restores only the failed deletion while preserving newer chapter progress', async () => {
+    let rejectDelete!: (reason: Error) => void;
+    vi.mocked(deleteHistoryItem).mockImplementationOnce(() => new Promise<void>((_, reject) => { rejectDelete = reject; }));
+    useHistoryStore.setState({ items: { 's::m::a': { sourceId: 's', mangaId: 'm', chapterId: 'a', mangaTitle: 'M', readAt: 1 } } });
+    useHistoryStore.getState().removeHistoryItem('s', 'm', 'a');
+    useHistoryStore.getState().saveProgress('s', 'm', 'b', 9);
+    rejectDelete(new Error('offline'));
+    await Promise.resolve();
+    expect(useHistoryStore.getState().items['s::m::a']).toBeDefined();
+    expect(useHistoryStore.getState().items['s::m::b'].pageIndex).toBe(9);
+    useHistoryStore.getState().clearHistory();
+  });
+
 });
