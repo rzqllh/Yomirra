@@ -1,4 +1,19 @@
-# Yomirra AGY execution checkpoint — 2026-10-29
+# Latest release state — 2026-10-29
+
+**STATUS: PR #59 MERGED; VERCEL PRODUCTION DEPLOYMENT READY.** This section supersedes the older execution restrictions below, which are retained as historical evidence.
+
+- PR: https://github.com/rzqllh/Yomirra/pull/59 (MERGED, not Draft).
+- Merged code SHA: `e82ab45ce47645f1ffbbb2433ae565e01163bed0`.
+- Last verified code CI: https://github.com/rzqllh/Yomirra/actions/runs/40822090749 (run #468, SUCCESS): TypeScript PASS; lint 0 errors/508 warnings; Vitest 217/217 files and 1436/1436 tests PASS; production build PASS.
+- Vercel production deployment: `dpl_3DvZGwncV6zDcZi75yK3AQxeZ2J3` READY, matched merged SHA, aliases `www.yomirra.web.id`, `yomirra.web.id` and `yomirra.vercel.app`.
+- Both custom domains verified by Vercel; apex redirects via 308 to `www`.
+- Vercel runtime error clusters: none reported for a 30-minute observation window at release check (absence of error logs is not end-to-end behavior proof).
+- Local Windows worktrees, parent staged files, and untracked files: NOT accessed or modified during the GitHub-connected release.
+- Remaining external gates: Q21 real iOS/iPadOS installed PWA and BrowserStack hardware, live Firebase cross-device/recovery flow, independent per-Q verification of Q1–Q175, content-rights and legal/publication review. These are NOT TESTED or NOT CLEARED, and must not be reclassified as VERIFIED from CI alone.
+- No release tag or package-version increment was created; package version remains 2.3.1.
+- Do not infer live service correctness from the successful build. Retain the prior 30-minute log evidence as a limited observation and investigate any future production incidents from Vercel runtime logs.
+
+## Historical execution checkpoint (before merge)
 
 ## Resume here
 This record is a durable handoff, not proof of release readiness. The last known GitHub work was performed via the GitHub connector, because the local Windows worktree is not mounted in the executing environment.
