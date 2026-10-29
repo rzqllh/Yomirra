@@ -1,3 +1,18 @@
+# Post-release corrective work — 2026-10-29
+
+**STATUS: IN REVIEW / CI NOT YET VERIFIED.** This post-release section supersedes any historical "all gaps closed" claim. Do not merge or deploy this work without a green CI run on the final head and review.
+
+- Starting code: production `main` at `6cc9e07b6d6eedb8fb0f6a88d3e66ee4e6e6ef24`, after merged PR #59.
+- Isolated GitHub branch: `fix/yomirra-postrelease-truth-20261029`. Original user's Windows worktrees and staged files have not been accessed or modified.
+- Fixed source defects: HomeHero platform-specific search shortcut (shared hook); history no longer evicts and remotely deletes the oldest chapter after 1,000 records; async history-delete failures no longer replace an entire persisted store; failed progress cloud writes keep the local cursor.
+- Added regression assertions: platform-aware HomeHero hint, >1,000 history records, concurrent chapter deletion failures, rendered DesktopRail contracts, and actual returning-reader shelf/ordering in Playwright.
+- Verification: **NOT YET RUN/REPORTED on this branch**. This environment cannot directly mount the Windows checkout or execute the full Next.js build. Require GitHub Actions on the PR and do not infer pass from earlier PR #59.
+- Still open: real iOS/iPadOS installed-PWA QA (Q21), live Firebase multi-device and partial-merge recovery acceptance, verified item-by-item Q1–Q175 behavioral acceptance, seven documented PARTIAL product features, content-rights and legal/policy counsel review, and final production monitoring.
+- Integrity warning: `docs/YOMIRRA_FULL_PARITY_EXECUTION.md` still labels 167 items VERIFIED based on earlier work and is **not independently verified per item**; related evidence claims must not be promoted to release sign-off. `docs/PARITY_GAP_AUDIT.md` is referenced by the ledger but absent from `main`.
+- Next executable task: open a draft PR, inspect its exact-head CI and review findings, repair any failures, then record the final evidence. No automatic production merge or tag.
+
+---
+
 # Latest release state — 2026-10-29
 
 **STATUS: PR #59 MERGED; VERCEL PRODUCTION DEPLOYMENT READY.** This section supersedes the older execution restrictions below, which are retained as historical evidence.
