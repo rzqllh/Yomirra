@@ -2,6 +2,13 @@ import { initFirebase } from "./firebase";
 import type { LibraryItem } from "@/shared/store/library-store";
 import type { HistoryItem } from "@/shared/store/history-store";
 
+export class PartialHistoryDeletionError extends Error {
+  constructor(readonly committedChapterIds: string[]) {
+    super("Only some history chapters were deleted from the cloud.");
+    this.name = "PartialHistoryDeletionError";
+  }
+}
+
 export async function pushLibraryItem(item: LibraryItem, expectedOwnerUid?: string | null) {
   // Guest mutations are local-only. Never replay guest writes into an account
   // that happens to sign in before a queued operation is dispatched.
@@ -137,6 +144,7 @@ export async function deleteMangaHistory(
     throw new Error("Account changed before manga history deletion. Cross-account sync blocked.");
   }
 
+  const committedChapterIds: string[] = [];
   try {
     const { collection, query, where, getDocs, writeBatch } = await import("firebase/firestore");
     const historyRef = collection(db, `users/${ownerUid}/history`);
@@ -159,8 +167,9 @@ export async function deleteMangaHistory(
         throw new Error("Account changed during history deletion. Further cloud writes blocked.");
       }
 
+      const chunk = liveDocs.slice(index, index + MAX_BATCH_OPERATIONS);
       const batch = writeBatch(db);
-      for (const historyDoc of liveDocs.slice(index, index + MAX_BATCH_OPERATIONS)) {
+      for (const historyDoc of chunk) {
         const historyItem = historyDoc.data() as HistoryItem;
         batch.set(historyDoc.ref, {
           _deleted: true,
@@ -171,9 +180,13 @@ export async function deleteMangaHistory(
         });
       }
       await batch.commit();
+      committedChapterIds.push(...chunk.map((doc) => (doc.data() as HistoryItem).chapterId));
     }
   } catch (e) {
     console.error("Failed to delete manga history from sync", e);
+    if (committedChapterIds.length > 0) {
+      throw new PartialHistoryDeletionError(committedChapterIds);
+    }
     throw e;
   }
 }
