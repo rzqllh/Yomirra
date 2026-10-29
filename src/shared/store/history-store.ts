@@ -6,6 +6,7 @@ import { sourceRegistry } from "@/shared/sources/source-registry";
 import { toast } from "sonner";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { parseChapterNumber } from "@/shared/lib/chapter-parser";
+import { getLocalDataOwnerUid } from "@/shared/lib/local-data-owner";
 
 export type HistoryItem = {
   sourceId: string;
@@ -52,6 +53,16 @@ interface HistoryState {
 
 const getHistoryId = (sourceId: string, mangaId: string, chapterId: string) => `${sourceId}::${mangaId}::${chapterId}`;
 
+function queueHistorySync(item: HistoryItem): void {
+  const ownerUid = getLocalDataOwnerUid();
+  if (!ownerUid) return; // Guest history remains local until an approved merge.
+  setTimeout(() => {
+    void pushHistoryItem(item, ownerUid).catch((error) => {
+      console.error("Failed to sync local reading history", error);
+    });
+  }, 0);
+}
+
 export const useHistoryStore = create<HistoryState>()(
   persist(
     (set, get) => ({
@@ -76,7 +87,7 @@ export const useHistoryStore = create<HistoryState>()(
           ? { ...existing, ...item, savedTitleId: savedTitleId ?? existing.savedTitleId, readAt: item.readAt }
           : { ...item, savedTitleId };
 
-        setTimeout(() => pushHistoryItem(finalItem), 0); // Async Background sync
+        queueHistorySync(finalItem);
         
         // Reading history is user data, not an evictable cache.
         // Never remove milestones or send cloud tombstones because of a count limit.
@@ -114,7 +125,7 @@ export const useHistoryStore = create<HistoryState>()(
           return { items: newItems };
         });
 
-        deleteHistoryItem(sourceId, mangaId, chapterId).catch(() => {
+        deleteHistoryItem(sourceId, mangaId, chapterId, getLocalDataOwnerUid()).catch(() => {
           // Restore only the failed deletion; keep any independent reading
           // progress made while the cloud operation was pending.
           if (previousItem) {
@@ -140,7 +151,7 @@ export const useHistoryStore = create<HistoryState>()(
           return { items: newItems };
         });
 
-        deleteMangaHistory(sourceId, mangaId).catch(() => {
+        deleteMangaHistory(sourceId, mangaId, getLocalDataOwnerUid()).catch(() => {
           set((state) => {
             const newItems = { ...state.items };
             let changed = false;
@@ -308,7 +319,7 @@ export const useHistoryStore = create<HistoryState>()(
           }
         });
 
-        pushHistoryItem(updatedItem).catch(() => {
+        pushHistoryItem(updatedItem, getLocalDataOwnerUid()).catch(() => {
           // Reading progress is local-first: a failed cloud write must not
           // discard the current cursor or unrelated chapters saved afterward.
           toast.warning("Sinkronisasi Progres Tertunda", {
@@ -397,7 +408,7 @@ export const useHistoryStore = create<HistoryState>()(
               hasChanges = true;
             } else if (localTime > cloudTime) {
               // Local is newer, push to cloud to sync up
-              setTimeout(() => pushHistoryItem(localItem), 0);
+              queueHistorySync(localItem);
             }
           }
         }
@@ -406,7 +417,7 @@ export const useHistoryStore = create<HistoryState>()(
         const cloudIds = new Set(cloudItems.map(item => getHistoryId(item.sourceId, item.mangaId, item.chapterId)));
         for (const [id, localItem] of Object.entries(state.items)) {
           if (!cloudIds.has(id)) {
-            setTimeout(() => pushHistoryItem(localItem), 0);
+            queueHistorySync(localItem);
           }
         }
 
