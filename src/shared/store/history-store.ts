@@ -292,9 +292,10 @@ export const useHistoryStore = create<HistoryState>()(
         });
 
         pushHistoryItem(updatedItem).catch(() => {
-          set({ items: previousState });
-          toast.warning("Progres Belum Tersimpan", {
-            description: "Progres membaca belum tersinkron ke akun karena kendala jaringan.",
+          // Reading progress is local-first: a failed cloud write must not
+          // discard the current cursor or unrelated chapters saved afterward.
+          toast.warning("Sinkronisasi Progres Tertunda", {
+            description: "Progres tetap tersimpan di perangkat. Cloud belum berhasil diperbarui.",
           });
         });
       },
