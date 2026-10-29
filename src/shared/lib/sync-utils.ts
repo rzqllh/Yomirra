@@ -67,11 +67,21 @@ export async function deleteLibraryItem(
   }
 }
 
-export async function pushHistoryItem(item: HistoryItem) {
+export async function pushHistoryItem(item: HistoryItem, expectedOwnerUid?: string | null) {
+  if (expectedOwnerUid === null) return;
   const { auth, db } = await initFirebase();
-  if (!auth || !db) return;
+  if (!auth || !db) {
+    if (expectedOwnerUid) throw new Error("Cloud unavailable for the reading-history owner.");
+    return;
+  }
   const user = auth.currentUser;
-  if (!user) return;
+  if (!user) {
+    if (expectedOwnerUid) throw new Error("Reading-history owner is no longer signed in.");
+    return;
+  }
+  if (expectedOwnerUid && user.uid !== expectedOwnerUid) {
+    throw new Error("Account changed before the history write. Cross-account sync blocked.");
+  }
   try {
     const { doc, setDoc } = await import("firebase/firestore");
     const id = `${item.sourceId}::${item.mangaId}::${item.chapterId}`;
@@ -83,11 +93,20 @@ export async function pushHistoryItem(item: HistoryItem) {
   }
 }
 
-export async function deleteHistoryItem(sourceId: string, mangaId: string, chapterId: string) {
+export async function deleteHistoryItem(
+  sourceId: string,
+  mangaId: string,
+  chapterId: string,
+  expectedOwnerUid?: string | null
+) {
+  if (expectedOwnerUid === null) return;
   const { auth, db } = await initFirebase();
   if (!auth || !db) throw new Error("Firebase is unavailable for deletion.");
   const user = auth.currentUser;
   if (!user) throw new Error("No authenticated user is available for deletion.");
+  if (expectedOwnerUid && user.uid !== expectedOwnerUid) {
+    throw new Error("Account changed before history deletion. Cross-account sync blocked.");
+  }
   try {
     const { doc, setDoc } = await import("firebase/firestore");
     const id = `${sourceId}::${mangaId}::${chapterId}`;
@@ -104,11 +123,19 @@ export async function deleteHistoryItem(sourceId: string, mangaId: string, chapt
   }
 }
 
-export async function deleteMangaHistory(sourceId: string, mangaId: string) {
+export async function deleteMangaHistory(
+  sourceId: string,
+  mangaId: string,
+  expectedOwnerUid?: string | null
+) {
+  if (expectedOwnerUid === null) return;
   const { auth, db } = await initFirebase();
   if (!auth || !db) throw new Error("Firebase is unavailable for deletion.");
   const ownerUid = auth.currentUser?.uid;
   if (!ownerUid) throw new Error("No authenticated user is available for deletion.");
+  if (expectedOwnerUid && ownerUid !== expectedOwnerUid) {
+    throw new Error("Account changed before manga history deletion. Cross-account sync blocked.");
+  }
 
   try {
     const { collection, query, where, getDocs, writeBatch } = await import("firebase/firestore");
