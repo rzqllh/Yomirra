@@ -109,6 +109,7 @@ export function ReaderShell({
 
   const handleToggleBookmark = (e: React.MouseEvent) => {
     e.stopPropagation()
+    const wasInLibrary = useLibraryStore.getState().isInLibrary(sourceId, mangaId)
     toggleLibrary({
       sourceId,
       mangaId,
@@ -117,12 +118,15 @@ export function ReaderShell({
       addedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     })
-    if (isSaved) {
+    const toastId = `bookmark-toggle-${sourceId}-${mangaId}`
+    if (wasInLibrary) {
       toast.info("Dihapus dari Bookmark", {
+        id: toastId,
         description: "Komik ini dikeluarkan dari daftar bookmark.",
       })
     } else {
       toast.success("Disimpan ke Bookmark", {
+        id: toastId,
         description: "Komik ini ditambahkan ke daftar bookmark.",
       })
     }
@@ -168,6 +172,12 @@ export function ReaderShell({
 
       if (e.key === 'Escape' || e.key === 'm' || e.key === 'M') {
         toggleOverlay();
+      } else if (e.key === 'f' || e.key === 'F') {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen?.().catch(() => {});
+        } else {
+          document.exitFullscreen?.().catch(() => {});
+        }
       }
     };
 

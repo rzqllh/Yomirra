@@ -37,6 +37,7 @@ export function MangaActions({
   const toggleLibrary = useLibraryStore((state) => state.toggleLibrary);
 
   const handleToggle = () => {
+    const wasInLibrary = useLibraryStore.getState().isInLibrary(sourceId, mangaId);
     toggleLibrary({
       sourceId,
       mangaId,
@@ -48,12 +49,16 @@ export function MangaActions({
       updatedAt: new Date().toISOString(),
     });
 
-    if (isInLibrary) {
+    const toastId = `bookmark-toggle-${sourceId}-${mangaId}`;
+
+    if (wasInLibrary) {
       toast.info("Dihapus dari Rak Buku", {
+        id: toastId,
         description: `'${title}' tidak lagi tersimpan.`,
       });
     } else {
       toast.success("Disimpan ke Rak Buku", {
+        id: toastId,
         description: `'${title}' berhasil disimpan.`,
       });
     }

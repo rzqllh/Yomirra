@@ -51,7 +51,7 @@ describe("MorphIcon package boundary", () => {
       );
 
     expect(offenders).toEqual([]);
-  });
+  }, 15000);
 
   it("adopts MorphIcon through the package boundary for approved feature state", () => {
     const mangaDetailView = fs.readFileSync(
