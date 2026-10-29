@@ -155,4 +155,14 @@ describe('Firestore Sync Utils Regression Suite', () => {
     await expect(deleteMangaHistory('source', 'manga', 'former-owner')).rejects.toThrow(/Account changed/);
   });
 
+
+  it('fails closed when strict migration has no active Firebase auth', async () => {
+    vi.mocked(initFirebase).mockResolvedValueOnce({ auth: null, db: {} } as never);
+    await expect(pullLegacyLibraryData({ strict: true, expectedUid: 'user123' })).rejects.toThrow(/Firebase unavailable/);
+  });
+
+  it('rejects importing another account legacy records during a UID switch', async () => {
+    await expect(pullLegacyLibraryData({ strict: true, expectedUid: 'other-user' })).rejects.toThrow(/Account changed/);
+  });
+
 });
