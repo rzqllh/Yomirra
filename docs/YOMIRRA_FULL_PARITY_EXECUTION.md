@@ -4,7 +4,7 @@
 **Branch:** `fix/uiux-master-reconciliation-20261028`  
 **Target Architecture:** Next.js 16.3.5 App Router, React 19.2.4, Serwist 9.5.11, Tailwind CSS v4, Zustand 5, Radix UI  
 **Authority:** Grill Decision Register (Rounds 1–13, Decisions Q1–Q175), `docs/GRILL_FINAL_LEDGER.md`, `docs/GRILL_DECISIONS.md`, `docs/PARITY_GAP_AUDIT.md`  
-**Verification Baseline:** 210 Test Files (1398 Tests Passed, 0 Failed), TypeScript `tsc --noEmit` (0 Errors), ESLint (0 Errors, 496 non-blocking warnings), Next.js Production Build (Clean Code 0).
+**Verification Baseline:** 217 Test Files (1430 Tests Passed, 0 Failed), TypeScript `tsc --noEmit` (0 Errors), ESLint (0 Errors, 496 non-blocking warnings), Next.js Production Build (Clean Code 0).
 
 ---
 
@@ -16,7 +16,7 @@ All 175 product and architecture decisions (Q1–Q175) from the authoritative Gr
 
 | Gate / Suite | Command | Total Units | Passed | Failed | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Vitest Test Runner** | `npx vitest run` | 210 test files / 1398 tests | 1398 | 0 | **PASS (100%)** |
+| **Vitest Test Runner** | `npx vitest run` | 217 test files / 1430 tests | 1430 | 0 | **PASS (100%)** |
 | **TypeScript Typecheck** | `npm run typecheck` | Project-wide strict checks | All files | 0 | **PASS (100%)** |
 | **ESLint Static Analysis** | `npm run lint` | Repository-wide ESLint 9 | 0 errors | 0 errors | **PASS (100%)** |
 | **Production Build** | `npm run build` (`next build --webpack`) | 24 static routes + dynamic | 24 / 24 | 0 | **PASS (100%)** |
@@ -76,7 +76,7 @@ All 175 product and architecture decisions (Q1–Q175) from the authoritative Gr
 | ID | Topic | Requirement | Status | Evidence Files / Tests |
 | :--- | :--- | :--- | :--- | :--- |
 | **Q7** | Reader Navigation | Contextual reader chrome with auto-hide and tap zones | `VERIFIED` | `src/components/reader/reader-shell.tsx`, `src/components/reader/__tests__/reader-shell.test.tsx` |
-| **Q8** | Title Preferences | Per-title reader settings override global defaults | `IMPLEMENTED / UNTESTED` | `src/shared/store/reader-store.ts` |
+| **Q8** | Title Preferences | Per-title reader settings override global defaults | `VERIFIED` | `src/shared/store/reader-store.ts`, `src/shared/store/__tests__/reader-store.test.ts` |
 | **Q9** | Gesture Arbitration | Zoom/pan gestures prioritized over page turn gestures | `VERIFIED` | `src/components/reader/reader-image.tsx`, `src/components/reader/__tests__/reader-image.test.tsx` |
 | **Q10** | Chapter Completion | Explicit completion threshold with failure isolation | `VERIFIED` | `src/shared/lib/chapter-continuity.ts`, `src/shared/lib/__tests__/chapter-continuity.test.ts` |
 | **Q11** | Source Mapping | Verified cross-source title & chapter mapping | `VERIFIED` | `src/shared/lib/source-routing.ts`, `src/shared/lib/source-fallback.ts`, `src/shared/lib/__tests__/source-routing.test.ts` |
@@ -98,8 +98,8 @@ All 175 product and architecture decisions (Q1–Q175) from the authoritative Gr
 | **Q23** | Manga Terminology | Established terminology (Komik, Chapter, Rilis, Bookmark) | `VERIFIED` | `README.md`, `docs/IDENTITY.md`, `src/components/`, `src/shared/lib/motion/__tests__/transition-identity.test.ts` |
 | **Q24** | Quiet Toast Feedback | Non-intrusive Sonner toasts with safe area padding | `VERIFIED` | `src/components/ui/sonner.tsx`, `src/components/ui/__tests__/sonner.test.tsx` |
 | **Q25** | Actionable Errors | Every error state provides clear retry / alternate source | `VERIFIED` | `src/components/komik/manga-detail-error-state.tsx`, `src/components/komik/__tests__/manga-detail-error-state.test.tsx` |
-| **Q26** | Visual Density | Restrained typography, squircle radius hierarchy | `IMPLEMENTED / UNTESTED` | `src/app/(web)/globals.css` |
-| **Q27** | Motion Discipline | Respects `prefers-reduced-motion` project-wide | `IMPLEMENTED / UNTESTED` | `src/components/motion/motion-provider.tsx`, `src/app/(web)/globals.css` |
+| **Q26** | Visual Density | Restrained typography, squircle radius hierarchy | `VERIFIED` | `src/app/(web)/globals.css`, `src/components/chrome/__tests__/responsive-visual-hierarchy.test.tsx` |
+| **Q27** | Motion Discipline | Respects `prefers-reduced-motion` project-wide | `VERIFIED` | `src/components/motion/motion-provider.tsx`, `src/components/chrome/__tests__/responsive-visual-hierarchy.test.tsx` |
 | **Q28** | Accessible Glass | Liquid glass complies with WCAG AA contrast (>= 4.5:1) | `VERIFIED` | `src/components/ui/__tests__/contrast-contract.test.ts` |
 | **Q29** | Bottom Dock | Accessible 44px dock navigation with active indicator | `VERIFIED` | `src/components/chrome/bottom-dock.tsx`, `src/components/app/__tests__/bottom-dock.test.tsx` |
 | **Q30** | Accessible Drawers | Vaul drawers with focus trap and ARIA labels | `VERIFIED` | `src/components/shared/unified-filter-drawer.tsx`, `src/components/shared/__tests__/filter-modal.test.tsx` |
@@ -116,16 +116,16 @@ All 175 product and architecture decisions (Q1–Q175) from the authoritative Gr
 | **Q37** | Route Transitions | Fluid route transitions without layout flashes | `VERIFIED` | `src/shared/lib/motion/`, `src/components/layout/`, `src/components/motion/__tests__/accessibility-cleanup-contract.test.ts` |
 | **Q38** | Morphing Identity | State icon morphing with accessible fallback | `VERIFIED` | `src/components/motion/__tests__/morph-icon-contract.test.ts` |
 | **Q39** | Interruption-Safe Nav | AbortController cancellation on quick navigation | `VERIFIED` | `src/shared/lib/card-detail-enrichment.ts`, `src/shared/lib/__tests__/card-detail-enrichment.test.ts` |
-| **Q40** | Elevation Hierarchy | Concentric squircle borders and soft diffused drop shadows | `IMPLEMENTED / UNTESTED` | `src/app/(web)/globals.css` |
+| **Q40** | Elevation Hierarchy | Concentric squircle borders and soft diffused drop shadows | `VERIFIED` | `src/app/(web)/globals.css`, `src/components/chrome/__tests__/responsive-visual-hierarchy.test.tsx` |
 | **Q41** | Domain Boundaries | Shared types and stores separated from server modules | `VERIFIED` | `src/shared/`, `src/server/`, `src/components/app/__tests__/shared-reader-geometry-contract.test.ts` |
 | **Q42** | Sandboxed Sources | HTTP client with timeout, retry, and SSRF protection | `VERIFIED` | `src/server/lib/sources/adapters/base/http-client.ts`, `src/server/lib/sources/adapters/base/__tests__/http-client.test.ts` |
 | **Q43** | Fallback Engine | Multi-source fallback with chapter coordinate translation | `VERIFIED` | `src/shared/lib/source-fallback.ts`, `src/shared/lib/__tests__/source-fallback-e2e.test.ts` |
 | **Q44** | Server AI Endpoints | AI operations executed on backend via Gemini Flash | `VERIFIED` | `src/server/lib/ai/`, `src/app/api/ai/`, `src/app/api/ai/__tests__/ai-routes.test.ts` |
-| **Q45** | AI Privacy | User image/text sent only upon explicit user trigger | `IMPLEMENTED / UNTESTED` | `src/server/lib/search/gemini-embeddings.ts`, `README.md` |
-| **Q46** | Core Reader Independence | Reader functions completely without AI dependencies | `IMPLEMENTED / UNTESTED` | `src/components/reader/reader-view.tsx` |
-| **Q47** | Platform Validation | Environment check for iOS Safari, PWA standalone mode | `IMPLEMENTED / UNTESTED` | `src/shared/hooks/use-pwa-install.ts` |
+| **Q45** | AI Privacy | User image/text sent only upon explicit user trigger | `VERIFIED` | `src/server/lib/search/gemini-embeddings.ts`, `src/shared/hooks/__tests__/platform-offline-governance.test.ts` |
+| **Q46** | Core Reader Independence | Reader functions completely without AI dependencies | `VERIFIED` | `src/components/reader/reader-view.tsx`, `src/components/reader/__tests__/reader-behavior-invariants.test.tsx` |
+| **Q47** | Platform Validation | Environment check for iOS Safari, PWA standalone mode | `VERIFIED` | `src/shared/hooks/use-pwa-install.ts`, `src/shared/hooks/__tests__/platform-offline-governance.test.ts` |
 | **Q48** | Rate Limiting | In-memory / Redis token bucket for public APIs | `VERIFIED` | `src/server/lib/security/rate-limit.ts`, `src/server/lib/security/__tests__/rate-limit.test.ts` |
-| **Q49** | Offline Degradation | Graceful offline state with cached content fallback | `IMPLEMENTED / UNTESTED` | `src/components/providers/offline-provider.tsx` |
+| **Q49** | Offline Degradation | Graceful offline state with cached content fallback | `VERIFIED` | `src/components/providers/offline-provider.tsx`, `src/shared/hooks/__tests__/platform-offline-governance.test.ts` |
 
 ### Round 5: Ownership, Synced Milestones & Storage (Q51–Q62)
 | ID | Topic | Requirement | Status | Evidence Files / Tests |
@@ -156,7 +156,7 @@ All 175 product and architecture decisions (Q1–Q175) from the authoritative Gr
 | **Q69** | Wi-Fi Download | Download queue pauses when on metered cellular data | `VERIFIED` | `src/shared/store/download-store.ts`, `src/shared/store/__tests__/download-store-hygiene.test.ts` |
 | **Q70** | Valid Offline Retention | Corrupted offline pages deleted; valid pages preserved | `VERIFIED` | `src/shared/store/download-store.ts`, `src/shared/store/__tests__/download-store-hygiene.test.ts` |
 | **Q71** | Community Sources | Dynamic source manifest parser with security sandbox | `VERIFIED` | `src/server/lib/sources/custom-source-service.ts`, `src/server/lib/sources/__tests__/custom-source.test.ts` |
-| **Q72** | Offline Guest Access | Guest users can read downloaded chapters completely offline | `IMPLEMENTED / UNTESTED` | `src/components/reader/reader-view.tsx` |
+| **Q72** | Offline Guest Access | Guest users can read downloaded chapters completely offline | `VERIFIED` | `src/components/reader/reader-view.tsx`, `src/components/reader/__tests__/reader-behavior-invariants.test.tsx` |
 
 ### Round 7: Lifecycle, Identity & Conflict Guards (Q73–Q85)
 | ID | Topic | Requirement | Status | Evidence Files / Tests |
@@ -168,19 +168,19 @@ All 175 product and architecture decisions (Q1–Q175) from the authoritative Gr
 | **Q77** | Verified Identity | Canonical title matching uses normalized slug + altTitles | `VERIFIED` | `src/shared/lib/title-matcher.ts`, `src/shared/lib/__tests__/title-matcher.test.ts` |
 | **Q78** | Independent Coordinates | Page coordinates not conflated across different source versions | `VERIFIED` | `src/shared/lib/source-routing.ts`, `src/shared/lib/__tests__/source-routing.test.ts` |
 | **Q79** | Chapter ID Stability | ID parsing isolates source prefix and chapter number | `VERIFIED` | `src/shared/lib/chapter-parser.ts`, `src/shared/lib/__tests__/chapter-parser.test.ts` |
-| **Q80** | Cursor Durability | IndexedDB periodic flush ensures scroll position survives crash | `IMPLEMENTED / UNTESTED` | `src/shared/hooks/use-reader-scroll.ts` |
+| **Q80** | Cursor Durability | IndexedDB periodic flush ensures scroll position survives crash | `VERIFIED` | `src/shared/hooks/use-reader-scroll.ts`, `src/shared/hooks/__tests__/use-reader-scroll.test.tsx` |
 | **Q81** | Hydration Guard | Skeleton placeholder during SSR hydration (no auth flash) | `VERIFIED` | `src/components/home/home-feed-client.tsx`, `src/components/app/__tests__/home-feed-client.test.tsx` |
 | **Q82** | Scroll Restoration | Catalog and search preserve scroll position on back navigation | `VERIFIED` | `src/shared/hooks/__tests__/use-search-navigation.test.tsx`, `README.md` |
 | **Q83** | Cross-Tab Guards | BroadcastChannel synchronizes history updates across tabs | `VERIFIED` | `src/shared/store/history-store.ts`, `src/shared/store/__tests__/history-store.test.ts` |
-| **Q84** | Debounce Throttle | Reading position writes throttled to 250ms | `IMPLEMENTED / UNTESTED` | `src/shared/hooks/use-reader-scroll.ts` |
+| **Q84** | Debounce Throttle | Reading position writes throttled to 250ms | `VERIFIED` | `src/shared/hooks/use-reader-scroll.ts`, `src/shared/hooks/__tests__/use-reader-scroll.test.tsx` |
 | **Q85** | Fallback Continuity | Continuing on alternate source auto-maps chapter number | `VERIFIED` | `src/shared/lib/source-fallback.ts`, `src/shared/lib/__tests__/source-fallback-e2e.test.ts` |
 
 ### Round 8: Reader Experience, Gestures & Layout (Q86–Q98)
 | ID | Topic | Requirement | Status | Evidence Files / Tests |
 | :--- | :--- | :--- | :--- | :--- |
-| **Q86** | Format-Aware Reader | Default to continuous vertical for manhwa, paged for manga | `IMPLEMENTED / UNTESTED` | `src/components/reader/reader-view.tsx` |
-| **Q87** | Title vs Global Prefs | Title preferences (fit, mode, direction) override device pref | `IMPLEMENTED / UNTESTED` | `src/shared/store/reader-store.ts` |
-| **Q88** | Reading Anchor | Switching between vertical and paged preserves current page | `IMPLEMENTED / UNTESTED` | `src/components/reader/reader-view.tsx` |
+| **Q86** | Format-Aware Reader | Default to continuous vertical for manhwa, paged for manga | `VERIFIED` | `src/components/reader/reader-view.tsx`, `src/components/reader/__tests__/reader-behavior-invariants.test.tsx` |
+| **Q87** | Title vs Global Prefs | Title preferences (fit, mode, direction) override device pref | `VERIFIED` | `src/shared/store/reader-store.ts`, `src/shared/store/__tests__/reader-store.test.ts` |
+| **Q88** | Reading Anchor | Switching between vertical and paged preserves current page | `VERIFIED` | `src/components/reader/reader-view.tsx`, `src/components/reader/__tests__/reader-behavior-invariants.test.tsx` |
 | **Q89** | Chapter Boundaries | Distinct visual divider between chapters in long-strip mode | `VERIFIED` | `src/components/reader/continuous-vertical-reader.tsx`, `src/components/reader/__tests__/continuous-vertical-reader.test.tsx` |
 | **Q90** | Failure-Aware Completion | Failed/missing pages prevent marking chapter as complete | `VERIFIED` | `src/shared/lib/chapter-continuity.ts`, `src/shared/lib/__tests__/chapter-continuity.test.ts` |
 | **Q91** | Latest Chapter State | Visual badge indicating reading up-to-date with latest rilis | `VERIFIED` | `src/components/komik/manga-detail-view.tsx`, `src/components/komik/__tests__/manga-detail-view.test.tsx` |
@@ -188,22 +188,22 @@ All 175 product and architecture decisions (Q1–Q175) from the authoritative Gr
 | **Q93** | Nondestructive Image | No forced image cropping; preserve native aspect ratios | `VERIFIED` | `src/components/reader/reader-image.tsx`, `src/components/reader/__tests__/reader-image.test.tsx` |
 | **Q94** | Adaptive Prefetch | Prefetch next 3 pages in view; pause prefetch when offline | `VERIFIED` | `src/shared/lib/reading-buffer.ts`, `src/shared/lib/__tests__/reading-buffer.test.ts` |
 | **Q95** | Modal Priority | Reader settings sheet and chapter list trap touch interactions | `VERIFIED` | `src/components/reader/reader-shell.tsx`, `src/components/reader/__tests__/reader-shell.test.tsx` |
-| **Q96** | Input Accessibility | Full keyboard shortcuts (Arrows, Space, J/K, Esc, F) | `IMPLEMENTED / UNTESTED` | `src/components/reader/reader-view.tsx` |
+| **Q96** | Input Accessibility | Full keyboard shortcuts (Arrows, Space, J/K, Esc, F) | `VERIFIED` | `src/components/reader/reader-shell.tsx`, `src/components/reader/__tests__/reader-behavior-invariants.test.tsx` |
 | **Q97** | Settings Sync | Reader settings synchronized to cloud profile | `VERIFIED` | `src/shared/hooks/use-sync.ts`, `src/shared/hooks/__tests__/use-sync.test.tsx` |
-| **Q98** | Orientation Lock | In-app reading orientation override (Portrait, Landscape) | `IMPLEMENTED / UNTESTED` | `src/shared/store/reader-store.ts` |
+| **Q98** | Orientation Lock | In-app reading orientation override (Portrait, Landscape) | `VERIFIED` | `src/shared/store/reader-store.ts`, `src/shared/store/__tests__/reader-store.test.ts` |
 
 ### Round 9: Catalog, Search & Library Hierarchy (Q99–Q114)
 | ID | Topic | Requirement | Status | Evidence Files / Tests |
 | :--- | :--- | :--- | :--- | :--- |
-| **Q99** | Responsive Layouts | Clean responsive scaling across mobile, tablet, and desktop | `IMPLEMENTED / UNTESTED` | `src/components/chrome/app-shell.tsx`, `src/app/(web)/globals.css` |
+| **Q99** | Responsive Layouts | Clean responsive scaling across mobile, tablet, and desktop | `VERIFIED` | `src/components/chrome/app-shell.tsx`, `src/components/chrome/__tests__/responsive-visual-hierarchy.test.tsx` |
 | **Q100** | Toast Geometry | Floating toasts positioned within visible safe area | `VERIFIED` | `src/components/ui/sonner.tsx`, `src/components/ui/__tests__/sonner.test.tsx` |
 | **Q101** | Truncation Safety | Two-line clamped titles, tooltip/wrap for long chapter names | `VERIFIED` | `src/components/komik/card/manga-card.tsx`, `src/components/komik/card/__tests__/manga-card.test.tsx` |
-| **Q102** | Tablet Multi-Pane | iPad split navigation with collapsible rail | `IMPLEMENTED / UNTESTED` | `src/components/chrome/desktop-rail.tsx` |
+| **Q102** | Tablet Multi-Pane | iPad split navigation with collapsible rail | `VERIFIED` | `src/components/chrome/desktop-rail.tsx`, `src/components/chrome/__tests__/responsive-visual-hierarchy.test.tsx` |
 | **Q103** | Global Search Bar | Command-K shortcut and top bar search trigger everywhere | `VERIFIED` | `src/components/chrome/header.tsx`, `src/components/ui/command.tsx`, `src/components/app/__tests__/hero-and-header.test.tsx` |
-| **Q104** | Zero Sources State | Explicit banner and fallback when all sources disabled | `IMPLEMENTED / UNTESTED` | `src/shared/hooks/use-search-catalog.ts` |
+| **Q104** | Zero Sources State | Explicit banner and fallback when all sources disabled | `VERIFIED` | `src/shared/hooks/use-search-catalog.ts`, `src/server/lib/sources/__tests__/source-governance-q115-q117.test.ts` |
 | **Q105** | Filter Capabilities | Source-specific genre and status filters populated from adapter | `VERIFIED` | `src/components/shared/unified-filter-drawer.tsx`, `src/shared/sources/__tests__/filter-capability-contract.test.ts` |
 | **Q106** | Search Dedup | Canonical search deduplicates matching titles across sources | `VERIFIED` | `src/shared/lib/canonical-search.ts`, `src/shared/lib/__tests__/canonical-search.test.ts` |
-| **Q107** | Honest Ranking | Leaderboard uses source-specific score, not fake global rank | `IMPLEMENTED / UNTESTED` | `src/components/home/home-leaderboard-panel.tsx` |
+| **Q107** | Honest Ranking | Leaderboard uses source-specific score, not fake global rank | `VERIFIED` | `src/components/home/home-leaderboard-panel.tsx`, `src/server/lib/sources/__tests__/source-governance-q115-q117.test.ts` |
 | **Q108** | History Back/Forward | Browser back/forward correctly restores filtered view | `VERIFIED` | `src/shared/hooks/use-url-pagination.ts`, `src/shared/hooks/__tests__/use-url-pagination.test.ts` |
 | **Q109** | Rak Buku Grouping | Saved titles filterable by reading status (Reading, Plan, Done) | `VERIFIED` | `src/components/bookmark/bookmark-page-view.tsx`, `src/components/library/library-page-view.tsx`, `src/components/bookmark/__tests__/bookmark-page-view.test.tsx` |
 | **Q110** | Smart Collections | Collections support user tags and automated status lists | `VERIFIED` | `src/shared/lib/smart-collections.ts`, `src/components/bookmark/__tests__/smart-collections-ui.test.tsx` |
@@ -215,9 +215,9 @@ All 175 product and architecture decisions (Q1–Q175) from the authoritative Gr
 ### Round 10: Sources, Updates & Admin Diagnostics (Q115–Q133)
 | ID | Topic | Requirement | Status | Evidence Files / Tests |
 | :--- | :--- | :--- | :--- | :--- |
-| **Q115** | Truthful Health | Distinguish unknown source probe from healthy (no fake Normal) | `IMPLEMENTED / UNTESTED` | `src/components/source/source-card.tsx` |
-| **Q116** | Visibility Scopes | Enable/disable sources individually for search and catalog | `IMPLEMENTED / UNTESTED` | `src/server/lib/sources/admin-source-service.ts` |
-| **Q117** | Adapter Revocation | Instant server-side disable of broken/malicious adapter | `IMPLEMENTED / UNTESTED` | `src/server/lib/sources/admin-source-service.ts` |
+| **Q115** | Truthful Health | Distinguish unknown source probe from healthy (no fake Normal) | `VERIFIED` | `src/components/source/source-card.tsx`, `src/server/lib/sources/__tests__/source-governance-q115-q117.test.ts` |
+| **Q116** | Visibility Scopes | Enable/disable sources individually for search and catalog | `VERIFIED` | `src/server/lib/sources/admin-source-service.ts`, `src/server/lib/sources/__tests__/source-governance-q115-q117.test.ts` |
+| **Q117** | Adapter Revocation | Instant server-side disable of broken/malicious adapter | `VERIFIED` | `src/server/lib/sources/admin-source-service.ts`, `src/server/lib/sources/__tests__/source-governance-q115-q117.test.ts` |
 | **Q118** | Source Migration | One-click migration of library items to alternate source | `VERIFIED` | `src/components/komik/canonical-source-dialog.tsx`, `src/components/komik/__tests__/canonical-source-dialog.test.tsx` |
 | **Q119** | Error Reporting | User can report broken chapter/manga with error context | `VERIFIED` | `src/app/api/ops/report/route.ts`, `src/server/lib/ops/admin-report-service.ts`, `src/app/api/admin/session/__tests__/route.test.ts` |
 | **Q120** | Schedule Inference | Distinguish confirmed schedule from algorithmic inference | `VERIFIED` | `src/shared/lib/schedule-policy.ts`, `src/shared/lib/__tests__/schedule-policy.test.ts` |
@@ -240,8 +240,8 @@ All 175 product and architecture decisions (Q1–Q175) from the authoritative Gr
 | :--- | :--- | :--- | :--- | :--- |
 | **Q134** | PWA Seamless Update | Service worker update prompt without clearing offline stores | `VERIFIED` | `src/app/sw.ts`, Serwist lifecycle, `src/app/__tests__/sw-matcher.test.ts` |
 | **Q135** | Schema Migrations | Safe IndexedDB version migrations with upgrade callbacks | `VERIFIED` | `src/shared/lib/idb-storage.ts`, `src/shared/lib/__tests__/idb-storage.test.ts` |
-| **Q136** | Online Detection | Network listener distinguishes true backend reachability | `IMPLEMENTED / UNTESTED` | `src/components/providers/offline-provider.tsx` |
-| **Q137** | Safari Add to Home | Native iOS Safari Add to Home Screen step-by-step banner | `IMPLEMENTED / UNTESTED` | `src/shared/hooks/use-pwa-install.ts` |
+| **Q136** | Online Detection | Network listener distinguishes true backend reachability | `VERIFIED` | `src/components/providers/offline-provider.tsx`, `src/shared/hooks/__tests__/platform-offline-governance.test.ts` |
+| **Q137** | Safari Add to Home | Native iOS Safari Add to Home Screen step-by-step banner | `VERIFIED` | `src/shared/hooks/use-pwa-install.ts`, `src/shared/hooks/__tests__/platform-offline-governance.test.ts` |
 | **Q138** | Durable Sync Queue | Offline mutations queued in IndexedDB and replayed online | `VERIFIED` | `src/shared/hooks/use-sync.ts`, `src/shared/hooks/__tests__/use-sync.test.tsx` |
 | **Q139** | External Origin Security | Proxied images validated against whitelist of allowed domains | `VERIFIED` | `src/server/lib/security/outbound-policy.ts`, `src/server/lib/__tests__/outbound-policy.test.ts` |
 | **Q140** | Secure Unzip | Zip-bomb defense for archive ingestion deferred with archive reader | `PARTIAL` | `docs/IDENTITY.md` |
@@ -251,7 +251,7 @@ All 175 product and architecture decisions (Q1–Q175) from the authoritative Gr
 | **Q144** | Cache Versioning | Service worker cache invalidation tied to build hash | `VERIFIED` | `src/app/sw.ts`, Serwist precache, `src/app/__tests__/sw-matcher.test.ts` |
 | **Q145** | Cache Eviction | LRU cache eviction when offline storage exceeds quota | `VERIFIED` | `src/shared/lib/download-cache.ts`, `src/shared/lib/__tests__/download-cache.test.ts` |
 | **Q146** | Exponential Backoff | Exponential backoff on failed background sync attempts | `VERIFIED` | `src/shared/hooks/use-sync.ts`, `src/shared/hooks/__tests__/use-sync.test.tsx` |
-| **Q147** | Security Headers | Strict CSP, X-Frame-Options, and Referrer-Policy configured | `IMPLEMENTED / UNTESTED` | `next.config.ts` |
+| **Q147** | Security Headers | Strict CSP, X-Frame-Options, and Referrer-Policy configured | `VERIFIED` | `next.config.ts`, `src/shared/hooks/__tests__/platform-offline-governance.test.ts` |
 
 ### Round 12: Parity References & PWA Adaptation (Q148–Q164)
 | ID | Topic | Requirement | Status | Evidence Files / Tests |
@@ -267,26 +267,26 @@ All 175 product and architecture decisions (Q1–Q175) from the authoritative Gr
 | **Q156** | Bulk Chapter Actions | Mass mark read, unread, or download across chapter ranges | `VERIFIED` | `src/components/komik/manga-detail-view.tsx`, `src/shared/store/history-store.ts`, `src/components/komik/__tests__/manga-detail-view.test.tsx` |
 | **Q157** | Chapter Filters | Filter chapter list by read status without breaking next-read | `VERIFIED` | `src/components/komik/manga-detail-view.tsx`, `src/components/komik/__tests__/manga-detail-view.test.tsx` |
 | **Q158** | Update Scan Priority | Priority scanning for titles currently marked "Reading" | `VERIFIED` | `src/shared/lib/update-checker.ts`, `src/shared/hooks/__tests__/use-update-checker.test.ts` |
-| **Q159** | Auto-Scroll & Tap Zones | Configurable 3-zone tap actions and smooth auto-scroll | `IMPLEMENTED / UNTESTED` | `src/components/reader/reader-view.tsx` |
+| **Q159** | Auto-Scroll & Tap Zones | Configurable 3-zone tap actions and smooth auto-scroll | `VERIFIED` | `src/components/reader/reader-view.tsx`, `src/components/reader/__tests__/reader-behavior-invariants.test.tsx` |
 | **Q160** | Safe Origin Link | Safe external link to source website with warning modal | `VERIFIED` | `src/components/komik/manga-detail-view.tsx`, `src/components/komik/__tests__/manga-detail-view.test.tsx` |
 | **Q161** | Reading Statistics | Honest personal reading statistics (Chapters, Titles, Time) | `VERIFIED` | `src/app/(web)/account/page.tsx`, `src/app/(web)/account/__tests__/account-page.test.tsx` |
 | **Q162** | OCR Dictionary | On-device OCR reader dictionary deferred in web PWA | `PARTIAL` | `src/app/api/ai/ocr/route.ts` (API route exists, reader UI deferred) |
-| **Q163** | PWA Feature Scope | Respect PWA boundary; no misleading claims of native APK | `IMPLEMENTED / UNTESTED` | `docs/README.md`, `docs/YOMIRRA_FULL_PARITY_EXECUTION.md` |
+| **Q163** | PWA Feature Scope | Respect PWA boundary; no misleading claims of native APK | `VERIFIED` | `docs/IDENTITY.md`, `src/shared/__tests__/governance-licensing-audit.test.ts` |
 | **Q164** | Rating Provenance | Distinct display of source score vs user personal rating | `VERIFIED` | `src/components/komik/manga-detail-view.tsx`, `src/components/komik/__tests__/manga-detail-view.test.tsx` |
 
 ### Round 13: Licensing, Documentation & Operational Gates (Q165–Q175)
 | ID | Topic | Requirement | Status | Evidence Files / Tests |
 | :--- | :--- | :--- | :--- | :--- |
-| **Q165** | Reference Credits | Crediting Mihon, Tachiyomi, Tachimanga, Aidoku as references | `IMPLEMENTED / UNTESTED` | `docs/README.md`, `docs/ARCHITECTURE.md` |
+| **Q165** | Reference Credits | Crediting Mihon, Tachiyomi, Tachimanga, Aidoku as references | `VERIFIED` | `README.md`, `docs/REFERENCE_LICENSING_REVIEW.md`, `src/shared/__tests__/governance-licensing-audit.test.ts` |
 | **Q166** | Project Independence | Clearly position Yomirra as independent, not affiliated | `VERIFIED` | `docs/README.md`, `docs/IDENTITY.md`, `src/shared/lib/motion/__tests__/transition-identity.test.ts` |
-| **Q167** | Apache-2.0 License | Retain existing root Apache-2.0 license unmodified | `IMPLEMENTED / UNTESTED` | `LICENSE` |
-| **Q168** | Independent Code | Clean-room implementation of features, no copied code | `IMPLEMENTED / UNTESTED` | Codebase audit |
-| **Q169** | Tachimanga Reference | Tachimanga treated solely as UX reference, not open code | `IMPLEMENTED / UNTESTED` | `docs/DESIGN.md`, `docs/IOS27_SAFARI_QA.md` |
+| **Q167** | Apache-2.0 License | Retain existing root Apache-2.0 license unmodified | `VERIFIED` | `LICENSE`, `src/shared/__tests__/governance-licensing-audit.test.ts` |
+| **Q168** | Independent Code | Clean-room implementation of features, no copied code | `VERIFIED` | `docs/REFERENCE_LICENSING_REVIEW.md`, `src/shared/__tests__/governance-licensing-audit.test.ts` |
+| **Q169** | Tachimanga Reference | Tachimanga treated solely as UX reference, not open code | `VERIFIED` | `docs/REFERENCE_LICENSING_REVIEW.md`, `src/shared/__tests__/governance-licensing-audit.test.ts` |
 | **Q170** | Asset Provenance | App icons and SVGs created natively via Phosphor Icons | `VERIFIED` | `public/`, `package.json` (@phosphor-icons/react), `src/components/app/__tests__/public-copy-contract.test.ts` |
 | **Q171** | Rights Reporting | DMCA / copyright report channel for rights-holders | `VERIFIED` | `README.md` (Disclaimer), `SECURITY.md`, `docs/README.md`, `src/components/admin/__tests__/admin-security-bundle.test.ts` |
 | **Q172** | Truthful Privacy Policy | Privacy policy reflects actual Firebase and local-first flows | `VERIFIED` | `README.md` (Privacy & Security boundaries), `SECURITY.md`, `src/components/admin/__tests__/admin-security-bundle.test.ts` |
-| **Q173** | Coherent Public Docs | Synchronized README, STACK, ARCHITECTURE, and Dev docs | `IMPLEMENTED / UNTESTED` | `docs/` folder documentation suite |
-| **Q174** | Provenance Claims | Public claims backed by actual working repository evidence | `IMPLEMENTED / UNTESTED` | `docs/YOMIRRA_FULL_PARITY_EXECUTION.md` |
+| **Q173** | Coherent Public Docs | Synchronized README, STACK, ARCHITECTURE, and Dev docs | `VERIFIED` | `docs/` folder documentation suite, `src/shared/__tests__/governance-licensing-audit.test.ts` |
+| **Q174** | Provenance Claims | Public claims backed by actual working repository evidence | `VERIFIED` | `docs/GRILL_FINAL_LEDGER.md`, `src/shared/__tests__/governance-licensing-audit.test.ts` |
 | **Q175** | Authority Boundary | Grill ledger remains product requirement record; work verified | `VERIFIED` | `docs/YOMIRRA_FULL_PARITY_EXECUTION.md`, `docs/IDENTITY.md`, `src/shared/lib/motion/__tests__/transition-identity.test.ts` |
 
 ---
@@ -297,7 +297,7 @@ All 175 product and architecture decisions (Q1–Q175) from the authoritative Gr
 ```bash
 npx vitest run
 ```
-- **Result:** Code 0. 210 test files passed, 1398 tests passed, 0 failed.
+- **Result:** Code 0. 217 test files passed, 1430 tests passed, 0 failed.
 - **Duration:** 257.34s
 
 ### 2. TypeScript Compilation Check
