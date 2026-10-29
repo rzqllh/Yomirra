@@ -107,35 +107,42 @@ export async function deleteHistoryItem(sourceId: string, mangaId: string, chapt
 export async function deleteMangaHistory(sourceId: string, mangaId: string) {
   const { auth, db } = await initFirebase();
   if (!auth || !db) throw new Error("Firebase is unavailable for deletion.");
-  const user = auth.currentUser;
-  if (!user) throw new Error("No authenticated user is available for deletion.");
+  const ownerUid = auth.currentUser?.uid;
+  if (!ownerUid) throw new Error("No authenticated user is available for deletion.");
+
   try {
     const { collection, query, where, getDocs, writeBatch } = await import("firebase/firestore");
-    const historyRef = collection(db, `users/${user.uid}/history`);
+    const historyRef = collection(db, `users/${ownerUid}/history`);
     const q = query(
       historyRef,
       where("sourceId", "==", sourceId),
       where("mangaId", "==", mangaId)
     );
     const snapshot = await getDocs(q);
-    
-    // Create a batch
-    const batch = writeBatch(db);
-    let count = 0;
-    
-    snapshot.docs.forEach(historyDoc => {
-      const historyItem = historyDoc.data() as HistoryItem;
-      batch.set(historyDoc.ref, {
-        _deleted: true,
-        deletedAt: new Date().toISOString(),
-        sourceId: historyItem.sourceId,
-        mangaId: historyItem.mangaId,
-        chapterId: historyItem.chapterId,
-      });
-      count++;
-    });
-    
-    if (count > 0) {
+    const liveDocs = snapshot.docs.filter(
+      (historyDoc) => (historyDoc.data() as Record<string, unknown>)._deleted !== true
+    );
+
+    // Each Firestore batch is atomic independently. A large history must be
+    // split into bounded commits; never silently report success on a failure.
+    const MAX_BATCH_OPERATIONS = 400;
+    const deletedAt = new Date().toISOString();
+    for (let index = 0; index < liveDocs.length; index += MAX_BATCH_OPERATIONS) {
+      if (auth.currentUser?.uid !== ownerUid) {
+        throw new Error("Account changed during history deletion. Further cloud writes blocked.");
+      }
+
+      const batch = writeBatch(db);
+      for (const historyDoc of liveDocs.slice(index, index + MAX_BATCH_OPERATIONS)) {
+        const historyItem = historyDoc.data() as HistoryItem;
+        batch.set(historyDoc.ref, {
+          _deleted: true,
+          deletedAt,
+          sourceId: historyItem.sourceId,
+          mangaId: historyItem.mangaId,
+          chapterId: historyItem.chapterId,
+        });
+      }
       await batch.commit();
     }
   } catch (e) {
