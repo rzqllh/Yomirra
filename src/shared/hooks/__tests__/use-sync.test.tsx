@@ -531,7 +531,7 @@ describe("useSync cloud correctness", () => {
     const { result } = renderHook(() => useSync({ autoSync: false }));
     await act(async () => { await result.current.runFullSync(); });
 
-    expect(pullLegacyLibraryData).toHaveBeenCalledWith({ strict: true });
+    expect(pullLegacyLibraryData).toHaveBeenCalledWith({ strict: true, expectedUid: "user-b" });
     expect(mocks.writes).toContainEqual(expect.objectContaining({ path: "users/user-b/libraryV2/saved-title" }));
     expect(localStorage.getItem("yomirra-libraryV2-migrated:user-b")).toBe("true");
   });
