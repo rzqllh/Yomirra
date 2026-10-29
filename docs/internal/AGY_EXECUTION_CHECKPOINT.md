@@ -1,3 +1,28 @@
+# Follow-up hardening after merged PR #59 — 2026-10-29
+
+**Status:** isolated corrective GitHub branch; not merged into production; CI not yet independently confirmed.
+**Branch:** `fix/yomirra-home-search-consistency-20261029`
+**Base main SHA:** `6cc9e07b6d6eedb8fb0f6a88d3e66ee4e6e6ef24`
+**Baseline source:** GitHub default branch after PR #59 merge.
+**Last code/test commit at checkpoint creation:** `0e02ab72827f71b678da61b1ef69264548b798b6`
+
+## Concrete fixes in this branch
+- Beranda search trigger derives the shortcut badge and accessible label from the shared platform hook; the dead, aria-hidden text input is removed.
+- Firestore full sync queues batches to commit sequentially after snapshot reconciliation rather than launching the batches early; later batches are not started after a failed earlier commit.
+- The legacy libraryV2 migration completion marker is per UID and is set only after all scheduled writes succeed; canonical-nonempty accounts still inspect the legacy collection.
+- Focused tests added for two search platform labels, account-separated migration, failure-retained incomplete migration, and batch sequencing.
+
+## Still required before release
+1. Open a draft PR and verify its own exact-head GitHub Actions typecheck/lint/Vitest/build results; investigate failures.
+2. Independently review sync semantics and migration on real Firebase emulator or a controlled test account. Unit mocks are not proof of production migration.
+3. Run browser UX QA of the corrected search trigger on Windows and Safari environments; iOS installed PWA remains NOT TESTED.
+4. Do not mark Q1–Q175 independently VERIFIED based on this patch or historical tracker counts.
+5. Keep `main`/production unchanged until review and explicit merge approval.
+
+**Recovery instruction:** inspect the PR/head of `fix/yomirra-home-search-consistency-20261029`; verify CI, fix any failure, and keep changes in the isolated branch. Prior production release snapshot and historical checkpoints follow below.
+
+---
+
 # Latest release state — 2026-10-29
 
 **STATUS: PR #59 MERGED; VERCEL PRODUCTION DEPLOYMENT READY.** This section supersedes the older execution restrictions below, which are retained as historical evidence.
