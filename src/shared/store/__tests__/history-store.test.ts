@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useHistoryStore } from '../history-store';
 import { useLibraryStore } from '../library-store';
-import { deleteHistoryItem } from '@/shared/lib/sync-utils';
+import { deleteHistoryItem, deleteMangaHistory } from '@/shared/lib/sync-utils';
 
 vi.mock('@/shared/lib/sync-utils', () => ({
   pushHistoryItem: vi.fn().mockResolvedValue(undefined),
@@ -113,23 +113,70 @@ describe('history-store', () => {
     expect(resolved).toBeNull();
   });
 
-  it('handles a rejected cloud delete for cap eviction without an unhandled rejection', async () => {
-    vi.useFakeTimers();
-    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    vi.mocked(deleteHistoryItem).mockRejectedValueOnce(new Error('offline'));
+  it('preserves more than 1,000 reading records without automatic cloud deletion', () => {
     const items = Object.fromEntries(Array.from({ length: 1000 }, (_, index) => [
       `source::manga::chapter-${index}`,
       { sourceId: 'source', mangaId: 'manga', chapterId: `chapter-${index}`, mangaTitle: 'Title', readAt: index },
     ]));
     useHistoryStore.setState({ items });
+    vi.mocked(deleteHistoryItem).mockClear();
 
     useHistoryStore.getState().upsertHistory({
-      sourceId: 'source', mangaId: 'manga', chapterId: 'chapter-new', mangaTitle: 'New', readAt: 2000,
+      sourceId: 'source', mangaId: 'manga', chapterId: 'chapter-new', mangaTitle: 'Title', readAt: 2000,
     });
-    await vi.runAllTimersAsync();
 
-    expect(error).toHaveBeenCalledWith('Failed to delete evicted history item', expect.any(Error));
-    error.mockRestore();
-    vi.useRealTimers();
+    const updated = useHistoryStore.getState().items;
+    expect(Object.keys(updated)).toHaveLength(1001);
+    expect(updated['source::manga::chapter-0']).toBeDefined();
+    expect(updated['source::manga::chapter-new']).toBeDefined();
+    expect(deleteHistoryItem).not.toHaveBeenCalled();
+  });
+
+  it('restores only the deleted chapter if cloud deletion fails, preserving unrelated new reads', async () => {
+    vi.mocked(deleteHistoryItem).mockRejectedValueOnce(new Error('offline'));
+    useHistoryStore.getState()._setItemLocal({
+      sourceId: 'source', mangaId: 'title', chapterId: 'old', mangaTitle: 'Title', readAt: 100,
+    });
+
+    useHistoryStore.getState().removeHistoryItem('source', 'title', 'old');
+    useHistoryStore.getState()._setItemLocal({
+      sourceId: 'source', mangaId: 'other', chapterId: 'new', mangaTitle: 'Other', readAt: 200,
+    });
+
+    await vi.waitFor(() => {
+      expect(useHistoryStore.getState().items['source::title::old']).toBeDefined();
+    });
+    expect(useHistoryStore.getState().items['source::other::new']?.readAt).toBe(200);
+  });
+
+  it('does not overwrite a newer edit to the same chapter after failed deletion', async () => {
+    vi.mocked(deleteHistoryItem).mockRejectedValueOnce(new Error('offline'));
+    useHistoryStore.getState()._setItemLocal({
+      sourceId: 'source', mangaId: 'title', chapterId: 'old', mangaTitle: 'Title', readAt: 100,
+    });
+
+    useHistoryStore.getState().removeHistoryItem('source', 'title', 'old');
+    useHistoryStore.getState()._setItemLocal({
+      sourceId: 'source', mangaId: 'title', chapterId: 'old', mangaTitle: 'Title', readAt: 300,
+    });
+
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(useHistoryStore.getState().items['source::title::old']?.readAt).toBe(300);
+  });
+
+  it('rolls back a failed manga deletion without erasing records from another manga', async () => {
+    vi.mocked(deleteMangaHistory).mockRejectedValueOnce(new Error('offline'));
+    useHistoryStore.getState()._setItemLocal({
+      sourceId: 'source', mangaId: 'title', chapterId: 'a', mangaTitle: 'Title', readAt: 100,
+    });
+    useHistoryStore.getState().removeMangaHistory('source', 'title');
+    useHistoryStore.getState()._setItemLocal({
+      sourceId: 'source', mangaId: 'other', chapterId: 'z', mangaTitle: 'Other', readAt: 500,
+    });
+    await vi.waitFor(() => {
+      expect(useHistoryStore.getState().items['source::title::a']).toBeDefined();
+    });
+    expect(useHistoryStore.getState().items['source::other::z']?.readAt).toBe(500);
   });
 });
