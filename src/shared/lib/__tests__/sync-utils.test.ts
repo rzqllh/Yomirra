@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { deleteHistoryItem, deleteLibraryItem, deleteMangaHistory, pullHistoryData, pullLegacyLibraryData, pushLibraryItem } from '../sync-utils';
+import { deleteHistoryItem, deleteLibraryItem, deleteMangaHistory, pullHistoryData, pullLegacyLibraryData, pushLibraryItem, pushHistoryItem, deleteHistoryItem } from '../sync-utils';
 import { initFirebase } from '../firebase';
 
 vi.mock('../firebase', () => ({
@@ -134,4 +134,25 @@ describe('Firestore Sync Utils Regression Suite', () => {
     await expect(pushLibraryItem(item, 'owner-A')).rejects.toThrow(/Account changed/);
     await expect(deleteLibraryItem('source', 'manga', 'saved-owner-a', 'owner-A')).rejects.toThrow(/Account changed/);
   });
+
+  it('never uploads guest history after a user signs in', async () => {
+    const firestore = await import('firebase/firestore');
+    const pushesBefore = vi.mocked(firestore.setDoc).mock.calls.length;
+    const batchesBefore = vi.mocked(firestore.writeBatch).mock.calls.length;
+    const item = { sourceId: 'source', mangaId: 'manga', chapterId: 'ch1', mangaTitle: 'Title', readAt: 2000 };
+
+    await pushHistoryItem(item, null);
+    await deleteHistoryItem('source', 'manga', 'ch1', null);
+    await deleteMangaHistory('source', 'manga', null);
+    expect(vi.mocked(firestore.setDoc).mock.calls.length).toBe(pushesBefore);
+    expect(vi.mocked(firestore.writeBatch).mock.calls.length).toBe(batchesBefore);
+  });
+
+  it('rejects stale queued history mutations after account switch', async () => {
+    const item = { sourceId: 'source', mangaId: 'manga', chapterId: 'ch1', mangaTitle: 'Title', readAt: 2000 };
+    await expect(pushHistoryItem(item, 'former-owner')).rejects.toThrow(/Account changed/);
+    await expect(deleteHistoryItem('source', 'manga', 'ch1', 'former-owner')).rejects.toThrow(/Account changed/);
+    await expect(deleteMangaHistory('source', 'manga', 'former-owner')).rejects.toThrow(/Account changed/);
+  });
+
 });
