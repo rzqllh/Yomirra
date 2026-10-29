@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useHistoryStore } from '../history-store';
 import { useLibraryStore } from '../library-store';
+import { setLocalDataOwnerUid, clearLocalDataOwnerUid } from '@/shared/lib/local-data-owner';
 import { deleteHistoryItem, deleteMangaHistory, pushHistoryItem } from '@/shared/lib/sync-utils';
 
 vi.mock('@/shared/lib/sync-utils', () => ({
@@ -213,6 +214,37 @@ describe('history-store', () => {
     expect(items['source1::manga1::chapter1']).toEqual(chapter1);
     expect(items['source1::manga1::chapter2'].pageIndex).toBe(8);
     expect(items['source2::manga2::chapter3'].pageIndex).toBe(9);
+  });
+
+
+  it('captures history sync owner before delayed dispatch and does not queue guest data', async () => {
+    vi.useFakeTimers();
+    try {
+      vi.mocked(pushHistoryItem).mockClear();
+      clearLocalDataOwnerUid();
+      useHistoryStore.getState().upsertHistory({
+        sourceId: 'source', mangaId: 'guest', chapterId: 'ch1',
+        mangaTitle: 'Guest chapter', readAt: 10,
+      });
+      await vi.runAllTimersAsync();
+      expect(pushHistoryItem).not.toHaveBeenCalled();
+
+      setLocalDataOwnerUid('owner-A');
+      useHistoryStore.getState().upsertHistory({
+        sourceId: 'source', mangaId: 'owner-a', chapterId: 'ch1',
+        mangaTitle: 'Owner A chapter', readAt: 11,
+      });
+      setLocalDataOwnerUid('owner-B');
+      await vi.runAllTimersAsync();
+      expect(pushHistoryItem).toHaveBeenCalledTimes(1);
+      expect(pushHistoryItem).toHaveBeenCalledWith(
+        expect.objectContaining({ mangaId: 'owner-a' }),
+        'owner-A',
+      );
+    } finally {
+      clearLocalDataOwnerUid();
+      vi.useRealTimers();
+    }
   });
 
 });
