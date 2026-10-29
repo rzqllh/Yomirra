@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { useLibraryStore } from "../library-store";
 import { deleteLibraryItem, pushLibraryItem } from "@/shared/lib/sync-utils";
+import { clearLocalDataOwnerUid, setLocalDataOwnerUid } from "@/shared/lib/local-data-owner";
 
 vi.mock("@/shared/lib/sync-utils", () => ({
   pushLibraryItem: vi.fn().mockResolvedValue(undefined),
@@ -10,6 +11,7 @@ vi.mock("@/shared/lib/sync-utils", () => ({
 describe("library-store Phase 1 Identity & Relinking", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    clearLocalDataOwnerUid();
     useLibraryStore.setState({ items: {} });
   });
 
@@ -23,7 +25,7 @@ describe("library-store Phase 1 Identity & Relinking", () => {
 
     useLibraryStore.getState().removeFromLibrary("mangadex", "manga-1");
 
-    await vi.waitFor(() => expect(deleteLibraryItem).toHaveBeenCalledWith("mangadex", "manga-1", "saved-uuid"));
+    await vi.waitFor(() => expect(deleteLibraryItem).toHaveBeenCalledWith("mangadex", "manga-1", "saved-uuid", null));
     expect(useLibraryStore.getState().items).toEqual({});
   });
 
@@ -96,6 +98,33 @@ describe("library-store Phase 1 Identity & Relinking", () => {
     failDelete(new Error("temporary failure"));
     await vi.waitFor(() => expect(pushLibraryItem).toHaveBeenCalledTimes(1));
     expect(useLibraryStore.getState().items.saved?.title).toBe("New");
+  });
+
+  it("does not let an earlier account's failed write roll back a different signed-in account", async () => {
+    let rejectOwnerA: (error: Error) => void = () => {};
+    vi.mocked(pushLibraryItem).mockImplementationOnce(() =>
+      new Promise<void>((_, reject) => { rejectOwnerA = reject; })
+    );
+    setLocalDataOwnerUid("owner-A");
+    useLibraryStore.getState().addToLibrary({
+      id: "same-title", sourceId: "source", mangaId: "manga", title: "Owner A",
+      addedAt: "2026-01-01", updatedAt: "2026-01-01",
+    });
+    await vi.waitFor(() => expect(pushLibraryItem).toHaveBeenCalledTimes(1));
+    expect(pushLibraryItem).toHaveBeenCalledWith(
+      expect.objectContaining({ title: "Owner A" }), "owner-A"
+    );
+
+    setLocalDataOwnerUid("owner-B");
+    useLibraryStore.setState({ items: {
+      "same-title": {
+        id: "same-title", sourceId: "source", mangaId: "manga", title: "Owner B",
+        addedAt: "2026-01-02", updatedAt: "2026-01-02",
+      },
+    } });
+    rejectOwnerA(new Error("Owner A session ended"));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(useLibraryStore.getState().items["same-title"]?.title).toBe("Owner B");
   });
 
   it("assigns SavedTitleId and initializes Phase 1 identity fields on new items", () => {
