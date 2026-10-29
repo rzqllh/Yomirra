@@ -475,7 +475,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
     <>
       <YomirraSurface variant="base" className="min-h-screen">
         <PageContainer variant="management" hasMobileHeader>
-          <div className="space-y-8">
+          <div className="space-y-8" data-hydrated={mounted}>
             {subView === "backup" ? (
               <>
                 <PageHeader

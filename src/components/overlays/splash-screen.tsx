@@ -45,6 +45,11 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
       timeoutId = setTimeout(() => {
         setIsReadyToExit(true);
       }, remainingTime);
+    } else {
+      // Fail-open: Never trap guest users on splash if network/auth dependencies are slow
+      timeoutId = setTimeout(() => {
+        setIsReadyToExit(true);
+      }, 2000);
     }
 
     return () => clearTimeout(timeoutId);
@@ -73,6 +78,7 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
 
   return (
     <motion.div
+      data-testid="splash-screen"
       initial={{ opacity: 1 }}
       exit={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 1.015 }}
       transition={reducedMotion ? { duration: 0 } : transitions.gentle}
