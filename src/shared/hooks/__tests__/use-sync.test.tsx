@@ -3,6 +3,7 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useSync } from "../use-sync";
 import { initFirebase } from "@/shared/lib/firebase";
+import { pullLegacyLibraryData } from "@/shared/lib/sync-utils";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useHistoryStore } from "@/shared/store/history-store";
 
@@ -88,7 +89,8 @@ describe("useSync cloud correctness", () => {
       mocks.snapshots.get(reference.path) ?? snapshot([]),
     );
     vi.mocked(initFirebase).mockResolvedValue({ db: { name: "db" } } as never);
-    localStorage.setItem("yomirra-libraryV2-migrated", "true");
+    localStorage.clear();
+    localStorage.setItem("yomirra-libraryV2-migrated:user-a", "true");
     useLibraryStore.setState({ items: {} });
     useHistoryStore.setState({ items: {} });
     useGuestMergeStore.getState().cancelMergeReview();
@@ -456,6 +458,71 @@ describe("useSync cloud correctness", () => {
 
     await act(async () => { resolveUserB!(snapshot([])); });
     await waitFor(() => expect(result.current.isSyncing).toBe(false));
+  });
+
+  it("isolates the legacy-library migration checkpoint by user UID", async () => {
+    mocks.user = { uid: "user-b" };
+    vi.mocked(pullLegacyLibraryData).mockResolvedValueOnce([libraryItem()]);
+    const { result } = renderHook(() => useSync({ autoSync: false }));
+
+    await act(async () => { await result.current.runFullSync(); });
+
+    expect(mocks.writes).toContainEqual(expect.objectContaining({
+      path: "users/user-b/libraryV2/saved-title",
+    }));
+    expect(localStorage.getItem("yomirra-libraryV2-migrated:user-b")).toBe("true");
+    expect(localStorage.getItem("yomirra-libraryV2-migrated:user-a")).toBe("true");
+  });
+
+  it("does not mark a first-time migration complete when the Firestore batch fails", async () => {
+    localStorage.removeItem("yomirra-libraryV2-migrated:user-a");
+    vi.mocked(pullLegacyLibraryData).mockResolvedValueOnce([libraryItem()]);
+    mocks.firestore.writeBatch.mockImplementationOnce(() => ({
+      set: (reference: { path: string }, data: unknown) => mocks.writes.push({ path: reference.path, data }),
+      commit: vi.fn(async () => { throw new Error("migration batch failed"); }),
+    }));
+    const { result } = renderHook(() => useSync({ autoSync: false }));
+
+    await act(async () => {
+      await expect(result.current.runFullSync()).rejects.toThrow("migration batch failed");
+    });
+
+    expect(localStorage.getItem("yomirra-libraryV2-migrated:user-a")).toBeNull();
+  });
+
+  it("commits Firestore write batches sequentially rather than launching all batches at once", async () => {
+    const items: Record<string, ReturnType<typeof libraryItem>> = {};
+    for (let index = 0; index < 451; index++) {
+      items[`saved-${index}`] = {
+        ...libraryItem(),
+        id: `saved-${index}`,
+        mangaId: `manga-${index}`,
+      };
+    }
+    useLibraryStore.setState({ items });
+    let resolveFirst: (() => void) | undefined;
+    let started = 0;
+    mocks.firestore.writeBatch.mockImplementation(() => ({
+      set: (reference: { path: string }, data: unknown) => mocks.writes.push({ path: reference.path, data }),
+      commit: vi.fn(() => {
+        started++;
+        return started === 1
+          ? new Promise<void>((resolve) => { resolveFirst = resolve; })
+          : Promise.resolve();
+      }),
+    }));
+    const { result } = renderHook(() => useSync({ autoSync: false }));
+    let syncPromise: Promise<void>;
+    act(() => { syncPromise = result.current.runFullSync(); });
+
+    await waitFor(() => expect(resolveFirst).toBeTypeOf("function"));
+    expect(started).toBe(1);
+
+    await act(async () => {
+      resolveFirst!();
+      await syncPromise!;
+    });
+    expect(started).toBe(2);
   });
 
   it("rejects manual sync when its Firestore batch commit fails", async () => {
