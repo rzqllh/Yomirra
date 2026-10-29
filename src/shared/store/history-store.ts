@@ -153,7 +153,7 @@ export const useHistoryStore = create<HistoryState>()(
         const prefix = `${sourceId}::${mangaId}::`;
         const removed = Object.entries(get().items).filter(([key]) => key.startsWith(prefix));
         if (!removed.length) return;
-        const revisions = new Map(removed.map(([key]) => [key, bumpHistoryRevision(key)]));
+        const revisions = new Map<string, number>(removed.map(([key]): [string, number] => [key, bumpHistoryRevision(key)]));
         const generation = historyClearGeneration;
 
         set((state) => {
