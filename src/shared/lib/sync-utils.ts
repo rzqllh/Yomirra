@@ -2,11 +2,23 @@ import { initFirebase } from "./firebase";
 import type { LibraryItem } from "@/shared/store/library-store";
 import type { HistoryItem } from "@/shared/store/history-store";
 
-export async function pushLibraryItem(item: LibraryItem) {
+export async function pushLibraryItem(item: LibraryItem, expectedOwnerUid?: string | null) {
+  // Guest mutations are local-only. Never replay guest writes into an account
+  // that happens to sign in before a queued operation is dispatched.
+  if (expectedOwnerUid === null) return;
   const { auth, db } = await initFirebase();
-  if (!auth || !db) return;
+  if (!auth || !db) {
+    if (expectedOwnerUid) throw new Error("Cloud unavailable for the saved-title owner.");
+    return;
+  }
   const user = auth.currentUser;
-  if (!user) return;
+  if (!user) {
+    if (expectedOwnerUid) throw new Error("Saved-title owner is no longer signed in.");
+    return;
+  }
+  if (expectedOwnerUid && user.uid !== expectedOwnerUid) {
+    throw new Error("Account changed before the library write. Cross-account sync blocked.");
+  }
   try {
     const { doc, setDoc } = await import("firebase/firestore");
     const savedTitleId = item.id ?? `${item.sourceId}::${item.mangaId}`;
@@ -18,11 +30,21 @@ export async function pushLibraryItem(item: LibraryItem) {
   }
 }
 
-export async function deleteLibraryItem(sourceId: string, mangaId: string, savedTitleId?: string) {
+export async function deleteLibraryItem(
+  sourceId: string,
+  mangaId: string,
+  savedTitleId?: string,
+  expectedOwnerUid?: string | null
+) {
+  // A guest can remove locally saved titles without Firebase credentials.
+  if (expectedOwnerUid === null) return;
   const { auth, db } = await initFirebase();
   if (!auth || !db) throw new Error("Firebase is unavailable for deletion.");
   const user = auth.currentUser;
   if (!user) throw new Error("No authenticated user is available for deletion.");
+  if (expectedOwnerUid && user.uid !== expectedOwnerUid) {
+    throw new Error("Account changed before deletion. Cross-account sync blocked.");
+  }
   try {
     const { doc, writeBatch } = await import("firebase/firestore");
     const v2Id = savedTitleId ?? `${sourceId}::${mangaId}`;
