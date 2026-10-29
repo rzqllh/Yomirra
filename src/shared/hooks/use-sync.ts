@@ -152,8 +152,13 @@ export function useSync(options = { autoSync: true }) {
       });
 
       // First-time migration: import legacy library only when canonical is empty.
-      const isMigrationComplete = localStorage.getItem('yomirra-libraryV2-migrated') === 'true';
-      if (!isMigrationComplete && remoteLibrarySnapshot.empty) {
+      // Migration is owned by an account, never by the browser globally.
+      // Legacy clients used an unscoped marker, which cannot attest that
+      // another signed-in account has completed its own migration.
+      const migrationKey = `yomirra-libraryV2-migrated:${uid}`;
+      const isMigrationComplete = localStorage.getItem(migrationKey) === "true";
+      const needsInitialMigration = !isMigrationComplete && remoteLibrarySnapshot.empty;
+      if (needsInitialMigration) {
         const legacyItems = await pullLegacyLibraryData({ strict: true });
         if (!isCurrentUser()) return;
         for (const legacyItem of legacyItems) {
@@ -171,11 +176,12 @@ export function useSync(options = { autoSync: true }) {
             remoteLibrary[savedTitleId] = enriched;
           }
         }
-        try { localStorage.setItem('yomirra-libraryV2-migrated', 'true'); } catch { /* ignore */ }
       }
 
-      // Post-migration V1 import detects legacy records added by older clients.
-      if (isMigrationComplete) {
+      // When canonical data already exists, still reconcile legacy-only titles.
+      // This covers upgrades from clients that only wrote the old global marker.
+      // The scoped completion marker is not durable until all writes succeed.
+      if (!needsInitialMigration) {
         const legacySnapshot = await getDocs(collection(firestore, `users/${uid}/library`));
         if (!isCurrentUser()) return;
         legacySnapshot.forEach((legacyDoc) => {
@@ -283,6 +289,13 @@ export function useSync(options = { autoSync: true }) {
       commitCurrentBatch();
       await Promise.all(commits);
       if (!isCurrentUser()) return;
+
+      // Never mark a migration completed on a failed/partial Firestore commit.
+      // Re-executing the import is idempotent: canonical titles and tombstones
+      // are read afresh on the next invocation before staging any new writes.
+      if (!isMigrationComplete) {
+        try { localStorage.setItem(migrationKey, "true"); } catch { /* optional storage */ }
+      }
 
       // Source preferences and custom collections remain best-effort.
       try {
