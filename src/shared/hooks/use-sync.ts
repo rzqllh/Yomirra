@@ -92,9 +92,9 @@ export function useSync(options = { autoSync: true }) {
     if (isBlockedByMerge) {
       return Promise.reject(new Error("Sync is blocked while guest merge review is active."));
     }
-    useSyncDiagnosticsStore.getState().recordSyncStart();
     const uid = userUid;
     if (!uid) return Promise.reject(new Error("No authenticated user is available for sync."));
+    useSyncDiagnosticsStore.getState().recordSyncStart();
 
     const existing = inFlightSyncs.get(uid);
     const trackSyncLifecycle = (syncOperation: Promise<void>) => {
@@ -124,11 +124,12 @@ export function useSync(options = { autoSync: true }) {
       let syncedHistCount = 0;
       let cloudPrefsResult: unknown = null;
       let cloudCollectionsResult: unknown = null;
-      const commits: Promise<void>[] = [];
+      const commits: Array<() => Promise<void>> = [];
       const isCurrentUser = () => currentUidRef.current === uid;
       const commitCurrentBatch = () => {
         if (batchCount > 0) {
-          commits.push(batch.commit());
+          const batchToCommit = batch;
+          commits.push(() => batchToCommit.commit());
           totalSynced += batchCount;
           batch = writeBatch(firestore);
           batchCount = 0;
@@ -152,7 +153,9 @@ export function useSync(options = { autoSync: true }) {
       });
 
       // First-time migration: import legacy library only when canonical is empty.
-      const isMigrationComplete = localStorage.getItem('yomirra-libraryV2-migrated') === 'true';
+      // Migration status is scoped to the authenticated account; a shared browser may host multiple UIDs.
+      const migrationKey = `yomirra-libraryV2-migrated:${uid}`;
+      const isMigrationComplete = localStorage.getItem(migrationKey) === 'true';
       if (!isMigrationComplete && remoteLibrarySnapshot.empty) {
         const legacyItems = await pullLegacyLibraryData({ strict: true });
         if (!isCurrentUser()) return;
@@ -171,11 +174,10 @@ export function useSync(options = { autoSync: true }) {
             remoteLibrary[savedTitleId] = enriched;
           }
         }
-        try { localStorage.setItem('yomirra-libraryV2-migrated', 'true'); } catch { /* ignore */ }
       }
 
       // Post-migration V1 import detects legacy records added by older clients.
-      if (isMigrationComplete) {
+      if (isMigrationComplete || !remoteLibrarySnapshot.empty) {
         const legacySnapshot = await getDocs(collection(firestore, `users/${uid}/library`));
         if (!isCurrentUser()) return;
         legacySnapshot.forEach((legacyDoc) => {
@@ -281,8 +283,17 @@ export function useSync(options = { autoSync: true }) {
 
       if (!isCurrentUser()) return;
       commitCurrentBatch();
-      await Promise.all(commits);
+      // Do not start the next Firestore batch until the previous batch is confirmed.
+      // A failed early batch must not leave later batches running without reconciliation.
+      for (const commit of commits) {
+        if (!isCurrentUser()) return;
+        await commit();
+      }
       if (!isCurrentUser()) return;
+      // A previous failed batch must never cause the migration to be marked complete.
+      if (!isMigrationComplete) {
+        try { localStorage.setItem(migrationKey, 'true'); } catch { /* localStorage is optional */ }
+      }
 
       // Source preferences and custom collections remain best-effort.
       try {
