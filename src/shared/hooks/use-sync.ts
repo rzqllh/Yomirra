@@ -159,7 +159,7 @@ export function useSync(options = { autoSync: true }) {
       const isMigrationComplete = localStorage.getItem(migrationKey) === "true";
       const needsInitialMigration = !isMigrationComplete && remoteLibrarySnapshot.empty;
       if (needsInitialMigration) {
-        const legacyItems = await pullLegacyLibraryData({ strict: true });
+        const legacyItems = await pullLegacyLibraryData({ strict: true, expectedUid: uid });
         if (!isCurrentUser()) return;
         for (const legacyItem of legacyItems) {
           const savedTitleId = legacyItem.id ?? `${legacyItem.sourceId}::${legacyItem.mangaId}`;
