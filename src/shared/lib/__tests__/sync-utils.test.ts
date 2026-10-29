@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { deleteHistoryItem, deleteLibraryItem, deleteMangaHistory, pullHistoryData, pullLegacyLibraryData, pushHistoryItem, pushLibraryItem } from '../sync-utils';
+import { deleteHistoryItem, deleteLibraryItem, deleteMangaHistory, PartialHistoryDeletionError, pullHistoryData, pullLegacyLibraryData, pushHistoryItem, pushLibraryItem } from '../sync-utils';
 import { initFirebase } from '../firebase';
 
 vi.mock('../firebase', () => ({
@@ -219,6 +219,39 @@ describe('Firestore Sync Utils Regression Suite', () => {
     await expect(pushHistoryItem(history, 'different-owner')).rejects.toThrow(/Account changed/);
     await expect(deleteHistoryItem('source', 'manga', 'ch1', 'different-owner')).rejects.toThrow(/Account changed/);
     await expect(deleteMangaHistory('source', 'manga', 'different-owner')).rejects.toThrow(/Account changed/);
+  });
+
+
+  it('reports only successfully committed chapters after a later Firestore batch fails', async () => {
+    const firestore = await import('firebase/firestore');
+    vi.mocked(firestore.getDocs).mockResolvedValueOnce({
+      docs: Array.from({ length: 401 }, (_, index) => ({
+        ref: `history-${index}`,
+        data: () => ({
+          sourceId: 'source', mangaId: 'manga', chapterId: `chapter-${index}`,
+        }),
+      })),
+    } as never);
+    const firstBatch = { set: vi.fn(), commit: vi.fn().mockResolvedValue(undefined) };
+    const secondBatch = { set: vi.fn(), commit: vi.fn().mockRejectedValue(new Error('quota exceeded')) };
+    vi.mocked(firestore.writeBatch)
+      .mockImplementationOnce(() => firstBatch as never)
+      .mockImplementationOnce(() => secondBatch as never);
+
+    let thrown: unknown;
+    try {
+      await deleteMangaHistory('source', 'manga');
+    } catch (error) {
+      thrown = error;
+    }
+
+    expect(thrown).toBeInstanceOf(PartialHistoryDeletionError);
+    const committed = (thrown as PartialHistoryDeletionError).committedChapterIds;
+    expect(committed).toHaveLength(400);
+    expect(committed[0]).toBe('chapter-0');
+    expect(committed[399]).toBe('chapter-399');
+    expect(firstBatch.commit).toHaveBeenCalledTimes(1);
+    expect(secondBatch.commit).toHaveBeenCalledTimes(1);
   });
 
 });
