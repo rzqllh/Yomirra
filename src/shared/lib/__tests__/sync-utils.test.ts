@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { deleteHistoryItem, deleteLibraryItem, deleteMangaHistory, pullHistoryData, pullLegacyLibraryData, pushLibraryItem } from '../sync-utils';
+import { deleteHistoryItem, deleteLibraryItem, deleteMangaHistory, pullHistoryData, pullLegacyLibraryData, pushHistoryItem, pushLibraryItem } from '../sync-utils';
 import { initFirebase } from '../firebase';
 
 vi.mock('../firebase', () => ({
@@ -134,4 +134,33 @@ describe('Firestore Sync Utils Regression Suite', () => {
     await expect(pushLibraryItem(item, 'owner-A')).rejects.toThrow(/Account changed/);
     await expect(deleteLibraryItem('source', 'manga', 'saved-owner-a', 'owner-A')).rejects.toThrow(/Account changed/);
   });
+  it('keeps guest history writes and tombstones local-only', async () => {
+    const firestore = await import('firebase/firestore');
+    const previousWrites = vi.mocked(firestore.setDoc).mock.calls.length;
+    const previousBatches = vi.mocked(firestore.writeBatch).mock.calls.length;
+
+    await pushHistoryItem({
+      sourceId: 'source', mangaId: 'guest', chapterId: 'ch-1', mangaTitle: 'Guest', readAt: 10,
+    }, null);
+    await deleteHistoryItem('source', 'guest', 'ch-1', null);
+    await deleteMangaHistory('source', 'guest', null);
+
+    expect(vi.mocked(firestore.setDoc).mock.calls.length).toBe(previousWrites);
+    expect(vi.mocked(firestore.writeBatch).mock.calls.length).toBe(previousBatches);
+  });
+
+  it('rejects a queued history write or delete when another account signs in', async () => {
+    const wrongUser = { auth: { currentUser: { uid: 'wrong-account' } }, db: {} } as never;
+    vi.mocked(initFirebase).mockResolvedValueOnce(wrongUser);
+    await expect(pushHistoryItem({
+      sourceId: 'source', mangaId: 'saved', chapterId: 'ch-1', mangaTitle: 'Saved', readAt: 10,
+    }, 'expected-account')).rejects.toThrow(/Account changed/);
+
+    vi.mocked(initFirebase).mockResolvedValueOnce(wrongUser);
+    await expect(deleteHistoryItem('source', 'saved', 'ch-1', 'expected-account')).rejects.toThrow(/Account changed/);
+
+    vi.mocked(initFirebase).mockResolvedValueOnce(wrongUser);
+    await expect(deleteMangaHistory('source', 'saved', 'expected-account')).rejects.toThrow(/Account changed/);
+  });
+
 });
