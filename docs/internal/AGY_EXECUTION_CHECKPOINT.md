@@ -1,3 +1,19 @@
+# POST-RELEASE DATA SAFETY FOLLOW-UP — 2026-10-29 (Draft PR #60)
+
+This section takes precedence over prior historical "GOAL_COMPLETE" statements.
+
+- **Working mode:** GitHub connector remote branch only; Windows main worktree, staged files and stashes were **not accessible or modified**.
+- **Draft PR:** https://github.com/rzqllh/Yomirra/pull/60, from production \`main\` at \`6cc9e07\`, isolated branch \`fix/yomirra-postrelease-sync-gates-20261029\`. The branch is **not merged or deployed**.
+- **Implemented:** Per-UID legacy Library V2 migration marker set after confirmed Firestore writes; strict legacy import fails closed on missing auth or unexpected UID; remove destructive 1,000-history cap/tombstones; action-owner guarded history writes/deletes; retain local progress on network failure; granular rollback for explicit history deletion. Relevant new Vitest tests are included.
+- **Documentation:** Reintroduced missing \`docs/PARITY_GAP_AUDIT.md\` explicitly as a new evidence index (not the unavailable original); documented disposable-account Firebase QA, physical Apple PWA QA and legal rights checks in \`docs/internal/POST_RELEASE_ACCEPTANCE_GATES_20261029.md\`.
+- **Q1–Q175 source-based tracker:** 160 **previously/project-reported** VERIFIED (not independently retested per item), 14 PARTIAL (original 7 plus Q55 Q97 Q138 Q146 Q147 Q172 Q174 evidence inconsistencies), 1 BLOCKED (Q21), total 175. The 160 are not an enterprise acceptance sign-off.
+- **Verified CI on earlier branch SHA:** GitHub Actions run #476 completed **SUCCESS** for SHA \`857eb9a\` with typecheck/lint/Vitest/build; CI for newer strict-auth fix needs exact final SHA revalidation. Latest before this checkpoint: run #480 on SHA \`92d5e6c\` had TypeScript and lint PASS, Vitest in progress. Never transplant #476's pass to newer SHA.
+- **Production ground truth:** PR #59 already merged to \`main\`, Vercel deployment READY. PR #60 does not modify that deployment.
+- **External gates (NOT RUN):** two real/test Firebase accounts and cross-device conflict/migration/recovery; actual iPhone/iPad Add-to-HomeScreen standalone; BrowserStack credentials; owner-approved privacy/terms, rights-holder channel, assets/dependency provenance and legal counsel. Full independent per-Q sign-off still pending.
+- **Next exact executable steps:** (1) inspect the newest PR #60 head SHA + associated GitHub CI, fix concrete failures; (2) review diff and impact on auth/guest/history; (3) run staging/emulator Firebase acceptance; (4) arrange owner-managed physical Apple and legal clearance. No merge, tag, deploy, or package bump until separately approved.
+
+---
+
 # Latest release state — 2026-10-29
 
 **STATUS: PR #59 MERGED; VERCEL PRODUCTION DEPLOYMENT READY.** This section supersedes the older execution restrictions below, which are retained as historical evidence.
