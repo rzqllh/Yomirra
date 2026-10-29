@@ -17,10 +17,10 @@ These classifications reflect confirmed source/documentation gaps, **not** a com
 | Q50 | PARTIAL | Token and component tests exist, but full real-device reusable-component/motion acceptance is incomplete. Synthetic class-string tests were replaced in draft PR #61. | Real responsive/assistive-technology checks and component interaction matrix. |
 | Q64 | PARTIAL | Guest merge commits are atomic only within individual Firestore batches; multi-batch failure is fail-closed, but cross-device recovery has not been exercised against live Firebase. | Controlled multi-batch failure/recovery, owner isolation, and post-restart verification. |
 | Q127 | IMPLEMENTED / UNTESTED | Diagnostics have automated tests, but real connectivity/Firebase reachability and cross-device pending-write states are not independently exercised. | Live Firebase fault-injection and multi-device sync test. |
-| Q171 | NOT IMPLEMENTED | README disclaimer is not a dedicated rights-holder reporting/contact and escalation workflow. No sufficiently evidenced public rights intake was identified. | Implement a public intake channel, escalation owner, and actual response procedure, subject to review. |
+| Q171 | PARTIAL | A public reporting form and intake process exist in draft PR #61. Accountable reviewer, confidential follow-up and response process are not yet verified. | Test the form after merge and assign a maintainer and suitable legal-review escalation. |
 | Q172 | PARTIAL | README documents some privacy/security boundaries but is not a reviewed privacy policy; the authentic decision ledger requires suitable legal review. | Factual data-flow inventory, dedicated accurate privacy terms, qualified legal review. |
 
-**Provisional counts:** 162 previously reported VERIFIED (still not individually independently accepted), 10 PARTIAL, 1 IMPLEMENTED / UNTESTED, 1 NOT IMPLEMENTED, 1 BLOCKED. Total: **175 unique Q items**.
+**Provisional counts:** 162 previously reported VERIFIED (still not individually independently accepted), 11 PARTIAL, 1 IMPLEMENTED / UNTESTED, 0 NOT IMPLEMENTED, 1 BLOCKED. Total: **175 unique Q items**.
 
 Seven previously documented deferred features remain PARTIAL: Q58, Q130, Q140, Q148, Q149, Q153, Q162. The single BLOCKED item is Q21 (physical iOS/iPadOS and BrowserStack acceptance). No completion is implied for deferred work.
 
@@ -303,7 +303,7 @@ All 175 product decisions are recorded, but this register inherited classificati
 | **Q168** | Independent Code | Clean-room implementation of features, no copied code | `VERIFIED` | `docs/REFERENCE_LICENSING_REVIEW.md`, `src/shared/__tests__/governance-licensing-audit.test.ts` |
 | **Q169** | Tachimanga Reference | Tachimanga treated solely as UX reference, not open code | `VERIFIED` | `docs/REFERENCE_LICENSING_REVIEW.md`, `src/shared/__tests__/governance-licensing-audit.test.ts` |
 | **Q170** | Asset Provenance | App icons and SVGs created natively via Phosphor Icons | `VERIFIED` | `public/`, `package.json` (@phosphor-icons/react), `src/components/app/__tests__/public-copy-contract.test.ts` |
-| **Q171** | Rights Reporting | DMCA / copyright report channel for rights-holders | `NOT IMPLEMENTED` | `README.md` (Disclaimer), `SECURITY.md`, `docs/README.md`, `src/components/admin/__tests__/admin-security-bundle.test.ts` (post-release gap: see truth gate) |
+| **Q171** | Rights Reporting | DMCA / copyright report channel for rights-holders | `PARTIAL` | `.github/ISSUE_TEMPLATE/content-rights.yml`, `docs/CONTENT_RIGHTS_REPORTING.md`, `README.md` (public intake implemented; maintainer assignment and legally reviewed response process not yet verified) |
 | **Q172** | Truthful Privacy Policy | Privacy policy reflects actual Firebase and local-first flows | `PARTIAL` | `README.md` (Privacy & Security boundaries), `SECURITY.md`, `src/components/admin/__tests__/admin-security-bundle.test.ts` (post-release gap: see truth gate) |
 | **Q173** | Coherent Public Docs | Synchronized README, STACK, ARCHITECTURE, and Dev docs | `VERIFIED` | `docs/` folder documentation suite, `src/shared/__tests__/governance-licensing-audit.test.ts` |
 | **Q174** | Provenance Claims | Public claims backed by actual working repository evidence | `VERIFIED` | `docs/GRILL_FINAL_LEDGER.md`, `src/shared/__tests__/governance-licensing-audit.test.ts` |
