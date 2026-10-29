@@ -182,11 +182,20 @@ export async function pullLibraryData(): Promise<LibraryItem[]> {
 }
 
 /** Pull from legacy 'library' collection — used once at migration time and for V1 import detection. */
-export async function pullLegacyLibraryData(options: { strict?: boolean } = {}): Promise<LibraryItem[]> {
+export async function pullLegacyLibraryData(options: { strict?: boolean; expectedUid?: string } = {}): Promise<LibraryItem[]> {
   const { auth, db } = await initFirebase();
-  if (!auth || !db) return [];
+  if (!auth || !db) {
+    if (options.strict) throw new Error("Firebase unavailable during strict legacy migration.");
+    return [];
+  }
   const user = auth.currentUser;
-  if (!user) return [];
+  if (!user) {
+    if (options.strict) throw new Error("No authenticated account for strict legacy migration.");
+    return [];
+  }
+  if (options.expectedUid && options.expectedUid !== user.uid) {
+    throw new Error("Account changed during legacy migration. Cross-account import blocked.");
+  }
   try {
     const { collection, getDocs } = await import("firebase/firestore");
     const querySnapshot = await getDocs(collection(db, `users/${user.uid}/library`));
