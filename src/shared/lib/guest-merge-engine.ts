@@ -60,6 +60,8 @@ export interface MergeExecutionResult {
     libraryCount: number;
     historyCount: number;
     actualCloudWrites: number;
+    libraryWrites: number;
+    historyWrites: number;
     conflictsResolved: number;
   };
   backupKey?: string;
@@ -382,6 +384,8 @@ export async function executeGuestMerge({
     let finalLibrary: Record<string, LibraryItem>;
     let finalHistory: Record<string, HistoryItem>;
     let actualCloudWrites = 0;
+    let libraryWrites = 0;
+    let historyWrites = 0;
 
     if (strategy === "cloud-replace") {
       // 1. Create a verifiable local backup before destructive replacement
@@ -431,11 +435,15 @@ export async function executeGuestMerge({
           history: finalHistory,
         });
         actualCloudWrites = res.totalWrites;
+        libraryWrites = "libraryWrites" in res && typeof res.libraryWrites === "number" ? res.libraryWrites : 0;
+        historyWrites = "historyWrites" in res && typeof res.historyWrites === "number" ? res.historyWrites : 0;
       } else if (commitToFirestore) {
         await commitToFirestore({
           library: finalLibrary,
           history: finalHistory,
         });
+        // A custom committer does not return per-domain counts. Keep them
+        // unknown (zero) rather than fabricating diagnostic write metrics.
         actualCloudWrites = Object.keys(finalLibrary).length + Object.keys(finalHistory).length;
       } else {
         const res = await commitMergedDataToFirestore({
@@ -444,6 +452,8 @@ export async function executeGuestMerge({
           history: finalHistory,
         });
         actualCloudWrites = res.totalWrites;
+        libraryWrites = res.libraryWrites;
+        historyWrites = res.historyWrites;
       }
     }
 
@@ -461,6 +471,8 @@ export async function executeGuestMerge({
         libraryCount: Object.keys(finalLibrary).length,
         historyCount: Object.keys(finalHistory).length,
         actualCloudWrites,
+        libraryWrites,
+        historyWrites,
         conflictsResolved: Object.keys(guestSnapshot.library).filter(
           (k) => cloudSnapshot.library[k]
         ).length,
