@@ -271,7 +271,7 @@ export function performDryRun(
       preview.excludedNsfwCount++;
       return;
     }
-    const key = getLibraryId(item.sourceId, item.mangaId, "id" in item ? item.id : undefined);
+    const key = getLibraryId(item.sourceId, item.mangaId, "id" in item && typeof item.id === "string" ? item.id : undefined);
     if (seenLibKeys.has(key)) {
       preview.duplicateInPayloadCount++;
     } else {
@@ -312,7 +312,7 @@ export function performDryRun(
   const uniqueLibItems = new Map<string, LibraryItemV2Backup>();
   backupData.data.library.forEach((item) => {
     if (!item.isNsfw) {
-      uniqueLibItems.set(getLibraryId(item.sourceId, item.mangaId, "id" in item ? item.id : undefined), item);
+      uniqueLibItems.set(getLibraryId(item.sourceId, item.mangaId, "id" in item && typeof item.id === "string" ? item.id : undefined), item);
     }
   });
 
@@ -378,7 +378,7 @@ export function executeCoordinatedRestore(
     if (mode === "replace") {
       backup.data.library.forEach((item) => {
         if (!item.isNsfw) {
-          const id = getLibraryId(item.sourceId, item.mangaId, "id" in item ? item.id : undefined);
+          const id = getLibraryId(item.sourceId, item.mangaId, "id" in item && typeof item.id === "string" ? item.id : undefined);
           targetLibraryItems[id] = { ...item };
         }
       });
@@ -387,7 +387,7 @@ export function executeCoordinatedRestore(
       targetLibraryItems = { ...(snapLib.items || {}) };
       backup.data.library.forEach((item) => {
         if (item.isNsfw) return;
-        const id = getLibraryId(item.sourceId, item.mangaId, "id" in item ? item.id : undefined);
+        const id = getLibraryId(item.sourceId, item.mangaId, "id" in item && typeof item.id === "string" ? item.id : undefined);
         const existingEntry = Object.entries(targetLibraryItems).find(([key, current]) =>
           key === id || current.id === id || (current.sourceId === item.sourceId && current.mangaId === item.mangaId),
         );
@@ -399,7 +399,7 @@ export function executeCoordinatedRestore(
           const backupTime = Date.parse(item.updatedAt);
           const existingTime = Date.parse(existing.updatedAt || existing.addedAt);
           if (!isNaN(backupTime) && !isNaN(existingTime) && backupTime > existingTime) {
-            targetLibraryItems[targetKey] = { ...item, id: existing.id ?? ("id" in item ? item.id : undefined) };
+            targetLibraryItems[targetKey] = { ...item, id: existing.id ?? ("id" in item && typeof item.id === "string" ? item.id : undefined) };
           }
         }
       });
