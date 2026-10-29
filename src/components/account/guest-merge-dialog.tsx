@@ -7,6 +7,7 @@ import {
   fetchCloudSnapshot,
   computeMergeDiff,
   MergeStrategy,
+  PartialBatchCommitError,
 } from "@/shared/lib/guest-merge-engine";
 import { useAuth } from "@/shared/hooks/use-auth";
 import { useLibraryStore } from "@/shared/store/library-store";
@@ -46,6 +47,7 @@ export function GuestMergeDialog() {
   const [confirmedDestructive, setConfirmedDestructive] = React.useState(false);
   const [isExecuting, setIsExecuting] = React.useState(false);
   const [isRetryingSnapshot, setIsRetryingSnapshot] = React.useState(false);
+  const [requiresCloudRefresh, setRequiresCloudRefresh] = React.useState(false);
 
   if (!isMergePending) {
     return null;
@@ -162,7 +164,32 @@ export function GuestMergeDialog() {
     }
   };
 
+  const refreshAfterPartialCommit = async () => {
+    setIsRetryingSnapshot(true);
+    try {
+      // Earlier batches may have persisted remotely even though the merge failed.
+      // Always fetch a fresh cloud snapshot before offering a new confirmation.
+      const latestCloud = await fetchCloudSnapshot(pendingUser.uid);
+      const latestDiff = computeMergeDiff(guestSnapshot, latestCloud);
+      startMergeReview({
+        user: pendingUser,
+        guestSnapshot,
+        cloudSnapshot: latestCloud,
+        diff: latestDiff,
+      });
+      setConfirmedDestructive(false);
+      setRequiresCloudRefresh(false);
+    } catch (error) {
+      toast.error("Data Cloud Belum Bisa Diperiksa", {
+        description: error instanceof Error ? error.message : "Coba lagi saat koneksi tersedia.",
+      });
+    } finally {
+      setIsRetryingSnapshot(false);
+    }
+  };
+
   const handleApply = async () => {
+    if (requiresCloudRefresh) return;
     if (strategy === "cloud-replace" && !confirmedDestructive) {
       toast.error("Konfirmasi Diperlukan", {
         description: "Beri tanda centang pada kotak konfirmasi sebelum melanjutkan.",
@@ -185,12 +212,12 @@ export function GuestMergeDialog() {
           domains: [
             {
               domain: "library",
-              successfulWriteCount: result.stats.actualCloudWrites > 0 ? guestLibCount : 0,
+              successfulWriteCount: result.stats.libraryWrites,
               verifiedReadCount: cloudLibCount,
             },
             {
               domain: "history",
-              successfulWriteCount: result.stats.actualCloudWrites > 0 ? guestHistCount : 0,
+              successfulWriteCount: result.stats.historyWrites,
               verifiedReadCount: cloudHistCount,
             },
           ],
@@ -226,10 +253,16 @@ export function GuestMergeDialog() {
       );
     } catch (err: any) {
       console.error("Failed to execute guest merge", err);
-      toast.error("Penyelarasan Gagal", {
-        description:
-          err?.message || "Terjadi kesalahan saat memproses data. Data lokal telah dipulihkan ke kondisi semula.",
-      });
+      if (err instanceof PartialBatchCommitError && err.completedBatches > 0) {
+        setRequiresCloudRefresh(true);
+        toast.error("Sinkronisasi Cloud Belum Tuntas", {
+          description: `${err.completedBatches} dari ${err.totalBatches} batch tersimpan. Data lokal tidak diganti; cloud perlu diperiksa ulang.`,
+        });
+      } else {
+        toast.error("Penyelarasan Gagal", {
+          description: err?.message || "Data lokal tetap dipertahankan. Periksa koneksi dan coba lagi.",
+        });
+      }
     } finally {
       setIsExecuting(false);
     }
@@ -416,6 +449,19 @@ export function GuestMergeDialog() {
           </div>
         )}
 
+        {requiresCloudRefresh && (
+          <div role="alert" className="rounded-xl border border-status-warning-fg/40 bg-status-warning-bg/40 p-3 space-y-2">
+            <p className="text-xs font-semibold text-text-primary">Sebagian perubahan mungkin sudah masuk ke cloud.</p>
+            <p className="text-xs text-text-secondary">
+              Pembacaan ulang cloud wajib dilakukan sebelum melanjutkan. Data lokal tidak diganti selama proses ini.
+            </p>
+            <Button type="button" variant="ghost" onClick={refreshAfterPartialCommit}
+              loading={isRetryingSnapshot} disabled={isExecuting}>
+              Periksa Ulang Data Cloud
+            </Button>
+          </div>
+        )}
+
         {/* Action Buttons */}
         <div className="pt-2 flex flex-col sm:flex-row items-center gap-2.5">
           <Button
@@ -433,7 +479,7 @@ export function GuestMergeDialog() {
             variant="primary"
             onClick={handleApply}
             loading={isExecuting}
-            disabled={strategy === "cloud-replace" && !confirmedDestructive}
+            disabled={requiresCloudRefresh || (strategy === "cloud-replace" && !confirmedDestructive)}
             className="w-full sm:w-auto flex-1 rounded-xl min-h-11 text-xs font-bold"
           >
             <ArrowsClockwise size={16} weight="bold" className={cn(isExecuting && "animate-spin")} />

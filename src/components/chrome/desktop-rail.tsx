@@ -106,7 +106,7 @@ export function DesktopRail({ pendingHref }: { pendingHref?: string | null } = {
         </Link>
       </div>
 
-      <nav aria-label="Navigasi utama" className="flex flex-col gap-1">
+      <nav aria-label="Navigasi desktop" className="flex flex-col gap-1">
         <span
           className={cn(
             "hidden px-2.5 pb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-text-muted/80",

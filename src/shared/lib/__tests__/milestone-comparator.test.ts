@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+﻿import { describe, it, expect } from "vitest";
 import { compareMilestones } from "../milestone-comparator";
 import type { LibraryItem } from "@/shared/store/library-store";
 
@@ -125,5 +125,48 @@ describe("MilestoneComparator (Q52 Strict Structured Precedence)", () => {
     const res = compareMilestones(itemA, itemB);
     expect(res.guestWins).toBe(true);
     expect(res.reason).toContain("Timestamp baca lokal lebih baru");
+  });
+
+  it("handles Prologue vs Chapter 0 symmetrically without fabricating progress", () => {
+    const prologue: LibraryItem = {
+      id: "m1",
+      title: "Test Prologue",
+      sourceId: "s1",
+      highestMilestoneChapterTitle: "Prologue",
+    } as LibraryItem;
+
+    const ch0: LibraryItem = {
+      id: "m1",
+      title: "Test Prologue",
+      sourceId: "s2",
+      highestMilestoneChapterTitle: "Chapter 0",
+    } as LibraryItem;
+
+    const res = compareMilestones(ch0, prologue);
+    // Numbered Ch. 0 >= 0 wins over Prologue
+    expect(res.guestWins).toBe(true);
+  });
+
+  it("handles Epilogue vs previous numbered chapter based on reading timestamp", () => {
+    const epilogue: LibraryItem = {
+      id: "m1",
+      title: "Test Epilogue",
+      sourceId: "s1",
+      highestMilestoneChapterTitle: "Epilogue - Final Chapter",
+      lastReadAt: "2026-10-28T12:00:00Z",
+    } as LibraryItem;
+
+    const ch50: LibraryItem = {
+      id: "m1",
+      title: "Test Epilogue",
+      sourceId: "s2",
+      highestMilestoneChapterTitle: "Chapter 50",
+      lastReadAt: "2026-10-27T12:00:00Z",
+    } as LibraryItem;
+
+    const res = compareMilestones(epilogue, ch50);
+    // Newer epilogue wins over earlier numbered chapter
+    expect(res.guestWins).toBe(true);
+    expect(res.reason).toContain("Epilog");
   });
 });

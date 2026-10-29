@@ -37,6 +37,7 @@ export function MangaActions({
   const toggleLibrary = useLibraryStore((state) => state.toggleLibrary);
 
   const handleToggle = () => {
+    const wasInLibrary = useLibraryStore.getState().isInLibrary(sourceId, mangaId);
     toggleLibrary({
       sourceId,
       mangaId,
@@ -48,15 +49,14 @@ export function MangaActions({
       updatedAt: new Date().toISOString(),
     });
 
-    if (isInLibrary) {
-      toast.info("Dihapus dari Rak Buku", {
-        description: `'${title}' tidak lagi tersimpan.`,
-      });
-    } else {
-      toast.success("Disimpan ke Rak Buku", {
-        description: `'${title}' berhasil disimpan.`,
-      });
-    }
+    const toastId = `bookmark-toggle-${sourceId}-${mangaId}`;
+
+    // This action is optimistic and local-first. Do not claim cloud commit
+    // success before the asynchronous store mutation has actually settled.
+    toast.info(wasInLibrary ? "Dihapus dari Rak Buku di perangkat" : "Disimpan ke Rak Buku di perangkat", {
+      id: toastId,
+      description: "Jika sinkronisasi akun gagal, Yomirra akan memberi tahu dan membatalkan perubahan ini.",
+    });
   };
 
   return (

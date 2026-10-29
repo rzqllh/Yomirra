@@ -14,11 +14,6 @@ export function BootGate({ children }: { children: React.ReactNode }) {
   
   // start in boot phase
   const [phase, setPhase] = React.useState<"boot" | "onboarding" | "app">("boot");
-  const [isMounted, setIsMounted] = React.useState(false);
-
-  React.useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   if (isAdmin) {
     return <>{children}</>;
@@ -38,8 +33,6 @@ export function BootGate({ children }: { children: React.ReactNode }) {
     import("@/shared/lib/canonical-migration").then(m => m.runCanonicalMigration());
   };
 
-  if (!isMounted) return null;
-
   return (
     <>
       <AnimatePresence mode="wait">
@@ -51,7 +44,7 @@ export function BootGate({ children }: { children: React.ReactNode }) {
         )}
       </AnimatePresence>
       
-      {phase === "app" && children}
+      {children}
     </>
   );
 }

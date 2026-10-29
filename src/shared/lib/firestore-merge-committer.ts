@@ -38,6 +38,31 @@ export interface MergeRecoveryJournal {
   completedBatches: number;
   successfulWrites: number;
   status: "in-progress" | "failed" | "completed";
+  failedBatchIndex?: number;
+}
+
+export function getMergeRecoveryJournal(uid: string): MergeRecoveryJournal | null {
+  try {
+    const recoveryKey = "yomirra_merge_recovery_" + uid;
+    const raw = localStorage.getItem(recoveryKey);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && parsed.uid === uid) {
+      return parsed as MergeRecoveryJournal;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearMergeRecoveryJournal(uid: string): void {
+  try {
+    const recoveryKey = "yomirra_merge_recovery_" + uid;
+    localStorage.removeItem(recoveryKey);
+  } catch {
+    // Non-fatal if localStorage is restricted
+  }
 }
 
 function getSafeTime(val: string | number | undefined | null): number {
@@ -58,6 +83,8 @@ function cleanRecord(item: object): Record<string, unknown> {
 /**
  * Direct Firestore committer for merged data.
  * Executes writes in sequential atomic batches with retries and recovery journal.
+ * Note: Firestore guarantees atomicity per write batch (up to 400 operations per batch).
+ * Multi-batch commits are executed sequentially with durable recovery journaling.
  */
 export async function commitMergedDataToFirestore({
   uid,
@@ -158,6 +185,7 @@ export async function commitMergedDataToFirestore({
 
       if (!committed) {
         journal.completedBatches = bIndex;
+        journal.failedBatchIndex = bIndex;
         journal.successfulWrites = successfulWrites;
         journal.status = "failed";
         try {
@@ -202,3 +230,6 @@ export async function commitMergedDataToFirestore({
     totalWrites: libraryWrites + historyWrites,
   };
 }
+
+/** Canonical export alias ensuring backward compatibility with documentation and tests */
+export const commitMergedDataSequentially = commitMergedDataToFirestore;

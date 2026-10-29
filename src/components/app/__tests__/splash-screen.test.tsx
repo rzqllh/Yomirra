@@ -1,4 +1,4 @@
-import { render, screen, act, waitFor } from '@testing-library/react';
+import { render, act } from '@testing-library/react';
 import { SplashScreen } from '@/components/overlays/splash-screen';
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 
@@ -44,55 +44,34 @@ describe('SplashScreen', () => {
     render(<SplashScreen onComplete={onComplete} />);
     expect(onComplete).not.toHaveBeenCalled();
 
-    // Fast-forward past MINIMUM_SPLASH_DURATION (1200ms)
+    // Fast-forward past MINIMUM_SPLASH_DURATION (450ms)
     act(() => {
-      vi.advanceTimersByTime(1250);
+      vi.advanceTimersByTime(500);
     });
 
     expect(onComplete).toHaveBeenCalledTimes(1);
   });
 
-  it('does NOT get stuck if loading takes > 10s: shows warning, and when boot completes at 11s, still calls onComplete', async () => {
-    let authLoading = true;
-    let hydrated = false;
-
-    mockUseAuth.mockImplementation(() => ({ loading: authLoading }));
-    mockUseOnboardingStore.mockImplementation(() => ({ _hasHydrated: hydrated }));
+  it('fails open after two seconds when Firebase auth or onboarding hydration stays unresolved', () => {
+    mockUseAuth.mockReturnValue({ loading: true });
+    mockUseOnboardingStore.mockReturnValue({ _hasHydrated: false });
     const onComplete = vi.fn();
 
-    const { rerender } = render(<SplashScreen onComplete={onComplete} />);
-
-    // Allow mount effect to set isMounted = true
-    await act(async () => {
-      await Promise.resolve();
-    });
-
-    // Fast-forward 10.5 seconds (past WATCHDOG_TIMEOUT of 10s)
+    render(<SplashScreen onComplete={onComplete} />);
     act(() => {
-      vi.advanceTimersByTime(10500);
+      vi.advanceTimersByTime(1999);
     });
-
-    // Allow state update to flush
-    await act(async () => {
-      await Promise.resolve();
-    });
-
-    // Warning copy should be visible
-    expect(screen.getByText('Koneksi Lagi Pelan')).toBeTruthy();
-    expect(screen.getByText(/Ini makan waktu lebih lama/)).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Coba Lagi' })).toBeTruthy();
     expect(onComplete).not.toHaveBeenCalled();
 
-    // Now dependencies resolve at second 11
-    authLoading = false;
-    hydrated = true;
-    rerender(<SplashScreen onComplete={onComplete} />);
-
     act(() => {
-      vi.advanceTimersByTime(100);
+      vi.advanceTimersByTime(1);
     });
+    expect(onComplete).toHaveBeenCalledTimes(1);
 
-    // Boot should complete and call onComplete! (Never locked out)
+    // Delayed callbacks must not re-enter onboarding or fire onComplete again.
+    act(() => {
+      vi.advanceTimersByTime(10000);
+    });
     expect(onComplete).toHaveBeenCalledTimes(1);
   });
 });

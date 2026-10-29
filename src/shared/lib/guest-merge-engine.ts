@@ -1,6 +1,6 @@
-export { compareMilestones } from "@/shared/lib/milestone-comparator";
+﻿export { compareMilestones } from "@/shared/lib/milestone-comparator";
 export type { MilestoneComparison } from "@/shared/lib/milestone-comparator";
-export { commitMergedDataToFirestore, PartialBatchCommitError } from "@/shared/lib/firestore-merge-committer";
+export { commitMergedDataToFirestore, commitMergedDataSequentially, PartialBatchCommitError, getMergeRecoveryJournal, clearMergeRecoveryJournal } from "@/shared/lib/firestore-merge-committer";
 export type { MergeRecoveryJournal } from "@/shared/lib/firestore-merge-committer";
 import { compareMilestones } from "@/shared/lib/milestone-comparator";
 import { commitMergedDataToFirestore } from "@/shared/lib/firestore-merge-committer";
@@ -60,6 +60,8 @@ export interface MergeExecutionResult {
     libraryCount: number;
     historyCount: number;
     actualCloudWrites: number;
+    libraryWrites: number;
+    historyWrites: number;
     conflictsResolved: number;
   };
   backupKey?: string;
@@ -322,10 +324,31 @@ export function restoreGuestBackup(): GuestSnapshot | null {
     if (!key) return null;
     const raw = localStorage.getItem(key);
     if (!raw) return null;
-    return JSON.parse(raw) as GuestSnapshot;
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object" && typeof parsed.library === "object" && typeof parsed.history === "object") {
+      return parsed as GuestSnapshot;
+    }
+    return null;
   } catch (e) {
     console.error("Failed to restore guest backup", e);
     return null;
+  }
+}
+
+/**
+ * Safely restores the last verified guest session backup directly to active client stores.
+ * Returns true if the backup was found, valid, and applied; false otherwise.
+ */
+export function restoreGuestBackupToStores(): boolean {
+  try {
+    const backup = restoreGuestBackup();
+    if (!backup) return false;
+    useLibraryStore.setState({ items: backup.library });
+    useHistoryStore.setState({ items: backup.history });
+    return true;
+  } catch (e) {
+    console.error("Failed to restore guest backup to stores", e);
+    return false;
   }
 }
 
@@ -361,6 +384,8 @@ export async function executeGuestMerge({
     let finalLibrary: Record<string, LibraryItem>;
     let finalHistory: Record<string, HistoryItem>;
     let actualCloudWrites = 0;
+    let libraryWrites = 0;
+    let historyWrites = 0;
 
     if (strategy === "cloud-replace") {
       // 1. Create a verifiable local backup before destructive replacement
@@ -410,11 +435,15 @@ export async function executeGuestMerge({
           history: finalHistory,
         });
         actualCloudWrites = res.totalWrites;
+        libraryWrites = "libraryWrites" in res && typeof res.libraryWrites === "number" ? res.libraryWrites : 0;
+        historyWrites = "historyWrites" in res && typeof res.historyWrites === "number" ? res.historyWrites : 0;
       } else if (commitToFirestore) {
         await commitToFirestore({
           library: finalLibrary,
           history: finalHistory,
         });
+        // A custom committer does not return per-domain counts. Keep them
+        // unknown (zero) rather than fabricating diagnostic write metrics.
         actualCloudWrites = Object.keys(finalLibrary).length + Object.keys(finalHistory).length;
       } else {
         const res = await commitMergedDataToFirestore({
@@ -423,6 +452,8 @@ export async function executeGuestMerge({
           history: finalHistory,
         });
         actualCloudWrites = res.totalWrites;
+        libraryWrites = res.libraryWrites;
+        historyWrites = res.historyWrites;
       }
     }
 
@@ -440,6 +471,8 @@ export async function executeGuestMerge({
         libraryCount: Object.keys(finalLibrary).length,
         historyCount: Object.keys(finalHistory).length,
         actualCloudWrites,
+        libraryWrites,
+        historyWrites,
         conflictsResolved: Object.keys(guestSnapshot.library).filter(
           (k) => cloudSnapshot.library[k]
         ).length,

@@ -28,9 +28,9 @@ describe("Home loading geometry contract", () => {
     );
 
     expect(hero).toBeGreaterThan(-1);
-    expect(spotlight).toBeGreaterThan(hero);
-    expect(continueReading).toBeGreaterThan(spotlight);
-    expect(recentlyUpdated).toBeGreaterThan(continueReading);
+    expect(continueReading).toBeGreaterThan(hero);
+    expect(spotlight).toBeGreaterThan(continueReading);
+    expect(recentlyUpdated).toBeGreaterThan(spotlight);
   });
 
   it("renders the usable Hero instead of an artwork placeholder", () => {

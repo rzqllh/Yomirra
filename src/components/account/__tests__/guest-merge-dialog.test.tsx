@@ -204,13 +204,56 @@ describe("GuestMergeDialog Production Regression Suite (Q64 & Q127)", () => {
     // Diagnostics must record honest successfulWriteCount and verifiedReadCount
     const diagState = useSyncDiagnosticsStore.getState();
     expect(diagState.lifecycleState).toBe("successful commit");
-    expect(diagState.domainRecords["library"].successfulWriteCount).toBe(1);
+    expect(diagState.domainRecords["library"].successfulWriteCount).toBe(2);
     expect(diagState.domainRecords["library"].verifiedReadCount).toBe(1);
 
     // Local state must contain both merged items
     const mergedLib = useLibraryStore.getState().items;
     expect(mergedLib["local-manga-1"]).toBeDefined();
     expect(mergedLib["cloud-manga-2"]).toBeDefined();
+  });
+
+  it("blocks repeat merge after a partial cloud commit until a fresh cloud snapshot is read", async () => {
+    const largeGuest = Object.fromEntries(Array.from({ length: 402 }, (_, index) => [
+      `chapter-${index}`,
+      {
+        id: `chapter-${index}`,
+        sourceId: "test",
+        mangaId: `manga-${index}`,
+        title: `Title ${index}`,
+        addedAt: "2026-10-20T00:00:00Z",
+        updatedAt: "2026-10-20T00:00:00Z",
+      } as LibraryItem,
+    ]));
+    mockBatchCommit.mockResolvedValueOnce(undefined).mockRejectedValue(new Error("quota"));
+    useGuestMergeStore.getState().startMergeReview({
+      user: sampleUser,
+      guestSnapshot: { library: largeGuest, history: {} },
+      cloudSnapshot: { library: {}, history: {} },
+      diff: {
+        hasGuestData: true,
+        hasCloudData: false,
+        guestOnlyLibrary: Object.values(largeGuest),
+        cloudOnlyLibrary: [],
+        conflictingLibrary: [],
+        guestOnlyHistoryCount: 0,
+        cloudOnlyHistoryCount: 0,
+        conflictingHistoryCount: 0,
+        totalMergedLibraryCount: 402,
+        totalMergedHistoryCount: 0,
+      },
+    });
+    render(<GuestMergeDialog />);
+    const apply = screen.getByRole("button", { name: /Terapkan & Lanjutkan/i });
+    fireEvent.click(apply);
+    await waitFor(() => {
+      expect(screen.getByText(/Sebagian perubahan mungkin sudah masuk ke cloud/i)).toBeTruthy();
+      expect(screen.getByRole("button", { name: /Periksa Ulang Data Cloud/i })).toBeTruthy();
+      expect(apply.hasAttribute("disabled")).toBe(true);
+    });
+    expect(mockBatchCommit).toHaveBeenCalledTimes(4); // 1 success + 3 failed retries
+    expect(getLocalDataOwnerUid()).toBeNull();
+    expect(toast.success).not.toHaveBeenCalled();
   });
 
   it("enforces fail-closed protection when snapshot fails and allows cancel to return to guest", async () => {

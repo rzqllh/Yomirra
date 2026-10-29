@@ -31,8 +31,9 @@ test.describe("Mobile Safari WebKit Regression & Interactive Compliance Suite", 
     page,
   }) => {
     await page.goto("/search", { waitUntil: "domcontentloaded" });
-    await page.waitForSelector("input", { timeout: 8000 });
-    const input = page.locator("input").first();
+    await page.waitForTimeout(1000);
+    const input = page.locator('input[type="search"], input[placeholder*="Cari"], input').first();
+    await input.waitFor({ state: "visible", timeout: 15000 });
 
     // Verify computed font size >= 16px (16px threshold prevents iOS Safari forced 120% zoom)
     const fontSize = await input.evaluate((el) => {

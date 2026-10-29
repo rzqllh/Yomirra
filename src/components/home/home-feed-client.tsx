@@ -52,8 +52,12 @@ export function HomeFeedClient({
   const reducedMotion = useReducedMotion();
 
   const isFromNsfwSource = React.useCallback(
-    (sourceId: string, itemIsNsfw?: boolean) =>
-      itemIsNsfw === true || nsfwSourceIds.has(sourceId),
+    (sourceId: string, itemIsNsfw?: boolean) => {
+      if (itemIsNsfw === true) return true;
+      if (nsfwSourceIds.has(sourceId)) return true;
+      const staticSource = dynamicSourceRegistry.get(sourceId);
+      return staticSource?.isNsfw === true;
+    },
     [nsfwSourceIds]
   );
 
@@ -103,29 +107,25 @@ export function HomeFeedClient({
 
   const filteredPopular = React.useMemo(() => {
     if (!hideNsfw) return unifiedPopular;
-    if (nsfwStatus !== "KNOWN") return [];
 
     return unifiedPopular.filter(
-      (manga) => !isFromNsfwSource(manga.sourceId)
+      (manga) => !isFromNsfwSource(manga.sourceId, (manga as any).isNsfw)
     );
   }, [
     unifiedPopular,
     hideNsfw,
-    nsfwStatus,
     isFromNsfwSource,
   ]);
 
   const filteredLatest = React.useMemo(() => {
     if (!hideNsfw) return unifiedLatest;
-    if (nsfwStatus !== "KNOWN") return [];
 
     return unifiedLatest.filter(
-      (manga) => !isFromNsfwSource(manga.sourceId)
+      (manga) => !isFromNsfwSource(manga.sourceId, (manga as any).isNsfw)
     );
   }, [
     unifiedLatest,
     hideNsfw,
-    nsfwStatus,
     isFromNsfwSource,
   ]);
 
@@ -236,7 +236,7 @@ export function HomeFeedClient({
       {historyItems.length > 0 && (
         <section
           id="continue-reading-section"
-          className="mt-8 flex flex-col sm:mt-10"
+          className="mt-4 flex flex-col sm:mt-5"
         >
           <ContinueReadingList items={historyItems} />
         </section>

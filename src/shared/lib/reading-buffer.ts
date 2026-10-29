@@ -219,7 +219,14 @@ export async function clearAutomaticCache(): Promise<{ clearedCaches: string[]; 
     return { clearedCaches: [], preserved: EXPLICIT_DOWNLOADS_CACHE_NAME };
   }
 
-  const clearedCaches = await clearAutomaticAppCaches(caches);
+  const timeoutPromise = new Promise<string[]>((resolve) =>
+    setTimeout(() => resolve([]), 1500)
+  );
+
+  const clearedCaches = await Promise.race([
+    clearAutomaticAppCaches(caches),
+    timeoutPromise,
+  ]).catch(() => []);
 
   if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
     localStorage.removeItem(REGISTRY_STORAGE_KEY);
@@ -247,7 +254,13 @@ export async function getStorageEstimate(): Promise<{
 }> {
   if (typeof navigator !== "undefined" && navigator.storage && navigator.storage.estimate) {
     try {
-      const estimate = await navigator.storage.estimate();
+      const timeoutPromise = new Promise<StorageEstimate>((resolve) =>
+        setTimeout(() => resolve({ usage: 0, quota: 1024 * 1024 * 100 }), 1000)
+      );
+      const estimate = await Promise.race([
+        navigator.storage.estimate(),
+        timeoutPromise,
+      ]).catch(() => ({ usage: 0, quota: 1024 * 1024 * 100 }));
       const usageBytes = estimate.usage ?? 0;
       const quotaBytes = estimate.quota ?? 1;
       const percentage = Math.min(100, Math.round((usageBytes / quotaBytes) * 100));

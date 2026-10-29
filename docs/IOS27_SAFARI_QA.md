@@ -1,7 +1,7 @@
 # Yomirra - Mobile WebKit & iOS Safari Compatibility QA Report
 
 **Branch:** `feat/yomirra-full-uiux-revamp-20261026`  
-**Worktree:** `C:\\Users\\Hafizh Rizqullah\\Documents\\Code\\_active\\_yomirra-worktrees\\impl-full-uiux`  
+**Worktree:** _yomirra-worktrees/impl-full-uiux (isolated verification worktree)  
 **Date:** 2026-10-27  
 **Auditor:** Xyeena Axazeela (Strategic QA & Architecture)  
 

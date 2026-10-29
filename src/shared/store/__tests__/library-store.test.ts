@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { useLibraryStore } from "../library-store";
-import { deleteLibraryItem } from "@/shared/lib/sync-utils";
+import { deleteLibraryItem, pushLibraryItem } from "@/shared/lib/sync-utils";
+import { clearLocalDataOwnerUid, setLocalDataOwnerUid } from "@/shared/lib/local-data-owner";
 
 vi.mock("@/shared/lib/sync-utils", () => ({
   pushLibraryItem: vi.fn().mockResolvedValue(undefined),
@@ -10,10 +11,11 @@ vi.mock("@/shared/lib/sync-utils", () => ({
 describe("library-store Phase 1 Identity & Relinking", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    clearLocalDataOwnerUid();
     useLibraryStore.setState({ items: {} });
   });
 
-  it("deletes the cloud document using the saved title ID", () => {
+  it("deletes the cloud document using the saved title ID", async () => {
     useLibraryStore.setState({ items: {
       "saved-uuid": {
         id: "saved-uuid", sourceId: "mangadex", mangaId: "manga-1",
@@ -23,7 +25,7 @@ describe("library-store Phase 1 Identity & Relinking", () => {
 
     useLibraryStore.getState().removeFromLibrary("mangadex", "manga-1");
 
-    expect(deleteLibraryItem).toHaveBeenCalledWith("mangadex", "manga-1", "saved-uuid");
+    await vi.waitFor(() => expect(deleteLibraryItem).toHaveBeenCalledWith("mangadex", "manga-1", "saved-uuid", null));
     expect(useLibraryStore.getState().items).toEqual({});
   });
 
@@ -39,10 +41,7 @@ describe("library-store Phase 1 Identity & Relinking", () => {
     await vi.waitFor(() => expect(useLibraryStore.getState().items["saved-uuid"]).toEqual(item));
   });
 
-  it("handles a rejected cloud delete for cap eviction without an unhandled rejection", async () => {
-    vi.useFakeTimers();
-    const error = vi.spyOn(console, "error").mockImplementation(() => undefined);
-    vi.mocked(deleteLibraryItem).mockRejectedValueOnce(new Error("offline"));
+  it("never evicts or remotely deletes saved titles when Rak Buku exceeds 1,000 records", async () => {
     const items = Object.fromEntries(Array.from({ length: 1000 }, (_, index) => [
       `saved-${index}`,
       { id: `saved-${index}`, sourceId: "source", mangaId: `manga-${index}`, title: "Title", addedAt: "2026-01-01", updatedAt: "2026-01-01" },
@@ -52,11 +51,80 @@ describe("library-store Phase 1 Identity & Relinking", () => {
     useLibraryStore.getState().addToLibrary({
       id: "saved-new", sourceId: "source", mangaId: "manga-new", title: "New", addedAt: "2026-01-02", updatedAt: "2026-01-02",
     });
-    await vi.runAllTimersAsync();
 
-    expect(error).toHaveBeenCalledWith("Failed to delete evicted library item", expect.any(Error));
-    error.mockRestore();
-    vi.useRealTimers();
+    expect(Object.keys(useLibraryStore.getState().items)).toHaveLength(1001);
+    expect(useLibraryStore.getState().items["saved-0"]).toBeDefined();
+    expect(deleteLibraryItem).not.toHaveBeenCalled();
+    await vi.waitFor(() => expect(pushLibraryItem).toHaveBeenCalled());
+  });
+
+  it("rolls back only the failed title and preserves concurrently saved unrelated titles", async () => {
+    let failFirst: (error: Error) => void = () => { throw new Error("Deferred not initialized"); };
+    vi.mocked(pushLibraryItem).mockImplementationOnce(() =>
+      new Promise<void>((_, reject) => { failFirst = reject; })
+    );
+    useLibraryStore.getState().addToLibrary({
+      id: "one", sourceId: "source", mangaId: "one", title: "One", addedAt: "2026-01-01", updatedAt: "2026-01-01",
+    });
+    await vi.waitFor(() => expect(pushLibraryItem).toHaveBeenCalledTimes(1));
+
+    useLibraryStore.getState().addToLibrary({
+      id: "two", sourceId: "source", mangaId: "two", title: "Two", addedAt: "2026-01-02", updatedAt: "2026-01-02",
+    });
+    failFirst(new Error("network down"));
+
+    await vi.waitFor(() => {
+      expect(useLibraryStore.getState().items.one).toBeUndefined();
+      expect(useLibraryStore.getState().items.two?.title).toBe("Two");
+    });
+  });
+
+  it("does not resurrect a removed title when the user saves it again before the failed delete settles", async () => {
+    let failDelete: (error: Error) => void = () => { throw new Error("Deferred not initialized"); };
+    vi.mocked(deleteLibraryItem).mockImplementationOnce(() =>
+      new Promise<void>((_, reject) => { failDelete = reject; })
+    );
+    useLibraryStore.setState({ items: {
+      saved: { id: "saved", sourceId: "source", mangaId: "manga", title: "Old", addedAt: "2026-01-01", updatedAt: "2026-01-01" },
+    } });
+    useLibraryStore.getState().removeFromLibrary("source", "manga");
+    await vi.waitFor(() => expect(deleteLibraryItem).toHaveBeenCalledTimes(1));
+
+    useLibraryStore.getState().addToLibrary({
+      id: "saved", sourceId: "source", mangaId: "manga", title: "New", addedAt: "2026-01-02", updatedAt: "2026-01-02",
+    });
+    // The second write is queued behind the first for this saved-title identity.
+    expect(pushLibraryItem).not.toHaveBeenCalled();
+    failDelete(new Error("temporary failure"));
+    await vi.waitFor(() => expect(pushLibraryItem).toHaveBeenCalledTimes(1));
+    expect(useLibraryStore.getState().items.saved?.title).toBe("New");
+  });
+
+  it("does not let an earlier account's failed write roll back a different signed-in account", async () => {
+    let rejectOwnerA: (error: Error) => void = () => {};
+    vi.mocked(pushLibraryItem).mockImplementationOnce(() =>
+      new Promise<void>((_, reject) => { rejectOwnerA = reject; })
+    );
+    setLocalDataOwnerUid("owner-A");
+    useLibraryStore.getState().addToLibrary({
+      id: "same-title", sourceId: "source", mangaId: "manga", title: "Owner A",
+      addedAt: "2026-01-01", updatedAt: "2026-01-01",
+    });
+    await vi.waitFor(() => expect(pushLibraryItem).toHaveBeenCalledTimes(1));
+    expect(pushLibraryItem).toHaveBeenCalledWith(
+      expect.objectContaining({ title: "Owner A" }), "owner-A"
+    );
+
+    setLocalDataOwnerUid("owner-B");
+    useLibraryStore.setState({ items: {
+      "same-title": {
+        id: "same-title", sourceId: "source", mangaId: "manga", title: "Owner B",
+        addedAt: "2026-01-02", updatedAt: "2026-01-02",
+      },
+    } });
+    rejectOwnerA(new Error("Owner A session ended"));
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(useLibraryStore.getState().items["same-title"]?.title).toBe("Owner B");
   });
 
   it("assigns SavedTitleId and initializes Phase 1 identity fields on new items", () => {

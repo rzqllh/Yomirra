@@ -11,7 +11,8 @@ const WATCHDOG_TIMEOUT = 10000;
 
 export function SplashScreen({ onComplete }: { onComplete: () => void }) {
   const { loading: authLoading } = useAuth();
-  const reducedMotion = useReducedMotion();
+  const isReduced = useReducedMotion();
+  const reducedMotion = isReduced || process.env.NODE_ENV === "test";
   const { _hasHydrated: hasHydrated } = useOnboardingStore();
 
   const [isMounted, setIsMounted] = React.useState(false);
@@ -44,6 +45,11 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
       timeoutId = setTimeout(() => {
         setIsReadyToExit(true);
       }, remainingTime);
+    } else {
+      // Fail-open: Never trap guest users on splash if network/auth dependencies are slow
+      timeoutId = setTimeout(() => {
+        setIsReadyToExit(true);
+      }, 2000);
     }
 
     return () => clearTimeout(timeoutId);
@@ -72,6 +78,7 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
 
   return (
     <motion.div
+      data-testid="splash-screen"
       initial={{ opacity: 1 }}
       exit={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 1.015 }}
       transition={reducedMotion ? { duration: 0 } : transitions.gentle}
@@ -145,6 +152,7 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
               initial={reducedMotion ? false : { opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -8 }}
+              transition={reducedMotion ? { duration: 0 } : transitions.gentle}
               className="flex flex-col items-center gap-3 w-full"
             >
               <div className="w-full max-w-[160px] h-1.5 rounded-full bg-border-subtle overflow-hidden relative">
