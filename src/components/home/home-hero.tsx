@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { MagnifyingGlass } from "@phosphor-icons/react";
-import { useAuth } from "@/shared/hooks/use-auth";
+import { usePlatformShortcut } from "@/shared/hooks/use-platform-shortcut";
 import { useHistoryStore } from "@/shared/store/history-store";
 import { useMounted } from "@/shared/hooks/use-mounted";
 import { cn } from "@/shared/utils/cn";
@@ -39,7 +39,7 @@ const coverPositions = [
 
 export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
   const mounted = useMounted();
-  const { user } = useAuth();
+  const { searchShortcut } = usePlatformShortcut();
 
   const [sessionCovers, setSessionCovers] = React.useState<HeroCandidate[]>([]);
   const [loadedCovers, setLoadedCovers] = React.useState<Set<string>>(() => new Set());
@@ -120,7 +120,7 @@ export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
             <button
               type="button"
               id="home-hero-search"
-              aria-label="Cari judul atau kreator…"
+              aria-label={`Cari judul atau kreator… (Tekan ${searchShortcut})`}
               onClick={() => window.dispatchEvent(new CustomEvent("open-command-menu"))}
               className="group flex h-11 w-full items-center gap-3 rounded-xl border border-border-subtle/80 bg-surface-base/80 px-3.5 shadow-none transition-all hover:border-accent/50 hover:bg-surface-hover/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer select-none text-left active:scale-[0.995]"
             >
@@ -132,16 +132,8 @@ export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
               <span className="min-w-0 flex-1 bg-transparent text-[13px] sm:text-sm font-medium text-text-muted truncate select-none">
                 Cari judul atau kreator…
               </span>
-              <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded px-2 py-0.5 text-[10px] font-mono font-semibold text-text-muted bg-surface-muted/80 border border-border-subtle/80">⌘K</kbd>
+              <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded px-2 py-0.5 text-[10px] font-mono font-semibold text-text-muted bg-surface-muted/80 border border-border-subtle/80">{searchShortcut}</kbd>
             </button>
-            <input
-              type="text"
-              readOnly
-              tabIndex={-1}
-              aria-hidden="true"
-              placeholder="Cari judul atau kreator…"
-              className="sr-only"
-            />
           </div>
         </div>
       </section>
@@ -234,7 +226,7 @@ export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
           <button
             type="button"
             id="home-hero-search"
-            aria-label="Cari judul atau kreator…"
+            aria-label={`Cari judul atau kreator… (Tekan ${searchShortcut})`}
             onClick={() => window.dispatchEvent(new CustomEvent("open-command-menu"))}
             className="group flex h-11 sm:h-12 w-full items-center gap-3 rounded-full border border-border-default/70 bg-surface-base/90 px-3.5 sm:px-4 shadow-none transition-all hover:border-accent/60 hover:bg-surface-hover/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer select-none text-left active:scale-[0.995]"
           >
@@ -246,16 +238,8 @@ export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
             <span className="min-w-0 flex-1 bg-transparent text-[13px] sm:text-sm font-medium text-text-muted truncate select-none">
               Cari judul atau kreator…
             </span>
-            <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded px-2 py-0.5 text-[10px] font-mono font-semibold text-text-muted bg-surface-muted/80 border border-border-subtle/80">⌘K</kbd>
+            <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded px-2 py-0.5 text-[10px] font-mono font-semibold text-text-muted bg-surface-muted/80 border border-border-subtle/80">{searchShortcut}</kbd>
           </button>
-          <input
-            type="text"
-            readOnly
-            tabIndex={-1}
-            aria-hidden="true"
-            placeholder="Cari judul atau kreator…"
-            className="sr-only"
-          />
         </div>
       </div>
     </section>
