@@ -6,6 +6,7 @@ import { sourceRegistry } from "@/shared/sources/source-registry";
 import { toast } from "sonner";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { parseChapterNumber } from "@/shared/lib/chapter-parser";
+import { getLocalDataOwnerUid } from "@/shared/lib/local-data-owner";
 
 export type HistoryItem = {
   sourceId: string;
@@ -52,6 +53,17 @@ interface HistoryState {
 
 const getHistoryId = (sourceId: string, mangaId: string, chapterId: string) => `${sourceId}::${mangaId}::${chapterId}`;
 
+// Capture the owner at enqueue time, not when a timer later executes.
+// Failed cloud synchronization never deletes the durable local reading cursor.
+const queueHistoryPush = (item: HistoryItem) => {
+  const ownerUid = getLocalDataOwnerUid();
+  setTimeout(() => {
+    void pushHistoryItem(item, ownerUid).catch((error) => {
+      console.error("History cloud write failed; local progress retained", error);
+    });
+  }, 0);
+};
+
 export const useHistoryStore = create<HistoryState>()(
   persist(
     (set, get) => ({
@@ -76,35 +88,11 @@ export const useHistoryStore = create<HistoryState>()(
           ? { ...existing, ...item, savedTitleId: savedTitleId ?? existing.savedTitleId, readAt: item.readAt }
           : { ...item, savedTitleId };
 
-        setTimeout(() => pushHistoryItem(finalItem), 0); // Async Background sync
-        
+        queueHistoryPush(finalItem);
+
+        // Chapter progress is user data, not an evictable cache. Never discard
+        // the oldest cursor or emit a cloud tombstone at an arbitrary item limit.
         const newItems = { ...state.items, [id]: finalItem };
-        const keys = Object.keys(newItems);
-        const MAX_HISTORY_ITEMS = 1000;
-        
-        if (keys.length > MAX_HISTORY_ITEMS) {
-          // O(N) trim of oldest item
-          let oldestKey = keys[0];
-          let oldestTime = newItems[oldestKey].readAt;
-          
-          for (let i = 1; i < keys.length; i++) {
-            const key = keys[i];
-            const time = newItems[key].readAt;
-            if (time < oldestTime) {
-              oldestTime = time;
-              oldestKey = key;
-            }
-          }
-          
-          const evictedItem = newItems[oldestKey];
-          delete newItems[oldestKey];
-          
-          setTimeout(() => {
-            deleteHistoryItem(evictedItem.sourceId, evictedItem.mangaId, evictedItem.chapterId).catch((error) => {
-              console.error("Failed to delete evicted history item", error);
-            });
-          }, 0);
-        }
 
         return { items: newItems };
       }),
@@ -133,6 +121,7 @@ export const useHistoryStore = create<HistoryState>()(
 
       removeHistoryItem: (sourceId, mangaId, chapterId) => {
         const previousState = get().items;
+        const ownerUid = getLocalDataOwnerUid();
         set((state) => {
           const id = getHistoryId(sourceId, mangaId, chapterId);
           const newItems = { ...state.items };
@@ -140,8 +129,13 @@ export const useHistoryStore = create<HistoryState>()(
           return { items: newItems };
         });
 
-        deleteHistoryItem(sourceId, mangaId, chapterId).catch(() => {
-          set({ items: previousState });
+        deleteHistoryItem(sourceId, mangaId, chapterId, ownerUid).catch(() => {
+          if (getLocalDataOwnerUid() !== ownerUid) return;
+          const id = getHistoryId(sourceId, mangaId, chapterId);
+          const deletedItem = previousState[id];
+          if (deletedItem) {
+            set((state) => state.items[id] ? {} : { items: { ...state.items, [id]: deletedItem } });
+          }
           toast.error("Gagal Menghapus Riwayat", {
             description: "Riwayat bacaan belum berhasil dihapus dari akunmu.",
           });
@@ -150,6 +144,9 @@ export const useHistoryStore = create<HistoryState>()(
 
       removeMangaHistory: (sourceId, mangaId) => {
         const previousState = get().items;
+        const ownerUid = getLocalDataOwnerUid();
+        const prefix = `${sourceId}::${mangaId}::`;
+        const deletedEntries = Object.entries(previousState).filter(([key]) => key.startsWith(prefix));
         set((state) => {
           const newItems = { ...state.items };
           Object.keys(newItems).forEach(key => {
@@ -160,8 +157,15 @@ export const useHistoryStore = create<HistoryState>()(
           return { items: newItems };
         });
 
-        deleteMangaHistory(sourceId, mangaId).catch(() => {
-          set({ items: previousState });
+        deleteMangaHistory(sourceId, mangaId, ownerUid).catch(() => {
+          if (getLocalDataOwnerUid() !== ownerUid) return;
+          set((state) => {
+            const restored = { ...state.items };
+            for (const [id, oldItem] of deletedEntries) {
+              if (!restored[id]) restored[id] = oldItem;
+            }
+            return { items: restored };
+          });
           toast.error("Gagal Menghapus Riwayat", {
             description: "Riwayat komik belum berhasil dihapus dari akunmu.",
           });
@@ -317,10 +321,10 @@ export const useHistoryStore = create<HistoryState>()(
           }
         });
 
-        pushHistoryItem(updatedItem).catch(() => {
-          set({ items: previousState });
-          toast.warning("Progres Belum Tersimpan", {
-            description: "Progres membaca belum tersinkron ke akun karena kendala jaringan.",
+        void pushHistoryItem(updatedItem, getLocalDataOwnerUid()).catch(() => {
+          // Offline/local-first progress must survive a failed cloud request.
+          toast.warning("Progres Belum Tersinkron", {
+            description: "Progres tetap tersimpan di perangkat ini. Sinkronisasi cloud belum berhasil.",
           });
         });
       },
@@ -405,7 +409,7 @@ export const useHistoryStore = create<HistoryState>()(
               hasChanges = true;
             } else if (localTime > cloudTime) {
               // Local is newer, push to cloud to sync up
-              setTimeout(() => pushHistoryItem(localItem), 0);
+              queueHistoryPush(localItem);
             }
           }
         }
@@ -414,7 +418,7 @@ export const useHistoryStore = create<HistoryState>()(
         const cloudIds = new Set(cloudItems.map(item => getHistoryId(item.sourceId, item.mangaId, item.chapterId)));
         for (const [id, localItem] of Object.entries(state.items)) {
           if (!cloudIds.has(id)) {
-            setTimeout(() => pushHistoryItem(localItem), 0);
+            queueHistoryPush(localItem);
           }
         }
 
