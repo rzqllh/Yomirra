@@ -512,8 +512,8 @@ describe("useSync cloud correctness", () => {
       commit: vi.fn(() => {
         started++;
         return started === 1
-          ? new Promise<void>((resolve) => { resolveFirst = resolve; })
-          : Promise.resolve();
+          ? new Promise<undefined>((resolve) => { resolveFirst = () => resolve(undefined); })
+          : Promise.resolve(undefined);
       }),
     }));
     const { result } = renderHook(() => useSync({ autoSync: false }));
