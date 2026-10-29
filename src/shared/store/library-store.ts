@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { pushLibraryItem, deleteLibraryItem } from "@/shared/lib/sync-utils";
+import { getLocalDataOwnerUid } from "@/shared/lib/local-data-owner";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { sourceRegistry } from "@/shared/sources/source-registry";
 import { toast } from "sonner";
@@ -85,6 +86,7 @@ type MutationCheckpoint = {
   applied: Record<string, LibraryItem>;
   versions: Map<string, number>;
   resetVersion: number;
+  ownerUid: string | null;
 };
 
 function queueTitleWrite(id: string, operation: () => Promise<void>): Promise<void> {
@@ -110,7 +112,13 @@ function captureMutation(
       versions.set(key, version);
     }
   }
-  return { before, applied, versions, resetVersion: libraryResetVersion };
+  return {
+    before,
+    applied,
+    versions,
+    resetVersion: libraryResetVersion,
+    ownerUid: getLocalDataOwnerUid(),
+  };
 }
 
 function rollbackMutation(
@@ -118,7 +126,8 @@ function rollbackMutation(
   setItems: (update: (state: LibraryState) => Partial<LibraryState>) => void,
   onlyKeys?: string[]
 ): boolean {
-  if (checkpoint.resetVersion !== libraryResetVersion) return false;
+  if (checkpoint.resetVersion !== libraryResetVersion ||
+      checkpoint.ownerUid !== getLocalDataOwnerUid()) return false;
   let rolledBack = false;
   setItems((state) => {
     const next = { ...state.items };
@@ -191,8 +200,8 @@ export const useLibraryStore = create<LibraryState>()(
         });
 
         const checkpoint = captureMutation(previousState, get().items);
-        void queueTitleWrite(itemToPush.id ?? getLibraryId(item.sourceId, item.mangaId), () =>
-          pushLibraryItem(itemToPush)
+        void queueTitleWrite(`${checkpoint.ownerUid ?? "guest"}:${itemToPush.id ?? getLibraryId(item.sourceId, item.mangaId)}`, () =>
+          pushLibraryItem(itemToPush, checkpoint.ownerUid)
         ).catch(() => {
           if (rollbackMutation(checkpoint, set)) {
             toast.error("Gagal Menyimpan ke Akun", {
@@ -252,8 +261,8 @@ export const useLibraryStore = create<LibraryState>()(
 
         const checkpoint = captureMutation(previousState, get().items);
         for (const [key, removedItem] of removedItems) {
-          void queueTitleWrite(removedItem.id ?? key, () =>
-            deleteLibraryItem(removedItem.sourceId, removedItem.mangaId, removedItem.id ?? key)
+          void queueTitleWrite(`${checkpoint.ownerUid ?? "guest"}:${removedItem.id ?? key}`, () =>
+            deleteLibraryItem(removedItem.sourceId, removedItem.mangaId, removedItem.id ?? key, checkpoint.ownerUid)
           ).catch(() => {
             if (rollbackMutation(checkpoint, set, [key])) {
               toast.error("Gagal Menghapus dari Akun", {
@@ -366,8 +375,8 @@ export const useLibraryStore = create<LibraryState>()(
 
         if (updatedItem) {
           const checkpoint = captureMutation(previousState, get().items);
-          void queueTitleWrite((updatedItem as LibraryItem).id ?? savedTitleIdOrKey, () =>
-            pushLibraryItem(updatedItem!)
+          void queueTitleWrite(`${checkpoint.ownerUid ?? "guest"}:${(updatedItem as LibraryItem).id ?? savedTitleIdOrKey}`, () =>
+            pushLibraryItem(updatedItem!, checkpoint.ownerUid)
           ).catch(() => {
             if (rollbackMutation(checkpoint, set)) {
               toast.error("Gagal Memperbarui Sumber", {
@@ -416,8 +425,8 @@ export const useLibraryStore = create<LibraryState>()(
 
         if (updatedItem) {
           const checkpoint = captureMutation(previousState, get().items);
-          void queueTitleWrite((updatedItem as LibraryItem).id ?? getLibraryId(sourceId, mangaId), () =>
-            pushLibraryItem(updatedItem!)
+          void queueTitleWrite(`${checkpoint.ownerUid ?? "guest"}:${(updatedItem as LibraryItem).id ?? getLibraryId(sourceId, mangaId)}`, () =>
+            pushLibraryItem(updatedItem!, checkpoint.ownerUid)
           ).catch(() => {
             rollbackMutation(checkpoint, set);
           });
