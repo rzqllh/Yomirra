@@ -9,6 +9,7 @@ const backMock = vi.fn();
 const replaceMock = vi.fn();
 let mockUser: unknown = null;
 let mockHistoryItems: Record<string, unknown> = {};
+let mockSearchShortcut: "⌘K" | "Ctrl+K" = "Ctrl+K";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: pushMock, back: backMock, replace: replaceMock }),
@@ -32,6 +33,10 @@ vi.mock("@/shared/hooks/use-auth", () => ({
   }),
 }));
 
+vi.mock("@/shared/hooks/use-platform-shortcut", () => ({
+  usePlatformShortcut: () => ({ searchShortcut: mockSearchShortcut }),
+}));
+
 vi.mock("@/shared/hooks/use-mounted", () => ({
   useMounted: () => true,
 }));
@@ -53,6 +58,7 @@ describe("Header & Hero System (Squircle & Reusable)", () => {
     vi.clearAllMocks();
     mockUser = null;
     mockHistoryItems = {};
+    mockSearchShortcut = "Ctrl+K";
     sessionStorage.clear();
   });
 
@@ -76,6 +82,22 @@ describe("Header & Hero System (Squircle & Reusable)", () => {
 
       expect(screen.getByText("LANJUT LAGI DI YOMIRRA")).toBeTruthy();
       expect(screen.queryByText("BACAANMU DIMULAI DI SINI")).toBeNull();
+    });
+
+    it("uses the same platform shortcut on zero-history and returning-reader search triggers", () => {
+      const first = render(<HomeHero />);
+      expect(screen.getByText("Ctrl+K")).toBeTruthy();
+      first.unmount();
+
+      mockHistoryItems = {
+        "source-a::title-a::chapter-10": { chapterId: "chapter-10" },
+      };
+      mockSearchShortcut = "⌘K";
+      render(<HomeHero />);
+
+      expect(screen.getByText("⌘K")).toBeTruthy();
+      expect(screen.queryByText("Ctrl+K")).toBeNull();
+      expect(screen.getByText("LANJUT LAGI DI YOMIRRA")).toBeTruthy();
     });
 
     it("hands Home search to the shared global search surface", () => {
