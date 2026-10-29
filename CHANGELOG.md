@@ -2,6 +2,15 @@
 
 Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan perubahan yang sudah masuk ke repository; eksperimen internal dan rencana masa depan tidak diperlakukan sebagai fitur rilis.
 
+## [Unreleased] — Production hardening after 2.3.1 (2026-10-29)
+
+- **PR #59, merged to main:** Fix Rak Buku optimistic rollback so failed asynchronous saves/deletes cannot overwrite unrelated or newer local changes. Serialize writes per saved-title identity, scope them to account ownership, and keep guest deletions local.
+- **Data retention:** Remove automatic eviction of saved titles above 1,000 items and the corresponding destructive Firestore tombstones. A personal library is not a cache.
+- **Cloud merge Q64/Q127:** Record domain-specific committed writes rather than infer from local counts. After a partially committed multi-batch merge, require a fresh cloud snapshot and renewed user confirmation before retrying.
+- **Feedback and reliability:** Distinguish optimistic local bookmark changes from confirmed cloud success. Align splash-screen regression tests with the two-second fail-open behavior.
+- **Verification:** GitHub Actions PR run #468 passed TypeScript, ESLint (0 errors, 508 warnings), 217 Vitest files / 1,436 tests, and the production build. The merged SHA `e82ab45` was deployed to Vercel production as READY on 2026-10-29.
+- **Outstanding verification:** Real iPhone/iPadOS installed-PWA tests, BrowserStack hardware tests, end-to-end production Firebase recovery, individual Q1–Q175 evidence review and external legal/content-rights clearance are not independently completed. CI/deployment status is not a claim that these gates passed.
+
 ## [2.3.1] - 2026-10-28
 
 ### Hardening Sinkronisasi & Atomicity Firestore (Q64 & Q127)
