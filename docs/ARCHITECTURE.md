@@ -239,3 +239,11 @@ Telegram ops bersifat deterministic. Error/stage diubah menjadi report yang memb
 - Smart Collections: derived.
 - Recommendation core: deterministic.
 - Semantic search: optional.
+
+## Batas penyimpanan riwayat
+
+`history-retention.ts` menjadi kebijakan bersama untuk store, rehidrasi, sinkronisasi, guest merge, ekspor, dan restore. Kebijakan ini membatasi detail chapter ke 512, mempertahankan resume serta milestone per judul, dan tidak menjalankan penghapusan berdasarkan umur.
+
+Penulisan history menangkap pemilik data sebelum operasi async, mengurutkan penulisan per chapter, dan menolak akun yang berubah. Kegagalan penulisan cloud mempertahankan progres lokal. Full sync menyatukan state sebelum memadatkan history; marker kompak mencegah detail lama masuk kembali. Pemadatan cloud selesai saat rekonsiliasi penuh, bukan sebagai transaksi global lintas perangkat. Lihat [kontrak data bacaan](READING_DATA.md).
+
+Download engine memeriksa Cache Storage ketika resume dan sebelum menyatakan chapter selesai. Metadata `cached` saja tidak membuktikan gambar masih tersedia.

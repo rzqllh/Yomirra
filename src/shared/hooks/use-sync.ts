@@ -10,9 +10,11 @@ import { initFirebase } from '@/shared/lib/firebase';
 import { loadFirestore } from "@/shared/lib/firestore-runtime";
 import { pullSourcePreferences, pullLegacyLibraryData, pullCustomCollections } from '@/shared/lib/sync-utils';
 import { useCollectionStore } from '@/shared/store/collection-store';
+import { retainHistory } from '@/shared/lib/history-retention';
 
 type Tombstone = {
   _deleted: true;
+  _compacted?: boolean;
   deletedAt: unknown;
   id?: string;
   sourceId?: string;
@@ -221,7 +223,7 @@ export function useSync(options = { autoSync: true }) {
       const historyTombstones: Record<string, Tombstone> = {};
       remoteHistorySnapshot.forEach((remoteDoc) => {
         const item = remoteDoc.data() as HistoryItem & Tombstone;
-        if (item._deleted) historyTombstones[remoteDoc.id] = item;
+        if (item._deleted || item._compacted) historyTombstones[remoteDoc.id] = item;
         else remoteHistory[remoteDoc.id] = item;
       });
 
@@ -252,30 +254,36 @@ export function useSync(options = { autoSync: true }) {
         }
       }
 
-      // Merge history with tombstone precedence.
-      const localHistory = useHistoryStore.getState().items;
-      for (const localItem of Object.values(localHistory)) {
-        const id = `${localItem.sourceId}::${localItem.mangaId}::${localItem.chapterId}`;
-        const tombstone = historyTombstones[id];
-        if (tombstone) {
-          if (getSafeTimestamp(tombstone.deletedAt) >= getSafeTimestamp(localItem.readAt)) {
-            removeHistoryItemLocal(id, localItem);
-          } else {
-            pushToBatch(doc(firestore, `users/${uid}/history`, id), cleanRecord({ ...localItem, readAt: getSafeTimestamp(localItem.readAt) })); syncedHistCount++;
-          }
-          continue;
-        }
-        const remoteItem = remoteHistory[id];
-        if (!remoteItem || getSafeTimestamp(localItem.readAt) > getSafeTimestamp(remoteItem.readAt)) {
-          pushToBatch(doc(firestore, `users/${uid}/history`, id), cleanRecord({ ...localItem, readAt: getSafeTimestamp(localItem.readAt) })); syncedHistCount++;
+      const mergedHistory = { ...useHistoryStore.getState().items };
+      for (const [id, marker] of Object.entries(historyTombstones)) {
+        if (getSafeTimestamp(marker.deletedAt) >= getSafeTimestamp(mergedHistory[id]?.readAt)) delete mergedHistory[id];
+      }
+      for (const [id, remoteItem] of Object.entries(remoteHistory)) {
+        const localItem = mergedHistory[id];
+        if (!localItem || getSafeTimestamp(remoteItem.readAt) > getSafeTimestamp(localItem.readAt)) {
+          mergedHistory[id] = { ...remoteItem, readAt: getSafeTimestamp(remoteItem.readAt) };
         }
       }
-
-      for (const [id, remoteItem] of Object.entries(remoteHistory)) {
-        if (!isCurrentUser()) return;
-        const localItem = useHistoryStore.getState().items[id];
-        if (!localItem || getSafeTimestamp(remoteItem.readAt) > getSafeTimestamp(localItem.readAt)) {
-          useHistoryStore.getState()._setItemLocal({ ...remoteItem, readAt: getSafeTimestamp(remoteItem.readAt) });
+      const retainedHistory = retainHistory(mergedHistory, (sourceId, mangaId) =>
+        useLibraryStore.getState().resolveBySourceRef(sourceId, mangaId)?.id ?? null,
+      );
+      useHistoryStore.setState({ items: retainedHistory });
+      for (const [id, item] of Object.entries(mergedHistory)) {
+        const retained = retainedHistory[id];
+        const remote = remoteHistory[id];
+        const data = retained ? cleanRecord(retained) : {
+          _compacted: true, deletedAt: item.readAt,
+          sourceId: item.sourceId, mangaId: item.mangaId, chapterId: item.chapterId,
+          mangaTitle: item.mangaTitle, readAt: item.readAt,
+        };
+        const retainedRecord = retained ? cleanRecord(retained) : undefined;
+        const remoteRecord = remote ? cleanRecord(remote) : undefined;
+        const unchanged = retainedRecord && remoteRecord &&
+          Object.keys(retainedRecord).length === Object.keys(remoteRecord).length &&
+          Object.entries(retainedRecord).every(([key, value]) => remoteRecord[key] === value);
+        if (!unchanged) {
+          pushToBatch(doc(firestore, `users/${uid}/history`, id), data);
+          syncedHistCount++;
         }
       }
 
@@ -410,7 +418,7 @@ export function useSync(options = { autoSync: true }) {
             removeHistoryItemLocal(change.doc.id, data);
             return;
           }
-          if (data._deleted) {
+          if (data._deleted || data._compacted) {
             if (!localItem || getSafeTimestamp(data.deletedAt) >= getSafeTimestamp(localItem.readAt)) {
               removeHistoryItemLocal(change.doc.id, data);
             }

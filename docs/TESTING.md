@@ -159,3 +159,11 @@ Jangan melemahkan assertion hanya supaya suite hijau.
 Jangan menyatakan task selesai dari diff atau lint saja. Fresh verification harus dijalankan setelah tree terakhir berubah.
 
 Untuk motion/navigation, gate minimal mencakup typecheck, lint, full test suite, production build, preview deployment, reduced-motion regression, dan browser smoke untuk Back/Forward scroll. iOS/PWA behavior tidak boleh dinyatakan lulus hanya dari jsdom atau static source inspection.
+
+## Regresi keamanan data bacaan
+
+Jalankan `pnpm test -- --run` dan pemeriksaan CI untuk seluruh suite. Regresi khusus berada di `history-retention.test.ts`, `history-store.test.ts`, `sync-utils.test.ts`, `backup-engine.test.ts`, dan `download-integrity.test.ts`.
+
+Skenario wajib: lebih dari 512 detail; ringkasan judul lama tetap ada; reread berbeda dari milestone; akun berubah ketika operasi tertunda; kegagalan cloud tidak menimpa progres baru; ekspor dan restore berulang mempertahankan ID serta koleksi; library di atas 1.000 judul dapat diimpor; dan gambar cache yang hilang diunduh kembali.
+
+Uji otomatis dengan Firebase/cache simulasi bukan pengganti pengujian dua akun pada dua perangkat nyata. Uji iPhone/iPad PWA terpasang, pemutusan jaringan, penutupan paksa aplikasi, batas storage, dan pemulihan Firebase tetap harus dicatat terpisah. Aturan penghapusan setelah tiga bulan belum diimplementasikan.

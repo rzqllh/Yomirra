@@ -25,6 +25,11 @@ export const libraryItemBackupSchema = z.object({
   lastReadChapterId: z.string().optional(),
   lastReadChapterTitle: z.string().optional(),
   lastReadAt: z.string().optional(),
+  highestMilestoneChapterId: z.string().optional(),
+  highestMilestoneChapterTitle: z.string().optional(),
+  highestMilestoneIndex: z.number().int().min(0).optional(),
+  isBookmarked: z.boolean().optional(),
+  releaseDay: z.number().int().min(0).max(6).optional(),
   userRating: z.number().min(1).max(10).optional(),
   isNsfw: z.boolean().optional(),
 });
@@ -46,6 +51,10 @@ export const historyItemBackupSchema = z.object({
   totalChapters: z.number().min(0).optional(),
   scrollPercent: z.number().min(0).max(100).optional(),
   readAt: z.number().positive().finite(),
+  savedTitleId: z.string().min(1).optional(),
+  chapterNumber: z.number().finite().optional(),
+  status: z.string().optional(),
+  isCompact: z.boolean().optional(),
   isNsfw: z.boolean().optional(),
 });
 
@@ -108,8 +117,8 @@ export const yomirraBackupSchemaV1 = z.object({
   appVersion: z.string().min(1),
   exportedAt: z.string().refine(isIsoDate, { message: "exportedAt harus berupa ISO date string yang valid" }),
   data: z.object({
-    library: z.array(libraryItemBackupSchema).max(1000, "Library tidak boleh melebihi 1000 item"),
-    history: z.array(historyItemBackupSchema).max(1000, "History tidak boleh melebihi 1000 item"),
+    library: z.array(libraryItemBackupSchema),
+    history: z.array(historyItemBackupSchema),
     updates: z.array(updateItemBackupSchema).max(1000, "Updates tidak boleh melebihi 1000 item").optional(),
     settings: whitelistedSettingsSchema,
     readerPreferences: readerPreferencesBackupSchema,
@@ -123,8 +132,8 @@ export const yomirraBackupSchemaV2 = z.object({
   appVersion: z.string().min(1),
   exportedAt: z.string().refine(isIsoDate, { message: "exportedAt harus berupa ISO date string yang valid" }),
   data: z.object({
-    library: z.array(libraryItemBackupSchema).max(1000, "Library tidak boleh melebihi 1000 item"),
-    history: z.array(historyItemBackupSchema).max(1000, "History tidak boleh melebihi 1000 item"),
+    library: z.array(libraryItemBackupSchema),
+    history: z.array(historyItemBackupSchema),
     updates: z.array(updateItemBackupSchema).max(1000, "Updates tidak boleh melebihi 1000 item").optional(),
     collections: z.array(collectionBackupSchema).max(100, "Koleksi tidak boleh melebihi 100 item").optional(),
     membershipsByManga: z.record(z.string(), z.array(z.string())).optional(),
@@ -150,8 +159,8 @@ export const yomirraBackupSchemaV3 = z.object({
   appVersion: z.string().min(1),
   exportedAt: z.string().refine(isIsoDate, { message: "exportedAt harus berupa ISO date string yang valid" }),
   data: z.object({
-    library: z.array(libraryItemV2BackupSchema).max(1000, "Library tidak boleh melebihi 1000 item"),
-    history: z.array(historyItemBackupSchema).max(1000, "History tidak boleh melebihi 1000 item"),
+    library: z.array(libraryItemV2BackupSchema),
+    history: z.array(historyItemBackupSchema),
     updates: z.array(updateItemBackupSchema).max(1000, "Updates tidak boleh melebihi 1000 item").optional(),
     collections: z.array(collectionBackupSchema).max(100, "Koleksi tidak boleh melebihi 100 item").optional(),
     membershipsByManga: z.record(z.string(), z.array(z.string())).optional(),

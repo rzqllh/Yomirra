@@ -1,5 +1,17 @@
 # Yomirra — Master Execution Roadmap P0–P4
 
+## Pembaruan 30 Oktober 2026: keamanan data bacaan
+
+Bagian ini mengoreksi klaim penyelesaian menyeluruh dalam catatan historis di bawah. Pekerjaan saat ini menangani tujuh temuan pada history, penulisan lintas akun, rollback progres, backup/restore, batas impor, dan integritas download. Kontrak perilaku ada di [READING_DATA.md](READING_DATA.md).
+
+- Implementasi dan regresi tersedia di [PR #64](https://github.com/rzqllh/Yomirra/pull/64), branch `fix/reading-data-safety-20261030`. Status CI dan merge mengikuti checks pada PR tersebut; release gates eksternal di bawah tetap berlaku.
+- Pemeriksaan lokal terisolasi: 8 skenario lulus pada kode perubahan; baseline gagal pada 8 skenario yang sama. Ini bukan seluruh suite Vitest atau pengujian layanan nyata.
+- Retensi: 512 detail terbaru ditambah ringkasan resume dan milestone per judul. Tidak ada penghapusan otomatis setelah tiga bulan; definisi ketidakaktifan masih keputusan pemilik.
+- Release gates tetap terbuka: Firebase lintas perangkat/recovery nyata, iOS/iPadOS PWA terpasang, verifikasi independen Q1–Q175, serta review hak konten/publikasi. Fitur partial dan blocked pada tracker tidak otomatis berubah menjadi verified.
+- Tidak ada tag rilis atau kenaikan versi package untuk perubahan ini. Status produksi tidak disimpulkan dari CI.
+
+### Catatan historis
+
 **Status:** Roadmap historis (baseline 2026-10-07); lihat checkpoint integrasi baru di bawah. Gerbang manual dan eksternal tetap terbuka.
 **Target repo path:** `docs/yomirra-master-execution-roadmap.md`  
 **Role:** Single source of truth for the remaining Yomirra work covered by this roadmap.  

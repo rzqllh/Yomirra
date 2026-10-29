@@ -171,3 +171,9 @@ Browser CSP saat ini sengaja `Report-Only`. Perubahan directive harus diuji pada
 - [Components](COMPONENTS.md)
 - [Testing](TESTING.md)
 - [Adding a Source](ADDING_A_SOURCE.md)
+
+## Perubahan history dan backup
+
+Baca [kontrak data bacaan](READING_DATA.md) sebelum mengubah history atau sync. Gunakan kebijakan `retainHistory` pada semua jalur pemasukan data. Jangan memakai batas 512 untuk menghapus progres judul dari cloud, jangan memulihkan seluruh snapshot history ketika satu write gagal, dan selalu tangkap pemilik operasi sebelum menunggu Firebase.
+
+Backup schema 1 sampai 3 tetap diterima. Perubahan identitas wajib diuji melalui ekspor, validasi schema, merge berulang, dan replace dengan koleksi yang masih terhubung. Batas 10 MB tetap berlaku untuk ekspor dan impor.

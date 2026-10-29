@@ -8,6 +8,7 @@ import type { LibraryItem } from "@/shared/store/library-store";
 import type { HistoryItem } from "@/shared/store/history-store";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useHistoryStore } from "@/shared/store/history-store";
+import { retainHistory } from "./history-retention";
 import { setLocalDataOwnerUid } from "@/shared/lib/local-data-owner";
 
 export interface GuestSnapshot {
@@ -101,7 +102,7 @@ export async function fetchCloudSnapshot(uid: string): Promise<CloudSnapshot> {
     const libSnap = await getDocs(collection(firestore, `users/${uid}/libraryV2`));
     libSnap.forEach((docSnap) => {
       const data = docSnap.data() as Record<string, unknown>;
-      if (data._deleted) {
+      if (data._deleted || data._compacted) {
         libraryTombstones[docSnap.id] = {
           deletedAt: (data.deletedAt as string | number) || Date.now(),
           _deleted: true,
@@ -119,7 +120,7 @@ export async function fetchCloudSnapshot(uid: string): Promise<CloudSnapshot> {
     const histSnap = await getDocs(collection(firestore, `users/${uid}/history`));
     histSnap.forEach((docSnap) => {
       const data = docSnap.data() as Record<string, unknown>;
-      if (data._deleted) {
+      if (data._deleted || data._compacted) {
         historyTombstones[docSnap.id] = {
           deletedAt: (data.deletedAt as string | number) || Date.now(),
           _deleted: true,
@@ -311,7 +312,7 @@ export function resolveMergedState(
     }
   }
 
-  return { library: mergedLibrary, history: mergedHistory };
+  return { library: mergedLibrary, history: retainHistory(mergedHistory) };
 }
 
 /**
@@ -344,7 +345,7 @@ export function restoreGuestBackupToStores(): boolean {
     const backup = restoreGuestBackup();
     if (!backup) return false;
     useLibraryStore.setState({ items: backup.library });
-    useHistoryStore.setState({ items: backup.history });
+    useHistoryStore.setState({ items: retainHistory(backup.history) });
     return true;
   } catch (e) {
     console.error("Failed to restore guest backup to stores", e);
@@ -459,7 +460,7 @@ export async function executeGuestMerge({
 
     // 3. Apply to local stores ONLY after cloud write succeeds!
     useLibraryStore.setState({ items: finalLibrary });
-    useHistoryStore.setState({ items: finalHistory });
+    useHistoryStore.setState({ items: retainHistory(finalHistory) });
 
     // 4. Update owner UID
     setLocalDataOwnerUid(uid);

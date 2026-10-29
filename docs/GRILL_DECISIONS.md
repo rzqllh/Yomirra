@@ -1,5 +1,17 @@
 # Yomirra — Grill Decision Register
 
+## Pembaruan 30 Oktober 2026: keamanan data bacaan
+
+Bagian ini mengoreksi klaim penyelesaian menyeluruh dalam catatan historis di bawah. Pekerjaan saat ini menangani tujuh temuan pada history, penulisan lintas akun, rollback progres, backup/restore, batas impor, dan integritas download. Kontrak perilaku ada di [READING_DATA.md](READING_DATA.md).
+
+- Implementasi dan regresi tersedia di [PR #64](https://github.com/rzqllh/Yomirra/pull/64), branch `fix/reading-data-safety-20261030`. Status CI dan merge mengikuti checks pada PR tersebut; release gates eksternal di bawah tetap berlaku.
+- Pemeriksaan lokal terisolasi: 8 skenario lulus pada kode perubahan; baseline gagal pada 8 skenario yang sama. Ini bukan seluruh suite Vitest atau pengujian layanan nyata.
+- Retensi: 512 detail terbaru ditambah ringkasan resume dan milestone per judul. Tidak ada penghapusan otomatis setelah tiga bulan; definisi ketidakaktifan masih keputusan pemilik.
+- Release gates tetap terbuka: Firebase lintas perangkat/recovery nyata, iOS/iPadOS PWA terpasang, verifikasi independen Q1–Q175, serta review hak konten/publikasi. Fitur partial dan blocked pada tracker tidak otomatis berubah menjadi verified.
+- Tidak ada tag rilis atau kenaikan versi package untuk perubahan ini. Status produksi tidak disimpulkan dari CI.
+
+### Catatan historis
+
 Last reviewed: 2026-10-25. **13-round interview CLOSED.** All Q1–Q175 accepted, with revised-and-accepted Q52 and Q63. See [the authoritative final ledger](GRILL_FINAL_LEDGER.md). This remains a product decision record, not an execution specification, acceptance report, release sign-off, or authorization to change production code.
 
 ## Status convention
@@ -39,7 +51,7 @@ Last reviewed: 2026-10-25. **13-round interview CLOSED.** All Q1–Q175 accepted
 - **Open product decisions:** none within this interview.
 - **Still unverified:** real-device visual quality, implementation and feature-parity coverage, recovery/security tests, third-party material provenance, public policies and legal readiness. These are evidence gates, not unresolved answers.
 - **Not authorized:** execution plan/spec, code or deployed product changes. Full UI/UX-from-zero-to-deployment discussion is reserved for a later Antigravity session with development/design skills.
-- **See:** [final decision and public docs gap ledger](GRILL_FINAL_LEDGER.md), [parity reference map](PARITY_GAP_AUDIT.md), [license and public docs review](REFERENCE_LICENSING_REVIEW.md).
+- **See:** [final decision and public docs gap ledger](GRILL_FINAL_LEDGER.md), [parity reference map](YOMIRRA_FULL_PARITY_EXECUTION.md), [license and public docs review](REFERENCE_LICENSING_REVIEW.md).
 
 ## User-specified visual quality constraints (2026-10-25)
 

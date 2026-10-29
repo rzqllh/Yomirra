@@ -519,4 +519,41 @@ describe("useSync cloud correctness", () => {
       expect(mocks.listeners.has("users/user-a/libraryV2")).toBe(true);
     });
   });
+  it("compacts cloud overflow only after choosing retained resume and milestone records", async () => {
+    const entries: Array<[string, Record<string, unknown>]> = Array.from({ length: 600 }, (_, index) => [
+      `source::manga::ch-${index}`, { ...historyItem(index + 1), chapterId: `ch-${index}`, chapterNumber: index },
+    ]);
+    mocks.snapshots.set("users/user-a/history", snapshot(entries));
+    const { result } = renderHook(() => useSync({ autoSync: false }));
+    await act(async () => { await result.current.runFullSync(); });
+    const retained = Object.values(useHistoryStore.getState().items);
+    expect(retained.filter(item => !item.isCompact)).toHaveLength(512);
+    expect(useHistoryStore.getState().getHighestMilestoneForManga("source", "manga")?.chapterNumber).toBe(599);
+    const markers = mocks.writes.filter(write => (write.data as Record<string, unknown>)._compacted);
+    expect(markers).toHaveLength(88);
+    expect(markers.every(write => !(write.data as Record<string, unknown>)._deleted)).toBe(true);
+  });
+
+  it("does not resurrect compacted history but permits an explicit newer read", async () => {
+    mocks.snapshots.set("users/user-a/history", snapshot([["source::manga::chapter", {
+      _compacted: true, deletedAt: 2000, sourceId: "source", mangaId: "manga", chapterId: "chapter",
+    }]]));
+    useHistoryStore.setState({ items: { "source::manga::chapter": historyItem(1000) } });
+    const { result } = renderHook(() => useSync({ autoSync: false }));
+    await act(async () => { await result.current.runFullSync(); });
+    expect(useHistoryStore.getState().items).toEqual({});
+    useHistoryStore.setState({ items: { "source::manga::chapter": historyItem(3000) } });
+    await act(async () => { await result.current.runFullSync(); });
+    expect(mocks.writes).toContainEqual(expect.objectContaining({ data: expect.objectContaining({ readAt: 3000 }) }));
+  });
+
+  it("does not rewrite unchanged cloud history when field order differs", async () => {
+    mocks.snapshots.set("users/user-a/history", snapshot([["source::manga::chapter", {
+      readAt: 1000, mangaTitle: "Title", chapterId: "chapter", mangaId: "manga", sourceId: "source",
+    }]]));
+    const { result } = renderHook(() => useSync({ autoSync: false }));
+    await act(async () => { await result.current.runFullSync(); });
+    expect(mocks.writes.filter(write => write.path.includes("/history/"))).toHaveLength(0);
+  });
+
 });

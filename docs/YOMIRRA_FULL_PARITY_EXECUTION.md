@@ -1,9 +1,35 @@
 # Yomirra — Final Full-Parity & Production Execution Tracker (Q1–Q175)
 
-**Status:** ALL PRODUCTION IMPLEMENTATION & TESTING COMPLETED LOCALLY  
+## Pembaruan 30 Oktober 2026: keamanan data bacaan
+
+Bagian ini mengoreksi klaim penyelesaian menyeluruh dalam catatan historis di bawah. Pekerjaan saat ini menangani tujuh temuan pada history, penulisan lintas akun, rollback progres, backup/restore, batas impor, dan integritas download. Kontrak perilaku ada di [READING_DATA.md](READING_DATA.md).
+
+- Implementasi dan regresi tersedia di [PR #64](https://github.com/rzqllh/Yomirra/pull/64), branch `fix/reading-data-safety-20261030`. Status CI dan merge mengikuti checks pada PR tersebut; release gates eksternal di bawah tetap berlaku.
+- Pemeriksaan lokal terisolasi: 8 skenario lulus pada kode perubahan; baseline gagal pada 8 skenario yang sama. Ini bukan seluruh suite Vitest atau pengujian layanan nyata.
+- Retensi: 512 detail terbaru ditambah ringkasan resume dan milestone per judul. Tidak ada penghapusan otomatis setelah tiga bulan; definisi ketidakaktifan masih keputusan pemilik.
+- Release gates tetap terbuka: Firebase lintas perangkat/recovery nyata, iOS/iPadOS PWA terpasang, verifikasi independen Q1–Q175, serta review hak konten/publikasi. Fitur partial dan blocked pada tracker tidak otomatis berubah menjadi verified.
+- Tidak ada tag rilis atau kenaikan versi package untuk perubahan ini. Status produksi tidak disimpulkan dari CI.
+
+### Cakupan perbaikan data bacaan
+
+| Temuan | Implementasi dan regresi |
+|---|---|
+| Riwayat terhapus saat melewati batas | Kebijakan 512 detail dan ringkasan; uji overflow serta migrasi persistence v1 |
+| Operasi history berpindah akun | UID pemilik ditangkap sebelum async; uji perubahan akun saat Firebase tertunda |
+| Kegagalan cloud menimpa progres baru | Progres lokal dipertahankan; rollback delete terbatas entri terkait |
+| Status download tidak sesuai isi cache | Pemeriksaan gambar saat resume dan sebelum selesai; uji gambar hilang |
+| Restore menggandakan judul | Merge dan replace memakai identitas judul; uji restore berulang |
+| Backup kehilangan identitas/milestone | Field ikut diekspor dan lolos schema; uji round-trip dan pemetaan koleksi |
+| Backup library besar ditolak | Batas 1.000 judul dihapus; batas 10 MB tetap diuji |
+
+Tabel ini memetakan implementasi ke regresinya. Hasil eksekusi final tersedia di checks PR #64; pengujian nyata Firebase dan iOS tidak digantikan oleh tabel ini.
+
+### Catatan historis
+
+**Status historis:** klaim di bawah belum membuktikan kesiapan produksi; lihat pembaruan 30 Oktober di atas.  
 **Branch:** `fix/uiux-master-reconciliation-20261028`  
 **Target Architecture:** Next.js 16.3.5 App Router, React 19.2.4, Serwist 9.5.11, Tailwind CSS v4, Zustand 5, Radix UI  
-**Authority:** Grill Decision Register (Rounds 1–13, Decisions Q1–Q175), `docs/GRILL_FINAL_LEDGER.md`, `docs/GRILL_DECISIONS.md`, `docs/PARITY_GAP_AUDIT.md`  
+**Authority:** Grill Decision Register (Rounds 1–13, Decisions Q1–Q175), `docs/GRILL_FINAL_LEDGER.md`, `docs/GRILL_DECISIONS.md`  
 **Verification Baseline:** 217 Test Files (1430 Tests Passed, 0 Failed), TypeScript `tsc --noEmit` (0 Errors), ESLint (0 Errors, 496 non-blocking warnings), Next.js Production Build (Clean Code 0).
 
 ---

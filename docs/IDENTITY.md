@@ -104,3 +104,7 @@ Backup v1/v2 tetap didukung oleh import layer untuk compatibility yang sudah dii
 - Jangan mengarang chapter progress saat relink.
 - Jangan menghapus unresolved history.
 - Jangan memakai canonical search key sebagai pengganti SavedTitleId milik user.
+
+## Identitas saat backup dan restore
+
+Ekspor mempertahankan ID judul, hubungan sumber, identitas history, serta milestone tertinggi. Merge membandingkan identitas tetap sebelum memakai fallback sumber dan manga. Restore berulang tidak boleh membuat salinan judul yang sama. Mode ganti menggunakan ID judul sebagai kunci sehingga referensi koleksi tidak terputus. History hasil restore mengikuti [retensi 512 detail dan ringkasan](READING_DATA.md).

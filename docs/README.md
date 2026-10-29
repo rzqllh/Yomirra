@@ -1,5 +1,7 @@
 # Dokumentasi Yomirra
 
+Untuk perilaku penyimpanan pengguna, mulai dari [Riwayat, sinkronisasi, dan cadangan](READING_DATA.md). Status implementasi terbaru ada di [tracker parity](YOMIRRA_FULL_PARITY_EXECUTION.md); label pengujian historis bukan bukti bahwa seluruh fitur sudah matang.
+
 Folder ini berisi dokumentasi public untuk contributor dan maintainer. Untuk overview produk, mulai dari [README](../README.md).
 
 ## Peta dokumen

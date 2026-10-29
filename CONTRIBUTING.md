@@ -117,3 +117,7 @@ Tambahkan perubahan penting ke `CHANGELOG.md`.
 ## Lisensi dan konten pihak ketiga
 
 Kontribusi mengikuti Apache License 2.0. Jangan mengirim source code, credential, atau konten berhak cipta yang tidak boleh didistribusikan.
+
+## Perubahan data pengguna
+
+Perubahan history, library, atau backup harus menyertakan regresi untuk data lama dan pemulihan. Ikuti [kontrak data bacaan](docs/READING_DATA.md), perbarui public docs serta tracker dalam PR yang sama, dan pisahkan bukti CI dari pengujian layanan atau perangkat nyata.

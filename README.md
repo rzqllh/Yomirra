@@ -65,6 +65,8 @@ Navigasi reader menjaga parent page secara eksplisit: perpindahan detail → rea
 
 Offline dan PWA bergantung pada kemampuan browser, Service Worker, dan storage perangkat.
 
+Riwayat menyimpan 512 entri chapter dengan detail lengkap, lalu mempertahankan ringkasan posisi terakhir dan milestone tiap judul. Progres lokal tetap dipertahankan ketika cloud gagal. Untuk aturan retensi, backup, pemulihan, dan batas offline, baca [panduan data bacaan](docs/READING_DATA.md). Penghapusan otomatis setelah tiga bulan belum aktif.
+
 Unduhan eksplisit tidak terus menjadwalkan pemrosesan saat antrian kosong. Untuk unduhan lama dengan URL gambar tanpa tanda tangan, engine dapat mencoba mengambil ulang URL resmi dari endpoint halaman sumber tanpa membuang halaman yang sudah di-cache. Pemulihan bergantung pada ketersediaan sumber dan tidak melemahkan validasi signed image proxy. Profiling timer browser dan smoke Safari masih merupakan verifikasi manual.
 
 ### Motion dan navigasi

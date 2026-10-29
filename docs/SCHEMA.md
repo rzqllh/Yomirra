@@ -83,7 +83,7 @@ type LibraryItem = {
 };
 ```
 
-Library dibatasi 1000 item oleh store.
+Library tidak memiliki eviction otomatis berdasarkan jumlah judul. Batas 1.000 judul pada impor backup telah dihapus; batas berkas tetap 10 MB.
 
 ## History
 
@@ -182,3 +182,11 @@ GEMINI_API_KEY
 Public/browser config menggunakan `NEXT_PUBLIC_*`, termasuk app URL dan Firebase config.
 
 Jika env contract berubah, update `src/env.ts`, `.env.example`, dan dokumen terkait dalam PR yang sama.
+
+## Retensi progres dan schema backup
+
+History persistence menggunakan versi 2. Migrasi mempertahankan 512 entri detail terbaru dan catatan ringkas posisi terakhir serta milestone tiap judul. `HistoryItem.isCompact` membedakan ringkasan dari detail. `savedTitleId` menyatukan judul lintas sumber bila identitas itu tersedia. Tidak ada TTL ketidakaktifan.
+
+Backup schema tetap v3 dan menerima field opsional `savedTitleId`, `chapterNumber`, `status`, `isCompact` pada history; serta milestone tertinggi, `isBookmarked`, dan `releaseDay` pada library. Restore memakai `LibraryItem.id` sebagai kunci bila tersedia, dengan fallback untuk backup lama. Koleksi tetap merujuk ID judul yang sama.
+
+Sinkronisasi penuh mengganti detail chapter lama yang tidak lagi dipertahankan dengan marker `_compacted` berisi identitas chapter dan timestamp. Pembaca cloud mengabaikan marker sebagai entri history dan menghormati timestamp saat rekonsiliasi. Marker tidak sama dengan `_deleted` dari penghapusan pengguna. Lihat [kontrak data bacaan](READING_DATA.md).

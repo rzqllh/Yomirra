@@ -10,6 +10,7 @@ import {
   performDryRun,
   executeCoordinatedRestore,
 } from "../backup-engine";
+import { useCollectionStore } from "@/shared/store/collection-store";
 import type { AnyYomirraBackup } from "../backup-schema";
 
 // Mock cloud sync functions to verify local-only restore
@@ -108,7 +109,7 @@ describe("Backup & Restore Engine v1", () => {
     expect(dryRun.errors.some((e) => e.message.includes("ISO date"))).toBe(true);
   });
 
-  it("3. rejects oversized payload (> 10MB or > 1000 items)", () => {
+  it("3. accepts libraries above 1000 items while enforcing the 10 MB file limit", () => {
     const hugePayload = {
       schemaVersion: 1,
       appVersion: "1.0.0",
@@ -140,7 +141,8 @@ describe("Backup & Restore Engine v1", () => {
     };
 
     const dryRun = performDryRun(JSON.stringify(hugePayload));
-    expect(dryRun.errors.some((e) => e.message.includes("1000 item"))).toBe(true);
+    expect(dryRun.errors).toEqual([]);
+    expect(dryRun.validLibraryCount).toBe(1001);
 
     // Oversized string test
     const longStringJson = "a".repeat(10 * 1024 * 1024 + 5);
@@ -411,4 +413,37 @@ describe("Backup & Restore Engine v1", () => {
 
     expect(stateAfterSecond).toEqual(stateAfterFirst);
   });
+  it("round-trips canonical identity, milestones and collection membership without duplicate titles", () => {
+    const title = { id: "saved-canonical", sourceId: "src", mangaId: "manga", title: "Title", addedAt: "2026-10-01", updatedAt: "2026-10-02", highestMilestoneChapterId: "ch100", highestMilestoneChapterTitle: "Chapter 100", highestMilestoneIndex: 99, isBookmarked: true };
+    useLibraryStore.setState({ items: { "saved-canonical": title } });
+    useHistoryStore.setState({ items: { "src::manga::ch20": { sourceId: "src", mangaId: "manga", chapterId: "ch20", chapterNumber: 20, savedTitleId: "saved-canonical", mangaTitle: "Title", readAt: 5, pageIndex: 7 } } });
+    const backup = createBackupPayload();
+    const preview = performDryRun(JSON.stringify(backup));
+    expect(preview.errors).toEqual([]);
+    expect(preview.addedCount).toBe(0);
+    expect(preview.backupPayload!.data.library[0]).toMatchObject({ highestMilestoneChapterId: "ch100" });
+    expect(preview.backupPayload!.data.history[0]).toMatchObject({ savedTitleId: "saved-canonical", chapterNumber: 20 });
+    executeCoordinatedRestore(preview.backupPayload!, "merge");
+    executeCoordinatedRestore(preview.backupPayload!, "merge");
+    expect(Object.keys(useLibraryStore.getState().items)).toEqual(["saved-canonical"]);
+    executeCoordinatedRestore(preview.backupPayload!, "replace");
+    expect(useLibraryStore.getState().getLibraryItemById("saved-canonical")?.highestMilestoneChapterId).toBe("ch100");
+    expect(useHistoryStore.getState().items["src::manga::ch20"].savedTitleId).toBe("saved-canonical");
+  });
+
+  it("remaps backup history and memberships to an existing title identity", () => {
+    const title = { id: "device-id", sourceId: "s", mangaId: "m", title: "M", addedAt: "2026-10-01", updatedAt: "2026-10-02" };
+    useLibraryStore.setState({ items: { "device-id": title } });
+    const backup = createBackupPayload();
+    backup.data.library[0].id = "backup-id";
+    backup.data.history = [{ sourceId: "s", mangaId: "m", chapterId: "c", mangaTitle: "M", savedTitleId: "backup-id", readAt: 5 }];
+    backup.data.membershipsByManga = { "backup-id": ["favorites"] };
+    backup.data.readingStatusByManga = { "backup-id": "reading" };
+    executeCoordinatedRestore(backup, "merge");
+    expect(Object.keys(useLibraryStore.getState().items)).toEqual(["device-id"]);
+    expect(useHistoryStore.getState().items["s::m::c"].savedTitleId).toBe("device-id");
+    expect(useCollectionStore.getState().membershipsByManga["device-id"]).toContain("favorites");
+    expect(useCollectionStore.getState().readingStatusByManga["device-id"]).toBe("reading");
+  });
+
 });

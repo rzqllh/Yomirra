@@ -1,5 +1,15 @@
 # Changelog
 
+
+## Unreleased
+
+- Batasi detail history ke 512 entri; pertahankan ringkasan resume dan milestone tiap judul tanpa TTL otomatis.
+- Ikat penulisan dan penghapusan history ke akun asal; pertahankan progres lokal saat sinkronisasi gagal.
+- Pertahankan identitas judul, milestone, dan referensi koleksi dalam backup/restore; cegah duplikasi saat merge berulang.
+- Hapus batas impor library 1.000 judul; pertahankan batas berkas 10 MB dan catat versi aplikasi aktual.
+- Periksa ulang gambar dalam Cache Storage saat resume dan sebelum unduhan ditandai selesai.
+- Selaraskan panduan publik dan tracker dengan batas verifikasi. Pengujian Firebase dua perangkat serta iOS/iPadOS nyata tetap terpisah.
+
 Perubahan penting Yomirra dicatat di sini. Changelog hanya memuat fitur dan perubahan yang sudah masuk ke repository; eksperimen internal dan rencana masa depan tidak diperlakukan sebagai fitur rilis.
 
 ## [Unreleased] — Production hardening after 2.3.1 (2026-10-29)

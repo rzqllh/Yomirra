@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
-import { deleteHistoryItem, deleteLibraryItem, deleteMangaHistory, pullHistoryData, pullLegacyLibraryData, pushLibraryItem } from '../sync-utils';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { deleteHistoryItem, deleteLibraryItem, deleteMangaHistory, pullHistoryData, pullLegacyLibraryData, pushLibraryItem, pushHistoryItem } from '../sync-utils';
 import { initFirebase } from '../firebase';
 
 vi.mock('../firebase', () => ({
@@ -32,6 +32,22 @@ vi.mock('firebase/firestore', () => ({
 }));
 
 describe('Firestore Sync Utils Regression Suite', () => {
+  beforeEach(() => { localStorage.setItem('yomirra-local-data-owner-uid', 'user123'); });
+  it('rejects an account switch while Firebase initialization is pending', async () => {
+    let resolveFirebase!: (value: never) => void;
+    vi.mocked(initFirebase).mockImplementationOnce(() => new Promise(resolve => { resolveFirebase = resolve; }));
+    const pending = pushHistoryItem({ sourceId: 's', mangaId: 'm', chapterId: 'c', mangaTitle: 'M', readAt: 1 }, 'owner-A');
+    resolveFirebase({ auth: { currentUser: { uid: 'owner-B' } }, db: {} } as never);
+    await expect(pending).rejects.toThrow(/Account changed/);
+  });
+  it('blocks history writes and deletes for another account', async () => {
+    const item = { sourceId: 's', mangaId: 'm', chapterId: 'c', mangaTitle: 'M', readAt: 1 };
+    await expect(pushHistoryItem(item, 'owner-A')).rejects.toThrow(/Account changed/);
+    await expect(deleteHistoryItem('s', 'm', 'c', 'owner-A')).rejects.toThrow(/Account changed/);
+    await expect(deleteMangaHistory('s', 'm', 'owner-A')).rejects.toThrow(/Account changed/);
+    await expect(pushHistoryItem(item, null)).resolves.toBeUndefined();
+  });
+
   it('uses scoped query instead of full scan for deleteMangaHistory', async () => {
     const firestore = await import('firebase/firestore');
     
