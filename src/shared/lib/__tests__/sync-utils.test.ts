@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { deleteHistoryItem, deleteLibraryItem, deleteMangaHistory, pullHistoryData, pullLegacyLibraryData } from '../sync-utils';
+import { deleteHistoryItem, deleteLibraryItem, deleteMangaHistory, pullHistoryData, pullLegacyLibraryData, pushLibraryItem } from '../sync-utils';
 import { initFirebase } from '../firebase';
 
 vi.mock('../firebase', () => ({
@@ -109,5 +109,29 @@ describe('Firestore Sync Utils Regression Suite', () => {
     vi.mocked(firestore.getDocs).mockRejectedValueOnce(new Error('legacy read failed'));
 
     await expect(pullLegacyLibraryData({ strict: true })).rejects.toThrow('legacy read failed');
+  });
+
+  it('keeps guest library mutations local-only without creating cloud tombstones', async () => {
+    const firestore = await import('firebase/firestore');
+    const previousCommits = vi.mocked(firestore.writeBatch).mock.calls.length;
+    const previousPushes = vi.mocked(firestore.setDoc).mock.calls.length;
+
+    await deleteLibraryItem('source', 'guest-title', 'saved-guest', null);
+    await pushLibraryItem({
+      sourceId: 'source', mangaId: 'guest-title', title: 'Guest',
+      addedAt: '2026-10-29', updatedAt: '2026-10-29',
+    }, null);
+
+    expect(vi.mocked(firestore.writeBatch).mock.calls.length).toBe(previousCommits);
+    expect(vi.mocked(firestore.setDoc).mock.calls.length).toBe(previousPushes);
+  });
+
+  it('refuses cross-account writes and deletes while a queued mutation is settling', async () => {
+    const item = {
+      id: 'saved-owner-a', sourceId: 'source', mangaId: 'manga',
+      title: 'Account A', addedAt: '2026-10-29', updatedAt: '2026-10-29',
+    };
+    await expect(pushLibraryItem(item, 'owner-A')).rejects.toThrow(/Account changed/);
+    await expect(deleteLibraryItem('source', 'manga', 'saved-owner-a', 'owner-A')).rejects.toThrow(/Account changed/);
   });
 });
