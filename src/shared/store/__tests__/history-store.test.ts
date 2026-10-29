@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useHistoryStore } from '../history-store';
 import { useLibraryStore } from '../library-store';
-import { deleteHistoryItem, pushHistoryItem } from '@/shared/lib/sync-utils';
+import { deleteHistoryItem, deleteMangaHistory, pushHistoryItem } from '@/shared/lib/sync-utils';
 
 vi.mock('@/shared/lib/sync-utils', () => ({
   pushHistoryItem: vi.fn().mockResolvedValue(undefined),
@@ -160,6 +160,59 @@ describe('history-store', () => {
     expect(current['source1::manga1::chapter1'].pageIndex).toBe(4);
     expect(current['source1::manga1::chapter1'].progressPercent).toBe(40);
     expect(current['source2::manga2::chapter2'].pageIndex).toBe(7);
+  });
+
+
+  it('restores only the affected chapter when a single-item cloud delete fails', async () => {
+    const original = {
+      sourceId: 'source1', mangaId: 'manga1', chapterId: 'chapter1',
+      mangaTitle: 'Title', readAt: 100,
+    };
+    useHistoryStore.setState({ items: { 'source1::manga1::chapter1': original } });
+    let rejectDelete!: (reason?: unknown) => void;
+    vi.mocked(deleteHistoryItem).mockReturnValueOnce(new Promise<void>((_resolve, reject) => {
+      rejectDelete = reject;
+    }));
+
+    useHistoryStore.getState().removeHistoryItem('source1', 'manga1', 'chapter1');
+    useHistoryStore.getState().saveProgress('source2', 'manga2', 'chapter2', 9);
+    rejectDelete(new Error('offline'));
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const items = useHistoryStore.getState().items;
+    expect(items['source1::manga1::chapter1']).toEqual(original);
+    expect(items['source2::manga2::chapter2'].pageIndex).toBe(9);
+  });
+
+  it('restores deleted manga chapters without overwriting newer cursors or unrelated progress', async () => {
+    const chapter1 = {
+      sourceId: 'source1', mangaId: 'manga1', chapterId: 'chapter1',
+      mangaTitle: 'Title', readAt: 100, pageIndex: 1,
+    };
+    const chapter2 = {
+      ...chapter1, chapterId: 'chapter2', pageIndex: 2,
+    };
+    useHistoryStore.setState({ items: {
+      'source1::manga1::chapter1': chapter1,
+      'source1::manga1::chapter2': chapter2,
+    } });
+    let rejectDelete!: (reason?: unknown) => void;
+    vi.mocked(deleteMangaHistory).mockReturnValueOnce(new Promise<void>((_resolve, reject) => {
+      rejectDelete = reject;
+    }));
+
+    useHistoryStore.getState().removeMangaHistory('source1', 'manga1');
+    useHistoryStore.getState().saveProgress('source1', 'manga1', 'chapter2', 8);
+    useHistoryStore.getState().saveProgress('source2', 'manga2', 'chapter3', 9);
+    rejectDelete(new Error('offline'));
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const items = useHistoryStore.getState().items;
+    expect(items['source1::manga1::chapter1']).toEqual(chapter1);
+    expect(items['source1::manga1::chapter2'].pageIndex).toBe(8);
+    expect(items['source2::manga2::chapter3'].pageIndex).toBe(9);
   });
 
 });
