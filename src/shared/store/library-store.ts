@@ -74,30 +74,67 @@ const itemReferencesSource = (item: LibraryItem, sourceId: string, mangaId: stri
   (item.primarySourceId === sourceId && item.primaryMangaId === mangaId) ||
   item.linkedSources?.some((ref) => ref.sourceId === sourceId && ref.mangaId === mangaId) === true;
 
-const enforceItemCap = (items: Record<string, LibraryItem>, maxItems = 1000) => {
-  const keys = Object.keys(items);
-  if (keys.length <= maxItems) return items;
-  
-  const sortedKeys = keys.sort((a, b) => {
-    const timeA = new Date(items[a].updatedAt || items[a].addedAt).getTime();
-    const timeB = new Date(items[b].updatedAt || items[b].addedAt).getTime();
-    return timeB - timeA; // Descending (newest first)
-  });
+// A user's Rak Buku is not an evictable cache. Never delete saved records
+// or issue remote tombstones merely because the library grew beyond 1,000 items.
+const pendingTitleWrites = new Map<string, Promise<void>>();
+const titleMutationVersions = new Map<string, number>();
+let libraryResetVersion = 0;
 
-  const keysToRemove = sortedKeys.slice(maxItems);
-  const newItems = { ...items };
-  keysToRemove.forEach(key => {
-    const item = newItems[key];
-    setTimeout(() => {
-      deleteLibraryItem(item.sourceId, item.mangaId, item.id ?? key).catch((error) => {
-        console.error("Failed to delete evicted library item", error);
-      });
-    }, 0);
-    delete newItems[key];
-  });
-  
-  return newItems;
+type MutationCheckpoint = {
+  before: Record<string, LibraryItem>;
+  applied: Record<string, LibraryItem>;
+  versions: Map<string, number>;
+  resetVersion: number;
 };
+
+function queueTitleWrite(id: string, operation: () => Promise<void>): Promise<void> {
+  const previous = pendingTitleWrites.get(id) ?? Promise.resolve();
+  const current = previous.catch(() => undefined).then(operation);
+  pendingTitleWrites.set(id, current);
+  void current.then(
+    () => { if (pendingTitleWrites.get(id) === current) pendingTitleWrites.delete(id); },
+    () => { if (pendingTitleWrites.get(id) === current) pendingTitleWrites.delete(id); }
+  );
+  return current;
+}
+
+function captureMutation(
+  before: Record<string, LibraryItem>,
+  applied: Record<string, LibraryItem>
+): MutationCheckpoint {
+  const versions = new Map<string, number>();
+  for (const key of new Set([...Object.keys(before), ...Object.keys(applied)])) {
+    if (before[key] !== applied[key]) {
+      const version = (titleMutationVersions.get(key) ?? 0) + 1;
+      titleMutationVersions.set(key, version);
+      versions.set(key, version);
+    }
+  }
+  return { before, applied, versions, resetVersion: libraryResetVersion };
+}
+
+function rollbackMutation(
+  checkpoint: MutationCheckpoint,
+  setItems: (update: (state: LibraryState) => Partial<LibraryState>) => void,
+  onlyKeys?: string[]
+): boolean {
+  if (checkpoint.resetVersion !== libraryResetVersion) return false;
+  let rolledBack = false;
+  setItems((state) => {
+    const next = { ...state.items };
+    for (const [key, version] of checkpoint.versions) {
+      if (onlyKeys && !onlyKeys.includes(key)) continue;
+      if (titleMutationVersions.get(key) !== version) continue;
+      if (state.items[key] !== checkpoint.applied[key]) continue;
+      if (checkpoint.before[key] === undefined) delete next[key];
+      else next[key] = checkpoint.before[key];
+      titleMutationVersions.set(key, version + 1);
+      rolledBack = true;
+    }
+    return rolledBack ? { items: next } : {};
+  });
+  return rolledBack;
+}
 
 export const useLibraryStore = create<LibraryState>()(
   persist(
@@ -149,16 +186,19 @@ export const useLibraryStore = create<LibraryState>()(
           itemToPush = enriched;
           const key = existingKey || enriched.id!;
           return {
-            items: enforceItemCap({ ...state.items, [key]: enriched })
+            items: { ...state.items, [key]: enriched }
           };
         });
 
-        // Async Background sync with rollback
-        pushLibraryItem(itemToPush).catch(() => {
-          set({ items: previousState });
-          toast.error("Gagal Menyimpan ke Akun", {
-            description: "Tidak dapat menyinkronkan komik. Periksa sambungan internetmu.",
-          });
+        const checkpoint = captureMutation(previousState, get().items);
+        void queueTitleWrite(itemToPush.id ?? getLibraryId(item.sourceId, item.mangaId), () =>
+          pushLibraryItem(itemToPush)
+        ).catch(() => {
+          if (rollbackMutation(checkpoint, set)) {
+            toast.error("Gagal Menyimpan ke Akun", {
+              description: "Perubahan ini tidak tersinkron. Perubahan Rak Buku lainnya tetap aman.",
+            });
+          }
         });
       },
 
@@ -179,7 +219,7 @@ export const useLibraryStore = create<LibraryState>()(
         }
         newItems[targetKey] = item;
         return {
-          items: enforceItemCap(newItems)
+          items: newItems
         };
       }),
 
@@ -210,15 +250,18 @@ export const useLibraryStore = create<LibraryState>()(
           return changed ? { items: newItems } : state;
         });
 
-        // Async Background sync with rollback
-        Promise.all(removedItems.map(([key, item]) =>
-          deleteLibraryItem(item.sourceId, item.mangaId, item.id ?? key)
-        )).catch(() => {
-          set({ items: previousState });
-          toast.error("Gagal Menghapus dari Akun", {
-            description: "Tidak dapat menyinkronkan perubahan. Periksa sambungan internetmu.",
+        const checkpoint = captureMutation(previousState, get().items);
+        for (const [key, removedItem] of removedItems) {
+          void queueTitleWrite(removedItem.id ?? key, () =>
+            deleteLibraryItem(removedItem.sourceId, removedItem.mangaId, removedItem.id ?? key)
+          ).catch(() => {
+            if (rollbackMutation(checkpoint, set, [key])) {
+              toast.error("Gagal Menghapus dari Akun", {
+                description: "Penghapusan komik ini dibatalkan karena sinkronisasi gagal.",
+              });
+            }
           });
-        });
+        }
       },
 
       toggleLibrary: (item) => {
@@ -322,11 +365,15 @@ export const useLibraryStore = create<LibraryState>()(
         });
 
         if (updatedItem) {
-          pushLibraryItem(updatedItem).catch(() => {
-            set({ items: previousState });
-            toast.error("Gagal Memperbarui Sumber", {
-              description: "Tautan sumber bacaan belum berhasil disimpan ke akunmu.",
-            });
+          const checkpoint = captureMutation(previousState, get().items);
+          void queueTitleWrite(updatedItem.id ?? savedTitleIdOrKey, () =>
+            pushLibraryItem(updatedItem!)
+          ).catch(() => {
+            if (rollbackMutation(checkpoint, set)) {
+              toast.error("Gagal Memperbarui Sumber", {
+                description: "Tautan sumber bacaan belum berhasil disimpan ke akunmu.",
+              });
+            }
           });
         }
       },
@@ -368,15 +415,19 @@ export const useLibraryStore = create<LibraryState>()(
         });
 
         if (updatedItem) {
-          // Async Background sync with rollback
-          pushLibraryItem(updatedItem).catch(() => {
-            set({ items: previousState });
-            // silently fail or toast? Since it's often background updates, maybe no toast needed unless critical
+          const checkpoint = captureMutation(previousState, get().items);
+          void queueTitleWrite(updatedItem.id ?? getLibraryId(sourceId, mangaId), () =>
+            pushLibraryItem(updatedItem!)
+          ).catch(() => {
+            rollbackMutation(checkpoint, set);
           });
         }
       },
 
-      clearLibrary: () => set({ items: {} }),
+      clearLibrary: () => {
+        libraryResetVersion += 1;
+        set({ items: {} });
+      },
 
       syncWithCloud: (cloudItems) => set((state) => {
         const newItems = { ...state.items };
@@ -421,7 +472,7 @@ export const useLibraryStore = create<LibraryState>()(
           }
         }
 
-        return hasChanges ? { items: enforceItemCap(newItems) } : state;
+        return hasChanges ? { items: newItems } : state;
       }),
     }),
     {
