@@ -52,6 +52,15 @@ interface HistoryState {
 
 const getHistoryId = (sourceId: string, mangaId: string, chapterId: string) => `${sourceId}::${mangaId}::${chapterId}`;
 
+// Per-record revisions prevent a failed remote mutation from reverting newer local actions.
+const historyRevisions = new Map<string, number>();
+let historyClearGeneration = 0;
+const bumpHistoryRevision = (id: string): number => {
+  const revision = (historyRevisions.get(id) ?? 0) + 1;
+  historyRevisions.set(id, revision);
+  return revision;
+};
+
 export const useHistoryStore = create<HistoryState>()(
   persist(
     (set, get) => ({
@@ -66,6 +75,7 @@ export const useHistoryStore = create<HistoryState>()(
           else item.isNsfw = false;
         }
         const id = getHistoryId(item.sourceId, item.mangaId, item.chapterId);
+        bumpHistoryRevision(id);
         const existing = state.items[id];
         const savedTitleId = item.savedTitleId ?? get().resolveSavedTitleId(item.sourceId, item.mangaId) ?? undefined;
         if (item.chapterNumber === undefined) {
@@ -78,39 +88,16 @@ export const useHistoryStore = create<HistoryState>()(
 
         setTimeout(() => pushHistoryItem(finalItem), 0); // Async Background sync
         
+        // Reading history is user data, not a cache: never evict and cloud-delete
+        // old records simply because the collection exceeds an arbitrary limit.
         const newItems = { ...state.items, [id]: finalItem };
-        const keys = Object.keys(newItems);
-        const MAX_HISTORY_ITEMS = 1000;
-        
-        if (keys.length > MAX_HISTORY_ITEMS) {
-          // O(N) trim of oldest item
-          let oldestKey = keys[0];
-          let oldestTime = newItems[oldestKey].readAt;
-          
-          for (let i = 1; i < keys.length; i++) {
-            const key = keys[i];
-            const time = newItems[key].readAt;
-            if (time < oldestTime) {
-              oldestTime = time;
-              oldestKey = key;
-            }
-          }
-          
-          const evictedItem = newItems[oldestKey];
-          delete newItems[oldestKey];
-          
-          setTimeout(() => {
-            deleteHistoryItem(evictedItem.sourceId, evictedItem.mangaId, evictedItem.chapterId).catch((error) => {
-              console.error("Failed to delete evicted history item", error);
-            });
-          }, 0);
-        }
 
         return { items: newItems };
       }),
 
       _setItemLocal: (item) => set((state) => {
         const id = getHistoryId(item.sourceId, item.mangaId, item.chapterId);
+        bumpHistoryRevision(id);
         const existing = state.items[id];
         let normalizedReadAt = item.readAt;
         if (typeof normalizedReadAt === 'string') {
@@ -132,43 +119,76 @@ export const useHistoryStore = create<HistoryState>()(
       }),
 
       removeHistoryItem: (sourceId, mangaId, chapterId) => {
-        const previousState = get().items;
+        const id = getHistoryId(sourceId, mangaId, chapterId);
+        const previous = get().items[id];
+        if (!previous) return;
+        const revision = bumpHistoryRevision(id);
+        const generation = historyClearGeneration;
+
         set((state) => {
-          const id = getHistoryId(sourceId, mangaId, chapterId);
-          const newItems = { ...state.items };
-          delete newItems[id];
-          return { items: newItems };
+          const items = { ...state.items };
+          delete items[id];
+          return { items };
         });
 
-        deleteHistoryItem(sourceId, mangaId, chapterId).catch(() => {
-          set({ items: previousState });
-          toast.error("Gagal Menghapus Riwayat", {
-            description: "Riwayat bacaan belum berhasil dihapus dari akunmu.",
+        void deleteHistoryItem(sourceId, mangaId, chapterId).catch(() => {
+          let restored = false;
+          set((state) => {
+            if (generation !== historyClearGeneration ||
+                historyRevisions.get(id) !== revision ||
+                Object.prototype.hasOwnProperty.call(state.items, id)) return state;
+            restored = true;
+            bumpHistoryRevision(id);
+            return { items: { ...state.items, [id]: previous } };
           });
+          if (restored) {
+            toast.error("Gagal Menghapus Riwayat", {
+              description: "Penghapusan dibatalkan. Perubahan riwayat lainnya tetap aman.",
+            });
+          }
         });
       },
 
       removeMangaHistory: (sourceId, mangaId) => {
-        const previousState = get().items;
+        const prefix = `${sourceId}::${mangaId}::`;
+        const removed = Object.entries(get().items).filter(([key]) => key.startsWith(prefix));
+        if (!removed.length) return;
+        const revisions = new Map(removed.map(([key]) => [key, bumpHistoryRevision(key)]));
+        const generation = historyClearGeneration;
+
         set((state) => {
-          const newItems = { ...state.items };
-          Object.keys(newItems).forEach(key => {
-            if (key.startsWith(`${sourceId}::${mangaId}::`)) {
-              delete newItems[key];
-            }
-          });
-          return { items: newItems };
+          const items = { ...state.items };
+          for (const [key] of removed) delete items[key];
+          return { items };
         });
 
-        deleteMangaHistory(sourceId, mangaId).catch(() => {
-          set({ items: previousState });
-          toast.error("Gagal Menghapus Riwayat", {
-            description: "Riwayat komik belum berhasil dihapus dari akunmu.",
+        void deleteMangaHistory(sourceId, mangaId).catch(() => {
+          let restored = false;
+          set((state) => {
+            if (generation !== historyClearGeneration) return state;
+            const items = { ...state.items };
+            for (const [key, oldItem] of removed) {
+              if (historyRevisions.get(key) !== revisions.get(key) ||
+                  Object.prototype.hasOwnProperty.call(items, key)) continue;
+              items[key] = oldItem;
+              bumpHistoryRevision(key);
+              restored = true;
+            }
+            return restored ? { items } : state;
           });
+          if (restored) {
+            toast.error("Gagal Menghapus Riwayat", {
+              description: "Penghapusan dibatalkan tanpa menimpa perubahan bacaan yang lebih baru.",
+            });
+          }
         });
       },
 
-      clearHistory: () => set({ items: {} }),
+      clearHistory: () => {
+        historyClearGeneration += 1;
+        historyRevisions.clear();
+        set({ items: {} });
+      },
 
       getLatestForManga: (sourceId, mangaId) => {
         const allItems = Object.values(get().items);
@@ -310,6 +330,7 @@ export const useHistoryStore = create<HistoryState>()(
           isNsfw,
         };
         
+        bumpHistoryRevision(getHistoryId(sourceId, mangaId, chapterId));
         set({
           items: {
             ...previousState,
@@ -318,7 +339,7 @@ export const useHistoryStore = create<HistoryState>()(
         });
 
         pushHistoryItem(updatedItem).catch(() => {
-          set({ items: previousState });
+          // Keep local reading progress. Cloud failure must not erase newer local edits.
           toast.warning("Progres Belum Tersimpan", {
             description: "Progres membaca belum tersinkron ke akun karena kendala jaringan.",
           });
@@ -327,6 +348,7 @@ export const useHistoryStore = create<HistoryState>()(
 
       saveProgress: (sourceId, mangaId, chapterId, pageIndex, pageOffset) => set((state) => {
         const id = getHistoryId(sourceId, mangaId, chapterId);
+        bumpHistoryRevision(id);
         const existing = state.items[id];
         
         let updatedItem: HistoryItem;
