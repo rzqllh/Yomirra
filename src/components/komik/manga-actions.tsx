@@ -51,17 +51,12 @@ export function MangaActions({
 
     const toastId = `bookmark-toggle-${sourceId}-${mangaId}`;
 
-    if (wasInLibrary) {
-      toast.info("Dihapus dari Rak Buku", {
-        id: toastId,
-        description: `'${title}' tidak lagi tersimpan.`,
-      });
-    } else {
-      toast.success("Disimpan ke Rak Buku", {
-        id: toastId,
-        description: `'${title}' berhasil disimpan.`,
-      });
-    }
+    // This action is optimistic and local-first. Do not claim cloud commit
+    // success before the asynchronous store mutation has actually settled.
+    toast.info(wasInLibrary ? "Dihapus dari Rak Buku di perangkat" : "Disimpan ke Rak Buku di perangkat", {
+      id: toastId,
+      description: "Jika sinkronisasi akun gagal, Yomirra akan memberi tahu dan membatalkan perubahan ini.",
+    });
   };
 
   return (
