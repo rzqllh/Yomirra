@@ -137,7 +137,7 @@ describe('history-store', () => {
     } finally {
       vi.useRealTimers();
     }
-  });;
+  });
 
   it('keeps the local chapter cursor and later unrelated progress after cloud sync rejects', async () => {
     useHistoryStore.setState({
