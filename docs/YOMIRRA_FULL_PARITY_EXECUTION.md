@@ -1,16 +1,36 @@
 # Yomirra — Final Full-Parity & Production Execution Tracker (Q1–Q175)
 
-**Status:** ALL PRODUCTION IMPLEMENTATION & TESTING COMPLETED LOCALLY  
-**Branch:** `fix/uiux-master-reconciliation-20261028`  
+**Status:** PROVISIONAL ACCEPTANCE REGISTER — code shipped, individual requirements and external QA not fully accepted. See post-release truth gate below.  
+**Code baseline:** production main after merged PR #59; corrective branch `fix/yomirra-postrelease-truth-20261029` remains draft.  
 **Target Architecture:** Next.js 16.3.5 App Router, React 19.2.4, Serwist 9.5.11, Tailwind CSS v4, Zustand 5, Radix UI  
 **Authority:** Grill Decision Register (Rounds 1–13, Decisions Q1–Q175), `docs/GRILL_FINAL_LEDGER.md`, `docs/GRILL_DECISIONS.md`, `docs/PARITY_GAP_AUDIT.md`  
-**Verification Baseline:** 217 Test Files (1430 Tests Passed, 0 Failed), TypeScript `tsc --noEmit` (0 Errors), ESLint (0 Errors, 496 non-blocking warnings), Next.js Production Build (Clean Code 0).
+**Historical baseline:** The older AGY report listed 217 files/1430 tests and 496 lint warnings. The independently reported PR #59 CI on `01157ae` had 217 files/1436 tests passed, 508 warnings, and a green build. These results do not validate the newer corrective branch or every individual Q.
+
+---
+
+## Post-release evidence corrections (2026-10-29)
+
+These classifications reflect confirmed source/documentation gaps, **not** a complete independent re-audit of all 175 decisions.
+
+| Q | Current status | Grounded reason | Next acceptance proof |
+| --- | --- | --- | --- |
+| Q50 | PARTIAL | Token and component tests exist, but full real-device reusable-component/motion acceptance is incomplete. Synthetic class-string tests were replaced in draft PR #61. | Real responsive/assistive-technology checks and component interaction matrix. |
+| Q64 | PARTIAL | Guest merge commits are atomic only within individual Firestore batches; multi-batch failure is fail-closed, but cross-device recovery has not been exercised against live Firebase. | Controlled multi-batch failure/recovery, owner isolation, and post-restart verification. |
+| Q127 | IMPLEMENTED / UNTESTED | Diagnostics have automated tests, but real connectivity/Firebase reachability and cross-device pending-write states are not independently exercised. | Live Firebase fault-injection and multi-device sync test. |
+| Q171 | NOT IMPLEMENTED | README disclaimer is not a dedicated rights-holder reporting/contact and escalation workflow. No sufficiently evidenced public rights intake was identified. | Implement a public intake channel, escalation owner, and actual response procedure, subject to review. |
+| Q172 | PARTIAL | README documents some privacy/security boundaries but is not a reviewed privacy policy; the authentic decision ledger requires suitable legal review. | Factual data-flow inventory, dedicated accurate privacy terms, qualified legal review. |
+
+**Provisional counts:** 162 previously reported VERIFIED (still not individually independently accepted), 10 PARTIAL, 1 IMPLEMENTED / UNTESTED, 1 NOT IMPLEMENTED, 1 BLOCKED. Total: **175 unique Q items**.
+
+Seven previously documented deferred features remain PARTIAL: Q58, Q130, Q140, Q148, Q149, Q153, Q162. The single BLOCKED item is Q21 (physical iOS/iPadOS and BrowserStack acceptance). No completion is implied for deferred work.
+
+**Latest working branch:** `fix/yomirra-postrelease-truth-20261029`, draft PR #61. Its CI and preview results must be checked on the final commit; previous CI results belong to a different SHA. Neither production device QA nor legal clearance is provided by this document.
 
 ---
 
 ## 1. Executive Summary & Verification Evidence
 
-All 175 product and architecture decisions (Q1–Q175) from the authoritative Grill Decision Ledger have been audited against the actual Next.js application codebase. Every locally actionable gap has been resolved and verified with automated test suites, typechecking, linting, and full production bundling.
+All 175 product decisions are recorded, but this register inherited classifications from earlier AGY reports. Test-file existence, a passing build, and token checks do **not** establish behavioral acceptance for every Q. Items with directly contradicted evidence have been downgraded below. All other prior VERIFIED labels are provisional pending item-by-item independent review. External iOS device, live Firebase recovery, and legal/content-rights gates remain open.
 
 ### Verification Summary Table
 
@@ -130,7 +150,7 @@ All 175 product and architecture decisions (Q1–Q175) from the authoritative Gr
 ### Round 5: Ownership, Synced Milestones & Storage (Q51–Q62)
 | ID | Topic | Requirement | Status | Evidence Files / Tests |
 | :--- | :--- | :--- | :--- | :--- |
-| **Q50** | Component Consistency & Motion Gate | Reusable components, squircle tokens, 44px tap targets, reduced motion guards, responsive multi-device verification | `VERIFIED` | `src/app/(web)/globals.css`, `src/components/ui/__tests__/contrast-contract.test.ts`, `src/components/motion/__tests__/accessibility-cleanup-contract.test.ts` |
+| **Q50** | Component Consistency & Motion Gate | Reusable components, squircle tokens, 44px tap targets, reduced motion guards, responsive multi-device verification | `PARTIAL` | `src/app/(web)/globals.css`, `src/components/ui/__tests__/contrast-contract.test.ts`, `src/components/motion/__tests__/accessibility-cleanup-contract.test.ts` (post-release gap: see truth gate) |
 | **Q51** | Owner Isolation | Guest data namespaced separately from auth user data | `VERIFIED` | `src/shared/lib/local-data-owner.ts`, `src/shared/lib/__tests__/local-data-owner.test.ts` |
 | **Q52** | Highest Milestone | Highest verified milestone wins; no regression on revisit | `VERIFIED` | `src/shared/store/__tests__/reading-continuity-q52-q63.test.ts` |
 | **Q53** | Intentional Deletion | Confirmation required before removing saved collections | `VERIFIED` | `src/components/settings/collection-manager.tsx`, `src/components/settings/__tests__/collection-manager.test.tsx` |
@@ -148,7 +168,7 @@ All 175 product and architecture decisions (Q1–Q175) from the authoritative Gr
 | ID | Topic | Requirement | Status | Evidence Files / Tests |
 | :--- | :--- | :--- | :--- | :--- |
 | **Q63** | Independent Cursor | Per-chapter cursor preserved across rereads | `VERIFIED` | `src/shared/store/__tests__/reading-continuity-q52-q63.test.ts` |
-| **Q64** | Merge Preview & Safe Engine | Real guest-to-account merge engine with safe cloud snapshot, diff review, strategy selection, destructive safeguard, atomic commit & rollback | `VERIFIED` | `src/shared/lib/guest-merge-engine.ts`, `src/shared/lib/__tests__/guest-merge-engine.test.ts`, `src/components/account/guest-merge-dialog.tsx`, `src/app/(web)/account/__tests__/account-page.test.tsx` |
+| **Q64** | Merge Preview & Safe Engine | Real guest-to-account merge engine with safe cloud snapshot, diff review, strategy selection, destructive safeguard, atomic commit & rollback | `PARTIAL` | `src/shared/lib/guest-merge-engine.ts`, `src/shared/lib/__tests__/guest-merge-engine.test.ts`, `src/components/account/guest-merge-dialog.tsx`, `src/app/(web)/account/__tests__/account-page.test.tsx` (post-release gap: see truth gate) |
 | **Q65** | Multi-Account Safety | Switching accounts clears private local cache of prior user | `VERIFIED` | `src/shared/lib/__tests__/auth-lifecycle.test.ts`, `src/shared/store/history-store.ts` |
 | **Q66** | Undo Delete | Temporary undo toast on bookmark removal | `VERIFIED` | `src/components/komik/manga-actions.tsx`, `src/components/komik/__tests__/manga-actions.test.tsx` |
 | **Q67** | Unmapped Records | Imports preserve unmapped sources in separate view | `VERIFIED` | `src/shared/lib/backup-engine.ts`, `src/shared/lib/__tests__/backup-engine.test.ts` |
@@ -227,7 +247,7 @@ All 175 product and architecture decisions (Q1–Q175) from the authoritative Gr
 | **Q124** | Cache Repair | Tool to verify and purge corrupted cached chapter images | `VERIFIED` | `src/shared/lib/download-cache.ts`, `src/shared/lib/__tests__/download-cache.test.ts` |
 | **Q125** | Honest Storage UI | Clear breakdown of offline images vs cache vs metadata | `VERIFIED` | `src/app/(web)/downloads/page.tsx`, `src/app/(web)/account/__tests__/account-page.test.tsx` |
 | **Q126** | Human Settings | Simplified settings with plain Indonesian explanations | `VERIFIED` | `src/app/(web)/settings/page.tsx`, `src/app/(web)/account/__tests__/account-page.test.tsx` |
-| **Q127** | Honest Sync Diagnostics | Truthful sync status across lifecycle states (idle, syncing, success, pending, failed, offline), network vs Firebase reachability separation, zero false checkmarks | `VERIFIED` | `src/shared/store/sync-diagnostics-store.ts`, `src/shared/lib/__tests__/sync-diagnostics.test.ts`, `src/app/(web)/account/page.tsx`, `src/app/(web)/account/__tests__/account-page.test.tsx` |
+| **Q127** | Honest Sync Diagnostics | Truthful sync status across lifecycle states (idle, syncing, success, pending, failed, offline), network vs Firebase reachability separation, zero false checkmarks | `IMPLEMENTED / UNTESTED` | `src/shared/store/sync-diagnostics-store.ts`, `src/shared/lib/__tests__/sync-diagnostics.test.ts`, `src/app/(web)/account/page.tsx`, `src/app/(web)/account/__tests__/account-page.test.tsx` (post-release gap: see truth gate) |
 | **Q128** | Explicit Logout | Logout offers option to retain or delete local offline files | `VERIFIED` | `src/app/(web)/account/page.tsx`, `src/app/(web)/account/__tests__/account-page.test.tsx` |
 | **Q129** | Gemini Quota UI | Visual indicators when free-tier Gemini API quota exhausted | `VERIFIED` | `src/server/lib/search/gemini-embeddings.ts`, `src/app/api/search/intelligence/route.ts`, `src/app/api/admin/session/__tests__/route.test.ts` |
 | **Q130** | Non-Blocking AI | Reader AI toolbar deferred; non-blocking AI used for search | `PARTIAL` | `src/server/lib/search/gemini-embeddings.ts` |
@@ -283,8 +303,8 @@ All 175 product and architecture decisions (Q1–Q175) from the authoritative Gr
 | **Q168** | Independent Code | Clean-room implementation of features, no copied code | `VERIFIED` | `docs/REFERENCE_LICENSING_REVIEW.md`, `src/shared/__tests__/governance-licensing-audit.test.ts` |
 | **Q169** | Tachimanga Reference | Tachimanga treated solely as UX reference, not open code | `VERIFIED` | `docs/REFERENCE_LICENSING_REVIEW.md`, `src/shared/__tests__/governance-licensing-audit.test.ts` |
 | **Q170** | Asset Provenance | App icons and SVGs created natively via Phosphor Icons | `VERIFIED` | `public/`, `package.json` (@phosphor-icons/react), `src/components/app/__tests__/public-copy-contract.test.ts` |
-| **Q171** | Rights Reporting | DMCA / copyright report channel for rights-holders | `VERIFIED` | `README.md` (Disclaimer), `SECURITY.md`, `docs/README.md`, `src/components/admin/__tests__/admin-security-bundle.test.ts` |
-| **Q172** | Truthful Privacy Policy | Privacy policy reflects actual Firebase and local-first flows | `VERIFIED` | `README.md` (Privacy & Security boundaries), `SECURITY.md`, `src/components/admin/__tests__/admin-security-bundle.test.ts` |
+| **Q171** | Rights Reporting | DMCA / copyright report channel for rights-holders | `NOT IMPLEMENTED` | `README.md` (Disclaimer), `SECURITY.md`, `docs/README.md`, `src/components/admin/__tests__/admin-security-bundle.test.ts` (post-release gap: see truth gate) |
+| **Q172** | Truthful Privacy Policy | Privacy policy reflects actual Firebase and local-first flows | `PARTIAL` | `README.md` (Privacy & Security boundaries), `SECURITY.md`, `src/components/admin/__tests__/admin-security-bundle.test.ts` (post-release gap: see truth gate) |
 | **Q173** | Coherent Public Docs | Synchronized README, STACK, ARCHITECTURE, and Dev docs | `VERIFIED` | `docs/` folder documentation suite, `src/shared/__tests__/governance-licensing-audit.test.ts` |
 | **Q174** | Provenance Claims | Public claims backed by actual working repository evidence | `VERIFIED` | `docs/GRILL_FINAL_LEDGER.md`, `src/shared/__tests__/governance-licensing-audit.test.ts` |
 | **Q175** | Authority Boundary | Grill ledger remains product requirement record; work verified | `VERIFIED` | `docs/YOMIRRA_FULL_PARITY_EXECUTION.md`, `docs/IDENTITY.md`, `src/shared/lib/motion/__tests__/transition-identity.test.ts` |
@@ -360,7 +380,7 @@ npx playwright test --project=webkit-mobile-safari
 
 ## 5. Parity & Release Readiness Verdict
 
-- **Feature Parity:** All agreed features from Q1–Q175 are implemented or have appropriate PWA-adapted contracts.
+- **Feature Parity:** Not independently established for Q1–Q175. At least 7 features remain PARTIAL and the post-release truth gate identifies additional gaps.
 - **Quality & Craftsmanship:** Apple HIG 44px tap targets, squircle geometry tokens, WCAG AA 4.5:1 contrast ratios, fluid animations with reduced motion guards.
 - **Rollback Safety & Git Protocol:**
   - 11 staged user files on main remain strictly untouched and preserved.
@@ -373,4 +393,4 @@ npx playwright test --project=webkit-mobile-safari
     ```bash
     git revert -m 1 <merge-commit-sha>
     ```
-- **Release Status:** **READY FOR PULL REQUEST REVIEW** (Slice 19 iOS 27 Safari Compatibility, PWA Auto-Zoom Defense, and Automated Playwright Regression Suite incorporated).
+- **Release Status:** **NOT FULLY ACCEPTED**. Draft PR #61 is for corrective review; separate real-device, Firebase and legal gates remain.
