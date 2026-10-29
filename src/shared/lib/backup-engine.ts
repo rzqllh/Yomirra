@@ -317,7 +317,9 @@ export function performDryRun(
   });
 
   uniqueLibItems.forEach((backupItem, key) => {
-    const existing = currentStoresProjection.libraryItems[key];
+    const existing = currentStoresProjection.libraryItems[key] ?? Object.values(currentStoresProjection.libraryItems).find((item) =>
+      item.id === key || (item.sourceId === backupItem.sourceId && item.mangaId === backupItem.mangaId),
+    );
     if (existing) {
       preview.existingConflictCount++;
       const backupTime = Date.parse(backupItem.updatedAt);
@@ -375,6 +377,7 @@ export function executeCoordinatedRestore(
   try {
     // Compute target Library state
     let targetLibraryItems: Record<string, LibraryItem> = {};
+    const titleAliases: Record<string, string> = {};
     if (mode === "replace") {
       backup.data.library.forEach((item) => {
         if (!item.isNsfw) {
@@ -384,7 +387,7 @@ export function executeCoordinatedRestore(
       });
     } else {
       // Merge mode: newer valid updatedAt wins. Tie => current wins.
-      targetLibraryItems = { ...(snapLib.items || {}) };
+      targetLibraryItems = Object.fromEntries(Object.entries(snapLib.items || {}).map(([key, item]) => [item.id ?? key, item]));
       backup.data.library.forEach((item) => {
         if (item.isNsfw) return;
         const id = getLibraryId(item.sourceId, item.mangaId, "id" in item && typeof item.id === "string" ? item.id : undefined);
@@ -393,6 +396,8 @@ export function executeCoordinatedRestore(
         );
         const existing = existingEntry?.[1];
         const targetKey = existing?.id ?? existingEntry?.[0] ?? id;
+        titleAliases[id] = targetKey;
+        titleAliases[getLibraryId(item.sourceId, item.mangaId)] = targetKey;
         if (!existing) {
           targetLibraryItems[targetKey] = { ...item };
         } else {
@@ -546,6 +551,18 @@ export function executeCoordinatedRestore(
     }
 
     // Apply all store mutations using direct setState (No side effects, local-only)
+    for (const [id, item] of Object.entries(targetHistoryItems)) {
+      if (item.savedTitleId && titleAliases[item.savedTitleId]) {
+        targetHistoryItems[id] = { ...item, savedTitleId: titleAliases[item.savedTitleId] };
+      }
+    }
+    const remappedMemberships: Record<string, string[]> = {};
+    for (const [id, memberships] of Object.entries(targetMemberships)) {
+      const targetId = titleAliases[id] ?? id;
+      remappedMemberships[targetId] = Array.from(new Set([...(remappedMemberships[targetId] ?? []), ...memberships]));
+    }
+    targetMemberships = remappedMemberships;
+    targetReadingStatus = Object.fromEntries(Object.entries(targetReadingStatus).map(([id, status]) => [titleAliases[id] ?? id, status]));
     useLibraryStore.setState({ items: targetLibraryItems });
     useHistoryStore.setState({ items: retainHistory(targetHistoryItems, (sourceId, mangaId) =>
       useLibraryStore.getState().resolveBySourceRef(sourceId, mangaId)?.id ?? null,

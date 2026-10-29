@@ -33,6 +33,13 @@ vi.mock('firebase/firestore', () => ({
 
 describe('Firestore Sync Utils Regression Suite', () => {
   beforeEach(() => { localStorage.setItem('yomirra-local-data-owner-uid', 'user123'); });
+  it('rejects an account switch while Firebase initialization is pending', async () => {
+    let resolveFirebase!: (value: never) => void;
+    vi.mocked(initFirebase).mockImplementationOnce(() => new Promise(resolve => { resolveFirebase = resolve; }));
+    const pending = pushHistoryItem({ sourceId: 's', mangaId: 'm', chapterId: 'c', mangaTitle: 'M', readAt: 1 }, 'owner-A');
+    resolveFirebase({ auth: { currentUser: { uid: 'owner-B' } }, db: {} } as never);
+    await expect(pending).rejects.toThrow(/Account changed/);
+  });
   it('blocks history writes and deletes for another account', async () => {
     const item = { sourceId: 's', mangaId: 'm', chapterId: 'c', mangaTitle: 'M', readAt: 1 };
     await expect(pushHistoryItem(item, 'owner-A')).rejects.toThrow(/Account changed/);
