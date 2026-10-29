@@ -41,6 +41,9 @@ test.describe("Yomirra Interactive User Flows & Behavior Regression", () => {
 
     const main = page.locator("main");
     await expect(main).toBeVisible();
+    await expect(page.getByText("BACAANMU DIMULAI DI SINI")).toBeVisible();
+    await expect(page.locator("#continue-reading-section")).toHaveCount(0);
+    await expect(page.locator("#spotlight-section")).toBeVisible();
 
     const hasOverflow = await page.evaluate(() => {
       return document.documentElement.scrollWidth > document.documentElement.clientWidth;
@@ -49,39 +52,51 @@ test.describe("Yomirra Interactive User Flows & Behavior Regression", () => {
   });
 
   test("2. Returning reader state: displays continue reading card with milestone data", async ({ page }) => {
-    // Seed reading history in localStorage
+    // Seed a real HistoryItem shape and explicit settings to isolate the history UI.
     await page.addInitScript(() => {
-      try {
-        const historyData = {
-          state: {
-            items: {
-              "asurascans-solo-leveling": {
-                sourceId: "asurascans",
-                mangaId: "solo-leveling",
-                title: "Solo Leveling",
-                coverUrl: "/covers/cover-1.webp",
-                chapterId: "ch-100",
-                chapterTitle: "Chapter 100",
-                chapterNumber: 100,
-                readAt: new Date().toISOString(),
-                completed: false,
-                page: 12,
-                scrollPosition: 0.5,
-              },
+      localStorage.setItem("yomirra-settings", JSON.stringify({
+        state: { hideNsfw: false }, version: 2,
+      }));
+      localStorage.setItem("yomirra-history", JSON.stringify({
+        state: {
+          items: {
+            "komiku::solo-leveling::ch-100": {
+              sourceId: "komiku",
+              mangaId: "solo-leveling",
+              mangaTitle: "Solo Leveling",
+              chapterId: "ch-100",
+              chapterTitle: "Chapter 100",
+              chapterNumber: 100,
+              readAt: Date.now(),
+              progressPercent: 48,
+              pageIndex: 12,
+              totalPages: 25,
+              isNsfw: false,
             },
-            _hasHydrated: true,
           },
-          version: 0,
-        };
-        localStorage.setItem("yomirra-history", JSON.stringify(historyData));
-      } catch (e) {}
+          _hasHydrated: true,
+        },
+        version: 1,
+      }));
     });
 
     await page.goto("/", { waitUntil: "domcontentloaded" });
     await waitForAppReady(page);
 
-    const heroSection = page.locator("section").first();
-    await expect(heroSection).toBeVisible();
+    await expect(page.getByText("LANJUT LAGI DI YOMIRRA")).toBeVisible();
+    const shelf = page.locator("#continue-reading-section");
+    await expect(shelf).toBeVisible();
+    await expect(shelf.getByText("Solo Leveling")).toBeVisible();
+    await expect(shelf.getByText("Chapter 100")).toBeVisible();
+    await expect(page.locator("#spotlight-section")).toBeVisible();
+
+    const order = await page.evaluate(() => {
+      const shelf = document.querySelector("#continue-reading-section");
+      const spotlight = document.querySelector("#spotlight-section");
+      if (!shelf || !spotlight) return null;
+      return Boolean(shelf.compareDocumentPosition(spotlight) & Node.DOCUMENT_POSITION_FOLLOWING);
+    });
+    expect(order).toBe(true);
   });
 
   test("3. Command palette (⌘K) search modal lifecycle & focus trap", async ({ page }) => {
