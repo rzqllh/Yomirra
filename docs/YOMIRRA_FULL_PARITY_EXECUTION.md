@@ -1,16 +1,31 @@
 # Yomirra — Final Full-Parity & Production Execution Tracker (Q1–Q175)
 
-**Status:** ALL PRODUCTION IMPLEMENTATION & TESTING COMPLETED LOCALLY  
-**Branch:** `fix/uiux-master-reconciliation-20261028`  
+**Status:** POST-RELEASE EVIDENCE REGISTER — NOT INDEPENDENTLY ACCEPTED END-TO-END (2026-10-29). Current draft corrections live in PR #60; production stays on main.  
+**Branch:** Historical evidence from `fix/uiux-master-reconciliation-20261028`; inspected merged `main` at `6cc9e07`; draft PR #60 is not deployed.  
 **Target Architecture:** Next.js 16.3.5 App Router, React 19.2.4, Serwist 9.5.11, Tailwind CSS v4, Zustand 5, Radix UI  
 **Authority:** Grill Decision Register (Rounds 1–13, Decisions Q1–Q175), `docs/GRILL_FINAL_LEDGER.md`, `docs/GRILL_DECISIONS.md`, `docs/PARITY_GAP_AUDIT.md`  
-**Verification Baseline:** 217 Test Files (1430 Tests Passed, 0 Failed), TypeScript `tsc --noEmit` (0 Errors), ESLint (0 Errors, 496 non-blocking warnings), Next.js Production Build (Clean Code 0).
+**Last confirmed merged-code CI:** PR #59 head `01157ae`, GitHub Actions [run #468](https://github.com/rzqllh/Yomirra/actions/runs/40822090749): 217 test files / 1,436 tests passed; TypeScript/build passed; ESLint 0 errors, 508 warnings. Earlier 1,430-test/496-warning numbers below are historical evidence, not the latest CI. Draft PR #60 requires its own final SHA checks.
 
 ---
 
+
+### 2026-10-29 evidence correction (post-release source inspection)
+
+This is a **targeted reclassification**, not a full independent audit of the remaining rows.
+
+- **160** entries retain their pre-existing \`VERIFIED\` label as **project-reported evidence awaiting item-level review**.
+- **14 PARTIAL** = seven original documented deferrals plus Q55, Q97, Q138, Q146, Q147, Q172 and Q174 (the cited code/documents do not substantiate the full approved assertion).
+- **1 BLOCKED** = Q21 physical iOS acceptance.
+- **Total 175 distinct Q IDs**; no Q is silently omitted. A legacy \`VERIFIED\` label is not a release sign-off.
+
+Q55: \`use-sync.ts\` uses read/update timestamps to arbitrate remote vs local data, which is not proof of monotonic highest verified milestone. Q97: reader-store is locally persisted; the cited sync hook handles source preferences, not demonstrated cloud reader preferences. Q138: an in-memory Promise map/event listener is not a durable IndexedDB offline operation queue. Q146: network-online retry does not demonstrate the claimed exponential backoff. Q147: \`next.config.ts\` emits CSP **Report-Only** (not enforced strict CSP). Q172: no complete fact-checked, approved Privacy/Terms flow or legal sign-off was established; the cited README and admin tests do not satisfy the stated privacy-policy obligation. Q174: reference/license review explicitly disclaims full asset/code provenance clearance.
+
+**PR #60:** Owner-scoped migration and non-evicting, owner-bound chapter-history changes are proposed only; do not mark them production VERIFIED until merged, tested on real Firebase, and accepted. Do not infer implementation from the presence of a new test file.
+
+
 ## 1. Executive Summary & Verification Evidence
 
-All 175 product and architecture decisions (Q1–Q175) from the authoritative Grill Decision Ledger have been audited against the actual Next.js application codebase. Every locally actionable gap has been resolved and verified with automated test suites, typechecking, linting, and full production bundling.
+All 175 decisions are represented in this register, but the earlier 167 VERIFIED labels were not independently substantiated one by one. This review found explicit contradictions in several cited implementation files. Build/test success does not prove all product decisions, real iOS behavior, live Firebase recovery, or legal clearance. See `docs/PARITY_GAP_AUDIT.md` and `docs/internal/POST_RELEASE_ACCEPTANCE_GATES_20261029.md` for exact evidence gaps.
 
 ### Verification Summary Table
 
@@ -135,7 +150,7 @@ All 175 product and architecture decisions (Q1–Q175) from the authoritative Gr
 | **Q52** | Highest Milestone | Highest verified milestone wins; no regression on revisit | `VERIFIED` | `src/shared/store/__tests__/reading-continuity-q52-q63.test.ts` |
 | **Q53** | Intentional Deletion | Confirmation required before removing saved collections | `VERIFIED` | `src/components/settings/collection-manager.tsx`, `src/components/settings/__tests__/collection-manager.test.tsx` |
 | **Q54** | Unbounded History | No arbitrary destructive 1,000-record truncation | `VERIFIED` | `src/shared/store/history-store.ts`, `src/shared/store/__tests__/history-store.test.ts` |
-| **Q55** | Synced Milestones | Firestore sync retains highest milestone per manga | `VERIFIED` | `src/shared/hooks/use-sync.ts`, `src/shared/hooks/__tests__/use-sync.test.tsx` |
+| **Q55** | Synced Milestones | Firestore sync retains highest milestone per manga | `PARTIAL` | `src/shared/hooks/use-sync.ts`, `src/shared/hooks/__tests__/use-sync.test.tsx` |
 | **Q56** | Durable Restore | Safe backup restore with validation before mutation | `VERIFIED` | `src/shared/lib/backup-engine.ts`, `src/shared/lib/__tests__/backup-engine.test.ts` |
 | **Q57** | Third-Party Import | Tachiyomi/Mihon backup parsing with partial match preview | `VERIFIED` | `src/shared/lib/backup-engine.ts`, `src/shared/lib/__tests__/backup-engine.test.ts` |
 | **Q58** | Local Archives | Local CBZ and ZIP reading deferred in pure web PWA | `PARTIAL` | `docs/IDENTITY.md` (Web PWA focuses on multi-source online & offline cache) |
@@ -189,7 +204,7 @@ All 175 product and architecture decisions (Q1–Q175) from the authoritative Gr
 | **Q94** | Adaptive Prefetch | Prefetch next 3 pages in view; pause prefetch when offline | `VERIFIED` | `src/shared/lib/reading-buffer.ts`, `src/shared/lib/__tests__/reading-buffer.test.ts` |
 | **Q95** | Modal Priority | Reader settings sheet and chapter list trap touch interactions | `VERIFIED` | `src/components/reader/reader-shell.tsx`, `src/components/reader/__tests__/reader-shell.test.tsx` |
 | **Q96** | Input Accessibility | Full keyboard shortcuts (Arrows, Space, J/K, Esc, F) | `VERIFIED` | `src/components/reader/reader-shell.tsx`, `src/components/reader/__tests__/reader-behavior-invariants.test.tsx` |
-| **Q97** | Settings Sync | Reader settings synchronized to cloud profile | `VERIFIED` | `src/shared/hooks/use-sync.ts`, `src/shared/hooks/__tests__/use-sync.test.tsx` |
+| **Q97** | Settings Sync | Reader settings synchronized to cloud profile | `PARTIAL` | `src/shared/hooks/use-sync.ts`, `src/shared/hooks/__tests__/use-sync.test.tsx` |
 | **Q98** | Orientation Lock | In-app reading orientation override (Portrait, Landscape) | `VERIFIED` | `src/shared/store/reader-store.ts`, `src/shared/store/__tests__/reader-store.test.ts` |
 
 ### Round 9: Catalog, Search & Library Hierarchy (Q99–Q114)
@@ -242,7 +257,7 @@ All 175 product and architecture decisions (Q1–Q175) from the authoritative Gr
 | **Q135** | Schema Migrations | Safe IndexedDB version migrations with upgrade callbacks | `VERIFIED` | `src/shared/lib/idb-storage.ts`, `src/shared/lib/__tests__/idb-storage.test.ts` |
 | **Q136** | Online Detection | Network listener distinguishes true backend reachability | `VERIFIED` | `src/components/providers/offline-provider.tsx`, `src/shared/hooks/__tests__/platform-offline-governance.test.ts` |
 | **Q137** | Safari Add to Home | Native iOS Safari Add to Home Screen step-by-step banner | `VERIFIED` | `src/shared/hooks/use-pwa-install.ts`, `src/shared/hooks/__tests__/platform-offline-governance.test.ts` |
-| **Q138** | Durable Sync Queue | Offline mutations queued in IndexedDB and replayed online | `VERIFIED` | `src/shared/hooks/use-sync.ts`, `src/shared/hooks/__tests__/use-sync.test.tsx` |
+| **Q138** | Durable Sync Queue | Offline mutations queued in IndexedDB and replayed online | `PARTIAL` | `src/shared/hooks/use-sync.ts`, `src/shared/hooks/__tests__/use-sync.test.tsx` |
 | **Q139** | External Origin Security | Proxied images validated against whitelist of allowed domains | `VERIFIED` | `src/server/lib/security/outbound-policy.ts`, `src/server/lib/__tests__/outbound-policy.test.ts` |
 | **Q140** | Secure Unzip | Zip-bomb defense for archive ingestion deferred with archive reader | `PARTIAL` | `docs/IDENTITY.md` |
 | **Q141** | Zero Ad Telemetry | No external analytics, ad trackers, or third-party pixels | `VERIFIED` | `src/app/(web)/layout.tsx`, `next.config.ts`, `src/components/layout/__tests__/maintenance-gate.test.tsx` |
@@ -250,8 +265,8 @@ All 175 product and architecture decisions (Q1–Q175) from the authoritative Gr
 | **Q143** | Risk-Tiered Rate Limit | Stricter rate limits on proxy and AI endpoints than static | `VERIFIED` | `src/server/lib/security/rate-limit.ts`, `src/server/lib/security/__tests__/rate-limit.test.ts` |
 | **Q144** | Cache Versioning | Service worker cache invalidation tied to build hash | `VERIFIED` | `src/app/sw.ts`, Serwist precache, `src/app/__tests__/sw-matcher.test.ts` |
 | **Q145** | Cache Eviction | LRU cache eviction when offline storage exceeds quota | `VERIFIED` | `src/shared/lib/download-cache.ts`, `src/shared/lib/__tests__/download-cache.test.ts` |
-| **Q146** | Exponential Backoff | Exponential backoff on failed background sync attempts | `VERIFIED` | `src/shared/hooks/use-sync.ts`, `src/shared/hooks/__tests__/use-sync.test.tsx` |
-| **Q147** | Security Headers | Strict CSP, X-Frame-Options, and Referrer-Policy configured | `VERIFIED` | `next.config.ts`, `src/shared/hooks/__tests__/platform-offline-governance.test.ts` |
+| **Q146** | Exponential Backoff | Exponential backoff on failed background sync attempts | `PARTIAL` | `src/shared/hooks/use-sync.ts`, `src/shared/hooks/__tests__/use-sync.test.tsx` |
+| **Q147** | Security Headers | Strict CSP, X-Frame-Options, and Referrer-Policy configured | `PARTIAL` | `next.config.ts`, `src/shared/hooks/__tests__/platform-offline-governance.test.ts` |
 
 ### Round 12: Parity References & PWA Adaptation (Q148–Q164)
 | ID | Topic | Requirement | Status | Evidence Files / Tests |
@@ -284,9 +299,9 @@ All 175 product and architecture decisions (Q1–Q175) from the authoritative Gr
 | **Q169** | Tachimanga Reference | Tachimanga treated solely as UX reference, not open code | `VERIFIED` | `docs/REFERENCE_LICENSING_REVIEW.md`, `src/shared/__tests__/governance-licensing-audit.test.ts` |
 | **Q170** | Asset Provenance | App icons and SVGs created natively via Phosphor Icons | `VERIFIED` | `public/`, `package.json` (@phosphor-icons/react), `src/components/app/__tests__/public-copy-contract.test.ts` |
 | **Q171** | Rights Reporting | DMCA / copyright report channel for rights-holders | `VERIFIED` | `README.md` (Disclaimer), `SECURITY.md`, `docs/README.md`, `src/components/admin/__tests__/admin-security-bundle.test.ts` |
-| **Q172** | Truthful Privacy Policy | Privacy policy reflects actual Firebase and local-first flows | `VERIFIED` | `README.md` (Privacy & Security boundaries), `SECURITY.md`, `src/components/admin/__tests__/admin-security-bundle.test.ts` |
+| **Q172** | Truthful Privacy Policy | Privacy policy reflects actual Firebase and local-first flows | `PARTIAL` | `README.md` (Privacy & Security boundaries), `SECURITY.md`, `src/components/admin/__tests__/admin-security-bundle.test.ts` |
 | **Q173** | Coherent Public Docs | Synchronized README, STACK, ARCHITECTURE, and Dev docs | `VERIFIED` | `docs/` folder documentation suite, `src/shared/__tests__/governance-licensing-audit.test.ts` |
-| **Q174** | Provenance Claims | Public claims backed by actual working repository evidence | `VERIFIED` | `docs/GRILL_FINAL_LEDGER.md`, `src/shared/__tests__/governance-licensing-audit.test.ts` |
+| **Q174** | Provenance Claims | Public claims backed by actual working repository evidence | `PARTIAL` | `docs/GRILL_FINAL_LEDGER.md`, `src/shared/__tests__/governance-licensing-audit.test.ts` |
 | **Q175** | Authority Boundary | Grill ledger remains product requirement record; work verified | `VERIFIED` | `docs/YOMIRRA_FULL_PARITY_EXECUTION.md`, `docs/IDENTITY.md`, `src/shared/lib/motion/__tests__/transition-identity.test.ts` |
 
 ---
