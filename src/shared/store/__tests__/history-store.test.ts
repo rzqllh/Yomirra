@@ -113,23 +113,28 @@ describe('history-store', () => {
     expect(resolved).toBeNull();
   });
 
-  it('handles a rejected cloud delete for cap eviction without an unhandled rejection', async () => {
+  it('retains 1,001 independent chapter cursors without evicting user history', async () => {
     vi.useFakeTimers();
-    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    vi.mocked(deleteHistoryItem).mockRejectedValueOnce(new Error('offline'));
-    const items = Object.fromEntries(Array.from({ length: 1000 }, (_, index) => [
-      `source::manga::chapter-${index}`,
-      { sourceId: 'source', mangaId: 'manga', chapterId: `chapter-${index}`, mangaTitle: 'Title', readAt: index },
-    ]));
-    useHistoryStore.setState({ items });
+    try {
+      vi.mocked(deleteHistoryItem).mockClear();
+      const items = Object.fromEntries(Array.from({ length: 1000 }, (_, index) => [
+        `source::manga::chapter-${index}`,
+        { sourceId: 'source', mangaId: 'manga', chapterId: `chapter-${index}`, mangaTitle: 'Title', readAt: index },
+      ]));
+      useHistoryStore.setState({ items });
 
-    useHistoryStore.getState().upsertHistory({
-      sourceId: 'source', mangaId: 'manga', chapterId: 'chapter-new', mangaTitle: 'New', readAt: 2000,
-    });
-    await vi.runAllTimersAsync();
+      useHistoryStore.getState().upsertHistory({
+        sourceId: 'source', mangaId: 'manga', chapterId: 'chapter-new', mangaTitle: 'New', readAt: 2000,
+      });
+      await vi.runAllTimersAsync();
 
-    expect(error).toHaveBeenCalledWith('Failed to delete evicted history item', expect.any(Error));
-    error.mockRestore();
-    vi.useRealTimers();
+      const saved = useHistoryStore.getState().items;
+      expect(Object.keys(saved)).toHaveLength(1001);
+      expect(saved['source::manga::chapter-0']).toBeDefined();
+      expect(saved['source::manga::chapter-new']).toBeDefined();
+      expect(deleteHistoryItem).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
