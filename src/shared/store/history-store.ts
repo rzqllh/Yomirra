@@ -106,16 +106,23 @@ export const useHistoryStore = create<HistoryState>()(
       }),
 
       removeHistoryItem: (sourceId, mangaId, chapterId) => {
-        const previousState = get().items;
+        const id = getHistoryId(sourceId, mangaId, chapterId);
+        const previousItem = get().items[id];
         set((state) => {
-          const id = getHistoryId(sourceId, mangaId, chapterId);
           const newItems = { ...state.items };
           delete newItems[id];
           return { items: newItems };
         });
 
         deleteHistoryItem(sourceId, mangaId, chapterId).catch(() => {
-          set({ items: previousState });
+          // Restore only the failed deletion; keep any independent reading
+          // progress made while the cloud operation was pending.
+          if (previousItem) {
+            set((state) => {
+              if (Object.prototype.hasOwnProperty.call(state.items, id)) return state;
+              return { items: { ...state.items, [id]: previousItem } };
+            });
+          }
           toast.error("Gagal Menghapus Riwayat", {
             description: "Riwayat bacaan belum berhasil dihapus dari akunmu.",
           });
@@ -123,19 +130,29 @@ export const useHistoryStore = create<HistoryState>()(
       },
 
       removeMangaHistory: (sourceId, mangaId) => {
-        const previousState = get().items;
+        const prefix = `${sourceId}::${mangaId}::`;
+        const removedEntries = Object.entries(get().items).filter(([key]) => key.startsWith(prefix));
         set((state) => {
           const newItems = { ...state.items };
-          Object.keys(newItems).forEach(key => {
-            if (key.startsWith(`${sourceId}::${mangaId}::`)) {
-              delete newItems[key];
-            }
+          Object.keys(newItems).forEach((key) => {
+            if (key.startsWith(prefix)) delete newItems[key];
           });
           return { items: newItems };
         });
 
         deleteMangaHistory(sourceId, mangaId).catch(() => {
-          set({ items: previousState });
+          set((state) => {
+            const newItems = { ...state.items };
+            let changed = false;
+            for (const [key, item] of removedEntries) {
+              // Never overwrite a newer cursor re-created during the request.
+              if (!Object.prototype.hasOwnProperty.call(newItems, key)) {
+                newItems[key] = item;
+                changed = true;
+              }
+            }
+            return changed ? { items: newItems } : state;
+          });
           toast.error("Gagal Menghapus Riwayat", {
             description: "Riwayat komik belum berhasil dihapus dari akunmu.",
           });
