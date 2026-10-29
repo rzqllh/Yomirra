@@ -540,7 +540,7 @@ describe("useSync cloud correctness", () => {
     localStorage.removeItem("yomirra-libraryV2-migrated:user-a");
     vi.mocked(pullLegacyLibraryData).mockResolvedValueOnce([libraryItem() as never]);
     let resolveBatch: (() => void) | undefined;
-    const commit = vi.fn(() => new Promise<void>((resolve) => { resolveBatch = resolve; }));
+    const commit = vi.fn(() => new Promise<undefined>((resolve) => { resolveBatch = () => resolve(undefined); }));
     mocks.firestore.writeBatch.mockImplementationOnce(() => ({
       set: (reference: { path: string }, data: unknown) => mocks.writes.push({ path: reference.path, data }),
       commit,
