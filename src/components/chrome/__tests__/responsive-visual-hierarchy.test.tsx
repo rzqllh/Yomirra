@@ -29,7 +29,7 @@ describe("DesktopRail responsive, motion and navigation contracts", () => {
     expect(useSidebarStore.getState().isCollapsed).toBe(true);
     expect(rail?.className).toContain("w-[76px]");
     expect(rail?.className).not.toContain("xl:w-[240px]");
-    expect(screen.getByRole("button", { name: "Perluas bilah samping" })).toHaveAttribute("aria-expanded", "false");
+    expect(screen.getByRole("button", { name: "Perluas bilah samping" }).getAttribute("aria-expanded")).toBe("false");
   });
 
   it("exposes a real labelled navigation landmark and current destination", () => {
