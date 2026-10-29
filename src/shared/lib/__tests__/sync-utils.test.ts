@@ -134,4 +134,62 @@ describe('Firestore Sync Utils Regression Suite', () => {
     await expect(pushLibraryItem(item, 'owner-A')).rejects.toThrow(/Account changed/);
     await expect(deleteLibraryItem('source', 'manga', 'saved-owner-a', 'owner-A')).rejects.toThrow(/Account changed/);
   });
+
+  it('splits more than 500 history tombstones into sequential batches of at most 400', async () => {
+    const firestore = await import('firebase/firestore');
+    const priorBatches = vi.mocked(firestore.writeBatch).mock.results.length;
+    const docs = Array.from({ length: 801 }, (_, index) => ({
+      ref: `history-${index}`,
+      data: () => ({
+        sourceId: 'source', mangaId: 'long-series', chapterId: `chapter-${index}`,
+      }),
+    }));
+
+    vi.mocked(firestore.getDocs).mockResolvedValueOnce({ docs } as never);
+    await deleteMangaHistory('source', 'long-series');
+
+    const createdBatches = vi.mocked(firestore.writeBatch).mock.results.slice(priorBatches)
+      .map((result) => result.value);
+    expect(createdBatches).toHaveLength(3);
+    expect(createdBatches.map((batch) => batch.set.mock.calls.length)).toEqual([400, 400, 1]);
+    for (const batch of createdBatches) {
+      expect(batch.commit).toHaveBeenCalledTimes(1);
+    }
+    const firstTimestamp = createdBatches[0].set.mock.calls[0][1].deletedAt;
+    expect(createdBatches[2].set.mock.calls[0][1].deletedAt).toBe(firstTimestamp);
+  });
+
+  it('does not create batches for already deleted chapter tombstones', async () => {
+    const firestore = await import('firebase/firestore');
+    const priorBatches = vi.mocked(firestore.writeBatch).mock.calls.length;
+    vi.mocked(firestore.getDocs).mockResolvedValueOnce({
+      docs: [
+        { ref: 'deleted-1', data: () => ({
+          _deleted: true, sourceId: 'source', mangaId: 'old', chapterId: 'chapter-1',
+        }) },
+      ],
+    } as never);
+
+    await deleteMangaHistory('source', 'old');
+    expect(vi.mocked(firestore.writeBatch).mock.calls.length).toBe(priorBatches);
+  });
+
+  it('blocks cloud history deletion if the account changes during query fetch', async () => {
+    const firestore = await import('firebase/firestore');
+    const auth = { currentUser: { uid: 'account-a' } };
+    vi.mocked(initFirebase).mockResolvedValueOnce({ auth, db: {} } as never);
+    const priorBatches = vi.mocked(firestore.writeBatch).mock.calls.length;
+    vi.mocked(firestore.getDocs).mockImplementationOnce(async () => {
+      auth.currentUser = { uid: 'account-b' };
+      return {
+        docs: [{ ref: 'one', data: () => ({
+          sourceId: 'source', mangaId: 'manga', chapterId: 'ch-1',
+        }) }],
+      } as never;
+    });
+
+    await expect(deleteMangaHistory('source', 'manga')).rejects.toThrow(/Account changed/);
+    expect(vi.mocked(firestore.writeBatch).mock.calls.length).toBe(priorBatches);
+  });
+
 });
