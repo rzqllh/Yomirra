@@ -13,7 +13,7 @@ describe("library-store Phase 1 Identity & Relinking", () => {
     useLibraryStore.setState({ items: {} });
   });
 
-  it("deletes the cloud document using the saved title ID", () => {
+  it("deletes the cloud document using the saved title ID", async () => {
     useLibraryStore.setState({ items: {
       "saved-uuid": {
         id: "saved-uuid", sourceId: "mangadex", mangaId: "manga-1",
@@ -23,7 +23,7 @@ describe("library-store Phase 1 Identity & Relinking", () => {
 
     useLibraryStore.getState().removeFromLibrary("mangadex", "manga-1");
 
-    expect(deleteLibraryItem).toHaveBeenCalledWith("mangadex", "manga-1", "saved-uuid");
+    await vi.waitFor(() => expect(deleteLibraryItem).toHaveBeenCalledWith("mangadex", "manga-1", "saved-uuid"));
     expect(useLibraryStore.getState().items).toEqual({});
   });
 
