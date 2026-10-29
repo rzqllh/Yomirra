@@ -101,3 +101,7 @@ Chapter yang didownload dapat tetap berada di browser storage setelah logout. Ja
 ## Disclosure
 
 Beri maintainer waktu yang wajar untuk investigasi dan perbaikan sebelum disclosure publik. Project tidak menjanjikan bug bounty atau SLA response.
+
+## Isolasi riwayat antar-akun
+
+Penulisan dan penghapusan riwayat terikat ke UID pemilik saat operasi dimulai. Operasi yang tertunda ditolak jika akun aktif berubah. Firestore rules tetap menjadi pembatas akses data per pengguna; pemeriksaan aplikasi menambahkan perlindungan terhadap antrean yang salah sasaran. Pengujian simulasi tidak membuktikan isolasi layanan produksi. Laporkan dugaan kebocoran lintas akun melalui jalur pelaporan di dokumen ini.

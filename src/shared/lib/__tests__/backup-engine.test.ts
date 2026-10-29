@@ -108,7 +108,7 @@ describe("Backup & Restore Engine v1", () => {
     expect(dryRun.errors.some((e) => e.message.includes("ISO date"))).toBe(true);
   });
 
-  it("3. rejects oversized payload (> 10MB or > 1000 items)", () => {
+  it("3. accepts libraries above 1000 items while enforcing the 10 MB file limit", () => {
     const hugePayload = {
       schemaVersion: 1,
       appVersion: "1.0.0",
@@ -140,7 +140,8 @@ describe("Backup & Restore Engine v1", () => {
     };
 
     const dryRun = performDryRun(JSON.stringify(hugePayload));
-    expect(dryRun.errors.some((e) => e.message.includes("1000 item"))).toBe(true);
+    expect(dryRun.errors).toEqual([]);
+    expect(dryRun.validLibraryCount).toBe(1001);
 
     // Oversized string test
     const longStringJson = "a".repeat(10 * 1024 * 1024 + 5);
@@ -411,4 +412,22 @@ describe("Backup & Restore Engine v1", () => {
 
     expect(stateAfterSecond).toEqual(stateAfterFirst);
   });
+  it("round-trips canonical identity, milestones and collection membership without duplicate titles", () => {
+    const title = { id: "saved-canonical", sourceId: "src", mangaId: "manga", title: "Title", addedAt: "2026-10-01", updatedAt: "2026-10-02", highestMilestoneChapterId: "ch100", highestMilestoneChapterTitle: "Chapter 100", highestMilestoneIndex: 99, isBookmarked: true };
+    useLibraryStore.setState({ items: { "saved-canonical": title } });
+    useHistoryStore.setState({ items: { "src::manga::ch20": { sourceId: "src", mangaId: "manga", chapterId: "ch20", chapterNumber: 20, savedTitleId: "saved-canonical", mangaTitle: "Title", readAt: 5, pageIndex: 7 } } });
+    const backup = createBackupPayload();
+    const preview = performDryRun(JSON.stringify(backup));
+    expect(preview.errors).toEqual([]);
+    expect(preview.addedCount).toBe(0);
+    expect(preview.backupPayload!.data.library[0]).toMatchObject({ highestMilestoneChapterId: "ch100" });
+    expect(preview.backupPayload!.data.history[0]).toMatchObject({ savedTitleId: "saved-canonical", chapterNumber: 20 });
+    executeCoordinatedRestore(preview.backupPayload!, "merge");
+    executeCoordinatedRestore(preview.backupPayload!, "merge");
+    expect(Object.keys(useLibraryStore.getState().items)).toEqual(["saved-canonical"]);
+    executeCoordinatedRestore(preview.backupPayload!, "replace");
+    expect(useLibraryStore.getState().getLibraryItemById("saved-canonical")?.highestMilestoneChapterId).toBe("ch100");
+    expect(useHistoryStore.getState().items["src::manga::ch20"].savedTitleId).toBe("saved-canonical");
+  });
+
 });

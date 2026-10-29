@@ -1,6 +1,7 @@
 import { initFirebase } from "./firebase";
 import type { LibraryItem } from "@/shared/store/library-store";
 import type { HistoryItem } from "@/shared/store/history-store";
+import { getLocalDataOwnerUid } from "./local-data-owner";
 
 export async function pushLibraryItem(item: LibraryItem, expectedOwnerUid?: string | null) {
   // Guest mutations are local-only. Never replay guest writes into an account
@@ -67,13 +68,15 @@ export async function deleteLibraryItem(
   }
 }
 
-export async function pushHistoryItem(item: HistoryItem) {
+export async function pushHistoryItem(item: HistoryItem, expectedOwnerUid: string | null = getLocalDataOwnerUid()) {
+  if (expectedOwnerUid === null) return;
   const { auth, db } = await initFirebase();
-  if (!auth || !db) return;
+  if (!auth || !db) throw new Error("Cloud unavailable for history owner.");
   const user = auth.currentUser;
-  if (!user) return;
+  if (!user || user.uid !== expectedOwnerUid) throw new Error("Account changed before history write.");
   try {
     const { doc, setDoc } = await import("firebase/firestore");
+    if (auth.currentUser?.uid !== expectedOwnerUid) throw new Error("Account changed before history write.");
     const id = `${item.sourceId}::${item.mangaId}::${item.chapterId}`;
     const cleanItem = Object.fromEntries(Object.entries(item).filter(([, v]) => v !== undefined));
     await setDoc(doc(db, `users/${user.uid}/history`, id), cleanItem);
@@ -83,13 +86,15 @@ export async function pushHistoryItem(item: HistoryItem) {
   }
 }
 
-export async function deleteHistoryItem(sourceId: string, mangaId: string, chapterId: string) {
+export async function deleteHistoryItem(sourceId: string, mangaId: string, chapterId: string, expectedOwnerUid: string | null = getLocalDataOwnerUid()) {
+  if (expectedOwnerUid === null) return;
   const { auth, db } = await initFirebase();
   if (!auth || !db) throw new Error("Firebase is unavailable for deletion.");
   const user = auth.currentUser;
-  if (!user) throw new Error("No authenticated user is available for deletion.");
+  if (!user || user.uid !== expectedOwnerUid) throw new Error("Account changed before history deletion.");
   try {
     const { doc, setDoc } = await import("firebase/firestore");
+    if (auth.currentUser?.uid !== expectedOwnerUid) throw new Error("Account changed before history deletion.");
     const id = `${sourceId}::${mangaId}::${chapterId}`;
     await setDoc(doc(db, `users/${user.uid}/history`, id), {
       _deleted: true,
@@ -104,11 +109,12 @@ export async function deleteHistoryItem(sourceId: string, mangaId: string, chapt
   }
 }
 
-export async function deleteMangaHistory(sourceId: string, mangaId: string) {
+export async function deleteMangaHistory(sourceId: string, mangaId: string, expectedOwnerUid: string | null = getLocalDataOwnerUid()) {
+  if (expectedOwnerUid === null) return;
   const { auth, db } = await initFirebase();
   if (!auth || !db) throw new Error("Firebase is unavailable for deletion.");
   const user = auth.currentUser;
-  if (!user) throw new Error("No authenticated user is available for deletion.");
+  if (!user || user.uid !== expectedOwnerUid) throw new Error("Account changed before history deletion.");
   try {
     const { collection, query, where, getDocs, writeBatch } = await import("firebase/firestore");
     const historyRef = collection(db, `users/${user.uid}/history`);
@@ -118,12 +124,13 @@ export async function deleteMangaHistory(sourceId: string, mangaId: string) {
       where("mangaId", "==", mangaId)
     );
     const snapshot = await getDocs(q);
+    if (auth.currentUser?.uid !== expectedOwnerUid) throw new Error("Account changed before history deletion.");
     
     // Create a batch
-    const batch = writeBatch(db);
+    let batch = writeBatch(db);
     let count = 0;
     
-    snapshot.docs.forEach(historyDoc => {
+    for (const historyDoc of snapshot.docs) {
       const historyItem = historyDoc.data() as HistoryItem;
       batch.set(historyDoc.ref, {
         _deleted: true,
@@ -133,9 +140,16 @@ export async function deleteMangaHistory(sourceId: string, mangaId: string) {
         chapterId: historyItem.chapterId,
       });
       count++;
-    });
+      if (count === 450) {
+        if (auth.currentUser?.uid !== expectedOwnerUid) throw new Error("Account changed before history deletion.");
+        await batch.commit();
+        batch = writeBatch(db);
+        count = 0;
+      }
+    }
     
     if (count > 0) {
+      if (auth.currentUser?.uid !== expectedOwnerUid) throw new Error("Account changed before history deletion.");
       await batch.commit();
     }
   } catch (e) {
@@ -155,7 +169,7 @@ export async function pullLibraryData(): Promise<LibraryItem[]> {
     const querySnapshot = await getDocs(collection(db, `users/${user.uid}/libraryV2`));
     return querySnapshot.docs
       .map(d => d.data() as LibraryItem)
-      .filter(item => !(item as Record<string, unknown>)._deleted);
+      .filter(item => !(item as Record<string, unknown>)._deleted && !(item as Record<string, unknown>)._compacted);
   } catch (e) {
     console.error("Failed to pull library data from libraryV2", e);
     return [];
@@ -173,7 +187,7 @@ export async function pullLegacyLibraryData(options: { strict?: boolean } = {}):
     const querySnapshot = await getDocs(collection(db, `users/${user.uid}/library`));
     return querySnapshot.docs
       .map(d => d.data() as LibraryItem)
-      .filter(item => !(item as Record<string, unknown>)._deleted);
+      .filter(item => !(item as Record<string, unknown>)._deleted && !(item as Record<string, unknown>)._compacted);
   } catch (e) {
     console.error("Failed to pull legacy library data", e);
     if (options.strict) throw e;
@@ -191,7 +205,7 @@ export async function pullHistoryData(): Promise<HistoryItem[]> {
     const querySnapshot = await getDocs(collection(db, `users/${user.uid}/history`));
     return querySnapshot.docs
       .map(doc => doc.data() as HistoryItem)
-      .filter(item => !(item as Record<string, unknown>)._deleted);
+      .filter(item => !(item as Record<string, unknown>)._deleted && !(item as Record<string, unknown>)._compacted);
   } catch (e) {
     console.error("Failed to pull history data", e);
     return [];

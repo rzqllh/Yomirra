@@ -8,6 +8,8 @@ import { useUpdateStore } from "@/shared/store/update-store";
 import { useCollectionStore } from "@/shared/store/collection-store";
 import type { MangaUpdateItem } from "@/shared/types/update";
 import type { Collection, ReadingStatus } from "@/shared/types/collection";
+import { retainHistory } from "./history-retention";
+import { version as appVersion } from "../../../package.json";
 import {
   yomirraBackupSchemaV1,
   yomirraBackupSchemaV2,
@@ -22,7 +24,7 @@ import {
   type CollectionBackup,
 } from "./backup-schema";
 
-export const getLibraryId = (sourceId: string, mangaId: string) => `${sourceId}::${mangaId}`;
+export const getLibraryId = (sourceId: string, mangaId: string, savedTitleId?: string) => savedTitleId ?? `${sourceId}::${mangaId}`;
 export const getHistoryId = (sourceId: string, mangaId: string, chapterId: string) => `${sourceId}::${mangaId}::${chapterId}`;
 
 export interface CurrentStoresProjection {
@@ -81,11 +83,16 @@ export function createBackupPayload(theme: "light" | "dark" | "system" = "system
       lastReadChapterId: item.lastReadChapterId,
       lastReadChapterTitle: item.lastReadChapterTitle,
       lastReadAt: item.lastReadAt,
+      highestMilestoneChapterId: item.highestMilestoneChapterId,
+      highestMilestoneChapterTitle: item.highestMilestoneChapterTitle,
+      highestMilestoneIndex: item.highestMilestoneIndex,
+      isBookmarked: item.isBookmarked,
+      releaseDay: item.releaseDay,
       userRating: item.userRating,
       isNsfw: false,
     }));
 
-  const historyList: HistoryItemBackup[] = Object.values(historyState.items || {})
+  const historyList: HistoryItemBackup[] = Object.values(retainHistory(historyState.items || {}))
     .filter((item) => !item.isNsfw)
     .map((item) => ({
       sourceId: item.sourceId,
@@ -104,6 +111,10 @@ export function createBackupPayload(theme: "light" | "dark" | "system" = "system
       totalChapters: item.totalChapters,
       scrollPercent: item.scrollPercent,
       readAt: item.readAt || Date.now(),
+      savedTitleId: item.savedTitleId,
+      chapterNumber: item.chapterNumber,
+      status: item.status,
+      isCompact: item.isCompact,
       isNsfw: false,
     }));
 
@@ -121,7 +132,7 @@ export function createBackupPayload(theme: "light" | "dark" | "system" = "system
 
   return {
     schemaVersion: 3,
-    appVersion: "1.0.0",
+    appVersion,
     exportedAt: new Date().toISOString(),
     data: {
       library: libraryList,
@@ -161,6 +172,9 @@ export function createBackupPayload(theme: "light" | "dark" | "system" = "system
 export function triggerBackupDownload(theme: "light" | "dark" | "system" = "system") {
   const payload = createBackupPayload(theme);
   const jsonStr = JSON.stringify(payload, null, 2);
+  if (new Blob([jsonStr]).size > 10 * 1024 * 1024) {
+    throw new Error("Cadangan melebihi batas pemulihan 10 MB.");
+  }
 
   const now = new Date();
   const yyyy = now.getFullYear();
@@ -201,7 +215,7 @@ export function performDryRun(
   };
 
   // File size check (10MB limit)
-  if (jsonContent.length > 10 * 1024 * 1024) {
+  if (new Blob([jsonContent]).size > 10 * 1024 * 1024) {
     preview.errors.push({ path: "file", message: "Ukuran file backup melebihi batas 10 MB" });
     return preview;
   }
@@ -257,7 +271,7 @@ export function performDryRun(
       preview.excludedNsfwCount++;
       return;
     }
-    const key = getLibraryId(item.sourceId, item.mangaId);
+    const key = getLibraryId(item.sourceId, item.mangaId, "id" in item ? item.id : undefined);
     if (seenLibKeys.has(key)) {
       preview.duplicateInPayloadCount++;
     } else {
@@ -298,7 +312,7 @@ export function performDryRun(
   const uniqueLibItems = new Map<string, LibraryItemV2Backup>();
   backupData.data.library.forEach((item) => {
     if (!item.isNsfw) {
-      uniqueLibItems.set(getLibraryId(item.sourceId, item.mangaId), item);
+      uniqueLibItems.set(getLibraryId(item.sourceId, item.mangaId, "id" in item ? item.id : undefined), item);
     }
   });
 
@@ -364,7 +378,7 @@ export function executeCoordinatedRestore(
     if (mode === "replace") {
       backup.data.library.forEach((item) => {
         if (!item.isNsfw) {
-          const id = getLibraryId(item.sourceId, item.mangaId);
+          const id = getLibraryId(item.sourceId, item.mangaId, "id" in item ? item.id : undefined);
           targetLibraryItems[id] = { ...item };
         }
       });
@@ -373,15 +387,19 @@ export function executeCoordinatedRestore(
       targetLibraryItems = { ...(snapLib.items || {}) };
       backup.data.library.forEach((item) => {
         if (item.isNsfw) return;
-        const id = getLibraryId(item.sourceId, item.mangaId);
-        const existing = targetLibraryItems[id];
+        const id = getLibraryId(item.sourceId, item.mangaId, "id" in item ? item.id : undefined);
+        const existingEntry = Object.entries(targetLibraryItems).find(([key, current]) =>
+          key === id || current.id === id || (current.sourceId === item.sourceId && current.mangaId === item.mangaId),
+        );
+        const existing = existingEntry?.[1];
+        const targetKey = existing?.id ?? existingEntry?.[0] ?? id;
         if (!existing) {
-          targetLibraryItems[id] = { ...item };
+          targetLibraryItems[targetKey] = { ...item };
         } else {
           const backupTime = Date.parse(item.updatedAt);
           const existingTime = Date.parse(existing.updatedAt || existing.addedAt);
           if (!isNaN(backupTime) && !isNaN(existingTime) && backupTime > existingTime) {
-            targetLibraryItems[id] = { ...item };
+            targetLibraryItems[targetKey] = { ...item, id: existing.id ?? ("id" in item ? item.id : undefined) };
           }
         }
       });
@@ -529,7 +547,9 @@ export function executeCoordinatedRestore(
 
     // Apply all store mutations using direct setState (No side effects, local-only)
     useLibraryStore.setState({ items: targetLibraryItems });
-    useHistoryStore.setState({ items: targetHistoryItems });
+    useHistoryStore.setState({ items: retainHistory(targetHistoryItems, (sourceId, mangaId) =>
+      useLibraryStore.getState().resolveBySourceRef(sourceId, mangaId)?.id ?? null,
+    ) });
     useSettingsStore.setState(targetSettings);
     useReaderStore.setState({ preferences: targetReaderPreferences });
     useSourcePreferencesStore.setState({

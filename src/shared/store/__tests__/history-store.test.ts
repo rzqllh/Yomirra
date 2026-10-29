@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useHistoryStore } from '../history-store';
 import { useLibraryStore } from '../library-store';
-import { deleteHistoryItem } from '@/shared/lib/sync-utils';
+import { deleteHistoryItem, pushHistoryItem } from '@/shared/lib/sync-utils';
 
 vi.mock('@/shared/lib/sync-utils', () => ({
   pushHistoryItem: vi.fn().mockResolvedValue(undefined),
@@ -113,23 +113,35 @@ describe('history-store', () => {
     expect(resolved).toBeNull();
   });
 
-  it('handles a rejected cloud delete for cap eviction without an unhandled rejection', async () => {
-    vi.useFakeTimers();
-    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    vi.mocked(deleteHistoryItem).mockRejectedValueOnce(new Error('offline'));
+  it('compacts overflow without deleting cloud progress', () => {
+    vi.mocked(deleteHistoryItem).mockClear();
     const items = Object.fromEntries(Array.from({ length: 1000 }, (_, index) => [
-      `source::manga::chapter-${index}`,
-      { sourceId: 'source', mangaId: 'manga', chapterId: `chapter-${index}`, mangaTitle: 'Title', readAt: index },
+      `source::manga-${index}::chapter`,
+      { sourceId: 'source', mangaId: `manga-${index}`, chapterId: 'chapter', mangaTitle: 'Title', readAt: index + 1 },
     ]));
     useHistoryStore.setState({ items });
-
-    useHistoryStore.getState().upsertHistory({
-      sourceId: 'source', mangaId: 'manga', chapterId: 'chapter-new', mangaTitle: 'New', readAt: 2000,
-    });
-    await vi.runAllTimersAsync();
-
-    expect(error).toHaveBeenCalledWith('Failed to delete evicted history item', expect.any(Error));
-    error.mockRestore();
-    vi.useRealTimers();
+    useHistoryStore.getState().upsertHistory({ sourceId: 'source', mangaId: 'new', chapterId: 'chapter', mangaTitle: 'New', readAt: 2000 });
+    const retained = Object.values(useHistoryStore.getState().items);
+    expect(retained.filter(item => !item.isCompact)).toHaveLength(512);
+    expect(retained).toHaveLength(1001);
+    expect(deleteHistoryItem).not.toHaveBeenCalled();
   });
+  it('keeps newer local progress when an earlier cloud write fails', async () => {
+    localStorage.setItem('yomirra-local-data-owner-uid', 'owner-A');
+    let rejectWrite!: (reason: Error) => void;
+    vi.mocked(pushHistoryItem).mockImplementationOnce(() => new Promise<void>((_, reject) => { rejectWrite = reject; }));
+    useHistoryStore.setState({ items: { 's::m::a': { sourceId: 's', mangaId: 'm', chapterId: 'a', mangaTitle: 'M', readAt: 1 } } });
+    useHistoryStore.getState().markChapterProgress('s', 'm', 'a', 2, 10);
+    await Promise.resolve();
+    await Promise.resolve();
+    useHistoryStore.getState().saveProgress('s', 'm', 'b', 7);
+    rejectWrite(new Error('offline'));
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(useHistoryStore.getState().items['s::m::b'].pageIndex).toBe(7);
+    expect(useHistoryStore.getState().items['s::m::a'].pageIndex).toBe(2);
+    useHistoryStore.getState().clearHistory();
+    localStorage.removeItem('yomirra-local-data-owner-uid');
+  });
+
 });

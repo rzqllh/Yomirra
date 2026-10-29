@@ -1,5 +1,7 @@
 # Yomirra
 
+Riwayat menyimpan 512 entri chapter dengan detail lengkap, lalu mempertahankan ringkasan posisi terakhir dan milestone tiap judul. Progres lokal tetap dipertahankan ketika cloud gagal. Untuk aturan retensi, backup, pemulihan, dan batas offline, baca [panduan data bacaan](docs/READING_DATA.md). Penghapusan otomatis setelah tiga bulan belum aktif.
+
 Yomirra adalah web reader komik multi-source yang mendukung manga, manhwa, manhua, dan jenis komik lainnya. Tujuannya sederhana: pencarian, library, progress baca, dan reader tetap berada di satu aplikasi walaupun sumber kontennya berbeda-beda atau berubah.
 
 **Aplikasi:** https://www.yomirra.web.id/

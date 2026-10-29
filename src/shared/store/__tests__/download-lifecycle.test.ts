@@ -12,10 +12,12 @@ describe("W1: Download Engine Lifecycle & URL Verification (F02 + F12)", () => {
     originalFetch = globalThis.fetch;
     originalCaches = globalThis.caches;
 
-    const mockPut = vi.fn(async () => undefined);
+    const entries = new Map<string, Response>();
+    const mockPut = vi.fn(async (key: string, response: Response) => { entries.set(key, response); });
+    const mockMatch = vi.fn(async (key: string) => entries.get(key));
     const mockKeys = vi.fn(async () => []);
     globalThis.caches = {
-      open: vi.fn(async () => ({ put: mockPut, keys: mockKeys })),
+      open: vi.fn(async () => ({ put: mockPut, keys: mockKeys, match: mockMatch })),
       delete: vi.fn(async () => true),
     } as unknown as CacheStorage;
 

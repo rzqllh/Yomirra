@@ -79,6 +79,18 @@ export async function processDownloadQueue(options: DownloadEngineOptions) {
 
     try {
       let pages = item.pages;
+      const cache = await caches.open(EXPLICIT_DOWNLOADS_CACHE_NAME);
+      pages = await Promise.all(pages.map(async (page) => {
+        if (page.status !== "cached") return page;
+        const cacheKey = new URL(page.offlineUrl, window.location.origin).toString();
+        const cached = await cache.match(cacheKey);
+        if (cached?.ok && cached.headers.get("content-type")?.startsWith("image/")) return page;
+        return { ...page, status: "pending" as const, contentType: undefined, sizeBytes: undefined };
+      }));
+      updateDownload(id, {
+        pages, downloadedPages: pages.filter((page) => page.status === "cached").length,
+        progress: pages.length ? Math.round(pages.filter((page) => page.status === "cached").length / pages.length * 100) : 0,
+      });
       const needsPageRefresh =
         pages.length === 0 ||
         pages.some(
@@ -114,7 +126,6 @@ export async function processDownloadQueue(options: DownloadEngineOptions) {
         updateDownload(id, { pages, totalPages: pages.length });
       }
 
-      const cache = await caches.open(EXPLICIT_DOWNLOADS_CACHE_NAME);
       const CONCURRENCY = 2; // Batasi 2 koneksi per chapter untuk kestabilan offline
       
       for (let i = 0; i < pages.length; i += CONCURRENCY) {
@@ -185,7 +196,11 @@ export async function processDownloadQueue(options: DownloadEngineOptions) {
       }
 
       const finalPages = getDownloads()[id].pages;
-      const allCached = finalPages.every(p => p.status === 'cached');
+      const allCached = finalPages.length > 0 && (await Promise.all(finalPages.map(async (page) => {
+        if (page.status !== "cached") return false;
+        const response = await cache.match(new URL(page.offlineUrl, window.location.origin).toString());
+        return response?.ok === true && response.headers.get("content-type")?.startsWith("image/") === true;
+      }))).every(Boolean);
       
       if (allCached) {
         updateDownload(id, { status: "downloaded", progress: 100 });
