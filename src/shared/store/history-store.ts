@@ -78,35 +78,9 @@ export const useHistoryStore = create<HistoryState>()(
 
         setTimeout(() => pushHistoryItem(finalItem), 0); // Async Background sync
         
-        const newItems = { ...state.items, [id]: finalItem };
-        const keys = Object.keys(newItems);
-        const MAX_HISTORY_ITEMS = 1000;
-        
-        if (keys.length > MAX_HISTORY_ITEMS) {
-          // O(N) trim of oldest item
-          let oldestKey = keys[0];
-          let oldestTime = newItems[oldestKey].readAt;
-          
-          for (let i = 1; i < keys.length; i++) {
-            const key = keys[i];
-            const time = newItems[key].readAt;
-            if (time < oldestTime) {
-              oldestTime = time;
-              oldestKey = key;
-            }
-          }
-          
-          const evictedItem = newItems[oldestKey];
-          delete newItems[oldestKey];
-          
-          setTimeout(() => {
-            deleteHistoryItem(evictedItem.sourceId, evictedItem.mangaId, evictedItem.chapterId).catch((error) => {
-              console.error("Failed to delete evicted history item", error);
-            });
-          }, 0);
-        }
-
-        return { items: newItems };
+        // Reading history is user data, not an evictable cache.
+        // Never remove milestones or send cloud tombstones because of a count limit.
+        return { items: { ...state.items, [id]: finalItem } };
       }),
 
       _setItemLocal: (item) => set((state) => {
