@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useHistoryStore } from '../history-store';
 import { useLibraryStore } from '../library-store';
-import { deleteHistoryItem } from '@/shared/lib/sync-utils';
+import { deleteHistoryItem, pushHistoryItem } from '@/shared/lib/sync-utils';
 
 vi.mock('@/shared/lib/sync-utils', () => ({
   pushHistoryItem: vi.fn().mockResolvedValue(undefined),
@@ -138,4 +138,28 @@ describe('history-store', () => {
       vi.useRealTimers();
     }
   });;
+
+  it('keeps the local chapter cursor and later unrelated progress after cloud sync rejects', async () => {
+    useHistoryStore.setState({
+      items: {
+        'source1::manga1::chapter1': {
+          sourceId: 'source1', mangaId: 'manga1', chapterId: 'chapter1',
+          mangaTitle: 'Title', readAt: 100, pageIndex: 1,
+        },
+      },
+    });
+    vi.mocked(pushHistoryItem).mockRejectedValueOnce(new Error('offline'));
+
+    useHistoryStore.getState().markChapterProgress('source1', 'manga1', 'chapter1', 4, 10, 40);
+    // A second, independent local update must survive the earlier rejected write.
+    useHistoryStore.getState().saveProgress('source2', 'manga2', 'chapter2', 7);
+    await Promise.resolve();
+    await Promise.resolve();
+
+    const current = useHistoryStore.getState().items;
+    expect(current['source1::manga1::chapter1'].pageIndex).toBe(4);
+    expect(current['source1::manga1::chapter1'].progressPercent).toBe(40);
+    expect(current['source2::manga2::chapter2'].pageIndex).toBe(7);
+  });
+
 });
