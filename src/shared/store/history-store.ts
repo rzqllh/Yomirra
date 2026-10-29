@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { pushHistoryItem, deleteHistoryItem, deleteMangaHistory } from "@/shared/lib/sync-utils";
+import { pushHistoryItem, deleteHistoryItem, deleteMangaHistory, PartialHistoryDeletionError } from "@/shared/lib/sync-utils";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { sourceRegistry } from "@/shared/sources/source-registry";
 import { toast } from "sonner";
@@ -151,22 +151,33 @@ export const useHistoryStore = create<HistoryState>()(
           return { items: newItems };
         });
 
-        deleteMangaHistory(sourceId, mangaId, getLocalDataOwnerUid()).catch(() => {
+        deleteMangaHistory(sourceId, mangaId, getLocalDataOwnerUid()).catch((error) => {
+          const committedKeys = error instanceof PartialHistoryDeletionError
+            ? new Set(error.committedChapterIds.map((chapterId) => getHistoryId(sourceId, mangaId, chapterId)))
+            : new Set<string>();
           set((state) => {
             const newItems = { ...state.items };
             let changed = false;
             for (const [key, item] of removedEntries) {
-              // Never overwrite a newer cursor re-created during the request.
-              if (!Object.prototype.hasOwnProperty.call(newItems, key)) {
+              // Completed batches must stay deleted locally. Only retryable
+              // chapters are restored; never overwrite a newer cursor.
+              if (!committedKeys.has(key) && !Object.prototype.hasOwnProperty.call(newItems, key)) {
                 newItems[key] = item;
                 changed = true;
               }
             }
             return changed ? { items: newItems } : state;
           });
-          toast.error("Gagal Menghapus Riwayat", {
-            description: "Riwayat komik belum berhasil dihapus dari akunmu.",
-          });
+          toast.error(
+            error instanceof PartialHistoryDeletionError
+              ? "Sebagian Riwayat Berhasil Dihapus"
+              : "Gagal Menghapus Riwayat",
+            {
+              description: error instanceof PartialHistoryDeletionError
+                ? "Sebagian chapter sudah terhapus di cloud. Coba hapus kembali riwayat yang masih tersisa."
+                : "Riwayat komik belum berhasil dihapus dari akunmu.",
+            }
+          );
         });
       },
 
