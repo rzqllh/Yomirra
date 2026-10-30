@@ -78,14 +78,14 @@ export function PagedReader({
   useReadingTimer();
 
   const [currentPages, setCurrentPages] = React.useState<PageItem[]>(pages);
+  const [failedPageIndices, setFailedPageIndices] = React.useState<Set<number>>(new Set());
+  const [loadedPositions, setLoadedPositions] = React.useState<Set<number>>(new Set());
+
   React.useEffect(() => {
     setCurrentPages(pages);
     setLoadedPositions(new Set());
     setFailedPageIndices(new Set());
   }, [pages]);
-
-  const [failedPageIndices, setFailedPageIndices] = React.useState<Set<number>>(new Set());
-  const [loadedPositions, setLoadedPositions] = React.useState<Set<number>>(new Set());
 
   const handleImageLoad = React.useCallback((pageIndex: number) => {
     setLoadedPositions((prev) => new Set(prev).add(pageIndex));
