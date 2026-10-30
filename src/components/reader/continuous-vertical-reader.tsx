@@ -445,7 +445,7 @@ export function ContinuousVerticalReader({
               <span className="text-xs font-semibold text-white/90 truncate">
                 {failedPageIndices.size > 0
                   ? `${chapterTitle} — ada halaman gagal dimuat`
-                  : `Akhir ${chapterTitle}`
+                  : `Akhir ${chapterTitle}`}
               </span>
             </div>
             <span className="text-[11px] font-mono text-white/70 shrink-0">
