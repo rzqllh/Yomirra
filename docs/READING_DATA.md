@@ -14,7 +14,7 @@ Progres ringkas tidak kedaluwarsa berdasarkan umur. Aturan penghapusan setelah t
 
 Perubahan progres diterapkan ke state dan penyimpanan lokal lebih dulu. Penulisan posisi scroll ke cloud digabungkan dengan jeda 1,5 detik, dengan penundaan maksimum 5 detik saat membaca terus-menerus. Saat halaman ditinggalkan, aplikasi mencoba mengirim posisi tertunda. Browser tetap dapat menghentikan permintaan jaringan ketika aplikasi ditutup.
 
-Kegagalan cloud tidak mengembalikan seluruh riwayat ke snapshot lama. Data lokal tetap tersedia untuk sinkronisasi berikutnya, termasuk ketika koneksi kembali. Penulisan riwayat terikat ke akun asal; operasi lama tidak boleh berpindah ke akun lain setelah pengguna berganti akun. Penghapusan yang gagal hanya memulihkan entri terkait, tanpa menimpa progres baru.
+Kegagalan cloud tidak mengembalikan seluruh riwayat ke snapshot lama. Data lokal tetap tersedia untuk sinkronisasi berikutnya, termasuk ketika koneksi kembali. Penulisan riwayat terikat ke akun asal; operasi lama tidak boleh berpindah ke akun lain setelah pengguna berganti akun. Penghapusan yang gagal hanya memulihkan entri terkait yang belum berhasil dihapus di cloud, tanpa menimpa progres baru atau penghapusan berikutnya. Jika sebagian batch sudah berhasil, bagian itu tetap terhapus dan aplikasi melaporkan kegagalan sebagian.
 
 Penyimpanan browser tetap bergantung pada ruang tersedia dan kebijakan perangkat. Menghapus data situs, memakai mode privat, atau kehilangan perangkat dapat menghilangkan data yang belum dicadangkan atau disinkronkan.
 
@@ -23,6 +23,8 @@ Penyimpanan browser tetap bergantung pada ruang tersedia dan kebijakan perangkat
 Sinkronisasi penuh menggabungkan data lokal dan cloud sebelum menerapkan batas detail. Ringkasan tetap berupa catatan history yang dapat dibaca aplikasi. Chapter lama yang sudah tidak dibutuhkan untuk posisi terakhir atau milestone diganti dengan marker `_compacted`, bukan penanda penghapusan pengguna. Marker tidak ditampilkan sebagai riwayat dan mencegah detail lama muncul lagi dari snapshot yang lebih tua.
 
 Batas 512 berlaku setelah rekonsiliasi, bukan sebagai kuota database yang langsung berlaku pada setiap penulisan dari semua perangkat. Marker lama tidak dihapus otomatis. Klien versi lama belum memahami marker ini; muat ulang aplikasi pada semua perangkat sebelum mengandalkan perilaku retensi baru.
+
+Sinkronisasi penuh menulis batch secara berurutan dan berhenti saat satu batch gagal. Migrasi library lama memakai penanda per akun, yang baru dicatat setelah seluruh penulisan berhasil. Data lama yang belum ada di library baru tetap diperiksa walaupun library baru sudah berisi judul.
 
 ## Ekspor dan pemulihan
 

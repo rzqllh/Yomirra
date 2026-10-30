@@ -145,6 +145,7 @@ Lihat [Developer Guide](docs/README_DEV.md) untuk struktur project dan [Adding a
 - [Execution Roadmap](docs/yomirra-master-execution-roadmap.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security](SECURITY.md)
+- [Laporan hak konten](docs/CONTENT_RIGHTS_REPORTING.md)
 - [Changelog](CHANGELOG.md)
 
 ## Disclaimer
@@ -152,3 +153,5 @@ Lihat [Developer Guide](docs/README_DEV.md) untuk struktur project dan [Adding a
 Yomirra adalah reader interface independen. Konten, artwork, manga, manhwa, manhua, dan jenis komik lainnya yang ditampilkan berasal dari layanan pihak ketiga dan tetap menjadi milik pemegang hak masing-masing.
 
 Penggunaan source pihak ketiga mengikuti aturan dan ketersediaan layanan tersebut. Yomirra tidak menjamin source tertentu akan selalu tersedia.
+
+Untuk dugaan masalah hak konten, gunakan [panduan dan formulir laporan](docs/CONTENT_RIGHTS_REPORTING.md). Lisensi kode aplikasi tidak memberikan hak atas materi sumber pihak ketiga.

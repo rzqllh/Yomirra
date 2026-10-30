@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { HomeHero, HERO_COLLAGE_CACHE_KEY } from "@/components/home/home-hero";
 import { HeaderActions } from "@/components/chrome/header-actions";
 import { PageHeader } from "@/components/chrome/header";
@@ -48,12 +48,15 @@ vi.mock("@/shared/store/history-store", () => ({
   useHistoryStore: (selector: any) => selector({ items: mockHistoryItems }),
 }));
 
+afterEach(() => vi.unstubAllGlobals());
+
 describe("Header & Hero System (Squircle & Reusable)", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUser = null;
     mockHistoryItems = {};
     sessionStorage.clear();
+    vi.stubGlobal("navigator", { platform: "Win32" });
   });
 
   describe("HomeHero", () => {
@@ -65,7 +68,7 @@ describe("Header & Hero System (Squircle & Reusable)", () => {
       ).toBeTruthy();
       expect(screen.getByText("BACAANMU DIMULAI DI SINI")).toBeTruthy();
       expect(
-        screen.getByPlaceholderText(/Cari judul atau kreator/i)
+        screen.getByRole("button", { name: "Cari komik (Tekan Ctrl+K)" })
       ).toBeTruthy();
     });
 
@@ -78,19 +81,33 @@ describe("Header & Hero System (Squircle & Reusable)", () => {
       expect(screen.queryByText("BACAANMU DIMULAI DI SINI")).toBeNull();
     });
 
-    it("hands Home search to the shared global search surface", () => {
+    it.each([false, true])("opens the shared search surface (returning=%s)", (returning) => {
+      mockHistoryItems = returning ? { "s::m::c": { chapterId: "c" } } : {};
       const listener = vi.fn();
       window.addEventListener("open-command-menu", listener);
 
       render(<HomeHero />);
       const button = screen.getByRole("button", {
-        name: /Cari judul atau kreator/i,
+        name: "Cari komik (Tekan Ctrl+K)",
       });
       fireEvent.click(button);
 
       expect(listener).toHaveBeenCalled();
 
       window.removeEventListener("open-command-menu", listener);
+    });
+
+    it.each([false, true])("uses the platform shortcut in visible and accessible search labels (returning=%s)", (returning) => {
+      for (const [platform, shortcut] of [["MacIntel", "⌘K"], ["Win32", "Ctrl+K"]]) {
+        vi.stubGlobal("navigator", { platform });
+        mockHistoryItems = returning ? { "s::m::c": { chapterId: "c" } } : {};
+        const { container, unmount } = render(<HomeHero />);
+        expect(screen.getByRole("button", { name: `Cari komik (Tekan ${shortcut})` })).toBeTruthy();
+        expect(container.querySelector("kbd")?.textContent).toBe(shortcut);
+        expect(container.querySelector("input")).toBeNull();
+        expect(screen.queryByRole("textbox")).toBeNull();
+        unmount();
+      }
     });
 
     it("keeps decorative artwork optional and does not render an artwork skeleton", () => {

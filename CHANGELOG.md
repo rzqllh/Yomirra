@@ -3,6 +3,11 @@
 
 ## Unreleased
 
+- Pulihkan hanya history yang belum berhasil dihapus di cloud; lindungi progres dan intent delete baru saat operasi bertumpuk.
+- Jalankan batch full sync berurutan dan tandai migrasi legacy per akun setelah seluruh commit berhasil.
+- Gunakan tombol pencarian Beranda dengan label keyboard sesuai platform; ganti assertion rail buatan dan fixture e2e lama dengan kontrak komponen serta history v2.
+- Tambahkan formulir laporan hak konten publik dan panduan privasi laporan. Pertahankan bukti acceptance serta keputusan docs lama tanpa menganggap intake, CI, atau studi desain sebagai persetujuan hukum/perangkat.
+
 - Batasi detail history ke 512 entri; pertahankan ringkasan resume dan milestone tiap judul tanpa TTL otomatis.
 - Ikat penulisan dan penghapusan history ke akun asal; pertahankan progres lokal saat sinkronisasi gagal.
 - Pertahankan identitas judul, milestone, dan referensi koleksi dalam backup/restore; cegah duplikasi saat merge berulang.

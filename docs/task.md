@@ -1,16 +1,21 @@
 # Yomirra Quality, Motion, and Seamless UX Tasks
 
-## Pembaruan 30 Oktober 2026: keamanan data bacaan
+## Tugas aktif: konsolidasi PR #65, 30 Oktober 2026
 
-Bagian ini mengoreksi klaim penyelesaian menyeluruh dalam catatan historis di bawah. Pekerjaan saat ini menangani tujuh temuan pada history, penulisan lintas akun, rollback progres, backup/restore, batas impor, dan integritas download. Kontrak perilaku ada di [READING_DATA.md](READING_DATA.md).
+Baseline kerja adalah `main@c776f010062e4854cfce358d81ed9f26305778f2`. [PR #65](https://github.com/rzqllh/Yomirra/pull/65) masih draft dan belum merged. Checklist di bawah berlaku untuk konsolidasi ini; checklist fase lama sesudah bagian arsip adalah bukti historis.
 
-- Implementasi dan regresi tersedia di [PR #64](https://github.com/rzqllh/Yomirra/pull/64), branch `fix/reading-data-safety-20261030`. Status CI dan merge mengikuti checks pada PR tersebut; release gates eksternal di bawah tetap berlaku.
-- Pemeriksaan lokal terisolasi: 8 skenario lulus pada kode perubahan; baseline gagal pada 8 skenario yang sama. Ini bukan seluruh suite Vitest atau pengujian layanan nyata.
-- Retensi: 512 detail terbaru ditambah ringkasan resume dan milestone per judul. Tidak ada penghapusan otomatis setelah tiga bulan; definisi ketidakaktifan masih keputusan pemilik.
-- Release gates tetap terbuka: Firebase lintas perangkat/recovery nyata, iOS/iPadOS PWA terpasang, verifikasi independen Q1–Q175, serta review hak konten/publikasi. Fitur partial dan blocked pada tracker tidak otomatis berubah menjadi verified.
-- Tidak ada tag rilis atau kenaikan versi package untuk perubahan ini. Status produksi tidak disimpulkan dari CI.
+- [x] Pertahankan perbaikan history: rollback per operasi/revisi, hasil delete parsial, serta 512 detail dan ringkasan tiap judul tanpa expiry otomatis.
+- [x] Konsolidasikan migrasi legacy per akun setelah commit berhasil dan full sync berurutan.
+- [x] Siapkan search Beranda berlabel platform, tes komponen/fixture history v2, intake hak konten, serta disposisi bukti dan keputusan docs lama.
+- [ ] Selesaikan pembaruan tracking, review akhir, dan CI pada SHA akhir PR #65. Hasil head sebelumnya tidak meluluskan perubahan sesudahnya; status terkini mengikuti [checks PR #65](https://github.com/rzqllh/Yomirra/pull/65/checks) dan [checkpoint](internal/AGY_EXECUTION_CHECKPOINT.md).
+- [ ] Setelah pengganti terverifikasi, tutup PR #60–63 dan hapus head terkait. PR serta head itu masih dipertahankan; lima head usang lain sudah dihapus setelah rekonsiliasi.
+- [ ] Lanjutkan audit independen fitur Q1–Q175 setelah disposisi cleanup selesai. Firebase dua perangkat, iOS/iPadOS PWA, serta review hak konten/hukum tetap gate eksternal.
+
+Rincian item pengganti ada di [tracker parity](YOMIRRA_FULL_PARITY_EXECUTION.md#konsolidasi-cleanup-30-oktober-2026), kontrak data di [READING_DATA](READING_DATA.md), dan bukti yang perlu dikumpulkan di [Testing](TESTING.md#acceptance-cleanup-dan-layanan-nyata). OCR tidak termasuk pekerjaan ini. Tidak ada keputusan versi, tag, atau kesiapan rilis dari checklist ini.
 
 ### Catatan historis
+
+Pembaruan keamanan data PR #64 mendahului konsolidasi ini; lihat [urutan checkpoint](yomirra-master-execution-roadmap.md#checkpoint-cleanup-30-oktober-2026). Catatan fase lama berikut tetap disimpan sebagai riwayat pelaksanaan.
 
 **Status:** Active execution checklist for `docs/plan.md`.  
 **Current baseline:** `main@f3317d38352000096f20dff9c847cd19a65fef89` after merged PRs #29–#32.  

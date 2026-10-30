@@ -1,6 +1,6 @@
 import * as React from "react";
 import { render, screen, fireEvent, act, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { DesktopRail } from "@/components/chrome/desktop-rail";
 import { TopNav } from "@/components/chrome/top-nav";
 import { HomeHero } from "@/components/home/home-hero";
@@ -41,9 +41,12 @@ vi.mock("@/components/overlays/theme-toggle", () => ({
   ThemeToggle: () => <button type="button" aria-label="Ganti tema">Theme</button>,
 }));
 
+afterEach(() => vi.unstubAllGlobals());
+
 describe("Shell Revamp Regression Coverage", () => {
   beforeEach(() => {
     currentPathname = "/";
+    vi.stubGlobal("navigator", { platform: "Win32" });
     sessionStorage.clear();
     act(() => {
       useSidebarStore.setState({ isCollapsed: false });
@@ -151,6 +154,22 @@ describe("Shell Revamp Regression Coverage", () => {
     });
   });
 
+  it.each([["MacIntel", "⌘K"], ["Win32", "Ctrl+K"]])("labels the real header search for %s", (platform, shortcut) => {
+    currentPathname = "/popular";
+    vi.stubGlobal("navigator", { platform });
+    const listener = vi.fn();
+    window.addEventListener("open-command-menu", listener);
+    try {
+      render(<TopNav />);
+      const searchButton = screen.getByRole("button", { name: `Cari komik (Tekan ${shortcut})` });
+      expect(searchButton.querySelector("kbd")?.textContent).toBe(shortcut);
+      fireEvent.click(searchButton);
+      expect(listener).toHaveBeenCalledTimes(1);
+    } finally {
+      window.removeEventListener("open-command-menu", listener);
+    }
+  });
+
   describe("SiteAnnouncementBanner Stacking & Navigation Offset", () => {
     it("sets and resets --announcement-height CSS variable without occluding shell", async () => {
       global.fetch = vi.fn().mockResolvedValueOnce({
@@ -194,14 +213,16 @@ describe("Shell Revamp Regression Coverage", () => {
       expect(heroCode).toContain("pointer-events-none");
     });
 
-    it("renders headline and full-width search input cleanly", () => {
+    it("renders the actionable Home search with the platform label", () => {
       render(<HomeHero />);
 
       const heading = screen.getByRole("heading", { level: 1, name: "Mau baca apa hari ini?" });
       expect(heading).toBeTruthy();
 
-      const searchInput = screen.getByPlaceholderText(/Cari judul atau kreator/i);
-      expect(searchInput).toBeTruthy();
+      const searchButton = screen.getByRole("button", { name: "Cari komik (Tekan Ctrl+K)" });
+      expect(searchButton.querySelector("kbd")?.textContent).toBe("Ctrl+K");
+      expect(searchButton.getAttribute("type")).toBe("button");
+      expect(screen.queryByRole("textbox")).toBeNull();
     });
   });
 });

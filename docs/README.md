@@ -18,6 +18,7 @@ Folder ini berisi dokumentasi public untuk contributor dan maintainer. Untuk ove
 - [Execution Roadmap](yomirra-master-execution-roadmap.md) — status rekonsiliasi dan remaining release gates.
 - [Contributing](../CONTRIBUTING.md)
 - [Security](../SECURITY.md)
+- [Laporan hak konten](CONTENT_RIGHTS_REPORTING.md)
 - [Changelog](../CHANGELOG.md)
 
 ## Source of truth

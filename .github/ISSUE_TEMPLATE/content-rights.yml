@@ -1,0 +1,50 @@
+name: Laporan hak konten
+description: Laporkan dugaan masalah hak komik, terjemahan, artwork, logo, atau sumber.
+title: "[Hak konten] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Issue ini publik. Jangan kirim data pribadi sensitif, dokumen identitas, kredensial, percakapan pribadi, atau karya lengkap. Jika bukti rahasia diperlukan, sebutkan ketersediaannya dan tunggu jalur privat dari pengelola. Baca [panduan laporan](https://github.com/rzqllh/Yomirra/blob/main/docs/CONTENT_RIGHTS_REPORTING.md). Formulir ini tidak memberikan persetujuan hukum atau tenggat respons.
+  - type: input
+    id: yomirra-url
+    attributes:
+      label: URL Yomirra terkait
+      description: Tautkan halaman atau rute yang dilaporkan.
+    validations:
+      required: true
+  - type: input
+    id: source-url
+    attributes:
+      label: URL sumber pihak ketiga
+      description: Sertakan tautan publik jika tersedia.
+    validations:
+      required: false
+  - type: textarea
+    id: affected-content
+    attributes:
+      label: Materi dan alasan laporan
+      description: Sebutkan judul atau materi terkait dan jelaskan masalahnya tanpa menyalin karya lengkap.
+    validations:
+      required: true
+  - type: textarea
+    id: authority
+    attributes:
+      label: Hubungan dengan hak yang dilaporkan
+      description: Sebutkan apakah Anda pemegang hak, perwakilan, atau pelapor dugaan masalah. Jangan unggah dokumen identitas.
+    validations:
+      required: true
+  - type: textarea
+    id: action
+    attributes:
+      label: Tindakan yang diminta dan bukti publik
+      description: Jelaskan permintaan dan sertakan bukti secukupnya tanpa informasi rahasia.
+    validations:
+      required: true
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Keamanan laporan publik
+      options:
+        - label: Saya memahami issue ini publik dan tidak menyertakan informasi pribadi rahasia atau karya lengkap.
+          required: true

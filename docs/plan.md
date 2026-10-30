@@ -1,14 +1,16 @@
 # Yomirra Quality, Motion, and Seamless UX Plan
 
-## Pembaruan 30 Oktober 2026: keamanan data bacaan
+## Urutan aktif: verifikasi konsolidasi sebelum audit fitur
 
-Bagian ini mengoreksi klaim penyelesaian menyeluruh dalam catatan historis di bawah. Pekerjaan saat ini menangani tujuh temuan pada history, penulisan lintas akun, rollback progres, backup/restore, batas impor, dan integritas download. Kontrak perilaku ada di [READING_DATA.md](READING_DATA.md).
+[PR #65](https://github.com/rzqllh/Yomirra/pull/65) menggabungkan pekerjaan unik PR #60–63 di atas `main@c776f010062e4854cfce358d81ed9f26305778f2`; statusnya masih draft dan belum merged. Perbaikan kode cleanup telah disiapkan. Urutan berikut mengatur langkah yang tersisa, bukan mengulang fase historis di bawah.
 
-- Implementasi dan regresi tersedia di [PR #64](https://github.com/rzqllh/Yomirra/pull/64), branch `fix/reading-data-safety-20261030`. Status CI dan merge mengikuti checks pada PR tersebut; release gates eksternal di bawah tetap berlaku.
-- Pemeriksaan lokal terisolasi: 8 skenario lulus pada kode perubahan; baseline gagal pada 8 skenario yang sama. Ini bukan seluruh suite Vitest atau pengujian layanan nyata.
-- Retensi: 512 detail terbaru ditambah ringkasan resume dan milestone per judul. Tidak ada penghapusan otomatis setelah tiga bulan; definisi ketidakaktifan masih keputusan pemilik.
-- Release gates tetap terbuka: Firebase lintas perangkat/recovery nyata, iOS/iPadOS PWA terpasang, verifikasi independen Q1–Q175, serta review hak konten/publikasi. Fitur partial dan blocked pada tracker tidak otomatis berubah menjadi verified.
-- Tidak ada tag rilis atau kenaikan versi package untuk perubahan ini. Status produksi tidak disimpulkan dari CI.
+1. Pertahankan kontrak history dan sync yang sudah direview: [512 detail dan ringkasan, rollback/delete parsial serta migrasi per akun](READING_DATA.md). Tidak ada expiry otomatis atau perubahan OCR.
+2. Lengkapi tracking dan review akhir untuk search platform, tes UI/fixture v2, intake hak konten serta [disposisi PR/docs lama](YOMIRRA_FULL_PARITY_EXECUTION.md#konsolidasi-cleanup-30-oktober-2026).
+3. Publikasikan tree akhir ke PR #65 dan verifikasi [checks pada SHA akhir](https://github.com/rzqllh/Yomirra/pull/65/checks). [Checkpoint](internal/AGY_EXECUTION_CHECKPOINT.md) memisahkan CI head awal dari hasil head akhir yang masih perlu diperiksa.
+4. Tutup PR #60–63 dan hapus head terkait hanya setelah semua item pengganti terverifikasi. Lima head usang lain telah dihapus; PR #60–63 beserta head-nya masih dipertahankan.
+5. Setelah cleanup selesai, lakukan audit fitur Q1–Q175. Gunakan [matriks acceptance](TESTING.md#acceptance-cleanup-dan-layanan-nyata) untuk memisahkan tes otomatis dari Firebase dua perangkat, Safari/PWA nyata, dan review hukum/hak konten yang masih terbuka.
+
+Rencana ini tidak menetapkan versi, tag, deployment atau kesiapan rilis. Bukti PR #64 dan fase sebelumnya tetap historis; pekerjaan yang sudah masuk tidak diimplementasikan ulang.
 
 ### Catatan historis
 
