@@ -689,7 +689,7 @@ describe("useSync cloud correctness", () => {
       expect(mocks.listeners.has("users/user-a/libraryV2")).toBe(true);
     });
   });
-  it("compacts cloud overflow only after choosing retained resume and milestone records", async () => {
+  it("compacts cloud overflow while retaining the latest visit without inventing a verified milestone", async () => {
     const entries: Array<[string, Record<string, unknown>]> = Array.from({ length: 600 }, (_, index) => [
       `source::manga::ch-${index}`, { ...historyItem(index + 1), chapterId: `ch-${index}`, chapterNumber: index },
     ]);
@@ -698,7 +698,11 @@ describe("useSync cloud correctness", () => {
     await act(async () => { await result.current.runFullSync(); });
     const retained = Object.values(useHistoryStore.getState().items);
     expect(retained.filter(item => !item.isCompact)).toHaveLength(512);
-    expect(useHistoryStore.getState().getHighestMilestoneForManga("source", "manga")?.chapterNumber).toBe(599);
+    // The imported records contain chapter numbers but no measured page progress
+    // or pinned Library milestone: chapter 599 is a visit, not verified reading.
+    expect(useHistoryStore.getState().getLatestForManga("source", "manga")?.chapterNumber).toBe(599);
+    expect(useHistoryStore.getState().getContinueReading()[0]?.chapterNumber).toBe(599);
+    expect(useHistoryStore.getState().getHighestMilestoneForManga("source", "manga")).toBeUndefined();
     const markers = mocks.writes.filter(write => (write.data as Record<string, unknown>)._compacted);
     expect(markers).toHaveLength(88);
     expect(markers.every(write => !(write.data as Record<string, unknown>)._deleted)).toBe(true);
