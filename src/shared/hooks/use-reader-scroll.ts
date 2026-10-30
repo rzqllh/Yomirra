@@ -110,7 +110,7 @@ export function useReaderScroll({
                 window.history.replaceState(null, '', getReaderHref(sourceId, mangaId, activeStreamItem.chapterId));
               }
 
-              // Coalesce write progress on scroll stop (300ms idle)
+              // Coalesce write progress on scroll stop (250ms idle)
               if (isReadyToTrack) {
                 const offset = currentScrollY - centerItem.start;
                 pendingProgressSave.current = {
@@ -124,7 +124,7 @@ export function useReaderScroll({
                 }
                 scrollStopTimer.current = setTimeout(() => {
                   flushProgress();
-                }, 300);
+                }, 250);
               }
             }
           }
