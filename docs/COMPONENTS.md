@@ -63,6 +63,8 @@ Route/navigation identity icon tetap stabil dan tidak dimorph hanya untuk efek v
 
 ## Home
 
+HomeHero membuka command menu melalui tombol pencarian, dengan label aksesibel dan petunjuk keyboard dari `usePlatformShortcut`: `⌘K` pada platform Apple dan `Ctrl+K` pada platform lain. Kedua keadaan pembaca memakai kontrol yang sama; input query berada di command menu.
+
 Home opening sengaja dibagi menurut responsibility, bukan dijadikan satu mega component.
 
 | Component | Tanggung jawab |

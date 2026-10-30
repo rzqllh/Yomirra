@@ -1,5 +1,49 @@
 # Yomirra — Final Full-Parity & Production Execution Tracker (Q1–Q175)
 
+## Konsolidasi cleanup 30 Oktober 2026
+
+[PR #65](https://github.com/rzqllh/Yomirra/pull/65) adalah pengganti yang masih draft untuk pekerjaan unik PR #60–63. PR lama belum boleh dianggap selesai hanya karena ada pengganti. Hasil CI, review akhir, dan tautan pengganti setiap item perlu diperiksa sebelum penutupan branch lama.
+
+| Asal | Perilaku yang dipertahankan | Bukti dan batas |
+| --- | --- | --- |
+| PR #60 dan #62 | Migrasi legacy per UID setelah sukses; pemeriksaan akun; batch sync berurutan; diagnostik tidak dimulai tanpa akun | `use-sync.test.tsx`, `sync-utils.test.ts`; Firebase nyata tetap perlu diuji |
+| PR #61 dan #63 | Rollback per revisi/operasi; kegagalan sebagian tidak memulihkan chapter yang sudah terhapus; tombstone lama dilewati | `history-store.test.ts`, `sync-utils.test.ts`; kebijakan 512 detail dan ringkasan tetap berlaku |
+| PR #61 dan #62 | Home search memakai label platform; tidak ada input tersembunyi; tes rail memakai komponen nyata; fixture riwayat v2 | `hero-and-header.test.tsx`, `shell-revamp-contract.test.tsx`, `responsive-visual-hierarchy.test.tsx`, `e2e/user-flows-regression.spec.ts` |
+| PR #61 | Formulir hak konten publik dan panduan yang membedakan lisensi kode dari hak materi | [Panduan laporan](CONTENT_RIGHTS_REPORTING.md); penanggung jawab dan persetujuan hukum masih gate eksternal |
+| PR #60 | Pemisahan bukti implementasi dari acceptance layanan/perangkat | [Matriks acceptance](TESTING.md#acceptance-cleanup-dan-layanan-nyata); tidak mengadopsi hitungan kelulusan lama |
+
+Pemeriksaan lokal konsolidasi memakai eksekusi source terisolasi dan validasi tautan. Dependencies proyek belum tersedia pada worktree ini; suite Vitest, typecheck, build, serta Playwright belum dijalankan untuk perubahan UI ini. Keberadaan file tes tidak berarti tes lulus. Baris Q1–Q175 di bawah masih memerlukan audit independen; kandidat koreksi lama Q50/Q55/Q64/Q97/Q127/Q138/Q146/Q147/Q171/Q172/Q174 tidak otomatis menjadi VERIFIED.
+
+### Petunjuk audit dari PR #60 dan #61
+
+Indeks PR #60 pada `b3d383d` merupakan pengganti tautan parity yang saat itu hilang, bukan rekonstruksi isi dokumen asli. Dokumen asli pada branch docs `7e92c802` kini tersedia sebagai referensi historis. Keduanya tidak membuktikan acceptance. CI PR #59/#64 hanya berlaku pada kode dan assertion saat itu; hasil tersebut tidak menandatangani seluruh requirement.
+
+| Area | Bukti lanjutan yang diperlukan |
+| --- | --- |
+| Q55 | Dua perangkat: milestone tidak kalah oleh reread/timestamp terbaru; tes lokal history saja belum cukup |
+| Q97 | Temukan jalur sync reader settings tersendiri; sync preferensi sumber tidak membuktikan sync preferensi reader |
+| Q138 | Buktikan penyimpanan/replay antrean operasi setelah aplikasi ditutup; Promise in-flight bukan antrean durable |
+| Q146 | Buktikan jadwal retry/backoff; pemanggilan saat mount/online saja belum membuktikannya |
+| Q147 | CSP saat ini report-only; jangan menyebut enforcement tanpa perubahan policy dan bukti kompatibilitas |
+| Q50/Q64/Q127 | Periksa kualitas UI/perangkat, merge guest dan status tiap domain sync; keberadaan komponen atau fungsi bukan hasil acceptance |
+| Q171/Q172/Q174 | Periksa fakta kebijakan publikasi, privasi/hak konten dan dokumen publik; tidak ada clearance dari intake atau tulisan AI |
+
+Q21 dan area partial seperti arsip lokal Q58/Q140/Q153, reader AI Q130, tracker Q148/Q149 dan OCR dictionary Q162 tetap mengikuti status serta batasnya pada register. Penundaan fitur tidak membuktikan fitur mustahil pada PWA. Cleanup ini tidak mengimplementasikan area tersebut atau melakukan audit Q1–Q175 penuh.
+
+### Keputusan dari branch docs lama
+
+Referensi: `docs/grill-yomirra-20261024` pada `7e92c8026af377a01461bbeb6952721f86fa72a5`, terutama `01-foundations.md` dan `02-design-system.md` yang disetujui sebagai fondasi pada 25 Oktober. Ringkasan ini mempertahankan keputusan yang berbeda dari catatan historis; ini bukan instruksi redesign.
+
+- Arah visual yang diterima: Jepang modern, sederhana, tenang dan berfokus pada konten. Preferensi editorial lama bukan kewajiban untuk mempertahankan hero atau layout majalah. Hindari motif Jepang dekoratif, brutalism, dan efek yang mengalahkan artwork.
+- F1/F2 meminta perbandingan warna dan font bebas pakai. Contoh warna serta Plus Jakarta Sans/Inter/Geist adalah kandidat, bukan pilihan final. Nilai spacing, radius, font, dan motion pada studi lama juga bukan token produksi yang telah diuji.
+- Arsitektur fondasi memakai skala spacing 4px dengan ritme kerja 8px, lima peran tipografi (page, section, body, label, caption), serta warna semantik dengan status terpisah dari aksen merek. Jarak, ukuran dan rasio contoh tetap perlu diuji; jangan menyalin CSS ilustratif sebagai implementasi.
+- F3 memakai kembali primitive Radix dan komponen milik repo; F4 berbagi token semantik dengan admin yang lebih padat. F5 memilih branch dokumentasi saat itu, bukan kewajiban mempertahankan head lama. Utamakan primitive dan aset bebas pakai; jangan menambah paket berbayar sebagai dependency tersembunyi. Paket atau aset baru tetap memerlukan pemeriksaan lisensi dan kebutuhan.
+- Kontrak fondasi mencakup loading, empty, error dan offline; partial/auth berlaku sesuai domain. Status interaksi, focus, reduced motion, judul panjang, keyboard, safe area dan resize perlu diuji pada komponen serta layar nyata. Target sentuh produk 44 CSS px tidak boleh disebut sebagai syarat universal WCAG AA.
+- Studi `03-screen-level-ux-blueprint.md`, `04-flow-state-coverage.md`, dan `05-beranda-wireframe-review.md` adalah usulan. Susunan navigasi, wireframe, integrasi Morphin atau engine tambahan belum disetujui melalui studi tersebut. Hasil HTML standalone pada studi Beranda bukan bukti Next.js, Safari/PWA, atau layanan nyata.
+- Pertahankan seluruh fungsi dan rute, Library sebagai katalog, Rak Buku sebagai simpanan pribadi, milestone terpisah dari cursor/reread, status sumber yang jujur, serta batas data/akun. Keluhan toast dan judul reader terpotong tetap memerlukan bukti perangkat. Jangan meminta ulang jawaban Q1–Q175; pertanyaan baru harus menyebut konflik yang belum terjawab.
+
+`PARITY_GAP_AUDIT` lama memberi referensi Mihon/Tachiyomi/Tachimanga/Aidoku untuk Q148–Q164, bukan bukti implementasi atau izin penggunaan materi. Cakupannya tetap tercatat pada register di bawah dan [ledger keputusan](GRILL_FINAL_LEDGER.md). Inventaris rute dan risiko pada `REVAMP_REPO_PAGE_AUDIT_20261025` bertanggal 25 Oktober; jadikan petunjuk audit, bukan kegagalan runtime terkini. Format chapter panjang, identitas sumber, seen/read, kuota browser, sync parsial, dan source scope perlu dibuktikan sesuai [Testing](TESTING.md). OCR tetap di luar cleanup ini.
+
 ## Pembaruan 30 Oktober 2026: keamanan data bacaan
 
 Bagian ini mengoreksi klaim penyelesaian menyeluruh dalam catatan historis di bawah. Pekerjaan saat ini menangani tujuh temuan pada history, penulisan lintas akun, rollback progres, backup/restore, batas impor, dan integritas download. Kontrak perilaku ada di [READING_DATA.md](READING_DATA.md).

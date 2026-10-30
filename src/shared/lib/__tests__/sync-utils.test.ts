@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { deleteHistoryItem, deleteLibraryItem, deleteMangaHistory, pullHistoryData, pullLegacyLibraryData, pushLibraryItem, pushHistoryItem } from '../sync-utils';
+import { deleteHistoryItem, deleteLibraryItem, deleteMangaHistory, PartialHistoryDeletionError, pullHistoryData, pullLegacyLibraryData, pushLibraryItem, pushHistoryItem } from '../sync-utils';
 import { initFirebase } from '../firebase';
 
 vi.mock('../firebase', () => ({
@@ -127,6 +127,37 @@ describe('Firestore Sync Utils Regression Suite', () => {
     await expect(pullLegacyLibraryData({ strict: true })).rejects.toThrow('legacy read failed');
   });
 
+  it.each([
+    { auth: null, db: null },
+    { auth: null, db: {} },
+    { auth: { currentUser: null }, db: {} },
+  ])('rejects strict legacy reads without Firebase or authentication: %j', async (firebase) => {
+    vi.mocked(initFirebase).mockResolvedValueOnce(firebase as never);
+    await expect(pullLegacyLibraryData({ strict: true, expectedUid: 'user123' })).rejects.toThrow(/Firebase|authenticated/i);
+    vi.mocked(initFirebase).mockResolvedValueOnce(firebase as never);
+    await expect(pullLegacyLibraryData()).resolves.toEqual([]);
+  });
+
+  it('rejects a legacy read for a different expected account before querying', async () => {
+    const firestore = await import('firebase/firestore');
+    const reads = vi.mocked(firestore.getDocs).mock.calls.length;
+    await expect(pullLegacyLibraryData({ strict: true, expectedUid: 'other-user' })).rejects.toThrow(/Account changed/);
+    expect(firestore.getDocs).toHaveBeenCalledTimes(reads);
+  });
+
+  it('rejects strict legacy data returned after its initiating account signs out', async () => {
+    const firestore = await import('firebase/firestore');
+    const auth = { currentUser: { uid: 'user123' } as { uid: string } | null };
+    vi.mocked(initFirebase).mockResolvedValueOnce({ auth, db: {} } as never);
+    let release!: (value: never) => void;
+    vi.mocked(firestore.getDocs).mockImplementationOnce(() => new Promise(resolve => { release = resolve; }));
+    const pending = pullLegacyLibraryData({ strict: true, expectedUid: 'user123' });
+    await vi.waitFor(() => expect(release).toBeTypeOf('function'));
+    auth.currentUser = null;
+    release({ docs: [{ data: () => ({ sourceId: 's', mangaId: 'private' }) }] } as never);
+    await expect(pending).rejects.toThrow(/Account changed/);
+  });
+
   it('keeps guest library mutations local-only without creating cloud tombstones', async () => {
     const firestore = await import('firebase/firestore');
     const previousCommits = vi.mocked(firestore.writeBatch).mock.calls.length;
@@ -149,5 +180,108 @@ describe('Firestore Sync Utils Regression Suite', () => {
     };
     await expect(pushLibraryItem(item, 'owner-A')).rejects.toThrow(/Account changed/);
     await expect(deleteLibraryItem('source', 'manga', 'saved-owner-a', 'owner-A')).rejects.toThrow(/Account changed/);
+  });
+
+  const historyDocs = (count: number) => Array.from({ length: count }, (_, index) => ({
+    ref: `history-${index}`,
+    data: () => ({ sourceId: 'source', mangaId: 'manga', chapterId: `chapter-${index}` }),
+  }));
+
+  it('waits for each 450-operation batch before starting the next', async () => {
+    const firestore = await import('firebase/firestore');
+    let releaseFirst!: () => void;
+    let firstStarted!: () => void;
+    const started = new Promise<void>(resolve => { firstStarted = resolve; });
+    const first = { set: vi.fn(), commit: vi.fn(() => {
+      firstStarted();
+      return new Promise<void>(resolve => { releaseFirst = resolve; });
+    }) };
+    const second = { set: vi.fn(), commit: vi.fn().mockResolvedValue(undefined) };
+    const third = { set: vi.fn(), commit: vi.fn().mockResolvedValue(undefined) };
+    vi.mocked(firestore.getDocs).mockResolvedValueOnce({ docs: historyDocs(901) } as never);
+    vi.mocked(firestore.writeBatch)
+      .mockReturnValueOnce(first as never)
+      .mockReturnValueOnce(second as never)
+      .mockReturnValueOnce(third as never);
+
+    const pending = deleteMangaHistory('source', 'manga');
+    await started;
+    expect(first.set).toHaveBeenCalledTimes(450);
+    expect(second.set).not.toHaveBeenCalled();
+    expect(second.commit).not.toHaveBeenCalled();
+    releaseFirst();
+    await pending;
+    expect([first.set.mock.calls.length, second.set.mock.calls.length, third.set.mock.calls.length]).toEqual([450, 450, 1]);
+    for (const batch of [first, second, third]) expect(batch.commit).toHaveBeenCalledOnce();
+  });
+
+  it('uses one deletion timestamp even when batch commits take time', async () => {
+    const firestore = await import('firebase/firestore');
+    vi.useFakeTimers();
+    try {
+      vi.setSystemTime(new Date('2026-10-30T00:00:00Z'));
+      const first = { set: vi.fn(), commit: vi.fn(async () => { vi.setSystemTime(new Date('2026-10-30T00:01:00Z')); }) };
+      const second = { set: vi.fn(), commit: vi.fn().mockResolvedValue(undefined) };
+      vi.mocked(firestore.getDocs).mockResolvedValueOnce({ docs: historyDocs(451) } as never);
+      vi.mocked(firestore.writeBatch).mockReturnValueOnce(first as never).mockReturnValueOnce(second as never);
+      await deleteMangaHistory('source', 'manga');
+      expect(first.set.mock.calls[0][1].deletedAt).toBe('2026-10-30T00:00:00.000Z');
+      expect(second.set.mock.calls[0][1].deletedAt).toBe(first.set.mock.calls[0][1].deletedAt);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('reports exactly the committed chapters after a later batch fails and stops', async () => {
+    const firestore = await import('firebase/firestore');
+    const first = { set: vi.fn(), commit: vi.fn().mockResolvedValue(undefined) };
+    const second = { set: vi.fn(), commit: vi.fn().mockRejectedValue(new Error('quota exceeded')) };
+    const priorBatches = vi.mocked(firestore.writeBatch).mock.calls.length;
+    vi.mocked(firestore.getDocs).mockResolvedValueOnce({ docs: historyDocs(901) } as never);
+    vi.mocked(firestore.writeBatch).mockReturnValueOnce(first as never).mockReturnValueOnce(second as never);
+    let thrown: unknown;
+    try { await deleteMangaHistory('source', 'manga'); } catch (error) { thrown = error; }
+    expect(thrown).toBeInstanceOf(PartialHistoryDeletionError);
+    expect((thrown as PartialHistoryDeletionError).committedChapterIds).toEqual(
+      Array.from({ length: 450 }, (_, index) => `chapter-${index}`),
+    );
+    expect(firestore.writeBatch).toHaveBeenCalledTimes(priorBatches + 2);
+    expect(second.commit).toHaveBeenCalledOnce();
+  });
+
+  it('preserves the original error when the first batch fails', async () => {
+    const firestore = await import('firebase/firestore');
+    const failure = new Error('first batch unavailable');
+    const first = { set: vi.fn(), commit: vi.fn().mockRejectedValue(failure) };
+    const priorBatches = vi.mocked(firestore.writeBatch).mock.calls.length;
+    vi.mocked(firestore.getDocs).mockResolvedValueOnce({ docs: historyDocs(901) } as never);
+    vi.mocked(firestore.writeBatch).mockReturnValueOnce(first as never);
+    await expect(deleteMangaHistory('source', 'manga')).rejects.toBe(failure);
+    expect(firestore.writeBatch).toHaveBeenCalledTimes(priorBatches + 1);
+  });
+
+  it('skips existing tombstones without changing their timestamps', async () => {
+    const firestore = await import('firebase/firestore');
+    const priorBatches = vi.mocked(firestore.writeBatch).mock.calls.length;
+    vi.mocked(firestore.getDocs).mockResolvedValueOnce({ docs: [{
+      ref: 'old', data: () => ({ _deleted: true, deletedAt: '2020-01-01', sourceId: 'source', mangaId: 'manga', chapterId: 'old' }),
+    }] } as never);
+    await deleteMangaHistory('source', 'manga');
+    expect(firestore.writeBatch).toHaveBeenCalledTimes(priorBatches);
+  });
+
+  it('stops after an account switch between commits and reports the committed chunk', async () => {
+    const firestore = await import('firebase/firestore');
+    const auth = { currentUser: { uid: 'user123' } };
+    vi.mocked(initFirebase).mockResolvedValueOnce({ auth, db: {} } as never);
+    const first = { set: vi.fn(), commit: vi.fn(async () => { auth.currentUser = { uid: 'other-user' }; }) };
+    const priorBatches = vi.mocked(firestore.writeBatch).mock.calls.length;
+    vi.mocked(firestore.getDocs).mockResolvedValueOnce({ docs: historyDocs(901) } as never);
+    vi.mocked(firestore.writeBatch).mockReturnValueOnce(first as never);
+    await expect(deleteMangaHistory('source', 'manga')).rejects.toMatchObject({
+      name: 'PartialHistoryDeletionError',
+      committedChapterIds: Array.from({ length: 450 }, (_, index) => `chapter-${index}`),
+    });
+    expect(firestore.writeBatch).toHaveBeenCalledTimes(priorBatches + 1);
   });
 });

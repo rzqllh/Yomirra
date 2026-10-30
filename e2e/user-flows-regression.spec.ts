@@ -1,16 +1,12 @@
 import { test, expect, type Page } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
-  // Pre-seed completed onboarding and hydrated stores so splash completes immediately to app shell
+  // Keep onboarding setup separate from each scenario's reading history.
   await page.addInitScript(() => {
     try {
       localStorage.setItem(
         "yomirra-onboarding",
         JSON.stringify({ state: { hasCompletedOnboarding: true, _hasHydrated: true }, version: 0 })
-      );
-      localStorage.setItem(
-        "yomirra-history",
-        JSON.stringify({ state: { items: {}, chapters: {}, _hasHydrated: true }, version: 0 })
       );
     } catch (e) {}
   });
@@ -41,6 +37,13 @@ test.describe("Yomirra Interactive User Flows & Behavior Regression", () => {
 
     const main = page.locator("main");
     await expect(main).toBeVisible();
+    await expect(page.getByText("BACAANMU DIMULAI DI SINI")).toBeVisible();
+    await expect(page.locator("#continue-reading-section")).toHaveCount(0);
+    await expect(page.locator("#spotlight-section")).toBeVisible();
+    const guidance = page.getByRole("complementary", { name: "Info Rak Buku" });
+    await expect(guidance).toBeVisible();
+    await expect(guidance.getByRole("link", { name: /Buka Rak Buku/ })).toHaveAttribute("href", "/bookmark");
+    await expect(page.getByRole("button", { name: /Cari komik \(Tekan (Ctrl\+K|⌘K)\)/ })).toBeVisible();
 
     const hasOverflow = await page.evaluate(() => {
       return document.documentElement.scrollWidth > document.documentElement.clientWidth;
@@ -49,50 +52,79 @@ test.describe("Yomirra Interactive User Flows & Behavior Regression", () => {
   });
 
   test("2. Returning reader state: displays continue reading card with milestone data", async ({ page }) => {
-    // Seed reading history in localStorage
+    // Seed a real HistoryItem shape and explicit settings to isolate the history UI.
     await page.addInitScript(() => {
-      try {
-        const historyData = {
-          state: {
-            items: {
-              "asurascans-solo-leveling": {
-                sourceId: "asurascans",
-                mangaId: "solo-leveling",
-                title: "Solo Leveling",
-                coverUrl: "/covers/cover-1.webp",
-                chapterId: "ch-100",
-                chapterTitle: "Chapter 100",
-                chapterNumber: 100,
-                readAt: new Date().toISOString(),
-                completed: false,
-                page: 12,
-                scrollPosition: 0.5,
-              },
+      localStorage.setItem("yomirra-settings", JSON.stringify({
+        state: { hideNsfw: false }, version: 2,
+      }));
+      localStorage.setItem("yomirra-history", JSON.stringify({
+        state: {
+          items: {
+            "komiku::solo-leveling::ch-100": {
+              sourceId: "komiku",
+              mangaId: "solo-leveling",
+              mangaTitle: "Solo Leveling",
+              chapterId: "ch-100",
+              chapterTitle: "Chapter 100",
+              chapterNumber: 100,
+              readAt: Date.now() - 10_000,
+              progressPercent: 48,
+              pageIndex: 12,
+              totalPages: 25,
+              isNsfw: false,
             },
-            _hasHydrated: true,
+            "komiku::solo-leveling::ch-12": {
+              sourceId: "komiku",
+              mangaId: "solo-leveling",
+              mangaTitle: "Solo Leveling",
+              chapterId: "ch-12",
+              chapterTitle: "Chapter 12",
+              chapterNumber: 12,
+              readAt: Date.now(),
+              progressPercent: 20,
+              pageIndex: 5,
+              totalPages: 25,
+              isNsfw: false,
+            },
           },
-          version: 0,
-        };
-        localStorage.setItem("yomirra-history", JSON.stringify(historyData));
-      } catch (e) {}
+          _hasHydrated: true,
+        },
+        version: 2,
+      }));
     });
 
     await page.goto("/", { waitUntil: "domcontentloaded" });
     await waitForAppReady(page);
 
-    const heroSection = page.locator("section").first();
-    await expect(heroSection).toBeVisible();
+    await expect(page.getByText("LANJUT LAGI DI YOMIRRA")).toBeVisible();
+    const shelf = page.locator("#continue-reading-section");
+    await expect(shelf).toBeVisible();
+    await expect(shelf.getByRole("heading", { name: "Solo Leveling", exact: true })).toBeVisible();
+    await expect(shelf.getByText("Chapter 100")).toBeVisible();
+    const continueLink = shelf.getByRole("link", { name: "Lanjut baca Solo Leveling, Chapter 100", exact: true });
+    await expect(continueLink).toBeVisible();
+    await expect(continueLink).toHaveAttribute("href", /\/manga\/komiku\/solo-leveling\/read\/ch-100(?:\?|$)/);
+    await expect(page.getByRole("complementary", { name: "Info Rak Buku" })).toHaveCount(0);
+    await expect(page.locator("#spotlight-section")).toBeVisible();
+
+    const order = await page.evaluate(() => {
+      const shelf = document.querySelector("#continue-reading-section");
+      const spotlight = document.querySelector("#spotlight-section");
+      if (!shelf || !spotlight) return null;
+      return Boolean(shelf.compareDocumentPosition(spotlight) & Node.DOCUMENT_POSITION_FOLLOWING);
+    });
+    expect(order).toBe(true);
   });
 
-  test("3. Command palette (⌘K) search modal lifecycle & focus trap", async ({ page }) => {
+  test("3. Command palette search opens and closes", async ({ page }) => {
     await page.goto("/", { waitUntil: "domcontentloaded" });
     await waitForAppReady(page);
     await page.waitForTimeout(1000);
 
     // Trigger command palette via search trigger button or shortcut
-    const heroSearchBtn = page.locator("#home-hero-search, button[aria-label*='Cari judul atau kreator']").first();
+    const heroSearchBtn = page.locator("#home-hero-search");
     await heroSearchBtn.waitFor({ state: "visible", timeout: 10000 });
-    await heroSearchBtn.dispatchEvent("click");
+    await heroSearchBtn.click();
 
     // Wait for command palette dialog to appear
     const dialog = page.locator(".command-dialog-content, [role='dialog']:not([data-nextjs-dialog])").first();

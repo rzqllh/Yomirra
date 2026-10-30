@@ -2,6 +2,8 @@ import { useGuestMergeStore } from "@/shared/store/guest-merge-store";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useSync } from "../use-sync";
+import { pullLegacyLibraryData } from "@/shared/lib/sync-utils";
+import { useSyncDiagnosticsStore } from "@/shared/store/sync-diagnostics-store";
 import { initFirebase } from "@/shared/lib/firebase";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useHistoryStore } from "@/shared/store/history-store";
@@ -24,8 +26,8 @@ const mocks = vi.hoisted(() => ({
     }),
     setDoc: vi.fn(),
     writeBatch: vi.fn(() => ({
-      set: (reference: { path: string }, data: unknown) => mocks.writes.push({ path: reference.path, data }),
-      commit: vi.fn(async () => undefined),
+      set: (reference: { path: string }, data: unknown) => { mocks.writes.push({ path: reference.path, data }); },
+      commit: vi.fn(async (): Promise<void> => undefined),
     })),
   },
 }));
@@ -35,7 +37,7 @@ vi.mock("@/shared/hooks/use-auth", () => ({
 }));
 
 vi.mock("@/shared/lib/firebase", () => ({
-  initFirebase: vi.fn(async () => ({ db: { name: "db" } })),
+  initFirebase: vi.fn(async () => ({ auth: { get currentUser() { return mocks.user; } }, db: { name: "db" } })),
 }));
 
 vi.mock("@/shared/lib/sync-utils", () => ({
@@ -87,7 +89,14 @@ describe("useSync cloud correctness", () => {
     mocks.firestore.getDocs.mockImplementation(async (reference: { path: string }) =>
       mocks.snapshots.get(reference.path) ?? snapshot([]),
     );
-    vi.mocked(initFirebase).mockResolvedValue({ db: { name: "db" } } as never);
+    vi.mocked(initFirebase).mockResolvedValue({ auth: { get currentUser() { return mocks.user; } }, db: { name: "db" } } as never);
+    vi.mocked(pullLegacyLibraryData).mockReset().mockResolvedValue([]);
+    mocks.firestore.writeBatch.mockReset().mockImplementation(() => ({
+      set: (reference: { path: string }, data: unknown) => { mocks.writes.push({ path: reference.path, data }); },
+      commit: vi.fn(async (): Promise<void> => undefined),
+    }));
+    localStorage.removeItem("yomirra-libraryV2-migrated:user-a");
+    localStorage.removeItem("yomirra-libraryV2-migrated:user-b");
     localStorage.setItem("yomirra-libraryV2-migrated", "true");
     useLibraryStore.setState({ items: {} });
     useHistoryStore.setState({ items: {} });
@@ -460,7 +469,7 @@ describe("useSync cloud correctness", () => {
 
   it("rejects manual sync when its Firestore batch commit fails", async () => {
     mocks.firestore.writeBatch.mockImplementationOnce(() => ({
-      set: (reference: { path: string }, data: unknown) => mocks.writes.push({ path: reference.path, data }),
+      set: (reference: { path: string }, data: unknown) => { mocks.writes.push({ path: reference.path, data }); },
       commit: vi.fn(async () => { throw new Error("write failed"); }),
     }));
     useLibraryStore.setState({ items: { "saved-title": libraryItem() } });
@@ -479,6 +488,167 @@ describe("useSync cloud correctness", () => {
       await expect(result.current.runFullSync()).rejects.toThrow(/Firebase/i);
     });
   });
+  it("rejects unauthenticated manual sync before starting diagnostics", async () => {
+    mocks.user = null;
+    const started = vi.spyOn(useSyncDiagnosticsStore.getState(), "recordSyncStart");
+    const { result } = renderHook(() => useSync({ autoSync: false }));
+    await expect(result.current.runFullSync()).rejects.toThrow(/authenticated/);
+    expect(started).not.toHaveBeenCalled();
+    started.mockRestore();
+  });
+
+  it("rejects full sync without Firebase auth", async () => {
+    vi.mocked(initFirebase).mockResolvedValue({ auth: null, db: {} } as never);
+    const { result } = renderHook(() => useSync({ autoSync: false }));
+    await expect(result.current.runFullSync()).rejects.toThrow(/authenticated/);
+  });
+
+  it("ignores the old global marker and marks only the initiating account after migration", async () => {
+    mocks.user = { uid: "user-b" };
+    localStorage.setItem("yomirra-libraryV2-migrated:user-a", "true");
+    vi.mocked(pullLegacyLibraryData).mockResolvedValue([{ ...libraryItem(), id: "legacy" }]);
+    const { result } = renderHook(() => useSync({ autoSync: false }));
+    await act(async () => { await result.current.runFullSync(); });
+    expect(pullLegacyLibraryData).toHaveBeenCalledWith({ strict: true, expectedUid: "user-b" });
+    expect(mocks.writes).toContainEqual(expect.objectContaining({ path: "users/user-b/libraryV2/legacy" }));
+    expect(localStorage.getItem("yomirra-libraryV2-migrated:user-b")).toBe("true");
+  });
+
+  it("reconciles legacy-only titles alongside canonical data while retaining deduplication and tombstones", async () => {
+    mocks.snapshots.set("users/user-a/libraryV2", snapshot([
+      ["canonical", { ...libraryItem(), id: "canonical" }],
+      ["dead", { ...libraryItem(), id: "dead", mangaId: "dead", _deleted: true, deletedAt: "2026-10-08" }],
+    ]));
+    mocks.snapshots.set("users/user-a/library", snapshot([
+      ["alias", { ...libraryItem(), id: "alias" }],
+      ["fresh", { ...libraryItem(), id: "fresh", mangaId: "fresh" }],
+      ["dead", { ...libraryItem(), id: "dead", mangaId: "dead" }],
+    ]));
+    const { result } = renderHook(() => useSync({ autoSync: false }));
+    await act(async () => { await result.current.runFullSync(); });
+    expect(mocks.writes.map(write => write.path)).toEqual(["users/user-a/libraryV2/fresh"]);
+    expect(localStorage.getItem("yomirra-libraryV2-migrated:user-a")).toBe("true");
+  });
+
+  it("does not import pending legacy results after an account switch", async () => {
+    let release!: (items: ReturnType<typeof libraryItem>[]) => void;
+    vi.mocked(pullLegacyLibraryData).mockImplementationOnce(() => new Promise(resolve => { release = resolve; }));
+    const { result, rerender } = renderHook(() => useSync({ autoSync: false }));
+    const pending = result.current.runFullSync();
+    await waitFor(() => expect(release).toBeTypeOf("function"));
+    mocks.user = { uid: "user-b" };
+    rerender();
+    await act(async () => { release([libraryItem()]); await pending; });
+    expect(useLibraryStore.getState().items).toEqual({});
+    expect(mocks.writes).toEqual([]);
+    expect(localStorage.getItem("yomirra-libraryV2-migrated:user-a")).toBeNull();
+  });
+
+  const manyLibraryItems = () => Object.fromEntries(Array.from({ length: 901 }, (_, index) => [
+    `title-${index}`, { ...libraryItem(), id: `title-${index}`, mangaId: `manga-${index}` },
+  ]));
+  const stagedBatches = (commit: (index: number) => Promise<void>) => {
+    const batches: Array<{ writes: unknown[]; commit: ReturnType<typeof vi.fn> }> = [];
+    mocks.firestore.writeBatch.mockImplementation(() => {
+      const index = batches.length;
+      const batch = { writes: [] as unknown[], set: (_reference: unknown, data: unknown) => { batch.writes.push(data); }, commit: vi.fn(() => commit(index)) };
+      batches.push(batch);
+      return batch;
+    });
+    return batches;
+  };
+
+  it("waits for sequential 450/450/1 commits before writing migration completion", async () => {
+    const releases: Array<() => void> = [];
+    const batches = stagedBatches(() => new Promise(resolve => { releases.push(resolve); }));
+    useLibraryStore.setState({ items: manyLibraryItems() });
+    const { result } = renderHook(() => useSync({ autoSync: false }));
+    const pending = result.current.runFullSync();
+    await waitFor(() => expect(releases).toHaveLength(1));
+    expect(batches.filter(batch => batch.commit.mock.calls.length).map(batch => batch.writes.length)).toEqual([450]);
+    expect(localStorage.getItem("yomirra-libraryV2-migrated:user-a")).toBeNull();
+    releases[0]();
+    await waitFor(() => expect(releases).toHaveLength(2));
+    expect(batches[2].commit).not.toHaveBeenCalled();
+    releases[1]();
+    await waitFor(() => expect(releases).toHaveLength(3));
+    expect(localStorage.getItem("yomirra-libraryV2-migrated:user-a")).toBeNull();
+    await act(async () => { releases[2](); await pending; });
+    expect(batches.filter(batch => batch.commit.mock.calls.length).map(batch => batch.writes.length)).toEqual([450, 450, 1]);
+    expect(localStorage.getItem("yomirra-libraryV2-migrated:user-a")).toBe("true");
+  });
+
+  it.each([0, 1])("stops later commits after batch %i fails and retries with a fresh operation", async (failAt) => {
+    let fail = true;
+    const batches = stagedBatches(async index => { if (fail && index === failAt) throw new Error("quota"); });
+    useLibraryStore.setState({ items: manyLibraryItems() });
+    const { result } = renderHook(() => useSync({ autoSync: false }));
+    const failed = result.current.runFullSync();
+    expect(result.current.runFullSync()).toBe(failed);
+    await act(async () => { await expect(failed).rejects.toThrow("quota"); });
+    expect(batches.reduce((count, batch) => count + batch.commit.mock.calls.length, 0)).toBe(failAt + 1);
+    expect(localStorage.getItem("yomirra-libraryV2-migrated:user-a")).toBeNull();
+    fail = false;
+    const retry = result.current.runFullSync();
+    expect(retry).not.toBe(failed);
+    await act(async () => { await retry; });
+    expect(localStorage.getItem("yomirra-libraryV2-migrated:user-a")).toBe("true");
+  });
+
+  it("does not start staged writes when a later required history read fails", async () => {
+    const batches = stagedBatches(async () => undefined);
+    mocks.firestore.getDocs.mockImplementation(async (reference: { path: string }) => {
+      if (reference.path.endsWith("/history")) throw new Error("history unavailable");
+      return snapshot([]);
+    });
+    vi.mocked(pullLegacyLibraryData).mockResolvedValue(Object.values(manyLibraryItems()));
+    const { result } = renderHook(() => useSync({ autoSync: false }));
+    await act(async () => { await expect(result.current.runFullSync()).rejects.toThrow("history unavailable"); });
+    expect(batches.every(batch => batch.commit.mock.calls.length === 0)).toBe(true);
+    expect(localStorage.getItem("yomirra-libraryV2-migrated:user-a")).toBeNull();
+  });
+
+  it("preserves newer local progress when a pending cloud commit fails", async () => {
+    let reject!: (error: Error) => void;
+    stagedBatches(() => new Promise((_resolve, rejectCommit) => { reject = rejectCommit; }));
+    useHistoryStore.setState({ items: { "source::manga::chapter": historyItem(1000) } });
+    const { result } = renderHook(() => useSync({ autoSync: false }));
+    const pending = result.current.runFullSync();
+    const rejected = expect(pending).rejects.toThrow("offline");
+    await waitFor(() => expect(reject).toBeTypeOf("function"));
+    act(() => { useHistoryStore.setState({ items: { "source::manga::chapter": { ...historyItem(2000), pageIndex: 9 } } }); });
+    await act(async () => { reject(new Error("offline")); await rejected; });
+    expect(useHistoryStore.getState().items["source::manga::chapter"]).toEqual(expect.objectContaining({ readAt: 2000, pageIndex: 9 }));
+  });
+
+  it("does not mark completion after the final commit changes auth before React rerenders", async () => {
+    stagedBatches(async () => { mocks.user = { uid: "user-b" }; });
+    useLibraryStore.setState({ items: { "saved-title": libraryItem() } });
+    const committed = vi.spyOn(useSyncDiagnosticsStore.getState(), "recordSuccessfulCommit");
+    const { result } = renderHook(() => useSync({ autoSync: false }));
+    await act(async () => { await result.current.runFullSync(); });
+    expect(localStorage.getItem("yomirra-libraryV2-migrated:user-a")).toBeNull();
+    expect(committed).not.toHaveBeenCalled();
+    committed.mockRestore();
+  });
+
+  it.each([false, true])("stops later commits on an account switch while the first is pending (rerender=%s)", async (shouldRerender) => {
+    let release!: () => void;
+    const batches = stagedBatches(index => index === 0 ? new Promise(resolve => { release = resolve; }) : Promise.resolve());
+    useLibraryStore.setState({ items: manyLibraryItems() });
+    const committed = vi.spyOn(useSyncDiagnosticsStore.getState(), "recordSuccessfulCommit");
+    const { result, rerender } = renderHook(() => useSync({ autoSync: false }));
+    const pending = result.current.runFullSync();
+    await waitFor(() => expect(release).toBeTypeOf("function"));
+    mocks.user = { uid: "user-b" };
+    if (shouldRerender) rerender();
+    await act(async () => { release(); await pending; });
+    expect(batches.reduce((count, batch) => count + batch.commit.mock.calls.length, 0)).toBe(1);
+    expect(localStorage.getItem("yomirra-libraryV2-migrated:user-a")).toBeNull();
+    expect(committed).not.toHaveBeenCalled();
+    committed.mockRestore();
+  });
+
   it("blocks manual sync, auto-sync, and realtime listeners when guest merge is pending or errored", async () => {
     useGuestMergeStore.getState().startMergeReview({
       user: { uid: "user-a" },

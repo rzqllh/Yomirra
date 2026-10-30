@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { pushHistoryItem, deleteHistoryItem, deleteMangaHistory } from "@/shared/lib/sync-utils";
+import { pushHistoryItem, deleteHistoryItem, deleteMangaHistory, PartialHistoryDeletionError } from "@/shared/lib/sync-utils";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { sourceRegistry } from "@/shared/sources/source-registry";
 import { toast } from "sonner";
@@ -57,6 +57,42 @@ const getHistoryId = (sourceId: string, mangaId: string, chapterId: string) => `
 
 const pendingWrites = new Map<string, Promise<void>>();
 let resetVersion = 0;
+const historyRevisions = new Map<string, number>();
+function bumpHistoryRevision(id: string): number {
+  const revision = (historyRevisions.get(id) ?? 0) + 1;
+  historyRevisions.set(id, revision);
+  return revision;
+}
+type PendingHistoryDeletion = {
+  item?: HistoryItem;
+  revision: number;
+  pending: number;
+  committed: boolean;
+  ownerUid: string | null;
+  resetVersion: number;
+};
+const pendingHistoryDeletions = new Map<string, PendingHistoryDeletion>();
+function beginHistoryDeletion(id: string, item: HistoryItem | undefined, ownerUid: string | null): PendingHistoryDeletion {
+  let deletion = pendingHistoryDeletions.get(id);
+  if (item || !deletion || deletion.revision !== historyRevisions.get(id) || deletion.ownerUid !== ownerUid || deletion.resetVersion !== resetVersion) {
+    deletion = { item, revision: 0, pending: 0, committed: false, ownerUid, resetVersion };
+  }
+  deletion.revision = bumpHistoryRevision(id);
+  deletion.pending++;
+  pendingHistoryDeletions.set(id, deletion);
+  return deletion;
+}
+function settleHistoryDeletion(id: string, deletion: PendingHistoryDeletion, committed: boolean): HistoryItem | undefined {
+  deletion.pending--;
+  if (committed) deletion.committed = true;
+  if (deletion.pending > 0 || pendingHistoryDeletions.get(id) !== deletion) return;
+  pendingHistoryDeletions.delete(id);
+  // Overlapping deletes share a snapshot until all results are known. Any
+  // committed deletion wins; newer reading progress invalidates the snapshot.
+  if (!deletion.committed && deletion.ownerUid === getLocalDataOwnerUid() && deletion.resetVersion === resetVersion && deletion.revision === historyRevisions.get(id)) {
+    return deletion.item;
+  }
+}
 const progressTimers = new Map<string, { timer: ReturnType<typeof setTimeout>; startedAt: number; item: HistoryItem }>();
 function scheduleProgressWrite(item: HistoryItem): void {
   const key = getHistoryId(item.sourceId, item.mangaId, item.chapterId);
@@ -114,6 +150,7 @@ export const useHistoryStore = create<HistoryState>()(
           else item.isNsfw = false;
         }
         const id = getHistoryId(item.sourceId, item.mangaId, item.chapterId);
+        bumpHistoryRevision(id);
         const existing = state.items[id];
         const savedTitleId = item.savedTitleId ?? get().resolveSavedTitleId(item.sourceId, item.mangaId) ?? undefined;
         if (item.chapterNumber === undefined) {
@@ -130,6 +167,7 @@ export const useHistoryStore = create<HistoryState>()(
 
       _setItemLocal: (item) => set((state) => {
         const id = getHistoryId(item.sourceId, item.mangaId, item.chapterId);
+        bumpHistoryRevision(id);
         const existing = state.items[id];
         let normalizedReadAt = item.readAt;
         if (typeof normalizedReadAt === 'string') {
@@ -153,9 +191,8 @@ export const useHistoryStore = create<HistoryState>()(
       removeHistoryItem: (sourceId, mangaId, chapterId) => {
         const previousState = get().items;
         const ownerUid = getLocalDataOwnerUid();
-        const mutationResetVersion = resetVersion;
         const id = getHistoryId(sourceId, mangaId, chapterId);
-        const removedItem = previousState[id];
+        const deletion = beginHistoryDeletion(id, previousState[id], ownerUid);
         set((state) => {
           const id = getHistoryId(sourceId, mangaId, chapterId);
           const newItems = { ...state.items };
@@ -163,9 +200,16 @@ export const useHistoryStore = create<HistoryState>()(
           return { items: newItems };
         });
 
-        deleteHistoryItem(sourceId, mangaId, chapterId, ownerUid).catch(() => {
-          if (getLocalDataOwnerUid() !== ownerUid || mutationResetVersion !== resetVersion || !removedItem) return;
-          set((state) => state.items[id] ? {} : { items: retainHistory({ ...state.items, [id]: removedItem }) });
+        void deleteHistoryItem(sourceId, mangaId, chapterId, ownerUid).then(() => {
+          settleHistoryDeletion(id, deletion, true);
+        }, () => {
+          const removedItem = settleHistoryDeletion(id, deletion, false);
+          if (!removedItem) return;
+          set((state) => {
+            if (state.items[id]) return {};
+            bumpHistoryRevision(id);
+            return { items: retainHistory({ ...state.items, [id]: removedItem }) };
+          });
           toast.error("Gagal Menghapus Riwayat", {
             description: "Riwayat bacaan belum berhasil dihapus dari akunmu.",
           });
@@ -176,33 +220,54 @@ export const useHistoryStore = create<HistoryState>()(
         const previousState = get().items;
         const ownerUid = getLocalDataOwnerUid();
         const mutationResetVersion = resetVersion;
+        const prefix = `${sourceId}::${mangaId}::`;
+        const affectedIds = new Set(Object.keys(previousState).filter(key => key.startsWith(prefix)));
+        // Pending deletes may already have removed their entries from local state.
+        for (const key of pendingHistoryDeletions.keys()) {
+          if (key.startsWith(prefix)) affectedIds.add(key);
+        }
+        const deletions = new Map<string, PendingHistoryDeletion>(Array.from(affectedIds, key => [key, beginHistoryDeletion(key, previousState[key], ownerUid)]));
         set((state) => {
           const newItems = { ...state.items };
           Object.keys(newItems).forEach(key => {
-            if (key.startsWith(`${sourceId}::${mangaId}::`)) {
+            if (key.startsWith(prefix)) {
               delete newItems[key];
             }
           });
           return { items: newItems };
         });
 
-        deleteMangaHistory(sourceId, mangaId, ownerUid).catch(() => {
+        void deleteMangaHistory(sourceId, mangaId, ownerUid).then(() => {
+          for (const [key, deletion] of deletions) settleHistoryDeletion(key, deletion, true);
+        }, (error) => {
+          const committedChapterIds = new Set(error instanceof PartialHistoryDeletionError ? error.committedChapterIds : []);
+          const rollbackItems = new Map<string, HistoryItem>();
+          for (const [key, deletion] of deletions) {
+            const item = settleHistoryDeletion(key, deletion, committedChapterIds.has(key.slice(prefix.length)));
+            if (item) rollbackItems.set(key, item);
+          }
           if (getLocalDataOwnerUid() !== ownerUid || mutationResetVersion !== resetVersion) return;
           set((state) => {
             const restored = { ...state.items };
-            for (const [key, item] of Object.entries(previousState)) {
-              if (item.sourceId === sourceId && item.mangaId === mangaId) restored[key] ??= item;
+            for (const [key, item] of rollbackItems) {
+              if (restored[key]) continue;
+              restored[key] = item;
+              bumpHistoryRevision(key);
             }
             return { items: retainHistory(restored) };
           });
-          toast.error("Gagal Menghapus Riwayat", {
-            description: "Riwayat komik belum berhasil dihapus dari akunmu.",
+          toast.error(error instanceof PartialHistoryDeletionError ? "Sebagian Riwayat Berhasil Dihapus" : "Gagal Menghapus Riwayat", {
+            description: error instanceof PartialHistoryDeletionError
+              ? "Sebagian chapter sudah terhapus di cloud. Coba hapus kembali riwayat yang masih tersisa."
+              : "Riwayat komik belum berhasil dihapus dari akunmu.",
           });
         });
       },
 
       clearHistory: () => {
         resetVersion++;
+        historyRevisions.clear();
+        pendingHistoryDeletions.clear();
         for (const pending of progressTimers.values()) clearTimeout(pending.timer);
         progressTimers.clear();
         set({ items: {} });
@@ -348,6 +413,7 @@ export const useHistoryStore = create<HistoryState>()(
           isNsfw,
         };
         
+        bumpHistoryRevision(getHistoryId(sourceId, mangaId, chapterId));
         set({
           items: retainHistory({
             ...previousState,
@@ -359,6 +425,7 @@ export const useHistoryStore = create<HistoryState>()(
 
       saveProgress: (sourceId, mangaId, chapterId, pageIndex, pageOffset) => set((state) => {
         const id = getHistoryId(sourceId, mangaId, chapterId);
+        bumpHistoryRevision(id);
         const existing = state.items[id];
         
         let updatedItem: HistoryItem;
@@ -425,6 +492,7 @@ export const useHistoryStore = create<HistoryState>()(
           const localItem = newItems[id];
           
           if (!localItem) {
+            bumpHistoryRevision(id);
             newItems[id] = cloudItem;
             hasChanges = true;
           } else {
@@ -432,6 +500,7 @@ export const useHistoryStore = create<HistoryState>()(
             const cloudTime = cloudItem.readAt;
             
             if (cloudTime > localTime) {
+              bumpHistoryRevision(id);
               newItems[id] = cloudItem;
               hasChanges = true;
             } else if (localTime > cloudTime) {

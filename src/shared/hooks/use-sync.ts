@@ -94,9 +94,9 @@ export function useSync(options = { autoSync: true }) {
     if (isBlockedByMerge) {
       return Promise.reject(new Error("Sync is blocked while guest merge review is active."));
     }
-    useSyncDiagnosticsStore.getState().recordSyncStart();
     const uid = userUid;
     if (!uid) return Promise.reject(new Error("No authenticated user is available for sync."));
+    useSyncDiagnosticsStore.getState().recordSyncStart();
 
     const existing = inFlightSyncs.get(uid);
     const trackSyncLifecycle = (syncOperation: Promise<void>) => {
@@ -115,9 +115,13 @@ export function useSync(options = { autoSync: true }) {
     }
 
     const operation = (async () => {
-      const { db: firestore } = await initFirebase();
+      const { auth, db: firestore } = await initFirebase();
       if (!firestore) throw new Error("Firebase is unavailable for sync.");
+      if (!auth?.currentUser) throw new Error("No authenticated user is available for sync.");
+      const isCurrentUser = () => currentUidRef.current === uid && auth.currentUser?.uid === uid;
+      if (!isCurrentUser()) return;
       const { collection, doc, getDocs, writeBatch } = await loadFirestore();
+      if (!isCurrentUser()) return;
 
       let batch = writeBatch(firestore);
       let batchCount = 0;
@@ -126,11 +130,11 @@ export function useSync(options = { autoSync: true }) {
       let syncedHistCount = 0;
       let cloudPrefsResult: unknown = null;
       let cloudCollectionsResult: unknown = null;
-      const commits: Promise<void>[] = [];
-      const isCurrentUser = () => currentUidRef.current === uid;
+      const commits: Array<() => Promise<void>> = [];
       const commitCurrentBatch = () => {
         if (batchCount > 0) {
-          commits.push(batch.commit());
+          const batchToCommit = batch;
+          commits.push(() => batchToCommit.commit());
           totalSynced += batchCount;
           batch = writeBatch(firestore);
           batchCount = 0;
@@ -153,10 +157,11 @@ export function useSync(options = { autoSync: true }) {
         else remoteLibrary[remoteDoc.id] = item;
       });
 
-      // First-time migration: import legacy library only when canonical is empty.
-      const isMigrationComplete = localStorage.getItem('yomirra-libraryV2-migrated') === 'true';
-      if (!isMigrationComplete && remoteLibrarySnapshot.empty) {
-        const legacyItems = await pullLegacyLibraryData({ strict: true });
+      const migrationKey = `yomirra-libraryV2-migrated:${uid}`;
+      const isMigrationComplete = localStorage.getItem(migrationKey) === 'true';
+      const needsInitialMigration = !isMigrationComplete && remoteLibrarySnapshot.empty;
+      if (needsInitialMigration) {
+        const legacyItems = await pullLegacyLibraryData({ strict: true, expectedUid: uid });
         if (!isCurrentUser()) return;
         for (const legacyItem of legacyItems) {
           const savedTitleId = legacyItem.id ?? `${legacyItem.sourceId}::${legacyItem.mangaId}`;
@@ -173,11 +178,10 @@ export function useSync(options = { autoSync: true }) {
             remoteLibrary[savedTitleId] = enriched;
           }
         }
-        try { localStorage.setItem('yomirra-libraryV2-migrated', 'true'); } catch { /* ignore */ }
       }
 
-      // Post-migration V1 import detects legacy records added by older clients.
-      if (isMigrationComplete) {
+      // Reconcile legacy-only titles even when canonical data already exists.
+      if (!needsInitialMigration) {
         const legacySnapshot = await getDocs(collection(firestore, `users/${uid}/library`));
         if (!isCurrentUser()) return;
         legacySnapshot.forEach((legacyDoc) => {
@@ -289,8 +293,14 @@ export function useSync(options = { autoSync: true }) {
 
       if (!isCurrentUser()) return;
       commitCurrentBatch();
-      await Promise.all(commits);
+      for (const commit of commits) {
+        if (!isCurrentUser()) return;
+        await commit();
+      }
       if (!isCurrentUser()) return;
+      if (!isMigrationComplete) {
+        try { localStorage.setItem(migrationKey, 'true'); } catch { /* optional storage */ }
+      }
 
       // Source preferences and custom collections remain best-effort.
       try {
