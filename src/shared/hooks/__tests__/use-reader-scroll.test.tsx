@@ -65,12 +65,12 @@ describe("useReaderScroll - Q80 Durability & Q84 Debounce Throttle", () => {
       vi.advanceTimersByTime(50);
     });
 
-    // Q84: Save must be throttled / debounced (300ms idle timer)
+    // Q84: Save must be throttled / debounced (250ms idle timer)
     expect(saveProgress).not.toHaveBeenCalled();
 
-    // Advance beyond 300ms debounce
+    // Advance to the 250ms idle deadline
     act(() => {
-      vi.advanceTimersByTime(300);
+      vi.advanceTimersByTime(250);
     });
 
     expect(saveProgress).toHaveBeenCalledTimes(1);
@@ -111,9 +111,9 @@ describe("useReaderScroll - Q80 Durability & Q84 Debounce Throttle", () => {
     // Still within idle debounce window from last scroll
     expect(saveProgress).not.toHaveBeenCalled();
 
-    // Idle for 300ms
+    // Idle for 250ms
     act(() => {
-      vi.advanceTimersByTime(300);
+      vi.advanceTimersByTime(250);
     });
 
     expect(saveProgress).toHaveBeenCalledTimes(1);
@@ -135,7 +135,7 @@ describe("useReaderScroll - Q80 Durability & Q84 Debounce Throttle", () => {
       })
     );
 
-    // User scrolls then immediately leaves/unmounts before 300ms debounce completes
+    // User scrolls then immediately leaves/unmounts before 250ms debounce completes
     window.scrollY = 1200;
     act(() => {
       window.dispatchEvent(new Event("scroll"));

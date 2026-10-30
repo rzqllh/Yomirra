@@ -3,6 +3,8 @@
 
 ## Unreleased
 
+- **Draft Q84:** Align Reader scroll idle debounce with accepted 250 ms contract, retaining immediate unmount/visibility flush and corresponding regression tests.
+
 - Pulihkan hanya history yang belum berhasil dihapus di cloud; lindungi progres dan intent delete baru saat operasi bertumpuk.
 - Jalankan batch full sync berurutan dan tandai migrasi legacy per akun setelah seluruh commit berhasil.
 - Gunakan tombol pencarian Beranda dengan label keyboard sesuai platform; ganti assertion rail buatan dan fixture e2e lama dengan kontrak komponen serta history v2.
