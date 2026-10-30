@@ -20,6 +20,22 @@ describe("idbStorage", () => {
     });
   });
 
+  it("rejects a write when local persistence is unavailable instead of silently reporting success", async () => {
+    localStorage.setItem("existing", "safe-value");
+    const failedSet = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new DOMException("Storage quota exceeded", "QuotaExceededError");
+    });
+    try {
+      await expect(idbStorage.setItem("new-progress", "chapter-42")).rejects.toMatchObject({
+        name: "QuotaExceededError",
+      });
+      expect(localStorage.getItem("existing")).toBe("safe-value");
+      expect(localStorage.getItem("new-progress")).toBeNull();
+    } finally {
+      failedSet.mockRestore();
+    }
+  });
+
   describe("when IndexedDB is supported", () => {
     let mockStore: Map<string, any>;
 
