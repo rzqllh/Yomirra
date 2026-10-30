@@ -426,9 +426,11 @@ export function ContinuousVerticalReader({
           {/* Header Status Line */}
           <div className="flex items-center justify-between border-b border-white/[0.06] pb-3.5">
             <div className="flex items-center gap-2 min-w-0 pr-2">
-              <span className="size-2 rounded-full bg-semantic-success shrink-0" />
+              <span className="size-2 rounded-full bg-white/45 shrink-0" />
               <span className="text-xs font-semibold text-white/90 truncate">
-                {chapterTitle} selesai
+                {failedPageIndices.size > 0
+                  ? `${chapterTitle} — ada halaman gagal dimuat`
+                  : `Akhir ${chapterTitle}`
               </span>
             </div>
             <span className="text-[11px] font-mono text-white/70 shrink-0">

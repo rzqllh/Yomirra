@@ -59,7 +59,7 @@ export default function manifest(): MetadataRoute.Manifest {
         name: 'Lanjut Baca',
         short_name: 'Lanjut',
         description: 'Lanjutkan chapter terakhir yang kamu baca.',
-        url: '/bookmark?tab=history',
+        url: '/bookmark',
         icons: [
           {
             src: '/icons/shortcut-continue.png',

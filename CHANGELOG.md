@@ -3,6 +3,8 @@
 
 ## Unreleased
 
+- **Draft UI correctness:** Reader end-card no longer claims a chapter is finished without verified images; fix PWA Continue Reading shortcut to the canonical reading tab route.
+
 - Pulihkan hanya history yang belum berhasil dihapus di cloud; lindungi progres dan intent delete baru saat operasi bertumpuk.
 - Jalankan batch full sync berurutan dan tandai migrasi legacy per akun setelah seluruh commit berhasil.
 - Gunakan tombol pencarian Beranda dengan label keyboard sesuai platform; ganti assertion rail buatan dan fixture e2e lama dengan kontrak komponen serta history v2.
