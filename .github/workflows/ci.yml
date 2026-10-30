@@ -6,12 +6,15 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   verify:
     name: Verify & Build
     runs-on: ubuntu-latest
     env:
-      IMAGE_PROXY_SECRET: ci-secret-key-12345
+      IMAGE_PROXY_SECRET: ci-only-unsigned-test-secret-not-for-production-2026
       NEXT_PUBLIC_APP_URL: http://localhost:3000
 
     steps:
@@ -43,3 +46,51 @@ jobs:
 
       - name: Build Application
         run: pnpm build
+
+  browser-smoke:
+    name: Browser Smoke (Chromium and WebKit)
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      IMAGE_PROXY_SECRET: ci-only-unsigned-test-secret-not-for-production-2026
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      CI: "true"
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install browser engines and system dependencies
+        run: pnpm exec playwright install --with-deps chromium webkit
+
+      - name: Run interactive user-flow regressions
+        run: pnpm exec playwright test e2e/user-flows-regression.spec.ts --project=chromium-mobile --project=webkit-mobile-safari
+
+      - name: Run WebKit Safari-layout regressions
+        run: pnpm exec playwright test e2e/ios27-safari-regression.spec.ts --project=webkit-mobile-safari
+
+      - name: Preserve browser failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-smoke-evidence
+          path: |
+            test-results/
+            artifacts/ios27-safari/test-results.json
+          retention-days: 7
+          if-no-files-found: warn
