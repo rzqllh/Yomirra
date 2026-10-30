@@ -90,6 +90,10 @@ export function ContinuousVerticalReader({
   const [failedPageIndices, setFailedPageIndices] = React.useState<Set<number>>(new Set());
   const settledPageIndicesRef = React.useRef<Set<number>>(new Set());
   const loadedPositionsRef = React.useRef<Set<number>>(new Set());
+  // Revalidate decodes whenever source page URLs are refreshed.
+  React.useEffect(() => {
+    loadedPositionsRef.current = new Set();
+  }, [pages]);
   const [queueStartIndex, setQueueStartIndex] = React.useState(0);
   const [revealedThrough, setRevealedThrough] = React.useState(-1);
   const lookAheadWindow = React.useMemo(
