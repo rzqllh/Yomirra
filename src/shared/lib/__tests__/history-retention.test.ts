@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { retainHistory, historyId } from "../history-retention";
 import type { HistoryItem } from "@/shared/store/history-store";
+import { deriveSmartCollections } from "../smart-collections";
 
 const item = (mangaId: string, chapterNumber: number, readAt: number): HistoryItem => ({
   sourceId: "source", mangaId, chapterId: `ch-${chapterNumber}`, chapterNumber,
@@ -8,6 +9,32 @@ const item = (mangaId: string, chapterNumber: number, readAt: number): HistoryIt
 });
 
 describe("reading progress retention", () => {
+  it.each([
+    { seriesProgressPercent: 100 },
+    { chapterIndex: 49, totalChapters: 50 },
+  ])("preserves finished-series classification after compaction: %j", (completion) => {
+    const finished = { ...item("finished", 50, 1), ...completion, status: "COMPLETED" };
+    const input = Object.fromEntries(Array.from({ length: 512 }, (_, index) => {
+      const entry = item(`new-${index}`, 1, index + 2);
+      return [historyId(entry), entry];
+    }));
+    input[historyId(finished)] = finished;
+    const retained = retainHistory(input);
+    const compact = retained[historyId(finished)];
+    expect(compact).toMatchObject({ ...completion, status: "COMPLETED", isCompact: true });
+    expect(Object.values(retained).filter(entry => !entry.isCompact)).toHaveLength(512);
+
+    const library = [{
+      id: "finished", sourceId: "source", mangaId: "finished", title: "Finished",
+      status: "COMPLETED", addedAt: "2020-01-01", updatedAt: "2020-01-01",
+    }];
+    const collections = deriveSmartCollections(library, [compact], { now: Date.UTC(2026, 9, 30) });
+    for (const id of ["continue-reading", "stale", "completed-unfinished"]) {
+      expect(collections.find(collection => collection.id === id)?.items).toEqual([]);
+    }
+    expect(retainHistory(retained)).toEqual(retained);
+  });
+
   it("keeps 512 details and compact resume records for every older title", () => {
     const input = Object.fromEntries(Array.from({ length: 1200 }, (_, i) => {
       const entry = item(`title-${i}`, 1, i + 1);

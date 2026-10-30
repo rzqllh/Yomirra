@@ -25,6 +25,8 @@ export function compactHistoryItem(item: HistoryItem): HistoryItem {
     savedTitleId: item.savedTitleId, chapterNumber: item.chapterNumber,
     chapterIndex: item.chapterIndex, pageIndex: item.pageIndex, pageOffset: item.pageOffset,
     progressPercent: item.progressPercent, totalPages: item.totalPages,
+    seriesProgressPercent: item.seriesProgressPercent, totalChapters: item.totalChapters,
+    status: item.status,
     readAt: item.readAt, isNsfw: item.isNsfw, isCompact: true,
   };
 }

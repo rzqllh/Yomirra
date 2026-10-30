@@ -3,6 +3,16 @@ import type { LibraryItem } from "@/shared/store/library-store";
 import type { HistoryItem } from "@/shared/store/history-store";
 import { getLocalDataOwnerUid } from "./local-data-owner";
 
+export class PartialHistoryDeletionError extends Error {
+  readonly committedChapterIds: string[];
+
+  constructor(committedChapterIds: string[]) {
+    super("Only some history chapters were deleted from the cloud.");
+    this.name = "PartialHistoryDeletionError";
+    this.committedChapterIds = committedChapterIds;
+  }
+}
+
 export async function pushLibraryItem(item: LibraryItem, expectedOwnerUid?: string | null) {
   // Guest mutations are local-only. Never replay guest writes into an account
   // that happens to sign in before a queued operation is dispatched.
@@ -115,6 +125,7 @@ export async function deleteMangaHistory(sourceId: string, mangaId: string, expe
   if (!auth || !db) throw new Error("Firebase is unavailable for deletion.");
   const user = auth.currentUser;
   if (!user || user.uid !== expectedOwnerUid) throw new Error("Account changed before history deletion.");
+  const committedChapterIds: string[] = [];
   try {
     const { collection, query, where, getDocs, writeBatch } = await import("firebase/firestore");
     const historyRef = collection(db, `users/${user.uid}/history`);
@@ -126,34 +137,32 @@ export async function deleteMangaHistory(sourceId: string, mangaId: string, expe
     const snapshot = await getDocs(q);
     if (auth.currentUser?.uid !== expectedOwnerUid) throw new Error("Account changed before history deletion.");
     
-    // Create a batch
-    let batch = writeBatch(db);
-    let count = 0;
-    
-    for (const historyDoc of snapshot.docs) {
-      const historyItem = historyDoc.data() as HistoryItem;
-      batch.set(historyDoc.ref, {
-        _deleted: true,
-        deletedAt: new Date().toISOString(),
-        sourceId: historyItem.sourceId,
-        mangaId: historyItem.mangaId,
-        chapterId: historyItem.chapterId,
-      });
-      count++;
-      if (count === 450) {
-        if (auth.currentUser?.uid !== expectedOwnerUid) throw new Error("Account changed before history deletion.");
-        await batch.commit();
-        batch = writeBatch(db);
-        count = 0;
-      }
-    }
-    
-    if (count > 0) {
+    const liveDocs = snapshot.docs.filter(historyDoc => historyDoc.data()._deleted !== true);
+    const deletedAt = new Date().toISOString();
+    const MAX_BATCH_OPERATIONS = 450;
+    for (let index = 0; index < liveDocs.length; index += MAX_BATCH_OPERATIONS) {
       if (auth.currentUser?.uid !== expectedOwnerUid) throw new Error("Account changed before history deletion.");
+      const chunk = liveDocs.slice(index, index + MAX_BATCH_OPERATIONS);
+      const batch = writeBatch(db);
+      const chapterIds: string[] = [];
+      for (const historyDoc of chunk) {
+        const historyItem = historyDoc.data() as HistoryItem;
+        batch.set(historyDoc.ref, {
+          _deleted: true,
+          deletedAt,
+          sourceId: historyItem.sourceId,
+          mangaId: historyItem.mangaId,
+          chapterId: historyItem.chapterId,
+        });
+        chapterIds.push(historyItem.chapterId);
+      }
       await batch.commit();
+      // A later failure must not roll back chapters from an already committed batch.
+      committedChapterIds.push(...chapterIds);
     }
   } catch (e) {
     console.error("Failed to delete manga history from sync", e);
+    if (committedChapterIds.length > 0) throw new PartialHistoryDeletionError(committedChapterIds);
     throw e;
   }
 }
@@ -177,14 +186,26 @@ export async function pullLibraryData(): Promise<LibraryItem[]> {
 }
 
 /** Pull from legacy 'library' collection — used once at migration time and for V1 import detection. */
-export async function pullLegacyLibraryData(options: { strict?: boolean } = {}): Promise<LibraryItem[]> {
+export async function pullLegacyLibraryData(options: { strict?: boolean; expectedUid?: string } = {}): Promise<LibraryItem[]> {
   const { auth, db } = await initFirebase();
-  if (!auth || !db) return [];
+  if (!auth || !db) {
+    if (options.strict) throw new Error("Firebase unavailable during strict legacy migration.");
+    return [];
+  }
   const user = auth.currentUser;
-  if (!user) return [];
+  if (!user) {
+    if (options.strict) throw new Error("No authenticated account for strict legacy migration.");
+    return [];
+  }
+  if (options.expectedUid && user.uid !== options.expectedUid) {
+    throw new Error("Account changed during legacy migration. Cross-account import blocked.");
+  }
+  const expectedUid = options.expectedUid ?? user.uid;
   try {
     const { collection, getDocs } = await import("firebase/firestore");
+    if (auth.currentUser?.uid !== expectedUid) throw new Error("Account changed during legacy migration.");
     const querySnapshot = await getDocs(collection(db, `users/${user.uid}/library`));
+    if (auth.currentUser?.uid !== expectedUid) throw new Error("Account changed during legacy migration.");
     return querySnapshot.docs
       .map(d => d.data() as LibraryItem)
       .filter(item => !(item as Record<string, unknown>)._deleted && !(item as Record<string, unknown>)._compacted);

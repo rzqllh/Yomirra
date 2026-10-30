@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "git": {
     "deploymentEnabled": {
-      "fix/reading-data-safety-20261030": false
+      "fix/yomirra-cleanup-consolidation-20261030": false
     }
   }
 }
