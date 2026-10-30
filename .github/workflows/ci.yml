@@ -81,6 +81,9 @@ jobs:
       - name: Run interactive user-flow regressions
         run: pnpm exec playwright test e2e/user-flows-regression.spec.ts --project=chromium-mobile --project=webkit-mobile-safari
 
+      - name: Run WebKit Safari-layout regressions
+        run: pnpm exec playwright test e2e/ios27-safari-regression.spec.ts --project=webkit-mobile-safari
+
       - name: Preserve browser failure evidence
         if: failure()
         uses: actions/upload-artifact@v4
