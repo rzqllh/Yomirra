@@ -399,4 +399,47 @@ describe("Reading Continuity Q52 (Highest Milestone) & Q63 (Independent Cursor) 
     expect(store.getContinueReading()[0]?.chapterId).toBe("ch-30");
   });
 
+  it("promotes the saved Library milestone only after real page progress", () => {
+    const store = useHistoryStore.getState();
+    useLibraryStore.getState().addToLibrary({
+      sourceId: "src", mangaId: "confirmed", title: "Confirmed",
+      addedAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+      highestMilestoneChapterId: "ch-30", highestMilestoneChapterTitle: "Chapter 30",
+      highestMilestoneIndex: 30,
+    });
+    store.upsertHistory({sourceId:"src", mangaId:"confirmed", chapterId:"ch-31",
+      mangaTitle:"Confirmed", chapterTitle:"Chapter 31", chapterNumber:31, chapterIndex:31, readAt:2000});
+    const lib = () => useLibraryStore.getState().getLibraryItem("src", "confirmed");
+    expect(lib()?.highestMilestoneChapterId).toBe("ch-30");
+
+    // A zero-page navigation is a visit, not a milestone.
+    store.saveProgress("src", "confirmed", "ch-31", 0);
+    expect(lib()?.highestMilestoneChapterId).toBe("ch-30");
+
+    store.saveProgress("src", "confirmed", "ch-31", 2);
+    expect(lib()?.highestMilestoneChapterId).toBe("ch-31");
+    expect(lib()?.highestMilestoneIndex).toBe(31);
+
+    // Reading an older chapter must not roll the milestone backwards.
+    store.upsertHistory({sourceId:"src", mangaId:"confirmed", chapterId:"ch-5",
+      mangaTitle:"Confirmed", chapterTitle:"Chapter 5", chapterNumber:5, chapterIndex:5, readAt:3000});
+    store.saveProgress("src", "confirmed", "ch-5", 3);
+    expect(lib()?.highestMilestoneChapterId).toBe("ch-31");
+  });
+
+  it("does not promote an unverified alternate source using only a greater chapter number", () => {
+    useLibraryStore.getState().addToLibrary({
+      sourceId: "primary", mangaId: "series", title: "Series",
+      addedAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+      id: "canonical", primarySourceId: "primary", primaryMangaId: "series",
+      linkedSources: [{sourceId:"alternate", mangaId:"alternate-series", addedAt:Date.now(), matchConfidence:"AMBIGUOUS"}],
+      highestMilestoneChapterId: "ch-30", highestMilestoneChapterTitle: "Chapter 30",
+    });
+    const store = useHistoryStore.getState();
+    store.upsertHistory({sourceId:"alternate", mangaId:"alternate-series", chapterId:"ch-100",
+      mangaTitle:"Series", chapterTitle:"Chapter 100", chapterNumber:100, readAt:2000});
+    store.saveProgress("alternate", "alternate-series", "ch-100", 4);
+    expect(useLibraryStore.getState().getLibraryItem("primary","series")?.highestMilestoneChapterId).toBe("ch-30");
+  });
+
 });

@@ -145,6 +145,40 @@ function hasObservedReadingProgress(item: HistoryItem): boolean {
   return (item.progressPercent ?? 0) > 0 || (item.pageIndex ?? 0) > 0;
 }
 
+/**
+ * Only genuine page progress may advance a saved Library milestone. Compare
+ * chapter numbers where possible and use source-local ordering as a fallback;
+ * never infer progress across an unverified alternate-source mapping.
+ */
+function promoteVerifiedLibraryMilestone(item: HistoryItem): void {
+  if (!hasObservedReadingProgress(item)) return;
+  const library = useLibraryStore.getState();
+  const saved = library.getLibraryItem(item.sourceId, item.mangaId);
+  if (!saved || saved.highestMilestoneChapterId === item.chapterId) return;
+
+  const primarySourceId = saved.primarySourceId ?? saved.sourceId;
+  if (primarySourceId !== item.sourceId) return;
+
+  if (saved.highestMilestoneChapterId) {
+    const currentNumber = item.chapterNumber ?? parseChapterNumber(item.chapterTitle ?? item.chapterId);
+    const highestNumber = parseChapterNumber(saved.highestMilestoneChapterTitle ?? saved.highestMilestoneChapterId);
+    if (currentNumber !== null && highestNumber !== null) {
+      if (currentNumber <= highestNumber) return;
+    } else if (item.chapterIndex !== undefined && saved.highestMilestoneIndex !== undefined) {
+      if (item.chapterIndex <= saved.highestMilestoneIndex) return;
+    } else {
+      // No validated ordering; retain prior progress without guessing.
+      return;
+    }
+  }
+
+  library.updateLibraryItem(item.sourceId, item.mangaId, {
+    highestMilestoneChapterId: item.chapterId,
+    highestMilestoneChapterTitle: item.chapterTitle,
+    ...(item.chapterIndex !== undefined ? { highestMilestoneIndex: item.chapterIndex } : {}),
+  });
+}
+
 function chooseReadingMilestone(items: HistoryItem[]): HistoryItem | undefined {
   if (items.length === 0) return undefined;
   const library = useLibraryStore.getState();
@@ -407,9 +441,11 @@ export const useHistoryStore = create<HistoryState>()(
           })
         });
         queueHistoryWrite(updatedItem);
+        promoteVerifiedLibraryMilestone(updatedItem);
       },
 
-      saveProgress: (sourceId, mangaId, chapterId, pageIndex, pageOffset) => set((state) => {
+      saveProgress: (sourceId, mangaId, chapterId, pageIndex, pageOffset) => {
+        set((state) => {
         const id = getHistoryId(sourceId, mangaId, chapterId);
         bumpHistoryRevision(id);
         const existing = state.items[id];
@@ -448,7 +484,10 @@ export const useHistoryStore = create<HistoryState>()(
             [id]: { ...updatedItem, isCompact: false }
           })
         };
-      }),
+        });
+        const saved = get().items[getHistoryId(sourceId, mangaId, chapterId)];
+        if (saved) promoteVerifiedLibraryMilestone(saved);
+      },
 
       resolveSavedTitleId: (sourceId, mangaId) => {
         const anyItem = Object.values(get().items).find(
