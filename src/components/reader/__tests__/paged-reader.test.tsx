@@ -4,6 +4,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useReaderStore } from "@/shared/store/reader-store";
 import { useHistoryStore } from "@/shared/store/history-store";
+import { useLibraryStore } from "@/shared/store/library-store";
 import { useDownloadStore } from "@/shared/store/download-store";
 import { PagedReader } from "../paged-reader";
 import { ReaderView } from "../reader-view";
@@ -38,6 +39,7 @@ describe("PagedReader Component & Integration", () => {
       isDesktopPanelOpen: true,
     });
     useHistoryStore.setState({ items: {} });
+    useLibraryStore.setState({ items: {} });
     useDownloadStore.setState({ downloads: {}, queue: [], activeDownloads: [] });
 
     class MockIntersectionObserver {
@@ -315,6 +317,28 @@ describe("PagedReader Component & Integration", () => {
   });
 
   describe("Mode Integration in ReaderView", () => {
+    it("Q52: opening a far-ahead chapter never overwrites an existing milestone", () => {
+      useLibraryStore.getState().addToLibrary({
+        sourceId: "src1", mangaId: "manga1", title: "Manga 1",
+        addedAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+        highestMilestoneChapterId: "ch30", highestMilestoneIndex: 30,
+      });
+      const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+      render(
+        <QueryClientProvider client={queryClient}>
+          <ReaderView sourceId="src1" mangaId="manga1" chapterId="ch100"
+            initialDetail={{ id: "manga1", title: "Manga 1", coverUrl: "/cover.jpg", description: "", genres: [], status: "ONGOING" }}
+            initialChapters={[
+              { id: "ch100", mangaId: "manga1", number: 100, title: "Chapter 100", date: "2026-01-02" },
+              { id: "ch30", mangaId: "manga1", number: 30, title: "Chapter 30", date: "2026-01-01" },
+            ]}
+            initialPages={mockPages} />
+        </QueryClientProvider>
+      );
+      expect(useLibraryStore.getState().getLibraryItem("src1", "manga1")?.highestMilestoneChapterId).toBe("ch30");
+      expect(useHistoryStore.getState().items["src1::manga1::ch100"]).toBeDefined();
+    });
+
     it("should render PagedReader when readingMode === 'paged'", () => {
       useReaderStore.setState({
         preferences: {

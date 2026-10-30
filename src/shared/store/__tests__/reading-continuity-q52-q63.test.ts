@@ -355,4 +355,48 @@ describe("Reading Continuity Q52 (Highest Milestone) & Q63 (Independent Cursor) 
     // Must stay on Chapter 1, never jumping to Chapter 2
     expect(continueTarget).toBe("ch-1");
   });
+  it("Q52: a far-ahead chapter opened without reading cannot outrank completed progress", () => {
+    const store = useHistoryStore.getState();
+    store.upsertHistory({
+      sourceId: "src", mangaId: "jump", chapterId: "ch-30",
+      chapterTitle: "Chapter 30", mangaTitle: "Jump", chapterNumber: 30,
+      progressPercent: 100, readAt: 1000,
+    });
+    store.upsertHistory({
+      sourceId: "src", mangaId: "jump", chapterId: "ch-100",
+      chapterTitle: "Chapter 100", mangaTitle: "Jump", chapterNumber: 100,
+      chapterIndex: 100, seriesProgressPercent: 100, readAt: 2000,
+    });
+    expect(store.getLatestForManga("src", "jump")?.chapterId).toBe("ch-100");
+    expect(store.getHighestMilestoneForManga("src", "jump")?.chapterId).toBe("ch-30");
+    expect(store.getContinueReading()[0]?.chapterId).toBe("ch-30");
+  });
+
+  it("Q52/Q63: moving several pages into the next chapter is real progress", () => {
+    const store = useHistoryStore.getState();
+    store.upsertHistory({ sourceId: "src", mangaId: "progress", chapterId: "ch-30",
+      chapterTitle: "Chapter 30", mangaTitle: "Progress", progressPercent: 100, readAt: 1000 });
+    store.upsertHistory({ sourceId: "src", mangaId: "progress", chapterId: "ch-31",
+      chapterTitle: "Chapter 31", mangaTitle: "Progress", readAt: 2000 });
+    expect(store.getHighestMilestoneForManga("src", "progress")?.chapterId).toBe("ch-30");
+    store.saveProgress("src", "progress", "ch-31", 4);
+    expect(store.getHighestMilestoneForManga("src", "progress")?.chapterId).toBe("ch-31");
+    expect(store.getContinueReading()[0]?.chapterId).toBe("ch-31");
+  });
+
+  it("Q52: keeps a pinned legacy library milestone while unprogressed chapters are visited", () => {
+    const store = useHistoryStore.getState();
+    useLibraryStore.getState().addToLibrary({
+      sourceId: "src", mangaId: "legacy", title: "Legacy",
+      addedAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+      highestMilestoneChapterId: "ch-30", highestMilestoneIndex: 30,
+    });
+    store.upsertHistory({ sourceId: "src", mangaId: "legacy", chapterId: "ch-30",
+      chapterTitle: "Chapter 30", mangaTitle: "Legacy", readAt: 1000 });
+    store.upsertHistory({ sourceId: "src", mangaId: "legacy", chapterId: "ch-100",
+      chapterTitle: "Chapter 100", mangaTitle: "Legacy", readAt: 2000 });
+    expect(store.getHighestMilestoneForManga("src", "legacy")?.chapterId).toBe("ch-30");
+    expect(store.getContinueReading()[0]?.chapterId).toBe("ch-30");
+  });
+
 });

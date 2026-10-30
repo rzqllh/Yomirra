@@ -6,7 +6,7 @@ import { sourceRegistry } from "@/shared/sources/source-registry";
 import { toast } from "sonner";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { parseChapterNumber } from "@/shared/lib/chapter-parser";
-import { retainHistory } from "@/shared/lib/history-retention";
+import { compareMilestone, retainHistory } from "@/shared/lib/history-retention";
 import { getLocalDataOwnerUid } from "@/shared/lib/local-data-owner";
 
 export type HistoryItem = {
@@ -134,6 +134,32 @@ function queueHistoryWrite(item: HistoryItem): void {
       });
     },
   );
+}
+
+/**
+ * A visit alone has a chapter index, but no measured page progress.
+ * Preserve legacy stored Library milestones until a reviewed migration exists;
+ * those historical records may predate verified-progress enforcement.
+ */
+function hasObservedReadingProgress(item: HistoryItem): boolean {
+  return (item.progressPercent ?? 0) > 0 || (item.pageIndex ?? 0) > 0;
+}
+
+function chooseReadingMilestone(items: HistoryItem[]): HistoryItem | undefined {
+  if (items.length === 0) return undefined;
+  const library = useLibraryStore.getState();
+  const observed = items.filter((item) =>
+    hasObservedReadingProgress(item) ||
+    library.getLibraryItem(item.sourceId, item.mangaId)?.highestMilestoneChapterId === item.chapterId
+  );
+  if (observed.length === 0) {
+    // With no measured progress, keep a useful recent visit as a fallback.
+    return [...items].sort((a, b) => b.readAt - a.readAt)[0];
+  }
+  return observed.reduce((best, item) => {
+    const order = compareMilestone(item, best);
+    return order > 0 || (order === 0 && item.readAt > best.readAt) ? item : best;
+  });
 }
 
 export const useHistoryStore = create<HistoryState>()(
@@ -303,69 +329,29 @@ export const useHistoryStore = create<HistoryState>()(
 
         if (mangaHistory.length === 0) return undefined;
         
-        // Return item with highest verified milestone (Q52/Q63)
-        return [...mangaHistory].sort((a, b) => {
-          const aNum = a.chapterNumber ?? (a.chapterTitle ? parseChapterNumber(a.chapterTitle) : null);
-          const bNum = b.chapterNumber ?? (b.chapterTitle ? parseChapterNumber(b.chapterTitle) : null);
-          if (aNum !== null && bNum !== null) {
-            if (bNum !== aNum) return bNum - aNum;
-          } else if (bNum !== null && aNum === null) {
-            return 1;
-          } else if (aNum !== null && bNum === null) {
-            return -1;
-          }
-          if (typeof a.chapterIndex === "number" && typeof b.chapterIndex === "number") {
-            if (b.chapterIndex !== a.chapterIndex) return b.chapterIndex - a.chapterIndex;
-          }
-          if (a.chapterId === b.chapterId) {
-            return (b.progressPercent ?? 0) - (a.progressPercent ?? 0);
-          }
-          return b.readAt - a.readAt;
-        })[0];
+        return chooseReadingMilestone(mangaHistory);
       },
 
       getContinueReading: (limit) => {
         const allItems = Object.values(get().items);
         
-        // Group by manga to only get the highest milestone chapter read for each manga (Q52)
-        const latestPerManga = new Map<string, { milestoneItem: HistoryItem; latestActivity: number }>();
-        
+        // Sort titles by recent activity, but use *observed* chapter progress
+        // for the continue target. A jump into a far-ahead chapter is not enough.
+        const grouped = new Map<string, { items: HistoryItem[]; latestActivity: number }>();
         for (const item of allItems) {
           const key = item.savedTitleId ?? get().resolveSavedTitleId(item.sourceId, item.mangaId) ?? `${item.sourceId}::${item.mangaId}`;
-          const existing = latestPerManga.get(key);
-          
-          if (!existing) {
-            latestPerManga.set(key, { milestoneItem: item, latestActivity: item.readAt });
+          const group = grouped.get(key);
+          if (group) {
+            group.items.push(item);
+            group.latestActivity = Math.max(group.latestActivity, item.readAt);
           } else {
-            const latestActivity = Math.max(existing.latestActivity, item.readAt);
-            let isHigherMilestone = false;
-            const currentMilestone = existing.milestoneItem;
-            
-            const itemNum = item.chapterNumber ?? (item.chapterTitle ? parseChapterNumber(item.chapterTitle) : null);
-            const curNum = currentMilestone.chapterNumber ?? (currentMilestone.chapterTitle ? parseChapterNumber(currentMilestone.chapterTitle) : null);
-
-            if (itemNum !== null && curNum !== null) {
-              isHigherMilestone = itemNum > curNum;
-            } else if (typeof item.chapterIndex === "number" && typeof currentMilestone.chapterIndex === "number") {
-              isHigherMilestone = item.chapterIndex > currentMilestone.chapterIndex;
-            } else if (item.chapterId === currentMilestone.chapterId) {
-              isHigherMilestone = (item.progressPercent ?? 0) > (currentMilestone.progressPercent ?? 0);
-            } else {
-              // Q52: If no semantic order exists, preserve existing verified milestone rather than regressing on readAt
-              isHigherMilestone = false;
-            }
-            
-            latestPerManga.set(key, {
-              milestoneItem: isHigherMilestone ? item : currentMilestone,
-              latestActivity,
-            });
+            grouped.set(key, { items: [item], latestActivity: item.readAt });
           }
         }
-        
-        const sorted = Array.from(latestPerManga.values())
+        const sorted = Array.from(grouped.values())
           .sort((a, b) => b.latestActivity - a.latestActivity)
-          .map(entry => entry.milestoneItem);
-          
+          .map((group) => chooseReadingMilestone(group.items))
+          .filter((item): item is HistoryItem => item !== undefined);
         return limit ? sorted.slice(0, limit) : sorted;
       },
       

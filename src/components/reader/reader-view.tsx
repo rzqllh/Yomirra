@@ -160,29 +160,13 @@ export function ReaderView({
       return;
     }
 
-    // Calculate overall series progress based on chapter list
+    // Q52/Q75: opening a chapter is activity, not a verified milestone.
+    // Chapter order alone must never manufacture reading progress.
     const chapterIndex = initialChapters?.findIndex((c) => c.id === chapterId) ?? -1;
-    let seriesProgressPercent = 0;
-    
-    // Chapters are sorted newest (index 0) to oldest (index N-1)
-    let readCount = 0;
-    let totalChapters = 0;
-    const isCompletedStatus = initialDetail.status?.toUpperCase() === "COMPLETED";
+    const readCount = chapterIndex >= 0 && initialChapters
+      ? initialChapters.length - chapterIndex
+      : undefined;
 
-    if (chapterIndex !== -1 && initialChapters?.length > 0) {
-      totalChapters = initialChapters.length;
-      readCount = totalChapters - chapterIndex;
-      const rawPercent = Math.round((readCount / totalChapters) * 100);
-
-      // On initial open, reading is in-progress (not finished yet)
-      // Ongoing manga can never be 100% series-complete since new chapters are expected
-      if (isCompletedStatus) {
-        seriesProgressPercent = chapterIndex === 0 ? 99 : rawPercent;
-      } else {
-        seriesProgressPercent = Math.min(95, rawPercent);
-      }
-    }
-    
     const parsedChapterNumber = currentChapterForHistory?.number ?? parseChapterNumber(chapterTitle) ?? undefined;
 
     upsertHistory({
@@ -193,9 +177,8 @@ export function ReaderView({
       chapterTitle,
       coverUrl: initialDetail.coverUrl,
       sourceName: sourceId,
-      seriesProgressPercent,
       chapterIndex: readCount,
-      totalChapters,
+      totalChapters: initialChapters?.length,
       chapterNumber: parsedChapterNumber,
       status: initialDetail.status,
       readAt: Date.now(),
@@ -203,17 +186,12 @@ export function ReaderView({
 
     const libItem = getLibraryItem(sourceId, mangaId);
     if (libItem) {
-      const prevMilestoneIndex = libItem.highestMilestoneIndex ?? 0;
-      const isHigher = !libItem.highestMilestoneChapterId || readCount >= prevMilestoneIndex;
+      // Preserve the latest visit independently; only verified reading may
+      // advance the highest milestone via a separate completion/progress path.
       updateLibraryItem(sourceId, mangaId, {
         lastReadChapterId: chapterId,
         lastReadChapterTitle: chapterTitle,
         lastReadAt: new Date().toISOString(),
-        ...(isHigher ? {
-          highestMilestoneChapterId: chapterId,
-          highestMilestoneChapterTitle: chapterTitle,
-          highestMilestoneIndex: readCount,
-        } : {}),
       });
     }
   }, [initialDetail, chapterId, sourceId, mangaId, chapterTitle, initialChapters, upsertHistory, getLibraryItem, updateLibraryItem]);

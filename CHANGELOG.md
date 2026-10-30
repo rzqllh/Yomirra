@@ -3,6 +3,8 @@
 
 ## Unreleased
 
+- **Draft fix Q52/Q63/Q75:** Jangan memajukan milestone ketika chapter sekadar dibuka; prioritaskan progres halaman yang tercatat dalam Lanjut Baca, pertahankan milestone legacy, dan tambahkan regresi Reader. Completion berbasis validasi seluruh halaman dan integrasi perangkat nyata tetap pekerjaan terpisah.
+
 - Pulihkan hanya history yang belum berhasil dihapus di cloud; lindungi progres dan intent delete baru saat operasi bertumpuk.
 - Jalankan batch full sync berurutan dan tandai migrasi legacy per akun setelah seluruh commit berhasil.
 - Gunakan tombol pencarian Beranda dengan label keyboard sesuai platform; ganti assertion rail buatan dan fixture e2e lama dengan kontrak komponen serta history v2.
