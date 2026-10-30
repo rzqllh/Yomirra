@@ -11,6 +11,7 @@ import { loadFirestore } from "@/shared/lib/firestore-runtime";
 import { pullSourcePreferences, pullLegacyLibraryData, pullCustomCollections } from '@/shared/lib/sync-utils';
 import { useCollectionStore } from '@/shared/store/collection-store';
 import { retainHistory } from '@/shared/lib/history-retention';
+import { nextSyncRetryDelayMs } from '@/shared/lib/sync-retry';
 
 type Tombstone = {
   _deleted: true;
@@ -369,18 +370,52 @@ export function useSync(options = { autoSync: true }) {
     if (initialSyncUidRef.current === userUid) return;
 
     initialSyncUidRef.current = userUid;
-    runFullSync().catch((error) => console.error("Initial sync failed", error));
+    let cancelled = false;
+    let failures = 0;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
 
+    const cancelRetry = () => {
+      if (retryTimer !== null) {
+        clearTimeout(retryTimer);
+        retryTimer = null;
+      }
+    };
+    const attemptSync = () => {
+      if (cancelled || currentUidRef.current !== userUid || !window.navigator.onLine) return;
+      // Only background auto-sync retries; manual sync continues to report errors.
+      void runFullSync().then(
+        () => {
+          if (cancelled) return;
+          failures = 0;
+          cancelRetry();
+        },
+        (error) => {
+          if (cancelled || currentUidRef.current !== userUid) return;
+          console.error("Automatic sync failed", error);
+          if (!window.navigator.onLine) return;
+          const delay = nextSyncRetryDelayMs(++failures);
+          cancelRetry();
+          retryTimer = setTimeout(attemptSync, delay);
+        },
+      );
+    };
+
+    attemptSync();
     const handleOnline = () => {
       useSyncDiagnosticsStore.getState().setNetworkOnline(true);
-      runFullSync().catch((error) => console.error("Online sync failed", error));
+      cancelRetry();
+      failures = 0;
+      attemptSync();
     };
     const handleOffline = () => {
       useSyncDiagnosticsStore.getState().setNetworkOnline(false);
+      cancelRetry();
     };
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
     return () => {
+      cancelled = true;
+      cancelRetry();
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };
