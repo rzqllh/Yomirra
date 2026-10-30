@@ -170,6 +170,7 @@ describe("Reading Continuity Q52 (Highest Milestone) & Q63 (Independent Cursor) 
       chapterId: "ch-57-5",
       mangaTitle: "Complex",
       chapterTitle: "Chapter 57.5 Special Extra",
+      pageIndex: 2, // a real observed cursor, not merely opening a distant chapter
       readAt: 400,
     });
 
@@ -295,6 +296,7 @@ describe("Reading Continuity Q52 (Highest Milestone) & Q63 (Independent Cursor) 
       chapterId: "c-42",
       mangaTitle: "Legacy Title",
       chapterTitle: "Ch. 42 - The Truth",
+      pageIndex: 2,
       readAt: 100,
     });
 
@@ -330,6 +332,7 @@ describe("Reading Continuity Q52 (Highest Milestone) & Q63 (Independent Cursor) 
       chapterId: "ch-100",
       chapterTitle: "Chapter 100",
       mangaTitle: "Durability",
+      pageIndex: 2,
       readAt: 1000,
     });
 
@@ -456,6 +459,18 @@ describe("Reading Continuity Q52 (Highest Milestone) & Q63 (Independent Cursor) 
     const saved = useLibraryStore.getState().getLibraryItem("src", "ordinal");
     expect(saved?.highestMilestoneChapterId).toBe("ch-31");
     expect(saved?.highestMilestoneIndex).toBeUndefined();
+  });
+
+  it("does not call an unprogressed visit a verified milestone", () => {
+    const store = useHistoryStore.getState();
+    store.upsertHistory({
+      sourceId:"src", mangaId:"new-title", chapterId:"ch-100",
+      mangaTitle:"New Title", chapterTitle:"Chapter 100", readAt:1000,
+    });
+    expect(store.getHighestMilestoneForManga("src","new-title")).toBeUndefined();
+    // The user's last visit may still appear as a navigational fallback.
+    expect(store.getLatestForManga("src","new-title")?.chapterId).toBe("ch-100");
+    expect(store.getContinueReading()[0]?.chapterId).toBe("ch-100");
   });
 
 });

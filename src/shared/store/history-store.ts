@@ -187,10 +187,7 @@ function chooseReadingMilestone(items: HistoryItem[]): HistoryItem | undefined {
     hasObservedReadingProgress(item) ||
     library.getLibraryItem(item.sourceId, item.mangaId)?.highestMilestoneChapterId === item.chapterId
   );
-  if (observed.length === 0) {
-    // With no measured progress, keep a useful recent visit as a fallback.
-    return [...items].sort((a, b) => b.readAt - a.readAt)[0];
-  }
+  if (observed.length === 0) return undefined;
   return observed.reduce((best, item) => {
     const order = compareMilestone(item, best);
     return order > 0 || (order === 0 && item.readAt > best.readAt) ? item : best;
@@ -385,8 +382,10 @@ export const useHistoryStore = create<HistoryState>()(
         }
         const sorted = Array.from(grouped.values())
           .sort((a, b) => b.latestActivity - a.latestActivity)
-          .map((group) => chooseReadingMilestone(group.items))
-          .filter((item): item is HistoryItem => item !== undefined);
+          .map((group) =>
+            chooseReadingMilestone(group.items) ??
+            [...group.items].sort((a, b) => b.readAt - a.readAt)[0]
+          );
         return limit ? sorted.slice(0, limit) : sorted;
       },
       
