@@ -442,4 +442,20 @@ describe("Reading Continuity Q52 (Highest Milestone) & Q63 (Independent Cursor) 
     expect(useLibraryStore.getState().getLibraryItem("primary","series")?.highestMilestoneChapterId).toBe("ch-30");
   });
 
+  it("clears stale ordinal metadata when new verified chapter has no index", () => {
+    const store = useHistoryStore.getState();
+    useLibraryStore.getState().addToLibrary({
+      sourceId:"src", mangaId:"ordinal", title:"Ordinal",
+      addedAt:new Date().toISOString(), updatedAt:new Date().toISOString(),
+      highestMilestoneChapterId:"ch-30", highestMilestoneChapterTitle:"Chapter 30",
+      highestMilestoneIndex:30,
+    });
+    store.upsertHistory({sourceId:"src", mangaId:"ordinal", chapterId:"ch-31",
+      mangaTitle:"Ordinal", chapterTitle:"Chapter 31", chapterNumber:31, readAt:1000});
+    store.saveProgress("src", "ordinal", "ch-31", 2);
+    const saved = useLibraryStore.getState().getLibraryItem("src", "ordinal");
+    expect(saved?.highestMilestoneChapterId).toBe("ch-31");
+    expect(saved?.highestMilestoneIndex).toBeUndefined();
+  });
+
 });

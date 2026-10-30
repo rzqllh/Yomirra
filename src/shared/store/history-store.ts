@@ -175,7 +175,8 @@ function promoteVerifiedLibraryMilestone(item: HistoryItem): void {
   library.updateLibraryItem(item.sourceId, item.mangaId, {
     highestMilestoneChapterId: item.chapterId,
     highestMilestoneChapterTitle: item.chapterTitle,
-    ...(item.chapterIndex !== undefined ? { highestMilestoneIndex: item.chapterIndex } : {}),
+    // Clear any old ordinal when the new chapter lacks a comparable index.
+    highestMilestoneIndex: item.chapterIndex,
   });
 }
 
