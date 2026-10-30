@@ -250,6 +250,28 @@ describe("PagedReader Component & Integration", () => {
   });
 
   describe("Resume & Offline Reader Contract", () => {
+    it("Q63: paged progress records the page index without a fabricated offset", async () => {
+      useHistoryStore.setState({
+        _hasHydrated: true,
+        items: {
+          "src1::manga1::ch1": {
+            sourceId: "src1", mangaId: "manga1", chapterId: "ch1",
+            mangaTitle: "Manga 1", pageIndex: 0, pageOffset: 92, readAt: Date.now(),
+          },
+        },
+      });
+      renderWithClient(
+        <PagedReader sourceId="src1" mangaId="manga1" chapterId="ch1" pages={mockPages} />
+      );
+      await act(async () => {
+        fireEvent.click(screen.getByLabelText("Halaman berikutnya"));
+      });
+      const current = useHistoryStore.getState().items["src1::manga1::ch1"];
+      expect(current.pageIndex).toBe(1);
+      expect(current.pageOffset).toBeUndefined();
+    });
+
+
     it("restores the saved page after history hydration", async () => {
       useHistoryStore.setState({
         _hasHydrated: true,

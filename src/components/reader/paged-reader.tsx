@@ -140,7 +140,8 @@ export function PagedReader({
   // Persist page progress only after initialization
   const flushProgress = React.useCallback(() => {
     if (totalPages > 0 && hasInitialized) {
-      saveProgress(sourceId, mangaId, chapterId, currentPageIndex, totalPages);
+      // In paged mode, totalPages is NOT a pixel/page offset (Q63).
+      saveProgress(sourceId, mangaId, chapterId, currentPageIndex);
     }
   }, [currentPageIndex, totalPages, sourceId, mangaId, chapterId, saveProgress, hasInitialized]);
 
