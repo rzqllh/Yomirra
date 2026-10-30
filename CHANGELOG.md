@@ -3,6 +3,8 @@
 
 ## Unreleased
 
+- **Draft Q90:** Explicit next-chapter navigation marks completion only when all images decoded successfully, with no failed pages; retain final-page cursor, and keep navigation non-blocking.
+
 - **Draft fix Q52/Q63/Q75:** Jangan memajukan milestone ketika chapter sekadar dibuka; prioritaskan progres halaman yang tercatat dalam Lanjut Baca, promosikan milestone Rak Buku hanya setelah ada progres nyata dengan pembanding konservatif, pertahankan milestone legacy, dan tambahkan regresi Reader. Perbaiki juga penyimpanan cursor mode paged agar jumlah halaman tidak disalahartikan sebagai offset. Completion berbasis validasi seluruh halaman dan integrasi perangkat nyata tetap pekerjaan terpisah.
 
 - Pulihkan hanya history yang belum berhasil dihapus di cloud; lindungi progres dan intent delete baru saat operasi bertumpuk.

@@ -24,6 +24,7 @@ import { motion, PanInfo } from "motion/react";
 import { toast } from "sonner";
 import { beginNavigationIntent } from "@/shared/lib/navigation-intent";
 import { getReaderLookAheadWindow } from "@/shared/lib/reader-load-order";
+import { canCompleteChapter } from "@/shared/lib/chapter-completion";
 
 interface PagedReaderProps {
   sourceId: string;
@@ -57,6 +58,7 @@ export function PagedReader({
   const { dataSaver } = useSettingsStore();
   const isDownloaded = useDownloadStore(state => state.isDownloaded(sourceId, mangaId, chapterId));
   const saveProgress = useHistoryStore(state => state.saveProgress);
+  const markChapterProgress = useHistoryStore(state => state.markChapterProgress);
   const getProgress = useHistoryStore(state => state.getLatestForManga);
   const hasHydrated = useHistoryStore(state => state._hasHydrated);
   const historyItem = useHistoryStore(state => {
@@ -78,11 +80,15 @@ export function PagedReader({
   const [currentPages, setCurrentPages] = React.useState<PageItem[]>(pages);
   React.useEffect(() => {
     setCurrentPages(pages);
+    setLoadedPositions(new Set());
+    setFailedPageIndices(new Set());
   }, [pages]);
 
   const [failedPageIndices, setFailedPageIndices] = React.useState<Set<number>>(new Set());
+  const [loadedPositions, setLoadedPositions] = React.useState<Set<number>>(new Set());
 
   const handleImageLoad = React.useCallback((pageIndex: number) => {
+    setLoadedPositions((prev) => new Set(prev).add(pageIndex));
     setFailedPageIndices((prev) => {
       if (!prev.has(pageIndex)) return prev;
       const next = new Set(prev);
@@ -92,6 +98,12 @@ export function PagedReader({
   }, []);
 
   const handlePermanentFailure = React.useCallback((pageIndex: number) => {
+    setLoadedPositions((prev) => {
+      if (!prev.has(pageIndex)) return prev;
+      const next = new Set(prev);
+      next.delete(pageIndex);
+      return next;
+    });
     setFailedPageIndices((prev) => {
       if (prev.has(pageIndex)) return prev;
       const next = new Set(prev);
@@ -173,9 +185,15 @@ export function PagedReader({
       setCurrentPageIndex(prev => prev + 1);
     } else if (nextChapterId) {
       const href = getReaderHref(sourceId, mangaId, nextChapterId);
-      if (beginNavigationIntent(href)) router.replace(href);
+      if (beginNavigationIntent(href)) {
+        if (canCompleteChapter(currentPages, loadedPositions, failedPageIndices)) {
+          markChapterProgress(sourceId, mangaId, chapterId, totalPages - 1, totalPages, 100);
+        }
+        router.replace(href);
+      }
     }
-  }, [currentPageIndex, totalPages, nextChapterId, router, sourceId, mangaId]);
+  }, [currentPageIndex, totalPages, nextChapterId, router, sourceId, mangaId,
+      chapterId, currentPages, loadedPositions, failedPageIndices, markChapterProgress]);
 
   const goToPrevPage = React.useCallback(() => {
     if (currentPageIndex > 0) {

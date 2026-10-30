@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/shared/utils/cn"
 import { motion } from "motion/react"
 import { beginNavigationIntent } from "@/shared/lib/navigation-intent"
+import { canCompleteChapter } from "@/shared/lib/chapter-completion"
 import {
   advanceReaderReveal,
   getReaderLookAheadWindow,
@@ -65,6 +66,7 @@ export function ContinuousVerticalReader({
   const { dataSaver } = useSettingsStore()
   const isDownloaded = useDownloadStore(state => state.isDownloaded(sourceId, mangaId, chapterId))
   const saveProgress = useHistoryStore(state => state.saveProgress)
+  const markChapterProgress = useHistoryStore(state => state.markChapterProgress)
   const hasHydrated = useHistoryStore(state => state._hasHydrated)
   const historyItem = useHistoryStore(state => {
     const id = `${sourceId}::${mangaId}::${chapterId}`;
@@ -87,6 +89,7 @@ export function ContinuousVerticalReader({
 
   const [failedPageIndices, setFailedPageIndices] = React.useState<Set<number>>(new Set());
   const settledPageIndicesRef = React.useRef<Set<number>>(new Set());
+  const loadedPositionsRef = React.useRef<Set<number>>(new Set());
   const [queueStartIndex, setQueueStartIndex] = React.useState(0);
   const [revealedThrough, setRevealedThrough] = React.useState(-1);
   const lookAheadWindow = React.useMemo(
@@ -96,6 +99,7 @@ export function ContinuousVerticalReader({
 
   const resetLoadQueue = React.useCallback((startIndex = 0) => {
     settledPageIndicesRef.current = new Set();
+    loadedPositionsRef.current = new Set();
     setQueueStartIndex(startIndex);
     setRevealedThrough(startIndex - 1);
   }, []);
@@ -116,6 +120,7 @@ export function ContinuousVerticalReader({
   }, [currentPages.length]);
 
   const handleImageLoad = React.useCallback((pageIndex: number, virtualIndex: number) => {
+    loadedPositionsRef.current.add(virtualIndex);
     setFailedPageIndices((prev) => {
       if (!prev.has(pageIndex)) return prev;
       const next = new Set(prev);
@@ -126,6 +131,7 @@ export function ContinuousVerticalReader({
   }, [markPageSettled]);
 
   const handlePermanentFailure = React.useCallback((pageIndex: number, virtualIndex: number) => {
+    loadedPositionsRef.current.delete(virtualIndex);
     setFailedPageIndices((prev) => {
       if (prev.has(pageIndex)) return prev;
       const next = new Set(prev);
@@ -288,6 +294,10 @@ export function ContinuousVerticalReader({
     const href = getReaderHref(sourceId, mangaId, nextChapterId);
     if (!beginNavigationIntent(href)) return;
 
+    if (isRestored && canCompleteChapter(currentPages, loadedPositionsRef.current, failedPageIndices)) {
+      markChapterProgress(sourceId, mangaId, chapterId, currentPages.length - 1, currentPages.length, 100);
+    }
+
     if (!isInLibrary) {
       const readCountKey = `yomirra-read-count-${mangaId}`;
       const currentCount = parseInt(sessionStorage.getItem(readCountKey) || "0");
@@ -301,7 +311,8 @@ export function ContinuousVerticalReader({
     }
 
     router.replace(href);
-  }, [nextChapterId, isInLibrary, mangaId, sourceId, router]);
+  }, [nextChapterId, isInLibrary, mangaId, sourceId, chapterId, router,
+      isRestored, currentPages, failedPageIndices, markChapterProgress]);
 
   const handleReport = React.useCallback((pageIdx?: number) => {
     setReportPageIndex(typeof pageIdx === "number" ? pageIdx : undefined);
