@@ -119,3 +119,53 @@ Issue/PR linked:
 ```
 
 **Final gate:** enterprise READY can only be reported after all essential production, functionality, data safety, security, accessibility, hardware and legal approvals are complete. Until then, use **BLOCKED** or **PARTIAL**, never READY.
+
+
+## H. Langkah 7 — Grill-Me Interactive Bulk (owner decisions; BELUM DIJAWAB)
+
+**Purpose:** Use this as a supervised decision interview, not an automatic authorization. The owner can answer in one batch (`R1=B, R2=A, F1=C, L1=?`). A question mark means intentionally undecided; do not infer acceptance. After the first batch, the assistant should challenge ambiguity, contradictory requirements, worst-case failure modes, business impact, and tests in a **second targeted round**. The final round produces a decision register with owners, acceptance criteria, and explicit owner approval. This interview is **not a legal sign-off**.
+
+### H1. R — Retensi, hapus, backup, dan kepemilikan data
+
+**R1. Arti "3 bulan tidak aktif"**: A tidak ada auto-delete (default konservatif); B 90 hari tidak membuka app; C 90 hari tidak membaca setiap judul; D definisi khusus.
+**R2. Data yang boleh dibersihkan**: A hanya cache dan unduhan yang dapat dipulihkan; B chapter-history detail lama tetapi resume/milestone per judul wajib utuh; C library+history milik akun (memerlukan peringatan dan review legal); D lainnya.
+**R3. Hitung waktu**: A dari aktivitas berhasil tersinkron terbaru; B dari aktivitas lokal juga (perlu strategi cross-device); C per-judul; D lainnya.
+**R4. Sebelum penghapusan**: A tidak ada otomatis sampai kebijakan disetujui; B peringatan 30/7/1 hari + pilihan ekspor; C reminder tunggal; D lainnya.
+**R5. Backup dan recovery**: A backup manual + ekspor sebelum tindakan irreversibel; B backup terenkripsi terjadwal + masa pemulihan; C tidak perlu ekspor (tidak direkomendasikan untuk data bernilai).
+**R6. Logout/perpindahan akun**: A isolasi akun mutlak, pilihan "hapus dari perangkat"/"pertahankan offline" yang tidak bocor ke akun lain; B selalu hapus data lokal; C lainnya.
+**R7. Prioritas konflik perangkat**: A lebih baru berdasarkan revisi dan intent, tombstone tidak bisa dibangkitkan oleh aksi lama; B prefer cloud saat konflik; C minta user resolve manual; D lainnya.
+**R8. Jika kapasitas storage habis/offline >30 hari**: A tampilkan status gagal menyimpan dan jangan klaim sync sukses; B batasi fitur saat tidak bisa persist; C lainnya.
+
+### H2. F — Scope fitur dan acceptance release
+
+**F1. Target release**: A fondasi stabil sekarang lalu fitur lanjutan menjadi milestone berikutnya; B semua Q1–Q175 wajib sesuai kontrak sebelum rilis; C release terbatas/beta dengan daftar fitur jelas.
+**F2. Reader CBZ/ZIP/PDF**: A wajib untuk release; B CBZ/ZIP saja; C boleh milestone berikutnya; D tidak masuk scope (ubah kontrak eksplisit).
+**F3. AniList/MyAnimeList**: A kedua integrasi penuh; B satu provider dulu; C deferred; D out-of-scope.
+**F4. OCR/dictionary**: A wajib offline; B online-only dengan consent dan fallback; C deferred; D out-of-scope.
+**F5. AI toolbar**: A wajib untuk release; B optional feature flag (OFF by default, privacy review); C deferred; D out-of-scope.
+**F6. Reader settings lintas perangkat (Q97)**: A global + per-title sync ke akun; B global-only; C local-only tetapi Q97 turun/diubah secara eksplisit.
+**F7. Durable offline mutation queue (Q138)**: A wajib replay idempoten setelah force-close/restart + rekonsiliasi tombstone; B hanya local-state with manual sync (ubah kontrak/acceptance); C deferred (release tetap BLOCKED bila Q138 mandatory).
+**F8. CSP (Q147)**: A enforce setelah laporan violation benar-benar bersih pada staging & iOS; B report-only sementara sebagai documented exception dengan owner security approval (bukan strict-enforced PASS).
+**F9. UI/UX acceptance**: A audit WCAG, device breakpoints, reduced-motion, focus/keyboard, visual consistency dan regressions tanpa mengubah fungsi; B baseline terbatas dengan tiket P2; C lainnya.
+**F10. Definisi P0/P1**: A tidak ada P0 atau P1 terbuka pada critical user paths; B P1 boleh dengan mitigasi dan tanggal perbaikan disetujui; C lainnya.
+**F11. Pilihan platform release**: A web+installed iOS/iPad PWA; B web desktop/mobile responsive saja sekarang; C lainnya.
+
+### H3. L — Legal, privasi, pengelolaan konten, approval
+
+**L1. Hak terhadap konten pihak ketiga**: A hanya source dengan izin/lisensi/otorisasi terverifikasi; B agregasi eksternal sesuai persyaratan sumber yang sudah diaudit; C belum diketahui (BLOCKED sampai review).
+**L2. Model distribusi**: A official/public launch; B closed private beta dengan akun terbatas; C internal/testing only tanpa klaim publik.
+**L3. Siapa penanggung jawab keputusan rights & privacy**: A reviewer internal yang berwenang; B penasihat hukum eksternal; C belum ditunjuk (BLOCKED untuk public release).
+**L4. Data pribadi yang benar-benar dibutuhkan**: A minimisasi (UID, library/progress, preferences) + penghapusan akun; B tambah analytics diagnostik opt-in; C lainnya.
+**L5. Pemakaian data untuk AI/rekomendasi**: A explicit opt-in, transparan provider, redaction, no raw private history by default; B tidak kirim data personal ke AI; C lainnya.
+**L6. Hak penghapusan dan ekspor akun**: A user dapat ekspor/hapus dengan prosedur dan audit minimal; B hanya melalui support sementara dengan SLA tercatat (butuh legal approval); C belum ditentukan (BLOCKED).
+**L7. Takedown/report rights**: A channel resmi + pemilik inbox/ticket + prosedur dan waktu respons; B laporan manual khusus closed beta; C belum siap (BLOCKED untuk public release).
+**L8. Licenses/assets**: A inventaris dep/asset/font + atribusi/izin; B audit hanya asset high-risk sekarang dengan exception terdokumentasi; C lainnya.
+**L9. Kewenangan final go/no-go**: A owner + engineering QA + security + legal/privacy signoffs; B owner saja untuk internal beta (tetap tidak menggantikan kebutuhan compliance); C aturan khusus.
+**L10. Bukti keputusan**: A simpan decision log (tanpa data rahasia), penanggung jawab, tanggal, acceptance dan alasan; B dokumen persetujuan terpisah yang dilink ke release issue; C keduanya.
+
+### Interactive process and answer contract
+
+- **Round 1 — bulk answers:** owner replies in one message with codes; `?` is acceptable. Example: `R1=A, R2=B, R3=?, F1=B, F2=C, F6=A, L1=C, L2=C, L3=?`. Unanswered items remain **PENDING**, never silently defaulted.
+- **Round 2 — conflict grill:** assistant asks only the minimal high-impact follow-ups, such as: "If Q138 is deferred, can the release honestly claim all 175 enterprise requirements?" or "How can public launch proceed if content rights have not been proven?" or "If deletion triggers while offline and an older device returns, what stops resurrection?" Highlight consequences and decision reversibility.
+- **Round 3 — final lock:** create a decision record with **VERIFIED POLICY / PROPOSED / UNDECIDED / BLOCKED** per area, named accountable role (not secret), evidence source, tests and release impact. Explicitly ask the owner to approve the proposed decisions; absence of an answer is not consent.
+- **All rounds:** no new production deletes, data migration, license assumption, Firebase config changes or deployment authorized by merely selecting interview answers. Live permissions and review gates still apply.
