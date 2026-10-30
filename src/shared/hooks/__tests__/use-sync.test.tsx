@@ -103,6 +103,27 @@ describe("useSync cloud correctness", () => {
     useGuestMergeStore.getState().cancelMergeReview();
   });
 
+  it("retries a failed automatic full sync after a bounded delay", async () => {
+    let attempts = 0;
+    mocks.firestore.getDocs.mockImplementation(async (reference: { path: string }) => {
+      if (reference.path === "users/user-a/libraryV2") {
+        attempts++;
+        if (attempts === 1) throw new Error("network unavailable");
+      }
+      return snapshot([]);
+    });
+    const random = vi.spyOn(Math, "random").mockReturnValue(0.5);
+    const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    try {
+      const { unmount } = renderHook(() => useSync({ autoSync: true }));
+      await waitFor(() => expect(attempts).toBe(2), { timeout: 4_000 });
+      unmount();
+    } finally {
+      random.mockRestore();
+      log.mockRestore();
+    }
+  });
+
   it("subscribes to canonical libraryV2 and applies remote tombstone and removed changes locally", async () => {
     const { result } = renderHook(() => useSync({ autoSync: true }));
 
@@ -154,6 +175,38 @@ describe("useSync cloud correctness", () => {
         docChanges: () => [{ type: "removed", doc: { id: "source::manga::chapter", data: () => ({}) } }],
       });
     });
+    expect(useHistoryStore.getState().items).toEqual({});
+  });
+
+  it("ignores queued realtime changes from the old account before React can rerender", async () => {
+    renderHook(() => useSync({ autoSync: false }));
+    await waitFor(() => {
+      expect(mocks.listeners.has("users/user-a/libraryV2")).toBe(true);
+      expect(mocks.listeners.has("users/user-a/history")).toBe(true);
+      expect(mocks.listeners.has("users/user-a/preferences/sources")).toBe(true);
+    });
+
+    // Firebase changes account immediately; the old hook closure/listeners
+    // have not yet been cleaned up by React.
+    mocks.user = { uid: "user-b" };
+    act(() => {
+      mocks.listeners.get("users/user-a/libraryV2")?.({
+        docChanges: () => [{ type: "added", doc: {
+          id: "saved-title", data: () => libraryItem(),
+        } }],
+      });
+      mocks.listeners.get("users/user-a/history")?.({
+        docChanges: () => [{ type: "added", doc: {
+          id: "source::manga::chapter", data: () => historyItem(),
+        } }],
+      });
+      mocks.listeners.get("users/user-a/preferences/sources")?.({
+        exists: () => true,
+        data: () => ({ disabledSources: ["source"], hiddenFromHomeSources: [] }),
+      } as never);
+    });
+
+    expect(useLibraryStore.getState().items).toEqual({});
     expect(useHistoryStore.getState().items).toEqual({});
   });
 
