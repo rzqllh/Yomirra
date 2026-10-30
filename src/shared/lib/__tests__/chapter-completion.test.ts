@@ -7,6 +7,9 @@ describe("Q90 failure-aware chapter completion", () => {
     expect(canCompleteChapter([], new Set(), new Set())).toBe(false);
     expect(canCompleteChapter(pages, new Set([0, 2]), new Set())).toBe(false);
   });
+  it("does not accept success from unrelated pages as evidence for a missing page", () => {
+    expect(canCompleteChapter(pages, new Set([0, 2, 99]), new Set())).toBe(false);
+  });
   it("refuses a chapter with any failed page", () => {
     expect(canCompleteChapter(pages, new Set([0, 1, 2]), new Set([1]))).toBe(false);
   });
