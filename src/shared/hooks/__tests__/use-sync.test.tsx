@@ -103,6 +103,27 @@ describe("useSync cloud correctness", () => {
     useGuestMergeStore.getState().cancelMergeReview();
   });
 
+  it("retries a failed automatic full sync after a bounded delay", async () => {
+    let attempts = 0;
+    mocks.firestore.getDocs.mockImplementation(async (reference: { path: string }) => {
+      if (reference.path === "users/user-a/libraryV2") {
+        attempts++;
+        if (attempts === 1) throw new Error("network unavailable");
+      }
+      return snapshot([]);
+    });
+    const random = vi.spyOn(Math, "random").mockReturnValue(0.5);
+    const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    try {
+      const { unmount } = renderHook(() => useSync({ autoSync: true }));
+      await waitFor(() => expect(attempts).toBe(2), { timeout: 4_000 });
+      unmount();
+    } finally {
+      random.mockRestore();
+      log.mockRestore();
+    }
+  });
+
   it("subscribes to canonical libraryV2 and applies remote tombstone and removed changes locally", async () => {
     const { result } = renderHook(() => useSync({ autoSync: true }));
 
