@@ -11,6 +11,7 @@ import { UpdatesBell } from "@/components/overlays/updates-bell";
 import { cn } from "@/shared/utils/cn";
 import { useSidebarStore } from "@/shared/store/sidebar-store";
 import { usePlatformShortcut } from "@/shared/hooks/use-platform-shortcut";
+import { useMounted } from "@/shared/hooks/use-mounted";
 
 const ROUTE_LABELS: Record<string, string> = {
   "": "Beranda",
@@ -27,6 +28,7 @@ const ROUTE_LABELS: Record<string, string> = {
 };
 
 export function TopNav() {
+  const mounted = useMounted();
   const pathname = usePathname();
   const { user, loginWithGoogle, logout } = useAuth();
   const isCollapsed = useSidebarStore((state) => state.isCollapsed);
@@ -113,6 +115,7 @@ export function TopNav() {
             <div className="hidden md:flex h-9 w-48 lg:w-56 shrink-0 items-center justify-end">
               <button
                 type="button"
+                disabled={!mounted}
                 onClick={() => window.dispatchEvent(new CustomEvent("open-command-menu"))}
                 aria-label={searchAriaLabel}
                 className={cn(
