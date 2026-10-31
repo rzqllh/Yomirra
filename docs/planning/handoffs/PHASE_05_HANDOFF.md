@@ -1,6 +1,6 @@
 # Yomirra — PHASE 05 HANDOFF
 Updated: 2026-10-31 Asia/Jakarta
-Phase status: NOT_STARTED (planning file created; no implementation/QA performed in this phase)
+Phase status: IN_PROGRESS (dedicated Help UI PR drafted; not merged/verified)
 Document branch: `docs/yomirra-master-planning-20261031`
 Planning base: `preview@02cc664be8c66664ffe9628fcaa68523322f3ce0`
 
@@ -55,3 +55,5 @@ RISK/DECISION: approval, rollback, follow-up dependency
 STATUS: PLANNED / IN_PROGRESS / IMPLEMENTED / VERIFIED / BLOCKED
 NEXT: one concrete safe continuation step
 ```
+
+- 2026-11-01 — CODE/TEST WRITTEN, **NOT VERIFIED**: P05 UX-01/UX-02/HELP-01..03 draft PR **#88** https://github.com/rzqllh/Yomirra/pull/88, branch `feat/standalone-help-route-20261101`, SHA `d8faebb3928459f5b4ebd8ece40f81acff28ee17`. Added `src/app/(web)/help/page.tsx` (standalone, accessible FAQ, real existing action links) and `help/__tests__/page.test.tsx`; changed `src/components/chrome/header-actions.tsx` so Pusat Bantuan links `/help` and removed fake `Bahasa (Indonesia)` / `/settings#general` UI locale shortcut while retaining actual preferred chapter-language Settings. Changed only three files; zero auth/Redis/persistence changes. No preview deployment confirmed; Vercel build-rate-limit status failure. CI Typecheck/Lint/Tests/Build and live browser validation **NOT VERIFIED**. Next: inspect exact-head CI, review rendered Help page on mobile, then merge only if approved safe gates.

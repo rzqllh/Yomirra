@@ -63,7 +63,7 @@ Documentation changes and code changes require scoped PR/checks; when starting w
 | HEALTH-01 | Capability-specific source health, checkedAt+confidence | P01/P06 | P0 | ENG:TBD | PLANNED | Existing shallow/deep probes |
 | HEALTH-02..04 | Fresh status, scheduled probes separate from liveness | P03 | P1 | ENG:TBD | PLANNED | `/api/health` currently probes providers |
 | PROVIDER-04 | Request budget, 403/429 differentiation, bounded retries | P03 | P1 | ENG:TBD | PLANNED | Vercel aggregated Komikindo filter 403 |
-| PR-01..04 | Partial failure isolation, accurate error, retry, healthy results retained | P03/P04 | P1 | ENG:TBD | PLANNED | Provider screenshots / live error |
+| PR-01..04 | Partial failure isolation, accurate error, retry, healthy results retained | P03/P04 | P1 | ENG:TBD | IN_PROGRESS | PR #87 (`7675289d0`) combines partial-provider banners; exact SHA Vercel READY, CI and browser UX not yet verified; scoped retry remains open |
 | PF-01..06 | Cache-first Back, scroll restoration, request savings and trace | P03 | P1 | ENG:TBD | PLANNED | React Query existing; baseline not measured |
 | FL-01..05 | iOS safe filter footer, draft apply/cancel/reset and accessibility | P03/P05 | P0 | ENG:TBD | PLANNED | User screenshot clipped apply, Vaul 52/92% snaps |
 
@@ -72,11 +72,11 @@ Documentation changes and code changes require scoped PR/checks; when starting w
 | IDs | Scope / evidence | Phase | Priority | Owner | Status | Evidence / next |
 | --- | --- | --- | --- | --- | --- | --- |
 | HOME-01..03 | Continue Reading > discovery with history, first-time home, no all-null Home | P04 | P1 | ENG:TBD | PLANNED | Owner locked |
-| UX-01..04 | Real `/help`, remove fake controls, routing and states | P04/P05 | P1 | ENG:TBD | PLANNED | Current gear `/settings#about` |
+| UX-01..04 | Real `/help`, remove fake controls, routing and states | P04/P05 | P1 | ENG:TBD | IN_PROGRESS | PR #88 (`d8faebb3`) adds Help and removes fake language shortcut; CI/rendering not yet verified |
 | NOTIF-01..04 | Honest toasts, 4 verified chapters bookmark prompt, updates, OS push not fabricated | P04 | P1 | ENG:TBD | PLANNED | B-07 for push |
 | PWA-01 | Accurate offline status and no claim beyond cached pages | P04 | P1 | ENG:TBD | PLANNED | Existing reading buffer supports partial cache |
 | DS-01..03 | Semantic tokens, accessibility, visual regression | P05 | P2 | ENG:TBD | PLANNED | iPhone screenshot modal/borders inconsistency |
-| HELP-01..03 | Dedicated `/help`, accessible support/recovery content | P05 | P1 | ENG:TBD | PLANNED | No existing `/help` route at baseline |
+| HELP-01..03 | Dedicated `/help`, accessible support/recovery content | P05 | P1 | ENG:TBD | IN_PROGRESS | Draft PR #88 route and two tests, not merged/deployed |
 | MAL-01..04 | Official MAL live ranking, safe classification, mapping via trusted IDs | P06 | P1 | PRODUCT:owner / ENG:TBD | BLOCKED | B-01/B-09, `MAL_CLIENT_ID` |
 | INTEG-01..04 | External sources, archives, source admin, rights, optional AI | P06 | P1 | PRODUCT:owner / ENG:TBD | PLANNED | Existing adapters/features; broad live gates unknown |
 | REL-01..07 | All scoped P0 gates, Browser/CI/Safari/Firebase/security/prod signoff | P07 | P0 | QA:TBD / PRODUCT:owner | BLOCKED | B-01..B-11 as release-applicable |
