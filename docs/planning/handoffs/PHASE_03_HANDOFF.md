@@ -1,6 +1,6 @@
 # Yomirra — PHASE 03 HANDOFF
 Updated: 2026-10-31 Asia/Jakarta
-Phase status: NOT_STARTED (planning file created; no implementation/QA performed in this phase)
+Phase status: IN_PROGRESS (scoped provider-error UX fix drafted; phase acceptance not verified)
 Document branch: `docs/yomirra-master-planning-20261031`
 Planning base: `preview@02cc664be8c66664ffe9628fcaa68523322f3ce0`
 
@@ -56,3 +56,5 @@ RISK/DECISION: approval, rollback, follow-up dependency
 STATUS: PLANNED / IN_PROGRESS / IMPLEMENTED / VERIFIED / BLOCKED
 NEXT: one concrete safe continuation step
 ```
+
+- 2026-11-01 — CODE/TEST WRITTEN, **NOT VERIFIED**: Independent Phase 03/04 requirement `PR-02` for Cari multi-provider failures: draft PR **#87** https://github.com/rzqllh/Yomirra/pull/87, commit `7675289d0dd0af6d2f6cc6da805dee80ea84bcc8`, branch `fix/search-partial-error-summary-20261101` based on `preview@02cc664`. Three files only: `src/components/search/search-results.tsx` now shows one disclosure instead of a banner per failed provider; new `src/components/search/source-error-summary.tsx` uses accessible native `details/summary` and friendly messages; regression test covers four errors, one, empty and raw error redaction. No provider network flow, auth, Redis or saved data changed. **CI/Browser smoke: PENDING** at PR creation; not PASS. Vercel still has build rate-limit blocker. Next: check PR #87 exact SHA TypeScript/lint/tests/build/browser and fix failures; merge only after review and safe gate.
