@@ -12,6 +12,10 @@ export function useWakeLock() {
     try {
       if (wakeLockRef.current) return;
       const wakeLock = await navigator.wakeLock.request("screen");
+      if (!useSettingsStore.getState().keepScreenAwake) {
+        await wakeLock.release();
+        return;
+      }
       
       wakeLock.addEventListener("release", () => {
         setIsActive(false);
@@ -36,6 +40,12 @@ export function useWakeLock() {
       }
     }
   }, []);
+
+  useEffect(() => {
+    if (!keepScreenAwake) void release();
+  }, [keepScreenAwake, release]);
+
+  useEffect(() => () => { void release(); }, [release]);
 
   // Handle visibility change (re-request wake lock when returning to tab)
   useEffect(() => {

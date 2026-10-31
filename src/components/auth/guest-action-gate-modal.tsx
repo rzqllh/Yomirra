@@ -84,7 +84,7 @@ export function GuestActionGateModal({
               {isRating ? (
                 <Star size={22} weight="fill" />
               ) : (
-                <FolderPlus size={22} weight="duotone" />
+                <FolderPlus size={22} weight="regular" />
               )}
             </div>
             <div className="flex flex-col">
@@ -92,7 +92,7 @@ export function GuestActionGateModal({
                 {isRating ? "Rating Personal" : "Koleksi Kustom"}
               </span>
               <span className="text-xs font-semibold text-text-secondary flex items-center gap-1">
-                <DeviceMobile size={13} weight="bold" />
+                <DeviceMobile size={13} weight="regular" />
                 Mode Tamu (Penyimpanan Lokal)
               </span>
             </div>
@@ -121,7 +121,7 @@ export function GuestActionGateModal({
             loading={isLoggingIn}
             className="w-full h-11 rounded-xl font-bold bg-accent hover:bg-accent-hover text-white flex items-center justify-center gap-2 shadow-xs active:scale-[0.99] transition-transform"
           >
-            <GoogleLogo size={18} weight="bold" />
+            <GoogleLogo size={18} weight="regular" />
             <span>{isRating ? "Simpan ke Akun (Google)" : "Amankan Pake Google"}</span>
           </Button>
 

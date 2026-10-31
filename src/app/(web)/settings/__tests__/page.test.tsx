@@ -92,16 +92,14 @@ describe("SettingsPage - Update Checker UI", () => {
     expect(useSettingsStore.getState().minimumCheckIntervalMinutes).toBe(60);
   });
 
-  it("disables interval select visually when checkOnAppStart is false, but keeps value", async () => {
+  it("disables interval selection when checkOnAppStart is false, but keeps value", async () => {
     useSettingsStore.setState({ checkOnAppStart: false, minimumCheckIntervalMinutes: 30 });
-    const { container } = await renderWithMount();
+    await renderWithMount();
     
     const selectButton = screen.getByRole("button", { name: /30 Menit/i });
     expect(selectButton).not.toBeNull();
     
-    // CustomSelect wrapper should have opacity-50 and pointer-events-none
-    const wrapper = selectButton.closest(".opacity-50.pointer-events-none");
-    expect(wrapper).not.toBeNull();
+    expect((selectButton as HTMLButtonElement).disabled).toBe(true);
     
     expect(useSettingsStore.getState().minimumCheckIntervalMinutes).toBe(30);
   });

@@ -84,27 +84,27 @@ const Toaster = ({ position: propPosition, ...props }: ToasterProps) => {
       icons={{
         success: (
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-semantic-success text-white shadow-xs">
-            <Check size={16} weight="bold" />
+            <Check size={16} weight="regular" />
           </div>
         ),
         error: (
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-semantic-error text-white shadow-xs">
-            <X size={16} weight="bold" />
+            <X size={16} weight="regular" />
           </div>
         ),
         warning: (
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-status-warning-bg text-status-warning-fg border border-status-warning-fg/30 shadow-xs">
-            <Warning size={16} weight="bold" />
+            <Warning size={16} weight="regular" />
           </div>
         ),
         info: (
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-raised border border-border-default text-text-primary shadow-xs">
-            <Info size={16} weight="bold" />
+            <Info size={16} weight="regular" />
           </div>
         ),
         loading: (
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-white shadow-xs">
-            <CircleNotch size={16} weight="bold" className="motion-safe:animate-spin" />
+            <CircleNotch size={16} weight="regular" className="motion-safe:animate-spin" />
           </div>
         ),
       }}

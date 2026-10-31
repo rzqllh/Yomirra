@@ -28,7 +28,7 @@ export function MaintenanceView({ message }: MaintenanceViewProps) {
         {/* Brand mark */}
         <div className="mb-6 flex items-center gap-2.5">
           <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-red-500/30 bg-red-500/10 shadow-[0_0_20px_rgba(239,68,68,0.2)]">
-            <Wrench className="h-5 w-5 text-red-400" weight="duotone" />
+            <Wrench className="h-5 w-5 text-red-400" weight="regular" />
           </div>
           <span className="text-xl font-bold tracking-tight text-zinc-100">
             Yomirra
@@ -38,7 +38,7 @@ export function MaintenanceView({ message }: MaintenanceViewProps) {
         {/* Card status */}
         <div className="w-full rounded-2xl border border-zinc-800/80 bg-zinc-900/60 p-6 shadow-2xl backdrop-blur-xl sm:p-8">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-300">
-            <ShieldWarning className="h-3.5 w-3.5" weight="bold" />
+            <ShieldWarning className="h-3.5 w-3.5" weight="regular" />
             <span>Mode Pemeliharaan</span>
           </div>
 

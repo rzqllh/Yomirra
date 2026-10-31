@@ -463,7 +463,7 @@ export function ContinuousVerticalReader({
                   if (beginNavigationIntent(href)) router.replace(href);
                 }}
               >
-                <CaretLeft size={16} weight="bold" />
+                <CaretLeft size={16} weight="regular" />
                 <span>Sebelumnya</span>
               </Button>
             )}
@@ -477,7 +477,7 @@ export function ContinuousVerticalReader({
                 onClick={handleNextChapter}
               >
                 <span>{_prevChapterId ? "Selanjutnya" : "Lanjut Bab Berikutnya"}</span>
-                <CaretRight size={16} weight="bold" />
+                <CaretRight size={16} weight="regular" />
               </Button>
             ) : (
               <Button
@@ -488,7 +488,7 @@ export function ContinuousVerticalReader({
                 )}
               >
                 <Link href={detailHref} replace prefetch={false}>
-                  <BookOpen size={16} weight="bold" />
+                  <BookOpen size={16} weight="regular" />
                   <span>Detail Komik</span>
                 </Link>
               </Button>

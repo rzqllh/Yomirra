@@ -462,7 +462,7 @@ export function PagedReader({
           disabled={currentPageIndex === 0 && !prevChapterId}
           aria-label="Halaman sebelumnya"
         >
-          <CaretLeft size={16} weight="bold" />
+          <CaretLeft size={16} weight="regular" />
         </Button>
 
         <span className="tabular-nums font-bold">
@@ -477,7 +477,7 @@ export function PagedReader({
           disabled={currentPageIndex === totalPages - 1 && !nextChapterId}
           aria-label="Halaman berikutnya"
         >
-          <CaretRight size={16} weight="bold" />
+          <CaretRight size={16} weight="regular" />
         </Button>
       </div>
 

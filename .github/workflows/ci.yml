@@ -87,6 +87,9 @@ jobs:
       - name: Run discovery and Quick Search contracts
         run: pnpm exec playwright test e2e/discovery-search-contract.spec.ts --project=chromium-mobile --project=webkit-mobile-safari
 
+      - name: Run settings preference contracts
+        run: pnpm exec playwright test e2e/settings-control-contract.spec.ts --project=chromium-mobile --project=webkit-mobile-safari
+
       - name: Preserve browser failure evidence
         if: failure()
         uses: actions/upload-artifact@v4

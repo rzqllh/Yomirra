@@ -87,7 +87,7 @@ export function ThemeToggle({ className }: { className?: string }) {
             className="flex items-center justify-center text-accent"
             aria-hidden="true"
           >
-            <Sun size={18} weight="duotone" />
+            <Sun size={18} weight="regular" />
           </motion.span>
         ) : (
           <motion.span
@@ -99,7 +99,7 @@ export function ThemeToggle({ className }: { className?: string }) {
             className="flex items-center justify-center text-text-secondary"
             aria-hidden="true"
           >
-            <Moon size={18} weight="duotone" />
+            <Moon size={18} weight="regular" />
           </motion.span>
         )}
       </AnimatePresence>

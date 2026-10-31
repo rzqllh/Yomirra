@@ -127,7 +127,7 @@ export function MangaRating({ sourceId, mangaId, className, variant = "default",
       )}
       title="Beri rating"
     >
-      <Star size={16} weight={userRating ? "fill" : "bold"} />
+      <Star size={16} weight={userRating ? "fill" : "regular"} />
       <span className="text-sm">{userRating || "Rating"}</span>
     </button>
   );

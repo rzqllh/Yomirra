@@ -64,11 +64,11 @@ export function MangaDetailErrorState({
             {isRestricted ? (
               <Button asChild variant="primary"><Link href="/settings">Buka Pengaturan</Link></Button>
             ) : isDisabled ? (
-              <HardDrives size={28} weight="duotone" />
+              <HardDrives size={28} weight="regular" />
             ) : isNotFound ? (
-              <MagnifyingGlass size={28} weight="duotone" />
+              <MagnifyingGlass size={28} weight="regular" />
             ) : (
-              <WarningCircle size={28} weight="duotone" className="text-semantic-warning" />
+              <WarningCircle size={28} weight="regular" className="text-semantic-warning" />
             )}
           </div>
 
@@ -84,14 +84,14 @@ export function MangaDetailErrorState({
             {isDisabled ? (
               <Button asChild variant="primary" className="gap-2 w-full sm:w-auto font-bold">
                 <Link href="/sources">
-                  <HardDrives size={18} weight="bold" />
+                  <HardDrives size={18} weight="regular" />
                   Buka Sumber
                 </Link>
               </Button>
             ) : isNotFound ? (
               <Button asChild variant="primary" className="gap-2 w-full sm:w-auto font-bold">
                 <Link href={`/search?q=${encodeURIComponent(mangaId.replace(/[-_]/g, ' '))}`}>
-                  <MagnifyingGlass size={18} weight="bold" />
+                  <MagnifyingGlass size={18} weight="regular" />
                   Cari di Sumber Lain
                 </Link>
               </Button>
@@ -102,7 +102,7 @@ export function MangaDetailErrorState({
                 loading={isRetrying}
                 className="gap-2 w-full sm:w-auto font-bold"
               >
-                <ArrowClockwise size={18} weight="bold" />
+                <ArrowClockwise size={18} weight="regular" />
                 Coba Lagi
               </Button>
             )}

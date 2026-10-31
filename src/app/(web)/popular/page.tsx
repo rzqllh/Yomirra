@@ -70,7 +70,7 @@ export default async function PopularPage() {
         <PageHeader
           title="Populer"
           subtitle="Peringkat dari sumber yang kamu aktifkan."
-          icon={<Fire size={24} weight="duotone" />}
+          icon={<Fire size={24} weight="regular" />}
         />
         <PopularPageView feeds={feeds} />
       </PageContainer>

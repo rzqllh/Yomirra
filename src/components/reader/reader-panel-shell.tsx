@@ -152,7 +152,7 @@ export function ReaderPanelShell({
                   className="yomirra-chrome-control rounded-xl hover:bg-surface-hover text-text-primary transition-colors"
                   onClick={onClose}
                 >
-                  <X size={16} weight="bold" />
+                  <X size={16} weight="regular" />
                 </IconButton>
               </div>
               {headerControls}

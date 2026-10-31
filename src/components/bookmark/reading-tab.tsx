@@ -48,7 +48,7 @@ export function ReadingTab({
         action={
           <Button asChild variant="accent" className="rounded-xl shadow-sm font-bold mt-4">
             <Link href={getLibraryHref()}>
-              <Compass size={20} weight="bold" className="mr-1.5" />
+              <Compass size={20} weight="regular" className="mr-1.5" />
               Cari bacaan
             </Link>
           </Button>

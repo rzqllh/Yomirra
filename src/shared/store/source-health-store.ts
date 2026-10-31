@@ -35,10 +35,10 @@ export const useSourceHealthStore = create<SourceHealthState>()(
         const current = state.healthBySource[sourceId] || DEFAULT_HEALTH;
         // Moving average for latency (e.g., 70% new, 30% old)
         const avgLatency = current.latencyMs === 0 ? latencyMs : (latencyMs * 0.7) + (current.latencyMs * 0.3);
-        
+
         let newStatus: HealthStatus = "online";
         if (avgLatency > 5000) newStatus = "slow";
-        
+
         return {
           healthBySource: {
             ...state.healthBySource,
@@ -56,7 +56,7 @@ export const useSourceHealthStore = create<SourceHealthState>()(
       recordError: (sourceId, error) => set((state) => {
         const current = state.healthBySource[sourceId] || DEFAULT_HEALTH;
         const failures = current.consecutiveFailures + 1;
-        
+
         let newStatus: HealthStatus = current.status;
         if (failures >= 3) {
           newStatus = "offline";
@@ -79,7 +79,9 @@ export const useSourceHealthStore = create<SourceHealthState>()(
       }),
 
       getHealth: (sourceId) => {
-        return get().healthBySource[sourceId] || DEFAULT_HEALTH;
+        const health = get().healthBySource[sourceId];
+        if (!health || Date.now() - Math.max(health.lastSuccessAt, health.lastErrorAt ?? 0) > 5 * 60 * 1000) return DEFAULT_HEALTH;
+        return health;
       }
     }),
     {

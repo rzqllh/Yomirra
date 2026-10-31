@@ -10,7 +10,7 @@ export default function Loading() {
         <PageHeader
           title="Pengaturan"
           subtitle="Atur tampilan, bacaan, dan data Yomirra."
-          icon={<Gear size={24} weight="duotone" />}
+          icon={<Gear size={24} weight="regular" />}
         />
 
         <ContentLane variant="management">

@@ -315,7 +315,7 @@ export function ReaderShell({
                   className="yomirra-chrome-control flex size-11 items-center justify-center rounded-xl text-text-secondary hover:text-text-primary transition-all shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent"
                   onClick={handleBack}
                 >
-                  <ArrowLeft size={18} weight="bold" />
+                  <ArrowLeft size={18} weight="regular" />
                 </motion.button>
 
                 {/* Center: Manga Title (Top) & Chapter (Bottom) */}
@@ -353,7 +353,7 @@ export function ReaderShell({
                     transition={reducedMotion ? { duration: 0 } : transitions.snappy}
                     className="flex items-center justify-center"
                   >
-                    <BookmarkSimple size={18} weight={isSaved ? "fill" : "bold"} />
+                    <BookmarkSimple size={18} weight={isSaved ? "fill" : "regular"} />
                   </motion.div>
                 </motion.button>
 
@@ -420,7 +420,7 @@ export function ReaderShell({
                   className="yomirra-chrome pointer-events-auto self-end flex size-10 items-center justify-center rounded-xl text-text-secondary hover:text-text-primary transition-all  cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent"
                   aria-label="Kembali ke atas"
                 >
-                  <CaretUp size={18} weight="bold" />
+                  <CaretUp size={18} weight="regular" />
                 </motion.button>
               )}
 
@@ -442,7 +442,7 @@ export function ReaderShell({
                     }
                   }}
                 >
-                  <CaretLeft size={20} weight="bold" />
+                  <CaretLeft size={20} weight="regular" />
                 </motion.button>
 
                 <motion.button
@@ -453,7 +453,7 @@ export function ReaderShell({
                     setIsChapterDrawerOpen(true);
                   }}
                 >
-                  <List size={18} weight="bold" className="shrink-0" />
+                  <List size={18} weight="regular" className="shrink-0" />
                   <span className="truncate">Daftar chapter</span>
                 </motion.button>
 
@@ -473,7 +473,7 @@ export function ReaderShell({
                     }
                   }}
                 >
-                  <CaretRight size={20} weight="bold" />
+                  <CaretRight size={20} weight="regular" />
                 </motion.button>
 
                 <motion.button
@@ -489,7 +489,7 @@ export function ReaderShell({
                     }
                   }}
                 >
-                  <Gear size={20} weight="bold" />
+                  <Gear size={20} weight="regular" />
                 </motion.button>
               </div>
             </div>

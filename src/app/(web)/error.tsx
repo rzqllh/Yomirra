@@ -30,11 +30,11 @@ export default function GlobalError({
 
   return (
     <div className="relative flex min-h-[85vh] w-full flex-col items-center justify-center gap-6 px-6 text-center overflow-hidden">
-      
+
       <div className="absolute inset-0 pointer-events-none z-0 flex items-center justify-center overflow-hidden">
         {/* Glowing aura */}
         <div className="absolute w-[300px] h-[300px] md:w-[500px] md:h-[500px] bg-accent/15 dark:bg-accent/10 rounded-full blur-[80px] md:blur-[120px]" />
-        
+
         {/* Floating elements simulating manga panels */}
         <motion.div
           animate={{ y: [-10, 10, -10], rotate: [-2, 2, -2] }}
@@ -53,7 +53,7 @@ export default function GlobalError({
         />
       </div>
 
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.9, filter: "blur(10px)", y: 20 }}
         animate={{ opacity: 1, scale: 1, filter: "blur(0px)", y: 0 }}
         transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
@@ -67,8 +67,8 @@ export default function GlobalError({
           priority
         />
       </motion.div>
-      
-      <motion.div 
+
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
@@ -82,23 +82,23 @@ export default function GlobalError({
         </p>
       </motion.div>
 
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.25, ease: [0.16, 1, 0.3, 1] }}
         className="flex flex-col gap-3 mt-4 z-10 w-full max-w-[320px]"
       >
-        <Button 
-          variant="accent" 
+        <Button
+          variant="accent"
           onClick={() => reset()}
           className="h-[52px] rounded-[18px] shadow-lg shadow-accent/25 font-bold w-full text-[15px] hover:scale-[1.02] active:scale-[0.98] transition-all"
         >
-          <ArrowCounterClockwise className="mr-2.5" size={20} weight="bold" />
+          <ArrowCounterClockwise className="mr-2.5" size={20} weight="regular" />
           Coba lagi
         </Button>
         {!isHome && (
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             asChild
             className="h-[52px] rounded-[18px] font-bold border border-border-strong w-full text-[15px] bg-surface-glass backdrop-blur-md hover:bg-surface-hover hover:scale-[1.02] active:scale-[0.98] transition-all text-text-primary"
           >
@@ -124,7 +124,7 @@ export default function GlobalError({
 
         <div className="flex items-start gap-4 p-4 rounded-xl bg-surface-base border border-border-default/50 text-left mt-2">
           <div className="w-10 h-10 rounded-full bg-surface-raised flex items-center justify-center shrink-0 border border-border-default shadow-xs">
-            <Question size={20} weight="duotone" className="text-text-secondary" />
+            <Question size={20} weight="regular" className="text-text-secondary" />
           </div>
           <div className="flex flex-col pt-0.5">
             <span className="text-[13px] font-bold text-text-primary">Masih bermasalah?</span>
