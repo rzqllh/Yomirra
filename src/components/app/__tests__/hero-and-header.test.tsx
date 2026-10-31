@@ -197,8 +197,9 @@ describe("Header & Hero System (Squircle & Reusable)", () => {
         "/sources"
       );
       expect(screen.getByText(/Tema tampilan/i)).toBeTruthy();
-      expect(screen.getByText(/Bahasa/i)).toBeTruthy();
-      expect(screen.getByText(/Pusat bantuan/i)).toBeTruthy();
+      // UI language selection is not implemented: no misleading Bahasa shortcut.
+      expect(screen.queryByText(/^Bahasa$/i)).toBeNull();
+      expect(screen.getByRole("link", { name: /Pusat bantuan/i }).getAttribute("href")).toBe("/help");
       expect(screen.getByText(/^Masuk$/i)).toBeTruthy();
     });
   });
