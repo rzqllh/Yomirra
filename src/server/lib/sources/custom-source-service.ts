@@ -1,5 +1,6 @@
 import * as cheerio from "cheerio";
 import { isRedisConfigured, isRedisReady, redis, ensureRedisReady } from "@/server/lib/cache/redis";
+import { physicalScanPattern, physicalToLogicalRedisKey } from "@/server/lib/cache/redis-key-scope";
 import { logger } from "@/shared/logger";
 import { safeFetch } from "@/server/lib/security/outbound-policy";
 import { CustomSourceSchema, type CustomSourceDefinition } from "@/shared/sources/custom-source-schema";
@@ -64,12 +65,12 @@ export async function scanRedisKeys(pattern: string, batchSize = 100): Promise<s
   const matchedKeys: string[] = [];
 
   do {
-    const res = await redis.scan(cursor, "MATCH", pattern, "COUNT", batchSize);
+    const res = await redis.scan(cursor, "MATCH", physicalScanPattern(pattern), "COUNT", batchSize);
     if (!res || !Array.isArray(res)) break;
     const [nextCursor, keys] = res;
     cursor = nextCursor;
     if (keys && Array.isArray(keys) && keys.length > 0) {
-      matchedKeys.push(...keys);
+      matchedKeys.push(...keys.map(physicalToLogicalRedisKey).filter((key): key is string => key !== null));
     }
   } while (cursor !== "0");
 
@@ -85,13 +86,15 @@ export async function deleteMatchedRedisKeys(pattern: string, batchSize = 100): 
   let totalDeleted = 0;
 
   do {
-    const res = await redis.scan(cursor, "MATCH", pattern, "COUNT", batchSize);
+    const res = await redis.scan(cursor, "MATCH", physicalScanPattern(pattern), "COUNT", batchSize);
     if (!res || !Array.isArray(res)) break;
     const [nextCursor, keys] = res;
     cursor = nextCursor;
     if (keys && Array.isArray(keys) && keys.length > 0) {
-      await redis.del(...keys);
-      totalDeleted += keys.length;
+      const logicalKeys = keys.map(physicalToLogicalRedisKey).filter((key): key is string => key !== null);
+      if (logicalKeys.length === 0) continue;
+      await redis.del(...logicalKeys);
+      totalDeleted += logicalKeys.length;
     }
   } while (cursor !== "0");
 
