@@ -26,7 +26,7 @@ function interleaveArrays<T>(arrays: T[][]): T[] {
 }
 
 export async function UnifiedFeed({ activeSources, options = {} }: UnifiedFeedProps) {
-  if (activeSources.length === 0) return null;
+  if (activeSources.length === 0) return <HomeFeedClient unifiedPopular={[]} unifiedLatest={[]} />;
 
   const fetchPromises = activeSources.map(async (sourceInfo) => {
     try {
@@ -60,10 +60,6 @@ export async function UnifiedFeed({ activeSources, options = {} }: UnifiedFeedPr
     (result): result is NonNullable<typeof result> => Boolean(result)
   );
 
-  if (validResults.length === 0) {
-    return null;
-  }
-
   const popularArrays: HomeFeedManga[][] = validResults.map((result) =>
     (result.popular?.mangas ?? []).map((manga) => ({
       ...manga,
@@ -83,14 +79,11 @@ export async function UnifiedFeed({ activeSources, options = {} }: UnifiedFeedPr
   const unifiedPopular = interleaveArrays(popularArrays);
   const unifiedLatest = interleaveArrays(latestArrays);
 
-  if (unifiedPopular.length === 0 && unifiedLatest.length === 0) {
-    return null;
-  }
-
   return (
     <HomeFeedClient
       unifiedPopular={unifiedPopular}
       unifiedLatest={unifiedLatest}
+      catalogState={validResults.length === 0 ? "unavailable" : validResults.length < activeSources.length ? "partial" : unifiedPopular.length + unifiedLatest.length === 0 ? "empty" : undefined}
     />
   );
 }
