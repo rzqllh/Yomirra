@@ -1,5 +1,18 @@
 # Yomirra — Final Grill Decision Ledger
 
+## Pembaruan 31 Oktober 2026: otorisasi dan delta discovery UX
+
+Instruksi owner terbaru: **"ok eksekusi berdasarkan priority ya, kalau ada yg destruktable atau berbahaya tnya gua dulu"**. Ini menggantikan status historis "implementation not approved" dan reservasi Antigravity **untuk scope discovery/UX yang dibahas pada sesi ini**. Operasi destruktif/berbahaya tetap perlu persetujuan terpisah. Q1–Q175 tidak dibuka ulang. Keputusan 1A–5A tetap menjadi dasar; teks opsi yang belum berhasil dipulihkan tidak direkonstruksi sebagai keputusan baru.
+
+- Delta owner: label katalog `/library` menjadi **Jelajah**, rak pribadi `/bookmark` menjadi **Library**. Ini perubahan presentasi; route, storage key, Manga/API identity dan kontrak backup tetap.
+- Delta owner: **Quick Search mengikuti eligibility dan source aktif Jelajah**. **Cari** tetap memiliki pilihan source sendiri. Tidak ada source picker kedua di dialog atau perluasan scope diam-diam.
+- Phosphor existing menjadi keluarga UI utama: regular untuk aksi umum, fill untuk state terpilih, duotone terbatas pada ilustrasi. Morphicons dipertahankan untuk animasi existing; tidak ada dependency baru.
+- Pelaksanaan dipisah menjadi draft [PR #80](https://github.com/rzqllh/Yomirra/pull/80) (P0 server/content/MangaDex), [#81](https://github.com/rzqllh/Yomirra/pull/81) (discovery/search), [#82](https://github.com/rzqllh/Yomirra/pull/82) (Settings/ikon), dan [#83](https://github.com/rzqllh/Yomirra/pull/83) (guard konten mounted/cache). Status CI mengikuti **SHA terkini masing-masing PR**, bukan catatan PASS historis. Belum ada merge ke main atau perubahan produksi.
+- Kontrak aktual dan batas bukti: [discovery/search](DISCOVERY_UX_20261031.md), [Settings/ikon](SETTINGS_ICON_AUDIT_20261031.md), [inventaris ikon](ICONOGRAPHY_INVENTORY_20261031.md), dan [cache/content guard](CACHED_CONTENT_SAFETY_20261031.md).
+- Ranking internal Yomirra belum diklaim. Label agregat menggunakan **lintas sumber**. MAL identity/API/attribution dan ambang data popularitas internal masih memerlukan keputusan/verifikasi sebelum implementasi integrasi.
+- Cek live MangaDex pada lingkungan audit berhenti dengan HTTP 503 di katalog; chapter/gambar live belum terverifikasi. Preview terpisah dicoba tetapi Vercel menolak karena kuota deployment harian (HTTP 402); billing/plan tidak diubah.
+- Gate tetap terbuka: iPhone/iPad fisik Safari/PWA, keyboard virtual/safe area/VoiceOver, Firebase lintas akun/perangkat dan offline recovery, metadata lama mixed-provider, serta penerimaan Reader/progres. Sejumlah perbaikan Reader sudah ada pada branch preview historis; risk register lama bukan klaim bahwa seluruh bug masih aktif atau sudah lulus acceptance.
+
 ## Pembaruan 30 Oktober 2026: keamanan data bacaan
 
 Bagian ini mengoreksi klaim penyelesaian menyeluruh dalam catatan historis di bawah. Pekerjaan saat ini menangani tujuh temuan pada history, penulisan lintas akun, rollback progres, backup/restore, batas impor, dan integritas download. Kontrak perilaku ada di [READING_DATA.md](READING_DATA.md).

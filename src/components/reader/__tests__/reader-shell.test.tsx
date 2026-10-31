@@ -4,6 +4,8 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { ReaderShell } from "../reader-shell";
 import { useReaderStore } from "@/shared/store/reader-store";
 import { useLibraryStore } from "@/shared/store/library-store";
+import { toast } from "sonner";
+import { noteCompletedChapter } from "@/shared/lib/bookmark-suggestion";
 import { endNavigationIntent } from "@/shared/lib/navigation-intent";
 
 const mockRouterBack = vi.fn();
@@ -35,6 +37,7 @@ vi.mock("motion/react", async (importOriginal) => {
 describe("ReaderShell Header & Progress Bar", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    sessionStorage.clear();
     endNavigationIntent();
     window.history.replaceState({}, "", "/");
     useReaderStore.setState({
@@ -52,6 +55,7 @@ describe("ReaderShell Header & Progress Bar", () => {
       isOverlayVisible: true,
       isDesktopPanelOpen: true,
       pagedProgress: 0.25,
+      pageNavigation: { key: "srcA::m1::ch1", index: 1, total: 4, seek: vi.fn() },
     });
     useLibraryStore.setState({ items: {} });
   });
@@ -67,6 +71,7 @@ describe("ReaderShell Header & Progress Bar", () => {
       <ReaderShell
         mangaTitle="Solo Leveling"
         chapterTitle="Chapter 1"
+        currentChapterId="ch1"
         sourceId="srcA"
         mangaId="m1"
       >
@@ -84,11 +89,39 @@ describe("ReaderShell Header & Progress Bar", () => {
     );
   });
 
+  it("returns to detail even when browser history contains another Reader chapter", () => {
+    window.history.pushState({}, "", "/manga/srcA/m1/read/ch-2");
+    render(<ReaderShell sourceId="srcA" mangaId="m1"><div>Content</div></ReaderShell>);
+    fireEvent.click(screen.getByRole("button", { name: "Kembali ke detail komik" }));
+    expect(mockRouterBack).not.toHaveBeenCalled();
+    expect(mockRouterReplace).toHaveBeenCalledWith("/manga/srcA/m1");
+  });
+
+  it("offers a bookmark once after four completed chapters and never toggles an existing save off", () => {
+    const prompt = vi.spyOn(toast, "info");
+    for (const chapter of ["1", "2", "3", "4"]) noteCompletedChapter("srcA", "m1", chapter);
+    render(<ReaderShell sourceId="srcA" mangaId="m1" mangaTitle="Saved work"><div>Content</div></ReaderShell>);
+    const options = prompt.mock.calls.find(([title]) => title === "Simpan bacaan ini ke Library?")?.[1];
+    expect(options?.action).toBeDefined();
+    fireEvent.click(screen.getByRole("button", { name: "Simpan ke bookmark" }));
+    const action = options!.action as { onClick: (event: React.MouseEvent<HTMLButtonElement>) => void };
+    action.onClick({} as React.MouseEvent<HTMLButtonElement>);
+    expect(useLibraryStore.getState().isInLibrary("srcA", "m1")).toBe(true);
+    prompt.mockRestore();
+  });
+
+  it("opens Home independently of the detail destination", () => {
+    render(<ReaderShell sourceId="srcA" mangaId="m1"><div>Content</div></ReaderShell>);
+    fireEvent.click(screen.getByRole("button", { name: "Kembali ke Beranda" }));
+    expect(mockRouterReplace).toHaveBeenCalledWith("/");
+  });
+
   it("renders manga title on the top line and chapter title on the bottom line", () => {
     render(
       <ReaderShell
         mangaTitle="Solo Leveling"
         chapterTitle="Chapter 179"
+        currentChapterId="ch1"
         sourceId="srcA"
         mangaId="m1"
       >
@@ -105,6 +138,7 @@ describe("ReaderShell Header & Progress Bar", () => {
       <ReaderShell
         chapterTitle="Chapter 0"
         pageCount={17}
+        currentChapterId="ch1"
         sourceId="srcA"
         mangaId="m1"
       >
@@ -116,11 +150,12 @@ describe("ReaderShell Header & Progress Bar", () => {
     expect(screen.getByText("17 halaman")).toBeDefined();
   });
 
-  it("renders start-to-finish reading progress bar inside the header capsule", () => {
+  it("renders page dots and an operable bottom scrubber", () => {
     render(
       <ReaderShell
         mangaTitle="Solo Leveling"
         chapterTitle="Chapter 1"
+        currentChapterId="ch1"
         sourceId="srcA"
         mangaId="m1"
       >
@@ -128,8 +163,10 @@ describe("ReaderShell Header & Progress Bar", () => {
       </ReaderShell>
     );
 
-    const progressBar = screen.getByTestId("reader-progress-bar");
-    expect(progressBar).toBeDefined();
+    expect(screen.getByTestId("reader-page-dots").querySelectorAll("circle")).toHaveLength(4);
+    const scrubber = screen.getByRole("slider", { name: "Pindah halaman" });
+    fireEvent.change(scrubber, { target: { value: "4" } });
+    expect(useReaderStore.getState().pageNavigation?.seek).toHaveBeenCalledWith(3);
   });
 
   it("saves bookmark using mangaTitle", () => {
@@ -137,6 +174,7 @@ describe("ReaderShell Header & Progress Bar", () => {
       <ReaderShell
         mangaTitle="Solo Leveling"
         chapterTitle="Chapter 1"
+        currentChapterId="ch1"
         sourceId="srcA"
         mangaId="m1"
       >
@@ -154,13 +192,14 @@ describe("ReaderShell Header & Progress Bar", () => {
     expect(item?.title).toBe("Solo Leveling");
   });
 
-  it("renders top-viewport progress bar when header is hidden", () => {
+  it("keeps the bottom page scrubber when chrome is hidden", () => {
     useReaderStore.setState({ isOverlayVisible: false });
 
     render(
       <ReaderShell
         mangaTitle="Solo Leveling"
         chapterTitle="Chapter 1"
+        currentChapterId="ch1"
         sourceId="srcA"
         mangaId="m1"
       >
@@ -172,11 +211,11 @@ describe("ReaderShell Header & Progress Bar", () => {
     expect(screen.queryByTestId("reader-progress-bar")).toBeNull();
 
     // Top viewport bar is rendered
-    const topBar = screen.getByTestId("top-viewport-progress-bar");
+    const topBar = screen.getByTestId("reader-page-scrubber");
     expect(topBar).toBeDefined();
   });
 
-  it("hides both progress bars when showPageProgress is disabled", () => {
+  it("hides the scrubber when page progress is disabled", () => {
     useReaderStore.setState({
       preferences: {
         imageFit: "width",
@@ -196,6 +235,7 @@ describe("ReaderShell Header & Progress Bar", () => {
       <ReaderShell
         mangaTitle="Solo Leveling"
         chapterTitle="Chapter 1"
+        currentChapterId="ch1"
         sourceId="srcA"
         mangaId="m1"
       >
@@ -205,6 +245,7 @@ describe("ReaderShell Header & Progress Bar", () => {
 
     expect(screen.queryByTestId("reader-progress-bar")).toBeNull();
     expect(screen.queryByTestId("top-viewport-progress-bar")).toBeNull();
+    expect(screen.queryByTestId("reader-page-scrubber")).toBeNull();
 
     // When overlay is hidden with showPageProgress false
     useReaderStore.setState({ isOverlayVisible: false });
@@ -212,6 +253,7 @@ describe("ReaderShell Header & Progress Bar", () => {
       <ReaderShell
         mangaTitle="Solo Leveling"
         chapterTitle="Chapter 1"
+        currentChapterId="ch1"
         sourceId="srcA"
         mangaId="m1"
       >
@@ -221,5 +263,6 @@ describe("ReaderShell Header & Progress Bar", () => {
 
     expect(screen.queryByTestId("reader-progress-bar")).toBeNull();
     expect(screen.queryByTestId("top-viewport-progress-bar")).toBeNull();
+    expect(screen.queryByTestId("reader-page-scrubber")).toBeNull();
   });
 });

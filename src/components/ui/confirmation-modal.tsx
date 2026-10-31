@@ -70,12 +70,12 @@ export function ConfirmationModal({
     if (icon) return icon;
     switch (variant) {
       case "danger":
-        return <Trash size={28} weight="duotone" />;
+        return <Trash size={28} weight="regular" />;
       case "warning":
-        return <Warning size={28} weight="duotone" />;
+        return <Warning size={28} weight="regular" />;
       case "info":
       default:
-        return <Info size={28} weight="duotone" />;
+        return <Info size={28} weight="regular" />;
     }
   }, [icon, variant]);
 

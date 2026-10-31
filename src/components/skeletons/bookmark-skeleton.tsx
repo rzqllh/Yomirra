@@ -7,7 +7,7 @@ export function BookmarkSkeleton() {
   return (
     <>
       <PageHeader
-        title="Rak Buku"
+        title="Library"
         subtitle="Lanjutkan bacaan atau kelola bookmark."
       />
 

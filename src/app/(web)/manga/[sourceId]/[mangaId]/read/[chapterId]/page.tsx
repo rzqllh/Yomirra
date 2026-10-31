@@ -2,7 +2,7 @@ import { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { WarningCircle } from "@phosphor-icons/react/dist/ssr";
 import { sourceManager } from "@/server/lib/sources/source-manager";
-import { withCache, CACHE_TTL } from "@/server/lib/cache/redis-cache";
+import { getServerReadOptions, loadSourceDetail, loadSourceChapters, loadSourcePages } from "@/server/lib/sources/content-access";
 import { ReaderView } from "@/components/reader/reader-view";
 import { ReaderShell } from "@/components/reader/reader-shell";
 import { EmptyState } from "@/components/states/empty-state";
@@ -22,11 +22,12 @@ export async function generateMetadata({
   const mangaId = decodeURIComponent(rawParams.mangaId);
   const chapterId = decodeURIComponent(rawParams.chapterId);
   try {
+    const readOptions = await getServerReadOptions();
     const manifestUrl = await getManifestUrlFromCookie(sourceId);
     const source = await sourceManager.getSource(sourceId, manifestUrl);
     const [detail, chapters] = await Promise.all([
-      withCache(`source:${sourceId}:manga:${mangaId}`, () => source.getDetail(mangaId), CACHE_TTL.DETAIL),
-      withCache(`source:${sourceId}:chapters:${mangaId}`, () => source.getChapters(mangaId), CACHE_TTL.CHAPTERS)
+      loadSourceDetail(source, mangaId, readOptions),
+      loadSourceChapters(source, mangaId, readOptions)
     ]);
     const chapterTitle = chapters.find((c: any) => c.id === chapterId)?.title || "Chapter";
     return {
@@ -67,18 +68,19 @@ export default async function ReaderPage({
 
   let detail: any, chapters: any, pagesResult: any;
   try {
+    const readOptions = await getServerReadOptions();
     const manifestUrl = await getManifestUrlFromCookie(sourceId);
     const source = await sourceManager.getSource(sourceId, manifestUrl);
     
     // Fetch detail, chapters, and fast-race pages cache to prevent blocking RSC commit on slow scrapers
     const fastPagesPromise = Promise.race([
-      withCache(`source:${sourceId}:pages:${mangaId}:${chapterId}`, () => source.getPages(chapterId), CACHE_TTL.PAGES).catch(() => null),
+      loadSourcePages(source, mangaId, chapterId, readOptions).catch(() => null),
       new Promise<null>((resolve) => setTimeout(() => resolve(null), 250)),
     ]);
 
     [detail, chapters, pagesResult] = await Promise.all([
-      withCache(`source:${sourceId}:manga:${mangaId}`, () => source.getDetail(mangaId), CACHE_TTL.DETAIL),
-      withCache(`source:${sourceId}:chapters:${mangaId}`, () => source.getChapters(mangaId), CACHE_TTL.CHAPTERS),
+      loadSourceDetail(source, mangaId, readOptions),
+      loadSourceChapters(source, mangaId, readOptions),
       fastPagesPromise,
     ]);
 

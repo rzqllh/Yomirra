@@ -158,7 +158,7 @@ export function PageHeader({
                 )}
                 aria-label="Kembali"
               >
-                <CaretLeft size={20} weight="bold" />
+                <CaretLeft size={20} weight="regular" />
               </button>
             ) : (
               icon && (

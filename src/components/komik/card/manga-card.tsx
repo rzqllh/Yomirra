@@ -388,7 +388,7 @@ export function MangaCard({
                 aria-label={`Opsi untuk ${manga.title}`}
                 className="flex size-11 items-center justify-center rounded-sm text-text-muted hover:text-text-primary hover:bg-surface-hover motion-safe:transition-all outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface-raised active:scale-95 data-[state=open]:rotate-90 data-[state=open]:text-text-primary duration-150 cursor-pointer"
               >
-                <DotsThreeVertical size={16} weight="bold" />
+                <DotsThreeVertical size={16} weight="regular" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48 z-50">
@@ -696,7 +696,7 @@ export function MangaCard({
 
               {(manga as any).views && (
                 <span className="flex items-center gap-1 text-text-muted font-medium">
-                  <Eye size={13} weight="bold" className="shrink-0" />
+                  <Eye size={13} weight="regular" className="shrink-0" />
                   <span>{typeof (manga as any).views === "number" ? `${((manga as any).views / 1000).toFixed(1)}k` : (manga as any).views}</span>
                 </span>
               )}
@@ -822,7 +822,7 @@ export function MangaCard({
                   )}
                 >
                   <TrendUp
-                    weight="bold"
+                    weight="regular"
                     className={cn(
                       "text-[10px]",
                       Number(effectiveRank) === 1

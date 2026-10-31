@@ -51,10 +51,10 @@ describe('App Shell & Navigation Deduplication Pass', () => {
       expect(berandaLink).toBeTruthy();
       expect(berandaLink.getAttribute('aria-current')).toBe('page');
 
-      const libraryLink = screen.getByRole('link', { name: 'Library' });
+      const libraryLink = screen.getByRole('link', { name: 'Jelajah' });
       expect(libraryLink.getAttribute('href')).toBe('/library');
 
-      const bookmarkLink = screen.getByRole('link', { name: 'Rak Buku' });
+      const bookmarkLink = screen.getByRole('link', { name: 'Library' });
       expect(bookmarkLink.getAttribute('href')).toBe('/bookmark');
 
       const cariLink = screen.getByRole('link', { name: 'Cari' });
@@ -89,7 +89,7 @@ describe('App Shell & Navigation Deduplication Pass', () => {
       render(<DesktopRail pendingHref="/library" />);
 
       const berandaLink = screen.getByRole('link', { name: 'Beranda' });
-      const libraryLink = screen.getByRole('link', { name: 'Library' });
+      const libraryLink = screen.getByRole('link', { name: 'Jelajah' });
 
       expect(berandaLink.getAttribute('aria-current')).toBeNull();
       expect(libraryLink.getAttribute('aria-current')).toBe('page');

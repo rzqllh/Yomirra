@@ -121,6 +121,7 @@ export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
               type="button"
               id="home-hero-search"
               aria-label={searchAriaLabel}
+              disabled={!mounted}
               onClick={() => window.dispatchEvent(new CustomEvent("open-command-menu"))}
               className="group flex h-11 w-full items-center gap-3 rounded-xl border border-border-subtle/80 bg-surface-base/80 px-3.5 shadow-none transition-all hover:border-accent/50 hover:bg-surface-hover/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer select-none text-left active:scale-[0.995]"
             >
@@ -227,6 +228,7 @@ export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
             type="button"
             id="home-hero-search"
             aria-label={searchAriaLabel}
+            disabled={!mounted}
             onClick={() => window.dispatchEvent(new CustomEvent("open-command-menu"))}
             className="group flex h-11 sm:h-12 w-full items-center gap-3 rounded-full border border-border-default/70 bg-surface-base/90 px-3.5 sm:px-4 shadow-none transition-all hover:border-accent/60 hover:bg-surface-hover/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer select-none text-left active:scale-[0.995]"
           >

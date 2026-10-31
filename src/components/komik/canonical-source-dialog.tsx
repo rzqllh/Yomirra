@@ -52,7 +52,7 @@ export function CanonicalSourceDialog({
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Compass size={20} weight="duotone" className="text-accent" />
+            <Compass size={20} weight="regular" className="text-accent" />
             Pilih sumber
           </DialogTitle>
           <DialogDescription>
@@ -78,7 +78,7 @@ export function CanonicalSourceDialog({
                     {[binding.language, binding.latestChapter].filter(Boolean).join(" · ") || "Buka dari sumber ini"}
                   </p>
                 </div>
-                <ArrowRight size={16} weight="bold" className="shrink-0 text-text-muted" />
+                <ArrowRight size={16} weight="regular" className="shrink-0 text-text-muted" />
               </Link>
             );
           })}

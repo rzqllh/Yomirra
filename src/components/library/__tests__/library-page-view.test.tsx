@@ -65,7 +65,7 @@ describe("LibraryPageView hierarchy", () => {
     render(<LibraryPageView />);
 
     const heading = screen.getByRole("heading", { level: 1 });
-    expect(heading.textContent).toBe("Library");
+    expect(heading.textContent).toBe("Jelajah");
     expect(heading.className).toContain("text-text-primary");
 
     expect(screen.queryByText("Rak Bacaan")).toBeNull();
@@ -78,7 +78,7 @@ describe("LibraryPageView hierarchy", () => {
     render(<LibraryPageView />);
 
     expect(screen.getByTestId("header-actions")).toBeTruthy();
-    expect(screen.getByRole("heading", { level: 2, name: "Library" })).toBeTruthy();
+    expect(screen.getByRole("heading", { level: 2, name: "Jelajah" })).toBeTruthy();
     expect(screen.getAllByText("Jelajahi katalog dari sumber yang kamu pilih.").length).toBeGreaterThan(0);
   });
 

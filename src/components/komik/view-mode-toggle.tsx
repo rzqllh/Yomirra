@@ -57,7 +57,7 @@ export function ViewModeToggle({ className, value, onChange }: ViewModeTogglePro
             transition={reducedMotion ? { duration: 0 } : transitions.layout}
           />
         )}
-        <SquaresFour size={17} weight={activeMode === "grid" ? "fill" : "bold"} />
+        <SquaresFour size={17} weight={activeMode === "grid" ? "fill" : "regular"} />
       </button>
 
       <button
@@ -79,7 +79,7 @@ export function ViewModeToggle({ className, value, onChange }: ViewModeTogglePro
             transition={reducedMotion ? { duration: 0 } : transitions.layout}
           />
         )}
-        <Rows size={17} weight={activeMode === "compact" ? "fill" : "bold"} />
+        <Rows size={17} weight={activeMode === "compact" ? "fill" : "regular"} />
       </button>
     </div>
   );

@@ -84,7 +84,7 @@ export function MangaSourceSelector({
               : "bg-black/40 border-white/15 text-white hover:bg-black/60"
           )}
         >
-          <Compass size={13} weight="duotone" />
+          <Compass size={13} weight="regular" />
           <span>{currentSourceName}</span>
           {isCurrentPreferred && (
             <Star size={12} weight="fill" className="text-accent" />
@@ -101,7 +101,7 @@ export function MangaSourceSelector({
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-base font-bold">
-              <Compass size={20} weight="duotone" className="text-accent" />
+              <Compass size={20} weight="regular" className="text-accent" />
               <span>Sumber Bacaan</span>
             </DialogTitle>
             <DialogDescription className="text-xs text-text-muted">
@@ -164,7 +164,7 @@ export function MangaSourceSelector({
                           onClick={() => setIsOpen(false)}
                         >
                           <span>Buka versi ini</span>
-                          <ArrowRight size={10} weight="bold" />
+                          <ArrowRight size={10} weight="regular" />
                         </Link>
                       </div>
 

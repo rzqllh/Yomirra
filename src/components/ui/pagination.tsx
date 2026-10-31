@@ -71,7 +71,7 @@ const PaginationPrevious = ({
     className={cn("gap-1 pl-2.5", className)}
     {...props}
   >
-    <CaretLeft size={16} weight="bold" />
+    <CaretLeft size={16} weight="regular" />
     <span className="sr-only sm:not-sr-only sm:text-xs">Sebelumnya</span>
   </PaginationLink>
 )
@@ -88,7 +88,7 @@ const PaginationNext = ({
     {...props}
   >
     <span className="sr-only sm:not-sr-only sm:text-xs">Berikutnya</span>
-    <CaretRight size={16} weight="bold" />
+    <CaretRight size={16} weight="regular" />
   </PaginationLink>
 )
 PaginationNext.displayName = "PaginationNext"
@@ -103,7 +103,7 @@ const PaginationPrevious10 = ({
     className={cn("", className)}
     {...props}
   >
-    <CaretDoubleLeft size={16} weight="bold" />
+    <CaretDoubleLeft size={16} weight="regular" />
   </PaginationLink>
 )
 PaginationPrevious10.displayName = "PaginationPrevious10"
@@ -118,7 +118,7 @@ const PaginationNext10 = ({
     className={cn("", className)}
     {...props}
   >
-    <CaretDoubleRight size={16} weight="bold" />
+    <CaretDoubleRight size={16} weight="regular" />
   </PaginationLink>
 )
 PaginationNext10.displayName = "PaginationNext10"
@@ -132,7 +132,7 @@ const PaginationEllipsis = ({
     className={cn("flex h-9 w-9 items-center justify-center", className)}
     {...props}
   >
-    <DotsThree size={16} weight="bold" className="text-text-muted" />
+    <DotsThree size={16} weight="regular" className="text-text-muted" />
     <span className="sr-only">Halaman lainnya</span>
   </span>
 )

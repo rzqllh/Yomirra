@@ -59,7 +59,7 @@ export default function manifest(): MetadataRoute.Manifest {
         name: 'Lanjut Baca',
         short_name: 'Lanjut',
         description: 'Lanjutkan chapter terakhir yang kamu baca.',
-        url: '/bookmark?tab=history',
+        url: '/bookmark',
         icons: [
           {
             src: '/icons/shortcut-continue.png',
@@ -69,8 +69,8 @@ export default function manifest(): MetadataRoute.Manifest {
         ],
       },
       {
-        name: 'Rak Buku',
-        short_name: 'Rak Buku',
+        name: 'Library',
+        short_name: 'Library',
         description: 'Buka bookmark dan bacaan yang kamu simpan.',
         url: '/bookmark',
         icons: [
@@ -129,7 +129,7 @@ export default function manifest(): MetadataRoute.Manifest {
         sizes: '1920x940',
         type: 'image/png',
         form_factor: 'wide',
-        label: 'Library Yomirra di desktop',
+        label: 'Jelajah Yomirra di desktop',
       },
     ],
   };

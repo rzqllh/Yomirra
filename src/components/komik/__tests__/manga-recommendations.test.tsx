@@ -1,9 +1,11 @@
 import React from "react";
-import { render, screen } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MangaRecommendations } from "../manga-recommendations";
 import { apiClient } from "@/shared/api-client";
+import { useSettingsStore } from "@/shared/store/settings-store";
+import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 
 vi.mock("@/shared/api-client", () => ({
   apiClient: {
@@ -28,6 +30,13 @@ describe("MangaRecommendations Component", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    useSettingsStore.setState({ hideNsfw: true });
+    useSourcePreferencesStore.setState({ disabledSources: [] });
+    vi.mocked(apiClient.getRelatedTitles).mockResolvedValue([]);
+    vi.mocked(apiClient.search).mockResolvedValue({ sourceId: "sourceA", query: "", page: 1, results: [], hasNextPage: false });
+    vi.mocked(apiClient.getPopular).mockResolvedValue({ mangas: [], hasNextPage: false });
+    vi.mocked(apiClient.getLatest).mockResolvedValue({ mangas: [], hasNextPage: false });
+    vi.mocked(apiClient.getSources).mockResolvedValue([]);
     queryClient = new QueryClient({
       defaultOptions: {
         queries: {
@@ -50,6 +59,22 @@ describe("MangaRecommendations Component", () => {
       </QueryClientProvider>
     );
   };
+
+  it("never reuses opted-in recommendation cards after safety or discovery eligibility changes", async () => {
+    useSettingsStore.setState({ hideNsfw: false });
+    vi.mocked(apiClient.getRelatedTitles).mockResolvedValue([
+      { canonicalKey: "adult", sourceId: "sourceA", mangaId: "adult", title: "Restricted recommendation", contentRating: "erotica", coverUrl: "", genres: ["Action"] },
+      { canonicalKey: "safe", sourceId: "sourceA", mangaId: "safe", title: "Safe recommendation", contentRating: "safe", coverUrl: "", genres: ["Action"] },
+    ]);
+    renderComponent({ sourceId: "sourceA", currentMangaId: "current", genres: ["Action"] });
+    await screen.findByText("Restricted recommendation");
+    act(() => useSettingsStore.getState().setHideNsfw(true));
+    expect(screen.queryByText("Restricted recommendation")).toBeNull();
+    await screen.findByText("Safe recommendation");
+    expect(screen.queryByText("Restricted recommendation")).toBeNull();
+    act(() => useSourcePreferencesStore.setState({ disabledSources: ["sourceA"] }));
+    await waitFor(() => expect(screen.queryByText("Safe recommendation")).toBeNull());
+  });
 
   it("renders 'Komik Serupa' header and recommendations from server catalog primary path", async () => {
     (apiClient.getRelatedTitles as ReturnType<typeof vi.fn>).mockResolvedValueOnce([
@@ -199,8 +224,8 @@ describe("MangaRecommendations Component", () => {
     });
     (apiClient.getLatest as ReturnType<typeof vi.fn>).mockResolvedValue({ mangas: [], hasNextPage: false });
     (apiClient.getSources as ReturnType<typeof vi.fn>).mockResolvedValue([
-      { id: "sourceA", isEnabled: true, isNsfw: false },
-      { id: "sourceB", isEnabled: true, isNsfw: false },
+      { id: "sourceA", isEnabled: true, isInstalled: true, isNsfw: false },
+      { id: "sourceB", isEnabled: true, isInstalled: true, isNsfw: false },
     ]);
 
     renderComponent({

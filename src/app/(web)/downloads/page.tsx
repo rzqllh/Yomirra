@@ -82,7 +82,7 @@ export default function DownloadsPage() {
         <PageHeader
           title="Unduhan"
           subtitle="Kelola chapter yang tersimpan untuk dibaca offline."
-          icon={<Download size={24} weight="duotone" />}
+          icon={<Download size={24} weight="regular" />}
           actions={clearAllAction}
           desktopActions={clearAllAction}
         />
@@ -95,18 +95,18 @@ export default function DownloadsPage() {
         {storageInfo && (
           <div className="rounded-2xl p-4 sm:p-5 flex items-center gap-4 bg-surface-raised border border-border-default/80 shadow-xs">
             <div className="size-12 bg-accent/10 border border-accent/20 rounded-xl flex items-center justify-center text-accent shrink-0 shadow-xs">
-              <Database size={24} weight="duotone" />
+              <Database size={24} weight="regular" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-1">
-                <p className="text-xs font-bold text-text-primary uppercase tracking-wider">Penyimpanan Perangkat</p>
+                <p className="text-xs font-bold text-text-primary uppercase tracking-wider">Penyimpanan browser</p>
                 <span className="text-[11px] font-bold text-accent">
                   {((storageInfo.usage / (storageInfo.quota || 1)) * 100).toFixed(1)}%
                 </span>
               </div>
               <div className="flex justify-between text-xs mb-2">
                 <span className="font-semibold text-text-secondary">{formatBytes(storageInfo.usage)} terpakai</span>
-                <span className="text-text-muted">{formatBytes(storageInfo.quota)} total</span>
+                <span className="text-text-muted">{formatBytes(storageInfo.quota)} perkiraan kuota browser</span>
               </div>
               <div className="w-full bg-surface-base border border-border-subtle/80 rounded-full h-2 overflow-hidden shadow-inner">
                 <div
@@ -217,7 +217,7 @@ export default function DownloadsPage() {
                             aria-label={`Jeda unduhan ${item.mangaTitle} - ${item.chapterTitle}`}
                             className="text-text-secondary hover:text-text-primary rounded-lg active:scale-95 transition-all"
                           >
-                            <Pause size={17} weight="bold" />
+                            <Pause size={17} weight="regular" />
                           </IconButton>
                         ) : item.status === "paused" ? (
                           <IconButton
@@ -243,7 +243,7 @@ export default function DownloadsPage() {
                             aria-label={`Coba lagi unduhan ${item.mangaTitle} - ${item.chapterTitle}`}
                             className="text-accent hover:text-accent-hover rounded-lg active:scale-95 transition-all"
                           >
-                            <ArrowClockwise size={17} weight="bold" />
+                            <ArrowClockwise size={17} weight="regular" />
                           </IconButton>
                         ) : null}
 
@@ -257,7 +257,7 @@ export default function DownloadsPage() {
                           aria-label={`Batalkan unduhan ${item.mangaTitle} - ${item.chapterTitle}`}
                           className="text-semantic-error hover:text-semantic-error/80 rounded-lg active:scale-95 transition-all"
                         >
-                          <X size={17} weight="bold" />
+                          <X size={17} weight="regular" />
                         </IconButton>
                       </div>
                     </div>

@@ -128,6 +128,9 @@ export const idbStorage: StateStorage = {
       window.localStorage.setItem(name, value);
     } catch (err) {
       console.error(`[idbStorage] LocalStorage write failed for "${name}":`, err);
+      // Zustand persistence must not report success when both backends reject
+      // a write (for example, due to browser quota or blocked storage).
+      throw err;
     }
   },
 

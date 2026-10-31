@@ -38,6 +38,8 @@ export interface SearchCatalogBinding {
 }
 
 export interface SearchCatalogCandidate {
+  contentRating?: import("@/shared/sources/source-types").MangaItem["contentRating"];
+  isNsfw?: boolean;
   canonicalKey: string;
   sourceId: string;
   mangaId: string;

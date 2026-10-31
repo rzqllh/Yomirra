@@ -70,6 +70,7 @@ export interface MangaDexChapterAttributes {
   publishAt: string;
   readableAt: string;
   pages: number;
+  externalUrl?: string | null;
 }
 
 export interface MangaDexChapter {
@@ -101,6 +102,7 @@ export type MangaDexTagListResponse = MangaDexListResponse<MangaDexTag>;
 export type MangaDexMangaListResponse = MangaDexListResponse<MangaDexManga>;
 export type MangaDexChapterListResponse = MangaDexListResponse<MangaDexChapter>;
 export type MangaDexMangaResponse = MangaDexResponse<MangaDexManga>;
+export type MangaDexChapterResponse = MangaDexResponse<MangaDexChapter>;
 
 
 export interface MangaDexStatisticsResponse {

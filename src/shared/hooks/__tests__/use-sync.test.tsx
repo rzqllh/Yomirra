@@ -103,6 +103,27 @@ describe("useSync cloud correctness", () => {
     useGuestMergeStore.getState().cancelMergeReview();
   });
 
+  it("retries a failed automatic full sync after a bounded delay", async () => {
+    let attempts = 0;
+    mocks.firestore.getDocs.mockImplementation(async (reference: { path: string }) => {
+      if (reference.path === "users/user-a/libraryV2") {
+        attempts++;
+        if (attempts === 1) throw new Error("network unavailable");
+      }
+      return snapshot([]);
+    });
+    const random = vi.spyOn(Math, "random").mockReturnValue(0.5);
+    const log = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    try {
+      const { unmount } = renderHook(() => useSync({ autoSync: true }));
+      await waitFor(() => expect(attempts).toBe(2), { timeout: 4_000 });
+      unmount();
+    } finally {
+      random.mockRestore();
+      log.mockRestore();
+    }
+  });
+
   it("subscribes to canonical libraryV2 and applies remote tombstone and removed changes locally", async () => {
     const { result } = renderHook(() => useSync({ autoSync: true }));
 
@@ -154,6 +175,38 @@ describe("useSync cloud correctness", () => {
         docChanges: () => [{ type: "removed", doc: { id: "source::manga::chapter", data: () => ({}) } }],
       });
     });
+    expect(useHistoryStore.getState().items).toEqual({});
+  });
+
+  it("ignores queued realtime changes from the old account before React can rerender", async () => {
+    renderHook(() => useSync({ autoSync: false }));
+    await waitFor(() => {
+      expect(mocks.listeners.has("users/user-a/libraryV2")).toBe(true);
+      expect(mocks.listeners.has("users/user-a/history")).toBe(true);
+      expect(mocks.listeners.has("users/user-a/preferences/sources")).toBe(true);
+    });
+
+    // Firebase changes account immediately; the old hook closure/listeners
+    // have not yet been cleaned up by React.
+    mocks.user = { uid: "user-b" };
+    act(() => {
+      mocks.listeners.get("users/user-a/libraryV2")?.({
+        docChanges: () => [{ type: "added", doc: {
+          id: "saved-title", data: () => libraryItem(),
+        } }],
+      });
+      mocks.listeners.get("users/user-a/history")?.({
+        docChanges: () => [{ type: "added", doc: {
+          id: "source::manga::chapter", data: () => historyItem(),
+        } }],
+      });
+      mocks.listeners.get("users/user-a/preferences/sources")?.({
+        exists: () => true,
+        data: () => ({ disabledSources: ["source"], hiddenFromHomeSources: [] }),
+      } as never);
+    });
+
+    expect(useLibraryStore.getState().items).toEqual({});
     expect(useHistoryStore.getState().items).toEqual({});
   });
 
@@ -689,7 +742,7 @@ describe("useSync cloud correctness", () => {
       expect(mocks.listeners.has("users/user-a/libraryV2")).toBe(true);
     });
   });
-  it("compacts cloud overflow only after choosing retained resume and milestone records", async () => {
+  it("compacts cloud overflow while retaining the latest visit without inventing a verified milestone", async () => {
     const entries: Array<[string, Record<string, unknown>]> = Array.from({ length: 600 }, (_, index) => [
       `source::manga::ch-${index}`, { ...historyItem(index + 1), chapterId: `ch-${index}`, chapterNumber: index },
     ]);
@@ -698,7 +751,11 @@ describe("useSync cloud correctness", () => {
     await act(async () => { await result.current.runFullSync(); });
     const retained = Object.values(useHistoryStore.getState().items);
     expect(retained.filter(item => !item.isCompact)).toHaveLength(512);
-    expect(useHistoryStore.getState().getHighestMilestoneForManga("source", "manga")?.chapterNumber).toBe(599);
+    // The imported records contain chapter numbers but no measured page progress
+    // or pinned Library milestone: chapter 599 is a visit, not verified reading.
+    expect(useHistoryStore.getState().getLatestForManga("source", "manga")?.chapterNumber).toBe(599);
+    expect(useHistoryStore.getState().getContinueReading()[0]?.chapterNumber).toBe(599);
+    expect(useHistoryStore.getState().getHighestMilestoneForManga("source", "manga")).toBeUndefined();
     const markers = mocks.writes.filter(write => (write.data as Record<string, unknown>)._compacted);
     expect(markers).toHaveLength(88);
     expect(markers.every(write => !(write.data as Record<string, unknown>)._deleted)).toBe(true);

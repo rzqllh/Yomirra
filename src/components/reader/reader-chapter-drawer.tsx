@@ -18,9 +18,9 @@ interface ReaderChapterDrawerProps {
   mangaId: string;
 }
 
-export function ReaderChapterDrawer({ 
-  isOpen, 
-  onClose, 
+export function ReaderChapterDrawer({
+  isOpen,
+  onClose,
   chapters,
   currentChapterId,
   sourceId,
@@ -34,13 +34,13 @@ export function ReaderChapterDrawer({
 
   const sortedChapters = React.useMemo(() => {
     if (!chapters) return [];
-    
+
     let result = chapters;
     if (searchQuery.trim()) {
       const lowerQuery = searchQuery.toLowerCase();
       result = result.filter(c => c.title.toLowerCase().includes(lowerQuery));
     }
-    
+
     if (sortOrder === "asc") return [...result].reverse();
     return result;
   }, [chapters, sortOrder, searchQuery]);
@@ -71,14 +71,14 @@ export function ReaderChapterDrawer({
 
   const headerControls = (
     <div className="flex items-center gap-2.5">
-      <SearchInput 
+      <SearchInput
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        placeholder="Cari nomor chapter…" 
+        placeholder="Cari nomor chapter…"
         containerClassName="flex-1 h-[44px]"
       />
-      <IconButton 
-        variant="ghost" 
+      <IconButton
+        variant="ghost"
         size="default"
         className={cn(
           "rounded-xl min-h-[44px] min-w-[44px] border border-border-subtle shrink-0 transition-colors",
@@ -98,7 +98,7 @@ export function ReaderChapterDrawer({
       isOpen={isOpen}
       onClose={onClose}
       title="Chapter"
-      icon={<List size={20} weight="bold" />}
+      icon={<List size={20} weight="regular" />}
       headerControls={headerControls}
       desktopMode="bottom-dialog"
     >

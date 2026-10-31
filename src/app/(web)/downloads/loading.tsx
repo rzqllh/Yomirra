@@ -10,7 +10,7 @@ export default function Loading() {
         <PageHeader
           title="Unduhan"
           subtitle="Kelola chapter yang tersimpan untuk dibaca offline."
-          icon={<Download size={24} weight="duotone" />}
+          icon={<Download size={24} weight="regular" />}
         />
 
         <ContentLane variant="focused" className="flex flex-col gap-6">

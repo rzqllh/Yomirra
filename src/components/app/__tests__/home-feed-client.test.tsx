@@ -524,12 +524,12 @@ describe("Yomirra Editorial Home Components", () => {
     it("keeps ranking source-scoped, uses display names, and preserves source context in Lihat semua", () => {
       render(<HomeLeaderboardPanel items={samplePopular} />);
 
-      expect(screen.getByText("Paling banyak dibaca")).toBeTruthy();
+      expect(screen.getByText("Populer di sumber")).toBeTruthy();
       expect(screen.getByText("Manga Test 1")).toBeTruthy();
       expect(screen.getByText("Manga Test 2")).toBeTruthy();
       expect(screen.queryByText("Manga Source B")).toBeNull();
 
-      const select = screen.getByRole("combobox", {
+      const select = screen.getByRole("button", {
         name: /pilih sumber peringkat/i,
       });
       expect(select).toBeTruthy();
@@ -539,7 +539,8 @@ describe("Yomirra Editorial Home Components", () => {
         "/sources/source-a?sort=popular"
       );
 
-      fireEvent.change(select, { target: { value: "source-b" } });
+      fireEvent.pointerDown(select, { button: 0, ctrlKey: false });
+      fireEvent.click(screen.getByRole("menuitem", { name: "Source B" }));
 
       expect(screen.getByText("Manga Source B")).toBeTruthy();
       expect(screen.queryByText("Manga Test 1")).toBeNull();
@@ -673,6 +674,20 @@ describe("Yomirra Editorial Home Components", () => {
   });
 
   describe("Popularity Deduplication", () => {
+    it("keeps Quick Search available and shows provider failure with empty feeds", () => {
+      render(<HomeFeedClient unifiedPopular={[]} unifiedLatest={[]} catalogState="unavailable" />);
+      expect(screen.getByRole("button", { name: "Cari komik (Tekan Ctrl+K)" })).toBeTruthy();
+      expect(screen.getByRole("heading", { name: "Sumber bacaan belum bisa dimuat" })).toBeTruthy();
+      expect(screen.getByRole("button", { name: "Coba lagi" })).toBeTruthy();
+      expect(screen.queryByRole("region", { name: "Sorotan & peringkat" })).toBeNull();
+    });
+
+    it("labels healthy empty feeds without calling them unreachable", () => {
+      render(<HomeFeedClient unifiedPopular={[]} unifiedLatest={[]} catalogState="empty" />);
+      expect(screen.getByRole("heading", { name: "Belum ada hasil dari sumber aktif" })).toBeTruthy();
+      expect(screen.queryByText("Sumber bacaan belum bisa dimuat")).toBeNull();
+    });
+
     it("keeps only the compact source-scoped ranking panel", () => {
       render(
         <HomeFeedClient
@@ -681,9 +696,9 @@ describe("Yomirra Editorial Home Components", () => {
         />
       );
 
-      expect(screen.getByText("Paling banyak dibaca")).toBeTruthy();
+      expect(screen.getByText("Populer di sumber")).toBeTruthy();
       expect(
-        screen.queryByRole("heading", { level: 2, name: /banyak dibaca/i })
+        screen.queryByRole("heading", { level: 2, name: /populer di sumber/i })
       ).toBeNull();
       expect(document.getElementById("popular-section")).toBeNull();
     });

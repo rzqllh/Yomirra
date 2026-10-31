@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { checkRateLimit } from "@/server/lib/security/rate-limit";
 import { findRelatedSearchTitles } from "@/server/lib/search/search-intelligence-service";
+import { getRequestReadOptions } from "@/server/lib/sources/content-access";
 
 export const dynamic = "force-dynamic";
 
@@ -51,7 +52,8 @@ export async function POST(request: NextRequest) {
 
   const results = await findRelatedSearchTitles(
     parsed.data.target,
-    parsed.data.limit ?? 8
+    parsed.data.limit ?? 8,
+    getRequestReadOptions(request).hideNsfw !== false
   );
   return NextResponse.json({ data: results });
 }

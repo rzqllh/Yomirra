@@ -373,7 +373,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
                 onClick={installPWA}
                 className="w-full min-h-11 rounded-2xl font-bold text-xs sm:text-sm bg-surface-overlay border border-border-subtle text-accent hover:bg-accent/10 motion-safe:active:scale-[0.98] motion-safe:transition-[transform,background-color,color,border-color] flex items-center justify-center gap-2 cursor-pointer"
               >
-                <DownloadSimple size={18} weight="bold" />
+                <DownloadSimple size={18} weight="regular" />
                 Install Aplikasi Yomirra
               </motion.button>
             )}
@@ -386,7 +386,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
         <DialogContent className="max-w-sm rounded-2xl bg-surface-overlay border border-border-default/80 p-5 text-text-primary">
           <DialogHeader>
             <DialogTitle className="text-base font-bold flex items-center gap-2">
-              <Export size={20} className="text-accent" weight="bold" />
+              <Export size={20} className="text-accent" weight="regular" />
               <span>Pasang di iPhone / iPad</span>
             </DialogTitle>
             <DialogDescription className="text-xs text-text-muted">
@@ -400,7 +400,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
                 1
               </span>
               <p className="leading-relaxed">
-                Ketuk tombol <strong>Bagikan (Share)</strong> <Export size={14} className="inline mx-0.5 text-accent" weight="bold" /> di bilah navigasi Safari.
+                Ketuk tombol <strong>Bagikan (Share)</strong> <Export size={14} className="inline mx-0.5 text-accent" weight="regular" /> di bilah navigasi Safari.
               </p>
             </div>
 
@@ -409,7 +409,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
                 2
               </span>
               <p className="leading-relaxed">
-                Gulir ke bawah dan pilih <strong>&quot;Tambah ke Layar Utama&quot; (Add to Home Screen)</strong> <PlusSquare size={14} className="inline mx-0.5 text-accent" weight="bold" />.
+                Gulir ke bawah dan pilih <strong>&quot;Tambah ke Layar Utama&quot; (Add to Home Screen)</strong> <PlusSquare size={14} className="inline mx-0.5 text-accent" weight="regular" />.
               </p>
             </div>
 

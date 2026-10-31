@@ -76,6 +76,8 @@ export function normalizeMangaItem(manga: MangaDexManga): MangaItem {
     format: getFormat(manga),
     latestChapter: lastCh,
     description: desc || undefined,
+    contentRating: manga.attributes.contentRating ?? "unknown",
+    isNsfw: manga.attributes.contentRating !== "safe",
   };
 }
 
@@ -94,6 +96,8 @@ export function normalizeMangaDetail(manga: MangaDexManga): MangaDetail {
     genres,
     status: normalizeMangaDexStatus(manga.attributes.status),
     format: getFormat(manga),
+    contentRating: manga.attributes.contentRating ?? "unknown",
+    isNsfw: manga.attributes.contentRating !== "safe",
   };
 }
 
@@ -114,5 +118,14 @@ export function normalizeChapter(chapter: MangaDexChapter, mangaId: string): Cha
     number: num,
     title,
     date: chapter.attributes.readableAt || chapter.attributes.publishAt || "",
+    language: lang,
+    volume: chapter.attributes.volume ?? undefined,
+    pageCount: chapter.attributes.pages,
+    chapterNumber: chapter.attributes.chapter ?? undefined,
+    scanlator: chapter.relationships
+      .filter((relationship) => relationship.type === "scanlation_group")
+      .map((relationship) => relationship.attributes?.name)
+      .filter((name): name is string => typeof name === "string")
+      .join(", ") || undefined,
   };
 }
