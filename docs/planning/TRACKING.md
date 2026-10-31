@@ -25,7 +25,7 @@ Documentation changes and code changes require scoped PR/checks; when starting w
 
 | IDs | Specific scope / existing code | Phase | Priority | Owner | Status | Evidence / next |
 | --- | --- | --- | --- | --- | --- | --- |
-| CAT-01..02 | One canonical card per verified work; NO false merge | P01 | P0 | ENG:TBD | IN_PROGRESS | #86 identical binding dedupe `21b05db`, #94 unmatched confidence `fa30041` merged Preview; both source CI PASS; false merges, cross-page canonical identity still incomplete |
+| CAT-01..02 | One canonical card per verified work; NO false merge | P01 | P0 | ENG:TBD | IN_PROGRESS | #86 duplicate binding `21b05db`, #94 confidence `fa30041` merged CI PASS; draft #98 format conflict guard CI pending; durable cross-page identity/false-match review incomplete |
 | CAT-03..04 | Multi-source picker; source health ordering | P01 | P0 | ENG:TBD | IN_PROGRESS | Existing manual picker; PR #86 (`e4ea15f`) sorts by observed request health, tests **not run**; deep source health still pending |
 | CAT-05..07 | Clear unhealthy/unknown provider statuses; exact chosen source route; NSFW eligible count | P01 | P0 | ENG:TBD | PLANNED | Provider chooser and content guard tests |
 | CAT-08..10 | Cross-page/cache/session stability, UID-local progress, no work-ID breakage | P01/P02 | P0 | ENG:TBD | PLANNED | Existing source `canonical:{title}` and Redis `source:{id}:{mangaId}` split |
