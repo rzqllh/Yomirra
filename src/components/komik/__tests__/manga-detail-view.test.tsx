@@ -60,6 +60,16 @@ describe("MangaDetailView - Scroll Position Reset", () => {
     expect(refresh).toHaveBeenCalledOnce();
   });
 
+  it("preserves a provider's chapter zero in the reading action label and identity", () => {
+    const view = render(<MangaDetailView sourceId="mangadex" mangaId="zero-work"
+      detail={{ id: "zero-work", title: "Zero Work", coverUrl: "", description: "", genres: [], status: "COMPLETED" }}
+      chapters={[{ id: "zero-id", mangaId: "zero-work", number: 0, title: "Oneshot [EN]", date: "2026-10-31" }]} />);
+    const actions = view.getAllByRole("link", { name: "Mulai Baca - Chapter 0" });
+    expect(actions.length).toBeGreaterThan(0);
+    expect(actions.every((link) => link.getAttribute("href")?.includes("/read/zero-id"))).toBe(true);
+    expect(view.queryByRole("link", { name: "Mulai Baca - Chapter 1" })).toBeNull();
+  });
+
   it("resets window scroll to top (0, 0) on render/mount", () => {
     const scrollToSpy = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
 

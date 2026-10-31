@@ -222,7 +222,7 @@ function MangaDetailContent({
     const primaryLabel = isContinue ? "Lanjutkan" : "Mulai Baca";
     const companionLabel = isContinue
       ? continueChapterLabel.replace('Chapter', 'Ch.')
-      : (firstChapter ? (firstChapter.title?.startsWith('Ch') ? firstChapter.title : `Chapter ${firstChapter.number || 1}`) : "Chapter 1");
+      : (firstChapter ? (firstChapter.title?.startsWith('Ch') ? firstChapter.title : `Chapter ${firstChapter.number ?? 1}`) : "Chapter 1");
 
     const targetHref = getReaderHref(sourceId, mangaId, targetChapterId, readerReturnTo);
 
