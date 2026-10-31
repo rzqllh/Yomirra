@@ -375,14 +375,14 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
         <SettingsSection title="Konten">
           <SettingsItem
             icon={<IconWrapper><ShieldWarning size={20} weight="regular" /></IconWrapper>}
-            title="Sembunyikan konten dewasa"
-            description="Sembunyikan sumber dan konten yang ditandai 18+."
+            title="Tampilkan NSFW"
+            description="Nonaktif secara default. Saat diaktifkan, sumber dan konten yang ditandai dewasa dapat ditampilkan. Rating yang belum terverifikasi tidak berarti aman."
             right={
               <ToggleSwitch
                 id="nsfw-toggle"
-                checked={mounted ? hideNsfw : true}
-                onCheckedChange={setHideNsfw}
-                label="Sembunyikan konten dewasa"
+                checked={mounted ? !hideNsfw : false}
+                onCheckedChange={(showNsfw) => setHideNsfw(!showNsfw)}
+                label="Tampilkan NSFW"
               />
             }
           />

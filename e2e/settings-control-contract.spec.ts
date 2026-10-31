@@ -6,8 +6,12 @@ test("Settings controls persist preferences and expose honest, accessible states
   await page.goto("/settings");
   await expect(page.locator('[data-hydrated="true"]')).toBeVisible();
   await expect(page.locator('[data-testid="splash-screen"]')).toHaveCount(0);
-  await expect(page.getByRole("checkbox", { name: "Sembunyikan konten dewasa", exact: true })).toBeChecked();
+  await expect(page.getByRole("checkbox", { name: "Tampilkan NSFW", exact: true })).not.toBeChecked();
   await expect(page.getByRole("checkbox", { name: "Hemat data", exact: true })).not.toBeChecked();
+  await page.locator('label[for="nsfw-toggle"]').click();
+  await expect(page.getByRole("checkbox", { name: "Tampilkan NSFW", exact: true })).toBeChecked();
+  await page.locator('label[for="nsfw-toggle"]').click();
+  await expect(page.getByRole("checkbox", { name: "Tampilkan NSFW", exact: true })).not.toBeChecked();
   await page.locator('label[for="data-saver"]').click();
   await expect(page.getByRole("checkbox", { name: "Hemat data", exact: true })).toBeChecked();
   await page.locator('label[for="check-on-start"]').click();
@@ -24,5 +28,5 @@ test("Settings controls persist preferences and expose honest, accessible states
   await expect(page.getByRole("button", { name: "Jeda pengecekan: 15 Menit", exact: true })).toBeDisabled();
   await expect(page.getByRole("button", { name: "Bahasa utama: English", exact: true })).toBeVisible();
   await expect(page.locator("html")).toHaveClass(/dark/);
-  await expect(page.getByRole("checkbox", { name: "Sembunyikan konten dewasa", exact: true })).toBeChecked();
+  await expect(page.getByRole("checkbox", { name: "Tampilkan NSFW", exact: true })).not.toBeChecked();
 });

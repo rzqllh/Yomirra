@@ -48,6 +48,22 @@ describe("SettingsPage - Update Checker UI", () => {
     return view;
   };
 
+  it("keeps Tampilkan NSFW off by default and inverts only the displayed toggle", async () => {
+    useSettingsStore.setState({ hideNsfw: true });
+    await renderWithMount();
+
+    const toggle = screen.getByRole("checkbox", { name: "Tampilkan NSFW" }) as HTMLInputElement;
+    expect(toggle.checked).toBe(false);
+
+    await act(async () => { fireEvent.click(toggle); });
+    expect(toggle.checked).toBe(true);
+    expect(useSettingsStore.getState().hideNsfw).toBe(false);
+
+    await act(async () => { fireEvent.click(toggle); });
+    expect(toggle.checked).toBe(false);
+    expect(useSettingsStore.getState().hideNsfw).toBe(true);
+  });
+
   it("renders current values correctly", async () => {
     await renderWithMount();
 
