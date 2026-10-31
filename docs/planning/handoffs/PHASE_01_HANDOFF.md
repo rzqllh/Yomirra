@@ -1,6 +1,6 @@
 # Yomirra — PHASE 01 HANDOFF
 Updated: 2026-10-31 Asia/Jakarta
-Phase status: NOT_STARTED (planning file created; no implementation/QA performed in this phase)
+Phase status: IN_PROGRESS (read-only root-cause audit started; no implementation/QA executed)
 Document branch: `docs/yomirra-master-planning-20261031`
 Planning base: `preview@02cc664be8c66664ffe9628fcaa68523322f3ce0`
 
@@ -55,3 +55,5 @@ RISK/DECISION: approval, rollback, follow-up dependency
 STATUS: PLANNED / IN_PROGRESS / IMPLEMENTED / VERIFIED / BLOCKED
 NEXT: one concrete safe continuation step
 ```
+
+- 2026-10-31 — READ-ONLY P01 DIAGNOSTIC: inspected `src/shared/hooks/use-search-catalog.ts`, `src/shared/lib/canonical-search.ts`, `src/server/lib/search/semantic-catalog.ts`, `src/app/api/sources/search/route.ts`, `src/components/search/search-results.tsx`, `src/components/komik/canonical-source-dialog.tsx`, `src/components/komik/manga-source-selector.tsx` and existing canonical tests at `preview@02cc664`. Search UI makes per-source TanStack queries and clusters the current page in memory, while separate aggregate API also clusters and Redis search index stores source-derived keys. Stored candidate matches are keyed separately and may be inserted into combined client results; this design can permit duplicate canonical identities across pages/search modalities and lacks durable cross-session identity. **This is code-path risk, not yet a reproduced count from live samples.** Existing picker uses static registry availability, not verified deep health or last-used healthy sorting. SearchResults produces one error banner per failed provider. Existing tests cover identical-title merging and conflicting authors but do not establish cross-page/live canonical stability. Next: add failing fixtures for cross-page identity, unknown match confidence and source ordering **before** code modifications. No tests executed at this checkpoint; no functional changes.
