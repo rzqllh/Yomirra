@@ -18,8 +18,8 @@ Documentation changes and code changes require scoped PR/checks; when starting w
 | PLAN-01 | Reconcile preview/main/PR/deploy heads, historic Q1–Q175 | P00 | P0 | ENG:TBD | IN_PROGRESS | GitHub preview `02cc664`; main `d27d1e1`; PR #79 draft; refresh before implementation |
 | PLAN-02 | Consolidate all plans in `MASTER_PLAN.md` | P00 | P0 | ENG:TBD | IMPLEMENTED | Created on planning branch; verify document completeness and link with exact SHA |
 | PLAN-03 | Eight-phase `PHASE_PLAN.md` with gates | P00 | P0 | ENG:TBD | IMPLEMENTED | Created on planning branch; check scope/exit criteria |
-| PLAN-04 | This `TRACKING.md`, acceptance matrix, P00–P07 handoffs | P00 | P0 | ENG:TBD | IN_PROGRESS | Append exact doc commits/PR in P00 handoff |
-| PLAN-05 | Documents reviewed, PR checked and safely merged to `preview` | P00 | P0 | ENG:TBD | PLANNED | No PR/merge yet at initial checkpoint |
+| PLAN-04 | This `TRACKING.md`, acceptance matrix, P00–P07 handoffs | P00 | P0 | ENG:TBD | IMPLEMENTED | All 12 Markdown documents exist in docs-only branch; 111 acceptance IDs, phase/acceptance crosscheck passed; PR review pending |
+| PLAN-05 | Documents reviewed, PR checked and safely merged to `preview` | P00 | P0 | ENG:TBD | IN_PROGRESS | Document diff review shows exactly 12 new Markdown files and no code changes; PR and CI/merge pending |
 
 ## Canonical catalog, metadata and source choice
 
