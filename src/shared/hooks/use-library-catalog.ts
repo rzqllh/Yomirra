@@ -225,6 +225,7 @@ export function useLibraryCatalog() {
         const fallback = filtersData.sorts.find((item) => aliases.includes(item.id))?.id ?? filtersData.sorts[0].id;
         // Keep both owners in agreement. Updating only local state lets the
         // store-sync effect restore the unsupported value on every render.
+        skipSourceFilterPageReset.current = true;
         setSort(fallback);
         setFilters({ sort: fallback });
       }

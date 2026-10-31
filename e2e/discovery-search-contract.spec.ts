@@ -89,13 +89,16 @@ test("native provider sorts settle without a render loop and reach the request",
   test.setTimeout(60_000);
   const errors: string[] = [];
   page.on("pageerror", error => errors.push(error.message));
-  await page.goto("/library?source=mangadex&sort=latest");
+  await page.goto("/library?source=mangadex&sort=latest&page=3");
   await expect(page.getByText("Catalog mangadex", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('[data-testid="splash-screen"]')).toHaveCount(0);
+  expect(new URL(page.url()).searchParams.get("page")).toBe("3");
   await page.getByRole("button", { name: "Urutkan Jelajah: Terbaru", exact: true }).click();
   const request = page.waitForRequest(req => new URL(req.url()).pathname === "/api/sources/mangadex/search" && new URL(req.url()).searchParams.get("sort") === "createdAt");
   await page.getByRole("menuitem", { name: "Terbaru Ditambahkan", exact: true }).click();
   await request;
+  await expect(page).toHaveURL(/sort=createdAt/);
+  expect(new URL(page.url()).searchParams.has("page")).toBe(false);
   await expect(page.getByRole("button", { name: "Urutkan Jelajah: Terbaru Ditambahkan", exact: true })).toBeVisible();
   await expect(page.getByText("Catalog mangadex", { exact: true }).first()).toBeVisible();
   await expect(page.getByRole("heading", { name: "Yomirra mengalami kendala", exact: true })).toHaveCount(0);
