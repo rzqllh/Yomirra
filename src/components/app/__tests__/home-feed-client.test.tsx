@@ -676,15 +676,15 @@ describe("Yomirra Editorial Home Components", () => {
   describe("Popularity Deduplication", () => {
     it("keeps Quick Search available and shows provider failure with empty feeds", () => {
       render(<HomeFeedClient unifiedPopular={[]} unifiedLatest={[]} catalogState="unavailable" />);
-      expect(screen.getByRole("button", { name: "Cari komik (Tekan Ctrl+K)", exact: true })).toBeTruthy();
-      expect(screen.getByRole("heading", { name: "Sumber bacaan belum bisa dimuat", exact: true })).toBeTruthy();
-      expect(screen.getByRole("button", { name: "Coba lagi", exact: true })).toBeTruthy();
-      expect(screen.queryByRole("region", { name: "Sorotan & peringkat", exact: true })).toBeNull();
+      expect(screen.getByRole("button", { name: "Cari komik (Tekan Ctrl+K)" })).toBeTruthy();
+      expect(screen.getByRole("heading", { name: "Sumber bacaan belum bisa dimuat" })).toBeTruthy();
+      expect(screen.getByRole("button", { name: "Coba lagi" })).toBeTruthy();
+      expect(screen.queryByRole("region", { name: "Sorotan & peringkat" })).toBeNull();
     });
 
     it("labels healthy empty feeds without calling them unreachable", () => {
       render(<HomeFeedClient unifiedPopular={[]} unifiedLatest={[]} catalogState="empty" />);
-      expect(screen.getByRole("heading", { name: "Belum ada hasil dari sumber aktif", exact: true })).toBeTruthy();
+      expect(screen.getByRole("heading", { name: "Belum ada hasil dari sumber aktif" })).toBeTruthy();
       expect(screen.queryByText("Sumber bacaan belum bisa dimuat")).toBeNull();
     });
 
