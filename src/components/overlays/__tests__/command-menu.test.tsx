@@ -96,4 +96,12 @@ describe("Quick Search scope and dialog", () => {
     expect(screen.queryByRole("dialog", { name: "Quick Search" })).toBeNull();
     await waitFor(() => expect(document.activeElement).toBe(trigger));
   });
+
+  it("handles global Escape while the dialog is open regardless of the keyboard event target", async () => {
+    const trigger = open();
+    await screen.findByRole("dialog", { name: "Quick Search" });
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(screen.queryByRole("dialog", { name: "Quick Search" })).toBeNull();
+    await waitFor(() => expect(document.activeElement).toBe(trigger));
+  });
 });

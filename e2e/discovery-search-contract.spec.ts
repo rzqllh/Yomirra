@@ -112,7 +112,7 @@ test("actual routes keep filters and centered Quick Search inside small, tablet 
     expect(bounds!.x).toBeGreaterThanOrEqual(0);
     expect(bounds!.y).toBeGreaterThanOrEqual(0);
     expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(viewport.height + 1);
-    await page.keyboard.press("Escape");
+    await dialog.getByRole("combobox", { name: "Quick Search di sumber Jelajah" }).press("Escape");
     await expect(dialog).toHaveCount(0);
     for (const path of ["/search", "/bookmark", "/settings"]) {
       // Isolate layout probes from document teardown/HMR. Client navigation and

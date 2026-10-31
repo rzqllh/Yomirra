@@ -38,6 +38,16 @@ export function CommandMenu() {
   const debouncedQuery = useDebounce(query, 180);
   const isDebouncing = query !== debouncedQuery;
 
+  const handleOpenChange = React.useCallback((next: boolean) => {
+    setOpen(next);
+    if (!next) {
+      setSearchQuery("");
+      const trigger = triggerRef.current;
+      if (restoreFocusRef.current) requestAnimationFrame(() => { if (trigger?.isConnected) trigger.focus({ preventScroll: true }); });
+      triggerRef.current = null;
+    }
+  }, []);
+
   React.useEffect(() => {
     const openSearch = (value = "") => {
       const active = document.activeElement;
@@ -48,12 +58,18 @@ export function CommandMenu() {
     };
     const customOpen = (event: Event) => openSearch((event as CustomEvent<{ query?: string }>).detail?.query ?? "");
     const shortcut = (event: KeyboardEvent) => {
+      if (open && event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        handleOpenChange(false);
+        return;
+      }
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") { event.preventDefault(); openSearch(); }
     };
     window.addEventListener("open-command-menu", customOpen);
-    window.addEventListener("keydown", shortcut);
-    return () => { window.removeEventListener("open-command-menu", customOpen); window.removeEventListener("keydown", shortcut); };
-  }, []);
+    window.addEventListener("keydown", shortcut, true);
+    return () => { window.removeEventListener("open-command-menu", customOpen); window.removeEventListener("keydown", shortcut, true); };
+  }, [open, handleOpenChange]);
 
   const search = useQuery({
     queryKey: ["quick-search-v1", scope.sourceIds, debouncedQuery, hideNsfw, languages],
@@ -73,15 +89,6 @@ export function CommandMenu() {
   const failed = search.isError || sourceFailures.length > 0;
   const loading = query.length >= 2 && (isDebouncing || search.isFetching);
 
-  const handleOpenChange = (next: boolean) => {
-    setOpen(next);
-    if (!next) {
-      setSearchQuery("");
-      const trigger = triggerRef.current;
-      if (restoreFocusRef.current) requestAnimationFrame(() => { if (trigger?.isConnected) trigger.focus({ preventScroll: true }); });
-      triggerRef.current = null;
-    }
-  };
   const navigate = (href: string) => { restoreFocusRef.current = false; setOpen(false); setSearchQuery(""); router.push(href); };
 
   let message = query.length < 2 ? "Ketik minimal 2 karakter untuk mencari judul." : "Tidak ada hasil di sumber Jelajah ini.";
