@@ -1,6 +1,6 @@
 # Yomirra — PHASE 04 HANDOFF
 Updated: 2026-10-31 Asia/Jakarta
-Phase status: NOT_STARTED (planning file created; no implementation/QA performed in this phase)
+Phase status: IN_PROGRESS (scoped Home hierarchy fix drafted; not merged/verified)
 Document branch: `docs/yomirra-master-planning-20261031`
 Planning base: `preview@02cc664be8c66664ffe9628fcaa68523322f3ce0`
 
@@ -56,3 +56,5 @@ RISK/DECISION: approval, rollback, follow-up dependency
 STATUS: PLANNED / IN_PROGRESS / IMPLEMENTED / VERIFIED / BLOCKED
 NEXT: one concrete safe continuation step
 ```
+
+- 2026-11-01 — CODE/TEST WRITTEN **NOT VERIFIED**: Draft PR **#90** https://github.com/rzqllh/Yomirra/pull/90 (branch `feat/home-continue-reading-first-20261101`, exact SHA `a25e1958dc7796fdae0f331f03eb7a7a7b9c4e83`) changes `src/components/home/home-feed-client.tsx` to place existing Continue Reading shelf BEFORE HomeHero when eligible history exists, while guest without history keeps Hero first; test in `src/components/app/__tests__/home-feed-client.test.tsx` asserts DOM order and guest flow. This is owner-locked HOME-01/HOME-02. No Reader, history storage, bookmark, API, Redis or auth changes. CI PENDING; no merge/deploy claimed. Next: verify exact SHA CI + browser; if PASS review for Preview, then physical UX.

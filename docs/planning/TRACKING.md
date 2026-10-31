@@ -71,7 +71,7 @@ Documentation changes and code changes require scoped PR/checks; when starting w
 
 | IDs | Scope / evidence | Phase | Priority | Owner | Status | Evidence / next |
 | --- | --- | --- | --- | --- | --- | --- |
-| HOME-01..03 | Continue Reading > discovery with history, first-time home, no all-null Home | P04 | P1 | ENG:TBD | PLANNED | Owner locked |
+| HOME-01..03 | Continue Reading > discovery with history, first-time home, no all-null Home | P04 | P1 | ENG:TBD | IN_PROGRESS | PR #90 (`a25e195`) reorders Home shelf/hero with DOM-order tests; CI & real UX PENDING; HOME-03 not changed |
 | UX-01..04 | Real `/help`, remove fake controls, routing and states | P04/P05 | P1 | ENG:TBD | IN_PROGRESS | PR #88 (`d8faebb3`) adds Help and removes fake language shortcut; CI/rendering not yet verified |
 | NOTIF-01..04 | Honest toasts, 4 verified chapters bookmark prompt, updates, OS push not fabricated | P04 | P1 | ENG:TBD | PLANNED | B-07 for push |
 | PWA-01 | Accurate offline status and no claim beyond cached pages | P04 | P1 | ENG:TBD | PLANNED | Existing reading buffer supports partial cache |
