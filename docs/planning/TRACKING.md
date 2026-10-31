@@ -55,7 +55,7 @@ Documentation changes and code changes require scoped PR/checks; when starting w
 | IDs | Scope / existing code | Phase | Priority | Owner | Status | Evidence / next |
 | --- | --- | --- | --- | --- | --- | --- |
 | ENV-01 | Production-like Preview Redis with protected operational namespace and branch-restricted credentials | P03 | P0 | PRODUCT:owner / ENG:TBD | BLOCKED | PR #91 merged `10130580`, full CI PASS; Preview still lacks restricted Redis credential, branch-specific env and deployed SHA/live verification B-10 |
-| CACHE-01..03 | TTL/stale, cache-key scopes, safe flush, observability, graceful degradation | P03 | P1 | ENG:TBD | PLANNED | `withCache()` fixed Redis retention 7d; reuse existing Redis |
+| CACHE-01..03 | TTL/stale, cache-key scopes, safe flush, observability, graceful degradation | P03 | P1 | ENG:TBD | IN_PROGRESS | PR #95 (`995e819`) bounds stale TTL/grace, CI pending. Redis namespace/scoped scan protection #91 already merged `10130580`; remaining observability/fallback work open |
 | CACHE-04..05 | Cold-start Redis readiness, all namespace statistics, performance evidence | P03 | P1 | ENG:TBD | PLANNED | `lazyConnect`; no live hit rate proven |
 | SEC-01 | NSFW effective preference consistent, no accidental query override | P01/P03 | P0 | ENG:TBD | IN_PROGRESS | PR #93 proposes server cookie-first opt-in; draft, test/CI PENDING |
 | SEC-02 | Cache/privacy/env isolation, no public secrets or cross-user responses | P03 | P0 | ENG:TBD | PLANNED | Use exact UID/NSFW/language/policy scope |
@@ -73,7 +73,7 @@ Documentation changes and code changes require scoped PR/checks; when starting w
 | --- | --- | --- | --- | --- | --- | --- |
 | HOME-01..03 | Continue Reading > discovery with history, first-time home, no all-null Home | P04 | P1 | ENG:TBD | IN_PROGRESS | PR #90 (`a25e195`) reorders Home shelf/hero with DOM-order tests; CI & real UX PENDING; HOME-03 not changed |
 | UX-01..04 | Real `/help`, remove fake controls, routing and states | P04/P05 | P1 | ENG:TBD | IN_PROGRESS | PR #88 (`d8faebb3`) adds Help and removes fake language shortcut; CI/rendering not yet verified |
-| NOTIF-01..04 | Honest toasts, 4 verified chapters bookmark prompt, updates, OS push not fabricated | P04 | P1 | ENG:TBD | PLANNED | B-07 for push |
+| NOTIF-01..04 | Honest toasts, 4 verified chapters bookmark prompt, updates, OS push not fabricated | P04 | P1 | ENG:TBD | IN_PROGRESS | PR #96 (`44513d3`) persists 4-chapter prompt across sessions; CI pending; OS push B-07 and real Reader event proof pending |
 | PWA-01 | Accurate offline status and no claim beyond cached pages | P04 | P1 | ENG:TBD | PLANNED | Existing reading buffer supports partial cache |
 | DS-01..03 | Semantic tokens, accessibility, visual regression | P05 | P2 | ENG:TBD | PLANNED | iPhone screenshot modal/borders inconsistency |
 | HELP-01..03 | Dedicated `/help`, accessible support/recovery content | P05 | P1 | ENG:TBD | IMPLEMENTED | PR #88 merged Preview `243804f`; full GitHub CI PASS, live Preview not verified |
