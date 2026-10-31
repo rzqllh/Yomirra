@@ -65,7 +65,7 @@ Documentation changes and code changes require scoped PR/checks; when starting w
 | PROVIDER-04 | Request budget, 403/429 differentiation, bounded retries | P03 | P1 | ENG:TBD | PLANNED | Vercel aggregated Komikindo filter 403 |
 | PR-01..04 | Partial failure isolation, accurate error, retry, healthy results retained | P03/P04 | P1 | ENG:TBD | IN_PROGRESS | PR #87 (`7675289d0`) combines partial-provider banners; exact SHA Vercel READY, CI and browser UX not yet verified; scoped retry remains open |
 | PF-01..06 | Cache-first Back, scroll restoration, request savings and trace | P03 | P1 | ENG:TBD | PLANNED | React Query existing; baseline not measured |
-| FL-01..05 | iOS safe filter footer, draft apply/cancel/reset and accessibility | P03/P05 | P0 | ENG:TBD | PLANNED | User screenshot clipped apply, Vaul 52/92% snaps |
+| FL-01..05 | iOS safe filter footer, draft apply/cancel/reset and accessibility | P03/P05 | P0 | ENG:TBD | IN_PROGRESS | PR #89 (`1188f7b`) changes VisualViewport bottom offset + 4 math tests; current CI and physical Safari NOT_RUN/PENDING; P0 remains incomplete |
 
 ## Experience, design and integration
 
