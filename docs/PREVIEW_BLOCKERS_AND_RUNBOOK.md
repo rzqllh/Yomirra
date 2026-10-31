@@ -4,6 +4,23 @@ Updated: 31 October 2026 (Asia/Jakarta). Owner authorized consolidation into `pr
 
 Current verification must be read from the final PR checks and Vercel commit metadata. Earlier investigation snapshots in `PREVIEW_RUNTIME_GATES_20261031.md` are historical; a prior PASS or deployment-quota failure is not the current status automatically.
 
+## Consolidation verification snapshot
+
+31 October 2026, tested commit `df909b9d74d8fde0829847e5b8e7999545d51923` (tree `90354c135257083b1a6e84dd3ea5f347251a2870`):
+
+| Check | Result / boundary |
+| --- | --- |
+| Reconciled local suite | PASSED: 231 files, 1,568 tests; TypeScript passed. |
+| GitHub CI Verify & Build | PASSED on this commit, run `41204515290`, job `124546757769`. Browser job was still running at this snapshot; inspect final PR #83 checks for its result and any subsequent head. |
+| Vercel feature deployment | READY, preview target (`null`), deployment `dpl_4UoQakJUZLLV3P2Gd8Xb9HJgGJUh`, exact commit confirmed. This is pre-merge evidence; final preview branch SHA/deployment must be verified separately. |
+| Beranda Quick Search | PASSED live desktop sample: visible-viewport centered dialog, 16px input, Escape closes. Mobile/tablet and visual-keyboard simulation are in the browser suite; physical acceptance remains B-02. |
+| MangaDex detail → chapter → Reader | PASSED live sample: `fcb5111f-be88-4f5a-b456-22135f3eda49`, English chapter `5c79494d-6f40-4118-9baa-2b2142fcd9b1`, 22 pages. First five visible images decoded with nonzero natural dimensions. This does not prove every page/provider/title. |
+| Reader controls | PASSED live sample: bottom slider has 44px input height and 22 dots; ArrowRight selects page 2 and scrolls content; detail action reaches the exact manga detail. Double-tap setting can be selected. Behavior/persistence are additionally covered by focused units; real touch/pinch remains B-02. |
+| Toast | PASSED live sample: resume-reading toast appears in the Reader. Four-distinct-completion recommendation and idempotent Save action pass focused units; real four-chapter reading acceptance is not claimed from this one-chapter sample. |
+| MAL endpoint / UI | BLOCKED on B-01: real preview endpoint returns HTTP 503 `MAL_NOT_CONFIGURED`, private/no-store; Populer MAL displays configuration status. Official API request, normalization and opt-out safety pass fixtures; live ranking has not been verified. |
+
+The final merge is tracked in https://github.com/rzqllh/Yomirra/pull/83. A later visual adjustment keeps page dots readable at narrow widths using non-scaling SVG strokes; it does not change page-navigation semantics. Do not substitute this snapshot for exact-head checks on the final preview commit.
+
 ## Open blockers / acceptance gates
 
 | ID | Status and evidence | How to resolve | Who / release boundary |
