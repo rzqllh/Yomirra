@@ -14,7 +14,9 @@ async function prepareDiscovery(page: Page) {
     const url = new URL(route.request().url());
     let data: unknown;
     if (url.pathname === "/api/sources") data = sources;
-    else if (url.pathname.endsWith("/filters")) data = { genres: [{ id: "action", name: "Action" }], formats: [{ id: "manga", name: "Manga" }], statuses: [{ id: "ongoing", name: "Berjalan" }], sorts: [{ id: "popular", name: "Populer" }, { id: "latest", name: "Terbaru" }] };
+    else if (url.pathname.endsWith("/filters")) data = { genres: [{ id: "action", name: "Action" }], formats: [{ id: "manga", name: "Manga" }], statuses: [{ id: "ongoing", name: "Berjalan" }], sorts: url.pathname.includes("/mangadex/")
+      ? [{ id: "followedCount", name: "Populer" }, { id: "latestUploadedChapter", name: "Terbaru" }, { id: "createdAt", name: "Terbaru Ditambahkan" }]
+      : [{ id: "popular", name: "Populer" }, { id: "latest", name: "Terbaru" }] };
     else if (url.pathname === "/api/sources/search") {
       const id = url.searchParams.get("sources") ?? "";
       data = { resultsBySource: { [id]: url.searchParams.get("q") === "failure"
@@ -81,6 +83,23 @@ test("provider failure stays distinct from empty results in Quick Search", async
   await expect(dialog.getByText("Provider tidak dapat dijangkau", { exact: true })).toBeVisible();
   await expect(dialog.getByText("Tidak ada hasil di sumber Jelajah ini.", { exact: true })).toHaveCount(0);
   await expect(dialog.getByText("Buka Cari", { exact: true })).toBeVisible();
+});
+
+test("native provider sorts settle without a render loop and reach the request", async ({ page }) => {
+  test.setTimeout(60_000);
+  const errors: string[] = [];
+  page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/library?source=mangadex&sort=latest");
+  await expect(page.getByText("Catalog mangadex", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
+  await expect(page.locator('[data-testid="splash-screen"]')).toHaveCount(0);
+  await page.getByRole("button", { name: "Urutkan Jelajah: Terbaru", exact: true }).click();
+  const request = page.waitForRequest(req => new URL(req.url()).pathname === "/api/sources/mangadex/search" && new URL(req.url()).searchParams.get("sort") === "createdAt");
+  await page.getByRole("menuitem", { name: "Terbaru Ditambahkan", exact: true }).click();
+  await request;
+  await expect(page.getByRole("button", { name: "Urutkan Jelajah: Terbaru Ditambahkan", exact: true })).toBeVisible();
+  await expect(page.getByText("Catalog mangadex", { exact: true }).first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Yomirra mengalami kendala", exact: true })).toHaveCount(0);
+  expect(errors).toEqual([]);
 });
 
 test("actual routes keep filters and centered Quick Search inside small, tablet and desktop viewports", async ({ page }) => {

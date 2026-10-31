@@ -215,17 +215,29 @@ export function useLibraryCatalog() {
   ];
 
   // Fallback to supported sort if current sort is not available in the new source
+  const setFilters = filterStore.setFilters;
   React.useEffect(() => {
     if (filtersData?.sorts) {
       const isSupported = filtersData.sorts.some(s => s.id === sort);
       if (!isSupported && filtersData.sorts.length > 0) {
-        setSort(filtersData.sorts[0].id);
+        const aliases = sort === "latest" ? ["latestUploadedChapter"]
+          : sort === "popular" || sort === "all" ? ["followedCount", "popularity"] : [];
+        const fallback = filtersData.sorts.find((item) => aliases.includes(item.id))?.id ?? filtersData.sorts[0].id;
+        // Keep both owners in agreement. Updating only local state lets the
+        // store-sync effect restore the unsupported value on every render.
+        setSort(fallback);
+        setFilters({ sort: fallback });
       }
     }
-  }, [filtersData?.sorts, sort]);
+  }, [filtersData?.sorts, sort, setFilters]);
 
   // Sync local sort state with storeSort
+  const previousStoreSortRef = React.useRef(storeSort);
   React.useEffect(() => {
+    // A direct URL owns the initial sort; only subsequent drawer/store edits
+    // should replace it. Local/provider normalization updates both together.
+    if (previousStoreSortRef.current === storeSort) return;
+    previousStoreSortRef.current = storeSort;
     if (storeSort && storeSort !== sort) {
       setSort(storeSort);
       const params = new URLSearchParams(searchParams.toString());
@@ -260,22 +272,29 @@ export function useLibraryCatalog() {
 
   const fetchCatalog = async (currentPage: number) => {
     const hasFilters = selectedGenres.length > 0 || excludedGenres.length > 0 || selectedFormats.length > 0 || selectedStatuses.length > 0;
+    const popularSort = ["popular", "all", "popularity", "followedCount"].includes(sort);
+    const latestSort = ["latest", "latestUploadedChapter"].includes(sort);
+    const localSort = ["alphabetical", "alphabet", "title"].includes(sort) ||
+      (sort === "rating" && !filtersData?.sorts?.some((item) => item.id === "rating"));
 
     if (!query && !hasFilters) {
-      if (sort === "latest") {
+      if (latestSort) {
         const res = await apiClient.getLatest(activeSourceId, currentPage);
         return { mangas: res.mangas, hasNextPage: !!res.hasNextPage };
       }
 
-      // Rating and alphabetical ordering are applied client-side so they work
-      // consistently even when a provider has no native sort support.
-      const res = await apiClient.getPopular(activeSourceId, currentPage);
-      return { mangas: res.mangas, hasNextPage: !!res.hasNextPage };
+      // Only local fallback sorts reuse the popular page. Provider-native sorts
+      // must reach search instead of silently returning the popular catalog.
+      if (popularSort || localSort) {
+        const res = await apiClient.getPopular(activeSourceId, currentPage);
+        return { mangas: res.mangas, hasNextPage: !!res.hasNextPage };
+      }
     }
 
     const filters: Record<string, string | string[]> = {};
-    if (sort === "latest") filters.sort = "latest";
+    if (latestSort) filters.sort = sort;
     else if (sort === "popular" || sort === "all") filters.sort = "popularity";
+    else if (!localSort) filters.sort = sort;
 
     if (selectedGenres.length > 0 || excludedGenres.length > 0) {
       const genreParams: string[] = [];
@@ -364,7 +383,7 @@ export function useLibraryCatalog() {
     selectedStatuses.length +
     selectedCollections.length +
     selectedReadingStatuses.length +
-    (sort !== "popular" && sort !== "all" ? 1 : 0);
+    (!["popular", "all", "popularity", "followedCount"].includes(sort) ? 1 : 0);
   const rawMangas = data?.mangas || [];
   const uniqueMangas = React.useMemo(() => {
     return Array.from(new Map(rawMangas.map(m => [m.id, m])).values());
