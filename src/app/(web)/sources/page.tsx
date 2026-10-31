@@ -86,7 +86,7 @@ export default function SourcesPage() {
 
   const filteredSources = React.useMemo(() => {
     let result = allSources;
-    if (isMounted && hideNsfw) {
+    if (!isMounted || hideNsfw) {
       result = result.filter(s => !s.isNsfw);
     }
     

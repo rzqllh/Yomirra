@@ -2,6 +2,14 @@ import type { MangaDetail, MangaPageResult, Chapter, ChapterPages, MangaItem, So
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import type { ResolvedSearchTag, SearchCatalogCandidate } from "@/shared/lib/search-intelligence";
 import type { GlobalSearchResponse } from "@/shared/types/search";
+import { useSettingsStore } from "@/shared/store/settings-store";
+
+export class ApiRequestError extends Error {
+  constructor(message: string, readonly code: string, readonly status: number) {
+    super(message);
+    this.name = "ApiRequestError";
+  }
+}
 
 export type { GlobalSearchResponse };
 
@@ -19,7 +27,7 @@ class ApiClient {
     const data = await res.json();
     if (!res.ok) {
       if (data.error) {
-        throw new Error(data.error.message || `API Error: ${data.error.code}`);
+        throw new ApiRequestError(data.error.message || `API Error: ${data.error.code}`, data.error.code || "UNKNOWN", res.status);
       }
       throw new Error(`API Error: ${res.status}`);
     }
@@ -35,6 +43,8 @@ class ApiClient {
       useSourceHealthStore.getState().recordSuccess(sourceId, latency);
       return result;
     } catch (error: any) {
+      if (error?.name === "AbortError" || options?.signal?.aborted ||
+          ["CONTENT_RESTRICTED", "MAPPING_UNAVAILABLE", "CHAPTER_UNAVAILABLE", "CONTENT_NOT_FOUND", "SOURCE_DISABLED"].includes(error?.code)) throw error;
       const { useSourceHealthStore } = await import("@/shared/store/source-health-store");
       useSourceHealthStore.getState().recordError(sourceId, error);
       throw error;
@@ -55,12 +65,23 @@ class ApiClient {
   }
 
   private appendManifest(url: string, sourceId: string): string {
+    url = this.appendReadPreferences(url);
     const customSource = dynamicSourceRegistry.get(sourceId);
     if (customSource?.manifestUrl) {
       const sep = url.includes("?") ? "&" : "?";
       return `${url}${sep}manifestUrl=${encodeURIComponent(customSource.manifestUrl)}`;
     }
     return url;
+  }
+
+  private appendReadPreferences(url: string): string {
+    const [path, query] = url.split("?");
+    const params = new URLSearchParams(query);
+    const settings = useSettingsStore.getState();
+    if (!params.has("hideNsfw")) params.set("hideNsfw", String(settings.hideNsfw !== false));
+    params.set("languages", settings.preferredLanguages.join(","));
+    params.set("dataSaver", String(settings.dataSaver));
+    return `${path}?${params}`;
   }
 
   getFilters(sourceId: string) {
@@ -75,8 +96,8 @@ class ApiClient {
     return this.fetchSource<MangaPageResult>(sourceId, this.appendManifest(`/api/sources/${sourceId}/latest?page=${page}`, sourceId));
   }
 
-  search(sourceId: string, query: string, page: number = 1, filters?: Record<string, string | string[]>, isNsfwFiltered: boolean = false, options?: { signal?: AbortSignal }) {
-    let url = `/api/sources/${sourceId}/search?q=${encodeURIComponent(query)}&page=${page}`;
+  search(sourceId: string, query: string, page: number = 1, filters?: Record<string, string | string[]>, isNsfwFiltered: boolean = useSettingsStore.getState().hideNsfw, options?: { signal?: AbortSignal }) {
+    let url = `/api/sources/${sourceId}/search?q=${encodeURIComponent(query)}&page=${page}&hideNsfw=${isNsfwFiltered}`;
     
     const finalFilters = { ...filters };
     
@@ -116,8 +137,8 @@ class ApiClient {
     })) as Promise<SearchResponse>;
   }
 
-  searchGlobal(query: string, sourceIds: string[], page: number = 1, isNsfwFiltered: boolean = false, filters?: Record<string, string | string[]>) {
-    let url = `/api/sources/search?q=${encodeURIComponent(query)}&sources=${sourceIds.join(",")}&page=${page}`;
+  searchGlobal(query: string, sourceIds: string[], page: number = 1, isNsfwFiltered: boolean = useSettingsStore.getState().hideNsfw, filters?: Record<string, string | string[]>, options?: { signal?: AbortSignal }) {
+    let url = `/api/sources/search?q=${encodeURIComponent(query)}&sources=${sourceIds.join(",")}&page=${page}&hideNsfw=${isNsfwFiltered}`;
     
     const finalFilters = { ...filters };
     
@@ -146,7 +167,7 @@ class ApiClient {
       url += `&${sp.toString()}`;
     }
     
-    return this.fetcher<GlobalSearchResponse>(url);
+    return this.fetcher<GlobalSearchResponse>(this.appendReadPreferences(url), { signal: options?.signal });
   }
 
   rankSearchIntelligence(
@@ -158,7 +179,7 @@ class ApiClient {
       semanticAvailable: boolean;
       scores: Record<string, number>;
       catalogMatches: SearchCatalogCandidate[];
-    }>("/api/search/intelligence", {
+    }>(this.appendReadPreferences("/api/search/intelligence"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ query, tags, candidates }),
@@ -183,7 +204,7 @@ class ApiClient {
     limit = 8
   ) {
     const canonicalKey = target.canonicalKey || `${target.sourceId}::${target.mangaId}::${encodeURIComponent(target.title)}`;
-    return this.fetcher<SearchCatalogCandidate[]>("/api/search/related", {
+    return this.fetcher<SearchCatalogCandidate[]>(this.appendReadPreferences("/api/search/related"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ target: { ...target, canonicalKey }, limit }),

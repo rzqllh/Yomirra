@@ -1,3 +1,5 @@
+import { getServerReadOptions } from "@/server/lib/sources/content-access";
+import { isSourceContentVisible } from "@/shared/sources/content-policy";
 import { Metadata } from "next";
 import { HomeView } from "@/components/home/home-view";
 import { getRuntimeSources } from "@/server/lib/sources/runtime-sources";
@@ -22,16 +24,17 @@ export default async function HomePage() {
     cookieStore.get("yomirra-disabled-sources")?.value
   );
 
+  const readOptions = await getServerReadOptions();
   const allRuntimeSources = await getRuntimeSources();
   const activeSources = selectDiscoverySources(
     allRuntimeSources,
     userDisabledSources
-  );
+  ).filter((source) => isSourceContentVisible(source, readOptions.hideNsfw !== false));
 
   return (
     <HomeView>
       <Suspense fallback={<SourceFeedSkeleton />}>
-        <UnifiedFeed activeSources={activeSources} />
+        <UnifiedFeed activeSources={activeSources} options={readOptions} />
       </Suspense>
 
       {activeSources.length === 0 && (

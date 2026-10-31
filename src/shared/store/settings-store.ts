@@ -1,5 +1,18 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { CONTENT_PREFERENCE_COOKIE, DATA_SAVER_COOKIE, LANGUAGE_PREFERENCE_COOKIE } from "@/shared/sources/content-policy";
+
+function syncReadPreferenceCookie(hideNsfw: boolean): void {
+  if (typeof document !== "undefined") {
+    document.cookie = `${CONTENT_PREFERENCE_COOKIE}=${hideNsfw ? "true" : "false"}; path=/; max-age=31536000; SameSite=Lax`;
+  }
+}
+
+function syncOtherReadCookies(state: Pick<SettingsState, "dataSaver" | "preferredLanguages">): void {
+  if (typeof document === "undefined") return;
+  document.cookie = `${DATA_SAVER_COOKIE}=${state.dataSaver === true}; path=/; max-age=31536000; SameSite=Lax`;
+  document.cookie = `${LANGUAGE_PREFERENCE_COOKIE}=${encodeURIComponent((state.preferredLanguages ?? DEFAULT_PREFERRED_LANGUAGES).join(","))}; path=/; max-age=31536000; SameSite=Lax`;
+}
 
 export type SourceRoutingMode = "MANUAL" | "PREFERRED" | "AUTO_SAFE";
 
@@ -58,11 +71,14 @@ interface SettingsState {
 
 export const useSettingsStore = create<SettingsState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       dataSaver: false,
-      setDataSaver: (enabled) => set({ dataSaver: enabled }),
+      setDataSaver: (enabled) => { set({ dataSaver: enabled }); syncOtherReadCookies(get()); },
       hideNsfw: true, // Default to true for safety
-      setHideNsfw: (enabled) => set({ hideNsfw: enabled }),
+      setHideNsfw: (enabled) => {
+        syncReadPreferenceCookie(enabled);
+        set({ hideNsfw: enabled });
+      },
       lastSyncedAt: null,
       setLastSyncedAt: (date) => set({ lastSyncedAt: date }),
       keepScreenAwake: true,
@@ -90,7 +106,7 @@ export const useSettingsStore = create<SettingsState>()(
       globalSourceOrder: DEFAULT_GLOBAL_SOURCE_ORDER,
       setGlobalSourceOrder: (order) => set({ globalSourceOrder: order }),
       preferredLanguages: DEFAULT_PREFERRED_LANGUAGES,
-      setPreferredLanguages: (langs) => set({ preferredLanguages: langs }),
+      setPreferredLanguages: (langs) => { set({ preferredLanguages: langs }); syncOtherReadCookies(get()); },
       perTitleSourcePreferences: {},
       setPerTitleSourcePreference: (titleKey, sourceId) => set((state) => ({
         perTitleSourcePreferences: {
@@ -126,6 +142,10 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: "yomirra-settings",
+      onRehydrateStorage: () => (state) => {
+        syncReadPreferenceCookie(state?.hideNsfw !== false);
+        if (state) syncOtherReadCookies(state);
+      },
       version: 2,
       migrate: (persistedState: any, version: number) => {
         if (version === 0) {

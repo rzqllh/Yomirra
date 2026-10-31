@@ -14,6 +14,7 @@ interface MangaActionsProps {
   coverUrl: string;
   author?: string;
   status?: string;
+  isNsfw?: boolean;
   manifestUrl?: string; // We can use this to open webview
 }
 
@@ -24,6 +25,7 @@ export function MangaActions({
   coverUrl,
   author,
   status,
+  isNsfw,
 }: MangaActionsProps) {
   const [isMounted, setIsMounted] = React.useState(false);
 
@@ -45,6 +47,7 @@ export function MangaActions({
       coverUrl,
       author,
       status,
+      isNsfw,
       addedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
@@ -81,7 +84,7 @@ export function MangaActions({
         sourceId={sourceId}
         mangaId={mangaId}
         variant="action"
-        mangaDetail={{ title, coverUrl, author, status }}
+        mangaDetail={{ title, coverUrl, author, status, isNsfw }}
       />
     </>
   );

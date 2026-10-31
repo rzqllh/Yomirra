@@ -1,12 +1,13 @@
-import { withCache, CACHE_TTL } from "@/server/lib/cache/redis-cache";
+import { loadSourceCatalog } from "@/server/lib/sources/content-access";
 import { sourceManager } from "@/server/lib/sources/source-manager";
 import { getManifestUrlFromCookie } from "@/server/lib/sources/server-manifest";
-import type { SourceMetadata } from "@/shared/sources/source-types";
+import type { SourceReadOptions, SourceMetadata } from "@/shared/sources/source-types";
 import { HomeFeedClient } from "./home-feed-client";
 import type { HomeFeedManga } from "./home-feed-selection";
 
 interface UnifiedFeedProps {
   activeSources: SourceMetadata[];
+  options?: SourceReadOptions;
 }
 
 function interleaveArrays<T>(arrays: T[][]): T[] {
@@ -24,7 +25,7 @@ function interleaveArrays<T>(arrays: T[][]): T[] {
   return result;
 }
 
-export async function UnifiedFeed({ activeSources }: UnifiedFeedProps) {
+export async function UnifiedFeed({ activeSources, options = {} }: UnifiedFeedProps) {
   if (activeSources.length === 0) return null;
 
   const fetchPromises = activeSources.map(async (sourceInfo) => {
@@ -33,16 +34,8 @@ export async function UnifiedFeed({ activeSources }: UnifiedFeedProps) {
       const source = await sourceManager.getSource(sourceInfo.id, manifestUrl);
 
       const [popularData, latestData] = await Promise.all([
-        withCache(
-          `source:${sourceInfo.id}:popular:1`,
-          () => source.getPopular(1),
-          CACHE_TTL.DISCOVERY
-        ),
-        withCache(
-          `source:${sourceInfo.id}:latest:1`,
-          () => source.getLatest(1),
-          CACHE_TTL.DISCOVERY
-        ),
+        loadSourceCatalog(source, "popular", 1, options),
+        loadSourceCatalog(source, "latest", 1, options),
       ]);
 
       return {

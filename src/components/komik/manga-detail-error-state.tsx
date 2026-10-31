@@ -11,7 +11,7 @@ import Link from "next/link";
 interface MangaDetailErrorStateProps {
   sourceId: string;
   mangaId: string;
-  type: "not_found" | "network_error" | "disabled";
+  type: "not_found" | "network_error" | "disabled" | "content_restricted";
   message?: string;
 }
 
@@ -34,14 +34,17 @@ export function MangaDetailErrorState({
 
   const isNotFound = type === "not_found";
   const isDisabled = type === "disabled";
+  const isRestricted = type === "content_restricted";
 
-  const title = isDisabled
+  const title = isRestricted ? "Konten disembunyikan"
+    : isDisabled
     ? `Sumber "${sourceName}" dinonaktifkan`
     : isNotFound
     ? "Komik tidak ditemukan"
     : `Belum bisa terhubung ke ${sourceName}`;
 
-  const description = isDisabled
+  const description = isRestricted ? "Konten ini tidak ditampilkan sesuai pengaturan kontenmu."
+    : isDisabled
     ? "Sumber ini sedang dinonaktifkan. Aktifkan kembali dari halaman Sumber untuk membaca komik ini."
     : isNotFound
     ? `Komik ini tidak ditemukan di ${sourceName}. Kamu bisa mencarinya di sumber lain.`
@@ -58,7 +61,9 @@ export function MangaDetailErrorState({
       <div className="w-full max-w-lg mx-auto px-4 pt-16 md:pt-24 flex flex-col items-center">
         <div className="w-full bg-surface-raised border border-border-subtle rounded-xl p-6 md:p-8 shadow-sm flex flex-col items-center text-center">
           <div className="w-14 h-14 rounded-full bg-accent-dim text-accent flex items-center justify-center mb-4">
-            {isDisabled ? (
+            {isRestricted ? (
+              <Button asChild variant="primary"><Link href="/settings">Buka Pengaturan</Link></Button>
+            ) : isDisabled ? (
               <HardDrives size={28} weight="duotone" />
             ) : isNotFound ? (
               <MagnifyingGlass size={28} weight="duotone" />

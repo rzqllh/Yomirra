@@ -1,8 +1,8 @@
 export const dynamic = "force-dynamic";
 import { checkRateLimit } from "@/server/lib/security/rate-limit";
 import { NextRequest, NextResponse } from "next/server";
+import { getRequestReadOptions, loadSourceChapters, sourceErrorResponse } from "@/server/lib/sources/content-access";
 import { sourceManager } from "@/server/lib/sources/source-manager";
-import { withCache, CACHE_TTL, getSourceCacheKey } from "@/server/lib/cache/redis-cache";
 import { mangaParamsSchema } from "@/server/lib/validation/api";
 
 export async function GET(
@@ -22,34 +22,11 @@ export async function GET(
 
   try {
     const source = await sourceManager.getSource(sourceId, request.nextUrl.searchParams.get("manifestUrl"));
-    const cacheKey = getSourceCacheKey(source, "chapters", mangaId);
-
-    const data = await withCache(
-      cacheKey,
-      () => source.getChapters(mangaId),
-      CACHE_TTL.CHAPTERS
-    );
-
-    if (Array.isArray(data) && data.length === 0) {
-      import("@/shared/logger").then(({ logger }) => {
-        logger.warn(`Source ${sourceId} returned 0 chapters for manga ${mangaId}`);
-      });
-      import("@/server/lib/ops/telegram-notifier").then(({ sendTelegramMessage }) => {
-        import("@/server/lib/ops/severity").then(({ AlertSeverity }) => {
-          sendTelegramMessage(
-            `⚠️ *Scraper Degraded Warning*\nSource: \`${sourceId}\`\nManga: \`${mangaId}\`\nReturned 0 chapters (possible broken selector or CF challenge).`,
-            { severity: AlertSeverity.WARNING, sourceId, event: "PARSER_BROKEN" }
-          ).catch(() => {});
-        });
-      });
-    }
+    const data = await loadSourceChapters(source, mangaId, getRequestReadOptions(request));
 
     return NextResponse.json({ data });
   } catch (error: unknown) {
-    return NextResponse.json(
-      { error: { message: (error instanceof Error ? error.message : String(error)) || "Internal Server Error" } },
-      { status: (error instanceof Error ? error.message : String(error))?.includes("not found") ? 404 : 500 }
-    );
+    const response = sourceErrorResponse(error, sourceId, "chapters");
+    return NextResponse.json(response.body, { status: response.status });
   }
 }
-

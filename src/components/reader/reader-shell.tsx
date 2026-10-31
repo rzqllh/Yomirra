@@ -31,6 +31,7 @@ import { beginNavigationIntent } from "@/shared/lib/navigation-intent"
 
 interface ReaderShellProps {
   children: React.ReactNode
+  isNsfw?: boolean
   mangaTitle?: string
   chapterTitle?: string
   pageCount?: number
@@ -43,6 +44,7 @@ interface ReaderShellProps {
 export function ReaderShell({
   children,
   mangaTitle,
+  isNsfw,
   chapterTitle = "Chapter",
   pageCount,
   sourceId,
@@ -115,6 +117,7 @@ export function ReaderShell({
       mangaId,
       title: mangaTitle || chapterTitle.split(" - ")[0] || "Komik",
       coverUrl: "",
+      isNsfw,
       addedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     })
@@ -156,6 +159,7 @@ export function ReaderShell({
             mangaId,
             title: mangaTitle || chapterTitle.split(" - ")[0] || "Komik",
             coverUrl: "",
+      isNsfw,
             addedAt: new Date().toISOString(),
             updatedAt: new Date().toISOString(),
           })
@@ -164,7 +168,7 @@ export function ReaderShell({
       },
       duration: 8000,
     })
-  }, [chapterTitle, isSaved, mangaId, mangaTitle, sourceId, toggleLibrary])
+  }, [chapterTitle, isSaved, isNsfw, mangaId, mangaTitle, sourceId, toggleLibrary])
 
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

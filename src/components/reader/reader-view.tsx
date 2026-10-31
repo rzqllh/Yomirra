@@ -174,6 +174,7 @@ export function ReaderView({
       mangaId,
       chapterId,
       mangaTitle: initialDetail.title,
+      isNsfw: initialDetail.isNsfw,
       chapterTitle,
       coverUrl: initialDetail.coverUrl,
       sourceName: sourceId,
@@ -200,6 +201,7 @@ export function ReaderView({
     return (
       <ReaderShell
         mangaTitle={initialDetail?.title}
+        isNsfw={initialDetail?.isNsfw}
         chapterTitle={chapterTitle}
         currentChapterId={chapterId}
         sourceId={sourceId}
@@ -230,6 +232,7 @@ export function ReaderView({
     return (
       <ReaderShell
         mangaTitle={initialDetail?.title}
+        isNsfw={initialDetail?.isNsfw}
         chapterTitle={chapterTitle}
         currentChapterId={chapterId}
         sourceId={sourceId}
@@ -257,6 +260,7 @@ export function ReaderView({
     return (
       <ReaderShell
         mangaTitle={initialDetail?.title}
+        isNsfw={initialDetail?.isNsfw}
         chapterTitle="Error"
         currentChapterId={chapterId}
         sourceId={sourceId}
@@ -309,6 +313,7 @@ export function ReaderView({
   return (
     <ReaderShell 
       mangaTitle={initialDetail?.title}
+        isNsfw={initialDetail?.isNsfw}
       chapterTitle={chapterTitle} 
       pageCount={pagesToRender.length}
       currentChapterId={chapterId}

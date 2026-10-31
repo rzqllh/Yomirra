@@ -29,7 +29,8 @@ export function getSourceCacheKey(source: SourceMetadata, operation: string, par
 export async function withCache<T>(
   key: string,
   fetcher: () => Promise<T>,
-  ttlSeconds: number
+  ttlSeconds: number,
+  options: { allowStaleOnError?: boolean } = {}
 ): Promise<T> {
   let staleEntry: CacheEntry<T> | null = null;
   
@@ -71,7 +72,7 @@ export async function withCache<T>(
 
     return data;
   } catch (error) {
-    if (staleEntry) {
+    if (staleEntry && options.allowStaleOnError !== false) {
       logger.warn(`Fetcher failed for ${key}, falling back to stale cache`);
       return staleEntry.data;
     }

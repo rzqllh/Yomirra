@@ -28,6 +28,7 @@ describe("Global Search Failure Isolation", () => {
   it("returns 200 with partial results and failure metadata when 1 source fails and others succeed", async () => {
     const successSourceA: any = {
       id: "shinigami",
+      isEnabled: true, isInstalled: true, isNsfw: false,
       capabilities: { search: true },
       search: vi.fn().mockResolvedValue({
         mangas: [{ id: "manga-1", title: "Manga 1", coverUrl: "https://img.com/1.jpg" }],
@@ -37,6 +38,7 @@ describe("Global Search Failure Isolation", () => {
 
     const successSourceB: any = {
       id: "mangadex",
+      isEnabled: true, isInstalled: true, isNsfw: false,
       capabilities: { search: true },
       search: vi.fn().mockResolvedValue({
         mangas: [{ id: "manga-2", title: "Manga 2", coverUrl: "https://img.com/2.jpg" }],
@@ -46,6 +48,7 @@ describe("Global Search Failure Isolation", () => {
 
     const failedSource: any = {
       id: "komikindo",
+      isEnabled: true, isInstalled: true, isNsfw: false,
       capabilities: { search: true },
       search: vi.fn().mockRejectedValue(new Error("Request timed out after 10000ms")),
     };
@@ -94,7 +97,7 @@ describe("Global Search Failure Isolation", () => {
     const results = json.data.resultsBySource;
 
     expect(results["invalid-source"].results).toHaveLength(0);
-    expect(results["invalid-source"].error).toBe("Source not found");
+    expect(results["invalid-source"].error).toContain("not found");
     expect(results["invalid-source"].errorCode).toBe("SOURCE_DOWN");
   });
 });

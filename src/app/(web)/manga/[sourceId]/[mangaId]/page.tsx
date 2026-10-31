@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import { sourceManager } from "@/server/lib/sources/source-manager";
-import { withCache, CACHE_TTL } from "@/server/lib/cache/redis-cache";
+import { getServerReadOptions, loadSourceDetail, loadSourceChapters } from "@/server/lib/sources/content-access";
 import { MangaDetailView } from "@/components/komik/manga-detail-view";
 import { getManifestUrlFromCookie } from "@/server/lib/sources/server-manifest";
 import { DeadSourceRecovery } from "@/components/komik/dead-source-recovery";
@@ -16,9 +16,10 @@ export async function generateMetadata({
   const { sourceId, mangaId } = await params;
   const normalizedSourceId = sourceId.toLowerCase().trim();
   try {
+    const readOptions = await getServerReadOptions();
     const manifestUrl = await getManifestUrlFromCookie(normalizedSourceId);
     const source = await sourceManager.getSource(normalizedSourceId, manifestUrl);
-    const detail = await source.getDetail(mangaId);
+    const detail = await loadSourceDetail(source, mangaId, readOptions);
     return {
       title: `${detail.title} - Yomirra`,
       description: detail.description?.slice(0, 150) + "...",
@@ -44,7 +45,7 @@ export default async function MangaDetailPage({
   let detail;
   let chapters;
   let errorState: {
-    type: "disabled" | "not_found" | "dead" | "network_error";
+    type: "content_restricted" | "disabled" | "not_found" | "dead" | "network_error";
     message?: string;
     recoveryHealth?: {
       status: "BROKEN" | "RATE_LIMITED" | "DEGRADED";
@@ -54,13 +55,14 @@ export default async function MangaDetailPage({
   } | null = null;
 
   try {
+    const readOptions = await getServerReadOptions();
     const manifestUrl = await getManifestUrlFromCookie(normalizedSourceId);
     const source = await sourceManager.getSource(normalizedSourceId, manifestUrl);
     
     // Fetch data directly on the server with cache!
     [detail, chapters] = await Promise.all([
-      withCache(`source:v2:${normalizedSourceId}:manga:${mangaId}`, () => source.getDetail(mangaId), CACHE_TTL.DETAIL),
-      withCache(`source:v2:${normalizedSourceId}:chapters:${mangaId}`, () => source.getChapters(mangaId), CACHE_TTL.CHAPTERS),
+      loadSourceDetail(source, mangaId, readOptions),
+      loadSourceChapters(source, mangaId, readOptions),
     ]);
 
     if (!detail || !detail.title) {
@@ -70,7 +72,11 @@ export default async function MangaDetailPage({
     console.error("Failed to load manga details", error);
     const errString = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
 
-    if (errString.includes("404") || errString.includes("not found") || errString.includes("tidak ditemukan")) {
+    if (SourceError.classify(error, normalizedSourceId, "detail").code === "CONTENT_RESTRICTED") {
+      errorState = { type: "content_restricted" };
+    } else if (errString.includes("source_disabled")) {
+      errorState = { type: "disabled" };
+    } else if (errString.includes("404") || errString.includes("not found") || errString.includes("tidak ditemukan")) {
       errorState = { type: "not_found" };
     } else {
       const sourceMeta = getSourceMetadata(normalizedSourceId);

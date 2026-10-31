@@ -1,8 +1,8 @@
 export const dynamic = "force-dynamic";
 import { checkRateLimit } from "@/server/lib/security/rate-limit";
 import { NextRequest, NextResponse } from "next/server";
+import { getRequestReadOptions, loadSourcePages, sourceErrorResponse } from "@/server/lib/sources/content-access";
 import { sourceManager } from "@/server/lib/sources/source-manager";
-import { withCache, CACHE_TTL, getSourceCacheKey } from "@/server/lib/cache/redis-cache";
 import { chapterParamsSchema } from "@/server/lib/validation/api";
 
 export async function GET(
@@ -22,13 +22,7 @@ export async function GET(
 
   try {
     const source = await sourceManager.getSource(sourceId, request.nextUrl.searchParams.get("manifestUrl"));
-    const cacheKey = getSourceCacheKey(source, "pages", `${mangaId}:${chapterId}`);
-
-    const data = await withCache(
-      cacheKey,
-      () => source.getPages(chapterId),
-      CACHE_TTL.PAGES
-    );
+    const data = await loadSourcePages(source, mangaId, chapterId, getRequestReadOptions(request));
 
     // Sign URLs for the proxy
     const { signImageUrl } = await import("@/server/lib/sign-proxy-url");
@@ -42,10 +36,7 @@ export async function GET(
 
     return NextResponse.json({ data: signedData });
   } catch (error: unknown) {
-    return NextResponse.json(
-      { error: { message: (error instanceof Error ? error.message : String(error)) || "Internal Server Error" } },
-      { status: (error instanceof Error ? error.message : String(error))?.includes("not found") ? 404 : 500 }
-    );
+    const response = sourceErrorResponse(error, sourceId, "pages");
+    return NextResponse.json(response.body, { status: response.status });
   }
 }
-

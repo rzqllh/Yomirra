@@ -21,7 +21,7 @@ interface MangaCollectionButtonProps {
     title: string;
     coverUrl?: string;
     author?: string;
-    status?: string;
+    status?: string; isNsfw?: boolean;
   };
 }
 
@@ -60,6 +60,7 @@ export function MangaCollectionButton({
         sourceId,
         mangaId,
         title: mangaDetail.title,
+        isNsfw: mangaDetail.isNsfw,
         coverUrl: mangaDetail.coverUrl,
         author: mangaDetail.author,
         status: mangaDetail.status,

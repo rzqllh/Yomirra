@@ -249,6 +249,7 @@ export function MangaDetailView({
         sourceId={sourceId}
         mangaId={mangaId}
         title={detail.title}
+        isNsfw={detail.isNsfw}
         coverUrl={detail.coverUrl}
         author={detail.author}
         status={detail.status}
@@ -259,6 +260,7 @@ export function MangaDetailView({
         mangaId={mangaId}
         mangaDetail={{
           title: detail.title,
+          isNsfw: detail.isNsfw,
           coverUrl: detail.coverUrl,
           author: detail.author,
           status: detail.status,

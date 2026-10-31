@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
+    branches: [main, preview, fix/p0-discovery-safety-20261031]
 
 permissions:
   contents: read

@@ -2,13 +2,14 @@
 
 import * as React from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
 import { useMounted } from "@/shared/hooks/use-mounted";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { sourceQueryOptions } from "@/shared/sources/source-query-options";
+import { isContentVisible } from "@/shared/sources/content-policy";
 import { isDiscoverySourceSystemEligible, resolveDiscoverySourceId, selectDiscoverySources } from "@/shared/sources/discovery-source-policy";
 import { useLibraryFilterStore } from "@/shared/store/library-filter-store";
 import { useLibraryStore } from "@/shared/store/library-store";
@@ -141,10 +142,9 @@ export function useLibraryCatalog() {
   const isDisabled =
     !activeSourceId ||
     disabledSources.includes(activeSourceId) ||
-    Boolean(
-      activeSourceMetadata &&
-      !isDiscoverySourceSystemEligible(activeSourceMetadata)
-    );
+    !activeSourceMetadata ||
+    !isDiscoverySourceSystemEligible(activeSourceMetadata) ||
+    (isNsfwFiltered && activeSourceMetadata.isNsfw);
   const supportsProviderFilters =
     activeSourceMetadata?.capabilities?.filters === true;
 
@@ -294,7 +294,8 @@ export function useLibraryCatalog() {
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     enabled: Boolean(activeSourceId) && !isDisabled,
-    placeholderData: keepPreviousData,
+    placeholderData: (previous, previousQuery) =>
+      previousQuery?.queryKey[1] === activeSourceId && previousQuery.queryKey.at(-1) === isNsfwFiltered ? previous : undefined,
   });
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -359,7 +360,7 @@ export function useLibraryCatalog() {
   }, [rawMangas]);
 
   const mangas = React.useMemo(() => {
-    let result = [...uniqueMangas];
+    let result = uniqueMangas.filter((item) => isContentVisible(item, isNsfwFiltered));
 
     if (selectedCollections.length > 0) {
       result = result.filter((manga) => {
@@ -400,6 +401,7 @@ export function useLibraryCatalog() {
     });
   }, [
     uniqueMangas,
+    isNsfwFiltered,
     sort,
     activeSourceId,
     selectedCollections,
