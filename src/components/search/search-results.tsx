@@ -25,21 +25,7 @@ import {
 import { cn } from "@/shared/utils/cn";
 import { useSearchFilterStore } from "@/shared/store/search-filter-store";
 import type { SourceMetadata } from "@/shared/sources/source-types";
-
-function getFriendlyErrorMessage(errorMsg: string): string {
-  const msg = errorMsg.toLowerCase();
-  if (msg.includes("timeout") || msg.includes("aborted") || msg.includes("fetch failed") || msg.includes("econnrefused")) {
-    return "belum bisa dihubungi";
-  }
-  if (msg.includes("cloudflare") || msg.includes("503") || msg.includes("403")) {
-    return "sementara menolak permintaan";
-  }
-  if (msg.includes("parser") || msg.includes("cheerio") || msg.includes("selector") || msg.includes("parse")) {
-    return "sedang bermasalah";
-  }
-  return "gagal dimuat";
-}
-
+import { SearchSourceErrorSummary } from "./source-error-summary";
 
 export interface SearchResultsProps {
   activeSelectedSources: string[];
@@ -98,26 +84,12 @@ export function SearchResults({
 
   return (
     <>
-      {/* Partial Failure Warning (Compact) */}
-      {errorsToDisplay.length > 0 && !allSourcesFailed && (
-        <div className="flex flex-col gap-2">
-          {errorsToDisplay.map((err) => {
-            const source = searchableSources.find((s) => s.id === err.sourceId);
-            return (
-              <div
-                key={err.sourceId}
-                className="flex items-center justify-between p-3 rounded-[12px] bg-status-error-bg border border-status-error-fg/20 text-sm font-medium text-status-error-fg"
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <WarningCircle size={16} weight="fill" className="shrink-0" />
-                  <span className="truncate">
-                    {source?.name || "Sumber"} {getFriendlyErrorMessage(err.error)}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+      {/* Keep partial provider failures actionable without pushing healthy results below stacked banners. */}
+      {!allSourcesFailed && (
+        <SearchSourceErrorSummary
+          errors={errorsToDisplay}
+          sources={searchableSources}
+        />
       )}
 
       {/* Content Area */}

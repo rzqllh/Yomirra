@@ -130,8 +130,14 @@ describe('Search Page Revamp Unit Tests', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Overgeared')).toBeDefined();
-      expect(screen.getByText('Komikindo gagal dimuat')).toBeDefined();
+      expect(screen.getByText(/Komikindo bermasalah/)).toBeDefined();
     }, { timeout: 3000 });
+
+    const disclosure = screen.getByText(/Komikindo bermasalah/).closest('details');
+    expect(disclosure?.open).toBe(false);
+    fireEvent.click(disclosure!.querySelector('summary')!);
+    expect(disclosure?.open).toBe(true);
+    expect(disclosure?.querySelector('li')?.textContent?.trim()).toBe('Komikindo gagal dimuat');
   });
 
   it('displays single-source failure title when only one source is selected and fails', async () => {
