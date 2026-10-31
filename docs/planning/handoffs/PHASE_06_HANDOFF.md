@@ -1,6 +1,6 @@
 # Yomirra — PHASE 06 HANDOFF
 Updated: 2026-10-31 Asia/Jakarta
-Phase status: NOT_STARTED (planning file created; no implementation/QA performed in this phase)
+Phase status: IN_PROGRESS (read-only official AniList terms/rate-limit audit; broader metadata integration blocked)
 Document branch: `docs/yomirra-master-planning-20261031`
 Planning base: `preview@02cc664be8c66664ffe9628fcaa68523322f3ce0`
 
@@ -56,3 +56,5 @@ RISK/DECISION: approval, rollback, follow-up dependency
 STATUS: PLANNED / IN_PROGRESS / IMPLEMENTED / VERIFIED / BLOCKED
 NEXT: one concrete safe continuation step
 ```
+
+- 2026-11-01 — READ-ONLY TERMS AUDIT: Official current AniList API terms, https://docs.anilist.co/guide/terms-of-use, explicitly prohibit using API as backup/storage or for mass collection and within competing non-complementary anime/manga list/tracker services; restriction extends to media data. Official rate-limit docs at https://anilist.gitbook.io/anilist-apiv2-docs/docs/guide/rate-limiting identify degraded **30 req/min** temporary cap and 429/Retry-After semantics (subject to change). Yomirra already uses AniList GraphQL as rating fallback at `src/app/api/metadata/rating-batch/route.ts`; this existing usage must be reviewed for terms compliance, not merely planned expansion. **Do not expand metadata/ranking or build a mass AniList mirror** until permitted-use decision/authorization. MAL absent/unmapped remains provider metadata with provenance/UNKNOWN warning planned, not fabricated AniList rank. No external API request made in this audit; no legal determination rendered. B-11 remains BLOCKED.

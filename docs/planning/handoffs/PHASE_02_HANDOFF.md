@@ -1,6 +1,6 @@
 # Yomirra — PHASE 02 HANDOFF
 Updated: 2026-10-31 Asia/Jakarta
-Phase status: NOT_STARTED (planning file created; no implementation/QA performed in this phase)
+Phase status: IN_PROGRESS (read-only code-path audit, external acceptance still blocked)
 Document branch: `docs/yomirra-master-planning-20261031`
 Planning base: `preview@02cc664be8c66664ffe9628fcaa68523322f3ce0`
 
@@ -55,3 +55,5 @@ RISK/DECISION: approval, rollback, follow-up dependency
 STATUS: PLANNED / IN_PROGRESS / IMPLEMENTED / VERIFIED / BLOCKED
 NEXT: one concrete safe continuation step
 ```
+
+- 2026-11-01 — READ-ONLY P02 AUDIT: inspected `src/shared/lib/milestone-comparator.ts`, `src/shared/lib/chapter-completion.ts`, `src/shared/store/history-store.ts`, `src/components/reader/reader-view.tsx` and bookmark suggestion. Current code requires successfully decoded pages for verified chapter completion (`canCompleteChapter`), records chapter opening as activity rather than automatically promoting milestone, uses source-local chapter identity, distinguishes latest reading cursor from highest observed milestone, and gates queued remote history writes on current local owner UID. This is **code evidence only**; no device/Firebase/real two-UID acceptance executed. Do not assert security/data-integrity PASS without live disposable A/B and offline replay proof. B-02/B-03/B-05 stay BLOCKED. No code or stored personal data modified.
