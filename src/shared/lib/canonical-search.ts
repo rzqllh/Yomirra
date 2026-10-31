@@ -70,7 +70,6 @@ export function clusterCanonicalResults(
     };
 
     let matchedCluster: CanonicalSearchResult | null = null;
-    let highestConfidence: MatchConfidence = "NO_MATCH";
 
     for (const cluster of clusters) {
       // Avoid binding the same source multiple times to one cluster
@@ -118,7 +117,6 @@ export function clusterCanonicalResults(
       // Strict merge gate: only merge when HIGH_CONFIDENCE
       if (match.confidence === "HIGH_CONFIDENCE") {
         matchedCluster = cluster;
-        highestConfidence = "HIGH_CONFIDENCE";
         break;
       }
     }
@@ -126,6 +124,9 @@ export function clusterCanonicalResults(
     if (matchedCluster) {
       matchedCluster.sourceBindings.push(candidateBinding);
       matchedCluster.primaryResult.sourceBindings = matchedCluster.sourceBindings;
+      // Confidence describes an observed cross-provider identity match,
+      // not merely the presence of a single provider result.
+      matchedCluster.matchConfidence = "HIGH_CONFIDENCE";
     } else {
       const normalizedTitle = normalizeTitle(manga.title) || `${sourceId}-${manga.id}`;
       const normalizedAuthor = normalizeTitle(manga.author || "");
@@ -144,7 +145,7 @@ export function clusterCanonicalResults(
         canonicalKey,
         primaryResult: primaryWithSource,
         sourceBindings: [candidateBinding],
-        matchConfidence: highestConfidence === "NO_MATCH" ? "HIGH_CONFIDENCE" : highestConfidence,
+        matchConfidence: "NO_MATCH",
       });
     }
   }

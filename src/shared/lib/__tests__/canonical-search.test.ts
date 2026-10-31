@@ -30,6 +30,24 @@ describe("Phase 4 — Canonical Search Deduplication & Failure Isolation", () =>
     ]);
   });
 
+  it("does not claim HIGH_CONFIDENCE for a work seen in only one source", () => {
+    const clusters = clusterCanonicalResults([
+      { sourceId: "komiku", manga: { id: "only", title: "Unique Work", coverUrl: "/only.jpg" } },
+    ]);
+    expect(clusters).toHaveLength(1);
+    expect(clusters[0].matchConfidence).toBe("NO_MATCH");
+    expect(clusters[0].sourceBindings).toHaveLength(1);
+  });
+
+  it("promotes observed cross-source match confidence only after an actual match", () => {
+    const clusters = clusterCanonicalResults([
+      { sourceId: "komiku", manga: { id: "a", title: "Work Alpha", coverUrl: "/a.jpg", author: "Artist" } },
+      { sourceId: "mangadex", manga: { id: "b", title: "Work Alpha", coverUrl: "/b.jpg", author: "Artist" } },
+    ]);
+    expect(clusters).toHaveLength(1);
+    expect(clusters[0].matchConfidence).toBe("HIGH_CONFIDENCE");
+  });
+
   it("identical title across two sources → one canonical result with 2 bindings", () => {
     const items: Array<{ manga: MangaItem; sourceId: string }> = [
       {
