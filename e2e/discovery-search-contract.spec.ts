@@ -103,6 +103,7 @@ test("actual routes keep filters and centered Quick Search inside small, tablet 
     await page.keyboard.press("Control+k");
     const dialog = page.getByRole("dialog", { name: "Quick Search", exact: true });
     await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole("combobox", { name: "Quick Search di sumber Jelajah" })).toBeFocused();
     await expect.poll(async () => {
       const rect = await dialog.boundingBox();
       return rect ? Math.abs(rect.x + rect.width / 2 - viewport.width / 2) : Infinity;
@@ -114,9 +115,21 @@ test("actual routes keep filters and centered Quick Search inside small, tablet 
     await page.keyboard.press("Escape");
     await expect(dialog).toHaveCount(0);
     for (const path of ["/search", "/bookmark", "/settings"]) {
-      await page.goto(path);
-      await expect(page.locator("main")).toBeVisible();
-      await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
+      // Isolate layout probes from document teardown/HMR. Client navigation and
+      // Back/Forward are exercised by the first contract above.
+      const routePage = await page.context().newPage();
+      try {
+        await prepareDiscovery(routePage);
+        await routePage.setViewportSize(viewport);
+        await routePage.goto(path, { waitUntil: "domcontentloaded" });
+        if (path === "/search") await expect(routePage.getByRole("button", { name: "Source A", exact: true })).toHaveAttribute("aria-pressed", "true");
+        else if (path === "/bookmark") await expect(routePage.getByRole("button", { name: "Sedang Dibaca", exact: true })).toBeVisible();
+        else await expect(routePage.locator('[data-hydrated="true"]')).toBeVisible();
+        await expect(routePage).toHaveURL(new RegExp(`${path}$`));
+        await expect.poll(() => routePage.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
+      } finally {
+        await routePage.close();
+      }
     }
   }
 });
