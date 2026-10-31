@@ -38,3 +38,5 @@ All statuses require fresh evidence before closure. No user data was changed.
 - 2026-10-31 — WRITE: PHASE_PLAN.md committed at b89883abb7dd626bb859f64c778239d8b35cd410; P00–P07 scope/dependencies/entry/exit/rollback/gates documented. Phase planning is not phase implementation. TRACKING, ACCEPTANCE, P01–P07 handoffs pending.
 
 - 2026-10-31 — WRITE: TRACKING.md committed at 0b8d9bcdfd5ea6bcf3c423ff94ae8674fc6e0b4c; requirement groups, B-01..B-11 blocker register, current Preview env and operational risks recorded. ACCEPTANCE_MATRIX and P01–P07 handoffs pending.
+
+- 2026-10-31 — WRITE: ACCEPTANCE_MATRIX.md committed at 6167312547bc7d0aa15b6d79f0a272a62c260660; full per-ID test steps/expected/evidence compiled, **all NOT_RUN** for planning branch. Next: create P01–P07 handoffs, verify links and open docs PR.
