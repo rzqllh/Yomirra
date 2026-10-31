@@ -40,9 +40,14 @@ export function clusterCanonicalResults(
   items: Array<{ manga: MangaItem; sourceId: string }>
 ): CanonicalSearchResult[] {
   const clusters: CanonicalSearchResult[] = [];
+  const seenSourceReferences = new Set<string>();
 
   for (const { manga, sourceId } of items) {
     if (!manga || !manga.id || !manga.title) continue;
+    // Repeated rows of the same provider item are not independent works.
+    const sourceReference = JSON.stringify([sourceId, manga.id]);
+    if (seenSourceReferences.has(sourceReference)) continue;
+    seenSourceReferences.add(sourceReference);
 
     const candidateBinding: SourceBinding = {
       sourceId,

@@ -7,6 +7,29 @@ import {
 import type { MangaItem } from "@/shared/sources/source-types";
 
 describe("Phase 4 — Canonical Search Deduplication & Failure Isolation", () => {
+  it("ignores repeated rows from the same provider without inventing another work", () => {
+    const sameManga: MangaItem = {
+      id: "solo-md",
+      title: "Solo Leveling",
+      coverUrl: "/solo-md.jpg",
+    };
+
+    const clusters = clusterCanonicalResults([
+      { sourceId: "mangadex", manga: sameManga },
+      { sourceId: "mangadex", manga: { ...sameManga } },
+      {
+        sourceId: "komiku",
+        manga: { id: "solo-komiku", title: "Solo Leveling", coverUrl: "/solo-komiku.jpg" },
+      },
+    ]);
+
+    expect(clusters).toHaveLength(1);
+    expect(clusters[0].sourceBindings).toEqual([
+      expect.objectContaining({ sourceId: "mangadex", mangaId: "solo-md" }),
+      expect.objectContaining({ sourceId: "komiku", mangaId: "solo-komiku" }),
+    ]);
+  });
+
   it("identical title across two sources → one canonical result with 2 bindings", () => {
     const items: Array<{ manga: MangaItem; sourceId: string }> = [
       {
