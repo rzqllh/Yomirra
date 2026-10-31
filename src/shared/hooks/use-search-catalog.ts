@@ -31,8 +31,10 @@ import {
 import type { FilterList, SourceMetadata } from "@/shared/sources/source-types";
 import { isSearchSourceSystemEligible } from "@/shared/sources/discovery-source-policy";
 import { useUrlPagination } from "@/shared/hooks/use-url-pagination";
+import { useMounted } from "@/shared/hooks/use-mounted";
 
 export function useSearchCatalog() {
+  const isMounted = useMounted();
   const searchParams = useSearchParams();
   const query = searchParams?.get("q") || "";
   const [localQuery, setLocalQuery] = React.useState(query);
@@ -99,6 +101,9 @@ export function useSearchCatalog() {
   const hideNsfw = useSettingsStore((state) => state.hideNsfw);
 
   const searchableSources = React.useMemo(() => {
+    // The shell may warm this query before the streamed search route hydrates.
+    // Match the server's empty registry until the route has mounted.
+    if (!isMounted) return [];
     const sources = [...(sourcesData || [])];
     localSources.forEach((localSource) => {
       if (!sources.find((source) => source.id === localSource.id)) {
@@ -111,7 +116,7 @@ export function useSearchCatalog() {
       if (source.isNsfw && hideNsfw) return false;
       return true;
     });
-  }, [sourcesData, localSources, hideNsfw]);
+  }, [isMounted, sourcesData, localSources, hideNsfw]);
 
   const searchFilterStore = useSearchFilterStore();
   const selectedSources = searchFilterStore.selectedSources;

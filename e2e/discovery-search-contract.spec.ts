@@ -33,7 +33,7 @@ async function prepareDiscovery(page: Page) {
 
 async function openCatalog(page: Page, extra = "") {
   await page.goto(`/library?source=komiku${extra}`);
-  await expect(page.getByText("Catalog komiku", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("Catalog komiku", { exact: true }).first()).toBeVisible({ timeout: 15_000 });
   await expect(page.locator('[data-testid="splash-screen"]')).toHaveCount(0);
 }
 
@@ -119,6 +119,10 @@ test("actual routes keep filters and centered Quick Search inside small, tablet 
       // Back/Forward are exercised by the first contract above.
       const routePage = await page.context().newPage();
       try {
+        const hydrationErrors: string[] = [];
+        routePage.on("pageerror", (error) => {
+          if (/hydration|server rendered html/i.test(error.message)) hydrationErrors.push(error.message);
+        });
         await prepareDiscovery(routePage);
         await routePage.setViewportSize(viewport);
         await routePage.goto(path, { waitUntil: "domcontentloaded" });
@@ -127,6 +131,7 @@ test("actual routes keep filters and centered Quick Search inside small, tablet 
         else await expect(routePage.locator('[data-hydrated="true"]')).toBeVisible({ timeout: 15_000 });
         await expect(routePage).toHaveURL(new RegExp(`${path}$`));
         await expect.poll(() => routePage.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
+        if (path === "/search") expect(hydrationErrors).toEqual([]);
       } finally {
         await routePage.close();
       }
