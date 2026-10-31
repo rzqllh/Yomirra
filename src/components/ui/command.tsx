@@ -26,11 +26,11 @@ type CommandDialogProps = React.ComponentPropsWithoutRef<typeof Dialog> &
   Pick<React.ComponentPropsWithoutRef<typeof CommandPrimitive>, "shouldFilter" | "filter">
 
 const CommandDialog = ({ children, shouldFilter, filter, ...props }: CommandDialogProps) => {
-  const [viewport, setViewport] = React.useState<{ height: number; offset: number } | null>(null);
+  const [viewport, setViewport] = React.useState<{ height: number; offset: number; width: number; left: number } | null>(null);
   React.useEffect(() => {
     if (!props.open) return;
     const visual = window.visualViewport;
-    const update = () => setViewport({ height: visual?.height ?? window.innerHeight, offset: visual?.offsetTop ?? 0 });
+    const update = () => setViewport({ height: visual?.height ?? window.innerHeight, offset: visual?.offsetTop ?? 0, width: visual?.width ?? window.innerWidth, left: visual?.offsetLeft ?? 0 });
     update();
     visual?.addEventListener("resize", update);
     visual?.addEventListener("scroll", update);
@@ -46,8 +46,8 @@ const CommandDialog = ({ children, shouldFilter, filter, ...props }: CommandDial
       <DialogPortal>
         <DialogOverlay />
         <DialogPrimitive.Content
-          className="command-dialog-content fixed left-1/2 top-1/2 z-[var(--z-overlay)] -translate-x-1/2 -translate-y-1/2 w-[calc(100vw-32px)] max-w-xl max-h-[calc(100dvh-32px)] rounded-2xl border border-border-default bg-surface-overlay text-text-primary shadow-2xl p-0 overflow-hidden outline-none flex flex-col"
-          style={viewport ? { top: viewport.offset + viewport.height / 2, maxHeight: `calc(${Math.max(0, viewport.height - 32)}px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))` } : undefined}
+          className="command-dialog-content fixed left-1/2 top-1/2 z-[var(--z-overlay)] w-[calc(100vw-32px)] max-w-xl max-h-[calc(100dvh-32px)] rounded-2xl border border-border-default bg-surface-overlay text-text-primary shadow-2xl p-0 overflow-hidden outline-none flex flex-col"
+          style={viewport ? { transform: "translate(-50%, -50%)", left: viewport.left + viewport.width / 2, width: Math.max(0, viewport.width - 32), top: viewport.offset + viewport.height / 2, maxHeight: `calc(${Math.max(0, viewport.height - 32)}px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))` } : { transform: "translate(-50%, -50%)" }}
           onCloseAutoFocus={(e) => {
             e.preventDefault();
           }}
@@ -83,7 +83,7 @@ const CommandInput = React.forwardRef<
     <CommandPrimitive.Input
       ref={ref}
       className={cn(
-        "flex h-full w-full bg-transparent pr-12 text-base sm:text-sm font-semibold outline-none placeholder:text-text-muted placeholder:font-normal text-text-primary disabled:cursor-not-allowed disabled:opacity-50",
+        "flex h-full w-full bg-transparent pr-12 text-base font-semibold outline-none placeholder:text-text-muted placeholder:font-normal text-text-primary disabled:cursor-not-allowed disabled:opacity-50",
         className
       )}
       {...props}

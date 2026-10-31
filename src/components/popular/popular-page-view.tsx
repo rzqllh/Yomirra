@@ -11,16 +11,20 @@ import {
   type PopularSourceFeed,
 } from "@/shared/lib/popular-ranking";
 
+import type { MalPopularFeed } from "@/shared/types/mal";
+import { MalPopularSection } from "./mal-popular-section";
+
 interface PopularPageViewProps {
+  mal?: MalPopularFeed;
   feeds: PopularSourceFeed[];
 }
 
-export function PopularPageView({ feeds }: PopularPageViewProps) {
-  const [mode, setMode] = React.useState<"combined" | "source">("combined");
+export function PopularPageView({ feeds, mal }: PopularPageViewProps) {
+  const [mode, setMode] = React.useState<"combined" | "source" | "mal">(mal?.status === "ready" ? "mal" : "combined");
   const aggregated = React.useMemo(() => aggregatePopularFeeds(feeds), [feeds]);
   const successfulFeeds = feeds.filter((feed) => feed.mangas.length > 0);
 
-  if (feeds.length === 0) {
+  if (feeds.length === 0 && !mal) {
     return (
       <div className="py-20">
         <EmptyState
@@ -36,8 +40,9 @@ export function PopularPageView({ feeds }: PopularPageViewProps) {
       <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
         <SegmentedControl
           value={mode}
-          onChange={(value) => setMode(value as "combined" | "source")}
+          onChange={(value) => setMode(value as "combined" | "source" | "mal")}
           options={[
+            ...(mal ? [{ value: "mal", label: "Populer MAL" }] : []),
             { value: "combined", label: "Lintas sumber" },
             { value: "source", label: "Per Sumber" },
           ]}
@@ -52,7 +57,7 @@ export function PopularPageView({ feeds }: PopularPageViewProps) {
         )}
       </div>
 
-      {mode === "combined" ? (
+      {mode === "mal" && mal ? <MalPopularSection feed={mal} /> : mode === "combined" ? (
         aggregated.length > 0 ? (
           <section aria-labelledby="popular-combined-heading">
             <div className="mb-5 flex items-center justify-between gap-3">

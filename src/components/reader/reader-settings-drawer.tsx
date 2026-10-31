@@ -302,6 +302,10 @@ export function ReaderSettingsDrawer({ isOpen, onClose, sourceId, mangaId }: Rea
             onChange={(val) => handleUpdate({ preloadIntensity: val })}
           />
 
+          <div className="p-4 flex items-center justify-between gap-4">
+            <div><span className="text-sm font-bold text-text-primary">Nonaktifkan double-tap zoom</span><p className="mt-1 text-xs text-text-muted">Cubit gambar tetap dapat digunakan untuk zoom.</p></div>
+            <ToggleSwitch id="disable-double-tap-zoom" checked={preferences.disableDoubleTapZoom ?? false} onCheckedChange={(checked) => handleUpdate({ disableDoubleTapZoom: checked })} label="Nonaktifkan double-tap zoom" />
+          </div>
           <div className="p-4 flex items-center justify-between">
             <span className="text-sm font-bold text-text-primary">Progres halaman</span>
             <ToggleSwitch

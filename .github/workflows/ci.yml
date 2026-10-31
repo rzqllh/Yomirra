@@ -85,7 +85,7 @@ jobs:
         run: pnpm exec playwright test e2e/ios27-safari-regression.spec.ts --project=webkit-mobile-safari
 
       - name: Run discovery and Quick Search contracts
-        run: pnpm exec playwright test e2e/discovery-search-contract.spec.ts --project=chromium-mobile --project=webkit-mobile-safari
+        run: pnpm exec playwright test e2e/discovery-search-contract.spec.ts e2e/home-quick-search.spec.ts --project=chromium-mobile --project=webkit-mobile-safari
 
       - name: Run settings preference contracts
         run: pnpm exec playwright test e2e/settings-control-contract.spec.ts --project=chromium-mobile --project=webkit-mobile-safari

@@ -328,6 +328,7 @@ function ReaderContent({
     >
       {readingMode === "paged" ? (
         <PagedReader
+          managedChrome
           key={`paged-${chapterId}`}
           sourceId={sourceId}
           mangaId={mangaId}

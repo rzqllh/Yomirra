@@ -21,6 +21,7 @@ interface ReaderImageProps {
   isAllowedToReveal?: boolean
   onLoadComplete: (index: number) => void
   onError: (index: number) => void
+  disableDoubleTapZoom?: boolean;
   imageFit?: 'width' | 'contained'
   onReport?: (pageIndex: number) => void
   onSwitchSource?: () => void;
@@ -52,6 +53,7 @@ export const ReaderImage = React.memo(function ReaderImage({
   pageWidth,
   pageHeight,
   imageFit = 'width',
+  disableDoubleTapZoom = false,
   onReport,
   onSwitchSource,
   dataIndex,
@@ -174,6 +176,7 @@ export const ReaderImage = React.memo(function ReaderImage({
   // Double-tap to zoom toggle (1x <-> 2.2x)
   const lastTapRef = React.useRef<number>(0)
   const handlePointerDown = (e: React.PointerEvent) => {
+    if (disableDoubleTapZoom) { lastTapRef.current = 0; return; }
     if (!e.isPrimary) return
     const now = Date.now()
     const DOUBLE_TAP_DELAY = 300

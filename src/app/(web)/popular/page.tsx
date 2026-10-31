@@ -1,3 +1,4 @@
+import { getMalPopular } from "@/server/lib/metadata/mal-popular";
 import { Metadata } from "next";
 import { cookies } from "next/headers";
 import { Fire } from "@phosphor-icons/react/dist/ssr";
@@ -18,7 +19,7 @@ import { PopularPageView } from "@/components/popular/popular-page-view";
 
 export const metadata: Metadata = {
   title: "Komik Populer — Yomirra",
-  description: "Peringkat populer gabungan dari sumber aktif.",
+  description: "Popularitas MyAnimeList dan peringkat dari sumber bacaan aktif.",
 };
 
 export const dynamic = "force-dynamic";
@@ -60,9 +61,10 @@ export default async function PopularPage() {
     disabledSourceIds
   ).filter((source) => isSourceContentVisible(source, readOptions.hideNsfw !== false));
 
-  const feeds = await Promise.all(
-    activeSources.map((source) => loadPopularFeed(source.id, source.name, readOptions))
-  );
+  const [feeds, mal] = await Promise.all([
+    Promise.all(activeSources.map((source) => loadPopularFeed(source.id, source.name, readOptions))),
+    getMalPopular(readOptions.hideNsfw !== false),
+  ]);
 
   return (
     <YomirraSurface variant="base" className="w-full">
@@ -72,7 +74,7 @@ export default async function PopularPage() {
           subtitle="Peringkat dari sumber yang kamu aktifkan."
           icon={<Fire size={24} weight="regular" />}
         />
-        <PopularPageView feeds={feeds} />
+        <PopularPageView feeds={feeds} mal={mal} />
       </PageContainer>
     </YomirraSurface>
   );

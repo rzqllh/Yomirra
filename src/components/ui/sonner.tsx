@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useTheme } from "next-themes"
 import { Toaster as Sonner, toast, type ExternalToast } from "sonner"
 import { Check, Info, Warning, X, CircleNotch } from "@phosphor-icons/react"
 
@@ -14,18 +15,7 @@ type ToastPosition = "top-right" | "top-center"
  * - Mobile (< 768px): always top-center
  */
 function useResponsiveToastPosition(): ToastPosition {
-  const [position, setPosition] = React.useState<ToastPosition>(() => {
-    if (typeof window !== "undefined") {
-      const width = window.innerWidth
-      const isLandscape = typeof window.matchMedia === "function"
-        ? window.matchMedia("(orientation: landscape)").matches
-        : false
-      if (width >= 1024) return "top-right"
-      if (width >= 768) return isLandscape ? "top-right" : "top-center"
-      return "top-center"
-    }
-    return "top-center"
-  })
+  const [position, setPosition] = React.useState<ToastPosition>("top-center")
 
   React.useEffect(() => {
     const computePosition = (): ToastPosition => {
@@ -69,12 +59,13 @@ function useResponsiveToastPosition(): ToastPosition {
 }
 
 const Toaster = ({ position: propPosition, ...props }: ToasterProps) => {
+  const { resolvedTheme } = useTheme()
   const autoPosition = useResponsiveToastPosition()
   const resolvedPosition = propPosition ?? autoPosition
 
   return (
     <Sonner
-      theme="system"
+      theme={resolvedTheme === "dark" ? "dark" : resolvedTheme === "light" ? "light" : "system"}
       position={resolvedPosition}
       className="toaster group"
       closeButton
