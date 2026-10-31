@@ -164,3 +164,20 @@ Mandatory baseline commands: `pnpm typecheck`, `pnpm lint`, `pnpm test --run`, `
 Do not retroactively edit the original test steps or overwrite failed evidence. Add dated results with actual output, a reproducible issue and next action. On a fail, set TRACKING requirement `IN_PROGRESS` or `BLOCKED` and add it to owning handoff; do not promote unrelated cases. On a blocked physical device or missing env, record `BLOCKED` and expected human action. Full release PASS remains unavailable until actual external tests run.
 
 Crosslinks: [MASTER_PLAN](MASTER_PLAN.md) · [PHASE_PLAN](PHASE_PLAN.md) · [TRACKING](TRACKING.md) · [P00 handoff](handoffs/PHASE_00_HANDOFF.md)
+
+
+## Automated evidence checkpoints (not full release acceptance)
+
+The tests below **ran and passed** at the cited source PR SHA, but must not be promoted to `VERIFIED` across release gates without exact merged-Preview runtime, security/content-safety, provider, iOS and account validation as applicable. All steps above retain `NOT_RUN` until their *complete* acceptance procedure has evidence. This appendix distinguishes **automated CI PASS** from **live acceptance NOT_RUN/BLOCKED**.
+
+| Partial requirement evidence | PR / source SHA | Observed GitHub workflow | Still missing |
+| --- | --- | --- | --- |
+| CAT-01 duplicate source binding; CAT-11 last healthy source ordering | #86 `e4ea15f` | [CI 41223026141](https://github.com/rzqllh/Yomirra/actions/runs/41223026141) SUCCESS (Verify & Build + Browser Smoke) | Stable canonical ID, live source health and cross-page/cross-session UX |
+| PR-02 summarized partial provider failures | #87 `4fa9860` | [CI 41224083435](https://github.com/rzqllh/Yomirra/actions/runs/41224083435) SUCCESS | Live provider 403/429, actual browser on deployed SHA |
+| HELP-01 standalone /help navigation | #88 `f141cada` | [CI 41224161809](https://github.com/rzqllh/Yomirra/actions/runs/41224161809) SUCCESS | Exact-head Preview and device accessibility |
+| FL-01/02 mobile visual viewport geometry | #89 `1188f7b` | [CI 41224001961](https://github.com/rzqllh/Yomirra/actions/runs/41224001961) SUCCESS | Physical iPhone Safari keyboard, browser chrome and PWA |
+| HOME-01/02 Continue Reading-first for history | #90 `a25e195` | [CI 41224490239](https://github.com/rzqllh/Yomirra/actions/runs/41224490239) SUCCESS | Real eligible history/source availability, exact-head live Home |
+| ENV-01 per-branch Redis key scope and admin SCAN | #91 `47e14e5` | [CI 41225659697](https://github.com/rzqllh/Yomirra/actions/runs/41225659697) SUCCESS | Restricted Preview Redis credentials, actual hit/ping, Preview READY SHA |
+| NS-01 `Tampilkan NSFW` OFF UI semantics | #92 `3184fd7` | [CI 41227124316](https://github.com/rzqllh/Yomirra/actions/runs/41227124316) SUCCESS | Full UNKNOWN warning across surfaces, opt-in safety end to end |
+
+**Blockers carried forward:** B-02 physical Safari, B-03 disposable Firebase 2 UIDs, B-04 legacy mixed data, B-06 Vercel exact Preview READY/build quota, B-10 isolated Preview Redis access, B-11 AniList terms. Do not count the docs PR or source PR unit tests as proof that these external gates passed.
