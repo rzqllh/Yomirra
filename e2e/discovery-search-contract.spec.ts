@@ -105,9 +105,9 @@ test("native provider sorts settle without a render loop and reach the request",
   expect(errors).toEqual([]);
 });
 
-test("actual routes keep filters and centered Quick Search inside small, tablet and desktop viewports", async ({ page }) => {
-  test.setTimeout(120_000);
-  for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 844 }, { width: 820, height: 1180 }, { width: 1366, height: 900 }, { width: 1920, height: 1080 }]) {
+for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 844 }, { width: 820, height: 1180 }, { width: 1366, height: 900 }, { width: 1920, height: 1080 }]) {
+  test(`actual routes keep filters and centered Quick Search inside ${viewport.width}x${viewport.height}`, async ({ page }) => {
+    test.setTimeout(90_000);
     await page.setViewportSize(viewport);
     await openCatalog(page);
     const desktop = viewport.width >= 1024;
@@ -158,5 +158,5 @@ test("actual routes keep filters and centered Quick Search inside small, tablet 
         await routePage.close();
       }
     }
-  }
-});
+  });
+}
