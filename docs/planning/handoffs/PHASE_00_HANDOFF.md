@@ -32,3 +32,5 @@ Owner authorization: staged execution, documentation first, write handoff after 
 ## Current blockers / unverified gates
 `B-01` MAL_CLIENT_ID Preview config and live ranking; `B-02` physical iOS/iPad Safari/PWA; `B-03` isolated Firebase/2 UID sync; `B-04` legacy classification; `B-05` Reader data correctness; `B-06` exact-SHA Vercel deployment/quota; `B-07` background notifications; `B-08` broader provider integrations/content rights; `B-09` MAL-to-provider verified mapping; `B-10` isolated Preview Redis connection; `B-11` AniList licensing/terms.
 All statuses require fresh evidence before closure. No user data was changed.
+
+- 2026-10-31 — WRITE: MASTER_PLAN.md committed at e990262a4e2fe203d5af7ace010a41f5d3241197; full project contract, new UX/CX decisions, current Redis/AniList baseline, data safety and release boundaries documented. PHASE_PLAN, TRACKING, ACCEPTANCE and future handoffs still pending.
