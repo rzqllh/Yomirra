@@ -21,6 +21,7 @@ import type { MangaDetail, Chapter, PageItem } from "@/shared/types/source";
 import { useAlternateSource } from "@/shared/hooks/use-alternate-source";
 import { AlternateSourceModal } from "@/components/komik/alternate-source-modal";
 import { parseChapterNumber } from "@/shared/lib/chapter-parser";
+import { ContentAccessBoundary } from "@/components/komik/content-access-boundary";
 
 interface ReaderViewProps {
   sourceId: string;
@@ -32,7 +33,11 @@ interface ReaderViewProps {
   returnTo?: string;
 }
 
-export function ReaderView({
+export function ReaderView(props: ReaderViewProps) {
+  return <ContentAccessBoundary sourceId={props.sourceId} item={props.initialDetail}><ReaderContent {...props} /></ContentAccessBoundary>;
+}
+
+function ReaderContent({
   sourceId,
   mangaId,
   chapterId,

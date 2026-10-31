@@ -31,6 +31,7 @@ import { MangaDetailLayout } from "./manga-detail-layout";
 import { normalizeSynopsis } from "@/shared/utils/normalize";
 import { getMangaTransitionNames } from "@/shared/lib/motion/transition-identity";
 import { MorphIcon } from "@/components/motion/morph-icon";
+import { ContentAccessBoundary } from "@/components/komik/content-access-boundary";
 import { morphIconPairs } from "@/shared/lib/motion/morph-icons";
 import { transitions } from "@/shared/lib/motion/tokens";
 import { motion, useReducedMotion } from "motion/react";
@@ -74,7 +75,11 @@ interface MangaDetailViewProps {
   chapterLoadError?: string;
 }
 
-export function MangaDetailView({
+export function MangaDetailView(props: MangaDetailViewProps) {
+  return <ContentAccessBoundary sourceId={props.sourceId} item={props.detail}><MangaDetailContent {...props} /></ContentAccessBoundary>;
+}
+
+function MangaDetailContent({
   sourceId,
   mangaId,
   detail,
