@@ -88,4 +88,12 @@ describe("Quick Search scope and dialog", () => {
     fireEvent.keyDown(document, { key: "Escape" });
     await waitFor(() => expect(document.activeElement).toBe(trigger));
   });
+
+  it("removes the dialog immediately when Escape comes from its input", async () => {
+    const trigger = open();
+    const input = await screen.findByRole("combobox");
+    fireEvent.keyDown(input, { key: "Escape" });
+    expect(screen.queryByRole("dialog", { name: "Quick Search" })).toBeNull();
+    await waitFor(() => expect(document.activeElement).toBe(trigger));
+  });
 });

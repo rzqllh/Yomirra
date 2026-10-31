@@ -93,6 +93,10 @@ export function CommandMenu() {
   else if (loading) message = "Mencari di sumber Jelajah…";
   else if (failed) message = sourceFailures[0]?.error ?? "Pencarian belum bisa dimuat. Coba lagi.";
 
+  // A closed search has no interactive/present dialog, including on WebKit
+  // when an interrupted exit animation does not emit animationend.
+  if (!open) return null;
+
   return (
     <CommandDialog open={open} onOpenChange={handleOpenChange} shouldFilter={false}>
       <CommandInput aria-label="Quick Search di sumber Jelajah" placeholder="Cari judul di Jelajah…" value={searchQuery} onValueChange={setSearchQuery} />

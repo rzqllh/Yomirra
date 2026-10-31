@@ -51,6 +51,13 @@ const CommandDialog = ({ children, shouldFilter, filter, ...props }: CommandDial
           onCloseAutoFocus={(e) => {
             e.preventDefault();
           }}
+          onKeyDownCapture={(event) => {
+            if (event.key === "Escape" && props.onOpenChange) {
+              event.preventDefault();
+              event.stopPropagation();
+              props.onOpenChange(false);
+            }
+          }}
         >
           <DialogTitle className="sr-only">Quick Search</DialogTitle>
           <DialogDescription className="sr-only">Cari judul dengan sumber Jelajah yang sedang dipilih.</DialogDescription>
