@@ -25,7 +25,7 @@ Documentation changes and code changes require scoped PR/checks; when starting w
 
 | IDs | Specific scope / existing code | Phase | Priority | Owner | Status | Evidence / next |
 | --- | --- | --- | --- | --- | --- | --- |
-| CAT-01..02 | One canonical card per verified work; NO false merge | P01 | P0 | ENG:TBD | IN_PROGRESS | PR #86 (`55a44d6`) adds exact source-binding duplicate guard + test; **not merged/tested**; full cross-page canonical identity pending |
+| CAT-01..02 | One canonical card per verified work; NO false merge | P01 | P0 | ENG:TBD | IN_PROGRESS | PR #86 merged `21b05db` full CI PASS, exact duplicate rows fixed; PR #94 confidence correction unmerged/CI pending; false merges and durable cross-page work identity unresolved |
 | CAT-03..04 | Multi-source picker; source health ordering | P01 | P0 | ENG:TBD | IN_PROGRESS | Existing manual picker; PR #86 (`e4ea15f`) sorts by observed request health, tests **not run**; deep source health still pending |
 | CAT-05..07 | Clear unhealthy/unknown provider statuses; exact chosen source route; NSFW eligible count | P01 | P0 | ENG:TBD | PLANNED | Provider chooser and content guard tests |
 | CAT-08..10 | Cross-page/cache/session stability, UID-local progress, no work-ID breakage | P01/P02 | P0 | ENG:TBD | PLANNED | Existing source `canonical:{title}` and Redis `source:{id}:{mangaId}` split |
@@ -39,7 +39,7 @@ Documentation changes and code changes require scoped PR/checks; when starting w
 
 | IDs | Scope / evidence starting point | Phase | Priority | Owner | Status | Evidence / next |
 | --- | --- | --- | --- | --- | --- | --- |
-| NS-01..02 | `Tampilkan NSFW` default OFF; confirmed restricted source/title excluded | P01 | P0 | ENG:TBD | PLANNED | Current store `hideNsfw:true`, UI inverse label still needed |
+| NS-01..02 | `Tampilkan NSFW` default OFF; confirmed restricted source/title excluded | P01 | P0 | ENG:TBD | IN_PROGRESS | PR #92 proposes UI inverse toggle; unmerged/CI PENDING. Confirmed restricted content exclusion broader acceptance pending |
 | NS-03..04 | UNKNOWN shown with explicit warning; filter/tag and stored URL guard | P01 | P0 | ENG:TBD | PLANNED | MAL strict nonwhite discrepancy **OPEN** |
 | NS-05..07 | ON→OFF cache/personal views reclassified, persistence, reporting | P01 | P0 | ENG:TBD | PLANNED | PWA cache 7/14d; no destructive data rewrite |
 | SAFE-07 | PWA/cache/direct reader/display source isolation | P01/P03 | P0 | ENG:TBD | PLANNED | Read `src/app/sw.ts`, old data B-04 |
@@ -54,10 +54,10 @@ Documentation changes and code changes require scoped PR/checks; when starting w
 
 | IDs | Scope / existing code | Phase | Priority | Owner | Status | Evidence / next |
 | --- | --- | --- | --- | --- | --- | --- |
-| ENV-01 | Production-like Preview Redis with protected operational namespace and branch-restricted credentials | P03 | P0 | PRODUCT:owner / ENG:TBD | BLOCKED | PR #91 (`47e14e5`) implements per-branch prefix/scan guard, CI pending; Preview still lacks REDIS_URL and restricted ACL credential, plus exact-SHA READY deployment B-10 |
+| ENV-01 | Production-like Preview Redis with protected operational namespace and branch-restricted credentials | P03 | P0 | PRODUCT:owner / ENG:TBD | BLOCKED | PR #91 merged `10130580`, full CI PASS; Preview still lacks restricted Redis credential, branch-specific env and deployed SHA/live verification B-10 |
 | CACHE-01..03 | TTL/stale, cache-key scopes, safe flush, observability, graceful degradation | P03 | P1 | ENG:TBD | PLANNED | `withCache()` fixed Redis retention 7d; reuse existing Redis |
 | CACHE-04..05 | Cold-start Redis readiness, all namespace statistics, performance evidence | P03 | P1 | ENG:TBD | PLANNED | `lazyConnect`; no live hit rate proven |
-| SEC-01 | NSFW effective preference consistent, no accidental query override | P01/P03 | P0 | ENG:TBD | PLANNED | `getRequestReadOptions` accepts `hideNsfw` query param |
+| SEC-01 | NSFW effective preference consistent, no accidental query override | P01/P03 | P0 | ENG:TBD | IN_PROGRESS | PR #93 proposes server cookie-first opt-in; draft, test/CI PENDING |
 | SEC-02 | Cache/privacy/env isolation, no public secrets or cross-user responses | P03 | P0 | ENG:TBD | PLANNED | Use exact UID/NSFW/language/policy scope |
 | SEC-03 | Source rights, access boundaries, security/legal factual audit | P06/P07 | P0 | PRODUCT:owner | BLOCKED | B-08/B-11; public claim gate |
 | HEALTH-01 | Capability-specific source health, checkedAt+confidence | P01/P06 | P0 | ENG:TBD | PLANNED | Existing shallow/deep probes |
