@@ -78,6 +78,15 @@ export function clusterCanonicalResults(
       }
 
       const clusterPrimary = cluster.primaryResult;
+      // Matching title/author is insufficient when known media types conflict:
+      // a novel and a manga adaptation must remain distinct catalog entries.
+      if (
+        manga.format &&
+        clusterPrimary.format &&
+        normalizeTitle(manga.format) !== normalizeTitle(clusterPrimary.format)
+      ) {
+        continue;
+      }
       const primaryCandidate: TitleCandidate = {
         sourceId: clusterPrimary.sourceId,
         mangaId: clusterPrimary.id,
