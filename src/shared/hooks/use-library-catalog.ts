@@ -216,6 +216,7 @@ export function useLibraryCatalog() {
 
   // Fallback to supported sort if current sort is not available in the new source
   const setFilters = filterStore.setFilters;
+  const normalizedSortRef = React.useRef<string | null>(null);
   React.useEffect(() => {
     if (filtersData?.sorts) {
       const isSupported = filtersData.sorts.some(s => s.id === sort);
@@ -225,7 +226,7 @@ export function useLibraryCatalog() {
         const fallback = filtersData.sorts.find((item) => aliases.includes(item.id))?.id ?? filtersData.sorts[0].id;
         // Keep both owners in agreement. Updating only local state lets the
         // store-sync effect restore the unsupported value on every render.
-        skipSourceFilterPageReset.current = true;
+        normalizedSortRef.current = fallback;
         setSort(fallback);
         setFilters({ sort: fallback });
       }
@@ -254,7 +255,17 @@ export function useLibraryCatalog() {
 
   // Reset page to 1 when filters change from drawer
   const previousFiltersRef = React.useRef({ selectedGenres, excludedGenres, selectedFormats, selectedStatuses, selectedCollections, selectedReadingStatuses, storeSort });
+  const filtersMountedRef = React.useRef(false);
   React.useEffect(() => {
+    const current = { selectedGenres, excludedGenres, selectedFormats, selectedStatuses, selectedCollections, selectedReadingStatuses, storeSort };
+    // Persisted arrays replace the server snapshot during hydration. They are
+    // the initial filter state, not an edit that should discard a deep link.
+    if (!isMounted || !filtersMountedRef.current) {
+      filtersMountedRef.current = isMounted;
+      previousFiltersRef.current = current;
+      if (normalizedSortRef.current === storeSort) normalizedSortRef.current = null;
+      return;
+    }
     const prev = previousFiltersRef.current;
     if (
       prev.storeSort !== storeSort ||
@@ -265,11 +276,13 @@ export function useLibraryCatalog() {
       prev.selectedCollections !== selectedCollections ||
       prev.selectedReadingStatuses !== selectedReadingStatuses
     ) {
+      const normalized = normalizedSortRef.current === storeSort;
+      if (normalized) normalizedSortRef.current = null;
       if (skipSourceFilterPageReset.current) skipSourceFilterPageReset.current = false;
-      else setPage(1);
-      previousFiltersRef.current = { selectedGenres, excludedGenres, selectedFormats, selectedStatuses, selectedCollections, selectedReadingStatuses, storeSort };
+      else if (!normalized) setPage(1);
+      previousFiltersRef.current = current;
     }
-  }, [selectedGenres, excludedGenres, selectedFormats, selectedStatuses, selectedCollections, selectedReadingStatuses, storeSort]);
+  }, [isMounted, selectedGenres, excludedGenres, selectedFormats, selectedStatuses, selectedCollections, selectedReadingStatuses, storeSort]);
 
   const fetchCatalog = async (currentPage: number) => {
     const hasFilters = selectedGenres.length > 0 || excludedGenres.length > 0 || selectedFormats.length > 0 || selectedStatuses.length > 0;

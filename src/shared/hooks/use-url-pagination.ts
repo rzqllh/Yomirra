@@ -32,8 +32,10 @@ export function useUrlPagination(): [
   const searchParamsString = searchParams?.toString() || "";
   const urlPage = parseCatalogPage(searchParams?.get("page"));
   const [page, setPageState] = React.useState(urlPage);
+  const pageRef = React.useRef(urlPage);
 
   React.useEffect(() => {
+    pageRef.current = urlPage;
     setPageState(urlPage);
   }, [urlPage]);
 
@@ -41,9 +43,14 @@ export function useUrlPagination(): [
     (value) => {
       const resolved =
         typeof value === "function"
-          ? value(page)
+          ? value(pageRef.current)
           : value;
       const nextPage = Math.max(1, Math.floor(Number(resolved) || 1));
+      // Filter and route handlers can reset the page in the same interaction.
+      // A repeated reset must not overwrite a newer sort/source URL with the
+      // previous render's search params while navigation is still pending.
+      if (nextPage === pageRef.current) return;
+      pageRef.current = nextPage;
       setPageState(nextPage);
 
       const suffix = writeCatalogPageParam(searchParamsString, nextPage);
@@ -54,7 +61,7 @@ export function useUrlPagination(): [
         scroll: false,
       });
     },
-    [page, pathname, router, searchParamsString]
+    [pathname, router, searchParamsString]
   );
 
   return [page, setPage];
