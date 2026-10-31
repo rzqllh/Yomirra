@@ -19,7 +19,7 @@ Documentation changes and code changes require scoped PR/checks; when starting w
 | PLAN-02 | Consolidate all plans in `MASTER_PLAN.md` | P00 | P0 | ENG:TBD | IMPLEMENTED | Created on planning branch; verify document completeness and link with exact SHA |
 | PLAN-03 | Eight-phase `PHASE_PLAN.md` with gates | P00 | P0 | ENG:TBD | IMPLEMENTED | Created on planning branch; check scope/exit criteria |
 | PLAN-04 | This `TRACKING.md`, acceptance matrix, P00–P07 handoffs | P00 | P0 | ENG:TBD | IMPLEMENTED | All 12 Markdown documents exist in docs-only branch; 111 acceptance IDs, phase/acceptance crosscheck passed; PR review pending |
-| PLAN-05 | Documents reviewed, PR checked and safely merged to `preview` | P00 | P0 | ENG:TBD | IN_PROGRESS | Document diff review shows exactly 12 new Markdown files and no code changes; PR and CI/merge pending |
+| PLAN-05 | Documents reviewed, PR checked and safely merged to `preview` | P00 | P0 | ENG:TBD | IN_PROGRESS | PR #85 ready review, all 12 Markdown docs, CI rerun pending; not merged (feature PRs #86–#90 already on preview) |
 
 ## Canonical catalog, metadata and source choice
 
@@ -29,7 +29,7 @@ Documentation changes and code changes require scoped PR/checks; when starting w
 | CAT-03..04 | Multi-source picker; source health ordering | P01 | P0 | ENG:TBD | IN_PROGRESS | Existing manual picker; PR #86 (`e4ea15f`) sorts by observed request health, tests **not run**; deep source health still pending |
 | CAT-05..07 | Clear unhealthy/unknown provider statuses; exact chosen source route; NSFW eligible count | P01 | P0 | ENG:TBD | PLANNED | Provider chooser and content guard tests |
 | CAT-08..10 | Cross-page/cache/session stability, UID-local progress, no work-ID breakage | P01/P02 | P0 | ENG:TBD | PLANNED | Existing source `canonical:{title}` and Redis `source:{id}:{mangaId}` split |
-| CAT-11 | Healthy last-used source first but user explicitly chooses | P01 | P0 | ENG:TBD | IN_PROGRESS | PR #86 uses exact-binding history + recent observed ONLINE state; manual click retained, CI pending |
+| CAT-11 | Healthy last-used source first but user explicitly chooses | P01 | P0 | ENG:TBD | IMPLEMENTED | PR #86 merged Preview `21b05db`; full GitHub CI PASS; exact-SHA Preview deployment/physical QA NOT_RUN |
 | CAT-12..14 | Verified cross-DB IDs; Redis is not authoritative identity; stable mapping across restarts | P01/P06 | P0 | ENG:TBD | PLANNED | B-09, B-11; assess saved-title schema before migrations |
 | META-01 | Metadata provenance and UNKNOWN warning after source lookup | P01/P06 | P0 | ENG:TBD | PLANNED | Existing providers and MAL; no full AniList metadata fallback |
 | META-02 | Conditional broadened AniList use *after* terms/rate review | P06 | P1 | PRODUCT:owner | BLOCKED | B-11; existing AniList rating fallback already exists |
@@ -76,7 +76,7 @@ Documentation changes and code changes require scoped PR/checks; when starting w
 | NOTIF-01..04 | Honest toasts, 4 verified chapters bookmark prompt, updates, OS push not fabricated | P04 | P1 | ENG:TBD | PLANNED | B-07 for push |
 | PWA-01 | Accurate offline status and no claim beyond cached pages | P04 | P1 | ENG:TBD | PLANNED | Existing reading buffer supports partial cache |
 | DS-01..03 | Semantic tokens, accessibility, visual regression | P05 | P2 | ENG:TBD | PLANNED | iPhone screenshot modal/borders inconsistency |
-| HELP-01..03 | Dedicated `/help`, accessible support/recovery content | P05 | P1 | ENG:TBD | IN_PROGRESS | Draft PR #88 route and two tests, not merged/deployed |
+| HELP-01..03 | Dedicated `/help`, accessible support/recovery content | P05 | P1 | ENG:TBD | IMPLEMENTED | PR #88 merged Preview `243804f`; full GitHub CI PASS, live Preview not verified |
 | MAL-01..04 | Official MAL live ranking, safe classification, mapping via trusted IDs | P06 | P1 | PRODUCT:owner / ENG:TBD | BLOCKED | B-01/B-09, `MAL_CLIENT_ID` |
 | INTEG-01..04 | External sources, archives, source admin, rights, optional AI | P06 | P1 | PRODUCT:owner / ENG:TBD | PLANNED | Existing adapters/features; broad live gates unknown |
 | REL-01..07 | All scoped P0 gates, Browser/CI/Safari/Firebase/security/prod signoff | P07 | P0 | QA:TBD / PRODUCT:owner | BLOCKED | B-01..B-11 as release-applicable |

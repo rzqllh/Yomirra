@@ -1,6 +1,6 @@
 # Yomirra — PHASE 05 HANDOFF
 Updated: 2026-10-31 Asia/Jakarta
-Phase status: IN_PROGRESS (dedicated Help UI PR drafted; not merged/verified)
+Phase status: IN_PROGRESS (Help UI PR merged to preview; live /help unverified)
 Document branch: `docs/yomirra-master-planning-20261031`
 Planning base: `preview@02cc664be8c66664ffe9628fcaa68523322f3ce0`
 
@@ -61,3 +61,5 @@ NEXT: one concrete safe continuation step
 - 2026-11-01 — **CI FAIL resolved in branch, new CI pending**: Initial PR #88 SHA `d8faebb3` had typecheck, lint and new Help tests pass but full suite FAILED **1/1578**: historic `src/components/app/__tests__/hero-and-header.test.tsx` still expected fake `Bahasa` menu. GitHub run `41223756292` / job `124603508549`. Commit `f141cada4c1b6da72c055a45966de417b948ea51` changes assertion to require no misleading Bahasa shortcut and verifies Pusat Bantuan link exactly `/help`. New-head CI **IN_PROGRESS**, no actual Preview READY and no merge; accessibility/physical iOS still NOT_RUN.
 
 - 2026-11-01 — AUTOMATED QA partial **PASS**: PR #88 exact `f141cada4c1b6da72c055a45966de417b948ea51` GitHub `Verify & Build` completed SUCCESS (typecheck, lint, full unit/integration and app build), Browser Smoke (Chromium and WebKit) was **IN_PROGRESS**. Vercel status failure due build quota; no live `/help` route verified on deployment. Do not mark HELP-01/02/03 PASS until browser/live tests as applicable.
+
+- 2026-11-01 — MERGED TO PREVIEW: #88 Help route and removal of misleading Bahasa UI locale shortcut at squash `243804f7cbf9bc34440c7cc80b689f69bca4b5ca`. Source PR exact-head GitHub CI SUCCESS incl WebKit/Chromium browser smoke; no Firebase/Redis/site settings changed. No live merged-head Preview proof; HELP-01..03 not production VERIFIED.

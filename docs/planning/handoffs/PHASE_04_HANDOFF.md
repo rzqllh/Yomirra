@@ -1,6 +1,6 @@
 # Yomirra — PHASE 04 HANDOFF
 Updated: 2026-10-31 Asia/Jakarta
-Phase status: IN_PROGRESS (scoped Home hierarchy fix drafted; not merged/verified)
+Phase status: IN_PROGRESS (scoped Home hierarchy fix merged to preview; live runtime unverified)
 Document branch: `docs/yomirra-master-planning-20261031`
 Planning base: `preview@02cc664be8c66664ffe9628fcaa68523322f3ce0`
 
@@ -58,3 +58,5 @@ NEXT: one concrete safe continuation step
 ```
 
 - 2026-11-01 — CODE/TEST WRITTEN **NOT VERIFIED**: Draft PR **#90** https://github.com/rzqllh/Yomirra/pull/90 (branch `feat/home-continue-reading-first-20261101`, exact SHA `a25e1958dc7796fdae0f331f03eb7a7a7b9c4e83`) changes `src/components/home/home-feed-client.tsx` to place existing Continue Reading shelf BEFORE HomeHero when eligible history exists, while guest without history keeps Hero first; test in `src/components/app/__tests__/home-feed-client.test.tsx` asserts DOM order and guest flow. This is owner-locked HOME-01/HOME-02. No Reader, history storage, bookmark, API, Redis or auth changes. CI PENDING; no merge/deploy claimed. Next: verify exact SHA CI + browser; if PASS review for Preview, then physical UX.
+
+- 2026-11-01 — MERGED TO PREVIEW: #90 Home Continue Reading-first for returning users at squash commit `0e85aa20e89ef9f10b8643bf7e6370782c555539`, source PR exact-head GitHub CI SUCCESS including browser smoke. First-time guest remains discovery-first. **Live Preview URL for merged SHA not confirmed**; independent Home/customer flow acceptance NOT_RUN. No data changes.
