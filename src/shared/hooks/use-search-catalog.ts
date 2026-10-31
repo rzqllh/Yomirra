@@ -334,7 +334,8 @@ export function useSearchCatalog() {
           !isExhausted &&
           !isUnreachable &&
           isTagCompatible,
-        placeholderData: keepPreviousData,
+        placeholderData: (previous: { sourceId: string; query: string; page: number; results: import("@/shared/sources/source-types").MangaItem[]; hasNextPage?: boolean } | undefined, previousQuery: { queryKey: readonly unknown[] } | undefined) =>
+          previousQuery?.queryKey[1] === sourceId && previousQuery.queryKey[4] === hideNsfw ? previous : undefined,
       };
     }),
   });
@@ -656,6 +657,15 @@ export function useSearchCatalog() {
   }, [parsedQuery.tags, query, router, searchParamsString]);
 
   return {
+    appliedFilters: [
+      ...genres.map((id) => ({ key: `genre:${id}`, label: dynamicFilters.genres.find((item) => item.id === id)?.label ?? id,
+        remove: () => searchFilterStore.applyFilters({ genres: genres.filter((item) => item !== id), formats, status, sort }) })),
+      ...formats.map((id) => ({ key: `format:${id}`, label: dynamicFilters.formats.find((item) => item.id === id)?.label ?? id,
+        remove: () => searchFilterStore.applyFilters({ genres, formats: formats.filter((item) => item !== id), status, sort }) })),
+      ...(status ? [{ key: "status", label: dynamicFilters.statuses.find((item) => item.id === status)?.label ?? status,
+        remove: () => searchFilterStore.applyFilters({ genres, formats, status: "", sort }) }] : []),
+    ],
+    resetAppliedFilters: () => { searchFilterStore.resetFilters(); resetFilterRouteIntent(); },
     localQuery,
     setLocalQuery,
     query,

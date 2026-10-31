@@ -12,6 +12,7 @@ import { sourceQueryOptions } from "@/shared/sources/source-query-options";
 import { isContentVisible } from "@/shared/sources/content-policy";
 import { isDiscoverySourceSystemEligible, resolveDiscoverySourceId, selectDiscoverySources } from "@/shared/sources/discovery-source-policy";
 import { useLibraryFilterStore } from "@/shared/store/library-filter-store";
+import { useDiscoveryScopeStore } from "@/shared/store/discovery-scope-store";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useCollectionStore } from "@/shared/store/collection-store";
 import type { MangaKey } from "@/shared/types/collection";
@@ -54,7 +55,12 @@ export function useLibraryCatalog() {
       ),
     [sourceCandidates, disabledSources, isNsfwFiltered]
   );
-  const activeSourceId = resolveDiscoverySourceId(sourceParam, eligibleSources);
+  const rememberedSourceId = useDiscoveryScopeStore((state) => state.sourceId);
+  const rememberSource = useDiscoveryScopeStore((state) => state.setSourceId);
+  const activeSourceId = resolveDiscoverySourceId(sourceParam ?? rememberedSourceId, eligibleSources);
+  React.useEffect(() => {
+    if (activeSourceId && rememberedSourceId !== activeSourceId) rememberSource(activeSourceId);
+  }, [activeSourceId, rememberedSourceId, rememberSource]);
   const sortParam = searchParams.get("sort");
 
   const filterStore = useLibraryFilterStore();
@@ -85,9 +91,11 @@ export function useLibraryCatalog() {
   const [query, setQuery] = React.useState(storeQuery);
   const [sort, setSort] = React.useState<string>(initialSort);
   const [page, setPage] = useUrlPagination();
+  const [sourceChangeNotice, setSourceChangeNotice] = React.useState("");
 
   const genreSignature = genreParams.join("|");
   const previousSourceRef = React.useRef(activeSourceId);
+  const skipSourceFilterPageReset = React.useRef(false);
 
   // A direct reload clears session-scoped filters, but explicit URL tags remain an intent
   // and are applied again immediately below.
@@ -110,13 +118,15 @@ export function useLibraryCatalog() {
 
     if (sourceChanged) {
       previousSourceRef.current = activeSourceId;
+      skipSourceFilterPageReset.current = true;
       filterStore.setFilters({
         selectedGenres: nextGenres,
         excludedGenres: [],
         selectedFormats: [],
         selectedStatuses: [],
+        sort: "popular",
       });
-      setPage(1);
+      setSort("popular");
       return;
     }
 
@@ -242,7 +252,8 @@ export function useLibraryCatalog() {
       prev.selectedCollections !== selectedCollections ||
       prev.selectedReadingStatuses !== selectedReadingStatuses
     ) {
-      setPage(1);
+      if (skipSourceFilterPageReset.current) skipSourceFilterPageReset.current = false;
+      else setPage(1);
       previousFiltersRef.current = { selectedGenres, excludedGenres, selectedFormats, selectedStatuses, selectedCollections, selectedReadingStatuses, storeSort };
     }
   }, [selectedGenres, excludedGenres, selectedFormats, selectedStatuses, selectedCollections, selectedReadingStatuses, storeSort]);
@@ -421,9 +432,27 @@ export function useLibraryCatalog() {
   }, [page]);
 
   const totalLibraryCount = Object.keys(libraryItems).length;
+  const appliedFilters = [
+    ...selectedGenres.map((id) => ({ key: `genre:${id}`, label: filtersData?.genres.find((item) => item.id === id)?.name ?? "Genre dipilih", remove: () => filterStore.setFilters({ selectedGenres: selectedGenres.filter((item) => item !== id) }) })),
+    ...excludedGenres.map((id) => ({ key: `exclude:${id}`, label: `Bukan ${filtersData?.genres.find((item) => item.id === id)?.name ?? "genre terpilih"}`, remove: () => filterStore.setFilters({ excludedGenres: excludedGenres.filter((item) => item !== id) }) })),
+    ...selectedFormats.map((id) => ({ key: `format:${id}`, label: filtersData?.formats.find((item) => item.id === id)?.name ?? "Filter dipilih", remove: () => filterStore.setFilters({ selectedFormats: selectedFormats.filter((item) => item !== id) }) })),
+    ...selectedStatuses.map((id) => ({ key: `status:${id}`, label: filtersData?.statuses.find((item) => item.id === id)?.name ?? "Filter dipilih", remove: () => filterStore.setFilters({ selectedStatuses: selectedStatuses.filter((item) => item !== id) }) })),
+    ...selectedCollections.map((id) => ({ key: `collection:${id}`, label: collections.find((item) => item.id === id)?.name ?? "Koleksi dipilih", remove: () => filterStore.setFilters({ selectedCollections: selectedCollections.filter((item) => item !== id) }) })),
+    ...selectedReadingStatuses.map((id) => ({ key: `reading:${id}`, label: `Status baca: ${{ reading: "Sedang dibaca", completed: "Selesai", "on-hold": "Ditunda", dropped: "Dihentikan", "plan-to-read": "Rencana baca" }[id] ?? "Dipilih"}`, remove: () => filterStore.setFilters({ selectedReadingStatuses: selectedReadingStatuses.filter((item) => item !== id) }) })),
+  ];
 
   return {
+    sourceOptions: eligibleSources.map((source) => ({ value: source.id, label: source.name })),
+    sourceChangeNotice,
+    changeSource: (sourceId: string) => {
+      if (!eligibleSources.some((source) => source.id === sourceId) || sourceId === activeSourceId) return;
+      setSourceChangeNotice("Sumber berubah. Filter khusus sumber direset.");
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("source", sourceId); params.delete("page"); params.delete("genre"); params.delete("sort");
+      router.push(`${pathname}?${params}`, { scroll: false });
+    },
     isMounted,
+    appliedFilters,
     activeSourceId,
     searchInput,
     setSearchInput,

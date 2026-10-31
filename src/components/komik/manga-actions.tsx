@@ -56,7 +56,7 @@ export function MangaActions({
 
     // This action is optimistic and local-first. Do not claim cloud commit
     // success before the asynchronous store mutation has actually settled.
-    toast.info(wasInLibrary ? "Dihapus dari Rak Buku di perangkat" : "Disimpan ke Rak Buku di perangkat", {
+    toast.info(wasInLibrary ? "Dihapus dari Library di perangkat" : "Disimpan ke Library di perangkat", {
       id: toastId,
       description: "Jika sinkronisasi akun gagal, Yomirra akan memberi tahu dan membatalkan perubahan ini.",
     });
@@ -66,7 +66,7 @@ export function MangaActions({
     <>
       <button
         onClick={handleToggle}
-        aria-label={isInLibrary ? "Hapus dari Rak Buku" : "Simpan ke Rak Buku"}
+        aria-label={isInLibrary ? "Hapus dari Library" : "Simpan ke Library"}
         className={cn(
           "flex items-center justify-center gap-1.5 h-[52px] md:h-[48px] px-1 md:px-3.5 transition-all outline-none select-none rounded-[14px] border shadow-xs active:scale-95 bg-surface-raised",
           isInLibrary

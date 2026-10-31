@@ -1,11 +1,12 @@
 import React from "react";
-import { render } from "@testing-library/react";
+import { render, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { MangaDetailView } from "../manga-detail-view";
 
+const refresh = vi.fn();
 vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
-  useRouter: () => ({ push: vi.fn(), back: vi.fn() }),
+  useRouter: () => ({ push: vi.fn(), back: vi.fn(), refresh }),
   usePathname: () => "/manga/shinigami/test-manga",
 }));
 
@@ -45,6 +46,18 @@ vi.mock("motion/react", () => ({
 describe("MangaDetailView - Scroll Position Reset", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it("keeps title metadata and offers retry when the chapter request fails", () => {
+    const view = render(<MangaDetailView sourceId="shinigami" mangaId="test-manga"
+      detail={{ id: "test-manga", title: "Test Manga", coverUrl: "", description: "Synopsis", genres: [], status: "ONGOING" }}
+      chapters={[]} chapterLoadError="Daftar chapter tidak dapat dijangkau." />);
+    expect(view.getAllByText("Test Manga").length).toBeGreaterThan(0);
+    expect(view.getByText("Daftar chapter tidak dapat dijangkau.")).toBeTruthy();
+    expect(view.queryByText("Belum ada chapter yang tersedia untuk pilihan bahasa pada sumber ini.")).toBeNull();
+    expect(view.getAllByRole("button", { name: "Chapter belum bisa dimuat" }).every((button) => (button as HTMLButtonElement).disabled)).toBe(true);
+    fireEvent.click(view.getByRole("button", { name: "Muat ulang chapter" }));
+    expect(refresh).toHaveBeenCalledOnce();
   });
 
   it("resets window scroll to top (0, 0) on render/mount", () => {

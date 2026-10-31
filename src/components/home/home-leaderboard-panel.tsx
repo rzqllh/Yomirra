@@ -19,7 +19,7 @@ export interface HomeLeaderboardPanelProps {
 
 export function HomeLeaderboardPanel({
   items,
-  title = "Paling banyak dibaca",
+  title = "Populer di sumber",
   defaultSourceId,
   onSourceChange,
   seeAllHref,
@@ -113,7 +113,7 @@ export function HomeLeaderboardPanel({
               <span className="hidden sm:inline">Lihat semua</span>
               <ArrowRight
                 size={13}
-                weight="bold"
+                weight="regular"
                 className="transition-transform group-hover:translate-x-0.5"
                 aria-hidden="true"
               />

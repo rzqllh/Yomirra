@@ -38,7 +38,7 @@ export function PopularPageView({ feeds }: PopularPageViewProps) {
           value={mode}
           onChange={(value) => setMode(value as "combined" | "source")}
           options={[
-            { value: "combined", label: "Gabungan" },
+            { value: "combined", label: "Lintas sumber" },
             { value: "source", label: "Per Sumber" },
           ]}
           layoutId="popular-mode"
@@ -60,7 +60,7 @@ export function PopularPageView({ feeds }: PopularPageViewProps) {
                 id="popular-combined-heading"
                 className="text-xl font-bold tracking-tight text-text-primary sm:text-2xl"
               >
-                Peringkat Yomirra
+                Populer lintas sumber
               </h2>
               <span className="text-xs font-semibold text-text-muted">
                 {aggregated.length} judul

@@ -5,7 +5,7 @@ import { Command as CommandPrimitive } from "cmdk"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { MagnifyingGlass, X } from "@phosphor-icons/react"
 import { cn } from "@/shared/utils/cn"
-import { Dialog, DialogPortal, DialogOverlay, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogPortal, DialogOverlay, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 
 const Command = React.forwardRef<
   React.ElementRef<typeof CommandPrimitive>,
@@ -22,22 +22,40 @@ const Command = React.forwardRef<
 ))
 Command.displayName = CommandPrimitive.displayName
 
-type CommandDialogProps = React.ComponentPropsWithoutRef<typeof Dialog> & 
+type CommandDialogProps = React.ComponentPropsWithoutRef<typeof Dialog> &
   Pick<React.ComponentPropsWithoutRef<typeof CommandPrimitive>, "shouldFilter" | "filter">
 
 const CommandDialog = ({ children, shouldFilter, filter, ...props }: CommandDialogProps) => {
+  const [viewport, setViewport] = React.useState<{ height: number; offset: number } | null>(null);
+  React.useEffect(() => {
+    if (!props.open) return;
+    const visual = window.visualViewport;
+    const update = () => setViewport({ height: visual?.height ?? window.innerHeight, offset: visual?.offsetTop ?? 0 });
+    update();
+    visual?.addEventListener("resize", update);
+    visual?.addEventListener("scroll", update);
+    window.addEventListener("resize", update);
+    return () => {
+      visual?.removeEventListener("resize", update);
+      visual?.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, [props.open]);
   return (
     <Dialog {...props}>
       <DialogPortal>
         <DialogOverlay />
         <DialogPrimitive.Content
-          className="command-dialog-content fixed left-1/2 top-[12vh] sm:top-[16vh] z-[var(--z-overlay)] -translate-x-1/2 w-[calc(100vw-32px)] max-w-xl sm:max-w-2xl max-h-[78vh] rounded-[24px] border border-border-default bg-surface-overlay text-text-primary shadow-2xl backdrop-blur-xl p-0 overflow-hidden outline-none flex flex-col"
+          className="command-dialog-content fixed left-1/2 top-1/2 z-[var(--z-overlay)] -translate-x-1/2 -translate-y-1/2 w-[calc(100vw-32px)] max-w-xl max-h-[calc(100dvh-32px)] rounded-2xl border border-border-default bg-surface-overlay text-text-primary shadow-2xl p-0 overflow-hidden outline-none flex flex-col"
+          style={viewport ? { top: viewport.offset + viewport.height / 2, maxHeight: `calc(${Math.max(0, viewport.height - 32)}px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))` } : undefined}
           onCloseAutoFocus={(e) => {
             e.preventDefault();
           }}
         >
-          <DialogTitle className="sr-only">Menu Pencarian</DialogTitle>
+          <DialogTitle className="sr-only">Quick Search</DialogTitle>
+          <DialogDescription className="sr-only">Cari judul dengan sumber Jelajah yang sedang dipilih.</DialogDescription>
           <Command
+            label="Quick Search di sumber Jelajah"
             shouldFilter={shouldFilter}
             filter={filter}
             className="flex flex-col h-full w-full overflow-hidden [&_[cmdk-group-heading]]:px-4 [&_[cmdk-group-heading]]:py-2 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-extrabold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-[0.14em] [&_[cmdk-group-heading]]:text-text-muted"
@@ -45,10 +63,10 @@ const CommandDialog = ({ children, shouldFilter, filter, ...props }: CommandDial
             {children}
           </Command>
           <DialogPrimitive.Close
-            className="absolute right-3.5 top-3.5 flex size-9 items-center justify-center rounded-xs bg-surface-muted text-text-muted hover:text-text-primary hover:bg-surface-hover transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent cursor-pointer z-20"
+            className="absolute right-1.5 top-1.5 flex size-11 items-center justify-center rounded-xs bg-surface-muted text-text-muted hover:text-text-primary hover:bg-surface-hover transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent cursor-pointer z-20"
             aria-label="Tutup"
           >
-            <X size={16} weight="bold" />
+            <X size={16} weight="regular" />
           </DialogPrimitive.Close>
         </DialogPrimitive.Content>
       </DialogPortal>
@@ -61,7 +79,7 @@ const CommandInput = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof CommandPrimitive.Input>
 >(({ className, ...props }, ref) => (
   <div className="relative flex items-center border-b border-border-subtle px-4 h-14 bg-surface-base shrink-0" cmdk-input-wrapper="">
-    <MagnifyingGlass className="mr-3 h-5 w-5 shrink-0 text-text-muted" weight="bold" />
+    <MagnifyingGlass className="mr-3 h-5 w-5 shrink-0 text-text-muted" weight="regular" />
     <CommandPrimitive.Input
       ref={ref}
       className={cn(

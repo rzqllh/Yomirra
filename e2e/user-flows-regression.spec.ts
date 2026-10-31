@@ -40,9 +40,9 @@ test.describe("Yomirra Interactive User Flows & Behavior Regression", () => {
     await expect(page.getByText("BACAANMU DIMULAI DI SINI")).toBeVisible();
     await expect(page.locator("#continue-reading-section")).toHaveCount(0);
     await expect(page.locator("#spotlight-section")).toBeVisible();
-    const guidance = page.getByRole("complementary", { name: "Info Rak Buku" });
+    const guidance = page.getByRole("complementary", { name: "Info Library" });
     await expect(guidance).toBeVisible();
-    await expect(guidance.getByRole("link", { name: /Buka Rak Buku/ })).toHaveAttribute("href", "/bookmark");
+    await expect(guidance.getByRole("link", { name: /Buka Library/ })).toHaveAttribute("href", "/bookmark");
     await expect(page.getByRole("button", { name: /Cari komik \(Tekan (Ctrl\+K|⌘K)\)/ })).toBeVisible();
 
     const hasOverflow = await page.evaluate(() => {
@@ -104,7 +104,7 @@ test.describe("Yomirra Interactive User Flows & Behavior Regression", () => {
     const continueLink = shelf.getByRole("link", { name: "Lanjut baca Solo Leveling, Chapter 100", exact: true });
     await expect(continueLink).toBeVisible();
     await expect(continueLink).toHaveAttribute("href", /\/manga\/komiku\/solo-leveling\/read\/ch-100(?:\?|$)/);
-    await expect(page.getByRole("complementary", { name: "Info Rak Buku" })).toHaveCount(0);
+    await expect(page.getByRole("complementary", { name: "Info Library" })).toHaveCount(0);
     await expect(page.locator("#spotlight-section")).toBeVisible();
 
     const order = await page.evaluate(() => {

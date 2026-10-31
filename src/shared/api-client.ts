@@ -61,6 +61,7 @@ class ApiClient {
       latency: string;
       uptime: string;
       message: string;
+      checkedAt?: string;
     }>>("/api/sources/health");
   }
 
@@ -98,13 +99,13 @@ class ApiClient {
 
   search(sourceId: string, query: string, page: number = 1, filters?: Record<string, string | string[]>, isNsfwFiltered: boolean = useSettingsStore.getState().hideNsfw, options?: { signal?: AbortSignal }) {
     let url = `/api/sources/${sourceId}/search?q=${encodeURIComponent(query)}&page=${page}&hideNsfw=${isNsfwFiltered}`;
-    
+
     const finalFilters = { ...filters };
-    
+
     if (isNsfwFiltered) {
       const nsfwTags = ["-adult", "-mature", "-smut", "-nsfw", "-ecchi"];
       const existingGenres = finalFilters["genre[]"];
-      
+
       if (Array.isArray(existingGenres)) {
         finalFilters["genre[]"] = [...existingGenres, ...nsfwTags];
       } else if (typeof existingGenres === "string") {
@@ -125,9 +126,9 @@ class ApiClient {
       });
       url += `&${sp.toString()}`;
     }
-    
+
     url = this.appendManifest(url, sourceId);
-    
+
     return this.fetchSource<{mangas?: MangaItem[], results?: MangaItem[], hasNextPage?: boolean}>(sourceId, url, { signal: options?.signal }).then(data => ({
       sourceId,
       query,
@@ -139,13 +140,13 @@ class ApiClient {
 
   searchGlobal(query: string, sourceIds: string[], page: number = 1, isNsfwFiltered: boolean = useSettingsStore.getState().hideNsfw, filters?: Record<string, string | string[]>, options?: { signal?: AbortSignal }) {
     let url = `/api/sources/search?q=${encodeURIComponent(query)}&sources=${sourceIds.join(",")}&page=${page}&hideNsfw=${isNsfwFiltered}`;
-    
+
     const finalFilters = { ...filters };
-    
+
     if (isNsfwFiltered) {
       const nsfwTags = ["-adult", "-mature", "-smut", "-nsfw", "-ecchi"];
       const existingGenres = finalFilters["genre[]"];
-      
+
       if (Array.isArray(existingGenres)) {
         finalFilters["genre[]"] = [...existingGenres, ...nsfwTags];
       } else if (typeof existingGenres === "string") {
@@ -166,7 +167,7 @@ class ApiClient {
       });
       url += `&${sp.toString()}`;
     }
-    
+
     return this.fetcher<GlobalSearchResponse>(this.appendReadPreferences(url), { signal: options?.signal });
   }
 
@@ -240,7 +241,7 @@ class ApiClient {
   async getRatingScore(title: string): Promise<{ score?: number }> {
     return new Promise((resolve, reject) => {
       this.ratingBatch.push({ title, resolve, reject });
-      
+
       if (!this.ratingTimeout) {
         this.ratingTimeout = setTimeout(async () => {
           const currentBatch = [...this.ratingBatch];

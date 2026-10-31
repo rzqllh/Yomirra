@@ -47,6 +47,9 @@ export function useUrlPagination(): [
       setPageState(nextPage);
 
       const suffix = writeCatalogPageParam(searchParamsString, nextPage);
+      // Replacing an unchanged URL can cancel a source/query navigation that was
+      // just pushed by the same interaction.
+      if (suffix === searchParamsString) return;
       router.replace(suffix ? `${pathname}?${suffix}` : pathname, {
         scroll: false,
       });

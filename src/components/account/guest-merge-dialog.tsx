@@ -102,7 +102,7 @@ export function GuestMergeDialog() {
         <div className="relative w-full max-w-md rounded-2xl border border-status-error-fg/30 bg-surface-raised p-5 sm:p-6 shadow-2xl space-y-4">
           <div className="flex items-start gap-3">
             <div className="size-10 rounded-xl bg-status-error-bg/60 border border-status-error-fg/30 flex items-center justify-center text-status-error-fg shrink-0 mt-0.5">
-              <WarningCircle size={22} weight="bold" />
+              <WarningCircle size={22} weight="regular" />
             </div>
             <div>
               <h2 id="merge-error-title" className="text-base font-bold text-text-primary">
@@ -135,7 +135,7 @@ export function GuestMergeDialog() {
               loading={isRetryingSnapshot}
               className="w-full sm:w-auto flex-1 rounded-xl min-h-10 text-xs font-bold"
             >
-              <ArrowClockwise size={16} weight="bold" className={cn(isRetryingSnapshot && "animate-spin")} />
+              <ArrowClockwise size={16} weight="regular" className={cn(isRetryingSnapshot && "animate-spin")} />
               Coba Lagi
             </Button>
           </div>
@@ -280,7 +280,7 @@ export function GuestMergeDialog() {
         {/* Header */}
         <div className="flex items-start gap-3">
           <div className="size-10 rounded-xl bg-accent/15 border border-accent/25 flex items-center justify-center text-accent shrink-0 mt-0.5">
-            <GitMerge size={22} weight="bold" />
+            <GitMerge size={22} weight="regular" />
           </div>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
@@ -302,7 +302,7 @@ export function GuestMergeDialog() {
         <div className="grid grid-cols-2 gap-2.5 text-xs">
           <div className="p-3 rounded-xl bg-surface-base/80 border border-border-subtle/80 space-y-1.5">
             <div className="flex items-center gap-1.5 font-bold text-text-secondary">
-              <Bookmarks size={15} weight="duotone" className="text-accent" />
+              <Bookmarks size={15} weight="regular" className="text-accent" />
               <span>Data Lokal (Tamu)</span>
             </div>
             <div className="text-[11px] text-text-muted space-y-0.5">
@@ -313,7 +313,7 @@ export function GuestMergeDialog() {
 
           <div className="p-3 rounded-xl bg-surface-base/80 border border-border-subtle/80 space-y-1.5">
             <div className="flex items-center gap-1.5 font-bold text-text-secondary">
-              <CloudCheck size={16} weight="duotone" className="text-accent" />
+              <CloudCheck size={16} weight="regular" className="text-accent" />
               <span>Data Akun Cloud</span>
             </div>
             <div className="text-[11px] text-text-muted space-y-0.5">
@@ -327,7 +327,7 @@ export function GuestMergeDialog() {
         {diff.conflictingLibrary.length > 0 && (
           <div className="p-3 rounded-xl bg-status-info-bg/40 border border-status-info-fg/20 text-xs space-y-2">
             <div className="flex items-center gap-1.5 font-bold text-text-primary">
-              <ShieldCheck size={16} weight="bold" className="text-accent" />
+              <ShieldCheck size={16} weight="regular" className="text-accent" />
               <span>Resolusi Konflik Terverifikasi (Milestone Q52 &amp; Q63)</span>
             </div>
             <p className="text-[11.5px] text-text-secondary leading-relaxed">
@@ -383,7 +383,7 @@ export function GuestMergeDialog() {
                 </span>
               </div>
               <p className="text-[11px] text-text-muted mt-1 leading-relaxed">
-                Menyatukan rak buku dan riwayat. Komik dan chapter yang sama dipadukan dengan mempertahankan progres tertinggi (Q52) dan kursor mandiri (Q63).
+                Menyatukan Library dan riwayat. Komik dan chapter yang sama dipadukan dengan mempertahankan progres tertinggi (Q52) dan kursor mandiri (Q63).
               </p>
             </div>
           </button>
@@ -428,7 +428,7 @@ export function GuestMergeDialog() {
         {strategy === "cloud-replace" && (
           <div className="p-3 rounded-xl bg-status-warning-bg/40 border border-status-warning-fg/30 space-y-2 animate-in fade-in">
             <div className="flex items-center gap-1.5 text-xs font-bold text-status-warning-fg">
-              <Warning size={16} weight="bold" />
+              <Warning size={16} weight="regular" />
               <span>Konfirmasi Tindakan Destruktif</span>
             </div>
             <p className="text-[11px] text-text-secondary leading-relaxed">
@@ -482,7 +482,7 @@ export function GuestMergeDialog() {
             disabled={requiresCloudRefresh || (strategy === "cloud-replace" && !confirmedDestructive)}
             className="w-full sm:w-auto flex-1 rounded-xl min-h-11 text-xs font-bold"
           >
-            <ArrowsClockwise size={16} weight="bold" className={cn(isExecuting && "animate-spin")} />
+            <ArrowsClockwise size={16} weight="regular" className={cn(isExecuting && "animate-spin")} />
             Terapkan &amp; Lanjutkan
           </Button>
         </div>

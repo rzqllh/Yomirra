@@ -14,8 +14,8 @@ import { usePlatformShortcut } from "@/shared/hooks/use-platform-shortcut";
 
 const ROUTE_LABELS: Record<string, string> = {
   "": "Beranda",
-  library: "Library",
-  bookmark: "Rak Buku",
+  library: "Jelajah",
+  bookmark: "Library",
   search: "Cari",
   popular: "Populer",
   sources: "Sumber",
@@ -78,7 +78,7 @@ export function TopNav() {
     <>
       {/* Spacer to reserve layout space for the fixed nav */}
       <div className="hidden md:block h-[68px] w-full shrink-0" />
-      
+
       <header
         style={{ top: "var(--announcement-height, 0px)" }}
         className={cn(
@@ -128,7 +128,7 @@ export function TopNav() {
             </div>
           )}
 
-          
+
           {/* Notification Bell */}
           <UpdatesBell />
 
@@ -147,13 +147,13 @@ export function TopNav() {
                 {user.photoURL ? (
                   <img src={user.photoURL} alt="User" className="object-cover size-full rounded-2xl" referrerPolicy="no-referrer" />
                 ) : (
-                  <UserCircle size={24} weight="duotone" className="text-accent" />
+                  <UserCircle size={24} weight="regular" className="text-accent" />
                 )}
               </button>
 
               <AnimatePresence>
                 {isProfileOpen && (
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, y: 8, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 8, scale: 0.95 }}
@@ -165,40 +165,40 @@ export function TopNav() {
                       <p className="text-[11.5px] text-text-muted truncate mt-0.5">{user.email || ""}</p>
                     </div>
 
-                    <Link 
-                      href="/account" 
-                      onClick={() => setIsProfileOpen(false)} 
+                    <Link
+                      href="/account"
+                      onClick={() => setIsProfileOpen(false)}
                       className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors text-left"
                     >
-                      <UserCircle size={18} weight="duotone" /> Akun & Sinkronisasi
+                      <UserCircle size={18} weight="regular" /> Akun & Sinkronisasi
                     </Link>
 
-                    <Link 
-                      href="/settings#general" 
-                      onClick={() => setIsProfileOpen(false)} 
+                    <Link
+                      href="/settings#general"
+                      onClick={() => setIsProfileOpen(false)}
                       className="flex items-center justify-between px-3 py-2 rounded-xl text-[13px] font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors text-left"
                     >
                       <div className="flex items-center gap-2.5">
-                        <Globe size={18} weight="duotone" /> Bahasa
+                        <Globe size={18} weight="regular" /> Bahasa
                       </div>
                       <span className="text-[11.5px] text-text-muted font-medium">Indonesia</span>
                     </Link>
 
-                    <Link 
-                      href="/settings#about" 
-                      onClick={() => setIsProfileOpen(false)} 
+                    <Link
+                      href="/settings#about"
+                      onClick={() => setIsProfileOpen(false)}
                       className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors text-left"
                     >
-                      <Question size={18} weight="duotone" /> Pusat bantuan
+                      <Question size={18} weight="regular" /> Pusat bantuan
                     </Link>
 
                     <div className="my-1 border-t border-border-subtle/80" />
 
-                    <button 
-                      onClick={() => { setIsProfileOpen(false); logout(); }} 
+                    <button
+                      onClick={() => { setIsProfileOpen(false); logout(); }}
                       className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-semibold text-semantic-error hover:bg-semantic-error/10 transition-colors text-left cursor-pointer w-full"
                     >
-                      <SignOut size={18} weight="bold" /> Keluar
+                      <SignOut size={18} weight="regular" /> Keluar
                     </button>
                   </motion.div>
                 )}
@@ -206,7 +206,7 @@ export function TopNav() {
             </div>
           ) : (
             <button onClick={loginWithGoogle} aria-label="Masuk" className="flex items-center justify-center bg-surface-raised border border-border-subtle shadow-xs hover:bg-surface-hover active:scale-95 transition-all rounded-2xl px-4 h-9 sm:h-10 gap-2 outline-none cursor-pointer">
-              <UserCircle size={20} weight="duotone" className="text-text-secondary" />
+              <UserCircle size={20} weight="regular" className="text-text-secondary" />
               <span className="text-sm font-semibold text-text-primary">Masuk</span>
             </button>
           )}

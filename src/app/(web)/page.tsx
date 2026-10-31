@@ -42,7 +42,7 @@ export default async function HomePage() {
           <EmptyState
             icon={<WarningCircle size={40} className="text-accent" weight="duotone" />}
             title="Tidak ada sumber yang aktif."
-            description="Pilih sumber yang mau tampil di Beranda, Library, dan Populer."
+            description="Pilih sumber yang mau tampil di Beranda, Jelajah, dan Populer."
           />
         </div>
       )}

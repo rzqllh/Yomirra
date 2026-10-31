@@ -524,12 +524,12 @@ describe("Yomirra Editorial Home Components", () => {
     it("keeps ranking source-scoped, uses display names, and preserves source context in Lihat semua", () => {
       render(<HomeLeaderboardPanel items={samplePopular} />);
 
-      expect(screen.getByText("Paling banyak dibaca")).toBeTruthy();
+      expect(screen.getByText("Populer di sumber")).toBeTruthy();
       expect(screen.getByText("Manga Test 1")).toBeTruthy();
       expect(screen.getByText("Manga Test 2")).toBeTruthy();
       expect(screen.queryByText("Manga Source B")).toBeNull();
 
-      const select = screen.getByRole("combobox", {
+      const select = screen.getByRole("button", {
         name: /pilih sumber peringkat/i,
       });
       expect(select).toBeTruthy();
@@ -539,7 +539,8 @@ describe("Yomirra Editorial Home Components", () => {
         "/sources/source-a?sort=popular"
       );
 
-      fireEvent.change(select, { target: { value: "source-b" } });
+      fireEvent.pointerDown(select, { button: 0, ctrlKey: false });
+      fireEvent.click(screen.getByRole("menuitem", { name: "Source B" }));
 
       expect(screen.getByText("Manga Source B")).toBeTruthy();
       expect(screen.queryByText("Manga Test 1")).toBeNull();
@@ -681,9 +682,9 @@ describe("Yomirra Editorial Home Components", () => {
         />
       );
 
-      expect(screen.getByText("Paling banyak dibaca")).toBeTruthy();
+      expect(screen.getByText("Populer di sumber")).toBeTruthy();
       expect(
-        screen.queryByRole("heading", { level: 2, name: /banyak dibaca/i })
+        screen.queryByRole("heading", { level: 2, name: /populer di sumber/i })
       ).toBeNull();
       expect(document.getElementById("popular-section")).toBeNull();
     });

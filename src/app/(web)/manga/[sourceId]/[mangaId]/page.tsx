@@ -6,12 +6,12 @@ import { getManifestUrlFromCookie } from "@/server/lib/sources/server-manifest";
 import { DeadSourceRecovery } from "@/components/komik/dead-source-recovery";
 import { MangaDetailErrorState } from "@/components/komik/manga-detail-error-state";
 import { getSourceMetadata } from "@/shared/sources/source-registry";
-import { SourceError, type SourceErrorCode } from "@/server/lib/sources/error";
+import { SourceError, getFriendlyErrorMessage, type SourceErrorCode } from "@/server/lib/sources/error";
 
-export async function generateMetadata({ 
-  params 
-}: { 
-  params: Promise<{ sourceId: string; mangaId: string }> 
+export async function generateMetadata({
+  params
+}: {
+  params: Promise<{ sourceId: string; mangaId: string }>
 }): Promise<Metadata> {
   const { sourceId, mangaId } = await params;
   const normalizedSourceId = sourceId.toLowerCase().trim();
@@ -44,6 +44,7 @@ export default async function MangaDetailPage({
 
   let detail;
   let chapters;
+  let chapterLoadError: string | undefined;
   let errorState: {
     type: "content_restricted" | "disabled" | "not_found" | "dead" | "network_error";
     message?: string;
@@ -58,12 +59,18 @@ export default async function MangaDetailPage({
     const readOptions = await getServerReadOptions();
     const manifestUrl = await getManifestUrlFromCookie(normalizedSourceId);
     const source = await sourceManager.getSource(normalizedSourceId, manifestUrl);
-    
+
     // Fetch data directly on the server with cache!
-    [detail, chapters] = await Promise.all([
+    const [loadedDetail, chapterResult] = await Promise.all([
       loadSourceDetail(source, mangaId, readOptions),
-      loadSourceChapters(source, mangaId, readOptions),
+      loadSourceChapters(source, mangaId, readOptions).then((items) => ({ items, error: undefined as string | undefined })).catch((error: unknown) => {
+        const classified = SourceError.classify(error, normalizedSourceId, "chapters");
+        return { items: [], error: classified.code === "CHAPTER_UNAVAILABLE" ? classified.message : `Daftar chapter ${getFriendlyErrorMessage(classified.code)}.` };
+      }),
     ]);
+    detail = loadedDetail;
+    chapters = chapterResult.items;
+    chapterLoadError = chapterResult.error;
 
     if (!detail || !detail.title) {
       errorState = { type: "not_found" };
@@ -133,11 +140,12 @@ export default async function MangaDetailPage({
   }
 
   return (
-    <MangaDetailView 
+    <MangaDetailView
       sourceId={normalizedSourceId}
       mangaId={mangaId}
       detail={detail}
       chapters={chapters}
+      chapterLoadError={chapterLoadError}
     />
   );
 }

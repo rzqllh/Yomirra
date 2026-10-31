@@ -348,7 +348,7 @@ export function HomeFeedClient({
                 <span>Lihat semua</span>
                 <ArrowRight
                   size={13}
-                  weight="bold"
+                  weight="regular"
                   className="transition-transform group-hover:translate-x-0.5"
                   aria-hidden="true"
                 />
@@ -396,7 +396,7 @@ export function HomeFeedClient({
       )}
       {historyItems.length === 0 && (
         <aside
-          aria-label="Info Rak Buku"
+          aria-label="Info Library"
           className="mt-10 rounded-2xl border border-border-subtle/80 bg-surface-raised/40 p-4 sm:p-5 flex items-center justify-between gap-4"
         >
           <div className="flex items-center gap-3 min-w-0">
@@ -405,7 +405,7 @@ export function HomeFeedClient({
             </div>
             <div className="min-w-0">
               <p className="text-xs sm:text-sm font-semibold text-text-primary truncate">
-                Simpan &amp; tandai komik favoritmu di Rak Buku
+                Simpan &amp; tandai komik favoritmu di Library
               </p>
               <p className="text-[11px] sm:text-xs text-text-muted truncate">
                 Data tersimpan otomatis di perangkatmu, tanpa perlu akun.
@@ -416,7 +416,7 @@ export function HomeFeedClient({
             href="/bookmark"
             className="shrink-0 text-xs font-bold text-accent hover:underline py-1 px-2.5 rounded-lg hover:bg-accent/5 transition-colors"
           >
-            Buka Rak Buku &rarr;
+            Buka Library &rarr;
           </Link>
         </aside>
       )}

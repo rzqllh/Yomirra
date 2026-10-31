@@ -132,7 +132,7 @@ export default function AccountPage() {
                     {user.displayName || "Pembaca Yomirra"}
                   </h1>
                   <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-accent/15 text-accent px-2 py-0.5 rounded-md border border-accent/25">
-                    <ShieldCheck size={12} weight="bold" /> Terhubung dengan Google
+                    <ShieldCheck size={12} weight="regular" /> Terhubung dengan Google
                   </span>
                 </div>
                 <p className="text-sm text-text-muted truncate mt-1">
@@ -150,7 +150,7 @@ export default function AccountPage() {
                   Masuk ke Yomirra
                 </h2>
                 <p className="text-sm text-text-muted mt-1 max-w-sm mx-auto">
-                  Sinkronkan rak buku, progres baca, dan koleksimu di semua perangkat.
+                  Sinkronkan Library, progres baca, dan koleksimu di semua perangkat.
                 </p>
               </div>
 
@@ -159,7 +159,7 @@ export default function AccountPage() {
                 <div className="rounded-xl border border-border-subtle bg-surface-base/80 p-4 text-left space-y-2.5">
                   <div className="flex items-center justify-between gap-2">
                     <span className="inline-flex items-center gap-1.5 text-xs font-bold text-text-primary">
-                      <Bookmarks size={16} weight="duotone" className="text-accent" />
+                      <Bookmarks size={16} weight="regular" className="text-accent" />
                       Data Sesi Tamu Tersedia
                     </span>
                     <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-status-success-bg text-status-success-fg border border-status-success-fg/30">
@@ -167,7 +167,7 @@ export default function AccountPage() {
                     </span>
                   </div>
                   <p className="text-xs text-text-secondary leading-relaxed">
-                    Kamu memiliki <strong className="text-text-primary">{bookmarkCount} judul</strong> di rak buku dan <strong className="text-text-primary">{historyCount} riwayat</strong> baca lokal. Saat kamu masuk, kamu dapat meninjau diff dan memilih strategi penggabungan tanpa risiko data tertimpa atau hilang.
+                    Kamu memiliki <strong className="text-text-primary">{bookmarkCount} judul</strong> di Library dan <strong className="text-text-primary">{historyCount} riwayat</strong> baca lokal. Saat kamu masuk, kamu dapat meninjau diff dan memilih strategi penggabungan tanpa risiko data tertimpa atau hilang.
                   </p>
                 </div>
               )}
@@ -179,7 +179,7 @@ export default function AccountPage() {
                 loading={authLoading}
                 className="w-full max-w-xs mx-auto min-h-11 text-sm font-bold"
               >
-                <GoogleLogo size={18} weight="bold" />
+                <GoogleLogo size={18} weight="regular" />
                 Masuk dengan Google
               </Button>
             </div>
@@ -191,7 +191,7 @@ export default function AccountPage() {
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-3">
                   <div className="size-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent shrink-0">
-                    <CloudCheck size={22} weight="duotone" />
+                    <CloudCheck size={22} weight="regular" />
                   </div>
                   <div>
                     <h3 className="text-base font-bold text-text-primary">
@@ -212,7 +212,7 @@ export default function AccountPage() {
                         : "bg-status-warning-bg text-status-warning-fg border-status-warning-fg/30"
                     )}
                   >
-                    {networkOnline ? <WifiHigh size={12} weight="bold" /> : <WifiSlash size={12} weight="bold" />}
+                    {networkOnline ? <WifiHigh size={12} weight="regular" /> : <WifiSlash size={12} weight="regular" />}
                     {networkOnline ? "Online" : "Offline"}
                   </span>
 
@@ -249,7 +249,7 @@ export default function AccountPage() {
               <div className="space-y-2.5 pt-1 border-t border-border-subtle/50 text-xs">
                 {/* Domain: Library */}
                 <div className="flex items-center justify-between py-1">
-                  <span className="text-text-muted">Rak Buku &amp; Koleksi</span>
+                  <span className="text-text-muted">Library &amp; Koleksi</span>
                   <span className="inline-flex items-center gap-1.5 font-semibold text-text-primary">
                     {libRecord && libRecord.status === "synced" ? (
                       <>
@@ -262,7 +262,7 @@ export default function AccountPage() {
                       </>
                     ) : (
                       <>
-                        <Clock size={14} weight="bold" className="text-text-muted" />
+                        <Clock size={14} weight="regular" className="text-text-muted" />
                         <span className="text-text-muted">Menunggu sinkronisasi</span>
                       </>
                     )}
@@ -284,7 +284,7 @@ export default function AccountPage() {
                       </>
                     ) : (
                       <>
-                        <Clock size={14} weight="bold" className="text-text-muted" />
+                        <Clock size={14} weight="regular" className="text-text-muted" />
                         <span className="text-text-muted">Menunggu sinkronisasi</span>
                       </>
                     )}
@@ -312,7 +312,7 @@ export default function AccountPage() {
 
                 {lastSyncError && (
                   <div className="p-2.5 rounded-xl bg-status-error-bg/30 border border-status-error-fg/30 text-[11px] text-status-error-fg flex items-start gap-1.5">
-                    <WarningCircle size={14} weight="bold" className="shrink-0 mt-0.5" />
+                    <WarningCircle size={14} weight="regular" className="shrink-0 mt-0.5" />
                     <span>Error sinkronisasi terakhir: {lastSyncError}</span>
                   </div>
                 )}
@@ -328,7 +328,7 @@ export default function AccountPage() {
               >
                 <ArrowsClockwise
                   size={18}
-                  weight="bold"
+                  weight="regular"
                   className={cn(isSyncing && "animate-spin")}
                 />
                 {isSyncing ? "Menyinkronkan…" : "Sinkronkan sekarang"}
@@ -340,7 +340,7 @@ export default function AccountPage() {
           <div className="rounded-2xl border border-border-default/80 bg-surface-raised p-5 sm:p-6 shadow-xs space-y-3">
             <div className="flex items-center gap-3">
               <div className="size-10 rounded-xl bg-surface-raised border border-border-default flex items-center justify-center text-text-secondary shrink-0">
-                <DeviceMobile size={22} weight="duotone" />
+                <DeviceMobile size={22} weight="regular" />
               </div>
               <div>
                 <h3 className="text-base font-bold text-text-primary">
@@ -370,7 +370,7 @@ export default function AccountPage() {
                 onClick={handleLogout}
                 className="w-full rounded-xl min-h-11 text-sm font-bold"
               >
-                <SignOut size={18} weight="bold" />
+                <SignOut size={18} weight="regular" />
                 Keluar
               </Button>
             </div>
