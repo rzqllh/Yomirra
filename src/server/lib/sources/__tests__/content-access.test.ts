@@ -18,10 +18,14 @@ function source(overrides: Partial<MangaSource> = {}): MangaSource {
 }
 
 describe("read request policy boundaries", () => {
-  it("defaults to hidden content and lets an explicit safe flag override an opt-in cookie", () => {
+  it("requires a persisted opt-in before URL params can reveal adult content", () => {
     expect(getRequestReadOptions(new NextRequest("http://localhost/api"))).toMatchObject({ hideNsfw: true });
+    expect(getRequestReadOptions(new NextRequest("http://localhost/api?hideNsfw=false"))).toMatchObject({ hideNsfw: true });
+    expect(getRequestReadOptions(new NextRequest("http://localhost/api?hideNsfw=false", { headers: { cookie: "yomirra-hide-nsfw=true" } }))).toMatchObject({ hideNsfw: true });
+    expect(getRequestReadOptions(new NextRequest("http://localhost/api?hideNsfw=false", { headers: { cookie: "yomirra-hide-nsfw=false" } }))).toMatchObject({ hideNsfw: false });
+    expect(getRequestReadOptions(new NextRequest("http://localhost/api", { headers: { cookie: "yomirra-hide-nsfw=false" } }))).toMatchObject({ hideNsfw: false });
     expect(getRequestReadOptions(new NextRequest("http://localhost/api?hideNsfw=true", { headers: { cookie: "yomirra-hide-nsfw=false" } }))).toMatchObject({ hideNsfw: true });
-    expect(getRequestReadOptions(new NextRequest("http://localhost/api?hideNsfw=false"))).toMatchObject({ hideNsfw: false });
+    expect(getRequestReadOptions(new NextRequest("http://localhost/api?hideNsfw=invalid", { headers: { cookie: "yomirra-hide-nsfw=false" } }))).toMatchObject({ hideNsfw: true });
   });
   it("does not fetch disabled or adult-only sources by default", async () => {
     const adult = source({ isNsfw: true });

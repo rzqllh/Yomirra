@@ -9,8 +9,12 @@ import { SourceError } from "./error";
 export function getRequestReadOptions(request: NextRequest): SourceReadOptions {
   const params = request.nextUrl.searchParams;
   const languages = parseLanguages(params.get("languages") ?? request.cookies?.get(LANGUAGE_PREFERENCE_COOKIE)?.value);
+  // URL parameters can make the content filter stricter but cannot opt a
+  // visitor into adult content without their own persisted cookie.
+  const cookieHideNsfw = shouldHideNsfw(request.cookies?.get(CONTENT_PREFERENCE_COOKIE)?.value);
+  const queryHideNsfw = params.get("hideNsfw");
   return {
-    hideNsfw: shouldHideNsfw(params.get("hideNsfw") ?? request.cookies?.get(CONTENT_PREFERENCE_COOKIE)?.value),
+    hideNsfw: cookieHideNsfw || (queryHideNsfw !== null && queryHideNsfw !== "false"),
     preferredLanguages: languages?.length ? languages.slice(0, 5) : undefined,
     dataSaver: (params.get("dataSaver") ?? request.cookies?.get(DATA_SAVER_COOKIE)?.value) === "true",
   };
