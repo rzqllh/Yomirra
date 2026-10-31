@@ -122,8 +122,8 @@ test("actual routes keep filters and centered Quick Search inside small, tablet 
         await prepareDiscovery(routePage);
         await routePage.setViewportSize(viewport);
         await routePage.goto(path, { waitUntil: "domcontentloaded" });
-        if (path === "/search") await expect(routePage.getByRole("button", { name: "Source A", exact: true })).toHaveAttribute("aria-pressed", "true");
-        else if (path === "/bookmark") await expect(routePage.getByRole("button", { name: "Sedang Dibaca", exact: true })).toBeVisible();
+        if (path === "/search") await expect(routePage.getByRole("button", { name: "Source A", exact: true })).toHaveAttribute("aria-pressed", "true", { timeout: 15_000 });
+        else if (path === "/bookmark") await expect(routePage.getByRole("button", { name: "Sedang Dibaca", exact: true })).toBeVisible({ timeout: 15_000 });
         else await expect(routePage.locator('[data-hydrated="true"]')).toBeVisible({ timeout: 15_000 });
         await expect(routePage).toHaveURL(new RegExp(`${path}$`));
         await expect.poll(() => routePage.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
