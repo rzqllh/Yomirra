@@ -8,9 +8,17 @@ for (const viewport of [{ width: 320, height: 568 }, { width: 820, height: 1180 
     await page.route("**/api/sources", route => route.fulfill({ contentType: "application/json", body: JSON.stringify({ data: [{ id: "komiku", name: "Fixture source", isEnabled: true, isInstalled: true, isNsfw: false, status: "online", capabilities: { search: true } }] }) }));
     await page.goto("/");
     await expect(page.locator('[data-testid="splash-screen"]')).toHaveCount(0);
+    if (viewport.width === 1366) {
+      // A classic desktop scrollbar can disappear when Radix locks body scroll,
+      // changing visual width without a visualViewport resize notification.
+      await page.evaluate(() => Object.defineProperty(window.visualViewport!, "width", { configurable: true, value: innerWidth - 16 }));
+    }
     await page.getByRole("button", { name: "Cari komik (Tekan Ctrl+K)", exact: true }).first().click();
     const dialog = page.getByRole("dialog", { name: "Quick Search", exact: true });
     await expect(dialog).toBeVisible();
+    if (viewport.width === 1366) {
+      await page.evaluate(() => Object.defineProperty(window.visualViewport!, "width", { configurable: true, value: innerWidth }));
+    }
     const input = dialog.getByRole("combobox", { name: "Quick Search di sumber Jelajah", exact: true });
     await expect(input).toBeFocused();
     expect(await input.evaluate(node => parseFloat(getComputedStyle(node).fontSize))).toBeGreaterThanOrEqual(16);
