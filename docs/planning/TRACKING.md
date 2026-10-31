@@ -25,7 +25,7 @@ Documentation changes and code changes require scoped PR/checks; when starting w
 
 | IDs | Specific scope / existing code | Phase | Priority | Owner | Status | Evidence / next |
 | --- | --- | --- | --- | --- | --- | --- |
-| CAT-01..02 | One canonical card per verified work; NO false merge | P01 | P0 | ENG:TBD | PLANNED | Existing `canonical-search.ts` clusters per request; exact-ID fixture, pagination test |
+| CAT-01..02 | One canonical card per verified work; NO false merge | P01 | P0 | ENG:TBD | IN_PROGRESS | PR #86 (`55a44d6`) adds exact source-binding duplicate guard + test; **not merged/tested**; full cross-page canonical identity pending |
 | CAT-03..04 | Multi-source picker; source health ordering | P01 | P0 | ENG:TBD | PLANNED | Existing dialogs need behavior audit |
 | CAT-05..07 | Clear unhealthy/unknown provider statuses; exact chosen source route; NSFW eligible count | P01 | P0 | ENG:TBD | PLANNED | Provider chooser and content guard tests |
 | CAT-08..10 | Cross-page/cache/session stability, UID-local progress, no work-ID breakage | P01/P02 | P0 | ENG:TBD | PLANNED | Existing source `canonical:{title}` and Redis `source:{id}:{mangaId}` split |
