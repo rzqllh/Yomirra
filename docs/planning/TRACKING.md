@@ -54,7 +54,7 @@ Documentation changes and code changes require scoped PR/checks; when starting w
 
 | IDs | Scope / existing code | Phase | Priority | Owner | Status | Evidence / next |
 | --- | --- | --- | --- | --- | --- | --- |
-| ENV-01 | Isolated Preview Redis; never use production database | P03 | P0 | PRODUCT:owner / ENG:TBD | BLOCKED | Vercel env showed `REDIS_URL` target production only; B-10 |
+| ENV-01 | Production-like Preview Redis with protected operational namespace and branch-restricted credentials | P03 | P0 | PRODUCT:owner / ENG:TBD | BLOCKED | PR #91 (`47e14e5`) implements per-branch prefix/scan guard, CI pending; Preview still lacks REDIS_URL and restricted ACL credential, plus exact-SHA READY deployment B-10 |
 | CACHE-01..03 | TTL/stale, cache-key scopes, safe flush, observability, graceful degradation | P03 | P1 | ENG:TBD | PLANNED | `withCache()` fixed Redis retention 7d; reuse existing Redis |
 | CACHE-04..05 | Cold-start Redis readiness, all namespace statistics, performance evidence | P03 | P1 | ENG:TBD | PLANNED | `lazyConnect`; no live hit rate proven |
 | SEC-01 | NSFW effective preference consistent, no accidental query override | P01/P03 | P0 | ENG:TBD | PLANNED | `getRequestReadOptions` accepts `hideNsfw` query param |
