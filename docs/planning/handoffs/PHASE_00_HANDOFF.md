@@ -46,3 +46,6 @@ All statuses require fresh evidence before closure. No user data was changed.
 - NEXT: open PR docs-only to `preview`, verify latest diff/CI and do not promote production; update P00 with PR URL, checks and final merge SHA only when observed. Phase 01 may start with safe read-only reproduction/isolated tests on new branch after docs gate.
 
 - 2026-10-31 — PR: documentation-only **draft PR #85** opened against `preview`: https://github.com/rzqllh/Yomirra/pull/85 ; PR head at opening `129b37766306c373a132e247624490c707ed0953`. PR review/CI still requires current-head verification; no merge or app deploy claimed.
+
+- 2026-10-31 — QA: checked all 12 planning Markdown files against Git repository tree; **0 broken relative links**. PR #85 has 12 files changed, 1008 added lines, no code/config changes, GitHub mergeable TRUE at inspection. HEAD before this log `4870b51d`.
+- 2026-10-31 — BLOCKED: PR #85 GitHub combined status contains **Vercel failure** with target `https://vercel.com/rzqllhs-projects?upgradeToPro=build-rate-limit`; GitHub CI run `41222327959` was `in_progress` at inspection. This is **not** a docs-content failure; no billing change, quota bypass, deployment or production merge attempted. Before updating PASS, recheck exact latest PR head and CI result.
