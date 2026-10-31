@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import packageInfo from "../../../package.json";
 import { UserCircle, Broom, Palette, WifiHigh, Fire, ArrowsClockwise, DeviceMobile, FileText, Clock, Bell, Compass, Globe, Trash, CaretLeft } from "@phosphor-icons/react";
 import { BackupRestoreView } from "@/components/settings/backup-restore-modal";
 import { useAuth } from "@/shared/hooks/use-auth";
@@ -9,7 +10,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useHistoryStore } from "@/shared/store/history-store";
 import { useLibraryStore } from "@/shared/store/library-store";
-import { useSettingsStore, type SourceRoutingMode } from "@/shared/store/settings-store";
+import { useSettingsStore } from "@/shared/store/settings-store";
 import { useStatsStore } from "@/shared/store/stats-store";
 import { useTheme } from "next-themes";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
@@ -37,7 +38,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
     dataSaver, setDataSaver, hideNsfw, setHideNsfw, keepScreenAwake, setKeepScreenAwake,
     checkOnAppStart, setCheckOnAppStart, minimumCheckIntervalMinutes, setMinimumCheckIntervalMinutes,
     notifyForAllLibraryItems, setNotifyForAllLibraryItems,
-    routingMode, setRoutingMode, preferredLanguages, setPreferredLanguages
+    preferredLanguages, setPreferredLanguages
   } = useSettingsStore();
   const totalReadingTimeMs = useStatsStore((state) => state.totalReadingTimeMs);
   const { theme, setTheme } = useTheme();
@@ -58,7 +59,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
     if (mounted) {
       getStorageEstimate().then((est) => {
         if (est) {
-          setStorageUsage(`${est.usageMB} MB / ${est.quotaMB} MB`);
+          setStorageUsage(`${est.usageMB} MB dari perkiraan kuota ${est.quotaMB} MB`);
         }
       });
     }
@@ -69,11 +70,11 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
     try {
       await clearAutomaticCache();
       toast.success("Cache bacaan dibersihkan", {
-        description: "Berkas bacaan sementara berhasil dihapus untuk melegakan perangkat.",
+        description: "Berkas bacaan sementara dihapus dari penyimpanan browser.",
       });
       const est = await getStorageEstimate();
       if (est) {
-        setStorageUsage(`${est.usageMB} MB / ${est.quotaMB} MB`);
+        setStorageUsage(`${est.usageMB} MB dari perkiraan kuota ${est.quotaMB} MB`);
       }
     } catch {
       toast.error("Cache gagal dibersihkan", {
@@ -165,7 +166,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
                   </p>
                   <div className="mt-1.5 inline-flex items-center px-2 py-0.5 rounded-md bg-semantic-success/10 border border-semantic-success/20">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-semantic-success">
-                      Sync Cloud Aktif
+                      Akun terhubung
                     </span>
                   </div>
                 </div>
@@ -174,7 +175,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
               <Link href="/account" className="block outline-none pt-1">
                 <Button variant="secondary" className="w-full rounded-xl justify-between h-10 px-4 text-xs font-bold">
                   <span className="flex items-center gap-2">
-                    <UserCircle size={18} weight="duotone" className="text-accent" />
+                    <UserCircle size={18} weight="regular" className="text-accent" />
                     Kelola akun & sinkronisasi
                   </span>
                   <span>&rarr;</span>
@@ -189,7 +190,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
               </div>
               <Link href="/account" className="w-full sm:w-auto">
                 <Button variant="primary" className="w-full sm:w-auto rounded-xl font-bold shadow-xs text-xs">
-                  <UserCircle size={18} className="mr-1.5" weight="bold" />
+                  <UserCircle size={18} className="mr-1.5" weight="regular" />
                   Buka akun
                 </Button>
               </Link>
@@ -200,7 +201,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
         {/* Statistik Membaca */}
         <SettingsSection title="Statistik membaca">
           <SettingsItem
-            icon={<IconWrapper variant="accent"><Fire size={20} weight="duotone" /></IconWrapper>}
+            icon={<IconWrapper variant="accent"><Fire size={20} weight="regular" /></IconWrapper>}
             title="Waktu membaca"
             description="Total waktu yang tercatat saat membaca di Yomirra."
             right={<div className="text-sm font-semibold text-text-primary">{formatReadingTime()}</div>}
@@ -210,7 +211,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
         {/* Pembaruan Library */}
         <SettingsSection title="Pembaruan Library">
           <SettingsItem
-            icon={<IconWrapper><ArrowsClockwise size={20} weight="duotone" /></IconWrapper>}
+            icon={<IconWrapper><ArrowsClockwise size={20} weight="regular" /></IconWrapper>}
             title="Cek otomatis saat dibuka"
             description="Periksa chapter baru secara otomatis saat aplikasi dimulai."
             right={
@@ -226,11 +227,12 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
           <div className="mx-3 my-1 border-b border-border-subtle/50" />
 
           <SettingsItem
-            icon={<IconWrapper><Clock size={20} weight="duotone" /></IconWrapper>}
+            icon={<IconWrapper><Clock size={20} weight="regular" /></IconWrapper>}
             title="Jeda pengecekan"
             description="Jeda sebelum pengecekan otomatis berikutnya."
             right={
               <CustomSelect
+                label="Jeda pengecekan"
                 value={String(mounted ? minimumCheckIntervalMinutes : 15)}
                 onChange={(val) => setMinimumCheckIntervalMinutes(Number(val))}
                 options={[
@@ -240,7 +242,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
                   { value: "360", label: "6 Jam" },
                   { value: "720", label: "12 Jam" },
                 ]}
-                className={!checkOnAppStart ? "opacity-50 pointer-events-none" : ""}
+                disabled={!checkOnAppStart}
               />
             }
           />
@@ -248,7 +250,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
           <div className="mx-3 my-1 border-b border-border-subtle/50" />
 
           <SettingsItem
-            icon={<IconWrapper><Bell size={20} weight="duotone" /></IconWrapper>}
+            icon={<IconWrapper><Bell size={20} weight="regular" /></IconWrapper>}
             title="Tandai pembaruan baru"
             description="Tampilkan jumlah pembaruan yang belum dilihat pada navigasi."
             right={
@@ -265,30 +267,23 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
         {/* Preferensi Sumber & Bahasa */}
         <SettingsSection title="Sumber & bahasa">
           <SettingsItem
-            icon={<IconWrapper><Compass size={20} weight="duotone" /></IconWrapper>}
-            title="Saat sumber bermasalah"
-            description="Pilih tindakan saat sumber lambat atau gagal dimuat."
+            icon={<IconWrapper><Compass size={20} weight="regular" /></IconWrapper>}
+            title="Sumber Jelajah"
+            description="Kelola sumber yang digunakan untuk Jelajah dan Quick Search. Pilihan sumber Cari diatur pada halaman Cari."
             right={
-              <CustomSelect
-                value={mounted ? routingMode : "PREFERRED"}
-                onChange={(val) => setRoutingMode(val as SourceRoutingMode)}
-                options={[
-                  { value: "PREFERRED", label: "Tetap gunakan pilihan saya" },
-                  { value: "AUTO_SAFE", label: "Cari sumber lain otomatis" },
-                  { value: "MANUAL", label: "Tanyakan terlebih dahulu" },
-                ]}
-              />
+              <Link href="/sources" className="inline-flex min-h-11 items-center rounded-xl border border-border-default px-4 text-sm font-semibold text-accent focus-visible:outline-2 focus-visible:outline-accent">Kelola sumber</Link>
             }
           />
 
           <div className="mx-3 my-1 border-b border-border-subtle/50" />
 
           <SettingsItem
-            icon={<IconWrapper><Globe size={20} weight="duotone" /></IconWrapper>}
+            icon={<IconWrapper><Globe size={20} weight="regular" /></IconWrapper>}
             title="Bahasa utama"
-            description="Bahasa terjemahan yang diprioritaskan saat memilih sumber komik."
+            description="Prioritaskan bahasa ini saat memuat chapter dari sumber yang mendukung."
             right={
               <CustomSelect
+                label="Bahasa utama"
                 value={mounted ? (preferredLanguages[0] || "id") : "id"}
                 onChange={(val) => {
                   const rest = preferredLanguages.filter((l) => l !== val);
@@ -308,9 +303,8 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
         {/* Preferensi Tampilan */}
         <SettingsSection title="Tampilan">
           <SettingsItem
-            className="md:hidden"
             wrapOnMobile
-            icon={<IconWrapper><Palette size={20} weight="duotone" /></IconWrapper>}
+            icon={<IconWrapper><Palette size={20} weight="regular" /></IconWrapper>}
             title="Tema"
             description="Pilih tema terang atau gelap."
             right={
@@ -344,12 +338,12 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
             }
           />
 
-          <div className="mx-3 my-1 border-b border-border-subtle/50 md:hidden" />
+          <div className="mx-3 my-1 border-b border-border-subtle/50" />
 
           <SettingsItem
-            icon={<IconWrapper><WifiHigh size={20} weight="duotone" /></IconWrapper>}
+            icon={<IconWrapper><WifiHigh size={20} weight="regular" /></IconWrapper>}
             title="Hemat data"
-            description="Muat gambar resolusi rendah."
+            description="Gunakan gambar hemat data bila sumber mendukung."
             right={
               <ToggleSwitch
                 id="data-saver"
@@ -360,13 +354,12 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
             }
           />
 
-          <div className="mx-3 my-1 border-b border-border-subtle/50 lg:hidden" />
+          <div className="mx-3 my-1 border-b border-border-subtle/50" />
 
           <SettingsItem
-            className="lg:hidden"
-            icon={<IconWrapper><DeviceMobile size={20} weight="duotone" /></IconWrapper>}
+            icon={<IconWrapper><DeviceMobile size={20} weight="regular" /></IconWrapper>}
             title="Jaga layar tetap menyala"
-            description="Cegah layar mati otomatis selama unduhan berlangsung."
+            description="Cegah layar mati selama unduhan bila browser mendukung. Preferensi layar saat membaca diatur di Reader."
             right={
               <ToggleSwitch
                 id="keep-awake"
@@ -381,7 +374,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
         {/* Konten & Keamanan */}
         <SettingsSection title="Konten">
           <SettingsItem
-            icon={<IconWrapper><ShieldWarning size={20} weight="duotone" /></IconWrapper>}
+            icon={<IconWrapper><ShieldWarning size={20} weight="regular" /></IconWrapper>}
             title="Sembunyikan konten dewasa"
             description="Sembunyikan sumber dan konten yang ditandai 18+."
             right={
@@ -398,7 +391,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
         {/* Backup & Restore */}
         <SettingsSection title="Cadangan data">
           <SettingsItem
-            icon={<IconWrapper variant="accent"><FileText size={20} weight="duotone" /></IconWrapper>}
+            icon={<IconWrapper variant="accent"><FileText size={20} weight="regular" /></IconWrapper>}
             title="Ekspor atau pulihkan data"
             description="Simpan salinan data komikmu ke berkas cadangan atau pulihkan riwayat dan koleksi kapan saja."
             right={
@@ -412,7 +405,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
         {/* Data & Penyimpanan */}
         <SettingsSection title={user ? "Penyimpanan & data perangkat" : "Penyimpanan & data lokal"}>
           <SettingsItem
-            icon={<IconWrapper><Broom size={20} weight="duotone" /></IconWrapper>}
+            icon={<IconWrapper><Broom size={20} weight="regular" /></IconWrapper>}
             title="Bersihkan cache bacaan"
             description={`Hapus gambar dan data sementara tanpa menghapus riwayat atau unduhan.${storageUsage ? ` (Terpakai: ${storageUsage})` : ""}`}
             right={
@@ -430,7 +423,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
           <div className="mx-3 my-1 border-b border-border-subtle/50" />
 
           <SettingsItem
-            icon={<IconWrapper variant="danger"><Trash size={20} weight="duotone" /></IconWrapper>}
+            icon={<IconWrapper variant="danger"><Trash size={20} weight="regular" /></IconWrapper>}
             title="Hapus riwayat & bookmark lokal"
             description={user ? "Hapus riwayat baca dan bookmark lokal di perangkat ini. Unduhan tetap tersimpan, dan data cloud dapat muncul lagi setelah sinkronisasi." : "Hapus riwayat baca dan bookmark lokal dari perangkat ini. Unduhan tetap tersimpan."}
             right={
@@ -443,7 +436,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
           <div className="mx-3 my-1 border-b border-border-subtle/50" />
 
           <SettingsItem
-            icon={<IconWrapper variant="danger"><DeviceMobile size={20} weight="duotone" /></IconWrapper>}
+            icon={<IconWrapper variant="danger"><DeviceMobile size={20} weight="regular" /></IconWrapper>}
             title="Bersihkan untuk perangkat bersama"
             description="Keluar dari akun dan hapus data baca lokal, koleksi, unduhan, serta cache dari perangkat ini. Data cloud tidak dihapus."
             right={
@@ -464,7 +457,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
         {/* Version */}
         <div className="flex justify-center pt-2 pb-2">
           <span className="text-xs text-text-muted font-medium select-none">
-            Yomirra v2.1.0
+            Yomirra v{packageInfo.version}
           </span>
         </div>
       </div>
@@ -481,14 +474,14 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
                 <PageHeader
                   title="Cadangan data"
                   subtitle="Ekspor atau pulihkan riwayat baca, bookmark, dan koleksi lokal."
-                  icon={<FileText size={24} weight="duotone" />}
+                  icon={<FileText size={24} weight="regular" />}
                   actions={
                     <Button
                       variant="secondary"
                       onClick={() => setSubView("main")}
                       className="rounded-xl font-bold text-xs"
                     >
-                      <CaretLeft size={16} weight="bold" className="mr-1" />
+                      <CaretLeft size={16} weight="regular" className="mr-1" />
                       Kembali ke pengaturan
                     </Button>
                   }
@@ -498,7 +491,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
                       onClick={() => setSubView("main")}
                       className="rounded-xl font-bold text-xs"
                     >
-                      <CaretLeft size={16} weight="bold" className="mr-1" />
+                      <CaretLeft size={16} weight="regular" className="mr-1" />
                       Kembali ke pengaturan
                     </Button>
                   }
@@ -512,7 +505,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
                 <PageHeader
                   title="Pengaturan"
                   subtitle="Atur tampilan, bacaan, dan data Yomirra."
-                  icon={<Gear size={24} weight="duotone" />}
+                  icon={<Gear size={24} weight="regular" />}
                 />
                 <ContentLane variant="management">
                   {settingsContent}

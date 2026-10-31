@@ -41,7 +41,7 @@ describe("library-store Phase 1 Identity & Relinking", () => {
     await vi.waitFor(() => expect(useLibraryStore.getState().items["saved-uuid"]).toEqual(item));
   });
 
-  it("never evicts or remotely deletes saved titles when Rak Buku exceeds 1,000 records", async () => {
+  it("never evicts or remotely deletes saved titles when Library exceeds 1,000 records", async () => {
     const items = Object.fromEntries(Array.from({ length: 1000 }, (_, index) => [
       `saved-${index}`,
       { id: `saved-${index}`, sourceId: "source", mangaId: `manga-${index}`, title: "Title", addedAt: "2026-01-01", updatedAt: "2026-01-01" },

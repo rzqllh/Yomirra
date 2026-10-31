@@ -10,9 +10,9 @@ export function StorageWarningBanner() {
 
   useEffect(() => {
     // Basic detection for iOS/iPadOS
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
                   (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-    
+
     if (isIOS) {
       // Check if user dismissed it previously
       const dismissed = localStorage.getItem("yomirra_storage_warning_dismissed");
@@ -45,7 +45,7 @@ export function StorageWarningBanner() {
         variant="ghost"
         className="absolute top-2 right-2 h-8 w-8 text-semantic-warning hover:bg-semantic-warning/10 transition-colors"
       >
-        <X size={16} weight="bold" />
+        <X size={16} weight="regular" />
       </IconButton>
     </YomirraSurface>
   );

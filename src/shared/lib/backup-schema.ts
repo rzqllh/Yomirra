@@ -72,6 +72,7 @@ export const readerPreferencesBackupSchema = z.object({
   toolbarBehavior: z.enum(["auto-hide", "always-visible"]),
   preloadIntensity: z.enum(["light", "balanced", "aggressive"]),
   showPageProgress: z.boolean(),
+  disableDoubleTapZoom: z.boolean().optional(),
   readingDirection: z.enum(["ltr", "rtl"]),
   readingMode: z.enum(["vertical", "paged"]),
   keepScreenAwakeWhileReading: z.boolean(),

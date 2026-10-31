@@ -1,8 +1,8 @@
 export const dynamic = "force-dynamic";
 import { checkRateLimit } from "@/server/lib/security/rate-limit";
 import { NextRequest, NextResponse } from "next/server";
+import { getRequestReadOptions, loadSourceCatalog, sourceErrorResponse } from "@/server/lib/sources/content-access";
 import { sourceManager } from "@/server/lib/sources/source-manager";
-import { withCache, CACHE_TTL, getSourceCacheKey } from "@/server/lib/cache/redis-cache";
 import { paginationSchema, sourceParamsSchema } from "@/server/lib/validation/api";
 
 export async function GET(
@@ -29,20 +29,11 @@ export async function GET(
 
   try {
     const source = await sourceManager.getSource(sourceId, request.nextUrl.searchParams.get("manifestUrl"));
-    const cacheKey = getSourceCacheKey(source, "latest", `page=${page}`);
-
-    const data = await withCache(
-      cacheKey,
-      () => source.getLatest(page),
-      CACHE_TTL.DISCOVERY
-    );
+    const data = await loadSourceCatalog(source, "latest", page, getRequestReadOptions(request));
 
     return NextResponse.json({ data });
   } catch (error: unknown) {
-    return NextResponse.json(
-      { error: { message: (error instanceof Error ? error.message : String(error)) || "Internal Server Error" } },
-      { status: (error instanceof Error ? error.message : String(error))?.includes("not found") ? 404 : 500 }
-    );
+    const response = sourceErrorResponse(error, sourceId, "search");
+    return NextResponse.json(response.body, { status: response.status });
   }
 }
-

@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
+    branches: [main, preview, fix/p0-discovery-safety-20261031, feat/discovery-ux-20261031, feat/settings-icons-20261031]
 
 permissions:
   contents: read
@@ -83,6 +83,12 @@ jobs:
 
       - name: Run WebKit Safari-layout regressions
         run: pnpm exec playwright test e2e/ios27-safari-regression.spec.ts --project=webkit-mobile-safari
+
+      - name: Run discovery and Quick Search contracts
+        run: pnpm exec playwright test e2e/discovery-search-contract.spec.ts e2e/home-quick-search.spec.ts --project=chromium-mobile --project=webkit-mobile-safari
+
+      - name: Run settings preference contracts
+        run: pnpm exec playwright test e2e/settings-control-contract.spec.ts --project=chromium-mobile --project=webkit-mobile-safari
 
       - name: Preserve browser failure evidence
         if: failure()

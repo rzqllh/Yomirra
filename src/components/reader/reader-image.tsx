@@ -21,6 +21,7 @@ interface ReaderImageProps {
   isAllowedToReveal?: boolean
   onLoadComplete: (index: number) => void
   onError: (index: number) => void
+  disableDoubleTapZoom?: boolean;
   imageFit?: 'width' | 'contained'
   onReport?: (pageIndex: number) => void
   onSwitchSource?: () => void;
@@ -52,6 +53,7 @@ export const ReaderImage = React.memo(function ReaderImage({
   pageWidth,
   pageHeight,
   imageFit = 'width',
+  disableDoubleTapZoom = false,
   onReport,
   onSwitchSource,
   dataIndex,
@@ -105,8 +107,11 @@ export const ReaderImage = React.memo(function ReaderImage({
   const x = useMotionValue(0)
   const y = useMotionValue(0)
   const [isZoomed, setIsZoomed] = React.useState(false)
+  // A double-tap spring starts near 1x; pointer-up must not cancel its zoom intent.
+  const zoomIntentRef = React.useRef(false)
 
   const resetZoom = React.useCallback((smooth = true) => {
+    zoomIntentRef.current = false
     if (smooth) {
       animate(scale, 1, { type: "spring", stiffness: 350, damping: 30 })
       animate(x, 0, { type: "spring", stiffness: 350, damping: 30 })
@@ -126,6 +131,7 @@ export const ReaderImage = React.memo(function ReaderImage({
       const newScale = Math.max(0.85, Math.min(d, 4.5))
       scale.set(newScale)
       const zoomed = newScale > 1.05
+      zoomIntentRef.current = zoomed
       setIsZoomed(zoomed)
       if (zoomed) {
         document.documentElement.classList.add('is-pinching')
@@ -138,6 +144,7 @@ export const ReaderImage = React.memo(function ReaderImage({
         resetZoom(true)
       } else {
         const targetScale = Math.min(Math.max(d, 1), 4)
+        zoomIntentRef.current = targetScale > 1.05
         animate(scale, targetScale, { type: "spring", stiffness: 400, damping: 32 })
         setIsZoomed(targetScale > 1.05)
       }
@@ -158,7 +165,7 @@ export const ReaderImage = React.memo(function ReaderImage({
       y.set(boundedY)
     },
     onDragEnd: () => {
-      if (scale.get() <= 1.05) {
+      if (scale.get() <= 1.05 && !zoomIntentRef.current) {
         resetZoom(true)
       }
     }
@@ -174,6 +181,7 @@ export const ReaderImage = React.memo(function ReaderImage({
   // Double-tap to zoom toggle (1x <-> 2.2x)
   const lastTapRef = React.useRef<number>(0)
   const handlePointerDown = (e: React.PointerEvent) => {
+    if (disableDoubleTapZoom) { lastTapRef.current = 0; return; }
     if (!e.isPrimary) return
     const now = Date.now()
     const DOUBLE_TAP_DELAY = 300
@@ -181,6 +189,7 @@ export const ReaderImage = React.memo(function ReaderImage({
       if (scale.get() > 1.1) {
         resetZoom(true)
       } else {
+        zoomIntentRef.current = true
         animate(scale, 2.2, { type: "spring", stiffness: 350, damping: 28 })
         setIsZoomed(true)
         document.documentElement.classList.add('is-pinching')

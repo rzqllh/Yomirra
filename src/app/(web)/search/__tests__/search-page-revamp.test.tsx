@@ -88,7 +88,7 @@ describe('Search Page Revamp Unit Tests', () => {
     expect(screen.queryByText('Cari judul dari semua sumber bacaanmu.')).toBeNull();
   });
 
-  it('renders source control chips and prevents deselecting the last source', async () => {
+  it('renders source controls and preserves an intentional zero-source selection', async () => {
     render(
       <QueryClientProvider client={queryClient}>
         <React.Suspense fallback={<div>Loading...</div>}>
@@ -107,9 +107,9 @@ describe('Search Page Revamp Unit Tests', () => {
     fireEvent.click(shinigamiBtn);
     expect(useSearchFilterStore.getState().selectedSources).toEqual(['source2']);
 
-    // Attempt to deselect Komikindo (last source) -> should stay selected
+    // Explicitly deselect the last source; never silently select all.
     fireEvent.click(komikindoBtn);
-    expect(useSearchFilterStore.getState().selectedSources).toEqual(['source2']);
+    expect(useSearchFilterStore.getState().selectedSources).toEqual([]);
   });
 
   it('displays compact warning for partial source failure alongside successful results', async () => {

@@ -5,6 +5,7 @@ export interface ReaderPreferences {
   toolbarBehavior: 'auto-hide' | 'always-visible';
   preloadIntensity: 'light' | 'balanced' | 'aggressive';
   showPageProgress: boolean;
+  disableDoubleTapZoom?: boolean;
   readingDirection: 'ltr' | 'rtl';
   readingMode: 'vertical' | 'paged';
   keepScreenAwake?: boolean;

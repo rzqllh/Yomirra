@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { createPortal } from "react-dom";
 import { Drawer } from "vaul";
 import { Funnel } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,7 @@ interface FilterDrawerShellProps {
   applyLabel?: string;
   /** Override the default trigger button. When provided, `activeCount` badge is consumer's responsibility. */
   trigger?: React.ReactNode;
+  desktopPortalId?: string;
   /** Filter section content */
   children: React.ReactNode;
 }
@@ -66,9 +68,23 @@ export function FilterDrawerShell({
   onOpen,
   applyLabel = "Terapkan Filter",
   trigger,
+  desktopPortalId,
   children,
 }: FilterDrawerShellProps) {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [desktopTarget, setDesktopTarget] = React.useState<HTMLElement | null>(null);
+  const headingId = React.useId();
+  React.useEffect(() => {
+    if (!desktopPortalId || !window.matchMedia) return;
+    const media = window.matchMedia("(min-width: 1024px)");
+    const update = () => {
+      setDesktopTarget(media.matches ? document.getElementById(desktopPortalId) : null);
+      setIsOpen(false);
+    };
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, [desktopPortalId]);
   const [activeSnapPoint, setActiveSnapPoint] = React.useState<number | string | null>(0.52);
   const touchStartY = React.useRef<number | null>(null);
   const reducedMotion = useReducedMotion();
@@ -101,8 +117,31 @@ export function FilterDrawerShell({
 
   const handleApply = () => {
     onApply();
-    setIsOpen(false);
+    if (!desktopTarget) setIsOpen(false);
   };
+
+  if (desktopTarget) {
+    const triggerProps = {
+      "aria-expanded": isOpen,
+      "aria-controls": desktopPortalId,
+      onClick: () => handleOpenChange(!isOpen),
+    };
+    const desktopTrigger = React.isValidElement(trigger)
+      ? React.cloneElement(trigger as React.ReactElement<typeof triggerProps>, triggerProps)
+      : <Button variant="outline" {...triggerProps}><Funnel size={18} weight="regular" />Filter {activeCount > 0 ? `(${activeCount})` : ""}</Button>;
+    return <>{desktopTrigger}{isOpen && createPortal(
+      <section aria-labelledby={headingId} className="mb-5 rounded-xl border border-border-subtle bg-surface-base p-4 xl:p-5">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h2 id={headingId} className="text-sm font-semibold text-text-primary">{title}</h2>
+          <Button variant="ghost" onClick={onReset}>Reset filter</Button>
+        </div>
+        <div tabIndex={0} aria-label="Pilihan filter" className="grid max-h-[min(42dvh,380px)] grid-cols-2 gap-x-6 gap-y-5 overflow-y-auto pr-1 xl:grid-cols-3">{children}</div>
+        <div className="mt-5 flex justify-end gap-2 border-t border-border-subtle pt-3">
+          <Button variant="ghost" onClick={() => { onOpen?.(); setIsOpen(false); }}>Batal</Button>
+          <Button onClick={handleApply}>{applyLabel}</Button>
+        </div>
+      </section>, desktopTarget)}</>;
+  }
 
   return (
     <Drawer.Root
@@ -124,7 +163,7 @@ export function FilterDrawerShell({
             )}
             aria-label={`Filter${activeCount > 0 ? ` (${activeCount} aktif)` : ""}`}
           >
-            <Funnel size={18} weight={activeCount > 0 ? "fill" : "bold"} />
+            <Funnel size={18} weight={activeCount > 0 ? "fill" : "regular"} />
             <span>Filter</span>
             {activeCount > 0 && (
               <motion.span
@@ -194,6 +233,8 @@ export function FilterDrawerShell({
             className="px-4 pt-3 bg-surface-base/96 backdrop-blur-xl border-t border-border-subtle shrink-0 relative z-10"
             style={{ paddingBottom: "calc(1rem + var(--safe-bottom))" }}
           >
+            <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setIsOpen(false)} className="min-h-11">Batal</Button>
             <Button
               variant="primary"
               onClick={handleApply}
@@ -201,6 +242,7 @@ export function FilterDrawerShell({
             >
               {applyLabel}
             </Button>
+            </div>
           </div>
         </Drawer.Content>
       </Drawer.Portal>

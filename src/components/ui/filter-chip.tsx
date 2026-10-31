@@ -41,7 +41,7 @@ export const FilterChip = React.forwardRef<HTMLButtonElement, FilterChipProps>(
           className
         )}
       >
-        {showCheck && <Check size={14} weight="bold" />}
+        {showCheck && <Check size={14} weight="regular" />}
         {showMinus && <span className="mr-1 font-black">-</span>}
         {label}
         {showDownBadge && <span className="text-[10px] uppercase tracking-wider ml-1 bg-semantic-error text-white px-1.5 py-0.5 rounded-sm">Down</span>}

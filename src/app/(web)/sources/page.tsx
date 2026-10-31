@@ -71,12 +71,12 @@ export default function SourcesPage() {
           healthStats: {
             latency: health.latency,
             uptime: health.uptime,
-            lastChecked: "Baru saja",
+            lastChecked: health.checkedAt ? new Date(health.checkedAt).toLocaleString("id-ID") : "Waktu belum diketahui",
             message: health.message,
           }
         };
       }
-      return source;
+      return { ...source, status: ["unavailable", "in-fix", "in-dev"].includes(source.status ?? "") ? source.status : "unknown" as const, healthStats: { latency: "-", uptime: "-", lastChecked: "Belum diperiksa", message: "Status sumber belum diperiksa." } };
     });
   }, [serverSources, localSources, healthStats]);
 
@@ -86,10 +86,10 @@ export default function SourcesPage() {
 
   const filteredSources = React.useMemo(() => {
     let result = allSources;
-    if (isMounted && hideNsfw) {
+    if (!isMounted || hideNsfw) {
       result = result.filter(s => !s.isNsfw);
     }
-    
+
     if (!filter.trim()) return result;
     const lower = filter.toLowerCase();
     return result.filter(s => s.name.toLowerCase().includes(lower) || s.language?.toLowerCase().includes(lower));
@@ -102,13 +102,13 @@ export default function SourcesPage() {
           <PageHeader
             title="Sumber"
             subtitle="Atur sumber yang digunakan saat menjelajah."
-            icon={<HardDrives size={24} weight="duotone" />}
+            icon={<HardDrives size={24} weight="regular" />}
           />
 
           {/* Source Mental Model Guidance Banner */}
           <div className="p-3.5 rounded-2xl bg-surface-glass border border-border-subtle text-xs text-text-muted flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
             <p className="leading-relaxed">
-              Pengaturan ini berlaku untuk Beranda, Library, dan Populer. Pencarian tetap dapat memakai sumber yang tersedia meski dinonaktifkan di sini.
+              Pengaturan ini berlaku untuk Beranda, Jelajah, dan Populer. Pencarian tetap dapat memakai sumber yang tersedia meski dinonaktifkan di sini.
             </p>
           </div>
 
@@ -131,7 +131,7 @@ export default function SourcesPage() {
                 )}
                 title={hideNsfw ? "Tampilkan sumber 18+" : "Sembunyikan sumber 18+"}
               >
-                <ShieldWarning size={16} weight={hideNsfw ? "regular" : "duotone"} />
+                <ShieldWarning size={16} weight={hideNsfw ? "regular" : "regular"} />
                 <span>{hideNsfw ? `18+ Disembunyikan (${nsfwCount})` : "18+ Ditampilkan"}</span>
               </button>
             ) : null}

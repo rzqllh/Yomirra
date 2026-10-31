@@ -21,6 +21,7 @@ import type { MangaDetail, Chapter, PageItem } from "@/shared/types/source";
 import { useAlternateSource } from "@/shared/hooks/use-alternate-source";
 import { AlternateSourceModal } from "@/components/komik/alternate-source-modal";
 import { parseChapterNumber } from "@/shared/lib/chapter-parser";
+import { ContentAccessBoundary } from "@/components/komik/content-access-boundary";
 
 interface ReaderViewProps {
   sourceId: string;
@@ -32,7 +33,11 @@ interface ReaderViewProps {
   returnTo?: string;
 }
 
-export function ReaderView({
+export function ReaderView(props: ReaderViewProps) {
+  return <ContentAccessBoundary sourceId={props.sourceId} item={props.initialDetail}><ReaderContent {...props} /></ContentAccessBoundary>;
+}
+
+function ReaderContent({
   sourceId,
   mangaId,
   chapterId,
@@ -174,6 +179,7 @@ export function ReaderView({
       mangaId,
       chapterId,
       mangaTitle: initialDetail.title,
+      isNsfw: initialDetail.isNsfw,
       chapterTitle,
       coverUrl: initialDetail.coverUrl,
       sourceName: sourceId,
@@ -200,6 +206,7 @@ export function ReaderView({
     return (
       <ReaderShell
         mangaTitle={initialDetail?.title}
+        isNsfw={initialDetail?.isNsfw}
         chapterTitle={chapterTitle}
         currentChapterId={chapterId}
         sourceId={sourceId}
@@ -230,6 +237,7 @@ export function ReaderView({
     return (
       <ReaderShell
         mangaTitle={initialDetail?.title}
+        isNsfw={initialDetail?.isNsfw}
         chapterTitle={chapterTitle}
         currentChapterId={chapterId}
         sourceId={sourceId}
@@ -257,6 +265,7 @@ export function ReaderView({
     return (
       <ReaderShell
         mangaTitle={initialDetail?.title}
+        isNsfw={initialDetail?.isNsfw}
         chapterTitle="Error"
         currentChapterId={chapterId}
         sourceId={sourceId}
@@ -309,6 +318,7 @@ export function ReaderView({
   return (
     <ReaderShell 
       mangaTitle={initialDetail?.title}
+        isNsfw={initialDetail?.isNsfw}
       chapterTitle={chapterTitle} 
       pageCount={pagesToRender.length}
       currentChapterId={chapterId}
@@ -318,6 +328,7 @@ export function ReaderView({
     >
       {readingMode === "paged" ? (
         <PagedReader
+          managedChrome
           key={`paged-${chapterId}`}
           sourceId={sourceId}
           mangaId={mangaId}

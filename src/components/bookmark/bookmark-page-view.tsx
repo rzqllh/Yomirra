@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { CalendarBlank, Bookmarks } from "@phosphor-icons/react";
+import { CalendarBlank, Books } from "@phosphor-icons/react";
 import { YomirraSurface, PageContainer } from "@/components/ui/layout";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { BookmarkSkeleton } from "@/components/skeletons/bookmark-skeleton";
@@ -62,9 +62,9 @@ export function BookmarkPageView() {
     <YomirraSurface variant="base" className="w-full">
       <PageContainer hasMobileHeader>
         <PageHeader
-          title="Rak Buku"
+          title="Library"
           subtitle="Lanjutkan bacaan dan kelola komik yang kamu simpan."
-          icon={<Bookmarks size={24} weight="duotone" />}
+          icon={<Books size={24} weight="regular" />}
         />
 
         {/* Unified Navigation & Utility Row */}
@@ -89,7 +89,7 @@ export function BookmarkPageView() {
             className="inline-flex min-h-[44px] items-center justify-between sm:justify-start gap-2 px-3.5 py-2 rounded-[12px] bg-surface-raised border border-border-subtle hover:bg-surface-hover hover:border-border-default text-xs font-semibold text-text-secondary transition-colors shrink-0"
           >
             <span className="flex items-center gap-2">
-              <CalendarBlank size={16} weight="duotone" className="text-text-muted" />
+              <CalendarBlank size={16} weight="regular" className="text-text-muted" />
               <span>Jadwal Rilis Mingguan</span>
             </span>
             {unreadCount > 0 && (

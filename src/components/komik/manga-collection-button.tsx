@@ -21,7 +21,7 @@ interface MangaCollectionButtonProps {
     title: string;
     coverUrl?: string;
     author?: string;
-    status?: string;
+    status?: string; isNsfw?: boolean;
   };
 }
 
@@ -60,6 +60,7 @@ export function MangaCollectionButton({
         sourceId,
         mangaId,
         title: mangaDetail.title,
+        isNsfw: mangaDetail.isNsfw,
         coverUrl: mangaDetail.coverUrl,
         author: mangaDetail.author,
         status: mangaDetail.status,
@@ -144,7 +145,7 @@ export function MangaCollectionButton({
                   className="flex h-12 w-12 items-center justify-center rounded-lg border border-accent/30 bg-gradient-to-br from-accent/20 via-accent/10 to-transparent text-accent shadow-xs shrink-0 select-none"
                   aria-hidden="true"
                 >
-                  <FolderPlus size={22} weight="duotone" />
+                  <FolderPlus size={22} weight="regular" />
                 </div>
                 <div>
                   <DialogTitle>Koleksi Komik</DialogTitle>
@@ -196,7 +197,7 @@ export function MangaCollectionButton({
                   className="flex h-12 w-12 items-center justify-center rounded-lg border border-accent/30 bg-gradient-to-br from-accent/20 via-accent/10 to-transparent text-accent shadow-xs shrink-0 select-none"
                   aria-hidden="true"
                 >
-                  <FolderPlus size={22} weight="duotone" />
+                  <FolderPlus size={22} weight="regular" />
                 </div>
                 <div>
                   <DialogTitle>Koleksi Baru</DialogTitle>

@@ -5,12 +5,13 @@ import { YomirraSurface, PageContainer, PageToolbar } from "@/components/ui/layo
 import { CatalogControls } from "@/components/ui/catalog-controls";
 import { LibrarySkeleton } from "@/components/skeletons/library-skeleton";
 import { PageHeader } from "@/components/chrome/header";
-import { Books } from "@phosphor-icons/react";
+import { Compass } from "@phosphor-icons/react";
 import { useLibraryCatalog } from "@/shared/hooks/use-library-catalog";
 import { LibraryToolbar } from "./library-toolbar";
 import { LibraryStatusRail } from "./library-status-rail";
 import { LibraryResults } from "./library-results";
 import { GuestSyncBanner } from "./guest-sync-banner";
+import { AppliedFilters } from "@/components/ui/applied-filters";
 
 export function LibraryPageView() {
   const catalog = useLibraryCatalog();
@@ -29,12 +30,12 @@ export function LibraryPageView() {
     <YomirraSurface variant="base" className="w-full">
       <PageContainer hasMobileHeader>
         <PageHeader
-          title="Library"
+          title="Jelajah"
           subtitle="Jelajahi katalog dari sumber yang kamu pilih."
-          icon={<Books size={24} weight="duotone" />}
+          icon={<Compass size={24} weight="regular" />}
         />
 
-        <CatalogControls label="Pencarian dan filter Library">
+        <CatalogControls label="Pencarian dan filter Jelajah">
           <PageToolbar>
             <LibraryToolbar
               searchInput={catalog.searchInput}
@@ -46,6 +47,8 @@ export function LibraryPageView() {
                 catalog.setPage(1);
               }}
               activeSourceId={catalog.activeSourceId}
+              sourceOptions={catalog.sourceOptions}
+              onSourceChange={catalog.changeSource}
               activeFilterCount={catalog.activeFilterCount}
               onResetRouteIntent={catalog.resetFilterRouteIntent}
             />
@@ -59,6 +62,9 @@ export function LibraryPageView() {
             />
           </PageToolbar>
         </CatalogControls>
+        <div id="library-filter-panel" className="hidden lg:block" />
+        <AppliedFilters items={catalog.appliedFilters} onReset={catalog.resetFilters} />
+        {catalog.sourceChangeNotice && <p role="status" className="mb-3 text-xs text-text-muted">{catalog.sourceChangeNotice}</p>}
 
         <GuestSyncBanner />
 

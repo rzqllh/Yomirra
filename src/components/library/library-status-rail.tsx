@@ -38,7 +38,7 @@ export function LibraryStatusRail({
           options={dynamicSorts.map(s => ({ value: s.id, label: s.name }))}
           align="left"
           className="shrink-0"
-          label="Urutkan rak bacaan"
+          label="Urutkan Jelajah"
           buttonClassName="min-h-11 px-3 text-sm bg-surface-overlay"
         />
         <div className="w-px h-6 bg-border-subtle shrink-0 mx-1" />

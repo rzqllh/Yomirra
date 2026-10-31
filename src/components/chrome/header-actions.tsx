@@ -195,7 +195,7 @@ export function HeaderActions({ className }: { className?: string } = {}) {
                 }}
                 className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-semibold text-semantic-error hover:bg-semantic-error/10 active:scale-98 transition-all w-full text-left cursor-pointer"
               >
-                <SignOut size={18} weight="bold" className="shrink-0" />
+                <SignOut size={18} weight="regular" className="shrink-0" />
                 <span>Keluar</span>
               </button>
             ) : (
@@ -207,7 +207,7 @@ export function HeaderActions({ className }: { className?: string } = {}) {
                 }}
                 className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-semibold text-accent hover:bg-accent/10 active:scale-98 transition-all w-full text-left cursor-pointer"
               >
-                <SignIn size={18} weight="bold" className="shrink-0" />
+                <SignIn size={18} weight="regular" className="shrink-0" />
                 <span>Masuk</span>
               </button>
             )}

@@ -60,7 +60,7 @@ export function CreateCollectionModal({
               className="flex h-12 w-12 items-center justify-center rounded-lg border border-accent/30 bg-gradient-to-br from-accent/20 via-accent/10 to-transparent text-accent shadow-xs shrink-0 select-none"
               aria-hidden="true"
             >
-              <FolderPlus size={22} weight="duotone" />
+              <FolderPlus size={22} weight="regular" />
             </div>
             <div>
               <DialogTitle>Koleksi Baru</DialogTitle>
@@ -155,7 +155,7 @@ export function RenameCollectionModal({
               className="flex h-12 w-12 items-center justify-center rounded-lg border border-accent/30 bg-gradient-to-br from-accent/20 via-accent/10 to-transparent text-accent shadow-xs shrink-0 select-none"
               aria-hidden="true"
             >
-              <PencilSimple size={22} weight="duotone" />
+              <PencilSimple size={22} weight="regular" />
             </div>
             <div>
               <DialogTitle>Ubah Nama Koleksi</DialogTitle>

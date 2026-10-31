@@ -21,7 +21,7 @@ interface MangaRatingProps {
     title: string;
     coverUrl?: string;
     author?: string;
-    status?: string;
+    status?: string; isNsfw?: boolean;
   };
 }
 
@@ -81,6 +81,7 @@ export function MangaRating({ sourceId, mangaId, className, variant = "default",
         coverUrl: mangaDetail?.coverUrl || "",
         author: mangaDetail?.author,
         status: mangaDetail?.status,
+        isNsfw: mangaDetail?.isNsfw,
         addedAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         isBookmarked: false,
@@ -126,7 +127,7 @@ export function MangaRating({ sourceId, mangaId, className, variant = "default",
       )}
       title="Beri rating"
     >
-      <Star size={16} weight={userRating ? "fill" : "bold"} />
+      <Star size={16} weight={userRating ? "fill" : "regular"} />
       <span className="text-sm">{userRating || "Rating"}</span>
     </button>
   );
