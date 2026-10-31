@@ -230,11 +230,7 @@ export function HomeFeedClient({
 
   return (
     <div>
-      <section id="hero-section" aria-label="Pembuka Beranda">
-        <HomeHero candidates={heroCandidates} />
-      </section>
-
-      {/* Adaptive Reading Shelf (Hero Position for Returning Readers) */}
+      {/* Returning readers resume first; new readers see discovery immediately. */}
       {historyItems.length > 0 && (
         <section
           id="continue-reading-section"
@@ -243,6 +239,14 @@ export function HomeFeedClient({
           <ContinueReadingList items={historyItems} />
         </section>
       )}
+
+      <section
+        id="hero-section"
+        aria-label="Pembuka Beranda"
+        className={historyItems.length > 0 ? "mt-6" : undefined}
+      >
+        <HomeHero candidates={heroCandidates} />
+      </section>
 
       {catalogState && <section role="status" className="mt-6 rounded-xl border border-border-subtle bg-surface-raised p-4">
         <h2 className="font-semibold text-text-primary">{catalogState === "unavailable" ? "Sumber bacaan belum bisa dimuat" : catalogState === "partial" ? "Sebagian sumber belum bisa dimuat" : "Belum ada hasil dari sumber aktif"}</h2>

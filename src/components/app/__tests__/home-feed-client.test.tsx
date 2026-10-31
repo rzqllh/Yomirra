@@ -603,6 +603,27 @@ describe("Yomirra Editorial Home Components", () => {
   });
 
   describe("Continue Reading Shelf", () => {
+    it("puts Continue Reading before discovery for returning readers", () => {
+      render(<HomeFeedClient unifiedPopular={samplePopular} unifiedLatest={sampleLatest} />);
+      const readingSection = document.getElementById("continue-reading-section");
+      const heroSection = document.getElementById("hero-section");
+      expect(readingSection).not.toBeNull();
+      expect(heroSection).not.toBeNull();
+      expect(Boolean(readingSection!.compareDocumentPosition(heroSection!) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);
+    });
+
+    it("keeps discovery first and omits the reading shelf for new guests", () => {
+      const originalGetter = mockHistoryState.getContinueReading;
+      mockHistoryState.getContinueReading = () => [];
+      try {
+        render(<HomeFeedClient unifiedPopular={samplePopular} unifiedLatest={sampleLatest} />);
+        expect(document.getElementById("continue-reading-section")).toBeNull();
+        expect(document.getElementById("hero-section")).not.toBeNull();
+      } finally {
+        mockHistoryState.getContinueReading = originalGetter;
+      }
+    });
+
     it("renders Continue Reading with normalized progress and context menu trigger", () => {
       render(
         <HomeFeedClient
