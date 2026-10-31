@@ -181,3 +181,8 @@ The tests below **ran and passed** at the cited source PR SHA, but must not be p
 | NS-01 `Tampilkan NSFW` OFF UI semantics | #92 `3184fd7` | [CI 41227124316](https://github.com/rzqllh/Yomirra/actions/runs/41227124316) SUCCESS | Full UNKNOWN warning across surfaces, opt-in safety end to end |
 
 **Blockers carried forward:** B-02 physical Safari, B-03 disposable Firebase 2 UIDs, B-04 legacy mixed data, B-06 Vercel exact Preview READY/build quota, B-10 isolated Preview Redis access, B-11 AniList terms. Do not count the docs PR or source PR unit tests as proof that these external gates passed.
+
+| SEC-01 opt-in cookie cannot be bypassed by URL | #93 `8d5fa0d` | [CI 41227250647](https://github.com/rzqllh/Yomirra/actions/runs/41227250647) SUCCESS | Live direct API/cookie cross-account test on merged Preview SHA |
+| CAT-02 unmatched cluster confidence not falsely HIGH | #94 `f1b453b` | [CI 41227360802](https://github.com/rzqllh/Yomirra/actions/runs/41227360802) SUCCESS | Durable canonical identity, false merge corpus and external IDs |
+| CACHE-01 bounded stale expiry/retention | #95 `995e819` | [CI 41227619930](https://github.com/rzqllh/Yomirra/actions/runs/41227619930) SUCCESS | Live Preview Redis availability and measurable stale tests |
+| NOTIF-02 four-chapter prompt persists across sessions | #96 `44513d3` | [CI 41227852748](https://github.com/rzqllh/Yomirra/actions/runs/41227852748) SUCCESS | Physical Reader completion/UID/offline acceptance |
