@@ -459,6 +459,24 @@ describe("MangaCard", () => {
     expect(screen.queryByText("100%")).toBeNull();
   });
 
+  it("hides confirmed restricted cached records and source-only adult cards without rendering a title, cover or link", () => {
+    const { rerender } = render(
+      <MangaCard sourceId="shinigami" manga={{
+        id: "restricted", title: "Sensitive title", coverUrl: "https://example.com/sensitive.jpg", contentRating: "erotica",
+      }} />
+    );
+    expect(screen.getByRole("status").textContent).toContain("Konten disembunyikan");
+    expect(screen.queryByText("Sensitive title")).toBeNull();
+    expect(screen.queryByRole("link", { name: /Sensitive title/ })).toBeNull();
+    expect(screen.queryByTestId("unverified-cover")).toBeNull();
+
+    rerender(<MangaCard sourceId="doujindesu" manga={{
+      id: "source-only", title: "Old source-only title", coverUrl: "https://example.com/source.jpg", contentRating: "safe",
+    }} />);
+    expect(screen.getByRole("status").textContent).toContain("Konten disembunyikan");
+    expect(screen.queryByText("Old source-only title")).toBeNull();
+  });
+
   it.each([
     ["discovery", "grid"],
     ["discovery", "compact"],
