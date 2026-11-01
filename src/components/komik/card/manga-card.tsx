@@ -223,7 +223,6 @@ export function MangaCard({
 
   const sourceObj = dynamicSourceRegistry.get(sourceId) || sourceRegistry.find((s) => s.id === sourceId);
   const sourceDisplayName = sourceObj?.name || sourceId;
-  const sourceName = showSourceBadge ? sourceDisplayName : null;
   const isUnavailable = sourceObj?.status === "unavailable" || sourceObj?.status === "in-fix";
 
   const effectiveBindings = (sourceBindings || (manga as any)?.sourceBindings || []) as SourceBinding[];
@@ -231,6 +230,36 @@ export function MangaCard({
     isCanonicalBindingAvailable(binding, disabledSources)
   );
   const isMultiSource = availableBindings.length > 1;
+  const noEligibleSource =
+    (effectiveBindings.length > 0 && availableBindings.length === 0) ||
+    (effectiveBindings.length === 0 && isUnavailable);
+  const onlyBinding = availableBindings.length === 1 ? availableBindings[0] : null;
+  const cardSourceId = onlyBinding?.sourceId ?? sourceId;
+  const cardMangaId = onlyBinding?.mangaId ?? manga.id;
+  const cardManga = onlyBinding ? { ...manga, id: cardMangaId } : manga;
+  const cardSource = dynamicSourceRegistry.get(cardSourceId) || sourceRegistry.find((s) => s.id === cardSourceId);
+  const sourceName = showSourceBadge ? (cardSource?.name || cardSourceId) : null;
+  // A filtered canonical card must not navigate through a disabled primary binding.
+  const cardDetailHref = getMangaDetailHref(
+    cardSourceId,
+    cardMangaId,
+    fullPath
+  );
+  const handleCardOpen = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (noEligibleSource) {
+      event.preventDefault();
+      return;
+    }
+    if (isMultiSource) {
+      event.preventDefault();
+      setIsSourceDialogOpen(true);
+    }
+  };
+  const cardAriaLabel = noEligibleSource
+    ? `Sumber tidak tersedia untuk ${manga.title}`
+    : isMultiSource
+      ? `Pilih sumber untuk ${manga.title}`
+      : `Lihat ${manga.title}`;
   const [isSourceDialogOpen, setIsSourceDialogOpen] = React.useState(false);
 
   const mangaKey = `${sourceId}::${manga.id}` as MangaKey;
@@ -453,18 +482,17 @@ export function MangaCard({
         style={vtStyle}
       >
         <Link
-          href={getMangaDetailHref(sourceId, manga.id, fullPath)}
+          href={noEligibleSource ? "#" : cardDetailHref}
+          prefetch={noEligibleSource ? false : undefined}
           className={cn(
             mangaCardInteraction.link,
-            "flex min-w-0 flex-1 gap-2.5 cursor-pointer rounded-l-md"
+            "flex min-w-0 flex-1 gap-2.5 rounded-l-md",
+            noEligibleSource ? "cursor-not-allowed opacity-60" : "cursor-pointer"
           )}
-          aria-label={isMultiSource ? `Pilih sumber untuk ${manga.title}` : `Baca ${manga.title}`}
+          aria-label={noEligibleSource || isMultiSource ? cardAriaLabel : `Baca ${manga.title}`}
+          aria-disabled={noEligibleSource || undefined}
           aria-haspopup={isMultiSource ? "dialog" : undefined}
-          onClick={(event) => {
-            if (!isMultiSource) return;
-            event.preventDefault();
-            setIsSourceDialogOpen(true);
-          }}
+          onClick={handleCardOpen}
         >
           {/* Cover Frame with Ranking Badge Overlay */}
           <MangaCardCoverFrame className="vt-hover h-full w-[74px] border-y-0 border-l-0 rounded-l-md rounded-r-xs group-hover:shadow-lg group-hover:shadow-accent/5">
@@ -529,12 +557,13 @@ export function MangaCard({
               <MangaCardMeta className="truncate pr-2">{manga.latestChapter || "Chapter belum tersedia"}</MangaCardMeta>
               {timeText && <MangaCardMeta className="whitespace-nowrap text-[10px] text-text-muted">{timeText}</MangaCardMeta>}
             </div>
+            {noEligibleSource && <MangaCardMeta className="text-status-error-fg font-semibold">Sumber tidak tersedia</MangaCardMeta>}
           </div>
         </Link>
 
         {/* Bookmark & Rating Column */}
         <div className="relative flex w-[52px] shrink-0 flex-col items-center justify-center gap-2 bg-transparent">
-          <BookmarkButton sourceId={sourceId} manga={manga} className="size-11" />
+          <BookmarkButton sourceId={cardSourceId} manga={cardManga} className="size-11" />
           <div className="h-px w-6 bg-border-subtle" />
           <div className="flex flex-col items-center gap-0.5 text-semantic-warning">
             <Star weight="fill" size={12} aria-hidden="true" />
@@ -570,6 +599,9 @@ export function MangaCard({
     const cleanedDescription = rawDesc ? normalizeSynopsis(String(rawDesc)) : "";
 
     const badgesList: React.ReactNode[] = [
+      noEligibleSource ? (
+        <span key="unavailable" className="text-[10px] font-semibold text-status-error-fg">Sumber tidak tersedia</span>
+      ) : null,
       manga.status ? (
         <span
           key="status"
@@ -629,14 +661,13 @@ export function MangaCard({
           className="w-[84px] shrink-0 sm:w-[96px] md:w-[104px]"
         >
           <Link
-            href={getMangaDetailHref(sourceId, manga.id, fullPath)}
-            className="block h-full cursor-pointer rounded-sm outline-none"
-            aria-label={isMultiSource ? `Pilih sumber untuk ${manga.title}` : `Lihat ${manga.title}`}
-            onClick={(event) => {
-              if (!isMultiSource) return;
-              event.preventDefault();
-              setIsSourceDialogOpen(true);
-            }}
+            href={noEligibleSource ? "#" : cardDetailHref}
+          prefetch={noEligibleSource ? false : undefined}
+            className={cn("block h-full rounded-sm outline-none", noEligibleSource ? "cursor-not-allowed opacity-60" : "cursor-pointer")}
+            aria-label={cardAriaLabel}
+            aria-disabled={noEligibleSource || undefined}
+            aria-haspopup={isMultiSource ? "dialog" : undefined}
+            onClick={handleCardOpen}
           >
             <MangaCardCoverFrame className="vt-hover h-full w-full rounded-sm shadow-xs border-border-subtle/60">
               <MangaCover
@@ -654,14 +685,13 @@ export function MangaCard({
           <div>
             <div className="flex items-start justify-between gap-2">
               <Link
-                href={getMangaDetailHref(sourceId, manga.id, fullPath)}
-                className={cn(mangaCardInteraction.link, "min-w-0 flex-1 rounded-sm")}
+                href={noEligibleSource ? "#" : cardDetailHref}
+          prefetch={noEligibleSource ? false : undefined}
+                className={cn(mangaCardInteraction.link, "min-w-0 flex-1 rounded-sm", noEligibleSource && "cursor-not-allowed opacity-60")}
+                aria-label={cardAriaLabel}
+                aria-disabled={noEligibleSource || undefined}
                 aria-haspopup={isMultiSource ? "dialog" : undefined}
-                onClick={(event) => {
-                  if (!isMultiSource) return;
-                  event.preventDefault();
-                  setIsSourceDialogOpen(true);
-                }}
+                onClick={handleCardOpen}
               >
                 <MangaCardTitle lines={1} className={cn("vt-title-hover", mangaCardInteraction.title)} title={manga.title}>
                   {manga.title}
@@ -670,8 +700,8 @@ export function MangaCard({
 
               <div className="shrink-0 -mt-0.5 -mr-1 relative z-10">
                 <BookmarkButton
-                  sourceId={sourceId}
-                  manga={manga}
+                  sourceId={cardSourceId}
+                  manga={cardManga}
                   className="size-11 hover:border-accent hover:text-accent"
                 />
               </div>
@@ -715,8 +745,8 @@ export function MangaCard({
               </MangaCardMeta>
             ) : (
               <LazySynopsisPreview
-                sourceId={sourceId}
-                mangaId={manga.id}
+                sourceId={cardSourceId}
+                mangaId={cardMangaId}
                 author={manga.author}
               />
             )}
@@ -769,16 +799,14 @@ export function MangaCard({
       style={vtStyle}
     >
       <Link
-        href={getMangaDetailHref(sourceId, manga.id, fullPath)}
+        href={noEligibleSource ? "#" : cardDetailHref}
+          prefetch={noEligibleSource ? false : undefined}
         transitionTypes={["nav-forward"]}
-        className={cn(mangaCardInteraction.link, "group flex flex-col rounded-xs")}
-        aria-label={isMultiSource ? `Pilih sumber untuk ${manga.title}` : `Lihat ${manga.title}`}
+        className={cn(mangaCardInteraction.link, "group flex flex-col rounded-xs", noEligibleSource && "cursor-not-allowed opacity-60")}
+        aria-label={cardAriaLabel}
+        aria-disabled={noEligibleSource || undefined}
         aria-haspopup={isMultiSource ? "dialog" : undefined}
-        onClick={(event) => {
-          if (!isMultiSource) return;
-          event.preventDefault();
-          setIsSourceDialogOpen(true);
-        }}
+        onClick={handleCardOpen}
       >
         <motion.div
           layoutId={reducedMotion ? undefined : transitionNames.cover}
@@ -851,7 +879,7 @@ export function MangaCard({
               )}
             </div>
 
-            {isUnavailable && (
+            {noEligibleSource && (
               <div className="absolute inset-0 bg-surface-base/60 backdrop-blur-[2px] flex items-center justify-center z-10 transition-opacity group-hover:opacity-100 opacity-90">
                 <div className="rounded-xs bg-status-error-bg px-2.5 py-1 text-xs font-bold text-status-error-fg">
                   Tidak Tersedia
@@ -916,7 +944,7 @@ export function MangaCard({
       </Link>
 
       <div className="absolute right-2 top-2 z-20 flex items-center justify-center">
-        <BookmarkButton sourceId={sourceId} manga={manga} className="size-8.5 sm:size-9 rounded-lg" />
+        <BookmarkButton sourceId={cardSourceId} manga={cardManga} className="size-8.5 sm:size-9 rounded-lg" />
       </div>
 
       {isMultiSource && (

@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
@@ -12,8 +12,8 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("../../bookmark-button", () => ({
-  BookmarkButton: ({ manga }: { manga: { title: string } }) => (
-    <button type="button" className="size-11" aria-label={`Simpan ${manga.title} ke rak`} />
+  BookmarkButton: ({ manga, sourceId }: { manga: { title: string; id: string }; sourceId: string }) => (
+    <button type="button" className="size-11" data-source-id={sourceId} data-manga-id={manga.id} aria-label={`Simpan ${manga.title} ke rak`} />
   ),
 }));
 
@@ -103,6 +103,62 @@ describe("MangaCard", () => {
     expect(screen.getByRole("heading", { name: "Solo Max-Level Newbie" })).toBeDefined();
     expect(screen.getByText("Chapter 150")).toBeDefined();
     expect(screen.getByText("9.2")).toBeDefined();
+  });
+
+  it.each(["grid", "compact"] as const)(
+    "opens the only eligible source directly in %s view",
+    (viewMode) => {
+      render(
+        <MangaCard
+          variant="discovery"
+          viewMode={viewMode}
+          sourceId="shinigami"
+          sourceBindings={[{ sourceId: "mangadex", mangaId: "verified-alternative", title: "Work" }]}
+          manga={{ id: "disabled-primary", title: "Work", coverUrl: "", description: "Sinopsis sampel." }}
+        />
+      );
+      const links = screen.getAllByRole("link", { name: /Lihat Work/ });
+      expect(links.length).toBeGreaterThan(0);
+      for (const link of links) {
+        expect(link.getAttribute("href")).toContain("/manga/mangadex/verified-alternative");
+        expect(link.getAttribute("aria-haspopup")).toBeNull();
+      }
+      expect(screen.queryByRole("dialog")).toBeNull();
+      const bookmark = screen.getByRole("button", { name: "Simpan Work ke rak" });
+      expect(bookmark.getAttribute("data-source-id")).toBe("mangadex");
+      expect(bookmark.getAttribute("data-manga-id")).toBe("verified-alternative");
+    }
+  );
+
+  it("still requires a manual picker for two eligible sources", () => {
+    render(
+      <MangaCard
+        sourceId="shinigami"
+        sourceBindings={[
+          { sourceId: "shinigami", mangaId: "a", title: "Work" },
+          { sourceId: "mangadex", mangaId: "b", title: "Work" },
+        ]}
+        manga={{ id: "a", title: "Work", coverUrl: "" }}
+      />
+    );
+    fireEvent.click(screen.getByRole("link", { name: "Pilih sumber untuk Work" }));
+    expect(screen.getByRole("dialog")).toBeDefined();
+    expect(screen.getByText("Pilih sumber")).toBeDefined();
+  });
+
+  it("does not navigate to a disabled or missing canonical source", () => {
+    render(
+      <MangaCard
+        sourceId="shinigami"
+        sourceBindings={[{ sourceId: "missing-source", mangaId: "a", title: "Work" }]}
+        manga={{ id: "a", title: "Work", coverUrl: "" }}
+      />
+    );
+    const link = screen.getByRole("link", { name: "Sumber tidak tersedia untuk Work" });
+    expect(link.getAttribute("aria-disabled")).toBe("true");
+    expect(link.getAttribute("href")).toBe("#");
+    expect(fireEvent.click(link)).toBe(false);
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 
   it("lazily hydrates and sanitizes a missing compact-card synopsis", async () => {

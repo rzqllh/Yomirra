@@ -43,7 +43,7 @@ Yomirra is an iOS-first, responsive, local-first PWA for discovering, tracking a
 
 Quick Search follows the active eligible source in Jelajah; full Cari has its own provider choices. Do not add an unrequested second source picker inside Quick Search. Responsive tablet, mobile browser UI, installed PWA and desktop must preserve navigation semantics.
 
-## 4. Work identity, deduplication and source selection (CAT-01–CAT-14)
+## 4. Work identity, deduplication and source selection (CAT-01–CAT-15)
 
 ### Canonical domain
 - **Work**: durable, stable canonical ID for the underlying edition/work where equivalence has been verified.
@@ -52,12 +52,12 @@ Quick Search follows the active eligible source in Jelajah; full Cari has its ow
 - Catalog cards show **one work and N available eligible sources**, counted by *unique provider bindings* with valid source visibility, not by raw duplicate rows. When match confidence is uncertain, keep separate cards; false merging is worse than a temporary duplicate.
 - Use trusted external IDs (MAL/eligible AniList etc. only with rights/terms verification), original/alternative titles, author, work type/edition, year and supporting evidence. Similarity alone is insufficient for automatic binding. Record match provenance, confidence, versions and override/review state. Existing `clusterCanonicalResults()` is a starting point, **not** proof of stable cross-page identity.
 - All aggregate surfaces (Cari, genuinely aggregated feeds) obey canonical dedupe. A deliberately source-scoped Jelajah page shows the selected provider's items without inventing cross-provider availability; a work may show verified cross-links when known.
-- Multi-source card **opens source picker**; sort healthy sources first, with the **last used healthy source pinned first**; user must explicitly choose. Health unknown is not healthy. A single eligible binding may proceed directly to detail. Never infer working chapter access from a healthy listing probe.
+- **Source-choice cardinality (owner locked 2026-11-01):** exactly one eligible provider binding opens its exact `sourceId/mangaId` detail directly without a picker; two or more eligible bindings **must** open a source picker, never silently choose. In that picker, the last-used source is pinned first **only when recently healthy**; other sources follow observed health, and unknown health must never be labeled healthy. With zero eligible bindings, keep the work card identifiable but block invalid navigation and show `Tidak Tersedia` plus an explicit recovery path where supported. Count only unique eligible bindings after visibility/policy filtering. Never infer working chapter access from a healthy listing probe.
 - A work with a known previously selected source that degrades must show a clear alternative choice, not silently relocate the reader or transfer milestones. No auto-migration without reversible evidence.
 - Canonical identity lives in durable authoritative storage appropriate for mappings; Redis search indexes are acceleration only. Review reuse of existing saved-title identity layer before introducing schema/tables. Do not choose Supabase/Firebase schema changes until separately approved.
 
 ### Completion
-- `CAT-01..CAT-14` cover single-card dedupe, false merge rejection, picker, unique source counts, health ordering, last-used preference, source URL fidelity, safety, cache, persistence and fallback. Tests need cross-page, cross-session and different-adaptation fixtures.
+- `CAT-01..CAT-15` cover single-card dedupe, false merge rejection, picker, unique source counts, health ordering, last-used preference, zero/one/multiple source routing, source URL fidelity, safety, cache, persistence and fallback. Tests need cross-page, cross-session and different-adaptation fixtures.
 
 ## 5. Content classification contract (NS/SAFE)
 

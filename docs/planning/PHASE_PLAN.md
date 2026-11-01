@@ -38,16 +38,16 @@ Cross-cutting: legal/source rights, privacy, test fixtures, monitoring and hando
 
 ## Phase 01 — Canonical catalog, verified provider identity & content policy
 
-**Requirement IDs:** CAT-01..CAT-14; NS-01..NS-07; SAFE-07; META-01, CAT-12/13; HEALTH-01; SEC-01.
+**Requirement IDs:** CAT-01..CAT-15; NS-01..NS-07; SAFE-07; META-01, CAT-12/13; HEALTH-01; SEC-01.
 **Depends on:** P00; existing saved-title/provenance contracts and sample corpus.
 **Implementation sequence:**
 1. Audit existing canonical-search, semantic-catalog, sourceBinding, title-matcher and saved-title identity; reproduce duplicate screenshot with fixture and live sample.
 2. Write match-confidence rules (verified ID, alternate title, creator, edition, year, no false merge). Document distinct work/edition/provider/chapter identity; stable mapping storage with rollback, not Redis-only keys.
 3. Unit and fixture tests for false-merge, duplicate across pages, source count and source unavailable; expose canonical card for aggregated modes only.
-4. Implement explicit source picker; last-used *healthy* source first; health unknown cannot claim healthy; detail uses exact `sourceId/mangaId`. Do not silently auto-select multi-source.
+4. Route **one eligible source** directly to the exact provider detail; require manual picker for **2+ eligible sources**, ordering last-used recently healthy first. For **zero eligible sources**, block invalid detail links and show honest unavailability/recovery. Health unknown cannot claim healthy. Test all card variants (rank/grid/compact) and filtered primary-source cases; never auto-select from 2+ sources.
 5. Implement content classification tri-state and source eligibility, ON/OFF default polarity, UNKNOWN warning, cache/API/Reader/Library/Download privacy; preserve old user data. Resolve MAL-specific strict behavior via documented decision before coding.
 6. Audit persisted sources, filters, mixed-provider saved data, and reversibility of any proposed migration.
-**Exit criteria:** CAT-01..14 + NS-01..07 + SAFE-07 passed (unit/browser; physical tests remain P07); no false merge or NSFW confirmed leakage; no user data migration unless approved and reversible.
+**Exit criteria:** CAT-01..15 + NS-01..07 + SAFE-07 passed (unit/browser; physical tests remain P07); no false merge or NSFW confirmed leakage; no user data migration unless approved and reversible.
 **Rollback:** feature-flag/off-path fallbacks or scoped revert, retain legacy IDs and bookmarks.
 **Blocked by:** B-04 legacy evidence, B-09 mapping for *automatic* external ID binding (explicit source selection can proceed).
 

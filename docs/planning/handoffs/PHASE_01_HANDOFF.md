@@ -8,7 +8,7 @@ Planning base: `preview@02cc664be8c66664ffe9628fcaa68523322f3ce0`
 Canonical Catalog, Content Classification & Source Choice
 
 ## Requirement IDs
-`CAT-01..CAT-14; NS-01..NS-07; SAFE-07; META-01; SEC-01; HEALTH-01`
+`CAT-01..CAT-15; NS-01..NS-07; SAFE-07; META-01; SEC-01; HEALTH-01`
 
 ## Entry prerequisites
 P00 documentation review; read existing IDENTITY.md, canonical-search, semantic-catalog, title-matcher, source selectors, content-access, PWA caching.
@@ -20,9 +20,9 @@ Existing `clusterCanonicalResults()` merges per search response, not durable acr
 1. [ ] Reproduce five-provider duplicate search and ambiguous-title false-merge on real/fixture data; record before screenshot and route.
 2. [ ] Define stable canonical work-vs-edition-vs-provider-vs-chapter identity and provenance; review schema/backup compatibility and obtain owner approval before any migration.
 3. [ ] Introduce verified merge confidence; do not assume one high-confidence cluster means identity verified; test alias/author/edition/year counterexamples.
-4. [ ] Render one work card on aggregated surfaces and explicit source picker; pin healthy last-used binding first; detail uses exact provider ref. Jelajah remains source scoped.
+4. [ ] Render one work card on aggregated surfaces. For **one** eligible binding, navigate directly to its exact provider detail; for **2+**, require picker and pin recently healthy last-used first; for **zero**, show unavailable and do not navigate. Jelajah remains source scoped.
 5. [ ] Implement 3-state content classification with user-visible UNKNOWN warning, OFF default and API/cache/Reader/Library safety; leave legacy data untouched until approved.
-6. [ ] Run acceptance CAT-01..14, NS-01..07, SAFE-07 in focused unit/Playwright; add results with exact SHA.
+6. [ ] Run acceptance CAT-01..15, NS-01..07, SAFE-07 in focused unit/Playwright; add results with exact SHA.
 
 ## Evidence to collect
 Current: PLANNED, NOT_RUN. Required: false merge corpus, URL and binding traces, screenshots, case-by-case evidence, security review and rollback.
@@ -80,3 +80,5 @@ NEXT: one concrete safe continuation step
 - 2026-11-01 — MERGED TO PREVIEW: canonical confidence PR **#94** squash `fa300415f358a54ef325d9d632777920557ebec5`; source PR HEAD `f1b453ba4ff1e9ee90931d9e3435e19d0032fa75` GitHub Verify & Build/Browser Smoke SUCCESS. Single-provider/unmatched cluster now NO_MATCH; only actual multi-provider match produces HIGH_CONFIDENCE. No changes to canonical matching algorithm or persisted mapping; stable ID/false title-only merge work remains P0 OPEN. Vercel exact-SHA live still unverified.
 
 - 2026-11-01 — CODE + TEST WRITTEN, NOT VERIFIED: PR **#98** https://github.com/rzqllh/Yomirra/pull/98, branch `fix/canonical-format-conflict-20261101`, HEAD `08b355d14fe1e7e11eee80d5a1b1f65def05cc18`. When both matching titles have known but conflicting formats (e.g. NOVEL/MANGA), automatic merging is rejected; if format metadata missing on one side, existing heuristic remains. Two regression tests in `src/shared/lib/__tests__/canonical-search.test.ts`. **CI RUN 41229181720 IN_PROGRESS** (Verify & Build step Unit & Integration Tests at inspection), no acceptance PASS, not merged; no database/Redis/bookmarks touched. Remaining P0: external-ID work equivalence, same-title false matches with missing author, cross-page durable identity, UNKNOWN warning on safe-mode screens and cache.
+
+- 2026-11-01 — **OWNER LOCK CAT-15 / CODE PR #99:** one eligible source navigates directly to its exact provider detail, two or more keep a mandatory manual picker, zero disables navigation and displays unavailable. Regression also checks that the only-eligible binding drives bookmark provenance and synopsis fetch instead of a disabled primary source. Branch `fix/catalog-single-source-routing-20261101`, PR https://github.com/rzqllh/Yomirra/pull/99. Unit/browser tests and exact-head Vercel acceptance **NOT YET VERIFIED** at this checkpoint; no data migration, secrets, main or production changed.
