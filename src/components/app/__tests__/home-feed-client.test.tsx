@@ -14,6 +14,7 @@ import {
 } from "vitest";
 import { HomeFeedClient, SPOTLIGHT_AUTOPLAY_MS } from "@/components/home/home-feed-client";
 import { HomeView } from "@/components/home/home-view";
+import { HomeHero, HERO_COLLAGE_CACHE_KEY, isVerifiedSafeHeroCandidate } from "@/components/home/home-hero";
 import { HomeLeaderboardPanel } from "@/components/home/home-leaderboard-panel";
 import {
   isConfidentHomeDuplicate,
@@ -159,11 +160,50 @@ describe("Yomirra Editorial Home Components", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     motionState.reduced = false;
+    mockSettingsState.hideNsfw = false;
     sessionStorage.clear();
   });
 
   afterEach(() => {
     vi.useRealTimers();
+  });
+
+  describe("Hero cached cover content safety", () => {
+    it("never calls an unknown or adult-only source safe", () => {
+      expect(isVerifiedSafeHeroCandidate({
+        title: "Unknown", coverUrl: "https://example.com/unknown.jpg", sourceId: "shinigami",
+      })).toBe(false);
+      expect(isVerifiedSafeHeroCandidate({
+        title: "Adult source", coverUrl: "https://example.com/adult.jpg", sourceId: "doujindesu", contentRating: "safe",
+      })).toBe(false);
+      expect(isVerifiedSafeHeroCandidate({
+        title: "Verified safe", coverUrl: "https://example.com/safe.jpg", sourceId: "shinigami", contentRating: "safe",
+      })).toBe(true);
+    });
+
+    it("ignores legacy and opt-in session covers when NSFW is turned OFF", () => {
+      mockHistoryState = { ...mockHistoryState, items: {} };
+      mockSettingsState.hideNsfw = true;
+      const candidates = [
+        { title: "Known safe", coverUrl: "https://example.com/safe-cover.jpg", sourceId: "shinigami", contentRating: "safe" as const },
+        { title: "Unknown", coverUrl: "https://example.com/unknown-cover.jpg", sourceId: "shinigami", contentRating: "unknown" as const },
+        { title: "Confirmed adult", coverUrl: "https://example.com/adult-cover.jpg", sourceId: "doujindesu", contentRating: "safe" as const },
+      ];
+      sessionStorage.setItem("yomirra_home_hero_collage_v1", JSON.stringify([candidates[2]]));
+      sessionStorage.setItem(`${HERO_COLLAGE_CACHE_KEY}_optin`, JSON.stringify([candidates[2]]));
+
+      const { container, rerender } = render(<HomeHero candidates={candidates} />);
+      const srcs = () => Array.from(container.querySelectorAll("img")).map((img) => img.getAttribute("src"));
+      expect(srcs()).toEqual(["https://example.com/safe-cover.jpg"]);
+      expect(sessionStorage.getItem(`${HERO_COLLAGE_CACHE_KEY}_safe`)).toContain("safe-cover.jpg");
+
+      mockSettingsState.hideNsfw = false;
+      rerender(<HomeHero candidates={candidates} />);
+      expect(srcs()).toContain("https://example.com/adult-cover.jpg");
+      mockSettingsState.hideNsfw = true;
+      rerender(<HomeHero candidates={candidates} />);
+      expect(srcs()).toEqual(["https://example.com/safe-cover.jpg"]);
+    });
   });
 
   describe("HomeView & Layout Hierarchy", () => {
