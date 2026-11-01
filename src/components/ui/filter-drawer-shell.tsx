@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { createPortal } from "react-dom";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Drawer } from "vaul";
 import { Funnel } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
@@ -58,8 +59,6 @@ interface FilterDrawerShellProps {
   children: React.ReactNode;
 }
 
-import { motion, useReducedMotion } from "motion/react";
-
 export function FilterDrawerShell({
   title,
   description,
@@ -75,6 +74,7 @@ export function FilterDrawerShell({
   const [isOpen, setIsOpen] = React.useState(false);
   const [desktopTarget, setDesktopTarget] = React.useState<HTMLElement | null>(null);
   const headingId = React.useId();
+  const prefersReducedMotion = useReducedMotion();
   React.useEffect(() => {
     if (!desktopPortalId || !window.matchMedia) return;
     const media = window.matchMedia("(min-width: 1024px)");
@@ -140,18 +140,39 @@ export function FilterDrawerShell({
     const desktopTrigger = React.isValidElement(trigger)
       ? React.cloneElement(trigger as React.ReactElement<typeof triggerProps>, triggerProps)
       : <Button variant="outline" {...triggerProps}><Funnel size={18} weight="regular" />Filter {activeCount > 0 ? `(${activeCount})` : ""}</Button>;
-    return <>{desktopTrigger}{isOpen && createPortal(
-      <section aria-labelledby={headingId} className="mb-5 rounded-xl border border-border-subtle bg-surface-base p-4 xl:p-5">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 id={headingId} className="text-sm font-semibold text-text-primary">{title}</h2>
-          <Button variant="ghost" onClick={onReset}>Reset filter</Button>
-        </div>
-        <div tabIndex={0} aria-label="Pilihan filter" className="grid max-h-[min(42dvh,380px)] grid-cols-2 gap-x-6 gap-y-5 overflow-y-auto pr-1 xl:grid-cols-3">{children}</div>
-        <div className="mt-5 flex justify-end gap-2 border-t border-border-subtle pt-3">
-          <Button variant="ghost" onClick={() => { onOpen?.(); setIsOpen(false); }}>Batal</Button>
-          <Button onClick={handleApply}>{applyLabel}</Button>
-        </div>
-      </section>, desktopTarget)}</>;
+    return (
+      <>
+        {desktopTrigger}
+        {createPortal(
+          <AnimatePresence initial={false}>
+            {isOpen && (
+              <motion.section
+                key={desktopPortalId}
+                id={desktopPortalId}
+                initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, height: 0, marginBottom: 0 }}
+                animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, height: "auto", marginBottom: 20 }}
+                exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, height: 0, marginBottom: 0 }}
+                transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                style={{ overflow: "hidden" }}
+                aria-labelledby={headingId}
+                className="rounded-2xl border border-border-subtle bg-surface-base p-4 xl:p-5"
+              >
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <h2 id={headingId} className="text-sm font-semibold text-text-primary">{title}</h2>
+                  <Button variant="ghost" onClick={onReset}>Reset filter</Button>
+                </div>
+                <div tabIndex={0} aria-label="Pilihan filter" className="grid max-h-[min(42dvh,380px)] grid-cols-2 gap-x-6 gap-y-5 overflow-y-auto pr-1 xl:grid-cols-3">{children}</div>
+                <div className="mt-5 flex justify-end gap-2 border-t border-border-subtle pt-3">
+                  <Button variant="ghost" onClick={() => { onOpen?.(); setIsOpen(false); }}>Batal</Button>
+                  <Button onClick={handleApply}>{applyLabel}</Button>
+                </div>
+              </motion.section>
+            )}
+          </AnimatePresence>,
+          desktopTarget
+        )}
+      </>
+    );
   }
 
   return (
