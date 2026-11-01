@@ -114,7 +114,7 @@ describe("MangaCard", () => {
           viewMode={viewMode}
           sourceId="shinigami"
           sourceBindings={[{ sourceId: "mangadex", mangaId: "verified-alternative", title: "Work" }]}
-          manga={{ id: "disabled-primary", title: "Work", coverUrl: "" }}
+          manga={{ id: "disabled-primary", title: "Work", coverUrl: "", description: "Sinopsis sampel." }}
         />
       );
       const links = screen.getAllByRole("link", { name: /Lihat Work/ });
