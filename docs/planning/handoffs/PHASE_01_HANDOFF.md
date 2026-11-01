@@ -8,7 +8,7 @@ Planning base: `preview@02cc664be8c66664ffe9628fcaa68523322f3ce0`
 Canonical Catalog, Content Classification & Source Choice
 
 ## Requirement IDs
-`CAT-01..CAT-14; NS-01..NS-07; SAFE-07; META-01; SEC-01; HEALTH-01`
+`CAT-01..CAT-15; NS-01..NS-07; SAFE-07; META-01; SEC-01; HEALTH-01`
 
 ## Entry prerequisites
 P00 documentation review; read existing IDENTITY.md, canonical-search, semantic-catalog, title-matcher, source selectors, content-access, PWA caching.
@@ -20,9 +20,9 @@ Existing `clusterCanonicalResults()` merges per search response, not durable acr
 1. [ ] Reproduce five-provider duplicate search and ambiguous-title false-merge on real/fixture data; record before screenshot and route.
 2. [ ] Define stable canonical work-vs-edition-vs-provider-vs-chapter identity and provenance; review schema/backup compatibility and obtain owner approval before any migration.
 3. [ ] Introduce verified merge confidence; do not assume one high-confidence cluster means identity verified; test alias/author/edition/year counterexamples.
-4. [ ] Render one work card on aggregated surfaces and explicit source picker; pin healthy last-used binding first; detail uses exact provider ref. Jelajah remains source scoped.
+4. [ ] Render one work card on aggregated surfaces. For **one** eligible binding, navigate directly to its exact provider detail; for **2+**, require picker and pin recently healthy last-used first; for **zero**, show unavailable and do not navigate. Jelajah remains source scoped.
 5. [ ] Implement 3-state content classification with user-visible UNKNOWN warning, OFF default and API/cache/Reader/Library safety; leave legacy data untouched until approved.
-6. [ ] Run acceptance CAT-01..14, NS-01..07, SAFE-07 in focused unit/Playwright; add results with exact SHA.
+6. [ ] Run acceptance CAT-01..15, NS-01..07, SAFE-07 in focused unit/Playwright; add results with exact SHA.
 
 ## Evidence to collect
 Current: PLANNED, NOT_RUN. Required: false merge corpus, URL and binding traces, screenshots, case-by-case evidence, security review and rollback.
