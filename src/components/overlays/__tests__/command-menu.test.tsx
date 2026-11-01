@@ -38,31 +38,31 @@ function open() {
 }
 
 describe("Quick Search scope and dialog", () => {
-  it("does not infer safety from absent or unknown rating", () => {
-    expect(canRevealQuickSearchCover({}, true)).toBe(false);
-    expect(canRevealQuickSearchCover({ contentRating: "unknown" }, true)).toBe(false);
+  it("reveals covers for titles without positive adult signals (D-01)", () => {
+    expect(canRevealQuickSearchCover({}, true)).toBe(true);
+    expect(canRevealQuickSearchCover({ contentRating: "unknown" }, true)).toBe(true);
     expect(canRevealQuickSearchCover({ contentRating: "erotica" }, true)).toBe(false);
     expect(canRevealQuickSearchCover({ contentRating: "safe", isNsfw: true }, true)).toBe(false);
     expect(canRevealQuickSearchCover({ contentRating: "safe" }, true)).toBe(true);
     expect(canRevealQuickSearchCover({ contentRating: "unknown" }, false)).toBe(true);
   });
 
-  it("renders an unverified warning instead of fetching an UNKNOWN thumbnail", async () => {
+  it("renders thumbnail for unrated titles with no positive adult signals (D-01)", async () => {
     vi.spyOn(apiClient, "searchGlobal").mockResolvedValue({
       resultsBySource: {
         a: { results: [{
           id: "unverified-title",
           title: "Unverified title",
           coverUrl: "https://example.com/unverified.jpg",
-          // No provider rating: still UNKNOWN, not safe.
+          // No provider rating: still UNKNOWN, but no adult signal -> reveal cover (D-01)
         }] },
       },
     });
     open();
     fireEvent.change(await screen.findByRole("combobox"), { target: { value: "unverified" } });
     await screen.findByText("Unverified title");
-    expect(screen.getByText("Rating belum terverifikasi")).toBeTruthy();
-    expect(document.querySelector('img[src*="unverified.jpg"]')).toBeNull();
+    expect(screen.queryByText("Rating belum terverifikasi")).toBeNull();
+    expect(document.querySelector('img[src*="unverified.jpg"]')).toBeTruthy();
     expect(screen.getByRole("option", { name: /Unverified title/ })).toBeTruthy();
   });
 

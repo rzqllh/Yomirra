@@ -21,11 +21,11 @@ describe("LeaderboardRow content policy", () => {
     useSettingsStore.setState({ hideNsfw: true });
   });
 
-  it("keeps missing/UNKNOWN-rated results identifiable without mounting an unverified image", () => {
+  it("renders normal cover and link for missing/unrated titles without positive adult signals (D-01)", () => {
     const { container } = render(<LeaderboardRow sourceId="shinigami" manga={manga} />);
     expect(screen.getByText("Ranking work")).toBeTruthy();
-    expect(screen.getByText("Rating belum terverifikasi")).toBeTruthy();
-    expect(container.querySelector("img")).toBeNull();
+    expect(screen.queryByText("Rating belum terverifikasi")).toBeNull();
+    expect(container.querySelector("img")).toBeTruthy();
     expect(screen.getByRole("link")).toBeTruthy();
   });
 

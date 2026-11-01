@@ -514,33 +514,25 @@ describe("MangaCard", () => {
     ["discovery", "compact"],
     ["rank", "grid"],
     ["progress", "grid"],
-  ] as const)("masks UNKNOWN cover before acknowledgement for %s/%s cards", (variant, viewMode) => {
-    const { rerender } = render(<MangaCard
-      variant={variant}
-      viewMode={viewMode}
-      sourceId="shinigami"
-      manga={{ id: "unknown-title", title: "Unknown title", coverUrl: "https://example.com/unverified.jpg", description: "Known fixture text" }}
-    />);
-    expect(screen.getByTestId("unverified-cover").textContent).toContain("Rating belum terverifikasi");
-    useSettingsStore.setState({ hideNsfw: false });
-    rerender(<MangaCard
+  ] as const)("renders normal cover for unrated/missing-rating titles in safe mode (D-01) for %s/%s cards", (variant, viewMode) => {
+    const { container } = render(<MangaCard
       variant={variant}
       viewMode={viewMode}
       sourceId="shinigami"
       manga={{ id: "unknown-title", title: "Unknown title", coverUrl: "https://example.com/unverified.jpg", description: "Known fixture text" }}
     />);
     expect(screen.queryByTestId("unverified-cover")).toBeNull();
+    expect(container.querySelector("img")).toBeTruthy();
+    expect(screen.getByText("Unknown title")).toBeTruthy();
   });
 
-  it("does not issue compact-card synopsis requests for unverified titles while NSFW is OFF", () => {
-    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    render(<QueryClientProvider client={queryClient}><MangaCard
-      variant="discovery" viewMode="compact" sourceId="shinigami"
-      manga={{ id: "unknown-synopsis", title: "Unknown synopsis", coverUrl: "https://example.com/unknown.jpg" }}
-    /></QueryClientProvider>);
-    expect(screen.getByTestId("unverified-cover")).toBeDefined();
-    expect(apiClient.getDetail).not.toHaveBeenCalled();
-    queryClient.clear();
+  it("keeps explicit adult titles strictly restricted in safe mode", () => {
+    render(<MangaCard
+      variant="discovery" viewMode="grid" sourceId="shinigami"
+      manga={{ id: "adult-title", title: "Adult title", coverUrl: "https://example.com/adult.jpg", contentRating: "erotica" }}
+    />);
+    expect(screen.getByRole("status").textContent).toContain("Konten disembunyikan");
+    expect(screen.queryByText("Adult title")).toBeNull();
   });
 
 });
