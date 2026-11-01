@@ -101,7 +101,7 @@ export function ConfirmationModal({
         <div className="flex flex-col items-center pt-8 pb-5 px-6 text-center gap-4">
           <div
             className={cn(
-              "flex h-14 w-14 items-center justify-center rounded-[20px] border shrink-0 select-none",
+              "flex h-14 w-14 items-center justify-center rounded-xl border shrink-0 select-none",
               iconContainerStyle
             )}
             aria-hidden="true"
@@ -124,7 +124,7 @@ export function ConfirmationModal({
           {requireCheckbox && (
             <div
               className={cn(
-                "w-full mt-1 p-3 rounded-[12px] border transition-colors text-left",
+                "w-full mt-1 p-3 rounded-md border transition-colors text-left",
                 checked
                   ? "bg-semantic-error/[0.06] border-semantic-error/30"
                   : "bg-surface-base border-border-subtle hover:border-border-default"

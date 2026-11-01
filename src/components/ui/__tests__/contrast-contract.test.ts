@@ -84,4 +84,45 @@ describe("design-token contrast", () => {
     expect(buttonSource).toContain("aria-disabled={isDisabled || undefined}");
     expect(buttonSource).toContain("disabled:opacity-40");
   });
+
+  it("maintains a strictly monotonic squircle radius hierarchy in @theme (AUD-07)", () => {
+    const parsePx = (tokenName: string) => {
+      const match = css.match(new RegExp(`--${tokenName}:\\s*(\\d+)px;`));
+      if (!match) throw new Error(`Missing token --${tokenName}`);
+      return Number.parseInt(match[1], 10);
+    };
+
+    const xs = parsePx("radius-xs");
+    const sm = parsePx("radius-sm");
+    const md = parsePx("radius-md");
+    const lg = parsePx("radius-lg");
+    const xl = parsePx("radius-xl");
+    const r2xl = parsePx("radius-2xl");
+    const r3xl = parsePx("radius-3xl");
+
+    expect(xs).toBeLessThan(sm);
+    expect(sm).toBeLessThan(md);
+    expect(md).toBeLessThan(lg);
+    expect(lg).toBeLessThan(xl);
+    expect(xl).toBeLessThan(r2xl);
+    expect(r2xl).toBeLessThan(r3xl);
+
+    // Verify concrete standard values
+    expect({ xs, sm, md, lg, xl, r2xl, r3xl }).toEqual({
+      xs: 6,
+      sm: 10,
+      md: 14,
+      lg: 18,
+      xl: 22,
+      r2xl: 28,
+      r3xl: 32,
+    });
+  });
+
+  it("enforces robust toast positioning and close-button isolation (AUD-11)", () => {
+    expect(css).toContain('[data-sonner-toast][data-styled="true"]');
+    expect(css).toContain("align-items: flex-start !important;");
+    expect(css).toContain("position: absolute !important;\n  top: 10px !important;\n  right: 10px !important;");
+    expect(css).toContain("overflow-wrap: anywhere !important;\n  word-break: break-word !important;");
+  });
 });

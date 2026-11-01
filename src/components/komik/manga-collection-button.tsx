@@ -121,7 +121,7 @@ export function MangaCollectionButton({
         onClick={handleOpenClick}
         aria-label="Kelola koleksi"
         className={cn(
-          "flex items-center justify-center gap-1.5 h-[52px] md:h-[48px] px-1 md:px-3.5 transition-all outline-none select-none rounded-[14px] border shadow-xs active:scale-95 bg-surface-raised",
+          "flex items-center justify-center gap-1.5 h-[52px] md:h-[48px] px-1 md:px-3.5 transition-all outline-none select-none rounded-md border shadow-xs active:scale-95 bg-surface-raised",
           memberships.length > 0 && mounted
             ? "border-accent/60 text-accent font-bold ring-1 ring-accent/20"
             : "border-border-default text-text-secondary hover:text-text-primary hover:border-border-strong hover:bg-surface-hover"
