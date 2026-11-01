@@ -52,7 +52,9 @@ const coverPositions = [
   "hidden sm:block right-[3%] top-8 w-[80px] lg:w-[88px]",
 ] as const;
 
-export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
+const EMPTY_CANDIDATES: HeroCandidate[] = [];
+
+export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroProps) {
   const mounted = useMounted();
   const hideNsfw = useSettingsStore((state) => state.hideNsfw);
   const { searchShortcut, searchAriaLabel } = usePlatformShortcut();
@@ -61,6 +63,7 @@ export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
   const [loadedCovers, setLoadedCovers] = React.useState<Set<string>>(() => new Set());
   const [failedCovers, setFailedCovers] = React.useState<Set<string>>(() => new Set());
   const chosenMode = React.useRef<"safe" | "optin" | null>(null);
+  const prevCandidatesRef = React.useRef<HeroCandidate[]>(candidates);
 
   // CRITICAL FIX (DEF-02): Only readers with actual local reading history are returning readers.
   // Authenticated accounts with zero history receive the discovery flow without layout displacement.
@@ -72,6 +75,10 @@ export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
   React.useEffect(() => {
     if (!mounted) return;
     const mode = hideNsfw ? "safe" : "optin";
+    if (prevCandidatesRef.current !== candidates) {
+      prevCandidatesRef.current = candidates;
+      chosenMode.current = null;
+    }
     if (chosenMode.current === mode) return;
 
     // Do not reuse unclassified v1 art from an earlier opt-in session.
@@ -101,8 +108,8 @@ export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
     }
 
     if (allowed.length === 0) {
-      setSessionCovers([]);
-      chosenMode.current = null; // Reconsider if fresh safe data becomes available.
+      setSessionCovers((prev) => (prev.length === 0 ? prev : []));
+      chosenMode.current = mode;
       return;
     }
 
