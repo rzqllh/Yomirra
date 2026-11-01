@@ -72,7 +72,7 @@ export function GuestActionGateModal({
         }
       }}
     >
-      <DialogContent className="max-w-sm sm:max-w-md p-5 sm:p-6 rounded-[24px] border border-border-glass bg-surface-overlay/95 backdrop-blur-2xl shadow-glass">
+      <DialogContent className="max-w-sm sm:max-w-md p-5 sm:p-6 rounded-2xl border border-border-glass bg-surface-overlay/95 backdrop-blur-2xl shadow-glass">
         <DialogHeader className="gap-3 text-left">
           <div className="flex items-center gap-2.5">
             <div

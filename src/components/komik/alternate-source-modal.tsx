@@ -117,7 +117,7 @@ export function AlternateSourceModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="max-w-md w-[calc(100vw-32px)] rounded-[28px] p-0 bg-surface-overlay/95 backdrop-blur-2xl border border-border-glass shadow-glass overflow-hidden flex flex-col gap-0">
+      <DialogContent className="max-w-md w-[calc(100vw-32px)] rounded-2xl p-0 bg-surface-overlay/95 backdrop-blur-2xl border border-border-glass shadow-glass overflow-hidden flex flex-col gap-0">
         {/* Header Section */}
         <div className="px-6 pt-6 pb-4 border-b border-border-glass/40 flex items-start gap-3.5">
           <div className="flex size-11 items-center justify-center rounded-lg bg-accent/12 text-accent border border-accent/20 shrink-0">

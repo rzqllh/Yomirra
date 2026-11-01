@@ -210,7 +210,7 @@ function MangaDetailContent({
     if (chapterLoadError || (!startChapterId && !continueChapterId)) {
       return (
         <div className="w-full md:w-auto mt-2 md:mt-0">
-          <Button disabled variant="outline" className="w-full md:w-auto md:min-w-[210px] rounded-[14px] h-[52px] md:h-[48px] text-base font-bold bg-surface-raised border-border-default opacity-60">
+          <Button disabled variant="outline" className="w-full md:w-auto md:min-w-[210px] rounded-md h-[52px] md:h-[48px] text-base font-bold bg-surface-raised border-border-default opacity-60">
             {chapterLoadError ? "Chapter belum bisa dimuat" : "Belum ada chapter"}
           </Button>
         </div>
@@ -231,7 +231,7 @@ function MangaDetailContent({
         <Button
           asChild
           variant="accent"
-          className="w-full md:w-auto md:min-w-[210px] md:px-6 rounded-[14px] h-[52px] md:h-[48px] text-base font-bold flex items-center justify-center gap-2.5 bg-accent hover:bg-accent/90 text-white shadow-md active:scale-[0.98] transition-all"
+          className="w-full md:w-auto md:min-w-[210px] md:px-6 rounded-md h-[52px] md:h-[48px] text-base font-bold flex items-center justify-center gap-2.5 bg-accent hover:bg-accent/90 text-white shadow-md active:scale-[0.98] transition-all"
         >
           <Link
             href={targetHref}

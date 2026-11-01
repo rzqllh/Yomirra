@@ -58,11 +58,13 @@
   --spacing-16: 64px;
 
   /* Radius (Squircle Concentric Scale) */
-  --radius-xs: 8px;
-  --radius-sm: 12px;
-  --radius-md: 18px;
-  --radius-lg: 24px;
-  --radius-xl: 28px;
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 22px;
+  --radius-2xl: 28px;
+  --radius-3xl: 32px;
   --radius-sheet: 32px;
   --radius-full: 9999px;
 
@@ -685,10 +687,11 @@ section[aria-label*="Notifications" i] {
 }
 
 [data-sonner-toast][data-styled="true"] {
-  border-radius: 20px !important;
-  padding: 12px 16px !important;
+  position: relative !important;
+  border-radius: var(--radius-xl, 22px) !important;
+  padding: 14px 44px 14px 16px !important;
   display: flex !important;
-  align-items: center !important;
+  align-items: flex-start !important;
   gap: 12px !important;
   backdrop-filter: blur(24px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
@@ -705,6 +708,7 @@ section[aria-label*="Notifications" i] {
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 auto !important;
+    padding: 14px 40px 14px 14px !important;
   }
 }
 
@@ -792,13 +796,14 @@ section[aria-label*="Notifications" i] {
   align-items: center !important;
   justify-content: center !important;
   flex-shrink: 0 !important;
+  margin-top: 1px !important;
 }
 
 /* Content (Title & Description) */
 [data-sonner-toast] [data-content] {
   display: flex !important;
   flex-direction: column !important;
-  gap: 2px !important;
+  gap: 3px !important;
   flex: 1 1 auto !important;
   min-width: 0 !important;
 }
@@ -809,6 +814,8 @@ section[aria-label*="Notifications" i] {
   line-height: 1.35 !important;
   letter-spacing: -0.01em !important;
   color: inherit !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
 }
 
 [data-sonner-toast] [data-description] {
@@ -817,11 +824,14 @@ section[aria-label*="Notifications" i] {
   line-height: 1.4 !important;
   opacity: 0.85 !important;
   color: inherit !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
 }
 
 /* Action Button */
 [data-sonner-toast] [data-button] {
-  margin-left: auto !important;
+  align-self: center !important;
+  margin-left: 8px !important;
   border-radius: 9999px !important;
   padding: 6px 14px !important;
   font-size: 12px !important;
@@ -835,6 +845,17 @@ section[aria-label*="Notifications" i] {
   transition: all 0.15s ease !important;
   white-space: nowrap !important;
   flex-shrink: 0 !important;
+}
+
+@media (max-width: 600px) {
+  [data-sonner-toast][data-styled="true"] {
+    flex-wrap: wrap !important;
+  }
+  [data-sonner-toast] [data-button] {
+    margin-left: 44px !important;
+    margin-top: 6px !important;
+    align-self: flex-start !important;
+  }
 }
 
 .light [data-sonner-toast] [data-button] {
@@ -854,12 +875,14 @@ section[aria-label*="Notifications" i] {
 
 /* Close Button (X on right side) */
 [data-sonner-toast] [data-close-button] {
-  position: static !important;
+  position: absolute !important;
+  top: 10px !important;
+  right: 10px !important;
   transform: none !important;
-  margin-left: auto !important;
-  align-self: center !important;
-  width: 44px !important;
-  height: 44px !important;
+  margin: 0 !important;
+  align-self: auto !important;
+  width: 28px !important;
+  height: 28px !important;
   border-radius: 9999px !important;
   border: none !important;
   background: transparent !important;
