@@ -183,11 +183,12 @@ describe("MangaCard", () => {
         <MangaCard
           variant="discovery"
           viewMode="compact"
-          sourceId="doujindesu"
+          sourceId="shinigami"
           manga={{
             id: "missing-synopsis",
             title: "Missing Synopsis",
             coverUrl: "https://example.com/cover.jpg",
+            contentRating: "safe",
           }}
         />
       </QueryClientProvider>
@@ -197,7 +198,7 @@ describe("MangaCard", () => {
       expect(screen.getByText("Cerita bersih dari detail.")).toBeDefined();
     });
     expect(apiClient.getDetail).toHaveBeenCalledWith(
-      "doujindesu",
+      "shinigami",
       "missing-synopsis",
       expect.objectContaining({ signal: expect.anything() })
     );
