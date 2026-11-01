@@ -287,6 +287,21 @@ export function MangaCard({
     return false;
   }, [updateStore.items, manga.id, sourceId]);
 
+  // Fail closed at render time as well as at the API boundary. This also
+  // protects already-mounted and cached lists when NSFW is switched OFF.
+  // Do not mount card covers, synopsis queries, bookmark or reader links.
+  if (hideNsfw && (
+    classifyContent(manga) === "NSFW" ||
+    sourceObj?.isNsfw === true ||
+    cardSource?.isNsfw === true
+  )) {
+    return (
+      <article role="status" className={cn("flex min-h-24 items-center justify-center rounded-xl border border-border-subtle bg-surface-raised p-4 text-center text-sm text-text-secondary", className)}>
+        Konten disembunyikan oleh pengaturan NSFW
+      </article>
+    );
+  }
+
   // ==========================================
   // PROGRESS VARIANT (Bookmark / Riwayat)
   // ==========================================
