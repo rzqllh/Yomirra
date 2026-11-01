@@ -231,6 +231,31 @@ export function MangaCard({
     isCanonicalBindingAvailable(binding, disabledSources)
   );
   const isMultiSource = availableBindings.length > 1;
+  const noEligibleSource =
+    (effectiveBindings.length > 0 && availableBindings.length === 0) ||
+    (effectiveBindings.length === 0 && isUnavailable);
+  const onlyBinding = availableBindings.length === 1 ? availableBindings[0] : null;
+  // A filtered canonical card must not navigate through a disabled primary binding.
+  const cardDetailHref = getMangaDetailHref(
+    onlyBinding?.sourceId ?? sourceId,
+    onlyBinding?.mangaId ?? manga.id,
+    fullPath
+  );
+  const handleCardOpen = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (noEligibleSource) {
+      event.preventDefault();
+      return;
+    }
+    if (isMultiSource) {
+      event.preventDefault();
+      setIsSourceDialogOpen(true);
+    }
+  };
+  const cardAriaLabel = noEligibleSource
+    ? `Sumber tidak tersedia untuk ${manga.title}`
+    : isMultiSource
+      ? `Pilih sumber untuk ${manga.title}`
+      : `Lihat ${manga.title}`;
   const [isSourceDialogOpen, setIsSourceDialogOpen] = React.useState(false);
 
   const mangaKey = `${sourceId}::${manga.id}` as MangaKey;
@@ -453,18 +478,16 @@ export function MangaCard({
         style={vtStyle}
       >
         <Link
-          href={getMangaDetailHref(sourceId, manga.id, fullPath)}
+          href={cardDetailHref}
           className={cn(
             mangaCardInteraction.link,
-            "flex min-w-0 flex-1 gap-2.5 cursor-pointer rounded-l-md"
+            "flex min-w-0 flex-1 gap-2.5 rounded-l-md",
+            noEligibleSource ? "cursor-not-allowed opacity-60" : "cursor-pointer"
           )}
-          aria-label={isMultiSource ? `Pilih sumber untuk ${manga.title}` : `Baca ${manga.title}`}
+          aria-label={cardAriaLabel}
+          aria-disabled={noEligibleSource || undefined}
           aria-haspopup={isMultiSource ? "dialog" : undefined}
-          onClick={(event) => {
-            if (!isMultiSource) return;
-            event.preventDefault();
-            setIsSourceDialogOpen(true);
-          }}
+          onClick={handleCardOpen}
         >
           {/* Cover Frame with Ranking Badge Overlay */}
           <MangaCardCoverFrame className="vt-hover h-full w-[74px] border-y-0 border-l-0 rounded-l-md rounded-r-xs group-hover:shadow-lg group-hover:shadow-accent/5">
@@ -629,14 +652,12 @@ export function MangaCard({
           className="w-[84px] shrink-0 sm:w-[96px] md:w-[104px]"
         >
           <Link
-            href={getMangaDetailHref(sourceId, manga.id, fullPath)}
-            className="block h-full cursor-pointer rounded-sm outline-none"
-            aria-label={isMultiSource ? `Pilih sumber untuk ${manga.title}` : `Lihat ${manga.title}`}
-            onClick={(event) => {
-              if (!isMultiSource) return;
-              event.preventDefault();
-              setIsSourceDialogOpen(true);
-            }}
+            href={cardDetailHref}
+            className={cn("block h-full rounded-sm outline-none", noEligibleSource ? "cursor-not-allowed opacity-60" : "cursor-pointer")}
+            aria-label={cardAriaLabel}
+            aria-disabled={noEligibleSource || undefined}
+            aria-haspopup={isMultiSource ? "dialog" : undefined}
+            onClick={handleCardOpen}
           >
             <MangaCardCoverFrame className="vt-hover h-full w-full rounded-sm shadow-xs border-border-subtle/60">
               <MangaCover
@@ -654,14 +675,12 @@ export function MangaCard({
           <div>
             <div className="flex items-start justify-between gap-2">
               <Link
-                href={getMangaDetailHref(sourceId, manga.id, fullPath)}
-                className={cn(mangaCardInteraction.link, "min-w-0 flex-1 rounded-sm")}
+                href={cardDetailHref}
+                className={cn(mangaCardInteraction.link, "min-w-0 flex-1 rounded-sm", noEligibleSource && "cursor-not-allowed opacity-60")}
+                aria-label={cardAriaLabel}
+                aria-disabled={noEligibleSource || undefined}
                 aria-haspopup={isMultiSource ? "dialog" : undefined}
-                onClick={(event) => {
-                  if (!isMultiSource) return;
-                  event.preventDefault();
-                  setIsSourceDialogOpen(true);
-                }}
+                onClick={handleCardOpen}
               >
                 <MangaCardTitle lines={1} className={cn("vt-title-hover", mangaCardInteraction.title)} title={manga.title}>
                   {manga.title}
@@ -769,16 +788,13 @@ export function MangaCard({
       style={vtStyle}
     >
       <Link
-        href={getMangaDetailHref(sourceId, manga.id, fullPath)}
+        href={cardDetailHref}
         transitionTypes={["nav-forward"]}
-        className={cn(mangaCardInteraction.link, "group flex flex-col rounded-xs")}
-        aria-label={isMultiSource ? `Pilih sumber untuk ${manga.title}` : `Lihat ${manga.title}`}
+        className={cn(mangaCardInteraction.link, "group flex flex-col rounded-xs", noEligibleSource && "cursor-not-allowed opacity-60")}
+        aria-label={cardAriaLabel}
+        aria-disabled={noEligibleSource || undefined}
         aria-haspopup={isMultiSource ? "dialog" : undefined}
-        onClick={(event) => {
-          if (!isMultiSource) return;
-          event.preventDefault();
-          setIsSourceDialogOpen(true);
-        }}
+        onClick={handleCardOpen}
       >
         <motion.div
           layoutId={reducedMotion ? undefined : transitionNames.cover}
