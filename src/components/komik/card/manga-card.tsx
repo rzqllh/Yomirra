@@ -218,7 +218,8 @@ export function MangaCard({
 
   const { readingStatusByManga } = useCollectionStore();
   const updateStore = useUpdateStore();
-  const disabledSources = useSourcePreferencesStore((state) => state.disabledSources);
+  const storedDisabledSources = useSourcePreferencesStore((state) => state.disabledSources);
+  const disabledSources = Array.isArray(storedDisabledSources) ? storedDisabledSources : [];
   const hideNsfw = useSettingsStore((state) => state.hideNsfw);
   const isUnknownContent = hideNsfw && classifyContent(manga) === "UNKNOWN";
   const removeMangaHistory = useHistoryStore((state) => state.removeMangaHistory);
@@ -246,7 +247,12 @@ export function MangaCard({
   const isMultiSource = availableBindings.length > 1;
   const noEligibleSource =
     (effectiveBindings.length > 0 && availableBindings.length === 0) ||
-    (effectiveBindings.length === 0 && isUnavailable);
+    (effectiveBindings.length === 0 && (
+      isUnavailable ||
+      disabledSources.includes(sourceId) ||
+      sourceObj?.isEnabled === false ||
+      sourceObj?.isInstalled === false
+    ));
   const onlyBinding = availableBindings.length === 1 ? availableBindings[0] : null;
   const cardSourceId = onlyBinding?.sourceId ?? sourceId;
   const cardMangaId = onlyBinding?.mangaId ?? manga.id;
