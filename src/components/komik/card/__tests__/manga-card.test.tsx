@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
 import { useUpdateStore } from "@/shared/store/update-store";
+import { useSettingsStore } from "@/shared/store/settings-store";
 import { MangaCard, CollapsibleBadgeRow } from "../manga-card";
 
 vi.mock("next/navigation", () => ({
@@ -61,6 +62,7 @@ describe("MangaCard", () => {
   beforeEach(() => {
     document.body.innerHTML = "";
     vi.clearAllMocks();
+    useSettingsStore.setState({ hideNsfw: true });
 
     class ImmediateIntersectionObserver {
       private callback: IntersectionObserverCallback;
@@ -228,6 +230,7 @@ describe("MangaCard", () => {
               id: "same-manga",
               title: "Same Manga",
               coverUrl: "https://example.com/cover.jpg",
+              contentRating: "safe",
             }}
           />
           <MangaCard
@@ -238,6 +241,7 @@ describe("MangaCard", () => {
               id: "same-manga",
               title: "Same Manga Copy",
               coverUrl: "https://example.com/cover.jpg",
+              contentRating: "safe",
             }}
           />
         </>
@@ -453,4 +457,39 @@ describe("MangaCard", () => {
     expect(screen.getByText("95%")).toBeDefined();
     expect(screen.queryByText("100%")).toBeNull();
   });
+
+  it.each([
+    ["discovery", "grid"],
+    ["discovery", "compact"],
+    ["rank", "grid"],
+    ["progress", "grid"],
+  ] as const)("masks UNKNOWN cover before acknowledgement for %s/%s cards", (variant, viewMode) => {
+    const { rerender } = render(<MangaCard
+      variant={variant}
+      viewMode={viewMode}
+      sourceId="shinigami"
+      manga={{ id: "unknown-title", title: "Unknown title", coverUrl: "https://example.com/unverified.jpg" }}
+    />);
+    expect(screen.getByTestId("unverified-cover").textContent).toContain("Rating belum terverifikasi");
+    useSettingsStore.setState({ hideNsfw: false });
+    rerender(<MangaCard
+      variant={variant}
+      viewMode={viewMode}
+      sourceId="shinigami"
+      manga={{ id: "unknown-title", title: "Unknown title", coverUrl: "https://example.com/unverified.jpg" }}
+    />);
+    expect(screen.queryByTestId("unverified-cover")).toBeNull();
+  });
+
+  it("does not issue compact-card synopsis requests for unverified titles while NSFW is OFF", () => {
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(<QueryClientProvider client={queryClient}><MangaCard
+      variant="discovery" viewMode="compact" sourceId="shinigami"
+      manga={{ id: "unknown-synopsis", title: "Unknown synopsis", coverUrl: "https://example.com/unknown.jpg" }}
+    /></QueryClientProvider>);
+    expect(screen.getByTestId("unverified-cover")).toBeDefined();
+    expect(apiClient.getDetail).not.toHaveBeenCalled();
+    queryClient.clear();
+  });
+
 });
