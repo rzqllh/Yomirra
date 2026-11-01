@@ -23,10 +23,10 @@ function createCacheStorage(cacheNames: string[]) {
 describe("PWA cache policy", () => {
   it("keeps explicit downloads durable while automatic caches use the current version", () => {
     expect(EXPLICIT_DOWNLOADS_CACHE_NAME).toBe("yomirra-chapter-cache-v1");
-    expect(READING_BUFFER_CACHE_NAME).toBe("yomirra-reading-buffer-v2");
-    expect(MANGA_IMAGES_CACHE_NAME).toBe("yomirra-manga-images-v2");
-    expect(MANGA_METADATA_CACHE_NAME).toBe("yomirra-manga-metadata-v2");
-    expect(PAGES_CACHE_NAME).toBe("yomirra-pages-v2");
+    expect(READING_BUFFER_CACHE_NAME).toBe("yomirra-reading-buffer-v3");
+    expect(MANGA_IMAGES_CACHE_NAME).toBe("yomirra-manga-images-v3");
+    expect(MANGA_METADATA_CACHE_NAME).toBe("yomirra-manga-metadata-v3");
+    expect(PAGES_CACHE_NAME).toBe("yomirra-pages-v3");
   });
 
   it("treats account, admin, and auth surfaces as session-sensitive without overmatching siblings", () => {
@@ -56,6 +56,10 @@ describe("PWA cache policy", () => {
       "yomirra-manga-images",
       "yomirra-manga-metadata",
       "yomirra-pages",
+      "yomirra-reading-buffer-v2",
+      "yomirra-manga-images-v2",
+      "yomirra-manga-metadata-v2",
+      "yomirra-pages-v2",
       READING_BUFFER_CACHE_NAME,
       MANGA_IMAGES_CACHE_NAME,
       MANGA_METADATA_CACHE_NAME,
