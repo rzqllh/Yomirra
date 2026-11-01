@@ -29,7 +29,8 @@ Documentation changes and code changes require scoped PR/checks; when starting w
 | CAT-03..04 | Multi-source picker; source health ordering | P01 | P0 | ENG:TBD | IN_PROGRESS | Existing manual picker; PR #86 (`e4ea15f`) sorts by observed request health, tests **not run**; deep source health still pending |
 | CAT-05..07 | Clear unhealthy/unknown provider statuses; exact chosen source route; NSFW eligible count | P01 | P0 | ENG:TBD | PLANNED | Provider chooser and content guard tests |
 | CAT-08..10 | Cross-page/cache/session stability, UID-local progress, no work-ID breakage | P01/P02 | P0 | ENG:TBD | PLANNED | Existing source `canonical:{title}` and Redis `source:{id}:{mangaId}` split |
-| CAT-11 | Healthy last-used source first but user explicitly chooses | P01 | P0 | ENG:TBD | IMPLEMENTED | PR #86 merged Preview `21b05db`; full GitHub CI PASS; exact-SHA Preview deployment/physical QA NOT_RUN |
+| CAT-11 | Healthy last-used source first when 2+ sources, manual picker | P01 | P0 | ENG:TBD | IMPLEMENTED | PR #86 merged Preview `21b05db`; full GitHub CI PASS; exact-SHA Preview deployment/physical QA NOT_RUN |
+| CAT-15 | 1 eligible source → exact detail; 2+ → picker; 0 → block invalid navigation | P01 | P0 | ENG:TBD | IN_PROGRESS | Owner locked 2026-11-01; scoped routing regression branch `fix/catalog-single-source-routing-20261101`; GitHub CI/Preview live acceptance NOT_RUN |
 | CAT-12..14 | Verified cross-DB IDs; Redis is not authoritative identity; stable mapping across restarts | P01/P06 | P0 | ENG:TBD | PLANNED | B-09, B-11; assess saved-title schema before migrations |
 | META-01 | Metadata provenance and UNKNOWN warning after source lookup | P01/P06 | P0 | ENG:TBD | PLANNED | Existing providers and MAL; no full AniList metadata fallback |
 | META-02 | Conditional broadened AniList use *after* terms/rate review | P06 | P1 | PRODUCT:owner | BLOCKED | B-11; existing AniList rating fallback already exists |
