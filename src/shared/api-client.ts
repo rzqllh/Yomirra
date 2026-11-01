@@ -102,19 +102,6 @@ class ApiClient {
 
     const finalFilters = { ...filters };
 
-    if (isNsfwFiltered) {
-      const nsfwTags = ["-adult", "-mature", "-smut", "-nsfw", "-ecchi"];
-      const existingGenres = finalFilters["genre[]"];
-
-      if (Array.isArray(existingGenres)) {
-        finalFilters["genre[]"] = [...existingGenres, ...nsfwTags];
-      } else if (typeof existingGenres === "string") {
-        finalFilters["genre[]"] = [existingGenres, ...nsfwTags];
-      } else {
-        finalFilters["genre[]"] = nsfwTags;
-      }
-    }
-
     if (Object.keys(finalFilters).length > 0) {
       const sp = new URLSearchParams();
       Object.entries(finalFilters).forEach(([k, v]) => {
@@ -142,19 +129,6 @@ class ApiClient {
     let url = `/api/sources/search?q=${encodeURIComponent(query)}&sources=${sourceIds.join(",")}&page=${page}&hideNsfw=${isNsfwFiltered}`;
 
     const finalFilters = { ...filters };
-
-    if (isNsfwFiltered) {
-      const nsfwTags = ["-adult", "-mature", "-smut", "-nsfw", "-ecchi"];
-      const existingGenres = finalFilters["genre[]"];
-
-      if (Array.isArray(existingGenres)) {
-        finalFilters["genre[]"] = [...existingGenres, ...nsfwTags];
-      } else if (typeof existingGenres === "string") {
-        finalFilters["genre[]"] = [existingGenres, ...nsfwTags];
-      } else {
-        finalFilters["genre[]"] = nsfwTags;
-      }
-    }
 
     if (Object.keys(finalFilters).length > 0) {
       const sp = new URLSearchParams();

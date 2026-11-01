@@ -129,9 +129,10 @@ export async function GET(req: NextRequest) {
       CACHE_TTL.SEARCH
     );
 
-    // If all results are errors, we might want to delete the cache key so it retries next time
-    const allErrors = Object.values(cachedData).every(r => r.error);
-    if (allErrors && isRedisConfigured) {
+    // Do not preserve partial or complete adapter failures in cache:
+    // avoid locking transient upstream provider errors for the full TTL.
+    const hasAnyError = Object.values(cachedData).some((r) => Boolean(r.error));
+    if (hasAnyError && isRedisConfigured) {
       await redis.del(cacheKey).catch(() => {});
     }
 
