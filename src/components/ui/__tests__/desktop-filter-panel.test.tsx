@@ -1,11 +1,11 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { FilterDrawerShell } from "../filter-drawer-shell";
 
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 describe("desktop filters", () => {
-  it("uses a nonmodal integrated panel, applies without closing, and lets the user collapse it", () => {
+  it("uses a nonmodal integrated panel, applies without closing, and lets the user collapse it", async () => {
     vi.stubGlobal("matchMedia", vi.fn(() => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() } as unknown as MediaQueryList)));
     const apply = vi.fn();
     render(<><div id="test-filter-panel" /><FilterDrawerShell title="Filter Jelajah" description="Filters" activeCount={0} onApply={apply} onReset={vi.fn()} desktopPortalId="test-filter-panel"><p>Genre controls</p></FilterDrawerShell></>);
@@ -17,6 +17,8 @@ describe("desktop filters", () => {
     expect(apply).toHaveBeenCalledTimes(1);
     expect(screen.getByText("Genre controls")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: /^Filter$/ }));
-    expect(screen.queryByText("Genre controls")).toBeNull();
+    await waitFor(() => {
+      expect(screen.queryByText("Genre controls")).toBeNull();
+    });
   });
 });
