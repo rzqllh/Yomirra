@@ -14,6 +14,7 @@ import {
 } from "vitest";
 import { HomeFeedClient, SPOTLIGHT_AUTOPLAY_MS } from "@/components/home/home-feed-client";
 import { HomeView } from "@/components/home/home-view";
+import { EditorialSpotlight } from "@/components/home/editorial-spotlight";
 import { HomeHero, HERO_COLLAGE_CACHE_KEY, isVerifiedSafeHeroCandidate } from "@/components/home/home-hero";
 import { HomeLeaderboardPanel } from "@/components/home/home-leaderboard-panel";
 import {
@@ -144,6 +145,7 @@ const sampleLatest: HomeFeedManga[] = [
     sourceName: "Source A",
     latestChapter: "Ch. 50",
     description: "Sinopsis petualangan epik komik alpha.",
+    contentRating: "safe",
   },
   {
     id: "manga-feat-2",
@@ -153,6 +155,7 @@ const sampleLatest: HomeFeedManga[] = [
     sourceName: "Source B",
     latestChapter: "Ch. 12",
     description: "Sinopsis komik beta yang mendebarkan.",
+    contentRating: "safe",
   },
 ];
 
@@ -166,6 +169,31 @@ describe("Yomirra Editorial Home Components", () => {
 
   afterEach(() => {
     vi.useRealTimers();
+  });
+
+  describe("Spotlight content safety", () => {
+    it("masks unknown artwork and synopsis without launching detail enrichment", () => {
+      mockSettingsState.hideNsfw = true;
+      const { container } = render(<EditorialSpotlight
+        sourceId="shinigami" sourceName="Shinigami"
+        manga={{ id: "unknown-home", title: "Unknown home", coverUrl: "https://example.com/unverified-spotlight.jpg", description: "Unreviewed synopsis" }}
+      />);
+      expect(screen.getAllByText(/Rating belum terverifikasi/).length).toBeGreaterThan(0);
+      expect(container.querySelector('img[src*="unverified-spotlight"]')).toBeNull();
+      expect(screen.queryByText("Unreviewed synopsis")).toBeNull();
+      expect(screen.getByRole("link", { name: "Lihat komik Unknown home" })).toBeTruthy();
+    });
+
+    it("does not render a confirmed adult-only provider or restricted title with NSFW OFF", () => {
+      mockSettingsState.hideNsfw = true;
+      const view = render(<EditorialSpotlight
+        sourceId="doujindesu" sourceName="Doujindesu"
+        manga={{ id: "adult-home", title: "Restricted title", coverUrl: "https://example.com/explicit.jpg", contentRating: "safe" }}
+      />);
+      expect(screen.getByRole("status").textContent).toContain("Konten disembunyikan");
+      expect(view.container.querySelector("img")).toBeNull();
+      expect(screen.queryByText("Restricted title")).toBeNull();
+    });
   });
 
   describe("Hero cached cover content safety", () => {
