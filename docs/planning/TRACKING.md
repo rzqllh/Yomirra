@@ -41,7 +41,7 @@ Documentation changes and code changes require scoped PR/checks; when starting w
 | IDs | Scope / evidence starting point | Phase | Priority | Owner | Status | Evidence / next |
 | --- | --- | --- | --- | --- | --- | --- |
 | NS-01..02 | `Tampilkan NSFW` default OFF; confirmed restricted source/title excluded | P01 | P0 | ENG:TBD | IN_PROGRESS | NS-01 UI PR #92 merged `75153e7`, full source CI PASS; NS-02 full cache/Reader/source exclusions and UNKNOWN warning unresolved |
-| NS-03..04 | UNKNOWN shown with explicit warning; filter/tag and stored URL guard | P01 | P0 | ENG:TBD | IN_PROGRESS | Owner approved Issue #101: general UNKNOWN warned, MAL remains strict white-only. UI/Reader/cache/deep-link test gates still OPEN |
+| NS-03..04 | UNKNOWN shown with explicit warning; filter/tag and stored URL guard | P01 | P0 | ENG:TBD | IN_PROGRESS | PR #103 `dcffbb90` and #104 `1ad32996` merged to Preview with GitHub Verify & Build + Chromium/WebKit Smoke PASS. Broader Home/Quick Search/PWA checks and real Preview runtime remain OPEN; MAL stays strict white-only |
 | NS-05..07 | ON→OFF cache/personal views reclassified, persistence, reporting | P01 | P0 | ENG:TBD | PLANNED | PWA cache 7/14d; no destructive data rewrite |
 | SAFE-07 | PWA/cache/direct reader/display source isolation | P01/P03 | P0 | ENG:TBD | PLANNED | Read `src/app/sw.ts`, old data B-04 |
 | RD-01..03 | Open/re-read/failure do not incorrectly complete or regress milestones | P02 | P0 | ENG:TBD | PLANNED | `READING_DATA.md`, B-05 |
