@@ -556,7 +556,7 @@ export function MangaCard({
               <MangaCardMeta className="truncate pr-2">{manga.latestChapter || "Chapter belum tersedia"}</MangaCardMeta>
               {timeText && <MangaCardMeta className="whitespace-nowrap text-[10px] text-text-muted">{timeText}</MangaCardMeta>}
             </div>
-            {noEligibleSource && <MangaCardMeta className="text-status-error-fg font-semibold">Sumber tidak tersedia</MangaCardMeta>
+            {noEligibleSource && <MangaCardMeta className="text-status-error-fg font-semibold">Sumber tidak tersedia</MangaCardMeta>}
           </div>
         </Link>
 
