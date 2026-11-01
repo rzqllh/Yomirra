@@ -169,6 +169,20 @@ describe("Header & Hero System (Squircle & Reusable)", () => {
       ).toBeTruthy();
       expect(screen.getByRole("search")).toBeTruthy();
     });
+
+    it("renders discovery quick action links in zero-history view and returning view", () => {
+      // 1. Zero history
+      const { unmount } = render(<HomeHero />);
+      expect(screen.getByRole("link", { name: /populer/i }).getAttribute("href")).toBe("/popular");
+      expect(screen.getByRole("link", { name: /jelajah/i }).getAttribute("href")).toBe("/library");
+      unmount();
+
+      // 2. Returning reader
+      mockHistoryItems = { "source-a::title-a": { chapterId: "1" } };
+      render(<HomeHero />);
+      expect(screen.getByRole("link", { name: /populer/i }).getAttribute("href")).toBe("/popular");
+      expect(screen.getByRole("link", { name: /koleksi/i }).getAttribute("href")).toBe("/bookmark");
+    });
   });
 
   describe("HeaderActions & Dropdown Popover", () => {
