@@ -116,7 +116,12 @@ export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
 
   // Gate immediately during ON→OFF rerenders, before the effect updates state.
   const visibleCovers = hideNsfw
-    ? sessionCovers.filter(isVerifiedSafeHeroCandidate)
+    ? sessionCovers.filter((cover) =>
+        isVerifiedSafeHeroCandidate(cover) &&
+        candidates.some((current) =>
+          current.coverUrl === cover.coverUrl && isVerifiedSafeHeroCandidate(current)
+        )
+      )
     : sessionCovers;
 
   // Returning Reader: Minimal, compact global search without collage or promotional card
