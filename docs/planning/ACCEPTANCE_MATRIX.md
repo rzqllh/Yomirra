@@ -49,7 +49,7 @@ Mandatory baseline commands: `pnpm typecheck`, `pnpm lint`, `pnpm test --run`, `
 | NS-07 | Trigger rating report/correction and unknown-state view | Clear feedback, provenance and warning; no false safe assumption | classification/UI test | NOT_RUN |
 | SAFE-07 | Seed stale PWA metadata/image caches for NSFW and switch OFF | Confirmed restricted cached assets not re-exposed; unknown warned; valid offline downloads handled without silent data loss | Service Worker + actual PWA | NOT_RUN |
 
-**Conflict gate:** MAL safe-mode currently returns only `nsfw=white`, while owner global UNKNOWN policy permits warning. Keep stricter MAL path while unresolved, record product decision/evidence before adjusting. MAL `gray/black` must not be misclassified safe.
+**Owner decision recorded 2026-11-01 (Issue #101):** general-source UNKNOWN/missing rating may be visible **with explicit warning and no premature image reveal**; MAL safe-mode remains strictly `nsfw=white`. Keep MAL `gray/black/unknown` excluded while NSFW OFF. Disable automatic Library/History patcher without rewriting existing records; this policy approval **does not** count as UI/PWA/two-UID acceptance or authorize migration.
 
 ## P02 — Reader, durability, Firebase and offline downloads
 
