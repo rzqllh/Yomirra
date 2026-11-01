@@ -13,6 +13,9 @@ import { transitions } from "@/shared/lib/motion/tokens";
 import { cn } from "@/shared/utils/cn";
 import { normalizeSynopsis } from "@/shared/utils/normalize";
 import type { MangaItem } from "@/shared/sources/source-types";
+import { useSettingsStore } from "@/shared/store/settings-store";
+import { getSourceMetadata } from "@/shared/sources/source-registry";
+import { isContentVisible } from "@/shared/sources/content-policy";
 
 function SpotlightMetadataFallback({
   manga,
@@ -166,10 +169,22 @@ export function EditorialSpotlight({
   className,
 }: EditorialSpotlightProps) {
   const reducedMotion = useReducedMotion();
+  const hideNsfw = useSettingsStore((state) => state.hideNsfw);
+  const source = getSourceMetadata(sourceId);
+  const restricted = hideNsfw && (source?.isNsfw === true || !isContentVisible(manga, true));
+  const unverified = hideNsfw && !restricted && manga.contentRating !== "safe";
   const href = getMangaDetailHref(sourceId, manga.id, "/");
   const rawDesc = manga.description || (manga as any)?.synopsis || (manga as any)?.summary || (manga as any)?.excerpt;
   const cleanedDescription = rawDesc ? normalizeSynopsis(String(rawDesc)).trim() : "";
   const metadata = [manga.format, manga.latestChapter, sourceName].filter(Boolean);
+
+  if (restricted) {
+    return (
+      <article role="status" className={cn("ink-panel flex min-h-64 items-center justify-center rounded-xl p-6 text-sm text-text-secondary", className)}>
+        Konten disembunyikan oleh pengaturan NSFW
+      </article>
+    );
+  }
 
   return (
     <article
@@ -179,7 +194,7 @@ export function EditorialSpotlight({
         className
       )}
     >
-      {manga.coverUrl && (
+      {manga.coverUrl && !unverified && (
         <>
           <img
             src={manga.coverUrl}
@@ -213,13 +228,19 @@ export function EditorialSpotlight({
           aria-label={`Lihat komik ${manga.title}`}
         >
           <div className="aspect-[2/3] w-full max-w-[104px] overflow-hidden rounded-[10px] border border-border-subtle bg-surface-muted sm:max-w-[126px] lg:max-w-[176px]">
-            <MangaCover
-              src={manga.coverUrl}
-              alt={manga.title}
-              fallbackTitle={manga.title}
-              className="size-full"
-              imageClassName="size-full object-cover"
-            />
+            {unverified ? (
+              <div role="note" className="flex size-full items-center justify-center px-2 text-center text-xs font-semibold text-text-secondary">
+                Rating belum terverifikasi
+              </div>
+            ) : (
+              <MangaCover
+                src={manga.coverUrl}
+                alt={manga.title}
+                fallbackTitle={manga.title}
+                className="size-full"
+                imageClassName="size-full object-cover"
+              />
+            )}
           </div>
         </Link>
 
@@ -238,12 +259,18 @@ export function EditorialSpotlight({
               </h2>
             </Link>
 
-            <SpotlightSynopsis
-              manga={manga}
-              sourceId={sourceId}
-              sourceName={sourceName}
-              initialSynopsis={cleanedDescription}
-            />
+            {unverified ? (
+              <p role="note" className="mt-2 text-sm font-semibold text-status-warning-fg">
+                Rating belum terverifikasi — buka detail untuk memilih apakah konten ditampilkan.
+              </p>
+            ) : (
+              <SpotlightSynopsis
+                manga={manga}
+                sourceId={sourceId}
+                sourceName={sourceName}
+                initialSynopsis={cleanedDescription}
+              />
+            )}
 
             <div
               className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-semibold text-text-muted sm:text-xs"
