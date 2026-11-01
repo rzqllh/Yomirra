@@ -16,6 +16,7 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
   const { _hasHydrated: hasHydrated } = useOnboardingStore();
 
   const [isMounted, setIsMounted] = React.useState(false);
+  const mountTimeRef = React.useRef<number | null>(null);
   const [bootStartTime] = React.useState(() => Date.now());
   const [isReadyToExit, setIsReadyToExit] = React.useState(false);
   const [isTakingTooLong, setIsTakingTooLong] = React.useState(false);
@@ -23,6 +24,7 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
   // Preserve previous overflow on mount and restore on unmount
   React.useEffect(() => {
     setIsMounted(true);
+    mountTimeRef.current = Date.now();
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
@@ -39,7 +41,7 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
     const isBootComplete = !authLoading && hasHydrated;
 
     if (isBootComplete) {
-      const elapsed = Date.now() - bootStartTime;
+      const elapsed = Date.now() - (mountTimeRef.current ?? bootStartTime);
       const remainingTime = Math.max(0, MINIMUM_SPLASH_DURATION - elapsed);
 
       timeoutId = setTimeout(() => {
@@ -73,8 +75,28 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
     }
   }, [isReadyToExit, onComplete]);
 
-  // Prevent hydration mismatch
-  if (!isMounted) return null;
+  // Render solid cover before hydration to avoid leaking unhydrated views
+  if (!isMounted) {
+    return (
+      <div
+        data-testid="splash-screen"
+        className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden bg-surface-base text-text-primary select-none"
+      >
+        <div className="relative z-10 flex flex-col items-center justify-center w-full h-full pb-16">
+          <div className="relative size-24 sm:size-28 rounded-2xl sm:rounded-3xl overflow-hidden bg-surface-raised border border-border-subtle p-0.5 shadow-md">
+            <img
+              src="/icon-pwa.png"
+              alt="Yomirra Logo"
+              width={112}
+              height={112}
+              className="w-full h-full object-cover rounded-[14px] sm:rounded-[22px] select-none"
+              loading="eager"
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <motion.div
