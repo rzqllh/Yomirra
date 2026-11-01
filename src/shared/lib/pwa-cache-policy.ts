@@ -66,7 +66,7 @@ export function isCurrentAppCacheName(cacheName: string): boolean {
 
 // Only automatically recreated caches may be evicted. Do not treat every
 // yomirra-* cache as disposable: a future user-data cache may be durable.
-const AUTOMATIC_CACHE_NAME = /^yomirra-(?:reading-buffer|manga-images|manga-metadata|pages)(?:-v\\d+)?$/;
+const AUTOMATIC_CACHE_NAME = /^yomirra-(?:reading-buffer|manga-images|manga-metadata|pages)(?:-v\d+)?$/;
 
 export function isAutomaticAppCacheName(cacheName: string): boolean {
   return AUTOMATIC_CACHE_NAME.test(cacheName);
