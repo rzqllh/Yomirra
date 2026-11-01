@@ -8,8 +8,11 @@ This is an evidence-limited handoff as of 2026-11-01, not a declaration that P00
 - PR #102: source-scoped catalog cards with disabled/ineligible sole provider block invalid detail links; merged to `preview`, GitHub CI PASS.
 - PR #103: disabled automatic NSFW Library/History patcher and recorded owner-approved non-destructive B-04 policy; merged to `preview`, exact-head source CI PASS.
 - PR #104: tri-state content classification and gated UNKNOWN Detail/Reader/card rendering, preserving MAL strictly white-only in NSFW OFF; merged to `preview`, exact-head source CI PASS.
-- PR #105: isolated Home hero v2 safe/opt-in cover cache and Spotlight safety gates; open feature PR at this snapshot. Verify exact-head CI and integration before merge.
-- PR #106: isolated Quick Search UNKNOWN-cover masking/warning; open feature PR at this snapshot. Prior unit fixture was corrected, exact-head CI pending.
+- PR #106: isolated Quick Search UNKNOWN-cover masking/warning; merged to `preview`, exact-head source CI PASS.
+- PR #107: rotated PWA cache to v3, automatic cache eviction on NSFW ON->OFF switch while preserving user chapter downloads; merged to `preview`, exact-head source CI PASS.
+- PR #110: gated Home leaderboard restricted titles and unverified artwork with explicit badge; merged to `preview`, exact-head source CI PASS.
+- PR #111: capped GitHub Actions Vitest runner concurrency to `--maxWorkers=2`; merged to `preview`, exact-head source CI PASS.
+- PR #105: diagnosed and eliminated root-cause infinite React re-render loop on empty candidates in `HomeHero`, isolated hero collage cache by mode, gated Spotlight unverified/restricted titles, updated tests; merged to `preview`, exact-head GitHub CI PASS (run 41300940992, Verify & Build 4m55s + Browser Smoke 10m33s) and Vercel Preview READY deployment.
 
 ## External owner/provider/device gates (only these need outside action)
 | ID | Current blocker | Required next action by owner/provider | Agent-independent preparation possible |

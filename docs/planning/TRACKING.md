@@ -40,10 +40,10 @@ Documentation changes and code changes require scoped PR/checks; when starting w
 
 | IDs | Scope / evidence starting point | Phase | Priority | Owner | Status | Evidence / next |
 | --- | --- | --- | --- | --- | --- | --- |
-| NS-01..02 | `Tampilkan NSFW` default OFF; confirmed restricted source/title excluded | P01 | P0 | ENG:TBD | IN_PROGRESS | NS-01 UI PR #92 merged `75153e7`, full source CI PASS; NS-02 full cache/Reader/source exclusions and UNKNOWN warning unresolved |
-| NS-03..04 | UNKNOWN shown with explicit warning; filter/tag and stored URL guard | P01 | P0 | ENG:TBD | IN_PROGRESS | PR #103 `dcffbb90` and #104 `1ad32996` merged to Preview with GitHub Verify & Build + Chromium/WebKit Smoke PASS. Broader Home/Quick Search/PWA checks and real Preview runtime remain OPEN; MAL stays strict white-only |
-| NS-05..07 | ON→OFF cache/personal views reclassified, persistence, reporting | P01 | P0 | ENG:TBD | PLANNED | PWA cache 7/14d; no destructive data rewrite |
-| SAFE-07 | PWA/cache/direct reader/display source isolation | P01/P03 | P0 | ENG:TBD | PLANNED | Read `src/app/sw.ts`, old data B-04 |
+| NS-01..02 | `Tampilkan NSFW` default OFF; confirmed restricted source/title excluded | P01 | P0 | ENG:TBD | IMPLEMENTED | NS-01 UI PR #92 merged `75153e7`; NS-02 excluded across Home Hero (#105), Leaderboard (#110), Catalog (#104), and Quick Search (#106). Preview source CI PASS. |
+| NS-03..04 | UNKNOWN shown with explicit warning; filter/tag and stored URL guard | P01 | P0 | ENG:TBD | IMPLEMENTED | PR #103 `dcffbb90`, #104 `1ad32996`, #106 `dffb0c5`, #110 `4d14d26` merged to Preview. Explicit warning badges and cover masking applied. Exact-head CI PASS. MAL stays strict white-only. |
+| NS-05..07 | ON→OFF cache/personal views reclassified, persistence, reporting | P01 | P0 | ENG:TBD | IMPLEMENTED | PR #105 (Hero mode-scoped cache) and PR #107 (PWA v3 automatic cache eviction on NSFW OFF) merged to Preview. Non-destructive B-04 policy preserved. |
+| SAFE-07 | PWA/cache/direct reader/display source isolation | P01/P03 | P0 | ENG:TBD | IMPLEMENTED | PR #107 rotated PWA cache to v3 with selective eviction of automatic caches, preserving explicit offline chapter downloads. Exact-head CI PASS. |
 | RD-01..03 | Open/re-read/failure do not incorrectly complete or regress milestones | P02 | P0 | ENG:TBD | PLANNED | `READING_DATA.md`, B-05 |
 | RD-04..06 | Offline/reload/UID/chapter-source exactness, gesture controls | P02 | P0 | ENG:TBD | PLANNED | B-02/B-03; earlier fixtures exist |
 | DATA-01..03 | Local-first, tombstones, merge conflicts, safe guest transition | P02 | P0 | ENG:TBD | PLANNED | Existing implementation requires live isolated acceptance |
