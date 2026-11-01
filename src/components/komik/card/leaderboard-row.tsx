@@ -7,6 +7,9 @@ import type { BaseCardProps } from "./types";
 import { usePathname, useSearchParams } from "next/navigation";
 import { MangaCover } from "../manga-cover";
 import { cn } from "@/shared/utils/cn";
+import { useSettingsStore } from "@/shared/store/settings-store";
+import { classifyContent } from "@/shared/sources/content-policy";
+import { getSourceMetadata } from "@/shared/sources/source-registry";
 import {
   MangaCardCoverFrame,
   MangaCardMeta,
@@ -28,6 +31,11 @@ export function LeaderboardRow({
   density = "default",
   emphasized = false,
 }: LeaderboardRowProps) {
+  const hideNsfw = useSettingsStore((state) => state.hideNsfw);
+  const classification = classifyContent(manga);
+  const sourceIsAdultOnly = getSourceMetadata(sourceId)?.isNsfw === true;
+  const restricted = hideNsfw && (sourceIsAdultOnly || classification === "NSFW");
+  const unverified = hideNsfw && classification === "UNKNOWN";
   const scoreToDisplay = displayScore ?? manga.score;
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -47,6 +55,16 @@ export function LeaderboardRow({
       ? "h-[64px] w-12"
       : "h-[42px] w-7"
     : "h-[60px] w-10";
+
+  // The leaderboard bypasses MangaCard. Guard cached provider rows here too:
+  // never mount a confirmed restricted title or an unverified image in safe mode.
+  if (restricted) {
+    return (
+      <div role="status" className={cn("flex min-h-11 items-center rounded-lg border border-border-subtle px-3 text-xs text-text-secondary", rowGeometry)}>
+        Konten disembunyikan oleh pengaturan NSFW
+      </div>
+    );
+  }
 
   return (
     <Link
@@ -76,13 +94,19 @@ export function LeaderboardRow({
       )}
 
       <MangaCardCoverFrame className={coverGeometry}>
-        <MangaCover
-          src={manga.coverUrl}
-          alt={manga.title}
-          fallbackTitle={manga.title}
-          iconSize={20}
-          imageClassName={mangaCardInteraction.coverImage}
-        />
+        {unverified ? (
+          <div aria-label="Rating belum terverifikasi" className="flex size-full items-center justify-center bg-surface-muted px-1 text-center text-[9px] font-semibold leading-tight text-text-secondary">
+            ?
+          </div>
+        ) : (
+          <MangaCover
+            src={manga.coverUrl}
+            alt={manga.title}
+            fallbackTitle={manga.title}
+            iconSize={20}
+            imageClassName={mangaCardInteraction.coverImage}
+          />
+        )}
       </MangaCardCoverFrame>
 
       <div className="flex min-w-0 flex-1 flex-col justify-center gap-0.5 py-0.5">
@@ -96,6 +120,9 @@ export function LeaderboardRow({
         >
           {manga.title}
         </MangaCardTitle>
+        {unverified && (
+          <span className="text-[10px] font-semibold text-status-warning-fg">Rating belum terverifikasi</span>
+        )}
         <div className="flex items-center gap-2 text-[10.5px] font-semibold text-text-secondary sm:text-[11.5px]">
           <div className="flex items-center gap-1">
             <Star
