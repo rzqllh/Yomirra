@@ -9,7 +9,7 @@ describe('NSFW cache invalidation on opt-out', () => {
   });
 
   it('evicts automatic caches but preserves explicit downloads and unrelated storage', async () => {
-    const names = new Set([EXPLICIT_DOWNLOADS_CACHE_NAME, MANGA_IMAGES_CACHE_NAME, MANGA_METADATA_CACHE_NAME, PAGES_CACHE_NAME, 'third-party-cache']);
+    const names = new Set([EXPLICIT_DOWNLOADS_CACHE_NAME, MANGA_IMAGES_CACHE_NAME, MANGA_METADATA_CACHE_NAME, PAGES_CACHE_NAME, 'third-party-cache', 'yomirra-saved-offline-notes-v1']);
     const storage = {
       keys: vi.fn(async () => Array.from(names)),
       delete: vi.fn(async (name: string) => names.delete(name)),
@@ -22,6 +22,7 @@ describe('NSFW cache invalidation on opt-out', () => {
     expect(names.has(PAGES_CACHE_NAME)).toBe(false);
     expect(names.has(EXPLICIT_DOWNLOADS_CACHE_NAME)).toBe(true);
     expect(names.has('third-party-cache')).toBe(true);
+    expect(names.has('yomirra-saved-offline-notes-v1')).toBe(true);
   });
 
   it('does not evict caches for NSFW opt-in or redundant safe-mode selection', async () => {
