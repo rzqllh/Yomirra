@@ -1,5 +1,39 @@
 import { useSettingsStore } from '../settings-store';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { EXPLICIT_DOWNLOADS_CACHE_NAME, MANGA_IMAGES_CACHE_NAME, MANGA_METADATA_CACHE_NAME, PAGES_CACHE_NAME } from '@/shared/lib/pwa-cache-policy';
+
+describe('NSFW cache invalidation on opt-out', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    useSettingsStore.setState({ hideNsfw: true });
+  });
+
+  it('evicts automatic caches but preserves explicit downloads and unrelated storage', async () => {
+    const names = new Set([EXPLICIT_DOWNLOADS_CACHE_NAME, MANGA_IMAGES_CACHE_NAME, MANGA_METADATA_CACHE_NAME, PAGES_CACHE_NAME, 'third-party-cache']);
+    const storage = {
+      keys: vi.fn(async () => Array.from(names)),
+      delete: vi.fn(async (name: string) => names.delete(name)),
+    };
+    vi.stubGlobal('caches', storage);
+    useSettingsStore.setState({ hideNsfw: false });
+    useSettingsStore.getState().setHideNsfw(true);
+    await vi.waitFor(() => expect(storage.delete).toHaveBeenCalledWith(MANGA_METADATA_CACHE_NAME));
+    expect(names.has(MANGA_IMAGES_CACHE_NAME)).toBe(false);
+    expect(names.has(PAGES_CACHE_NAME)).toBe(false);
+    expect(names.has(EXPLICIT_DOWNLOADS_CACHE_NAME)).toBe(true);
+    expect(names.has('third-party-cache')).toBe(true);
+  });
+
+  it('does not evict caches for NSFW opt-in or redundant safe-mode selection', async () => {
+    const storage = { keys: vi.fn(async () => []), delete: vi.fn(async () => false) };
+    vi.stubGlobal('caches', storage);
+    useSettingsStore.setState({ hideNsfw: true });
+    useSettingsStore.getState().setHideNsfw(true);
+    useSettingsStore.getState().setHideNsfw(false);
+    await Promise.resolve();
+    expect(storage.keys).not.toHaveBeenCalled();
+  });
+});
 
 describe('SettingsStore Notification Preferences', () => {
   beforeEach(() => {
