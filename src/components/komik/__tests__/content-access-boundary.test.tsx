@@ -39,29 +39,18 @@ describe("mounted content safety", () => {
     expect(screen.getByText("Konten disembunyikan")).toBeTruthy();
   });
 
-  it("warns about UNKNOWN before mounting detail, Reader image or request effects", () => {
+  it("permits unrated or missing-rating content without positive adult signals to mount directly (D-01)", () => {
     const fetchPages = vi.fn();
-    function Pages() { useEffect(fetchPages, []); return <p>Unknown chapter images</p>; }
+    function Pages() { useEffect(fetchPages, []); return <p>Unrated chapter images</p>; }
     render(<ContentAccessBoundary sourceId="mangadex" item={{ id: "unverified-1", contentRating: "unknown" }}><Pages /></ContentAccessBoundary>);
-    expect(screen.getByText("Rating belum terverifikasi")).toBeTruthy();
-    expect(screen.queryByText("Unknown chapter images")).toBeNull();
-    expect(fetchPages).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: "Lanjutkan dan tampilkan konten" }));
-    expect(screen.getByText("Unknown chapter images")).toBeTruthy();
+    expect(screen.getByText("Unrated chapter images")).toBeTruthy();
     expect(fetchPages).toHaveBeenCalledOnce();
-    expect(screen.getByText(/klasifikasi konten dari sumber belum tersedia/)).toBeTruthy();
   });
 
-  it("treats absent rating as UNKNOWN and requires a new acknowledgement after opt-in toggles", () => {
+  it("treats absent rating as unrated and permits direct access without blocking consent", () => {
     render(<ContentAccessBoundary sourceId="mangadex" item={{ id: "missing-rating" }}><p>Unclassified pages</p></ContentAccessBoundary>);
-    expect(screen.getByText("Rating belum terverifikasi")).toBeTruthy();
-    expect(screen.queryByText("Unclassified pages")).toBeNull();
-    fireEvent.click(screen.getByRole("button", { name: "Lanjutkan dan tampilkan konten" }));
     expect(screen.getByText("Unclassified pages")).toBeTruthy();
-    act(() => useSettingsStore.getState().setHideNsfw(false));
-    act(() => useSettingsStore.getState().setHideNsfw(true));
-    expect(screen.queryByText("Unclassified pages")).toBeNull();
-    expect(screen.getByText("Rating belum terverifikasi")).toBeTruthy();
+    expect(screen.queryByText("Rating belum terverifikasi")).toBeNull();
   });
 
 });

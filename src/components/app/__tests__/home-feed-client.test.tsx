@@ -172,15 +172,15 @@ describe("Yomirra Editorial Home Components", () => {
   });
 
   describe("Spotlight content safety", () => {
-    it("masks unknown artwork and synopsis without launching detail enrichment", () => {
+    it("renders artwork and synopsis for unrated titles without positive adult signals (D-01)", () => {
       mockSettingsState.hideNsfw = true;
       const { container } = render(<EditorialSpotlight
         sourceId="shinigami" sourceName="Shinigami"
         manga={{ id: "unknown-home", title: "Unknown home", coverUrl: "https://example.com/unverified-spotlight.jpg", description: "Unreviewed synopsis" }}
       />);
-      expect(screen.getAllByText(/Rating belum terverifikasi/).length).toBeGreaterThan(0);
-      expect(container.querySelector('img[src*="unverified-spotlight"]')).toBeNull();
-      expect(screen.queryByText("Unreviewed synopsis")).toBeNull();
+      expect(screen.queryByText(/Rating belum terverifikasi/)).toBeNull();
+      expect(container.querySelector('img[src*="unverified-spotlight"]')).toBeTruthy();
+      expect(screen.getByText("Unreviewed synopsis")).toBeTruthy();
       expect(screen.getByRole("link", { name: "Lihat komik Unknown home" })).toBeTruthy();
     });
 
@@ -225,15 +225,17 @@ describe("Yomirra Editorial Home Components", () => {
 
       const { container, rerender } = render(<HomeHero candidates={candidates} />);
       const srcs = () => Array.from(container.querySelectorAll("img")).map((img) => img.getAttribute("src"));
-      expect(srcs()).toEqual(["https://example.com/safe-cover.jpg"]);
-      expect(sessionStorage.getItem(`${HERO_COLLAGE_CACHE_KEY}_safe`)).toContain("safe-cover.jpg");
+      expect(srcs()).toContain("https://example.com/safe-cover.jpg");
+      expect(srcs()).toContain("https://example.com/unknown-cover.jpg");
+      expect(srcs()).not.toContain("https://example.com/adult-cover.jpg");
+      expect(sessionStorage.getItem(`${HERO_COLLAGE_CACHE_KEY}_safe`)).not.toContain("adult-cover.jpg");
 
       mockSettingsState.hideNsfw = false;
       rerender(<HomeHero candidates={candidates} />);
       expect(srcs()).toContain("https://example.com/adult-cover.jpg");
       mockSettingsState.hideNsfw = true;
       rerender(<HomeHero candidates={candidates} />);
-      expect(srcs()).toEqual(["https://example.com/safe-cover.jpg"]);
+      expect(srcs()).not.toContain("https://example.com/adult-cover.jpg");
 
       // New provider evidence must invalidate an already-mounted cached cover.
       const reclassified = candidates.map((candidate) =>
@@ -242,6 +244,15 @@ describe("Yomirra Editorial Home Components", () => {
           : candidate
       );
       rerender(<HomeHero candidates={reclassified} />);
+      expect(srcs()).not.toContain("https://example.com/safe-cover.jpg");
+      expect(srcs()).toEqual(["https://example.com/unknown-cover.jpg"]);
+
+      // If all candidates are restricted, visible covers collapse to empty.
+      const allRestricted = candidates.map((candidate) => ({
+        ...candidate,
+        contentRating: "erotica" as const,
+      }));
+      rerender(<HomeHero candidates={allRestricted} />);
       expect(srcs()).toEqual([]);
     });
   });

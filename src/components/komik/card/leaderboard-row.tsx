@@ -35,7 +35,6 @@ export function LeaderboardRow({
   const classification = classifyContent(manga);
   const sourceIsAdultOnly = getSourceMetadata(sourceId)?.isNsfw === true;
   const restricted = hideNsfw && (sourceIsAdultOnly || classification === "NSFW");
-  const unverified = hideNsfw && classification === "UNKNOWN";
   const scoreToDisplay = displayScore ?? manga.score;
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -94,19 +93,13 @@ export function LeaderboardRow({
       )}
 
       <MangaCardCoverFrame className={coverGeometry}>
-        {unverified ? (
-          <div aria-label="Rating belum terverifikasi" className="flex size-full items-center justify-center bg-surface-muted px-1 text-center text-[9px] font-semibold leading-tight text-text-secondary">
-            ?
-          </div>
-        ) : (
-          <MangaCover
-            src={manga.coverUrl}
-            alt={manga.title}
-            fallbackTitle={manga.title}
-            iconSize={20}
-            imageClassName={mangaCardInteraction.coverImage}
-          />
-        )}
+        <MangaCover
+          src={manga.coverUrl}
+          alt={manga.title}
+          fallbackTitle={manga.title}
+          iconSize={20}
+          imageClassName={mangaCardInteraction.coverImage}
+        />
       </MangaCardCoverFrame>
 
       <div className="flex min-w-0 flex-1 flex-col justify-center gap-0.5 py-0.5">
@@ -120,9 +113,6 @@ export function LeaderboardRow({
         >
           {manga.title}
         </MangaCardTitle>
-        {unverified && (
-          <span className="text-[10px] font-semibold text-status-warning-fg">Rating belum terverifikasi</span>
-        )}
         <div className="flex items-center gap-2 text-[10.5px] font-semibold text-text-secondary sm:text-[11.5px]">
           <div className="flex items-center gap-1">
             <Star

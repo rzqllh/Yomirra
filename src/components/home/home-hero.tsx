@@ -34,6 +34,16 @@ export function isVerifiedSafeHeroCandidate(candidate: HeroCandidate): boolean {
     source.isNsfw !== true;
 }
 
+export function isEligibleSafeHeroCandidate(candidate: HeroCandidate): boolean {
+  const source = candidate.sourceId ? getSourceMetadata(candidate.sourceId) : undefined;
+  return source !== undefined &&
+    source.isNsfw !== true &&
+    candidate.isNsfw !== true &&
+    candidate.contentRating !== "suggestive" &&
+    candidate.contentRating !== "erotica" &&
+    candidate.contentRating !== "pornographic";
+}
+
 function pickSessionCovers(candidates: HeroCandidate[], count = 3): HeroCandidate[] {
   const pool = candidates.slice(0, 15);
   const selected: HeroCandidate[] = [];
@@ -84,7 +94,7 @@ export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroP
     // Do not reuse unclassified v1 art from an earlier opt-in session.
     // Separate modes prevent accidentally exposing opted-in covers after OFF.
     const cacheKey = `${HERO_COLLAGE_CACHE_KEY}_${mode}`;
-    const allowed = hideNsfw ? candidates.filter(isVerifiedSafeHeroCandidate) : candidates;
+    const allowed = hideNsfw ? candidates.filter(isEligibleSafeHeroCandidate) : candidates;
     const allowedUrls = new Set(allowed.map((item) => item.coverUrl));
 
     try {
@@ -96,7 +106,7 @@ export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroP
           parsed.length > 0 &&
           parsed.every((item) => item?.coverUrl && item?.title &&
             allowedUrls.has(item.coverUrl) &&
-            (!hideNsfw || isVerifiedSafeHeroCandidate(item)))
+            (!hideNsfw || isEligibleSafeHeroCandidate(item)))
         ) {
           chosenMode.current = mode;
           setSessionCovers(parsed.slice(0, 3));
@@ -126,9 +136,9 @@ export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroP
   // Gate immediately during ON→OFF rerenders, before the effect updates state.
   const visibleCovers = hideNsfw
     ? sessionCovers.filter((cover) =>
-        isVerifiedSafeHeroCandidate(cover) &&
+        isEligibleSafeHeroCandidate(cover) &&
         candidates.some((current) =>
-          current.coverUrl === cover.coverUrl && isVerifiedSafeHeroCandidate(current)
+          current.coverUrl === cover.coverUrl && isEligibleSafeHeroCandidate(current)
         )
       )
     : sessionCovers;

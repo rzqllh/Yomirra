@@ -12,13 +12,14 @@ import { useSourcePreferencesStore } from "@/shared/store/source-preferences-sto
 import { useDiscoveryScopeStore } from "@/shared/store/discovery-scope-store";
 import { sourceQueryOptions } from "@/shared/sources/source-query-options";
 import { resolveQuickSearchScope } from "@/shared/sources/discovery-source-policy";
-import { isContentVisible } from "@/shared/sources/content-policy";
+import { classifyContent, isContentVisible } from "@/shared/sources/content-policy";
 import type { MangaItem } from "@/shared/types/source";
 import { CommandDialog, CommandInput, CommandList, CommandGroup, CommandItem } from "@/components/ui/command";
 import { getMangaDetailHref, getSearchHref } from "@/shared/lib/routes";
 
 export function canRevealQuickSearchCover(item: Pick<MangaItem, "contentRating" | "isNsfw">, hideNsfw: boolean): boolean {
-  return !hideNsfw || (item.contentRating === "safe" && item.isNsfw !== true);
+  if (!hideNsfw) return true;
+  return classifyContent(item) !== "NSFW";
 }
 
 export function CommandMenu() {
