@@ -17,6 +17,10 @@ import type { MangaItem } from "@/shared/types/source";
 import { CommandDialog, CommandInput, CommandList, CommandGroup, CommandItem } from "@/components/ui/command";
 import { getMangaDetailHref, getSearchHref } from "@/shared/lib/routes";
 
+export function canRevealQuickSearchCover(item: Pick<MangaItem, "contentRating" | "isNsfw">, hideNsfw: boolean): boolean {
+  return !hideNsfw || (item.contentRating === "safe" && item.isNsfw !== true);
+}
+
 export function CommandMenu() {
   const [open, setOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -126,12 +130,21 @@ export function CommandMenu() {
               <CommandItem key={`${manga.sourceId}:${manga.id}`} value={`${manga.sourceId}:${manga.id}`}
                 onSelect={() => navigate(getMangaDetailHref(manga.sourceId, manga.id, pathname))}
                 className="flex min-h-14 cursor-pointer items-center gap-3 rounded-lg px-3 py-2">
-                {manga.coverUrl ? <div className="relative h-12 w-9 shrink-0 overflow-hidden rounded bg-surface-muted">
-                  <Image src={manga.coverUrl} alt="" fill className="object-cover" unoptimized />
-                </div> : <MagnifyingGlass size={20} aria-hidden="true" />}
+                {manga.coverUrl && canRevealQuickSearchCover(manga, hideNsfw) ? (
+                  <div className="relative h-12 w-9 shrink-0 overflow-hidden rounded bg-surface-muted">
+                    <Image src={manga.coverUrl} alt="" fill className="object-cover" unoptimized />
+                  </div>
+                ) : (
+                  <div aria-hidden="true" className="flex h-12 w-9 shrink-0 items-center justify-center rounded bg-surface-muted">
+                    <MagnifyingGlass size={20} />
+                  </div>
+                )}
                 <div className="min-w-0 flex-1">
                   <span className="block break-words text-sm font-semibold text-text-primary">{manga.title}</span>
                   <span className="text-xs text-text-muted">{scopeLabel}</span>
+                  {hideNsfw && !canRevealQuickSearchCover(manga, hideNsfw) && (
+                    <span className="block text-xs font-semibold text-status-warning-fg">Rating belum terverifikasi</span>
+                  )}
                 </div>
               </CommandItem>
             ))}
