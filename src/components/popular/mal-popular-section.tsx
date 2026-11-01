@@ -6,7 +6,7 @@ import type { MalPopularFeed } from "@/shared/types/mal";
 import { getSearchHref } from "@/shared/lib/routes";
 export function MalPopularSection({ feed }: { feed: MalPopularFeed }) {
   const hideNsfw = useSettingsStore(state => state.hideNsfw);
-  if (feed.status !== "ready") return <section role="status" className="rounded-2xl border border-border-subtle bg-surface-raised p-6"><h2 className="text-lg font-bold">Populer MAL belum tersedia</h2><p className="mt-2 text-sm text-text-secondary">{feed.message}</p><p className="mt-2 text-xs text-text-muted">Pilih Lintas sumber atau Per Sumber untuk melanjutkan jelajah.</p></section>;
+  if (feed.status !== "ready") return <section role="status" className="rounded-2xl border border-border-subtle bg-surface-raised p-6"><h2 className="text-lg font-bold">Populer MAL belum tersedia</h2><p className="mt-2 text-sm text-text-secondary">{feed.message}</p><p className="mt-2 text-xs text-text-muted">Pilih Populer di Yomirra untuk melanjutkan jelajah.</p></section>;
   const visibleWorks = feed.works.filter(work => !hideNsfw || work.nsfw === "white");
   return <section aria-labelledby="mal-popular-heading" className="space-y-5">
     <div><h2 id="mal-popular-heading" className="text-xl font-bold">Populer MAL</h2><p className="mt-2 text-sm text-text-secondary">Popularitas eksternal MyAnimeList berdasarkan jumlah anggota yang menyimpan judul. Bukan trafik Yomirra.</p><p className="mt-1 text-xs text-text-muted">Peringkat asli dipertahankan setelah penyaringan kategori dan konten. Metadata tidak menjamin chapter tersedia di sumber baca. Snapshot {new Date(feed.fetchedAt).toLocaleDateString("id-ID", { dateStyle: "medium", timeZone: "Asia/Jakarta" })}.</p></div>
