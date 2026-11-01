@@ -13,7 +13,7 @@ vi.mock("@/server/lib/cache/redis-cache", () => ({
 function source(overrides: Partial<MangaSource> = {}): MangaSource {
   return { id: "test", name: "Test", isEnabled: true, isInstalled: true, isNsfw: false, isDynamic: false,
     capabilities: { popular: true, latest: true, search: true, detail: true, chapters: true, pages: true, filters: false },
-    getPopular: vi.fn(async () => ({ mangas: [{ id: "safe", title: "Safe", coverUrl: "", contentRating: "safe" as const }, { id: "adult", title: "Adult", coverUrl: "", contentRating: "erotica" as const }], hasNextPage: false })),
+    getPopular: vi.fn(async () => ({ mangas: [{ id: "safe", title: "Safe", coverUrl: "", contentRating: "safe" as const }, { id: "adult", title: "Adult", coverUrl: "", contentRating: "erotica" as const }, { id: "unknown", title: "Unknown", coverUrl: "", contentRating: "unknown" as const }, { id: "unclassified", title: "Unclassified", coverUrl: "" }], hasNextPage: false })),
     search: vi.fn(), getLatest: vi.fn(), getDetail: vi.fn(), getChapters: vi.fn(), getPages: vi.fn(async () => ({ chapterId: "c", pages: [] })), getFilters: vi.fn(), ...overrides };
 }
 
@@ -34,7 +34,7 @@ describe("read request policy boundaries", () => {
     await expect(loadSourceCatalog(source({ isEnabled: false }), "popular", 1)).rejects.toMatchObject({ code: "SOURCE_DISABLED" });
   });
   it("filters restricted catalog entries before returning them", async () => {
-    expect((await loadSourceCatalog(source(), "popular", 1)).mangas.map((item) => item.id)).toEqual(["safe"]);
+    expect((await loadSourceCatalog(source(), "popular", 1)).mangas.map((item) => item.id)).toEqual(["safe", "unknown", "unclassified"]);
   });
   it("separates opt-in, language and quality cache variants", () => {
     const item = source();
