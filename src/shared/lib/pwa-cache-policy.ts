@@ -64,8 +64,16 @@ export function isCurrentAppCacheName(cacheName: string): boolean {
   return CURRENT_CACHE_NAMES.has(cacheName);
 }
 
+// Only automatically recreated caches may be evicted. Do not treat every
+// yomirra-* cache as disposable: a future user-data cache may be durable.
+const AUTOMATIC_CACHE_NAME = /^yomirra-(?:reading-buffer|manga-images|manga-metadata|pages)(?:-v\\d+)?$/;
+
+export function isAutomaticAppCacheName(cacheName: string): boolean {
+  return AUTOMATIC_CACHE_NAME.test(cacheName);
+}
+
 export function isOutdatedAppCacheName(cacheName: string): boolean {
-  return cacheName.startsWith("yomirra-") && !isCurrentAppCacheName(cacheName);
+  return isAutomaticAppCacheName(cacheName) && !isCurrentAppCacheName(cacheName);
 }
 
 export async function cleanupOutdatedAppCaches(
@@ -93,7 +101,7 @@ export async function clearAutomaticAppCaches(
   for (const cacheName of cacheNames) {
     if (
       cacheName === EXPLICIT_DOWNLOADS_CACHE_NAME ||
-      !cacheName.startsWith("yomirra-")
+      !isAutomaticAppCacheName(cacheName)
     ) {
       continue;
     }
