@@ -5,11 +5,17 @@ import { MagnifyingGlass } from "@phosphor-icons/react";
 import { usePlatformShortcut } from "@/shared/hooks/use-platform-shortcut";
 import { useHistoryStore } from "@/shared/store/history-store";
 import { useMounted } from "@/shared/hooks/use-mounted";
+import { useSettingsStore } from "@/shared/store/settings-store";
+import { getSourceMetadata } from "@/shared/sources/source-registry";
+import type { MangaItem } from "@/shared/sources/source-types";
 import { cn } from "@/shared/utils/cn";
 
 export interface HeroCandidate {
   coverUrl: string;
   title: string;
+  sourceId?: string;
+  contentRating?: MangaItem["contentRating"];
+  isNsfw?: boolean;
 }
 
 export interface HomeHeroProps {
@@ -17,7 +23,14 @@ export interface HomeHeroProps {
   candidates?: HeroCandidate[];
 }
 
-export const HERO_COLLAGE_CACHE_KEY = "yomirra_home_hero_collage_v1";
+// v1 held raw, unclassified cover URLs. Never trust it in safe mode.
+export const HERO_COLLAGE_CACHE_KEY = "yomirra_home_hero_collage_v2";
+export function isVerifiedSafeHeroCandidate(candidate: HeroCandidate): boolean {
+  return candidate.contentRating === "safe" &&
+    candidate.isNsfw !== true &&
+    Boolean(candidate.sourceId) &&
+    getSourceMetadata(candidate.sourceId!)?.isNsfw !== true;
+}
 
 function pickSessionCovers(candidates: HeroCandidate[], count = 3): HeroCandidate[] {
   const pool = candidates.slice(0, 15);
@@ -39,12 +52,13 @@ const coverPositions = [
 
 export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
   const mounted = useMounted();
+  const hideNsfw = useSettingsStore((state) => state.hideNsfw);
   const { searchShortcut, searchAriaLabel } = usePlatformShortcut();
 
   const [sessionCovers, setSessionCovers] = React.useState<HeroCandidate[]>([]);
   const [loadedCovers, setLoadedCovers] = React.useState<Set<string>>(() => new Set());
   const [failedCovers, setFailedCovers] = React.useState<Set<string>>(() => new Set());
-  const hasChosenCovers = React.useRef(false);
+  const chosenMode = React.useRef<"safe" | "optin" | null>(null);
 
   // CRITICAL FIX (DEF-02): Only readers with actual local reading history are returning readers.
   // Authenticated accounts with zero history receive the discovery flow without layout displacement.
@@ -54,38 +68,56 @@ export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
   const isReturning = mounted && hasHistory;
 
   React.useEffect(() => {
-    if (!mounted || hasChosenCovers.current) return;
+    if (!mounted) return;
+    const mode = hideNsfw ? "safe" : "optin";
+    if (chosenMode.current === mode) return;
+
+    // Do not reuse unclassified v1 art from an earlier opt-in session.
+    // Separate modes prevent accidentally exposing opted-in covers after OFF.
+    const cacheKey = `${HERO_COLLAGE_CACHE_KEY}_${mode}`;
+    const allowed = hideNsfw ? candidates.filter(isVerifiedSafeHeroCandidate) : candidates;
+    const allowedUrls = new Set(allowed.map((item) => item.coverUrl));
 
     try {
-      const cached = sessionStorage.getItem(HERO_COLLAGE_CACHE_KEY);
+      const cached = sessionStorage.getItem(cacheKey);
       if (cached) {
-        const parsed = JSON.parse(cached);
+        const parsed: HeroCandidate[] = JSON.parse(cached);
         if (
           Array.isArray(parsed) &&
           parsed.length > 0 &&
-          parsed.every((item) => item?.coverUrl && item?.title)
+          parsed.every((item) => item?.coverUrl && item?.title &&
+            allowedUrls.has(item.coverUrl) &&
+            (!hideNsfw || isVerifiedSafeHeroCandidate(item)))
         ) {
-          hasChosenCovers.current = true;
+          chosenMode.current = mode;
           setSessionCovers(parsed.slice(0, 3));
           return;
         }
       }
     } catch {
-      // Session storage is optional. Keep in-memory selection stable.
+      // Session storage is optional. Never treat invalid cache as verified.
     }
 
-    if (candidates.length === 0) return;
+    if (allowed.length === 0) {
+      setSessionCovers([]);
+      chosenMode.current = null; // Reconsider if fresh safe data becomes available.
+      return;
+    }
 
-    const selected = pickSessionCovers(candidates);
-    hasChosenCovers.current = true;
+    const selected = pickSessionCovers(allowed);
+    chosenMode.current = mode;
     setSessionCovers(selected);
-
     try {
-      sessionStorage.setItem(HERO_COLLAGE_CACHE_KEY, JSON.stringify(selected));
+      sessionStorage.setItem(cacheKey, JSON.stringify(selected));
     } catch {
       // Decorative artwork caching is non-critical.
     }
-  }, [mounted, candidates]);
+  }, [mounted, candidates, hideNsfw]);
+
+  // Gate immediately during ON→OFF rerenders, before the effect updates state.
+  const visibleCovers = hideNsfw
+    ? sessionCovers.filter(isVerifiedSafeHeroCandidate)
+    : sessionCovers;
 
   // Returning Reader: Minimal, compact global search without collage or promotional card
   if (isReturning) {
@@ -151,7 +183,7 @@ export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
       )}
     >
       {/* Subtle artwork preview strictly for new discovery sessions */}
-      {sessionCovers.length > 0 && (
+      {visibleCovers.length > 0 && (
         <div
           aria-hidden="true"
           className="pointer-events-none absolute right-0 top-0 h-[140px] w-[50%] overflow-hidden sm:inset-y-0 sm:h-auto sm:w-[46%] lg:w-[42%]"
@@ -160,7 +192,7 @@ export function HomeHero({ className, candidates = [] }: HomeHeroProps) {
             WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 38%)",
           }}
         >
-          {sessionCovers.map((cover, index) => {
+          {visibleCovers.map((cover, index) => {
             if (failedCovers.has(cover.coverUrl)) return null;
             const loaded = loadedCovers.has(cover.coverUrl);
 
