@@ -87,7 +87,7 @@ Mandatory baseline commands: `pnpm typecheck`, `pnpm lint`, `pnpm test --run`, `
 | HEALTH-01 | Listing succeeds, chapters/pages fail for sampled source | Health status says exactly what was measured; no false fully-healthy claim | shallow/deep probes | NOT_RUN |
 | HEALTH-02 | Read health status after TTL expires/without probe | CheckedAt visible and stale/unknown statuses unambiguously labelled | simulated clock + UI | NOT_RUN |
 | HEALTH-03 | Provider gets 403/429 then recovers | Degraded/rate limited/recovered status and cooldown correct | fixture + safe live sample | NOT_RUN |
-| HEALTH-04 | Call `/api/health` ten times under source failure | Endpoint lightweight; no repeated upstream full-provider probes induced by liveness checks | request-count trace | NOT_RUN |
+| HEALTH-04 | Call `/api/health` ten times under source failure; separately fetch `/api/sources/health` | No upstream full-provider probes from liveness, only recent sanitized snapshots shown; explicit functional-health endpoint still performs its intended probes | spy/request-count fixture, endpoint tests, Preview trace | NOT_RUN |
 | PROVIDER-04 | Simulate 403/429/503/timeouts and Retry-After | Distinct errors, bounded retries and no bypass of provider protection | transport test | NOT_RUN |
 | PR-01 | One of five selected providers fails search | Healthy results still appear | multi-source fixture | NOT_RUN |
 | PR-02 | Four providers fail simultaneously | One calm summarized banner; expandable per-source diagnostic | mobile screenshot | NOT_RUN |
