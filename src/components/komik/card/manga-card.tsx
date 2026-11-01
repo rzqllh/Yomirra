@@ -489,7 +489,7 @@ export function MangaCard({
             "flex min-w-0 flex-1 gap-2.5 rounded-l-md",
             noEligibleSource ? "cursor-not-allowed opacity-60" : "cursor-pointer"
           )}
-          aria-label={cardAriaLabel}
+          aria-label={noEligibleSource || isMultiSource ? cardAriaLabel : `Baca ${manga.title}`}
           aria-disabled={noEligibleSource || undefined}
           aria-haspopup={isMultiSource ? "dialog" : undefined}
           onClick={handleCardOpen}
