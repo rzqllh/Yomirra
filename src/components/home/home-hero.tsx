@@ -26,10 +26,12 @@ export interface HomeHeroProps {
 // v1 held raw, unclassified cover URLs. Never trust it in safe mode.
 export const HERO_COLLAGE_CACHE_KEY = "yomirra_home_hero_collage_v2";
 export function isVerifiedSafeHeroCandidate(candidate: HeroCandidate): boolean {
+  // A missing registry entry is not proof that the provider is safe.
+  const source = candidate.sourceId ? getSourceMetadata(candidate.sourceId) : undefined;
   return candidate.contentRating === "safe" &&
     candidate.isNsfw !== true &&
-    Boolean(candidate.sourceId) &&
-    getSourceMetadata(candidate.sourceId!)?.isNsfw !== true;
+    source !== undefined &&
+    source.isNsfw !== true;
 }
 
 function pickSessionCovers(candidates: HeroCandidate[], count = 3): HeroCandidate[] {
