@@ -24,6 +24,8 @@ import { useCollectionStore } from "@/shared/store/collection-store";
 import { useUpdateStore, getUpdateKey } from "@/shared/store/update-store";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { useHistoryStore, type HistoryItem } from "@/shared/store/history-store";
+import { useSettingsStore } from "@/shared/store/settings-store";
+import { classifyContent } from "@/shared/sources/content-policy";
 import { ReadingProgress } from "@/components/ui/reading-progress";
 import {
   DropdownMenu,
@@ -49,6 +51,16 @@ import {
   mangaCardInteraction,
   mangaCardSurface,
 } from "./primitives";
+
+function UnverifiedCover() {
+  return <div
+    data-testid="unverified-cover"
+    role="note"
+    className="absolute inset-0 z-20 flex items-center justify-center bg-surface-muted px-1.5 text-center text-[10px] font-semibold leading-tight text-text-secondary"
+  >
+    Rating belum terverifikasi
+  </div>;
+}
 
 export type MangaCardVariant = "discovery" | "rank" | "progress";
 
@@ -207,6 +219,8 @@ export function MangaCard({
   const { readingStatusByManga } = useCollectionStore();
   const updateStore = useUpdateStore();
   const disabledSources = useSourcePreferencesStore((state) => state.disabledSources);
+  const hideNsfw = useSettingsStore((state) => state.hideNsfw);
+  const isUnknownContent = hideNsfw && classifyContent(manga) === "UNKNOWN";
   const removeMangaHistory = useHistoryStore((state) => state.removeMangaHistory);
 
   const fullPath = (pathname || "") + (searchParams?.toString() ? `?${searchParams.toString()}` : "");
@@ -340,13 +354,13 @@ export function MangaCard({
           aria-label={`Lanjut baca ${manga.title}, ${effChapterTitle}`}
         >
           <MangaCardCoverFrame className="w-18 sm:w-20">
-            <MangaCover
+            {isUnknownContent ? <UnverifiedCover /> : <MangaCover
               src={manga.coverUrl}
               alt={manga.title}
               fallbackTitle={manga.title}
               className="w-full h-full"
               imageClassName={cn("w-full h-full object-cover", mangaCardInteraction.coverImage)}
-            />
+            />}
           </MangaCardCoverFrame>
 
           <div className="flex flex-col flex-1 min-w-0 justify-between py-0.5">
@@ -496,14 +510,14 @@ export function MangaCard({
         >
           {/* Cover Frame with Ranking Badge Overlay */}
           <MangaCardCoverFrame className="vt-hover h-full w-[74px] border-y-0 border-l-0 rounded-l-md rounded-r-xs group-hover:shadow-lg group-hover:shadow-accent/5">
-            <MangaCover
+            {isUnknownContent ? <UnverifiedCover /> : <MangaCover
               src={manga.coverUrl}
               alt={manga.title}
               fallbackTitle={manga.title}
               iconSize={24}
               priority={priority}
               imageClassName={mangaCardInteraction.coverImage}
-            />
+            />}
 
             {/* Top-3 Visual Escalation Badge */}
             {effectiveRank !== undefined && (
@@ -670,13 +684,13 @@ export function MangaCard({
             onClick={handleCardOpen}
           >
             <MangaCardCoverFrame className="vt-hover h-full w-full rounded-sm shadow-xs border-border-subtle/60">
-              <MangaCover
+              {isUnknownContent ? <UnverifiedCover /> : <MangaCover
                 src={manga.coverUrl}
                 alt={manga.title}
                 priority={priority}
                 fallbackTitle={manga.title}
                 imageClassName={mangaCardInteraction.coverImage}
-              />
+              />}
             </MangaCardCoverFrame>
           </Link>
         </motion.div>
@@ -739,7 +753,11 @@ export function MangaCard({
             </div>
 
             {/* Row 4: Sanitized Synopsis */}
-            {cleanedDescription ? (
+            {isUnknownContent ? (
+              <MangaCardMeta as="p" className="mt-1.5 text-xs font-semibold text-status-warning-fg">
+                Rating belum terverifikasi
+              </MangaCardMeta>
+            ) : cleanedDescription ? (
               <MangaCardMeta as="p" className="mt-1.5 line-clamp-2 leading-relaxed text-text-muted/80 md:line-clamp-3">
                 {cleanedDescription}
               </MangaCardMeta>
@@ -812,13 +830,13 @@ export function MangaCard({
           layoutId={reducedMotion ? undefined : transitionNames.cover}
         >
           <MangaCardCoverFrame className="w-full shadow-sm vt-hover">
-            <MangaCover
+            {isUnknownContent ? <UnverifiedCover /> : <MangaCover
               src={manga.coverUrl}
               alt={manga.title}
               priority={priority}
               fallbackTitle={manga.title}
               imageClassName={mangaCardInteraction.coverImage}
-            />
+            />}
 
             {/* Over-cover Badges */}
             <div className="absolute top-2 left-2 flex flex-col gap-1.5 z-20 items-start max-w-[calc(100%-48px)]">
