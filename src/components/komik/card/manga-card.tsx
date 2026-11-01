@@ -223,7 +223,6 @@ export function MangaCard({
 
   const sourceObj = dynamicSourceRegistry.get(sourceId) || sourceRegistry.find((s) => s.id === sourceId);
   const sourceDisplayName = sourceObj?.name || sourceId;
-  const sourceName = showSourceBadge ? sourceDisplayName : null;
   const isUnavailable = sourceObj?.status === "unavailable" || sourceObj?.status === "in-fix";
 
   const effectiveBindings = (sourceBindings || (manga as any)?.sourceBindings || []) as SourceBinding[];
@@ -235,10 +234,15 @@ export function MangaCard({
     (effectiveBindings.length > 0 && availableBindings.length === 0) ||
     (effectiveBindings.length === 0 && isUnavailable);
   const onlyBinding = availableBindings.length === 1 ? availableBindings[0] : null;
+  const cardSourceId = onlyBinding?.sourceId ?? sourceId;
+  const cardMangaId = onlyBinding?.mangaId ?? manga.id;
+  const cardManga = onlyBinding ? { ...manga, id: cardMangaId } : manga;
+  const cardSource = dynamicSourceRegistry.get(cardSourceId) || sourceRegistry.find((s) => s.id === cardSourceId);
+  const sourceName = showSourceBadge ? (cardSource?.name || cardSourceId) : null;
   // A filtered canonical card must not navigate through a disabled primary binding.
   const cardDetailHref = getMangaDetailHref(
-    onlyBinding?.sourceId ?? sourceId,
-    onlyBinding?.mangaId ?? manga.id,
+    cardSourceId,
+    cardMangaId,
     fullPath
   );
   const handleCardOpen = (event: React.MouseEvent<HTMLAnchorElement>) => {
@@ -552,12 +556,13 @@ export function MangaCard({
               <MangaCardMeta className="truncate pr-2">{manga.latestChapter || "Chapter belum tersedia"}</MangaCardMeta>
               {timeText && <MangaCardMeta className="whitespace-nowrap text-[10px] text-text-muted">{timeText}</MangaCardMeta>}
             </div>
+            {noEligibleSource && <MangaCardMeta className="text-status-error-fg font-semibold">Sumber tidak tersedia</MangaCardMeta>
           </div>
         </Link>
 
         {/* Bookmark & Rating Column */}
         <div className="relative flex w-[52px] shrink-0 flex-col items-center justify-center gap-2 bg-transparent">
-          <BookmarkButton sourceId={sourceId} manga={manga} className="size-11" />
+          <BookmarkButton sourceId={cardSourceId} manga={cardManga} className="size-11" />
           <div className="h-px w-6 bg-border-subtle" />
           <div className="flex flex-col items-center gap-0.5 text-semantic-warning">
             <Star weight="fill" size={12} aria-hidden="true" />
@@ -593,6 +598,9 @@ export function MangaCard({
     const cleanedDescription = rawDesc ? normalizeSynopsis(String(rawDesc)) : "";
 
     const badgesList: React.ReactNode[] = [
+      noEligibleSource ? (
+        <span key="unavailable" className="text-[10px] font-semibold text-status-error-fg">Sumber tidak tersedia</span>
+      ) : null,
       manga.status ? (
         <span
           key="status"
@@ -689,8 +697,8 @@ export function MangaCard({
 
               <div className="shrink-0 -mt-0.5 -mr-1 relative z-10">
                 <BookmarkButton
-                  sourceId={sourceId}
-                  manga={manga}
+                  sourceId={cardSourceId}
+                  manga={cardManga}
                   className="size-11 hover:border-accent hover:text-accent"
                 />
               </div>
@@ -734,8 +742,8 @@ export function MangaCard({
               </MangaCardMeta>
             ) : (
               <LazySynopsisPreview
-                sourceId={sourceId}
-                mangaId={manga.id}
+                sourceId={cardSourceId}
+                mangaId={cardMangaId}
                 author={manga.author}
               />
             )}
@@ -932,7 +940,7 @@ export function MangaCard({
       </Link>
 
       <div className="absolute right-2 top-2 z-20 flex items-center justify-center">
-        <BookmarkButton sourceId={sourceId} manga={manga} className="size-8.5 sm:size-9 rounded-lg" />
+        <BookmarkButton sourceId={cardSourceId} manga={cardManga} className="size-8.5 sm:size-9 rounded-lg" />
       </div>
 
       {isMultiSource && (

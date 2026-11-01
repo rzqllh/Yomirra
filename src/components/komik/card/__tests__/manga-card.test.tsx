@@ -12,8 +12,8 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("../../bookmark-button", () => ({
-  BookmarkButton: ({ manga }: { manga: { title: string } }) => (
-    <button type="button" className="size-11" aria-label={`Simpan ${manga.title} ke rak`} />
+  BookmarkButton: ({ manga, sourceId }: { manga: { title: string; id: string }; sourceId: string }) => (
+    <button type="button" className="size-11" data-source-id={sourceId} data-manga-id={manga.id} aria-label={`Simpan ${manga.title} ke rak`} />
   ),
 }));
 
@@ -124,6 +124,9 @@ describe("MangaCard", () => {
         expect(link.getAttribute("aria-haspopup")).toBeNull();
       }
       expect(screen.queryByRole("dialog")).toBeNull();
+      const bookmark = screen.getByRole("button", { name: "Simpan Work ke rak" });
+      expect(bookmark.getAttribute("data-source-id")).toBe("mangadex");
+      expect(bookmark.getAttribute("data-manga-id")).toBe("verified-alternative");
     }
   );
 

@@ -3,6 +3,8 @@
 
 ## Unreleased
 
+- Catalog: when one eligible provider remains, its card opens that provider's exact detail and aligns one-tap bookmark provenance; 2+ providers keep explicit selection, while no eligible provider disables invalid detail navigation (CAT-15, PR #99).
+
 - **Draft integration (PRs #74–#77):** Reader milestone/cursor correctness, failure-aware completion, truthful end state, canonical PWA reading shortcut, and Q84 250 ms debounce. Keep legacy data intact; hardware and cross-device verification remain release gates.
 
 - **Draft Q90:** Explicit next-chapter navigation marks completion only when all images decoded successfully, with no failed pages; retain final-page cursor, and keep navigation non-blocking.
