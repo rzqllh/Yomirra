@@ -1,4 +1,6 @@
-export const PWA_CACHE_VERSION = 2;
+// Rotates unsafe legacy automatic caches after Issue #101 content-policy update.
+// The separately named explicit-download cache retains durable user downloads.
+export const PWA_CACHE_VERSION = 3;
 
 export const EXPLICIT_DOWNLOADS_CACHE_NAME = "yomirra-chapter-cache-v1";
 export const READING_BUFFER_CACHE_NAME = `yomirra-reading-buffer-v${PWA_CACHE_VERSION}`;
