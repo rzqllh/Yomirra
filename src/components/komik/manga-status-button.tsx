@@ -59,7 +59,7 @@ export function MangaStatusButton({ sourceId, mangaId }: MangaStatusButtonProps)
         onClick={() => setIsOpen(true)}
         aria-label="Atur status baca"
         className={cn(
-          "flex items-center justify-center gap-1.5 h-[52px] md:h-[48px] px-1 md:px-3.5 transition-all outline-none select-none rounded-[14px] border shadow-xs active:scale-95 bg-surface-raised",
+          "flex items-center justify-center gap-1.5 h-[52px] md:h-[48px] px-1 md:px-3.5 transition-all outline-none select-none rounded-md border shadow-xs active:scale-95 bg-surface-raised",
           readingStatus && mounted
             ? "border-accent/60 text-accent font-bold ring-1 ring-accent/20"
             : "border-border-default text-text-secondary hover:text-text-primary hover:border-border-strong hover:bg-surface-hover"
@@ -78,7 +78,7 @@ export function MangaStatusButton({ sourceId, mangaId }: MangaStatusButtonProps)
               className="flex h-12 w-12 items-center justify-center rounded-lg border border-accent/30 bg-gradient-to-br from-accent/20 via-accent/10 to-transparent text-accent shadow-xs shrink-0 select-none"
               aria-hidden="true"
             >
-              <BookOpenText size={22} weight="duotone" />
+              <BookOpenText size={22} weight="regular" />
             </div>
             <div>
               <DialogTitle>Status Membaca</DialogTitle>

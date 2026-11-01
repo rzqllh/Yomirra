@@ -21,7 +21,7 @@ interface MangaRatingProps {
     title: string;
     coverUrl?: string;
     author?: string;
-    status?: string;
+    status?: string; isNsfw?: boolean;
   };
 }
 
@@ -81,6 +81,7 @@ export function MangaRating({ sourceId, mangaId, className, variant = "default",
         coverUrl: mangaDetail?.coverUrl || "",
         author: mangaDetail?.author,
         status: mangaDetail?.status,
+        isNsfw: mangaDetail?.isNsfw,
         addedAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         isBookmarked: false,
@@ -106,7 +107,7 @@ export function MangaRating({ sourceId, mangaId, className, variant = "default",
       onClick={() => setIsOpen(true)}
       aria-label="Beri Rating"
       className={cn(
-        "flex items-center justify-center gap-1.5 h-[52px] md:h-[48px] px-1 md:px-3.5 transition-all outline-none select-none rounded-[14px] border shadow-xs active:scale-95 bg-surface-raised",
+        "flex items-center justify-center gap-1.5 h-[52px] md:h-[48px] px-1 md:px-3.5 transition-all outline-none select-none rounded-md border shadow-xs active:scale-95 bg-surface-raised",
         userRating && mounted
           ? "border-accent/60 text-accent font-bold ring-1 ring-accent/20"
           : "border-border-default text-text-secondary hover:text-text-primary hover:border-border-strong hover:bg-surface-hover"
@@ -126,7 +127,7 @@ export function MangaRating({ sourceId, mangaId, className, variant = "default",
       )}
       title="Beri rating"
     >
-      <Star size={16} weight={userRating ? "fill" : "bold"} />
+      <Star size={16} weight={userRating ? "fill" : "regular"} />
       <span className="text-sm">{userRating || "Rating"}</span>
     </button>
   );

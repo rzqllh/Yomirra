@@ -7,7 +7,6 @@ import {
   Gear,
   Stack,
   Palette,
-  Globe,
   Question,
   SignOut,
   SignIn,
@@ -153,25 +152,9 @@ export function HeaderActions({ className }: { className?: string } = {}) {
               </div>
             </button>
 
-            {/* 3. Bahasa */}
+            {/* 3. Pusat bantuan */}
             <Link
-              href="/settings#general"
-              onClick={() => setIsMenuOpen(false)}
-              className="flex items-center justify-between px-3 py-2 rounded-xl text-[13px] font-medium text-text-primary hover:bg-surface-hover active:scale-98 transition-all"
-            >
-              <div className="flex items-center gap-2.5">
-                <Globe size={18} className="text-text-muted shrink-0" />
-                <span>Bahasa</span>
-              </div>
-              <div className="flex items-center gap-1 text-[11.5px] font-semibold text-text-muted">
-                <span>Indonesia</span>
-                <CaretRight size={13} className="text-text-muted/70" />
-              </div>
-            </Link>
-
-            {/* 4. Pusat bantuan */}
-            <Link
-              href="/settings#about"
+              href="/help"
               onClick={() => setIsMenuOpen(false)}
               className="flex items-center justify-between px-3 py-2 rounded-xl text-[13px] font-medium text-text-primary hover:bg-surface-hover active:scale-98 transition-all"
             >
@@ -185,7 +168,7 @@ export function HeaderActions({ className }: { className?: string } = {}) {
             {/* Divider */}
             <div className="my-1 border-t border-border-subtle/80" />
 
-            {/* 5. Keluar akun / Masuk akun */}
+            {/* 4. Keluar akun / Masuk akun */}
             {user ? (
               <button
                 type="button"
@@ -195,7 +178,7 @@ export function HeaderActions({ className }: { className?: string } = {}) {
                 }}
                 className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-semibold text-semantic-error hover:bg-semantic-error/10 active:scale-98 transition-all w-full text-left cursor-pointer"
               >
-                <SignOut size={18} weight="bold" className="shrink-0" />
+                <SignOut size={18} weight="regular" className="shrink-0" />
                 <span>Keluar</span>
               </button>
             ) : (
@@ -207,7 +190,7 @@ export function HeaderActions({ className }: { className?: string } = {}) {
                 }}
                 className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-semibold text-accent hover:bg-accent/10 active:scale-98 transition-all w-full text-left cursor-pointer"
               >
-                <SignIn size={18} weight="bold" className="shrink-0" />
+                <SignIn size={18} weight="regular" className="shrink-0" />
                 <span>Masuk</span>
               </button>
             )}

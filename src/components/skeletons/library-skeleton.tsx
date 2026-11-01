@@ -13,7 +13,7 @@ export function LibrarySkeleton() {
   return (
     <div className="w-full flex flex-col">
       <PageHeader
-        title="Library"
+        title="Jelajah"
         subtitle="Jelajahi komik dari sumber pilihanmu."
       />
 

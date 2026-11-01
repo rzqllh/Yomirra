@@ -29,10 +29,17 @@ export function getSourceCacheKey(source: SourceMetadata, operation: string, par
 export async function withCache<T>(
   key: string,
   fetcher: () => Promise<T>,
-  ttlSeconds: number
+  ttlSeconds: number,
+  options: { allowStaleOnError?: boolean } = {}
 ): Promise<T> {
   let staleEntry: CacheEntry<T> | null = null;
-  
+  const activeTtlSeconds = Math.max(1, Math.floor(ttlSeconds));
+  // Stale data is only useful for a short, bounded outage. The previous
+  // blanket 7-day Redis retention could resurrect weeks-old source data.
+  const staleGraceSeconds = options.allowStaleOnError === false
+    ? 0
+    : Math.min(activeTtlSeconds, 60 * 60);
+
   if (isRedisConfigured) try {
     const cached = await redis.get(key);
     if (cached) {
@@ -59,10 +66,10 @@ export async function withCache<T>(
       if (data) {
         const entry: CacheEntry<T> = {
           data,
-          expiresAt: Date.now() + (ttlSeconds * 1000)
+          expiresAt: Date.now() + (activeTtlSeconds * 1000)
         };
-        // Store in Redis for 7 days to allow stale fallback
-        await redis.setex(key, 7 * 24 * 60 * 60, JSON.stringify(entry));
+        // Physical retention matches active TTL plus permitted stale grace.
+        await redis.setex(key, activeTtlSeconds + staleGraceSeconds, JSON.stringify(entry));
       }
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
@@ -71,8 +78,13 @@ export async function withCache<T>(
 
     return data;
   } catch (error) {
-    if (staleEntry) {
-      logger.warn(`Fetcher failed for ${key}, falling back to stale cache`);
+    if (
+      staleEntry &&
+      staleGraceSeconds > 0 &&
+      Date.now() >= staleEntry.expiresAt &&
+      Date.now() - staleEntry.expiresAt <= staleGraceSeconds * 1000
+    ) {
+      logger.warn(`Fetcher failed for ${key}, falling back to bounded stale cache`);
       return staleEntry.data;
     }
     throw error;

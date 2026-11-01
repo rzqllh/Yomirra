@@ -470,7 +470,8 @@ export function UnifiedFilterDrawer({
 
   return (
     <FilterDrawerShell
-      title={context === "search" ? "Filter Pencarian" : "Filter Library"}
+      desktopPortalId={`${context}-filter-panel`}
+      title={context === "search" ? "Filter Pencarian" : "Filter Jelajah"}
       description="Atur urutan, tipe, status, dan genre yang mau ditampilkan."
       activeCount={activeCount}
       onApply={handleApply}
@@ -481,7 +482,7 @@ export function UnifiedFilterDrawer({
       {!hasAnyFilter ? (
         <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
           <div className="w-12 h-12 rounded-lg bg-surface-raised flex items-center justify-center mb-3 text-text-muted">
-            <Funnel size={24} weight="duotone" />
+            <Funnel size={24} weight="regular" />
           </div>
           <p className="text-sm font-semibold text-text-primary">
             Sumber ini tidak menyediakan filter tambahan

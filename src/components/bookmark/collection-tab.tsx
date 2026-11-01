@@ -139,7 +139,7 @@ export function CollectionTab({
       onSelectCollectionId?.(null);
     }
     toast.info("Koleksi dihapus", {
-      description: "Komik di dalamnya tetap tersimpan di Rak Buku.",
+      description: "Komik di dalamnya tetap tersimpan di Library.",
     });
     setIsDeleteOpen(false);
     setActiveCollectionId(null);
@@ -263,7 +263,7 @@ export function CollectionTab({
                       <FilterChip
                         label={
                           <span className="flex items-center gap-1.5">
-                            <Folder size={14} weight="duotone" />
+                            <Folder size={14} weight="regular" />
                             <span>{collection.name}</span>
                             <span className="text-[11px] opacity-70">{count}</span>
                           </span>
@@ -292,7 +292,7 @@ export function CollectionTab({
                             className="w-7 h-7 rounded-lg bg-surface-raised border border-border-subtle hover:text-text-primary text-text-muted flex items-center justify-center transition-colors"
                             aria-label={`Ubah nama ${collection.name}`}
                           >
-                            <PencilSimple size={13} weight="duotone" />
+                            <PencilSimple size={13} weight="regular" />
                           </button>
                           <button
                             type="button"
@@ -304,7 +304,7 @@ export function CollectionTab({
                             className="w-7 h-7 rounded-lg bg-surface-raised border border-border-subtle hover:text-semantic-error text-text-muted flex items-center justify-center transition-colors"
                             aria-label={`Hapus ${collection.name}`}
                           >
-                            <Trash size={13} weight="duotone" />
+                            <Trash size={13} weight="regular" />
                           </button>
                         </div>
                       )}
@@ -337,7 +337,7 @@ export function CollectionTab({
           action={
             <Button asChild variant="accent" className="rounded-xl shadow-sm font-bold mt-4">
               <Link href={getLibraryHref()}>
-                <Compass size={20} weight="bold" className="mr-1.5" />
+                <Compass size={20} weight="regular" className="mr-1.5" />
                 Jelajahi Library
               </Link>
             </Button>
@@ -500,7 +500,7 @@ export function CollectionTab({
         isOpen={isDeleteOpen}
         onOpenChange={setIsDeleteOpen}
         title="Hapus koleksi?"
-        description="Folder koleksi ini akan dihapus. Komik di dalamnya tidak akan terhapus dari Rak Buku."
+        description="Folder koleksi ini akan dihapus. Komik di dalamnya tidak akan terhapus dari Library."
         confirmLabel="Hapus"
         cancelLabel="Batal"
         variant="danger"

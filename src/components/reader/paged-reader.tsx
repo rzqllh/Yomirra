@@ -1,4 +1,5 @@
 "use client";
+import { noteCompletedChapter } from "@/shared/lib/bookmark-suggestion";
 
 import * as React from "react";
 import Image from "next/image";
@@ -24,8 +25,10 @@ import { motion, PanInfo } from "motion/react";
 import { toast } from "sonner";
 import { beginNavigationIntent } from "@/shared/lib/navigation-intent";
 import { getReaderLookAheadWindow } from "@/shared/lib/reader-load-order";
+import { canCompleteChapter } from "@/shared/lib/chapter-completion";
 
 interface PagedReaderProps {
+  managedChrome?: boolean;
   sourceId: string;
   mangaId: string;
   chapterId: string;
@@ -39,6 +42,7 @@ interface PagedReaderProps {
 }
 
 export function PagedReader({
+  managedChrome = false,
   sourceId,
   mangaId,
   chapterId,
@@ -57,6 +61,7 @@ export function PagedReader({
   const { dataSaver } = useSettingsStore();
   const isDownloaded = useDownloadStore(state => state.isDownloaded(sourceId, mangaId, chapterId));
   const saveProgress = useHistoryStore(state => state.saveProgress);
+  const markChapterProgress = useHistoryStore(state => state.markChapterProgress);
   const getProgress = useHistoryStore(state => state.getLatestForManga);
   const hasHydrated = useHistoryStore(state => state._hasHydrated);
   const historyItem = useHistoryStore(state => {
@@ -76,13 +81,17 @@ export function PagedReader({
   useReadingTimer();
 
   const [currentPages, setCurrentPages] = React.useState<PageItem[]>(pages);
+  const [failedPageIndices, setFailedPageIndices] = React.useState<Set<number>>(new Set());
+  const [loadedPositions, setLoadedPositions] = React.useState<Set<number>>(new Set());
+
   React.useEffect(() => {
     setCurrentPages(pages);
+    setLoadedPositions(new Set());
+    setFailedPageIndices(new Set());
   }, [pages]);
 
-  const [failedPageIndices, setFailedPageIndices] = React.useState<Set<number>>(new Set());
-
   const handleImageLoad = React.useCallback((pageIndex: number) => {
+    setLoadedPositions((prev) => new Set(prev).add(pageIndex));
     setFailedPageIndices((prev) => {
       if (!prev.has(pageIndex)) return prev;
       const next = new Set(prev);
@@ -92,6 +101,12 @@ export function PagedReader({
   }, []);
 
   const handlePermanentFailure = React.useCallback((pageIndex: number) => {
+    setLoadedPositions((prev) => {
+      if (!prev.has(pageIndex)) return prev;
+      const next = new Set(prev);
+      next.delete(pageIndex);
+      return next;
+    });
     setFailedPageIndices((prev) => {
       if (prev.has(pageIndex)) return prev;
       const next = new Set(prev);
@@ -137,10 +152,22 @@ export function PagedReader({
     }
   }, [currentPageIndex, totalPages, setPagedProgress, hasInitialized]);
 
+  const setPageNavigation = useReaderStore(state => state.setPageNavigation);
+  const navigationKey = `${sourceId}::${mangaId}::${chapterId}`;
+  const seekPage = React.useCallback((index: number) => setCurrentPageIndex(Math.max(0, Math.min(index, totalPages - 1))), [totalPages]);
+
+  React.useEffect(() => () => {
+    if (useReaderStore.getState().pageNavigation?.key === navigationKey) setPageNavigation(null);
+  }, [navigationKey, setPageNavigation]);
+  React.useEffect(() => {
+    if (hasInitialized && currentPageIndex === totalPages - 1 && canCompleteChapter(currentPages, loadedPositions, failedPageIndices)) noteCompletedChapter(sourceId, mangaId, chapterId);
+  }, [hasInitialized, currentPageIndex, totalPages, currentPages, loadedPositions, failedPageIndices, sourceId, mangaId, chapterId]);
+
   // Persist page progress only after initialization
   const flushProgress = React.useCallback(() => {
     if (totalPages > 0 && hasInitialized) {
-      saveProgress(sourceId, mangaId, chapterId, currentPageIndex, totalPages);
+      // In paged mode, totalPages is NOT a pixel/page offset (Q63).
+      saveProgress(sourceId, mangaId, chapterId, currentPageIndex);
     }
   }, [currentPageIndex, totalPages, sourceId, mangaId, chapterId, saveProgress, hasInitialized]);
 
@@ -172,9 +199,15 @@ export function PagedReader({
       setCurrentPageIndex(prev => prev + 1);
     } else if (nextChapterId) {
       const href = getReaderHref(sourceId, mangaId, nextChapterId);
-      if (beginNavigationIntent(href)) router.replace(href);
+      if (beginNavigationIntent(href)) {
+        if (canCompleteChapter(currentPages, loadedPositions, failedPageIndices)) {
+          markChapterProgress(sourceId, mangaId, chapterId, totalPages - 1, totalPages, 100);
+        }
+        router.replace(href);
+      }
     }
-  }, [currentPageIndex, totalPages, nextChapterId, router, sourceId, mangaId]);
+  }, [currentPageIndex, totalPages, nextChapterId, router, sourceId, mangaId,
+      chapterId, currentPages, loadedPositions, failedPageIndices, markChapterProgress]);
 
   const goToPrevPage = React.useCallback(() => {
     if (currentPageIndex > 0) {
@@ -193,6 +226,11 @@ export function PagedReader({
       goToPrevPage();
     }
   }, [isRtl, goToNextPage, goToPrevPage]);
+
+  React.useEffect(() => {
+    if (hasInitialized) setPageNavigation({ key: navigationKey, index: currentPageIndex, total: totalPages, seek: seekPage,
+      previous: goToPrevPage, next: goToNextPage, canPrevious: currentPageIndex > 0 || Boolean(prevChapterId), canNext: currentPageIndex < totalPages - 1 || Boolean(nextChapterId) });
+  }, [hasInitialized, navigationKey, currentPageIndex, totalPages, seekPage, goToPrevPage, goToNextPage, prevChapterId, nextChapterId, setPageNavigation]);
 
   const handleRightTap = React.useCallback(() => {
     if (isRtl) {
@@ -311,7 +349,7 @@ export function PagedReader({
   const rightLabel = isRtl ? "Area ketuk halaman sebelumnya" : "Area ketuk halaman berikutnya";
 
   return (
-    <div className="relative min-h-screen w-full bg-surface-base select-none flex flex-col items-center justify-center pt-[calc(var(--mobile-header-height)+var(--safe-top))] pb-[calc(var(--bottom-dock-height)+var(--safe-bottom))]">
+    <div className="relative min-h-screen w-full bg-surface-base select-none flex flex-col items-center justify-center pt-[calc(var(--mobile-header-height)+var(--safe-top))] pb-[calc(var(--bottom-dock-height)+var(--safe-bottom)+80px)]">
       {/* Chapter Degraded Recovery Banner */}
       {failedPageIndices.size > 0 && (
         <div className="fixed top-[calc(var(--mobile-header-height)+var(--safe-top)+10px)] z-40 max-w-md w-[calc(100%-32px)] mx-auto left-0 right-0 p-3 rounded-full bg-surface-raised/95 backdrop-blur-xl border border-semantic-warning/30 shadow-lg flex items-center justify-between gap-3 text-xs animate-in fade-in slide-in-from-top-2 duration-200">
@@ -433,8 +471,8 @@ export function PagedReader({
         </div>
       )}
 
-      {/* Bottom Paged Navigation & Counter Squircle */}
-      <div className="fixed bottom-[calc(var(--bottom-dock-height,80px)+16px)] z-30 flex items-center gap-2.5 px-3 py-1.5 bg-surface-raised/95 backdrop-blur-xl rounded-xl border border-border-subtle shadow-md text-xs font-semibold text-text-primary">
+      {/* Standalone/manual fallback; the composed Reader uses its shared bottom scrubber. */}
+      {(!managedChrome || !preferences.showPageProgress) && <div className="fixed bottom-[calc(var(--bottom-dock-height,80px)+16px)] z-30 flex items-center gap-2.5 px-3 py-1.5 bg-surface-raised/95 backdrop-blur-xl rounded-xl border border-border-subtle shadow-md text-xs font-semibold text-text-primary">
         <Button
           variant="ghost"
           size="icon"
@@ -443,7 +481,7 @@ export function PagedReader({
           disabled={currentPageIndex === 0 && !prevChapterId}
           aria-label="Halaman sebelumnya"
         >
-          <CaretLeft size={16} weight="bold" />
+          <CaretLeft size={16} weight="regular" />
         </Button>
 
         <span className="tabular-nums font-bold">
@@ -458,9 +496,9 @@ export function PagedReader({
           disabled={currentPageIndex === totalPages - 1 && !nextChapterId}
           aria-label="Halaman berikutnya"
         >
-          <CaretRight size={16} weight="bold" />
+          <CaretRight size={16} weight="regular" />
         </Button>
-      </div>
+      </div>}
 
       <ReportSheet
         open={isReportOpen}

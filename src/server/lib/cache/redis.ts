@@ -1,6 +1,7 @@
 import Redis from "ioredis";
 import { env } from "@/env";
 import { logger } from "@/shared/logger";
+import { redisKeyNamespace } from "./redis-key-scope";
 
 const globalForRedis = globalThis as unknown as {
   redis: Redis | undefined;
@@ -17,6 +18,7 @@ export const isRedisConfigured = Boolean(process.env.REDIS_URL);
 
 const createRedisClient = () => {
   const client = new Redis(env.REDIS_URL, {
+    ...(redisKeyNamespace ? { keyPrefix: redisKeyNamespace } : {}),
     lazyConnect: true,
     maxRetriesPerRequest: 1,
     enableOfflineQueue: false,

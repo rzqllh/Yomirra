@@ -1,8 +1,10 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
 import { useUpdateStore } from "@/shared/store/update-store";
+import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
+import { useSettingsStore } from "@/shared/store/settings-store";
 import { MangaCard, CollapsibleBadgeRow } from "../manga-card";
 
 vi.mock("next/navigation", () => ({
@@ -12,8 +14,8 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("../../bookmark-button", () => ({
-  BookmarkButton: ({ manga }: { manga: { title: string } }) => (
-    <button type="button" className="size-11" aria-label={`Simpan ${manga.title} ke rak`} />
+  BookmarkButton: ({ manga, sourceId }: { manga: { title: string; id: string }; sourceId: string }) => (
+    <button type="button" className="size-11" data-source-id={sourceId} data-manga-id={manga.id} aria-label={`Simpan ${manga.title} ke rak`} />
   ),
 }));
 
@@ -61,6 +63,8 @@ describe("MangaCard", () => {
   beforeEach(() => {
     document.body.innerHTML = "";
     vi.clearAllMocks();
+    useSourcePreferencesStore.setState({ disabledSources: [] });
+    useSettingsStore.setState({ hideNsfw: true });
 
     class ImmediateIntersectionObserver {
       private callback: IntersectionObserverCallback;
@@ -105,6 +109,92 @@ describe("MangaCard", () => {
     expect(screen.getByText("9.2")).toBeDefined();
   });
 
+  it.each(["grid", "compact"] as const)(
+    "opens the only eligible source directly in %s view",
+    (viewMode) => {
+      render(
+        <MangaCard
+          variant="discovery"
+          viewMode={viewMode}
+          sourceId="shinigami"
+          sourceBindings={[{ sourceId: "mangadex", mangaId: "verified-alternative", title: "Work" }]}
+          manga={{ id: "disabled-primary", title: "Work", coverUrl: "", description: "Sinopsis sampel." }}
+        />
+      );
+      const links = screen.getAllByRole("link", { name: /Lihat Work/ });
+      expect(links.length).toBeGreaterThan(0);
+      for (const link of links) {
+        expect(link.getAttribute("href")).toContain("/manga/mangadex/verified-alternative");
+        expect(link.getAttribute("aria-haspopup")).toBeNull();
+      }
+      expect(screen.queryByRole("dialog")).toBeNull();
+      const bookmark = screen.getByRole("button", { name: "Simpan Work ke rak" });
+      expect(bookmark.getAttribute("data-source-id")).toBe("mangadex");
+      expect(bookmark.getAttribute("data-manga-id")).toBe("verified-alternative");
+    }
+  );
+
+  it("still requires a manual picker for two eligible sources", () => {
+    render(
+      <MangaCard
+        sourceId="shinigami"
+        sourceBindings={[
+          { sourceId: "shinigami", mangaId: "a", title: "Work" },
+          { sourceId: "mangadex", mangaId: "b", title: "Work" },
+        ]}
+        manga={{ id: "a", title: "Work", coverUrl: "" }}
+      />
+    );
+    fireEvent.click(screen.getByRole("link", { name: "Pilih sumber untuk Work" }));
+    expect(screen.getByRole("dialog")).toBeDefined();
+    expect(screen.getByText("Pilih sumber")).toBeDefined();
+  });
+
+  it("does not navigate to a disabled or missing canonical source", () => {
+    render(
+      <MangaCard
+        sourceId="shinigami"
+        sourceBindings={[{ sourceId: "missing-source", mangaId: "a", title: "Work" }]}
+        manga={{ id: "a", title: "Work", coverUrl: "" }}
+      />
+    );
+    const link = screen.getByRole("link", { name: "Sumber tidak tersedia untuk Work" });
+    expect(link.getAttribute("aria-disabled")).toBe("true");
+    expect(link.getAttribute("href")).toBe("#");
+    expect(fireEvent.click(link)).toBe(false);
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it.each(["grid", "compact", "rank"] as const)(
+    "blocks navigation when the only non-aggregated source is disabled (%s)",
+    (mode) => {
+      useSourcePreferencesStore.setState({ disabledSources: ["mangadex"] });
+      render(
+        <MangaCard
+          variant={mode === "rank" ? "rank" : "discovery"}
+          viewMode={mode === "compact" ? "compact" : "grid"}
+          sourceId="mangadex"
+          manga={{
+            id: "disabled-sole-source",
+            title: "Unavailable Solo",
+            coverUrl: "",
+            description: "A source-specific result.",
+          }}
+        />
+      );
+      const links = screen.getAllByRole("link", {
+        name: "Sumber tidak tersedia untuk Unavailable Solo",
+      });
+      expect(links.length).toBeGreaterThan(0);
+      for (const link of links) {
+        expect(link.getAttribute("aria-disabled")).toBe("true");
+        expect(link.getAttribute("href")).toBe("#");
+        expect(fireEvent.click(link)).toBe(false);
+      }
+      expect(screen.queryByRole("dialog")).toBeNull();
+    }
+  );
+
   it("lazily hydrates and sanitizes a missing compact-card synopsis", async () => {
     const queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
@@ -125,11 +215,12 @@ describe("MangaCard", () => {
         <MangaCard
           variant="discovery"
           viewMode="compact"
-          sourceId="doujindesu"
+          sourceId="shinigami"
           manga={{
             id: "missing-synopsis",
             title: "Missing Synopsis",
             coverUrl: "https://example.com/cover.jpg",
+            contentRating: "safe",
           }}
         />
       </QueryClientProvider>
@@ -139,7 +230,7 @@ describe("MangaCard", () => {
       expect(screen.getByText("Cerita bersih dari detail.")).toBeDefined();
     });
     expect(apiClient.getDetail).toHaveBeenCalledWith(
-      "doujindesu",
+      "shinigami",
       "missing-synopsis",
       expect.objectContaining({ signal: expect.anything() })
     );
@@ -172,6 +263,7 @@ describe("MangaCard", () => {
               id: "same-manga",
               title: "Same Manga",
               coverUrl: "https://example.com/cover.jpg",
+              contentRating: "safe",
             }}
           />
           <MangaCard
@@ -182,6 +274,7 @@ describe("MangaCard", () => {
               id: "same-manga",
               title: "Same Manga Copy",
               coverUrl: "https://example.com/cover.jpg",
+              contentRating: "safe",
             }}
           />
         </>
@@ -397,4 +490,49 @@ describe("MangaCard", () => {
     expect(screen.getByText("95%")).toBeDefined();
     expect(screen.queryByText("100%")).toBeNull();
   });
+
+  it("hides confirmed restricted cached records and source-only adult cards without rendering a title, cover or link", () => {
+    const { rerender } = render(
+      <MangaCard sourceId="shinigami" manga={{
+        id: "restricted", title: "Sensitive title", coverUrl: "https://example.com/sensitive.jpg", contentRating: "erotica",
+      }} />
+    );
+    expect(screen.getByRole("status").textContent).toContain("Konten disembunyikan");
+    expect(screen.queryByText("Sensitive title")).toBeNull();
+    expect(screen.queryByRole("link", { name: /Sensitive title/ })).toBeNull();
+    expect(screen.queryByTestId("unverified-cover")).toBeNull();
+
+    rerender(<MangaCard sourceId="doujindesu" manga={{
+      id: "source-only", title: "Old source-only title", coverUrl: "https://example.com/source.jpg", contentRating: "safe",
+    }} />);
+    expect(screen.getByRole("status").textContent).toContain("Konten disembunyikan");
+    expect(screen.queryByText("Old source-only title")).toBeNull();
+  });
+
+  it.each([
+    ["discovery", "grid"],
+    ["discovery", "compact"],
+    ["rank", "grid"],
+    ["progress", "grid"],
+  ] as const)("renders normal cover for unrated/missing-rating titles in safe mode (D-01) for %s/%s cards", (variant, viewMode) => {
+    const { container } = render(<MangaCard
+      variant={variant}
+      viewMode={viewMode}
+      sourceId="shinigami"
+      manga={{ id: "unknown-title", title: "Unknown title", coverUrl: "https://example.com/unverified.jpg", description: "Known fixture text" }}
+    />);
+    expect(screen.queryByTestId("unverified-cover")).toBeNull();
+    expect(container.querySelector("img")).toBeTruthy();
+    expect(screen.getByText("Unknown title")).toBeTruthy();
+  });
+
+  it("keeps explicit adult titles strictly restricted in safe mode", () => {
+    render(<MangaCard
+      variant="discovery" viewMode="grid" sourceId="shinigami"
+      manga={{ id: "adult-title", title: "Adult title", coverUrl: "https://example.com/adult.jpg", contentRating: "erotica" }}
+    />);
+    expect(screen.getByRole("status").textContent).toContain("Konten disembunyikan");
+    expect(screen.queryByText("Adult title")).toBeNull();
+  });
+
 });

@@ -83,7 +83,7 @@ export function CoreSourceModal({ source, isOpen, onClose, onSaved, getToken }: 
         aria-modal="true"
         aria-labelledby="core-source-title"
         style={{ colorScheme: "dark" }}
-        className="flex max-h-[92vh] w-full max-w-xl flex-col overflow-hidden rounded-[24px] border border-zinc-800 bg-zinc-900 shadow-2xl shadow-black/50"
+        className="flex max-h-[92vh] w-full max-w-xl flex-col overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 shadow-2xl shadow-black/50"
       >
         <div className="flex items-start justify-between gap-4 border-b border-zinc-800/90 px-5 py-4">
           <div className="flex min-w-0 items-start gap-3">

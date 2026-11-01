@@ -11,7 +11,7 @@ import Link from "next/link";
 interface MangaDetailErrorStateProps {
   sourceId: string;
   mangaId: string;
-  type: "not_found" | "network_error" | "disabled";
+  type: "not_found" | "network_error" | "disabled" | "content_restricted";
   message?: string;
 }
 
@@ -34,14 +34,17 @@ export function MangaDetailErrorState({
 
   const isNotFound = type === "not_found";
   const isDisabled = type === "disabled";
+  const isRestricted = type === "content_restricted";
 
-  const title = isDisabled
+  const title = isRestricted ? "Konten disembunyikan"
+    : isDisabled
     ? `Sumber "${sourceName}" dinonaktifkan`
     : isNotFound
     ? "Komik tidak ditemukan"
     : `Belum bisa terhubung ke ${sourceName}`;
 
-  const description = isDisabled
+  const description = isRestricted ? "Konten ini tidak ditampilkan sesuai pengaturan kontenmu."
+    : isDisabled
     ? "Sumber ini sedang dinonaktifkan. Aktifkan kembali dari halaman Sumber untuk membaca komik ini."
     : isNotFound
     ? `Komik ini tidak ditemukan di ${sourceName}. Kamu bisa mencarinya di sumber lain.`
@@ -58,12 +61,14 @@ export function MangaDetailErrorState({
       <div className="w-full max-w-lg mx-auto px-4 pt-16 md:pt-24 flex flex-col items-center">
         <div className="w-full bg-surface-raised border border-border-subtle rounded-xl p-6 md:p-8 shadow-sm flex flex-col items-center text-center">
           <div className="w-14 h-14 rounded-full bg-accent-dim text-accent flex items-center justify-center mb-4">
-            {isDisabled ? (
-              <HardDrives size={28} weight="duotone" />
+            {isRestricted ? (
+              <Button asChild variant="primary"><Link href="/settings">Buka Pengaturan</Link></Button>
+            ) : isDisabled ? (
+              <HardDrives size={28} weight="regular" />
             ) : isNotFound ? (
-              <MagnifyingGlass size={28} weight="duotone" />
+              <MagnifyingGlass size={28} weight="regular" />
             ) : (
-              <WarningCircle size={28} weight="duotone" className="text-semantic-warning" />
+              <WarningCircle size={28} weight="regular" className="text-semantic-warning" />
             )}
           </div>
 
@@ -79,14 +84,14 @@ export function MangaDetailErrorState({
             {isDisabled ? (
               <Button asChild variant="primary" className="gap-2 w-full sm:w-auto font-bold">
                 <Link href="/sources">
-                  <HardDrives size={18} weight="bold" />
+                  <HardDrives size={18} weight="regular" />
                   Buka Sumber
                 </Link>
               </Button>
             ) : isNotFound ? (
               <Button asChild variant="primary" className="gap-2 w-full sm:w-auto font-bold">
                 <Link href={`/search?q=${encodeURIComponent(mangaId.replace(/[-_]/g, ' '))}`}>
-                  <MagnifyingGlass size={18} weight="bold" />
+                  <MagnifyingGlass size={18} weight="regular" />
                   Cari di Sumber Lain
                 </Link>
               </Button>
@@ -97,7 +102,7 @@ export function MangaDetailErrorState({
                 loading={isRetrying}
                 className="gap-2 w-full sm:w-auto font-bold"
               >
-                <ArrowClockwise size={18} weight="bold" />
+                <ArrowClockwise size={18} weight="regular" />
                 Coba Lagi
               </Button>
             )}

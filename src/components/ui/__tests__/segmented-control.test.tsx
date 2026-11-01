@@ -72,11 +72,11 @@ describe("SegmentedControl - Concentric Radius Architecture & Quick Rail", () =>
         options={options}
         value="reading"
         onChange={vi.fn()}
-        ariaLabel="Tampilan rak buku"
+        ariaLabel="Tampilan Library"
       />
     );
 
-    const group = screen.getByRole("group", { name: "Tampilan rak buku" });
+    const group = screen.getByRole("group", { name: "Tampilan Library" });
     expect(group).toBeDefined();
     expect(screen.getByRole("button", { name: /sedang dibaca/i }).getAttribute("aria-pressed")).toBe("true");
     expect(screen.getByRole("button", { name: /koleksi/i }).getAttribute("aria-pressed")).toBe("false");

@@ -15,6 +15,7 @@ interface UseReaderScrollOptions {
   saveProgress: (sourceId: string, mangaId: string, chapterId: string, pageIndex: number, pageOffset?: number) => void;
   queryClient: QueryClient;
   isReadyToTrack?: boolean;
+  onPageChange?: (index: number) => void;
 }
 
 export function useReaderScroll({
@@ -27,6 +28,7 @@ export function useReaderScroll({
   saveProgress,
   queryClient,
   isReadyToTrack = true,
+  onPageChange,
 }: UseReaderScrollOptions) {
   const lastActiveChapter = React.useRef(chapterId);
   const scrollStopTimer = React.useRef<NodeJS.Timeout>(undefined);
@@ -104,13 +106,14 @@ export function useReaderScroll({
             const activeStreamItem = streamItems[centerItem.index];
             
             if (activeStreamItem && activeStreamItem.type === 'image') {
+              onPageChange?.(centerItem.index);
               // Update URL if chapter crossed
               if (activeStreamItem.chapterId !== lastActiveChapter.current) {
                 lastActiveChapter.current = activeStreamItem.chapterId;
                 window.history.replaceState(null, '', getReaderHref(sourceId, mangaId, activeStreamItem.chapterId));
               }
 
-              // Coalesce write progress on scroll stop (300ms idle)
+              // Coalesce write progress on scroll stop (250ms idle)
               if (isReadyToTrack) {
                 const offset = currentScrollY - centerItem.start;
                 pendingProgressSave.current = {
@@ -124,7 +127,7 @@ export function useReaderScroll({
                 }
                 scrollStopTimer.current = setTimeout(() => {
                   flushProgress();
-                }, 300);
+                }, 250);
               }
             }
           }
@@ -145,5 +148,5 @@ export function useReaderScroll({
       // Flush immediately on unmount to not lose progress
       flushProgress();
     };
-  }, [sourceId, mangaId, nextChapterId, queryClient, streamItems, virtualizer, flushProgress, isReadyToTrack]);
+  }, [sourceId, mangaId, nextChapterId, queryClient, streamItems, virtualizer, flushProgress, isReadyToTrack, onPageChange]);
 }

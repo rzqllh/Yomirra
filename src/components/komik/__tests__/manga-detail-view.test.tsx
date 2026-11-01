@@ -1,11 +1,12 @@
 import React from "react";
-import { render } from "@testing-library/react";
+import { render, fireEvent } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { MangaDetailView } from "../manga-detail-view";
 
+const refresh = vi.fn();
 vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
-  useRouter: () => ({ push: vi.fn(), back: vi.fn() }),
+  useRouter: () => ({ push: vi.fn(), back: vi.fn(), refresh }),
   usePathname: () => "/manga/shinigami/test-manga",
 }));
 
@@ -47,6 +48,28 @@ describe("MangaDetailView - Scroll Position Reset", () => {
     vi.clearAllMocks();
   });
 
+  it("keeps title metadata and offers retry when the chapter request fails", () => {
+    const view = render(<MangaDetailView sourceId="shinigami" mangaId="test-manga"
+      detail={{ contentRating: "safe", id: "test-manga", title: "Test Manga", coverUrl: "", description: "Synopsis", genres: [], status: "ONGOING" }}
+      chapters={[]} chapterLoadError="Daftar chapter tidak dapat dijangkau." />);
+    expect(view.getAllByText("Test Manga").length).toBeGreaterThan(0);
+    expect(view.getByText("Daftar chapter tidak dapat dijangkau.")).toBeTruthy();
+    expect(view.queryByText("Belum ada chapter yang tersedia untuk pilihan bahasa pada sumber ini.")).toBeNull();
+    expect(view.getAllByRole("button", { name: "Chapter belum bisa dimuat" }).every((button) => (button as HTMLButtonElement).disabled)).toBe(true);
+    fireEvent.click(view.getByRole("button", { name: "Muat ulang chapter" }));
+    expect(refresh).toHaveBeenCalledOnce();
+  });
+
+  it("preserves a provider's chapter zero in the reading action label and identity", () => {
+    const view = render(<MangaDetailView sourceId="mangadex" mangaId="zero-work"
+      detail={{ contentRating: "safe", id: "zero-work", title: "Zero Work", coverUrl: "", description: "", genres: [], status: "COMPLETED" }}
+      chapters={[{ id: "zero-id", mangaId: "zero-work", number: 0, title: "Oneshot [EN]", date: "2026-10-31" }]} />);
+    const actions = view.getAllByRole("link", { name: "Mulai Baca - Chapter 0" });
+    expect(actions.length).toBeGreaterThan(0);
+    expect(actions.every((link) => link.getAttribute("href")?.includes("/read/zero-id"))).toBe(true);
+    expect(view.queryByRole("link", { name: "Mulai Baca - Chapter 1" })).toBeNull();
+  });
+
   it("resets window scroll to top (0, 0) on render/mount", () => {
     const scrollToSpy = vi.spyOn(window, "scrollTo").mockImplementation(() => {});
 
@@ -55,7 +78,7 @@ describe("MangaDetailView - Scroll Position Reset", () => {
         sourceId="shinigami"
         mangaId="test-manga"
         detail={{
-          id: "test-manga",
+          contentRating: "safe", id: "test-manga",
           title: "Test Manga",
           coverUrl: "https://example.com/cover.jpg",
           description: "Synopsis text",
@@ -78,7 +101,7 @@ describe("MangaDetailView - Scroll Position Reset", () => {
         sourceId="shinigami"
         mangaId="test-manga"
         detail={{
-          id: "test-manga",
+          contentRating: "safe", id: "test-manga",
           title: "Test Manga",
           coverUrl: "https://example.com/cover.jpg",
           description: "Synopsis text",
@@ -103,7 +126,7 @@ describe("MangaDetailView - Scroll Position Reset", () => {
         sourceId="shinigami"
         mangaId="test-manga"
         detail={{
-          id: "test-manga",
+          contentRating: "safe", id: "test-manga",
           title: "Test Manga",
           coverUrl: "https://example.com/cover.jpg",
           description: "Synopsis text",
@@ -131,7 +154,7 @@ describe("MangaDetailView - Scroll Position Reset", () => {
         sourceId="shinigami"
         mangaId="test-manga"
         detail={{
-          id: "test-manga",
+          contentRating: "safe", id: "test-manga",
           title: "Test Manga",
           coverUrl: "https://example.com/cover.jpg",
           description: "<p>Setelah menyelesaikan \\[MENARA UJIAN\\], pahlawan kembali &amp; mendapati dunia &quot;baru&quot;.</p>",
@@ -153,7 +176,7 @@ describe("MangaDetailView - Scroll Position Reset", () => {
         sourceId="shinigami"
         mangaId="test-manga-1"
         detail={{
-          id: "test-manga-1",
+          contentRating: "safe", id: "test-manga-1",
           title: "Test Manga",
           coverUrl: "https://example.com/cover.jpg",
           description: "Synopsis",
@@ -173,7 +196,7 @@ describe("MangaDetailView - Scroll Position Reset", () => {
         sourceId="shinigami"
         mangaId="test-manga-2"
         detail={{
-          id: "test-manga-2",
+          contentRating: "safe", id: "test-manga-2",
           title: "Test Manga",
           coverUrl: "https://example.com/cover.jpg",
           description: "Synopsis",

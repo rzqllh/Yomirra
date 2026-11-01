@@ -296,7 +296,7 @@ export function CustomSourceModal({ initialSource, isOpen, onClose, onSaved, get
         aria-modal="true"
         aria-labelledby="custom-source-title"
         style={{ colorScheme: "dark" }}
-        className="my-auto flex max-h-[94vh] w-full max-w-3xl flex-col overflow-hidden rounded-[24px] border border-zinc-800 bg-zinc-900 shadow-2xl shadow-black/50"
+        className="my-auto flex max-h-[94vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 shadow-2xl shadow-black/50"
       >
         <div className="flex items-start justify-between gap-4 border-b border-zinc-800/90 px-5 py-4 sm:px-6">
           <div className="flex min-w-0 items-start gap-3">

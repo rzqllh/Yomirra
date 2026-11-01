@@ -14,6 +14,7 @@ interface MangaActionsProps {
   coverUrl: string;
   author?: string;
   status?: string;
+  isNsfw?: boolean;
   manifestUrl?: string; // We can use this to open webview
 }
 
@@ -24,6 +25,7 @@ export function MangaActions({
   coverUrl,
   author,
   status,
+  isNsfw,
 }: MangaActionsProps) {
   const [isMounted, setIsMounted] = React.useState(false);
 
@@ -45,6 +47,7 @@ export function MangaActions({
       coverUrl,
       author,
       status,
+      isNsfw,
       addedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });
@@ -53,7 +56,7 @@ export function MangaActions({
 
     // This action is optimistic and local-first. Do not claim cloud commit
     // success before the asynchronous store mutation has actually settled.
-    toast.info(wasInLibrary ? "Dihapus dari Rak Buku di perangkat" : "Disimpan ke Rak Buku di perangkat", {
+    toast.info(wasInLibrary ? "Dihapus dari Library di perangkat" : "Disimpan ke Library di perangkat", {
       id: toastId,
       description: "Jika sinkronisasi akun gagal, Yomirra akan memberi tahu dan membatalkan perubahan ini.",
     });
@@ -63,9 +66,9 @@ export function MangaActions({
     <>
       <button
         onClick={handleToggle}
-        aria-label={isInLibrary ? "Hapus dari Rak Buku" : "Simpan ke Rak Buku"}
+        aria-label={isInLibrary ? "Hapus dari Library" : "Simpan ke Library"}
         className={cn(
-          "flex items-center justify-center gap-1.5 h-[52px] md:h-[48px] px-1 md:px-3.5 transition-all outline-none select-none rounded-[14px] border shadow-xs active:scale-95 bg-surface-raised",
+          "flex items-center justify-center gap-1.5 h-[52px] md:h-[48px] px-1 md:px-3.5 transition-all outline-none select-none rounded-md border shadow-xs active:scale-95 bg-surface-raised",
           isInLibrary
             ? "border-accent/60 text-accent font-bold ring-1 ring-accent/20"
             : "border-border-default text-text-secondary hover:text-text-primary hover:border-border-strong hover:bg-surface-hover"
@@ -81,7 +84,7 @@ export function MangaActions({
         sourceId={sourceId}
         mangaId={mangaId}
         variant="action"
-        mangaDetail={{ title, coverUrl, author, status }}
+        mangaDetail={{ title, coverUrl, author, status, isNsfw }}
       />
     </>
   );

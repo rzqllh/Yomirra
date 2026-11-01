@@ -59,7 +59,7 @@ export function CollectionSelectionToolbar({
               onClick={() => onOpenDeleteDialogChange(true)}
               className="rounded-xl text-xs font-bold bg-semantic-error hover:bg-semantic-error/90 text-white gap-1"
             >
-              <Trash size={14} weight="bold" />
+              <Trash size={14} weight="regular" />
               Hapus ({selectedCount})
             </Button>
           )}

@@ -11,7 +11,7 @@ export default function Loading() {
         <PageHeader
           title="Sumber"
           subtitle="Pilih sumber yang digunakan untuk menjelajah dan membaca komik."
-          icon={<HardDrives size={24} weight="duotone" />}
+          icon={<HardDrives size={24} weight="regular" />}
         />
         <Skeleton className="h-16 w-full rounded-2xl" />
         <Skeleton className="h-11 w-full max-w-md rounded-2xl" />

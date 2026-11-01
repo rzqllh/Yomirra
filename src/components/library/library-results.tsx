@@ -3,10 +3,10 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { motion, LayoutGroup, useReducedMotion } from "motion/react";
-import { 
-  Funnel, 
-  SmileySad, 
-  Books, 
+import {
+  Funnel,
+  SmileySad,
+  Books,
   MagnifyingGlass,
   Check,
   HardDrives
@@ -53,7 +53,7 @@ export interface LibraryResultsProps {
   setPage: React.Dispatch<React.SetStateAction<number>>;
   hasNextPage?: boolean;
   onResetFilters: () => void;
-  
+
   // Selection mode props
   isSelectionMode?: boolean;
   selectedItems?: Set<string>;
@@ -97,7 +97,7 @@ export function LibraryResults({
       <EmptyState
         icon={<HardDrives size={40} className="text-text-muted" weight="duotone" />}
         title="Belum ada sumber aktif"
-        description="Pilih sumber yang mau tampil di Beranda, Library, dan Populer."
+        description="Pilih sumber yang mau tampil di Beranda, Jelajah, dan Populer."
         action={
           <Button onClick={() => router.push("/sources")} variant="outline" className="mt-4 rounded-xl shadow-sm font-bold">
             Atur sumber
@@ -112,7 +112,7 @@ export function LibraryResults({
       <EmptyState
         icon={<HardDrives size={40} className="text-text-muted" weight="duotone" />}
         title="Sumber ini tidak ditampilkan"
-        description="Pilih sumber yang mau tampil di Beranda, Library, dan Populer."
+        description="Pilih sumber yang mau tampil di Beranda, Jelajah, dan Populer."
         action={
           <Button onClick={() => router.push("/sources")} variant="outline" className="mt-4 rounded-xl shadow-sm font-bold">
             Atur sumber
@@ -245,7 +245,7 @@ export function LibraryResults({
                           : "bg-surface-raised border border-border-strong"
                       )}
                     >
-                      {isSelected && <Check size={16} weight="bold" aria-hidden="true" />}
+                      {isSelected && <Check size={16} weight="regular" aria-hidden="true" />}
                     </div>
                   </button>
                 )}

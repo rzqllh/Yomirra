@@ -1,24 +1,25 @@
 import { Metadata } from "next";
 import { sourceManager } from "@/server/lib/sources/source-manager";
-import { withCache, CACHE_TTL } from "@/server/lib/cache/redis-cache";
+import { getServerReadOptions, loadSourceDetail, loadSourceChapters } from "@/server/lib/sources/content-access";
 import { MangaDetailView } from "@/components/komik/manga-detail-view";
 import { getManifestUrlFromCookie } from "@/server/lib/sources/server-manifest";
 import { DeadSourceRecovery } from "@/components/komik/dead-source-recovery";
 import { MangaDetailErrorState } from "@/components/komik/manga-detail-error-state";
 import { getSourceMetadata } from "@/shared/sources/source-registry";
-import { SourceError, type SourceErrorCode } from "@/server/lib/sources/error";
+import { SourceError, getFriendlyErrorMessage, type SourceErrorCode } from "@/server/lib/sources/error";
 
-export async function generateMetadata({ 
-  params 
-}: { 
-  params: Promise<{ sourceId: string; mangaId: string }> 
+export async function generateMetadata({
+  params
+}: {
+  params: Promise<{ sourceId: string; mangaId: string }>
 }): Promise<Metadata> {
   const { sourceId, mangaId } = await params;
   const normalizedSourceId = sourceId.toLowerCase().trim();
   try {
+    const readOptions = await getServerReadOptions();
     const manifestUrl = await getManifestUrlFromCookie(normalizedSourceId);
     const source = await sourceManager.getSource(normalizedSourceId, manifestUrl);
-    const detail = await source.getDetail(mangaId);
+    const detail = await loadSourceDetail(source, mangaId, readOptions);
     return {
       title: `${detail.title} - Yomirra`,
       description: detail.description?.slice(0, 150) + "...",
@@ -43,8 +44,9 @@ export default async function MangaDetailPage({
 
   let detail;
   let chapters;
+  let chapterLoadError: string | undefined;
   let errorState: {
-    type: "disabled" | "not_found" | "dead" | "network_error";
+    type: "content_restricted" | "disabled" | "not_found" | "dead" | "network_error";
     message?: string;
     recoveryHealth?: {
       status: "BROKEN" | "RATE_LIMITED" | "DEGRADED";
@@ -54,14 +56,21 @@ export default async function MangaDetailPage({
   } | null = null;
 
   try {
+    const readOptions = await getServerReadOptions();
     const manifestUrl = await getManifestUrlFromCookie(normalizedSourceId);
     const source = await sourceManager.getSource(normalizedSourceId, manifestUrl);
-    
+
     // Fetch data directly on the server with cache!
-    [detail, chapters] = await Promise.all([
-      withCache(`source:v2:${normalizedSourceId}:manga:${mangaId}`, () => source.getDetail(mangaId), CACHE_TTL.DETAIL),
-      withCache(`source:v2:${normalizedSourceId}:chapters:${mangaId}`, () => source.getChapters(mangaId), CACHE_TTL.CHAPTERS),
+    const [loadedDetail, chapterResult] = await Promise.all([
+      loadSourceDetail(source, mangaId, readOptions),
+      loadSourceChapters(source, mangaId, readOptions).then((items) => ({ items, error: undefined as string | undefined })).catch((error: unknown) => {
+        const classified = SourceError.classify(error, normalizedSourceId, "chapters");
+        return { items: [], error: classified.code === "CHAPTER_UNAVAILABLE" ? classified.message : `Daftar chapter ${getFriendlyErrorMessage(classified.code)}.` };
+      }),
     ]);
+    detail = loadedDetail;
+    chapters = chapterResult.items;
+    chapterLoadError = chapterResult.error;
 
     if (!detail || !detail.title) {
       errorState = { type: "not_found" };
@@ -70,7 +79,11 @@ export default async function MangaDetailPage({
     console.error("Failed to load manga details", error);
     const errString = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
 
-    if (errString.includes("404") || errString.includes("not found") || errString.includes("tidak ditemukan")) {
+    if (SourceError.classify(error, normalizedSourceId, "detail").code === "CONTENT_RESTRICTED") {
+      errorState = { type: "content_restricted" };
+    } else if (errString.includes("source_disabled")) {
+      errorState = { type: "disabled" };
+    } else if (errString.includes("404") || errString.includes("not found") || errString.includes("tidak ditemukan")) {
       errorState = { type: "not_found" };
     } else {
       const sourceMeta = getSourceMetadata(normalizedSourceId);
@@ -127,11 +140,12 @@ export default async function MangaDetailPage({
   }
 
   return (
-    <MangaDetailView 
+    <MangaDetailView
       sourceId={normalizedSourceId}
       mangaId={mangaId}
       detail={detail}
       chapters={chapters}
+      chapterLoadError={chapterLoadError}
     />
   );
 }

@@ -32,6 +32,8 @@ export function buildTrustedCatalogCandidate(
     format: manga.format,
     status: manga.status,
     score: manga.score,
+    contentRating: manga.contentRating,
+    isNsfw: manga.isNsfw,
     sourceBindings: [
       {
         sourceId,

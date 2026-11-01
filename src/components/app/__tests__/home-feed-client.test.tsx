@@ -14,6 +14,8 @@ import {
 } from "vitest";
 import { HomeFeedClient, SPOTLIGHT_AUTOPLAY_MS } from "@/components/home/home-feed-client";
 import { HomeView } from "@/components/home/home-view";
+import { EditorialSpotlight } from "@/components/home/editorial-spotlight";
+import { HomeHero, HERO_COLLAGE_CACHE_KEY, isVerifiedSafeHeroCandidate } from "@/components/home/home-hero";
 import { HomeLeaderboardPanel } from "@/components/home/home-leaderboard-panel";
 import {
   isConfidentHomeDuplicate,
@@ -143,6 +145,7 @@ const sampleLatest: HomeFeedManga[] = [
     sourceName: "Source A",
     latestChapter: "Ch. 50",
     description: "Sinopsis petualangan epik komik alpha.",
+    contentRating: "safe",
   },
   {
     id: "manga-feat-2",
@@ -152,6 +155,7 @@ const sampleLatest: HomeFeedManga[] = [
     sourceName: "Source B",
     latestChapter: "Ch. 12",
     description: "Sinopsis komik beta yang mendebarkan.",
+    contentRating: "safe",
   },
 ];
 
@@ -159,11 +163,98 @@ describe("Yomirra Editorial Home Components", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     motionState.reduced = false;
+    mockSettingsState.hideNsfw = false;
     sessionStorage.clear();
   });
 
   afterEach(() => {
     vi.useRealTimers();
+  });
+
+  describe("Spotlight content safety", () => {
+    it("renders artwork and synopsis for unrated titles without positive adult signals (D-01)", () => {
+      mockSettingsState.hideNsfw = true;
+      const { container } = render(<EditorialSpotlight
+        sourceId="shinigami" sourceName="Shinigami"
+        manga={{ id: "unknown-home", title: "Unknown home", coverUrl: "https://example.com/unverified-spotlight.jpg", description: "Unreviewed synopsis" }}
+      />);
+      expect(screen.queryByText(/Rating belum terverifikasi/)).toBeNull();
+      expect(container.querySelector('img[src*="unverified-spotlight"]')).toBeTruthy();
+      expect(screen.getByText("Unreviewed synopsis")).toBeTruthy();
+      expect(screen.getByRole("link", { name: "Lihat komik Unknown home" })).toBeTruthy();
+    });
+
+    it("does not render a confirmed adult-only provider or restricted title with NSFW OFF", () => {
+      mockSettingsState.hideNsfw = true;
+      const view = render(<EditorialSpotlight
+        sourceId="doujindesu" sourceName="Doujindesu"
+        manga={{ id: "adult-home", title: "Restricted title", coverUrl: "https://example.com/explicit.jpg", contentRating: "safe" }}
+      />);
+      expect(screen.getByRole("status").textContent).toContain("Konten disembunyikan");
+      expect(view.container.querySelector("img")).toBeNull();
+      expect(screen.queryByText("Restricted title")).toBeNull();
+    });
+  });
+
+  describe("Hero cached cover content safety", () => {
+    it("never calls an unknown or adult-only source safe", () => {
+      expect(isVerifiedSafeHeroCandidate({
+        title: "Unknown", coverUrl: "https://example.com/unknown.jpg", sourceId: "shinigami",
+      })).toBe(false);
+      expect(isVerifiedSafeHeroCandidate({
+        title: "Adult source", coverUrl: "https://example.com/adult.jpg", sourceId: "doujindesu", contentRating: "safe",
+      })).toBe(false);
+      expect(isVerifiedSafeHeroCandidate({
+        title: "Unknown provider", coverUrl: "https://example.com/unknown-provider.jpg", sourceId: "not-registered", contentRating: "safe",
+      })).toBe(false);
+      expect(isVerifiedSafeHeroCandidate({
+        title: "Verified safe", coverUrl: "https://example.com/safe.jpg", sourceId: "shinigami", contentRating: "safe",
+      })).toBe(true);
+    });
+
+    it("ignores legacy and opt-in session covers when NSFW is turned OFF", () => {
+      mockHistoryState = { ...mockHistoryState, items: {} };
+      mockSettingsState.hideNsfw = true;
+      const candidates = [
+        { title: "Known safe", coverUrl: "https://example.com/safe-cover.jpg", sourceId: "shinigami", contentRating: "safe" as const },
+        { title: "Unknown", coverUrl: "https://example.com/unknown-cover.jpg", sourceId: "shinigami", contentRating: "unknown" as const },
+        { title: "Confirmed adult", coverUrl: "https://example.com/adult-cover.jpg", sourceId: "doujindesu", contentRating: "safe" as const },
+      ];
+      sessionStorage.setItem("yomirra_home_hero_collage_v1", JSON.stringify([candidates[2]]));
+      sessionStorage.setItem(`${HERO_COLLAGE_CACHE_KEY}_optin`, JSON.stringify([candidates[2]]));
+
+      const { container, rerender } = render(<HomeHero candidates={candidates} />);
+      const srcs = () => Array.from(container.querySelectorAll("img")).map((img) => img.getAttribute("src"));
+      expect(srcs()).toContain("https://example.com/safe-cover.jpg");
+      expect(srcs()).toContain("https://example.com/unknown-cover.jpg");
+      expect(srcs()).not.toContain("https://example.com/adult-cover.jpg");
+      expect(sessionStorage.getItem(`${HERO_COLLAGE_CACHE_KEY}_safe`)).not.toContain("adult-cover.jpg");
+
+      mockSettingsState.hideNsfw = false;
+      rerender(<HomeHero candidates={candidates} />);
+      expect(srcs()).toContain("https://example.com/adult-cover.jpg");
+      mockSettingsState.hideNsfw = true;
+      rerender(<HomeHero candidates={candidates} />);
+      expect(srcs()).not.toContain("https://example.com/adult-cover.jpg");
+
+      // New provider evidence must invalidate an already-mounted cached cover.
+      const reclassified = candidates.map((candidate) =>
+        candidate.title === "Known safe"
+          ? { ...candidate, contentRating: "erotica" as const }
+          : candidate
+      );
+      rerender(<HomeHero candidates={reclassified} />);
+      expect(srcs()).not.toContain("https://example.com/safe-cover.jpg");
+      expect(srcs()).toEqual(["https://example.com/unknown-cover.jpg"]);
+
+      // If all candidates are restricted, visible covers collapse to empty.
+      const allRestricted = candidates.map((candidate) => ({
+        ...candidate,
+        contentRating: "erotica" as const,
+      }));
+      rerender(<HomeHero candidates={allRestricted} />);
+      expect(srcs()).toEqual([]);
+    });
   });
 
   describe("HomeView & Layout Hierarchy", () => {
@@ -524,12 +615,12 @@ describe("Yomirra Editorial Home Components", () => {
     it("keeps ranking source-scoped, uses display names, and preserves source context in Lihat semua", () => {
       render(<HomeLeaderboardPanel items={samplePopular} />);
 
-      expect(screen.getByText("Paling banyak dibaca")).toBeTruthy();
+      expect(screen.getByText("Populer di sumber")).toBeTruthy();
       expect(screen.getByText("Manga Test 1")).toBeTruthy();
       expect(screen.getByText("Manga Test 2")).toBeTruthy();
       expect(screen.queryByText("Manga Source B")).toBeNull();
 
-      const select = screen.getByRole("combobox", {
+      const select = screen.getByRole("button", {
         name: /pilih sumber peringkat/i,
       });
       expect(select).toBeTruthy();
@@ -539,7 +630,8 @@ describe("Yomirra Editorial Home Components", () => {
         "/sources/source-a?sort=popular"
       );
 
-      fireEvent.change(select, { target: { value: "source-b" } });
+      fireEvent.pointerDown(select, { button: 0, ctrlKey: false });
+      fireEvent.click(screen.getByRole("menuitem", { name: "Source B" }));
 
       expect(screen.getByText("Manga Source B")).toBeTruthy();
       expect(screen.queryByText("Manga Test 1")).toBeNull();
@@ -602,6 +694,27 @@ describe("Yomirra Editorial Home Components", () => {
   });
 
   describe("Continue Reading Shelf", () => {
+    it("puts Continue Reading before discovery for returning readers", () => {
+      render(<HomeFeedClient unifiedPopular={samplePopular} unifiedLatest={sampleLatest} />);
+      const readingSection = document.getElementById("continue-reading-section");
+      const heroSection = document.getElementById("hero-section");
+      expect(readingSection).not.toBeNull();
+      expect(heroSection).not.toBeNull();
+      expect(Boolean(readingSection!.compareDocumentPosition(heroSection!) & Node.DOCUMENT_POSITION_FOLLOWING)).toBe(true);
+    });
+
+    it("keeps discovery first and omits the reading shelf for new guests", () => {
+      const originalGetter = mockHistoryState.getContinueReading;
+      mockHistoryState.getContinueReading = () => [];
+      try {
+        render(<HomeFeedClient unifiedPopular={samplePopular} unifiedLatest={sampleLatest} />);
+        expect(document.getElementById("continue-reading-section")).toBeNull();
+        expect(document.getElementById("hero-section")).not.toBeNull();
+      } finally {
+        mockHistoryState.getContinueReading = originalGetter;
+      }
+    });
+
     it("renders Continue Reading with normalized progress and context menu trigger", () => {
       render(
         <HomeFeedClient
@@ -673,6 +786,20 @@ describe("Yomirra Editorial Home Components", () => {
   });
 
   describe("Popularity Deduplication", () => {
+    it("keeps Quick Search available and shows provider failure with empty feeds", () => {
+      render(<HomeFeedClient unifiedPopular={[]} unifiedLatest={[]} catalogState="unavailable" />);
+      expect(screen.getByRole("button", { name: "Cari komik (Tekan Ctrl+K)" })).toBeTruthy();
+      expect(screen.getByRole("heading", { name: "Sumber bacaan belum bisa dimuat" })).toBeTruthy();
+      expect(screen.getByRole("button", { name: "Coba lagi" })).toBeTruthy();
+      expect(screen.queryByRole("region", { name: "Sorotan & peringkat" })).toBeNull();
+    });
+
+    it("labels healthy empty feeds without calling them unreachable", () => {
+      render(<HomeFeedClient unifiedPopular={[]} unifiedLatest={[]} catalogState="empty" />);
+      expect(screen.getByRole("heading", { name: "Belum ada hasil dari sumber aktif" })).toBeTruthy();
+      expect(screen.queryByText("Sumber bacaan belum bisa dimuat")).toBeNull();
+    });
+
     it("keeps only the compact source-scoped ranking panel", () => {
       render(
         <HomeFeedClient
@@ -681,9 +808,9 @@ describe("Yomirra Editorial Home Components", () => {
         />
       );
 
-      expect(screen.getByText("Paling banyak dibaca")).toBeTruthy();
+      expect(screen.getByText("Populer di sumber")).toBeTruthy();
       expect(
-        screen.queryByRole("heading", { level: 2, name: /banyak dibaca/i })
+        screen.queryByRole("heading", { level: 2, name: /populer di sumber/i })
       ).toBeNull();
       expect(document.getElementById("popular-section")).toBeNull();
     });

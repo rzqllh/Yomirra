@@ -58,11 +58,13 @@
   --spacing-16: 64px;
 
   /* Radius (Squircle Concentric Scale) */
-  --radius-xs: 8px;
-  --radius-sm: 12px;
-  --radius-md: 18px;
-  --radius-lg: 24px;
-  --radius-xl: 28px;
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --radius-xl: 22px;
+  --radius-2xl: 28px;
+  --radius-3xl: 32px;
   --radius-sheet: 32px;
   --radius-full: 9999px;
 
@@ -638,8 +640,8 @@ body.reader-active {
 @keyframes ink-backdrop-in { from { opacity: 0; backdrop-filter: blur(0); } to { opacity: 1; backdrop-filter: blur(5px); } }
 @keyframes ink-dialog-in { from { opacity: 0; filter: blur(6px); scale: .94; } to { opacity: 1; filter: blur(0); scale: 1; } }
 @keyframes ink-dialog-out { from { opacity: 1; filter: blur(0); scale: 1; } to { opacity: 0; filter: blur(4px); scale: .94; } }
-@keyframes command-dialog-in { from { opacity: 0; transform: translate(-50%, -18px) scale(0.96); } to { opacity: 1; transform: translate(-50%, 0) scale(1); } }
-@keyframes command-dialog-out { from { opacity: 1; transform: translate(-50%, 0) scale(1); } to { opacity: 0; transform: translate(-50%, -12px) scale(0.98); } }
+@keyframes command-dialog-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes command-dialog-out { from { opacity: 1; } to { opacity: 0; } }
 /* Existing feature buttons still use white/black utility text on solid semantic fills. */
 .dark .bg-accent.text-white { color: var(--text-on-accent); }
 .dark .bg-semantic-success.text-white { color: var(--status-success-bg); }
@@ -648,12 +650,12 @@ body.reader-active {
 .light .bg-semantic-warning.text-black { color: #fff; }
 .dark .bg-semantic-warning.text-black { color: var(--status-warning-bg); }
 
-/* Toast Notification System (Highest Layer, Glassmorphism, Responsive Safe-Area) */
+/* Toast notifications stay below chrome and respect the safe area. */
 [data-sonner-toaster],
 section[aria-label*="Notifications" i] {
   font-family: var(--font-ui), sans-serif;
   z-index: 1000000 !important;
-  --offset-top: calc(env(safe-area-inset-top, 0px) + 20px) !important;
+  --offset-top: calc(env(safe-area-inset-top, 0px) + 80px) !important;
   --offset-right: 20px !important;
   pointer-events: none !important;
 }
@@ -661,7 +663,7 @@ section[aria-label*="Notifications" i] {
 @media (max-width: 767px) {
   [data-sonner-toaster],
   section[aria-label*="Notifications" i] {
-    --mobile-offset-top: calc(env(safe-area-inset-top, 0px) + 12px) !important;
+    --mobile-offset-top: calc(env(safe-area-inset-top, 0px) + 80px) !important;
     --mobile-offset-left: 16px !important;
     --mobile-offset-right: 16px !important;
   }
@@ -676,24 +678,7 @@ section[aria-label*="Notifications" i] {
   }
 }
 
-/* Safe Area Slide Animation for Top Positions: Slides in from top, slides back up and fades out only at safe area boundary */
-[data-sonner-toast][data-y-position="top"] {
-  --y: translateY(calc(-100% - 32px - env(safe-area-inset-top, 0px)));
-}
-
-[data-sonner-toast][data-y-position="top"][data-mounted="true"] {
-  --y: translateY(0) !important;
-  opacity: 1 !important;
-  transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.18s ease-out, height 0.3s ease !important;
-}
-
-[data-sonner-toast][data-y-position="top"][data-removed="true"] {
-  --y: translateY(calc(-100% - 32px - env(safe-area-inset-top, 0px))) !important;
-  opacity: 0 !important;
-  /* Slides up first, fades out only as it reaches the top safe-area boundary */
-  transition: transform 0.32s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.12s ease-in 0.18s, height 0.32s ease !important;
-}
-
+/* Sonner owns stacking and dismissal transforms; do not pin every toast to y=0. */
 /* Base Glass Card */
 [data-sonner-toast] {
   pointer-events: auto !important;
@@ -702,10 +687,11 @@ section[aria-label*="Notifications" i] {
 }
 
 [data-sonner-toast][data-styled="true"] {
-  border-radius: 20px !important;
-  padding: 12px 16px !important;
+  position: relative !important;
+  border-radius: var(--radius-xl, 22px) !important;
+  padding: 14px 44px 14px 16px !important;
   display: flex !important;
-  align-items: center !important;
+  align-items: flex-start !important;
   gap: 12px !important;
   backdrop-filter: blur(24px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
@@ -722,6 +708,7 @@ section[aria-label*="Notifications" i] {
     width: 100% !important;
     max-width: 100% !important;
     margin: 0 auto !important;
+    padding: 14px 40px 14px 14px !important;
   }
 }
 
@@ -809,13 +796,14 @@ section[aria-label*="Notifications" i] {
   align-items: center !important;
   justify-content: center !important;
   flex-shrink: 0 !important;
+  margin-top: 1px !important;
 }
 
 /* Content (Title & Description) */
 [data-sonner-toast] [data-content] {
   display: flex !important;
   flex-direction: column !important;
-  gap: 2px !important;
+  gap: 3px !important;
   flex: 1 1 auto !important;
   min-width: 0 !important;
 }
@@ -826,6 +814,8 @@ section[aria-label*="Notifications" i] {
   line-height: 1.35 !important;
   letter-spacing: -0.01em !important;
   color: inherit !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
 }
 
 [data-sonner-toast] [data-description] {
@@ -834,11 +824,14 @@ section[aria-label*="Notifications" i] {
   line-height: 1.4 !important;
   opacity: 0.85 !important;
   color: inherit !important;
+  overflow-wrap: anywhere !important;
+  word-break: break-word !important;
 }
 
 /* Action Button */
 [data-sonner-toast] [data-button] {
-  margin-left: auto !important;
+  align-self: center !important;
+  margin-left: 8px !important;
   border-radius: 9999px !important;
   padding: 6px 14px !important;
   font-size: 12px !important;
@@ -852,6 +845,17 @@ section[aria-label*="Notifications" i] {
   transition: all 0.15s ease !important;
   white-space: nowrap !important;
   flex-shrink: 0 !important;
+}
+
+@media (max-width: 600px) {
+  [data-sonner-toast][data-styled="true"] {
+    flex-wrap: wrap !important;
+  }
+  [data-sonner-toast] [data-button] {
+    margin-left: 44px !important;
+    margin-top: 6px !important;
+    align-self: flex-start !important;
+  }
 }
 
 .light [data-sonner-toast] [data-button] {
@@ -871,10 +875,12 @@ section[aria-label*="Notifications" i] {
 
 /* Close Button (X on right side) */
 [data-sonner-toast] [data-close-button] {
-  position: static !important;
+  position: absolute !important;
+  top: 10px !important;
+  right: 10px !important;
   transform: none !important;
-  margin-left: auto !important;
-  align-self: center !important;
+  margin: 0 !important;
+  align-self: auto !important;
   width: 28px !important;
   height: 28px !important;
   border-radius: 9999px !important;
@@ -959,3 +965,10 @@ section[aria-label*="Notifications" i] {
     --secondary-sticky-top: var(--desktop-header-height);
   }
 }
+
+/* Page scrubber keeps a 44px gesture target with an 8px track and a visible thumb. */
+.reader-page-range { appearance: none; -webkit-appearance: none; touch-action: pan-x; }
+.reader-page-range::-webkit-slider-runnable-track { height: 8px; border-radius: 999px; background: color-mix(in srgb, var(--text-primary) 15%, transparent); }
+.reader-page-range::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; margin-top: -7px; border-radius: 50%; background: var(--accent); border: 2px solid var(--surface-base); }
+.reader-page-range::-moz-range-track { height: 8px; border-radius: 999px; background: color-mix(in srgb, var(--text-primary) 15%, transparent); }
+.reader-page-range::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: var(--accent); border: 2px solid var(--surface-base); }

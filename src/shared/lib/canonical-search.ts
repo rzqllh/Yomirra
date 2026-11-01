@@ -40,9 +40,14 @@ export function clusterCanonicalResults(
   items: Array<{ manga: MangaItem; sourceId: string }>
 ): CanonicalSearchResult[] {
   const clusters: CanonicalSearchResult[] = [];
+  const seenSourceReferences = new Set<string>();
 
   for (const { manga, sourceId } of items) {
     if (!manga || !manga.id || !manga.title) continue;
+    // Repeated rows of the same provider item are not independent works.
+    const sourceReference = JSON.stringify([sourceId, manga.id]);
+    if (seenSourceReferences.has(sourceReference)) continue;
+    seenSourceReferences.add(sourceReference);
 
     const candidateBinding: SourceBinding = {
       sourceId,
@@ -65,7 +70,6 @@ export function clusterCanonicalResults(
     };
 
     let matchedCluster: CanonicalSearchResult | null = null;
-    let highestConfidence: MatchConfidence = "NO_MATCH";
 
     for (const cluster of clusters) {
       // Avoid binding the same source multiple times to one cluster
@@ -74,6 +78,15 @@ export function clusterCanonicalResults(
       }
 
       const clusterPrimary = cluster.primaryResult;
+      // Matching title/author is insufficient when known media types conflict:
+      // a novel and a manga adaptation must remain distinct catalog entries.
+      if (
+        manga.format &&
+        clusterPrimary.format &&
+        normalizeTitle(manga.format) !== normalizeTitle(clusterPrimary.format)
+      ) {
+        continue;
+      }
       const primaryCandidate: TitleCandidate = {
         sourceId: clusterPrimary.sourceId,
         mangaId: clusterPrimary.id,
@@ -113,7 +126,6 @@ export function clusterCanonicalResults(
       // Strict merge gate: only merge when HIGH_CONFIDENCE
       if (match.confidence === "HIGH_CONFIDENCE") {
         matchedCluster = cluster;
-        highestConfidence = "HIGH_CONFIDENCE";
         break;
       }
     }
@@ -121,6 +133,9 @@ export function clusterCanonicalResults(
     if (matchedCluster) {
       matchedCluster.sourceBindings.push(candidateBinding);
       matchedCluster.primaryResult.sourceBindings = matchedCluster.sourceBindings;
+      // Confidence describes an observed cross-provider identity match,
+      // not merely the presence of a single provider result.
+      matchedCluster.matchConfidence = "HIGH_CONFIDENCE";
     } else {
       const normalizedTitle = normalizeTitle(manga.title) || `${sourceId}-${manga.id}`;
       const normalizedAuthor = normalizeTitle(manga.author || "");
@@ -139,7 +154,7 @@ export function clusterCanonicalResults(
         canonicalKey,
         primaryResult: primaryWithSource,
         sourceBindings: [candidateBinding],
-        matchConfidence: highestConfidence === "NO_MATCH" ? "HIGH_CONFIDENCE" : highestConfidence,
+        matchConfidence: "NO_MATCH",
       });
     }
   }

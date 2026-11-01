@@ -1,5 +1,16 @@
 # Yomirra — Final Full-Parity & Production Execution Tracker (Q1–Q175)
 
+## Audit independen — koreksi bukti awal (30 Oktober 2026)
+
+Empat status sebelumnya dikoreksi dari `VERIFIED` menjadi `PARTIAL` karena implementasi yang dirujuk belum membuktikan kontrak lengkap. Penurunan status adalah **evaluasi evidence**, bukan regresi baru yang telah direproduksi. Inventaris 175 keputusan tetap utuh; status `VERIFIED` lainnya merupakan klaim tracker lama sampai diperiksa satu per satu.
+
+- **Q97 — Reader settings cloud sync:** `reader-store.ts` menyimpan pengaturan reader pada storage lokal. Jalur `use-sync.ts` yang ditunjuk mengurus source preferences, bukan pembuktian sync global/per-title reader settings lintas akun dan perangkat.
+- **Q138 — Durable offline sync queue:** `use-sync.ts` memakai promise in-flight pada memori dan trigger awal/online. `idb-storage.ts` adalah adapter penyimpanan state, bukan bukti antrean operasi IndexedDB yang dapat direplay secara idempoten setelah aplikasi ditutup.
+- **Q146 — Exponential retry:** `use-sync.ts` belum menunjukkan scheduler retry exponential backoff/jitter yang terukur, dibatalkan saat akun berubah, dan diuji dengan fake timers.
+- **Q147 — CSP enforcement:** `next.config.ts` memakai header `Content-Security-Policy-Report-Only`; X-Frame-Options dan Referrer-Policy tersedia tetapi **strict CSP enforced belum terverifikasi**. Jangan langsung enforce sebelum audit violation, Firebase, dan PWA kompatibel.
+
+Lihat [issue #68](https://github.com/rzqllh/Yomirra/issues/68) untuk langkah implementasi dan [enterprise program #66](https://github.com/rzqllh/Yomirra/issues/66) untuk acceptance nyata. Jangan meluluskan Cloud Sync dari tes mock atau Safari fisik dari desktop WebKit.
+
 ## Konsolidasi cleanup 30 Oktober 2026
 
 [PR #65](https://github.com/rzqllh/Yomirra/pull/65) adalah pengganti yang masih draft untuk pekerjaan unik PR #60–63. PR lama belum boleh dianggap selesai hanya karena ada pengganti. Hasil CI, review akhir, dan tautan pengganti setiap item perlu diperiksa sebelum penutupan branch lama.
@@ -259,7 +270,7 @@ All 175 product and architecture decisions (Q1–Q175) from the authoritative Gr
 | **Q94** | Adaptive Prefetch | Prefetch next 3 pages in view; pause prefetch when offline | `VERIFIED` | `src/shared/lib/reading-buffer.ts`, `src/shared/lib/__tests__/reading-buffer.test.ts` |
 | **Q95** | Modal Priority | Reader settings sheet and chapter list trap touch interactions | `VERIFIED` | `src/components/reader/reader-shell.tsx`, `src/components/reader/__tests__/reader-shell.test.tsx` |
 | **Q96** | Input Accessibility | Full keyboard shortcuts (Arrows, Space, J/K, Esc, F) | `VERIFIED` | `src/components/reader/reader-shell.tsx`, `src/components/reader/__tests__/reader-behavior-invariants.test.tsx` |
-| **Q97** | Settings Sync | Reader settings synchronized to cloud profile | `VERIFIED` | `src/shared/hooks/use-sync.ts`, `src/shared/hooks/__tests__/use-sync.test.tsx` |
+| **Q97** | Settings Sync | Reader settings synchronized to cloud profile | `PARTIAL` | `src/shared/hooks/use-sync.ts`, `src/shared/hooks/__tests__/use-sync.test.tsx` |
 | **Q98** | Orientation Lock | In-app reading orientation override (Portrait, Landscape) | `VERIFIED` | `src/shared/store/reader-store.ts`, `src/shared/store/__tests__/reader-store.test.ts` |
 
 ### Round 9: Catalog, Search & Library Hierarchy (Q99–Q114)
@@ -312,7 +323,7 @@ All 175 product and architecture decisions (Q1–Q175) from the authoritative Gr
 | **Q135** | Schema Migrations | Safe IndexedDB version migrations with upgrade callbacks | `VERIFIED` | `src/shared/lib/idb-storage.ts`, `src/shared/lib/__tests__/idb-storage.test.ts` |
 | **Q136** | Online Detection | Network listener distinguishes true backend reachability | `VERIFIED` | `src/components/providers/offline-provider.tsx`, `src/shared/hooks/__tests__/platform-offline-governance.test.ts` |
 | **Q137** | Safari Add to Home | Native iOS Safari Add to Home Screen step-by-step banner | `VERIFIED` | `src/shared/hooks/use-pwa-install.ts`, `src/shared/hooks/__tests__/platform-offline-governance.test.ts` |
-| **Q138** | Durable Sync Queue | Offline mutations queued in IndexedDB and replayed online | `VERIFIED` | `src/shared/hooks/use-sync.ts`, `src/shared/hooks/__tests__/use-sync.test.tsx` |
+| **Q138** | Durable Sync Queue | Offline mutations queued in IndexedDB and replayed online | `PARTIAL` | `src/shared/hooks/use-sync.ts`, `src/shared/hooks/__tests__/use-sync.test.tsx` |
 | **Q139** | External Origin Security | Proxied images validated against whitelist of allowed domains | `VERIFIED` | `src/server/lib/security/outbound-policy.ts`, `src/server/lib/__tests__/outbound-policy.test.ts` |
 | **Q140** | Secure Unzip | Zip-bomb defense for archive ingestion deferred with archive reader | `PARTIAL` | `docs/IDENTITY.md` |
 | **Q141** | Zero Ad Telemetry | No external analytics, ad trackers, or third-party pixels | `VERIFIED` | `src/app/(web)/layout.tsx`, `next.config.ts`, `src/components/layout/__tests__/maintenance-gate.test.tsx` |
@@ -320,8 +331,8 @@ All 175 product and architecture decisions (Q1–Q175) from the authoritative Gr
 | **Q143** | Risk-Tiered Rate Limit | Stricter rate limits on proxy and AI endpoints than static | `VERIFIED` | `src/server/lib/security/rate-limit.ts`, `src/server/lib/security/__tests__/rate-limit.test.ts` |
 | **Q144** | Cache Versioning | Service worker cache invalidation tied to build hash | `VERIFIED` | `src/app/sw.ts`, Serwist precache, `src/app/__tests__/sw-matcher.test.ts` |
 | **Q145** | Cache Eviction | LRU cache eviction when offline storage exceeds quota | `VERIFIED` | `src/shared/lib/download-cache.ts`, `src/shared/lib/__tests__/download-cache.test.ts` |
-| **Q146** | Exponential Backoff | Exponential backoff on failed background sync attempts | `VERIFIED` | `src/shared/hooks/use-sync.ts`, `src/shared/hooks/__tests__/use-sync.test.tsx` |
-| **Q147** | Security Headers | Strict CSP, X-Frame-Options, and Referrer-Policy configured | `VERIFIED` | `next.config.ts`, `src/shared/hooks/__tests__/platform-offline-governance.test.ts` |
+| **Q146** | Exponential Backoff | Exponential backoff on failed background sync attempts | `PARTIAL` | `src/shared/hooks/use-sync.ts`, `src/shared/hooks/__tests__/use-sync.test.tsx` |
+| **Q147** | Security Headers | Strict CSP, X-Frame-Options, and Referrer-Policy configured | `PARTIAL` | `next.config.ts`, `src/shared/hooks/__tests__/platform-offline-governance.test.ts` |
 
 ### Round 12: Parity References & PWA Adaptation (Q148–Q164)
 | ID | Topic | Requirement | Status | Evidence Files / Tests |

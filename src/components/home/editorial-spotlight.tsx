@@ -13,6 +13,9 @@ import { transitions } from "@/shared/lib/motion/tokens";
 import { cn } from "@/shared/utils/cn";
 import { normalizeSynopsis } from "@/shared/utils/normalize";
 import type { MangaItem } from "@/shared/sources/source-types";
+import { useSettingsStore } from "@/shared/store/settings-store";
+import { getSourceMetadata } from "@/shared/sources/source-registry";
+import { isContentVisible } from "@/shared/sources/content-policy";
 
 function SpotlightMetadataFallback({
   manga,
@@ -166,10 +169,21 @@ export function EditorialSpotlight({
   className,
 }: EditorialSpotlightProps) {
   const reducedMotion = useReducedMotion();
+  const hideNsfw = useSettingsStore((state) => state.hideNsfw);
+  const source = getSourceMetadata(sourceId);
+  const restricted = hideNsfw && (source?.isNsfw === true || !isContentVisible(manga, true));
   const href = getMangaDetailHref(sourceId, manga.id, "/");
   const rawDesc = manga.description || (manga as any)?.synopsis || (manga as any)?.summary || (manga as any)?.excerpt;
   const cleanedDescription = rawDesc ? normalizeSynopsis(String(rawDesc)).trim() : "";
   const metadata = [manga.format, manga.latestChapter, sourceName].filter(Boolean);
+
+  if (restricted) {
+    return (
+      <article role="status" className={cn("ink-panel flex min-h-64 items-center justify-center rounded-xl p-6 text-sm text-text-secondary", className)}>
+        Konten disembunyikan oleh pengaturan NSFW
+      </article>
+    );
+  }
 
   return (
     <article
@@ -282,7 +296,7 @@ export function EditorialSpotlight({
               className="inline-flex min-h-11 items-center gap-1.5 rounded-[10px] px-2 text-xs font-bold text-accent transition-colors hover:bg-accent/5 focus-visible:outline-2 focus-visible:outline-accent sm:text-sm"
             >
               <span>Lihat komik</span>
-              <ArrowRight size={14} weight="bold" aria-hidden="true" />
+              <ArrowRight size={14} weight="regular" aria-hidden="true" />
             </Link>
 
             {totalCount > 1 && (
@@ -304,7 +318,7 @@ export function EditorialSpotlight({
                   aria-label="Komik sebelumnya"
                   className="flex size-11 items-center justify-center rounded-[10px] border border-border-subtle bg-surface-base text-text-secondary transition-colors hover:border-accent/40 hover:bg-surface-hover hover:text-text-primary focus-visible:outline-2 focus-visible:outline-accent"
                 >
-                  <CaretLeft size={16} weight="bold" aria-hidden="true" />
+                  <CaretLeft size={16} weight="regular" aria-hidden="true" />
                 </button>
                 <button
                   type="button"
@@ -312,7 +326,7 @@ export function EditorialSpotlight({
                   aria-label="Komik berikutnya"
                   className="flex size-11 items-center justify-center rounded-[10px] border border-border-subtle bg-surface-base text-text-secondary transition-colors hover:border-accent/40 hover:bg-surface-hover hover:text-text-primary focus-visible:outline-2 focus-visible:outline-accent"
                 >
-                  <CaretRight size={16} weight="bold" aria-hidden="true" />
+                  <CaretRight size={16} weight="regular" aria-hidden="true" />
                 </button>
               </div>
             )}

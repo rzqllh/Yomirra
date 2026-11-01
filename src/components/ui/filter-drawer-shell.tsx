@@ -1,10 +1,13 @@
 "use client";
 
 import * as React from "react";
+import { createPortal } from "react-dom";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Drawer } from "vaul";
 import { Funnel } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/shared/utils/cn";
+import { getVisualViewportBounds, type DrawerViewportBounds } from "@/shared/lib/visual-viewport-bounds";
 
 // FilterSection
 
@@ -51,11 +54,10 @@ interface FilterDrawerShellProps {
   applyLabel?: string;
   /** Override the default trigger button. When provided, `activeCount` badge is consumer's responsibility. */
   trigger?: React.ReactNode;
+  desktopPortalId?: string;
   /** Filter section content */
   children: React.ReactNode;
 }
-
-import { motion, useReducedMotion } from "motion/react";
 
 export function FilterDrawerShell({
   title,
@@ -66,25 +68,50 @@ export function FilterDrawerShell({
   onOpen,
   applyLabel = "Terapkan Filter",
   trigger,
+  desktopPortalId,
   children,
 }: FilterDrawerShellProps) {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [desktopTarget, setDesktopTarget] = React.useState<HTMLElement | null>(null);
+  const headingId = React.useId();
+  const prefersReducedMotion = useReducedMotion();
+  React.useEffect(() => {
+    if (!desktopPortalId || !window.matchMedia) return;
+    const media = window.matchMedia("(min-width: 1024px)");
+    const update = () => {
+      setDesktopTarget(media.matches ? document.getElementById(desktopPortalId) : null);
+      setIsOpen(false);
+    };
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, [desktopPortalId]);
   const [activeSnapPoint, setActiveSnapPoint] = React.useState<number | string | null>(0.52);
   const touchStartY = React.useRef<number | null>(null);
   const reducedMotion = useReducedMotion();
-  const [visualViewportHeight, setVisualViewportHeight] = React.useState<number | null>(null);
+  const [viewportBounds, setViewportBounds] = React.useState<DrawerViewportBounds | null>(null);
 
   React.useEffect(() => {
     const viewport = window.visualViewport;
     if (!viewport) return;
 
-    const updateHeight = () => {
-      setVisualViewportHeight(Math.round(viewport.height));
+    const updateBounds = () => {
+      const next = getVisualViewportBounds(window.innerHeight, viewport.height, viewport.offsetTop);
+      setViewportBounds((previous) =>
+        previous?.height === next.height && previous?.bottom === next.bottom ? previous : next
+      );
     };
 
-    updateHeight();
-    viewport.addEventListener("resize", updateHeight);
-    return () => viewport.removeEventListener("resize", updateHeight);
+    updateBounds();
+    viewport.addEventListener("resize", updateBounds);
+    // iOS Safari can pan the visual viewport without resizing it (keyboard/toolbar).
+    viewport.addEventListener("scroll", updateBounds);
+    window.addEventListener("resize", updateBounds);
+    return () => {
+      viewport.removeEventListener("resize", updateBounds);
+      viewport.removeEventListener("scroll", updateBounds);
+      window.removeEventListener("resize", updateBounds);
+    };
   }, []);
 
   const handleOpenChange = (open: boolean) => {
@@ -101,8 +128,52 @@ export function FilterDrawerShell({
 
   const handleApply = () => {
     onApply();
-    setIsOpen(false);
+    if (!desktopTarget) setIsOpen(false);
   };
+
+  if (desktopTarget) {
+    const triggerProps = {
+      "aria-expanded": isOpen,
+      "aria-controls": desktopPortalId,
+      onClick: () => handleOpenChange(!isOpen),
+    };
+    const desktopTrigger = React.isValidElement(trigger)
+      ? React.cloneElement(trigger as React.ReactElement<typeof triggerProps>, triggerProps)
+      : <Button variant="outline" {...triggerProps}><Funnel size={18} weight="regular" />Filter {activeCount > 0 ? `(${activeCount})` : ""}</Button>;
+    return (
+      <>
+        {desktopTrigger}
+        {createPortal(
+          <AnimatePresence initial={false}>
+            {isOpen && (
+              <motion.section
+                key={desktopPortalId}
+                id={desktopPortalId}
+                initial={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, height: 0, marginBottom: 0 }}
+                animate={prefersReducedMotion ? { opacity: 1 } : { opacity: 1, height: "auto", marginBottom: 20 }}
+                exit={prefersReducedMotion ? { opacity: 0 } : { opacity: 0, height: 0, marginBottom: 0 }}
+                transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                style={{ overflow: "hidden" }}
+                aria-labelledby={headingId}
+                className="rounded-2xl border border-border-subtle bg-surface-base p-4 xl:p-5"
+              >
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <h2 id={headingId} className="text-sm font-semibold text-text-primary">{title}</h2>
+                  <Button variant="ghost" onClick={onReset}>Reset filter</Button>
+                </div>
+                <div tabIndex={0} aria-label="Pilihan filter" className="grid max-h-[min(42dvh,380px)] grid-cols-2 gap-x-6 gap-y-5 overflow-y-auto pr-1 xl:grid-cols-3">{children}</div>
+                <div className="mt-5 flex justify-end gap-2 border-t border-border-subtle pt-3">
+                  <Button variant="ghost" onClick={() => { onOpen?.(); setIsOpen(false); }}>Batal</Button>
+                  <Button onClick={handleApply}>{applyLabel}</Button>
+                </div>
+              </motion.section>
+            )}
+          </AnimatePresence>,
+          desktopTarget
+        )}
+      </>
+    );
+  }
 
   return (
     <Drawer.Root
@@ -124,7 +195,7 @@ export function FilterDrawerShell({
             )}
             aria-label={`Filter${activeCount > 0 ? ` (${activeCount} aktif)` : ""}`}
           >
-            <Funnel size={18} weight={activeCount > 0 ? "fill" : "bold"} />
+            <Funnel size={18} weight={activeCount > 0 ? "fill" : "regular"} />
             <span>Filter</span>
             {activeCount > 0 && (
               <motion.span
@@ -144,7 +215,7 @@ export function FilterDrawerShell({
         <Drawer.Overlay className="fixed inset-0 bg-black/45 backdrop-blur-[2px] z-[var(--z-drawer)]" />
         <Drawer.Content
           className="bg-surface-base flex h-[92dvh] max-h-[92dvh] flex-col overflow-hidden rounded-t-[28px] fixed bottom-0 left-0 right-0 z-[var(--z-overlay)] outline-none shadow-heavy border-t border-border-subtle"
-          style={visualViewportHeight ? { maxHeight: `${visualViewportHeight}px` } : undefined}
+          style={viewportBounds ? { maxHeight: `${viewportBounds.height}px`, bottom: `${viewportBounds.bottom}px` } : undefined}
         >
           <div className="pt-2.5 pb-2 px-5 sm:px-6 shrink-0 flex flex-col cursor-grab active:cursor-grabbing select-none">
             <div className="mx-auto w-11 h-1 shrink-0 rounded-full bg-border-strong/80 mb-3.5" />
@@ -194,6 +265,8 @@ export function FilterDrawerShell({
             className="px-4 pt-3 bg-surface-base/96 backdrop-blur-xl border-t border-border-subtle shrink-0 relative z-10"
             style={{ paddingBottom: "calc(1rem + var(--safe-bottom))" }}
           >
+            <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setIsOpen(false)} className="min-h-11">Batal</Button>
             <Button
               variant="primary"
               onClick={handleApply}
@@ -201,6 +274,7 @@ export function FilterDrawerShell({
             >
               {applyLabel}
             </Button>
+            </div>
           </div>
         </Drawer.Content>
       </Drawer.Portal>

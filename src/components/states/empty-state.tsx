@@ -45,7 +45,7 @@ export function EmptyState({
       {icon && (
         <motion.div 
           animate={floatAnimation}
-          className="relative mb-6 flex h-20 w-20 items-center justify-center rounded-[24px] bg-surface-raised/40 border border-border-subtle/40 shadow-sm"
+          className="relative mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-surface-raised/40 border border-border-subtle/40 shadow-sm"
         >
           <div className="relative z-10 text-text-muted drop-shadow-sm scale-110">
             {icon}

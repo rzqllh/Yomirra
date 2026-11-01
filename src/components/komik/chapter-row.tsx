@@ -31,7 +31,7 @@ export function ChapterRow({
   isLocked = false,
   returnTo
 }: ChapterRowProps) {
-  
+
   // Format date safely
   const formattedDate = React.useMemo(() => {
     if (!date) return "";
@@ -73,7 +73,7 @@ export function ChapterRow({
             </h4>
             {isLocked && (
               <div className="flex items-center gap-1 rounded-[5px] bg-status-warning-bg px-1.5 py-0.5 text-[10px] font-semibold text-status-warning-fg ring-1 ring-inset ring-status-warning-fg/20 shrink-0">
-                <Lock size={11} weight="bold" />
+                <Lock size={11} weight="regular" />
                 <span>Terkunci</span>
               </div>
             )}
@@ -97,7 +97,7 @@ export function ChapterRow({
               className="flex size-11 shrink-0 items-center justify-center rounded-full bg-status-warning-bg text-status-warning-fg"
               title="Chapter terkunci di sumber asli"
             >
-              <Lock size={16} weight="bold" />
+              <Lock size={16} weight="regular" />
             </span>
           )}
           <CaretLeft size={16} className="shrink-0 rotate-180 text-text-muted/40 group-hover:text-accent" />

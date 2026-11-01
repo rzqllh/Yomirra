@@ -148,7 +148,7 @@ export function DesktopRail({ pendingHref }: { pendingHref?: string | null } = {
         >
           <SidebarSimple
             size={18}
-            weight={isCollapsed ? "regular" : "duotone"}
+            weight={isCollapsed ? "regular" : "regular"}
             className={cn(
               "shrink-0 transition-transform duration-200 text-text-muted group-hover:text-text-primary",
               isCollapsed && "rotate-180"

@@ -56,7 +56,7 @@ describe("FilterDrawerShell Anatomy", () => {
     expect(scrollRegion?.className).toContain("min-h-0");
 
     const applyButton = screen.getByRole("button", { name: /Terapkan Filter/i });
-    const footer = applyButton.parentElement;
+    const footer = applyButton.parentElement?.parentElement;
     expect(footer?.getAttribute("style")).toContain("var(--safe-bottom)");
     expect(screen.getByTestId("drawer-overlay").className).toContain("z-[var(--z-drawer)]");
     expect(content.className).toContain("z-[var(--z-overlay)]");

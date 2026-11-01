@@ -117,11 +117,11 @@ export function AlternateSourceModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="max-w-md w-[calc(100vw-32px)] rounded-[28px] p-0 bg-surface-overlay/95 backdrop-blur-2xl border border-border-glass shadow-glass overflow-hidden flex flex-col gap-0">
+      <DialogContent className="max-w-md w-[calc(100vw-32px)] rounded-2xl p-0 bg-surface-overlay/95 backdrop-blur-2xl border border-border-glass shadow-glass overflow-hidden flex flex-col gap-0">
         {/* Header Section */}
         <div className="px-6 pt-6 pb-4 border-b border-border-glass/40 flex items-start gap-3.5">
           <div className="flex size-11 items-center justify-center rounded-lg bg-accent/12 text-accent border border-accent/20 shrink-0">
-            <ArrowsClockwise size={22} weight="duotone" />
+            <ArrowsClockwise size={22} weight="regular" />
           </div>
           <div className="min-w-0 flex-1 pr-6">
             <DialogTitle className="text-lg font-black tracking-tight text-text-primary">
@@ -145,7 +145,7 @@ export function AlternateSourceModal({
           {candidates.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-2.5 py-10 text-text-muted">
               <div className="flex size-12 items-center justify-center rounded-lg bg-surface-raised text-text-muted border border-border-subtle">
-                <MagnifyingGlass size={24} weight="duotone" />
+                <MagnifyingGlass size={24} weight="regular" />
               </div>
               <p className="text-xs font-medium">Tidak ada sumber ditemukan untuk komik ini.</p>
             </div>
@@ -215,7 +215,7 @@ export function AlternateSourceModal({
             ) : (
               <>
                 <span>Gunakan Sumber Ini</span>
-                <ArrowRight size={16} weight="bold" />
+                <ArrowRight size={16} weight="regular" />
               </>
             )}
           </Button>

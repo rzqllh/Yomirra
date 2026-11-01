@@ -13,6 +13,10 @@ import {
   rankRecommendationCandidates,
 } from "@/shared/lib/recommendations";
 import type { SearchCatalogCandidate } from "@/shared/lib/search-intelligence";
+import { useSettingsStore } from "@/shared/store/settings-store";
+import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
+import { isContentVisible } from "@/shared/sources/content-policy";
+import { isDiscoverySourceSystemEligible } from "@/shared/sources/discovery-source-policy";
 
 interface MangaRecommendationsProps {
   sourceId: string;
@@ -71,6 +75,8 @@ export function MangaRecommendations({
   alternativeTitles,
   coverUrl,
 }: MangaRecommendationsProps) {
+  const hideNsfw = useSettingsStore((state) => state.hideNsfw);
+  const disabledSources = useSourcePreferencesStore((state) => state.disabledSources);
   const libraryItems = useLibraryStore((state) => state.items);
   const historyItems = useHistoryStore((state) => state.items);
   const profile = useMemo(
@@ -83,16 +89,19 @@ export function MangaRecommendations({
   );
 
   const { data: candidatePool = [], isLoading } = useQuery({
-    queryKey: ["recommendations", currentSourceId, currentMangaId, genres, title],
+    queryKey: ["recommendations-v2", currentSourceId, currentMangaId, genres, title, hideNsfw, disabledSources],
     queryFn: async () => {
       const CANDIDATE_LIMIT = 30;
+      const currentSourceAllowed = !disabledSources.includes(currentSourceId);
       const results: RecommendedManga[] = [];
       const initialTitle = normalizeTitle(title);
       const seenTitles = new Set<string>(initialTitle ? [initialTitle] : []);
       const seenKeys = new Set<string>([`${currentSourceId}::${currentMangaId}`]);
 
       const addItems = (items: MangaItem[], srcId: string, reason?: string) => {
+        if (disabledSources.includes(srcId)) return;
         for (const item of items) {
+          if (!isContentVisible(item, hideNsfw)) continue;
           if (results.length >= CANDIDATE_LIMIT) break;
           const key = `${srcId}::${item.id}`;
           const normalizedItemTitle = normalizeTitle(item.title);
@@ -127,6 +136,7 @@ export function MangaRecommendations({
 
         if (related && related.length > 0) {
           for (const candidate of related) {
+            if (disabledSources.includes(candidate.sourceId) || !isContentVisible(candidate, hideNsfw)) continue;
             if (results.length >= CANDIDATE_LIMIT) break;
             const key = `${candidate.sourceId}::${candidate.mangaId}`;
             const normalizedItemTitle = normalizeTitle(candidate.title);
@@ -146,6 +156,8 @@ export function MangaRecommendations({
                 genres: candidate.genres,
                 format: candidate.format,
                 status: candidate.status,
+                contentRating: candidate.contentRating,
+                isNsfw: candidate.isNsfw,
               } as MangaItem,
               sourceId: candidate.sourceId,
               similarityReason: reason,
@@ -158,7 +170,7 @@ export function MangaRecommendations({
 
       // Fallback: genre-scoped search on current source
       const primaryGenres = genres.slice(0, 2);
-      if (primaryGenres.length > 0 && results.length < CANDIDATE_LIMIT) {
+      if (currentSourceAllowed && primaryGenres.length > 0 && results.length < CANDIDATE_LIMIT) {
         try {
           const searchRes = await apiClient.search(currentSourceId, "", 1, {
             "genre[]": primaryGenres,
@@ -182,7 +194,7 @@ export function MangaRecommendations({
       }
 
       // Fallback: popular / latest from current source
-      if (results.length < CANDIDATE_LIMIT) {
+      if (currentSourceAllowed && results.length < CANDIDATE_LIMIT) {
         try {
           const popularRes = await apiClient.getPopular(currentSourceId, 1);
           addItems(popularRes.mangas || (popularRes as unknown as { results: MangaItem[] }).results || [], currentSourceId);
@@ -191,7 +203,7 @@ export function MangaRecommendations({
         }
       }
 
-      if (results.length < CANDIDATE_LIMIT) {
+      if (currentSourceAllowed && results.length < CANDIDATE_LIMIT) {
         try {
           const latestRes = await apiClient.getLatest(currentSourceId, 1);
           addItems(latestRes.mangas || (latestRes as unknown as { results: MangaItem[] }).results || [], currentSourceId);
@@ -205,7 +217,7 @@ export function MangaRecommendations({
         try {
           const sources = await apiClient.getSources();
           const otherSources = (sources || []).filter(
-            (s) => s.id !== currentSourceId && s.isEnabled && !s.isNsfw
+            (s) => s.id !== currentSourceId && isDiscoverySourceSystemEligible(s) && !disabledSources.includes(s.id) && !s.isNsfw
           );
 
           for (const otherSource of otherSources) {
@@ -246,7 +258,7 @@ export function MangaRecommendations({
 
   const recommendations = useMemo(
     () =>
-      rankRecommendationCandidates(candidatePool, {
+      rankRecommendationCandidates(candidatePool.filter((item) => !disabledSources.includes(item.sourceId) && isContentVisible(item.manga, hideNsfw)), {
         currentTitle: title,
         currentSourceId,
         currentGenres: genres,
@@ -254,7 +266,7 @@ export function MangaRecommendations({
         currentStatus: status,
         profile,
       }).slice(0, 10),
-    [candidatePool, currentSourceId, format, genres, profile, status, title]
+    [candidatePool, currentSourceId, format, genres, profile, status, title, hideNsfw, disabledSources]
   );
 
   if (isLoading) {

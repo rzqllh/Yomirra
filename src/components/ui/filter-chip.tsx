@@ -31,7 +31,7 @@ export const FilterChip = React.forwardRef<HTMLButtonElement, FilterChipProps>(
         aria-label={computedAriaLabel}
         aria-pressed={selected}
         className={cn(
-          "min-h-11 px-3.5 rounded-[12px] text-xs font-bold transition-all border flex items-center justify-center gap-1.5 active:scale-[0.98] shrink-0",
+          "min-h-11 px-3.5 rounded-md text-xs font-bold transition-all border flex items-center justify-center gap-1.5 active:scale-[0.98] shrink-0",
           variant === "inverted" && "bg-text-primary text-surface-base border-transparent shadow-xs",
           variant === "accent-subtle" && "bg-accent/10 border-accent/30 text-accent",
           variant === "accent-solid" && "bg-accent text-accent-on border-transparent shadow-xs",
@@ -41,7 +41,7 @@ export const FilterChip = React.forwardRef<HTMLButtonElement, FilterChipProps>(
           className
         )}
       >
-        {showCheck && <Check size={14} weight="bold" />}
+        {showCheck && <Check size={14} weight="regular" />}
         {showMinus && <span className="mr-1 font-black">-</span>}
         {label}
         {showDownBadge && <span className="text-[10px] uppercase tracking-wider ml-1 bg-semantic-error text-white px-1.5 py-0.5 rounded-sm">Down</span>}

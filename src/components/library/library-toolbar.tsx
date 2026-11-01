@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/shared/utils/cn";
 import { LibraryFilterDrawer } from "./library-filter-drawer";
 import { ViewModeToggle } from "@/components/komik/view-mode-toggle";
+import { CustomSelect } from "@/components/ui/custom-select";
 import { DotsThreeVertical, CheckCircle } from "@phosphor-icons/react";
 import {
   DropdownMenu,
@@ -23,6 +24,8 @@ export interface LibraryToolbarProps {
   onSearchSubmit: (e: React.FormEvent) => void;
   onSearchClear: () => void;
   activeSourceId: string;
+  sourceOptions?: { value: string; label: string }[];
+  onSourceChange?: (value: string) => void;
   activeFilterCount: number;
   onResetRouteIntent?: () => void;
   isSelectionMode?: boolean;
@@ -35,6 +38,8 @@ export function LibraryToolbar({
   onSearchSubmit,
   onSearchClear,
   activeSourceId,
+  sourceOptions = [],
+  onSourceChange,
   activeFilterCount,
   onResetRouteIntent,
   isSelectionMode,
@@ -43,13 +48,17 @@ export function LibraryToolbar({
   const reducedMotion = useReducedMotion();
 
   return (
-    <div className="flex items-center gap-2 mt-4 md:mt-0">
+    <div className="flex flex-wrap items-center gap-2 mt-4 md:mt-0">
+      {onSourceChange && <div className="w-full sm:w-auto sm:max-w-56">
+        <CustomSelect label="Sumber Jelajah" value={activeSourceId} onChange={onSourceChange}
+          className="w-full" options={sourceOptions.some((item) => item.value === activeSourceId) ? sourceOptions : [{ value: activeSourceId, label: "Sumber belum tersedia" }, ...sourceOptions]} />
+      </div>}
       <SearchInput
         value={searchInput}
         onChange={onSearchInputChange}
         onSubmitAction={onSearchSubmit}
         onClear={onSearchClear}
-        placeholder="Cari di Library…"
+        placeholder="Cari di Jelajah…"
         containerClassName="flex-1 min-w-0 min-h-11 rounded-xl"
       />
 
@@ -67,7 +76,7 @@ export function LibraryToolbar({
           )}
           aria-label={`Filter ${activeFilterCount > 0 ? `(${activeFilterCount} aktif)` : ""}`}
         >
-          <Funnel size={17} weight={activeFilterCount > 0 ? "fill" : "bold"} />
+          <Funnel size={17} weight={activeFilterCount > 0 ? "fill" : "regular"} />
           <span className="hidden xs:inline sm:inline">Filter</span>
           {activeFilterCount > 0 && (
             <motion.span
@@ -91,12 +100,12 @@ export function LibraryToolbar({
               className="shrink-0 min-h-11 px-2.5 rounded-xl border-dashed"
               aria-label="Opsi lainnya"
             >
-              <DotsThreeVertical size={20} weight="bold" />
+              <DotsThreeVertical size={20} weight="regular" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48">
             <DropdownMenuItem onClick={onToggleSelectionMode} className="flex items-center gap-2">
-              <CheckCircle size={16} weight={isSelectionMode ? "fill" : "bold"} />
+              <CheckCircle size={16} weight={isSelectionMode ? "fill" : "regular"} />
               <span>{isSelectionMode ? "Selesai memilih" : "Pilih beberapa"}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>

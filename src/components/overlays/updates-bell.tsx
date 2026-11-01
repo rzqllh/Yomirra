@@ -142,7 +142,7 @@ export function UpdatesBell({ className }: { className?: string } = {}) {
       >
         <div className="flex items-center justify-between px-4 py-3 border-b border-border-subtle bg-surface-raised/40">
           <div className="flex items-center gap-2">
-            <Bell size={16} weight="duotone" className="text-accent" />
+            <Bell size={16} weight="regular" className="text-accent" />
             <h3 className="text-xs font-bold uppercase tracking-wider text-text-primary">
               Notifikasi Pembaruan
             </h3>
@@ -217,7 +217,7 @@ export function UpdatesBell({ className }: { className?: string } = {}) {
               className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-bold text-accent hover:text-accent-hover hover:bg-accent-dim focus:bg-accent-dim focus:text-accent-hover transition-colors cursor-pointer outline-none"
             >
               <span>Tampilkan semua notifikasi</span>
-              <ArrowRight size={14} weight="bold" />
+              <ArrowRight size={14} weight="regular" />
             </Link>
           </DropdownMenuItem>
         </div>

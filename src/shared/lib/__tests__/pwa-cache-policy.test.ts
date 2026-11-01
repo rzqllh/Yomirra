@@ -23,10 +23,10 @@ function createCacheStorage(cacheNames: string[]) {
 describe("PWA cache policy", () => {
   it("keeps explicit downloads durable while automatic caches use the current version", () => {
     expect(EXPLICIT_DOWNLOADS_CACHE_NAME).toBe("yomirra-chapter-cache-v1");
-    expect(READING_BUFFER_CACHE_NAME).toBe("yomirra-reading-buffer-v2");
-    expect(MANGA_IMAGES_CACHE_NAME).toBe("yomirra-manga-images-v2");
-    expect(MANGA_METADATA_CACHE_NAME).toBe("yomirra-manga-metadata-v2");
-    expect(PAGES_CACHE_NAME).toBe("yomirra-pages-v2");
+    expect(READING_BUFFER_CACHE_NAME).toBe("yomirra-reading-buffer-v3");
+    expect(MANGA_IMAGES_CACHE_NAME).toBe("yomirra-manga-images-v3");
+    expect(MANGA_METADATA_CACHE_NAME).toBe("yomirra-manga-metadata-v3");
+    expect(PAGES_CACHE_NAME).toBe("yomirra-pages-v3");
   });
 
   it("treats account, admin, and auth surfaces as session-sensitive without overmatching siblings", () => {
@@ -56,11 +56,17 @@ describe("PWA cache policy", () => {
       "yomirra-manga-images",
       "yomirra-manga-metadata",
       "yomirra-pages",
+      "yomirra-reading-buffer-v2",
+      "yomirra-manga-images-v2",
+      "yomirra-manga-metadata-v2",
+      "yomirra-pages-v2",
       READING_BUFFER_CACHE_NAME,
       MANGA_IMAGES_CACHE_NAME,
       MANGA_METADATA_CACHE_NAME,
       PAGES_CACHE_NAME,
       "serwist-precache-v1",
+      "yomirra-user-export-v1",
+      "yomirra-saved-offline-notes-v1",
     ]);
 
     const deleted = await cleanupOutdatedAppCaches(cacheStorage);
@@ -71,12 +77,16 @@ describe("PWA cache policy", () => {
         "yomirra-manga-images",
         "yomirra-manga-metadata",
         "yomirra-pages",
+        "yomirra-pages-v2",
+        "yomirra-manga-metadata-v2",
       ])
     );
     expect(cacheStorage.has(EXPLICIT_DOWNLOADS_CACHE_NAME)).toBe(true);
     expect(cacheStorage.has(READING_BUFFER_CACHE_NAME)).toBe(true);
     expect(cacheStorage.has(PAGES_CACHE_NAME)).toBe(true);
     expect(cacheStorage.has("serwist-precache-v1")).toBe(true);
+    expect(cacheStorage.has("yomirra-user-export-v1")).toBe(true);
+    expect(cacheStorage.has("yomirra-saved-offline-notes-v1")).toBe(true);
   });
 
   it("classifies unknown old Yomirra cache versions as migratable but never the durable download cache", () => {
@@ -84,5 +94,7 @@ describe("PWA cache policy", () => {
     expect(isOutdatedAppCacheName("yomirra-pages-v99")).toBe(true);
     expect(isOutdatedAppCacheName(EXPLICIT_DOWNLOADS_CACHE_NAME)).toBe(false);
     expect(isOutdatedAppCacheName("pages-rsc")).toBe(false);
+    expect(isOutdatedAppCacheName("yomirra-user-export-v1")).toBe(false);
+    expect(isOutdatedAppCacheName("yomirra-saved-offline-notes-v1")).toBe(false);
   });
 });

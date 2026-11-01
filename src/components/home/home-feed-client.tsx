@@ -27,6 +27,7 @@ import Link from "next/link";
 export interface HomeFeedClientProps {
   unifiedPopular: HomeFeedManga[];
   unifiedLatest: HomeFeedManga[];
+  catalogState?: "unavailable" | "partial" | "empty";
 }
 
 export const SPOTLIGHT_AUTOPLAY_MS = 6_000;
@@ -35,6 +36,7 @@ const SWIPE_THRESHOLD_PX = 40;
 export function HomeFeedClient({
   unifiedPopular,
   unifiedLatest,
+  catalogState,
 }: HomeFeedClientProps) {
   const [isMounted, setIsMounted] = React.useState(false);
   React.useEffect(() => setIsMounted(true), []);
@@ -142,6 +144,9 @@ export function HomeFeedClient({
       selectHeroCandidates(discoveryItems, spotlightItems, 15).map((item) => ({
         coverUrl: item.coverUrl,
         title: item.title,
+        sourceId: item.sourceId,
+        contentRating: item.contentRating,
+        isNsfw: item.isNsfw,
       })),
     [discoveryItems, spotlightItems]
   );
@@ -228,11 +233,7 @@ export function HomeFeedClient({
 
   return (
     <div>
-      <section id="hero-section" aria-label="Pembuka Beranda">
-        <HomeHero candidates={heroCandidates} />
-      </section>
-
-      {/* Adaptive Reading Shelf (Hero Position for Returning Readers) */}
+      {/* Returning readers resume first; new readers see discovery immediately. */}
       {historyItems.length > 0 && (
         <section
           id="continue-reading-section"
@@ -242,8 +243,25 @@ export function HomeFeedClient({
         </section>
       )}
 
-      {/* Discovery & Peringkat (Immediate entry for Zero History, Secondary for Returning) */}
       <section
+        id="hero-section"
+        aria-label="Pembuka Beranda"
+        className={historyItems.length > 0 ? "mt-6" : undefined}
+      >
+        <HomeHero candidates={heroCandidates} />
+      </section>
+
+      {catalogState && <section role="status" className="mt-6 rounded-xl border border-border-subtle bg-surface-raised p-4">
+        <h2 className="font-semibold text-text-primary">{catalogState === "unavailable" ? "Sumber bacaan belum bisa dimuat" : catalogState === "partial" ? "Sebagian sumber belum bisa dimuat" : "Belum ada hasil dari sumber aktif"}</h2>
+        <p className="mt-1 text-sm text-text-secondary">{catalogState === "empty" ? "Sumber sudah merespons, tetapi belum ada komik yang sesuai. Kamu tetap bisa mencari judul atau memeriksa pilihan sumber." : "Ada permintaan katalog yang gagal. Quick Search, Library, dan riwayat di perangkat tetap tersedia."}</p>
+        <div className="mt-3 flex flex-wrap gap-3 text-sm font-semibold">
+          <button type="button" onClick={() => window.location.reload()} className="min-h-11 rounded-lg border border-border-default px-3 focus-visible:outline-2 focus-visible:outline-accent">Coba lagi</button>
+          <Link href="/sources" className="inline-flex min-h-11 items-center rounded-lg px-3 text-accent focus-visible:outline-2 focus-visible:outline-accent">Kelola sumber</Link>
+        </div>
+      </section>}
+
+      {/* Discovery & Peringkat (Immediate entry for Zero History, Secondary for Returning) */}
+      {(currentSpotlight || filteredPopular.length > 0) && <section
         id="spotlight-section"
         aria-labelledby="spotlight-title"
         className="mt-8 flex min-w-0 flex-col gap-3.5 sm:mt-10 sm:gap-4"
@@ -319,7 +337,7 @@ export function HomeFeedClient({
 
           <HomeLeaderboardPanel items={filteredPopular} />
         </div>
-      </section>
+      </section>}
 
       {updateHariIni.length > 0 && (
         <section
@@ -348,7 +366,7 @@ export function HomeFeedClient({
                 <span>Lihat semua</span>
                 <ArrowRight
                   size={13}
-                  weight="bold"
+                  weight="regular"
                   className="transition-transform group-hover:translate-x-0.5"
                   aria-hidden="true"
                 />
@@ -396,7 +414,7 @@ export function HomeFeedClient({
       )}
       {historyItems.length === 0 && (
         <aside
-          aria-label="Info Rak Buku"
+          aria-label="Info Library"
           className="mt-10 rounded-2xl border border-border-subtle/80 bg-surface-raised/40 p-4 sm:p-5 flex items-center justify-between gap-4"
         >
           <div className="flex items-center gap-3 min-w-0">
@@ -405,7 +423,7 @@ export function HomeFeedClient({
             </div>
             <div className="min-w-0">
               <p className="text-xs sm:text-sm font-semibold text-text-primary truncate">
-                Simpan &amp; tandai komik favoritmu di Rak Buku
+                Simpan &amp; tandai komik favoritmu di Library
               </p>
               <p className="text-[11px] sm:text-xs text-text-muted truncate">
                 Data tersimpan otomatis di perangkatmu, tanpa perlu akun.
@@ -416,7 +434,7 @@ export function HomeFeedClient({
             href="/bookmark"
             className="shrink-0 text-xs font-bold text-accent hover:underline py-1 px-2.5 rounded-lg hover:bg-accent/5 transition-colors"
           >
-            Buka Rak Buku &rarr;
+            Buka Library &rarr;
           </Link>
         </aside>
       )}

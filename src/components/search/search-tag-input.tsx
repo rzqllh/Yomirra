@@ -105,7 +105,7 @@ export function SearchTagInput({
                 aria-label={`Hapus tag ${isExclude ? "kecualikan " : ""}${tag.label}`}
               >
                 <span>{isExclude ? `-${tag.label}` : tag.label}</span>
-                <X size={11} weight="bold" />
+                <X size={11} weight="regular" />
               </button>
             );
           })}

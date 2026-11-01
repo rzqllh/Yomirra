@@ -2,15 +2,17 @@
 
 import * as React from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { useQuery, keepPreviousData } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
 import { useMounted } from "@/shared/hooks/use-mounted";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { sourceQueryOptions } from "@/shared/sources/source-query-options";
+import { isContentVisible } from "@/shared/sources/content-policy";
 import { isDiscoverySourceSystemEligible, resolveDiscoverySourceId, selectDiscoverySources } from "@/shared/sources/discovery-source-policy";
 import { useLibraryFilterStore } from "@/shared/store/library-filter-store";
+import { useDiscoveryScopeStore } from "@/shared/store/discovery-scope-store";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useCollectionStore } from "@/shared/store/collection-store";
 import type { MangaKey } from "@/shared/types/collection";
@@ -53,7 +55,12 @@ export function useLibraryCatalog() {
       ),
     [sourceCandidates, disabledSources, isNsfwFiltered]
   );
-  const activeSourceId = resolveDiscoverySourceId(sourceParam, eligibleSources);
+  const rememberedSourceId = useDiscoveryScopeStore((state) => state.sourceId);
+  const rememberSource = useDiscoveryScopeStore((state) => state.setSourceId);
+  const activeSourceId = resolveDiscoverySourceId(sourceParam ?? rememberedSourceId, eligibleSources);
+  React.useEffect(() => {
+    if (activeSourceId && rememberedSourceId !== activeSourceId) rememberSource(activeSourceId);
+  }, [activeSourceId, rememberedSourceId, rememberSource]);
   const sortParam = searchParams.get("sort");
 
   const filterStore = useLibraryFilterStore();
@@ -84,9 +91,11 @@ export function useLibraryCatalog() {
   const [query, setQuery] = React.useState(storeQuery);
   const [sort, setSort] = React.useState<string>(initialSort);
   const [page, setPage] = useUrlPagination();
+  const [sourceChangeNotice, setSourceChangeNotice] = React.useState("");
 
   const genreSignature = genreParams.join("|");
   const previousSourceRef = React.useRef(activeSourceId);
+  const skipSourceFilterPageReset = React.useRef(false);
 
   // A direct reload clears session-scoped filters, but explicit URL tags remain an intent
   // and are applied again immediately below.
@@ -109,13 +118,15 @@ export function useLibraryCatalog() {
 
     if (sourceChanged) {
       previousSourceRef.current = activeSourceId;
+      skipSourceFilterPageReset.current = true;
       filterStore.setFilters({
         selectedGenres: nextGenres,
         excludedGenres: [],
         selectedFormats: [],
         selectedStatuses: [],
+        sort: "popular",
       });
-      setPage(1);
+      setSort("popular");
       return;
     }
 
@@ -141,10 +152,9 @@ export function useLibraryCatalog() {
   const isDisabled =
     !activeSourceId ||
     disabledSources.includes(activeSourceId) ||
-    Boolean(
-      activeSourceMetadata &&
-      !isDiscoverySourceSystemEligible(activeSourceMetadata)
-    );
+    !activeSourceMetadata ||
+    !isDiscoverySourceSystemEligible(activeSourceMetadata) ||
+    (isNsfwFiltered && activeSourceMetadata.isNsfw);
   const supportsProviderFilters =
     activeSourceMetadata?.capabilities?.filters === true;
 
@@ -205,17 +215,31 @@ export function useLibraryCatalog() {
   ];
 
   // Fallback to supported sort if current sort is not available in the new source
+  const setFilters = filterStore.setFilters;
+  const normalizedSortRef = React.useRef<string | null>(null);
   React.useEffect(() => {
     if (filtersData?.sorts) {
       const isSupported = filtersData.sorts.some(s => s.id === sort);
       if (!isSupported && filtersData.sorts.length > 0) {
-        setSort(filtersData.sorts[0].id);
+        const aliases = sort === "latest" ? ["latestUploadedChapter"]
+          : sort === "popular" || sort === "all" ? ["followedCount", "popularity"] : [];
+        const fallback = filtersData.sorts.find((item) => aliases.includes(item.id))?.id ?? filtersData.sorts[0].id;
+        // Keep both owners in agreement. Updating only local state lets the
+        // store-sync effect restore the unsupported value on every render.
+        normalizedSortRef.current = fallback;
+        setSort(fallback);
+        setFilters({ sort: fallback });
       }
     }
-  }, [filtersData?.sorts, sort]);
+  }, [filtersData?.sorts, sort, setFilters]);
 
   // Sync local sort state with storeSort
+  const previousStoreSortRef = React.useRef(storeSort);
   React.useEffect(() => {
+    // A direct URL owns the initial sort; only subsequent drawer/store edits
+    // should replace it. Local/provider normalization updates both together.
+    if (previousStoreSortRef.current === storeSort) return;
+    previousStoreSortRef.current = storeSort;
     if (storeSort && storeSort !== sort) {
       setSort(storeSort);
       const params = new URLSearchParams(searchParams.toString());
@@ -231,7 +255,17 @@ export function useLibraryCatalog() {
 
   // Reset page to 1 when filters change from drawer
   const previousFiltersRef = React.useRef({ selectedGenres, excludedGenres, selectedFormats, selectedStatuses, selectedCollections, selectedReadingStatuses, storeSort });
+  const filtersMountedRef = React.useRef(false);
   React.useEffect(() => {
+    const current = { selectedGenres, excludedGenres, selectedFormats, selectedStatuses, selectedCollections, selectedReadingStatuses, storeSort };
+    // Persisted arrays replace the server snapshot during hydration. They are
+    // the initial filter state, not an edit that should discard a deep link.
+    if (!isMounted || !filtersMountedRef.current) {
+      filtersMountedRef.current = isMounted;
+      previousFiltersRef.current = current;
+      if (normalizedSortRef.current === storeSort) normalizedSortRef.current = null;
+      return;
+    }
     const prev = previousFiltersRef.current;
     if (
       prev.storeSort !== storeSort ||
@@ -242,29 +276,39 @@ export function useLibraryCatalog() {
       prev.selectedCollections !== selectedCollections ||
       prev.selectedReadingStatuses !== selectedReadingStatuses
     ) {
-      setPage(1);
-      previousFiltersRef.current = { selectedGenres, excludedGenres, selectedFormats, selectedStatuses, selectedCollections, selectedReadingStatuses, storeSort };
+      const normalized = normalizedSortRef.current === storeSort;
+      if (normalized) normalizedSortRef.current = null;
+      if (skipSourceFilterPageReset.current) skipSourceFilterPageReset.current = false;
+      else if (!normalized) setPage(1);
+      previousFiltersRef.current = current;
     }
-  }, [selectedGenres, excludedGenres, selectedFormats, selectedStatuses, selectedCollections, selectedReadingStatuses, storeSort]);
+  }, [isMounted, selectedGenres, excludedGenres, selectedFormats, selectedStatuses, selectedCollections, selectedReadingStatuses, storeSort]);
 
   const fetchCatalog = async (currentPage: number) => {
     const hasFilters = selectedGenres.length > 0 || excludedGenres.length > 0 || selectedFormats.length > 0 || selectedStatuses.length > 0;
+    const popularSort = ["popular", "all", "popularity", "followedCount"].includes(sort);
+    const latestSort = ["latest", "latestUploadedChapter"].includes(sort);
+    const localSort = ["alphabetical", "alphabet", "title"].includes(sort) ||
+      (sort === "rating" && !filtersData?.sorts?.some((item) => item.id === "rating"));
 
     if (!query && !hasFilters) {
-      if (sort === "latest") {
+      if (latestSort) {
         const res = await apiClient.getLatest(activeSourceId, currentPage);
         return { mangas: res.mangas, hasNextPage: !!res.hasNextPage };
       }
 
-      // Rating and alphabetical ordering are applied client-side so they work
-      // consistently even when a provider has no native sort support.
-      const res = await apiClient.getPopular(activeSourceId, currentPage);
-      return { mangas: res.mangas, hasNextPage: !!res.hasNextPage };
+      // Only local fallback sorts reuse the popular page. Provider-native sorts
+      // must reach search instead of silently returning the popular catalog.
+      if (popularSort || localSort) {
+        const res = await apiClient.getPopular(activeSourceId, currentPage);
+        return { mangas: res.mangas, hasNextPage: !!res.hasNextPage };
+      }
     }
 
     const filters: Record<string, string | string[]> = {};
-    if (sort === "latest") filters.sort = "latest";
+    if (latestSort) filters.sort = sort;
     else if (sort === "popular" || sort === "all") filters.sort = "popularity";
+    else if (!localSort) filters.sort = sort;
 
     if (selectedGenres.length > 0 || excludedGenres.length > 0) {
       const genreParams: string[] = [];
@@ -294,7 +338,8 @@ export function useLibraryCatalog() {
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     enabled: Boolean(activeSourceId) && !isDisabled,
-    placeholderData: keepPreviousData,
+    placeholderData: (previous, previousQuery) =>
+      previousQuery?.queryKey[1] === activeSourceId && previousQuery.queryKey.at(-1) === isNsfwFiltered ? previous : undefined,
   });
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -352,14 +397,14 @@ export function useLibraryCatalog() {
     selectedStatuses.length +
     selectedCollections.length +
     selectedReadingStatuses.length +
-    (sort !== "popular" && sort !== "all" ? 1 : 0);
+    (!["popular", "all", "popularity", "followedCount"].includes(sort) ? 1 : 0);
   const rawMangas = data?.mangas || [];
   const uniqueMangas = React.useMemo(() => {
     return Array.from(new Map(rawMangas.map(m => [m.id, m])).values());
   }, [rawMangas]);
 
   const mangas = React.useMemo(() => {
-    let result = [...uniqueMangas];
+    let result = uniqueMangas.filter((item) => isContentVisible(item, isNsfwFiltered));
 
     if (selectedCollections.length > 0) {
       result = result.filter((manga) => {
@@ -400,6 +445,7 @@ export function useLibraryCatalog() {
     });
   }, [
     uniqueMangas,
+    isNsfwFiltered,
     sort,
     activeSourceId,
     selectedCollections,
@@ -419,9 +465,27 @@ export function useLibraryCatalog() {
   }, [page]);
 
   const totalLibraryCount = Object.keys(libraryItems).length;
+  const appliedFilters = [
+    ...selectedGenres.map((id) => ({ key: `genre:${id}`, label: filtersData?.genres.find((item) => item.id === id)?.name ?? "Genre dipilih", remove: () => filterStore.setFilters({ selectedGenres: selectedGenres.filter((item) => item !== id) }) })),
+    ...excludedGenres.map((id) => ({ key: `exclude:${id}`, label: `Bukan ${filtersData?.genres.find((item) => item.id === id)?.name ?? "genre terpilih"}`, remove: () => filterStore.setFilters({ excludedGenres: excludedGenres.filter((item) => item !== id) }) })),
+    ...selectedFormats.map((id) => ({ key: `format:${id}`, label: filtersData?.formats.find((item) => item.id === id)?.name ?? "Filter dipilih", remove: () => filterStore.setFilters({ selectedFormats: selectedFormats.filter((item) => item !== id) }) })),
+    ...selectedStatuses.map((id) => ({ key: `status:${id}`, label: filtersData?.statuses.find((item) => item.id === id)?.name ?? "Filter dipilih", remove: () => filterStore.setFilters({ selectedStatuses: selectedStatuses.filter((item) => item !== id) }) })),
+    ...selectedCollections.map((id) => ({ key: `collection:${id}`, label: collections.find((item) => item.id === id)?.name ?? "Koleksi dipilih", remove: () => filterStore.setFilters({ selectedCollections: selectedCollections.filter((item) => item !== id) }) })),
+    ...selectedReadingStatuses.map((id) => ({ key: `reading:${id}`, label: `Status baca: ${{ reading: "Sedang dibaca", completed: "Selesai", "on-hold": "Ditunda", dropped: "Dihentikan", "plan-to-read": "Rencana baca" }[id] ?? "Dipilih"}`, remove: () => filterStore.setFilters({ selectedReadingStatuses: selectedReadingStatuses.filter((item) => item !== id) }) })),
+  ];
 
   return {
+    sourceOptions: eligibleSources.map((source) => ({ value: source.id, label: source.name })),
+    sourceChangeNotice,
+    changeSource: (sourceId: string) => {
+      if (!eligibleSources.some((source) => source.id === sourceId) || sourceId === activeSourceId) return;
+      setSourceChangeNotice("Sumber berubah. Filter khusus sumber direset.");
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("source", sourceId); params.delete("page"); params.delete("genre"); params.delete("sort");
+      router.push(`${pathname}?${params}`, { scroll: false });
+    },
     isMounted,
+    appliedFilters,
     activeSourceId,
     searchInput,
     setSearchInput,

@@ -3,7 +3,20 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { ReaderPreferences } from "@/shared/types/manga";
 
+export interface ReaderPageNavigation {
+  key: string;
+  index: number;
+  total: number;
+  seek: (index: number) => void;
+  previous?: () => void;
+  next?: () => void;
+  canPrevious?: boolean;
+  canNext?: boolean;
+}
+
 interface ReaderState {
+  pageNavigation: ReaderPageNavigation | null;
+  setPageNavigation: (navigation: ReaderPageNavigation | null) => void;
   preferences: ReaderPreferences;
   updatePreferences: (prefs: Partial<ReaderPreferences>) => void;
   perTitlePreferences: Record<string, Partial<ReaderPreferences>>;
@@ -26,6 +39,7 @@ const defaultPreferences: ReaderPreferences = {
   toolbarBehavior: "auto-hide",
   preloadIntensity: "balanced",
   showPageProgress: true,
+  disableDoubleTapZoom: false,
   readingDirection: 'ltr',
   readingMode: 'vertical',
   keepScreenAwake: true,
@@ -35,6 +49,8 @@ export const useReaderStore = create<ReaderState>()(
   persist(
     (set, get) => ({
       preferences: defaultPreferences,
+      pageNavigation: null,
+      setPageNavigation: (pageNavigation) => set({ pageNavigation }),
       updatePreferences: (newPrefs) =>
         set((state) => ({
           preferences: { ...state.preferences, ...newPrefs },

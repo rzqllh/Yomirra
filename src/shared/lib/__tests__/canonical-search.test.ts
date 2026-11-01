@@ -7,6 +7,47 @@ import {
 import type { MangaItem } from "@/shared/sources/source-types";
 
 describe("Phase 4 — Canonical Search Deduplication & Failure Isolation", () => {
+  it("ignores repeated rows from the same provider without inventing another work", () => {
+    const sameManga: MangaItem = {
+      id: "solo-md",
+      title: "Solo Leveling",
+      coverUrl: "/solo-md.jpg",
+    };
+
+    const clusters = clusterCanonicalResults([
+      { sourceId: "mangadex", manga: sameManga },
+      { sourceId: "mangadex", manga: { ...sameManga } },
+      {
+        sourceId: "komiku",
+        manga: { id: "solo-komiku", title: "Solo Leveling", coverUrl: "/solo-komiku.jpg" },
+      },
+    ]);
+
+    expect(clusters).toHaveLength(1);
+    expect(clusters[0].sourceBindings).toEqual([
+      expect.objectContaining({ sourceId: "mangadex", mangaId: "solo-md" }),
+      expect.objectContaining({ sourceId: "komiku", mangaId: "solo-komiku" }),
+    ]);
+  });
+
+  it("does not claim HIGH_CONFIDENCE for a work seen in only one source", () => {
+    const clusters = clusterCanonicalResults([
+      { sourceId: "komiku", manga: { id: "only", title: "Unique Work", coverUrl: "/only.jpg" } },
+    ]);
+    expect(clusters).toHaveLength(1);
+    expect(clusters[0].matchConfidence).toBe("NO_MATCH");
+    expect(clusters[0].sourceBindings).toHaveLength(1);
+  });
+
+  it("promotes observed cross-source match confidence only after an actual match", () => {
+    const clusters = clusterCanonicalResults([
+      { sourceId: "komiku", manga: { id: "a", title: "Work Alpha", coverUrl: "/a.jpg", author: "Artist" } },
+      { sourceId: "mangadex", manga: { id: "b", title: "Work Alpha", coverUrl: "/b.jpg", author: "Artist" } },
+    ]);
+    expect(clusters).toHaveLength(1);
+    expect(clusters[0].matchConfidence).toBe("HIGH_CONFIDENCE");
+  });
+
   it("identical title across two sources → one canonical result with 2 bindings", () => {
     const items: Array<{ manga: MangaItem; sourceId: string }> = [
       {
@@ -39,6 +80,29 @@ describe("Phase 4 — Canonical Search Deduplication & Failure Isolation", () =>
       "komiku-ii",
     ]);
     expect(clusters[0].matchConfidence).toBe("HIGH_CONFIDENCE");
+  });
+
+  it("never merges same-title/same-author works with conflicting known formats", () => {
+    const clusters = clusterCanonicalResults([
+      { sourceId: "source-a", manga: { id: "novel", title: "The Hero", author: "Author One", format: "NOVEL", coverUrl: "/n.jpg" } },
+      { sourceId: "source-b", manga: { id: "manga", title: "The Hero", author: "Author One", format: "MANGA", coverUrl: "/m.jpg" } },
+    ]);
+    expect(clusters).toHaveLength(2);
+    expect(clusters[0].sourceBindings).toHaveLength(1);
+    expect(clusters[1].sourceBindings).toHaveLength(1);
+    expect(clusters.map((cluster) => cluster.canonicalKey)).toEqual([
+      "canonical:the hero:author:author one",
+      "canonical:the hero:author:author one:source:source-b:manga",
+    ]);
+  });
+
+  it("does not reject a valid cross-source match just because one provider omitted format", () => {
+    const clusters = clusterCanonicalResults([
+      { sourceId: "source-a", manga: { id: "a", title: "The Hero", author: "Author One", format: "MANGA", coverUrl: "/a.jpg" } },
+      { sourceId: "source-b", manga: { id: "b", title: "The Hero", author: "Author One", coverUrl: "/b.jpg" } },
+    ]);
+    expect(clusters).toHaveLength(1);
+    expect(clusters[0].sourceBindings).toHaveLength(2);
   });
 
   it("same title + different author → no unsafe merge (two separate results)", () => {
