@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
 import { useUpdateStore } from "@/shared/store/update-store";
+import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { MangaCard, CollapsibleBadgeRow } from "../manga-card";
 
 vi.mock("next/navigation", () => ({
@@ -61,6 +62,7 @@ describe("MangaCard", () => {
   beforeEach(() => {
     document.body.innerHTML = "";
     vi.clearAllMocks();
+    useSourcePreferencesStore.setState({ disabledSources: [] });
 
     class ImmediateIntersectionObserver {
       private callback: IntersectionObserverCallback;
@@ -160,6 +162,36 @@ describe("MangaCard", () => {
     expect(fireEvent.click(link)).toBe(false);
     expect(screen.queryByRole("dialog")).toBeNull();
   });
+
+  it.each(["grid", "compact", "rank"] as const)(
+    "blocks navigation when the only non-aggregated source is disabled (%s)",
+    (mode) => {
+      useSourcePreferencesStore.setState({ disabledSources: ["mangadex"] });
+      render(
+        <MangaCard
+          variant={mode === "rank" ? "rank" : "discovery"}
+          viewMode={mode === "compact" ? "compact" : "grid"}
+          sourceId="mangadex"
+          manga={{
+            id: "disabled-sole-source",
+            title: "Unavailable Solo",
+            coverUrl: "",
+            description: "A source-specific result.",
+          }}
+        />
+      );
+      const links = screen.getAllByRole("link", {
+        name: "Sumber tidak tersedia untuk Unavailable Solo",
+      });
+      expect(links.length).toBeGreaterThan(0);
+      for (const link of links) {
+        expect(link.getAttribute("aria-disabled")).toBe("true");
+        expect(link.getAttribute("href")).toBe("#");
+        expect(fireEvent.click(link)).toBe(false);
+      }
+      expect(screen.queryByRole("dialog")).toBeNull();
+    }
+  );
 
   it("lazily hydrates and sanitizes a missing compact-card synopsis", async () => {
     const queryClient = new QueryClient({

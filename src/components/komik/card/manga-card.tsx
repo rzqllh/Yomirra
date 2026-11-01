@@ -232,7 +232,12 @@ export function MangaCard({
   const isMultiSource = availableBindings.length > 1;
   const noEligibleSource =
     (effectiveBindings.length > 0 && availableBindings.length === 0) ||
-    (effectiveBindings.length === 0 && isUnavailable);
+    (effectiveBindings.length === 0 && (
+      isUnavailable ||
+      disabledSources.includes(sourceId) ||
+      sourceObj?.isEnabled === false ||
+      sourceObj?.isInstalled === false
+    ));
   const onlyBinding = availableBindings.length === 1 ? availableBindings[0] : null;
   const cardSourceId = onlyBinding?.sourceId ?? sourceId;
   const cardMangaId = onlyBinding?.mangaId ?? manga.id;
