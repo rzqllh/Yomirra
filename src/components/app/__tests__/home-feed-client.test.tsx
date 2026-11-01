@@ -205,6 +205,9 @@ describe("Yomirra Editorial Home Components", () => {
         title: "Adult source", coverUrl: "https://example.com/adult.jpg", sourceId: "doujindesu", contentRating: "safe",
       })).toBe(false);
       expect(isVerifiedSafeHeroCandidate({
+        title: "Unknown provider", coverUrl: "https://example.com/unknown-provider.jpg", sourceId: "not-registered", contentRating: "safe",
+      })).toBe(false);
+      expect(isVerifiedSafeHeroCandidate({
         title: "Verified safe", coverUrl: "https://example.com/safe.jpg", sourceId: "shinigami", contentRating: "safe",
       })).toBe(true);
     });
