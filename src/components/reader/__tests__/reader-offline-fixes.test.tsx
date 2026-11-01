@@ -93,7 +93,7 @@ describe("Reader Offline Fixes Unit Tests", () => {
             sourceId="src1"
             mangaId="manga1"
             chapterId="ch1"
-            initialDetail={{ id: "manga1", title: "Manga 1", coverUrl: "/cover.jpg", description: "", genres: [], status: "ONGOING" }}
+            initialDetail={{ contentRating: "safe", id: "manga1", title: "Manga 1", coverUrl: "/cover.jpg", description: "", genres: [], status: "ONGOING" }}
             initialChapters={[{ id: "ch1", mangaId: "manga1", number: 1, title: "Ch 1", date: "2026-01-01" }]}
             initialPages={[{ index: 0, url: "http://example.com/0.jpg" }]}
           />
@@ -142,7 +142,7 @@ describe("Reader Offline Fixes Unit Tests", () => {
             sourceId="src1"
             mangaId="manga1"
             chapterId="ch1"
-            initialDetail={{ id: "manga1", title: "Manga 1", coverUrl: "/cover.jpg", description: "", genres: [], status: "ONGOING" }}
+            initialDetail={{ contentRating: "safe", id: "manga1", title: "Manga 1", coverUrl: "/cover.jpg", description: "", genres: [], status: "ONGOING" }}
             initialChapters={[
               { id: "ch1", mangaId: "manga1", number: 1, title: "Ch 1", date: "2026-01-01" },
               { id: "ch2", mangaId: "manga1", number: 2, title: "Ch 2", date: "2026-01-02" },
@@ -165,7 +165,7 @@ describe("Reader Offline Fixes Unit Tests", () => {
             sourceId="src1"
             mangaId="manga1"
             chapterId="ch2"
-            initialDetail={{ id: "manga1", title: "Manga 1", coverUrl: "/cover.jpg", description: "", genres: [], status: "ONGOING" }}
+            initialDetail={{ contentRating: "safe", id: "manga1", title: "Manga 1", coverUrl: "/cover.jpg", description: "", genres: [], status: "ONGOING" }}
             initialChapters={[
               { id: "ch1", mangaId: "manga1", number: 1, title: "Ch 1", date: "2026-01-01" },
               { id: "ch2", mangaId: "manga1", number: 2, title: "Ch 2", date: "2026-01-02" },
@@ -214,7 +214,7 @@ describe("Reader Offline Fixes Unit Tests", () => {
             sourceId="src1"
             mangaId="manga1"
             chapterId="ch1"
-            initialDetail={{ id: "manga1", title: "Manga 1", coverUrl: "/cover.jpg", description: "", genres: [], status: "ONGOING" }}
+            initialDetail={{ contentRating: "safe", id: "manga1", title: "Manga 1", coverUrl: "/cover.jpg", description: "", genres: [], status: "ONGOING" }}
             initialChapters={[{ id: "ch1", mangaId: "manga1", number: 1, title: "Ch 1", date: "2026-01-01" }]}
             initialPages={[{ index: 0, url: "http://example.com/0.jpg" }]}
           />
@@ -265,7 +265,7 @@ describe("Reader Offline Fixes Unit Tests", () => {
             sourceId="src1"
             mangaId="manga1"
             chapterId="ch1"
-            initialDetail={{ id: "manga1", title: "Manga 1", coverUrl: "/cover.jpg", description: "", genres: [], status: "ONGOING" }}
+            initialDetail={{ contentRating: "safe", id: "manga1", title: "Manga 1", coverUrl: "/cover.jpg", description: "", genres: [], status: "ONGOING" }}
             initialChapters={[{ id: "ch1", mangaId: "manga1", number: 1, title: "Ch 1", date: "2026-01-01" }]}
             initialPages={[{ index: 0, url: "http://example.com/0.jpg" }]}
           />
