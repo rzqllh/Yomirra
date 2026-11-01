@@ -54,7 +54,7 @@ describe("Quick Search scope and dialog", () => {
           id: "unverified-title",
           title: "Unverified title",
           coverUrl: "https://example.com/unverified.jpg",
-          contentRating: "unknown",
+          // No provider rating: still UNKNOWN, not safe.
         }] },
       },
     });
