@@ -75,6 +75,8 @@ describe("PWA cache policy", () => {
         "yomirra-manga-images",
         "yomirra-manga-metadata",
         "yomirra-pages",
+        "yomirra-pages-v2",
+        "yomirra-manga-metadata-v2",
       ])
     );
     expect(cacheStorage.has(EXPLICIT_DOWNLOADS_CACHE_NAME)).toBe(true);
