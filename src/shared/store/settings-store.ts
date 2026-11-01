@@ -1,6 +1,16 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { CONTENT_PREFERENCE_COOKIE, DATA_SAVER_COOKIE, LANGUAGE_PREFERENCE_COOKIE } from "@/shared/sources/content-policy";
+import { clearAutomaticAppCaches } from "@/shared/lib/pwa-cache-policy";
+
+function expireAutomaticCachesAfterNsfwOptOut(): void {
+  if (typeof caches === "undefined") return;
+  // Clear automatic metadata, images and pages from opt-in sessions.
+  // Explicit offline downloads and personal records remain untouched.
+  void clearAutomaticAppCaches(caches).catch(() => {
+    // Storage can be unavailable; UI content boundaries still apply.
+  });
+}
 
 function syncReadPreferenceCookie(hideNsfw: boolean): void {
   if (typeof document !== "undefined") {
@@ -76,8 +86,10 @@ export const useSettingsStore = create<SettingsState>()(
       setDataSaver: (enabled) => { set({ dataSaver: enabled }); syncOtherReadCookies(get()); },
       hideNsfw: true, // Default to true for safety
       setHideNsfw: (enabled) => {
+        const wasHidden = get().hideNsfw;
         syncReadPreferenceCookie(enabled);
         set({ hideNsfw: enabled });
+        if (enabled && !wasHidden) expireAutomaticCachesAfterNsfwOptOut();
       },
       lastSyncedAt: null,
       setLastSyncedAt: (date) => set({ lastSyncedAt: date }),
