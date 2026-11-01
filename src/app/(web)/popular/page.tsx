@@ -18,8 +18,8 @@ import { PageHeader } from "@/components/chrome/header";
 import { PopularPageView } from "@/components/popular/popular-page-view";
 
 export const metadata: Metadata = {
-  title: "Komik Populer — Yomirra",
-  description: "Popularitas MyAnimeList dan peringkat dari sumber bacaan aktif.",
+  title: "Populer di Yomirra — Yomirra",
+  description: "Peringkat manga terpopuler dari sumber aktif dan referensi tren global.",
 };
 
 export const dynamic = "force-dynamic";
@@ -70,8 +70,8 @@ export default async function PopularPage() {
     <YomirraSurface variant="base" className="w-full">
       <PageContainer hasMobileHeader>
         <PageHeader
-          title="Populer"
-          subtitle="Peringkat dari sumber yang kamu aktifkan."
+          title="Populer di Yomirra"
+          subtitle="Peringkat komik paling banyak dibaca dari sumber aktif pilihanmu."
           icon={<Fire size={24} weight="regular" />}
         />
         <PopularPageView feeds={feeds} mal={mal} />
