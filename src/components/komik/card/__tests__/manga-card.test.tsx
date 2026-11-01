@@ -156,6 +156,7 @@ describe("MangaCard", () => {
     );
     const link = screen.getByRole("link", { name: "Sumber tidak tersedia untuk Work" });
     expect(link.getAttribute("aria-disabled")).toBe("true");
+    expect(link.getAttribute("href")).toBe("#");
     expect(fireEvent.click(link)).toBe(false);
     expect(screen.queryByRole("dialog")).toBeNull();
   });

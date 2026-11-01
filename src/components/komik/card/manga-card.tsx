@@ -482,7 +482,8 @@ export function MangaCard({
         style={vtStyle}
       >
         <Link
-          href={cardDetailHref}
+          href={noEligibleSource ? "#" : cardDetailHref}
+          prefetch={noEligibleSource ? false : undefined}
           className={cn(
             mangaCardInteraction.link,
             "flex min-w-0 flex-1 gap-2.5 rounded-l-md",
@@ -660,7 +661,8 @@ export function MangaCard({
           className="w-[84px] shrink-0 sm:w-[96px] md:w-[104px]"
         >
           <Link
-            href={cardDetailHref}
+            href={noEligibleSource ? "#" : cardDetailHref}
+          prefetch={noEligibleSource ? false : undefined}
             className={cn("block h-full rounded-sm outline-none", noEligibleSource ? "cursor-not-allowed opacity-60" : "cursor-pointer")}
             aria-label={cardAriaLabel}
             aria-disabled={noEligibleSource || undefined}
@@ -683,7 +685,8 @@ export function MangaCard({
           <div>
             <div className="flex items-start justify-between gap-2">
               <Link
-                href={cardDetailHref}
+                href={noEligibleSource ? "#" : cardDetailHref}
+          prefetch={noEligibleSource ? false : undefined}
                 className={cn(mangaCardInteraction.link, "min-w-0 flex-1 rounded-sm", noEligibleSource && "cursor-not-allowed opacity-60")}
                 aria-label={cardAriaLabel}
                 aria-disabled={noEligibleSource || undefined}
@@ -796,7 +799,8 @@ export function MangaCard({
       style={vtStyle}
     >
       <Link
-        href={cardDetailHref}
+        href={noEligibleSource ? "#" : cardDetailHref}
+          prefetch={noEligibleSource ? false : undefined}
         transitionTypes={["nav-forward"]}
         className={cn(mangaCardInteraction.link, "group flex flex-col rounded-xs", noEligibleSource && "cursor-not-allowed opacity-60")}
         aria-label={cardAriaLabel}
