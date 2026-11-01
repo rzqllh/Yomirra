@@ -203,6 +203,15 @@ describe("Yomirra Editorial Home Components", () => {
       mockSettingsState.hideNsfw = true;
       rerender(<HomeHero candidates={candidates} />);
       expect(srcs()).toEqual(["https://example.com/safe-cover.jpg"]);
+
+      // New provider evidence must invalidate an already-mounted cached cover.
+      const reclassified = candidates.map((candidate) =>
+        candidate.title === "Known safe"
+          ? { ...candidate, contentRating: "erotica" as const }
+          : candidate
+      );
+      rerender(<HomeHero candidates={reclassified} />);
+      expect(srcs()).toEqual([]);
     });
   });
 
