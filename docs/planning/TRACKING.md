@@ -119,12 +119,5 @@ Documentation changes and code changes require scoped PR/checks; when starting w
 - **RISK-07 migration/sync:** backup, reversible transform, per-UID isolation, regression proof.
 - **RISK-08 incomplete docs/history:** checkpoint each stage; status and evidence stored in handoffs.
 
-## Latest verified engineering checkpoint (2026-11-01)
-
-- Preview GitHub merged: #100 lightweight health API `fa4ded23`, #102 disabled sole-source CAT-15 `46892ecf`, #103 non-mutating NSFW legacy patcher `dcffbb90`, #104 UNKNOWN consent/card safety `1ad32996`. Full GitHub source CI success for each; no data migration or Production promotion. Earlier phase-table entries are historical snapshots; no P0 full acceptance is inferred.
-- Live Vercel READY verified only at Preview SHA `46892ecf`; exact newer Preview SHA not proven deployed. Official API quota 402 `api-deployments-free-per-day` on an attempted later feature deployment; no billing workaround.
-- PR #105 Home hero cache/Spotlight and #106 Quick Search warnings remained open at document creation; exact-head CI and integration remain required. Refresh GitHub before concluding.
-- Full owner/action matrix: [Owner blockers and autonomous handoff](./OWNER_BLOCKERS_AND_AUTONOMOUS_HANDOFF_20261101.md).
-
 ## Next checkpoint
 Complete ACCEPTANCE_MATRIX and PHASE_01..07 handoffs; run document cross-reference audit; open docs PR against `preview`. After docs approval, plan P01 implementation in small scoped PRs. No P01 tests or code changes can be marked PASS from this document.
