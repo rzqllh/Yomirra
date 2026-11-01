@@ -468,7 +468,7 @@ describe("MangaCard", () => {
       variant={variant}
       viewMode={viewMode}
       sourceId="shinigami"
-      manga={{ id: "unknown-title", title: "Unknown title", coverUrl: "https://example.com/unverified.jpg" }}
+      manga={{ id: "unknown-title", title: "Unknown title", coverUrl: "https://example.com/unverified.jpg", description: "Known fixture text" }}
     />);
     expect(screen.getByTestId("unverified-cover").textContent).toContain("Rating belum terverifikasi");
     useSettingsStore.setState({ hideNsfw: false });
@@ -476,7 +476,7 @@ describe("MangaCard", () => {
       variant={variant}
       viewMode={viewMode}
       sourceId="shinigami"
-      manga={{ id: "unknown-title", title: "Unknown title", coverUrl: "https://example.com/unverified.jpg" }}
+      manga={{ id: "unknown-title", title: "Unknown title", coverUrl: "https://example.com/unverified.jpg", description: "Known fixture text" }}
     />);
     expect(screen.queryByTestId("unverified-cover")).toBeNull();
   });
