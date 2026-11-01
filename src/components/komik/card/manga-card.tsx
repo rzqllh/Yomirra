@@ -867,7 +867,7 @@ export function MangaCard({
               )}
             </div>
 
-            {isUnavailable && (
+            {noEligibleSource && (
               <div className="absolute inset-0 bg-surface-base/60 backdrop-blur-[2px] flex items-center justify-center z-10 transition-opacity group-hover:opacity-100 opacity-90">
                 <div className="rounded-xs bg-status-error-bg px-2.5 py-1 text-xs font-bold text-status-error-fg">
                   Tidak Tersedia
