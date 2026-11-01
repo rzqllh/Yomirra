@@ -11,6 +11,7 @@ import Link from "next/link";
 import { useHistoryStore } from "@/shared/store/history-store";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useSettingsStore } from "@/shared/store/settings-store";
+import { useOnboardingStore } from "@/shared/store/onboarding-store";
 import { useStatsStore } from "@/shared/store/stats-store";
 import { useTheme } from "next-themes";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
@@ -454,8 +455,25 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
       </div>
 
       <div className="xl:col-span-2">
+        <div className="flex justify-center pb-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              useOnboardingStore.getState().resetOnboarding();
+              toast.info("Panduan aplikasi disiapkan", {
+                description: "Panduan onboarding akan ditampilkan saat kamu kembali ke Beranda.",
+              });
+            }}
+            className="rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary"
+          >
+            <Compass size={16} weight="regular" className="mr-1.5" />
+            Buka Panduan Onboarding
+          </Button>
+        </div>
+
         {/* Version */}
-        <div className="flex justify-center pt-2 pb-2">
+        <div className="flex justify-center pt-1 pb-2">
           <span className="text-xs text-text-muted font-medium select-none">
             Yomirra v{packageInfo.version}
           </span>

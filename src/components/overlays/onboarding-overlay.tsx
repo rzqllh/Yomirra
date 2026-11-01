@@ -13,23 +13,18 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 const STEPS = [
   {
     eyebrow: "SEMUA SUMBER, SATU PINTU",
-    title: "Ribuan Judul.\nNggak Perlu Pindah App.",
-    desc: "Semua ketemu di sini, tanpa buka tab baru.",
+    title: "Katalog Multi-Sumber Terlengkap",
+    desc: "Akses ribuan judul dari berbagai sumber lokal dan internasional dalam satu tempat.",
   },
   {
-    eyebrow: "RAK & RIWAYAT",
-    title: "Berhenti di Sini,\nLanjut Persis di Sini.",
-    desc: "Panel terakhir yang kamu baca, tersimpan otomatis. Buka lagi kapan aja, gak ada yang hilang.",
+    eyebrow: "KUSTOMISASI & KENYAMANAN",
+    title: "Atur Gaya Membaca Sesuai Keinginan",
+    desc: "Pilih mode gulir vertikal Webtoon atau balik halaman per halaman dengan pencatatan riwayat otomatis.",
   },
   {
-    eyebrow: "PENCARIAN LINTAS SUMBER",
-    title: "Satu Judul,\nSemua Pilihan Sekaligus.",
-    desc: "Bandingin mana yang rilis duluan, mana yang gambarnya lebih tajam, langsung dari satu pencarian.",
-  },
-  {
-    eyebrow: "READER YANG NGERTI KAMU",
-    title: "Scroll Panjang\natau Balik Halaman.",
-    desc: "Mode Webtoon, preload otomatis biar kuota aman, layar tetap nyala pas kamu lagi khusyuk.",
+    eyebrow: "SIAP MEMBACA",
+    title: "Mulai Petualangan Membacamu",
+    desc: "Cari judul favoritmu, tambahkan ke Koleksi, atau lanjutkan bacaan kapan saja langsung di Yomirra.",
   },
 ];
 
@@ -99,39 +94,8 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
       return;
     }
 
-    let isCancelled = false;
-
-    async function loadLiveCovers() {
-      const sources = ["shinigami", "komikindo", "mangadex", "kiryuu"];
-      for (const source of sources) {
-        if (isCancelled) return;
-        try {
-          const res = await fetch(`/api/sources/${source}/popular?page=1`);
-          if (!res.ok) continue;
-          const data = await res.json();
-          const mangas = data?.data?.mangas || data?.mangas || [];
-          const validCovers = mangas
-            .map((m: any) => m.coverUrl)
-            .filter((url: any) => typeof url === "string" && url.startsWith("http"));
-
-          if (validCovers.length >= 3) {
-            const shuffledApi = validCovers.sort(() => 0.5 - Math.random()).slice(0, 3);
-            if (!isCancelled) {
-              setCovers(shuffledApi);
-            }
-            break;
-          }
-        } catch {
-          // Continue to next available source
-        }
-      }
-    }
-
-    loadLiveCovers();
-
-    return () => {
-      isCancelled = true;
-    };
+    // Fallback to local covers immediately without making network calls on initial startup
+    setCovers(FALLBACK_COVERS);
   }, []);
 
   React.useEffect(() => {
@@ -297,7 +261,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
 
       {/* Editorial Content & CTA Actions */}
       <footer className="relative z-10 flex flex-col px-6 pb-[calc(var(--safe-bottom,env(safe-area-inset-bottom))+20px)] w-full max-w-[400px] mx-auto">
-        <div className="h-[140px] flex flex-col justify-end text-center mb-5">
+        <div className="min-h-[140px] flex flex-col justify-end text-center mb-5">
           <AnimatePresence mode="wait">
             <motion.div
               key={step}
