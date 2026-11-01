@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { act, cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ContentAccessBoundary } from "../content-access-boundary";
 import { useSettingsStore } from "@/shared/store/settings-store";
@@ -38,4 +38,30 @@ describe("mounted content safety", () => {
     expect(screen.queryByText("Restricted source title")).toBeNull();
     expect(screen.getByText("Konten disembunyikan")).toBeTruthy();
   });
+
+  it("warns about UNKNOWN before mounting detail, Reader image or request effects", () => {
+    const fetchPages = vi.fn();
+    function Pages() { useEffect(fetchPages, []); return <p>Unknown chapter images</p>; }
+    render(<ContentAccessBoundary sourceId="mangadex" item={{ id: "unverified-1", contentRating: "unknown" }}><Pages /></ContentAccessBoundary>);
+    expect(screen.getByText("Rating belum terverifikasi")).toBeTruthy();
+    expect(screen.queryByText("Unknown chapter images")).toBeNull();
+    expect(fetchPages).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Lanjutkan dan tampilkan konten" }));
+    expect(screen.getByText("Unknown chapter images")).toBeTruthy();
+    expect(fetchPages).toHaveBeenCalledOnce();
+    expect(screen.getByText(/klasifikasi konten dari sumber belum tersedia/)).toBeTruthy();
+  });
+
+  it("treats absent rating as UNKNOWN and requires a new acknowledgement after opt-in toggles", () => {
+    render(<ContentAccessBoundary sourceId="mangadex" item={{ id: "missing-rating" }}><p>Unclassified pages</p></ContentAccessBoundary>);
+    expect(screen.getByText("Rating belum terverifikasi")).toBeTruthy();
+    expect(screen.queryByText("Unclassified pages")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Lanjutkan dan tampilkan konten" }));
+    expect(screen.getByText("Unclassified pages")).toBeTruthy();
+    act(() => useSettingsStore.getState().setHideNsfw(false));
+    act(() => useSettingsStore.getState().setHideNsfw(true));
+    expect(screen.queryByText("Unclassified pages")).toBeNull();
+    expect(screen.getByText("Rating belum terverifikasi")).toBeTruthy();
+  });
+
 });

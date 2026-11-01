@@ -50,7 +50,7 @@ describe("MangaDetailView - Scroll Position Reset", () => {
 
   it("keeps title metadata and offers retry when the chapter request fails", () => {
     const view = render(<MangaDetailView sourceId="shinigami" mangaId="test-manga"
-      detail={{ id: "test-manga", title: "Test Manga", coverUrl: "", description: "Synopsis", genres: [], status: "ONGOING" }}
+      detail={{ contentRating: "safe", id: "test-manga", title: "Test Manga", coverUrl: "", description: "Synopsis", genres: [], status: "ONGOING" }}
       chapters={[]} chapterLoadError="Daftar chapter tidak dapat dijangkau." />);
     expect(view.getAllByText("Test Manga").length).toBeGreaterThan(0);
     expect(view.getByText("Daftar chapter tidak dapat dijangkau.")).toBeTruthy();
@@ -62,7 +62,7 @@ describe("MangaDetailView - Scroll Position Reset", () => {
 
   it("preserves a provider's chapter zero in the reading action label and identity", () => {
     const view = render(<MangaDetailView sourceId="mangadex" mangaId="zero-work"
-      detail={{ id: "zero-work", title: "Zero Work", coverUrl: "", description: "", genres: [], status: "COMPLETED" }}
+      detail={{ contentRating: "safe", id: "zero-work", title: "Zero Work", coverUrl: "", description: "", genres: [], status: "COMPLETED" }}
       chapters={[{ id: "zero-id", mangaId: "zero-work", number: 0, title: "Oneshot [EN]", date: "2026-10-31" }]} />);
     const actions = view.getAllByRole("link", { name: "Mulai Baca - Chapter 0" });
     expect(actions.length).toBeGreaterThan(0);
@@ -78,7 +78,7 @@ describe("MangaDetailView - Scroll Position Reset", () => {
         sourceId="shinigami"
         mangaId="test-manga"
         detail={{
-          id: "test-manga",
+          contentRating: "safe", id: "test-manga",
           title: "Test Manga",
           coverUrl: "https://example.com/cover.jpg",
           description: "Synopsis text",
@@ -101,7 +101,7 @@ describe("MangaDetailView - Scroll Position Reset", () => {
         sourceId="shinigami"
         mangaId="test-manga"
         detail={{
-          id: "test-manga",
+          contentRating: "safe", id: "test-manga",
           title: "Test Manga",
           coverUrl: "https://example.com/cover.jpg",
           description: "Synopsis text",
@@ -126,7 +126,7 @@ describe("MangaDetailView - Scroll Position Reset", () => {
         sourceId="shinigami"
         mangaId="test-manga"
         detail={{
-          id: "test-manga",
+          contentRating: "safe", id: "test-manga",
           title: "Test Manga",
           coverUrl: "https://example.com/cover.jpg",
           description: "Synopsis text",
@@ -154,7 +154,7 @@ describe("MangaDetailView - Scroll Position Reset", () => {
         sourceId="shinigami"
         mangaId="test-manga"
         detail={{
-          id: "test-manga",
+          contentRating: "safe", id: "test-manga",
           title: "Test Manga",
           coverUrl: "https://example.com/cover.jpg",
           description: "<p>Setelah menyelesaikan \\[MENARA UJIAN\\], pahlawan kembali &amp; mendapati dunia &quot;baru&quot;.</p>",
@@ -176,7 +176,7 @@ describe("MangaDetailView - Scroll Position Reset", () => {
         sourceId="shinigami"
         mangaId="test-manga-1"
         detail={{
-          id: "test-manga-1",
+          contentRating: "safe", id: "test-manga-1",
           title: "Test Manga",
           coverUrl: "https://example.com/cover.jpg",
           description: "Synopsis",
@@ -196,7 +196,7 @@ describe("MangaDetailView - Scroll Position Reset", () => {
         sourceId="shinigami"
         mangaId="test-manga-2"
         detail={{
-          id: "test-manga-2",
+          contentRating: "safe", id: "test-manga-2",
           title: "Test Manga",
           coverUrl: "https://example.com/cover.jpg",
           description: "Synopsis",

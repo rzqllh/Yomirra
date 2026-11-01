@@ -349,7 +349,7 @@ describe("PagedReader Component & Integration", () => {
       render(
         <QueryClientProvider client={queryClient}>
           <ReaderView sourceId="src1" mangaId="manga1" chapterId="ch100"
-            initialDetail={{ id: "manga1", title: "Manga 1", coverUrl: "/cover.jpg", description: "", genres: [], status: "ONGOING" }}
+            initialDetail={{ contentRating: "safe", id: "manga1", title: "Manga 1", coverUrl: "/cover.jpg", description: "", genres: [], status: "ONGOING" }}
             initialChapters={[
               { id: "ch100", mangaId: "manga1", number: 100, title: "Chapter 100", date: "2026-01-02" },
               { id: "ch30", mangaId: "manga1", number: 30, title: "Chapter 30", date: "2026-01-01" },
@@ -376,7 +376,7 @@ describe("PagedReader Component & Integration", () => {
             sourceId="src1"
             mangaId="manga1"
             chapterId="ch1"
-            initialDetail={{ id: "manga1", title: "Manga 1", coverUrl: "/cover.jpg", description: "", genres: [], status: "ONGOING" }}
+            initialDetail={{ contentRating: "safe", id: "manga1", title: "Manga 1", coverUrl: "/cover.jpg", description: "", genres: [], status: "ONGOING" }}
             initialChapters={[{ id: "ch1", mangaId: "manga1", number: 1, title: "Ch 1", date: "2026-01-01" }]}
             initialPages={mockPages}
           />

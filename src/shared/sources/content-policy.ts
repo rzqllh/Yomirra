@@ -9,10 +9,22 @@ export function shouldHideNsfw(value?: string | null): boolean {
   return value !== "false";
 }
 
+export type ContentClassification = "SAFE" | "NSFW" | "UNKNOWN";
+
+/**
+ * A missing provider rating is not evidence that a title is safe.
+ * Keep suggestive content restricted in safe mode (existing behavior).
+ */
+export function classifyContent(item: Pick<MangaItem, "contentRating" | "isNsfw">): ContentClassification {
+  if (item.isNsfw === true || item.contentRating === "suggestive" ||
+      item.contentRating === "erotica" || item.contentRating === "pornographic") return "NSFW";
+  if (item.contentRating === "safe") return "SAFE";
+  return "UNKNOWN";
+}
+
 export function isContentVisible(item: Pick<MangaItem, "contentRating" | "isNsfw">, hideNsfw = true): boolean {
   if (!hideNsfw) return true;
-  if (item.isNsfw === true) return false;
-  return item.contentRating === undefined || item.contentRating === "safe";
+  return classifyContent(item) !== "NSFW";
 }
 
 export function isSourceContentVisible(source: Pick<SourceMetadata, "isNsfw">, hideNsfw = true): boolean {
@@ -21,7 +33,7 @@ export function isSourceContentVisible(source: Pick<SourceMetadata, "isNsfw">, h
 
 export function sourceReadScope(options: SourceReadOptions = {}): string {
   return JSON.stringify({
-    safety: options.hideNsfw !== false ? "safe-v1" : "opt-in-v1",
+    safety: options.hideNsfw !== false ? "safe-v2" : "opt-in-v1",
     languages: options.preferredLanguages ?? ["id", "en"],
     dataSaver: options.dataSaver === true,
   });

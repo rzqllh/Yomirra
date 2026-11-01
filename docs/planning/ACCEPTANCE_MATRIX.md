@@ -49,7 +49,9 @@ Mandatory baseline commands: `pnpm typecheck`, `pnpm lint`, `pnpm test --run`, `
 | NS-07 | Trigger rating report/correction and unknown-state view | Clear feedback, provenance and warning; no false safe assumption | classification/UI test | NOT_RUN |
 | SAFE-07 | Seed stale PWA metadata/image caches for NSFW and switch OFF | Confirmed restricted cached assets not re-exposed; unknown warned; valid offline downloads handled without silent data loss | Service Worker + actual PWA | NOT_RUN |
 
-**Conflict gate:** MAL safe-mode currently returns only `nsfw=white`, while owner global UNKNOWN policy permits warning. Keep stricter MAL path while unresolved, record product decision/evidence before adjusting. MAL `gray/black` must not be misclassified safe.
+**Automated checkpoint (2026-11-01, NOT FULL ACCEPTANCE):** PR #103 and #104 merged to `preview` after exact-head GitHub Verify & Build and Chromium/WebKit Browser Smoke PASS; this does **not** prove live Preview SHA parity, physical Safari/PWA cache behavior, two-UID Firebase isolation, or legacy-data correctness. Home/Quick Search/PWA follow-up PRs #105–#107 are draft and pending. Keep individual NS/SAFE rows NOT_RUN until evidence from their prescribed fixture/device is recorded.
+
+**Owner decision recorded 2026-11-01 (Issue #101):** general-source UNKNOWN/missing rating may be visible **with explicit warning and no premature image reveal**; MAL safe-mode remains strictly `nsfw=white`. Keep MAL `gray/black/unknown` excluded while NSFW OFF. Disable automatic Library/History patcher without rewriting existing records; this policy approval **does not** count as UI/PWA/two-UID acceptance or authorize migration.
 
 ## P02 — Reader, durability, Firebase and offline downloads
 
