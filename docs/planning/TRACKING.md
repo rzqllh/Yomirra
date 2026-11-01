@@ -41,7 +41,7 @@ Documentation changes and code changes require scoped PR/checks; when starting w
 | IDs | Scope / evidence starting point | Phase | Priority | Owner | Status | Evidence / next |
 | --- | --- | --- | --- | --- | --- | --- |
 | NS-01..02 | `Tampilkan NSFW` default OFF; confirmed restricted source/title excluded | P01 | P0 | ENG:TBD | IN_PROGRESS | NS-01 UI PR #92 merged `75153e7`, full source CI PASS; NS-02 full cache/Reader/source exclusions and UNKNOWN warning unresolved |
-| NS-03..04 | UNKNOWN shown with explicit warning; filter/tag and stored URL guard | P01 | P0 | ENG:TBD | PLANNED | MAL strict nonwhite discrepancy **OPEN** |
+| NS-03..04 | UNKNOWN shown with explicit warning; filter/tag and stored URL guard | P01 | P0 | ENG:TBD | IN_PROGRESS | Owner approved Issue #101: general UNKNOWN warned, MAL remains strict white-only. UI/Reader/cache/deep-link test gates still OPEN |
 | NS-05..07 | ON→OFF cache/personal views reclassified, persistence, reporting | P01 | P0 | ENG:TBD | PLANNED | PWA cache 7/14d; no destructive data rewrite |
 | SAFE-07 | PWA/cache/direct reader/display source isolation | P01/P03 | P0 | ENG:TBD | PLANNED | Read `src/app/sw.ts`, old data B-04 |
 | RD-01..03 | Open/re-read/failure do not incorrectly complete or regress milestones | P02 | P0 | ENG:TBD | PLANNED | `READING_DATA.md`, B-05 |
@@ -99,7 +99,7 @@ Documentation changes and code changes require scoped PR/checks; when starting w
 | B-01 | Official MAL ranking missing Preview `MAL_CLIENT_ID` | Owner registers/configures server-only Preview key; retest `/api/metadata/mal/popular` and UI with real data | PRODUCT | 200 real ranked works + safe/error fixture | BLOCKED |
 | B-02 | No physical Safari/iPad/PWA acceptance | Real device test incl keyboard, viewport, Reader, VoiceOver | QA/device owner | device/OS/SHA/video/screenshot & expected/actual | BLOCKED |
 | B-03 | No isolated real Firebase two-UID verification | disposable staging setup, auth/sync/offline/guest cross-UID | PRODUCT/QA | UID A/B fixture and isolated session logs | BLOCKED |
-| B-04 | Old mixed-provider NSFW data uncertain | Read-only export/audit, reversible migration proposal if necessary | PRODUCT for data write | before/after samples, no loss | BLOCKED |
+| B-04 | Old mixed-provider NSFW data uncertain | Legacy mount-time patcher disabled in isolated PR; read-only export/audit and reversible migration proposal if needed | PRODUCT for any user-data write | before/after samples and 2 UID staging, no loss; PR tests do not prove live migration safety | BLOCKED |
 | B-05 | Reader milestone/retention offline edge cases not accepted | reproduce Q52/Q63, failed image, reread, cross-source IDs | QA | exact SHA and targeted+live tests | BLOCKED |
 | B-06 | Preview exact-head deployment / 402 quota history | verify latest Vercel READY SHA and retry only official quota window | ENG/PRODUCT for paid upgrade | same SHA READY on Preview, no production | BLOCKED |
 | B-07 | OS/background push not demonstrated | keep in-app toasts; opt-in permission and native/PWA proof if in release | PRODUCT/QA | device notification e2e | BLOCKED |
