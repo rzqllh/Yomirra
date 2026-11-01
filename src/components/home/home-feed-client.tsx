@@ -144,6 +144,9 @@ export function HomeFeedClient({
       selectHeroCandidates(discoveryItems, spotlightItems, 15).map((item) => ({
         coverUrl: item.coverUrl,
         title: item.title,
+        sourceId: item.sourceId,
+        contentRating: item.contentRating,
+        isNsfw: item.isNsfw,
       })),
     [discoveryItems, spotlightItems]
   );
