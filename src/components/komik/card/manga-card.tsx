@@ -206,7 +206,9 @@ export function MangaCard({
 
   const { readingStatusByManga } = useCollectionStore();
   const updateStore = useUpdateStore();
-  const disabledSources = useSourcePreferencesStore((state) => state.disabledSources);
+  const storedDisabledSources = useSourcePreferencesStore((state) => state.disabledSources);
+  // A malformed legacy/mocked preference must not crash unrelated catalog cards.
+  const disabledSources = Array.isArray(storedDisabledSources) ? storedDisabledSources : [];
   const removeMangaHistory = useHistoryStore((state) => state.removeMangaHistory);
 
   const fullPath = (pathname || "") + (searchParams?.toString() ? `?${searchParams.toString()}` : "");
