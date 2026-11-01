@@ -62,7 +62,8 @@ Documentation changes and code changes require scoped PR/checks; when starting w
 | SEC-02 | Cache/privacy/env isolation, no public secrets or cross-user responses | P03 | P0 | ENG:TBD | PLANNED | Use exact UID/NSFW/language/policy scope |
 | SEC-03 | Source rights, access boundaries, security/legal factual audit | P06/P07 | P0 | PRODUCT:owner | BLOCKED | B-08/B-11; public claim gate |
 | HEALTH-01 | Capability-specific source health, checkedAt+confidence | P01/P06 | P0 | ENG:TBD | PLANNED | Existing shallow/deep probes |
-| HEALTH-02..04 | Fresh status, scheduled probes separate from liveness | P03 | P1 | ENG:TBD | PLANNED | `/api/health` currently probes providers |
+| HEALTH-02..03 | Fresh status, provider recovery and cooldown | P03 | P1 | ENG:TBD | PLANNED | Retain `/api/sources/health` functional probes and evidence; physical/provider live checks outstanding |
+| HEALTH-04 | `/api/health` liveness never triggers upstream source probes | P03 | P1 | ENG:TBD | IN_PROGRESS | Scoped PR `fix/health-liveness-no-provider-probes-20261101`; snapshots optional/recent, Redis diagnostics retained; exact-head CI/live trace required |
 | PROVIDER-04 | Request budget, 403/429 differentiation, bounded retries | P03 | P1 | ENG:TBD | PLANNED | Vercel aggregated Komikindo filter 403 |
 | PR-01..04 | Partial failure isolation, accurate error, retry, healthy results retained | P03/P04 | P1 | ENG:TBD | IN_PROGRESS | PR #87 (`7675289d0`) combines partial-provider banners; exact SHA Vercel READY, CI and browser UX not yet verified; scoped retry remains open |
 | PF-01..06 | Cache-first Back, scroll restoration, request savings and trace | P03 | P1 | ENG:TBD | PLANNED | React Query existing; baseline not measured |
