@@ -41,7 +41,7 @@ Documentation changes and code changes require scoped PR/checks; when starting w
 | IDs | Scope / evidence starting point | Phase | Priority | Owner | Status | Evidence / next |
 | --- | --- | --- | --- | --- | --- | --- |
 | NS-01..02 | `Tampilkan NSFW` default OFF; confirmed restricted source/title excluded | P01 | P0 | ENG:TBD | IMPLEMENTED | NS-01 UI PR #92 merged `75153e7`; NS-02 excluded across Home Hero (#105), Leaderboard (#110), Catalog (#104), and Quick Search (#106). Preview source CI PASS. |
-| NS-03..04 | UNKNOWN shown with explicit warning; filter/tag and stored URL guard | P01 | P0 | ENG:TBD | IMPLEMENTED | PR #103 `dcffbb90`, #104 `1ad32996`, #106 `dffb0c5`, #110 `4d14d26` merged to Preview. Explicit warning badges and cover masking applied. Exact-head CI PASS. MAL stays strict white-only. |
+| NS-03..04 | Unrated UNKNOWN is display-eligible absent positive adult signals; explicit restriction, filter/tag and URL guard | P01 | P0 | ENG:TBD | IN_PROGRESS | Current D-01 owner policy supersedes #101 UNKNOWN masking; `content-policy.ts` allows UNKNOWN while OFF and blocks explicit NSFW. Confirm end-to-end image/Detail/Reader/cache guard at merged SHA; MAL remains white-only. See `P01_P07_RECONCILIATION_20261102.md`. |
 | NS-05..07 | ON→OFF cache/personal views reclassified, persistence, reporting | P01 | P0 | ENG:TBD | IMPLEMENTED | PR #105 (Hero mode-scoped cache) and PR #107 (PWA v3 automatic cache eviction on NSFW OFF) merged to Preview. Non-destructive B-04 policy preserved. |
 | SAFE-07 | PWA/cache/direct reader/display source isolation | P01/P03 | P0 | ENG:TBD | IMPLEMENTED | PR #107 rotated PWA cache to v3 with selective eviction of automatic caches, preserving explicit offline chapter downloads. Exact-head CI PASS. |
 | RD-01..03 | Open/re-read/failure do not incorrectly complete or regress milestones | P02 | P0 | ENG:TBD | PLANNED | `READING_DATA.md`, B-05 |
@@ -79,7 +79,7 @@ Documentation changes and code changes require scoped PR/checks; when starting w
 | PWA-01 | Accurate offline status and no claim beyond cached pages | P04 | P1 | ENG:TBD | PLANNED | Existing reading buffer supports partial cache |
 | DS-01..03 | Semantic tokens, accessibility, visual regression | P05 | P2 | ENG:TBD | PLANNED | iPhone screenshot modal/borders inconsistency |
 | HELP-01..03 | Dedicated `/help`, accessible support/recovery content | P05 | P1 | ENG:TBD | IMPLEMENTED | PR #88 merged Preview `243804f`; full GitHub CI PASS, live Preview not verified |
-| MAL-01..04 | Official MAL live ranking, safe classification, mapping via trusted IDs | P06 | P1 | PRODUCT:owner / ENG:TBD | BLOCKED | B-01/B-09, `MAL_CLIENT_ID` |
+| MAL-01..04 | Official MAL live ranking, strict white-only SAFE mode, explicit reading-source search fallback | P06 | P1 | PRODUCT:owner / ENG:TBD | IN_PROGRESS | Owner reports MAL Client ID configured locally and on Vercel and live verification performed. Server-side MAL adapter/UI present. Full MAL-02 acceptance still needs masked HTTP 200/status=ready/items on exact Preview SHA; automatic MAL-to-provider mapping is not required. |
 | INTEG-01..04 | External sources, archives, source admin, rights, optional AI | P06 | P1 | PRODUCT:owner / ENG:TBD | PLANNED | Existing adapters/features; broad live gates unknown |
 | REL-01..07 | All scoped P0 gates, Browser/CI/Safari/Firebase/security/prod signoff | P07 | P0 | QA:TBD / PRODUCT:owner | BLOCKED | B-01..B-11 as release-applicable |
 
@@ -97,16 +97,16 @@ Documentation changes and code changes require scoped PR/checks; when starting w
 
 | ID | Severity / current condition | Action required | Approver/owner | Acceptance evidence | Status |
 | --- | --- | --- | --- | --- | --- |
-| B-01 | Official MAL ranking missing Preview `MAL_CLIENT_ID` | Owner registers/configures server-only Preview key; retest `/api/metadata/mal/popular` and UI with real data | PRODUCT | 200 real ranked works + safe/error fixture | BLOCKED |
+| B-01 | MAL Client ID registration/configuration owner-reported complete (2026-11-02) | Capture redacted real Preview API 200, `status=ready`, item count, NSFW white-only contract and matching deployment SHA | PRODUCT/QA | Redacted live response and UI evidence, no secrets | IN_PROGRESS |
 | B-02 | No physical Safari/iPad/PWA acceptance | Real device test incl keyboard, viewport, Reader, VoiceOver | QA/device owner | device/OS/SHA/video/screenshot & expected/actual | BLOCKED |
 | B-03 | No isolated real Firebase two-UID verification | disposable staging setup, auth/sync/offline/guest cross-UID | PRODUCT/QA | UID A/B fixture and isolated session logs | BLOCKED |
-| B-04 | Old mixed-provider NSFW data uncertain | Legacy mount-time patcher disabled in isolated PR; read-only export/audit and reversible migration proposal if needed | PRODUCT for any user-data write | before/after samples and 2 UID staging, no loss; PR tests do not prove live migration safety | BLOCKED |
+| B-04 | Legacy personal-data migration explicitly **not requested** | Preserve existing Library/History; any future migration requires separate owner authorization and reversible backup plan | PRODUCT only if requested | No automatic mount-time personal-data rewrite | DEFERRED |
 | B-05 | Reader milestone/retention offline edge cases not accepted | reproduce Q52/Q63, failed image, reread, cross-source IDs | QA | exact SHA and targeted+live tests | BLOCKED |
 | B-06 | Preview exact-head deployment / 402 quota history | verify latest Vercel READY SHA and retry only official quota window | ENG/PRODUCT for paid upgrade | same SHA READY on Preview, no production | BLOCKED |
-| B-07 | OS/background push not demonstrated | keep in-app toasts; opt-in permission and native/PWA proof if in release | PRODUCT/QA | device notification e2e | BLOCKED |
+| B-07 | OS/background push excluded from current scope; in-app toast remains | Do not advertise push capabilities; assess only if later reintroduced by owner | PRODUCT | Explicit non-push scope and honest UI | DEFERRED |
 | B-08 | Rights/provider connectors/admin logs external claims unverified | isolate fixtures, rights review, no rate-limit bypass | PRODUCT/QA | provider/rights/operational evidence | BLOCKED |
-| B-09 | Verified MAL↔source automatic mapping not available | trusted cross-ref/edition mapping with ambiguous fallback | ENG/PRODUCT | matched/unmatched/ambiguous fixtures | BLOCKED |
-| B-10 | Preview Redis env target missing from listing | isolate Preview store, verify ping/hit rate without secrets or cross-env writes | PRODUCT approval for env security | status `redis:ok`, safe namespace and cache HIT on preview | BLOCKED |
+| B-09 | Automatic MAL-to-source ID matching excluded from current scope | Retain `Cari sumber bacaan` and forbid unverified automatic binding | ENG/PRODUCT if reintroduced | No false provider ID mapping | DEFERRED |
+| B-10 | One Redis instance with environment-prefixed keys accepted by owner; actual Preview isolation still unverified | Validate namespaced Preview ping/hit and non-destructive access; no new Redis instance by default, note namespace != credential isolation | PRODUCT for any credential/permission change | Preview runtime evidence without Production key mutation or secret disclosure | IN_PROGRESS |
 | B-11 | Existing AniList rating fallback permissions unclear | audit official terms + current usage and rate limits before expansion | PRODUCT/legal | documented allowed-use decision | BLOCKED |
 
 ## Risks and mitigations
