@@ -49,9 +49,9 @@ Pengujian lokal mengoreksi kekeliruan pelabelan profil sebelumnya:
   - `src/components/komik/manga-collection-button.tsx` (Quick collection button)
 
 ### 2. Sinkronisasi Dinamis `theme-color` dengan Tema Aktual Yomirra
-- **Gejala:** Ketika pengguna memilih mode gelap (Dark) di dalam Yomirra tetapi perangkat OS menggunakan Light Mode, status bar Safari tetap berwarna terang (#f8f6f1) karena meta tag statis hanya membaca media query OS.
+- **Gejala:** Ketika pengguna memilih mode gelap (Dark) di dalam Yomirra tetapi perangkat OS menggunakan Light Mode, status bar Safari tetap berwarna terang (#f9f9fb) karena meta tag statis hanya membaca media query OS.
 - **Root Cause:** Meta tag `theme-color` statis di Next.js layout tidak diperbarui saat pengguna mengubah tema di level aplikasi.
-- **Fix Produksi:** Menambahkan komponen `ThemeColorSync` di `src/components/providers/index.tsx` yang memantau `resolvedTheme` dari `next-themes` dan memperbarui meta tag `theme-color` secara dinamis ke `#090a0f` (Dark) atau `#f8f6f1` (Light).
+- **Fix Produksi:** Menambahkan komponen `ThemeColorSync` di `src/components/providers/index.tsx` yang memantau `resolvedTheme` dari `next-themes` dan memperbarui meta tag `theme-color` secara dinamis ke `#090a0f` (Dark) atau `#f9f9fb` (Light).
 
 ### 3. Text Auto-Inflation pada Landscape Rotation
 - **Gejala:** Saat perangkat diputar ke orientasi landscape, WebKit secara sepihak memperbesar ukuran teks paragraf.
@@ -89,7 +89,7 @@ Pengujian otomatis mencakup 11 skenario interaktif:
 5. **Dock & Header Collision:** Memastikan bottom dock terjangkar di visible viewport dan tidak bertabrakan dengan header sticky.
 6. **Toolbar Collapse/Expand:** Menguji adaptasi bottom dock terhadap variasi tinggi viewport Safari (852px down to 732px).
 7. **Overscroll Containment Defense:** Memverifikasi keberadaan aturan `overscroll-contain` pada bundle CSS aplikasi.
-8. **Theme-Color Synchronization:** Memverifikasi meta tag `theme-color` tersinkronisasi ke nilai tema aktif Yomirra (`#090a0f` atau `#f8f6f1`).
+8. **Theme-Color Synchronization:** Memverifikasi meta tag `theme-color` tersinkronisasi ke nilai tema aktif Yomirra (`#090a0f` atau `#f9f9fb`).
 9. **Accessibility Reduced Motion:** Menguji kepatuhan terhadap media query `prefers-reduced-motion: reduce`.
 10. **Reader Token Availability:** Memverifikasi ketersediaan token runtime `--bottom-dock-height`.
 11. **BrowserStack Cloud Gate:** Memastikan pengujian cloud diskip secara bersih ketika kredensial tidak tersedia di environment.

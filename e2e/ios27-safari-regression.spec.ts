@@ -169,8 +169,8 @@ test.describe("Mobile Safari WebKit Regression & Interactive Compliance Suite", 
       return meta ? meta.getAttribute("content") : null;
     });
     expect(themeMetaContent).toBeTruthy();
-    // Valid Yomirra theme color is either light (#f8f6f1) or dark (#090a0f)
-    expect(["#f8f6f1", "#090a0f"]).toContain(themeMetaContent);
+    // Valid Yomirra theme color is either light (#f9f9fb) or dark (#090a0f)
+    expect(["#f9f9fb", "#090a0f"]).toContain(themeMetaContent);
   });
 
   test("9. respects prefers-reduced-motion media query", async ({ page }) => {

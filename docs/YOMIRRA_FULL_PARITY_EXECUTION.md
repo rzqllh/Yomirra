@@ -428,7 +428,7 @@ npx playwright test --project=webkit-mobile-safari
 - **Canonical QA Document:** `docs/IOS27_SAFARI_QA.md`
 - **Audit Findings & Fixes:**
   - Auto-zoom prevention: Input font-size set to 16px (`text-base sm:text-sm`) across command palette and modal inputs.
-  - Dynamic theme-color sync: Added `ThemeColorSync` in `Providers` ensuring `theme-color` meta tag reflects active Yomirra theme (`#090a0f` / `#f8f6f1`), preventing OS-level mismatch.
+  - Dynamic theme-color sync: Added `ThemeColorSync` in `Providers` ensuring `theme-color` meta tag reflects active Yomirra theme (`#090a0f` / `#f9f9fb`), preventing OS-level mismatch.
   - Text auto-inflation prevention: `-webkit-text-size-adjust: 100%` in `globals.css`.
   - CSS variable fix: `--bottom-dock-height: var(--bottom-nav-content-height)` added to avoid `calc()` failure in `paged-reader.tsx`.
   - Top reader progress bar positioning clamped to `top-[max(0px,calc(var(--safe-top,0px)-3px))]`.
