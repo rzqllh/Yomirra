@@ -46,7 +46,7 @@ export function OpsCard({
   return (
     <section
       className={cx(
-        "rounded-2xl border border-zinc-800/90 bg-zinc-900/55 shadow-[0_1px_0_rgba(255,255,255,0.02)]",
+        "rounded-xl border border-zinc-800/90 bg-zinc-900/55 shadow-[0_1px_0_rgba(255,255,255,0.02)]",
         className,
       )}
     >
@@ -318,7 +318,7 @@ export function ConfirmDialog({
         aria-modal="true"
         aria-labelledby="ops-confirm-title"
         aria-describedby="ops-confirm-description"
-        className="w-full max-w-md overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900 shadow-2xl"
+        className="w-full max-w-md overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 shadow-2xl"
       >
         <div className="border-b border-zinc-800/90 px-5 py-4">
           <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-red-400">Konfirmasi operasional</p>

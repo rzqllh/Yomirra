@@ -17,6 +17,7 @@ import { useSettingsStore } from "@/shared/store/settings-store";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { isContentVisible } from "@/shared/sources/content-policy";
 import { isDiscoverySourceSystemEligible } from "@/shared/sources/discovery-source-policy";
+import { useHorizontalDragScroll } from "@/shared/hooks/use-horizontal-drag-scroll";
 
 interface MangaRecommendationsProps {
   sourceId: string;
@@ -256,6 +257,8 @@ export function MangaRecommendations({
     staleTime: 1000 * 60 * 30,
   });
 
+  const { ref: dragScrollRef, dragProps } = useHorizontalDragScroll<HTMLDivElement>();
+
   const recommendations = useMemo(
     () =>
       rankRecommendationCandidates(candidatePool.filter((item) => !disabledSources.includes(item.sourceId) && isContentVisible(item.manga, hideNsfw)), {
@@ -265,6 +268,7 @@ export function MangaRecommendations({
         currentFormat: format,
         currentStatus: status,
         profile,
+        excludeSaved: false,
       }).slice(0, 10),
     [candidatePool, currentSourceId, format, genres, profile, status, title, hideNsfw, disabledSources]
   );
@@ -287,7 +291,11 @@ export function MangaRecommendations({
   return (
     <div className="mt-6 mb-2">
       <h3 className="text-[11px] font-black text-text-muted uppercase tracking-widest block mb-3">Komik Serupa</h3>
-      <div className="flex gap-3 md:gap-4 overflow-x-auto pb-4 snap-x snap-mandatory hide-scrollbar">
+      <div
+        ref={dragScrollRef}
+        {...dragProps}
+        className="flex gap-3 md:gap-4 overflow-x-auto pb-4 snap-x snap-mandatory hide-scrollbar select-none active:cursor-grabbing"
+      >
         {recommendations.map((item) => (
           <div key={`${item.sourceId}-${item.manga.id}`} className="w-[130px] md:w-[140px] shrink-0 snap-start">
             <ShelfCard

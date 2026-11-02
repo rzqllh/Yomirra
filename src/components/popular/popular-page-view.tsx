@@ -48,7 +48,7 @@ export function PopularPageView({ feeds, mal }: PopularPageViewProps) {
 
   const segmentOptions = [
     { value: "local", label: "Populer di Yomirra" },
-    ...(mal ? [{ value: "mal", label: "Tren MyAnimeList" }] : []),
+    { value: "mal", label: "Tren MyAnimeList" },
   ];
 
   return (
@@ -70,8 +70,8 @@ export function PopularPageView({ feeds, mal }: PopularPageViewProps) {
         )}
       </div>
 
-      {mode === "mal" && mal ? (
-        <MalPopularSection feed={mal} />
+      {mode === "mal" ? (
+        <MalPopularSection feed={mal} onSwitchToLocal={() => setMode("local")} />
       ) : (
         <div className="space-y-6">
           {/* Source Filter Pills Rail */}
@@ -182,7 +182,7 @@ export function PopularPageView({ feeds, mal }: PopularPageViewProps) {
                   ))}
                 </div>
               ) : (
-                <div className="rounded-2xl border border-border-subtle bg-surface-raised p-6 text-center sm:text-left">
+                <div className="rounded-xl border border-border-subtle bg-surface-raised p-6 text-center sm:text-left">
                   <p className="text-sm font-bold text-text-primary">
                     {selectedFeed.loadFailed
                       ? `Peringkat dari ${selectedFeed.sourceName} belum bisa dimuat.`

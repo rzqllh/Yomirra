@@ -10,9 +10,11 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
+let mockUser: any = { uid: "test-user-1", email: "test@example.com", displayName: "Tester" };
+
 // Mock hooks
 vi.mock("@/shared/hooks/use-auth", () => ({
-  useAuth: () => ({ user: null, loginWithGoogle: vi.fn(), logout: vi.fn() }),
+  useAuth: () => ({ user: mockUser, loginWithGoogle: vi.fn(), logout: vi.fn() }),
 }));
 
 vi.mock("@/shared/hooks/use-sync", () => ({
@@ -32,6 +34,7 @@ vi.mock("@/components/ui/directional-transition", () => ({
 describe("SettingsPage - Update Checker UI", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUser = { uid: "test-user-1", email: "test@example.com", displayName: "Tester" };
     useSettingsStore.setState({
       checkOnAppStart: true,
       minimumCheckIntervalMinutes: 15,
@@ -118,5 +121,14 @@ describe("SettingsPage - Update Checker UI", () => {
     expect((selectButton as HTMLButtonElement).disabled).toBe(true);
     
     expect(useSettingsStore.getState().minimumCheckIntervalMinutes).toBe(30);
+  });
+
+  it("restricts NSFW toggle when user is not logged in", async () => {
+    mockUser = null;
+    await renderWithMount();
+
+    expect(screen.queryByRole("checkbox", { name: "Tampilkan NSFW" })).toBeNull();
+    expect(screen.getByText("Terkunci")).toBeDefined();
+    expect(screen.getByRole("link", { name: /Masuk/i })).toBeDefined();
   });
 });

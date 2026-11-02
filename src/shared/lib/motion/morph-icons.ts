@@ -6,7 +6,7 @@ export interface MorphPair {
 export const morphIconPairs = {
   bookmark: {
     off: "M7 4.5h10v15l-5-3-5 3Z",
-    on: "M7 4.5h10v15l-5-3-5 3Z M9.5 10.5l1.6 1.6 3.4-3.4",
+    on: "M7 4.5h10v15l-5-3-5 3Z",
   },
   viewMode: {
     off: "M4 4h6v6H4Z M14 4h6v6h-6Z M4 14h6v6H4Z M14 14h6v6h-6Z",

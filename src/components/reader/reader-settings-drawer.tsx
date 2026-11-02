@@ -16,8 +16,8 @@ interface ReaderSettingsDrawerProps {
 
 const BACKGROUNDS = [
   { name: 'Gelap', value: 'black', color: '#000000', border: 'border-white/10' },
-  { name: 'Hijau Gelap', value: 'deepLagoon', color: '#003135', border: 'border-white/10' },
-  { name: 'Terang', value: 'mist', color: '#f8fafc', border: 'border-black/10' }
+  { name: 'Terang', value: 'mist', color: '#f9f9fb', border: 'border-black/10' },
+  { name: 'Sesuai Sistem', value: 'system', color: '', border: 'border-white/20' }
 ] as const;
 
 const IMAGE_FITS = [
@@ -221,17 +221,22 @@ export function ReaderSettingsDrawer({ isOpen, onClose, sourceId, mangaId }: Rea
               return (
                 <button
                   key={bg.value}
+                  type="button"
                   onClick={() => handleUpdate({ background: bg.value })}
                   className={cn(
-                    "flex flex-col items-center gap-2 p-2.5 rounded-xl border transition-all outline-none",
+                    "flex flex-col items-center gap-2 p-2.5 rounded-xl border transition-all outline-none cursor-pointer",
                     isSelected
                       ? "border-accent bg-accent/10 shadow-xs ring-1 ring-accent"
                       : "border-border-subtle bg-surface-raised hover:bg-surface-hover"
                   )}
                 >
                   <div
-                    className={cn("w-6 h-6 rounded-full shadow-inner border", bg.border)}
-                    style={{ backgroundColor: bg.color }}
+                    className={cn("w-6 h-6 rounded-full shadow-inner border overflow-hidden", bg.border)}
+                    style={
+                      bg.value === "system"
+                        ? { background: "linear-gradient(135deg, #090a0f 50%, #f9f9fb 50%)" }
+                        : { backgroundColor: bg.color }
+                    }
                   />
                   <span className={cn(
                     "text-xs font-bold truncate w-full text-center",

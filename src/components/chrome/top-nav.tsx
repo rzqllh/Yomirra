@@ -145,10 +145,10 @@ export function TopNav() {
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
                 aria-label="Profil Pengguna"
                 aria-expanded={isProfileOpen}
-                className="flex items-center justify-center size-9 sm:size-10 rounded-2xl bg-surface-raised hover:scale-105 active:scale-95 transition-all outline-none border border-border-subtle hover:border-accent/40 overflow-hidden cursor-pointer"
+                className="flex items-center justify-center size-9 sm:size-10 rounded-xl bg-surface-raised hover:scale-105 active:scale-95 transition-all outline-none border border-border-subtle hover:border-accent/40 overflow-hidden cursor-pointer"
               >
                 {user.photoURL ? (
-                  <img src={user.photoURL} alt="User" className="object-cover size-full rounded-2xl" referrerPolicy="no-referrer" />
+                  <img src={user.photoURL} alt="User" className="object-cover size-full rounded-xl" referrerPolicy="no-referrer" />
                 ) : (
                   <UserCircle size={24} weight="regular" className="text-accent" />
                 )}
@@ -161,7 +161,7 @@ export function TopNav() {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 8, scale: 0.95 }}
                     transition={{ duration: 0.15, ease: "easeOut" }}
-                    className="absolute right-0 top-12 w-60 bg-surface-overlay/95 backdrop-blur-2xl shadow-[0_12px_36px_-6px_rgba(0,0,0,0.18)] dark:shadow-[0_16px_40px_-6px_rgba(0,0,0,0.7)] border border-border-subtle rounded-2xl p-1.5 z-[100] flex flex-col gap-0.5 select-none"
+                    className="absolute right-0 top-12 w-60 bg-surface-overlay/95 backdrop-blur-2xl shadow-[0_12px_36px_-6px_rgba(0,0,0,0.18)] dark:shadow-[0_16px_40px_-6px_rgba(0,0,0,0.7)] border border-border-subtle rounded-xl p-1.5 z-[100] flex flex-col gap-0.5 select-none"
                   >
                     <div className="px-3 py-2 border-b border-border-subtle/70 mb-1">
                       <p className="text-[13.5px] font-bold text-text-primary truncate">{user.displayName || "User"}</p>
@@ -208,7 +208,7 @@ export function TopNav() {
               </AnimatePresence>
             </div>
           ) : (
-            <button onClick={loginWithGoogle} aria-label="Masuk" className="flex items-center justify-center bg-surface-raised border border-border-subtle shadow-xs hover:bg-surface-hover active:scale-95 transition-all rounded-2xl px-4 h-9 sm:h-10 gap-2 outline-none cursor-pointer">
+            <button onClick={loginWithGoogle} aria-label="Masuk" className="flex items-center justify-center bg-surface-raised border border-border-subtle shadow-xs hover:bg-surface-hover active:scale-95 transition-all rounded-xl px-4 h-9 sm:h-10 gap-2 outline-none cursor-pointer">
               <UserCircle size={20} weight="regular" className="text-text-secondary" />
               <span className="text-sm font-semibold text-text-primary">Masuk</span>
             </button>

@@ -468,7 +468,7 @@ describe("Yomirra Editorial Home Components", () => {
       ).toBeTruthy();
 
       act(() => {
-        vi.advanceTimersByTime(5_000);
+        vi.advanceTimersByTime(SPOTLIGHT_AUTOPLAY_MS - 1_000);
       });
       fireEvent.click(
         screen.getByRole("button", { name: /komik berikutnya/i })
@@ -485,7 +485,7 @@ describe("Yomirra Editorial Home Components", () => {
       ).toBeTruthy();
 
       act(() => {
-        vi.advanceTimersByTime(5_000);
+        vi.advanceTimersByTime(SPOTLIGHT_AUTOPLAY_MS - 1_000);
       });
       expect(
         screen.getByRole("heading", {

@@ -155,7 +155,7 @@ export function FilterDrawerShell({
                 transition={prefersReducedMotion ? { duration: 0 } : { duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
                 style={{ overflow: "hidden" }}
                 aria-labelledby={headingId}
-                className="rounded-2xl border border-border-subtle bg-surface-base p-4 xl:p-5"
+                className="rounded-xl border border-border-subtle bg-surface-base p-4 xl:p-5"
               >
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <h2 id={headingId} className="text-sm font-semibold text-text-primary">{title}</h2>
@@ -190,7 +190,7 @@ export function FilterDrawerShell({
           <Button
             variant={activeCount > 0 ? "accent" : "outline"}
             className={cn(
-              "relative rounded-full font-bold px-4 h-[44px] gap-1.5 motion-safe:transition-[background-color,color,border-color,box-shadow,transform] motion-safe:duration-300 border-border-subtle",
+              "relative rounded-xl font-bold px-4 h-[44px] gap-1.5 motion-safe:transition-[background-color,color,border-color,box-shadow,transform] motion-safe:duration-300 border-border-subtle",
               activeCount > 0 ? "border-accent/40 bg-accent text-accent-on shadow-xs" : "bg-surface-glass backdrop-blur-md"
             )}
             aria-label={`Filter${activeCount > 0 ? ` (${activeCount} aktif)` : ""}`}
@@ -270,7 +270,7 @@ export function FilterDrawerShell({
             <Button
               variant="primary"
               onClick={handleApply}
-              className="w-full h-12 rounded-full text-[15px] font-bold"
+              className="w-full h-12 rounded-xl text-[15px] font-bold"
             >
               {applyLabel}
             </Button>

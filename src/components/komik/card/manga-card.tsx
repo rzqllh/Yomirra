@@ -346,6 +346,11 @@ export function MangaCard({
       }
     };
 
+    // =========================================================================
+    // RESTORE POINT: PREVIOUS PROGRESS VARIANT IMPLEMENTATION
+    // (Preserved as fallback restore point per user request)
+    // =========================================================================
+    /*
     return (
       <article
         className={cn(
@@ -412,7 +417,6 @@ export function MangaCard({
                 <MangaCardMeta className="truncate mr-2 text-[11px] text-text-muted">
                   {effChapterTitle}
                 </MangaCardMeta>
-                {/* Upgraded "Lanjut" CTA with ~44px mobile touch area */}
                 <span
                   className={cn(
                     "shrink-0 inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-sm text-xs font-bold transition-all",
@@ -443,6 +447,158 @@ export function MangaCard({
                 className="flex size-11 items-center justify-center rounded-sm text-text-muted hover:text-text-primary hover:bg-surface-hover motion-safe:transition-all outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface-raised active:scale-95 data-[state=open]:rotate-90 data-[state=open]:text-text-primary duration-150 cursor-pointer"
               >
                 <DotsThreeVertical size={16} weight="regular" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 z-50">
+              <DropdownMenuItem asChild className="cursor-pointer text-xs">
+                <Link
+                  href={readerHref}
+                  onClick={() => beginNavigationIntent(readerHref)}
+                  className="flex items-center gap-2"
+                >
+                  <Play size={14} weight="fill" className="text-accent" />
+                  <span>Lanjutkan membaca</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild className="cursor-pointer text-xs">
+                <Link
+                  href={detailHref}
+                  onClick={() => beginNavigationIntent(detailHref)}
+                  className="flex items-center gap-2"
+                >
+                  <BookOpen size={14} />
+                  <span>Buka detail komik</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={handleDeleteHistory}
+                className="flex items-center gap-2 cursor-pointer text-xs text-semantic-error focus:bg-semantic-error/10 focus:text-semantic-error"
+              >
+                <Trash size={14} />
+                <span>Hapus dari riwayat</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </article>
+    );
+    */
+    // =========================================================================
+    // END RESTORE POINT
+    // =========================================================================
+
+    return (
+      <article
+        className={cn(
+          "group relative flex overflow-hidden select-none rounded-xl border border-border-subtle/90 bg-surface-raised shadow-xs transition-all duration-200 hover:border-accent/40 hover:bg-surface-hover/60 hover:shadow-sm motion-reduce:transition-none",
+          className
+        )}
+      >
+        <Link
+          href={readerHref}
+          prefetch={false}
+          onClick={() => beginNavigationIntent(readerHref)}
+          className={cn(
+            "flex flex-1 min-h-[96px] sm:min-h-[104px] gap-3.5 p-3 sm:p-3.5 focus-visible:ring-inset rounded-xl",
+            mangaCardInteraction.link
+          )}
+          aria-label={`Lanjut baca ${manga.title}, ${effChapterTitle}`}
+        >
+          {/* Cover Frame: Squircle rounded-lg, crisp aspect-ratio */}
+          <div className="relative aspect-[2/3] w-18 sm:w-20 shrink-0 overflow-hidden rounded-lg border border-border-subtle bg-surface-muted shadow-2xs">
+            <MangaCover
+              src={manga.coverUrl}
+              alt={manga.title}
+              fallbackTitle={manga.title}
+              className="w-full h-full"
+              imageClassName={cn("w-full h-full object-cover", mangaCardInteraction.coverImage)}
+            />
+          </div>
+
+          {/* Content Body: Clear 2-tier hierarchy */}
+          <div className="flex flex-col flex-1 min-w-0 justify-between py-0.5">
+            {/* Top Tier: Source Badge & Primary Title */}
+            <div className="min-w-0 pr-8">
+              <div className="flex items-center gap-1.5 mb-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-surface-base text-text-muted border border-border-subtle/80">
+                  {sourceDisplayName}
+                </span>
+                {showNewBadge && (
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-status-info-bg text-status-info-fg border border-status-info-fg/30">
+                    Baru
+                  </span>
+                )}
+              </div>
+
+              <h3
+                className="text-[13px] sm:text-sm font-bold leading-snug text-text-primary line-clamp-2 transition-colors duration-200 group-hover:text-accent motion-reduce:transition-none"
+                title={manga.title}
+              >
+                {manga.title}
+              </h3>
+            </div>
+
+            {/* Bottom Tier: Unified Reading Progress & Squircle CTA */}
+            <div className="mt-2.5 flex flex-col gap-1.5">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5 min-w-0 text-xs">
+                  <span className="font-semibold text-text-muted truncate text-[11.5px] sm:text-xs">
+                    {effChapterTitle}
+                  </span>
+                  <span className="text-text-muted/40 font-normal select-none">&bull;</span>
+                  <span
+                    className={cn(
+                      "text-[11px] font-mono font-bold tracking-tight",
+                      isCompleted
+                        ? "text-status-success-fg status-success"
+                        : "text-accent"
+                    )}
+                  >
+                    {progress}%
+                  </span>
+                </div>
+
+                {/* Squircle CTA Button (< xl, rounded-lg, 10px, non-pill) */}
+                <span
+                  className={cn(
+                    "shrink-0 inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all shadow-2xs",
+                    "bg-accent text-accent-on hover:bg-accent-hover active:scale-95",
+                    "h-7 text-[11.5px]"
+                  )}
+                >
+                  <Play size={10} weight="fill" />
+                  <span>Lanjut</span>
+                </span>
+              </div>
+
+              {/* Integrated Progress Bar */}
+              <div className="relative w-full h-1.5 rounded-full overflow-hidden bg-surface-muted border border-border-subtle/50">
+                <div
+                  className={cn(
+                    "h-full transition-all duration-300 rounded-full",
+                    isCompleted ? "bg-status-success-fg" : "bg-accent"
+                  )}
+                  style={{ width: `${progress}%` }}
+                  role="progressbar"
+                  aria-valuenow={progress}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                />
+              </div>
+            </div>
+          </div>
+        </Link>
+
+        {/* Compact Dropdown Options Button: 44px Apple HIG touch target on mobile, hover-revealed on desktop */}
+        <div className="absolute right-1 top-1 z-20">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                aria-label={`Opsi untuk ${manga.title}`}
+                className="flex size-11 sm:size-8 items-center justify-center rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-hover/80 motion-safe:transition-all outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-1 active:scale-95 data-[state=open]:rotate-90 data-[state=open]:text-text-primary duration-150 cursor-pointer sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 data-[state=open]:opacity-100"
+              >
+                <DotsThreeVertical size={18} weight="bold" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48 z-50">
@@ -590,12 +746,14 @@ export function MangaCard({
         <div className="relative flex w-[52px] shrink-0 flex-col items-center justify-center gap-2 bg-transparent">
           <BookmarkButton sourceId={cardSourceId} manga={cardManga} className="size-11" />
           <div className="h-px w-6 bg-border-subtle" />
-          <div className="flex flex-col items-center gap-0.5 text-semantic-warning">
-            <Star weight="fill" size={12} aria-hidden="true" />
-            <span className="text-[10px] font-black" suppressHydrationWarning>
-              {Number(scoreToDisplay) > 0 ? Number(scoreToDisplay).toFixed(1) : "—"}
-            </span>
-          </div>
+          {Number(scoreToDisplay) > 0 ? (
+            <div className="flex flex-col items-center gap-0.5 text-semantic-warning">
+              <Star weight="fill" size={12} aria-hidden="true" />
+              <span className="text-[10px] font-black" suppressHydrationWarning>
+                {Number(scoreToDisplay).toFixed(1)}
+              </span>
+            </div>
+          ) : null}
         </div>
 
         {isMultiSource && (
@@ -958,12 +1116,14 @@ export function MangaCard({
             <MangaCardMeta className="max-w-[70%] truncate font-semibold sm:text-sm">
               {manga.latestChapter || "Chapter belum tersedia"}
             </MangaCardMeta>
-            <span className="flex shrink-0 items-center gap-1 text-xs font-bold tracking-tight text-text-secondary sm:text-sm">
-              <Star weight="fill" className="text-semantic-warning text-sm" aria-hidden="true" />
-              <span suppressHydrationWarning>
-                {Number(scoreToDisplay) > 0 ? Number(scoreToDisplay).toFixed(1) : "—"}
+            {Number(scoreToDisplay) > 0 ? (
+              <span className="flex shrink-0 items-center gap-1 text-xs font-bold tracking-tight text-text-secondary sm:text-sm">
+                <Star weight="fill" className="text-semantic-warning text-sm" aria-hidden="true" />
+                <span suppressHydrationWarning>
+                  {Number(scoreToDisplay).toFixed(1)}
+                </span>
               </span>
-            </span>
+            ) : null}
           </div>
         </div>
       </Link>

@@ -24,28 +24,28 @@ describe("useResponsiveToastPosition", () => {
     setMockMedia(false);
   });
 
-  it("returns top-right for desktop viewports (>= 1024px)", () => {
+  it("returns bottom-right for desktop viewports (>= 1024px)", () => {
     window.innerWidth = 1280;
     setMockMedia(false);
 
     const { result } = renderHook(() => useResponsiveToastPosition());
-    expect(result.current).toBe("top-right");
+    expect(result.current).toBe("bottom-right");
   });
 
-  it("returns top-right for tablet landscape (768px - 1023px, landscape)", () => {
+  it("returns bottom-right for tablet landscape (768px - 1023px, landscape)", () => {
     window.innerWidth = 850;
     setMockMedia(true);
 
     const { result } = renderHook(() => useResponsiveToastPosition());
-    expect(result.current).toBe("top-right");
+    expect(result.current).toBe("bottom-right");
   });
 
-  it("returns top-center for tablet portrait (768px - 1023px, portrait)", () => {
+  it("returns bottom-right for tablet portrait (768px - 1023px, portrait)", () => {
     window.innerWidth = 800;
     setMockMedia(false);
 
     const { result } = renderHook(() => useResponsiveToastPosition());
-    expect(result.current).toBe("top-center");
+    expect(result.current).toBe("bottom-right");
   });
 
   it("returns top-center for mobile viewports (< 768px)", () => {
@@ -83,7 +83,7 @@ describe("useResponsiveToastPosition", () => {
       if (resizeCallback) resizeCallback();
     });
 
-    expect(result.current).toBe("top-right");
+    expect(result.current).toBe("bottom-right");
   });
 });
 

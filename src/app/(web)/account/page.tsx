@@ -112,8 +112,8 @@ export default function AccountPage() {
         <main className="w-full space-y-6 md:space-y-8">
           {/* Profile Card */}
           {user ? (
-            <div className="rounded-2xl border border-border-default/80 bg-surface-raised p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
-              <div className="size-20 rounded-2xl overflow-hidden border border-border-default/60 shrink-0 bg-surface-raised shadow-xs flex items-center justify-center">
+            <div className="rounded-xl border border-border-default/80 bg-surface-raised p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
+              <div className="size-20 rounded-xl overflow-hidden border border-border-default/60 shrink-0 bg-surface-raised shadow-xs flex items-center justify-center">
                 {user.photoURL ? (
                   <img
                     src={user.photoURL}
@@ -141,8 +141,8 @@ export default function AccountPage() {
               </div>
             </div>
           ) : (
-            <div className="rounded-2xl border border-border-default/80 bg-surface-raised p-5 sm:p-6 shadow-xs text-center space-y-5">
-              <div className="size-16 mx-auto rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
+            <div className="rounded-xl border border-border-default/80 bg-surface-raised p-5 sm:p-6 shadow-xs text-center space-y-5">
+              <div className="size-16 mx-auto rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent">
                 <UserCircle size={36} weight="duotone" />
               </div>
               <div>
@@ -187,7 +187,7 @@ export default function AccountPage() {
 
           {/* Cloud Sync Section */}
           {user && (
-            <div className="rounded-2xl border border-border-default/80 bg-surface-raised p-5 sm:p-6 shadow-xs space-y-5">
+            <div className="rounded-xl border border-border-default/80 bg-surface-raised p-5 sm:p-6 shadow-xs space-y-5">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="flex items-center gap-3">
                   <div className="size-10 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent shrink-0">
@@ -241,7 +241,7 @@ export default function AccountPage() {
                 </div>
               </div>
 
-              <div className="p-4 rounded-2xl bg-surface-raised/50 border border-border-subtle/40 text-xs text-text-secondary">
+              <div className="p-4 rounded-xl bg-surface-raised/50 border border-border-subtle/40 text-xs text-text-secondary">
                 Tersinkron: bookmark, riwayat baca, koleksi, dan preferensi yang didukung.
               </div>
 
@@ -337,7 +337,7 @@ export default function AccountPage() {
           )}
 
           {/* Device & PWA Status */}
-          <div className="rounded-2xl border border-border-default/80 bg-surface-raised p-5 sm:p-6 shadow-xs space-y-3">
+          <div className="rounded-xl border border-border-default/80 bg-surface-raised p-5 sm:p-6 shadow-xs space-y-3">
             <div className="flex items-center gap-3">
               <div className="size-10 rounded-xl bg-surface-raised border border-border-default flex items-center justify-center text-text-secondary shrink-0">
                 <DeviceMobile size={22} weight="regular" />
@@ -355,7 +355,7 @@ export default function AccountPage() {
 
           {/* Danger Zone */}
           {user && (
-            <div className="rounded-[28px] border border-semantic-error/20 bg-semantic-error/5 p-6 space-y-4">
+            <div className="rounded-xl border border-semantic-error/20 bg-semantic-error/5 p-6 space-y-4">
               <div>
                 <h3 className="text-sm font-bold text-semantic-error">
                   Keluar

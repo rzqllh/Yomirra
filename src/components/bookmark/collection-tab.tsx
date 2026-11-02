@@ -37,6 +37,9 @@ export interface CollectionTabProps {
   onSearchClear: () => void;
   sortBy: "updatedAt" | "title";
   onSortChange: (v: "updatedAt" | "title") => void;
+  sourceFilter?: string | null;
+  onSourceFilterChange?: (v: string | null) => void;
+  availableSources?: { id: string; name: string }[];
   isSelectionMode: boolean;
   onToggleSelectionMode: () => void;
   selectedItems: Set<string>;
@@ -71,6 +74,9 @@ export function CollectionTab({
   onSearchClear,
   sortBy,
   onSortChange,
+  sourceFilter,
+  onSourceFilterChange,
+  availableSources,
   isSelectionMode,
   onToggleSelectionMode,
   selectedItems,
@@ -179,6 +185,9 @@ export function CollectionTab({
           onSearchClear={onSearchClear}
           sortBy={sortBy}
           onSortChange={onSortChange}
+          sourceFilter={sourceFilter}
+          onSourceFilterChange={onSourceFilterChange}
+          availableSources={availableSources}
           isSelectionMode={isSelectionMode}
           onToggleSelectionMode={onToggleSelectionMode}
           totalCount={totalItemsCount}

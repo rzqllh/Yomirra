@@ -354,16 +354,22 @@ function MangaDetailContent({
 
             <div className="flex items-center gap-1.5 flex-wrap mb-2.5">
               {detail.format && (
-                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider backdrop-blur-md border border-white/15 bg-black/40 text-white shadow-xs">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider backdrop-blur-md border border-white/15 bg-black/40 text-white shadow-xs">
                   {detail.format}
                 </span>
               )}
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide backdrop-blur-md border border-amber-400/30 bg-black/40 text-amber-300 shadow-xs">
-                <Star weight="fill" size={12} className="text-amber-400" />
-                <span suppressHydrationWarning>{Number(displayScore) > 0 ? Number(displayScore).toFixed(1) : "—"}</span>
-              </span>
+              {Number(displayScore) > 0 ? (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold tracking-wide backdrop-blur-md border border-amber-400/30 bg-black/40 text-amber-300 shadow-xs">
+                  <Star weight="fill" size={12} className="text-amber-400" />
+                  <span suppressHydrationWarning>{Number(displayScore).toFixed(1)}</span>
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium tracking-wide backdrop-blur-md border border-white/10 bg-black/30 text-white/70 shadow-xs">
+                  <span>Unrated</span>
+                </span>
+              )}
               {detail.status && detail.status !== "UNKNOWN" && (
-                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider backdrop-blur-md border border-white/15 bg-black/40 text-white shadow-xs">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider backdrop-blur-md border border-white/15 bg-black/40 text-white shadow-xs">
                   {detail.status}
                 </span>
               )}
@@ -405,16 +411,22 @@ function MangaDetailContent({
           <>
             <div className="flex flex-wrap items-center gap-1.5">
               {detail.format && (
-                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider backdrop-blur-md border border-white/15 bg-black/40 text-white shadow-xs">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider backdrop-blur-md border border-white/15 bg-black/40 text-white shadow-xs">
                   {detail.format}
                 </span>
               )}
-              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide backdrop-blur-md border border-amber-400/30 bg-black/40 text-amber-300 shadow-xs">
-                <Star weight="fill" size={12} className="text-amber-400" />
-                <span suppressHydrationWarning>{Number(displayScore) > 0 ? Number(displayScore).toFixed(1) : "—"}</span>
-              </span>
+              {Number(displayScore) > 0 ? (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold tracking-wide backdrop-blur-md border border-amber-400/30 bg-black/40 text-amber-300 shadow-xs">
+                  <Star weight="fill" size={12} className="text-amber-400" />
+                  <span suppressHydrationWarning>{Number(displayScore).toFixed(1)}</span>
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium tracking-wide backdrop-blur-md border border-white/10 bg-black/30 text-white/70 shadow-xs">
+                  <span>Unrated</span>
+                </span>
+              )}
               {detail.status && detail.status !== "UNKNOWN" && (
-                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider backdrop-blur-md border border-white/15 bg-black/40 text-white shadow-xs">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider backdrop-blur-md border border-white/15 bg-black/40 text-white shadow-xs">
                   {detail.status}
                 </span>
               )}
@@ -451,7 +463,7 @@ function MangaDetailContent({
           <>
             <div className="flex items-center justify-between mb-2.5">
               <span className="text-[11px] font-black text-text-muted uppercase tracking-widest">Sinopsis</span>
-              {cleanedSynopsis.length > 150 && (
+              {cleanedSynopsis.length > 280 && (
                 <button
                   onClick={() => setIsExpanded(!isExpanded)}
                   className="text-[11px] font-bold text-accent hover:text-accent-hover transition-colors inline-flex items-center gap-1"

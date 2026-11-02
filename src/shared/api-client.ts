@@ -232,11 +232,15 @@ class ApiClient {
             const res: Record<string, number | undefined> = {};
             for (let i = 0; i < titles.length; i += 20) {
               const chunk = titles.slice(i, i + 20);
-              Object.assign(res, await this.fetcher<Record<string, number | undefined>>(`/api/metadata/rating-batch`, {
+              const payload = await this.fetcher<{ data?: Record<string, number | undefined> } | Record<string, number | undefined>>(`/api/metadata/rating-batch`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ titles: chunk })
-              }));
+              });
+              const scores = (payload && typeof payload === "object" && "data" in payload && payload.data)
+                ? payload.data
+                : (payload as Record<string, number | undefined> || {});
+              Object.assign(res, scores);
             }
 
             currentBatch.forEach(b => {

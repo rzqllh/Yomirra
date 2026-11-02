@@ -290,7 +290,7 @@ export function AdminLayout() {
   if (verifying && isAuthorized === null) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4 text-zinc-400">
-        <div className="flex flex-col items-center gap-3 rounded-2xl border border-zinc-800/80 bg-zinc-900/40 px-8 py-7">
+        <div className="flex flex-col items-center gap-3 rounded-xl border border-zinc-800/80 bg-zinc-900/40 px-8 py-7">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-red-500/25 bg-red-500/10 text-red-400">
             <CircleNotch className="h-5 w-5 animate-spin" />
           </div>

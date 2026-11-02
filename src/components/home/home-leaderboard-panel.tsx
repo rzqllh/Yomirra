@@ -74,7 +74,7 @@ export function HomeLeaderboardPanel({
     <section
       aria-label={title}
       className={cn(
-        "ink-panel flex h-full min-w-0 flex-col p-4 sm:p-5 lg:h-[340px] lg:p-4",
+        "relative flex h-full min-w-0 flex-col p-4 sm:p-5 lg:h-[340px] lg:p-4 rounded-xl border border-border-subtle bg-surface-raised shadow-xs overflow-hidden",
         className
       )}
     >

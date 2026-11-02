@@ -189,7 +189,7 @@ export function EditorialSpotlight({
     <article
       aria-label={`Sorotan komik: ${manga.title}`}
       className={cn(
-        "ink-panel relative h-[268px] min-w-0 overflow-hidden sm:h-[310px] lg:h-[340px]",
+        "relative h-[268px] min-w-0 overflow-hidden sm:h-[310px] lg:h-[340px] rounded-xl border border-border-subtle bg-surface-raised shadow-xs",
         className
       )}
     >

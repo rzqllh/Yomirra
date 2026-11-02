@@ -336,7 +336,7 @@ export function ContinuousVerticalReader({
   }, []);
 
   return (
-    <div className="flex min-h-screen w-full flex-col items-center select-none pb-[calc(var(--safe-bottom)+180px)] bg-black/95 dark:bg-black">
+    <div className="flex min-h-screen w-full flex-col items-center select-none pb-[calc(var(--safe-bottom)+180px)] bg-transparent">
       {/* Chapter Degraded Recovery Banner */}
       {failedPageIndices.size > 0 && (
         <div className="fixed top-[calc(var(--mobile-header-height)+var(--safe-top)+10px)] z-40 max-w-md w-[calc(100%-32px)] mx-auto left-0 right-0 p-3 rounded-full bg-surface-raised/95 backdrop-blur-xl border border-semantic-warning/30 shadow-lg flex items-center justify-between gap-3 text-xs animate-in fade-in slide-in-from-top-2 duration-200">
@@ -441,7 +441,7 @@ export function ContinuousVerticalReader({
         })}
       </div>
 
-      <div className="w-full max-w-[800px] h-14 bg-gradient-to-b from-transparent via-black/60 to-black pointer-events-none -mt-4 relative z-10" />
+      <div className="w-full max-w-[800px] h-14 bg-gradient-to-b from-transparent via-black/20 to-transparent pointer-events-none -mt-4 relative z-10" />
 
       <div className="w-full max-w-[280px] h-[1px] bg-gradient-to-r from-transparent via-white/15 to-transparent my-2 relative z-10" />
 

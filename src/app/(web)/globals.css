@@ -65,7 +65,7 @@
   --radius-xl: 22px;
   --radius-2xl: 28px;
   --radius-3xl: 32px;
-  --radius-sheet: 32px;
+  --radius-sheet: 20px;
   --radius-full: 9999px;
 
   /* Elevation */
@@ -226,13 +226,13 @@
 
   .light {
     color-scheme: light;
-    /* Washi canvas, restrained hanko red. */
-    --surface-base: #f8f6f1;
+    /* Clean, soft modern off-white canvas without yellow tint, restrained hanko red accent. */
+    --surface-base: #f9f9fb;
     --surface-raised: #ffffff;
     --surface-overlay: #ffffff;
-    --surface-muted: #efece6;
-    --surface-hover: #e7e3db;
-    --surface-glass: rgba(255, 255, 255, 0.88);
+    --surface-muted: #f0f2f5;
+    --surface-hover: #e8ebf0;
+    --surface-glass: rgba(255, 255, 255, 0.90);
 
     --text-primary: #121316;
     --text-secondary: #4a4e5c;
@@ -628,20 +628,21 @@ body.reader-active {
   .ink-range:focus-visible::-moz-range-thumb { outline: 3px solid var(--color-accent); outline-offset: 3px; }
 }
 :root, .dark { --skeleton-glow: #383c52; }
-.light { --skeleton-glow: #faf7f2; }
+.light { --skeleton-glow: #f5f6f8; }
 @keyframes ink-skeleton-flow { 0% { background-position: 135% 0; opacity: .78; } 50% { opacity: 1; } 100% { background-position: -135% 0; opacity: .78; } }
 .ink-dialog-overlay { background: rgb(12 19 40 / 66%); }
-.ink-dialog-overlay[data-state="open"] { animation: ink-backdrop-in 420ms ease-out both; }
-.ink-dialog-overlay[data-state="closed"] { animation: ink-backdrop-in 320ms ease-in reverse both; }
-.ink-dialog-content[data-state="open"] { animation: ink-dialog-in 560ms cubic-bezier(.2,.92,.22,1) both; }
-.ink-dialog-content[data-state="closed"] { animation: ink-dialog-out 320ms cubic-bezier(.4,0,1,1) both; }
-.command-dialog-content[data-state="open"] { animation: command-dialog-in 240ms cubic-bezier(.16,1,.3,1) both; }
-.command-dialog-content[data-state="closed"] { animation: command-dialog-out 160ms cubic-bezier(.4,0,1,1) both; }
-@keyframes ink-backdrop-in { from { opacity: 0; backdrop-filter: blur(0); } to { opacity: 1; backdrop-filter: blur(5px); } }
-@keyframes ink-dialog-in { from { opacity: 0; filter: blur(6px); scale: .94; } to { opacity: 1; filter: blur(0); scale: 1; } }
-@keyframes ink-dialog-out { from { opacity: 1; filter: blur(0); scale: 1; } to { opacity: 0; filter: blur(4px); scale: .94; } }
-@keyframes command-dialog-in { from { opacity: 0; } to { opacity: 1; } }
-@keyframes command-dialog-out { from { opacity: 1; } to { opacity: 0; } }
+.ink-dialog-overlay[data-state="open"] { animation: ink-backdrop-in 150ms ease-out both; }
+.ink-dialog-overlay[data-state="closed"] { animation: ink-backdrop-out 120ms ease-in both; }
+.ink-dialog-content[data-state="open"] { animation: ink-dialog-in 160ms cubic-bezier(.16,1,.3,1) both; }
+.ink-dialog-content[data-state="closed"] { animation: ink-dialog-out 120ms cubic-bezier(.4,0,1,1) both; }
+.command-dialog-content[data-state="open"] { animation: command-dialog-in 150ms cubic-bezier(.16,1,.3,1) both; }
+.command-dialog-content[data-state="closed"] { animation: command-dialog-out 120ms cubic-bezier(.4,0,1,1) both; }
+@keyframes ink-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes ink-backdrop-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes ink-dialog-in { from { opacity: 0; scale: .98; } to { opacity: 1; scale: 1; } }
+@keyframes ink-dialog-out { from { opacity: 1; scale: 1; } to { opacity: 0; scale: .98; } }
+@keyframes command-dialog-in { from { opacity: 0; scale: .98; } to { opacity: 1; scale: 1; } }
+@keyframes command-dialog-out { from { opacity: 1; scale: 1; } to { opacity: 0; scale: .98; } }
 /* Existing feature buttons still use white/black utility text on solid semantic fills. */
 .dark .bg-accent.text-white { color: var(--text-on-accent); }
 .dark .bg-semantic-success.text-white { color: var(--status-success-bg); }
@@ -655,15 +656,16 @@ body.reader-active {
 section[aria-label*="Notifications" i] {
   font-family: var(--font-ui), sans-serif;
   z-index: 1000000 !important;
-  --offset-top: calc(env(safe-area-inset-top, 0px) + 80px) !important;
-  --offset-right: 20px !important;
+  --offset-bottom: calc(env(safe-area-inset-bottom, 0px) + 24px) !important;
+  --offset-top: calc(env(safe-area-inset-top, 0px) + 24px) !important;
+  --offset-right: 24px !important;
   pointer-events: none !important;
 }
 
 @media (max-width: 767px) {
   [data-sonner-toaster],
   section[aria-label*="Notifications" i] {
-    --mobile-offset-top: calc(env(safe-area-inset-top, 0px) + 80px) !important;
+    --mobile-offset-top: calc(env(safe-area-inset-top, 0px) + 16px) !important;
     --mobile-offset-left: 16px !important;
     --mobile-offset-right: 16px !important;
   }
@@ -688,7 +690,7 @@ section[aria-label*="Notifications" i] {
 
 [data-sonner-toast][data-styled="true"] {
   position: relative !important;
-  border-radius: var(--radius-xl, 22px) !important;
+  border-radius: var(--radius-xl, 14px) !important;
   padding: 14px 44px 14px 16px !important;
   display: flex !important;
   align-items: flex-start !important;
@@ -832,7 +834,7 @@ section[aria-label*="Notifications" i] {
 [data-sonner-toast] [data-button] {
   align-self: center !important;
   margin-left: 8px !important;
-  border-radius: 9999px !important;
+  border-radius: var(--radius-lg, 10px) !important;
   padding: 6px 14px !important;
   font-size: 12px !important;
   font-weight: 700 !important;
@@ -874,16 +876,20 @@ section[aria-label*="Notifications" i] {
 }
 
 /* Close Button (X on right side) */
-[data-sonner-toast] [data-close-button] {
+[data-sonner-toast] [data-close-button],
+.yomirra-toast-close,
+[data-close-button] {
   position: absolute !important;
   top: 10px !important;
   right: 10px !important;
+  left: auto !important;
+  bottom: auto !important;
   transform: none !important;
   margin: 0 !important;
   align-self: auto !important;
   width: 28px !important;
   height: 28px !important;
-  border-radius: 9999px !important;
+  border-radius: var(--radius-md, 8px) !important;
   border: none !important;
   background: transparent !important;
   color: var(--text-muted, #64748b) !important;
@@ -894,6 +900,7 @@ section[aria-label*="Notifications" i] {
   flex-shrink: 0 !important;
   transition: all 0.15s ease !important;
   padding: 0 !important;
+  z-index: 10 !important;
 }
 
 [data-sonner-toast] [data-close-button]:hover {

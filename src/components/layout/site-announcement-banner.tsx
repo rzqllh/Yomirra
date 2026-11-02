@@ -124,7 +124,7 @@ export function SiteAnnouncementBanner() {
       ref={bannerRef}
       aria-label="Pengumuman Situs"
       className={cn(
-        "relative z-50 w-full border-b backdrop-blur-md px-3.5 py-2 text-xs transition-all animate-in fade-in duration-200",
+        "sticky top-0 z-50 w-full border-b backdrop-blur-md px-3.5 py-2 text-xs transition-all animate-in fade-in duration-200",
         style.bg,
         style.border
       )}

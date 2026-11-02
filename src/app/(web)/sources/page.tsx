@@ -106,7 +106,7 @@ export default function SourcesPage() {
           />
 
           {/* Source Mental Model Guidance Banner */}
-          <div className="p-3.5 rounded-2xl bg-surface-glass border border-border-subtle text-xs text-text-muted flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          <div className="p-3.5 rounded-xl bg-surface-glass border border-border-subtle text-xs text-text-muted flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
             <p className="leading-relaxed">
               Pengaturan ini berlaku untuk Beranda, Jelajah, dan Populer. Pencarian tetap dapat memakai sumber yang tersedia meski dinonaktifkan di sini.
             </p>
@@ -117,9 +117,9 @@ export default function SourcesPage() {
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               placeholder="Cari sumber…"
-              containerClassName="rounded-2xl max-w-md w-full"
+              containerClassName="rounded-xl max-w-md w-full"
             />
-            {isMounted && nsfwCount > 0 ? (
+            {isMounted && !hideNsfw && nsfwCount > 0 ? (
               <button
                 type="button"
                 onClick={() => setHideNsfw(!hideNsfw)}

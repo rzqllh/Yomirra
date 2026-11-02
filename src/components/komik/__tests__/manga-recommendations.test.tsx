@@ -6,6 +6,7 @@ import { MangaRecommendations } from "../manga-recommendations";
 import { apiClient } from "@/shared/api-client";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
+import { useLibraryStore } from "@/shared/store/library-store";
 
 vi.mock("@/shared/api-client", () => ({
   apiClient: {
@@ -262,5 +263,42 @@ describe("MangaRecommendations Component", () => {
     const cards = await screen.findAllByTestId("shelf-card");
     expect(cards).toHaveLength(1);
     expect(cards[0].getAttribute("data-manga-id")).toBe("manga-unique");
+  });
+
+  it("does not remove recommended titles when they are bookmarked in the library", async () => {
+    (apiClient.getRelatedTitles as ReturnType<typeof vi.fn>).mockResolvedValueOnce([
+      {
+        canonicalKey: "src::manga-1::Title+One",
+        sourceId: "sourceA",
+        mangaId: "manga-1",
+        title: "Manga One",
+        coverUrl: "/cover1.jpg",
+        genres: ["Action"],
+      },
+    ]);
+
+    renderComponent({
+      sourceId: "sourceA",
+      currentMangaId: "current-manga",
+      genres: ["Action"],
+      title: "Current Manga",
+    });
+
+    await screen.findByText("Manga One");
+
+    // Simulate user bookmarking the recommended manga into library
+    act(() => {
+      useLibraryStore.getState().addToLibrary({
+        sourceId: "sourceA",
+        mangaId: "manga-1",
+        title: "Manga One",
+        coverUrl: "/cover1.jpg",
+        addedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+    });
+
+    // The card must stay visible and NOT disappear from the shelf
+    expect(screen.getByText("Manga One")).toBeDefined();
   });
 });

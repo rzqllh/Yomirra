@@ -113,7 +113,7 @@ export function DesktopRail({ pendingHref }: { pendingHref?: string | null } = {
             !isCollapsed && "xl:block"
           )}
         >
-          Jelajah
+          Utama
         </span>
         {MAIN_NAV_ITEMS.map(renderItem)}
       </nav>

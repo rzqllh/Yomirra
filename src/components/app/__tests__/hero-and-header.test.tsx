@@ -186,17 +186,17 @@ describe("Header & Hero System (Squircle & Reusable)", () => {
   });
 
   describe("HeaderActions & Dropdown Popover", () => {
-    it("uses squircle rounded-2xl geometry for bell and settings trigger", () => {
+    it("uses squircle rounded-xl geometry for bell and settings trigger", () => {
       render(<HeaderActions />);
       const bellButton = screen.getByRole("button", { name: /pembaruan/i });
-      expect(bellButton.className).toContain("rounded-2xl");
+      expect(bellButton.className).toContain("rounded-xl");
       expect(bellButton.className).toContain("bg-transparent");
       expect(bellButton.className).toContain("shadow-none");
 
       const settingsBtn = screen.getByRole("button", {
         name: /buka menu akun/i,
       });
-      expect(settingsBtn.className).toContain("rounded-2xl");
+      expect(settingsBtn.className).toContain("rounded-xl");
       expect(settingsBtn.className).toContain("bg-transparent");
       expect(settingsBtn.className).toContain("shadow-none");
     });

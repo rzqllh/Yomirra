@@ -64,7 +64,7 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
       )}
       {showFallback ? (
         <div className="fixed inset-0 z-[100] bg-surface-base flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300">
-          <div className="w-20 h-20 bg-surface-muted rounded-3xl flex items-center justify-center text-text-muted mb-6">
+          <div className="w-20 h-20 bg-surface-muted rounded-xl flex items-center justify-center text-text-muted mb-6">
             <WifiSlash size={40} weight="duotone" />
           </div>
           <h1 className="text-2xl font-bold mb-2">Kamu sedang offline</h1>

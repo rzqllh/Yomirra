@@ -30,7 +30,7 @@ export interface HomeFeedClientProps {
   catalogState?: "unavailable" | "partial" | "empty";
 }
 
-export const SPOTLIGHT_AUTOPLAY_MS = 6_000;
+export const SPOTLIGHT_AUTOPLAY_MS = 8_000;
 const SWIPE_THRESHOLD_PX = 40;
 
 export function HomeFeedClient({
@@ -135,7 +135,7 @@ export function HomeFeedClient({
     filteredLatest.length > 0 ? filteredLatest : filteredPopular;
 
   const spotlightItems = React.useMemo(
-    () => selectSpotlightItems(discoveryItems, 5),
+    () => selectSpotlightItems(discoveryItems, 10),
     [discoveryItems]
   );
 
@@ -415,7 +415,7 @@ export function HomeFeedClient({
       {historyItems.length === 0 && (
         <aside
           aria-label="Info Library"
-          className="mt-10 rounded-2xl border border-border-subtle/80 bg-surface-raised/40 p-4 sm:p-5 flex items-center justify-between gap-4"
+          className="mt-10 rounded-xl border border-border-subtle/80 bg-surface-raised/40 p-4 sm:p-5 flex items-center justify-between gap-4"
         >
           <div className="flex items-center gap-3 min-w-0">
             <div className="size-9 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent shrink-0">

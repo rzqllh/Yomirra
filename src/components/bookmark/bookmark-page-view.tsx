@@ -116,6 +116,9 @@ export function BookmarkPageView() {
               onSearchClear={() => collection.setSearchQuery("")}
               sortBy={collection.sortBy}
               onSortChange={collection.setSortBy}
+              sourceFilter={collection.sourceFilter}
+              onSourceFilterChange={collection.setSourceFilter}
+              availableSources={collection.availableSources}
               isSelectionMode={collection.isSelectionMode}
               onToggleSelectionMode={() => {
                 collection.setIsSelectionMode(!collection.isSelectionMode);

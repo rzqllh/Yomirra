@@ -2,16 +2,25 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 export function MangaCardSkeleton({ variant = "grid" }: { variant?: "grid" | "list" | "editorial" | "shelf" | "history" | "leaderboard" | "compact" }) {
   if (variant === "history") {
-    // Mirrors HistoryCard: enclosed row, 2:3 cover, and a 44px resume target.
+    // Mirrors Lanjut Baca (variant="progress"): enclosed row, 2:3 cover, 2-tier hierarchy, and slim progress bar.
     return (
-      <div className="flex items-center gap-4 rounded-xl bg-surface-raised/50 p-3 border border-border-subtle/50 w-full">
-        <Skeleton className="h-[84px] w-[56px] rounded-xs shrink-0" />
-        <div className="flex-1 flex flex-col justify-center space-y-2 py-1">
-          <Skeleton className="h-4 w-3/4" />
-          <Skeleton className="h-3 w-1/2" />
-          <Skeleton className="h-3 w-1/3 mt-1" />
+      <div className="flex items-center gap-3 sm:gap-3.5 rounded-xl bg-surface-raised p-2.5 sm:p-3 border border-border-subtle shadow-xs w-full">
+        <Skeleton className="w-[64px] sm:w-[76px] aspect-[2/3] rounded-lg shrink-0" />
+        <div className="flex-1 flex flex-col justify-between min-h-[96px] sm:min-h-[114px] py-0.5 min-w-0">
+          <div className="flex items-center gap-1.5">
+            <Skeleton className="h-4 w-16 rounded-xs" />
+            <Skeleton className="h-4 w-9 rounded-xs" />
+          </div>
+          <div className="flex flex-col gap-1.5 my-auto">
+            <Skeleton className="h-4 w-3/4 rounded-xs" />
+            <Skeleton className="h-3.5 w-1/2 rounded-xs" />
+          </div>
+          <div className="flex flex-col gap-1.5 mt-auto">
+            <Skeleton className="h-3 w-28 rounded-xs" />
+            <Skeleton className="h-1.5 w-full rounded-xs" />
+          </div>
         </div>
-        <Skeleton className="size-11 rounded-xs shrink-0" />
+        <Skeleton className="size-8 rounded-lg shrink-0 self-start" />
       </div>
     )
   }

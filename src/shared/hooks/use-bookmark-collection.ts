@@ -33,6 +33,7 @@ export function useBookmarkCollection() {
     React.useState<SmartCollectionId | null>(null);
   const [searchQuery, setSearchQuery] = React.useState("");
   const [sortBy, setSortBy] = React.useState<"updatedAt" | "title">("updatedAt");
+  const [sourceFilter, setSourceFilter] = React.useState<string | null>(null);
   const [isSelectionMode, setIsSelectionMode] = React.useState(false);
   const [selectedItems, setSelectedItems] = React.useState<Set<string>>(new Set());
   const [collectionPage, setCollectionPage] = React.useState(1);
@@ -105,10 +106,26 @@ export function useBookmarkCollection() {
   const clearCollectionFilters = React.useCallback(() => {
     setSelectedCollectionId(null);
     setSelectedSmartCollectionId(null);
+    setSourceFilter(null);
   }, []);
+
+  const availableSources = React.useMemo(() => {
+    const map = new Map<string, string>();
+    for (const item of visibleLibraryItems) {
+      if (!map.has(item.sourceId)) {
+        const meta = dynamicSourceRegistry.get(item.sourceId);
+        map.set(item.sourceId, meta?.name || item.sourceName || item.sourceId);
+      }
+    }
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+  }, [visibleLibraryItems]);
 
   const filteredAndSortedLibraryItems = React.useMemo(() => {
     let result = [...visibleLibraryItems];
+
+    if (sourceFilter) {
+      result = result.filter((item) => item.sourceId === sourceFilter);
+    }
 
     if (selectedSmartCollectionId) {
       const smartCollection = smartCollections.find(
@@ -154,13 +171,14 @@ export function useBookmarkCollection() {
     selectedSmartCollectionId,
     smartCollections,
     sortBy,
+    sourceFilter,
     visibleLibraryItems,
   ]);
 
   // Reset pagination when search, sort, or collection filter changes
   React.useEffect(() => {
     setCollectionPage(1);
-  }, [searchQuery, sortBy, selectedCollectionId, selectedSmartCollectionId]);
+  }, [searchQuery, sortBy, selectedCollectionId, selectedSmartCollectionId, sourceFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredAndSortedLibraryItems.length / ITEMS_PER_PAGE));
   const paginatedCollection = React.useMemo(() => {
@@ -210,6 +228,9 @@ export function useBookmarkCollection() {
     setSearchQuery,
     sortBy,
     setSortBy,
+    sourceFilter,
+    setSourceFilter,
+    availableSources,
     isSelectionMode,
     setIsSelectionMode,
     selectedItems,

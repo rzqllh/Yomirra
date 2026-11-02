@@ -45,11 +45,10 @@ export function SegmentedControl({
   const isQuickRail = variant === "quick-rail";
   const isGlass = variant === "glass-floating";
 
-  // - Pill: Both outer container and inner indicator are rounded-full.
-  // - Rounded: Outer rounded-xl with p-1 padding requires inner rounded-md (14px squircle)
-  //   satisfying R_inner = R_outer - padding to prevent corner pinching/bulging.
-  const containerRadiusClass = isPill ? "rounded-full" : "rounded-xl";
-  const itemRadiusClass = isPill ? "rounded-full" : "rounded-md";
+  // Concentric radius architecture strictly adhering to Yomirra squircle max xl:
+  // Outer rounded-xl (14px squircle) with p-1 padding requires inner rounded-lg (12px) or rounded-md (10px).
+  const containerRadiusClass = "rounded-xl";
+  const itemRadiusClass = isPill ? "rounded-lg" : "rounded-md";
 
   return (
     <div

@@ -206,6 +206,7 @@ function ReaderContent({
     return (
       <ReaderShell
         mangaTitle={initialDetail?.title}
+        coverUrl={initialDetail?.coverUrl}
         isNsfw={initialDetail?.isNsfw}
         chapterTitle={chapterTitle}
         currentChapterId={chapterId}
@@ -237,6 +238,7 @@ function ReaderContent({
     return (
       <ReaderShell
         mangaTitle={initialDetail?.title}
+        coverUrl={initialDetail?.coverUrl}
         isNsfw={initialDetail?.isNsfw}
         chapterTitle={chapterTitle}
         currentChapterId={chapterId}
@@ -265,6 +267,7 @@ function ReaderContent({
     return (
       <ReaderShell
         mangaTitle={initialDetail?.title}
+        coverUrl={initialDetail?.coverUrl}
         isNsfw={initialDetail?.isNsfw}
         chapterTitle="Error"
         currentChapterId={chapterId}
@@ -318,7 +321,8 @@ function ReaderContent({
   return (
     <ReaderShell 
       mangaTitle={initialDetail?.title}
-        isNsfw={initialDetail?.isNsfw}
+      coverUrl={initialDetail?.coverUrl}
+      isNsfw={initialDetail?.isNsfw}
       chapterTitle={chapterTitle} 
       pageCount={pagesToRender.length}
       currentChapterId={chapterId}

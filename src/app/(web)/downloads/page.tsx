@@ -93,7 +93,7 @@ export default function DownloadsPage() {
 
         {/* Device Storage Status */}
         {storageInfo && (
-          <div className="rounded-2xl p-4 sm:p-5 flex items-center gap-4 bg-surface-raised border border-border-default/80 shadow-xs">
+          <div className="rounded-xl p-4 sm:p-5 flex items-center gap-4 bg-surface-raised border border-border-default/80 shadow-xs">
             <div className="size-12 bg-accent/10 border border-accent/20 rounded-xl flex items-center justify-center text-accent shrink-0 shadow-xs">
               <Database size={24} weight="regular" />
             </div>
@@ -154,7 +154,7 @@ export default function DownloadsPage() {
                   return (
                     <div
                       key={item.id}
-                      className="rounded-2xl p-3.5 sm:p-4 flex gap-3.5 sm:gap-4 bg-surface-raised border border-border-subtle/80 shadow-xs hover:border-accent/40 motion-safe:transition-colors"
+                      className="rounded-xl p-3.5 sm:p-4 flex gap-3.5 sm:gap-4 bg-surface-raised border border-border-subtle/80 shadow-xs hover:border-accent/40 motion-safe:transition-colors"
                     >
                       <MangaCardCoverFrame className="w-14 sm:w-16 rounded-xl">
                         <MangaCover
@@ -279,7 +279,7 @@ export default function DownloadsPage() {
                 completedItems.map((item) => (
                   <div
                     key={item.id}
-                    className="group flex items-center gap-1 rounded-2xl bg-surface-raised border border-border-subtle/80 p-2 sm:p-2.5 shadow-xs hover:border-accent/40 motion-safe:transition-colors"
+                    className="group flex items-center gap-1 rounded-xl bg-surface-raised border border-border-subtle/80 p-2 sm:p-2.5 shadow-xs hover:border-accent/40 motion-safe:transition-colors"
                   >
                     <Link
                       href={`/manga/${item.sourceId}/${item.mangaId}/read/${item.chapterId}`}

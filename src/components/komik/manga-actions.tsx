@@ -54,12 +54,11 @@ export function MangaActions({
 
     const toastId = `bookmark-toggle-${sourceId}-${mangaId}`;
 
-    // This action is optimistic and local-first. Do not claim cloud commit
-    // success before the asynchronous store mutation has actually settled.
-    toast.info(wasInLibrary ? "Dihapus dari Library di perangkat" : "Disimpan ke Library di perangkat", {
-      id: toastId,
-      description: "Jika sinkronisasi akun gagal, Yomirra akan memberi tahu dan membatalkan perubahan ini.",
-    });
+    if (wasInLibrary) {
+      toast.info("Dihapus dari Library", { id: toastId });
+    } else {
+      toast.success("Tersimpan di Library", { id: toastId });
+    }
   };
 
   return (
@@ -74,7 +73,11 @@ export function MangaActions({
             : "border-border-default text-text-secondary hover:text-text-primary hover:border-border-strong hover:bg-surface-hover"
         )}
       >
-        <BookmarkSimple size={18} weight={isInLibrary ? "fill" : "regular"} className="shrink-0" />
+        <BookmarkSimple
+          size={18}
+          weight={isInLibrary ? "fill" : "regular"}
+          className="shrink-0"
+        />
         <span className="hidden md:inline text-xs font-bold tracking-tight leading-none whitespace-nowrap">
           {isInLibrary ? "Tersimpan" : "Simpan"}
         </span>

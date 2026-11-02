@@ -114,19 +114,19 @@ export function LeaderboardRow({
           {manga.title}
         </MangaCardTitle>
         <div className="flex items-center gap-2 text-[10.5px] font-semibold text-text-secondary sm:text-[11.5px]">
-          <div className="flex items-center gap-1">
-            <Star
-              weight="fill"
-              size={12}
-              className="text-semantic-warning"
-              aria-hidden="true"
-            />
-            <span suppressHydrationWarning>
-              {Number(scoreToDisplay) > 0
-                ? Number(scoreToDisplay).toFixed(1)
-                : "—"}
-            </span>
-          </div>
+          {Number(scoreToDisplay) > 0 ? (
+            <div className="flex items-center gap-1">
+              <Star
+                weight="fill"
+                size={12}
+                className="text-semantic-warning"
+                aria-hidden="true"
+              />
+              <span suppressHydrationWarning>
+                {Number(scoreToDisplay).toFixed(1)}
+              </span>
+            </div>
+          ) : null}
           <MangaCardMeta className="max-w-[110px] truncate text-[10.5px] text-text-muted sm:max-w-[140px] sm:text-[11.5px]">
             {manga.latestChapter || "Chapter belum tersedia"}
           </MangaCardMeta>

@@ -149,14 +149,17 @@ export function useLibraryCatalog() {
     [activeSourceId, sourceCandidates]
   );
 
-  const isDisabled =
-    !activeSourceId ||
-    disabledSources.includes(activeSourceId) ||
-    !activeSourceMetadata ||
-    !isDiscoverySourceSystemEligible(activeSourceMetadata) ||
-    (isNsfwFiltered && activeSourceMetadata.isNsfw);
-  const supportsProviderFilters =
-    activeSourceMetadata?.capabilities?.filters === true;
+  const isAllSources = activeSourceId === "all";
+  const isDisabled = isAllSources
+    ? eligibleSources.length === 0
+    : !activeSourceId ||
+      disabledSources.includes(activeSourceId) ||
+      !activeSourceMetadata ||
+      !isDiscoverySourceSystemEligible(activeSourceMetadata) ||
+      (isNsfwFiltered && activeSourceMetadata.isNsfw);
+  const supportsProviderFilters = isAllSources
+    ? eligibleSources.some((s) => s.capabilities?.filters === true)
+    : activeSourceMetadata?.capabilities?.filters === true;
 
   const deferredSearchInput = React.useDeferredValue(searchInput);
 
@@ -285,6 +288,32 @@ export function useLibraryCatalog() {
   }, [isMounted, selectedGenres, excludedGenres, selectedFormats, selectedStatuses, selectedCollections, selectedReadingStatuses, storeSort]);
 
   const fetchCatalog = async (currentPage: number) => {
+    if (activeSourceId === "all") {
+      const targetSourceIds = eligibleSources.map((s) => s.id);
+      if (targetSourceIds.length === 0) return { mangas: [], hasNextPage: false };
+
+      if (query.trim()) {
+        const res = await apiClient.searchGlobal(query.trim(), targetSourceIds, currentPage, isNsfwFiltered);
+        const results = res.canonicalResults?.length
+          ? res.canonicalResults.map((item) => ({ ...item.primaryResult, sourceBindings: item.sourceBindings }))
+          : Object.values(res.resultsBySource).flatMap((g) => g.results);
+        return { mangas: results, hasNextPage: false };
+      }
+
+      const latestSort = ["latest", "latestUploadedChapter"].includes(sort);
+      const promises = targetSourceIds.slice(0, 6).map(async (sid) => {
+        try {
+          const res = latestSort ? await apiClient.getLatest(sid, currentPage) : await apiClient.getPopular(sid, currentPage);
+          return res.mangas.map((m) => ({ ...m, sourceId: sid }));
+        } catch {
+          return [];
+        }
+      });
+      const settled = await Promise.all(promises);
+      const combined = settled.flat();
+      return { mangas: combined, hasNextPage: combined.length >= 20 };
+    }
+
     const hasFilters = selectedGenres.length > 0 || excludedGenres.length > 0 || selectedFormats.length > 0 || selectedStatuses.length > 0;
     const popularSort = ["popular", "all", "popularity", "followedCount"].includes(sort);
     const latestSort = ["latest", "latestUploadedChapter"].includes(sort);
@@ -475,13 +504,20 @@ export function useLibraryCatalog() {
   ];
 
   return {
-    sourceOptions: eligibleSources.map((source) => ({ value: source.id, label: source.name })),
+    sourceOptions: [
+      { value: "all", label: "Semua Sumber" },
+      ...eligibleSources.map((source) => ({ value: source.id, label: source.name })),
+    ],
     sourceChangeNotice,
     changeSource: (sourceId: string) => {
-      if (!eligibleSources.some((source) => source.id === sourceId) || sourceId === activeSourceId) return;
-      setSourceChangeNotice("Sumber berubah. Filter khusus sumber direset.");
+      const isAllowed = sourceId === "all" || eligibleSources.some((source) => source.id === sourceId);
+      if (!isAllowed || sourceId === activeSourceId) return;
+      setSourceChangeNotice(sourceId === "all" ? "Menampilkan semua sumber aktif." : "Sumber berubah. Filter khusus sumber direset.");
       const params = new URLSearchParams(searchParams.toString());
-      params.set("source", sourceId); params.delete("page"); params.delete("genre"); params.delete("sort");
+      params.set("source", sourceId);
+      params.delete("page");
+      params.delete("genre");
+      params.delete("sort");
       router.push(`${pathname}?${params}`, { scroll: false });
     },
     isMounted,

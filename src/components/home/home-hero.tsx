@@ -162,7 +162,7 @@ export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroP
       <section
         aria-labelledby="home-hero-title"
         className={cn(
-          "relative w-full overflow-hidden rounded-2xl border border-border-subtle/80 bg-surface-raised/70 p-4 sm:p-5 backdrop-blur-md transition-all shadow-xs",
+          "relative w-full overflow-hidden rounded-xl border border-border-subtle/80 bg-surface-raised/70 p-4 sm:p-5 backdrop-blur-md transition-all shadow-xs",
           className
         )}
       >
@@ -219,14 +219,14 @@ export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroP
             <span className="text-[11px] font-medium text-text-muted/80">Pintas:</span>
             <Link
               href="/popular"
-              className="inline-flex items-center gap-1.5 rounded-full border border-border-subtle/60 bg-surface-base/60 px-2.5 py-1 font-medium text-text-secondary hover:border-accent/40 hover:text-accent transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border-subtle/60 bg-surface-base/60 px-2.5 py-1 font-medium text-text-secondary hover:border-accent/40 hover:text-accent transition-colors"
             >
               <Sparkle size={13} className="text-accent" aria-hidden="true" />
               Populer
             </Link>
             <Link
               href="/bookmark"
-              className="inline-flex items-center gap-1.5 rounded-full border border-border-subtle/60 bg-surface-base/60 px-2.5 py-1 font-medium text-text-secondary hover:border-accent/40 hover:text-accent transition-colors"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border-subtle/60 bg-surface-base/60 px-2.5 py-1 font-medium text-text-secondary hover:border-accent/40 hover:text-accent transition-colors"
             >
               <BookmarkSimple size={13} aria-hidden="true" />
               Koleksi
@@ -237,26 +237,25 @@ export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroP
     );
   }
 
-  // Zero-History Reader: Editorial Spotlight concept with layered cover art and clear discovery CTAs
+  // Zero-History Reader: Editorial Spotlight concept with layered interactive cover art and clear discovery CTAs
   return (
     <section
       aria-labelledby="home-hero-title"
       className={cn(
-        "relative w-full overflow-hidden rounded-2xl border border-border-subtle/80 bg-surface-raised/70 transition-all min-h-[170px] sm:min-h-[195px] shadow-xs",
+        "relative w-full overflow-hidden rounded-xl border border-border-subtle/80 bg-gradient-to-br from-surface-raised via-surface-raised to-accent/[0.04] transition-all min-h-[170px] sm:min-h-[195px] shadow-xs",
         className
       )}
     >
       {/* Ambient background glow behind artwork */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -right-16 -top-16 size-72 rounded-full bg-accent/[0.05] blur-3xl"
+        className="pointer-events-none absolute -right-16 -top-16 size-72 rounded-full bg-accent/[0.06] blur-3xl"
       />
 
       {/* Layered editorial artwork preview strictly for discovery sessions */}
       {visibleCovers.length > 0 && (
         <div
-          aria-hidden="true"
-          className="pointer-events-none absolute right-0 top-0 h-[145px] w-[52%] overflow-hidden sm:inset-y-0 sm:h-auto sm:w-[48%] lg:w-[44%]"
+          className="absolute right-0 top-0 h-[145px] w-[52%] overflow-hidden sm:inset-y-0 sm:h-auto sm:w-[48%] lg:w-[44%] z-10"
           style={{
             maskImage: "linear-gradient(to right, transparent 0%, black 35%)",
             WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 35%)",
@@ -269,14 +268,15 @@ export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroP
             return (
               <div
                 key={`${cover.coverUrl}-${index}`}
+                title={cover.title}
                 className={cn(
-                  "absolute aspect-[2/3] overflow-hidden rounded-lg border border-border-subtle/70 bg-surface-muted shadow-md transition-transform duration-300",
+                  "absolute aspect-[2/3] overflow-hidden rounded-lg border border-border-subtle/80 bg-surface-muted shadow-md transition-all duration-300 hover:scale-105 hover:shadow-xl hover:z-30 cursor-pointer",
                   coverCardStyles[index] ?? coverCardStyles[2]
                 )}
               >
                 <img
                   src={cover.coverUrl}
-                  alt=""
+                  alt={cover.title}
                   referrerPolicy="no-referrer"
                   decoding="async"
                   loading="eager"
@@ -296,7 +296,7 @@ export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroP
                   }
                   className={cn(
                     "size-full object-cover transition-opacity duration-300",
-                    loaded ? "opacity-60 sm:opacity-75 lg:opacity-85" : "opacity-0"
+                    loaded ? "opacity-75 hover:opacity-100 sm:opacity-85 lg:opacity-95" : "opacity-0"
                   )}
                 />
               </div>
@@ -306,11 +306,17 @@ export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroP
       )}
 
       <div className="relative z-10 flex flex-col justify-center p-5 sm:max-w-[62%] sm:p-6 lg:max-w-[58%] lg:px-7 min-h-[170px] sm:min-h-[195px]">
-        <div className="flex items-center gap-2 mb-1">
-          <span className="size-1.5 rounded-full bg-accent" aria-hidden="true" />
-          <p className="text-[10.5px] sm:text-[11px] font-extrabold uppercase tracking-[0.14em] text-accent">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1.5">
+          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-accent">
             BACAANMU DIMULAI DI SINI
           </p>
+          <span className="inline-flex items-center gap-1 rounded-md bg-accent/10 border border-accent/20 px-2 py-0.5 text-[10px] font-bold text-accent uppercase tracking-wider">
+            <Sparkle size={11} weight="fill" />
+            Katalog Multi-Sumber
+          </span>
+          <span className="hidden sm:inline-flex items-center rounded-md bg-surface-base/80 border border-border-subtle px-2 py-0.5 text-[10px] font-semibold text-text-muted">
+            9 Sumber Aktif
+          </span>
         </div>
 
         <h1

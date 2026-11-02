@@ -4,6 +4,7 @@ import { ReaderPageScrubber } from "./reader-page-scrubber";
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
+import { useTheme } from "next-themes"
 import { useReaderStore, useEffectiveReaderPreferences } from "@/shared/store/reader-store"
 import { CaretLeft, Gear, CaretRight, List, CaretUp, BookmarkSimple, ArrowLeft, House } from "@phosphor-icons/react"
 import { useLibraryStore } from "@/shared/store/library-store"
@@ -34,6 +35,7 @@ interface ReaderShellProps {
   children: React.ReactNode
   isNsfw?: boolean
   mangaTitle?: string
+  coverUrl?: string
   chapterTitle?: string
   pageCount?: number
   currentChapterId?: string
@@ -45,6 +47,7 @@ interface ReaderShellProps {
 export function ReaderShell({
   children,
   mangaTitle,
+  coverUrl,
   isNsfw,
   chapterTitle = "Chapter",
   pageCount,
@@ -98,6 +101,12 @@ export function ReaderShell({
     router.replace(href);
   }
 
+  const getResolvedCoverUrl = () => {
+    if (coverUrl) return coverUrl;
+    const existing = useLibraryStore.getState().items[`${sourceId}::${mangaId}`];
+    return existing?.coverUrl || "";
+  };
+
   const handleToggleBookmark = (e: React.MouseEvent) => {
     e.stopPropagation()
     const wasInLibrary = useLibraryStore.getState().isInLibrary(sourceId, mangaId)
@@ -105,31 +114,35 @@ export function ReaderShell({
       sourceId,
       mangaId,
       title: mangaTitle || chapterTitle.split(" - ")[0] || "Komik",
-      coverUrl: "",
+      coverUrl: getResolvedCoverUrl(),
       isNsfw,
       addedAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     })
     const toastId = `bookmark-toggle-${sourceId}-${mangaId}`
     if (wasInLibrary) {
-      toast.info("Dihapus dari Bookmark", {
-        id: toastId,
-        description: "Komik ini dikeluarkan dari daftar bookmark.",
-      })
+      toast.info("Dihapus dari Bookmark", { id: toastId })
     } else {
-      toast.success("Disimpan ke Bookmark", {
-        id: toastId,
-        description: "Komik ini ditambahkan ke daftar bookmark.",
-      })
+      toast.success("Disimpan ke Bookmark", { id: toastId })
     }
   }
 
+  const { resolvedTheme } = useTheme();
+  const isLightReader =
+    preferences.background === "mist" ||
+    (preferences.background === "system" && resolvedTheme === "light");
+
   const getBackgroundColor = () => {
     switch (preferences.background) {
-      case 'deepLagoon': return '#003135';
-      case 'mist': return '#f8fafc';
-      case 'black':
-      default: return '#000000';
+      case "system":
+        return resolvedTheme === "light" ? "#f9f9fb" : "#000000";
+      case "mist":
+        return "#f9f9fb";
+      case "deepLagoon":
+        return "#003135";
+      case "black":
+      default:
+        return "#000000";
     }
   }
 
@@ -143,7 +156,7 @@ export function ReaderShell({
         id, description: "Sudah lebih dari 3 chapter. Bookmark komik ini supaya mudah dilanjutkan.", duration: 10_000,
         action: { label: "Simpan", onClick: () => {
           if (useLibraryStore.getState().isInLibrary(sourceId, mangaId)) return;
-          toggleLibrary({ sourceId, mangaId, title: mangaTitle || "Komik", coverUrl: "", isNsfw, addedAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
+          toggleLibrary({ sourceId, mangaId, title: mangaTitle || "Komik", coverUrl: getResolvedCoverUrl(), isNsfw, addedAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
           toast.success("Disimpan ke Library");
         } },
       });
@@ -255,9 +268,9 @@ export function ReaderShell({
   return (
     <div
       className={cn(
-        "relative min-h-screen w-full transition-[padding] duration-150",
+        "relative min-h-screen w-full transition-[padding,background-color] duration-150",
         isDesktopPanelOpen && "md:pr-[320px]",
-        preferences.background !== 'mist' && "dark"
+        !isLightReader && "dark"
       )}
       style={{ backgroundColor: getBackgroundColor() }}
     >
@@ -289,20 +302,20 @@ export function ReaderShell({
             <div className="w-full pt-[calc(var(--safe-top)+10px)] pb-3 px-3 flex items-center justify-center pointer-events-none">
               <div
                 className={cn(
-                  "yomirra-chrome pointer-events-auto relative overflow-hidden flex items-center justify-between w-full max-w-md md:max-w-2xl h-[52px] sm:h-[56px] px-2.5 sm:px-3 rounded-full transition-all duration-200 text-text-primary"
+                  "yomirra-chrome pointer-events-auto relative overflow-hidden flex items-center justify-between w-full max-w-md md:max-w-2xl h-[52px] sm:h-[56px] px-2.5 sm:px-3 rounded-xl transition-all duration-200 text-text-primary"
                 )}
               >
                 {/* Left: Back Button */}
                 <motion.button
                   aria-label="Kembali ke detail komik"
                   whileTap={reducedMotion ? undefined : { scale: 0.97 }}
-                  className="yomirra-chrome-control flex size-11 items-center justify-center rounded-xl text-text-secondary hover:text-text-primary transition-all shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                  className="yomirra-chrome-control flex size-11 items-center justify-center rounded-xl text-text-muted hover:text-text-primary hover:bg-surface-hover/80 active:scale-95 transition-all shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                   onClick={handleBack}
                 >
                   <ArrowLeft size={18} weight="regular" />
                 </motion.button>
 
-                <IconButton aria-label="Kembali ke Beranda" onClick={(event) => { event.stopPropagation(); if (beginNavigationIntent("/")) router.replace("/"); }}><House size={18} weight="regular" /></IconButton>
+                <IconButton aria-label="Kembali ke Beranda" className="text-text-muted hover:text-text-primary hover:bg-surface-hover/80" onClick={(event) => { event.stopPropagation(); if (beginNavigationIntent("/")) router.replace("/"); }}><House size={18} weight="regular" /></IconButton>
                 {/* Center: Manga Title (Top) & Chapter (Bottom) */}
                 <div className="flex flex-col items-center justify-center px-3 min-w-0 flex-1 select-none">
                   <span className="text-sm sm:text-[15px] font-bold truncate w-full max-w-full tracking-tight text-center leading-tight text-text-primary">
@@ -324,10 +337,10 @@ export function ReaderShell({
                   aria-label={isSaved ? "Hapus dari bookmark" : "Simpan ke bookmark"}
                   whileTap={reducedMotion ? undefined : { scale: 0.97 }}
                   className={cn(
-                    "yomirra-chrome-control flex size-11 items-center justify-center rounded-xl transition-all shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent",
+                    "yomirra-chrome-control flex size-11 items-center justify-center rounded-xl transition-all shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
                     isSaved
-                      ? "bg-accent text-white border-accent shadow-xs"
-                      : "text-text-secondary hover:text-text-primary hover:bg-surface-hover"
+                      ? "bg-accent text-accent-on border-accent shadow-xs"
+                      : "text-text-muted hover:text-text-primary hover:bg-surface-hover/80 active:scale-95"
                   )}
                   onClick={handleToggleBookmark}
                 >
@@ -383,90 +396,114 @@ export function ReaderShell({
                     e.stopPropagation();
                     window.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" });
                   }}
-                  className="yomirra-chrome pointer-events-auto self-end flex size-10 items-center justify-center rounded-xl text-text-secondary hover:text-text-primary transition-all  cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent"
+                  className="yomirra-chrome pointer-events-auto self-end flex size-10 items-center justify-center rounded-xl text-text-muted hover:text-text-primary hover:bg-surface-hover/80 active:scale-95 transition-all cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                   aria-label="Kembali ke atas"
                 >
                   <CaretUp size={18} weight="regular" />
                 </motion.button>
               )}
 
-              {/* Yomirra Reader Control Dock */}
-              <div className="yomirra-chrome pointer-events-auto flex h-[60px] w-full max-w-[440px] mx-auto items-center justify-between gap-2 rounded-full text-text-primary px-3 transition-all duration-200">
-                <motion.button
-                  aria-label="Chapter sebelumnya"
-                  whileTap={reducedMotion ? undefined : { scale: 0.97 }}
-                  className={cn(
-                    "yomirra-chrome-control flex size-11 items-center justify-center rounded-xl text-text-secondary hover:text-text-primary transition-all shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent",
-                    !prevChapterId && "opacity-30 cursor-not-allowed pointer-events-none"
-                  )}
-                  disabled={!prevChapterId}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (prevChapterId) {
-                      const href = getReaderHref(sourceId, mangaId, prevChapterId);
-                      if (beginNavigationIntent(href)) router.replace(href);
-                    }
-                  }}
-                >
-                  <CaretLeft size={20} weight="regular" />
-                </motion.button>
+              {/* Yomirra Reader Unified Control Dock */}
+              <div className="yomirra-chrome pointer-events-auto flex flex-col w-full max-w-[460px] mx-auto rounded-xl p-3 transition-all duration-200 text-text-primary gap-2.5">
+                {/* Embedded Page Scrubber when page navigation is available */}
+                {preferences.showPageProgress && pageNavigation?.key === `${sourceId}::${mangaId}::${currentChapterId}` && (
+                  <>
+                    <ReaderPageScrubber
+                      navigation={pageNavigation}
+                      direction={preferences.readingDirection}
+                    />
+                    <div className="h-px w-full bg-border-subtle" />
+                  </>
+                )}
 
-                <motion.button
-                  whileTap={reducedMotion ? undefined : { scale: 0.97 }}
-                  className="flex-1 h-11 rounded-xl font-bold text-sm bg-accent hover:bg-accent-hover text-white shadow-xs transition-all truncate px-3.5 flex items-center justify-center gap-1.5 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setIsChapterDrawerOpen(true);
-                  }}
-                >
-                  <List size={18} weight="regular" className="shrink-0" />
-                  <span className="truncate">Daftar chapter</span>
-                </motion.button>
+                {/* Chapter Navigation Controls */}
+                <div className="flex h-11 items-center justify-between gap-2">
+                  <motion.button
+                    aria-label="Chapter sebelumnya"
+                    whileTap={reducedMotion ? undefined : { scale: 0.97 }}
+                    className={cn(
+                      "yomirra-chrome-control flex size-11 items-center justify-center rounded-xl text-text-muted hover:text-text-primary hover:bg-surface-hover/80 active:scale-95 transition-all shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+                      !prevChapterId && "opacity-30 cursor-not-allowed pointer-events-none"
+                    )}
+                    disabled={!prevChapterId}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (prevChapterId) {
+                        const href = getReaderHref(sourceId, mangaId, prevChapterId);
+                        if (beginNavigationIntent(href)) router.replace(href);
+                      }
+                    }}
+                  >
+                    <CaretLeft size={20} weight="regular" />
+                  </motion.button>
 
-                <motion.button
-                  aria-label="Chapter berikutnya"
-                  whileTap={reducedMotion ? undefined : { scale: 0.97 }}
-                  className={cn(
-                    "yomirra-chrome-control flex size-11 items-center justify-center rounded-xl text-text-secondary hover:text-text-primary transition-all shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent",
-                    !nextChapterId && "opacity-30 cursor-not-allowed pointer-events-none"
-                  )}
-                  disabled={!nextChapterId}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (nextChapterId) {
-                      const href = getReaderHref(sourceId, mangaId, nextChapterId);
-                      if (beginNavigationIntent(href)) router.replace(href);
-                    }
-                  }}
-                >
-                  <CaretRight size={20} weight="regular" />
-                </motion.button>
+                  <motion.button
+                    whileTap={reducedMotion ? undefined : { scale: 0.97 }}
+                    className="flex-1 h-11 rounded-xl font-bold text-sm bg-accent hover:bg-accent-hover text-accent-on shadow-xs transition-all truncate px-3.5 flex items-center justify-center gap-1.5 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:scale-95"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setIsChapterDrawerOpen(true);
+                    }}
+                  >
+                    <List size={18} weight="regular" className="shrink-0" />
+                    <span className="truncate">Daftar chapter</span>
+                  </motion.button>
 
-                <motion.button
-                  aria-label="Pengaturan pembaca"
-                  whileTap={reducedMotion ? undefined : { scale: 0.97 }}
-                  className="yomirra-chrome-control flex size-11 items-center justify-center rounded-xl text-text-secondary hover:text-text-primary transition-all shrink-0 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (window.innerWidth >= 768) {
-                      toggleDesktopPanel();
-                    } else {
-                      setIsDrawerOpen(true);
-                    }
-                  }}
-                >
-                  <Gear size={20} weight="regular" />
-                </motion.button>
+                  <motion.button
+                    aria-label="Chapter berikutnya"
+                    whileTap={reducedMotion ? undefined : { scale: 0.97 }}
+                    className={cn(
+                      "yomirra-chrome-control flex size-11 items-center justify-center rounded-xl text-text-muted hover:text-text-primary hover:bg-surface-hover/80 active:scale-95 transition-all shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+                      !nextChapterId && "opacity-30 cursor-not-allowed pointer-events-none"
+                    )}
+                    disabled={!nextChapterId}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (nextChapterId) {
+                        const href = getReaderHref(sourceId, mangaId, nextChapterId);
+                        if (beginNavigationIntent(href)) router.replace(href);
+                      }
+                    }}
+                  >
+                    <CaretRight size={20} weight="regular" />
+                  </motion.button>
+
+                  <motion.button
+                    aria-label="Pengaturan pembaca"
+                    whileTap={reducedMotion ? undefined : { scale: 0.97 }}
+                    className="yomirra-chrome-control flex size-11 items-center justify-center rounded-xl text-text-muted hover:text-text-primary hover:bg-surface-hover/80 active:scale-95 transition-all shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (window.innerWidth >= 768) {
+                        toggleDesktopPanel();
+                      } else {
+                        setIsDrawerOpen(true);
+                      }
+                    }}
+                  >
+                    <Gear size={20} weight="regular" />
+                  </motion.button>
+                </div>
               </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {preferences.showPageProgress && pageNavigation?.key === `${sourceId}::${mangaId}::${currentChapterId}` && (
-        <div className={cn("fixed inset-x-0 z-[66] flex justify-center px-3 pointer-events-none", isDesktopPanelOpen && "md:right-[320px]")}
-          style={{ bottom: `calc(var(--safe-bottom, 0px) + ${isOverlayVisible ? 82 : 12}px)` }}>
-          <ReaderPageScrubber navigation={pageNavigation} direction={preferences.readingDirection} />
+      {/* Unobtrusive Minimal Page Badge while reading (overlay hidden) */}
+      {!isOverlayVisible && preferences.showPageProgress && pageNavigation?.key === `${sourceId}::${mangaId}::${currentChapterId}` && (
+        <div
+          className={cn(
+            "fixed right-3 z-30 pointer-events-none transition-all duration-200",
+            isDesktopPanelOpen && "md:right-[332px]"
+          )}
+          style={{ bottom: "calc(var(--safe-bottom, 0px) + 12px)" }}
+        >
+          <ReaderPageScrubber
+            navigation={pageNavigation}
+            direction={preferences.readingDirection}
+            minimal
+          />
         </div>
       )}
 

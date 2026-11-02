@@ -13,8 +13,8 @@ export default function Loading() {
           subtitle="Pilih sumber yang digunakan untuk menjelajah dan membaca komik."
           icon={<HardDrives size={24} weight="regular" />}
         />
-        <Skeleton className="h-16 w-full rounded-2xl" />
-        <Skeleton className="h-11 w-full max-w-md rounded-2xl" />
+        <Skeleton className="h-16 w-full rounded-xl" />
+        <Skeleton className="h-11 w-full max-w-md rounded-xl" />
         <SourceListSkeleton />
       </PageContainer>
     </YomirraSurface>

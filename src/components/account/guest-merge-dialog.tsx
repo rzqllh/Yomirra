@@ -99,7 +99,7 @@ export function GuestMergeDialog() {
         aria-labelledby="merge-error-title"
         className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
       >
-        <div className="relative w-full max-w-md rounded-2xl border border-status-error-fg/30 bg-surface-raised p-5 sm:p-6 shadow-2xl space-y-4">
+        <div className="relative w-full max-w-md rounded-xl border border-status-error-fg/30 bg-surface-raised p-5 sm:p-6 shadow-2xl space-y-4">
           <div className="flex items-start gap-3">
             <div className="size-10 rounded-xl bg-status-error-bg/60 border border-status-error-fg/30 flex items-center justify-center text-status-error-fg shrink-0 mt-0.5">
               <WarningCircle size={22} weight="regular" />
@@ -276,7 +276,7 @@ export function GuestMergeDialog() {
       aria-describedby="guest-merge-desc"
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
     >
-      <div className="relative w-full max-w-lg rounded-2xl border border-border-default/80 bg-surface-raised p-5 sm:p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
+      <div className="relative w-full max-w-lg rounded-xl border border-border-default/80 bg-surface-raised p-5 sm:p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-start gap-3">
           <div className="size-10 rounded-xl bg-accent/15 border border-accent/25 flex items-center justify-center text-accent shrink-0 mt-0.5">

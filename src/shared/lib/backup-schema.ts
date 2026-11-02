@@ -68,7 +68,7 @@ export const whitelistedSettingsSchema = z.object({
 export const readerPreferencesBackupSchema = z.object({
   imageFit: z.enum(["width", "contained"]),
   pageGap: z.enum(["none", "small", "comfortable"]),
-  background: z.enum(["black", "deepLagoon", "mist"]),
+  background: z.enum(["black", "deepLagoon", "mist", "system"]),
   toolbarBehavior: z.enum(["auto-hide", "always-visible"]),
   preloadIntensity: z.enum(["light", "balanced", "aggressive"]),
   showPageProgress: z.boolean(),

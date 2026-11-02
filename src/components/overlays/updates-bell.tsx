@@ -138,7 +138,7 @@ export function UpdatesBell({ className }: { className?: string } = {}) {
       <DropdownMenuContent
         align="end"
         sideOffset={8}
-        className="w-80 sm:w-88 p-0 rounded-2xl bg-surface-overlay/95 backdrop-blur-xl border border-border-subtle shadow-xl overflow-hidden z-[100]"
+        className="w-80 sm:w-88 p-0 rounded-xl bg-surface-overlay/95 backdrop-blur-xl border border-border-subtle shadow-xl overflow-hidden z-[100]"
       >
         <div className="flex items-center justify-between px-4 py-3 border-b border-border-subtle bg-surface-raised/40">
           <div className="flex items-center gap-2">

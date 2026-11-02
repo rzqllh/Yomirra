@@ -32,9 +32,11 @@ export async function GET(
     return NextResponse.json({ data: filters });
   } catch (error: unknown) {
     console.error(`[API] Error fetching filters:`, error);
-    return NextResponse.json({ 
-      error: { code: "INTERNAL_ERROR", message: error instanceof Error ? error.message : "Failed to fetch filters" } 
-    }, { status: 500 });
+    // Graceful fallback for upstream provider timeouts or temporary network failures
+    return NextResponse.json({
+      data: { genres: [], formats: [], statuses: [], sorts: [] },
+      warning: error instanceof Error ? error.message : "Failed to fetch upstream filters",
+    });
   }
 }
 

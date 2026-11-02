@@ -83,13 +83,13 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
         className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden bg-surface-base text-text-primary select-none"
       >
         <div className="relative z-10 flex flex-col items-center justify-center w-full h-full pb-16">
-          <div className="relative size-24 sm:size-28 rounded-2xl sm:rounded-3xl overflow-hidden bg-surface-raised border border-border-subtle p-0.5 shadow-md">
+          <div className="relative size-24 sm:size-28 rounded-xl overflow-hidden bg-surface-raised border border-border-subtle p-0.5 shadow-md">
             <img
               src="/icon-pwa.png"
               alt="Yomirra Logo"
               width={112}
               height={112}
-              className="w-full h-full object-cover rounded-[14px] sm:rounded-[22px] select-none"
+              className="w-full h-full object-cover rounded-lg select-none"
               loading="eager"
             />
           </div>
@@ -132,13 +132,13 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
         >
           <div className="absolute -inset-2 rounded-[28px] sm:rounded-[32px] bg-accent/10 blur-xl opacity-60 dark:opacity-80" />
 
-          <div className="relative size-24 sm:size-28 rounded-2xl sm:rounded-3xl overflow-hidden bg-surface-raised border border-border-subtle shadow-md dark:shadow-[0_20px_40px_rgba(0,0,0,0.5)] p-0.5">
+          <div className="relative size-24 sm:size-28 rounded-xl overflow-hidden bg-surface-raised border border-border-subtle shadow-md dark:shadow-[0_20px_40px_rgba(0,0,0,0.5)] p-0.5">
             <img
               src="/icon-pwa.png"
               alt="Yomirra Logo"
               width={112}
               height={112}
-              className="w-full h-full object-cover rounded-[14px] sm:rounded-[22px] select-none"
+              className="w-full h-full object-cover rounded-lg select-none"
               loading="eager"
               decoding="sync"
             />
@@ -206,7 +206,7 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
               initial={reducedMotion ? false : { opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={reducedMotion ? { duration: 0 } : transitions.gentle}
-              className="flex flex-col items-center gap-2 text-center p-5 rounded-2xl bg-surface-raised border border-border-subtle shadow-md max-w-xs"
+              className="flex flex-col items-center gap-2 text-center p-5 rounded-xl bg-surface-raised border border-border-subtle shadow-md max-w-xs"
             >
               <p className="text-sm font-bold text-text-primary">
                 Koneksi Lagi Pelan
