@@ -26,12 +26,29 @@ type CommandDialogProps = React.ComponentPropsWithoutRef<typeof Dialog> &
   Pick<React.ComponentPropsWithoutRef<typeof CommandPrimitive>, "shouldFilter" | "filter">
 
 const CommandDialog = ({ children, shouldFilter, filter, ...props }: CommandDialogProps) => {
+  const [viewport, setViewport] = React.useState<{ height: number; offset: number; width: number; left: number; scale: number } | null>(null);
+  React.useEffect(() => {
+    if (!props.open) return;
+    const visual = window.visualViewport;
+    const update = () => setViewport({ height: visual?.height ?? window.innerHeight, offset: visual?.offsetTop ?? 0, width: visual?.width ?? window.innerWidth, left: visual?.offsetLeft ?? 0, scale: visual?.scale ?? 1 });
+    update();
+    visual?.addEventListener("resize", update);
+    visual?.addEventListener("scroll", update);
+    window.addEventListener("resize", update);
+    return () => {
+      visual?.removeEventListener("resize", update);
+      visual?.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, [props.open]);
+
   return (
     <Dialog {...props}>
       <DialogPortal>
         <DialogOverlay />
         <DialogPrimitive.Content
-          className="command-dialog-content fixed left-1/2 -translate-x-1/2 top-[8vh] sm:top-[12vh] z-[var(--z-overlay)] w-[calc(100vw-28px)] sm:w-full sm:max-w-xl max-h-[82dvh] rounded-xl border border-border-default bg-surface-overlay text-text-primary shadow-2xl p-0 overflow-hidden outline-none flex flex-col"
+          className="command-dialog-content fixed left-1/2 top-1/2 z-[var(--z-overlay)] w-[calc(100vw-32px)] max-w-xl max-h-[calc(100dvh-32px)] rounded-xl border border-border-default bg-surface-overlay text-text-primary shadow-2xl p-0 overflow-hidden outline-none flex flex-col"
+          style={viewport ? { transform: "translate(-50%, -50%)", left: viewport.scale === 1 && viewport.left === 0 ? "50%" : viewport.left + viewport.width / 2, width: Math.max(0, viewport.width - 32), top: viewport.offset + viewport.height / 2, maxHeight: `calc(${Math.max(0, viewport.height - 32)}px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))` } : { transform: "translate(-50%, -50%)" }}
           onCloseAutoFocus={(e) => {
             e.preventDefault();
           }}
