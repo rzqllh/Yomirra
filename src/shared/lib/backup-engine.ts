@@ -9,7 +9,8 @@ import { useCollectionStore } from "@/shared/store/collection-store";
 import type { MangaUpdateItem } from "@/shared/types/update";
 import type { Collection, ReadingStatus } from "@/shared/types/collection";
 import { retainHistory } from "./history-retention";
-import { version as appVersion } from "../../../package.json";
+import packageInfo from "../../../package.json";
+const appVersion = packageInfo.version;
 import {
   yomirraBackupSchemaV1,
   yomirraBackupSchemaV2,
