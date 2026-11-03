@@ -20,6 +20,8 @@ export function ReaderPageScrubber({
   const total = Math.max(0, navigation.total);
   if (!total) return null;
   const page = Math.min(total, Math.max(1, navigation.index + 1));
+  const isContinuous = navigation.mode === "continuous";
+  const progressPercent = Math.min(100, Math.max(0, Math.round(navigation.progress ?? 0)));
 
   if (minimal) {
     return (
@@ -30,7 +32,66 @@ export function ReaderPageScrubber({
         )}
         data-testid="reader-page-scrubber"
       >
-        <span>{page} / {total}</span>
+        <span>
+          {isContinuous ? `${progressPercent}%` : `${page} / ${total}`}
+        </span>
+      </div>
+    );
+  }
+
+  if (isContinuous) {
+    return (
+      <div
+        className={cn("w-full flex flex-col gap-1 text-text-primary select-none", className)}
+        data-testid="reader-page-scrubber"
+      >
+        <div className="flex items-center justify-between text-xs font-semibold text-text-muted px-1">
+          <label htmlFor="reader-webtoon-range">Progress</label>
+          <output htmlFor="reader-webtoon-range" aria-live="off" className="text-text-primary font-bold font-mono">
+            {progressPercent}% <span className="font-normal text-text-muted text-[11px]">(Hal. {page} / {total})</span>
+          </output>
+        </div>
+        <div className="flex h-10 items-center gap-1">
+          <button
+            type="button"
+            aria-label="Bagian sebelumnya"
+            disabled={navigation.canPrevious !== undefined ? !navigation.canPrevious : page <= 1}
+            onClick={() => navigation.previous ? navigation.previous() : navigation.seek(page - 2)}
+            className="flex size-9 shrink-0 items-center justify-center rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-hover/80 active:scale-95 disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-accent cursor-pointer transition-colors"
+          >
+            <CaretLeft size={16} />
+          </button>
+          <div className="relative flex min-w-0 flex-1 items-center h-10">
+            <input
+              id="reader-webtoon-range"
+              type="range"
+              min={0}
+              max={100}
+              step={1}
+              value={progressPercent}
+              aria-label="Progress membaca"
+              aria-valuetext={`${progressPercent}%`}
+              className="reader-page-range relative z-10 h-10 w-full cursor-pointer bg-transparent accent-accent focus-visible:outline-2 focus-visible:outline-accent"
+              onChange={(event) => {
+                const percent = Number(event.target.value);
+                if (navigation.seekProgress) {
+                  navigation.seekProgress(percent);
+                } else {
+                  navigation.seek(Math.round((percent / 100) * (total - 1)));
+                }
+              }}
+            />
+          </div>
+          <button
+            type="button"
+            aria-label="Bagian berikutnya"
+            disabled={navigation.canNext !== undefined ? !navigation.canNext : page >= total}
+            onClick={() => navigation.next ? navigation.next() : navigation.seek(page)}
+            className="flex size-9 shrink-0 items-center justify-center rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-hover/80 active:scale-95 disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-accent cursor-pointer transition-colors"
+          >
+            <CaretRight size={16} />
+          </button>
+        </div>
       </div>
     );
   }

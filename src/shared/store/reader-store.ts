@@ -12,6 +12,9 @@ export interface ReaderPageNavigation {
   next?: () => void;
   canPrevious?: boolean;
   canNext?: boolean;
+  mode?: "paged" | "continuous";
+  progress?: number;
+  seekProgress?: (percent: number) => void;
 }
 
 interface ReaderState {

@@ -169,6 +169,42 @@ describe("ReaderShell Header & Progress Bar", () => {
     expect(useReaderStore.getState().pageNavigation?.seek).toHaveBeenCalledWith(3);
   });
 
+  it("renders continuous 0-100% progress scrubber without page dots for webtoon continuous mode", () => {
+    const mockSeekProgress = vi.fn();
+    useReaderStore.setState({
+      pageNavigation: {
+        key: "srcA::m1::ch1",
+        index: 1,
+        total: 20,
+        seek: vi.fn(),
+        mode: "continuous",
+        progress: 42,
+        seekProgress: mockSeekProgress,
+      },
+    });
+
+    render(
+      <ReaderShell
+        mangaTitle="Solo Leveling"
+        chapterTitle="Chapter 1"
+        currentChapterId="ch1"
+        sourceId="srcA"
+        mangaId="m1"
+      >
+        <div>Content</div>
+      </ReaderShell>
+    );
+
+    expect(screen.queryByTestId("reader-page-dots")).toBeNull();
+    const scrubber = screen.getByRole("slider", { name: "Progress membaca" });
+    expect(scrubber).toBeDefined();
+    expect(scrubber.getAttribute("value")).toBe("42");
+    expect(scrubber.getAttribute("aria-valuetext")).toBe("42%");
+
+    fireEvent.change(scrubber, { target: { value: "75" } });
+    expect(mockSeekProgress).toHaveBeenCalledWith(75);
+  });
+
   it("saves bookmark using mangaTitle", () => {
     render(
       <ReaderShell

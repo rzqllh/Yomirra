@@ -212,6 +212,50 @@ export function ContinuousVerticalReader({
     }
   }, [isRestored, firstVisibleVirtualIndex, queueStartIndex, revealedThrough, lookAheadWindow]);
 
+  const [scrollProgress, setScrollProgress] = React.useState(0);
+
+  const calculateScrollProgress = React.useCallback(() => {
+    if (typeof window === "undefined") return 0;
+    const scrollEl = document.documentElement;
+    const maxScroll = scrollEl.scrollHeight - window.innerHeight;
+    if (maxScroll <= 0) return 0;
+    return Math.min(100, Math.max(0, (window.scrollY / maxScroll) * 100));
+  }, []);
+
+  const seekProgress = React.useCallback((percent: number) => {
+    if (typeof window === "undefined") return;
+    const scrollEl = document.documentElement;
+    const maxScroll = scrollEl.scrollHeight - window.innerHeight;
+    if (maxScroll <= 0) return;
+    const targetY = (Math.max(0, Math.min(100, percent)) / 100) * maxScroll;
+    window.scrollTo({ top: targetY, behavior: "smooth" });
+  }, []);
+
+  React.useEffect(() => {
+    let animationFrameId: number;
+    const onScrollOrResize = () => {
+      cancelAnimationFrame(animationFrameId);
+      animationFrameId = requestAnimationFrame(() => {
+        setScrollProgress(calculateScrollProgress());
+      });
+    };
+
+    window.addEventListener("scroll", onScrollOrResize, { passive: true });
+    window.addEventListener("resize", onScrollOrResize, { passive: true });
+    onScrollOrResize();
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+      window.removeEventListener("scroll", onScrollOrResize);
+      window.removeEventListener("resize", onScrollOrResize);
+    };
+  }, [calculateScrollProgress, currentPages.length, isRestored]);
+
+  const totalVirtualSize = virtualizer.getTotalSize();
+  React.useEffect(() => {
+    setScrollProgress(calculateScrollProgress());
+  }, [totalVirtualSize, calculateScrollProgress]);
+
   const navigationKey = `${sourceId}::${mangaId}::${chapterId}`;
   const seekPage = React.useCallback((index: number) => {
     const target = Math.max(0, Math.min(index, currentPages.length - 1));
@@ -221,8 +265,16 @@ export function ContinuousVerticalReader({
     setActivePage(target);
   }, [virtualizer, currentPages.length]);
   React.useEffect(() => {
-    setPageNavigation({ key: navigationKey, index: activePage, total: currentPages.length, seek: seekPage });
-  }, [navigationKey, activePage, currentPages.length, seekPage, setPageNavigation]);
+    setPageNavigation({
+      key: navigationKey,
+      index: activePage,
+      total: currentPages.length,
+      seek: seekPage,
+      mode: "continuous",
+      progress: scrollProgress,
+      seekProgress,
+    });
+  }, [navigationKey, activePage, currentPages.length, seekPage, scrollProgress, seekProgress, setPageNavigation]);
   React.useEffect(() => () => {
     if (useReaderStore.getState().pageNavigation?.key === navigationKey) setPageNavigation(null);
   }, [navigationKey, setPageNavigation]);
