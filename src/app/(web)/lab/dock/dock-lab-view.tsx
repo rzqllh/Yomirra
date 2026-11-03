@@ -95,21 +95,23 @@ const VARIANTS: VariantMeta[] = [
   {
     id: 3,
     codename: "Dynamic Island",
-    title: "Varian 3: Dynamic Island (Morphing)",
-    archetype: "Morphing Contextual Island",
-    tag: "Motion Interactive",
-    height: "56px (Morphs to 64px on Expand)",
-    reachability: "A",
-    motionLevel: "High",
+    title: "Varian 3: Dynamic Island Yomirra (Terpilih)",
+    archetype: "Fluid Morphing Glass Capsule + Prominent Search",
+    tag: "Pilihan Owner — Yomirra Native",
+    height: "56px (Concentric rounded-2xl)",
+    reachability: "A+",
+    motionLevel: "Medium",
     description:
-      "Kapsul navigasi pintar yang membesar saat tab aktif dipilih untuk menampilkan label deskriptif, dan mengecil saat idle/scrolling untuk memaksimalkan area baca.",
+      "Desain Dynamic Island yang di-redesign menggunakan layout language, concentric squircle radius, dan semantic tokens Yomirra (.yomirra-chrome). Bebas hardcoded black/white (100% Light/Dark adaptive), memiliki tombol Cari prominent dengan divider kaca, safe-area iOS, dan morphing tab beranimasi spring.",
     pros: [
-      "Sangat hidup dan responsif secara kinestetik",
-      "Memperjelas konteks rute aktif dengan mikro-copy",
-      "Memberikan kesan aplikasi premium tier atas",
+      "100% selaras dengan design tokens Yomirra (.yomirra-chrome & var(--surface-glass))",
+      "Adaptif otomatis terhadap Dark Mode & Light Mode tanpa warna hardcoded",
+      "Tombol Cari prominent dengan aksen punch dan divider kaca pemisah",
+      "Target sentuh terverifikasi minimal 44x44px di setiap tombol",
+      "Fluid morphing container dengan spring animation yang dinamis & responsif",
     ],
     cons: [
-      "Motion terus-menerus bisa mengalihkan perhatian jika tanpa preferensi reduced-motion",
+      "Memerlukan GPU compositing ringan untuk backdrop-filter blur 20px pada perangkat ultra low-end",
     ],
     component: Variant3DynamicIsland,
   },
@@ -264,7 +266,7 @@ const VARIANTS: VariantMeta[] = [
 ]
 
 export function DockLabView() {
-  const [selectedVariantId, setSelectedVariantId] = React.useState<number>(1)
+  const [selectedVariantId, setSelectedVariantId] = React.useState<number>(3)
   const [activeTab, setActiveTab] = React.useState<string>("beranda")
   const [safeAreaBottom, setSafeAreaBottom] = React.useState<number>(16)
   const [showTargetOverlay, setShowTargetOverlay] = React.useState<boolean>(false)

@@ -188,7 +188,7 @@ export function Variant2UnifiedPill({
 }
 
 // ---------------------------------------------------------------------------
-// VARIANT 3: Dynamic Island / Fluid Morphing
+// VARIANT 3: Dynamic Island Yomirra (Fluid Morphing + Semantic Tokens)
 // ---------------------------------------------------------------------------
 export function Variant3DynamicIsland({
   activeTab,
@@ -197,19 +197,32 @@ export function Variant3DynamicIsland({
   showTargetOverlay,
   isReducedMotion,
 }: DockVariantProps) {
+  const mainNavItems = DOCK_LAB_ITEMS.filter((i) => i.id !== "cari")
+  const searchItem = DOCK_LAB_ITEMS.find((i) => i.id === "cari")!
+  const isSearchActive = activeTab === "cari"
+
   return (
     <div
       className="flex items-center justify-center select-none"
       style={{ paddingBottom: `${safeAreaBottom}px` }}
       role="navigation"
-      aria-label="Dock Dynamic Island"
+      aria-label="Navigasi Dynamic Island Yomirra"
     >
       <motion.div
         layout
-        transition={{ type: "spring", stiffness: 400, damping: 28 }}
-        className="relative flex h-13 items-center justify-center gap-1 rounded-full border border-border-subtle bg-black/85 px-2 py-1 shadow-2xl backdrop-blur-xl text-white"
+        transition={
+          isReducedMotion
+            ? { duration: 0 }
+            : { type: "spring", stiffness: 420, damping: 30 }
+        }
+        className={cn(
+          "yomirra-chrome relative flex h-14 items-center justify-center gap-1 rounded-2xl px-2 py-1.5",
+          "shadow-[0_12px_32px_-8px_rgba(0,0,0,0.22)] dark:shadow-[0_16px_40px_-10px_rgba(0,0,0,0.65)]",
+          "text-text-primary transition-colors duration-200"
+        )}
       >
-        {DOCK_LAB_ITEMS.map((item) => {
+        {/* Main 4 Navigation Tabs */}
+        {mainNavItems.map((item) => {
           const isActive = activeTab === item.id
 
           return (
@@ -218,30 +231,104 @@ export function Variant3DynamicIsland({
               type="button"
               onClick={() => onSelectTab(item.id)}
               className={cn(
-                "group relative flex h-10 min-h-[44px] min-w-[44px] items-center justify-center rounded-full outline-none transition-all duration-200",
-                isActive ? "px-3.5 bg-white text-black" : "w-10 text-white/60 hover:text-white",
-                "focus-visible:ring-2 focus-visible:ring-white",
+                "group relative flex h-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl outline-none select-none tap-highlight-transparent active:scale-95 motion-reduce:transition-none",
+                "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+                isActive ? "px-3.5 shrink-0" : "size-11 shrink-0 text-text-muted hover:text-text-primary hover:bg-surface-hover/50",
                 showTargetOverlay && "ring-1 ring-emerald-500/80 bg-emerald-500/10"
               )}
               aria-label={item.label}
               aria-pressed={isActive}
             >
-              <span className="flex items-center justify-center gap-1.5">
-                <item.icon size={19} weight={isActive ? "fill" : "regular"} />
+              {isActive && (
+                <motion.span
+                  layoutId={isReducedMotion ? undefined : "v3-active-dynamic-tab"}
+                  className="absolute inset-0 rounded-xl bg-accent-dim border border-accent/20 pointer-events-none"
+                  transition={{ type: "spring", stiffness: 450, damping: 32 }}
+                />
+              )}
+
+              <span className="relative z-10 flex items-center justify-center gap-1.5">
+                <item.icon
+                  size={isActive ? 18 : 20}
+                  weight={isActive ? "fill" : "regular"}
+                  className={cn(
+                    "transition-colors duration-200 shrink-0",
+                    isActive ? "text-accent" : "text-text-muted group-hover:text-text-primary"
+                  )}
+                />
                 {isActive && (
                   <motion.span
                     initial={isReducedMotion ? false : { opacity: 0, width: 0 }}
                     animate={{ opacity: 1, width: "auto" }}
                     exit={{ opacity: 0, width: 0 }}
-                    className="text-[11px] font-bold tracking-tight whitespace-nowrap"
+                    transition={{ duration: 0.18, ease: "easeOut" }}
+                    className="whitespace-nowrap text-[11.5px] font-semibold leading-none tracking-tight text-text-primary"
                   >
                     {item.label}
                   </motion.span>
+                )}
+                {!isActive && item.badge && (
+                  <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-accent text-[9px] font-bold text-accent-contrast ring-2 ring-background">
+                    {item.badge}
+                  </span>
                 )}
               </span>
             </button>
           )
         })}
+
+        {/* Subtle Glass Divider separating main navigation from prominent search */}
+        <div
+          className="h-5 w-[1px] bg-border-glass mx-0.5 shrink-0 self-center opacity-80"
+          aria-hidden="true"
+        />
+
+        {/* Dedicated Prominent Search Action */}
+        <button
+          key={searchItem.id}
+          type="button"
+          onClick={() => onSelectTab(searchItem.id)}
+          className={cn(
+            "group relative flex h-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl outline-none select-none tap-highlight-transparent active:scale-95 motion-reduce:transition-none",
+            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+            isSearchActive
+              ? "px-3.5 shrink-0"
+              : "size-11 shrink-0 bg-accent/10 border border-accent/25 text-accent hover:bg-accent/20 hover:border-accent/40 shadow-xs",
+            showTargetOverlay && "ring-1 ring-emerald-500/80 bg-emerald-500/10"
+          )}
+          aria-label={searchItem.label}
+          aria-pressed={isSearchActive}
+        >
+          {isSearchActive && (
+            <motion.span
+              layoutId={isReducedMotion ? undefined : "v3-active-dynamic-tab"}
+              className="absolute inset-0 rounded-xl bg-accent text-accent-contrast shadow-sm pointer-events-none"
+              transition={{ type: "spring", stiffness: 450, damping: 32 }}
+            />
+          )}
+
+          <span className="relative z-10 flex items-center justify-center gap-1.5">
+            <searchItem.icon
+              size={isSearchActive ? 18 : 20}
+              weight={isSearchActive ? "bold" : "bold"}
+              className={cn(
+                "transition-colors duration-200 shrink-0",
+                isSearchActive ? "text-accent-contrast" : "text-accent"
+              )}
+            />
+            {isSearchActive && (
+              <motion.span
+                initial={isReducedMotion ? false : { opacity: 0, width: 0 }}
+                animate={{ opacity: 1, width: "auto" }}
+                exit={{ opacity: 0, width: 0 }}
+                transition={{ duration: 0.18, ease: "easeOut" }}
+                className="whitespace-nowrap text-[11.5px] font-bold leading-none tracking-tight text-accent-contrast"
+              >
+                Cari Komik
+              </motion.span>
+            )}
+          </span>
+        </button>
       </motion.div>
     </div>
   )
