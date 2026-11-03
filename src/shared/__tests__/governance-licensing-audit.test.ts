@@ -56,11 +56,13 @@ describe("Governance, Licensing & Provenance Audit - Q163, Q165, Q167, Q168, Q16
     }
   });
 
-  it("Q174: Authoritative Grill Ledger and Parity Execution Tracker exist and are maintained", () => {
-    const trackerPath = path.join(rootDir, "docs/YOMIRRA_FULL_PARITY_EXECUTION.md");
-    const ledgerPath = path.join(rootDir, "docs/GRILL_FINAL_LEDGER.md");
+  it("Q174: Maintains core public guides (reading data, content reporting, source integration)", () => {
+    const readingDataPath = path.join(rootDir, "docs/READING_DATA.md");
+    const rightsPath = path.join(rootDir, "docs/CONTENT_RIGHTS_REPORTING.md");
+    const addingSourcePath = path.join(rootDir, "docs/ADDING_A_SOURCE.md");
 
-    expect(fs.existsSync(trackerPath)).toBe(true);
-    expect(fs.existsSync(ledgerPath)).toBe(true);
+    expect(fs.existsSync(readingDataPath)).toBe(true);
+    expect(fs.existsSync(rightsPath)).toBe(true);
+    expect(fs.existsSync(addingSourcePath)).toBe(true);
   });
 });
