@@ -1,8 +1,8 @@
 # Dokumentasi Yomirra
 
-Untuk perilaku penyimpanan pengguna, mulai dari [Riwayat, sinkronisasi, dan cadangan](READING_DATA.md). Status implementasi terbaru ada di [tracker parity](YOMIRRA_FULL_PARITY_EXECUTION.md); label pengujian historis bukan bukti bahwa seluruh fitur sudah matang.
+Untuk perilaku penyimpanan pengguna, mulai dari [Riwayat, sinkronisasi, dan cadangan](READING_DATA.md).
 
-Folder ini berisi dokumentasi public untuk contributor dan maintainer. Untuk overview produk, mulai dari [README](../README.md).
+Folder ini berisi dokumentasi publik untuk contributor dan maintainer. Untuk overview produk, mulai dari [README](../README.md).
 
 ## Peta dokumen
 
@@ -14,8 +14,9 @@ Folder ini berisi dokumentasi public untuk contributor dan maintainer. Untuk ove
 - [Stack](STACK.md) — package dan runtime choices.
 - [Testing](TESTING.md) — verification gate dan risk-based testing.
 - [Adding a Source](ADDING_A_SOURCE.md) — built-in adapter dan dynamic source.
+- [Reading Data](READING_DATA.md) — retensi data lokal, backup engine, dan sinkronisasi.
 - [Developer Guide](README_DEV.md) — onboarding developer.
-- [Execution Roadmap](yomirra-master-execution-roadmap.md) — status rekonsiliasi dan remaining release gates.
+- [Reference & Licensing](REFERENCE_LICENSING_REVIEW.md) — referensi independen dan batas lisensi.
 - [Contributing](../CONTRIBUTING.md)
 - [Security](../SECURITY.md)
 - [Laporan hak konten](CONTENT_RIGHTS_REPORTING.md)
@@ -29,8 +30,6 @@ Jika docs dan repository berbeda, urutan prioritasnya:
 2. `package.json` dan runtime config;
 3. `docs/DESIGN.md` untuk design contract;
 4. public docs lain.
-
-Dokumen plan/task lain adalah catatan eksekusi historis. Untuk status kerja lintas fase yang masih berlaku, gunakan `yomirra-master-execution-roadmap.md` sebagai roadmap tunggal.
 
 Jangan mempertahankan dokumentasi yang sudah tidak sesuai hanya karena pernah benar.
 

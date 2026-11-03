@@ -28,7 +28,7 @@ Search global tidak mengikuti toggle penjelajahan di Beranda/Library/Populer. So
 
 Beranda memprioritaskan komik dan mengadaptasi hierarki tampilan sesuai status riwayat: pembaca yang kembali (*returning reader*) memperoleh prioritas `Lanjut Baca` tepat di bawah baris pencarian global untuk melanjutkan milestone membaca secara instan (Q52 & Q63). Bagi pembaca tanpa riwayat (*zero-history*), Beranda memprioritaskan Discovery dengan langsung menyajikan `Sorotan terbaru` dan peringkat per sumber tanpa kotak kosong, disertai kartu pengenalan Rak Buku ringkas. Toggle penjelajahan pada halaman Sumber berlaku konsisten ke Beranda, Library, dan Populer; Search tetap independen.
 
-Sorotan menjaga variasi sumber lebih dulu, menghindari penggabungan judul lintas sumber bila identitasnya belum cukup pasti, dan menghormati `prefers-reduced-motion`. Top 5 di Beranda tetap source-scoped. Halaman Populer memiliki mode `Gabungan` yang mengagregasi posisi per sumber tanpa membandingkan angka popularity mentah, serta mode `Per Sumber` yang mempertahankan urutan native masing-masing source.
+Sorotan menjaga variasi sumber lebih dulu, menghindari penggabungan judul lintas sumber bila identitasnya belum cukup pasti, dan menghormati `prefers-reduced-motion`. Top 5 di Beranda tetap source-scoped. Halaman Populer menyediakan data peringkat resmi MyAnimeList (MAL) live dengan klasifikasi aman (`safeOnly` terfilter `white`), dilengkapi opsi fallback native per source dan mode gabungan dengan source pills.
 
 ### Library, Rak Buku, dan progress
 
@@ -59,11 +59,11 @@ Jika source utama bermasalah, Yomirra dapat mencari source alternatif untuk judu
 
 ### Reader dan offline
 
-Reader mendukung chapter berbasis gambar, progress baca, chapter navigator, preferensi reader, serta download/offline flow pada browser yang mendukung. Dukungan format dan gaya penyajian (seperti mode paginasi atau strip vertikal) dibatasi pada kemampuan masing-masing sumber (source) serta fitur yang didukung oleh reader Yomirra.
+Reader mendukung chapter berbasis gambar, progress baca, chapter navigator, preferensi reader, serta download/offline flow pada browser yang mendukung. Untuk format vertikal (webtoon), Reader menyediakan continuous scrubber 0–100% berbasis posisi scroll riil tanpa dot circle berlebih, sementara mode paginasi (LTR/RTL) tetap mempertahankan navigasi halaman diskrit. Kanvas Reader menggunakan dark loading minimal yang menghormati `prefers-reduced-motion` dan menghilangkan efek layout jump dari skeleton komik palsu.
 
 Navigasi reader menjaga parent page secara eksplisit: perpindahan detail → reader dan antar-chapter tidak meninggalkan reader route lama di belakang tombol kembali, sehingga keluar ke detail lalu kembali lagi mengarah ke halaman asal, bukan ke reader sebelumnya.
 
-Offline dan PWA bergantung pada kemampuan browser, Service Worker, dan storage perangkat.
+Offline dan PWA bergantung pada kemampuan browser, Service Worker, dan storage perangkat. Tampilan PWA terintegrasi penuh dengan safe-area iOS Safari dan sinkronisasi canonical theme-color (`#f9f9fb` untuk light, `#090a0f` untuk dark). Cadangan data (backup & restore) beroperasi 100% secara offline berbasis berkas JSON terenkapsulasi dengan validasi skema Zod.
 
 Riwayat menyimpan 512 entri chapter dengan detail lengkap, lalu mempertahankan ringkasan posisi terakhir dan milestone tiap judul. Progres lokal tetap dipertahankan ketika cloud gagal. Untuk aturan retensi, backup, pemulihan, dan batas offline, baca [panduan data bacaan](docs/READING_DATA.md). Penghapusan otomatis setelah tiga bulan belum aktif.
 
@@ -142,7 +142,8 @@ Lihat [Developer Guide](docs/README_DEV.md) untuk struktur project dan [Adding a
 - [Stack](docs/STACK.md)
 - [Testing](docs/TESTING.md)
 - [Adding a Source](docs/ADDING_A_SOURCE.md)
-- [Execution Roadmap](docs/yomirra-master-execution-roadmap.md)
+- [Reading Data & Backup](docs/READING_DATA.md)
+- [Reference & Licensing](docs/REFERENCE_LICENSING_REVIEW.md)
 - [Contributing](CONTRIBUTING.md)
 - [Security](SECURITY.md)
 - [Laporan hak konten](docs/CONTENT_RIGHTS_REPORTING.md)
