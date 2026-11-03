@@ -44,7 +44,9 @@ export function BootGate({ children }: { children: React.ReactNode }) {
         )}
       </AnimatePresence>
       
-      {children}
+      <div className={phase === "app" ? "contents" : "invisible pointer-events-none"} aria-hidden={phase !== "app"}>
+        {children}
+      </div>
     </>
   );
 }

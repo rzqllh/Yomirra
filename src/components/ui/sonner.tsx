@@ -1,41 +1,25 @@
 "use client"
 
 import * as React from "react"
+import { useTheme } from "next-themes"
 import { Toaster as Sonner, toast, type ExternalToast } from "sonner"
 import { Check, Info, Warning, X, CircleNotch } from "@phosphor-icons/react"
 
 type ToasterProps = React.ComponentProps<typeof Sonner>
-type ToastPosition = "top-right" | "top-center"
+type ToastPosition = "top-right" | "top-center" | "bottom-right"
 
 /**
  * Responsive toast position:
- * - Desktop (>= 1024px): top-right
- * - Tablet (768px - 1023px): top-right in landscape, top-center in portrait
- * - Mobile (< 768px): always top-center
+ * - Desktop/Tablet (>= 768px): bottom-right (unobtrusive, standard desktop placement)
+ * - Mobile (< 768px): top-center (accessible under status area)
  */
 function useResponsiveToastPosition(): ToastPosition {
-  const [position, setPosition] = React.useState<ToastPosition>(() => {
-    if (typeof window !== "undefined") {
-      const width = window.innerWidth
-      const isLandscape = typeof window.matchMedia === "function"
-        ? window.matchMedia("(orientation: landscape)").matches
-        : false
-      if (width >= 1024) return "top-right"
-      if (width >= 768) return isLandscape ? "top-right" : "top-center"
-      return "top-center"
-    }
-    return "top-center"
-  })
+  const [position, setPosition] = React.useState<ToastPosition>("bottom-right")
 
   React.useEffect(() => {
     const computePosition = (): ToastPosition => {
       const width = window.innerWidth
-      const isLandscape = typeof window.matchMedia === "function"
-        ? window.matchMedia("(orientation: landscape)").matches
-        : false
-
-      if (width >= 1024) return "top-right"
-      if (width >= 768) return isLandscape ? "top-right" : "top-center"
+      if (width >= 768) return "bottom-right"
       return "top-center"
     }
 
@@ -69,12 +53,13 @@ function useResponsiveToastPosition(): ToastPosition {
 }
 
 const Toaster = ({ position: propPosition, ...props }: ToasterProps) => {
+  const { resolvedTheme } = useTheme()
   const autoPosition = useResponsiveToastPosition()
   const resolvedPosition = propPosition ?? autoPosition
 
   return (
     <Sonner
-      theme="system"
+      theme={resolvedTheme === "dark" ? "dark" : resolvedTheme === "light" ? "light" : "system"}
       position={resolvedPosition}
       className="toaster group"
       closeButton
@@ -83,28 +68,28 @@ const Toaster = ({ position: propPosition, ...props }: ToasterProps) => {
       visibleToasts={4}
       icons={{
         success: (
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-semantic-success text-white shadow-xs">
-            <Check size={16} weight="bold" />
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-semantic-success text-white shadow-xs">
+            <Check size={16} weight="regular" />
           </div>
         ),
         error: (
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-semantic-error text-white shadow-xs">
-            <X size={16} weight="bold" />
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-semantic-error text-white shadow-xs">
+            <X size={16} weight="regular" />
           </div>
         ),
         warning: (
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-status-warning-bg text-status-warning-fg border border-status-warning-fg/30 shadow-xs">
-            <Warning size={16} weight="bold" />
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-status-warning-bg text-status-warning-fg border border-status-warning-fg/30 shadow-xs">
+            <Warning size={16} weight="regular" />
           </div>
         ),
         info: (
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface-raised border border-border-default text-text-primary shadow-xs">
-            <Info size={16} weight="bold" />
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-raised border border-border-default text-text-primary shadow-xs">
+            <Info size={16} weight="regular" />
           </div>
         ),
         loading: (
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent text-white shadow-xs">
-            <CircleNotch size={16} weight="bold" className="motion-safe:animate-spin" />
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent text-white shadow-xs">
+            <CircleNotch size={16} weight="regular" className="motion-safe:animate-spin" />
           </div>
         ),
       }}

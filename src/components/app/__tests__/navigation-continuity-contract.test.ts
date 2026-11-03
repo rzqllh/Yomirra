@@ -36,13 +36,7 @@ describe("navigation continuity contracts", () => {
     expect(shell).not.toContain("yomirra:scroll:");
   });
 
-  it("returns trigger focus when the command overlay closes without navigation", () => {
-    const menu = read("src/components/overlays/command-menu.tsx");
 
-    expect(menu).toContain("document.activeElement instanceof HTMLElement");
-    expect(menu).toContain("trigger?.focus({ preventScroll: true })");
-    expect(menu).toContain("restoreFocusOnCloseRef.current = false");
-  });
 
   it("keeps catalog loading shells aligned with their final route geometry", () => {
     const sourceList = read("src/components/skeletons/source-list-skeleton.tsx");

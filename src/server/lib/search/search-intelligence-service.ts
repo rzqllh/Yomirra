@@ -21,6 +21,8 @@ import {
   isSemanticEmbeddingConfigured,
 } from "./gemini-embeddings";
 import { getSiteConfig } from "@/server/lib/site/site-config-service";
+import { getRuntimeSources } from "@/server/lib/sources/runtime-sources";
+import { filterCatalogContent } from "./catalog-content-policy";
 
 export interface SearchIntelligenceResult {
   semanticAvailable: boolean;
@@ -55,13 +57,14 @@ export async function rankSearchIntelligence(params: {
   query: string;
   tags: ResolvedSearchTag[];
   candidates: SearchCatalogCandidate[];
+  hideNsfw?: boolean;
 }): Promise<SearchIntelligenceResult> {
   const query = params.query.trim();
   const candidates = Array.from(
     new Map(params.candidates.slice(0, 40).map((candidate) => [candidate.canonicalKey, candidate])).values()
   );
 
-  const recent = await getRecentSearchCatalogRecords(240);
+  const recent = filterCatalogContent(await getRecentSearchCatalogRecords(240), await getRuntimeSources(), params.hideNsfw !== false);
   const recentByKey = new Map(recent.map((record) => [record.canonicalKey, record]));
   const scores: Record<string, number> = {};
   const siteConfig = await getSiteConfig().catch(() => null);
@@ -221,9 +224,10 @@ export function metadataRelatedScore(
 
 export async function findRelatedSearchTitles(
   target: SearchCatalogCandidate,
-  limit = 8
+  limit = 8,
+  hideNsfw = true
 ): Promise<SearchCatalogCandidate[]> {
-  const recent = await getRecentSearchCatalogRecords(300);
+  const recent = filterCatalogContent(await getRecentSearchCatalogRecords(300), await getRuntimeSources(), hideNsfw);
   const otherRecords = recent.filter((record) => record.canonicalKey !== target.canonicalKey);
   if (otherRecords.length === 0) return [];
 

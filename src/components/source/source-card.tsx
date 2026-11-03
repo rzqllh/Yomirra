@@ -146,7 +146,7 @@ export function SourceCard({ source, onUpdate }: SourceCardProps) {
                     className="flex size-11 items-center justify-center rounded-xl text-text-muted transition-colors hover:bg-surface-hover hover:text-text-primary focus-visible:outline-2 focus-visible:outline-accent"
                     aria-label={`Kelola ${source.name}`}
                   >
-                    <DotsThreeVertical size={18} weight="bold" />
+                    <DotsThreeVertical size={18} weight="regular" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48 rounded-xl">
@@ -217,7 +217,7 @@ export function SourceCard({ source, onUpdate }: SourceCardProps) {
             }
             className="inline-flex min-h-11 shrink-0 items-center rounded-xl bg-accent px-3 text-xs font-bold text-accent-on transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
-            Buka Library
+            Buka Jelajah
           </button>
         )}
       </div>

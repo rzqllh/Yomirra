@@ -12,11 +12,11 @@ export interface SearchInputProps extends Omit<React.InputHTMLAttributes<HTMLInp
 
 export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
   ({ className, containerClassName, onSubmitAction, onClear, shortcut, value, onChange, ...props }, ref) => {
-    
+
     const handleClear = () => {
       onClear?.();
     };
-    
+
     const handleSubmit = (e: React.FormEvent) => {
       e.preventDefault();
       if (onSubmitAction) {
@@ -25,17 +25,17 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
     };
 
     return (
-      <form 
-        onSubmit={handleSubmit} 
+      <form
+        onSubmit={handleSubmit}
         className={cn(
           "flex items-center gap-2.5 rounded-sm bg-surface-glass backdrop-blur-md px-4 h-[44px] border border-border-subtle transition-all duration-200 ease-out w-full",
           "hover:bg-surface-hover hover:border-border-strong focus-within:bg-surface-overlay focus-within:border-accent/40 focus-within:ring-2 focus-within:ring-accent/20 focus-within:shadow-xs",
           containerClassName
         )}
       >
-        <MagnifyingGlass 
-          className="size-[18px] text-text-muted shrink-0 transition-colors group-focus-within:text-accent" 
-          weight="bold" 
+        <MagnifyingGlass
+          className="size-[18px] text-text-muted shrink-0 transition-colors group-focus-within:text-accent"
+          weight="regular"
         />
         <input
           ref={ref}
@@ -56,7 +56,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
             className="text-text-muted hover:text-text-primary p-1 h-auto w-auto shrink-0"
             aria-label="Clear search"
           >
-            <X size={16} weight="bold" />
+            <X size={16} weight="regular" />
           </IconButton>
         )}
         {shortcut && (

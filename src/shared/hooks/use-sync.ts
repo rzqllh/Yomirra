@@ -11,6 +11,7 @@ import { loadFirestore } from "@/shared/lib/firestore-runtime";
 import { pullSourcePreferences, pullLegacyLibraryData, pullCustomCollections } from '@/shared/lib/sync-utils';
 import { useCollectionStore } from '@/shared/store/collection-store';
 import { retainHistory } from '@/shared/lib/history-retention';
+import { nextSyncRetryDelayMs } from '@/shared/lib/sync-retry';
 
 type Tombstone = {
   _deleted: true;
@@ -369,18 +370,52 @@ export function useSync(options = { autoSync: true }) {
     if (initialSyncUidRef.current === userUid) return;
 
     initialSyncUidRef.current = userUid;
-    runFullSync().catch((error) => console.error("Initial sync failed", error));
+    let cancelled = false;
+    let failures = 0;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
 
+    const cancelRetry = () => {
+      if (retryTimer !== null) {
+        clearTimeout(retryTimer);
+        retryTimer = null;
+      }
+    };
+    const attemptSync = () => {
+      if (cancelled || currentUidRef.current !== userUid || !window.navigator.onLine) return;
+      // Only background auto-sync retries; manual sync continues to report errors.
+      void runFullSync().then(
+        () => {
+          if (cancelled) return;
+          failures = 0;
+          cancelRetry();
+        },
+        (error) => {
+          if (cancelled || currentUidRef.current !== userUid) return;
+          console.error("Automatic sync failed", error);
+          if (!window.navigator.onLine) return;
+          const delay = nextSyncRetryDelayMs(++failures);
+          cancelRetry();
+          retryTimer = setTimeout(attemptSync, delay);
+        },
+      );
+    };
+
+    attemptSync();
     const handleOnline = () => {
       useSyncDiagnosticsStore.getState().setNetworkOnline(true);
-      runFullSync().catch((error) => console.error("Online sync failed", error));
+      cancelRetry();
+      failures = 0;
+      attemptSync();
     };
     const handleOffline = () => {
       useSyncDiagnosticsStore.getState().setNetworkOnline(false);
+      cancelRetry();
     };
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
     return () => {
+      cancelled = true;
+      cancelRetry();
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };
@@ -394,12 +429,17 @@ export function useSync(options = { autoSync: true }) {
     let unsubscribeHistory: (() => void) | undefined;
     let unsubscribePreferences: (() => void) | undefined;
 
-    initFirebase().then(async ({ db }) => {
+    initFirebase().then(async ({ db, auth }) => {
       if (!db || isCancelled) return;
-      const { collection, doc, onSnapshot } = await loadFirestore();
-      if (isCancelled) return;
       const uid = userUid;
+      const isCurrentAccount = () =>
+        !isCancelled && currentUidRef.current === uid && auth?.currentUser?.uid === uid;
+      const { collection, doc, onSnapshot } = await loadFirestore();
+      if (!isCurrentAccount()) return;
       unsubscribeLibrary = onSnapshot(collection(db, `users/${uid}/libraryV2`), (remoteSnapshot) => {
+        // A callback may already be queued while logout/UID switch is tearing
+        // down old listeners. Never apply an old account's data to local state.
+        if (!isCurrentAccount()) return;
         remoteSnapshot.docChanges().forEach((change) => {
           const data = change.doc.data() as LibraryItem & Tombstone;
           const localItem = findLibraryItemLocal(change.doc.id, data);
@@ -421,6 +461,7 @@ export function useSync(options = { autoSync: true }) {
       }, (error) => console.error("Library sync listener error:", error));
 
       unsubscribeHistory = onSnapshot(collection(db, `users/${uid}/history`), (remoteSnapshot) => {
+        if (!isCurrentAccount()) return;
         remoteSnapshot.docChanges().forEach((change) => {
           const data = change.doc.data() as HistoryItem & Tombstone;
           const localItem = useHistoryStore.getState().items[change.doc.id];
@@ -442,6 +483,7 @@ export function useSync(options = { autoSync: true }) {
       }, (error) => console.error("History sync listener error:", error));
 
       unsubscribePreferences = onSnapshot(doc(db, `users/${uid}/preferences`, "sources"), (preferenceSnapshot) => {
+        if (!isCurrentAccount()) return;
         if (!preferenceSnapshot.exists()) return;
         const data = preferenceSnapshot.data();
         if (Array.isArray(data.disabledSources) || Array.isArray(data.hiddenFromHomeSources)) {

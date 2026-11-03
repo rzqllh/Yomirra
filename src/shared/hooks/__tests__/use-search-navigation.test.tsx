@@ -5,6 +5,9 @@ import { QueryClient, QueryClientProvider, focusManager } from "@tanstack/react-
 import { useSearchCatalog } from "../use-search-catalog";
 import { apiClient } from "@/shared/api-client";
 import { useSearchFilterStore } from "@/shared/store/search-filter-store";
+import { renderToString } from "react-dom/server";
+import { hydrateRoot } from "react-dom/client";
+import type { SourceMetadata } from "@/shared/sources/source-types";
 
 const navigation = vi.hoisted(() => ({
   params: "q=solo+leveling&keep=1",
@@ -125,6 +128,36 @@ describe("search URL navigation", () => {
     act(() => focusManager.setFocused(true));
     await act(async () => { vi.runOnlyPendingTimers(); });
     expect(apiClient.getSources).toHaveBeenCalledTimes(2);
+  });
+
+  it("hydrates the search registry after the shell has warmed the client cache", async () => {
+    vi.useRealTimers();
+    navigation.params = "";
+    const sources: SourceMetadata[] = [{ id: "source-a", name: "Source A", isEnabled: true, isInstalled: true, isNsfw: false,
+      isDynamic: false, status: "online", capabilities: { search: true, popular: true, latest: true, detail: true, chapters: true, pages: true } }];
+    vi.mocked(apiClient.getSources).mockResolvedValue(sources);
+    function SourceProbe() {
+      const search = useSearchCatalog();
+      return <div>{search.searchableSources.map(source => <span key={source.id}>{source.name}</span>)}</div>;
+    }
+    const serverClient = new QueryClient();
+    const container = document.createElement("div");
+    container.innerHTML = renderToString(<QueryClientProvider client={serverClient}><SourceProbe /></QueryClientProvider>);
+    document.body.appendChild(container);
+    client.setQueryData(["sources"], sources);
+    const recoverableError = vi.fn();
+    let root: ReturnType<typeof hydrateRoot> | undefined;
+    try {
+      await act(async () => {
+        root = hydrateRoot(container, <QueryClientProvider client={client}><SourceProbe /></QueryClientProvider>, { onRecoverableError: recoverableError });
+      });
+      await waitFor(() => expect(container.textContent).toBe("Source A"));
+      expect(recoverableError).not.toHaveBeenCalled();
+    } finally {
+      act(() => root?.unmount());
+      container.remove();
+      serverClient.clear();
+    }
   });
 
   it("loads the default popular catalog when the query is empty", async () => {

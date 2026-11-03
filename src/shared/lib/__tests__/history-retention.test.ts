@@ -56,6 +56,29 @@ describe("reading progress retention", () => {
     expect(output["source::new::ch-20"].pageIndex).toBe(7);
   });
 
+
+  it("preserves a verified old milestone when newer open-only chapters exceed 512 details", () => {
+    const opened = Array.from({ length: 600 }, (_, index) => {
+      const entry: HistoryItem = {
+        sourceId: "source", mangaId: "one-title",
+        chapterId: `ch-${index}`, chapterNumber: index,
+        mangaTitle: "One Title", readAt: 1000 + index,
+      };
+      return [historyId(entry), entry] as const;
+    });
+    const milestone: HistoryItem = {
+      sourceId: "source", mangaId: "one-title", chapterId: "ch-30",
+      chapterNumber: 30, mangaTitle: "One Title", readAt: 1, pageIndex: 7,
+    };
+    const input = Object.fromEntries(opened);
+    input[historyId(milestone)] = milestone;
+    const output = retainHistory(input);
+    expect(Object.values(output).filter(entry => !entry.isCompact)).toHaveLength(512);
+    expect(output[historyId(milestone)]).toMatchObject({ pageIndex: 7, isCompact: true });
+    expect(output["source::one-title::ch-599"]).toBeDefined();
+    expect(retainHistory(output)).toEqual(output);
+  });
+
   it("does not expire a title after three months of inactivity", () => {
     const entry = item("old-title", 100, 1);
     expect(retainHistory({ [historyId(entry)]: entry })[historyId(entry)]).toBeDefined();

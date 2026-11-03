@@ -7,6 +7,9 @@ import type { BaseCardProps } from "./types";
 import { usePathname, useSearchParams } from "next/navigation";
 import { MangaCover } from "../manga-cover";
 import { cn } from "@/shared/utils/cn";
+import { useSettingsStore } from "@/shared/store/settings-store";
+import { classifyContent } from "@/shared/sources/content-policy";
+import { getSourceMetadata } from "@/shared/sources/source-registry";
 import {
   MangaCardCoverFrame,
   MangaCardMeta,
@@ -28,6 +31,10 @@ export function LeaderboardRow({
   density = "default",
   emphasized = false,
 }: LeaderboardRowProps) {
+  const hideNsfw = useSettingsStore((state) => state.hideNsfw);
+  const classification = classifyContent(manga);
+  const sourceIsAdultOnly = getSourceMetadata(sourceId)?.isNsfw === true;
+  const restricted = hideNsfw && (sourceIsAdultOnly || classification === "NSFW");
   const scoreToDisplay = displayScore ?? manga.score;
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -47,6 +54,16 @@ export function LeaderboardRow({
       ? "h-[64px] w-12"
       : "h-[42px] w-7"
     : "h-[60px] w-10";
+
+  // The leaderboard bypasses MangaCard. Guard cached provider rows here too:
+  // never mount a confirmed restricted title or an unverified image in safe mode.
+  if (restricted) {
+    return (
+      <div role="status" className={cn("flex min-h-11 items-center rounded-lg border border-border-subtle px-3 text-xs text-text-secondary", rowGeometry)}>
+        Konten disembunyikan oleh pengaturan NSFW
+      </div>
+    );
+  }
 
   return (
     <Link
@@ -97,19 +114,19 @@ export function LeaderboardRow({
           {manga.title}
         </MangaCardTitle>
         <div className="flex items-center gap-2 text-[10.5px] font-semibold text-text-secondary sm:text-[11.5px]">
-          <div className="flex items-center gap-1">
-            <Star
-              weight="fill"
-              size={12}
-              className="text-semantic-warning"
-              aria-hidden="true"
-            />
-            <span suppressHydrationWarning>
-              {Number(scoreToDisplay) > 0
-                ? Number(scoreToDisplay).toFixed(1)
-                : "—"}
-            </span>
-          </div>
+          {Number(scoreToDisplay) > 0 ? (
+            <div className="flex items-center gap-1">
+              <Star
+                weight="fill"
+                size={12}
+                className="text-semantic-warning"
+                aria-hidden="true"
+              />
+              <span suppressHydrationWarning>
+                {Number(scoreToDisplay).toFixed(1)}
+              </span>
+            </div>
+          ) : null}
           <MangaCardMeta className="max-w-[110px] truncate text-[10.5px] text-text-muted sm:max-w-[140px] sm:text-[11.5px]">
             {manga.latestChapter || "Chapter belum tersedia"}
           </MangaCardMeta>

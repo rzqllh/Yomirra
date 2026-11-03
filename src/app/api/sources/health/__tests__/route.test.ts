@@ -76,7 +76,7 @@ describe("GET /api/sources/health", () => {
     expect(json.data.shinigami).toMatchObject({ status: "online", latency: "120ms" });
     expect(json.data.komikindo).toMatchObject({
       status: "unavailable",
-      message: "diblokir perlindungan situs (Cloudflare)",
+      message: "akses ke sumber ditolak",
     });
     expect(json.data.komikindo.message).not.toContain("internal upstream details");
     expect(json.meta).toMatchObject({ cached: false, probeType: "functional" });

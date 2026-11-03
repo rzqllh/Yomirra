@@ -113,6 +113,7 @@ describe("Listing View Mode & CompactCard", () => {
       title: "Demonic Emperor",
       coverUrl: "https://example.com/cover.jpg",
       description: "Karena dia memiliki warisan Ancient Demonic emperor...",
+      contentRating: "safe" as const,
     };
 
     renderWithQuery(

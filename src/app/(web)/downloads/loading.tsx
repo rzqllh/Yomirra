@@ -10,11 +10,11 @@ export default function Loading() {
         <PageHeader
           title="Unduhan"
           subtitle="Kelola chapter yang tersimpan untuk dibaca offline."
-          icon={<Download size={24} weight="duotone" />}
+          icon={<Download size={24} weight="regular" />}
         />
 
         <ContentLane variant="focused" className="flex flex-col gap-6">
-          <Skeleton className="h-20 w-full rounded-2xl" />
+          <Skeleton className="h-20 w-full rounded-xl" />
 
           <div className="w-full">
             <Skeleton className="mb-6 h-10 w-full max-w-xs rounded-xl" />
@@ -22,7 +22,7 @@ export default function Loading() {
             {Array.from({ length: 5 }).map((_, i) => (
               <div
                 key={i}
-                className="flex gap-3.5 rounded-2xl border border-border-subtle/80 bg-surface-raised p-3.5 sm:gap-4 sm:p-4"
+                className="flex gap-3.5 rounded-xl border border-border-subtle/80 bg-surface-raised p-3.5 sm:gap-4 sm:p-4"
               >
                 <Skeleton className="h-24 w-16 shrink-0 rounded-xl" />
                 <div className="flex flex-1 flex-col justify-between py-1">

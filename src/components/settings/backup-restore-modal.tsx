@@ -96,9 +96,9 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
 
   return (
     <div className={cn("space-y-4", className)}>
-      <div className="p-4 rounded-2xl bg-surface-raised border border-border-subtle flex items-start gap-3.5">
+      <div className="p-4 rounded-xl bg-surface-raised border border-border-subtle flex items-start gap-3.5">
         <div className="flex size-10 items-center justify-center rounded-xl bg-accent/10 text-accent shrink-0">
-          <FileText size={22} weight="duotone" />
+          <FileText size={22} weight="regular" />
         </div>
         <div>
           <h3 className="text-sm font-bold text-text-primary">Cadangan data</h3>
@@ -124,7 +124,7 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
               className="group relative w-full flex items-center gap-3.5 p-4 rounded-xl bg-surface-raised border border-border-subtle hover:border-accent/40 hover:bg-accent/5 transition-all text-left overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-accent cursor-pointer"
             >
               <div className="shrink-0 flex items-center justify-center size-11 rounded-lg bg-accent/10 text-accent group-hover:scale-105 transition-transform duration-200">
-                <DownloadSimple size={22} weight="duotone" />
+                <DownloadSimple size={22} weight="regular" />
               </div>
               <div className="flex-1 min-w-0">
                 <h4 className="text-sm font-bold text-text-primary truncate">Ekspor cadangan</h4>
@@ -138,7 +138,7 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
               className="group relative w-full flex items-center gap-3.5 p-4 rounded-xl bg-surface-raised border border-border-subtle hover:border-accent/40 hover:bg-accent/5 transition-all text-left overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-accent cursor-pointer"
             >
               <div className="shrink-0 flex items-center justify-center size-11 rounded-lg bg-accent/10 text-accent group-hover:scale-105 transition-transform duration-200">
-                <UploadSimple size={22} weight="duotone" />
+                <UploadSimple size={22} weight="regular" />
               </div>
               <div className="flex-1 min-w-0">
                 <h4 className="text-sm font-bold text-text-primary truncate">Pulihkan dari cadangan</h4>
@@ -166,16 +166,16 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
             {/* Selected File Box */}
             <div className="flex flex-col gap-1.5">
               <span className="text-[11px] font-bold text-text-muted uppercase tracking-wider pl-1">Berkas dipilih</span>
-              <div className="flex items-center justify-between p-3 rounded-2xl bg-surface-raised border border-border-subtle shadow-xs">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-surface-raised border border-border-subtle shadow-xs">
                 <div className="flex items-center gap-3 overflow-hidden">
                   <div className="size-8 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
-                    <FileText size={16} className="text-accent" weight="duotone" />
+                    <FileText size={16} className="text-accent" weight="regular" />
                   </div>
                   <span className="text-xs font-bold text-text-primary truncate">{selectedFileName}</span>
                 </div>
-                <button 
+                <button
                   type="button"
-                  onClick={resetState} 
+                  onClick={resetState}
                   className="text-[11px] font-bold text-text-secondary hover:text-text-primary px-3 py-1 rounded-lg bg-surface-base border border-border-subtle hover:bg-surface-hover transition-colors shrink-0 cursor-pointer"
                 >
                   Batal
@@ -185,7 +185,7 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
 
             {/* Validation State */}
             {dryRun.errors.length > 0 ? (
-              <div className="p-4 rounded-2xl bg-semantic-error/10 border border-semantic-error/20 text-semantic-error shadow-xs">
+              <div className="p-4 rounded-xl bg-semantic-error/10 border border-semantic-error/20 text-semantic-error shadow-xs">
                 <span className="font-bold flex items-center gap-2 mb-2 text-sm">
                   <ShieldWarning size={20} weight="fill" /> Berkas tidak dapat digunakan ({dryRun.errors.length})
                 </span>
@@ -196,7 +196,7 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
             ) : (
               <>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="flex flex-col justify-center p-3.5 rounded-2xl bg-surface-raised border border-border-subtle shadow-xs">
+                  <div className="flex flex-col justify-center p-3.5 rounded-xl bg-surface-raised border border-border-subtle shadow-xs">
                     <span className="text-[11px] uppercase font-bold text-text-muted mb-0.5">Data valid</span>
                     <div className="flex items-baseline gap-2">
                       <span className="text-2xl font-extrabold text-text-primary">{dryRun.validLibraryCount + dryRun.validHistoryCount}</span>
@@ -206,8 +206,8 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
                       <span className="text-accent bg-accent/10 px-1.5 py-0.5 rounded-md">{dryRun.replacedCount} diperbarui</span>
                     </div>
                   </div>
-                  
-                  <div className="flex flex-col justify-center p-3.5 rounded-2xl bg-surface-raised border border-border-subtle shadow-xs">
+
+                  <div className="flex flex-col justify-center p-3.5 rounded-xl bg-surface-raised border border-border-subtle shadow-xs">
                     <span className="text-[11px] uppercase font-bold text-text-muted mb-0.5">Data yang perlu diperiksa</span>
                     <div className="flex items-baseline gap-2">
                       <span className="text-2xl font-extrabold text-text-primary">{dryRun.existingConflictCount + dryRun.duplicateInPayloadCount}</span>
@@ -225,7 +225,7 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
                       type="button"
                       onClick={() => setImportMode("merge")}
                       className={cn(
-                        "relative p-3.5 rounded-2xl border text-left transition-all overflow-hidden outline-none cursor-pointer",
+                        "relative p-3.5 rounded-xl border text-left transition-all overflow-hidden outline-none cursor-pointer",
                         importMode === "merge"
                           ? "border-accent bg-accent/10 shadow-xs"
                           : "border-border-subtle bg-surface-raised hover:bg-surface-hover"
@@ -240,7 +240,7 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
                       type="button"
                       onClick={() => setImportMode("replace")}
                       className={cn(
-                        "relative p-3.5 rounded-2xl border text-left transition-all overflow-hidden outline-none cursor-pointer",
+                        "relative p-3.5 rounded-xl border text-left transition-all overflow-hidden outline-none cursor-pointer",
                         importMode === "replace"
                           ? "border-semantic-error bg-semantic-error/10 shadow-xs"
                           : "border-border-subtle bg-surface-raised hover:bg-surface-hover"

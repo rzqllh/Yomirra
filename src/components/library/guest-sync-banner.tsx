@@ -97,7 +97,7 @@ export function GuestSyncBanner({ className }: GuestSyncBannerProps) {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-start gap-3 sm:gap-3.5 min-w-0 flex-1">
               <div className="size-11 rounded-xl bg-accent-dim border border-accent/20 flex items-center justify-center text-accent shrink-0">
-                <CloudArrowUp size={22} weight="duotone" />
+                <CloudArrowUp size={22} weight="regular" />
               </div>
 
               <div className="space-y-1 min-w-0">
@@ -106,7 +106,7 @@ export function GuestSyncBanner({ className }: GuestSyncBannerProps) {
                     {isEscalated ? `${totalItemCount} judul tersimpan` : "Rak bacaan tamu"}
                   </span>
                   <span className="text-xs text-text-muted flex items-center gap-1">
-                    <HardDrives size={16} weight="bold" aria-hidden="true" />
+                    <HardDrives size={16} weight="regular" aria-hidden="true" />
                     Hanya di perangkat ini
                   </span>
                 </div>
@@ -138,7 +138,7 @@ export function GuestSyncBanner({ className }: GuestSyncBannerProps) {
                 onClick={handleLogin}
                 loading={isLoggingIn}
               >
-                <GoogleLogo size={18} weight="bold" />
+                <GoogleLogo size={18} weight="regular" />
                 <span>Masuk dengan Google</span>
               </Button>
 
@@ -148,7 +148,7 @@ export function GuestSyncBanner({ className }: GuestSyncBannerProps) {
                 aria-label="Tutup pengingat"
                 className="hidden sm:flex size-11 items-center justify-center rounded-xl text-text-muted hover:text-text-primary hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-accent transition-colors ml-1"
               >
-                <X size={15} weight="bold" />
+                <X size={15} weight="regular" />
               </button>
             </div>
           </div>

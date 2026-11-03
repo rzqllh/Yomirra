@@ -106,7 +106,7 @@ describe("Shell Revamp Regression Coverage", () => {
       currentPathname = "/library";
       const { rerender } = render(<DesktopRail />);
 
-      const libraryLink = screen.getByRole("link", { name: "Library" });
+      const libraryLink = screen.getByRole("link", { name: "Jelajah" });
       expect(libraryLink.getAttribute("aria-current")).toBe("page");
 
       // Switch to collapsed

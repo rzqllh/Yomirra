@@ -2,11 +2,11 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { 
-  Bell, 
-  WarningCircle, 
-  ArrowsClockwise, 
-  CalendarBlank, 
+import {
+  Bell,
+  WarningCircle,
+  ArrowsClockwise,
+  CalendarBlank,
   Play,
   BookOpen
 } from "@phosphor-icons/react";
@@ -171,7 +171,7 @@ export function UpdateCard({ item, historyItem, onScheduleChange, onMarkSeen }: 
         {hasHistory ? (
           <Play size={13} weight="fill" />
         ) : (
-          <BookOpen size={14} weight="bold" />
+          <BookOpen size={14} weight="regular" />
         )}
         <span>{hasHistory ? "Lanjut" : "Baca"}</span>
       </Link>
@@ -222,7 +222,7 @@ function ErrorBanner({
               >
                 <ArrowsClockwise
                   size={12}
-                  weight="bold"
+                  weight="regular"
                   className={isScanning ? "animate-spin" : ""}
                 />
                 Coba lagi
@@ -461,7 +461,7 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
             >
               <ArrowsClockwise
                 size={15}
-                weight="bold"
+                weight="regular"
                 className={isScanning ? "animate-spin" : ""}
               />
               <span className="hidden sm:inline">Perbarui</span>
@@ -487,7 +487,7 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
           <EmptyState
             icon={<Bell size={48} className="text-text-muted" weight="duotone" />}
             title="Belum ada jadwal untuk ditampilkan"
-            description="Simpan komik ke Rak Buku agar jadwal pembaruannya muncul di sini."
+            description="Simpan komik ke Library agar jadwal pembaruannya muncul di sini."
             action={
               <Button asChild variant="primary" className="rounded-xl mt-4">
                 <Link href="/library">Jelajahi komik</Link>

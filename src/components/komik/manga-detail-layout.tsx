@@ -109,7 +109,7 @@ export function MangaDetailLayout({
           <div className="hidden md:flex gap-8 items-end">
             <div
               className={cn(
-                "relative w-[220px] lg:w-[240px] shrink-0 aspect-[2/3] rounded-[20px] overflow-hidden shadow-lg border border-white/10 dark:border-white/10 bg-surface-raised z-20",
+                "relative w-[220px] lg:w-[240px] shrink-0 aspect-[2/3] rounded-xl overflow-hidden shadow-xl border border-white/10 dark:border-white/10 bg-surface-raised z-20",
                 desktopCoverClassName
               )}
             >
@@ -130,22 +130,26 @@ export function MangaDetailLayout({
         </div>
       </section>
 
-      {/* Body Content */}
+      {/* Body Content: 2-Column Editorial Grid + Full-Width Recommendations (Anti-Cutoff) */}
       <div className="w-full relative z-10 bg-surface-base">
-        <div className="w-full max-w-9xl mx-auto px-4 md:px-8 py-5 flex flex-col gap-6">
-          {/* Synopsis Section */}
-          <div className="rounded-xl border border-border-default/80 bg-surface-raised p-4 md:p-5 shadow-xs">
-            {synopsis}
+        <div className="w-full max-w-7xl mx-auto px-4 md:px-8 py-6 space-y-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+            {/* Left Column on Desktop (4 cols / ~33%): Sticky Synopsis & Metadata */}
+            <div className="lg:col-span-4 flex flex-col gap-6 lg:sticky lg:top-20">
+              <div className="rounded-xl border border-border-default/80 bg-surface-raised p-4 sm:p-5 shadow-xs">
+                {synopsis}
+              </div>
+            </div>
+
+            {/* Right Column on Desktop (8 cols / ~67%): Chapters List */}
+            <div className="lg:col-span-8 flex flex-col min-w-0">
+              {chapters}
+            </div>
           </div>
 
-          {/* Chapters Section */}
-          <div className="flex flex-col">
-            {chapters}
-          </div>
-
-          {/* Recommendations Section */}
+          {/* Full-Width Recommendations: generous horizontal breathing room, zero clipping */}
           {recommendations && (
-            <div className="pb-1">
+            <div className="w-full pt-4 border-t border-border-subtle/60">
               {recommendations}
             </div>
           )}

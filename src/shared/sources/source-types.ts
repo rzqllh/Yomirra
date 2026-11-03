@@ -48,6 +48,8 @@ export interface MangaItem {
   author?: string;
   alternativeTitles?: string[];
   language?: string;
+  contentRating?: "safe" | "suggestive" | "erotica" | "pornographic" | "unknown";
+  isNsfw?: boolean;
 }
 
 export interface MangaDetail extends MangaItem {
@@ -67,6 +69,18 @@ export interface Chapter {
   scanlator?: string;
   isLocked?: boolean; // V1: paywall/early-access boundary indicator
   url?: string; // V1: upstream URL if available
+  language?: string;
+  volume?: string;
+  pageCount?: number;
+  chapterNumber?: string;
+}
+
+/** Per-request preferences; never mutate a shared adapter instance with user state. */
+export interface SourceReadOptions {
+  hideNsfw?: boolean;
+  preferredLanguages?: string[];
+  dataSaver?: boolean;
+  mangaId?: string;
 }
 
 export interface ChapterPages {
@@ -95,12 +109,12 @@ export interface FilterList {
 }
 
 export interface MangaSource extends SourceMetadata {
-  getPopular(page: number): Promise<MangaPageResult>;
-  getLatest(page: number): Promise<MangaPageResult>;
-  search(query: string, page: number, filters?: Record<string, string | string[]>): Promise<MangaPageResult>;
-  getDetail(mangaId: string): Promise<MangaDetail>;
-  getChapters(mangaId: string): Promise<Chapter[]>;
-  getPages(chapterId: string): Promise<ChapterPages>;
+  getPopular(page: number, options?: SourceReadOptions): Promise<MangaPageResult>;
+  getLatest(page: number, options?: SourceReadOptions): Promise<MangaPageResult>;
+  search(query: string, page: number, filters?: Record<string, string | string[]>, options?: SourceReadOptions): Promise<MangaPageResult>;
+  getDetail(mangaId: string, options?: SourceReadOptions): Promise<MangaDetail>;
+  getChapters(mangaId: string, options?: SourceReadOptions): Promise<Chapter[]>;
+  getPages(chapterId: string, options?: SourceReadOptions): Promise<ChapterPages>;
   getFilters(): FilterList | Promise<FilterList>;
   // V1 Optional Capabilities
   getRelated?(mangaId: string): Promise<MangaItem[]>;
@@ -108,6 +122,11 @@ export interface MangaSource extends SourceMetadata {
 }
 
 export type SourceErrorCode =
+  | "SOURCE_DISABLED"
+  | "CONTENT_RESTRICTED"
+  | "CONTENT_NOT_FOUND"
+  | "CHAPTER_UNAVAILABLE"
+  | "MAPPING_UNAVAILABLE"
   | "SOURCE_DOWN"
   | "DOMAIN_CHANGED"
   | "ROUTE_CHANGED"

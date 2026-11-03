@@ -16,8 +16,8 @@ interface ReaderSettingsDrawerProps {
 
 const BACKGROUNDS = [
   { name: 'Gelap', value: 'black', color: '#000000', border: 'border-white/10' },
-  { name: 'Hijau Gelap', value: 'deepLagoon', color: '#003135', border: 'border-white/10' },
-  { name: 'Terang', value: 'mist', color: '#f8fafc', border: 'border-black/10' }
+  { name: 'Terang', value: 'mist', color: '#f9f9fb', border: 'border-black/10' },
+  { name: 'Sesuai Sistem', value: 'system', color: '', border: 'border-white/20' }
 ] as const;
 
 const IMAGE_FITS = [
@@ -77,8 +77,8 @@ function ReaderSettingsOption<T extends string>({
             onClick={() => onChange(mode.id)}
             className={cn(
               "flex-1 py-2 px-1 text-xs font-bold rounded-lg transition-colors outline-none",
-              value === mode.id 
-                ? "bg-surface-overlay text-text-primary ring-1 ring-border-default/50" 
+              value === mode.id
+                ? "bg-surface-overlay text-text-primary ring-1 ring-border-default/50"
                 : "text-text-secondary hover:text-text-primary hover:bg-surface-hover"
             )}
           >
@@ -152,7 +152,7 @@ export function ReaderSettingsDrawer({ isOpen, onClose, sourceId, mangaId }: Rea
       isOpen={effectiveIsOpen}
       onClose={handleClose}
       title="Pengaturan pembaca"
-      icon={<SlidersHorizontal size={20} weight="bold" />}
+      icon={<SlidersHorizontal size={20} weight="regular" />}
       desktopMode="side-panel"
       contentClassName="p-5 space-y-6 overscroll-contain pb-[calc(24px+var(--safe-bottom))]"
     >
@@ -209,9 +209,9 @@ export function ReaderSettingsDrawer({ isOpen, onClose, sourceId, mangaId }: Rea
       {/* Tampilan */}
       <div className="space-y-3">
         <div className="text-xs font-bold uppercase tracking-wider text-text-muted px-1 flex items-center gap-1.5">
-          <Layout size={14} weight="bold" /> Tampilan & Tema
+          <Layout size={14} weight="regular" /> Tampilan & Tema
         </div>
-        
+
         {/* Warna Latar Belakang */}
         <div className="p-4 bg-surface-base rounded-xl border border-border-subtle flex flex-col gap-3">
           <span className="text-sm font-bold text-text-primary">Warna Latar Belakang</span>
@@ -221,17 +221,22 @@ export function ReaderSettingsDrawer({ isOpen, onClose, sourceId, mangaId }: Rea
               return (
                 <button
                   key={bg.value}
+                  type="button"
                   onClick={() => handleUpdate({ background: bg.value })}
                   className={cn(
-                    "flex flex-col items-center gap-2 p-2.5 rounded-xl border transition-all outline-none",
-                    isSelected 
-                      ? "border-accent bg-accent/10 shadow-xs ring-1 ring-accent" 
+                    "flex flex-col items-center gap-2 p-2.5 rounded-xl border transition-all outline-none cursor-pointer",
+                    isSelected
+                      ? "border-accent bg-accent/10 shadow-xs ring-1 ring-accent"
                       : "border-border-subtle bg-surface-raised hover:bg-surface-hover"
                   )}
                 >
-                  <div 
-                    className={cn("w-6 h-6 rounded-full shadow-inner border", bg.border)}
-                    style={{ backgroundColor: bg.color }}
+                  <div
+                    className={cn("w-6 h-6 rounded-full shadow-inner border overflow-hidden", bg.border)}
+                    style={
+                      bg.value === "system"
+                        ? { background: "linear-gradient(135deg, #090a0f 50%, #f9f9fb 50%)" }
+                        : { backgroundColor: bg.color }
+                    }
                   />
                   <span className={cn(
                     "text-xs font-bold truncate w-full text-center",
@@ -249,12 +254,12 @@ export function ReaderSettingsDrawer({ isOpen, onClose, sourceId, mangaId }: Rea
       {/* Mode Baca & Gambar */}
       <div className="space-y-3">
         <div className="text-xs font-bold uppercase tracking-wider text-text-muted px-1 flex items-center gap-1.5">
-          <ImageSquare size={14} weight="bold" /> Penyesuaian Gambar
+          <ImageSquare size={14} weight="regular" /> Penyesuaian Gambar
         </div>
 
         <div className="bg-surface-base rounded-xl border border-border-subtle divide-y divide-border-subtle">
           <ReaderSettingsOption
-            icon={<BoundingBox size={18} className="text-accent" weight="bold" />}
+            icon={<BoundingBox size={18} className="text-accent" weight="regular" />}
             title="Ukuran gambar"
             options={IMAGE_FITS}
             value={preferences.imageFit}
@@ -262,7 +267,7 @@ export function ReaderSettingsDrawer({ isOpen, onClose, sourceId, mangaId }: Rea
           />
 
           <ReaderSettingsOption
-            icon={<ArrowsOutLineVertical size={18} className="text-accent" weight="bold" />}
+            icon={<ArrowsOutLineVertical size={18} className="text-accent" weight="regular" />}
             title="Jarak Antar Halaman"
             options={PAGE_GAPS}
             value={preferences.pageGap}
@@ -270,7 +275,7 @@ export function ReaderSettingsDrawer({ isOpen, onClose, sourceId, mangaId }: Rea
           />
 
           <ReaderSettingsOption
-            icon={<Layout size={18} className="text-accent" weight="bold" />}
+            icon={<Layout size={18} className="text-accent" weight="regular" />}
             title="Arah baca"
             options={READING_DIRECTIONS}
             value={preferences.readingDirection}
@@ -282,12 +287,12 @@ export function ReaderSettingsDrawer({ isOpen, onClose, sourceId, mangaId }: Rea
       {/* Kontrol & Performa */}
       <div className="space-y-3">
         <div className="text-xs font-bold uppercase tracking-wider text-text-muted px-1 flex items-center gap-1.5">
-          <Lightning size={14} weight="bold" /> Kontrol & Performa
+          <Lightning size={14} weight="regular" /> Kontrol & Performa
         </div>
 
         <div className="bg-surface-base rounded-xl border border-border-subtle divide-y divide-border-subtle">
           <ReaderSettingsOption
-            icon={<SlidersHorizontal size={18} className="text-accent" weight="bold" />}
+            icon={<SlidersHorizontal size={18} className="text-accent" weight="regular" />}
             title="Kontrol pembaca"
             options={TOOLBAR_BEHAVIORS}
             value={preferences.toolbarBehavior}
@@ -295,13 +300,17 @@ export function ReaderSettingsDrawer({ isOpen, onClose, sourceId, mangaId }: Rea
           />
 
           <ReaderSettingsOption
-            icon={<Lightning size={18} className="text-accent" weight="bold" />}
+            icon={<Lightning size={18} className="text-accent" weight="regular" />}
             title="Muat awal gambar"
             options={PRELOAD_INTENSITIES}
             value={preferences.preloadIntensity}
             onChange={(val) => handleUpdate({ preloadIntensity: val })}
           />
 
+          <div className="p-4 flex items-center justify-between gap-4">
+            <div><span className="text-sm font-bold text-text-primary">Nonaktifkan double-tap zoom</span><p className="mt-1 text-xs text-text-muted">Cubit gambar tetap dapat digunakan untuk zoom.</p></div>
+            <ToggleSwitch id="disable-double-tap-zoom" checked={preferences.disableDoubleTapZoom ?? false} onCheckedChange={(checked) => handleUpdate({ disableDoubleTapZoom: checked })} label="Nonaktifkan double-tap zoom" />
+          </div>
           <div className="p-4 flex items-center justify-between">
             <span className="text-sm font-bold text-text-primary">Progres halaman</span>
             <ToggleSwitch

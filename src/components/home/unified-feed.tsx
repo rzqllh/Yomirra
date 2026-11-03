@@ -1,12 +1,13 @@
-import { withCache, CACHE_TTL } from "@/server/lib/cache/redis-cache";
+import { loadSourceCatalog } from "@/server/lib/sources/content-access";
 import { sourceManager } from "@/server/lib/sources/source-manager";
 import { getManifestUrlFromCookie } from "@/server/lib/sources/server-manifest";
-import type { SourceMetadata } from "@/shared/sources/source-types";
+import type { SourceReadOptions, SourceMetadata } from "@/shared/sources/source-types";
 import { HomeFeedClient } from "./home-feed-client";
 import type { HomeFeedManga } from "./home-feed-selection";
 
 interface UnifiedFeedProps {
   activeSources: SourceMetadata[];
+  options?: SourceReadOptions;
 }
 
 function interleaveArrays<T>(arrays: T[][]): T[] {
@@ -24,8 +25,8 @@ function interleaveArrays<T>(arrays: T[][]): T[] {
   return result;
 }
 
-export async function UnifiedFeed({ activeSources }: UnifiedFeedProps) {
-  if (activeSources.length === 0) return null;
+export async function UnifiedFeed({ activeSources, options = {} }: UnifiedFeedProps) {
+  if (activeSources.length === 0) return <HomeFeedClient unifiedPopular={[]} unifiedLatest={[]} />;
 
   const fetchPromises = activeSources.map(async (sourceInfo) => {
     try {
@@ -33,16 +34,8 @@ export async function UnifiedFeed({ activeSources }: UnifiedFeedProps) {
       const source = await sourceManager.getSource(sourceInfo.id, manifestUrl);
 
       const [popularData, latestData] = await Promise.all([
-        withCache(
-          `source:${sourceInfo.id}:popular:1`,
-          () => source.getPopular(1),
-          CACHE_TTL.DISCOVERY
-        ),
-        withCache(
-          `source:${sourceInfo.id}:latest:1`,
-          () => source.getLatest(1),
-          CACHE_TTL.DISCOVERY
-        ),
+        loadSourceCatalog(source, "popular", 1, options),
+        loadSourceCatalog(source, "latest", 1, options),
       ]);
 
       return {
@@ -67,10 +60,6 @@ export async function UnifiedFeed({ activeSources }: UnifiedFeedProps) {
     (result): result is NonNullable<typeof result> => Boolean(result)
   );
 
-  if (validResults.length === 0) {
-    return null;
-  }
-
   const popularArrays: HomeFeedManga[][] = validResults.map((result) =>
     (result.popular?.mangas ?? []).map((manga) => ({
       ...manga,
@@ -90,14 +79,11 @@ export async function UnifiedFeed({ activeSources }: UnifiedFeedProps) {
   const unifiedPopular = interleaveArrays(popularArrays);
   const unifiedLatest = interleaveArrays(latestArrays);
 
-  if (unifiedPopular.length === 0 && unifiedLatest.length === 0) {
-    return null;
-  }
-
   return (
     <HomeFeedClient
       unifiedPopular={unifiedPopular}
       unifiedLatest={unifiedLatest}
+      catalogState={validResults.length === 0 ? "unavailable" : validResults.length < activeSources.length ? "partial" : unifiedPopular.length + unifiedLatest.length === 0 ? "empty" : undefined}
     />
   );
 }

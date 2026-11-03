@@ -1,255 +1,170 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { useRouter, usePathname } from "next/navigation"
-import Image from "next/image"
-import { useQuery } from "@tanstack/react-query"
-import { apiClient } from "@/shared/api-client"
-import { useDebounce } from "@/shared/hooks/use-debounce"
-import { useSettingsStore } from "@/shared/store/settings-store"
-import { sourceRegistry } from "@/shared/sources/source-registry"
-import { MangaItem } from "@/shared/types/source"
-import {
-  MagnifyingGlass,
-  ArrowRight,
-} from "@phosphor-icons/react"
-import {
-  CommandDialog,
-  CommandInput,
-  CommandList,
-  CommandEmpty,
-  CommandGroup,
-  CommandItem,
-} from "@/components/ui/command"
-import { getMangaDetailHref } from "@/shared/lib/routes"
+import * as React from "react";
+import { useRouter, usePathname } from "next/navigation";
+import Image from "next/image";
+import { useQuery } from "@tanstack/react-query";
+import { MagnifyingGlass, ArrowRight } from "@phosphor-icons/react";
+import { apiClient } from "@/shared/api-client";
+import { useDebounce } from "@/shared/hooks/use-debounce";
+import { useSettingsStore } from "@/shared/store/settings-store";
+import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
+import { useDiscoveryScopeStore } from "@/shared/store/discovery-scope-store";
+import { sourceQueryOptions } from "@/shared/sources/source-query-options";
+import { resolveQuickSearchScope } from "@/shared/sources/discovery-source-policy";
+import { classifyContent, isContentVisible } from "@/shared/sources/content-policy";
+import type { MangaItem } from "@/shared/types/source";
+import { CommandDialog, CommandInput, CommandList, CommandGroup, CommandItem } from "@/components/ui/command";
+import { getMangaDetailHref, getSearchHref } from "@/shared/lib/routes";
 
-// Nav items removed as it's now search only
+export function canRevealQuickSearchCover(item: Pick<MangaItem, "contentRating" | "isNsfw">, hideNsfw: boolean): boolean {
+  if (!hideNsfw) return true;
+  return classifyContent(item) !== "NSFW";
+}
 
 export function CommandMenu() {
-  const [open, setOpen] = React.useState(false)
-  const [searchQuery, setSearchQuery] = React.useState("")
-  const triggerRef = React.useRef<HTMLElement | null>(null)
-  const restoreFocusOnCloseRef = React.useRef(true)
-  const router = useRouter()
-  const pathname = usePathname()
+  const [open, setOpen] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const triggerRef = React.useRef<HTMLElement | null>(null);
+  const restoreFocusRef = React.useRef(true);
+  const router = useRouter();
+  const pathname = usePathname();
+  const hideNsfw = useSettingsStore((state) => state.hideNsfw);
+  const languages = useSettingsStore((state) => state.preferredLanguages);
+  const disabledSources = useSourcePreferencesStore((state) => state.disabledSources);
+  const sourceId = useDiscoveryScopeStore((state) => state.sourceId);
+  const registry = useQuery(sourceQueryOptions);
+  const scope = React.useMemo(
+    () => resolveQuickSearchScope(registry.data ?? [], disabledSources, sourceId, hideNsfw),
+    [registry.data, disabledSources, sourceId, hideNsfw]
+  );
+  const scopeLabel = scope.source && !(hideNsfw && scope.source.isNsfw) ? scope.source.name : "Belum tersedia";
+  const query = searchQuery.trim();
+  const debouncedQuery = useDebounce(query, 180);
+  const isDebouncing = query !== debouncedQuery;
 
-  React.useEffect(() => {
-    const openSearch = (query = "") => {
-      if (pathname === "/search") {
-        window.dispatchEvent(new CustomEvent("focus-search-input", { detail: { query } }));
-        return;
-      }
-      triggerRef.current =
-        document.activeElement instanceof HTMLElement &&
-        document.activeElement !== document.body
-          ? document.activeElement
-          : null;
-      restoreFocusOnCloseRef.current = true;
-      setSearchQuery(query);
-      setOpen(true);
-    };
-
-    const handleCustomOpen = (event: Event) => {
-      const customEvent = event as CustomEvent<{ query?: string }>;
-      openSearch(customEvent.detail?.query ?? "");
-    };
-
-    const handleShortcut = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
-        event.preventDefault();
-        openSearch();
-      }
-    };
-
-    window.addEventListener("open-command-menu", handleCustomOpen);
-    window.addEventListener("keydown", handleShortcut);
-    return () => {
-      window.removeEventListener("open-command-menu", handleCustomOpen);
-      window.removeEventListener("keydown", handleShortcut);
-    };
-  }, [pathname]);
-
-  // Search manga globally with word debounce & timeout limiting
-  const debouncedQuery = useDebounce(searchQuery.trim(), 180)
-  const isNsfwFiltered = useSettingsStore((state) => state.hideNsfw)
-  // Global Search intentionally ignores Library/Popular source toggles.
-  // Only sources that are operationally unavailable are excluded here.
-  const activeSources = React.useMemo(() => {
-    return sourceRegistry
-      .filter((source) =>
-        source.isEnabled &&
-        source.isInstalled &&
-        source.status !== "unavailable" &&
-        source.status !== "in-fix"
-      )
-      .map((source) => source.id);
+  const handleOpenChange = React.useCallback((next: boolean) => {
+    setOpen(next);
+    if (!next) {
+      setSearchQuery("");
+      const trigger = triggerRef.current;
+      if (restoreFocusRef.current) requestAnimationFrame(() => { if (trigger?.isConnected) trigger.focus({ preventScroll: true }); });
+      triggerRef.current = null;
+    }
   }, []);
 
-  const { data: globalSearchData, isLoading: isSearching } = useQuery({
-    queryKey: ["command-search-global", debouncedQuery, isNsfwFiltered, activeSources],
-    queryFn: () => apiClient.searchGlobal(debouncedQuery, activeSources, 1, isNsfwFiltered),
-    enabled: debouncedQuery.length >= 2,
-  })
-
-  const previewResults = React.useMemo(() => {
-    if (!globalSearchData) return [];
-    // Priority: consume backend canonicalResults directly (Single Ownership)
-    if (globalSearchData.canonicalResults && globalSearchData.canonicalResults.length > 0) {
-      return globalSearchData.canonicalResults.map((c) => ({
-        ...c.primaryResult,
-        sourceBindings: c.sourceBindings,
-      })).slice(0, 5);
-    }
-    // Narrow compatibility fallback for raw legacy results
-    if (globalSearchData.resultsBySource) {
-      const allResults: (MangaItem & { sourceId: string })[] = [];
-      Object.entries(globalSearchData.resultsBySource).forEach(([sourceId, sourceData]) => {
-        if (sourceData.results) {
-          sourceData.results.forEach((manga) => {
-            allResults.push({ ...manga, sourceId });
-          });
-        }
-      });
-      return allResults.slice(0, 5);
-    }
-    return [];
-  }, [globalSearchData]);
-
-  const handleOpenChange = React.useCallback((nextOpen: boolean) => {
-    setOpen(nextOpen)
-
-    if (!nextOpen && restoreFocusOnCloseRef.current) {
-      const trigger = triggerRef.current
-      if (trigger instanceof HTMLInputElement) {
-        trigger.blur()
-      } else {
-        requestAnimationFrame(() => {
-          trigger?.focus({ preventScroll: true })
-        })
+  React.useEffect(() => {
+    const openSearch = (value = "") => {
+      const active = document.activeElement;
+      if (active instanceof HTMLElement && active !== document.body && !active.closest('[role="dialog"]')) triggerRef.current = active;
+      restoreFocusRef.current = true;
+      setSearchQuery(value);
+      setOpen(true);
+    };
+    const customOpen = (event: Event) => openSearch((event as CustomEvent<{ query?: string }>).detail?.query ?? "");
+    const shortcut = (event: KeyboardEvent) => {
+      if (open && event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
+        handleOpenChange(false);
+        return;
       }
-    }
-  }, [])
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") { event.preventDefault(); openSearch(); }
+    };
+    window.addEventListener("open-command-menu", customOpen);
+    window.addEventListener("keydown", shortcut, true);
+    return () => { window.removeEventListener("open-command-menu", customOpen); window.removeEventListener("keydown", shortcut, true); };
+  }, [open, handleOpenChange]);
 
-  const handleSelect = (href: string) => {
-    restoreFocusOnCloseRef.current = false
-    setOpen(false)
-    setSearchQuery("")
-    router.push(href)
-  }
+  const search = useQuery({
+    queryKey: ["quick-search-v1", scope.sourceIds, debouncedQuery, hideNsfw, languages],
+    queryFn: ({ signal }) => apiClient.searchGlobal(debouncedQuery, scope.sourceIds, 1, hideNsfw, undefined, { signal }),
+    enabled: open && !registry.isError && scope.sourceIds.length > 0 && debouncedQuery.length >= 2 && !isDebouncing,
+    retry: 1,
+  });
+  const results = React.useMemo(() => {
+    if (!open || isDebouncing || !scope.sourceIds.length || registry.isError || !search.data || query.length < 2) return [];
+    const allowed = new Set(scope.sourceIds);
+    const items: (MangaItem & { sourceId: string })[] = search.data.canonicalResults?.length
+      ? search.data.canonicalResults.map((item) => ({ ...item.primaryResult, sourceBindings: item.sourceBindings }))
+      : Object.entries(search.data.resultsBySource).flatMap(([id, group]) => group.results.map((item) => ({ ...item, sourceId: id })));
+    return items.filter((item) => allowed.has(item.sourceId) && isContentVisible(item, hideNsfw)).slice(0, 5);
+  }, [open, isDebouncing, scope.sourceIds, registry.isError, search.data, query, hideNsfw]);
+  const sourceFailures = Object.values(search.data?.resultsBySource ?? {}).filter((group) => group.error);
+  const failed = search.isError || sourceFailures.length > 0;
+  const loading = query.length >= 2 && (isDebouncing || search.isFetching);
+
+  const navigate = (href: string) => { restoreFocusRef.current = false; setOpen(false); setSearchQuery(""); router.push(href); };
+
+  let message = query.length < 2 ? "Ketik minimal 2 karakter untuk mencari judul." : "Tidak ada hasil di sumber Jelajah ini.";
+  if (registry.isPending) message = "Memuat pilihan sumber Jelajah…";
+  else if (registry.isError) message = "Daftar sumber belum bisa dimuat. Coba lagi.";
+  else if (scope.reason === "empty") message = "Belum ada sumber Jelajah yang aktif. Pilih sumber di Jelajah.";
+  else if (scope.reason === "unavailable") message = "Sumber Jelajah yang dipilih sedang tidak tersedia atau disembunyikan.";
+  else if (scope.reason === "unsupported") message = "Sumber Jelajah ini belum mendukung pencarian cepat.";
+  else if (loading) message = "Mencari di sumber Jelajah…";
+  else if (failed) message = sourceFailures[0]?.error ?? "Pencarian belum bisa dimuat. Coba lagi.";
+
+  // A closed search has no interactive/present dialog, including on WebKit
+  // when an interrupted exit animation does not emit animationend.
+  if (!open) return null;
 
   return (
     <CommandDialog open={open} onOpenChange={handleOpenChange} shouldFilter={false}>
-      <CommandInput
-        placeholder="Cari judul atau kreator…"
-        value={searchQuery}
-        onValueChange={setSearchQuery}
-      />
-      <CommandList className="max-h-[380px] p-2 overflow-y-auto">
-        <CommandEmpty>
-          {searchQuery.trim().length < 2 ? (
-            <div className="py-8 text-center select-none">
-              <p className="font-bold text-text-primary text-sm">Mulai ketik judul</p>
-              <p className="text-xs text-text-muted mt-1">Minimal 2 karakter untuk menampilkan saran.</p>
-            </div>
-          ) : isSearching ? (
-            <div className="flex flex-col gap-2 p-3">
-              <div className="h-4 w-1/4 bg-surface-muted rounded animate-pulse mb-1" />
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center gap-3 py-2 px-1">
-                  <div className="h-12 w-9 rounded-md bg-surface-muted animate-pulse shrink-0" />
-                  <div className="flex flex-col gap-2 flex-1">
-                    <div className="h-3.5 w-3/4 bg-surface-muted rounded animate-pulse" />
-                    <div className="h-3 w-1/3 bg-surface-muted rounded animate-pulse" />
+      <CommandInput aria-label="Quick Search di sumber Jelajah" placeholder="Cari judul di Jelajah…" value={searchQuery} onValueChange={setSearchQuery} />
+      <p className="border-b border-border-subtle px-4 py-2 pr-14 text-xs text-text-muted">
+        Sumber Jelajah · <span className="font-semibold text-text-secondary">{scopeLabel}</span>
+      </p>
+      <CommandList key={scope.sourceId} className="min-h-0 flex-1 overflow-y-auto p-2">
+        {(results.length === 0 || failed) && (
+          <div role="status" aria-live="polite" className="px-3 py-5 text-sm leading-relaxed text-text-muted">
+            <p>{message}</p>
+            {(registry.isError || failed) && (
+              <button type="button" className="mt-2 min-h-11 px-2 font-semibold text-accent focus-visible:outline-2"
+                onClick={() => registry.isError ? void registry.refetch() : void search.refetch()}>Coba lagi</button>
+            )}
+          </div>
+        )}
+        {results.length > 0 && (
+          <CommandGroup heading="Hasil di Jelajah">
+            {results.map((manga) => (
+              <CommandItem key={`${manga.sourceId}:${manga.id}`} value={`${manga.sourceId}:${manga.id}`}
+                onSelect={() => navigate(getMangaDetailHref(manga.sourceId, manga.id, pathname))}
+                className="flex min-h-14 cursor-pointer items-center gap-3 rounded-lg px-3 py-2">
+                {manga.coverUrl && canRevealQuickSearchCover(manga, hideNsfw) ? (
+                  <div className="relative h-12 w-9 shrink-0 overflow-hidden rounded bg-surface-muted">
+                    <Image src={manga.coverUrl} alt="" fill className="object-cover" unoptimized />
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="py-8 text-center select-none">
-              <p className="font-bold text-text-primary text-sm">Belum ketemu</p>
-              <p className="text-xs text-text-muted mt-1">Coba kata kunci lain, atau lanjutkan ke halaman Cari.</p>
-            </div>
-          )}
-        </CommandEmpty>
-
-        {/* Search Results */}
-        {previewResults.length > 0 && (
-          <CommandGroup heading="Pilihan Judul">
-            {previewResults.map((manga) => {
-              const href = getMangaDetailHref(manga.sourceId, manga.id, pathname);
-              return (
-                <CommandItem
-                  key={`${manga.sourceId}-${manga.id}`}
-                  value={`${manga.title} ${manga.sourceId} ${manga.id}`}
-                  onSelect={() => handleSelect(href)}
-                  onClick={() => handleSelect(href)}
-                  className="flex items-center gap-3 px-3 py-2 rounded-[12px] cursor-pointer hover:bg-surface-hover transition-colors"
-                >
-                  {manga.coverUrl ? (
-                    <div className="relative h-12 w-9 shrink-0 overflow-hidden rounded-[6px] border border-border-subtle bg-surface-muted shadow-xs">
-                      <Image
-                        src={manga.coverUrl}
-                        alt=""
-                        fill
-                        className="object-cover transition-transform group-hover:scale-105"
-                        unoptimized
-                      />
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center h-12 w-9 shrink-0 rounded-[6px] bg-surface-muted text-text-muted">
-                      <MagnifyingGlass size={16} weight="bold" />
-                    </div>
+                ) : (
+                  <div aria-hidden="true" className="flex h-12 w-9 shrink-0 items-center justify-center rounded bg-surface-muted">
+                    <MagnifyingGlass size={20} />
+                  </div>
+                )}
+                <div className="min-w-0 flex-1">
+                  <span className="block break-words text-sm font-semibold text-text-primary">{manga.title}</span>
+                  <span className="text-xs text-text-muted">{scopeLabel}</span>
+                  {hideNsfw && !canRevealQuickSearchCover(manga, hideNsfw) && (
+                    <span className="block text-xs font-semibold text-status-warning-fg">Rating belum terverifikasi</span>
                   )}
-                  <div className="flex flex-col min-w-0 flex-1">
-                    <span className="truncate font-bold text-text-primary text-sm">{manga.title}</span>
-                    <div className="flex items-center gap-2 mt-0.5 text-xs text-text-muted">
-                      <span className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-accent-dim text-accent uppercase tracking-wider">
-                        {manga.sourceId}
-                      </span>
-                      {manga.latestChapter && (
-                        <span className="truncate text-[11px]">{manga.latestChapter}</span>
-                      )}
-                    </div>
-                  </div>
-                </CommandItem>
-              );
-            })}
+                </div>
+              </CommandItem>
+            ))}
           </CommandGroup>
         )}
-
-        {searchQuery.trim().length > 0 && (
+        {query.length >= 2 && (
           <CommandGroup>
-            <CommandItem
-              value={`search-all-${searchQuery}`}
-              onSelect={() => handleSelect(`/search?q=${encodeURIComponent(searchQuery.trim())}`)}
-              onClick={() => handleSelect(`/search?q=${encodeURIComponent(searchQuery.trim())}`)}
-              className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-[12px] cursor-pointer border border-border-subtle bg-surface-raised hover:bg-surface-hover"
-            >
+            <CommandItem value="open-discovery-search" onSelect={() => navigate(getSearchHref(query))}
+              className="flex min-h-14 cursor-pointer items-center justify-between gap-3 rounded-lg border border-border-subtle px-3 py-2">
               <div className="min-w-0">
-                <span className="block text-sm font-bold text-text-primary truncate">
-                  Lihat hasil lainnya
-                </span>
-                <span className="block text-[11px] text-text-muted truncate">
-                  Cari &ldquo;{searchQuery.trim()}&rdquo; di semua sumber
-                </span>
+                <span className="block text-sm font-semibold">Buka Cari</span>
+                <span className="block text-xs leading-relaxed text-text-muted">Cari “{query}” memakai pilihan sumber Cari.</span>
               </div>
-              <ArrowRight size={16} weight="bold" className="text-accent shrink-0" />
+              <ArrowRight size={18} aria-hidden="true" />
             </CommandItem>
           </CommandGroup>
         )}
       </CommandList>
-
-      <div className="hidden sm:flex items-center justify-between px-4 py-2 bg-surface-muted/30 border-t border-border-subtle text-[11px] text-text-muted select-none">
-        <div className="flex items-center gap-2">
-          <span className="font-bold text-accent uppercase tracking-wider text-[10px]">Yomirra</span>
-          <span>· Pencarian</span>
-        </div>
-        <div className="flex items-center gap-3 font-mono text-[10px]">
-          <span className="flex items-center gap-1"><kbd className="px-1 py-0.5 rounded bg-surface-base border border-border-subtle">↑↓</kbd> pilih</span>
-          <span className="flex items-center gap-1"><kbd className="px-1 py-0.5 rounded bg-surface-base border border-border-subtle">↵</kbd> buka</span>
-          <span className="flex items-center gap-1"><kbd className="px-1 py-0.5 rounded bg-surface-base border border-border-subtle">esc</kbd> tutup</span>
-        </div>
-      </div>
+      <div className="hidden shrink-0 border-t border-border-subtle px-4 py-2 text-xs text-text-muted sm:block">↑↓ pilih · Enter buka · Esc tutup</div>
     </CommandDialog>
-  )
+  );
 }

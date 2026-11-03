@@ -43,8 +43,8 @@ export default function SourceBrowsePage({
     status
   } = useQuery({
     queryKey: ["sourceBrowse", sourceId, sort, currentPage],
-    queryFn: () => 
-      sort === "popular" 
+    queryFn: () =>
+      sort === "popular"
         ? apiClient.getPopular(sourceId, currentPage)
         : apiClient.getLatest(sourceId, currentPage),
     placeholderData: keepPreviousData,
@@ -66,7 +66,7 @@ export default function SourceBrowsePage({
         <div className="mb-6 flex items-center justify-between rounded-xl border border-border-subtle bg-surface-raised/70 p-3 sm:p-4">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-accent/10 rounded-lg text-accent">
-              <House size={24} weight="duotone" />
+              <House size={24} weight="regular" />
             </div>
             <div>
               <p className="font-bold text-text-primary">Tampilkan di Beranda</p>

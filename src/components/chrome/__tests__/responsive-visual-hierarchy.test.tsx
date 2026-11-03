@@ -35,7 +35,7 @@ describe("DesktopRail responsive, motion and navigation contracts", () => {
   it("exposes a real labelled navigation landmark and current destination", () => {
     render(<DesktopRail />);
     const nav = screen.getByRole("navigation", { name: "Navigasi desktop" });
-    const library = within(nav).getByRole("link", { name: "Library" });
+    const library = within(nav).getByRole("link", { name: "Jelajah" });
     expect(library.getAttribute("href")).toBe("/library");
     expect(library.getAttribute("aria-current")).toBe("page");
   });

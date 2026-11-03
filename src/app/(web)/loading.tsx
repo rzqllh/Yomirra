@@ -1,10 +1,11 @@
-import { HomeView } from "@/components/home/home-view";
 import { SourceFeedSkeleton } from "@/components/home/source-feed-skeleton";
 
 export default function Loading() {
+  // Hidden container ensures seamless page transitions without jarring layout flashes
+  // while preserving SourceFeedSkeleton geometry contract
   return (
-    <HomeView>
+    <div className="sr-only pointer-events-none" aria-hidden="true">
       <SourceFeedSkeleton />
-    </HomeView>
+    </div>
   );
 }

@@ -2,7 +2,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 
 // Mock redis
 const mockInfo = vi.fn();
-const mockKeys = vi.fn();
+const mockScan = vi.fn();
 const mockTtl = vi.fn();
 const mockType = vi.fn();
 const mockGet = vi.fn();
@@ -11,7 +11,7 @@ const mockDel = vi.fn();
 vi.mock("@/server/lib/cache/redis", () => ({
   redis: {
     info: (...args: any[]) => mockInfo(...args),
-    keys: (...args: any[]) => mockKeys(...args),
+    scan: (...args: any[]) => mockScan(...args),
     ttl: (...args: any[]) => mockTtl(...args),
     type: (...args: any[]) => mockType(...args),
     get: (...args: any[]) => mockGet(...args),
@@ -26,7 +26,9 @@ describe("Admin Redis Service", () => {
 
   it("should return telemetry info with memory and keyspace", async () => {
     mockInfo.mockResolvedValueOnce("used_memory_human:14.2M\nuptime_in_days:12\nconnected_clients:4");
-    mockKeys.mockResolvedValueOnce(["k1", "k2"]);
+    mockScan.mockResolvedValueOnce(["0", ["yomirra:k1", "yomirra:k2"]]);
+    mockTtl.mockResolvedValue(-1);
+    mockType.mockResolvedValue("string");
 
     const { getRedisTelemetry } = await import("../admin-redis-service");
     const telem = await getRedisTelemetry();
@@ -37,7 +39,7 @@ describe("Admin Redis Service", () => {
   });
 
   it("should scan keys and return metadata with TTL and type", async () => {
-    mockKeys.mockResolvedValueOnce(["yomirra:site:config"]);
+    mockScan.mockResolvedValueOnce(["0", ["yomirra:site:config"]]);
     mockTtl.mockResolvedValueOnce(-1);
     mockType.mockResolvedValueOnce("string");
 
@@ -48,6 +50,7 @@ describe("Admin Redis Service", () => {
     expect(result[0].key).toBe("yomirra:site:config");
     expect(result[0].type).toBe("string");
     expect(result[0].ttl).toBe(-1);
+    expect(mockScan).toHaveBeenCalledWith("0", "MATCH", "yomirra:*", "COUNT", 100);
   });
 
   it("should delete key successfully", async () => {

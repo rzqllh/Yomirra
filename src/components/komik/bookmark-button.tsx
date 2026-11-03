@@ -36,6 +36,7 @@ export function BookmarkButton({ sourceId, manga, className }: { sourceId: strin
       sourceId: sourceId,
       mangaId: manga.id,
       title: manga.title,
+      isNsfw: manga.isNsfw,
       coverUrl: manga.coverUrl,
       author: manga.author,
       status: manga.status,

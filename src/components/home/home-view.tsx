@@ -21,7 +21,7 @@ export function HomeView({ children }: HomeViewProps) {
       <YomirraSurface variant="base" className="min-h-screen">
         <PageHeader
           title="Beranda"
-          icon={<House size={20} weight="duotone" />}
+          icon={<House size={20} weight="regular" />}
           actions={<HeaderActions />}
           hideDesktop
         />

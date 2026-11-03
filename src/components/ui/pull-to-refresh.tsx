@@ -171,11 +171,11 @@ export function PullToRefresh({ children, onRefresh }: PullToRefreshProps) {
               animate={reducedMotion ? undefined : { rotate: 360 }}
               transition={reducedMotion ? { duration: 0 } : { repeat: Infinity, ease: "linear", duration: 1 }}
             >
-              <ArrowsClockwise size={20} weight="bold" className="text-accent" aria-hidden="true" />
+              <ArrowsClockwise size={20} weight="regular" className="text-accent" aria-hidden="true" />
             </motion.div>
           ) : (
             <motion.div style={{ rotate: reducedMotion ? 0 : rotation }}>
-              <ArrowDown size={20} weight="bold" className="text-text-secondary" aria-hidden="true" />
+              <ArrowDown size={20} weight="regular" className="text-text-secondary" aria-hidden="true" />
             </motion.div>
           )}
         </div>

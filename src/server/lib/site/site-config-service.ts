@@ -11,12 +11,14 @@ export function _resetSiteConfigForTesting(): void {
 }
 function parseStoredSiteConfig(raw: string): SiteConfig {
   const parsed = JSON.parse(raw);
+  const isTestAnnouncement = parsed.announcement?.message?.trim()?.toLowerCase() === "test bacaan";
   return {
     ...DEFAULT_SITE_CONFIG,
     ...parsed,
     announcement: {
       ...DEFAULT_SITE_CONFIG.announcement,
       ...(parsed.announcement || {}),
+      enabled: isTestAnnouncement ? false : (parsed.announcement?.enabled ?? DEFAULT_SITE_CONFIG.announcement.enabled),
     },
     maintenanceMode: {
       ...DEFAULT_SITE_CONFIG.maintenanceMode,

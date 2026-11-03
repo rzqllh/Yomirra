@@ -136,8 +136,9 @@ export function PageHeader({
   return (
     <>
       <header
+        style={{ top: "var(--announcement-height, 0px)" }}
         className={cn(
-          "md:hidden fixed top-0 left-0 right-0 z-[var(--z-sticky)] flex w-full flex-col justify-end px-4 pt-[calc(var(--safe-top,0px)+8px)] pb-2 transition-[background-color,border-color,box-shadow,backdrop-filter] duration-200 ease-out pointer-events-none",
+          "md:hidden fixed left-0 right-0 z-[var(--z-sticky)] flex w-full flex-col justify-end px-4 pt-[calc(var(--safe-top,0px)+8px)] pb-2 transition-[background-color,border-color,box-shadow,backdrop-filter,top] duration-200 ease-out pointer-events-none",
           mode === "standard" && "yomirra-chrome border-x-0 border-t-0 rounded-none",
           mode === "detail" && isGlass && "yomirra-chrome border-x-0 border-t-0 rounded-none",
           isTransparent && "bg-transparent border-transparent shadow-none backdrop-blur-none",
@@ -151,18 +152,18 @@ export function PageHeader({
                 type="button"
                 onClick={handleBack}
                 className={cn(
-                  "flex size-11 items-center justify-center rounded-2xl active:scale-95 transition-all shrink-0 select-none outline-none cursor-pointer",
+                  "flex size-11 items-center justify-center rounded-xl active:scale-95 transition-all shrink-0 select-none outline-none cursor-pointer",
                   mode === "detail" && !isGlass
                     ? "bg-black/40 hover:bg-black/60 text-white backdrop-blur-md border border-white/20 shadow-sm"
                     : "yomirra-chrome-control text-text-primary"
                 )}
                 aria-label="Kembali"
               >
-                <CaretLeft size={20} weight="bold" />
+                <CaretLeft size={20} weight="regular" />
               </button>
             ) : (
               icon && (
-                <div className="yomirra-chrome-control flex size-11 items-center justify-center rounded-2xl text-accent shrink-0 select-none">
+                <div className="yomirra-chrome-control flex size-11 items-center justify-center rounded-xl text-accent shrink-0 select-none">
                   {icon}
                 </div>
               )

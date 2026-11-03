@@ -13,7 +13,7 @@ export default function UpdatesPage() {
         <PageHeader
           title="Jadwal Mingguan"
           description="Lihat perkiraan jadwal chapter baru dari komik yang kamu simpan."
-          icon={<CalendarBlank size={24} weight="duotone" />}
+          icon={<CalendarBlank size={24} weight="regular" />}
           showBack={true}
         />
 

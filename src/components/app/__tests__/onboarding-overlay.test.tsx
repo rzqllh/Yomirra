@@ -43,26 +43,20 @@ describe('OnboardingOverlay', () => {
     render(<OnboardingOverlay onComplete={onComplete} />);
 
     expect(screen.getByText('SEMUA SUMBER, SATU PINTU')).toBeTruthy();
-    expect(screen.getByText(/Ribuan Judul/)).toBeTruthy();
+    expect(screen.getByText(/Katalog Multi-Sumber Terlengkap/)).toBeTruthy();
 
     const nextBtn = screen.getByRole('button', { name: 'Lanjut' });
     fireEvent.click(nextBtn);
 
     // Step 2
     await waitFor(() => {
-      expect(screen.getByText('RAK & RIWAYAT')).toBeTruthy();
+      expect(screen.getByText('KUSTOMISASI & KENYAMANAN')).toBeTruthy();
     });
     fireEvent.click(screen.getByRole('button', { name: 'Lanjut' }));
 
-    // Step 3
+    // Final Step: Step 3
     await waitFor(() => {
-      expect(screen.getByText('PENCARIAN LINTAS SUMBER')).toBeTruthy();
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Lanjut' }));
-
-    // Final Step: Step 4
-    await waitFor(() => {
-      expect(screen.getByText('READER YANG NGERTI KAMU')).toBeTruthy();
+      expect(screen.getByText('SIAP MEMBACA')).toBeTruthy();
       expect(screen.getByRole('button', { name: 'Mulai Membaca' })).toBeTruthy();
     });
 
@@ -92,7 +86,7 @@ describe('OnboardingOverlay', () => {
     // ArrowRight advances step
     fireEvent.keyDown(window, { key: 'ArrowRight' });
     await waitFor(() => {
-      expect(screen.getByText('RAK & RIWAYAT')).toBeTruthy();
+      expect(screen.getByText('KUSTOMISASI & KENYAMANAN')).toBeTruthy();
     });
 
     // ArrowLeft goes back

@@ -92,6 +92,7 @@ export function rankRecommendationCandidates<T extends RecommendationCandidate>(
     currentFormat?: string;
     currentStatus?: string;
     profile: RecommendationProfile;
+    excludeSaved?: boolean;
   }
 ): T[] {
   const currentTitle = normalizeTitle(options.currentTitle);
@@ -100,12 +101,13 @@ export function rankRecommendationCandidates<T extends RecommendationCandidate>(
   const currentGenreSet = new Set(
     (options.currentGenres ?? []).map((g) => g.toLowerCase().trim()).filter(Boolean)
   );
+  const shouldExcludeSaved = options.excludeSaved ?? true;
 
   return candidates
     .map((candidate, index) => {
       const normalizedTitle = normalizeTitle(candidate.manga?.title);
       if (!normalizedTitle || (currentTitle && normalizedTitle === currentTitle)) return null;
-      if (options.profile.seenTitles.has(normalizedTitle)) return null;
+      if (shouldExcludeSaved && options.profile.seenTitles.has(normalizedTitle)) return null;
 
       const format = candidate.manga.format?.trim().toLowerCase();
       const status = candidate.manga.status?.trim().toLowerCase();

@@ -9,7 +9,8 @@ import { useCollectionStore } from "@/shared/store/collection-store";
 import type { MangaUpdateItem } from "@/shared/types/update";
 import type { Collection, ReadingStatus } from "@/shared/types/collection";
 import { retainHistory } from "./history-retention";
-import { version as appVersion } from "../../../package.json";
+import packageInfo from "../../../package.json";
+const appVersion = packageInfo.version;
 import {
   yomirraBackupSchemaV1,
   yomirraBackupSchemaV2,
@@ -154,6 +155,7 @@ export function createBackupPayload(theme: "light" | "dark" | "system" = "system
         toolbarBehavior: readerState.preferences.toolbarBehavior,
         preloadIntensity: readerState.preferences.preloadIntensity,
         showPageProgress: readerState.preferences.showPageProgress,
+        disableDoubleTapZoom: readerState.preferences.disableDoubleTapZoom ?? false,
         readingDirection: readerState.preferences.readingDirection,
         readingMode: readerState.preferences.readingMode,
         keepScreenAwakeWhileReading: readerState.preferences.keepScreenAwake ?? true,
@@ -480,6 +482,7 @@ export function executeCoordinatedRestore(
       toolbarBehavior: backup.data.readerPreferences.toolbarBehavior,
       preloadIntensity: backup.data.readerPreferences.preloadIntensity,
       showPageProgress: backup.data.readerPreferences.showPageProgress,
+      disableDoubleTapZoom: backup.data.readerPreferences.disableDoubleTapZoom ?? false,
       readingDirection: backup.data.readerPreferences.readingDirection,
       readingMode: backup.data.readerPreferences.readingMode,
       keepScreenAwake: backup.data.readerPreferences.keepScreenAwakeWhileReading,

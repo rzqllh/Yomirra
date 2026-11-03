@@ -2,7 +2,9 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "git": {
     "deploymentEnabled": {
-      "fix/yomirra-cleanup-consolidation-20261030": false
+      "fix/yomirra-cleanup-consolidation-20261030": false,
+      "ci/enterprise-browser-smoke-20261030": false,
+      "integrate/enterprise-safety-gates-20261030": false
     }
   }
 }

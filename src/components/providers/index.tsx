@@ -11,7 +11,7 @@ function ThemeColorSync() {
 
   useEffect(() => {
     if (!resolvedTheme) return;
-    const color = resolvedTheme === "dark" ? "#090a0f" : "#f8f6f1";
+    const color = resolvedTheme === "dark" ? "#090a0f" : "#f9f9fb";
 
     let defaultMeta = document.querySelector("meta[name=\"theme-color\"]:not([media])");
     if (!defaultMeta) {
@@ -27,8 +27,8 @@ function ThemeColorSync() {
       if (lightMeta) lightMeta.setAttribute("content", "#090a0f");
       if (darkMeta) darkMeta.setAttribute("content", "#090a0f");
     } else if (resolvedTheme === "light") {
-      if (lightMeta) lightMeta.setAttribute("content", "#f8f6f1");
-      if (darkMeta) darkMeta.setAttribute("content", "#f8f6f1");
+      if (lightMeta) lightMeta.setAttribute("content", "#f9f9fb");
+      if (darkMeta) darkMeta.setAttribute("content", "#f9f9fb");
     }
   }, [resolvedTheme]);
 

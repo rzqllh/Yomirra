@@ -54,7 +54,16 @@ export function retainHistory(
     const title = item.savedTitleId ?? `${item.sourceId}::${item.mangaId}`;
     const summary = summaries.get(title);
     if (!summary) summaries.set(title, { latest: item, highest: item });
-    else if (compareMilestone(item, summary.highest) > 0) summary.highest = item;
+    else {
+      // A high chapter number from an open-only visit is not verified reading.
+      // Preserve a measured milestone even if its detail falls outside 512.
+      const observed = (item.progressPercent ?? 0) > 0 || (item.pageIndex ?? 0) > 0;
+      const highestObserved = (summary.highest.progressPercent ?? 0) > 0 || (summary.highest.pageIndex ?? 0) > 0;
+      if ((observed && !highestObserved) ||
+        (observed === highestObserved && compareMilestone(item, summary.highest) > 0)) {
+        summary.highest = item;
+      }
+    }
   }
   for (const { latest, highest } of summaries.values()) {
     for (const item of [latest, highest]) {

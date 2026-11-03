@@ -31,7 +31,7 @@ export function PopularPageSkeleton() {
         <PageHeader
           title="Populer"
           subtitle="Komik yang sedang populer dari sumber aktif."
-          icon={<Fire size={24} weight="duotone" />}
+          icon={<Fire size={24} weight="regular" />}
         />
 
         <PopularFeedSkeleton cardCount={8} />

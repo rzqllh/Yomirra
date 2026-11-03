@@ -13,6 +13,7 @@ vi.mock("@/shared/api-client", () => ({
 const manga = {
   id: "manga-a",
   title: "Manga A",
+  contentRating: "safe" as const,
   coverUrl: "/cover.jpg",
   description: "Description",
   format: "Manhwa",
@@ -23,7 +24,7 @@ describe("EditorialSpotlight accessibility", () => {
   it("renders synopsis-absent slot with truthful metadata composition and no placeholder text when synopsis is missing", () => {
     const { container } = render(
       <EditorialSpotlight
-        manga={{ id: "manga-b", title: "Manga B", coverUrl: "/cover-b.jpg" }}
+        manga={{ id: "manga-b", title: "Manga B", contentRating: "safe", coverUrl: "/cover-b.jpg" }}
         sourceId="source-b"
         sourceName="Source B"
       />
@@ -76,6 +77,7 @@ describe("EditorialSpotlight accessibility", () => {
         manga={{
           id: "manga-c",
           title: "Manga C",
+          contentRating: "safe",
           coverUrl: "/cover-c.jpg",
           synopsis: "  <p>Cerita tentang petualangan &amp; sihir heroik.</p>  ",
         } as any}
@@ -103,7 +105,7 @@ describe("EditorialSpotlight accessibility", () => {
     const { container } = render(
       <QueryClientProvider client={queryClient}>
         <EditorialSpotlight
-          manga={{ id: "manga-d", title: "Manga D", coverUrl: "/cover-d.jpg" }}
+          manga={{ id: "manga-d", title: "Manga D", contentRating: "safe", coverUrl: "/cover-d.jpg" }}
           sourceId="source-d"
           sourceName="Source D"
         />

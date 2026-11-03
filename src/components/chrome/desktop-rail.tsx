@@ -113,7 +113,7 @@ export function DesktopRail({ pendingHref }: { pendingHref?: string | null } = {
             !isCollapsed && "xl:block"
           )}
         >
-          Jelajah
+          Utama
         </span>
         {MAIN_NAV_ITEMS.map(renderItem)}
       </nav>
@@ -148,7 +148,7 @@ export function DesktopRail({ pendingHref }: { pendingHref?: string | null } = {
         >
           <SidebarSimple
             size={18}
-            weight={isCollapsed ? "regular" : "duotone"}
+            weight={isCollapsed ? "regular" : "regular"}
             className={cn(
               "shrink-0 transition-transform duration-200 text-text-muted group-hover:text-text-primary",
               isCollapsed && "rotate-180"

@@ -47,7 +47,7 @@ describe("public copy contracts", () => {
     const pagination = read("src/components/ui/pagination.tsx");
 
     expect(manifest).toContain("lang: 'id'");
-    expect(manifest).toContain("name: 'Rak Buku'");
+    expect(manifest).toContain("name: 'Library'");
     expect(manifest).toContain("url: '/bookmark'");
     expect(pagination).toContain('aria-label="Paginasi"');
     expect(pagination).toContain('aria-label="Ke halaman berikutnya"');

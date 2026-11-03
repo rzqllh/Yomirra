@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Rak Buku - Yomirra",
+  title: "Library - Yomirra",
   description: "Koleksi komik dan bookmark yang kamu simpan.",
 };
 

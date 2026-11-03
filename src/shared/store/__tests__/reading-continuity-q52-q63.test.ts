@@ -170,6 +170,7 @@ describe("Reading Continuity Q52 (Highest Milestone) & Q63 (Independent Cursor) 
       chapterId: "ch-57-5",
       mangaTitle: "Complex",
       chapterTitle: "Chapter 57.5 Special Extra",
+      pageIndex: 2, // a real observed cursor, not merely opening a distant chapter
       readAt: 400,
     });
 
@@ -295,6 +296,7 @@ describe("Reading Continuity Q52 (Highest Milestone) & Q63 (Independent Cursor) 
       chapterId: "c-42",
       mangaTitle: "Legacy Title",
       chapterTitle: "Ch. 42 - The Truth",
+      pageIndex: 2,
       readAt: 100,
     });
 
@@ -330,6 +332,7 @@ describe("Reading Continuity Q52 (Highest Milestone) & Q63 (Independent Cursor) 
       chapterId: "ch-100",
       chapterTitle: "Chapter 100",
       mangaTitle: "Durability",
+      pageIndex: 2,
       readAt: 1000,
     });
 
@@ -355,4 +358,119 @@ describe("Reading Continuity Q52 (Highest Milestone) & Q63 (Independent Cursor) 
     // Must stay on Chapter 1, never jumping to Chapter 2
     expect(continueTarget).toBe("ch-1");
   });
+  it("Q52: a far-ahead chapter opened without reading cannot outrank completed progress", () => {
+    const store = useHistoryStore.getState();
+    store.upsertHistory({
+      sourceId: "src", mangaId: "jump", chapterId: "ch-30",
+      chapterTitle: "Chapter 30", mangaTitle: "Jump", chapterNumber: 30,
+      progressPercent: 100, readAt: 1000,
+    });
+    store.upsertHistory({
+      sourceId: "src", mangaId: "jump", chapterId: "ch-100",
+      chapterTitle: "Chapter 100", mangaTitle: "Jump", chapterNumber: 100,
+      chapterIndex: 100, seriesProgressPercent: 100, readAt: 2000,
+    });
+    expect(store.getLatestForManga("src", "jump")?.chapterId).toBe("ch-100");
+    expect(store.getHighestMilestoneForManga("src", "jump")?.chapterId).toBe("ch-30");
+    expect(store.getContinueReading()[0]?.chapterId).toBe("ch-30");
+  });
+
+  it("Q52/Q63: moving several pages into the next chapter is real progress", () => {
+    const store = useHistoryStore.getState();
+    store.upsertHistory({ sourceId: "src", mangaId: "progress", chapterId: "ch-30",
+      chapterTitle: "Chapter 30", mangaTitle: "Progress", progressPercent: 100, readAt: 1000 });
+    store.upsertHistory({ sourceId: "src", mangaId: "progress", chapterId: "ch-31",
+      chapterTitle: "Chapter 31", mangaTitle: "Progress", readAt: 2000 });
+    expect(store.getHighestMilestoneForManga("src", "progress")?.chapterId).toBe("ch-30");
+    store.saveProgress("src", "progress", "ch-31", 4);
+    expect(store.getHighestMilestoneForManga("src", "progress")?.chapterId).toBe("ch-31");
+    expect(store.getContinueReading()[0]?.chapterId).toBe("ch-31");
+  });
+
+  it("Q52: keeps a pinned legacy library milestone while unprogressed chapters are visited", () => {
+    const store = useHistoryStore.getState();
+    useLibraryStore.getState().addToLibrary({
+      sourceId: "src", mangaId: "legacy", title: "Legacy",
+      addedAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+      highestMilestoneChapterId: "ch-30", highestMilestoneIndex: 30,
+    });
+    store.upsertHistory({ sourceId: "src", mangaId: "legacy", chapterId: "ch-30",
+      chapterTitle: "Chapter 30", mangaTitle: "Legacy", readAt: 1000 });
+    store.upsertHistory({ sourceId: "src", mangaId: "legacy", chapterId: "ch-100",
+      chapterTitle: "Chapter 100", mangaTitle: "Legacy", readAt: 2000 });
+    expect(store.getHighestMilestoneForManga("src", "legacy")?.chapterId).toBe("ch-30");
+    expect(store.getContinueReading()[0]?.chapterId).toBe("ch-30");
+  });
+
+  it("promotes the saved Library milestone only after real page progress", () => {
+    const store = useHistoryStore.getState();
+    useLibraryStore.getState().addToLibrary({
+      sourceId: "src", mangaId: "confirmed", title: "Confirmed",
+      addedAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+      highestMilestoneChapterId: "ch-30", highestMilestoneChapterTitle: "Chapter 30",
+      highestMilestoneIndex: 30,
+    });
+    store.upsertHistory({sourceId:"src", mangaId:"confirmed", chapterId:"ch-31",
+      mangaTitle:"Confirmed", chapterTitle:"Chapter 31", chapterNumber:31, chapterIndex:31, readAt:2000});
+    const lib = () => useLibraryStore.getState().getLibraryItem("src", "confirmed");
+    expect(lib()?.highestMilestoneChapterId).toBe("ch-30");
+
+    // A zero-page navigation is a visit, not a milestone.
+    store.saveProgress("src", "confirmed", "ch-31", 0);
+    expect(lib()?.highestMilestoneChapterId).toBe("ch-30");
+
+    store.saveProgress("src", "confirmed", "ch-31", 2);
+    expect(lib()?.highestMilestoneChapterId).toBe("ch-31");
+    expect(lib()?.highestMilestoneIndex).toBe(31);
+
+    // Reading an older chapter must not roll the milestone backwards.
+    store.upsertHistory({sourceId:"src", mangaId:"confirmed", chapterId:"ch-5",
+      mangaTitle:"Confirmed", chapterTitle:"Chapter 5", chapterNumber:5, chapterIndex:5, readAt:3000});
+    store.saveProgress("src", "confirmed", "ch-5", 3);
+    expect(lib()?.highestMilestoneChapterId).toBe("ch-31");
+  });
+
+  it("does not promote an unverified alternate source using only a greater chapter number", () => {
+    useLibraryStore.getState().addToLibrary({
+      sourceId: "primary", mangaId: "series", title: "Series",
+      addedAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
+      id: "canonical", primarySourceId: "primary", primaryMangaId: "series",
+      linkedSources: [{sourceId:"alternate", mangaId:"alternate-series", addedAt:Date.now(), matchConfidence:"AMBIGUOUS"}],
+      highestMilestoneChapterId: "ch-30", highestMilestoneChapterTitle: "Chapter 30",
+    });
+    const store = useHistoryStore.getState();
+    store.upsertHistory({sourceId:"alternate", mangaId:"alternate-series", chapterId:"ch-100",
+      mangaTitle:"Series", chapterTitle:"Chapter 100", chapterNumber:100, readAt:2000});
+    store.saveProgress("alternate", "alternate-series", "ch-100", 4);
+    expect(useLibraryStore.getState().getLibraryItem("primary","series")?.highestMilestoneChapterId).toBe("ch-30");
+  });
+
+  it("clears stale ordinal metadata when new verified chapter has no index", () => {
+    const store = useHistoryStore.getState();
+    useLibraryStore.getState().addToLibrary({
+      sourceId:"src", mangaId:"ordinal", title:"Ordinal",
+      addedAt:new Date().toISOString(), updatedAt:new Date().toISOString(),
+      highestMilestoneChapterId:"ch-30", highestMilestoneChapterTitle:"Chapter 30",
+      highestMilestoneIndex:30,
+    });
+    store.upsertHistory({sourceId:"src", mangaId:"ordinal", chapterId:"ch-31",
+      mangaTitle:"Ordinal", chapterTitle:"Chapter 31", chapterNumber:31, readAt:1000});
+    store.saveProgress("src", "ordinal", "ch-31", 2);
+    const saved = useLibraryStore.getState().getLibraryItem("src", "ordinal");
+    expect(saved?.highestMilestoneChapterId).toBe("ch-31");
+    expect(saved?.highestMilestoneIndex).toBeUndefined();
+  });
+
+  it("does not call an unprogressed visit a verified milestone", () => {
+    const store = useHistoryStore.getState();
+    store.upsertHistory({
+      sourceId:"src", mangaId:"new-title", chapterId:"ch-100",
+      mangaTitle:"New Title", chapterTitle:"Chapter 100", readAt:1000,
+    });
+    expect(store.getHighestMilestoneForManga("src","new-title")).toBeUndefined();
+    // The user's last visit may still appear as a navigational fallback.
+    expect(store.getLatestForManga("src","new-title")?.chapterId).toBe("ch-100");
+    expect(store.getContinueReading()[0]?.chapterId).toBe("ch-100");
+  });
+
 });

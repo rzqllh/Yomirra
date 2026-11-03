@@ -296,7 +296,7 @@ export function CustomSourceModal({ initialSource, isOpen, onClose, onSaved, get
         aria-modal="true"
         aria-labelledby="custom-source-title"
         style={{ colorScheme: "dark" }}
-        className="my-auto flex max-h-[94vh] w-full max-w-3xl flex-col overflow-hidden rounded-[24px] border border-zinc-800 bg-zinc-900 shadow-2xl shadow-black/50"
+        className="my-auto flex max-h-[94vh] w-full max-w-3xl flex-col overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900 shadow-2xl shadow-black/50"
       >
         <div className="flex items-start justify-between gap-4 border-b border-zinc-800/90 px-5 py-4 sm:px-6">
           <div className="flex min-w-0 items-start gap-3">
@@ -462,7 +462,7 @@ export function CustomSourceModal({ initialSource, isOpen, onClose, onSaved, get
             </section>
 
             {formData.type === "html" ? (
-              <section className="rounded-2xl border border-zinc-800/90 bg-zinc-950/30">
+              <section className="rounded-xl border border-zinc-800/90 bg-zinc-950/30">
                 <div className="flex flex-col gap-2.5 rounded-t-2xl border-b border-zinc-800/80 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <div className="flex items-center gap-2">
@@ -606,7 +606,7 @@ export function CustomSourceModal({ initialSource, isOpen, onClose, onSaved, get
               {testResult ? (
                 <div
                   className={cx(
-                    "rounded-2xl border p-4",
+                    "rounded-xl border p-4",
                     testResult.success
                       ? "border-emerald-500/25 bg-emerald-500/[0.06]"
                       : "border-rose-500/25 bg-rose-500/[0.06]",

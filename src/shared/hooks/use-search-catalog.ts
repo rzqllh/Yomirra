@@ -31,8 +31,10 @@ import {
 import type { FilterList, SourceMetadata } from "@/shared/sources/source-types";
 import { isSearchSourceSystemEligible } from "@/shared/sources/discovery-source-policy";
 import { useUrlPagination } from "@/shared/hooks/use-url-pagination";
+import { useMounted } from "@/shared/hooks/use-mounted";
 
 export function useSearchCatalog() {
+  const isMounted = useMounted();
   const searchParams = useSearchParams();
   const query = searchParams?.get("q") || "";
   const [localQuery, setLocalQuery] = React.useState(query);
@@ -99,6 +101,9 @@ export function useSearchCatalog() {
   const hideNsfw = useSettingsStore((state) => state.hideNsfw);
 
   const searchableSources = React.useMemo(() => {
+    // The shell may warm this query before the streamed search route hydrates.
+    // Match the server's empty registry until the route has mounted.
+    if (!isMounted) return [];
     const sources = [...(sourcesData || [])];
     localSources.forEach((localSource) => {
       if (!sources.find((source) => source.id === localSource.id)) {
@@ -111,7 +116,7 @@ export function useSearchCatalog() {
       if (source.isNsfw && hideNsfw) return false;
       return true;
     });
-  }, [sourcesData, localSources, hideNsfw]);
+  }, [isMounted, sourcesData, localSources, hideNsfw]);
 
   const searchFilterStore = useSearchFilterStore();
   const selectedSources = searchFilterStore.selectedSources;
@@ -334,7 +339,8 @@ export function useSearchCatalog() {
           !isExhausted &&
           !isUnreachable &&
           isTagCompatible,
-        placeholderData: keepPreviousData,
+        placeholderData: (previous: { sourceId: string; query: string; page: number; results: import("@/shared/sources/source-types").MangaItem[]; hasNextPage?: boolean } | undefined, previousQuery: { queryKey: readonly unknown[] } | undefined) =>
+          previousQuery?.queryKey[1] === sourceId && previousQuery.queryKey[4] === hideNsfw ? previous : undefined,
       };
     }),
   });
@@ -656,6 +662,15 @@ export function useSearchCatalog() {
   }, [parsedQuery.tags, query, router, searchParamsString]);
 
   return {
+    appliedFilters: [
+      ...genres.map((id) => ({ key: `genre:${id}`, label: dynamicFilters.genres.find((item) => item.id === id)?.label ?? id,
+        remove: () => searchFilterStore.applyFilters({ genres: genres.filter((item) => item !== id), formats, status, sort }) })),
+      ...formats.map((id) => ({ key: `format:${id}`, label: dynamicFilters.formats.find((item) => item.id === id)?.label ?? id,
+        remove: () => searchFilterStore.applyFilters({ genres, formats: formats.filter((item) => item !== id), status, sort }) })),
+      ...(status ? [{ key: "status", label: dynamicFilters.statuses.find((item) => item.id === status)?.label ?? status,
+        remove: () => searchFilterStore.applyFilters({ genres, formats, status: "", sort }) }] : []),
+    ],
+    resetAppliedFilters: () => { searchFilterStore.resetFilters(); resetFilterRouteIntent(); },
     localQuery,
     setLocalQuery,
     query,

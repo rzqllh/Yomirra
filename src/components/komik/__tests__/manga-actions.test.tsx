@@ -27,7 +27,7 @@ describe("MangaActions", () => {
     );
 
     expect(screen.getByText("Simpan")).toBeDefined();
-    expect(screen.getByRole("button", { name: /Simpan ke Rak Buku/i })).toBeDefined();
+    expect(screen.getByRole("button", { name: /Simpan ke Library/i })).toBeDefined();
   });
 
   it("renders 'Tersimpan' when manga is in library", async () => {
@@ -53,6 +53,6 @@ describe("MangaActions", () => {
     );
 
     expect(await screen.findByText("Tersimpan")).toBeDefined();
-    expect(screen.getByRole("button", { name: /Hapus dari Rak Buku/i })).toBeDefined();
+    expect(screen.getByRole("button", { name: /Hapus dari Library/i })).toBeDefined();
   });
 });

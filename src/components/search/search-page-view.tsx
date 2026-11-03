@@ -9,6 +9,7 @@ import { useSearchCatalog } from "@/shared/hooks/use-search-catalog";
 import { SearchToolbar } from "./search-toolbar";
 import { SearchSourceRail } from "./search-source-rail";
 import { SearchResults } from "./search-results";
+import { AppliedFilters } from "@/components/ui/applied-filters";
 
 export function SearchPageView() {
   const search = useSearchCatalog();
@@ -19,7 +20,7 @@ export function SearchPageView() {
         <PageHeader
           title="Cari"
           subtitle="Temukan komik dari berbagai sumber."
-          icon={<MagnifyingGlass size={24} weight="duotone" />}
+          icon={<MagnifyingGlass size={24} weight="regular" />}
         />
 
         <CatalogControls label="Pencarian dan filter">
@@ -40,6 +41,8 @@ export function SearchPageView() {
             />
           </PageToolbar>
         </CatalogControls>
+        <div id="search-filter-panel" className="hidden lg:block" />
+        <AppliedFilters items={search.appliedFilters} onReset={search.resetAppliedFilters} />
 
         {/* Results & Pagination */}
         <SearchResults

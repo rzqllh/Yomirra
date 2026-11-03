@@ -58,13 +58,13 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
           data-testid="offline-banner"
           className="fixed top-0 left-0 right-0 z-[60] bg-surface-raised/95 text-text-primary border-b border-border-default pt-[calc(var(--safe-top,0px)+4px)] pb-1.5 px-3 text-xs font-semibold text-center flex items-center justify-center gap-2 backdrop-blur-md shadow-xs pointer-events-none"
         >
-          <WifiSlash size={14} weight="bold" />
+          <WifiSlash size={14} weight="regular" />
           <span>Offline — menampilkan data yang tersimpan di perangkat</span>
         </div>
       )}
       {showFallback ? (
         <div className="fixed inset-0 z-[100] bg-surface-base flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300">
-          <div className="w-20 h-20 bg-surface-muted rounded-3xl flex items-center justify-center text-text-muted mb-6">
+          <div className="w-20 h-20 bg-surface-muted rounded-xl flex items-center justify-center text-text-muted mb-6">
             <WifiSlash size={40} weight="duotone" />
           </div>
           <h1 className="text-2xl font-bold mb-2">Kamu sedang offline</h1>
@@ -72,7 +72,7 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
             Halaman ini memerlukan koneksi internet. Kamu masih bisa membuka data lokal dan chapter yang sudah diunduh.
           </p>
           <div className="flex flex-wrap gap-3 justify-center">
-            <Button 
+            <Button
               onClick={() => router.push("/downloads")}
               size="lg"
               className="rounded-xl gap-2 font-bold px-6"
@@ -80,7 +80,7 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
               <HardDrives size={20} weight="fill" />
               Buka Unduhan
             </Button>
-            <Button 
+            <Button
               onClick={() => router.push("/")}
               variant="outline"
               size="lg"

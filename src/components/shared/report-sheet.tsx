@@ -159,7 +159,7 @@ export function ReportSheet({
         <div className="px-6 pb-6">
           <SheetHeader className="mb-5 text-left">
             <SheetTitle className="text-lg flex items-center gap-2">
-              <Flag size={20} className="text-semantic-error shrink-0" weight="duotone" />
+              <Flag size={20} className="text-semantic-error shrink-0" weight="regular" />
               Laporkan Kendala
             </SheetTitle>
             <SheetDescription className="text-sm leading-snug">

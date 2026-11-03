@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Library - Yomirra",
+  title: "Jelajah - Yomirra",
   description: "Jelajahi katalog komik dari sumber yang kamu pilih.",
 };
 

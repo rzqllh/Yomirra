@@ -10,7 +10,7 @@ export default function Loading() {
         <PageHeader
           title="Pengaturan"
           subtitle="Atur tampilan, bacaan, dan data Yomirra."
-          icon={<Gear size={24} weight="duotone" />}
+          icon={<Gear size={24} weight="regular" />}
         />
 
         <ContentLane variant="management">
@@ -20,7 +20,7 @@ export default function Loading() {
                 {Array.from({ length: sectionCount }).map((_, sectionIndex) => (
                   <section
                     key={sectionIndex}
-                    className="overflow-hidden rounded-2xl border border-border-subtle bg-surface-raised"
+                    className="overflow-hidden rounded-xl border border-border-subtle bg-surface-raised"
                   >
                     <div className="border-b border-border-subtle px-4 py-3">
                       <Skeleton className="h-4 w-32 rounded-md" />

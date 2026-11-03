@@ -38,7 +38,7 @@ const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
         ref={ref}
         variant={variantMap[variant]}
         size={sizeMap[size]}
-        className={cn(radiusMap[size], className)}
+        className={cn(radiusMap[size], className, "min-h-11 min-w-11")}
         {...props}
       />
     )

@@ -290,7 +290,7 @@ export function DeadSourceRecovery({ sourceId, mangaId, health = { status: "BROK
                 onClick={handleQuickSwitch}
                 className="gap-2 w-full sm:w-auto font-bold"
               >
-                <ArrowClockwise size={18} weight="bold" />
+                <ArrowClockwise size={18} weight="regular" />
                 Alihkan ke {getSourceMetadata(fallbackEvaluation.candidate.sourceId)?.name ?? fallbackEvaluation.candidate.sourceId}
               </Button>
             )}
@@ -299,7 +299,7 @@ export function DeadSourceRecovery({ sourceId, mangaId, health = { status: "BROK
               onClick={handleFindAlternate}
               className="gap-2 w-full sm:w-auto font-bold"
             >
-              <MagnifyingGlass size={18} weight="bold" />
+              <MagnifyingGlass size={18} weight="regular" />
               Cari Sumber Alternatif
             </Button>
             <Button

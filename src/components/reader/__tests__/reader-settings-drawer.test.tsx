@@ -33,21 +33,29 @@ describe("ReaderSettingsDrawer & Per-Title Scope (P0 Q8/Q86)", () => {
     });
   });
 
+  it("disables double-tap per title without changing the global or another title", () => {
+    render(<ReaderSettingsDrawer isOpen onClose={vi.fn()} sourceId="mangadex" mangaId="frieren" />);
+    fireEvent.click(screen.getByRole("checkbox", { name: "Nonaktifkan double-tap zoom" }));
+    expect(useReaderStore.getState().perTitlePreferences["mangadex::frieren"].disableDoubleTapZoom).toBe(true);
+    expect(useReaderStore.getState().preferences.disableDoubleTapZoom ?? false).toBe(false);
+    expect(useReaderStore.getState().perTitlePreferences["other::title"]).toBeUndefined();
+  });
+
   it("renders drawer and does NOT recurse or crash when updating global preferences", () => {
     const onClose = vi.fn();
     render(<ReaderSettingsDrawer isOpen={true} onClose={onClose} />);
 
-    // Click on a background color option (e.g. Hijau Gelap)
-    const deepLagoonBtn = screen.getByRole("button", { name: /Hijau Gelap/i });
-    expect(deepLagoonBtn).toBeDefined();
+    // Click on a background color option (e.g. Sesuai Sistem)
+    const systemBgBtn = screen.getByRole("button", { name: /Sesuai Sistem/i });
+    expect(systemBgBtn).toBeDefined();
 
     // Trigger setting update: must NOT throw RangeError: Maximum call stack size exceeded
     expect(() => {
-      fireEvent.click(deepLagoonBtn);
+      fireEvent.click(systemBgBtn);
     }).not.toThrow();
 
     // Verify global preference was updated
-    expect(useReaderStore.getState().preferences.background).toBe("deepLagoon");
+    expect(useReaderStore.getState().preferences.background).toBe("system");
     // Verify perTitlePreferences remained empty since no title context was provided
     expect(Object.keys(useReaderStore.getState().perTitlePreferences)).toHaveLength(0);
   });

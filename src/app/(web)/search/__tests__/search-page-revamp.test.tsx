@@ -88,7 +88,7 @@ describe('Search Page Revamp Unit Tests', () => {
     expect(screen.queryByText('Cari judul dari semua sumber bacaanmu.')).toBeNull();
   });
 
-  it('renders source control chips and prevents deselecting the last source', async () => {
+  it('renders source controls and preserves an intentional zero-source selection', async () => {
     render(
       <QueryClientProvider client={queryClient}>
         <React.Suspense fallback={<div>Loading...</div>}>
@@ -107,9 +107,9 @@ describe('Search Page Revamp Unit Tests', () => {
     fireEvent.click(shinigamiBtn);
     expect(useSearchFilterStore.getState().selectedSources).toEqual(['source2']);
 
-    // Attempt to deselect Komikindo (last source) -> should stay selected
+    // Explicitly deselect the last source; never silently select all.
     fireEvent.click(komikindoBtn);
-    expect(useSearchFilterStore.getState().selectedSources).toEqual(['source2']);
+    expect(useSearchFilterStore.getState().selectedSources).toEqual([]);
   });
 
   it('displays compact warning for partial source failure alongside successful results', async () => {
@@ -130,8 +130,14 @@ describe('Search Page Revamp Unit Tests', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Overgeared')).toBeDefined();
-      expect(screen.getByText('Komikindo gagal dimuat')).toBeDefined();
+      expect(screen.getByText(/Komikindo bermasalah/)).toBeDefined();
     }, { timeout: 3000 });
+
+    const disclosure = screen.getByText(/Komikindo bermasalah/).closest('details');
+    expect(disclosure?.open).toBe(false);
+    fireEvent.click(disclosure!.querySelector('summary')!);
+    expect(disclosure?.open).toBe(true);
+    expect(disclosure?.querySelector('li')?.textContent?.trim()).toBe('Komikindo gagal dimuat');
   });
 
   it('displays single-source failure title when only one source is selected and fails', async () => {

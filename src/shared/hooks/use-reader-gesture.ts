@@ -1,8 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { useReaderStore } from '@/shared/store/reader-store';
 
 export function useReaderGesture() {
-  const { toggleOverlay } = useReaderStore();
+  const toggleOverlay = useReaderStore(state => state.toggleOverlay);
   
   // Gesture-safe overlay toggle (Center 40% tap, <=10px, <=250ms)
   useEffect(() => {

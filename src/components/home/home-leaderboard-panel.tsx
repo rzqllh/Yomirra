@@ -19,7 +19,7 @@ export interface HomeLeaderboardPanelProps {
 
 export function HomeLeaderboardPanel({
   items,
-  title = "Paling banyak dibaca",
+  title = "Populer di sumber",
   defaultSourceId,
   onSourceChange,
   seeAllHref,
@@ -74,7 +74,7 @@ export function HomeLeaderboardPanel({
     <section
       aria-label={title}
       className={cn(
-        "ink-panel flex h-full min-w-0 flex-col p-4 sm:p-5 lg:h-[340px] lg:p-4",
+        "relative flex h-full min-w-0 flex-col p-4 sm:p-5 lg:h-[340px] lg:p-4 rounded-xl border border-border-subtle bg-surface-raised shadow-xs overflow-hidden",
         className
       )}
     >
@@ -113,7 +113,7 @@ export function HomeLeaderboardPanel({
               <span className="hidden sm:inline">Lihat semua</span>
               <ArrowRight
                 size={13}
-                weight="bold"
+                weight="regular"
                 className="transition-transform group-hover:translate-x-0.5"
                 aria-hidden="true"
               />

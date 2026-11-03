@@ -90,16 +90,16 @@ export function CollectionManager() {
             <h3 className="font-bold text-text-primary text-sm sm:text-base">Koleksi Tersimpan</h3>
             <p className="text-xs text-text-secondary mt-0.5">{collections.length} koleksi</p>
           </div>
-          <Button 
+          <Button
             onClick={() => {
               setNewName("");
               setIsCreateOpen(true);
-            }} 
-            variant="accent" 
-            size="sm" 
+            }}
+            variant="accent"
+            size="sm"
             className="rounded-xl font-bold h-9"
           >
-            <Plus size={16} weight="bold" className="mr-1.5" />
+            <Plus size={16} weight="regular" className="mr-1.5" />
             Koleksi Baru
           </Button>
         </div>
@@ -113,28 +113,28 @@ export function CollectionManager() {
             {collections.map((c, i) => (
               <div key={c.id}>
                 <SettingsItem
-                  icon={<IconWrapper variant="accent"><Folder size={20} weight="duotone" /></IconWrapper>}
+                  icon={<IconWrapper variant="accent"><Folder size={20} weight="regular" /></IconWrapper>}
                   title={c.name}
                   description={`${getMangaCount(c.id)} manga ditambahkan`}
                   right={
                     <div className="flex items-center gap-1">
-                      <Button 
+                      <Button
                         onClick={() => openRename(c.id, c.name)}
-                        variant="ghost" 
-                        size="icon" 
+                        variant="ghost"
+                        size="icon"
                         className="w-8 h-8 rounded-lg text-text-secondary hover:text-text-primary"
                         aria-label="Ubah nama"
                       >
-                        <PencilSimple size={18} weight="duotone" />
+                        <PencilSimple size={18} weight="regular" />
                       </Button>
-                      <Button 
+                      <Button
                         onClick={() => openDelete(c.id)}
-                        variant="ghost" 
-                        size="icon" 
+                        variant="ghost"
+                        size="icon"
                         className="w-8 h-8 rounded-lg text-semantic-error hover:text-white hover:bg-semantic-error transition-colors"
                         aria-label="Hapus"
                       >
-                        <Trash size={18} weight="duotone" />
+                        <Trash size={18} weight="regular" />
                       </Button>
                     </div>
                   }
@@ -168,7 +168,7 @@ export function CollectionManager() {
         isOpen={isDeleteOpen}
         onOpenChange={setIsDeleteOpen}
         title="Hapus Koleksi?"
-        description="Folder koleksi ini akan dihapus. Komik di dalamnya tidak akan terhapus dari Rak Buku."
+        description="Folder koleksi ini akan dihapus. Komik di dalamnya tidak akan terhapus dari Library."
         confirmLabel="Hapus"
         cancelLabel="Batal"
         variant="danger"

@@ -92,11 +92,8 @@ describe("Seamless Continuity Contracts (WS5)", () => {
       expect(verticalReader).toContain("router.replace(href)");
     });
 
-    it("ensures reader in-app back returns via router.back() to restore detail scroll and highlighted state", () => {
-      const readerShell = read("src/components/reader/reader-shell.tsx");
-      expect(readerShell).toContain("router.back()");
-      expect(readerShell).toContain("beginNavigationIntent(href)");
-    });
+    // Named Reader destinations are now exercised by reader-shell.test.tsx
+    // through actual clicks, including a non-detail browser history entry.
   });
 
   describe("Reader Unified Loading & Single Skeleton Contract (WS3 Contract)", () => {

@@ -191,11 +191,24 @@ export function UnifiedFilterDrawer({
   });
 
   // ----------------------------------------------------
-  // Single Source Filters for Library context
+  // Single Source or All Sources Filters for Library context
   // ----------------------------------------------------
+  const isAllLibrary = context === "library" && (activeSourceId === "all" || !activeSourceId);
   const activeLibrarySource = allSources.find((source) => source.id === activeSourceId);
   const supportsLibraryProviderFilters =
     activeLibrarySource?.capabilities?.filters === true;
+
+  const eligibleLibrarySources = React.useMemo(() => {
+    return allSources.filter((s) => s.isInstalled && s.isEnabled !== false && (!hideNsfw || !s.isNsfw) && s.capabilities?.filters);
+  }, [allSources, hideNsfw]);
+
+  const libraryAllFiltersQueries = useQueries({
+    queries: isAllLibrary ? eligibleLibrarySources.map((source) => ({
+      queryKey: ["filters", source.id],
+      queryFn: () => apiClient.getFilters(source.id),
+      staleTime: Infinity,
+    })) : [],
+  });
 
   const { data: libraryFiltersData } = useQuery({
     queryKey: ["filters", activeSourceId],
@@ -203,6 +216,7 @@ export function UnifiedFilterDrawer({
     staleTime: Infinity,
     enabled:
       context === "library" &&
+      !isAllLibrary &&
       Boolean(activeSourceId) &&
       supportsLibraryProviderFilters,
   });
@@ -211,11 +225,13 @@ export function UnifiedFilterDrawer({
   // Unified Dynamic Filters with NSFW filtering applied
   // ----------------------------------------------------
   const dynamicFilters = React.useMemo<MergedFilterList>(() => {
-    if (context === "search") {
-      const sourceFilters = filterSourcesToFetch
+    if (context === "search" || isAllLibrary) {
+      const sourcesList = context === "search" ? filterSourcesToFetch : eligibleLibrarySources;
+      const queriesList = context === "search" ? searchFiltersQueries : libraryAllFiltersQueries;
+      const sourceFilters = sourcesList
         .map((source, idx) => ({
           sourceId: source.id,
-          filters: searchFiltersQueries[idx]?.data,
+          filters: queriesList[idx]?.data,
         }))
         .filter((x) => x.filters) as { sourceId: string; filters: FilterList }[];
 
@@ -256,7 +272,7 @@ export function UnifiedFilterDrawer({
         formats: withSourceSupport(formats),
       };
     }
-  }, [context, filterSourcesToFetch, searchFiltersQueries, libraryFiltersData, hideNsfw, activeSourceId]);
+  }, [context, isAllLibrary, filterSourcesToFetch, searchFiltersQueries, eligibleLibrarySources, libraryAllFiltersQueries, libraryFiltersData, hideNsfw, activeSourceId]);
 
   const searchTagIntent = React.useMemo(() => {
     if (context !== "search" || !searchQuery.trim()) {
@@ -470,7 +486,8 @@ export function UnifiedFilterDrawer({
 
   return (
     <FilterDrawerShell
-      title={context === "search" ? "Filter Pencarian" : "Filter Library"}
+      desktopPortalId={`${context}-filter-panel`}
+      title={context === "search" ? "Filter Pencarian" : "Filter Jelajah"}
       description="Atur urutan, tipe, status, dan genre yang mau ditampilkan."
       activeCount={activeCount}
       onApply={handleApply}
@@ -481,7 +498,7 @@ export function UnifiedFilterDrawer({
       {!hasAnyFilter ? (
         <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
           <div className="w-12 h-12 rounded-lg bg-surface-raised flex items-center justify-center mb-3 text-text-muted">
-            <Funnel size={24} weight="duotone" />
+            <Funnel size={24} weight="regular" />
           </div>
           <p className="text-sm font-semibold text-text-primary">
             Sumber ini tidak menyediakan filter tambahan

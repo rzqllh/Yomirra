@@ -61,7 +61,7 @@ describe("ReaderImage - Failure Recovery", () => {
     // Final failure - should render PageImageError
     fireEvent.error(screen.getByRole("img"));
     
-    expect(screen.getByText(/Halaman 0 gagal dimuat/i)).toBeTruthy();
+    expect(screen.getByText(/Halaman 1 gagal dimuat/i)).toBeTruthy();
     expect(defaultProps.onError).toHaveBeenCalledWith(0);
   });
 
@@ -94,7 +94,7 @@ describe("ReaderImage - Failure Recovery", () => {
     // Should update the image src to freshUrl
     expect(screen.getByRole("img").getAttribute("src")).toContain("fresh-url.jpg");
     // Not in error state yet
-    expect(screen.queryByText(/Halaman 0 gagal dimuat/i)).toBeNull();
+    expect(screen.queryByText(/Halaman 1 gagal dimuat/i)).toBeNull();
   });
 
   it("should attempt proxy fallback when fallbackProxyUrl is provided", () => {
@@ -121,7 +121,7 @@ describe("ReaderImage - Failure Recovery", () => {
     });
 
     expect(screen.getByRole("img").getAttribute("src")).toContain("/api/proxy/image");
-    expect(screen.queryByText(/Halaman 0 gagal dimuat/i)).toBeNull();
+    expect(screen.queryByText(/Halaman 1 gagal dimuat/i)).toBeNull();
   });
 
   it("should reset recovery state when user clicks retry in error banner", () => {
@@ -136,14 +136,14 @@ describe("ReaderImage - Failure Recovery", () => {
     act(() => { vi.advanceTimersByTime(6000); });
     fireEvent.error(screen.getByRole("img"));
 
-    expect(screen.getByText(/Halaman 0 gagal dimuat/i)).toBeTruthy();
+    expect(screen.getByText(/Halaman 1 gagal dimuat/i)).toBeTruthy();
 
     // Click "Coba Lagi"
     const retryBtn = screen.getByRole("button", { name: /Coba Lagi/i });
     fireEvent.click(retryBtn);
 
     // Error state cleared, image component rendered again
-    expect(screen.queryByText(/Halaman 0 gagal dimuat/i)).toBeNull();
+    expect(screen.queryByText(/Halaman 1 gagal dimuat/i)).toBeNull();
     expect(screen.getByRole("img")).toBeTruthy();
   });
 
@@ -167,7 +167,7 @@ describe("ReaderImage - Failure Recovery", () => {
     // Should immediately re-render with unoptimized=true
     const bypassedImg = container.querySelector("img");
     expect(bypassedImg?.getAttribute("data-unoptimized")).toBe("true");
-    expect(screen.queryByText(/Halaman 0 gagal dimuat/i)).toBeNull();
+    expect(screen.queryByText(/Halaman 1 gagal dimuat/i)).toBeNull();
   });
 
   it("waits for decode before revealing a loaded page", async () => {
@@ -287,7 +287,7 @@ describe("ReaderImage - Failure Recovery", () => {
     });
 
     expect(screen.getByRole("img").getAttribute("src")).toContain("http://example.com/test.jpg");
-    expect(screen.queryByText(/Halaman 0 gagal dimuat/i)).toBeNull();
+    expect(screen.queryByText(/Halaman 1 gagal dimuat/i)).toBeNull();
   });
 
   it("cancels a pending retry when the image job unmounts", () => {

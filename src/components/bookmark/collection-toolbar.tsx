@@ -18,6 +18,9 @@ export interface CollectionToolbarProps {
   onSearchClear: () => void;
   sortBy: "updatedAt" | "title";
   onSortChange: (v: "updatedAt" | "title") => void;
+  sourceFilter?: string | null;
+  onSourceFilterChange?: (v: string | null) => void;
+  availableSources?: { id: string; name: string }[];
   isSelectionMode: boolean;
   onToggleSelectionMode: () => void;
   totalCount: number;
@@ -30,6 +33,9 @@ export function CollectionToolbar({
   onSearchClear,
   sortBy,
   onSortChange,
+  sourceFilter = null,
+  onSourceFilterChange,
+  availableSources = [],
   isSelectionMode,
   onToggleSelectionMode,
   totalCount,
@@ -45,7 +51,20 @@ export function CollectionToolbar({
         containerClassName="sm:flex-1 min-w-0 h-[44px]"
       />
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+        {availableSources.length > 1 && onSourceFilterChange && (
+          <CustomSelect
+            value={sourceFilter ?? "ALL"}
+            onChange={(v) => onSourceFilterChange(v === "ALL" ? null : v)}
+            options={[
+              { value: "ALL", label: "Semua Sumber" },
+              ...availableSources.map((s) => ({ value: s.id, label: s.name })),
+            ]}
+            align="right"
+            className="flex-1 sm:flex-initial min-w-[130px]"
+          />
+        )}
+
         <CustomSelect
           value={sortBy}
           onChange={(v) => onSortChange(v as "updatedAt" | "title")}
@@ -54,7 +73,7 @@ export function CollectionToolbar({
             { value: "title", label: "Abjad (A-Z)" },
           ]}
           align="right"
-          className="flex-1 min-w-0"
+          className="flex-1 sm:flex-initial min-w-[140px]"
         />
 
         {totalCount > 0 && (
@@ -65,18 +84,18 @@ export function CollectionToolbar({
                 className="h-[44px] px-2.5 rounded-xl font-bold gap-1.5 shrink-0 border-dashed"
                 aria-label="Opsi lainnya"
               >
-                <DotsThreeVertical size={20} weight="bold" />
+                <DotsThreeVertical size={20} weight="regular" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               {onCreateCollectionClick && (
                 <DropdownMenuItem onClick={onCreateCollectionClick} className="flex items-center gap-2">
-                  <Plus size={16} weight="bold" />
+                  <Plus size={16} weight="regular" />
                   <span>Buat koleksi</span>
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem onClick={onToggleSelectionMode} className="flex items-center gap-2">
-                <CheckCircle size={16} weight={isSelectionMode ? "fill" : "bold"} />
+                <CheckCircle size={16} weight={isSelectionMode ? "fill" : "regular"} />
                 <span>{isSelectionMode ? "Batal memilih" : "Pilih beberapa"}</span>
               </DropdownMenuItem>
             </DropdownMenuContent>

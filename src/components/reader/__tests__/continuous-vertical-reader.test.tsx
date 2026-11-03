@@ -54,6 +54,12 @@ describe("ContinuousVerticalReader - Keyboard Navigation", () => {
     chapters: [{ id: "test-chapter", title: "Chapter 1", mangaId: "test-manga", number: 1, date: "2024-01-01T00:00:00.000Z" }],
   };
 
+  it("labels the chapter end without claiming verified completion", () => {
+    const { getByText, queryByText } = render(<ContinuousVerticalReader {...defaultProps} />);
+    expect(getByText("Akhir Chapter 1")).toBeTruthy();
+    expect(queryByText("Chapter 1 selesai")).toBeNull();
+  });
+
   it("should scroll down on Space", () => {
     render(<ContinuousVerticalReader {...defaultProps} />);
     

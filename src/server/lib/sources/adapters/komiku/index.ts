@@ -73,6 +73,8 @@ export class KomikuSource implements MangaSource {
       const href = a.attr("href") || "";
       const coverUrl = this.extractCoverUrl($el.find("img").first());
       const latestChapter = $el.find(".ls4l, .ls2l, .ch").first().text().trim();
+      const scoreRaw = $el.find(".rating, .score, .skor, .num, i[class*='star']").first().text().replace(/[^\d.]/g, "").trim();
+      const score = parseFloat(scoreRaw) || undefined;
 
       if (href && title && (href.includes("/manga/") || href.includes("/komik/"))) {
         const id = href
@@ -89,6 +91,7 @@ export class KomikuSource implements MangaSource {
             coverUrl: coverUrl.startsWith("//") ? `https:${coverUrl}` : coverUrl,
             latestChapter: latestChapter || undefined,
             format: "Manga",
+            score,
           });
         }
       }

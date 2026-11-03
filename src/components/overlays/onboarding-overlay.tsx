@@ -13,23 +13,18 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 const STEPS = [
   {
     eyebrow: "SEMUA SUMBER, SATU PINTU",
-    title: "Ribuan Judul.\nNggak Perlu Pindah App.",
-    desc: "Semua ketemu di sini, tanpa buka tab baru.",
+    title: "Katalog Multi-Sumber Terlengkap",
+    desc: "Akses ribuan judul dari berbagai sumber lokal dan internasional dalam satu tempat.",
   },
   {
-    eyebrow: "RAK & RIWAYAT",
-    title: "Berhenti di Sini,\nLanjut Persis di Sini.",
-    desc: "Panel terakhir yang kamu baca, tersimpan otomatis. Buka lagi kapan aja, gak ada yang hilang.",
+    eyebrow: "KUSTOMISASI & KENYAMANAN",
+    title: "Atur Gaya Membaca Sesuai Keinginan",
+    desc: "Pilih mode gulir vertikal Webtoon atau balik halaman per halaman dengan pencatatan riwayat otomatis.",
   },
   {
-    eyebrow: "PENCARIAN LINTAS SUMBER",
-    title: "Satu Judul,\nSemua Pilihan Sekaligus.",
-    desc: "Bandingin mana yang rilis duluan, mana yang gambarnya lebih tajam, langsung dari satu pencarian.",
-  },
-  {
-    eyebrow: "READER YANG NGERTI KAMU",
-    title: "Scroll Panjang\natau Balik Halaman.",
-    desc: "Mode Webtoon, preload otomatis biar kuota aman, layar tetap nyala pas kamu lagi khusyuk.",
+    eyebrow: "SIAP MEMBACA",
+    title: "Mulai Petualangan Membacamu",
+    desc: "Cari judul favoritmu, tambahkan ke Koleksi, atau lanjutkan bacaan kapan saja langsung di Yomirra.",
   },
 ];
 
@@ -99,39 +94,8 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
       return;
     }
 
-    let isCancelled = false;
-
-    async function loadLiveCovers() {
-      const sources = ["shinigami", "komikindo", "mangadex", "kiryuu"];
-      for (const source of sources) {
-        if (isCancelled) return;
-        try {
-          const res = await fetch(`/api/sources/${source}/popular?page=1`);
-          if (!res.ok) continue;
-          const data = await res.json();
-          const mangas = data?.data?.mangas || data?.mangas || [];
-          const validCovers = mangas
-            .map((m: any) => m.coverUrl)
-            .filter((url: any) => typeof url === "string" && url.startsWith("http"));
-
-          if (validCovers.length >= 3) {
-            const shuffledApi = validCovers.sort(() => 0.5 - Math.random()).slice(0, 3);
-            if (!isCancelled) {
-              setCovers(shuffledApi);
-            }
-            break;
-          }
-        } catch {
-          // Continue to next available source
-        }
-      }
-    }
-
-    loadLiveCovers();
-
-    return () => {
-      isCancelled = true;
-    };
+    // Fallback to local covers immediately without making network calls on initial startup
+    setCovers(FALLBACK_COVERS);
   }, []);
 
   React.useEffect(() => {
@@ -249,7 +213,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
           ref={skipButtonRef}
           type="button"
           onClick={handleComplete}
-          className="min-h-11 px-3.5 rounded-full text-xs sm:text-sm font-semibold text-text-muted hover:text-text-primary hover:bg-surface-raised motion-safe:active:scale-95 motion-safe:transition-[transform,background-color,color] cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          className="min-h-11 px-3.5 rounded-xl text-xs sm:text-sm font-semibold text-text-muted hover:text-text-primary hover:bg-surface-raised motion-safe:active:scale-95 motion-safe:transition-[transform,background-color,color] cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           Lewati
         </button>
@@ -270,7 +234,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
                   filter: style.filter,
                 }}
                 transition={reducedMotion ? { duration: 0 } : { type: "spring", stiffness: 280, damping: 26, mass: 1 }}
-                className="absolute w-[190px] h-[270px] sm:w-[210px] sm:h-[300px] rounded-2xl sm:rounded-3xl overflow-hidden shadow-lg border border-border-subtle bg-surface-raised"
+                className="absolute w-[190px] h-[270px] sm:w-[210px] sm:h-[300px] rounded-xl overflow-hidden shadow-lg border border-border-subtle bg-surface-raised"
                 style={{ zIndex: style.zIndex }}
               >
                 <img
@@ -297,7 +261,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
 
       {/* Editorial Content & CTA Actions */}
       <footer className="relative z-10 flex flex-col px-6 pb-[calc(var(--safe-bottom,env(safe-area-inset-bottom))+20px)] w-full max-w-[400px] mx-auto">
-        <div className="h-[140px] flex flex-col justify-end text-center mb-5">
+        <div className="min-h-[140px] flex flex-col justify-end text-center mb-5">
           <AnimatePresence mode="wait">
             <motion.div
               key={step}
@@ -348,7 +312,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
             type="button"
             onClick={handleNext}
             className={cn(
-              "w-full h-12 sm:h-13 rounded-2xl font-bold text-sm sm:text-base shadow-sm motion-safe:active:scale-[0.98] motion-safe:transition-[transform,background-color,color,border-color,box-shadow] flex items-center justify-center gap-2 cursor-pointer",
+              "w-full h-12 sm:h-13 rounded-lg font-bold text-sm sm:text-base shadow-sm motion-safe:active:scale-[0.98] motion-safe:transition-[transform,background-color,color,border-color,box-shadow] flex items-center justify-center gap-2 cursor-pointer",
               step === STEPS.length - 1
                 ? "bg-accent hover:bg-accent-hover text-white shadow-md shadow-accent/25"
                 : "bg-surface-raised hover:bg-surface-hover border border-border-subtle text-text-primary"
@@ -371,9 +335,9 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
                 exit={reducedMotion ? { opacity: 1, height: 44, marginTop: 8 } : { opacity: 0, height: 0, marginTop: 0 }}
                 transition={reducedMotion ? { duration: 0 } : undefined}
                 onClick={installPWA}
-                className="w-full min-h-11 rounded-2xl font-bold text-xs sm:text-sm bg-surface-overlay border border-border-subtle text-accent hover:bg-accent/10 motion-safe:active:scale-[0.98] motion-safe:transition-[transform,background-color,color,border-color] flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full min-h-11 rounded-lg font-bold text-xs sm:text-sm bg-surface-overlay border border-border-subtle text-accent hover:bg-accent/10 motion-safe:active:scale-[0.98] motion-safe:transition-[transform,background-color,color,border-color] flex items-center justify-center gap-2 cursor-pointer"
               >
-                <DownloadSimple size={18} weight="bold" />
+                <DownloadSimple size={18} weight="regular" />
                 Install Aplikasi Yomirra
               </motion.button>
             )}
@@ -383,10 +347,10 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
 
       {/* iOS Safari Add to Home Screen Guidance Dialog (Q134-Q147) */}
       <Dialog open={showIOSGuide} onOpenChange={setShowIOSGuide}>
-        <DialogContent className="max-w-sm rounded-2xl bg-surface-overlay border border-border-default/80 p-5 text-text-primary">
+        <DialogContent className="max-w-sm rounded-xl bg-surface-overlay border border-border-default/80 p-5 text-text-primary">
           <DialogHeader>
             <DialogTitle className="text-base font-bold flex items-center gap-2">
-              <Export size={20} className="text-accent" weight="bold" />
+              <Export size={20} className="text-accent" weight="regular" />
               <span>Pasang di iPhone / iPad</span>
             </DialogTitle>
             <DialogDescription className="text-xs text-text-muted">
@@ -400,7 +364,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
                 1
               </span>
               <p className="leading-relaxed">
-                Ketuk tombol <strong>Bagikan (Share)</strong> <Export size={14} className="inline mx-0.5 text-accent" weight="bold" /> di bilah navigasi Safari.
+                Ketuk tombol <strong>Bagikan (Share)</strong> <Export size={14} className="inline mx-0.5 text-accent" weight="regular" /> di bilah navigasi Safari.
               </p>
             </div>
 
@@ -409,7 +373,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
                 2
               </span>
               <p className="leading-relaxed">
-                Gulir ke bawah dan pilih <strong>&quot;Tambah ke Layar Utama&quot; (Add to Home Screen)</strong> <PlusSquare size={14} className="inline mx-0.5 text-accent" weight="bold" />.
+                Gulir ke bawah dan pilih <strong>&quot;Tambah ke Layar Utama&quot; (Add to Home Screen)</strong> <PlusSquare size={14} className="inline mx-0.5 text-accent" weight="regular" />.
               </p>
             </div>
 

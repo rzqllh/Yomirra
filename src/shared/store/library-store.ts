@@ -46,7 +46,7 @@ export type LibraryItem = {
 
 interface LibraryState {
   items: Record<string, LibraryItem>;
-  
+
   addToLibrary: (item: LibraryItem) => void;
   _setItemLocal: (item: LibraryItem) => void;
   removeFromLibrary: (sourceId: string, mangaId: string) => void;
@@ -75,7 +75,7 @@ const itemReferencesSource = (item: LibraryItem, sourceId: string, mangaId: stri
   (item.primarySourceId === sourceId && item.primaryMangaId === mangaId) ||
   item.linkedSources?.some((ref) => ref.sourceId === sourceId && ref.mangaId === mangaId) === true;
 
-// A user's Rak Buku is not an evictable cache. Never delete saved records
+// A user's Library is not an evictable cache. Never delete saved records
 // or issue remote tombstones merely because the library grew beyond 1,000 items.
 const pendingTitleWrites = new Map<string, Promise<void>>();
 const titleMutationVersions = new Map<string, number>();
@@ -205,7 +205,7 @@ export const useLibraryStore = create<LibraryState>()(
         ).catch(() => {
           if (rollbackMutation(checkpoint, set)) {
             toast.error("Gagal Menyimpan ke Akun", {
-              description: "Perubahan ini tidak tersinkron. Perubahan Rak Buku lainnya tetap aman.",
+              description: "Perubahan ini tidak tersinkron. Perubahan Library lainnya tetap aman.",
             });
           }
         });
@@ -441,7 +441,7 @@ export const useLibraryStore = create<LibraryState>()(
       syncWithCloud: (cloudItems) => set((state) => {
         const newItems = { ...state.items };
         let hasChanges = false;
-        
+
         for (const cloudItem of cloudItems) {
           const legacyId = getLibraryId(cloudItem.sourceId, cloudItem.mangaId);
           const localEntry = Object.entries(newItems).find(
@@ -450,7 +450,7 @@ export const useLibraryStore = create<LibraryState>()(
               k === legacyId ||
               itemReferencesSource(i, cloudItem.sourceId, cloudItem.mangaId)
           );
-          
+
           if (!localEntry) {
             const targetKey = cloudItem.id || legacyId;
             newItems[targetKey] = cloudItem;
@@ -459,7 +459,7 @@ export const useLibraryStore = create<LibraryState>()(
             const [localKey, localItem] = localEntry;
             const localTime = new Date(localItem.updatedAt || localItem.addedAt).getTime();
             const cloudTime = new Date(cloudItem.updatedAt || cloudItem.addedAt).getTime();
-            
+
             if (cloudTime > localTime) {
               newItems[localKey] = { ...localItem, ...cloudItem };
               hasChanges = true;

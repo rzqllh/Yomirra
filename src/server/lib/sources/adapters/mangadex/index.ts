@@ -5,12 +5,14 @@ import type {
   MangaPageResult,
   MangaSource,
   FilterList,
+  SourceReadOptions,
 } from "@/shared/sources/source-types";
 import type {
   MangaDexMangaListResponse,
   MangaDexMangaResponse,
   MangaDexChapterListResponse,
   MangaDexAtHomeResponse,
+  MangaDexChapterResponse,
 } from "./types";
 import {
   normalizeMangaItem,
@@ -20,6 +22,9 @@ import {
 import { getMangaDexFilters } from "./tag-cache";
 import { acquireToken, type AcquireTokenOptions } from "./throttle";
 import { createMangaDexTransport } from "./transport";
+
+import { isContentVisible } from "@/shared/sources/content-policy";
+import { SourceError } from "@/server/lib/sources/error";
 
 const API_BASE = "https://api.mangadex.org";
 const PAGE_SIZE = 24;
@@ -115,6 +120,8 @@ export function createMdFetch(dependencies: MdFetchDependencies = {}) {
 export const mdFetch = createMdFetch();
 
 export class MangaDexSource implements MangaSource {
+  constructor(private readonly request: typeof mdFetch = mdFetch) {}
+
   id = "mangadex";
   name = "MangaDex";
   description = "Largest international manga source with multi-language support.";
@@ -125,7 +132,8 @@ export class MangaDexSource implements MangaSource {
   isEnabled = true;
   isInstalled = true;
   status = "online" as const;
-  isNsfw = true;
+  // A mixed catalog; every request still enforces content-level policy.
+  isNsfw = false;
   isDynamic = false;
   capabilities = {
     popular: true,
@@ -137,46 +145,48 @@ export class MangaDexSource implements MangaSource {
     filters: true,
   };
 
-  private baseParams(): Record<string, string | string[]> {
+  private baseParams(options: SourceReadOptions = {}): Record<string, string | string[]> {
     return {
       "includes[]": ["cover_art"],
-      "contentRating[]": ["safe", "suggestive", "erotica"],
+      "contentRating[]": options.hideNsfw === false
+        ? ["safe", "suggestive", "erotica", "pornographic"]
+        : ["safe"],
       limit: String(PAGE_SIZE),
     };
   }
 
-  async getPopular(page: number): Promise<MangaPageResult> {
+  async getPopular(page: number, options: SourceReadOptions = {}): Promise<MangaPageResult> {
     const offset = (page - 1) * PAGE_SIZE;
-    const res = await mdFetch<MangaDexMangaListResponse>("/manga", {
-      ...this.baseParams(),
+    const res = await this.request<MangaDexMangaListResponse>("/manga", {
+      ...this.baseParams(options),
       "order[followedCount]": "desc",
       offset: String(offset),
     });
 
     return {
-      mangas: res.data.map(normalizeMangaItem),
+      mangas: res.data.map(normalizeMangaItem).filter((item) => isContentVisible(item, options.hideNsfw !== false)),
       hasNextPage: offset + res.data.length < res.total,
     };
   }
 
-  async getLatest(page: number): Promise<MangaPageResult> {
+  async getLatest(page: number, options: SourceReadOptions = {}): Promise<MangaPageResult> {
     const offset = (page - 1) * PAGE_SIZE;
-    const res = await mdFetch<MangaDexMangaListResponse>("/manga", {
-      ...this.baseParams(),
+    const res = await this.request<MangaDexMangaListResponse>("/manga", {
+      ...this.baseParams(options),
       "order[latestUploadedChapter]": "desc",
       offset: String(offset),
     });
 
     return {
-      mangas: res.data.map(normalizeMangaItem),
+      mangas: res.data.map(normalizeMangaItem).filter((item) => isContentVisible(item, options.hideNsfw !== false)),
       hasNextPage: offset + res.data.length < res.total,
     };
   }
 
-  async search(query: string, page: number, filters?: Record<string, string | string[]>): Promise<MangaPageResult> {
+  async search(query: string, page: number, filters?: Record<string, string | string[]>, options: SourceReadOptions = {}): Promise<MangaPageResult> {
     const offset = (page - 1) * PAGE_SIZE;
     const params: Record<string, string | string[]> = {
-      ...this.baseParams(),
+      ...this.baseParams(options),
       offset: String(offset),
     };
 
@@ -218,8 +228,9 @@ export class MangaDexSource implements MangaSource {
       const sortInput = filters["sort"];
       if (sortInput) {
         const sortStr = Array.isArray(sortInput) ? sortInput[0] : sortInput;
-        let mdSort = "relevance";
-        if (sortStr === "popular") mdSort = "followedCount";
+        const nativeSorts = new Set(["followedCount", "latestUploadedChapter", "relevance", "rating", "createdAt", "title"]);
+        let mdSort = nativeSorts.has(sortStr) ? sortStr : "relevance";
+        if (sortStr === "popular" || sortStr === "popularity") mdSort = "followedCount";
         else if (sortStr === "latest") mdSort = "latestUploadedChapter";
         else if (sortStr === "update") mdSort = "latestUploadedChapter";
         else if (sortStr === "rating") mdSort = "rating";
@@ -239,70 +250,131 @@ export class MangaDexSource implements MangaSource {
       }
     }
 
-    const res = await mdFetch<MangaDexMangaListResponse>("/manga", params);
+    const res = await this.request<MangaDexMangaListResponse>("/manga", params);
 
     return {
-      mangas: res.data.map(normalizeMangaItem),
+      mangas: res.data.map(normalizeMangaItem).filter((item) => isContentVisible(item, options.hideNsfw !== false)),
       hasNextPage: offset + res.data.length < res.total,
     };
   }
 
-  async getDetail(mangaId: string): Promise<MangaDetail> {
-    const res = await mdFetch<MangaDexMangaResponse>(`/manga/${mangaId}`, {
+  async getDetail(mangaId: string, options: SourceReadOptions = {}): Promise<MangaDetail> {
+    const res = await this.request<MangaDexMangaResponse>(`/manga/${mangaId}`, {
       "includes[]": ["cover_art", "author", "artist"],
     });
 
-    return normalizeMangaDetail(res.data);
+    const detail = normalizeMangaDetail(res.data);
+    if (!isContentVisible(detail, options.hideNsfw !== false)) {
+      throw new SourceError("Konten disembunyikan oleh pengaturan konten", {
+        code: "CONTENT_RESTRICTED", sourceId: this.id, stage: "detail", statusCode: 403,
+      });
+    }
+    return detail;
   }
 
-  async getChapters(mangaId: string): Promise<Chapter[]> {
+  async getChapters(mangaId: string, options: SourceReadOptions = {}): Promise<Chapter[]> {
+    // Validate content before exposing chapter metadata from a direct link.
+    await this.getDetail(mangaId, options);
+    const languages = options.preferredLanguages?.length ? options.preferredLanguages : ["id", "en"];
     const allChapters: Chapter[] = [];
+    const seenIds = new Set<string>();
     let offset = 0;
-    let hasMore = true;
+    let upstreamCount = 0;
 
-    // First try ID language, then fallback EN
-    while (hasMore) {
-      const res = await mdFetch<MangaDexChapterListResponse>(`/manga/${mangaId}/feed`, {
-        "translatedLanguage[]": ["id", "en"],
-        "order[chapter]": "desc",
-        limit: String(CHAPTERS_LIMIT),
-        offset: String(offset),
-        "includes[]": ["scanlation_group"],
-      });
-
-      const normalized = res.data.map(ch => normalizeChapter(ch, mangaId));
-      allChapters.push(...normalized);
-
+    while (true) {
+      const res = await this.request<MangaDexChapterListResponse>(
+        `/manga/${mangaId}/feed`,
+        {
+          "translatedLanguage[]": languages,
+          "contentRating[]": this.baseParams(options)["contentRating[]"],
+          "order[chapter]": "desc",
+          limit: String(CHAPTERS_LIMIT),
+          offset: String(offset),
+          "includes[]": ["scanlation_group"],
+        }
+      );
+      if (!Array.isArray(res.data) || !Number.isFinite(res.total)) {
+        throw new SourceError("Format daftar chapter berubah", {
+          code: "SCHEMA_CHANGED", sourceId: this.id, stage: "chapters",
+        });
+      }
+      upstreamCount += res.data.length;
+      let newIds = 0;
+      for (const chapter of res.data) {
+        if (seenIds.has(chapter.id)) continue;
+        seenIds.add(chapter.id);
+        newIds++;
+        if (chapter.attributes.externalUrl || chapter.attributes.pages <= 0) continue;
+        allChapters.push(normalizeChapter(chapter, mangaId));
+      }
       offset += res.data.length;
-      hasMore = offset < res.total && res.data.length === CHAPTERS_LIMIT;
-    }
-
-    // Deduplicate: prefer ID over EN for same chapter number
-    const seen = new Map<number, Chapter>();
-    for (const ch of allChapters) {
-      const existing = seen.get(ch.number);
-      if (!existing) {
-        seen.set(ch.number, ch);
-      } else if (ch.title.includes("[EN]") && !existing.title.includes("[EN]")) {
-        // Keep ID version, skip EN duplicate
-        continue;
-      } else if (!ch.title.includes("[EN]") && existing.title.includes("[EN]")) {
-        // Replace EN with ID
-        seen.set(ch.number, ch);
+      if (offset >= res.total) break;
+      if (!res.data.length || !newIds) {
+        throw new SourceError("Pagination chapter tidak maju; coba muat ulang", {
+          code: "SCHEMA_CHANGED", sourceId: this.id, stage: "chapters",
+        });
       }
     }
 
-    return Array.from(seen.values()).sort((a, b) => b.number - a.number);
+    if (upstreamCount > 0 && allChapters.length === 0) {
+      throw new SourceError("Chapter tersedia di sumber eksternal atau belum memiliki halaman baca", {
+        code: "CHAPTER_UNAVAILABLE", sourceId: this.id, stage: "chapters", statusCode: 404,
+      });
+    }
+
+    // Volume is part of identity. Unnumbered specials must not all collapse to chapter 0.
+    const chosen = new Map<string, Chapter>();
+    const preference = (chapter: Chapter) => {
+      const index = languages.indexOf(chapter.language ?? "");
+      return index < 0 ? languages.length : index;
+    };
+    for (const chapter of allChapters) {
+      const identity = chapter.chapterNumber === undefined || chapter.chapterNumber === ""
+        ? `special:${chapter.id}` : `${chapter.volume ?? ""}:${chapter.chapterNumber}`;
+      const existing = chosen.get(identity);
+      if (!existing || preference(chapter) < preference(existing) ||
+          (preference(chapter) === preference(existing) &&
+           (chapter.date > existing.date || (chapter.date === existing.date && chapter.id < existing.id)))) {
+        chosen.set(identity, chapter);
+      }
+    }
+    return Array.from(chosen.values()).sort((a, b) => {
+      const volumeA = Number(a.volume);
+      const volumeB = Number(b.volume);
+      if (a.volume && b.volume && Number.isFinite(volumeA) && Number.isFinite(volumeB) && volumeA !== volumeB) {
+        return volumeB - volumeA;
+      }
+      return b.number - a.number || b.date.localeCompare(a.date) || a.id.localeCompare(b.id);
+    });
   }
 
-  async getPages(chapterId: string): Promise<ChapterPages> {
-    const res = await mdFetch<MangaDexAtHomeResponse>(`/at-home/server/${chapterId}`, {});
-
+  async getPages(chapterId: string, options: SourceReadOptions = {}): Promise<ChapterPages> {
+    const chapter = await this.request<MangaDexChapterResponse>(`/chapter/${chapterId}`);
+    const parentId = chapter.data.relationships.find((item) => item.type === "manga")?.id;
+    if (!parentId || (options.mangaId && parentId !== options.mangaId)) {
+      throw new SourceError("Chapter tidak cocok dengan komik yang dipilih", {
+        code: "MAPPING_UNAVAILABLE", sourceId: this.id, stage: "pages", statusCode: 409,
+      });
+    }
+    await this.getDetail(parentId, options);
+    if (chapter.data.attributes.externalUrl || chapter.data.attributes.pages <= 0) {
+      throw new SourceError("Chapter ini belum memiliki halaman yang dapat dibaca di aplikasi", {
+        code: "CHAPTER_UNAVAILABLE", sourceId: this.id, stage: "pages", statusCode: 404,
+      });
+    }
+    const res = await this.request<MangaDexAtHomeResponse>(`/at-home/server/${chapterId}`, {});
+    const saver = options.dataSaver === true && res.chapter?.dataSaver?.length > 0;
+    const filenames = saver ? res.chapter.dataSaver : res.chapter?.data;
+    if (!res.baseUrl || !res.chapter?.hash || !filenames?.length || filenames.some((file) => !file)) {
+      throw new SourceError("Daftar gambar chapter belum tersedia", {
+        code: "CHAPTER_UNAVAILABLE", sourceId: this.id, stage: "pages", statusCode: 404,
+      });
+    }
     return {
       chapterId,
-      pages: res.chapter.data.map((filename, index) => ({
+      pages: filenames.map((filename, index) => ({
         index,
-        url: `${res.baseUrl}/data/${res.chapter.hash}/${filename}`,
+        url: `${res.baseUrl.replace(/\/$/, "")}/${saver ? "data-saver" : "data"}/${res.chapter.hash}/${filename}`,
         referer: "https://mangadex.org",
       })),
     };

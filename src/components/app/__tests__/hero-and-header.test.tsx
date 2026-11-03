@@ -124,11 +124,13 @@ describe("Header & Hero System (Squircle & Reusable)", () => {
       const candidates = Array.from({ length: 5 }, (_, index) => ({
         coverUrl: `https://example.com/cover-${index}.jpg`,
         title: `Manga ${index}`,
+        sourceId: "shinigami",
+        contentRating: "safe" as const,
       }));
       const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0);
 
       const firstRender = render(<HomeHero candidates={candidates} />);
-      const firstSelection = sessionStorage.getItem(HERO_COLLAGE_CACHE_KEY);
+      const firstSelection = sessionStorage.getItem(`${HERO_COLLAGE_CACHE_KEY}_safe`);
 
       expect(firstSelection).toBeTruthy();
       expect(JSON.parse(firstSelection ?? "[]")).toHaveLength(3);
@@ -137,7 +139,7 @@ describe("Header & Hero System (Squircle & Reusable)", () => {
       randomSpy.mockReturnValue(0.99);
       render(<HomeHero candidates={candidates} />);
 
-      expect(sessionStorage.getItem(HERO_COLLAGE_CACHE_KEY)).toBe(
+      expect(sessionStorage.getItem(`${HERO_COLLAGE_CACHE_KEY}_safe`)).toBe(
         firstSelection
       );
 
@@ -151,6 +153,8 @@ describe("Header & Hero System (Squircle & Reusable)", () => {
             {
               coverUrl: "https://example.com/broken.jpg",
               title: "Broken cover",
+              sourceId: "shinigami",
+              contentRating: "safe",
             },
           ]}
         />
@@ -165,20 +169,34 @@ describe("Header & Hero System (Squircle & Reusable)", () => {
       ).toBeTruthy();
       expect(screen.getByRole("search")).toBeTruthy();
     });
+
+    it("renders discovery quick action links in zero-history view and returning view", () => {
+      // 1. Zero history
+      const { unmount } = render(<HomeHero />);
+      expect(screen.getByRole("link", { name: /populer/i }).getAttribute("href")).toBe("/popular");
+      expect(screen.getByRole("link", { name: /jelajah/i }).getAttribute("href")).toBe("/library");
+      unmount();
+
+      // 2. Returning reader
+      mockHistoryItems = { "source-a::title-a": { chapterId: "1" } };
+      render(<HomeHero />);
+      expect(screen.getByRole("link", { name: /populer/i }).getAttribute("href")).toBe("/popular");
+      expect(screen.getByRole("link", { name: /koleksi/i }).getAttribute("href")).toBe("/bookmark");
+    });
   });
 
   describe("HeaderActions & Dropdown Popover", () => {
-    it("uses squircle rounded-2xl geometry for bell and settings trigger", () => {
+    it("uses squircle rounded-xl geometry for bell and settings trigger", () => {
       render(<HeaderActions />);
       const bellButton = screen.getByRole("button", { name: /pembaruan/i });
-      expect(bellButton.className).toContain("rounded-2xl");
+      expect(bellButton.className).toContain("rounded-xl");
       expect(bellButton.className).toContain("bg-transparent");
       expect(bellButton.className).toContain("shadow-none");
 
       const settingsBtn = screen.getByRole("button", {
         name: /buka menu akun/i,
       });
-      expect(settingsBtn.className).toContain("rounded-2xl");
+      expect(settingsBtn.className).toContain("rounded-xl");
       expect(settingsBtn.className).toContain("bg-transparent");
       expect(settingsBtn.className).toContain("shadow-none");
     });
@@ -197,8 +215,9 @@ describe("Header & Hero System (Squircle & Reusable)", () => {
         "/sources"
       );
       expect(screen.getByText(/Tema tampilan/i)).toBeTruthy();
-      expect(screen.getByText(/Bahasa/i)).toBeTruthy();
-      expect(screen.getByText(/Pusat bantuan/i)).toBeTruthy();
+      // UI language selection is not implemented: no misleading Bahasa shortcut.
+      expect(screen.queryByText(/^Bahasa$/i)).toBeNull();
+      expect(screen.getByRole("link", { name: /Pusat bantuan/i }).getAttribute("href")).toBe("/help");
       expect(screen.getByText(/^Masuk$/i)).toBeTruthy();
     });
   });

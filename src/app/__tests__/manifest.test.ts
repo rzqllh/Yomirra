@@ -22,6 +22,7 @@ describe("F10: PWA Manifest & Asset Alignment", () => {
     expect(data.display).toBe("fullscreen");
     expect(data.icons).toHaveLength(4);
     expect(data.shortcuts).toHaveLength(4);
+    expect(data.shortcuts?.[0]?.url).toBe("/bookmark");
     expect(data.screenshots).toHaveLength(3);
   });
 

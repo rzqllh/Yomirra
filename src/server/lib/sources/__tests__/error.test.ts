@@ -17,7 +17,7 @@ describe("SourceError and Error Normalization", () => {
     const classified = SourceError.classify(cfErr, "shinigami", "transport");
 
     expect(classified.code).toBe("UPSTREAM_BLOCKED");
-    expect(getFriendlyErrorMessage(classified.code)).toBe("diblokir perlindungan situs (Cloudflare)");
+    expect(getFriendlyErrorMessage(classified.code)).toBe("akses ke sumber ditolak");
   });
 
   it("classifies 404 on search as ROUTE_CHANGED", () => {

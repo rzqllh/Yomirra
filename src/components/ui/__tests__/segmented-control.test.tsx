@@ -31,7 +31,7 @@ describe("SegmentedControl - Concentric Radius Architecture & Quick Rail", () =>
     });
   });
 
-  it("applies rounded-full to container and buttons when shape='pill'", () => {
+  it("enforces concentric squircle max xl to container and buttons when shape='pill'", () => {
     const handleChange = vi.fn();
     const { container } = render(
       <SegmentedControl
@@ -43,11 +43,11 @@ describe("SegmentedControl - Concentric Radius Architecture & Quick Rail", () =>
     );
 
     const outerContainer = container.firstElementChild as HTMLElement;
-    expect(outerContainer.className).toContain("rounded-full");
+    expect(outerContainer.className).toContain("rounded-xl");
 
     const buttons = screen.getAllByRole("button");
     buttons.forEach((button) => {
-      expect(button.className).toContain("rounded-full");
+      expect(button.className).toContain("rounded-lg");
     });
   });
 
@@ -72,11 +72,11 @@ describe("SegmentedControl - Concentric Radius Architecture & Quick Rail", () =>
         options={options}
         value="reading"
         onChange={vi.fn()}
-        ariaLabel="Tampilan rak buku"
+        ariaLabel="Tampilan Library"
       />
     );
 
-    const group = screen.getByRole("group", { name: "Tampilan rak buku" });
+    const group = screen.getByRole("group", { name: "Tampilan Library" });
     expect(group).toBeDefined();
     expect(screen.getByRole("button", { name: /sedang dibaca/i }).getAttribute("aria-pressed")).toBe("true");
     expect(screen.getByRole("button", { name: /koleksi/i }).getAttribute("aria-pressed")).toBe("false");

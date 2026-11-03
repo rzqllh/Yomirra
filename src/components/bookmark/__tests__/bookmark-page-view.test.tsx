@@ -70,7 +70,7 @@ describe("BookmarkPageView hierarchy & standardization", () => {
     render(<BookmarkPageView />);
 
     const heading = screen.getByRole("heading", { level: 1 });
-    expect(heading.textContent).toBe("Rak Buku");
+    expect(heading.textContent).toBe("Library");
     expect(heading.className).toContain("text-text-primary");
 
     expect(

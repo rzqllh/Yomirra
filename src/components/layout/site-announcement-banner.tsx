@@ -124,7 +124,7 @@ export function SiteAnnouncementBanner() {
       ref={bannerRef}
       aria-label="Pengumuman Situs"
       className={cn(
-        "relative z-50 w-full border-b backdrop-blur-md px-3.5 py-2 text-xs transition-all animate-in fade-in duration-200",
+        "sticky top-0 z-50 w-full border-b backdrop-blur-md px-3.5 py-2 text-xs transition-all animate-in fade-in duration-200",
         style.bg,
         style.border
       )}
@@ -145,7 +145,7 @@ export function SiteAnnouncementBanner() {
                 )}
               >
                 <span>Pelajari lebih lanjut</span>
-                <ArrowSquareOut size={12} weight="bold" />
+                <ArrowSquareOut size={12} weight="regular" />
               </a>
             )}
           </div>
@@ -157,7 +157,7 @@ export function SiteAnnouncementBanner() {
           aria-label="Tutup pengumuman"
           className="size-6 shrink-0 rounded-md flex items-center justify-center text-text-secondary hover:text-text-primary hover:bg-surface-raised/40 transition-colors focus:outline-none"
         >
-          <X size={14} weight="bold" />
+          <X size={14} weight="regular" />
         </button>
       </div>
     </aside>

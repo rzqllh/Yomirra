@@ -10,9 +10,11 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
+let mockUser: any = { uid: "test-user-1", email: "test@example.com", displayName: "Tester" };
+
 // Mock hooks
 vi.mock("@/shared/hooks/use-auth", () => ({
-  useAuth: () => ({ user: null, loginWithGoogle: vi.fn(), logout: vi.fn() }),
+  useAuth: () => ({ user: mockUser, loginWithGoogle: vi.fn(), logout: vi.fn() }),
 }));
 
 vi.mock("@/shared/hooks/use-sync", () => ({
@@ -32,6 +34,7 @@ vi.mock("@/components/ui/directional-transition", () => ({
 describe("SettingsPage - Update Checker UI", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUser = { uid: "test-user-1", email: "test@example.com", displayName: "Tester" };
     useSettingsStore.setState({
       checkOnAppStart: true,
       minimumCheckIntervalMinutes: 15,
@@ -47,6 +50,22 @@ describe("SettingsPage - Update Checker UI", () => {
     });
     return view;
   };
+
+  it("keeps Tampilkan NSFW off by default and inverts only the displayed toggle", async () => {
+    useSettingsStore.setState({ hideNsfw: true });
+    await renderWithMount();
+
+    const toggle = screen.getByRole("checkbox", { name: "Tampilkan NSFW" }) as HTMLInputElement;
+    expect(toggle.checked).toBe(false);
+
+    await act(async () => { fireEvent.click(toggle); });
+    expect(toggle.checked).toBe(true);
+    expect(useSettingsStore.getState().hideNsfw).toBe(false);
+
+    await act(async () => { fireEvent.click(toggle); });
+    expect(toggle.checked).toBe(false);
+    expect(useSettingsStore.getState().hideNsfw).toBe(true);
+  });
 
   it("renders current values correctly", async () => {
     await renderWithMount();
@@ -92,17 +111,24 @@ describe("SettingsPage - Update Checker UI", () => {
     expect(useSettingsStore.getState().minimumCheckIntervalMinutes).toBe(60);
   });
 
-  it("disables interval select visually when checkOnAppStart is false, but keeps value", async () => {
+  it("disables interval selection when checkOnAppStart is false, but keeps value", async () => {
     useSettingsStore.setState({ checkOnAppStart: false, minimumCheckIntervalMinutes: 30 });
-    const { container } = await renderWithMount();
+    await renderWithMount();
     
     const selectButton = screen.getByRole("button", { name: /30 Menit/i });
     expect(selectButton).not.toBeNull();
     
-    // CustomSelect wrapper should have opacity-50 and pointer-events-none
-    const wrapper = selectButton.closest(".opacity-50.pointer-events-none");
-    expect(wrapper).not.toBeNull();
+    expect((selectButton as HTMLButtonElement).disabled).toBe(true);
     
     expect(useSettingsStore.getState().minimumCheckIntervalMinutes).toBe(30);
+  });
+
+  it("restricts NSFW toggle when user is not logged in", async () => {
+    mockUser = null;
+    await renderWithMount();
+
+    expect(screen.queryByRole("checkbox", { name: "Tampilkan NSFW" })).toBeNull();
+    expect(screen.getByText("Terkunci")).toBeDefined();
+    expect(screen.getByRole("link", { name: /Masuk/i })).toBeDefined();
   });
 });

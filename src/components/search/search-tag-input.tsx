@@ -97,7 +97,7 @@ export function SearchTagInput({
                 key={`${tag.operator ?? "include"}:${tag.category}:${tag.id}`}
                 type="button"
                 onClick={() => removeTag(tag.raw)}
-                className={`inline-flex h-7 items-center gap-1.5 rounded-full border px-2.5 text-[11px] font-semibold transition-colors ${
+                className={`inline-flex h-7 items-center gap-1.5 rounded-lg border px-2.5 text-[11px] font-semibold transition-colors ${
                   isExclude
                     ? "border-red-500/25 bg-red-500/10 text-red-400 hover:border-red-500/40 hover:bg-red-500/15"
                     : "border-accent/20 bg-accent-dim text-accent hover:border-accent/35 hover:bg-accent/10"
@@ -105,7 +105,7 @@ export function SearchTagInput({
                 aria-label={`Hapus tag ${isExclude ? "kecualikan " : ""}${tag.label}`}
               >
                 <span>{isExclude ? `-${tag.label}` : tag.label}</span>
-                <X size={11} weight="bold" />
+                <X size={11} weight="regular" />
               </button>
             );
           })}
