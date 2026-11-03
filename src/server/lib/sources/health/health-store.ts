@@ -1,14 +1,24 @@
 import { isRedisConfigured, redis } from "@/server/lib/cache/redis";
 import { logger } from "@/shared/logger";
-import type { SourceHealthSnapshot, SourceHealthTransition, SourceHealthStatus } from "./types";
+import type {
+  SourceHealthSnapshot,
+  SourceHealthTransition,
+  SourceHealthStatus,
+  SourceProbeSample,
+  SourceRollingStats,
+} from "./types";
 
 const SNAPSHOT_KEY_PREFIX = "yomirra:health:snapshot:";
 const SNAPSHOT_TTL_SECONDS = 604800; // 7 days
+const HISTORY_KEY_PREFIX = "yomirra:health:history:";
+const MAX_HISTORY_SAMPLES = 50;
+const HISTORY_TTL_SECONDS = 604800; // 7 days (covers 24h rolling window safely)
 
 type TransitionListener = (transition: SourceHealthTransition) => void | Promise<void>;
 
 export class SourceHealthStore {
   private memorySnapshots = new Map<string, SourceHealthSnapshot>();
+  private memoryHistory = new Map<string, SourceProbeSample[]>();
   private listeners: TransitionListener[] = [];
 
   /**
@@ -62,6 +72,32 @@ export class SourceHealthStore {
         );
       } catch (err) {
         logger.warn("Failed to persist source health snapshot to Redis", { sourceId, error: err });
+      }
+    }
+
+    // Record probe sample in rolling history
+    const sample: SourceProbeSample = {
+      sourceId,
+      timestamp: Date.now(),
+      latencyMs: newSnapshot.latencyMs,
+      status: newSnapshot.status,
+      stage: newSnapshot.stage,
+      probeType: newSnapshot.metadata?.probeType ?? "lightweight",
+      errorCode: newSnapshot.lastFailureCode,
+    };
+
+    const existingHistory = this.memoryHistory.get(sourceId) || [];
+    const updatedHistory = [sample, ...existingHistory].slice(0, MAX_HISTORY_SAMPLES);
+    this.memoryHistory.set(sourceId, updatedHistory);
+
+    if (isRedisConfigured) {
+      try {
+        const historyKey = `${HISTORY_KEY_PREFIX}${sourceId}`;
+        await redis.lpush(historyKey, JSON.stringify(sample));
+        await redis.ltrim(historyKey, 0, MAX_HISTORY_SAMPLES - 1);
+        await redis.expire(historyKey, HISTORY_TTL_SECONDS);
+      } catch (err) {
+        logger.warn("Failed to persist source health probe sample to Redis", { sourceId, error: err });
       }
     }
 
@@ -141,8 +177,72 @@ export class SourceHealthStore {
     return result;
   }
 
+  async getRollingStats(sourceId: string, windowHours: number = 24): Promise<SourceRollingStats> {
+    const normalizedId = sourceId.toLowerCase().trim();
+    let samples: SourceProbeSample[] = [];
+
+    if (isRedisConfigured) {
+      try {
+        const rawItems = await redis.lrange(`${HISTORY_KEY_PREFIX}${normalizedId}`, 0, MAX_HISTORY_SAMPLES - 1);
+        if (rawItems && rawItems.length > 0) {
+          samples = rawItems.map((item) => (typeof item === "string" ? JSON.parse(item) : item) as SourceProbeSample);
+        }
+      } catch (err) {
+        logger.warn("Failed to read source health history from Redis, falling back to memory", {
+          sourceId: normalizedId,
+          error: err,
+        });
+      }
+    }
+
+    if (samples.length === 0) {
+      samples = this.memoryHistory.get(normalizedId) || [];
+    }
+
+    const windowStart = Date.now() - windowHours * 60 * 60 * 1000;
+    const validSamples = samples.filter((s) => s.timestamp >= windowStart);
+
+    const totalSamples = validSamples.length;
+    const hasSufficientData = totalSamples >= 3;
+    const successfulSamples = validSamples.filter((s) => s.status === "HEALTHY").length;
+
+    const successRate =
+      hasSufficientData && totalSamples > 0
+        ? `${((successfulSamples / totalSamples) * 100).toFixed(1)}%`
+        : "-";
+
+    // Calculate p95 latency from valid successful samples
+    const successfulLatencies = validSamples
+      .filter((s) => s.status === "HEALTHY" && s.latencyMs > 0)
+      .map((s) => s.latencyMs)
+      .sort((a, b) => a - b);
+
+    let p95LatencyMs: number | null = null;
+    let p95Latency = "-";
+
+    if (hasSufficientData && successfulLatencies.length > 0) {
+      const p95Index = Math.ceil(0.95 * successfulLatencies.length) - 1;
+      p95LatencyMs = successfulLatencies[Math.max(0, p95Index)];
+      p95Latency = `${p95LatencyMs}ms`;
+    }
+
+    const lastCheckedAt = validSamples[0] ? new Date(validSamples[0].timestamp).toISOString() : null;
+
+    return {
+      sourceId: normalizedId,
+      totalSamples,
+      successfulSamples,
+      successRate,
+      p95LatencyMs,
+      p95Latency,
+      lastCheckedAt,
+      hasSufficientData,
+    };
+  }
+
   async clear(): Promise<void> {
     this.memorySnapshots.clear();
+    this.memoryHistory.clear();
   }
 }
 

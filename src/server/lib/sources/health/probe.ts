@@ -176,8 +176,25 @@ export async function probeSourceHealth(
   }
 }
 
+async function mapConcurrent<T, R>(
+  items: T[],
+  concurrency: number,
+  fn: (item: T) => Promise<R>
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let currentIndex = 0;
+  const pool = Array.from({ length: Math.min(concurrency, items.length) }, async () => {
+    while (currentIndex < items.length) {
+      const idx = currentIndex++;
+      results[idx] = await fn(items[idx]);
+    }
+  });
+  await Promise.all(pool);
+  return results;
+}
+
 /**
- * Probes all active enabled sources.
+ * Probes all active enabled sources with bounded concurrency and individual timeouts.
  */
 export async function probeAllSourcesHealth(
   options: HealthProbeOptions = {}
@@ -185,17 +202,20 @@ export async function probeAllSourcesHealth(
   const runtimeSources = await getRuntimeSources().catch(() => getAllSourceMetadata());
   const activeSources = runtimeSources.filter((s) => s.isEnabled && s.isInstalled);
   const results: Record<string, SourceHealthSnapshot> = {};
+  const timeoutMs = options.timeoutMs ?? 10000;
 
-  await Promise.all(
-    activeSources.map(async (meta) => {
-      try {
-        const snapshot = await probeSourceHealth(meta.id, options);
-        results[meta.id] = snapshot;
-      } catch (error) {
-        logger.error(`Unhandled error during health probe for ${meta.id}`, { error });
-      }
-    })
-  );
+  await mapConcurrent(activeSources, 3, async (meta) => {
+    try {
+      const probePromise = probeSourceHealth(meta.id, options);
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error(`Health probe timeout after ${timeoutMs}ms`)), timeoutMs)
+      );
+      const snapshot = await Promise.race([probePromise, timeoutPromise]);
+      results[meta.id] = snapshot;
+    } catch (error) {
+      logger.error(`Unhandled error during health probe for ${meta.id}`, { error });
+    }
+  });
 
   return results;
 }
