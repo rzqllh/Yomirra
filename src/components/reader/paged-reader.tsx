@@ -31,6 +31,7 @@ interface PagedReaderProps {
   managedChrome?: boolean;
   sourceId: string;
   mangaId: string;
+  mangaTitle?: string;
   chapterId: string;
   chapterTitle?: string;
   pages: PageItem[];
@@ -45,6 +46,7 @@ export function PagedReader({
   managedChrome = false,
   sourceId,
   mangaId,
+  mangaTitle,
   chapterId,
   chapterTitle = "Chapter",
   pages,
@@ -507,6 +509,7 @@ export function PagedReader({
         subject={chapterTitle}
         sourceId={sourceId}
         mangaId={mangaId}
+        mangaTitle={mangaTitle}
         chapterId={chapterId}
         chapterTitle={chapterTitle}
         pageIndex={reportPageIndex}

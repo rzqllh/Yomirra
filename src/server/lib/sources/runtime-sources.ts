@@ -66,7 +66,7 @@ export async function getRuntimeSources(): Promise<SourceMetadata[]> {
         version: c.version || "1.0.0",
         isEnabled: typeof (c as any).isEnabled === "boolean" ? (c as any).isEnabled : true,
         isInstalled: true,
-        status: "online" as const,
+        status: "unknown" as const,
         isNsfw: Boolean(c.isNsfw),
         capabilities: {
           popular: true,

@@ -336,6 +336,7 @@ function ReaderContent({
           key={`paged-${chapterId}`}
           sourceId={sourceId}
           mangaId={mangaId}
+          mangaTitle={initialDetail?.title}
           chapterId={chapterId}
           chapterTitle={chapterTitle}
           pages={pagesToRender}
@@ -350,6 +351,7 @@ function ReaderContent({
           key={`continuous-${chapterId}`}
           sourceId={sourceId}
           mangaId={mangaId}
+          mangaTitle={initialDetail?.title}
           chapterId={chapterId}
           chapterTitle={chapterTitle}
           pages={pagesToRender}

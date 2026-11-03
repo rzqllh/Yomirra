@@ -166,10 +166,21 @@ export function SourceCard({ source, onUpdate }: SourceCardProps) {
             )}
           </div>
 
+          {source.healthStats && (source.healthStats.latency !== "-" || source.healthStats.uptime !== "-") ? (
+            <div className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-text-muted">
+              {source.healthStats.latency !== "-" && (
+                <span>Latensi: {source.healthStats.latency}</span>
+              )}
+              {source.healthStats.uptime !== "-" && (
+                <span>Sukses: {source.healthStats.uptime}</span>
+              )}
+            </div>
+          ) : null}
+
           {isUnavailable ? (
             <div className="mt-2.5 flex items-center justify-between gap-2">
               <p className="text-xs font-medium text-semantic-error">
-                Sumber tidak dapat digunakan saat ini.
+                {source.healthStats?.message || "Sumber tidak dapat digunakan saat ini."}
               </p>
               <button
                 type="button"

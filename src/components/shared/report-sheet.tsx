@@ -53,6 +53,7 @@ export interface ReportSheetProps {
   /** Payload fields forwarded to API */
   sourceId?: string;
   mangaId?: string;
+  mangaTitle?: string;
   chapterId?: string;
   chapterTitle?: string;
   /** Pre-selected page index for image errors */
@@ -68,6 +69,7 @@ export function ReportSheet({
   subject,
   sourceId,
   mangaId,
+  mangaTitle,
   chapterId,
   chapterTitle,
   pageIndex,
@@ -109,6 +111,7 @@ export function ReportSheet({
         detail: detail.trim() || undefined,
         sourceId,
         mangaId,
+        mangaTitle,
         chapterId,
         chapterTitle,
         pageIndex,

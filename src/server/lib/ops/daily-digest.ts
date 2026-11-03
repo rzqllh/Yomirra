@@ -20,8 +20,15 @@ export async function sendDailyDigest(): Promise<boolean> {
       activeSources.map((source) => source.id)
     );
     const entries = Object.entries(snapshots);
-    const unhealthy = entries.filter(([, snapshot]) => snapshot.status !== "HEALTHY");
-    const unmeasuredCount = Math.max(0, activeSources.length - entries.length);
+    const healthy = entries.filter(([, snapshot]) => snapshot.status === "HEALTHY");
+    const unmeasured = entries.filter(([, snapshot]) => snapshot.status === "UNKNOWN" || !snapshot.status);
+    const unhealthy = entries.filter(
+      ([, snapshot]) =>
+        snapshot.status !== "HEALTHY" &&
+        snapshot.status !== "UNKNOWN" &&
+        Boolean(snapshot.status)
+    );
+    const unmeasuredCount = unmeasured.length + Math.max(0, activeSources.length - entries.length);
 
     const latencies = entries
       .map(([, snapshot]) => snapshot.latencyMs)
@@ -45,7 +52,7 @@ export async function sendDailyDigest(): Promise<boolean> {
 
     let message = `📋 *Yomirra · Ringkasan Harian*\n${formatWibDate(new Date())}\n\n`;
     message += "*Stabilitas*\n";
-    message += `${entries.length - unhealthy.length} dari ${activeSources.length} source normal\n`;
+    message += `${healthy.length} dari ${activeSources.length} source normal\n`;
     message += unhealthy.length
       ? `${unhealthy.length} perlu perhatian\n`
       : "Tidak ada gangguan aktif\n";
@@ -71,7 +78,9 @@ export async function sendDailyDigest(): Promise<boolean> {
     message += "\n*Tindakan terbuka*\n";
     message += unhealthy.length
       ? `${unhealthy.length} source perlu dicek`
-      : "Tidak ada.";
+      : unmeasuredCount
+        ? `${unmeasuredCount} source menunggu probe baseline.`
+        : "Tidak ada.";
 
     return await sendTelegramMessage(message, {
       severity: AlertSeverity.INFO,

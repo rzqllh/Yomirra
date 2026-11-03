@@ -130,31 +130,50 @@ export function formatUserReport(payload: UserReportPayload): string {
     chapter_error: "Chapter bermasalah",
     source_broken: "Source tidak bisa dipakai",
     image_broken: "Gambar tidak tampil",
-    other: payload.category,
+    other: payload.category || "Lainnya",
   };
 
-  let text = "🟡 *Laporan pengguna*\n\n";
-  text += `*Masalah*\n${issueLabel[payload.type] || payload.category}\n`;
+  const baseLabel = issueLabel[payload.type] || payload.category || "Laporan umum";
+  const problemDescription =
+    payload.category && payload.category !== baseLabel
+      ? `${baseLabel} (${payload.category})`
+      : baseLabel;
 
-  if (payload.sourceId || payload.chapterTitle || typeof payload.pageIndex === "number") {
+  let text = "🟡 *Laporan pengguna*\n\n";
+  text += `*Masalah*\n${problemDescription}\n`;
+
+  if (
+    payload.sourceId ||
+    payload.mangaTitle ||
+    payload.chapterTitle ||
+    typeof payload.pageIndex === "number"
+  ) {
     text += "\n*Lokasi*\n";
-    if (payload.sourceId) text += `Source: ${sourceDisplayName(payload.sourceId)}\n`;
     if (payload.mangaTitle) text += `Komik: ${payload.mangaTitle}\n`;
     if (payload.chapterTitle) text += `${payload.chapterTitle}\n`;
     if (typeof payload.pageIndex === "number") text += `Halaman ${payload.pageIndex + 1}\n`;
+    if (payload.sourceId) text += `Source: ${sourceDisplayName(payload.sourceId)} (\`${payload.sourceId}\`)\n`;
   }
 
   if (payload.detail?.trim()) {
-    text += `\n*Catatan*\n${payload.detail.trim()}\n`;
+    text += `\n*Catatan*\n"${payload.detail.trim()}"\n`;
   }
 
   text += "\n*Langkah*\n";
-  text += payload.sourceId
-    ? `/recheck ${payload.sourceId}`
-    : "Cek laporan di aplikasi.";
+  if (payload.sourceId) {
+    text += `/recheck ${payload.sourceId}\n`;
+  } else {
+    text += "Cek laporan di aplikasi.\n";
+  }
+
+  if (payload.sourceId && payload.mangaId && payload.chapterId) {
+    const appUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://www.yomirra.web.id").replace(/\/+$/, "");
+    const readerUrl = `${appUrl}/manga/${encodeURIComponent(payload.sourceId)}/${encodeURIComponent(payload.mangaId)}/read/${encodeURIComponent(payload.chapterId)}`;
+    text += `Tinjau di Reader: ${readerUrl}\n`;
+  }
 
   if (payload.mangaId || payload.chapterId) {
-    text += "\n\n*Teknis*\n";
+    text += "\n*Teknis*\n";
     if (payload.mangaId) text += `Manga ID: \`${payload.mangaId}\`\n`;
     if (payload.chapterId) text += `Chapter ID: \`${payload.chapterId}\`\n`;
   }

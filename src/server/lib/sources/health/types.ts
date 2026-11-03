@@ -42,3 +42,25 @@ export interface HealthProbeOptions {
   deep?: boolean;
   timeoutMs?: number;
 }
+
+export interface SourceProbeSample {
+  sourceId: string;
+  timestamp: number;
+  latencyMs: number;
+  status: SourceHealthStatus;
+  stage?: SourceHealthStage;
+  probeType?: "lightweight" | "deep";
+  errorCode?: SourceErrorCode;
+}
+
+export interface SourceRollingStats {
+  sourceId: string;
+  totalSamples: number;
+  successfulSamples: number;
+  successRate: string;
+  p95LatencyMs: number | null;
+  p95Latency: string;
+  lastCheckedAt: string | null;
+  hasSufficientData: boolean;
+}
+

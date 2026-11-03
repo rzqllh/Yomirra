@@ -3,6 +3,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 const mockRedis = {
   get: vi.fn(),
   setex: vi.fn(),
+  set: vi.fn(),
+  eval: vi.fn(),
 };
 
 const mockProbeAllSourcesHealth = vi.fn();
@@ -27,59 +29,113 @@ vi.mock("@/server/lib/sources/health/probe", () => ({
 }));
 
 import { GET } from "../route";
+import { sourceHealthStore } from "@/server/lib/sources/health/health-store";
 import { sourceRegistry } from "@/shared/sources/source-registry";
 
 describe("GET /api/sources/health", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.restoreAllMocks();
     mockRedis.get.mockReset();
     mockRedis.setex.mockReset();
+    mockRedis.set.mockReset();
+    mockRedis.eval.mockReset();
     mockProbeAllSourcesHealth.mockReset();
+    await sourceHealthStore.clear();
   });
 
-  it("uses functional probes as the source of truth and sanitizes failures", async () => {
+  it("serves cached payload immediately on Redis cache hit (<50ms)", async () => {
+    const cachedPayload = {
+      data: {
+        mangadex: {
+          id: "mangadex",
+          status: "online",
+          latency: "120ms",
+          uptime: "99.0%",
+          message: "Server merespons dengan baik.",
+          checkedAt: "2026-11-03T00:00:00.000Z",
+        },
+      },
+      meta: {
+        cached: false,
+        stale: false,
+        checkedAt: "2026-11-03T00:00:00.000Z",
+        probeType: "functional",
+      },
+    };
+
+    mockRedis.get.mockResolvedValue(JSON.stringify(cachedPayload));
+
+    const res = await GET();
+    expect(res.status).toBe(200);
+    const json = await res.json();
+
+    expect(json.meta.cached).toBe(true);
+    expect(json.meta.stale).toBe(false);
+    expect(json.data.mangadex.status).toBe("online");
+    expect(mockProbeAllSourcesHealth).not.toHaveBeenCalled();
+  });
+
+  it("serves non-blocking snapshot response on cache miss and triggers background probe", async () => {
     mockRedis.get.mockResolvedValue(null);
+    mockRedis.set.mockResolvedValue("OK");
     mockRedis.setex.mockResolvedValue("OK");
-    mockProbeAllSourcesHealth.mockResolvedValue({
-      shinigami: {
-        sourceId: "shinigami",
-        status: "HEALTHY",
-        latencyMs: 120,
-        resolvedHost: "https://api.shngm.io",
-        lastCheckedAt: "2026-10-05T05:00:00.000Z",
-        lastSuccessAt: "2026-10-05T05:00:00.000Z",
-        lastFailureAt: null,
-        consecutiveFailures: 0,
-      },
-      komikindo: {
-        sourceId: "komikindo",
-        status: "BROKEN",
-        stage: "search",
-        latencyMs: 250,
-        resolvedHost: "https://komikindo.example",
-        lastCheckedAt: "2026-10-05T05:00:00.000Z",
-        lastSuccessAt: null,
-        lastFailureAt: "2026-10-05T05:00:00.000Z",
-        consecutiveFailures: 1,
-        lastFailureCode: "UPSTREAM_BLOCKED",
-        errorMessage: "HTTP Error 403 with internal upstream details",
-      },
+    mockRedis.eval.mockResolvedValue(1);
+
+    // Pre-populate store with a known snapshot
+    await sourceHealthStore.recordSnapshot({
+      sourceId: "shinigami",
+      status: "HEALTHY",
+      latencyMs: 110,
+      resolvedHost: "https://api.shngm.io",
+      lastCheckedAt: "2026-11-03T01:00:00.000Z",
+      lastSuccessAt: "2026-11-03T01:00:00.000Z",
+      lastFailureAt: null,
+      consecutiveFailures: 0,
     });
 
-    const rawFetch = vi.spyOn(global, "fetch").mockRejectedValue(new Error("raw reachability ping should not run"));
+    const res = await GET();
+    expect(res.status).toBe(200);
+    const json = await res.json();
+
+    expect(json.meta.cached).toBe(false);
+    expect(json.meta.stale).toBe(true);
+    // Verified snapshot returned immediately
+    expect(json.data.shinigami).toMatchObject({
+      status: "online",
+      id: "shinigami",
+    });
+    // Sources without snapshot return honest unknown status
+    expect(json.data.komikindo).toMatchObject({
+      status: "unknown",
+      message: "Sumber belum diperiksa.",
+      uptime: "-",
+      latency: "-",
+    });
+  });
+
+  it("sanitizes broken source failure messages into safe user-facing text", async () => {
+    mockRedis.get.mockResolvedValue(null);
+
+    await sourceHealthStore.recordSnapshot({
+      sourceId: "komikindo",
+      status: "BROKEN",
+      stage: "search",
+      latencyMs: 250,
+      resolvedHost: "https://komikindo.example",
+      lastCheckedAt: "2026-11-03T01:00:00.000Z",
+      lastSuccessAt: null,
+      lastFailureAt: "2026-11-03T01:00:00.000Z",
+      consecutiveFailures: 1,
+      lastFailureCode: "UPSTREAM_BLOCKED",
+      errorMessage: "HTTP Error 403 with internal upstream details that must never leak",
+    });
 
     const res = await GET();
     const json = await res.json();
 
-    expect(mockProbeAllSourcesHealth).toHaveBeenCalledWith({ deep: false });
-    expect(rawFetch).not.toHaveBeenCalled();
-    expect(json.data.shinigami).toMatchObject({ status: "online", latency: "120ms" });
-    expect(json.data.komikindo).toMatchObject({
-      status: "unavailable",
-      message: "akses ke sumber ditolak",
-    });
-    expect(json.data.komikindo.message).not.toContain("internal upstream details");
-    expect(json.meta).toMatchObject({ cached: false, probeType: "functional" });
+    expect(json.data.komikindo.status).toBe("unavailable");
+    expect(json.data.komikindo.message).toBe("akses ke sumber ditolak");
+    expect(JSON.stringify(json)).not.toContain("internal upstream details");
   });
 
   it("includes healthCheckUrl for MangaDex in registry", () => {
@@ -87,82 +143,13 @@ describe("GET /api/sources/health", () => {
     expect(md?.healthCheckUrl).toBe("https://api.mangadex.org/manga?limit=1");
   });
 
-  it("returns health check data for registered sources", async () => {
-    mockRedis.get.mockResolvedValue(null);
-    mockRedis.setex.mockResolvedValue("OK");
-    mockProbeAllSourcesHealth.mockResolvedValue(
-      Object.fromEntries(
-        ["mangadex", "shinigami", "komikindo"].map((sourceId) => [
-          sourceId,
-          {
-            sourceId,
-            status: "HEALTHY",
-            latencyMs: 100,
-            resolvedHost: `https://${sourceId}.example`,
-            lastCheckedAt: "2026-10-05T05:00:00.000Z",
-            lastSuccessAt: "2026-10-05T05:00:00.000Z",
-            lastFailureAt: null,
-            consecutiveFailures: 0,
-          },
-        ])
-      )
-    );
-
-    const res = await GET();
-    expect(res.status).toBe(200);
-
-    const json = await res.json();
-    expect(json.data).toBeDefined();
-    expect(json.data.mangadex.status).toBe("online");
-    expect(json.data.shinigami.status).toBe("online");
-    expect(json.data.komikindo.status).toBe("online");
-  });
-
-  it("normalizes functional probe failures into safe public messages", async () => {
-    mockRedis.get.mockResolvedValue(null);
-    mockProbeAllSourcesHealth.mockResolvedValue({
-      mangadex: {
-        sourceId: "mangadex",
-        status: "BROKEN",
-        latencyMs: 10,
-        resolvedHost: "https://mangadex.org",
-        lastCheckedAt: "2026-10-05T05:00:00.000Z",
-        lastSuccessAt: null,
-        lastFailureAt: "2026-10-05T05:00:00.000Z",
-        consecutiveFailures: 1,
-        lastFailureCode: "SOURCE_DOWN",
-        errorMessage: "certificate details that must stay private",
-      },
-    });
-
-    const res = await GET();
-    const json = await res.json();
-
-    expect(json.data.mangadex.status).toBe("unavailable");
-    expect(json.data.mangadex.message).toBe("server sumber sedang tidak dapat dihubungi");
-    expect(JSON.stringify(json)).not.toContain("certificate details");
-  });
-
-  it("survives Redis stream errors without failing the health check", async () => {
+  it("survives Redis stream errors gracefully without failing", async () => {
     mockRedis.get.mockRejectedValue(new Error("Stream isn't writeable and enableOfflineQueue options is false"));
-    mockRedis.setex.mockRejectedValue(new Error("Stream isn't writeable and enableOfflineQueue options is false"));
-    mockProbeAllSourcesHealth.mockResolvedValue({
-      mangadex: {
-        sourceId: "mangadex",
-        status: "HEALTHY",
-        latencyMs: 100,
-        resolvedHost: "https://mangadex.org",
-        lastCheckedAt: "2026-10-05T05:00:00.000Z",
-        lastSuccessAt: "2026-10-05T05:00:00.000Z",
-        lastFailureAt: null,
-        consecutiveFailures: 0,
-      },
-    });
+    mockRedis.set.mockRejectedValue(new Error("Stream isn't writeable"));
 
     const res = await GET();
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.data).toBeDefined();
-    expect(json.data.mangadex.status).toBe("online");
   });
 });

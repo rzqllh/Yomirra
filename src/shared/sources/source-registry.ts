@@ -13,12 +13,12 @@ export const sourceRegistry: SourceMetadata[] = [
     version: "1.0.0",
     isEnabled: true,
     isInstalled: true,
-    status: "online",
+    status: "unknown",
     healthStats: {
-      uptime: "99.9%",
-      latency: "120ms",
-      lastChecked: "Baru saja",
-      message: "Server berjalan normal tanpa kendala."
+      uptime: "-",
+      latency: "-",
+      lastChecked: "Belum diperiksa",
+      message: "Status sumber belum diperiksa."
     },
     reportUrl: "https://discord.gg/shinigamid",
     isNsfw: false,
@@ -43,12 +43,12 @@ export const sourceRegistry: SourceMetadata[] = [
     version: "1.0.0",
     isEnabled: true,
     isInstalled: true,
-    status: "online",
+    status: "unknown",
     healthStats: {
-      uptime: "99.9%",
-      latency: "286ms",
-      lastChecked: "Baru saja",
-      message: "Server merespons dengan baik."
+      uptime: "-",
+      latency: "-",
+      lastChecked: "Belum diperiksa",
+      message: "Status sumber belum diperiksa."
     },
     isNsfw: false,
     capabilities: {
@@ -72,12 +72,12 @@ export const sourceRegistry: SourceMetadata[] = [
     version: "1.0.0",
     isEnabled: true,
     isInstalled: true,
-    status: "online",
+    status: "unknown",
     healthStats: {
-      uptime: "99.9%",
-      latency: "150ms",
-      lastChecked: "Baru saja",
-      message: "Server merespons dengan baik."
+      uptime: "-",
+      latency: "-",
+      lastChecked: "Belum diperiksa",
+      message: "Status sumber belum diperiksa."
     },
     // Mixed catalog: content-level filtering handles restricted titles.
     // Do not classify the whole source as restricted.
@@ -104,12 +104,12 @@ export const sourceRegistry: SourceMetadata[] = [
     version: "1.0.0",
     isEnabled: true,
     isInstalled: true,
-    status: "online",
+    status: "unknown",
     healthStats: {
-      uptime: "99.9%",
-      latency: "169ms",
-      lastChecked: "Baru saja",
-      message: "Server merespons dengan baik."
+      uptime: "-",
+      latency: "-",
+      lastChecked: "Belum diperiksa",
+      message: "Status sumber belum diperiksa."
     },
     isNsfw: false,
     capabilities: {
@@ -136,12 +136,12 @@ export const sourceRegistry: SourceMetadata[] = [
     adapterVersion: "1.0.0",
     isEnabled: true,
     isInstalled: true,
-    status: "online",
+    status: "unknown",
     healthStats: {
-      uptime: "99.9%",
-      latency: "180ms",
-      lastChecked: "Baru saja",
-      message: "Server merespons dengan baik."
+      uptime: "-",
+      latency: "-",
+      lastChecked: "Belum diperiksa",
+      message: "Status sumber belum diperiksa."
     },
     isNsfw: false,
     capabilities: {
@@ -168,12 +168,12 @@ export const sourceRegistry: SourceMetadata[] = [
     adapterVersion: "1.0.0",
     isEnabled: true,
     isInstalled: true,
-    status: "online",
+    status: "unknown",
     healthStats: {
-      uptime: "99.9%",
-      latency: "150ms",
-      lastChecked: "Baru saja",
-      message: "Server merespons dengan baik."
+      uptime: "-",
+      latency: "-",
+      lastChecked: "Belum diperiksa",
+      message: "Status sumber belum diperiksa."
     },
     isNsfw: false,
     capabilities: {
@@ -200,12 +200,12 @@ export const sourceRegistry: SourceMetadata[] = [
     adapterVersion: "1.0.0",
     isEnabled: true,
     isInstalled: true,
-    status: "online",
+    status: "unknown",
     healthStats: {
-      uptime: "99.9%",
-      latency: "200ms",
-      lastChecked: "Baru saja",
-      message: "Server merespons dengan baik."
+      uptime: "-",
+      latency: "-",
+      lastChecked: "Belum diperiksa",
+      message: "Status sumber belum diperiksa."
     },
     isNsfw: false,
     capabilities: {
@@ -232,12 +232,12 @@ export const sourceRegistry: SourceMetadata[] = [
     adapterVersion: "1.0.0",
     isEnabled: true,
     isInstalled: true,
-    status: "online",
+    status: "unknown",
     healthStats: {
-      uptime: "99.9%",
-      latency: "180ms",
-      lastChecked: "Baru saja",
-      message: "Server merespons dengan baik."
+      uptime: "-",
+      latency: "-",
+      lastChecked: "Belum diperiksa",
+      message: "Status sumber belum diperiksa."
     },
     isNsfw: true,
     capabilities: {
@@ -264,12 +264,12 @@ export const sourceRegistry: SourceMetadata[] = [
     adapterVersion: "1.0.0",
     isEnabled: true,
     isInstalled: true,
-    status: "online",
+    status: "unknown",
     healthStats: {
-      uptime: "99.9%",
-      latency: "150ms",
-      lastChecked: "Baru saja",
-      message: "Server merespons dengan baik."
+      uptime: "-",
+      latency: "-",
+      lastChecked: "Belum diperiksa",
+      message: "Status sumber belum diperiksa."
     },
     isNsfw: false,
     capabilities: {
