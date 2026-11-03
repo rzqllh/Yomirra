@@ -6,7 +6,6 @@ import {
   useQuery,
   useQueries,
   useQueryClient,
-  keepPreviousData,
 } from "@tanstack/react-query";
 import { apiClient } from "@/shared/api-client";
 import { useSettingsStore } from "@/shared/store/settings-store";

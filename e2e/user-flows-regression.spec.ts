@@ -8,7 +8,7 @@ test.beforeEach(async ({ page }) => {
         "yomirra-onboarding",
         JSON.stringify({ state: { hasCompletedOnboarding: true, _hasHydrated: true }, version: 0 })
       );
-    } catch (e) {}
+    } catch {}
   });
 });
 
@@ -29,7 +29,7 @@ test.describe("Yomirra Interactive User Flows & Behavior Regression", () => {
       try {
         localStorage.removeItem("yomirra-history");
         localStorage.removeItem("yomirra-library");
-      } catch (e) {}
+      } catch {}
     });
 
     await page.goto("/", { waitUntil: "domcontentloaded" });

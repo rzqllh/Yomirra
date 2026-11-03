@@ -1,7 +1,7 @@
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import { ViewModeToggle } from "../view-mode-toggle";
 import { CompactCard } from "../card/compact-card";
 import { useSettingsStore } from "@/shared/store/settings-store";

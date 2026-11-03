@@ -23,7 +23,6 @@ import {
   Clock,
   WarningCircle,
   Bookmarks,
-  ClockCounterClockwise,
   WifiHigh,
   WifiSlash,
 } from "@phosphor-icons/react";
