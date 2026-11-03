@@ -7,7 +7,6 @@ import {
   Broom,
   Palette,
   WifiHigh,
-  Fire,
   ArrowsClockwise,
   DeviceMobile,
   FileText,
@@ -30,7 +29,6 @@ import { useHistoryStore } from "@/shared/store/history-store";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useOnboardingStore } from "@/shared/store/onboarding-store";
-import { useStatsStore } from "@/shared/store/stats-store";
 import { useDownloadStore } from "@/shared/store/download-store";
 import { useTheme } from "next-themes";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
@@ -78,7 +76,6 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
     setPreferredLanguages,
   } = useSettingsStore();
 
-  const totalReadingTimeMs = useStatsStore((state) => state.totalReadingTimeMs);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
 
@@ -181,15 +178,6 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
     } finally {
       setIsClearingDevice(false);
     }
-  };
-
-  const formatReadingTime = () => {
-    if (!totalReadingTimeMs) return "Belum ada riwayat baca";
-    const minutes = Math.floor(totalReadingTimeMs / 60000);
-    if (minutes < 60) return `${minutes} menit`;
-    const hours = Math.floor(minutes / 60);
-    const remMins = minutes % 60;
-    return `${hours} jam ${remMins > 0 ? `${remMins} menit` : ""}`;
   };
 
   const settingsContent = (
@@ -338,16 +326,6 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
                 label="Tandai pembaruan baru"
               />
             }
-          />
-
-          <div className="mx-3 my-1 border-b border-border-subtle/50" />
-
-          {/* Waktu Baca */}
-          <SettingsItem
-            icon={<IconWrapper variant="accent"><Fire size={19} weight="regular" /></IconWrapper>}
-            title="Total waktu membaca"
-            description="Total durasi aktif membaca komik di Yomirra."
-            right={<div className="text-xs font-bold text-text-primary tabular-nums">{formatReadingTime()}</div>}
           />
         </SettingsSection>
 
