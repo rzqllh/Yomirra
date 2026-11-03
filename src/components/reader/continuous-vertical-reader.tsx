@@ -36,6 +36,7 @@ export type StreamItem = { type: "image"; chapterId: string; pageIndex: number; 
 interface ContinuousVerticalReaderProps {
   sourceId: string;
   mangaId: string;
+  mangaTitle?: string;
   chapterId: string;
   chapterTitle?: string;
   pages: PageItem[];
@@ -50,6 +51,7 @@ interface ContinuousVerticalReaderProps {
 export function ContinuousVerticalReader({
   sourceId,
   mangaId,
+  mangaTitle,
   chapterId,
   chapterTitle = "Chapter",
   pages,
@@ -595,6 +597,7 @@ export function ContinuousVerticalReader({
         subject={chapterTitle}
         sourceId={sourceId}
         mangaId={mangaId}
+        mangaTitle={mangaTitle}
         chapterId={chapterId}
         chapterTitle={chapterTitle}
         pageIndex={reportPageIndex}

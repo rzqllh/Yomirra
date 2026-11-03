@@ -33,7 +33,15 @@ export function formatHealthDigest(
   timestamp = new Date()
 ): string {
   const entries = Object.entries(snapshots);
-  const unhealthy = entries.filter(([, snapshot]) => snapshot.status !== "HEALTHY");
+  const healthy = entries.filter(([, snapshot]) => snapshot.status === "HEALTHY");
+  const unmeasured = entries.filter(([, snapshot]) => snapshot.status === "UNKNOWN" || !snapshot.status);
+  const unhealthy = entries.filter(
+    ([, snapshot]) =>
+      snapshot.status !== "HEALTHY" &&
+      snapshot.status !== "UNKNOWN" &&
+      Boolean(snapshot.status)
+  );
+
   const measuredLatencies = entries
     .map(([, snapshot]) => snapshot.latencyMs)
     .filter((latency) => Number.isFinite(latency) && latency > 0);
@@ -47,13 +55,23 @@ export function formatHealthDigest(
     .filter(([, snapshot]) => snapshot.status === "HEALTHY" && snapshot.latencyMs >= 1500)
     .sort((a, b) => b[1].latencyMs - a[1].latencyMs)
     .slice(0, 2);
-  const healthyCount = entries.length - unhealthy.length;
+
+  const healthyCount = healthy.length;
 
   let text = `📊 *Yomirra · Health*\n${formatWibTime(timestamp)}\n\n`;
   text += `${entries.length} source diperiksa\n`;
-  text += unhealthy.length
-    ? `${healthyCount} normal · ${unhealthy.length} perlu perhatian\n`
-    : `${healthyCount}/${entries.length} source normal\n`;
+
+  if (unhealthy.length > 0) {
+    text += `${healthyCount} normal · ${unhealthy.length} perlu perhatian`;
+    if (unmeasured.length > 0) text += ` · ${unmeasured.length} belum diperiksa`;
+    text += "\n";
+  } else if (unmeasured.length > 0 && healthyCount > 0) {
+    text += `${healthyCount} normal · ${unmeasured.length} belum diperiksa\n`;
+  } else if (unmeasured.length > 0 && healthyCount === 0) {
+    text += `${unmeasured.length} source belum diperiksa (menunggu probe)\n`;
+  } else {
+    text += `${healthyCount}/${entries.length} source normal\n`;
+  }
 
   if (unhealthy.length) {
     text += "\n*Perlu perhatian*\n";
@@ -75,7 +93,9 @@ export function formatHealthDigest(
 
   if (!unhealthy.length && !slow.length) {
     if (averageLatency) text += `Rata-rata ${formatLatency(averageLatency)}\n`;
-    text += "Tidak ada tindakan.";
+    text += unmeasured.length > 0
+      ? "Semua source yang terukur berjalan normal."
+      : "Tidak ada tindakan.";
   }
 
   return text.trim();

@@ -12,6 +12,7 @@ import type { SourceHealthSnapshot } from "@/server/lib/sources/health/types";
 // In-memory mock for redis
 const memoryStore = new Map<string, string>();
 vi.mock("@/server/lib/cache/redis", () => ({
+  isRedisConfigured: true,
   redis: {
     get: vi.fn(async (key: string) => memoryStore.get(key) || null),
     set: vi.fn(async (key: string, val: string) => {
@@ -186,6 +187,9 @@ describe("Phase 4 — Telegram Ops Runtime V1 Unit Tests", () => {
     expect(text).toContain("Komik: Nano Machine");
     expect(text).toContain("Chapter 263");
     expect(text).toContain("Halaman 8");
+    expect(text).toContain('"blank putih terus"');
+    expect(text).toContain("Tinjau di Reader:");
+    expect(text).toContain("/manga/shinigami/raw-manga-id/read/raw-chapter-id");
     expect(text).toContain("*Langkah*\n/recheck shinigami");
     expect(text.indexOf("Manga ID:")).toBeGreaterThan(text.indexOf("*Langkah*"));
   });
@@ -401,6 +405,29 @@ describe("Phase 4 — Telegram Ops Runtime V1 Unit Tests", () => {
         expect.stringContaining("sendMessage"),
         expect.objectContaining({
           body: expect.stringContaining("Yomirra · Ops"),
+        })
+      );
+    });
+
+    it("routes /help command and responds with complete command guidance", async () => {
+      const fetchSpy = vi.spyOn(global, "fetch").mockResolvedValue(
+        new Response(JSON.stringify({ ok: true }), { status: 200 })
+      );
+
+      const req = new Request("http://localhost/api/ops/telegram/webhook", {
+        method: "POST",
+        headers: {
+          "x-telegram-bot-api-secret-token": "mock-webhook-secret",
+        },
+        body: JSON.stringify({ message: { chat: { id: 123456 }, text: "/help" } }),
+      });
+
+      const res = await handleWebhook(req);
+      expect(res.status).toBe(200);
+      expect(fetchSpy).toHaveBeenCalledWith(
+        expect.stringContaining("sendMessage"),
+        expect.objectContaining({
+          body: expect.stringContaining("Perintah Operasional"),
         })
       );
     });
