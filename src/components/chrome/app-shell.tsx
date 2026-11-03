@@ -26,6 +26,7 @@ import { useSidebarStore } from "@/shared/store/sidebar-store"
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const isReader = pathname?.includes("/read/")
+  const isLab = pathname?.startsWith("/lab")
   const isAdmin = pathname?.startsWith("/admin")
   const isCollapsed = useSidebarStore((state) => state.isCollapsed)
   const [pendingHref, setPendingHref] = React.useState<string | null>(null)
@@ -125,7 +126,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         >
           {isReader ? children : <PageTransition>{children}</PageTransition>}
         </main>
-        {!isReader && <BottomDock pendingHref={pendingHref} />}
+        {!isReader && !isLab && <BottomDock pendingHref={pendingHref} />}
       </div>
 
       <CommandMenu />
