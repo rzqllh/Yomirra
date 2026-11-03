@@ -229,7 +229,7 @@ export function PagedReader({
 
   React.useEffect(() => {
     if (hasInitialized) setPageNavigation({ key: navigationKey, index: currentPageIndex, total: totalPages, seek: seekPage,
-      previous: goToPrevPage, next: goToNextPage, canPrevious: currentPageIndex > 0 || Boolean(prevChapterId), canNext: currentPageIndex < totalPages - 1 || Boolean(nextChapterId) });
+      mode: "paged", previous: goToPrevPage, next: goToNextPage, canPrevious: currentPageIndex > 0 || Boolean(prevChapterId), canNext: currentPageIndex < totalPages - 1 || Boolean(nextChapterId) });
   }, [hasInitialized, navigationKey, currentPageIndex, totalPages, seekPage, goToPrevPage, goToNextPage, prevChapterId, nextChapterId, setPageNavigation]);
 
   const handleRightTap = React.useCallback(() => {
