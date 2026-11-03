@@ -12,14 +12,14 @@ export const metadata: Metadata = {
 }
 
 export default function DockLabPage() {
-  // Strict Environment Guard:
-  // Available in Development and Preview environments.
-  // Defaults to HTTP 404 in Production unless NEXT_PUBLIC_ENABLE_LAB is explicitly set.
+  // Strict Production Isolation Guard:
+  // Route is ONLY accessible in Development and Preview environments.
+  // Unconditionally returns HTTP 404 in Production (NO bypass allowed).
   const isProduction =
     process.env.VERCEL_ENV === "production" ||
     (process.env.NODE_ENV === "production" && !process.env.VERCEL_ENV)
 
-  if (isProduction && !process.env.NEXT_PUBLIC_ENABLE_LAB) {
+  if (isProduction) {
     notFound()
   }
 
