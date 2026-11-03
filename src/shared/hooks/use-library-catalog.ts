@@ -18,18 +18,6 @@ import { useCollectionStore } from "@/shared/store/collection-store";
 import type { MangaKey } from "@/shared/types/collection";
 import { useUrlPagination } from "@/shared/hooks/use-url-pagination";
 
-const FORMATS = [
-  { id: "manga", name: "Manga" },
-  { id: "manhwa", name: "Manhwa" },
-  { id: "manhua", name: "Manhua" },
-];
-
-const STATUSES = [
-  { id: "ongoing", name: "Berjalan" },
-  { id: "completed", name: "Selesai" },
-  { id: "hiatus", name: "Hiatus" },
-];
-
 export function useLibraryCatalog() {
   const isMounted = useMounted();
   const searchParams = useSearchParams();
@@ -73,14 +61,12 @@ export function useLibraryCatalog() {
     selectedReadingStatuses,
     sort: storeSort,
     query: storeQuery,
-    viewMode,
   } = filterStore;
 
   const libraryItems = useLibraryStore(state => state.items);
   const {
     collections,
     membershipsByManga,
-    readingStatusByManga,
     getMemberships,
     getResolvedReadingStatus,
   } = useCollectionStore();

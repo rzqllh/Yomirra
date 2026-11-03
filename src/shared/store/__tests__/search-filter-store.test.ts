@@ -54,7 +54,10 @@ describe("search-filter-store", () => {
       useSearchFilterStore.getState().pruneFilters(["action"], ["manga"], ["ongoing"], ["latest"]);
 
       const afterRef = useSearchFilterStore.getState();
-
+      expect(afterRef.genres).toEqual(beforeRef.genres);
+      expect(afterRef.formats).toEqual(beforeRef.formats);
+      expect(afterRef.status).toEqual(beforeRef.status);
+      expect(afterRef.sort).toEqual(beforeRef.sort);
     });
   });
 

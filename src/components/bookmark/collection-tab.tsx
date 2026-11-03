@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { BookBookmark, Compass, MagnifyingGlass, Plus, PencilSimple, Trash, Folder } from "@phosphor-icons/react";
+import { BookBookmark, Compass, MagnifyingGlass, PencilSimple, Trash, Folder } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/states/empty-state";
 import { Button } from "@/components/ui/button";
 import { MangaGrid } from "@/components/komik/manga-grid";

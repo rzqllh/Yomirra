@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ContentAccessBoundary } from "../content-access-boundary";
 import { useSettingsStore } from "@/shared/store/settings-store";

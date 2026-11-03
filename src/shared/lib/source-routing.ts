@@ -2,7 +2,6 @@ import { SourceRef } from "@/shared/store/library-store";
 import {
   resolveSourceFallback,
   type SourceFallbackResult,
-  type ResolveFallbackOptions,
 } from "./source-fallback";
 import { type SourceRoutingMode } from "@/shared/store/settings-store";
 import { getSourceMetadata, getAllSourceMetadata } from "@/shared/sources/source-registry";
@@ -94,7 +93,6 @@ export function resolveSourceRoute(options: ResolveSourceRouteOptions): SourceRo
     requestedMangaId,
     routingMode = "PREFERRED",
     globalSourceOrder = [],
-    languagePreference = ["id", "en"],
     perTitleSourcePreference,
     healthMap = {},
     targetChaptersMap = {},
@@ -118,15 +116,6 @@ export function resolveSourceRoute(options: ResolveSourceRouteOptions): SourceRo
   // Helper to get health snapshot
   const getHealth = (srcId: string): SourceHealthRouteSnapshot => {
     return healthMap[srcId] || { status: "HEALTHY", latencyMs: 0 };
-  };
-
-  // Helper to find matching mangaId for a given source in linkedSources
-  const findLinkedMangaId = (srcId: string): string | undefined => {
-    if (srcId === savedTitle?.primarySourceId || srcId === savedTitle?.sourceId) {
-      return defaultMangaId;
-    }
-    const match = (savedTitle?.linkedSources || []).find((l) => l.sourceId === srcId);
-    return match?.mangaId;
   };
 
   if (!effectivePreferredSourceId) {
@@ -187,7 +176,6 @@ export function resolveSourceRoute(options: ResolveSourceRouteOptions): SourceRo
   }
 
   const isRateLimited = preferredHealthStatus === "RATE_LIMITED";
-  const isBroken = preferredHealthStatus === "BROKEN" || !!preferredHealth.errorCode;
 
   // MODE A: MANUAL
   // Never auto-switch sources in MANUAL mode under any circumstances.

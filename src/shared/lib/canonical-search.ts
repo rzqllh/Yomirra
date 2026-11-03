@@ -170,10 +170,10 @@ export function deduplicateResultsBySource(
 ): CanonicalSearchResult[] {
   // Flatten in source-interleaved order for balanced multi-source representation
   const flattened: Array<{ manga: MangaItem; sourceId: string }> = [];
-  const sourceEntries = Object.entries(resultsBySource).filter(([_, data]) => !data.error && Array.isArray(data.results));
+  const sourceEntries = Object.entries(resultsBySource).filter(([, data]) => !data.error && Array.isArray(data.results));
 
   let maxLen = 0;
-  sourceEntries.forEach(([_, data]) => {
+  sourceEntries.forEach(([, data]) => {
     if (data.results.length > maxLen) maxLen = data.results.length;
   });
 

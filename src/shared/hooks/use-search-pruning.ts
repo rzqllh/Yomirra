@@ -1,6 +1,4 @@
 import * as React from "react";
-import type { UseQueryResult } from "@tanstack/react-query";
-import type { FilterList } from "@/shared/sources/source-types";
 import type { MergedFilterList } from "@/shared/utils/filter-helpers";
 
 export interface UseSearchPruningProps {

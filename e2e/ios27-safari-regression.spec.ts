@@ -8,7 +8,7 @@ test.beforeEach(async ({ page }) => {
         "yomirra-onboarding",
         JSON.stringify({ state: { hasCompletedOnboarding: true, _hasHydrated: true }, version: 0 })
       );
-    } catch (e) {}
+    } catch {}
   });
 });
 
@@ -146,7 +146,7 @@ test.describe("Mobile Safari WebKit Regression & Interactive Compliance Suite", 
           if (text.includes("overscroll-contain") || text.includes("overscroll-behavior")) {
             return true;
           }
-        } catch (e) {}
+        } catch {}
       }
       const styles = Array.from(document.querySelectorAll("style"));
       for (const st of styles) {

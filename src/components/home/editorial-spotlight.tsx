@@ -175,7 +175,6 @@ export function EditorialSpotlight({
   const href = getMangaDetailHref(sourceId, manga.id, "/");
   const rawDesc = manga.description || (manga as any)?.synopsis || (manga as any)?.summary || (manga as any)?.excerpt;
   const cleanedDescription = rawDesc ? normalizeSynopsis(String(rawDesc)).trim() : "";
-  const metadata = [manga.format, manga.latestChapter, sourceName].filter(Boolean);
 
   if (restricted) {
     return (

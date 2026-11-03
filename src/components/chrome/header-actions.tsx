@@ -11,7 +11,6 @@ import {
   SignOut,
   SignIn,
   CaretRight,
-  UserCircle,
 } from "@phosphor-icons/react"
 import { motion, AnimatePresence } from "motion/react"
 import { useMounted } from "@/shared/hooks/use-mounted"

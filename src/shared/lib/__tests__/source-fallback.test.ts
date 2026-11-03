@@ -9,7 +9,6 @@ import {
 import { LibraryItem, SourceRef } from "@/shared/store/library-store";
 import { HistoryItem } from "@/shared/store/history-store";
 import { ChapterMeta } from "../chapter-parser";
-import { TitleCandidate } from "../title-matcher";
 
 describe("Source Fallback Resolver & Reading Migration Engine", () => {
   beforeEach(() => {
