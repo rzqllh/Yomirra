@@ -7,7 +7,6 @@ import {
 } from "../source-fallback";
 import { useLibraryStore, type LibraryItem } from "@/shared/store/library-store";
 import { useHistoryStore } from "@/shared/store/history-store";
-import { mapChapterProgress } from "../chapter-parser";
 
 describe("Phase 5 E2E — Integrated Source Fallback, Migration & Rollback", () => {
   beforeEach(() => {

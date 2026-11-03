@@ -33,7 +33,7 @@ export async function generateMetadata({
     return {
       title: `${chapterTitle} - ${detail.title} - Yomirra`,
     };
-  } catch (e) {
+  } catch {
     return { title: "Membaca - Yomirra" };
   }
 }

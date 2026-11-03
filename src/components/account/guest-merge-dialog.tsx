@@ -17,9 +17,7 @@ import { Button } from "@/components/ui/button";
 import {
   GitMerge,
   Warning,
-  CheckCircle,
   Bookmarks,
-  ClockCounterClockwise,
   CloudCheck,
   ShieldCheck,
   ArrowsClockwise,

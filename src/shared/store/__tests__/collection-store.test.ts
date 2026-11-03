@@ -48,7 +48,7 @@ describe("CollectionStore (Slice 2.1)", () => {
       const updatedCollection = useCollectionStore.getState().collections[0];
       
       expect(updatedCollection.name).toBe("New Name");
-      // Note: testing exact time depends on system, we just check they don't match or at least it didn't throw
+      expect(new Date(updatedCollection.updatedAt).getTime()).toBeGreaterThanOrEqual(new Date(initialUpdatedAt).getTime());
     });
 
     it("reorders collections correctly", () => {

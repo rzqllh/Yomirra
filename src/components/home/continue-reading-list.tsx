@@ -3,7 +3,6 @@
 import * as React from "react";
 import Link from "next/link";
 import {
-  BookBookmark,
   ArrowRight,
 } from "@phosphor-icons/react";
 import type { HistoryItem } from "@/shared/store/history-store";

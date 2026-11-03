@@ -1,8 +1,7 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { useLibraryStore } from '../../store/library-store';
 import { useHistoryStore } from '../../store/history-store';
 import { useSettingsStore } from '../../store/settings-store';
-import { useSearchFilterStore } from '../../store/search-filter-store';
 
 describe('Auth Lifecycle Isolation Regression Suite', () => {
   it('clears user-scoped stores on account switch or logout', async () => {

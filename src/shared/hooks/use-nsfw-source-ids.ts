@@ -37,7 +37,7 @@ export function useNsfwSourceIds(): { status: NsfwClassificationStatus; ids: Set
             setStatus("KNOWN");
           }
         }
-      } catch (e) {
+      } catch {
         // Ignore JSON parse errors
       }
     }
