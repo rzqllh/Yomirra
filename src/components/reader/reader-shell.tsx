@@ -232,7 +232,11 @@ export function ReaderShell({
         window.requestAnimationFrame(() => {
           const currentScrollY = window.scrollY;
           const diff = currentScrollY - lastScrollY;
-          if (document.activeElement?.id === "reader-page-range") { ticking = false; return; }
+          const activeId = document.activeElement?.id;
+          if (activeId === "reader-page-range" || activeId === "reader-webtoon-range") {
+            ticking = false;
+            return;
+          }
 
           setShowBackToTop(currentScrollY > 1200);
 
