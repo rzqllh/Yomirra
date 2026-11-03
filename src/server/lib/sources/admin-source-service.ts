@@ -1,5 +1,6 @@
 import { getAllSourceMetadata } from "@/shared/sources/source-registry";
 import { sourceHealthStore } from "@/server/lib/sources/health/health-store";
+import { probeSourceHealth } from "@/server/lib/sources/health/probe";
 import * as domainResolverModule from "@/server/lib/sources/domain-resolver";
 import { isRedisConfigured, isRedisReady, redis, ensureRedisReady } from "@/server/lib/cache/redis";
 import { deleteMatchedRedisKeys } from "@/server/lib/sources/custom-source-service";
@@ -317,28 +318,26 @@ export async function getSourceHealthMatrix(): Promise<SourceHealthMatrixItem[]>
 }
 
 export async function probeSource(sourceId: string): Promise<ProbeResult> {
-  const start = performance.now();
+  const normId = sourceId.toLowerCase().trim();
   try {
-    const source = await sourceManager.getSource(sourceId);
-    const popular = await source.getPopular(1);
-    const latencyMs = Math.round(performance.now() - start);
-    const itemCount = popular?.mangas?.length ?? 0;
-
+    const snapshot = await probeSourceHealth(normId);
+    const isSuccess = snapshot.status === "HEALTHY";
     return {
-      sourceId,
-      success: true,
-      latencyMs,
-      statusCode: 200,
-      itemCount,
-      message: `Berhasil memuat ${itemCount} judul manga`,
+      sourceId: normId,
+      success: isSuccess,
+      latencyMs: snapshot.latencyMs,
+      statusCode: isSuccess ? 200 : snapshot.lastFailureCode === "UPSTREAM_BLOCKED" ? 403 : 500,
+      itemCount: snapshot.metadata?.totalParsed ?? 0,
+      message: isSuccess
+        ? `Berhasil memuat ${snapshot.metadata?.totalParsed ?? 0} judul manga`
+        : snapshot.errorMessage || "Probe request failed",
     };
   } catch (error: any) {
-    const latencyMs = Math.round(performance.now() - start);
-    logger.warn(`Admin probe failed for ${sourceId}`, { error });
+    logger.warn(`Admin probe failed for ${normId}`, { error });
     return {
-      sourceId,
+      sourceId: normId,
       success: false,
-      latencyMs,
+      latencyMs: 0,
       statusCode: error?.statusCode || 500,
       message: error?.message || "Probe request failed",
     };

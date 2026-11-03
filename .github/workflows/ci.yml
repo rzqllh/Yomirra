@@ -52,6 +52,7 @@ jobs:
   browser-smoke:
     name: Browser Smoke (Chromium and WebKit)
     needs: verify
+    if: github.event_name == 'push' || github.base_ref == 'main'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
