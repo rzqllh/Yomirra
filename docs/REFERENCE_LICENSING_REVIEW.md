@@ -1,7 +1,7 @@
 # Yomirra — Reference, Licensing and Public Documentation Review
 
 **Review date:** 2026-10-25  
-**Status:** Round 13 reference, licensing and public-documentation **product policy decisions accepted** (Q165–Q175, 2026-10-25). This is **not** legal advice, actual legal clearance, completed dependency/asset provenance verification, release approval, or authorization to alter LICENSE, production code or public website content. See [final decision ledger](GRILL_FINAL_LEDGER.md).
+**Status:** Reference, licensing and public-documentation **product policy decisions accepted**. This is **not** legal advice, actual legal clearance, completed dependency/asset provenance verification, release approval, or authorization to alter LICENSE, production code or public website content.
 
 ## 1. Current verified repository and comparator facts
 
