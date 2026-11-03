@@ -16,15 +16,24 @@ describe("Dock Lab Showcase & Production Guard", () => {
   })
 
   it("calls notFound() in production when NEXT_PUBLIC_ENABLE_LAB is not set", () => {
-    vi.stubEnv("NODE_ENV", "production")
+    vi.stubEnv("VERCEL_ENV", "production")
     vi.stubEnv("NEXT_PUBLIC_ENABLE_LAB", "")
 
     render(<DockLabPage />)
     expect(notFound).toHaveBeenCalled()
   })
 
-  it("renders DockLabView when NEXT_PUBLIC_ENABLE_LAB is set in production", () => {
+  it("renders DockLabView in Vercel preview environment even if NODE_ENV is production", () => {
     vi.stubEnv("NODE_ENV", "production")
+    vi.stubEnv("VERCEL_ENV", "preview")
+
+    render(<DockLabPage />)
+    expect(notFound).not.toHaveBeenCalled()
+    expect(screen.getByText("YOMIRRA DOCK LAB")).toBeDefined()
+  })
+
+  it("renders DockLabView when NEXT_PUBLIC_ENABLE_LAB is set in production", () => {
+    vi.stubEnv("VERCEL_ENV", "production")
     vi.stubEnv("NEXT_PUBLIC_ENABLE_LAB", "true")
 
     render(<DockLabPage />)

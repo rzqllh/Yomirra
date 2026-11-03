@@ -12,9 +12,14 @@ export const metadata: Metadata = {
 }
 
 export default function DockLabPage() {
-  // Strict Production Isolation Guard:
-  // In production builds, this route immediately returns 404 unless NEXT_PUBLIC_ENABLE_LAB is explicitly set.
-  if (process.env.NODE_ENV === "production" && !process.env.NEXT_PUBLIC_ENABLE_LAB) {
+  // Strict Environment Guard:
+  // Available in Development and Preview environments.
+  // Defaults to HTTP 404 in Production unless NEXT_PUBLIC_ENABLE_LAB is explicitly set.
+  const isProduction =
+    process.env.VERCEL_ENV === "production" ||
+    (process.env.NODE_ENV === "production" && !process.env.VERCEL_ENV)
+
+  if (isProduction && !process.env.NEXT_PUBLIC_ENABLE_LAB) {
     notFound()
   }
 
