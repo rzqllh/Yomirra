@@ -352,6 +352,21 @@ describe("Q138 PR-2: Outbox-First Write Path Engine & Dark Launch Activation Gat
       setOutboxPathEnabledForTesting(null);
       expect(isOutboxPathEnabled()).toBe(false);
     });
+
+    it("strictly ignores NEXT_PUBLIC_ENABLE_OUTBOX_SYNC environment variable", () => {
+      const origEnv = process.env.NEXT_PUBLIC_ENABLE_OUTBOX_SYNC;
+      try {
+        process.env.NEXT_PUBLIC_ENABLE_OUTBOX_SYNC = "true";
+        setOutboxPathEnabledForTesting(null);
+        expect(isOutboxPathEnabled()).toBe(false);
+      } finally {
+        if (origEnv !== undefined) {
+          process.env.NEXT_PUBLIC_ENABLE_OUTBOX_SYNC = origEnv;
+        } else {
+          delete process.env.NEXT_PUBLIC_ENABLE_OUTBOX_SYNC;
+        }
+      }
+    });
   });
 
   // =========================================================================
