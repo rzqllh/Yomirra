@@ -5,6 +5,7 @@ import { getLocalDataOwnerUid } from "@/shared/lib/local-data-owner";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { sourceRegistry } from "@/shared/sources/source-registry";
 import { toast } from "sonner";
+import { isOutboxPathEnabled, enqueueLibraryUpsert, enqueueLibraryDelete } from "@/shared/lib/outbox";
 
 /** A reference to a title on a specific manga provider. */
 export type SourceRef = {
@@ -200,6 +201,13 @@ export const useLibraryStore = create<LibraryState>()(
         });
 
         const checkpoint = captureMutation(previousState, get().items);
+
+        // Q138 Outbox-First Dark Launch Branch
+        if (isOutboxPathEnabled()) {
+          void enqueueLibraryUpsert(itemToPush);
+          return;
+        }
+
         void queueTitleWrite(`${checkpoint.ownerUid ?? "guest"}:${itemToPush.id ?? getLibraryId(item.sourceId, item.mangaId)}`, () =>
           pushLibraryItem(itemToPush, checkpoint.ownerUid)
         ).catch(() => {
@@ -260,6 +268,17 @@ export const useLibraryStore = create<LibraryState>()(
         });
 
         const checkpoint = captureMutation(previousState, get().items);
+
+        // Q138 Outbox-First Dark Launch Branch
+        if (isOutboxPathEnabled()) {
+          for (const [key, removedItem] of removedItems) {
+            void enqueueLibraryDelete(removedItem.sourceId, removedItem.mangaId, {
+              explicitId: removedItem.id ?? key,
+            });
+          }
+          return;
+        }
+
         for (const [key, removedItem] of removedItems) {
           void queueTitleWrite(`${checkpoint.ownerUid ?? "guest"}:${removedItem.id ?? key}`, () =>
             deleteLibraryItem(removedItem.sourceId, removedItem.mangaId, removedItem.id ?? key, checkpoint.ownerUid)

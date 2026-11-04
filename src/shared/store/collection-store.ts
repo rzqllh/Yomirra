@@ -3,6 +3,7 @@ import { persist } from "zustand/middleware";
 import { Collection, CollectionState, MangaKey, ReadingStatus } from "../types/collection";
 import { pushCustomCollections } from "@/shared/lib/sync-utils";
 import { useLibraryStore } from "@/shared/store/library-store";
+import { isOutboxPathEnabled, enqueueCollectionsUpsert } from "@/shared/lib/outbox";
 
 interface CollectionActions {
   createCollection: (name: string) => void;
@@ -28,6 +29,16 @@ export const useCollectionStore = create<CollectionStore>()(
   persist(
     (set, get) => {
       const syncCloud = () => {
+        if (isOutboxPathEnabled()) {
+          const state = get();
+          void enqueueCollectionsUpsert({
+            collections: state.collections,
+            membershipsByManga: state.membershipsByManga,
+            readingStatusByManga: state.readingStatusByManga,
+          });
+          return;
+        }
+
         setTimeout(() => {
           const state = get();
           pushCustomCollections(state.collections, state.membershipsByManga).catch(() => {});
