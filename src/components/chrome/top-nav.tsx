@@ -12,6 +12,8 @@ import { cn } from "@/shared/utils/cn";
 import { useSidebarStore } from "@/shared/store/sidebar-store";
 import { usePlatformShortcut } from "@/shared/hooks/use-platform-shortcut";
 import { useMounted } from "@/shared/hooks/use-mounted";
+import { Button } from "@/components/ui/button";
+import { Surface } from "@/components/ui/surface";
 
 const ROUTE_LABELS: Record<string, string> = {
   "": "Beranda",
@@ -81,13 +83,14 @@ export function TopNav() {
       {/* Spacer to reserve layout space for the fixed nav */}
       <div className="hidden md:block h-[68px] w-full shrink-0" />
 
-      <header
-        style={{ top: "var(--announcement-height, 0px)" }}
-        className={cn(
-          "hidden md:flex fixed right-0 z-40 h-[68px] bg-surface-base/85 backdrop-blur-md border-b border-border-subtle items-center px-6 lg:px-8 justify-between transition-[left,top] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
-          isCollapsed ? "left-[76px]" : "left-[76px] xl:left-[240px]"
-        )}
-      >
+      <Surface asChild variant="glassHeader">
+        <header
+          style={{ top: "var(--announcement-height, 0px)" }}
+          className={cn(
+            "hidden md:flex fixed right-0 z-40 h-[68px] items-center px-6 lg:px-8 justify-between transition-[left,top] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
+            isCollapsed ? "left-[76px]" : "left-[76px] xl:left-[240px]"
+          )}
+        >
         {/* LEFT: Global Editorial Breadcrumb (Phase 3) */}
         <nav aria-label="Breadcrumb" className="flex items-center gap-2">
           <ol className="flex items-center gap-2 text-xs">
@@ -113,21 +116,22 @@ export function TopNav() {
           {/* Sticky search pill: visible on non-home pages or when scrolled past hero */}
           {shouldShowSearch && (
             <div className="hidden md:flex h-9 w-48 lg:w-56 shrink-0 items-center justify-end">
-              <button
+              <Button
                 type="button"
+                variant="searchTrigger"
                 disabled={!mounted}
                 onClick={() => window.dispatchEvent(new CustomEvent("open-command-menu"))}
                 aria-label={searchAriaLabel}
                 className={cn(
-                  "flex items-center gap-2.5 px-3 rounded-sm text-text-secondary hover:text-text-primary text-xs font-semibold h-9 w-full cursor-pointer select-none",
-                  "bg-surface-raised border border-border-subtle hover:border-accent/40 hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-accent",
+                  "flex items-center gap-2.5 px-3 rounded-sm text-text-secondary hover:text-text-primary text-xs font-semibold h-9 min-h-[36px] w-full cursor-pointer select-none",
+                  "border-border-subtle hover:border-accent/40 focus-visible:outline-2 focus-visible:outline-accent",
                   "transition-all duration-200 ease-out"
                 )}
               >
                 <MagnifyingGlass size={16} weight="regular" className="text-text-muted shrink-0" aria-hidden="true" />
                 <span className="flex-1 text-left opacity-70 truncate">Cari komik…</span>
                 <kbd className="hidden lg:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono text-text-muted bg-surface-muted rounded-xs border border-border-subtle">{searchShortcut}</kbd>
-              </button>
+              </Button>
             </div>
           )}
 
@@ -156,54 +160,57 @@ export function TopNav() {
 
               <AnimatePresence>
                 {isProfileOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                    transition={{ duration: 0.15, ease: "easeOut" }}
-                    className="absolute right-0 top-12 w-60 bg-surface-overlay/95 backdrop-blur-2xl shadow-[0_12px_36px_-6px_rgba(0,0,0,0.18)] dark:shadow-[0_16px_40px_-6px_rgba(0,0,0,0.7)] border border-border-subtle rounded-xl p-1.5 z-[100] flex flex-col gap-0.5 select-none"
-                  >
-                    <div className="px-3 py-2 border-b border-border-subtle/70 mb-1">
-                      <p className="text-[13.5px] font-bold text-text-primary truncate">{user.displayName || "User"}</p>
-                      <p className="text-[11.5px] text-text-muted truncate mt-0.5">{user.email || ""}</p>
-                    </div>
-
-                    <Link
-                      href="/account"
-                      onClick={() => setIsProfileOpen(false)}
-                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors text-left"
+                  <Surface asChild variant="glassPopover" rounded="card">
+                    <motion.div
+                      initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                      transition={{ duration: 0.15, ease: "easeOut" }}
+                      className="absolute right-0 top-12 w-60 border border-border-subtle rounded-xl p-1.5 z-[100] flex flex-col gap-0.5 select-none"
                     >
-                      <UserCircle size={18} weight="regular" /> Akun & Sinkronisasi
-                    </Link>
-
-                    <Link
-                      href="/settings#general"
-                      onClick={() => setIsProfileOpen(false)}
-                      className="flex items-center justify-between px-3 py-2 rounded-xl text-[13px] font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors text-left"
-                    >
-                      <div className="flex items-center gap-2.5">
-                        <Globe size={18} weight="regular" /> Bahasa
+                      <div className="px-3 py-2 border-b border-border-subtle/70 mb-1">
+                        <p className="text-[13.5px] font-bold text-text-primary truncate">{user.displayName || "User"}</p>
+                        <p className="text-[11.5px] text-text-muted truncate mt-0.5">{user.email || ""}</p>
                       </div>
-                      <span className="text-[11.5px] text-text-muted font-medium">Indonesia</span>
-                    </Link>
 
-                    <Link
-                      href="/settings#about"
-                      onClick={() => setIsProfileOpen(false)}
-                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors text-left"
-                    >
-                      <Question size={18} weight="regular" /> Pusat bantuan
-                    </Link>
+                      <Link
+                        href="/account"
+                        onClick={() => setIsProfileOpen(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors text-left"
+                      >
+                        <UserCircle size={18} weight="regular" /> Akun & Sinkronisasi
+                      </Link>
 
-                    <div className="my-1 border-t border-border-subtle/80" />
+                      <Link
+                        href="/settings#general"
+                        onClick={() => setIsProfileOpen(false)}
+                        className="flex items-center justify-between px-3 py-2 rounded-xl text-[13px] font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors text-left"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <Globe size={18} weight="regular" /> Bahasa
+                        </div>
+                        <span className="text-[11.5px] text-text-muted font-medium">Indonesia</span>
+                      </Link>
 
-                    <button
-                      onClick={() => { setIsProfileOpen(false); logout(); }}
-                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-semibold text-semantic-error hover:bg-semantic-error/10 transition-colors text-left cursor-pointer w-full"
-                    >
-                      <SignOut size={18} weight="regular" /> Keluar
-                    </button>
-                  </motion.div>
+                      <Link
+                        href="/settings#about"
+                        onClick={() => setIsProfileOpen(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors text-left"
+                      >
+                        <Question size={18} weight="regular" /> Pusat bantuan
+                      </Link>
+
+                      <div className="my-1 border-t border-border-subtle/80" />
+
+                      <Button
+                        variant="menuDestructive"
+                        onClick={() => { setIsProfileOpen(false); logout(); }}
+                        className="flex items-center justify-start gap-2.5 px-3 py-2 rounded-xl text-[13px] font-semibold text-semantic-error hover:bg-semantic-error/10 transition-colors text-left cursor-pointer w-full h-auto min-h-0"
+                      >
+                        <SignOut size={18} weight="regular" /> Keluar
+                      </Button>
+                    </motion.div>
+                  </Surface>
                 )}
               </AnimatePresence>
             </div>
@@ -214,7 +221,8 @@ export function TopNav() {
             </button>
           )}
           </div>
-      </header>
+        </header>
+      </Surface>
     </>
   );
 }

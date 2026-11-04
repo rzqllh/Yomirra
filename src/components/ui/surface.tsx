@@ -23,7 +23,7 @@ const surfaceVariants = cva(
         editorial: "bg-surface-base border border-border-subtle overflow-hidden",
       },
       elevation: {
-        none: "shadow-none",
+        none: "",
         sm: "shadow-sm",
         md: "shadow-md",
         lg: "shadow-lg",

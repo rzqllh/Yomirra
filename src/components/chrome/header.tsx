@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useRouter } from "next/navigation"
 import { CaretLeft } from "@phosphor-icons/react"
+import { IconButton } from "@/components/ui/icon-button"
 import { HeaderActions } from "./header-actions"
 import { cn } from "@/shared/utils/cn"
 
@@ -148,9 +149,10 @@ export function PageHeader({
         <div className="flex items-center justify-between w-full transition-all duration-300 ease-out pointer-events-auto h-11">
           <div className="flex items-center gap-2.5 flex-1 min-w-0">
             {showBack ? (
-              <button
+              <IconButton
                 type="button"
                 onClick={handleBack}
+                variant="ghost"
                 className={cn(
                   "flex size-11 items-center justify-center rounded-xl active:scale-95 transition-all shrink-0 select-none outline-none cursor-pointer",
                   mode === "detail" && !isGlass
@@ -160,7 +162,7 @@ export function PageHeader({
                 aria-label="Kembali"
               >
                 <CaretLeft size={20} weight="regular" />
-              </button>
+              </IconButton>
             ) : (
               icon && (
                 <div className="yomirra-chrome-control flex size-11 items-center justify-center rounded-xl text-accent shrink-0 select-none">
