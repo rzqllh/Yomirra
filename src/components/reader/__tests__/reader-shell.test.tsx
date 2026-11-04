@@ -301,4 +301,70 @@ describe("ReaderShell Header & Progress Bar", () => {
     expect(screen.queryByTestId("top-viewport-progress-bar")).toBeNull();
     expect(screen.queryByTestId("reader-page-scrubber")).toBeNull();
   });
+
+  it("does not auto-hide reader overlay when scrolling is triggered by active scrubbing", () => {
+    useReaderStore.setState({ isOverlayVisible: true });
+
+    render(
+      <ReaderShell
+        mangaTitle="Solo Leveling"
+        chapterTitle="Chapter 1"
+        currentChapterId="ch1"
+        sourceId="srcA"
+        mangaId="m1"
+      >
+        <div style={{ height: "4000px" }}>Content</div>
+      </ReaderShell>
+    );
+
+    const scrubber = screen.getByRole("slider", { name: "Pindah halaman" });
+    expect(useReaderStore.getState().isOverlayVisible).toBe(true);
+
+    // User starts scrubbing
+    fireEvent.pointerDown(scrubber);
+
+    // Scroll down event fires as seek updates scroll position
+    Object.defineProperty(window, "scrollY", { value: 600, writable: true });
+    fireEvent.scroll(window);
+
+    // Overlay must remain visible while scrubbing
+    expect(useReaderStore.getState().isOverlayVisible).toBe(true);
+
+    // User ends scrubbing
+    fireEvent.pointerUp(scrubber);
+    // Still protected by grace period
+    fireEvent.scroll(window);
+    expect(useReaderStore.getState().isOverlayVisible).toBe(true);
+  });
+
+  it("renders symmetrical true-center header with proper title tooltips and consistent buttons", () => {
+    const { container } = render(
+      <ReaderShell
+        mangaTitle="Frieren: Beyond Journey's End"
+        chapterTitle="Chapter 123 - The Hero's Blade"
+        currentChapterId="ch1"
+        sourceId="srcA"
+        mangaId="m1"
+      >
+        <div>Content</div>
+      </ReaderShell>
+    );
+
+    const header = container.querySelector("header");
+    expect(header).toBeDefined();
+    expect(header?.className).toContain("grid-cols-[84px_1fr_84px]");
+
+    // Left cluster buttons
+    expect(screen.getByRole("button", { name: "Kembali ke detail komik" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "Kembali ke Beranda" })).toBeDefined();
+
+    // Right cluster button
+    expect(screen.getByRole("button", { name: "Simpan ke bookmark" })).toBeDefined();
+
+    // Center title and chapter tooltips
+    const mangaTitleEl = screen.getByText("Frieren: Beyond Journey's End");
+    const chapterTitleEl = screen.getByText("Chapter 123 - The Hero's Blade");
+    expect(mangaTitleEl.getAttribute("title")).toBe("Frieren: Beyond Journey's End");
+    expect(chapterTitleEl.getAttribute("title")).toBe("Chapter 123 - The Hero's Blade");
+  });
 });
