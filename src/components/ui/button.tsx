@@ -42,6 +42,18 @@ const buttonVariants = cva(
           "bg-surface-overlay text-text-primary hover:bg-surface-raised border border-border-default",
         link:
           "text-accent underline-offset-4 hover:underline",
+        searchTrigger:
+          "bg-surface-raised text-text-muted hover:text-text-primary hover:bg-surface-hover border border-border-default justify-start font-normal",
+        menuDefault:
+          "text-text-secondary hover:text-text-primary hover:bg-surface-hover justify-start font-medium",
+        menuDestructive:
+          "text-status-error-fg hover:bg-status-error-bg/20 border-transparent justify-start font-medium",
+        menuAccent:
+          "text-accent bg-accent-dim hover:bg-accent/20 border-accent/20 justify-start font-medium",
+        heroAction:
+          "bg-accent text-accent-on hover:bg-accent-hover border border-transparent shadow-xs",
+        heroSecondary:
+          "bg-surface-raised text-text-primary border border-border-default hover:bg-surface-hover",
       },
       size: {
         sm: "min-h-11 px-3 text-xs rounded-sm [&_svg]:size-4",
