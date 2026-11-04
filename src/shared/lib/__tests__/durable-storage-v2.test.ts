@@ -22,6 +22,7 @@ import {
   addReconciliationAudit,
   getReconciliationAudits,
   acquireSyncLease,
+  renewSyncLease,
   releaseSyncLease,
   checkStorageQuota,
   exportEmergencyBackup,
@@ -517,12 +518,23 @@ describe("Q138 Durable Storage v2 Engine (PR-1 Specification & Invariants)", () 
       const entries = await getJournalEntries("user-123");
       expect(entries).toHaveLength(0);
     });
+
+    it("prevents false success when an async callback throws after IDB operations finish", async () => {
+      const delayedFailure = runAtomicTransaction([STORE_KEYVAL], async (stores) => {
+        await stores[STORE_KEYVAL].put("transient-val", "transient-key");
+        // Async tick delay simulating secondary validation failure
+        await new Promise((r) => setTimeout(r, 25));
+        throw new Error("Late async business validation failure");
+      });
+
+      await expect(delayedFailure).rejects.toThrow("Late async business validation failure");
+    });
   });
 
   // =========================================================================
-  // 3. Multi-Tab Lease Coordination & 30s Crash Recovery
+  // 3. Multi-Tab Lease Coordination with Ownership Token Verification
   // =========================================================================
-  describe("3. Multi-Tab Lease Coordination & TTL Recovery", () => {
+  describe("3. Multi-Tab Lease Coordination with Ownership Token Verification", () => {
     beforeEach(() => {
       setupMockIndexedDB(2, {});
     });
@@ -539,34 +551,59 @@ describe("Q138 Durable Storage v2 Engine (PR-1 Specification & Invariants)", () 
       expect(tab2Result.leaseExpiresAt).toBe(tab1Result.leaseExpiresAt);
     });
 
-    it("allows the current holder to renew its lease (heartbeat)", async () => {
+    it("renews lease only when presenting the verified ownership token", async () => {
       const initial = await acquireSyncLease("tab-uuid-alpha", 10000);
       expect(initial.acquired).toBe(true);
+      const token = initial.token!;
 
-      // Renew with same holder
-      const renewed = await acquireSyncLease("tab-uuid-alpha", 25000);
-      expect(renewed.acquired).toBe(true);
-      expect(renewed.leaseExpiresAt).toBeGreaterThanOrEqual(initial.leaseExpiresAt!);
+      // 1. Wrong token -> REJECTED
+      const invalidTokenRenew = await renewSyncLease("tab-uuid-alpha", "wrong-token-xyz", 25000);
+      expect(invalidTokenRenew.renewed).toBe(false);
+      expect(invalidTokenRenew.reason).toBe("token_mismatch");
+
+      // 2. Wrong holderId -> REJECTED
+      const invalidHolderRenew = await renewSyncLease("tab-uuid-intruder", token, 25000);
+      expect(invalidHolderRenew.renewed).toBe(false);
+      expect(invalidHolderRenew.reason).toBe("holder_mismatch");
+
+      // 3. Correct holderId + verified token -> GRANTED
+      const validRenew = await renewSyncLease("tab-uuid-alpha", token, 25000);
+      expect(validRenew.renewed).toBe(true);
+      expect(validRenew.token).toBe(token);
+      expect(validRenew.leaseExpiresAt).toBeGreaterThanOrEqual(initial.leaseExpiresAt!);
     });
 
     it("recovers and grants lease to a new tab when prior lease expires (crashed tab simulation)", async () => {
       // Tab 1 acquires short 50ms lease and crashes without releasing
       const tab1Result = await acquireSyncLease("tab-uuid-crashed", 50);
       expect(tab1Result.acquired).toBe(true);
+      const staleToken = tab1Result.token!;
 
       // Wait 60ms for lease TTL to expire
       await new Promise((r) => setTimeout(r, 65));
 
-      // Tab 2 arrives after crash: lease expired -> granted
+      // Attempting to renew expired lease is rejected
+      const lateRenew = await renewSyncLease("tab-uuid-crashed", staleToken, 10000);
+      expect(lateRenew.renewed).toBe(false);
+      expect(lateRenew.reason).toBe("lease_expired");
+
+      // Tab 2 arrives after crash: lease expired -> granted with fresh token
       const tab2Result = await acquireSyncLease("tab-uuid-active", 30000);
       expect(tab2Result.acquired).toBe(true);
       expect(tab2Result.token).toBeDefined();
+      expect(tab2Result.token).not.toBe(staleToken);
     });
 
-    it("releases lease cleanly, allowing immediate acquisition by another tab", async () => {
-      await acquireSyncLease("tab-uuid-alpha", 30000);
+    it("releases lease cleanly only when presenting the verified token", async () => {
+      const initial = await acquireSyncLease("tab-uuid-alpha", 30000);
+      const token = initial.token!;
 
-      const released = await releaseSyncLease("tab-uuid-alpha");
+      // Release with wrong token fails
+      const failedRelease = await releaseSyncLease("tab-uuid-alpha", "wrong-token");
+      expect(failedRelease).toBe(false);
+
+      // Release with correct token succeeds
+      const released = await releaseSyncLease("tab-uuid-alpha", token);
       expect(released).toBe(true);
 
       // Tab 2 can now acquire immediately without waiting for TTL
