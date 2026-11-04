@@ -9,6 +9,7 @@ export interface ReaderPageScrubberProps {
   direction?: "ltr" | "rtl";
   minimal?: boolean;
   className?: string;
+  onScrubbingChange?: (isScrubbing: boolean) => void;
 }
 
 export function ReaderPageScrubber({
@@ -16,7 +17,16 @@ export function ReaderPageScrubber({
   direction = "ltr",
   minimal = false,
   className,
+  onScrubbingChange,
 }: ReaderPageScrubberProps) {
+  const handleStartScrubbing = React.useCallback(() => {
+    onScrubbingChange?.(true);
+  }, [onScrubbingChange]);
+
+  const handleEndScrubbing = React.useCallback(() => {
+    onScrubbingChange?.(false);
+  }, [onScrubbingChange]);
+
   const total = Math.max(0, navigation.total);
   if (!total) return null;
   const page = Math.min(total, Math.max(1, navigation.index + 1));
@@ -44,6 +54,8 @@ export function ReaderPageScrubber({
       <div
         className={cn("w-full flex flex-col gap-1 text-text-primary select-none", className)}
         data-testid="reader-page-scrubber"
+        onPointerDown={handleStartScrubbing}
+        onTouchStart={handleStartScrubbing}
       >
         <div className="flex items-center justify-between text-xs font-semibold text-text-muted px-1">
           <label htmlFor="reader-webtoon-range">Progress</label>
@@ -56,7 +68,15 @@ export function ReaderPageScrubber({
             type="button"
             aria-label="Bagian sebelumnya"
             disabled={navigation.canPrevious !== undefined ? !navigation.canPrevious : page <= 1}
-            onClick={() => navigation.previous ? navigation.previous() : navigation.seek(page - 2)}
+            onClick={() => {
+              handleStartScrubbing();
+              if (navigation.previous) {
+                navigation.previous();
+              } else {
+                navigation.seek(page - 2);
+              }
+              handleEndScrubbing();
+            }}
             className="flex size-9 shrink-0 items-center justify-center rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-hover/80 active:scale-95 disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-accent cursor-pointer transition-colors"
           >
             <CaretLeft size={16} />
@@ -72,7 +92,16 @@ export function ReaderPageScrubber({
               aria-label="Progress membaca"
               aria-valuetext={`${progressPercent}%`}
               className="reader-page-range relative z-10 h-10 w-full cursor-pointer bg-transparent accent-accent focus-visible:outline-2 focus-visible:outline-accent"
+              onPointerDown={handleStartScrubbing}
+              onPointerUp={handleEndScrubbing}
+              onPointerCancel={handleEndScrubbing}
+              onTouchStart={handleStartScrubbing}
+              onTouchEnd={handleEndScrubbing}
+              onTouchCancel={handleEndScrubbing}
+              onMouseDown={handleStartScrubbing}
+              onMouseUp={handleEndScrubbing}
               onChange={(event) => {
+                handleStartScrubbing();
                 const percent = Number(event.target.value);
                 if (navigation.seekProgress) {
                   navigation.seekProgress(percent);
@@ -86,7 +115,15 @@ export function ReaderPageScrubber({
             type="button"
             aria-label="Bagian berikutnya"
             disabled={navigation.canNext !== undefined ? !navigation.canNext : page >= total}
-            onClick={() => navigation.next ? navigation.next() : navigation.seek(page)}
+            onClick={() => {
+              handleStartScrubbing();
+              if (navigation.next) {
+                navigation.next();
+              } else {
+                navigation.seek(page);
+              }
+              handleEndScrubbing();
+            }}
             className="flex size-9 shrink-0 items-center justify-center rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-hover/80 active:scale-95 disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-accent cursor-pointer transition-colors"
           >
             <CaretRight size={16} />
@@ -100,6 +137,8 @@ export function ReaderPageScrubber({
     <div
       className={cn("w-full flex flex-col gap-1 text-text-primary select-none", className)}
       data-testid="reader-page-scrubber"
+      onPointerDown={handleStartScrubbing}
+      onTouchStart={handleStartScrubbing}
     >
       <div className="flex items-center justify-between text-xs font-semibold text-text-muted px-1">
         <label htmlFor="reader-page-range">Halaman</label>
@@ -112,7 +151,15 @@ export function ReaderPageScrubber({
           type="button"
           aria-label="Halaman sebelumnya"
           disabled={navigation.canPrevious !== undefined ? !navigation.canPrevious : page <= 1}
-          onClick={() => navigation.previous ? navigation.previous() : navigation.seek(page - 2)}
+          onClick={() => {
+            handleStartScrubbing();
+            if (navigation.previous) {
+              navigation.previous();
+            } else {
+              navigation.seek(page - 2);
+            }
+            handleEndScrubbing();
+          }}
           className="flex size-9 shrink-0 items-center justify-center rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-hover/80 active:scale-95 disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-accent cursor-pointer transition-colors"
         >
           <CaretLeft size={16} />
@@ -150,14 +197,33 @@ export function ReaderPageScrubber({
             aria-label="Pindah halaman"
             aria-valuetext={`Halaman ${page} dari ${total}`}
             className="reader-page-range relative z-10 h-10 w-full cursor-pointer bg-transparent accent-accent focus-visible:outline-2 focus-visible:outline-accent"
-            onChange={(event) => navigation.seek(Number(event.target.value) - 1)}
+            onPointerDown={handleStartScrubbing}
+            onPointerUp={handleEndScrubbing}
+            onPointerCancel={handleEndScrubbing}
+            onTouchStart={handleStartScrubbing}
+            onTouchEnd={handleEndScrubbing}
+            onTouchCancel={handleEndScrubbing}
+            onMouseDown={handleStartScrubbing}
+            onMouseUp={handleEndScrubbing}
+            onChange={(event) => {
+              handleStartScrubbing();
+              navigation.seek(Number(event.target.value) - 1);
+            }}
           />
         </div>
         <button
           type="button"
           aria-label="Halaman berikutnya"
           disabled={navigation.canNext !== undefined ? !navigation.canNext : page >= total}
-          onClick={() => navigation.next ? navigation.next() : navigation.seek(page)}
+          onClick={() => {
+            handleStartScrubbing();
+            if (navigation.next) {
+              navigation.next();
+            } else {
+              navigation.seek(page);
+            }
+            handleEndScrubbing();
+          }}
           className="flex size-9 shrink-0 items-center justify-center rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-hover/80 active:scale-95 disabled:opacity-30 focus-visible:outline-2 focus-visible:outline-accent cursor-pointer transition-colors"
         >
           <CaretRight size={16} />

@@ -24,7 +24,6 @@ const ReaderChapterDrawer = dynamic(() => import("./reader-chapter-drawer").then
   ssr: false,
 })
 
-import { IconButton } from "@/components/ui/icon-button"
 import { StatusBarBlur } from "@/components/ui/status-bar-blur"
 import { toast } from "sonner"
 import { useReaderGesture } from "@/shared/hooks/use-reader-gesture"
@@ -68,6 +67,34 @@ export function ReaderShell({
   const [isDrawerOpen, setIsDrawerOpen] = React.useState(false)
   const [isChapterDrawerOpen, setIsChapterDrawerOpen] = React.useState(false)
   const [showBackToTop, setShowBackToTop] = React.useState(false)
+
+  const isScrubbingRef = React.useRef(false);
+  const scrubbingTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleScrubbingChange = React.useCallback((isScrubbing: boolean) => {
+    if (scrubbingTimerRef.current) {
+      clearTimeout(scrubbingTimerRef.current);
+      scrubbingTimerRef.current = null;
+    }
+
+    if (isScrubbing) {
+      isScrubbingRef.current = true;
+      setOverlayVisible(true);
+    } else {
+      // Grace period to allow smooth-scroll inertia and frame settlement
+      scrubbingTimerRef.current = setTimeout(() => {
+        isScrubbingRef.current = false;
+      }, 600);
+    }
+  }, [setOverlayVisible]);
+
+  React.useEffect(() => {
+    return () => {
+      if (scrubbingTimerRef.current) {
+        clearTimeout(scrubbingTimerRef.current);
+      }
+    };
+  }, []);
 
 
   const chapterIndex = chapters?.findIndex(c => c.id === currentChapterId) ?? -1;
@@ -233,7 +260,11 @@ export function ReaderShell({
           const currentScrollY = window.scrollY;
           const diff = currentScrollY - lastScrollY;
           const activeId = document.activeElement?.id;
-          if (activeId === "reader-page-range" || activeId === "reader-webtoon-range") {
+          const isRangeActive = activeId === "reader-page-range" || activeId === "reader-webtoon-range";
+
+          if (isScrubbingRef.current || isRangeActive) {
+            lastScrollY = currentScrollY;
+            accumulatedDiff = 0;
             ticking = false;
             return;
           }
@@ -304,63 +335,85 @@ export function ReaderShell({
             )}
           >
             <div className="w-full pt-[calc(var(--safe-top)+10px)] pb-3 px-3 flex items-center justify-center pointer-events-none">
-              <div
+              <header
                 className={cn(
-                  "yomirra-chrome pointer-events-auto relative overflow-hidden flex items-center justify-between w-full max-w-md md:max-w-2xl h-[52px] sm:h-[56px] px-2.5 sm:px-3 rounded-xl transition-all duration-200 text-text-primary"
+                  "yomirra-chrome pointer-events-auto relative overflow-hidden grid grid-cols-[84px_1fr_84px] sm:grid-cols-[96px_1fr_96px] items-center w-full max-w-lg md:max-w-2xl h-[54px] sm:h-[58px] px-2 sm:px-3 rounded-2xl transition-all duration-200 text-text-primary shadow-lg"
                 )}
               >
-                {/* Left: Back Button */}
-                <motion.button
-                  aria-label="Kembali ke detail komik"
-                  whileTap={reducedMotion ? undefined : { scale: 0.97 }}
-                  className="yomirra-chrome-control flex size-11 items-center justify-center rounded-xl text-text-muted hover:text-text-primary hover:bg-surface-hover/80 active:scale-95 transition-all shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                  onClick={handleBack}
-                >
-                  <ArrowLeft size={18} weight="regular" />
-                </motion.button>
+                {/* Left Cluster: Back to Detail + Home Navigation */}
+                <div className="flex items-center gap-1 shrink-0">
+                  <motion.button
+                    aria-label="Kembali ke detail komik"
+                    whileTap={reducedMotion ? undefined : { scale: 0.95 }}
+                    className="yomirra-chrome-control flex size-9 sm:size-10 items-center justify-center rounded-xl text-text-muted hover:text-text-primary hover:bg-surface-hover/80 active:scale-95 transition-all shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                    onClick={handleBack}
+                  >
+                    <ArrowLeft size={18} weight="regular" />
+                  </motion.button>
 
-                <IconButton aria-label="Kembali ke Beranda" className="text-text-muted hover:text-text-primary hover:bg-surface-hover/80" onClick={(event) => { event.stopPropagation(); if (beginNavigationIntent("/")) router.replace("/"); }}><House size={18} weight="regular" /></IconButton>
-                {/* Center: Manga Title (Top) & Chapter (Bottom) */}
-                <div className="flex flex-col items-center justify-center px-3 min-w-0 flex-1 select-none">
-                  <span className="text-sm sm:text-[15px] font-bold truncate w-full max-w-full tracking-tight text-center leading-tight text-text-primary">
+                  <motion.button
+                    aria-label="Kembali ke Beranda"
+                    whileTap={reducedMotion ? undefined : { scale: 0.95 }}
+                    className="yomirra-chrome-control flex size-9 sm:size-10 items-center justify-center rounded-xl text-text-muted hover:text-text-primary hover:bg-surface-hover/80 active:scale-95 transition-all shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      if (beginNavigationIntent("/")) router.replace("/");
+                    }}
+                  >
+                    <House size={18} weight="regular" />
+                  </motion.button>
+                </div>
+
+                {/* Center Cluster: Mathematically & Visually Centered Manga & Chapter Hierarchy */}
+                <div className="flex flex-col items-center justify-center px-1.5 min-w-0 select-none text-center overflow-hidden">
+                  <span
+                    className="text-xs sm:text-[12.5px] font-medium text-text-muted truncate w-full max-w-full text-center leading-tight tracking-tight"
+                    title={mangaTitle || chapterTitle}
+                  >
                     {mangaTitle || chapterTitle}
                   </span>
                   {mangaTitle && chapterTitle ? (
-                    <span className="text-[10.5px] font-semibold tracking-wider uppercase text-center mt-0.5 truncate w-full max-w-full text-text-muted">
+                    <span
+                      className="text-[13px] sm:text-[14px] font-bold text-text-primary truncate w-full max-w-full text-center mt-0.5 leading-tight tracking-tight"
+                      title={chapterTitle}
+                    >
                       {chapterTitle}
                     </span>
                   ) : pageCount ? (
-                    <span className="text-[10.5px] font-semibold tracking-wider uppercase text-center mt-0.5 text-text-muted">
+                    <span
+                      className="text-[12px] sm:text-[13px] font-semibold text-text-muted truncate w-full max-w-full text-center mt-0.5 leading-tight tracking-tight"
+                      title={`${pageCount} halaman`}
+                    >
                       {pageCount} halaman
                     </span>
                   ) : null}
                 </div>
 
-                {/* Right: Bookmark Button */}
-                <motion.button
-                  aria-label={isSaved ? "Hapus dari bookmark" : "Simpan ke bookmark"}
-                  whileTap={reducedMotion ? undefined : { scale: 0.97 }}
-                  className={cn(
-                    "yomirra-chrome-control flex size-11 items-center justify-center rounded-xl transition-all shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
-                    isSaved
-                      ? "bg-accent text-accent-on border-accent shadow-xs"
-                      : "text-text-muted hover:text-text-primary hover:bg-surface-hover/80 active:scale-95"
-                  )}
-                  onClick={handleToggleBookmark}
-                >
-                  <motion.div
-                    key={isSaved ? "saved" : "unsaved"}
-                    initial={reducedMotion ? false : { scale: 0.5, opacity: 0, rotate: -30 }}
-                    animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                    transition={reducedMotion ? { duration: 0 } : transitions.snappy}
-                    className="flex items-center justify-center"
+                {/* Right Cluster: Bookmark Action with Symmetrical Width */}
+                <div className="flex items-center justify-end shrink-0">
+                  <motion.button
+                    aria-label={isSaved ? "Hapus dari bookmark" : "Simpan ke bookmark"}
+                    whileTap={reducedMotion ? undefined : { scale: 0.95 }}
+                    className={cn(
+                      "yomirra-chrome-control flex size-9 sm:size-10 items-center justify-center rounded-xl transition-all shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+                      isSaved
+                        ? "bg-accent text-accent-on border-accent shadow-xs"
+                        : "text-text-muted hover:text-text-primary hover:bg-surface-hover/80 active:scale-95"
+                    )}
+                    onClick={handleToggleBookmark}
                   >
-                    <BookmarkSimple size={18} weight={isSaved ? "fill" : "regular"} />
-                  </motion.div>
-                </motion.button>
-
-
-              </div>
+                    <motion.div
+                      key={isSaved ? "saved" : "unsaved"}
+                      initial={reducedMotion ? false : { scale: 0.5, opacity: 0, rotate: -30 }}
+                      animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                      transition={reducedMotion ? { duration: 0 } : transitions.snappy}
+                      className="flex items-center justify-center"
+                    >
+                      <BookmarkSimple size={18} weight={isSaved ? "fill" : "regular"} />
+                    </motion.div>
+                  </motion.button>
+                </div>
+              </header>
             </div>
           </motion.div>
         )}
@@ -415,6 +468,7 @@ export function ReaderShell({
                     <ReaderPageScrubber
                       navigation={pageNavigation}
                       direction={preferences.readingDirection}
+                      onScrubbingChange={handleScrubbingChange}
                     />
                     <div className="h-px w-full bg-border-subtle" />
                   </>
