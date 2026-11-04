@@ -3,15 +3,17 @@ import { MagnifyingGlass, X } from "@phosphor-icons/react"
 import { IconButton } from "@/components/ui/icon-button"
 import { cn } from "@/shared/utils/cn"
 
-export interface SearchInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onSubmit'> {
+export interface SearchInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onSubmit' | 'size'> {
   onSubmitAction?: (e: React.FormEvent, value: string) => void;
   onClear?: () => void;
   shortcut?: string;
   containerClassName?: string;
+  variant?: "glass" | "solid" | "raised";
+  size?: "default" | "sm";
 }
 
 export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
-  ({ className, containerClassName, onSubmitAction, onClear, shortcut, value, onChange, ...props }, ref) => {
+  ({ className, containerClassName, onSubmitAction, onClear, shortcut, value, onChange, variant = "glass", size = "default", ...props }, ref) => {
 
     const handleClear = () => {
       onClear?.();
@@ -28,8 +30,11 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
       <form
         onSubmit={handleSubmit}
         className={cn(
-          "flex items-center gap-2.5 rounded-sm bg-surface-glass backdrop-blur-md px-4 h-[44px] border border-border-subtle transition-all duration-200 ease-out w-full",
-          "hover:bg-surface-hover hover:border-border-strong focus-within:bg-surface-overlay focus-within:border-accent/40 focus-within:ring-2 focus-within:ring-accent/20 focus-within:shadow-xs",
+          "flex items-center gap-2.5 rounded-sm px-4 border border-border-subtle transition-all duration-200 ease-out w-full",
+          size === "sm" ? "h-[36px]" : "h-[44px]",
+          variant === "glass" && "bg-surface-glass backdrop-blur-md hover:bg-surface-hover hover:border-border-strong focus-within:bg-surface-overlay focus-within:border-accent/40 focus-within:ring-2 focus-within:ring-accent/20 focus-within:shadow-xs",
+          variant === "solid" && "bg-surface-base hover:bg-surface-raised hover:border-border-strong focus-within:border-accent/40 focus-within:ring-2 focus-within:ring-accent/20",
+          variant === "raised" && "bg-surface-raised hover:bg-surface-hover hover:border-border-strong focus-within:border-accent/40 focus-within:ring-2 focus-within:ring-accent/20",
           containerClassName
         )}
       >
