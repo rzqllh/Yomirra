@@ -68,6 +68,14 @@
   --radius-sheet: 20px;
   --radius-full: 9999px;
 
+  /* Exact Role Radius Aliases (YOM-01: Zero Delta) */
+  --radius-role-card: var(--radius-md);     /* 14px */
+  --radius-role-control: var(--radius-sm);  /* 10px */
+  --radius-role-modal: var(--radius-xl);    /* 22px */
+  --radius-role-nav: var(--radius-sm);      /* 10px */
+  --radius-role-dock: var(--radius-xl);     /* 22px */
+  --radius-role-chip: var(--radius-full);   /* 9999px */
+
   /* Elevation */
   --shadow-none: none;
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.15);
@@ -157,6 +165,21 @@
     --media-overlay-soft: rgba(5, 5, 10, 0.12);
     --media-foreground: #F2F2F7;
     --media-muted-foreground: rgba(242, 242, 247, 0.78);
+
+    /* Glass Foundation Tokens (YOM-01: Exact Parity Values) */
+    --glass-blur-chrome: 16px;
+    --glass-blur-statusbar: 20px;
+    --glass-blur-liquid: 24px;
+    --glass-blur-header: 12px;
+    --glass-blur-popover: 24px;
+
+    --glass-saturate-liquid: 190%;
+    --glass-saturate-toast: 180%;
+
+    --glass-alpha-chrome: 0.90;
+    --glass-alpha-overlay: 0.95;
+    --glass-alpha-base: 0.85;
+    --glass-alpha-control: 0.82;
   }
 
   :root, .dark {
@@ -606,6 +629,19 @@ body.reader-active {
     background: transparent;
     border: 0;
     box-shadow: none;
+  }
+
+  /* Centralized Glass Surface Foundation (YOM-01: Unconsumed Layer) */
+  .yomirra-glass-foundation {
+    --_glass-blur: var(--glass-blur-chrome);
+    --_glass-sat: 100%;
+    --_glass-bg: color-mix(in srgb, var(--surface-glass) calc(var(--glass-alpha-chrome) * 100%), transparent);
+    --_glass-border: var(--border-glass);
+
+    background: var(--_glass-bg);
+    border: 1px solid var(--_glass-border);
+    backdrop-filter: blur(var(--_glass-blur)) saturate(var(--_glass-sat));
+    -webkit-backdrop-filter: blur(var(--_glass-blur)) saturate(var(--_glass-sat));
   }
 
   .ink-panel {
