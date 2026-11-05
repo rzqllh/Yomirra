@@ -229,7 +229,7 @@ class ApiClient {
                return;
             }
 
-            const res: Record<string, number | undefined> = {};
+            const res: Record<string, number | undefined> = Object.create(null);
             for (let i = 0; i < titles.length; i += 20) {
               const chunk = titles.slice(i, i + 20);
               const payload = await this.fetcher<{ data?: Record<string, number | undefined> } | Record<string, number | undefined>>(`/api/metadata/rating-batch`, {

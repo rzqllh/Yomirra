@@ -12,6 +12,7 @@ import { SourceError } from "@/server/lib/sources/error";
 import { withSourceCapacity } from "@/server/lib/sources/source-capacity";
 import { deduplicateResultsBySource } from "@/shared/lib/canonical-search";
 import { upsertSearchCatalogRecords } from "@/server/lib/search/semantic-catalog";
+import type { MangaSource } from "@/shared/sources/source-types";
 import type { GlobalSearchResponse } from "@/shared/types/search";
 
 export type { GlobalSearchResponse };
@@ -64,9 +65,9 @@ export async function GET(req: NextRequest) {
     filterKey = `:${createHash("md5").update(JSON.stringify(filters)).digest("hex").slice(0, 8)}`;
   }
 
-  const loadedSources: Record<string, any> = {};
+  const loadedSources: Record<string, MangaSource> = Object.create(null);
   const sourceKeys: string[] = [];
-  const sourceErrors: GlobalSearchResponse["resultsBySource"] = {};
+  const sourceErrors: GlobalSearchResponse["resultsBySource"] = Object.create(null);
   
   for (const sourceId of sourceIds) {
     try {
@@ -87,7 +88,7 @@ export async function GET(req: NextRequest) {
     const cachedData = await withCache(
       cacheKey,
       async () => {
-        const results: GlobalSearchResponse["resultsBySource"] = {};
+        const results: GlobalSearchResponse["resultsBySource"] = Object.create(null);
         
         const promises = sourceIds.map(async (sourceId) => {
           const source = loadedSources[sourceId];

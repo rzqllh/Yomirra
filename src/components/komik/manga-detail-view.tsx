@@ -99,6 +99,7 @@ function MangaDetailContent({
   const { data: ratingData } = useQuery({
     queryKey: ["rating-score", sourceId, mangaId],
     queryFn: () => apiClient.getRatingScore(detail.title),
+    retry: false,
     staleTime: 1000 * 60 * 60, // 1 hour
     enabled: true,
   });
