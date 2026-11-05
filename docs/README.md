@@ -6,8 +6,8 @@ Folder ini berisi dokumentasi publik untuk contributor dan maintainer. Untuk ove
 
 ## Peta dokumen
 
-- [Architecture](ARCHITECTURE.md) — boundary runtime, data flow, source flow, cache, search, dan state ownership.
-- [Components](COMPONENTS.md) — reusable UI contract dan feature boundary.
+- [Architecture](ARCHITECTURE.md) — boundary runtime, source flow, cache Redis, circuit breaker, command budget, dan state ownership.
+- [Components](COMPONENTS.md) — reusable UI contract, bottom dock capsule geometry, dan feature boundary.
 - [Design](DESIGN.md) — design system, layout, typography, motion, dan overlay rules.
 - [Identity](IDENTITY.md) — SavedTitle, linked source, history, dan source migration.
 - [Schema](SCHEMA.md) — domain types, stores, API contract, dan persistence notes.

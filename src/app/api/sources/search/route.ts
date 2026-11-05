@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 import { applyRateLimitHeaders, checkRateLimitPolicy, createRateLimitRejection } from "@/server/lib/security/rate-limit";
 import { NextRequest, NextResponse } from "next/server";
 import { sourceManager } from "@/server/lib/sources/source-manager";
-import { withCache, CACHE_TTL } from "@/server/lib/cache/redis-cache";
+import { withCache, CACHE_TTL, invalidateNearCacheKey } from "@/server/lib/cache/redis-cache";
 import { isRedisConfigured, redis } from "@/server/lib/cache/redis";
 import { createHash } from "crypto";
 
@@ -132,8 +132,9 @@ export async function GET(req: NextRequest) {
     // Do not preserve partial or complete adapter failures in cache:
     // avoid locking transient upstream provider errors for the full TTL.
     const hasAnyError = Object.values(cachedData).some((r) => Boolean(r.error));
-    if (hasAnyError && isRedisConfigured) {
-      await redis.del(cacheKey).catch(() => {});
+    if (hasAnyError) {
+      invalidateNearCacheKey(cacheKey);
+      if (isRedisConfigured) await redis.del(cacheKey).catch(() => {});
     }
 
     const canonicalResults = deduplicateResultsBySource(cachedData);

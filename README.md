@@ -97,6 +97,14 @@ Tanpa `GEMINI_API_KEY`, search tetap menyediakan tag parsing, canonical filters,
 
 Jika `GEMINI_API_KEY` tersedia, Yomirra dapat menggunakan embedding untuk semantic ranking. Catalog semantic hanya menyimpan metadata manga publik yang ditemukan saat penggunaan normal; library, history, progress baca, dan data akun tidak dimasukkan ke catalog tersebut.
 
+## Cache dan ketersediaan
+
+Redis bersifat opsional untuk feed, pencarian, dan Reader. Saat cache tidak tersedia atau kuotanya habis, pembacaan publik mencoba langsung ke sumber, yang tetap dapat membatasi akses atau menolak request. Mutasi yang memerlukan penyimpanan durabel tetap gagal tertutup bila Redis tidak dapat menjamin penulisan. Cache publik membatasi pembacaan berulang dengan deduplikasi dan cache memori per instance maksimal 10 detik; sinkronisasi konfigurasi antarisolate dapat tertunda sampai 10 detik.
+
+Bottom dock mobile memakai radius kapsul penuh untuk shell, tombol Search, dan tab aktif, dengan target sentuh minimal 44px dan gutter mengikuti safe-area perangkat. Ini pengecualian komponen, bukan perubahan token radius global.
+
+Preview tanpa `REDIS_URL` tetap dapat memuat public flow, tetapi tidak menguji command budget Production. Detailnya di [Architecture](docs/ARCHITECTURE.md) dan [Testing](docs/TESTING.md).
+
 ## Security dan reliability
 
 Boundary privileged tetap berada di server:

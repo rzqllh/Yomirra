@@ -1,4 +1,4 @@
-import { isRedisConfigured, redis } from "@/server/lib/cache/redis";
+import { isRedisConfigured, isRedisCommandAllowed, redis } from "@/server/lib/cache/redis";
 import { logger } from "@/shared/logger";
 
 export type DomainRole = "frontend" | "api" | "cdn";
@@ -127,6 +127,8 @@ export const SOURCE_DOMAINS: Record<string, SourceDomainConfig> = {
 
 const CACHE_TTL_SECONDS = 86400; // 24 hours
 const memoryCache = new Map<string, DomainRecord>();
+const DOMAIN_NEAR_TTL_MS = 10_000;
+const recentReads = new Map<string, { value: DomainRecord | null; expiresAt: number }>();
 
 function getCacheKey(sourceId: string, role: DomainRole): string {
   return `yomirra:domain:${sourceId}:${role}`;
@@ -198,6 +200,7 @@ export class DomainResolver {
 
     const key = getCacheKey(normalizedId, role);
     memoryCache.set(key, record);
+    recentReads.set(key, { value: record, expiresAt: Date.now() + DOMAIN_NEAR_TTL_MS });
 
     if (isRedisConfigured) {
       try {
@@ -246,6 +249,7 @@ export class DomainResolver {
       status: "failed",
     };
     memoryCache.set(key, failedRecord);
+    recentReads.set(key, { value: failedRecord, expiresAt: Date.now() + DOMAIN_NEAR_TTL_MS });
 
     return null;
   }
@@ -253,14 +257,19 @@ export class DomainResolver {
   async getCachedDomain(sourceId: string, role: DomainRole = "frontend"): Promise<DomainRecord | null> {
     const key = getCacheKey(sourceId.toLowerCase().trim(), role);
 
-    if (isRedisConfigured) {
+    if (isRedisConfigured && isRedisCommandAllowed()) {
+      const recent = recentReads.get(key);
+      if (recent && Date.now() < recent.expiresAt) return recent.value;
+      recentReads.delete(key);
       try {
         const raw = await redis.get(key);
-        if (raw) {
-          return typeof raw === "string" ? JSON.parse(raw) : (raw as unknown as DomainRecord);
-        }
+        const value = raw
+          ? (typeof raw === "string" ? JSON.parse(raw) : raw) as DomainRecord
+          : memoryCache.get(key) || null;
+        recentReads.set(key, { value, expiresAt: Date.now() + DOMAIN_NEAR_TTL_MS });
+        return value;
       } catch {
-        // Fall back to memoryCache
+        // Fall back to the existing in-isolate record on Redis failure.
       }
     }
 
@@ -273,10 +282,12 @@ export class DomainResolver {
       for (const role of ["frontend", "api", "cdn"] as DomainRole[]) {
         const key = getCacheKey(normalizedId, role);
         memoryCache.delete(key);
+        recentReads.delete(key);
         if (isRedisConfigured) await redis.del(key).catch(() => {});
       }
     } else {
       memoryCache.clear();
+      recentReads.clear();
     }
   }
 }

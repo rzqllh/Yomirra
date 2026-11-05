@@ -1380,6 +1380,8 @@ Use a small controlled set:
 
 Do not invent a new radius per component.
 
+**Scoped bottom dock exception.** The mobile four-tab shell, detached Search button, and active navigation indicators use `rounded-full` rather than global card/sheet radius tokens. For a `56px` shell, `44px` touch targets and `1px` borders, `(56 − 44 − 2 × 1) / 2 = 5px` vertical padding keeps the 28px/22px radii concentric. Detached Search indicator is inset by 4px. Labels, horizontal gaps, and side gutters adapt to viewport/safe-area constraints. Do not propagate this to desktop navigation, Reader, cards, or filter panels.
+
 ## 20.6 Borders and elevation
 
 Base card style: thin border + minimal/no shadow.
