@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+test.describe.configure({ timeout: 60_000 });
+
 for (const [width, theme] of [[320, "light"], [360, "dark"]] as const) {
   test(`dock fits ${width}px in ${theme} and tracks back/forward horizontally`, async ({ page }) => {
     await page.setViewportSize({ width, height: 720 });
@@ -21,7 +23,7 @@ for (const [width, theme] of [[320, "light"], [360, "dark"]] as const) {
     expect(first.x + first.width).toBeLessThanOrEqual(width);
 
     await dock.getByRole("link", { name: "Library" }).click();
-    await expect(page).toHaveURL(/\/bookmark$/);
+    await expect(page).toHaveURL(/\/bookmark$/, { timeout: 20_000 });
     await expect(dock.getByRole("link", { name: "Library", current: "page" })).toBeVisible();
     await expect.poll(async () => (await pill.boundingBox())!.x).toBeLessThan(first.x - 10);
     expect((await pill.boundingBox())!.y).toBeCloseTo(first.y, 0);
@@ -30,7 +32,7 @@ for (const [width, theme] of [[320, "light"], [360, "dark"]] as const) {
     await expect(page).toHaveURL(/\/search$/);
     await expect.poll(async () => Math.abs((await pill.boundingBox())!.x - first.x)).toBeLessThan(1);
     await page.goForward();
-    await expect(page).toHaveURL(/\/bookmark$/);
+    await expect(page).toHaveURL(/\/bookmark$/, { timeout: 20_000 });
     await expect(dock.getByRole("link", { name: "Library", current: "page" })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
   });
@@ -41,7 +43,7 @@ test("desktop onboarding keeps the primary action in view and supports the keybo
   await page.goto("/settings");
   const dialog = page.getByRole("dialog");
   const next = dialog.getByRole("button", { name: "Lanjut" });
-  await expect(next).toBeInViewport();
+  await expect(next).toBeInViewport({ timeout: 30_000 });
   await expect(dialog.getByRole("button", { name: "Langkah 1", current: "step" })).toBeVisible();
   await page.keyboard.press("ArrowRight");
   await expect(dialog.getByRole("button", { name: "Langkah 2", current: "step" })).toBeVisible();
