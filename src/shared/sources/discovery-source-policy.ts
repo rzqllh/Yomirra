@@ -39,7 +39,7 @@ export function isDiscoverySourceSelected(
   source: SourceMetadata,
   disabledSourceIds: Iterable<string>
 ): boolean {
-  if (!isDiscoverySourceSystemEligible(source)) return false;
+  if (source.maintenance || !isDiscoverySourceSystemEligible(source)) return false;
 
   const disabled = disabledSourceIds instanceof Set
     ? disabledSourceIds

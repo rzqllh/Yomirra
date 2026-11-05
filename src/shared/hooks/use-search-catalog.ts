@@ -111,7 +111,7 @@ export function useSearchCatalog() {
     });
 
     return sources.filter((source) => {
-      if (!isSearchSourceSystemEligible(source)) return false;
+      if (source.maintenance || !isSearchSourceSystemEligible(source)) return false;
       if (source.isNsfw && hideNsfw) return false;
       return true;
     });

@@ -43,6 +43,7 @@ export const sourceRegistry: SourceMetadata[] = [
     version: "1.0.0",
     isEnabled: true,
     isInstalled: true,
+    maintenance: { reason: "Server sumber menolak akses katalog dengan HTTP 403.", since: "2026-11-05T08:55:00.000Z" },
     status: "unknown",
     healthStats: {
       uptime: "-",
@@ -200,6 +201,7 @@ export const sourceRegistry: SourceMetadata[] = [
     adapterVersion: "1.0.0",
     isEnabled: true,
     isInstalled: true,
+    maintenance: { reason: "Format sinopsis pada halaman pertama katalog belum kompatibel.", since: "2026-11-05T08:55:00.000Z" },
     status: "unknown",
     healthStats: {
       uptime: "-",
@@ -264,6 +266,7 @@ export const sourceRegistry: SourceMetadata[] = [
     adapterVersion: "1.0.0",
     isEnabled: true,
     isInstalled: true,
+    maintenance: { reason: "Server sumber menolak akses katalog dengan HTTP 403.", since: "2026-11-05T08:55:00.000Z" },
     status: "unknown",
     healthStats: {
       uptime: "-",

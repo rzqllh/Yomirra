@@ -15,6 +15,7 @@ export interface SourceMetadata {
   isInstalled: boolean;
   capabilities: SourceCapabilities;
   status?: "online" | "slow" | "degraded" | "unavailable" | "unknown" | "in-dev" | "in-fix";
+  maintenance?: { reason: string; since: string };
   healthStats?: {
     uptime: string;
     latency: string;

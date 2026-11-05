@@ -25,7 +25,6 @@ import { useSourceHealthStore } from "@/shared/store/source-health-store"
 import { useRouter } from "next/navigation"
 import {
   isDiscoverySourceSystemEligible,
-  isSearchSourceSystemEligible,
 } from "@/shared/sources/discovery-source-policy"
 import { cn } from "@/shared/utils/cn"
 
@@ -43,6 +42,7 @@ function getReaderHealth(status: string): ReaderHealth {
   if (status === "online") return { label: "Normal", variant: "success" }
   if (status === "slow") return { label: "Lambat", variant: "warning" }
   if (status === "degraded") return { label: "Gangguan", variant: "warning" }
+  if (status === "in-fix") return { label: "Under Maintenance", variant: "warning" }
   if (status === "unknown") return { label: "Belum diperiksa", variant: "muted" }
   return { label: "Tidak dapat digunakan", variant: "error" }
 }
@@ -54,7 +54,7 @@ export function SourceCard({ source, onUpdate }: SourceCardProps) {
   const [reportOpen, setReportOpen] = React.useState(false)
 
   const effectiveStatus =
-    health.status === "unknown" ? source.status || "unknown" : health.status
+    source.maintenance ? "in-fix" : health.status === "unknown" ? source.status || "unknown" : health.status
   const readerHealth = getReaderHealth(effectiveStatus)
   const isUnavailable = ["offline", "unavailable", "in-fix", "in-dev"].includes(
     effectiveStatus
@@ -180,7 +180,8 @@ export function SourceCard({ source, onUpdate }: SourceCardProps) {
           {isUnavailable ? (
             <div className="mt-2.5 flex items-center justify-between gap-2">
               <p className="text-xs font-medium text-semantic-error">
-                {source.healthStats?.message || "Sumber tidak dapat digunakan saat ini."}
+                {source.maintenance?.reason || source.healthStats?.message || "Sumber tidak dapat digunakan saat ini."}
+                {source.maintenance && <span className="mt-1 block text-text-muted">Menunggu pemeriksaan pemulihan katalog.</span>}
               </p>
               <button
                 type="button"
@@ -202,7 +203,8 @@ export function SourceCard({ source, onUpdate }: SourceCardProps) {
       <div className="flex items-center justify-between gap-3 border-t border-border-subtle bg-surface-base/35 px-4 py-2.5">
         <div className="flex min-w-0 items-center gap-2.5">
           <ToggleSwitch
-            checked={isPreferenceEnabled}
+            checked={isPreferenceEnabled && !source.maintenance}
+            disabled={Boolean(source.maintenance)}
             onCheckedChange={() => {
               toggleSource(source.id)
               window.dispatchEvent(new Event("sources_updated"))
@@ -212,7 +214,7 @@ export function SourceCard({ source, onUpdate }: SourceCardProps) {
           />
           <div className="min-w-0">
             <p className="text-xs font-bold text-text-primary">
-              {isPreferenceEnabled ? "Aktif" : "Nonaktif"}
+              {source.maintenance ? "Dijeda" : isPreferenceEnabled ? "Aktif" : "Nonaktif"}
             </p>
             <p className="truncate text-[11px] text-text-muted">
               Preferensi penjelajahan
