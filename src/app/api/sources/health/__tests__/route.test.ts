@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+﻿import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const mockRedis = {
   get: vi.fn(),
@@ -11,6 +11,9 @@ const mockProbeAllSourcesHealth = vi.fn();
 
 vi.mock("@/server/lib/cache/redis", () => ({
   isRedisConfigured: true,
+  isRedisCircuitOpen: () => false,
+  isRedisCommandAllowed: () => true,
+  isRedisReady: () => true,
   get redis() {
     return mockRedis;
   },

@@ -3,9 +3,16 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mockRedisPing = vi.fn();
 const mockGetAllSnapshots = vi.fn();
 const mockProbeAllSourcesHealth = vi.fn();
+const redisState = vi.hoisted(() => ({
+  configured: true,
+  circuit: "closed" as "closed" | "open" | "half-open",
+  probing: false,
+}));
 
 vi.mock("@/server/lib/cache/redis", () => ({
-  isRedisConfigured: true,
+  get isRedisConfigured() { return redisState.configured; },
+  isRedisCircuitOpen: () => redisState.circuit !== "closed",
+  isRedisCommandAllowed: () => redisState.circuit === "closed",
   redis: { ping: (...args: unknown[]) => mockRedisPing(...args) },
 }));
 
@@ -29,6 +36,9 @@ import { GET } from "../route";
 describe("GET /api/health liveness", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    redisState.configured = true;
+    redisState.circuit = "closed";
+    redisState.probing = false;
     mockRedisPing.mockResolvedValue("PONG");
     mockGetAllSnapshots.mockResolvedValue({});
   });
@@ -109,6 +119,50 @@ describe("GET /api/health liveness", () => {
     expect(json.redis).toBe("down");
     expect(json.sources).toEqual({});
     expect(JSON.stringify(json)).not.toContain("No snapshot store");
+    expect(mockProbeAllSourcesHealth).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["open", false],
+    ["half-open", false],
+    ["half-open", true],
+  ] as const)("skips PING while circuit is %s (probe active: %s)", async (circuit, probing) => {
+    redisState.circuit = circuit;
+    redisState.probing = probing;
+
+    for (let i = 0; i < 10; i++) {
+      const res = await GET();
+      expect(res.status).toBe(503);
+      expect(await res.json()).toMatchObject({ status: "degraded", redis: "down" });
+    }
+
+    expect(mockRedisPing).not.toHaveBeenCalled();
+    expect(mockProbeAllSourcesHealth).not.toHaveBeenCalled();
+    expect(mockGetAllSnapshots.mock.calls).toEqual(Array.from({ length: 10 }, () => []));
+  });
+
+  it("reports quota failure and skips commands on subsequent health requests", async () => {
+    mockRedisPing.mockImplementationOnce(async () => {
+      redisState.circuit = "open";
+      throw new Error("ERR max requests limit exceeded");
+    });
+
+    for (let i = 0; i < 10; i++) {
+      const res = await GET();
+      expect(res.status).toBe(503);
+      expect(await res.json()).toMatchObject({ status: "degraded", redis: "down" });
+    }
+
+    expect(mockRedisPing).toHaveBeenCalledOnce();
+    expect(mockProbeAllSourcesHealth).not.toHaveBeenCalled();
+  });
+
+  it("reports unconfigured Redis without sending commands", async () => {
+    redisState.configured = false;
+    const res = await GET();
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ status: "ok", redis: "unconfigured" });
+    expect(mockRedisPing).not.toHaveBeenCalled();
     expect(mockProbeAllSourcesHealth).not.toHaveBeenCalled();
   });
 });

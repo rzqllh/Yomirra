@@ -1,4 +1,4 @@
-import { isRedisConfigured, redis } from "./redis";
+import { isRedisConfigured, isRedisCommandAllowed, redis } from "./redis";
 import { logger } from "@/shared/logger";
 
 export const CACHE_TTL = {
@@ -17,6 +17,10 @@ interface CacheEntry<T> {
   expiresAt: number;
 }
 
+const FLIGHT_LIFETIME_MS = 30_000;
+const MAX_IN_FLIGHT = 1024;
+const inFlight = new Map<string, Promise<unknown>>();
+
 export function getSourceCacheKey(source: SourceMetadata, operation: string, params: string): string {
   if (source.isDynamic) {
     const raw = `${source.id}:${source.version || "0.0.0"}:${source.baseUrl || ""}`;
@@ -32,15 +36,47 @@ export async function withCache<T>(
   ttlSeconds: number,
   options: { allowStaleOnError?: boolean } = {}
 ): Promise<T> {
-  let staleEntry: CacheEntry<T> | null = null;
   const activeTtlSeconds = Math.max(1, Math.floor(ttlSeconds));
+  const flightKey = JSON.stringify([key, activeTtlSeconds, options.allowStaleOnError !== false]);
+  const existing = inFlight.get(flightKey);
+  if (existing) return existing as Promise<T>;
+  if (inFlight.size >= MAX_IN_FLIGHT) {
+    throw new Error("Cache in-flight capacity exceeded");
+  }
+
+  const timeoutError = new Error(`Cache request timed out after ${FLIGHT_LIFETIME_MS}ms`);
+  let timer: ReturnType<typeof setTimeout>;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(timeoutError), FLIGHT_LIFETIME_MS);
+  });
+  const isCurrent = () => inFlight.get(flightKey) === request;
+  const work = Promise.resolve().then(() =>
+    readThroughCache(key, fetcher, activeTtlSeconds, options, isCurrent, timeoutError),
+  );
+  const request: Promise<T> = Promise.race([work, timeout]).finally(() => {
+    clearTimeout(timer);
+    if (isCurrent()) inFlight.delete(flightKey);
+  });
+  inFlight.set(flightKey, request);
+  return request;
+}
+
+async function readThroughCache<T>(
+  key: string,
+  fetcher: () => Promise<T>,
+  activeTtlSeconds: number,
+  options: { allowStaleOnError?: boolean },
+  isCurrent: () => boolean,
+  timeoutError: Error,
+): Promise<T> {
+  let staleEntry: CacheEntry<T> | null = null;
   // Stale data is only useful for a short, bounded outage. The previous
   // blanket 7-day Redis retention could resurrect weeks-old source data.
   const staleGraceSeconds = options.allowStaleOnError === false
     ? 0
     : Math.min(activeTtlSeconds, 60 * 60);
 
-  if (isRedisConfigured) try {
+  if (isRedisConfigured && isRedisCommandAllowed()) try {
     const cached = await redis.get(key);
     if (cached) {
       const parsed = JSON.parse(cached);
@@ -59,10 +95,11 @@ export async function withCache<T>(
     logger.warn(`Redis get bypassed for key ${key}: ${msg}`);
   }
 
+  if (!isCurrent()) throw timeoutError;
   try {
     const data = await fetcher();
-    
-    if (isRedisConfigured) try {
+
+    if (isCurrent() && isRedisConfigured && isRedisCommandAllowed()) try {
       if (data) {
         const entry: CacheEntry<T> = {
           data,
