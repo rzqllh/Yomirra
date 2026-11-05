@@ -119,45 +119,14 @@ describe('BottomDock Navigation', () => {
     expect(searchLink.querySelector('span[aria-hidden="true"]')).toBeTruthy();
   });
 
-  it('keeps 44px tab targets and adapts label spacing for narrow screens', () => {
-    render(<BottomDock />);
+  it('uses the shared dock frame, surface and pill for the detached search action', () => {
+    render(<BottomDock pendingHref="/search" />);
 
-    const inactiveLink = screen.getByRole('link', { name: 'Library' });
-    const searchLink = screen.getByRole('link', { name: 'Cari' });
-
-    expect(inactiveLink.className).toContain('size-11');
-    expect(screen.getByRole('link', { name: 'Library' }).className).toContain('size-11');
-    expect(searchLink.className).toContain('size-14');
-    expect(searchLink.className).toContain('max-[359px]:size-12');
-  });
-
-
-  it('keeps full radii and derived spacing only on the bottom dock', () => {
-    render(<BottomDock />);
     const nav = screen.getByRole('navigation', { name: 'Navigasi utama' });
-    const shell = nav.querySelector('.yomirra-chrome');
-    const active = screen.getByRole('link', { name: 'Beranda' });
     const search = screen.getByRole('link', { name: 'Cari' });
 
-    expect(shell?.className).toContain('h-14');
-    expect(shell?.className).toContain('py-[5px]');
-    expect(shell?.className).toContain('rounded-full');
-    expect(shell?.className).toContain('gap-0.5');
-    expect(shell?.className).toContain('px-1');
-    expect(shell?.className).toContain('min-[360px]:gap-1');
-    expect(active.className).toContain('h-11');
-    expect(active.className).toContain('rounded-full');
-    expect(active.querySelector('span[aria-hidden="true"]')?.className).toContain('rounded-full');
-    expect(search.className).toContain('size-14');
-    expect(search.className).toContain('rounded-full');
-    expect(search.className).toContain('max-[359px]:size-12');
+    expect(nav.classList.contains('yomirra-dock-frame')).toBe(true);
+    expect(nav.querySelectorAll('.yomirra-dock-surface')).toHaveLength(2);
+    expect(search.querySelector('.yomirra-dock-pill')).toBeTruthy();
   });
-
-  it('maintains the inset, fully rounded active search indicator', () => {
-    render(<BottomDock pendingHref="/search" />);
-    const indicator = screen.getByRole('link', { name: 'Cari' }).querySelector('span[aria-hidden="true"]');
-    expect(indicator?.className).toContain('inset-1');
-    expect(indicator?.className).toContain('rounded-full');
-  });
-
 });

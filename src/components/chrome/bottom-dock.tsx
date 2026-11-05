@@ -33,15 +33,10 @@ export function BottomDock({ pendingHref }: { pendingHref?: string | null }) {
   return (
     <nav
       aria-label="Navigasi utama"
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-[var(--z-sticky)] w-full md:hidden"
-      style={{
-        paddingLeft: "max(12px, env(safe-area-inset-left, 0px))",
-        paddingRight: "max(12px, env(safe-area-inset-right, 0px))",
-        paddingBottom: "max(12px, env(safe-area-inset-bottom, 0px))",
-      }}
+      className="yomirra-dock-frame pointer-events-none fixed inset-x-0 bottom-0 z-[var(--z-sticky)] w-full md:hidden"
     >
       <div className="pointer-events-auto mx-auto flex w-fit max-w-full items-center justify-center gap-2 max-[359px]:gap-1.5">
-        <div className="yomirra-chrome flex h-14 min-w-0 items-center justify-center gap-0.5 rounded-full px-1 py-[5px] min-[360px]:gap-1 min-[360px]:px-1.5 sm:gap-1.5 sm:px-2">
+        <div className="yomirra-chrome yomirra-dock-surface flex min-w-0 items-center justify-center gap-0.5 min-[360px]:gap-1 sm:gap-1.5">
           {mainItems.map((item) => {
             const isActive = isMainTabActive(item.href)
 
@@ -66,7 +61,7 @@ export function BottomDock({ pendingHref }: { pendingHref?: string | null }) {
                 {isActive && (
                   <motion.span
                     aria-hidden="true"
-                    className="pointer-events-none absolute inset-0 rounded-full bg-accent-dim"
+                    className="pointer-events-none absolute inset-0 yomirra-dock-pill"
                     layoutId="active-dock-tab"
                     transition={transitions.layout}
                   />
@@ -105,14 +100,14 @@ export function BottomDock({ pendingHref }: { pendingHref?: string | null }) {
             }
             useSearchFilterStore.getState().resetFilters()
           }}
-          className="yomirra-chrome relative flex size-14 shrink-0 items-center justify-center rounded-full outline-none transition-transform duration-200 ease-out select-none tap-highlight-transparent active:scale-95 motion-reduce:transition-none max-[359px]:size-12 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          className="yomirra-chrome yomirra-dock-surface relative flex w-[var(--dock-height)] shrink-0 items-center justify-center rounded-full outline-none transition-transform duration-200 ease-out select-none tap-highlight-transparent active:scale-95 motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           aria-label={searchItem.label}
           aria-current={isSearchActive ? "page" : undefined}
         >
           {isSearchActive && (
             <motion.span
               aria-hidden="true"
-              className="pointer-events-none absolute inset-1 rounded-full bg-accent-dim"
+              className="pointer-events-none absolute inset-[calc(var(--dock-padding)+1px)] yomirra-dock-pill"
               layoutId="active-dock-tab"
               transition={transitions.layout}
             />
