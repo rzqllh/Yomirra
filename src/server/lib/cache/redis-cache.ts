@@ -1,4 +1,4 @@
-import { isRedisConfigured, redis } from "./redis";
+import { isRedisConfigured, isRedisCommandAllowed, redis } from "./redis";
 import { logger } from "@/shared/logger";
 
 export const CACHE_TTL = {
@@ -17,6 +17,8 @@ interface CacheEntry<T> {
   expiresAt: number;
 }
 
+const inFlight = new Map<string, Promise<unknown>>();
+
 export function getSourceCacheKey(source: SourceMetadata, operation: string, params: string): string {
   if (source.isDynamic) {
     const raw = `${source.id}:${source.version || "0.0.0"}:${source.baseUrl || ""}`;
@@ -32,15 +34,32 @@ export async function withCache<T>(
   ttlSeconds: number,
   options: { allowStaleOnError?: boolean } = {}
 ): Promise<T> {
-  let staleEntry: CacheEntry<T> | null = null;
   const activeTtlSeconds = Math.max(1, Math.floor(ttlSeconds));
+  const flightKey = JSON.stringify([key, activeTtlSeconds, options.allowStaleOnError !== false]);
+  const pending = inFlight.get(flightKey);
+  if (pending) return pending as Promise<T>;
+
+  const request = readThroughCache(key, fetcher, activeTtlSeconds, options).finally(() => {
+    inFlight.delete(flightKey);
+  });
+  inFlight.set(flightKey, request);
+  return request;
+}
+
+async function readThroughCache<T>(
+  key: string,
+  fetcher: () => Promise<T>,
+  activeTtlSeconds: number,
+  options: { allowStaleOnError?: boolean },
+): Promise<T> {
+  let staleEntry: CacheEntry<T> | null = null;
   // Stale data is only useful for a short, bounded outage. The previous
   // blanket 7-day Redis retention could resurrect weeks-old source data.
   const staleGraceSeconds = options.allowStaleOnError === false
     ? 0
     : Math.min(activeTtlSeconds, 60 * 60);
 
-  if (isRedisConfigured) try {
+  if (isRedisConfigured && isRedisCommandAllowed()) try {
     const cached = await redis.get(key);
     if (cached) {
       const parsed = JSON.parse(cached);
@@ -62,7 +81,7 @@ export async function withCache<T>(
   try {
     const data = await fetcher();
     
-    if (isRedisConfigured) try {
+    if (isRedisConfigured && isRedisCommandAllowed()) try {
       if (data) {
         const entry: CacheEntry<T> = {
           data,

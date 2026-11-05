@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { isRedisConfigured, redis } from "@/server/lib/cache/redis";
+import { isRedisConfigured, isRedisCircuitOpen, isRedisCommandAllowed, redis } from "@/server/lib/cache/redis";
 import { sourceHealthStore } from "@/server/lib/sources/health/health-store";
 import { toLivenessSourceHealth, type LivenessSourceHealth } from "@/server/lib/sources/health/public-health";
 import { logger } from "@/shared/logger";
@@ -16,7 +16,10 @@ export async function GET() {
   let redisStatus: "ok" | "slow" | "down" | "unconfigured" =
     isRedisConfigured ? "ok" : "unconfigured";
 
-  if (isRedisConfigured) {
+  if (isRedisConfigured && !isRedisCommandAllowed()) {
+    redisStatus = "down";
+    isDegraded = true;
+  } else if (isRedisConfigured) {
     try {
       const start = Date.now();
       await redis.ping();
@@ -24,7 +27,9 @@ export async function GET() {
     } catch (error) {
       redisStatus = "down";
       isDegraded = true;
-      logger.error("Redis health check failed", { error });
+      if (!isRedisCircuitOpen()) {
+        logger.error("Redis health check failed", { error });
+      }
     }
   }
 

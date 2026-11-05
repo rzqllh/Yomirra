@@ -1,4 +1,4 @@
-import { isRedisConfigured, redis } from "@/server/lib/cache/redis";
+import { isRedisConfigured, isRedisCircuitOpen, isRedisCommandAllowed, redis } from "@/server/lib/cache/redis";
 import { probeAllSourcesHealth } from "./probe";
 import { sourceHealthStore } from "./health-store";
 import { toPublicSourceHealth, type PublicSourceHealth } from "./public-health";
@@ -50,13 +50,18 @@ export async function triggerBackgroundProbe(): Promise<boolean> {
       : `${Date.now()}-${Math.random()}`;
 
   if (isRedisConfigured) {
+    if (!isRedisCommandAllowed()) {
+      return false;
+    }
     try {
       const acquired = await redis.set(PROBE_LOCK_KEY, token, "EX", PROBE_LOCK_TTL_SECONDS, "NX");
       if (acquired !== "OK") {
         return false;
       }
     } catch (err) {
-      logger.warn("Redis error acquiring probe lock", { error: err });
+      if (!isRedisCircuitOpen()) {
+        logger.warn("Redis error acquiring probe lock", { error: err });
+      }
       return false;
     }
   } else {
@@ -71,7 +76,9 @@ export async function triggerBackgroundProbe(): Promise<boolean> {
       const data: Record<string, PublicSourceHealth> = {};
 
       for (const [sourceId, snapshot] of Object.entries(snapshots)) {
-        const stats = await sourceHealthStore.getRollingStats(sourceId);
+        const stats = !isRedisConfigured || isRedisCommandAllowed()
+          ? await sourceHealthStore.getRollingStats(sourceId)
+          : undefined;
         data[sourceId] = toPublicSourceHealth(snapshot, stats);
       }
 
@@ -93,7 +100,7 @@ export async function triggerBackgroundProbe(): Promise<boolean> {
 
       inMemoryCachedPayload = freshPayload;
 
-      if (isRedisConfigured) {
+      if (isRedisConfigured && isRedisCommandAllowed()) {
         try {
           await redis.setex(CACHE_KEY, TTL_SECONDS, JSON.stringify(freshPayload));
         } catch (error) {
@@ -103,13 +110,13 @@ export async function triggerBackgroundProbe(): Promise<boolean> {
     } catch (error) {
       logger.error("Background functional source health check failed", { error });
     } finally {
-      if (isRedisConfigured) {
+      if (isRedisConfigured && isRedisCommandAllowed()) {
         try {
           await redis.eval(RELEASE_LOCK_LUA, 1, PROBE_LOCK_KEY, token);
         } catch (err) {
           logger.warn("Failed to release Redis probe lock", { error: err });
         }
-      } else {
+      } else if (!isRedisConfigured) {
         if (inMemoryLockToken === token) {
           inMemoryLockToken = null;
         }
