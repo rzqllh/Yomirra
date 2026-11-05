@@ -24,7 +24,7 @@ for (const [width, theme] of [[320, "light"], [360, "dark"]] as const) {
 
     await dock.getByRole("link", { name: "Library" }).click();
     await expect(page).toHaveURL(/\/bookmark$/, { timeout: 20_000 });
-    await expect(dock.getByRole("link", { name: "Library", current: "page" })).toBeVisible();
+    await expect(dock.getByRole("link", { name: "Library" })).toHaveAttribute("aria-current", "page");
     await expect.poll(async () => (await pill.boundingBox())!.x).toBeLessThan(first.x - 10);
     expect((await pill.boundingBox())!.y).toBeCloseTo(first.y, 0);
 
@@ -33,7 +33,7 @@ for (const [width, theme] of [[320, "light"], [360, "dark"]] as const) {
     await expect.poll(async () => Math.abs((await pill.boundingBox())!.x - first.x)).toBeLessThan(1);
     await page.goForward();
     await expect(page).toHaveURL(/\/bookmark$/, { timeout: 20_000 });
-    await expect(dock.getByRole("link", { name: "Library", current: "page" })).toBeVisible();
+    await expect(dock.getByRole("link", { name: "Library" })).toHaveAttribute("aria-current", "page");
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
   });
 }
@@ -44,9 +44,9 @@ test("desktop onboarding keeps the primary action in view and supports the keybo
   const dialog = page.getByRole("dialog");
   const next = dialog.getByRole("button", { name: "Lanjut" });
   await expect(next).toBeInViewport({ timeout: 30_000 });
-  await expect(dialog.getByRole("button", { name: "Langkah 1", current: "step" })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Langkah 1" })).toHaveAttribute("aria-current", "step");
   await page.keyboard.press("ArrowRight");
-  await expect(dialog.getByRole("button", { name: "Langkah 2", current: "step" })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Langkah 2" })).toHaveAttribute("aria-current", "step");
   await dialog.getByRole("button", { name: "Lewati" }).click();
   await expect(dialog).toHaveCount(0);
 });
