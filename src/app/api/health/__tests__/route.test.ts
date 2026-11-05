@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { Command } from "ioredis";
 
 const mockRedisPing = vi.fn();
+const mockEnsureRedisReady = vi.fn();
 const mockGetAllSnapshots = vi.fn();
 const mockProbeAllSourcesHealth = vi.fn();
 const redisState = vi.hoisted(() => ({
@@ -13,7 +15,13 @@ vi.mock("@/server/lib/cache/redis", () => ({
   get isRedisConfigured() { return redisState.configured; },
   isRedisCircuitOpen: () => redisState.circuit !== "closed",
   isRedisCommandAllowed: () => redisState.circuit === "closed",
-  redis: { ping: (...args: unknown[]) => mockRedisPing(...args) },
+  ensureRedisReady: () => mockEnsureRedisReady(),
+  redis: {
+    sendCommand: (command: Command) => {
+      void mockRedisPing(command).then(command.resolve, command.reject);
+      return command.promise;
+    },
+  },
 }));
 
 vi.mock("@/server/lib/sources/health/health-store", () => ({
@@ -40,6 +48,7 @@ describe("GET /api/health liveness", () => {
     redisState.circuit = "closed";
     redisState.probing = false;
     mockRedisPing.mockResolvedValue("PONG");
+    mockEnsureRedisReady.mockResolvedValue(undefined);
     mockGetAllSnapshots.mockResolvedValue({});
   });
 
@@ -86,6 +95,44 @@ describe("GET /api/health liveness", () => {
     }
     expect(mockGetAllSnapshots).toHaveBeenCalledTimes(10);
     expect(mockProbeAllSourcesHealth).not.toHaveBeenCalled();
+  });
+
+  it("waits for a cold Redis connection and shares the ping between concurrent requests", async () => {
+    let ready!: () => void;
+    mockEnsureRedisReady.mockImplementationOnce(() => new Promise<void>((resolve) => {
+      ready = resolve;
+    }));
+
+    const first = GET();
+    const second = GET();
+    expect(mockEnsureRedisReady).toHaveBeenCalledOnce();
+    expect(mockRedisPing).not.toHaveBeenCalled();
+
+    ready();
+    const responses = await Promise.all([first, second]);
+    expect(responses.map((response) => response.status)).toEqual([200, 200]);
+    expect(mockRedisPing).toHaveBeenCalledOnce();
+    expect(mockRedisPing).toHaveBeenCalledWith(expect.objectContaining({ name: "ping" }));
+  });
+
+  it("reports Redis down if the connection cannot become ready", async () => {
+    mockEnsureRedisReady.mockRejectedValueOnce(new Error("Redis connection refused"));
+    const response = await GET();
+    expect(response.status).toBe(503);
+    expect(await response.json()).toMatchObject({ status: "degraded", redis: "down" });
+    expect(mockRedisPing).not.toHaveBeenCalled();
+  });
+
+  it("reports Redis down when a ready connection stops responding", async () => {
+    vi.useFakeTimers();
+    try {
+      mockRedisPing.mockImplementationOnce(() => new Promise(() => {}));
+      const response = GET();
+      await vi.advanceTimersByTimeAsync(1_500);
+      expect((await response).status).toBe(503);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("omits stale or future-dated observations instead of calling them healthy", async () => {

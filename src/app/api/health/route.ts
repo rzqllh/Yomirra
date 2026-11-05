@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { isRedisConfigured, isRedisCircuitOpen, isRedisCommandAllowed, redis } from "@/server/lib/cache/redis";
+import { Command } from "ioredis";
+import { ensureRedisReady, isRedisConfigured, isRedisCircuitOpen, isRedisCommandAllowed, redis } from "@/server/lib/cache/redis";
 import { sourceHealthStore } from "@/server/lib/sources/health/health-store";
 import { toLivenessSourceHealth, type LivenessSourceHealth } from "@/server/lib/sources/health/public-health";
 import { logger } from "@/shared/logger";
@@ -10,6 +11,19 @@ export const revalidate = 0;
 // Liveness checks must never initiate upstream provider requests. Source health
 // is measured separately by /api/sources/health and stored by scheduled probes.
 const MAX_SOURCE_SNAPSHOT_AGE_MS = 10 * 60 * 1000;
+let redisHealthCheck: Promise<number> | undefined;
+
+function checkRedisHealth(): Promise<number> {
+  redisHealthCheck ??= (async () => {
+    const start = Date.now();
+    await ensureRedisReady();
+    const ping = new Command("ping");
+    ping.setTimeout(1_500);
+    await redis.sendCommand(ping);
+    return Date.now() - start;
+  })().finally(() => { redisHealthCheck = undefined; });
+  return redisHealthCheck;
+}
 
 export async function GET() {
   let isDegraded = false;
@@ -21,9 +35,7 @@ export async function GET() {
     isDegraded = true;
   } else if (isRedisConfigured) {
     try {
-      const start = Date.now();
-      await redis.ping();
-      if (Date.now() - start > 1000) redisStatus = "slow";
+      if (await checkRedisHealth() > 1000) redisStatus = "slow";
     } catch (error) {
       redisStatus = "down";
       isDegraded = true;
