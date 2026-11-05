@@ -143,6 +143,9 @@ describe('BottomDock Navigation', () => {
     expect(shell?.className).toContain('h-14');
     expect(shell?.className).toContain('py-[5px]');
     expect(shell?.className).toContain('rounded-full');
+    expect(shell?.className).toContain('gap-0.5');
+    expect(shell?.className).toContain('px-1');
+    expect(shell?.className).toContain('min-[360px]:gap-1');
     expect(active.className).toContain('h-11');
     expect(active.className).toContain('rounded-full');
     expect(active.querySelector('span[aria-hidden="true"]')?.className).toContain('rounded-full');

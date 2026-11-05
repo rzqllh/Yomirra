@@ -41,7 +41,7 @@ export function BottomDock({ pendingHref }: { pendingHref?: string | null }) {
       }}
     >
       <div className="pointer-events-auto mx-auto flex w-fit max-w-full items-center justify-center gap-2 max-[359px]:gap-1.5">
-        <div className="yomirra-chrome flex h-14 min-w-0 items-center justify-center gap-1 rounded-full px-1.5 py-[5px] sm:gap-1.5 sm:px-2">
+        <div className="yomirra-chrome flex h-14 min-w-0 items-center justify-center gap-0.5 rounded-full px-1 py-[5px] min-[360px]:gap-1 min-[360px]:px-1.5 sm:gap-1.5 sm:px-2">
           {mainItems.map((item) => {
             const isActive = isMainTabActive(item.href)
 
@@ -72,7 +72,7 @@ export function BottomDock({ pendingHref }: { pendingHref?: string | null }) {
                   />
                 )}
 
-                <span className="relative z-10 flex w-full items-center justify-center gap-1.5">
+                <span className="relative z-10 flex w-full items-center justify-center gap-1 min-[360px]:gap-1.5">
                   <Icon
                     icon={item.icon}
                     size={isActive ? 18 : 20}
