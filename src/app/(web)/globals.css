@@ -598,11 +598,16 @@ body.reader-active {
 /* Reusable Ink surfaces and motion. Feature markup only chooses composition. */
 @layer components {
   .yomirra-chrome {
-    background: color-mix(in srgb, var(--surface-glass) 90%, transparent);
+    background: var(--surface-overlay);
     border: 1px solid var(--border-glass);
-    box-shadow: none;
-    -webkit-backdrop-filter: blur(16px);
-    backdrop-filter: blur(16px);
+  }
+
+  @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+    .yomirra-chrome {
+      background: var(--surface-glass);
+      -webkit-backdrop-filter: blur(16px) saturate(135%);
+      backdrop-filter: blur(16px) saturate(135%);
+    }
   }
 
   .yomirra-dock-frame {
@@ -612,6 +617,7 @@ body.reader-active {
 
   .yomirra-dock-surface {
     min-height: var(--dock-height);
+    box-shadow: var(--shadow-glass);
     padding: var(--dock-padding);
     border-radius: 9999px;
   }
