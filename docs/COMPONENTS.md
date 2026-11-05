@@ -27,6 +27,10 @@ Jangan membangun mobile header baru per halaman jika `PageHeader` sudah cukup. P
 
 Bottom navigation memakai shared Yomirra chrome. Reader punya chrome sendiri tetapi mengikuti bahasa visual yang sama.
 
+**Radius khusus bottom dock mobile:** shell empat tab, tombol Cari terpisah, dan tab terpilih memakai `rounded-full`. Tidak ada perubahan token radius global, desktop rail, Reader, atau card.
+
+Geometri berbasis ukuran nyata: tinggi shell `H = 56px`, border `b = 1px`, target sentuh `T = 44px`, sehingga padding vertikal `P = (H − T − 2b) / 2 = 5px`. Kontur kapsul konsentris: radius shell `28px` dan tab `22px`. Tab berjarak `4px`; icon–label `6px`; Search terpisah `8px` (`6px` pada viewport di bawah 360px). Padding horizontal label aktif `8px` di layar sempit dan `12px` mulai 360px, dengan hit target tidak kurang dari 44px. Search `56px` atau `48px` di bawah 360px, indicator inset 4px. Gutter mengikuti `max(12px, safe-area inset)`. Periksa 320px/360px, iOS PWA, VoiceOver, dan perpindahan tab sebelum visual acceptance.
+
 ## Base UI
 
 Komponen penting di `src/components/ui/`:
