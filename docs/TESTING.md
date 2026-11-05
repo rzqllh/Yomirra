@@ -201,3 +201,9 @@ Acceptance perangkat tetap mencakup Safari dan PWA terpasang pada iPhone/iPad: k
 Review hak/publikasi masih memerlukan provenance aset/kode/dependency, izin sumber, data flow Firebase/Google/Gemini/log, retention/deletion, kebijakan privasi/terms sesuai perilaku nyata, serta persetujuan manusia yang berwenang. [Formulir hak konten](CONTENT_RIGHTS_REPORTING.md) menyediakan intake publik; formulir itu tidak menetapkan penanggung jawab atau menggantikan persetujuan hukum.
 
 Sebelum menutup gate, catat hasil CI SHA akhir, transkrip Firebase, bukti Safari/PWA, audit per Q dan hasil review hukum beserta reviewer yang benar-benar melakukan pemeriksaan. Jangan isi reviewer atau kelulusan dari asumsi. Tag, perubahan versi dan publikasi mengikuti keputusan rilis terpisah.
+
+### CSP enforcement gate
+
+The production Reader and homepage emitted an eval report from the Zod object-schema JIT probe. Shared browser schemas use Zod's interpreted validation path. The production header stays in Report-Only mode.
+
+Validate the built preview in Chromium and WebKit. Collect `securitypolicyviolation` events with the blocked URI, directive and source location on home, search, detail and Reader. Include Firebase sign-in and sign-out, backup import validation, Serwist installation and an offline Reader reload. Test existing inline Next.js and theme bootstrap before moving to enforcement. Use a separate reviewed release for enforcement after preview evidence covers these flows and shows no unexplained violations.
