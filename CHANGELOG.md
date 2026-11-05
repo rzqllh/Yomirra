@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased — Redis read containment dan bottom dock (5 November 2026)
+
+- Cache publik membatasi Redis `GET` berulang melalui near-cache maksimal 10 detik dengan batas kapasitas, timeout fencing, dan invalidasi ketika hasil pencarian error atau admin melakukan flush.
+- Pembacaan override source dideduplikasi hanya selama server render; lookup domain disimpan singkat, dengan kemungkinan jeda hingga 10 detik antarinstance. Ketentuan durability untuk mutation tetap fail-closed.
+- Bottom dock mobile memakai radius `full` hanya untuk kapsul, tombol Search, dan tab aktif; padding diturunkan dari tinggi 56px, target 44px, dan border 1px.
+- Dokumentasi membedakan status Preview tanpa Redis dari kesehatan kuota Production. Penyebab eksternal lonjakan command 3 November masih belum terbukti.
+
+
+
 
 ## Unreleased
 
