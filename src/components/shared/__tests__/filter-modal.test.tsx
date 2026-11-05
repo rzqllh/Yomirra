@@ -175,6 +175,29 @@ describe("UnifiedFilterDrawer — Section Consistency & NSFW Gating", () => {
     expect(screen.getByText("Status Rilis")).toBeDefined();
   });
 
+  it("reuses active search filters without requesting maintenance sources", async () => {
+    const { apiClient } = await import("@/shared/api-client");
+    const sources = await apiClient.getSources();
+    vi.mocked(apiClient.getSources).mockResolvedValueOnce([
+      ...sources,
+      {
+        ...sources[0],
+        id: "komikindo",
+        isEnabled: true,
+        maintenance: { reason: "Upstream returned 403", since: "2026-11-05" },
+      },
+    ]);
+    const filters = await apiClient.getFilters("shinigami");
+    vi.mocked(apiClient.getFilters).mockClear();
+    queryClient.setQueryData(["sourceFilters", "shinigami"], filters);
+
+    render(<UnifiedFilterDrawer context="search" />, { wrapper });
+    fireEvent.click(screen.getByRole("button", { name: /Filter/i }));
+
+    expect(await screen.findByText("Action")).toBeDefined();
+    expect(apiClient.getFilters).not.toHaveBeenCalled();
+  });
+
   it("includes mature genres when hideNsfw is false in Search context", async () => {
     useSettingsStore.setState({ hideNsfw: false });
 

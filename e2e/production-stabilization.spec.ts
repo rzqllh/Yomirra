@@ -51,19 +51,23 @@ test("desktop onboarding keeps the primary action in view and supports the keybo
   await expect(dialog).toHaveCount(0);
 });
 
-test("desktop settings remain keyboard-scrollable without a visible scrollbar", async ({ page }) => {
-  await page.setViewportSize({ width: 1440, height: 620 });
-  await page.addInitScript(() => {
-    localStorage.setItem("yomirra-onboarding", JSON.stringify({
-      state: { hasCompletedOnboarding: true }, version: 0,
-    }));
+test.describe("desktop keyboard input", () => {
+  test.use({ isMobile: false, hasTouch: false, viewport: { width: 1440, height: 620 } });
+
+  test("settings remain keyboard-scrollable without a visible scrollbar", async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem("yomirra-onboarding", JSON.stringify({
+        state: { hasCompletedOnboarding: true }, version: 0,
+      }));
+    });
+    await page.goto("/settings");
+    await expect(page.locator('[data-hydrated="true"]')).toBeVisible();
+    await expect(page.locator('[data-testid="splash-screen"]')).toHaveCount(0);
+    expect(await page.locator("html").evaluate((element) => {
+      return getComputedStyle(element).scrollbarWidth === "none" ||
+        getComputedStyle(element, "::-webkit-scrollbar").display === "none";
+    })).toBe(true);
+    await page.keyboard.press("PageDown");
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
   });
-  await page.goto("/settings");
-  await expect(page.locator('[data-hydrated="true"]')).toBeVisible();
-  expect(await page.locator("html").evaluate((element) => {
-    return getComputedStyle(element).scrollbarWidth === "none" ||
-      getComputedStyle(element, "::-webkit-scrollbar").display === "none";
-  })).toBe(true);
-  await page.keyboard.press("PageDown");
-  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
 });
