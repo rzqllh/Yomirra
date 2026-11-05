@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useDeferredValue, useEffect } from "react";
 import { Play, SortAscending, SortDescending, Book } from "@phosphor-icons/react";
-import Image from "next/image";
+import { MangaCover } from "@/components/komik/manga-cover";
 import Link from "next/link";
 import { useMounted } from "@/shared/hooks/use-mounted";
 import { getReaderHref, getSafeMangaDetailBackHref } from "@/shared/lib/routes";
@@ -292,18 +292,14 @@ function MangaDetailContent({
       `}} />
 
       <MangaDetailLayout
-        backdrop={
-          detail.coverUrl ? (
-            <Image
-              src={detail.coverUrl}
-              alt=""
-              fill
-              className="object-cover opacity-85 dark:opacity-70 blur-[8px] scale-110 transform-gpu brightness-[0.85] dark:brightness-[0.55]"
-              unoptimized
-              priority
-            />
-          ) : null
-        }
+        backdrop={detail.coverUrl && (
+          <MangaCover
+            src={detail.coverUrl}
+            alt=""
+            className="bg-transparent"
+            imageClassName="scale-110 opacity-75 blur-[8px] brightness-[0.75]"
+          />
+        )}
         header={
           <PageHeader
             title={detail.title}
@@ -323,21 +319,7 @@ function MangaDetailContent({
         }
         mobileCoverClassName="vt-cover-mobile"
         mobileCover={
-          detail.coverUrl ? (
-            <Image
-              src={detail.coverUrl}
-              alt={detail.title}
-              fill
-              sizes="(max-width: 768px) 41vw, 165px"
-              className="object-cover"
-              unoptimized
-              priority
-            />
-          ) : (
-            <div className="w-full h-full bg-surface-raised flex items-center justify-center">
-              <Book size={32} weight="duotone" className="text-text-muted" />
-            </div>
-          )
+          <MangaCover src={coverUrl} alt={detail.title} priority />
         }
         mobileMeta={
           <>
@@ -391,21 +373,7 @@ function MangaDetailContent({
         }
         desktopCoverClassName="vt-cover-desktop"
         desktopCover={
-          coverUrl ? (
-            <Image
-              src={coverUrl}
-              alt={detail.title}
-              fill
-              sizes="(min-width: 768px) 220px, 240px"
-              className="object-cover"
-              priority
-              unoptimized
-            />
-          ) : (
-            <div className="w-full h-full bg-surface-raised flex items-center justify-center">
-              <Book size={48} weight="duotone" className="text-text-muted" />
-            </div>
-          )
+          <MangaCover src={coverUrl} alt={detail.title} priority />
         }
         desktopMeta={
           <>
