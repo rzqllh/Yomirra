@@ -139,7 +139,6 @@ describe('BottomDock Navigation', () => {
     const active = screen.getByRole('link', { name: 'Beranda' });
     const search = screen.getByRole('link', { name: 'Cari' });
 
-    // (56px shell - 44px touch target - 2px border) / 2 = 5px.
     expect(shell?.className).toContain('h-14');
     expect(shell?.className).toContain('py-[5px]');
     expect(shell?.className).toContain('rounded-full');

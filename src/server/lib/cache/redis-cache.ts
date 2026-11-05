@@ -21,12 +21,6 @@ const FLIGHT_LIFETIME_MS = 30_000;
 const MAX_IN_FLIGHT = 1024;
 const inFlight = new Map<string, Promise<unknown>>();
 
-/**
- * Brief, bounded per-isolate read-through cache for public cache-keyed content.
- * This reduces repeated paid Redis GETs without retaining entries beyond their
- * original active TTL. Values are serialized to prevent cross-request mutation.
- * The 10-second cap bounds lag after an out-of-process cache invalidation.
- */
 const NEAR_TTL_MS = 10_000;
 const NEAR_MAX_ENTRIES = 256;
 const NEAR_MAX_BYTES = 8 * 1024 * 1024;
@@ -47,7 +41,6 @@ export function clearNearCache(): void {
 }
 
 export function invalidateNearCacheKey(key: string): void {
-  // Remove every TTL/stale-contract variant for an explicitly invalidated key.
   for (const flightKey of nearCache.keys()) {
     try {
       const [storedKey] = JSON.parse(flightKey) as [string];
@@ -66,7 +59,7 @@ function rememberNear(key: string, serialized: string, originalExpiresAt: number
   discardNear(key);
   const now = Date.now();
   const expiresAt = Math.min(originalExpiresAt, now + NEAR_TTL_MS);
-  const bytes = serialized.length * 2; // Conservative UTF-16 memory estimate.
+  const bytes = serialized.length * 2;
   if (!Number.isFinite(expiresAt) || expiresAt <= now ||
       bytes > NEAR_MAX_ENTRY_BYTES || key.length > 1024) return;
   while (nearCache.size >= NEAR_MAX_ENTRIES || nearCacheBytes + bytes > NEAR_MAX_BYTES) {
@@ -91,7 +84,6 @@ function readNear<T>(key: string): { data: T } | null {
       discardNear(key);
       return null;
     }
-    // LRU: keep frequently accessed keys rather than one-off crawler keys.
     nearCache.delete(key);
     nearCache.set(key, entry);
     return { data: parsed.data };
@@ -167,7 +159,6 @@ async function readThroughCache<T>(
       if (parsed && typeof parsed === 'object' && 'expiresAt' in parsed && 'data' in parsed) {
         staleEntry = parsed as CacheEntry<T>;
         if (Date.now() < staleEntry.expiresAt) {
-          // A late Redis GET must not warm local cache after its flight timed out.
           if (isCurrent()) rememberNear(flightKey, cached, staleEntry.expiresAt);
           return staleEntry.data;
         }

@@ -108,8 +108,6 @@ async function readCoreSourceOverrides(): Promise<Record<string, CoreSourceOverr
   }
 }
 
-// Request-scoped deduplication for server component renders. This introduces
-// no cross-request staleness for administrator source kill-switch decisions.
 export const getCoreSourceOverrides = cache(readCoreSourceOverrides);
 
 const SAVE_CORE_OVERRIDE_LUA = `

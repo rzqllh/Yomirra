@@ -127,8 +127,6 @@ export const SOURCE_DOMAINS: Record<string, SourceDomainConfig> = {
 
 const CACHE_TTL_SECONDS = 86400; // 24 hours
 const memoryCache = new Map<string, DomainRecord>();
-// Negative lookups are frequent for bundled default domains. Bound both
-// positive and negative lookup results for only ten seconds per isolate.
 const DOMAIN_NEAR_TTL_MS = 10_000;
 const recentReads = new Map<string, { value: DomainRecord | null; expiresAt: number }>();
 

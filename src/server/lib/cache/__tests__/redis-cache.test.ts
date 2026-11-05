@@ -172,7 +172,6 @@ describe("Cache: withCache", () => {
     await expect(Promise.all(requests)).resolves.toEqual(Array(20).fill("fresh"));
     expect(redis.setex).toHaveBeenCalledTimes(configured ? 1 : 0);
 
-    // Completed in-flight work is gone, but its fresh bounded near-cache survives.
     await expect(withCache("shared", async () => "unexpected", 60)).resolves.toBe("fresh");
     vi.useFakeTimers();
     await vi.advanceTimersByTimeAsync(10_001);
