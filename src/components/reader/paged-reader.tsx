@@ -462,7 +462,6 @@ export function PagedReader({
               width={800}
               height={1200}
               sizes="100vw"
-              priority={false}
               fetchPriority="low"
               quality={dataSaver ? 60 : 85}
               unoptimized={!dataSaver || page.url.startsWith("blob:") || page.url.startsWith("data:")}

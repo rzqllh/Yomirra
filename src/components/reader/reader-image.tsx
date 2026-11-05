@@ -399,8 +399,7 @@ export const ReaderImage = React.memo(function ReaderImage({
               width={pageWidth && pageWidth > 0 ? pageWidth : 800}
               height={pageHeight && pageHeight > 0 ? pageHeight : 1200}
               sizes={imageFit === 'width' ? "100vw" : "(max-width: 768px) 100vw, 1200px"}
-              priority={priority}
-              fetchPriority={priority ? "high" : "auto"}
+              fetchPriority={priority ? "high" : "low"}
               quality={dataSaver ? 60 : 85}
               unoptimized={!dataSaver || bypassOptimizer || currentUrl.startsWith('blob:') || currentUrl.startsWith('data:')}
               loading="eager"

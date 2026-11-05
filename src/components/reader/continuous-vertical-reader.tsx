@@ -201,18 +201,17 @@ export function ContinuousVerticalReader({
 
   const virtualItems = virtualizer.getVirtualItems();
 
-  const firstVisibleVirtualIndex = virtualItems[0]?.index;
+  const firstMountedIndex = virtualItems[0]?.index;
   React.useEffect(() => {
     if (
       isRestored &&
-      typeof firstVisibleVirtualIndex === "number" &&
-      firstVisibleVirtualIndex > queueStartIndex + lookAheadWindow &&
-      firstVisibleVirtualIndex > revealedThrough + lookAheadWindow
+      typeof firstMountedIndex === "number" &&
+      firstMountedIndex > revealedThrough + 1
     ) {
-      setQueueStartIndex(firstVisibleVirtualIndex);
-      setRevealedThrough((prev) => Math.max(prev, firstVisibleVirtualIndex - 1));
+      setQueueStartIndex(firstMountedIndex);
+      setRevealedThrough((prev) => Math.max(prev, firstMountedIndex - 1));
     }
-  }, [isRestored, firstVisibleVirtualIndex, queueStartIndex, revealedThrough, lookAheadWindow]);
+  }, [isRestored, firstMountedIndex, revealedThrough]);
 
   const [scrollProgress, setScrollProgress] = React.useState(0);
 
