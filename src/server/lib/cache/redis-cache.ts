@@ -41,9 +41,25 @@ function discardNear(key: string): void {
   nearCache.delete(key);
 }
 
-export function _resetNearCacheForTesting(): void {
+export function clearNearCache(): void {
   nearCache.clear();
   nearCacheBytes = 0;
+}
+
+export function invalidateNearCacheKey(key: string): void {
+  // Remove every TTL/stale-contract variant for an explicitly invalidated key.
+  for (const flightKey of nearCache.keys()) {
+    try {
+      const [storedKey] = JSON.parse(flightKey) as [string];
+      if (storedKey === key) discardNear(flightKey);
+    } catch {
+      discardNear(flightKey);
+    }
+  }
+}
+
+export function _resetNearCacheForTesting(): void {
+  clearNearCache();
 }
 
 function rememberNear(key: string, serialized: string, originalExpiresAt: number): void {

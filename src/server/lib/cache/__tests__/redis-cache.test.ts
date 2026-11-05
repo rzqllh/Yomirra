@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
-import { withCache, _resetNearCacheForTesting } from '../redis-cache';
+import { withCache, invalidateNearCacheKey, clearNearCache, _resetNearCacheForTesting } from '../redis-cache';
 
 const redisState = vi.hoisted(() => ({
   configured: true,
@@ -354,6 +354,20 @@ describe("Cache: withCache", () => {
     vi.mocked(redis.get).mockResolvedValueOnce(null);
     await expect(withCache("late-read", async () => "fresh", 60)).resolves.toBe("fresh");
     expect(redis.get).toHaveBeenCalledTimes(2);
+  });
+
+
+  it("invalidates a cached error or a flushed key before its ten-second TTL", async () => {
+    const { redis } = await import("../redis");
+    vi.mocked(redis.get).mockResolvedValue(null);
+    await withCache("manual-flush", async () => "transient error", 60);
+    invalidateNearCacheKey("manual-flush");
+    await expect(withCache("manual-flush", async () => "healthy", 60)).resolves.toBe("healthy");
+    expect(redis.get).toHaveBeenCalledTimes(2);
+
+    clearNearCache();
+    await expect(withCache("manual-flush", async () => "refreshed", 60)).resolves.toBe("refreshed");
+    expect(redis.get).toHaveBeenCalledTimes(3);
   });
 
 });
