@@ -5,7 +5,9 @@ import { logger } from "@/shared/logger";
 import { safeFetch } from "@/server/lib/security/outbound-policy";
 import { applyRateLimitHeaders, checkRateLimitPolicy, createRateLimitRejection } from "@/server/lib/security/rate-limit";
 
-const MAX_IMAGE_SIZE = 15 * 1024 * 1024; // 15MB
+const MAX_IMAGE_SIZE = 15 * 1024 * 1024;
+const MAX_ACTIVE_IMAGES = 16;
+let activeImages = 0;
 
 const ALLOWED_DIRECT_CDN_HOSTS = new Set([
   "content.komiku.me",
@@ -38,6 +40,18 @@ export async function GET(request: NextRequest) {
   const limited = <T extends Response>(response: T) =>
     applyRateLimitHeaders(response, rateLimit);
 
+  if (activeImages >= MAX_ACTIVE_IMAGES) {
+    return limited(new NextResponse("Image proxy busy", {
+      status: 503,
+      headers: { "Retry-After": "2", "Cache-Control": "no-store" },
+    }));
+  }
+
+  activeImages++;
+  const release = () => { activeImages--; };
+  let streamOwnsSlot = false;
+  const signal = AbortSignal.any([request.signal, AbortSignal.timeout(15000)]);
+
   try {
     const headers: Record<string, string> = {
       "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
@@ -51,11 +65,11 @@ export async function GET(request: NextRequest) {
     const response = await safeFetch(url, { 
       headers,
       maxSize: MAX_IMAGE_SIZE,
-      // Abort if the fetch takes too long (e.g. 15s)
-      signal: AbortSignal.timeout(15000)
+      signal,
     });
 
     if (!response.ok) {
+      await response.body?.cancel();
       // If upstream anti-bot/Cloudflare blocks server-side fetch (403)
       // for verified direct CDN image hosts, redirect the browser directly to the signed CDN URL.
       if (response.status === 403) {
@@ -73,6 +87,7 @@ export async function GET(request: NextRequest) {
 
     const contentType = response.headers.get("content-type");
     if (contentType && !contentType.startsWith("image/")) {
+      await response.body?.cancel();
       logger.warn(`Invalid content type for image proxy: ${contentType}`);
       return limited(new NextResponse("Invalid content type", { status: 400 }));
     }
@@ -81,14 +96,22 @@ export async function GET(request: NextRequest) {
     if (contentType) responseHeaders.set("Content-Type", contentType);
     responseHeaders.set("Cache-Control", "public, max-age=31536000, immutable");
 
-    // Stream the response directly instead of buffering in memory
-    return limited(new NextResponse(response.body, {
+    let body: ReadableStream<Uint8Array> | null = null;
+    if (response.body) {
+      const { readable, writable } = new TransformStream<Uint8Array, Uint8Array>();
+      void response.body.pipeTo(writable, { signal }).then(release, release);
+      streamOwnsSlot = true;
+      body = readable;
+    }
+    return limited(new NextResponse(body, {
       status: 200,
       headers: responseHeaders,
     }));
   } catch (error) {
     logger.error("Image proxy error", { error, url });
     return limited(new NextResponse("Internal Server Error", { status: 500 }));
+  } finally {
+    if (!streamOwnsSlot) release();
   }
 }
 

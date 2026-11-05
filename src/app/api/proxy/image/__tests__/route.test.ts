@@ -1,0 +1,36 @@
+import { NextRequest } from "next/server";
+import { expect, it, vi } from "vitest";
+import { GET } from "../route";
+import { safeFetch } from "@/server/lib/security/outbound-policy";
+
+vi.mock("@/server/lib/sign-proxy-url", () => ({ verifyImageUrl: () => true }));
+vi.mock("@/server/lib/security/outbound-policy", () => ({ safeFetch: vi.fn() }));
+vi.mock("@/server/lib/security/rate-limit", () => ({
+  checkRateLimitPolicy: async () => ({ success: true, headers: {} }),
+  applyRateLimitHeaders: (response: Response) => response,
+}));
+
+it("bounds concurrent image streams and frees slots when a client cancels", async () => {
+  const cancel = vi.fn();
+  vi.mocked(safeFetch).mockImplementation(async () => new Response(
+    new ReadableStream({ cancel }),
+    { headers: { "Content-Type": "image/jpeg" } },
+  ));
+  const request = () => new NextRequest("https://yomirra.test/api/proxy/image?url=https://example.test/page.jpg&sig=valid");
+  const streams = await Promise.all(Array.from({ length: 16 }, () => GET(request())));
+  try {
+    expect(streams.every((response) => response.ok)).toBe(true);
+    const busy = await GET(request());
+    expect(busy.status).toBe(503);
+    expect(busy.headers.get("Retry-After")).toBe("2");
+    expect(safeFetch).toHaveBeenCalledTimes(16);
+
+    await streams[0].body!.cancel();
+    await vi.waitFor(() => expect(cancel).toHaveBeenCalledTimes(1));
+    const next = await GET(request());
+    expect(next.status).toBe(200);
+    await next.body!.cancel();
+  } finally {
+    await Promise.all(streams.map((stream) => stream.body?.cancel()));
+  }
+});
