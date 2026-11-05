@@ -334,4 +334,26 @@ describe("Cache: withCache", () => {
     expect(redis.get).toHaveBeenCalledTimes(258);
   });
 
+
+  it("never warms near-cache from a Redis GET that returns after the flight deadline", async () => {
+    vi.useFakeTimers();
+    const { redis } = await import("../redis");
+    let resolveOld!: (value: string) => void;
+    vi.mocked(redis.get).mockImplementationOnce(
+      () => new Promise<string>((resolve) => { resolveOld = resolve; }),
+    );
+
+    const old = withCache("late-read", async () => "unexpected", 60);
+    const expired = expect(old).rejects.toThrow("Cache request timed out after 30000ms");
+    await vi.advanceTimersByTimeAsync(30_000);
+    await expired;
+
+    resolveOld(JSON.stringify({ data: "obsolete", expiresAt: Date.now() + 60_000 }));
+    await vi.advanceTimersByTimeAsync(0);
+
+    vi.mocked(redis.get).mockResolvedValueOnce(null);
+    await expect(withCache("late-read", async () => "fresh", 60)).resolves.toBe("fresh");
+    expect(redis.get).toHaveBeenCalledTimes(2);
+  });
+
 });
