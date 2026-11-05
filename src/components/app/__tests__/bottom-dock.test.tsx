@@ -92,13 +92,13 @@ describe('BottomDock Navigation', () => {
     render(<BottomDock />);
 
     const nav = screen.getByRole('navigation', { name: 'Navigasi utama' });
-    const mainDock = nav.querySelector('.yomirra-chrome');
+    const mainDock = nav.querySelector('.yomirra-dock-surface');
     const glassSurfaces = nav.querySelectorAll('.yomirra-chrome');
 
     expect(glassSurfaces).toHaveLength(2);
     expect(mainDock?.querySelectorAll('a')).toHaveLength(4);
-    expect(glassSurfaces[1].querySelector('a')).toBeNull();
-    expect(screen.getByRole('link', { name: 'Cari' }).className).toContain('yomirra-chrome');
+    expect(glassSurfaces[1].closest('a')?.getAttribute('href')).toBe('/search');
+    expect(screen.getByRole('link', { name: 'Cari' }).className).toContain('yomirra-dock-surface');
   });
 
   it('uses a restrained primary-text label and accent icon for the selected destination', () => {
@@ -116,17 +116,18 @@ describe('BottomDock Navigation', () => {
     const searchLink = screen.getByRole('link', { name: 'Cari' });
     expect(searchLink.getAttribute('aria-current')).toBe('page');
     expect(screen.getByRole('link', { name: 'Beranda' }).getAttribute('aria-current')).toBeNull();
-    expect(searchLink.querySelector('span[aria-hidden="true"]')).toBeTruthy();
   });
 
-  it('uses the shared dock frame, surface and pill for the detached search action', () => {
-    render(<BottomDock pendingHref="/search" />);
-
+  it('keeps one persistent pill when moving between the rail and search', () => {
+    const { rerender } = render(<BottomDock />);
     const nav = screen.getByRole('navigation', { name: 'Navigasi utama' });
-    const search = screen.getByRole('link', { name: 'Cari' });
+    const pill = nav.querySelector('.yomirra-dock-indicator');
 
     expect(nav.classList.contains('yomirra-dock-frame')).toBe(true);
     expect(nav.querySelectorAll('.yomirra-dock-surface')).toHaveLength(2);
-    expect(search.querySelector('.yomirra-dock-pill')).toBeTruthy();
+    expect(pill).toBeTruthy();
+
+    rerender(<BottomDock pendingHref="/search" />);
+    expect(nav.querySelector('.yomirra-dock-indicator')).toBe(pill);
   });
 });

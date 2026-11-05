@@ -617,7 +617,6 @@ body.reader-active {
 
   .yomirra-dock-surface {
     min-height: var(--dock-height);
-    box-shadow: var(--shadow-glass);
     padding: var(--dock-padding);
     border-radius: 9999px;
   }
@@ -626,10 +625,34 @@ body.reader-active {
     border-radius: calc(var(--dock-target) / 2 + var(--dock-padding));
   }
 
+  .yomirra-dock-glass,
+  .yomirra-reader-dock {
+    box-shadow: var(--shadow-glass);
+  }
+
   .yomirra-dock-pill {
     min-height: var(--dock-target);
     border-radius: 9999px;
     background: var(--color-accent-dim);
+  }
+
+  .yomirra-dock-indicator {
+    position: absolute;
+    top: calc(var(--dock-padding) + 1px);
+    left: 0;
+    z-index: 1;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .yomirra-dock-indicator[data-visible] {
+    visibility: visible;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .yomirra-dock-indicator[data-positioned] {
+      transition: transform 220ms ease-out, width 220ms ease-out;
+    }
   }
 
   .yomirra-chrome-control {
