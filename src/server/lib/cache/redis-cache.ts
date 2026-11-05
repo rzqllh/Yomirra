@@ -151,7 +151,8 @@ async function readThroughCache<T>(
       if (parsed && typeof parsed === 'object' && 'expiresAt' in parsed && 'data' in parsed) {
         staleEntry = parsed as CacheEntry<T>;
         if (Date.now() < staleEntry.expiresAt) {
-          rememberNear(flightKey, cached, staleEntry.expiresAt);
+          // A late Redis GET must not warm local cache after its flight timed out.
+          if (isCurrent()) rememberNear(flightKey, cached, staleEntry.expiresAt);
           return staleEntry.data;
         }
       } else {
