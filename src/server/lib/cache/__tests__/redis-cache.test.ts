@@ -30,6 +30,25 @@ describe("Cache: withCache", () => {
     vi.mocked(redis.setex).mockReset();
   });
 
+
+  it("holds a partial fill locally before retrying without persisting it", async () => {
+    vi.useFakeTimers();
+    const { redis } = await import("../redis");
+    const fetcher = vi.fn().mockResolvedValueOnce({ complete: false }).mockResolvedValueOnce({ complete: true });
+    const read = () => withCache("partial-fill", fetcher, 60, {
+      shouldPersist: (result: { complete: boolean }) => result.complete,
+    });
+
+    await expect(read()).resolves.toEqual({ complete: false });
+    await expect(read()).resolves.toEqual({ complete: false });
+    expect(fetcher).toHaveBeenCalledOnce();
+    expect(redis.setex).not.toHaveBeenCalled();
+
+    await vi.advanceTimersByTimeAsync(10_001);
+    await expect(read()).resolves.toEqual({ complete: true });
+    expect(redis.setex).toHaveBeenCalledOnce();
+  });
+
   it("should return cached data if available", async () => {
     const { redis } = await import("../redis");
     vi.mocked(redis.get).mockResolvedValueOnce(JSON.stringify({ mock: "data" }));

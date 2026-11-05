@@ -6,7 +6,7 @@ import { performPageOCR } from "@/server/lib/ai/ocr-service";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
-  const rateLimit = await checkRateLimitPolicy(req, "publicSearch");
+  const rateLimit = await checkRateLimitPolicy(req, "publicAi");
   if (!rateLimit.success) {
     return createRateLimitRejection(rateLimit);
   }

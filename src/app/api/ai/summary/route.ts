@@ -5,7 +5,7 @@ import { generateTitleSummary } from "@/server/lib/ai/ai-text-service";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
-  const rateLimit = await checkRateLimitPolicy(req, "publicSearch");
+  const rateLimit = await checkRateLimitPolicy(req, "publicAi");
   if (!rateLimit.success) {
     return createRateLimitRejection(rateLimit);
   }

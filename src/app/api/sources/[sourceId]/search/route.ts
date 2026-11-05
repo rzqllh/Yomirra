@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 import { createHash } from "crypto";
 import { checkRateLimit } from "@/server/lib/security/rate-limit";
+import { loadSourceUpstream } from "@/server/lib/sources/source-upstream";
 import { NextRequest, NextResponse } from "next/server";
 import { assertSourceAccess, contentCacheKey, getRequestReadOptions, sourceErrorResponse } from "@/server/lib/sources/content-access";
 import { isContentVisible } from "@/shared/sources/content-policy";
@@ -67,13 +68,13 @@ export async function GET(
 
     const data = await withCache(
       cacheKey,
-      () => source.search(q, page, filters, readOptions),
+      () => loadSourceUpstream(sourceId, "search", null, () => source.search(q, page, filters, readOptions)),
       CACHE_TTL.SEARCH
     );
 
     return NextResponse.json({ data: { ...data, mangas: data.mangas.filter((item) => isContentVisible(item, readOptions.hideNsfw !== false)) } });
   } catch (error: unknown) {
     const response = sourceErrorResponse(error, sourceId, "search");
-    return NextResponse.json(response.body, { status: response.status });
+    return NextResponse.json(response.body, { status: response.status, headers: response.headers });
   }
 }

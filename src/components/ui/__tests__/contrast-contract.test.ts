@@ -39,7 +39,7 @@ describe("design-token contrast", () => {
   const css = fs.readFileSync(
     path.resolve(process.cwd(), "src/app/(web)/globals.css"),
     "utf-8"
-  );
+  ).replace(/\r\n/g, "\n");
   const darkBlock = css.match(/:root, \.dark \{([\s\S]*?)\n  \}/)?.[1] ?? "";
   const lightBlock = css.match(/\.light \{([\s\S]*?)\n  \}/)?.[1] ?? "";
 

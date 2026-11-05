@@ -44,7 +44,7 @@ export class SourceHealthStore {
     let lastSuccessAt = prev?.lastSuccessAt ?? null;
     let lastFailureAt = prev?.lastFailureAt ?? null;
 
-    if (newSnapshot.status === "HEALTHY") {
+    if (newSnapshot.status === "HEALTHY" || newSnapshot.status === "DEGRADED") {
       consecutiveFailures = 0;
       lastSuccessAt = now;
     } else {
@@ -157,20 +157,29 @@ export class SourceHealthStore {
   }
 
   async getAllSnapshots(knownSourceIds?: string[]): Promise<Record<string, SourceHealthSnapshot>> {
-    const result: Record<string, SourceHealthSnapshot> = {};
+    const result: Record<string, SourceHealthSnapshot> = Object.create(null);
     for (const [id, snap] of this.memorySnapshots.entries()) {
       result[id] = snap;
     }
 
-    if (knownSourceIds && isRedisConfigured) {
-      for (const id of knownSourceIds) {
-        const normalized = id.toLowerCase().trim();
-        if (!result[normalized]) {
-          const snap = await this.getSnapshot(normalized);
-          if (snap) {
-            result[normalized] = snap;
+    const sourceIds = knownSourceIds?.map((id) => id.toLowerCase().trim());
+    if (isRedisConfigured && sourceIds?.length) {
+      try {
+        const raw = await redis.mget(sourceIds.map((id) => `${SNAPSHOT_KEY_PREFIX}${id}`));
+        for (const [index, value] of raw.entries()) {
+          if (!value) continue;
+          try {
+            const snapshot = JSON.parse(value) as SourceHealthSnapshot;
+            const id = sourceIds[index];
+            if (!result[id] || snapshot.lastCheckedAt > result[id].lastCheckedAt) {
+              result[id] = snapshot;
+            }
+          } catch {
+            // A malformed snapshot must not hide the remaining sources.
           }
         }
+      } catch {
+        // Preserve in-memory snapshots while Redis is unavailable.
       }
     }
 

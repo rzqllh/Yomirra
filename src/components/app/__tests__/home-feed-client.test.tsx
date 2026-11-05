@@ -794,6 +794,16 @@ describe("Yomirra Editorial Home Components", () => {
       expect(screen.queryByRole("region", { name: "Sorotan & peringkat" })).toBeNull();
     });
 
+    it("keeps the successful catalog sections ahead of the partial failure notice", () => {
+      render(<HomeFeedClient unifiedPopular={samplePopular} unifiedLatest={sampleLatest} catalogState="partial" />);
+
+      const notice = screen.getByRole("heading", { name: "Sebagian sumber belum bisa dimuat" });
+      const spotlight = screen.getByRole("heading", { name: "Sorotan & peringkat" });
+      const latest = screen.getByRole("heading", { name: "Baru diperbarui" });
+      expect(spotlight.compareDocumentPosition(notice) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(latest.compareDocumentPosition(notice) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
     it("labels healthy empty feeds without calling them unreachable", () => {
       render(<HomeFeedClient unifiedPopular={[]} unifiedLatest={[]} catalogState="empty" />);
       expect(screen.getByRole("heading", { name: "Belum ada hasil dari sumber aktif" })).toBeTruthy();

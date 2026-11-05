@@ -9,12 +9,10 @@ describe("Yomirra fluid interaction contracts", () => {
   it("keeps page continuity and optimistic feedback at the shell boundary", () => {
     const shell = source("src/components/chrome/app-shell.tsx");
     const pageTransition = source("src/components/motion/page-transition.tsx");
-    const dock = source("src/components/chrome/bottom-dock.tsx");
 
     expect(shell).toContain("<PageTransition>");
     expect(shell).toContain("pendingHref={pendingHref}");
     expect(pageTransition).toContain("useReducedMotion");
-    expect(dock).toContain('layoutId="active-dock-tab"');
   });
 
   it("preserves native edge and horizontal gestures", () => {

@@ -11,6 +11,8 @@ import { getMangaDetailHref, getSafeMangaDetailBackHref } from "@/shared/lib/rou
 import { getManifestUrlFromCookie } from "@/server/lib/sources/server-manifest";
 import { SourceError } from "@/server/lib/sources/error";
 import { DeadSourceRecovery } from "@/components/komik/dead-source-recovery";
+import { signImageUrl } from "@/server/lib/sign-proxy-url";
+import type { PageItem } from "@/shared/sources/source-types";
 
 export async function generateMetadata({ 
   params 
@@ -43,8 +45,6 @@ export const revalidate = 1800;
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
   viewportFit: "cover",
 };
 
@@ -66,30 +66,33 @@ export default async function ReaderPage({
   const returnTo = getSafeMangaDetailBackHref(rawReturnTo ?? null);
   const detailHref = getMangaDetailHref(sourceId, mangaId, returnTo);
 
-  let detail: any, chapters: any, pagesResult: any;
+  let detail, chapters;
+  let initialPages: PageItem[] | null = null;
   try {
     const readOptions = await getServerReadOptions();
     const manifestUrl = await getManifestUrlFromCookie(sourceId);
     const source = await sourceManager.getSource(sourceId, manifestUrl);
     
-    // Fetch detail, chapters, and fast-race pages cache to prevent blocking RSC commit on slow scrapers
-    const fastPagesPromise = Promise.race([
-      loadSourcePages(source, mangaId, chapterId, readOptions).catch(() => null),
-      new Promise<null>((resolve) => setTimeout(() => resolve(null), 250)),
-    ]);
+    const pages = loadSourcePages(source, mangaId, chapterId, readOptions).catch(() => null);
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const deadline = new Promise<null>((resolve) => {
+      timer = setTimeout(() => resolve(null), 250);
+    });
 
-    [detail, chapters, pagesResult] = await Promise.all([
-      loadSourceDetail(source, mangaId, readOptions),
-      loadSourceChapters(source, mangaId, readOptions),
-      fastPagesPromise,
-    ]);
+    try {
+      [detail, chapters] = await Promise.all([
+        loadSourceDetail(source, mangaId, readOptions),
+        loadSourceChapters(source, mangaId, readOptions),
+      ]);
 
-    if (pagesResult?.pages) {
-      const { signImageUrl } = await import("@/server/lib/sign-proxy-url");
-      pagesResult.pages = pagesResult.pages.map((p: any) => ({
-        ...p,
-        url: signImageUrl(p.url, p.referer || source.baseUrl)
-      }));
+      // If both promises have settled, take the available pages before the deadline.
+      const pagesResult = await Promise.race([pages, deadline]);
+      initialPages = pagesResult?.pages.map((page) => ({
+        ...page,
+        url: signImageUrl(page.url, page.referer || source.baseUrl),
+      })) ?? null;
+    } finally {
+      clearTimeout(timer);
     }
   } catch (error) {
     console.error("Failed to load reader data:", error);
@@ -148,7 +151,7 @@ export default async function ReaderPage({
       chapterId={chapterId}
       initialDetail={detail}
       initialChapters={chapters}
-      initialPages={pagesResult?.pages || null}
+      initialPages={initialPages}
       returnTo={returnTo}
     />
   );

@@ -185,7 +185,11 @@ Redis failure tidak boleh membuat normal source search gagal hanya karena semant
 
 `src/server/lib/cache/redis.ts` menyediakan `ensureRedisReady()` dan `isRedisReady()`. Client memakai lazy connection; request fail-closed menunggu readiness melalui in-flight promise bersama, bukan memanggil `INCR` sebelum Redis siap. Penantian dibatasi 2.500 ms pada jalur cold-start maupun reconnect, termasuk ketika ioredis masih melakukan retry.
 
-`src/server/lib/security/rate-limit.ts` mempertahankan dua kebijakan yang berbeda: fail-closed menunggu readiness atau menghasilkan unavailable (503), sedangkan fail-open publik melewati Redis dengan cepat saat client belum ready sambil memulai recovery non-blocking. Ketika Redis ready, counter/TTL kembali digunakan dan limit exhaustion dapat menghasilkan 429. Konsumen Redis lain belum otomatis memiliki jaminan readiness atau durabilitas yang sama.
+`src/server/lib/security/rate-limit.ts` memakai jendela tetap per instance untuk rute publik. Counter dibatasi dan tidak memakai perintah Redis. Rute admin, keamanan, dan pembuatan embedding berbayar memakai admission Redis dan merespons 503 ketika limiter tidak tersedia. Setiap instance memiliki kuota publik sendiri.
+
+Request cache miss ke sumber memakai single-flight per key dengan maksimum 8 operasi per sumber dan 32 per instance. Circuit breaker per sumber memberi jeda pada 403, 429, timeout, dan kegagalan upstream. Setelah jeda, satu permintaan menguji pemulihan. Respons 404 memakai cache lokal 30 detik. Health snapshot memakai satu MGET untuk discovery, cache proses 30 detik, dan keputusan pemulihan berdasarkan snapshot fungsi yang lebih baru. Rute probe mengambil lease bersama saat Redis tersedia. Image proxy membatasi 16 stream aktif per instance, membatalkan upstream saat koneksi ditutup, dan mengirim 503 dengan Retry-After ketika penuh.
+
+Related search dapat mengembalikan daftar kosong ketika indeks tidak tersedia. Rating batch mengembalikan hasil yang sempat diperoleh dalam batas waktu. Kedua respons tetap mengikuti kontrak normal dan dapat berisi lebih sedikit hasil saat provider bermasalah.
 
 ## 10. Reader dan offline
 

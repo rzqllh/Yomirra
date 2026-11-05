@@ -281,21 +281,20 @@ export function PagedReader({
   const [canDrag, setCanDrag] = React.useState(true);
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (e.touches && e.touches.length > 0) {
-      const touchX = e.touches[0].clientX;
-      const EDGE_THRESHOLD = 32; // Apple HIG 32px safe margin for native Safari edge gestures
-      if (typeof window !== "undefined" && (touchX < EDGE_THRESHOLD || touchX > window.innerWidth - EDGE_THRESHOLD)) {
-        setCanDrag(false);
-        return;
-      }
+    if (e.touches.length !== 1) {
+      setCanDrag(false);
+      return;
     }
-    setCanDrag(true);
+    const touchX = e.touches[0].clientX;
+    const edgeThreshold = 32;
+    setCanDrag(touchX >= edgeThreshold && touchX <= window.innerWidth - edgeThreshold);
   };
 
   const handleDragEnd = (
     _event: MouseEvent | TouchEvent | PointerEvent,
     info: PanInfo
   ) => {
+    if (!canDrag || _event.type === "pointercancel" || _event.type === "touchcancel") return;
     const offset = info.offset.x;
     const velocity = info.velocity.x;
     const threshold = 50;
@@ -422,7 +421,7 @@ export function PagedReader({
           initial={{ opacity: 0.9, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.15, ease: "easeOut" }}
-          className="relative max-w-full max-h-screen flex items-center justify-center z-0 px-2"
+          className="relative max-w-full max-h-screen flex items-center justify-center z-0 px-2 [touch-action:pan-y_pinch-zoom]!"
         >
           <ReaderImage
             pageIndex={currentPageIndex}
@@ -462,7 +461,6 @@ export function PagedReader({
               width={800}
               height={1200}
               sizes="100vw"
-              priority={false}
               fetchPriority="low"
               quality={dataSaver ? 60 : 85}
               unoptimized={!dataSaver || page.url.startsWith("blob:") || page.url.startsWith("data:")}

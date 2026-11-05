@@ -23,14 +23,12 @@ export function MangaCover({
   fallbackTitle,
   iconSize = 32,
 }: MangaCoverProps) {
-  const [imageError, setImageError] = React.useState(false);
-
-  // Reset error state if src changes
-  React.useEffect(() => {
-    setImageError(false);
-  }, [src]);
-
-  const hasValidImage = src && !imageError;
+  const [failedSrc, setFailedSrc] = React.useState<string>();
+  const markFailed = React.useCallback(() => setFailedSrc(src), [src]);
+  const checkCachedImage = React.useCallback((img: HTMLImageElement | null) => {
+    if (img?.complete && img.naturalWidth === 0) markFailed();
+  }, [markFailed]);
+  const hasValidImage = src && src !== failedSrc;
 
   return (
     <div className={cn("relative w-full h-full overflow-hidden bg-surface-muted", className)}>
@@ -39,17 +37,14 @@ export function MangaCover({
           src={src}
           alt={alt}
           className={cn("absolute inset-0 w-full h-full object-cover", imageClassName)}
-          onError={() => setImageError(true)}
-          ref={(img) => {
-            if (img && img.complete && img.naturalWidth === 0) {
-              setImageError(true);
-            }
-          }}
+          onError={markFailed}
+          ref={checkCachedImage}
+          fetchPriority={priority ? "high" : undefined}
           referrerPolicy="no-referrer"
           decoding="async"
           loading={priority ? "eager" : "lazy"}
         />
-      ) : (
+      ) : alt || fallbackTitle ? (
         <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center text-text-muted/50 p-2">
           <ImageBroken size={iconSize} weight="duotone" className="mb-1" />
           {fallbackTitle && (
@@ -58,7 +53,7 @@ export function MangaCover({
             </span>
           )}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

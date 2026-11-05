@@ -8,6 +8,7 @@ import { IconButton } from "@/components/ui/icon-button";
 import { downloadChapterAsZip } from "@/shared/utils/zip-downloader";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { cn } from "@/shared/utils/cn";
 
 import { ConfirmationModal } from "@/components/ui/confirmation-modal";
 
@@ -112,17 +113,36 @@ export function ChapterDownloadButton({
     }
   };
 
+  const isDownloaded = isPWA && download?.status === "downloaded";
+
   return (
     <>
       <IconButton
       variant="ghost"
       size="sm"
-      className="relative z-20 shrink-0 text-text-muted hover:text-text-primary"
+      className={cn(
+        "relative z-20 shrink-0",
+        isDownloaded ? "bg-status-success-bg text-status-success-fg" : "text-text-muted hover:text-text-primary"
+      )}
       onClick={handleDownload}
-      aria-label={`Unduh ${chapterTitle}`}
+      aria-label={`${isDownloaded ? "Kelola unduhan" : "Unduh"} ${chapterTitle}`}
     >
       <AnimatePresence mode="wait" initial={false}>
-        {!download ? (
+        {!isPWA && isZipDownloading ? (
+          <motion.span
+            key="zip-downloading"
+            initial={iconInitial}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={iconExit}
+            transition={iconTransition}
+            className="text-accent relative flex items-center justify-center"
+          >
+            <CircleNotch size={20} className="motion-safe:animate-spin" />
+            <span className="absolute text-[8px] font-bold">
+              {zipProgress > 0 ? zipProgress : ""}
+            </span>
+          </motion.span>
+        ) : !isPWA || !download ? (
           <motion.span
             key="idle"
             initial={iconInitial}
@@ -139,7 +159,6 @@ export function ChapterDownloadButton({
             animate={{ scale: 1, opacity: 1 }}
             exit={iconExit}
             transition={iconTransition}
-            className="text-accent"
           >
             <CheckCircle size={20} weight="fill" />
           </motion.span>
@@ -164,20 +183,6 @@ export function ChapterDownloadButton({
             className="text-text-muted"
           >
             <Pause size={20} weight="fill" />
-          </motion.span>
-        ) : isZipDownloading ? (
-          <motion.span
-            key="zip-downloading"
-            initial={iconInitial}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={iconExit}
-            transition={iconTransition}
-            className="text-accent relative flex items-center justify-center"
-          >
-            <CircleNotch size={20} className="motion-safe:animate-spin" />
-            <span className="absolute text-[8px] font-bold">
-              {zipProgress > 0 ? zipProgress : ""}
-            </span>
           </motion.span>
         ) : (
           <motion.span

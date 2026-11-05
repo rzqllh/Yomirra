@@ -9,8 +9,6 @@ import {
 } from "@/shared/lib/reader-load-order"
 
 import { PageImageError } from "./page-image-error"
-import { motion, useMotionValue, animate } from "motion/react"
-import { useGesture } from "@use-gesture/react"
 
 interface ReaderImageProps {
   pageIndex: number
@@ -21,7 +19,6 @@ interface ReaderImageProps {
   isAllowedToReveal?: boolean
   onLoadComplete: (index: number) => void
   onError: (index: number) => void
-  disableDoubleTapZoom?: boolean;
   imageFit?: 'width' | 'contained'
   onReport?: (pageIndex: number) => void
   onSwitchSource?: () => void;
@@ -53,7 +50,6 @@ export const ReaderImage = React.memo(function ReaderImage({
   pageWidth,
   pageHeight,
   imageFit = 'width',
-  disableDoubleTapZoom = false,
   onReport,
   onSwitchSource,
   dataIndex,
@@ -72,7 +68,6 @@ export const ReaderImage = React.memo(function ReaderImage({
   const retryTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
   const loadGenerationRef = React.useRef(0)
   const mountedRef = React.useRef(true)
-  const containerRef = React.useRef<HTMLDivElement>(null)
 
   const moveQueueState = React.useCallback((event: Parameters<typeof transitionReaderPageQueueState>[1]) => {
     const next = transitionReaderPageQueueState(queueStateRef.current, event)
@@ -101,153 +96,6 @@ export const ReaderImage = React.memo(function ReaderImage({
     : (retryCount > 0 && !activeBaseUrl.startsWith('blob:') && !activeBaseUrl.startsWith('data:')
         ? `${activeBaseUrl}${activeBaseUrl.includes('?') ? '&' : '?'}retry=${retryCount}` 
         : activeBaseUrl);
-
-  // Zoom motion values with spring physics
-  const scale = useMotionValue(1)
-  const x = useMotionValue(0)
-  const y = useMotionValue(0)
-  const [isZoomed, setIsZoomed] = React.useState(false)
-  // A double-tap spring starts near 1x; pointer-up must not cancel its zoom intent.
-  const zoomIntentRef = React.useRef(false)
-
-  const resetZoom = React.useCallback((smooth = true) => {
-    zoomIntentRef.current = false
-    if (smooth) {
-      animate(scale, 1, { type: "spring", stiffness: 350, damping: 30 })
-      animate(x, 0, { type: "spring", stiffness: 350, damping: 30 })
-      animate(y, 0, { type: "spring", stiffness: 350, damping: 30 })
-    } else {
-      scale.set(1)
-      x.set(0)
-      y.set(0)
-    }
-    setIsZoomed(false)
-    document.documentElement.classList.remove('is-pinching')
-  }, [scale, x, y])
-
-  useGesture({
-    onPinch: ({ offset: [d], origin, event }) => {
-      event.preventDefault()
-      const newScale = Math.max(0.85, Math.min(d, 4.5))
-      const prevScale = scale.get()
-      scale.set(newScale)
-      const zoomed = newScale > 1.05
-      zoomIntentRef.current = zoomed
-      setIsZoomed(zoomed)
-      if (zoomed) {
-        document.documentElement.classList.add('is-pinching')
-      } else {
-        document.documentElement.classList.remove('is-pinching')
-      }
-
-      // Keep focal point under pinch origin if origin coordinates are provided
-      if (origin && containerRef.current && prevScale > 0) {
-        const rect = containerRef.current.getBoundingClientRect()
-        const originX = origin[0] - (rect.left + rect.width / 2)
-        const originY = origin[1] - (rect.top + rect.height / 2)
-        const scaleRatio = newScale / prevScale
-        const currentX = x.get()
-        const currentY = y.get()
-        const maxDragX = (rect.width * (newScale - 1)) / 2
-        const maxDragY = (rect.height * (newScale - 1)) / 2
-        if (newScale > 1) {
-          const nextX = currentX - (originX - currentX) * (scaleRatio - 1)
-          const nextY = currentY - (originY - currentY) * (scaleRatio - 1)
-          x.set(Math.max(-maxDragX, Math.min(maxDragX, nextX)))
-          y.set(Math.max(-maxDragY, Math.min(maxDragY, nextY)))
-        } else {
-          x.set(0)
-          y.set(0)
-        }
-      }
-    },
-    onPinchEnd: ({ offset: [d] }) => {
-      if (d <= 1.08) {
-        resetZoom(true)
-      } else {
-        const targetScale = Math.min(Math.max(d, 1), 4)
-        zoomIntentRef.current = targetScale > 1.05
-        animate(scale, targetScale, { type: "spring", stiffness: 400, damping: 32 })
-        setIsZoomed(targetScale > 1.05)
-      }
-    },
-    onDrag: ({ offset: [ox, oy], pinching, event }) => {
-      if (pinching || scale.get() <= 1.05) return
-      event.preventDefault()
-
-      const container = containerRef.current
-      const currentScale = scale.get()
-      const maxDragX = container ? (container.clientWidth * (currentScale - 1)) / 2 : 250
-      const maxDragY = container ? (container.clientHeight * (currentScale - 1)) / 2 : 350
-
-      const boundedX = Math.max(-maxDragX, Math.min(maxDragX, ox))
-      const boundedY = Math.max(-maxDragY, Math.min(maxDragY, oy))
-
-      x.set(boundedX)
-      y.set(boundedY)
-    },
-    onDragEnd: () => {
-      if (scale.get() <= 1.05 && !zoomIntentRef.current) {
-        resetZoom(true)
-      }
-    }
-  }, {
-    target: containerRef,
-    eventOptions: { passive: false },
-    pinch: { scaleBounds: { min: 1, max: 4 }, rubberband: true },
-    drag: { 
-      from: () => [x.get(), y.get()]
-    }
-  })
-
-  // Double-tap to zoom toggle (1x <-> 2.2x) focusing directly on tapped coordinate
-  const lastTapRef = React.useRef<{ time: number; x: number; y: number }>({ time: 0, x: 0, y: 0 })
-  const handlePointerDown = (e: React.PointerEvent) => {
-    if (disableDoubleTapZoom) { lastTapRef.current = { time: 0, x: 0, y: 0 }; return; }
-    if (!e.isPrimary) return
-    const now = Date.now()
-    const DOUBLE_TAP_DELAY = 300
-    const prevTap = lastTapRef.current
-
-    const clientX = e.clientX ?? 0
-    const clientY = e.clientY ?? 0
-    // Check tap proximity and delay (support synthetic test events without client coordinates)
-    const isProximity = prevTap.x === 0 && prevTap.y === 0 ? true : Math.hypot(clientX - prevTap.x, clientY - prevTap.y) < 50
-    if (now - prevTap.time < DOUBLE_TAP_DELAY && isProximity) {
-      if (scale.get() > 1.1) {
-        resetZoom(true)
-      } else {
-        zoomIntentRef.current = true
-        const targetScale = 2.2
-        const container = containerRef.current
-        let targetX = 0
-        let targetY = 0
-
-        if (container && clientX && clientY) {
-          const rect = container.getBoundingClientRect()
-          if (rect.width > 0 && rect.height > 0) {
-            const clickX = clientX - (rect.left + rect.width / 2)
-            const clickY = clientY - (rect.top + rect.height / 2)
-            const maxDragX = (rect.width * (targetScale - 1)) / 2
-            const maxDragY = (rect.height * (targetScale - 1)) / 2
-
-            // Center zoom on user's tapped finger / cursor location
-            targetX = Math.max(-maxDragX, Math.min(maxDragX, -clickX * (targetScale - 1)))
-            targetY = Math.max(-maxDragY, Math.min(maxDragY, -clickY * (targetScale - 1)))
-          }
-        }
-
-        animate(scale, targetScale, { type: "spring", stiffness: 350, damping: 28 })
-        if (targetX !== 0) animate(x, targetX, { type: "spring", stiffness: 350, damping: 28 })
-        if (targetY !== 0) animate(y, targetY, { type: "spring", stiffness: 350, damping: 28 })
-        setIsZoomed(true)
-        document.documentElement.classList.add('is-pinching')
-      }
-      lastTapRef.current = { time: 0, x: 0, y: 0 }
-    } else {
-      lastTapRef.current = { time: now, x: clientX, y: clientY }
-    }
-  }
 
   const shouldLoad = isAllowedToLoad;
   const shouldReveal = isAllowedToReveal && hasLoaded;
@@ -361,18 +209,14 @@ export const ReaderImage = React.memo(function ReaderImage({
 
   return (
     <div 
-      ref={containerRef}
       data-index={dataIndex}
-      onPointerDown={handlePointerDown}
       className={cn(
-        "reader-page-container w-full flex justify-center touch-pan-y relative select-none",
-        isZoomed ? "z-30 overflow-visible" : "z-0 overflow-hidden",
+        "reader-page-container relative flex w-full justify-center overflow-hidden select-none",
         (!shouldLoad || !shouldReveal || hasError) && "bg-surface-muted/30"
       )}
       data-page-index={pageIndex}
       data-load-state={queueState}
       style={{ 
-        touchAction: "pan-y",
         aspectRatio: aspectRatio ? estimatedAspectRatio : (isWebtoon ? "auto" : estimatedAspectRatio),
         minHeight: aspectRatio ? "auto" : "50vh",
         transition: "aspect-ratio 0.3s ease-out"
@@ -382,10 +226,9 @@ export const ReaderImage = React.memo(function ReaderImage({
         <PageImageError index={pageIndex} onRetry={handleRetry} onReport={onReport} onSwitchSource={onSwitchSource} />
       ) : shouldLoad && !hasError ? (
         <>
-          <motion.div
-            style={{ x, y, scale }}
+          <div
             className={cn(
-              "w-full h-full origin-center flex justify-center transform-gpu will-change-transform transition-opacity duration-100",
+              "w-full h-full flex justify-center transition-opacity duration-100",
               shouldReveal ? "opacity-100" : "opacity-0"
             )}
           >
@@ -399,8 +242,7 @@ export const ReaderImage = React.memo(function ReaderImage({
               width={pageWidth && pageWidth > 0 ? pageWidth : 800}
               height={pageHeight && pageHeight > 0 ? pageHeight : 1200}
               sizes={imageFit === 'width' ? "100vw" : "(max-width: 768px) 100vw, 1200px"}
-              priority={priority}
-              fetchPriority={priority ? "high" : "auto"}
+              fetchPriority={priority ? "high" : "low"}
               quality={dataSaver ? 60 : 85}
               unoptimized={!dataSaver || bypassOptimizer || currentUrl.startsWith('blob:') || currentUrl.startsWith('data:')}
               loading="eager"
@@ -431,7 +273,7 @@ export const ReaderImage = React.memo(function ReaderImage({
               }}
               onError={() => void handleImageError()}
             />
-          </motion.div>
+          </div>
 
           {!shouldReveal && (
             <div className="absolute inset-0 bg-surface-muted/10 pointer-events-none" />

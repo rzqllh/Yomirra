@@ -92,13 +92,13 @@ describe('BottomDock Navigation', () => {
     render(<BottomDock />);
 
     const nav = screen.getByRole('navigation', { name: 'Navigasi utama' });
-    const mainDock = nav.querySelector('.yomirra-chrome');
+    const mainDock = nav.querySelector('.yomirra-dock-surface');
     const glassSurfaces = nav.querySelectorAll('.yomirra-chrome');
 
     expect(glassSurfaces).toHaveLength(2);
     expect(mainDock?.querySelectorAll('a')).toHaveLength(4);
-    expect(glassSurfaces[1].querySelector('a')).toBeNull();
-    expect(screen.getByRole('link', { name: 'Cari' }).className).toContain('yomirra-chrome');
+    expect(glassSurfaces[1].closest('a')?.getAttribute('href')).toBe('/search');
+    expect(screen.getByRole('link', { name: 'Cari' }).className).toContain('yomirra-dock-surface');
   });
 
   it('uses a restrained primary-text label and accent icon for the selected destination', () => {
@@ -116,48 +116,18 @@ describe('BottomDock Navigation', () => {
     const searchLink = screen.getByRole('link', { name: 'Cari' });
     expect(searchLink.getAttribute('aria-current')).toBe('page');
     expect(screen.getByRole('link', { name: 'Beranda' }).getAttribute('aria-current')).toBeNull();
-    expect(searchLink.querySelector('span[aria-hidden="true"]')).toBeTruthy();
   });
 
-  it('keeps 44px tab targets and adapts label spacing for narrow screens', () => {
-    render(<BottomDock />);
-
-    const inactiveLink = screen.getByRole('link', { name: 'Library' });
-    const searchLink = screen.getByRole('link', { name: 'Cari' });
-
-    expect(inactiveLink.className).toContain('size-11');
-    expect(screen.getByRole('link', { name: 'Library' }).className).toContain('size-11');
-    expect(searchLink.className).toContain('size-14');
-    expect(searchLink.className).toContain('max-[359px]:size-12');
-  });
-
-
-  it('keeps full radii and derived spacing only on the bottom dock', () => {
-    render(<BottomDock />);
+  it('keeps one persistent pill when moving between the rail and search', () => {
+    const { rerender } = render(<BottomDock />);
     const nav = screen.getByRole('navigation', { name: 'Navigasi utama' });
-    const shell = nav.querySelector('.yomirra-chrome');
-    const active = screen.getByRole('link', { name: 'Beranda' });
-    const search = screen.getByRole('link', { name: 'Cari' });
+    const pill = nav.querySelector('.yomirra-dock-indicator');
 
-    expect(shell?.className).toContain('h-14');
-    expect(shell?.className).toContain('py-[5px]');
-    expect(shell?.className).toContain('rounded-full');
-    expect(shell?.className).toContain('gap-0.5');
-    expect(shell?.className).toContain('px-1');
-    expect(shell?.className).toContain('min-[360px]:gap-1');
-    expect(active.className).toContain('h-11');
-    expect(active.className).toContain('rounded-full');
-    expect(active.querySelector('span[aria-hidden="true"]')?.className).toContain('rounded-full');
-    expect(search.className).toContain('size-14');
-    expect(search.className).toContain('rounded-full');
-    expect(search.className).toContain('max-[359px]:size-12');
+    expect(nav.classList.contains('yomirra-dock-frame')).toBe(true);
+    expect(nav.querySelectorAll('.yomirra-dock-surface')).toHaveLength(2);
+    expect(pill).toBeTruthy();
+
+    rerender(<BottomDock pendingHref="/search" />);
+    expect(nav.querySelector('.yomirra-dock-indicator')).toBe(pill);
   });
-
-  it('maintains the inset, fully rounded active search indicator', () => {
-    render(<BottomDock pendingHref="/search" />);
-    const indicator = screen.getByRole('link', { name: 'Cari' }).querySelector('span[aria-hidden="true"]');
-    expect(indicator?.className).toContain('inset-1');
-    expect(indicator?.className).toContain('rounded-full');
-  });
-
 });

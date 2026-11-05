@@ -37,6 +37,6 @@ export async function GET(
     return NextResponse.json({ data: signedData });
   } catch (error: unknown) {
     const response = sourceErrorResponse(error, sourceId, "pages");
-    return NextResponse.json(response.body, { status: response.status });
+    return NextResponse.json(response.body, { status: response.status, headers: response.headers });
   }
 }

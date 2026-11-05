@@ -2,19 +2,24 @@ export const dynamic = "force-dynamic";
 import { applyRateLimitHeaders, checkRateLimitPolicy, createRateLimitRejection } from "@/server/lib/security/rate-limit";
 import { NextRequest, NextResponse } from "next/server";
 import { sourceManager } from "@/server/lib/sources/source-manager";
-import { withCache, CACHE_TTL, invalidateNearCacheKey } from "@/server/lib/cache/redis-cache";
-import { isRedisConfigured, redis } from "@/server/lib/cache/redis";
+import { withCache, CACHE_TTL } from "@/server/lib/cache/redis-cache";
+
 import { createHash } from "crypto";
 
 import { assertSourceAccess, contentCacheKey, getRequestReadOptions } from "@/server/lib/sources/content-access";
 import { isContentVisible } from "@/shared/sources/content-policy";
 import { SourceError } from "@/server/lib/sources/error";
+import { loadSourceUpstream } from "@/server/lib/sources/source-upstream";
 import { deduplicateResultsBySource } from "@/shared/lib/canonical-search";
 import { upsertSearchCatalogRecords } from "@/server/lib/search/semantic-catalog";
+import type { MangaSource } from "@/shared/sources/source-types";
 import type { GlobalSearchResponse } from "@/shared/types/search";
 
 export type { GlobalSearchResponse };
 
+function hasSourceErrors(results: GlobalSearchResponse["resultsBySource"]): boolean {
+  return Object.values(results).some((result) => Boolean(result.error));
+}
 
 export async function GET(req: NextRequest) {
   const rateLimit = await checkRateLimitPolicy(req, "publicSearch");
@@ -60,9 +65,9 @@ export async function GET(req: NextRequest) {
     filterKey = `:${createHash("md5").update(JSON.stringify(filters)).digest("hex").slice(0, 8)}`;
   }
 
-  const loadedSources: Record<string, any> = {};
+  const loadedSources: Record<string, MangaSource> = Object.create(null);
   const sourceKeys: string[] = [];
-  const sourceErrors: GlobalSearchResponse["resultsBySource"] = {};
+  const sourceErrors: GlobalSearchResponse["resultsBySource"] = Object.create(null);
   
   for (const sourceId of sourceIds) {
     try {
@@ -77,13 +82,13 @@ export async function GET(req: NextRequest) {
   }
 
   const sourcesFingerprint = createHash("md5").update(sourceKeys.sort().join(",")).digest("hex").slice(0, 8);
-  const cacheKey = `global:search:content-v1:${queryStr}:requested:${sourceIds.slice().sort().join(",")}:sources:${sourcesFingerprint}:page:${page}${filterKey}`;
+  const cacheKey = `global:search:v2:content-v1:${queryStr}:requested:${sourceIds.slice().sort().join(",")}:sources:${sourcesFingerprint}:page:${page}${filterKey}`;
 
   try {
     const cachedData = await withCache(
       cacheKey,
       async () => {
-        const results: GlobalSearchResponse["resultsBySource"] = {};
+        const results: GlobalSearchResponse["resultsBySource"] = Object.create(null);
         
         const promises = sourceIds.map(async (sourceId) => {
           const source = loadedSources[sourceId];
@@ -99,14 +104,14 @@ export async function GET(req: NextRequest) {
                 results[sourceId] = { results: [], error: "Latest not supported by source", errorCode: "UNKNOWN" };
                 return;
               }
-              searchResult = await source.getLatest(page, readOptions);
+              searchResult = await loadSourceUpstream(sourceId, "search", null, () => source.getLatest(page, readOptions));
             } else {
               if (!source.capabilities.search) {
                 results[sourceId] = { results: [], error: "Search not supported by source", errorCode: "UNKNOWN" };
                 return;
               }
               const activeFilters = Object.keys(filters).length > 0 && source.capabilities.filters ? filters : undefined;
-              searchResult = await source.search(queryStr, page, activeFilters, readOptions);
+              searchResult = await loadSourceUpstream(sourceId, "search", null, () => source.search(queryStr, page, activeFilters, readOptions));
             }
             results[sourceId] = {
               results: searchResult.mangas.filter((item: import("@/shared/sources/source-types").MangaItem) => isContentVisible(item, readOptions.hideNsfw !== false)),
@@ -124,47 +129,35 @@ export async function GET(req: NextRequest) {
         });
 
         await Promise.allSettled(promises);
-        return results;
+        const canonicalResults = deduplicateResultsBySource(results);
+        if (!hasSourceErrors(results)) {
+          await upsertSearchCatalogRecords(
+            canonicalResults.slice(0, 24).map((cluster) => ({
+              canonicalKey: cluster.canonicalKey,
+              sourceId: cluster.primaryResult.sourceId,
+              mangaId: cluster.primaryResult.id,
+              title: cluster.primaryResult.title,
+              coverUrl: cluster.primaryResult.coverUrl,
+              originalTitle: cluster.primaryResult.originalTitle,
+              alternativeTitles: cluster.primaryResult.alternativeTitles,
+              author: cluster.primaryResult.author,
+              description: cluster.primaryResult.description,
+              format: cluster.primaryResult.format,
+              status: cluster.primaryResult.status,
+              score: cluster.primaryResult.score,
+              contentRating: cluster.primaryResult.contentRating,
+              isNsfw: cluster.primaryResult.isNsfw,
+              sourceBindings: cluster.sourceBindings,
+            }))
+          );
+        }
+        return { resultsBySource: results, canonicalResults };
       },
-      CACHE_TTL.SEARCH
+      CACHE_TTL.SEARCH,
+      { shouldPersist: ({ resultsBySource }) => !hasSourceErrors(resultsBySource) }
     );
 
-    // Do not preserve partial or complete adapter failures in cache:
-    // avoid locking transient upstream provider errors for the full TTL.
-    const hasAnyError = Object.values(cachedData).some((r) => Boolean(r.error));
-    if (hasAnyError) {
-      invalidateNearCacheKey(cacheKey);
-      if (isRedisConfigured) await redis.del(cacheKey).catch(() => {});
-    }
-
-    const canonicalResults = deduplicateResultsBySource(cachedData);
-
-    await upsertSearchCatalogRecords(
-      canonicalResults.slice(0, 24).map((cluster) => ({
-        canonicalKey: cluster.canonicalKey,
-        sourceId: cluster.primaryResult.sourceId,
-        mangaId: cluster.primaryResult.id,
-        title: cluster.primaryResult.title,
-        coverUrl: cluster.primaryResult.coverUrl,
-        originalTitle: cluster.primaryResult.originalTitle,
-        alternativeTitles: cluster.primaryResult.alternativeTitles,
-        author: cluster.primaryResult.author,
-        description: cluster.primaryResult.description,
-        format: cluster.primaryResult.format,
-        status: cluster.primaryResult.status,
-        score: cluster.primaryResult.score,
-        contentRating: cluster.primaryResult.contentRating,
-        isNsfw: cluster.primaryResult.isNsfw,
-        sourceBindings: cluster.sourceBindings,
-      }))
-    );
-
-    return limitedJson({
-      data: {
-        resultsBySource: cachedData,
-        canonicalResults,
-      }
-    });
+    return limitedJson({ data: cachedData });
   } catch {
     return limitedJson({ error: { message: "Internal server error" } }, { status: 500 });
   }

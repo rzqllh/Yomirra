@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/shared/lib/browser-safe-zod";
 
 export const CustomHtmlSelectorsSchema = z.object({
   popularPath: z.string().default("/"),

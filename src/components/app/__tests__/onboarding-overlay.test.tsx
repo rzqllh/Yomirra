@@ -5,7 +5,6 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 const mockCompleteOnboarding = vi.fn();
 const mockIsInstallable = false;
 const mockInstallPWA = vi.fn();
-let mockLibraryItems: Record<string, { coverUrl?: string }> = {};
 
 vi.mock('@/shared/store/onboarding-store', () => ({
   useOnboardingStore: () => ({
@@ -20,22 +19,9 @@ vi.mock('@/shared/hooks/use-pwa-install', () => ({
   }),
 }));
 
-vi.mock('@/shared/store/library-store', () => ({
-  useLibraryStore: {
-    getState: () => ({ items: mockLibraryItems }),
-  },
-}));
-
-vi.mock('@/shared/store/history-store', () => ({
-  useHistoryStore: {
-    getState: () => ({ items: {} }),
-  },
-}));
-
 describe('OnboardingOverlay', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockLibraryItems = {};
   });
 
   it('renders initial step and allows stepping forward to final step', async () => {
@@ -43,7 +29,7 @@ describe('OnboardingOverlay', () => {
     render(<OnboardingOverlay onComplete={onComplete} />);
 
     expect(screen.getByText('SEMUA SUMBER, SATU PINTU')).toBeTruthy();
-    expect(screen.getByText(/Katalog Multi-Sumber Terlengkap/)).toBeTruthy();
+    expect(screen.getByText(/Jelajahi komik lintas sumber/)).toBeTruthy();
 
     const nextBtn = screen.getByRole('button', { name: 'Lanjut' });
     fireEvent.click(nextBtn);
@@ -131,27 +117,14 @@ describe('OnboardingOverlay', () => {
     previousButton.remove();
   });
 
-  it('restores prior focus when local covers satisfy the early cover path', async () => {
-    mockLibraryItems = {
-      one: { coverUrl: 'https://example.com/one.jpg' },
-      two: { coverUrl: 'https://example.com/two.jpg' },
-      three: { coverUrl: 'https://example.com/three.jpg' },
-    };
+  it('loads one bundled artwork for the current step', async () => {
+    render(<OnboardingOverlay onComplete={vi.fn()} />);
+    const dialog = screen.getByRole('dialog');
+    expect(dialog.querySelectorAll('img[src^="/covers/"]')).toHaveLength(1);
+    expect(dialog.querySelector('img[src="/covers/cover-1.webp"]')).toBeTruthy();
 
-    const previousButton = document.createElement('button');
-    previousButton.textContent = 'Previous local-cover trigger';
-    document.body.appendChild(previousButton);
-    previousButton.focus();
-
-    const { unmount } = render(<OnboardingOverlay onComplete={vi.fn()} />);
-
-    await waitFor(() => {
-      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Lewati' }));
-    });
-
-    unmount();
-    expect(document.activeElement).toBe(previousButton);
-    previousButton.remove();
+    fireEvent.click(screen.getByRole('button', { name: 'Langkah 3' }));
+    expect(dialog.querySelector('img[src="/covers/cover-3.webp"]')).toBeTruthy();
   });
 
   it('keeps onboarding navigation controls at the shared 44px touch-target baseline', async () => {

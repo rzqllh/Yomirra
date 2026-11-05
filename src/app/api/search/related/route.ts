@@ -28,17 +28,15 @@ const bodySchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  const rateLimit = await checkRateLimit(request, 12, 60, true, "search-related");
+  const rateLimit = await checkRateLimit(request, 12, 60, false, "search-related");
   if (!rateLimit.success) {
     return NextResponse.json(
       {
         error: {
-          message: rateLimit.unavailable
-            ? "Search intelligence temporarily unavailable"
-            : "Too Many Requests",
+          message: "Too Many Requests",
         },
       },
-      { status: rateLimit.unavailable ? 503 : 429, headers: rateLimit.headers }
+      { status: 429, headers: rateLimit.headers }
     );
   }
 
@@ -53,7 +51,8 @@ export async function POST(request: NextRequest) {
   const results = await findRelatedSearchTitles(
     parsed.data.target,
     parsed.data.limit ?? 8,
-    getRequestReadOptions(request).hideNsfw !== false
+    getRequestReadOptions(request).hideNsfw !== false,
+    async () => (await checkRateLimit(request, 12, 60, true, "search-related-embedding")).success
   );
   return NextResponse.json({ data: results });
 }

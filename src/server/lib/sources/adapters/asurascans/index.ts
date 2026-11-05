@@ -1,3 +1,4 @@
+import { SourceError } from "../../error";
 import type {
   Chapter,
   ChapterPages,
@@ -22,6 +23,10 @@ import type {
   AsuraSeriesDetailResponse,
   AsuraSeriesListResponse,
 } from "./types";
+
+function isSeriesSlug(value: string): boolean {
+  return value.length <= 240 && /^[a-z0-9_-]+$/i.test(value);
+}
 
 export class AsuraScansSource implements MangaSource {
   public readonly id = "asurascans";
@@ -170,9 +175,11 @@ export class AsuraScansSource implements MangaSource {
   }
 
   async getDetail(mangaId: string): Promise<MangaDetail> {
-    const slug = mangaId?.trim();
-    if (!slug) {
-      throw new Error(`INVALID_MANGA_ID: Asura Scans requires a series slug, got "${mangaId}"`);
+    const slug = mangaId?.trim() ?? "";
+    if (!isSeriesSlug(slug)) {
+      throw new SourceError("INVALID_MANGA_ID: Asura Scans requires a series slug", {
+        code: "CONTENT_NOT_FOUND", sourceId: this.id, statusCode: 404,
+      });
     }
 
     const res = await this.client.get<AsuraSeriesDetailResponse>(
@@ -187,9 +194,11 @@ export class AsuraScansSource implements MangaSource {
   }
 
   async getChapters(mangaId: string): Promise<Chapter[]> {
-    const slug = mangaId?.trim();
-    if (!slug) {
-      throw new Error(`INVALID_MANGA_ID: Asura Scans requires a series slug, got "${mangaId}"`);
+    const slug = mangaId?.trim() ?? "";
+    if (!isSeriesSlug(slug)) {
+      throw new SourceError("INVALID_MANGA_ID: Asura Scans requires a series slug", {
+        code: "CONTENT_NOT_FOUND", sourceId: this.id, statusCode: 404,
+      });
     }
 
     const res = await this.client.get<AsuraChaptersResponse>(
@@ -206,10 +215,10 @@ export class AsuraScansSource implements MangaSource {
   async getPages(chapterId: string): Promise<ChapterPages> {
     const { seriesSlug, chapterParam } = parseAsuraChapterId(chapterId);
 
-    if (!seriesSlug || !chapterParam) {
-      throw new Error(
-        `INVALID_CHAPTER_ID: Asura Scans chapter ID must be in format "{seriesSlug}::{chapterParam}", got "${chapterId}"`
-      );
+    if (!isSeriesSlug(seriesSlug) || !/^[a-z0-9_-][a-z0-9._-]{0,239}$/i.test(chapterParam)) {
+      throw new SourceError("INVALID_CHAPTER_ID: Asura Scans requires a series slug and chapter", {
+        code: "CONTENT_NOT_FOUND", sourceId: this.id, statusCode: 404,
+      });
     }
 
     const res = await this.client.get<AsuraChapterReadResponse>(

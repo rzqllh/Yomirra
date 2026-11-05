@@ -10,7 +10,6 @@ import {
 import { normalizeTitle } from "@/shared/lib/title-matcher";
 import {
   getRecentSearchCatalogRecords,
-  getSearchCatalogRecord,
   hashEmbeddingText,
   upsertSearchCatalogRecords,
   type StoredSearchCatalogRecord,
@@ -225,9 +224,12 @@ export function metadataRelatedScore(
 export async function findRelatedSearchTitles(
   target: SearchCatalogCandidate,
   limit = 8,
-  hideNsfw = true
+  hideNsfw = true,
+  allowNewEmbedding: () => Promise<boolean> = async () => true
 ): Promise<SearchCatalogCandidate[]> {
-  const recent = filterCatalogContent(await getRecentSearchCatalogRecords(300), await getRuntimeSources(), hideNsfw);
+  const catalog = await getRecentSearchCatalogRecords(300);
+  if (catalog.length === 0) return [];
+  const recent = filterCatalogContent(catalog, await getRuntimeSources(), hideNsfw);
   const otherRecords = recent.filter((record) => record.canonicalKey !== target.canonicalKey);
   if (otherRecords.length === 0) return [];
 
@@ -235,8 +237,13 @@ export async function findRelatedSearchTitles(
   let targetEmbedding: { values: number[]; textHash: string } | null = null;
 
   if (semanticEnabled) {
-    const storedTarget = await getSearchCatalogRecord(target.canonicalKey);
-    targetEmbedding = await ensureCandidateEmbedding(target, storedTarget);
+    const storedTarget = recent.find((record) => record.canonicalKey === target.canonicalKey);
+    const textHash = hashEmbeddingText(buildCatalogText(target));
+    if (storedTarget?.embedding?.length && storedTarget.embeddingTextHash === textHash) {
+      targetEmbedding = { values: storedTarget.embedding, textHash };
+    } else if (otherRecords.some((record) => record.embedding?.length) && await allowNewEmbedding()) {
+      targetEmbedding = await ensureCandidateEmbedding(target);
+    }
   }
 
   return otherRecords

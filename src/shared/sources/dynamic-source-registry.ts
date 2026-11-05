@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/shared/lib/browser-safe-zod";
 import type { SourceMetadata } from "./source-types";
 
 // Schema for the Mihon-like manifest
