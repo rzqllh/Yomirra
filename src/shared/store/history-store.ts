@@ -8,6 +8,7 @@ import { useLibraryStore } from "@/shared/store/library-store";
 import { parseChapterNumber } from "@/shared/lib/chapter-parser";
 import { compareMilestone, retainHistory } from "@/shared/lib/history-retention";
 import { getLocalDataOwnerUid } from "@/shared/lib/local-data-owner";
+import { isOutboxPathEnabled, enqueueHistoryUpsert, enqueueHistoryDelete, enqueueMangaHistoryBatchDelete } from "@/shared/lib/outbox";
 
 export type HistoryItem = {
   sourceId: string;
@@ -220,7 +221,11 @@ export const useHistoryStore = create<HistoryState>()(
           ? { ...existing, ...item, savedTitleId: savedTitleId ?? existing.savedTitleId, readAt: item.readAt }
           : { ...item, savedTitleId };
 
-        queueHistoryWrite(finalItem);
+        if (isOutboxPathEnabled()) {
+          void enqueueHistoryUpsert(finalItem);
+        } else {
+          queueHistoryWrite(finalItem);
+        }
         return { items: retainHistory({ ...state.items, [id]: { ...finalItem, isCompact: false } }) };
       }),
 
@@ -251,6 +256,17 @@ export const useHistoryStore = create<HistoryState>()(
         const previousState = get().items;
         const ownerUid = getLocalDataOwnerUid();
         const id = getHistoryId(sourceId, mangaId, chapterId);
+
+        if (isOutboxPathEnabled()) {
+          set((state) => {
+            const newItems = { ...state.items };
+            delete newItems[id];
+            return { items: newItems };
+          });
+          void enqueueHistoryDelete(sourceId, mangaId, chapterId, { userId: ownerUid ?? undefined });
+          return;
+        }
+
         const deletion = beginHistoryDeletion(id, previousState[id], ownerUid);
         set((state) => {
           const id = getHistoryId(sourceId, mangaId, chapterId);
@@ -285,6 +301,22 @@ export const useHistoryStore = create<HistoryState>()(
         for (const key of pendingHistoryDeletions.keys()) {
           if (key.startsWith(prefix)) affectedIds.add(key);
         }
+
+        if (isOutboxPathEnabled()) {
+          const chapterIds = Array.from(affectedIds).map(k => k.slice(prefix.length));
+          set((state) => {
+            const newItems = { ...state.items };
+            Object.keys(newItems).forEach(key => {
+              if (key.startsWith(prefix)) {
+                delete newItems[key];
+              }
+            });
+            return { items: newItems };
+          });
+          void enqueueMangaHistoryBatchDelete(sourceId, mangaId, chapterIds, { userId: ownerUid ?? undefined });
+          return;
+        }
+
         const deletions = new Map<string, PendingHistoryDeletion>(Array.from(affectedIds, key => [key, beginHistoryDeletion(key, previousState[key], ownerUid)]));
         set((state) => {
           const newItems = { ...state.items };

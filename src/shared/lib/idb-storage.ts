@@ -148,7 +148,8 @@ export function getIDB(): Promise<IDBDatabase> {
 
 /**
  * Executes an atomic transaction across multiple object stores.
- * If any operation or callback throws, the transaction is automatically aborted.
+ * Strictly guarantees that async operations settle before resolution, preventing
+ * premature completion or false success if callbacks reject after IDB completion.
  */
 export async function runAtomicTransaction<T>(
   storeNames: string[],
@@ -158,7 +159,25 @@ export async function runAtomicTransaction<T>(
 
   return new Promise<T>((resolve, reject) => {
     let result: T;
+    let callbackSettled = false;
     let callbackError: unknown = null;
+    let txCompleted = false;
+    let txAborted = false;
+    let settled = false;
+
+    const safeReject = (err: unknown) => {
+      if (!settled) {
+        settled = true;
+        reject(err);
+      }
+    };
+
+    const safeResolve = (val: T) => {
+      if (!settled) {
+        settled = true;
+        resolve(val);
+      }
+    };
 
     const tx = db.transaction(storeNames, "readwrite");
     const stores: Record<string, IDBObjectStore> = {};
@@ -167,34 +186,47 @@ export async function runAtomicTransaction<T>(
     }
 
     tx.oncomplete = () => {
+      txCompleted = true;
       if (callbackError) {
-        reject(callbackError);
-      } else {
-        resolve(result);
+        safeReject(callbackError);
+      } else if (callbackSettled) {
+        safeResolve(result);
       }
     };
 
     tx.onerror = () => {
-      reject(callbackError || tx.error || new Error("IDB transaction failed"));
+      safeReject(callbackError || tx.error || new Error("IDB transaction failed"));
     };
 
     tx.onabort = () => {
-      reject(callbackError || tx.error || new Error("IDB transaction aborted"));
+      txAborted = true;
+      safeReject(callbackError || tx.error || new Error("IDB transaction aborted"));
     };
 
     Promise.resolve()
       .then(() => fn(stores, tx))
       .then((res) => {
         result = res;
+        callbackSettled = true;
+        if (callbackError) {
+          safeReject(callbackError);
+        } else if (txAborted) {
+          safeReject(tx.error || new Error("IDB transaction aborted before callback settled"));
+        } else if (txCompleted) {
+          safeResolve(result);
+        }
       })
       .catch((err) => {
         callbackError = err;
-        try {
-          tx.abort();
-        } catch {
-          // Transaction might already be aborting or completed
+        callbackSettled = true;
+        if (!txCompleted && !txAborted) {
+          try {
+            tx.abort();
+          } catch {
+            // Transaction might already be aborting or completed
+          }
         }
-        reject(err);
+        safeReject(err);
       });
   });
 }
@@ -343,6 +375,12 @@ export async function getReconciliationAudits(limit = 100): Promise<Reconciliati
 // Multi-Tab Lease Coordination (Fencing Token with 30s TTL Fallback)
 // ---------------------------------------------------------------------------
 
+export interface SyncLeaseRecord {
+  holderId: string;
+  token: string;
+  expiresAt: number;
+}
+
 export async function acquireSyncLease(
   holderId: string,
   ttlMs = DEFAULT_LEASE_TTL
@@ -350,13 +388,13 @@ export async function acquireSyncLease(
   return runAtomicTransaction([STORE_SYNC_METADATA], async (stores) => {
     const store = stores[STORE_SYNC_METADATA];
     const currentRecord = await promisifyRequest<
-      SyncMetadataRecord<{ holderId: string; expiresAt: number; token: string }> | undefined
+      SyncMetadataRecord<SyncLeaseRecord> | undefined
     >(store.get(LEASE_METADATA_KEY));
 
     const now = Date.now();
     const currentLease = currentRecord?.value;
 
-    if (currentLease && currentLease.expiresAt > now && currentLease.holderId !== holderId) {
+    if (currentLease && currentLease.expiresAt > now) {
       return {
         acquired: false,
         reason: "lease_busy",
@@ -370,9 +408,9 @@ export async function acquireSyncLease(
         : `lease-${now}-${Math.random().toString(36).slice(2, 9)}`;
 
     const expiresAt = now + ttlMs;
-    const newRecord: SyncMetadataRecord = {
+    const newRecord: SyncMetadataRecord<SyncLeaseRecord> = {
       key: LEASE_METADATA_KEY,
-      value: { holderId, expiresAt, token },
+      value: { holderId, token, expiresAt },
       updatedAt: now,
     };
 
@@ -386,14 +424,63 @@ export async function acquireSyncLease(
   });
 }
 
-export async function releaseSyncLease(holderId: string): Promise<boolean> {
+export async function renewSyncLease(
+  holderId: string,
+  token: string,
+  ttlMs = DEFAULT_LEASE_TTL
+): Promise<{ renewed: boolean; token?: string; leaseExpiresAt?: number; reason?: string }> {
   return runAtomicTransaction([STORE_SYNC_METADATA], async (stores) => {
     const store = stores[STORE_SYNC_METADATA];
     const currentRecord = await promisifyRequest<
-      SyncMetadataRecord<{ holderId: string; expiresAt: number; token: string }> | undefined
+      SyncMetadataRecord<SyncLeaseRecord> | undefined
     >(store.get(LEASE_METADATA_KEY));
 
-    if (!currentRecord?.value || currentRecord.value.holderId !== holderId) {
+    const now = Date.now();
+    const currentLease = currentRecord?.value;
+
+    if (!currentLease) {
+      return { renewed: false, reason: "no_active_lease" };
+    }
+
+    if (currentLease.expiresAt <= now) {
+      return { renewed: false, reason: "lease_expired" };
+    }
+
+    if (currentLease.holderId !== holderId) {
+      return { renewed: false, reason: "holder_mismatch" };
+    }
+
+    if (currentLease.token !== token) {
+      return { renewed: false, reason: "token_mismatch" };
+    }
+
+    const expiresAt = now + ttlMs;
+    const updatedRecord: SyncMetadataRecord<SyncLeaseRecord> = {
+      key: LEASE_METADATA_KEY,
+      value: { holderId, token, expiresAt },
+      updatedAt: now,
+    };
+
+    await promisifyRequest(store.put(updatedRecord));
+
+    return {
+      renewed: true,
+      token,
+      leaseExpiresAt: expiresAt,
+    };
+  });
+}
+
+export async function releaseSyncLease(holderId: string, token: string): Promise<boolean> {
+  return runAtomicTransaction([STORE_SYNC_METADATA], async (stores) => {
+    const store = stores[STORE_SYNC_METADATA];
+    const currentRecord = await promisifyRequest<
+      SyncMetadataRecord<SyncLeaseRecord> | undefined
+    >(store.get(LEASE_METADATA_KEY));
+
+    const currentLease = currentRecord?.value;
+
+    if (!currentLease || currentLease.holderId !== holderId || currentLease.token !== token) {
       return false;
     }
 

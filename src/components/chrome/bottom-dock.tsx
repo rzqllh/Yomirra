@@ -7,6 +7,7 @@ import { DOCK_NAV_ITEMS } from "@/shared/config/nav"
 import { cn } from "@/shared/utils/cn"
 import { useSearchFilterStore } from "@/shared/store/search-filter-store"
 import { Icon } from "@/components/ui/icon"
+import { Surface } from "@/components/ui/surface"
 import { beginNavigationIntent, getNavigationPathname } from "@/shared/lib/navigation-intent"
 import { transitions } from "@/shared/lib/motion/tokens"
 
@@ -42,7 +43,8 @@ export function BottomDock({ pendingHref }: { pendingHref?: string | null }) {
       }}
     >
       <div className="pointer-events-auto mx-auto flex w-fit max-w-full items-center justify-center gap-2 max-[359px]:gap-1.5">
-        <div className="yomirra-chrome flex h-14 min-w-0 items-center justify-center gap-1 rounded-xl px-1.5 py-1 sm:gap-1.5 sm:px-2">
+        <Surface asChild variant="glassChrome" rounded="dock">
+          <div className="yomirra-chrome flex h-14 min-w-0 items-center justify-center gap-1 rounded-xl px-1.5 py-1 sm:gap-1.5 sm:px-2">
           {mainItems.map((item) => {
             const isActive = isMainTabActive(item.href)
 
@@ -96,7 +98,9 @@ export function BottomDock({ pendingHref }: { pendingHref?: string | null }) {
             )
           })}
         </div>
+      </Surface>
 
+      <Surface asChild variant="glassChrome" rounded="dock">
         <Link
           href={searchItem.href}
           onClick={(event) => {
@@ -130,6 +134,7 @@ export function BottomDock({ pendingHref }: { pendingHref?: string | null }) {
             )}
           />
         </Link>
+      </Surface>
       </div>
     </nav>
   )
