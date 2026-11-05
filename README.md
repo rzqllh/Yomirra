@@ -57,9 +57,11 @@ Judul yang sedang dibuka, sudah disimpan, atau sudah dibaca tidak diprioritaskan
 
 Jika source utama bermasalah, Yomirra dapat mencari source alternatif untuk judul yang sama. Relink tidak dilakukan secara agresif untuk match yang ambigu, dan progress lama tetap dipertahankan bila chapter tidak bisa dipetakan dengan aman.
 
+Sumber yang gagal berulang muncul di kelompok **Under Maintenance** di halaman Sumber, dengan alasan dan status pemeriksaan. Sumber tersebut dijeda dari katalog dan pencarian default hingga pemeriksaan berhasil. Tautan judul yang sudah tersimpan tetap bisa dibuka saat layanan sumber mengizinkan. Saat sebagian sumber gagal, Beranda menampilkan hasil yang tersedia terlebih dahulu dan menaruh pemberitahuan serta pilihan pemulihan di bawah katalog.
+
 ### Reader dan offline
 
-Reader mendukung chapter berbasis gambar, progress baca, chapter navigator, preferensi reader, serta download/offline flow pada browser yang mendukung. Untuk format vertikal (webtoon), Reader menyediakan continuous scrubber 0–100% berbasis posisi scroll riil tanpa dot circle berlebih, sementara mode paginasi (LTR/RTL) tetap mempertahankan navigasi halaman diskrit. Kanvas Reader menggunakan dark loading minimal yang menghormati `prefers-reduced-motion` dan menghilangkan efek layout jump dari skeleton komik palsu.
+Reader mendukung chapter berbasis gambar, progress baca, chapter navigator, preferensi reader, serta download/offline flow pada browser yang mendukung. Halaman dimuat bertahap dari posisi baca. Gestur zoom mengikuti pengaturan browser dan perangkat. Untuk format vertikal (webtoon), Reader menyediakan continuous scrubber 0–100% berbasis posisi scroll riil tanpa dot circle berlebih, sementara mode paginasi (LTR/RTL) tetap mempertahankan navigasi halaman diskrit. Kanvas Reader menggunakan dark loading minimal yang menghormati `prefers-reduced-motion` dan menghilangkan efek layout jump dari skeleton komik palsu.
 
 Navigasi reader menjaga parent page secara eksplisit: perpindahan detail → reader dan antar-chapter tidak meninggalkan reader route lama di belakang tombol kembali, sehingga keluar ke detail lalu kembali lagi mengarah ke halaman asal, bukan ke reader sebelumnya.
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased — Production stabilization
+
+- Batasi permintaan publik per instance, bagikan pekerjaan source yang sedang berlangsung, dan beri jeda pemulihan setelah upstream gagal berulang. Otorisasi dan kuota operasi berbiaya tetap memerlukan Redis.
+- Pencarian terkait dan rating batch mengembalikan hasil yang tersedia saat cache atau provider gagal. Sumber yang membutuhkan perbaikan tampil di **Under Maintenance** dan dapat kembali setelah lulus pemeriksaan.
+- Reader memprioritaskan gambar yang terlihat, melanjutkan antrean saat pembaca melompat jauh, dan mengikuti zoom bawaan browser.
+- Selaraskan dock dan efek kaca, tingkatkan hierarki tema terang, serta rapikan onboarding, detail komik, dan status chapter.
+- Tempatkan pemberitahuan katalog di bawah hasil, sediakan fallback cover yang gagal dimuat, dan nonaktifkan code generation Zod di browser. CSP tetap Report-Only selama validasi.
+
 ## Unreleased — Redis read containment dan bottom dock (5 November 2026)
 
 - Cache publik membatasi Redis `GET` berulang melalui near-cache maksimal 10 detik dengan batas kapasitas, timeout fencing, dan invalidasi ketika hasil pencarian error atau admin melakukan flush.
