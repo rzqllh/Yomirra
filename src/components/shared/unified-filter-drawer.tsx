@@ -15,6 +15,7 @@ import { mergeFilters, type MergedFilterList } from "@/shared/utils/filter-helpe
 import { canonicalizeFilterValue, parseSearchExpression, resolveSearchTag, type SearchTagCategory } from "@/shared/lib/search-intelligence";
 import { normalizeTitle } from "@/shared/lib/title-matcher";
 import type { FilterList, SourceMetadata } from "@/shared/sources/source-types";
+import { isDiscoverySourceSystemEligible, isSearchSourceSystemEligible } from "@/shared/sources/discovery-source-policy";
 import { sourceQueryOptions } from "@/shared/sources/source-query-options";
 
 const NSFW_GENRE_IDENTIFIERS = new Set([
@@ -167,15 +168,15 @@ export function UnifiedFilterDrawer({
     if (context !== "search") return [];
 
     return allSources.filter((item) => {
-      if (!item.isInstalled || item.isEnabled === false || !item.capabilities?.search) return false;
+      if (item.maintenance || !isSearchSourceSystemEligible(item)) return false;
       if (item.isNsfw && hideNsfw) return false;
       return true;
     });
   }, [context, allSources, hideNsfw]);
 
-  const activeSelectedSources = searchStore.selectedSources || [];
+  const activeSelectedSources = searchStore.hasCustomizedSources ? searchStore.selectedSources : null;
   const sourcesToFetch =
-    activeSelectedSources.length > 0
+    activeSelectedSources !== null
       ? searchableSources.filter((source) => activeSelectedSources.includes(source.id))
       : searchableSources;
   const filterSourcesToFetch = sourcesToFetch.filter(
@@ -184,9 +185,10 @@ export function UnifiedFilterDrawer({
 
   const searchFiltersQueries = useQueries({
     queries: (context === "search" ? filterSourcesToFetch : []).map((source) => ({
-      queryKey: ["filters", source.id],
+      queryKey: ["sourceFilters", source.id],
       queryFn: () => apiClient.getFilters(source.id),
-      staleTime: Infinity,
+      staleTime: 5 * 60 * 1000,
+      retry: false,
     })),
   });
 
@@ -199,7 +201,7 @@ export function UnifiedFilterDrawer({
     activeLibrarySource?.capabilities?.filters === true;
 
   const eligibleLibrarySources = React.useMemo(() => {
-    return allSources.filter((s) => s.isInstalled && s.isEnabled !== false && (!hideNsfw || !s.isNsfw) && s.capabilities?.filters);
+    return allSources.filter((s) => !s.maintenance && isDiscoverySourceSystemEligible(s) && (!hideNsfw || !s.isNsfw) && s.capabilities?.filters);
   }, [allSources, hideNsfw]);
 
   const libraryAllFiltersQueries = useQueries({

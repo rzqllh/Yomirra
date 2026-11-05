@@ -160,6 +160,7 @@ export function useSearchCatalog() {
       queryKey: ["sourceFilters", sourceId],
       queryFn: (): Promise<FilterList> => apiClient.getFilters(sourceId),
       staleTime: 5 * 60 * 1000,
+      retry: false,
     })),
   });
 
