@@ -20,6 +20,7 @@ describe("Domain resolver short-lived Redis read deduplication", () => {
     vi.mocked(redis.get).mockReset();
     vi.mocked(redis.setex).mockReset();
     vi.mocked(redis.del).mockReset();
+    vi.mocked(redis.del).mockResolvedValue(1);
     await domainResolver.resetDomainCache();
   });
   afterEach(() => vi.useRealTimers());
