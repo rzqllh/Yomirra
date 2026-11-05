@@ -5,6 +5,7 @@ import { CONTENT_PREFERENCE_COOKIE, DATA_SAVER_COOKIE, LANGUAGE_PREFERENCE_COOKI
 import { isDiscoverySourceSystemEligible } from "@/shared/sources/discovery-source-policy";
 import type { MangaSource, SourceReadOptions } from "@/shared/sources/source-types";
 import { SourceError } from "./error";
+import { withSourceCapacity } from "./source-capacity";
 
 export function getRequestReadOptions(request: NextRequest): SourceReadOptions {
   const params = request.nextUrl.searchParams;
@@ -58,13 +59,14 @@ export function contentCacheKey(source: MangaSource, operation: string, params: 
 export async function loadSourceCatalog(source: MangaSource, operation: "popular" | "latest", page: number, options: SourceReadOptions = {}) {
   assertSourceAccess(source, options);
   const result = await withCache(contentCacheKey(source, operation, String(page), options),
-    () => operation === "popular" ? source.getPopular(page, options) : source.getLatest(page, options), CACHE_TTL.DISCOVERY);
+    () => withSourceCapacity(source.id, () => operation === "popular" ? source.getPopular(page, options) : source.getLatest(page, options)), CACHE_TTL.DISCOVERY);
   return { ...result, mangas: result.mangas.filter((item) => isContentVisible(item, options.hideNsfw !== false)) };
 }
 
 export async function loadSourceDetail(source: MangaSource, mangaId: string, options: SourceReadOptions = {}) {
   assertSourceAccess(source, options);
-  const detail = await withCache(contentCacheKey(source, "manga", mangaId, options), () => source.getDetail(mangaId, options), CACHE_TTL.DETAIL);
+  const detail = await withCache(contentCacheKey(source, "manga", mangaId, options),
+    () => withSourceCapacity(source.id, () => source.getDetail(mangaId, options)), CACHE_TTL.DETAIL);
   if (!isContentVisible(detail, options.hideNsfw !== false)) {
     throw new SourceError("Konten disembunyikan oleh pengaturan konten", {
       code: "CONTENT_RESTRICTED", sourceId: source.id, stage: "detail", statusCode: 403,
@@ -75,14 +77,16 @@ export async function loadSourceDetail(source: MangaSource, mangaId: string, opt
 
 export async function loadSourceChapters(source: MangaSource, mangaId: string, options: SourceReadOptions = {}) {
   assertSourceAccess(source, options);
-  return withCache(contentCacheKey(source, "chapters", mangaId, options), () => source.getChapters(mangaId, options), CACHE_TTL.CHAPTERS);
+  return withCache(contentCacheKey(source, "chapters", mangaId, options),
+    () => withSourceCapacity(source.id, () => source.getChapters(mangaId, options)), CACHE_TTL.CHAPTERS);
 }
 
 export async function loadSourcePages(source: MangaSource, mangaId: string, chapterId: string, options: SourceReadOptions = {}) {
   assertSourceAccess(source, options);
   // MangaDex @Home URLs expire. Never revive an expired URL from stale-on-error cache.
   return withCache(contentCacheKey(source, "pages", `${mangaId}:${chapterId}`, options),
-    () => source.getPages(chapterId, { ...options, mangaId }), source.id === "mangadex" ? 300 : CACHE_TTL.PAGES,
+    () => withSourceCapacity(source.id, () => source.getPages(chapterId, { ...options, mangaId })),
+    source.id === "mangadex" ? 300 : CACHE_TTL.PAGES,
     { allowStaleOnError: source.id !== "mangadex" });
 }
 

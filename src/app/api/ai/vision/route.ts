@@ -12,7 +12,7 @@ const visionSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const rateLimit = await checkRateLimitPolicy(req, "publicSearch", "ai-vision");
+  const rateLimit = await checkRateLimitPolicy(req, "publicAi", "ai-vision");
   if (!rateLimit.success) {
     return createRateLimitRejection(rateLimit, {
       unavailableMessage: "Layanan analisis visual sedang padat, silakan coba beberapa saat lagi.",

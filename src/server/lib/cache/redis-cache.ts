@@ -17,6 +17,11 @@ interface CacheEntry<T> {
   expiresAt: number;
 }
 
+interface CacheOptions<T> {
+  allowStaleOnError?: boolean;
+  shouldPersist?: (data: T) => boolean;
+}
+
 const FLIGHT_LIFETIME_MS = 30_000;
 const MAX_IN_FLIGHT = 1024;
 const inFlight = new Map<string, Promise<unknown>>();
@@ -107,7 +112,7 @@ export async function withCache<T>(
   key: string,
   fetcher: () => Promise<T>,
   ttlSeconds: number,
-  options: { allowStaleOnError?: boolean } = {}
+  options: CacheOptions<T> = {}
 ): Promise<T> {
   const activeTtlSeconds = Math.max(1, Math.floor(ttlSeconds));
   const flightKey = JSON.stringify([key, activeTtlSeconds, options.allowStaleOnError !== false]);
@@ -139,7 +144,7 @@ async function readThroughCache<T>(
   flightKey: string,
   fetcher: () => Promise<T>,
   activeTtlSeconds: number,
-  options: { allowStaleOnError?: boolean },
+  options: CacheOptions<T>,
   isCurrent: () => boolean,
   timeoutError: Error,
 ): Promise<T> {
@@ -184,7 +189,7 @@ async function readThroughCache<T>(
         };
         const serialized = JSON.stringify(entry);
         rememberNear(flightKey, serialized, entry.expiresAt);
-        if (isRedisConfigured && isRedisCommandAllowed()) {
+        if (options.shouldPersist?.(data) !== false && isRedisConfigured && isRedisCommandAllowed()) {
           // Physical retention matches active TTL plus permitted stale grace.
           await redis.setex(key, activeTtlSeconds + staleGraceSeconds, serialized);
         }

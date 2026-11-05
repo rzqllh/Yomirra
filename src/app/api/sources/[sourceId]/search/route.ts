@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 import { createHash } from "crypto";
 import { checkRateLimit } from "@/server/lib/security/rate-limit";
+import { withSourceCapacity } from "@/server/lib/sources/source-capacity";
 import { NextRequest, NextResponse } from "next/server";
 import { assertSourceAccess, contentCacheKey, getRequestReadOptions, sourceErrorResponse } from "@/server/lib/sources/content-access";
 import { isContentVisible } from "@/shared/sources/content-policy";
@@ -67,7 +68,7 @@ export async function GET(
 
     const data = await withCache(
       cacheKey,
-      () => source.search(q, page, filters, readOptions),
+      () => withSourceCapacity(sourceId, () => source.search(q, page, filters, readOptions)),
       CACHE_TTL.SEARCH
     );
 
