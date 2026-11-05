@@ -33,12 +33,9 @@ describe("ReaderSettingsDrawer & Per-Title Scope (P0 Q8/Q86)", () => {
     });
   });
 
-  it("disables double-tap per title without changing the global or another title", () => {
+  it("omits the obsolete custom zoom setting", () => {
     render(<ReaderSettingsDrawer isOpen onClose={vi.fn()} sourceId="mangadex" mangaId="frieren" />);
-    fireEvent.click(screen.getByRole("checkbox", { name: "Nonaktifkan double-tap zoom" }));
-    expect(useReaderStore.getState().perTitlePreferences["mangadex::frieren"].disableDoubleTapZoom).toBe(true);
-    expect(useReaderStore.getState().preferences.disableDoubleTapZoom ?? false).toBe(false);
-    expect(useReaderStore.getState().perTitlePreferences["other::title"]).toBeUndefined();
+    expect(screen.queryByRole("checkbox", { name: /zoom/i })).toBeNull();
   });
 
   it("renders drawer and does NOT recurse or crash when updating global preferences", () => {

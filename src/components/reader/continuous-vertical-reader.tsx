@@ -483,7 +483,6 @@ export function ContinuousVerticalReader({
                 priority={virtualRow.index === queueStartIndex}
                 offlineUrl={isDownloaded ? getOfflineImageUrl({ sourceId, mangaId, chapterId: item.chapterId, pageIndex: item.pageIndex }) : undefined}
                 imageFit={preferences.imageFit}
-                disableDoubleTapZoom={preferences.disableDoubleTapZoom}
                 dataIndex={virtualRow.index}
                 totalPages={pages.length}
                 pageWidth={item.width}
