@@ -162,14 +162,18 @@ export class SourceHealthStore {
       result[id] = snap;
     }
 
-    const missing = knownSourceIds?.map((id) => id.toLowerCase().trim()).filter((id) => !Object.hasOwn(result, id));
-    if (isRedisConfigured && missing?.length) {
+    const sourceIds = knownSourceIds?.map((id) => id.toLowerCase().trim());
+    if (isRedisConfigured && sourceIds?.length) {
       try {
-        const raw = await redis.mget(missing.map((id) => `${SNAPSHOT_KEY_PREFIX}${id}`));
+        const raw = await redis.mget(sourceIds.map((id) => `${SNAPSHOT_KEY_PREFIX}${id}`));
         for (const [index, value] of raw.entries()) {
           if (!value) continue;
           try {
-            result[missing[index]] = JSON.parse(value) as SourceHealthSnapshot;
+            const snapshot = JSON.parse(value) as SourceHealthSnapshot;
+            const id = sourceIds[index];
+            if (!result[id] || snapshot.lastCheckedAt > result[id].lastCheckedAt) {
+              result[id] = snapshot;
+            }
           } catch {
             // A malformed snapshot must not hide the remaining sources.
           }

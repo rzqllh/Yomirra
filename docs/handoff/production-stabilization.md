@@ -8,9 +8,16 @@ Vercel production deployment `dpl_4N63SyaPDRJPTuNRQq1Jfkdigjq5` was Ready at the
 
 One Shinigami title and chapter returned HTTP 200 on detail, chapter-list and page API requests in 0.46–0.50 s. SSR detail and Reader returned 200 in 0.41–0.46 s. These spot samples do not establish tail latency. Chromium at 360 px loaded the production Reader and reproduced a CSP report-only unsafe-eval warning.
 
-## Work in progress
+## P0 changes
 
-- P0.1 commit `1890d65` fixes Reader SSR discarding a successful pages result during chapter loading. Six test files passed, 19 tests.
-- P0.2 bounds public request admission in memory, preserves Redis-backed security admission, and limits concurrent source work. Global search coalesces partial results briefly instead of refetching all sources on every request.
-- Next verify repeat source failures and recovery, then remove the Redis gate from safe public fallback paths.
-- PR #143 was open and draft during the baseline audit. Production release remains gated on full checks and production health.
+- `1890d65` reuses a successful Reader pages result during chapter loading. 19 focused tests passed.
+- `5b91d76` bounds public admission and concurrent source requests per instance. Security admission remains Redis-backed and fail-closed. Partial global search results briefly share a local cache. 42 focused tests passed.
+- `d9b0e51` moves Komikindo, KomikNesia and WestManga into Maintenance after live catalog checks. Komikindo and WestManga returned upstream 403 on both pages. KomikNesia page 1 repeatedly failed schema validation at `contents.data[3].sinopsis`, while page 2 returned 40 items. A newer successful functional probe restores default selection. 75 focused tests passed.
+- `1d40ea2` lets public related search and rating batch return empty or partial results during Redis outages. New paid embeddings still require secure admission. 15 focused tests passed.
+- `c97294e` adds per-source cooldowns, a single recovery probe and temporary 404 caching. Invalid Asura slugs return 404 before contacting upstream. 56 focused tests passed.
+
+## Remaining gates
+
+- Production Redis is down at the baseline. Source recovery through the deployed health pipeline and production latency under load are unverified. The request budget is per instance.
+- PR #143 was open and draft at audit time. Keep it separate.
+- Next run dock and Reader browser checks, followed by full typecheck, lint, tests, production build and smoke.
