@@ -162,9 +162,9 @@ export function ReaderShell({
   const getBackgroundColor = () => {
     switch (preferences.background) {
       case "system":
-        return resolvedTheme === "light" ? "#f9f9fb" : "#000000";
+        return resolvedTheme === "light" ? "#eef0f5" : "#000000";
       case "mist":
-        return "#f9f9fb";
+        return "#eef0f5";
       case "deepLagoon":
         return "#003135";
       case "black":

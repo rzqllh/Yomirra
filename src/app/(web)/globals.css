@@ -230,23 +230,22 @@
 
   .light {
     color-scheme: light;
-    /* Clean, soft modern off-white canvas without yellow tint, restrained hanko red accent. */
-    --surface-base: #f9f9fb;
-    --surface-raised: #ffffff;
+    --surface-base: #eef0f5;
+    --surface-raised: #fafbfe;
     --surface-overlay: #ffffff;
-    --surface-muted: #f0f2f5;
-    --surface-hover: #e8ebf0;
+    --surface-muted: #e6e9f0;
+    --surface-hover: #dce2eb;
     --surface-glass: rgba(255, 255, 255, 0.90);
 
     --text-primary: #121316;
-    --text-secondary: #4a4e5c;
-    --text-muted: #595e6d;
+    --text-secondary: #3d4454;
+    --text-muted: #50586a;
     --text-on-accent: #ffffff;
 
-    --border-subtle: rgba(0, 0, 0, 0.06);
-    --border-default: rgba(0, 0, 0, 0.12);
-    --border-strong: rgba(0, 0, 0, 0.20);
-    --border-glass: rgba(0, 0, 0, 0.08);
+    --border-subtle: rgb(34 44 64 / 11%);
+    --border-default: rgb(34 44 64 / 19%);
+    --border-strong: rgb(34 44 64 / 30%);
+    --border-glass: rgb(34 44 64 / 15%);
 
     --color-accent: #a82e2e;
     --color-accent-dim: #faecea;
@@ -268,7 +267,7 @@
 
     /* Diffused shadow for glass docks/headers */
     --shadow-heavy-val: 0 12px 30px rgba(28, 28, 30, 0.08), 0 4px 12px rgba(28, 28, 30, 0.04);
-    --shadow-glass: inset 0 1px 0 0 rgba(255, 255, 255, 0.7), 0 8px 32px rgba(28, 28, 30, 0.06);
+    --shadow-glass: inset 0 1px 0 0 rgba(255, 255, 255, 0.7), 0 5px 20px rgb(34 44 64 / 13%);
 
     /* shadcn/ui compatible mapping */
     --background: var(--surface-base);
