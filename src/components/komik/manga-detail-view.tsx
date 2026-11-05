@@ -232,7 +232,7 @@ function MangaDetailContent({
         <Button
           asChild
           variant="accent"
-          className="w-full md:w-auto md:min-w-[210px] md:px-6 rounded-md h-[52px] md:h-[48px] text-base font-bold flex items-center justify-center gap-2.5 bg-accent hover:bg-accent/90 text-white shadow-md active:scale-[0.98] transition-all"
+          className="w-full md:w-auto md:min-w-[210px] md:px-6 rounded-md h-[52px] md:h-[48px] text-base font-bold flex items-center justify-center gap-2.5 bg-accent hover:bg-accent/90 text-accent-on shadow-md active:scale-[0.98] transition-all"
         >
           <Link
             href={targetHref}
@@ -251,7 +251,6 @@ function MangaDetailContent({
     );
   };
 
-  // Secondary actions — compact four-item rail composed by MangaDetailLayout
   const renderActions = () => (
     <>
       <MangaActions
@@ -329,7 +328,7 @@ function MangaDetailContent({
               src={detail.coverUrl}
               alt={detail.title}
               fill
-              sizes="(max-width: 768px) 36vw, 165px"
+              sizes="(max-width: 768px) 41vw, 165px"
               className="object-cover"
               unoptimized
               priority
@@ -343,7 +342,7 @@ function MangaDetailContent({
         mobileMeta={
           <>
             <div className="mb-2">
-              <h1 id="manga-detail-title-mobile" className="text-[22px] sm:text-[26px] font-black tracking-tight text-white leading-[1.1] line-clamp-3 text-balance drop-shadow-sm vt-title-mobile">
+              <h1 id="manga-detail-title-mobile" className="text-xl min-[360px]:text-[22px] sm:text-[26px] font-black tracking-tight text-white leading-[1.1] line-clamp-3 text-balance drop-shadow-sm vt-title-mobile">
                 {detail.title}
               </h1>
               {detail.originalTitle && (
@@ -366,7 +365,7 @@ function MangaDetailContent({
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium tracking-wide backdrop-blur-md border border-white/10 bg-black/30 text-white/70 shadow-xs">
-                  <span>Unrated</span>
+                  <span>Belum dinilai</span>
                 </span>
               )}
               {detail.status && detail.status !== "UNKNOWN" && (
@@ -410,6 +409,17 @@ function MangaDetailContent({
         }
         desktopMeta={
           <>
+            <div>
+              <h1 id="manga-detail-title-desktop" className="text-3xl lg:text-4xl xl:text-[42px] font-black tracking-tight leading-[1.15] text-white drop-shadow-sm vt-title-desktop max-w-2xl">
+                {detail.title}
+              </h1>
+              {detail.originalTitle && (
+                <p className="text-sm font-medium text-white/70 mt-1">
+                  {detail.originalTitle}
+                </p>
+              )}
+            </div>
+
             <div className="flex flex-wrap items-center gap-1.5">
               {detail.format && (
                 <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider backdrop-blur-md border border-white/15 bg-black/40 text-white shadow-xs">
@@ -423,7 +433,7 @@ function MangaDetailContent({
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium tracking-wide backdrop-blur-md border border-white/10 bg-black/30 text-white/70 shadow-xs">
-                  <span>Unrated</span>
+                  <span>Belum dinilai</span>
                 </span>
               )}
               {detail.status && detail.status !== "UNKNOWN" && (
@@ -436,17 +446,6 @@ function MangaDetailContent({
                 mangaId={mangaId}
                 title={detail.title}
               />
-            </div>
-
-            <div>
-              <h1 id="manga-detail-title-desktop" className="text-3xl lg:text-4xl xl:text-[42px] font-black tracking-tight leading-[1.15] text-white drop-shadow-sm vt-title-desktop max-w-2xl">
-                {detail.title}
-              </h1>
-              {detail.originalTitle && (
-                <p className="text-sm font-medium text-white/70 mt-1">
-                  {detail.originalTitle}
-                </p>
-              )}
             </div>
 
             <div className="flex flex-col gap-0.5">
@@ -463,9 +462,10 @@ function MangaDetailContent({
         synopsis={
           <>
             <div className="flex items-center justify-between mb-2.5">
-              <span className="text-[11px] font-black text-text-muted uppercase tracking-widest">Sinopsis</span>
+              <h2 className="text-base font-bold tracking-tight text-text-primary">Sinopsis</h2>
               {cleanedSynopsis.length > 280 && (
                 <button
+                  aria-expanded={isExpanded}
                   onClick={() => setIsExpanded(!isExpanded)}
                   className="text-[11px] font-bold text-accent hover:text-accent-hover transition-colors inline-flex items-center gap-1"
                 >
@@ -509,11 +509,12 @@ function MangaDetailContent({
         }
         chapters={
           <>
-            <div className="sticky top-[var(--secondary-sticky-top)] z-20 bg-surface-base/95 py-3.5 px-0.5 border-b border-border-default/40 flex flex-col gap-3 backdrop-blur-md">
+            <div className="sticky top-[var(--secondary-sticky-top)] z-20 bg-surface-raised/95 py-3.5 px-0.5 border-b border-border-default/40 flex flex-col gap-3 backdrop-blur-md">
               <div className="flex items-center justify-between">
-                <span className="text-lg md:text-xl font-bold tracking-tight text-text-primary flex items-center gap-2">
-                  {chapters?.length || 0} Chapter
-                </span>
+                <h2 id="detail-chapters" className="flex flex-wrap items-center gap-x-2 text-lg font-bold tracking-tight text-text-primary md:text-xl">
+                  Daftar chapter
+                  <span className="rounded-full bg-surface-muted px-2 py-0.5 text-xs text-text-secondary">{chapters?.length ?? 0}</span>
+                </h2>
                 <button
                   onClick={() => setSortOrder(prev => prev === "desc" ? "asc" : "desc")}
                   className="flex items-center gap-1.5 min-h-[44px] text-[12px] font-semibold text-text-muted hover:text-text-primary transition-colors py-1 px-3 rounded-lg hover:bg-surface-hover"
@@ -551,7 +552,10 @@ function MangaDetailContent({
             ) : (
               <div
                 ref={parentRef}
-                className="flex flex-col max-h-[60vh] md:max-h-[500px] overflow-y-auto overflow-x-hidden pt-2 pr-2 -mr-2 [scrollbar-width:thin]"
+                tabIndex={0}
+                role="region"
+                aria-labelledby="detail-chapters"
+                className="flex max-h-[52dvh] flex-col overflow-x-hidden overflow-y-auto pt-2 outline-none focus-visible:outline-2 focus-visible:outline-accent md:max-h-[500px]"
               >
                 <div
                   style={{

@@ -69,29 +69,28 @@ export function MangaDetailLayout({
           {/* Top vignette — keeps header/back button readable without killing the cover */}
           <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/15 via-35% to-transparent pointer-events-none" />
 
-          {/* Bottom gradient — text contrast + seamless surface-base blend in one smooth pass */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[var(--color-surface-base)] via-black/55 via-45% to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/65 to-black/10" />
         </div>
 
         {/* Page Header */}
         {header}
 
         {/* Hero Content Container */}
-        <div className="w-full max-w-9xl mx-auto px-4 md:px-8 pt-[calc(var(--safe-top,0px)+72px)] md:pt-20 pb-4 md:pb-6 relative z-10">
+        <div className="w-full max-w-7xl mx-auto px-4 md:px-8 pt-[calc(var(--safe-top,0px)+72px)] md:pt-20 pb-5 md:pb-8 relative z-10">
           {/* Mobile Hero Flow */}
           <div className="flex flex-col gap-4 md:hidden">
-            <div className="flex gap-4 relative items-end">
+            <div className="flex gap-3.5 relative items-end min-[360px]:gap-5">
               <div
                 className={cn(
                   "relative shrink-0 aspect-[2/3] rounded-[18px] overflow-hidden shadow-lg border border-white/10 dark:border-white/10 bg-surface-raised z-20",
                   mobileCoverClassName
                 )}
-                style={{ width: "clamp(130px, 36vw, 165px)" }}
+                style={{ width: "clamp(126px, 41vw, 180px)" }}
               >
                 {mobileCover}
               </div>
 
-              <div className="flex flex-col flex-1 overflow-hidden pb-1">
+              <div className="flex min-w-0 flex-1 flex-col pb-1">
                 {mobileMeta}
               </div>
             </div>
@@ -99,14 +98,13 @@ export function MangaDetailLayout({
             {/* Primary CTA */}
             {mainAction}
 
-            {/* Secondary actions share one compact four-item rail across viewports. */}
-            <div className="grid grid-cols-4 gap-2 mt-2 w-full [&>button]:w-full [&>button]:min-w-0 [&>button]:justify-center">
+            <div role="group" aria-label="Aksi komik" className="grid w-full grid-cols-2 gap-2 [&>button]:min-w-0">
               {actions}
             </div>
           </div>
 
           {/* Desktop Hero Flow */}
-          <div className="hidden md:flex gap-8 items-end">
+          <div className="hidden items-center gap-8 md:flex lg:gap-10">
             <div
               className={cn(
                 "relative w-[220px] lg:w-[240px] shrink-0 aspect-[2/3] rounded-xl overflow-hidden shadow-xl border border-white/10 dark:border-white/10 bg-surface-raised z-20",
@@ -116,14 +114,12 @@ export function MangaDetailLayout({
               {desktopCover}
             </div>
 
-            <div className="flex-1 flex flex-col gap-3 pb-1">
+            <div className="flex min-w-0 flex-1 flex-col items-start gap-4">
               {desktopMeta}
 
-              <div className="flex flex-wrap items-center gap-2.5 pt-2 w-full">
-                <div className="shrink-0">{mainAction}</div>
-                <div className="flex flex-wrap items-center gap-2 [&>button]:min-w-0">
-                  {actions}
-                </div>
+              {mainAction}
+              <div role="group" aria-label="Aksi komik" className="flex flex-wrap gap-2">
+                {actions}
               </div>
             </div>
           </div>
@@ -132,7 +128,7 @@ export function MangaDetailLayout({
 
       {/* Body Content: 2-Column Editorial Grid + Full-Width Recommendations (Anti-Cutoff) */}
       <div className="w-full relative z-10 bg-surface-base">
-        <div className="w-full max-w-7xl mx-auto px-4 md:px-8 py-6 space-y-8">
+        <div className="w-full max-w-7xl mx-auto px-4 pt-6 pb-[var(--page-bottom-safe)] md:px-8 md:pb-8 space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
             {/* Left Column on Desktop (4 cols / ~33%): Sticky Synopsis & Metadata */}
             <div className="lg:col-span-4 flex flex-col gap-6 lg:sticky lg:top-20">
@@ -142,7 +138,7 @@ export function MangaDetailLayout({
             </div>
 
             {/* Right Column on Desktop (8 cols / ~67%): Chapters List */}
-            <div className="lg:col-span-8 flex flex-col min-w-0">
+            <div className="lg:col-span-8 flex min-w-0 flex-col rounded-xl border border-border-default/80 bg-surface-raised px-3 pb-3 sm:px-5">
               {chapters}
             </div>
           </div>
