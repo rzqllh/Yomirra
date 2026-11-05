@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
-import { withCache } from '../redis-cache';
+import { withCache, _resetNearCacheForTesting } from '../redis-cache';
 
 const redisState = vi.hoisted(() => ({
   configured: true,
@@ -21,6 +21,7 @@ vi.mock("../redis", () => ({
 describe("Cache: withCache", () => {
   afterEach(() => { vi.useRealTimers(); });
   beforeEach(async () => {
+    _resetNearCacheForTesting();
     redisState.configured = true;
     redisState.circuit = "closed";
     redisState.probing = false;
@@ -81,6 +82,8 @@ describe("Cache: withCache", () => {
     await withCache("signed-url", async () => ({ url: "https://example.com/new" }), 300, { allowStaleOnError: false });
     expect(redis.setex).toHaveBeenCalledWith("signed-url", 300, expect.any(String));
 
+    vi.useFakeTimers();
+    await vi.advanceTimersByTimeAsync(10_001);
     vi.mocked(redis.get).mockResolvedValueOnce(JSON.stringify({
       data: { url: "https://example.com/expired" },
       expiresAt: Date.now() - 1,
@@ -169,6 +172,10 @@ describe("Cache: withCache", () => {
     await expect(Promise.all(requests)).resolves.toEqual(Array(20).fill("fresh"));
     expect(redis.setex).toHaveBeenCalledTimes(configured ? 1 : 0);
 
+    // Completed in-flight work is gone, but its fresh bounded near-cache survives.
+    await expect(withCache("shared", async () => "unexpected", 60)).resolves.toBe("fresh");
+    vi.useFakeTimers();
+    await vi.advanceTimersByTimeAsync(10_001);
     await expect(withCache("shared", async () => "next", 60)).resolves.toBe("next");
   });
 
@@ -270,4 +277,61 @@ describe("Cache: withCache", () => {
     expect(redis.setex).toHaveBeenCalledOnce();
     expect(redis.setex).toHaveBeenCalledWith("same-key", 7200, expect.stringContaining('"longer"'));
   });
+
+  it("deduplicates hot Redis GETs, without sharing mutable result references", async () => {
+    const { redis } = await import("../redis");
+    vi.mocked(redis.get).mockResolvedValue(JSON.stringify({
+      data: { total: 1 }, expiresAt: Date.now() + 60_000,
+    }));
+    const first = await withCache("hot-key", async () => ({ total: 5 }), 60);
+    first.total = 99;
+    const second = await withCache("hot-key", async () => ({ total: 5 }), 60);
+    expect(second).toEqual({ total: 1 });
+    expect(redis.get).toHaveBeenCalledOnce();
+  });
+
+  it("does not cache oversized results or retain them beyond the near TTL", async () => {
+    const { redis } = await import("../redis");
+    vi.mocked(redis.get).mockResolvedValue(JSON.stringify({
+      data: { payload: "x".repeat(70_000) }, expiresAt: Date.now() + 60_000,
+    }));
+    await withCache("large-key", async () => "unused", 60);
+    await withCache("large-key", async () => "unused", 60);
+    expect(redis.get).toHaveBeenCalledTimes(2);
+
+    vi.mocked(redis.get).mockResolvedValue(JSON.stringify({
+      data: { payload: "small" }, expiresAt: Date.now() + 60_000,
+    }));
+    await withCache("expiring-hot-key", async () => "unused", 60);
+    await withCache("expiring-hot-key", async () => "unused", 60);
+    expect(redis.get).toHaveBeenCalledTimes(3);
+    vi.useFakeTimers();
+    await vi.advanceTimersByTimeAsync(10_001);
+    await withCache("expiring-hot-key", async () => "unused", 60);
+    expect(redis.get).toHaveBeenCalledTimes(4);
+  });
+
+  it("never shares near-cache values between different TTL or stale contracts", async () => {
+    const { redis } = await import("../redis");
+    vi.mocked(redis.get).mockResolvedValue(JSON.stringify({
+      data: "cached", expiresAt: Date.now() + 60_000,
+    }));
+    await withCache("partition-key", async () => "new", 60);
+    await withCache("partition-key", async () => "new", 3600);
+    await withCache("partition-key", async () => "new", 60, { allowStaleOnError: false });
+    expect(redis.get).toHaveBeenCalledTimes(3);
+  });
+
+  it("evicts old entries instead of growing without bound", async () => {
+    const { redis } = await import("../redis");
+    vi.mocked(redis.get).mockResolvedValue(JSON.stringify({
+      data: "hit", expiresAt: Date.now() + 60_000,
+    }));
+    for (let index = 0; index < 257; index++) {
+      await withCache(`bounded-${index}`, async () => "miss", 60);
+    }
+    await withCache("bounded-0", async () => "miss", 60);
+    expect(redis.get).toHaveBeenCalledTimes(258);
+  });
+
 });

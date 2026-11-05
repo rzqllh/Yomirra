@@ -1,4 +1,5 @@
 import { getAllSourceMetadata } from "@/shared/sources/source-registry";
+import { cache } from "react";
 import { sourceHealthStore } from "@/server/lib/sources/health/health-store";
 import { probeSourceHealth } from "@/server/lib/sources/health/probe";
 import * as domainResolverModule from "@/server/lib/sources/domain-resolver";
@@ -74,7 +75,7 @@ export async function getDurableCoreSourceOverrides(): Promise<Record<string, Co
 /**
  * Mengambil core source overrides untuk consumer publik/pembaca (fail-open graceful fallback).
  */
-export async function getCoreSourceOverrides(): Promise<Record<string, CoreSourceOverride>> {
+async function readCoreSourceOverrides(): Promise<Record<string, CoreSourceOverride>> {
   if (!isRedisConfigured) return inMemoryCoreOverrides;
 
   if (!isRedisReady()) {
@@ -105,6 +106,10 @@ export async function getCoreSourceOverrides(): Promise<Record<string, CoreSourc
     return inMemoryCoreOverrides;
   }
 }
+
+// Request-scoped deduplication for server component renders. This introduces
+// no cross-request staleness for administrator source kill-switch decisions.
+export const getCoreSourceOverrides = cache(readCoreSourceOverrides);
 
 const SAVE_CORE_OVERRIDE_LUA = `
 local raw = redis.call('get', KEYS[1])
