@@ -71,11 +71,13 @@ export class RedisCircuitGuard extends Redis {
       : super.emit(event, ...args);
   }
 
-  override connect(...args: Parameters<Redis["connect"]>): Promise<void> {
+  override connect(callback?: Parameters<Redis["connect"]>[0]): Promise<void> {
     // Reconnects enter the same bounded attempt, regardless of timer context.
-    return this.probe
-      ? this.lifecycle.run(this.probe, () => super.connect(...args))
-      : super.connect(...args);
+    if (!this.probe) return super.connect(callback);
+    const applicationCallback: typeof callback = typeof callback === "function"
+      ? (...args) => this.lifecycle.exit(() => callback(...args))
+      : callback;
+    return this.lifecycle.run(this.probe, () => super.connect(applicationCallback));
   }
 
   isCircuitOpen(): boolean {

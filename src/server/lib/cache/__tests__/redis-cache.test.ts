@@ -1,4 +1,4 @@
-import { beforeEach, describe, it, expect, vi } from "vitest";
+import { afterEach, beforeEach, describe, it, expect, vi } from "vitest";
 import { withCache } from '../redis-cache';
 
 const redisState = vi.hoisted(() => ({
@@ -19,6 +19,7 @@ vi.mock("../redis", () => ({
 }));
 
 describe("Cache: withCache", () => {
+  afterEach(() => { vi.useRealTimers(); });
   beforeEach(async () => {
     redisState.configured = true;
     redisState.circuit = "closed";
@@ -183,6 +184,71 @@ describe("Cache: withCache", () => {
       { status: "rejected", reason: expect.any(Error) },
     ]);
     await expect(withCache("retry", async () => "recovered", 60)).resolves.toBe("recovered");
+  });
+
+  it("bounds a never-settling flight and permits replacement after expiration", async () => {
+    vi.useFakeTimers();
+    redisState.configured = false;
+    const fetcher = vi.fn(() => new Promise<string>(() => {}));
+    const results = Promise.allSettled([
+      withCache("never-settles", fetcher, 60), withCache("never-settles", fetcher, 60),
+    ]);
+    await vi.advanceTimersByTimeAsync(29_999);
+    expect(fetcher).toHaveBeenCalledOnce();
+    await vi.advanceTimersByTimeAsync(1);
+    expect(await results).toEqual(Array(2).fill({
+      status: "rejected", reason: expect.objectContaining({ message: "Cache request timed out after 30000ms" }),
+    }));
+    await expect(withCache("never-settles", async () => "replacement", 60)).resolves.toBe("replacement");
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it.each(["resolve", "reject"] as const)("fences late original %s from a pending replacement", async (settle) => {
+    vi.useFakeTimers();
+    const { redis } = await import("../redis");
+    let resolveOriginal!: (value: string) => void;
+    let rejectOriginal!: (error: Error) => void;
+    const original = withCache("late-original", () => new Promise<string>((resolve, reject) => {
+      resolveOriginal = resolve;
+      rejectOriginal = reject;
+    }), 60);
+    const expired = expect(original).rejects.toThrow("Cache request timed out after 30000ms");
+    await vi.advanceTimersByTimeAsync(30_000);
+    await expired;
+    let resolveReplacement!: (value: string) => void;
+    const replacementFetcher = vi.fn(() => new Promise<string>((resolve) => { resolveReplacement = resolve; }));
+    const replacement = withCache("late-original", replacementFetcher, 60);
+    await vi.advanceTimersByTimeAsync(0);
+    if (settle === "resolve") resolveOriginal("obsolete");
+    else rejectOriginal(new Error("late rejection"));
+    await vi.advanceTimersByTimeAsync(0);
+    expect(redis.setex).not.toHaveBeenCalled();
+    const duplicateFetcher = vi.fn(async () => "unexpected duplicate");
+    const joined = withCache("late-original", duplicateFetcher, 60);
+    resolveReplacement("fresh replacement");
+    await expect(Promise.all([replacement, joined])).resolves.toEqual(["fresh replacement", "fresh replacement"]);
+    expect(replacementFetcher).toHaveBeenCalledOnce();
+    expect(duplicateFetcher).not.toHaveBeenCalled();
+    expect(redis.setex).toHaveBeenCalledOnce();
+    expect(redis.setex).toHaveBeenCalledWith("late-original", 120, expect.stringContaining("fresh replacement"));
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("caps distinct in-flight keys and frees capacity on timeout", async () => {
+    vi.useFakeTimers();
+    redisState.configured = false;
+    const fetcher = vi.fn(() => new Promise<string>(() => {}));
+    const results = Promise.allSettled(Array.from({ length: 1024 }, (_, index) =>
+      withCache(`capacity-${index}`, fetcher, 60),
+    ));
+    const rejectedFetcher = vi.fn(async () => "must not start");
+    await expect(withCache("capacity-overflow", rejectedFetcher, 60)).rejects.toThrow("Cache in-flight capacity exceeded");
+    expect(rejectedFetcher).not.toHaveBeenCalled();
+    expect(fetcher).toHaveBeenCalledTimes(1024);
+    await vi.advanceTimersByTimeAsync(30_000);
+    expect((await results).every((result) => result.status === "rejected")).toBe(true);
+    await expect(withCache("capacity-overflow", async () => "available", 60)).resolves.toBe("available");
+    expect(vi.getTimerCount()).toBe(0);
   });
 
   it("isolates concurrent requests with different TTLs and stale options", async () => {

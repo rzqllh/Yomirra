@@ -317,6 +317,42 @@ describe("Redis circuit through the real ioredis lifecycle", () => {
     expect(fixture.commands().filter((name) => name === "ping")).toHaveLength(0);
   });
 
+  it("strips handshake authority from connect error callbacks and their async descendants", async () => {
+    const fixture = createClient();
+    await openCircuit(fixture);
+    fixture.configure((peer) => { peer.holdInfo = true; });
+    const applicationCalls: Promise<unknown>[] = [];
+    let callbackError: Error | null | undefined;
+    const connect = fixture.client.connect;
+    vi.spyOn(fixture.client, "connect").mockImplementation(function (this: RedisCircuitGuard) {
+      return connect.call(this, (error) => {
+        callbackError = error;
+        const commands = () => [
+          fixture.client.get("callback-leak"), fixture.client.ping(), fixture.client.info(),
+          fixture.client.client("SETNAME", "callback-leak"), fixture.client.auth("secret"),
+        ];
+        applicationCalls.push(...commands().map((promise) => promise.catch((failure: unknown) => failure)));
+        applicationCalls.push(Promise.resolve().then(() => Promise.all(
+          commands().map((promise) => promise.catch((failure: unknown) => failure)),
+        )));
+      });
+    });
+    await vi.advanceTimersByTimeAsync(100);
+    const recovery = fixture.client.kickRecovery();
+    await flush();
+    void fixture.client.connect().catch(() => {});
+    await flush();
+    expect(callbackError).toBeInstanceOf(Error);
+    expect(applicationCalls).toHaveLength(6);
+    const results = (await Promise.all(applicationCalls)).flat();
+    expect(results).toHaveLength(10);
+    expect(results.every((error) => error instanceof Error && error.message.includes("circuit breaker"))).toBe(true);
+    expect(fixture.peers[1].commands.some((args) => args.includes("callback-leak"))).toBe(false);
+    fixture.peers[1].pendingInfo!();
+    await expect(recovery).resolves.toBe(true);
+    expect(fixture.commands().filter((name) => name === "ping")).toHaveLength(1);
+  });
+
   it.each(["resolve", "reject", "quota"] as const)("fences late probe %s even when a mock transport cannot cancel completion", async (settle) => {
     const fixture = createClient();
     await openCircuit(fixture);

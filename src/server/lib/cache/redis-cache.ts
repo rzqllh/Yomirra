@@ -17,6 +17,8 @@ interface CacheEntry<T> {
   expiresAt: number;
 }
 
+const FLIGHT_LIFETIME_MS = 30_000;
+const MAX_IN_FLIGHT = 1024;
 const inFlight = new Map<string, Promise<unknown>>();
 
 export function getSourceCacheKey(source: SourceMetadata, operation: string, params: string): string {
@@ -36,11 +38,24 @@ export async function withCache<T>(
 ): Promise<T> {
   const activeTtlSeconds = Math.max(1, Math.floor(ttlSeconds));
   const flightKey = JSON.stringify([key, activeTtlSeconds, options.allowStaleOnError !== false]);
-  const pending = inFlight.get(flightKey);
-  if (pending) return pending as Promise<T>;
+  const existing = inFlight.get(flightKey);
+  if (existing) return existing as Promise<T>;
+  if (inFlight.size >= MAX_IN_FLIGHT) {
+    throw new Error("Cache in-flight capacity exceeded");
+  }
 
-  const request = readThroughCache(key, fetcher, activeTtlSeconds, options).finally(() => {
-    inFlight.delete(flightKey);
+  const timeoutError = new Error(`Cache request timed out after ${FLIGHT_LIFETIME_MS}ms`);
+  let timer: ReturnType<typeof setTimeout>;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(timeoutError), FLIGHT_LIFETIME_MS);
+  });
+  const isCurrent = () => inFlight.get(flightKey) === request;
+  const work = Promise.resolve().then(() =>
+    readThroughCache(key, fetcher, activeTtlSeconds, options, isCurrent, timeoutError),
+  );
+  const request: Promise<T> = Promise.race([work, timeout]).finally(() => {
+    clearTimeout(timer);
+    if (isCurrent()) inFlight.delete(flightKey);
   });
   inFlight.set(flightKey, request);
   return request;
@@ -51,6 +66,8 @@ async function readThroughCache<T>(
   fetcher: () => Promise<T>,
   activeTtlSeconds: number,
   options: { allowStaleOnError?: boolean },
+  isCurrent: () => boolean,
+  timeoutError: Error,
 ): Promise<T> {
   let staleEntry: CacheEntry<T> | null = null;
   // Stale data is only useful for a short, bounded outage. The previous
@@ -78,10 +95,11 @@ async function readThroughCache<T>(
     logger.warn(`Redis get bypassed for key ${key}: ${msg}`);
   }
 
+  if (!isCurrent()) throw timeoutError;
   try {
     const data = await fetcher();
-    
-    if (isRedisConfigured && isRedisCommandAllowed()) try {
+
+    if (isCurrent() && isRedisConfigured && isRedisCommandAllowed()) try {
       if (data) {
         const entry: CacheEntry<T> = {
           data,
