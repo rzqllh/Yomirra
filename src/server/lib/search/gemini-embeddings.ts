@@ -25,19 +25,20 @@ export function isSemanticEmbeddingConfigured(): boolean {
 
 export async function embedSearchText(text: string): Promise<number[] | null> {
   const clean = text.trim();
-  if (!clean || !env.GEMINI_API_KEY) return null;
+  const apiKey = env.GEMINI_API_KEY;
+  if (!clean || !apiKey) return null;
 
   const key = cacheKey(clean);
   const active = activeEmbeddings.get(key);
   if (active) return active;
   if (activeEmbeddings.size >= MAX_ACTIVE_EMBEDDINGS) return null;
 
-  const pending = loadEmbedding(clean, key).finally(() => activeEmbeddings.delete(key));
+  const pending = loadEmbedding(clean, key, apiKey).finally(() => activeEmbeddings.delete(key));
   activeEmbeddings.set(key, pending);
   return pending;
 }
 
-async function loadEmbedding(text: string, key: string): Promise<number[] | null> {
+async function loadEmbedding(text: string, key: string, apiKey: string): Promise<number[] | null> {
   try {
     const cached = await redis.get(key);
     if (cached) {
@@ -56,7 +57,7 @@ async function loadEmbedding(text: string, key: string): Promise<number[] | null
         redirect: "error",
         headers: {
           "Content-Type": "application/json",
-          "x-goog-api-key": env.GEMINI_API_KEY,
+          "x-goog-api-key": apiKey,
         },
         body: JSON.stringify({
           model: `models/${MODEL}`,
