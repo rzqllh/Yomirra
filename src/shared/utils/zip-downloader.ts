@@ -1,5 +1,6 @@
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
+import { apiClient } from "@/shared/api-client";
 
 interface DownloadChapterArgs {
   sourceId: string;
@@ -25,13 +26,8 @@ export async function downloadChapterAsZip({
   if (!folder) throw new Error("Gagal membuat zip folder");
 
   try {
-    // Fetch chapter pages
-    const res = await fetch(`/api/sources/${sourceId}/manga/${encodeURIComponent(mangaId)}/chapters/${encodeURIComponent(chapterId)}/pages`);
-    if (!res.ok) throw new Error("Gagal mengambil daftar halaman chapter");
-    
-    const result = await res.json();
-    const pages: { index: number; url: string }[] = result.data?.pages ?? [];
-    
+    const { pages } = await apiClient.pagesQuery(sourceId, mangaId, chapterId).queryFn();
+
     if (pages.length === 0) throw new Error("Halaman tidak ditemukan");
 
     let downloadedCount = 0;
@@ -40,16 +36,13 @@ export async function downloadChapterAsZip({
     // Concurrency pool setup
     const CONCURRENCY = 3;
     let index = 0;
+    const controller = new AbortController();
 
     const worker = async () => {
-      while (index < pages.length) {
+      while (!controller.signal.aborted && index < pages.length) {
         const page = pages[index++];
-        const proxyUrl = page.url.startsWith('/api/proxy/image') 
-          ? page.url 
-          : `/api/proxy/image?url=${encodeURIComponent(page.url)}&sourceId=${sourceId}`;
-        
         try {
-          const imgRes = await fetch(proxyUrl);
+          const imgRes = await fetch(page.url, { signal: controller.signal });
           if (!imgRes.ok) throw new Error(`Fetch failed: ${imgRes.status}`);
           
           const blob = await imgRes.blob();
@@ -63,9 +56,9 @@ export async function downloadChapterAsZip({
           downloadedCount++;
           if (onProgress) onProgress(downloadedCount, pages.length);
         } catch (error) {
-          console.error(`Failed to download page ${page.index}`, error);
-          // Decide whether to throw or continue. For a zip, a missing page is bad, so throw.
-          throw new Error(`Gagal mengunduh halaman ${page.index + 1}`);
+          if (controller.signal.aborted) return;
+          controller.abort();
+          throw new Error(`Gagal mengunduh halaman ${page.index + 1}`, { cause: error });
         }
       }
     };
