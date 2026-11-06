@@ -34,7 +34,7 @@ export function TopNav() {
   const pathname = usePathname();
   const { user, loginWithGoogle, logout } = useAuth();
   const isCollapsed = useSidebarStore((state) => state.isCollapsed);
-  const { searchShortcut, searchAriaLabel } = usePlatformShortcut();
+  const { modifier, searchShortcut } = usePlatformShortcut();
 
   const segments = (pathname || "").split("/").filter(Boolean);
   const primarySegment = segments[0] || "";
@@ -121,7 +121,7 @@ export function TopNav() {
                 variant="searchTrigger"
                 disabled={!mounted}
                 onClick={() => window.dispatchEvent(new CustomEvent("open-command-menu"))}
-                aria-label={searchAriaLabel}
+                aria-keyshortcuts={modifier === "⌘" ? "Meta+K" : "Control+K"}
                 className={cn(
                   "flex items-center gap-2.5 px-3 rounded-sm text-text-secondary hover:text-text-primary text-xs font-semibold h-9 min-h-[36px] w-full cursor-pointer select-none",
                   "border-border-subtle hover:border-accent/40 focus-visible:outline-2 focus-visible:outline-accent",
@@ -130,7 +130,7 @@ export function TopNav() {
               >
                 <MagnifyingGlass size={16} weight="regular" className="text-text-muted shrink-0" aria-hidden="true" />
                 <span className="flex-1 text-left truncate">Cari komik…</span>
-                <kbd className="hidden lg:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono text-text-muted bg-surface-muted rounded-xs border border-border-subtle">{searchShortcut}</kbd>
+                <kbd aria-hidden="true" className="hidden lg:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono text-text-muted bg-surface-muted rounded-xs border border-border-subtle">{searchShortcut}</kbd>
               </Button>
             </div>
           )}

@@ -34,6 +34,9 @@ for (const width of [320, 360, 1440]) {
         }
       } else {
         await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toBeVisible();
+        const search = page.getByRole("button", { name: "Cari komik…", exact: true });
+        await expect(search).toBeVisible();
+        await expect(search).toHaveAttribute("aria-keyshortcuts", /^(Control|Meta)\+K$/);
       }
       await page.screenshot({ path: info.outputPath("settings.png"), animations: "disabled" });
     });
