@@ -2,6 +2,10 @@
 
 ## Unreleased — Final stabilization
 
+- Batasi permintaan halaman dinamis per instance. Kuota sensitif mencatat counter dan masa berlaku dalam satu operasi Redis.
+- Batasi payload sesi admin dan pekerjaan AI bersamaan. Perketat validasi alamat upstream dan kirim kunci Gemini melalui header.
+- Pulihkan kontras pilihan tema, navigasi desktop, dan teks saat splash. Patch advisory produksi pada dependensi Next.js, Firebase, dan Serwist.
+
 - Kurangi aset publik yang diunduh saat memasang PWA. Reader mode halaman memuat chapter berikutnya saat navigasi.
 - Batasi ukuran payload pencarian terkait dan rating batch. Hormati jeda upstream untuk mengurangi permintaan berulang saat provider membatasi akses.
 - Pisahkan liveness proses dari kesiapan Redis. Readiness membatasi probe berulang per instance dan tetap menampilkan kegagalan Redis.

@@ -6,8 +6,9 @@ Status **BLOCKED**. Gunakan runbook ini untuk evaluasi Draft PR #146. Owner meng
 
 | Jalur | Batas yang ada pada kandidat | Bukti yang diperlukan di hosting |
 | --- | --- | --- |
-| HTML, RSC, Reader | Reader SSR memberi daftar chapter 250 ms sebelum melanjutkan jalur kritis. Mode halaman meminta chapter berikutnya saat navigasi. Konten mengikuti preferensi dan kebijakan NSFW. | Request dan byte origin untuk HTML dan RSC, hit/miss CDN, p95 detail dan Reader, cache isolation untuk akun dan preferensi berbeda. |
+| HTML, RSC, Reader | Homepage, katalog, detail, Reader, dan pencarian berbagi 240 GET/HEAD per 60 dtk per IP per instance. Reader SSR memberi daftar chapter 250 ms sebelum melanjutkan jalur kritis. Mode halaman meminta chapter berikutnya saat navigasi. Konten mengikuti preferensi dan kebijakan NSFW. | Request dan byte origin untuk HTML dan RSC, hit/miss CDN, p95 detail dan Reader, cache isolation untuk akun dan preferensi berbeda. |
 | Pencarian dan related | Kebijakan public-search 120/60 dtk dan related 12/60 dtk per identitas per instance. Related menerima hingga 128 KiB. Kuota embedding memerlukan Redis. | Pisahkan hit, miss, penolakan origin, dan penolakan edge. Catat ukuran request/response tanpa judul atau body. |
+| AI dan autentikasi admin | AI membatasi delapan request aktif per instance dan body JSON 64 KiB untuk teks atau 8 MiB + 64 KiB untuk input gambar. Pertukaran sesi admin menerima 4 KiB. Kuota sensitif menulis counter dan expiry secara atomik. | Fail-closed saat Redis putus, lonjakan command, kebijakan cache, dan akses admin terotorisasi. |
 | Rating batch | 30/60 dtk per identitas per instance, hingga 20 judul dan 16 KiB input. Anggaran lookup 4 dtk, empat judul paralel per batch. | Volume batch, distribusi byte, hasil parsial, cache miss, 403/429, p95, dan biaya Redis per lookup. |
 | Image proxy dan cover | 600/60 dtk per identitas per instance, 16 stream aktif per instance, 15 MiB per gambar dan 15 dtk. Cache browser private. Redirect hanya untuk CDN HTTPS yang diizinkan. | Byte gambar proxy, cover fallback, tanda tangan invalid, dan angka 403/429 per provider. Pisahkan gambar Reader dari RSC. |
 | Source adapters | Delapan pekerjaan per scope dan 32 global per instance. Cooldown dan negative cache berbatas. | Error per sumber, waktu cooldown, hasil recovery dan p95 Shinigami, Komikindo, KomikNesia, WestManga, Asura, MangaDex. |
@@ -27,15 +28,16 @@ Batas per instance di atas bukan batas global. Cache atau WAF tidak boleh menyat
 | Metrik | Peringatan usulan | Hentikan dan evaluasi |
 | --- | --- | --- |
 | Fast Origin Transfer | 60% kuota periode atau 3% kuota periode dalam 24 jam | 80% kuota periode atau 5% dalam 24 jam |
+| Fast Data Transfer | 60% kuota periode atau 3% kuota periode dalam 24 jam | 80% kuota periode atau 5% dalam 24 jam |
 | Redis command | 60% kuota bulanan atau 3% kuota bulanan dalam satu hari | 80% bulanan atau 5% kuota bulanan dalam satu hari |
 | Kesehatan | Usulan awal p95 ≥1,5× baseline atau 5xx ≥1% selama 15 menit dengan minimal 100 request pada volume sebanding. Pantau 429 menurut path dan keputusan edge. | HTTP 402, 5xx berulang yang belum dijelaskan, indikasi masalah keamanan/data, atau p95 ≥2× baseline atau 5xx ≥2% selama 15 menit dengan sampel sebanding. |
 
-Contoh pada kuota Fast Origin Transfer 10 GB ialah peringatan 6 GB per periode atau 0,3 GB dalam 24 jam. Ambang stop ialah 8 GB per periode atau 0,5 GB dalam 24 jam. Cocokkan dulu dengan kuota aktual. Workflow Redis di repositori memeriksa ambang stop. Peringatan awal, agregat transfer, dan prosedur stop tetap memerlukan bukti operasional.
+Contoh pada kuota Fast Origin Transfer 10 GB ialah peringatan 6 GB per periode atau 0,3 GB dalam 24 jam. Ambang stop ialah 8 GB per periode atau 0,5 GB dalam 24 jam. Untuk contoh kuota Fast Data Transfer 100 GB, peringatan ialah 60 GB per periode atau 3 GB dalam 24 jam, dan stop ialah 80 GB per periode atau 5 GB dalam 24 jam. Cocokkan dulu dengan kuota aktual. Workflow Redis di repositori memeriksa ambang stop. Peringatan awal, agregat transfer, dan prosedur stop tetap memerlukan bukti operasional.
 
 Referensi provider [WAF rate limiting](https://vercel.com/docs/vercel-firewall/vercel-waf/rate-limiting), [Hobby](https://vercel.com/docs/plans/hobby), [limits](https://vercel.com/docs/limits), dan [CDN usage](https://vercel.com/docs/manage-cdn-usage).
 
 ## Controlled unblock dan rollback
 
-- Setelah seluruh gate lulus, catat SHA, deployment, persetujuan owner, baseline terbaru, dan identitas deployment rollback yang kompatibel. Owner menjadwalkan jendela pemulihan.
+- Setelah seluruh gate lulus, catat SHA, deployment, persetujuan owner, baseline terbaru, dan identitas deployment rollback yang kompatibel. Owner menjadwalkan jendela pemulihan. Mulai dengan kohor terbatas atau Preview terlindung dengan Redis dan Firebase terisolasi. Perluas akses sesudah origin rejection, cache isolation, alert budget, dan stop drill terbukti.
 - Setelah unblock oleh owner, cocokkan SHA deployment dengan kandidat. Jalankan smoke read-only volume rendah pada liveness, readiness, pencarian, detail, Reader, dan shell PWA. Periksa grafik transfer, Redis, error dan p95 pada +15 menit, +1 jam, dan +24 jam.
 - Pada stop condition, hentikan rollout atau pemeriksaan tambahan, rekam waktu dan metrik yang memicu, dan beri owner bukti minimum. Owner menentukan pause atau rollback ke deployment immutable yang sudah diperiksa. Jika rollback juga membawa risiko lonjakan atau isolasi data, pertahankan pause dan siapkan kandidat pengganti. Gunakan revert pada branch kerja untuk membatalkan kode lokal; validasi lagi sebelum publikasi.
