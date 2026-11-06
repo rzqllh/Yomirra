@@ -8,7 +8,9 @@ import {
   PAGES_CACHE_NAME,
   READING_BUFFER_CACHE_NAME,
   cleanupOutdatedAppCaches,
+  isNetworkOnlyApiPath,
   isOfflineCacheableNavigationPath,
+  isSafeSourceMetadataRequest,
   isSessionSensitivePath,
 } from "@/shared/lib/pwa-cache-policy";
 
@@ -57,7 +59,7 @@ const serwist = new Serwist({
     },
     // We aggressively cache manga pages (via image proxy) for offline reading & bandwidth saving.
     {
-      matcher: ({ url }) => url.pathname.startsWith('/api/proxy/image'),
+      matcher: ({ sameOrigin, url }) => sameOrigin && url.pathname === "/api/proxy/image",
       handler: new CacheFirst({
         cacheName: MANGA_IMAGES_CACHE_NAME,
         plugins: [
@@ -69,16 +71,9 @@ const serwist = new Serwist({
         ],
       }),
     },
-    // StaleWhileRevalidate for Source Metadata API
-    // Explicit allowlist: only cache manga details and chapter lists.
-    // We intentionally exclude /search, /health, /nsfw-ids to prevent cache bloat or stale data.
+    // The server always filters this explicit scope, even with an adult-content cookie.
     {
-      matcher: ({ url }) => {
-        if (url.pathname.match(/^\/api\/sources\/[^/]+\/(manga|chapters|popular|latest)$/)) return true;
-        if (url.pathname.match(/^\/api\/sources\/[^/]+\/manga\/[^/]+$/)) return true;
-        if (url.pathname.match(/^\/api\/sources\/[^/]+\/manga\/[^/]+\/chapters$/)) return true;
-        return false;
-      },
+      matcher: ({ sameOrigin, url }) => sameOrigin && isSafeSourceMetadataRequest(url),
       handler: new StaleWhileRevalidate({
         cacheName: MANGA_METADATA_CACHE_NAME,
         plugins: [
@@ -88,6 +83,11 @@ const serwist = new Serwist({
           }),
         ],
       }),
+    },
+    // Cookie-dependent responses and health probes must not fall through to Serwist's API cache.
+    {
+      matcher: ({ sameOrigin, url }) => sameOrigin && isNetworkOnlyApiPath(url.pathname),
+      handler: new NetworkOnly(),
     },
     // Cache only the explicit offline navigation surface. Sensitive routes are
     // handled by the NetworkOnly guard above and never fall through to defaultCache.

@@ -25,7 +25,7 @@ describe("PWA cache policy", () => {
     expect(EXPLICIT_DOWNLOADS_CACHE_NAME).toBe("yomirra-chapter-cache-v1");
     expect(READING_BUFFER_CACHE_NAME).toBe("yomirra-reading-buffer-v3");
     expect(MANGA_IMAGES_CACHE_NAME).toBe("yomirra-manga-images-v3");
-    expect(MANGA_METADATA_CACHE_NAME).toBe("yomirra-manga-metadata-v3");
+    expect(MANGA_METADATA_CACHE_NAME).toBe("yomirra-manga-metadata-v4");
     expect(PAGES_CACHE_NAME).toBe("yomirra-pages-v3");
   });
 
@@ -59,6 +59,7 @@ describe("PWA cache policy", () => {
       "yomirra-reading-buffer-v2",
       "yomirra-manga-images-v2",
       "yomirra-manga-metadata-v2",
+      "yomirra-manga-metadata-v3",
       "yomirra-pages-v2",
       READING_BUFFER_CACHE_NAME,
       MANGA_IMAGES_CACHE_NAME,
@@ -79,6 +80,7 @@ describe("PWA cache policy", () => {
         "yomirra-pages",
         "yomirra-pages-v2",
         "yomirra-manga-metadata-v2",
+        "yomirra-manga-metadata-v3",
       ])
     );
     expect(cacheStorage.has(EXPLICIT_DOWNLOADS_CACHE_NAME)).toBe(true);

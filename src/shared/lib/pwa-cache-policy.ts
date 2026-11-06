@@ -5,7 +5,7 @@ export const PWA_CACHE_VERSION = 3;
 export const EXPLICIT_DOWNLOADS_CACHE_NAME = "yomirra-chapter-cache-v1";
 export const READING_BUFFER_CACHE_NAME = `yomirra-reading-buffer-v${PWA_CACHE_VERSION}`;
 export const MANGA_IMAGES_CACHE_NAME = `yomirra-manga-images-v${PWA_CACHE_VERSION}`;
-export const MANGA_METADATA_CACHE_NAME = `yomirra-manga-metadata-v${PWA_CACHE_VERSION}`;
+export const MANGA_METADATA_CACHE_NAME = "yomirra-manga-metadata-v4";
 export const PAGES_CACHE_NAME = `yomirra-pages-v${PWA_CACHE_VERSION}`;
 
 export const CURRENT_AUTOMATIC_CACHE_NAMES = [
@@ -43,6 +43,18 @@ const OFFLINE_NAVIGATION_PREFIXES = [
 
 export function pathMatchesPrefix(pathname: string, prefix: string): boolean {
   return pathname === prefix || pathname.startsWith(`${prefix}/`);
+}
+
+const SOURCE_METADATA_PATH = /^\/api\/sources\/[^/]+\/(?:chapters|popular|latest|manga(?:\/[^/]+(?:\/chapters)?)?)$/;
+
+export function isSafeSourceMetadataRequest(url: URL): boolean {
+  const safety = url.searchParams.getAll("hideNsfw");
+  return safety.length === 1 && safety[0] === "true" &&
+    !url.searchParams.has("manifestUrl") && SOURCE_METADATA_PATH.test(url.pathname);
+}
+
+export function isNetworkOnlyApiPath(pathname: string): boolean {
+  return pathMatchesPrefix(pathname, "/api");
 }
 
 export function isSessionSensitivePath(pathname: string): boolean {
