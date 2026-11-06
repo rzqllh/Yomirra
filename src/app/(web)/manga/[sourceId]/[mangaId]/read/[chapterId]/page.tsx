@@ -2,7 +2,7 @@ import { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { WarningCircle } from "@phosphor-icons/react/dist/ssr";
 import { sourceManager } from "@/server/lib/sources/source-manager";
-import { getServerReadOptions, loadSourceDetail, loadSourceChapters, loadSourcePages } from "@/server/lib/sources/content-access";
+import { findMangaChapter, getServerReadOptions, loadSourceDetail, loadSourceChapters, loadSourcePages } from "@/server/lib/sources/content-access";
 import { ReaderView } from "@/components/reader/reader-view";
 import { ReaderShell } from "@/components/reader/reader-shell";
 import { EmptyState } from "@/components/states/empty-state";
@@ -76,26 +76,28 @@ export default async function ReaderPage({
     const source = await sourceManager.getSource(sourceId, manifestUrl);
     
     initialPagesScope = sourceReadScope(readOptions);
-    const pages = loadSourcePages(source, mangaId, chapterId, readOptions).catch(() => null);
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const deadline = new Promise<null>((resolve) => {
-      timer = setTimeout(() => resolve(null), 250);
-    });
+    [detail, chapters] = await Promise.all([
+      loadSourceDetail(source, mangaId, readOptions),
+      loadSourceChapters(source, mangaId, readOptions),
+    ]);
 
-    try {
-      [detail, chapters] = await Promise.all([
-        loadSourceDetail(source, mangaId, readOptions),
-        loadSourceChapters(source, mangaId, readOptions),
-      ]);
-
-      // If both promises have settled, take the available pages before the deadline.
-      const pagesResult = await Promise.race([pages, deadline]);
-      initialPages = pagesResult?.pages.map((page) => ({
-        ...page,
-        url: signImageUrl(page.url, page.referer || source.baseUrl),
-      })) ?? null;
-    } finally {
-      clearTimeout(timer);
+    // MangaDex verifies the parent via chapter metadata, even for scanlations
+    // excluded from its display list. Other sources must match the parent feed.
+    if (source.id === "mangadex" || !findMangaChapter(source.id, chapterId, chapters).isLocked) {
+      const pages = loadSourcePages(source, mangaId, chapterId, readOptions).catch(() => null);
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const deadline = new Promise<null>((resolve) => {
+        timer = setTimeout(() => resolve(null), 250);
+      });
+      try {
+        const pagesResult = await Promise.race([pages, deadline]);
+        initialPages = pagesResult?.pages.map((page) => ({
+          ...page,
+          url: signImageUrl(page.url, page.referer || source.baseUrl),
+        })) ?? null;
+      } finally {
+        clearTimeout(timer);
+      }
     }
   } catch (error) {
     console.error("Failed to load reader data:", error);

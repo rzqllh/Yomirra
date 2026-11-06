@@ -69,10 +69,22 @@ function ReaderContent({
   const readScope = useSettingsStore(sourceReadScope);
   const initialPages = !initialPagesScope || initialPagesScope === readScope ? serverPages : null;
 
+  let decodedChapterId = chapterId;
+  try {
+    decodedChapterId = decodeURIComponent(chapterId);
+  } catch {
+    decodedChapterId = chapterId;
+  }
+
+  const currentChapter = initialChapters?.find(
+    (c) => c.id === chapterId || c.id === decodedChapterId
+  );
+  const isLockedChapter = Boolean(currentChapter?.isLocked);
+
   // Fallback fetching if SSR did not supply pages for the active scope.
   const { data: chapterPages, isLoading: isQueryLoading, error, refetch } = useQuery({
     ...apiClient.pagesQuery(sourceId, mangaId, chapterId),
-    enabled: !initialPages && downloadStatus !== "downloaded",
+    enabled: !initialPages && !isLockedChapter && downloadStatus !== "downloaded",
     initialData: initialPages ? { chapterId, pages: initialPages } : undefined,
   });
 
@@ -225,20 +237,6 @@ function ReaderContent({
       </ReaderShell>
     );
   }
-
-  let decodedChapterId = chapterId;
-  try {
-    decodedChapterId = decodeURIComponent(chapterId);
-  } catch {
-    decodedChapterId = chapterId;
-  }
-
-  const currentChapter = initialChapters?.find(
-    (c) => c.id === chapterId || c.id === decodedChapterId
-  );
-  const isLockedChapter = Boolean(
-    currentChapter?.isLocked || (pagesToRender && pagesToRender.length === 0 && currentChapter?.isLocked)
-  );
 
   if (isLockedChapter) {
     return (

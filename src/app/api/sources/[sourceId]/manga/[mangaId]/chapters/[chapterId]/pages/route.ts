@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 import { checkRateLimit } from "@/server/lib/security/rate-limit";
 import { NextRequest, NextResponse } from "next/server";
-import { getRequestReadOptions, loadSourcePages, sourceErrorResponse } from "@/server/lib/sources/content-access";
+import { getRequestReadOptions, loadReadableSourcePages, sourceErrorResponse } from "@/server/lib/sources/content-access";
 import { sourceManager } from "@/server/lib/sources/source-manager";
 import { chapterParamsSchema } from "@/server/lib/validation/api";
 
@@ -22,7 +22,7 @@ export async function GET(
 
   try {
     const source = await sourceManager.getSource(sourceId, request.nextUrl.searchParams.get("manifestUrl"));
-    const data = await loadSourcePages(source, mangaId, chapterId, getRequestReadOptions(request));
+    const data = await loadReadableSourcePages(source, mangaId, chapterId, getRequestReadOptions(request));
 
     // Sign URLs for the proxy
     const { signImageUrl } = await import("@/server/lib/sign-proxy-url");
