@@ -28,6 +28,14 @@ describe("Utils: image signing", () => {
     expect(verifyImageUrl(url, signature.toUpperCase())).toBe(false);
   });
 
+  it("binds the image URL and referer independently", () => {
+    const url = "https://example.com/image.jpg";
+    const referer = "https://source.example";
+    const signature = new URL(signImageUrl(url, referer), "https://yomirra.test").searchParams.get("sig")!;
+    expect(verifyImageUrl(url, signature, referer)).toBe(true);
+    expect(verifyImageUrl(url + referer, signature)).toBe(false);
+  });
+
   it("should fail verification with wrong signature", () => {
     const isValid = verifyImageUrl("https://example.com/image.jpg", "wrongsignature123");
     expect(isValid).toBe(false);
