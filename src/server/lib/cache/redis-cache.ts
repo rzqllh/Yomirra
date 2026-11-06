@@ -10,7 +10,7 @@ export const CACHE_TTL = {
 };
 
 import crypto from "node:crypto";
-import type { SourceMetadata } from "@/shared/sources/source-types";
+import type { MangaSource, SourceMetadata } from "@/shared/sources/source-types";
 
 interface CacheEntry<T> {
   data: T;
@@ -99,7 +99,10 @@ function readNear<T>(key: string): { data: T } | null {
 }
 
 
-export function getSourceCacheKey(source: SourceMetadata, operation: string, params: string): string {
+export function getSourceCacheKey(source: SourceMetadata & Pick<MangaSource, "cacheFingerprint">, operation: string, params: string): string {
+  if (source.cacheFingerprint) {
+    return `source:dynamic:v2:${source.cacheFingerprint}:${operation}:${params}`;
+  }
   if (source.isDynamic) {
     const raw = `${source.id}:${source.version || "0.0.0"}:${source.baseUrl || ""}`;
     const fingerprint = crypto.createHash("sha256").update(raw).digest("hex").substring(0, 12);

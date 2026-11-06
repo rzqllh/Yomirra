@@ -110,6 +110,7 @@ export interface FilterList {
 }
 
 export interface MangaSource extends SourceMetadata {
+  readonly cacheFingerprint?: string;
   getPopular(page: number, options?: SourceReadOptions): Promise<MangaPageResult>;
   getLatest(page: number, options?: SourceReadOptions): Promise<MangaPageResult>;
   search(query: string, page: number, filters?: Record<string, string | string[]>, options?: SourceReadOptions): Promise<MangaPageResult>;

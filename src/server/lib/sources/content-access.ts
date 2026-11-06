@@ -59,7 +59,7 @@ export function contentCacheKey(source: MangaSource, operation: string, params: 
 export async function loadSourceCatalog(source: MangaSource, operation: "popular" | "latest", page: number, options: SourceReadOptions = {}) {
   assertSourceAccess(source, options);
   const result = await withCache(contentCacheKey(source, operation, String(page), options),
-    () => loadSourceUpstream(source.id, "search", null, () => operation === "popular" ? source.getPopular(page, options) : source.getLatest(page, options)), CACHE_TTL.DISCOVERY);
+    () => loadSourceUpstream(source.id, "search", null, () => operation === "popular" ? source.getPopular(page, options) : source.getLatest(page, options), source.cacheFingerprint), CACHE_TTL.DISCOVERY);
   return { ...result, mangas: result.mangas.filter((item) => isContentVisible(item, options.hideNsfw !== false)) };
 }
 
@@ -67,7 +67,7 @@ export async function loadSourceDetail(source: MangaSource, mangaId: string, opt
   assertSourceAccess(source, options);
   const key = contentCacheKey(source, "manga", mangaId, options);
   const detail = await withCache(key,
-    () => loadSourceUpstream(source.id, "detail", key, () => source.getDetail(mangaId, options)), CACHE_TTL.DETAIL);
+    () => loadSourceUpstream(source.id, "detail", key, () => source.getDetail(mangaId, options), source.cacheFingerprint), CACHE_TTL.DETAIL);
   if (!isContentVisible(detail, options.hideNsfw !== false)) {
     throw new SourceError("Konten disembunyikan oleh pengaturan konten", {
       code: "CONTENT_RESTRICTED", sourceId: source.id, stage: "detail", statusCode: 403,
@@ -80,7 +80,7 @@ export async function loadSourceChapters(source: MangaSource, mangaId: string, o
   assertSourceAccess(source, options);
   const key = contentCacheKey(source, "chapters", mangaId, options);
   return withCache(key,
-    () => loadSourceUpstream(source.id, "chapters", key, () => source.getChapters(mangaId, options)), CACHE_TTL.CHAPTERS);
+    () => loadSourceUpstream(source.id, "chapters", key, () => source.getChapters(mangaId, options), source.cacheFingerprint), CACHE_TTL.CHAPTERS);
 }
 
 export function findMangaChapter(sourceId: string, chapterId: string, chapters: Chapter[]): Chapter {
@@ -115,7 +115,7 @@ export async function loadSourcePages(source: MangaSource, mangaId: string, chap
   // MangaDex @Home URLs expire. Never revive an expired URL from stale-on-error cache.
   const key = contentCacheKey(source, "pages", JSON.stringify([mangaId, chapterId]), options);
   return withCache(key,
-    () => loadSourceUpstream(source.id, "pages", key, () => source.getPages(chapterId, { ...options, mangaId })),
+    () => loadSourceUpstream(source.id, "pages", key, () => source.getPages(chapterId, { ...options, mangaId }), source.cacheFingerprint),
     source.id === "mangadex" ? 300 : CACHE_TTL.PAGES,
     { allowStaleOnError: source.id !== "mangadex" });
 }
