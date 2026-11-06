@@ -21,7 +21,7 @@ for (const width of [320, 360, 1440]) {
         await expect(nav).toBeVisible();
         await expect(nav.getByRole("link", { name: "Beranda" })).toBeVisible();
         for (const label of ["Bahasa utama", "Jeda pengecekan", "Cek otomatis saat dibuka"]) {
-          const title = page.getByText(label, { exact: true });
+          const title = page.getByText(label, { exact: true }).and(page.locator("div"));
           await expect(title).toBeVisible();
           const fits = await title.evaluate((element) => element.scrollWidth <= element.clientWidth);
           expect(fits, label).toBe(true);
