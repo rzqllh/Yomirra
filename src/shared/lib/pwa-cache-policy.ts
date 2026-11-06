@@ -4,7 +4,7 @@ export const PWA_CACHE_VERSION = 3;
 
 export const EXPLICIT_DOWNLOADS_CACHE_NAME = "yomirra-chapter-cache-v1";
 export const READING_BUFFER_CACHE_NAME = `yomirra-reading-buffer-v${PWA_CACHE_VERSION}`;
-export const MANGA_IMAGES_CACHE_NAME = `yomirra-manga-images-v${PWA_CACHE_VERSION}`;
+export const MANGA_IMAGES_CACHE_NAME = "yomirra-manga-images-v4";
 export const MANGA_METADATA_CACHE_NAME = "yomirra-manga-metadata-v4";
 export const PAGES_CACHE_NAME = `yomirra-pages-v${PWA_CACHE_VERSION}`;
 

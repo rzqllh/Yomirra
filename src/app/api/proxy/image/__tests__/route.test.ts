@@ -51,3 +51,23 @@ it("preserves supported retry URLs", async () => {
   expect(response.status).toBe(200);
   await response.text();
 });
+
+it.each(["image/svg+xml", "text/html", "application/octet-stream", ""])(
+  "rejects active, missing and unsupported image type %j",
+  async (contentType) => {
+    const headers = contentType ? { "Content-Type": contentType } : undefined;
+    vi.mocked(safeFetch).mockResolvedValueOnce(new Response(new Uint8Array([1, 2]), { headers }));
+    const request = new NextRequest("https://yomirra.test/api/proxy/image?url=https://example.test/page.jpg&sig=valid");
+    expect((await GET(request)).status).toBe(400);
+  }
+);
+
+it("isolates accepted raster images if opened as documents", async () => {
+  vi.mocked(safeFetch).mockResolvedValueOnce(new Response("image", { headers: { "Content-Type": "image/webp" } }));
+  const response = await GET(new NextRequest("https://yomirra.test/api/proxy/image?url=https://example.test/page.webp&sig=valid"));
+  expect(response.status).toBe(200);
+  expect(response.headers.get("Content-Security-Policy")).toContain("sandbox");
+  expect(response.headers.get("X-Content-Type-Options")).toBe("nosniff");
+  expect(response.headers.get("Cache-Control")).toContain("private");
+  await response.text();
+});

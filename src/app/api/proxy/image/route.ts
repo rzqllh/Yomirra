@@ -6,6 +6,10 @@ import { safeFetch } from "@/server/lib/security/outbound-policy";
 import { applyRateLimitHeaders, checkRateLimitPolicy, createRateLimitRejection } from "@/server/lib/security/rate-limit";
 
 const IMAGE_QUERY_KEYS = new Set(["url", "sig", "ref", "retry"]);
+const RASTER_IMAGE_TYPES = new Set([
+  "image/apng", "image/avif", "image/bmp", "image/gif",
+  "image/jpeg", "image/jpg", "image/png", "image/webp",
+]);
 const MAX_IMAGE_SIZE = 15 * 1024 * 1024;
 const MAX_ACTIVE_IMAGES = 16;
 let activeImages = 0;
@@ -91,16 +95,19 @@ export async function GET(request: NextRequest) {
       return limited(new NextResponse("Failed to fetch image", { status: response.status }));
     }
 
-    const contentType = response.headers.get("content-type");
-    if (contentType && !contentType.startsWith("image/")) {
+    const contentType = response.headers.get("content-type")?.split(";")[0].trim().toLowerCase();
+    if (!contentType || !RASTER_IMAGE_TYPES.has(contentType)) {
       await response.body?.cancel();
-      logger.warn(`Invalid content type for image proxy: ${contentType}`);
       return limited(new NextResponse("Invalid content type", { status: 400 }));
     }
 
-    const responseHeaders = new Headers();
-    if (contentType) responseHeaders.set("Content-Type", contentType);
-    responseHeaders.set("Cache-Control", "public, max-age=31536000, immutable");
+    const responseHeaders = new Headers({
+      "Content-Type": contentType,
+      "Content-Security-Policy": "sandbox; default-src 'none'",
+      "X-Content-Type-Options": "nosniff",
+      // Admission and rate-limit headers are per client.
+      "Cache-Control": "private, max-age=86400",
+    });
 
     let body: ReadableStream<Uint8Array> | null = null;
     if (response.body) {

@@ -24,7 +24,7 @@ describe("PWA cache policy", () => {
   it("keeps explicit downloads durable while automatic caches use the current version", () => {
     expect(EXPLICIT_DOWNLOADS_CACHE_NAME).toBe("yomirra-chapter-cache-v1");
     expect(READING_BUFFER_CACHE_NAME).toBe("yomirra-reading-buffer-v3");
-    expect(MANGA_IMAGES_CACHE_NAME).toBe("yomirra-manga-images-v3");
+    expect(MANGA_IMAGES_CACHE_NAME).toBe("yomirra-manga-images-v4");
     expect(MANGA_METADATA_CACHE_NAME).toBe("yomirra-manga-metadata-v4");
     expect(PAGES_CACHE_NAME).toBe("yomirra-pages-v3");
   });
@@ -58,6 +58,7 @@ describe("PWA cache policy", () => {
       "yomirra-pages",
       "yomirra-reading-buffer-v2",
       "yomirra-manga-images-v2",
+      "yomirra-manga-images-v3",
       "yomirra-manga-metadata-v2",
       "yomirra-manga-metadata-v3",
       "yomirra-pages-v2",
@@ -76,6 +77,7 @@ describe("PWA cache policy", () => {
       expect.arrayContaining([
         "yomirra-reading-buffer-v1",
         "yomirra-manga-images",
+        "yomirra-manga-images-v3",
         "yomirra-manga-metadata",
         "yomirra-pages",
         "yomirra-pages-v2",
