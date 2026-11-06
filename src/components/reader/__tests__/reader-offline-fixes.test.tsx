@@ -49,6 +49,45 @@ describe("Reader Offline Fixes Unit Tests", () => {
       URL.revokeObjectURL = originalRevokeObjectURL as typeof URL.revokeObjectURL;
     });
 
+    it("falls back to server pages when a completed legacy download contains only SVG", async () => {
+      const downloadId = getDownloadChapterId("src1", "manga1", "ch1");
+      const svg = new Response("<svg></svg>", { headers: { "Content-Type": "image/svg+xml" } });
+      const match = vi.fn().mockResolvedValue(svg);
+      global.caches = {
+        open: vi.fn().mockResolvedValue({
+          keys: vi.fn().mockResolvedValue([{ url: `http://localhost/offline-images/${downloadId}/0` }]),
+          match,
+        }),
+      } as unknown as CacheStorage;
+      useDownloadStore.setState({
+        downloads: {
+          [downloadId]: {
+            id: downloadId, sourceId: "src1", mangaId: "manga1", chapterId: "ch1",
+            chapterTitle: "Ch 1", mangaTitle: "Manga 1", status: "downloaded",
+            progress: 100, downloadedPages: 1, totalPages: 1, pages: [], createdAt: 0, updatedAt: 0,
+          },
+        },
+      });
+
+      const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+      const view = render(
+        <QueryClientProvider client={queryClient}>
+          <ReaderView
+            sourceId="src1"
+            mangaId="manga1"
+            chapterId="ch1"
+            initialDetail={{ contentRating: "safe", id: "manga1", title: "Manga 1", coverUrl: "/cover.jpg", description: "", genres: [], status: "ONGOING" }}
+            initialChapters={[]}
+            initialPages={[{ index: 0, url: "http://example.com/0.jpg" }]}
+          />
+        </QueryClientProvider>
+      );
+
+      expect(await view.findByAltText("Page 1")).toBeTruthy();
+      expect(match).toHaveBeenCalledTimes(1);
+      expect(URL.createObjectURL).not.toHaveBeenCalled();
+    });
+
     it("should create, track, and revoke Object URLs on component unmount", async () => {
       const mockBlob = new Blob(["test image content"], { type: "image/jpeg" });
       const mockCache = {
@@ -231,7 +270,7 @@ describe("Reader Offline Fixes Unit Tests", () => {
       // Resolve match promise after unmount
       await act(async () => {
         if (resolveMatch) {
-          resolveMatch(new Response(mockBlob, { headers: { "Content-Type": "image/jpeg" } }));
+          resolveMatch({ ok: true, headers: new Headers({ "Content-Type": "image/jpeg" }), blob: async () => mockBlob });
         }
         await new Promise((r) => setTimeout(r, 50));
       });
@@ -248,7 +287,7 @@ describe("Reader Offline Fixes Unit Tests", () => {
           { url: "http://localhost/offline-images/src1::manga1::ch1/1" },
         ]),
         match: vi.fn()
-          .mockResolvedValueOnce(new Response(mockBlob, { headers: { "Content-Type": "image/jpeg" } }))
+          .mockResolvedValueOnce({ ok: true, headers: new Headers({ "Content-Type": "image/jpeg" }), blob: async () => mockBlob })
           .mockRejectedValueOnce(new Error("Disk read error")),
       };
 

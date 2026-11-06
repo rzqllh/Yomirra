@@ -66,7 +66,11 @@ function ReaderContent({
   const downloadId = getDownloadChapterId(sourceId, mangaId, chapterId);
   const downloadStatus = useDownloadStore(state => state.downloads[downloadId]?.status);
 
-  const [offlinePages, setOfflinePages] = useState<PageItem[] | null>(null);
+  const [offlineResult, setOfflineResult] = useState<{ id: string; pages: PageItem[] | null } | null>(null);
+  const isDownloaded = downloadStatus === "downloaded";
+  const currentOfflineResult = isDownloaded && offlineResult?.id === downloadId ? offlineResult : null;
+  const offlinePages = currentOfflineResult?.pages;
+  const isCheckingOffline = isDownloaded && !currentOfflineResult;
 
   const readScope = useSettingsStore(sourceReadScope);
   const initialPages = !initialPagesScope || initialPagesScope === readScope ? serverPages : null;
@@ -86,7 +90,7 @@ function ReaderContent({
   // Fallback fetching if SSR did not supply pages for the active scope.
   const { data: chapterPages, isLoading: isQueryLoading, error, refetch } = useQuery({
     ...apiClient.pagesQuery(sourceId, mangaId, chapterId),
-    enabled: !initialPages && !isLockedChapter && downloadStatus !== "downloaded",
+    enabled: !initialPages && !isLockedChapter && !isCheckingOffline && !offlinePages,
     initialData: initialPages ? { chapterId, pages: initialPages } : undefined,
   });
 
@@ -111,12 +115,15 @@ function ReaderContent({
   }, [refetch]);
 
   useEffect(() => {
-    setOfflinePages(null);
+    setOfflineResult(null);
     const createdUrls: string[] = [];
     let isMounted = true;
 
-    if (downloadStatus === "downloaded" && typeof caches !== "undefined") {
+    if (isDownloaded && typeof caches === "undefined") {
+      setOfflineResult({ id: downloadId, pages: null });
+    } else if (isDownloaded) {
       (async () => {
+        let pages: PageItem[] | null = null;
         try {
           const cache = await caches.open(EXPLICIT_DOWNLOADS_CACHE_NAME);
           const keys = await cache.keys();
@@ -140,7 +147,7 @@ function ReaderContent({
             height: basePages[i]?.height,
           }));
 
-          await Promise.all(parsedKeys.map(async ({ req, index }) => {
+          const results = await Promise.allSettled(parsedKeys.map(async ({ req, index }) => {
             const res = await cache.match(req);
             if (!res || !rasterImageContentType(res)) return;
             const blob = await res.blob();
@@ -156,14 +163,17 @@ function ReaderContent({
             }
           }));
           
-          if (isMounted && createdUrls.length > 0) {
-            setOfflinePages(blobUrls);
-          } else {
-            createdUrls.forEach(url => URL.revokeObjectURL(url));
+          const failure = results.find((result) => result.status === "rejected");
+          if (failure) throw failure.reason;
+          if (createdUrls.length > 0) {
+            pages = blobUrls;
           }
         } catch (e) {
           console.error("Failed to load offline pages", e);
           createdUrls.forEach(url => URL.revokeObjectURL(url));
+          createdUrls.length = 0;
+        } finally {
+          if (isMounted) setOfflineResult({ id: downloadId, pages });
         }
       })();
     }
@@ -172,9 +182,9 @@ function ReaderContent({
       isMounted = false;
       createdUrls.forEach(url => URL.revokeObjectURL(url));
     };
-  }, [downloadStatus, downloadId]);
+  }, [isDownloaded, downloadId]);
 
-  const isLoading = downloadStatus === "downloaded" ? offlinePages === null : (!initialPages && isQueryLoading);
+  const isLoading = isCheckingOffline || (!offlinePages && !initialPages && isQueryLoading);
   const pagesToRender = offlinePages || initialPages || chapterPages?.pages;
 
   useEffect(() => {
@@ -285,7 +295,9 @@ function ReaderContent({
           <EmptyState
             icon={<WarningCircle size={48} weight="duotone" className="text-text-muted" />}
             title="Gagal Memuat Halaman"
-            description="Tidak dapat mengambil halaman chapter dari server saat ini."
+            description={isDownloaded
+              ? "Halaman unduhan tidak tersedia. Sambungkan perangkat ke internet dan coba lagi."
+              : "Tidak dapat mengambil halaman chapter dari server saat ini."}
             action={
               <div className="flex flex-col sm:flex-row items-center gap-2 mt-2">
                 <Button onClick={() => refetch()} variant="outline" className="rounded-xl shadow-sm font-bold w-full sm:w-auto">

@@ -17,8 +17,8 @@ describe("download cache integrity", () => {
       id: "download", sourceId: "s", mangaId: "m", mangaTitle: "M", chapterId: "c", chapterTitle: "Chapter",
       status: "queued", progress: 50, downloadedPages: 1, totalPages: 2, createdAt: 1, updatedAt: 1,
       pages: [
-        { index: 0, status: "cached", originalUrl: "/api/proxy/image?sig=a", offlineUrl: "/offline/0" },
-        { index: 1, status: "pending", originalUrl: "/api/proxy/image?sig=b", offlineUrl: "/offline/1" },
+        { index: 0, status: "cached", originalUrl: "/api/proxy/image?v=2&sig=a", offlineUrl: "/offline/0" },
+        { index: 1, status: "pending", originalUrl: "/api/proxy/image?v=2&sig=b", offlineUrl: "/offline/1" },
       ],
     };
     let queue = [item.id];
