@@ -2,6 +2,7 @@ import dns from "node:dns";
 import http from "node:http";
 import https from "node:https";
 import { isIP } from "node:net";
+import { Readable } from "node:stream";
 
 export function isSafeIp(ip: string): boolean {
   // WHATWG URL hostnames wrap IPv6 literals in brackets.
@@ -196,32 +197,32 @@ export async function safeFetch(url: string, options: SafeFetchOptions = {}): Pr
       }
     });
 
-    const stream = new ReadableStream({
-      start(controller) {
+    const status = res.statusCode || 200;
+    const hasBody = options.method?.toUpperCase() !== "HEAD" && ![204, 205, 304].includes(status);
+    let stream: ReadableStream<Uint8Array> | null = null;
+
+    if (hasBody) {
+      const upstream = Readable.toWeb(res) as ReadableStream<Uint8Array>;
+      if (maxSize) {
         let totalSize = 0;
-        res.on("data", (chunk) => {
-          totalSize += chunk.length;
-          if (maxSize && totalSize > maxSize) {
-            res.destroy();
-            controller.error(new Error(`SECURITY_REJECTED: Payload exceeded maximum size of ${maxSize} bytes`));
-            return;
-          }
-          controller.enqueue(chunk);
-        });
-        res.on("end", () => {
-          controller.close();
-        });
-        res.on("error", (err) => {
-          controller.error(err);
-        });
-      },
-      cancel() {
-        res.destroy();
+        stream = upstream.pipeThrough(new TransformStream<Uint8Array, Uint8Array>({
+          transform(chunk, controller) {
+            totalSize += chunk.byteLength;
+            if (totalSize > maxSize) {
+              throw new Error(`SECURITY_REJECTED: Payload exceeded maximum size of ${maxSize} bytes`);
+            }
+            controller.enqueue(chunk);
+          },
+        }));
+      } else {
+        stream = upstream;
       }
-    });
+    } else {
+      res.resume();
+    }
 
     const standardResponse = new Response(stream, {
-      status: res.statusCode || 200,
+      status,
       statusText: res.statusMessage || "OK",
       headers
     });
