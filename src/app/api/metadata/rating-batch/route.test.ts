@@ -31,6 +31,23 @@ describe("rating batch during Redis outage", () => {
     expect(redisGet).not.toHaveBeenCalled();
   });
 
+  it("shares one deadline across successive batches", async () => {
+    const signals = new Set<AbortSignal>();
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (_url, options) => {
+      if (options?.signal) signals.add(options.signal);
+      return new Response(null, { status: 503 });
+    });
+
+    const response = await POST(new NextRequest("http://localhost/api/metadata/rating-batch", {
+      method: "POST",
+      body: JSON.stringify({ titles: Array.from({ length: 5 }, (_, i) => `Budget title ${i}`) }),
+    }));
+
+    expect(response.status).toBe(200);
+    expect(signals.size).toBe(1);
+    expect(fetch).toHaveBeenCalledTimes(10);
+  });
+
   it("rejects oversized batches before contacting upstream services", async () => {
     const fetchSpy = vi.spyOn(globalThis, "fetch");
     const request = new NextRequest("http://localhost/api/metadata/rating-batch", {

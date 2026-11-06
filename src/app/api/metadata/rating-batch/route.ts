@@ -28,11 +28,14 @@ export async function POST(req: NextRequest) {
     }
 
     const results: Record<string, number | undefined> = Object.create(null);
-    const deadline = Date.now() + LOOKUP_BUDGET_MS;
+    const signal = AbortSignal.timeout(LOOKUP_BUDGET_MS);
+    const budgetExhausted = new Promise<void>((resolve) => {
+      signal.addEventListener("abort", () => resolve(), { once: true });
+    });
     const uniqueTitles = Array.from(new Set(titles)).filter(Boolean);
 
-    for (let i = 0; i < uniqueTitles.length && Date.now() < deadline; i += CONCURRENCY) {
-      await Promise.all(uniqueTitles.slice(i, i + CONCURRENCY).map(async (title) => {
+    for (let i = 0; i < uniqueTitles.length && !signal.aborted; i += CONCURRENCY) {
+      const batch = Promise.all(uniqueTitles.slice(i, i + CONCURRENCY).map(async (title) => {
         const normalizedTitle = title
           .replace(/chapter\s*\d+/i, "")
           .replace(/\[.*?\]/g, "")
@@ -50,7 +53,7 @@ export async function POST(req: NextRequest) {
           const cachedData = await withCache(
             cacheKey,
             () => withSourceCapacity("metadata-rating", async () => {
-              const signal = AbortSignal.timeout(LOOKUP_BUDGET_MS);
+              signal.throwIfAborted();
               try {
                 // Find manga by title
                 const searchRes = await fetch(`https://api.mangadex.org/manga?title=${encodeURIComponent(normalizedTitle)}&limit=1`, {
@@ -100,10 +103,11 @@ export async function POST(req: NextRequest) {
                   }
                 }
               } catch (e) {
+                signal.throwIfAborted();
                 console.error("MangaDex rating fetch error:", e);
               }
 
-              if (signal.aborted) return { score: undefined };
+              signal.throwIfAborted();
               try {
                 const query = `
                   query ($search: String) {
@@ -156,6 +160,7 @@ export async function POST(req: NextRequest) {
                   }
                 }
               } catch (e) {
+                signal.throwIfAborted();
                 console.error("Anilist fallback error:", e);
               }
 
@@ -165,11 +170,12 @@ export async function POST(req: NextRequest) {
             { shouldPersist: ({ score }) => score !== undefined }
           );
 
-          results[title] = cachedData?.score;
+          if (!signal.aborted) results[title] = cachedData?.score;
         } catch {
           // Admission or lookup failure leaves this title out of the partial response.
         }
       }));
+      await Promise.race([batch, budgetExhausted]);
     }
 
     return NextResponse.json({ data: results });
