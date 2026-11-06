@@ -33,6 +33,12 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsOffline(!navigator.onLine);
 
+    if (process.env.NODE_ENV === "production" && navigator.onLine && "serviceWorker" in navigator) {
+      void navigator.serviceWorker.register("/sw.js").catch((error) => {
+        console.warn("Service worker registration failed", error);
+      });
+    }
+
     const handleOffline = () => setIsOffline(true);
     const handleOnline = () => setIsOffline(false);
 

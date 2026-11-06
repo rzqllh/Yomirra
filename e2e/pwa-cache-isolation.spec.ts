@@ -15,7 +15,8 @@ test("offline cache retains downloads and only stores safe documents", async ({ 
       state: { hasCompletedOnboarding: true, _hasHydrated: true }, version: 0,
     }));
   });
-  await page.goto("/api/health/live");
+  await page.goto("/settings");
+  await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
   const offlineImage = "/offline-images/regression/1";
   const unsafeImage = "/offline-images/regression/legacy.svg";
   await page.evaluate(async ({ offlineImage, unsafeImage, downloads }) => {
@@ -31,8 +32,11 @@ test("offline cache retains downloads and only stores safe documents", async ({ 
     await legacy.put("/settings", new Response("legacy-cookie-dependent-payload"));
   }, { offlineImage, unsafeImage, downloads: EXPLICIT_DOWNLOADS_CACHE_NAME });
 
-  await page.goto("/settings");
-  await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
+  await page.evaluate(async () => {
+    await navigator.serviceWorker.register("/sw.js?cache-upgrade-regression=1");
+  });
+  await expect.poll(() => page.evaluate(() => navigator.serviceWorker.controller?.scriptURL))
+    .toContain("cache-upgrade-regression=1");
   const safe = await page.reload();
   expect(safe?.headers()[SAFE_OFFLINE_PAGE_HEADER]).toBe(SAFE_OFFLINE_PAGE_SCOPE);
   await expect.poll(() => page.evaluate(async (name) => {
@@ -63,7 +67,17 @@ test("offline cache retains downloads and only stores safe documents", async ({ 
   const offlineDownloads = await context.newPage();
   await offlineDownloads.goto("/downloads");
   await expect(offlineDownloads.getByRole("heading", { name: "Unduhan", exact: true })).toBeVisible();
-  expect(await page.evaluate(async (url) => (await fetch(url)).headers.get("content-type"), offlineImage)).toBe("image/png");
+  const image = await offlineDownloads.evaluate(async ({ url, cacheName }) => {
+    const cache = await caches.open(cacheName);
+    const cached = await cache.match(new URL(url, location.origin).href);
+    const response = await fetch(url, { headers: { Accept: "image/png" } });
+    return {
+      cachedContentType: cached?.headers.get("content-type"),
+      contentType: response.headers.get("content-type"),
+      status: response.status,
+    };
+  }, { url: offlineImage, cacheName: EXPLICIT_DOWNLOADS_CACHE_NAME });
+  expect(image).toEqual({ cachedContentType: "image/png", contentType: "image/png", status: 200 });
   expect(await page.evaluate(async (url) => fetch(url).then((response) => response.ok, () => false), unsafeImage)).toBe(false);
   expect(await page.evaluate(async () => fetch("/api/health/live").then(() => false, () => true))).toBe(true);
   const cached = await page.goto("/settings");

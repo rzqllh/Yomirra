@@ -1,6 +1,6 @@
 import { defaultCache } from "@serwist/next/worker";
-import type { PrecacheEntry, SerwistGlobalConfig, SerwistPlugin } from "serwist";
-import { Serwist, CacheFirst, NetworkFirst, NetworkOnly, StaleWhileRevalidate, ExpirationPlugin, CacheOnly } from "serwist";
+import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
+import { Serwist, CacheFirst, NetworkFirst, NetworkOnly, StaleWhileRevalidate, ExpirationPlugin } from "serwist";
 import {
   EXPLICIT_DOWNLOADS_CACHE_NAME,
   MANGA_IMAGES_CACHE_NAME,
@@ -18,10 +18,13 @@ import {
 
 import { rasterImageContentType } from "@/shared/lib/raster-image";
 
-const rasterCacheOnly: SerwistPlugin = {
-  cachedResponseWillBeUsed: async ({ cachedResponse }) =>
-    rasterImageContentType(cachedResponse ?? undefined) ? cachedResponse : null,
-};
+function virtualImageCache(cacheName: string) {
+  return async ({ request }: { request: Request }): Promise<Response> => {
+    const cache = await caches.open(cacheName);
+    const response = await cache.match(request.url);
+    return response && rasterImageContentType(response) ? response : new Response(null, { status: 404 });
+  };
+}
 
 declare global {
   interface WorkerGlobalScope extends SerwistGlobalConfig {
@@ -64,17 +67,11 @@ const serwist = new Serwist({
     },
     {
       matcher: ({ sameOrigin, url }) => sameOrigin && url.pathname.startsWith("/offline-images/"),
-      handler: new CacheOnly({
-        cacheName: EXPLICIT_DOWNLOADS_CACHE_NAME,
-        plugins: [rasterCacheOnly],
-      }),
+      handler: virtualImageCache(EXPLICIT_DOWNLOADS_CACHE_NAME),
     },
     {
       matcher: ({ sameOrigin, url }) => sameOrigin && url.pathname.startsWith("/reading-buffer/"),
-      handler: new CacheOnly({
-        cacheName: READING_BUFFER_CACHE_NAME,
-        plugins: [rasterCacheOnly],
-      }),
+      handler: virtualImageCache(READING_BUFFER_CACHE_NAME),
     },
     // We aggressively cache manga pages (via image proxy) for offline reading & bandwidth saving.
     {
