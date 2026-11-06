@@ -34,3 +34,20 @@ it("bounds concurrent image streams and frees slots when a client cancels", asyn
     await Promise.all(streams.map((stream) => stream.body?.cancel()));
   }
 });
+
+it.each(["sig=second", "url=https://example.test/other.jpg", "ref=a&ref=b", "retry=4", "alias=1"])(
+  "rejects ambiguous cache-key query %s before fetching upstream",
+  async (suffix) => {
+    vi.mocked(safeFetch).mockClear();
+    const request = new NextRequest(`https://yomirra.test/api/proxy/image?url=https://example.test/page.jpg&sig=valid&${suffix}`);
+    expect((await GET(request)).status).toBe(400);
+    expect(safeFetch).not.toHaveBeenCalled();
+  }
+);
+
+it("preserves supported retry URLs", async () => {
+  vi.mocked(safeFetch).mockResolvedValueOnce(new Response("image", { headers: { "Content-Type": "image/jpeg" } }));
+  const response = await GET(new NextRequest("https://yomirra.test/api/proxy/image?url=https://example.test/page.jpg&sig=valid&retry=3"));
+  expect(response.status).toBe(200);
+  await response.text();
+});

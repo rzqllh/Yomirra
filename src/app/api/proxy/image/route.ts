@@ -5,6 +5,7 @@ import { logger } from "@/shared/logger";
 import { safeFetch } from "@/server/lib/security/outbound-policy";
 import { applyRateLimitHeaders, checkRateLimitPolicy, createRateLimitRejection } from "@/server/lib/security/rate-limit";
 
+const IMAGE_QUERY_KEYS = new Set(["url", "sig", "ref", "retry"]);
 const MAX_IMAGE_SIZE = 15 * 1024 * 1024;
 const MAX_ACTIVE_IMAGES = 16;
 let activeImages = 0;
@@ -18,6 +19,12 @@ const ALLOWED_DIRECT_CDN_HOSTS = new Set([
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
+  const keys = [...searchParams.keys()];
+  const retry = searchParams.get("retry");
+  if (keys.some((key) => !IMAGE_QUERY_KEYS.has(key)) || new Set(keys).size !== keys.length ||
+      (retry !== null && retry !== "1" && retry !== "2" && retry !== "3")) {
+    return new NextResponse("Invalid image proxy parameters", { status: 400 });
+  }
   const url = searchParams.get("url");
   const signature = searchParams.get("sig");
   const referer = searchParams.get("ref") || undefined;
@@ -28,7 +35,6 @@ export async function GET(request: NextRequest) {
 
   // Verify HMAC signature to prevent SSRF before spending limiter capacity.
   if (!verifyImageUrl(url, signature, referer)) {
-    logger.warn(`Invalid image proxy signature for url: ${url}`);
     return new NextResponse("Forbidden: Invalid signature", { status: 403 });
   }
 

@@ -23,7 +23,7 @@ export function signImageUrl(url: string, referer?: string): string {
 }
 
 export function verifyImageUrl(url: string, signature: string, referer?: string): boolean {
-  if (!url || !signature || !env.IMAGE_PROXY_SECRET) return false;
+  if (!url || signature.length !== 64 || /[^a-f0-9]/.test(signature) || !env.IMAGE_PROXY_SECRET) return false;
 
   const hmac = createHmac("sha256", env.IMAGE_PROXY_SECRET);
   hmac.update(url);
@@ -35,6 +35,5 @@ export function verifyImageUrl(url: string, signature: string, referer?: string)
   const sigBuf = Buffer.from(signature, "hex");
   const expectedBuf = Buffer.from(expectedSignature, "hex");
 
-  if (sigBuf.length !== expectedBuf.length) return false;
   return timingSafeEqual(sigBuf, expectedBuf);
 }
