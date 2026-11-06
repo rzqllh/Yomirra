@@ -189,8 +189,7 @@ export function PagedReader({
       const href = getReaderHref(sourceId, mangaId, nextChapterId);
       router.prefetch(href);
       queryClient.prefetchQuery({
-        queryKey: ["pages", sourceId, nextChapterId],
-        queryFn: () => apiClient.getPages(sourceId, mangaId, nextChapterId),
+        ...apiClient.pagesQuery(sourceId, mangaId, nextChapterId),
         staleTime: 1000 * 60 * 5,
       });
     }

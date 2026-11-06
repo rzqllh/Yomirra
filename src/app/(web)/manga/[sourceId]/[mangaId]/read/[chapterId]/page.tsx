@@ -12,6 +12,7 @@ import { getManifestUrlFromCookie } from "@/server/lib/sources/server-manifest";
 import { SourceError } from "@/server/lib/sources/error";
 import { DeadSourceRecovery } from "@/components/komik/dead-source-recovery";
 import { signImageUrl } from "@/server/lib/sign-proxy-url";
+import { sourceReadScope } from "@/shared/sources/content-policy";
 import type { PageItem } from "@/shared/sources/source-types";
 
 export async function generateMetadata({ 
@@ -68,11 +69,13 @@ export default async function ReaderPage({
 
   let detail, chapters;
   let initialPages: PageItem[] | null = null;
+  let initialPagesScope: string | undefined;
   try {
     const readOptions = await getServerReadOptions();
     const manifestUrl = await getManifestUrlFromCookie(sourceId);
     const source = await sourceManager.getSource(sourceId, manifestUrl);
     
+    initialPagesScope = sourceReadScope(readOptions);
     const pages = loadSourcePages(source, mangaId, chapterId, readOptions).catch(() => null);
     let timer: ReturnType<typeof setTimeout> | undefined;
     const deadline = new Promise<null>((resolve) => {
@@ -152,6 +155,7 @@ export default async function ReaderPage({
       initialDetail={detail}
       initialChapters={chapters}
       initialPages={initialPages}
+      initialPagesScope={initialPagesScope}
       returnTo={returnTo}
     />
   );

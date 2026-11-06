@@ -7,6 +7,8 @@ import { ReaderPageSkeleton } from "@/components/skeletons/reader-page-skeleton"
 import { ReaderShell } from "@/components/reader/reader-shell";
 import { ContinuousVerticalReader } from "@/components/reader/continuous-vertical-reader";
 import { PagedReader } from "@/components/reader/paged-reader";
+import { sourceReadScope } from "@/shared/sources/content-policy";
+import { useSettingsStore } from "@/shared/store/settings-store";
 import { useReaderStore } from "@/shared/store/reader-store";
 import { useHistoryStore } from "@/shared/store/history-store";
 import { useLibraryStore } from "@/shared/store/library-store";
@@ -30,6 +32,7 @@ interface ReaderViewProps {
   initialDetail: MangaDetail;
   initialChapters: Chapter[];
   initialPages: PageItem[] | null; // null if error on server
+  initialPagesScope?: string;
   returnTo?: string;
 }
 
@@ -43,7 +46,8 @@ function ReaderContent({
   chapterId,
   initialDetail,
   initialChapters,
-  initialPages,
+  initialPages: serverPages,
+  initialPagesScope,
   returnTo,
 }: ReaderViewProps) {
   const detailHref = getMangaDetailHref(sourceId, mangaId, returnTo);
@@ -62,10 +66,12 @@ function ReaderContent({
 
   const [offlinePages, setOfflinePages] = useState<PageItem[] | null>(null);
 
-  // Fallback fetching if initialPages failed on SSR
+  const readScope = useSettingsStore(sourceReadScope);
+  const initialPages = !initialPagesScope || initialPagesScope === readScope ? serverPages : null;
+
+  // Fallback fetching if SSR did not supply pages for the active scope.
   const { data: chapterPages, isLoading: isQueryLoading, error, refetch } = useQuery({
-    queryKey: ["pages", sourceId, chapterId],
-    queryFn: () => apiClient.getPages(sourceId, mangaId, chapterId),
+    ...apiClient.pagesQuery(sourceId, mangaId, chapterId),
     enabled: !initialPages && downloadStatus !== "downloaded",
     initialData: initialPages ? { chapterId, pages: initialPages } : undefined,
   });
