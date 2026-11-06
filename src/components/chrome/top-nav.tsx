@@ -160,7 +160,7 @@ export function TopNav() {
 
               <AnimatePresence>
                 {isProfileOpen && (
-                  <Surface asChild variant="glassPopover" rounded="card">
+                  <Surface asChild variant="glassPopover" rounded="card" className="shadow-[0_12px_36px_-6px_rgba(0,0,0,0.18)] dark:shadow-[0_16px_40px_-6px_rgba(0,0,0,0.7)]">
                     <motion.div
                       initial={{ opacity: 0, y: 8, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
