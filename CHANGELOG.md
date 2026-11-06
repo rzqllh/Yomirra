@@ -4,7 +4,10 @@
 
 - Batasi permintaan halaman dinamis per instance. Kuota sensitif mencatat counter dan masa berlaku dalam satu operasi Redis.
 - Batasi payload sesi admin dan pekerjaan AI bersamaan. Perketat validasi alamat upstream dan kirim kunci Gemini melalui header.
-- Pulihkan kontras pilihan tema, navigasi desktop, dan teks saat splash. Patch advisory produksi pada dependensi Next.js, Firebase, dan Serwist.
+- Wajibkan email Firebase terverifikasi untuk akses admin melalui allowlist.
+- Batasi waktu perintah Redis, tutup koneksi tanpa respons, dan cegah replay otomatis perintah yang belum menerima balasan.
+- Batasi ukuran request dan pekerjaan embedding Search Intelligence. Pertahankan hasil leksikal ketika kapasitas embedding penuh.
+- Pulihkan kontras pilihan tema, navigasi desktop, dan teks saat splash. Selaraskan nama aksesibel tombol pencarian desktop dengan labelnya. Patch advisory produksi pada dependensi Next.js, Firebase, dan Serwist. Perbarui Vitest dan dependensi tooling terkait.
 
 - Kurangi aset publik yang diunduh saat memasang PWA. Reader mode halaman memuat chapter berikutnya saat navigasi.
 - Batasi ukuran payload pencarian terkait dan rating batch. Hormati jeda upstream untuk mengurangi permintaan berulang saat provider membatasi akses.
