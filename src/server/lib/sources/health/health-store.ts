@@ -1,4 +1,4 @@
-import { isRedisConfigured, redis } from "@/server/lib/cache/redis";
+import { isRedisConfigured, isRedisCommandAllowed, redis } from "@/server/lib/cache/redis";
 import { logger } from "@/shared/logger";
 import type {
   SourceHealthSnapshot,
@@ -163,7 +163,7 @@ export class SourceHealthStore {
     }
 
     const sourceIds = knownSourceIds?.map((id) => id.toLowerCase().trim());
-    if (isRedisConfigured && sourceIds?.length) {
+    if (isRedisConfigured && isRedisCommandAllowed() && sourceIds?.length) {
       try {
         const raw = await redis.mget(sourceIds.map((id) => `${SNAPSHOT_KEY_PREFIX}${id}`));
         for (const [index, value] of raw.entries()) {
@@ -190,7 +190,7 @@ export class SourceHealthStore {
     const normalizedId = sourceId.toLowerCase().trim();
     let samples: SourceProbeSample[] = [];
 
-    if (isRedisConfigured) {
+    if (isRedisConfigured && isRedisCommandAllowed()) {
       try {
         const rawItems = await redis.lrange(`${HISTORY_KEY_PREFIX}${normalizedId}`, 0, MAX_HISTORY_SAMPLES - 1);
         if (rawItems && rawItems.length > 0) {

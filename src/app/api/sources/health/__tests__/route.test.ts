@@ -1,4 +1,4 @@
-﻿import { describe, it, expect, vi, beforeEach } from "vitest";
+﻿import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 
 const mockRedis = {
   get: vi.fn(),
@@ -36,8 +36,14 @@ import { sourceHealthStore } from "@/server/lib/sources/health/health-store";
 import { sourceRegistry } from "@/shared/sources/source-registry";
 
 describe("GET /api/sources/health", () => {
+  let clock = Date.now();
+
+  afterEach(() => { vi.useRealTimers(); });
   beforeEach(async () => {
     vi.restoreAllMocks();
+    clock += 60_000;
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(clock);
     mockRedis.get.mockReset();
     mockRedis.setex.mockReset();
     mockRedis.set.mockReset();
@@ -139,6 +145,17 @@ describe("GET /api/sources/health", () => {
     expect(json.data.komikindo.status).toBe("unavailable");
     expect(json.data.komikindo.message).toBe("akses ke sumber ditolak");
     expect(JSON.stringify(json)).not.toContain("internal upstream details");
+  });
+
+  it("coalesces a cold burst and reuses the result within the local TTL", async () => {
+    mockRedis.get.mockResolvedValue(null);
+    mockRedis.set.mockResolvedValue(null);
+    const responses = await Promise.all(Array.from({ length: 12 }, () => GET()));
+    expect(responses.every((response) => response.status === 200)).toBe(true);
+    expect(mockRedis.get.mock.calls.filter(([key]) => key === "yomirra:sources:health:v7")).toHaveLength(1);
+    expect(mockRedis.set).toHaveBeenCalledTimes(1);
+    await GET();
+    expect(mockRedis.get.mock.calls.filter(([key]) => key === "yomirra:sources:health:v7")).toHaveLength(1);
   });
 
   it("includes healthCheckUrl for MangaDex in registry", () => {
