@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased — Final stabilization
+
+- Pisahkan liveness proses dari kesiapan Redis. Readiness membatasi probe berulang per instance dan tetap menampilkan kegagalan Redis.
+
 ## Unreleased — Production stabilization
 
 - Batasi permintaan publik per instance, bagikan pekerjaan source yang sedang berlangsung, dan beri jeda pemulihan setelah upstream gagal berulang. Otorisasi dan kuota operasi berbiaya tetap memerlukan Redis.

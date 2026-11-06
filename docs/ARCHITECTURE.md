@@ -168,6 +168,8 @@ Production memiliki `REDIS_URL`, sedangkan Vercel Preview saat ini tidak. Previe
 
 ### Pengawasan command budget
 
+`GET /api/health/live` hanya memeriksa respons proses. `GET /api/health` adalah readiness Redis dan mengembalikan 503 ketika Redis tidak tersedia atau belum dikonfigurasi. Readiness berbagi satu probe yang sedang berjalan dan memakai ulang hasilnya selama 10 detik per instance. Circuit yang terbuka langsung membatalkan hasil sukses yang tersimpan. Kedua endpoint memakai `Cache-Control: no-store` dan tidak memanggil upstream sumber.
+
 Pantau `GET`, `INCR`, total commands, hits/misses, request per endpoint, dan status quota circuit. Kurva Upstash 3 November 2026 mulai naik sebelum Source Health PR #128 mencapai production. Penyebab traffic berulang belum dapat ditentukan secara definitif dari log agregat; data request mentah IP/User-Agent lama tidak tersedia. Jangan menjadikan upgrade billing sebagai pengganti pengurangan command berulang. Lihat [catatan insiden](ops/redis-read-spike-2026-11-03.md).
 
 

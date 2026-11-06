@@ -105,7 +105,7 @@ Redis bersifat opsional untuk feed, pencarian, dan Reader. Saat cache tidak ters
 
 Bottom dock mobile memakai radius kapsul penuh untuk shell, tombol Search, dan tab aktif, dengan target sentuh minimal 44px dan gutter mengikuti safe-area perangkat. Ini pengecualian komponen, bukan perubahan token radius global.
 
-Preview tanpa `REDIS_URL` tetap dapat memuat public flow, tetapi tidak menguji command budget Production. Detailnya di [Architecture](docs/ARCHITECTURE.md) dan [Testing](docs/TESTING.md).
+Gunakan `GET /api/health/live` untuk memeriksa apakah proses aplikasi merespons. `GET /api/health` memeriksa kesiapan Redis dan mengembalikan 503 jika Redis tidak tersedia atau belum dikonfigurasi. Preview tanpa `REDIS_URL` masih dapat melayani alur publik. Detailnya di [Architecture](docs/ARCHITECTURE.md) dan [Testing](docs/TESTING.md).
 
 ## Security dan reliability
 
