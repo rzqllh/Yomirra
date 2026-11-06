@@ -18,6 +18,18 @@ Untuk loop cepat:
 pnpm vitest run path/to/file.test.ts
 ```
 
+## Browser dari build production
+
+Gunakan Redis terisolasi dan nilai lokal untuk `IMAGE_PROXY_SECRET`, `REDIS_URL`, dan `NEXT_PUBLIC_APP_URL`. CI memakai container Redis terpisah. Atur `E2E_PRODUCTION_BUILD=1` untuk menjalankan server dari hasil build.
+
+```bash
+pnpm exec playwright install chromium webkit
+pnpm build
+E2E_PRODUCTION_BUILD=1 pnpm exec playwright test --reporter=list
+```
+
+Suite PWA memakai service worker build production dan menanam entri raster serta SVG legacy untuk menguji jalur cache. Suite discovery memblokir service worker agar fixture API mencapai Playwright. Bukti Playwright WebKit berasal dari emulasi desktop dan mobile. Pengujian iOS fisik, BrowserStack, dan Firebase lintas perangkat memerlukan lingkungan terpisah.
+
 ## Apa yang wajib dites
 
 Prioritaskan boundary yang kalau rusak dapat merusak data atau banyak feature:

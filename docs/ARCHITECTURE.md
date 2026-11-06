@@ -265,3 +265,11 @@ Telegram ops bersifat deterministic. Error/stage diubah menjadi report yang memb
 Penulisan history menangkap pemilik data sebelum operasi async, mengurutkan penulisan per chapter, dan menolak akun yang berubah. Kegagalan penulisan cloud mempertahankan progres lokal. Full sync menyatukan state sebelum memadatkan history; marker kompak mencegah detail lama masuk kembali. Pemadatan cloud selesai saat rekonsiliasi penuh, bukan sebagai transaksi global lintas perangkat. Lihat [kontrak data bacaan](READING_DATA.md).
 
 Download engine memeriksa Cache Storage ketika resume dan sebelum menyatakan chapter selesai. Metadata `cached` saja tidak membuktikan gambar masih tersedia.
+
+## Health dan cache offline
+
+`/api/health/live` mengukur respons proses. `/api/health` mengukur kesiapan Redis dan melaporkan snapshot sumber yang sudah tersedia di instance. Readiness berbagi satu probe aktif per instance dengan TTL dan backoff, serta membuang hasil positif saat koneksi diketahui putus. Probe tidak meminta data baru dari upstream.
+
+Worker hanya menyimpan HTML yang diberi penanda aman oleh server. Halaman Unduhan mempunyai shell bersama dengan data lokal yang dimuat setelah hidrasi. Respons RSC, API bergantung cookie, dan API dengan manifest eksternal tetap melalui jaringan. Cache gambar proxy otomatis dan buffer dapat diganti saat upgrade. Cache unduhan eksplisit memakai nama tetap, memeriksa tipe raster, dan menolak penggunaan path virtual sebagai dokumen. URL proxy versi 2 mengikat URL dan referer dalam HMAC. Antrean lama menukar URL yang kedaluwarsa lewat endpoint halaman resmi ketika online.
+
+Lihat [handoff stabilisasi](handoff/final-stabilization.md) untuk batas rilis, pemantauan dan recovery.
