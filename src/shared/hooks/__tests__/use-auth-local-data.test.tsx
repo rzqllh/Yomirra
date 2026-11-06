@@ -47,6 +47,7 @@ vi.mock("@/shared/lib/guest-merge-engine", () => ({
   })),
 }));
 
+import { useSettingsStore } from "@/shared/store/settings-store";
 import { useAuth, _resetGlobalAuthForTesting } from "../use-auth";
 
 describe("useAuth local data contract", () => {
@@ -54,27 +55,33 @@ describe("useAuth local data contract", () => {
     _resetGlobalAuthForTesting();
     vi.clearAllMocks();
     localStorage.clear();
+    useSettingsStore.getState().setHideNsfw(true);
     authMocks.currentUser = { uid: "uid-a" };
     authStateCallback = null;
   });
 
   it("does not delete device-local reading data on ordinary logout", async () => {
     setLocalDataOwnerUid("uid-a");
+    useSettingsStore.getState().setHideNsfw(false);
 
     const { result } = renderHook(() => useAuth());
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     await act(async () => {
       await result.current.logout();
+      authStateCallback?.(null);
     });
 
     expect(authMocks.signOut).toHaveBeenCalledTimes(1);
     expect(authMocks.clearUserScopedReadingState).not.toHaveBeenCalled();
     expect(getLocalDataOwnerUid()).toBe("uid-a");
+    expect(useSettingsStore.getState().hideNsfw).toBe(true);
+    expect(document.cookie).toContain("yomirra-hide-nsfw=true");
   });
 
   it("clears user-scoped local reading data before a different account becomes owner", async () => {
     setLocalDataOwnerUid("uid-a");
+    useSettingsStore.getState().setHideNsfw(false);
     authMocks.currentUser = { uid: "uid-b" };
 
     const { result } = renderHook(() => useAuth());
@@ -83,6 +90,7 @@ describe("useAuth local data contract", () => {
     expect(authMocks.clearUserScopedReadingState).toHaveBeenCalledTimes(1);
     expect(getLocalDataOwnerUid()).toBe("uid-b");
     expect(result.current.user?.uid).toBe("uid-b");
+    expect(useSettingsStore.getState().hideNsfw).toBe(true);
   });
 
   it("drops stale in-flight cloud snapshot when auth state transitions before fetch completes", async () => {
