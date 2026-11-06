@@ -18,6 +18,12 @@ test("offline cache retains downloads and only stores safe documents", async ({ 
   });
   await page.goto("/settings");
   await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
+  const publicPrecachePaths = await page.evaluate(async () => {
+    const names = (await caches.keys()).filter((name) => name.includes("precache"));
+    const entries = await Promise.all(names.map(async (name) => (await caches.open(name)).keys()));
+    return entries.flat().map(({ url }) => new URL(url).pathname).filter((path) => !path.startsWith("/_next/"));
+  });
+  expect(publicPrecachePaths).toEqual(["/icon-pwa.png"]);
   const safe = await page.reload();
   expect(safe?.headers()[SAFE_OFFLINE_PAGE_HEADER]).toBe(SAFE_OFFLINE_PAGE_SCOPE);
   await expect.poll(() => page.evaluate(async ({ name, header }) => {

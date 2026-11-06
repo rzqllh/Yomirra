@@ -16,6 +16,16 @@ vi.mock("@/server/lib/search/gemini-embeddings", () => ({ embedSearchText: vi.fn
 import { POST } from "./route";
 
 describe("related titles during Redis outage", () => {
+  it("rejects an oversized body without relying on Content-Length", async () => {
+    getRecent.mockClear();
+    const response = await POST(new NextRequest("http://localhost/api/search/related", {
+      method: "POST",
+      body: JSON.stringify({ ignored: "x".repeat(128 * 1024) }),
+    }));
+
+    expect(response.status).toBe(413);
+    expect(getRecent).not.toHaveBeenCalled();
+  });
   it("returns an empty successful result when the catalog is unavailable", async () => {
     const response = await POST(new NextRequest("http://localhost/api/search/related", {
       method: "POST",

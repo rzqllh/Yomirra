@@ -1,6 +1,6 @@
 import { safeFetch } from "../../../security/outbound-policy";
 
-class UpstreamHttpError extends Error {
+export class UpstreamHttpError extends Error {
   readonly retryAfterSeconds?: number;
 
   constructor(readonly status: number, statusText: string, retryAfter: string | null) {

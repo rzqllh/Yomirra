@@ -2,13 +2,28 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { withCache } from "@/server/lib/cache/redis-cache";
 import { checkRateLimit } from "@/server/lib/security/rate-limit";
+import { readBoundedJson } from "@/server/lib/security/read-bounded-json";
 import { withSourceCapacity } from "@/server/lib/sources/source-capacity";
+import { loadSourceUpstream } from "@/server/lib/sources/source-upstream";
+import { UpstreamHttpError } from "@/server/lib/sources/adapters/base/http-client";
+import { SourceError } from "@/server/lib/sources/error";
 import { isExactNormalizedTitleMatch } from "@/shared/lib/title-matcher";
 
 const MAX_TITLES = 20;
 const MAX_TITLE_LENGTH = 120;
 const CONCURRENCY = 4;
 const LOOKUP_BUDGET_MS = 4_000;
+
+function fetchRatingProvider(provider: "mangadex" | "anilist", url: string, options: RequestInit) {
+  return loadSourceUpstream(provider, "detail", null, async () => {
+    const response = await fetch(url, options);
+    if (response.status === 403 || response.status === 429) {
+      void response.body?.cancel().catch(() => {});
+      throw new UpstreamHttpError(response.status, response.statusText, response.headers.get("retry-after"));
+    }
+    return response;
+  }, 'metadata-rating:' + provider);
+}
 
 export async function POST(req: NextRequest) {
   const rateLimit = await checkRateLimit(req, 30, 60, false, "rating-batch");
@@ -19,8 +34,11 @@ export async function POST(req: NextRequest) {
     });
   }
   try {
-    const body = await req.json().catch(() => null);
-    const titles: string[] = body?.titles;
+    const body = await readBoundedJson(req, 16 * 1024);
+    if (!body.ok && body.status === 413) {
+      return NextResponse.json({ error: "Rating batch payload too large" }, { status: 413 });
+    }
+    const titles = body.ok ? (body.data as { titles?: unknown } | null)?.titles : undefined;
 
     if (!Array.isArray(titles) || titles.length === 0 || titles.length > MAX_TITLES ||
         titles.some((title) => typeof title !== "string" || title.length > MAX_TITLE_LENGTH)) {
@@ -56,7 +74,7 @@ export async function POST(req: NextRequest) {
               signal.throwIfAborted();
               try {
                 // Find manga by title
-                const searchRes = await fetch(`https://api.mangadex.org/manga?title=${encodeURIComponent(normalizedTitle)}&limit=1`, {
+                const searchRes = await fetchRatingProvider("mangadex", `https://api.mangadex.org/manga?title=${encodeURIComponent(normalizedTitle)}&limit=1`, {
                   signal,
                 });
                 
@@ -85,7 +103,7 @@ export async function POST(req: NextRequest) {
                       ])
                     ) {
                       // Fetch statistics only after strict title identity validation.
-                      const statRes = await fetch(`https://api.mangadex.org/statistics/manga/${mangaId}`, {
+                      const statRes = await fetchRatingProvider("mangadex", `https://api.mangadex.org/statistics/manga/${mangaId}`, {
                         signal,
                       });
                       
@@ -104,7 +122,7 @@ export async function POST(req: NextRequest) {
                 }
               } catch (e) {
                 signal.throwIfAborted();
-                console.error("MangaDex rating fetch error:", e);
+                if (!SourceError.isSourceError(e)) console.error("MangaDex rating lookup failed");
               }
 
               signal.throwIfAborted();
@@ -124,7 +142,7 @@ export async function POST(req: NextRequest) {
                   }
                 `;
                 
-                const res = await fetch("https://graphql.anilist.co", {
+                const res = await fetchRatingProvider("anilist", "https://graphql.anilist.co", {
                   method: "POST",
                   headers: {
                     "Content-Type": "application/json",
@@ -161,7 +179,7 @@ export async function POST(req: NextRequest) {
                 }
               } catch (e) {
                 signal.throwIfAborted();
-                console.error("Anilist fallback error:", e);
+                if (!SourceError.isSourceError(e)) console.error("AniList rating lookup failed");
               }
 
               return { score: undefined };

@@ -120,7 +120,7 @@ export async function GET(request: NextRequest) {
       headers: responseHeaders,
     }));
   } catch (error) {
-    logger.error("Image proxy error", { error, url });
+    logger.error("Image proxy error", { errorType: error instanceof Error ? error.name : "Unknown" });
     return limited(new NextResponse("Internal Server Error", { status: 500 }));
   } finally {
     if (!streamOwnsSlot) release();

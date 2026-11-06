@@ -9,9 +9,11 @@ import { useDownloadStore } from "@/shared/store/download-store";
 import { PagedReader } from "../paged-reader";
 import { ReaderView } from "../reader-view";
 
+const routerPrefetch = vi.hoisted(() => vi.fn());
+
 vi.mock("next/navigation", () => ({
   usePathname: vi.fn(() => "/"),
-  useRouter: vi.fn(() => ({ back: vi.fn(), push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() })),
+  useRouter: vi.fn(() => ({ back: vi.fn(), push: vi.fn(), replace: vi.fn(), prefetch: routerPrefetch })),
 }));
 
 describe("PagedReader Component & Integration", () => {
@@ -201,6 +203,25 @@ describe("PagedReader Component & Integration", () => {
   });
 
   describe("Predictive Preloading & Image Priority", () => {
+    it("keeps the next chapter off the network until navigation", () => {
+      const prefetch = vi.spyOn(testQueryClient, "prefetchQuery");
+      try {
+        renderWithClient(
+          <PagedReader sourceId="src1" mangaId="manga1" chapterId="ch1" nextChapterId="ch2" pages={mockPages} />
+        );
+
+        fireEvent.click(screen.getByLabelText("Halaman berikutnya"));
+        expect(screen.getByText("2 / 3")).toBeDefined();
+        fireEvent.click(screen.getByLabelText("Halaman berikutnya"));
+        expect(screen.getByText("3 / 3")).toBeDefined();
+        expect(routerPrefetch).not.toHaveBeenCalled();
+        expect(prefetch).not.toHaveBeenCalled();
+      } finally {
+        prefetch.mockRestore();
+      }
+    });
+
+
     it("should render active page with priority and preload upcoming pages", () => {
       renderWithClient(
         <PagedReader

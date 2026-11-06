@@ -4,8 +4,6 @@ import { noteCompletedChapter } from "@/shared/lib/bookmark-suggestion";
 import * as React from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "@/shared/api-client";
 import { useReaderStore, useEffectiveReaderPreferences } from "@/shared/store/reader-store";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useHistoryStore } from "@/shared/store/history-store";
@@ -180,20 +178,6 @@ export function PagedReader({
   }, [flushProgress, hasInitialized]);
 
   useVisibilityFlush(flushProgress);
-
-  const queryClient = useQueryClient();
-
-  // Predictive preload: prefetch next chapter pages when user reaches last 2 pages
-  React.useEffect(() => {
-    if (nextChapterId && totalPages > 0 && currentPageIndex >= totalPages - 2 && typeof navigator !== "undefined" && navigator.onLine) {
-      const href = getReaderHref(sourceId, mangaId, nextChapterId);
-      router.prefetch(href);
-      queryClient.prefetchQuery({
-        ...apiClient.pagesQuery(sourceId, mangaId, nextChapterId),
-        staleTime: 1000 * 60 * 5,
-      });
-    }
-  }, [nextChapterId, totalPages, currentPageIndex, queryClient, router, sourceId, mangaId]);
 
   const goToNextPage = React.useCallback(() => {
     if (currentPageIndex < totalPages - 1) {

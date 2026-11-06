@@ -5,6 +5,8 @@ const withSerwist = withSerwistInit({
   swSrc: "src/app/sw.ts",
   swDest: "public/sw.js",
   register: false,
+  // Keep install small. Screenshots, onboarding art and manifest icons load on demand.
+  globPublicPatterns: ["icon-pwa.png"],
   disable: process.env.NODE_ENV === "development",
 });
 

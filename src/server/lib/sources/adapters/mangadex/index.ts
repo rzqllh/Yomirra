@@ -37,16 +37,14 @@ export function parseRetryAfter(headerVal: string | null): number {
   if (!headerVal) return FALLBACK_RETRY_DELAY_MS;
 
   const trimmed = headerVal.trim();
-  const seconds = parseInt(trimmed, 10);
-  if (!isNaN(seconds) && String(seconds) === trimmed) {
-    const delayMs = seconds * 1000;
-    return Math.min(Math.max(0, delayMs), MAX_RETRY_SLEEP_MS);
+  if (/^\d+$/.test(trimmed)) {
+    return Math.min(Number(trimmed), Number.MAX_SAFE_INTEGER / 1000) * 1000;
   }
 
   const dateMs = Date.parse(trimmed);
   if (!isNaN(dateMs)) {
     const delayMs = dateMs - Date.now();
-    return Math.min(Math.max(0, delayMs), MAX_RETRY_SLEEP_MS);
+    return Math.max(0, delayMs);
   }
 
   return FALLBACK_RETRY_DELAY_MS;
@@ -96,15 +94,28 @@ export function createMdFetch(dependencies: MdFetchDependencies = {}) {
     let result = await transport.request(url, options, context);
 
     if (result.response.status === 429) {
+      const sleepMs = parseRetryAfter(result.response.headers.get("retry-after"));
+      void result.response.body?.cancel().catch(() => {});
       context.callerSignal?.throwIfAborted();
-      const retryAfterHeader = result.response.headers.get("retry-after");
-      const sleepMs = parseRetryAfter(retryAfterHeader);
-      if (transport.remaining(context) - sleepMs >= 2000) {
+      if (sleepMs <= MAX_RETRY_SLEEP_MS && transport.remaining(context) - sleepMs >= 2000) {
         await transport.sleep(sleepMs, context);
         context.callerSignal?.throwIfAborted();
         await acquire({ signal: context.callerSignal, deadlineMs: context.deadlineMs });
         result = await transport.request(url, options, context, result.route);
+        if (result.response.status === 429) {
+          void result.response.body?.cancel().catch(() => {});
+        }
       }
+    }
+
+    if (result.response.status === 429) {
+      const retryAfter = parseRetryAfter(result.response.headers.get("retry-after"));
+      throw new SourceError("MangaDex API error 429: Too Many Requests", {
+        code: "RATE_LIMITED",
+        sourceId: "mangadex",
+        statusCode: 429,
+        retryAfterSeconds: Math.max(1, Math.ceil(retryAfter / 1000)),
+      });
     }
 
     if (!result.response.ok) {
