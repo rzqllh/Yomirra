@@ -83,7 +83,7 @@ export function SegmentedControl({
               fullWidth ? "flex-1" : "flex-1 sm:flex-none sm:min-w-[90px]",
               isActive
                 ? isQuickRail
-                  ? "text-white"
+                  ? "text-accent-on"
                   : "text-text-primary"
                 : "text-text-secondary hover:text-text-primary hover:bg-surface-hover/40"
             )}
@@ -113,7 +113,7 @@ export function SegmentedControl({
                   "relative z-10 text-[10px] px-1.5 py-0.5 rounded-md font-bold transition-colors leading-none",
                   isActive
                     ? isQuickRail
-                      ? "bg-white/20 text-white"
+                      ? "bg-accent-on/10 text-accent-on"
                       : "bg-accent/15 text-accent"
                     : option.badgeVariant === "error"
                     ? "bg-semantic-error text-white shadow-xs"
