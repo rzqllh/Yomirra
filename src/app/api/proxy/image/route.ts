@@ -5,11 +5,10 @@ import { logger } from "@/shared/logger";
 import { safeFetch } from "@/server/lib/security/outbound-policy";
 import { applyRateLimitHeaders, checkRateLimitPolicy, createRateLimitRejection } from "@/server/lib/security/rate-limit";
 
-const IMAGE_QUERY_KEYS = new Set(["url", "sig", "ref", "retry"]);
-const RASTER_IMAGE_TYPES = new Set([
-  "image/apng", "image/avif", "image/bmp", "image/gif",
-  "image/jpeg", "image/jpg", "image/png", "image/webp",
-]);
+import { rasterImageContentType } from "@/shared/lib/raster-image";
+import { IMAGE_PROXY_VERSION } from "@/shared/lib/image-proxy-version";
+
+const IMAGE_QUERY_KEYS = new Set(["v", "url", "sig", "ref", "retry"]);
 const MAX_IMAGE_SIZE = 15 * 1024 * 1024;
 const MAX_ACTIVE_IMAGES = 16;
 let activeImages = 0;
@@ -38,7 +37,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Verify HMAC signature to prevent SSRF before spending limiter capacity.
-  if (!verifyImageUrl(url, signature, referer)) {
+  if (searchParams.get("v") !== IMAGE_PROXY_VERSION || !verifyImageUrl(url, signature, referer)) {
     return new NextResponse("Forbidden: Invalid signature", { status: 403 });
   }
 
@@ -95,8 +94,8 @@ export async function GET(request: NextRequest) {
       return limited(new NextResponse("Failed to fetch image", { status: response.status }));
     }
 
-    const contentType = response.headers.get("content-type")?.split(";")[0].trim().toLowerCase();
-    if (!contentType || !RASTER_IMAGE_TYPES.has(contentType)) {
+    const contentType = rasterImageContentType(response);
+    if (!contentType) {
       await response.body?.cancel();
       return limited(new NextResponse("Invalid content type", { status: 400 }));
     }

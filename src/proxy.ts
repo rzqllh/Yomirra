@@ -4,8 +4,10 @@ import { CONTENT_PREFERENCE_COOKIE, shouldHideNsfw } from "@/shared/sources/cont
 
 export function proxy(request: NextRequest) {
   const response = NextResponse.next();
-  if (shouldHideNsfw(request.cookies.get(CONTENT_PREFERENCE_COOKIE)?.value) &&
-      !request.cookies.has("yomirra_dynamic_sources_urls")) {
+  // Downloads renders a shared shell. Device-local download records load after hydration.
+  const isDownloadsShell = request.nextUrl.pathname === "/downloads";
+  if (isDownloadsShell || (shouldHideNsfw(request.cookies.get(CONTENT_PREFERENCE_COOKIE)?.value) &&
+      !request.cookies.has("yomirra_dynamic_sources_urls"))) {
     response.headers.set(SAFE_OFFLINE_PAGE_HEADER, SAFE_OFFLINE_PAGE_SCOPE);
   }
   return response;

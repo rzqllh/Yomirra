@@ -23,6 +23,8 @@ import type { MangaDetail, Chapter, PageItem } from "@/shared/types/source";
 import { useAlternateSource } from "@/shared/hooks/use-alternate-source";
 import { AlternateSourceModal } from "@/components/komik/alternate-source-modal";
 import { parseChapterNumber } from "@/shared/lib/chapter-parser";
+import { rasterImageContentType } from "@/shared/lib/raster-image";
+import { EXPLICIT_DOWNLOADS_CACHE_NAME } from "@/shared/lib/pwa-cache-policy";
 import { ContentAccessBoundary } from "@/components/komik/content-access-boundary";
 
 interface ReaderViewProps {
@@ -116,7 +118,7 @@ function ReaderContent({
     if (downloadStatus === "downloaded" && typeof caches !== "undefined") {
       (async () => {
         try {
-          const cache = await caches.open("yomirra-chapter-cache-v1");
+          const cache = await caches.open(EXPLICIT_DOWNLOADS_CACHE_NAME);
           const keys = await cache.keys();
           const prefix = `/offline-images/${downloadId}/`;
           
@@ -140,7 +142,8 @@ function ReaderContent({
 
           await Promise.all(parsedKeys.map(async ({ req, index }) => {
             const res = await cache.match(req);
-            const blob = await res?.blob();
+            if (!res || !rasterImageContentType(res)) return;
+            const blob = await res.blob();
             if (blob && isMounted && index < pageCount) {
               const url = URL.createObjectURL(blob);
               createdUrls.push(url);

@@ -25,7 +25,7 @@ function createCacheStorage(cacheNames: string[]) {
 describe("PWA cache policy", () => {
   it("keeps explicit downloads durable while automatic caches use the current version", () => {
     expect(EXPLICIT_DOWNLOADS_CACHE_NAME).toBe("yomirra-chapter-cache-v1");
-    expect(READING_BUFFER_CACHE_NAME).toBe("yomirra-reading-buffer-v3");
+    expect(READING_BUFFER_CACHE_NAME).toBe("yomirra-reading-buffer-v4");
     expect(MANGA_IMAGES_CACHE_NAME).toBe("yomirra-manga-images-v4");
     expect(MANGA_METADATA_CACHE_NAME).toBe("yomirra-manga-metadata-v4");
     expect(PAGES_CACHE_NAME).toBe("yomirra-pages-v4");

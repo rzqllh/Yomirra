@@ -57,6 +57,8 @@ describe("Reader Offline Fixes Unit Tests", () => {
           { url: "http://localhost/offline-images/src1::manga1::ch1/1" },
         ]),
         match: vi.fn().mockResolvedValue({
+          ok: true,
+          headers: new Headers({ "Content-Type": "image/jpeg" }),
           blob: vi.fn().mockResolvedValue(mockBlob),
         }),
       };
@@ -118,6 +120,8 @@ describe("Reader Offline Fixes Unit Tests", () => {
           { url: "http://localhost/offline-images/src1::manga1::ch1/0" },
         ]),
         match: vi.fn().mockResolvedValue({
+          ok: true,
+          headers: new Headers({ "Content-Type": "image/jpeg" }),
           blob: vi.fn().mockResolvedValue(mockBlob),
         }),
       };
@@ -227,7 +231,7 @@ describe("Reader Offline Fixes Unit Tests", () => {
       // Resolve match promise after unmount
       await act(async () => {
         if (resolveMatch) {
-          resolveMatch({ blob: () => Promise.resolve(mockBlob) });
+          resolveMatch(new Response(mockBlob, { headers: { "Content-Type": "image/jpeg" } }));
         }
         await new Promise((r) => setTimeout(r, 50));
       });
@@ -244,7 +248,7 @@ describe("Reader Offline Fixes Unit Tests", () => {
           { url: "http://localhost/offline-images/src1::manga1::ch1/1" },
         ]),
         match: vi.fn()
-          .mockResolvedValueOnce({ blob: vi.fn().mockResolvedValue(mockBlob) })
+          .mockResolvedValueOnce(new Response(mockBlob, { headers: { "Content-Type": "image/jpeg" } }))
           .mockRejectedValueOnce(new Error("Disk read error")),
       };
 

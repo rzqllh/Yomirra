@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from "crypto";
 import { env } from "@/env";
+import { IMAGE_PROXY_VERSION } from "@/shared/lib/image-proxy-version";
 
 export function signImageUrl(url: string, referer?: string): string {
   if (!url) return "";
@@ -8,6 +9,7 @@ export function signImageUrl(url: string, referer?: string): string {
   const signature = imageSignature(env.IMAGE_PROXY_SECRET, url, referer).toString("hex");
 
   const searchParams = new URLSearchParams();
+  searchParams.set("v", IMAGE_PROXY_VERSION);
   searchParams.set("url", url);
   searchParams.set("sig", signature);
   if (referer) {

@@ -1,5 +1,5 @@
 import { defaultCache } from "@serwist/next/worker";
-import type { PrecacheEntry, SerwistGlobalConfig } from "serwist";
+import type { PrecacheEntry, SerwistGlobalConfig, SerwistPlugin } from "serwist";
 import { Serwist, CacheFirst, NetworkFirst, NetworkOnly, StaleWhileRevalidate, ExpirationPlugin, CacheOnly } from "serwist";
 import {
   EXPLICIT_DOWNLOADS_CACHE_NAME,
@@ -15,6 +15,13 @@ import {
   isSafeSourceMetadataRequest,
   isSessionSensitivePath,
 } from "@/shared/lib/pwa-cache-policy";
+
+import { rasterImageContentType } from "@/shared/lib/raster-image";
+
+const rasterCacheOnly: SerwistPlugin = {
+  cachedResponseWillBeUsed: async ({ cachedResponse }) =>
+    rasterImageContentType(cachedResponse ?? undefined) ? cachedResponse : null,
+};
 
 declare global {
   interface WorkerGlobalScope extends SerwistGlobalConfig {
@@ -46,17 +53,27 @@ const serwist = new Serwist({
         sameOrigin && isSessionSensitivePath(url.pathname),
       handler: new NetworkOnly(),
     },
-    // We never fetch from network for this virtual route. It's populated by download-store.ts.
+    // Virtual images may be rendered as images or fetched for Blob decoding.
+    // A navigation must never turn an entry in user storage into an origin document.
     {
-      matcher: ({ url }) => url.pathname.startsWith('/offline-images/'),
+      matcher: ({ request, sameOrigin, url }) => sameOrigin &&
+        (url.pathname.startsWith("/offline-images/") || url.pathname.startsWith("/reading-buffer/")) &&
+        (request.mode === "navigate" || request.destination === "document" ||
+          Boolean(request.headers.get("Accept")?.includes("text/html"))),
+      handler: new NetworkOnly(),
+    },
+    {
+      matcher: ({ sameOrigin, url }) => sameOrigin && url.pathname.startsWith("/offline-images/"),
       handler: new CacheOnly({
         cacheName: EXPLICIT_DOWNLOADS_CACHE_NAME,
+        plugins: [rasterCacheOnly],
       }),
     },
     {
-      matcher: ({ url }) => url.pathname.startsWith('/reading-buffer/'),
+      matcher: ({ sameOrigin, url }) => sameOrigin && url.pathname.startsWith("/reading-buffer/"),
       handler: new CacheOnly({
         cacheName: READING_BUFFER_CACHE_NAME,
+        plugins: [rasterCacheOnly],
       }),
     },
     // We aggressively cache manga pages (via image proxy) for offline reading & bandwidth saving.
