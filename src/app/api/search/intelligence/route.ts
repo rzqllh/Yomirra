@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { applyRateLimitHeaders, checkRateLimitPolicy, createRateLimitRejection } from "@/server/lib/security/rate-limit";
+import { readBoundedJson } from "@/server/lib/security/read-bounded-json";
 import { rankSearchIntelligence } from "@/server/lib/search/search-intelligence-service";
 import { getRequestReadOptions } from "@/server/lib/sources/content-access";
 
 export const dynamic = "force-dynamic";
+
+const MAX_BODY_BYTES = 4 * 1024 * 1024;
 
 const bindingSchema = z.object({
   sourceId: z.string().min(1).max(80),
@@ -56,7 +59,14 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  const parsed = bodySchema.safeParse(await request.json().catch(() => null));
+  const body = await readBoundedJson(request, MAX_BODY_BYTES);
+  if (!body.ok && body.status === 413) {
+    return applyRateLimitHeaders(
+      NextResponse.json({ error: { message: "Search intelligence payload too large" } }, { status: 413 }),
+      rateLimit
+    );
+  }
+  const parsed = bodySchema.safeParse(body.ok ? body.data : null);
   if (!parsed.success) {
     return applyRateLimitHeaders(
       NextResponse.json(
