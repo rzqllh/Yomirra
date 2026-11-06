@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 import {
   EXPLICIT_DOWNLOADS_CACHE_NAME,
   PAGES_CACHE_NAME,

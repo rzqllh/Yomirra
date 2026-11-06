@@ -3,7 +3,7 @@ import { checkRateLimit, createRateLimitRejection } from "@/server/lib/security/
 import { SAFE_OFFLINE_PAGE_HEADER, SAFE_OFFLINE_PAGE_SCOPE } from "@/shared/lib/pwa-cache-policy";
 import { CONTENT_PREFERENCE_COOKIE, shouldHideNsfw } from "@/shared/sources/content-policy";
 
-const DYNAMIC_PAGE = /^\/(?:manga|search|popular|updates|sources)(?:\/|$)/;
+const DYNAMIC_PAGE = /^\/(?:library|manga|search|popular|updates|sources)(?:\/|$)/;
 
 export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname;

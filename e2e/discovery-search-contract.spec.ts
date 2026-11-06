@@ -1,4 +1,4 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, type Page } from "./fixtures";
 
 // Fixture-backed requests must reach Playwright routing. The PWA suite exercises the real worker.
 test.use({ serviceWorkers: "block" });

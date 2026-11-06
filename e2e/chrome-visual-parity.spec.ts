@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 for (const width of [320, 360, 1440]) {
   for (const theme of ["light", "dark"]) {

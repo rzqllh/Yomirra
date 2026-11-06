@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 
 for (const viewport of [{ width: 320, height: 568 }, { width: 820, height: 1180 }, { width: 1366, height: 900 }]) {
   test(`Beranda Quick Search centers in the visible viewport at ${viewport.width}px`, async ({ page }) => {
