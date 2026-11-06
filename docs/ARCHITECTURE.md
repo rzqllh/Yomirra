@@ -272,4 +272,6 @@ Download engine memeriksa Cache Storage ketika resume dan sebelum menyatakan cha
 
 Worker hanya menyimpan HTML yang diberi penanda aman oleh server. Halaman Unduhan mempunyai shell bersama dengan data lokal yang dimuat setelah hidrasi. Respons RSC, API bergantung cookie, dan API dengan manifest eksternal tetap melalui jaringan. Cache gambar proxy otomatis dan buffer dapat diganti saat upgrade. Cache unduhan eksplisit memakai nama tetap, memeriksa tipe raster, dan menolak penggunaan path virtual sebagai dokumen. URL proxy versi 2 mengikat URL dan referer dalam HMAC. Antrean lama menukar URL yang kedaluwarsa lewat endpoint halaman resmi ketika online.
 
+Untuk membaca offline, kunjungi Unduhan sekali saat online. Setelah shell tersimpan, halaman Unduhan membuka gambar chapter berklasifikasi aman dari sumber terdaftar langsung dari penyimpanan perangkat. Reader online dapat mengisi klasifikasi untuk unduhan lama setelah halaman chapter berhasil dimuat. Dialog offline tidak melakukan sinkronisasi akun atau menulis riwayat baca.
+
 Lihat [handoff stabilisasi](handoff/final-stabilization.md) untuk batas rilis, pemantauan dan recovery.

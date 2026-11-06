@@ -7,7 +7,7 @@ import { ReaderPageSkeleton } from "@/components/skeletons/reader-page-skeleton"
 import { ReaderShell } from "@/components/reader/reader-shell";
 import { ContinuousVerticalReader } from "@/components/reader/continuous-vertical-reader";
 import { PagedReader } from "@/components/reader/paged-reader";
-import { sourceReadScope } from "@/shared/sources/content-policy";
+import { classifyContent, sourceReadScope } from "@/shared/sources/content-policy";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useReaderStore } from "@/shared/store/reader-store";
 import { useHistoryStore } from "@/shared/store/history-store";
@@ -65,6 +65,7 @@ function ReaderContent({
 
   const downloadId = getDownloadChapterId(sourceId, mangaId, chapterId);
   const downloadStatus = useDownloadStore(state => state.downloads[downloadId]?.status);
+  const offlineSafe = useDownloadStore(state => state.downloads[downloadId]?.offlineSafe);
 
   const [offlineResult, setOfflineResult] = useState<{ id: string; pages: PageItem[] | null } | null>(null);
   const isDownloaded = downloadStatus === "downloaded";
@@ -86,6 +87,11 @@ function ReaderContent({
     (c) => c.id === chapterId || c.id === decodedChapterId
   );
   const isLockedChapter = Boolean(currentChapter?.isLocked);
+
+  useEffect(() => {
+    if (!isDownloaded || offlineSafe !== undefined || isLockedChapter || !initialPages?.length || !navigator.onLine) return;
+    useDownloadStore.getState()._updateDownload(downloadId, { offlineSafe: classifyContent(initialDetail) === "SAFE" });
+  }, [downloadId, initialDetail, initialPages, isDownloaded, isLockedChapter, offlineSafe]);
 
   // Fallback fetching if SSR did not supply pages for the active scope.
   const { data: chapterPages, isLoading: isQueryLoading, error, refetch } = useQuery({

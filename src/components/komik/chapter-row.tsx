@@ -12,6 +12,7 @@ interface ChapterRowProps {
   chapterId: string
   chapterTitle: string
   mangaTitle: string
+  offlineSafe?: boolean
   date: string | number | Date
   isRead?: boolean
   isLastRead?: boolean
@@ -25,6 +26,7 @@ export function ChapterRow({
   chapterId,
   chapterTitle,
   mangaTitle,
+  offlineSafe,
   date,
   isRead = false,
   isLastRead = false,
@@ -103,6 +105,7 @@ export function ChapterRow({
             chapterId={chapterId}
             chapterTitle={chapterTitle}
             mangaTitle={mangaTitle}
+            offlineSafe={offlineSafe}
           />
         </>
       )}

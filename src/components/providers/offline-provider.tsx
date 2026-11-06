@@ -33,14 +33,24 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsOffline(!navigator.onLine);
 
-    if (process.env.NODE_ENV === "production" && navigator.onLine && "serviceWorker" in navigator) {
+    let registeringWorker = false;
+    const registerWorker = () => {
+      if (process.env.NODE_ENV !== "production" || registeringWorker || !("serviceWorker" in navigator)) return;
+      registeringWorker = true;
       void navigator.serviceWorker.register("/sw.js").catch((error) => {
         console.warn("Service worker registration failed", error);
+      }).finally(() => {
+        registeringWorker = false;
       });
-    }
+    };
+
+    if (navigator.onLine) registerWorker();
 
     const handleOffline = () => setIsOffline(true);
-    const handleOnline = () => setIsOffline(false);
+    const handleOnline = () => {
+      setIsOffline(false);
+      registerWorker();
+    };
 
     window.addEventListener("offline", handleOffline);
     window.addEventListener("online", handleOnline);

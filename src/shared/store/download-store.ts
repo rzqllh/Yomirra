@@ -25,6 +25,7 @@ export interface DownloadChapter {
   chapterId: string;
   chapterTitle: string;
   coverUrl?: string;
+  offlineSafe?: boolean;
   status: DownloadStatus;
   progress: number;
   totalPages: number;

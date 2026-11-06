@@ -6,6 +6,7 @@
 - Validasi relasi chapter dan judul sebelum meminta halaman Reader. Batasi prefetch pada metadata chapter berikutnya.
 - Batasi waktu kerja rating batch dan pembacaan manifest kustom. Pisahkan cache sumber terdaftar dan manifest eksternal.
 - Batasi cache offline untuk dokumen aman dan gambar raster. Pertahankan unduhan raster yang sudah tersimpan dan perbarui URL lama saat antrean dilanjutkan.
+- Baca chapter berklasifikasi aman langsung dari halaman Unduhan saat offline. Buka Unduhan sekali ketika online agar shell tersimpan. Untuk unduhan lama, buka chapter melalui Reader online agar klasifikasi dapat diperiksa.
 - Selaraskan komponen navigasi dan menu dari YOM-01 hingga YOM-03. Q138 tetap nonaktif.
 - Perbarui Next.js, Firebase, Serwist, Zod, dan dependency terkait untuk menutup advisory runtime. Tambahkan smoke browser dari build production dan pemantauan health yang dapat diaktifkan setelah akses provider pulih.
 

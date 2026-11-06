@@ -6,6 +6,7 @@ import {
   SAFE_OFFLINE_PAGE_SCOPE,
 } from "../src/shared/lib/pwa-cache-policy";
 import { CONTENT_PREFERENCE_COOKIE } from "../src/shared/sources/content-policy";
+import { getDownloadChapterId, getOfflineImageUrl } from "../src/shared/utils/download-helpers";
 
 test("offline cache retains downloads and only stores safe documents", async ({ context, page, baseURL }) => {
   test.skip(process.env.E2E_PRODUCTION_BUILD !== "1", "Requires a production service worker build");
@@ -17,11 +18,13 @@ test("offline cache retains downloads and only stores safe documents", async ({ 
   });
   await page.goto("/settings");
   await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
-  const offlineImage = "/offline-images/regression/1";
+  const chapter = { sourceId: "shinigami", mangaId: "offline-manga", chapterId: "1", mangaTitle: "Offline Fixture", chapterTitle: "Chapter 1" };
+  const downloadId = getDownloadChapterId(chapter.sourceId, chapter.mangaId, chapter.chapterId);
+  const offlineImage = getOfflineImageUrl({ ...chapter, pageIndex: 0 });
   const unsafeImage = "/offline-images/regression/legacy.svg";
   await page.evaluate(async ({ offlineImage, unsafeImage, downloads }) => {
     const cache = await caches.open(downloads);
-    const png = Uint8Array.from(atob("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a2X8AAAAASUVORK5CYII="), (char) => char.charCodeAt(0));
+    const png = Uint8Array.from(atob("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC"), (char) => char.charCodeAt(0));
     await cache.put(new URL(offlineImage, location.origin).href, new Response(png, {
       headers: { "content-type": "image/png" },
     }));
@@ -63,6 +66,39 @@ test("offline cache retains downloads and only stores safe documents", async ({ 
     return Boolean(await (await caches.open(name)).match("/downloads"));
   }, PAGES_CACHE_NAME)).toBe(true);
 
+  await page.evaluate(async ({ chapter, downloadId, offlineImage }) => {
+    const db = await new Promise<IDBDatabase>((resolve, reject) => {
+      const request = indexedDB.open("yomirra-store");
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    });
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const tx = db.transaction("keyval", "readwrite");
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error);
+        const fixture = {
+          ...chapter,
+          id: downloadId,
+          status: "downloaded",
+          offlineSafe: true,
+          totalPages: 1,
+          downloadedPages: 1,
+          progress: 100,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          pages: [{ index: 0, status: "cached", offlineUrl: offlineImage }],
+        };
+        const legacyId = downloadId.replace(/1$/, "2");
+        const legacy = { ...fixture, id: legacyId, chapterId: "2", chapterTitle: "Chapter 2", offlineSafe: undefined };
+        tx.objectStore("keyval").put(JSON.stringify({
+          state: { downloads: { [downloadId]: fixture, [legacyId]: legacy } }, version: 0,
+        }), "yomirra-downloads");
+      });
+    } finally {
+      db.close();
+    }
+  }, { chapter, downloadId, offlineImage });
   await context.setOffline(true);
   const offlineDownloads = await context.newPage();
   await offlineDownloads.goto("/downloads");
@@ -78,6 +114,16 @@ test("offline cache retains downloads and only stores safe documents", async ({ 
     };
   }, { url: offlineImage, cacheName: EXPLICIT_DOWNLOADS_CACHE_NAME });
   expect(image).toEqual({ cachedContentType: "image/png", contentType: "image/png", status: 200 });
+  await offlineDownloads.getByRole("button", { name: "Baca Offline Fixture - Chapter 1" }).click();
+  const reader = offlineDownloads.getByRole("dialog", { name: "Offline Fixture" });
+  await expect(reader).toBeVisible();
+  const firstPage = reader.getByRole("img", { name: "Halaman 1" });
+  await expect.poll(() => firstPage.evaluate((image: HTMLImageElement) => image.naturalWidth)).toBe(1);
+  await expect(offlineDownloads).toHaveURL(/\/downloads$/);
+  await reader.getByRole("button", { name: "Tutup" }).click();
+  await offlineDownloads.getByRole("button", { name: "Baca Offline Fixture - Chapter 2" }).click();
+  await expect(reader.getByText("Unduhan ini memerlukan verifikasi konten", { exact: false })).toBeVisible();
+  await expect(reader.getByRole("img")).toHaveCount(0);
   expect(await page.evaluate(async (url) => fetch(url).then((response) => response.ok, () => false), unsafeImage)).toBe(false);
   expect(await page.evaluate(async () => fetch("/api/health/live").then(() => false, () => true))).toBe(true);
   const cached = await page.goto("/settings");
