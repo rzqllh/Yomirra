@@ -1,3 +1,4 @@
+import { readBoundedJson } from "@/server/lib/security/read-bounded-json";
 import { NextRequest, NextResponse } from "next/server";
 import {
   ADMIN_SESSION_COOKIE,
@@ -84,16 +85,15 @@ export async function POST(request: NextRequest) {
     });
   }
 
-  let passkey = "";
-  try {
-    const body = (await request.json()) as { passkey?: unknown };
-    passkey = typeof body.passkey === "string" ? body.passkey.trim() : "";
-  } catch {
+  const body = await readBoundedJson(request, 4 * 1024);
+  if (!body.ok || !body.data || typeof body.data !== "object") {
     return NextResponse.json(
       { error: "Invalid request", code: "invalid_request" },
-      { status: 400 },
+      { status: body.ok ? 400 : body.status },
     );
   }
+  const input = (body.data as { passkey?: unknown }).passkey;
+  const passkey = typeof input === "string" ? input.trim() : "";
 
   if (!passkey) {
     return NextResponse.json(

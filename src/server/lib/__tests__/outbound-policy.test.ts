@@ -26,6 +26,10 @@ describe('Outbound Policy Security Regression Suite', () => {
       expect(isSafeIp('fe80::1')).toBe(false);
       expect(isSafeIp('[::1]')).toBe(false);
       expect(isSafeIp('::ffff:7f00:1')).toBe(false);
+      expect(isSafeIp('::FFFF:127.0.0.1')).toBe(false);
+      expect(isSafeIp('64:ff9b::a9fe:a9fe')).toBe(false);
+      expect(isSafeIp('2002:7f00:1::')).toBe(false);
+      expect(isSafeIp('2001:0::1')).toBe(false);
     });
 
     it('allows safe external IPs', () => {

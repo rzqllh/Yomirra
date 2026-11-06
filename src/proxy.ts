@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
+import { checkRateLimit, createRateLimitRejection } from "@/server/lib/security/rate-limit";
 import { SAFE_OFFLINE_PAGE_HEADER, SAFE_OFFLINE_PAGE_SCOPE } from "@/shared/lib/pwa-cache-policy";
 import { CONTENT_PREFERENCE_COOKIE, shouldHideNsfw } from "@/shared/sources/content-policy";
 
-export function proxy(request: NextRequest) {
+const DYNAMIC_PAGE = /^\/(?:manga|search|popular|updates|sources)(?:\/|$)/;
+
+export async function proxy(request: NextRequest) {
+  const path = request.nextUrl.pathname;
+  if ((request.method === "GET" || request.method === "HEAD") && (path === "/" || DYNAMIC_PAGE.test(path))) {
+    const admission = await checkRateLimit(request, 240, 60, false, "public-page");
+    if (!admission.success) return createRateLimitRejection(admission);
+  }
+
   const response = NextResponse.next();
   // Downloads renders a shared shell. Device-local download records load after hydration.
   const isDownloadsShell = request.nextUrl.pathname === "/downloads";
