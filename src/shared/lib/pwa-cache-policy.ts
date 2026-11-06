@@ -6,7 +6,16 @@ export const EXPLICIT_DOWNLOADS_CACHE_NAME = "yomirra-chapter-cache-v1";
 export const READING_BUFFER_CACHE_NAME = `yomirra-reading-buffer-v${PWA_CACHE_VERSION}`;
 export const MANGA_IMAGES_CACHE_NAME = "yomirra-manga-images-v4";
 export const MANGA_METADATA_CACHE_NAME = "yomirra-manga-metadata-v4";
-export const PAGES_CACHE_NAME = `yomirra-pages-v${PWA_CACHE_VERSION}`;
+export const PAGES_CACHE_NAME = "yomirra-pages-v4";
+export const SAFE_OFFLINE_PAGE_HEADER = "x-yomirra-offline-cache";
+export const SAFE_OFFLINE_PAGE_SCOPE = "safe-v1";
+
+export const RETIRED_SERWIST_CACHES = new Set(["pages", "pages-rsc", "pages-rsc-prefetch", "others"]);
+
+export function isSafeOfflinePageResponse(response: Response): boolean {
+  return response.status === 200 && response.headers.get(SAFE_OFFLINE_PAGE_HEADER) === SAFE_OFFLINE_PAGE_SCOPE &&
+    response.headers.get("Content-Type")?.split(";")[0].trim() === "text/html";
+}
 
 export const CURRENT_AUTOMATIC_CACHE_NAMES = [
   READING_BUFFER_CACHE_NAME,
@@ -85,7 +94,8 @@ export function isAutomaticAppCacheName(cacheName: string): boolean {
 }
 
 export function isOutdatedAppCacheName(cacheName: string): boolean {
-  return isAutomaticAppCacheName(cacheName) && !isCurrentAppCacheName(cacheName);
+  return RETIRED_SERWIST_CACHES.has(cacheName) ||
+    (isAutomaticAppCacheName(cacheName) && !isCurrentAppCacheName(cacheName));
 }
 
 export async function cleanupOutdatedAppCaches(

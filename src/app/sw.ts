@@ -7,9 +7,11 @@ import {
   MANGA_METADATA_CACHE_NAME,
   PAGES_CACHE_NAME,
   READING_BUFFER_CACHE_NAME,
+  RETIRED_SERWIST_CACHES,
   cleanupOutdatedAppCaches,
   isNetworkOnlyApiPath,
   isOfflineCacheableNavigationPath,
+  isSafeOfflinePageResponse,
   isSafeSourceMetadataRequest,
   isSessionSensitivePath,
 } from "@/shared/lib/pwa-cache-policy";
@@ -63,6 +65,11 @@ const serwist = new Serwist({
       handler: new CacheFirst({
         cacheName: MANGA_IMAGES_CACHE_NAME,
         plugins: [
+          {
+            cacheWillUpdate: async ({ response }) =>
+              response.status === 200 && response.headers.get("Content-Security-Policy") === "sandbox; default-src 'none'"
+                ? response : null,
+          },
           new ExpirationPlugin({
             maxEntries: 400, // Roughly 10-15 chapters worth of images (balanced for mobile storage)
             maxAgeSeconds: 14 * 24 * 60 * 60, // 14 Days
@@ -99,10 +106,23 @@ const serwist = new Serwist({
       handler: new NetworkFirst({
         cacheName: PAGES_CACHE_NAME,
         networkTimeoutSeconds: 3, // fallback to cache quickly if offline
+        plugins: [
+          { cacheWillUpdate: async ({ response }) => isSafeOfflinePageResponse(response) ? response : null },
+          new ExpirationPlugin({ maxEntries: 32, maxAgeSeconds: 24 * 60 * 60 }),
+        ],
       }),
     },
-    // Include default caches for other assets (JS, CSS, static images)
-    ...defaultCache,
+    {
+      matcher: ({ request, sameOrigin }) => sameOrigin && (
+        request.mode === "navigate" || request.headers.get("RSC") === "1" ||
+        Boolean(request.headers.get("Accept")?.includes("text/html"))
+      ),
+      handler: new NetworkOnly(),
+    },
+    // Retain the stock asset strategies while disabling unscoped document and catch-all caches.
+    ...defaultCache.filter(({ handler }) =>
+      !("cacheName" in handler && typeof handler.cacheName === "string" && RETIRED_SERWIST_CACHES.has(handler.cacheName))
+    ),
   ],
 });
 

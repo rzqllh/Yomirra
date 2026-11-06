@@ -8,6 +8,8 @@ import {
   cleanupOutdatedAppCaches,
   isOfflineCacheableNavigationPath,
   isOutdatedAppCacheName,
+  isSafeOfflinePageResponse,
+  SAFE_OFFLINE_PAGE_HEADER,
   isSessionSensitivePath,
 } from "../pwa-cache-policy";
 
@@ -26,7 +28,7 @@ describe("PWA cache policy", () => {
     expect(READING_BUFFER_CACHE_NAME).toBe("yomirra-reading-buffer-v3");
     expect(MANGA_IMAGES_CACHE_NAME).toBe("yomirra-manga-images-v4");
     expect(MANGA_METADATA_CACHE_NAME).toBe("yomirra-manga-metadata-v4");
-    expect(PAGES_CACHE_NAME).toBe("yomirra-pages-v3");
+    expect(PAGES_CACHE_NAME).toBe("yomirra-pages-v4");
   });
 
   it("treats account, admin, and auth surfaces as session-sensitive without overmatching siblings", () => {
@@ -49,6 +51,14 @@ describe("PWA cache policy", () => {
     expect(isOfflineCacheableNavigationPath("/unknown-private-route")).toBe(false);
   });
 
+  it("only stores documents explicitly marked safe by the server", () => {
+    expect(isSafeOfflinePageResponse(new Response("unscoped"))).toBe(false);
+    const headers = { [SAFE_OFFLINE_PAGE_HEADER]: "safe-v1", "Content-Type": "text/html; charset=utf-8" };
+    expect(isSafeOfflinePageResponse(new Response("safe", { headers }))).toBe(true);
+    expect(isSafeOfflinePageResponse(new Response("rsc", { headers: { ...headers, "Content-Type": "text/x-component" } }))).toBe(false);
+    expect(isSafeOfflinePageResponse(new Response("error", { status: 503, headers }))).toBe(false);
+  });
+
   it("migrates previous production runtime caches without deleting downloads or current caches", async () => {
     const cacheStorage = createCacheStorage([
       EXPLICIT_DOWNLOADS_CACHE_NAME,
@@ -62,10 +72,15 @@ describe("PWA cache policy", () => {
       "yomirra-manga-metadata-v2",
       "yomirra-manga-metadata-v3",
       "yomirra-pages-v2",
+      "yomirra-pages-v3",
       READING_BUFFER_CACHE_NAME,
       MANGA_IMAGES_CACHE_NAME,
       MANGA_METADATA_CACHE_NAME,
       PAGES_CACHE_NAME,
+      "pages",
+      "pages-rsc",
+      "pages-rsc-prefetch",
+      "others",
       "serwist-precache-v1",
       "yomirra-user-export-v1",
       "yomirra-saved-offline-notes-v1",
@@ -81,6 +96,11 @@ describe("PWA cache policy", () => {
         "yomirra-manga-metadata",
         "yomirra-pages",
         "yomirra-pages-v2",
+        "yomirra-pages-v3",
+        "pages",
+        "pages-rsc",
+        "pages-rsc-prefetch",
+        "others",
         "yomirra-manga-metadata-v2",
         "yomirra-manga-metadata-v3",
       ])
@@ -97,7 +117,7 @@ describe("PWA cache policy", () => {
     expect(isOutdatedAppCacheName("yomirra-pages-v1")).toBe(true);
     expect(isOutdatedAppCacheName("yomirra-pages-v99")).toBe(true);
     expect(isOutdatedAppCacheName(EXPLICIT_DOWNLOADS_CACHE_NAME)).toBe(false);
-    expect(isOutdatedAppCacheName("pages-rsc")).toBe(false);
+    expect(isOutdatedAppCacheName("pages-rsc")).toBe(true);
     expect(isOutdatedAppCacheName("yomirra-user-export-v1")).toBe(false);
     expect(isOutdatedAppCacheName("yomirra-saved-offline-notes-v1")).toBe(false);
   });
