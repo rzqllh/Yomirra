@@ -3,6 +3,8 @@ import React, { act } from "react";
 import { render } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { getDownloadChapterId } from "@/shared/utils/download-helpers";
+import { sourceReadScope } from "@/shared/sources/content-policy";
+import { useSettingsStore } from "@/shared/store/settings-store";
 import { useDownloadStore, type DownloadChapter } from "@/shared/store/download-store";
 import { ReaderImage } from "../reader-image";
 import { ReaderView } from "../reader-view";
@@ -88,7 +90,7 @@ describe("Reader Offline Fixes Unit Tests", () => {
       expect(URL.createObjectURL).not.toHaveBeenCalled();
     });
 
-    it("should create, track, and revoke Object URLs on component unmount", async () => {
+    it("classifies a verified legacy download after the SSR deadline and revokes its blob URLs on unmount", async () => {
       const mockBlob = new Blob(["test image content"], { type: "image/jpeg" });
       const mockCache = {
         keys: vi.fn().mockResolvedValue([
@@ -136,7 +138,8 @@ describe("Reader Offline Fixes Unit Tests", () => {
             chapterId="ch1"
             initialDetail={{ contentRating: "safe", id: "manga1", title: "Manga 1", coverUrl: "/cover.jpg", description: "", genres: [], status: "ONGOING" }}
             initialChapters={[{ id: "ch1", mangaId: "manga1", number: 1, title: "Ch 1", date: "2026-01-01" }]}
-            initialPages={[{ index: 0, url: "http://example.com/0.jpg" }]}
+            initialPages={null}
+            initialPagesScope={sourceReadScope(useSettingsStore.getState())}
           />
         </QueryClientProvider>
       );
@@ -146,6 +149,7 @@ describe("Reader Offline Fixes Unit Tests", () => {
       });
 
       expect(URL.createObjectURL).toHaveBeenCalledTimes(2);
+      expect(useDownloadStore.getState().downloads[downloadId].offlineSafe).toBe(true);
 
       unmount();
 

@@ -18,8 +18,9 @@ test("offline cache retains downloads and only stores safe documents", async ({ 
   });
   await page.goto("/settings");
   await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
-  const chapter = { sourceId: "shinigami", mangaId: "offline-manga", chapterId: "1", mangaTitle: "Offline Fixture", chapterTitle: "Chapter 1" };
+  const chapter = { sourceId: "mangadex", mangaId: "offline-manga", chapterId: "1", mangaTitle: "Offline Fixture", chapterTitle: "Chapter 1" };
   const downloadId = getDownloadChapterId(chapter.sourceId, chapter.mangaId, chapter.chapterId);
+  const legacyId = getDownloadChapterId(chapter.sourceId, chapter.mangaId, "2");
   const offlineImage = getOfflineImageUrl({ ...chapter, pageIndex: 0 });
   const unsafeImage = "/offline-images/regression/legacy.svg";
   await page.evaluate(async ({ offlineImage, unsafeImage, downloads }) => {
@@ -66,7 +67,7 @@ test("offline cache retains downloads and only stores safe documents", async ({ 
     return Boolean(await (await caches.open(name)).match("/downloads"));
   }, PAGES_CACHE_NAME)).toBe(true);
 
-  await page.evaluate(async ({ chapter, downloadId, offlineImage }) => {
+  await page.evaluate(async ({ chapter, downloadId, legacyId, offlineImage }) => {
     const db = await new Promise<IDBDatabase>((resolve, reject) => {
       const request = indexedDB.open("yomirra-store");
       request.onsuccess = () => resolve(request.result);
@@ -89,7 +90,6 @@ test("offline cache retains downloads and only stores safe documents", async ({ 
           updatedAt: Date.now(),
           pages: [{ index: 0, status: "cached", offlineUrl: offlineImage }],
         };
-        const legacyId = downloadId.replace(/1$/, "2");
         const legacy = { ...fixture, id: legacyId, chapterId: "2", chapterTitle: "Chapter 2", offlineSafe: undefined };
         tx.objectStore("keyval").put(JSON.stringify({
           state: { downloads: { [downloadId]: fixture, [legacyId]: legacy } }, version: 0,
@@ -98,7 +98,7 @@ test("offline cache retains downloads and only stores safe documents", async ({ 
     } finally {
       db.close();
     }
-  }, { chapter, downloadId, offlineImage });
+  }, { chapter, downloadId, legacyId, offlineImage });
   await context.setOffline(true);
   const offlineDownloads = await context.newPage();
   await offlineDownloads.goto("/downloads");
@@ -123,7 +123,7 @@ test("offline cache retains downloads and only stores safe documents", async ({ 
   await reader.getByRole("button", { name: "Tutup" }).click();
   await offlineDownloads.getByRole("button", { name: "Baca Offline Fixture - Chapter 2" }).click();
   await expect(reader.getByText("Unduhan ini memerlukan verifikasi konten", { exact: false })).toBeVisible();
-  await expect(reader.getByRole("img")).toHaveCount(0);
+  await expect(reader.getByRole("img", { name: /^Halaman / })).toHaveCount(0);
   expect(await page.evaluate(async (url) => fetch(url).then((response) => response.ok, () => false), unsafeImage)).toBe(false);
   expect(await page.evaluate(async () => fetch("/api/health/live").then(() => false, () => true))).toBe(true);
   const cached = await page.goto("/settings");

@@ -89,9 +89,10 @@ function ReaderContent({
   const isLockedChapter = Boolean(currentChapter?.isLocked);
 
   useEffect(() => {
-    if (!isDownloaded || offlineSafe !== undefined || isLockedChapter || !initialPages?.length || !navigator.onLine) return;
+    if (!isDownloaded || offlineSafe !== undefined || isLockedChapter || !navigator.onLine) return;
+    if (initialPagesScope !== readScope || (!currentChapter && !initialPages?.length)) return;
     useDownloadStore.getState()._updateDownload(downloadId, { offlineSafe: classifyContent(initialDetail) === "SAFE" });
-  }, [downloadId, initialDetail, initialPages, isDownloaded, isLockedChapter, offlineSafe]);
+  }, [currentChapter, downloadId, initialDetail, initialPages, initialPagesScope, isDownloaded, isLockedChapter, offlineSafe, readScope]);
 
   // Fallback fetching if SSR did not supply pages for the active scope.
   const { data: chapterPages, isLoading: isQueryLoading, error, refetch } = useQuery({
