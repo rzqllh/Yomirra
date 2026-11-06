@@ -43,6 +43,9 @@ test("offline cache retains downloads and only stores safe documents", async ({ 
     .toContain("cache-upgrade-regression=1");
   const safe = await page.reload();
   expect(safe?.headers()[SAFE_OFFLINE_PAGE_HEADER]).toBe(SAFE_OFFLINE_PAGE_SCOPE);
+  // The online app registers its canonical worker again on mount.
+  await expect.poll(() => page.evaluate(() => navigator.serviceWorker.controller?.scriptURL))
+    .toBe(new URL("/sw.js", baseURL).href);
   await expect.poll(() => page.evaluate(async (name) => {
     const cache = await caches.open(name);
     return (await cache.match("/settings"))?.headers.get("x-yomirra-offline-cache");
@@ -126,6 +129,10 @@ test("offline cache retains downloads and only stores safe documents", async ({ 
   await expect(reader.getByRole("img", { name: /^Halaman / })).toHaveCount(0);
   expect(await page.evaluate(async (url) => fetch(url).then((response) => response.ok, () => false), unsafeImage)).toBe(false);
   expect(await page.evaluate(async () => fetch("/api/health/live").then(() => false, () => true))).toBe(true);
-  const cached = await page.goto("/settings");
+  const offlineSettings = await context.newPage();
+  const cached = await offlineSettings.goto("/settings");
+  expect(cached?.status()).toBe(200);
   expect(cached?.headers()[SAFE_OFFLINE_PAGE_HEADER]).toBe(SAFE_OFFLINE_PAGE_SCOPE);
+  await expect(offlineSettings.getByRole("heading", { name: "Pengaturan", exact: true })).toBeVisible();
+  await expect(offlineSettings.getByTestId("offline-banner")).toBeVisible();
 });
