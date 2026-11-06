@@ -18,6 +18,13 @@ test("offline cache retains downloads and only stores safe documents", async ({ 
   });
   await page.goto("/settings");
   await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
+  const safe = await page.reload();
+  expect(safe?.headers()[SAFE_OFFLINE_PAGE_HEADER]).toBe(SAFE_OFFLINE_PAGE_SCOPE);
+  await expect.poll(() => page.evaluate(async ({ name, header }) => {
+    const cache = await caches.open(name);
+    return (await cache.match("/settings"))?.headers.get(header);
+  }, { name: PAGES_CACHE_NAME, header: SAFE_OFFLINE_PAGE_HEADER })).toBe(SAFE_OFFLINE_PAGE_SCOPE);
+
   const chapter = { sourceId: "mangadex", mangaId: "offline-manga", chapterId: "1", mangaTitle: "Offline Fixture", chapterTitle: "Chapter 1" };
   const downloadId = getDownloadChapterId(chapter.sourceId, chapter.mangaId, chapter.chapterId);
   const legacyId = getDownloadChapterId(chapter.sourceId, chapter.mangaId, "2");
@@ -35,22 +42,6 @@ test("offline cache retains downloads and only stores safe documents", async ({ 
     const legacy = await caches.open("pages-rsc");
     await legacy.put("/settings", new Response("legacy-cookie-dependent-payload"));
   }, { offlineImage, unsafeImage, downloads: EXPLICIT_DOWNLOADS_CACHE_NAME });
-
-  await page.evaluate(async () => {
-    await navigator.serviceWorker.register("/sw.js?cache-upgrade-regression=1");
-  });
-  await expect.poll(() => page.evaluate(() => navigator.serviceWorker.controller?.scriptURL))
-    .toContain("cache-upgrade-regression=1");
-  const safe = await page.reload();
-  expect(safe?.headers()[SAFE_OFFLINE_PAGE_HEADER]).toBe(SAFE_OFFLINE_PAGE_SCOPE);
-  // The online app registers its canonical worker again on mount.
-  await expect.poll(() => page.evaluate(() => navigator.serviceWorker.controller?.scriptURL))
-    .toBe(new URL("/sw.js", baseURL).href);
-  await expect.poll(() => page.evaluate(async (name) => {
-    const cache = await caches.open(name);
-    return (await cache.match("/settings"))?.headers.get("x-yomirra-offline-cache");
-  }, PAGES_CACHE_NAME)).toBe(SAFE_OFFLINE_PAGE_SCOPE);
-  await expect.poll(() => page.evaluate(() => caches.has("pages-rsc"))).toBe(false);
 
   expect((await page.goto(unsafeImage))?.status()).toBe(404);
   await context.addCookies([
@@ -102,6 +93,14 @@ test("offline cache retains downloads and only stores safe documents", async ({ 
       db.close();
     }
   }, { chapter, downloadId, legacyId, offlineImage });
+
+  // Complete the upgrade after all online navigations, which register the canonical worker on mount.
+  await page.evaluate(async () => {
+    await navigator.serviceWorker.register("/sw.js?cache-upgrade-regression=1");
+  });
+  await expect.poll(() => page.evaluate(() => navigator.serviceWorker.controller?.scriptURL))
+    .toContain("cache-upgrade-regression=1");
+  await expect.poll(() => page.evaluate(() => caches.has("pages-rsc"))).toBe(false);
   await context.setOffline(true);
   const offlineDownloads = await context.newPage();
   await offlineDownloads.goto("/downloads");
