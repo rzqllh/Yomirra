@@ -9,12 +9,14 @@ const redisState = vi.hoisted(() => ({
   configured: true,
   circuit: "closed" as "closed" | "open" | "half-open",
   probing: false,
+  ready: true,
 }));
 
 vi.mock("@/server/lib/cache/redis", () => ({
   get isRedisConfigured() { return redisState.configured; },
   isRedisCircuitOpen: () => redisState.circuit !== "closed",
   isRedisCommandAllowed: () => redisState.circuit === "closed",
+  isRedisReady: () => redisState.ready,
   ensureRedisReady: () => mockEnsureRedisReady(),
   redis: {
     sendCommand: (command: Command) => {
@@ -48,6 +50,7 @@ describe("GET /api/health readiness", () => {
     redisState.configured = true;
     redisState.circuit = "closed";
     redisState.probing = false;
+    redisState.ready = true;
     mockRedisPing.mockResolvedValue("PONG");
     mockEnsureRedisReady.mockResolvedValue(undefined);
     mockGetAllSnapshots.mockResolvedValue({});
@@ -123,6 +126,23 @@ describe("GET /api/health readiness", () => {
     redisState.circuit = "open";
     expect((await GET()).status).toBe(503);
     expect(mockRedisPing).toHaveBeenCalledOnce();
+  });
+
+  it("invalidates a cached PONG immediately on disconnect and reprobes after backoff", async () => {
+    vi.useFakeTimers();
+    try {
+      expect((await GET()).status).toBe(200);
+      redisState.ready = false;
+      expect((await GET()).status).toBe(503);
+      redisState.ready = true;
+      expect((await GET()).status).toBe(503);
+      expect(mockRedisPing).toHaveBeenCalledOnce();
+      await vi.advanceTimersByTimeAsync(10_000);
+      expect((await GET()).status).toBe(200);
+      expect(mockRedisPing).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("waits for a cold Redis connection and shares the ping between concurrent requests", async () => {

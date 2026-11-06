@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { Command } from "ioredis";
-import { ensureRedisReady, isRedisConfigured, isRedisCircuitOpen, isRedisCommandAllowed, redis } from "@/server/lib/cache/redis";
+import { ensureRedisReady, isRedisConfigured, isRedisCircuitOpen, isRedisCommandAllowed, isRedisReady, redis } from "@/server/lib/cache/redis";
 import { sourceHealthStore } from "@/server/lib/sources/health/health-store";
 import { toLivenessSourceHealth, type LivenessSourceHealth } from "@/server/lib/sources/health/public-health";
 import { logger } from "@/shared/logger";
@@ -18,6 +18,9 @@ let lastRedisProbe: { status: RedisProbeResult; expiresAt: number } | undefined;
 
 function checkRedisHealth(): Promise<RedisProbeResult> {
   if (lastRedisProbe && Date.now() < lastRedisProbe.expiresAt) {
+    if (!isRedisReady()) {
+      lastRedisProbe.status = "down";
+    }
     return Promise.resolve(lastRedisProbe.status);
   }
   redisHealthCheck ??= (async () => {
