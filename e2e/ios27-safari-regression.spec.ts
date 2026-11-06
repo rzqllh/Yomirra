@@ -160,17 +160,12 @@ test.describe("Mobile Safari WebKit Regression & Interactive Compliance Suite", 
   });
 
   test("8. synchronizes theme-color meta tag with active Yomirra theme", async ({ page }) => {
+    await page.emulateMedia({ colorScheme: "light" });
     await page.goto("/", { waitUntil: "domcontentloaded" });
-
-    // Evaluate theme synchronization logic
-    const themeMetaContent = await page.evaluate(() => {
-      const meta = document.querySelector('meta[name="theme-color"]:not([media])') ||
-                   document.querySelector('meta[name="theme-color"]');
-      return meta ? meta.getAttribute("content") : null;
-    });
-    expect(themeMetaContent).toBeTruthy();
-    // Valid Yomirra theme color is either light (#f9f9fb) or dark (#090a0f)
-    expect(["#f9f9fb", "#090a0f"]).toContain(themeMetaContent);
+    const themeMeta = page.locator('meta[name="theme-color"]:not([media])');
+    await expect(themeMeta).toHaveAttribute("content", "#eef0f5");
+    await page.emulateMedia({ colorScheme: "dark" });
+    await expect(themeMeta).toHaveAttribute("content", "#090a0f");
   });
 
   test("9. respects prefers-reduced-motion media query", async ({ page }) => {
