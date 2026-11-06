@@ -30,18 +30,12 @@ test("offline cache retains downloads and only stores safe documents", async ({ 
   const legacyId = getDownloadChapterId(chapter.sourceId, chapter.mangaId, "2");
   const offlineImage = getOfflineImageUrl({ ...chapter, pageIndex: 0 });
   const unsafeImage = "/offline-images/regression/legacy.svg";
-  await page.evaluate(async ({ offlineImage, unsafeImage, downloads }) => {
+  await page.evaluate(async ({ unsafeImage, downloads }) => {
     const cache = await caches.open(downloads);
-    const png = Uint8Array.from(atob("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC"), (char) => char.charCodeAt(0));
-    await cache.put(new URL(offlineImage, location.origin).href, new Response(png, {
-      headers: { "content-type": "image/png" },
-    }));
     await cache.put(new URL(unsafeImage, location.origin).href, new Response('<svg xmlns="http://www.w3.org/2000/svg"/>', {
       headers: { "content-type": "image/svg+xml" },
     }));
-    const legacy = await caches.open("pages-rsc");
-    await legacy.put("/settings", new Response("legacy-cookie-dependent-payload"));
-  }, { offlineImage, unsafeImage, downloads: EXPLICIT_DOWNLOADS_CACHE_NAME });
+  }, { unsafeImage, downloads: EXPLICIT_DOWNLOADS_CACHE_NAME });
 
   expect((await page.goto(unsafeImage))?.status()).toBe(404);
   await context.addCookies([
@@ -94,6 +88,22 @@ test("offline cache retains downloads and only stores safe documents", async ({ 
     }
   }, { chapter, downloadId, legacyId, offlineImage });
 
+  // Seed the pre-upgrade caches from the controlled document that starts the upgrade.
+  await page.evaluate(async ({ offlineImage, downloads }) => {
+    const cache = await caches.open(downloads);
+    const png = Uint8Array.from(atob("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4//8/AAX+Av4N70a4AAAAAElFTkSuQmCC"), (char) => char.charCodeAt(0));
+    await cache.put(new URL(offlineImage, location.origin).href, new Response(png, {
+      headers: { "content-type": "image/png" },
+    }));
+    const legacy = await caches.open("pages-rsc");
+    await legacy.put("/settings", new Response("legacy-cookie-dependent-payload"));
+  }, { offlineImage, downloads: EXPLICIT_DOWNLOADS_CACHE_NAME });
+  const retainedImageType = () => page.evaluate(async ({ url, cacheName }) => {
+    const cached = await caches.match(new URL(url, location.origin).href, { cacheName });
+    return cached?.headers.get("content-type");
+  }, { url: offlineImage, cacheName: EXPLICIT_DOWNLOADS_CACHE_NAME });
+  expect(await retainedImageType(), "raster fixture before worker upgrade").toBe("image/png");
+
   // Complete the upgrade after all online navigations, which register the canonical worker on mount.
   await page.evaluate(async () => {
     await navigator.serviceWorker.register("/sw.js?cache-upgrade-regression=1");
@@ -101,6 +111,7 @@ test("offline cache retains downloads and only stores safe documents", async ({ 
   await expect.poll(() => page.evaluate(() => navigator.serviceWorker.controller?.scriptURL))
     .toContain("cache-upgrade-regression=1");
   await expect.poll(() => page.evaluate(() => caches.has("pages-rsc"))).toBe(false);
+  expect(await retainedImageType(), "raster fixture after worker upgrade").toBe("image/png");
   await context.setOffline(true);
   const offlineDownloads = await context.newPage();
   await offlineDownloads.goto("/downloads");
