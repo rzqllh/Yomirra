@@ -51,7 +51,7 @@ describe("GET /api/health readiness", () => {
     redisState.circuit = "closed";
     redisState.probing = false;
     redisState.ready = true;
-    mockRedisPing.mockResolvedValue("PONG");
+    mockRedisPing.mockResolvedValue(Buffer.from("PONG"));
     mockEnsureRedisReady.mockResolvedValue(undefined);
     mockGetAllSnapshots.mockResolvedValue({});
     ({ GET } = await import("../route"));

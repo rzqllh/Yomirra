@@ -28,7 +28,7 @@ function checkRedisHealth(): Promise<RedisProbeResult> {
     let status: RedisProbeResult;
     try {
       await ensureRedisReady();
-      const ping = new Command("ping");
+      const ping = new Command("ping", [], { replyEncoding: "utf8" });
       ping.setTimeout(1_500);
       if (await redis.sendCommand(ping) !== "PONG") {
         throw new Error("Unexpected Redis PING response");
