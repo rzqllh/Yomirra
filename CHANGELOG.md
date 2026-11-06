@@ -2,6 +2,8 @@
 
 ## Unreleased — Final stabilization
 
+- Kurangi aset publik yang diunduh saat memasang PWA. Reader mode halaman memuat chapter berikutnya saat navigasi.
+- Batasi ukuran payload pencarian terkait dan rating batch. Hormati jeda upstream untuk mengurangi permintaan berulang saat provider membatasi akses.
 - Pisahkan liveness proses dari kesiapan Redis. Readiness membatasi probe berulang per instance dan tetap menampilkan kegagalan Redis.
 - Validasi relasi chapter dan judul sebelum meminta halaman Reader. Batasi prefetch pada metadata chapter berikutnya.
 - Batasi waktu kerja rating batch dan pembacaan manifest kustom. Pisahkan cache sumber terdaftar dan manifest eksternal.
