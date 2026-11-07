@@ -379,7 +379,7 @@ export function executeCoordinatedRestore(
   try {
     // Compute target Library state
     let targetLibraryItems: Record<string, LibraryItem> = {};
-    const titleAliases: Record<string, string> = {};
+    const titleAliases: Record<string, string> = Object.create(null);
     if (mode === "replace") {
       backup.data.library.forEach((item) => {
         if (!item.isNsfw) {
@@ -534,10 +534,28 @@ export function executeCoordinatedRestore(
           targetMemberships[mangaId] = Array.from(new Set([...current, ...(colIds as string[])]));
         });
         
-        targetReadingStatus = { ...currentReadingStatus };
-        Object.entries(v2PlusBackup.data.readingStatusByManga || {}).forEach(([mangaId, status]) => {
-          if (!targetReadingStatus[mangaId]) {
-            targetReadingStatus[mangaId] = status as ReadingStatus;
+        // Resolve identity before comparing statuses so an imported alias cannot
+        // overwrite the device's choice when both refer to the same title.
+        const resolveStatuses = (statuses: Record<string, ReadingStatus>, canonicalIds: Set<string>) => {
+          const resolved: Record<string, ReadingStatus> = Object.create(null);
+          // Match collection-store: canonical status wins over legacy fallback.
+          const entries = Object.entries(statuses);
+          for (const canonical of [true, false]) {
+            for (const [id, status] of entries) {
+              if (canonicalIds.has(id) !== canonical) continue;
+              const targetId = titleAliases[id] ?? id;
+              if (!Object.hasOwn(resolved, targetId)) resolved[targetId] = status;
+            }
+          }
+          return resolved;
+        };
+        targetReadingStatus = resolveStatuses(currentReadingStatus, new Set(Object.keys(targetLibraryItems)));
+        const importedStatuses = resolveStatuses(v2PlusBackup.data.readingStatusByManga || {}, new Set(
+          backup.data.library.map((item) => getLibraryId(item.sourceId, item.mangaId, "id" in item && typeof item.id === "string" ? item.id : undefined)),
+        ));
+        Object.entries(importedStatuses).forEach(([targetId, status]) => {
+          if (!Object.hasOwn(targetReadingStatus, targetId)) {
+            targetReadingStatus[targetId] = status;
           }
         });
       }
