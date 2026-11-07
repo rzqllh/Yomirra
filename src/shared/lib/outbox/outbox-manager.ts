@@ -65,6 +65,13 @@ export function resolveActiveOutboxUid(explicitUid?: string): string {
   return authUid && authUid.trim().length > 0 ? authUid : GUEST_USER_ID;
 }
 
+/** A new semantic operation must never reuse a prior idempotency key. */
+function newOutboxOperationId(): string {
+  return typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+    ? crypto.randomUUID()
+    : `op-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
+}
+
 /**
  * Atomically enqueues a mutation to the durable `sync_journal` and updates the
  * durable local `keyval` store within a single IDB transaction.
@@ -111,41 +118,41 @@ export async function enqueueOutboxMutation<T = unknown>(
       let opId: string;
       let coalesced = false;
 
-      if (existingPending) {
+      if (existingPending && existingPending.operation !== operation) {
+        // A different operation cannot inherit an old idempotency key: the
+        // previous operation may have been observed or retried upstream.
+        if (operation === "upsert" && !isExplicitRestore) {
+          throw new Error("EXPLICIT_RESTORE_REQUIRED");
+        }
+        opId = newOutboxOperationId();
+        await promisifyRequest(journalStore.delete(existingPending.id));
+        const replacement: SyncJournalEntry<T> = {
+          id: opId,
+          userId,
+          entityType,
+          entityId,
+          operation,
+          payload,
+          baseServerRevision,
+          status: "pending",
+          createdAt: now,
+          retryCount: 0,
+          isExplicitRestore,
+        };
+        await promisifyRequest(journalStore.put(replacement));
+      } else if (existingPending) {
         opId = existingPending.id;
         coalesced = true;
-
-        if (operation === "upsert" && existingPending.operation === "upsert") {
-          // Merge payload for sequential upserts
-          existingPending.payload = {
-            ...existingPending.payload,
-            ...payload,
-          };
-          existingPending.createdAt = now;
-          if (isExplicitRestore) {
-            existingPending.isExplicitRestore = true;
-          }
-          await promisifyRequest(journalStore.put(existingPending));
-        } else if (operation === "delete") {
-          // Terminal deletion supersedes previous pending upserts
-          existingPending.operation = "delete";
+        if (operation === "upsert") {
+          existingPending.payload = { ...existingPending.payload, ...payload };
+          existingPending.isExplicitRestore = existingPending.isExplicitRestore || isExplicitRestore;
+        } else {
           existingPending.payload = payload;
-          existingPending.createdAt = now;
-          await promisifyRequest(journalStore.put(existingPending));
-        } else if (operation === "upsert" && existingPending.operation === "delete") {
-          // User deleted then restored/re-added while offline
-          existingPending.operation = "upsert";
-          existingPending.payload = payload;
-          existingPending.createdAt = now;
-          existingPending.isExplicitRestore = isExplicitRestore || true;
-          await promisifyRequest(journalStore.put(existingPending));
         }
+        existingPending.createdAt = now;
+        await promisifyRequest(journalStore.put(existingPending));
       } else {
-        opId =
-          typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-            ? crypto.randomUUID()
-            : `op-${now}-${Math.random().toString(36).slice(2, 9)}`;
-
+        opId = newOutboxOperationId();
         const newEntry: SyncJournalEntry<T> = {
           id: opId,
           userId,
@@ -159,7 +166,6 @@ export async function enqueueOutboxMutation<T = unknown>(
           retryCount: 0,
           isExplicitRestore,
         };
-
         await promisifyRequest(journalStore.put(newEntry));
       }
 
@@ -253,38 +259,39 @@ export async function enqueueOutboxBatchMutations(
         let opId: string;
         let coalesced = false;
 
-        if (existingPending) {
+        if (existingPending && existingPending.operation !== operation) {
+          if (operation === "upsert" && !isExplicitRestore) {
+            throw new Error("EXPLICIT_RESTORE_REQUIRED");
+          }
+          opId = newOutboxOperationId();
+          await promisifyRequest(journalStore.delete(existingPending.id));
+          const replacement: SyncJournalEntry = {
+            id: opId,
+            userId,
+            entityType,
+            entityId,
+            operation,
+            payload,
+            baseServerRevision,
+            status: "pending",
+            createdAt: now,
+            retryCount: 0,
+            isExplicitRestore,
+          };
+          await promisifyRequest(journalStore.put(replacement));
+        } else if (existingPending) {
           opId = existingPending.id;
           coalesced = true;
-
-          if (operation === "upsert" && existingPending.operation === "upsert") {
-            existingPending.payload = {
-              ...existingPending.payload,
-              ...payload,
-            };
-            existingPending.createdAt = now;
-            if (isExplicitRestore) {
-              existingPending.isExplicitRestore = true;
-            }
-            await promisifyRequest(journalStore.put(existingPending));
-          } else if (operation === "delete") {
-            existingPending.operation = "delete";
+          if (operation === "upsert") {
+            existingPending.payload = { ...existingPending.payload, ...payload };
+            existingPending.isExplicitRestore = existingPending.isExplicitRestore || isExplicitRestore;
+          } else {
             existingPending.payload = payload;
-            existingPending.createdAt = now;
-            await promisifyRequest(journalStore.put(existingPending));
-          } else if (operation === "upsert" && existingPending.operation === "delete") {
-            existingPending.operation = "upsert";
-            existingPending.payload = payload;
-            existingPending.createdAt = now;
-            existingPending.isExplicitRestore = isExplicitRestore || true;
-            await promisifyRequest(journalStore.put(existingPending));
           }
+          existingPending.createdAt = now;
+          await promisifyRequest(journalStore.put(existingPending));
         } else {
-          opId =
-            typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-              ? crypto.randomUUID()
-              : `op-${now}-${Math.random().toString(36).slice(2, 9)}`;
-
+          opId = newOutboxOperationId();
           const newEntry: SyncJournalEntry = {
             id: opId,
             userId,
@@ -298,7 +305,6 @@ export async function enqueueOutboxBatchMutations(
             retryCount: 0,
             isExplicitRestore,
           };
-
           await promisifyRequest(journalStore.put(newEntry));
         }
 
