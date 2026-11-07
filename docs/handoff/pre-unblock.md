@@ -2,6 +2,23 @@
 
 **BLOCKED** · 6 November 2026 WIB. Baseline main **1a889db70d6cc09e8ccf28b607e5b24130b9f843**. Head remote [Draft PR #146](https://github.com/rzqllh/Yomirra/pull/146) saat mulai **11783306a89f9903af7d02b706a1614e6b511973**. Commit lokal hardening **3be3bd1c512e3e70e7c0973ce94f9476f94cc69a** dan batas telemetri admin **66bd1c22e8fc4f021824033c98757d943324b66d**. Branch draft memicu integrasi Vercel saat push, sehingga perubahan tetap lokal selama larangan deploy berlaku.
 
+## Checkpoint backup merge — 8 November 2026 WIB
+
+**LOCAL_VERIFIED** untuk kode `11c152049c01bcca49f71c8a00c87e7d4dd208f2`, tree `dfd77b815ce0351056300cdd619c0a9b60380b6c`. Mode gabung menyelesaikan ID tetap sebelum alias lama dalam masing-masing dataset, lalu mempertahankan status baca perangkat saat konflik dengan cadangan. Map tanpa prototype dan pemeriksaan own-property pada engine mempertahankan key `constructor`, `toString`, dan own-key `__proto__`. Ini tidak menjamin impor JSON untuk `__proto__`: parser record Zod yang terpasang membuang key itu sebelum restore, sedangkan `constructor` dan `toString` dipertahankan. Patch tidak mengubah schema, storage, migrasi, auth, atau kebijakan NSFW; Q138 tetap nonaktif.
+
+Gate dijalankan pada snapshot TEMP dari 806 file tracked pada commit tersebut; arsip, tree, dan lockfile dicocokkan oleh Rinne. `.env.local` asli tidak dibaca atau diubah dan tidak masuk snapshot. Dependensi memakai junction ke instalasi yang sudah ada. Manifest bukti lokal: `%TEMP%/yomirra-local-gates-20261107/source-manifest.json`. Worktree asli bersih dan tetap pada SHA/tree tersebut sebelum perubahan dokumentasi ini.
+
+- Typecheck dan production build lulus, exit 0; build ID `9QL5t_XztrxRQGKdaxy9k`.
+- Lint lulus, exit 0, dengan 0 error dan 503 warning.
+- Full Vitest lulus, exit 0: 257 file dan 1.848 tes.
+- Browser smoke production build lulus, exit 0: 78 skenario Chromium/WebKit, nol unexpected dan nol flaky. Dua gate BrowserStack cloud di-skip karena kredensial BrowserStack tidak tersedia; validasi perangkat fisik tetap NOT_TESTED. Cakupan lokal termasuk service worker dan cache offline untuk konten yang memenuhi klasifikasi aman.
+
+Percobaan awal berhenti pada guard `.env.local` sebelum typecheck. Percobaan Vitest dengan path pendek Windows gagal saat collection (`/vitest.setup.ts` tidak ditemukan) dan dihentikan; path kanonis kemudian meluluskan diagnostik 19 tes serta full suite di atas. Percobaan browser pertama gagal pada quoting konfigurasi sebelum tes berjalan; koreksi satu baris ditinjau QA, lalu smoke lulus. Hasil akhir ini menggantikan kegagalan percobaan lokal tersebut tanpa menjadikannya PASS secara retroaktif.
+
+Harness memakai environment yang masuk allowlist, fixture Node fetch, dan proxy loopback browser. Ini bukan sandbox jaringan seluruh OS; escape redirect loopback pada percobaan fetch awal tetap merupakan batas harness. Enam error transport proxy belum diklasifikasikan penyebabnya. Server lokal pada port 3000 dan 18080 sudah berhenti. Node 24.22.1/pnpm 10.20.0 lokal berbeda dari CI Node 22/pnpm 9. Redis sengaja tidak tersedia pada loopback; kesehatan Redis aktif, provider live, Vercel hosted, Firebase dua perangkat, iOS/iPadOS fisik, kuota Redis antarinstance, dan transfer CDN belum dibuktikan oleh run ini.
+
+**Produksi tetap BLOCKED / NO-GO.** Penolakan origin Vercel melalui browser belum terselesaikan; status WAF, kuota, dan penyebab penolakan saat ini belum terverifikasi. Jangan ulangi akses yang ditolak atau memakai jalur alternatif. Tidak ada push, merge, deploy, atau unblock akun pada checkpoint ini. Unblock/boost tetap memerlukan approval eksplisit owner sebagai langkah terakhir setelah gate terpenuhi.
+
 ## Penutupan gate lokal 6 November 2026
 
 Kandidat kode **a411a933bdc6b379ae70f53fb379e01eda075050** berada di branch `codex/final-stabilization`. Head Draft #146 tetap **11783306a89f9903af7d02b706a1614e6b511973**. Kandidat meneruskan **3be3bd1c**, **66bd1c22**, dan **f453f30b**. Head verifikasi **9d0ee54cb8fa0e4baa44dc1d9b0e3f2ccba1081c** menambahkan koreksi dua assertion aksesibilitas. Diff a411a933..9d0ee54c hanya memuat file tes kontrak shell. Integrasi Git Vercel pada branch menjadi alasan publikasi ditahan.

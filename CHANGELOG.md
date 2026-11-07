@@ -2,6 +2,7 @@
 
 ## Unreleased — Final stabilization
 
+- Pertahankan status baca perangkat saat menggabungkan cadangan dengan alias identitas judul berbeda; prioritaskan ID tetap atas alias lama sebelum menyelesaikan konflik status.
 - Batasi permintaan halaman dinamis per instance. Kuota sensitif mencatat counter dan masa berlaku dalam satu operasi Redis.
 - Batasi payload sesi admin dan pekerjaan AI bersamaan. Perketat validasi alamat upstream dan kirim kunci Gemini melalui header.
 - Wajibkan email Firebase terverifikasi untuk akses admin melalui allowlist.
