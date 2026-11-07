@@ -5,6 +5,10 @@ import { logger } from "@/shared/logger";
 import { safeFetch } from "@/server/lib/security/outbound-policy";
 import { applyRateLimitHeaders, checkRateLimitPolicy, createRateLimitRejection } from "@/server/lib/security/rate-limit";
 
+import { rasterImageContentType } from "@/shared/lib/raster-image";
+import { IMAGE_PROXY_VERSION } from "@/shared/lib/image-proxy-version";
+
+const IMAGE_QUERY_KEYS = new Set(["v", "url", "sig", "ref", "retry"]);
 const MAX_IMAGE_SIZE = 15 * 1024 * 1024;
 const MAX_ACTIVE_IMAGES = 16;
 let activeImages = 0;
@@ -18,6 +22,12 @@ const ALLOWED_DIRECT_CDN_HOSTS = new Set([
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
+  const keys = [...searchParams.keys()];
+  const retry = searchParams.get("retry");
+  if (keys.some((key) => !IMAGE_QUERY_KEYS.has(key)) || new Set(keys).size !== keys.length ||
+      (retry !== null && retry !== "1" && retry !== "2" && retry !== "3")) {
+    return new NextResponse("Invalid image proxy parameters", { status: 400 });
+  }
   const url = searchParams.get("url");
   const signature = searchParams.get("sig");
   const referer = searchParams.get("ref") || undefined;
@@ -27,8 +37,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Verify HMAC signature to prevent SSRF before spending limiter capacity.
-  if (!verifyImageUrl(url, signature, referer)) {
-    logger.warn(`Invalid image proxy signature for url: ${url}`);
+  if (searchParams.get("v") !== IMAGE_PROXY_VERSION || !verifyImageUrl(url, signature, referer)) {
     return new NextResponse("Forbidden: Invalid signature", { status: 403 });
   }
 
@@ -85,16 +94,19 @@ export async function GET(request: NextRequest) {
       return limited(new NextResponse("Failed to fetch image", { status: response.status }));
     }
 
-    const contentType = response.headers.get("content-type");
-    if (contentType && !contentType.startsWith("image/")) {
+    const contentType = rasterImageContentType(response);
+    if (!contentType) {
       await response.body?.cancel();
-      logger.warn(`Invalid content type for image proxy: ${contentType}`);
       return limited(new NextResponse("Invalid content type", { status: 400 }));
     }
 
-    const responseHeaders = new Headers();
-    if (contentType) responseHeaders.set("Content-Type", contentType);
-    responseHeaders.set("Cache-Control", "public, max-age=31536000, immutable");
+    const responseHeaders = new Headers({
+      "Content-Type": contentType,
+      "Content-Security-Policy": "sandbox; default-src 'none'",
+      "X-Content-Type-Options": "nosniff",
+      // Admission and rate-limit headers are per client.
+      "Cache-Control": "private, max-age=86400",
+    });
 
     let body: ReadableStream<Uint8Array> | null = null;
     if (response.body) {

@@ -30,8 +30,8 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run dev",
-    url: "http://localhost:3000",
+    command: process.env.E2E_PRODUCTION_BUILD === "1" ? "npm run start" : "npm run dev",
+    url: "http://localhost:3000/api/health/live",
     reuseExistingServer: true,
     timeout: 120000,
   },

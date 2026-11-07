@@ -18,6 +18,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { DynamicSourceAdapter } from "../index";
+import { getSourceCacheKey } from "@/server/lib/cache/redis-cache";
 import { isSafeIp } from "../../../../security/outbound-policy";
 import type { MihonSourceManifest } from "@/shared/sources/dynamic-source-registry";
 
@@ -77,7 +78,8 @@ describe("DynamicSourceAdapter.search() — call path through safeFetch", () => 
 
     expect(safeFetchSpy).toHaveBeenCalledOnce();
     expect(safeFetchSpy).toHaveBeenCalledWith(
-      "https://safe-external-manga-api.example.com/api/search?q=berserk&page=1"
+      "https://safe-external-manga-api.example.com/api/search?q=berserk&page=1",
+      expect.objectContaining({ signal: expect.any(AbortSignal), maxSize: 2 * 1024 * 1024, maxRedirects: 3 })
     );
     expect(result).toEqual({ mangas: [], hasNextPage: false });
 
@@ -207,7 +209,8 @@ describe("DynamicSourceAdapter filter capability", () => {
       sorts: [],
     });
     expect(safeFetchSpy).toHaveBeenCalledWith(
-      "https://safe-external-manga-api.example.com/filters"
+      "https://safe-external-manga-api.example.com/filters",
+      expect.objectContaining({ signal: expect.any(AbortSignal), maxSize: 2 * 1024 * 1024, maxRedirects: 3 })
     );
 
     safeFetchSpy.mockRestore();
@@ -349,5 +352,17 @@ describe("IPv4-mapped IPv6 bypass prevention", () => {
 
   it("rejects ::ffff:192.168.1.1 (private as IPv4-mapped IPv6)", () => {
     expect(isSafeIp("::ffff:192.168.1.1")).toBe(false);
+  });
+});
+
+describe("dynamic source cache identity", () => {
+  it("separates external manifests from registered sources and includes the full endpoint definition", () => {
+    const manifest = makeManifest();
+    const external = "https://extensions.example/manifest.json";
+    const key = (adapter: DynamicSourceAdapter) => getSourceCacheKey(adapter, "search", "one");
+    expect(key(new DynamicSourceAdapter(manifest, external))).not.toBe(key(new DynamicSourceAdapter(manifest)));
+    expect(key(new DynamicSourceAdapter(manifest, external))).not.toBe(key(new DynamicSourceAdapter(
+      { ...manifest, endpoints: { search: "https://different.example/search" } }, external
+    )));
   });
 });

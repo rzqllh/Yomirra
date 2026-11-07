@@ -104,14 +104,14 @@ export async function GET(req: NextRequest) {
                 results[sourceId] = { results: [], error: "Latest not supported by source", errorCode: "UNKNOWN" };
                 return;
               }
-              searchResult = await loadSourceUpstream(sourceId, "search", null, () => source.getLatest(page, readOptions));
+              searchResult = await loadSourceUpstream(sourceId, "search", null, () => source.getLatest(page, readOptions), source.cacheFingerprint);
             } else {
               if (!source.capabilities.search) {
                 results[sourceId] = { results: [], error: "Search not supported by source", errorCode: "UNKNOWN" };
                 return;
               }
               const activeFilters = Object.keys(filters).length > 0 && source.capabilities.filters ? filters : undefined;
-              searchResult = await loadSourceUpstream(sourceId, "search", null, () => source.search(queryStr, page, activeFilters, readOptions));
+              searchResult = await loadSourceUpstream(sourceId, "search", null, () => source.search(queryStr, page, activeFilters, readOptions), source.cacheFingerprint);
             }
             results[sourceId] = {
               results: searchResult.mangas.filter((item: import("@/shared/sources/source-types").MangaItem) => isContentVisible(item, readOptions.hideNsfw !== false)),

@@ -68,7 +68,7 @@ export async function GET(
 
     const data = await withCache(
       cacheKey,
-      () => loadSourceUpstream(sourceId, "search", null, () => source.search(q, page, filters, readOptions)),
+      () => loadSourceUpstream(sourceId, "search", null, () => source.search(q, page, filters, readOptions), source.cacheFingerprint),
       CACHE_TTL.SEARCH
     );
 

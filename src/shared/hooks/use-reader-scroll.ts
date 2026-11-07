@@ -1,6 +1,7 @@
 import * as React from "react";
 import { QueryClient } from "@tanstack/react-query";
 import type { StreamItem } from "@/components/reader/continuous-vertical-reader";
+import { apiClient } from "@/shared/api-client";
 import { getReaderHref } from "@/shared/lib/routes";
 import { Virtualizer } from "@tanstack/react-virtual";
 import { useVisibilityFlush } from "./use-visibility-flush";
@@ -73,26 +74,7 @@ export function useReaderScroll({
             
             if (maxScroll > 0 && (isVeryClose || isApproachingFast)) {
               hasPrefetched = true;
-              import("@/shared/api-client").then(m => {
-                const queryKey = ["pages", sourceId, nextChapterId];
-                queryClient.prefetchQuery({
-                  queryKey,
-                  queryFn: () => m.apiClient.getPages(sourceId, mangaId, nextChapterId)
-                }).then(async () => {
-                  // After JSON is fetched, preload images via fetch to populate browser cache
-                  const data = queryClient.getQueryData<{ pages: { url: string }[] }>(queryKey);
-                  if (data && data.pages) {
-                    // Keep next-chapter warmup ordered so page requests do not race ahead.
-                    for (const page of data.pages.slice(0, 2)) {
-                      try {
-                        await fetch(page.url, { mode: 'no-cors' });
-                      } catch {
-                        break;
-                      }
-                    }
-                  }
-                });
-              });
+              void queryClient.prefetchQuery(apiClient.pagesQuery(sourceId, mangaId, nextChapterId));
             }
           }
 

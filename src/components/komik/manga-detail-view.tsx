@@ -10,6 +10,7 @@ import { beginNavigationIntent } from "@/shared/lib/navigation-intent";
 import { MangaActions } from "@/components/komik/manga-actions";
 import { useHistoryStore } from "@/shared/store/history-store";
 import { Button } from "@/components/ui/button";
+import { classifyContent } from "@/shared/sources/content-policy";
 import { ChapterRow } from "@/components/komik/chapter-row";
 import { MangaRecommendations } from "@/components/komik/manga-recommendations";
 import { MangaStatusButton } from "@/components/komik/manga-status-button";
@@ -557,6 +558,7 @@ function MangaDetailContent({
                           chapterId={chapter.id}
                           chapterTitle={chapter.title}
                           mangaTitle={detail.title}
+                          offlineSafe={classifyContent(detail) === "SAFE"}
                           returnTo={readerReturnTo}
                           date={chapter.date}
                           isRead={isRead}

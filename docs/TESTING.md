@@ -18,6 +18,18 @@ Untuk loop cepat:
 pnpm vitest run path/to/file.test.ts
 ```
 
+## Browser dari build production
+
+Gunakan Redis terisolasi dan nilai lokal untuk `IMAGE_PROXY_SECRET`, `REDIS_URL`, dan `NEXT_PUBLIC_APP_URL`. CI memakai container Redis terpisah. Atur `E2E_PRODUCTION_BUILD=1` untuk menjalankan server dari hasil build.
+
+```bash
+pnpm exec playwright install chromium webkit
+pnpm build
+E2E_PRODUCTION_BUILD=1 pnpm exec playwright test --reporter=list
+```
+
+Suite PWA memakai service worker build production dan menanam entri raster serta SVG legacy untuk menguji jalur cache. Suite discovery memblokir service worker agar fixture API mencapai Playwright. Bukti Playwright WebKit berasal dari emulasi desktop dan mobile. Pengujian iOS fisik, BrowserStack, dan Firebase lintas perangkat memerlukan lingkungan terpisah.
+
 ## Apa yang wajib dites
 
 Prioritaskan boundary yang kalau rusak dapat merusak data atau banyak feature:
@@ -89,6 +101,8 @@ Untuk rate limiting, cover minimal:
 - trusted proxy-chain identity agar client tidak bisa memilih bucket sendiri lewat forwarded header palsu.
 
 Untuk command-budget Redis, gunakan `src/server/lib/cache/__tests__/redis-cache.test.ts` dan `src/server/lib/sources/__tests__/domain-resolver-near-cache.test.ts` serta pengukuran real command `GET` di production. Uji hit/miss, expiry, fail-open, isolated TTL contracts, late Redis GET, invalidasi search error dan flush admin. Preview tanpa `REDIS_URL` bukan bukti kuota Redis sehat. Untuk dock, uji `src/components/app/__tests__/bottom-dock.test.tsx` dan pemeriksaan viewport 320px/360px, safe-area Safari/PWA, label aktif, serta VoiceOver.
+
+Uji `/api/health/live` dan `/api/health` secara terpisah. Pada lingkungan terisolasi, pastikan liveness tetap 200 saat Redis dihentikan atau belum dikonfigurasi, readiness mengembalikan 503, dan readiness pulih setelah Redis kembali tersedia. Ulangi polling dalam satu jendela 10 detik dan pastikan probe Redis dipakai ulang. Jangan gunakan polling intensif pada production.
 
 Untuk Redis cold-start dan limiter, gunakan `src/server/lib/cache/__tests__/redis-readiness.test.ts` dan `src/server/lib/security/__tests__/rate-limit.test.ts`. Cover `wait`, `connecting`, `reconnecting`, `end`, late rejection, 2.500 ms bounded deadline, shared initial connection, fail-closed 503, serta bypass fail-open yang tidak tertahan saat Redis down.
 

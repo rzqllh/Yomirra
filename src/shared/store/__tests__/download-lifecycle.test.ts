@@ -172,7 +172,7 @@ describe("W1: Download Engine Lifecycle & URL Verification (F02 + F12)", () => {
 
     it("executes chapter download to completion and leaves zero idle timers", async () => {
       const id = "komiku::manga-1::ch-1";
-      const signedPageUrl = "/api/proxy/image?url=https%3A%2F%2Fcdn.test%2F1.jpg&sig=valid-sig";
+      const signedPageUrl = "/api/proxy/image?url=https%3A%2F%2Fcdn.test%2F1.jpg&v=2&sig=valid-sig";
 
       globalThis.fetch = vi.fn(async (input: RequestInfo | URL) => {
         const urlStr = String(input);
@@ -244,7 +244,7 @@ describe("W1: Download Engine Lifecycle & URL Verification (F02 + F12)", () => {
             JSON.stringify({
               data: {
                 pages: [
-                  { index: 0, url: "/api/proxy/image?url=https%3A%2F%2Fcdn.test%2F1.jpg&sig=valid-sig" },
+                  { index: 0, url: "/api/proxy/image?url=https%3A%2F%2Fcdn.test%2F1.jpg&v=2&sig=valid-sig" },
                 ],
               },
             }),
@@ -338,7 +338,7 @@ describe("W1: Download Engine Lifecycle & URL Verification (F02 + F12)", () => {
             JSON.stringify({
               data: {
                 pages: [
-                  { index: 0, url: "/api/proxy/image?url=https%3A%2F%2Fcdn.test%2F1.jpg&sig=valid-sig" },
+                  { index: 0, url: "/api/proxy/image?url=https%3A%2F%2Fcdn.test%2F1.jpg&v=2&sig=valid-sig" },
                 ],
               },
             }),
@@ -435,8 +435,8 @@ describe("W1: Download Engine Lifecycle & URL Verification (F02 + F12)", () => {
 
     it("upgrades legacy unsigned pages by re-fetching fresh signed URLs from API before download", async () => {
       const id = "komiku::manga-1::ch-1";
-      const legacyRawUrl = "https://cdn.example.com/legacy/page0.jpg";
-      const freshSignedUrl = "/api/proxy/image?url=https%3A%2F%2Fcdn.example.com%2Flegacy%2Fpage0.jpg&sig=signed-fresh-token";
+      const legacySignedUrl = "/api/proxy/image?url=https%3A%2F%2Fcdn.example.com%2Flegacy%2Fpage0.jpg&sig=legacy";
+      const freshSignedUrl = "/api/proxy/image?url=https%3A%2F%2Fcdn.example.com%2Flegacy%2Fpage0.jpg&v=2&sig=signed-fresh-token";
 
       let pagesEndpointCalled = false;
       let imageFetchUrl: string | null = null;
@@ -464,7 +464,7 @@ describe("W1: Download Engine Lifecycle & URL Verification (F02 + F12)", () => {
         return new Response("Not found", { status: 404 });
       });
 
-      // Item has legacy page with raw URL (not starting with /api/proxy/image and without sig=)
+      // Persisted pending URL still carries a pre-rotation signature.
       useDownloadStore.setState({
         downloads: {
           [id]: {
@@ -481,7 +481,7 @@ describe("W1: Download Engine Lifecycle & URL Verification (F02 + F12)", () => {
             pages: [
               {
                 index: 0,
-                originalUrl: legacyRawUrl,
+                originalUrl: legacySignedUrl,
                 offlineUrl: `/offline-images/${id}/0`,
                 status: "pending",
               },
@@ -496,7 +496,7 @@ describe("W1: Download Engine Lifecycle & URL Verification (F02 + F12)", () => {
 
       await useDownloadStore.getState()._processQueue();
 
-      // Pages endpoint was called to upgrade the legacy unsigned URL
+      // Pages endpoint was called to replace the retired signature.
       expect(pagesEndpointCalled).toBe(true);
       // The image fetch used the fresh signed URL, NOT an unsigned proxy URL
       expect(imageFetchUrl).toBe(freshSignedUrl);

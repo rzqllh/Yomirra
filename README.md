@@ -65,11 +65,11 @@ Reader mendukung chapter berbasis gambar, progress baca, chapter navigator, pref
 
 Navigasi reader menjaga parent page secara eksplisit: perpindahan detail → reader dan antar-chapter tidak meninggalkan reader route lama di belakang tombol kembali, sehingga keluar ke detail lalu kembali lagi mengarah ke halaman asal, bukan ke reader sebelumnya.
 
-Offline dan PWA bergantung pada kemampuan browser, Service Worker, dan storage perangkat. Tampilan PWA terintegrasi penuh dengan safe-area iOS Safari dan sinkronisasi canonical theme-color (`#f9f9fb` untuk light, `#090a0f` untuk dark). Cadangan data (backup & restore) beroperasi 100% secara offline berbasis berkas JSON terenkapsulasi dengan validasi skema Zod.
+Offline dan PWA bergantung pada kemampuan browser, Service Worker, dan storage perangkat. Tampilan PWA terintegrasi penuh dengan safe-area iOS Safari dan sinkronisasi canonical theme-color (`#eef0f5` untuk light, `#090a0f` untuk dark). Cadangan data (backup & restore) beroperasi 100% secara offline berbasis berkas JSON terenkapsulasi dengan validasi skema Zod.
 
 Riwayat menyimpan 512 entri chapter dengan detail lengkap, lalu mempertahankan ringkasan posisi terakhir dan milestone tiap judul. Progres lokal tetap dipertahankan ketika cloud gagal. Untuk aturan retensi, backup, pemulihan, dan batas offline, baca [panduan data bacaan](docs/READING_DATA.md). Penghapusan otomatis setelah tiga bulan belum aktif.
 
-Unduhan eksplisit tidak terus menjadwalkan pemrosesan saat antrian kosong. Untuk unduhan lama dengan URL gambar tanpa tanda tangan, engine dapat mencoba mengambil ulang URL resmi dari endpoint halaman sumber tanpa membuang halaman yang sudah di-cache. Pemulihan bergantung pada ketersediaan sumber dan tidak melemahkan validasi signed image proxy. Profiling timer browser dan smoke Safari masih merupakan verifikasi manual.
+Unduhan eksplisit tidak terus menjadwalkan pemrosesan saat antrian kosong. Unduhan yang tertunda dengan URL lama mengambil ulang daftar halaman saat sumber dapat dijangkau. Cache menyimpan gambar raster yang sudah diunduh. Buka halaman Unduhan saat terhubung agar shell tersedia ketika offline. Browser dapat menghapus penyimpanan lokal jika kuota terlampaui. Perangkat iOS fisik tetap memerlukan verifikasi terpisah.
 
 ### Motion dan navigasi
 
@@ -105,7 +105,7 @@ Redis bersifat opsional untuk feed, pencarian, dan Reader. Saat cache tidak ters
 
 Bottom dock mobile memakai radius kapsul penuh untuk shell, tombol Search, dan tab aktif, dengan target sentuh minimal 44px dan gutter mengikuti safe-area perangkat. Ini pengecualian komponen, bukan perubahan token radius global.
 
-Preview tanpa `REDIS_URL` tetap dapat memuat public flow, tetapi tidak menguji command budget Production. Detailnya di [Architecture](docs/ARCHITECTURE.md) dan [Testing](docs/TESTING.md).
+Gunakan `GET /api/health/live` untuk memeriksa apakah proses aplikasi merespons. `GET /api/health` memeriksa kesiapan Redis dan mengembalikan 503 jika Redis tidak tersedia atau belum dikonfigurasi. Preview tanpa `REDIS_URL` masih dapat melayani alur publik. Detailnya di [Architecture](docs/ARCHITECTURE.md) dan [Testing](docs/TESTING.md).
 
 ## Security dan reliability
 
