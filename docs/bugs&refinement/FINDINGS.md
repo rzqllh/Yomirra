@@ -300,3 +300,11 @@
 - [PR #143](https://github.com/rzqllh/Yomirra/pull/143) and [#146](https://github.com/rzqllh/Yomirra/pull/146) must be reconciled without declaring previous incidents solved. Check full branch context before future implementation.
 - **Release remains BLOCKED** for physical Safari/PWA, legal source rights, data integrity, Redis health/observability, backup/restore and exact production SHA. Source evidence and product acceptance are separate.
 - Never write real user data for test fixtures; use disposable identities and owner-approved staging only.
+
+## Docs-only validation checkpoint (2026-11-07)
+
+- Source of this register: 30 Oct read-only repository audit, 1 Nov user reports and 7 Nov PR/CI checks. Historical observations remain clearly labeled, not automatically active bugs.
+- Count and identity: **40 unique finding IDs**, severity counts **P0 8 / P1 14 / P2 11 / P3 7**.
+- GitHub workflow `.github/workflows/ci.yml` excludes Markdown/docs-only changes using `paths-ignore`. Therefore **no GitHub Actions run on the documentation PR** is expected; do not mark this a CI PASS.
+- GitHub commit combined status on the docs SHA returned **Vercel FAILURE: “Account is blocked”**. Release gate remains open and fixing deployment/account limits is outside this docs-only scope.
+- Integration source remains on draft PRs #143, #146, #147, with their own source/evidence boundaries; no checkout or write to production.
