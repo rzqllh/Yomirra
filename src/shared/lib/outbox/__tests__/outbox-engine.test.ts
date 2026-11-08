@@ -4,6 +4,7 @@ import {
   setOutboxPathEnabledForTesting,
   enqueueLibraryUpsert,
   enqueueLibraryDelete,
+  enqueueOutboxBatchMutations,
   enqueueHistoryUpsert,
   enqueueHistoryDelete,
   enqueueMangaHistoryBatchDelete,
@@ -452,6 +453,51 @@ describe("Q138 PR-2: Outbox-First Write Path Engine & Dark Launch Activation Gat
       expect(tombstoneRecord.deletedAt).toBeGreaterThan(0);
     });
 
+    it("cannot implicitly resurrect a deleted manga or change its durable state", async () => {
+      const deletion = await enqueueLibraryDelete("mangadex", "frieren-123", { userId: "user-alpha" });
+      const prior = await idbStorage.getItem("yomirra-library");
+
+      await expect(
+        enqueueLibraryUpsert(sampleManga, { userId: "user-alpha" })
+      ).rejects.toThrow("EXPLICIT_RESTORE_REQUIRED");
+
+      const journal = await getPendingOutboxEntries("user-alpha");
+      expect(journal).toHaveLength(1);
+      expect(journal[0].id).toBe(deletion.opId);
+      expect(journal[0].operation).toBe("delete");
+      expect(await idbStorage.getItem("yomirra-library")).toBe(prior);
+      expect(activeMockDB!.backingData.get(STORE_TOMBSTONES)!.get(
+        JSON.stringify(["user-alpha", "library", "mangadex::frieren-123"])
+      )).toBeDefined();
+    });
+
+    it("rotates operation IDs when switching from upsert to delete", async () => {
+      const upsert = await enqueueLibraryUpsert(sampleManga, { userId: "user-alpha" });
+      const deletion = await enqueueLibraryDelete("mangadex", "frieren-123", { userId: "user-alpha" });
+      expect(deletion.opId).not.toBe(upsert.opId);
+      expect(deletion.coalesced).toBe(false);
+      const journal = await getPendingOutboxEntries("user-alpha");
+      expect(journal).toHaveLength(1);
+      expect(journal[0].operation).toBe("delete");
+    });
+
+    it("also enforces explicit restore and unique operation IDs in batch enqueue", async () => {
+      const deletion = await enqueueOutboxBatchMutations({
+        mutations: [{ entityType: "library", entityId: "batch-title", operation: "delete", payload: {} }],
+        userId: "user-alpha",
+      });
+      await expect(enqueueOutboxBatchMutations({
+        mutations: [{ entityType: "library", entityId: "batch-title", operation: "upsert", payload: {} }],
+        userId: "user-alpha",
+      })).rejects.toThrow("EXPLICIT_RESTORE_REQUIRED");
+      const restored = await enqueueOutboxBatchMutations({
+        mutations: [{ entityType: "library", entityId: "batch-title", operation: "upsert", payload: {}, isExplicitRestore: true }],
+        userId: "user-alpha",
+      });
+      expect(restored[0].opId).not.toBe(deletion[0].opId);
+      expect(restored[0].coalesced).toBe(false);
+    });
+
     it("preserves userRating in keyval by marking isBookmarked false instead of deleting", async () => {
       const ratedManga: LibraryItem = {
         ...sampleManga,
@@ -472,13 +518,15 @@ describe("Q138 PR-2: Outbox-First Write Path Engine & Dark Launch Activation Gat
     });
 
     it("handles explicit restore by clearing local tombstone and marking isExplicitRestore", async () => {
-      await enqueueLibraryDelete("mangadex", "frieren-123", { userId: "user-alpha" });
+      const deletion = await enqueueLibraryDelete("mangadex", "frieren-123", { userId: "user-alpha" });
 
-      // User explicitly re-bookmarks
-      await enqueueLibraryUpsert(sampleManga, {
+      // User explicitly re-bookmarks. The old delete idempotency key must die.
+      const restoration = await enqueueLibraryUpsert(sampleManga, {
         userId: "user-alpha",
         isExplicitRestore: true,
       });
+      expect(restoration.opId).not.toBe(deletion.opId);
+      expect(restoration.coalesced).toBe(false);
 
       const pending = await getPendingOutboxEntries("user-alpha");
       expect(pending).toHaveLength(1);
