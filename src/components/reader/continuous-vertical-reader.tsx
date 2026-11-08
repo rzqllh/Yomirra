@@ -282,8 +282,11 @@ export function ContinuousVerticalReader({
   React.useEffect(() => {
     if (isRestored && activePage === currentPages.length - 1 && canCompleteChapter(currentPages, loadedPositionsRef.current, failedPageIndices)) {
       noteCompletedChapter(sourceId, mangaId, chapterId);
+      if (!nextChapterId) {
+        markChapterProgress(sourceId, mangaId, chapterId, currentPages.length - 1, currentPages.length, 100);
+      }
     }
-  }, [isRestored, activePage, revealedThrough, currentPages, failedPageIndices, sourceId, mangaId, chapterId]);
+  }, [isRestored, activePage, revealedThrough, currentPages, failedPageIndices, sourceId, mangaId, chapterId, nextChapterId, markChapterProgress]);
 
   const handleImageError = React.useCallback(() => { }, []);
 
@@ -552,7 +555,17 @@ export function ContinuousVerticalReader({
                   _prevChapterId ? "flex-1" : "w-full"
                 )}
               >
-                <Link href={detailHref} replace prefetch={false}>
+                <Link
+                  href={detailHref}
+                  replace
+                  prefetch={false}
+                  onClick={() => {
+                    if (isRestored && canCompleteChapter(currentPages, loadedPositionsRef.current, failedPageIndices)) {
+                      markChapterProgress(sourceId, mangaId, chapterId, currentPages.length - 1, currentPages.length, 100);
+                      noteCompletedChapter(sourceId, mangaId, chapterId);
+                    }
+                  }}
+                >
                   <BookOpen size={16} weight="regular" />
                   <span>Detail Komik</span>
                 </Link>

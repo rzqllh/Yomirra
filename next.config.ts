@@ -129,6 +129,33 @@ const nextConfig: NextConfig = {
           },
         ],
       },
+      {
+        source: "/(icons|covers|screenshots)/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400",
+          },
+        ],
+      },
+      {
+        source: "/(apple-icon.png|favicon.ico|favicon.png|icon.png|icon-pwa.png)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400",
+          },
+        ],
+      },
+      {
+        source: "/sw.js",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=0, must-revalidate",
+          },
+        ],
+      },
     ];
   },
   turbopack: {},

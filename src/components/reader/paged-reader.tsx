@@ -160,8 +160,13 @@ export function PagedReader({
     if (useReaderStore.getState().pageNavigation?.key === navigationKey) setPageNavigation(null);
   }, [navigationKey, setPageNavigation]);
   React.useEffect(() => {
-    if (hasInitialized && currentPageIndex === totalPages - 1 && canCompleteChapter(currentPages, loadedPositions, failedPageIndices)) noteCompletedChapter(sourceId, mangaId, chapterId);
-  }, [hasInitialized, currentPageIndex, totalPages, currentPages, loadedPositions, failedPageIndices, sourceId, mangaId, chapterId]);
+    if (hasInitialized && currentPageIndex === totalPages - 1 && canCompleteChapter(currentPages, loadedPositions, failedPageIndices)) {
+      noteCompletedChapter(sourceId, mangaId, chapterId);
+      if (!nextChapterId) {
+        markChapterProgress(sourceId, mangaId, chapterId, totalPages - 1, totalPages, 100);
+      }
+    }
+  }, [hasInitialized, currentPageIndex, totalPages, currentPages, loadedPositions, failedPageIndices, sourceId, mangaId, chapterId, nextChapterId, markChapterProgress]);
 
   // Persist page progress only after initialization
   const flushProgress = React.useCallback(() => {
