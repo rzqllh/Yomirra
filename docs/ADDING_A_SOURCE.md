@@ -1,5 +1,7 @@
 # Adding a Source
 
+[Dokumentasi](README.md) · [Developer Guide](README_DEV.md) · [Testing](TESTING.md)
+
 Yomirra punya dua jalur source:
 
 1. built-in TypeScript adapter;
@@ -25,23 +27,26 @@ Lokasi:
 src/server/lib/sources/adapters/<source>/
 ```
 
-Implement `MangaSource` dari `src/shared/sources/source-types.ts`:
+Implement `MangaSource` dari `src/shared/sources/source-types.ts`. Contoh berikut hanya metode; interface sebenarnya juga mewarisi metadata sumber dan menerima opsi per request:
 
 ```ts
 interface MangaSource {
-  getPopular(page: number): Promise<MangaPageResult>;
-  getLatest(page: number): Promise<MangaPageResult>;
+  getPopular(page: number, options?: SourceReadOptions): Promise<MangaPageResult>;
+  getLatest(page: number, options?: SourceReadOptions): Promise<MangaPageResult>;
   search(
     query: string,
     page: number,
-    filters?: Record<string, string | string[]>
+    filters?: Record<string, string | string[]>,
+    options?: SourceReadOptions
   ): Promise<MangaPageResult>;
-  getDetail(mangaId: string): Promise<MangaDetail>;
-  getChapters(mangaId: string): Promise<Chapter[]>;
-  getPages(chapterId: string): Promise<ChapterPages>;
+  getDetail(mangaId: string, options?: SourceReadOptions): Promise<MangaDetail>;
+  getChapters(mangaId: string, options?: SourceReadOptions): Promise<Chapter[]>;
+  getPages(chapterId: string, options?: SourceReadOptions): Promise<ChapterPages>;
   getFilters(): FilterList | Promise<FilterList>;
 }
 ```
+
+`SourceReadOptions` membawa preferensi per request (bahasa, data saver, policy konten, dan konteks manga). Jangan mengubah instance adapter bersama dengan state pengguna. Metadata/capability publik berada di `src/shared/sources/source-registry.ts`; implementasi privileged tetap di server.
 
 Optional capability seperti `getRelated` atau `resolveDomain` hanya dipakai jika source memang mendukungnya.
 
@@ -85,7 +90,7 @@ Jika upstream tidak mendukung filter tertentu tetapi metadata result cukup untuk
 
 ## Chapters
 
-Return order harus stable. Reader/update logic tidak boleh bergantung pada kebetulan urutan response upstream.
+Kembalikan daftar secara deterministik dari chapter terbaru ke terlama. `reader-shell.tsx` memakai index - 1 untuk chapter berikutnya dan index + 1 untuk sebelumnya; drawer membalik daftar untuk tampilan ascending. Uji angka desimal, volume, chapter khusus, duplikasi, dan tie-breaker. Jangan mengandalkan kebetulan urutan response upstream.
 
 Locked/early-access chapter dapat memakai `isLocked`.
 
@@ -120,7 +125,7 @@ Source ID harus unique dan stable.
 
 ## Tests
 
-Minimum coverage:
+Gunakan fixture yang boleh dibagikan; jangan merekam cookie, credential, karya lengkap, atau respons pribadi. Minimum coverage:
 
 - metadata/capabilities;
 - popular/latest normalization;
@@ -138,7 +143,7 @@ Run:
 ```bash
 pnpm typecheck
 pnpm lint
-pnpm test --run
+pnpm test -- --run
 pnpm build
 ```
 
@@ -146,7 +151,7 @@ Lalu smoke-test discovery → search → detail → chapter → reader.
 
 ## Dynamic manifest
 
-Dynamic manifest cocok untuk trusted JSON API yang sudah normalized. Ia bukan tempat menjalankan arbitrary parser code.
+Dynamic manifest cocok untuk trusted JSON API yang sudah normalized. Ia bukan tempat menjalankan arbitrary parser code atau memasang APK extension Mihon/Tachiyomi. Nama type internal `MihonSourceManifest` tidak menyatakan kompatibilitas extension.
 
 Manifest mendefinisikan source metadata dan endpoint seperti:
 
@@ -169,6 +174,8 @@ Manifest mendefinisikan source metadata dan endpoint seperti:
   "nsfw": false
 }
 ```
+
+Schema berada di `src/shared/sources/dynamic-source-registry.ts`; adapter JSON berada di `src/server/lib/sources/adapters/dynamic/index.ts`. Contoh domain di atas adalah placeholder dokumentasi, bukan sumber siap pakai. API harus mengembalikan `MangaPageResult`, `MangaDetail`, `Chapter[]`, dan `ChapterPages` sesuai endpoint, bukan payload provider mentah.
 
 Dynamic source harus berasal dari publisher/API yang dipercaya. Untuk source yang perlu transform/parsing custom, gunakan built-in adapter.
 

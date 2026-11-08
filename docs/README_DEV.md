@@ -4,22 +4,63 @@ Panduan singkat untuk bekerja di codebase Yomirra.
 
 ## Setup
 
+Gunakan Node.js **22** dan pnpm **9** agar sesuai versi mayor CI. Belum ada pin `engines` atau `packageManager` di `package.json`; jangan menganggap versi lokal contributor sebagai persyaratan baru.
+
 ```bash
-pnpm install
+pnpm install --frozen-lockfile
+```
+
+Salin `.env.example` ke `.env`:
+
+```bash
+# Bash
 cp .env.example .env
+```
+
+```powershell
+# PowerShell
+Copy-Item .env.example .env
+```
+
+Tetapkan `NEXT_PUBLIC_APP_URL` ke `http://localhost:3000` dan ganti placeholder `IMAGE_PROXY_SECRET` dengan nilai acak lokal minimal 32 karakter. Jangan menaruh secret pada variabel `NEXT_PUBLIC_*`, memakai nilai contoh untuk production, atau mengomit `.env` ke Git.
+
+```bash
 pnpm dev
 ```
 
-Verification penuh:
+Buka `http://localhost:3000`. Halaman aplikasi harus merespons; hasil sumber masih bergantung pada jaringan dan upstream. `dev` serta `build` memakai Webpack sesuai script repository.
+
+## Konfigurasi berdasarkan fitur
+
+| Kategori | Konfigurasi | Kapan diperlukan |
+| --- | --- | --- |
+| URL aplikasi/gambar | `NEXT_PUBLIC_APP_URL`, `IMAGE_PROXY_SECRET` | URL lokal dan signed image proxy; tanpa signing, gambar dapat memakai URL langsung dan mengikuti kebijakan upstream |
+| Cache dan readiness | `REDIS_URL` | Koneksi Redis yang dipakai runtime cache/server; contoh menunjuk Redis lokal, bukan layanan yang otomatis tersedia |
+| Akun/sinkronisasi | `NEXT_PUBLIC_FIREBASE_*` | Proyek Firebase dengan provider Auth dan aturan Firestore sesuai pengguna; public browsing tidak mensyaratkan akun |
+| Admin | `ADMIN_KEY` / `ADMIN_SECRET`, `ADMIN_SESSION_SECRET`, `ADMIN_EMAILS` | Fitur admin; ikuti [Security Policy](../SECURITY.md) dan jangan buka admin tanpa konfigurasi/otorisasi yang benar |
+| Credential sumber | `RESTRICTED_SOURCE_APP_SECRET` | Hanya sumber yang memerlukannya; kegagalan satu sumber tidak seharusnya memutus registry lain |
+| Search intelligence | `GEMINI_API_KEY` | Semantic ranking opsional; pencarian leksikal dan rekomendasi utama tidak bergantung pada AI |
+| Otomasi/operasi | Variabel Telegram, cron, dan deployment terkait | Hanya jika mengerjakan integrasi tersebut; tidak perlu diisi untuk mencoba UI publik |
+
+`.env.example` adalah titik awal, bukan daftar setiap variabel seluruh integrasi. Periksa modul fitur dan `src/env.ts` sebelum mengonfigurasi layanan tambahan. Jangan meminta atau menyalin kredensial produksi untuk onboarding.
+
+Tanpa Redis yang tersedia, pembacaan publik mencoba jalur sumber/fallback; itu tidak menjamin semua API berfungsi. Operasi yang memerlukan durability/admission Redis tetap dapat ditolak. `GET /api/health/live` memeriksa respons proses, sedangkan `GET /api/health` memeriksa kesiapan Redis dan dapat mengembalikan 503 walaupun halaman publik merespons.
+
+Cache aktif menggunakan `src/server/lib/cache/redis.ts` (`ioredis`, `REDIS_URL`). Helper REST terpisah di `src/lib/redis.ts` menggunakan `UPSTASH_REDIS_REST_URL` dan `UPSTASH_REDIS_REST_TOKEN`; keberadaannya tidak berarti cache aplikasi sudah beralih ke REST. Jangan mengganti konfigurasi runtime hanya berdasarkan dependency `@upstash/redis`.
+
+## Verifikasi dan build
 
 ```bash
 pnpm typecheck
 pnpm lint
-pnpm test --run
+pnpm test -- --run
 pnpm build
+pnpm start
 ```
 
-Package versions dan scripts selalu mengikuti `package.json`.
+`pnpm test` saja membuka mode watch Vitest; `-- --run` menjalankan satu kali. `pnpm start` melayani hasil build production pada port 3000; hentikan server dev lebih dulu. Untuk browser smoke dan batas perangkat, ikuti [Testing](TESTING.md). Keberhasilan build tidak membuktikan akses sumber, Firebase, atau perangkat nyata.
+
+Package versions dan scripts mengikuti `package.json`; dependency tepatnya mengikuti `pnpm-lock.yaml`.
 
 ## Struktur utama
 

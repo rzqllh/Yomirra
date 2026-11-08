@@ -164,13 +164,15 @@ Jalur pembacaan publik memakai Redis sebagai cache opsional. Jika Redis tidak di
 
 Mitigasi 2026-11-05 menambah in-flight deduplication (maksimal 1.024 flight, deadline 30 detik) serta near-cache per serverless isolate dengan TTL maksimal 10 detik, batas 256 entri, 8 MiB total, dan 128 KiB per entri. Data tidak boleh bertahan melewati expiry asal. Domain resolver menggunakan positive/negative near-cache maksimal 10 detik, dengan invalidasi saat operasi lokal mengubah domain; isolate lain dapat melihat perubahan dengan jeda sampai 10 detik. Pembacaan override source digabung per server render dengan React `cache()`, bukan lintas request. Kesalahan search dan flush admin menghapus cache lokal yang relevan.
 
-Production memiliki `REDIS_URL`, sedangkan Vercel Preview saat ini tidak. Preview berstatus READY atau homepage HTTP 200 tidak membuktikan Redis production sehat atau command-rate sudah turun. Validasi pada environment dengan Redis terkonfigurasi tetap diperlukan.
+Konfigurasi Redis dapat berbeda antara local, preview, dan production. Deployment berstatus READY atau homepage HTTP 200 tidak membuktikan readiness Redis atau command-rate. Validasi pada environment yang dimaksud dengan Redis terkonfigurasi; jangan menganggap snapshot konfigurasi deployment lama sebagai status saat ini.
+
+Cache ini menggunakan `ioredis` melalui `src/server/lib/cache/redis.ts` dan `REDIS_URL`. Helper REST `src/lib/redis.ts` terpisah dan belum menjadi jalur cache tersebut; menambahkan `@upstash/redis` saja tidak memigrasikan cache/readiness.
 
 ### Pengawasan command budget
 
 `GET /api/health/live` hanya memeriksa respons proses. `GET /api/health` adalah readiness Redis dan mengembalikan 503 ketika Redis tidak tersedia atau belum dikonfigurasi. Readiness berbagi satu probe yang sedang berjalan dan memakai ulang hasilnya selama 10 detik per instance. Circuit yang terbuka langsung membatalkan hasil sukses yang tersimpan. Kedua endpoint memakai `Cache-Control: no-store` dan tidak memanggil upstream sumber.
 
-Pantau `GET`, `INCR`, total commands, hits/misses, request per endpoint, dan status quota circuit. Kurva Upstash 3 November 2026 mulai naik sebelum Source Health PR #128 mencapai production. Penyebab traffic berulang belum dapat ditentukan secara definitif dari log agregat; data request mentah IP/User-Agent lama tidak tersedia. Jangan menjadikan upgrade billing sebagai pengganti pengurangan command berulang. Lihat [catatan insiden](ops/redis-read-spike-2026-11-03.md).
+Pantau `GET`, `INCR`, total commands, hits/misses, request per endpoint, dan status quota circuit pada interval yang wajar. [Catatan insiden 3 November 2026](ops/redis-read-spike-2026-11-03.md) menyimpan bukti historis serta batas diagnosis pada saat itu; laporan itu bukan status kuota atau layanan terkini.
 
 
 

@@ -6,7 +6,7 @@
 
 | Package | Version | Peran |
 | --- | --- | --- |
-| Next.js | `16.3.5` | App Router, server routes, build |
+| Next.js | `16.4.5` | App Router, server routes, build |
 | React | `19.2.4` | UI runtime |
 | React DOM | `19.2.4` | DOM renderer |
 | TypeScript | `^5` | type checking |
@@ -45,20 +45,20 @@ Gunakan `motion/react`, bukan dependency animation paralel.
 
 ## Server dan infrastructure
 
-- Firebase `^12.14.0` — auth + supported cloud sync.
-- ioredis `^5.10.1` — Redis cache/search catalog dan readiness rate limiting.
-- Zod `^4.4.3` — runtime validation.
+- Firebase `^12.19.0` — auth + supported cloud sync.
+- Firebase Admin `^14.5.0` — server-side Firebase operations.
+- ioredis `^5.10.1` — runtime cache/search catalog dan readiness melalui `REDIS_URL`.
+- `@upstash/redis ^1.41.0` — helper REST terpisah; bukan bukti migrasi jalur cache aktif.
+- Zod `^4.6.7` — runtime validation.
 - Cheerio `^1.2.0` — HTML parsing pada adapter tertentu.
 
 ## PWA dan offline
 
-- `@serwist/next ^9.5.11`
-- `serwist ^9.5.11`
+- `@serwist/next ^9.5.13`
+- `serwist ^9.5.13`
 - `jszip ^3.10.1`
 - `file-saver ^2.0.5`
 - `@tanstack/react-virtual ^3.14.2`
-- `react-intersection-observer ^10.0.3`
-- `@use-gesture/react ^10.3.1`
 
 ## Theme dan telemetry
 
@@ -67,7 +67,7 @@ Gunakan `motion/react`, bukan dependency animation paralel.
 
 ## Testing
 
-- Vitest `^4.1.5`
+- Vitest `^4.1.12`
 - jsdom `^29.1.1`
 - Testing Library React `^16.3.2`
 - Vite React plugin `^6.0.1`
@@ -75,11 +75,11 @@ Gunakan `motion/react`, bukan dependency animation paralel.
 ## Commands
 
 ```bash
-pnpm install
+pnpm install --frozen-lockfile
 pnpm dev
 pnpm typecheck
 pnpm lint
-pnpm test --run
+pnpm test -- --run
 pnpm build
 pnpm start
 ```

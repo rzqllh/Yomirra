@@ -1,5 +1,7 @@
 # Riwayat, sinkronisasi, dan cadangan
 
+[Dokumentasi](README.md) · [Langkah ekspor/pulihkan](USER_GUIDE.md#cadangkan-dan-pulihkan-data) · [Bantuan](TROUBLESHOOTING.md)
+
 Yomirra menyimpan posisi baca di perangkat. Akun yang terhubung dapat menyinkronkan data itu ke cloud. Penyimpanan perangkat dan keberhasilan sinkronisasi adalah dua kondisi berbeda.
 
 ## Apa yang disimpan
@@ -42,4 +44,4 @@ Engine memeriksa keberadaan respons gambar di Cache Storage ketika melanjutkan u
 
 ## Batas verifikasi
 
-Tes otomatis mencakup retensi, identitas backup, pemulihan berulang, kegagalan cloud, dan cache yang hilang. Uji Firebase dua perangkat nyata serta iPhone/iPad dengan PWA terpasang tetap merupakan pemeriksaan terpisah. Lihat [Testing](TESTING.md) dan [tracker parity](YOMIRRA_FULL_PARITY_EXECUTION.md).
+Tes otomatis mencakup retensi, identitas backup, pemulihan berulang, kegagalan cloud, dan cache yang hilang. Uji Firebase dua perangkat nyata serta iPhone/iPad dengan PWA terpasang tetap merupakan pemeriksaan terpisah. Lihat [Testing](TESTING.md).
