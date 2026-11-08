@@ -42,4 +42,4 @@ Engine memeriksa keberadaan respons gambar di Cache Storage ketika melanjutkan u
 
 ## Batas verifikasi
 
-Tes otomatis mencakup retensi, identitas backup, pemulihan berulang, kegagalan cloud, dan cache yang hilang. Uji Firebase dua perangkat nyata serta iPhone/iPad dengan PWA terpasang tetap merupakan pemeriksaan terpisah. Lihat [Testing](TESTING.md) dan [tracker parity](YOMIRRA_FULL_PARITY_EXECUTION.md).
+Tes otomatis mencakup retensi, identitas backup, pemulihan berulang, kegagalan cloud, dan cache yang hilang. Uji Firebase dua perangkat nyata serta iPhone/iPad dengan PWA terpasang tetap merupakan pemeriksaan terpisah. Lihat [Testing](TESTING.md) dan [register bugs & refinement](bugs&refinement/FINDINGS.md).
