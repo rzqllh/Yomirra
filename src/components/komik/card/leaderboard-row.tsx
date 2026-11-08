@@ -68,6 +68,7 @@ export function LeaderboardRow({
   return (
     <Link
       href={getMangaDetailHref(sourceId, manga.id, fullPath)}
+      prefetch={false}
       className={cn(
         mangaCardSurface({ kind: "row" }),
         mangaCardInteraction.link,
