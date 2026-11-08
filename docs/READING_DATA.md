@@ -1,5 +1,7 @@
 # Riwayat, sinkronisasi, dan cadangan
 
+[Dokumentasi](README.md) · [Langkah ekspor/pulihkan](USER_GUIDE.md#cadangkan-dan-pulihkan-data) · [Bantuan](TROUBLESHOOTING.md)
+
 Yomirra menyimpan posisi baca di perangkat. Akun yang terhubung dapat menyinkronkan data itu ke cloud. Penyimpanan perangkat dan keberhasilan sinkronisasi adalah dua kondisi berbeda.
 
 ## Apa yang disimpan

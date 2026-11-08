@@ -7,15 +7,15 @@ Yomirra memakai Vitest + Testing Library untuk automated tests dan browser/devic
 ```bash
 pnpm typecheck
 pnpm lint
-pnpm test --run
+pnpm test -- --run
 pnpm build
 git diff --check
 ```
 
-Untuk loop cepat:
+`pnpm test` tanpa `-- --run` membuka mode watch. Untuk loop cepat:
 
 ```bash
-pnpm vitest run path/to/file.test.ts
+pnpm exec vitest run path/to/file.test.ts
 ```
 
 ## Browser dari build production
@@ -27,6 +27,10 @@ pnpm exec playwright install chromium webkit
 pnpm build
 E2E_PRODUCTION_BUILD=1 pnpm exec playwright test --reporter=list
 ```
+
+Perintah assignment di atas memakai Bash. Pada PowerShell, jalankan `$env:E2E_PRODUCTION_BUILD = "1"` lalu `pnpm exec playwright test --reporter=list`. Tetapkan environment sebelum build/test; hentikan server lokal lama karena konfigurasi Playwright dapat memakai ulang server yang sudah berjalan. `--with-deps` pada instalasi browser dipakai CI Linux untuk dependency OS, bukan langkah universal Windows.
+
+CI memakai Node.js 22, pnpm 9, Redis 7.2 terisolasi, dan `pnpm test -- --run --maxWorkers=2` untuk mengendalikan memori runner. Workflow mengabaikan perubahan yang hanya menyentuh Markdown/`docs/`; tidak adanya run baru pada PR dokumentasi bukan bukti kegagalan atau kelulusan aplikasi. Untuk docs-only, periksa diff, tautan relatif/anchor, akurasi perintah, dan klaim terhadap implementation; jangan menjalankan probe produksi sebagai pemeriksaan dokumentasi.
 
 Suite PWA memakai service worker build production dan menanam entri raster serta SVG legacy untuk menguji jalur cache. Suite discovery memblokir service worker agar fixture API mencapai Playwright. Bukti Playwright WebKit berasal dari emulasi desktop dan mobile. Pengujian iOS fisik, BrowserStack, dan Firebase lintas perangkat memerlukan lingkungan terpisah.
 
@@ -186,7 +190,7 @@ Uji otomatis dengan Firebase/cache simulasi bukan pengganti pengujian dua akun p
 
 ## Acceptance cleanup dan layanan nyata
 
-Matriks ini mempertahankan skenario dari PR #60 (`b3d383d`) dan memperbarui ekspektasi retensi serta hasil delete parsial. Baseline implementasi konsolidasi ada pada [PR #65](https://github.com/rzqllh/Yomirra/pull/65), masih draft; hasil CI harus sesuai SHA akhir. Semua skenario layanan/perangkat di bawah **belum dijalankan dalam cleanup ini**.
+Matriks ini mempertahankan skenario dari PR #60 (`b3d383d`) dan memperbarui ekspektasi retensi serta hasil delete parsial. [PR #65](https://github.com/rzqllh/Yomirra/pull/65) adalah rujukan historis implementasi konsolidasi, bukan pernyataan status PR saat ini. Matriks ini adalah rencana acceptance, bukan catatan kelulusan. Catat hasil layanan/perangkat dan CI pada SHA yang benar-benar diuji.
 
 Gunakan dua akun uji A/B dan dua profil atau perangkat terpisah dengan data sintetis. Simpan cadangan sebelum uji destruktif. Gunakan emulator atau proyek staging untuk memaksa gagal tulis; jangan ubah aturan Firebase atau data pengguna nyata. Catat langkah, hasil yang diharapkan/aktual, timestamp, versi aplikasi, SHA, lingkungan dan tautan bukti yang disanitasi. Jangan masukkan token, email, kredensial atau data pribadi ke log.
 
@@ -206,7 +210,7 @@ Gunakan dua akun uji A/B dan dua profil atau perangkat terpisah dengan data sint
 | A12 Logout | Coba opsi retensi lokal lalu login ulang dengan A/B | Hasil sesuai pilihan pengguna dan batas pemilik; data tidak bocor antar akun |
 | A13 Intent delete bertumpuk | Tunda delete, re-add/progres baru, lalu delete lagi; selesaikan permintaan dalam urutan berbeda | Kegagalan operasi lama tidak memulihkan data yang sudah sengaja dihapus atau menimpa data baru |
 
-Tes UI terarah: jalankan `pnpm vitest run src/components/app/__tests__/hero-and-header.test.tsx src/components/app/__tests__/shell-revamp-contract.test.tsx src/components/chrome/__tests__/responsive-visual-hierarchy.test.tsx`. Hero dan header harus membuka command menu lewat tombol dengan petunjuk platform. Tes rail memeriksa komponen nyata, landmark/current destination dan toggle; class reduced-motion hanya membuktikan deklarasi CSS, bukan hasil rendering animasi.
+Tes UI terarah: jalankan `pnpm exec vitest run src/components/app/__tests__/hero-and-header.test.tsx src/components/app/__tests__/shell-revamp-contract.test.tsx src/components/chrome/__tests__/responsive-visual-hierarchy.test.tsx`. Hero dan header harus membuka command menu lewat tombol dengan petunjuk platform. Tes rail memeriksa komponen nyata, landmark/current destination dan toggle; class reduced-motion hanya membuktikan deklarasi CSS, bukan hasil rendering animasi.
 
 Untuk browser, jalankan `pnpm exec playwright test e2e/user-flows-regression.spec.ts` dengan server/config yang sesuai. Fixture memakai persistence history v2, timestamp numerik, `mangaTitle`, `pageIndex` dan ID per chapter. Periksa guidance tanpa history, judul/chapter pada shelf, tautan reader dan urutan shelf sebelum discovery. Tidak ada peningkatan timeout sebagai pengganti diagnosis.
 

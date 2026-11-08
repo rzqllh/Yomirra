@@ -1,26 +1,34 @@
 # Dokumentasi Yomirra
 
-Untuk perilaku penyimpanan pengguna, mulai dari [Riwayat, sinkronisasi, dan cadangan](READING_DATA.md).
+Mulai dari [README proyek](../README.md) untuk gambaran produk. Pilih panduan berdasarkan pekerjaan berikutnya.
 
-Folder ini berisi dokumentasi publik untuk contributor dan maintainer. Untuk overview produk, mulai dari [README](../README.md).
+## Untuk pembaca
 
-## Peta dokumen
+| Tujuan | Panduan |
+| --- | --- |
+| Cari judul, baca, simpan, pindah sumber, atau pasang PWA | [Panduan pembaca](USER_GUIDE.md) |
+| Sumber/gambar gagal, offline bermasalah, atau perlu melaporkan bug | [Bantuan dan FAQ](TROUBLESHOOTING.md) |
+| Pindah perangkat, ekspor/pulihkan, atau memahami cloud sync | [Data bacaan dan cadangan](READING_DATA.md) |
+| Laporkan kerentanan atau masalah hak konten | [Security](../SECURITY.md) · [Hak konten](CONTENT_RIGHTS_REPORTING.md) |
 
-- [Architecture](ARCHITECTURE.md) — boundary runtime, source flow, cache Redis, circuit breaker, command budget, dan state ownership.
-- [Components](COMPONENTS.md) — reusable UI contract, bottom dock capsule geometry, dan feature boundary.
-- [Design](DESIGN.md) — design system, layout, typography, motion, dan overlay rules.
-- [Identity](IDENTITY.md) — SavedTitle, linked source, history, dan source migration.
-- [Schema](SCHEMA.md) — domain types, stores, API contract, dan persistence notes.
-- [Stack](STACK.md) — package dan runtime choices.
-- [Testing](TESTING.md) — verification gate dan risk-based testing.
-- [Adding a Source](ADDING_A_SOURCE.md) — built-in adapter dan dynamic source.
-- [Reading Data](READING_DATA.md) — retensi data lokal, backup engine, dan sinkronisasi.
-- [Developer Guide](README_DEV.md) — onboarding developer.
-- [Reference & Licensing](REFERENCE_LICENSING_REVIEW.md) — referensi independen dan batas lisensi.
-- [Contributing](../CONTRIBUTING.md)
-- [Security](../SECURITY.md)
-- [Laporan hak konten](CONTENT_RIGHTS_REPORTING.md)
-- [Changelog](../CHANGELOG.md)
+## Untuk contributor
+
+Mulai dari [Developer Guide](README_DEV.md), [Contributing](../CONTRIBUTING.md), dan [Testing](TESTING.md).
+
+- [Architecture](ARCHITECTURE.md) — runtime, client/server boundary, sumber, cache, dan state.
+- [Adding a Source](ADDING_A_SOURCE.md) — adapter, manifest, normalisasi, dan pengujian sumber.
+- [Identity](IDENTITY.md) — identitas judul, linked source, riwayat, dan migrasi.
+- [Schema](SCHEMA.md) — types, store, persistence, dan kontrak API.
+- [Stack](STACK.md) — dependency dan perannya.
+- [Components](COMPONENTS.md) · [Design](DESIGN.md) — komponen, layout, motion, dan overlay.
+- [Reference & Licensing](REFERENCE_LICENSING_REVIEW.md) — referensi produk dan batas penggunaan ulang.
+- [Changelog](../CHANGELOG.md) — perubahan repository dan batas verifikasi yang dicatat saat perubahan.
+
+## Untuk maintainer dan operasi
+
+[Architecture: cache dan Redis](ARCHITECTURE.md#9-cache-dan-redis) menjelaskan liveness versus readiness. [Testing](TESTING.md) memuat pemeriksaan Redis, sumber, browser, dan perangkat. Ikuti instruksi environment terisolasi sebelum menjalankan pemeriksaan yang melakukan mutasi.
+
+Folder `ops/`, `handoff/`, `internal/`, dan catatan bertanggal menyimpan bukti atau konteks pekerjaan tertentu. Status insiden, draft PR, dan gate di dalamnya adalah catatan pada waktunya, bukan status layanan saat ini atau panduan pembaca. Bukti baru dicatat terpisah; riwayat tidak dihapus untuk membuat status terlihat hijau.
 
 ## Source of truth
 

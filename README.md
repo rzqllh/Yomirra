@@ -1,168 +1,70 @@
 # Yomirra
 
-Yomirra adalah web reader komik multi-source yang mendukung manga, manhwa, manhua, dan jenis komik lainnya. Tujuannya sederhana: pencarian, library, progress baca, dan reader tetap berada di satu aplikasi walaupun sumber kontennya berbeda-beda atau berubah.
+Yomirra adalah web reader manga, manhwa, dan manhua dari beberapa sumber. Cari judul, simpan ke Rak Buku, dan lanjutkan bacaan di satu aplikasi.
 
-**Aplikasi:** https://www.yomirra.web.id/
+**[Buka Yomirra](https://www.yomirra.web.id/)** · [Panduan pembaca](docs/USER_GUIDE.md) · [Bantuan](docs/TROUBLESHOOTING.md) · [Dokumentasi](docs/README.md)
 
-> Yomirra masih aktif dikembangkan. Ketersediaan judul dan source mengikuti layanan pihak ketiga yang dipakai.
+Yomirra masih aktif dikembangkan. Katalog, bahasa, kelengkapan chapter, dan ketersediaan gambar mengikuti layanan sumber pihak ketiga.
 
-## Yang sudah tersedia
+## Mulai membaca
 
-### Multi-source search
+1. Cari judul dari Beranda atau Search. Coba judul alternatif atau `#tag` untuk mempersempit hasil.
+2. Pilih sumber yang tersedia, buka detail komik, lalu pilih chapter.
+3. Gunakan tombol bookmark agar judul muncul di **Rak Buku**. Kunjungi **Lanjut Baca** di Beranda untuk meneruskan progres yang tersimpan.
+4. Buka **Pengaturan** untuk tema, prioritas bahasa, serta ekspor cadangan. Akun bersifat opsional untuk sinkronisasi yang didukung.
 
-Search berjalan ke beberapa source dan menggabungkan hasil yang terdeteksi sebagai judul yang sama.
+## Kemampuan dan batasnya
 
-Fitur search saat ini mencakup:
+| Kebutuhan | Yang tersedia | Batas yang perlu diketahui |
+| --- | --- | --- |
+| Menemukan bacaan | Pencarian lintas sumber, judul alternatif, tag/filter, discovery, dan rekomendasi tanpa AI | Hasil dan filter mengikuti kemampuan sumber; kecocokan judul dapat ambigu |
+| Mengatur koleksi | Bookmark, riwayat, koleksi buatan sendiri, dan Smart Collections dari data lokal | **Library** adalah penjelajahan katalog; **Rak Buku** adalah bacaan pribadi |
+| Melanjutkan bacaan | Progres halaman, navigator chapter, arah vertikal/LTR/RTL, preferensi per judul atau semua komik | Perbedaan penomoran chapter antar sumber dapat memerlukan pilihan manual |
+| Memulihkan sumber | Status layanan, kelompok **Under Maintenance**, dan pencarian sumber alternatif | Tidak menjamin judul tersedia atau progres dapat dipetakan otomatis |
+| Membaca offline | Antrean unduhan pada PWA standalone dan pembacaan unduhan yang memenuhi klasifikasi aman | Browser biasa mengunduh ZIP; cache dapat dibuang perangkat |
+| Menjaga data | Penyimpanan lokal, ekspor/pulihkan JSON, dan sinkronisasi Firebase opsional | Gambar unduhan tidak masuk cadangan/cloud sync; status baca masih lokal |
 
-- canonical title matching lintas source;
-- alternate/original title matching;
-- `#tag` untuk genre, format, dan status;
-- alias Indonesia/English untuk tag;
-- typo handling dan lexical/fuzzy ranking;
-- filter mapping ke nilai yang dimengerti masing-masing source;
-- optional semantic ranking bila `GEMINI_API_KEY` tersedia.
+Pilihan penjelajahan di **Sumber** berlaku untuk Beranda, Library, dan Populer. Pencarian global tetap memakai sumber yang tersedia terlepas dari toggle penjelajahan. Status layanan berbeda dari preferensi tersebut.
 
-Search global tidak mengikuti toggle penjelajahan di Beranda/Library/Populer. Source yang benar-benar unavailable tetap dikeluarkan dari pencarian. Pada halaman Sumber, status layanan dan preferensi penjelajahan ditampilkan sebagai dua hal yang berbeda: source dapat tetap dipilih pengguna walaupun sementara sedang bermasalah.
+Progres lokal tetap tersedia saat sinkronisasi gagal. Menghapus data situs atau kehilangan perangkat dapat menghilangkan data yang belum dicadangkan. Baca [data bacaan dan cadangan](docs/READING_DATA.md) sebelum memindahkan perangkat atau membersihkan penyimpanan.
 
-### Beranda dan discovery
+PWA, offline, gestur, dan penyimpanan bergantung pada browser serta perangkat. Implementasi dan tes otomatis tidak menjamin semua alur telah lulus di iPhone/iPad fisik atau dua perangkat dengan Firebase. [Panduan pengujian](docs/TESTING.md) membedakan pemeriksaan otomatis dan manual.
 
-Beranda memprioritaskan komik dan mengadaptasi hierarki tampilan sesuai status riwayat: pembaca yang kembali (*returning reader*) memperoleh prioritas `Lanjut Baca` tepat di bawah baris pencarian global untuk melanjutkan milestone membaca secara instan (Q52 & Q63). Bagi pembaca tanpa riwayat (*zero-history*), Beranda memprioritaskan Discovery dengan langsung menyajikan `Sorotan terbaru` dan peringkat per sumber tanpa kotak kosong, disertai kartu pengenalan Rak Buku ringkas. Toggle penjelajahan pada halaman Sumber berlaku konsisten ke Beranda, Library, dan Populer; Search tetap independen.
+## Bantuan dan laporan
 
-Sorotan menjaga variasi sumber lebih dulu, menghindari penggabungan judul lintas sumber bila identitasnya belum cukup pasti, dan menghormati `prefers-reduced-motion`. Top 5 di Beranda tetap source-scoped. Halaman Populer menyediakan data peringkat resmi MyAnimeList (MAL) live dengan klasifikasi aman (`safeOnly` terfilter `white`), dilengkapi opsi fallback native per source dan mode gabungan dengan source pills.
+Mulai dari [pemecahan masalah](docs/TROUBLESHOOTING.md) untuk sumber gagal, halaman kosong, unduhan, dan sinkronisasi. Laporkan bug melalui [GitHub Issues](https://github.com/rzqllh/Yomirra/issues) dengan langkah reproduksi dan informasi perangkat yang sudah disanitasi.
 
-### Library, Rak Buku, dan progress
-
-Judul yang disimpan memakai identitas yang tidak bergantung pada satu source saja. Satu judul dapat memiliki primary source dan linked source, sehingga relink atau migrasi source tidak harus memutus library dan progress baca.
-
-Rak Buku menyediakan:
-
-- sedang dibaca dan riwayat;
-- bookmark;
-- koleksi buatan user;
-- Smart Collections yang dihitung dari state lokal, seperti Lanjut Dibaca, Belum Dibaca, Baru Ditambahkan, Rating Tinggi, dan Lama Tidak Dibuka.
-
-Smart Collections tidak membuat salinan membership baru. Isinya dihitung dari Library dan reading history.
-
-**Cloud Sync (opsional)** memakai Firebase untuk menyelaraskan Library, riwayat baca, preferensi sumber, dan koleksi buatan pengguna saat akun tersedia. Penghapusan Library dan riwayat memakai penanda penghapusan (*tombstone*) agar data lama tidak muncul kembali dari perangkat lain. Kegagalan sync manual dilaporkan sebagai kegagalan, bukan keberhasilan.
-
-Bookmark hanya ditambahkan lewat tindakan menyimpan yang eksplisit; rating atau koleksi tidak otomatis membuat bookmark. Status baca `readingStatusByManga` masih lokal, bukan bagian dari Cloud Sync. Sinkronisasi dua perangkat nyata tetap memerlukan uji manual.
-
-### Rekomendasi
-
-Rekomendasi utama bersifat deterministic dan tidak membutuhkan AI. Ranking menggunakan sinyal yang sudah ada, seperti source, format, rating user, status, dan riwayat baca.
-
-Judul yang sedang dibuka, sudah disimpan, atau sudah dibaca tidak diprioritaskan sebagai rekomendasi baru.
-
-### Source recovery
-
-Jika source utama bermasalah, Yomirra dapat mencari source alternatif untuk judul yang sama. Relink tidak dilakukan secara agresif untuk match yang ambigu, dan progress lama tetap dipertahankan bila chapter tidak bisa dipetakan dengan aman.
-
-Sumber yang gagal berulang muncul di kelompok **Under Maintenance** di halaman Sumber, dengan alasan dan status pemeriksaan. Sumber tersebut dijeda dari katalog dan pencarian default hingga pemeriksaan berhasil. Tautan judul yang sudah tersimpan tetap bisa dibuka saat layanan sumber mengizinkan. Saat sebagian sumber gagal, Beranda menampilkan hasil yang tersedia terlebih dahulu dan menaruh pemberitahuan serta pilihan pemulihan di bawah katalog.
-
-### Reader dan offline
-
-Reader mendukung chapter berbasis gambar, progress baca, chapter navigator, preferensi reader, serta download/offline flow pada browser yang mendukung. Halaman dimuat bertahap dari posisi baca. Gestur zoom mengikuti pengaturan browser dan perangkat. Untuk format vertikal (webtoon), Reader menyediakan continuous scrubber 0–100% berbasis posisi scroll riil tanpa dot circle berlebih, sementara mode paginasi (LTR/RTL) tetap mempertahankan navigasi halaman diskrit. Kanvas Reader menggunakan dark loading minimal yang menghormati `prefers-reduced-motion` dan menghilangkan efek layout jump dari skeleton komik palsu.
-
-Navigasi reader menjaga parent page secara eksplisit: perpindahan detail → reader dan antar-chapter tidak meninggalkan reader route lama di belakang tombol kembali, sehingga keluar ke detail lalu kembali lagi mengarah ke halaman asal, bukan ke reader sebelumnya.
-
-Offline dan PWA bergantung pada kemampuan browser, Service Worker, dan storage perangkat. Tampilan PWA terintegrasi penuh dengan safe-area iOS Safari dan sinkronisasi canonical theme-color (`#eef0f5` untuk light, `#090a0f` untuk dark). Cadangan data (backup & restore) beroperasi 100% secara offline berbasis berkas JSON terenkapsulasi dengan validasi skema Zod.
-
-Riwayat menyimpan 512 entri chapter dengan detail lengkap, lalu mempertahankan ringkasan posisi terakhir dan milestone tiap judul. Progres lokal tetap dipertahankan ketika cloud gagal. Untuk aturan retensi, backup, pemulihan, dan batas offline, baca [panduan data bacaan](docs/READING_DATA.md). Penghapusan otomatis setelah tiga bulan belum aktif.
-
-Unduhan eksplisit tidak terus menjadwalkan pemrosesan saat antrian kosong. Unduhan yang tertunda dengan URL lama mengambil ulang daftar halaman saat sumber dapat dijangkau. Cache menyimpan gambar raster yang sudah diunduh. Buka halaman Unduhan saat terhubung agar shell tersedia ketika offline. Browser dapat menghapus penyimpanan lokal jika kuota terlampaui. Perangkat iOS fisik tetap memerlukan verifikasi terpisah.
-
-### Motion dan navigasi
-
-Motion memakai semantic tokens bersama untuk page transition, layout spring, press feedback, dan delayed navigation feedback. Fast route transition tidak memunculkan loader sesaat; bila navigasi cukup lama, progress tipis baru muncul setelah delay singkat sementara skeleton tetap dimiliki route `loading.tsx`.
-
-Back/Forward tidak dioverride dengan scroll restoration custom. Browser history tetap menjadi sumber utama untuk scroll restoration, sedangkan reader progress disimpan terpisah dari scroll halaman aplikasi.
-
-Stateful icon morphing dibatasi melalui wrapper internal yang menghormati `prefers-reduced-motion`; package animasi tidak diimport langsung dari feature components dan tidak dipakai untuk identitas route/navigation yang harus stabil.
-
-## Arsitektur internal
-
-UI utama dipisahkan menurut ownership: `chrome` untuk shell/navigation, `overlays` untuk overlay lintas halaman, `home` untuk Beranda, dan `komik` untuk presentasi manga/manhwa/manhua. Nama internal `Manga*` yang sudah menjadi contract tetap dipertahankan, begitu juga public route `/manga/*` agar deep link dan bookmark tidak berubah.
-
-Client code hanya memakai contract browser-safe dari `src/shared/`; adapter, Redis, credential, dan service privileged tetap berada di `src/server/`. Import production mengarah langsung ke module pemiliknya sehingga tidak bergantung pada legacy folder atau barrel tanpa consumer.
-
-## Source bawaan
-
-Yomirra memiliki beberapa adapter source bawaan dan mendukung konfigurasi source runtime. Daftar source, status availability, dan kemampuan masing-masing source ditampilkan oleh aplikasi pada saat runtime agar dokumentasi publik tidak bergantung pada nama provider yang dapat berubah.
-
-Source dapat berubah status atau berhenti bekerja tanpa perubahan di Yomirra.
-
-## Search intelligence dan AI
-
-AI bukan dependency untuk fungsi utama Yomirra.
-
-Tanpa `GEMINI_API_KEY`, search tetap menyediakan tag parsing, canonical filters, typo handling, lexical ranking, dan multi-source search biasa.
-
-Jika `GEMINI_API_KEY` tersedia, Yomirra dapat menggunakan embedding untuk semantic ranking. Catalog semantic hanya menyimpan metadata manga publik yang ditemukan saat penggunaan normal; library, history, progress baca, dan data akun tidak dimasukkan ke catalog tersebut.
-
-## Cache dan ketersediaan
-
-Redis bersifat opsional untuk feed, pencarian, dan Reader. Saat cache tidak tersedia atau kuotanya habis, pembacaan publik mencoba langsung ke sumber, yang tetap dapat membatasi akses atau menolak request. Mutasi yang memerlukan penyimpanan durabel tetap gagal tertutup bila Redis tidak dapat menjamin penulisan. Cache publik membatasi pembacaan berulang dengan deduplikasi dan cache memori per instance maksimal 10 detik; sinkronisasi konfigurasi antarisolate dapat tertunda sampai 10 detik.
-
-Bottom dock mobile memakai radius kapsul penuh untuk shell, tombol Search, dan tab aktif, dengan target sentuh minimal 44px dan gutter mengikuti safe-area perangkat. Ini pengecualian komponen, bukan perubahan token radius global.
-
-Gunakan `GET /api/health/live` untuk memeriksa apakah proses aplikasi merespons. `GET /api/health` memeriksa kesiapan Redis dan mengembalikan 503 jika Redis tidak tersedia atau belum dikonfigurasi. Preview tanpa `REDIS_URL` masih dapat melayani alur publik. Detailnya di [Architecture](docs/ARCHITECTURE.md) dan [Testing](docs/TESTING.md).
-
-## Security dan reliability
-
-Boundary privileged tetap berada di server:
-
-- admin API memakai authorization server-side dan browser admin memakai session bertanda tangan, HttpOnly, dan berumur pendek; raw passkey tidak disimpan di browser storage;
-- reusable upstream credential dibaca dari environment server-only dan konfigurasi yang hilang gagal tertutup pada saat request upstream tanpa menjatuhkan registry source lain;
-- route yang mahal atau sensitif memakai rate-limit namespace terpisah: mutation admin dan optional expensive compute gagal tertutup bila limiter tidak tersedia, sedangkan public search/image delivery mempertahankan availability dengan policy fail-open;
-- rate limiting yang fail-closed menunggu readiness Redis secara terbatas pada cold-start; policy fail-open publik tidak menunggu saat Redis belum siap, lalu kembali menghitung limit normal setelah client siap;
-- browser response memakai baseline Content Security Policy dalam mode report-only untuk mengamati compatibility Next.js, Firebase, remote assets, dan PWA sebelum enforcement;
-- generic public error surfaces tidak menampilkan raw exception/upstream error; detail diagnosis tetap dicatat melalui jalur server/log yang disanitasi;
-- logger men-sanitasi authorization header, cookie, token, secret, API key, signature, signed URL, dan field sensitif lain sebelum ditulis ke log.
-
-Detail threat boundary dan aturan implementasi ada di [Security Policy](SECURITY.md).
+Untuk kerentanan, ikuti [Security Policy](SECURITY.md). Untuk dugaan masalah hak konten, gunakan [panduan laporan hak konten](docs/CONTENT_RIGHTS_REPORTING.md). Jangan mengirim token, cookie, cadangan pribadi, atau data akun ke issue publik.
 
 ## Menjalankan secara lokal
 
-Butuh Node.js yang kompatibel dengan Next.js 16 dan pnpm.
+Gunakan Node.js **22** dan pnpm **9** untuk mengikuti versi mayor di CI. Repository belum menetapkan `engines` atau `packageManager`; dependency mengikuti [package.json](package.json) dan lockfile.
 
 ```bash
-pnpm install
-cp .env.example .env
+pnpm install --frozen-lockfile
+```
+
+Salin `.env.example` menjadi `.env` (`cp .env.example .env` pada Bash atau `Copy-Item .env.example .env` pada PowerShell). Isi konfigurasi lokal yang diperlukan; ganti placeholder `IMAGE_PROXY_SECRET` dengan secret lokal acak minimal 32 karakter. Jangan memakai kredensial produksi untuk pengembangan.
+
+```bash
 pnpm dev
 ```
 
-Verifikasi penuh:
+Buka `http://localhost:3000`. Public browsing dapat mencoba sumber tanpa Redis; akun/sync, operasi admin, dan layanan opsional memerlukan konfigurasi masing-masing. Detail setup, kategori environment, serta readiness ada di [Developer Guide](docs/README_DEV.md).
+
+Pemeriksaan kode:
 
 ```bash
 pnpm typecheck
 pnpm lint
-pnpm test --run
+pnpm test -- --run
 pnpm build
 ```
 
-Lihat [Developer Guide](docs/README_DEV.md) untuk struktur project dan [Adding a Source](docs/ADDING_A_SOURCE.md) untuk integrasi source.
+Lihat [Contributing](CONTRIBUTING.md), [Adding a Source](docs/ADDING_A_SOURCE.md), dan [peta dokumentasi](docs/README.md) untuk pekerjaan berikutnya.
 
-## Dokumentasi
+## Referensi dan lisensi
 
-- [Architecture](docs/ARCHITECTURE.md)
-- [Components](docs/COMPONENTS.md)
-- [Design](docs/DESIGN.md)
-- [Identity](docs/IDENTITY.md)
-- [Schema](docs/SCHEMA.md)
-- [Stack](docs/STACK.md)
-- [Testing](docs/TESTING.md)
-- [Adding a Source](docs/ADDING_A_SOURCE.md)
-- [Reading Data & Backup](docs/READING_DATA.md)
-- [Reference & Licensing](docs/REFERENCE_LICENSING_REVIEW.md)
-- [Contributing](CONTRIBUTING.md)
-- [Security](SECURITY.md)
-- [Laporan hak konten](docs/CONTENT_RIGHTS_REPORTING.md)
-- [Changelog](CHANGELOG.md)
+Yomirra adalah proyek independen. Mihon, Tachimanga, dan reader lain menjadi referensi alur penggunaan; penyebutan tersebut tidak menyatakan afiliasi, endorsement, atau kesetaraan fitur. [Tinjauan referensi dan lisensi](docs/REFERENCE_LICENSING_REVIEW.md) menjelaskan batas inspirasi dan penggunaan ulang karya.
 
-## Disclaimer
-
-Yomirra adalah reader interface independen. Konten, artwork, manga, manhwa, manhua, dan jenis komik lainnya yang ditampilkan berasal dari layanan pihak ketiga dan tetap menjadi milik pemegang hak masing-masing.
-
-Penggunaan source pihak ketiga mengikuti aturan dan ketersediaan layanan tersebut. Yomirra tidak menjamin source tertentu akan selalu tersedia.
-
-Untuk dugaan masalah hak konten, gunakan [panduan dan formulir laporan](docs/CONTENT_RIGHTS_REPORTING.md). Lisensi kode aplikasi tidak memberikan hak atas materi sumber pihak ketiga.
+Kode yang dicakup [LICENSE](LICENSE) menggunakan Apache-2.0. Lisensi itu tidak memberi hak atas chapter, terjemahan, cover, artwork, logo, atau materi pihak ketiga. Akses dan penggunaan konten mengikuti hak pemilik serta ketentuan layanan sumber. [Changelog](CHANGELOG.md) mencatat perubahan repository; kesiapan perangkat, layanan, dan legal memerlukan bukti terpisah.

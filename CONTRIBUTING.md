@@ -25,11 +25,14 @@ refactor/filter-controller
 
 ## Setup lokal
 
+Ikuti [Developer Guide](docs/README_DEV.md) untuk Node.js 22/pnpm 9, salinan `.env`, dan konfigurasi sesuai fitur. Setelah environment lokal siap:
+
 ```bash
-pnpm install
-cp .env.example .env
+pnpm install --frozen-lockfile
 pnpm dev
 ```
+
+Untuk bug penggunaan, ikuti [panduan laporan](docs/TROUBLESHOOTING.md#melaporkan-bug). Kerentanan mengikuti [Security Policy](SECURITY.md); masalah hak konten memakai [kanal hak konten](docs/CONTENT_RIGHTS_REPORTING.md).
 
 ## Prinsip perubahan
 
@@ -78,7 +81,7 @@ Untuk perubahan broad atau release-sensitive:
 ```bash
 pnpm typecheck
 pnpm lint
-pnpm test --run
+pnpm test -- --run
 pnpm build
 git diff --check
 ```
@@ -121,3 +124,7 @@ Kontribusi mengikuti Apache License 2.0. Jangan mengirim source code, credential
 ## Perubahan data pengguna
 
 Perubahan history, library, atau backup harus menyertakan regresi untuk data lama dan pemulihan. Ikuti [kontrak data bacaan](docs/READING_DATA.md), perbarui public docs serta tracker dalam PR yang sama, dan pisahkan bukti CI dari pengujian layanan atau perangkat nyata.
+
+## Asal kode dan materi pihak ketiga
+
+Implementasikan ide referensi secara independen. Jika PR memakai ulang kode, patch, terjemahan, gambar, atau aset, cantumkan asal, versi/commit, lisensi, perubahan, serta notice yang perlu dipertahankan. Jangan menyalin materi hanya karena repository atau situsnya publik. Nama referensi bukan izin penggunaan ulang; baca [tinjauan referensi dan lisensi](docs/REFERENCE_LICENSING_REVIEW.md). Lisensi aplikasi tidak mencakup hak konten sumber pihak ketiga.
