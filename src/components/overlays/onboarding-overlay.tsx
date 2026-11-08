@@ -5,7 +5,7 @@ import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { useOnboardingStore } from "@/shared/store/onboarding-store";
 import { cn } from "@/shared/utils/cn";
 import { usePWAInstall } from "@/shared/hooks/use-pwa-install";
-import { ArrowRight, ArrowLeft, DownloadSimple, Export, PlusSquare, Sparkle, Lightning, BookOpen, BookmarkSimple, Keyboard } from "@phosphor-icons/react";
+import { ArrowRight, ArrowLeft, DownloadSimple, Export, PlusSquare, Keyboard } from "@phosphor-icons/react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 interface OnboardingStep {
@@ -17,51 +17,38 @@ interface OnboardingStep {
   creator: string;
   glowColor: string;
   tip: string;
-  features: { icon: React.ElementType; text: string }[];
 }
 
 const STEPS: OnboardingStep[] = [
   {
     eyebrow: "SEMUA SUMBER, SATU PINTU",
-    title: "Jelajahi komik lintas sumber.",
-    desc: "Baca manga, manhwa, dan manhua dari penyedia favorit di satu tempat. Tanpa iklan pop-up dan tanpa repot bolak-balik banyak tab.",
+    title: "Jelajahi komik lintas sumber",
+    desc: "Baca manga, manhwa, dan manhua dari penyedia favorit di satu tempat. Tanpa iklan pop-up yang mengganggu dan tanpa repot bolak-balik banyak tab.",
     artwork: "/covers/cover-1.webp",
     series: "Solo Leveling",
     creator: "DUBU (REDICE STUDIO)",
-    glowColor: "rgba(99, 102, 241, 0.18)",
+    glowColor: "var(--color-accent)",
     tip: "Gunakan tombol panah keyboard ← → untuk navigasi cepat",
-    features: [
-      { icon: Lightning, text: "Agregasi multi-sumber tanpa tab berantakan" },
-      { icon: Sparkle, text: "Bebas iklan pop-up dan pengalihan link" },
-    ],
   },
   {
     eyebrow: "KUSTOMISASI & KENYAMANAN",
-    title: "Baca komik dengan caramu.",
+    title: "Baca komik dengan caramu",
     desc: "Dukungan mode gulir vertikal panjang atau balik halaman per halaman. Riwayat dan posisi bab terakhir selalu tersimpan otomatis.",
     artwork: "/covers/cover-2.webp",
     series: "Nano Machine",
     creator: "Gugwo / Jeol-Moo Hyeon",
-    glowColor: "rgba(220, 38, 38, 0.16)",
+    glowColor: "var(--color-accent)",
     tip: "Mode baca dapat diubah kapan saja di menu pembaca",
-    features: [
-      { icon: BookOpen, text: "Mode gulir vertikal & baca per halaman" },
-      { icon: Sparkle, text: "Riwayat progres tersinkronisasi otomatis" },
-    ],
   },
   {
     eyebrow: "SIAP MEMBACA",
-    title: "Temukan bacaan berikutnya.",
+    title: "Temukan bacaan berikutnya",
     desc: "Simpan serial favorit ke rak buku pribadi, pantau rilis bab terbaru, atau langsung mulai membaca rekomendasi terpopuler hari ini.",
     artwork: "/covers/cover-3.webp",
     series: "Omniscient Reader",
     creator: "Sleepy-C / sing N song",
-    glowColor: "rgba(14, 165, 233, 0.18)",
+    glowColor: "var(--color-accent)",
     tip: "Koleksi tersimpan aman di perangkat dan siap dibaca",
-    features: [
-      { icon: BookmarkSimple, text: "Rak buku pribadi & pemantau rilis baru" },
-      { icon: Lightning, text: "Akses cepat langsung siap dibaca" },
-    ],
   },
 ];
 
@@ -200,14 +187,15 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
       animate={{ opacity: 1 }}
       exit={reducedMotion ? { opacity: 1 } : { opacity: 0, scale: 0.99 }}
       transition={reducedMotion ? { duration: 0 } : { duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-      className="fixed inset-0 z-[9000] flex min-h-dvh flex-col justify-between overflow-y-auto bg-surface-base text-text-primary selection:bg-accent/20"
+      className="fixed inset-0 z-[var(--z-takeover)] flex min-h-dvh flex-col justify-between overflow-y-auto bg-surface-base text-text-primary selection:bg-accent/20"
     >
       {/* Dynamic Ambient Color Glow */}
       <div
         aria-hidden="true"
         className="pointer-events-none fixed inset-0 overflow-hidden transition-colors duration-700"
         style={{
-          background: `radial-gradient(circle at 35% 45%, ${current.glowColor}, transparent 65%)`,
+          background: `radial-gradient(circle at 35% 45%, ${current.glowColor}, transparent 70%)`,
+          opacity: 0.12,
         }}
       />
 
@@ -223,14 +211,9 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
               className="w-full h-full object-cover rounded-lg select-none"
             />
           </div>
-          <div className="flex flex-col">
-            <span className="font-extrabold tracking-tight text-base sm:text-lg text-text-primary leading-tight">
-              Yomirra
-            </span>
-            <span className="text-[10px] font-semibold text-text-muted tracking-wider uppercase">
-              Pembaca Komik
-            </span>
-          </div>
+          <span className="font-extrabold tracking-tight text-base sm:text-lg text-text-primary leading-tight">
+            Yomirra
+          </span>
         </div>
 
         <button
@@ -247,49 +230,43 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
         </button>
       </header>
 
-      {/* Central Interactive Showcase Stage — Fully Locked Dimensions to prevent layout shift */}
+      {/* Central Interactive Showcase Stage */}
       <main className="relative z-10 mx-auto my-auto flex w-full max-w-5xl flex-1 items-center justify-center px-6 py-6 sm:px-10">
         <div className="grid w-full grid-cols-1 md:grid-cols-2 gap-8 md:gap-14 lg:gap-16 items-center">
           
-          {/* Left Column: Physical 3D Manga Volume Presentation (Strictly Fixed Dimensions) */}
+          {/* Left Column: Physical 3D Manga Volume Presentation */}
           <div
             aria-hidden="true"
-            className="relative flex items-center justify-center py-4 md:py-6"
+            className="relative flex flex-col items-center justify-center py-4 md:py-6"
           >
             {/* The Manga Book Deck Container */}
-            <div className="relative w-[240px] sm:w-[270px] md:w-[300px] aspect-[2/3] perspective-1000">
+            <div className="relative w-56 sm:w-64 md:w-72 aspect-[2/3] perspective-1000">
               
               {/* Stacked Manga Volume 1 (Deep background layer) */}
               <div
                 className={cn(
                   "absolute inset-0 rounded-2xl bg-gradient-to-tr from-surface-muted to-surface-raised border border-border-default/80 shadow-md transition-all duration-500",
-                  step === 0 && "-translate-x-5 translate-y-3 -rotate-6 opacity-60 scale-[0.93]",
-                  step === 1 && "-translate-x-6 translate-y-4 -rotate-8 opacity-70 scale-[0.93]",
-                  step === 2 && "-translate-x-4 translate-y-2 -rotate-5 opacity-60 scale-[0.93]"
+                  step === 0 && "-translate-x-5 translate-y-3 -rotate-6 opacity-60 scale-95",
+                  step === 1 && "-translate-x-6 translate-y-4 -rotate-8 opacity-70 scale-95",
+                  step === 2 && "-translate-x-4 translate-y-2 -rotate-5 opacity-60 scale-95"
                 )}
               >
                 <div className="absolute inset-y-0 left-0 w-3.5 bg-gradient-to-r from-black/25 via-white/10 to-transparent rounded-l-2xl" />
-                <div className="absolute top-3 right-3 px-2 py-0.5 rounded-md bg-surface-overlay text-[9px] font-bold text-text-muted uppercase tracking-wider">
-                  Vol. 0{(step + 2) % 3 + 1}
-                </div>
               </div>
 
               {/* Stacked Manga Volume 2 (Middle background layer) */}
               <div
                 className={cn(
                   "absolute inset-0 rounded-2xl bg-gradient-to-tl from-surface-raised to-surface-hover border border-border-default shadow-lg transition-all duration-500",
-                  step === 0 && "translate-x-5 translate-y-2 rotate-6 opacity-70 scale-[0.96]",
-                  step === 1 && "translate-x-4 translate-y-1 rotate-5 opacity-60 scale-[0.96]",
-                  step === 2 && "translate-x-6 translate-y-3 rotate-7 opacity-70 scale-[0.96]"
+                  step === 0 && "translate-x-5 translate-y-2 rotate-6 opacity-70 scale-95",
+                  step === 1 && "translate-x-4 translate-y-1 rotate-5 opacity-60 scale-95",
+                  step === 2 && "translate-x-6 translate-y-3 rotate-7 opacity-70 scale-95"
                 )}
               >
                 <div className="absolute inset-y-0 left-0 w-3.5 bg-gradient-to-r from-black/25 via-white/10 to-transparent rounded-l-2xl" />
-                <div className="absolute top-3 right-3 px-2 py-0.5 rounded-md bg-surface-overlay text-[9px] font-bold text-text-muted uppercase tracking-wider">
-                  Vol. 0{(step + 1) % 3 + 1}
-                </div>
               </div>
 
-              {/* Foreground Active Manga Volume */}
+              {/* Foreground Active Manga Volume — Pure artwork without text collision */}
               <motion.div
                 key={step}
                 initial={
@@ -313,7 +290,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
                         damping: 26,
                       }
                 }
-                className="relative w-full h-full rounded-2xl overflow-hidden border border-white/20 dark:border-white/10 shadow-[0_24px_50px_-10px_rgba(0,0,0,0.32)] dark:shadow-[0_28px_65px_-12px_rgba(0,0,0,0.7)] bg-surface-raised cursor-default select-none"
+                className="relative w-full h-full rounded-2xl overflow-hidden border border-white/20 dark:border-white/10 shadow-xl bg-surface-raised cursor-default select-none"
               >
                 <img
                   src={current.artwork}
@@ -324,43 +301,38 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
 
                 {/* Physical Book Spine Gradient */}
                 <div className="absolute inset-y-0 left-0 w-4 bg-gradient-to-r from-black/50 via-white/15 to-transparent rounded-l-2xl pointer-events-none" />
-
-                {/* Bottom Vignette & Metadata */}
-                <div className="absolute inset-x-0 bottom-0 pt-12 pb-3.5 px-3.5 bg-gradient-to-t from-black/85 via-black/40 to-transparent pointer-events-none">
-                  <div className="flex items-end justify-between text-white">
-                    <div className="flex flex-col truncate pr-2">
-                      <span className="text-xs sm:text-sm font-bold truncate drop-shadow-md">
-                        {current.series}
-                      </span>
-                      <span className="text-[10px] text-white/75 truncate drop-shadow-sm font-medium">
-                        {current.creator}
-                      </span>
-                    </div>
-                    <span className="shrink-0 rounded-full bg-white/20 backdrop-blur-md border border-white/25 px-2.5 py-0.5 text-[10px] font-bold tracking-wider uppercase text-white shadow-xs">
-                      0{step + 1} / 0{STEPS.length}
-                    </span>
-                  </div>
-                </div>
               </motion.div>
+            </div>
+
+            {/* Volume Attribution & Counter — Cleanly Positioned Outside & Below Artwork */}
+            <div className="w-56 sm:w-64 md:w-72 mt-3 flex items-center justify-between px-1 text-text-muted text-xs">
+              <div className="flex items-center gap-1.5 truncate pr-2">
+                <span className="font-semibold text-text-secondary truncate">{current.series}</span>
+                <span className="text-text-muted select-none">·</span>
+                <span className="text-text-muted truncate">{current.creator}</span>
+              </div>
+              <span className="shrink-0 rounded-full bg-surface-raised border border-border-subtle px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-text-secondary">
+                0{step + 1} / 0{STEPS.length}
+              </span>
             </div>
           </div>
 
-          {/* Right Column: Editorial Copy & Unified Controls (Zero Layout Shift Architecture) */}
+          {/* Right Column: Editorial Copy & Unified Controls */}
           <div className="flex flex-col justify-center">
             
-            {/* Locked Content Container — Fixed Height Bounds */}
-            <div aria-live="polite" className="h-[260px] sm:h-[250px] flex flex-col justify-between">
+            {/* Content Container — Restored Natural Vertical Rhythm */}
+            <div aria-live="polite" className="flex flex-col gap-4 sm:gap-6 min-h-[190px] justify-center">
               
-              {/* Eyebrow Label (Fixed Height) */}
-              <div className="h-6 flex items-center gap-2">
+              {/* Eyebrow Label */}
+              <div className="flex items-center gap-2">
                 <span className="size-2 rounded-full bg-accent animate-pulse" />
-                <p className="text-xs font-bold tracking-[0.2em] text-accent uppercase">
+                <p className="text-xs font-bold tracking-wider text-accent uppercase">
                   {current.eyebrow}
                 </p>
               </div>
 
-              {/* Display Headline (Locked 2-line height) */}
-              <div className="h-[76px] sm:h-[84px] flex items-center">
+              {/* Display Headline */}
+              <div>
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.h1
                     key={step}
@@ -369,15 +341,15 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
                     animate={{ opacity: 1, y: 0 }}
                     exit={reducedMotion ? { opacity: 1 } : { opacity: 0, y: -6 }}
                     transition={reducedMotion ? { duration: 0 } : { duration: 0.18 }}
-                    className="text-balance text-3xl sm:text-4xl lg:text-[40px] font-extrabold leading-[1.12] tracking-tight text-text-primary"
+                    className="text-balance text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-[1.15] tracking-tight text-text-primary"
                   >
                     {current.title}
                   </motion.h1>
                 </AnimatePresence>
               </div>
 
-              {/* Description Body (Locked Height, Human Prose, No Webtoon Mention) */}
-              <div className="h-[52px] sm:h-[58px] flex items-center">
+              {/* Description Body — Human Editorial Prose (Deduped, No SaaS Bullets) */}
+              <div>
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.p
                     key={step}
@@ -392,40 +364,14 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
                   </motion.p>
                 </AnimatePresence>
               </div>
-
-              {/* Feature Checkpoints (Locked Height) */}
-              <div className="h-[58px] flex flex-col justify-center gap-2">
-                <AnimatePresence mode="wait" initial={false}>
-                  <motion.div
-                    key={step}
-                    initial={reducedMotion ? false : { opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={reducedMotion ? { opacity: 1 } : { opacity: 0 }}
-                    transition={reducedMotion ? { duration: 0 } : { duration: 0.18 }}
-                    className="flex flex-col gap-2"
-                  >
-                    {current.features.map((feat, idx) => {
-                      const Icon = feat.icon;
-                      return (
-                        <div key={idx} className="flex items-center gap-2.5 text-xs sm:text-sm font-medium text-text-secondary">
-                          <div className="size-5 rounded-md bg-accent/10 text-accent flex items-center justify-center shrink-0">
-                            <Icon size={12} weight="bold" />
-                          </div>
-                          <span className="truncate">{feat.text}</span>
-                        </div>
-                      );
-                    })}
-                  </motion.div>
-                </AnimatePresence>
-              </div>
             </div>
 
-            {/* Stable Action & Navigation Row — Fixed Position & Layout */}
-            <div className="mt-6 pt-4 border-t border-border-subtle/80 flex flex-col gap-3">
+            {/* Stable Action & Navigation Row — Strict Zero Clipping at 400px */}
+            <div className="mt-6 pt-5 border-t border-border-subtle flex flex-col gap-3">
               
-              <div className="h-12 flex items-center justify-between gap-4">
-                {/* Stepper Interactive Pills (Fixed touch targets) */}
-                <div className="flex items-center gap-1">
+              <div className="flex items-center justify-between gap-3 sm:gap-4">
+                {/* Stepper Interactive Pills (size-11 touch target maintained) */}
+                <div className="flex items-center gap-1 shrink-0">
                   {STEPS.map((_, i) => (
                     <button
                       key={i}
@@ -448,28 +394,28 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
                   ))}
                 </div>
 
-                {/* Predictable Navigation CTA Group — Strict Zero Shift Geometry */}
-                <div className="flex items-center gap-2.5">
-                  {/* Kembali Button: Always rendered in DOM to hold geometry, invisible on Step 0 */}
+                {/* Navigation CTA Group — Responsive Geometry, Zero Clipping on Mobile */}
+                <div className="flex items-center gap-2 sm:gap-3 flex-1 sm:flex-initial justify-end">
+                  {/* Kembali Button: Always renders with consistent geometry, hidden on Step 0 */}
                   <button
                     type="button"
                     onClick={handlePrev}
                     tabIndex={step === 0 ? -1 : 0}
                     aria-hidden={step === 0}
                     className={cn(
-                      "inline-flex min-h-11 w-[96px] sm:w-[104px] shrink-0 items-center justify-center gap-1.5 px-3 rounded-xl border border-border-default bg-surface-raised hover:bg-surface-hover text-xs sm:text-sm font-bold text-text-secondary hover:text-text-primary active:scale-[0.98] transition-all cursor-pointer",
-                      step === 0 ? "invisible opacity-0 pointer-events-none" : "visible opacity-100"
+                      "inline-flex min-h-11 items-center justify-center gap-1.5 px-3 sm:px-4 rounded-xl border border-border-default bg-surface-raised hover:bg-surface-hover text-xs sm:text-sm font-bold text-text-secondary hover:text-text-primary active:scale-[0.98] transition-all cursor-pointer",
+                      step === 0 ? "hidden sm:invisible sm:w-26" : "visible opacity-100 w-auto sm:w-26"
                     )}
                   >
                     <ArrowLeft size={16} />
-                    <span>Kembali</span>
+                    <span className="hidden xs:inline">Kembali</span>
                   </button>
 
-                  {/* Primary CTA: Fixed Width to keep identical geometry across all steps */}
+                  {/* Primary CTA: Responsive on mobile, rock-solid on desktop */}
                   <button
                     type="button"
                     onClick={handleNext}
-                    className="group inline-flex min-h-11 w-[156px] sm:w-[172px] shrink-0 cursor-pointer items-center justify-center gap-2 px-4 rounded-xl bg-accent hover:bg-accent-hover text-accent-on font-bold text-xs sm:text-sm shadow-md shadow-accent/20 hover:shadow-lg hover:shadow-accent/30 active:scale-[0.98] transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                    className="group inline-flex min-h-11 flex-1 sm:flex-initial sm:w-44 cursor-pointer items-center justify-center gap-2 px-4 rounded-xl bg-accent hover:bg-accent-hover text-accent-on font-bold text-xs sm:text-sm shadow-md shadow-accent/20 hover:shadow-lg hover:shadow-accent/30 active:scale-[0.98] transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                   >
                     <span>{step === STEPS.length - 1 ? "Mulai Membaca" : "Lanjut"}</span>
                     <ArrowRight
@@ -480,8 +426,8 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
                 </div>
               </div>
 
-              {/* Bottom Utility Slot (Fixed Height of 44px across all steps to prevent any CLS) */}
-              <div className="h-11 flex items-center">
+              {/* Bottom Utility Slot */}
+              <div className="min-h-8 flex items-center">
                 {step === STEPS.length - 1 && isInstallable ? (
                   <div className="w-full flex items-center justify-between px-3 py-1.5 rounded-xl bg-surface-raised border border-border-default/80">
                     <div className="flex items-center gap-2.5 min-w-0 pr-2">
@@ -499,7 +445,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
                     </button>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2 text-[11px] text-text-muted px-1">
+                  <div className="hidden [@media(hover:hover)_and_(pointer:fine)]:flex items-center gap-2 text-2xs text-text-muted px-1">
                     <Keyboard size={14} className="shrink-0 text-text-muted/80" />
                     <span className="truncate">{current.tip}</span>
                   </div>

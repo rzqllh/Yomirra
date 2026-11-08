@@ -30,7 +30,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: process.env.E2E_PRODUCTION_BUILD === "1" ? "npm run start" : "npm run dev",
+    command: process.env.E2E_PRODUCTION_BUILD === "1" ? "node ./node_modules/next/dist/bin/next start" : "node ./node_modules/next/dist/bin/next dev --webpack -p 3000",
     url: "http://localhost:3000/api/health/live",
     reuseExistingServer: true,
     timeout: 120000,

@@ -136,7 +136,14 @@
   --z-drawer: 60;
   --z-overlay: 70;
   --z-popover: 80;
+  --z-modal: 900;
+  --z-takeover: 9000;
   --z-toast: 100000;
+
+  /* Motion Curves */
+  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-snappy: cubic-bezier(0.16, 1, 0.3, 1);
 
   /* Safe Area & Layout Tokens */
   --safe-top: env(safe-area-inset-top, 0px);
@@ -524,64 +531,6 @@ body.reader-active {
   .group:hover .vt-title-hover { view-transition-name: var(--vt-title-name); } 
 }
 
-/* ── Reusable iOS Liquid Glass Design System ── */
-.liquid-glass:not(.fixed):not(.absolute):not(.sticky), 
-.liquid-glass-dark:not(.fixed):not(.absolute):not(.sticky) {
-  position: relative;
-}
-
-.liquid-glass::before, .liquid-glass-dark::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background: linear-gradient(115deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 30%, rgba(255,255,255,0) 70%, rgba(255,255,255,0.1) 100%);
-  mix-blend-mode: overlay;
-}
-
-.dark .liquid-glass::before, :is(.dark) .liquid-glass::before, .liquid-glass-dark::before {
-  background: linear-gradient(115deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 30%, rgba(255,255,255,0) 70%, rgba(255,255,255,0.05) 100%);
-}
-
-.liquid-glass {
-  background: rgba(255, 255, 255, 0.45);
-  backdrop-filter: blur(24px) saturate(190%);
-  -webkit-backdrop-filter: blur(24px) saturate(190%);
-  border: 1px solid rgba(255, 255, 255, 0.4);
-  box-shadow: 
-    0 16px 40px rgba(0, 0, 0, 0.08),
-    0 4px 12px rgba(0, 0, 0, 0.04),
-    inset 0 1.5px 1.5px rgba(255, 255, 255, 0.95),
-    inset 0 -1px 1px rgba(0, 0, 0, 0.03);
-}
-
-.dark .liquid-glass,
-:is(.dark) .liquid-glass,
-.liquid-glass-dark {
-  background: rgba(13, 13, 22, 0.50);
-  backdrop-filter: blur(24px) saturate(190%);
-  -webkit-backdrop-filter: blur(24px) saturate(190%);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  box-shadow: 
-    0 20px 48px rgba(0, 0, 0, 0.60),
-    0 4px 16px rgba(0, 0, 0, 0.35),
-    inset 0 1.5px 1.5px rgba(255, 255, 255, 0.20),
-    inset 0 -1px 1px rgba(0, 0, 0, 0.4);
-}
-
-.liquid-glass-interactive {
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.liquid-glass-interactive:hover {
-  background: rgba(255, 255, 255, 0.82);
-  border-color: rgba(255, 255, 255, 0.75);
-}
-.dark .liquid-glass-interactive:hover,
-:is(.dark) .liquid-glass-interactive:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.24);
-}
 
 /* Reusable Ink surfaces and motion. Feature markup only chooses composition. */
 @layer components {
