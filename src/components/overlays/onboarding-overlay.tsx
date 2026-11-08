@@ -5,31 +5,31 @@ import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { useOnboardingStore } from "@/shared/store/onboarding-store";
 import { cn } from "@/shared/utils/cn";
 import { usePWAInstall } from "@/shared/hooks/use-pwa-install";
-import { ArrowRight, ArrowLeft, DownloadSimple, Export, PlusSquare, Sparkle, Lightning, BookOpen, BookmarkSimple } from "@phosphor-icons/react";
+import { ArrowRight, ArrowLeft, DownloadSimple, Export, PlusSquare, Sparkle, Lightning, BookOpen, BookmarkSimple, Keyboard } from "@phosphor-icons/react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 interface OnboardingStep {
   eyebrow: string;
-  badge: string;
   title: string;
   desc: string;
   artwork: string;
   series: string;
   creator: string;
   glowColor: string;
+  tip: string;
   features: { icon: React.ElementType; text: string }[];
 }
 
 const STEPS: OnboardingStep[] = [
   {
     eyebrow: "SEMUA SUMBER, SATU PINTU",
-    badge: "KATALOG",
     title: "Jelajahi komik lintas sumber.",
-    desc: "Baca manga, manhwa, dan manhua dari penyedia favorit di satu tempat. Tanpa iklan pop-up yang mengganggu dan tanpa bolak-balik buka banyak tab.",
+    desc: "Baca manga, manhwa, dan manhua dari penyedia favorit di satu tempat. Tanpa iklan pop-up dan tanpa repot bolak-balik banyak tab.",
     artwork: "/covers/cover-1.webp",
     series: "Solo Leveling",
     creator: "DUBU (REDICE STUDIO)",
     glowColor: "rgba(99, 102, 241, 0.18)",
+    tip: "Gunakan tombol panah keyboard ← → untuk navigasi cepat",
     features: [
       { icon: Lightning, text: "Agregasi multi-sumber tanpa tab berantakan" },
       { icon: Sparkle, text: "Bebas iklan pop-up dan pengalihan link" },
@@ -37,30 +37,30 @@ const STEPS: OnboardingStep[] = [
   },
   {
     eyebrow: "KUSTOMISASI & KENYAMANAN",
-    badge: "READER",
-    title: "Baca dengan caramu.",
-    desc: "Scroll santai ala Webtoon vertikal atau balik halaman per halaman seperti manga fisik. Riwayat dan bab terakhir tersimpan otomatis.",
+    title: "Baca komik dengan caramu.",
+    desc: "Dukungan mode gulir vertikal panjang atau balik halaman per halaman. Riwayat dan posisi bab terakhir selalu tersimpan otomatis.",
     artwork: "/covers/cover-2.webp",
     series: "Nano Machine",
     creator: "Gugwo / Jeol-Moo Hyeon",
     glowColor: "rgba(220, 38, 38, 0.16)",
+    tip: "Mode baca dapat diubah kapan saja di menu pembaca",
     features: [
-      { icon: BookOpen, text: "Mode Webtoon vertikal & Paged reader" },
+      { icon: BookOpen, text: "Mode gulir vertikal & baca per halaman" },
       { icon: Sparkle, text: "Riwayat progres tersinkronisasi otomatis" },
     ],
   },
   {
     eyebrow: "SIAP MEMBACA",
-    badge: "KOLEKSI",
     title: "Temukan bacaan berikutnya.",
-    desc: "Simpan serial favorit ke rak buku, pantau update bab terbaru, atau langsung jelajahi ratusan judul yang sedang tren hari ini.",
+    desc: "Simpan serial favorit ke rak buku pribadi, pantau rilis bab terbaru, atau langsung mulai membaca rekomendasi terpopuler hari ini.",
     artwork: "/covers/cover-3.webp",
     series: "Omniscient Reader",
     creator: "Sleepy-C / sing N song",
     glowColor: "rgba(14, 165, 233, 0.18)",
+    tip: "Koleksi tersimpan aman di perangkat dan siap dibaca",
     features: [
       { icon: BookmarkSimple, text: "Rak buku pribadi & pemantau rilis baru" },
-      { icon: Lightning, text: "Akses cepat kapan saja tanpa repot" },
+      { icon: Lightning, text: "Akses cepat langsung siap dibaca" },
     ],
   },
 ];
@@ -75,7 +75,6 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
   const [isMounted, setIsMounted] = React.useState(false);
   const [isReadyToExit, setIsReadyToExit] = React.useState(false);
   const [step, setStep] = React.useState(0);
-  const [direction, setDirection] = React.useState<1 | -1>(1);
 
   React.useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -115,7 +114,6 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
   }, [isReadyToExit, completeOnboarding, onComplete]);
 
   const goToStep = (nextStep: number) => {
-    setDirection(nextStep > step ? 1 : -1);
     setStep(nextStep);
   };
 
@@ -201,7 +199,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
       initial={reducedMotion ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={reducedMotion ? { opacity: 1 } : { opacity: 0, scale: 0.99 }}
-      transition={reducedMotion ? { duration: 0 } : { duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+      transition={reducedMotion ? { duration: 0 } : { duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
       className="fixed inset-0 z-[9000] flex min-h-dvh flex-col justify-between overflow-y-auto bg-surface-base text-text-primary selection:bg-accent/20"
     >
       {/* Dynamic Ambient Color Glow */}
@@ -214,7 +212,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
       />
 
       {/* Top Navigation Bar */}
-      <header className="relative z-20 mx-auto flex w-full max-w-5xl items-center justify-between px-6 pt-[calc(var(--safe-top)+16px)] sm:px-10">
+      <header className="relative z-20 mx-auto flex w-full max-w-5xl items-center justify-between px-6 pt-[calc(var(--safe-top)+16px)] pb-2 sm:px-10">
         <div className="flex items-center gap-3">
           <div className="size-9 rounded-xl overflow-hidden bg-surface-raised border border-border-default shadow-xs p-1 flex items-center justify-center">
             <img
@@ -249,14 +247,14 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
         </button>
       </header>
 
-      {/* Central Interactive Showcase Stage */}
+      {/* Central Interactive Showcase Stage — Fully Locked Dimensions to prevent layout shift */}
       <main className="relative z-10 mx-auto my-auto flex w-full max-w-5xl flex-1 items-center justify-center px-6 py-6 sm:px-10">
         <div className="grid w-full grid-cols-1 md:grid-cols-2 gap-8 md:gap-14 lg:gap-16 items-center">
           
-          {/* Left Column: Physical 3D Manga Volume Presentation */}
+          {/* Left Column: Physical 3D Manga Volume Presentation (Strictly Fixed Dimensions) */}
           <div
             aria-hidden="true"
-            className="relative flex items-center justify-center py-4 md:py-8"
+            className="relative flex items-center justify-center py-4 md:py-6"
           >
             {/* The Manga Book Deck Container */}
             <div className="relative w-[240px] sm:w-[270px] md:w-[300px] aspect-[2/3] perspective-1000">
@@ -298,8 +296,8 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
                   reducedMotion
                     ? false
                     : {
-                        opacity: 0.8,
-                        scale: 0.96,
+                        opacity: 0.85,
+                        scale: 0.98,
                       }
                 }
                 animate={{
@@ -311,8 +309,8 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
                     ? { duration: 0 }
                     : {
                         type: "spring",
-                        stiffness: 300,
-                        damping: 25,
+                        stiffness: 320,
+                        damping: 26,
                       }
                 }
                 className="relative w-full h-full rounded-2xl overflow-hidden border border-white/20 dark:border-white/10 shadow-[0_24px_50px_-10px_rgba(0,0,0,0.32)] dark:shadow-[0_28px_65px_-12px_rgba(0,0,0,0.7)] bg-surface-raised cursor-default select-none"
@@ -347,46 +345,65 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
             </div>
           </div>
 
-          {/* Right Column: Editorial Copy & Unified Controls */}
+          {/* Right Column: Editorial Copy & Unified Controls (Zero Layout Shift Architecture) */}
           <div className="flex flex-col justify-center">
             
-            {/* Animated Copy Block */}
-            <div aria-live="polite" className="min-h-[220px] sm:min-h-[200px] flex flex-col justify-center">
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.div
-                  key={step}
-                  initial={reducedMotion ? false : { opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={reducedMotion ? { opacity: 1 } : { opacity: 0, y: -10 }}
-                  transition={reducedMotion ? { duration: 0 } : { duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-                  className="flex flex-col gap-3"
-                >
-                  {/* Eyebrow / Label */}
-                  <div className="flex items-center gap-2">
-                    <span className="size-2 rounded-full bg-accent animate-pulse" />
-                    <p className="text-xs font-bold tracking-[0.2em] text-accent uppercase">
-                      {current.eyebrow}
-                    </p>
-                  </div>
+            {/* Locked Content Container — Fixed Height Bounds */}
+            <div aria-live="polite" className="h-[260px] sm:h-[250px] flex flex-col justify-between">
+              
+              {/* Eyebrow Label (Fixed Height) */}
+              <div className="h-6 flex items-center gap-2">
+                <span className="size-2 rounded-full bg-accent animate-pulse" />
+                <p className="text-xs font-bold tracking-[0.2em] text-accent uppercase">
+                  {current.eyebrow}
+                </p>
+              </div>
 
-                  {/* Headline */}
-                  <h1
+              {/* Display Headline (Locked 2-line height) */}
+              <div className="h-[76px] sm:h-[84px] flex items-center">
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.h1
+                    key={step}
                     id="onboarding-title"
-                    className="text-balance text-3xl sm:text-4xl lg:text-[42px] font-extrabold leading-[1.12] tracking-tight text-text-primary"
+                    initial={reducedMotion ? false : { opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={reducedMotion ? { opacity: 1 } : { opacity: 0, y: -6 }}
+                    transition={reducedMotion ? { duration: 0 } : { duration: 0.18 }}
+                    className="text-balance text-3xl sm:text-4xl lg:text-[40px] font-extrabold leading-[1.12] tracking-tight text-text-primary"
                   >
                     {current.title}
-                  </h1>
+                  </motion.h1>
+                </AnimatePresence>
+              </div>
 
-                  {/* Human, Grounded Body Copy */}
-                  <p
+              {/* Description Body (Locked Height, Human Prose, No Webtoon Mention) */}
+              <div className="h-[52px] sm:h-[58px] flex items-center">
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.p
+                    key={step}
                     id="onboarding-description"
+                    initial={reducedMotion ? false : { opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={reducedMotion ? { opacity: 1 } : { opacity: 0 }}
+                    transition={reducedMotion ? { duration: 0 } : { duration: 0.18 }}
                     className="text-sm sm:text-base leading-relaxed text-text-secondary max-w-prose"
                   >
                     {current.desc}
-                  </p>
+                  </motion.p>
+                </AnimatePresence>
+              </div>
 
-                  {/* Feature Checkpoints */}
-                  <div className="mt-1 flex flex-col gap-1.5 pt-1">
+              {/* Feature Checkpoints (Locked Height) */}
+              <div className="h-[58px] flex flex-col justify-center gap-2">
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.div
+                    key={step}
+                    initial={reducedMotion ? false : { opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={reducedMotion ? { opacity: 1 } : { opacity: 0 }}
+                    transition={reducedMotion ? { duration: 0 } : { duration: 0.18 }}
+                    className="flex flex-col gap-2"
+                  >
                     {current.features.map((feat, idx) => {
                       const Icon = feat.icon;
                       return (
@@ -394,21 +411,21 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
                           <div className="size-5 rounded-md bg-accent/10 text-accent flex items-center justify-center shrink-0">
                             <Icon size={12} weight="bold" />
                           </div>
-                          <span>{feat.text}</span>
+                          <span className="truncate">{feat.text}</span>
                         </div>
                       );
                     })}
-                  </div>
-                </motion.div>
-              </AnimatePresence>
+                  </motion.div>
+                </AnimatePresence>
+              </div>
             </div>
 
-            {/* Stable Action & Navigation Row */}
-            <div className="mt-8 pt-4 border-t border-border-subtle/80 flex flex-col gap-4">
+            {/* Stable Action & Navigation Row — Fixed Position & Layout */}
+            <div className="mt-6 pt-4 border-t border-border-subtle/80 flex flex-col gap-3">
               
-              <div className="flex items-center justify-between gap-4">
-                {/* Stepper Interactive Pills (44px touch targets) */}
-                <div className="flex items-center gap-1.5">
+              <div className="h-12 flex items-center justify-between gap-4">
+                {/* Stepper Interactive Pills (Fixed touch targets) */}
+                <div className="flex items-center gap-1">
                   {STEPS.map((_, i) => (
                     <button
                       key={i}
@@ -431,23 +448,28 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
                   ))}
                 </div>
 
-                {/* Predictable Navigation CTA Group */}
+                {/* Predictable Navigation CTA Group — Strict Zero Shift Geometry */}
                 <div className="flex items-center gap-2.5">
-                  {step > 0 && (
-                    <button
-                      type="button"
-                      onClick={handlePrev}
-                      className="inline-flex min-h-11 items-center justify-center gap-1.5 px-4 rounded-xl border border-border-default bg-surface-raised hover:bg-surface-hover text-xs sm:text-sm font-bold text-text-secondary hover:text-text-primary active:scale-[0.98] transition-all cursor-pointer"
-                    >
-                      <ArrowLeft size={16} />
-                      <span>Kembali</span>
-                    </button>
-                  )}
+                  {/* Kembali Button: Always rendered in DOM to hold geometry, invisible on Step 0 */}
+                  <button
+                    type="button"
+                    onClick={handlePrev}
+                    tabIndex={step === 0 ? -1 : 0}
+                    aria-hidden={step === 0}
+                    className={cn(
+                      "inline-flex min-h-11 w-[96px] sm:w-[104px] shrink-0 items-center justify-center gap-1.5 px-3 rounded-xl border border-border-default bg-surface-raised hover:bg-surface-hover text-xs sm:text-sm font-bold text-text-secondary hover:text-text-primary active:scale-[0.98] transition-all cursor-pointer",
+                      step === 0 ? "invisible opacity-0 pointer-events-none" : "visible opacity-100"
+                    )}
+                  >
+                    <ArrowLeft size={16} />
+                    <span>Kembali</span>
+                  </button>
 
+                  {/* Primary CTA: Fixed Width to keep identical geometry across all steps */}
                   <button
                     type="button"
                     onClick={handleNext}
-                    className="group inline-flex min-h-11 min-w-[140px] sm:min-w-[160px] items-center justify-center gap-2 px-5 rounded-xl bg-accent hover:bg-accent-hover text-accent-on font-bold text-xs sm:text-sm shadow-md shadow-accent/20 hover:shadow-lg hover:shadow-accent/30 active:scale-[0.98] transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                    className="group inline-flex min-h-11 w-[156px] sm:w-[172px] shrink-0 cursor-pointer items-center justify-center gap-2 px-4 rounded-xl bg-accent hover:bg-accent-hover text-accent-on font-bold text-xs sm:text-sm shadow-md shadow-accent/20 hover:shadow-lg hover:shadow-accent/30 active:scale-[0.98] transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                   >
                     <span>{step === STEPS.length - 1 ? "Mulai Membaca" : "Lanjut"}</span>
                     <ArrowRight
@@ -458,37 +480,31 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
                 </div>
               </div>
 
-              {/* Install PWA Prompt Banner (Cleanly integrated on step 3 without breaking button layouts) */}
-              <AnimatePresence>
-                {step === STEPS.length - 1 && isInstallable && (
-                  <motion.div
-                    initial={reducedMotion ? false : { opacity: 0, height: 0, marginTop: 0 }}
-                    animate={{ opacity: 1, height: "auto", marginTop: 4 }}
-                    exit={reducedMotion ? { opacity: 1 } : { opacity: 0, height: 0, marginTop: 0 }}
-                    transition={reducedMotion ? { duration: 0 } : { duration: 0.2 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="flex items-center justify-between p-3 rounded-xl bg-surface-raised border border-border-default/80">
-                      <div className="flex items-center gap-3">
-                        <div className="size-8 rounded-lg bg-accent/10 text-accent flex items-center justify-center shrink-0">
-                          <DownloadSimple size={16} weight="bold" />
-                        </div>
-                        <div className="flex flex-col text-left">
-                          <span className="text-xs font-bold text-text-primary">Install Aplikasi Yomirra</span>
-                          <span className="text-[11px] text-text-muted">Buka langsung dari desktop atau layar utama</span>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={installPWA}
-                        className="px-3.5 py-1.5 rounded-lg bg-accent/15 hover:bg-accent/25 text-accent text-xs font-bold transition-colors cursor-pointer shrink-0"
-                      >
-                        Pasang
-                      </button>
+              {/* Bottom Utility Slot (Fixed Height of 44px across all steps to prevent any CLS) */}
+              <div className="h-11 flex items-center">
+                {step === STEPS.length - 1 && isInstallable ? (
+                  <div className="w-full flex items-center justify-between px-3 py-1.5 rounded-xl bg-surface-raised border border-border-default/80">
+                    <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                      <DownloadSimple size={15} weight="bold" className="text-accent shrink-0" />
+                      <span className="text-xs font-semibold text-text-secondary truncate">
+                        Install Aplikasi Yomirra di perangkat
+                      </span>
                     </div>
-                  </motion.div>
+                    <button
+                      type="button"
+                      onClick={installPWA}
+                      className="px-3 py-1 rounded-lg bg-accent/15 hover:bg-accent/25 text-accent text-xs font-bold transition-colors cursor-pointer shrink-0"
+                    >
+                      Pasang
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-[11px] text-text-muted px-1">
+                    <Keyboard size={14} className="shrink-0 text-text-muted/80" />
+                    <span className="truncate">{current.tip}</span>
+                  </div>
                 )}
-              </AnimatePresence>
+              </div>
             </div>
           </div>
         </div>
