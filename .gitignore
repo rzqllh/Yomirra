@@ -11,6 +11,7 @@
 # Testing
 /coverage
 playwright-report/
+.playwright-mcp/
 test-results/
 
 # Next.js
