@@ -91,6 +91,7 @@ export function ContinuousVerticalReader({
   }, [pages]);
 
   const [failedPageIndices, setFailedPageIndices] = React.useState<Set<number>>(new Set());
+  const [decodeVersion, setDecodeVersion] = React.useState(0);
   const settledPageIndicesRef = React.useRef<Set<number>>(new Set());
   const loadedPositionsRef = React.useRef<Set<number>>(new Set());
   // Revalidate decodes whenever source page URLs are refreshed.
@@ -134,6 +135,7 @@ export function ContinuousVerticalReader({
       next.delete(pageIndex);
       return next;
     });
+    setDecodeVersion((v) => v + 1);
     markPageSettled(virtualIndex);
   }, [markPageSettled]);
 
@@ -145,6 +147,7 @@ export function ContinuousVerticalReader({
       next.add(pageIndex);
       return next;
     });
+    setDecodeVersion((v) => v + 1);
     markPageSettled(virtualIndex);
   }, [markPageSettled]);
 
@@ -214,6 +217,22 @@ export function ContinuousVerticalReader({
   }, [isRestored, firstMountedIndex, revealedThrough]);
 
   const [scrollProgress, setScrollProgress] = React.useState(0);
+  const comicContainerRef = React.useRef<HTMLDivElement>(null);
+  const hasMarkedCompletionRef = React.useRef<string | null>(null);
+  const [reachedComicEnd, setReachedComicEnd] = React.useState(false);
+
+  React.useEffect(() => {
+    setReachedComicEnd(false);
+  }, [chapterId]);
+
+  const checkComicEndReached = React.useCallback((): boolean => {
+    if (typeof window === "undefined" || !comicContainerRef.current) return false;
+    const rect = comicContainerRef.current.getBoundingClientRect();
+    // Continuous vertical reader: content end is reached when the bottom of the comic
+    // image container enters or passes the viewport (window.innerHeight + tolerance)
+    const TOLERANCE_PX = 48;
+    return rect.bottom <= window.innerHeight + TOLERANCE_PX;
+  }, []);
 
   const calculateScrollProgress = React.useCallback(() => {
     if (typeof window === "undefined") return 0;
@@ -235,6 +254,9 @@ export function ContinuousVerticalReader({
   React.useEffect(() => {
     let animationFrameId: number;
     const onScrollOrResize = () => {
+      if (checkComicEndReached()) {
+        setReachedComicEnd(true);
+      }
       cancelAnimationFrame(animationFrameId);
       animationFrameId = requestAnimationFrame(() => {
         setScrollProgress(calculateScrollProgress());
@@ -250,12 +272,15 @@ export function ContinuousVerticalReader({
       window.removeEventListener("scroll", onScrollOrResize);
       window.removeEventListener("resize", onScrollOrResize);
     };
-  }, [calculateScrollProgress, currentPages.length, isRestored]);
+  }, [calculateScrollProgress, checkComicEndReached, currentPages.length, isRestored]);
 
   const totalVirtualSize = virtualizer.getTotalSize();
   React.useEffect(() => {
     setScrollProgress(calculateScrollProgress());
-  }, [totalVirtualSize, calculateScrollProgress]);
+    if (checkComicEndReached()) {
+      setReachedComicEnd(true);
+    }
+  }, [totalVirtualSize, calculateScrollProgress, checkComicEndReached]);
 
   const navigationKey = `${sourceId}::${mangaId}::${chapterId}`;
   const seekPage = React.useCallback((index: number) => {
@@ -280,13 +305,36 @@ export function ContinuousVerticalReader({
     if (useReaderStore.getState().pageNavigation?.key === navigationKey) setPageNavigation(null);
   }, [navigationKey, setPageNavigation]);
   React.useEffect(() => {
-    if (isRestored && activePage === currentPages.length - 1 && canCompleteChapter(currentPages, loadedPositionsRef.current, failedPageIndices)) {
-      noteCompletedChapter(sourceId, mangaId, chapterId);
-      if (!nextChapterId) {
-        markChapterProgress(sourceId, mangaId, chapterId, currentPages.length - 1, currentPages.length, 100);
+    if (!isRestored) return;
+
+    const isAtEnd = currentPages.length > 1
+      ? activePage === currentPages.length - 1 && reachedComicEnd
+      : reachedComicEnd;
+
+    if (isAtEnd && canCompleteChapter(currentPages, loadedPositionsRef.current, failedPageIndices)) {
+      if (hasMarkedCompletionRef.current !== chapterId) {
+        hasMarkedCompletionRef.current = chapterId;
+        noteCompletedChapter(sourceId, mangaId, chapterId);
+        if (!nextChapterId) {
+          markChapterProgress(sourceId, mangaId, chapterId, currentPages.length - 1, currentPages.length, 100);
+        }
       }
     }
-  }, [isRestored, activePage, revealedThrough, currentPages, failedPageIndices, sourceId, mangaId, chapterId, nextChapterId, markChapterProgress]);
+  }, [
+    isRestored,
+    activePage,
+    reachedComicEnd,
+    decodeVersion,
+    revealedThrough,
+    totalVirtualSize,
+    currentPages,
+    failedPageIndices,
+    sourceId,
+    mangaId,
+    chapterId,
+    nextChapterId,
+    markChapterProgress,
+  ]);
 
   const handleImageError = React.useCallback(() => { }, []);
 
@@ -432,6 +480,7 @@ export function ContinuousVerticalReader({
       )}
 
       <div
+        ref={comicContainerRef}
         className="flex w-full max-w-[800px] flex-col items-center pt-[calc(var(--mobile-header-height)+var(--safe-top))]"
         style={{
           height: `${virtualizer.getTotalSize()}px`,
