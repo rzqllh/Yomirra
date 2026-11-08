@@ -2,6 +2,10 @@
 
 ## Unreleased — Final stabilization
 
+- Runner staging drill diperkeras: fail-closed dengan penolakan domain/alias produksi, pembatalan streaming per-chunk saat melewati batas 25 MiB, batas waktu request adaptif terhadap deadline 15 menit, serta strict nonzero exit codes.
+- Continuous Reader menghitung penyelesaian chapter terakhir berdasarkan ujung konten komik terukur (`checkComicEndReached`) dengan toleransi 48px dan guard webtoon strip panjang 10.000px tanpa auto-complete prematur saat mount.
+- Penambahan Edge CDN Cache-Control headers (`s-maxage=604800`) untuk aset statis berat (`apple-icon.png`, `icon.png`, `/covers/`, `favicon.ico`) untuk meredam Fast Origin Transfer ke Vercel edge network.
+- Rekonsiliasi metrik insiden: penutupan 18 temuan stabilitas, pemisahan bukti lokal (`LOCAL_VERIFIED`) dan status hosted provider (`BLOCKED_EXTERNAL / NOT_TESTED`), dan verifikasi pengujian independen.
 - Pertahankan status baca perangkat saat menggabungkan cadangan dengan alias identitas judul berbeda; prioritaskan ID tetap atas alias lama sebelum menyelesaikan konflik status.
 - Batasi permintaan halaman dinamis per instance. Kuota sensitif mencatat counter dan masa berlaku dalam satu operasi Redis.
 - Batasi payload sesi admin dan pekerjaan AI bersamaan. Perketat validasi alamat upstream dan kirim kunci Gemini melalui header.
