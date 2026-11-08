@@ -4,8 +4,6 @@ import { noteCompletedChapter } from "@/shared/lib/bookmark-suggestion";
 import * as React from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "@/shared/api-client";
 import { useReaderStore, useEffectiveReaderPreferences } from "@/shared/store/reader-store";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useHistoryStore } from "@/shared/store/history-store";
@@ -162,8 +160,13 @@ export function PagedReader({
     if (useReaderStore.getState().pageNavigation?.key === navigationKey) setPageNavigation(null);
   }, [navigationKey, setPageNavigation]);
   React.useEffect(() => {
-    if (hasInitialized && currentPageIndex === totalPages - 1 && canCompleteChapter(currentPages, loadedPositions, failedPageIndices)) noteCompletedChapter(sourceId, mangaId, chapterId);
-  }, [hasInitialized, currentPageIndex, totalPages, currentPages, loadedPositions, failedPageIndices, sourceId, mangaId, chapterId]);
+    if (hasInitialized && currentPageIndex === totalPages - 1 && canCompleteChapter(currentPages, loadedPositions, failedPageIndices)) {
+      noteCompletedChapter(sourceId, mangaId, chapterId);
+      if (!nextChapterId) {
+        markChapterProgress(sourceId, mangaId, chapterId, totalPages - 1, totalPages, 100);
+      }
+    }
+  }, [hasInitialized, currentPageIndex, totalPages, currentPages, loadedPositions, failedPageIndices, sourceId, mangaId, chapterId, nextChapterId, markChapterProgress]);
 
   // Persist page progress only after initialization
   const flushProgress = React.useCallback(() => {
@@ -180,21 +183,6 @@ export function PagedReader({
   }, [flushProgress, hasInitialized]);
 
   useVisibilityFlush(flushProgress);
-
-  const queryClient = useQueryClient();
-
-  // Predictive preload: prefetch next chapter pages when user reaches last 2 pages
-  React.useEffect(() => {
-    if (nextChapterId && totalPages > 0 && currentPageIndex >= totalPages - 2 && typeof navigator !== "undefined" && navigator.onLine) {
-      const href = getReaderHref(sourceId, mangaId, nextChapterId);
-      router.prefetch(href);
-      queryClient.prefetchQuery({
-        queryKey: ["pages", sourceId, nextChapterId],
-        queryFn: () => apiClient.getPages(sourceId, mangaId, nextChapterId),
-        staleTime: 1000 * 60 * 5,
-      });
-    }
-  }, [nextChapterId, totalPages, currentPageIndex, queryClient, router, sourceId, mangaId]);
 
   const goToNextPage = React.useCallback(() => {
     if (currentPageIndex < totalPages - 1) {
@@ -281,21 +269,20 @@ export function PagedReader({
   const [canDrag, setCanDrag] = React.useState(true);
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (e.touches && e.touches.length > 0) {
-      const touchX = e.touches[0].clientX;
-      const EDGE_THRESHOLD = 32; // Apple HIG 32px safe margin for native Safari edge gestures
-      if (typeof window !== "undefined" && (touchX < EDGE_THRESHOLD || touchX > window.innerWidth - EDGE_THRESHOLD)) {
-        setCanDrag(false);
-        return;
-      }
+    if (e.touches.length !== 1) {
+      setCanDrag(false);
+      return;
     }
-    setCanDrag(true);
+    const touchX = e.touches[0].clientX;
+    const edgeThreshold = 32;
+    setCanDrag(touchX >= edgeThreshold && touchX <= window.innerWidth - edgeThreshold);
   };
 
   const handleDragEnd = (
     _event: MouseEvent | TouchEvent | PointerEvent,
     info: PanInfo
   ) => {
+    if (!canDrag || _event.type === "pointercancel" || _event.type === "touchcancel") return;
     const offset = info.offset.x;
     const velocity = info.velocity.x;
     const threshold = 50;
@@ -422,7 +409,7 @@ export function PagedReader({
           initial={{ opacity: 0.9, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.15, ease: "easeOut" }}
-          className="relative max-w-full max-h-screen flex items-center justify-center z-0 px-2"
+          className="relative max-w-full max-h-screen flex items-center justify-center z-0 px-2 [touch-action:pan-y_pinch-zoom]!"
         >
           <ReaderImage
             pageIndex={currentPageIndex}
@@ -462,7 +449,6 @@ export function PagedReader({
               width={800}
               height={1200}
               sizes="100vw"
-              priority={false}
               fetchPriority="low"
               quality={dataSaver ? 60 : 85}
               unoptimized={!dataSaver || page.url.startsWith("blob:") || page.url.startsWith("data:")}

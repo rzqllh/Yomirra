@@ -1,3 +1,6 @@
+import http from "node:http";
+import { EventEmitter } from "node:events";
+import { PassThrough } from "node:stream";
 import { describe, it, expect, vi } from 'vitest';
 import { isSafeIp, safeFetch } from '../security/outbound-policy';
 
@@ -23,6 +26,10 @@ describe('Outbound Policy Security Regression Suite', () => {
       expect(isSafeIp('fe80::1')).toBe(false);
       expect(isSafeIp('[::1]')).toBe(false);
       expect(isSafeIp('::ffff:7f00:1')).toBe(false);
+      expect(isSafeIp('::FFFF:127.0.0.1')).toBe(false);
+      expect(isSafeIp('64:ff9b::a9fe:a9fe')).toBe(false);
+      expect(isSafeIp('2002:7f00:1::')).toBe(false);
+      expect(isSafeIp('2001:0::1')).toBe(false);
     });
 
     it('allows safe external IPs', () => {
@@ -33,6 +40,41 @@ describe('Outbound Policy Security Regression Suite', () => {
   });
 
   describe('safeFetch', () => {
+    function mockUpstream() {
+      const upstream = Object.assign(new PassThrough(), { statusCode: 200, headers: {} });
+      const request = Object.assign(new EventEmitter(), { end: vi.fn() });
+      vi.spyOn(http, "request").mockImplementationOnce((_options, callback) => {
+        queueMicrotask(() => (callback as (response: http.IncomingMessage) => void)(upstream as unknown as http.IncomingMessage));
+        return request as unknown as http.ClientRequest;
+      });
+      return upstream;
+    }
+
+    it("cancels the upstream when the client stops reading", async () => {
+      const upstream = mockUpstream();
+      try {
+        const response = await safeFetch("http://example.test/", { maxSize: 32 });
+        const reader = response.body!.getReader();
+        upstream.write(Buffer.from("data"));
+        expect((await reader.read()).value).toHaveLength(4);
+        await reader.cancel();
+        await vi.waitFor(() => expect(upstream.destroyed).toBe(true));
+      } finally {
+        vi.restoreAllMocks();
+      }
+    });
+
+    it("rejects an oversized stream and closes the upstream", async () => {
+      const upstream = mockUpstream();
+      try {
+        const response = await safeFetch("http://example.test/", { maxSize: 3 });
+        upstream.write(Buffer.from("1234"));
+        await expect(response.arrayBuffer()).rejects.toThrow("Payload exceeded maximum size");
+        await vi.waitFor(() => expect(upstream.destroyed).toBe(true));
+      } finally {
+        vi.restoreAllMocks();
+      }
+    });
     it('rejects unsupported protocols (ftp, file, gopher)', async () => {
       await expect(safeFetch('ftp://example.com/')).rejects.toThrowError('SECURITY_REJECTED: Unsupported protocol');
       await expect(safeFetch('file:///etc/passwd')).rejects.toThrowError('SECURITY_REJECTED: Unsupported protocol');

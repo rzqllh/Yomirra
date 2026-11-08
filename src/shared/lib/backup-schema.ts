@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "@/shared/lib/browser-safe-zod";
 
 // ISO timestamp validator helper
 const isIsoDate = (val: string) => !isNaN(Date.parse(val));

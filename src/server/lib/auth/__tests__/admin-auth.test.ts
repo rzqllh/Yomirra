@@ -237,7 +237,7 @@ describe("Admin Auth Verification Helper", () => {
     });
   });
 
-  it("authorizes Firebase users in the configured email allowlist", async () => {
+  it.each([true, false, undefined])("uses the Firebase email allowlist only for verified email (%s)", async (verified) => {
     process.env.FIREBASE_SERVICE_ACCOUNT_KEY = JSON.stringify({
       project_id: "test",
       client_email: "test@test.com",
@@ -246,6 +246,7 @@ describe("Admin Auth Verification Helper", () => {
     mockVerifyIdToken.mockResolvedValueOnce({
       uid: "allowlist-user",
       email: "admin@example.com",
+      email_verified: verified,
     });
 
     const { verifyAdminRequest } = await import("../admin-auth");
@@ -255,8 +256,9 @@ describe("Admin Auth Verification Helper", () => {
       }),
     );
 
-    expect(result.isAdmin).toBe(true);
+    expect(result.isAdmin).toBe(verified === true);
     expect(result.uid).toBe("allowlist-user");
+    expect(result.error).toBe(verified === true ? undefined : "not_admin");
   });
 
   it("rejects Firebase users without an admin claim or allowlisted email", async () => {

@@ -12,6 +12,7 @@ interface ChapterRowProps {
   chapterId: string
   chapterTitle: string
   mangaTitle: string
+  offlineSafe?: boolean
   date: string | number | Date
   isRead?: boolean
   isLastRead?: boolean
@@ -25,6 +26,7 @@ export function ChapterRow({
   chapterId,
   chapterTitle,
   mangaTitle,
+  offlineSafe,
   date,
   isRead = false,
   isLastRead = false,
@@ -43,77 +45,69 @@ export function ChapterRow({
 
   const readerHref = getReaderHref(sourceId, mangaId, chapterId, returnTo);
 
+  const content = (
+    <>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-1.5">
+          <h4 className={cn(
+            "truncate text-sm font-semibold",
+            isLastRead ? "text-accent" : "text-text-primary"
+          )}>
+            {chapterTitle}
+          </h4>
+          {isLocked && (
+            <span className="flex shrink-0 items-center gap-1 rounded-xs bg-status-warning-bg px-1.5 py-0.5 text-xs font-semibold text-status-warning-fg">
+              <Lock aria-hidden="true" size={12} />
+              Terkunci
+            </span>
+          )}
+          {!isRead && !isLastRead && !isLocked && (
+            <span className="size-1.5 shrink-0 rounded-full bg-accent" aria-hidden="true" />
+          )}
+        </div>
+        <p className="mt-0.5 truncate text-xs text-text-muted">{formattedDate}</p>
+      </div>
+      {isLastRead && (
+        <span className="shrink-0 rounded-xs bg-accent/10 px-1.5 py-0.5 text-xs font-semibold text-accent">
+          Terakhir
+        </span>
+      )}
+    </>
+  );
+
+  const rowContentClass = "flex min-w-0 flex-1 items-center gap-2 rounded-sm px-2 py-3 sm:px-3";
+
   return (
     <article
       className={cn(
-        "group relative flex items-center border-b border-border-default/30 bg-transparent motion-safe:transition-colors motion-safe:duration-200 motion-safe:ease-out",
-        isLastRead ? "bg-accent/5" : "hover:bg-surface-hover",
-        !isRead && !isLastRead ? "opacity-100" : "opacity-70"
+        "flex items-center gap-1 rounded-sm border px-1 motion-safe:transition-colors",
+        isLastRead ? "border-accent/30 bg-accent/5" : "border-transparent",
+        !isLocked && "hover:bg-surface-hover focus-within:bg-surface-hover"
       )}
     >
-      <Link
-        href={readerHref}
-        onClick={(e) => {
-          if (isLocked) {
-            e.preventDefault();
-            return;
-          }
-          beginNavigationIntent(readerHref);
-        }}
-        aria-label={`Baca ${chapterTitle}`}
-        className="flex min-w-0 flex-1 items-center justify-between px-1 py-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:scale-[0.99] active:bg-accent/10 transition-transform"
-      >
-        <div className="flex min-w-0 flex-1 flex-col pr-4">
-          <div className="flex items-center gap-2 mb-0.5">
-            <h4 className={cn(
-              "text-[14px] font-bold tracking-tight truncate motion-safe:transition-colors motion-safe:duration-300",
-              isLastRead ? "text-accent" : "text-text-primary group-hover:text-accent"
-            )}>
-              {chapterTitle}
-            </h4>
-            {isLocked && (
-              <div className="flex items-center gap-1 rounded-[5px] bg-status-warning-bg px-1.5 py-0.5 text-[10px] font-semibold text-status-warning-fg ring-1 ring-inset ring-status-warning-fg/20 shrink-0">
-                <Lock size={11} weight="regular" />
-                <span>Terkunci</span>
-              </div>
-            )}
-            {!isRead && !isLastRead && !isLocked && (
-              <span className="w-1.5 h-1.5 rounded-full bg-accent shrink-0" />
-            )}
-          </div>
-          <p className="text-[11px] text-text-muted font-medium truncate">
-            {formattedDate}
-          </p>
-        </div>
-
-        <div className="flex shrink-0 items-center gap-3">
-          {isLastRead && (
-            <div className="flex items-center justify-center rounded-[6px] bg-accent/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-accent ring-1 ring-inset ring-accent/20">
-              Terakhir
-            </div>
-          )}
-          {isLocked && (
-            <span
-              className="flex size-11 shrink-0 items-center justify-center rounded-full bg-status-warning-bg text-status-warning-fg"
-              title="Chapter terkunci di sumber asli"
-            >
-              <Lock size={16} weight="regular" />
-            </span>
-          )}
-          <CaretLeft size={16} className="shrink-0 rotate-180 text-text-muted/40 group-hover:text-accent" />
-        </div>
-      </Link>
-
-      {!isLocked && (
-        <div className="shrink-0 rounded-sm bg-accent/10 text-accent opacity-70 motion-safe:transition-opacity group-hover:opacity-100 focus-within:opacity-100">
+      {isLocked ? (
+        <div className={rowContentClass} aria-disabled="true">{content}</div>
+      ) : (
+        <>
+          <Link
+            href={readerHref}
+            onClick={() => beginNavigationIntent(readerHref)}
+            aria-label={`Baca ${chapterTitle}`}
+            aria-current={isLastRead || undefined}
+            className={cn(rowContentClass, "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent active:bg-accent/10")}
+          >
+            {content}
+            <CaretLeft aria-hidden="true" size={14} className="shrink-0 rotate-180 text-text-muted" />
+          </Link>
           <ChapterDownloadButton
             sourceId={sourceId}
             mangaId={mangaId}
             chapterId={chapterId}
             chapterTitle={chapterTitle}
             mangaTitle={mangaTitle}
+            offlineSafe={offlineSafe}
           />
-        </div>
+        </>
       )}
     </article>
   )

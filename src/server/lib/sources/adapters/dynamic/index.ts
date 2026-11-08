@@ -1,7 +1,33 @@
+import { createHash } from "node:crypto";
 import { MangaSource, MangaPageResult, MangaDetail, Chapter, ChapterPages, FilterList, SourceMetadata } from "@/shared/sources/source-types";
 import { MihonSourceManifest } from "@/shared/sources/dynamic-source-registry";
 
 import { safeFetch } from "../../../security/outbound-policy";
+import { SourceError } from "../../error";
+
+const activeByOrigin = { registered: 0, external: 0 };
+
+export async function fetchDynamicSourceJson<T>(
+  url: string, sourceId: string, origin: keyof typeof activeByOrigin, maxSize = 2 * 1024 * 1024
+): Promise<T> {
+  if (activeByOrigin[origin] >= 8) {
+    throw new SourceError("Sumber kustom sedang sibuk. Coba lagi sebentar.", {
+      code: "RATE_LIMITED", sourceId, statusCode: 429, retryAfterSeconds: 2,
+    });
+  }
+
+  activeByOrigin[origin]++;
+  try {
+    const response = await safeFetch(url, { signal: AbortSignal.timeout(7000), maxSize, maxRedirects: 3 });
+    if (!response.ok) {
+      await response.body?.cancel();
+      throw new Error(`Custom source API error: ${response.status}`);
+    }
+    return await response.json() as T;
+  } finally {
+    activeByOrigin[origin]--;
+  }
+}
 
 export class DynamicSourceAdapter implements MangaSource {
   public readonly id: string;
@@ -18,10 +44,16 @@ export class DynamicSourceAdapter implements MangaSource {
   public readonly manifestUrl?: string;
   public readonly isDynamic: boolean = true;
 
-  private manifest: MihonSourceManifest;
+  public readonly cacheFingerprint: string;
+  private readonly manifest: MihonSourceManifest;
+  private readonly origin: keyof typeof activeByOrigin;
 
-  constructor(manifest: MihonSourceManifest) {
+  constructor(manifest: MihonSourceManifest, externalManifestUrl?: string) {
     this.manifest = manifest;
+    this.origin = externalManifestUrl ? "external" : "registered";
+    this.cacheFingerprint = createHash("sha256")
+      .update(JSON.stringify([this.origin, externalManifestUrl ?? null, manifest]))
+      .digest("hex");
     this.id = manifest.id;
     this.name = manifest.name;
     this.language = manifest.lang;
@@ -29,7 +61,7 @@ export class DynamicSourceAdapter implements MangaSource {
     this.icon = manifest.icon;
     this.version = manifest.version;
     this.isNsfw = manifest.nsfw === true;
-    this.manifestUrl = manifest.manifestUrl;
+    this.manifestUrl = externalManifestUrl;
     this.capabilities = {
       popular: manifest.capabilities.includes("popular"),
       latest: manifest.capabilities.includes("latest"),
@@ -53,15 +85,12 @@ export class DynamicSourceAdapter implements MangaSource {
       url = url.replace(`{${key}}`, encodeURIComponent(String(value)));
     }
     
+    return this.fetchJson<T>(url);
+  }
+
+  private fetchJson<T>(url: string): Promise<T> {
     const fullUrl = url.startsWith("http") ? url : `${this.manifest.baseUrl}${url.startsWith("/") ? "" : "/"}${url}`;
-    
-    const res = await safeFetch(fullUrl);
-    if (!res.ok) {
-      throw new Error(`Custom source API error: ${res.status}`);
-    }
-    
-    const data = await res.json();
-    return data;
+    return fetchDynamicSourceJson(fullUrl, this.id, this.origin);
   }
 
   async getPopular(page: number): Promise<MangaPageResult> {
@@ -97,10 +126,7 @@ export class DynamicSourceAdapter implements MangaSource {
       url += (url.includes("?") ? "&" : "?") + sp.toString();
     }
 
-    const fullUrl = url.startsWith("http") ? url : `${this.manifest.baseUrl}${url.startsWith("/") ? "" : "/"}${url}`;
-    const res = await safeFetch(fullUrl);
-    if (!res.ok) throw new Error(`Search failed: ${res.status}`);
-    return await res.json();
+    return this.fetchJson<MangaPageResult>(url);
   }
 
   async getDetail(mangaId: string): Promise<MangaDetail> {

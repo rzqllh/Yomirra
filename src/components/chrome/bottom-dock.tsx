@@ -2,20 +2,17 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { motion } from "motion/react"
+import { useLayoutEffect, useRef } from "react"
 import { DOCK_NAV_ITEMS } from "@/shared/config/nav"
 import { cn } from "@/shared/utils/cn"
 import { useSearchFilterStore } from "@/shared/store/search-filter-store"
 import { Icon } from "@/components/ui/icon"
-import { Surface } from "@/components/ui/surface"
 import { beginNavigationIntent, getNavigationPathname } from "@/shared/lib/navigation-intent"
-import { transitions } from "@/shared/lib/motion/tokens"
 
 export function BottomDock({ pendingHref }: { pendingHref?: string | null }) {
   const pathname = usePathname()
   const activePathname = pendingHref ? getNavigationPathname(pendingHref) : pathname
 
-  // Keep the existing four primary destinations and detached search action.
   const mainItems = DOCK_NAV_ITEMS.filter(
     (item) => item.href !== "/settings" && item.href !== "/search"
   )
@@ -32,19 +29,49 @@ export function BottomDock({ pendingHref }: { pendingHref?: string | null }) {
 
   const isSearchActive = activePathname === "/search" || activePathname?.startsWith("/search")
 
+  const dockRef = useRef<HTMLDivElement>(null)
+  const pillRef = useRef<HTMLSpanElement>(null)
+  useLayoutEffect(() => {
+    const dock = dockRef.current
+    const pill = pillRef.current
+    const link = dock?.querySelector<HTMLAnchorElement>('[aria-current="page"]')
+    if (!dock || !pill || !link) {
+      pill?.removeAttribute("data-visible")
+      return
+    }
+
+    const measure = () => {
+      const dockBox = dock.getBoundingClientRect()
+      const linkBox = link.getBoundingClientRect()
+      const inset = isSearchActive ? (linkBox.width - pill.offsetHeight) / 2 : 0
+      pill.style.width = `${linkBox.width - 2 * inset}px`
+      pill.style.transform = `translateX(${linkBox.left - dockBox.left + inset}px)`
+      pill.dataset.visible = ""
+    }
+
+    measure()
+    const frame = requestAnimationFrame(() => { pill.dataset.positioned = "" })
+    if (typeof ResizeObserver === "undefined") return () => cancelAnimationFrame(frame)
+
+    const observer = new ResizeObserver(measure)
+    observer.observe(dock)
+    observer.observe(link)
+    return () => {
+      observer.disconnect()
+      cancelAnimationFrame(frame)
+    }
+  }, [activePathname, isSearchActive])
+
+
   return (
     <nav
       aria-label="Navigasi utama"
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-[var(--z-sticky)] w-full md:hidden"
-      style={{
-        paddingLeft: "max(12px, env(safe-area-inset-left, 0px))",
-        paddingRight: "max(12px, env(safe-area-inset-right, 0px))",
-        paddingBottom: "max(12px, env(safe-area-inset-bottom, 0px))",
-      }}
+      className="yomirra-dock-frame pointer-events-none fixed inset-x-0 bottom-0 z-[var(--z-sticky)] w-full md:hidden"
     >
-      <div className="pointer-events-auto mx-auto flex w-fit max-w-full items-center justify-center gap-2 max-[359px]:gap-1.5">
-        <Surface asChild variant="glassChrome" rounded="dock">
-          <div className="yomirra-chrome flex h-14 min-w-0 items-center justify-center gap-1 rounded-xl px-1.5 py-1 sm:gap-1.5 sm:px-2">
+      <div ref={dockRef} className="pointer-events-auto relative mx-auto flex w-fit max-w-full items-center justify-center gap-2 max-[359px]:gap-1.5">
+        <span ref={pillRef} aria-hidden="true" className="yomirra-dock-pill yomirra-dock-indicator" />
+        <div className="yomirra-dock-surface relative flex border border-transparent min-w-0 items-center justify-center gap-0.5 min-[360px]:gap-1 sm:gap-1.5">
+          <span aria-hidden="true" className="yomirra-chrome yomirra-dock-glass absolute inset-0 rounded-full" />
           {mainItems.map((item) => {
             const isActive = isMainTabActive(item.href)
 
@@ -58,24 +85,15 @@ export function BottomDock({ pendingHref }: { pendingHref?: string | null }) {
                   }
                 }}
                 className={cn(
-                  "group relative flex h-11 items-center justify-center rounded-lg outline-none transition-all duration-200 ease-out select-none tap-highlight-transparent active:scale-95 motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+                  "group relative flex h-11 items-center justify-center rounded-full outline-none select-none tap-highlight-transparent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
                   isActive
-                    ? "shrink-0 px-2.5 min-[360px]:px-3 sm:px-3.5"
+                    ? "shrink-0 px-2 min-[360px]:px-3 sm:px-3.5"
                     : "size-11 shrink-0"
                 )}
                 aria-label={item.label}
                 aria-current={isActive ? "page" : undefined}
               >
-                {isActive && (
-                  <motion.span
-                    aria-hidden="true"
-                    className="pointer-events-none absolute inset-0 rounded-lg bg-accent-dim"
-                    layoutId="active-dock-tab"
-                    transition={transitions.layout}
-                  />
-                )}
-
-                <span className="relative z-10 flex w-full items-center justify-center gap-1.5">
+                <span className="relative z-10 flex w-full items-center justify-center gap-1 min-[360px]:gap-1.5">
                   <Icon
                     icon={item.icon}
                     size={isActive ? 18 : 20}
@@ -98,9 +116,7 @@ export function BottomDock({ pendingHref }: { pendingHref?: string | null }) {
             )
           })}
         </div>
-      </Surface>
 
-      <Surface asChild variant="glassChrome" rounded="dock">
         <Link
           href={searchItem.href}
           onClick={(event) => {
@@ -110,18 +126,11 @@ export function BottomDock({ pendingHref }: { pendingHref?: string | null }) {
             }
             useSearchFilterStore.getState().resetFilters()
           }}
-          className="yomirra-chrome relative flex size-14 shrink-0 items-center justify-center rounded-xl outline-none transition-transform duration-200 ease-out select-none tap-highlight-transparent active:scale-95 motion-reduce:transition-none max-[359px]:size-12 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          className="yomirra-dock-surface relative flex border border-transparent w-[var(--dock-height)] shrink-0 items-center justify-center rounded-full outline-none select-none tap-highlight-transparent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           aria-label={searchItem.label}
           aria-current={isSearchActive ? "page" : undefined}
         >
-          {isSearchActive && (
-            <motion.span
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-1 rounded-lg bg-accent-dim"
-              layoutId="active-dock-tab"
-              transition={transitions.layout}
-            />
-          )}
+          <span aria-hidden="true" className="yomirra-chrome yomirra-dock-glass absolute inset-0 rounded-full" />
           <Icon
             icon={searchItem.icon}
             size={21}
@@ -134,7 +143,6 @@ export function BottomDock({ pendingHref }: { pendingHref?: string | null }) {
             )}
           />
         </Link>
-      </Surface>
       </div>
     </nav>
   )

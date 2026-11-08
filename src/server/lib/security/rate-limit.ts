@@ -1,7 +1,6 @@
 import {
   ensureRedisReady,
   isRedisConfigured,
-  isRedisReady,
   redis,
 } from "@/server/lib/cache/redis";
 import { logger } from "@/shared/logger";
@@ -32,6 +31,12 @@ export const RATE_LIMIT_POLICIES = {
     failClosed: false,
     namespace: "public-search",
   },
+  publicAi: {
+    limit: 12,
+    window: 60,
+    failClosed: true,
+    namespace: "public-ai",
+  },
   searchIntelligence: {
     limit: 10,
     window: 60,
@@ -54,6 +59,54 @@ export const RATE_LIMIT_POLICIES = {
 
 export type RateLimitPolicyName = keyof typeof RATE_LIMIT_POLICIES;
 
+const INCREMENT_WITH_EXPIRY = `
+local count = redis.call("INCR", KEYS[1])
+local ttl = redis.call("TTL", KEYS[1])
+if ttl < 0 then
+  redis.call("EXPIRE", KEYS[1], ARGV[1])
+  ttl = tonumber(ARGV[1])
+end
+return {count, ttl}
+`;
+
+const MAX_LOCAL_COUNTERS = 4096;
+const localCounters = new Map<string, { count: number; expiresAt: number }>();
+let nextSweep = 0;
+let nextUnavailableLog = 0;
+
+function checkLocalRateLimit(key: string, limit: number, window: number): RateLimitResult {
+  const now = Date.now();
+  if (now >= nextSweep) {
+    for (const [key, counter] of localCounters) {
+      if (counter.expiresAt <= now) localCounters.delete(key);
+    }
+    nextSweep = now + 1000;
+  }
+
+  let counter = localCounters.get(key);
+  if (!counter || counter.expiresAt <= now) {
+    // Keep live counters even during a flood of new identities.
+    if (!counter && localCounters.size >= MAX_LOCAL_COUNTERS) {
+      return {
+        success: false,
+        headers: { "X-RateLimit-Limit": String(limit), "X-RateLimit-Remaining": "0", "X-RateLimit-Reset": String(window) },
+      };
+    }
+    counter = { count: 0, expiresAt: now + window * 1000 };
+    localCounters.set(key, counter);
+  }
+  if (counter.count <= limit) counter.count += 1;
+
+  return {
+    success: counter.count <= limit,
+    headers: {
+      "X-RateLimit-Limit": String(limit),
+      "X-RateLimit-Remaining": String(Math.max(0, limit - counter.count)),
+      "X-RateLimit-Reset": String(Math.ceil((counter.expiresAt - now) / 1000)),
+    },
+  };
+}
+
 function getRateLimitIdentity(request: Request): string {
   // Use the right-most proxy-observed hop instead of trusting a client-prepended
   // x-forwarded-for value. x-real-ip remains a fallback for local/proxy setups.
@@ -65,7 +118,7 @@ function getRateLimitIdentity(request: Request): string {
     .at(-1);
   const realIp = request.headers.get("x-real-ip")?.trim();
 
-  return forwarded || realIp || "unknown";
+  return (forwarded || realIp || "unknown").slice(0, 64);
 }
 
 export async function checkRateLimit(
@@ -92,22 +145,11 @@ export async function checkRateLimit(
       };
     }
 
+    if (!failClosed) return checkLocalRateLimit(key, limit, window);
+
     if (!isRedisConfigured) {
       return {
-        success: !failClosed,
-        unavailable: true,
-        headers: {
-          "X-RateLimit-Limit": limit.toString(),
-          "X-RateLimit-Remaining": limit.toString(),
-          "X-RateLimit-Reset": window.toString(),
-        },
-      };
-    }
-
-    if (!failClosed && !isRedisReady()) {
-      void ensureRedisReady().catch(() => {});
-      return {
-        success: true,
+        success: false,
         unavailable: true,
         headers: {
           "X-RateLimit-Limit": limit.toString(),
@@ -119,13 +161,7 @@ export async function checkRateLimit(
 
     await ensureRedisReady();
 
-    const requests = await redis.incr(key);
-
-    let ttl = await redis.ttl(key);
-    if (requests === 1 || ttl === -1) {
-      await redis.expire(key, window);
-      ttl = window;
-    }
+    const [requests, ttl] = await redis.eval(INCREMENT_WITH_EXPIRY, 1, key, window) as [number, number];
 
     return {
       success: requests <= limit,
@@ -136,9 +172,13 @@ export async function checkRateLimit(
       },
     };
   } catch (error) {
-    logger.warn("Rate limit check unavailable", { error });
+    const now = Date.now();
+    if (now >= nextUnavailableLog) {
+      nextUnavailableLog = now + 60_000;
+      logger.warn("Rate limit check unavailable", { errorType: error instanceof Error ? error.name : "Unknown" });
+    }
     return {
-      success: !failClosed,
+      success: false,
       unavailable: true,
       headers: {
         "X-RateLimit-Limit": limit.toString(),
@@ -188,6 +228,7 @@ export function createRateLimitRejection(
   const unavailable = Boolean(rateLimit.unavailable);
   const headers = {
     ...rateLimit.headers,
+    "Cache-Control": "private, no-store",
     "Retry-After":
       rateLimit.headers["X-RateLimit-Reset"] ||
       RATE_LIMIT_POLICIES.adminMutation.window.toString(),

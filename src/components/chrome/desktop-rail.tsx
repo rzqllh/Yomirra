@@ -111,7 +111,7 @@ export function DesktopRail({ pendingHref }: { pendingHref?: string | null } = {
       <nav aria-label="Navigasi desktop" className="flex flex-col gap-1">
         <span
           className={cn(
-            "hidden px-2.5 pb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-text-muted/80",
+            "hidden px-2.5 pb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-text-muted",
             !isCollapsed && "xl:block"
           )}
         >
@@ -123,7 +123,7 @@ export function DesktopRail({ pendingHref }: { pendingHref?: string | null } = {
       <nav aria-label="Navigasi lainnya" className="mt-4 flex flex-col gap-1 border-t border-border-subtle/60 pt-3.5">
         <span
           className={cn(
-            "hidden px-2.5 pb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-text-muted/80",
+            "hidden px-2.5 pb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-text-muted",
             !isCollapsed && "xl:block"
           )}
         >

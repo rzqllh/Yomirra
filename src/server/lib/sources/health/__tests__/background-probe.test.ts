@@ -131,7 +131,13 @@ describe("background source health probe locking", () => {
     expect(await Promise.all(Array.from({ length: 20 }, () => triggerBackgroundProbe())))
       .toEqual([true, ...Array(19).fill(false)]);
     reject(new Error("provider unavailable"));
-    await vi.waitFor(async () => expect(await triggerBackgroundProbe()).toBe(true));
+    expect(await triggerBackgroundProbe()).toBe(false);
+    const now = vi.spyOn(Date, "now").mockReturnValue(Date.now() + 30_000);
+    try {
+      await vi.waitFor(async () => expect(await triggerBackgroundProbe()).toBe(true));
+    } finally {
+      now.mockRestore();
+    }
     expect(mocks.probe).toHaveBeenCalledTimes(2);
     expect(mocks.set).not.toHaveBeenCalled();
     expect(mocks.setex).not.toHaveBeenCalled();

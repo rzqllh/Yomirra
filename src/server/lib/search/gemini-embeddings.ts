@@ -6,6 +6,8 @@ import { logger } from "@/shared/logger";
 const MODEL = "gemini-embedding-2";
 const DIMENSIONS = 768;
 const CACHE_TTL_SECONDS = 7 * 24 * 60 * 60;
+const MAX_ACTIVE_EMBEDDINGS = 8;
+const activeEmbeddings = new Map<string, Promise<number[] | null>>();
 
 interface GeminiEmbeddingResponse {
   embedding?: { values?: number[] };
@@ -23,9 +25,20 @@ export function isSemanticEmbeddingConfigured(): boolean {
 
 export async function embedSearchText(text: string): Promise<number[] | null> {
   const clean = text.trim();
-  if (!clean || !env.GEMINI_API_KEY) return null;
+  const apiKey = env.GEMINI_API_KEY;
+  if (!clean || !apiKey) return null;
 
   const key = cacheKey(clean);
+  const active = activeEmbeddings.get(key);
+  if (active) return active;
+  if (activeEmbeddings.size >= MAX_ACTIVE_EMBEDDINGS) return null;
+
+  const pending = loadEmbedding(clean, key, apiKey).finally(() => activeEmbeddings.delete(key));
+  activeEmbeddings.set(key, pending);
+  return pending;
+}
+
+async function loadEmbedding(text: string, key: string, apiKey: string): Promise<number[] | null> {
   try {
     const cached = await redis.get(key);
     if (cached) {
@@ -41,13 +54,14 @@ export async function embedSearchText(text: string): Promise<number[] | null> {
       `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:embedContent`,
       {
         method: "POST",
+        redirect: "error",
         headers: {
           "Content-Type": "application/json",
-          "x-goog-api-key": env.GEMINI_API_KEY,
+          "x-goog-api-key": apiKey,
         },
         body: JSON.stringify({
           model: `models/${MODEL}`,
-          content: { parts: [{ text: clean }] },
+          content: { parts: [{ text }] },
           output_dimensionality: DIMENSIONS,
         }),
         signal: AbortSignal.timeout(8000),

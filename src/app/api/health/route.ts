@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { isRedisConfigured, isRedisCircuitOpen, isRedisCommandAllowed, redis } from "@/server/lib/cache/redis";
+import { Command } from "ioredis";
+import { ensureRedisReady, isRedisConfigured, isRedisCircuitOpen, isRedisCommandAllowed, isRedisReady, redis } from "@/server/lib/cache/redis";
 import { sourceHealthStore } from "@/server/lib/sources/health/health-store";
 import { toLivenessSourceHealth, type LivenessSourceHealth } from "@/server/lib/sources/health/public-health";
 import { logger } from "@/shared/logger";
@@ -7,31 +8,55 @@ import { logger } from "@/shared/logger";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-// Liveness checks must never initiate upstream provider requests. Source health
+// Readiness checks must never initiate upstream provider requests. Source health
 // is measured separately by /api/sources/health and stored by scheduled probes.
 const MAX_SOURCE_SNAPSHOT_AGE_MS = 10 * 60 * 1000;
+const REDIS_PROBE_INTERVAL_MS = 10_000;
+type RedisProbeResult = "ok" | "slow" | "down";
+let redisHealthCheck: Promise<RedisProbeResult> | undefined;
+let lastRedisProbe: { status: RedisProbeResult; expiresAt: number } | undefined;
 
-export async function GET() {
-  let isDegraded = false;
-  let redisStatus: "ok" | "slow" | "down" | "unconfigured" =
-    isRedisConfigured ? "ok" : "unconfigured";
-
-  if (isRedisConfigured && !isRedisCommandAllowed()) {
-    redisStatus = "down";
-    isDegraded = true;
-  } else if (isRedisConfigured) {
+function checkRedisHealth(): Promise<RedisProbeResult> {
+  if (lastRedisProbe && Date.now() < lastRedisProbe.expiresAt) {
+    if (!isRedisReady()) {
+      lastRedisProbe.status = "down";
+    }
+    return Promise.resolve(lastRedisProbe.status);
+  }
+  redisHealthCheck ??= (async () => {
+    const start = Date.now();
+    let status: RedisProbeResult;
     try {
-      const start = Date.now();
-      await redis.ping();
-      if (Date.now() - start > 1000) redisStatus = "slow";
+      await ensureRedisReady();
+      const ping = new Command("ping", [], { replyEncoding: "utf8" });
+      ping.setTimeout(1_500);
+      if (await redis.sendCommand(ping) !== "PONG") {
+        throw new Error("Unexpected Redis PING response");
+      }
+      status = Date.now() - start > 1_000 ? "slow" : "ok";
     } catch (error) {
-      redisStatus = "down";
-      isDegraded = true;
+      status = "down";
       if (!isRedisCircuitOpen()) {
         logger.error("Redis health check failed", { error });
       }
     }
+    lastRedisProbe = { status, expiresAt: Date.now() + REDIS_PROBE_INTERVAL_MS };
+    return status;
+  })().finally(() => { redisHealthCheck = undefined; });
+  return redisHealthCheck;
+}
+
+export async function GET() {
+  let redisStatus: RedisProbeResult | "unconfigured" = "unconfigured";
+  if (isRedisConfigured) {
+    if (isRedisCommandAllowed()) {
+      redisStatus = await checkRedisHealth();
+    } else {
+      lastRedisProbe = undefined;
+      redisStatus = "down";
+    }
   }
+  const isDegraded = redisStatus === "down" || redisStatus === "unconfigured";
 
   // Only in-process observations are read. Missing or stale observations are
   // omitted rather than presented as current health or triggering fresh probes.
@@ -50,8 +75,8 @@ export async function GET() {
         .map(([sourceId, snapshot]) => [sourceId, toLivenessSourceHealth(snapshot)])
     );
   } catch (error) {
-    // Optional diagnostic data must not break a liveness response.
-    logger.warn("Recent source snapshots unavailable to liveness check", { error });
+    // Optional diagnostic data must not break readiness reporting.
+    logger.warn("Recent source snapshots unavailable to readiness check", { error });
   }
 
   return NextResponse.json(

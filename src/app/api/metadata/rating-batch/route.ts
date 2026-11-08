@@ -2,14 +2,31 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { withCache } from "@/server/lib/cache/redis-cache";
 import { checkRateLimit } from "@/server/lib/security/rate-limit";
+import { readBoundedJson } from "@/server/lib/security/read-bounded-json";
+import { withSourceCapacity } from "@/server/lib/sources/source-capacity";
+import { loadSourceUpstream } from "@/server/lib/sources/source-upstream";
+import { UpstreamHttpError } from "@/server/lib/sources/adapters/base/http-client";
+import { SourceError } from "@/server/lib/sources/error";
 import { isExactNormalizedTitleMatch } from "@/shared/lib/title-matcher";
 
 const MAX_TITLES = 20;
 const MAX_TITLE_LENGTH = 120;
 const CONCURRENCY = 4;
+const LOOKUP_BUDGET_MS = 4_000;
+
+function fetchRatingProvider(provider: "mangadex" | "anilist", url: string, options: RequestInit) {
+  return loadSourceUpstream(provider, "detail", null, async () => {
+    const response = await fetch(url, options);
+    if (response.status === 403 || response.status === 429) {
+      void response.body?.cancel().catch(() => {});
+      throw new UpstreamHttpError(response.status, response.statusText, response.headers.get("retry-after"));
+    }
+    return response;
+  }, 'metadata-rating:' + provider);
+}
 
 export async function POST(req: NextRequest) {
-  const rateLimit = await checkRateLimit(req, 30, 60, true);
+  const rateLimit = await checkRateLimit(req, 30, 60, false, "rating-batch");
   if (!rateLimit.success) {
     return NextResponse.json({ error: rateLimit.unavailable ? "Service temporarily unavailable" : "Too many requests" }, {
       status: rateLimit.unavailable ? 503 : 429,
@@ -17,19 +34,26 @@ export async function POST(req: NextRequest) {
     });
   }
   try {
-    const body = await req.json();
-    const titles: string[] = body.titles;
+    const body = await readBoundedJson(req, 16 * 1024);
+    if (!body.ok && body.status === 413) {
+      return NextResponse.json({ error: "Rating batch payload too large" }, { status: 413 });
+    }
+    const titles = body.ok ? (body.data as { titles?: unknown } | null)?.titles : undefined;
 
     if (!Array.isArray(titles) || titles.length === 0 || titles.length > MAX_TITLES ||
         titles.some((title) => typeof title !== "string" || title.length > MAX_TITLE_LENGTH)) {
       return NextResponse.json({ error: "Missing or invalid titles array" }, { status: 400 });
     }
 
-    const results: Record<string, number | undefined> = {};
+    const results: Record<string, number | undefined> = Object.create(null);
+    const signal = AbortSignal.timeout(LOOKUP_BUDGET_MS);
+    const budgetExhausted = new Promise<void>((resolve) => {
+      signal.addEventListener("abort", () => resolve(), { once: true });
+    });
     const uniqueTitles = Array.from(new Set(titles)).filter(Boolean);
 
-    for (let i = 0; i < uniqueTitles.length; i += CONCURRENCY) {
-      await Promise.all(uniqueTitles.slice(i, i + CONCURRENCY).map(async (title) => {
+    for (let i = 0; i < uniqueTitles.length && !signal.aborted; i += CONCURRENCY) {
+      const batch = Promise.all(uniqueTitles.slice(i, i + CONCURRENCY).map(async (title) => {
         const normalizedTitle = title
           .replace(/chapter\s*\d+/i, "")
           .replace(/\[.*?\]/g, "")
@@ -41,16 +65,17 @@ export async function POST(req: NextRequest) {
           return;
         }
 
-        const cacheKey = `rating:score:v2:${normalizedTitle.toLowerCase()}`;
+        const cacheKey = `rating:score:v3:${normalizedTitle.toLowerCase()}`;
 
         try {
           const cachedData = await withCache(
             cacheKey,
-            async () => {
+            () => withSourceCapacity("metadata-rating", async () => {
+              signal.throwIfAborted();
               try {
                 // Find manga by title
-                const searchRes = await fetch(`https://api.mangadex.org/manga?title=${encodeURIComponent(normalizedTitle)}&limit=1`, {
-                  signal: AbortSignal.timeout(5000),
+                const searchRes = await fetchRatingProvider("mangadex", `https://api.mangadex.org/manga?title=${encodeURIComponent(normalizedTitle)}&limit=1`, {
+                  signal,
                 });
                 
                 if (searchRes.ok) {
@@ -78,8 +103,8 @@ export async function POST(req: NextRequest) {
                       ])
                     ) {
                       // Fetch statistics only after strict title identity validation.
-                      const statRes = await fetch(`https://api.mangadex.org/statistics/manga/${mangaId}`, {
-                        signal: AbortSignal.timeout(5000),
+                      const statRes = await fetchRatingProvider("mangadex", `https://api.mangadex.org/statistics/manga/${mangaId}`, {
+                        signal,
                       });
                       
                       if (statRes.ok) {
@@ -96,9 +121,11 @@ export async function POST(req: NextRequest) {
                   }
                 }
               } catch (e) {
-                console.error("MangaDex rating fetch error:", e);
+                signal.throwIfAborted();
+                if (!SourceError.isSourceError(e)) console.error("MangaDex rating lookup failed");
               }
 
+              signal.throwIfAborted();
               try {
                 const query = `
                   query ($search: String) {
@@ -115,7 +142,7 @@ export async function POST(req: NextRequest) {
                   }
                 `;
                 
-                const res = await fetch("https://graphql.anilist.co", {
+                const res = await fetchRatingProvider("anilist", "https://graphql.anilist.co", {
                   method: "POST",
                   headers: {
                     "Content-Type": "application/json",
@@ -123,7 +150,7 @@ export async function POST(req: NextRequest) {
                     "User-Agent": "Yomirra/1.0"
                   },
                   body: JSON.stringify({ query, variables: { search: normalizedTitle } }),
-                  signal: AbortSignal.timeout(5000),
+                  signal,
                 });
 
                 if (res.ok) {
@@ -151,20 +178,22 @@ export async function POST(req: NextRequest) {
                   }
                 }
               } catch (e) {
-                console.error("Anilist fallback error:", e);
+                signal.throwIfAborted();
+                if (!SourceError.isSourceError(e)) console.error("AniList rating lookup failed");
               }
 
               return { score: undefined };
-            },
-            60 * 60 * 24 * 7 // 7 days
+            }),
+            60 * 60 * 24 * 7,
+            { shouldPersist: ({ score }) => score !== undefined }
           );
 
-          results[title] = cachedData?.score;
-        } catch (error) {
-          console.error(`Rating batch score error for ${title}:`, error);
-          results[title] = undefined;
+          if (!signal.aborted) results[title] = cachedData?.score;
+        } catch {
+          // Admission or lookup failure leaves this title out of the partial response.
         }
       }));
+      await Promise.race([batch, budgetExhausted]);
     }
 
     return NextResponse.json({ data: results });

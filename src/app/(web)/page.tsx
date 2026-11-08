@@ -2,7 +2,7 @@ import { getServerReadOptions } from "@/server/lib/sources/content-access";
 import { isSourceContentVisible } from "@/shared/sources/content-policy";
 import { Metadata } from "next";
 import { HomeView } from "@/components/home/home-view";
-import { getRuntimeSources } from "@/server/lib/sources/runtime-sources";
+import { getDiscoveryRuntimeSources } from "@/server/lib/sources/discovery-runtime-sources";
 import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { EmptyState } from "@/components/states/empty-state";
@@ -25,7 +25,7 @@ export default async function HomePage() {
   );
 
   const readOptions = await getServerReadOptions();
-  const allRuntimeSources = await getRuntimeSources();
+  const allRuntimeSources = await getDiscoveryRuntimeSources();
   const activeSources = selectDiscoverySources(
     allRuntimeSources,
     userDisabledSources

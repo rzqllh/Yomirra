@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 
 test("Settings controls persist preferences and expose honest, accessible states", async ({ page }) => {
   test.setTimeout(120_000);

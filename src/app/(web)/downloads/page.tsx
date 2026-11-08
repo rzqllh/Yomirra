@@ -1,11 +1,17 @@
 "use client";
 
-import { useDownloadStore } from "@/shared/store/download-store";
+import { useDownloadStore, type DownloadChapter } from "@/shared/store/download-store";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEffect, useState } from "react";
 import { Database, Pause, Play, Trash, X, ArrowClockwise, Download, BookOpen } from "@phosphor-icons/react";
 import { IconButton } from "@/components/ui/icon-button";
+import Image from "next/image";
 import Link from "next/link";
+import { useOffline } from "@/components/providers/offline-provider";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { getReaderHref } from "@/shared/lib/routes";
+import { getSourceMetadata } from "@/shared/sources/source-registry";
+import { getOfflineImageUrl } from "@/shared/utils/download-helpers";
 import { YomirraSurface, PageContainer, ContentLane } from "@/components/ui/layout";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/states/empty-state";
@@ -19,6 +25,78 @@ import {
 import { MangaCover } from "@/components/komik/manga-cover";
 
 import { PageHeader } from "@/components/chrome/header";
+
+function OfflineDownloadImage({ src, index, first }: { src: string; index: number; first: boolean }) {
+  const [failed, setFailed] = useState(false);
+
+  if (failed) {
+    return <p className="p-4 text-center text-sm text-text-secondary">Halaman {index + 1} tidak tersedia di perangkat.</p>;
+  }
+
+  return (
+    <Image
+      src={src}
+      alt={`Halaman ${index + 1}`}
+      width={720}
+      height={1080}
+      className="h-auto w-full bg-surface-muted"
+      loading={first ? "eager" : "lazy"}
+      unoptimized
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
+function CompletedDownloadLink({ item, children }: { item: DownloadChapter; children: React.ReactNode }) {
+  const { isOffline } = useOffline();
+  const label = `Baca ${item.mangaTitle} - ${item.chapterTitle}`;
+  const className = "flex min-w-0 flex-1 items-center gap-3.5 rounded-xl p-1.5 text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:gap-4";
+
+  if (!isOffline) {
+    return <Link href={getReaderHref(item.sourceId, item.mangaId, item.chapterId)} prefetch={false} className={className} aria-label={label}>{children}</Link>;
+  }
+
+  const source = getSourceMetadata(item.sourceId);
+  const canReadOffline = item.offlineSafe === true && source && !source.isNsfw;
+  const unavailableMessage = item.offlineSafe === undefined && source && !source.isNsfw
+    ? "Unduhan ini memerlukan verifikasi konten. Buka chapter saat perangkat terhubung ke internet."
+    : "Judul ini hanya bisa dibaca melalui Reader saat perangkat terhubung ke internet.";
+  const pages = canReadOffline ? item.pages
+    .filter((page) => page.status === "cached" && Number.isSafeInteger(page.index) && page.index >= 0)
+    .sort((first, second) => first.index - second.index) : [];
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <button type="button" className={className} aria-label={label}>{children}</button>
+      </DialogTrigger>
+      <DialogContent className="max-w-3xl gap-4 sm:max-w-3xl">
+        <DialogHeader className="pr-12">
+          <DialogTitle>{item.mangaTitle}</DialogTitle>
+          <DialogDescription>{item.chapterTitle} · Unduhan offline</DialogDescription>
+        </DialogHeader>
+        {pages.length > 0 ? (
+          <div className="overflow-hidden rounded-md">
+            {pages.map((page, position) => (
+              <OfflineDownloadImage
+                key={page.index}
+                src={getOfflineImageUrl({ ...item, pageIndex: page.index })}
+                index={page.index}
+                first={position === 0}
+              />
+            ))}
+          </div>
+        ) : (
+          <p role="status" className="text-sm text-text-secondary">
+            {canReadOffline
+              ? "Halaman unduhan tidak tersedia. Sambungkan perangkat ke internet dan periksa unduhan."
+              : unavailableMessage}
+          </p>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export default function DownloadsPage() {
   const {
@@ -281,11 +359,7 @@ export default function DownloadsPage() {
                     key={item.id}
                     className="group flex items-center gap-1 rounded-xl bg-surface-raised border border-border-subtle/80 p-2 sm:p-2.5 shadow-xs hover:border-accent/40 motion-safe:transition-colors"
                   >
-                    <Link
-                      href={`/manga/${item.sourceId}/${item.mangaId}/read/${item.chapterId}`}
-                      className="flex min-w-0 flex-1 items-center gap-3.5 rounded-xl p-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:gap-4"
-                      aria-label={`Baca ${item.mangaTitle} - ${item.chapterTitle}`}
-                    >
+                    <CompletedDownloadLink item={item}>
                       <MangaCardCoverFrame className="w-12 sm:w-14 rounded-xl">
                         <MangaCover
                           src={item.coverUrl}
@@ -306,7 +380,7 @@ export default function DownloadsPage() {
                           {item.downloadedPages || 0} Halaman • Selesai
                         </MangaCardMeta>
                       </div>
-                    </Link>
+                    </CompletedDownloadLink>
                     <IconButton
                       onClick={() => {
                         removeDownload(item.id);

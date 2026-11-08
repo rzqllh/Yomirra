@@ -18,6 +18,10 @@ const createRedisClient = (): RedisCircuitGuard => {
     lazyConnect: true,
     maxRetriesPerRequest: 1,
     enableOfflineQueue: false,
+    // A silent socket must not stall callers or replay a potentially committed write.
+    autoResendUnfulfilledCommands: false,
+    commandTimeout: 1500,
+    socketTimeout: 2000,
     connectTimeout: 2000,
     retryStrategy(times: number) {
       if (times > 2) return null;

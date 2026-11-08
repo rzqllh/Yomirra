@@ -120,7 +120,7 @@ describe("MangaDetailView - Scroll Position Reset", () => {
     expect(header.getAttribute("data-showback")).toBe("true");
   });
 
-  it("renders backdrop with parallax motion wrapper and lowered bottom gradient scrim", () => {
+  it("renders backdrop with parallax motion wrapper and a dark scrim for the white detail text", () => {
     const { container } = render(
       <MangaDetailView
         sourceId="shinigami"
@@ -137,10 +137,8 @@ describe("MangaDetailView - Scroll Position Reset", () => {
       />
     );
 
-    // Verify smoothed bottom gradient (via-45% from-[var(--color-surface-base)])
-    const bottomGradient = container.querySelector('[class*="via-45%"]');
-    expect(bottomGradient).not.toBeNull();
-    expect(bottomGradient?.className).toContain("from-[var(--color-surface-base)]");
+    const bottomGradient = container.querySelector('[class~="from-black/95"]');
+    expect(bottomGradient?.className).toContain("via-black/65");
 
     // Verify parallax container overflow positioning
     const parallaxLayer = container.querySelector('[class*="-top-12"]');

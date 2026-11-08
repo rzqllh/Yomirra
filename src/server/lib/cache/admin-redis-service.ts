@@ -3,41 +3,41 @@ import { physicalScanPattern, physicalToLogicalRedisKey } from "./redis-key-scop
 import { logger } from "@/shared/logger";
 import type { RedisKeyDetail, RedisKeyItem, RedisTelemetry } from "@/shared/types/admin";
 
-/**
- * Mengambil ringkasan telemetri Redis (penggunaan memori, uptime, client, total key yomirra).
- */
 const MAX_SCAN_ITERATIONS = 200;
 const MAX_ADMIN_KEYS = 1000;
+const TELEMETRY_SCAN_ITERATIONS = 4;
 
 /**
- * Redis SCAN returns physical keys and does NOT apply ioredis keyPrefix to MATCH.
- * Prefix the scan pattern manually, then strip only keys belonging to this branch.
- * The iteration cap prevents unbounded work on a shared Redis service.
+ * Redis SCAN returns physical keys and does not apply ioredis keyPrefix to MATCH.
+ * Prefix the pattern and keep only logical keys belonging to this branch.
  */
+async function scanLogicalKeys(pattern: string, maxKeys: number, maxIterations: number): Promise<Set<string>> {
+  const physicalPattern = physicalScanPattern(pattern);
+  const keys = new Set<string>();
+  let cursor = "0";
+  let iterations = 0;
+  do {
+    const [next, scanned] = await redis.scan(cursor, "MATCH", physicalPattern, "COUNT", 100);
+    cursor = next;
+    iterations += 1;
+    for (const physicalKey of scanned) {
+      const key = physicalToLogicalRedisKey(physicalKey);
+      if (key !== null) keys.add(key);
+      if (keys.size >= maxKeys) return keys;
+    }
+  } while (cursor !== "0" && iterations < maxIterations);
+  return keys;
+}
+
 export async function scanRedisKeys(pattern = "yomirra:*", limit = 100): Promise<RedisKeyItem[]> {
   const maxKeys = Number.isFinite(limit) ? Math.max(1, Math.min(Math.floor(limit), MAX_ADMIN_KEYS)) : 100;
   try {
-    const physicalPattern = physicalScanPattern(pattern);
+    const keys = await scanLogicalKeys(pattern, maxKeys, MAX_SCAN_ITERATIONS);
     const results: RedisKeyItem[] = [];
-    const seen = new Set<string>();
-    let cursor = "0";
-    let iterations = 0;
-
-    do {
-      const [next, scanned] = await redis.scan(cursor, "MATCH", physicalPattern, "COUNT", 100);
-      cursor = next;
-      iterations += 1;
-
-      for (const physicalKey of scanned) {
-        const key = physicalToLogicalRedisKey(physicalKey);
-        if (key === null || seen.has(key)) continue;
-        seen.add(key);
-        const [type, ttl] = await Promise.all([redis.type(key), redis.ttl(key)]);
-        results.push({ key, type, ttl });
-        if (results.length >= maxKeys) break;
-      }
-    } while (cursor !== "0" && iterations < MAX_SCAN_ITERATIONS && results.length < maxKeys);
-
+    for (const key of keys) {
+      const [type, ttl] = await Promise.all([redis.type(key), redis.ttl(key)]);
+      results.push({ key, type, ttl });
+    }
     return results;
   } catch (error) {
     logger.warn("Gagal scan keys Redis", { pattern, error });
@@ -52,7 +52,7 @@ export async function scanRedisKeys(pattern = "yomirra:*", limit = 100): Promise
 export async function getRedisTelemetry(): Promise<RedisTelemetry> {
   try {
     const rawInfo = await redis.info();
-    const keys = await scanRedisKeys("yomirra:*", MAX_ADMIN_KEYS);
+    const keys = await scanLogicalKeys("yomirra:*", MAX_ADMIN_KEYS, TELEMETRY_SCAN_ITERATIONS);
 
     let usedMemory = "0B";
     let uptimeDays = 0;
@@ -68,7 +68,7 @@ export async function getRedisTelemetry(): Promise<RedisTelemetry> {
       usedMemory,
       uptimeDays,
       connectedClients,
-      totalSampledKeys: keys.length,
+      totalSampledKeys: keys.size,
       status: "connected",
     };
   } catch (error) {

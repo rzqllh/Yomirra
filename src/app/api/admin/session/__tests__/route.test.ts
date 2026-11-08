@@ -63,6 +63,17 @@ describe("Admin session route", () => {
     expect(response.headers.get("set-cookie")).toBeNull();
   });
 
+  it("rejects an oversized login body without issuing a session", async () => {
+    process.env.ADMIN_KEY = "configured-admin-key";
+    process.env.ADMIN_SESSION_SECRET = "session-secret";
+    const response = await POST(new NextRequest("https://yomirra.example/api/admin/session", {
+      method: "POST",
+      body: JSON.stringify({ passkey: "x".repeat(4096) }),
+    }));
+    expect(response.status).toBe(413);
+    expect(response.headers.get("set-cookie")).toBeNull();
+  });
+
   it("rate limits session exchange before validating a configured passkey", async () => {
     process.env.ADMIN_KEY = "configured-admin-key";
     process.env.ADMIN_SESSION_SECRET = "session-secret";

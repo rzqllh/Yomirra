@@ -1,3 +1,4 @@
+import { AI_IMAGE_BODY_LIMIT, withAiRequest } from "@/server/lib/ai/request-admission";
 import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimitPolicy, createRateLimitRejection } from "@/server/lib/security/rate-limit";
 import { analyzeMangaPageVision } from "@/server/lib/ai/vision-service";
@@ -12,43 +13,44 @@ const visionSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const rateLimit = await checkRateLimitPolicy(req, "publicSearch", "ai-vision");
+  const rateLimit = await checkRateLimitPolicy(req, "publicAi", "ai-vision");
   if (!rateLimit.success) {
     return createRateLimitRejection(rateLimit, {
       unavailableMessage: "Layanan analisis visual sedang padat, silakan coba beberapa saat lagi.",
     });
   }
 
-  try {
-    const body = await req.json();
-    const parsed = visionSchema.safeParse(body);
-    if (!parsed.success) {
+  return withAiRequest(req, AI_IMAGE_BODY_LIMIT, async (body) => {
+    try {
+      const parsed = visionSchema.safeParse(body);
+      if (!parsed.success) {
+        return NextResponse.json(
+          { error: "Format request tidak valid", details: parsed.error.format() },
+          { status: 400 }
+        );
+      }
+
+      if (!parsed.data.imageBase64 && !parsed.data.imageUrl) {
+        return NextResponse.json(
+          { error: "Salah satu dari imageBase64 atau imageUrl harus disertakan" },
+          { status: 400 }
+        );
+      }
+
+      const response = await analyzeMangaPageVision(parsed.data);
+      if (!response.success) {
+        return NextResponse.json(
+          { error: response.error, code: response.code },
+          { status: response.code === "AI_UNCONFIGURED" ? 503 : 502 }
+        );
+      }
+
+      return NextResponse.json(response);
+    } catch {
       return NextResponse.json(
-        { error: "Format request tidak valid", details: parsed.error.format() },
-        { status: 400 }
+        { error: "Gagal memproses analisis visual halaman" },
+        { status: 500 }
       );
     }
-
-    if (!parsed.data.imageBase64 && !parsed.data.imageUrl) {
-      return NextResponse.json(
-        { error: "Salah satu dari imageBase64 atau imageUrl harus disertakan" },
-        { status: 400 }
-      );
-    }
-
-    const response = await analyzeMangaPageVision(parsed.data);
-    if (!response.success) {
-      return NextResponse.json(
-        { error: response.error, code: response.code },
-        { status: response.code === "AI_UNCONFIGURED" ? 503 : 502 }
-      );
-    }
-
-    return NextResponse.json(response);
-  } catch {
-    return NextResponse.json(
-      { error: "Gagal memproses analisis visual halaman" },
-      { status: 500 }
-    );
-  }
+  });
 }

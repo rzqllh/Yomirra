@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 const topics = [
   {
     title: "Sumber komik gagal dimuat",
-    answer: "Sumber bisa menolak permintaan atau sedang tidak tersedia. Hasil dari sumber lain tetap dapat digunakan. Coba lagi nanti atau pilih sumber berbeda. Pesan 403/429 berasal dari pembatasan akses sumber; Yomirra tidak menjamin setiap sumber selalu aktif.",
+    answer: "Sumber bisa menolak permintaan atau sedang tidak tersedia. Yomirra dapat melanjutkan tanpa cache ketika layanan cache bermasalah, tetapi sumber tetap bisa membatasi akses. Respons 403/429 dapat menandakan batasan dari sumber atau layanan lain. Hindari memuat ulang berkali-kali; coba lagi nanti atau pilih sumber berbeda.",
     link: "/sources",
     linkLabel: "Periksa daftar sumber",
   },

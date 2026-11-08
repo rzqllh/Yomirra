@@ -111,7 +111,7 @@ export function useSearchCatalog() {
     });
 
     return sources.filter((source) => {
-      if (!isSearchSourceSystemEligible(source)) return false;
+      if (source.maintenance || !isSearchSourceSystemEligible(source)) return false;
       if (source.isNsfw && hideNsfw) return false;
       return true;
     });
@@ -160,6 +160,7 @@ export function useSearchCatalog() {
       queryKey: ["sourceFilters", sourceId],
       queryFn: (): Promise<FilterList> => apiClient.getFilters(sourceId),
       staleTime: 5 * 60 * 1000,
+      retry: false,
     })),
   });
 

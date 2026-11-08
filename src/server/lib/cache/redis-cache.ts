@@ -10,18 +10,99 @@ export const CACHE_TTL = {
 };
 
 import crypto from "node:crypto";
-import type { SourceMetadata } from "@/shared/sources/source-types";
+import type { MangaSource, SourceMetadata } from "@/shared/sources/source-types";
 
 interface CacheEntry<T> {
   data: T;
   expiresAt: number;
 }
 
+interface CacheOptions<T> {
+  allowStaleOnError?: boolean;
+  shouldPersist?: (data: T) => boolean;
+}
+
 const FLIGHT_LIFETIME_MS = 30_000;
 const MAX_IN_FLIGHT = 1024;
 const inFlight = new Map<string, Promise<unknown>>();
 
-export function getSourceCacheKey(source: SourceMetadata, operation: string, params: string): string {
+const NEAR_TTL_MS = 10_000;
+const NEAR_MAX_ENTRIES = 256;
+const NEAR_MAX_BYTES = 8 * 1024 * 1024;
+const NEAR_MAX_ENTRY_BYTES = 128 * 1024;
+type NearEntry = { serialized: string; expiresAt: number; bytes: number };
+const nearCache = new Map<string, NearEntry>();
+let nearCacheBytes = 0;
+
+function discardNear(key: string): void {
+  const entry = nearCache.get(key);
+  if (entry) nearCacheBytes -= entry.bytes;
+  nearCache.delete(key);
+}
+
+export function clearNearCache(): void {
+  nearCache.clear();
+  nearCacheBytes = 0;
+}
+
+export function invalidateNearCacheKey(key: string): void {
+  for (const flightKey of nearCache.keys()) {
+    try {
+      const [storedKey] = JSON.parse(flightKey) as [string];
+      if (storedKey === key) discardNear(flightKey);
+    } catch {
+      discardNear(flightKey);
+    }
+  }
+}
+
+export function _resetNearCacheForTesting(): void {
+  clearNearCache();
+}
+
+function rememberNear(key: string, serialized: string, originalExpiresAt: number): void {
+  discardNear(key);
+  const now = Date.now();
+  const expiresAt = Math.min(originalExpiresAt, now + NEAR_TTL_MS);
+  const bytes = serialized.length * 2;
+  if (!Number.isFinite(expiresAt) || expiresAt <= now ||
+      bytes > NEAR_MAX_ENTRY_BYTES || key.length > 1024) return;
+  while (nearCache.size >= NEAR_MAX_ENTRIES || nearCacheBytes + bytes > NEAR_MAX_BYTES) {
+    const oldest = nearCache.keys().next().value;
+    if (oldest === undefined) break;
+    discardNear(oldest);
+  }
+  nearCache.set(key, { serialized, expiresAt, bytes });
+  nearCacheBytes += bytes;
+}
+
+function readNear<T>(key: string): { data: T } | null {
+  const entry = nearCache.get(key);
+  if (!entry) return null;
+  if (Date.now() >= entry.expiresAt) {
+    discardNear(key);
+    return null;
+  }
+  try {
+    const parsed = JSON.parse(entry.serialized) as CacheEntry<T>;
+    if (Date.now() >= parsed.expiresAt) {
+      discardNear(key);
+      return null;
+    }
+    nearCache.delete(key);
+    nearCache.set(key, entry);
+    return { data: parsed.data };
+  } catch {
+    discardNear(key);
+    return null;
+  }
+}
+
+
+export function getSourceCacheKey(source: SourceMetadata & Pick<MangaSource, "cacheFingerprint">, operation: string, params: string): string {
+  if (source.cacheFingerprint) {
+    return `source:dynamic:v2:${source.cacheFingerprint}:${operation}:${params}`;
+  }
   if (source.isDynamic) {
     const raw = `${source.id}:${source.version || "0.0.0"}:${source.baseUrl || ""}`;
     const fingerprint = crypto.createHash("sha256").update(raw).digest("hex").substring(0, 12);
@@ -34,7 +115,7 @@ export async function withCache<T>(
   key: string,
   fetcher: () => Promise<T>,
   ttlSeconds: number,
-  options: { allowStaleOnError?: boolean } = {}
+  options: CacheOptions<T> = {}
 ): Promise<T> {
   const activeTtlSeconds = Math.max(1, Math.floor(ttlSeconds));
   const flightKey = JSON.stringify([key, activeTtlSeconds, options.allowStaleOnError !== false]);
@@ -51,7 +132,7 @@ export async function withCache<T>(
   });
   const isCurrent = () => inFlight.get(flightKey) === request;
   const work = Promise.resolve().then(() =>
-    readThroughCache(key, fetcher, activeTtlSeconds, options, isCurrent, timeoutError),
+    readThroughCache(key, flightKey, fetcher, activeTtlSeconds, options, isCurrent, timeoutError),
   );
   const request: Promise<T> = Promise.race([work, timeout]).finally(() => {
     clearTimeout(timer);
@@ -63,12 +144,15 @@ export async function withCache<T>(
 
 async function readThroughCache<T>(
   key: string,
+  flightKey: string,
   fetcher: () => Promise<T>,
   activeTtlSeconds: number,
-  options: { allowStaleOnError?: boolean },
+  options: CacheOptions<T>,
   isCurrent: () => boolean,
   timeoutError: Error,
 ): Promise<T> {
+  const near = readNear<T>(flightKey);
+  if (near) return near.data;
   let staleEntry: CacheEntry<T> | null = null;
   // Stale data is only useful for a short, bounded outage. The previous
   // blanket 7-day Redis retention could resurrect weeks-old source data.
@@ -83,6 +167,7 @@ async function readThroughCache<T>(
       if (parsed && typeof parsed === 'object' && 'expiresAt' in parsed && 'data' in parsed) {
         staleEntry = parsed as CacheEntry<T>;
         if (Date.now() < staleEntry.expiresAt) {
+          if (isCurrent()) rememberNear(flightKey, cached, staleEntry.expiresAt);
           return staleEntry.data;
         }
       } else {
@@ -99,18 +184,22 @@ async function readThroughCache<T>(
   try {
     const data = await fetcher();
 
-    if (isCurrent() && isRedisConfigured && isRedisCommandAllowed()) try {
-      if (data) {
+    if (isCurrent() && data) {
+      try {
         const entry: CacheEntry<T> = {
           data,
-          expiresAt: Date.now() + (activeTtlSeconds * 1000)
+          expiresAt: Date.now() + (activeTtlSeconds * 1000),
         };
-        // Physical retention matches active TTL plus permitted stale grace.
-        await redis.setex(key, activeTtlSeconds + staleGraceSeconds, JSON.stringify(entry));
+        const serialized = JSON.stringify(entry);
+        rememberNear(flightKey, serialized, entry.expiresAt);
+        if (options.shouldPersist?.(data) !== false && isRedisConfigured && isRedisCommandAllowed()) {
+          // Physical retention matches active TTL plus permitted stale grace.
+          await redis.setex(key, activeTtlSeconds + staleGraceSeconds, serialized);
+        }
+      } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        logger.warn(`Redis set bypassed for key ${key}: ${msg}`);
       }
-    } catch (error) {
-      const msg = error instanceof Error ? error.message : String(error);
-      logger.warn(`Redis set bypassed for key ${key}: ${msg}`);
     }
 
     return data;

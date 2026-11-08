@@ -1,5 +1,18 @@
 import { safeFetch } from "../../../security/outbound-policy";
 
+export class UpstreamHttpError extends Error {
+  readonly retryAfterSeconds?: number;
+
+  constructor(readonly status: number, statusText: string, retryAfter: string | null) {
+    super(`HTTP Error ${status}: ${statusText}`);
+    if (!retryAfter) return;
+    const seconds = /^\d+$/.test(retryAfter)
+      ? Number(retryAfter)
+      : Math.ceil((Date.parse(retryAfter) - Date.now()) / 1000);
+    if (Number.isFinite(seconds)) this.retryAfterSeconds = Math.max(1, Math.min(seconds, 3600));
+  }
+}
+
 export interface HttpClientConfig {
   baseUrl: string;
   defaultHeaders?: Record<string, string>;
@@ -113,8 +126,9 @@ export class HttpClient {
         msg.includes("EPIPE") ||
         msg.includes("socket hang up");
 
-      if (isTransient && (!fetchOptions?.signal || !fetchOptions.signal.aborted)) {
-        await new Promise((resolve) => setTimeout(resolve, 350));
+      if (isTransient && (!fetchOptions?.method || fetchOptions.method === "GET") && !fetchOptions?.signal?.aborted) {
+        await new Promise((resolve) => setTimeout(resolve, 250 + Math.random() * 200));
+        fetchOptions?.signal?.throwIfAborted();
         return await safeFetch(url, fetchOptions);
       }
       throw err;
@@ -141,7 +155,8 @@ export class HttpClient {
     });
 
     if (!res.ok) {
-      throw new Error(`HTTP Error ${res.status}: ${res.statusText}`);
+      void res.body?.cancel().catch(() => undefined);
+      throw new UpstreamHttpError(res.status, res.statusText, res.headers.get("retry-after"));
     }
 
     return res.json() as Promise<T>;
@@ -167,7 +182,8 @@ export class HttpClient {
     });
 
     if (!res.ok) {
-      throw new Error(`HTTP Error ${res.status}: ${res.statusText}`);
+      void res.body?.cancel().catch(() => undefined);
+      throw new UpstreamHttpError(res.status, res.statusText, res.headers.get("retry-after"));
     }
 
     return res.text();
@@ -193,7 +209,8 @@ export class HttpClient {
     });
 
     if (!res.ok) {
-      throw new Error(`HTTP Error ${res.status}: ${res.statusText}`);
+      void res.body?.cancel().catch(() => undefined);
+      throw new UpstreamHttpError(res.status, res.statusText, res.headers.get("retry-after"));
     }
 
     return res.text();
@@ -234,7 +251,8 @@ export class HttpClient {
     });
 
     if (!res.ok) {
-      throw new Error(`HTTP Error ${res.status}: ${res.statusText}`);
+      void res.body?.cancel().catch(() => undefined);
+      throw new UpstreamHttpError(res.status, res.statusText, res.headers.get("retry-after"));
     }
 
     return res.json() as Promise<T>;

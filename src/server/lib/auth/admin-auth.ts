@@ -242,7 +242,7 @@ export async function verifyAdminRequest(req: Request): Promise<AdminAuthResult>
                 : undefined;
             const hasAdminClaim = decoded.admin === true;
             const allowedEmails = parseAdminEmails(process.env.ADMIN_EMAILS);
-            const isAllowedEmail = email ? allowedEmails.has(email) : false;
+            const isAllowedEmail = decoded.email_verified === true && !!email && allowedEmails.has(email);
 
             if (uid && (hasAdminClaim || isAllowedEmail)) {
               return {
@@ -261,10 +261,7 @@ export async function verifyAdminRequest(req: Request): Promise<AdminAuthResult>
             };
           } catch (tokenErr) {
             logger.warn("Admin verifyIdToken failed", {
-              error:
-                tokenErr instanceof Error
-                  ? tokenErr.message
-                  : "token verification failed",
+              errorType: tokenErr instanceof Error ? tokenErr.name : "Unknown",
             });
           }
         }

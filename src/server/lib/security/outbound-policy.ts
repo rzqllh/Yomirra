@@ -2,11 +2,13 @@ import dns from "node:dns";
 import http from "node:http";
 import https from "node:https";
 import { isIP } from "node:net";
+import { Readable } from "node:stream";
 
 export function isSafeIp(ip: string): boolean {
   // WHATWG URL hostnames wrap IPv6 literals in brackets.
   if (ip.startsWith("[") && ip.endsWith("]")) ip = ip.slice(1, -1);
   if (!isIP(ip)) return false;
+  ip = ip.toLowerCase();
 
   // IPv4 mapping in IPv6 (e.g. ::ffff:192.168.1.1)
   if (ip.startsWith("::ffff:")) {
@@ -47,23 +49,11 @@ export function isSafeIp(ip: string): boolean {
   }
 
   if (isIP(ip) === 6) {
-    const lowerIp = ip.toLowerCase();
-    
-    // Loopback
-    if (lowerIp === "::1") return false;
-    // Unspecified
-    if (lowerIp === "::") return false;
-    
-    // Unique local (fc00::/7) - starts with fc or fd
-    if (lowerIp.startsWith("fc") || lowerIp.startsWith("fd")) return false;
-    
-    // Link local (fe80::/10) - starts with fe8, fe9, fea, feb
-    if (lowerIp.startsWith("fe8") || lowerIp.startsWith("fe9") || lowerIp.startsWith("fea") || lowerIp.startsWith("feb")) return false;
-    
-    // Multicast (ff00::/8)
-    if (lowerIp.startsWith("ff")) return false;
-    
-    return true;
+    // Permit global unicast and exclude transition ranges that embed an IPv4 destination.
+    const [prefix, second] = ip.split(":");
+    const first = Number.parseInt(prefix, 16);
+    return first >= 0x2000 && first <= 0x3fff &&
+      first !== 0x2002 && !(first === 0x2001 && (!second || Number.parseInt(second, 16) === 0));
   }
 
   return false;
@@ -146,7 +136,7 @@ export async function safeFetch(url: string, options: SafeFetchOptions = {}): Pr
 
     const requestOptions: http.RequestOptions = {
       protocol: parsedUrl.protocol,
-      hostname: parsedUrl.hostname,
+      hostname: literalHost,
       port: parsedUrl.port || (isHttps ? 443 : 80),
       path: parsedUrl.pathname + parsedUrl.search,
       method: options.method || "GET",
@@ -177,7 +167,7 @@ export async function safeFetch(url: string, options: SafeFetchOptions = {}): Pr
     const res = response.res;
     
     if (res.statusCode && res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-      res.resume();
+      res.destroy();
       let redirectUrl = res.headers.location;
       if (!redirectUrl.startsWith("http")) {
         redirectUrl = new URL(redirectUrl, currentUrl).toString();
@@ -196,32 +186,32 @@ export async function safeFetch(url: string, options: SafeFetchOptions = {}): Pr
       }
     });
 
-    const stream = new ReadableStream({
-      start(controller) {
+    const status = res.statusCode || 200;
+    const hasBody = options.method?.toUpperCase() !== "HEAD" && ![204, 205, 304].includes(status);
+    let stream: ReadableStream<Uint8Array> | null = null;
+
+    if (hasBody) {
+      const upstream = Readable.toWeb(res) as ReadableStream<Uint8Array>;
+      if (maxSize) {
         let totalSize = 0;
-        res.on("data", (chunk) => {
-          totalSize += chunk.length;
-          if (maxSize && totalSize > maxSize) {
-            res.destroy();
-            controller.error(new Error(`SECURITY_REJECTED: Payload exceeded maximum size of ${maxSize} bytes`));
-            return;
-          }
-          controller.enqueue(chunk);
-        });
-        res.on("end", () => {
-          controller.close();
-        });
-        res.on("error", (err) => {
-          controller.error(err);
-        });
-      },
-      cancel() {
-        res.destroy();
+        stream = upstream.pipeThrough(new TransformStream<Uint8Array, Uint8Array>({
+          transform(chunk, controller) {
+            totalSize += chunk.byteLength;
+            if (totalSize > maxSize) {
+              throw new Error(`SECURITY_REJECTED: Payload exceeded maximum size of ${maxSize} bytes`);
+            }
+            controller.enqueue(chunk);
+          },
+        }));
+      } else {
+        stream = upstream;
       }
-    });
+    } else {
+      res.resume();
+    }
 
     const standardResponse = new Response(stream, {
-      status: res.statusCode || 200,
+      status,
       statusText: res.statusMessage || "OK",
       headers
     });

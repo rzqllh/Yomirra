@@ -64,6 +64,7 @@ export default function SourcesPage() {
     // Merge health stats
     return s.map(source => {
       const health = healthStats?.[source.id];
+      if (source.maintenance) return { ...source, status: "in-fix" as const };
       if (health) {
         return {
           ...source,
@@ -165,7 +166,7 @@ export default function SourcesPage() {
 
               {filteredSources.some(s => s.status === 'in-fix') && (
                 <div className="pt-2">
-                  <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-4 px-1">Sedang Diperbaiki</h3>
+                  <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-4 px-1">Under Maintenance</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                     {filteredSources.filter(s => s.status === 'in-fix').map((source) => (
                       <SourceCard key={source.id} source={source} onUpdate={loadLocalSources} />

@@ -94,7 +94,7 @@ export function HeaderActions({ className }: { className?: string } = {}) {
       {/* Dropdown Menu Popover (Mockup Gambar 1 & 2) */}
       <AnimatePresence>
         {isMenuOpen && (
-          <Surface asChild variant="glassPopover" rounded="card">
+          <Surface asChild variant="glassPopover" rounded="card" className="shadow-[0_12px_36px_-6px_rgba(0,0,0,0.18),0_4px_16px_-2px_rgba(0,0,0,0.08)] dark:shadow-[0_16px_40px_-6px_rgba(0,0,0,0.7),0_4px_16px_-2px_rgba(0,0,0,0.4)]">
             <motion.div
               initial={{ opacity: 0, y: 6, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -193,7 +193,7 @@ export function HeaderActions({ className }: { className?: string } = {}) {
                   setIsMenuOpen(false)
                   loginWithGoogle()
                 }}
-                className="flex items-center justify-start gap-2.5 px-3 py-2 rounded-xl text-[13px] font-semibold text-accent hover:bg-accent/10 active:scale-98 transition-all w-full text-left cursor-pointer h-auto min-h-0"
+                className="flex items-center justify-start gap-2.5 px-3 py-2 rounded-xl text-[13px] font-semibold text-accent bg-transparent hover:bg-accent/10 active:scale-98 transition-all w-full text-left cursor-pointer h-auto min-h-0"
               >
                 <SignIn size={18} weight="regular" className="shrink-0" />
                 <span>Masuk</span>

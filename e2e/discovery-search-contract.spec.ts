@@ -1,6 +1,7 @@
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect, type Page } from "./fixtures";
 
-// Fixture-backed route tests verify UI contracts, not live provider availability.
+// Fixture-backed requests must reach Playwright routing. The PWA suite exercises the real worker.
+test.use({ serviceWorkers: "block" });
 async function prepareDiscovery(page: Page) {
   await page.addInitScript(() => {
     localStorage.setItem("yomirra-onboarding", JSON.stringify({ state: { hasCompletedOnboarding: true, _hasHydrated: true }, version: 0 }));

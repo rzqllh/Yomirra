@@ -17,9 +17,9 @@ describe("MangaDex Retry Hardening & Retry-After Parser", () => {
       expect(parseRetryAfter("5")).toBe(5000);
     });
 
-    it("should cap large Retry-After values to 5000ms", () => {
-      expect(parseRetryAfter("60")).toBe(5000);
-      expect(parseRetryAfter("100")).toBe(5000);
+    it("preserves long Retry-After delays for the circuit breaker", () => {
+      expect(parseRetryAfter("60")).toBe(60000);
+      expect(parseRetryAfter("100")).toBe(100000);
     });
 
     it("should use fallback 1000ms for missing or invalid values", () => {
@@ -38,12 +38,12 @@ describe("MangaDex Retry Hardening & Retry-After Parser", () => {
       vi.useRealTimers();
     });
 
-    it("should cap future HTTP-date beyond max cap to 5000ms", () => {
+    it("preserves a long HTTP-date cooldown", () => {
       vi.useFakeTimers();
       const now = 1700000000000;
       vi.setSystemTime(now);
       const futureDate = new Date(now + 60000).toUTCString();
-      expect(parseRetryAfter(futureDate)).toBe(5000);
+      expect(parseRetryAfter(futureDate)).toBe(60000);
       vi.useRealTimers();
     });
 
@@ -163,21 +163,19 @@ describe("MangaDex Retry Hardening & Retry-After Parser", () => {
       expect(fetchSpy).toHaveBeenCalledTimes(2);
     });
 
-    it("Scenario 4: First 429 with excessively large Retry-After should cap sleep to 5000ms and succeed", async () => {
-      const headers = new Headers({ "retry-after": "120" });
-      let callCount = 0;
-      const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(async () => {
-        callCount++;
-        if (callCount === 1) {
-          return new Response("Rate limited", { status: 429, headers });
-        }
-        return new Response(JSON.stringify({ result: "ok" }), { status: 200 });
-      });
+    it("returns the upstream cooldown without retrying early", async () => {
+      const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+        new Response("Rate limited", { status: 429, headers: { "retry-after": "120" } })
+      );
 
-      const result = await mdFetch<{ result: string }>("/manga");
-      expect(result).toEqual({ result: "ok" });
-      expect(fetchSpy).toHaveBeenCalledTimes(2);
-    }, 15000);
+      await expect(mdFetch("/manga")).rejects.toMatchObject({
+        code: "RATE_LIMITED",
+        statusCode: 429,
+        retryAfterSeconds: 120,
+      });
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+    });
+
 
     it("Scenario 5: Second request still 429 should stop after 2 attempts and throw", async () => {
       const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(async () => {

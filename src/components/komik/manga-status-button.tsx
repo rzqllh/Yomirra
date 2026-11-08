@@ -59,14 +59,14 @@ export function MangaStatusButton({ sourceId, mangaId }: MangaStatusButtonProps)
         onClick={() => setIsOpen(true)}
         aria-label="Atur status baca"
         className={cn(
-          "flex items-center justify-center gap-1.5 h-[52px] md:h-[48px] px-1 md:px-3.5 transition-all outline-none select-none rounded-md border shadow-xs active:scale-95 bg-surface-raised",
+          "flex items-center justify-center gap-1.5 min-h-11 px-2 md:px-3.5 transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent select-none rounded-lg border shadow-xs active:scale-95 bg-surface-raised",
           readingStatus && mounted
             ? "border-accent/60 text-accent font-bold ring-1 ring-accent/20"
             : "border-border-default text-text-secondary hover:text-text-primary hover:border-border-strong hover:bg-surface-hover"
         )}
       >
         <BookOpenText size={18} weight={readingStatus && mounted ? "fill" : "regular"} className="shrink-0" />
-        <span className="hidden md:inline text-xs font-bold tracking-tight leading-none whitespace-nowrap">
+        <span className="min-w-0 truncate text-xs font-semibold tracking-tight leading-tight">
           {getLabel()}
         </span>
       </button>

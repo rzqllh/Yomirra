@@ -92,13 +92,13 @@ describe('BottomDock Navigation', () => {
     render(<BottomDock />);
 
     const nav = screen.getByRole('navigation', { name: 'Navigasi utama' });
-    const mainDock = nav.querySelector('.yomirra-chrome');
+    const mainDock = nav.querySelector('.yomirra-dock-surface');
     const glassSurfaces = nav.querySelectorAll('.yomirra-chrome');
 
     expect(glassSurfaces).toHaveLength(2);
     expect(mainDock?.querySelectorAll('a')).toHaveLength(4);
-    expect(glassSurfaces[1].querySelector('a')).toBeNull();
-    expect(screen.getByRole('link', { name: 'Cari' }).className).toContain('yomirra-chrome');
+    expect(glassSurfaces[1].closest('a')?.getAttribute('href')).toBe('/search');
+    expect(screen.getByRole('link', { name: 'Cari' }).className).toContain('yomirra-dock-surface');
   });
 
   it('uses a restrained primary-text label and accent icon for the selected destination', () => {
@@ -116,19 +116,18 @@ describe('BottomDock Navigation', () => {
     const searchLink = screen.getByRole('link', { name: 'Cari' });
     expect(searchLink.getAttribute('aria-current')).toBe('page');
     expect(screen.getByRole('link', { name: 'Beranda' }).getAttribute('aria-current')).toBeNull();
-    expect(searchLink.querySelector('span[aria-hidden="true"]')).toBeTruthy();
   });
 
-  it('keeps 44px tab targets and adapts label spacing for narrow screens', () => {
-    render(<BottomDock />);
+  it('keeps one persistent pill when moving between the rail and search', () => {
+    const { rerender } = render(<BottomDock />);
+    const nav = screen.getByRole('navigation', { name: 'Navigasi utama' });
+    const pill = nav.querySelector('.yomirra-dock-indicator');
 
-    const inactiveLink = screen.getByRole('link', { name: 'Library' });
-    const searchLink = screen.getByRole('link', { name: 'Cari' });
+    expect(nav.classList.contains('yomirra-dock-frame')).toBe(true);
+    expect(nav.querySelectorAll('.yomirra-dock-surface')).toHaveLength(2);
+    expect(pill).toBeTruthy();
 
-    expect(inactiveLink.className).toContain('size-11');
-    expect(screen.getByRole('link', { name: 'Library' }).className).toContain('size-11');
-    expect(searchLink.className).toContain('size-14');
-    expect(searchLink.className).toContain('max-[359px]:size-12');
+    rerender(<BottomDock pendingHref="/search" />);
+    expect(nav.querySelector('.yomirra-dock-indicator')).toBe(pill);
   });
-
 });

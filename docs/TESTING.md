@@ -18,6 +18,18 @@ Untuk loop cepat:
 pnpm vitest run path/to/file.test.ts
 ```
 
+## Browser dari build production
+
+Gunakan Redis terisolasi dan nilai lokal untuk `IMAGE_PROXY_SECRET`, `REDIS_URL`, dan `NEXT_PUBLIC_APP_URL`. CI memakai container Redis terpisah. Atur `E2E_PRODUCTION_BUILD=1` untuk menjalankan server dari hasil build.
+
+```bash
+pnpm exec playwright install chromium webkit
+pnpm build
+E2E_PRODUCTION_BUILD=1 pnpm exec playwright test --reporter=list
+```
+
+Suite PWA memakai service worker build production dan menanam entri raster serta SVG legacy untuk menguji jalur cache. Suite discovery memblokir service worker agar fixture API mencapai Playwright. Bukti Playwright WebKit berasal dari emulasi desktop dan mobile. Pengujian iOS fisik, BrowserStack, dan Firebase lintas perangkat memerlukan lingkungan terpisah.
+
 ## Apa yang wajib dites
 
 Prioritaskan boundary yang kalau rusak dapat merusak data atau banyak feature:
@@ -87,6 +99,10 @@ Untuk rate limiting, cover minimal:
 - 503 saat policy fail-closed tidak dapat mengakses limiter;
 - fail-open hanya pada route yang memang availability-first;
 - trusted proxy-chain identity agar client tidak bisa memilih bucket sendiri lewat forwarded header palsu.
+
+Untuk command-budget Redis, gunakan `src/server/lib/cache/__tests__/redis-cache.test.ts` dan `src/server/lib/sources/__tests__/domain-resolver-near-cache.test.ts` serta pengukuran real command `GET` di production. Uji hit/miss, expiry, fail-open, isolated TTL contracts, late Redis GET, invalidasi search error dan flush admin. Preview tanpa `REDIS_URL` bukan bukti kuota Redis sehat. Untuk dock, uji `src/components/app/__tests__/bottom-dock.test.tsx` dan pemeriksaan viewport 320px/360px, safe-area Safari/PWA, label aktif, serta VoiceOver.
+
+Uji `/api/health/live` dan `/api/health` secara terpisah. Pada lingkungan terisolasi, pastikan liveness tetap 200 saat Redis dihentikan atau belum dikonfigurasi, readiness mengembalikan 503, dan readiness pulih setelah Redis kembali tersedia. Ulangi polling dalam satu jendela 10 detik dan pastikan probe Redis dipakai ulang. Jangan gunakan polling intensif pada production.
 
 Untuk Redis cold-start dan limiter, gunakan `src/server/lib/cache/__tests__/redis-readiness.test.ts` dan `src/server/lib/security/__tests__/rate-limit.test.ts`. Cover `wait`, `connecting`, `reconnecting`, `end`, late rejection, 2.500 ms bounded deadline, shared initial connection, fail-closed 503, serta bypass fail-open yang tidak tertahan saat Redis down.
 
@@ -199,3 +215,9 @@ Acceptance perangkat tetap mencakup Safari dan PWA terpasang pada iPhone/iPad: k
 Review hak/publikasi masih memerlukan provenance aset/kode/dependency, izin sumber, data flow Firebase/Google/Gemini/log, retention/deletion, kebijakan privasi/terms sesuai perilaku nyata, serta persetujuan manusia yang berwenang. [Formulir hak konten](CONTENT_RIGHTS_REPORTING.md) menyediakan intake publik; formulir itu tidak menetapkan penanggung jawab atau menggantikan persetujuan hukum.
 
 Sebelum menutup gate, catat hasil CI SHA akhir, transkrip Firebase, bukti Safari/PWA, audit per Q dan hasil review hukum beserta reviewer yang benar-benar melakukan pemeriksaan. Jangan isi reviewer atau kelulusan dari asumsi. Tag, perubahan versi dan publikasi mengikuti keputusan rilis terpisah.
+
+### CSP enforcement gate
+
+The production Reader and homepage emitted an eval report from the Zod object-schema JIT probe. Shared browser schemas use Zod's interpreted validation path. The production header stays in Report-Only mode.
+
+Validate the built preview in Chromium and WebKit. Collect `securitypolicyviolation` events with the blocked URI, directive and source location on home, search, detail and Reader. Include Firebase sign-in and sign-out, backup import validation, Serwist installation and an offline Reader reload. Test existing inline Next.js and theme bootstrap before moving to enforcement. Use a separate reviewed release for enforcement after preview evidence covers these flows and shows no unexplained violations.

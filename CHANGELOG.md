@@ -1,5 +1,47 @@
 # Changelog
 
+## Unreleased — Final stabilization
+
+- Runner staging drill diperkeras: fail-closed dengan penolakan domain/alias produksi, pembatalan streaming per-chunk saat melewati batas 25 MiB, batas waktu request adaptif terhadap deadline 15 menit, serta strict nonzero exit codes.
+- Continuous Reader menghitung penyelesaian chapter terakhir berdasarkan ujung konten komik terukur (`checkComicEndReached`) dengan toleransi 48px dan guard webtoon strip panjang 10.000px tanpa auto-complete prematur saat mount.
+- Penambahan Edge CDN Cache-Control headers (`s-maxage=604800`) untuk aset statis berat (`apple-icon.png`, `icon.png`, `/covers/`, `favicon.ico`) untuk meredam Fast Origin Transfer ke Vercel edge network.
+- Rekonsiliasi metrik insiden: penyelesaian implementasi 18 temuan stabilitas pada tataran kode lokal (`LOCAL_VERIFIED`), dengan penegasan status hosted provider/infrastruktur eksternal tetap transparan (`BLOCKED_EXTERNAL / NOT_TESTED`) sampai dibuktikan live.
+- Pertahankan status baca perangkat saat menggabungkan cadangan dengan alias identitas judul berbeda; prioritaskan ID tetap atas alias lama sebelum menyelesaikan konflik status.
+- Batasi permintaan halaman dinamis per instance. Kuota sensitif mencatat counter dan masa berlaku dalam satu operasi Redis.
+- Batasi payload sesi admin dan pekerjaan AI bersamaan. Perketat validasi alamat upstream dan kirim kunci Gemini melalui header.
+- Wajibkan email Firebase terverifikasi untuk akses admin melalui allowlist.
+- Batasi waktu perintah Redis, tutup koneksi tanpa respons, dan cegah replay otomatis perintah yang belum menerima balasan.
+- Batasi ukuran request dan pekerjaan embedding Search Intelligence. Pertahankan hasil leksikal ketika kapasitas embedding penuh.
+- Pulihkan kontras pilihan tema, navigasi desktop, dan teks saat splash. Selaraskan nama aksesibel tombol pencarian desktop dengan labelnya. Patch advisory produksi pada dependensi Next.js, Firebase, dan Serwist. Perbarui Vitest dan dependensi tooling terkait.
+
+- Kurangi aset publik yang diunduh saat memasang PWA. Reader mode halaman memuat chapter berikutnya saat navigasi.
+- Batasi ukuran payload pencarian terkait dan rating batch. Hormati jeda upstream untuk mengurangi permintaan berulang saat provider membatasi akses.
+- Pisahkan liveness proses dari kesiapan Redis. Readiness membatasi probe berulang per instance dan tetap menampilkan kegagalan Redis.
+- Validasi relasi chapter dan judul sebelum meminta halaman Reader. Batasi prefetch pada metadata chapter berikutnya.
+- Batasi waktu kerja rating batch dan pembacaan manifest kustom. Pisahkan cache sumber terdaftar dan manifest eksternal.
+- Batasi cache offline untuk dokumen aman dan gambar raster. Pertahankan unduhan raster yang sudah tersimpan dan perbarui URL lama saat antrean dilanjutkan.
+- Baca chapter berklasifikasi aman langsung dari halaman Unduhan saat offline. Buka Unduhan sekali ketika online agar shell tersimpan. Untuk unduhan lama, buka chapter melalui Reader online agar klasifikasi dapat diperiksa.
+- Selaraskan komponen navigasi dan menu dari YOM-01 hingga YOM-03. Q138 tetap nonaktif.
+- Tampilkan label Pengaturan secara utuh pada layar sempit dan letakkan pilihan bahasa serta interval di bawah labelnya.
+- Perbarui Next.js, Firebase, Serwist, Zod, dan dependency terkait untuk menutup advisory runtime. Tambahkan smoke browser dari build production dan pemantauan health yang dapat diaktifkan setelah akses provider pulih.
+
+## Unreleased — Production stabilization
+
+- Batasi permintaan publik per instance, bagikan pekerjaan source yang sedang berlangsung, dan beri jeda pemulihan setelah upstream gagal berulang. Otorisasi dan kuota operasi berbiaya tetap memerlukan Redis.
+- Pencarian terkait dan rating batch mengembalikan hasil yang tersedia saat cache atau provider gagal. Sumber yang membutuhkan perbaikan tampil di **Under Maintenance** dan dapat kembali setelah lulus pemeriksaan.
+- Reader memprioritaskan gambar yang terlihat, melanjutkan antrean saat pembaca melompat jauh, dan mengikuti zoom bawaan browser.
+- Selaraskan dock dan efek kaca, tingkatkan hierarki tema terang, serta rapikan onboarding, detail komik, dan status chapter.
+- Tempatkan pemberitahuan katalog di bawah hasil, sediakan fallback cover yang gagal dimuat, dan nonaktifkan code generation Zod di browser. CSP tetap Report-Only selama validasi.
+
+## Unreleased — Redis read containment dan bottom dock (5 November 2026)
+
+- Cache publik membatasi Redis `GET` berulang melalui near-cache maksimal 10 detik dengan batas kapasitas, timeout fencing, dan invalidasi ketika hasil pencarian error atau admin melakukan flush.
+- Pembacaan override source dideduplikasi hanya selama server render; lookup domain disimpan singkat, dengan kemungkinan jeda hingga 10 detik antarinstance. Ketentuan durability untuk mutation tetap fail-closed.
+- Bottom dock mobile memakai radius `full` hanya untuk kapsul, tombol Search, dan tab aktif; padding diturunkan dari tinggi 56px, target 44px, dan border 1px.
+- Dokumentasi membedakan status Preview tanpa Redis dari kesehatan kuota Production. Penyebab eksternal lonjakan command 3 November masih belum terbukti.
+
+
+
 
 ## Unreleased
 

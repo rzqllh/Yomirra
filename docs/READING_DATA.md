@@ -32,7 +32,7 @@ Cadangan JSON menyertakan library, hubungan sumber, posisi baca, milestone, kole
 
 Format ekspor tetap schema 3 dengan field progres tambahan yang opsional. Impor menerima schema 1, 2, dan 3. Tidak ada batas 1.000 judul untuk library; batas ukuran berkas tetap 10 MB dan berlaku juga saat ekspor. Batas domain lain, seperti jumlah koleksi, tetap mengikuti schema. Aplikasi memakai versi package saat mencatat versi ekspor.
 
-Mode gabung membandingkan data berdasarkan identitas judul tetap dan timestamp. Memulihkan cadangan yang sama berulang kali tidak boleh menambah salinan judul. Mode ganti memulihkan library dengan kunci identitas yang sama sehingga referensi koleksi tetap terhubung. Riwayat hasil impor mengikuti kebijakan 512 detail dan ringkasan progres.
+Mode gabung membandingkan data berdasarkan identitas judul tetap dan timestamp. Untuk status baca, identitas judul disatukan lebih dulu: status yang sudah ada di perangkat dipertahankan; status dari cadangan ditambahkan jika judul itu belum memiliki status lokal. Jika satu dataset memuat status dengan ID judul tetap sekaligus alias lama sumber/manga, status pada ID tetap diprioritaskan. Kunci identitas seperti `constructor` dan `toString` tetap diperlakukan sebagai data status. Memulihkan cadangan yang sama berulang kali tidak boleh menambah salinan judul. Mode ganti memulihkan library dengan kunci identitas yang sama sehingga referensi koleksi tetap terhubung. Riwayat hasil impor mengikuti kebijakan 512 detail dan ringkasan progres.
 
 Pemulihan cadangan mengubah data lokal. Itu bukan bukti bahwa perubahan sudah tersimpan ke cloud. Verifikasi hasil pemulihan sebelum menjalankan sinkronisasi; mode ganti lokal tidak menghapus seluruh isi akun cloud.
 

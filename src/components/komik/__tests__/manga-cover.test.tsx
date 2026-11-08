@@ -52,6 +52,15 @@ describe("MangaCover", () => {
     expect(screen.getByText("Broken Manga")).not.toBeNull();
   });
 
+  it("loads a new cover URL after a provider image fails", () => {
+    const { rerender } = render(<MangaCover src="https://uploads.mangadex.org/old.jpg" alt="Manga" />);
+    fireEvent.error(screen.getByRole("img", { name: "Manga" }));
+    expect(screen.queryByRole("img", { name: "Manga" })).toBeNull();
+
+    rerender(<MangaCover src="https://uploads.mangadex.org/new.jpg" alt="Manga" />);
+    expect(screen.getByRole("img", { name: "Manga" }).getAttribute("src")).toContain("new.jpg");
+  });
+
   it("renders broken fallback directly when src is missing", () => {
     render(<MangaCover alt="No Cover Manga" fallbackTitle="No Cover Manga" />);
 

@@ -20,6 +20,22 @@ describe("Utils: image signing", () => {
     }
   });
 
+  it("rejects noncanonical encodings of a valid signature", () => {
+    const url = "https://example.com/image.jpg";
+    const query = new URL(signImageUrl(url), "https://yomirra.test").searchParams;
+    const signature = query.get("sig")!;
+    expect(verifyImageUrl(url, signature + "!suffix")).toBe(false);
+    expect(verifyImageUrl(url, signature.toUpperCase())).toBe(false);
+  });
+
+  it("binds the image URL and referer independently", () => {
+    const url = "https://example.com/image.jpg";
+    const referer = "https://source.example";
+    const signature = new URL(signImageUrl(url, referer), "https://yomirra.test").searchParams.get("sig")!;
+    expect(verifyImageUrl(url, signature, referer)).toBe(true);
+    expect(verifyImageUrl(url + referer, signature)).toBe(false);
+  });
+
   it("should fail verification with wrong signature", () => {
     const isValid = verifyImageUrl("https://example.com/image.jpg", "wrongsignature123");
     expect(isValid).toBe(false);

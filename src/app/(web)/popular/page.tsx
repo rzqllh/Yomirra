@@ -2,7 +2,7 @@ import { getMalPopular } from "@/server/lib/metadata/mal-popular";
 import { Metadata } from "next";
 import { cookies } from "next/headers";
 import { Fire } from "@phosphor-icons/react/dist/ssr";
-import { getRuntimeSources } from "@/server/lib/sources/runtime-sources";
+import { getDiscoveryRuntimeSources } from "@/server/lib/sources/discovery-runtime-sources";
 import { getServerReadOptions, loadSourceCatalog } from "@/server/lib/sources/content-access";
 import { isSourceContentVisible } from "@/shared/sources/content-policy";
 import { sourceManager } from "@/server/lib/sources/source-manager";
@@ -57,7 +57,7 @@ export default async function PopularPage() {
     cookieStore.get("yomirra-disabled-sources")?.value
   );
   const activeSources = selectDiscoverySources(
-    await getRuntimeSources(),
+    await getDiscoveryRuntimeSources(),
     disabledSourceIds
   ).filter((source) => isSourceContentVisible(source, readOptions.hideNsfw !== false));
 

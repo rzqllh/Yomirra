@@ -162,9 +162,9 @@ export function ReaderShell({
   const getBackgroundColor = () => {
     switch (preferences.background) {
       case "system":
-        return resolvedTheme === "light" ? "#f9f9fb" : "#000000";
+        return resolvedTheme === "light" ? "#eef0f5" : "#000000";
       case "mist":
-        return "#f9f9fb";
+        return "#eef0f5";
       case "deepLagoon":
         return "#003135";
       case "black":
@@ -305,7 +305,7 @@ export function ReaderShell({
       className={cn(
         "relative min-h-screen w-full transition-[padding,background-color] duration-150",
         isDesktopPanelOpen && "md:pr-[320px]",
-        !isLightReader && "dark"
+        isLightReader ? "light" : "dark"
       )}
       style={{ backgroundColor: getBackgroundColor() }}
     >
@@ -437,7 +437,7 @@ export function ReaderShell({
               }
             }}
             className={cn(
-              "fixed bottom-0 left-0 right-0 z-[65] pointer-events-none touch-none pb-[calc(var(--safe-bottom)+12px)] px-3",
+              "yomirra-dock-frame fixed bottom-0 left-0 right-0 z-[65] pointer-events-none touch-none",
               isDesktopPanelOpen ? "md:right-[calc(320px)]" : ""
             )}
           >
@@ -461,7 +461,7 @@ export function ReaderShell({
               )}
 
               {/* Yomirra Reader Unified Control Dock */}
-              <div className="yomirra-chrome pointer-events-auto flex flex-col w-full max-w-[460px] mx-auto rounded-xl p-3 transition-all duration-200 text-text-primary gap-2.5">
+              <div role="group" aria-label="Kontrol pembaca" className="yomirra-chrome yomirra-dock-surface yomirra-reader-dock pointer-events-auto flex w-full max-w-[460px] flex-col gap-1.5 text-text-primary">
                 {/* Embedded Page Scrubber when page navigation is available */}
                 {preferences.showPageProgress && pageNavigation?.key === `${sourceId}::${mangaId}::${currentChapterId}` && (
                   <>
@@ -475,12 +475,12 @@ export function ReaderShell({
                 )}
 
                 {/* Chapter Navigation Controls */}
-                <div className="flex h-11 items-center justify-between gap-2">
+                <div className="flex h-[var(--dock-target)] items-center justify-between gap-1">
                   <motion.button
                     aria-label="Chapter sebelumnya"
                     whileTap={reducedMotion ? undefined : { scale: 0.97 }}
                     className={cn(
-                      "yomirra-chrome-control flex size-11 items-center justify-center rounded-xl text-text-muted hover:text-text-primary hover:bg-surface-hover/80 active:scale-95 transition-all shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+                      "yomirra-chrome-control flex size-11 items-center justify-center rounded-full text-text-muted hover:text-text-primary hover:bg-surface-hover/80 active:scale-95 transition-all shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
                       !prevChapterId && "opacity-30 cursor-not-allowed pointer-events-none"
                     )}
                     disabled={!prevChapterId}
@@ -497,13 +497,13 @@ export function ReaderShell({
 
                   <motion.button
                     whileTap={reducedMotion ? undefined : { scale: 0.97 }}
-                    className="flex-1 h-11 rounded-xl font-bold text-sm bg-accent hover:bg-accent-hover text-accent-on shadow-xs transition-all truncate px-3.5 flex items-center justify-center gap-1.5 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:scale-95"
+                    className="yomirra-dock-pill min-w-0 flex-1 font-semibold text-sm text-text-primary hover:bg-surface-hover transition-colors px-2 flex items-center justify-center gap-1.5 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:scale-95"
                     onClick={(e) => {
                       e.stopPropagation();
                       setIsChapterDrawerOpen(true);
                     }}
                   >
-                    <List size={18} weight="regular" className="shrink-0" />
+                    <List size={18} weight="regular" className="shrink-0 text-accent" />
                     <span className="truncate">Daftar chapter</span>
                   </motion.button>
 
@@ -511,7 +511,7 @@ export function ReaderShell({
                     aria-label="Chapter berikutnya"
                     whileTap={reducedMotion ? undefined : { scale: 0.97 }}
                     className={cn(
-                      "yomirra-chrome-control flex size-11 items-center justify-center rounded-xl text-text-muted hover:text-text-primary hover:bg-surface-hover/80 active:scale-95 transition-all shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+                      "yomirra-chrome-control flex size-11 items-center justify-center rounded-full text-text-muted hover:text-text-primary hover:bg-surface-hover/80 active:scale-95 transition-all shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
                       !nextChapterId && "opacity-30 cursor-not-allowed pointer-events-none"
                     )}
                     disabled={!nextChapterId}
@@ -529,7 +529,7 @@ export function ReaderShell({
                   <motion.button
                     aria-label="Pengaturan pembaca"
                     whileTap={reducedMotion ? undefined : { scale: 0.97 }}
-                    className="yomirra-chrome-control flex size-11 items-center justify-center rounded-xl text-text-muted hover:text-text-primary hover:bg-surface-hover/80 active:scale-95 transition-all shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                    className="yomirra-chrome-control flex size-11 items-center justify-center rounded-full text-text-muted hover:text-text-primary hover:bg-surface-hover/80 active:scale-95 transition-all shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                     onClick={(e) => {
                       e.stopPropagation();
                       if (window.innerWidth >= 768) {

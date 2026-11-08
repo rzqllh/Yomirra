@@ -1,9 +1,9 @@
 import type { MangaSource } from "@/shared/sources/source-types";
 import { sourceMap, sources } from "./adapters";
-import { DynamicSourceAdapter } from "./adapters/dynamic";
+import { DynamicSourceAdapter, fetchDynamicSourceJson } from "./adapters/dynamic";
 import { MihonSourceManifestSchema } from "@/shared/sources/dynamic-source-registry";
 import { domainResolver } from "./domain-resolver";
-import { safeFetch } from "../security/outbound-policy";
+import { SourceError } from "./error";
 
 
 export class SourceManager {
@@ -31,25 +31,22 @@ export class SourceManager {
       }
     }
     if (manifestUrl) {
-      if (sourceMap.has(id)) {
+      if (sourceMap.has(normalizedId)) {
         throw new Error("SECURITY_REJECTED: Cannot use dynamic manifest with a built-in source identity.");
       }
       try {
-        const res = await safeFetch(manifestUrl, {
-          signal: AbortSignal.timeout(5000),
-          maxSize: 256 * 1024,
-          maxRedirects: 3,
-        });
-        if (!res.ok) throw new Error("Failed to fetch custom manifest");
-        const data = await res.json();
+        const { getCustomSourceById } = await import("./custom-source-service");
+        if (await getCustomSourceById(normalizedId)) {
+          throw new Error("SECURITY_REJECTED: Cannot use an external manifest with a registered source identity.");
+        }
+        const data = await fetchDynamicSourceJson(manifestUrl, normalizedId, "external", 256 * 1024);
         const manifest = MihonSourceManifestSchema.parse(data);
         if (manifest.id !== id) {
           throw new Error(`SECURITY_REJECTED: Manifest identity mismatch. Expected ${id}, got ${manifest.id}`);
         }
-        manifest.manifestUrl = manifestUrl;
-        return new DynamicSourceAdapter(manifest);
+        return new DynamicSourceAdapter(manifest, manifestUrl);
       } catch (err) {
-        if (err instanceof Error && err.message.startsWith("SECURITY_REJECTED")) throw err;
+        if (SourceError.isSourceError(err) || (err instanceof Error && err.message.startsWith("SECURITY_REJECTED"))) throw err;
         throw new Error(`Failed to initialize custom source: ${err instanceof Error ? err.message : String(err)}`);
       }
     }

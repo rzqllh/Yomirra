@@ -160,6 +160,20 @@ Jangan memindahkan query state ke Zustand hanya untuk mengurangi jumlah hook.
 
 ## 9. Cache dan Redis
 
+Jalur pembacaan publik memakai Redis sebagai cache opsional. Jika Redis tidak dikonfigurasi, belum siap, atau quota circuit terbuka, aplikasi melewati cache dan mencoba mengambil dari source. Ini **tidak** mengubah fail-closed pada mutasi admin atau operasi yang membutuhkan durability.
+
+Mitigasi 2026-11-05 menambah in-flight deduplication (maksimal 1.024 flight, deadline 30 detik) serta near-cache per serverless isolate dengan TTL maksimal 10 detik, batas 256 entri, 8 MiB total, dan 128 KiB per entri. Data tidak boleh bertahan melewati expiry asal. Domain resolver menggunakan positive/negative near-cache maksimal 10 detik, dengan invalidasi saat operasi lokal mengubah domain; isolate lain dapat melihat perubahan dengan jeda sampai 10 detik. Pembacaan override source digabung per server render dengan React `cache()`, bukan lintas request. Kesalahan search dan flush admin menghapus cache lokal yang relevan.
+
+Production memiliki `REDIS_URL`, sedangkan Vercel Preview saat ini tidak. Preview berstatus READY atau homepage HTTP 200 tidak membuktikan Redis production sehat atau command-rate sudah turun. Validasi pada environment dengan Redis terkonfigurasi tetap diperlukan.
+
+### Pengawasan command budget
+
+`GET /api/health/live` hanya memeriksa respons proses. `GET /api/health` adalah readiness Redis dan mengembalikan 503 ketika Redis tidak tersedia atau belum dikonfigurasi. Readiness berbagi satu probe yang sedang berjalan dan memakai ulang hasilnya selama 10 detik per instance. Circuit yang terbuka langsung membatalkan hasil sukses yang tersimpan. Kedua endpoint memakai `Cache-Control: no-store` dan tidak memanggil upstream sumber.
+
+Pantau `GET`, `INCR`, total commands, hits/misses, request per endpoint, dan status quota circuit. Kurva Upstash 3 November 2026 mulai naik sebelum Source Health PR #128 mencapai production. Penyebab traffic berulang belum dapat ditentukan secara definitif dari log agregat; data request mentah IP/User-Agent lama tidak tersedia. Jangan menjadikan upgrade billing sebagai pengganti pengurangan command berulang. Lihat [catatan insiden](ops/redis-read-spike-2026-11-03.md).
+
+
+
 Server dapat memakai Redis untuk:
 
 - cached source responses;
@@ -173,7 +187,11 @@ Redis failure tidak boleh membuat normal source search gagal hanya karena semant
 
 `src/server/lib/cache/redis.ts` menyediakan `ensureRedisReady()` dan `isRedisReady()`. Client memakai lazy connection; request fail-closed menunggu readiness melalui in-flight promise bersama, bukan memanggil `INCR` sebelum Redis siap. Penantian dibatasi 2.500 ms pada jalur cold-start maupun reconnect, termasuk ketika ioredis masih melakukan retry.
 
-`src/server/lib/security/rate-limit.ts` mempertahankan dua kebijakan yang berbeda: fail-closed menunggu readiness atau menghasilkan unavailable (503), sedangkan fail-open publik melewati Redis dengan cepat saat client belum ready sambil memulai recovery non-blocking. Ketika Redis ready, counter/TTL kembali digunakan dan limit exhaustion dapat menghasilkan 429. Konsumen Redis lain belum otomatis memiliki jaminan readiness atau durabilitas yang sama.
+`src/server/lib/security/rate-limit.ts` memakai jendela tetap per instance untuk rute publik. Counter dibatasi dan tidak memakai perintah Redis. Rute admin, keamanan, dan pembuatan embedding berbayar memakai admission Redis dan merespons 503 ketika limiter tidak tersedia. Setiap instance memiliki kuota publik sendiri.
+
+Request cache miss ke sumber memakai single-flight per key dengan maksimum 8 operasi per sumber dan 32 per instance. Circuit breaker per sumber memberi jeda pada 403, 429, timeout, dan kegagalan upstream. Setelah jeda, satu permintaan menguji pemulihan. Respons 404 memakai cache lokal 30 detik. Health snapshot memakai satu MGET untuk discovery, cache proses 30 detik, dan keputusan pemulihan berdasarkan snapshot fungsi yang lebih baru. Rute probe mengambil lease bersama saat Redis tersedia. Image proxy membatasi 16 stream aktif per instance, membatalkan upstream saat koneksi ditutup, dan mengirim 503 dengan Retry-After ketika penuh.
+
+Related search dapat mengembalikan daftar kosong ketika indeks tidak tersedia. Rating batch mengembalikan hasil yang sempat diperoleh dalam batas waktu. Kedua respons tetap mengikuti kontrak normal dan dapat berisi lebih sedikit hasil saat provider bermasalah.
 
 ## 10. Reader dan offline
 
@@ -247,3 +265,13 @@ Telegram ops bersifat deterministic. Error/stage diubah menjadi report yang memb
 Penulisan history menangkap pemilik data sebelum operasi async, mengurutkan penulisan per chapter, dan menolak akun yang berubah. Kegagalan penulisan cloud mempertahankan progres lokal. Full sync menyatukan state sebelum memadatkan history; marker kompak mencegah detail lama masuk kembali. Pemadatan cloud selesai saat rekonsiliasi penuh, bukan sebagai transaksi global lintas perangkat. Lihat [kontrak data bacaan](READING_DATA.md).
 
 Download engine memeriksa Cache Storage ketika resume dan sebelum menyatakan chapter selesai. Metadata `cached` saja tidak membuktikan gambar masih tersedia.
+
+## Health dan cache offline
+
+`/api/health/live` mengukur respons proses. `/api/health` mengukur kesiapan Redis dan melaporkan snapshot sumber yang sudah tersedia di instance. Readiness berbagi satu probe aktif per instance dengan TTL dan backoff, serta membuang hasil positif saat koneksi diketahui putus. Probe tidak meminta data baru dari upstream.
+
+Worker hanya menyimpan HTML yang diberi penanda aman oleh server. Halaman Unduhan mempunyai shell bersama dengan data lokal yang dimuat setelah hidrasi. Respons RSC, API bergantung cookie, dan API dengan manifest eksternal tetap melalui jaringan. Cache gambar proxy otomatis dan buffer dapat diganti saat upgrade. Cache unduhan eksplisit memakai nama tetap, memeriksa tipe raster, dan menolak penggunaan path virtual sebagai dokumen. URL proxy versi 2 mengikat URL dan referer dalam HMAC. Antrean lama menukar URL yang kedaluwarsa lewat endpoint halaman resmi ketika online.
+
+Untuk membaca offline, kunjungi Unduhan sekali saat online. Setelah shell tersimpan, halaman Unduhan membuka gambar chapter berklasifikasi aman dari sumber terdaftar langsung dari penyimpanan perangkat. MangaDex menyediakan rating judul yang dapat memenuhi syarat ini. Sumber tanpa rating per judul, seperti Shinigami, masih memerlukan Reader online. Reader online dapat memeriksa klasifikasi unduhan lama ketika chapter terverifikasi pada scope yang aktif. Dialog offline tidak melakukan sinkronisasi akun atau menulis riwayat baca.
+
+Lihat [handoff stabilisasi](handoff/final-stabilization.md) untuk batas rilis, pemantauan dan recovery.

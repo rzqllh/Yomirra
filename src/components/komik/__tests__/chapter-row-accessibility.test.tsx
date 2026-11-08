@@ -48,4 +48,21 @@ describe("ChapterRow accessibility", () => {
     expect(downloadButton.closest("a")).toBeNull()
     expect(chapterLink.closest("article")).toBe(downloadButton.closest("article"))
   })
+  it("marks the last-read chapter and keeps locked chapters out of navigation", () => {
+    const chapter = {
+      sourceId: "source-a",
+      mangaId: "manga-a",
+      chapterId: "chapter-12",
+      chapterTitle: "Chapter 12",
+      mangaTitle: "Manga A",
+      date: "2026-09-25",
+    }
+    const { rerender } = render(<ChapterRow {...chapter} isLastRead />)
+    expect(screen.getByRole("link", { name: "Baca Chapter 12", current: true })).toBeTruthy()
+
+    rerender(<ChapterRow {...chapter} isLocked />)
+    expect(screen.getByText("Terkunci")).toBeTruthy()
+    expect(screen.queryByRole("link")).toBeNull()
+    expect(screen.queryByRole("button")).toBeNull()
+  })
 })

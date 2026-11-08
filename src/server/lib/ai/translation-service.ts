@@ -1,5 +1,4 @@
-import { callGeminiGenerateContent, generateAiText } from "./ai-provider";
-import { extractMangaPageText } from "./ocr-service";
+import { callGeminiGenerateContent } from "./ai-provider";
 
 export interface TranslationRequest {
   text: string;
@@ -71,58 +70,5 @@ ${cleanText}
     originalText: cleanText,
     translatedText: result.text,
     targetLanguage: targetLang,
-  };
-}
-
-/**
- * Direct dialogue translator used for tests and simple dialogue translation.
- */
-export async function translateMangaDialogue(
-  text: string,
-  targetLanguage: string = "id"
-): Promise<{ success: boolean; translatedText?: string; error?: string }> {
-  const prompt = `Terjemahkan dialog komik berikut ke dalam Bahasa Indonesia yang natural:\n${text}`;
-  const res = await generateAiText({ prompt });
-  if (!res.success || !res.text) {
-    return { success: false, error: res.error || "Gagal menerjemahkan dialog" };
-  }
-  return { success: true, translatedText: res.text };
-}
-
-/**
- * End-to-end page translation: performs OCR on image then translates dialogue.
- */
-export async function translateMangaPage(
-  imageUrl: string,
-  targetLanguage: string = "id"
-): Promise<{
-  success: boolean;
-  originalText?: string;
-  translatedText?: string;
-  stageFailed?: "ocr" | "translation";
-  error?: string;
-}> {
-  const ocrRes = await extractMangaPageText(imageUrl);
-  if (!ocrRes.success || !ocrRes.text) {
-    return {
-      success: false,
-      stageFailed: "ocr",
-      error: ocrRes.error || "Gagal melakukan OCR pada halaman",
-    };
-  }
-
-  const transRes = await translateMangaDialogue(ocrRes.text, targetLanguage);
-  if (!transRes.success || !transRes.translatedText) {
-    return {
-      success: false,
-      stageFailed: "translation",
-      error: transRes.error || "Gagal menerjemahkan teks halaman",
-    };
-  }
-
-  return {
-    success: true,
-    originalText: ocrRes.text,
-    translatedText: transRes.translatedText,
   };
 }

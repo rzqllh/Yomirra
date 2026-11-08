@@ -36,6 +36,23 @@ describe("Admin Redis Service", () => {
     expect(telem.usedMemory).toBe("14.2M");
     expect(telem.uptimeDays).toBe(12);
     expect(telem.totalSampledKeys).toBe(2);
+    expect(mockType).not.toHaveBeenCalled();
+    expect(mockTtl).not.toHaveBeenCalled();
+  });
+
+  it("caps telemetry work on a large keyspace and deduplicates sampled keys", async () => {
+    mockInfo.mockResolvedValueOnce("connected_clients:4");
+    for (const cursor of ["1", "2", "3", "4"]) {
+      mockScan.mockResolvedValueOnce([cursor, ["yomirra:k1"]]);
+    }
+    const { getRedisTelemetry } = await import("../admin-redis-service");
+
+    const telemetry = await getRedisTelemetry();
+
+    expect(telemetry.totalSampledKeys).toBe(1);
+    expect(mockScan).toHaveBeenCalledTimes(4);
+    expect(mockType).not.toHaveBeenCalled();
+    expect(mockTtl).not.toHaveBeenCalled();
   });
 
   it("should scan keys and return metadata with TTL and type", async () => {

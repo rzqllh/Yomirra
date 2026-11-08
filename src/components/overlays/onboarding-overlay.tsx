@@ -3,44 +3,34 @@
 import * as React from "react";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { useOnboardingStore } from "@/shared/store/onboarding-store";
-import { useLibraryStore } from "@/shared/store/library-store";
-import { useHistoryStore } from "@/shared/store/history-store";
 import { cn } from "@/shared/utils/cn";
 import { usePWAInstall } from "@/shared/hooks/use-pwa-install";
-import { DownloadSimple, Export, PlusSquare, X } from "@phosphor-icons/react";
+import { ArrowRight, DownloadSimple, Export, PlusSquare } from "@phosphor-icons/react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 
 const STEPS = [
   {
     eyebrow: "SEMUA SUMBER, SATU PINTU",
-    title: "Katalog Multi-Sumber Terlengkap",
+    title: "Jelajahi komik lintas sumber",
     desc: "Akses ribuan judul dari berbagai sumber lokal dan internasional dalam satu tempat.",
   },
   {
     eyebrow: "KUSTOMISASI & KENYAMANAN",
-    title: "Atur Gaya Membaca Sesuai Keinginan",
+    title: "Baca dengan caramu",
     desc: "Pilih mode gulir vertikal Webtoon atau balik halaman per halaman dengan pencatatan riwayat otomatis.",
   },
   {
     eyebrow: "SIAP MEMBACA",
-    title: "Mulai Petualangan Membacamu",
+    title: "Temukan bacaan berikutnya",
     desc: "Cari judul favoritmu, tambahkan ke Koleksi, atau lanjutkan bacaan kapan saja langsung di Yomirra.",
   },
 ];
 
-const FALLBACK_COVERS = [
+const STEP_ARTWORK = [
   "/covers/cover-1.webp",
   "/covers/cover-2.webp",
   "/covers/cover-3.webp",
 ];
-
-function getCardStyle(index: number, currentStep: number, totalCards: number) {
-  const offset = (index - (currentStep % totalCards) + totalCards) % totalCards;
-  if (offset === 0) return { y: 0, scale: 1, zIndex: 10, opacity: 1, filter: "brightness(100%)" };
-  if (offset === 1) return { y: -16, scale: 0.92, zIndex: 5, opacity: 0.65, filter: "brightness(88%)" };
-  if (offset === 2) return { y: -30, scale: 0.84, zIndex: 3, opacity: 0.35, filter: "brightness(75%)" };
-  return { y: -42, scale: 0.78, zIndex: 1, opacity: 0, filter: "brightness(60%)" };
-}
 
 export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
   const { completeOnboarding } = useOnboardingStore();
@@ -52,7 +42,6 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
   const [isMounted, setIsMounted] = React.useState(false);
   const [isReadyToExit, setIsReadyToExit] = React.useState(false);
   const [step, setStep] = React.useState(0);
-  const [covers, setCovers] = React.useState<string[]>(FALLBACK_COVERS);
 
   React.useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -76,27 +65,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
     };
   }, []);
 
-  // Init phase
-  React.useEffect(() => {
-    setIsMounted(true);
-
-    const libraryItems = Object.values(useLibraryStore.getState().items || {});
-    const historyItems = Object.values(useHistoryStore.getState().items || {});
-
-    const extractedCovers = new Set<string>();
-    libraryItems.forEach(item => { if (item.coverUrl) extractedCovers.add(item.coverUrl); });
-    historyItems.forEach(item => { if (item.coverUrl) extractedCovers.add(item.coverUrl); });
-
-    const availableCovers = Array.from(extractedCovers);
-    if (availableCovers.length >= 3) {
-      const shuffled = availableCovers.sort(() => 0.5 - Math.random());
-      setCovers(shuffled.slice(0, 3));
-      return;
-    }
-
-    // Fallback to local covers immediately without making network calls on initial startup
-    setCovers(FALLBACK_COVERS);
-  }, []);
+  React.useEffect(() => setIsMounted(true), []);
 
   React.useEffect(() => {
     if (!isMounted) return;
@@ -186,15 +155,9 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
       animate={{ opacity: 1 }}
       exit={reducedMotion ? { opacity: 1 } : { opacity: 0, scale: 1.02 }}
       transition={reducedMotion ? { duration: 0 } : { duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-      className="fixed inset-0 z-[9000] flex flex-col bg-surface-base text-text-primary h-[100dvh] overflow-hidden select-none"
+      className="fixed inset-0 z-[9000] flex h-dvh flex-col overflow-y-auto bg-surface-base text-text-primary"
     >
-      {/* Subtle adaptive ambient aura */}
-      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden flex items-center justify-center">
-        <div className="w-[500px] h-[500px] bg-accent/6 dark:bg-accent/14 blur-[120px] rounded-full pointer-events-none" />
-      </div>
-
-      {/* Header */}
-      <header className="relative z-10 flex items-center justify-between px-6 pt-[calc(var(--safe-top,env(safe-area-inset-top))+16px)] w-full">
+      <header className="relative z-10 mx-auto flex w-full max-w-6xl items-center justify-between px-4 pt-[calc(var(--safe-top)+12px)] sm:px-8">
         <div className="flex items-center gap-2.5">
           <div className="size-8 rounded-xl overflow-hidden bg-surface-raised border border-border-subtle shadow-xs p-0.5 flex items-center justify-center">
             <img
@@ -219,73 +182,45 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
         </button>
       </header>
 
-      {/* Straight Depth Stack Showcase */}
-      <main className="relative z-10 flex-1 flex items-center justify-center w-full px-4 min-h-0">
-        <div className="relative flex items-center justify-center w-full max-w-[260px] h-[320px] sm:max-w-[280px] sm:h-[360px]">
-          {covers.map((url, i) => {
-            const style = getCardStyle(i, step, covers.length);
-            return (
-              <motion.div
-                key={`cover-${i}`}
-                animate={{
-                  y: style.y,
-                  scale: style.scale,
-                  opacity: style.opacity,
-                  filter: style.filter,
-                }}
-                transition={reducedMotion ? { duration: 0 } : { type: "spring", stiffness: 280, damping: 26, mass: 1 }}
-                className="absolute w-[190px] h-[270px] sm:w-[210px] sm:h-[300px] rounded-xl overflow-hidden shadow-lg border border-border-subtle bg-surface-raised"
-                style={{ zIndex: style.zIndex }}
-              >
-                <img
-                  src={url}
-                  alt="Cover Komik"
-                  className="w-full h-full object-cover select-none"
-                  referrerPolicy="no-referrer"
-                  loading="eager"
-                  decoding="async"
-                  onError={(e) => {
-                    const target = e.currentTarget;
-                    const fallback = FALLBACK_COVERS[i % FALLBACK_COVERS.length];
-                    if (target.src !== fallback) {
-                      target.src = fallback;
-                    }
-                  }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-transparent to-transparent opacity-50" />
-              </motion.div>
-            );
-          })}
+      <div className="mx-auto grid w-full max-w-6xl flex-1 content-center items-center gap-4 px-4 pt-3 pb-[calc(var(--safe-bottom)+16px)] sm:px-8 md:grid-cols-[1.1fr_1fr] md:gap-10 lg:gap-16">
+        <div aria-hidden="true" className="relative isolate grid h-[clamp(190px,40svh,310px)] place-items-center overflow-hidden rounded-2xl border border-border-default bg-surface-muted md:h-[clamp(360px,65svh,620px)] md:rounded-3xl">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_40%,var(--color-accent-dim),transparent_72%)]" />
+          <div className="absolute aspect-[2/3] h-[69%] -translate-x-8 -rotate-12 rounded-xl border border-border-strong bg-surface-hover shadow-lg md:-translate-x-12" />
+          <div className="absolute aspect-[2/3] h-[72%] translate-x-8 rotate-12 rounded-xl border border-border-strong bg-surface-overlay shadow-lg md:translate-x-12" />
+          <img
+            src={STEP_ARTWORK[step]}
+            alt=""
+            className="relative aspect-[2/3] h-[79%] rounded-xl border border-border-glass object-cover shadow-xl"
+            decoding="async"
+          />
+          <span className="absolute bottom-3 left-3 rounded-full border border-border-default bg-surface-overlay px-2.5 py-1 text-xs font-semibold tabular-nums text-text-secondary">
+            0{step + 1} / 0{STEPS.length}
+          </span>
         </div>
-      </main>
 
-      {/* Editorial Content & CTA Actions */}
-      <footer className="relative z-10 flex flex-col px-6 pb-[calc(var(--safe-bottom,env(safe-area-inset-bottom))+20px)] w-full max-w-[400px] mx-auto">
-        <div className="min-h-[140px] flex flex-col justify-end text-center mb-5">
-          <AnimatePresence mode="wait">
+        <section className="flex w-full flex-col md:py-6">
+          <div aria-live="polite" className="mb-2 min-h-28 md:mb-5 md:min-h-48">
             <motion.div
               key={step}
               initial={reducedMotion ? false : { opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={reducedMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: -8 }}
               transition={reducedMotion ? { duration: 0 } : { duration: 0.25 }}
               className="flex flex-col gap-1.5"
             >
               <p className="text-[11px] font-bold tracking-[0.2em] text-accent uppercase">
                 {STEPS[step].eyebrow}
               </p>
-              <h2 id="onboarding-title" className="text-2xl sm:text-[28px] leading-tight font-extrabold tracking-tight text-text-primary whitespace-pre-line">
+              <h2 id="onboarding-title" className="max-w-[16ch] text-balance text-[28px] font-extrabold leading-[1.06] tracking-tight text-text-primary sm:text-4xl lg:text-[clamp(42px,4vw,62px)]">
                 {STEPS[step].title}
               </h2>
-              <p id="onboarding-description" className="text-xs sm:text-sm font-normal text-text-muted mt-1 leading-relaxed">
+              <p id="onboarding-description" className="mt-2 max-w-prose text-sm leading-relaxed text-text-secondary md:text-base">
                 {STEPS[step].desc}
               </p>
             </motion.div>
-          </AnimatePresence>
         </div>
 
         {/* Segmented Step Indicator */}
-        <div className="flex items-center justify-center gap-1 mb-3 min-h-11">
+        <div className="-ml-2 mb-2 flex min-h-11 items-center md:mb-4">
           {STEPS.map((_, i) => (
             <button
               key={i}
@@ -311,19 +246,10 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
           <button
             type="button"
             onClick={handleNext}
-            className={cn(
-              "w-full h-12 sm:h-13 rounded-lg font-bold text-sm sm:text-base shadow-sm motion-safe:active:scale-[0.98] motion-safe:transition-[transform,background-color,color,border-color,box-shadow] flex items-center justify-center gap-2 cursor-pointer",
-              step === STEPS.length - 1
-                ? "bg-accent hover:bg-accent-hover text-white shadow-md shadow-accent/25"
-                : "bg-surface-raised hover:bg-surface-hover border border-border-subtle text-text-primary"
-            )}
+            className="flex min-h-12 w-full cursor-pointer items-center justify-between gap-2 rounded-xl bg-accent px-4 text-sm font-bold text-accent-on shadow-md shadow-accent/20 outline-none transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:text-base"
           >
             {step === STEPS.length - 1 ? "Mulai Membaca" : "Lanjut"}
-            {step === STEPS.length - 1 && (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            )}
+            <ArrowRight aria-hidden="true" size={20} />
           </button>
 
           {/* Install PWA Button (Only on final step if installable) */}
@@ -343,7 +269,8 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
             )}
           </AnimatePresence>
         </div>
-      </footer>
+        </section>
+      </div>
 
       {/* iOS Safari Add to Home Screen Guidance Dialog (Q134-Q147) */}
       <Dialog open={showIOSGuide} onOpenChange={setShowIOSGuide}>

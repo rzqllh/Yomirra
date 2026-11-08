@@ -1,4 +1,6 @@
 import { getAllSourceMetadata } from "@/shared/sources/source-registry";
+import { cache } from "react";
+import { clearNearCache } from "@/server/lib/cache/redis-cache";
 import { sourceHealthStore } from "@/server/lib/sources/health/health-store";
 import { probeSourceHealth } from "@/server/lib/sources/health/probe";
 import * as domainResolverModule from "@/server/lib/sources/domain-resolver";
@@ -74,7 +76,7 @@ export async function getDurableCoreSourceOverrides(): Promise<Record<string, Co
 /**
  * Mengambil core source overrides untuk consumer publik/pembaca (fail-open graceful fallback).
  */
-export async function getCoreSourceOverrides(): Promise<Record<string, CoreSourceOverride>> {
+async function readCoreSourceOverrides(): Promise<Record<string, CoreSourceOverride>> {
   if (!isRedisConfigured) return inMemoryCoreOverrides;
 
   if (!isRedisReady()) {
@@ -105,6 +107,15 @@ export async function getCoreSourceOverrides(): Promise<Record<string, CoreSourc
     return inMemoryCoreOverrides;
   }
 }
+
+let publicOverrideRead: ReturnType<typeof readCoreSourceOverrides> | undefined;
+
+export const getCoreSourceOverrides = cache(() => {
+  publicOverrideRead ??= readCoreSourceOverrides().finally(() => {
+    publicOverrideRead = undefined;
+  });
+  return publicOverrideRead;
+});
 
 const SAVE_CORE_OVERRIDE_LUA = `
 local raw = redis.call('get', KEYS[1])
@@ -346,12 +357,14 @@ export async function probeSource(sourceId: string): Promise<ProbeResult> {
 
 export async function flushSourceCache(sourceId?: string): Promise<{ success: boolean; message: string; flushedCount: number; deletedCount: number }> {
   if (!isRedisConfigured) {
-    return { success: true, message: "Redis unconfigured, in-memory cache implicitly empty", flushedCount: 0, deletedCount: 0 };
+    clearNearCache();
+    return { success: true, message: "Redis unconfigured; local cache cleared", flushedCount: 0, deletedCount: 0 };
   }
 
   try {
     const pattern = sourceId ? `source:${sourceId}:*` : "source:*";
     const deletedCount = await deleteMatchedRedisKeys(pattern);
+    clearNearCache();
 
     return {
       success: true,

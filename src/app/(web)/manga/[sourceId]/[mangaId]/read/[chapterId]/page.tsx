@@ -2,7 +2,7 @@ import { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { WarningCircle } from "@phosphor-icons/react/dist/ssr";
 import { sourceManager } from "@/server/lib/sources/source-manager";
-import { getServerReadOptions, loadSourceDetail, loadSourceChapters, loadSourcePages } from "@/server/lib/sources/content-access";
+import { findMangaChapter, getServerReadOptions, loadSourceDetail, loadSourceChapters, loadSourcePages } from "@/server/lib/sources/content-access";
 import { ReaderView } from "@/components/reader/reader-view";
 import { ReaderShell } from "@/components/reader/reader-shell";
 import { EmptyState } from "@/components/states/empty-state";
@@ -11,6 +11,9 @@ import { getMangaDetailHref, getSafeMangaDetailBackHref } from "@/shared/lib/rou
 import { getManifestUrlFromCookie } from "@/server/lib/sources/server-manifest";
 import { SourceError } from "@/server/lib/sources/error";
 import { DeadSourceRecovery } from "@/components/komik/dead-source-recovery";
+import { signImageUrl } from "@/server/lib/sign-proxy-url";
+import { sourceReadScope } from "@/shared/sources/content-policy";
+import type { PageItem } from "@/shared/sources/source-types";
 
 export async function generateMetadata({ 
   params 
@@ -43,8 +46,6 @@ export const revalidate = 1800;
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
   viewportFit: "cover",
 };
 
@@ -66,30 +67,37 @@ export default async function ReaderPage({
   const returnTo = getSafeMangaDetailBackHref(rawReturnTo ?? null);
   const detailHref = getMangaDetailHref(sourceId, mangaId, returnTo);
 
-  let detail: any, chapters: any, pagesResult: any;
+  let detail, chapters;
+  let initialPages: PageItem[] | null = null;
+  let initialPagesScope: string | undefined;
   try {
     const readOptions = await getServerReadOptions();
     const manifestUrl = await getManifestUrlFromCookie(sourceId);
     const source = await sourceManager.getSource(sourceId, manifestUrl);
     
-    // Fetch detail, chapters, and fast-race pages cache to prevent blocking RSC commit on slow scrapers
-    const fastPagesPromise = Promise.race([
-      loadSourcePages(source, mangaId, chapterId, readOptions).catch(() => null),
-      new Promise<null>((resolve) => setTimeout(() => resolve(null), 250)),
-    ]);
-
-    [detail, chapters, pagesResult] = await Promise.all([
+    initialPagesScope = sourceReadScope(readOptions);
+    [detail, chapters] = await Promise.all([
       loadSourceDetail(source, mangaId, readOptions),
       loadSourceChapters(source, mangaId, readOptions),
-      fastPagesPromise,
     ]);
 
-    if (pagesResult?.pages) {
-      const { signImageUrl } = await import("@/server/lib/sign-proxy-url");
-      pagesResult.pages = pagesResult.pages.map((p: any) => ({
-        ...p,
-        url: signImageUrl(p.url, p.referer || source.baseUrl)
-      }));
+    // MangaDex verifies the parent via chapter metadata, even for scanlations
+    // excluded from its display list. Other sources must match the parent feed.
+    if (source.id === "mangadex" || !findMangaChapter(source.id, chapterId, chapters).isLocked) {
+      const pages = loadSourcePages(source, mangaId, chapterId, readOptions).catch(() => null);
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const deadline = new Promise<null>((resolve) => {
+        timer = setTimeout(() => resolve(null), 250);
+      });
+      try {
+        const pagesResult = await Promise.race([pages, deadline]);
+        initialPages = pagesResult?.pages.map((page) => ({
+          ...page,
+          url: signImageUrl(page.url, page.referer || source.baseUrl),
+        })) ?? null;
+      } finally {
+        clearTimeout(timer);
+      }
     }
   } catch (error) {
     console.error("Failed to load reader data:", error);
@@ -148,7 +156,8 @@ export default async function ReaderPage({
       chapterId={chapterId}
       initialDetail={detail}
       initialChapters={chapters}
-      initialPages={pagesResult?.pages || null}
+      initialPages={initialPages}
+      initialPagesScope={initialPagesScope}
       returnTo={returnTo}
     />
   );

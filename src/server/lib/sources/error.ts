@@ -7,6 +7,7 @@ export interface SourceErrorOptions {
   sourceId: string;
   stage?: SourceHealthStage;
   statusCode?: number;
+  retryAfterSeconds?: number;
   cause?: unknown;
 }
 
@@ -15,6 +16,7 @@ export class SourceError extends Error {
   readonly sourceId: string;
   readonly stage?: SourceHealthStage;
   readonly statusCode?: number;
+  readonly retryAfterSeconds?: number;
 
   constructor(message: string, options: SourceErrorOptions) {
     super(message);
@@ -23,6 +25,7 @@ export class SourceError extends Error {
     this.sourceId = options.sourceId;
     this.stage = options.stage;
     this.statusCode = options.statusCode;
+    this.retryAfterSeconds = options.retryAfterSeconds;
     if (options.cause) {
       this.cause = options.cause;
     }
@@ -92,10 +95,7 @@ export class SourceError extends Error {
       msg.includes("fetch failed") ||
       msg.includes("dns error") ||
       msg.includes("cert_has_expired") ||
-      statusCode === 502 ||
-      statusCode === 504 ||
-      statusCode === 521 ||
-      statusCode === 522
+      (statusCode !== undefined && statusCode >= 500)
     ) {
       code = "SOURCE_DOWN";
     } else if (msg.includes("decrypt") || msg.includes("cipher") || msg.includes("aes-256")) {
@@ -123,6 +123,8 @@ export class SourceError extends Error {
       sourceId,
       stage,
       statusCode,
+      retryAfterSeconds: typeof err === "object" && err !== null && "retryAfterSeconds" in err
+        && typeof err.retryAfterSeconds === "number" ? err.retryAfterSeconds : undefined,
       cause: err,
     });
   }

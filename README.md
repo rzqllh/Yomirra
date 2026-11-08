@@ -57,17 +57,19 @@ Judul yang sedang dibuka, sudah disimpan, atau sudah dibaca tidak diprioritaskan
 
 Jika source utama bermasalah, Yomirra dapat mencari source alternatif untuk judul yang sama. Relink tidak dilakukan secara agresif untuk match yang ambigu, dan progress lama tetap dipertahankan bila chapter tidak bisa dipetakan dengan aman.
 
+Sumber yang gagal berulang muncul di kelompok **Under Maintenance** di halaman Sumber, dengan alasan dan status pemeriksaan. Sumber tersebut dijeda dari katalog dan pencarian default hingga pemeriksaan berhasil. Tautan judul yang sudah tersimpan tetap bisa dibuka saat layanan sumber mengizinkan. Saat sebagian sumber gagal, Beranda menampilkan hasil yang tersedia terlebih dahulu dan menaruh pemberitahuan serta pilihan pemulihan di bawah katalog.
+
 ### Reader dan offline
 
-Reader mendukung chapter berbasis gambar, progress baca, chapter navigator, preferensi reader, serta download/offline flow pada browser yang mendukung. Untuk format vertikal (webtoon), Reader menyediakan continuous scrubber 0–100% berbasis posisi scroll riil tanpa dot circle berlebih, sementara mode paginasi (LTR/RTL) tetap mempertahankan navigasi halaman diskrit. Kanvas Reader menggunakan dark loading minimal yang menghormati `prefers-reduced-motion` dan menghilangkan efek layout jump dari skeleton komik palsu.
+Reader mendukung chapter berbasis gambar, progress baca, chapter navigator, preferensi reader, serta download/offline flow pada browser yang mendukung. Halaman dimuat bertahap dari posisi baca. Gestur zoom mengikuti pengaturan browser dan perangkat. Untuk format vertikal (webtoon), Reader menyediakan continuous scrubber 0–100% berbasis posisi scroll riil tanpa dot circle berlebih, sementara mode paginasi (LTR/RTL) tetap mempertahankan navigasi halaman diskrit. Kanvas Reader menggunakan dark loading minimal yang menghormati `prefers-reduced-motion` dan menghilangkan efek layout jump dari skeleton komik palsu.
 
 Navigasi reader menjaga parent page secara eksplisit: perpindahan detail → reader dan antar-chapter tidak meninggalkan reader route lama di belakang tombol kembali, sehingga keluar ke detail lalu kembali lagi mengarah ke halaman asal, bukan ke reader sebelumnya.
 
-Offline dan PWA bergantung pada kemampuan browser, Service Worker, dan storage perangkat. Tampilan PWA terintegrasi penuh dengan safe-area iOS Safari dan sinkronisasi canonical theme-color (`#f9f9fb` untuk light, `#090a0f` untuk dark). Cadangan data (backup & restore) beroperasi 100% secara offline berbasis berkas JSON terenkapsulasi dengan validasi skema Zod.
+Offline dan PWA bergantung pada kemampuan browser, Service Worker, dan storage perangkat. Tampilan PWA terintegrasi penuh dengan safe-area iOS Safari dan sinkronisasi canonical theme-color (`#eef0f5` untuk light, `#090a0f` untuk dark). Cadangan data (backup & restore) beroperasi 100% secara offline berbasis berkas JSON terenkapsulasi dengan validasi skema Zod.
 
 Riwayat menyimpan 512 entri chapter dengan detail lengkap, lalu mempertahankan ringkasan posisi terakhir dan milestone tiap judul. Progres lokal tetap dipertahankan ketika cloud gagal. Untuk aturan retensi, backup, pemulihan, dan batas offline, baca [panduan data bacaan](docs/READING_DATA.md). Penghapusan otomatis setelah tiga bulan belum aktif.
 
-Unduhan eksplisit tidak terus menjadwalkan pemrosesan saat antrian kosong. Untuk unduhan lama dengan URL gambar tanpa tanda tangan, engine dapat mencoba mengambil ulang URL resmi dari endpoint halaman sumber tanpa membuang halaman yang sudah di-cache. Pemulihan bergantung pada ketersediaan sumber dan tidak melemahkan validasi signed image proxy. Profiling timer browser dan smoke Safari masih merupakan verifikasi manual.
+Unduhan eksplisit tidak terus menjadwalkan pemrosesan saat antrian kosong. Unduhan yang tertunda dengan URL lama mengambil ulang daftar halaman saat sumber dapat dijangkau. Cache menyimpan gambar raster yang sudah diunduh. Buka halaman Unduhan saat terhubung agar shell tersedia ketika offline. Browser dapat menghapus penyimpanan lokal jika kuota terlampaui. Perangkat iOS fisik tetap memerlukan verifikasi terpisah.
 
 ### Motion dan navigasi
 
@@ -96,6 +98,14 @@ AI bukan dependency untuk fungsi utama Yomirra.
 Tanpa `GEMINI_API_KEY`, search tetap menyediakan tag parsing, canonical filters, typo handling, lexical ranking, dan multi-source search biasa.
 
 Jika `GEMINI_API_KEY` tersedia, Yomirra dapat menggunakan embedding untuk semantic ranking. Catalog semantic hanya menyimpan metadata manga publik yang ditemukan saat penggunaan normal; library, history, progress baca, dan data akun tidak dimasukkan ke catalog tersebut.
+
+## Cache dan ketersediaan
+
+Redis bersifat opsional untuk feed, pencarian, dan Reader. Saat cache tidak tersedia atau kuotanya habis, pembacaan publik mencoba langsung ke sumber, yang tetap dapat membatasi akses atau menolak request. Mutasi yang memerlukan penyimpanan durabel tetap gagal tertutup bila Redis tidak dapat menjamin penulisan. Cache publik membatasi pembacaan berulang dengan deduplikasi dan cache memori per instance maksimal 10 detik; sinkronisasi konfigurasi antarisolate dapat tertunda sampai 10 detik.
+
+Bottom dock mobile memakai radius kapsul penuh untuk shell, tombol Search, dan tab aktif, dengan target sentuh minimal 44px dan gutter mengikuti safe-area perangkat. Ini pengecualian komponen, bukan perubahan token radius global.
+
+Gunakan `GET /api/health/live` untuk memeriksa apakah proses aplikasi merespons. `GET /api/health` memeriksa kesiapan Redis dan mengembalikan 503 jika Redis tidak tersedia atau belum dikonfigurasi. Preview tanpa `REDIS_URL` masih dapat melayani alur publik. Detailnya di [Architecture](docs/ARCHITECTURE.md) dan [Testing](docs/TESTING.md).
 
 ## Security dan reliability
 
