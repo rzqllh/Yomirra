@@ -254,6 +254,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
 
           {/* Bahasa Utama */}
           <SettingsItem
+            wrapOnMobile
             icon={<IconWrapper><Globe size={19} weight="regular" /></IconWrapper>}
             title="Bahasa utama"
             description="Prioritas bahasa saat memuat bab komik dari sumber yang mendukung."
@@ -293,6 +294,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
           <div className="mx-3 my-1 border-b border-border-subtle/50" />
 
           <SettingsItem
+            wrapOnMobile
             icon={<IconWrapper><Clock size={19} weight="regular" /></IconWrapper>}
             title="Jeda pengecekan"
             description="Frekuensi interval pemeriksaan chapter baru."

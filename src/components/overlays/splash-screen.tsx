@@ -146,8 +146,8 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
         </motion.div>
 
         <motion.div
-          initial={reducedMotion ? false : { opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={reducedMotion ? false : { y: 10 }}
+          animate={{ y: 0 }}
           transition={reducedMotion ? { duration: 0 } : { ...transitions.gentle, delay: 0.1 }}
           className="flex flex-col items-center text-center gap-1.5"
         >
@@ -162,17 +162,14 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
 
       {/* Hairline Progress & Watchdog Status */}
       <motion.div
-        initial={reducedMotion ? false : { opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={reducedMotion ? { duration: 0 } : { ...transitions.gentle, delay: 0.15 }}
         className="absolute bottom-16 left-0 right-0 flex flex-col items-center gap-3.5 w-full px-6"
       >
         <AnimatePresence mode="wait">
           {!isTakingTooLong ? (
             <motion.div
               key="loading-bar"
-              initial={reducedMotion ? false : { opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={reducedMotion ? false : { y: 8 }}
+              animate={{ y: 0 }}
               exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: -8 }}
               transition={reducedMotion ? { duration: 0 } : transitions.gentle}
               className="flex flex-col items-center gap-3 w-full"
@@ -192,19 +189,15 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
                   }}
                 />
               </div>
-              <motion.p
-                animate={reducedMotion ? { opacity: 1 } : { opacity: [0.55, 0.95, 0.55] }}
-                transition={reducedMotion ? { duration: 0 } : { duration: 2, ease: "easeInOut", repeat: Infinity }}
-                className="text-[11px] font-semibold tracking-wider text-text-muted uppercase"
-              >
+              <p className="text-[11px] font-semibold tracking-wider text-text-muted uppercase">
                 Membuka Rak Kamu...
-              </motion.p>
+              </p>
             </motion.div>
           ) : (
             <motion.div
               key="slow-warning-state"
-              initial={reducedMotion ? false : { opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial={reducedMotion ? false : { y: 8 }}
+              animate={{ y: 0 }}
               transition={reducedMotion ? { duration: 0 } : transitions.gentle}
               className="flex flex-col items-center gap-2 text-center p-5 rounded-xl bg-surface-raised border border-border-subtle shadow-md max-w-xs"
             >

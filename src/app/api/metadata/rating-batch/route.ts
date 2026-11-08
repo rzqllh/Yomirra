@@ -2,13 +2,28 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { withCache } from "@/server/lib/cache/redis-cache";
 import { checkRateLimit } from "@/server/lib/security/rate-limit";
+import { readBoundedJson } from "@/server/lib/security/read-bounded-json";
 import { withSourceCapacity } from "@/server/lib/sources/source-capacity";
+import { loadSourceUpstream } from "@/server/lib/sources/source-upstream";
+import { UpstreamHttpError } from "@/server/lib/sources/adapters/base/http-client";
+import { SourceError } from "@/server/lib/sources/error";
 import { isExactNormalizedTitleMatch } from "@/shared/lib/title-matcher";
 
 const MAX_TITLES = 20;
 const MAX_TITLE_LENGTH = 120;
 const CONCURRENCY = 4;
 const LOOKUP_BUDGET_MS = 4_000;
+
+function fetchRatingProvider(provider: "mangadex" | "anilist", url: string, options: RequestInit) {
+  return loadSourceUpstream(provider, "detail", null, async () => {
+    const response = await fetch(url, options);
+    if (response.status === 403 || response.status === 429) {
+      void response.body?.cancel().catch(() => {});
+      throw new UpstreamHttpError(response.status, response.statusText, response.headers.get("retry-after"));
+    }
+    return response;
+  }, 'metadata-rating:' + provider);
+}
 
 export async function POST(req: NextRequest) {
   const rateLimit = await checkRateLimit(req, 30, 60, false, "rating-batch");
@@ -19,8 +34,11 @@ export async function POST(req: NextRequest) {
     });
   }
   try {
-    const body = await req.json().catch(() => null);
-    const titles: string[] = body?.titles;
+    const body = await readBoundedJson(req, 16 * 1024);
+    if (!body.ok && body.status === 413) {
+      return NextResponse.json({ error: "Rating batch payload too large" }, { status: 413 });
+    }
+    const titles = body.ok ? (body.data as { titles?: unknown } | null)?.titles : undefined;
 
     if (!Array.isArray(titles) || titles.length === 0 || titles.length > MAX_TITLES ||
         titles.some((title) => typeof title !== "string" || title.length > MAX_TITLE_LENGTH)) {
@@ -28,11 +46,14 @@ export async function POST(req: NextRequest) {
     }
 
     const results: Record<string, number | undefined> = Object.create(null);
-    const deadline = Date.now() + LOOKUP_BUDGET_MS;
+    const signal = AbortSignal.timeout(LOOKUP_BUDGET_MS);
+    const budgetExhausted = new Promise<void>((resolve) => {
+      signal.addEventListener("abort", () => resolve(), { once: true });
+    });
     const uniqueTitles = Array.from(new Set(titles)).filter(Boolean);
 
-    for (let i = 0; i < uniqueTitles.length && Date.now() < deadline; i += CONCURRENCY) {
-      await Promise.all(uniqueTitles.slice(i, i + CONCURRENCY).map(async (title) => {
+    for (let i = 0; i < uniqueTitles.length && !signal.aborted; i += CONCURRENCY) {
+      const batch = Promise.all(uniqueTitles.slice(i, i + CONCURRENCY).map(async (title) => {
         const normalizedTitle = title
           .replace(/chapter\s*\d+/i, "")
           .replace(/\[.*?\]/g, "")
@@ -50,10 +71,10 @@ export async function POST(req: NextRequest) {
           const cachedData = await withCache(
             cacheKey,
             () => withSourceCapacity("metadata-rating", async () => {
-              const signal = AbortSignal.timeout(LOOKUP_BUDGET_MS);
+              signal.throwIfAborted();
               try {
                 // Find manga by title
-                const searchRes = await fetch(`https://api.mangadex.org/manga?title=${encodeURIComponent(normalizedTitle)}&limit=1`, {
+                const searchRes = await fetchRatingProvider("mangadex", `https://api.mangadex.org/manga?title=${encodeURIComponent(normalizedTitle)}&limit=1`, {
                   signal,
                 });
                 
@@ -82,7 +103,7 @@ export async function POST(req: NextRequest) {
                       ])
                     ) {
                       // Fetch statistics only after strict title identity validation.
-                      const statRes = await fetch(`https://api.mangadex.org/statistics/manga/${mangaId}`, {
+                      const statRes = await fetchRatingProvider("mangadex", `https://api.mangadex.org/statistics/manga/${mangaId}`, {
                         signal,
                       });
                       
@@ -100,10 +121,11 @@ export async function POST(req: NextRequest) {
                   }
                 }
               } catch (e) {
-                console.error("MangaDex rating fetch error:", e);
+                signal.throwIfAborted();
+                if (!SourceError.isSourceError(e)) console.error("MangaDex rating lookup failed");
               }
 
-              if (signal.aborted) return { score: undefined };
+              signal.throwIfAborted();
               try {
                 const query = `
                   query ($search: String) {
@@ -120,7 +142,7 @@ export async function POST(req: NextRequest) {
                   }
                 `;
                 
-                const res = await fetch("https://graphql.anilist.co", {
+                const res = await fetchRatingProvider("anilist", "https://graphql.anilist.co", {
                   method: "POST",
                   headers: {
                     "Content-Type": "application/json",
@@ -156,7 +178,8 @@ export async function POST(req: NextRequest) {
                   }
                 }
               } catch (e) {
-                console.error("Anilist fallback error:", e);
+                signal.throwIfAborted();
+                if (!SourceError.isSourceError(e)) console.error("AniList rating lookup failed");
               }
 
               return { score: undefined };
@@ -165,11 +188,12 @@ export async function POST(req: NextRequest) {
             { shouldPersist: ({ score }) => score !== undefined }
           );
 
-          results[title] = cachedData?.score;
+          if (!signal.aborted) results[title] = cachedData?.score;
         } catch {
           // Admission or lookup failure leaves this title out of the partial response.
         }
       }));
+      await Promise.race([batch, budgetExhausted]);
     }
 
     return NextResponse.json({ data: results });

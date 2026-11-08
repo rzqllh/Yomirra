@@ -194,11 +194,16 @@ class ApiClient {
     return this.fetchSource<Chapter[]>(sourceId, this.appendManifest(`/api/sources/${sourceId}/manga/${encodeURIComponent(mangaId)}/chapters`, sourceId), options);
   }
 
-  getPages(sourceId: string, mangaId: string, chapterId: string) {
-    return this.fetchSource<ChapterPages>(
-      sourceId,
-      this.appendManifest(`/api/sources/${sourceId}/manga/${encodeURIComponent(mangaId)}/chapters/${encodeURIComponent(chapterId)}/pages`, sourceId)
+  pagesQuery(sourceId: string, mangaId: string, chapterId: string) {
+    const url = this.appendManifest(
+      `/api/sources/${sourceId}/manga/${encodeURIComponent(mangaId)}/chapters/${encodeURIComponent(chapterId)}/pages`,
+      sourceId
     );
+
+    return {
+      queryKey: ["pages", url] as const,
+      queryFn: () => this.fetchSource<ChapterPages>(sourceId, url),
+    };
   }
 
   async toggleHistory(sourceId: string, mangaId: string): Promise<{ added: boolean }> {

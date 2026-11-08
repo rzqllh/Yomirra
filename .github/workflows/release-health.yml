@@ -1,0 +1,29 @@
+name: Release Health Watch
+
+on:
+  schedule:
+    - cron: "11,26,41,56 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-health-watch
+  cancel-in-progress: false
+
+jobs:
+  measure:
+    if: vars.RELEASE_HEALTH_WATCH_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/check-release-health.mjs
+        env:
+          UPSTASH_STATS_BASIC: ${{ secrets.UPSTASH_STATS_BASIC }}
+          UPSTASH_STATS_DATABASE_ID: ${{ vars.UPSTASH_STATS_DATABASE_ID }}
+          UPSTASH_MONTHLY_COMMAND_LIMIT: ${{ vars.UPSTASH_MONTHLY_COMMAND_LIMIT }}

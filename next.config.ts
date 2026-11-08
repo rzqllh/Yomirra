@@ -4,6 +4,9 @@ import withSerwistInit from "@serwist/next";
 const withSerwist = withSerwistInit({
   swSrc: "src/app/sw.ts",
   swDest: "public/sw.js",
+  register: false,
+  // Keep install small. Screenshots, onboarding art and manifest icons load on demand.
+  globPublicPatterns: ["icon-pwa.png"],
   disable: process.env.NODE_ENV === "development",
 });
 
@@ -123,6 +126,33 @@ const nextConfig: NextConfig = {
           {
             key: "Content-Security-Policy-Report-Only",
             value: contentSecurityPolicyReportOnly,
+          },
+        ],
+      },
+      {
+        source: "/(icons|covers|screenshots)/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400",
+          },
+        ],
+      },
+      {
+        source: "/(apple-icon.png|favicon.ico|favicon.png|icon.png|icon-pwa.png)",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400",
+          },
+        ],
+      },
+      {
+        source: "/sw.js",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=0, must-revalidate",
           },
         ],
       },

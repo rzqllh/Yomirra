@@ -1,5 +1,26 @@
 # Changelog
 
+## Unreleased — Final stabilization
+
+- Pertahankan status baca perangkat saat menggabungkan cadangan dengan alias identitas judul berbeda; prioritaskan ID tetap atas alias lama sebelum menyelesaikan konflik status.
+- Batasi permintaan halaman dinamis per instance. Kuota sensitif mencatat counter dan masa berlaku dalam satu operasi Redis.
+- Batasi payload sesi admin dan pekerjaan AI bersamaan. Perketat validasi alamat upstream dan kirim kunci Gemini melalui header.
+- Wajibkan email Firebase terverifikasi untuk akses admin melalui allowlist.
+- Batasi waktu perintah Redis, tutup koneksi tanpa respons, dan cegah replay otomatis perintah yang belum menerima balasan.
+- Batasi ukuran request dan pekerjaan embedding Search Intelligence. Pertahankan hasil leksikal ketika kapasitas embedding penuh.
+- Pulihkan kontras pilihan tema, navigasi desktop, dan teks saat splash. Selaraskan nama aksesibel tombol pencarian desktop dengan labelnya. Patch advisory produksi pada dependensi Next.js, Firebase, dan Serwist. Perbarui Vitest dan dependensi tooling terkait.
+
+- Kurangi aset publik yang diunduh saat memasang PWA. Reader mode halaman memuat chapter berikutnya saat navigasi.
+- Batasi ukuran payload pencarian terkait dan rating batch. Hormati jeda upstream untuk mengurangi permintaan berulang saat provider membatasi akses.
+- Pisahkan liveness proses dari kesiapan Redis. Readiness membatasi probe berulang per instance dan tetap menampilkan kegagalan Redis.
+- Validasi relasi chapter dan judul sebelum meminta halaman Reader. Batasi prefetch pada metadata chapter berikutnya.
+- Batasi waktu kerja rating batch dan pembacaan manifest kustom. Pisahkan cache sumber terdaftar dan manifest eksternal.
+- Batasi cache offline untuk dokumen aman dan gambar raster. Pertahankan unduhan raster yang sudah tersimpan dan perbarui URL lama saat antrean dilanjutkan.
+- Baca chapter berklasifikasi aman langsung dari halaman Unduhan saat offline. Buka Unduhan sekali ketika online agar shell tersimpan. Untuk unduhan lama, buka chapter melalui Reader online agar klasifikasi dapat diperiksa.
+- Selaraskan komponen navigasi dan menu dari YOM-01 hingga YOM-03. Q138 tetap nonaktif.
+- Tampilkan label Pengaturan secara utuh pada layar sempit dan letakkan pilihan bahasa serta interval di bawah labelnya.
+- Perbarui Next.js, Firebase, Serwist, Zod, dan dependency terkait untuk menutup advisory runtime. Tambahkan smoke browser dari build production dan pemantauan health yang dapat diaktifkan setelah akses provider pulih.
+
 ## Unreleased — Production stabilization
 
 - Batasi permintaan publik per instance, bagikan pekerjaan source yang sedang berlangsung, dan beri jeda pemulihan setelah upstream gagal berulang. Otorisasi dan kuota operasi berbiaya tetap memerlukan Redis.

@@ -9,6 +9,7 @@ import {
 import { clearUserScopedReadingState } from "@/shared/lib/local-data-cleanup";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useHistoryStore } from "@/shared/store/history-store";
+import { useSettingsStore } from "@/shared/store/settings-store";
 import {
   shouldPromptGuestMerge,
   fetchCloudSnapshot,
@@ -40,6 +41,11 @@ async function handleAuthStateTransition(currentUser: User | null) {
   if (newUid === currentProcessingUid && globalUser?.uid === newUid) {
     return;
   }
+  const currentOwnerUid = getLocalDataOwnerUid();
+  if ((currentProcessingUid && currentProcessingUid !== newUid) ||
+      (newUid && shouldResetLocalDataForAccount(currentOwnerUid, newUid))) {
+    useSettingsStore.getState().setHideNsfw(true);
+  }
   currentProcessingUid = newUid;
 
   if (!newUid) {
@@ -50,8 +56,6 @@ async function handleAuthStateTransition(currentUser: User | null) {
     notifySubscribers();
     return;
   }
-
-  const currentOwnerUid = getLocalDataOwnerUid();
 
   if (shouldResetLocalDataForAccount(currentOwnerUid, newUid)) {
     clearUserScopedReadingState();

@@ -4,7 +4,8 @@ import { sourceHealthStore } from "./health-store";
 import { toPublicSourceHealth, type PublicSourceHealth } from "./public-health";
 import { logger } from "@/shared/logger";
 
-const CACHE_KEY = "yomirra:sources:health:v7";
+export const SOURCE_HEALTH_CACHE_KEY = "yomirra:sources:health:v7";
+const PROBE_RETRY_DELAY_MS = 30_000;
 const TTL_SECONDS = 600;
 const PROBE_LOCK_KEY = "yomirra:lock:sources:health:probe";
 const PROBE_LOCK_TTL_SECONDS = 120; // 2 minutes max
@@ -28,6 +29,7 @@ export interface CachedHealthPayload {
   meta: HealthResponseMeta;
 }
 
+let nextProbeAttemptAt = 0;
 let inMemoryLockToken: string | null = null;
 let inMemoryCachedPayload: CachedHealthPayload | null = null;
 
@@ -44,6 +46,10 @@ export function setInMemoryCachedPayload(payload: CachedHealthPayload | null): v
  * Protected against thundering herd by atomic Redis SET NX with TTL and token ownership.
  */
 export async function triggerBackgroundProbe(): Promise<boolean> {
+  const now = Date.now();
+  if (now < nextProbeAttemptAt) return false;
+  nextProbeAttemptAt = now + PROBE_RETRY_DELAY_MS;
+
   const token =
     typeof crypto !== "undefined" && crypto.randomUUID
       ? crypto.randomUUID()
@@ -102,7 +108,7 @@ export async function triggerBackgroundProbe(): Promise<boolean> {
 
       if (isRedisConfigured && isRedisCommandAllowed()) {
         try {
-          await redis.setex(CACHE_KEY, TTL_SECONDS, JSON.stringify(freshPayload));
+          await redis.setex(SOURCE_HEALTH_CACHE_KEY, TTL_SECONDS, JSON.stringify(freshPayload));
         } catch (error) {
           logger.warn("Redis setex failed in background probe", { error });
         }

@@ -235,6 +235,7 @@ vi.mock("@/server/lib/cache/redis", () => ({
     return mockIsRedisConfigured;
   },
   isRedisReady: vi.fn(() => redisReady),
+  isRedisCommandAllowed: vi.fn(() => !readinessError),
   ensureRedisReady: vi.fn(async () => {
     if (readinessError) throw readinessError;
     if (!redisReady) throw new Error("Redis connection timed out waiting for ready state");

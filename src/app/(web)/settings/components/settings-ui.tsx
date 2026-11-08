@@ -82,11 +82,11 @@ export function SettingsItem({
       <div className={cn("flex items-center gap-3", wrapOnMobile ? "w-full sm:w-auto min-w-0" : "min-w-0")}>
         {icon}
         <div className="min-w-0">
-          <div className={cn("text-sm font-bold truncate", danger ? "text-semantic-error" : "text-text-primary")}>
+          <div className={cn("text-sm font-bold sm:truncate", danger ? "text-semantic-error" : "text-text-primary")}>
             {title}
           </div>
           {description && (
-            <div className={cn("text-xs mt-0.5", wrapOnMobile ? "" : "line-clamp-2", danger ? "text-semantic-error/70" : "text-text-secondary max-w-md")}>
+            <div className={cn("text-xs mt-0.5", !wrapOnMobile && "sm:line-clamp-2", danger ? "text-semantic-error/70" : "text-text-secondary max-w-md")}>
               {description}
             </div>
           )}

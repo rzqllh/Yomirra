@@ -18,6 +18,7 @@ interface ChapterDownloadButtonProps {
   chapterId: string;
   chapterTitle: string;
   mangaTitle: string;
+  offlineSafe?: boolean;
 }
 
 export function ChapterDownloadButton({
@@ -26,6 +27,7 @@ export function ChapterDownloadButton({
   chapterId,
   chapterTitle,
   mangaTitle,
+  offlineSafe,
 }: ChapterDownloadButtonProps) {
   const reducedMotion = useReducedMotion();
   const id = getDownloadChapterId(sourceId, mangaId, chapterId);
@@ -92,6 +94,7 @@ export function ChapterDownloadButton({
         chapterId,
         chapterTitle,
         mangaTitle,
+        offlineSafe,
       });
       toast.success("Masuk Antrean Unduhan", {
         description: `${chapterTitle} ditambahkan ke antrean unduh.`,

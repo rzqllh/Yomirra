@@ -65,3 +65,41 @@ jobs:
 
       - name: ${{ matrix.name }}
         run: ${{ matrix.run }}
+
+  browser:
+    name: Production build browser smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      redis:
+        image: redis:7.2-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+    env:
+      IMAGE_PROXY_SECRET: ci-only-unsigned-test-secret-not-for-production-2026
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      REDIS_URL: redis://localhost:6379
+      E2E_PRODUCTION_BUILD: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium webkit
+      - run: pnpm build
+      - run: pnpm exec playwright test --reporter=list
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: browser-smoke-failure
+          path: test-results/

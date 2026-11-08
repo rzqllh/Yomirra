@@ -446,4 +446,103 @@ describe("Backup & Restore Engine v1", () => {
     expect(useCollectionStore.getState().readingStatusByManga["device-id"]).toBe("reading");
   });
 
+  it.each([
+    ["device-id", "s::m"],
+    ["s::m", "backup-id"],
+    ["device-id", "device-id"],
+  ])("keeps device reading status when merging identity aliases %s and %s", (deviceKey, backupKey) => {
+    useLibraryStore.setState({ items: {
+      "device-id": { id: "device-id", sourceId: "s", mangaId: "m", title: "M", addedAt: "2026-10-01", updatedAt: "2026-10-02" },
+    } });
+    useCollectionStore.setState({
+      collections: [], membershipsByManga: {},
+      readingStatusByManga: { [deviceKey]: "completed", "independent-device": "on-hold" },
+    });
+    const backup = createBackupPayload();
+    backup.data.library[0].id = "backup-id";
+    backup.data.readingStatusByManga = { [backupKey]: "reading", "independent-backup": "plan-to-read" };
+
+    executeCoordinatedRestore(backup, "merge");
+    executeCoordinatedRestore(backup, "merge");
+
+    expect(useCollectionStore.getState().readingStatusByManga).toEqual({
+      "device-id": "completed",
+      "independent-device": "on-hold",
+      "independent-backup": "plan-to-read",
+    });
+  });
+
+  it.each([false, true])("prefers canonical local status over its legacy alias regardless of insertion order (%s)", (reverse) => {
+    useLibraryStore.setState({ items: {
+      "device-id": { id: "device-id", sourceId: "s", mangaId: "m", title: "M", addedAt: "2026-10-01", updatedAt: "2026-10-02" },
+    } });
+    const entries = [["device-id", "completed"], ["s::m", "reading"]] as const;
+    useCollectionStore.setState({ collections: [], membershipsByManga: {},
+      readingStatusByManga: Object.fromEntries(reverse ? [...entries].reverse() : entries),
+    });
+    const backup = createBackupPayload();
+    backup.data.library[0].id = "backup-id";
+    backup.data.readingStatusByManga = { "backup-id": "dropped" };
+
+    executeCoordinatedRestore(backup, "merge");
+    executeCoordinatedRestore(backup, "merge");
+
+    expect(useCollectionStore.getState().readingStatusByManga).toEqual({ "device-id": "completed" });
+  });
+
+  it.each([
+    [false, "device-id"], [true, "device-id"],
+    [false, "backup-id"], [true, "backup-id"],
+  ] as const)("prefers canonical imported status over its legacy alias regardless of insertion order (%s, %s)", (reverse, importedId) => {
+    useLibraryStore.setState({ items: {
+      "device-id": { id: "device-id", sourceId: "s", mangaId: "m", title: "M", addedAt: "2026-10-01", updatedAt: "2026-10-02" },
+    } });
+    useCollectionStore.setState({ collections: [], membershipsByManga: {}, readingStatusByManga: {} });
+    const backup = createBackupPayload();
+    backup.data.library[0].id = importedId;
+    const entries = [[importedId, "completed"], ["s::m", "reading"]] as const;
+    backup.data.readingStatusByManga = Object.fromEntries(reverse ? [...entries].reverse() : entries);
+
+    executeCoordinatedRestore(backup, "merge");
+    executeCoordinatedRestore(backup, "merge");
+
+    expect(useCollectionStore.getState().readingStatusByManga).toEqual({ "device-id": "completed" });
+  });
+
+  it.each([false, true])("preserves own reserved status keys during merge (local conflict: %s)", (hasLocalStatus) => {
+    const ids = ["constructor", "toString", "__proto__"];
+    useLibraryStore.setState({ items: Object.fromEntries(ids.map((id) => [id, {
+      id, sourceId: "s", mangaId: id, title: id, addedAt: "2026-10-01", updatedAt: "2026-10-02",
+    }])) });
+    const reservedStatuses = JSON.parse('{"constructor":"completed","toString":"completed","__proto__":"completed"}');
+    useCollectionStore.setState({ collections: [], membershipsByManga: {},
+      readingStatusByManga: { ...(hasLocalStatus ? reservedStatuses : {}), "independent-device": "on-hold" },
+    });
+    const backup = createBackupPayload();
+    backup.data.readingStatusByManga = JSON.parse('{"constructor":"reading","toString":"reading","__proto__":"reading","independent-backup":"plan-to-read"}');
+
+    executeCoordinatedRestore(backup, "merge");
+    executeCoordinatedRestore(backup, "merge");
+
+    expect(useCollectionStore.getState().readingStatusByManga).toEqual({
+      ...Object.fromEntries(ids.map((id) => [id, hasLocalStatus ? "completed" : "reading"])),
+      "independent-device": "on-hold", "independent-backup": "plan-to-read",
+    });
+  });
+
+  it.each(["constructor", "toString", "__proto__"])("resolves an imported reserved canonical alias %s", (importedId) => {
+    useLibraryStore.setState({ items: {
+      "device-id": { id: "device-id", sourceId: "s", mangaId: "m", title: "M", addedAt: "2026-10-01", updatedAt: "2026-10-02" },
+    } });
+    useCollectionStore.setState({ collections: [], membershipsByManga: {}, readingStatusByManga: {} });
+    const backup = createBackupPayload();
+    backup.data.library[0].id = importedId;
+    backup.data.readingStatusByManga = Object.fromEntries([[importedId, "completed"], ["s::m", "reading"]]);
+
+    executeCoordinatedRestore(backup, "merge");
+    executeCoordinatedRestore(backup, "merge");
+
+    expect(useCollectionStore.getState().readingStatusByManga).toEqual({ "device-id": "completed" });
+  });
+
 });

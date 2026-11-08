@@ -19,6 +19,7 @@ class RespPeer extends Duplex {
   private transaction: string[] | null = null;
   holdPing = false;
   holdInfo = false;
+  holdGet = false;
   quotaGet = false;
   quotaPing = false;
   quotaExec = false;
@@ -80,7 +81,7 @@ class RespPeer extends Duplex {
       if (this.holdPing) this.pendingPing = reply;
       else reply();
     } else if (name === "get") {
-      this.reply(this.quotaGet ? `-${QUOTA}\r\n` : bulk("value"));
+      if (!this.holdGet) this.reply(this.quotaGet ? `-${QUOTA}\r\n` : bulk("value"));
     } else if (name === "auth" && this.quotaAuth) {
       this.reply(`-${QUOTA}\r\n`);
     } else {
@@ -151,6 +152,27 @@ describe("Redis circuit through the real ioredis lifecycle", () => {
     });
     expect(await client.pipeline().get("one").get("two").exec()).toEqual([[null, "value"], [null, "value"]]);
     expect(await client.multi().get("one").get("two").exec()).toEqual([[null, "value"], [null, "value"]]);
+  });
+
+  it("times out a silent connection and reconnects without replaying the pending command", async () => {
+    const fixture = createClient({}, {
+      commandTimeout: 30,
+      socketTimeout: 45,
+      autoResendUnfulfilledCommands: false,
+    });
+    await fixture.client.connect();
+    fixture.peers[0].holdGet = true;
+    const settled = expect(fixture.client.get("silent")).rejects.toThrow("Command timed out");
+    await vi.advanceTimersByTimeAsync(30);
+    await settled;
+    expect(fixture.peers[0].destroyed).toBe(false);
+
+    await vi.advanceTimersByTimeAsync(30);
+    await flush();
+    expect(fixture.peers[0].destroyed).toBe(true);
+    expect(fixture.peers).toHaveLength(2);
+    expect(fixture.commands().filter((name) => name === "get")).toHaveLength(1);
+    await expect(fixture.client.get("recovered")).resolves.toBe("value");
   });
 
   it("opens synchronously before a quota callback can dispatch another command", async () => {

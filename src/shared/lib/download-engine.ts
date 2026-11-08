@@ -1,3 +1,5 @@
+import { rasterImageContentType } from "./raster-image";
+import { isCurrentImageProxyUrl } from "./image-proxy-version";
 import type { DownloadChapter } from "../store/download-store";
 import { EXPLICIT_DOWNLOADS_CACHE_NAME } from "./pwa-cache-policy";
 import { getOfflineImageUrl } from "../utils/download-helpers";
@@ -84,7 +86,7 @@ export async function processDownloadQueue(options: DownloadEngineOptions) {
         if (page.status !== "cached") return page;
         const cacheKey = new URL(page.offlineUrl, window.location.origin).toString();
         const cached = await cache.match(cacheKey);
-        if (cached?.ok && cached.headers.get("content-type")?.startsWith("image/")) return page;
+        if (rasterImageContentType(cached)) return page;
         return { ...page, status: "pending" as const, contentType: undefined, sizeBytes: undefined };
       }));
       updateDownload(id, {
@@ -96,7 +98,7 @@ export async function processDownloadQueue(options: DownloadEngineOptions) {
         pages.some(
           (p) =>
             p.status !== "cached" &&
-            (!p.originalUrl.startsWith("/api/proxy/image") || !p.originalUrl.includes("sig="))
+            !isCurrentImageProxyUrl(p.originalUrl)
         );
       
       if (needsPageRefresh) {
@@ -141,16 +143,13 @@ export async function processDownloadQueue(options: DownloadEngineOptions) {
           updateDownload(id, { pages: pagesCopy });
 
           const cacheKey = new URL(pageObj.offlineUrl, window.location.origin).toString();
-          const proxyUrl = pageObj.originalUrl.startsWith('/api/proxy/image')
-            ? pageObj.originalUrl
-            : `/api/proxy/image?url=${encodeURIComponent(pageObj.originalUrl)}&sourceId=${item.sourceId}`;
-          
           try {
-            const imgRes = await fetch(proxyUrl, { signal });
+            if (!isCurrentImageProxyUrl(pageObj.originalUrl)) throw new Error("URL halaman unduhan tidak valid");
+            const imgRes = await fetch(pageObj.originalUrl, { signal });
             if (!imgRes.ok) throw new Error(`Image fetch failed: ${imgRes.status}`);
             
-            const contentType = imgRes.headers.get("content-type") || "image/jpeg";
-            if (!contentType.startsWith("image/")) throw new Error("Invalid content type");
+            const contentType = rasterImageContentType(imgRes);
+            if (!contentType) throw new Error("Invalid content type");
 
             // Clone response before putting in cache
             const cacheRes = imgRes.clone();
@@ -199,7 +198,7 @@ export async function processDownloadQueue(options: DownloadEngineOptions) {
       const allCached = finalPages.length > 0 && (await Promise.all(finalPages.map(async (page) => {
         if (page.status !== "cached") return false;
         const response = await cache.match(new URL(page.offlineUrl, window.location.origin).toString());
-        return response?.ok === true && response.headers.get("content-type")?.startsWith("image/") === true;
+        return Boolean(rasterImageContentType(response));
       }))).every(Boolean);
       
       if (allCached) {

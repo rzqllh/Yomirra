@@ -50,3 +50,4 @@ export const FilterChip = React.forwardRef<HTMLButtonElement, FilterChipProps>(
   }
 );
 FilterChip.displayName = "FilterChip";
+export { Chip } from "./chip";

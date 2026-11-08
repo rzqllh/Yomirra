@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { checkRateLimit } from "@/server/lib/security/rate-limit";
+import { readBoundedJson } from "@/server/lib/security/read-bounded-json";
 import { findRelatedSearchTitles } from "@/server/lib/search/search-intelligence-service";
 import { getRequestReadOptions } from "@/server/lib/sources/content-access";
 
@@ -40,7 +41,11 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const parsed = bodySchema.safeParse(await request.json().catch(() => null));
+  const body = await readBoundedJson(request, 128 * 1024);
+  if (!body.ok && body.status === 413) {
+    return NextResponse.json({ error: { message: "Related-title payload too large" } }, { status: 413 });
+  }
+  const parsed = bodySchema.safeParse(body.ok ? body.data : null);
   if (!parsed.success) {
     return NextResponse.json(
       { error: { message: "Invalid related-title payload" } },

@@ -1,6 +1,7 @@
 import { renderHook, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { useReaderScroll } from "../use-reader-scroll";
+import { apiClient } from "@/shared/api-client";
 import { QueryClient } from "@tanstack/react-query";
 import type { StreamItem } from "@/components/reader/continuous-vertical-reader";
 
@@ -41,6 +42,35 @@ describe("useReaderScroll - Q80 Durability & Q84 Debounce Throttle", () => {
       ]),
     } as any;
   };
+
+  it("prefetches next chapter metadata without downloading any of its images", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValue({
+      ok: true,
+      json: async () => ({ data: { pages: [{ index: 0, url: "https://example.com/next.jpg" }] } }),
+    } as Response);
+    const virtualizer = createMockVirtualizer();
+    renderHook(() => useReaderScroll({
+      streamItems: mockStreamItems,
+      virtualizer,
+      sourceId: "shinigami",
+      mangaId: "title-a",
+      chapterId: "ch-1",
+      nextChapterId: "ch-2",
+      saveProgress,
+      queryClient,
+    }));
+
+    window.scrollY = 4_100;
+    await act(async () => {
+      window.dispatchEvent(new Event("scroll"));
+      await vi.advanceTimersByTimeAsync(50);
+      await vi.dynamicImportSettled();
+    });
+
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(fetchSpy).toHaveBeenCalledWith(expect.stringContaining("/chapters/ch-2/pages?"), undefined);
+    expect(queryClient.getQueryData(apiClient.pagesQuery("shinigami", "title-a", "ch-2").queryKey)).toBeDefined();
+  });
 
   it("registers scroll listener and does not invoke saveProgress before debounce interval (Q84)", () => {
     const virtualizer = createMockVirtualizer(1);

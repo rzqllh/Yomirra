@@ -8,6 +8,7 @@ import { MAIN_NAV_ITEMS, type NavItem } from "@/shared/config/nav";
 import { cn } from "@/shared/utils/cn";
 import { beginNavigationIntent, getNavigationPathname } from "@/shared/lib/navigation-intent";
 import { useSidebarStore } from "@/shared/store/sidebar-store";
+import { Surface } from "@/components/ui/surface";
 
 const MORE_ITEMS: NavItem[] = [
   { href: "/sources", label: "Sumber", icon: HardDrives },
@@ -77,13 +78,14 @@ export function DesktopRail({ pendingHref }: { pendingHref?: string | null } = {
   };
 
   return (
-    <aside
-      style={{ top: "var(--announcement-height, 0px)" }}
-      className={cn(
-        "hidden md:flex fixed bottom-0 left-0 z-30 flex-col border-r border-border-subtle bg-surface-base px-2.5 py-4 transition-[width,top] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
-        isCollapsed ? "w-[76px]" : "w-[76px] xl:w-[240px] xl:px-3.5"
-      )}
-    >
+    <Surface asChild variant="default">
+      <aside
+        style={{ top: "var(--announcement-height, 0px)" }}
+        className={cn(
+          "hidden md:flex fixed bottom-0 left-0 z-30 flex-col border-r border-border-subtle bg-surface-base px-2.5 py-4 transition-[width,top] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
+          isCollapsed ? "w-[76px]" : "w-[76px] xl:w-[240px] xl:px-3.5"
+        )}
+      >
       {/* Brand Header */}
       <div
         className={cn(
@@ -109,7 +111,7 @@ export function DesktopRail({ pendingHref }: { pendingHref?: string | null } = {
       <nav aria-label="Navigasi desktop" className="flex flex-col gap-1">
         <span
           className={cn(
-            "hidden px-2.5 pb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-text-muted/80",
+            "hidden px-2.5 pb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-text-muted",
             !isCollapsed && "xl:block"
           )}
         >
@@ -121,7 +123,7 @@ export function DesktopRail({ pendingHref }: { pendingHref?: string | null } = {
       <nav aria-label="Navigasi lainnya" className="mt-4 flex flex-col gap-1 border-t border-border-subtle/60 pt-3.5">
         <span
           className={cn(
-            "hidden px-2.5 pb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-text-muted/80",
+            "hidden px-2.5 pb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-text-muted",
             !isCollapsed && "xl:block"
           )}
         >
@@ -157,6 +159,7 @@ export function DesktopRail({ pendingHref }: { pendingHref?: string | null } = {
           {!isCollapsed && <span className="truncate">Ciutkan</span>}
         </button>
       </div>
-    </aside>
+      </aside>
+    </Surface>
   );
 }

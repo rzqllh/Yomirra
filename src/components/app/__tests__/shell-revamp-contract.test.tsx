@@ -154,14 +154,15 @@ describe("Shell Revamp Regression Coverage", () => {
     });
   });
 
-  it.each([["MacIntel", "⌘K"], ["Win32", "Ctrl+K"]])("labels the real header search for %s", (platform, shortcut) => {
+  it.each([["MacIntel", "⌘K", "Meta+K"], ["Win32", "Ctrl+K", "Control+K"]])("labels the real header search for %s", (platform, shortcut, ariaShortcut) => {
     currentPathname = "/popular";
     vi.stubGlobal("navigator", { platform });
     const listener = vi.fn();
     window.addEventListener("open-command-menu", listener);
     try {
       render(<TopNav />);
-      const searchButton = screen.getByRole("button", { name: `Cari komik (Tekan ${shortcut})` });
+      const searchButton = screen.getByRole("button", { name: "Cari komik…" });
+      expect(searchButton.getAttribute("aria-keyshortcuts")).toBe(ariaShortcut);
       expect(searchButton.querySelector("kbd")?.textContent).toBe(shortcut);
       fireEvent.click(searchButton);
       expect(listener).toHaveBeenCalledTimes(1);

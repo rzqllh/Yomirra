@@ -108,7 +108,14 @@ async function readCoreSourceOverrides(): Promise<Record<string, CoreSourceOverr
   }
 }
 
-export const getCoreSourceOverrides = cache(readCoreSourceOverrides);
+let publicOverrideRead: ReturnType<typeof readCoreSourceOverrides> | undefined;
+
+export const getCoreSourceOverrides = cache(() => {
+  publicOverrideRead ??= readCoreSourceOverrides().finally(() => {
+    publicOverrideRead = undefined;
+  });
+  return publicOverrideRead;
+});
 
 const SAVE_CORE_OVERRIDE_LUA = `
 local raw = redis.call('get', KEYS[1])

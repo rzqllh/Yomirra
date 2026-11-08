@@ -11,6 +11,8 @@ import {
   clearAutomaticAppCaches,
 } from "./pwa-cache-policy";
 
+import { rasterImageContentType } from "./raster-image";
+
 export {
   EXPLICIT_DOWNLOADS_CACHE_NAME,
   MANGA_IMAGES_CACHE_NAME,
@@ -30,8 +32,8 @@ export interface BufferedChapterMeta {
   bufferedAt: number;
 }
 
-const REGISTRY_STORAGE_KEY = "yomirra_reading_buffer_registry_v2";
-const LEGACY_REGISTRY_STORAGE_KEYS = ["yomirra_reading_buffer_registry"] as const;
+const REGISTRY_STORAGE_KEY = "yomirra_reading_buffer_registry_v3";
+const LEGACY_REGISTRY_STORAGE_KEYS = ["yomirra_reading_buffer_registry", "yomirra_reading_buffer_registry_v2"] as const;
 
 function getRegistry(): BufferedChapterMeta[] {
   if (typeof window === "undefined" || typeof localStorage === "undefined") return [];
@@ -129,10 +131,10 @@ export async function bufferChapterPages(params: {
 
       // Check if already in cache
       const exists = await cache.match(requestKey);
-      if (!exists) {
+      if (!rasterImageContentType(exists)) {
         try {
           const res = await fetch(page.url, { mode: "cors" });
-          if (res.ok) {
+          if (rasterImageContentType(res)) {
             await cache.put(requestKey, res.clone());
             cachedCount++;
           }
@@ -200,7 +202,7 @@ export async function getBufferedPageBlobUrl(
     const cache = await caches.open(READING_BUFFER_CACHE_NAME);
     const key = getBufferedPageRequestKey(sourceId, mangaId, chapterId, pageIndex);
     const res = await cache.match(key);
-    if (!res) return null;
+    if (!res || !rasterImageContentType(res)) return null;
 
     const blob = await res.blob();
     if (!blob || blob.size === 0) return null;

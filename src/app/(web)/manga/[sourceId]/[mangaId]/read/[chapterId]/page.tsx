@@ -2,7 +2,7 @@ import { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { WarningCircle } from "@phosphor-icons/react/dist/ssr";
 import { sourceManager } from "@/server/lib/sources/source-manager";
-import { getServerReadOptions, loadSourceDetail, loadSourceChapters, loadSourcePages } from "@/server/lib/sources/content-access";
+import { findMangaChapter, getServerReadOptions, loadSourceDetail, loadSourceChapters, loadSourcePages } from "@/server/lib/sources/content-access";
 import { ReaderView } from "@/components/reader/reader-view";
 import { ReaderShell } from "@/components/reader/reader-shell";
 import { EmptyState } from "@/components/states/empty-state";
@@ -12,6 +12,7 @@ import { getManifestUrlFromCookie } from "@/server/lib/sources/server-manifest";
 import { SourceError } from "@/server/lib/sources/error";
 import { DeadSourceRecovery } from "@/components/komik/dead-source-recovery";
 import { signImageUrl } from "@/server/lib/sign-proxy-url";
+import { sourceReadScope } from "@/shared/sources/content-policy";
 import type { PageItem } from "@/shared/sources/source-types";
 
 export async function generateMetadata({ 
@@ -68,31 +69,35 @@ export default async function ReaderPage({
 
   let detail, chapters;
   let initialPages: PageItem[] | null = null;
+  let initialPagesScope: string | undefined;
   try {
     const readOptions = await getServerReadOptions();
     const manifestUrl = await getManifestUrlFromCookie(sourceId);
     const source = await sourceManager.getSource(sourceId, manifestUrl);
     
-    const pages = loadSourcePages(source, mangaId, chapterId, readOptions).catch(() => null);
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const deadline = new Promise<null>((resolve) => {
-      timer = setTimeout(() => resolve(null), 250);
-    });
+    initialPagesScope = sourceReadScope(readOptions);
+    [detail, chapters] = await Promise.all([
+      loadSourceDetail(source, mangaId, readOptions),
+      loadSourceChapters(source, mangaId, readOptions),
+    ]);
 
-    try {
-      [detail, chapters] = await Promise.all([
-        loadSourceDetail(source, mangaId, readOptions),
-        loadSourceChapters(source, mangaId, readOptions),
-      ]);
-
-      // If both promises have settled, take the available pages before the deadline.
-      const pagesResult = await Promise.race([pages, deadline]);
-      initialPages = pagesResult?.pages.map((page) => ({
-        ...page,
-        url: signImageUrl(page.url, page.referer || source.baseUrl),
-      })) ?? null;
-    } finally {
-      clearTimeout(timer);
+    // MangaDex verifies the parent via chapter metadata, even for scanlations
+    // excluded from its display list. Other sources must match the parent feed.
+    if (source.id === "mangadex" || !findMangaChapter(source.id, chapterId, chapters).isLocked) {
+      const pages = loadSourcePages(source, mangaId, chapterId, readOptions).catch(() => null);
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const deadline = new Promise<null>((resolve) => {
+        timer = setTimeout(() => resolve(null), 250);
+      });
+      try {
+        const pagesResult = await Promise.race([pages, deadline]);
+        initialPages = pagesResult?.pages.map((page) => ({
+          ...page,
+          url: signImageUrl(page.url, page.referer || source.baseUrl),
+        })) ?? null;
+      } finally {
+        clearTimeout(timer);
+      }
     }
   } catch (error) {
     console.error("Failed to load reader data:", error);
@@ -152,6 +157,7 @@ export default async function ReaderPage({
       initialDetail={detail}
       initialChapters={chapters}
       initialPages={initialPages}
+      initialPagesScope={initialPagesScope}
       returnTo={returnTo}
     />
   );

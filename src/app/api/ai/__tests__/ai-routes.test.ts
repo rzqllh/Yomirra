@@ -30,6 +30,45 @@ describe("AI API Routes", () => {
     vi.clearAllMocks();
   });
 
+  it("rejects an oversized streamed text payload before provider work", async () => {
+    const response = await handleSummary(new NextRequest("https://yomirra.example/api/ai/summary", {
+      method: "POST",
+      body: JSON.stringify({ title: "x".repeat(65_536) }),
+    }));
+    expect(response.status).toBe(413);
+    expect(generateTitleSummary).not.toHaveBeenCalled();
+  });
+
+  it("bounds shared provider work across AI routes and releases capacity", async () => {
+    let release!: () => void;
+    let reachedCapacity!: () => void;
+    const held = new Promise<void>((resolve) => { release = resolve; });
+    const atCapacity = new Promise<void>((resolve) => { reachedCapacity = resolve; });
+    vi.mocked(generateTitleSummary).mockImplementation(async () => {
+      if (vi.mocked(generateTitleSummary).mock.calls.length === 8) reachedCapacity();
+      await held;
+      return { success: true, summary: "Ringkasan" };
+    });
+    const pending = Array.from({ length: 8 }, () => handleSummary(new NextRequest(
+      "https://yomirra.example/api/ai/summary",
+      { method: "POST", body: JSON.stringify({ title: "Manga" }) },
+    )));
+    const translate = () => handleTranslate(new NextRequest("https://yomirra.example/api/ai/translate", {
+      method: "POST", body: "{}",
+    }));
+    try {
+      await atCapacity;
+      const response = await translate();
+      expect(response.status).toBe(503);
+      expect(response.headers.get("retry-after")).toBe("2");
+      expect(translateMangaText).not.toHaveBeenCalled();
+    } finally {
+      release();
+      await Promise.all(pending);
+    }
+    expect((await translate()).status).toBe(400);
+  });
+
   describe("POST /api/ai/summary", () => {
     it("returns summary result", async () => {
       vi.mocked(generateTitleSummary).mockResolvedValue({

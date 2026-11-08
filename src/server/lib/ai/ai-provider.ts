@@ -87,7 +87,7 @@ export async function callGeminiGenerateContent(
     }
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${DEFAULT_AI_MODEL}:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${DEFAULT_AI_MODEL}:generateContent`,
       {
         method: "POST",
         headers: {
@@ -95,13 +95,14 @@ export async function callGeminiGenerateContent(
           "x-goog-api-key": apiKey,
         },
         body: JSON.stringify(body),
+        redirect: "error",
         signal: AbortSignal.timeout(timeoutMs),
       }
     );
 
     if (!response.ok) {
-      const errText = await response.text().catch(() => "");
-      logger.warn("AI generation upstream error", { status: response.status, details: errText.slice(0, 200) });
+      void response.body?.cancel().catch(() => {});
+      logger.warn("AI generation upstream error", { status: response.status });
       return {
         error: {
           code: "UPSTREAM_ERROR",
@@ -126,7 +127,7 @@ export async function callGeminiGenerateContent(
   } catch (err) {
     const isTimeout = err instanceof Error && err.name === "TimeoutError";
     const errorMessage = isTimeout ? "AI generation request timed out." : "AI service temporarily unavailable.";
-    logger.warn("AI generation failed", { error: err instanceof Error ? err.message : String(err) });
+    logger.warn("AI generation failed", { errorType: err instanceof Error ? err.name : "Unknown" });
     return {
       error: {
         code: isTimeout ? "TIMEOUT" : "UNAVAILABLE",

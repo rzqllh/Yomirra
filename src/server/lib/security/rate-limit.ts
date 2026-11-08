@@ -59,9 +59,20 @@ export const RATE_LIMIT_POLICIES = {
 
 export type RateLimitPolicyName = keyof typeof RATE_LIMIT_POLICIES;
 
+const INCREMENT_WITH_EXPIRY = `
+local count = redis.call("INCR", KEYS[1])
+local ttl = redis.call("TTL", KEYS[1])
+if ttl < 0 then
+  redis.call("EXPIRE", KEYS[1], ARGV[1])
+  ttl = tonumber(ARGV[1])
+end
+return {count, ttl}
+`;
+
 const MAX_LOCAL_COUNTERS = 4096;
 const localCounters = new Map<string, { count: number; expiresAt: number }>();
 let nextSweep = 0;
+let nextUnavailableLog = 0;
 
 function checkLocalRateLimit(key: string, limit: number, window: number): RateLimitResult {
   const now = Date.now();
@@ -150,13 +161,7 @@ export async function checkRateLimit(
 
     await ensureRedisReady();
 
-    const requests = await redis.incr(key);
-
-    let ttl = await redis.ttl(key);
-    if (requests === 1 || ttl === -1) {
-      await redis.expire(key, window);
-      ttl = window;
-    }
+    const [requests, ttl] = await redis.eval(INCREMENT_WITH_EXPIRY, 1, key, window) as [number, number];
 
     return {
       success: requests <= limit,
@@ -167,7 +172,11 @@ export async function checkRateLimit(
       },
     };
   } catch (error) {
-    logger.warn("Rate limit check unavailable", { error });
+    const now = Date.now();
+    if (now >= nextUnavailableLog) {
+      nextUnavailableLog = now + 60_000;
+      logger.warn("Rate limit check unavailable", { errorType: error instanceof Error ? error.name : "Unknown" });
+    }
     return {
       success: false,
       unavailable: true,
@@ -219,6 +228,7 @@ export function createRateLimitRejection(
   const unavailable = Boolean(rateLimit.unavailable);
   const headers = {
     ...rateLimit.headers,
+    "Cache-Control": "private, no-store",
     "Retry-After":
       rateLimit.headers["X-RateLimit-Reset"] ||
       RATE_LIMIT_POLICIES.adminMutation.window.toString(),

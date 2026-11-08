@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
-import { contentCacheKey, getRequestReadOptions, loadSourceCatalog, loadSourcePages } from "../content-access";
+import { contentCacheKey, findMangaChapter, getRequestReadOptions, loadReadableSourcePages, loadSourceCatalog, loadSourcePages } from "../content-access";
 import type { MangaSource } from "@/shared/sources/source-types";
 import { withCache } from "@/server/lib/cache/redis-cache";
 
@@ -43,6 +43,29 @@ describe("read request policy boundaries", () => {
     expect(contentCacheKey(item, "pages", "work:c", { preferredLanguages: ["en"] })).not.toBe(safe);
     expect(contentCacheKey(item, "pages", "work:c", { dataSaver: true })).not.toBe(safe);
   });
+  it("rejects pages from another manga or a locked chapter without calling the page adapter", async () => {
+    const item = source({
+      getDetail: vi.fn(async () => ({ id: "work", title: "Work", coverUrl: "" }) as Awaited<ReturnType<MangaSource["getDetail"]>>),
+      getChapters: vi.fn(async () => [
+        { id: "locked", mangaId: "work", number: 2, title: "Two", date: "", isLocked: true },
+      ]),
+    });
+    await expect(loadReadableSourcePages(item, "work", "foreign")).rejects.toMatchObject({ code: "CHAPTER_UNAVAILABLE" });
+    await expect(loadReadableSourcePages(item, "work", "locked")).rejects.toMatchObject({ statusCode: 403 });
+    expect(item.getPages).not.toHaveBeenCalled();
+    expect(() => findMangaChapter(item.id, "foreign", [])).toThrow();
+  });
+
+  it("enforces title safety before returning signed-page candidates", async () => {
+    const item = source({
+      getDetail: vi.fn(async () => ({ id: "work", title: "Adult", coverUrl: "", isNsfw: true }) as Awaited<ReturnType<MangaSource["getDetail"]>>),
+      getChapters: vi.fn(async () => [{ id: "c", mangaId: "work", number: 1, title: "One", date: "" }]),
+    });
+    await expect(loadReadableSourcePages(item, "work", "c")).rejects.toMatchObject({ code: "CONTENT_RESTRICTED" });
+    expect(item.getPages).not.toHaveBeenCalled();
+    await expect(loadReadableSourcePages(item, "work", "c", { hideNsfw: false })).resolves.toMatchObject({ chapterId: "c" });
+  });
+
   it("never revives stale MangaDex image URLs and passes the expected parent identity", async () => {
     const item = source({ id: "mangadex" });
     await loadSourcePages(item, "work", "c");

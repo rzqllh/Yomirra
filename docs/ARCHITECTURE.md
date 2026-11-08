@@ -168,6 +168,8 @@ Production memiliki `REDIS_URL`, sedangkan Vercel Preview saat ini tidak. Previe
 
 ### Pengawasan command budget
 
+`GET /api/health/live` hanya memeriksa respons proses. `GET /api/health` adalah readiness Redis dan mengembalikan 503 ketika Redis tidak tersedia atau belum dikonfigurasi. Readiness berbagi satu probe yang sedang berjalan dan memakai ulang hasilnya selama 10 detik per instance. Circuit yang terbuka langsung membatalkan hasil sukses yang tersimpan. Kedua endpoint memakai `Cache-Control: no-store` dan tidak memanggil upstream sumber.
+
 Pantau `GET`, `INCR`, total commands, hits/misses, request per endpoint, dan status quota circuit. Kurva Upstash 3 November 2026 mulai naik sebelum Source Health PR #128 mencapai production. Penyebab traffic berulang belum dapat ditentukan secara definitif dari log agregat; data request mentah IP/User-Agent lama tidak tersedia. Jangan menjadikan upgrade billing sebagai pengganti pengurangan command berulang. Lihat [catatan insiden](ops/redis-read-spike-2026-11-03.md).
 
 
@@ -263,3 +265,13 @@ Telegram ops bersifat deterministic. Error/stage diubah menjadi report yang memb
 Penulisan history menangkap pemilik data sebelum operasi async, mengurutkan penulisan per chapter, dan menolak akun yang berubah. Kegagalan penulisan cloud mempertahankan progres lokal. Full sync menyatukan state sebelum memadatkan history; marker kompak mencegah detail lama masuk kembali. Pemadatan cloud selesai saat rekonsiliasi penuh, bukan sebagai transaksi global lintas perangkat. Lihat [kontrak data bacaan](READING_DATA.md).
 
 Download engine memeriksa Cache Storage ketika resume dan sebelum menyatakan chapter selesai. Metadata `cached` saja tidak membuktikan gambar masih tersedia.
+
+## Health dan cache offline
+
+`/api/health/live` mengukur respons proses. `/api/health` mengukur kesiapan Redis dan melaporkan snapshot sumber yang sudah tersedia di instance. Readiness berbagi satu probe aktif per instance dengan TTL dan backoff, serta membuang hasil positif saat koneksi diketahui putus. Probe tidak meminta data baru dari upstream.
+
+Worker hanya menyimpan HTML yang diberi penanda aman oleh server. Halaman Unduhan mempunyai shell bersama dengan data lokal yang dimuat setelah hidrasi. Respons RSC, API bergantung cookie, dan API dengan manifest eksternal tetap melalui jaringan. Cache gambar proxy otomatis dan buffer dapat diganti saat upgrade. Cache unduhan eksplisit memakai nama tetap, memeriksa tipe raster, dan menolak penggunaan path virtual sebagai dokumen. URL proxy versi 2 mengikat URL dan referer dalam HMAC. Antrean lama menukar URL yang kedaluwarsa lewat endpoint halaman resmi ketika online.
+
+Untuk membaca offline, kunjungi Unduhan sekali saat online. Setelah shell tersimpan, halaman Unduhan membuka gambar chapter berklasifikasi aman dari sumber terdaftar langsung dari penyimpanan perangkat. MangaDex menyediakan rating judul yang dapat memenuhi syarat ini. Sumber tanpa rating per judul, seperti Shinigami, masih memerlukan Reader online. Reader online dapat memeriksa klasifikasi unduhan lama ketika chapter terverifikasi pada scope yang aktif. Dialog offline tidak melakukan sinkronisasi akun atau menulis riwayat baca.
+
+Lihat [handoff stabilisasi](handoff/final-stabilization.md) untuk batas rilis, pemantauan dan recovery.

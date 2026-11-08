@@ -8,9 +8,7 @@ vi.mock("@/server/lib/cache/redis", () => ({
     return mockIsRedisConfigured;
   },
   redis: {
-    incr: vi.fn(),
-    ttl: vi.fn(),
-    expire: vi.fn(),
+    eval: vi.fn(),
   },
 }));
 
@@ -28,7 +26,7 @@ describe("route rate-limit policies", () => {
   });
 
   it("fails closed for admin mutations when Redis is unavailable", async () => {
-    vi.mocked(redis.incr).mockRejectedValueOnce(new Error("redis unavailable"));
+    vi.mocked(redis.eval).mockRejectedValueOnce(new Error("redis unavailable"));
 
     const result = await checkRateLimitPolicy(
       new Request("https://yomirra.example/api/admin/site/config"),
@@ -59,12 +57,11 @@ describe("route rate-limit policies", () => {
       success: false,
       unavailable: true,
     });
-    expect(redis.incr).not.toHaveBeenCalled();
+    expect(redis.eval).not.toHaveBeenCalled();
   });
 
   it("returns 429 with remaining/reset headers when a namespace is exhausted", async () => {
-    vi.mocked(redis.incr).mockResolvedValueOnce(31);
-    vi.mocked(redis.ttl).mockResolvedValueOnce(42);
+    vi.mocked(redis.eval).mockResolvedValueOnce([31, 42]);
 
     const result = await checkRateLimitPolicy(
       new Request("https://yomirra.example/api/admin/reports"),
@@ -79,6 +76,13 @@ describe("route rate-limit policies", () => {
     expect(response.headers.get("X-RateLimit-Remaining")).toBe("0");
     expect(response.headers.get("X-RateLimit-Reset")).toBe("42");
     expect(response.headers.get("Retry-After")).toBe("42");
+    expect(redis.eval).toHaveBeenCalledTimes(1);
+    expect(redis.eval).toHaveBeenCalledWith(
+      expect.stringContaining('redis.call("EXPIRE"'),
+      1,
+      "rate-limit:admin-mutation:report-status:unknown",
+      60
+    );
   });
 
   it("bypasses Redis commands and fails closed with 503 for security policy when Redis is not configured", async () => {
@@ -97,7 +101,7 @@ describe("route rate-limit policies", () => {
     const response = createRateLimitRejection(result);
     expect(response.status).toBe(503);
     expect(ensureRedisReady).not.toHaveBeenCalled();
-    expect(redis.incr).not.toHaveBeenCalled();
+    expect(redis.eval).not.toHaveBeenCalled();
   });
 
   it("blocks and fails closed for admin mutations when Redis is not ready and times out", async () => {
@@ -116,7 +120,7 @@ describe("route rate-limit policies", () => {
       unavailable: true,
     });
     expect(ensureRedisReady).toHaveBeenCalledTimes(1);
-    expect(redis.incr).not.toHaveBeenCalled();
+    expect(redis.eval).not.toHaveBeenCalled();
 
     const response = createRateLimitRejection(result);
     expect(response.status).toBe(503);
@@ -143,7 +147,7 @@ describe("route rate-limit policies", () => {
     });
     expect((await checkRateLimitPolicy(otherClient, "publicSearch")).success).toBe(true);
     expect(ensureRedisReady).not.toHaveBeenCalled();
-    expect(redis.incr).not.toHaveBeenCalled();
+    expect(redis.eval).not.toHaveBeenCalled();
   });
 
   it("keeps paid AI admission fail-closed during a Redis outage", async () => {

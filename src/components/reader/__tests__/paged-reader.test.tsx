@@ -9,9 +9,11 @@ import { useDownloadStore } from "@/shared/store/download-store";
 import { PagedReader } from "../paged-reader";
 import { ReaderView } from "../reader-view";
 
+const routerPrefetch = vi.hoisted(() => vi.fn());
+
 vi.mock("next/navigation", () => ({
   usePathname: vi.fn(() => "/"),
-  useRouter: vi.fn(() => ({ back: vi.fn(), push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() })),
+  useRouter: vi.fn(() => ({ back: vi.fn(), push: vi.fn(), replace: vi.fn(), prefetch: routerPrefetch })),
 }));
 
 describe("PagedReader Component & Integration", () => {
@@ -201,6 +203,25 @@ describe("PagedReader Component & Integration", () => {
   });
 
   describe("Predictive Preloading & Image Priority", () => {
+    it("keeps the next chapter off the network until navigation", () => {
+      const prefetch = vi.spyOn(testQueryClient, "prefetchQuery");
+      try {
+        renderWithClient(
+          <PagedReader sourceId="src1" mangaId="manga1" chapterId="ch1" nextChapterId="ch2" pages={mockPages} />
+        );
+
+        fireEvent.click(screen.getByLabelText("Halaman berikutnya"));
+        expect(screen.getByText("2 / 3")).toBeDefined();
+        fireEvent.click(screen.getByLabelText("Halaman berikutnya"));
+        expect(screen.getByText("3 / 3")).toBeDefined();
+        expect(routerPrefetch).not.toHaveBeenCalled();
+        expect(prefetch).not.toHaveBeenCalled();
+      } finally {
+        prefetch.mockRestore();
+      }
+    });
+
+
     it("should render active page with priority and preload upcoming pages", () => {
       renderWithClient(
         <PagedReader
@@ -385,6 +406,65 @@ describe("PagedReader Component & Integration", () => {
 
       // Should render PagedReader counter pill 1 / 3
       expect(screen.getByText("1 / 3")).toBeDefined();
+    });
+
+    it("completes the final chapter with 100% progress when no nextChapterId exists and all pages decoded", async () => {
+      Object.defineProperty(HTMLImageElement.prototype, "naturalWidth", { configurable: true, value: 800 });
+      Object.defineProperty(HTMLImageElement.prototype, "naturalHeight", { configurable: true, value: 1200 });
+      Object.defineProperty(HTMLImageElement.prototype, "decode", { configurable: true, value: vi.fn().mockResolvedValue(undefined) });
+
+      useHistoryStore.setState({
+        items: {
+          "src1::manga1::ch1": {
+            sourceId: "src1",
+            mangaId: "manga1",
+            chapterId: "ch1",
+            mangaTitle: "Manga 1",
+            readAt: Date.now(),
+            pageIndex: 0,
+            totalPages: 3,
+            progressPercent: 0,
+          },
+        },
+      });
+
+      renderWithClient(
+        <PagedReader
+          sourceId="src1"
+          mangaId="manga1"
+          chapterId="ch1"
+          pages={mockPages}
+        />
+      );
+
+      // Load page 0
+      const img0 = screen.getByRole("img");
+      await act(async () => {
+        fireEvent.load(img0);
+      });
+
+      // Advance to page 1 and load it
+      const nextBtn = screen.getByLabelText("Halaman berikutnya");
+      await act(async () => {
+        fireEvent.click(nextBtn);
+      });
+      const img1 = screen.getByRole("img");
+      await act(async () => {
+        fireEvent.load(img1);
+      });
+
+      // Advance to page 2 and load it
+      await act(async () => {
+        fireEvent.click(nextBtn);
+      });
+      expect(screen.getByText("3 / 3")).toBeDefined();
+      const img2 = screen.getByRole("img");
+      await act(async () => {
+        fireEvent.load(img2);
+      });
+
+      const historyItem = useHistoryStore.getState().items["src1::manga1::ch1"];
+      expect(historyItem?.progressPercent).toBe(100);
     });
   });
 });
