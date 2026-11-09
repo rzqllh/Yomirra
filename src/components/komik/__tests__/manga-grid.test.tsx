@@ -41,7 +41,7 @@ describe("MangaGrid deterministic layout", () => {
 
     const gridEl = container.firstElementChild as HTMLElement;
     expect(gridEl.className).toBe(MANGA_COMPACT_GRID_CLASS);
-    expect(gridEl.className).toContain("repeat(auto-fit");
-    expect(gridEl.className).toContain("320px");
+    expect(gridEl.className).toContain("grid-cols-1");
+    expect(gridEl.className).toContain("xl:grid-cols-3");
   });
 });
