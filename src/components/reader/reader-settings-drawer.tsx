@@ -17,7 +17,7 @@ interface ReaderSettingsDrawerProps {
 const BACKGROUNDS = [
   { name: 'Gelap', value: 'black', color: '#000000', border: 'border-white/10' },
   { name: 'Terang', value: 'mist', color: '#f9f9fb', border: 'border-black/10' },
-  { name: 'Sesuai Sistem', value: 'system', color: '', border: 'border-white/20' }
+  { name: 'Ikuti Sistem', value: 'system', color: '', border: 'border-white/20' }
 ] as const;
 
 const IMAGE_FITS = [
@@ -222,6 +222,7 @@ export function ReaderSettingsDrawer({ isOpen, onClose, sourceId, mangaId }: Rea
                 <button
                   key={bg.value}
                   type="button"
+                  aria-label={bg.value === 'system' ? 'Sesuai Sistem' : bg.name}
                   onClick={() => handleUpdate({ background: bg.value })}
                   className={cn(
                     "flex flex-col items-center gap-2 p-2.5 rounded-xl border transition-all outline-none cursor-pointer",
@@ -268,7 +269,7 @@ export function ReaderSettingsDrawer({ isOpen, onClose, sourceId, mangaId }: Rea
 
           <ReaderSettingsOption
             icon={<ArrowsOutLineVertical size={18} className="text-accent" weight="regular" />}
-            title="Jarak Antar Halaman"
+            title="Jarak antar gambar"
             options={PAGE_GAPS}
             value={preferences.pageGap}
             onChange={(val) => handleUpdate({ pageGap: val })}
@@ -308,12 +309,12 @@ export function ReaderSettingsDrawer({ isOpen, onClose, sourceId, mangaId }: Rea
           />
 
           <div className="p-4 flex items-center justify-between">
-            <span className="text-sm font-bold text-text-primary">Progres halaman</span>
+            <span className="text-sm font-bold text-text-primary">Tampilkan progres baca</span>
             <ToggleSwitch
               id="show-page-progress"
               checked={preferences.showPageProgress}
               onCheckedChange={(checked) => handleUpdate({ showPageProgress: checked })}
-              label="Progres halaman"
+              label="Tampilkan progres baca"
             />
           </div>
         </div>

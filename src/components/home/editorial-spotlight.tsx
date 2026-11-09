@@ -225,7 +225,7 @@ export function EditorialSpotlight({
           className="group flex min-w-0 items-center justify-center p-2 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent sm:p-3 lg:p-4"
           aria-label={`Lihat komik ${manga.title}`}
         >
-          <div className="aspect-[2/3] w-full max-w-[104px] overflow-hidden rounded-[10px] border border-border-subtle bg-surface-muted sm:max-w-[126px] lg:max-w-[176px]">
+          <div className="aspect-[2/3] w-full max-w-[104px] overflow-hidden rounded-xl border border-border-subtle bg-surface-muted sm:max-w-[126px] lg:max-w-[176px]">
             <MangaCover
               src={manga.coverUrl}
               alt={manga.title}
@@ -244,7 +244,7 @@ export function EditorialSpotlight({
 
             <Link
               href={href}
-              className="group rounded focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              className="group rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
               <h2 className="line-clamp-2 text-xl font-bold leading-[1.15] tracking-tight text-text-primary transition-colors group-hover:text-accent sm:text-2xl lg:text-[32px]">
                 {manga.title}
@@ -292,7 +292,7 @@ export function EditorialSpotlight({
           <div className="mt-auto flex min-w-0 items-end justify-between gap-2 border-t border-border-subtle/60 pt-2.5">
             <Link
               href={href}
-              className="inline-flex min-h-11 items-center gap-1.5 rounded-[10px] px-2 text-xs font-bold text-accent transition-colors hover:bg-accent/5 focus-visible:outline-2 focus-visible:outline-accent sm:text-sm"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-xl px-2 text-xs font-bold text-accent transition-colors hover:bg-accent/5 focus-visible:outline-2 focus-visible:outline-accent sm:text-sm"
             >
               <span>Lihat komik</span>
               <ArrowRight size={14} weight="regular" aria-hidden="true" />
@@ -315,7 +315,7 @@ export function EditorialSpotlight({
                   type="button"
                   onClick={onPrev}
                   aria-label="Komik sebelumnya"
-                  className="flex size-11 items-center justify-center rounded-[10px] border border-border-subtle bg-surface-base text-text-secondary transition-colors hover:border-accent/40 hover:bg-surface-hover hover:text-text-primary focus-visible:outline-2 focus-visible:outline-accent"
+                  className="flex size-11 items-center justify-center rounded-xl border border-border-subtle bg-surface-base text-text-secondary transition-colors hover:border-accent/40 hover:bg-surface-hover hover:text-text-primary focus-visible:outline-2 focus-visible:outline-accent"
                 >
                   <CaretLeft size={16} weight="regular" aria-hidden="true" />
                 </button>
@@ -323,7 +323,7 @@ export function EditorialSpotlight({
                   type="button"
                   onClick={onNext}
                   aria-label="Komik berikutnya"
-                  className="flex size-11 items-center justify-center rounded-[10px] border border-border-subtle bg-surface-base text-text-secondary transition-colors hover:border-accent/40 hover:bg-surface-hover hover:text-text-primary focus-visible:outline-2 focus-visible:outline-accent"
+                  className="flex size-11 items-center justify-center rounded-xl border border-border-subtle bg-surface-base text-text-secondary transition-colors hover:border-accent/40 hover:bg-surface-hover hover:text-text-primary focus-visible:outline-2 focus-visible:outline-accent"
                 >
                   <CaretRight size={16} weight="regular" aria-hidden="true" />
                 </button>

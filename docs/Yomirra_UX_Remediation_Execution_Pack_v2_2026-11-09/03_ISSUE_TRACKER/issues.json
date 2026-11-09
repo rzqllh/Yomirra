@@ -1,0 +1,1767 @@
+[
+  {
+    "id": "SYS-01",
+    "page": "Shared shell",
+    "component": "AppShell / BottomDock",
+    "element": "fixed position + page scroll end",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P1",
+    "observation": "Floating bottom dock menutupi konten dan tombol: Settings , Help , Detail , Home , Library , Jadwal .",
+    "evidence": [
+      "IMG_3798(1).jpeg",
+      "IMG_3799.jpeg",
+      "IMG_3800.jpeg",
+      "IMG_3795.png",
+      "IMG_3796.png",
+      "IMG_3766.jpeg",
+      "IMG_3767.png",
+      "IMG_3768.png",
+      "IMG_3770.jpeg",
+      "IMG_3780.png",
+      "IMG_3788.png"
+    ],
+    "proposal": "Setiap scroll container memiliki area akhir yang cukup agar semua elemen dapat di-scroll di atas dock + safe area; tidak ada CTA/teks yang terhalang pada posisi akhir.",
+    "fix_track": "F01",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "SYS-02",
+    "page": "Shared shell",
+    "component": "OverlayHost / Toast",
+    "element": "header collision + placement",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P1",
+    "observation": "Toast menghalangi kontrol reader; , , .",
+    "evidence": [
+      "IMG_3753.jpeg",
+      "IMG_3759.jpeg",
+      "IMG_3760.jpeg",
+      "IMG_3803.jpeg"
+    ],
+    "proposal": "Buat layout policy overlay: prioritas toast, header, modal, safe area, notifikasi. Tidak menutup navigasi primer; resume/toast memiliki posisi, ukuran, dan durasi yang sesuai.",
+    "fix_track": "F02",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "SYS-03",
+    "page": "Shared shell",
+    "component": "PageHeader / Filters",
+    "element": "long title, subtitle, selected value",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Header title/subtitle dan beberapa pilihan terpotong: , , , . Sebagian title tampak blur di screenshot; sebabnya belum diketahui.",
+    "evidence": [
+      "IMG_3776.jpeg",
+      "IMG_3781.jpeg",
+      "IMG_3782.jpeg",
+      "IMG_3783.jpeg",
+      "IMG_3794.jpeg",
+      "IMG_3763.png"
+    ],
+    "proposal": "Periksa actual text rendering; aturan 1/2 baris yang konsisten dan disclosure full label saat fokus; singkatkan copy sebelum truncating nilai penting.",
+    "fix_track": "F03",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "SYS-04",
+    "page": "Shared shell",
+    "component": "PageContainer / SectionStack",
+    "element": "section, card, row padding",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Kerapatan layout tidak seragam: Reader dock padat; Settings cards terlalu besar; komponen search/filter kadang menumpuk.",
+    "evidence": [
+      "IMG_3754.jpeg",
+      "IMG_3776.jpeg",
+      "IMG_3781.jpeg"
+    ],
+    "proposal": "Tetapkan spacing scale menurut level: page, section, card, row, control, inline text. Gunakan satu layout token system, jangan patch margin acak.",
+    "fix_track": "F03",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "SYS-05",
+    "page": "Shared shell",
+    "component": "SelectPopover",
+    "element": "source / sort menu dimensions & anchor",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Dropdown sumber/sort dan selector di Explore, Library, Home memakai ukuran, elevasi, dan batas yang berbeda: , , .",
+    "evidence": [
+      "IMG_3772.jpeg",
+      "IMG_3777.jpeg",
+      "IMG_3782.jpeg",
+      "IMG_3783.jpeg"
+    ],
+    "proposal": "Gunakan family menu/combobox yang konsisten; menu harus tetap dalam viewport dan mempunyai max-height scroll.",
+    "fix_track": "F02",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "SYS-06",
+    "page": "Shared shell",
+    "component": "BottomDock",
+    "element": "icons, active pill, search destination",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Icon-only navigation butuh pengenalan pola lebih kuat; active dock bisa berubah dari ikon ke label, search terpisah.",
+    "evidence": [
+      "IMG_3754.jpeg",
+      "IMG_3776.jpeg",
+      "IMG_3781.jpeg"
+    ],
+    "proposal": "Buat navigation contract: destinasi tetap, active state terprediksi, label aksesibel untuk setiap ikon, focus state jelas.",
+    "fix_track": "F04",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "SYS-07",
+    "page": "Shared shell",
+    "component": "InteractiveStates",
+    "element": "bookmark, active, destructive, loading",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Selected/active/bookmarked/destructive states tidak seragam: bookmark card, segmented tabs, modal, action buttons.",
+    "evidence": [
+      "IMG_3754.jpeg",
+      "IMG_3776.jpeg",
+      "IMG_3781.jpeg"
+    ],
+    "proposal": "Definisikan state dan semantics pada design tokens: active, selected, bookmarked, success, info, destructive, disabled, loading.",
+    "fix_track": "F04",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "SYS-08",
+    "page": "Shared shell",
+    "component": "TextScaling / A11y",
+    "element": "large text and hit targets",
+    "evidence_type": "REQUIRES_QA",
+    "priority": "P1",
+    "observation": "Dynamic Type/large text dapat memperparah clipping pada controls dan header.",
+    "evidence": [
+      "IMG_3754.jpeg",
+      "IMG_3776.jpeg",
+      "IMG_3781.jpeg"
+    ],
+    "proposal": "Uji text scaling, orientasi, iPhone kecil, VoiceOver, target tap, focused content, browser zoom.",
+    "fix_track": "F10",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "SYS-09",
+    "page": "Shared shell",
+    "component": "OverlayHost",
+    "element": "tap interception, focus, background scrolling",
+    "evidence_type": "REQUIRES_QA",
+    "priority": "P2",
+    "observation": "Floating dock dan large popover mungkin menangkap tap/sentuhan di area bawahnya.",
+    "evidence": [
+      "IMG_3754.jpeg",
+      "IMG_3776.jpeg",
+      "IMG_3781.jpeg"
+    ],
+    "proposal": "Uji hit-testing, click-through, scroll-lock, escape/back, outside-click, keyboard focus, overscroll.",
+    "fix_track": "F02",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "RDR-01",
+    "page": "Reader",
+    "component": "ReaderDock",
+    "element": "image arrows vs chapter arrows",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P1",
+    "observation": "Dua pasang chevron serupa melakukan tindakan berbeda (gambar vs chapter): , .",
+    "evidence": [
+      "IMG_3754.jpeg",
+      "IMG_3758.jpeg"
+    ],
+    "proposal": "Bedakan fungsi melalui label/pengelompokan atau reorganisasi; tidak ada chapter skip yang mudah terjadi karena salah tekan.",
+    "fix_track": "F05",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "RDR-02",
+    "page": "Reader",
+    "component": "ReaderProgress",
+    "element": "Hal. asset index vs scroll percent",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P1",
+    "observation": "`Hal. 10/23` merujuk file/gambar, bukan halaman naratif; menjadi menyesatkan untuk vertical-strip content.",
+    "evidence": [
+      "IMG_3754.jpeg"
+    ],
+    "proposal": "Mode vertikal menonjolkan `xx% dibaca`, bila perlu `Gambar x dari y` sebagai metadata. Paged mode boleh menampilkan `Halaman x/y`. Jangan klasifikasi mode hanya dari negara komik.",
+    "fix_track": "F05",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "RDR-03",
+    "page": "Reader",
+    "component": "ReaderDock",
+    "element": "Progress label and inset",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Label `Progress` berhimpitan dengan tepi/border dock; jarak antar row ketat.",
+    "evidence": [
+      "IMG_3754.jpeg"
+    ],
+    "proposal": "Tambah internal padding, konsisten top/bottom rhythm, pisahkan progress text dan interactive control.",
+    "fix_track": "F03",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "RDR-04",
+    "page": "Reader",
+    "component": "ReaderDock",
+    "element": "Daftar chapter button weight",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Tombol `Daftar chapter` terlalu dominan untuk aksi sekunder.",
+    "evidence": [
+      "IMG_3754.jpeg"
+    ],
+    "proposal": "Kurangi visual weight; progress/resume jadi prioritas; daftar chapter tetap mudah ditemukan, namun tidak mendominasi keseluruhan dock.",
+    "fix_track": "F05",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "RDR-05",
+    "page": "Reader",
+    "component": "ReaderMinimalMode",
+    "element": "arrow-to-top and percent badge",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Floating `↑` dan badge `3%` ambigu jika tanpa label: , .",
+    "evidence": [
+      "IMG_3755.jpeg",
+      "IMG_3757.jpeg"
+    ],
+    "proposal": "Uji apakah tap badge interaktif; sediakan accessible name dan visibility preference sesuai kebutuhannya.",
+    "fix_track": "F05",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "RDR-06",
+    "page": "Reader",
+    "component": "ReaderStatusBarOverlay",
+    "element": "top gradient over comic artwork",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Blur/gradient bawah status bar terlihat memburamkan konten/artwork teks: , .",
+    "evidence": [
+      "IMG_3755.jpeg",
+      "IMG_3757.jpeg"
+    ],
+    "proposal": "Pastikan perlindungan status bar tidak mengurangi keterbacaan panel/teks komik; uji di artwork cerah dan gelap.",
+    "fix_track": "F05",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "RDR-07",
+    "page": "Reader",
+    "component": "ReaderToast",
+    "element": "bookmark add/remove notification",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Notification bookmark menggunakan success dan info styling berbeda, dengan block sangat besar: .",
+    "evidence": [
+      "IMG_3759.jpeg",
+      "IMG_3760.jpeg"
+    ],
+    "proposal": "Kontrak toast compact dengan level info/success/error yang jelas dan copy objek `Judul disimpan`/`Dihapus dari simpanan`.",
+    "fix_track": "F02",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "RDR-08",
+    "page": "Reader",
+    "component": "HistoryRestore",
+    "element": "resume toast vs image position",
+    "evidence_type": "REQUIRES_QA",
+    "priority": "P1",
+    "observation": "Resume toast `hal. 4` berbeda dari `Hal. 2/23`: , .",
+    "evidence": [
+      "IMG_3753.jpeg",
+      "IMG_3803.jpeg"
+    ],
+    "proposal": "Reproduksi setelah seluruh gambar dimuat, verifikasi progress scroll, image index, history; jangan menyatakan bug sebelum tes.",
+    "fix_track": "F05",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "RDR-09",
+    "page": "Reader",
+    "component": "ReaderImageLayout",
+    "element": "lazy load + scroll anchor restoration",
+    "evidence_type": "REQUIRES_QA",
+    "priority": "P1",
+    "observation": "Perubahan tinggi gambar, font/viewport, atau lazy loading dapat menggeser posisi resume.",
+    "evidence": [
+      "IMG_3754.jpeg"
+    ],
+    "proposal": "Uji position stability setelah reload/orientation/quality change/network slow; catat apakah lokasi baca kembali dengan presisi yang diterima.",
+    "fix_track": "F05",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "RDR-10",
+    "page": "Reader",
+    "component": "ReaderScrubber",
+    "element": "image navigation vs continuous progress",
+    "evidence_type": "PROPOSAL_ONLY",
+    "priority": "P2",
+    "observation": "Slider saat ini merepresentasikan navigasi gambar, sementara % progres menunjukkan scroll seluruh chapter.",
+    "evidence": [
+      "IMG_3754.jpeg"
+    ],
+    "proposal": "Pertimbangkan scrub progress yang kontinu untuk vertical-scroll mode, sedangkan gambar hanya fallback; memerlukan keputusan owner.",
+    "fix_track": "F05",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "CHP-01",
+    "page": "Reader / Chapter picker",
+    "component": "ChapterSheet",
+    "element": "heading, current chapter, grid",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Chapter picker berupa grid numerik efisien tetapi heading `Chapter` minim konteks: .",
+    "evidence": [
+      "IMG_3761.png",
+      "IMG_3762.png"
+    ],
+    "proposal": "Header `Daftar chapter`, jumlah, posisi aktif, dan urutan sort jelas. Grid numerik boleh tetap dipakai.",
+    "fix_track": "F06",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "CHP-02",
+    "page": "Reader / Chapter picker",
+    "component": "ChapterSheet",
+    "element": "initial anchor and active item",
+    "evidence_type": "REQUIRES_QA",
+    "priority": "P1",
+    "observation": "Tangkapan pertama chapter picker mulai angka 1, lainnya sekitar 132 dan aktif 152; default initial scroll tidak diketahui.",
+    "evidence": [
+      "IMG_3763.png"
+    ],
+    "proposal": "Saat membuka dari Reader, pastikan user mudah menuju chapter aktif; tes initial scroll dan sort.",
+    "fix_track": "F06",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "CHP-03",
+    "page": "Reader / Chapter picker",
+    "component": "ChapterSheet",
+    "element": "sort icon + search field",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Tombol sort icon-only, sedangkan search `Cari nomor chapter` berpotensi tidak mendukung bab khusus.",
+    "evidence": [
+      "IMG_3763.png"
+    ],
+    "proposal": "Label urutan aktif, sort state terdeskripsi; query chapter numerik, desimal, dan special episode bila dataset mendukung.",
+    "fix_track": "F06",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "CHP-04",
+    "page": "Reader / Chapter picker",
+    "component": "ReaderSettings / ThemeChoice",
+    "element": "Sesuai Siste... option",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Pilihan tema `Sesuai Siste...` terpotong: .",
+    "evidence": [
+      "IMG_3763.png"
+    ],
+    "proposal": "Singkat `Ikuti sistem` dan hindari truncation selected setting.",
+    "fix_track": "F03",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "CHP-05",
+    "page": "Reader / Chapter picker",
+    "component": "ReaderSettings / ImageSize",
+    "element": "Lebar Penuh vs Proporsional",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "`Lebar Penuh` vs `Proporsional` tidak menjelaskan perbedaan mekanis: .",
+    "evidence": [
+      "IMG_3763.png"
+    ],
+    "proposal": "Definisikan objek skala (`fit width`, `fit screen`, `original size`) berdasar perilaku sebenarnya, jangan sekadar mengganti label.",
+    "fix_track": "F11",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "CHP-06",
+    "page": "Reader / Chapter picker",
+    "component": "ReaderSettings / GapAndProgress",
+    "element": "Jarak Antar Halaman / Progres halaman",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "`Jarak Antar Halaman` dan `Progres halaman` menggunakan istilah halaman meski reader vertikal memakai aset gambar + scroll.",
+    "evidence": [
+      "IMG_3763.png"
+    ],
+    "proposal": "Ganti berdasarkan mode: `Jarak antar gambar`, `Tampilkan progres baca`, tetap mode-dependent.",
+    "fix_track": "F11",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "CHP-07",
+    "page": "Reader / Chapter picker",
+    "component": "ReaderSettings / Direction",
+    "element": "Kiri ke Kanan vs Kanan ke Kiri",
+    "evidence_type": "REQUIRES_QA",
+    "priority": "P1",
+    "observation": "`Arah baca Kiri ke Kanan/Kanan ke Kiri` muncul tanpa konteks vertical/paged mode: .",
+    "evidence": [
+      "IMG_3764.png"
+    ],
+    "proposal": "Konfirmasi apakah paged reading memang ada; hide/disable setting tidak relevan dalam vertical-only reader.",
+    "fix_track": "F11",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "CHP-08",
+    "page": "Reader / Chapter picker",
+    "component": "ReaderSettings / ScopeAndReset",
+    "element": "per-title vs all, reset, override indicator",
+    "evidence_type": "REQUIRES_QA",
+    "priority": "P1",
+    "observation": "`Khusus judul ini`, `Semua komik`, tanda bullet, `Reset ke default` belum menyatakan inheritance/override semantics.",
+    "evidence": [
+      "IMG_3763.png"
+    ],
+    "proposal": "Uji per-title/global precedence, reset scope, kapan data disimpan, dan visible override indicators.",
+    "fix_track": "F11",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "CHP-09",
+    "page": "Reader / Chapter picker",
+    "component": "ReaderSettings / Preload",
+    "element": "Ringan / Normal / Maksimal options",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "`Muat awal gambar: Ringan/Normal/Maksimal` tidak menjelaskan trade-off.",
+    "evidence": [
+      "IMG_3763.png"
+    ],
+    "proposal": "Label/description yang menjelaskan jumlah preload, pemakaian RAM/data, bila itu behavior sebenarnya.",
+    "fix_track": "F11",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "DET-01",
+    "page": "Comic detail",
+    "component": "ComicHero / ActionGrid",
+    "element": "continue, saved, rating, status, collections",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Hero berisi cover, judul panjang, score, serial status, source, author, 1 CTA besar, lalu 4 tombol setara: .",
+    "evidence": [
+      "IMG_3765.jpeg",
+      "IMG_3766.jpeg"
+    ],
+    "proposal": "Prioritaskan `Lanjutkan/Mulai membaca`, lalu bookmark/collection sebagai aksi sekunder. Jelaskan label `Status` (status baca vs status publikasi).",
+    "fix_track": "F06",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "DET-02",
+    "page": "Comic detail",
+    "component": "ComicSynopsis",
+    "element": "expand/collapse and source text rendering",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Synopsis berasal dari teks sumber panjang tanpa struktur/punctuation rapi; collapsed/expanded control panjang.",
+    "evidence": [
+      "IMG_3765.jpeg"
+    ],
+    "proposal": "Editorial display/line clamp yang menjaga readability, label `Selengkapnya` / `Lebih sedikit` konsisten. Jangan menulis ulang konten sumber diam-diam.",
+    "fix_track": "F03",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "DET-03",
+    "page": "Comic detail",
+    "component": "ComicChapterList",
+    "element": "new dot, last-read badge, selected row",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Pada daftar chapter di detail, badge titik merah kecil dan `Terakhir` kurang jelas maksudnya: .",
+    "evidence": [
+      "IMG_3767.png",
+      "IMG_3768.png"
+    ],
+    "proposal": "Definisikan unread/new/current/last-read. Gunakan label dan state yang tidak bergantung pada titik merah saja.",
+    "fix_track": "F06",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "DET-04",
+    "page": "Comic detail",
+    "component": "ComicChapterList",
+    "element": "chapter count vs latest shown",
+    "evidence_type": "REQUIRES_QA",
+    "priority": "P1",
+    "observation": "Detail menampilkan total 173 dan pada layar terlihat daftar berawal 155 meski sumber lain menampilkan latest 172. Bisa disebabkan scroll/paginasi/sort.",
+    "evidence": [
+      "IMG_3765.jpeg"
+    ],
+    "proposal": "Tes hasil urutan, total chapter, chapter tertinggi, chapter khusus, serta sort, sebelum menuduh data mismatch.",
+    "fix_track": "F06",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "DET-05",
+    "page": "Comic detail",
+    "component": "ComicRecommendationCarousel",
+    "element": "cover cards and horizontal scroll",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Ikon unduh tersedia pada tiap row tetapi status antrian/terunduh tidak terlihat dari screenshot.",
+    "evidence": [
+      "IMG_3765.jpeg"
+    ],
+    "proposal": "Pastikan progress, completed, retry, dan offline state terkomunikasikan; verifikasi actual behavior.",
+    "fix_track": "F03",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "DET-06",
+    "page": "Comic detail",
+    "component": "ComicDetailHeader",
+    "element": "back, share, notification, title clamp",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Rekomendasi komik horizontal memotong card di edge dan nav overlay area konten: .",
+    "evidence": [
+      "IMG_3769.jpeg"
+    ],
+    "proposal": "Revisi scroll padding, peeking, dan ukuran card agar teks serta aksi tidak tertutup.",
+    "fix_track": "F03",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "HOM-01",
+    "page": "Home",
+    "component": "Home / ContinueReading",
+    "element": "continue reading cards and %",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Lanjut Baca carousel, quick search, sorotan, ranking, baru diperbarui menampilkan banyak competing entry points: .",
+    "evidence": [
+      "IMG_3770.jpeg",
+      "IMG_3771.jpeg",
+      "IMG_3772.jpeg",
+      "IMG_3773.jpeg",
+      "IMG_3774.jpeg",
+      "IMG_3775.jpeg"
+    ],
+    "proposal": "Hierarki berdasarkan tugas utama: continue reading, discover/update, search. Jangan mengulang CTA yang tidak perlu.",
+    "fix_track": "F07",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "HOM-02",
+    "page": "Home",
+    "component": "Home / QuickSearchCard",
+    "element": "search entry vs global search",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Spotlight tinggi besar dan menampilkan banyak metadata serta dua chevron; nav dock bisa overlap saat scroll.",
+    "evidence": [
+      "IMG_3770.jpeg"
+    ],
+    "proposal": "Tetapkan tinggi adaptif dan teks yang wrap benar; jangan sampai CTA carousel tertutup dock.",
+    "fix_track": "F07",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "HOM-03",
+    "page": "Home",
+    "component": "Home / SpotlightCarousel",
+    "element": "feature CTA, arrows, card dimensions",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Ranking sumber menggunakan dropdown yang menimpa tabel dan tombol navigasi: .",
+    "evidence": [
+      "IMG_3772.jpeg"
+    ],
+    "proposal": "Popover capped-height dan posisi adaptif; hindari menutupi aksi primer selama menu aktif.",
+    "fix_track": "F07",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "HOM-04",
+    "page": "Home",
+    "component": "Home / RecentUpdates",
+    "element": "new update semantics and missing chapters",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "`Baru diperbarui` memuat card bertuliskan `Chapter belum tersedia`: .",
+    "evidence": [
+      "IMG_3773.jpeg",
+      "IMG_3774.jpeg"
+    ],
+    "proposal": "Tegaskan apa arti diperbarui (metadata, katalog, chapter); pisahkan item yang tidak memiliki chapter dari update chapter.",
+    "fix_track": "F07",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "HOM-05",
+    "page": "Home",
+    "component": "Home / SourceRanking",
+    "element": "source sort and top-5 list",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Card carousel dan opsi `Lihat semua` memakai pola yang menghabiskan satu slot konten, sementara ada tautan `Lihat semua` di section heading: .",
+    "evidence": [
+      "IMG_3775.jpeg"
+    ],
+    "proposal": "Gunakan satu pola `view all` yang konsisten, tidak mengorbankan ruang discovery tanpa alasan.",
+    "fix_track": "F07",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "DSC-01",
+    "page": "Explore / Search",
+    "component": "Explore / Search",
+    "element": "duplicate entry points and source semantics",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Jelajah memiliki sumber, sort, format, search, view mode, filter — density dan relationship antar-filter belum mudah dipindai: .",
+    "evidence": [
+      "IMG_3776.jpeg"
+    ],
+    "proposal": "Hierarki `Sumber → Cari → Filter/sort → Hasil`, tampilkan applied filter state.",
+    "fix_track": "F07",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "DSC-02",
+    "page": "Explore / Search",
+    "component": "ExploreFilters",
+    "element": "source, format, sort, grid/list",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Dropdown sumber berukuran besar menutupi hasil; menu tampak floating di atas card: .",
+    "evidence": [
+      "IMG_3777.jpeg"
+    ],
+    "proposal": "Capped-height, scroll internal, indicator selected, klik di luar untuk menutup; uji interaksi.",
+    "fix_track": "F07",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "DSC-03",
+    "page": "Explore / Search",
+    "component": "ExploreSourceSelect",
+    "element": "popover anchor / overflow",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Search halaman Cari memiliki source multi-chips, filter dan count, sedangkan Jelajah memilih sumber single dropdown: , .",
+    "evidence": [
+      "IMG_3794.jpeg",
+      "IMG_3776.jpeg"
+    ],
+    "proposal": "Jelaskan beda scope search lintas sumber vs jelajah per sumber; selaraskan terminology/filter.",
+    "fix_track": "F02",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "DSC-04",
+    "page": "Explore / Search",
+    "component": "Search / ProviderChips",
+    "element": "selected provider filter scroll",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Placeholder `Cari judul, kreator, atau #ta...` terpotong; format chips terpotong di kanan.",
+    "evidence": [
+      "IMG_3776.jpeg"
+    ],
+    "proposal": "Gunakan microcopy pendek; jelaskan horizontal scroll dengan partial next chip, tanpa memotong kata utama yang penting.",
+    "fix_track": "F07",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "DSC-05",
+    "page": "Explore / Search",
+    "component": "SearchResultCard",
+    "element": "chapter missing, synopsis snippet, bookmark",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Card hasil menampilkan metadata sangat padat dan sinopsis langsung: .",
+    "evidence": [
+      "IMG_3794.jpeg"
+    ],
+    "proposal": "Putuskan minimum metadata dan default text clamp; bedakan status gagal dimuat dari `Chapter belum tersedia`.",
+    "fix_track": "F07",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "LIB-01",
+    "page": "Library",
+    "component": "Library / SavedTabs",
+    "element": "saved count vs automatic bucket count",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "`Sedang Dibaca` dan `Tersimpan` sudah dipisah dengan benar, tetapi label `Tersimpan (138)` dibanding smart chip `Semua 136` berpotensi membingungkan: .",
+    "evidence": [
+      "IMG_3780.png",
+      "IMG_3781.jpeg",
+      "IMG_3782.jpeg",
+      "IMG_3783.jpeg",
+      "IMG_3784.jpeg",
+      "IMG_3785.jpeg",
+      "IMG_3786.jpeg",
+      "IMG_3787.jpeg"
+    ],
+    "proposal": "Jelaskan denominator/count scope (misalnya koleksi sistem vs manual). Jangan anggap bug angka hingga diverifikasi.",
+    "fix_track": "F08",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "LIB-02",
+    "page": "Library",
+    "component": "Library / FilterRow",
+    "element": "truncated source/sort dropdown value",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Dropdown `Semua Sum...`, `Terakhir Diup...` terpotong dalam default state: .",
+    "evidence": [
+      "IMG_3781.jpeg",
+      "IMG_3782.jpeg",
+      "IMG_3783.jpeg"
+    ],
+    "proposal": "Istilah lebih pendek (`Sumber`, `Terbaru`) dan value tersaji penuh melalui menu/label pendamping.",
+    "fix_track": "F03",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "LIB-03",
+    "page": "Library",
+    "component": "Library / SmartCategoryChips",
+    "element": "horizontal scroll clipped edge",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Smart categories horizontal dapat terpotong, termasuk awal label saat digeser: .",
+    "evidence": [
+      "IMG_3785.jpeg",
+      "IMG_3786.jpeg",
+      "IMG_3787.jpeg"
+    ],
+    "proposal": "Jaga visible scroll affordance; snap/padding; tetap memungkinkan seluruh chip diakses.",
+    "fix_track": "F08",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "LIB-04",
+    "page": "Library",
+    "component": "Library / CollectionGroups",
+    "element": "System 2 category and collections",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Baris `System 2` di `Koleksi Kamu` tidak menjelaskan apakah koleksi sistem, folder, atau nama pengguna: .",
+    "evidence": [
+      "IMG_3781.jpeg"
+    ],
+    "proposal": "Perjelas grouping otomatis/custom dan metadata collection.",
+    "fix_track": "F08",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "LIB-05",
+    "page": "Library",
+    "component": "Library / SavedCoverCard",
+    "element": "bookmark overlay and fixed nav overlap",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Bookmark icon overlay pada cover berbeda visual dari bookmark list/card; bottom dock menutupi cover: .",
+    "evidence": [
+      "IMG_3781.jpeg",
+      "IMG_3782.jpeg",
+      "IMG_3783.jpeg",
+      "IMG_3784.jpeg",
+      "IMG_3785.jpeg",
+      "IMG_3786.jpeg",
+      "IMG_3787.jpeg"
+    ],
+    "proposal": "Satukan state saved dan interaction; reserve nav area.",
+    "fix_track": "F08",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "LIB-06",
+    "page": "Library",
+    "component": "Library / CollectionMenu",
+    "element": "create collection / multi-select",
+    "evidence_type": "REQUIRES_QA",
+    "priority": "P1",
+    "observation": "Banyak operasi koleksi via menu `⋮` seperti bulk select; hasil/error/undo tidak terlihat.",
+    "evidence": [
+      "IMG_3781.jpeg"
+    ],
+    "proposal": "QA create/edit/delete collection, multi-select, revert, modal confirmation, sync collision.",
+    "fix_track": "F08",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "LIB-07",
+    "page": "Library",
+    "component": "Library / HistoryCard",
+    "element": "chapter, percentage, Lanjut button",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "History `45 bacaan aktif` menunjukkan persen per chapter, CTA `Lanjut`, sedangkan library saved memakai counters berbeda: .",
+    "evidence": [
+      "IMG_3780.png"
+    ],
+    "proposal": "Konsisten tampilkan `Ch. n · xx% dibaca` dan jelas beda history vs bookmarked.",
+    "fix_track": "F08",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "SCH-01",
+    "page": "Weekly schedule",
+    "component": "WeeklySchedule / DayStrip",
+    "element": "today star, count, selected day",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Tab hari horizontal dengan `* Hari ini`, counts dan note panjang: .",
+    "evidence": [
+      "IMG_3788.png",
+      "IMG_3789.png"
+    ],
+    "proposal": "Pertahankan days segmented, tetapi render selected, today, count, dan scroll affordance berbeda secara jelas.",
+    "fix_track": "F09",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "SCH-02",
+    "page": "Weekly schedule",
+    "component": "WeeklySchedule / ScheduleCard",
+    "element": "Otomatis day, Baca/Lanjut CTA",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "`Otomatis · Senin`, status `Siap dibaca`, CTA `Baca/Lanjut` dalam card padat.",
+    "evidence": [
+      "IMG_3788.png"
+    ],
+    "proposal": "Jelaskan arti otomatis (perkiraan/terdeteksi/manual override) dan beda `Baca` vs `Lanjut`.",
+    "fix_track": "F09",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "SCH-03",
+    "page": "Weekly schedule",
+    "component": "WeeklySchedule / HistoryEntry",
+    "element": "latest chapter vs resume destination",
+    "evidence_type": "REQUIRES_QA",
+    "priority": "P1",
+    "observation": "`Chapter 172` jadwal vs history reader chapter 152 mungkin merupakan latest vs last-read; tidak otomatis bug.",
+    "evidence": [
+      "IMG_3788.png"
+    ],
+    "proposal": "Uji CTA memilih lanjut terakhir vs buka latest; jangan menyatakan chapter yang ditampilkan sebagai history jika bukan.",
+    "fix_track": "F09",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "SCH-04",
+    "page": "Weekly schedule",
+    "component": "WeeklySchedule / CardStack",
+    "element": "bottom dock and card clipping",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Redundansi panjang card jadwal dan fixed nav menutupi card di akhir viewport.",
+    "evidence": [
+      "IMG_3788.png"
+    ],
+    "proposal": "Perbaiki line clamp, CTA anchor, card density, dan scroll reserve.",
+    "fix_track": "F01",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "POP-01",
+    "page": "Popular",
+    "component": "Popular / RankingMethod",
+    "element": "internal vs source-rank semantics",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Tab `Populer di Yomirra` menunjukkan gabungan posisi per sumber, bukan angka raw/internal reading; kalimat penjelas sudah tersedia: , .",
+    "evidence": [
+      "IMG_3790.jpeg",
+      "IMG_3793.jpeg"
+    ],
+    "proposal": "Gunakan copy yang tidak mengisyaratkan metrik pembaca internal jika itu bukan metodenya. Paparkan metodologi singkat + tanggal refresh.",
+    "fix_track": "F09",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "POP-02",
+    "page": "Popular",
+    "component": "Popular / RankingCard",
+    "element": "density, badges, rating, bookmark",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Rank card sangat padat (badge ongoing, type, chapter, rating, bookmark, timestamp), sebagian judul sangat terpotong.",
+    "evidence": [
+      "IMG_3790.jpeg"
+    ],
+    "proposal": "Tetapkan metadata prioritas; title clamp 2 baris; mempertahankan rank dan primary title; sisanya dipindah ke detail.",
+    "fix_track": "F09",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "POP-03",
+    "page": "Popular",
+    "component": "Popular / SourceChips",
+    "element": "source selected/count and scroll",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Source pills horizontal menampilkan counts, active source, pemotongan edge: , .",
+    "evidence": [
+      "IMG_3790.jpeg",
+      "IMG_3793.jpeg"
+    ],
+    "proposal": "Pertahankan chips, perjelas scroll affordance dan relasi dengan tab utama.",
+    "fix_track": "F09",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "POP-04",
+    "page": "Popular",
+    "component": "Popular / MALLeaderboard",
+    "element": "member metric, snapshot and source link",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Tab MAL menggunakan metrik anggota dan memberi disclosure external + snapshot, ini praktik baik: .",
+    "evidence": [
+      "IMG_3791.png",
+      "IMG_3792.jpeg"
+    ],
+    "proposal": "Pertahankan provenance, tanggal snapshot, dan sumber; buat CTA `Cari sumber bacaan` tidak menjanjikan availability.",
+    "fix_track": "F09",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "NTF-01",
+    "page": "Global overlays",
+    "component": "NotificationPopover",
+    "element": "last row, scroll and footer",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Notification popover besar menampilkan list dengan baris terbawah terpotong di balik footer `Tampilkan semua`: .",
+    "evidence": [
+      "IMG_3778.jpeg"
+    ],
+    "proposal": "Buat scroll region yang jelas, footer fixed tanpa menutup item, semantics unread/new.",
+    "fix_track": "F02",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "NTF-02",
+    "page": "Global overlays",
+    "component": "AccountPopover",
+    "element": "account information, menu items, logout",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Profile popover memuat tema/sumber/pengaturan/help/logout; density dan fokus menu berbeda dari dropdown lain: .",
+    "evidence": [
+      "IMG_3779.jpeg"
+    ],
+    "proposal": "Satukan popover family, pemisahan destructive logout, dan visible focus.",
+    "fix_track": "F02",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "NTF-03",
+    "page": "Global overlays",
+    "component": "GlobalToast",
+    "element": "onboarding information toast",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Onboarding toast `Panduan aplikasi disiapkan` terlalu besar untuk konfirmasi non-urgent: .",
+    "evidence": [
+      "IMG_3802.png"
+    ],
+    "proposal": "Gunakan toast ringkas dengan konteks; bila langkah berikut penting, tampilkan inline guidance di lokasi relevan.",
+    "fix_track": "F02",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "HLP-01",
+    "page": "Help center",
+    "component": "HelpCenter / FAQBody",
+    "element": "technical 403/429 explanation",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Pusat Bantuan menampilkan teks 403/429, cache, token tanpa definisi awam: .",
+    "evidence": [
+      "IMG_3795.png",
+      "IMG_3796.png"
+    ],
+    "proposal": "Mulai dengan langkah sederhana dan berurutan; detail teknis dapat di-expand sebagai advanced info.",
+    "fix_track": "F09",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "HLP-02",
+    "page": "Help center",
+    "component": "HelpCenter / AccordionList",
+    "element": "expanded state and nav clearance",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Accordion + fixed navigation menghalangi paragraf dan topik terakhir saat scroll: .",
+    "evidence": [
+      "IMG_3795.png"
+    ],
+    "proposal": "Gunakan content inset di bagian akhir, tes expanded state dan focus restoration.",
+    "fix_track": "F01",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "SET-01",
+    "page": "App settings",
+    "component": "AppSettings / SettingsRow",
+    "element": "icon/title/description/control grid",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Struktur page settings panjang dan card bertingkat; semua row tidak memakai layout label/control yang konsisten: .",
+    "evidence": [
+      "IMG_3797(1).png",
+      "IMG_3798(1).jpeg",
+      "IMG_3799.jpeg",
+      "IMG_3800.jpeg",
+      "IMG_3801.jpeg"
+    ],
+    "proposal": "Standardize SettingsRow: icon + title + description + trailing control, dengan sub-control inline hanya bila perlu.",
+    "fix_track": "F03",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "SET-02",
+    "page": "App settings",
+    "component": "AppSettings / UpdateCheck",
+    "element": "on-open toggle + periodic interval",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "`Cek otomatis saat dibuka` dengan deskripsi `secara berkala` dan pilihan `Jeda pengecekan` mencampur trigger on-open vs periodic.",
+    "evidence": [
+      "IMG_3797(1).png"
+    ],
+    "proposal": "Definisikan apakah periodic background atau tiap pembukaan; copy mengikuti perilaku sesungguhnya.",
+    "fix_track": "F11",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "SET-03",
+    "page": "App settings",
+    "component": "AppSettings / KeepAwake",
+    "element": "screen wake lock during reading/downloading",
+    "evidence_type": "REQUIRES_QA",
+    "priority": "P1",
+    "observation": "`Jaga layar tetap menyala saat mengunduh atau membaca chapter` bisa menahan layar saat tidak perlu atau menghabiskan baterai.",
+    "evidence": [
+      "IMG_3797(1).png"
+    ],
+    "proposal": "Verifikasi kapan wake lock aktif/dilepas; copy harus memaparkan scope.",
+    "fix_track": "F11",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "SET-04",
+    "page": "App settings",
+    "component": "AppSettings / StorageMetrics",
+    "element": "total bytes vs shown buckets",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "`Penyimpanan terpakai 44.7MB`, 43.9MB cache, 0MB offline; total lainnya tidak terurai. Angka belum tentu salah.",
+    "evidence": [
+      "IMG_3797(1).png"
+    ],
+    "proposal": "Tampilkan kategori lain bila bermakna atau jelaskan total mencakup metadata/data lain. Gunakan satu istilah unit (`bab`, `berkas`, `gambar`) sesuai konteks.",
+    "fix_track": "F11",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "SET-05",
+    "page": "App settings",
+    "component": "AppSettings / DestructiveActions",
+    "element": "delete local history/save vs clear device",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P1",
+    "observation": "Aksi `Hapus riwayat & bookmark lokal` dan `Bersihkan perangkat` dekat, berpengaruh luas, berbeda scope: .",
+    "evidence": [
+      "IMG_3800.jpeg",
+      "IMG_3801.jpeg"
+    ],
+    "proposal": "Destructive confirmation menjelaskan data apa yang terhapus, data cloud yang tetap ada, unduhan yang dihapus; cegah accidental taps. Perilaku actual perlu QA.",
+    "fix_track": "F11",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "SET-06",
+    "page": "App settings",
+    "component": "AppSettings / OfflineAndHelp",
+    "element": "disabled clear-offline + onboarding",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "`Hapus semua bab offline` disabled tetapi tanpa alasan; `Buka Panduan Onboarding` dan versi app ada di akhir halaman.",
+    "evidence": [
+      "IMG_3797(1).png"
+    ],
+    "proposal": "Disabled state dengan reason (`Belum ada unduhan`), dan penempatan bantuan yang mudah ditemukan.",
+    "fix_track": "F11",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "SET-07",
+    "page": "App settings",
+    "component": "AppSettings / NSFWPreference",
+    "element": "state vs default copy",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "`Konten 18+ (NSFW)` toggle ON, sementara deskripsi menyebut default OFF. Ini bisa valid (setting diubah pengguna), bukan kontradiksi terbukti.",
+    "evidence": [
+      "IMG_3797(1).png"
+    ],
+    "proposal": "Copy membedakan current state vs default; legal/age restrictions harus diverifikasi secara terpisah.",
+    "fix_track": "F11",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "SET-08",
+    "page": "App settings",
+    "component": "AppSettings / AppThemeVsReaderTheme",
+    "element": "global theme vs reader surface choice",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "App theme global dan background reader memiliki setting berbeda tanpa eksplisit menjelaskan hubungan.",
+    "evidence": [
+      "IMG_3797(1).png"
+    ],
+    "proposal": "Jelaskan tema aplikasi vs tema/warna canvas pembaca dan cara inheritance bekerja.",
+    "fix_track": "F11",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "SYS-10",
+    "page": "Shared shell",
+    "component": "StickyHeader / ScrollSurface",
+    "element": "heading clipped vs content scroll",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Header and subtitle on several routes visibly ellipsize; determine whether wrapping or available width is the source of the loss of meaning.",
+    "evidence": [
+      "IMG_3776.jpeg",
+      "IMG_3795.png",
+      "IMG_3797(1).png"
+    ],
+    "proposal": "Define semantic truncation budget for title/subtitle, ensure full important label discoverability and eliminate gratuitous clipping.",
+    "fix_track": "F03",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "SYS-11",
+    "page": "Shared shell",
+    "component": "BottomDock / ExpandedOverlay",
+    "element": "raised overlay above bottom nav",
+    "evidence_type": "REQUIRES_QA",
+    "priority": "P1",
+    "observation": "Screenshots show overlay layers share the same screen; event capture and z-order have not been tested.",
+    "evidence": [
+      "IMG_3778.jpeg",
+      "IMG_3779.jpeg",
+      "IMG_3782.jpeg",
+      "IMG_3802.png"
+    ],
+    "proposal": "QA overlay stack: dock below active modal, pointer/focus confined where appropriate, background scroll contract.",
+    "fix_track": "F02",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "RDR-11",
+    "page": "Reader",
+    "component": "ResumeToast",
+    "element": "truncated resume message",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Resume text is ellipsized (Melanjutkan bacaan hal. 2...) in the reader and a cropped image.",
+    "evidence": [
+      "IMG_3753.jpeg",
+      "IMG_3803.jpeg"
+    ],
+    "proposal": "Use clear, concise resume state; no truncated actionable instruction, never obstruct header.",
+    "fix_track": "F02",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "RDR-12",
+    "page": "Reader",
+    "component": "Reader / HistoryLink",
+    "element": "history 0% vs reader nonzero",
+    "evidence_type": "REQUIRES_QA",
+    "priority": "P1",
+    "observation": "History shows chapter 152 at 0%; a reader image shows 3%. These are screenshots at different times and may not be synchronized.",
+    "evidence": [
+      "IMG_3754.jpeg",
+      "IMG_3780.png",
+      "IMG_3770.jpeg"
+    ],
+    "proposal": "Reproduce by reading, leaving, reopening, reloading; compare persisted % and restored scroll; do not claim mismatch from screenshots alone.",
+    "fix_track": "F05",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "CHP-10",
+    "page": "Chapter picker",
+    "component": "ChapterSheet / LongList",
+    "element": "search and sort interaction with large chapter count",
+    "evidence_type": "REQUIRES_QA",
+    "priority": "P2",
+    "observation": "172-number grid is shown but performance, search state, and active-item anchoring are not demonstrated.",
+    "evidence": [
+      "IMG_3761.png",
+      "IMG_3762.png"
+    ],
+    "proposal": "Test open at active chapter, sort flip, search, dismiss and reopen; no unexpected reset of reader scroll.",
+    "fix_track": "F06",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "DET-07",
+    "page": "Comic detail",
+    "component": "ComicMetadata / DataProvenance",
+    "element": "chapter 173 count vs visible chapter 155 / reader 172",
+    "evidence_type": "REQUIRES_QA",
+    "priority": "P2",
+    "observation": "A total of 173 entries is shown with recent row labeled 155, while separate views mention 172. Source/category/availability may explain differences.",
+    "evidence": [
+      "IMG_3767.png",
+      "IMG_3768.png",
+      "IMG_3788.png"
+    ],
+    "proposal": "Trace data source, sort, pagination, hidden entries and cross-source identity before declaring inconsistency.",
+    "fix_track": "F06",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "HOM-06",
+    "page": "Home",
+    "component": "Home / FeaturedCard",
+    "element": "carousel navigation clearance",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Bottom floating dock visibly overlaps lower area of featured card and carousel controls at one scroll position.",
+    "evidence": [
+      "IMG_3770.jpeg",
+      "IMG_3771.jpeg"
+    ],
+    "proposal": "At rest and during scroll, ensure carousel actions do not sit beneath global dock; include scroll-limit test.",
+    "fix_track": "F01",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "DSC-06",
+    "page": "Search",
+    "component": "Search / SourceSelection",
+    "element": "multi-source count with horizontal crop",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Search source picker shows 3 selected while edge chip is cut; the horizontal affordance is weak.",
+    "evidence": [
+      "IMG_3794.jpeg"
+    ],
+    "proposal": "Maintain visible selected count and discoverable horizontal source list; no loss of filter state.",
+    "fix_track": "F07",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "LIB-08",
+    "page": "Library",
+    "component": "Library / ScopeCounter",
+    "element": "saved count reconciliation",
+    "evidence_type": "REQUIRES_QA",
+    "priority": "P2",
+    "observation": "138 saved vs 136 automatic bucket; two items might be system collection, excluded states, or a data issue.",
+    "evidence": [
+      "IMG_3781.jpeg",
+      "IMG_3787.jpeg"
+    ],
+    "proposal": "Document exact set semantics and compare to data; only fix counts if mismatch is reproduced.",
+    "fix_track": "F08",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "LIB-09",
+    "page": "Library / Explore",
+    "component": "SourceLabel",
+    "element": "Shinigami vs shinigami casing",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P3",
+    "observation": "Provider labels show mixed capitalization across Library/Explore/Schedule.",
+    "evidence": [
+      "IMG_3776.jpeg",
+      "IMG_3782.jpeg",
+      "IMG_3788.png"
+    ],
+    "proposal": "Create canonical display name mapping, preserve underlying source ID unchanged.",
+    "fix_track": "F03",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "SCH-05",
+    "page": "Weekly schedule",
+    "component": "WeeklySchedule / DayAssignment",
+    "element": "semantics of automatic estimated day",
+    "evidence_type": "REQUIRES_QA",
+    "priority": "P2",
+    "observation": "The interface allows a day to be auto-picked or manually overridden; prediction/source semantics not confirmed.",
+    "evidence": [
+      "IMG_3788.png",
+      "IMG_3789.png"
+    ],
+    "proposal": "Confirm data provenance; copy and status distinguish estimated/custom and actual published chapter.",
+    "fix_track": "F09",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "POP-05",
+    "page": "Popular",
+    "component": "Ranking / AvailabilityCTA",
+    "element": "MAL ranking CTA find reading source",
+    "evidence_type": "REQUIRES_QA",
+    "priority": "P2",
+    "observation": "Cari sumber bacaan is presented for external titles; ability to find or availability not guaranteed.",
+    "evidence": [
+      "IMG_3791.png",
+      "IMG_3792.jpeg"
+    ],
+    "proposal": "Test no-match outcomes and source handoff; never promise availability.",
+    "fix_track": "F09",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "NTF-04",
+    "page": "Global overlays",
+    "component": "NotificationBell / Unread",
+    "element": "badge 5 and card list",
+    "evidence_type": "REQUIRES_QA",
+    "priority": "P2",
+    "observation": "Popover shows 5 recent items; unread count/mark-as-read behavior remains unknown.",
+    "evidence": [
+      "IMG_3778.jpeg",
+      "IMG_3779.jpeg"
+    ],
+    "proposal": "Verify semantics of count, timestamp and read state; no duplicate/unreachable notifications.",
+    "fix_track": "F02",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "SET-09",
+    "page": "App settings",
+    "component": "Preferences / DisabledAction",
+    "element": "disabled offline action without reason",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Hapus unduhan appears disabled alongside an offline storage figure of 0 MB; explanatory text is missing.",
+    "evidence": [
+      "IMG_3799.jpeg",
+      "IMG_3800.jpeg"
+    ],
+    "proposal": "Label disabled state with reason grounded in actual data and ensure assistive technology can convey it.",
+    "fix_track": "F11",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "SET-10",
+    "page": "App settings",
+    "component": "Settings / DenseDestructiveRows",
+    "element": "destructive text squeezed between icon and CTA",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Clear-history and device-clean rows wrap titles/descriptions into narrow stacks because of oversized trailing CTA.",
+    "evidence": [
+      "IMG_3800.jpeg",
+      "IMG_3801.jpeg"
+    ],
+    "proposal": "Use responsive stacked row layout for long descriptions and destructive action; keep full description readable.",
+    "fix_track": "F03",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  },
+  {
+    "id": "HLP-03",
+    "page": "Help center",
+    "component": "FAQ / SupportInstructions",
+    "element": "bottom instructions obscured",
+    "evidence_type": "VISUAL_OR_OWNER_CONFIRMED",
+    "priority": "P2",
+    "observation": "Footer guidance text at the bottom of FAQ becomes obscured by the global dock in a screenshot.",
+    "evidence": [
+      "IMG_3795.png"
+    ],
+    "proposal": "Ensure bottom text can scroll fully clear of fixed dock; preserve focus after accordion expansion.",
+    "fix_track": "F01",
+    "status": "BACKLOG_UNVALIDATED",
+    "approval": "NOT_APPROVED",
+    "code_location": "UNKNOWN_INSPECT_REPO",
+    "verification": "UNRUN",
+    "root_cause": "UNKNOWN_UNTIL_CODE_INSPECTION"
+  }
+]

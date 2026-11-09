@@ -62,7 +62,7 @@ export function ChapterRow({
             </span>
           )}
           {!isRead && !isLastRead && !isLocked && (
-            <span className="size-1.5 shrink-0 rounded-full bg-accent" aria-hidden="true" />
+            <span className="size-1.5 shrink-0 rounded-full bg-accent" aria-label="Belum dibaca" title="Belum dibaca" />
           )}
         </div>
         <p className="mt-0.5 truncate text-xs text-text-muted">{formattedDate}</p>
@@ -92,7 +92,7 @@ export function ChapterRow({
           <Link
             href={readerHref}
             onClick={() => beginNavigationIntent(readerHref)}
-            aria-label={`Baca ${chapterTitle}`}
+            aria-label={isLastRead ? `Lanjutkan bacaan terakhir: ${chapterTitle}` : isRead ? `Baca ulang ${chapterTitle}` : `Baca ${chapterTitle}`}
             aria-current={isLastRead || undefined}
             className={cn(rowContentClass, "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent active:bg-accent/10")}
           >

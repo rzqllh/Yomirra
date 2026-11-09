@@ -1,0 +1,21 @@
+{
+  "created": "2026-11-09",
+  "application_source_access": false,
+  "application_changes_made": false,
+  "product_runtime_tests_run": false,
+  "owner_code_change_permission": false,
+  "issue_count": 88,
+  "screenshot_count": 51,
+  "all_ticket_status": "BACKLOG_UNVALIDATED",
+  "all_qa_results": "NOT_RUN",
+  "evidence_type_counts": {
+    "VISUAL_OR_OWNER_CONFIRMED": 68,
+    "REQUIRES_QA": 19,
+    "PROPOSAL_ONLY": 1
+  },
+  "priority_counts": {
+    "P1": 17,
+    "P2": 70,
+    "P3": 1
+  }
+}

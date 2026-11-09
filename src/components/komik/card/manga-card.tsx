@@ -16,7 +16,7 @@ import { motion, useReducedMotion } from "motion/react";
 import { useQuery } from "@tanstack/react-query";
 import { getMangaDetailHref, getReaderHref } from "@/shared/lib/routes";
 import { beginNavigationIntent } from "@/shared/lib/navigation-intent";
-import { sourceRegistry } from "@/shared/sources/source-registry";
+import { sourceRegistry, getSourceDisplayName } from "@/shared/sources/source-registry";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { MangaCover } from "../manga-cover";
 import { BookmarkButton } from "../bookmark-button";
@@ -144,7 +144,7 @@ function LazySynopsisPreview({
   return (
     <div
       ref={anchorRef}
-      className="min-h-[2.75rem]"
+      className="min-h-11"
       data-card-slot="synopsis"
     >
       {synopsis ? (
@@ -152,11 +152,11 @@ function LazySynopsisPreview({
           {synopsis}
         </MangaCardMeta>
       ) : author ? (
-        <MangaCardMeta as="p" className="mt-1.5 truncate text-[11px] text-text-muted/70">
+        <MangaCardMeta as="p" className="mt-1.5 truncate text-2xs text-text-muted/70">
           Karya: {author}
         </MangaCardMeta>
       ) : (
-        <MangaCardMeta as="p" className="mt-1.5 text-[11px] text-text-muted/70">
+        <MangaCardMeta as="p" className="mt-1.5 text-2xs text-text-muted/70">
           Sinopsis belum tersedia
         </MangaCardMeta>
       )}
@@ -248,7 +248,7 @@ export function MangaCard({
   const cardMangaId = onlyBinding?.mangaId ?? manga.id;
   const cardManga = onlyBinding ? { ...manga, id: cardMangaId } : manga;
   const cardSource = dynamicSourceRegistry.get(cardSourceId) || sourceRegistry.find((s) => s.id === cardSourceId);
-  const sourceName = showSourceBadge ? (cardSource?.name || cardSourceId) : null;
+  const sourceName = showSourceBadge ? (cardSource?.name || getSourceDisplayName(cardSourceId)) : null;
   // A filtered canonical card must not navigate through a disabled primary binding.
   const cardDetailHref = getMangaDetailHref(
     cardSourceId,
@@ -727,8 +727,8 @@ export function MangaCard({
 
             <MangaCardTitle
               as="h4"
-              lines={1}
-              className={cn("vt-title-hover font-medium leading-normal", mangaCardInteraction.title)}
+              lines={2}
+              className={cn("vt-title-hover font-medium leading-snug", mangaCardInteraction.title)}
               title={manga.title}
             >
               {manga.title}
@@ -736,14 +736,14 @@ export function MangaCard({
 
             <div className="mt-1.5 flex items-center justify-between">
               <MangaCardMeta className="truncate pr-2">{manga.latestChapter || "Chapter belum tersedia"}</MangaCardMeta>
-              {timeText && <MangaCardMeta className="whitespace-nowrap text-[10px] text-text-muted">{timeText}</MangaCardMeta>}
+              {timeText && <MangaCardMeta className="whitespace-nowrap text-2xs text-text-muted">{timeText}</MangaCardMeta>}
             </div>
             {noEligibleSource && <MangaCardMeta className="text-status-error-fg font-semibold">Sumber tidak tersedia</MangaCardMeta>}
           </div>
         </Link>
 
         {/* Bookmark & Rating Column */}
-        <div className="relative flex w-[52px] shrink-0 flex-col items-center justify-center gap-2 bg-transparent">
+        <div className="relative flex w-13 shrink-0 flex-col items-center justify-center gap-2 bg-transparent">
           <BookmarkButton sourceId={cardSourceId} manga={cardManga} className="size-11" />
           <div className="h-px w-6 bg-border-subtle" />
           {Number(scoreToDisplay) > 0 ? (

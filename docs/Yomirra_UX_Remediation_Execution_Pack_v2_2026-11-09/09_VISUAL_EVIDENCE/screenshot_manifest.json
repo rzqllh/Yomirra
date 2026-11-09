@@ -1,0 +1,512 @@
+[
+  {
+    "number": 3753,
+    "file": "IMG_3753.jpeg",
+    "page": "Reader",
+    "state": "dark / resume toast",
+    "anchors": "resume top + bottom dock",
+    "width": 706,
+    "height": 1536,
+    "sha256": "91cae91bbf3f7cfa6b3d3c68a44d6dc2061b2bd211ae477557cc8071f63ca386"
+  },
+  {
+    "number": 3754,
+    "file": "IMG_3754.jpeg",
+    "page": "Reader",
+    "state": "dark / controls",
+    "anchors": "header, progress, double chevrons",
+    "width": 706,
+    "height": 1536,
+    "sha256": "f4db969cf27c5b6bbd4aadcd2e6047142d51832f1de57f97b503f32690ffa5d9"
+  },
+  {
+    "number": 3755,
+    "file": "IMG_3755.jpeg",
+    "page": "Reader",
+    "state": "dark / immersive",
+    "anchors": "top gradient, passive progress capsule",
+    "width": 706,
+    "height": 1536,
+    "sha256": "fab5a299ac1a84542c8f95720ce9593104278df6d1ea6a1f577d4fb700232b2f"
+  },
+  {
+    "number": 3756,
+    "file": "IMG_3756.jpeg",
+    "page": "Reader",
+    "state": "light / controls",
+    "anchors": "reader controls and arrow-to-top",
+    "width": 706,
+    "height": 1536,
+    "sha256": "33effaaabba927b5256a5966a66058ae747ac48f48dba6aa842c77922f2e62e7"
+  },
+  {
+    "number": 3757,
+    "file": "IMG_3757.jpeg",
+    "page": "Reader",
+    "state": "light / immersive",
+    "anchors": "top gradient, passive progress capsule",
+    "width": 706,
+    "height": 1536,
+    "sha256": "0b76d22985bd548b366893ef488fb0c9a7d0d1850e23043f5d1e03981459ab8c"
+  },
+  {
+    "number": 3758,
+    "file": "IMG_3758.jpeg",
+    "page": "Reader",
+    "state": "light / controls",
+    "anchors": "progress 59%, bookmark icon",
+    "width": 706,
+    "height": 1536,
+    "sha256": "4d294b99e6f8d0bd98dbb67225db3bf240539c76106c044a912537dd2525f972"
+  },
+  {
+    "number": 3759,
+    "file": "IMG_3759.jpeg",
+    "page": "Reader",
+    "state": "light / remove bookmark toast",
+    "anchors": "large toast replacing header",
+    "width": 706,
+    "height": 1536,
+    "sha256": "fadc725d52828bdd402a6dbd26be5db9476ffb5a7c19ef3ff627a9a1c8b4d907"
+  },
+  {
+    "number": 3760,
+    "file": "IMG_3760.jpeg",
+    "page": "Reader",
+    "state": "light / add bookmark toast",
+    "anchors": "large toast replacing header",
+    "width": 706,
+    "height": 1536,
+    "sha256": "f07389faaa68586dfc6b8d4d512829e690682a2517cf2907cd4ab00b9e9046d0"
+  },
+  {
+    "number": 3761,
+    "file": "IMG_3761.png",
+    "page": "Chapter picker",
+    "state": "sheet at list beginning",
+    "anchors": "chapter grid 1-48; search/sort",
+    "width": 1206,
+    "height": 2622,
+    "sha256": "f69ce562c7ffdcdeaee2a03551484e5a94a8dac017196af4dc56c6af9bf005ea"
+  },
+  {
+    "number": 3762,
+    "file": "IMG_3762.png",
+    "page": "Chapter picker",
+    "state": "sheet near active chapter",
+    "anchors": "chapter 152 selected; grid 132-172",
+    "width": 1206,
+    "height": 2622,
+    "sha256": "574bbb86b057ecfd9791c06cfd09761a190043b1ab8ee050cfecff566825c310"
+  },
+  {
+    "number": 3763,
+    "file": "IMG_3763.png",
+    "page": "Reader settings",
+    "state": "sheet upper",
+    "anchors": "scope, theme, image scaling",
+    "width": 1206,
+    "height": 2622,
+    "sha256": "816e567ea9b9bebbe9e11d814f9259ccb862dd9d6f8ab29594b6683bfb76179c"
+  },
+  {
+    "number": 3764,
+    "file": "IMG_3764.png",
+    "page": "Reader settings",
+    "state": "sheet lower",
+    "anchors": "spacing, reading direction, controls, preload, progress",
+    "width": 1206,
+    "height": 2622,
+    "sha256": "023d877f464af16721274f984f61b30cf84ed35c6bc58dcdff16eb64627a5ae1"
+  },
+  {
+    "number": 3765,
+    "file": "IMG_3765.jpeg",
+    "page": "Comic detail",
+    "state": "hero + collapsed synopsis",
+    "anchors": "continue and 4 action buttons",
+    "width": 706,
+    "height": 1536,
+    "sha256": "3351fedff263aa68632c22d327a5d7f61b63b71401b27b5b36f779faa78857fb"
+  },
+  {
+    "number": 3766,
+    "file": "IMG_3766.jpeg",
+    "page": "Comic detail",
+    "state": "hero + expanded synopsis",
+    "anchors": "large text plus floating dock",
+    "width": 706,
+    "height": 1536,
+    "sha256": "33c46030d33483098598ece5f8d03cd66ac12aedb9094857267ad853dc561624"
+  },
+  {
+    "number": 3767,
+    "file": "IMG_3767.png",
+    "page": "Comic detail",
+    "state": "expanded synopsis + chapter list",
+    "anchors": "chapter list; title truncation; red dots",
+    "width": 1206,
+    "height": 2622,
+    "sha256": "85dc75039123e33b307d9738002deb30ad2c5dfb2e907adff1c81bb2ed4263a8"
+  },
+  {
+    "number": 3768,
+    "file": "IMG_3768.png",
+    "page": "Comic detail",
+    "state": "collapsed synopsis + chapter list",
+    "anchors": "chapter 152 marked last/read; downloads",
+    "width": 1206,
+    "height": 2622,
+    "sha256": "20684b10e9a6f3f70a9eed053dfcde6b85899dfd6a12426eafca8a6d9d051dad"
+  },
+  {
+    "number": 3769,
+    "file": "IMG_3769.jpeg",
+    "page": "Comic detail",
+    "state": "similar comics",
+    "anchors": "cover carousel + floating dock",
+    "width": 706,
+    "height": 1536,
+    "sha256": "729bc9f06106dd0f2e80d992f6cbcdbbad1eb11a223edebd3d2e62f452ff3dc1"
+  },
+  {
+    "number": 3770,
+    "file": "IMG_3770.jpeg",
+    "page": "Home",
+    "state": "continue reading + search prompt",
+    "anchors": "history carousel, search prompt, spotlight",
+    "width": 706,
+    "height": 1536,
+    "sha256": "4dea98517b67663d3456959dfb3aa7e4d8f3a3b871fa61eb4037c14c3ee81940"
+  },
+  {
+    "number": 3771,
+    "file": "IMG_3771.jpeg",
+    "page": "Home",
+    "state": "spotlight + ranking",
+    "anchors": "feature CTA, ranking, fixed dock",
+    "width": 706,
+    "height": 1536,
+    "sha256": "c5ad6e1a7ecd40b01845145b782de1932e71249c5f438fe3fdd9a371d18e656e"
+  },
+  {
+    "number": 3772,
+    "file": "IMG_3772.jpeg",
+    "page": "Home",
+    "state": "source dropdown open",
+    "anchors": "ranking source list",
+    "width": 706,
+    "height": 1536,
+    "sha256": "56e059d9b2233022dd27dbe533d0c79fe55facd6b341291a1e424f3c898c935a"
+  },
+  {
+    "number": 3773,
+    "file": "IMG_3773.jpeg",
+    "page": "Home",
+    "state": "latest updates list",
+    "anchors": "cover list + bookmark + dock",
+    "width": 706,
+    "height": 1536,
+    "sha256": "ddfce7d984f137be6f490e1cba1d3c79e09031ca770c27ef2ab8a4a68eea9795"
+  },
+  {
+    "number": 3774,
+    "file": "IMG_3774.jpeg",
+    "page": "Home",
+    "state": "latest updates carousel",
+    "anchors": "cover cards + metadata",
+    "width": 706,
+    "height": 1536,
+    "sha256": "b2c70b92647164dd7308c3a1c4fca4c9d963521408f37b90e79b53923b68e078"
+  },
+  {
+    "number": 3775,
+    "file": "IMG_3775.jpeg",
+    "page": "Home",
+    "state": "latest updates carousel end",
+    "anchors": "see-all sentinel tile",
+    "width": 706,
+    "height": 1536,
+    "sha256": "1d13221feed1cbf2f63ae665cd4e05e7350442a71bf9fa5e2335b2d9a89cd35f"
+  },
+  {
+    "number": 3776,
+    "file": "IMG_3776.jpeg",
+    "page": "Explore",
+    "state": "catalog list",
+    "anchors": "source dropdown/filter/sort/type controls",
+    "width": 706,
+    "height": 1536,
+    "sha256": "e022927c9f7e4a0c6f782b37b6e60ba3221ba45c44b67b2c977ae4241664a918"
+  },
+  {
+    "number": 3777,
+    "file": "IMG_3777.jpeg",
+    "page": "Explore",
+    "state": "source dropdown open",
+    "anchors": "dropdown with sources over results",
+    "width": 706,
+    "height": 1536,
+    "sha256": "a8bfde433061a8c67e8472f07b812616969c39ae99cf1bf52fa28ffff78353f1"
+  },
+  {
+    "number": 3778,
+    "file": "IMG_3778.jpeg",
+    "page": "Explore",
+    "state": "notification popover open",
+    "anchors": "last item clipped by footer",
+    "width": 706,
+    "height": 1536,
+    "sha256": "65d3cf2b43e45b5270522eba728ddafd40a74674de76e6fddbc3d2dcf8410444"
+  },
+  {
+    "number": 3779,
+    "file": "IMG_3779.jpeg",
+    "page": "Explore",
+    "state": "profile popover open",
+    "anchors": "account menu, appearance, help",
+    "width": 706,
+    "height": 1536,
+    "sha256": "6f4c2a57d88d3cf647832f997267c5ae767fad24fd0df5b138e13c5cfa049e13"
+  },
+  {
+    "number": 3780,
+    "file": "IMG_3780.png",
+    "page": "Library",
+    "state": "reading history",
+    "anchors": "current chapter, % progress, continue buttons",
+    "width": 1206,
+    "height": 2622,
+    "sha256": "8687073245c6bdfca00a9c82cd475ad9f78b249ed81eab8127f29289b0700e65"
+  },
+  {
+    "number": 3781,
+    "file": "IMG_3781.jpeg",
+    "page": "Library",
+    "state": "saved default",
+    "anchors": "saved tabs, filters, smart buckets and cover grid",
+    "width": 706,
+    "height": 1536,
+    "sha256": "ebf16035d52cac407c43f3d82f647674b8f161499f62dc0e1c3cdcaa72d53574"
+  },
+  {
+    "number": 3782,
+    "file": "IMG_3782.jpeg",
+    "page": "Library",
+    "state": "source filter open",
+    "anchors": "long source menu",
+    "width": 706,
+    "height": 1536,
+    "sha256": "2a94b481a16a47609bf1a6d38d903fbdbd1b7dbdf0c4305cf7d93e8a03e076e8"
+  },
+  {
+    "number": 3783,
+    "file": "IMG_3783.jpeg",
+    "page": "Library",
+    "state": "sort menu open",
+    "anchors": "last updated / A-Z",
+    "width": 706,
+    "height": 1536,
+    "sha256": "9af15a42a8e2d351cb5fe5a33ee351f2f0e6a23d471998c9ce4f70bbc2e855b1"
+  },
+  {
+    "number": 3784,
+    "file": "IMG_3784.jpeg",
+    "page": "Library",
+    "state": "actions menu open",
+    "anchors": "create collection / multi-select",
+    "width": 706,
+    "height": 1536,
+    "sha256": "b10aee4278466e5a5acd9bd4650d59c3b752535bc9b571b32cdf5ce3f52f14a7"
+  },
+  {
+    "number": 3785,
+    "file": "IMG_3785.jpeg",
+    "page": "Library",
+    "state": "smart filter chips shifted right",
+    "anchors": "type buckets near horizontal end",
+    "width": 706,
+    "height": 1536,
+    "sha256": "aae4600bc3622726d678445b583af2092213e4e5890f04bac815b0c32822d8ff"
+  },
+  {
+    "number": 3786,
+    "file": "IMG_3786.jpeg",
+    "page": "Library",
+    "state": "smart filter chips shifted",
+    "anchors": "older/rating buckets",
+    "width": 706,
+    "height": 1536,
+    "sha256": "ecd433efced8f107ae9d8b5b75eb27a0bcb27c7951bc59ec9a1d375f21600080"
+  },
+  {
+    "number": 3787,
+    "file": "IMG_3787.jpeg",
+    "page": "Library",
+    "state": "smart filter chips left",
+    "anchors": "all/continue/not read filters",
+    "width": 706,
+    "height": 1536,
+    "sha256": "f45df3033312e87c896417d34a5861421b05ade6e58dea455cfa1dda35bdc763"
+  },
+  {
+    "number": 3788,
+    "file": "IMG_3788.png",
+    "page": "Weekly schedule",
+    "state": "all weekdays",
+    "anchors": "day chips and content cards",
+    "width": 1206,
+    "height": 2622,
+    "sha256": "d4e40256537e8b5ee955b7720ce50bbdb38bcaf55238eaae1b7275618b973b92"
+  },
+  {
+    "number": 3789,
+    "file": "IMG_3789.png",
+    "page": "Weekly schedule",
+    "state": "Monday selected",
+    "anchors": "selected day and filtered cards",
+    "width": 1206,
+    "height": 2622,
+    "sha256": "62cb2dbec643288d0b1442aeb6f3995d99f3cd47e7883bcbbbdd814be342771f"
+  },
+  {
+    "number": 3790,
+    "file": "IMG_3790.jpeg",
+    "page": "Popular",
+    "state": "combined ranking",
+    "anchors": "ranking methodology and multi-source chips",
+    "width": 706,
+    "height": 1536,
+    "sha256": "90ea2f6b9cced66b0a52d1e41c45503731026a2aa07526941e2fe7e3971abe89"
+  },
+  {
+    "number": 3791,
+    "file": "IMG_3791.png",
+    "page": "Popular",
+    "state": "MAL leaderboard start",
+    "anchors": "external data disclosure and first ranks",
+    "width": 1206,
+    "height": 2622,
+    "sha256": "a9354c3547a2218ac039ba252d07d6d43c6d354b9843b8a940300b9cf27677bb"
+  },
+  {
+    "number": 3792,
+    "file": "IMG_3792.jpeg",
+    "page": "Popular",
+    "state": "MAL leaderboard end",
+    "anchors": "source attribution footer and last ranks",
+    "width": 706,
+    "height": 1536,
+    "sha256": "a8cc143d62edc07df84dbf69ed22eee5c9f4f56ee9bbc8c8a17b248b43bdc0d8"
+  },
+  {
+    "number": 3793,
+    "file": "IMG_3793.jpeg",
+    "page": "Popular",
+    "state": "single-source ranking",
+    "anchors": "source selected, cards/status",
+    "width": 706,
+    "height": 1536,
+    "sha256": "b3d242f8080916fad00c7df12d0c22cc4bfab30028de9cf1033c7b463e266678"
+  },
+  {
+    "number": 3794,
+    "file": "IMG_3794.jpeg",
+    "page": "Search",
+    "state": "results and source chips",
+    "anchors": "search/filter, list mode, results",
+    "width": 706,
+    "height": 1536,
+    "sha256": "8510840f62251c26c7c9f05db05ad8eb6b13aed980b14f791d899d01d9a23694"
+  },
+  {
+    "number": 3795,
+    "file": "IMG_3795.png",
+    "page": "Help center",
+    "state": "all accordion closed",
+    "anchors": "FAQ topics, fixed dock covers lower body",
+    "width": 1206,
+    "height": 2622,
+    "sha256": "5e5f586e7549777cc616d1078469adaf8da9cf23d46e4b12a62d253482ca3f15"
+  },
+  {
+    "number": 3796,
+    "file": "IMG_3796.png",
+    "page": "Help center",
+    "state": "FAQ expanded",
+    "anchors": "technical 403/429 explanation and CTA",
+    "width": 1206,
+    "height": 2622,
+    "sha256": "f6a72814236650c01d2948a11311a5fe48bb7606e5024c8eb00017c46d1a6b30"
+  },
+  {
+    "number": 3797,
+    "file": "IMG_3797(1).png",
+    "page": "App settings",
+    "state": "account & reading prefs",
+    "anchors": "account, language, checks/timing, bottom dock",
+    "width": 1206,
+    "height": 2622,
+    "sha256": "0bd1559458dfe4f7cc3065d914f4647fb5c3bbc014319e70d5b18f1d4eee4348"
+  },
+  {
+    "number": 3798,
+    "file": "IMG_3798(1).jpeg",
+    "page": "App settings",
+    "state": "appearance and data options",
+    "anchors": "theme, data saver, keep awake",
+    "width": 706,
+    "height": 1536,
+    "sha256": "b7dfd3022b907943d9fd908a254d1b82a02751b14a7abbc898d0e5631aff753c"
+  },
+  {
+    "number": 3799,
+    "file": "IMG_3799.jpeg",
+    "page": "App settings",
+    "state": "content/privacy + storage",
+    "anchors": "NSFW, source, cache total breakdown",
+    "width": 706,
+    "height": 1536,
+    "sha256": "e106ce1244b1a8a0a817bc8446d18f3c7b58ddacd208797336f7a784f87c5a8e"
+  },
+  {
+    "number": 3800,
+    "file": "IMG_3800.jpeg",
+    "page": "App settings",
+    "state": "storage actions",
+    "anchors": "cache/delete offline/export/erase controls",
+    "width": 706,
+    "height": 1536,
+    "sha256": "611dc346562861b255772d480f908d1b2a51c3c357ca01a7f643b812739459c4"
+  },
+  {
+    "number": 3801,
+    "file": "IMG_3801.jpeg",
+    "page": "App settings",
+    "state": "storage footer",
+    "anchors": "destructive operations, onboarding, version",
+    "width": 706,
+    "height": 1536,
+    "sha256": "5fd8a796620463d935a31ca0a131c22bbbe1d071757a994d89194448e494182c"
+  },
+  {
+    "number": 3802,
+    "file": "IMG_3802.png",
+    "page": "App settings",
+    "state": "onboarding notification",
+    "anchors": "large informational toast covering page",
+    "width": 1206,
+    "height": 2622,
+    "sha256": "7d93f82bc7d1998a1ad7653b40dcedf99d29bffcba27cfd9b9fcf8663a1f6633"
+  },
+  {
+    "number": 3803,
+    "file": "IMG_3803.jpeg",
+    "page": "Reader",
+    "state": "resume toast close-up",
+    "anchors": "wide top toast truncated text",
+    "width": 1206,
+    "height": 476,
+    "sha256": "5e5c3851d592e0b0810ebf33802041917cac6b8b3389168cff31c752499c995f"
+  }
+]

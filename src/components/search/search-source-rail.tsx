@@ -28,7 +28,7 @@ export function SearchSourceRail({
             : `${activeSelectedSources.length} dipilih`}
         </span>
       </div>
-      <div className="flex overflow-x-auto [scrollbar-width:none] snap-x pb-1 gap-2 md:flex-wrap md:overflow-visible md:snap-none">
+      <div className="flex overflow-x-auto [scrollbar-width:none] snap-x pb-1 gap-2 overscroll-x-contain touch-pan-x md:flex-wrap md:overflow-visible md:snap-none">
         {searchableSources.map((source) => {
           const isSelected = activeSelectedSources.includes(source.id);
           const isOffline = source.status === "unavailable" || source.status === "in-fix";
@@ -45,7 +45,7 @@ export function SearchSourceRail({
                 <>
                   {isSelected && <CheckCircle weight="fill" size={18} aria-hidden="true" />}
                   <span>{source.name}</span>
-                  {isOffline && <span className="rounded-[8px] bg-status-warning-bg px-2 py-1 text-xs font-semibold text-status-warning-fg">Gangguan</span>}
+                  {isOffline && <span className="rounded-md bg-status-warning-bg px-2 py-1 text-xs font-semibold text-status-warning-fg">Gangguan</span>}
                 </>
               }
             />

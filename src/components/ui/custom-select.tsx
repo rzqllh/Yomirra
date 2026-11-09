@@ -59,7 +59,7 @@ export function CustomSelect({ value, onChange, options, className, buttonClassN
             type="button"
             disabled={disabled}
             aria-label={`${label}: ${typeof selectedOption?.label === "string" ? selectedOption.label : value}`}
-            className={cn("group flex min-h-[48px] items-center justify-between gap-3 rounded-[12px] border border-border-strong bg-surface-overlay px-4 text-sm font-semibold text-text-primary motion-safe:transition-[background-color,border-color,box-shadow] motion-safe:duration-300 hover:border-accent hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent data-[state=open]:border-accent data-[state=open]:ring-[3px] data-[state=open]:ring-accent-dim disabled:cursor-not-allowed disabled:opacity-50", className, buttonClassName)}
+            className={cn("group flex min-h-12 items-center justify-between gap-3 rounded-xl border border-border-strong bg-surface-overlay px-4 text-sm font-semibold text-text-primary motion-safe:transition-[background-color,border-color,box-shadow] motion-safe:duration-300 hover:border-accent hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent data-[state=open]:border-accent data-[state=open]:ring-2 data-[state=open]:ring-accent-dim disabled:cursor-not-allowed disabled:opacity-50", className, buttonClassName)}
           >
             <span className="truncate whitespace-nowrap">
               {selectedOption?.label}
@@ -74,7 +74,7 @@ export function CustomSelect({ value, onChange, options, className, buttonClassN
 
         <DropdownMenuContent
           align={alignMap[align]}
-          className="min-w-[var(--radix-dropdown-menu-trigger-width)] rounded-[12px] p-1.5"
+          className="min-w-[var(--radix-dropdown-menu-trigger-width)] rounded-xl p-1.5"
         >
           <div className="flex flex-col gap-0.5 max-h-[300px] overflow-y-auto">
             {options.map((option) => {
@@ -84,7 +84,7 @@ export function CustomSelect({ value, onChange, options, className, buttonClassN
                   key={option.value}
                   onSelect={() => onChange(option.value)}
                   className={cn(
-                    "flex min-h-11 items-center justify-between gap-3 rounded-[8px] px-3 py-2 text-sm font-medium transition-colors cursor-pointer",
+                    "flex min-h-11 items-center justify-between gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors cursor-pointer",
                     isSelected
                       ? "bg-accent/10 text-accent focus:bg-accent/10 focus:text-accent"
                       : "text-text-secondary focus:bg-surface-hover focus:text-text-primary"

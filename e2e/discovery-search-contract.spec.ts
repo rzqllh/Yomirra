@@ -60,7 +60,7 @@ test("Quick Search follows Jelajah after source switch and client navigation; Ca
   await expect(page).toHaveURL(/\/search/);
   await expect(page.getByRole("button", { name: "Source A", exact: true })).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByRole("button", { name: "Source B", exact: true })).toHaveAttribute("aria-pressed", "false");
-  const trigger = page.getByPlaceholder("Cari judul, kreator, atau #tag…");
+  const trigger = page.getByRole("textbox", { name: "Cari komik" });
   await trigger.focus();
   await page.keyboard.press("Control+k");
   const dialog = page.getByRole("dialog", { name: "Quick Search", exact: true });

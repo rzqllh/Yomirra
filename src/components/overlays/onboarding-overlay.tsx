@@ -187,7 +187,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
       animate={{ opacity: 1 }}
       exit={reducedMotion ? { opacity: 1 } : { opacity: 0, scale: 0.99 }}
       transition={reducedMotion ? { duration: 0 } : { duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-      className="fixed inset-0 z-[var(--z-takeover)] flex min-h-dvh flex-col justify-between overflow-y-auto bg-surface-base text-text-primary selection:bg-accent/20"
+      className="fixed inset-0 z-[var(--z-takeover)] flex h-dvh max-h-dvh flex-col justify-between overflow-hidden bg-surface-base text-text-primary selection:bg-accent/20 md:h-auto md:min-h-dvh md:overflow-y-auto"
     >
       {/* Dynamic Ambient Color Glow */}
       <div
@@ -200,9 +200,9 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
       />
 
       {/* Top Navigation Bar */}
-      <header className="relative z-20 mx-auto flex w-full max-w-5xl items-center justify-between px-6 pt-[calc(var(--safe-top)+16px)] pb-2 sm:px-10">
+      <header className="relative z-20 mx-auto flex w-full max-w-5xl shrink-0 items-center justify-between px-4 sm:px-10 pt-[calc(var(--safe-top)+8px)] sm:pt-[calc(var(--safe-top)+16px)] pb-1 sm:pb-2">
         <div className="flex items-center gap-3">
-          <div className="size-9 rounded-xl overflow-hidden bg-surface-raised border border-border-default shadow-xs p-1 flex items-center justify-center">
+          <div className="size-8 sm:size-9 rounded-xl overflow-hidden bg-surface-raised border border-border-default shadow-xs p-1 flex items-center justify-center">
             <img
               src="/icon-pwa.png"
               alt="Yomirra"
@@ -220,7 +220,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
           ref={skipButtonRef}
           type="button"
           onClick={handleComplete}
-          className="group inline-flex items-center gap-1.5 min-h-11 px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold text-text-muted hover:text-text-primary hover:bg-surface-raised border border-transparent hover:border-border-subtle motion-safe:active:scale-95 transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          className="group inline-flex items-center gap-1.5 min-h-11 px-3 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-semibold text-text-muted hover:text-text-primary hover:bg-surface-raised border border-transparent hover:border-border-subtle motion-safe:active:scale-95 transition-all cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           <span>Lewati</span>
           <ArrowRight
@@ -230,40 +230,40 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
         </button>
       </header>
 
-      {/* Central Interactive Showcase Stage */}
-      <main className="relative z-10 mx-auto my-auto flex w-full max-w-5xl flex-1 items-center justify-center px-6 py-6 sm:px-10">
-        <div className="grid w-full grid-cols-1 md:grid-cols-2 gap-8 md:gap-14 lg:gap-16 items-center">
+      {/* Central Interactive Showcase Stage with Responsive Overflow Fallback */}
+      <main className="relative z-10 mx-auto my-auto flex w-full max-w-5xl flex-1 min-h-0 items-center justify-center overflow-y-auto overscroll-contain px-4 py-1 sm:px-10 sm:py-6">
+        <div className="grid w-full grid-cols-1 md:grid-cols-2 gap-3 sm:gap-8 md:gap-14 lg:gap-16 items-center">
           
           {/* Left Column: Physical 3D Manga Volume Presentation */}
           <div
             aria-hidden="true"
-            className="relative flex flex-col items-center justify-center py-4 md:py-6"
+            className="relative flex flex-col items-center justify-center py-1 sm:py-4 md:py-6"
           >
-            {/* The Manga Book Deck Container */}
-            <div className="relative w-56 sm:w-64 md:w-72 aspect-[2/3] perspective-1000">
+            {/* The Manga Book Deck Container — Strict Fit on Mobile Viewport */}
+            <div className="relative w-28 sm:w-60 md:w-72 aspect-[2/3] perspective-1000 shrink-0">
               
               {/* Stacked Manga Volume 1 (Deep background layer) */}
               <div
                 className={cn(
                   "absolute inset-0 rounded-2xl bg-gradient-to-tr from-surface-muted to-surface-raised border border-border-default/80 shadow-md transition-all duration-500",
-                  step === 0 && "-translate-x-5 translate-y-3 -rotate-6 opacity-60 scale-95",
-                  step === 1 && "-translate-x-6 translate-y-4 -rotate-8 opacity-70 scale-95",
-                  step === 2 && "-translate-x-4 translate-y-2 -rotate-5 opacity-60 scale-95"
+                  step === 0 && "-translate-x-2 sm:-translate-x-5 translate-y-1 sm:translate-y-3 -rotate-6 opacity-60 scale-95",
+                  step === 1 && "-translate-x-2.5 sm:-translate-x-6 translate-y-1.5 sm:translate-y-4 -rotate-8 opacity-70 scale-95",
+                  step === 2 && "-translate-x-2 sm:-translate-x-4 translate-y-1 sm:translate-y-2 -rotate-5 opacity-60 scale-95"
                 )}
               >
-                <div className="absolute inset-y-0 left-0 w-3.5 bg-gradient-to-r from-black/25 via-white/10 to-transparent rounded-l-2xl" />
+                <div className="absolute inset-y-0 left-0 w-2.5 sm:w-3.5 bg-gradient-to-r from-black/25 via-white/10 to-transparent rounded-l-2xl" />
               </div>
 
               {/* Stacked Manga Volume 2 (Middle background layer) */}
               <div
                 className={cn(
                   "absolute inset-0 rounded-2xl bg-gradient-to-tl from-surface-raised to-surface-hover border border-border-default shadow-lg transition-all duration-500",
-                  step === 0 && "translate-x-5 translate-y-2 rotate-6 opacity-70 scale-95",
-                  step === 1 && "translate-x-4 translate-y-1 rotate-5 opacity-60 scale-95",
-                  step === 2 && "translate-x-6 translate-y-3 rotate-7 opacity-70 scale-95"
+                  step === 0 && "translate-x-2 sm:translate-x-5 translate-y-1 sm:translate-y-2 rotate-6 opacity-70 scale-95",
+                  step === 1 && "translate-x-2 sm:translate-x-4 translate-y-0.5 rotate-5 opacity-60 scale-95",
+                  step === 2 && "translate-x-2.5 sm:translate-x-6 translate-y-1.5 sm:translate-y-3 rotate-7 opacity-70 scale-95"
                 )}
               >
-                <div className="absolute inset-y-0 left-0 w-3.5 bg-gradient-to-r from-black/25 via-white/10 to-transparent rounded-l-2xl" />
+                <div className="absolute inset-y-0 left-0 w-2.5 sm:w-3.5 bg-gradient-to-r from-black/25 via-white/10 to-transparent rounded-l-2xl" />
               </div>
 
               {/* Foreground Active Manga Volume — Pure artwork without text collision */}
@@ -300,33 +300,33 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
                 />
 
                 {/* Physical Book Spine Gradient */}
-                <div className="absolute inset-y-0 left-0 w-4 bg-gradient-to-r from-black/50 via-white/15 to-transparent rounded-l-2xl pointer-events-none" />
+                <div className="absolute inset-y-0 left-0 w-2.5 sm:w-4 bg-gradient-to-r from-black/50 via-white/15 to-transparent rounded-l-2xl pointer-events-none" />
               </motion.div>
             </div>
 
             {/* Volume Attribution & Counter — Cleanly Positioned Outside & Below Artwork */}
-            <div className="w-56 sm:w-64 md:w-72 mt-3 flex items-center justify-between px-1 text-text-muted text-xs">
+            <div className="w-28 sm:w-60 md:w-72 mt-1 sm:mt-3 flex items-center justify-between px-1 text-text-muted text-2xs sm:text-xs">
               <div className="flex items-center gap-1.5 truncate pr-2">
                 <span className="font-semibold text-text-secondary truncate">{current.series}</span>
                 <span className="text-text-muted select-none">·</span>
                 <span className="text-text-muted truncate">{current.creator}</span>
               </div>
-              <span className="shrink-0 rounded-full bg-surface-raised border border-border-subtle px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-text-secondary">
+              <span className="shrink-0 rounded-full bg-surface-raised border border-border-subtle px-1.5 sm:px-2 py-0.5 text-2xs font-bold uppercase tracking-wider text-text-secondary">
                 0{step + 1} / 0{STEPS.length}
               </span>
             </div>
           </div>
 
           {/* Right Column: Editorial Copy & Unified Controls */}
-          <div className="flex flex-col justify-center">
+          <div className="flex flex-col justify-center min-h-0">
             
             {/* Content Container — Restored Natural Vertical Rhythm */}
-            <div aria-live="polite" className="flex flex-col gap-4 sm:gap-6 min-h-[190px] justify-center">
+            <div aria-live="polite" className="flex flex-col gap-1.5 sm:gap-4 md:gap-6 min-h-0 sm:min-h-48 justify-center">
               
               {/* Eyebrow Label */}
               <div className="flex items-center gap-2">
                 <span className="size-2 rounded-full bg-accent animate-pulse" />
-                <p className="text-xs font-bold tracking-wider text-accent uppercase">
+                <p className="text-2xs sm:text-xs font-bold tracking-wider text-accent uppercase">
                   {current.eyebrow}
                 </p>
               </div>
@@ -341,7 +341,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
                     animate={{ opacity: 1, y: 0 }}
                     exit={reducedMotion ? { opacity: 1 } : { opacity: 0, y: -6 }}
                     transition={reducedMotion ? { duration: 0 } : { duration: 0.18 }}
-                    className="text-balance text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-[1.15] tracking-tight text-text-primary"
+                    className="text-balance text-lg sm:text-4xl lg:text-5xl font-extrabold leading-snug sm:leading-[1.15] tracking-tight text-text-primary"
                   >
                     {current.title}
                   </motion.h1>
@@ -358,7 +358,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
                     animate={{ opacity: 1 }}
                     exit={reducedMotion ? { opacity: 1 } : { opacity: 0 }}
                     transition={reducedMotion ? { duration: 0 } : { duration: 0.18 }}
-                    className="text-sm sm:text-base leading-relaxed text-text-secondary max-w-prose"
+                    className="text-xs sm:text-base leading-relaxed text-text-secondary max-w-prose line-clamp-3 sm:line-clamp-none"
                   >
                     {current.desc}
                   </motion.p>
@@ -366,10 +366,10 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
               </div>
             </div>
 
-            {/* Stable Action & Navigation Row — Strict Zero Clipping at 400px */}
-            <div className="mt-6 pt-5 border-t border-border-subtle flex flex-col gap-3">
+            {/* Stable Action & Navigation Row — Strict Zero Clipping at 360px & 400px, Never pushed off-screen */}
+            <div className="mt-2 sm:mt-6 pt-2 sm:pt-5 border-t border-border-subtle flex flex-col gap-1.5 sm:gap-3 shrink-0 pb-[calc(var(--safe-bottom)+8px)] sm:pb-0">
               
-              <div className="flex items-center justify-between gap-3 sm:gap-4">
+              <div className="flex items-center justify-between gap-2 sm:gap-4">
                 {/* Stepper Interactive Pills (size-11 touch target maintained) */}
                 <div className="flex items-center gap-1 shrink-0">
                   {STEPS.map((_, i) => (
@@ -402,13 +402,14 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
                     onClick={handlePrev}
                     tabIndex={step === 0 ? -1 : 0}
                     aria-hidden={step === 0}
+                    aria-label="Kembali ke langkah sebelumnya"
                     className={cn(
                       "inline-flex min-h-11 items-center justify-center gap-1.5 px-3 sm:px-4 rounded-xl border border-border-default bg-surface-raised hover:bg-surface-hover text-xs sm:text-sm font-bold text-text-secondary hover:text-text-primary active:scale-[0.98] transition-all cursor-pointer",
                       step === 0 ? "hidden sm:invisible sm:w-26" : "visible opacity-100 w-auto sm:w-26"
                     )}
                   >
                     <ArrowLeft size={16} />
-                    <span className="hidden xs:inline">Kembali</span>
+                    <span className="hidden sm:inline">Kembali</span>
                   </button>
 
                   {/* Primary CTA: Responsive on mobile, rock-solid on desktop */}
@@ -427,7 +428,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
               </div>
 
               {/* Bottom Utility Slot */}
-              <div className="min-h-8 flex items-center">
+              <div className="hidden [@media(min-width:768px)_and_(hover:hover)_and_(pointer:fine)]:flex min-h-6 sm:min-h-8 items-center">
                 {step === STEPS.length - 1 && isInstallable ? (
                   <div className="w-full flex items-center justify-between px-3 py-1.5 rounded-xl bg-surface-raised border border-border-default/80">
                     <div className="flex items-center gap-2.5 min-w-0 pr-2">
@@ -445,7 +446,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
                     </button>
                   </div>
                 ) : (
-                  <div className="hidden [@media(hover:hover)_and_(pointer:fine)]:flex items-center gap-2 text-2xs text-text-muted px-1">
+                  <div className="flex items-center gap-2 text-2xs text-text-muted px-1">
                     <Keyboard size={14} className="shrink-0 text-text-muted/80" />
                     <span className="truncate">{current.tip}</span>
                   </div>

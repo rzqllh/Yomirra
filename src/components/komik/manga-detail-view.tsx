@@ -233,17 +233,17 @@ function MangaDetailContent({
         <Button
           asChild
           variant="accent"
-          className="w-full md:w-auto md:min-w-[210px] md:px-6 rounded-md h-[52px] md:h-[48px] text-base font-bold flex items-center justify-center gap-2.5 bg-accent hover:bg-accent/90 text-accent-on shadow-md active:scale-[0.98] transition-all"
+          className="w-full md:w-auto md:min-w-52 md:px-6 rounded-xl h-13 md:h-12 text-base font-bold flex items-center justify-center gap-2.5 bg-accent hover:bg-accent/90 text-accent-on shadow-md active:scale-[0.98] transition-all"
         >
           <Link
             href={targetHref}
             onClick={() => beginNavigationIntent(targetHref)}
             aria-label={`${primaryLabel} - ${companionLabel}`}
           >
-            <Play className="h-[18px] w-[18px] shrink-0" fill="currentColor" weight="fill" />
+            <Play size={18} className="shrink-0" fill="currentColor" weight="fill" />
             <span className="tracking-tight">{primaryLabel}</span>
-            <span className="text-white/40 font-normal select-none">•</span>
-            <span className="text-[14px] font-medium text-white/90 tracking-tight truncate max-w-[160px]">
+            <span className="text-accent-on/40 font-normal select-none">•</span>
+            <span className="text-sm font-medium text-accent-on/90 tracking-tight truncate max-w-40">
               {companionLabel}
             </span>
           </Link>
@@ -436,9 +436,9 @@ function MangaDetailContent({
                 <button
                   aria-expanded={isExpanded}
                   onClick={() => setIsExpanded(!isExpanded)}
-                  className="text-[11px] font-bold text-accent hover:text-accent-hover transition-colors inline-flex items-center gap-1"
+                  className="text-2xs font-bold text-accent hover:text-accent-hover transition-colors inline-flex items-center gap-1"
                 >
-                  {isExpanded ? "Tampilkan lebih sedikit" : "Selengkapnya"}
+                  {isExpanded ? "Lebih sedikit" : "Selengkapnya"}
                   <MorphIcon
                     icon={isExpanded ? morphIconPairs.disclosure.on : morphIconPairs.disclosure.off}
                     className="size-3"
@@ -454,7 +454,7 @@ function MangaDetailContent({
               className="overflow-hidden"
             >
               <p className={cn(
-                "text-[13px] md:text-sm leading-relaxed text-text-secondary break-words",
+                "text-xs md:text-sm leading-relaxed text-text-secondary break-words",
                 !isExpanded && "line-clamp-4"
               )}>
                 {cleanedSynopsis || "Sinopsis belum tersedia"}

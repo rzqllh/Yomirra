@@ -141,4 +141,27 @@ describe('OnboardingOverlay', () => {
     });
   });
 
+  it('exposes accessible Back button name and pointer-fine desktop-only keyboard tip', async () => {
+    render(<OnboardingOverlay onComplete={vi.fn()} />);
+
+    // Advance to step 2 so Back button becomes active
+    const nextBtn = screen.getByRole('button', { name: 'Lanjut' });
+    fireEvent.click(nextBtn);
+
+    await waitFor(() => {
+      const backBtn = screen.getByRole('button', { name: 'Kembali ke langkah sebelumnya' });
+      expect(backBtn).toBeTruthy();
+      expect(backBtn.className).toContain('min-h-11');
+    });
+
+    const dialog = screen.getByRole('dialog');
+    expect(dialog.className).toContain('h-dvh');
+    expect(dialog.className).toContain('max-h-dvh');
+    expect(dialog.className).toContain('overflow-hidden');
+
+    const main = dialog.querySelector('main');
+    expect(main?.className).toContain('overflow-y-auto');
+    expect(main?.className).toContain('overscroll-contain');
+  });
+
 });

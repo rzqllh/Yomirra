@@ -1,0 +1,182 @@
+﻿issue_id,priority,evidence_type,page,component,element,screenshot_file,screenshot_state,focus_region_files,fix_track,repro_status
+SYS-01,P1,VISUAL_OR_OWNER_CONFIRMED,Shared shell,AppShell / BottomDock,fixed position + page scroll end,IMG_3798(1).jpeg,appearance and data options,E31_settings_visual.jpg,F01,NOT_RUN
+SYS-01,P1,VISUAL_OR_OWNER_CONFIRMED,Shared shell,AppShell / BottomDock,fixed position + page scroll end,IMG_3799.jpeg,content/privacy + storage,E32_settings_storage.jpg,F01,NOT_RUN
+SYS-01,P1,VISUAL_OR_OWNER_CONFIRMED,Shared shell,AppShell / BottomDock,fixed position + page scroll end,IMG_3800.jpeg,storage actions,E33_settings_destructive.jpg,F01,NOT_RUN
+SYS-01,P1,VISUAL_OR_OWNER_CONFIRMED,Shared shell,AppShell / BottomDock,fixed position + page scroll end,IMG_3795.png,all accordion closed,E28_help_dock.jpg,F01,NOT_RUN
+SYS-01,P1,VISUAL_OR_OWNER_CONFIRMED,Shared shell,AppShell / BottomDock,fixed position + page scroll end,IMG_3796.png,FAQ expanded,E29_help_technical.jpg,F01,NOT_RUN
+SYS-01,P1,VISUAL_OR_OWNER_CONFIRMED,Shared shell,AppShell / BottomDock,fixed position + page scroll end,IMG_3766.jpeg,hero + expanded synopsis,,F01,NOT_RUN
+SYS-01,P1,VISUAL_OR_OWNER_CONFIRMED,Shared shell,AppShell / BottomDock,fixed position + page scroll end,IMG_3767.png,expanded synopsis + chapter list,,F01,NOT_RUN
+SYS-01,P1,VISUAL_OR_OWNER_CONFIRMED,Shared shell,AppShell / BottomDock,fixed position + page scroll end,IMG_3768.png,collapsed synopsis + chapter list,E12_detail_chapter_rows.jpg,F01,NOT_RUN
+SYS-01,P1,VISUAL_OR_OWNER_CONFIRMED,Shared shell,AppShell / BottomDock,fixed position + page scroll end,IMG_3770.jpeg,continue reading + search prompt,E13_home_continue.jpg,F01,NOT_RUN
+SYS-01,P1,VISUAL_OR_OWNER_CONFIRMED,Shared shell,AppShell / BottomDock,fixed position + page scroll end,IMG_3780.png,reading history,E19_library_history.jpg,F01,NOT_RUN
+SYS-01,P1,VISUAL_OR_OWNER_CONFIRMED,Shared shell,AppShell / BottomDock,fixed position + page scroll end,IMG_3788.png,all weekdays,E24_schedule_cards.jpg,F01,NOT_RUN
+SYS-02,P1,VISUAL_OR_OWNER_CONFIRMED,Shared shell,OverlayHost / Toast,header collision + placement,IMG_3753.jpeg,dark / resume toast,,F02,NOT_RUN
+SYS-02,P1,VISUAL_OR_OWNER_CONFIRMED,Shared shell,OverlayHost / Toast,header collision + placement,IMG_3759.jpeg,light / remove bookmark toast,E06_reader_remove_toast.jpg,F02,NOT_RUN
+SYS-02,P1,VISUAL_OR_OWNER_CONFIRMED,Shared shell,OverlayHost / Toast,header collision + placement,IMG_3760.jpeg,light / add bookmark toast,E05_reader_bookmark_toast.jpg,F02,NOT_RUN
+SYS-02,P1,VISUAL_OR_OWNER_CONFIRMED,Shared shell,OverlayHost / Toast,header collision + placement,IMG_3803.jpeg,resume toast close-up,E35_reader_resume_toast.jpg,F02,NOT_RUN
+SYS-03,P2,VISUAL_OR_OWNER_CONFIRMED,Shared shell,PageHeader / Filters,"long title, subtitle, selected value",IMG_3776.jpeg,catalog list,,F03,NOT_RUN
+SYS-03,P2,VISUAL_OR_OWNER_CONFIRMED,Shared shell,PageHeader / Filters,"long title, subtitle, selected value",IMG_3781.jpeg,saved default,E20_library_filter.jpg,F03,NOT_RUN
+SYS-03,P2,VISUAL_OR_OWNER_CONFIRMED,Shared shell,PageHeader / Filters,"long title, subtitle, selected value",IMG_3782.jpeg,source filter open,E21_library_source_menu.jpg,F03,NOT_RUN
+SYS-03,P2,VISUAL_OR_OWNER_CONFIRMED,Shared shell,PageHeader / Filters,"long title, subtitle, selected value",IMG_3783.jpeg,sort menu open,,F03,NOT_RUN
+SYS-03,P2,VISUAL_OR_OWNER_CONFIRMED,Shared shell,PageHeader / Filters,"long title, subtitle, selected value",IMG_3794.jpeg,results and source chips,E27_search_result.jpg,F03,NOT_RUN
+SYS-03,P2,VISUAL_OR_OWNER_CONFIRMED,Shared shell,PageHeader / Filters,"long title, subtitle, selected value",IMG_3763.png,sheet upper,E09_reader_settings_scope.jpg,F03,NOT_RUN
+SYS-04,P2,VISUAL_OR_OWNER_CONFIRMED,Shared shell,PageContainer / SectionStack,"section, card, row padding",IMG_3754.jpeg,dark / controls,E01_reader_dark_controls.jpg,F03,NOT_RUN
+SYS-04,P2,VISUAL_OR_OWNER_CONFIRMED,Shared shell,PageContainer / SectionStack,"section, card, row padding",IMG_3776.jpeg,catalog list,,F03,NOT_RUN
+SYS-04,P2,VISUAL_OR_OWNER_CONFIRMED,Shared shell,PageContainer / SectionStack,"section, card, row padding",IMG_3781.jpeg,saved default,E20_library_filter.jpg,F03,NOT_RUN
+SYS-05,P2,VISUAL_OR_OWNER_CONFIRMED,Shared shell,SelectPopover,source / sort menu dimensions & anchor,IMG_3772.jpeg,source dropdown open,,F02,NOT_RUN
+SYS-05,P2,VISUAL_OR_OWNER_CONFIRMED,Shared shell,SelectPopover,source / sort menu dimensions & anchor,IMG_3777.jpeg,source dropdown open,E16_explore_source_menu.jpg,F02,NOT_RUN
+SYS-05,P2,VISUAL_OR_OWNER_CONFIRMED,Shared shell,SelectPopover,source / sort menu dimensions & anchor,IMG_3782.jpeg,source filter open,E21_library_source_menu.jpg,F02,NOT_RUN
+SYS-05,P2,VISUAL_OR_OWNER_CONFIRMED,Shared shell,SelectPopover,source / sort menu dimensions & anchor,IMG_3783.jpeg,sort menu open,,F02,NOT_RUN
+SYS-06,P2,VISUAL_OR_OWNER_CONFIRMED,Shared shell,BottomDock,"icons, active pill, search destination",IMG_3754.jpeg,dark / controls,E01_reader_dark_controls.jpg,F04,NOT_RUN
+SYS-06,P2,VISUAL_OR_OWNER_CONFIRMED,Shared shell,BottomDock,"icons, active pill, search destination",IMG_3776.jpeg,catalog list,,F04,NOT_RUN
+SYS-06,P2,VISUAL_OR_OWNER_CONFIRMED,Shared shell,BottomDock,"icons, active pill, search destination",IMG_3781.jpeg,saved default,E20_library_filter.jpg,F04,NOT_RUN
+SYS-07,P2,VISUAL_OR_OWNER_CONFIRMED,Shared shell,InteractiveStates,"bookmark, active, destructive, loading",IMG_3754.jpeg,dark / controls,E01_reader_dark_controls.jpg,F04,NOT_RUN
+SYS-07,P2,VISUAL_OR_OWNER_CONFIRMED,Shared shell,InteractiveStates,"bookmark, active, destructive, loading",IMG_3776.jpeg,catalog list,,F04,NOT_RUN
+SYS-07,P2,VISUAL_OR_OWNER_CONFIRMED,Shared shell,InteractiveStates,"bookmark, active, destructive, loading",IMG_3781.jpeg,saved default,E20_library_filter.jpg,F04,NOT_RUN
+SYS-08,P1,REQUIRES_QA,Shared shell,TextScaling / A11y,large text and hit targets,IMG_3754.jpeg,dark / controls,E01_reader_dark_controls.jpg,F10,NOT_RUN
+SYS-08,P1,REQUIRES_QA,Shared shell,TextScaling / A11y,large text and hit targets,IMG_3776.jpeg,catalog list,,F10,NOT_RUN
+SYS-08,P1,REQUIRES_QA,Shared shell,TextScaling / A11y,large text and hit targets,IMG_3781.jpeg,saved default,E20_library_filter.jpg,F10,NOT_RUN
+SYS-09,P2,REQUIRES_QA,Shared shell,OverlayHost,"tap interception, focus, background scrolling",IMG_3754.jpeg,dark / controls,E01_reader_dark_controls.jpg,F02,NOT_RUN
+SYS-09,P2,REQUIRES_QA,Shared shell,OverlayHost,"tap interception, focus, background scrolling",IMG_3776.jpeg,catalog list,,F02,NOT_RUN
+SYS-09,P2,REQUIRES_QA,Shared shell,OverlayHost,"tap interception, focus, background scrolling",IMG_3781.jpeg,saved default,E20_library_filter.jpg,F02,NOT_RUN
+RDR-01,P1,VISUAL_OR_OWNER_CONFIRMED,Reader,ReaderDock,image arrows vs chapter arrows,IMG_3754.jpeg,dark / controls,E01_reader_dark_controls.jpg,F05,NOT_RUN
+RDR-01,P1,VISUAL_OR_OWNER_CONFIRMED,Reader,ReaderDock,image arrows vs chapter arrows,IMG_3758.jpeg,light / controls,E02_reader_light_controls.jpg,F05,NOT_RUN
+RDR-02,P1,VISUAL_OR_OWNER_CONFIRMED,Reader,ReaderProgress,Hal. asset index vs scroll percent,IMG_3754.jpeg,dark / controls,E01_reader_dark_controls.jpg,F05,NOT_RUN
+RDR-03,P2,VISUAL_OR_OWNER_CONFIRMED,Reader,ReaderDock,Progress label and inset,IMG_3754.jpeg,dark / controls,E01_reader_dark_controls.jpg,F03,NOT_RUN
+RDR-04,P2,VISUAL_OR_OWNER_CONFIRMED,Reader,ReaderDock,Daftar chapter button weight,IMG_3754.jpeg,dark / controls,E01_reader_dark_controls.jpg,F05,NOT_RUN
+RDR-05,P2,VISUAL_OR_OWNER_CONFIRMED,Reader,ReaderMinimalMode,arrow-to-top and percent badge,IMG_3755.jpeg,dark / immersive,E04_reader_minimal_progress.jpg,F05,NOT_RUN
+RDR-05,P2,VISUAL_OR_OWNER_CONFIRMED,Reader,ReaderMinimalMode,arrow-to-top and percent badge,IMG_3757.jpeg,light / immersive,E03_reader_immersive_top.jpg,F05,NOT_RUN
+RDR-06,P2,VISUAL_OR_OWNER_CONFIRMED,Reader,ReaderStatusBarOverlay,top gradient over comic artwork,IMG_3755.jpeg,dark / immersive,E04_reader_minimal_progress.jpg,F05,NOT_RUN
+RDR-06,P2,VISUAL_OR_OWNER_CONFIRMED,Reader,ReaderStatusBarOverlay,top gradient over comic artwork,IMG_3757.jpeg,light / immersive,E03_reader_immersive_top.jpg,F05,NOT_RUN
+RDR-07,P2,VISUAL_OR_OWNER_CONFIRMED,Reader,ReaderToast,bookmark add/remove notification,IMG_3759.jpeg,light / remove bookmark toast,E06_reader_remove_toast.jpg,F02,NOT_RUN
+RDR-07,P2,VISUAL_OR_OWNER_CONFIRMED,Reader,ReaderToast,bookmark add/remove notification,IMG_3760.jpeg,light / add bookmark toast,E05_reader_bookmark_toast.jpg,F02,NOT_RUN
+RDR-08,P1,REQUIRES_QA,Reader,HistoryRestore,resume toast vs image position,IMG_3753.jpeg,dark / resume toast,,F05,NOT_RUN
+RDR-08,P1,REQUIRES_QA,Reader,HistoryRestore,resume toast vs image position,IMG_3803.jpeg,resume toast close-up,E35_reader_resume_toast.jpg,F05,NOT_RUN
+RDR-09,P1,REQUIRES_QA,Reader,ReaderImageLayout,lazy load + scroll anchor restoration,IMG_3754.jpeg,dark / controls,E01_reader_dark_controls.jpg,F05,NOT_RUN
+RDR-10,P2,PROPOSAL_ONLY,Reader,ReaderScrubber,image navigation vs continuous progress,IMG_3754.jpeg,dark / controls,E01_reader_dark_controls.jpg,F05,NOT_RUN
+CHP-01,P2,VISUAL_OR_OWNER_CONFIRMED,Reader / Chapter picker,ChapterSheet,"heading, current chapter, grid",IMG_3761.png,sheet at list beginning,E07_chapter_sheet_header.jpg,F06,NOT_RUN
+CHP-01,P2,VISUAL_OR_OWNER_CONFIRMED,Reader / Chapter picker,ChapterSheet,"heading, current chapter, grid",IMG_3762.png,sheet near active chapter,E08_chapter_active.jpg,F06,NOT_RUN
+CHP-02,P1,REQUIRES_QA,Reader / Chapter picker,ChapterSheet,initial anchor and active item,IMG_3763.png,sheet upper,E09_reader_settings_scope.jpg,F06,NOT_RUN
+CHP-03,P2,VISUAL_OR_OWNER_CONFIRMED,Reader / Chapter picker,ChapterSheet,sort icon + search field,IMG_3763.png,sheet upper,E09_reader_settings_scope.jpg,F06,NOT_RUN
+CHP-04,P2,VISUAL_OR_OWNER_CONFIRMED,Reader / Chapter picker,ReaderSettings / ThemeChoice,Sesuai Siste... option,IMG_3763.png,sheet upper,E09_reader_settings_scope.jpg,F03,NOT_RUN
+CHP-05,P2,VISUAL_OR_OWNER_CONFIRMED,Reader / Chapter picker,ReaderSettings / ImageSize,Lebar Penuh vs Proporsional,IMG_3763.png,sheet upper,E09_reader_settings_scope.jpg,F11,NOT_RUN
+CHP-06,P2,VISUAL_OR_OWNER_CONFIRMED,Reader / Chapter picker,ReaderSettings / GapAndProgress,Jarak Antar Halaman / Progres halaman,IMG_3763.png,sheet upper,E09_reader_settings_scope.jpg,F11,NOT_RUN
+CHP-07,P1,REQUIRES_QA,Reader / Chapter picker,ReaderSettings / Direction,Kiri ke Kanan vs Kanan ke Kiri,IMG_3764.png,sheet lower,E10_reader_settings_control.jpg,F11,NOT_RUN
+CHP-08,P1,REQUIRES_QA,Reader / Chapter picker,ReaderSettings / ScopeAndReset,"per-title vs all, reset, override indicator",IMG_3763.png,sheet upper,E09_reader_settings_scope.jpg,F11,NOT_RUN
+CHP-09,P2,VISUAL_OR_OWNER_CONFIRMED,Reader / Chapter picker,ReaderSettings / Preload,Ringan / Normal / Maksimal options,IMG_3763.png,sheet upper,E09_reader_settings_scope.jpg,F11,NOT_RUN
+DET-01,P2,VISUAL_OR_OWNER_CONFIRMED,Comic detail,ComicHero / ActionGrid,"continue, saved, rating, status, collections",IMG_3765.jpeg,hero + collapsed synopsis,E11_detail_hero_actions.jpg,F06,NOT_RUN
+DET-01,P2,VISUAL_OR_OWNER_CONFIRMED,Comic detail,ComicHero / ActionGrid,"continue, saved, rating, status, collections",IMG_3766.jpeg,hero + expanded synopsis,,F06,NOT_RUN
+DET-02,P2,VISUAL_OR_OWNER_CONFIRMED,Comic detail,ComicSynopsis,expand/collapse and source text rendering,IMG_3765.jpeg,hero + collapsed synopsis,E11_detail_hero_actions.jpg,F03,NOT_RUN
+DET-03,P2,VISUAL_OR_OWNER_CONFIRMED,Comic detail,ComicChapterList,"new dot, last-read badge, selected row",IMG_3767.png,expanded synopsis + chapter list,,F06,NOT_RUN
+DET-03,P2,VISUAL_OR_OWNER_CONFIRMED,Comic detail,ComicChapterList,"new dot, last-read badge, selected row",IMG_3768.png,collapsed synopsis + chapter list,E12_detail_chapter_rows.jpg,F06,NOT_RUN
+DET-04,P1,REQUIRES_QA,Comic detail,ComicChapterList,chapter count vs latest shown,IMG_3765.jpeg,hero + collapsed synopsis,E11_detail_hero_actions.jpg,F06,NOT_RUN
+DET-05,P2,VISUAL_OR_OWNER_CONFIRMED,Comic detail,ComicRecommendationCarousel,cover cards and horizontal scroll,IMG_3765.jpeg,hero + collapsed synopsis,E11_detail_hero_actions.jpg,F03,NOT_RUN
+DET-06,P2,VISUAL_OR_OWNER_CONFIRMED,Comic detail,ComicDetailHeader,"back, share, notification, title clamp",IMG_3769.jpeg,similar comics,,F03,NOT_RUN
+HOM-01,P2,VISUAL_OR_OWNER_CONFIRMED,Home,Home / ContinueReading,continue reading cards and %,IMG_3770.jpeg,continue reading + search prompt,E13_home_continue.jpg,F07,NOT_RUN
+HOM-01,P2,VISUAL_OR_OWNER_CONFIRMED,Home,Home / ContinueReading,continue reading cards and %,IMG_3771.jpeg,spotlight + ranking,E14_home_spotlight_dock.jpg,F07,NOT_RUN
+HOM-01,P2,VISUAL_OR_OWNER_CONFIRMED,Home,Home / ContinueReading,continue reading cards and %,IMG_3772.jpeg,source dropdown open,,F07,NOT_RUN
+HOM-01,P2,VISUAL_OR_OWNER_CONFIRMED,Home,Home / ContinueReading,continue reading cards and %,IMG_3773.jpeg,latest updates list,E15_home_recent_updates.jpg,F07,NOT_RUN
+HOM-01,P2,VISUAL_OR_OWNER_CONFIRMED,Home,Home / ContinueReading,continue reading cards and %,IMG_3774.jpeg,latest updates carousel,,F07,NOT_RUN
+HOM-01,P2,VISUAL_OR_OWNER_CONFIRMED,Home,Home / ContinueReading,continue reading cards and %,IMG_3775.jpeg,latest updates carousel end,,F07,NOT_RUN
+HOM-02,P2,VISUAL_OR_OWNER_CONFIRMED,Home,Home / QuickSearchCard,search entry vs global search,IMG_3770.jpeg,continue reading + search prompt,E13_home_continue.jpg,F07,NOT_RUN
+HOM-03,P2,VISUAL_OR_OWNER_CONFIRMED,Home,Home / SpotlightCarousel,"feature CTA, arrows, card dimensions",IMG_3772.jpeg,source dropdown open,,F07,NOT_RUN
+HOM-04,P2,VISUAL_OR_OWNER_CONFIRMED,Home,Home / RecentUpdates,new update semantics and missing chapters,IMG_3773.jpeg,latest updates list,E15_home_recent_updates.jpg,F07,NOT_RUN
+HOM-04,P2,VISUAL_OR_OWNER_CONFIRMED,Home,Home / RecentUpdates,new update semantics and missing chapters,IMG_3774.jpeg,latest updates carousel,,F07,NOT_RUN
+HOM-05,P2,VISUAL_OR_OWNER_CONFIRMED,Home,Home / SourceRanking,source sort and top-5 list,IMG_3775.jpeg,latest updates carousel end,,F07,NOT_RUN
+DSC-01,P2,VISUAL_OR_OWNER_CONFIRMED,Explore / Search,Explore / Search,duplicate entry points and source semantics,IMG_3776.jpeg,catalog list,,F07,NOT_RUN
+DSC-02,P2,VISUAL_OR_OWNER_CONFIRMED,Explore / Search,ExploreFilters,"source, format, sort, grid/list",IMG_3777.jpeg,source dropdown open,E16_explore_source_menu.jpg,F07,NOT_RUN
+DSC-03,P2,VISUAL_OR_OWNER_CONFIRMED,Explore / Search,ExploreSourceSelect,popover anchor / overflow,IMG_3794.jpeg,results and source chips,E27_search_result.jpg,F02,NOT_RUN
+DSC-03,P2,VISUAL_OR_OWNER_CONFIRMED,Explore / Search,ExploreSourceSelect,popover anchor / overflow,IMG_3776.jpeg,catalog list,,F02,NOT_RUN
+DSC-04,P2,VISUAL_OR_OWNER_CONFIRMED,Explore / Search,Search / ProviderChips,selected provider filter scroll,IMG_3776.jpeg,catalog list,,F07,NOT_RUN
+DSC-05,P2,VISUAL_OR_OWNER_CONFIRMED,Explore / Search,SearchResultCard,"chapter missing, synopsis snippet, bookmark",IMG_3794.jpeg,results and source chips,E27_search_result.jpg,F07,NOT_RUN
+LIB-01,P2,VISUAL_OR_OWNER_CONFIRMED,Library,Library / SavedTabs,saved count vs automatic bucket count,IMG_3780.png,reading history,E19_library_history.jpg,F08,NOT_RUN
+LIB-01,P2,VISUAL_OR_OWNER_CONFIRMED,Library,Library / SavedTabs,saved count vs automatic bucket count,IMG_3781.jpeg,saved default,E20_library_filter.jpg,F08,NOT_RUN
+LIB-01,P2,VISUAL_OR_OWNER_CONFIRMED,Library,Library / SavedTabs,saved count vs automatic bucket count,IMG_3782.jpeg,source filter open,E21_library_source_menu.jpg,F08,NOT_RUN
+LIB-01,P2,VISUAL_OR_OWNER_CONFIRMED,Library,Library / SavedTabs,saved count vs automatic bucket count,IMG_3783.jpeg,sort menu open,,F08,NOT_RUN
+LIB-01,P2,VISUAL_OR_OWNER_CONFIRMED,Library,Library / SavedTabs,saved count vs automatic bucket count,IMG_3784.jpeg,actions menu open,,F08,NOT_RUN
+LIB-01,P2,VISUAL_OR_OWNER_CONFIRMED,Library,Library / SavedTabs,saved count vs automatic bucket count,IMG_3785.jpeg,smart filter chips shifted right,E22_library_smartchips.jpg,F08,NOT_RUN
+LIB-01,P2,VISUAL_OR_OWNER_CONFIRMED,Library,Library / SavedTabs,saved count vs automatic bucket count,IMG_3786.jpeg,smart filter chips shifted,,F08,NOT_RUN
+LIB-01,P2,VISUAL_OR_OWNER_CONFIRMED,Library,Library / SavedTabs,saved count vs automatic bucket count,IMG_3787.jpeg,smart filter chips left,E23_library_saved_cover.jpg,F08,NOT_RUN
+LIB-02,P2,VISUAL_OR_OWNER_CONFIRMED,Library,Library / FilterRow,truncated source/sort dropdown value,IMG_3781.jpeg,saved default,E20_library_filter.jpg,F03,NOT_RUN
+LIB-02,P2,VISUAL_OR_OWNER_CONFIRMED,Library,Library / FilterRow,truncated source/sort dropdown value,IMG_3782.jpeg,source filter open,E21_library_source_menu.jpg,F03,NOT_RUN
+LIB-02,P2,VISUAL_OR_OWNER_CONFIRMED,Library,Library / FilterRow,truncated source/sort dropdown value,IMG_3783.jpeg,sort menu open,,F03,NOT_RUN
+LIB-03,P2,VISUAL_OR_OWNER_CONFIRMED,Library,Library / SmartCategoryChips,horizontal scroll clipped edge,IMG_3785.jpeg,smart filter chips shifted right,E22_library_smartchips.jpg,F08,NOT_RUN
+LIB-03,P2,VISUAL_OR_OWNER_CONFIRMED,Library,Library / SmartCategoryChips,horizontal scroll clipped edge,IMG_3786.jpeg,smart filter chips shifted,,F08,NOT_RUN
+LIB-03,P2,VISUAL_OR_OWNER_CONFIRMED,Library,Library / SmartCategoryChips,horizontal scroll clipped edge,IMG_3787.jpeg,smart filter chips left,E23_library_saved_cover.jpg,F08,NOT_RUN
+LIB-04,P2,VISUAL_OR_OWNER_CONFIRMED,Library,Library / CollectionGroups,System 2 category and collections,IMG_3781.jpeg,saved default,E20_library_filter.jpg,F08,NOT_RUN
+LIB-05,P2,VISUAL_OR_OWNER_CONFIRMED,Library,Library / SavedCoverCard,bookmark overlay and fixed nav overlap,IMG_3781.jpeg,saved default,E20_library_filter.jpg,F08,NOT_RUN
+LIB-05,P2,VISUAL_OR_OWNER_CONFIRMED,Library,Library / SavedCoverCard,bookmark overlay and fixed nav overlap,IMG_3782.jpeg,source filter open,E21_library_source_menu.jpg,F08,NOT_RUN
+LIB-05,P2,VISUAL_OR_OWNER_CONFIRMED,Library,Library / SavedCoverCard,bookmark overlay and fixed nav overlap,IMG_3783.jpeg,sort menu open,,F08,NOT_RUN
+LIB-05,P2,VISUAL_OR_OWNER_CONFIRMED,Library,Library / SavedCoverCard,bookmark overlay and fixed nav overlap,IMG_3784.jpeg,actions menu open,,F08,NOT_RUN
+LIB-05,P2,VISUAL_OR_OWNER_CONFIRMED,Library,Library / SavedCoverCard,bookmark overlay and fixed nav overlap,IMG_3785.jpeg,smart filter chips shifted right,E22_library_smartchips.jpg,F08,NOT_RUN
+LIB-05,P2,VISUAL_OR_OWNER_CONFIRMED,Library,Library / SavedCoverCard,bookmark overlay and fixed nav overlap,IMG_3786.jpeg,smart filter chips shifted,,F08,NOT_RUN
+LIB-05,P2,VISUAL_OR_OWNER_CONFIRMED,Library,Library / SavedCoverCard,bookmark overlay and fixed nav overlap,IMG_3787.jpeg,smart filter chips left,E23_library_saved_cover.jpg,F08,NOT_RUN
+LIB-06,P1,REQUIRES_QA,Library,Library / CollectionMenu,create collection / multi-select,IMG_3781.jpeg,saved default,E20_library_filter.jpg,F08,NOT_RUN
+LIB-07,P2,VISUAL_OR_OWNER_CONFIRMED,Library,Library / HistoryCard,"chapter, percentage, Lanjut button",IMG_3780.png,reading history,E19_library_history.jpg,F08,NOT_RUN
+SCH-01,P2,VISUAL_OR_OWNER_CONFIRMED,Weekly schedule,WeeklySchedule / DayStrip,"today star, count, selected day",IMG_3788.png,all weekdays,E24_schedule_cards.jpg,F09,NOT_RUN
+SCH-01,P2,VISUAL_OR_OWNER_CONFIRMED,Weekly schedule,WeeklySchedule / DayStrip,"today star, count, selected day",IMG_3789.png,Monday selected,,F09,NOT_RUN
+SCH-02,P2,VISUAL_OR_OWNER_CONFIRMED,Weekly schedule,WeeklySchedule / ScheduleCard,"Otomatis day, Baca/Lanjut CTA",IMG_3788.png,all weekdays,E24_schedule_cards.jpg,F09,NOT_RUN
+SCH-03,P1,REQUIRES_QA,Weekly schedule,WeeklySchedule / HistoryEntry,latest chapter vs resume destination,IMG_3788.png,all weekdays,E24_schedule_cards.jpg,F09,NOT_RUN
+SCH-04,P2,VISUAL_OR_OWNER_CONFIRMED,Weekly schedule,WeeklySchedule / CardStack,bottom dock and card clipping,IMG_3788.png,all weekdays,E24_schedule_cards.jpg,F01,NOT_RUN
+POP-01,P2,VISUAL_OR_OWNER_CONFIRMED,Popular,Popular / RankingMethod,internal vs source-rank semantics,IMG_3790.jpeg,combined ranking,E25_popular_combined.jpg,F09,NOT_RUN
+POP-01,P2,VISUAL_OR_OWNER_CONFIRMED,Popular,Popular / RankingMethod,internal vs source-rank semantics,IMG_3793.jpeg,single-source ranking,,F09,NOT_RUN
+POP-02,P2,VISUAL_OR_OWNER_CONFIRMED,Popular,Popular / RankingCard,"density, badges, rating, bookmark",IMG_3790.jpeg,combined ranking,E25_popular_combined.jpg,F09,NOT_RUN
+POP-03,P2,VISUAL_OR_OWNER_CONFIRMED,Popular,Popular / SourceChips,source selected/count and scroll,IMG_3790.jpeg,combined ranking,E25_popular_combined.jpg,F09,NOT_RUN
+POP-03,P2,VISUAL_OR_OWNER_CONFIRMED,Popular,Popular / SourceChips,source selected/count and scroll,IMG_3793.jpeg,single-source ranking,,F09,NOT_RUN
+POP-04,P2,VISUAL_OR_OWNER_CONFIRMED,Popular,Popular / MALLeaderboard,"member metric, snapshot and source link",IMG_3791.png,MAL leaderboard start,E26_popular_MAL.jpg,F09,NOT_RUN
+POP-04,P2,VISUAL_OR_OWNER_CONFIRMED,Popular,Popular / MALLeaderboard,"member metric, snapshot and source link",IMG_3792.jpeg,MAL leaderboard end,,F09,NOT_RUN
+NTF-01,P2,VISUAL_OR_OWNER_CONFIRMED,Global overlays,NotificationPopover,"last row, scroll and footer",IMG_3778.jpeg,notification popover open,E17_notification_list.jpg,F02,NOT_RUN
+NTF-02,P2,VISUAL_OR_OWNER_CONFIRMED,Global overlays,AccountPopover,"account information, menu items, logout",IMG_3779.jpeg,profile popover open,E18_account_menu.jpg,F02,NOT_RUN
+NTF-03,P2,VISUAL_OR_OWNER_CONFIRMED,Global overlays,GlobalToast,onboarding information toast,IMG_3802.png,onboarding notification,E34_settings_toast.jpg,F02,NOT_RUN
+HLP-01,P2,VISUAL_OR_OWNER_CONFIRMED,Help center,HelpCenter / FAQBody,technical 403/429 explanation,IMG_3795.png,all accordion closed,E28_help_dock.jpg,F09,NOT_RUN
+HLP-01,P2,VISUAL_OR_OWNER_CONFIRMED,Help center,HelpCenter / FAQBody,technical 403/429 explanation,IMG_3796.png,FAQ expanded,E29_help_technical.jpg,F09,NOT_RUN
+HLP-02,P2,VISUAL_OR_OWNER_CONFIRMED,Help center,HelpCenter / AccordionList,expanded state and nav clearance,IMG_3795.png,all accordion closed,E28_help_dock.jpg,F01,NOT_RUN
+SET-01,P2,VISUAL_OR_OWNER_CONFIRMED,App settings,AppSettings / SettingsRow,icon/title/description/control grid,IMG_3797(1).png,account & reading prefs,E30_settings_account.jpg,F03,NOT_RUN
+SET-01,P2,VISUAL_OR_OWNER_CONFIRMED,App settings,AppSettings / SettingsRow,icon/title/description/control grid,IMG_3798(1).jpeg,appearance and data options,E31_settings_visual.jpg,F03,NOT_RUN
+SET-01,P2,VISUAL_OR_OWNER_CONFIRMED,App settings,AppSettings / SettingsRow,icon/title/description/control grid,IMG_3799.jpeg,content/privacy + storage,E32_settings_storage.jpg,F03,NOT_RUN
+SET-01,P2,VISUAL_OR_OWNER_CONFIRMED,App settings,AppSettings / SettingsRow,icon/title/description/control grid,IMG_3800.jpeg,storage actions,E33_settings_destructive.jpg,F03,NOT_RUN
+SET-01,P2,VISUAL_OR_OWNER_CONFIRMED,App settings,AppSettings / SettingsRow,icon/title/description/control grid,IMG_3801.jpeg,storage footer,,F03,NOT_RUN
+SET-02,P2,VISUAL_OR_OWNER_CONFIRMED,App settings,AppSettings / UpdateCheck,on-open toggle + periodic interval,IMG_3797(1).png,account & reading prefs,E30_settings_account.jpg,F11,NOT_RUN
+SET-03,P1,REQUIRES_QA,App settings,AppSettings / KeepAwake,screen wake lock during reading/downloading,IMG_3797(1).png,account & reading prefs,E30_settings_account.jpg,F11,NOT_RUN
+SET-04,P2,VISUAL_OR_OWNER_CONFIRMED,App settings,AppSettings / StorageMetrics,total bytes vs shown buckets,IMG_3797(1).png,account & reading prefs,E30_settings_account.jpg,F11,NOT_RUN
+SET-05,P1,VISUAL_OR_OWNER_CONFIRMED,App settings,AppSettings / DestructiveActions,delete local history/save vs clear device,IMG_3800.jpeg,storage actions,E33_settings_destructive.jpg,F11,NOT_RUN
+SET-05,P1,VISUAL_OR_OWNER_CONFIRMED,App settings,AppSettings / DestructiveActions,delete local history/save vs clear device,IMG_3801.jpeg,storage footer,,F11,NOT_RUN
+SET-06,P2,VISUAL_OR_OWNER_CONFIRMED,App settings,AppSettings / OfflineAndHelp,disabled clear-offline + onboarding,IMG_3797(1).png,account & reading prefs,E30_settings_account.jpg,F11,NOT_RUN
+SET-07,P2,VISUAL_OR_OWNER_CONFIRMED,App settings,AppSettings / NSFWPreference,state vs default copy,IMG_3797(1).png,account & reading prefs,E30_settings_account.jpg,F11,NOT_RUN
+SET-08,P2,VISUAL_OR_OWNER_CONFIRMED,App settings,AppSettings / AppThemeVsReaderTheme,global theme vs reader surface choice,IMG_3797(1).png,account & reading prefs,E30_settings_account.jpg,F11,NOT_RUN
+SYS-10,P2,VISUAL_OR_OWNER_CONFIRMED,Shared shell,StickyHeader / ScrollSurface,heading clipped vs content scroll,IMG_3776.jpeg,catalog list,,F03,NOT_RUN
+SYS-10,P2,VISUAL_OR_OWNER_CONFIRMED,Shared shell,StickyHeader / ScrollSurface,heading clipped vs content scroll,IMG_3795.png,all accordion closed,E28_help_dock.jpg,F03,NOT_RUN
+SYS-10,P2,VISUAL_OR_OWNER_CONFIRMED,Shared shell,StickyHeader / ScrollSurface,heading clipped vs content scroll,IMG_3797(1).png,account & reading prefs,E30_settings_account.jpg,F03,NOT_RUN
+SYS-11,P1,REQUIRES_QA,Shared shell,BottomDock / ExpandedOverlay,raised overlay above bottom nav,IMG_3778.jpeg,notification popover open,E17_notification_list.jpg,F02,NOT_RUN
+SYS-11,P1,REQUIRES_QA,Shared shell,BottomDock / ExpandedOverlay,raised overlay above bottom nav,IMG_3779.jpeg,profile popover open,E18_account_menu.jpg,F02,NOT_RUN
+SYS-11,P1,REQUIRES_QA,Shared shell,BottomDock / ExpandedOverlay,raised overlay above bottom nav,IMG_3782.jpeg,source filter open,E21_library_source_menu.jpg,F02,NOT_RUN
+SYS-11,P1,REQUIRES_QA,Shared shell,BottomDock / ExpandedOverlay,raised overlay above bottom nav,IMG_3802.png,onboarding notification,E34_settings_toast.jpg,F02,NOT_RUN
+RDR-11,P2,VISUAL_OR_OWNER_CONFIRMED,Reader,ResumeToast,truncated resume message,IMG_3753.jpeg,dark / resume toast,,F02,NOT_RUN
+RDR-11,P2,VISUAL_OR_OWNER_CONFIRMED,Reader,ResumeToast,truncated resume message,IMG_3803.jpeg,resume toast close-up,E35_reader_resume_toast.jpg,F02,NOT_RUN
+RDR-12,P1,REQUIRES_QA,Reader,Reader / HistoryLink,history 0% vs reader nonzero,IMG_3754.jpeg,dark / controls,E01_reader_dark_controls.jpg,F05,NOT_RUN
+RDR-12,P1,REQUIRES_QA,Reader,Reader / HistoryLink,history 0% vs reader nonzero,IMG_3780.png,reading history,E19_library_history.jpg,F05,NOT_RUN
+RDR-12,P1,REQUIRES_QA,Reader,Reader / HistoryLink,history 0% vs reader nonzero,IMG_3770.jpeg,continue reading + search prompt,E13_home_continue.jpg,F05,NOT_RUN
+CHP-10,P2,REQUIRES_QA,Chapter picker,ChapterSheet / LongList,search and sort interaction with large chapter count,IMG_3761.png,sheet at list beginning,E07_chapter_sheet_header.jpg,F06,NOT_RUN
+CHP-10,P2,REQUIRES_QA,Chapter picker,ChapterSheet / LongList,search and sort interaction with large chapter count,IMG_3762.png,sheet near active chapter,E08_chapter_active.jpg,F06,NOT_RUN
+DET-07,P2,REQUIRES_QA,Comic detail,ComicMetadata / DataProvenance,chapter 173 count vs visible chapter 155 / reader 172,IMG_3767.png,expanded synopsis + chapter list,,F06,NOT_RUN
+DET-07,P2,REQUIRES_QA,Comic detail,ComicMetadata / DataProvenance,chapter 173 count vs visible chapter 155 / reader 172,IMG_3768.png,collapsed synopsis + chapter list,E12_detail_chapter_rows.jpg,F06,NOT_RUN
+DET-07,P2,REQUIRES_QA,Comic detail,ComicMetadata / DataProvenance,chapter 173 count vs visible chapter 155 / reader 172,IMG_3788.png,all weekdays,E24_schedule_cards.jpg,F06,NOT_RUN
+HOM-06,P2,VISUAL_OR_OWNER_CONFIRMED,Home,Home / FeaturedCard,carousel navigation clearance,IMG_3770.jpeg,continue reading + search prompt,E13_home_continue.jpg,F01,NOT_RUN
+HOM-06,P2,VISUAL_OR_OWNER_CONFIRMED,Home,Home / FeaturedCard,carousel navigation clearance,IMG_3771.jpeg,spotlight + ranking,E14_home_spotlight_dock.jpg,F01,NOT_RUN
+DSC-06,P2,VISUAL_OR_OWNER_CONFIRMED,Search,Search / SourceSelection,multi-source count with horizontal crop,IMG_3794.jpeg,results and source chips,E27_search_result.jpg,F07,NOT_RUN
+LIB-08,P2,REQUIRES_QA,Library,Library / ScopeCounter,saved count reconciliation,IMG_3781.jpeg,saved default,E20_library_filter.jpg,F08,NOT_RUN
+LIB-08,P2,REQUIRES_QA,Library,Library / ScopeCounter,saved count reconciliation,IMG_3787.jpeg,smart filter chips left,E23_library_saved_cover.jpg,F08,NOT_RUN
+LIB-09,P3,VISUAL_OR_OWNER_CONFIRMED,Library / Explore,SourceLabel,Shinigami vs shinigami casing,IMG_3776.jpeg,catalog list,,F03,NOT_RUN
+LIB-09,P3,VISUAL_OR_OWNER_CONFIRMED,Library / Explore,SourceLabel,Shinigami vs shinigami casing,IMG_3782.jpeg,source filter open,E21_library_source_menu.jpg,F03,NOT_RUN
+LIB-09,P3,VISUAL_OR_OWNER_CONFIRMED,Library / Explore,SourceLabel,Shinigami vs shinigami casing,IMG_3788.png,all weekdays,E24_schedule_cards.jpg,F03,NOT_RUN
+SCH-05,P2,REQUIRES_QA,Weekly schedule,WeeklySchedule / DayAssignment,semantics of automatic estimated day,IMG_3788.png,all weekdays,E24_schedule_cards.jpg,F09,NOT_RUN
+SCH-05,P2,REQUIRES_QA,Weekly schedule,WeeklySchedule / DayAssignment,semantics of automatic estimated day,IMG_3789.png,Monday selected,,F09,NOT_RUN
+POP-05,P2,REQUIRES_QA,Popular,Ranking / AvailabilityCTA,MAL ranking CTA find reading source,IMG_3791.png,MAL leaderboard start,E26_popular_MAL.jpg,F09,NOT_RUN
+POP-05,P2,REQUIRES_QA,Popular,Ranking / AvailabilityCTA,MAL ranking CTA find reading source,IMG_3792.jpeg,MAL leaderboard end,,F09,NOT_RUN
+NTF-04,P2,REQUIRES_QA,Global overlays,NotificationBell / Unread,badge 5 and card list,IMG_3778.jpeg,notification popover open,E17_notification_list.jpg,F02,NOT_RUN
+NTF-04,P2,REQUIRES_QA,Global overlays,NotificationBell / Unread,badge 5 and card list,IMG_3779.jpeg,profile popover open,E18_account_menu.jpg,F02,NOT_RUN
+SET-09,P2,VISUAL_OR_OWNER_CONFIRMED,App settings,Preferences / DisabledAction,disabled offline action without reason,IMG_3799.jpeg,content/privacy + storage,E32_settings_storage.jpg,F11,NOT_RUN
+SET-09,P2,VISUAL_OR_OWNER_CONFIRMED,App settings,Preferences / DisabledAction,disabled offline action without reason,IMG_3800.jpeg,storage actions,E33_settings_destructive.jpg,F11,NOT_RUN
+SET-10,P2,VISUAL_OR_OWNER_CONFIRMED,App settings,Settings / DenseDestructiveRows,destructive text squeezed between icon and CTA,IMG_3800.jpeg,storage actions,E33_settings_destructive.jpg,F03,NOT_RUN
+SET-10,P2,VISUAL_OR_OWNER_CONFIRMED,App settings,Settings / DenseDestructiveRows,destructive text squeezed between icon and CTA,IMG_3801.jpeg,storage footer,,F03,NOT_RUN
+HLP-03,P2,VISUAL_OR_OWNER_CONFIRMED,Help center,FAQ / SupportInstructions,bottom instructions obscured,IMG_3795.png,all accordion closed,E28_help_dock.jpg,F01,NOT_RUN

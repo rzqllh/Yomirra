@@ -75,13 +75,13 @@ export function ReaderChapterDrawer({
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
         placeholder="Cari nomor chapter…"
-        containerClassName="flex-1 h-[44px]"
+        containerClassName="flex-1 h-11"
       />
       <IconButton
         variant="ghost"
         size="default"
         className={cn(
-          "rounded-xl min-h-[44px] min-w-[44px] border border-border-subtle shrink-0 transition-colors",
+          "rounded-xl size-11 border border-border-subtle shrink-0 transition-colors",
           sortOrder === "asc" ? "bg-accent/15 text-accent border-accent/20" : "bg-surface-glass text-text-secondary hover:text-text-primary hover:bg-surface-hover"
         )}
         onClick={() => setSortOrder(prev => prev === "desc" ? "asc" : "desc")}
@@ -97,7 +97,7 @@ export function ReaderChapterDrawer({
     <ReaderPanelShell
       isOpen={isOpen}
       onClose={onClose}
-      title="Chapter"
+      title="Daftar chapter"
       icon={<List size={20} weight="regular" />}
       headerControls={headerControls}
       desktopMode="bottom-dialog"

@@ -6,7 +6,7 @@ import * as React from "react"
 import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import { useReaderStore, useEffectiveReaderPreferences } from "@/shared/store/reader-store"
-import { CaretLeft, Gear, CaretRight, List, CaretUp, BookmarkSimple, ArrowLeft, House } from "@phosphor-icons/react"
+import { CaretLeft, CaretDoubleLeft, Gear, CaretRight, CaretDoubleRight, List, CaretUp, BookmarkSimple, ArrowLeft, House } from "@phosphor-icons/react"
 import { useLibraryStore } from "@/shared/store/library-store"
 import { cn } from "@/shared/utils/cn"
 import { motion, AnimatePresence, useReducedMotion } from "motion/react"
@@ -492,12 +492,12 @@ export function ReaderShell({
                       }
                     }}
                   >
-                    <CaretLeft size={20} weight="regular" />
+                    <CaretDoubleLeft size={20} weight="regular" />
                   </motion.button>
 
                   <motion.button
                     whileTap={reducedMotion ? undefined : { scale: 0.97 }}
-                    className="yomirra-dock-pill min-w-0 flex-1 font-semibold text-sm text-text-primary hover:bg-surface-hover transition-colors px-2 flex items-center justify-center gap-1.5 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:scale-95"
+                    className="yomirra-dock-pill min-w-0 flex-1 font-medium text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors px-2 flex items-center justify-center gap-1.5 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:scale-95"
                     onClick={(e) => {
                       e.stopPropagation();
                       setIsChapterDrawerOpen(true);
@@ -523,7 +523,7 @@ export function ReaderShell({
                       }
                     }}
                   >
-                    <CaretRight size={20} weight="regular" />
+                    <CaretDoubleRight size={20} weight="regular" />
                   </motion.button>
 
                   <motion.button

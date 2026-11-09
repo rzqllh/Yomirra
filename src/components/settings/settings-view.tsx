@@ -419,7 +419,9 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
               title="Tampilkan Konten 18+ (NSFW)"
               description={
                 user
-                  ? "Nonaktif secara default. Saat diaktifkan, sumber dan komik bertanda dewasa dapat diakses."
+                  ? !hideNsfw
+                    ? "Sedang aktif. Sumber dan komik bertanda 18+ dapat diakses di seluruh aplikasi."
+                    : "Nonaktif (default). Sumber dan komik bertanda 18+ disembunyikan dari katalog."
                   : "Fitur ini hanya dapat diaktifkan jika kamu sudah masuk dengan akun Google untuk verifikasi usia."
               }
               right={
@@ -431,7 +433,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
                     label="Tampilkan NSFW"
                   />
                 ) : (
-                  <span className="inline-flex items-center px-2 py-1 rounded-md bg-surface-muted text-[11px] font-bold text-text-muted border border-border-subtle">
+                  <span className="inline-flex items-center px-2 py-1 rounded-md bg-surface-muted text-2xs font-bold text-text-muted border border-border-subtle">
                     Terkunci
                   </span>
                 )
@@ -504,6 +506,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
 
           {/* Action 1: Clear Reading Cache */}
           <SettingsItem
+            wrapOnMobile
             icon={<IconWrapper><Broom size={19} weight="regular" /></IconWrapper>}
             title="Bersihkan cache gambar sementara"
             description="Hapus gambar bab sementara tanpa menghapus riwayat baca maupun unduhan offline."
@@ -523,14 +526,25 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
 
           {/* Action 2: Clear Offline Downloads */}
           <SettingsItem
+            wrapOnMobile
             icon={<IconWrapper><DownloadSimple size={19} weight="regular" /></IconWrapper>}
             title="Hapus semua bab offline"
-            description="Hapus berkas komik yang diunduh untuk dibaca saat offline."
+            description={
+              (storageData?.downloadsMB ?? 0) === 0
+                ? "Tidak ada bab komik offline yang tersimpan saat ini."
+                : "Hapus berkas komik yang diunduh untuk dibaca saat offline."
+            }
             right={
               <Button
                 onClick={() => setIsClearDownloadsDialogOpen(true)}
                 variant="outline"
                 disabled={isClearingDownloads || (storageData?.downloadsMB ?? 0) === 0}
+                aria-label={
+                  (storageData?.downloadsMB ?? 0) === 0
+                    ? "Hapus unduhan offline (dinonaktifkan karena tidak ada bab tersimpan)"
+                    : "Hapus unduhan offline"
+                }
+                title={(storageData?.downloadsMB ?? 0) === 0 ? "Tidak ada bab offline yang tersimpan" : undefined}
                 className="w-full sm:w-auto shrink-0 rounded-xl font-bold text-xs h-9 px-3.5 text-text-secondary hover:text-semantic-error hover:border-semantic-error/40 transition-colors"
               >
                 Hapus unduhan
@@ -542,6 +556,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
 
           {/* Action 3: Backup & Restore */}
           <SettingsItem
+            wrapOnMobile
             icon={<IconWrapper variant="accent"><FileText size={19} weight="regular" /></IconWrapper>}
             title="Ekspor / pulihkan cadangan data"
             description="Simpan salinan data komik ke berkas cadangan JSON atau pulihkan riwayat dan koleksi."
@@ -549,7 +564,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
               <Button
                 onClick={() => setSubView("backup")}
                 variant="outline"
-                className="w-full sm:w-auto shrink-0 border-accent/40 text-accent hover:bg-accent hover:text-white rounded-xl font-bold text-xs h-9 px-3.5 transition-colors"
+                className="w-full sm:w-auto shrink-0 border-accent/40 text-accent hover:bg-accent hover:text-accent-on rounded-xl font-bold text-xs h-9 px-3.5 transition-colors"
               >
                 Kelola cadangan
               </Button>
@@ -560,6 +575,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
 
           {/* Action 4: Clear Local Data */}
           <SettingsItem
+            wrapOnMobile
             icon={<IconWrapper variant="danger"><Trash size={19} weight="regular" /></IconWrapper>}
             title="Hapus riwayat &amp; bookmark lokal"
             description="Hapus riwayat baca dan bookmark lokal di perangkat ini. Berkas unduhan tetap tersimpan."
@@ -567,7 +583,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
               <Button
                 onClick={() => setIsClearDataDialogOpen(true)}
                 variant="outline"
-                className="w-full sm:w-auto shrink-0 text-semantic-error hover:text-white hover:bg-semantic-error border-semantic-error/40 rounded-xl font-bold text-xs h-9 px-3.5 transition-colors"
+                className="w-full sm:w-auto shrink-0 text-semantic-error hover:text-accent-on hover:bg-semantic-error border-semantic-error/40 rounded-xl font-bold text-xs h-9 px-3.5 transition-colors"
               >
                 Hapus data
               </Button>
@@ -578,6 +594,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
 
           {/* Action 5: Shared Device Cleanup */}
           <SettingsItem
+            wrapOnMobile
             icon={<IconWrapper variant="danger"><DeviceMobile size={19} weight="regular" /></IconWrapper>}
             title="Bersihkan untuk perangkat bersama"
             description="Keluar dari akun dan hapus seluruh data baca lokal, unduhan, dan cache pada perangkat ini."
@@ -586,7 +603,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
                 onClick={() => setIsSharedDeviceDialogOpen(true)}
                 variant="outline"
                 disabled={isClearingDevice}
-                className="w-full sm:w-auto shrink-0 text-semantic-error hover:text-white hover:bg-semantic-error border-semantic-error/40 rounded-xl font-bold text-xs h-9 px-3.5 transition-colors"
+                className="w-full sm:w-auto shrink-0 text-semantic-error hover:text-accent-on hover:bg-semantic-error border-semantic-error/40 rounded-xl font-bold text-xs h-9 px-3.5 transition-colors"
               >
                 {isClearingDevice ? "Membersihkan…" : "Bersihkan perangkat"}
               </Button>

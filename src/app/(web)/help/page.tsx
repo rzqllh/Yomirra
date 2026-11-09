@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 const topics = [
   {
     title: "Sumber komik gagal dimuat",
-    answer: "Sumber bisa menolak permintaan atau sedang tidak tersedia. Yomirra dapat melanjutkan tanpa cache ketika layanan cache bermasalah, tetapi sumber tetap bisa membatasi akses. Respons 403/429 dapat menandakan batasan dari sumber atau layanan lain. Hindari memuat ulang berkali-kali; coba lagi nanti atau pilih sumber berbeda.",
+    answer: "Penyedia komik mungkin sedang membatasi akses atau mengalami gangguan server. Pesan pembatasan (seperti error 403 atau 429) berarti server sumber sedang membatasi permintaan agar tidak overload. Jika ini terjadi, hindari memuat ulang berulang kali; tunggu beberapa menit atau gunakan pilihan sumber alternatif yang tersedia.",
     link: "/sources",
     linkLabel: "Periksa daftar sumber",
   },
@@ -58,7 +58,7 @@ export default function HelpPage() {
           showBack
           backHref="/"
         />
-        <ContentLane variant="focused" className="space-y-6 pb-24 md:pb-0">
+        <ContentLane variant="focused" className="space-y-6 pb-28 md:pb-8">
           <section className="space-y-2">
             <h1 className="text-xl font-bold tracking-tight text-text-primary md:text-2xl">Ada yang tidak berjalan semestinya?</h1>
             <p className="max-w-2xl text-sm leading-relaxed text-text-muted">

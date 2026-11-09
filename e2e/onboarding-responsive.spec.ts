@@ -1,10 +1,15 @@
 import { expect, test } from "./fixtures";
 
-const VIEWPORTS = [360, 400, 1440];
+const VIEWPORTS = [
+  { width: 360, height: 640 }, // compact mobile (e.g. standard Android / small phone)
+  { width: 390, height: 844 }, // standard iPhone 14/15
+  { width: 400, height: 800 }, // Android baseline
+  { width: 1440, height: 900 }, // desktop
+];
 
-for (const width of VIEWPORTS) {
-  test(`onboarding responsive fit and CTA visibility at ${width}px across all 3 steps`, async ({ page }) => {
-    await page.setViewportSize({ width, height: 800 });
+for (const { width, height } of VIEWPORTS) {
+  test(`onboarding responsive fit, CTA visibility and a11y at ${width}x${height}px across all 3 steps`, async ({ page }) => {
+    await page.setViewportSize({ width, height });
 
     // Ensure onboarding state is active (not completed)
     await page.addInitScript(() => {
@@ -40,21 +45,31 @@ for (const width of VIEWPORTS) {
       const ctaButton = page.getByRole("button", { name: ctaName });
       await expect(ctaButton).toBeVisible();
 
-      // 3. Measure bounding box and assert containment inside viewport
+      // 3. Measure bounding box and assert containment inside viewport (both horizontal AND vertical)
       const box = (await ctaButton.boundingBox())!;
       expect(box).not.toBeNull();
       const rightEdge = box.x + box.width;
+      const bottomEdge = box.y + box.height;
 
       // 4. Assert CTA label is not clipped (scrollWidth <= clientWidth)
       const isClipped = await ctaButton.evaluate((el) => el.scrollWidth > el.clientWidth);
       expect(isClipped).toBe(false);
 
-      console.log(
-        `[MEASURED] Viewport: ${width}px | Step: ${step + 1} | CTA: "${ctaName}" | x: ${box.x.toFixed(1)}px | width: ${box.width.toFixed(1)}px | rightEdge: ${rightEdge.toFixed(1)}px <= ${width}px | docScrollWidth: ${docScrollWidth}px`
-      );
-
+      // 5. Assert CTA button is inside viewport (not pushed off screen)
       expect(box.x).toBeGreaterThanOrEqual(0);
       expect(rightEdge).toBeLessThanOrEqual(width);
+      expect(box.y).toBeGreaterThanOrEqual(0);
+      expect(bottomEdge).toBeLessThanOrEqual(height);
+
+      // 6. On steps > 0, verify Back button accessibility name
+      if (step > 0) {
+        const backBtn = page.getByRole("button", { name: /kembali/i });
+        await expect(backBtn).toBeVisible();
+      }
+
+      console.log(
+        `[MEASURED] Viewport: ${width}x${height}px | Step: ${step + 1} | CTA: "${ctaName}" | x: ${box.x.toFixed(1)}px | y: ${box.y.toFixed(1)}px | bottom: ${bottomEdge.toFixed(1)}px <= ${height}px`
+      );
 
       // Advance to next step if not on final step
       if (step < 2) {

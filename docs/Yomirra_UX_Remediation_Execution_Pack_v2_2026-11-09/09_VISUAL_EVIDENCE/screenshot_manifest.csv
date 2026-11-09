@@ -1,0 +1,52 @@
+﻿number,file,page,state,anchors,width,height,sha256
+3753,IMG_3753.jpeg,Reader,dark / resume toast,resume top + bottom dock,706,1536,91cae91bbf3f7cfa6b3d3c68a44d6dc2061b2bd211ae477557cc8071f63ca386
+3754,IMG_3754.jpeg,Reader,dark / controls,"header, progress, double chevrons",706,1536,f4db969cf27c5b6bbd4aadcd2e6047142d51832f1de57f97b503f32690ffa5d9
+3755,IMG_3755.jpeg,Reader,dark / immersive,"top gradient, passive progress capsule",706,1536,fab5a299ac1a84542c8f95720ce9593104278df6d1ea6a1f577d4fb700232b2f
+3756,IMG_3756.jpeg,Reader,light / controls,reader controls and arrow-to-top,706,1536,33effaaabba927b5256a5966a66058ae747ac48f48dba6aa842c77922f2e62e7
+3757,IMG_3757.jpeg,Reader,light / immersive,"top gradient, passive progress capsule",706,1536,0b76d22985bd548b366893ef488fb0c9a7d0d1850e23043f5d1e03981459ab8c
+3758,IMG_3758.jpeg,Reader,light / controls,"progress 59%, bookmark icon",706,1536,4d294b99e6f8d0bd98dbb67225db3bf240539c76106c044a912537dd2525f972
+3759,IMG_3759.jpeg,Reader,light / remove bookmark toast,large toast replacing header,706,1536,fadc725d52828bdd402a6dbd26be5db9476ffb5a7c19ef3ff627a9a1c8b4d907
+3760,IMG_3760.jpeg,Reader,light / add bookmark toast,large toast replacing header,706,1536,f07389faaa68586dfc6b8d4d512829e690682a2517cf2907cd4ab00b9e9046d0
+3761,IMG_3761.png,Chapter picker,sheet at list beginning,chapter grid 1-48; search/sort,1206,2622,f69ce562c7ffdcdeaee2a03551484e5a94a8dac017196af4dc56c6af9bf005ea
+3762,IMG_3762.png,Chapter picker,sheet near active chapter,chapter 152 selected; grid 132-172,1206,2622,574bbb86b057ecfd9791c06cfd09761a190043b1ab8ee050cfecff566825c310
+3763,IMG_3763.png,Reader settings,sheet upper,"scope, theme, image scaling",1206,2622,816e567ea9b9bebbe9e11d814f9259ccb862dd9d6f8ab29594b6683bfb76179c
+3764,IMG_3764.png,Reader settings,sheet lower,"spacing, reading direction, controls, preload, progress",1206,2622,023d877f464af16721274f984f61b30cf84ed35c6bc58dcdff16eb64627a5ae1
+3765,IMG_3765.jpeg,Comic detail,hero + collapsed synopsis,continue and 4 action buttons,706,1536,3351fedff263aa68632c22d327a5d7f61b63b71401b27b5b36f779faa78857fb
+3766,IMG_3766.jpeg,Comic detail,hero + expanded synopsis,large text plus floating dock,706,1536,33c46030d33483098598ece5f8d03cd66ac12aedb9094857267ad853dc561624
+3767,IMG_3767.png,Comic detail,expanded synopsis + chapter list,chapter list; title truncation; red dots,1206,2622,85dc75039123e33b307d9738002deb30ad2c5dfb2e907adff1c81bb2ed4263a8
+3768,IMG_3768.png,Comic detail,collapsed synopsis + chapter list,chapter 152 marked last/read; downloads,1206,2622,20684b10e9a6f3f70a9eed053dfcde6b85899dfd6a12426eafca8a6d9d051dad
+3769,IMG_3769.jpeg,Comic detail,similar comics,cover carousel + floating dock,706,1536,729bc9f06106dd0f2e80d992f6cbcdbbad1eb11a223edebd3d2e62f452ff3dc1
+3770,IMG_3770.jpeg,Home,continue reading + search prompt,"history carousel, search prompt, spotlight",706,1536,4dea98517b67663d3456959dfb3aa7e4d8f3a3b871fa61eb4037c14c3ee81940
+3771,IMG_3771.jpeg,Home,spotlight + ranking,"feature CTA, ranking, fixed dock",706,1536,c5ad6e1a7ecd40b01845145b782de1932e71249c5f438fe3fdd9a371d18e656e
+3772,IMG_3772.jpeg,Home,source dropdown open,ranking source list,706,1536,56e059d9b2233022dd27dbe533d0c79fe55facd6b341291a1e424f3c898c935a
+3773,IMG_3773.jpeg,Home,latest updates list,cover list + bookmark + dock,706,1536,ddfce7d984f137be6f490e1cba1d3c79e09031ca770c27ef2ab8a4a68eea9795
+3774,IMG_3774.jpeg,Home,latest updates carousel,cover cards + metadata,706,1536,b2c70b92647164dd7308c3a1c4fca4c9d963521408f37b90e79b53923b68e078
+3775,IMG_3775.jpeg,Home,latest updates carousel end,see-all sentinel tile,706,1536,1d13221feed1cbf2f63ae665cd4e05e7350442a71bf9fa5e2335b2d9a89cd35f
+3776,IMG_3776.jpeg,Explore,catalog list,source dropdown/filter/sort/type controls,706,1536,e022927c9f7e4a0c6f782b37b6e60ba3221ba45c44b67b2c977ae4241664a918
+3777,IMG_3777.jpeg,Explore,source dropdown open,dropdown with sources over results,706,1536,a8bfde433061a8c67e8472f07b812616969c39ae99cf1bf52fa28ffff78353f1
+3778,IMG_3778.jpeg,Explore,notification popover open,last item clipped by footer,706,1536,65d3cf2b43e45b5270522eba728ddafd40a74674de76e6fddbc3d2dcf8410444
+3779,IMG_3779.jpeg,Explore,profile popover open,"account menu, appearance, help",706,1536,6f4c2a57d88d3cf647832f997267c5ae767fad24fd0df5b138e13c5cfa049e13
+3780,IMG_3780.png,Library,reading history,"current chapter, % progress, continue buttons",1206,2622,8687073245c6bdfca00a9c82cd475ad9f78b249ed81eab8127f29289b0700e65
+3781,IMG_3781.jpeg,Library,saved default,"saved tabs, filters, smart buckets and cover grid",706,1536,ebf16035d52cac407c43f3d82f647674b8f161499f62dc0e1c3cdcaa72d53574
+3782,IMG_3782.jpeg,Library,source filter open,long source menu,706,1536,2a94b481a16a47609bf1a6d38d903fbdbd1b7dbdf0c4305cf7d93e8a03e076e8
+3783,IMG_3783.jpeg,Library,sort menu open,last updated / A-Z,706,1536,9af15a42a8e2d351cb5fe5a33ee351f2f0e6a23d471998c9ce4f70bbc2e855b1
+3784,IMG_3784.jpeg,Library,actions menu open,create collection / multi-select,706,1536,b10aee4278466e5a5acd9bd4650d59c3b752535bc9b571b32cdf5ce3f52f14a7
+3785,IMG_3785.jpeg,Library,smart filter chips shifted right,type buckets near horizontal end,706,1536,aae4600bc3622726d678445b583af2092213e4e5890f04bac815b0c32822d8ff
+3786,IMG_3786.jpeg,Library,smart filter chips shifted,older/rating buckets,706,1536,ecd433efced8f107ae9d8b5b75eb27a0bcb27c7951bc59ec9a1d375f21600080
+3787,IMG_3787.jpeg,Library,smart filter chips left,all/continue/not read filters,706,1536,f45df3033312e87c896417d34a5861421b05ade6e58dea455cfa1dda35bdc763
+3788,IMG_3788.png,Weekly schedule,all weekdays,day chips and content cards,1206,2622,d4e40256537e8b5ee955b7720ce50bbdb38bcaf55238eaae1b7275618b973b92
+3789,IMG_3789.png,Weekly schedule,Monday selected,selected day and filtered cards,1206,2622,62cb2dbec643288d0b1442aeb6f3995d99f3cd47e7883bcbbbdd814be342771f
+3790,IMG_3790.jpeg,Popular,combined ranking,ranking methodology and multi-source chips,706,1536,90ea2f6b9cced66b0a52d1e41c45503731026a2aa07526941e2fe7e3971abe89
+3791,IMG_3791.png,Popular,MAL leaderboard start,external data disclosure and first ranks,1206,2622,a9354c3547a2218ac039ba252d07d6d43c6d354b9843b8a940300b9cf27677bb
+3792,IMG_3792.jpeg,Popular,MAL leaderboard end,source attribution footer and last ranks,706,1536,a8cc143d62edc07df84dbf69ed22eee5c9f4f56ee9bbc8c8a17b248b43bdc0d8
+3793,IMG_3793.jpeg,Popular,single-source ranking,"source selected, cards/status",706,1536,b3d242f8080916fad00c7df12d0c22cc4bfab30028de9cf1033c7b463e266678
+3794,IMG_3794.jpeg,Search,results and source chips,"search/filter, list mode, results",706,1536,8510840f62251c26c7c9f05db05ad8eb6b13aed980b14f791d899d01d9a23694
+3795,IMG_3795.png,Help center,all accordion closed,"FAQ topics, fixed dock covers lower body",1206,2622,5e5f586e7549777cc616d1078469adaf8da9cf23d46e4b12a62d253482ca3f15
+3796,IMG_3796.png,Help center,FAQ expanded,technical 403/429 explanation and CTA,1206,2622,f6a72814236650c01d2948a11311a5fe48bb7606e5024c8eb00017c46d1a6b30
+3797,IMG_3797(1).png,App settings,account & reading prefs,"account, language, checks/timing, bottom dock",1206,2622,0bd1559458dfe4f7cc3065d914f4647fb5c3bbc014319e70d5b18f1d4eee4348
+3798,IMG_3798(1).jpeg,App settings,appearance and data options,"theme, data saver, keep awake",706,1536,b7dfd3022b907943d9fd908a254d1b82a02751b14a7abbc898d0e5631aff753c
+3799,IMG_3799.jpeg,App settings,content/privacy + storage,"NSFW, source, cache total breakdown",706,1536,e106ce1244b1a8a0a817bc8446d18f3c7b58ddacd208797336f7a784f87c5a8e
+3800,IMG_3800.jpeg,App settings,storage actions,cache/delete offline/export/erase controls,706,1536,611dc346562861b255772d480f908d1b2a51c3c357ca01a7f643b812739459c4
+3801,IMG_3801.jpeg,App settings,storage footer,"destructive operations, onboarding, version",706,1536,5fd8a796620463d935a31ca0a131c22bbbe1d071757a994d89194448e494182c
+3802,IMG_3802.png,App settings,onboarding notification,large informational toast covering page,1206,2622,7d93f82bc7d1998a1ad7653b40dcedf99d29bffcba27cfd9b9fcf8663a1f6633
+3803,IMG_3803.jpeg,Reader,resume toast close-up,wide top toast truncated text,1206,476,5e5c3851d592e0b0810ebf33802041917cac6b8b3389168cff31c752499c995f

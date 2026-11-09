@@ -48,7 +48,7 @@ export function CollectionToolbar({
         onChange={onSearchChange}
         onClear={onSearchClear}
         placeholder="Cari di bookmark…"
-        containerClassName="sm:flex-1 min-w-0 h-[44px]"
+        containerClassName="sm:flex-1 min-w-0 h-11"
       />
 
       <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
@@ -61,7 +61,7 @@ export function CollectionToolbar({
               ...availableSources.map((s) => ({ value: s.id, label: s.name })),
             ]}
             align="right"
-            className="flex-1 sm:flex-initial min-w-[130px]"
+            className="flex-1 sm:flex-initial min-w-32"
           />
         )}
 
@@ -69,11 +69,11 @@ export function CollectionToolbar({
           value={sortBy}
           onChange={(v) => onSortChange(v as "updatedAt" | "title")}
           options={[
-            { value: "updatedAt", label: "Terakhir Diupdate" },
-            { value: "title", label: "Abjad (A-Z)" },
+            { value: "updatedAt", label: "Terbaru" },
+            { value: "title", label: "Judul (A-Z)" },
           ]}
           align="right"
-          className="flex-1 sm:flex-initial min-w-[140px]"
+          className="flex-1 sm:flex-initial min-w-32"
         />
 
         {totalCount > 0 && (
@@ -81,7 +81,7 @@ export function CollectionToolbar({
             <DropdownMenuTrigger asChild>
               <Button
                 variant={isSelectionMode ? "accent" : "outline"}
-                className="h-[44px] px-2.5 rounded-xl font-bold gap-1.5 shrink-0 border-dashed"
+                className="h-11 px-2.5 rounded-xl font-bold gap-1.5 shrink-0 border-dashed"
                 aria-label="Opsi lainnya"
               >
                 <DotsThreeVertical size={20} weight="regular" />

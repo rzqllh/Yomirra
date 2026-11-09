@@ -375,9 +375,9 @@ export function ContinuousVerticalReader({
         setIsRestored(true);
       });
 
-      toast(`Melanjutkan bacaan hal. ${targetIndex + 1}...`, {
+      toast(`Melanjutkan ke gambar ${targetIndex + 1}`, {
         id: "resume-reading",
-        position: "top-center",
+        duration: 2500,
         icon: <BookOpen size={15} weight="fill" className="text-accent shrink-0" />,
       });
     } else {

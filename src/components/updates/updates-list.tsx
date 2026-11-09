@@ -94,7 +94,7 @@ export function UpdateCard({ item, historyItem, onScheduleChange, onMarkSeen }: 
       <div className="flex items-center gap-3 min-w-0 flex-1">
         <Link
           href={detailHref}
-          className={cn("w-[52px] sm:w-[58px] shrink-0 rounded-xs", mangaCardInteraction.link)}
+          className={cn("w-13 sm:w-14 shrink-0 rounded-xs", mangaCardInteraction.link)}
           onClick={() => onMarkSeen?.(item.sourceId, item.mangaId)}
           aria-label={`Lihat detail ${item.mangaTitle}`}
         >
@@ -123,16 +123,16 @@ export function UpdateCard({ item, historyItem, onScheduleChange, onMarkSeen }: 
           </Link>
 
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="text-[10px] px-1.5 py-0.5 rounded-[6px] bg-surface-base border border-border-subtle/70 font-semibold text-text-secondary">
+            <span className="text-2xs px-1.5 py-0.5 rounded-sm bg-surface-base border border-border-subtle/70 font-semibold text-text-secondary">
               {item.sourceName || item.sourceId}
             </span>
             {isUnread && (
-              <span className="text-[9px] px-1.5 py-0.5 rounded-[6px] bg-semantic-error text-white font-extrabold uppercase tracking-wider shadow-xs">
+              <span className="text-2xs px-1.5 py-0.5 rounded-sm bg-semantic-error text-accent-on font-extrabold uppercase tracking-wider shadow-xs">
                 Baru
               </span>
             )}
             {item.publicationStatus === "hiatus" && (
-              <span className="text-[9px] px-1.5 py-0.5 rounded-[6px] bg-status-warning-bg text-status-warning-fg font-bold uppercase tracking-wider">
+              <span className="text-2xs px-1.5 py-0.5 rounded-sm bg-status-warning-bg text-status-warning-fg font-bold uppercase tracking-wider">
                 Hiatus
               </span>
             )}
@@ -242,12 +242,12 @@ function ErrorBanner({
               key={item.key}
               className="flex items-start gap-2"
             >
-              <span className="text-semantic-error/60 text-[10px] mt-0.5 shrink-0">•</span>
+              <span className="text-semantic-error/60 text-2xs mt-0.5 shrink-0">•</span>
               <div className="min-w-0">
                 <p className="text-xs font-medium text-text-primary truncate">
                   {item.mangaTitle || item.mangaId}
                 </p>
-                <p className="text-[10px] text-text-muted truncate">
+                <p className="text-2xs text-text-muted truncate">
                   {item.sourceName || "Sumber"} · Pemeriksaan terakhir gagal.
                 </p>
               </div>
@@ -423,10 +423,9 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
       const dayItems = w.key === "all" ? allItems : allItems.filter((i) => i.effectiveDay === w.dayIndex);
       const hasUnread = dayItems.some((i) => i.latestChapterId && !i.seenAt);
       const isCurrentDay = w.dayIndex === todayIndex;
-      const label = isCurrentDay ? `${w.name}*` : w.name;
       return {
         value: w.key,
-        label,
+        label: w.name,
         badge: dayItems.length > 0 ? dayItems.length : undefined,
         badgeVariant: hasUnread ? ("error" as const) : ("muted" as const),
       };
@@ -559,7 +558,7 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pb-24 md:pb-8">
               {displayedItems.map((item) => {
                 const historyItem = isMounted ? getLatestForManga(item.sourceId, item.mangaId) : undefined;
                 return (

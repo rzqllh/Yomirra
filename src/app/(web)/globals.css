@@ -520,6 +520,7 @@ body.reader-active {
 @media (min-width: 768px) {
   .vt-cover-mobile { view-transition-name: none !important; }
 }
+
 @media (max-width: 767px) { 
   .vt-hover { view-transition-name: var(--vt-name); } 
   .vt-title-hover { view-transition-name: var(--vt-title-name); } 
@@ -663,6 +664,12 @@ section[aria-label*="Notifications" i] {
   --offset-top: calc(env(safe-area-inset-top, 0px) + 24px) !important;
   --offset-right: 24px !important;
   pointer-events: none !important;
+}
+
+body.reader-active [data-sonner-toaster],
+body.reader-active section[aria-label*="Notifications" i] {
+  --offset-top: calc(env(safe-area-inset-top, 0px) + 64px) !important;
+  --mobile-offset-top: calc(env(safe-area-inset-top, 0px) + 64px) !important;
 }
 
 @media (max-width: 767px) {

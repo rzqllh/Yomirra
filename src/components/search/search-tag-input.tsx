@@ -81,7 +81,7 @@ export function SearchTagInput({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         onSubmitAction={onSubmit}
-        placeholder="Cari judul, kreator, atau #tag…"
+        placeholder="Cari komik, kreator, #tag…"
         containerClassName="min-h-11"
         onClear={onClear}
         autoComplete="off"
@@ -97,7 +97,7 @@ export function SearchTagInput({
                 key={`${tag.operator ?? "include"}:${tag.category}:${tag.id}`}
                 type="button"
                 onClick={() => removeTag(tag.raw)}
-                className={`inline-flex h-7 items-center gap-1.5 rounded-lg border px-2.5 text-[11px] font-semibold transition-colors ${
+                className={`inline-flex h-7 items-center gap-1.5 rounded-lg border px-2.5 text-2xs font-semibold transition-colors ${
                   isExclude
                     ? "border-red-500/25 bg-red-500/10 text-red-400 hover:border-red-500/40 hover:bg-red-500/15"
                     : "border-accent/20 bg-accent-dim text-accent hover:border-accent/35 hover:bg-accent/10"
@@ -113,7 +113,7 @@ export function SearchTagInput({
       )}
 
       {fragment !== null && (
-        <div className="absolute left-0 right-0 top-[48px] z-50 overflow-hidden rounded-md border border-border-subtle bg-surface-overlay shadow-lg">
+        <div className="absolute left-0 right-0 top-12 z-50 overflow-hidden rounded-md border border-border-subtle bg-surface-overlay shadow-lg">
           {suggestions.length > 0 ? (
             <div className="p-1.5">
               {suggestions.map((suggestion) => (
@@ -127,7 +127,7 @@ export function SearchTagInput({
                   <span className="text-sm font-semibold text-text-primary">
                     #{suggestion.id}
                   </span>
-                  <span className="text-[11px] font-medium text-text-muted">
+                  <span className="text-2xs font-medium text-text-muted">
                     {CATEGORY_LABELS[suggestion.category]}
                   </span>
                 </button>

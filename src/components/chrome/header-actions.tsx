@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { useTheme } from "next-themes"
 import {
   Gear,
@@ -22,6 +23,8 @@ import { Surface } from "@/components/ui/surface"
 import { cn } from "@/shared/utils/cn"
 
 export function HeaderActions({ className }: { className?: string } = {}) {
+  const pathname = usePathname()
+  const isSettingsActive = pathname === "/settings"
   const mounted = useMounted()
   const { theme, resolvedTheme, setTheme } = useTheme()
   const { user, loginWithGoogle, logout } = useAuth()
@@ -70,9 +73,11 @@ export function HeaderActions({ className }: { className?: string } = {}) {
         aria-expanded={isMenuOpen}
         className={cn(
           "relative flex size-11 items-center justify-center rounded-xl border border-transparent bg-transparent shadow-none transition-colors outline-none select-none active:scale-95 cursor-pointer",
-          isMenuOpen
+          isSettingsActive
             ? "border-accent/30 bg-accent/15 text-accent"
-            : "text-text-primary hover:bg-surface-hover/60"
+            : isMenuOpen
+              ? "bg-surface-hover/80 text-text-primary"
+              : "text-text-primary hover:bg-surface-hover/60"
         )}
       >
         {user?.photoURL ? (
@@ -85,8 +90,8 @@ export function HeaderActions({ className }: { className?: string } = {}) {
         ) : (
           <Gear
             size={20}
-            weight={isMenuOpen ? "fill" : "regular"}
-            className="shrink-0 transition-transform duration-200"
+            weight={isSettingsActive ? "fill" : isMenuOpen ? "bold" : "regular"}
+            className={cn("shrink-0 transition-transform duration-200", isSettingsActive && "text-accent")}
           />
         )}
       </button>
@@ -121,9 +126,18 @@ export function HeaderActions({ className }: { className?: string } = {}) {
             <Link
               href="/settings"
               onClick={() => setIsMenuOpen(false)}
-              className="group flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-bold text-accent bg-accent/10 hover:bg-accent/15 active:scale-98 transition-all"
+              className={cn(
+                "group flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] active:scale-98 transition-all",
+                isSettingsActive
+                  ? "font-bold text-accent bg-accent/10 hover:bg-accent/15"
+                  : "font-medium text-text-primary hover:bg-surface-hover"
+              )}
             >
-              <Gear size={18} weight="fill" className="text-accent shrink-0" />
+              <Gear
+                size={18}
+                weight={isSettingsActive ? "fill" : "regular"}
+                className={cn("shrink-0", isSettingsActive ? "text-accent" : "text-text-muted")}
+              />
               <span>Pengaturan</span>
             </Link>
 

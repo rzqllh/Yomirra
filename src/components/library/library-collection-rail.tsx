@@ -44,7 +44,7 @@ export function LibraryCollectionRail({
       <h3 className="text-xs font-black tracking-widest text-text-muted uppercase mb-3 px-1">
         Koleksi
       </h3>
-      <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
+      <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar -mx-4 px-4 md:mx-0 md:px-0 overscroll-x-contain touch-pan-x snap-x snap-mandatory">
         <FilterChip
           onClick={() => {
             onPageReset();
@@ -52,14 +52,14 @@ export function LibraryCollectionRail({
           }}
           selected={selectedCollections.length === 0}
           variant={selectedCollections.length === 0 ? "accent-solid" : "default"}
-          className="shrink-0 h-[36px] px-4 text-[13px]"
+          className="shrink-0 h-9 px-4 text-xs snap-start"
           label={
             <>
               Semua
               <span
                 className={cn(
-                  "text-[11px] px-1.5 py-0.5 rounded-md ml-1.5",
-                  selectedCollections.length === 0 ? "bg-white/20 text-white" : "bg-border-subtle/50 text-text-muted"
+                  "text-2xs px-1.5 py-0.5 rounded-md ml-1.5",
+                  selectedCollections.length === 0 ? "bg-accent-on/20 text-accent-on" : "bg-border-subtle/50 text-text-muted"
                 )}
               >
                 {totalSemua}
@@ -80,14 +80,14 @@ export function LibraryCollectionRail({
               }}
               selected={isSelected}
               variant={isSelected ? "accent-solid" : "default"}
-              className="shrink-0 h-[36px] px-4 text-[13px]"
+              className="shrink-0 h-9 px-4 text-xs snap-start"
               label={
                 <>
                   {c.name}
                   <span
                     className={cn(
-                      "text-[11px] px-1.5 py-0.5 rounded-md ml-1.5",
-                      isSelected ? "bg-white/20 text-white" : "bg-border-subtle/50 text-text-muted"
+                      "text-2xs px-1.5 py-0.5 rounded-md ml-1.5",
+                      isSelected ? "bg-accent-on/20 text-accent-on" : "bg-border-subtle/50 text-text-muted"
                     )}
                   >
                     {count}

@@ -294,6 +294,13 @@ export function getSourceMetadata(id: string): SourceMetadata | undefined {
   return sourceRegistry.find(s => s.id === id) || dynamicSourceRegistry.get(id);
 }
 
+export function getSourceDisplayName(id: string): string {
+  const meta = getSourceMetadata(id);
+  if (meta?.name) return meta.name;
+  if (!id) return "";
+  return id.charAt(0).toUpperCase() + id.slice(1);
+}
+
 export function getAllSourceMetadata(): SourceMetadata[] {
   const dynamicSources = dynamicSourceRegistry.getAll();
   return [...sourceRegistry, ...dynamicSources];
