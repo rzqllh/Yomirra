@@ -377,7 +377,7 @@ export function HomeFeedClient({
               ))}
             </div>
           ) : (
-            <div className="scrollbar-hide flex w-full snap-x snap-mandatory gap-3 overflow-x-auto pb-2 sm:gap-4 md:grid md:grid-cols-3 md:gap-x-4 md:gap-y-6 md:overflow-visible md:snap-none lg:grid-cols-4 xl:grid-cols-5 md:[&>*:nth-child(n+11)]:hidden">
+            <div className="[scrollbar-width:thin] flex w-full snap-x snap-mandatory gap-3 overflow-x-auto pb-2 sm:gap-4 md:grid md:grid-cols-3 md:gap-x-4 md:gap-y-6 md:overflow-visible md:snap-none lg:grid-cols-4 xl:grid-cols-5 md:[&>*:nth-child(n+11)]:hidden">
               {updateHariIni.map((manga) => (
                 <div
                   key={`${manga.sourceId}-${manga.id}`}

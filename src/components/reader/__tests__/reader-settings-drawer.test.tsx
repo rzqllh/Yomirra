@@ -42,8 +42,8 @@ describe("ReaderSettingsDrawer & Per-Title Scope (P0 Q8/Q86)", () => {
     const onClose = vi.fn();
     render(<ReaderSettingsDrawer isOpen={true} onClose={onClose} />);
 
-    // Click on a background color option (e.g. Sesuai Sistem)
-    const systemBgBtn = screen.getByRole("button", { name: /Sesuai Sistem/i });
+    // The accessible name matches the visible theme option.
+    const systemBgBtn = screen.getByRole("button", { name: "Ikuti Sistem" });
     expect(systemBgBtn).toBeDefined();
 
     // Trigger setting update: must NOT throw RangeError: Maximum call stack size exceeded
@@ -53,6 +53,7 @@ describe("ReaderSettingsDrawer & Per-Title Scope (P0 Q8/Q86)", () => {
 
     // Verify global preference was updated
     expect(useReaderStore.getState().preferences.background).toBe("system");
+    expect(systemBgBtn.getAttribute("aria-pressed")).toBe("true");
     // Verify perTitlePreferences remained empty since no title context was provided
     expect(Object.keys(useReaderStore.getState().perTitlePreferences)).toHaveLength(0);
   });

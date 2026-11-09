@@ -425,7 +425,7 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
       const isCurrentDay = w.dayIndex === todayIndex;
       return {
         value: w.key,
-        label: w.name,
+        label: isCurrentDay ? `${w.name} · Hari ini` : w.name,
         badge: dayItems.length > 0 ? dayItems.length : undefined,
         badgeVariant: hasUnread ? ("error" as const) : ("muted" as const),
       };
@@ -498,7 +498,7 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
         <>
           {/* Weekly day rail */}
           <div className="sticky top-[var(--secondary-sticky-top)] z-20 -mx-1 space-y-2.5 border-b border-border-subtle/60 bg-surface-base/92 px-1 py-2 backdrop-blur-md">
-            <div className="overflow-x-auto [scrollbar-width:none] pb-1">
+            <div className="overflow-x-auto [scrollbar-width:thin] pb-1">
               <div className="flex items-center gap-2">
                 {allItems.some((i) => i.latestChapterId && !i.seenAt) && (
                   <button
@@ -525,8 +525,6 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
               </div>
             </div>
             <p className="text-[11px] text-text-muted px-1 flex items-center gap-1.5">
-              <span>* Hari ini</span>
-              <span>•</span>
               <span>Kamu bisa mengubah hari rilis dari setiap kartu.</span>
             </p>
           </div>

@@ -58,7 +58,7 @@ describe("ChapterRow accessibility", () => {
       date: "2026-09-25",
     }
     const { rerender } = render(<ChapterRow {...chapter} isLastRead />)
-    expect(screen.getByRole("link", { name: "Baca Chapter 12", current: true })).toBeTruthy()
+    expect(screen.getByRole("link", { name: "Lanjutkan bacaan terakhir: Chapter 12", current: true })).toBeTruthy()
 
     rerender(<ChapterRow {...chapter} isLocked />)
     expect(screen.getByText("Terkunci")).toBeTruthy()

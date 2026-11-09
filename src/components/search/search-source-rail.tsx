@@ -21,14 +21,14 @@ export function SearchSourceRail({
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-1 text-sm text-text-secondary">
-        <span className="font-semibold text-text-primary">Sumber</span>
+        <span className="font-semibold text-text-primary">Sumber pencarian</span>
         <span>
           {activeSelectedSources.length === searchableSources.length
             ? "Semua sumber"
             : `${activeSelectedSources.length} dipilih`}
         </span>
       </div>
-      <div className="flex overflow-x-auto [scrollbar-width:none] snap-x pb-1 gap-2 overscroll-x-contain touch-pan-x md:flex-wrap md:overflow-visible md:snap-none">
+      <div className="flex overflow-x-auto [scrollbar-width:thin] snap-x pb-1 gap-2 overscroll-x-contain touch-pan-x md:flex-wrap md:overflow-visible md:snap-none">
         {searchableSources.map((source) => {
           const isSelected = activeSelectedSources.includes(source.id);
           const isOffline = source.status === "unavailable" || source.status === "in-fix";

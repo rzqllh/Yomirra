@@ -155,6 +155,8 @@ export function PagedReader({
   const setPageNavigation = useReaderStore(state => state.setPageNavigation);
   const navigationKey = `${sourceId}::${mangaId}::${chapterId}`;
   const seekPage = React.useCallback((index: number) => setCurrentPageIndex(Math.max(0, Math.min(index, totalPages - 1))), [totalPages]);
+  const previousImage = React.useCallback(() => seekPage(currentPageIndex - 1), [seekPage, currentPageIndex]);
+  const nextImage = React.useCallback(() => seekPage(currentPageIndex + 1), [seekPage, currentPageIndex]);
 
   React.useEffect(() => () => {
     if (useReaderStore.getState().pageNavigation?.key === navigationKey) setPageNavigation(null);
@@ -219,8 +221,8 @@ export function PagedReader({
 
   React.useEffect(() => {
     if (hasInitialized) setPageNavigation({ key: navigationKey, index: currentPageIndex, total: totalPages, seek: seekPage,
-      mode: "paged", previous: goToPrevPage, next: goToNextPage, canPrevious: currentPageIndex > 0 || Boolean(prevChapterId), canNext: currentPageIndex < totalPages - 1 || Boolean(nextChapterId) });
-  }, [hasInitialized, navigationKey, currentPageIndex, totalPages, seekPage, goToPrevPage, goToNextPage, prevChapterId, nextChapterId, setPageNavigation]);
+      mode: "paged", previous: previousImage, next: nextImage, canPrevious: currentPageIndex > 0, canNext: currentPageIndex < totalPages - 1 });
+  }, [hasInitialized, navigationKey, currentPageIndex, totalPages, seekPage, previousImage, nextImage, setPageNavigation]);
 
   const handleRightTap = React.useCallback(() => {
     if (isRtl) {
@@ -465,8 +467,8 @@ export function PagedReader({
           variant="ghost"
           size="icon"
           className="size-7 rounded-lg text-text-secondary hover:text-text-primary"
-          onClick={goToPrevPage}
-          disabled={currentPageIndex === 0 && !prevChapterId}
+          onClick={previousImage}
+          disabled={currentPageIndex === 0}
           aria-label="Halaman sebelumnya"
         >
           <CaretLeft size={16} weight="regular" />
@@ -480,8 +482,8 @@ export function PagedReader({
           variant="ghost"
           size="icon"
           className="size-7 rounded-lg text-text-secondary hover:text-text-primary"
-          onClick={goToNextPage}
-          disabled={currentPageIndex === totalPages - 1 && !nextChapterId}
+          onClick={nextImage}
+          disabled={currentPageIndex >= totalPages - 1}
           aria-label="Halaman berikutnya"
         >
           <CaretRight size={16} weight="regular" />

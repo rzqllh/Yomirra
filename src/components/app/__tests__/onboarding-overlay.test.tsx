@@ -5,6 +5,7 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 const mockCompleteOnboarding = vi.fn();
 const mockIsInstallable = false;
 const mockInstallPWA = vi.fn();
+let mockShowIOSGuide = false;
 
 vi.mock('@/shared/store/onboarding-store', () => ({
   useOnboardingStore: () => ({
@@ -16,12 +17,24 @@ vi.mock('@/shared/hooks/use-pwa-install', () => ({
   usePWAInstall: () => ({
     isInstallable: mockIsInstallable,
     installPWA: mockInstallPWA,
+    showIOSGuide: mockShowIOSGuide,
+    setShowIOSGuide: vi.fn(),
   }),
 }));
 
 describe('OnboardingOverlay', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockShowIOSGuide = false;
+  });
+
+  it('leaves Escape to the installation guide without completing onboarding', () => {
+    mockShowIOSGuide = true;
+    const onComplete = vi.fn();
+    render(<OnboardingOverlay onComplete={onComplete} />);
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(onComplete).not.toHaveBeenCalled();
+    expect(mockCompleteOnboarding).not.toHaveBeenCalled();
   });
 
   it('renders initial step and allows stepping forward to final step', async () => {

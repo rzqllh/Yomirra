@@ -454,7 +454,7 @@ export function ReaderShell({
                     window.scrollTo({ top: 0, behavior: reducedMotion ? "auto" : "smooth" });
                   }}
                   className="yomirra-chrome pointer-events-auto self-end flex size-10 items-center justify-center rounded-xl text-text-muted hover:text-text-primary hover:bg-surface-hover/80 active:scale-95 transition-all cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                  aria-label="Kembali ke atas"
+                  aria-label="Kembali ke bagian atas pembaca"
                 >
                   <CaretUp size={18} weight="regular" />
                 </motion.button>

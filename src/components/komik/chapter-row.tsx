@@ -92,7 +92,7 @@ export function ChapterRow({
           <Link
             href={readerHref}
             onClick={() => beginNavigationIntent(readerHref)}
-            aria-label={isLastRead ? `Lanjutkan bacaan terakhir: ${chapterTitle}` : isRead ? `Baca ulang ${chapterTitle}` : `Baca ${chapterTitle}`}
+            aria-label={isLastRead ? `Lanjutkan bacaan terakhir: ${chapterTitle}` : isRead ? `Baca ulang ${chapterTitle}` : `Belum dibaca: baca ${chapterTitle}`}
             aria-current={isLastRead || undefined}
             className={cn(rowContentClass, "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent active:bg-accent/10")}
           >

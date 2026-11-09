@@ -6,6 +6,7 @@ import { useSettingsStore } from "@/shared/store/settings-store";
 import { useNsfwSourceIds } from "@/shared/hooks/use-nsfw-source-ids";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
+import { getSourceMetadata, getSourceDisplayName } from "@/shared/sources/source-registry";
 import { useMounted } from "@/shared/hooks/use-mounted";
 import { useCollectionStore } from "@/shared/store/collection-store";
 import { useHistoryStore } from "@/shared/store/history-store";
@@ -113,8 +114,8 @@ export function useBookmarkCollection() {
     const map = new Map<string, string>();
     for (const item of visibleLibraryItems) {
       if (!map.has(item.sourceId)) {
-        const meta = dynamicSourceRegistry.get(item.sourceId);
-        map.set(item.sourceId, meta?.name || item.sourceName || item.sourceId);
+        const meta = getSourceMetadata(item.sourceId);
+        map.set(item.sourceId, meta?.name || item.sourceName || getSourceDisplayName(item.sourceId));
       }
     }
     return Array.from(map.entries()).map(([id, name]) => ({ id, name }));

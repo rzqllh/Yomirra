@@ -102,7 +102,7 @@ describe("SettingsPage - Update Checker UI", () => {
     });
 
     // Find and click 1 Jam option
-    const oneHourOption = await screen.findByRole("menuitem", { name: "1 Jam" });
+    const oneHourOption = await screen.findByRole("menuitemradio", { name: "1 Jam" });
     
     await act(async () => {
       fireEvent.click(oneHourOption);

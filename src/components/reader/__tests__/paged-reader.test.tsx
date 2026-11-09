@@ -10,10 +10,11 @@ import { PagedReader } from "../paged-reader";
 import { ReaderView } from "../reader-view";
 
 const routerPrefetch = vi.hoisted(() => vi.fn());
+const routerReplace = vi.hoisted(() => vi.fn());
 
 vi.mock("next/navigation", () => ({
   usePathname: vi.fn(() => "/"),
-  useRouter: vi.fn(() => ({ back: vi.fn(), push: vi.fn(), replace: vi.fn(), prefetch: routerPrefetch })),
+  useRouter: vi.fn(() => ({ back: vi.fn(), push: vi.fn(), replace: routerReplace, prefetch: routerPrefetch })),
 }));
 
 describe("PagedReader Component & Integration", () => {
@@ -167,6 +168,22 @@ describe("PagedReader Component & Integration", () => {
   });
 
   describe("Boundaries Clamping", () => {
+    it("keeps page controls within this chapter even when adjacent chapters exist", async () => {
+      useHistoryStore.setState({ _hasHydrated: true });
+      renderWithClient(<PagedReader sourceId="src1" mangaId="manga1" chapterId="ch1"
+        prevChapterId="ch0" nextChapterId="ch2" pages={mockPages} />);
+      expect(useReaderStore.getState().pageNavigation?.canPrevious).toBe(false);
+      await act(async () => { useReaderStore.getState().pageNavigation?.previous?.(); });
+      expect(routerReplace).not.toHaveBeenCalled();
+      await act(async () => { useReaderStore.getState().pageNavigation?.seek(2); });
+      expect(useReaderStore.getState().pageNavigation?.canNext).toBe(false);
+      await act(async () => { useReaderStore.getState().pageNavigation?.next?.(); });
+      expect(screen.getByText("3 / 3")).toBeDefined();
+      expect((screen.getByLabelText("Halaman berikutnya") as HTMLButtonElement).disabled).toBe(true);
+      expect(routerReplace).not.toHaveBeenCalled();
+      await act(async () => { fireEvent.keyDown(window, { key: "ArrowRight" }); });
+      expect(routerReplace).toHaveBeenCalledTimes(1);
+    });
     it("should not navigate before page 1 or past final page when no adjacent chapters exist", async () => {
       renderWithClient(
         <PagedReader

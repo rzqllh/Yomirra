@@ -37,8 +37,8 @@ export function ReaderChapterDrawer({
 
     let result = chapters;
     if (searchQuery.trim()) {
-      const lowerQuery = searchQuery.toLowerCase();
-      result = result.filter(c => c.title.toLowerCase().includes(lowerQuery));
+      const lowerQuery = searchQuery.trim().toLowerCase();
+      result = result.filter(c => c.title.toLowerCase().includes(lowerQuery) || String(c.number ?? "").includes(lowerQuery));
     }
 
     if (sortOrder === "asc") return [...result].reverse();
@@ -70,11 +70,16 @@ export function ReaderChapterDrawer({
   }, [isOpen, sortedChapters]);
 
   const headerControls = (
+    <div className="space-y-2">
+    <p className="text-xs text-text-secondary" role="status">
+      {chapters ? `${sortedChapters.length} dari ${chapters.length} chapter` : "Memuat chapter…"}
+      {" · "}{sortOrder === "asc" ? "Lama ke baru" : "Baru ke lama"}
+    </p>
     <div className="flex items-center gap-2.5">
       <SearchInput
         value={searchQuery}
         onChange={(e) => setSearchQuery(e.target.value)}
-        placeholder="Cari nomor chapter…"
+        placeholder="Cari nomor atau judul chapter…"
         containerClassName="flex-1 h-11"
       />
       <IconButton
@@ -90,6 +95,7 @@ export function ReaderChapterDrawer({
       >
         {sortOrder === "desc" ? <SortDescending size={20} /> : <SortAscending size={20} />}
       </IconButton>
+    </div>
     </div>
   )
 
@@ -144,13 +150,14 @@ export function ReaderChapterDrawer({
                         }
                       }}
                       className={cn(
-                        "min-h-11 rounded-xl border px-2 text-sm font-bold motion-safe:transition-[background-color,border-color,color,transform] outline-none motion-safe:active:scale-[0.97]",
+                        "min-h-11 min-w-0 break-words rounded-xl border px-2 py-2 text-sm font-bold motion-safe:transition-[background-color,border-color,color,transform] outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 motion-safe:active:scale-[0.97]",
                         isCurrent
                           ? "border-accent bg-accent text-accent-on shadow-xs"
                           : "border-border-subtle bg-surface-raised text-text-secondary hover:border-border-strong hover:text-text-primary hover:bg-surface-hover"
                       )}
                       aria-current={isCurrent ? "page" : undefined}
                       aria-label={`Chapter ${numberLabel}${isCurrent ? ", sedang dibaca" : ""}`}
+                      title={chapter.title}
                     >
                       {numberLabel}
                     </button>

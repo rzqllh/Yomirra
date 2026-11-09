@@ -294,7 +294,7 @@ export function MangaRecommendations({
       <div
         ref={dragScrollRef}
         {...dragProps}
-        className="flex gap-3 md:gap-4 overflow-x-auto pb-4 snap-x snap-mandatory hide-scrollbar select-none active:cursor-grabbing"
+        className="flex gap-3 md:gap-4 overflow-x-auto pb-4 snap-x snap-mandatory [scrollbar-width:thin] select-none active:cursor-grabbing"
       >
         {recommendations.map((item) => (
           <div key={`${item.sourceId}-${item.manga.id}`} className="w-[130px] md:w-[140px] shrink-0 snap-start">

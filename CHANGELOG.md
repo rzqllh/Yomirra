@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased — UX audit follow-up
+
+- Constrain shared menus to available viewport space, expose selected options as radio items, wrap long labels, and improve visible focus and horizontal-scroll affordances.
+- Search reader chapters by trimmed number or title, show result counts and sorting, clarify source/status labels, and keep notification content scrollable.
+- Reserve bottom-dock scroll clearance for Help links and add browser coverage for compact settings menus, expanded Help, and installation-guide focus return.
+
+- Keep onboarding actions reachable on short screens and expose installation on touch devices; separate nested installation-guide keyboard handling.
+- Stop reader page buttons at image boundaries; preserve chapter navigation through existing chapter controls and gestures/keyboard.
+- Correct Popular filter semantics, today's schedule marker, reader theme labels, account focus, source-error help copy, and offline-clear availability for pending or small cached downloads.
+- Reconcile historical tracker claims with incomplete acceptance evidence; see `docs/revamp/EXECUTION_LOG.md`. No claim that all 88 audit tickets are complete.
 ## Unreleased — Public documentation
 
 - Susun ulang README dan indeks dokumentasi berdasarkan kebutuhan pembaca, contributor, dan maintainer; tambahkan panduan penggunaan serta bantuan/FAQ.

@@ -1,14 +1,34 @@
 # Yomirra UX Remediation — Persistent Execution Tracker (88 Tickets)
 
-> **Status:** PHASE 1 EXECUTION AUTHORIZED · WAVES 1-5 COMPLETED & VERIFIED
+> **Status:** SCOPED FOLLOW-UP IMPLEMENTED; FULL PACK REMAINS OPEN. Historical Wave 1–5 claims below are not acceptance evidence.
 > **Governance:** XYN Multi-Agent System | Controller: Ritsuka Xyn | Independent QA: Rinne Xyn
 > **Repository:** Yomirra (Next.js 16 + Tailwind v4 + Zustand)
 
-## Execution Progress & Verification Scorecard (Wave 1-5)
-- **Total Tickets Remediated & Code Verified:** 35 / 55 `FIX` tickets
+## Historical scorecard (Wave 1–5; not independently substantiated per ticket)
+- **Historical agent claim, not verified completion:** 35 / 55 `FIX` tickets
 - **Design Token Ratchet:** 529 arbitrary brackets (-52 baseline improvement), 141 raw color bypasses (-10 baseline improvement)
 - **Automated Tests Passing:** Vitest suites for Onboarding (7/7), Updates List (7/7), Reader Shell (13/13), Hero & Header (15/15), Home Loading (3/3)
 - **Unresolved Product Decisions:** 16 tickets preserved in existing safe behavior (`NEEDS_APPROVAL`)
+
+
+## Independent follow-up — 2026-11-09
+
+Base: `819e04d12d31c584441504b3821b509ec501a9e9`; local branch `fix/ux-audit-followup`. No commit or push. User authorized execution after the audit, requires discussion before product semantic changes, and explicitly approved RDR-01 page buttons stopping at image boundaries. Keyboard and gesture navigation retain their previous behavior.
+
+Final scoped verification: 62 focused Vitest tests and 16 production-browser tests (WebKit/Chromium) passed; build, typecheck, lint and ratchet exited 0. Lint retains warnings. No new ticket is marked DONE by this follow-up. Component tests and a limited browser matrix are not the full acceptance evidence pack. Historical 35/55 must not be used as a verified completion percentage. The denominator remains 88 = 55 FIX + 17 QA_REQUIRED + 16 PRODUCT_DECISION.
+
+| Ticket / issue | Implementation state | Evidence boundary / remaining work |
+|---|---|---|
+| RDR-01 | Implemented, scoped approval | Image buttons clamp at boundaries; chapter buttons remain separate. Unit coverage includes adjacent chapters. Full reader device matrix remains open. |
+| CHP-04 | Implemented | Visible and accessible theme label agree; selected state exposed; label wraps. Visual matrix remains open. |
+| SCH-01 | Partial | Today explicitly identified independently of selected day/count. Horizontal overflow affordance still open. |
+| POP-03 | Partial | Source filters use a pressed-button group instead of an invalid tablist. Overflow affordance still open. |
+| NTF-02 | Partial | Account trigger keyboard focus ring restored. Complete account popover acceptance remains open. |
+| HLP-01 | Partial | FAQ no longer attributes every 403/429 to source overload; ordered retry guidance. Full help accessibility review remains open. |
+| SET-06, SET-09 | Partial | Pending storage check differs from empty; cached entries, not rounded MB, determine availability. Confirmation semantics unchanged. Help discovery and full runtime storage QA remain open. |
+| Onboarding regression (cross-cutting SYS-09/NTF-03) | Implemented, browser verification scoped | Independent action footer; short-screen layout; installation action visible on touch; nested guide layering and Escape handling. Not equivalent to closing either complete ticket. |
+
+All other rows retain their previous disposition and require the independent audit gap report, runtime evidence, or a product decision. RDR-02 and CHP-05/07/08/09, storage/deletion/synchronization semantics, and the other PRODUCT_DECISION rows are not authorized for semantic changes. See `docs/revamp/EXECUTION_LOG.md` for commands, failures and verification limitations.
 
 ## Executive Summary
 - **Total Tickets in Audit Pack:** 88
@@ -135,3 +155,12 @@
 | ID | Pri | Route / Page | Component & Element | Source File & Symbol | Disp | RC | Proposed Remediation & Target Criteria |
 |---|---|---|---|---|---|---|---|
 | **SYS-08** | `P1` | Shared shell | `TextScaling / A11y` <br> large text and hit targets | `src/app/globals.css` <br> `@theme text-*` | `QA_REQUIRED` | `R6` | Uji text scaling, orientasi, iPhone kecil, VoiceOver, target tap, focused content, browser zoom. |
+## Preview follow-up — 2026-11-09
+
+Owner approved preserving reading modes, saved positions, settings scope, sync and deletion behavior while clarifying UI. RDR-01 page controls stop at image boundaries by explicit approval; existing gesture/keyboard chapter paths remain.
+
+Additional preview work covers bounded shared menus and checked-option semantics, chapter search/count/order, source/status labels, horizontal-scroll affordances, notification scrolling, compact leaderboard layout, and focused Help link clearance. Evidence and exact changed paths are recorded in docs/revamp/EXECUTION_LOG.md. This does not close all acceptance criteria of the related tickets.
+
+The complete follow-up matrix accounts for 88 tickets: 34 partial implementation + 21 carry-forward acceptance open + 17 QA open + 16 behavior-preserved decision items = 88. Coverage of partial implementations is 34/88 = 38.6%, not a completion percentage. No additional ticket is declared fully accepted from this preview alone. Historic DONE labels must not be counted as independent acceptance evidence.
+
+Targeted unit verification: 15 files, 128 tests passed. Production build and typecheck passed. Full repository test suite and real-device acceptance remain unverified in this follow-up.

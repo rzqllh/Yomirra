@@ -378,6 +378,7 @@ export function ContinuousVerticalReader({
       toast(`Melanjutkan ke gambar ${targetIndex + 1}`, {
         id: "resume-reading",
         duration: 2500,
+        position: "top-center",
         icon: <BookOpen size={15} weight="fill" className="text-accent shrink-0" />,
       });
     } else {

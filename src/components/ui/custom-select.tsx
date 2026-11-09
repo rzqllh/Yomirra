@@ -1,12 +1,13 @@
 "use client"
 
 import * as React from "react"
-import { CaretDown, Check } from "@phosphor-icons/react"
+import { CaretDown } from "@phosphor-icons/react"
 import { cn } from "@/shared/utils/cn"
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
@@ -61,7 +62,7 @@ export function CustomSelect({ value, onChange, options, className, buttonClassN
             aria-label={`${label}: ${typeof selectedOption?.label === "string" ? selectedOption.label : value}`}
             className={cn("group flex min-h-12 items-center justify-between gap-3 rounded-xl border border-border-strong bg-surface-overlay px-4 text-sm font-semibold text-text-primary motion-safe:transition-[background-color,border-color,box-shadow] motion-safe:duration-300 hover:border-accent hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent data-[state=open]:border-accent data-[state=open]:ring-2 data-[state=open]:ring-accent-dim disabled:cursor-not-allowed disabled:opacity-50", className, buttonClassName)}
           >
-            <span className="truncate whitespace-nowrap">
+            <span className="min-w-0 whitespace-normal break-words py-2 text-left">
               {selectedOption?.label}
             </span>
             <CaretDown
@@ -76,28 +77,25 @@ export function CustomSelect({ value, onChange, options, className, buttonClassN
           align={alignMap[align]}
           className="min-w-[var(--radix-dropdown-menu-trigger-width)] rounded-xl p-1.5"
         >
-          <div className="flex flex-col gap-0.5 max-h-[300px] overflow-y-auto">
+          <DropdownMenuRadioGroup value={value} onValueChange={onChange} className="flex flex-col gap-0.5">
             {options.map((option) => {
               const isSelected = option.value === value;
               return (
-                <DropdownMenuItem
+                <DropdownMenuRadioItem
                   key={option.value}
-                  onSelect={() => onChange(option.value)}
+                  value={option.value}
                   className={cn(
-                    "flex min-h-11 items-center justify-between gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors cursor-pointer",
+                    "flex min-h-11 items-center gap-3 rounded-md py-2 text-sm font-medium transition-colors cursor-pointer",
                     isSelected
                       ? "bg-accent/10 text-accent focus:bg-accent/10 focus:text-accent"
                       : "text-text-secondary focus:bg-surface-hover focus:text-text-primary"
                   )}
                 >
-                  <span className="truncate">{option.label}</span>
-                  {isSelected && (
-                    <Check size={14} weight="regular" className="shrink-0" />
-                  )}
-                </DropdownMenuItem>
+                  <span className="min-w-0 whitespace-normal break-words">{option.label}</span>
+                </DropdownMenuRadioItem>
               )
             })}
-          </div>
+          </DropdownMenuRadioGroup>
         </DropdownMenuContent>
       </DropdownMenu>
     </>

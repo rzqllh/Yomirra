@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 const topics = [
   {
     title: "Sumber komik gagal dimuat",
-    answer: "Penyedia komik mungkin sedang membatasi akses atau mengalami gangguan server. Pesan pembatasan (seperti error 403 atau 429) berarti server sumber sedang membatasi permintaan agar tidak overload. Jika ini terjadi, hindari memuat ulang berulang kali; tunggu beberapa menit atau gunakan pilihan sumber alternatif yang tersedia.",
+    answer: "Akses mungkin sedang dibatasi oleh Yomirra atau penyedia komik, atau koneksi sedang terganggu. Tunggu beberapa menit sebelum mencoba lagi. Hindari memuat ulang berulang kali; periksa daftar sumber atau gunakan sumber alternatif yang tersedia.",
     link: "/sources",
     linkLabel: "Periksa daftar sumber",
   },
@@ -80,7 +80,7 @@ export default function HelpPage() {
                   <p className="text-sm leading-relaxed text-text-muted">{topic.answer}</p>
                   <Link
                     href={topic.link}
-                    className="inline-flex min-h-11 items-center rounded-md font-semibold text-sm text-accent underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                    className="scroll-mb-[calc(var(--bottom-nav-height)+16px)] md:scroll-mb-0 inline-flex min-h-11 items-center rounded-md font-semibold text-sm text-accent underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                   >
                     {topic.linkLabel}
                   </Link>

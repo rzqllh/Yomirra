@@ -16,7 +16,7 @@ test("Settings controls persist preferences and expose honest, accessible states
   await page.locator('label[for="check-on-start"]').click();
   await expect(page.getByRole("button", { name: "Jeda pengecekan: 15 Menit", exact: true })).toBeDisabled();
   await page.getByRole("button", { name: /^Bahasa utama:/ }).click();
-  await page.getByRole("menuitem", { name: "English", exact: true }).click();
+  await page.getByRole("menuitemradio", { name: "English", exact: true }).click();
   await page.getByRole("button", { name: "Gelap", exact: true }).click();
   await expect(page.locator("html")).toHaveClass(/dark/);
   await expect(page.getByRole("link", { name: /^Kelola sumber/ })).toHaveAttribute("href", "/sources");

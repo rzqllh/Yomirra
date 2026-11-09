@@ -657,7 +657,7 @@ export function MangaCard({
         }}
         className={cn(
           mangaCardSurface({ kind: "enclosed" }),
-          "group flex h-[110px] w-full min-w-[280px] overflow-hidden",
+          "group flex min-h-[110px] w-full min-w-0 overflow-hidden",
           className
         )}
         style={vtStyle}

@@ -68,6 +68,9 @@ export function MalPopularSection({
           })}
           .
         </p>
+        <p className="mt-2 text-xs text-text-secondary">
+          Cari sumber bacaan untuk memeriksa ketersediaan judul. Masuk peringkat MAL tidak menjamin judul tersedia di sumber Yomirra.
+        </p>
       </div>
 
       {visibleWorks.length === 0 ? (

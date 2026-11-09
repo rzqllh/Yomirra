@@ -49,8 +49,8 @@ export function MangaStatusButton({ sourceId, mangaId }: MangaStatusButtonProps)
   };
 
   const getLabel = () => {
-    if (!mounted || !readingStatus) return "Status";
-    return STATUS_OPTIONS.find((o) => o.value === readingStatus)?.shortLabel || "Status";
+    if (!mounted || !readingStatus) return "Status baca";
+    return STATUS_OPTIONS.find((o) => o.value === readingStatus)?.shortLabel || "Status baca";
   };
 
   return (
@@ -66,7 +66,7 @@ export function MangaStatusButton({ sourceId, mangaId }: MangaStatusButtonProps)
         )}
       >
         <BookOpenText size={18} weight={readingStatus && mounted ? "fill" : "regular"} className="shrink-0" />
-        <span className="min-w-0 truncate text-xs font-semibold tracking-tight leading-tight">
+        <span className="min-w-0 whitespace-normal text-xs font-semibold tracking-tight leading-tight">
           {getLabel()}
         </span>
       </button>
@@ -83,7 +83,7 @@ export function MangaStatusButton({ sourceId, mangaId }: MangaStatusButtonProps)
             <div>
               <DialogTitle>Status Membaca</DialogTitle>
               <DialogDescription className="mt-1.5">
-                Tandai progres membaca untuk komik ini.
+                Pilih status baca untuk komik ini. Pilih kembali status aktif untuk menghapusnya.
               </DialogDescription>
             </div>
           </DialogHeader>
@@ -95,8 +95,9 @@ export function MangaStatusButton({ sourceId, mangaId }: MangaStatusButtonProps)
                 <button
                   key={option.value}
                   onClick={() => handleSelect(option.value)}
+                  aria-pressed={isActive}
                   className={cn(
-                    "flex items-center justify-between w-full p-3.5 rounded-xl transition-all border outline-none font-semibold text-sm select-none active:scale-[0.99]",
+                    "flex items-center justify-between w-full p-3.5 rounded-xl transition-all border outline-none focus-visible:ring-2 focus-visible:ring-accent font-semibold text-sm select-none active:scale-[0.99]",
                     isActive
                       ? "bg-accent/15 border-accent/30 text-accent font-bold shadow-xs"
                       : "bg-surface-base border-border-default/60 text-text-primary hover:bg-surface-hover hover:border-border-strong"

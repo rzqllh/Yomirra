@@ -20,7 +20,7 @@ export function SearchPageView() {
       <PageContainer hasMobileHeader>
         <PageHeader
           title="Cari"
-          subtitle="Temukan komik dari berbagai sumber."
+          subtitle="Cari judul di sumber yang dipilih. Filter berlaku pada hasil pencarian."
           icon={<MagnifyingGlass size={24} weight="regular" />}
         />
 

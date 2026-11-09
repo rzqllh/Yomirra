@@ -631,7 +631,7 @@ describe("Yomirra Editorial Home Components", () => {
       );
 
       fireEvent.pointerDown(select, { button: 0, ctrlKey: false });
-      fireEvent.click(screen.getByRole("menuitem", { name: "Source B" }));
+      fireEvent.click(screen.getByRole("menuitemradio", { name: "Source B" }));
 
       expect(screen.getByText("Manga Source B")).toBeTruthy();
       expect(screen.queryByText("Manga Test 1")).toBeNull();

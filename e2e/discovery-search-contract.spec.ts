@@ -46,7 +46,7 @@ test("Quick Search follows Jelajah after source switch and client navigation; Ca
   test.setTimeout(120_000);
   await openCatalog(page, "&page=3");
   await page.getByRole("button", { name: "Sumber Jelajah: Source A", exact: true }).click();
-  await page.getByRole("menuitem", { name: "Source B", exact: true }).click();
+  await page.getByRole("menuitemradio", { name: "Source B", exact: true }).click();
   await expect(page).toHaveURL(/source=mangadex/);
   await expect(page.getByText("Catalog mangadex", { exact: true }).first()).toBeVisible();
   expect(new URL(page.url()).searchParams.has("page")).toBe(false);
@@ -96,7 +96,7 @@ test("native provider sorts settle without a render loop and reach the request",
   expect(new URL(page.url()).searchParams.get("page")).toBe("3");
   await page.getByRole("button", { name: "Urutkan Jelajah: Terbaru", exact: true }).click();
   const request = page.waitForRequest(req => new URL(req.url()).pathname === "/api/sources/mangadex/search" && new URL(req.url()).searchParams.get("sort") === "createdAt");
-  await page.getByRole("menuitem", { name: "Terbaru Ditambahkan", exact: true }).click();
+  await page.getByRole("menuitemradio", { name: "Terbaru Ditambahkan", exact: true }).click();
   await request;
   await expect(page).toHaveURL(/sort=createdAt/);
   expect(new URL(page.url()).searchParams.has("page")).toBe(false);

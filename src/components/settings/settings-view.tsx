@@ -92,6 +92,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
   const [isClearingDownloads, setIsClearingDownloads] = React.useState(false);
   const [isClearingDevice, setIsClearingDevice] = React.useState(false);
   const [storageData, setStorageData] = React.useState<YomirraStorageBreakdown | null>(null);
+  const hasOfflinePages = storageData !== null && storageData.entryCounts.downloads > 0;
 
   // Load real Yomirra storage breakdown
   const refreshStorage = React.useCallback(async () => {
@@ -530,21 +531,25 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
             icon={<IconWrapper><DownloadSimple size={19} weight="regular" /></IconWrapper>}
             title="Hapus semua bab offline"
             description={
-              (storageData?.downloadsMB ?? 0) === 0
-                ? "Tidak ada bab komik offline yang tersimpan saat ini."
-                : "Hapus berkas komik yang diunduh untuk dibaca saat offline."
+              storageData === null
+                ? "Memeriksa unduhan offline…"
+                : hasOfflinePages
+                  ? "Hapus berkas komik yang diunduh untuk dibaca saat offline."
+                  : "Tidak ada bab komik offline yang tersimpan saat ini."
             }
             right={
               <Button
                 onClick={() => setIsClearDownloadsDialogOpen(true)}
                 variant="outline"
-                disabled={isClearingDownloads || (storageData?.downloadsMB ?? 0) === 0}
+                disabled={isClearingDownloads || !hasOfflinePages}
                 aria-label={
-                  (storageData?.downloadsMB ?? 0) === 0
-                    ? "Hapus unduhan offline (dinonaktifkan karena tidak ada bab tersimpan)"
-                    : "Hapus unduhan offline"
+                  storageData === null
+                    ? "Hapus unduhan offline (menunggu pemeriksaan penyimpanan)"
+                    : hasOfflinePages
+                      ? "Hapus unduhan offline"
+                      : "Hapus unduhan offline (dinonaktifkan karena tidak ada bab tersimpan)"
                 }
-                title={(storageData?.downloadsMB ?? 0) === 0 ? "Tidak ada bab offline yang tersimpan" : undefined}
+                title={storageData === null ? "Memeriksa unduhan offline…" : !hasOfflinePages ? "Tidak ada bab offline yang tersimpan" : undefined}
                 className="w-full sm:w-auto shrink-0 rounded-xl font-bold text-xs h-9 px-3.5 text-text-secondary hover:text-semantic-error hover:border-semantic-error/40 transition-colors"
               >
                 Hapus unduhan
@@ -626,7 +631,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
           className="rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary h-9 px-4"
         >
           <Compass size={16} weight="regular" className="mr-1.5" />
-          Buka Panduan Onboarding
+          Tampilkan panduan saat ke Beranda
         </Button>
 
         <span className="text-xs text-text-muted font-medium select-none">

@@ -76,7 +76,7 @@ export function PopularPageView({ feeds, mal }: PopularPageViewProps) {
         <div className="space-y-6">
           {/* Source Filter Pills Rail */}
           {feeds.length > 0 && (
-            <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none overscroll-x-contain touch-pan-x" role="tablist" aria-label="Filter sumber komik">
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 [scrollbar-width:thin] overscroll-x-contain touch-pan-x" role="group" aria-label="Filter sumber komik">
               <FilterChip
                 label={`Semua Sumber (${aggregated.length})`}
                 selected={selectedSourceId === "all"}

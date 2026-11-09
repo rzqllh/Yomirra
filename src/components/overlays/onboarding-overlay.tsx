@@ -58,6 +58,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
   const reducedMotion = useReducedMotion();
   const dialogRef = React.useRef<HTMLDivElement>(null);
   const skipButtonRef = React.useRef<HTMLButtonElement>(null);
+  const installButtonRef = React.useRef<HTMLButtonElement>(null);
   const previousFocusRef = React.useRef<HTMLElement | null>(null);
   const [isMounted, setIsMounted] = React.useState(false);
   const [isReadyToExit, setIsReadyToExit] = React.useState(false);
@@ -124,6 +125,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
 
   // Keyboard navigation + focus containment
   React.useEffect(() => {
+    if (showIOSGuide) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Tab") {
         const root = dialogRef.current;
@@ -170,7 +172,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [step]);
+  }, [step, showIOSGuide]);
 
   if (!isMounted) return null;
 
@@ -187,7 +189,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
       animate={{ opacity: 1 }}
       exit={reducedMotion ? { opacity: 1 } : { opacity: 0, scale: 0.99 }}
       transition={reducedMotion ? { duration: 0 } : { duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-      className="fixed inset-0 z-[var(--z-takeover)] flex h-dvh max-h-dvh flex-col justify-between overflow-hidden bg-surface-base text-text-primary selection:bg-accent/20 md:h-auto md:min-h-dvh md:overflow-y-auto"
+      className="fixed inset-0 z-[var(--z-takeover)] flex h-dvh max-h-dvh flex-col overflow-hidden bg-surface-base text-text-primary selection:bg-accent/20"
     >
       {/* Dynamic Ambient Color Glow */}
       <div
@@ -231,13 +233,13 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
       </header>
 
       {/* Central Interactive Showcase Stage with Responsive Overflow Fallback */}
-      <main className="relative z-10 mx-auto my-auto flex w-full max-w-5xl flex-1 min-h-0 items-center justify-center overflow-y-auto overscroll-contain px-4 py-1 sm:px-10 sm:py-6">
-        <div className="grid w-full grid-cols-1 md:grid-cols-2 gap-3 sm:gap-8 md:gap-14 lg:gap-16 items-center">
+      <main className="relative z-10 mx-auto flex w-full max-w-5xl flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-1 sm:px-10 sm:py-6 [@media(max-height:600px)]:py-1">
+        <div className="grid w-full grid-cols-1 md:grid-cols-2 gap-3 sm:gap-8 md:gap-14 lg:gap-16 items-center my-auto [@media(max-height:600px)]:grid-cols-1">
           
           {/* Left Column: Physical 3D Manga Volume Presentation */}
           <div
             aria-hidden="true"
-            className="relative flex flex-col items-center justify-center py-1 sm:py-4 md:py-6"
+            className="relative flex flex-col items-center justify-center py-1 sm:py-4 md:py-6 [@media(max-height:600px)]:hidden"
           >
             {/* The Manga Book Deck Container — Strict Fit on Mobile Viewport */}
             <div className="relative w-28 sm:w-60 md:w-72 aspect-[2/3] perspective-1000 shrink-0">
@@ -321,7 +323,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
           <div className="flex flex-col justify-center min-h-0">
             
             {/* Content Container — Restored Natural Vertical Rhythm */}
-            <div aria-live="polite" className="flex flex-col gap-1.5 sm:gap-4 md:gap-6 min-h-0 sm:min-h-48 justify-center">
+            <div aria-live="polite" className="flex flex-col gap-1.5 sm:gap-4 md:gap-6 min-h-0 sm:min-h-48 justify-center [@media(max-height:600px)]:min-h-0 [@media(max-height:600px)]:gap-1.5">
               
               {/* Eyebrow Label */}
               <div className="flex items-center gap-2">
@@ -341,7 +343,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
                     animate={{ opacity: 1, y: 0 }}
                     exit={reducedMotion ? { opacity: 1 } : { opacity: 0, y: -6 }}
                     transition={reducedMotion ? { duration: 0 } : { duration: 0.18 }}
-                    className="text-balance text-lg sm:text-4xl lg:text-5xl font-extrabold leading-snug sm:leading-[1.15] tracking-tight text-text-primary"
+                    className="text-balance text-lg sm:text-4xl lg:text-5xl font-extrabold leading-snug sm:leading-[1.15] tracking-tight text-text-primary [@media(max-height:600px)]:text-lg"
                   >
                     {current.title}
                   </motion.h1>
@@ -358,7 +360,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
                     animate={{ opacity: 1 }}
                     exit={reducedMotion ? { opacity: 1 } : { opacity: 0 }}
                     transition={reducedMotion ? { duration: 0 } : { duration: 0.18 }}
-                    className="text-xs sm:text-base leading-relaxed text-text-secondary max-w-prose line-clamp-3 sm:line-clamp-none"
+                    className="text-xs sm:text-base leading-relaxed text-text-secondary max-w-prose [@media(max-height:600px)]:text-xs"
                   >
                     {current.desc}
                   </motion.p>
@@ -366,10 +368,15 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
               </div>
             </div>
 
-            {/* Stable Action & Navigation Row — Strict Zero Clipping at 360px & 400px, Never pushed off-screen */}
-            <div className="mt-2 sm:mt-6 pt-2 sm:pt-5 border-t border-border-subtle flex flex-col gap-1.5 sm:gap-3 shrink-0 pb-[calc(var(--safe-bottom)+8px)] sm:pb-0">
+          </div>
+        </div>
+      </main>
+
+      {/* Keep actions outside the scrollable text fallback for zoom and short screens. */}
+      <footer className="relative z-20 mx-auto w-full max-w-5xl shrink-0 px-4 sm:px-10 pb-[calc(var(--safe-bottom)+8px)]">
+            <div className="pt-2 border-t border-border-subtle flex flex-col gap-1.5">
               
-              <div className="flex items-center justify-between gap-2 sm:gap-4">
+              <div className="flex items-center justify-between gap-2 sm:gap-4 [@media(max-width:350px)]:flex-col">
                 {/* Stepper Interactive Pills (size-11 touch target maintained) */}
                 <div className="flex items-center gap-1 shrink-0">
                   {STEPS.map((_, i) => (
@@ -395,7 +402,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
                 </div>
 
                 {/* Navigation CTA Group — Responsive Geometry, Zero Clipping on Mobile */}
-                <div className="flex items-center gap-2 sm:gap-3 flex-1 sm:flex-initial justify-end">
+                <div className="flex items-center gap-2 sm:gap-3 flex-1 sm:flex-initial justify-end [@media(max-width:350px)]:w-full">
                   {/* Kembali Button: Always renders with consistent geometry, hidden on Step 0 */}
                   <button
                     type="button"
@@ -428,7 +435,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
               </div>
 
               {/* Bottom Utility Slot */}
-              <div className="hidden [@media(min-width:768px)_and_(hover:hover)_and_(pointer:fine)]:flex min-h-6 sm:min-h-8 items-center">
+              <div>
                 {step === STEPS.length - 1 && isInstallable ? (
                   <div className="w-full flex items-center justify-between px-3 py-1.5 rounded-xl bg-surface-raised border border-border-default/80">
                     <div className="flex items-center gap-2.5 min-w-0 pr-2">
@@ -439,30 +446,26 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
                     </div>
                     <button
                       type="button"
+                      ref={installButtonRef}
                       onClick={installPWA}
-                      className="px-3 py-1 rounded-lg bg-accent/15 hover:bg-accent/25 text-accent text-xs font-bold transition-colors cursor-pointer shrink-0"
+                      className="min-h-11 px-3 py-1 rounded-lg bg-accent/15 hover:bg-accent/25 text-accent text-xs font-bold transition-colors cursor-pointer shrink-0 focus-visible:outline-2 focus-visible:outline-accent"
                     >
                       Pasang
                     </button>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2 text-2xs text-text-muted px-1">
+                  <div className="hidden [@media(min-width:768px)_and_(hover:hover)_and_(pointer:fine)]:flex min-h-6 items-center gap-2 text-2xs text-text-muted px-1">
                     <Keyboard size={14} className="shrink-0 text-text-muted/80" />
                     <span className="truncate">{current.tip}</span>
                   </div>
                 )}
               </div>
             </div>
-          </div>
-        </div>
-      </main>
-
-      {/* Footer spacer */}
-      <footer className="relative z-20 pb-[calc(var(--safe-bottom)+12px)]" />
+      </footer>
 
       {/* iOS Safari Add to Home Screen Guidance Dialog */}
       <Dialog open={showIOSGuide} onOpenChange={setShowIOSGuide}>
-        <DialogContent className="max-w-sm rounded-2xl bg-surface-overlay border border-border-default/80 p-6 text-text-primary shadow-2xl">
+        <DialogContent onEscapeKeyDown={(event) => event.stopPropagation()} onCloseAutoFocus={(event) => { event.preventDefault(); installButtonRef.current?.focus(); }} overlayClassName="z-[var(--z-takeover)]" className="z-[var(--z-takeover)] max-w-sm rounded-2xl bg-surface-overlay border border-border-default/80 p-6 text-text-primary shadow-2xl">
           <DialogHeader>
             <DialogTitle className="text-base font-bold flex items-center gap-2">
               <Export size={20} className="text-accent" weight="bold" />

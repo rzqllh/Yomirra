@@ -208,7 +208,7 @@ export function CollectionTab({
               </span>
             </div>
 
-            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 px-0.5">
+            <div className="flex items-center gap-2 overflow-x-auto [scrollbar-width:thin] overscroll-x-contain touch-pan-x py-1 px-0.5">
               <FilterChip
                 label={
                   <span className="flex items-center gap-1.5">
@@ -259,7 +259,7 @@ export function CollectionTab({
                 </span>
               </div>
 
-              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 px-0.5">
+              <div className="flex items-center gap-2 overflow-x-auto [scrollbar-width:thin] overscroll-x-contain touch-pan-x py-1 px-0.5">
                 {collections.map((collection) => {
                   const isSelected = selectedCollectionId === collection.id;
                   const count = getMangaCount(collection.id);

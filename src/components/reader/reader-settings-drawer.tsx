@@ -222,7 +222,8 @@ export function ReaderSettingsDrawer({ isOpen, onClose, sourceId, mangaId }: Rea
                 <button
                   key={bg.value}
                   type="button"
-                  aria-label={bg.value === 'system' ? 'Sesuai Sistem' : bg.name}
+                  aria-label={bg.name}
+                  aria-pressed={isSelected}
                   onClick={() => handleUpdate({ background: bg.value })}
                   className={cn(
                     "flex flex-col items-center gap-2 p-2.5 rounded-xl border transition-all outline-none cursor-pointer",
@@ -240,7 +241,7 @@ export function ReaderSettingsDrawer({ isOpen, onClose, sourceId, mangaId }: Rea
                     }
                   />
                   <span className={cn(
-                    "text-xs font-bold truncate w-full text-center",
+                    "text-xs font-bold whitespace-normal w-full text-center",
                     isSelected ? "text-accent" : "text-text-secondary"
                   )}>
                     {bg.name}

@@ -72,7 +72,7 @@ export function HeaderActions({ className }: { className?: string } = {}) {
         aria-label="Buka menu akun"
         aria-expanded={isMenuOpen}
         className={cn(
-          "relative flex size-11 items-center justify-center rounded-xl border border-transparent bg-transparent shadow-none transition-colors outline-none select-none active:scale-95 cursor-pointer",
+          "relative flex size-11 items-center justify-center rounded-xl border border-transparent bg-transparent shadow-none transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 select-none active:scale-95 cursor-pointer",
           isSettingsActive
             ? "border-accent/30 bg-accent/15 text-accent"
             : isMenuOpen

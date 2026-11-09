@@ -96,7 +96,7 @@ export function UpdatesBell({ className }: { className?: string } = {}) {
         <button
           type="button"
           className={cn(
-            "relative flex size-9 items-center justify-center rounded-[10px] bg-surface-raised border border-border-subtle hover:border-accent/40 text-text-secondary hover:text-text-primary active:scale-95 transition-colors outline-none select-none shrink-0 shadow-xs cursor-pointer",
+            "relative flex size-9 items-center justify-center rounded-[10px] bg-surface-raised border border-border-subtle hover:border-accent/40 text-text-secondary hover:text-text-primary active:scale-95 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent select-none shrink-0 shadow-xs cursor-pointer",
             className
           )}
           aria-label={accessibleLabel}
@@ -138,9 +138,9 @@ export function UpdatesBell({ className }: { className?: string } = {}) {
       <DropdownMenuContent
         align="end"
         sideOffset={8}
-        className="w-80 sm:w-88 p-0 rounded-xl bg-surface-overlay/95 backdrop-blur-xl border border-border-subtle shadow-xl overflow-hidden z-[100]"
+        className="flex flex-col w-80 sm:w-88 p-0 rounded-xl bg-surface-overlay/95 backdrop-blur-xl border border-border-subtle shadow-xl overflow-hidden z-[100]"
       >
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border-subtle bg-surface-raised/40">
+        <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-border-subtle bg-surface-raised/40">
           <div className="flex items-center gap-2">
             <Bell size={16} weight="regular" className="text-accent" />
             <h3 className="text-xs font-bold uppercase tracking-wider text-text-primary">
@@ -154,7 +154,7 @@ export function UpdatesBell({ className }: { className?: string } = {}) {
           )}
         </div>
 
-        <div className="max-h-[340px] overflow-y-auto divide-y divide-border-subtle/50 py-1">
+        <div className="min-h-0 max-h-[340px] overflow-y-auto divide-y divide-border-subtle/50 py-1">
           {recentUpdates.length === 0 ? (
             <div className="py-8 px-4 text-center flex flex-col items-center justify-center gap-2">
               <BookOpen size={32} weight="duotone" className="text-text-muted/60" />
@@ -209,7 +209,7 @@ export function UpdatesBell({ className }: { className?: string } = {}) {
 
         <DropdownMenuSeparator className="m-0" />
 
-        <div className="p-1.5 bg-surface-raised/30">
+        <div className="shrink-0 p-1.5 bg-surface-raised/30">
           <DropdownMenuItem asChild>
             <Link
               href="/updates"

@@ -41,6 +41,17 @@ describe('UpdatesList Component', () => {
     expect(screen.getByText(/Belum ada jadwal/i)).toBeTruthy();
   });
 
+  it('identifies today independently of the selected day and item counts', () => {
+    (useUpdateStore as any).mockReturnValue({ items: {
+      'sourceA::manga1': { sourceId: 'sourceA', mangaId: 'manga1', mangaTitle: 'Title 1', detectedAt: new Date().toISOString(), latestChapterId: 'chap1' },
+    }, markAllAsSeen: mockMarkAllAsSeen });
+    render(<UpdatesList initialDay="all" />);
+    const today = screen.getByRole('button', { name: /Hari ini/ });
+    expect(today.getAttribute('aria-pressed')).toBe('false');
+    fireEvent.click(today);
+    expect(today.getAttribute('aria-pressed')).toBe('true');
+  });
+
   it('groups updates by day and sorts them by detectedAt descending', () => {
     const today = new Date().toISOString();
     const yesterday = new Date(Date.now() - 86400000).toISOString();

@@ -48,6 +48,14 @@ const mockMalFeed: MalPopularFeed = {
 };
 
 describe("PopularPageView (Unified Popular Architecture - D-03)", () => {
+  it("exposes source filters as a group of pressed buttons", () => {
+    render(<PopularPageView feeds={mockFeeds} />);
+    expect(screen.getByRole("group", { name: "Filter sumber komik" })).toBeTruthy();
+    expect(screen.queryByRole("tablist")).toBeNull();
+    const source = screen.getByRole("button", { name: /Komikindo/i });
+    fireEvent.click(source);
+    expect(source.getAttribute("aria-pressed")).toBe("true");
+  });
   it("defaults to 'Populer di Yomirra' tab and renders source filter pills", () => {
     render(<PopularPageView feeds={mockFeeds} mal={mockMalFeed} />);
 

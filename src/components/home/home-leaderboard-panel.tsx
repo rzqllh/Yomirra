@@ -96,7 +96,7 @@ export function HomeLeaderboardPanel({
                 value: source.id,
                 label: source.name,
               }))}
-              buttonClassName="h-11 min-h-11 max-w-[132px] rounded-[10px] border-border-subtle bg-surface-muted px-2.5 py-0 text-[11px] font-semibold text-text-secondary shadow-none hover:bg-surface-hover"
+              buttonClassName="min-h-11 max-w-[132px] rounded-[10px] border-border-subtle bg-surface-muted px-2.5 py-0 text-[11px] font-semibold text-text-secondary shadow-none hover:bg-surface-hover"
               align="right"
             />
           ) : activeSourceId ? (
@@ -110,7 +110,7 @@ export function HomeLeaderboardPanel({
               href={targetSeeAllHref}
               className="group inline-flex min-h-11 items-center gap-1 rounded-[10px] px-1.5 text-xs font-bold text-accent hover:bg-accent/5 focus-visible:outline-2 focus-visible:outline-accent"
             >
-              <span className="hidden sm:inline">Lihat semua</span>
+              <span className="sr-only sm:not-sr-only">Lihat semua</span>
               <ArrowRight
                 size={13}
                 weight="regular"
