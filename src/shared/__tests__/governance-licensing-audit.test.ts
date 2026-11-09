@@ -34,6 +34,7 @@ describe("Governance, Licensing & Provenance Audit - Q163, Q165, Q167, Q168, Q16
     expect(fs.existsSync(readmePath)).toBe(true);
 
     const readmeContent = fs.readFileSync(readmePath, "utf-8");
+    // Affirms clean-room independent reader interface in README.md
     expect(readmeContent).toContain("Yomirra adalah reader interface independen");
   });
 
