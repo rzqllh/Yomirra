@@ -150,7 +150,7 @@ export function ReaderChapterDrawer({
                         }
                       }}
                       className={cn(
-                        "min-h-11 min-w-0 break-words rounded-xl border px-2 py-2 text-sm font-bold motion-safe:transition-[background-color,border-color,color,transform] outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 motion-safe:active:scale-[0.97]",
+                        "min-h-11 rounded-xl min-w-0 break-words border px-2 py-2 text-sm font-bold motion-safe:transition-[background-color,border-color,color,transform] outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 motion-safe:active:scale-[0.97]",
                         isCurrent
                           ? "border-accent bg-accent text-accent-on shadow-xs"
                           : "border-border-subtle bg-surface-raised text-text-secondary hover:border-border-strong hover:text-text-primary hover:bg-surface-hover"

@@ -12,6 +12,7 @@ vi.mock("next/navigation", () => ({
     push: mockPush,
     back: vi.fn(),
   }),
+  usePathname: () => "/komik/test/test",
 }));
 
 vi.mock("@/shared/sources/dynamic-source-registry", () => ({

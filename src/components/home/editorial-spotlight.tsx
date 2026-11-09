@@ -246,7 +246,7 @@ export function EditorialSpotlight({
               href={href}
               className="group rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
-              <h2 className="line-clamp-2 text-xl font-bold leading-[1.15] tracking-tight text-text-primary transition-colors group-hover:text-accent sm:text-2xl lg:text-[32px]">
+              <h2 className="line-clamp-3 sm:line-clamp-2 text-xl font-bold leading-snug tracking-tight text-text-primary transition-colors group-hover:text-accent sm:text-2xl lg:text-3xl pb-0.5">
                 {manga.title}
               </h2>
             </Link>
@@ -300,7 +300,7 @@ export function EditorialSpotlight({
 
             {totalCount > 1 && (
               <div
-                className="flex shrink-0 items-center gap-1.5"
+                className="hidden sm:flex shrink-0 items-center gap-1.5"
                 role="region"
                 aria-label="Kontrol sorotan"
               >

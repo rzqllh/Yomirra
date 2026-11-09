@@ -130,10 +130,6 @@ function queueHistoryWrite(item: HistoryItem): void {
     () => { if (pendingWrites.get(key) === current) pendingWrites.delete(key); },
     () => {
       if (pendingWrites.get(key) === current) pendingWrites.delete(key);
-      if (getLocalDataOwnerUid() === ownerUid) toast.warning("Progres tersimpan di perangkat", {
-        id: `history-sync-${ownerUid}`,
-        description: "Belum tersinkron ke akun. Sinkronisasi akan dicoba saat koneksi kembali.",
-      });
     },
   );
 }

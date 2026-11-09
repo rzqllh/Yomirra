@@ -298,7 +298,7 @@ function MangaDetailContent({
             src={detail.coverUrl}
             alt=""
             className="bg-transparent"
-            imageClassName="scale-110 opacity-75 blur-[8px] brightness-[0.75]"
+            imageClassName="scale-110 opacity-30 dark:opacity-65 blur-md brightness-95 dark:brightness-75 transition-opacity"
           />
         )}
         header={
@@ -325,11 +325,11 @@ function MangaDetailContent({
         mobileMeta={
           <>
             <div className="mb-2">
-              <h1 id="manga-detail-title-mobile" className="text-xl min-[360px]:text-[22px] sm:text-[26px] font-black tracking-tight text-white leading-[1.1] line-clamp-3 text-balance drop-shadow-sm vt-title-mobile">
+              <h1 id="manga-detail-title-mobile" className="text-xl min-[360px]:text-2xl sm:text-3xl font-black tracking-tight text-text-primary leading-snug line-clamp-3 text-balance drop-shadow-xs vt-title-mobile pb-0.5">
                 {detail.title}
               </h1>
               {detail.originalTitle && (
-                <p className="text-[12px] font-medium text-white/70 mt-1 truncate">
+                <p className="text-xs font-medium text-text-secondary mt-1 truncate">
                   {detail.originalTitle}
                 </p>
               )}
@@ -337,22 +337,22 @@ function MangaDetailContent({
 
             <div className="flex items-center gap-1.5 flex-wrap mb-2.5">
               {detail.format && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider backdrop-blur-md border border-white/15 bg-black/40 text-white shadow-xs">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-2xs font-bold uppercase tracking-wider backdrop-blur-md border border-border-default/80 bg-surface-raised/85 text-text-secondary shadow-xs">
                   {detail.format}
                 </span>
               )}
               {Number(displayScore) > 0 ? (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold tracking-wide backdrop-blur-md border border-amber-400/30 bg-black/40 text-amber-300 shadow-xs">
-                  <Star weight="fill" size={12} className="text-amber-400" />
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-2xs font-bold tracking-wide backdrop-blur-md border border-amber-500/30 bg-surface-raised/85 text-amber-500 shadow-xs">
+                  <Star weight="fill" size={12} className="text-amber-500" />
                   <span suppressHydrationWarning>{Number(displayScore).toFixed(1)}</span>
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium tracking-wide backdrop-blur-md border border-white/10 bg-black/30 text-white/70 shadow-xs">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-2xs font-medium tracking-wide backdrop-blur-md border border-border-default/80 bg-surface-raised/85 text-text-muted shadow-xs">
                   <span>Belum dinilai</span>
                 </span>
               )}
               {detail.status && detail.status !== "UNKNOWN" && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider backdrop-blur-md border border-white/15 bg-black/40 text-white shadow-xs">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-2xs font-bold uppercase tracking-wider backdrop-blur-md border border-border-default/80 bg-surface-raised/85 text-text-secondary shadow-xs">
                   {detail.status}
                 </span>
               )}
@@ -379,11 +379,11 @@ function MangaDetailContent({
         desktopMeta={
           <>
             <div>
-              <h1 id="manga-detail-title-desktop" className="text-3xl lg:text-4xl xl:text-[42px] font-black tracking-tight leading-[1.15] text-white drop-shadow-sm vt-title-desktop max-w-2xl">
+              <h1 id="manga-detail-title-desktop" className="text-3xl lg:text-4xl xl:text-5xl font-black tracking-tight leading-tight text-text-primary drop-shadow-xs vt-title-desktop max-w-2xl pb-1">
                 {detail.title}
               </h1>
               {detail.originalTitle && (
-                <p className="text-sm font-medium text-white/70 mt-1">
+                <p className="text-sm font-medium text-text-secondary mt-1">
                   {detail.originalTitle}
                 </p>
               )}
@@ -391,22 +391,22 @@ function MangaDetailContent({
 
             <div className="flex flex-wrap items-center gap-1.5">
               {detail.format && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider backdrop-blur-md border border-white/15 bg-black/40 text-white shadow-xs">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-2xs font-bold uppercase tracking-wider backdrop-blur-md border border-border-default/80 bg-surface-raised/85 text-text-secondary shadow-xs">
                   {detail.format}
                 </span>
               )}
               {Number(displayScore) > 0 ? (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold tracking-wide backdrop-blur-md border border-amber-400/30 bg-black/40 text-amber-300 shadow-xs">
-                  <Star weight="fill" size={12} className="text-amber-400" />
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-2xs font-bold tracking-wide backdrop-blur-md border border-amber-500/30 bg-surface-raised/85 text-amber-500 shadow-xs">
+                  <Star weight="fill" size={12} className="text-amber-500" />
                   <span suppressHydrationWarning>{Number(displayScore).toFixed(1)}</span>
                 </span>
               ) : (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium tracking-wide backdrop-blur-md border border-white/10 bg-black/30 text-white/70 shadow-xs">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-2xs font-medium tracking-wide backdrop-blur-md border border-border-default/80 bg-surface-raised/85 text-text-muted shadow-xs">
                   <span>Belum dinilai</span>
                 </span>
               )}
               {detail.status && detail.status !== "UNKNOWN" && (
-                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider backdrop-blur-md border border-white/15 bg-black/40 text-white shadow-xs">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-2xs font-bold uppercase tracking-wider backdrop-blur-md border border-border-default/80 bg-surface-raised/85 text-text-secondary shadow-xs">
                   {detail.status}
                 </span>
               )}

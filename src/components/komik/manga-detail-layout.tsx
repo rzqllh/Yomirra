@@ -57,7 +57,7 @@ export function MangaDetailLayout({
     <div className={cn("flex-1 flex flex-col w-full relative text-text-primary bg-surface-base", className)}>
       <section className="relative w-full overflow-hidden select-none">
         {/* Backdrop Scrim */}
-        <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden bg-neutral-950">
+        <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden bg-surface-base">
           {/* Parallax layer with vertical overflow so translation never exposes empty gaps */}
           <motion.div
             style={{ y: backdropY }}
@@ -67,9 +67,9 @@ export function MangaDetailLayout({
           </motion.div>
 
           {/* Top vignette — keeps header/back button readable without killing the cover */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/15 via-35% to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-b from-surface-base/80 via-surface-base/30 to-transparent pointer-events-none" />
 
-          <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/65 to-black/10" />
+          <div className="absolute inset-0 bg-gradient-to-t from-surface-base via-surface-base/75 to-transparent" />
         </div>
 
         {/* Page Header */}
@@ -82,10 +82,9 @@ export function MangaDetailLayout({
             <div className="flex gap-3.5 relative items-end min-[360px]:gap-5">
               <div
                 className={cn(
-                  "relative shrink-0 aspect-[2/3] rounded-[18px] overflow-hidden shadow-lg border border-white/10 dark:border-white/10 bg-surface-raised z-20",
+                  "relative shrink-0 w-32 min-[360px]:w-36 sm:w-44 aspect-[2/3] rounded-xl overflow-hidden shadow-lg border border-border-default/80 bg-surface-raised z-20",
                   mobileCoverClassName
                 )}
-                style={{ width: "clamp(126px, 41vw, 180px)" }}
               >
                 {mobileCover}
               </div>
@@ -107,7 +106,7 @@ export function MangaDetailLayout({
           <div className="hidden items-center gap-8 md:flex lg:gap-10">
             <div
               className={cn(
-                "relative w-[220px] lg:w-[240px] shrink-0 aspect-[2/3] rounded-xl overflow-hidden shadow-xl border border-white/10 dark:border-white/10 bg-surface-raised z-20",
+                "relative w-52 lg:w-60 shrink-0 aspect-[2/3] rounded-xl overflow-hidden shadow-xl border border-border-default/80 bg-surface-raised z-20",
                 desktopCoverClassName
               )}
             >
