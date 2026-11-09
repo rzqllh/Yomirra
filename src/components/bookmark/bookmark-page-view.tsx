@@ -4,7 +4,8 @@ import * as React from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { CalendarBlank, Books } from "@phosphor-icons/react";
-import { YomirraSurface, PageContainer } from "@/components/ui/layout";
+import { PageContainer } from "@/components/ui/layout";
+import { Surface } from "@/components/ui/surface";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { BookmarkSkeleton } from "@/components/skeletons/bookmark-skeleton";
 import { useBookmarkReading } from "@/shared/hooks/use-bookmark-reading";
@@ -50,16 +51,16 @@ export function BookmarkPageView() {
 
   if (!reading.isMounted || !collection.isMounted) {
     return (
-      <YomirraSurface variant="base" className="w-full">
+      <Surface variant="base" className="w-full">
         <PageContainer hasMobileHeader>
           <BookmarkSkeleton />
         </PageContainer>
-      </YomirraSurface>
+      </Surface>
     );
   }
 
   return (
-    <YomirraSurface variant="base" className="w-full">
+    <Surface variant="base" className="w-full">
       <PageContainer hasMobileHeader>
         <PageHeader
           title="Library"
@@ -151,6 +152,6 @@ export function BookmarkPageView() {
           )}
         </div>
       </PageContainer>
-    </YomirraSurface>
+    </Surface>
   );
 }

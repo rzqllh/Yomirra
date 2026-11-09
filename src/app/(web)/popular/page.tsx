@@ -13,7 +13,8 @@ import {
 } from "@/shared/sources/discovery-source-policy";
 import type { SourceReadOptions, MangaItem } from "@/shared/sources/source-types";
 import type { PopularSourceFeed } from "@/shared/lib/popular-ranking";
-import { YomirraSurface, PageContainer } from "@/components/ui/layout";
+import { PageContainer } from "@/components/ui/layout";
+import { Surface } from "@/components/ui/surface";
 import { PageHeader } from "@/components/chrome/header";
 import { PopularPageView } from "@/components/popular/popular-page-view";
 
@@ -67,7 +68,7 @@ export default async function PopularPage() {
   ]);
 
   return (
-    <YomirraSurface variant="base" className="w-full">
+    <Surface variant="base" className="w-full">
       <PageContainer hasMobileHeader>
         <PageHeader
           title="Populer di Yomirra"
@@ -76,6 +77,6 @@ export default async function PopularPage() {
         />
         <PopularPageView feeds={feeds} mal={mal} />
       </PageContainer>
-    </YomirraSurface>
+    </Surface>
   );
 }

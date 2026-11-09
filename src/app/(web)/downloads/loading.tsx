@@ -1,11 +1,12 @@
 import { PageHeader } from "@/components/chrome/header";
 import { Skeleton } from "@/components/ui/skeleton";
-import { YomirraSurface, PageContainer, ContentLane } from "@/components/ui/layout";
+import { PageContainer, ContentLane } from "@/components/ui/layout";
+import { Surface } from "@/components/ui/surface";
 import { Download } from "@phosphor-icons/react/dist/ssr";
 
 export default function Loading() {
   return (
-    <YomirraSurface variant="base" className="min-h-screen">
+    <Surface variant="base" className="min-h-screen">
       <PageContainer hasMobileHeader>
         <PageHeader
           title="Unduhan"
@@ -39,6 +40,6 @@ export default function Loading() {
           </div>
         </ContentLane>
       </PageContainer>
-    </YomirraSurface>
+    </Surface>
   );
 }

@@ -4,11 +4,12 @@ import * as React from "react";
 import { CalendarBlank } from "@phosphor-icons/react";
 import { PageHeader } from "@/components/chrome/header";
 import { UpdatesList } from "@/components/updates/updates-list";
-import { YomirraSurface, PageContainer } from "@/components/ui/layout";
+import { PageContainer } from "@/components/ui/layout";
+import { Surface } from "@/components/ui/surface";
 
 export default function UpdatesPage() {
   return (
-    <YomirraSurface variant="base" className="min-h-screen">
+    <Surface variant="base" className="min-h-screen">
       <PageContainer hasMobileHeader>
         <PageHeader
           title="Jadwal Mingguan"
@@ -21,6 +22,6 @@ export default function UpdatesPage() {
           <UpdatesList hideHeader={true} />
         </div>
       </PageContainer>
-    </YomirraSurface>
+    </Surface>
   );
 }

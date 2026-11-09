@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PageHeader } from "@/components/chrome/header";
-import { ContentLane, PageContainer, YomirraSurface } from "@/components/ui/layout";
+import { ContentLane, PageContainer } from "@/components/ui/layout";
+import { Surface } from "@/components/ui/surface";
 
 export const metadata: Metadata = {
   title: "Pusat Bantuan | Yomirra",
@@ -49,7 +50,7 @@ const topics = [
 
 export default function HelpPage() {
   return (
-    <YomirraSurface variant="base" className="min-h-screen">
+    <Surface variant="base" className="min-h-screen">
       <PageContainer variant="management" hasMobileHeader>
         <PageHeader
           title="Pusat Bantuan"
@@ -92,6 +93,6 @@ export default function HelpPage() {
           </p>
         </ContentLane>
       </PageContainer>
-    </YomirraSurface>
+    </Surface>
   );
 }

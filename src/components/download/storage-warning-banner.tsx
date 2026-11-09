@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Warning, X } from "@phosphor-icons/react";
-import { YomirraSurface } from "@/components/ui/layout";
+import { Surface } from "@/components/ui/surface";
 import { IconButton } from "@/components/ui/icon-button";
 
 export function StorageWarningBanner() {
@@ -25,7 +25,7 @@ export function StorageWarningBanner() {
   if (!isVisible) return null;
 
   return (
-    <YomirraSurface variant="elevated" className="rounded-xl p-4 flex gap-3 relative overflow-hidden bg-semantic-warning/10 border-semantic-warning/20">
+    <Surface variant="overlay" elevation="sm" className="rounded-xl p-4 flex gap-3 relative overflow-hidden bg-semantic-warning/10 border-semantic-warning/20">
       <div className="absolute top-0 left-0 w-1 h-full bg-semantic-warning"></div>
       <div className="text-semantic-warning shrink-0 mt-0.5">
         <Warning size={20} weight="fill" />
@@ -47,6 +47,6 @@ export function StorageWarningBanner() {
       >
         <X size={16} weight="regular" />
       </IconButton>
-    </YomirraSurface>
+    </Surface>
   );
 }

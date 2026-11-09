@@ -1,27 +1,10 @@
 import * as React from "react"
 import { cn } from "@/shared/utils/cn"
+import { Surface, type SurfaceProps } from "./surface"
 
-export type SurfaceVariant = "base" | "raised" | "elevated" | "floating" | "glass" | "muted"
-
-export interface YomirraSurfaceProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: SurfaceVariant
-  asChild?: boolean
-}
-
-export const YomirraSurface = React.forwardRef<HTMLDivElement, YomirraSurfaceProps>(
-  ({ className, variant = "base", ...props }, ref) => {
-    return (
-      <div
-        ref={ref}
-        className={cn( "transition-colors", { "bg-surface-base text-text-primary": variant === "base", "bg-surface-raised text-text-primary": variant === "raised", "bg-surface-overlay text-text-primary shadow-sm border-border-subtle": variant === "elevated", "bg-surface-overlay text-text-primary shadow-md": variant === "floating", "bg-surface-base/80 backdrop-blur-xl supports-[backdrop-filter]:bg-surface-base/60 shadow-sm": variant === "glass", "bg-surface-muted text-text-primary": variant === "muted",},
-          className
-        )}
-        {...props}
-      />
-    )
-  }
-)
-YomirraSurface.displayName = "YomirraSurface"
+/** @deprecated Use `Surface` from `@/components/ui/surface` directly */
+export const YomirraSurface = Surface
+export type YomirraSurfaceProps = SurfaceProps
 
 export interface YomirraSectionProps extends React.HTMLAttributes<HTMLElement> {
   title?: string

@@ -118,12 +118,12 @@ export function TopNav() {
             <div className="hidden md:flex h-9 w-48 lg:w-56 shrink-0 items-center justify-end">
               <Button
                 type="button"
-                variant="searchTrigger"
+                variant="secondary"
                 disabled={!mounted}
                 onClick={() => window.dispatchEvent(new CustomEvent("open-command-menu"))}
                 aria-keyshortcuts={modifier === "⌘" ? "Meta+K" : "Control+K"}
                 className={cn(
-                  "flex items-center gap-2.5 px-3 rounded-sm text-text-secondary hover:text-text-primary text-xs font-semibold h-9 min-h-[36px] w-full cursor-pointer select-none",
+                  "justify-start flex items-center gap-2.5 px-3 rounded-sm text-text-secondary hover:text-text-primary text-xs font-semibold h-9 min-h-[36px] w-full cursor-pointer select-none",
                   "border-border-subtle hover:border-accent/40 focus-visible:outline-2 focus-visible:outline-accent",
                   "transition-all duration-200 ease-out"
                 )}
@@ -203,7 +203,7 @@ export function TopNav() {
                       <div className="my-1 border-t border-border-subtle/80" />
 
                       <Button
-                        variant="menuDestructive"
+                        variant="ghost"
                         onClick={() => { setIsProfileOpen(false); logout(); }}
                         className="flex items-center justify-start gap-2.5 px-3 py-2 rounded-xl text-[13px] font-semibold text-semantic-error hover:bg-semantic-error/10 transition-colors text-left cursor-pointer w-full h-auto min-h-0"
                       >

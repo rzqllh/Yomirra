@@ -175,7 +175,7 @@ export function HeaderActions({ className }: { className?: string } = {}) {
             {user ? (
               <Button
                 type="button"
-                variant="menuDestructive"
+                variant="ghost"
                 onClick={() => {
                   setIsMenuOpen(false)
                   logout()
@@ -188,7 +188,7 @@ export function HeaderActions({ className }: { className?: string } = {}) {
             ) : (
               <Button
                 type="button"
-                variant="menuAccent"
+                variant="ghost"
                 onClick={() => {
                   setIsMenuOpen(false)
                   loginWithGoogle()

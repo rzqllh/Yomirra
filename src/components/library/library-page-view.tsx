@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { YomirraSurface, PageContainer, PageToolbar } from "@/components/ui/layout";
+import { PageContainer, PageToolbar } from "@/components/ui/layout";
+import { Surface } from "@/components/ui/surface";
 import { CatalogControls } from "@/components/ui/catalog-controls";
 import { LibrarySkeleton } from "@/components/skeletons/library-skeleton";
 import { PageHeader } from "@/components/chrome/header";
@@ -18,16 +19,16 @@ export function LibraryPageView() {
 
   if (!catalog.isMounted) {
     return (
-      <YomirraSurface variant="base" className="w-full">
+      <Surface variant="base" className="w-full">
         <PageContainer hasMobileHeader>
           <LibrarySkeleton />
         </PageContainer>
-      </YomirraSurface>
+      </Surface>
     );
   }
 
   return (
-    <YomirraSurface variant="base" className="w-full">
+    <Surface variant="base" className="w-full">
       <PageContainer hasMobileHeader>
         <PageHeader
           title="Jelajah"
@@ -91,6 +92,6 @@ export function LibraryPageView() {
           onResetFilters={catalog.resetFilters}
         />
       </PageContainer>
-    </YomirraSurface>
+    </Surface>
   );
 }

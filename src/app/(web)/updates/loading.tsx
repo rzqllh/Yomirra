@@ -1,12 +1,13 @@
 import { PageHeader } from "@/components/chrome/header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UpdatesSkeleton } from "@/components/skeletons/updates-skeleton";
-import { YomirraSurface, PageContainer } from "@/components/ui/layout";
+import { PageContainer } from "@/components/ui/layout";
+import { Surface } from "@/components/ui/surface";
 import { CalendarBlank } from "@phosphor-icons/react/dist/ssr";
 
 export default function Loading() {
   return (
-    <YomirraSurface variant="base" className="min-h-screen">
+    <Surface variant="base" className="min-h-screen">
       <PageContainer hasMobileHeader>
         <PageHeader
           title="Jadwal Mingguan"
@@ -25,6 +26,6 @@ export default function Loading() {
           <UpdatesSkeleton count={9} />
         </div>
       </PageContainer>
-    </YomirraSurface>
+    </Surface>
   );
 }

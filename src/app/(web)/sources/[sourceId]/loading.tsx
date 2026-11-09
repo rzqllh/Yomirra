@@ -1,11 +1,12 @@
 import { PageHeader } from "@/components/chrome/header";
 import { MangaGridSkeleton } from "@/components/komik/manga-grid-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
-import { YomirraSurface, PageContainer } from "@/components/ui/layout";
+import { PageContainer } from "@/components/ui/layout";
+import { Surface } from "@/components/ui/surface";
 
 export default function Loading() {
   return (
-    <YomirraSurface variant="base" className="w-full">
+    <Surface variant="base" className="w-full">
       <PageContainer hasMobileHeader>
         <PageHeader title="Sumber" subtitle="Memuat katalog…" showBack />
         <div className="mb-6 flex items-center justify-between rounded-xl border border-border-subtle bg-surface-raised p-4">
@@ -24,6 +25,6 @@ export default function Loading() {
           className="gap-y-6 sm:gap-y-8 md:gap-y-10"
         />
       </PageContainer>
-    </YomirraSurface>
+    </Surface>
   );
 }

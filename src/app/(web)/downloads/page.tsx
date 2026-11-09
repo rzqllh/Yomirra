@@ -12,7 +12,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { getReaderHref } from "@/shared/lib/routes";
 import { getSourceMetadata } from "@/shared/sources/source-registry";
 import { getOfflineImageUrl } from "@/shared/utils/download-helpers";
-import { YomirraSurface, PageContainer, ContentLane } from "@/components/ui/layout";
+import { PageContainer, ContentLane } from "@/components/ui/layout";
+import { Surface } from "@/components/ui/surface";
 import { toast } from "sonner";
 import { EmptyState } from "@/components/states/empty-state";
 import { StorageWarningBanner } from "@/components/download/storage-warning-banner";
@@ -155,7 +156,7 @@ export default function DownloadsPage() {
   };
 
   return (
-    <YomirraSurface variant="base" className="min-h-screen">
+    <Surface variant="base" className="min-h-screen">
       <PageContainer variant="focused" hasMobileHeader>
         <PageHeader
           title="Unduhan"
@@ -401,6 +402,6 @@ export default function DownloadsPage() {
         )}
         </ContentLane>
       </PageContainer>
-    </YomirraSurface>
+    </Surface>
   );
 }

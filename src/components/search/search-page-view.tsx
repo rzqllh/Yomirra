@@ -3,7 +3,8 @@
 import * as React from "react";
 import { PageHeader } from "@/components/chrome/header";
 import { MagnifyingGlass } from "@phosphor-icons/react";
-import { YomirraSurface, PageContainer, PageToolbar } from "@/components/ui/layout";
+import { PageContainer, PageToolbar } from "@/components/ui/layout";
+import { Surface } from "@/components/ui/surface";
 import { CatalogControls } from "@/components/ui/catalog-controls";
 import { useSearchCatalog } from "@/shared/hooks/use-search-catalog";
 import { SearchToolbar } from "./search-toolbar";
@@ -15,7 +16,7 @@ export function SearchPageView() {
   const search = useSearchCatalog();
 
   return (
-    <YomirraSurface variant="base" className="w-full">
+    <Surface variant="base" className="w-full">
       <PageContainer hasMobileHeader>
         <PageHeader
           title="Cari"
@@ -61,6 +62,6 @@ export function SearchPageView() {
           hasSearchIntent={search.hasSearchIntent}
         />
       </PageContainer>
-    </YomirraSurface>
+    </Surface>
   );
 }

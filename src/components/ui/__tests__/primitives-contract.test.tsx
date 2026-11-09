@@ -31,14 +31,14 @@ describe("YOM-02: UI Primitives Contract & Parity", () => {
       const { rerender } = render(<Button variant="primary">Primary</Button>)
       expect(screen.getByRole("button").className).toContain("bg-accent")
 
-      rerender(<Button variant="searchTrigger">Search</Button>)
+      rerender(<Button variant="secondary">Secondary</Button>)
       expect(screen.getByRole("button").className).toContain("bg-surface-raised")
 
-      rerender(<Button variant="menuDestructive">Delete</Button>)
+      rerender(<Button variant="destructive">Delete</Button>)
       expect(screen.getByRole("button").className).toContain("text-status-error-fg")
 
-      rerender(<Button variant="glass">Glass</Button>)
-      expect(screen.getByRole("button").className).toContain("backdrop-blur-md")
+      rerender(<Button variant="washi">Washi</Button>)
+      expect(screen.getByRole("button").className).toContain("bg-surface-raised")
     })
 
     it("supports asChild delegation", () => {
@@ -136,6 +136,9 @@ describe("YOM-02: UI Primitives Contract & Parity", () => {
 
       rerender(<Badge variant="success" shape="pill">Active</Badge>)
       expect((container.firstChild as HTMLElement).className).toContain("rounded-role-chip")
+
+      rerender(<Badge size="sm">Tiny</Badge>)
+      expect((container.firstChild as HTMLElement).className).toContain("text-2xs")
     })
   })
 

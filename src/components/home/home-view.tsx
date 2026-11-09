@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { YomirraSurface, PageContainer } from "@/components/ui/layout";
+import { PageContainer } from "@/components/ui/layout";
+import { Surface } from "@/components/ui/surface";
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { HeaderActions } from "@/components/chrome/header-actions";
 import { PageHeader } from "@/components/chrome/header";
@@ -18,7 +19,7 @@ interface HomeViewProps {
 export function HomeView({ children }: HomeViewProps) {
   return (
     <PullToRefresh>
-      <YomirraSurface variant="base" className="min-h-screen">
+      <Surface variant="base" className="min-h-screen">
         <PageHeader
           title="Beranda"
           icon={<House size={20} weight="regular" />}
@@ -30,7 +31,7 @@ export function HomeView({ children }: HomeViewProps) {
             {children}
           </div>
         </PageContainer>
-      </YomirraSurface>
+      </Surface>
     </PullToRefresh>
   );
 }

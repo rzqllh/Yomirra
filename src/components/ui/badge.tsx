@@ -17,14 +17,9 @@ const badgeVariants = cva(
         outline: "border-border-strong bg-transparent text-text-secondary",
         accent: "border-accent/30 bg-accent/10 text-accent",
         reader: "border-border-default bg-surface-overlay text-text-primary",
-        // Legacy aliases
-        online: "border-transparent bg-status-success-bg text-status-success-fg",
-        slow: "border-transparent bg-status-warning-bg text-status-warning-fg",
-        unavailable: "border-transparent bg-status-error-bg text-status-error-fg",
-        cached: "border-border-default bg-surface-overlay text-text-muted",
       },
       size: {
-        sm: "min-h-5 px-1.5 py-0.5 text-[10px]",
+        sm: "min-h-5 px-1.5 py-0.5 text-2xs",
         default: "min-h-6 px-2 py-0.5 text-xs",
       },
       shape: {

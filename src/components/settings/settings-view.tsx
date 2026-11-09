@@ -33,7 +33,8 @@ import { useDownloadStore } from "@/shared/store/download-store";
 import { useTheme } from "next-themes";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { CustomSelect } from "@/components/ui/custom-select";
-import { YomirraSurface, PageContainer, ContentLane } from "@/components/ui/layout";
+import { PageContainer, ContentLane } from "@/components/ui/layout";
+import { Surface } from "@/components/ui/surface";
 import { PageHeader } from "@/components/chrome/header";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Gear } from "@phosphor-icons/react/dist/ssr";
@@ -620,7 +621,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
 
   return (
     <>
-      <YomirraSurface variant="base" className="min-h-screen">
+      <Surface variant="base" className="min-h-screen">
         <PageContainer variant="management" hasMobileHeader>
           <div className="space-y-6 sm:space-y-8" data-hydrated={mounted}>
             {subView === "backup" ? (
@@ -668,7 +669,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
             )}
           </div>
         </PageContainer>
-      </YomirraSurface>
+      </Surface>
 
       {/* Confirmation Dialogs */}
       <ConfirmationModal

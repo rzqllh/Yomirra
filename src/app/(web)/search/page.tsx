@@ -4,13 +4,14 @@ import * as React from "react";
 import { PageHeader } from "@/components/chrome/header";
 import { SearchPageView } from "@/components/search/search-page-view";
 import { SearchResultSkeleton } from "@/components/skeletons/search-result-skeleton";
-import { YomirraSurface, PageContainer } from "@/components/ui/layout";
+import { PageContainer } from "@/components/ui/layout";
+import { Surface } from "@/components/ui/surface";
 
 export default function SearchPage() {
   return (
     <React.Suspense
       fallback={
-        <YomirraSurface variant="base" className="w-full">
+        <Surface variant="base" className="w-full">
           <PageContainer hasMobileHeader>
             <PageHeader
               title="Cari"
@@ -18,7 +19,7 @@ export default function SearchPage() {
             />
             <SearchResultSkeleton />
           </PageContainer>
-        </YomirraSurface>
+        </Surface>
       }
     >
       <SearchPageView />

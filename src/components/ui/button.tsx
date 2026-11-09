@@ -20,47 +20,23 @@ const buttonVariants = cva(
           "bg-accent-dim text-accent hover:bg-accent/20 shadow-none border border-accent/20",
         secondary:
           "bg-surface-raised text-text-primary border border-border-default hover:bg-surface-hover",
-        tertiary:
-          "text-text-secondary hover:text-text-primary hover:bg-surface-hover",
         ghost:
           "text-text-secondary hover:bg-surface-hover hover:text-text-primary",
         outline:
           "border border-border-strong bg-transparent hover:bg-surface-hover hover:text-text-primary",
-        glass:
-          "bg-surface-glass backdrop-blur-md border border-border-default/40 text-text-primary hover:bg-surface-hover hover:border-border-strong active:scale-95 shadow-xs",
         destructive:
           "bg-status-error-bg text-status-error-fg hover:bg-status-error-bg/75 border border-status-error-fg",
-        success:
-          "bg-status-success-bg text-status-success-fg hover:bg-status-success-bg/75 border border-status-success-fg",
-        warning:
-          "bg-status-warning-bg text-status-warning-fg hover:bg-status-warning-bg/75 border border-status-warning-fg",
-        info:
-          "bg-status-info-bg text-status-info-fg hover:bg-status-info-bg/75 border border-status-info-fg",
-        muted:
-          "bg-surface-muted text-text-muted hover:bg-surface-hover hover:text-text-primary border border-border-subtle active:scale-[0.98]",
         reader:
           "bg-surface-overlay text-text-primary hover:bg-surface-raised border border-border-default",
-        link:
-          "text-accent underline-offset-4 hover:underline",
-        searchTrigger:
-          "bg-surface-raised text-text-muted hover:text-text-primary hover:bg-surface-hover border border-border-default justify-start font-normal",
-        menuDefault:
-          "text-text-secondary hover:text-text-primary hover:bg-surface-hover justify-start font-medium",
-        menuDestructive:
-          "text-status-error-fg hover:bg-status-error-bg/20 border-transparent justify-start font-medium",
-        menuAccent:
-          "text-accent bg-accent-dim hover:bg-accent/20 border-accent/20 justify-start font-medium",
-        heroAction:
-          "bg-accent text-accent-on hover:bg-accent-hover border border-transparent shadow-xs",
-        heroSecondary:
-          "bg-surface-raised text-text-primary border border-border-default hover:bg-surface-hover",
+        washi:
+          "bg-surface-raised border border-border-default/80 text-text-primary hover:bg-surface-hover shadow-xs",
       },
       size: {
         sm: "min-h-11 px-3 text-xs rounded-sm [&_svg]:size-4",
         default: "min-h-11 px-4 py-2 rounded-sm [&_svg]:size-[18px]",
         lg: "min-h-12 px-6 text-base rounded-sm [&_svg]:size-5",
         icon: "h-11 w-11 rounded-sm shrink-0 p-0 [&_svg]:size-5",
-        "icon-sm": "h-11 w-11 rounded-sm shrink-0 p-0 [&_svg]:size-5",
+        "icon-sm": "size-9 rounded-sm shrink-0 p-0 [&_svg]:size-4 relative after:absolute after:top-1/2 after:left-1/2 after:-translate-x-1/2 after:-translate-y-1/2 after:w-11 after:h-11 after:content-['']",
         "icon-lg": "h-12 w-12 rounded-sm shrink-0 p-0 [&_svg]:size-6",
       },
     },

@@ -1,10 +1,11 @@
 import { PageHeader } from "@/components/chrome/header";
-import { YomirraSurface, PageContainer } from "@/components/ui/layout";
+import { PageContainer } from "@/components/ui/layout";
+import { Surface } from "@/components/ui/surface";
 import { SearchResultSkeleton } from "@/components/skeletons/search-result-skeleton";
 
 export default function Loading() {
   return (
-    <YomirraSurface variant="base" className="w-full">
+    <Surface variant="base" className="w-full">
       <PageContainer hasMobileHeader>
         <PageHeader
           title="Cari"
@@ -12,6 +13,6 @@ export default function Loading() {
         />
         <SearchResultSkeleton />
       </PageContainer>
-    </YomirraSurface>
+    </Surface>
   );
 }

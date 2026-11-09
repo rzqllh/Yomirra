@@ -31,6 +31,7 @@ for (const width of VIEWPORTS) {
       const dialogScrollWidth = await dialog.evaluate((el) => el.scrollWidth);
       const dialogClientWidth = await dialog.evaluate((el) => el.clientWidth);
 
+      expect(docScrollWidth).toBeLessThanOrEqual(docClientWidth);
       expect(docScrollWidth).toBeLessThanOrEqual(width);
       expect(dialogScrollWidth).toBeLessThanOrEqual(dialogClientWidth);
 
@@ -43,6 +44,10 @@ for (const width of VIEWPORTS) {
       const box = (await ctaButton.boundingBox())!;
       expect(box).not.toBeNull();
       const rightEdge = box.x + box.width;
+
+      // 4. Assert CTA label is not clipped (scrollWidth <= clientWidth)
+      const isClipped = await ctaButton.evaluate((el) => el.scrollWidth > el.clientWidth);
+      expect(isClipped).toBe(false);
 
       console.log(
         `[MEASURED] Viewport: ${width}px | Step: ${step + 1} | CTA: "${ctaName}" | x: ${box.x.toFixed(1)}px | width: ${box.width.toFixed(1)}px | rightEdge: ${rightEdge.toFixed(1)}px <= ${width}px | docScrollWidth: ${docScrollWidth}px`

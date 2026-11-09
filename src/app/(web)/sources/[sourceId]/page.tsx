@@ -13,7 +13,8 @@ import { cn } from "@/shared/utils/cn";
 import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { House } from "@phosphor-icons/react/dist/ssr";
-import { YomirraSurface, PageContainer } from "@/components/ui/layout";
+import { PageContainer } from "@/components/ui/layout";
+import { Surface } from "@/components/ui/surface";
 
 export const dynamic = "force-dynamic";
 
@@ -56,7 +57,7 @@ export default function SourceBrowsePage({
   const isHiddenFromHome = isSourceHiddenFromHome(sourceId);
 
   return (
-    <YomirraSurface variant="base" className="w-full">
+    <Surface variant="base" className="w-full">
       <PageContainer hasMobileHeader>
         <PageHeader
           title={sourceName}
@@ -140,6 +141,6 @@ export default function SourceBrowsePage({
           </>
         )}
       </PageContainer>
-    </YomirraSurface>
+    </Surface>
   );
 }
