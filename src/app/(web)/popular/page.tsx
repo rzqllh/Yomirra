@@ -74,6 +74,7 @@ export default async function PopularPage() {
           title="Populer di Yomirra"
           subtitle="Peringkat komik paling banyak dibaca dari sumber aktif pilihanmu."
           icon={<Fire size={24} weight="regular" />}
+          hideDesktop={true}
         />
         <PopularPageView feeds={feeds} mal={mal} />
       </PageContainer>

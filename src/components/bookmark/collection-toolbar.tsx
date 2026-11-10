@@ -47,7 +47,7 @@ export function CollectionToolbar({
         value={searchQuery}
         onChange={onSearchChange}
         onClear={onSearchClear}
-        placeholder="Cari di bookmark…"
+        placeholder="Cari di koleksi tersimpan…"
         containerClassName="sm:flex-1 min-w-0 h-11"
       />
 

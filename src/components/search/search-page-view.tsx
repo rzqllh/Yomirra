@@ -22,6 +22,7 @@ export function SearchPageView() {
           title="Cari"
           subtitle="Cari judul di sumber yang dipilih. Filter berlaku pada hasil pencarian."
           icon={<MagnifyingGlass size={24} weight="regular" />}
+          hideDesktop={true}
         />
 
         <CatalogControls label="Pencarian dan filter">

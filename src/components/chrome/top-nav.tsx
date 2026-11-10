@@ -115,7 +115,7 @@ export function TopNav() {
         <div className="flex items-center gap-2 sm:gap-2.5 h-full">
           {/* Sticky search pill: visible on non-home pages or when scrolled past hero */}
           {shouldShowSearch && (
-            <div className="hidden md:flex h-9 w-48 lg:w-56 shrink-0 items-center justify-end">
+            <div className="hidden md:flex h-9 w-52 lg:w-72 xl:w-80 shrink-0 items-center justify-end">
               <Button
                 type="button"
                 variant="secondary"
@@ -130,7 +130,7 @@ export function TopNav() {
               >
                 <MagnifyingGlass size={16} weight="regular" className="text-text-muted shrink-0" aria-hidden="true" />
                 <span className="flex-1 text-left truncate">Cari komik…</span>
-                <kbd aria-hidden="true" className="hidden lg:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono text-text-muted bg-surface-muted rounded-xs border border-border-subtle">{searchShortcut}</kbd>
+                <kbd aria-hidden="true" className="hidden lg:inline-flex items-center px-1.5 py-0.5 text-2xs font-mono text-text-muted bg-surface-muted rounded-xs border border-border-subtle">{searchShortcut}</kbd>
               </Button>
             </div>
           )}

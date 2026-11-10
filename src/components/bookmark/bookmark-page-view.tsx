@@ -66,6 +66,7 @@ export function BookmarkPageView() {
           title="Library"
           subtitle="Lanjutkan bacaan dan kelola komik yang kamu simpan."
           icon={<Books size={24} weight="regular" />}
+          hideDesktop={true}
         />
 
         {/* Unified Navigation & Utility Row */}
@@ -87,14 +88,14 @@ export function BookmarkPageView() {
 
           <Link
             href="/updates"
-            className="inline-flex min-h-[44px] items-center justify-between sm:justify-start gap-2 px-3.5 py-2 rounded-[12px] bg-surface-raised border border-border-subtle hover:bg-surface-hover hover:border-border-default text-xs font-semibold text-text-secondary transition-colors shrink-0"
+            className="inline-flex min-h-11 items-center justify-between sm:justify-start gap-2 px-3.5 py-2 rounded-xl bg-surface-raised border border-border-subtle hover:bg-surface-hover hover:border-border-default text-xs font-semibold text-text-secondary transition-colors shrink-0"
           >
             <span className="flex items-center gap-2">
               <CalendarBlank size={16} weight="regular" className="text-text-muted" />
               <span>Jadwal Rilis Mingguan</span>
             </span>
             {unreadCount > 0 && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-semantic-error text-white font-bold">
+              <span className="text-2xs px-1.5 py-0.5 rounded-md bg-semantic-error text-white font-bold">
                 {unreadCount > 99 ? "99+" : unreadCount} baru
               </span>
             )}

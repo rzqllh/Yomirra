@@ -372,6 +372,8 @@ export function MangaCard({
           <MangaCardCoverFrame className="w-18 sm:w-20">
             <MangaCover
               src={manga.coverUrl}
+              sourceId={sourceId}
+              mangaId={manga.id}
               alt={manga.title}
               fallbackTitle={manga.title}
               className="w-full h-full"
@@ -508,6 +510,8 @@ export function MangaCard({
           <div className="relative aspect-[2/3] w-18 sm:w-20 shrink-0 overflow-hidden rounded-lg border border-border-subtle bg-surface-muted shadow-2xs">
             <MangaCover
               src={manga.coverUrl}
+              sourceId={sourceId}
+              mangaId={manga.id}
               alt={manga.title}
               fallbackTitle={manga.title}
               className="w-full h-full"
@@ -679,6 +683,8 @@ export function MangaCard({
           <MangaCardCoverFrame className="vt-hover h-full w-[74px] border-y-0 border-l-0 rounded-l-md rounded-r-xs group-hover:shadow-lg group-hover:shadow-accent/5">
             <MangaCover
               src={manga.coverUrl}
+              sourceId={sourceId}
+              mangaId={manga.id}
               alt={manga.title}
               fallbackTitle={manga.title}
               iconSize={24}
@@ -855,6 +861,8 @@ export function MangaCard({
             <MangaCardCoverFrame className="vt-hover h-full w-full rounded-sm shadow-xs border-border-subtle/60">
               <MangaCover
                 src={manga.coverUrl}
+                sourceId={sourceId}
+                mangaId={manga.id}
                 alt={manga.title}
                 priority={priority}
                 fallbackTitle={manga.title}
@@ -997,6 +1005,8 @@ export function MangaCard({
           <MangaCardCoverFrame className="w-full shadow-sm vt-hover">
             <MangaCover
               src={manga.coverUrl}
+              sourceId={sourceId}
+              mangaId={manga.id}
               alt={manga.title}
               priority={priority}
               fallbackTitle={manga.title}

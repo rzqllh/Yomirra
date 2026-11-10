@@ -180,7 +180,7 @@ export function PageHeader({
               )}
             >
               <div className="flex items-center gap-2 min-w-0">
-                <h2 className="text-[15px] sm:text-base font-bold tracking-tight text-text-primary truncate select-none">
+                <h2 className="text-sm sm:text-base font-bold tracking-tight text-text-primary truncate select-none">
                   {title}
                 </h2>
                 {meta && (
@@ -190,7 +190,7 @@ export function PageHeader({
                 )}
               </div>
               {sub && (
-                <p className="text-[11px] font-medium text-text-muted truncate leading-snug mt-0.5 select-none">
+                <p className="text-2xs font-medium text-text-muted truncate leading-snug mt-0.5 select-none">
                   {sub}
                 </p>
               )}
@@ -210,7 +210,10 @@ export function PageHeader({
         </div>
       </header>
 
-      {/* Skipped for mode="detail" or hideDesktop — detail pages have their own hero, and some pages (Beranda) have dedicated desktop layouts */}
+      {/* When desktop banner is hidden, preserve accessible H1 landmark */}
+      {hideDesktop && <h1 className="sr-only">{title}</h1>}
+
+      {/* Skipped for mode="detail" or hideDesktop — detail pages have their own hero, and unified destination pages match Beranda layout */}
       {mode !== "detail" && !hideDesktop && (
         <div
           className={cn(
@@ -227,7 +230,7 @@ export function PageHeader({
               )}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3">
-                  <h1 className="text-2xl lg:text-[30px] font-black tracking-tight text-text-primary truncate">
+                  <h1 className="text-2xl lg:text-3xl font-black tracking-tight text-text-primary truncate">
                     {title}
                   </h1>
                   {meta && (

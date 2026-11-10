@@ -21,6 +21,15 @@ describe("MAL external ranking", () => {
     expect(new URL(url).searchParams.get("ranking_type")).toBe("bypopularity");
     expect(url).not.toContain("test-only-client-id"); expect(options.headers).toMatchObject({ "X-MAL-CLIENT-ID": "test-only-client-id" });
   });
+  it("passes whitelisted ranking_type parameter to MAL API", async () => {
+    vi.stubEnv("MAL_CLIENT_ID", "test-only-client-id");
+    const fetcher = vi.fn(async () => new Response(JSON.stringify({ data: [entry(5, 1, "white")] })));
+    vi.stubGlobal("fetch", fetcher);
+    const result = await getMalPopular(true, "favorite");
+    expect(result.status).toBe("ready");
+    const [url] = fetcher.mock.calls[0] as unknown as [string, RequestInit];
+    expect(new URL(url).searchParams.get("ranking_type")).toBe("favorite");
+  });
   it("reports provider failure without manufacturing empty ranking", async () => {
     vi.stubEnv("MAL_CLIENT_ID", "test-only-client-id"); vi.stubGlobal("fetch", vi.fn(async () => new Response("unavailable", { status: 429 })));
     expect((await getMalPopular()).status).toBe("unavailable");

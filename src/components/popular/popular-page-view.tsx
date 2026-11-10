@@ -81,7 +81,7 @@ export function PopularPageView({ feeds, mal }: PopularPageViewProps) {
                 label={`Semua Sumber (${aggregated.length})`}
                 selected={selectedSourceId === "all"}
                 onClick={() => setSelectedSourceId("all")}
-                variant={selectedSourceId === "all" ? "accent-solid" : "default"}
+                variant={selectedSourceId === "all" ? "accent-subtle" : "default"}
               />
               {feeds.map((feed) => (
                 <FilterChip
@@ -90,7 +90,7 @@ export function PopularPageView({ feeds, mal }: PopularPageViewProps) {
                   selected={selectedSourceId === feed.sourceId}
                   showDownBadge={feed.loadFailed}
                   onClick={() => setSelectedSourceId(feed.sourceId)}
-                  variant={selectedSourceId === feed.sourceId ? "accent-solid" : "default"}
+                  variant={selectedSourceId === feed.sourceId ? "accent-subtle" : "default"}
                 />
               ))}
             </div>
@@ -100,21 +100,16 @@ export function PopularPageView({ feeds, mal }: PopularPageViewProps) {
           {selectedSourceId === "all" ? (
             aggregated.length > 0 ? (
               <section aria-labelledby="popular-combined-heading">
-                <div className="mb-5 flex items-center justify-between gap-3">
-                  <div>
-                    <h2
-                      id="popular-combined-heading"
-                      className="text-xl font-bold tracking-tight text-text-primary sm:text-2xl"
-                    >
-                      Peringkat lintas sumber
-                    </h2>
-                    <p className="mt-0.5 text-xs text-text-muted">
-                      Menampilkan komik teratas yang mendominasi katalog sumber aktif.
-                    </p>
-                  </div>
-                  <span className="shrink-0 rounded-full border border-border-subtle bg-surface-raised px-2.5 py-1 text-xs font-bold text-text-secondary">
-                    {aggregated.length} judul
-                  </span>
+                <div className="mb-5">
+                  <h2
+                    id="popular-combined-heading"
+                    className="text-xl font-bold tracking-tight text-text-primary sm:text-2xl"
+                  >
+                    Peringkat lintas sumber
+                  </h2>
+                  <p className="mt-0.5 text-xs text-text-muted">
+                    Menampilkan komik teratas yang mendominasi katalog sumber aktif.
+                  </p>
                 </div>
 
                 <div className="grid w-full grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">

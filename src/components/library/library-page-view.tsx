@@ -34,6 +34,7 @@ export function LibraryPageView() {
           title="Jelajah"
           subtitle="Jelajahi katalog dari sumber yang kamu pilih."
           icon={<Compass size={24} weight="regular" />}
+          hideDesktop={true}
         />
 
         <CatalogControls label="Pencarian dan filter Jelajah">

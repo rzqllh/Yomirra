@@ -15,10 +15,11 @@ describe("MangaGrid deterministic layout", () => {
     const gridEl = container.firstElementChild as HTMLElement;
     expect(gridEl.tagName).toBe("DIV");
     expect(gridEl.className).toContain("grid");
-    // Density follows the grid container rather than viewport column breakpoints.
-    expect(gridEl.className).toContain("repeat(auto-fit");
-    expect(gridEl.className).toContain("156px");
-    expect(gridEl.className).not.toContain("grid-cols-2");
+    // 5-column responsive grid matching Home feed layout
+    expect(gridEl.className).toContain("grid-cols-2");
+    expect(gridEl.className).toContain("sm:grid-cols-3");
+    expect(gridEl.className).toContain("md:grid-cols-4");
+    expect(gridEl.className).toContain("xl:grid-cols-5");
   });
 
   it("applies standard grid classes in default grid viewMode", () => {

@@ -12,7 +12,7 @@ import { CollectionToolbar } from "./collection-toolbar";
 import { CollectionSelectionToolbar } from "./collection-selection-toolbar";
 import { ConfirmationModal } from "@/components/ui/confirmation-modal";
 import { CreateCollectionModal, RenameCollectionModal } from "@/components/collection/collection-modals";
-import { getLibraryHref } from "@/shared/lib/routes";
+import { getLibraryHref, getSearchHref } from "@/shared/lib/routes";
 import { toast } from "sonner";
 import {
   Pagination,
@@ -371,13 +371,21 @@ export function CollectionTab({
                 Tampilkan semua bookmark
               </Button>
             ) : (
-              <Button
-                variant="outline"
-                onClick={onSearchClear}
-                className="rounded-xl shadow-sm font-bold mt-4"
-              >
-                Hapus pencarian
-              </Button>
+              <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
+                <Button
+                  variant="secondary"
+                  onClick={onSearchClear}
+                  className="rounded-xl shadow-sm font-semibold"
+                >
+                  Hapus pencarian
+                </Button>
+                <Button asChild variant="accent" className="rounded-xl shadow-sm font-bold">
+                  <Link href={getSearchHref(searchQuery)}>
+                    <MagnifyingGlass size={18} weight="bold" className="mr-1.5" />
+                    Cari di seluruh katalog
+                  </Link>
+                </Button>
+              </div>
             )
           }
         />
