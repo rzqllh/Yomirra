@@ -191,3 +191,13 @@ Dynamic source harus berasal dari publisher/API yang dipercaya. Untuk source yan
 - [ ] focused tests + full verification lulus;
 - [ ] browser flow diverifikasi;
 - [ ] docs/changelog diperbarui bila public behavior berubah.
+
+## 2026-11-10 — Daily-Tools nhentai target contract (planning only)
+
+See [source-integration PRD, 177-file audit, security/rights assessment and YOM-DT acceptance plan](planning/DAILY_TOOLS_INTEGRATION_PRD_2026-11-10.md). Owner chose nhentai FULL as a **desired** source capability, not proof the third-party source supports all methods or that legal/age gates are satisfied.
+
+The upstream script supplies gallery-ID detail/ordered image data and a PDF export; it does **not** supply verified popular, latest, search or filters. Do not mark those capabilities true until complete normalized methods, real pagination and tests exist. Prefer a built-in server-only adapter with stable gallery/chapter/page identity. Reuse existing safeFetch/HttpClient, image proxy, source health, content-rating classification and restrictive server-side policy; never load external scripts, allow arbitrary fallback mirrors, expose secret headers or use index-based gallery IDs.
+
+Source must be isNsfw=true and fail closed until the site terms, licensing, access/age assurance and prohibited-content policies are reviewed. No restricted image previews or search result leakage into safe mode, global discovery, generic offline caches or notifications. Existing content hiding is **not** independently sufficient proof of age eligibility. Separate authorization is required for new architecture/security exceptions, dependencies and production activation.
+
+Execution sequence: inventory remote/local -> protect dirty/untracked user work -> download/fetch -> align without resetting -> verify HEAD and review all contracts -> only then implement authorized small slices -> run focused/full/browser/security tests -> report exact evidence, limitations and rollback. Do not merge into the 88-ticket UX wave or rewrite historical remediation logs.
