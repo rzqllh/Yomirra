@@ -103,7 +103,7 @@ export function PopularPageView({ feeds, mal }: PopularPageViewProps) {
                 <div className="mb-5">
                   <h2
                     id="popular-combined-heading"
-                    className="text-xl font-bold tracking-tight text-text-primary sm:text-2xl"
+                    className="text-lg sm:text-xl font-bold tracking-tight text-text-primary"
                   >
                     Peringkat lintas sumber
                   </h2>
@@ -143,7 +143,7 @@ export function PopularPageView({ feeds, mal }: PopularPageViewProps) {
                 <div>
                   <h2
                     id={`popular-${selectedFeed.sourceId}`}
-                    className="text-xl font-bold tracking-tight text-text-primary sm:text-2xl"
+                    className="text-lg sm:text-xl font-bold tracking-tight text-text-primary"
                   >
                     Populer di {selectedFeed.sourceName}
                   </h2>

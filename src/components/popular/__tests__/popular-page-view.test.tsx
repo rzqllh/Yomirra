@@ -106,7 +106,7 @@ describe("PopularPageView (Unified Popular Architecture - D-03)", () => {
     const malTab = screen.getByRole("button", { name: "Tren MyAnimeList" });
     fireEvent.click(malTab);
 
-    expect(screen.getByRole("heading", { name: "Populer MAL" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Peringkat Global MyAnimeList" })).toBeTruthy();
     expect(screen.getByText("Berserk")).toBeTruthy();
   });
 

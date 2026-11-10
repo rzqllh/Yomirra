@@ -182,14 +182,14 @@ export function MalPopularSection({
 
   return (
     <section aria-labelledby="mal-popular-heading" className="space-y-6">
-      {/* Compact Header */}
+      {/* Section Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
-          <h2 id="mal-popular-heading" aria-label="Populer MAL" className="text-xl font-bold tracking-tight text-text-primary sm:text-2xl">
+          <h2 id="mal-popular-heading" className="text-lg sm:text-xl font-bold tracking-tight text-text-primary">
             Peringkat Global MyAnimeList
           </h2>
           <p className="mt-0.5 text-xs text-text-muted">
-            Metrik resmi berdasarkan database global MyAnimeList{formattedDate ? ` · Snapshot ${formattedDate}` : ""}.
+            Database resmi MyAnimeList{formattedDate ? ` · Snapshot ${formattedDate}` : ""}.
           </p>
         </div>
         {isLoading && (
@@ -202,7 +202,7 @@ export function MalPopularSection({
 
       {/* Unified Control Toolbar: Format Chips on Left, Sort Dropdown on Right */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-border-subtle/60">
-        <div className="flex items-center gap-2 overflow-x-auto [scrollbar-width:thin] overscroll-x-contain touch-pan-x" role="group" aria-label="Filter format komik">
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 [scrollbar-width:thin] overscroll-x-contain touch-pan-x" role="group" aria-label="Filter format komik">
           {FORMAT_OPTIONS.map((fmt) => (
             <FilterChip
               key={fmt.value}
@@ -214,14 +214,14 @@ export function MalPopularSection({
           ))}
         </div>
 
-        <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
-          <span className="text-2xs text-text-muted font-medium">Urutkan:</span>
+        <div className="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto shrink-0">
+          <span className="text-2xs text-text-muted font-medium shrink-0">Urutkan:</span>
           <CustomSelect
             value={sortBy}
             onChange={(val) => handleSortChange(val as SortCriteria)}
             options={SORT_OPTIONS}
             label="Urutkan hasil MAL"
-            className="w-48"
+            className="w-full sm:w-48"
           />
         </div>
       </div>
