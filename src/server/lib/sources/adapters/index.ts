@@ -8,6 +8,7 @@ import { AsuraScansSource } from "./asurascans";
 import { KomikNesiaSource } from "./komiknesia";
 import { DoujinDesuSource } from "./doujindesu";
 import { WestMangaSource } from "./westmanga";
+import { RestrictedGallery01Source } from "./restricted-gallery-01";
 
 // Add new sources here
 export const sources: MangaSource[] = [
@@ -20,6 +21,7 @@ export const sources: MangaSource[] = [
   new KomikNesiaSource(),
   new DoujinDesuSource(),
   new WestMangaSource(),
+  new RestrictedGallery01Source(),
 ];
 
 export const sourceMap = new Map(sources.map((s) => [s.id, s]));

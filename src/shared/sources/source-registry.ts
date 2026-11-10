@@ -254,6 +254,29 @@ export const sourceRegistry: SourceMetadata[] = [
     isDynamic: false
   },
   {
+    id: "rcs-01",
+    name: "Restricted Source 01",
+    description: "Optional source pending technical and access review.",
+    language: "multi",
+    version: "0.1.0",
+    adapterVersion: "0.1.0",
+    isEnabled: false,
+    isInstalled: true,
+    status: "in-dev",
+    isNsfw: true,
+    capabilities: {
+      popular: false,
+      latest: false,
+      search: false,
+      detail: false,
+      chapters: false,
+      pages: false,
+      filters: false,
+      download: false,
+    },
+    isDynamic: false
+  },
+  {
     id: "westmanga",
     name: "WestManga",
     description: "Baca manga, manhwa & manhua online terlengkap bahasa Indonesia",
