@@ -4,35 +4,39 @@ import * as React from "react";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import Link from "next/link";
 import Image from "next/image";
-import type { MalPopularFeed, MalRankingType } from "@/shared/types/mal";
+import type { MalPopularFeed, MalPopularWork, MalRankingType } from "@/shared/types/mal";
 import { getSearchHref } from "@/shared/lib/routes";
 import { ArrowRight, Sparkle, ArrowSquareOut, Star, SpinnerGap } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import { FilterChip } from "@/components/ui/filter-chip";
 import { CustomSelect } from "@/components/ui/custom-select";
 
-const RANKING_TYPE_OPTIONS: { value: MalRankingType; label: string }[] = [
-  { value: "bypopularity", label: "Paling Populer" },
-  { value: "all", label: "Skor Teratas" },
-  { value: "favorite", label: "Favorit" },
-  { value: "manhwa", label: "Top Manhwa" },
-  { value: "manhua", label: "Top Manhua" },
-];
+type FormatFilter = "all" | "manga" | "manhwa" | "manhua";
+type SortCriteria = "popularity" | "score" | "favorite" | "title-asc" | "title-desc";
 
-const FORMAT_OPTIONS: { value: "all" | "manga" | "manhwa" | "manhua"; label: string }[] = [
+const FORMAT_OPTIONS: { value: FormatFilter; label: string }[] = [
   { value: "all", label: "Semua Format" },
   { value: "manga", label: "Manga" },
   { value: "manhwa", label: "Manhwa" },
   { value: "manhua", label: "Manhua" },
 ];
 
-const SORT_OPTIONS = [
-  { value: "rank", label: "Peringkat MAL" },
+const SORT_OPTIONS: { value: SortCriteria; label: string }[] = [
+  { value: "popularity", label: "Paling Populer (Member)" },
   { value: "score", label: "Skor Tertinggi" },
-  { value: "members", label: "Anggota Terbanyak" },
+  { value: "favorite", label: "Paling Difavoritkan" },
   { value: "title-asc", label: "Judul A–Z" },
   { value: "title-desc", label: "Judul Z–A" },
 ];
+
+function resolveApiRankingType(format: FormatFilter, sort: SortCriteria): MalRankingType {
+  if (format === "manhwa") return "manhwa";
+  if (format === "manhua") return "manhua";
+  if (format === "manga") return "manga";
+  if (sort === "score") return "all";
+  if (sort === "favorite") return "favorite";
+  return "bypopularity";
+}
 
 export function MalPopularSection({
   feed,
@@ -43,44 +47,107 @@ export function MalPopularSection({
 }) {
   const hideNsfw = useSettingsStore((state) => state.hideNsfw);
   const [activeFeed, setActiveFeed] = React.useState<MalPopularFeed | undefined>(feed);
-  const [selectedRankingType, setSelectedRankingType] = React.useState<MalRankingType>(
-    feed?.status === "ready" && feed.rankingType ? feed.rankingType : "bypopularity"
-  );
-  const [formatFilter, setFormatFilter] = React.useState<"all" | "manga" | "manhwa" | "manhua">("all");
-  const [sortBy, setSortBy] = React.useState<"rank" | "score" | "members" | "title-asc" | "title-desc">("rank");
+  const [selectedFormat, setSelectedFormat] = React.useState<FormatFilter>("all");
+  const [sortBy, setSortBy] = React.useState<SortCriteria>("popularity");
   const [isLoading, setIsLoading] = React.useState(false);
 
-  // Sync if initial feed changes from server
+  // In-memory feed cache by rankingType to enable instant tab switching
+  const feedCacheRef = React.useRef<Record<string, MalPopularFeed>>({});
+
   React.useEffect(() => {
-    if (feed) {
+    if (feed && feed.status === "ready") {
+      const typeKey = feed.rankingType || "bypopularity";
+      feedCacheRef.current[typeKey] = feed;
       setActiveFeed(feed);
-      if (feed.status === "ready" && feed.rankingType) {
-        setSelectedRankingType(feed.rankingType);
-      }
     }
   }, [feed]);
 
-  const handleRankingTypeSelect = async (type: MalRankingType) => {
-    if (type === selectedRankingType && activeFeed?.status === "ready") return;
-    setSelectedRankingType(type);
-    setIsLoading(true);
+  const loadRankingFeed = React.useCallback(async (targetType: MalRankingType) => {
+    if (feedCacheRef.current[targetType]) {
+      setActiveFeed(feedCacheRef.current[targetType]);
+      return;
+    }
 
+    setIsLoading(true);
     try {
-      const res = await fetch(`/api/metadata/mal/popular?type=${encodeURIComponent(type)}`, {
+      const res = await fetch(`/api/metadata/mal/popular?type=${encodeURIComponent(targetType)}`, {
         headers: { Accept: "application/json" },
       });
       if (res.ok) {
         const payload = (await res.json()) as { data?: MalPopularFeed };
-        if (payload?.data) {
+        if (payload?.data && payload.data.status === "ready") {
+          feedCacheRef.current[targetType] = payload.data;
           setActiveFeed(payload.data);
         }
       }
     } catch {
-      // Keep existing data on transient fetch failure
+      // Retain current feed on network/timeout failure
     } finally {
       setIsLoading(false);
     }
+  }, []);
+
+  const handleFormatSelect = (format: FormatFilter) => {
+    if (format === selectedFormat && activeFeed?.status === "ready") return;
+    setSelectedFormat(format);
+    const targetType = resolveApiRankingType(format, sortBy);
+    void loadRankingFeed(targetType);
   };
+
+  const handleSortChange = (sort: SortCriteria) => {
+    setSortBy(sort);
+    if (selectedFormat === "all") {
+      const targetType = resolveApiRankingType("all", sort);
+      const currentType = activeFeed?.status === "ready" ? activeFeed.rankingType : undefined;
+      if (targetType !== currentType) {
+        void loadRankingFeed(targetType);
+      }
+    }
+  };
+
+  const formattedDate = React.useMemo(() => {
+    if (!activeFeed || activeFeed.status !== "ready") return "";
+    try {
+      return new Date(activeFeed.fetchedAt).toLocaleDateString("id-ID", {
+        dateStyle: "medium",
+        timeZone: "Asia/Jakarta",
+      });
+    } catch {
+      return "";
+    }
+  }, [activeFeed]);
+
+  const visibleWorks = React.useMemo(() => {
+    if (!activeFeed || activeFeed.status !== "ready") return [];
+    let works = activeFeed.works.filter((work) => !hideNsfw || work.nsfw === "white");
+
+    if (selectedFormat !== "all") {
+      works = works.filter((w) => w.mediaType === selectedFormat || activeFeed.rankingType === selectedFormat);
+    }
+
+    const sorted = [...works];
+    switch (sortBy) {
+      case "popularity":
+        sorted.sort((a, b) => (b.members ?? 0) - (a.members ?? 0) || a.rank - b.rank);
+        break;
+      case "score":
+        sorted.sort((a, b) => (b.score ?? 0) - (a.score ?? 0) || a.rank - b.rank);
+        break;
+      case "favorite":
+        sorted.sort((a, b) => a.rank - b.rank);
+        break;
+      case "title-asc":
+        sorted.sort((a, b) => a.title.localeCompare(b.title));
+        break;
+      case "title-desc":
+        sorted.sort((a, b) => b.title.localeCompare(a.title));
+        break;
+      default:
+        sorted.sort((a, b) => a.rank - b.rank);
+        break;
+    }
+    return sorted;
+  }, [activeFeed, hideNsfw, selectedFormat, sortBy]);
 
   if (!activeFeed || activeFeed.status !== "ready") {
     return (
@@ -113,112 +180,53 @@ export function MalPopularSection({
     );
   }
 
-  const visibleWorks = (() => {
-    let works = activeFeed.works.filter((work) => !hideNsfw || work.nsfw === "white");
-
-    if (formatFilter !== "all") {
-      works = works.filter((w) => w.mediaType === formatFilter);
-    }
-
-    const sorted = [...works];
-    switch (sortBy) {
-      case "score":
-        sorted.sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
-        break;
-      case "members":
-        sorted.sort((a, b) => (b.members ?? 0) - (a.members ?? 0));
-        break;
-      case "title-asc":
-        sorted.sort((a, b) => a.title.localeCompare(b.title));
-        break;
-      case "title-desc":
-        sorted.sort((a, b) => b.title.localeCompare(a.title));
-        break;
-      case "rank":
-      default:
-        sorted.sort((a, b) => a.rank - b.rank);
-        break;
-    }
-    return sorted;
-  })();
-
   return (
     <section aria-labelledby="mal-popular-heading" className="space-y-6">
-      {/* Editorial Overview Card */}
-      <div className="rounded-xl border border-border-subtle bg-surface-raised p-5 shadow-xs">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <h2 id="mal-popular-heading" aria-label="Populer MAL" className="text-xl font-bold text-text-primary">
-              Populer MyAnimeList
-            </h2>
-            <p className="mt-1 text-sm text-text-secondary leading-relaxed">
-              Metrik eksternal MyAnimeList berdasarkan pengguna global dan database resmi MAL. Bukan trafik internal Yomirra.
-            </p>
-          </div>
-          {isLoading && (
-            <div className="flex items-center gap-1.5 text-xs text-accent font-semibold self-start sm:self-center">
-              <SpinnerGap size={16} className="animate-spin" />
-              <span>Memperbarui…</span>
-            </div>
-          )}
+      {/* Compact Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+        <div>
+          <h2 id="mal-popular-heading" aria-label="Populer MAL" className="text-xl font-bold tracking-tight text-text-primary sm:text-2xl">
+            Peringkat Global MyAnimeList
+          </h2>
+          <p className="mt-0.5 text-xs text-text-muted">
+            Metrik resmi berdasarkan database global MyAnimeList{formattedDate ? ` · Snapshot ${formattedDate}` : ""}.
+          </p>
         </div>
-        <p className="mt-2 text-xs text-text-muted">
-          Peringkat resmi MAL dipertahankan. Snapshot{" "}
-          {new Date(activeFeed.fetchedAt).toLocaleDateString("id-ID", {
-            dateStyle: "medium",
-            timeZone: "Asia/Jakarta",
-          })}
-          .
-        </p>
+        {isLoading && (
+          <div className="flex items-center gap-1.5 text-xs text-accent font-semibold self-start sm:self-center">
+            <SpinnerGap size={16} className="animate-spin" />
+            <span>Memperbarui…</span>
+          </div>
+        )}
       </div>
 
-      {/* Control Filter Bar: Ranking Type & Sorting */}
-      <div className="space-y-3.5">
-        {/* Tier 1: MAL API Ranking Types */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:thin] overscroll-x-contain touch-pan-x" role="group" aria-label="Tipe peringkat MAL">
-          {RANKING_TYPE_OPTIONS.map((opt) => (
+      {/* Unified Control Toolbar: Format Chips on Left, Sort Dropdown on Right */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-border-subtle/60">
+        <div className="flex items-center gap-2 overflow-x-auto [scrollbar-width:thin] overscroll-x-contain touch-pan-x" role="group" aria-label="Filter format komik">
+          {FORMAT_OPTIONS.map((fmt) => (
             <FilterChip
-              key={opt.value}
-              label={opt.label}
-              selected={selectedRankingType === opt.value}
-              onClick={() => handleRankingTypeSelect(opt.value)}
-              variant={selectedRankingType === opt.value ? "accent-subtle" : "default"}
+              key={fmt.value}
+              label={fmt.label}
+              selected={selectedFormat === fmt.value}
+              onClick={() => handleFormatSelect(fmt.value)}
+              variant={selectedFormat === fmt.value ? "accent-subtle" : "default"}
             />
           ))}
         </div>
 
-        {/* Tier 2: Client Format Filter & Sort Options */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-1 border-t border-border-subtle/60">
-          <div className="flex items-center gap-1.5 overflow-x-auto [scrollbar-width:thin]" role="group" aria-label="Filter format manga">
-            {FORMAT_OPTIONS.map((fmt) => (
-              <button
-                key={fmt.value}
-                type="button"
-                onClick={() => setFormatFilter(fmt.value)}
-                className={`px-2.5 py-1 text-xs font-semibold rounded-md transition-colors ${
-                  formatFilter === fmt.value
-                    ? "bg-surface-muted text-text-primary border border-border-strong font-bold"
-                    : "text-text-muted hover:text-text-primary"
-                }`}
-              >
-                {fmt.label}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-2 self-end sm:self-auto">
-            <span className="text-2xs text-text-muted font-medium">Urutkan:</span>
-            <CustomSelect
-              value={sortBy}
-              onChange={(val) => setSortBy(val as any)}
-              options={SORT_OPTIONS}
-              label="Urutkan hasil MAL"
-              className="w-44"
-            />
-          </div>
+        <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+          <span className="text-2xs text-text-muted font-medium">Urutkan:</span>
+          <CustomSelect
+            value={sortBy}
+            onChange={(val) => handleSortChange(val as SortCriteria)}
+            options={SORT_OPTIONS}
+            label="Urutkan hasil MAL"
+            className="w-48"
+          />
         </div>
       </div>
 
+      {/* Results Count & Grid */}
       {visibleWorks.length === 0 ? (
         <div role="status" className="rounded-xl border border-border-subtle bg-surface-raised p-8 text-center text-text-muted">
           Tidak ada judul yang memenuhi filter konten atau format pada snapshot ini.
@@ -246,7 +254,7 @@ export function MalPopularSection({
                 <div>
                   <div className="flex items-center justify-between gap-2">
                     <span className="inline-flex items-center rounded-md bg-accent/10 px-2 py-0.5 text-2xs font-bold text-accent">
-                      #{work.rank} · MyAnimeList
+                      #{work.rank} · MAL
                     </span>
                     {typeof work.score === "number" && work.score > 0 && (
                       <span className="inline-flex items-center gap-1 text-2xs font-bold text-accent">
