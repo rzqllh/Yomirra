@@ -68,12 +68,12 @@ const Toaster = ({ position: propPosition, ...props }: ToasterProps) => {
       visibleToasts={4}
       icons={{
         success: (
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-semantic-success text-white shadow-xs">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-status-success-bg text-status-success-fg border border-status-success-fg/30 shadow-xs">
             <Check size={16} weight="regular" />
           </div>
         ),
         error: (
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-semantic-error text-white shadow-xs">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-status-error-bg text-status-error-fg border border-status-error-fg/30 shadow-xs">
             <X size={16} weight="regular" />
           </div>
         ),
@@ -88,7 +88,7 @@ const Toaster = ({ position: propPosition, ...props }: ToasterProps) => {
           </div>
         ),
         loading: (
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent text-white shadow-xs">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-on shadow-xs">
             <CircleNotch size={16} weight="regular" className="motion-safe:animate-spin" />
           </div>
         ),

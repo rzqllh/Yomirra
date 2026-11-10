@@ -27,6 +27,9 @@ Final scoped verification: 62 focused Vitest tests and 16 production-browser tes
 | HLP-01 | Partial | FAQ no longer attributes every 403/429 to source overload; ordered retry guidance. Full help accessibility review remains open. |
 | SET-06, SET-09 | Partial | Pending storage check differs from empty; cached entries, not rounded MB, determine availability. Confirmation semantics unchanged. Help discovery and full runtime storage QA remain open. |
 | Onboarding regression (cross-cutting SYS-09/NTF-03) | Implemented, browser verification scoped | Independent action footer; short-screen layout; installation action visible on touch; nested guide layering and Escape handling. Not equivalent to closing either complete ticket. |
+| SYS-01 | Implemented | AppShell single-source-of-truth bottom safe reservation (`--page-bottom-safe`) verified; no double-stacking in PageContainer. |
+| SYS-02 | Implemented, QA verified | Overlay toast policy enforced via `--offset-top` and `--mobile-offset-top` below header stack (and below reader top bar); raw color bypasses on Sonner status icons replaced with semantic tokens. |
+| SYS-06 | Implemented | BottomDock a11y `title` added for main tabs & search; active label text migrated from arbitrary brackets to `text-2xs min-[360px]:text-xs`. |
 
 All other rows retain their previous disposition and require the independent audit gap report, runtime evidence, or a product decision. RDR-02 and CHP-05/07/08/09, storage/deletion/synchronization semantics, and the other PRODUCT_DECISION rows are not authorized for semantic changes. See `docs/revamp/EXECUTION_LOG.md` for commands, failures and verification limitations.
 

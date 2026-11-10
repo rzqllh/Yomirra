@@ -668,14 +668,15 @@ section[aria-label*="Notifications" i] {
 
 body.reader-active [data-sonner-toaster],
 body.reader-active section[aria-label*="Notifications" i] {
-  --offset-top: calc(env(safe-area-inset-top, 0px) + 64px) !important;
-  --mobile-offset-top: calc(env(safe-area-inset-top, 0px) + 64px) !important;
+  --offset-top: calc(env(safe-area-inset-top, 0px) + 68px) !important;
+  --mobile-offset-top: calc(env(safe-area-inset-top, 0px) + 68px) !important;
 }
 
 @media (max-width: 767px) {
   [data-sonner-toaster],
   section[aria-label*="Notifications" i] {
-    --mobile-offset-top: calc(env(safe-area-inset-top, 0px) + 16px) !important;
+    --offset-top: calc(var(--app-header-stack-height) + 12px) !important;
+    --mobile-offset-top: calc(var(--app-header-stack-height) + 12px) !important;
     --mobile-offset-left: 16px !important;
     --mobile-offset-right: 16px !important;
   }

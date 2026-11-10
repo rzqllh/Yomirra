@@ -79,6 +79,7 @@ export function BottomDock({ pendingHref }: { pendingHref?: string | null }) {
               <Link
                 key={item.href}
                 href={item.href}
+                title={item.label}
                 onClick={(event) => {
                   if (isActive || !beginNavigationIntent(item.href)) {
                     event.preventDefault()
@@ -107,7 +108,7 @@ export function BottomDock({ pendingHref }: { pendingHref?: string | null }) {
                   />
 
                   {isActive && (
-                    <span className="whitespace-nowrap text-[11px] min-[360px]:text-[12px] font-semibold leading-none tracking-tight text-text-primary">
+                    <span className="whitespace-nowrap text-2xs min-[360px]:text-xs font-semibold leading-none tracking-tight text-text-primary">
                       {item.label}
                     </span>
                   )}
@@ -119,6 +120,7 @@ export function BottomDock({ pendingHref }: { pendingHref?: string | null }) {
 
         <Link
           href={searchItem.href}
+          title={searchItem.label}
           onClick={(event) => {
             if (isSearchActive || !beginNavigationIntent(searchItem.href)) {
               event.preventDefault()
