@@ -23,6 +23,11 @@ export interface MangaDetailLayoutProps {
   mainAction: React.ReactNode;
   actions: React.ReactNode;
 
+  // Mobile tab state
+  activeMobileTab?: "chapters" | "info";
+  onMobileTabChange?: (tab: "chapters" | "info") => void;
+  chapterCount?: number;
+
   // Body content
   synopsis: React.ReactNode;
   chapters: React.ReactNode;
@@ -42,6 +47,9 @@ export function MangaDetailLayout({
   desktopMeta,
   mainAction,
   actions,
+  activeMobileTab = "chapters",
+  onMobileTabChange,
+  chapterCount,
   synopsis,
   chapters,
   recommendations,
@@ -67,9 +75,10 @@ export function MangaDetailLayout({
           </motion.div>
 
           {/* Top vignette — keeps header/back button readable without killing the cover */}
-          <div className="absolute inset-0 bg-gradient-to-b from-surface-base/80 via-surface-base/30 to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-b from-surface-base/85 via-surface-base/40 to-transparent pointer-events-none" />
 
-          <div className="absolute inset-0 bg-gradient-to-t from-surface-base via-surface-base/75 to-transparent" />
+          {/* Bottom ramp blending seamlessly into page content */}
+          <div className="absolute inset-0 bg-gradient-to-t from-surface-base via-surface-base/80 to-transparent" />
         </div>
 
         {/* Page Header */}
@@ -82,7 +91,7 @@ export function MangaDetailLayout({
             <div className="flex gap-3.5 relative items-end min-[360px]:gap-5">
               <div
                 className={cn(
-                  "relative shrink-0 w-32 min-[360px]:w-36 sm:w-44 aspect-[2/3] rounded-xl overflow-hidden shadow-lg border border-border-default/80 bg-surface-raised z-20",
+                  "relative shrink-0 w-32 min-[360px]:w-36 sm:w-44 aspect-[2/3] rounded-2xl overflow-hidden shadow-xl border border-border-default/80 bg-surface-raised z-20",
                   mobileCoverClassName
                 )}
               >
@@ -97,7 +106,7 @@ export function MangaDetailLayout({
             {/* Primary CTA */}
             {mainAction}
 
-            <div role="group" aria-label="Aksi komik" className="grid w-full grid-cols-2 gap-2 [&>button]:min-w-0">
+            <div role="group" aria-label="Aksi komik" className="grid w-full grid-cols-2 sm:grid-cols-4 gap-2 [&>button]:min-w-0">
               {actions}
             </div>
           </div>
@@ -106,7 +115,7 @@ export function MangaDetailLayout({
           <div className="hidden items-center gap-8 md:flex lg:gap-10">
             <div
               className={cn(
-                "relative w-52 lg:w-60 shrink-0 aspect-[2/3] rounded-xl overflow-hidden shadow-xl border border-border-default/80 bg-surface-raised z-20",
+                "relative w-52 lg:w-60 shrink-0 aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl border border-border-default/80 bg-surface-raised z-20",
                 desktopCoverClassName
               )}
             >
@@ -125,10 +134,56 @@ export function MangaDetailLayout({
         </div>
       </section>
 
-      {/* Body Content: 2-Column Editorial Grid + Full-Width Recommendations (Anti-Cutoff) */}
+      {/* Mobile Tab Selector: Chapters vs Synopsis/Info */}
+      <div className="md:hidden sticky top-[var(--app-header-stack-height)] z-20 px-4 py-2 bg-surface-base/95 backdrop-blur-md border-b border-border-subtle/80">
+        <div className="grid grid-cols-2 p-1 bg-surface-muted rounded-xl gap-1">
+          <button
+            type="button"
+            onClick={() => onMobileTabChange?.("chapters")}
+            className={cn(
+              "py-2 text-xs font-bold rounded-lg transition-all text-center select-none cursor-pointer",
+              activeMobileTab === "chapters"
+                ? "bg-surface-raised text-text-primary shadow-xs"
+                : "text-text-muted hover:text-text-primary"
+            )}
+          >
+            Daftar Chapter {chapterCount !== undefined && `(${chapterCount})`}
+          </button>
+          <button
+            type="button"
+            onClick={() => onMobileTabChange?.("info")}
+            className={cn(
+              "py-2 text-xs font-bold rounded-lg transition-all text-center select-none cursor-pointer",
+              activeMobileTab === "info"
+                ? "bg-surface-raised text-text-primary shadow-xs"
+                : "text-text-muted hover:text-text-primary"
+            )}
+          >
+            Sinopsis & Info
+          </button>
+        </div>
+      </div>
+
+      {/* Body Content */}
       <div className="w-full relative z-10 bg-surface-base">
-        <div className="w-full max-w-7xl mx-auto px-4 pt-6 pb-[var(--page-bottom-safe)] md:px-8 md:pb-8 space-y-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+        <div className="w-full max-w-7xl mx-auto px-4 pt-4 md:pt-6 pb-[var(--page-bottom-safe)] md:px-8 md:pb-8 space-y-8">
+          {/* Mobile view switches according to active tab */}
+          <div className="block md:hidden">
+            {activeMobileTab === "chapters" ? (
+              <div className="flex min-w-0 flex-col rounded-xl border border-border-default/80 bg-surface-raised px-3 pb-3">
+                {chapters}
+              </div>
+            ) : (
+              <div className="flex flex-col gap-6">
+                <div className="rounded-xl border border-border-default/80 bg-surface-raised p-4 sm:p-5 shadow-xs">
+                  {synopsis}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Desktop view maintains the 2-Column Editorial Grid */}
+          <div className="hidden md:grid md:grid-cols-12 gap-6 lg:gap-8 items-start">
             {/* Left Column on Desktop (4 cols / ~33%): Sticky Synopsis & Metadata */}
             <div className="lg:col-span-4 flex flex-col gap-6 lg:sticky lg:top-20">
               <div className="rounded-xl border border-border-default/80 bg-surface-raised p-4 sm:p-5 shadow-xs">

@@ -91,6 +91,7 @@ function MangaDetailContent({
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
   const [searchQuery, setSearchQuery] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
+  const [mobileTab, setMobileTab] = useState<"chapters" | "info">("chapters");
   const isMounted = useMounted();
   const reducedMotion = useReducedMotion();
 
@@ -212,7 +213,7 @@ function MangaDetailContent({
     if (chapterLoadError || (!startChapterId && !continueChapterId)) {
       return (
         <div className="w-full md:w-auto mt-2 md:mt-0">
-          <Button disabled variant="outline" className="w-full md:w-auto md:min-w-[210px] rounded-md h-[52px] md:h-[48px] text-base font-bold bg-surface-raised border-border-default opacity-60">
+          <Button disabled variant="outline" className="w-full md:w-auto md:min-w-52 rounded-xl h-13 md:h-12 text-base font-bold bg-surface-raised border-border-default opacity-60">
             {chapterLoadError ? "Chapter belum bisa dimuat" : "Belum ada chapter"}
           </Button>
         </div>
@@ -225,6 +226,9 @@ function MangaDetailContent({
     const companionLabel = isContinue
       ? continueChapterLabel.replace('Chapter', 'Ch.')
       : (firstChapter ? (firstChapter.title?.startsWith('Ch') ? firstChapter.title : `Chapter ${firstChapter.number ?? 1}`) : "Chapter 1");
+    const progressLabel = isContinue && historyItem?.progressPercent && historyItem.progressPercent > 0
+      ? `${Math.round(historyItem.progressPercent)}%`
+      : null;
 
     const targetHref = getReaderHref(sourceId, mangaId, targetChapterId, readerReturnTo);
 
@@ -246,6 +250,11 @@ function MangaDetailContent({
             <span className="text-sm font-medium text-accent-on/90 tracking-tight truncate max-w-40">
               {companionLabel}
             </span>
+            {progressLabel && (
+              <span className="text-2xs font-bold bg-accent-on/20 px-1.5 py-0.5 rounded-xs tracking-tight">
+                {progressLabel}
+              </span>
+            )}
           </Link>
         </Button>
       </div>
@@ -293,6 +302,9 @@ function MangaDetailContent({
       `}} />
 
       <MangaDetailLayout
+        activeMobileTab={mobileTab}
+        onMobileTabChange={setMobileTab}
+        chapterCount={chapters?.length ?? 0}
         backdrop={detail.coverUrl && (
           <MangaCover
             src={detail.coverUrl}
@@ -325,7 +337,7 @@ function MangaDetailContent({
         mobileMeta={
           <>
             <div className="mb-2">
-              <h1 id="manga-detail-title-mobile" className="text-xl min-[360px]:text-2xl sm:text-3xl font-black tracking-tight text-text-primary leading-snug line-clamp-3 text-balance drop-shadow-xs vt-title-mobile pb-0.5">
+              <h1 id="manga-detail-title-mobile" className="text-xl min-[360px]:text-2xl sm:text-3xl font-black tracking-tight text-text-primary leading-snug line-clamp-3 text-balance drop-shadow-xs vt-title-mobile pb-1.5">
                 {detail.title}
               </h1>
               {detail.originalTitle && (
@@ -365,7 +377,7 @@ function MangaDetailContent({
 
             <div className="mt-auto flex flex-col gap-0.5">
               {authorDisplay && (
-                <p className="text-sm font-semibold text-white/90 line-clamp-1 drop-shadow-xs">
+                <p className="text-sm font-semibold text-text-primary/90 line-clamp-1 drop-shadow-xs">
                   {authorDisplay}
                 </p>
               )}
@@ -379,7 +391,7 @@ function MangaDetailContent({
         desktopMeta={
           <>
             <div>
-              <h1 id="manga-detail-title-desktop" className="text-3xl lg:text-4xl xl:text-5xl font-black tracking-tight leading-tight text-text-primary drop-shadow-xs vt-title-desktop max-w-2xl pb-1">
+              <h1 id="manga-detail-title-desktop" className="text-3xl lg:text-4xl xl:text-5xl font-black tracking-tight leading-snug text-text-primary drop-shadow-xs vt-title-desktop max-w-2xl pb-1.5">
                 {detail.title}
               </h1>
               {detail.originalTitle && (
@@ -419,7 +431,7 @@ function MangaDetailContent({
 
             <div className="flex flex-col gap-0.5">
               {authorDisplay && (
-                <p className="text-base font-semibold text-white/90 drop-shadow-xs">
+                <p className="text-base font-semibold text-text-primary/90 drop-shadow-xs">
                   {authorDisplay}
                 </p>
               )}
@@ -467,7 +479,7 @@ function MangaDetailContent({
                   <Link
                     key={g}
                     href={`/library?source=${sourceId}&genre=${encodeURIComponent(g)}`}
-                    className="rounded-xl bg-surface-base border border-border-default/80 px-3 py-1 text-[10px] font-bold text-text-secondary uppercase tracking-wider hover:border-accent hover:text-accent transition-colors"
+                    className="rounded-xl bg-surface-base border border-border-default/80 px-3 py-1 text-2xs font-bold text-text-secondary uppercase tracking-wider hover:border-accent hover:text-accent transition-colors"
                   >
                     {g}
                   </Link>
@@ -478,7 +490,7 @@ function MangaDetailContent({
         }
         chapters={
           <>
-            <div className="sticky top-[var(--secondary-sticky-top)] z-20 bg-surface-raised/95 py-3.5 px-0.5 border-b border-border-default/40 flex flex-col gap-3 backdrop-blur-md">
+            <div className="sticky top-[var(--chapter-header-sticky-top)] z-20 bg-surface-raised/95 py-3.5 px-0.5 border-b border-border-default/40 flex flex-col gap-3 backdrop-blur-md">
               <div className="flex items-center justify-between">
                 <h2 id="detail-chapters" className="flex flex-wrap items-center gap-x-2 text-lg font-bold tracking-tight text-text-primary md:text-xl">
                   Daftar chapter
@@ -486,7 +498,7 @@ function MangaDetailContent({
                 </h2>
                 <button
                   onClick={() => setSortOrder(prev => prev === "desc" ? "asc" : "desc")}
-                  className="flex items-center gap-1.5 min-h-[44px] text-[12px] font-semibold text-text-muted hover:text-text-primary transition-colors py-1 px-3 rounded-lg hover:bg-surface-hover"
+                  className="flex items-center gap-1.5 min-h-11 text-xs font-semibold text-text-muted hover:text-text-primary transition-colors py-1 px-3 rounded-lg hover:bg-surface-hover cursor-pointer"
                 >
                   {sortOrder === "desc" ? "Terbaru" : "Terlama"}
                   {sortOrder === "desc" ? <SortDescending size={16} /> : <SortAscending size={16} />}
@@ -500,7 +512,7 @@ function MangaDetailContent({
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Cari chapter…"
                     aria-label="Cari chapter"
-                    containerClassName="flex-1 h-[44px] rounded-xl bg-surface-raised border border-border-default/80 focus-within:border-accent/50 focus-within:ring-2 focus-within:ring-accent/20"
+                    containerClassName="flex-1 h-11 rounded-xl bg-surface-raised border border-border-default/80 focus-within:border-accent/50 focus-within:ring-2 focus-within:ring-accent/20"
                   />
                 </div>
               )}
@@ -524,7 +536,7 @@ function MangaDetailContent({
                 tabIndex={0}
                 role="region"
                 aria-labelledby="detail-chapters"
-                className="flex max-h-[52dvh] flex-col overflow-x-hidden overflow-y-auto pt-2 outline-none focus-visible:outline-2 focus-visible:outline-accent md:max-h-[500px]"
+                className="chapter-scroll-viewport flex flex-col overflow-x-hidden overflow-y-auto pt-2 outline-none focus-visible:outline-2 focus-visible:outline-accent"
               >
                 <div
                   style={{

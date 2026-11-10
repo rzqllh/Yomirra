@@ -137,8 +137,9 @@ describe("MangaDetailView - Scroll Position Reset", () => {
       />
     );
 
-    const bottomGradient = container.querySelector('[class~="from-black/95"]');
-    expect(bottomGradient?.className).toContain("via-black/65");
+    const bottomGradient = container.querySelector('[class*="bg-gradient-to-t"]');
+    expect(bottomGradient).not.toBeNull();
+    expect(bottomGradient?.className).toContain("from-surface-base");
 
     // Verify parallax container overflow positioning
     const parallaxLayer = container.querySelector('[class*="-top-12"]');

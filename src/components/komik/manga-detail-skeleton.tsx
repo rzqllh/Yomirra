@@ -46,7 +46,7 @@ export function MangaDetailSkeleton() {
       }
       mainAction={
         <div className="w-full mt-2">
-          <Skeleton className="w-full h-[52px] rounded-[16px] bg-white/20" />
+          <Skeleton className="w-full h-13 rounded-2xl bg-surface-muted" />
         </div>
       }
       actions={
@@ -77,12 +77,12 @@ export function MangaDetailSkeleton() {
       }
       chapters={
         <>
-          <div className="sticky top-[60px] z-20 bg-surface-base py-3.5 px-0.5 border-b border-border-default/40 flex flex-col gap-3">
+          <div className="sticky top-14 z-20 bg-surface-base py-3.5 px-0.5 border-b border-border-default/40 flex flex-col gap-3">
             <div className="flex items-center justify-between">
               <Skeleton className="h-6 w-28 rounded-md" />
               <Skeleton className="h-6 w-20 rounded-lg" />
             </div>
-            <Skeleton className="h-[42px] w-full rounded-xl" />
+            <Skeleton className="h-11 w-full rounded-xl" />
           </div>
           <div className="flex flex-col pt-2">
             {Array.from({ length: 6 }).map((_, i) => (
