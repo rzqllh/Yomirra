@@ -17,7 +17,6 @@ Mulai dari [Developer Guide](README_DEV.md), [Contributing](../CONTRIBUTING.md),
 
 - [Architecture](ARCHITECTURE.md) — runtime, client/server boundary, sumber, cache, dan state.
 - [Adding a Source](ADDING_A_SOURCE.md) — adapter, manifest, normalisasi, dan pengujian sumber.
-- [Daily-Tools Integration PRD (2026-11-10)](planning/DAILY_TOOLS_INTEGRATION_PRD_2026-11-10.md) — masterplanning source nhentai FULL, gap dan acceptance YOM-DT-00..10, audit 177 JavaScript, risiko konten, roadmap serta gate AGY remote/local sync sebelum implementasi.
 - [Identity](IDENTITY.md) — identitas judul, linked source, riwayat, dan migrasi.
 - [Schema](SCHEMA.md) — types, store, persistence, dan kontrak API.
 - [Stack](STACK.md) — dependency dan perannya.

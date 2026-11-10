@@ -277,11 +277,3 @@ Worker hanya menyimpan HTML yang diberi penanda aman oleh server. Halaman Unduha
 Untuk membaca offline, kunjungi Unduhan sekali saat online. Setelah shell tersimpan, halaman Unduhan membuka gambar chapter berklasifikasi aman dari sumber terdaftar langsung dari penyimpanan perangkat. MangaDex menyediakan rating judul yang dapat memenuhi syarat ini. Sumber tanpa rating per judul, seperti Shinigami, masih memerlukan Reader online. Reader online dapat memeriksa klasifikasi unduhan lama ketika chapter terverifikasi pada scope yang aktif. Dialog offline tidak melakukan sinkronisasi akun atau menulis riwayat baca.
 
 Lihat [handoff stabilisasi](handoff/final-stabilization.md) untuk batas rilis, pemantauan dan recovery.
-
-## 2026-11-10 — Proposed restricted-source integration boundary
-
-The [Daily-Tools 177-file audit and nhentai integration PRD](planning/DAILY_TOOLS_INTEGRATION_PRD_2026-11-10.md) documents a future full-capability source target. It is NOT present in the current adapter registry and must not be described as implemented or live.
-
-Proposed path: opt-in adult/authorized user request -> server-side source/content eligibility -> fixed approved source adapter -> bounded DNS/IP/redirect-safe request -> normalized MangaSource result -> controlled image proxy -> existing detail, chapter, and reader views. The upstream ID lookup/PDF script is not a drop-in adapter. The full search/popular/latest/filter methods need independent implementation and evidence.
-
-Preserve default restricted-content hiding and server policy; no global search, recommendation, offline cache, prefetch or cover preview leaks. Keep gallery IDs stable and chapter/page mapping deterministic; do not expose credentials or unknown mirror URLs to clients. If source permissions, age/content compliance, SSRF safety or legal distribution rights are unclear, disable feature and mark BLOCKED rather than adding bypasses. Do not touch existing 88-ticket UX remediation scope through this workstream.

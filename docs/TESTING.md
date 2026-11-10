@@ -225,11 +225,3 @@ Sebelum menutup gate, catat hasil CI SHA akhir, transkrip Firebase, bukti Safari
 The production Reader and homepage emitted an eval report from the Zod object-schema JIT probe. Shared browser schemas use Zod's interpreted validation path. The production header stays in Report-Only mode.
 
 Validate the built preview in Chromium and WebKit. Collect `securitypolicyviolation` events with the blocked URI, directive and source location on home, search, detail and Reader. Include Firebase sign-in and sign-out, backup import validation, Serwist installation and an offline Reader reload. Test existing inline Next.js and theme bootstrap before moving to enforcement. Use a separate reviewed release for enforcement after preview evidence covers these flows and shows no unexplained violations.
-
-## 2026-11-10 — Planned YOM-DT source acceptance matrix (not executed)
-
-Specification: [Daily-Tools nhentai Integration PRD and 177-file audit](planning/DAILY_TOOLS_INTEGRATION_PRD_2026-11-10.md).
-
-YOM-DT-00 is safe remote/local alignment (and dirty/untracked preservation) **before** code, dependencies or tests. YOM-DT-01 requires provenance/site terms/rights and restricted-content access eligibility; if not established, live implementation and publication are BLOCKED. Then YOM-DT-02/03 detail, stable one-gallery chapter and page fixtures; YOM-DT-04/05 truthful search/latest/popular/filter and pagination; YOM-DT-06 restricted-content/age and safe-mode isolation; YOM-DT-07 SSRF/image proxy; YOM-DT-08 upstream failures/health; YOM-DT-09 reader/browser/offline regressions; YOM-DT-10 rollback and explicit release.
-
-Fixture requirements: invalid/missing gallery, malformed JSON/HTML, missing/duplicate images, WebP/JPEG/PNG, 403/404/429/5xx/timeout/redirect, rate limit, unsafe host, source classification, safe toggle, cover/proxy/offline leakage, search filtering and existing other-source continuity. Only mark command PASS on the exact checked SHA with real output and exit code. Current status: PLANNED / NOT RUN; this documentation-only update is not evidence of installation, tests, live source access or launch.
