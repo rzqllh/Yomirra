@@ -280,11 +280,11 @@ export function ReaderShell({
           const isAtBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 300;
 
           if (isAtBottom) {
-            setOverlayVisible(false);
-          } else if (accumulatedDiff > 80) {
+            setOverlayVisible(true);
+          } else if (accumulatedDiff > 60) {
             setOverlayVisible(false);
             accumulatedDiff = 0; // Reset after triggering
-          } else if (accumulatedDiff < -80) {
+          } else if (accumulatedDiff < -30) {
             setOverlayVisible(true);
             accumulatedDiff = 0; // Reset after triggering
           }
@@ -298,6 +298,34 @@ export function ReaderShell({
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
+  }, [setOverlayVisible]);
+
+  // Desktop mouse proximity & arrow key awareness for showing chrome without forcing click
+  React.useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (window.innerWidth < 768) return;
+      const isNearTop = e.clientY <= 70;
+      const isNearBottom = e.clientY >= window.innerHeight - 90;
+
+      if (isNearTop || isNearBottom) {
+        setOverlayVisible(true);
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.key === "ArrowUp" || e.key === "PageUp") {
+        setOverlayVisible(true);
+      }
+    };
+
+    window.addEventListener("mousemove", handleMouseMove, { passive: true });
+    window.addEventListener("keydown", handleKeyDown, { passive: true });
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, [setOverlayVisible]);
 
   return (

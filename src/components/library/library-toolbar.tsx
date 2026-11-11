@@ -59,7 +59,7 @@ export function LibraryToolbar({
         onSubmitAction={onSearchSubmit}
         onClear={onSearchClear}
         placeholder="Cari di Jelajah…"
-        containerClassName="flex-1 min-w-0 min-h-11 rounded-xl"
+        containerClassName="flex-1 min-w-0 min-h-11 rounded-sm"
       />
 
       <ViewModeToggle className="min-h-11" />

@@ -213,8 +213,15 @@ export const useHistoryStore = create<HistoryState>()(
           const parsedNum = item.chapterTitle ? parseChapterNumber(item.chapterTitle) : (item.chapterId ? parseChapterNumber(item.chapterId) : null);
           if (parsedNum !== null) item.chapterNumber = parsedNum;
         }
+        if (item.seriesProgressPercent === undefined && item.totalChapters && item.totalChapters > 0) {
+          const count = item.chapterIndex ?? item.chapterNumber;
+          if (count !== undefined && count > 0) {
+            item.seriesProgressPercent = Math.min(100, Math.max(1, Math.round((count / item.totalChapters) * 100)));
+          }
+        }
+        const finalSeriesProgress = item.seriesProgressPercent ?? existing?.seriesProgressPercent;
         const finalItem = existing
-          ? { ...existing, ...item, savedTitleId: savedTitleId ?? existing.savedTitleId, readAt: item.readAt }
+          ? { ...existing, ...item, seriesProgressPercent: finalSeriesProgress, savedTitleId: savedTitleId ?? existing.savedTitleId, readAt: item.readAt }
           : { ...item, savedTitleId };
 
         if (isOutboxPathEnabled()) {

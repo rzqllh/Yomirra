@@ -319,7 +319,21 @@ export function MangaCard({
 
     const isOngoingStatus = historyItem?.status?.toUpperCase() === "ONGOING" || (manga as any).status?.toUpperCase() === "ONGOING";
 
-    const rawProgress = progressPercent ?? historyItem?.seriesProgressPercent ?? historyItem?.progressPercent ?? 0;
+    const computeSeriesProgress = () => {
+      if (progressPercent !== undefined) return progressPercent;
+      if (historyItem?.seriesProgressPercent !== undefined && historyItem.seriesProgressPercent > 0) {
+        return historyItem.seriesProgressPercent;
+      }
+      if (historyItem?.totalChapters && historyItem.totalChapters > 0) {
+        const count = historyItem.chapterIndex ?? historyItem.chapterNumber;
+        if (count !== undefined && count > 0) {
+          return Math.min(100, Math.max(1, Math.round((count / historyItem.totalChapters) * 100)));
+        }
+      }
+      return historyItem?.progressPercent ?? 0;
+    };
+
+    const rawProgress = computeSeriesProgress();
     let progress = Math.min(100, Math.max(0, Math.round(rawProgress)));
 
     // Badge "Baru" only displays if user was previously caught up (rawProgress >= 100) and a new release dropped
@@ -558,7 +572,7 @@ export function MangaCard({
                         : "text-accent"
                     )}
                   >
-                    {progress}%
+                    {progress > 0 ? `${progress}%` : "Baru mulai"}
                   </span>
                 </div>
 

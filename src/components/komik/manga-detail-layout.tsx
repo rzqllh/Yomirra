@@ -112,7 +112,7 @@ export function MangaDetailLayout({
           </div>
 
           {/* Desktop Hero Flow */}
-          <div className="hidden items-center gap-8 md:flex lg:gap-10">
+          <div className="hidden items-start gap-8 md:flex lg:gap-10">
             <div
               className={cn(
                 "relative w-52 lg:w-60 shrink-0 aspect-[2/3] rounded-2xl overflow-hidden shadow-2xl border border-border-default/80 bg-surface-raised z-20",
@@ -124,6 +124,10 @@ export function MangaDetailLayout({
 
             <div className="flex min-w-0 flex-1 flex-col items-start gap-4">
               {desktopMeta}
+
+              <div className="w-full rounded-xl border border-border-default/60 bg-surface-raised/80 backdrop-blur-sm p-4 text-sm shadow-xs">
+                {synopsis}
+              </div>
 
               {mainAction}
               <div role="group" aria-label="Aksi komik" className="flex flex-wrap gap-2">
@@ -167,13 +171,9 @@ export function MangaDetailLayout({
       {/* Body Content */}
       <div className="w-full relative z-10 bg-surface-base">
         <div className="w-full max-w-7xl mx-auto px-4 pt-4 md:pt-6 pb-[var(--page-bottom-safe)] md:px-8 md:pb-8 space-y-8">
-          {/* Mobile view switches according to active tab */}
+          {/* Mobile view: Info tab displays synopsis */}
           <div className="block md:hidden">
-            {activeMobileTab === "chapters" ? (
-              <div className="flex min-w-0 flex-col rounded-xl border border-border-default/80 bg-surface-raised px-3 pb-3">
-                {chapters}
-              </div>
-            ) : (
+            {activeMobileTab === "info" && (
               <div className="flex flex-col gap-6">
                 <div className="rounded-xl border border-border-default/80 bg-surface-raised p-4 sm:p-5 shadow-xs">
                   {synopsis}
@@ -182,19 +182,12 @@ export function MangaDetailLayout({
             )}
           </div>
 
-          {/* Desktop view maintains the 2-Column Editorial Grid */}
-          <div className="hidden md:grid md:grid-cols-12 gap-6 lg:gap-8 items-start">
-            {/* Left Column on Desktop (4 cols / ~33%): Sticky Synopsis & Metadata */}
-            <div className="lg:col-span-4 flex flex-col gap-6 lg:sticky lg:top-20">
-              <div className="rounded-xl border border-border-default/80 bg-surface-raised p-4 sm:p-5 shadow-xs">
-                {synopsis}
-              </div>
-            </div>
-
-            {/* Right Column on Desktop (8 cols / ~67%): Chapters List */}
-            <div className="lg:col-span-8 flex min-w-0 flex-col rounded-xl border border-border-default/80 bg-surface-raised px-3 pb-3 sm:px-5">
-              {chapters}
-            </div>
+          {/* Chapters List (Visible when mobile tab is chapters, always visible full-width on desktop) */}
+          <div className={cn(
+            "w-full flex min-w-0 flex-col rounded-xl border border-border-default/80 bg-surface-raised px-3 pb-3 sm:px-5",
+            activeMobileTab !== "chapters" && "hidden md:flex"
+          )}>
+            {chapters}
           </div>
 
           {/* Full-Width Recommendations: generous horizontal breathing room, zero clipping */}

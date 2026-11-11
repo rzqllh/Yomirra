@@ -175,12 +175,18 @@ function MangaDetailContent({
     const anchorKey = `${sourceId}::${mangaId}::${historyItem.chapterId}::${sortOrder}`;
     if (anchorKeyRef.current === anchorKey) return;
 
-    const frame = requestAnimationFrame(() => {
+    const doScroll = () => {
       rowVirtualizer.scrollToIndex(chapterAnchorIndex, { align: "center" });
       anchorKeyRef.current = anchorKey;
-    });
+    };
 
-    return () => cancelAnimationFrame(frame);
+    const frame = requestAnimationFrame(doScroll);
+    const timer = setTimeout(doScroll, 150);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      clearTimeout(timer);
+    };
   }, [
     chapterAnchorIndex,
     deferredSearchQuery,

@@ -211,6 +211,9 @@ function ReaderContent({
       : undefined;
 
     const parsedChapterNumber = currentChapterForHistory?.number ?? parseChapterNumber(chapterTitle) ?? undefined;
+    const seriesProgressPercent = initialChapters?.length && readCount
+      ? Math.min(100, Math.max(1, Math.round((readCount / initialChapters.length) * 100)))
+      : undefined;
 
     upsertHistory({
       sourceId,
@@ -223,6 +226,7 @@ function ReaderContent({
       sourceName: sourceId,
       chapterIndex: readCount,
       totalChapters: initialChapters?.length,
+      seriesProgressPercent,
       chapterNumber: parsedChapterNumber,
       status: initialDetail.status,
       readAt: Date.now(),

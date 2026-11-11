@@ -70,27 +70,28 @@ export function ReaderChapterDrawer({
 
   React.useEffect(() => {
     if (!isOpen) return;
-    let innerFrame = 0;
-    const frame = requestAnimationFrame(() => {
-      innerFrame = requestAnimationFrame(() => {
-        const active = activeChapterRef.current;
-        const container = containerRef.current;
-        if (!active || !container) return;
-        const scrollTop =
-          active.offsetTop - container.clientHeight / 2 + active.clientHeight / 2;
-        const top = Math.max(0, scrollTop);
-        if (typeof container.scrollTo === "function") {
-          container.scrollTo({ top, behavior: "instant" });
-        } else {
-          container.scrollTop = top;
-        }
-      });
-    });
+
+    const scrollToActive = () => {
+      const active = activeChapterRef.current;
+      const container = containerRef.current;
+      if (!active) return;
+
+      if (typeof active.scrollIntoView === "function") {
+        active.scrollIntoView({ block: "center", behavior: "smooth" });
+      } else if (container) {
+        const scrollTop = active.offsetTop - container.clientHeight / 2 + active.clientHeight / 2;
+        container.scrollTo({ top: Math.max(0, scrollTop), behavior: "smooth" });
+      }
+    };
+
+    const frame = requestAnimationFrame(scrollToActive);
+    const timer = setTimeout(scrollToActive, 250);
+
     return () => {
       cancelAnimationFrame(frame);
-      if (innerFrame) cancelAnimationFrame(innerFrame);
+      clearTimeout(timer);
     };
-  }, [isOpen, sortedChapters]);
+  }, [isOpen, sortedChapters, currentChapterId]);
 
   const headerControls = (
     <div className="space-y-2">

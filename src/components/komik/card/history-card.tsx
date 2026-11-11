@@ -11,6 +11,22 @@ export interface HistoryCardProps {
 }
 
 export function HistoryCard({ item, className, onDeleteOverride }: HistoryCardProps) {
+  const calculatedSeriesProgress =
+    item.seriesProgressPercent ??
+    (item.totalChapters && item.totalChapters > 0
+      ? Math.min(
+          100,
+          Math.max(
+            1,
+            Math.round(
+              ((item.chapterIndex ?? item.chapterNumber ?? 0) /
+                item.totalChapters) *
+                100
+            )
+          )
+        )
+      : undefined);
+
   return (
     <MangaCard
       variant="progress"
@@ -21,7 +37,7 @@ export function HistoryCard({ item, className, onDeleteOverride }: HistoryCardPr
         coverUrl: item.coverUrl || "",
       }}
       historyItem={item}
-      progressPercent={item.seriesProgressPercent ?? item.progressPercent ?? 0}
+      progressPercent={calculatedSeriesProgress ?? item.progressPercent ?? 0}
       chapterTitle={item.chapterTitle || `Ch. ${item.chapterId}`}
       chapterId={item.chapterId}
       className={className}

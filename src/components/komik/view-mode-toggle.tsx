@@ -34,7 +34,7 @@ export function ViewModeToggle({ className, value, onChange }: ViewModeTogglePro
       role="group"
       aria-label="Mode Tampilan Listing"
       className={cn(
-        "inline-flex items-center p-1 rounded-xl bg-surface-glass backdrop-blur-md border border-border-subtle shadow-xs shrink-0",
+        "inline-flex items-center p-1 rounded-sm bg-surface-glass backdrop-blur-md border border-border-subtle shadow-xs shrink-0",
         className
       )}
     >
@@ -44,16 +44,16 @@ export function ViewModeToggle({ className, value, onChange }: ViewModeTogglePro
         aria-label="Tampilan Card Grid"
         aria-pressed={activeMode === "grid"}
         className={cn(
-          "relative flex items-center justify-center h-8 w-8 rounded-lg transition-colors duration-150 z-10",
+          "relative flex items-center justify-center h-8 w-8 rounded-xs transition-colors duration-150 z-10",
           activeMode === "grid"
-            ? "text-white"
+            ? "text-accent-on"
             : "text-text-muted hover:text-text-primary hover:bg-surface-hover/50 active:scale-95"
         )}
       >
         {activeMode === "grid" && (
           <motion.div
             layoutId={reducedMotion ? undefined : `viewmode-pill-${indicatorId}`}
-            className="absolute inset-0 bg-accent rounded-lg shadow-xs -z-10"
+            className="absolute inset-0 bg-accent rounded-xs shadow-xs -z-10"
             transition={reducedMotion ? { duration: 0 } : transitions.layout}
           />
         )}
@@ -66,16 +66,16 @@ export function ViewModeToggle({ className, value, onChange }: ViewModeTogglePro
         aria-label="Tampilan Kompak"
         aria-pressed={activeMode === "compact"}
         className={cn(
-          "relative flex items-center justify-center h-8 w-8 rounded-lg transition-colors duration-150 z-10",
+          "relative flex items-center justify-center h-8 w-8 rounded-xs transition-colors duration-150 z-10",
           activeMode === "compact"
-            ? "text-white"
+            ? "text-accent-on"
             : "text-text-muted hover:text-text-primary hover:bg-surface-hover/50 active:scale-95"
         )}
       >
         {activeMode === "compact" && (
           <motion.div
             layoutId={reducedMotion ? undefined : `viewmode-pill-${indicatorId}`}
-            className="absolute inset-0 bg-accent rounded-lg shadow-xs -z-10"
+            className="absolute inset-0 bg-accent rounded-xs shadow-xs -z-10"
             transition={reducedMotion ? { duration: 0 } : transitions.layout}
           />
         )}
