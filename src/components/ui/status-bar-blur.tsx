@@ -19,7 +19,7 @@ export function StatusBarBlur({ className, style }: StatusBarBlurProps) {
     <div
       aria-hidden="true"
       className={cn(
-        "fixed inset-x-0 top-0 h-[env(safe-area-inset-top,0px)] max-h-[env(safe-area-inset-top,0px)] pointer-events-none z-[60] overflow-clip select-none isolate",
+        "fixed inset-x-0 top-0 h-[env(safe-area-inset-top,0px)] max-h-[env(safe-area-inset-top,0px)] pointer-events-none z-[60] overflow-hidden select-none isolate bg-transparent",
         className
       )}
       style={{
@@ -30,14 +30,14 @@ export function StatusBarBlur({ className, style }: StatusBarBlurProps) {
       }}
     >
       <div
-        className="absolute inset-0"
+        className="absolute inset-0 bg-transparent"
         style={{
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
+          backdropFilter: "blur(16px)",
+          WebkitBackdropFilter: "blur(16px)",
           maskImage:
-            "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.88) 36%, rgba(0,0,0,0.38) 74%, rgba(0,0,0,0) 100%)",
+            "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.65) 40%, rgba(0,0,0,0) 80%, rgba(0,0,0,0) 100%)",
           WebkitMaskImage:
-            "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.88) 36%, rgba(0,0,0,0.38) 74%, rgba(0,0,0,0) 100%)",
+            "linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.65) 40%, rgba(0,0,0,0) 80%, rgba(0,0,0,0) 100%)",
         }}
       />
     </div>

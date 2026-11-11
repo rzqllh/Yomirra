@@ -22,7 +22,8 @@ import {
 import { ShelfCard } from "@/components/komik/card";
 import { CompactCard } from "@/components/komik/card/compact-card";
 import { ViewModeToggle } from "@/components/komik/view-mode-toggle";
-import { MagnifyingGlass, ArrowRight, BookmarkSimple } from "@phosphor-icons/react";
+import { MagnifyingGlass, ArrowRight, BookmarkSimple, Compass } from "@phosphor-icons/react";
+import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 export interface HomeFeedClientProps {
@@ -228,7 +229,7 @@ export function HomeFeedClient({
           (item) =>
             !personalizedIds.has(`${item.sourceId}-${item.id}`)
         )
-        .slice(0, 18),
+        .slice(0, 50),
     [filteredLatest, personalizedIds]
   );
 
@@ -367,7 +368,7 @@ export function HomeFeedClient({
 
           {listingViewMode === "compact" ? (
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {updateHariIni.slice(0, 12).map((manga) => (
+              {updateHariIni.map((manga) => (
                 <CompactCard
                   key={`${manga.sourceId}-${manga.id}`}
                   manga={manga}
@@ -377,27 +378,27 @@ export function HomeFeedClient({
               ))}
             </div>
           ) : (
-            <div className="[scrollbar-width:thin] flex w-full snap-x snap-mandatory gap-3 overflow-x-auto pb-2 sm:gap-4 md:grid md:grid-cols-3 md:gap-x-4 md:gap-y-6 md:overflow-visible md:snap-none lg:grid-cols-4 xl:grid-cols-5 md:[&>*:nth-child(n+11)]:hidden">
-              {updateHariIni.map((manga) => (
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+              {updateHariIni.map((manga, idx) => (
                 <div
                   key={`${manga.sourceId}-${manga.id}`}
-                  className="w-[140px] shrink-0 snap-start sm:w-[155px] md:w-auto md:min-w-0"
+                  className="w-full min-w-0"
                 >
                   <ShelfCard
                     manga={manga}
                     sourceId={manga.sourceId}
                     showSourceBadge
+                    priority={idx < 4}
                   />
                 </div>
               ))}
-              <div className="flex aspect-[3/4] w-[140px] shrink-0 snap-start items-center justify-center p-2 sm:w-[155px] md:hidden">
-                <Link
-                  href="/library"
-                  className="flex size-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border-default font-bold text-text-muted transition-colors hover:border-accent hover:bg-accent/5 hover:text-accent"
-                >
-                  <MagnifyingGlass size={24} aria-hidden="true" />
-                  <span className="text-sm">Lihat semua</span>
-                </Link>
+              <div className="col-span-full mt-4 flex flex-col items-center justify-center p-6 rounded-2xl border border-dashed border-border-default bg-surface-raised/40 hover:bg-surface-raised/80 hover:border-accent transition-all text-center">
+                <Compass size={32} className="text-accent mb-2" weight="duotone" />
+                <h3 className="font-bold text-base text-text-primary">Ingin mencari judul lainnya?</h3>
+                <p className="text-xs text-text-muted mt-1 max-w-sm">Jelajahi ribuan komik dengan filter genre, status, dan peringkat di halaman Jelajah.</p>
+                <Button asChild variant="primary" className="mt-4 rounded-xl px-6 min-h-11 font-bold">
+                  <Link href="/search">Buka Halaman Jelajah</Link>
+                </Button>
               </div>
             </div>
           )}

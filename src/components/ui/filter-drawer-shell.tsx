@@ -117,13 +117,13 @@ export function FilterDrawerShell({
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
     if (open) {
-      setActiveSnapPoint(0.52);
+      setActiveSnapPoint(0.88);
       onOpen?.();
     }
   };
 
   const expandDrawer = React.useCallback(() => {
-    if (activeSnapPoint !== 0.92) setActiveSnapPoint(0.92);
+    if (activeSnapPoint !== 0.88) setActiveSnapPoint(0.88);
   }, [activeSnapPoint]);
 
   const handleApply = () => {
@@ -179,18 +179,18 @@ export function FilterDrawerShell({
     <Drawer.Root
       open={isOpen}
       onOpenChange={handleOpenChange}
-      snapPoints={[0.52, 0.92]}
+      snapPoints={[0.88]}
       activeSnapPoint={activeSnapPoint}
       setActiveSnapPoint={setActiveSnapPoint}
-      fadeFromIndex={1}
-      snapToSequentialPoint
+      fadeFromIndex={0}
+      dismissible
     >
       <Drawer.Trigger asChild>
         {trigger || (
           <Button
             variant={activeCount > 0 ? "accent" : "outline"}
             className={cn(
-              "relative rounded-xl font-bold px-4 h-[44px] gap-1.5 motion-safe:transition-[background-color,color,border-color,box-shadow,transform] motion-safe:duration-300 border-border-subtle",
+              "relative rounded-xl font-bold px-4 h-11 gap-1.5 motion-safe:transition-[background-color,color,border-color,box-shadow,transform] motion-safe:duration-300 border-border-subtle",
               activeCount > 0 ? "border-accent/40 bg-accent text-accent-on shadow-xs" : "bg-surface-glass backdrop-blur-md"
             )}
             aria-label={`Filter${activeCount > 0 ? ` (${activeCount} aktif)` : ""}`}
@@ -203,7 +203,7 @@ export function FilterDrawerShell({
                 initial={reducedMotion ? false : { scale: 0.5, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={reducedMotion ? { duration: 0 } : { duration: 0.15, ease: "easeOut" }}
-                className="ml-1 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full bg-accent-on text-accent text-[11px] font-black shadow-xs"
+                className="ml-1 inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-accent-on text-accent text-2xs font-black shadow-xs"
               >
                 {activeCount}
               </motion.span>
@@ -212,13 +212,14 @@ export function FilterDrawerShell({
         )}
       </Drawer.Trigger>
       <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 bg-black/45 backdrop-blur-[2px] z-[var(--z-drawer)]" />
+        <Drawer.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-xs z-[var(--z-drawer)]" />
         <Drawer.Content
-          className="bg-surface-base flex h-[92dvh] max-h-[92dvh] flex-col overflow-hidden rounded-t-[28px] fixed bottom-0 left-0 right-0 z-[var(--z-overlay)] outline-none shadow-heavy border-t border-border-subtle"
+          className="bg-surface-base flex h-[88dvh] max-h-[88dvh] flex-col overflow-hidden rounded-t-[28px] fixed bottom-0 left-0 right-0 z-[var(--z-overlay)] outline-none shadow-heavy border-t border-border-subtle"
           style={viewportBounds ? { maxHeight: `${viewportBounds.height}px`, bottom: `${viewportBounds.bottom}px` } : undefined}
         >
-          <div className="pt-2.5 pb-2 px-5 sm:px-6 shrink-0 flex flex-col cursor-grab active:cursor-grabbing select-none">
-            <div className="mx-auto w-11 h-1 shrink-0 rounded-full bg-border-strong/80 mb-3.5" />
+          {/* Swipe handle & header */}
+          <div className="pt-3 pb-2 px-5 sm:px-6 shrink-0 flex flex-col cursor-grab active:cursor-grabbing select-none">
+            <div className="mx-auto w-12 h-1.5 shrink-0 rounded-full bg-border-strong/70 hover:bg-border-strong transition-colors mb-3" />
 
             <div className="flex items-center justify-between">
               <Drawer.Title className="text-lg font-bold text-text-primary tracking-tight">{title}</Drawer.Title>
@@ -235,45 +236,37 @@ export function FilterDrawerShell({
             </div>
           </div>
 
+          {/* Smooth scrollable filter options */}
           <div
-            className="px-5 sm:px-6 py-3.5 min-h-0 flex-1 overflow-y-auto overscroll-contain [scrollbar-width:none] touch-pan-y relative z-0"
+            data-vaul-no-drag
+            className="px-5 sm:px-6 py-3.5 min-h-0 flex-1 overflow-y-auto overscroll-contain [scrollbar-width:thin] touch-pan-y relative z-0"
             style={{ WebkitOverflowScrolling: "touch" }}
-            onWheelCapture={(event) => {
-              if (event.deltaY > 6) expandDrawer();
-            }}
-            onScrollCapture={(event) => {
-              if (event.currentTarget.scrollTop > 0) expandDrawer();
-            }}
-            onTouchStart={(event) => {
-              touchStartY.current = event.touches[0]?.clientY ?? null;
-            }}
-            onTouchMove={(event) => {
-              const start = touchStartY.current;
-              const current = event.touches[0]?.clientY;
-              if (start != null && current != null && start - current > 14) expandDrawer();
-            }}
-            onTouchEnd={() => {
-              touchStartY.current = null;
-            }}
           >
             <div className="space-y-5 pb-6">
               {children}
             </div>
           </div>
 
+          {/* Sticky action footer with unclipped safe padding */}
           <div
-            className="px-4 pt-3 bg-surface-base/96 backdrop-blur-xl border-t border-border-subtle shrink-0 relative z-10"
-            style={{ paddingBottom: "calc(1rem + var(--safe-bottom))" }}
+            className="px-5 pt-3.5 bg-surface-base/98 backdrop-blur-xl border-t border-border-subtle shrink-0 relative z-10"
+            style={{ paddingBottom: "calc(1.25rem + var(--safe-bottom))" }}
           >
-            <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setIsOpen(false)} className="min-h-11">Batal</Button>
-            <Button
-              variant="primary"
-              onClick={handleApply}
-              className="w-full h-12 rounded-xl text-[15px] font-bold"
-            >
-              {applyLabel}
-            </Button>
+            <div className="flex items-center gap-3 w-full">
+              <Button
+                variant="outline"
+                onClick={() => setIsOpen(false)}
+                className="min-h-12 px-5 rounded-xl text-sm font-semibold text-text-secondary hover:text-text-primary shrink-0"
+              >
+                Batal
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleApply}
+                className="flex-1 h-12 rounded-xl text-sm font-bold shadow-md active:scale-[0.98] transition-all"
+              >
+                {applyLabel}
+              </Button>
             </div>
           </div>
         </Drawer.Content>
