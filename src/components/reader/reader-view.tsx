@@ -271,11 +271,11 @@ function ReaderContent({
       >
         <div className="flex min-h-screen items-center justify-center pt-16">
           <EmptyState
-            icon={<LockKey size={48} weight="duotone" className="text-amber-500" />}
+            icon={<LockKey size={48} weight="duotone" className="text-status-warning-fg" />}
             title="Chapter Terkunci"
             description="Chapter ini berstatus early access / terkunci di sumber aslinya."
             action={
-              <Button asChild variant="outline" className="rounded-xl shadow-sm mt-2 font-bold">
+              <Button asChild variant="outline" className="min-h-11 rounded-sm shadow-sm mt-2 font-bold">
                 <Link href={detailHref} replace>
                   Kembali ke Detail
                 </Link>
@@ -307,10 +307,10 @@ function ReaderContent({
               : "Tidak dapat mengambil halaman chapter dari server saat ini."}
             action={
               <div className="flex flex-col sm:flex-row items-center gap-2 mt-2">
-                <Button onClick={() => refetch()} variant="outline" className="rounded-xl shadow-sm font-bold w-full sm:w-auto">
+                <Button onClick={() => refetch()} variant="outline" className="min-h-11 rounded-sm shadow-sm font-bold w-full sm:w-auto">
                   Coba Lagi
                 </Button>
-                <Button onClick={alternateSource.openAndSearch} variant="secondary" className="rounded-xl shadow-sm font-bold w-full sm:w-auto">
+                <Button onClick={alternateSource.openAndSearch} variant="secondary" className="min-h-11 rounded-sm shadow-sm font-bold w-full sm:w-auto">
                   Cari Sumber Alternatif
                 </Button>
               </div>

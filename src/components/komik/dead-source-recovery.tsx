@@ -207,7 +207,7 @@ export function DeadSourceRecovery({ sourceId, mangaId, health = { status: "BROK
           lastReadChapterTitle: lastReadChapter,
         },
         failedSourceId: sourceId,
-        health: { status: "BROKEN", errorCode: "SOURCE_BROKEN" },
+        health: { status: "BROKEN", errorCode: "SOURCE_DOWN" },
         alternateCandidates: [
           {
             sourceId: candidate.sourceId,
@@ -247,7 +247,7 @@ export function DeadSourceRecovery({ sourceId, mangaId, health = { status: "BROK
         {/* Manga Preview Card */}
         <div className="w-full bg-surface-raised border border-border-subtle rounded-xl p-6 shadow-sm flex flex-col items-center text-center">
           {knownCover && (
-            <div className="relative w-28 h-40 rounded-xl overflow-hidden shadow-md mb-4 border border-border-subtle shrink-0">
+            <div className="relative w-28 h-40 rounded-md overflow-hidden shadow-md mb-4 border border-border-subtle shrink-0">
               <Image
                 src={knownCover}
                 alt={knownTitle}
@@ -266,7 +266,7 @@ export function DeadSourceRecovery({ sourceId, mangaId, health = { status: "BROK
           )}
 
           {/* Warning Banner */}
-          <div className="w-full mt-2 mb-6 p-4 rounded-xl bg-status-warning-bg border border-status-warning-fg/20 text-left flex items-start gap-3">
+          <div className="w-full mt-2 mb-6 p-4 rounded-md bg-status-warning-bg border border-status-warning-fg/20 text-left flex items-start gap-3">
             <Warning size={24} weight="fill" className="text-status-warning-fg shrink-0 mt-0.5" />
             <div className="text-sm">
               <p className="font-semibold text-status-warning-fg">
@@ -288,7 +288,7 @@ export function DeadSourceRecovery({ sourceId, mangaId, health = { status: "BROK
               <Button
                 variant="primary"
                 onClick={handleQuickSwitch}
-                className="gap-2 w-full sm:w-auto font-bold"
+                className="gap-2 w-full sm:w-auto font-bold min-h-11 rounded-sm"
               >
                 <ArrowClockwise size={18} weight="regular" />
                 Alihkan ke {getSourceMetadata(fallbackEvaluation.candidate.sourceId)?.name ?? fallbackEvaluation.candidate.sourceId}
@@ -297,7 +297,7 @@ export function DeadSourceRecovery({ sourceId, mangaId, health = { status: "BROK
             <Button
               variant={fallbackEvaluation?.status === "AUTO_SAFE" ? "outline" : "primary"}
               onClick={handleFindAlternate}
-              className="gap-2 w-full sm:w-auto font-bold"
+              className="gap-2 w-full sm:w-auto font-bold min-h-11 rounded-sm"
             >
               <MagnifyingGlass size={18} weight="regular" />
               Cari Sumber Alternatif
@@ -305,7 +305,7 @@ export function DeadSourceRecovery({ sourceId, mangaId, health = { status: "BROK
             <Button
               variant="outline"
               onClick={() => router.back()}
-              className="gap-2 w-full sm:w-auto"
+              className="gap-2 w-full sm:w-auto min-h-11 rounded-sm"
             >
               <ArrowLeft size={18} />
               Kembali
@@ -330,7 +330,7 @@ export function DeadSourceRecovery({ sourceId, mangaId, health = { status: "BROK
                 <Link
                   key={ch.chapterId}
                   href={getReaderHref(sourceId, mangaId, ch.chapterId)}
-                  className="flex items-center justify-between py-3 hover:text-accent transition-colors"
+                  className="flex min-h-11 items-center justify-between py-2.5 hover:text-accent transition-colors"
                 >
                   <span className="text-sm font-medium">{ch.chapterTitle}</span>
                   <span className="text-xs text-accent">Baca Offline &rarr;</span>

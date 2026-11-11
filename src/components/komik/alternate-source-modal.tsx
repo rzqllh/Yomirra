@@ -51,7 +51,7 @@ const confidenceConfig: Record<
 function ConfidenceBadge({ confidence }: { confidence: MatchConfidence }) {
   const cfg = confidenceConfig[confidence];
   return (
-    <span className={cn("text-[11px] font-bold px-2 py-0.5 rounded-lg border", cfg.className)}>
+    <span className={cn("text-2xs font-bold px-2 py-0.5 rounded-sm border", cfg.className)}>
       {cfg.label}
     </span>
   );
@@ -117,7 +117,7 @@ export function AlternateSourceModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="max-w-md w-[calc(100vw-32px)] rounded-xl p-0 bg-surface-overlay/95 backdrop-blur-2xl border border-border-glass shadow-glass overflow-hidden flex flex-col gap-0">
+      <DialogContent className="max-w-md rounded-2xl p-0 bg-surface-overlay/95 backdrop-blur-2xl border border-border-glass shadow-glass overflow-hidden flex flex-col gap-0">
         {/* Header Section */}
         <div className="px-6 pt-6 pb-4 border-b border-border-glass/40 flex items-start gap-3.5">
           <div className="flex size-11 items-center justify-center rounded-lg bg-accent/12 text-accent border border-accent/20 shrink-0">
@@ -173,7 +173,7 @@ export function AlternateSourceModal({
                           alt=""
                           referrerPolicy="no-referrer"
                           loading="lazy"
-                          className="w-11 h-16 rounded-xl object-cover shrink-0 border border-border-glass"
+                          className="w-11 h-16 rounded-sm object-cover shrink-0 border border-border-glass"
                         />
                       )}
                       <div className="min-w-0 flex-1">
@@ -184,7 +184,7 @@ export function AlternateSourceModal({
                           <p className="text-text-muted text-xs mt-0.5 truncate">{c.author}</p>
                         )}
                         <div className="flex items-center gap-2 mt-2 flex-wrap">
-                          <span className="text-[11px] font-bold text-text-secondary bg-surface-base px-2 py-0.5 rounded-lg border border-border-subtle">
+                          <span className="text-2xs font-bold text-text-secondary bg-surface-base px-2 py-0.5 rounded-sm border border-border-subtle">
                             {c.sourceDisplayName}
                           </span>
                           <ConfidenceBadge confidence={c.confidence} />
@@ -208,7 +208,7 @@ export function AlternateSourceModal({
             onClick={handleConfirm}
             disabled={!selected || isLoading}
             variant="accent"
-            className="w-full h-11 rounded-full font-bold text-sm shadow-sm flex items-center justify-center gap-2"
+            className="w-full min-h-11 rounded-sm font-bold text-sm shadow-sm flex items-center justify-center gap-2"
           >
             {isLoading ? (
               <span>Mengganti sumber...</span>
@@ -223,7 +223,7 @@ export function AlternateSourceModal({
             id="alternate-source-cancel-btn"
             variant="ghost"
             onClick={onClose}
-            className="w-full h-11 rounded-full font-bold text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
+            className="w-full min-h-11 rounded-sm font-bold text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors"
           >
             Batal
           </Button>

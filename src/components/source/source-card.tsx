@@ -149,7 +149,7 @@ export function SourceCard({ source, onUpdate }: SourceCardProps) {
                     <DotsThreeVertical size={18} weight="regular" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48 rounded-xl">
+                <DropdownMenuContent align="end" className="w-48 rounded-md">
                   <DropdownMenuItem onClick={handleRefresh}>
                     <ArrowsClockwise size={16} className="mr-2" />
                     Perbarui
@@ -167,7 +167,7 @@ export function SourceCard({ source, onUpdate }: SourceCardProps) {
           </div>
 
           {source.healthStats && (source.healthStats.latency !== "-" || source.healthStats.uptime !== "-") ? (
-            <div className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-text-muted">
+            <div className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-2xs text-text-muted">
               {source.healthStats.latency !== "-" && (
                 <span>Latensi: {source.healthStats.latency}</span>
               )}
@@ -216,7 +216,7 @@ export function SourceCard({ source, onUpdate }: SourceCardProps) {
             <p className="text-xs font-bold text-text-primary">
               {source.maintenance ? "Dijeda" : isPreferenceEnabled ? "Aktif" : "Nonaktif"}
             </p>
-            <p className="truncate text-[11px] text-text-muted">
+            <p className="truncate text-2xs text-text-muted">
               Preferensi penjelajahan
             </p>
           </div>
@@ -228,7 +228,7 @@ export function SourceCard({ source, onUpdate }: SourceCardProps) {
             onClick={() =>
               router.push(`/library?source=${encodeURIComponent(source.id)}`)
             }
-            className="inline-flex min-h-11 shrink-0 items-center rounded-xl bg-accent px-3 text-xs font-bold text-accent-on transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            className="inline-flex min-h-11 shrink-0 items-center rounded-sm bg-accent px-3 text-xs font-bold text-accent-on transition-colors hover:bg-accent-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
             Buka Jelajah
           </button>

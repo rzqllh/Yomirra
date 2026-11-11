@@ -137,7 +137,7 @@ export default async function ReaderPage({
             title="Chapter belum bisa dimuat"
             description="Chapter belum bisa dimuat dari sumber ini."
             action={
-              <Button asChild variant="outline" className="rounded-xl shadow-sm mt-2 font-bold">
+              <Button asChild variant="outline" className="min-h-11 rounded-sm shadow-sm mt-2 font-bold">
                 <Link href={detailHref} replace>
                   Kembali ke Detail
                 </Link>
