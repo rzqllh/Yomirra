@@ -2,7 +2,8 @@
 
 import * as React from "react"
 import { useRouter } from "next/navigation"
-import { CaretLeft } from "@phosphor-icons/react"
+import { CaretLeft, MagnifyingGlass } from "@phosphor-icons/react"
+import { motion, AnimatePresence, useReducedMotion } from "motion/react"
 import { IconButton } from "@/components/ui/icon-button"
 import { HeaderActions } from "./header-actions"
 import { cn } from "@/shared/utils/cn"
@@ -32,6 +33,8 @@ export interface PageHeaderProps {
   variant?: "transparent" | "glass" | "auto"
   /** Hero-title element observed in detail mode before showing the sticky title */
   detailTitleAnchorId?: string
+  /** Hero-search element observed in home mode before morphing the title into sticky search pill */
+  heroSearchAnchorId?: string
   /** Hide desktop banner when desktop has separate editorial header (e.g. Beranda) */
   hideDesktop?: boolean
   /** Outer wrapper className override */
@@ -55,12 +58,15 @@ export function PageHeader({
   mode = "standard",
   variant = "auto",
   detailTitleAnchorId,
+  heroSearchAnchorId,
   hideDesktop = false,
   className,
 }: PageHeaderProps) {
   const router = useRouter()
+  const shouldReduceMotion = useReducedMotion()
   const [isScrolled, setIsScrolled] = React.useState(false)
   const [detailTitleVisible, setDetailTitleVisible] = React.useState(false)
+  const [heroSearchPast, setHeroSearchPast] = React.useState(false)
   const sub = subtitle ?? description
 
   React.useEffect(() => {
@@ -72,6 +78,48 @@ export function PageHeader({
     handleScroll()
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
+
+  React.useEffect(() => {
+    if (!heroSearchAnchorId) {
+      setHeroSearchPast(false)
+      return
+    }
+
+    const updateVisibility = () => {
+      const el = document.getElementById(heroSearchAnchorId)
+      if (!el) {
+        setHeroSearchPast(window.scrollY > 100)
+        return
+      }
+      const rect = el.getBoundingClientRect()
+      // Mobile header is 56px tall. When hero search scrolls past the top bar, show search pill.
+      const isPast = rect.bottom < 56 && window.scrollY > 40
+      setHeroSearchPast(isPast)
+    }
+
+    let observer: IntersectionObserver | null = null
+    const el = document.getElementById(heroSearchAnchorId)
+    if (el && typeof IntersectionObserver !== "undefined") {
+      observer = new IntersectionObserver(
+        () => {
+          updateVisibility()
+        },
+        {
+          threshold: 0,
+          rootMargin: "-56px 0px 0px 0px",
+        }
+      )
+      observer.observe(el)
+    }
+
+    window.addEventListener("scroll", updateVisibility, { passive: true })
+    updateVisibility()
+
+    return () => {
+      observer?.disconnect()
+      window.removeEventListener("scroll", updateVisibility)
+    }
+  }, [heroSearchAnchorId])
 
   React.useEffect(() => {
     if (mode !== "detail") {
@@ -147,54 +195,101 @@ export function PageHeader({
         )}
       >
         <div className="flex items-center justify-between w-full transition-all duration-300 ease-out pointer-events-auto h-11">
-          <div className="flex items-center gap-2.5 flex-1 min-w-0">
-            {showBack ? (
-              <IconButton
-                type="button"
-                onClick={handleBack}
-                variant="ghost"
-                className={cn(
-                  "flex size-11 items-center justify-center rounded-sm active:scale-95 transition-all shrink-0 select-none outline-none cursor-pointer",
-                  mode === "detail" && !isGlass
-                    ? "bg-scrim/60 hover:bg-scrim/80 text-on-cover backdrop-blur-md border border-border-glass shadow-sm"
-                    : "yomirra-chrome-control text-text-primary"
-                )}
-                aria-label="Kembali"
-              >
-                <CaretLeft size={20} weight="regular" />
-              </IconButton>
-            ) : (
-              icon && (
-                <div className="yomirra-chrome-control flex size-11 items-center justify-center rounded-xl text-accent shrink-0 select-none">
-                  {icon}
-                </div>
-              )
-            )}
+          <div className="flex items-center flex-1 min-w-0 overflow-hidden">
+            <AnimatePresence initial={false}>
+              {heroSearchAnchorId && heroSearchPast ? (
+                <motion.div
+                  key="header-search-pill"
+                  initial={{ opacity: 0, scale: 0.96, y: -4 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.96, y: -4 }}
+                  transition={
+                    shouldReduceMotion
+                      ? { duration: 0 }
+                      : { type: "spring", stiffness: 420, damping: 28 }
+                  }
+                  className="flex-1 min-w-0 pr-1"
+                >
+                  <button
+                    type="button"
+                    onClick={() =>
+                      window.dispatchEvent(new CustomEvent("open-command-menu"))
+                    }
+                    className="flex items-center gap-2.5 h-10 w-full px-3 rounded-sm border border-border-subtle bg-surface-raised/90 text-text-muted hover:text-text-primary text-xs font-semibold backdrop-blur-md shadow-xs active:scale-[0.98] transition-all cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-accent select-none"
+                    aria-label="Cari komik"
+                  >
+                    <MagnifyingGlass
+                      size={16}
+                      weight="regular"
+                      className="text-text-muted shrink-0"
+                      aria-hidden="true"
+                    />
+                    <span className="truncate">Cari komik…</span>
+                  </button>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="header-default-title"
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={
+                    shouldReduceMotion
+                      ? { duration: 0 }
+                      : { duration: 0.18, ease: "easeOut" }
+                  }
+                  className="flex items-center gap-2.5 flex-1 min-w-0"
+                >
+                  {showBack ? (
+                    <IconButton
+                      type="button"
+                      onClick={handleBack}
+                      variant="ghost"
+                      className={cn(
+                        "flex size-11 items-center justify-center rounded-sm active:scale-95 transition-all shrink-0 select-none outline-none cursor-pointer",
+                        mode === "detail" && !isGlass
+                          ? "bg-scrim/60 hover:bg-scrim/80 text-on-cover backdrop-blur-md border border-border-glass shadow-sm"
+                          : "yomirra-chrome-control text-text-primary"
+                      )}
+                      aria-label="Kembali"
+                    >
+                      <CaretLeft size={20} weight="regular" />
+                    </IconButton>
+                  ) : (
+                    icon && (
+                      <div className="yomirra-chrome-control flex size-11 items-center justify-center rounded-xl text-accent shrink-0 select-none">
+                        {icon}
+                      </div>
+                    )
+                  )}
 
-            <div
-              className={cn(
-                "flex flex-col min-w-0 flex-1 transition-all duration-300 ease-out",
-                !isTitleVisible
-                  ? "opacity-0 pointer-events-none -translate-y-1"
-                  : "opacity-100 translate-y-0"
-              )}
-            >
-              <div className="flex items-center gap-2 min-w-0">
-                <h2 title={title} className="text-sm sm:text-base font-bold tracking-tight text-text-primary truncate select-none">
-                  {title}
-                </h2>
-                {meta && (
-                  <div className="shrink-0 inline-flex items-center text-xs font-bold text-text-muted">
-                    {meta}
+                  <div
+                    className={cn(
+                      "flex flex-col min-w-0 flex-1 transition-all duration-300 ease-out",
+                      !isTitleVisible
+                        ? "opacity-0 pointer-events-none -translate-y-1"
+                        : "opacity-100 translate-y-0"
+                    )}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <h2 title={title} className="text-sm sm:text-base font-bold tracking-tight text-text-primary truncate select-none">
+                        {title}
+                      </h2>
+                      {meta && (
+                        <div className="shrink-0 inline-flex items-center text-xs font-bold text-text-muted">
+                          {meta}
+                        </div>
+                      )}
+                    </div>
+                    {sub && (
+                      <p title={typeof sub === "string" ? sub : undefined} className="text-2xs font-medium text-text-muted truncate leading-snug mt-0.5 select-none">
+                        {sub}
+                      </p>
+                    )}
                   </div>
-                )}
-              </div>
-              {sub && (
-                <p title={typeof sub === "string" ? sub : undefined} className="text-2xs font-medium text-text-muted truncate leading-snug mt-0.5 select-none">
-                  {sub}
-                </p>
+                </motion.div>
               )}
-            </div>
+            </AnimatePresence>
           </div>
 
           {actions && (

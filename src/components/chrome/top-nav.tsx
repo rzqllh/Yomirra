@@ -4,7 +4,7 @@ import * as React from "react";
 import { UserCircle, SignOut, MagnifyingGlass, Globe, Question } from "@phosphor-icons/react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { useAuth } from "@/shared/hooks/use-auth";
 import { ThemeToggle } from "@/components/overlays/theme-toggle";
 import { UpdatesBell } from "@/components/overlays/updates-bell";
@@ -40,6 +40,7 @@ export function TopNav() {
   const primarySegment = segments[0] || "";
   const pageLabel = ROUTE_LABELS[primarySegment] || primarySegment;
   const isHome = pathname === "/";
+  const shouldReduceMotion = useReducedMotion();
 
   // Profile dropdown state
   const [isProfileOpen, setIsProfileOpen] = React.useState(false);
@@ -57,14 +58,40 @@ export function TopNav() {
       return;
     }
 
-    const checkScroll = () => {
-      // Reveal search pill in header when user scrolls past hero search area (> 180px)
-      setScrolledPastHero(window.scrollY > 180);
+    const updateVisibility = () => {
+      const heroEl = document.getElementById("home-hero-search");
+      if (!heroEl) {
+        setScrolledPastHero(window.scrollY > 140);
+        return;
+      }
+      const rect = heroEl.getBoundingClientRect();
+      // TopNav is 68px tall. When hero search leaves the viewport under top-nav, show header search.
+      const isPast = rect.bottom < 68 && window.scrollY > 50;
+      setScrolledPastHero(isPast);
     };
 
-    window.addEventListener("scroll", checkScroll, { passive: true });
-    checkScroll();
-    return () => window.removeEventListener("scroll", checkScroll);
+    let observer: IntersectionObserver | null = null;
+    const heroEl = document.getElementById("home-hero-search");
+    if (heroEl && typeof IntersectionObserver !== "undefined") {
+      observer = new IntersectionObserver(
+        () => {
+          updateVisibility();
+        },
+        {
+          threshold: 0,
+          rootMargin: "-68px 0px 0px 0px",
+        }
+      );
+      observer.observe(heroEl);
+    }
+
+    window.addEventListener("scroll", updateVisibility, { passive: true });
+    updateVisibility();
+
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("scroll", updateVisibility);
+    };
   }, [isHome]);
 
   React.useEffect(() => {
@@ -114,26 +141,39 @@ export function TopNav() {
         {/* RIGHT: Search + Bell + Theme + Profile */}
         <div className="flex items-center gap-2 sm:gap-2.5 h-full">
           {/* Sticky search pill: visible on non-home pages or when scrolled past hero */}
-          {shouldShowSearch && (
-            <div className="hidden md:flex h-9 w-52 lg:w-72 xl:w-80 shrink-0 items-center justify-end">
-              <Button
-                type="button"
-                variant="secondary"
-                disabled={!mounted}
-                onClick={() => window.dispatchEvent(new CustomEvent("open-command-menu"))}
-                aria-keyshortcuts={modifier === "⌘" ? "Meta+K" : "Control+K"}
-                className={cn(
-                  "justify-start flex items-center gap-2.5 px-3 rounded-sm text-text-secondary hover:text-text-primary text-xs font-semibold h-9 min-h-[36px] w-full cursor-pointer select-none",
-                  "border-border-subtle hover:border-accent/40 focus-visible:outline-2 focus-visible:outline-accent",
-                  "transition-all duration-200 ease-out"
-                )}
+          <AnimatePresence>
+            {shouldShowSearch && (
+              <motion.div
+                key="top-nav-search-pill"
+                initial={{ opacity: 0, scale: 0.95, y: -6 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: -6 }}
+                transition={
+                  shouldReduceMotion
+                    ? { duration: 0 }
+                    : { type: "spring", stiffness: 420, damping: 28 }
+                }
+                className="hidden md:flex h-9 w-52 lg:w-72 xl:w-80 shrink-0 items-center justify-end"
               >
-                <MagnifyingGlass size={16} weight="regular" className="text-text-muted shrink-0" aria-hidden="true" />
-                <span className="flex-1 text-left truncate">Cari komik…</span>
-                <kbd aria-hidden="true" className="hidden lg:inline-flex items-center px-1.5 py-0.5 text-2xs font-mono text-text-muted bg-surface-muted rounded-xs border border-border-subtle">{searchShortcut}</kbd>
-              </Button>
-            </div>
-          )}
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={!mounted}
+                  onClick={() => window.dispatchEvent(new CustomEvent("open-command-menu"))}
+                  aria-keyshortcuts={modifier === "⌘" ? "Meta+K" : "Control+K"}
+                  className={cn(
+                    "justify-start flex items-center gap-2.5 px-3 rounded-sm text-text-secondary hover:text-text-primary text-xs font-semibold h-9 min-h-[36px] w-full cursor-pointer select-none",
+                    "border-border-subtle hover:border-accent/40 focus-visible:outline-2 focus-visible:outline-accent",
+                    "transition-all duration-200 ease-out"
+                  )}
+                >
+                  <MagnifyingGlass size={16} weight="regular" className="text-text-muted shrink-0" aria-hidden="true" />
+                  <span className="flex-1 text-left truncate">Cari komik…</span>
+                  <kbd aria-hidden="true" className="hidden lg:inline-flex items-center px-1.5 py-0.5 text-2xs font-mono text-text-muted bg-surface-muted rounded-xs border border-border-subtle">{searchShortcut}</kbd>
+                </Button>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
 
           {/* Notification Bell */}

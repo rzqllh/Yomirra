@@ -24,6 +24,7 @@ export function HomeView({ children }: HomeViewProps) {
           title="Beranda"
           icon={<House size={20} weight="regular" />}
           actions={<HeaderActions />}
+          heroSearchAnchorId="home-hero-search"
           hideDesktop
         />
         <PageContainer hasMobileHeader>
