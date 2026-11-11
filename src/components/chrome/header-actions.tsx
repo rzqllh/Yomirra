@@ -31,20 +31,27 @@ export function HeaderActions({ className }: { className?: string } = {}) {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false)
   const menuRef = React.useRef<HTMLDivElement>(null)
 
-  // Close dropdown on click outside
+  // Close dropdown on click outside or Escape
   React.useEffect(() => {
     const handleClickOutside = (e: MouseEvent | TouchEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setIsMenuOpen(false)
       }
     }
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsMenuOpen(false)
+      }
+    }
     if (isMenuOpen) {
       document.addEventListener("mousedown", handleClickOutside)
       document.addEventListener("touchstart", handleClickOutside)
+      document.addEventListener("keydown", handleKeyDown)
     }
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
       document.removeEventListener("touchstart", handleClickOutside)
+      document.removeEventListener("keydown", handleKeyDown)
     }
   }, [isMenuOpen])
 
@@ -99,13 +106,13 @@ export function HeaderActions({ className }: { className?: string } = {}) {
       {/* Dropdown Menu Popover (Mockup Gambar 1 & 2) */}
       <AnimatePresence>
         {isMenuOpen && (
-          <Surface asChild variant="glassPopover" rounded="card" className="shadow-[0_12px_36px_-6px_rgba(0,0,0,0.18),0_4px_16px_-2px_rgba(0,0,0,0.08)] dark:shadow-[0_16px_40px_-6px_rgba(0,0,0,0.7),0_4px_16px_-2px_rgba(0,0,0,0.4)]">
+          <Surface asChild variant="glassPopover" rounded="card" elevation="popover" className="shadow-xl">
             <motion.div
               initial={{ opacity: 0, y: 6, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 6, scale: 0.95 }}
               transition={{ duration: 0.15, ease: "easeOut" }}
-              className="absolute right-0 top-12 z-[100] w-[230px] rounded-xl border border-border-subtle p-1.5 flex flex-col gap-0.5 select-none"
+              className="absolute right-0 top-12 z-overlay w-60 rounded-xl border border-border-subtle p-1.5 flex flex-col gap-0.5 select-none"
             >
             {/* Beak Pointer Notch */}
             <div className="absolute -top-1.5 right-3.5 size-3 rotate-45 bg-surface-overlay border-l border-t border-border-subtle pointer-events-none" />
@@ -113,10 +120,10 @@ export function HeaderActions({ className }: { className?: string } = {}) {
             {/* User Profile Header (if logged in) */}
             {user && (
               <div className="px-3 py-2 border-b border-border-subtle/70 mb-1">
-                <p className="text-[13.5px] font-bold text-text-primary truncate">
+                <p className="text-sm font-bold text-text-primary truncate">
                   {user.displayName || "User"}
                 </p>
-                <p className="text-[11.5px] text-text-muted truncate mt-0.5">
+                <p className="text-xs text-text-muted truncate mt-0.5">
                   {user.email || ""}
                 </p>
               </div>
@@ -127,9 +134,9 @@ export function HeaderActions({ className }: { className?: string } = {}) {
               href="/settings"
               onClick={() => setIsMenuOpen(false)}
               className={cn(
-                "group flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] active:scale-98 transition-all",
+                "group flex min-h-11 items-center gap-2.5 px-3 py-2 rounded-md text-sm active:scale-98 transition-all outline-none focus-visible:ring-2 focus-visible:ring-accent",
                 isSettingsActive
-                  ? "font-bold text-accent bg-accent/10 hover:bg-accent/15"
+                  ? "font-bold text-accent bg-accent-dim border border-accent/40"
                   : "font-medium text-text-primary hover:bg-surface-hover"
               )}
             >
@@ -144,7 +151,7 @@ export function HeaderActions({ className }: { className?: string } = {}) {
             <Link
               href="/sources"
               onClick={() => setIsMenuOpen(false)}
-              className="flex items-center justify-between px-3 py-2 rounded-xl text-[13px] font-medium text-text-primary hover:bg-surface-hover active:scale-98 transition-all"
+              className="flex min-h-11 items-center justify-between px-3 py-2 rounded-md text-sm font-medium text-text-primary hover:bg-surface-hover active:scale-98 transition-all outline-none focus-visible:ring-2 focus-visible:ring-accent"
             >
               <div className="flex items-center gap-2.5">
                 <Stack size={18} className="text-text-muted shrink-0" />
@@ -157,13 +164,13 @@ export function HeaderActions({ className }: { className?: string } = {}) {
             <button
               type="button"
               onClick={toggleTheme}
-              className="flex items-center justify-between w-full px-3 py-2 rounded-xl text-[13px] font-medium text-text-primary hover:bg-surface-hover active:scale-98 transition-all text-left cursor-pointer"
+              className="flex min-h-11 items-center justify-between w-full px-3 py-2 rounded-md text-sm font-medium text-text-primary hover:bg-surface-hover active:scale-98 transition-all text-left cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-accent"
             >
               <div className="flex items-center gap-2.5">
                 <Palette size={18} className="text-text-muted shrink-0" />
                 <span>Tema tampilan</span>
               </div>
-              <div className="flex items-center gap-1 text-[11.5px] font-semibold text-text-muted">
+              <div className="flex items-center gap-1 text-xs font-semibold text-text-muted">
                 <span>{currentThemeLabel}</span>
                 <CaretRight size={13} className="text-text-muted/70" />
               </div>
@@ -173,7 +180,7 @@ export function HeaderActions({ className }: { className?: string } = {}) {
             <Link
               href="/help"
               onClick={() => setIsMenuOpen(false)}
-              className="flex items-center justify-between px-3 py-2 rounded-xl text-[13px] font-medium text-text-primary hover:bg-surface-hover active:scale-98 transition-all"
+              className="flex min-h-11 items-center justify-between px-3 py-2 rounded-md text-sm font-medium text-text-primary hover:bg-surface-hover active:scale-98 transition-all outline-none focus-visible:ring-2 focus-visible:ring-accent"
             >
               <div className="flex items-center gap-2.5">
                 <Question size={18} className="text-text-muted shrink-0" />
@@ -194,7 +201,7 @@ export function HeaderActions({ className }: { className?: string } = {}) {
                   setIsMenuOpen(false)
                   logout()
                 }}
-                className="flex items-center justify-start gap-2.5 px-3 py-2 rounded-xl text-[13px] font-semibold text-semantic-error hover:bg-semantic-error/10 active:scale-98 transition-all w-full text-left cursor-pointer h-auto min-h-0"
+                className="flex min-h-11 items-center justify-start gap-2.5 px-3 py-2 rounded-md text-sm font-semibold text-semantic-error hover:bg-semantic-error/10 active:scale-98 transition-all w-full text-left cursor-pointer h-auto focus-visible:ring-2 focus-visible:ring-semantic-error"
               >
                 <SignOut size={18} weight="regular" className="shrink-0" />
                 <span>Keluar</span>
@@ -207,7 +214,7 @@ export function HeaderActions({ className }: { className?: string } = {}) {
                   setIsMenuOpen(false)
                   loginWithGoogle()
                 }}
-                className="flex items-center justify-start gap-2.5 px-3 py-2 rounded-xl text-[13px] font-semibold text-accent bg-transparent hover:bg-accent/10 active:scale-98 transition-all w-full text-left cursor-pointer h-auto min-h-0"
+                className="flex min-h-11 items-center justify-start gap-2.5 px-3 py-2 rounded-md text-sm font-semibold text-accent bg-transparent hover:bg-accent-dim active:scale-98 transition-all w-full text-left cursor-pointer h-auto focus-visible:ring-2 focus-visible:ring-accent"
               >
                 <SignIn size={18} weight="regular" className="shrink-0" />
                 <span>Masuk</span>

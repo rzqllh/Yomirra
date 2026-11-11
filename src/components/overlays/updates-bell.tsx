@@ -96,7 +96,7 @@ export function UpdatesBell({ className }: { className?: string } = {}) {
         <button
           type="button"
           className={cn(
-            "relative flex size-9 items-center justify-center rounded-[10px] bg-surface-raised border border-border-subtle hover:border-accent/40 text-text-secondary hover:text-text-primary active:scale-95 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent select-none shrink-0 shadow-xs cursor-pointer",
+            "relative flex size-9 items-center justify-center rounded-sm bg-surface-raised border border-border-subtle hover:border-accent/40 text-text-secondary hover:text-text-primary active:scale-95 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent select-none shrink-0 shadow-xs cursor-pointer",
             className
           )}
           aria-label={accessibleLabel}
@@ -118,14 +118,14 @@ export function UpdatesBell({ className }: { className?: string } = {}) {
                 animate={{ scale: 1, opacity: 1 }}
                 exit={reducedMotion ? undefined : { scale: 0.5, opacity: 0 }}
                 transition={{ duration: 0.15, ease: "easeOut" }}
-                className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-semantic-error text-white flex items-center justify-center border-2 border-surface-base shadow-xs"
+                className="absolute -top-1 -right-1 min-w-4.5 h-4.5 px-1 rounded-full bg-semantic-error text-accent-on flex items-center justify-center border-2 border-surface-base shadow-xs"
               >
                 <motion.span
                   key={displayCount}
                   initial={reducedMotion ? false : { scale: 0.8 }}
                   animate={{ scale: 1 }}
                   transition={{ duration: 0.15 }}
-                  className="text-[10px] font-bold text-white leading-none tracking-tight"
+                  className="text-2xs font-bold text-accent-on leading-none tracking-tight"
                 >
                   {displayCount}
                 </motion.span>
@@ -138,7 +138,7 @@ export function UpdatesBell({ className }: { className?: string } = {}) {
       <DropdownMenuContent
         align="end"
         sideOffset={8}
-        className="flex flex-col w-80 sm:w-88 p-0 rounded-xl bg-surface-overlay/95 backdrop-blur-xl border border-border-subtle shadow-xl overflow-hidden z-[100]"
+        className="flex flex-col w-80 sm:w-88 p-0 rounded-xl bg-surface-overlay/95 backdrop-blur-xl border border-border-subtle shadow-xl overflow-hidden z-overlay"
       >
         <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-border-subtle bg-surface-raised/40">
           <div className="flex items-center gap-2">
@@ -148,13 +148,13 @@ export function UpdatesBell({ className }: { className?: string } = {}) {
             </h3>
           </div>
           {recentUpdates.length > 0 && (
-            <span className="text-[11px] font-medium text-text-muted">
+            <span className="text-2xs font-semibold text-text-muted">
               {recentUpdates.length} terbaru
             </span>
           )}
         </div>
 
-        <div className="min-h-0 max-h-[340px] overflow-y-auto divide-y divide-border-subtle/50 py-1">
+        <div className="min-h-0 max-h-84 overflow-y-auto divide-y divide-border-subtle/50 py-1">
           {recentUpdates.length === 0 ? (
             <div className="py-8 px-4 text-center flex flex-col items-center justify-center gap-2">
               <BookOpen size={32} weight="duotone" className="text-text-muted/60" />
@@ -179,7 +179,7 @@ export function UpdatesBell({ className }: { className?: string } = {}) {
                   <Link
                     href={targetHref}
                     onClick={() => setIsOpen(false)}
-                    className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl hover:bg-surface-hover/80 focus:bg-surface-hover transition-colors cursor-pointer group outline-none"
+                    className="flex items-center gap-3 px-3.5 py-2.5 rounded-md hover:bg-surface-hover/80 focus:bg-surface-hover transition-colors cursor-pointer group outline-none"
                   >
                     <div className="relative w-10 h-14 rounded-md overflow-hidden bg-surface-base shrink-0 border border-border-subtle shadow-xs">
                       <MangaCover
@@ -193,10 +193,10 @@ export function UpdatesBell({ className }: { className?: string } = {}) {
                       <p className="text-xs font-bold text-text-primary truncate group-hover:text-accent transition-colors">
                         {item.mangaTitle || item.mangaId}
                       </p>
-                      <p className="text-[11px] font-semibold text-text-secondary truncate mt-0.5">
+                      <p className="text-2xs font-semibold text-text-secondary truncate mt-0.5">
                         {chapterLabel}
                       </p>
-                      <p className="text-[10px] text-text-muted mt-0.5">
+                      <p className="text-2xs text-text-muted mt-0.5">
                         {relativeTime}
                       </p>
                     </div>
@@ -209,12 +209,12 @@ export function UpdatesBell({ className }: { className?: string } = {}) {
 
         <DropdownMenuSeparator className="m-0" />
 
-        <div className="shrink-0 p-1.5 bg-surface-raised/30">
+        <div className="shrink-0 p-2 bg-surface-raised/30">
           <DropdownMenuItem asChild>
             <Link
               href="/updates"
               onClick={() => setIsOpen(false)}
-              className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-bold text-accent hover:text-accent-hover hover:bg-accent-dim focus:bg-accent-dim focus:text-accent-hover transition-colors cursor-pointer outline-none"
+              className="w-full flex min-h-11 items-center justify-center gap-2 py-2 px-3 rounded-md text-xs font-bold text-accent hover:text-accent-hover hover:bg-accent-dim focus:bg-accent-dim focus:text-accent-hover transition-colors cursor-pointer outline-none"
             >
               <span>Tampilkan semua notifikasi</span>
               <ArrowRight size={14} weight="regular" />

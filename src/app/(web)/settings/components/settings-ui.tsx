@@ -72,9 +72,13 @@ export function SettingsItem({
       onClick={isInteractive && !disabled ? onClick : undefined}
       disabled={disabled}
       className={cn(
-        "flex justify-between p-3 rounded-md text-left transition-colors gap-3 w-full",
+        "flex justify-between p-3 rounded-md text-left transition-colors gap-3 w-full min-h-11 outline-none",
         wrapOnMobile ? "flex-col sm:flex-row items-start sm:items-center" : "items-center",
-        isInteractive && !disabled && (danger ? "hover:bg-semantic-error/10 group" : "hover:bg-surface-hover group"),
+        isInteractive && !disabled && (
+          danger
+            ? "hover:bg-semantic-error/10 focus-visible:ring-2 focus-visible:ring-semantic-error group cursor-pointer"
+            : "hover:bg-surface-hover focus-visible:ring-2 focus-visible:ring-accent group cursor-pointer"
+        ),
         disabled && "opacity-50 cursor-not-allowed",
         className
       )}

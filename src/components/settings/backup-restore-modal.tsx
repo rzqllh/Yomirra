@@ -165,10 +165,10 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
           >
             {/* Selected File Box */}
             <div className="flex flex-col gap-1.5">
-              <span className="text-[11px] font-bold text-text-muted uppercase tracking-wider pl-1">Berkas dipilih</span>
+              <span className="text-2xs font-bold text-text-muted uppercase tracking-wider pl-1">Berkas dipilih</span>
               <div className="flex items-center justify-between p-3 rounded-xl bg-surface-raised border border-border-subtle shadow-xs">
                 <div className="flex items-center gap-3 overflow-hidden">
-                  <div className="size-8 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
+                  <div className="size-8 rounded-md bg-accent/10 flex items-center justify-center shrink-0">
                     <FileText size={16} className="text-accent" weight="regular" />
                   </div>
                   <span className="text-xs font-bold text-text-primary truncate">{selectedFileName}</span>
@@ -176,7 +176,7 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
                 <button
                   type="button"
                   onClick={resetState}
-                  className="text-[11px] font-bold text-text-secondary hover:text-text-primary px-3 py-1 rounded-lg bg-surface-base border border-border-subtle hover:bg-surface-hover transition-colors shrink-0 cursor-pointer"
+                  className="text-2xs font-bold text-text-secondary hover:text-text-primary px-3 py-1.5 min-h-9 rounded-md bg-surface-base border border-border-subtle hover:bg-surface-hover transition-colors shrink-0 cursor-pointer"
                 >
                   Batal
                 </button>
@@ -189,7 +189,7 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
                 <span className="font-bold flex items-center gap-2 mb-2 text-sm">
                   <ShieldWarning size={20} weight="fill" /> Berkas tidak dapat digunakan ({dryRun.errors.length})
                 </span>
-                <p className="text-[12px] opacity-90">
+                <p className="text-xs opacity-90">
                   Periksa kembali berkas cadangan lalu coba lagi.
                 </p>
               </div>
@@ -197,42 +197,42 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
               <>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="flex flex-col justify-center p-3.5 rounded-xl bg-surface-raised border border-border-subtle shadow-xs">
-                    <span className="text-[11px] uppercase font-bold text-text-muted mb-0.5">Data valid</span>
+                    <span className="text-2xs uppercase font-bold text-text-muted mb-0.5">Data valid</span>
                     <div className="flex items-baseline gap-2">
                       <span className="text-2xl font-extrabold text-text-primary">{dryRun.validLibraryCount + dryRun.validHistoryCount}</span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-[11px] font-bold mt-1">
+                    <div className="flex items-center gap-1.5 text-2xs font-bold mt-1">
                       <span className="text-semantic-success bg-semantic-success/10 px-1.5 py-0.5 rounded-md">+{dryRun.addedCount} baru</span>
                       <span className="text-accent bg-accent/10 px-1.5 py-0.5 rounded-md">{dryRun.replacedCount} diperbarui</span>
                     </div>
                   </div>
 
                   <div className="flex flex-col justify-center p-3.5 rounded-xl bg-surface-raised border border-border-subtle shadow-xs">
-                    <span className="text-[11px] uppercase font-bold text-text-muted mb-0.5">Data yang perlu diperiksa</span>
+                    <span className="text-2xs uppercase font-bold text-text-muted mb-0.5">Data yang perlu diperiksa</span>
                     <div className="flex items-baseline gap-2">
                       <span className="text-2xl font-extrabold text-text-primary">{dryRun.existingConflictCount + dryRun.duplicateInPayloadCount}</span>
                     </div>
-                    <div className="flex items-center gap-1.5 text-[11px] font-bold mt-1">
+                    <div className="flex items-center gap-1.5 text-2xs font-bold mt-1">
                       <span className="text-semantic-warning bg-semantic-warning/10 px-1.5 py-0.5 rounded-md">{dryRun.existingConflictCount} konflik</span>
                     </div>
                   </div>
                 </div>
 
                 <div className="space-y-2 mt-1">
-                  <span className="text-[11px] font-bold text-text-muted uppercase tracking-wider block pl-1">Cara memulihkan</span>
+                  <span className="text-2xs font-bold text-text-muted uppercase tracking-wider block pl-1">Cara memulihkan</span>
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
                       onClick={() => setImportMode("merge")}
                       className={cn(
-                        "relative p-3.5 rounded-xl border text-left transition-all overflow-hidden outline-none cursor-pointer",
+                        "relative p-3.5 rounded-md border text-left transition-all overflow-hidden outline-none cursor-pointer",
                         importMode === "merge"
-                          ? "border-accent bg-accent/10 shadow-xs"
+                          ? "border-accent bg-accent-dim shadow-xs"
                           : "border-border-subtle bg-surface-raised hover:bg-surface-hover"
                       )}
                     >
                       <span className={cn("block text-xs font-bold", importMode === "merge" ? "text-accent" : "text-text-primary")}>Gabungkan</span>
-                      <span className="block text-[11px] text-text-muted mt-1 leading-relaxed">
+                      <span className="block text-2xs text-text-muted mt-1 leading-relaxed">
                         Data lama tetap aman. Tambahkan item baru.
                       </span>
                     </button>
@@ -240,14 +240,14 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
                       type="button"
                       onClick={() => setImportMode("replace")}
                       className={cn(
-                        "relative p-3.5 rounded-xl border text-left transition-all overflow-hidden outline-none cursor-pointer",
+                        "relative p-3.5 rounded-md border text-left transition-all overflow-hidden outline-none cursor-pointer",
                         importMode === "replace"
                           ? "border-semantic-error bg-semantic-error/10 shadow-xs"
                           : "border-border-subtle bg-surface-raised hover:bg-surface-hover"
                       )}
                     >
                       <span className={cn("block text-xs font-bold", importMode === "replace" ? "text-semantic-error" : "text-text-primary")}>Ganti data saat ini</span>
-                      <span className="block text-[11px] text-text-muted mt-1 leading-relaxed">
+                      <span className="block text-2xs text-text-muted mt-1 leading-relaxed">
                         Hapus semua data lokal, timpa dari file cadangan.
                       </span>
                     </button>
@@ -258,7 +258,7 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
                   onClick={handleExecuteRestore}
                   disabled={isProcessing}
                   variant={importMode === "replace" ? "destructive" : "accent"}
-                  className="w-full h-12 rounded-xl font-bold text-sm shadow-xs mt-1"
+                  className="w-full min-h-12 rounded-md font-bold text-sm shadow-xs mt-1"
                 >
                   {isProcessing ? "Memproses…" : "Pulihkan data"}
                 </Button>
@@ -279,7 +279,7 @@ export interface BackupRestoreModalProps {
 export function BackupRestoreModal({ isOpen, onOpenChange }: BackupRestoreModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md w-[calc(100vw-32px)] rounded-[28px] p-6 bg-surface-overlay/95 backdrop-blur-2xl border border-border-glass shadow-glass overflow-hidden flex flex-col gap-0">
+      <DialogContent className="max-w-md rounded-2xl p-6 bg-surface-overlay/95 backdrop-blur-2xl border border-border-glass shadow-glass overflow-hidden flex flex-col gap-0">
         <DialogTitle className="sr-only">Cadangan & Pemulihan</DialogTitle>
         <DialogDescription className="sr-only">Ekspor atau impor data lokal Yomirra</DialogDescription>
         <BackupRestoreView onBack={() => onOpenChange(false)} />

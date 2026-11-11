@@ -77,7 +77,7 @@ export function CollectionManager() {
   if (!mounted) {
     return (
       <SettingsSection title="Koleksi Library">
-        <div className="opacity-50 h-[80px] flex items-center justify-center">Memuat...</div>
+        <div className="opacity-50 h-20 flex items-center justify-center">Memuat...</div>
       </SettingsSection>
     );
   }
@@ -97,7 +97,7 @@ export function CollectionManager() {
             }}
             variant="accent"
             size="sm"
-            className="rounded-xl font-bold h-9"
+            className="min-h-11 rounded-sm font-bold"
           >
             <Plus size={16} weight="regular" className="mr-1.5" />
             Koleksi Baru
@@ -121,8 +121,8 @@ export function CollectionManager() {
                       <Button
                         onClick={() => openRename(c.id, c.name)}
                         variant="ghost"
-                        size="icon"
-                        className="w-8 h-8 rounded-lg text-text-secondary hover:text-text-primary"
+                        size="icon-sm"
+                        className="rounded-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover"
                         aria-label="Ubah nama"
                       >
                         <PencilSimple size={18} weight="regular" />
@@ -130,8 +130,8 @@ export function CollectionManager() {
                       <Button
                         onClick={() => openDelete(c.id)}
                         variant="ghost"
-                        size="icon"
-                        className="w-8 h-8 rounded-lg text-semantic-error hover:text-white hover:bg-semantic-error transition-colors"
+                        size="icon-sm"
+                        className="rounded-sm text-semantic-error hover:text-accent-on hover:bg-semantic-error transition-colors"
                         aria-label="Hapus"
                       >
                         <Trash size={18} weight="regular" />

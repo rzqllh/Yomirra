@@ -219,14 +219,14 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
                   <p className="text-xs text-text-secondary truncate mt-0.5">
                     {user.email}
                   </p>
-                  <span className="mt-1 inline-flex items-center px-2 py-0.5 rounded-md bg-semantic-success/10 text-[10px] font-bold uppercase tracking-wider text-semantic-success border border-semantic-success/20">
+                  <span className="mt-1 inline-flex items-center px-2 py-0.5 rounded-md bg-semantic-success/10 text-2xs font-bold uppercase tracking-wider text-semantic-success border border-semantic-success/20">
                     Akun terhubung
                   </span>
                 </div>
               </div>
 
               <Link href="/account" className="block outline-none pt-1">
-                <Button variant="secondary" className="w-full rounded-xl justify-between h-10 px-4 text-xs font-bold">
+                <Button variant="secondary" className="w-full min-h-11 rounded-sm justify-between px-4 text-xs font-bold">
                   <span className="flex items-center gap-2">
                     <UserCircle size={17} weight="regular" className="text-accent" />
                     Kelola akun &amp; sinkronisasi
@@ -236,7 +236,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
               </Link>
             </div>
           ) : (
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 p-3.5 bg-surface-base/60 rounded-xl m-1 border border-border-subtle">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 p-3.5 bg-surface-base/60 rounded-md m-1 border border-border-subtle">
               <div>
                 <h3 className="text-sm font-bold text-text-primary">Masuk untuk sinkronisasi</h3>
                 <p className="text-xs text-text-secondary mt-0.5 max-w-sm leading-relaxed">
@@ -244,7 +244,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
                 </p>
               </div>
               <Link href="/account" className="w-full sm:w-auto shrink-0">
-                <Button variant="primary" className="w-full sm:w-auto rounded-xl font-bold shadow-xs text-xs">
+                <Button variant="primary" className="w-full sm:w-auto min-h-11 rounded-sm font-bold shadow-xs text-xs">
                   <UserCircle size={16} className="mr-1.5" weight="regular" />
                   Buka akun
                 </Button>
@@ -282,7 +282,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
           <SettingsItem
             icon={<IconWrapper><ArrowsClockwise size={19} weight="regular" /></IconWrapper>}
             title="Cek otomatis saat dibuka"
-            description="Periksa ketersediaan chapter baru secara berkala."
+            description="Periksa ketersediaan chapter baru saat aplikasi dibuka dan secara berkala di latar depan."
             right={
               <ToggleSwitch
                 id="check-on-start"
@@ -299,7 +299,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
             wrapOnMobile
             icon={<IconWrapper><Clock size={19} weight="regular" /></IconWrapper>}
             title="Jeda pengecekan"
-            description="Frekuensi interval pemeriksaan chapter baru."
+            description="Frekuensi interval pemeriksaan chapter baru saat aplikasi aktif dibuka."
             right={
               <CustomSelect
                 label="Jeda pengecekan"
@@ -339,7 +339,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
             wrapOnMobile
             icon={<IconWrapper><Palette size={19} weight="regular" /></IconWrapper>}
             title="Tema aplikasi"
-            description="Sesuaikan tema warna tampilan Yomirra."
+            description="Sesuaikan tema utama aplikasi. Pilihan warna latar Reader (gelap, terang, sepia) diatur terpisah di menu Reader saat membaca."
             right={
               mounted ? (
                 <SegmentedControl
@@ -354,7 +354,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
                   className="w-full sm:w-auto"
                 />
               ) : (
-                <div className="h-10 w-44 rounded-xl bg-surface-muted animate-pulse" />
+                <div className="h-11 w-44 rounded-sm bg-surface-muted animate-pulse" />
               )
             }
           />
@@ -380,7 +380,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
           <SettingsItem
             icon={<IconWrapper><DeviceMobile size={19} weight="regular" /></IconWrapper>}
             title="Jaga layar tetap menyala"
-            description="Cegah layar mati otomatis saat mengunduh atau membaca chapter."
+            description="Cegah layar mati otomatis saat membaca di Reader atau mengunduh chapter komik."
             right={
               <ToggleSwitch
                 id="keep-awake"
@@ -404,7 +404,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
             right={
               <Link
                 href="/sources"
-                className="inline-flex min-h-11 items-center rounded-xl border border-border-default px-3.5 text-xs font-bold text-accent hover:border-accent/50 transition-colors"
+                className="inline-flex min-h-11 items-center rounded-sm border border-border-default px-3.5 text-xs font-bold text-accent hover:border-accent/50 transition-colors"
               >
                 Kelola sumber &rarr;
               </Link>
@@ -442,7 +442,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
             />
 
             {!user && (
-              <div className="mt-2.5 flex items-center justify-between gap-3 p-2.5 rounded-lg bg-surface-muted/60 border border-border-subtle">
+              <div className="mt-2.5 flex items-center justify-between gap-3 p-2.5 rounded-sm bg-surface-muted/60 border border-border-subtle">
                 <p className="text-xs text-text-muted leading-relaxed">
                   Masuk dengan akun Google untuk mengaktifkan konten dewasa (18+).
                 </p>
@@ -465,7 +465,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
             <div className="rounded-xl border border-border-subtle bg-surface-base/80 p-3.5 flex flex-col gap-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-text-muted">
+                  <span className="text-2xs font-extrabold uppercase tracking-wider text-text-muted">
                     Penyimpanan Terpakai Yomirra
                   </span>
                   <p className="text-xs text-text-secondary mt-0.5">
@@ -478,25 +478,25 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
               </div>
 
               <div className="grid grid-cols-2 gap-2 text-xs">
-                <div className="rounded-lg border border-border-subtle bg-surface-raised p-2.5 flex flex-col justify-between">
+                <div className="rounded-sm border border-border-subtle bg-surface-raised p-2.5 flex flex-col justify-between">
                   <span className="text-text-muted font-medium">Cache Gambar Bacaan</span>
                   <div className="mt-1 flex items-baseline justify-between">
                     <span className="text-sm font-bold text-text-primary tabular-nums">
                       {storageData ? `${storageData.readingCacheMB} MB` : "-"}
                     </span>
-                    <span className="text-[10px] text-text-muted">
+                    <span className="text-2xs text-text-muted">
                       {storageData ? `${storageData.entryCounts.readingCache} berkas` : ""}
                     </span>
                   </div>
                 </div>
 
-                <div className="rounded-lg border border-border-subtle bg-surface-raised p-2.5 flex flex-col justify-between">
+                <div className="rounded-sm border border-border-subtle bg-surface-raised p-2.5 flex flex-col justify-between">
                   <span className="text-text-muted font-medium">Unduhan Bab Offline</span>
                   <div className="mt-1 flex items-baseline justify-between">
                     <span className="text-sm font-bold text-text-primary tabular-nums">
                       {storageData ? `${storageData.downloadsMB} MB` : "-"}
                     </span>
-                    <span className="text-[10px] text-text-muted">
+                    <span className="text-2xs text-text-muted">
                       {storageData ? `${storageData.entryCounts.downloads} halaman` : ""}
                     </span>
                   </div>
@@ -516,7 +516,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
                 onClick={handleClearAutomaticCache}
                 variant="outline"
                 disabled={isClearingCache}
-                className="w-full sm:w-auto shrink-0 rounded-xl font-bold text-xs h-9 px-3.5 transition-colors"
+                className="w-full sm:w-auto shrink-0 min-h-11 rounded-sm font-bold text-xs px-3.5 transition-colors"
               >
                 {isClearingCache ? "Membersihkan…" : "Bersihkan cache"}
               </Button>
@@ -550,7 +550,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
                       : "Hapus unduhan offline (dinonaktifkan karena tidak ada bab tersimpan)"
                 }
                 title={storageData === null ? "Memeriksa unduhan offline…" : !hasOfflinePages ? "Tidak ada bab offline yang tersimpan" : undefined}
-                className="w-full sm:w-auto shrink-0 rounded-xl font-bold text-xs h-9 px-3.5 text-text-secondary hover:text-semantic-error hover:border-semantic-error/40 transition-colors"
+                className="w-full sm:w-auto shrink-0 min-h-11 rounded-sm font-bold text-xs px-3.5 text-text-secondary hover:text-semantic-error hover:border-semantic-error/40 transition-colors"
               >
                 Hapus unduhan
               </Button>
@@ -569,7 +569,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
               <Button
                 onClick={() => setSubView("backup")}
                 variant="outline"
-                className="w-full sm:w-auto shrink-0 border-accent/40 text-accent hover:bg-accent hover:text-accent-on rounded-xl font-bold text-xs h-9 px-3.5 transition-colors"
+                className="w-full sm:w-auto shrink-0 border-accent/40 text-accent hover:bg-accent hover:text-accent-on min-h-11 rounded-sm font-bold text-xs px-3.5 transition-colors"
               >
                 Kelola cadangan
               </Button>
@@ -588,7 +588,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
               <Button
                 onClick={() => setIsClearDataDialogOpen(true)}
                 variant="outline"
-                className="w-full sm:w-auto shrink-0 text-semantic-error hover:text-accent-on hover:bg-semantic-error border-semantic-error/40 rounded-xl font-bold text-xs h-9 px-3.5 transition-colors"
+                className="w-full sm:w-auto shrink-0 text-semantic-error hover:text-accent-on hover:bg-semantic-error border-semantic-error/40 min-h-11 rounded-sm font-bold text-xs px-3.5 transition-colors"
               >
                 Hapus data
               </Button>
@@ -608,7 +608,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
                 onClick={() => setIsSharedDeviceDialogOpen(true)}
                 variant="outline"
                 disabled={isClearingDevice}
-                className="w-full sm:w-auto shrink-0 text-semantic-error hover:text-accent-on hover:bg-semantic-error border-semantic-error/40 rounded-xl font-bold text-xs h-9 px-3.5 transition-colors"
+                className="w-full sm:w-auto shrink-0 text-semantic-error hover:text-accent-on hover:bg-semantic-error border-semantic-error/40 min-h-11 rounded-sm font-bold text-xs px-3.5 transition-colors"
               >
                 {isClearingDevice ? "Membersihkan…" : "Bersihkan perangkat"}
               </Button>
@@ -628,7 +628,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
               description: "Panduan onboarding akan ditampilkan saat kamu kembali ke Beranda.",
             });
           }}
-          className="rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary h-9 px-4"
+          className="min-h-11 rounded-sm text-xs font-semibold text-text-secondary hover:text-text-primary px-4"
         >
           <Compass size={16} weight="regular" className="mr-1.5" />
           Tampilkan panduan saat ke Beranda
@@ -656,7 +656,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
                     <Button
                       variant="secondary"
                       onClick={() => setSubView("main")}
-                      className="rounded-xl font-bold text-xs"
+                      className="min-h-11 rounded-sm font-bold text-xs"
                     >
                       <CaretLeft size={16} weight="regular" className="mr-1" />
                       Kembali ke pengaturan
@@ -666,7 +666,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
                     <Button
                       variant="secondary"
                       onClick={() => setSubView("main")}
-                      className="rounded-xl font-bold text-xs"
+                      className="min-h-11 rounded-sm font-bold text-xs"
                     >
                       <CaretLeft size={16} weight="regular" className="mr-1" />
                       Kembali ke pengaturan
