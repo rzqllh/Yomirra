@@ -42,16 +42,16 @@ export function CollectionToolbar({
   onCreateCollectionClick,
 }: CollectionToolbarProps) {
   return (
-    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+    <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between">
       <SearchInput
         value={searchQuery}
         onChange={onSearchChange}
         onClear={onSearchClear}
         placeholder="Cari di koleksi tersimpan…"
-        containerClassName="sm:flex-1 min-w-0 h-11"
+        containerClassName="w-full sm:flex-1 min-w-0 h-11"
       />
 
-      <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+      <div className="flex items-center gap-2 w-full sm:w-auto">
         {availableSources.length > 1 && onSourceFilterChange && (
           <CustomSelect
             value={sourceFilter ?? "ALL"}
@@ -60,8 +60,8 @@ export function CollectionToolbar({
               { value: "ALL", label: "Semua Sumber" },
               ...availableSources.map((s) => ({ value: s.id, label: s.name })),
             ]}
-            align="right"
-            className="flex-1 sm:flex-initial min-w-32"
+            align="left"
+            className="flex-1 sm:w-44 min-w-0"
           />
         )}
 
@@ -73,7 +73,7 @@ export function CollectionToolbar({
             { value: "title", label: "Judul (A-Z)" },
           ]}
           align="right"
-          className="flex-1 sm:flex-initial min-w-32"
+          className="flex-1 sm:w-36 min-w-0"
         />
 
         {totalCount > 0 && (
@@ -81,7 +81,7 @@ export function CollectionToolbar({
             <DropdownMenuTrigger asChild>
               <Button
                 variant={isSelectionMode ? "accent" : "outline"}
-                className="h-11 px-2.5 rounded-xl font-bold gap-1.5 shrink-0 border-dashed"
+                className="size-11 p-0 rounded-xl font-bold shrink-0 border-dashed"
                 aria-label="Opsi lainnya"
               >
                 <DotsThreeVertical size={20} weight="regular" />

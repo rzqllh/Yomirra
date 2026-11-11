@@ -11,7 +11,16 @@ import {
   BookOpen,
   Trash,
   Eye,
+  Compass,
 } from "@phosphor-icons/react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { motion, useReducedMotion } from "motion/react";
 import { useQuery } from "@tanstack/react-query";
 import { getMangaDetailHref, getReaderHref } from "@/shared/lib/routes";
@@ -52,6 +61,48 @@ import {
   mangaCardSurface,
 } from "./primitives";
 
+
+function DeadSourceFallbackDialog({
+  open,
+  onOpenChange,
+  title,
+  sourceName,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  title: string;
+  sourceName: string;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Compass size={20} weight="regular" className="text-accent" />
+            Sumber Tidak Aktif
+          </DialogTitle>
+          <DialogDescription>
+            Komik &ldquo;{title}&rdquo; tersimpan dari sumber{" "}
+            <span className="font-semibold text-text-primary">{sourceName}</span>, tetapi sumber ini sedang dinonaktifkan atau belum tersedia.
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="flex flex-col gap-2.5 pt-2">
+          <Button asChild variant="primary" className="w-full min-h-11 font-bold">
+            <Link href={`/search?q=${encodeURIComponent(title)}`}>
+              Cari di Sumber Aktif Lain
+            </Link>
+          </Button>
+          <Button asChild variant="outline" className="w-full min-h-11">
+            <Link href="/sources">
+              Kelola Pengaturan Sumber
+            </Link>
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export type MangaCardVariant = "discovery" | "rank" | "progress";
 
@@ -255,9 +306,13 @@ export function MangaCard({
     cardMangaId,
     fullPath
   );
+  const [isSourceDialogOpen, setIsSourceDialogOpen] = React.useState(false);
+  const [isFallbackDialogOpen, setIsFallbackDialogOpen] = React.useState(false);
+
   const handleCardOpen = (event: React.MouseEvent<HTMLAnchorElement>) => {
     if (noEligibleSource) {
       event.preventDefault();
+      setIsFallbackDialogOpen(true);
       return;
     }
     if (isMultiSource) {
@@ -266,11 +321,10 @@ export function MangaCard({
     }
   };
   const cardAriaLabel = noEligibleSource
-    ? `Sumber tidak tersedia untuk ${manga.title}`
+    ? `Sumber tidak aktif untuk ${manga.title}. Klik untuk cari di sumber lain.`
     : isMultiSource
       ? `Pilih sumber untuk ${manga.title}`
       : `Lihat ${manga.title}`;
-  const [isSourceDialogOpen, setIsSourceDialogOpen] = React.useState(false);
 
   const mangaKey = `${sourceId}::${manga.id}` as MangaKey;
   const readingStatus = readingStatusByManga[mangaKey];
@@ -785,6 +839,15 @@ export function MangaCard({
             returnTo={fullPath}
           />
         )}
+
+        {noEligibleSource && (
+          <DeadSourceFallbackDialog
+            open={isFallbackDialogOpen}
+            onOpenChange={setIsFallbackDialogOpen}
+            title={manga.title}
+            sourceName={sourceDisplayName}
+          />
+        )}
       </motion.article>
     );
   }
@@ -967,6 +1030,15 @@ export function MangaCard({
             returnTo={fullPath}
           />
         )}
+
+        {noEligibleSource && (
+          <DeadSourceFallbackDialog
+            open={isFallbackDialogOpen}
+            onOpenChange={setIsFallbackDialogOpen}
+            title={manga.title}
+            sourceName={sourceDisplayName}
+          />
+        )}
       </motion.article>
     );
   }
@@ -1087,10 +1159,13 @@ export function MangaCard({
             </div>
 
             {noEligibleSource && (
-              <div className="absolute inset-0 bg-surface-base/60 backdrop-blur-[2px] flex items-center justify-center z-10 transition-opacity group-hover:opacity-100 opacity-90">
-                <div className="rounded-xs bg-status-error-bg px-2.5 py-1 text-xs font-bold text-status-error-fg">
-                  Tidak Tersedia
+              <div className="absolute inset-0 bg-surface-base/70 backdrop-blur-[2px] flex flex-col items-center justify-center p-2 text-center z-10 transition-opacity group-hover:opacity-100 opacity-90">
+                <div className="rounded-xs bg-status-warning-bg border border-status-warning-border px-2 py-0.5 text-2xs font-bold text-status-warning-fg">
+                  Sumber Nonaktif
                 </div>
+                <span className="mt-1 text-3xs font-semibold text-text-muted">
+                  Cari alternatif &rarr;
+                </span>
               </div>
             )}
           </MangaCardCoverFrame>
@@ -1107,8 +1182,12 @@ export function MangaCard({
                   {manga.format}
                 </MangaCardMeta>
               ) : null,
-              showSourceBadge && (sourceName || isMultiSource) ? (
-                isMultiSource ? (
+              showSourceBadge && (sourceName || isMultiSource || noEligibleSource) ? (
+                noEligibleSource ? (
+                  <MangaCardMeta key="source" className="truncate font-semibold text-status-warning-fg" title={`${sourceDisplayName} (Nonaktif)`}>
+                    {sourceDisplayName} · Nonaktif
+                  </MangaCardMeta>
+                ) : isMultiSource ? (
                   <MangaCardMeta key="source" className="truncate font-semibold text-accent">
                     {availableBindings.length} Sumber
                   </MangaCardMeta>
@@ -1163,6 +1242,15 @@ export function MangaCard({
           title={manga.title}
           sourceBindings={availableBindings}
           returnTo={fullPath}
+        />
+      )}
+
+      {noEligibleSource && (
+        <DeadSourceFallbackDialog
+          open={isFallbackDialogOpen}
+          onOpenChange={setIsFallbackDialogOpen}
+          title={manga.title}
+          sourceName={sourceDisplayName}
         />
       )}
     </motion.article>

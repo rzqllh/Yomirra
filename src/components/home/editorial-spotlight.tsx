@@ -192,22 +192,10 @@ export function EditorialSpotlight({
         className
       )}
     >
-      {manga.coverUrl && (
-        <>
-          <img
-            src={manga.coverUrl}
-            alt=""
-            aria-hidden="true"
-            referrerPolicy="no-referrer"
-            decoding="async"
-            className="pointer-events-none absolute inset-0 size-full scale-105 object-cover opacity-[0.14]"
-          />
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 bg-gradient-to-r from-surface-raised via-surface-raised/90 to-surface-raised/72"
-          />
-        </>
-      )}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-transparent opacity-60"
+      />
 
       <motion.div
         key={`${sourceId}:${manga.id}`}
@@ -218,14 +206,14 @@ export function EditorialSpotlight({
         }
         animate={{ opacity: 1, x: 0 }}
         transition={reducedMotion ? { duration: 0 } : transitions.gentle}
-        className="absolute inset-0 grid min-w-0 grid-cols-[120px_minmax(0,1fr)] sm:grid-cols-[150px_minmax(0,1fr)] lg:grid-cols-[210px_minmax(0,1fr)]"
+        className="absolute inset-0 grid min-w-0 grid-cols-[116px_minmax(0,1fr)] sm:grid-cols-[150px_minmax(0,1fr)] lg:grid-cols-[210px_minmax(0,1fr)]"
       >
         <Link
           href={href}
           className="group flex min-w-0 items-center justify-center p-2 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent sm:p-3 lg:p-4"
           aria-label={`Lihat komik ${manga.title}`}
         >
-          <div className="aspect-[2/3] w-full max-w-[104px] overflow-hidden rounded-xl border border-border-subtle bg-surface-muted sm:max-w-[126px] lg:max-w-[176px]">
+          <div className="aspect-[2/3] w-full max-w-[100px] overflow-hidden rounded-xl border border-border-subtle bg-surface-muted sm:max-w-[126px] lg:max-w-[176px]">
             <MangaCover
               src={manga.coverUrl}
               alt={manga.title}
@@ -236,9 +224,9 @@ export function EditorialSpotlight({
           </div>
         </Link>
 
-        <div className="relative flex min-w-0 flex-col p-3.5 sm:p-5 lg:p-6">
+        <div className="relative flex min-w-0 flex-col p-3 sm:p-4 lg:p-5">
           <div className="flex min-h-0 flex-1 flex-col">
-            <p className="mb-1.5 text-2xs font-extrabold uppercase tracking-widest text-accent sm:text-xs">
+            <p className="mb-1 text-2xs font-extrabold uppercase tracking-widest text-accent sm:text-xs">
               SOROTAN TERBARU
             </p>
 
@@ -246,7 +234,7 @@ export function EditorialSpotlight({
               href={href}
               className="group rounded-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
-              <h2 className="line-clamp-3 sm:line-clamp-2 text-xl font-bold leading-snug tracking-tight text-text-primary transition-colors group-hover:text-accent sm:text-2xl lg:text-3xl pb-0.5">
+              <h2 className="line-clamp-2 text-base font-bold leading-tight tracking-tight text-text-primary transition-colors group-hover:text-accent sm:text-xl lg:text-2xl pb-0.5">
                 {manga.title}
               </h2>
             </Link>

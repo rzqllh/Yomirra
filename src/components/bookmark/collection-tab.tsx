@@ -217,10 +217,10 @@ export function CollectionTab({
           {/* Row 1: System Reading Status (Smart Collections) */}
           <div>
             <div className="mb-2 flex items-center justify-between px-0.5">
-              <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-text-muted">
+              <span className="text-2xs font-bold uppercase tracking-wider text-text-muted">
                 Otomatis
               </span>
-              <span className="text-[11px] text-text-muted/70">
+              <span className="text-2xs text-text-muted/70">
                 Dari aktivitas bacamu
               </span>
             </div>
@@ -230,7 +230,7 @@ export function CollectionTab({
                 label={
                   <span className="flex items-center gap-1.5">
                     <span>Semua</span>
-                    <span className="text-[11px] opacity-70">{uniqueTitlesCount || totalItemsCount}</span>
+                    <span className="text-2xs opacity-70">{uniqueTitlesCount || totalItemsCount}</span>
                   </span>
                 }
                 aria-label={`Semua bookmark, ${uniqueTitlesCount || totalItemsCount} judul`}
@@ -249,7 +249,7 @@ export function CollectionTab({
                     label={
                       <span className="flex items-center gap-1.5">
                         <span>{collection.label}</span>
-                        <span className={cn("text-[11px]", count === 0 ? "opacity-40" : "opacity-70")}>
+                        <span className={cn("text-2xs", count === 0 ? "opacity-40" : "opacity-70")}>
                           {count}
                         </span>
                       </span>
@@ -272,7 +272,7 @@ export function CollectionTab({
           {/* Row 2: User Custom Collections */}
           <div>
             <div className="mb-2 flex items-center justify-between px-0.5">
-              <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-text-muted">
+              <span className="text-2xs font-bold uppercase tracking-wider text-text-muted">
                 Koleksi Kamu
               </span>
             </div>
@@ -305,7 +305,7 @@ export function CollectionTab({
                         <span className="flex items-center gap-1.5">
                           <Folder size={14} weight="regular" />
                           <span>{collection.name}</span>
-                          <span className={cn("text-[11px]", count === 0 ? "opacity-40" : "opacity-70")}>
+                          <span className={cn("text-2xs", count === 0 ? "opacity-40" : "opacity-70")}>
                             {count}
                           </span>
                         </span>

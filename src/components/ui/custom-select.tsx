@@ -62,7 +62,7 @@ export function CustomSelect({ value, onChange, options, className, buttonClassN
             aria-label={`${label}: ${typeof selectedOption?.label === "string" ? selectedOption.label : value}`}
             className={cn("group flex min-h-11 items-center justify-between gap-3 rounded-sm border border-border-strong bg-surface-overlay px-4 text-sm font-semibold text-text-primary motion-safe:transition-[background-color,border-color,box-shadow] motion-safe:duration-300 hover:border-accent hover:bg-surface-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent data-[state=open]:border-accent data-[state=open]:ring-2 data-[state=open]:ring-accent-dim disabled:cursor-not-allowed disabled:opacity-50", className, buttonClassName)}
           >
-            <span className="min-w-0 whitespace-normal break-words py-2 text-left">
+            <span className="min-w-0 truncate whitespace-nowrap text-left">
               {selectedOption?.label}
             </span>
             <CaretDown
