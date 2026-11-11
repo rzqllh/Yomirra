@@ -9,6 +9,8 @@ import { Toggle } from "../toggle"
 import { Badge } from "../badge"
 import { SearchInput } from "../search-input"
 import { Surface } from "../surface"
+import { SectionStack } from "../section-stack"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../dropdown-menu"
 
 describe("YOM-02: UI Primitives Contract & Parity", () => {
   describe("Button Primitive", () => {
@@ -16,7 +18,9 @@ describe("YOM-02: UI Primitives Contract & Parity", () => {
       render(<Button>Click me</Button>)
       const btn = screen.getByRole("button", { name: /click me/i })
       expect(btn).not.toBeNull()
+      expect(btn.className).toContain("h-11")
       expect(btn.className).toContain("min-h-11")
+      expect(btn.className).toContain("[&_svg]:size-4.5")
     })
 
     it("applies loading state with aria-busy and disabled", () => {
@@ -41,6 +45,33 @@ describe("YOM-02: UI Primitives Contract & Parity", () => {
       expect(screen.getByRole("button").className).toContain("bg-surface-raised")
     })
 
+    it("supports selected and bookmarked states", () => {
+      const { rerender } = render(<Button selected>Selected</Button>)
+      const btn = screen.getByRole("button", { name: /selected/i })
+      expect(btn.getAttribute("aria-pressed")).toBe("true")
+      expect(btn.className).toContain("bg-accent")
+      expect(btn.className).toContain("text-accent-on")
+
+      rerender(<Button bookmarked>Bookmarked</Button>)
+      const bmBtn = screen.getByRole("button", { name: /bookmarked/i })
+      expect(bmBtn.className).toContain("bg-accent-dim")
+      expect(bmBtn.className).toContain("text-accent")
+      expect(bmBtn.className).toContain("border-accent/40")
+    })
+
+    it("standardizes size variants with touch targets", () => {
+      const { rerender } = render(<Button size="sm">Small</Button>)
+      const smBtn = screen.getByRole("button")
+      expect(smBtn.className).toContain("h-9")
+      expect(smBtn.className).toContain("min-h-9")
+      expect(smBtn.className).toContain("after:-inset-1")
+
+      rerender(<Button size="lg">Large</Button>)
+      const lgBtn = screen.getByRole("button")
+      expect(lgBtn.className).toContain("h-12")
+      expect(lgBtn.className).toContain("min-h-12")
+    })
+
     it("supports asChild delegation", () => {
       render(
         <Button asChild>
@@ -54,12 +85,78 @@ describe("YOM-02: UI Primitives Contract & Parity", () => {
   })
 
   describe("IconButton Primitive", () => {
-    it("enforces aria-label and touch target minimums", () => {
+    it("enforces aria-label and standardized sizing", () => {
       render(<IconButton aria-label="Settings action" />)
       const btn = screen.getByRole("button", { name: /settings action/i })
       expect(btn.getAttribute("aria-label")).toBe("Settings action")
-      expect(btn.className).toContain("min-h-11")
-      expect(btn.className).toContain("min-w-11")
+      expect(btn.className).toContain("size-11")
+      expect(btn.className).toContain("rounded-sm")
+    })
+
+    it("supports sm and lg icon-button sizes without hard overrides", () => {
+      const { rerender } = render(<IconButton size="sm" aria-label="Small icon" />)
+      const smBtn = screen.getByRole("button", { name: /small icon/i })
+      expect(smBtn.className).toContain("size-9")
+      expect(smBtn.className).toContain("after:w-11")
+      expect(smBtn.className).toContain("rounded-sm")
+      expect(smBtn.className).not.toContain("min-h-11")
+
+      rerender(<IconButton size="lg" aria-label="Large icon" />)
+      const lgBtn = screen.getByRole("button", { name: /large icon/i })
+      expect(lgBtn.className).toContain("size-12")
+      expect(lgBtn.className).toContain("rounded-sm")
+    })
+  })
+
+  describe("SectionStack Primitive", () => {
+    it("supports modular level-based spacing scale", () => {
+      const { container, rerender } = render(
+        <SectionStack level="page">
+          <div>Item 1</div>
+          <div>Item 2</div>
+        </SectionStack>
+      )
+      const stack = container.firstElementChild as HTMLElement
+      expect(stack.getAttribute("data-stack-level")).toBe("page")
+      expect(stack.className).toContain("gap-6")
+
+      rerender(
+        <SectionStack level="section">
+          <div>Item 1</div>
+        </SectionStack>
+      )
+      expect(stack.className).toContain("gap-4")
+      expect(stack.className).toContain("sm:gap-5")
+
+      rerender(
+        <SectionStack level="card">
+          <div>Item 1</div>
+        </SectionStack>
+      )
+      expect(stack.className).toContain("gap-3")
+
+      rerender(
+        <SectionStack level="row">
+          <div>Item 1</div>
+        </SectionStack>
+      )
+      expect(stack.className).toContain("gap-2")
+
+      rerender(
+        <SectionStack level="control">
+          <div>Item 1</div>
+        </SectionStack>
+      )
+      expect(stack.className).toContain("gap-1.5")
+    })
+
+    it("renders polymorphic semantic HTML elements", () => {
+      const { container } = render(
+        <SectionStack as="section" level="section">
+          <h2>Heading</h2>
+        </SectionStack>
+      )
+      expect(container.querySelector("section")).not.toBeNull()
     })
   })
 
@@ -113,6 +210,38 @@ describe("YOM-02: UI Primitives Contract & Parity", () => {
       // Trigger button
       const trigger = screen.getByRole("button")
       expect(trigger.textContent).toContain("Opsi 1")
+    })
+
+    it("applies tokenized min-h-10 on compact variant without arbitrary brackets", () => {
+      const onChange = vi.fn()
+      render(
+        <Select
+          value="opt1"
+          onChange={onChange}
+          options={options}
+          variant="compact"
+          label="Pilih opsi ringkas"
+        />
+      )
+      const trigger = screen.getByRole("button")
+      expect(trigger.className).toContain("min-h-10")
+      expect(trigger.className).not.toContain("min-h-[40px]")
+    })
+  })
+
+  describe("DropdownMenu Primitive", () => {
+    it("renders with concentric radius and viewport containment classes", () => {
+      render(
+        <DropdownMenu defaultOpen>
+          <DropdownMenuTrigger>Open</DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem>Item 1</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )
+      const item = screen.getByRole("menuitem")
+      expect(item.className).toContain("rounded-md")
+      expect(item.className).not.toContain("rounded-xs")
     })
   })
 

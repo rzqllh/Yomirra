@@ -62,7 +62,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
           label={label}
           disabled={disabled}
           buttonClassName={cn(
-            variant === "compact" && "min-h-[40px] px-3 text-xs",
+            variant === "compact" && "min-h-10 px-3 text-xs",
             variant === "overlay" && "bg-surface-overlay border-border-default",
             buttonClassName
           )}

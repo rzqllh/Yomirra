@@ -34,6 +34,10 @@ Final scoped verification: 62 focused Vitest tests and 16 production-browser tes
 | RDR-04 | Implemented, QA verified | Chapter drawer button weight reduced to refined secondary pill (`h-9`, subtle border, 16px icon) without dominating dock. |
 | CHP-01 | Implemented, QA verified | Chapter drawer status exposes active reading context (`Sedang dibaca: Ch. <X>` or title) alongside total count and sort order. |
 | CHP-03 | Implemented, QA verified | Chapter search normalizes comma/dot decimals and strips prefixes (`ch`, `chapter`, `bab`); sort button adds `aria-pressed`. |
+| SYS-03 | Implemented, QA verified | PageHeader and section headings provide title disclosure for truncated text on mobile & desktop; raw colors replaced with semantic tokens (`bg-scrim/*`, `text-on-cover`, `border-border-glass`). |
+| SYS-04 | Implemented, QA verified | Modular `SectionStack` created with 5-level semantic gap scale (`page`, `section`, `card`, `row`, `control`); concentric radius math enforced in `settings-ui.tsx` ($R_{inner} = 22px - 8px = 14px$ `rounded-md`). |
+| SYS-05 | Implemented, QA verified | Standardized `DropdownMenuContent` and `Select` popover geometry (outer `rounded-xl p-1.5`, inner items `rounded-md`), arbitrary `min-h-[40px]` replaced with `min-h-10`, viewport containment and max-height scrolling enforced. |
+| SYS-07 | Implemented, QA verified | Standardized `Button` sizes (`sm: h-9`, `default: h-11`, `lg: h-12`) with 44px accessible touch target (`after:-inset-1`), semantic `selected` and `bookmarked` states with token mapping, and `bookmark-button.tsx` arbitrary radius replaced with `rounded-sm`. |
 
 All other rows retain their previous disposition and require the independent audit gap report, runtime evidence, or a product decision. RDR-02 and CHP-05/07/08/09, storage/deletion/synchronization semantics, and the other PRODUCT_DECISION rows are not authorized for semantic changes. See `docs/revamp/EXECUTION_LOG.md` for commands, failures and verification limitations.
 

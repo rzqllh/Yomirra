@@ -50,7 +50,7 @@ const current = {
 
 for (const file of files) {
   const content = fs.readFileSync(file, "utf-8");
-  current.tailwind_arbitrary_brackets += (content.match(/\[[0-9.]+(px|rem|em|vh|vw|%|[a-z]+)\]/g) || []).length;
+  current.tailwind_arbitrary_brackets += (content.match(/\[-?[0-9.]+(px|rem|em|vh|vw|%|[a-z]+)\]/g) || []).length;
   current.arbitrary_text_brackets += (content.match(/text-\[[0-9.]+(px|rem)?\]/g) || []).length;
   current.arbitrary_rounded_brackets += (content.match(/rounded(?:-[a-z]+)?-\[[0-9.]+(px|rem)?\]/g) || []).length;
   current.arbitrary_z_brackets += (content.match(/z-\[[0-9]+\]/g) || []).length;

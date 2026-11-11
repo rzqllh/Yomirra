@@ -18,6 +18,8 @@
   --color-text-on-accent: var(--text-on-accent);
   --color-media-foreground: var(--media-foreground);
   --color-media-muted: var(--media-muted-foreground);
+  --color-scrim: var(--scrim);
+  --color-on-cover: var(--on-cover);
 
   /* Border */
   --color-border-subtle: var(--border-subtle);
@@ -176,6 +178,8 @@
     --media-overlay-soft: rgba(5, 5, 10, 0.12);
     --media-foreground: #F2F2F7;
     --media-muted-foreground: rgba(242, 242, 247, 0.78);
+    --scrim: #05050a;
+    --on-cover: #f4f4f6;
 
     /* Glass Foundation Tokens (YOM-01: Exact Parity Values) */
     --glass-blur-chrome: 16px;

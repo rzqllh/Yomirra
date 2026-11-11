@@ -154,9 +154,9 @@ export function PageHeader({
                 onClick={handleBack}
                 variant="ghost"
                 className={cn(
-                  "flex size-11 items-center justify-center rounded-xl active:scale-95 transition-all shrink-0 select-none outline-none cursor-pointer",
+                  "flex size-11 items-center justify-center rounded-sm active:scale-95 transition-all shrink-0 select-none outline-none cursor-pointer",
                   mode === "detail" && !isGlass
-                    ? "bg-black/40 hover:bg-black/60 text-white backdrop-blur-md border border-white/20 shadow-sm"
+                    ? "bg-scrim/60 hover:bg-scrim/80 text-on-cover backdrop-blur-md border border-border-glass shadow-sm"
                     : "yomirra-chrome-control text-text-primary"
                 )}
                 aria-label="Kembali"
@@ -180,7 +180,7 @@ export function PageHeader({
               )}
             >
               <div className="flex items-center gap-2 min-w-0">
-                <h2 className="text-sm sm:text-base font-bold tracking-tight text-text-primary truncate select-none">
+                <h2 title={title} className="text-sm sm:text-base font-bold tracking-tight text-text-primary truncate select-none">
                   {title}
                 </h2>
                 {meta && (
@@ -190,7 +190,7 @@ export function PageHeader({
                 )}
               </div>
               {sub && (
-                <p className="text-2xs font-medium text-text-muted truncate leading-snug mt-0.5 select-none">
+                <p title={typeof sub === "string" ? sub : undefined} className="text-2xs font-medium text-text-muted truncate leading-snug mt-0.5 select-none">
                   {sub}
                 </p>
               )}
@@ -201,7 +201,7 @@ export function PageHeader({
             <div
               className={cn(
                 "flex items-center gap-1.5 shrink-0 ml-2",
-                mode === "detail" && !isGlass && "[&_button]:bg-black/40 [&_button]:hover:bg-black/60 [&_button]:text-white [&_button]:backdrop-blur-md [&_button]:border-white/20 [&_button]:shadow-sm"
+                mode === "detail" && !isGlass && "[&_button]:bg-scrim/60 [&_button]:hover:bg-scrim/80 [&_button]:text-on-cover [&_button]:backdrop-blur-md [&_button]:border-border-glass [&_button]:shadow-sm"
               )}
             >
               {actions}
@@ -230,7 +230,7 @@ export function PageHeader({
               )}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3">
-                  <h1 className="text-2xl lg:text-3xl font-black tracking-tight text-text-primary truncate">
+                  <h1 title={title} className="text-2xl lg:text-3xl font-black tracking-tight text-text-primary truncate">
                     {title}
                   </h1>
                   {meta && (
@@ -240,7 +240,7 @@ export function PageHeader({
                   )}
                 </div>
                 {sub && (
-                  <p className="text-text-muted mt-1 text-sm md:text-base max-w-2xl font-medium leading-relaxed">
+                  <p title={typeof sub === "string" ? sub : undefined} className="text-text-muted mt-1 text-sm md:text-base max-w-2xl font-medium leading-relaxed">
                     {sub}
                   </p>
                 )}

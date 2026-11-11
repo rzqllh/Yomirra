@@ -54,7 +54,7 @@ export function BookmarkButton({ sourceId, manga, className }: { sourceId: strin
       whileTap={reducedMotion ? undefined : { scale: 0.97 }}
       transition={reducedMotion ? { duration: 0 } : transitions.snappy}
       className={cn(
-        "group relative grid size-11 place-items-center rounded-[12px] border border-border-subtle bg-surface-base/95 text-text-primary shadow-xs transition-colors hover:bg-surface-hover hover:border-accent/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer",
+        "group relative grid size-11 place-items-center rounded-sm border border-border-subtle bg-surface-base/95 text-text-primary shadow-xs transition-colors hover:bg-surface-hover hover:border-accent/40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer",
         isInLibrary ? "text-accent bg-accent-dim border-accent/40" : "text-text-secondary",
         className
       )}

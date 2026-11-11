@@ -4,7 +4,7 @@ import { cn } from "@/shared/utils/cn";
 
 export function SettingsSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="bg-surface-overlay rounded-xl border border-subtle overflow-hidden">
+    <section className="bg-surface-overlay rounded-xl border border-border-subtle overflow-hidden">
       <div className="px-5 py-4 border-b border-border-subtle bg-surface-muted/30">
         <h2 className="text-xs font-bold uppercase tracking-widest text-text-muted">
           {title}
@@ -35,7 +35,7 @@ export function IconWrapper({
   };
 
   return (
-    <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-xl", styles[variant], className)}>
+    <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-md", styles[variant], className)}>
       {children}
     </div>
   );
@@ -72,7 +72,7 @@ export function SettingsItem({
       onClick={isInteractive && !disabled ? onClick : undefined}
       disabled={disabled}
       className={cn(
-        "flex justify-between p-3 rounded-lg text-left transition-colors gap-3 w-full",
+        "flex justify-between p-3 rounded-md text-left transition-colors gap-3 w-full",
         wrapOnMobile ? "flex-col sm:flex-row items-start sm:items-center" : "items-center",
         isInteractive && !disabled && (danger ? "hover:bg-semantic-error/10 group" : "hover:bg-surface-hover group"),
         disabled && "opacity-50 cursor-not-allowed",

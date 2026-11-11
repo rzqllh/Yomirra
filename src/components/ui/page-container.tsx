@@ -67,3 +67,5 @@ export const ContentLane = React.forwardRef<HTMLDivElement, ContentLaneProps>(
   )
 );
 ContentLane.displayName = "ContentLane";
+
+export { SectionStack, type SectionStackProps, type SectionStackLevel } from "@/components/ui/section-stack";
