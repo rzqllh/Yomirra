@@ -8,7 +8,10 @@
 - **Historical agent claim, not verified completion:** 35 / 55 `FIX` tickets
 - **Design Token Ratchet:** 529 arbitrary brackets (-52 baseline improvement), 141 raw color bypasses (-10 baseline improvement)
 - **Automated Tests Passing:** Vitest suites for Onboarding (7/7), Updates List (7/7), Reader Shell (13/13), Hero & Header (15/15), Home Loading (3/3)
-- **Product Decisions:** 16 / 16 tickets RESOLVED via interactive owner grilling session (2026-11-11; locked scope ready for implementation)
+- **Product Decisions:** 16 / 16 tickets FULLY IMPLEMENTED & COMMITTED on `main` across 3 batches (2026-11-11):
+  - **Batch 1 (Reader Engine):** `RDR-02`, `RDR-10`, `CHP-05`, `CHP-07`, `CHP-08`, `CHP-09` — Commit `c7cfbcec`
+  - **Batch 2 (Discovery, Library, Popular & Schedule):** `HOM-02`, `LIB-01`, `LIB-04`, `POP-01`, `SCH-02`, `SCH-05` — Commit `0e52aed3`
+  - **Batch 3 (Settings, Wake Lock & Sync):** `SET-02`, `SET-03`, `SET-05`, `SET-08` — Commit `e8068646`
 
 
 ## Independent follow-up — 2026-11-09
