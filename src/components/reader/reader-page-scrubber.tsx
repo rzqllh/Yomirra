@@ -37,7 +37,7 @@ export function ReaderPageScrubber({
     return (
       <div
         className={cn(
-          "yomirra-chrome pointer-events-auto select-none rounded-lg px-2.5 py-1 text-text-primary text-[11.5px] font-mono font-medium tracking-tight",
+          "yomirra-chrome pointer-events-auto select-none rounded-lg px-2.5 py-1 text-text-primary text-2xs font-mono font-medium tracking-tight",
           className
         )}
         data-testid="reader-page-scrubber"
@@ -57,10 +57,10 @@ export function ReaderPageScrubber({
         onPointerDown={handleStartScrubbing}
         onTouchStart={handleStartScrubbing}
       >
-        <div className="flex items-center justify-between text-xs font-semibold text-text-muted px-1">
+        <div className="flex items-center justify-between text-xs font-semibold text-text-muted px-2.5">
           <label htmlFor="reader-webtoon-range">Progress</label>
           <output htmlFor="reader-webtoon-range" aria-live="off" className="text-text-primary font-bold font-mono">
-            {progressPercent}% <span className="font-normal text-text-muted text-[11px]">(Hal. {page} / {total})</span>
+            {progressPercent}% <span className="font-normal text-text-muted text-2xs">(Hal. {page} / {total})</span>
           </output>
         </div>
         <div className="flex h-10 items-center gap-1">
@@ -140,7 +140,7 @@ export function ReaderPageScrubber({
       onPointerDown={handleStartScrubbing}
       onTouchStart={handleStartScrubbing}
     >
-      <div className="flex items-center justify-between text-xs font-semibold text-text-muted px-1">
+      <div className="flex items-center justify-between text-xs font-semibold text-text-muted px-2.5">
         <label htmlFor="reader-page-range">Halaman</label>
         <output htmlFor="reader-page-range" aria-live="off" className="text-text-primary font-bold font-mono">
           {page} / {total}

@@ -30,6 +30,10 @@ Final scoped verification: 62 focused Vitest tests and 16 production-browser tes
 | SYS-01 | Implemented | AppShell single-source-of-truth bottom safe reservation (`--page-bottom-safe`) verified; no double-stacking in PageContainer. |
 | SYS-02 | Implemented, QA verified | Overlay toast policy enforced via `--offset-top` and `--mobile-offset-top` below header stack (and below reader top bar); raw color bypasses on Sonner status icons replaced with semantic tokens. |
 | SYS-06 | Implemented | BottomDock a11y `title` added for main tabs & search; active label text migrated from arbitrary brackets to `text-2xs min-[360px]:text-xs`. |
+| RDR-03 | Implemented, QA verified | ReaderDock rhythm expanded to `gap-2` with `p-2 sm:p-2.5`; scrubber labels padded `px-2.5`; arbitrary brackets migrated to `text-2xs`. |
+| RDR-04 | Implemented, QA verified | Chapter drawer button weight reduced to refined secondary pill (`h-9`, subtle border, 16px icon) without dominating dock. |
+| CHP-01 | Implemented, QA verified | Chapter drawer status exposes active reading context (`Sedang dibaca: Ch. <X>` or title) alongside total count and sort order. |
+| CHP-03 | Implemented, QA verified | Chapter search normalizes comma/dot decimals and strips prefixes (`ch`, `chapter`, `bab`); sort button adds `aria-pressed`. |
 
 All other rows retain their previous disposition and require the independent audit gap report, runtime evidence, or a product decision. RDR-02 and CHP-05/07/08/09, storage/deletion/synchronization semantics, and the other PRODUCT_DECISION rows are not authorized for semantic changes. See `docs/revamp/EXECUTION_LOG.md` for commands, failures and verification limitations.
 

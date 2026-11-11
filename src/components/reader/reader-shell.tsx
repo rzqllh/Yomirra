@@ -461,7 +461,7 @@ export function ReaderShell({
               )}
 
               {/* Yomirra Reader Unified Control Dock */}
-              <div role="group" aria-label="Kontrol pembaca" className="yomirra-chrome yomirra-dock-surface yomirra-reader-dock pointer-events-auto flex w-full max-w-[460px] flex-col gap-1.5 text-text-primary">
+              <div role="group" aria-label="Kontrol pembaca" className="yomirra-chrome yomirra-dock-surface yomirra-reader-dock pointer-events-auto flex w-full max-w-[460px] flex-col gap-2 p-2 sm:p-2.5 text-text-primary">
                 {/* Embedded Page Scrubber when page navigation is available */}
                 {preferences.showPageProgress && pageNavigation?.key === `${sourceId}::${mangaId}::${currentChapterId}` && (
                   <>
@@ -497,13 +497,13 @@ export function ReaderShell({
 
                   <motion.button
                     whileTap={reducedMotion ? undefined : { scale: 0.97 }}
-                    className="yomirra-dock-pill min-w-0 flex-1 font-medium text-sm text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors px-2 flex items-center justify-center gap-1.5 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:scale-95"
+                    className="min-w-0 flex-1 h-9 rounded-full bg-surface-base/60 hover:bg-surface-raised border border-border-subtle/80 text-xs font-semibold text-text-secondary hover:text-text-primary transition-all px-3 flex items-center justify-center gap-1.5 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent active:scale-95"
                     onClick={(e) => {
                       e.stopPropagation();
                       setIsChapterDrawerOpen(true);
                     }}
                   >
-                    <List size={18} weight="regular" className="shrink-0 text-accent" />
+                    <List size={16} weight="regular" className="shrink-0 text-accent" />
                     <span className="truncate">Daftar chapter</span>
                   </motion.button>
 

@@ -32,13 +32,36 @@ export function ReaderChapterDrawer({
   const activeChapterRef = React.useRef<HTMLButtonElement>(null)
   const containerRef = React.useRef<HTMLDivElement>(null)
 
+  const currentChapter = React.useMemo(() => {
+    if (!chapters || !currentChapterId) return undefined;
+    return chapters.find(c => {
+      if (c.id === currentChapterId) return true;
+      try {
+        return Boolean(currentChapterId && c.id === decodeURIComponent(currentChapterId));
+      } catch {
+        return false;
+      }
+    });
+  }, [chapters, currentChapterId]);
+
   const sortedChapters = React.useMemo(() => {
     if (!chapters) return [];
 
     let result = chapters;
     if (searchQuery.trim()) {
-      const lowerQuery = searchQuery.trim().toLowerCase();
-      result = result.filter(c => c.title.toLowerCase().includes(lowerQuery) || String(c.number ?? "").includes(lowerQuery));
+      const raw = searchQuery.trim().toLowerCase();
+      const normalized = raw.replace(",", ".").replace(/^(?:ch(?:apter)?|bab)\s*/i, "");
+      const hasNormalized = Boolean(normalized);
+      result = result.filter(c => {
+        const titleLower = c.title.toLowerCase();
+        const numStr = String(c.number ?? "");
+        return (
+          titleLower.includes(raw) ||
+          (hasNormalized && titleLower.includes(normalized)) ||
+          numStr.includes(raw) ||
+          (hasNormalized && numStr.includes(normalized))
+        );
+      });
     }
 
     if (sortOrder === "asc") return [...result].reverse();
@@ -74,6 +97,15 @@ export function ReaderChapterDrawer({
     <p className="text-xs text-text-secondary" role="status">
       {chapters ? `${sortedChapters.length} dari ${chapters.length} chapter` : "Memuat chapter…"}
       {" · "}{sortOrder === "asc" ? "Lama ke baru" : "Baru ke lama"}
+      {currentChapter
+        ? ` · Sedang dibaca: ${
+            currentChapter.number != null
+              ? `Ch. ${currentChapter.number}`
+              : currentChapter.title.match(/\d+(?:\.\d+)?/)?.[0]
+              ? `Ch. ${currentChapter.title.match(/\d+(?:\.\d+)?/)?.[0]}`
+              : currentChapter.title
+          }`
+        : ""}
     </p>
     <div className="flex items-center gap-2.5">
       <SearchInput
@@ -92,6 +124,7 @@ export function ReaderChapterDrawer({
         onClick={() => setSortOrder(prev => prev === "desc" ? "asc" : "desc")}
         aria-label={sortOrder === "desc" ? "Urutkan lama ke baru" : "Urutkan baru ke lama"}
         title={sortOrder === "desc" ? "Urutkan lama ke baru" : "Urutkan baru ke lama"}
+        aria-pressed={sortOrder === "asc"}
       >
         {sortOrder === "desc" ? <SortDescending size={20} /> : <SortAscending size={20} />}
       </IconButton>
