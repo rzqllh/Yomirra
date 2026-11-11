@@ -213,7 +213,7 @@ function MangaDetailContent({
     if (chapterLoadError || (!startChapterId && !continueChapterId)) {
       return (
         <div className="w-full md:w-auto mt-2 md:mt-0">
-          <Button disabled variant="outline" className="w-full md:w-auto md:min-w-52 rounded-xl h-13 md:h-12 text-base font-bold bg-surface-raised border-border-default opacity-60">
+          <Button disabled variant="outline" className="w-full md:w-auto md:min-w-52 rounded-sm h-12 text-base font-bold bg-surface-raised border-border-default opacity-60">
             {chapterLoadError ? "Chapter belum bisa dimuat" : "Belum ada chapter"}
           </Button>
         </div>
@@ -237,7 +237,7 @@ function MangaDetailContent({
         <Button
           asChild
           variant="accent"
-          className="w-full md:w-auto md:min-w-52 md:px-6 rounded-xl h-13 md:h-12 text-base font-bold flex items-center justify-center gap-2.5 bg-accent hover:bg-accent/90 text-accent-on shadow-md active:scale-[0.98] transition-all"
+          className="w-full md:w-auto md:min-w-52 md:px-6 rounded-sm h-12 text-base font-bold flex items-center justify-center gap-2.5 bg-accent hover:bg-accent/90 text-accent-on shadow-md active:scale-[0.98] transition-all"
         >
           <Link
             href={targetHref}
@@ -479,7 +479,7 @@ function MangaDetailContent({
                   <Link
                     key={g}
                     href={`/library?source=${sourceId}&genre=${encodeURIComponent(g)}`}
-                    className="rounded-xl bg-surface-base border border-border-default/80 px-3 py-1 text-2xs font-bold text-text-secondary uppercase tracking-wider hover:border-accent hover:text-accent transition-colors"
+                    className="rounded-full bg-surface-base border border-border-default/80 px-3 py-1 text-2xs font-bold text-text-secondary uppercase tracking-wider hover:border-accent hover:text-accent transition-colors"
                   >
                     {g}
                   </Link>
@@ -498,7 +498,7 @@ function MangaDetailContent({
                 </h2>
                 <button
                   onClick={() => setSortOrder(prev => prev === "desc" ? "asc" : "desc")}
-                  className="flex items-center gap-1.5 min-h-11 text-xs font-semibold text-text-muted hover:text-text-primary transition-colors py-1 px-3 rounded-lg hover:bg-surface-hover cursor-pointer"
+                  className="flex items-center gap-1.5 min-h-11 text-xs font-semibold text-text-muted hover:text-text-primary transition-colors py-1 px-3 rounded-sm hover:bg-surface-hover cursor-pointer"
                 >
                   {sortOrder === "desc" ? "Terbaru" : "Terlama"}
                   {sortOrder === "desc" ? <SortDescending size={16} /> : <SortAscending size={16} />}
@@ -512,7 +512,7 @@ function MangaDetailContent({
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Cari chapter…"
                     aria-label="Cari chapter"
-                    containerClassName="flex-1 h-11 rounded-xl bg-surface-raised border border-border-default/80 focus-within:border-accent/50 focus-within:ring-2 focus-within:ring-accent/20"
+                    containerClassName="flex-1 h-11 rounded-sm bg-surface-raised border border-border-default/80 focus-within:border-accent/50 focus-within:ring-2 focus-within:ring-accent/20"
                   />
                 </div>
               )}

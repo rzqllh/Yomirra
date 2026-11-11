@@ -53,10 +53,10 @@ describe("MangaDetailView - Scroll Position Reset", () => {
       detail={{ contentRating: "safe", id: "test-manga", title: "Test Manga", coverUrl: "", description: "Synopsis", genres: [], status: "ONGOING" }}
       chapters={[]} chapterLoadError="Daftar chapter tidak dapat dijangkau." />);
     expect(view.getAllByText("Test Manga").length).toBeGreaterThan(0);
-    expect(view.getByText("Daftar chapter tidak dapat dijangkau.")).toBeTruthy();
+    expect(view.getAllByText("Daftar chapter tidak dapat dijangkau.").length).toBeGreaterThan(0);
     expect(view.queryByText("Belum ada chapter yang tersedia untuk pilihan bahasa pada sumber ini.")).toBeNull();
     expect(view.getAllByRole("button", { name: "Chapter belum bisa dimuat" }).every((button) => (button as HTMLButtonElement).disabled)).toBe(true);
-    fireEvent.click(view.getByRole("button", { name: "Muat ulang chapter" }));
+    fireEvent.click(view.getAllByRole("button", { name: "Muat ulang chapter" })[0]);
     expect(refresh).toHaveBeenCalledOnce();
   });
 

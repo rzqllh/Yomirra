@@ -76,12 +76,12 @@ export function MangaSourceSelector({
           type="button"
           onClick={() => setIsOpen(true)}
           className={cn(
-            "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold tracking-wide backdrop-blur-md border shadow-xs transition-all cursor-pointer select-none active:scale-95",
+            "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-2xs font-bold tracking-wide backdrop-blur-md border shadow-xs transition-all cursor-pointer select-none active:scale-95",
             isCurrentPreferred
               ? "bg-accent/20 border-accent/40 text-accent"
               : isTemporaryFallback
               ? "bg-amber-500/20 border-amber-500/40 text-amber-300"
-              : "bg-black/40 border-white/15 text-white hover:bg-black/60"
+              : "bg-scrim/60 border-border-glass text-on-cover hover:bg-scrim/80"
           )}
         >
           <Compass size={13} weight="regular" />
@@ -90,7 +90,7 @@ export function MangaSourceSelector({
             <Star size={12} weight="fill" className="text-accent" />
           )}
           {isTemporaryFallback && (
-            <span className="text-[9px] bg-amber-400/20 px-1.5 py-0.5 rounded-md uppercase font-black tracking-wider">
+            <span className="text-3xs bg-amber-400/20 px-1.5 py-0.5 rounded-md uppercase font-black tracking-wider">
               Sementara
             </span>
           )}
@@ -115,11 +115,11 @@ export function MangaSourceSelector({
               <div className="flex flex-col">
                 <span className="text-sm font-bold text-text-primary flex items-center gap-1.5">
                   {currentSourceName}
-                  <span className="text-[10px] px-2 py-0.5 rounded-md bg-accent/15 text-accent font-semibold border border-accent/20">
+                  <span className="text-2xs px-2 py-0.5 rounded-md bg-accent/15 text-accent font-semibold border border-accent/20">
                     Sedang Dibuka
                   </span>
                 </span>
-                <span className="text-[11px] text-text-muted mt-0.5">
+                <span className="text-2xs text-text-muted mt-0.5">
                   Digunakan untuk membaca judul ini
                 </span>
               </div>
@@ -128,7 +128,7 @@ export function MangaSourceSelector({
                 size="sm"
                 variant={isCurrentPreferred ? "primary" : "outline"}
                 onClick={() => handleSetPreferred(sourceId)}
-                className="text-xs h-8 px-3 rounded-xl gap-1.5"
+                className="text-xs h-8 px-3 rounded-sm gap-1.5"
               >
                 <Star size={14} weight={isCurrentPreferred ? "fill" : "regular"} />
                 <span>{isCurrentPreferred ? "Pilihan Utama" : "Jadikan Pilihan"}</span>
@@ -138,7 +138,7 @@ export function MangaSourceSelector({
             {/* Linked Alternates */}
             {linkedSources.length > 0 ? (
               <div className="flex flex-col gap-2 mt-2">
-                <span className="text-[11px] font-bold text-text-muted uppercase tracking-wider px-1">
+                <span className="text-2xs font-bold text-text-muted uppercase tracking-wider px-1">
                   Sumber lain
                 </span>
 
@@ -154,13 +154,13 @@ export function MangaSourceSelector({
                       <div className="flex flex-col">
                         <span className="text-sm font-bold text-text-primary flex items-center gap-1.5">
                           {linkedName}
-                          <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-surface-raised text-text-muted font-medium border border-border-subtle">
+                          <span className="text-2xs px-1.5 py-0.5 rounded-md bg-surface-raised text-text-muted font-medium border border-border-subtle">
                             {getMatchLabel(linked.matchConfidence)}
                           </span>
                         </span>
                         <Link
                           href={`/manga/${linked.sourceId}/${linked.mangaId}`}
-                          className="text-[11px] text-accent hover:underline flex items-center gap-1 mt-0.5"
+                          className="text-2xs text-accent hover:underline flex items-center gap-1 mt-0.5"
                           onClick={() => setIsOpen(false)}
                         >
                           <span>Buka versi ini</span>
@@ -172,7 +172,7 @@ export function MangaSourceSelector({
                         size="sm"
                         variant={isPref ? "primary" : "outline"}
                         onClick={() => handleSetPreferred(linked.sourceId)}
-                        className="text-xs h-8 px-3 rounded-xl gap-1.5"
+                        className="text-xs h-8 px-3 rounded-sm gap-1.5"
                       >
                         <Star size={14} weight={isPref ? "fill" : "regular"} />
                         <span>{isPref ? "Pilihan Utama" : "Jadikan Pilihan"}</span>

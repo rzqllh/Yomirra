@@ -141,7 +141,7 @@ export function ChapterDownloadButton({
             className="text-accent relative flex items-center justify-center"
           >
             <CircleNotch size={20} className="motion-safe:animate-spin" />
-            <span className="absolute text-[8px] font-bold">
+            <span className="absolute text-3xs font-bold">
               {zipProgress > 0 ? zipProgress : ""}
             </span>
           </motion.span>
@@ -197,7 +197,7 @@ export function ChapterDownloadButton({
             className="text-accent relative flex items-center justify-center"
           >
             <CircleNotch size={20} className="motion-safe:animate-spin" />
-            <span className="absolute text-[8px] font-bold">
+            <span className="absolute text-3xs font-bold">
               {download.progress > 0 ? download.progress : ""}
             </span>
           </motion.span>

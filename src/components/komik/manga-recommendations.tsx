@@ -276,7 +276,7 @@ export function MangaRecommendations({
   if (isLoading) {
     return (
       <div className="mt-6 mb-2">
-        <h3 className="text-[11px] font-black text-text-muted uppercase tracking-widest block mb-3">Komik Serupa</h3>
+        <h3 className="text-2xs font-black text-text-muted uppercase tracking-widest block mb-3">Komik Serupa</h3>
         <div className="flex gap-3 md:gap-4">
           <div className="h-[195px] w-[130px] md:w-[140px] bg-surface-raised animate-pulse rounded-sm shrink-0" />
           <div className="h-[195px] w-[130px] md:w-[140px] bg-surface-raised animate-pulse rounded-sm shrink-0" />
@@ -290,11 +290,11 @@ export function MangaRecommendations({
 
   return (
     <div className="mt-6 mb-2">
-      <h3 className="text-[11px] font-black text-text-muted uppercase tracking-widest block mb-3">Komik Serupa</h3>
+      <h3 className="text-2xs font-black text-text-muted uppercase tracking-widest block mb-3">Komik Serupa</h3>
       <div
         ref={dragScrollRef}
         {...dragProps}
-        className="flex gap-3 md:gap-4 overflow-x-auto pb-4 snap-x snap-mandatory [scrollbar-width:thin] select-none active:cursor-grabbing"
+        className="flex gap-3 md:gap-4 overflow-x-auto pb-4 snap-x snap-mandatory scroll-px-4 [scrollbar-width:thin] select-none active:cursor-grabbing"
       >
         {recommendations.map((item) => (
           <div key={`${item.sourceId}-${item.manga.id}`} className="w-[130px] md:w-[140px] shrink-0 snap-start">

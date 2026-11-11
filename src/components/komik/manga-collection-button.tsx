@@ -121,9 +121,9 @@ export function MangaCollectionButton({
         onClick={handleOpenClick}
         aria-label="Kelola koleksi"
         className={cn(
-          "flex items-center justify-center gap-1.5 min-h-11 px-2 md:px-3.5 transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent select-none rounded-lg border shadow-xs active:scale-95 bg-surface-raised",
+          "flex items-center justify-center gap-1.5 min-h-11 px-2 md:px-3.5 transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent select-none rounded-sm border shadow-xs active:scale-95 bg-surface-raised cursor-pointer",
           memberships.length > 0 && mounted
-            ? "border-accent/60 text-accent font-bold ring-1 ring-accent/20"
+            ? "border-accent/40 text-accent font-bold bg-accent-dim"
             : "border-border-default text-text-secondary hover:text-text-primary hover:border-border-strong hover:bg-surface-hover"
         )}
       >

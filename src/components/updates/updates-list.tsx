@@ -156,7 +156,7 @@ export function UpdateCard({ item, historyItem, onScheduleChange, onMarkSeen }: 
                 { value: "6", label: "📅 Sabtu" },
                 { value: "0", label: "📅 Minggu" },
               ]}
-              buttonClassName="min-h-11 px-2 py-0 text-[11px] font-semibold text-text-muted hover:text-text-primary bg-surface-base hover:bg-surface-hover border border-border-subtle rounded-xs gap-1.5 cursor-pointer shadow-xs"
+              buttonClassName="min-h-11 px-2.5 py-0 text-2xs font-semibold text-text-muted hover:text-text-primary bg-surface-base hover:bg-surface-hover border border-border-subtle rounded-sm gap-1.5 cursor-pointer shadow-xs"
               align="left"
             />
           </div>
@@ -211,14 +211,14 @@ function ErrorBanner({
             <div className="flex items-center gap-1.5 shrink-0">
               <button
                 onClick={() => setExpanded((v) => !v)}
-                className="text-[11px] font-semibold text-text-muted hover:text-text-primary transition-colors px-2 py-0.5 rounded-lg hover:bg-surface-hover"
+                className="text-2xs font-semibold text-text-muted hover:text-text-primary transition-colors px-2.5 py-1 rounded-sm hover:bg-surface-hover"
               >
                 {expanded ? "Sembunyikan" : "Lihat detail"}
               </button>
               <button
                 onClick={onRetry}
                 disabled={isScanning}
-                className="flex items-center gap-1 text-[11px] font-semibold text-semantic-error hover:text-semantic-error/80 transition-colors px-2 py-0.5 rounded-lg hover:bg-semantic-error/10 disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex items-center gap-1 text-2xs font-semibold text-semantic-error hover:text-semantic-error/80 transition-colors px-2.5 py-1 rounded-sm hover:bg-semantic-error/10 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <ArrowsClockwise
                   size={12}
@@ -507,7 +507,7 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
                       markAllAsSeen();
                       toast.success("Semua pembaruan ditandai telah dilihat");
                     }}
-                    className="min-h-11 px-3 rounded-xl text-xs font-semibold text-text-muted hover:text-text-primary hover:bg-surface-hover transition-colors cursor-pointer shrink-0"
+                    className="min-h-11 px-3 rounded-sm text-xs font-semibold text-text-muted hover:text-text-primary hover:bg-surface-hover transition-colors cursor-pointer shrink-0"
                   >
                     Tandai Semua Dilihat
                   </button>
@@ -524,7 +524,7 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
                 />
               </div>
             </div>
-            <p className="text-[11px] text-text-muted px-1 flex items-center gap-1.5">
+            <p className="text-2xs text-text-muted px-1 flex items-center gap-1.5">
               <span>Kamu bisa mengubah hari rilis dari setiap kartu.</span>
             </p>
           </div>

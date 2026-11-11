@@ -107,9 +107,9 @@ export function MangaRating({ sourceId, mangaId, className, variant = "default",
       onClick={() => setIsOpen(true)}
       aria-label="Beri Rating"
       className={cn(
-        "flex items-center justify-center gap-1.5 min-h-11 px-2 md:px-3.5 transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent select-none rounded-lg border shadow-xs active:scale-95 bg-surface-raised",
+        "flex items-center justify-center gap-1.5 min-h-11 px-2 md:px-3.5 transition-colors outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent select-none rounded-sm border shadow-xs active:scale-95 bg-surface-raised cursor-pointer",
         userRating && mounted
-          ? "border-accent/60 text-accent font-bold ring-1 ring-accent/20"
+          ? "border-accent/40 text-accent font-bold bg-accent-dim"
           : "border-border-default text-text-secondary hover:text-text-primary hover:border-border-strong hover:bg-surface-hover"
       )}
     >
@@ -158,9 +158,9 @@ export function MangaRating({ sourceId, mangaId, className, variant = "default",
                 aria-pressed={userRating === rating}
                 onClick={() => onSelectRating(rating)}
                 className={cn(
-                  "flex min-h-11 items-center justify-center rounded-lg text-sm font-bold motion-safe:transition-colors motion-safe:duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+                  "flex min-h-11 items-center justify-center rounded-sm text-sm font-bold motion-safe:transition-colors motion-safe:duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
                   userRating === rating
-                    ? "bg-accent text-white ring-1 ring-accent/30"
+                    ? "bg-accent text-accent-on shadow-xs"
                     : "bg-surface-raised text-text-secondary hover:bg-surface-hover hover:text-text-primary"
                 )}
               >
