@@ -36,14 +36,14 @@ interface ReaderState {
 }
 
 const defaultPreferences: ReaderPreferences = {
-  imageFit: "width",
+  imageFit: "contained",
   pageGap: "none",
   background: "black",
   toolbarBehavior: "auto-hide",
   preloadIntensity: "balanced",
   showPageProgress: true,
   disableDoubleTapZoom: false,
-  readingDirection: 'ltr',
+  readingDirection: 'rtl',
   readingMode: 'vertical',
   keepScreenAwake: true,
 };

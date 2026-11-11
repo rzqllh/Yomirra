@@ -41,6 +41,7 @@ interface ReaderShellProps {
   sourceId: string
   mangaId: string
   chapters?: Chapter[]
+  format?: string
 }
 
 export function ReaderShell({
@@ -54,6 +55,7 @@ export function ReaderShell({
   mangaId,
   chapters,
   currentChapterId,
+  format,
 }: ReaderShellProps) {
   const router = useRouter()
   const reducedMotion = useReducedMotion()
@@ -496,6 +498,7 @@ export function ReaderShell({
                     <ReaderPageScrubber
                       navigation={pageNavigation}
                       direction={preferences.readingDirection}
+                      format={format}
                       onScrubbingChange={handleScrubbingChange}
                     />
                     <div className="h-px w-full bg-border-subtle" />
@@ -588,6 +591,7 @@ export function ReaderShell({
           <ReaderPageScrubber
             navigation={pageNavigation}
             direction={preferences.readingDirection}
+            format={format}
             minimal
           />
         </div>

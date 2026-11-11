@@ -12,7 +12,7 @@ vi.mock("next/navigation", () => ({
 
 describe("ReaderSettingsDrawer & Per-Title Scope (P0 Q8/Q86)", () => {
   const defaultPrefs = {
-    imageFit: "width" as const,
+    imageFit: "contained" as const,
     pageGap: "none" as const,
     background: "black" as const,
     toolbarBehavior: "auto-hide" as const,
@@ -76,19 +76,22 @@ describe("ReaderSettingsDrawer & Per-Title Scope (P0 Q8/Q86)", () => {
     expect(titleScopeBtn).toBeDefined();
     expect(globalScopeBtn).toBeDefined();
 
-    // Click on 'Proporsional' image fit
-    const containedBtn = screen.getByRole("button", { name: /Proporsional/i });
-    fireEvent.click(containedBtn);
+    // Switch to 'Khusus judul ini' scope (since default is 'Semua komik' under CHP-08)
+    fireEvent.click(titleScopeBtn);
+
+    // Click on 'Penuhi Lebar' image fit
+    const widthBtn = screen.getByRole("button", { name: /Penuhi Lebar/i });
+    fireEvent.click(widthBtn);
 
     const storeState = useReaderStore.getState();
     const titleKey = "shinigami::solo-leveling";
 
     // Title override should be stored
     expect(storeState.perTitlePreferences[titleKey]).toBeDefined();
-    expect(storeState.perTitlePreferences[titleKey]?.imageFit).toBe("contained");
+    expect(storeState.perTitlePreferences[titleKey]?.imageFit).toBe("width");
 
-    // Global preference should remain "width"
-    expect(storeState.preferences.imageFit).toBe("width");
+    // Global preference should remain "contained"
+    expect(storeState.preferences.imageFit).toBe("contained");
   });
 
   it("updates global preferences when user switches scope to 'Semua komik'", () => {

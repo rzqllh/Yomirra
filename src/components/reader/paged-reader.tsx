@@ -312,8 +312,8 @@ export function PagedReader({
     : currentPage?.url ?? "";
 
   const preloadAheadCount = React.useMemo(
-    () => getReaderLookAheadWindow(preferences.preloadIntensity, dataSaver),
-    [preferences.preloadIntensity, dataSaver]
+    () => getReaderLookAheadWindow(preferences.preloadIntensity, dataSaver, totalPages),
+    [preferences.preloadIntensity, dataSaver, totalPages]
   );
 
   const preloadPages = React.useMemo(() => {
@@ -379,25 +379,27 @@ export function PagedReader({
         </div>
       )}
 
-      {/* Interactive Tap Zones */}
-      <button
-        type="button"
-        className="absolute left-0 top-0 bottom-0 w-1/4 z-20 cursor-pointer opacity-0 focus:outline-none"
-        aria-label={leftLabel}
-        onClick={handleLeftTap}
-      />
-      <button
-        type="button"
-        className="absolute right-0 top-0 bottom-0 w-1/4 z-20 cursor-pointer opacity-0 focus:outline-none"
-        aria-label={rightLabel}
-        onClick={handleRightTap}
-      />
-      <button
-        type="button"
-        className="absolute left-1/4 right-1/4 top-0 bottom-0 z-10 cursor-pointer opacity-0 focus:outline-none"
-        aria-label="Toggle Overlay"
-        onClick={toggleOverlay}
-      />
+      {/* Interactive Tap Zones (MangaDex Standard: 30% Left, 40% Center, 30% Right) */}
+      <div className="pointer-events-none absolute inset-0 z-20 grid grid-cols-10">
+        <button
+          type="button"
+          className="col-span-3 pointer-events-auto h-full cursor-pointer opacity-0 focus:outline-none"
+          aria-label={leftLabel}
+          onClick={handleLeftTap}
+        />
+        <button
+          type="button"
+          className="col-span-4 pointer-events-auto h-full cursor-pointer opacity-0 focus:outline-none"
+          aria-label="Buka kontrol menu"
+          onClick={toggleOverlay}
+        />
+        <button
+          type="button"
+          className="col-span-3 pointer-events-auto h-full cursor-pointer opacity-0 focus:outline-none"
+          aria-label={rightLabel}
+          onClick={handleRightTap}
+        />
+      </div>
 
       {/* Main Single Page Container */}
       {currentPage ? (

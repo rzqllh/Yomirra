@@ -96,8 +96,9 @@ describe("reader load order", () => {
 
   it("uses one shared configurable look-ahead policy", () => {
     expect(getReaderLookAheadWindow("light", false)).toBe(1);
-    expect(getReaderLookAheadWindow("balanced", false)).toBe(2);
-    expect(getReaderLookAheadWindow("aggressive", false)).toBe(3);
+    expect(getReaderLookAheadWindow("balanced", false)).toBe(3);
+    expect(getReaderLookAheadWindow("aggressive", false)).toBe(999);
+    expect(getReaderLookAheadWindow("aggressive", false, 45)).toBe(45);
     expect(getReaderLookAheadWindow("aggressive", true)).toBe(1);
   });
 

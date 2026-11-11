@@ -254,6 +254,7 @@ function ReaderContent({
         currentChapterId={chapterId}
         sourceId={sourceId}
         mangaId={mangaId}
+        format={initialDetail?.format}
       >
         <div className="flex min-h-screen w-full items-center justify-center pt-[calc(var(--mobile-header-height)+var(--safe-top))] px-4">
           <ReaderPageSkeleton />
@@ -272,6 +273,7 @@ function ReaderContent({
         currentChapterId={chapterId}
         sourceId={sourceId}
         mangaId={mangaId}
+        format={initialDetail?.format}
       >
         <div className="flex min-h-screen items-center justify-center pt-16">
           <EmptyState
@@ -359,6 +361,7 @@ function ReaderContent({
       sourceId={sourceId}
       mangaId={mangaId}
       chapters={initialChapters}
+      format={initialDetail?.format}
     >
       {readingMode === "paged" ? (
         <PagedReader

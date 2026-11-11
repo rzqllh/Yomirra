@@ -21,8 +21,8 @@ const BACKGROUNDS = [
 ] as const;
 
 const IMAGE_FITS = [
-  { id: 'width', label: 'Lebar Penuh' },
-  { id: 'contained', label: 'Proporsional' },
+  { id: 'contained', label: 'Muat Layar' },
+  { id: 'width', label: 'Penuhi Lebar' },
 ] as const;
 
 const PAGE_GAPS = [
@@ -31,20 +31,15 @@ const PAGE_GAPS = [
   { id: 'comfortable', label: 'Jauh' }
 ] as const;
 
-const READING_DIRECTIONS = [
-  { id: 'ltr', label: 'Kiri ke Kanan' },
-  { id: 'rtl', label: 'Kanan ke Kiri' },
-] as const;
-
 const TOOLBAR_BEHAVIORS = [
   { id: 'auto-hide', label: 'Sembunyikan otomatis' },
   { id: 'always-visible', label: 'Selalu Tampil' },
 ] as const;
 
 const PRELOAD_INTENSITIES = [
-  { id: 'light', label: 'Ringan' },
-  { id: 'balanced', label: 'Normal' },
-  { id: 'aggressive', label: 'Maksimal' },
+  { id: 'light', label: 'Hemat (+1)' },
+  { id: 'balanced', label: 'Standar (+3)' },
+  { id: 'aggressive', label: 'Cepat (Semua)' },
 ] as const;
 
 interface ReaderSettingsOptionProps<T extends string> {
@@ -103,8 +98,8 @@ export function ReaderSettingsDrawer({ isOpen, onClose, sourceId, mangaId }: Rea
   const isPerTitleContext = Boolean(sourceId && mangaId);
   const hasPerTitleOverride = Boolean(perTitlePrefs && Object.keys(perTitlePrefs).length > 0);
 
-  // Scope: 'title' (Khusus judul ini) or 'global' (Semua komik)
-  const [scope, setScope] = React.useState<"title" | "global">("title");
+  // Scope: 'title' (Khusus judul ini) or 'global' (Semua komik) - Default to 'global'
+  const [scope, setScope] = React.useState<"title" | "global">(hasPerTitleOverride ? "title" : "global");
 
   // Effective preferences:
   const preferences = React.useMemo(() => {
@@ -157,7 +152,7 @@ export function ReaderSettingsDrawer({ isOpen, onClose, sourceId, mangaId }: Rea
       contentClassName="p-5 space-y-6 overscroll-contain pb-[calc(24px+var(--safe-bottom))]"
     >
 
-      {/* Scope Selector: Khusus judul ini vs Semua komik (Q8/Q86) */}
+      {/* Scope Selector: Khusus judul ini vs Semua komik (CHP-08) */}
       {isPerTitleContext && (
         <div className="p-3 bg-surface-raised rounded-xl border border-border-subtle space-y-2">
           <div className="flex items-center justify-between">
@@ -165,8 +160,11 @@ export function ReaderSettingsDrawer({ isOpen, onClose, sourceId, mangaId }: Rea
             {hasPerTitleOverride && (
               <button
                 type="button"
-                onClick={handleResetTitle}
-                className="text-[11px] font-semibold text-accent hover:underline cursor-pointer"
+                onClick={() => {
+                  handleResetTitle();
+                  setScope("global");
+                }}
+                className="text-2xs font-semibold text-accent hover:underline cursor-pointer"
               >
                 Reset ke default
               </button>
@@ -175,30 +173,30 @@ export function ReaderSettingsDrawer({ isOpen, onClose, sourceId, mangaId }: Rea
           <div className="flex bg-surface-base p-1 rounded-lg border border-border-subtle">
             <button
               type="button"
-              onClick={() => setScope("title")}
-              className={cn(
-                "flex-1 py-1.5 px-2 text-xs font-bold rounded-md transition-colors outline-none cursor-pointer",
-                scope === "title"
-                  ? "bg-accent text-white shadow-xs"
-                  : "text-text-secondary hover:text-text-primary"
-              )}
-            >
-              Khusus judul ini {hasPerTitleOverride && "•"}
-            </button>
-            <button
-              type="button"
               onClick={() => setScope("global")}
               className={cn(
                 "flex-1 py-1.5 px-2 text-xs font-bold rounded-md transition-colors outline-none cursor-pointer",
                 scope === "global"
-                  ? "bg-accent text-white shadow-xs"
+                  ? "bg-accent text-accent-on shadow-xs"
                   : "text-text-secondary hover:text-text-primary"
               )}
             >
               Semua komik
             </button>
+            <button
+              type="button"
+              onClick={() => setScope("title")}
+              className={cn(
+                "flex-1 py-1.5 px-2 text-xs font-bold rounded-md transition-colors outline-none cursor-pointer",
+                scope === "title"
+                  ? "bg-accent text-accent-on shadow-xs"
+                  : "text-text-secondary hover:text-text-primary"
+              )}
+            >
+              Khusus judul ini {hasPerTitleOverride && "•"}
+            </button>
           </div>
-          <p className="text-[11px] text-text-muted leading-tight">
+          <p className="text-2xs text-text-muted leading-tight">
             {scope === "title"
               ? "Perubahan hanya berlaku untuk komik yang sedang dibaca."
               : "Perubahan akan menjadi preferensi default untuk semua komik."}
@@ -268,21 +266,15 @@ export function ReaderSettingsDrawer({ isOpen, onClose, sourceId, mangaId }: Rea
             onChange={(val) => handleUpdate({ imageFit: val })}
           />
 
-          <ReaderSettingsOption
-            icon={<ArrowsOutLineVertical size={18} className="text-accent" weight="regular" />}
-            title="Jarak antar gambar"
-            options={PAGE_GAPS}
-            value={preferences.pageGap}
-            onChange={(val) => handleUpdate({ pageGap: val })}
-          />
-
-          <ReaderSettingsOption
-            icon={<Layout size={18} className="text-accent" weight="regular" />}
-            title="Arah baca"
-            options={READING_DIRECTIONS}
-            value={preferences.readingDirection}
-            onChange={(val) => handleUpdate({ readingDirection: val })}
-          />
+          {preferences.readingMode !== "paged" && (
+            <ReaderSettingsOption
+              icon={<ArrowsOutLineVertical size={18} className="text-accent" weight="regular" />}
+              title="Jarak antar gambar"
+              options={PAGE_GAPS}
+              value={preferences.pageGap}
+              onChange={(val) => handleUpdate({ pageGap: val })}
+            />
+          )}
         </div>
       </div>
 

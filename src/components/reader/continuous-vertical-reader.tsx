@@ -64,6 +64,7 @@ export function ContinuousVerticalReader({
 }: ContinuousVerticalReaderProps) {
   const [activePage, setActivePage] = React.useState(0);
   const setPageNavigation = useReaderStore(state => state.setPageNavigation);
+  const toggleOverlay = useReaderStore(state => state.toggleOverlay);
   const router = useRouter()
   const detailHref = getMangaDetailHref(sourceId, mangaId, returnTo)
   const preferences = useEffectiveReaderPreferences(sourceId, mangaId)
@@ -79,6 +80,44 @@ export function ContinuousVerticalReader({
   const [isRestored, setIsRestored] = React.useState(false)
   const [isReportOpen, setIsReportOpen] = React.useState(false)
   const [reportPageIndex, setReportPageIndex] = React.useState<number | undefined>(undefined)
+
+  const pointerStartRef = React.useRef<{ x: number; y: number; time: number } | null>(null);
+
+  const handlePointerDown = React.useCallback((e: React.PointerEvent) => {
+    if (e.button !== 0) return;
+    pointerStartRef.current = { x: e.clientX, y: e.clientY, time: Date.now() };
+  }, []);
+
+  const handlePointerUp = React.useCallback((e: React.PointerEvent) => {
+    if (!pointerStartRef.current) return;
+    const start = pointerStartRef.current;
+    pointerStartRef.current = null;
+
+    const dx = Math.abs(e.clientX - start.x);
+    const dy = Math.abs(e.clientY - start.y);
+    const dt = Date.now() - start.time;
+
+    // Must be a tap without drag/scroll movement
+    if (dx > 10 || dy > 10 || dt > 350) return;
+
+    // Check if target is an interactive element
+    const target = e.target as HTMLElement | null;
+    if (target?.closest("button, a, input, select, textarea, [data-interactive='true'], [role='button']")) {
+      return;
+    }
+
+    const width = window.innerWidth;
+    const xRatio = e.clientX / width;
+
+    // MangaDex Standard: 30% left (scroll up 85vh), 40% center (toggle controls), 30% right (scroll down 85vh)
+    if (xRatio < 0.3) {
+      window.scrollBy({ top: -window.innerHeight * 0.85, behavior: "smooth" });
+    } else if (xRatio > 0.7) {
+      window.scrollBy({ top: window.innerHeight * 0.85, behavior: "smooth" });
+    } else {
+      toggleOverlay();
+    }
+  }, [toggleOverlay]);
 
 
   const queryClient = useQueryClient()
@@ -101,8 +140,8 @@ export function ContinuousVerticalReader({
   const [queueStartIndex, setQueueStartIndex] = React.useState(0);
   const [revealedThrough, setRevealedThrough] = React.useState(-1);
   const lookAheadWindow = React.useMemo(
-    () => getReaderLookAheadWindow(preferences.preloadIntensity, dataSaver),
-    [preferences.preloadIntensity, dataSaver]
+    () => getReaderLookAheadWindow(preferences.preloadIntensity, dataSaver, currentPages.length),
+    [preferences.preloadIntensity, dataSaver, currentPages.length]
   );
 
   const resetLoadQueue = React.useCallback((startIndex = 0) => {
@@ -441,7 +480,11 @@ export function ContinuousVerticalReader({
   }, []);
 
   return (
-    <div className="flex min-h-screen w-full flex-col items-center select-none pb-[calc(var(--safe-bottom)+180px)] bg-transparent">
+    <div
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      className="flex min-h-screen w-full flex-col items-center select-none pb-[calc(var(--safe-bottom)+180px)] bg-transparent"
+    >
       {/* Chapter Degraded Recovery Banner */}
       {failedPageIndices.size > 0 && (
         <div className="fixed top-[calc(var(--mobile-header-height)+var(--safe-top)+10px)] z-40 max-w-md w-[calc(100%-32px)] mx-auto left-0 right-0 p-3 rounded-full bg-surface-raised/95 backdrop-blur-xl border border-semantic-warning/30 shadow-lg flex items-center justify-between gap-3 text-xs animate-in fade-in slide-in-from-top-2 duration-200">

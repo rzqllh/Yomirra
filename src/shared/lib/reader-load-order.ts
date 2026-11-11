@@ -56,7 +56,8 @@ export function transitionReaderPageQueueState(
 
 export function getReaderLookAheadWindow(
   intensity: ReaderPreloadIntensity,
-  dataSaver: boolean
+  dataSaver: boolean,
+  totalCount?: number
 ): number {
   if (dataSaver) return 1;
 
@@ -64,10 +65,10 @@ export function getReaderLookAheadWindow(
     case "light":
       return 1;
     case "aggressive":
-      return 3;
+      return totalCount && totalCount > 0 ? totalCount : 999;
     case "balanced":
     default:
-      return 2;
+      return 3;
   }
 }
 
