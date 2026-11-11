@@ -6,41 +6,41 @@ import { MangaDetailLayout } from "./manga-detail-layout";
 export function MangaDetailSkeleton() {
   return (
     <MangaDetailLayout
-      backdrop={<div className="w-full h-full bg-neutral-900/90" />}
+      backdrop={<div className="w-full h-full bg-surface-muted/90" />}
       header={<PageHeader title="" showBack={true} mode="detail" variant="transparent" />}
-      mobileCover={<Skeleton className="w-full h-full rounded-none bg-white/10" />}
+      mobileCover={<Skeleton className="w-full h-full rounded-none bg-surface-muted" />}
       mobileMeta={
         <>
-          <Skeleton className="w-14 h-4 rounded-lg mb-2 bg-white/15" />
-          <Skeleton className="w-full h-5 rounded-md mb-1.5 bg-white/20" />
-          <Skeleton className="w-3/4 h-5 rounded-md mb-2.5 bg-white/20" />
+          <Skeleton className="w-14 h-4 rounded-lg mb-2 bg-surface-muted" />
+          <Skeleton className="w-full h-5 rounded-md mb-1.5 bg-surface-muted" />
+          <Skeleton className="w-3/4 h-5 rounded-md mb-2.5 bg-surface-muted" />
           <div className="flex items-center gap-2 flex-wrap mb-2.5">
-            <Skeleton className="w-12 h-5 rounded-lg bg-white/15" />
-            <Skeleton className="w-16 h-5 rounded-lg bg-white/15" />
-            <Skeleton className="w-20 h-5 rounded-lg bg-white/15" />
+            <Skeleton className="w-12 h-5 rounded-lg bg-surface-muted" />
+            <Skeleton className="w-16 h-5 rounded-lg bg-surface-muted" />
+            <Skeleton className="w-20 h-5 rounded-lg bg-surface-muted" />
           </div>
           <div className="mt-auto flex flex-col gap-1">
-            <Skeleton className="w-24 h-4 rounded-md bg-white/20" />
-            <Skeleton className="w-36 h-3 rounded-md bg-white/15" />
+            <Skeleton className="w-24 h-4 rounded-md bg-surface-muted" />
+            <Skeleton className="w-36 h-3 rounded-md bg-surface-muted" />
           </div>
         </>
       }
-      desktopCover={<Skeleton className="w-full h-full rounded-none bg-white/10" />}
+      desktopCover={<Skeleton className="w-full h-full rounded-none bg-surface-muted" />}
       desktopMeta={
         <>
           <div className="flex flex-wrap items-center gap-2">
-            <Skeleton className="w-14 h-5 rounded-lg bg-white/15" />
-            <Skeleton className="w-12 h-5 rounded-lg bg-white/15" />
-            <Skeleton className="w-16 h-5 rounded-lg bg-white/15" />
-            <Skeleton className="w-20 h-5 rounded-lg bg-white/15" />
+            <Skeleton className="w-14 h-5 rounded-lg bg-surface-muted" />
+            <Skeleton className="w-12 h-5 rounded-lg bg-surface-muted" />
+            <Skeleton className="w-16 h-5 rounded-lg bg-surface-muted" />
+            <Skeleton className="w-20 h-5 rounded-lg bg-surface-muted" />
           </div>
           <div className="my-1 space-y-2">
-            <Skeleton className="w-2/3 h-10 rounded-xl bg-white/20" />
-            <Skeleton className="w-1/3 h-4 rounded-md bg-white/15" />
+            <Skeleton className="w-2/3 h-10 rounded-xl bg-surface-muted" />
+            <Skeleton className="w-1/3 h-4 rounded-md bg-surface-muted" />
           </div>
           <div className="flex flex-col gap-1">
-            <Skeleton className="w-32 h-4 rounded-md bg-white/20" />
-            <Skeleton className="w-48 h-3 rounded-md bg-white/15" />
+            <Skeleton className="w-32 h-4 rounded-md bg-surface-muted" />
+            <Skeleton className="w-48 h-3 rounded-md bg-surface-muted" />
           </div>
         </>
       }
@@ -52,7 +52,7 @@ export function MangaDetailSkeleton() {
       actions={
         <>
           {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-10 w-full rounded-xl bg-white/15" />
+            <Skeleton key={i} className="h-10 w-full rounded-xl bg-surface-muted" />
           ))}
         </>
       }

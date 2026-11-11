@@ -548,25 +548,25 @@ export function ContinuousVerticalReader({
 
       <div className="w-full max-w-[800px] h-14 bg-gradient-to-b from-transparent via-black/20 to-transparent pointer-events-none -mt-4 relative z-10" />
 
-      <div className="w-full max-w-[280px] h-[1px] bg-gradient-to-r from-transparent via-white/15 to-transparent my-2 relative z-10" />
+      <div className="w-full max-w-[280px] h-[1px] bg-gradient-to-r from-transparent via-border-subtle to-transparent my-2 relative z-10" />
 
       {/* End of Chapter Section (Combined Variant 3 Milestone + 10 Unified Dock on Pure Black Canvas) */}
       <div className="w-full max-w-[420px] mx-auto px-4 pt-4 pb-[calc(5rem+env(safe-area-inset-bottom))] flex flex-col items-center gap-4 relative z-10 select-none">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] h-[200px] bg-accent/12 rounded-full blur-[80px] pointer-events-none -z-10" />
 
         {/* Milestone Card Dock */}
-        <div className="w-full rounded-xl bg-zinc-950/85 border border-white/[0.08] backdrop-blur-2xl p-4 sm:p-5 flex flex-col gap-4 shadow-[0_12px_40px_rgba(0,0,0,0.8)] relative">
+        <div className="w-full rounded-xl bg-surface-raised/85 border border-border-glass backdrop-blur-2xl p-4 sm:p-5 flex flex-col gap-4 shadow-heavy relative">
           {/* Header Status Line */}
-          <div className="flex items-center justify-between border-b border-white/[0.06] pb-3.5">
+          <div className="flex items-center justify-between border-b border-border-subtle pb-3.5">
             <div className="flex items-center gap-2 min-w-0 pr-2">
-              <span className="size-2 rounded-full bg-white/45 shrink-0" />
-              <span className="text-xs font-semibold text-white/90 truncate">
+              <span className="size-2 rounded-full bg-text-muted shrink-0" />
+              <span className="text-xs font-semibold text-text-primary truncate">
                 {failedPageIndices.size > 0
                   ? `${chapterTitle} — ada halaman gagal dimuat`
                   : `Akhir ${chapterTitle}`}
               </span>
             </div>
-            <span className="text-[11px] font-mono text-white/70 shrink-0">
+            <span className="text-2xs font-mono text-text-muted shrink-0">
               {pages.length} halaman
             </span>
           </div>
@@ -575,7 +575,7 @@ export function ContinuousVerticalReader({
             {_prevChapterId && (
               <Button
                 variant="outline"
-                className="h-11 px-4 font-semibold text-xs sm:text-sm bg-white/[0.05] hover:bg-white/[0.10] active:bg-white/[0.08] border-white/10 text-white/80 hover:text-white flex-1 flex items-center justify-center gap-2 active:scale-[0.98] transition-all cursor-pointer shadow-none"
+                className="h-11 px-4 font-semibold text-xs sm:text-sm bg-surface-overlay hover:bg-surface-hover active:bg-surface-muted border-border-subtle text-text-secondary hover:text-text-primary flex-1 flex items-center justify-center gap-2 active:scale-[0.98] transition-all cursor-pointer shadow-none"
                 onClick={() => {
                   const href = getReaderHref(sourceId, mangaId, _prevChapterId);
                   if (beginNavigationIntent(href)) router.replace(href);
@@ -589,7 +589,7 @@ export function ContinuousVerticalReader({
             {nextChapterId ? (
               <Button
                 className={cn(
-                  "h-11 px-4 font-semibold text-xs sm:text-sm bg-accent hover:bg-accent-hover text-white flex items-center justify-center gap-2 active:scale-[0.98] transition-all cursor-pointer shadow-sm",
+                  "h-11 px-4 font-semibold text-xs sm:text-sm bg-accent hover:bg-accent-hover text-accent-on flex items-center justify-center gap-2 active:scale-[0.98] transition-all cursor-pointer shadow-sm",
                   _prevChapterId ? "flex-1" : "w-full"
                 )}
                 onClick={handleNextChapter}
@@ -601,7 +601,7 @@ export function ContinuousVerticalReader({
               <Button
                 asChild
                 className={cn(
-                  "h-11 px-4 font-semibold text-xs sm:text-sm bg-accent hover:bg-accent-hover text-white flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-sm",
+                  "h-11 px-4 font-semibold text-xs sm:text-sm bg-accent hover:bg-accent-hover text-accent-on flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-sm",
                   _prevChapterId ? "flex-1" : "w-full"
                 )}
               >
@@ -623,19 +623,19 @@ export function ContinuousVerticalReader({
             )}
           </div>
 
-          <div className="flex items-center justify-center gap-3 text-xs text-white/70 pt-0.5">
+          <div className="flex items-center justify-center gap-3 text-xs text-text-muted pt-0.5">
             {nextChapterId && (
               <>
                 <Link
                   href={detailHref}
                   replace
                   prefetch={false}
-                  className="hover:text-white/80 transition-colors flex items-center gap-1.5 py-1"
+                  className="hover:text-text-primary transition-colors flex items-center gap-1.5 py-1"
                 >
                   <BookOpen size={13} />
                   <span>Detail Komik</span>
                 </Link>
-                <span className="text-white/20">·</span>
+                <span className="text-text-muted/40">·</span>
               </>
             )}
 

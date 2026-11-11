@@ -24,7 +24,7 @@ describe("shared reader geometry contracts", () => {
     const row = read("src/components/komik/card/leaderboard-row.tsx");
     expect(row).toContain('min-h-[76px] py-1.5');
     expect(row).toContain('h-[64px] w-12');
-    expect(row).toContain("Chapter belum tersedia");
+    expect(row).toContain("Katalog diperbarui");
     expect(row).not.toContain('"-.-"');
   });
 });

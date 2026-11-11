@@ -16,48 +16,48 @@ export function MaintenanceView({ message }: MaintenanceViewProps) {
     <main
       role="alert"
       aria-live="polite"
-      className="fixed inset-0 z-50 flex min-h-dvh flex-col items-center justify-center bg-zinc-950 px-6 py-12 text-center text-zinc-100 selection:bg-red-500/30 selection:text-red-200"
+      className="fixed inset-0 z-50 flex min-h-dvh flex-col items-center justify-center bg-surface-base px-6 py-12 text-center text-text-primary selection:bg-accent-dim selection:text-accent"
     >
       <div className="relative mx-auto flex w-full max-w-md flex-col items-center">
         {/* Glow ambient background */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -top-24 h-64 w-64 rounded-full bg-red-600/10 blur-3xl"
+          className="pointer-events-none absolute -top-24 h-64 w-64 rounded-full bg-accent/10 blur-3xl"
         />
 
         {/* Brand mark */}
         <div className="mb-6 flex items-center gap-2.5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-red-500/30 bg-red-500/10 shadow-[0_0_20px_rgba(239,68,68,0.2)]">
-            <Wrench className="h-5 w-5 text-red-400" weight="regular" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-accent/30 bg-accent-dim shadow-md">
+            <Wrench className="h-5 w-5 text-accent" weight="regular" />
           </div>
-          <span className="text-xl font-bold tracking-tight text-zinc-100">
+          <span className="text-xl font-bold tracking-tight text-text-primary">
             Yomirra
           </span>
         </div>
 
         {/* Card status */}
-        <div className="w-full rounded-xl border border-zinc-800/80 bg-zinc-900/60 p-6 shadow-2xl backdrop-blur-xl sm:p-8">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-300">
+        <div className="w-full rounded-xl border border-border-default bg-surface-raised/80 p-6 shadow-2xl backdrop-blur-xl sm:p-8">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-status-warning-fg/30 bg-status-warning-bg px-3 py-1 text-xs font-medium text-status-warning-fg">
             <ShieldWarning className="h-3.5 w-3.5" weight="regular" />
             <span>Mode Pemeliharaan</span>
           </div>
 
-          <h1 className="text-lg font-semibold tracking-tight text-zinc-100 sm:text-xl">
+          <h1 className="text-lg font-semibold tracking-tight text-text-primary sm:text-xl">
             Sistem Sedang Ditingkatkan
           </h1>
 
-          <p className="mt-3 text-xs leading-relaxed text-zinc-400 sm:text-sm">
+          <p className="mt-3 text-xs leading-relaxed text-text-secondary sm:text-sm">
             {displayMessage}
           </p>
 
-          <div className="mt-6 border-t border-zinc-800/80 pt-4">
-            <p className="text-[11px] text-zinc-600">
+          <div className="mt-6 border-t border-border-subtle pt-4">
+            <p className="text-2xs text-text-muted">
               Operasi administrator tetap dapat diakses melalui portal resmi.
             </p>
           </div>
         </div>
 
-        <p className="mt-8 text-[11px] text-zinc-700">
+        <p className="mt-8 text-2xs text-text-muted">
           © {new Date().getFullYear()} Yomirra. Seluruh hak cipta dilindungi.
         </p>
       </div>
