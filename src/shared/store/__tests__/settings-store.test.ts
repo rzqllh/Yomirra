@@ -41,7 +41,7 @@ describe('SettingsStore Notification Preferences', () => {
     // Reset store state
     useSettingsStore.setState({
       checkOnAppStart: true,
-      minimumCheckIntervalMinutes: 15,
+      minimumCheckIntervalMinutes: 360,
       notifyForAllLibraryItems: true,
       mutedMangaKeys: [],
     });
@@ -50,7 +50,7 @@ describe('SettingsStore Notification Preferences', () => {
   it('has correct default values', () => {
     const state = useSettingsStore.getState();
     expect(state.checkOnAppStart).toBe(true);
-    expect(state.minimumCheckIntervalMinutes).toBe(15);
+    expect(state.minimumCheckIntervalMinutes).toBe(360);
     expect(state.notifyForAllLibraryItems).toBe(true);
     expect(state.mutedMangaKeys).toEqual([]);
   });

@@ -19,6 +19,7 @@ import {
   DownloadSimple,
   ShieldWarning,
   Sparkle,
+  BookOpen,
 } from "@phosphor-icons/react";
 import { BackupRestoreView } from "@/components/settings/backup-restore-modal";
 import { useAuth } from "@/shared/hooks/use-auth";
@@ -28,6 +29,8 @@ import Link from "next/link";
 import { useHistoryStore } from "@/shared/store/history-store";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useSettingsStore } from "@/shared/store/settings-store";
+import { useReaderStore } from "@/shared/store/reader-store";
+import { useUpdateChecker } from "@/shared/hooks/use-update-checker";
 import { useOnboardingStore } from "@/shared/store/onboarding-store";
 import { useDownloadStore } from "@/shared/store/download-store";
 import { useTheme } from "next-themes";
@@ -40,6 +43,7 @@ import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Gear } from "@phosphor-icons/react/dist/ssr";
 import { toast } from "sonner";
 import { ConfirmationModal } from "@/components/ui/confirmation-modal";
+import { cn } from "@/shared/utils/cn";
 import { SettingsSection, SettingsItem, IconWrapper } from "@/app/(web)/settings/components/settings-ui";
 import { clearAutomaticCache } from "@/shared/lib/reading-buffer";
 import { clearSharedDeviceData } from "@/shared/lib/local-data-cleanup";
@@ -79,6 +83,9 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
 
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
+  const { triggerScan, isScanning: isCheckingUpdates } = useUpdateChecker();
+  const readerBackground = useReaderStore((state) => state.preferences.background);
+  const updateReaderPreferences = useReaderStore((state) => state.updatePreferences);
 
   React.useEffect(() => {
     queueMicrotask(() => setMounted(true));
@@ -303,18 +310,43 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
             right={
               <CustomSelect
                 label="Jeda pengecekan"
-                value={String(mounted ? minimumCheckIntervalMinutes : 15)}
+                value={String(mounted ? minimumCheckIntervalMinutes : 360)}
                 onChange={(val) => setMinimumCheckIntervalMinutes(Number(val))}
                 options={[
-                  { value: "15", label: "15 Menit" },
-                  { value: "30", label: "30 Menit" },
                   { value: "60", label: "1 Jam" },
-                  { value: "360", label: "6 Jam" },
+                  { value: "180", label: "3 Jam" },
+                  { value: "360", label: "6 Jam (Default)" },
+                  { value: "720", label: "12 Jam" },
+                  { value: "1440", label: "24 Jam" },
                 ]}
                 disabled={!checkOnAppStart}
               />
             }
           />
+
+          <div className="mx-3 my-1 border-b border-border-subtle/50" />
+
+          <div className="p-3">
+            <div className="flex items-center justify-between p-3 bg-surface-base rounded-xl border border-border-subtle">
+              <div className="min-w-0 pr-2">
+                <span className="text-xs font-bold text-text-primary block">Pemeriksaan Manual</span>
+                <span className="text-2xs text-text-muted block">Periksa chapter baru untuk seluruh komik tersimpan sekarang.</span>
+              </div>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={async () => {
+                  await triggerScan({ forceRefresh: true });
+                  toast.success("Pemeriksaan chapter selesai");
+                }}
+                disabled={isCheckingUpdates}
+                className="min-h-11 rounded-sm text-xs font-bold shrink-0 gap-1.5"
+              >
+                <ArrowsClockwise size={15} className={cn(isCheckingUpdates && "animate-spin")} />
+                <span>{isCheckingUpdates ? "Memeriksa…" : "Cek Sekarang"}</span>
+              </Button>
+            </div>
+          </div>
 
           <div className="mx-3 my-1 border-b border-border-subtle/50" />
 
@@ -339,7 +371,7 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
             wrapOnMobile
             icon={<IconWrapper><Palette size={19} weight="regular" /></IconWrapper>}
             title="Tema aplikasi"
-            description="Sesuaikan tema utama aplikasi. Pilihan warna latar Reader (gelap, terang, sepia) diatur terpisah di menu Reader saat membaca."
+            description="Sesuaikan tema utama aplikasi. Pilihan warna latar Reader diatur mandiri di bawah."
             right={
               mounted ? (
                 <SegmentedControl
@@ -358,6 +390,45 @@ export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) 
               )
             }
           />
+
+          <div className="mx-3 my-1 border-b border-border-subtle/50" />
+
+          <SettingsItem
+            wrapOnMobile
+            icon={<IconWrapper><BookOpen size={19} weight="regular" /></IconWrapper>}
+            title="Latar kanvas Reader"
+            description="Warna kanvas saat membaca komik (independen dari tema aplikasi). Default: Hitam OLED."
+            right={
+              mounted ? (
+                <CustomSelect
+                  label="Latar kanvas Reader"
+                  value={readerBackground}
+                  onChange={(val) => updateReaderPreferences({ background: val as any })}
+                  options={[
+                    { value: "black", label: "Hitam OLED (Default)" },
+                    { value: "mist", label: "Terang (Mist)" },
+                    { value: "system", label: "Ikuti Tema Aplikasi" },
+                  ]}
+                  buttonClassName="min-h-11 px-3 text-xs font-semibold bg-surface-overlay"
+                />
+              ) : (
+                <div className="h-11 w-44 rounded-sm bg-surface-muted animate-pulse" />
+              )
+            }
+          />
+
+          <div className="p-3">
+            <div className="p-3 bg-surface-base rounded-xl border border-border-subtle flex items-center justify-between text-xs">
+              <span className="text-text-muted font-medium">Pratinjau Kanvas Reader:</span>
+              <span className="px-3 py-1 rounded-md border border-border-default bg-surface-raised text-text-primary text-2xs font-bold shadow-xs">
+                {readerBackground === "black"
+                  ? "Hitam OLED (Murni)"
+                  : readerBackground === "mist"
+                    ? "Terang (Mist)"
+                    : "Ikuti Tema Aplikasi"}
+              </span>
+            </div>
+          </div>
 
           <div className="mx-3 my-1 border-b border-border-subtle/50" />
 

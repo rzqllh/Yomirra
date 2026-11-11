@@ -37,7 +37,7 @@ describe("SettingsPage - Update Checker UI", () => {
     mockUser = { uid: "test-user-1", email: "test@example.com", displayName: "Tester" };
     useSettingsStore.setState({
       checkOnAppStart: true,
-      minimumCheckIntervalMinutes: 15,
+      minimumCheckIntervalMinutes: 360,
     });
   });
 
@@ -75,7 +75,7 @@ describe("SettingsPage - Update Checker UI", () => {
     expect((toggle as HTMLInputElement).checked).toBe(true);
 
     // Check select button
-    const selectButton = screen.getByRole("button", { name: /15 Menit/i });
+    const selectButton = screen.getByRole("button", { name: /6 Jam/i });
     expect(selectButton).not.toBeNull();
   });
 
@@ -94,7 +94,7 @@ describe("SettingsPage - Update Checker UI", () => {
   it("choosing an interval calls setter with correct minutes", async () => {
     await renderWithMount();
     
-    const selectButton = screen.getByRole("button", { name: /15 Menit/i });
+    const selectButton = screen.getByRole("button", { name: /6 Jam/i });
     
     // Open select
     await act(async () => {
@@ -112,15 +112,15 @@ describe("SettingsPage - Update Checker UI", () => {
   });
 
   it("disables interval selection when checkOnAppStart is false, but keeps value", async () => {
-    useSettingsStore.setState({ checkOnAppStart: false, minimumCheckIntervalMinutes: 30 });
+    useSettingsStore.setState({ checkOnAppStart: false, minimumCheckIntervalMinutes: 180 });
     await renderWithMount();
     
-    const selectButton = screen.getByRole("button", { name: /30 Menit/i });
+    const selectButton = screen.getByRole("button", { name: /3 Jam/i });
     expect(selectButton).not.toBeNull();
     
     expect((selectButton as HTMLButtonElement).disabled).toBe(true);
     
-    expect(useSettingsStore.getState().minimumCheckIntervalMinutes).toBe(30);
+    expect(useSettingsStore.getState().minimumCheckIntervalMinutes).toBe(180);
   });
 
   it("restricts NSFW toggle when user is not logged in", async () => {

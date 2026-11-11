@@ -13,7 +13,7 @@ describe("useUpdateChecker Integration with Preferences", () => {
     vi.clearAllMocks();
     useSettingsStore.setState({
       checkOnAppStart: true,
-      minimumCheckIntervalMinutes: 15,
+      minimumCheckIntervalMinutes: 360,
     });
   });
 
@@ -57,7 +57,7 @@ describe("useUpdateChecker Integration with Preferences", () => {
   });
 
   it("custom interval diteruskan ke checker dalam milliseconds", async () => {
-    useSettingsStore.setState({ minimumCheckIntervalMinutes: 30 });
+    useSettingsStore.setState({ minimumCheckIntervalMinutes: 180 });
     const { result } = renderHook(() => useUpdateChecker());
 
     await act(async () => {
@@ -65,11 +65,11 @@ describe("useUpdateChecker Integration with Preferences", () => {
     });
 
     expect(updateCheckerLib.scanLibraryUpdates).toHaveBeenCalledWith(
-      expect.objectContaining({ cooldownMs: 30 * 60 * 1000 })
+      expect.objectContaining({ cooldownMs: 180 * 60 * 1000 })
     );
   });
 
-  it("invalid interval fallback ke 15 menit", async () => {
+  it("invalid interval fallback ke 360 menit (6 jam)", async () => {
     useSettingsStore.setState({ minimumCheckIntervalMinutes: -5 });
     const { result } = renderHook(() => useUpdateChecker());
 
@@ -78,7 +78,7 @@ describe("useUpdateChecker Integration with Preferences", () => {
     });
 
     expect(updateCheckerLib.scanLibraryUpdates).toHaveBeenCalledWith(
-      expect.objectContaining({ cooldownMs: 15 * 60 * 1000 })
+      expect.objectContaining({ cooldownMs: 360 * 60 * 1000 })
     );
   });
 

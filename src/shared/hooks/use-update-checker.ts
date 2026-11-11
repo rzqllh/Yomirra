@@ -31,10 +31,10 @@ export function useUpdateChecker(options: UseUpdateCheckerOptions = {}) {
 
     setIsScanning(true);
     try {
-      // Convert minutes to ms safely, fallback to 15 mins if invalid
-      const safeInterval = typeof minimumCheckIntervalMinutes === "number" && minimumCheckIntervalMinutes > 0
+      // Convert minutes to ms safely, fallback to 360 mins (6 Jam) if invalid (SET-02)
+      const safeInterval = typeof minimumCheckIntervalMinutes === "number" && minimumCheckIntervalMinutes >= 60
         ? minimumCheckIntervalMinutes * 60 * 1000
-        : 15 * 60 * 1000;
+        : 360 * 60 * 1000;
 
       const mergedOptions = {
         cooldownMs: safeInterval,

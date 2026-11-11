@@ -96,10 +96,10 @@ export const useSettingsStore = create<SettingsState>()(
       keepScreenAwake: true,
       setKeepScreenAwake: (enabled) => set({ keepScreenAwake: enabled }),
 
-      // Notification Preferences Defaults
+      // Notification Preferences Defaults (SET-02: 6 Jam default)
       checkOnAppStart: true,
       setCheckOnAppStart: (enabled) => set({ checkOnAppStart: enabled }),
-      minimumCheckIntervalMinutes: 15,
+      minimumCheckIntervalMinutes: 360,
       setMinimumCheckIntervalMinutes: (minutes) => set({ minimumCheckIntervalMinutes: minutes }),
       notifyForAllLibraryItems: true,
       setNotifyForAllLibraryItems: (enabled) => set({ notifyForAllLibraryItems: enabled }),
@@ -158,11 +158,11 @@ export const useSettingsStore = create<SettingsState>()(
         syncReadPreferenceCookie(state?.hideNsfw !== false);
         if (state) syncOtherReadCookies(state);
       },
-      version: 2,
+      version: 3,
       migrate: (persistedState: any, version: number) => {
         if (version === 0) {
           persistedState.checkOnAppStart = true;
-          persistedState.minimumCheckIntervalMinutes = 15;
+          persistedState.minimumCheckIntervalMinutes = 360;
           persistedState.notifyForAllLibraryItems = true;
           persistedState.mutedMangaKeys = [];
         }
@@ -171,6 +171,11 @@ export const useSettingsStore = create<SettingsState>()(
           persistedState.globalSourceOrder = persistedState.globalSourceOrder || DEFAULT_GLOBAL_SOURCE_ORDER;
           persistedState.preferredLanguages = persistedState.preferredLanguages || DEFAULT_PREFERRED_LANGUAGES;
           persistedState.perTitleSourcePreferences = persistedState.perTitleSourcePreferences || {};
+        }
+        if (version < 3) {
+          if (!persistedState.minimumCheckIntervalMinutes || persistedState.minimumCheckIntervalMinutes < 60) {
+            persistedState.minimumCheckIntervalMinutes = 360;
+          }
         }
         return persistedState as SettingsState;
       },
