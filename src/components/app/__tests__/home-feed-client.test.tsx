@@ -3,6 +3,7 @@ import {
   fireEvent,
   render,
   screen,
+  within,
 } from "@testing-library/react";
 import {
   afterEach,
@@ -823,6 +824,36 @@ describe("Yomirra Editorial Home Components", () => {
         screen.queryByRole("heading", { level: 2, name: /populer di sumber/i })
       ).toBeNull();
       expect(document.getElementById("popular-section")).toBeNull();
+    });
+
+    it("deduplicates identical manga titles from different sources in Baru diperbarui", () => {
+      const duplicateLatest: HomeFeedManga[] = [
+        {
+          id: "monarch-1",
+          title: "Underworld Monarch: I Am ...",
+          coverUrl: "/m1.jpg",
+          sourceId: "komiku-2",
+          sourceName: "Komiku II",
+        },
+        {
+          id: "monarch-2",
+          title: "Underworld Monarch: I Am ...",
+          coverUrl: "/m2.jpg",
+          sourceId: "shinigami",
+          sourceName: "Shinigami",
+        },
+      ];
+      render(
+        <HomeFeedClient
+          unifiedPopular={[]}
+          unifiedLatest={duplicateLatest}
+        />
+      );
+
+      const recentSection = document.getElementById("recently-updated-section");
+      expect(recentSection).not.toBeNull();
+      const items = within(recentSection!).getAllByText("Underworld Monarch: I Am ...");
+      expect(items.length).toBe(1);
     });
   });
 });

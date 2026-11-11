@@ -38,7 +38,14 @@ export function CommandMenu() {
     () => resolveQuickSearchScope(registry.data ?? [], disabledSources, sourceId, hideNsfw),
     [registry.data, disabledSources, sourceId, hideNsfw]
   );
-  const scopeLabel = scope.source && !(hideNsfw && scope.source.isNsfw) ? scope.source.name : "Belum tersedia";
+  const scopeLabel =
+    scope.source && !(hideNsfw && scope.source.isNsfw)
+      ? scope.source.name
+      : scope.sourceIds.length > 1
+        ? "Semua sumber aktif"
+        : scope.sourceIds.length === 1
+          ? (registry.data?.find((s) => s.id === scope.sourceIds[0])?.name ?? "Sumber Jelajah")
+          : "Belum tersedia";
   const query = searchQuery.trim();
   const debouncedQuery = useDebounce(query, 180);
   const isDebouncing = query !== debouncedQuery;
@@ -142,7 +149,9 @@ export function CommandMenu() {
                 )}
                 <div className="min-w-0 flex-1">
                   <span className="block break-words text-sm font-semibold text-text-primary">{manga.title}</span>
-                  <span className="text-xs text-text-muted">{scopeLabel}</span>
+                  <span className="text-xs text-text-muted">
+                    {registry.data?.find((s) => s.id === manga.sourceId)?.name ?? manga.sourceId ?? scopeLabel}
+                  </span>
                   {hideNsfw && !canRevealQuickSearchCover(manga, hideNsfw) && (
                     <span className="block text-xs font-semibold text-status-warning-fg">Rating belum terverifikasi</span>
                   )}

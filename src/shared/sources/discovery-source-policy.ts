@@ -69,12 +69,34 @@ export function resolveDiscoverySourceId(
   return eligibleSources[0]?.id || "";
 }
 
-export function resolveQuickSearchScope(sources: SourceMetadata[], disabledSources: string[], rememberedSourceId: string | null, hideNsfw = true) {
-  const eligible = selectDiscoverySources(sources, disabledSources).filter((source) => isSourceContentVisible(source, hideNsfw));
-  const sourceId = resolveDiscoverySourceId(rememberedSourceId, eligible);
-  const source = sources.find((item) => item.id === sourceId);
-  const selected = eligible.find((item) => item.id === sourceId);
-  const searchable = selected && isSearchSourceSystemEligible(selected);
-  return { sourceId, source, sourceIds: searchable ? [sourceId] : [],
-    reason: !sourceId ? "empty" : !selected ? "unavailable" : !searchable ? "unsupported" : null };
+export function resolveQuickSearchScope(
+  sources: SourceMetadata[],
+  disabledSources: string[],
+  rememberedSourceId: string | null,
+  hideNsfw = true
+) {
+  const eligible = selectDiscoverySources(sources, disabledSources).filter((source) =>
+    isSourceContentVisible(source, hideNsfw)
+  );
+  const eligibleSearchSources = eligible.filter(isSearchSourceSystemEligible);
+
+  if (rememberedSourceId) {
+    const source = sources.find((item) => item.id === rememberedSourceId);
+    const selected = eligible.find((item) => item.id === rememberedSourceId);
+    const searchable = selected && isSearchSourceSystemEligible(selected);
+    return {
+      sourceId: rememberedSourceId,
+      source,
+      sourceIds: searchable ? [rememberedSourceId] : [],
+      reason: !selected ? "unavailable" : !searchable ? "unsupported" : null,
+    };
+  }
+
+  const sourceIds = eligibleSearchSources.map((s) => s.id);
+  return {
+    sourceId: null,
+    source: null,
+    sourceIds,
+    reason: eligible.length === 0 ? "empty" : sourceIds.length === 0 ? "unsupported" : null,
+  };
 }

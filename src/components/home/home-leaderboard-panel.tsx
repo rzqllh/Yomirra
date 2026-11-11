@@ -5,6 +5,8 @@ import Link from "next/link";
 import { ArrowRight } from "@phosphor-icons/react";
 import { LeaderboardRow } from "@/components/komik/card/leaderboard-row";
 import { CustomSelect } from "@/components/ui/custom-select";
+import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
+import { normalizeTitle } from "@/shared/lib/title-matcher";
 import { cn } from "@/shared/utils/cn";
 import type { HomeFeedManga } from "./home-feed-selection";
 
@@ -25,17 +27,23 @@ export function HomeLeaderboardPanel({
   seeAllHref,
   className,
 }: HomeLeaderboardPanelProps) {
+  const preferencesStore = useSourcePreferencesStore();
+  const isSourceDisabled = typeof preferencesStore?.isSourceDisabled === "function"
+    ? preferencesStore.isSourceDisabled
+    : () => false;
+
   const availableSources = React.useMemo(() => {
     const sources = new Map<string, string>();
 
     for (const item of items) {
+      if (isSourceDisabled(item.sourceId)) continue;
       if (!sources.has(item.sourceId)) {
         sources.set(item.sourceId, item.sourceName);
       }
     }
 
     return Array.from(sources, ([id, name]) => ({ id, name }));
-  }, [items]);
+  }, [items, isSourceDisabled]);
 
   const [selectedSource, setSelectedSource] = React.useState<string | undefined>(
     defaultSourceId
@@ -61,9 +69,20 @@ export function HomeLeaderboardPanel({
   const displayItems = React.useMemo(() => {
     if (!activeSourceId) return [];
 
-    return items
-      .filter((item) => item.sourceId === activeSourceId)
-      .slice(0, 5);
+    const seen = new Set<string>();
+    const result: HomeFeedManga[] = [];
+
+    for (const item of items) {
+      if (item.sourceId !== activeSourceId) continue;
+      const norm = normalizeTitle(item.title);
+      const key = norm || item.id;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      result.push(item);
+      if (result.length >= 5) break;
+    }
+
+    return result;
   }, [items, activeSourceId]);
 
   const targetSeeAllHref = activeSourceId

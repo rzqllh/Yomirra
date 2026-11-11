@@ -19,6 +19,7 @@ import {
   selectSpotlightItems,
   type HomeFeedManga,
 } from "./home-feed-selection";
+import { normalizeTitle } from "@/shared/lib/title-matcher";
 import { ShelfCard } from "@/components/komik/card";
 import { CompactCard } from "@/components/komik/card/compact-card";
 import { ViewModeToggle } from "@/components/komik/view-mode-toggle";
@@ -110,25 +111,27 @@ export function HomeFeedClient({
   }, [historyItems]);
 
   const filteredPopular = React.useMemo(() => {
-    if (!hideNsfw) return unifiedPopular;
-
-    return unifiedPopular.filter(
-      (manga) => !isFromNsfwSource(manga.sourceId, (manga as any).isNsfw)
-    );
+    return unifiedPopular.filter((manga) => {
+      if (isSourceDisabled(manga.sourceId)) return false;
+      if (hideNsfw && isFromNsfwSource(manga.sourceId, (manga as any).isNsfw)) return false;
+      return true;
+    });
   }, [
     unifiedPopular,
+    isSourceDisabled,
     hideNsfw,
     isFromNsfwSource,
   ]);
 
   const filteredLatest = React.useMemo(() => {
-    if (!hideNsfw) return unifiedLatest;
-
-    return unifiedLatest.filter(
-      (manga) => !isFromNsfwSource(manga.sourceId, (manga as any).isNsfw)
-    );
+    return unifiedLatest.filter((manga) => {
+      if (isSourceDisabled(manga.sourceId)) return false;
+      if (hideNsfw && isFromNsfwSource(manga.sourceId, (manga as any).isNsfw)) return false;
+      return true;
+    });
   }, [
     unifiedLatest,
+    isSourceDisabled,
     hideNsfw,
     isFromNsfwSource,
   ]);
@@ -222,16 +225,25 @@ export function HomeFeedClient({
   const currentSpotlight =
     spotlightItems[spotlightIndex] ?? spotlightItems[0];
 
-  const updateHariIni = React.useMemo(
-    () =>
-      filteredLatest
-        .filter(
-          (item) =>
-            !personalizedIds.has(`${item.sourceId}-${item.id}`)
-        )
-        .slice(0, 50),
-    [filteredLatest, personalizedIds]
-  );
+  const updateHariIni = React.useMemo(() => {
+    const seenTitles = new Set<string>();
+    const result: HomeFeedManga[] = [];
+
+    for (const item of filteredLatest) {
+      if (personalizedIds.has(`${item.sourceId}-${item.id}`)) continue;
+
+      const norm = normalizeTitle(item.title);
+      const dedupeKey = norm || `${item.sourceId}-${item.id}`;
+
+      if (seenTitles.has(dedupeKey)) continue;
+      seenTitles.add(dedupeKey);
+      result.push(item);
+
+      if (result.length >= 50) break;
+    }
+
+    return result;
+  }, [filteredLatest, personalizedIds]);
 
   return (
     <SectionStack level="page">

@@ -66,6 +66,22 @@ describe("Quick Search scope and dialog", () => {
     expect(screen.getByRole("option", { name: /Unverified title/ })).toBeTruthy();
   });
 
+  it("searches across all active sources when no Jelajah source is pinned", async () => {
+    useDiscoveryScopeStore.setState({ sourceId: null });
+    const search = vi.spyOn(apiClient, "searchGlobal").mockResolvedValue({
+      resultsBySource: {
+        a: { results: [{ id: "work-a", title: "Solo Leveling", coverUrl: "" }] },
+        b: { results: [{ id: "work-b", title: "Solo Leveling", coverUrl: "" }] },
+      },
+    });
+    open();
+    const input = await screen.findByRole("combobox", { name: "Quick Search di sumber Jelajah" });
+    fireEvent.change(input, { target: { value: "solo" } });
+    await screen.findByText("Semua sumber aktif");
+    await screen.findAllByText("Solo Leveling");
+    expect(search).toHaveBeenCalledWith("solo", ["a", "b"], 1, true, undefined, expect.objectContaining({ signal: expect.any(AbortSignal) }));
+  });
+
   it("opens on Cari but searches Jelajah's source without overwriting Cari selection", async () => {
     const search = vi.spyOn(apiClient, "searchGlobal").mockResolvedValue(response("a"));
     open();
