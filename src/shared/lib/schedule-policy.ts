@@ -46,12 +46,12 @@ export function normalizePublicationStatus(
 
 /**
  * A manual release day changes scheduling only; it never changes publication
- * eligibility. Known completed/cancelled titles therefore stay out of the
- * future schedule.
+ * eligibility. Known completed, hiatus, and cancelled titles therefore stay out of the
+ * future schedule (SCH-05).
  */
 export function isWeeklyScheduleEligibleStatus(
   status?: string | null
 ): boolean {
   const normalized = normalizePublicationStatus(status);
-  return normalized !== "completed" && normalized !== "cancelled";
+  return normalized !== "completed" && normalized !== "cancelled" && normalized !== "hiatus";
 }

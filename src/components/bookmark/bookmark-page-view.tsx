@@ -133,6 +133,7 @@ export function BookmarkPageView() {
               onOpenDeleteDialogChange={collection.setIsDeleteDialogOpen}
               onConfirmBulkDelete={collection.handleConfirmBulkDelete}
               totalItemsCount={collection.totalLibraryItemsCount}
+              scopedItems={collection.scopedItems}
               filteredCount={collection.filteredAndSortedLibraryItems.length}
               paginatedCollection={collection.paginatedCollection}
               collectionPage={collection.collectionPage}

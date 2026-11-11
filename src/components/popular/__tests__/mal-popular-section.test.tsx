@@ -15,6 +15,6 @@ describe("external MAL metadata", () => {
     expect(screen.queryByText("Restricted Work")).toBeNull();
     expect(document.querySelector('img[src*="hidden.jpg"]')).toBeNull();
     expect(screen.getByText("Safe Work")).toBeDefined();
-    expect(new URL(screen.getByRole("link", { name: "Cari sumber bacaan" }).getAttribute("href")!, "https://example.test").searchParams.get("q")).toBe("Safe Work");
+    expect(new URL(screen.getByRole("link", { name: "Cari di Sumber" }).getAttribute("href")!, "https://example.test").searchParams.get("q")).toBe("Safe Work");
   });
 });

@@ -82,26 +82,29 @@ export function useBookmarkCollection() {
     nsfwStatus,
   ]);
 
+  const scopedItems = React.useMemo(() => {
+    if (!sourceFilter) return visibleLibraryItems;
+    return visibleLibraryItems.filter((item) => item.sourceId === sourceFilter);
+  }, [visibleLibraryItems, sourceFilter]);
+
   const smartCollections = React.useMemo(
     () =>
       deriveSmartCollections(
-        visibleLibraryItems,
+        scopedItems,
         Object.values(historyItemsMap)
       ),
-    [historyItemsMap, visibleLibraryItems]
+    [historyItemsMap, scopedItems]
   );
 
   const handleSmartCollectionChange = React.useCallback(
     (id: SmartCollectionId | null) => {
       setSelectedSmartCollectionId(id);
-      if (id) setSelectedCollectionId(null);
     },
     []
   );
 
   const handleCollectionChange = React.useCallback((id: string | null) => {
     setSelectedCollectionId(id);
-    if (id) setSelectedSmartCollectionId(null);
   }, []);
 
   const clearCollectionFilters = React.useCallback(() => {
@@ -239,7 +242,8 @@ export function useBookmarkCollection() {
     collectionPage,
     setCollectionPage,
     totalPages,
-    totalLibraryItemsCount: visibleLibraryItems.length,
+    totalLibraryItemsCount: scopedItems.length,
+    scopedItems,
     filteredAndSortedLibraryItems,
     paginatedCollection,
     isDeleteDialogOpen,

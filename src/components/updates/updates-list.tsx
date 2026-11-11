@@ -46,6 +46,7 @@ export const WEEKDAYS = [
   { key: "5", name: "Jumat", dayIndex: 5 },
   { key: "6", name: "Sabtu", dayIndex: 6 },
   { key: "0", name: "Minggu", dayIndex: 0 },
+  { key: "flexible", name: "Fleksibel", dayIndex: -2 },
 ];
 
 export interface WeeklyMangaItem {
@@ -82,7 +83,13 @@ export function UpdateCard({ item, historyItem, onScheduleChange, onMarkSeen }: 
     ? getReaderHref(item.sourceId, item.mangaId, targetChapterId, "/updates")
     : detailHref;
   const isUnread = Boolean(item.latestChapterId && !item.seenAt);
-  const dayName = WEEKDAYS.find((day) => day.dayIndex === item.effectiveDay)?.name || "Senin";
+  const isWithin24h = item.detectedAt
+    ? Date.now() - new Date(item.detectedAt).getTime() < 24 * 60 * 60 * 1000
+    : false;
+  const isNewRelease = isUnread || isWithin24h;
+  const isCustom = item.releaseDay !== undefined;
+  const dayName = WEEKDAYS.find((day) => day.dayIndex === item.effectiveDay)?.name || (item.effectiveDay === -2 ? "Fleksibel" : "Senin");
+  const scheduleDisplayLabel = isCustom ? `Kustom · ${dayName}` : `Estimasi · ${dayName}`;
 
   return (
     <article
@@ -126,7 +133,7 @@ export function UpdateCard({ item, historyItem, onScheduleChange, onMarkSeen }: 
             <span className="text-2xs px-1.5 py-0.5 rounded-sm bg-surface-base border border-border-subtle/70 font-semibold text-text-secondary">
               {item.sourceName || item.sourceId}
             </span>
-            {isUnread && (
+            {isNewRelease && (
               <span className="text-2xs px-1.5 py-0.5 rounded-sm bg-semantic-error text-accent-on font-extrabold uppercase tracking-wider shadow-xs">
                 Baru
               </span>
@@ -147,7 +154,7 @@ export function UpdateCard({ item, historyItem, onScheduleChange, onMarkSeen }: 
               value={item.releaseDay !== undefined ? String(item.releaseDay) : ""}
               onChange={onScheduleChange}
               options={[
-                { value: "", label: `Otomatis · ${dayName}` },
+                { value: "", label: scheduleDisplayLabel },
                 { value: "1", label: "📅 Senin" },
                 { value: "2", label: "📅 Selasa" },
                 { value: "3", label: "📅 Rabu" },
@@ -155,6 +162,7 @@ export function UpdateCard({ item, historyItem, onScheduleChange, onMarkSeen }: 
                 { value: "5", label: "📅 Jumat" },
                 { value: "6", label: "📅 Sabtu" },
                 { value: "0", label: "📅 Minggu" },
+                { value: "-2", label: "📅 Fleksibel" },
               ]}
               buttonClassName="min-h-11 px-2.5 py-0 text-2xs font-semibold text-text-muted hover:text-text-primary bg-surface-base hover:bg-surface-hover border border-border-subtle rounded-sm gap-1.5 cursor-pointer shadow-xs"
               align="left"
@@ -173,7 +181,11 @@ export function UpdateCard({ item, historyItem, onScheduleChange, onMarkSeen }: 
         ) : (
           <BookOpen size={14} weight="regular" />
         )}
-        <span>{hasHistory ? "Lanjut" : "Baca"}</span>
+        <span>
+          {hasHistory
+            ? `Lanjut (Ch. ${historyItem?.chapterNumber ?? item.latestChapterNumber ?? "1"})`
+            : "Mulai Baca"}
+        </span>
       </Link>
     </article>
   );
@@ -300,8 +312,8 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
         const inferredDay = (() => {
           if (upd?.detectedAt) return new Date(upd.detectedAt).getDay();
           if (lib.updatedAt) return new Date(lib.updatedAt).getDay();
-          if (lib.addedAt) return new Date(lib.addedAt).getDay();
-          return 1; // Default Senin
+          // SCH-05: Never guess based on addedAt - categorize as flexible (-2)
+          return -2;
         })();
 
         const effectiveDay = lib.releaseDay !== undefined ? lib.releaseDay : inferredDay;
@@ -412,6 +424,7 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
   // Filtered list based on selected weekly day
   const displayedItems = useMemo(() => {
     if (selectedDayKey === "all") return allItems;
+    if (selectedDayKey === "flexible") return allItems.filter((i) => i.effectiveDay === -2);
     const dayIndex = Number(selectedDayKey);
     return allItems.filter((i) => i.effectiveDay === dayIndex);
   }, [selectedDayKey, allItems]);

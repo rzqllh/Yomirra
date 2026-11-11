@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { BookBookmark, Compass, MagnifyingGlass, PencilSimple, Trash, Folder } from "@phosphor-icons/react";
+import { BookBookmark, Compass, MagnifyingGlass, PencilSimple, Trash, Folder, Plus } from "@phosphor-icons/react";
 import { EmptyState } from "@/components/states/empty-state";
 import { Button } from "@/components/ui/button";
 import { MangaGrid } from "@/components/komik/manga-grid";
@@ -49,6 +49,7 @@ export interface CollectionTabProps {
   onOpenDeleteDialogChange: (open: boolean) => void;
   onConfirmBulkDelete: () => void;
   totalItemsCount: number;
+  scopedItems?: any[];
   filteredCount: number;
   paginatedCollection: any[];
   collectionPage: number;
@@ -86,6 +87,7 @@ export function CollectionTab({
   onOpenDeleteDialogChange,
   onConfirmBulkDelete,
   totalItemsCount,
+  scopedItems = [],
   filteredCount,
   paginatedCollection,
   collectionPage,
@@ -151,7 +153,21 @@ export function CollectionTab({
     setActiveCollectionId(null);
   };
 
+  const uniqueTitlesCount = React.useMemo(() => {
+    const list = scopedItems ?? [];
+    return new Set(list.map((m) => m.title?.toLowerCase().trim() || m.mangaId)).size;
+  }, [scopedItems]);
+
   const getMangaCount = (collectionId: string) => {
+    if (scopedItems && scopedItems.length > 0) {
+      const matching = scopedItems.filter((item) => {
+        const key = item.id ?? `${item.sourceId}::${item.mangaId}`;
+        const legacyKey = `${item.sourceId}::${item.mangaId}`;
+        const memberships = membershipsByManga[key] || membershipsByManga[legacyKey] || [];
+        return memberships.includes(collectionId);
+      });
+      return new Set(matching.map((m) => m.title?.toLowerCase().trim() || m.mangaId)).size;
+    }
     return Object.values(membershipsByManga).filter((ids) => ids.includes(collectionId)).length;
   };
 
@@ -159,8 +175,8 @@ export function CollectionTab({
     (collection) =>
       collection.items.length > 0 || collection.id === selectedSmartCollectionId
   );
-  const hasCollectionFilter =
-    Boolean(selectedCollectionId) || Boolean(selectedSmartCollectionId);
+
+  const hasCollectionFilter = Boolean(selectedCollectionId) || Boolean(selectedSmartCollectionId);
 
   const clearCollectionFilters = () => {
     if (onClearCollectionFilters) {
@@ -198,6 +214,7 @@ export function CollectionTab({
         />
 
         <div className="space-y-3">
+          {/* Row 1: System Reading Status (Smart Collections) */}
           <div>
             <div className="mb-2 flex items-center justify-between px-0.5">
               <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-text-muted">
@@ -213,30 +230,31 @@ export function CollectionTab({
                 label={
                   <span className="flex items-center gap-1.5">
                     <span>Semua</span>
-                    <span className="text-[11px] opacity-70">{totalItemsCount}</span>
+                    <span className="text-[11px] opacity-70">{uniqueTitlesCount || totalItemsCount}</span>
                   </span>
                 }
-                aria-label={`Semua bookmark, ${totalItemsCount} judul`}
-                selected={!hasCollectionFilter}
-                variant={!hasCollectionFilter ? "accent-solid" : "default"}
-                onClick={clearCollectionFilters}
+                aria-label={`Semua bookmark, ${uniqueTitlesCount || totalItemsCount} judul`}
+                selected={!selectedSmartCollectionId}
+                variant={!selectedSmartCollectionId ? "accent-solid" : "default"}
+                onClick={() => onSelectSmartCollectionId?.(null)}
                 className="shrink-0"
               />
 
               {visibleSmartCollections.map((collection) => {
                 const isSelected = selectedSmartCollectionId === collection.id;
+                const count = collection.items.length;
                 return (
                   <FilterChip
                     key={collection.id}
                     label={
                       <span className="flex items-center gap-1.5">
                         <span>{collection.label}</span>
-                        <span className="text-[11px] opacity-70">
-                          {collection.items.length}
+                        <span className={cn("text-[11px]", count === 0 ? "opacity-40" : "opacity-70")}>
+                          {count}
                         </span>
                       </span>
                     }
-                    aria-label={`${collection.label}, ${collection.items.length} judul`}
+                    aria-label={`${collection.label}, ${count} judul`}
                     selected={isSelected}
                     variant={isSelected ? "accent-solid" : "default"}
                     onClick={() =>
@@ -251,78 +269,104 @@ export function CollectionTab({
             </div>
           </div>
 
-          {collections.length > 0 && (
-            <div>
-              <div className="mb-2 px-0.5">
-                <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-text-muted">
-                  Koleksi Kamu
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2 overflow-x-auto [scrollbar-width:thin] overscroll-x-contain touch-pan-x py-1 px-0.5">
-                {collections.map((collection) => {
-                  const isSelected = selectedCollectionId === collection.id;
-                  const count = getMangaCount(collection.id);
-
-                  return (
-                    <div
-                      key={collection.id}
-                      className="relative flex items-center shrink-0 group"
-                    >
-                      <FilterChip
-                        label={
-                          <span className="flex items-center gap-1.5">
-                            <Folder size={14} weight="regular" />
-                            <span>{collection.name}</span>
-                            <span className="text-[11px] opacity-70">{count}</span>
-                          </span>
-                        }
-                        aria-label={`${collection.name}, ${count} judul`}
-                        selected={isSelected}
-                        variant={isSelected ? "accent-solid" : "default"}
-                        onClick={() =>
-                          onSelectCollectionId?.(
-                            isSelected ? null : collection.id
-                          )
-                        }
-                        className="shrink-0"
-                      />
-
-                      {isSelected && (
-                        <div className="flex items-center ml-1 gap-1">
-                          <button
-                            type="button"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              setActiveCollectionId(collection.id);
-                              setNewName(collection.name);
-                              setIsRenameOpen(true);
-                            }}
-                            className="w-7 h-7 rounded-lg bg-surface-raised border border-border-subtle hover:text-text-primary text-text-muted flex items-center justify-center transition-colors"
-                            aria-label={`Ubah nama ${collection.name}`}
-                          >
-                            <PencilSimple size={13} weight="regular" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              setActiveCollectionId(collection.id);
-                              setIsDeleteOpen(true);
-                            }}
-                            className="w-7 h-7 rounded-lg bg-surface-raised border border-border-subtle hover:text-semantic-error text-text-muted flex items-center justify-center transition-colors"
-                            aria-label={`Hapus ${collection.name}`}
-                          >
-                            <Trash size={13} weight="regular" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+          {/* Row 2: User Custom Collections */}
+          <div>
+            <div className="mb-2 flex items-center justify-between px-0.5">
+              <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-text-muted">
+                Koleksi Kamu
+              </span>
             </div>
-          )}
+
+            <div className="flex items-center gap-2 overflow-x-auto [scrollbar-width:thin] overscroll-x-contain touch-pan-x py-1 px-0.5">
+              <FilterChip
+                label={
+                  <span className="flex items-center gap-1.5">
+                    <span>Semua Koleksi</span>
+                  </span>
+                }
+                aria-label="Semua koleksi kamu"
+                selected={!selectedCollectionId}
+                variant={!selectedCollectionId ? "accent-solid" : "default"}
+                onClick={() => onSelectCollectionId?.(null)}
+                className="shrink-0"
+              />
+
+              {collections.map((collection) => {
+                const isSelected = selectedCollectionId === collection.id;
+                const count = getMangaCount(collection.id);
+
+                return (
+                  <div
+                    key={collection.id}
+                    className="relative flex items-center shrink-0 group"
+                  >
+                    <FilterChip
+                      label={
+                        <span className="flex items-center gap-1.5">
+                          <Folder size={14} weight="regular" />
+                          <span>{collection.name}</span>
+                          <span className={cn("text-[11px]", count === 0 ? "opacity-40" : "opacity-70")}>
+                            {count}
+                          </span>
+                        </span>
+                      }
+                      aria-label={`${collection.name}, ${count} judul`}
+                      selected={isSelected}
+                      variant={isSelected ? "accent-solid" : "default"}
+                      onClick={() =>
+                        onSelectCollectionId?.(
+                          isSelected ? null : collection.id
+                        )
+                      }
+                      className="shrink-0"
+                    />
+
+                    {isSelected && (
+                      <div className="flex items-center ml-1 gap-1">
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setActiveCollectionId(collection.id);
+                            setNewName(collection.name);
+                            setIsRenameOpen(true);
+                          }}
+                          className="w-7 h-7 rounded-lg bg-surface-raised border border-border-subtle hover:text-text-primary text-text-muted flex items-center justify-center transition-colors"
+                          aria-label={`Ubah nama ${collection.name}`}
+                        >
+                          <PencilSimple size={13} weight="regular" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setActiveCollectionId(collection.id);
+                            setIsDeleteOpen(true);
+                          }}
+                          className="w-7 h-7 rounded-lg bg-surface-raised border border-border-subtle hover:text-semantic-error text-text-muted flex items-center justify-center transition-colors"
+                          aria-label={`Hapus ${collection.name}`}
+                        >
+                          <Trash size={13} weight="regular" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+
+              <button
+                type="button"
+                onClick={() => {
+                  setNewName("");
+                  setIsCreateOpen(true);
+                }}
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-full border border-dashed border-border-default px-3.5 py-1 text-xs font-semibold text-text-secondary hover:border-accent hover:text-accent transition-colors shrink-0"
+              >
+                <Plus size={14} weight="bold" />
+                <span>Buat Koleksi</span>
+              </button>
+            </div>
+          </div>
         </div>
       </PageToolbar>
 

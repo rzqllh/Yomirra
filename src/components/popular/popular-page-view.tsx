@@ -108,7 +108,7 @@ export function PopularPageView({ feeds, mal }: PopularPageViewProps) {
                     Peringkat lintas sumber
                   </h2>
                   <p className="mt-0.5 text-xs text-text-muted">
-                    Menampilkan komik teratas yang mendominasi katalog sumber aktif.
+                    Menampilkan komik teratas melalui agregasi Reciprocal Rank Fusion (RRF) dari seluruh katalog sumber aktif.
                   </p>
                 </div>
 

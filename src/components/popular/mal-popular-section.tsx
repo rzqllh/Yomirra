@@ -277,7 +277,7 @@ export function MalPopularSection({
                     href={getSearchHref(work.title)}
                     className="inline-flex items-center gap-1 text-xs font-bold text-accent hover:underline"
                   >
-                    <span>Cari sumber bacaan</span>
+                    <span>Cari di Sumber</span>
                     <ArrowRight size={12} />
                   </Link>
                   <a
