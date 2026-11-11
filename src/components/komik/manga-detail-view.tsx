@@ -500,7 +500,9 @@ function MangaDetailContent({
               <div className="flex items-center justify-between">
                 <h2 id="detail-chapters" className="flex flex-wrap items-center gap-x-2 text-lg font-bold tracking-tight text-text-primary md:text-xl">
                   Daftar chapter
-                  <span className="rounded-full bg-surface-muted px-2 py-0.5 text-xs text-text-secondary">{chapters?.length ?? 0}</span>
+                  <span className="rounded-full bg-surface-muted px-2 py-0.5 text-xs text-text-secondary">
+                    {searchQuery.trim() ? `${sortedChapters.length} / ${chapters?.length ?? 0}` : (chapters?.length ?? 0)}
+                  </span>
                 </h2>
                 <button
                   onClick={() => setSortOrder(prev => prev === "desc" ? "asc" : "desc")}

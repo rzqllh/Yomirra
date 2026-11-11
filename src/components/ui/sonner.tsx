@@ -52,15 +52,20 @@ function useResponsiveToastPosition(): ToastPosition {
   return position
 }
 
-const Toaster = ({ position: propPosition, ...props }: ToasterProps) => {
+const Toaster = ({ position: propPosition, offset: propOffset, ...props }: ToasterProps) => {
   const { resolvedTheme } = useTheme()
   const autoPosition = useResponsiveToastPosition()
   const resolvedPosition = propPosition ?? autoPosition
+  const defaultOffset = {
+    top: "calc(var(--safe-top, 0px) + 74px)",
+    bottom: "calc(var(--page-bottom-safe, 80px) + 16px)",
+  }
 
   return (
     <Sonner
       theme={resolvedTheme === "dark" ? "dark" : resolvedTheme === "light" ? "light" : "system"}
       position={resolvedPosition}
+      offset={propOffset ?? defaultOffset}
       className="toaster group"
       closeButton
       richColors={false}
