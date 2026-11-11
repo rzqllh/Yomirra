@@ -8,7 +8,7 @@
 - **Historical agent claim, not verified completion:** 35 / 55 `FIX` tickets
 - **Design Token Ratchet:** 529 arbitrary brackets (-52 baseline improvement), 141 raw color bypasses (-10 baseline improvement)
 - **Automated Tests Passing:** Vitest suites for Onboarding (7/7), Updates List (7/7), Reader Shell (13/13), Hero & Header (15/15), Home Loading (3/3)
-- **Unresolved Product Decisions:** 16 tickets preserved in existing safe behavior (`NEEDS_APPROVAL`)
+- **Product Decisions:** 16 / 16 tickets RESOLVED via interactive owner grilling session (2026-11-11; locked scope ready for implementation)
 
 
 ## Independent follow-up — 2026-11-09
@@ -56,7 +56,7 @@ All other rows retain their previous disposition and require the independent aud
 - **Dispositions:**
   - `FIX` (Ready for Scoped Implementation upon Approval): **55 tickets**
   - `QA_REQUIRED` (Pre-implementation Runtime Verification Required): **17 tickets**
-  - `PRODUCT_DECISION` (Owner Grillme Decision Required): **16 tickets**
+  - `PRODUCT_DECISION` (Owner Grillme Decision Required): **16 tickets (16/16 RESOLVED by Owner on 2026-11-11)**
   - `NOT_REPRODUCIBLE`: **0** | `DUPLICATE`: **0** | `OUT_OF_SCOPE`: **0**
 
 ---
