@@ -21,6 +21,7 @@ Mulai dari [Developer Guide](README_DEV.md), [Contributing](../CONTRIBUTING.md),
 - [Schema](SCHEMA.md) — types, store, persistence, dan kontrak API.
 - [Stack](STACK.md) — dependency dan perannya.
 - [Components](COMPONENTS.md) · [Design](DESIGN.md) — komponen, layout, motion, dan overlay.
+- [Feature Parity](FEATURE_PARITY.md) — matriks kesetaraan fitur dengan Mihon/Tachimanga, batasan PWA/web, dan status implementasi.
 - [Reference & Licensing](REFERENCE_LICENSING_REVIEW.md) — referensi produk dan batas penggunaan ulang.
 - [Changelog](../CHANGELOG.md) — perubahan repository dan batas verifikasi yang dicatat saat perubahan.
 
