@@ -12,6 +12,7 @@ import type { MangaKey } from "@/shared/types/collection";
 import { ContinueReadingList } from "./continue-reading-list";
 import { EditorialSpotlight } from "./editorial-spotlight";
 import { HomeLeaderboardPanel } from "./home-leaderboard-panel";
+import { SectionStack } from "@/components/ui/section-stack";
 import { HomeHero } from "./home-hero";
 import {
   selectHeroCandidates,
@@ -232,12 +233,12 @@ export function HomeFeedClient({
   );
 
   return (
-    <div>
+    <SectionStack level="page">
       {/* Returning readers resume first; new readers see discovery immediately. */}
       {historyItems.length > 0 && (
         <section
           id="continue-reading-section"
-          className="mt-4 flex flex-col sm:mt-5"
+          className="flex flex-col"
         >
           <ContinueReadingList items={historyItems} />
         </section>
@@ -246,7 +247,6 @@ export function HomeFeedClient({
       <section
         id="hero-section"
         aria-label="Pembuka Beranda"
-        className={historyItems.length > 0 ? "mt-6" : undefined}
       >
         <HomeHero candidates={heroCandidates} />
       </section>
@@ -255,7 +255,7 @@ export function HomeFeedClient({
       {(currentSpotlight || filteredPopular.length > 0) && <section
         id="spotlight-section"
         aria-labelledby="spotlight-title"
-        className="mt-8 flex min-w-0 flex-col gap-3.5 sm:mt-10 sm:gap-4"
+        className="flex min-w-0 flex-col gap-3.5 sm:gap-4"
       >
         <div className="flex items-center gap-2">
           <span
@@ -334,7 +334,7 @@ export function HomeFeedClient({
         <section
           id="recently-updated-section"
           aria-labelledby="recently-updated-title"
-          className="mt-10 flex flex-col gap-3.5 sm:mt-11"
+          className="flex flex-col gap-3.5"
         >
           <div className="flex items-center justify-between gap-3">
             <h2
@@ -352,7 +352,7 @@ export function HomeFeedClient({
               <ViewModeToggle />
               <Link
                 href="/library"
-                className="group inline-flex min-h-11 items-center gap-1 rounded-[10px] px-1.5 text-xs font-bold text-accent hover:bg-accent/5 focus-visible:outline-2 focus-visible:outline-accent"
+                className="group inline-flex min-h-11 items-center gap-1 rounded-sm px-1.5 text-xs font-bold text-accent hover:bg-accent/5 focus-visible:outline-2 focus-visible:outline-accent"
               >
                 <span>Lihat semua</span>
                 <ArrowRight
@@ -403,7 +403,7 @@ export function HomeFeedClient({
           )}
         </section>
       )}
-      {catalogState && <section role="status" className="mt-6 rounded-xl border border-border-subtle bg-surface-raised p-4">
+      {catalogState && <section role="status" className="rounded-xl border border-border-subtle bg-surface-raised p-4">
         <h2 className="font-semibold text-text-primary">{catalogState === "unavailable" ? "Sumber bacaan belum bisa dimuat" : catalogState === "partial" ? "Sebagian sumber belum bisa dimuat" : "Belum ada hasil dari sumber aktif"}</h2>
         <p className="mt-1 text-sm text-text-secondary">{catalogState === "empty" ? "Sumber sudah merespons, tetapi belum ada komik yang sesuai. Kamu tetap bisa mencari judul atau memeriksa pilihan sumber." : "Ada permintaan katalog yang gagal. Quick Search, Library, dan riwayat di perangkat tetap tersedia."}</p>
         <div className="mt-3 flex flex-wrap gap-3 text-sm font-semibold">
@@ -415,7 +415,7 @@ export function HomeFeedClient({
       {historyItems.length === 0 && (
         <aside
           aria-label="Info Library"
-          className="mt-10 rounded-xl border border-border-subtle/80 bg-surface-raised/40 p-4 sm:p-5 flex items-center justify-between gap-4"
+          className="rounded-xl border border-border-subtle/80 bg-surface-raised/40 p-4 sm:p-5 flex items-center justify-between gap-4"
         >
           <div className="flex items-center gap-3 min-w-0">
             <div className="size-9 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent shrink-0">
@@ -425,7 +425,7 @@ export function HomeFeedClient({
               <p className="text-xs sm:text-sm font-semibold text-text-primary truncate">
                 Simpan &amp; tandai komik favoritmu di Library
               </p>
-              <p className="text-[11px] sm:text-xs text-text-muted truncate">
+              <p className="text-2xs sm:text-xs text-text-muted truncate">
                 Data tersimpan otomatis di perangkatmu, tanpa perlu akun.
               </p>
             </div>
@@ -438,7 +438,7 @@ export function HomeFeedClient({
           </Link>
         </aside>
       )}
-    </div>
+    </SectionStack>
   );
 }
 

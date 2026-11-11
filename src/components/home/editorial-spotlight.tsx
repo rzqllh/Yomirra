@@ -36,22 +36,22 @@ function SpotlightMetadataFallback({
       data-spotlight-slot="synopsis-absent"
     >
       {hasStatus && (
-        <span className="inline-flex items-center rounded-md bg-accent/10 px-2 py-0.5 text-[10px] sm:text-[11px] font-bold uppercase text-accent border border-accent/20">
+        <span className="inline-flex items-center rounded-md bg-accent/10 px-2 py-0.5 text-2xs sm:text-xs font-bold uppercase text-accent border border-accent/20">
           {manga.status}
         </span>
       )}
       {hasFormat && (
-        <span className="inline-flex items-center rounded-md bg-surface-base px-2 py-0.5 text-[10px] sm:text-[11px] font-bold uppercase text-text-secondary border border-border-subtle">
+        <span className="inline-flex items-center rounded-md bg-surface-base px-2 py-0.5 text-2xs sm:text-xs font-bold uppercase text-text-secondary border border-border-subtle">
           {manga.format}
         </span>
       )}
       {hasChapter && (
-        <span className="inline-flex items-center rounded-md bg-surface-base px-2 py-0.5 text-[10px] sm:text-[11px] font-semibold text-text-primary border border-border-subtle">
+        <span className="inline-flex items-center rounded-md bg-surface-base px-2 py-0.5 text-2xs sm:text-xs font-semibold text-text-primary border border-border-subtle">
           {manga.latestChapter!.startsWith("Ch") ? manga.latestChapter : `Ch. ${manga.latestChapter}`}
         </span>
       )}
       {hasScore && (
-        <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2 py-0.5 text-[10px] sm:text-[11px] font-bold text-amber-500 border border-amber-500/20">
+        <span className="inline-flex items-center gap-1 rounded-md bg-amber-500/10 px-2 py-0.5 text-2xs sm:text-xs font-bold text-amber-500 border border-amber-500/20">
           <Star size={11} weight="fill" />
           <span>{Number(manga.score).toFixed(1)}</span>
         </span>
@@ -59,12 +59,12 @@ function SpotlightMetadataFallback({
       {genres.map((g: string) => (
         <span
           key={g}
-          className="inline-flex items-center rounded-md bg-surface-base/80 px-2 py-0.5 text-[10px] sm:text-[11px] font-medium text-text-muted border border-border-subtle/60"
+          className="inline-flex items-center rounded-md bg-surface-base/80 px-2 py-0.5 text-2xs sm:text-xs font-medium text-text-muted border border-border-subtle/60"
         >
           {g}
         </span>
       ))}
-      <span className="inline-flex items-center rounded-md bg-surface-muted px-2 py-0.5 text-[10px] sm:text-[11px] font-bold text-text-muted border border-border-subtle">
+      <span className="inline-flex items-center rounded-md bg-surface-muted px-2 py-0.5 text-2xs sm:text-xs font-bold text-text-muted border border-border-subtle">
         {sourceName}
       </span>
     </div>
@@ -87,7 +87,7 @@ function SpotlightSynopsis({
   if (initialSynopsis) {
     return (
       <p
-        className="mt-2 line-clamp-2 text-[11.5px] leading-relaxed text-text-secondary sm:line-clamp-3 sm:text-sm"
+        className="mt-2 line-clamp-2 text-xs leading-relaxed text-text-secondary sm:line-clamp-3 sm:text-sm"
         data-spotlight-slot="synopsis"
       >
         {initialSynopsis}
@@ -137,7 +137,7 @@ function SpotlightLazySynopsis({
 
   return (
     <p
-      className="mt-2 line-clamp-2 text-[11.5px] leading-relaxed text-text-secondary sm:line-clamp-3 sm:text-sm"
+      className="mt-2 line-clamp-2 text-xs leading-relaxed text-text-secondary sm:line-clamp-3 sm:text-sm"
       data-spotlight-slot="synopsis"
     >
       {synopsis}
@@ -238,7 +238,7 @@ export function EditorialSpotlight({
 
         <div className="relative flex min-w-0 flex-col p-3.5 sm:p-5 lg:p-6">
           <div className="flex min-h-0 flex-1 flex-col">
-            <p className="mb-1.5 text-[10px] font-extrabold uppercase tracking-[0.14em] text-accent sm:text-[11px]">
+            <p className="mb-1.5 text-2xs font-extrabold uppercase tracking-widest text-accent sm:text-xs">
               SOROTAN TERBARU
             </p>
 
@@ -259,7 +259,7 @@ export function EditorialSpotlight({
             />
 
             <div
-              className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-semibold text-text-muted sm:text-xs"
+              className="mt-2.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-2xs font-semibold text-text-muted sm:text-xs"
               data-spotlight-slot="metadata"
             >
               {Number(manga.score) > 0 && (
@@ -283,7 +283,7 @@ export function EditorialSpotlight({
               {manga.format && (
                 <>
                   <span aria-hidden="true" className="text-border-default/80">&bull;</span>
-                  <span className="uppercase text-[10px] tracking-wider text-text-muted">{manga.format}</span>
+                  <span className="uppercase text-2xs tracking-wider text-text-muted">{manga.format}</span>
                 </>
               )}
             </div>
@@ -305,7 +305,7 @@ export function EditorialSpotlight({
                 aria-label="Kontrol sorotan"
               >
                 <span
-                  className="hidden font-mono text-[10px] font-bold tabular-nums text-text-muted sm:inline"
+                  className="hidden font-mono text-2xs font-bold tabular-nums text-text-muted sm:inline"
                   aria-live="polite"
                 >
                   {String(currentIndex + 1).padStart(2, "0")} /{" "}
@@ -315,7 +315,7 @@ export function EditorialSpotlight({
                   type="button"
                   onClick={onPrev}
                   aria-label="Komik sebelumnya"
-                  className="flex size-11 items-center justify-center rounded-xl border border-border-subtle bg-surface-base text-text-secondary transition-colors hover:border-accent/40 hover:bg-surface-hover hover:text-text-primary focus-visible:outline-2 focus-visible:outline-accent"
+                  className="flex size-11 items-center justify-center rounded-sm border border-border-subtle bg-surface-base text-text-secondary transition-colors hover:border-accent/40 hover:bg-surface-hover hover:text-text-primary focus-visible:outline-2 focus-visible:outline-accent"
                 >
                   <CaretLeft size={16} weight="regular" aria-hidden="true" />
                 </button>
@@ -323,7 +323,7 @@ export function EditorialSpotlight({
                   type="button"
                   onClick={onNext}
                   aria-label="Komik berikutnya"
-                  className="flex size-11 items-center justify-center rounded-xl border border-border-subtle bg-surface-base text-text-secondary transition-colors hover:border-accent/40 hover:bg-surface-hover hover:text-text-primary focus-visible:outline-2 focus-visible:outline-accent"
+                  className="flex size-11 items-center justify-center rounded-sm border border-border-subtle bg-surface-base text-text-secondary transition-colors hover:border-accent/40 hover:bg-surface-hover hover:text-text-primary focus-visible:outline-2 focus-visible:outline-accent"
                 >
                   <CaretRight size={16} weight="regular" aria-hidden="true" />
                 </button>

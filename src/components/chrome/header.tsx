@@ -211,7 +211,7 @@ export function PageHeader({
       </header>
 
       {/* When desktop banner is hidden, preserve accessible H1 landmark */}
-      {hideDesktop && <h1 className="sr-only">{title}</h1>}
+      {hideDesktop && <h1 className="sr-only text-text-primary">{title}</h1>}
 
       {/* Skipped for mode="detail" or hideDesktop — detail pages have their own hero, and unified destination pages match Beranda layout */}
       {mode !== "detail" && !hideDesktop && (

@@ -71,7 +71,7 @@ export function LibraryToolbar({
         <Button
           variant={activeFilterCount > 0 ? "accent" : "outline"}
           className={cn(
-            "relative shrink-0 min-h-11 px-3 rounded-xl gap-1.5",
+            "relative shrink-0 min-h-11 px-3 rounded-sm gap-1.5",
             activeFilterCount > 0 && "bg-accent text-accent-on border-accent/40 shadow-xs"
           )}
           aria-label={`Filter ${activeFilterCount > 0 ? `(${activeFilterCount} aktif)` : ""}`}
@@ -84,7 +84,7 @@ export function LibraryToolbar({
               initial={reducedMotion ? false : { scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.15, ease: "easeOut" }}
-              className="inline-flex min-w-5 h-5 items-center justify-center rounded-full bg-accent-on text-accent px-1 text-[11px] font-black shadow-xs"
+              className="inline-flex min-w-5 h-5 items-center justify-center rounded-full bg-accent-on text-accent px-1 text-2xs font-black shadow-xs"
             >
               {activeFilterCount}
             </motion.span>
@@ -97,7 +97,7 @@ export function LibraryToolbar({
           <DropdownMenuTrigger asChild>
             <Button
               variant={isSelectionMode ? "accent" : "outline"}
-              className="shrink-0 min-h-11 px-2.5 rounded-xl border-dashed"
+              className="shrink-0 min-h-11 px-2.5 rounded-sm border-dashed"
               aria-label="Opsi lainnya"
             >
               <DotsThreeVertical size={20} weight="regular" />
