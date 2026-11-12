@@ -10,7 +10,7 @@ export interface IconProps extends Omit<PhosphorIconProps, "ref"> {
 }
 
 export const Icon = React.forwardRef<SVGSVGElement, IconProps>(
-  ({ icon: IconComponent, size = 20, weight = "regular", className, color = "currentColor", strokeWidth, ...props }, ref) => {
+  ({ icon: IconComponent, size = 20, weight = "regular", className, color = "currentColor", strokeWidth: _strokeWidth, ...props }, ref) => {
     return (
       <IconComponent
         ref={ref}

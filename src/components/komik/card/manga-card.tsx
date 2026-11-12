@@ -35,7 +35,6 @@ import { useSourcePreferencesStore } from "@/shared/store/source-preferences-sto
 import { useHistoryStore, type HistoryItem } from "@/shared/store/history-store";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { classifyContent } from "@/shared/sources/content-policy";
-import { ReadingProgress } from "@/components/ui/reading-progress";
 import {
   DropdownMenu,
   DropdownMenuTrigger,

@@ -18,7 +18,6 @@ import { useMounted } from "@/shared/hooks/use-mounted"
 import { UpdatesBell } from "@/components/overlays/updates-bell"
 import { useAuth } from "@/shared/hooks/use-auth"
 import { Button } from "@/components/ui/button"
-import { IconButton } from "@/components/ui/icon-button"
 import { Surface } from "@/components/ui/surface"
 import { cn } from "@/shared/utils/cn"
 

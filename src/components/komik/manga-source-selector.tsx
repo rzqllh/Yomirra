@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Compass, CheckCircle, Star, ArrowRight, ShieldCheck } from "@phosphor-icons/react";
+import { Compass, Star, ArrowRight } from "@phosphor-icons/react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useLibraryStore } from "@/shared/store/library-store";

@@ -71,7 +71,6 @@ export const Chip = React.forwardRef<HTMLButtonElement, ChipProps>(
     ref
   ) => {
     const Comp = asChild ? Slot : "button"
-    const isSelected = selected ?? (variant === "solid" || variant === "accent")
 
     return (
       <Comp

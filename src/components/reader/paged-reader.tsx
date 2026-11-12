@@ -15,10 +15,9 @@ import { getReaderHref } from "@/shared/lib/routes";
 import { getSourceMetadata } from "@/shared/sources/source-registry";
 import { useVisibilityFlush } from "@/shared/hooks/use-visibility-flush";
 import { useReadingTimer } from "@/shared/hooks/use-reading-timer";
-import { CaretLeft, CaretRight, Warning, Flag } from "@phosphor-icons/react";
+import { CaretLeft, CaretRight, Warning } from "@phosphor-icons/react";
 import { ReportSheet } from "@/components/shared/report-sheet";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/shared/utils/cn";
 import { motion, PanInfo } from "motion/react";
 import { toast } from "sonner";
 import { beginNavigationIntent } from "@/shared/lib/navigation-intent";
@@ -62,13 +61,11 @@ export function PagedReader({
   const isDownloaded = useDownloadStore(state => state.isDownloaded(sourceId, mangaId, chapterId));
   const saveProgress = useHistoryStore(state => state.saveProgress);
   const markChapterProgress = useHistoryStore(state => state.markChapterProgress);
-  const getProgress = useHistoryStore(state => state.getLatestForManga);
   const hasHydrated = useHistoryStore(state => state._hasHydrated);
   const historyItem = useHistoryStore(state => {
     const id = `${sourceId}::${mangaId}::${chapterId}`;
     return state.items[id] || state.getLatestForManga(sourceId, mangaId);
   });
-  const source = React.useMemo(() => getSourceMetadata(sourceId), [sourceId]);
 
   const [isReportOpen, setIsReportOpen] = React.useState(false);
   const [reportPageIndex, setReportPageIndex] = React.useState<number | undefined>(undefined);

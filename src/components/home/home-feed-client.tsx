@@ -23,7 +23,7 @@ import { normalizeTitle } from "@/shared/lib/title-matcher";
 import { ShelfCard } from "@/components/komik/card";
 import { CompactCard } from "@/components/komik/card/compact-card";
 import { ViewModeToggle } from "@/components/komik/view-mode-toggle";
-import { MagnifyingGlass, ArrowRight, BookmarkSimple, Compass } from "@phosphor-icons/react";
+import { ArrowRight, BookmarkSimple, Compass } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 

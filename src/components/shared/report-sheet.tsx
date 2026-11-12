@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Spinner, Flag, PaperPlaneRight, X } from "@phosphor-icons/react";
+import { Spinner, Flag, PaperPlaneRight } from "@phosphor-icons/react";
 import { cn } from "@/shared/utils/cn";
 import type { ReportType, UserReportPayload } from "@/shared/types/report";
 

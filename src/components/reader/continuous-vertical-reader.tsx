@@ -18,11 +18,10 @@ import { useReaderScroll } from "@/shared/hooks/use-reader-scroll"
 
 
 import { useReadingTimer } from "@/shared/hooks/use-reading-timer"
-import { CaretLeft, CaretRight, CheckCircle, Flag, BookOpen, Warning } from "@phosphor-icons/react"
+import { CaretLeft, CaretRight, Flag, BookOpen, Warning } from "@phosphor-icons/react"
 import { ReportSheet } from "@/components/shared/report-sheet"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/shared/utils/cn"
-import { motion } from "motion/react"
 import { beginNavigationIntent } from "@/shared/lib/navigation-intent"
 import { canCompleteChapter } from "@/shared/lib/chapter-completion"
 import {
@@ -210,7 +209,7 @@ export function ContinuousVerticalReader({
       if (cached) {
         try {
           return JSON.parse(cached);
-        } catch (e) { }
+        } catch { }
       }
     }
     return undefined;

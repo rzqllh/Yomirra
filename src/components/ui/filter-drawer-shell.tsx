@@ -87,7 +87,6 @@ export function FilterDrawerShell({
     return () => media.removeEventListener("change", update);
   }, [desktopPortalId]);
   const [activeSnapPoint, setActiveSnapPoint] = React.useState<number | string | null>(0.52);
-  const touchStartY = React.useRef<number | null>(null);
   const reducedMotion = useReducedMotion();
   const [viewportBounds, setViewportBounds] = React.useState<DrawerViewportBounds | null>(null);
 
@@ -121,10 +120,6 @@ export function FilterDrawerShell({
       onOpen?.();
     }
   };
-
-  const expandDrawer = React.useCallback(() => {
-    if (activeSnapPoint !== 0.88) setActiveSnapPoint(0.88);
-  }, [activeSnapPoint]);
 
   const handleApply = () => {
     onApply();

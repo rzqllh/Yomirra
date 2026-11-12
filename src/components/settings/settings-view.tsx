@@ -18,7 +18,6 @@ import {
   CaretLeft,
   DownloadSimple,
   ShieldWarning,
-  Sparkle,
   BookOpen,
 } from "@phosphor-icons/react";
 import { BackupRestoreView } from "@/components/settings/backup-restore-modal";
@@ -58,7 +57,7 @@ export interface SettingsViewProps {
   onClose?: () => void;
 }
 
-export function SettingsView({ isOverlay = false, onClose }: SettingsViewProps) {
+export function SettingsView({ isOverlay: _isOverlay = false, onClose: _onClose }: SettingsViewProps) {
   const { user, logout } = useAuth();
   const clearHistory = useHistoryStore((state) => state.clearHistory);
   const clearLibrary = useLibraryStore((state) => state.clearLibrary);

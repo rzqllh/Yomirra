@@ -7,7 +7,6 @@ import * as domainResolverModule from "@/server/lib/sources/domain-resolver";
 import { isRedisConfigured, isRedisReady, redis, ensureRedisReady } from "@/server/lib/cache/redis";
 import { deleteMatchedRedisKeys } from "@/server/lib/sources/custom-source-service";
 import { logger } from "@/shared/logger";
-import { sourceManager } from "@/server/lib/sources/source-manager";
 import type { SourceHealthMatrixItem } from "@/shared/types/admin";
 
 export interface ProbeResult {

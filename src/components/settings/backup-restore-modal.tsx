@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { DownloadSimple, UploadSimple, ShieldWarning, CheckCircle, Warning, FileText } from "@phosphor-icons/react";
+import { DownloadSimple, UploadSimple, ShieldWarning, FileText } from "@phosphor-icons/react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { performDryRun, executeCoordinatedRestore, triggerBackupDownload } from "@/shared/lib/backup-engine";
@@ -85,7 +85,7 @@ export function BackupRestoreView({ onBack, className }: BackupRestoreViewProps)
         resetState();
         onBack?.();
       }
-    } catch (err: any) {
+    } catch {
       toast.error("Data gagal dipulihkan", {
         description: "Koleksi bacaan dikembalikan ke kondisi sebelum pemulihan.",
       });

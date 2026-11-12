@@ -4,7 +4,6 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { motion, LayoutGroup, useReducedMotion } from "motion/react";
 import {
-  Funnel,
   SmileySad,
   Books,
   MagnifyingGlass,
@@ -69,8 +68,8 @@ export function LibraryResults({
   mangas,
   viewMode,
   activeSourceId,
-  libraryItems,
-  selectedCollections,
+  libraryItems: _libraryItems,
+  selectedCollections: _selectedCollections,
   selectedGenres,
   excludedGenres,
   selectedFormats,

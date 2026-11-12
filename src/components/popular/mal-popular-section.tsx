@@ -4,7 +4,7 @@ import * as React from "react";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import Link from "next/link";
 import Image from "next/image";
-import type { MalPopularFeed, MalPopularWork, MalRankingType } from "@/shared/types/mal";
+import type { MalPopularFeed, MalRankingType } from "@/shared/types/mal";
 import { getSearchHref } from "@/shared/lib/routes";
 import { ArrowRight, Sparkle, ArrowSquareOut, Star, SpinnerGap } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { MangaCard, type MangaCardProps } from "./manga-card";
+import { MangaCard } from "./manga-card";
 import type { BaseCardProps } from "./types";
 import type { SourceBinding } from "@/shared/lib/canonical-search";
 

@@ -3,7 +3,6 @@
 import * as React from "react";
 import { useCollectionStore } from "@/shared/store/collection-store";
 import { MangaKey, ReadingStatus } from "@/shared/types/collection";
-import { Button } from "@/components/ui/button";
 import { BookOpenText } from "@phosphor-icons/react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useMounted } from "@/shared/hooks/use-mounted";
