@@ -15,7 +15,7 @@ export function CatalogControls({
     <section
       aria-label={label}
       className={cn(
-        "space-y-3 border-y border-border-subtle py-4 md:space-y-4 md:rounded-[16px] md:border md:bg-surface-raised/50 md:p-5",
+        "space-y-3 border-y border-border-subtle py-4 md:space-y-4 md:rounded-2xl md:border md:bg-surface-raised/50 md:p-5",
         className
       )}
     >

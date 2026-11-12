@@ -17,7 +17,7 @@ const DialogOverlay = React.forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      "ink-dialog-overlay fixed inset-0 z-[var(--z-overlay)] backdrop-blur-[5px]",
+      "ink-dialog-overlay fixed inset-0 z-[var(--z-overlay)] backdrop-blur-sm",
       className
     )}
     {...props}
@@ -36,7 +36,7 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "ink-dialog-content fixed left-1/2 top-1/2 z-[var(--z-overlay)] grid w-[calc(100vw-32px)] max-w-sm sm:max-w-md -translate-x-1/2 -translate-y-1/2 gap-5 rounded-role-modal border border-border-subtle bg-surface-overlay p-6 shadow-lg focus:outline-none max-h-[85vh] overflow-y-auto",
+        "ink-dialog-content fixed left-1/2 top-1/2 z-[var(--z-overlay)] grid w-11/12 max-w-sm sm:max-w-md -translate-x-1/2 -translate-y-1/2 gap-5 rounded-role-modal border border-border-subtle bg-surface-overlay p-6 shadow-lg focus:outline-none max-h-9/10 overflow-y-auto",
         className
       )}
       {...props}
@@ -100,7 +100,7 @@ const DialogDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
     ref={ref}
-    className={cn("text-[13px] sm:text-sm leading-relaxed text-text-secondary", className)}
+    className={cn("text-xs sm:text-sm leading-relaxed text-text-secondary", className)}
     {...props}
   />
 ))

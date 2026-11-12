@@ -37,21 +37,21 @@ The application cache/readiness still uses `ioredis` and `REDIS_URL`. The separa
 
 Earlier incident and handoff reports remain historical evidence, including quota samples, external blockers, and the 18-finding stabilization summary. A past `LOCAL_VERIFIED` label does not establish all acceptance or device/service gates. This refresh does not independently retest them or replace their observations with a blanket green status. Current conclusions require dated evidence for each flow on the relevant SHA/environment.
 
-## Reference benchmark and original adaptation
+## Documentation benchmark and original adaptation
 
-Fuyuka supplied official-source research checked 2026-11-08 (WIB). Patterns informed information architecture and original wording; no external code, wording, logos, screenshots, or assets were copied. This is documentation benchmarking, not feature parity certification.
+Documentation structure informed information architecture and original wording; no external code, wording, logos, screenshots, or assets were copied.
 
-| Reference pattern | Primary references | Yomirra adaptation |
+| Documentation pattern | Core structure | Yomirra implementation |
 | --- | --- | --- |
-| Short first-reading path | [Mihon getting started](https://mihon.app/docs/guides/getting-started), [Tachimanga get started](https://tachimanga.app/help/guides/get-started.html) | Four-step README onboarding |
-| Task guides and FAQ | [Tachimanga FAQ](https://tachimanga.app/help/faq/) | Dedicated guide and troubleshooting/FAQ |
-| Platform and storage caveats beside actions | [Tachimanga downloads](https://tachimanga.app/help/guides/downloads.html), [Suwayomi setup](https://github.com/Suwayomi/Suwayomi-Server#downloading-and-running-the-app) | Standalone queue versus ZIP, cache eviction, local setup |
-| Diagnose chapter/title/source before escalation | [Mihon diagnosis](https://mihon.app/docs/guides/troubleshooting/diagnosis), [extension FAQ](https://mihon.app/docs/faq/browse/extensions) | Separate source, image, and app report steps |
-| Distinguish backups, media, and sync | [Mihon backups](https://mihon.app/docs/guides/backups), [Tachimanga backups](https://tachimanga.app/help/guides/backups.html) | JSON excludes images; local restore versus cloud sync; no cross-app format promise |
-| Privacy-aware reports | [Mihon privacy](https://mihon.app/privacy/), [Tachimanga privacy](https://tachimanga.app/docs/privacy.html) | Public issue redaction guidance without inventing a Yomirra privacy policy |
-| Discoverable contribution/support/change records | [Mihon contribution](https://mihon.app/docs/contribute), [changelogs](https://mihon.app/changelogs/), [Suwayomi support](https://github.com/Suwayomi/Suwayomi-Server#troubleshooting-and-support) | Audience index, contribution links, support route, changelog |
+| Short first-reading path | Clear onboarding | Four-step README onboarding |
+| Task guides and FAQ | Operational walkthroughs | Dedicated guide and troubleshooting/FAQ |
+| Platform and storage caveats beside actions | Clear platform bounds | Standalone queue versus ZIP, cache eviction, local setup |
+| Diagnose chapter/title/source before escalation | Structured diagnostics | Separate source, image, and app report steps |
+| Distinguish backups, media, and sync | Data boundaries | JSON excludes images; local restore versus cloud sync; no cross-app format promise |
+| Privacy-aware reports | Safe logging | Public issue redaction guidance without inventing an unverified privacy policy |
+| Discoverable contribution/support/change records | Project lifecycle | Audience index, contribution links, support route, changelog |
 
-Reference-specific native features, extension compatibility, backup interchange, background execution, and legal/privacy claims are not transferred to Yomirra. The existing [licensing review](../REFERENCE_LICENSING_REVIEW.md) and [rights reporting policy](../CONTENT_RIGHTS_REPORTING.md) remain unchanged.
+The existing [licensing review](../REFERENCE_LICENSING_REVIEW.md) and [rights reporting policy](../CONTENT_RIGHTS_REPORTING.md) remain in effect.
 
 ## Validation and limitations
 

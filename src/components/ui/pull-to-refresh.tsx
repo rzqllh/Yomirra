@@ -157,7 +157,7 @@ export function PullToRefresh({ children, onRefresh }: PullToRefreshProps) {
   return (
     <>
       <motion.div
-        className="pointer-events-none fixed inset-x-0 top-0 z-[100] flex justify-center"
+        className="pointer-events-none fixed inset-x-0 top-0 z-[var(--z-banner)] flex justify-center"
         style={{ y: pullDistance }}
       >
         <div

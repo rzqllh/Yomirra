@@ -525,7 +525,7 @@ export function ContinuousVerticalReader({
 
       <div
         ref={comicContainerRef}
-        className="flex w-full max-w-[800px] flex-col items-center pt-[calc(var(--mobile-header-height)+var(--safe-top))]"
+        className="flex w-full max-w-4xl flex-col items-center pt-[calc(var(--mobile-header-height)+var(--safe-top))]"
         style={{
           height: `${virtualizer.getTotalSize()}px`,
           width: '100%',
@@ -589,13 +589,13 @@ export function ContinuousVerticalReader({
         })}
       </div>
 
-      <div className="w-full max-w-[800px] h-14 bg-gradient-to-b from-transparent via-black/20 to-transparent pointer-events-none -mt-4 relative z-10" />
+      <div className="w-full max-w-4xl h-14 bg-gradient-to-b from-transparent via-black/20 to-transparent pointer-events-none -mt-4 relative z-10" />
 
-      <div className="w-full max-w-[280px] h-[1px] bg-gradient-to-r from-transparent via-border-subtle to-transparent my-2 relative z-10" />
+      <div className="w-full max-w-70 h-px bg-gradient-to-r from-transparent via-border-subtle to-transparent my-2 relative z-10" />
 
       {/* End of Chapter Section (Combined Variant 3 Milestone + 10 Unified Dock on Pure Black Canvas) */}
-      <div className="w-full max-w-[420px] mx-auto px-4 pt-4 pb-[calc(5rem+env(safe-area-inset-bottom))] flex flex-col items-center gap-4 relative z-10 select-none">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[340px] h-[200px] bg-accent/12 rounded-full blur-[80px] pointer-events-none -z-10" />
+      <div className="w-full max-w-md mx-auto px-4 pt-4 pb-[calc(5rem+env(safe-area-inset-bottom))] flex flex-col items-center gap-4 relative z-10 select-none">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-85 h-50 bg-accent/12 rounded-full blur-3xl pointer-events-none -z-10" />
 
         {/* Milestone Card Dock */}
         <div className="w-full rounded-xl bg-surface-raised/85 border border-border-glass backdrop-blur-2xl p-4 sm:p-5 flex flex-col gap-4 shadow-heavy relative">
@@ -618,7 +618,7 @@ export function ContinuousVerticalReader({
             {_prevChapterId && (
               <Button
                 variant="outline"
-                className="h-11 px-4 font-semibold text-xs sm:text-sm bg-surface-overlay hover:bg-surface-hover active:bg-surface-muted border-border-subtle text-text-secondary hover:text-text-primary flex-1 flex items-center justify-center gap-2 active:scale-[0.98] transition-all cursor-pointer shadow-none"
+                className="h-11 px-4 font-semibold text-xs sm:text-sm bg-surface-overlay hover:bg-surface-hover active:bg-surface-muted border-border-subtle text-text-secondary hover:text-text-primary flex-1 flex items-center justify-center gap-2 active:scale-98 transition-all cursor-pointer shadow-none"
                 onClick={() => {
                   const href = getReaderHref(sourceId, mangaId, _prevChapterId);
                   if (beginNavigationIntent(href)) router.replace(href);
@@ -632,7 +632,7 @@ export function ContinuousVerticalReader({
             {nextChapterId ? (
               <Button
                 className={cn(
-                  "h-11 px-4 font-semibold text-xs sm:text-sm bg-accent hover:bg-accent-hover text-accent-on flex items-center justify-center gap-2 active:scale-[0.98] transition-all cursor-pointer shadow-sm",
+                  "h-11 px-4 font-semibold text-xs sm:text-sm bg-accent hover:bg-accent-hover text-accent-on flex items-center justify-center gap-2 active:scale-98 transition-all cursor-pointer shadow-sm",
                   _prevChapterId ? "flex-1" : "w-full"
                 )}
                 onClick={handleNextChapter}
@@ -644,7 +644,7 @@ export function ContinuousVerticalReader({
               <Button
                 asChild
                 className={cn(
-                  "h-11 px-4 font-semibold text-xs sm:text-sm bg-accent hover:bg-accent-hover text-accent-on flex items-center justify-center gap-2 active:scale-[0.98] transition-all shadow-sm",
+                  "h-11 px-4 font-semibold text-xs sm:text-sm bg-accent hover:bg-accent-hover text-accent-on flex items-center justify-center gap-2 active:scale-98 transition-all shadow-sm",
                   _prevChapterId ? "flex-1" : "w-full"
                 )}
               >

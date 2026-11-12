@@ -48,12 +48,12 @@ export function ContinueReadingList({
       </div>
 
       {/* Responsive Shelf: Snap Rail on Mobile, 2 Cols on Tablet, 3 Cols on Desktop */}
-      <div className="flex gap-3.5 overflow-x-auto pb-2 pt-0.5 snap-x snap-mandatory [scrollbar-width:thin] w-full sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:overflow-visible sm:snap-none sm:gap-4">
+      <div className="flex gap-3.5 overflow-x-auto pb-2 pt-0.5 snap-x snap-mandatory scrollbar-thin w-full sm:grid sm:grid-cols-2 lg:grid-cols-3 sm:overflow-visible sm:snap-none sm:gap-4">
         {items.slice(0, 6).map((item) => (
           <HistoryCard
             key={`${item.sourceId}-${item.mangaId}-${item.chapterId}`}
             item={item}
-            className="shrink-0 snap-start w-[84vw] max-w-[320px] sm:w-auto sm:max-w-none sm:shadow-sm"
+            className="shrink-0 snap-start w-10/12 max-w-xs sm:w-auto sm:max-w-none sm:shadow-sm"
           />
         ))}
       </div>

@@ -21,7 +21,7 @@ interface FilterSectionProps {
 export function FilterSection({ title, layout = "wrap", children }: FilterSectionProps) {
   return (
     <div>
-      <h3 className="text-[12px] font-bold text-text-muted uppercase tracking-[0.12em] mb-2.5">{title}</h3>
+      <h3 className="text-xs font-bold text-text-muted uppercase tracking-widest mb-2.5">{title}</h3>
       <div
         className={cn(
           "gap-2",
@@ -212,9 +212,9 @@ export function FilterDrawerShell({
         )}
       </Drawer.Trigger>
       <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-xs z-[var(--z-drawer)]" />
+        <Drawer.Overlay className="fixed inset-0 bg-scrim backdrop-blur-xs z-[var(--z-drawer)]" />
         <Drawer.Content
-          className="bg-surface-base flex h-[88dvh] max-h-[88dvh] flex-col overflow-hidden rounded-t-[28px] fixed bottom-0 left-0 right-0 z-[var(--z-overlay)] outline-none shadow-heavy border-t border-border-subtle"
+          className="bg-surface-base flex h-9/10 max-h-9/10 flex-col overflow-hidden rounded-t-2xl fixed bottom-0 left-0 right-0 z-[var(--z-overlay)] outline-none shadow-heavy border-t border-border-subtle"
           style={viewportBounds ? { maxHeight: `${viewportBounds.height}px`, bottom: `${viewportBounds.bottom}px` } : undefined}
         >
           {/* Swipe handle & header */}

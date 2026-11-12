@@ -653,8 +653,8 @@ describe("Yomirra Editorial Home Components", () => {
       const first = screen.getByRole("link", { name: /Manga Test 1/i });
       const second = screen.getByRole("link", { name: /Manga Test 2/i });
 
-      expect(first.className).toContain("min-h-[76px]");
-      expect(second.className).toContain("min-h-[42px]");
+      expect(first.className).toContain("min-h-19");
+      expect(second.className).toContain("min-h-11");
       expect(screen.getByText("01")).toBeTruthy();
       expect(screen.getByText("02")).toBeTruthy();
     });

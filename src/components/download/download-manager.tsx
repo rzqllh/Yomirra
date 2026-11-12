@@ -60,10 +60,10 @@ export function DownloadManager() {
           animate={{ opacity: 0.85 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 1 }}
-          className="pointer-events-none fixed inset-0 z-[9999] bg-black"
+          className="pointer-events-none fixed inset-0 z-[var(--z-takeover)] bg-scrim"
         >
           <div className="absolute inset-0 flex items-center justify-center p-6 text-center">
-            <p className="text-white/70 text-sm">
+            <p className="text-text-muted text-sm">
               Layar diredupkan untuk menghemat daya selama proses unduhan.<br/>
               Sentuh layar untuk membangunkan.
             </p>

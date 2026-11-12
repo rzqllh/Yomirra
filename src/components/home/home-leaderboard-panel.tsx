@@ -93,7 +93,7 @@ export function HomeLeaderboardPanel({
     <section
       aria-label={title}
       className={cn(
-        "relative flex h-full min-w-0 flex-col p-4 sm:p-5 lg:h-[340px] lg:p-4 rounded-xl border border-border-subtle bg-surface-raised shadow-xs overflow-hidden",
+        "relative flex h-full min-w-0 flex-col p-4 sm:p-5 lg:h-85 lg:p-4 rounded-xl border border-border-subtle bg-surface-raised shadow-xs overflow-hidden",
         className
       )}
     >
@@ -115,11 +115,11 @@ export function HomeLeaderboardPanel({
                 value: source.id,
                 label: source.name,
               }))}
-              buttonClassName="min-h-11 max-w-[132px] rounded-sm border-border-subtle bg-surface-muted px-2.5 py-0 text-2xs font-semibold text-text-secondary shadow-none hover:bg-surface-hover"
+              buttonClassName="min-h-11 max-w-33 rounded-sm border-border-subtle bg-surface-muted px-2.5 py-0 text-2xs font-semibold text-text-secondary shadow-none hover:bg-surface-hover"
               align="right"
             />
           ) : activeSourceId ? (
-            <span className="max-w-[120px] truncate text-2xs font-semibold text-text-muted">
+            <span className="max-w-30 truncate text-2xs font-semibold text-text-muted">
               {activeSourceName}
             </span>
           ) : null}

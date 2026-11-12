@@ -31,7 +31,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
         onSubmit={handleSubmit}
         className={cn(
           "flex items-center gap-2.5 rounded-sm px-4 border border-border-subtle transition-all duration-200 ease-out w-full",
-          size === "sm" ? "h-[36px]" : "h-[44px]",
+          size === "sm" ? "h-9" : "h-11",
           variant === "glass" && "bg-surface-glass backdrop-blur-md hover:bg-surface-hover hover:border-border-strong focus-within:bg-surface-overlay focus-within:border-accent/40 focus-within:ring-2 focus-within:ring-accent/20 focus-within:shadow-xs",
           variant === "solid" && "bg-surface-base hover:bg-surface-raised hover:border-border-strong focus-within:border-accent/40 focus-within:ring-2 focus-within:ring-accent/20",
           variant === "raised" && "bg-surface-raised hover:bg-surface-hover hover:border-border-strong focus-within:border-accent/40 focus-within:ring-2 focus-within:ring-accent/20",
@@ -39,7 +39,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
         )}
       >
         <MagnifyingGlass
-          className="size-[18px] text-text-muted shrink-0 transition-colors group-focus-within:text-accent"
+          className="size-4.5 text-text-muted shrink-0 transition-colors group-focus-within:text-accent"
           weight="regular"
         />
         <input
@@ -65,7 +65,7 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
           </IconButton>
         )}
         {shortcut && (
-          <kbd className="hidden lg:inline-flex h-6 select-none items-center gap-1 rounded-xs border border-border-default bg-surface-base px-2 font-mono text-[11px] font-bold text-text-muted">
+          <kbd className="hidden lg:inline-flex h-6 select-none items-center gap-1 rounded-xs border border-border-default bg-surface-base px-2 font-mono text-2xs font-bold text-text-muted">
             {shortcut}
           </kbd>
         )}

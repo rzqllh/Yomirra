@@ -88,7 +88,7 @@ export function GuestActionGateModal({
               )}
             </div>
             <div className="flex flex-col">
-              <span className="text-[10px] font-black uppercase tracking-wider text-text-muted">
+              <span className="text-2xs font-black uppercase tracking-wider text-text-muted">
                 {isRating ? "Rating Personal" : "Koleksi Kustom"}
               </span>
               <span className="text-xs font-semibold text-text-secondary flex items-center gap-1">
@@ -119,7 +119,7 @@ export function GuestActionGateModal({
             size="default"
             onClick={handleLogin}
             loading={isLoggingIn}
-            className="w-full h-11 rounded-xl font-bold bg-accent hover:bg-accent-hover text-white flex items-center justify-center gap-2 shadow-xs active:scale-[0.99] transition-transform"
+            className="w-full h-11 rounded-xl font-bold bg-accent hover:bg-accent-hover text-accent-on flex items-center justify-center gap-2 shadow-xs active:scale-[0.99] transition-transform"
           >
             <GoogleLogo size={18} weight="regular" />
             <span>{isRating ? "Simpan ke Akun (Google)" : "Amankan Pake Google"}</span>

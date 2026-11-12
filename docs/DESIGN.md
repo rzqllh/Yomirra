@@ -43,30 +43,20 @@ Provider mechanics must not dominate normal browsing. The system should expose t
 
 ---
 
-# 2. Research basis: what a mature comic reader normally separates
+# 2. Research basis: reader ergonomics and information separation
 
-This spec was checked against current patterns from mature comic-reader products and documentation, especially Mihon, Komikku, and WEBTOON.
+This spec is grounded in ergonomic patterns and interface conventions established for modern digital comic readers.
 
-Key findings:
+Key principles:
 
-- Mature readers distinguish **browsing sources**, **personal library**, **global search**, **downloads**, and **reader settings** instead of collapsing them into one generic catalog.
-- Mihon explicitly provides global search across sources, while normal source browsing remains source-scoped.
-- Mihon and Komikku treat the reader as a first-class experience with per-series reading-mode overrides, paged and long-strip modes, page navigation, crop/scale controls, and persistent reading preferences.
-- Komikku supports merging equivalent entries from different sources. That validates Yomirra's normalization direction, but Yomirra should present the merged work as the primary object rather than exposing duplicate provider entries by default.
-- WEBTOON separates discovery/search from the user's saved/subscribed space and treats downloads as a dedicated personal utility.
-- Mature reader implementations also avoid unnecessary bulk source requests because excessive network requests can be expensive, slow, or trigger provider-side protection.
+- The system distinguishes **browsing sources**, **personal library**, **global search**, **downloads**, and **reader settings** instead of collapsing them into one generic catalog.
+- Global search executes across all active sources concurrently, while normal catalog browsing remains source-scoped.
+- The reader engine is treated as a first-class experience with per-series reading-mode overrides, paged and long-strip modes, page navigation, crop/scale controls, and persistent reading preferences.
+- Multi-source normalization merges equivalent entries across sources, presenting the unified series as the primary object rather than cluttering browsing with duplicate entries.
+- Discovery and search are separated from the user's personal saved space, treating downloads as a dedicated offline utility.
+- Request rate and concurrency are strictly managed to avoid excessive network requests and protect upstream stability.
 
-Research references consulted:
-
-- Mihon — Getting Started
-- Mihon — Reader Settings
-- Mihon — Library FAQ
-- Mihon — Source Migration
-- Mihon — 2026 changelogs
-- Komikku — Getting Started and project README
-- WEBTOON Help — Search/Home/My changes and Downloads
-
-These products are references, not visual templates. Yomirra should keep its own interaction model and identity.
+Yomirra maintains an independent interaction model and identity tailored for modern web and PWA ergonomics.
 
 ---
 

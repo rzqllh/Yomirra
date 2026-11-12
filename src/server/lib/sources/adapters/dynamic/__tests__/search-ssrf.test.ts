@@ -20,11 +20,11 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { DynamicSourceAdapter } from "../index";
 import { getSourceCacheKey } from "@/server/lib/cache/redis-cache";
 import { isSafeIp } from "../../../../security/outbound-policy";
-import type { MihonSourceManifest } from "@/shared/sources/dynamic-source-registry";
+import type { DynamicSourceManifest } from "@/shared/sources/dynamic-source-registry";
 
 // Fixture helpers
 
-function makeManifest(overrides: Partial<MihonSourceManifest> = {}): MihonSourceManifest {
+function makeManifest(overrides: Partial<DynamicSourceManifest> = {}): DynamicSourceManifest {
   return {
     id: "test-dynamic-source",
     name: "Test Dynamic Source",
@@ -40,7 +40,7 @@ function makeManifest(overrides: Partial<MihonSourceManifest> = {}): MihonSource
   };
 }
 
-function makeAdapter(manifest?: Partial<MihonSourceManifest>): DynamicSourceAdapter {
+function makeAdapter(manifest?: Partial<DynamicSourceManifest>): DynamicSourceAdapter {
   return new DynamicSourceAdapter(makeManifest(manifest));
 }
 

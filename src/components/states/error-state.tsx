@@ -44,7 +44,7 @@ export function ErrorState({
       <div className={cn("flex flex-col items-center justify-center py-8 text-center", className)}>
         <WarningCircle size={32} className="text-semantic-error mb-2" weight="duotone" />
         <p className="text-sm font-medium text-text-primary">{title}</p>
-        {description && <p className="text-xs text-text-muted mt-1 max-w-[240px]">{description}</p>}
+        {description && <p className="text-xs text-text-muted mt-1 max-w-60">{description}</p>}
         {onRetry && (
           <Button variant="secondary" size="sm" onClick={onRetry} className="mt-3">
             {retryLabel}
@@ -56,7 +56,7 @@ export function ErrorState({
 
   return (
     <div className={cn(
-      "flex min-h-[40vh] flex-col items-center justify-center text-center px-4",
+      "flex min-h-60 flex-col items-center justify-center text-center px-4",
       className
     )}>
       <div className="mb-6 rounded-xl bg-semantic-error/10 p-6 border border-semantic-error/20">

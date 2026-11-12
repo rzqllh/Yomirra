@@ -138,7 +138,7 @@ export function CollapsibleBadgeRow({
       ))}
       {overflowCount > 0 && (
         <span
-          className="shrink-0 text-[9px] font-bold px-1.5 py-0.5 rounded-xs bg-surface-muted text-text-muted border border-border-subtle"
+          className="shrink-0 text-3xs font-bold px-1.5 py-0.5 rounded-xs bg-surface-muted text-text-muted border border-border-subtle"
           title={`+${overflowCount} badge lainnya`}
         >
           +{overflowCount}
@@ -414,149 +414,6 @@ export function MangaCard({
       }
     };
 
-    // =========================================================================
-    // RESTORE POINT: PREVIOUS PROGRESS VARIANT IMPLEMENTATION
-    // (Preserved as fallback restore point per user request)
-    // =========================================================================
-    /*
-    return (
-      <article
-        className={cn(
-          mangaCardSurface({ kind: "enclosed" }),
-          "group relative overflow-hidden select-none",
-          className
-        )}
-      >
-        <Link
-          href={readerHref}
-          prefetch={false}
-          onClick={() => beginNavigationIntent(readerHref)}
-          className={cn(
-            "flex min-h-full gap-3.5 p-3 pr-13 sm:p-3.5 sm:pr-14 rounded-md focus-visible:ring-inset",
-            mangaCardInteraction.link
-          )}
-          aria-label={`Lanjut baca ${manga.title}, ${effChapterTitle}`}
-        >
-          <MangaCardCoverFrame className="w-18 sm:w-20">
-            <MangaCover
-              src={manga.coverUrl}
-              sourceId={sourceId}
-              mangaId={manga.id}
-              alt={manga.title}
-              fallbackTitle={manga.title}
-              className="w-full h-full"
-              imageClassName={cn("w-full h-full object-cover", mangaCardInteraction.coverImage)}
-            />
-          </MangaCardCoverFrame>
-
-          <div className="flex flex-col flex-1 min-w-0 justify-between py-0.5">
-            <div>
-              <div className="flex items-center gap-1.5 mb-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-surface-muted text-text-muted border border-border-subtle">
-                  {sourceDisplayName}
-                </span>
-                {showNewBadge && (
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-status-info-bg text-status-info-fg border border-status-info-fg/30">
-                    Baru
-                  </span>
-                )}
-                <span
-                  className={cn(
-                    "text-[10.5px] font-mono font-bold px-1.5 py-0.5 rounded",
-                    isCompleted
-                      ? "bg-status-success-bg text-status-success-fg border border-status-success-fg/30"
-                      : "bg-accent/10 text-accent"
-                  )}
-                >
-                  {progress}%
-                </span>
-              </div>
-
-              <MangaCardTitle
-                density="compact"
-                lines={2}
-                className={mangaCardInteraction.title}
-                title={manga.title}
-              >
-                {manga.title}
-              </MangaCardTitle>
-            </div>
-
-            <div className="mt-2.5">
-              <div className="flex items-center justify-between text-[11px] font-medium text-text-muted mb-1.5">
-                <MangaCardMeta className="truncate mr-2 text-[11px] text-text-muted">
-                  {effChapterTitle}
-                </MangaCardMeta>
-                <span
-                  className={cn(
-                    "shrink-0 inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded-sm text-xs font-bold transition-all",
-                    "bg-accent text-accent-on shadow-xs hover:bg-accent-hover active:scale-95",
-                    "min-h-[36px] sm:min-h-0 sm:py-0.5 sm:px-2 sm:text-[11px]"
-                  )}
-                >
-                  <Play size={10} weight="fill" />
-                  <span>Lanjut</span>
-                </span>
-              </div>
-              <ReadingProgress
-                value={progress}
-                size="sm"
-                showLabel={false}
-                variant={isCompleted ? "success" : "default"}
-              />
-            </div>
-          </div>
-        </Link>
-
-        <div className="absolute right-1.5 top-1.5 z-20">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                aria-label={`Opsi untuk ${manga.title}`}
-                className="flex size-11 items-center justify-center rounded-sm text-text-muted hover:text-text-primary hover:bg-surface-hover motion-safe:transition-all outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-surface-raised active:scale-95 data-[state=open]:rotate-90 data-[state=open]:text-text-primary duration-150 cursor-pointer"
-              >
-                <DotsThreeVertical size={16} weight="regular" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 z-50">
-              <DropdownMenuItem asChild className="cursor-pointer text-xs">
-                <Link
-                  href={readerHref}
-                  onClick={() => beginNavigationIntent(readerHref)}
-                  className="flex items-center gap-2"
-                >
-                  <Play size={14} weight="fill" className="text-accent" />
-                  <span>Lanjutkan membaca</span>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild className="cursor-pointer text-xs">
-                <Link
-                  href={detailHref}
-                  onClick={() => beginNavigationIntent(detailHref)}
-                  className="flex items-center gap-2"
-                >
-                  <BookOpen size={14} />
-                  <span>Buka detail komik</span>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={handleDeleteHistory}
-                className="flex items-center gap-2 cursor-pointer text-xs text-semantic-error focus:bg-semantic-error/10 focus:text-semantic-error"
-              >
-                <Trash size={14} />
-                <span>Hapus dari riwayat</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </article>
-    );
-    */
-    // =========================================================================
-    // END RESTORE POINT
-    // =========================================================================
-
     return (
       <article
         className={cn(
@@ -569,7 +426,7 @@ export function MangaCard({
           prefetch={false}
           onClick={() => beginNavigationIntent(readerHref)}
           className={cn(
-            "flex flex-1 min-h-[96px] sm:min-h-[104px] gap-3.5 p-3 sm:p-3.5 focus-visible:ring-inset rounded-xl",
+            "flex flex-1 min-h-24 sm:min-h-26 gap-3.5 p-3 sm:p-3.5 focus-visible:ring-inset rounded-xl",
             mangaCardInteraction.link
           )}
           aria-label={`Lanjut baca ${manga.title}, ${effChapterTitle}`}
@@ -592,18 +449,18 @@ export function MangaCard({
             {/* Top Tier: Source Badge & Primary Title */}
             <div className="min-w-0 pr-8">
               <div className="flex items-center gap-1.5 mb-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-surface-base text-text-muted border border-border-subtle/80">
+                <span className="text-2xs font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-surface-base text-text-muted border border-border-subtle/80">
                   {sourceDisplayName}
                 </span>
                 {showNewBadge && (
-                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-status-info-bg text-status-info-fg border border-status-info-fg/30">
+                  <span className="text-2xs font-bold px-1.5 py-0.5 rounded bg-status-info-bg text-status-info-fg border border-status-info-fg/30">
                     Baru
                   </span>
                 )}
               </div>
 
               <h3
-                className="text-[13px] sm:text-sm font-bold leading-snug text-text-primary line-clamp-2 transition-colors duration-200 group-hover:text-accent motion-reduce:transition-none"
+                className="text-xs sm:text-sm font-bold leading-snug text-text-primary line-clamp-2 transition-colors duration-200 group-hover:text-accent motion-reduce:transition-none"
                 title={manga.title}
               >
                 {manga.title}
@@ -614,13 +471,13 @@ export function MangaCard({
             <div className="mt-2.5 flex flex-col gap-1.5">
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-1.5 min-w-0 text-xs">
-                  <span className="font-semibold text-text-muted truncate text-[11.5px] sm:text-xs">
+                  <span className="font-semibold text-text-muted truncate text-2xs sm:text-xs">
                     {effChapterTitle}
                   </span>
                   <span className="text-text-muted/40 font-normal select-none">&bull;</span>
                   <span
                     className={cn(
-                      "text-[11px] font-mono font-bold tracking-tight",
+                      "text-2xs font-mono font-bold tracking-tight",
                       isCompleted
                         ? "text-status-success-fg status-success"
                         : "text-accent"
@@ -635,7 +492,7 @@ export function MangaCard({
                   className={cn(
                     "shrink-0 inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all shadow-2xs",
                     "bg-accent text-accent-on hover:bg-accent-hover active:scale-95",
-                    "h-7 text-[11.5px]"
+                    "h-7 text-xs"
                   )}
                 >
                   <Play size={10} weight="fill" />
@@ -729,7 +586,7 @@ export function MangaCard({
         }}
         className={cn(
           mangaCardSurface({ kind: "enclosed" }),
-          "group flex min-h-[110px] w-full min-w-0 overflow-hidden",
+          "group flex min-h-28 w-full min-w-0 overflow-hidden",
           className
         )}
         style={vtStyle}
@@ -748,7 +605,7 @@ export function MangaCard({
           onClick={handleCardOpen}
         >
           {/* Cover Frame with Ranking Badge Overlay */}
-          <MangaCardCoverFrame className="vt-hover h-full w-[74px] border-y-0 border-l-0 rounded-l-md rounded-r-xs group-hover:shadow-lg group-hover:shadow-accent/5">
+          <MangaCardCoverFrame className="vt-hover h-full w-18.5 border-y-0 border-l-0 rounded-l-md rounded-r-xs group-hover:shadow-lg group-hover:shadow-accent/5">
             <MangaCover
               src={manga.coverUrl}
               sourceId={sourceId}
@@ -766,12 +623,12 @@ export function MangaCard({
                 className={cn(
                   "absolute top-0 left-0 backdrop-blur-md font-black flex items-center justify-center rounded-br-xl shadow-md z-10",
                   Number(effectiveRank) === 1
-                    ? "bg-amber-400 text-amber-950 text-[12px] w-[30px] h-[30px] ring-1 ring-amber-300 shadow-amber-500/20"
+                    ? "bg-amber-400 text-amber-950 text-xs size-7.5 ring-1 ring-amber-300 shadow-amber-500/20"
                     : Number(effectiveRank) === 2
-                    ? "bg-slate-200 text-slate-900 text-[11.5px] w-[28px] h-[28px] ring-1 ring-slate-100 shadow-slate-400/20"
+                    ? "bg-slate-200 text-slate-900 text-xs size-7 ring-1 ring-slate-100 shadow-slate-400/20"
                     : Number(effectiveRank) === 3
-                    ? "bg-amber-800 text-amber-100 text-[11px] w-[28px] h-[28px] ring-1 ring-amber-600/40 shadow-amber-900/20"
-                    : "bg-black/85 text-white text-[11px] w-[26px] h-[26px]"
+                    ? "bg-amber-800 text-amber-100 text-2xs size-7 ring-1 ring-amber-600/40 shadow-amber-900/20"
+                    : "bg-scrim text-on-cover text-2xs size-6.5"
                 )}
               >
                 {effectiveRank}
@@ -787,12 +644,12 @@ export function MangaCard({
               className="mb-2"
               badges={[
                 manga.status ? (
-                  <span key="status" className="text-[9px] font-bold uppercase text-accent bg-accent/10 px-2 py-0.5 rounded-md shrink-0">
+                  <span key="status" className="text-3xs font-bold uppercase text-accent bg-accent/10 px-2 py-0.5 rounded-md shrink-0">
                     {manga.status}
                   </span>
                 ) : null,
                 manga.format ? (
-                  <span key="format" className="text-[9px] font-bold uppercase text-text-secondary bg-surface-base px-2 py-0.5 rounded-md shrink-0">
+                  <span key="format" className="text-3xs font-bold uppercase text-text-secondary bg-surface-base px-2 py-0.5 rounded-md shrink-0">
                     {manga.format}
                   </span>
                 ) : null,
@@ -823,7 +680,7 @@ export function MangaCard({
           {Number(scoreToDisplay) > 0 ? (
             <div className="flex flex-col items-center gap-0.5 text-semantic-warning">
               <Star weight="fill" size={12} aria-hidden="true" />
-              <span className="text-[10px] font-black" suppressHydrationWarning>
+              <span className="text-2xs font-black" suppressHydrationWarning>
                 {Number(scoreToDisplay).toFixed(1)}
               </span>
             </div>
@@ -866,13 +723,13 @@ export function MangaCard({
 
     const badgesList: React.ReactNode[] = [
       noEligibleSource ? (
-        <span key="unavailable" className="text-[10px] font-semibold text-status-error-fg">Sumber tidak tersedia</span>
+        <span key="unavailable" className="text-2xs font-semibold text-status-error-fg">Sumber tidak tersedia</span>
       ) : null,
       manga.status ? (
         <span
           key="status"
           className={cn(
-            "font-bold text-[10px] px-2 py-0.5 rounded-xs tracking-wide border shrink-0",
+            "font-bold text-2xs px-2 py-0.5 rounded-xs tracking-wide border shrink-0",
             isOngoing && "border-status-info-fg/20 bg-status-info-bg text-status-info-fg",
             isCompleted && "border-status-success-fg/20 bg-status-success-bg text-status-success-fg",
             !isOngoing && !isCompleted && "border-border-subtle bg-surface-base text-text-secondary"
@@ -882,17 +739,17 @@ export function MangaCard({
         </span>
       ) : null,
       mangaFormat ? (
-        <span key="format" className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-xs bg-surface-base border border-border-subtle/80 text-text-muted shrink-0">
+        <span key="format" className="text-3xs font-black uppercase tracking-wider px-1.5 py-0.5 rounded-xs bg-surface-base border border-border-subtle/80 text-text-muted shrink-0">
           {mangaFormat}
         </span>
       ) : null,
       readingStatus ? (
-        <span key="reading" className="text-[9px] font-bold px-1.5 py-0.5 rounded-xs bg-accent/20 text-accent uppercase tracking-wider shrink-0">
+        <span key="reading" className="text-3xs font-bold px-1.5 py-0.5 rounded-xs bg-accent/20 text-accent uppercase tracking-wider shrink-0">
           {readingStatus === "reading" ? "Dibaca" : readingStatus === "completed" ? "Selesai" : readingStatus}
         </span>
       ) : null,
       isMultiSource ? (
-        <span key="sources" className="text-[9px] font-bold text-accent px-1.5 py-0.5 rounded-xs bg-accent/10 border border-accent/20 shrink-0">
+        <span key="sources" className="text-3xs font-bold text-accent px-1.5 py-0.5 rounded-xs bg-accent/10 border border-accent/20 shrink-0">
           {availableBindings.length} Sumber
         </span>
       ) : null,
@@ -924,7 +781,7 @@ export function MangaCard({
       >
         <motion.div
           layoutId={reducedMotion ? undefined : transitionNames.cover}
-          className="w-[84px] shrink-0 sm:w-[96px] md:w-[104px]"
+          className="w-21 shrink-0 sm:w-24 md:w-26"
         >
           <Link
             href={noEligibleSource ? "#" : cardDetailHref}
@@ -1000,7 +857,7 @@ export function MangaCard({
               )}
 
               {sourceName && (
-                <span className="text-[10px] font-semibold text-text-muted/85 px-1.5 py-0.5 rounded-xs bg-surface-base/80 border border-border-subtle/50">
+                <span className="text-2xs font-semibold text-text-muted/85 px-1.5 py-0.5 rounded-xs bg-surface-base/80 border border-border-subtle/50">
                   {sourceName}
                 </span>
               )}
@@ -1131,7 +988,7 @@ export function MangaCard({
                   <TrendUp
                     weight="regular"
                     className={cn(
-                      "text-[10px]",
+                      "text-2xs",
                       Number(effectiveRank) === 1
                         ? "text-amber-950"
                         : Number(effectiveRank) === 2
@@ -1159,7 +1016,7 @@ export function MangaCard({
             </div>
 
             {noEligibleSource && (
-              <div className="absolute inset-0 bg-surface-base/70 backdrop-blur-[2px] flex flex-col items-center justify-center p-2 text-center z-10 transition-opacity group-hover:opacity-100 opacity-90">
+              <div className="absolute inset-0 bg-surface-base/70 backdrop-blur-xs flex flex-col items-center justify-center p-2 text-center z-10 transition-opacity group-hover:opacity-100 opacity-90">
                 <div className="rounded-xs bg-status-warning-bg border border-status-warning-border px-2 py-0.5 text-2xs font-bold text-status-warning-fg">
                   Sumber Nonaktif
                 </div>
@@ -1208,7 +1065,7 @@ export function MangaCard({
           {/* Title - 2 lines fixed height with title attribute for native tooltip fallback */}
           <MangaCardTitle
             lines={2}
-            className={cn("vt-title-hover mb-2 min-h-[2.4em]", mangaCardInteraction.title)}
+            className={cn("vt-title-hover mb-2 min-h-10", mangaCardInteraction.title)}
             title={manga.title}
           >
             {manga.title}
@@ -1216,7 +1073,7 @@ export function MangaCard({
 
           {/* Bottom Row - keep geometry stable when optional chapter/rating data is absent. */}
           <div className="mt-auto flex min-h-5 items-center justify-between">
-            <MangaCardMeta className="max-w-[70%] truncate font-semibold sm:text-sm">
+            <MangaCardMeta className="max-w-3/4 truncate font-semibold sm:text-sm">
               {manga.latestChapter || "Katalog diperbarui"}
             </MangaCardMeta>
             {Number(scoreToDisplay) > 0 ? (

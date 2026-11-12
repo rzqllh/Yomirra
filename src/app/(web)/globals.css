@@ -138,10 +138,14 @@
   --z-base: 0;
   --z-raised: 10;
   --z-dropdown: 40;
+  --z-status-bar: 45;
   --z-sticky: 50;
   --z-drawer: 60;
+  --z-reader-dock: 65;
   --z-overlay: 70;
   --z-popover: 80;
+  --z-progress: 90;
+  --z-banner: 100;
   --z-modal: 900;
   --z-takeover: 9000;
   --z-toast: 100000;
@@ -655,13 +659,6 @@ body.reader-active {
 @keyframes ink-dialog-out { from { opacity: 1; scale: 1; } to { opacity: 0; scale: .98; } }
 @keyframes command-dialog-in { from { opacity: 0; scale: .98; } to { opacity: 1; scale: 1; } }
 @keyframes command-dialog-out { from { opacity: 1; scale: 1; } to { opacity: 0; scale: .98; } }
-/* Existing feature buttons still use white/black utility text on solid semantic fills. */
-.dark .bg-accent.text-white { color: var(--text-on-accent); }
-.dark .bg-semantic-success.text-white { color: var(--status-success-bg); }
-.dark .bg-semantic-error.text-white { color: var(--status-error-bg); }
-.dark .bg-semantic-info.text-white { color: var(--status-info-bg); }
-.light .bg-semantic-warning.text-black { color: #fff; }
-.dark .bg-semantic-warning.text-black { color: var(--status-warning-bg); }
 
 /* Toast notifications stay below chrome and respect the safe area. */
 [data-sonner-toaster],

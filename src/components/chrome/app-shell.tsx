@@ -97,7 +97,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {showNavigationProgress && pendingHref && (
           <motion.div
             key={pendingHref}
-            className="fixed left-0 right-0 z-[90] h-[2px] origin-left bg-accent"
+            className="fixed left-0 right-0 z-[var(--z-progress)] h-0.5 origin-left bg-accent"
             style={{ top: "var(--safe-top, 0px)" }}
             initial={{ scaleX: 0.04, opacity: 1 }}
             animate={{ scaleX: 0.72, opacity: 1 }}
@@ -113,7 +113,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       <div className={cn(
         "flex-1 flex flex-col min-h-dvh transition-[padding-left] min-w-0 duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none w-full",
-        !isReader && (isCollapsed ? "md:pl-[76px]" : "md:pl-[76px] xl:pl-[240px]")
+        !isReader && (isCollapsed ? "md:pl-19" : "md:pl-19 xl:pl-60")
       )}>
         {!isReader && <TopNav />}
         {!isReader && <DesktopRail pendingHref={pendingHref} />}

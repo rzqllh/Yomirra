@@ -93,7 +93,7 @@ export function GuestSyncBanner({ className }: GuestSyncBannerProps) {
         transition={{ duration: 0.25, ease: "easeOut" }}
         className={cn("w-full mb-4 md:mb-6", className)}
       >
-        <div className="rounded-[16px] border border-border-default bg-surface-raised p-4 sm:p-5">
+        <div className="rounded-2xl border border-border-default bg-surface-raised p-4 sm:p-5">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-start gap-3 sm:gap-3.5 min-w-0 flex-1">
               <div className="size-11 rounded-xl bg-accent-dim border border-accent/20 flex items-center justify-center text-accent shrink-0">

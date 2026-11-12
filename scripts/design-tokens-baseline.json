@@ -1,11 +1,11 @@
 {
   "production": {
-    "tailwind_arbitrary_brackets": 581,
-    "arbitrary_text_brackets": 234,
-    "arbitrary_rounded_brackets": 32,
-    "arbitrary_z_brackets": 16,
-    "zinc_bypasses": 11,
-    "raw_black_white_bypasses": 151,
+    "tailwind_arbitrary_brackets": 26,
+    "arbitrary_text_brackets": 0,
+    "arbitrary_rounded_brackets": 0,
+    "arbitrary_z_brackets": 0,
+    "zinc_bypasses": 0,
+    "raw_black_white_bypasses": 0,
     "inline_styles": 34
   }
 }

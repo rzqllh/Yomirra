@@ -158,11 +158,11 @@ describe("MangaCard", () => {
         manga={{ id: "a", title: "Work", coverUrl: "" }}
       />
     );
-    const link = screen.getByRole("link", { name: "Sumber tidak tersedia untuk Work" });
+    const link = screen.getByRole("link", { name: /Sumber tidak (aktif|tersedia) untuk Work/ });
     expect(link.getAttribute("aria-disabled")).toBe("true");
     expect(link.getAttribute("href")).toBe("#");
     expect(fireEvent.click(link)).toBe(false);
-    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.getByRole("dialog")).toBeDefined();
   });
 
   it.each(["grid", "compact", "rank"] as const)(
@@ -183,7 +183,7 @@ describe("MangaCard", () => {
         />
       );
       const links = screen.getAllByRole("link", {
-        name: "Sumber tidak tersedia untuk Unavailable Solo",
+        name: /Sumber tidak (aktif|tersedia) untuk Unavailable Solo/,
       });
       expect(links.length).toBeGreaterThan(0);
       for (const link of links) {
@@ -191,7 +191,7 @@ describe("MangaCard", () => {
         expect(link.getAttribute("href")).toBe("#");
         expect(fireEvent.click(link)).toBe(false);
       }
-      expect(screen.queryByRole("dialog")).toBeNull();
+      expect(screen.getByRole("dialog")).toBeDefined();
     }
   );
 
@@ -308,7 +308,7 @@ describe("MangaCard", () => {
     const rank1Badge = screen.getByText("1");
     expect(rank1Badge).toBeDefined();
     expect(rank1Badge.className).toContain("amber-400");
-    expect(rank1Badge.className).toContain("w-[30px]");
+    expect(rank1Badge.className).toContain("size-7.5");
 
     rerender(
       <MangaCard
@@ -327,7 +327,7 @@ describe("MangaCard", () => {
 
     const rank2Badge = screen.getByText("2");
     expect(rank2Badge.className).toContain("slate-200");
-    expect(rank2Badge.className).toContain("w-[28px]");
+    expect(rank2Badge.className).toContain("size-7");
 
     rerender(
       <MangaCard
@@ -375,7 +375,7 @@ describe("MangaCard", () => {
         }}
       />
     );
-    expect(screen.getByText("15").className).toContain("bg-black/85");
+    expect(screen.getByText("15").className).toContain("bg-scrim");
   });
 
   it("renders progress variant with percentage, Lanjut button, and 100% color-coding", () => {

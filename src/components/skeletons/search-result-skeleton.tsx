@@ -12,9 +12,9 @@ export function SearchResultSkeleton({ viewMode }: { viewMode?: "grid" | "compac
     <div className="space-y-4 w-full">
       {/* Search Toolbar Placeholder */}
       <div className="flex items-center gap-2 w-full">
-        <Skeleton className="flex-1 h-[44px] rounded-xl" />
+        <Skeleton className="flex-1 h-11 rounded-xl" />
         <Skeleton className="size-11 rounded-xl shrink-0" />
-        <Skeleton className="h-[44px] w-20 rounded-xl shrink-0 hidden sm:block" />
+        <Skeleton className="h-11 w-20 rounded-xl shrink-0 hidden sm:block" />
       </div>
 
       {/* Source Rail Placeholder */}

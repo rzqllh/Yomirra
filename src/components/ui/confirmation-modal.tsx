@@ -94,8 +94,8 @@ export function ConfirmationModal({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !isBusy && onOpenChange(open)}>
       <DialogContent
-        overlayClassName="z-[110]"
-        className="z-[110] max-w-sm sm:max-w-md p-0 overflow-hidden gap-0"
+        overlayClassName="z-[var(--z-modal)]"
+        className="z-[var(--z-modal)] max-w-sm sm:max-w-md p-0 overflow-hidden gap-0"
       >
         {/* Icon + text — centered focal hierarchy */}
         <div className="flex flex-col items-center pt-8 pb-5 px-6 text-center gap-4">

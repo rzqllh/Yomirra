@@ -1,8 +1,8 @@
 import { z } from "@/shared/lib/browser-safe-zod";
 import type { SourceMetadata } from "./source-types";
 
-// Schema for the Mihon-like manifest
-export const MihonSourceManifestSchema = z.object({
+// Schema for dynamic source manifest
+export const DynamicSourceManifestSchema = z.object({
   id: z.string().min(1),
   name: z.string().min(1),
   baseUrl: z.string().url(),
@@ -23,14 +23,14 @@ export const MihonSourceManifestSchema = z.object({
   manifestUrl: z.string().optional(),
 });
 
-export type MihonSourceManifest = z.infer<typeof MihonSourceManifestSchema>;
+export type DynamicSourceManifest = z.infer<typeof DynamicSourceManifestSchema>;
 
 const STORAGE_KEY = "yomirra_dynamic_sources";
 
 export class DynamicSourceRegistry {
   private volatileSources: Record<string, SourceMetadata> = {};
 
-  private getStorage(): Record<string, MihonSourceManifest> {
+  private getStorage(): Record<string, DynamicSourceManifest> {
     if (typeof window === "undefined") return {};
     try {
       const data = localStorage.getItem(STORAGE_KEY);
@@ -40,7 +40,7 @@ export class DynamicSourceRegistry {
     }
   }
 
-  private setStorage(data: Record<string, MihonSourceManifest>) {
+  private setStorage(data: Record<string, DynamicSourceManifest>) {
     if (typeof window === "undefined") return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     
@@ -52,12 +52,12 @@ export class DynamicSourceRegistry {
     document.cookie = `${STORAGE_KEY}_urls=${encodeURIComponent(JSON.stringify(minimalData))}; path=/; max-age=31536000`;
   }
 
-  async validateManifest(url: string): Promise<MihonSourceManifest> {
+  async validateManifest(url: string): Promise<DynamicSourceManifest> {
     try {
       const response = await fetch(url);
       if (!response.ok) throw new Error("Failed to fetch manifest");
       const data = await response.json();
-      return MihonSourceManifestSchema.parse(data);
+      return DynamicSourceManifestSchema.parse(data);
     } catch (error) {
       if (error instanceof z.ZodError) {
         throw new Error("Invalid manifest schema");
@@ -153,7 +153,7 @@ export class DynamicSourceRegistry {
     return manifest ? this.mapToMetadata(manifest) : undefined;
   }
 
-  private mapToMetadata(manifest: MihonSourceManifest): SourceMetadata {
+  private mapToMetadata(manifest: DynamicSourceManifest): SourceMetadata {
     return {
       id: manifest.id,
       name: manifest.name,

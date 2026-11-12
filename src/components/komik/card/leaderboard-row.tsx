@@ -45,15 +45,15 @@ export function LeaderboardRow({
 
   const rowGeometry = isHomeDensity
     ? emphasized
-      ? "min-h-[76px] py-1.5"
-      : "min-h-[42px] py-0.5"
-    : "min-h-[62px] py-1.5 sm:py-2";
+      ? "min-h-19 py-1.5"
+      : "min-h-11 py-0.5"
+    : "min-h-16 py-1.5 sm:py-2";
 
   const coverGeometry = isHomeDensity
     ? emphasized
-      ? "h-[64px] w-12"
-      : "h-[42px] w-7"
-    : "h-[60px] w-10";
+      ? "h-16 w-12"
+      : "h-11 w-7"
+    : "h-15 w-10";
 
   // The leaderboard bypasses MangaCard. Guard cached provider rows here too:
   // never mount a confirmed restricted title or an unverified image in safe mode.
@@ -82,10 +82,10 @@ export function LeaderboardRow({
             className={cn(
               "font-black leading-none tracking-tight text-accent tabular-nums",
               emphasized
-                ? "text-[30px]"
+                ? "text-3xl"
                 : isHomeDensity
-                  ? "text-[24px]"
-                  : "text-[26px] sm:text-[28px]"
+                  ? "text-xl"
+                  : "text-2xl"
             )}
           >
             {rankStr}
@@ -114,7 +114,7 @@ export function LeaderboardRow({
         >
           {manga.title}
         </MangaCardTitle>
-        <div className="flex items-center gap-2 text-[10.5px] font-semibold text-text-secondary sm:text-[11.5px]">
+        <div className="flex items-center gap-2 text-2xs font-semibold text-text-secondary sm:text-xs">
           {Number(scoreToDisplay) > 0 ? (
             <div className="flex items-center gap-1">
               <Star
@@ -128,7 +128,7 @@ export function LeaderboardRow({
               </span>
             </div>
           ) : null}
-          <MangaCardMeta className="max-w-[110px] truncate text-2xs text-text-muted sm:max-w-[140px] sm:text-xs">
+          <MangaCardMeta className="max-w-28 truncate text-2xs text-text-muted sm:max-w-36 sm:text-xs">
             {manga.latestChapter || "Katalog diperbarui"}
           </MangaCardMeta>
         </div>

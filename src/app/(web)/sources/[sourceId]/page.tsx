@@ -122,7 +122,7 @@ export default function SourceBrowsePage({
               >
                 Sebelumnya
               </Link>
-              <div className="px-4 py-2 rounded-xl bg-accent text-accent-on font-bold text-sm min-w-[40px] text-center">
+              <div className="px-4 py-2 rounded-xl bg-accent text-accent-on font-bold text-sm min-w-10 text-center">
                 {currentPage}
               </div>
               <Link

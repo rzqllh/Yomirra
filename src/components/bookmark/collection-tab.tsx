@@ -463,7 +463,7 @@ export function CollectionTab({
                         "absolute inset-0 z-20 rounded-xl flex items-start justify-end p-2.5 motion-safe:transition-all motion-safe:duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
                         isSelected
                           ? "bg-accent/20 border-2 border-accent"
-                          : "bg-black/40 hover:bg-black/50 border border-white/20"
+                          : "bg-scrim/40 hover:bg-scrim/50 border border-border-glass"
                       )}
                       aria-label={`${isSelected ? "Batal pilih" : "Pilih"} ${manga.title}`}
                       aria-pressed={isSelected}
@@ -472,8 +472,8 @@ export function CollectionTab({
                         className={cn(
                           "w-6 h-6 rounded-lg flex items-center justify-center motion-safe:transition-transform motion-safe:duration-200",
                           isSelected
-                            ? "bg-accent text-white scale-110"
-                            : "bg-surface-glass border border-white/40"
+                            ? "bg-accent text-accent-on scale-110"
+                            : "bg-surface-glass border border-border-glass"
                         )}
                       >
                         {isSelected && <span className="text-xs font-black">✓</span>}

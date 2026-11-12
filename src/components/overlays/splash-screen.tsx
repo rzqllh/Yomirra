@@ -80,7 +80,7 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
     return (
       <div
         data-testid="splash-screen"
-        className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden bg-surface-base text-text-primary select-none"
+        className="fixed inset-0 z-[var(--z-takeover)] flex flex-col items-center justify-center overflow-hidden bg-surface-base text-text-primary select-none"
       >
         <div className="relative z-10 flex flex-col items-center justify-center w-full h-full pb-16">
           <div className="relative size-24 sm:size-28 rounded-xl overflow-hidden bg-surface-raised border border-border-subtle p-0.5 shadow-md">
@@ -104,7 +104,7 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
       initial={{ opacity: 1 }}
       exit={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 1.015 }}
       transition={reducedMotion ? { duration: 0 } : transitions.gentle}
-      className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden bg-surface-base text-text-primary select-none"
+      className="fixed inset-0 z-[var(--z-takeover)] flex flex-col items-center justify-center overflow-hidden bg-surface-base text-text-primary select-none"
     >
       {/* Subtle adaptive ambient aura */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden flex items-center justify-center">
@@ -118,7 +118,7 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
             ease: "easeInOut",
             repeat: Infinity,
           }}
-          className="w-[420px] h-[420px] rounded-full bg-accent/8 dark:bg-accent/18 blur-[100px] pointer-events-none"
+          className="size-104 rounded-full bg-accent/8 dark:bg-accent/18 blur-3xl pointer-events-none"
         />
       </div>
 
@@ -130,9 +130,9 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
           transition={reducedMotion ? { duration: 0 } : transitions.gentle}
           className="mb-5 relative"
         >
-          <div className="absolute -inset-2 rounded-[28px] sm:rounded-[32px] bg-accent/10 blur-xl opacity-60 dark:opacity-80" />
+          <div className="absolute -inset-2 rounded-2xl sm:rounded-3xl bg-accent/10 blur-xl opacity-60 dark:opacity-80" />
 
-          <div className="relative size-24 sm:size-28 rounded-xl overflow-hidden bg-surface-raised border border-border-subtle shadow-md dark:shadow-[0_20px_40px_rgba(0,0,0,0.5)] p-0.5">
+          <div className="relative size-24 sm:size-28 rounded-xl overflow-hidden bg-surface-raised border border-border-subtle shadow-md dark:shadow-2xl p-0.5">
             <img
               src="/icon-pwa.png"
               alt="Yomirra Logo"
@@ -154,7 +154,7 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
           <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-text-primary">
             Yomirra
           </h1>
-          <p className="text-xs sm:text-sm font-medium text-text-muted max-w-[280px] leading-relaxed">
+          <p className="text-xs sm:text-sm font-medium text-text-muted max-w-70 leading-relaxed">
             Semua Komik, Satu Rumah.
           </p>
         </motion.div>
@@ -174,7 +174,7 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
               transition={reducedMotion ? { duration: 0 } : transitions.gentle}
               className="flex flex-col items-center gap-3 w-full"
             >
-              <div className="w-full max-w-[160px] h-1.5 rounded-full bg-border-subtle overflow-hidden relative">
+              <div className="w-full max-w-40 h-1.5 rounded-full bg-border-subtle overflow-hidden relative">
                 <motion.div
                   className="h-full bg-accent rounded-full origin-left"
                   initial={{ scaleX: 0, x: "-100%" }}
@@ -189,7 +189,7 @@ export function SplashScreen({ onComplete }: { onComplete: () => void }) {
                   }}
                 />
               </div>
-              <p className="text-[11px] font-semibold tracking-wider text-text-muted uppercase">
+              <p className="text-2xs font-semibold tracking-wider text-text-muted uppercase">
                 Membuka Rak Kamu...
               </p>
             </motion.div>

@@ -65,6 +65,6 @@ Lihat [Contributing](CONTRIBUTING.md), [Adding a Source](docs/ADDING_A_SOURCE.md
 
 ## Referensi dan lisensi
 
-Yomirra adalah reader interface independen. Mihon, Tachimanga, dan reader lain menjadi referensi alur penggunaan; penyebutan tersebut tidak menyatakan afiliasi, endorsement, atau kesetaraan biner. Tinjau [matriks kesetaraan fitur](docs/FEATURE_PARITY.md) untuk perbandingan kapabilitas terinci dan [tinjauan referensi dan lisensi](docs/REFERENCE_LICENSING_REVIEW.md) untuk batas inspirasi dan penggunaan ulang karya.
+Yomirra adalah reader interface independen yang dibangun dengan standar web-first modern. Yomirra mengutamakan ergonomi baca mandiri, performa offline, dan netralitas katalog. Tinjau [matriks kapabilitas fitur](docs/FEATURE_PARITY.md) untuk perincian kapabilitas platform dan [tinjauan lisensi independen](docs/REFERENCE_LICENSING_REVIEW.md) untuk kepatuhan lisensi serta batasan karya.
 
 Kode yang dicakup [LICENSE](LICENSE) menggunakan Apache-2.0. Lisensi itu tidak memberi hak atas chapter, terjemahan, cover, artwork, logo, atau materi pihak ketiga. Akses dan penggunaan konten mengikuti hak pemilik serta ketentuan layanan sumber. [Changelog](CHANGELOG.md) mencatat perubahan repository; kesiapan perangkat, layanan, dan legal memerlukan bukti terpisah.

@@ -13,7 +13,7 @@ describe("StatusBarBlur Component", () => {
     expect(blurElement.className).toContain("fixed");
     expect(blurElement.className).toContain("top-0");
     expect(blurElement.className).toContain("pointer-events-none");
-    expect(blurElement.className).toContain("z-[45]");
+    expect(blurElement.className).toContain("z-[var(--z-status-bar)]");
     expect(blurElement.className).toContain("h-[env(safe-area-inset-top,0px)]");
     expect(blurElement.className).toContain("max-h-[env(safe-area-inset-top,0px)]");
     const styleAttr = blurElement.getAttribute("style") || "";

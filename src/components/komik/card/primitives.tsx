@@ -41,8 +41,8 @@ export function MangaCardCoverFrame({ className, ...props }: CoverFrameProps) {
 const titleRecipe = cva("text-text-primary", {
   variants: {
     density: {
-      compact: "text-xs font-bold leading-snug sm:text-[13.5px]",
-      default: "text-[15px] font-bold leading-snug tracking-tight sm:text-base",
+      compact: "text-xs font-bold leading-snug sm:text-sm",
+      default: "text-sm font-bold leading-snug tracking-tight sm:text-base",
     },
     lines: {
       1: "truncate",

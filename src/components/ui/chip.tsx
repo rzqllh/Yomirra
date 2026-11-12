@@ -23,7 +23,7 @@ const chipVariants = cva(
           "bg-semantic-error/10 border-semantic-error/20 text-semantic-error hover:bg-semantic-error/20",
       },
       size: {
-        sm: "min-h-9 px-2.5 text-[11px]",
+        sm: "min-h-9 px-2.5 text-2xs",
         default: "min-h-11 px-3.5 text-xs",
         lg: "min-h-12 px-4 text-sm",
       },

@@ -15,9 +15,9 @@ interface ReaderSettingsDrawerProps {
 }
 
 const BACKGROUNDS = [
-  { name: 'Gelap', value: 'black', color: '#000000', border: 'border-white/10' },
-  { name: 'Terang', value: 'mist', color: '#f9f9fb', border: 'border-black/10' },
-  { name: 'Ikuti Sistem', value: 'system', color: '', border: 'border-white/20' }
+  { name: 'Gelap', value: 'black', color: '#000000', border: 'border-border-subtle' },
+  { name: 'Terang', value: 'mist', color: '#f9f9fb', border: 'border-border-subtle' },
+  { name: 'Ikuti Sistem', value: 'system', color: '', border: 'border-border-default' }
 ] as const;
 
 const IMAGE_FITS = [

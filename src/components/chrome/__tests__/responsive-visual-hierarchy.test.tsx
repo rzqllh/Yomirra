@@ -22,13 +22,13 @@ describe("DesktopRail responsive, motion and navigation contracts", () => {
     const { container } = render(<DesktopRail />);
     const rail = container.querySelector("aside");
     expect(rail).not.toBeNull();
-    expect(rail?.className).toContain("xl:w-[240px]");
+    expect(rail?.className).toContain("xl:w-60");
 
     fireEvent.click(screen.getByRole("button", { name: "Ciutkan bilah samping" }));
 
     expect(useSidebarStore.getState().isCollapsed).toBe(true);
-    expect(rail?.className).toContain("w-[76px]");
-    expect(rail?.className).not.toContain("xl:w-[240px]");
+    expect(rail?.className).toContain("w-19");
+    expect(rail?.className).not.toContain("xl:w-60");
     expect(screen.getByRole("button", { name: "Perluas bilah samping" }).getAttribute("aria-expanded")).toBe("false");
   });
 

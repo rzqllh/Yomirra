@@ -17,7 +17,7 @@ export function ThemeToggle({ className }: { className?: string }) {
 
   if (!mounted) {
     return (
-      <div className={cn("size-9 rounded-[10px] bg-surface-raised border border-border-subtle shrink-0", className)} />
+      <div className={cn("size-9 rounded-sm bg-surface-raised border border-border-subtle shrink-0", className)} />
     );
   }
 
@@ -72,7 +72,7 @@ export function ThemeToggle({ className }: { className?: string }) {
       aria-label={isDark ? "Aktifkan mode terang" : "Aktifkan mode gelap"}
       title={isDark ? "Aktifkan mode terang" : "Aktifkan mode gelap"}
       className={cn(
-        "relative flex items-center justify-center size-9 rounded-[10px] bg-surface-raised hover:bg-surface-hover transition-colors outline-none border border-border-subtle hover:border-accent/40 text-text-primary shrink-0 cursor-pointer shadow-xs overflow-hidden",
+        "relative flex items-center justify-center size-9 rounded-sm bg-surface-raised hover:bg-surface-hover transition-colors outline-none border border-border-subtle hover:border-accent/40 text-text-primary shrink-0 cursor-pointer shadow-xs overflow-hidden",
         className
       )}
     >

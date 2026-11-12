@@ -533,7 +533,7 @@ export function UpdatesList({ renderRefreshButton, initialDay, hideHeader = fals
                   layoutId="weekly-calendar-pill"
                   size="sm"
                   fullWidth
-                  className="min-w-[620px]"
+                  className="min-w-155"
                 />
               </div>
             </div>

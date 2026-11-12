@@ -101,7 +101,7 @@
 - **Rujukan:** [issue #68](https://github.com/rzqllh/Yomirra/issues/68), `next.config.ts`, `docs/TESTING.md`.
 - **DoD:** Kumpulkan violation reports, Chromium/WebKit dan PWA offline/auth smoke; keputusan enforcement hanya pada PR tersendiri.
 
-### YOM-P1-06 — R-06 / Q150: Komga/Kavita/Suwayomi personal library parity tidak tertelusur
+### YOM-P1-06 — R-06 / Q150: Self-hosted personal server library parity tidak tertelusur
 
 - **Status:** HISTORICAL_UNPROVEN.
 - **Temuan/batas bukti:** Audit menemukan klaim VERIFIED di tracker tanpa adapter/auth runtime/test yang spesifik di path yang diperiksa. Tidak menyatakan integrasi pasti tidak ada.

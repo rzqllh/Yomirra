@@ -32,7 +32,7 @@ function SpotlightSkeleton() {
 
 function RankingSkeleton() {
   return (
-    <div className="ink-panel flex min-h-[300px] flex-col p-4 sm:p-5 lg:h-[340px] lg:p-4">
+    <div className="ink-panel flex min-h-75 flex-col p-4 sm:p-5 lg:h-85 lg:p-4">
       <div className="flex min-h-11 items-center justify-between gap-3 border-b border-border-subtle/60 pb-2.5">
         <Skeleton className="h-4 w-36 rounded-xs" />
         <Skeleton className="h-11 w-28 rounded-sm" />
@@ -43,8 +43,8 @@ function RankingSkeleton() {
             key={index}
             className={
               index === 0
-                ? "flex min-h-[72px] flex-1 items-center gap-3 px-1 py-1"
-                : "flex min-h-[44px] flex-1 items-center gap-3 px-1 py-0.5"
+                ? "flex min-h-18 flex-1 items-center gap-3 px-1 py-1"
+                : "flex min-h-11 flex-1 items-center gap-3 px-1 py-0.5"
             }
           >
             <Skeleton
@@ -57,8 +57,8 @@ function RankingSkeleton() {
             <Skeleton
               className={
                 index === 0
-                  ? "h-[72px] w-12 shrink-0 rounded-xs"
-                  : "h-[45px] w-[30px] shrink-0 rounded-xs"
+                  ? "h-18 w-12 shrink-0 rounded-xs"
+                  : "h-11 w-7.5 shrink-0 rounded-xs"
               }
             />
             <div className="min-w-0 flex-1 space-y-1.5">
@@ -91,7 +91,7 @@ export function SourceFeedSkeleton() {
           {Array.from({ length: 3 }).map((_, index) => (
             <div
               key={index}
-              className="w-[84vw] max-w-[320px] shrink-0 sm:w-auto sm:max-w-none"
+              className="w-10/12 max-w-xs shrink-0 sm:w-auto sm:max-w-none"
             >
               <MangaCardSkeleton variant="history" />
             </div>
@@ -132,7 +132,7 @@ export function SourceFeedSkeleton() {
           {Array.from({ length: 5 }).map((_, index) => (
             <div
               key={index}
-              className="w-[140px] shrink-0 sm:w-[155px] md:w-auto md:min-w-0"
+              className="w-35 shrink-0 sm:w-39 md:w-auto md:min-w-0"
             >
               <MangaCardSkeleton variant="shelf" />
             </div>

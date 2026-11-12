@@ -179,7 +179,7 @@ export default function DownloadsPage() {
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-1">
                 <p className="text-xs font-bold text-text-primary uppercase tracking-wider">Penyimpanan browser</p>
-                <span className="text-[11px] font-bold text-accent">
+                <span className="text-2xs font-bold text-accent">
                   {((storageInfo.usage / (storageInfo.quota || 1)) * 100).toFixed(1)}%
                 </span>
               </div>
@@ -252,7 +252,7 @@ export default function DownloadsPage() {
 
                         <div className="mt-2.5">
                           <div className="flex justify-between text-xs mb-1">
-                            <span className="text-[11px] font-medium text-text-muted capitalize">
+                            <span className="text-2xs font-medium text-text-muted capitalize">
                               {item.status === "downloading"
                                 ? "Mengunduh…"
                                 : item.status === "paused"
@@ -276,7 +276,7 @@ export default function DownloadsPage() {
                             />
                           </div>
                           {item.error && (
-                            <p className="text-[11px] text-semantic-error mt-1 truncate">
+                            <p className="text-2xs text-semantic-error mt-1 truncate">
                               Unduhan gagal. Coba lagi.
                             </p>
                           )}
@@ -377,7 +377,7 @@ export default function DownloadsPage() {
                         <MangaCardMeta as="p" className="mt-0.5 truncate">
                           {item.chapterTitle}
                         </MangaCardMeta>
-                        <MangaCardMeta as="p" className="mt-1 text-[11px] text-text-muted">
+                        <MangaCardMeta as="p" className="mt-1 text-2xs text-text-muted">
                           {item.downloadedPages || 0} Halaman • Selesai
                         </MangaCardMeta>
                       </div>

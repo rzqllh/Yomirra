@@ -53,7 +53,7 @@ export function ReadingProgress({
       {showLabel && (
         <span
           className={cn(
-            "text-xs font-semibold shrink-0 min-w-[32px] text-right",
+            "text-xs font-semibold shrink-0 min-w-8 text-right",
             isSuccess ? "text-status-success-fg" : "text-accent"
           )}
         >

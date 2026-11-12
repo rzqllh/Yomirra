@@ -95,7 +95,7 @@ export function BookmarkPageView() {
               <span>Jadwal Rilis Mingguan</span>
             </span>
             {unreadCount > 0 && (
-              <span className="text-2xs px-1.5 py-0.5 rounded-md bg-semantic-error text-white font-bold">
+              <span className="text-2xs px-1.5 py-0.5 rounded-md bg-status-error-bg text-status-error-fg font-bold">
                 {unreadCount > 99 ? "99+" : unreadCount} baru
               </span>
             )}

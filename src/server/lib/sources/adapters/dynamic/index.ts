@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { MangaSource, MangaPageResult, MangaDetail, Chapter, ChapterPages, FilterList, SourceMetadata } from "@/shared/sources/source-types";
-import { MihonSourceManifest } from "@/shared/sources/dynamic-source-registry";
+import { DynamicSourceManifest } from "@/shared/sources/dynamic-source-registry";
 
 import { safeFetch } from "../../../security/outbound-policy";
 import { SourceError } from "../../error";
@@ -45,10 +45,10 @@ export class DynamicSourceAdapter implements MangaSource {
   public readonly isDynamic: boolean = true;
 
   public readonly cacheFingerprint: string;
-  private readonly manifest: MihonSourceManifest;
+  private readonly manifest: DynamicSourceManifest;
   private readonly origin: keyof typeof activeByOrigin;
 
-  constructor(manifest: MihonSourceManifest, externalManifestUrl?: string) {
+  constructor(manifest: DynamicSourceManifest, externalManifestUrl?: string) {
     this.manifest = manifest;
     this.origin = externalManifestUrl ? "external" : "registered";
     this.cacheFingerprint = createHash("sha256")

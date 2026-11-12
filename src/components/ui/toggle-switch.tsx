@@ -34,7 +34,7 @@ export const ToggleSwitch = React.forwardRef<HTMLInputElement, ToggleSwitchProps
             initial={false}
             animate={{ x: checked ? 24 : 0 }}
             transition={reducedMotion ? { duration: 0 } : transitions.snappy}
-            className="absolute left-[3px] top-[3px] grid size-6 place-items-center rounded-full bg-surface-overlay text-text-secondary shadow-sm motion-safe:transition-[background-color,color] motion-safe:duration-200"
+            className="absolute left-0.5 top-0.5 grid size-6 place-items-center rounded-full bg-surface-overlay text-text-secondary shadow-sm motion-safe:transition-[background-color,color] motion-safe:duration-200"
           />
         </span>
       </label>

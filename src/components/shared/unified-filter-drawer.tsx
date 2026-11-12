@@ -505,7 +505,7 @@ export function UnifiedFilterDrawer({
           <p className="text-sm font-semibold text-text-primary">
             Sumber ini tidak menyediakan filter tambahan
           </p>
-          <p className="text-xs text-text-muted mt-1 max-w-[280px] leading-relaxed">
+          <p className="text-xs text-text-muted mt-1 max-w-70 leading-relaxed">
             Kamu tetap bisa mencari judul lewat kolom di atas.
           </p>
         </div>

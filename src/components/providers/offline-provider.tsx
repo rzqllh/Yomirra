@@ -72,14 +72,14 @@ export function OfflineProvider({ children }: { children: React.ReactNode }) {
       {isOffline && isAllowedOffline && (
         <div
           data-testid="offline-banner"
-          className="fixed top-0 left-0 right-0 z-[60] bg-surface-raised/95 text-text-primary border-b border-border-default pt-[calc(var(--safe-top,0px)+4px)] pb-1.5 px-3 text-xs font-semibold text-center flex items-center justify-center gap-2 backdrop-blur-md shadow-xs pointer-events-none"
+          className="fixed top-0 left-0 right-0 z-[var(--z-drawer)] bg-surface-raised/95 text-text-primary border-b border-border-default pt-[calc(var(--safe-top,0px)+4px)] pb-1.5 px-3 text-xs font-semibold text-center flex items-center justify-center gap-2 backdrop-blur-md shadow-xs pointer-events-none"
         >
           <WifiSlash size={14} weight="regular" />
           <span>Offline — menampilkan data yang tersimpan di perangkat</span>
         </div>
       )}
       {showFallback ? (
-        <div className="fixed inset-0 z-[100] bg-surface-base flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[var(--z-modal)] bg-surface-base flex flex-col items-center justify-center p-6 text-center animate-in fade-in duration-300">
           <div className="w-20 h-20 bg-surface-muted rounded-xl flex items-center justify-center text-text-muted mb-6">
             <WifiSlash size={40} weight="duotone" />
           </div>

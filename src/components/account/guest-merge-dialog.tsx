@@ -95,7 +95,7 @@ export function GuestMergeDialog() {
         role="dialog"
         aria-modal="true"
         aria-labelledby="merge-error-title"
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-scrim backdrop-blur-xs animate-in fade-in duration-200"
       >
         <div className="relative w-full max-w-md rounded-xl border border-status-error-fg/30 bg-surface-raised p-5 sm:p-6 shadow-2xl space-y-4">
           <div className="flex items-start gap-3">
@@ -109,7 +109,7 @@ export function GuestMergeDialog() {
               <p className="text-xs text-text-muted mt-1 leading-relaxed">
                 Yomirra mendeteksi akunmu memiliki sesi aktif, namun gagal membaca snapshot data cloud untuk verifikasi penggabungan: <strong className="text-status-error-fg">{mergeError.errorMessage}</strong>.
               </p>
-              <p className="text-[11px] text-text-secondary mt-1.5">
+              <p className="text-2xs text-text-secondary mt-1.5">
                 Data bacaan lokalmu di perangkat ini tetap aman dan tidak diubah. Sinkronisasi diblokir sampai data cloud berhasil diverifikasi.
               </p>
             </div>
@@ -272,9 +272,9 @@ export function GuestMergeDialog() {
       aria-modal="true"
       aria-labelledby="guest-merge-title"
       aria-describedby="guest-merge-desc"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-scrim backdrop-blur-xs animate-in fade-in duration-200"
     >
-      <div className="relative w-full max-w-lg rounded-xl border border-border-default/80 bg-surface-raised p-5 sm:p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
+      <div className="relative w-full max-w-lg rounded-xl border border-border-default/80 bg-surface-raised p-5 sm:p-6 shadow-2xl space-y-5 max-h-9/10 overflow-y-auto">
         {/* Header */}
         <div className="flex items-start gap-3">
           <div className="size-10 rounded-xl bg-accent/15 border border-accent/25 flex items-center justify-center text-accent shrink-0 mt-0.5">
@@ -285,7 +285,7 @@ export function GuestMergeDialog() {
               <h2 id="guest-merge-title" className="text-lg font-bold text-text-primary">
                 Penyelarasan Data Tamu &amp; Akun
               </h2>
-              <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-accent/10 text-accent border border-accent/20">
+              <span className="text-2xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-accent/10 text-accent border border-accent/20">
                 Q64 Terverifikasi
               </span>
             </div>
@@ -303,7 +303,7 @@ export function GuestMergeDialog() {
               <Bookmarks size={15} weight="regular" className="text-accent" />
               <span>Data Lokal (Tamu)</span>
             </div>
-            <div className="text-[11px] text-text-muted space-y-0.5">
+            <div className="text-2xs text-text-muted space-y-0.5">
               <p><strong className="text-text-primary">{guestLibCount}</strong> komik tersimpan</p>
               <p><strong className="text-text-primary">{guestHistCount}</strong> riwayat baca</p>
             </div>
@@ -314,7 +314,7 @@ export function GuestMergeDialog() {
               <CloudCheck size={16} weight="regular" className="text-accent" />
               <span>Data Akun Cloud</span>
             </div>
-            <div className="text-[11px] text-text-muted space-y-0.5">
+            <div className="text-2xs text-text-muted space-y-0.5">
               <p><strong className="text-text-primary">{cloudLibCount}</strong> komik di cloud</p>
               <p><strong className="text-text-primary">{cloudHistCount}</strong> riwayat di cloud</p>
             </div>
@@ -328,14 +328,14 @@ export function GuestMergeDialog() {
               <ShieldCheck size={16} weight="regular" className="text-accent" />
               <span>Resolusi Konflik Terverifikasi (Milestone Q52 &amp; Q63)</span>
             </div>
-            <p className="text-[11.5px] text-text-secondary leading-relaxed">
+            <p className="text-2xs text-text-secondary leading-relaxed">
               Ditemukan {diff.conflictingLibrary.length} komik tumpang-tindih. Jika memilih <strong>Gabungkan</strong>, Yomirra mempertahankan milestone tertinggi yang terverifikasi dan kursor chapter independen tanpa kehilangan progres bacaan.
             </p>
             <div className="max-h-24 overflow-y-auto space-y-1 pr-1">
               {diff.conflictingLibrary.map((c) => (
-                <div key={c.id} className="text-[11px] p-1.5 rounded bg-surface-base/60 border border-border-subtle/40 flex items-center justify-between">
-                  <span className="font-semibold text-text-primary truncate max-w-[55%]">{c.title}</span>
-                  <span className="text-[10px] text-accent font-medium">{c.resolvedMilestoneChapter}</span>
+                <div key={c.id} className="text-2xs p-1.5 rounded bg-surface-base/60 border border-border-subtle/40 flex items-center justify-between">
+                  <span className="font-semibold text-text-primary truncate max-w-7/12">{c.title}</span>
+                  <span className="text-2xs text-accent font-medium">{c.resolvedMilestoneChapter}</span>
                 </div>
               ))}
             </div>
@@ -368,7 +368,7 @@ export function GuestMergeDialog() {
                   strategy === "merge" ? "border-accent bg-accent" : "border-border-default"
                 )}
               >
-                {strategy === "merge" && <div className="size-1.5 rounded-full bg-white" />}
+                {strategy === "merge" && <div className="size-1.5 rounded-full bg-accent-on" />}
               </div>
             </div>
             <div className="flex-1 min-w-0">
@@ -376,11 +376,11 @@ export function GuestMergeDialog() {
                 <span className="text-xs font-bold text-text-primary">
                   1. Gabungkan Data (Direkomendasikan)
                 </span>
-                <span className="text-[9.5px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-status-success-bg text-status-success-fg border border-status-success-fg/30">
+                <span className="text-3xs font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-status-success-bg text-status-success-fg border border-status-success-fg/30">
                   Aman
                 </span>
               </div>
-              <p className="text-[11px] text-text-muted mt-1 leading-relaxed">
+              <p className="text-2xs text-text-muted mt-1 leading-relaxed">
                 Menyatukan Library dan riwayat. Komik dan chapter yang sama dipadukan dengan mempertahankan progres tertinggi (Q52) dan kursor mandiri (Q63).
               </p>
             </div>
@@ -403,7 +403,7 @@ export function GuestMergeDialog() {
                   strategy === "cloud-replace" ? "border-status-warning-fg bg-status-warning-fg" : "border-border-default"
                 )}
               >
-                {strategy === "cloud-replace" && <div className="size-1.5 rounded-full bg-white" />}
+                {strategy === "cloud-replace" && <div className="size-1.5 rounded-full bg-accent-on" />}
               </div>
             </div>
             <div className="flex-1 min-w-0">
@@ -411,11 +411,11 @@ export function GuestMergeDialog() {
                 <span className="text-xs font-bold text-text-primary">
                   2. Gunakan Data Cloud (Timpa Data Lokal)
                 </span>
-                <span className="text-[9.5px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-status-warning-bg text-status-warning-fg border border-status-warning-fg/30">
+                <span className="text-3xs font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-status-warning-bg text-status-warning-fg border border-status-warning-fg/30">
                   Destruktif
                 </span>
               </div>
-              <p className="text-[11px] text-text-muted mt-1 leading-relaxed">
+              <p className="text-2xs text-text-muted mt-1 leading-relaxed">
                 Abaikan data yang dibuat selama sesi tamu di perangkat ini, dan gunakan data akun Google sepenuhnya. Salinan cadangan sesi tamu akan disimpan secara lokal.
               </p>
             </div>
@@ -429,7 +429,7 @@ export function GuestMergeDialog() {
               <Warning size={16} weight="regular" />
               <span>Konfirmasi Tindakan Destruktif</span>
             </div>
-            <p className="text-[11px] text-text-secondary leading-relaxed">
+            <p className="text-2xs text-text-secondary leading-relaxed">
               Tindakan ini akan menggantikan data sesi tamu lokal dengan data akun Google. Cadangan lokal otomatis dibuat sebelum penggantian.
             </p>
             <label className="flex items-start gap-2 pt-1 cursor-pointer select-none">
@@ -440,7 +440,7 @@ export function GuestMergeDialog() {
                 onChange={(e) => setConfirmedDestructive(e.target.checked)}
                 className="mt-0.5 rounded border-border-default text-accent focus:ring-accent"
               />
-              <span className="text-[11px] font-semibold text-text-primary">
+              <span className="text-2xs font-semibold text-text-primary">
                 Saya mengerti bahwa data lokal sesi tamu akan digantikan data cloud.
               </span>
             </label>

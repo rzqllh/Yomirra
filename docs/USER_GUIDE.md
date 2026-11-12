@@ -70,7 +70,7 @@ Domain yang didukung mencakup Library/bookmark, riwayat/progres, preferensi sumb
 3. Periksa pratinjau validasi dan konflik. **Gabungkan** menggabungkan data; **Ganti data saat ini** menimpa data lokal yang dipulihkan. Ekspor data perangkat lebih dulu sebelum mode ganti.
 4. Pilih **Pulihkan data**, lalu periksa Rak Buku, koleksi, dan beberapa posisi baca. Sinkronisasi cloud adalah langkah terpisah; pemulihan lokal tidak menghapus seluruh akun cloud.
 
-Batas berkas 10 MB; schema cadangan Yomirra 1–3 diterima. Tidak ada janji kompatibilitas cadangan Mihon, Tachiyomi, Tachimanga, atau aplikasi lain. Gambar unduhan dan kredensial tidak disertakan; konten NSFW dikecualikan sesuai kebijakan ekspor. Cadangan mengandung informasi bacaan pribadi: jangan unggah ke issue publik. [Kontrak data bacaan](READING_DATA.md) menjelaskan retensi dan konflik.
+Batas berkas 10 MB; schema cadangan Yomirra 1–3 diterima. Berkas cadangan dirancang spesifik untuk format data internal Yomirra dan tidak menjamin kompatibilitas dengan aplikasi pihak ketiga. Gambar unduhan dan kredensial tidak disertakan; konten NSFW dikecualikan sesuai kebijakan ekspor. Cadangan mengandung informasi bacaan pribadi: jangan unggah ke issue publik. [Kontrak data bacaan](READING_DATA.md) menjelaskan retensi dan konflik.
 
 ## Membersihkan perangkat
 

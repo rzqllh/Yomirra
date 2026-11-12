@@ -108,14 +108,14 @@ export function TopNav() {
   return (
     <>
       {/* Spacer to reserve layout space for the fixed nav */}
-      <div className="hidden md:block h-[68px] w-full shrink-0" />
+      <div className="hidden md:block h-17 w-full shrink-0" />
 
       <Surface asChild variant="glassHeader">
         <header
           style={{ top: "var(--announcement-height, 0px)" }}
           className={cn(
-            "hidden md:flex fixed right-0 z-40 h-[68px] items-center px-6 lg:px-8 justify-between transition-[left,top] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
-            isCollapsed ? "left-[76px]" : "left-[76px] xl:left-[240px]"
+            "hidden md:flex fixed right-0 z-40 h-17 items-center px-6 lg:px-8 justify-between transition-[left,top] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
+            isCollapsed ? "left-19" : "left-19 xl:left-60"
           )}
         >
         {/* LEFT: Global Editorial Breadcrumb (Phase 3) */}
@@ -124,7 +124,7 @@ export function TopNav() {
             <li className="flex items-center gap-2">
               <Link
                 href="/"
-                className="font-bold uppercase tracking-[0.14em] text-accent hover:opacity-80 transition-opacity"
+                className="font-bold uppercase tracking-widest text-accent hover:opacity-80 transition-opacity"
               >
                 Yomirra
               </Link>
@@ -162,7 +162,7 @@ export function TopNav() {
                   onClick={() => window.dispatchEvent(new CustomEvent("open-command-menu"))}
                   aria-keyshortcuts={modifier === "⌘" ? "Meta+K" : "Control+K"}
                   className={cn(
-                    "justify-start flex items-center gap-2.5 px-3 rounded-sm text-text-secondary hover:text-text-primary text-xs font-semibold h-9 min-h-[36px] w-full cursor-pointer select-none",
+                    "justify-start flex items-center gap-2.5 px-3 rounded-sm text-text-secondary hover:text-text-primary text-xs font-semibold h-9 min-h-9 w-full cursor-pointer select-none",
                     "border-border-subtle hover:border-accent/40 focus-visible:outline-2 focus-visible:outline-accent",
                     "transition-all duration-200 ease-out"
                   )}
@@ -200,23 +200,23 @@ export function TopNav() {
 
               <AnimatePresence>
                 {isProfileOpen && (
-                  <Surface asChild variant="glassPopover" rounded="card" className="shadow-[0_12px_36px_-6px_rgba(0,0,0,0.18)] dark:shadow-[0_16px_40px_-6px_rgba(0,0,0,0.7)]">
+                  <Surface asChild variant="glassPopover" rounded="card" className="shadow-md">
                     <motion.div
                       initial={{ opacity: 0, y: 8, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 8, scale: 0.95 }}
                       transition={{ duration: 0.15, ease: "easeOut" }}
-                      className="absolute right-0 top-12 w-60 border border-border-subtle rounded-xl p-1.5 z-[100] flex flex-col gap-0.5 select-none"
+                      className="absolute right-0 top-12 w-60 border border-border-subtle rounded-xl p-1.5 z-[var(--z-popover)] flex flex-col gap-0.5 select-none"
                     >
                       <div className="px-3 py-2 border-b border-border-subtle/70 mb-1">
-                        <p className="text-[13.5px] font-bold text-text-primary truncate">{user.displayName || "User"}</p>
-                        <p className="text-[11.5px] text-text-muted truncate mt-0.5">{user.email || ""}</p>
+                        <p className="text-sm font-bold text-text-primary truncate">{user.displayName || "User"}</p>
+                        <p className="text-xs text-text-muted truncate mt-0.5">{user.email || ""}</p>
                       </div>
 
                       <Link
                         href="/account"
                         onClick={() => setIsProfileOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors text-left"
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors text-left"
                       >
                         <UserCircle size={18} weight="regular" /> Akun & Sinkronisasi
                       </Link>
@@ -224,18 +224,18 @@ export function TopNav() {
                       <Link
                         href="/settings#general"
                         onClick={() => setIsProfileOpen(false)}
-                        className="flex items-center justify-between px-3 py-2 rounded-xl text-[13px] font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors text-left"
+                        className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors text-left"
                       >
                         <div className="flex items-center gap-2.5">
                           <Globe size={18} weight="regular" /> Bahasa
                         </div>
-                        <span className="text-[11.5px] text-text-muted font-medium">Indonesia</span>
+                        <span className="text-xs text-text-muted font-medium">Indonesia</span>
                       </Link>
 
                       <Link
                         href="/settings#about"
                         onClick={() => setIsProfileOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors text-left"
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors text-left"
                       >
                         <Question size={18} weight="regular" /> Pusat bantuan
                       </Link>
@@ -245,7 +245,7 @@ export function TopNav() {
                       <Button
                         variant="ghost"
                         onClick={() => { setIsProfileOpen(false); logout(); }}
-                        className="flex items-center justify-start gap-2.5 px-3 py-2 rounded-xl text-[13px] font-semibold text-semantic-error hover:bg-semantic-error/10 transition-colors text-left cursor-pointer w-full h-auto min-h-0"
+                        className="flex items-center justify-start gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-semantic-error hover:bg-semantic-error/10 transition-colors text-left cursor-pointer w-full h-auto min-h-0"
                       >
                         <SignOut size={18} weight="regular" /> Keluar
                       </Button>

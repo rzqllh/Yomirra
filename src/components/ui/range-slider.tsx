@@ -15,7 +15,7 @@ export const RangeSlider = React.forwardRef<HTMLInputElement, RangeSliderProps>(
     return (
       <div className={cn("w-full", className)}>
         <label htmlFor={inputId} className="flex items-center justify-between gap-3 text-sm font-semibold text-text-primary">
-          <span>{label}</span><output className="rounded-[8px] bg-accent-dim px-2 py-0.5 text-xs font-bold text-accent">{valueLabel ?? String(value)}</output>
+          <span>{label}</span><output className="rounded-sm bg-accent-dim px-2 py-0.5 text-xs font-bold text-accent">{valueLabel ?? String(value)}</output>
         </label>
         <input ref={ref} id={inputId} type="range" min={min} max={max} value={value} className="ink-range mt-2" style={{ "--range-fill": `${percent}%` } as React.CSSProperties} aria-valuetext={valueLabel} {...props} />
       </div>

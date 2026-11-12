@@ -64,9 +64,9 @@ function pickSessionCovers(candidates: HeroCandidate[], count = 3): HeroCandidat
 
 // Sophisticated layered editorial angles for the spotlight artwork
 const coverCardStyles = [
-  "right-[26%] sm:right-[38%] lg:right-[36%] top-2 sm:top-5 w-[62px] sm:w-[84px] lg:w-[94px] -rotate-3 z-10",
-  "right-[12%] sm:right-[20%] lg:right-[19%] top-0 sm:top-2 w-[68px] sm:w-[94px] lg:w-[104px] rotate-2 z-20 shadow-xl",
-  "hidden sm:block right-[2%] lg:right-[3%] top-6 sm:top-7 w-[76px] sm:w-[88px] lg:w-[98px] rotate-6 z-10",
+  "right-1/4 sm:right-3/8 lg:right-1/3 top-2 sm:top-5 w-16 sm:w-21 lg:w-24 -rotate-3 z-10",
+  "right-1/8 sm:right-1/5 lg:right-1/5 top-0 sm:top-2 w-17 sm:w-24 lg:w-26 rotate-2 z-20 shadow-xl",
+  "hidden sm:block right-2 lg:right-3 top-6 sm:top-7 w-19 sm:w-22 lg:w-24 rotate-6 z-10",
 ] as const;
 
 const EMPTY_CANDIDATES: HeroCandidate[] = [];
@@ -175,7 +175,7 @@ export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroP
         <div className="relative z-10 flex flex-col gap-2.5 max-w-2xl">
           <div className="flex items-center gap-2">
             <span className="size-1.5 rounded-full bg-accent" aria-hidden="true" />
-            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-accent">
+            <p className="text-2xs font-bold uppercase tracking-widest text-accent">
               LANJUT LAGI DI YOMIRRA
             </p>
           </div>
@@ -198,17 +198,17 @@ export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroP
               aria-label={searchAriaLabel}
               disabled={!mounted}
               onClick={() => window.dispatchEvent(new CustomEvent("open-command-menu"))}
-              className="group flex h-11 w-full items-center gap-3 rounded-xl border border-border-subtle/80 bg-surface-base/85 px-3.5 shadow-none transition-all hover:border-accent/50 hover:bg-surface-hover/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer select-none text-left active:scale-[0.995]"
+              className="group flex h-11 w-full items-center gap-3 rounded-xl border border-border-subtle/80 bg-surface-base/85 px-3.5 shadow-none transition-all hover:border-accent/50 hover:bg-surface-hover/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer select-none text-left active:scale-95"
             >
               <MagnifyingGlass
                 size={18}
                 className="shrink-0 text-text-muted transition-colors group-hover:text-accent"
                 aria-hidden="true"
               />
-              <span className="min-w-0 flex-1 bg-transparent text-[13px] sm:text-sm font-medium text-text-muted truncate select-none">
+              <span className="min-w-0 flex-1 bg-transparent text-xs sm:text-sm font-medium text-text-muted truncate select-none">
                 Cari judul atau kreator…
               </span>
-              <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded px-2 py-0.5 text-[10px] font-mono font-semibold text-text-muted bg-surface-muted/80 border border-border-subtle/80">
+              <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded px-2 py-0.5 text-2xs font-mono font-semibold text-text-muted bg-surface-muted/80 border border-border-subtle/80">
                 {searchShortcut}
               </kbd>
             </button>
@@ -216,7 +216,7 @@ export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroP
 
           {/* Contextual navigation pills for returning readers */}
           <div className="flex items-center gap-2 pt-0.5 text-xs text-text-muted">
-            <span className="text-[11px] font-medium text-text-muted/80">Pintas:</span>
+            <span className="text-2xs font-medium text-text-muted/80">Pintas:</span>
             <Link
               href="/popular"
               className="inline-flex items-center gap-1.5 rounded-lg border border-border-subtle/60 bg-surface-base/60 px-2.5 py-1 font-medium text-text-secondary hover:border-accent/40 hover:text-accent transition-colors"
@@ -242,20 +242,20 @@ export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroP
     <section
       aria-labelledby="home-hero-title"
       className={cn(
-        "relative w-full overflow-hidden rounded-xl border border-border-subtle/80 bg-gradient-to-br from-surface-raised via-surface-raised to-accent/[0.04] transition-all min-h-[170px] sm:min-h-[195px] shadow-xs",
+        "relative w-full overflow-hidden rounded-xl border border-border-subtle/80 bg-gradient-to-br from-surface-raised via-surface-raised to-accent/5 transition-all min-h-44 sm:min-h-48 shadow-xs",
         className
       )}
     >
       {/* Ambient background glow behind artwork */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -right-16 -top-16 size-72 rounded-full bg-accent/[0.06] blur-3xl"
+        className="pointer-events-none absolute -right-16 -top-16 size-72 rounded-full bg-accent/5 blur-3xl"
       />
 
       {/* Layered editorial artwork preview strictly for discovery sessions */}
       {visibleCovers.length > 0 && (
         <div
-          className="absolute right-0 top-0 h-[145px] w-[52%] overflow-hidden sm:inset-y-0 sm:h-auto sm:w-[48%] lg:w-[44%] z-10"
+          className="absolute right-0 top-0 h-36 w-1/2 overflow-hidden sm:inset-y-0 sm:h-auto sm:w-1/2 lg:w-5/12 z-10"
           style={{
             maskImage: "linear-gradient(to right, transparent 0%, black 35%)",
             WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 35%)",
@@ -305,23 +305,23 @@ export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroP
         </div>
       )}
 
-      <div className="relative z-10 flex flex-col justify-center p-5 sm:max-w-[62%] sm:p-6 lg:max-w-[58%] lg:px-7 min-h-[170px] sm:min-h-[195px]">
+      <div className="relative z-10 flex flex-col justify-center p-5 sm:max-w-3/5 sm:p-6 lg:max-w-7/12 lg:px-7 min-h-44 sm:min-h-48">
         <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1.5">
-          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-accent">
+          <p className="text-2xs font-bold uppercase tracking-widest text-accent">
             BACAANMU DIMULAI DI SINI
           </p>
-          <span className="inline-flex items-center gap-1 rounded-md bg-accent/10 border border-accent/20 px-2 py-0.5 text-[10px] font-bold text-accent uppercase tracking-wider">
+          <span className="inline-flex items-center gap-1 rounded-md bg-accent/10 border border-accent/20 px-2 py-0.5 text-2xs font-bold text-accent uppercase tracking-wider">
             <Sparkle size={11} weight="fill" />
             Katalog Multi-Sumber
           </span>
-          <span className="hidden sm:inline-flex items-center rounded-md bg-surface-base/80 border border-border-subtle px-2 py-0.5 text-[10px] font-semibold text-text-muted">
+          <span className="hidden sm:inline-flex items-center rounded-md bg-surface-base/80 border border-border-subtle px-2 py-0.5 text-2xs font-semibold text-text-muted">
             9 Sumber Aktif
           </span>
         </div>
 
         <h1
           id="home-hero-title"
-          className="mb-1 text-[22px] sm:text-[26px] font-black leading-[1.15] tracking-tight text-text-primary"
+          className="mb-1 text-xl sm:text-2xl font-black leading-tight tracking-tight text-text-primary"
         >
           Mau baca apa hari ini?
         </h1>
@@ -330,7 +330,7 @@ export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroP
           Jelajahi ribuan komik dari berbagai sumber dalam satu antarmuka yang cepat dan terpadu.
         </p>
 
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full max-w-[480px]">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full max-w-lg">
           <div
             role="search"
             aria-label="Pencarian Beranda"
@@ -342,17 +342,17 @@ export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroP
               aria-label={searchAriaLabel}
               disabled={!mounted}
               onClick={() => window.dispatchEvent(new CustomEvent("open-command-menu"))}
-              className="group flex h-11 w-full items-center gap-3 rounded-xl border border-border-default/80 bg-surface-base/90 px-3.5 shadow-none transition-all hover:border-accent/60 hover:bg-surface-hover/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer select-none text-left active:scale-[0.995]"
+              className="group flex h-11 w-full items-center gap-3 rounded-xl border border-border-default/80 bg-surface-base/90 px-3.5 shadow-none transition-all hover:border-accent/60 hover:bg-surface-hover/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent cursor-pointer select-none text-left active:scale-95"
             >
               <MagnifyingGlass
                 size={18}
                 className="shrink-0 text-text-muted transition-colors group-hover:text-accent"
                 aria-hidden="true"
               />
-              <span className="min-w-0 flex-1 bg-transparent text-[13px] sm:text-sm font-medium text-text-muted truncate select-none">
+              <span className="min-w-0 flex-1 bg-transparent text-xs sm:text-sm font-medium text-text-muted truncate select-none">
                 Cari judul atau kreator…
               </span>
-              <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded px-2 py-0.5 text-[10px] font-mono font-semibold text-text-muted bg-surface-muted/80 border border-border-subtle/80">
+              <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded px-2 py-0.5 text-2xs font-mono font-semibold text-text-muted bg-surface-muted/80 border border-border-subtle/80">
                 {searchShortcut}
               </kbd>
             </button>

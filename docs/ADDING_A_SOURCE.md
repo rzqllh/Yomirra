@@ -151,7 +151,7 @@ Lalu smoke-test discovery → search → detail → chapter → reader.
 
 ## Dynamic manifest
 
-Dynamic manifest cocok untuk trusted JSON API yang sudah normalized. Ia bukan tempat menjalankan arbitrary parser code atau memasang APK extension Mihon/Tachiyomi. Nama type internal `MihonSourceManifest` tidak menyatakan kompatibilitas extension.
+Dynamic manifest cocok untuk trusted JSON API yang sudah normalized. Ia bukan tempat menjalankan arbitrary parser code atau memasang ekstensi biner pihak ketiga. Type internal `DynamicSourceManifest` murni mendefinisikan kontrak data endpoint JSON.
 
 Manifest mendefinisikan source metadata dan endpoint seperti:
 

@@ -130,7 +130,7 @@ export default function AccountPage() {
                   <h1 className="text-xl font-bold text-text-primary truncate">
                     {user.displayName || "Pembaca Yomirra"}
                   </h1>
-                  <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider bg-accent/15 text-accent px-2 py-0.5 rounded-md border border-accent/25">
+                  <span className="inline-flex items-center gap-1 text-2xs font-bold uppercase tracking-wider bg-accent/15 text-accent px-2 py-0.5 rounded-md border border-accent/25">
                     <ShieldCheck size={12} weight="regular" /> Terhubung dengan Google
                   </span>
                 </div>
@@ -161,7 +161,7 @@ export default function AccountPage() {
                       <Bookmarks size={16} weight="regular" className="text-accent" />
                       Data Sesi Tamu Tersedia
                     </span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-status-success-bg text-status-success-fg border border-status-success-fg/30">
+                    <span className="text-2xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-status-success-bg text-status-success-fg border border-status-success-fg/30">
                       Q64 Terlindungi
                     </span>
                   </div>
@@ -205,7 +205,7 @@ export default function AccountPage() {
                 <div className="flex items-center gap-2">
                   <span
                     className={cn(
-                      "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border inline-flex items-center gap-1",
+                      "text-2xs font-bold uppercase tracking-wider px-2 py-0.5 rounded border inline-flex items-center gap-1",
                       networkOnline
                         ? "bg-status-success-bg text-status-success-fg border-status-success-fg/30"
                         : "bg-status-warning-bg text-status-warning-fg border-status-warning-fg/30"
@@ -217,7 +217,7 @@ export default function AccountPage() {
 
                   <span
                     className={cn(
-                      "text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded border",
+                      "text-2xs font-bold uppercase tracking-wider px-2 py-0.5 rounded border",
                       lifecycleState === "successful commit"
                         ? "bg-status-success-bg text-status-success-fg border-status-success-fg/30"
                         : lifecycleState === "syncing"
@@ -310,7 +310,7 @@ export default function AccountPage() {
                 </div>
 
                 {lastSyncError && (
-                  <div className="p-2.5 rounded-xl bg-status-error-bg/30 border border-status-error-fg/30 text-[11px] text-status-error-fg flex items-start gap-1.5">
+                  <div className="p-2.5 rounded-xl bg-status-error-bg/30 border border-status-error-fg/30 text-2xs text-status-error-fg flex items-start gap-1.5">
                     <WarningCircle size={14} weight="regular" className="shrink-0 mt-0.5" />
                     <span>Error sinkronisasi terakhir: {lastSyncError}</span>
                   </div>

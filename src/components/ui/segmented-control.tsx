@@ -80,7 +80,7 @@ export function SegmentedControl({
               size === "sm" && "py-1.5 px-3 text-xs",
               size === "md" && "py-2 px-3.5 text-xs sm:text-sm",
               size === "lg" && "py-2.5 px-5 text-sm sm:text-base",
-              fullWidth ? "flex-1" : "flex-1 sm:flex-none sm:min-w-[90px]",
+              fullWidth ? "flex-1" : "flex-1 sm:flex-none sm:min-w-22.5",
               isActive
                 ? isQuickRail
                   ? "text-accent-on"
@@ -110,13 +110,13 @@ export function SegmentedControl({
             {hasBadge && (
               <span
                 className={cn(
-                  "relative z-10 text-[10px] px-1.5 py-0.5 rounded-md font-bold transition-colors leading-none",
+                  "relative z-10 text-2xs px-1.5 py-0.5 rounded-md font-bold transition-colors leading-none",
                   isActive
                     ? isQuickRail
                       ? "bg-accent-on/10 text-accent-on"
                       : "bg-accent/15 text-accent"
                     : option.badgeVariant === "error"
-                    ? "bg-semantic-error text-white shadow-xs"
+                    ? "bg-status-error-bg text-status-error-fg shadow-xs"
                     : option.badgeVariant === "accent"
                     ? "bg-accent/15 text-accent border border-accent/20"
                     : "bg-surface-muted text-text-muted border border-border-subtle"

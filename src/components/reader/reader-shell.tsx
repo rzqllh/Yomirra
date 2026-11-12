@@ -334,13 +334,13 @@ export function ReaderShell({
     <div
       className={cn(
         "relative min-h-screen w-full transition-[padding,background-color] duration-150",
-        isDesktopPanelOpen && "md:pr-[320px]",
+        isDesktopPanelOpen && "md:pr-80",
         isLightReader ? "light" : "dark"
       )}
       style={{ backgroundColor: getBackgroundColor() }}
     >
       {/* Compact Transparent Status Bar Blur Layer (Locked precisely to safe-top notch with zero bleed) */}
-      <StatusBarBlur className={cn(isDesktopPanelOpen && "md:right-[320px]")} />
+      <StatusBarBlur className={cn(isDesktopPanelOpen && "md:right-80")} />
 
       {/* Top Overlay (Option A: Back + Info + Bookmark with Spring Animation & High Contrast) */}
       <AnimatePresence>
@@ -360,14 +360,14 @@ export function ReaderShell({
               }
             }}
             className={cn(
-              "fixed top-0 left-0 right-0 z-[65] pointer-events-none touch-none",
-              isDesktopPanelOpen ? "md:right-[calc(320px)]" : ""
+              "fixed top-0 left-0 right-0 z-[var(--z-reader-dock)] pointer-events-none touch-none",
+              isDesktopPanelOpen ? "md:right-80" : ""
             )}
           >
             <div className="w-full pt-[calc(var(--safe-top)+10px)] pb-3 px-3 flex items-center justify-center pointer-events-none">
               <header
                 className={cn(
-                  "yomirra-chrome pointer-events-auto relative overflow-hidden grid grid-cols-[84px_1fr_84px] sm:grid-cols-[96px_1fr_96px] items-center w-full max-w-lg md:max-w-2xl h-[54px] sm:h-[58px] px-2 sm:px-3 rounded-2xl transition-all duration-200 text-text-primary shadow-lg"
+                  "yomirra-chrome pointer-events-auto relative overflow-hidden grid grid-cols-[84px_1fr_84px] sm:grid-cols-[96px_1fr_96px] items-center w-full max-w-lg md:max-w-2xl h-14 sm:h-14.5 px-2 sm:px-3 rounded-2xl transition-all duration-200 text-text-primary shadow-lg"
                 )}
               >
                 {/* Left Cluster: Back to Detail + Home Navigation */}
@@ -397,21 +397,21 @@ export function ReaderShell({
                 {/* Center Cluster: Mathematically & Visually Centered Manga & Chapter Hierarchy */}
                 <div className="flex flex-col items-center justify-center px-1.5 min-w-0 select-none text-center overflow-hidden">
                   <span
-                    className="text-xs sm:text-[12.5px] font-medium text-text-muted truncate w-full max-w-full text-center leading-tight tracking-tight"
+                    className="text-xs font-medium text-text-muted truncate w-full max-w-full text-center leading-tight tracking-tight"
                     title={mangaTitle || chapterTitle}
                   >
                     {mangaTitle || chapterTitle}
                   </span>
                   {mangaTitle && chapterTitle ? (
                     <span
-                      className="text-[13px] sm:text-[14px] font-bold text-text-primary truncate w-full max-w-full text-center mt-0.5 leading-tight tracking-tight"
+                      className="text-xs sm:text-sm font-bold text-text-primary truncate w-full max-w-full text-center mt-0.5 leading-tight tracking-tight"
                       title={chapterTitle}
                     >
                       {chapterTitle}
                     </span>
                   ) : pageCount ? (
                     <span
-                      className="text-[12px] sm:text-[13px] font-semibold text-text-muted truncate w-full max-w-full text-center mt-0.5 leading-tight tracking-tight"
+                      className="text-xs font-semibold text-text-muted truncate w-full max-w-full text-center mt-0.5 leading-tight tracking-tight"
                       title={`${pageCount} halaman`}
                     >
                       {pageCount} halaman
@@ -467,7 +467,7 @@ export function ReaderShell({
               }
             }}
             className={cn(
-              "yomirra-dock-frame fixed bottom-0 left-0 right-0 z-[65] pointer-events-none touch-none",
+              "yomirra-dock-frame fixed bottom-0 left-0 right-0 z-[var(--z-reader-dock)] pointer-events-none touch-none",
               isDesktopPanelOpen ? "md:right-[calc(320px)]" : ""
             )}
           >
@@ -491,7 +491,7 @@ export function ReaderShell({
               )}
 
               {/* Yomirra Reader Unified Control Dock */}
-              <div role="group" aria-label="Kontrol pembaca" className="yomirra-chrome yomirra-dock-surface yomirra-reader-dock pointer-events-auto flex w-full max-w-[460px] flex-col gap-2 p-2 sm:p-2.5 text-text-primary">
+              <div role="group" aria-label="Kontrol pembaca" className="yomirra-chrome yomirra-dock-surface yomirra-reader-dock pointer-events-auto flex w-full max-w-md flex-col gap-2 p-2 sm:p-2.5 text-text-primary">
                 {/* Embedded Page Scrubber when page navigation is available */}
                 {preferences.showPageProgress && pageNavigation?.key === `${sourceId}::${mangaId}::${currentChapterId}` && (
                   <>
@@ -584,7 +584,7 @@ export function ReaderShell({
         <div
           className={cn(
             "fixed right-3 z-30 pointer-events-none transition-all duration-200",
-            isDesktopPanelOpen && "md:right-[332px]"
+            isDesktopPanelOpen && "md:right-83"
           )}
           style={{ bottom: "calc(var(--safe-bottom, 0px) + 12px)" }}
         >

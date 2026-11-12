@@ -37,7 +37,7 @@ export function EmptyState({
     <div 
       className={cn(
         "flex flex-col items-center justify-center text-center px-6 py-16 animate-in fade-in duration-500",
-        fullHeight ? "min-h-[400px] flex-1" : "w-full",
+        fullHeight ? "min-h-100 flex-1" : "w-full",
         className
       )}
       {...props}
@@ -56,7 +56,7 @@ export function EmptyState({
       <h2 className="mb-2 text-lg font-bold text-text-primary tracking-tight">{title}</h2>
       
       {description && (
-        <div className="mb-8 max-w-[280px] text-[15px] font-medium text-text-muted leading-relaxed balance-text">
+        <div className="mb-8 max-w-70 text-sm font-medium text-text-muted leading-relaxed balance-text">
           {description}
         </div>
       )}

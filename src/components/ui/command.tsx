@@ -59,7 +59,7 @@ const CommandDialog = ({ children, shouldFilter, filter, ...props }: CommandDial
             label="Quick Search di sumber Jelajah"
             shouldFilter={shouldFilter}
             filter={filter}
-            className="flex flex-col h-full w-full overflow-hidden [&_[cmdk-group-heading]]:px-4 [&_[cmdk-group-heading]]:py-2 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-extrabold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-[0.14em] [&_[cmdk-group-heading]]:text-text-muted"
+            className="flex flex-col h-full w-full overflow-hidden [&_[cmdk-group-heading]]:px-4 [&_[cmdk-group-heading]]:py-2 [&_[cmdk-group-heading]]:text-2xs [&_[cmdk-group-heading]]:font-extrabold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-widest [&_[cmdk-group-heading]]:text-text-muted"
           >
             {children}
           </Command>
@@ -99,7 +99,7 @@ const CommandList = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <CommandPrimitive.List
     ref={ref}
-    className={cn("max-h-[300px] overflow-y-auto overflow-x-hidden", className)}
+    className={cn("max-h-75 overflow-y-auto overflow-x-hidden", className)}
     {...props}
   />
 ))
@@ -151,7 +151,7 @@ const CommandItem = React.forwardRef<
   <CommandPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex cursor-pointer select-none items-center rounded-[12px] px-3 py-2.5 text-sm outline-none transition-colors aria-selected:bg-accent-dim aria-selected:text-accent hover:bg-surface-hover active:scale-[0.99]",
+      "relative flex cursor-pointer select-none items-center rounded-md px-3 py-2.5 text-sm outline-none transition-colors aria-selected:bg-accent-dim aria-selected:text-accent hover:bg-surface-hover active:scale-[0.99]",
       className
     )}
     {...props}

@@ -1,7 +1,7 @@
 import type { MangaSource } from "@/shared/sources/source-types";
 import { sourceMap, sources } from "./adapters";
 import { DynamicSourceAdapter, fetchDynamicSourceJson } from "./adapters/dynamic";
-import { MihonSourceManifestSchema } from "@/shared/sources/dynamic-source-registry";
+import { DynamicSourceManifestSchema } from "@/shared/sources/dynamic-source-registry";
 import { domainResolver } from "./domain-resolver";
 import { SourceError } from "./error";
 
@@ -40,7 +40,7 @@ export class SourceManager {
           throw new Error("SECURITY_REJECTED: Cannot use an external manifest with a registered source identity.");
         }
         const data = await fetchDynamicSourceJson(manifestUrl, normalizedId, "external", 256 * 1024);
-        const manifest = MihonSourceManifestSchema.parse(data);
+        const manifest = DynamicSourceManifestSchema.parse(data);
         if (manifest.id !== id) {
           throw new Error(`SECURITY_REJECTED: Manifest identity mismatch. Expected ${id}, got ${manifest.id}`);
         }

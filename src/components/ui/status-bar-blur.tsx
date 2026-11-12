@@ -19,7 +19,7 @@ export function StatusBarBlur({ className, style }: StatusBarBlurProps) {
     <div
       aria-hidden="true"
       className={cn(
-        "fixed inset-x-0 top-0 h-[env(safe-area-inset-top,0px)] max-h-[env(safe-area-inset-top,0px)] pointer-events-none z-[45] overflow-hidden select-none isolate bg-transparent",
+        "fixed inset-x-0 top-0 h-[env(safe-area-inset-top,0px)] max-h-[env(safe-area-inset-top,0px)] pointer-events-none z-[var(--z-status-bar)] overflow-hidden select-none isolate bg-transparent",
         className
       )}
       style={{

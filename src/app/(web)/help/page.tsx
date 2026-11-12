@@ -72,7 +72,7 @@ export default function HelpPage() {
                 key={topic.title}
                 className="group overflow-hidden rounded-lg border border-border-subtle bg-surface-raised"
               >
-                <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-text-primary focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent [&::-webkit-details-marker]:hidden">
+                <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-text-primary focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent [&::-webkit-details-marker]:hidden">
                   {topic.title}
                   <span aria-hidden="true" className="shrink-0 text-text-muted group-open:rotate-180">⌄</span>
                 </summary>

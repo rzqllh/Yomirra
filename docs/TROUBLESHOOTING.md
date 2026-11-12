@@ -51,7 +51,7 @@ Gunakan JSON hasil ekspor Yomirra, bukan ZIP chapter atau cadangan aplikasi lain
 
 **AI wajib?** Tidak. Pencarian leksikal dan rekomendasi utama berjalan tanpa AI. Semantic ranking opsional pada deployment yang mengonfigurasinya.
 
-**Fitur sama persis dengan reader lain?** Panduan ini mencakup web/PWA Yomirra. Referensi Mihon dan Tachimanga tidak menjanjikan extension, format cadangan, fitur native, atau kesetaraan fitur.
+**Apakah fitur sama persis dengan aplikasi native?** Yomirra dirancang khusus sebagai antarmuka web/PWA modern yang mandiri. Kapabilitas fitur beroperasi dalam standar web terbuka tanpa ketergantungan pada ekstensi atau format aplikasi pihak ketiga.
 
 ## Melaporkan bug
 

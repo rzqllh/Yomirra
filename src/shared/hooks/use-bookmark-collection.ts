@@ -99,12 +99,18 @@ export function useBookmarkCollection() {
   const handleSmartCollectionChange = React.useCallback(
     (id: SmartCollectionId | null) => {
       setSelectedSmartCollectionId(id);
+      if (id !== null) {
+        setSelectedCollectionId(null);
+      }
     },
     []
   );
 
   const handleCollectionChange = React.useCallback((id: string | null) => {
     setSelectedCollectionId(id);
+    if (id !== null) {
+      setSelectedSmartCollectionId(null);
+    }
   }, []);
 
   const clearCollectionFilters = React.useCallback(() => {

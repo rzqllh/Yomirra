@@ -25,7 +25,7 @@ export function UpdatesSkeleton({ count = 6, className }: UpdatesSkeletonProps) 
               {/* Canonical 2:3 manga cover frame. */}
               <div
                 style={{ animationDelay: staggerDelay }}
-                className="relative w-[52px] sm:w-[58px] aspect-[2/3] rounded-xs overflow-hidden shrink-0 bg-surface-muted/80 border border-border-subtle/60"
+                className="relative w-13 sm:w-14.5 aspect-[2/3] rounded-xs overflow-hidden shrink-0 bg-surface-muted/80 border border-border-subtle/60"
               >
                 <Skeleton className="w-full h-full rounded-none" />
               </div>
@@ -35,7 +35,7 @@ export function UpdatesSkeleton({ count = 6, className }: UpdatesSkeletonProps) 
                 {/* Title */}
                 <Skeleton
                   style={{ animationDelay: staggerDelay }}
-                  className="h-4 w-[75%] max-w-[180px] rounded-md"
+                  className="h-4 w-3/4 max-w-45 rounded-md"
                 />
 
                 {/* Badges row */}

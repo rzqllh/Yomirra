@@ -59,8 +59,8 @@ describe("Shell Revamp Regression Coverage", () => {
 
       const aside = container.querySelector("aside");
       expect(aside).toBeTruthy();
-      expect(aside?.className).toContain("xl:w-[240px]");
-      expect(aside?.className).toContain("w-[76px]");
+      expect(aside?.className).toContain("xl:w-60");
+      expect(aside?.className).toContain("w-19");
 
       // Toggle button should indicate expanded state
       const toggleBtn = screen.getByRole("button", { name: "Ciutkan bilah samping" });
@@ -79,8 +79,8 @@ describe("Shell Revamp Regression Coverage", () => {
 
       const aside = container.querySelector("aside");
       expect(aside).toBeTruthy();
-      expect(aside?.className).toContain("w-[76px]");
-      expect(aside?.className).not.toContain("xl:w-[240px]");
+      expect(aside?.className).toContain("w-19");
+      expect(aside?.className).not.toContain("xl:w-60");
 
       // Toggle button should reflect collapsed state and offer expand
       const toggleBtn = screen.getByRole("button", { name: "Perluas bilah samping" });
@@ -129,8 +129,8 @@ describe("Shell Revamp Regression Coverage", () => {
       // Toggle container must be hidden on mobile/tablet (hidden xl:flex)
       expect(railCode).toContain("hidden xl:flex mt-auto");
 
-      // Aside width must always have w-[76px] base for md-lg tablet viewports
-      expect(railCode).toContain('w-[76px]');
+      // Aside width must always have w-19 base for md-lg tablet viewports
+      expect(railCode).toContain('w-19');
     });
 
     it("aligns TopNav left offset with the sidebar compact and expanded states", () => {
@@ -140,8 +140,8 @@ describe("Shell Revamp Regression Coverage", () => {
       const { rerender, container } = render(<TopNav />);
 
       const headerExpanded = container.querySelector("header");
-      expect(headerExpanded?.className).toContain("xl:left-[240px]");
-      expect(headerExpanded?.className).toContain("left-[76px]");
+      expect(headerExpanded?.className).toContain("xl:left-60");
+      expect(headerExpanded?.className).toContain("left-19");
 
       act(() => {
         useSidebarStore.setState({ isCollapsed: true });
@@ -149,8 +149,8 @@ describe("Shell Revamp Regression Coverage", () => {
       rerender(<TopNav />);
 
       const headerCollapsed = container.querySelector("header");
-      expect(headerCollapsed?.className).toContain("left-[76px]");
-      expect(headerCollapsed?.className).not.toContain("xl:left-[240px]");
+      expect(headerCollapsed?.className).toContain("left-19");
+      expect(headerCollapsed?.className).not.toContain("xl:left-60");
     });
   });
 

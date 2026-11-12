@@ -14,7 +14,7 @@ export default function Loading() {
             <Skeleton className="size-10 shrink-0 rounded-lg" />
             <div className="min-w-0 space-y-2">
               <Skeleton className="h-4 w-36 rounded-md" />
-              <Skeleton className="h-3 w-64 max-w-[55vw] rounded-md" />
+              <Skeleton className="h-3 w-64 max-w-xs rounded-md" />
             </div>
           </div>
           <Skeleton className="h-6 w-11 shrink-0 rounded-xl" />

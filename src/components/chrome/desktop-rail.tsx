@@ -55,10 +55,10 @@ export function DesktopRail({ pendingHref }: { pendingHref?: string | null } = {
           }
         }}
         className={cn(
-          "group flex min-h-[36px] items-center gap-2.5 rounded-xs px-2.5 py-1.5 transition-all duration-150 outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-accent active:ring-0",
+          "group flex min-h-9 items-center gap-2.5 rounded-xs px-2.5 py-1.5 transition-all duration-150 outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-accent active:ring-0",
           isCollapsed ? "justify-center" : "justify-center xl:justify-start",
           active
-            ? "bg-surface-raised text-text-primary font-semibold shadow-[0_1px_2px_rgba(0,0,0,0.05)] border border-border-subtle/80"
+            ? "bg-surface-raised text-text-primary font-semibold shadow-xs border border-border-subtle/80"
             : "text-text-secondary hover:bg-surface-hover/70 hover:text-text-primary font-medium"
         )}
       >
@@ -70,7 +70,7 @@ export function DesktopRail({ pendingHref }: { pendingHref?: string | null } = {
             active ? "text-accent" : "text-text-muted group-hover:text-text-primary"
           )}
         />
-        <span className={cn("hidden truncate text-[13px]", !isCollapsed && "xl:block")}>
+        <span className={cn("hidden truncate text-xs", !isCollapsed && "xl:block")}>
           {item.label}
         </span>
       </Link>
@@ -83,7 +83,7 @@ export function DesktopRail({ pendingHref }: { pendingHref?: string | null } = {
         style={{ top: "var(--announcement-height, 0px)" }}
         className={cn(
           "hidden md:flex fixed bottom-0 left-0 z-30 flex-col border-r border-border-subtle bg-surface-base px-2.5 py-4 transition-[width,top] duration-200 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
-          isCollapsed ? "w-[76px]" : "w-[76px] xl:w-[240px] xl:px-3.5"
+          isCollapsed ? "w-19" : "w-19 xl:w-60 xl:px-3.5"
         )}
       >
       {/* Brand Header */}
@@ -99,7 +99,7 @@ export function DesktopRail({ pendingHref }: { pendingHref?: string | null } = {
           </div>
           <span
             className={cn(
-              "hidden text-[19px] font-bold tracking-[-0.03em] text-text-primary",
+              "hidden text-lg font-bold tracking-tight text-text-primary",
               !isCollapsed && "xl:inline"
             )}
           >
@@ -111,7 +111,7 @@ export function DesktopRail({ pendingHref }: { pendingHref?: string | null } = {
       <nav aria-label="Navigasi desktop" className="flex flex-col gap-1">
         <span
           className={cn(
-            "hidden px-2.5 pb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-text-muted",
+            "hidden px-2.5 pb-1 text-2xs font-bold uppercase tracking-widest text-text-muted",
             !isCollapsed && "xl:block"
           )}
         >
@@ -123,7 +123,7 @@ export function DesktopRail({ pendingHref }: { pendingHref?: string | null } = {
       <nav aria-label="Navigasi lainnya" className="mt-4 flex flex-col gap-1 border-t border-border-subtle/60 pt-3.5">
         <span
           className={cn(
-            "hidden px-2.5 pb-1 text-[10px] font-bold uppercase tracking-[0.16em] text-text-muted",
+            "hidden px-2.5 pb-1 text-2xs font-bold uppercase tracking-widest text-text-muted",
             !isCollapsed && "xl:block"
           )}
         >
@@ -144,7 +144,7 @@ export function DesktopRail({ pendingHref }: { pendingHref?: string | null } = {
             e.currentTarget.blur();
           }}
           className={cn(
-            "group flex min-h-[44px] items-center gap-2.5 rounded-xs px-2.5 py-2 text-text-secondary hover:bg-surface-hover/70 hover:text-text-primary text-[13px] font-medium transition-all duration-150 outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-accent active:ring-0 cursor-pointer",
+            "group flex min-h-11 items-center gap-2.5 rounded-xs px-2.5 py-2 text-text-secondary hover:bg-surface-hover/70 hover:text-text-primary text-xs font-medium transition-all duration-150 outline-none focus:outline-none focus-visible:ring-2 focus-visible:ring-accent active:ring-0 cursor-pointer",
             isCollapsed ? "justify-center" : "justify-start w-full"
           )}
         >

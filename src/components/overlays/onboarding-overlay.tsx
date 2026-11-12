@@ -292,7 +292,7 @@ export function OnboardingOverlay({ onComplete }: { onComplete: () => void }) {
                         damping: 26,
                       }
                 }
-                className="relative w-full h-full rounded-2xl overflow-hidden border border-white/20 dark:border-white/10 shadow-xl bg-surface-raised cursor-default select-none"
+                className="relative w-full h-full rounded-2xl overflow-hidden border border-border-glass shadow-xl bg-surface-raised cursor-default select-none"
               >
                 <img
                   src={current.artwork}

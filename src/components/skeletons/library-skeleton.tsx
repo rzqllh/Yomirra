@@ -32,14 +32,14 @@ export function LibrarySkeleton() {
       {/* LibraryStatusRail placeholder */}
       <div className="flex items-center mt-1 -mx-4 px-4 md:mx-0 md:px-0">
         <div className="shrink-0 flex items-center">
-          <Skeleton className="h-[36px] w-28 rounded-lg" />
+          <Skeleton className="h-9 w-28 rounded-lg" />
           <div className="w-px h-5 bg-border-subtle shrink-0 mx-2.5" />
         </div>
         <div className="flex items-center gap-2.5 overflow-hidden flex-1 py-3">
-          <Skeleton className="h-[36px] w-28 rounded-lg shrink-0" />
-          <Skeleton className="h-[36px] w-20 rounded-lg shrink-0" />
-          <Skeleton className="h-[36px] w-20 rounded-lg shrink-0" />
-          <Skeleton className="h-[36px] w-20 rounded-lg shrink-0" />
+          <Skeleton className="h-9 w-28 rounded-lg shrink-0" />
+          <Skeleton className="h-9 w-20 rounded-lg shrink-0" />
+          <Skeleton className="h-9 w-20 rounded-lg shrink-0" />
+          <Skeleton className="h-9 w-20 rounded-lg shrink-0" />
         </div>
       </div>
 

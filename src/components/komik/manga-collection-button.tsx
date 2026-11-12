@@ -155,7 +155,7 @@ export function MangaCollectionButton({
                 </div>
               </DialogHeader>
 
-              <div className="flex flex-col gap-2 mt-1 max-h-[300px] overflow-y-auto pr-1">
+              <div className="flex flex-col gap-2 mt-1 max-h-75 overflow-y-auto pr-1">
                 {collections.length === 0 ? (
                   <p className="text-sm text-text-muted text-center py-6 font-medium">Belum ada koleksi.</p>
                 ) : (
