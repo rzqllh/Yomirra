@@ -13,11 +13,13 @@ describe("StatusBarBlur Component", () => {
     expect(blurElement.className).toContain("fixed");
     expect(blurElement.className).toContain("top-0");
     expect(blurElement.className).toContain("pointer-events-none");
+    expect(blurElement.className).toContain("z-[45]");
     expect(blurElement.className).toContain("h-[env(safe-area-inset-top,0px)]");
     expect(blurElement.className).toContain("max-h-[env(safe-area-inset-top,0px)]");
     const styleAttr = blurElement.getAttribute("style") || "";
     expect(styleAttr).toContain("contain: paint");
     expect(styleAttr).toContain("clip-path: inset(0)");
+    expect(styleAttr).toContain("height: var(--safe-top, env(safe-area-inset-top, 0px))");
   });
 
   it("applies progressive blur mask and custom className", () => {

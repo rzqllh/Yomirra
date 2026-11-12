@@ -179,8 +179,8 @@ export function PageHeader({
   const isTitleVisible = mode === "detail" ? detailTitleVisible : true
   const isGlass =
     variant === "glass" ||
-    (variant === "auto" && (mode === "detail" ? isScrolled : true))
-  const isTransparent = variant === "transparent" || (variant === "auto" && mode === "detail" && !isGlass)
+    (variant === "auto" && isScrolled)
+  const isTransparent = variant === "transparent" || (variant === "auto" && !isGlass)
 
   return (
     <>
@@ -188,8 +188,7 @@ export function PageHeader({
         style={{ top: "var(--announcement-height, 0px)" }}
         className={cn(
           "md:hidden fixed left-0 right-0 z-[var(--z-sticky)] flex w-full flex-col justify-end px-4 pt-[calc(var(--safe-top,0px)+8px)] pb-2 transition-[background-color,border-color,box-shadow,backdrop-filter,top] duration-200 ease-out pointer-events-none",
-          mode === "standard" && "yomirra-chrome border-x-0 border-t-0 rounded-none",
-          mode === "detail" && isGlass && "yomirra-chrome border-x-0 border-t-0 rounded-none",
+          isGlass && "yomirra-chrome border-x-0 border-t-0 rounded-none",
           isTransparent && "bg-transparent border-transparent shadow-none backdrop-blur-none",
           className
         )}
