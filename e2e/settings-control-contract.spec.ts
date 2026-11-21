@@ -14,7 +14,7 @@ test("Settings controls persist preferences and expose honest, accessible states
   await page.locator('label[for="data-saver"]').click();
   await expect(page.getByRole("checkbox", { name: "Hemat data", exact: true })).toBeChecked();
   await page.locator('label[for="check-on-start"]').click();
-  await expect(page.getByRole("button", { name: "Jeda pengecekan: 15 Menit", exact: true })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Jeda pengecekan: 6 Jam (Default)", exact: true })).toBeDisabled();
   await page.getByRole("button", { name: /^Bahasa utama:/ }).click();
   await page.getByRole("menuitemradio", { name: "English", exact: true }).click();
   await page.getByRole("button", { name: "Gelap", exact: true }).click();
@@ -24,7 +24,7 @@ test("Settings controls persist preferences and expose honest, accessible states
   await expect(page.locator('[data-hydrated="true"]')).toBeVisible();
   await expect(page.getByRole("checkbox", { name: "Hemat data", exact: true })).toBeChecked();
   await expect(page.getByRole("checkbox", { name: "Cek otomatis saat dibuka", exact: true })).not.toBeChecked();
-  await expect(page.getByRole("button", { name: "Jeda pengecekan: 15 Menit", exact: true })).toBeDisabled();
+  await expect(page.getByRole("button", { name: "Jeda pengecekan: 6 Jam (Default)", exact: true })).toBeDisabled();
   await expect(page.getByRole("button", { name: "Bahasa utama: English", exact: true })).toBeVisible();
   await expect(page.locator("html")).toHaveClass(/dark/);
   await expect(page.getByText("Terkunci", { exact: true })).toBeVisible();
