@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { HelpTopicLink } from "./help-topic-link";
 import { PageHeader } from "@/components/chrome/header";
 import { ContentLane, PageContainer } from "@/components/ui/layout";
 import { Surface } from "@/components/ui/surface";
@@ -78,12 +78,7 @@ export default function HelpPage() {
                 </summary>
                 <div className="space-y-3 border-t border-border-subtle px-4 py-3">
                   <p className="text-sm leading-relaxed text-text-muted">{topic.answer}</p>
-                  <Link
-                    href={topic.link}
-                    className="inline-flex min-h-11 items-center rounded-md font-semibold text-sm text-accent underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                  >
-                    {topic.linkLabel}
-                  </Link>
+                  <HelpTopicLink href={topic.link}>{topic.linkLabel}</HelpTopicLink>
                 </div>
               </details>
             ))}
