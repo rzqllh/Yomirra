@@ -40,7 +40,8 @@ describe("formatHealthDigestWithCoverage", () => {
       },
       NOW
     );
-    expect(message).toContain("1 source diperiksa");
+    expect(message).toContain("1 dari 2 source diperiksa");
+    expect(message).not.toContain("Tidak ada tindakan.");
     expect(message).toContain("1 dari 2 source belum terukur");
     expect(message).not.toContain("3 source diperiksa");
   });
