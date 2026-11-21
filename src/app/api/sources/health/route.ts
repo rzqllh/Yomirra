@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { isRedisConfigured, isRedisCommandAllowed, redis } from "@/server/lib/cache/redis";
 import { sourceHealthStore } from "@/server/lib/sources/health/health-store";
 import {
@@ -55,7 +55,7 @@ async function loadHealthPayload(): Promise<CachedHealthPayload> {
   // 2. Check in-memory cache
   const inMemoryCached = getInMemoryCachedPayload();
   if (inMemoryCached) {
-    void triggerBackgroundProbe();
+    await triggerBackgroundProbe((task) => after(() => task));
     return withCacheState(inMemoryCached, true, true);
   }
 
@@ -91,7 +91,7 @@ async function loadHealthPayload(): Promise<CachedHealthPayload> {
   };
 
   // Trigger background probe asynchronously without blocking
-  void triggerBackgroundProbe();
+  await triggerBackgroundProbe((task) => after(() => task));
 
   return payload;
 }

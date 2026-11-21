@@ -30,9 +30,13 @@ const FAST_ESCALATION_EVENTS = new Set([
 
 export function formatHealthDigest(
   snapshots: Record<string, SourceHealthSnapshot>,
-  timestamp = new Date()
+  timestamp = new Date(),
+  expectedSourceCount?: number
 ): string {
   const entries = Object.entries(snapshots);
+  const missingCount = expectedSourceCount === undefined
+    ? 0
+    : Math.max(0, expectedSourceCount - entries.length);
   const healthy = entries.filter(([, snapshot]) => snapshot.status === "HEALTHY");
   const unmeasured = entries.filter(([, snapshot]) => snapshot.status === "UNKNOWN" || !snapshot.status);
   const unhealthy = entries.filter(
@@ -57,18 +61,21 @@ export function formatHealthDigest(
     .slice(0, 2);
 
   const healthyCount = healthy.length;
+  const unmeasuredCount = unmeasured.length + missingCount;
 
   let text = `📊 *Yomirra · Health*\n${formatWibTime(timestamp)}\n\n`;
-  text += `${entries.length} source diperiksa\n`;
+  text += missingCount
+    ? `${entries.length} dari ${entries.length + missingCount} source diperiksa\n`
+    : `${entries.length} source diperiksa\n`;
 
   if (unhealthy.length > 0) {
     text += `${healthyCount} normal · ${unhealthy.length} perlu perhatian`;
-    if (unmeasured.length > 0) text += ` · ${unmeasured.length} belum diperiksa`;
+    if (unmeasuredCount > 0) text += ` · ${unmeasuredCount} belum diperiksa`;
     text += "\n";
-  } else if (unmeasured.length > 0 && healthyCount > 0) {
-    text += `${healthyCount} normal · ${unmeasured.length} belum diperiksa\n`;
-  } else if (unmeasured.length > 0 && healthyCount === 0) {
-    text += `${unmeasured.length} source belum diperiksa (menunggu probe)\n`;
+  } else if (unmeasuredCount > 0 && healthyCount > 0) {
+    text += `${healthyCount} normal · ${unmeasuredCount} belum diperiksa\n`;
+  } else if (unmeasuredCount > 0 && healthyCount === 0) {
+    text += `${unmeasuredCount} source belum diperiksa (menunggu probe)\n`;
   } else {
     text += `${healthyCount}/${entries.length} source normal\n`;
   }
@@ -93,8 +100,8 @@ export function formatHealthDigest(
 
   if (!unhealthy.length && !slow.length) {
     if (averageLatency) text += `Rata-rata ${formatLatency(averageLatency)}\n`;
-    text += unmeasured.length > 0
-      ? "Semua source yang terukur berjalan normal."
+    text += unmeasuredCount > 0
+      ? "Source yang terukur berjalan normal, tetapi status keseluruhan belum dapat dipastikan."
       : "Tidak ada tindakan.";
   }
 

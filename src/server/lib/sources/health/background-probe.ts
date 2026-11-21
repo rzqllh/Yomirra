@@ -45,7 +45,9 @@ export function setInMemoryCachedPayload(payload: CachedHealthPayload | null): v
  * Triggers functional source health probe in the background if atomic mutex is available.
  * Protected against thundering herd by atomic Redis SET NX with TTL and token ownership.
  */
-export async function triggerBackgroundProbe(): Promise<boolean> {
+export async function triggerBackgroundProbe(
+  registerTask: (task: Promise<void>) => void = () => {},
+): Promise<boolean> {
   const now = Date.now();
   if (now < nextProbeAttemptAt) return false;
   nextProbeAttemptAt = now + PROBE_RETRY_DELAY_MS;
@@ -75,8 +77,9 @@ export async function triggerBackgroundProbe(): Promise<boolean> {
     inMemoryLockToken = token;
   }
 
-  // Execute probe in the background asynchronously without blocking the request
-  (async () => {
+  // Keep the running Promise attached to the request lifetime (via Next.js after)
+  // when invoked from the route. Callers outside route handlers may omit it in tests.
+  const work = (async () => {
     try {
       const snapshots = await probeAllSourcesHealth({ deep: false });
       const data: Record<string, PublicSourceHealth> = {};
@@ -131,6 +134,7 @@ export async function triggerBackgroundProbe(): Promise<boolean> {
   })().catch((err) => {
     logger.error("Unhandled error in background probe executor", { error: err });
   });
+  registerTask(work);
 
   return true;
 }

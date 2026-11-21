@@ -9,6 +9,16 @@ const mockRedis = {
 
 const mockProbeAllSourcesHealth = vi.fn();
 
+// Run scheduled post-response work in unit tests without a Next.js request context.
+// Production uses the real next/server after() lifecycle hook.
+vi.mock("next/server", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("next/server")>();
+  return {
+    ...actual,
+    after: (task: () => void | Promise<void>) => { void task(); },
+  };
+});
+
 vi.mock("@/server/lib/cache/redis", () => ({
   isRedisConfigured: true,
   isRedisCircuitOpen: () => false,
