@@ -31,7 +31,7 @@ export function formatHealthDigestWithCoverage(
     return `📊 *Yomirra · Health*\n${formatWibTime(timestamp)}\n\n0 dari ${ids.length} source berhasil diperiksa\n${unmeasured} belum terukur (probe gagal atau timeout). Status belum dapat dipastikan.`;
   }
 
-  const message = formatHealthDigest(completed, timestamp);
+  const message = formatHealthDigest(completed, timestamp, ids.length);
   return unmeasured
     ? `${message}\n\n${unmeasured} dari ${ids.length} source belum terukur (probe gagal atau timeout).`
     : message;
