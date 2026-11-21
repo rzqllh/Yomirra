@@ -80,7 +80,7 @@ export default function HelpPage() {
                   <p className="text-sm leading-relaxed text-text-muted">{topic.answer}</p>
                   <Link
                     href={topic.link}
-                    className="inline-flex min-h-11 items-center rounded-md font-semibold text-sm text-accent underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                    className="inline-flex min-h-11 items-center scroll-mb-36 rounded-md font-semibold text-sm text-accent underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                   >
                     {topic.linkLabel}
                   </Link>
