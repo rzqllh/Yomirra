@@ -65,7 +65,9 @@ export function getReaderLookAheadWindow(
     case "light":
       return 1;
     case "aggressive":
-      return totalCount && totalCount > 0 ? totalCount : 999;
+      // Never eagerly request an entire long chapter. Eight pages ahead
+      // keeps navigation responsive without multiplying proxy/origin transfer.
+      return Math.min(totalCount ?? 8, 8);
     case "balanced":
     default:
       return 3;
