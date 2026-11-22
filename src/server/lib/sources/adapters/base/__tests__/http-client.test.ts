@@ -190,8 +190,10 @@ describe("HttpClient Infrastructure", () => {
 });
 
 describe("Source Registry Phase 1, 2A, 2B, 2C State", () => {
-  it("pendingSourceRegistry is empty — all Phase 2 sources are now active", () => {
-    expect(pendingSourceRegistry).toHaveLength(0);
+  it("has no legacy Phase 2 pending sources; new Keiyoushi candidates stay in-dev", () => {
+    expect(pendingSourceRegistry).toHaveLength(31);
+    expect(pendingSourceRegistry.every(s => s.isEnabled === false && s.status === "in-dev")).toBe(true);
+    expect(pendingSourceRegistry.some(s => ["komiku-ii", "asurascans", "komiknesia"].includes(s.id))).toBe(false);
   });
 
   it("getPendingSourceMetadata returns undefined for promoted sources", () => {
