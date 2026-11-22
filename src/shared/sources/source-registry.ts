@@ -1,4 +1,5 @@
 import { SourceMetadata } from "./source-types";
+import { KEIYOUSHI_CANDIDATES, keiyoushiNeedsRestrictedOptIn } from "./keiyoushi-candidates";
 
 // This is the shared representation of the registry.
 export const sourceRegistry: SourceMetadata[] = [
@@ -311,7 +312,25 @@ export function getAllSourceMetadata(): SourceMetadata[] {
  * Kept isolated from active `sourceRegistry` so they are not exposed to users
  * before their backend adapters are implemented and verified.
  */
-export const pendingSourceRegistry: SourceMetadata[] = [];
+export const pendingSourceRegistry: SourceMetadata[] = KEIYOUSHI_CANDIDATES.map((candidate) => ({
+  id: candidate.id,
+  name: candidate.name,
+  description: "Keiyoushi candidate: ported structurally, NOT live-verified",
+  language: "id",
+  baseUrl: candidate.baseUrl,
+  version: "0.1.0-in-dev",
+  isEnabled: false,
+  // API-only adapters are not implemented yet; HTML engines are staged behind
+  // an explicit diagnostic gate and are not in the active Yomirra source map.
+  isInstalled: candidate.engine !== "api",
+  status: "in-dev",
+  isNsfw: keiyoushiNeedsRestrictedOptIn(candidate),
+  capabilities: {
+    popular: false, latest: false, search: false, detail: false,
+    chapters: false, pages: false, filters: false,
+  },
+  isDynamic: false,
+}));
 
 
 export function getPendingSourceMetadata(id: string): SourceMetadata | undefined {
