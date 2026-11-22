@@ -18,6 +18,8 @@ import { useMounted } from "@/shared/hooks/use-mounted";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { cn } from "@/shared/utils/cn";
 
+const HEALTH_MAX_AGE_MS = 12 * 60 * 60 * 1000;
+
 export default function SourcesPage() {
   const isMounted = useMounted();
   const hideNsfw = useSettingsStore(state => state.hideNsfw);
@@ -67,14 +69,18 @@ export default function SourcesPage() {
       const health = healthStats?.[source.id];
       if (source.maintenance) return { ...source, status: "in-fix" as const };
       if (health) {
+        const observedAt = Date.parse(health.checkedAt || "");
+        const isFresh = Number.isFinite(observedAt)
+          && observedAt <= Date.now()
+          && Date.now() - observedAt <= HEALTH_MAX_AGE_MS;
         return {
           ...source,
-          status: health.status,
+          status: isFresh ? health.status : "unknown" as const,
           healthStats: {
-            latency: health.latency,
-            uptime: health.uptime,
-            lastChecked: health.checkedAt ? new Date(health.checkedAt).toLocaleString("id-ID") : "Waktu belum diketahui",
-            message: health.message,
+            latency: isFresh ? health.latency : "-",
+            uptime: isFresh ? health.uptime : "-",
+            lastChecked: Number.isFinite(observedAt) ? new Date(observedAt).toLocaleString("id-ID") : "Belum diperiksa",
+            message: isFresh ? health.message : "Belum ada pemeriksaan terbaru. Status sumber belum dapat dipastikan.",
           }
         };
       }

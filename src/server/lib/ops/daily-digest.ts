@@ -89,6 +89,9 @@ export function formatDailyDigest(
     for (const [sourceId, snapshot] of unhealthy) {
       const guidance = failureGuidance(snapshot.lastFailureCode, snapshot.stage);
       message += `${statusIcon(snapshot.status)} ${sourceDisplayName(sourceId)} · ${snapshot.stage || "source"} · \`${snapshot.lastFailureCode || snapshot.status}\`\n`;
+      if (snapshot.status === "DEGRADED" && snapshot.lastFailureCode) {
+        message += `Probe gagal ${snapshot.consecutiveFailures}/3 kali; reader masih bisa dicoba.\n`;
+      }
       message += `→ ${guidance.action}\n`;
     }
   }
