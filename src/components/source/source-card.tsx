@@ -39,7 +39,7 @@ type ReaderHealth = {
 function getReaderHealth(status: string): ReaderHealth {
   if (status === "online") return { label: "Normal", variant: "success" }
   if (status === "slow") return { label: "Lambat", variant: "warning" }
-  if (status === "degraded") return { label: "Gangguan", variant: "warning" }
+  if (status === "degraded") return { label: "Probe tidak stabil", variant: "warning" }
   if (status === "in-fix") return { label: "Maintenance", variant: "warning" }
   if (status === "in-dev") return { label: "Dalam pengembangan", variant: "muted" }
   if (status === "disabled") return { label: "Nonaktif oleh pengelola", variant: "warning" }

@@ -217,7 +217,7 @@ describe("Functional Health Probe (probeSourceHealth)", () => {
     expect(mockAdapter.getPages).toHaveBeenCalledWith("ch-1");
   });
 
-  it("switches to fallback mirror on transport domain failure", async () => {
+  it("does not mutate domain routing from an isolated transport probe failure", async () => {
     const mockAdapter: any = {
       id: "komikindo",
       getPopular: vi.fn().mockRejectedValue(new Error("fetch failed: ENOTFOUND komikindo.ch")),
@@ -226,9 +226,8 @@ describe("Functional Health Probe (probeSourceHealth)", () => {
 
     await probeSourceHealth("komikindo");
 
-    // Check that domainResolver marked komikindo.ch as failed and recorded fallback mirror komikindo.cv
     const cached = await domainResolver.getCachedDomain("komikindo", "frontend");
-    expect(cached?.currentHost).toBe("https://komikindo.cv");
+    expect(cached).toBeNull();
   });
 
   it("passes allowDisabled: true to sourceManager so disabled sources can be diagnostically probed", async () => {

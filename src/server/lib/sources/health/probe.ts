@@ -151,14 +151,8 @@ export async function probeSourceHealth(
       error: classified.message,
     });
 
-    // If failure indicates transport or domain issue, try fallback mirror
-    if (classified.code === "SOURCE_DOWN" || classified.code === "DOMAIN_CHANGED") {
-      const fallbackMirror = await domainResolver.markDomainFailed(normalizedId, resolvedHost, "frontend");
-      if (fallbackMirror) {
-        logger.info(`Recorded fallback mirror ${fallbackMirror} for ${normalizedId}`);
-      }
-    }
-
+    // Never rewrite routing from a failed monitoring request. A transient 502
+    // or an API host error does not validate a new frontend mirror.
     const snapshot: SourceHealthSnapshot = {
       sourceId: normalizedId,
       status,
