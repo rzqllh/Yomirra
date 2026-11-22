@@ -320,9 +320,8 @@ export const pendingSourceRegistry: SourceMetadata[] = KEIYOUSHI_CANDIDATES.map(
   baseUrl: candidate.baseUrl,
   version: "0.1.0-in-dev",
   isEnabled: false,
-  // API-only adapters are not implemented yet; HTML engines are staged behind
-  // an explicit diagnostic gate and are not in the active Yomirra source map.
-  isInstalled: candidate.engine !== "api",
+  // All candidates have staged implementations, but are NOT live-verified.
+  isInstalled: true,
   status: "in-dev",
   isNsfw: keiyoushiNeedsRestrictedOptIn(candidate),
   capabilities: {
