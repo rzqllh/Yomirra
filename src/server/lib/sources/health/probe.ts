@@ -41,7 +41,9 @@ export async function probeSourceHealth(
     }
 
     stage = "search";
-    const popularResult = await adapter.getPopular(1);
+    const popularResult = !options.deep && adapter.getHealthSample
+      ? await adapter.getHealthSample()
+      : await adapter.getPopular(1);
 
     // Schema / Parser validation: popular page 1 MUST return at least 1 item
     if (!popularResult || !Array.isArray(popularResult.mangas) || popularResult.mangas.length === 0) {
@@ -132,10 +134,13 @@ export async function probeSourceHealth(
     const latencyMs = Date.now() - startTime;
     const classified = SourceError.classify(err, normalizedId, stage);
 
-    let status: SourceHealthStatus = "BROKEN";
+    // A single failed monitor request does not prove the reader is down.
+    const previous = await sourceHealthStore.getSnapshot(normalizedId);
+    const consecutiveFailures = (previous?.consecutiveFailures ?? 0) + 1;
+    let status: SourceHealthStatus = consecutiveFailures >= 3 ? "BROKEN" : "DEGRADED";
     if (classified.code === "RATE_LIMITED") {
       status = "RATE_LIMITED";
-    } else if (classified.code === "DOMAIN_CHANGED") {
+    } else if (classified.code === "DOMAIN_CHANGED" && consecutiveFailures >= 3) {
       status = "DOMAIN_CHANGED";
     }
 
@@ -163,7 +168,7 @@ export async function probeSourceHealth(
       lastCheckedAt: new Date().toISOString(),
       lastSuccessAt: null,
       lastFailureAt: new Date().toISOString(),
-      consecutiveFailures: 1, // Will be computed accurately by store
+      consecutiveFailures,
       lastFailureCode: classified.code,
       errorMessage: classified.message,
       metadata: {
@@ -202,9 +207,9 @@ export async function probeAllSourcesHealth(
   const runtimeSources = await getRuntimeSources().catch(() => getAllSourceMetadata());
   const activeSources = runtimeSources.filter((s) => s.isEnabled && s.isInstalled);
   const results: Record<string, SourceHealthSnapshot> = {};
-  const timeoutMs = options.timeoutMs ?? 10000;
-
   await mapConcurrent(activeSources, 3, async (meta) => {
+    // Shinigami's adapter timeout is 15 seconds; do not cut its probe at 10s.
+    const timeoutMs = options.timeoutMs ?? (meta.id === "shinigami" ? 18000 : 10000);
     let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
     try {
       const probePromise = probeSourceHealth(meta.id, options);

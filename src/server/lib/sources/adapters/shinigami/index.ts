@@ -94,6 +94,20 @@ export class ShinigamiSource implements MangaSource {
   }
 
 
+  /** One-title functional probe instead of a 24-title catalog request. */
+  async getHealthSample(): Promise<MangaPageResult> {
+    const res = await this.client.get<ShinigamiMangaListResponse>("/v1/manga/list", {
+      page: 1,
+      page_size: 1,
+      sort: "popularity",
+    });
+    const items = Array.isArray(res?.data) ? res.data : [];
+    return {
+      mangas: items.map(normalizeMangaItem),
+      hasNextPage: (res?.meta?.page ?? 0) < (res?.meta?.total_page ?? 0),
+    };
+  }
+
   async getPopular(page: number): Promise<MangaPageResult> {
     const res = await this.client.get<ShinigamiMangaListResponse>("/v1/manga/list", {
       page,

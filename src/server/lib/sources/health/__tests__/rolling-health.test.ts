@@ -78,6 +78,18 @@ describe("Rolling Source Health & Uptime Engine", () => {
     expect(pub.hasSufficientData).toBe(true);
   });
 
+  it("does not count failed degraded probes as successful or reset consecutive failures", async () => {
+    await store.recordSnapshot(createMockSnapshot("shinigami", "HEALTHY", 120));
+    await store.recordSnapshot(createMockSnapshot("shinigami", "DEGRADED", 8000, { lastFailureCode: "UPSTREAM_TIMEOUT" }));
+    await store.recordSnapshot(createMockSnapshot("shinigami", "DEGRADED", 9000, { lastFailureCode: "SOURCE_DOWN" }));
+    const snapshot = await store.getSnapshot("shinigami");
+    const stats = await store.getRollingStats("shinigami");
+    expect(snapshot?.consecutiveFailures).toBe(2);
+    expect(stats.successfulSamples).toBe(1);
+    expect(stats.successRate).toBe("33.3%");
+    expect(stats.p95Latency).toBe("120ms");
+  });
+
   it("bounds rolling probe history to a maximum of 50 samples (FIFO eviction)", async () => {
     for (let i = 1; i <= 60; i++) {
       await store.recordSnapshot(createMockSnapshot("mangadex", "HEALTHY", 100 + i));
