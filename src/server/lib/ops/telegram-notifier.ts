@@ -86,6 +86,9 @@ export function formatHealthDigest(
       const guidance = failureGuidance(snapshot.lastFailureCode, snapshot.stage);
       text += `${statusIcon(snapshot.status)} *${sourceDisplayName(sourceId)}*\n`;
       text += `${snapshot.stage || "source"} · \`${snapshot.lastFailureCode || snapshot.status}\` · ${formatLatency(snapshot.latencyMs)}\n`;
+      if (snapshot.status === "DEGRADED" && snapshot.lastFailureCode) {
+        text += `Peringatan probe (${snapshot.consecutiveFailures}/3), reader belum tentu terganggu.\n`;
+      }
       text += `→ ${guidance.action}\n\n`;
     }
   }

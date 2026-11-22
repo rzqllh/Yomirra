@@ -58,6 +58,34 @@ describe("Functional Health Probe (probeSourceHealth)", () => {
     expect(snapshot.metadata?.totalParsed).toBe(2);
   });
 
+  it("uses the lightweight adapter health sample when available", async () => {
+    const getHealthSample = vi.fn().mockResolvedValue({
+      mangas: [{ id: "sample", title: "Sample", coverUrl: "https://example.com/1.jpg" }],
+      hasNextPage: false,
+    });
+    const getPopular = vi.fn();
+    vi.spyOn(sourceManager, "getSource").mockResolvedValue({
+      id: "shinigami", getHealthSample, getPopular,
+    } as any);
+    const result = await probeSourceHealth("shinigami");
+    expect(result.status).toBe("HEALTHY");
+    expect(getHealthSample).toHaveBeenCalledOnce();
+    expect(getPopular).not.toHaveBeenCalled();
+  });
+
+  it("requires three failed probes before declaring DOWN and recovers on success", async () => {
+    const getPopular = vi.fn()
+      .mockRejectedValueOnce(new Error("HTTP 502 Bad Gateway"))
+      .mockRejectedValueOnce(new Error("HTTP 502 Bad Gateway"))
+      .mockRejectedValueOnce(new Error("HTTP 502 Bad Gateway"))
+      .mockResolvedValue({ mangas: [{ id: "sample", title: "Sample" }], hasNextPage: false });
+    vi.spyOn(sourceManager, "getSource").mockResolvedValue({ id: "shinigami", getPopular } as any);
+    const statuses = [];
+    for (let n = 0; n < 4; n++) statuses.push((await probeSourceHealth("shinigami")).status);
+    expect(statuses).toEqual(["DEGRADED", "DEGRADED", "BROKEN", "HEALTHY"]);
+    expect((await sourceHealthStore.getSnapshot("shinigami"))?.consecutiveFailures).toBe(0);
+  });
+
   it("detects timeout as UPSTREAM_TIMEOUT", async () => {
     const mockAdapter: any = {
       id: "komiku",
@@ -67,7 +95,7 @@ describe("Functional Health Probe (probeSourceHealth)", () => {
 
     const snapshot = await probeSourceHealth("komiku");
 
-    expect(snapshot.status).toBe("BROKEN");
+    expect(snapshot.status).toBe("DEGRADED");
     expect(snapshot.lastFailureCode).toBe("UPSTREAM_TIMEOUT");
     expect(snapshot.stage).toBe("search");
   });
@@ -84,7 +112,7 @@ describe("Functional Health Probe (probeSourceHealth)", () => {
 
     const snapshot = await probeSourceHealth("shinigami");
 
-    expect(snapshot.status).toBe("BROKEN");
+    expect(snapshot.status).toBe("DEGRADED");
     expect(snapshot.lastFailureCode).toBe("UPSTREAM_BLOCKED");
   });
 
@@ -117,7 +145,7 @@ describe("Functional Health Probe (probeSourceHealth)", () => {
 
     const snapshot = await probeSourceHealth("komikindo");
 
-    expect(snapshot.status).toBe("BROKEN");
+    expect(snapshot.status).toBe("DEGRADED");
     expect(snapshot.lastFailureCode).toBe("PARSER_BROKEN");
     expect(snapshot.stage).toBe("search");
   });
@@ -134,7 +162,7 @@ describe("Functional Health Probe (probeSourceHealth)", () => {
 
     const snapshot = await probeSourceHealth("komikindo");
 
-    expect(snapshot.status).toBe("BROKEN");
+    expect(snapshot.status).toBe("DEGRADED");
     expect(snapshot.lastFailureCode).toBe("ROUTE_CHANGED");
     expect(snapshot.stage).toBe("search");
   });
@@ -148,7 +176,7 @@ describe("Functional Health Probe (probeSourceHealth)", () => {
 
     const snapshot = await probeSourceHealth("komiknesia");
 
-    expect(snapshot.status).toBe("BROKEN");
+    expect(snapshot.status).toBe("DEGRADED");
     expect(snapshot.lastFailureCode).toBe("DECRYPT_FAILURE");
   });
 
@@ -189,7 +217,7 @@ describe("Functional Health Probe (probeSourceHealth)", () => {
     expect(mockAdapter.getPages).toHaveBeenCalledWith("ch-1");
   });
 
-  it("switches to fallback mirror on transport domain failure", async () => {
+  it("does not mutate domain routing from an isolated transport probe failure", async () => {
     const mockAdapter: any = {
       id: "komikindo",
       getPopular: vi.fn().mockRejectedValue(new Error("fetch failed: ENOTFOUND komikindo.ch")),
@@ -198,9 +226,8 @@ describe("Functional Health Probe (probeSourceHealth)", () => {
 
     await probeSourceHealth("komikindo");
 
-    // Check that domainResolver marked komikindo.ch as failed and recorded fallback mirror komikindo.cv
     const cached = await domainResolver.getCachedDomain("komikindo", "frontend");
-    expect(cached?.currentHost).toBe("https://komikindo.cv");
+    expect(cached).toBeNull();
   });
 
   it("passes allowDisabled: true to sourceManager so disabled sources can be diagnostically probed", async () => {

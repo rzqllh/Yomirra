@@ -5,7 +5,6 @@ import {
   ArrowsClockwise,
   Bug,
   DotsThreeVertical,
-  Plug,
   Trash,
 } from "@phosphor-icons/react"
 import { Badge } from "@/components/ui/badge"
@@ -21,7 +20,6 @@ import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry"
 import { toast } from "sonner"
 import { ToggleSwitch } from "@/components/ui/toggle-switch"
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store"
-import { useSourceHealthStore } from "@/shared/store/source-health-store"
 import { useRouter } from "next/navigation"
 import {
   isDiscoverySourceSystemEligible,
@@ -41,24 +39,29 @@ type ReaderHealth = {
 function getReaderHealth(status: string): ReaderHealth {
   if (status === "online") return { label: "Normal", variant: "success" }
   if (status === "slow") return { label: "Lambat", variant: "warning" }
-  if (status === "degraded") return { label: "Gangguan", variant: "warning" }
-  if (status === "in-fix") return { label: "Under Maintenance", variant: "warning" }
-  if (status === "unknown") return { label: "Belum diperiksa", variant: "muted" }
-  return { label: "Tidak dapat digunakan", variant: "error" }
+  if (status === "degraded") return { label: "Probe tidak stabil", variant: "warning" }
+  if (status === "in-fix") return { label: "Maintenance", variant: "warning" }
+  if (status === "in-dev") return { label: "Dalam pengembangan", variant: "muted" }
+  if (status === "disabled") return { label: "Nonaktif oleh pengelola", variant: "warning" }
+  if (status === "unknown") return { label: "Belum terukur", variant: "muted" }
+  return { label: "Probe gagal berulang", variant: "error" }
 }
 
 export function SourceCard({ source, onUpdate }: SourceCardProps) {
   const router = useRouter()
-  const health = useSourceHealthStore((state) => state.getHealth(source.id))
   const { isSourceDisabled, toggleSource } = useSourcePreferencesStore()
   const [reportOpen, setReportOpen] = React.useState(false)
+  const [iconFailed, setIconFailed] = React.useState(false)
 
-  const effectiveStatus =
-    source.maintenance ? "in-fix" : health.status === "unknown" ? source.status || "unknown" : health.status
+  // Trust functional server health, not old browser-local request failures.
+  const effectiveStatus = !source.isEnabled
+    ? "disabled"
+    : source.maintenance ? "in-fix" : source.status || "unknown"
   const readerHealth = getReaderHealth(effectiveStatus)
-  const isUnavailable = ["offline", "unavailable", "in-fix", "in-dev"].includes(
-    effectiveStatus
-  )
+  const isUnavailable = Boolean(source.maintenance) || !source.isEnabled || ["in-fix", "in-dev"].includes(effectiveStatus)
+  const hasHealthAlert = !isUnavailable && ["slow", "degraded", "offline", "unavailable"].includes(effectiveStatus)
+  const initials = source.name.trim().split(/\s+/).slice(0, 2).map((word) => word.charAt(0)).join("").toUpperCase() || "?"
+  const showIcon = Boolean(source.icon) && !iconFailed
   const isPreferenceEnabled = !isSourceDisabled(source.id)
   const discoveryEligible = isDiscoverySourceSystemEligible(source)
   const isCustom = Boolean(source.manifestUrl)
@@ -97,26 +100,21 @@ export function SourceCard({ source, onUpdate }: SourceCardProps) {
   return (
     <article className="overflow-hidden rounded-xl border border-border-subtle bg-surface-raised">
       <div className="flex items-start gap-3.5 p-4">
-        <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border-subtle bg-surface-base">
-          {source.icon ? (
+        <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border-subtle bg-surface-base" aria-hidden="true">
+          {showIcon ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={source.icon}
               alt=""
-              aria-hidden="true"
-              className="size-full object-cover"
+              className="size-full object-contain p-1"
               referrerPolicy="no-referrer"
-              onError={(event) => {
-                event.currentTarget.style.display = "none"
-                event.currentTarget.nextElementSibling?.classList.remove("hidden")
-              }}
+              onError={() => setIconFailed(true)}
             />
-          ) : null}
-          <Plug
-            size={24}
-            className={cn("text-text-muted", source.icon && "hidden")}
-            aria-hidden="true"
-          />
+          ) : (
+            <span className="flex size-full items-center justify-center bg-accent/10 text-base font-black tracking-tight text-accent">
+              {initials}
+            </span>
+          )}
         </div>
 
         <div className="min-w-0 flex-1">
@@ -172,17 +170,27 @@ export function SourceCard({ source, onUpdate }: SourceCardProps) {
                 <span>Latensi: {source.healthStats.latency}</span>
               )}
               {source.healthStats.uptime !== "-" && (
-                <span>Sukses: {source.healthStats.uptime}</span>
+                <span>Probe (24 jam): {source.healthStats.uptime}</span>
               )}
             </div>
           ) : null}
 
-          {isUnavailable ? (
-            <div className="mt-2.5 flex items-center justify-between gap-2">
-              <p className="text-xs font-medium text-semantic-error">
-                {source.maintenance?.reason || source.healthStats?.message || "Sumber tidak dapat digunakan saat ini."}
-                {source.maintenance && <span className="mt-1 block text-text-muted">Menunggu pemeriksaan pemulihan katalog.</span>}
-              </p>
+          {isUnavailable || hasHealthAlert ? (
+            <div role="status" className="mt-2.5 flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className={cn(
+                  "text-xs font-medium",
+                  isUnavailable || ["offline", "unavailable"].includes(effectiveStatus)
+                    ? "text-semantic-error" : "text-text-secondary"
+                )}>
+                  {source.maintenance?.reason || source.healthStats?.message || (isUnavailable
+                    ? "Sumber sedang dibatasi pengelola."
+                    : "Pemeriksaan terganggu; reader mungkin tetap dapat digunakan.")}
+                </p>
+                {source.healthStats?.lastChecked && source.healthStats.lastChecked !== "Belum diperiksa" && (
+                  <p className="mt-1 text-2xs text-text-muted">Diperiksa: {source.healthStats.lastChecked}</p>
+                )}
+              </div>
               <button
                 type="button"
                 onClick={() => setReportOpen(true)}
@@ -203,8 +211,8 @@ export function SourceCard({ source, onUpdate }: SourceCardProps) {
       <div className="flex items-center justify-between gap-3 border-t border-border-subtle bg-surface-base/35 px-4 py-2.5">
         <div className="flex min-w-0 items-center gap-2.5">
           <ToggleSwitch
-            checked={isPreferenceEnabled && !source.maintenance}
-            disabled={Boolean(source.maintenance)}
+            checked={isPreferenceEnabled && source.isEnabled && !source.maintenance}
+            disabled={!source.isEnabled || Boolean(source.maintenance)}
             onCheckedChange={() => {
               toggleSource(source.id)
               window.dispatchEvent(new Event("sources_updated"))
@@ -214,7 +222,7 @@ export function SourceCard({ source, onUpdate }: SourceCardProps) {
           />
           <div className="min-w-0">
             <p className="text-xs font-bold text-text-primary">
-              {source.maintenance ? "Dijeda" : isPreferenceEnabled ? "Aktif" : "Nonaktif"}
+              {source.maintenance ? "Dijeda" : !source.isEnabled ? "Dinonaktifkan pengelola" : isPreferenceEnabled ? "Aktif" : "Nonaktif"}
             </p>
             <p className="truncate text-2xs text-text-muted">
               Preferensi penjelajahan

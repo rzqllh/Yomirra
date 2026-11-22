@@ -58,7 +58,7 @@ export function toPublicSourceHealth(
         : "-",
       uptime: rollingStats?.hasSufficientData ? rollingStats.successRate : "-",
       message: snapshot.lastFailureCode
-        ? failureMessage(snapshot)
+        ? `Pemeriksaan terganggu (${snapshot.consecutiveFailures}/3): ${failureMessage(snapshot)}. Reader mungkin tetap berfungsi.`
         : "Sumber merespons lebih lambat dari biasanya.",
       checkedAt: snapshot.lastCheckedAt,
       errorCode: snapshot.lastFailureCode,
@@ -87,7 +87,7 @@ export function toPublicSourceHealth(
     status: "unavailable",
     latency: "-",
     uptime: rollingStats?.hasSufficientData ? rollingStats.successRate : "-",
-    message: failureMessage(snapshot),
+    message: `Pemeriksaan gagal berulang: ${failureMessage(snapshot)}. Reader mungkin tetap berfungsi.`,
     checkedAt: snapshot.lastCheckedAt,
     errorCode: snapshot.lastFailureCode,
     sampleCount: rollingStats?.totalSamples ?? 1,

@@ -153,7 +153,7 @@ describe("GET /api/sources/health", () => {
     const json = await res.json();
 
     expect(json.data.komikindo.status).toBe("unavailable");
-    expect(json.data.komikindo.message).toBe("akses ke sumber ditolak");
+    expect(json.data.komikindo.message).toBe("Pemeriksaan gagal berulang: akses ke sumber ditolak. Reader mungkin tetap berfungsi.");
     expect(JSON.stringify(json)).not.toContain("internal upstream details");
   });
 

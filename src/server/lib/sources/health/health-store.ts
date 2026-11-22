@@ -44,7 +44,10 @@ export class SourceHealthStore {
     let lastSuccessAt = prev?.lastSuccessAt ?? null;
     let lastFailureAt = prev?.lastFailureAt ?? null;
 
-    if (newSnapshot.status === "HEALTHY" || newSnapshot.status === "DEGRADED") {
+    // A failed probe awaiting confirmation is DEGRADED but not successful.
+    const isSuccessfulProbe = newSnapshot.status === "HEALTHY"
+      || (newSnapshot.status === "DEGRADED" && !newSnapshot.lastFailureCode);
+    if (isSuccessfulProbe) {
       consecutiveFailures = 0;
       lastSuccessAt = now;
     } else {
@@ -213,7 +216,9 @@ export class SourceHealthStore {
 
     const totalSamples = validSamples.length;
     const hasSufficientData = totalSamples >= 3;
-    const successfulSamples = validSamples.filter((s) => s.status === "HEALTHY").length;
+    const successfulSamples = validSamples.filter((s) =>
+      s.status === "HEALTHY" || (s.status === "DEGRADED" && !s.errorCode)
+    ).length;
 
     const successRate =
       hasSufficientData && totalSamples > 0
@@ -222,7 +227,7 @@ export class SourceHealthStore {
 
     // Calculate p95 latency from valid successful samples
     const successfulLatencies = validSamples
-      .filter((s) => s.status === "HEALTHY" && s.latencyMs > 0)
+      .filter((s) => (s.status === "HEALTHY" || (s.status === "DEGRADED" && !s.errorCode)) && s.latencyMs > 0)
       .map((s) => s.latencyMs)
       .sort((a, b) => a - b);
 

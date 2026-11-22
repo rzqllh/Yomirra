@@ -1,7 +1,8 @@
 import type { SourceMetadata } from "@/shared/sources/source-types";
 import { isSourceContentVisible } from "./content-policy";
 
-const NON_OPERATIONAL_STATUSES = new Set(["unavailable", "in-fix", "in-dev"]);
+// A monitoring outage must not become an automatic access kill-switch.
+const NON_OPERATIONAL_STATUSES = new Set(["in-fix", "in-dev"]);
 
 export function parseDisabledSourceIdsCookie(value?: string): string[] {
   if (!value) return [];
@@ -22,6 +23,7 @@ export function isDiscoverySourceSystemEligible(source: SourceMetadata): boolean
   return (
     source.isEnabled !== false &&
     source.isInstalled === true &&
+    !source.maintenance &&
     !NON_OPERATIONAL_STATUSES.has(String(source.status || ""))
   );
 }
@@ -31,6 +33,7 @@ export function isSearchSourceSystemEligible(source: SourceMetadata): boolean {
     source.isEnabled !== false &&
     source.isInstalled === true &&
     source.capabilities?.search === true &&
+    !source.maintenance &&
     !NON_OPERATIONAL_STATUSES.has(String(source.status || ""))
   );
 }

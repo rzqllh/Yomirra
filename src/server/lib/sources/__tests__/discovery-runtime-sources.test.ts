@@ -1,44 +1,36 @@
-import { describe, expect, it, vi } from "vitest";
-import { getAllSourceMetadata } from "@/shared/sources/source-registry";
-import { selectDiscoverySources } from "@/shared/sources/discovery-source-policy";
+import { describe, expect, it } from "vitest";
+import type { SourceMetadata } from "@/shared/sources/source-types";
 import type { SourceHealthSnapshot } from "../health/types";
 import { applyDiscoveryMaintenance } from "../discovery-runtime-sources";
 
-vi.mock("../runtime-sources", () => ({ getRuntimeSources: vi.fn() }));
-vi.mock("../health/health-store", () => ({ sourceHealthStore: {} }));
+const source = {
+  id: "shinigami",
+  name: "Shinigami",
+  isEnabled: true,
+  isInstalled: true,
+  isNsfw: false,
+  isDynamic: false,
+  status: "unknown",
+  capabilities: { popular: true, latest: true, search: true, detail: true, chapters: true, pages: true, filters: true },
+} satisfies SourceMetadata;
+const probe = {
+  sourceId: "shinigami",
+  status: "BROKEN",
+  consecutiveFailures: 5,
+  resolvedHost: "https://api.shngm.io",
+  latencyMs: 15000,
+  lastCheckedAt: "2026-11-23T01:00:00.000Z",
+  lastSuccessAt: null,
+  lastFailureAt: "2026-11-23T01:00:00.000Z",
+} satisfies SourceHealthSnapshot;
 
-const sources = getAllSourceMetadata();
-const westmanga = sources.find(({ id }) => id === "westmanga")!;
-const shinigami = sources.find(({ id }) => id === "shinigami")!;
-
-function snapshot(status: SourceHealthSnapshot["status"], consecutiveFailures: number): SourceHealthSnapshot {
-  return {
-    sourceId: "westmanga",
-    status,
-    consecutiveFailures,
-    resolvedHost: "",
-    latencyMs: 30,
-    lastCheckedAt: "2026-11-06T00:00:00.000Z",
-    lastSuccessAt: null,
-    lastFailureAt: null,
-  };
-}
-
-describe("discovery maintenance", () => {
-  it("excludes verified incidents by default and restores sources after a successful probe", () => {
-    expect(selectDiscoverySources([westmanga], [])).toEqual([]);
-    expect(applyDiscoveryMaintenance(westmanga, {
-      ...snapshot("HEALTHY", 0),
-      lastCheckedAt: "2026-11-04T00:00:00.000Z",
-    }).maintenance).toBeDefined();
-
-    const recovered = applyDiscoveryMaintenance(westmanga, snapshot("HEALTHY", 0));
-    expect(selectDiscoverySources([recovered], [])).toEqual([recovered]);
-    expect(selectDiscoverySources([recovered], ["westmanga"])).toEqual([]);
+describe("maintenance is operator-controlled", () => {
+  it("never disables a reader just because monitoring failed repeatedly", () => {
+    expect(applyDiscoveryMaintenance(source, probe).maintenance).toBeUndefined();
   });
-
-  it("requires repeated functional failures for other sources", () => {
-    expect(applyDiscoveryMaintenance(shinigami, snapshot("BROKEN", 1)).maintenance).toBeUndefined();
-    expect(applyDiscoveryMaintenance(shinigami, snapshot("BROKEN", 2)).maintenance).toBeDefined();
+  it("does not silently cancel explicit operator maintenance", () => {
+    const manual = { ...source, maintenance: { reason: "Operator maintenance", since: "2026-11-23T00:00:00Z" } };
+    expect(applyDiscoveryMaintenance(manual, { ...probe, status: "HEALTHY", consecutiveFailures: 0 }).maintenance)
+      .toEqual(manual.maintenance);
   });
 });
