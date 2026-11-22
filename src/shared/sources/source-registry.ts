@@ -286,6 +286,38 @@ export const sourceRegistry: SourceMetadata[] = [
       filters: false,
     },
     isDynamic: false
+  },
+  {
+    id: "manhwa-list",
+    name: "Manhwa List",
+    description: "Indonesian Manhwa & Manga Reader",
+    language: "id",
+    baseUrl: "https://m1.manhwalist.my.id",
+    icon: "https://s2.googleusercontent.com/s2/favicons?domain=m1.manhwalist.my.id&sz=64",
+    version: "1.0.0",
+    adapterVersion: "1.0.0",
+    isEnabled: true,
+    isInstalled: true,
+    status: "unknown",
+    healthStats: {
+      uptime: "-",
+      latency: "-",
+      lastChecked: "Belum diperiksa",
+      message: "Status sumber aktif."
+    },
+    isNsfw: false,
+    capabilities: {
+      popular: true,
+      latest: true,
+      search: true,
+      detail: true,
+      chapters: true,
+      pages: true,
+      filters: false,
+      download: false,
+      related: false,
+    },
+    isDynamic: false
   }
 ];
 
@@ -312,24 +344,25 @@ export function getAllSourceMetadata(): SourceMetadata[] {
  * Kept isolated from active `sourceRegistry` so they are not exposed to users
  * before their backend adapters are implemented and verified.
  */
-export const pendingSourceRegistry: SourceMetadata[] = KEIYOUSHI_CANDIDATES.map((candidate) => ({
-  id: candidate.id,
-  name: candidate.name,
-  description: "Keiyoushi candidate: ported structurally, NOT live-verified",
-  language: "id",
-  baseUrl: candidate.baseUrl,
-  version: "0.1.0-in-dev",
-  isEnabled: false,
-  // All candidates have staged implementations, but are NOT live-verified.
-  isInstalled: true,
-  status: "in-dev",
-  isNsfw: keiyoushiNeedsRestrictedOptIn(candidate),
-  capabilities: {
-    popular: false, latest: false, search: false, detail: false,
-    chapters: false, pages: false, filters: false,
-  },
-  isDynamic: false,
-}));
+export const pendingSourceRegistry: SourceMetadata[] = KEIYOUSHI_CANDIDATES
+  .filter((candidate) => !sourceRegistry.some((s) => s.id === candidate.id))
+  .map((candidate) => ({
+    id: candidate.id,
+    name: candidate.name,
+    description: "Keiyoushi candidate: ported structurally, NOT live-verified",
+    language: "id",
+    baseUrl: candidate.baseUrl,
+    version: "0.1.0-in-dev",
+    isEnabled: false,
+    isInstalled: true,
+    status: "in-dev",
+    isNsfw: keiyoushiNeedsRestrictedOptIn(candidate),
+    capabilities: {
+      popular: false, latest: false, search: false, detail: false,
+      chapters: false, pages: false, filters: false,
+    },
+    isDynamic: false,
+  }));
 
 
 export function getPendingSourceMetadata(id: string): SourceMetadata | undefined {

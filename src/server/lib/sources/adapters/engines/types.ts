@@ -18,6 +18,8 @@ export interface BaseEngineConfig {
   capabilities?: Partial<SourceCapabilities>;
   mangaPath?: string;
   chapterPath?: string;
+  isEnabled?: boolean;
+  status?: "online" | "slow" | "degraded" | "unavailable" | "unknown" | "in-dev" | "in-fix";
 }
 
 export interface MangaThemesiaConfig extends BaseEngineConfig {

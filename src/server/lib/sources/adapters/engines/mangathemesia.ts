@@ -242,6 +242,12 @@ export class MangaThemesiaEngine extends BaseEngine {
         // Id from link path
         const id = link.replace(this.baseUrl, "").replace(/^\/|\/$/g, "");
 
+        const isLocked =
+          $el.hasClass("locked") ||
+          $el.hasClass("has-lock") ||
+          $el.hasClass("premium") ||
+          $el.find(".lock, .fa-lock, .svg-inline--fa-lock, .icon-lock, .badge-locked, .coin-locked, .premium").length > 0;
+
         chapters.push({
           id,
           mangaId,
@@ -249,6 +255,7 @@ export class MangaThemesiaEngine extends BaseEngine {
           title,
           date,
           url: link,
+          isLocked,
         });
       });
 

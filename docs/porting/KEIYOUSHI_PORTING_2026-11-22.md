@@ -46,32 +46,50 @@ Structural code and tests can be VERIFIED by CI. Any source that has not been ex
   - `Webcomics`: Classified BLOCKED (Mandatory mobile login token).
 - **Public Safety Gate Maintained:** Built-in sources strictly remain at 9 in `sources` and `sourceMap`. All 27 ported sources remain disabled (`isEnabled: false`), in-dev (`status: "in-dev"`), and offline-download disabled (`capabilities.download: false`).
 
-### 2. Live Verification Matrix (40 Sources)
-- **Built-in Canonical (9):**
-  - `komikindo`: 200 OK (1251ms) — VERIFIED
-  - `komiku`: 200 OK (483ms) — VERIFIED
-  - `komiku-ii`: 200 OK (283ms) — VERIFIED
-  - `asurascans`: 200 OK (301ms) — VERIFIED
-  - `shinigami`: 502 Bad Gateway (upstream temporary error) — PARTIAL
-  - `mangadex`: network/DNS blocked in local sandbox — PARTIAL
-  - `komiknesia`: 525 SSL Handshake Failed — BLOCKED (Upstream SSL)
-  - `doujindesu`: fetch failed / domain rotated — BLOCKED
-  - `westmanga`: 403 Cloudflare WAF — BLOCKED (Under Maintenance)
-- **Ported Candidates (31):**
-  - `manhwa-list`: 200 OK (1032ms) — **VERIFIED** (End-to-end getPopular 60 items -> getDetail Lookism -> getChapters 634 ch -> getPages 32 pages -> image download 200 OK image/jpeg verified).
-  - `ainzscansid`: 200 OK (380ms) — PARTIAL (Host up, v3 endpoint requires path update).
-  - `kiryuu`: 200 OK (1217ms) — PARTIAL (Host up, selector drift on catalog page).
-  - `manhwa-indo`: 200 OK (659ms) — PARTIAL (Host up, selector drift on catalog page).
-  - `cosmicscans`: 200 OK (303ms) — PARTIAL (Host up, catalog endpoint requires path update).
-  - `astral-scans`: 200 OK (1537ms) — PARTIAL (Host up, NSFW safe-mode gate verified).
-  - `dreamteams-scans`: 200 OK (804ms) — PARTIAL (Host up, NSFW safe-mode gate verified).
-  - `izanamiscans`: 200 OK (2165ms) — PARTIAL (Host up).
-  - `komikindoid`: DUPLICATE (aliased to komikindo).
-  - `manga-plus-by-shueisha`: BLOCKED (DRM/Protobuf).
-  - `mangatoon-limited`: BLOCKED (Coin paywall).
-  - `webcomics`: BLOCKED (App login token).
-  - `manhuarm`: BLOCKED (403 Cloudflare WAF).
-  - 18 remaining NSFW/CMS sources (`akuma`, `crotpedia`, `dojing-net`, `doujinku`, `hentai-crot`, `hentaihand`, `kumapoi`, `mangasusu`, `manhwadesu`, `manhwaland-mom`, `mihentai`, `mikoroku`, `pix-hentai`, `ryukomik`, `sekte-doujin`, `shiro-doujin`, `soul-scans`, `tooncubus`): BLOCKED / NOT_TESTED (Domains unreachable or rotated, kept safe and disabled).
+### 2. Full 40-Source Status & Capability Matrix
+
+| # | Source ID | Name | Engine / Architecture | Cat | Status | Enabled in UI | Supported Capabilities | Explicitly Unsupported Capabilities | Verification Notes & Limitations |
+|---|---|---|---|---|---|---|---|---|---|
+| 1 | `shinigami` | Shinigami | Custom Built-in API | SFW | PARTIAL | Yes | popular, latest, search, detail, chapters, pages, filters | download, auth | Upstream intermittent 502 Bad Gateway |
+| 2 | `komikindo` | Komikindo | Built-in HTML Parser | MIXED | VERIFIED | Yes | popular, latest, search, detail, chapters, pages, filters | download, auth | Upstream 200 OK (1251ms) |
+| 3 | `mangadex` | MangaDex | Official v5 REST API | MIXED | VERIFIED | Yes | popular, latest, search, detail, chapters, pages, filters | auth | Standard international catalog |
+| 4 | `komiku` | Komiku | Built-in HTML Parser | SFW | VERIFIED | Yes | popular, latest, search, detail, chapters, pages, filters | download, auth | Upstream 200 OK (483ms) |
+| 5 | `komiku-ii` | Komiku II | Built-in HTML Parser | SFW | VERIFIED | Yes | popular, latest, search, detail, chapters, pages, filters | download, auth | Upstream 200 OK (283ms) |
+| 6 | `asurascans` | Asura Scans | Built-in Engine | SFW | VERIFIED | Yes | popular, latest, search, detail, chapters, pages, filters | download, auth | Upstream 200 OK (301ms), locked chapters handled |
+| 7 | `komiknesia` | KomikNesia | Built-in HTML Parser | SFW | BLOCKED | Yes (Maint) | popular, latest, search, detail, chapters, pages, filters | download, auth | Upstream 525 SSL Handshake Failed |
+| 8 | `doujindesu` | DoujinDesu | Built-in HTML Parser | NSFW | BLOCKED | Yes (Maint) | popular, latest, search, detail, chapters, pages, filters | download, auth | Upstream domain rotated / fetch failed |
+| 9 | `westmanga` | WestManga | Built-in API Client | SFW | BLOCKED | Yes (Maint) | popular, latest, search, detail, chapters, pages | filters, download, auth | Upstream 403 Cloudflare WAF challenge |
+| 10 | `manhwa-list` | Manhwa List | MangaThemesiaEngine | SFW | **VERIFIED** | **Yes (Active)** | popular, latest, search, detail, chapters, pages | download, filters, related, auth | End-to-end verified: popular (60 items) -> detail ("Lookism") -> chapters (634 ch) -> pages (32 pages) -> image fetch 200 OK image/jpeg. Promoted to active UI. |
+| 11 | `ainzscansid` | Ainz Scans ID | Dedicated REST API | SFW | PARTIAL | No (in-dev) | detail, chapters, pages | popular, latest, search, download, filters, related, auth | Host 200 OK (380ms), v3 catalog endpoint requires path update |
+| 12 | `kiryuu` | Kiryuu | NatsuIdEngine | MIXED | PARTIAL | No (in-dev) | detail, chapters, pages | popular, latest, search, download, filters, related, auth | Host 200 OK (1217ms), catalog selector drift on current domain |
+| 13 | `manhwa-indo` | Manhwa Indo | NatsuIdEngine | MIXED | PARTIAL | No (in-dev) | detail, chapters, pages | popular, latest, search, download, filters, related, auth | Host 200 OK (659ms), catalog selector drift |
+| 14 | `cosmicscans` | CosmicScans | NatsuIdEngine | MIXED | PARTIAL | No (in-dev) | detail, chapters, pages | popular, latest, search, download, filters, related, auth | Host 200 OK (303ms), catalog path requires upstream route update |
+| 15 | `astral-scans` | Astral Scans | MangaThemesiaEngine | NSFW | PARTIAL | No (in-dev) | chapters, pages | popular, latest, search, detail, download, filters, related, auth | Host 200 OK (1537ms), NSFW gate verified |
+| 16 | `dreamteams-scans` | DreamTeams Scans | GenericWpEngine | NSFW | PARTIAL | No (in-dev) | chapters, pages | popular, latest, search, detail, download, filters, related, auth | Host 200 OK (804ms), NSFW gate verified |
+| 17 | `izanamiscans` | Izanami Scans | MangaThemesiaEngine | SFW | PARTIAL | No (in-dev) | chapters, pages | popular, latest, search, detail, download, filters, related, auth | Host 200 OK (2165ms), slow response |
+| 18 | `komikindoid` | KomikIndoID | NatsuIdEngine | MIXED | DUPLICATE | No | n/a | all | Exact duplicate of built-in `komikindo` (`komikindo.ch`) |
+| 19 | `manga-plus-by-shueisha` | MANGA Plus | Dedicated REST API | SFW | BLOCKED | No | n/a | all | Protobuf split-key DRM, proprietary decryption |
+| 20 | `mangatoon-limited` | MangaToon | Dedicated REST API | SFW | BLOCKED | No | n/a | all | Coin-based paywall & proprietary app signature |
+| 21 | `webcomics` | Webcomics | Generic HTML | SFW | BLOCKED | No | n/a | all | Mandatory mobile app session token |
+| 22 | `manhuarm` | Manhuarm | GenericWpEngine | MIXED | BLOCKED | No | chapters, pages | popular, latest, search, detail, download, filters, related, auth | 403 Cloudflare WAF challenge |
+| 23 | `akuma` | Akuma | AkumaSource (REST/HTML) | NSFW | BLOCKED | No | chapters, pages | popular, latest, search, detail, download, filters, related, auth | Upstream domain DNS unresolved / rotated |
+| 24 | `crotpedia` | CrotPedia | GenericWpEngine | NSFW | BLOCKED | No | chapters, pages | popular, latest, search, detail, download, filters, related, auth | Upstream host unreachable |
+| 25 | `dojing-net` | Dojing.net | MangaThemesiaEngine | NSFW | BLOCKED | No | chapters, pages | popular, latest, search, detail, download, filters, related, auth | Upstream host unreachable |
+| 26 | `doujinku` | Doujinku | MangaThemesiaEngine | NSFW | BLOCKED | No | chapters, pages | popular, latest, search, detail, download, filters, related, auth | Upstream host unreachable |
+| 27 | `hentai-crot` | Hentai Crot | GenericWpEngine | NSFW | BLOCKED | No | chapters, pages | popular, latest, search, detail, download, filters, related, auth | Upstream host unreachable |
+| 28 | `hentaihand` | HentaiHand | HentaiHandSource (REST/HTML) | NSFW | BLOCKED | No | chapters, pages | popular, latest, search, detail, download, filters, related, auth | Upstream host unreachable |
+| 29 | `kumapoi` | KumaPoi | MangaThemesiaEngine | NSFW | BLOCKED | No | chapters, pages | popular, latest, search, detail, download, filters, related, auth | Upstream host unreachable |
+| 30 | `mangasusu` | Mangasusu | MangaThemesiaEngine | NSFW | BLOCKED | No | chapters, pages | popular, latest, search, detail, download, filters, related, auth | Upstream host unreachable |
+| 31 | `manhwadesu` | ManhwaDesu | MangaThemesiaEngine | NSFW | BLOCKED | No | chapters, pages | popular, latest, search, detail, download, filters, related, auth | Upstream host unreachable |
+| 32 | `manhwaland-mom` | ManhwaLand.mom | MangaThemesiaEngine | NSFW | BLOCKED | No | chapters, pages | popular, latest, search, detail, download, filters, related, auth | Upstream host unreachable |
+| 33 | `mihentai` | Mihentai | GenericWpEngine | NSFW | BLOCKED | No | chapters, pages | popular, latest, search, detail, download, filters, related, auth | Upstream host unreachable |
+| 34 | `mikoroku` | MikoRoku | NatsuIdEngine | MIXED | BLOCKED | No | chapters, pages | popular, latest, search, detail, download, filters, related, auth | Upstream host unreachable |
+| 35 | `pix-hentai` | Pix Hentai | GenericWpEngine | NSFW | BLOCKED | No | chapters, pages | popular, latest, search, detail, download, filters, related, auth | Upstream host unreachable |
+| 36 | `ryukomik` | Ryukomik | NatsuIdEngine | NSFW | BLOCKED | No | chapters, pages | popular, latest, search, detail, download, filters, related, auth | Upstream host unreachable |
+| 37 | `sekte-doujin` | Sekte Doujin | MadaraEngine | NSFW | BLOCKED | No | chapters, pages | popular, latest, search, detail, download, filters, related, auth | Upstream host unreachable |
+| 38 | `shiro-doujin` | Shiro Doujin | GenericWpEngine | NSFW | BLOCKED | No | chapters, pages | popular, latest, search, detail, download, filters, related, auth | Upstream host unreachable |
+| 39 | `soul-scans` | Soul Scans | GenericWpEngine | SFW | BLOCKED | No | chapters, pages | popular, latest, search, detail, download, filters, related, auth | Upstream host unreachable |
+| 40 | `tooncubus` | Tooncubus | GenericWpEngine | NSFW | BLOCKED | No | chapters, pages | popular, latest, search, detail, download, filters, related, auth | Upstream host unreachable |
 
 ### 3. Automated Test Evidence
 - **Typecheck:** `pnpm typecheck` (`tsc --noEmit`) -> Exit code 0, 0 errors.

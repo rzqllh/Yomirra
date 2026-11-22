@@ -42,11 +42,11 @@ export abstract class BaseEngine implements MangaSource {
   public readonly adapterVersion: string;
   public readonly supportedLanguages: string[];
 
-  // Strict rollout constraint: all ported Keiyoushi sources are disabled and in-dev by default
-  public readonly isEnabled = false;
+  // Rollout status: configurable, defaults to disabled and in-dev
+  public readonly isEnabled: boolean;
   public readonly isInstalled = true;
   public readonly isDynamic = false;
-  public readonly status = "in-dev" as const;
+  public readonly status: "online" | "slow" | "degraded" | "unavailable" | "unknown" | "in-dev" | "in-fix";
 
   public readonly capabilities: SourceCapabilities;
 
@@ -69,6 +69,8 @@ export abstract class BaseEngine implements MangaSource {
       })();
     this.category = config.category;
     this.isNsfw = config.isNsfw;
+    this.isEnabled = config.isEnabled ?? false;
+    this.status = config.status ?? "in-dev";
     this.icon = config.icon ?? `https://s2.googleusercontent.com/s2/favicons?domain=${this.upstreamDomain}&sz=64`;
     this.version = config.version ?? "1.0.0";
     this.adapterVersion = config.adapterVersion ?? "1.0.0";

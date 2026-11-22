@@ -17,10 +17,15 @@ describe("Keiyoushi Ported Engines & Adapters", () => {
       expect(portedKeiyoushiSources).toHaveLength(27);
     });
 
-    it("keeps built-in sources strictly at 9 and stages all 27 ported sources via diagnostic loader", () => {
+    it("keeps built-in sources strictly at 9, exposes promoted manhwa-list to active discovery, and stages remaining 26 via diagnostic loader", () => {
       expect(builtInSources).toHaveLength(9);
-      expect(sources).toHaveLength(9);
-      expect(sourceMap.size).toBe(9);
+      expect(sources).toHaveLength(10);
+      expect(sourceMap.size).toBe(10);
+
+      const manhwaList = sourceMap.get("manhwa-list");
+      expect(manhwaList).toBeDefined();
+      expect(manhwaList?.isEnabled).toBe(true);
+      expect(manhwaList?.status).toBe("unknown");
 
       for (const s of portedKeiyoushiSources) {
         const staged = getStagedKeiyoushiSource(s.id);
@@ -29,8 +34,14 @@ describe("Keiyoushi Ported Engines & Adapters", () => {
       }
     });
 
-    it("enforces safe default rollout constraints on all 27 sources", () => {
-      for (const s of portedKeiyoushiSources) {
+    it("enforces safe rollout constraints: only verified manhwa-list is promoted; remaining 26 stay disabled in-dev", () => {
+      const manhwaList = portedKeiyoushiSources.find((s) => s.id === "manhwa-list")!;
+      expect(manhwaList.isEnabled).toBe(true);
+      expect(manhwaList.status).toBe("unknown");
+
+      const remaining = portedKeiyoushiSources.filter((s) => s.id !== "manhwa-list");
+      expect(remaining).toHaveLength(26);
+      for (const s of remaining) {
         expect(s.isEnabled).toBe(false);
         expect(s.status).toBe("in-dev");
         expect(s.isInstalled).toBe(true);
@@ -202,7 +213,7 @@ describe("Keiyoushi Ported Engines & Adapters", () => {
         <div id="chapterlist">
           <ul>
             <li data-num="1"><a href="https://example.com/ch-1/"><span class="chapternum">Chapter 1</span></a><span class="chapterdate">2026-11-10</span></li>
-            <li data-num="2"><a href="https://example.com/ch-2/"><span class="chapternum">Chapter 2</span></a><span class="chapterdate">2026-11-10</span></li>
+            <li data-num="2" class="locked"><a href="https://example.com/ch-2/"><span class="chapternum">Chapter 2</span><i class="fa-lock"></i></a><span class="chapterdate">2026-11-10</span></li>
           </ul>
         </div>
       `;
@@ -220,8 +231,10 @@ describe("Keiyoushi Ported Engines & Adapters", () => {
       expect(chapters).toHaveLength(2);
       expect(chapters[0].title).toBe("Chapter 1");
       expect(chapters[0].number).toBe(1);
+      expect(chapters[0].isLocked).toBe(false);
       expect(chapters[1].title).toBe("Chapter 2");
       expect(chapters[1].number).toBe(2);
+      expect(chapters[1].isLocked).toBe(true);
     });
   });
 

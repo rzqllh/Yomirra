@@ -26,6 +26,8 @@ export const portedKeiyoushiSources: MangaSource[] = [
     baseUrl: "https://m1.manhwalist.my.id",
     category: "SFW",
     isNsfw: false,
+    isEnabled: true,
+    status: "unknown",
   }),
   new MangaThemesiaEngine({
     id: "izanami-scans",
