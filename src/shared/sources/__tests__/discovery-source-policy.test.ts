@@ -38,8 +38,9 @@ describe("discovery source policy", () => {
     expect(isDiscoverySourceSystemEligible(source())).toBe(true);
     expect(isDiscoverySourceSystemEligible(source({ isEnabled: false }))).toBe(false);
     expect(isDiscoverySourceSystemEligible(source({ isInstalled: false }))).toBe(false);
-    expect(isDiscoverySourceSystemEligible(source({ status: "unavailable" }))).toBe(false);
+    expect(isDiscoverySourceSystemEligible(source({ status: "unavailable" }))).toBe(true);
     expect(isDiscoverySourceSystemEligible(source({ status: "in-fix" }))).toBe(false);
+    expect(isDiscoverySourceSystemEligible(source({ maintenance: { reason: "manual", since: "2026-11-23" } }))).toBe(false);
     expect(isDiscoverySourceSystemEligible(source({ status: "in-dev" }))).toBe(false);
   });
 
@@ -47,7 +48,7 @@ describe("discovery source policy", () => {
     expect(isSearchSourceSystemEligible(source())).toBe(true);
     expect(isSearchSourceSystemEligible(source({ status: "slow" }))).toBe(true);
     expect(isSearchSourceSystemEligible(source({ status: "unknown" }))).toBe(true);
-    expect(isSearchSourceSystemEligible(source({ status: "unavailable" }))).toBe(false);
+    expect(isSearchSourceSystemEligible(source({ status: "unavailable" }))).toBe(true);
     expect(isSearchSourceSystemEligible(source({ status: "in-fix" }))).toBe(false);
     expect(isSearchSourceSystemEligible(source({ status: "in-dev" }))).toBe(false);
     expect(isSearchSourceSystemEligible(source({ isEnabled: false }))).toBe(false);
