@@ -35,12 +35,12 @@ describe("Keiyoushi owner ZIP integration safety", () => {
     }
   });
 
-  it("stages the 28 HTML candidates and excludes three API engines", () => {
+  it("stages all 31 candidates, including three dedicated API prototypes", () => {
     const ids = getStagedKeiyoushiSourceIds();
-    expect(ids).toHaveLength(28);
+    expect(ids).toHaveLength(31);
     expect(new Set(ids).size).toBe(28);
     for (const candidate of KEIYOUSHI_CANDIDATES) {
-      expect(ids.includes(candidate.id)).toBe(candidate.engine !== "api");
+      expect(ids.includes(candidate.id)).toBe(true);
     }
   });
 });
