@@ -25,17 +25,18 @@ export class NatsuIdEngine extends BaseEngine {
   protected parseMangaItems($: cheerio.CheerioAPI): MangaItem[] {
     const mangas: MangaItem[] = [];
 
-    $(".listupd .bs, .list-update .bs, .animepost, .bsx").each((_, el) => {
+    $(".listupd .bs, .list-update .bs, .animepost, .bsx, #search-results > div, div[id*='search-results'] > div").each((_, el) => {
       const $el = $(el);
       const link =
         $el.find("a[href*='/manga/']").attr("href") ||
         $el.find("a").first().attr("href") ||
         "";
-      if (!link) return;
+      if (!link || link.includes("/chapter-")) return;
 
       const title =
-        $el.find(".tt, .title, h4, h3").text().trim() ||
+        $el.find(".tt, .title, h4, h3, h1, a[href*='/manga/'] h1, a[href*='/manga/'] h2").first().text().trim() ||
         $el.find("a").first().attr("title")?.trim() ||
+        $el.find("img[alt]").attr("alt")?.trim() ||
         "";
 
       const coverUrl =
@@ -46,7 +47,7 @@ export class NatsuIdEngine extends BaseEngine {
 
       const latestChapter =
         $el
-          .find(".lsch a, .epxs, .lsch")
+          .find(".lsch a, .epxs, .lsch, a[href*='/chapter-'] p, a[href*='/chapter-'] div")
           .filter((_, elem) => $(elem).text().trim().length > 0)
           .first()
           .text()
@@ -208,16 +209,23 @@ export class NatsuIdEngine extends BaseEngine {
     this.enforceContentPolicy("chapters", options);
 
     try {
-      let html: string;
-      try {
-        html = await this.client.getHtml(
-          `/wp-admin/admin-ajax.php?action=${encodeURIComponent(this.chapterAction)}&manga_id=${encodeURIComponent(mangaId)}`
-        );
-      } catch {
-        html = await this.client.getHtml(`/manga/${encodeURIComponent(mangaId)}/`);
-      }
+      let html = await this.client.getHtml(`/manga/${encodeURIComponent(mangaId)}/`);
+      let $ = cheerio.load(html);
 
-      const $ = cheerio.load(html);
+      // If no chapters found on detail page, attempt admin-ajax fallback
+      if ($("a[href*='/chapter-'], a[href*='/ch-'], #chapterlist li a, .chapter-list li a").length === 0) {
+        try {
+          const ajaxHtml = await this.client.getHtml(
+            `/wp-admin/admin-ajax.php?action=${encodeURIComponent(this.chapterAction)}&manga_id=${encodeURIComponent(mangaId)}`
+          );
+          if (ajaxHtml && ajaxHtml.length > 50) {
+            html = ajaxHtml;
+            $ = cheerio.load(html);
+          }
+        } catch {
+          // Keep original html
+        }
+      }
       const chapters: Chapter[] = [];
 
       $("a[href*='/chapter-'], a[href*='/ch-'], #chapterlist li a, .chapter-list li a").each(
@@ -316,7 +324,7 @@ export class NatsuIdEngine extends BaseEngine {
       const pages: PageItem[] = [];
       let index = 1;
 
-      $("#readerarea img, section[data-image-data] img, .reading-content img").each((_, el) => {
+      $("#readerarea img, [data-image-data] img, .reading-content img, .reader-area img").each((_, el) => {
         const $img = $(el);
         const url =
           $img.attr("data-src") ||
@@ -324,7 +332,14 @@ export class NatsuIdEngine extends BaseEngine {
           $img.attr("src") ||
           "";
 
-        if (url && !url.includes("data:image/svg") && !url.includes("placeholder")) {
+        if (
+          url &&
+          !url.includes("data:image/svg") &&
+          !url.includes("placeholder") &&
+          !url.includes("logo") &&
+          !url.includes("banner") &&
+          !url.endsWith(".gif")
+        ) {
           pages.push({
             index: index++,
             url: url.trim(),

@@ -9,6 +9,7 @@ describe("public source restriction classification", () => {
 
   it("keeps source-level restricted counting driven by registry metadata", () => {
     const restricted = sourceRegistry.filter((source) => source.isNsfw);
-    expect(restricted).toHaveLength(1);
+    expect(restricted).toHaveLength(2);
+    expect(restricted.map((s) => s.id).sort()).toEqual(["astral-scans", "doujindesu"]);
   });
 });

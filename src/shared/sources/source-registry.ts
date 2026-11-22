@@ -318,13 +318,110 @@ export const sourceRegistry: SourceMetadata[] = [
       related: false,
     },
     isDynamic: false
+  },
+  {
+    id: "izanamiscans",
+    name: "Izanami Scans",
+    description: "Izanami Scans Indonesian translations",
+    language: "id",
+    baseUrl: "https://izanamiscans.my.id",
+    icon: "https://s2.googleusercontent.com/s2/favicons?domain=izanamiscans.my.id&sz=64",
+    version: "1.0.0",
+    adapterVersion: "1.0.0",
+    isEnabled: true,
+    isInstalled: true,
+    status: "unknown",
+    healthStats: {
+      uptime: "-",
+      latency: "-",
+      lastChecked: "Belum diperiksa",
+      message: "Status sumber aktif."
+    },
+    isNsfw: false,
+    capabilities: {
+      popular: true,
+      latest: true,
+      search: true,
+      detail: true,
+      chapters: true,
+      pages: true,
+      filters: false,
+      download: false,
+      related: false,
+    },
+    isDynamic: false
+  },
+  {
+    id: "kiryuu",
+    name: "Kiryuu",
+    description: "Kiryuu Indonesian manga reader",
+    language: "id",
+    baseUrl: "https://v7.kiryuu.to",
+    icon: "https://s2.googleusercontent.com/s2/favicons?domain=v7.kiryuu.to&sz=64",
+    version: "1.0.0",
+    adapterVersion: "1.0.0",
+    isEnabled: true,
+    isInstalled: true,
+    status: "unknown",
+    healthStats: {
+      uptime: "-",
+      latency: "-",
+      lastChecked: "Belum diperiksa",
+      message: "Status sumber aktif."
+    },
+    isNsfw: false,
+    capabilities: {
+      popular: true,
+      latest: true,
+      search: true,
+      detail: true,
+      chapters: true,
+      pages: true,
+      filters: false,
+      download: false,
+      related: false,
+    },
+    isDynamic: false
+  },
+  {
+    id: "astral-scans",
+    name: "Astral Scans",
+    description: "Astral Scans translations",
+    language: "id",
+    baseUrl: "https://astralscans.site",
+    icon: "https://s2.googleusercontent.com/s2/favicons?domain=astralscans.site&sz=64",
+    version: "1.0.0",
+    adapterVersion: "1.0.0",
+    isEnabled: true,
+    isInstalled: true,
+    status: "unknown",
+    healthStats: {
+      uptime: "-",
+      latency: "-",
+      lastChecked: "Belum diperiksa",
+      message: "Status sumber aktif (NSFW opt-in)."
+    },
+    isNsfw: true,
+    capabilities: {
+      popular: true,
+      latest: true,
+      search: true,
+      detail: true,
+      chapters: true,
+      pages: true,
+      filters: false,
+      download: false,
+      related: false,
+    },
+    isDynamic: false
   }
 ];
 
 import { dynamicSourceRegistry } from "./dynamic-source-registry";
 
 export function getSourceMetadata(id: string): SourceMetadata | undefined {
-  return sourceRegistry.find(s => s.id === id) || dynamicSourceRegistry.get(id);
+  const normalizedId = id === "komikindoid" ? "komikindo" : id === "izanami-scans" ? "izanamiscans" : id;
+  return sourceRegistry.find(s => s.id === normalizedId) || dynamicSourceRegistry.get(normalizedId);
 }
 
 export function getSourceDisplayName(id: string): string {

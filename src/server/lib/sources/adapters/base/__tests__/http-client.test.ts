@@ -191,9 +191,9 @@ describe("HttpClient Infrastructure", () => {
 
 describe("Source Registry Phase 1, 2A, 2B, 2C State", () => {
   it("has no legacy Phase 2 pending sources; unverified Keiyoushi candidates stay in-dev", () => {
-    expect(pendingSourceRegistry).toHaveLength(30);
+    expect(pendingSourceRegistry).toHaveLength(27);
     expect(pendingSourceRegistry.every(s => s.isEnabled === false && s.status === "in-dev")).toBe(true);
-    expect(pendingSourceRegistry.some(s => ["komiku-ii", "asurascans", "komiknesia", "manhwa-list"].includes(s.id))).toBe(false);
+    expect(pendingSourceRegistry.some(s => ["komiku-ii", "asurascans", "komiknesia", "manhwa-list", "izanamiscans", "kiryuu", "astral-scans"].includes(s.id))).toBe(false);
   });
 
   it("getPendingSourceMetadata returns undefined for promoted sources", () => {
@@ -205,6 +205,10 @@ describe("Source Registry Phase 1, 2A, 2B, 2C State", () => {
 
     const manhwaList = getPendingSourceMetadata("manhwa-list");
     expect(manhwaList).toBeUndefined(); // Promoted after live verification
+
+    expect(getPendingSourceMetadata("izanamiscans")).toBeUndefined();
+    expect(getPendingSourceMetadata("kiryuu")).toBeUndefined();
+    expect(getPendingSourceMetadata("astral-scans")).toBeUndefined();
   });
 
   it("verifies all Phase 2 and verified Keiyoushi sources are in active sourceRegistry", () => {

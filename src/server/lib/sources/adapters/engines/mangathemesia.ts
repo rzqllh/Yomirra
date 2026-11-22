@@ -259,6 +259,50 @@ export class MangaThemesiaEngine extends BaseEngine {
         });
       });
 
+      // AstralScans V8 anti-scraper decryption handler
+      if (chapters.length === 0) {
+        try {
+          const formData = new URLSearchParams();
+          formData.append("v8_req", "get_list");
+          const v8Res = await this.client.getText(path, undefined, {
+            method: "POST",
+            headers: { "X-V8-Key": "astral" },
+            body: formData.toString(),
+          });
+          if (v8Res.startsWith("V8_")) {
+            const enc1 = v8Res.substring(3);
+            const dec1 = Buffer.from(enc1, "base64").toString("binary");
+            const rev1 = dec1.split("").reverse().join("");
+            const payload = Buffer.from(rev1, "base64").toString("utf-8");
+            const parts = payload.split("|||");
+            if (parts.length === 2) {
+              const $v = cheerio.load(parts[0]);
+              const attr = parts[1];
+              $v(`[${attr}]`).each((idx, el) => {
+                const raw = $v(el).attr(attr);
+                if (!raw) return;
+                const link = Buffer.from(raw, "base64").toString("utf-8");
+                const title = $v(el).text().trim() || `Chapter ${idx + 1}`;
+                const numMatch = title.match(/(\d+(?:\.\d+)?)/);
+                const number = numMatch ? parseFloat(numMatch[1]) : idx + 1;
+                const id = link.replace(this.baseUrl, "").replace(/^\/|\/$/g, "");
+                chapters.push({
+                  id,
+                  mangaId,
+                  number,
+                  title,
+                  date: "",
+                  url: link,
+                  isLocked: false,
+                });
+              });
+            }
+          }
+        } catch {
+          // Keep existing chapters
+        }
+      }
+
       return chapters;
     } catch (err) {
       if (SourceError.isSourceError(err)) throw err;

@@ -30,13 +30,15 @@ export const portedKeiyoushiSources: MangaSource[] = [
     status: "unknown",
   }),
   new MangaThemesiaEngine({
-    id: "izanami-scans",
+    id: "izanamiscans",
     name: "Izanami Scans",
     description: "Izanami Scans Indonesian translations",
     language: "id",
     baseUrl: "https://izanamiscans.my.id",
     category: "SFW",
     isNsfw: false,
+    isEnabled: true,
+    status: "unknown",
   }),
   new MangaThemesiaEngine({
     id: "astral-scans",
@@ -46,6 +48,8 @@ export const portedKeiyoushiSources: MangaSource[] = [
     baseUrl: "https://astralscans.site",
     category: "NSFW",
     isNsfw: true,
+    isEnabled: true,
+    status: "unknown",
   }),
   new MangaThemesiaEngine({
     id: "dojing-net",
@@ -138,6 +142,8 @@ export const portedKeiyoushiSources: MangaSource[] = [
     baseUrl: "https://v7.kiryuu.to",
     category: "MIXED",
     isNsfw: false,
+    isEnabled: true,
+    status: "unknown",
   }),
   new NatsuIdEngine({
     id: "manhwa-indo",

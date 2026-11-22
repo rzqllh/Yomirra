@@ -17,15 +17,18 @@ describe("Keiyoushi Ported Engines & Adapters", () => {
       expect(portedKeiyoushiSources).toHaveLength(27);
     });
 
-    it("keeps built-in sources strictly at 9, exposes promoted manhwa-list to active discovery, and stages remaining 26 via diagnostic loader", () => {
+    it("keeps built-in sources strictly at 9, exposes 4 verified sources to active discovery, and stages remaining 23 via diagnostic loader", () => {
       expect(builtInSources).toHaveLength(9);
-      expect(sources).toHaveLength(10);
-      expect(sourceMap.size).toBe(10);
+      expect(sources).toHaveLength(13);
+      expect(sourceMap.size).toBe(15);
 
-      const manhwaList = sourceMap.get("manhwa-list");
-      expect(manhwaList).toBeDefined();
-      expect(manhwaList?.isEnabled).toBe(true);
-      expect(manhwaList?.status).toBe("unknown");
+      const verifiedIds = ["manhwa-list", "izanamiscans", "kiryuu", "astral-scans"];
+      for (const id of verifiedIds) {
+        const source = sourceMap.get(id);
+        expect(source).toBeDefined();
+        expect(source?.isEnabled).toBe(true);
+        expect(source?.status).toBe("unknown");
+      }
 
       for (const s of portedKeiyoushiSources) {
         const staged = getStagedKeiyoushiSource(s.id);
@@ -34,13 +37,17 @@ describe("Keiyoushi Ported Engines & Adapters", () => {
       }
     });
 
-    it("enforces safe rollout constraints: only verified manhwa-list is promoted; remaining 26 stay disabled in-dev", () => {
-      const manhwaList = portedKeiyoushiSources.find((s) => s.id === "manhwa-list")!;
-      expect(manhwaList.isEnabled).toBe(true);
-      expect(manhwaList.status).toBe("unknown");
+    it("enforces safe rollout constraints: 4 verified sources are promoted; remaining 23 stay disabled in-dev", () => {
+      const verifiedIds = ["manhwa-list", "izanamiscans", "kiryuu", "astral-scans"];
+      for (const id of verifiedIds) {
+        const s = portedKeiyoushiSources.find((item) => item.id === id)!;
+        expect(s).toBeDefined();
+        expect(s.isEnabled).toBe(true);
+        expect(s.status).toBe("unknown");
+      }
 
-      const remaining = portedKeiyoushiSources.filter((s) => s.id !== "manhwa-list");
-      expect(remaining).toHaveLength(26);
+      const remaining = portedKeiyoushiSources.filter((s) => !verifiedIds.includes(s.id));
+      expect(remaining).toHaveLength(23);
       for (const s of remaining) {
         expect(s.isEnabled).toBe(false);
         expect(s.status).toBe("in-dev");
