@@ -33,9 +33,9 @@ function statusValue(raw: unknown): MangaDetail["status"] {
   return "UNKNOWN";
 }
 
-function segment(id: string): string {
+function segment(id: string, sourceId: string): string {
   if (!/^[a-zA-Z0-9._-]{1,200}$/.test(id)) {
-    throw new SourceError("Invalid provider resource ID", { code: "CONTENT_NOT_FOUND" });
+    throw new SourceError("Invalid provider resource ID", { code: "CONTENT_NOT_FOUND", sourceId });
   }
   return encodeURIComponent(id);
 }
@@ -137,7 +137,7 @@ export class KeiyoushiApiAdapter implements MangaSource {
   }
 
   async getDetail(mangaId: string): Promise<MangaDetail> {
-    const id = segment(mangaId);
+    const id = segment(mangaId, this.id);
     let data: JsonRecord;
     if (this.id === "ainzscansid") data = await this.get("/detail/" + id);
     else if (this.id === "mangatoon-limited") data = asRecord((await this.get("/content/comic/detail?id=" + id + "&language=id")).data);
@@ -152,7 +152,7 @@ export class KeiyoushiApiAdapter implements MangaSource {
   }
 
   async getChapters(mangaId: string): Promise<Chapter[]> {
-    const id = segment(mangaId);
+    const id = segment(mangaId, this.id);
     let values: unknown[] = [];
     if (this.id === "ainzscansid") {
       const data = await this.get("/chapters/" + id);
@@ -186,11 +186,11 @@ export class KeiyoushiApiAdapter implements MangaSource {
     if (this.id === "ainzscansid") {
       const match = chapterId.match(/^([a-zA-Z0-9._-]{1,200})::([a-zA-Z0-9._-]{1,200})$/);
       if (!match) throw new SourceError("Invalid Ainz chapter ID", { code: "CONTENT_NOT_FOUND", sourceId: this.id, stage: "pages" });
-      path = "/pages/" + segment(match[1]) + "/" + segment(match[2]);
+      path = "/pages/" + segment(match[1], this.id) + "/" + segment(match[2], this.id);
     } else if (this.id === "mangatoon-limited") {
-      path = "/content/comic/pictures?episode_id=" + segment(chapterId) + "&language=id";
+      path = "/content/comic/pictures?episode_id=" + segment(chapterId, this.id) + "&language=id";
     } else {
-      path = "/manga_viewer?chapter_id=" + segment(chapterId) + "&img_quality=high&format=json";
+      path = "/manga_viewer?chapter_id=" + segment(chapterId, this.id) + "&img_quality=high&format=json";
     }
     const data = await this.get(path);
     let values: unknown[];
