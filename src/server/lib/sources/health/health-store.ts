@@ -63,7 +63,7 @@ export class SourceHealthStore {
     this.memorySnapshots.set(sourceId, updatedSnapshot);
 
     // Save in Redis if available
-    if (isRedisConfigured) {
+    if (isRedisConfigured && isRedisCommandAllowed()) {
       try {
         await redis.setex(
           `${SNAPSHOT_KEY_PREFIX}${sourceId}`,
@@ -90,7 +90,7 @@ export class SourceHealthStore {
     const updatedHistory = [sample, ...existingHistory].slice(0, MAX_HISTORY_SAMPLES);
     this.memoryHistory.set(sourceId, updatedHistory);
 
-    if (isRedisConfigured) {
+    if (isRedisConfigured && isRedisCommandAllowed()) {
       try {
         const historyKey = `${HISTORY_KEY_PREFIX}${sourceId}`;
         await redis.lpush(historyKey, JSON.stringify(sample));
@@ -142,7 +142,7 @@ export class SourceHealthStore {
   async getSnapshot(sourceId: string): Promise<SourceHealthSnapshot | null> {
     const normalizedId = sourceId.toLowerCase().trim();
 
-    if (isRedisConfigured) {
+    if (isRedisConfigured && isRedisCommandAllowed()) {
       try {
         const raw = await redis.get(`${SNAPSHOT_KEY_PREFIX}${normalizedId}`);
         if (raw) {
