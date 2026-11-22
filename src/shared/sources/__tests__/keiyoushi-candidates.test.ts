@@ -38,7 +38,7 @@ describe("Keiyoushi owner ZIP integration safety", () => {
   it("stages all 31 candidates, including three dedicated API prototypes", () => {
     const ids = getStagedKeiyoushiSourceIds();
     expect(ids).toHaveLength(31);
-    expect(new Set(ids).size).toBe(28);
+    expect(new Set(ids).size).toBe(31);
     for (const candidate of KEIYOUSHI_CANDIDATES) {
       expect(ids.includes(candidate.id)).toBe(true);
     }
