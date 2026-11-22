@@ -260,8 +260,23 @@ describe("Functional Health Probe (probeSourceHealth)", () => {
     };
     vi.spyOn(sourceManager, "getSource").mockResolvedValue(mockAdapter);
 
-    const results = await probeAllSourcesHealth();
-    expect(results["source-a"]).toBeDefined();
-    expect(results["source-b"]).toBeUndefined();
+    const setTimeoutSpy = vi.spyOn(globalThis, "setTimeout");
+    const clearTimeoutSpy = vi.spyOn(globalThis, "clearTimeout");
+    try {
+      const results = await probeAllSourcesHealth();
+      expect(results["source-a"]).toBeDefined();
+      expect(results["source-b"]).toBeUndefined();
+
+      // A resolved probe must cancel its 10-second watchdog rather than
+      // keep an unnecessary pending timer alive in the Function.
+      const watchdogs = setTimeoutSpy.mock.calls.flatMap((args, index) =>
+        args[1] === 10_000 ? [setTimeoutSpy.mock.results[index]?.value] : []
+      );
+      expect(watchdogs).toHaveLength(1);
+      expect(clearTimeoutSpy).toHaveBeenCalledWith(watchdogs[0]);
+    } finally {
+      setTimeoutSpy.mockRestore();
+      clearTimeoutSpy.mockRestore();
+    }
   });
 });

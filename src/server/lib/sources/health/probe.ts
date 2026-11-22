@@ -205,15 +205,21 @@ export async function probeAllSourcesHealth(
   const timeoutMs = options.timeoutMs ?? 10000;
 
   await mapConcurrent(activeSources, 3, async (meta) => {
+    let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
     try {
       const probePromise = probeSourceHealth(meta.id, options);
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error(`Health probe timeout after ${timeoutMs}ms`)), timeoutMs)
-      );
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timeoutHandle = setTimeout(
+          () => reject(new Error(`Health probe timeout after ${timeoutMs}ms`)),
+          timeoutMs
+        );
+      });
       const snapshot = await Promise.race([probePromise, timeoutPromise]);
       results[meta.id] = snapshot;
     } catch (error) {
       logger.error(`Unhandled error during health probe for ${meta.id}`, { error });
+    } finally {
+      if (timeoutHandle !== undefined) clearTimeout(timeoutHandle);
     }
   });
 
