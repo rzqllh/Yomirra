@@ -9,8 +9,8 @@ import { KomikNesiaSource } from "./komiknesia";
 import { DoujinDesuSource } from "./doujindesu";
 import { WestMangaSource } from "./westmanga";
 
-// Add new sources here
-export const sources: MangaSource[] = [
+// Canonical Yomirra baseline sources (9 built-ins)
+export const builtInSources: MangaSource[] = [
   new ShinigamiSource(),
   new KomikindoSource(),
   new MangaDexSource(),
@@ -20,6 +20,11 @@ export const sources: MangaSource[] = [
   new KomikNesiaSource(),
   new DoujinDesuSource(),
   new WestMangaSource(),
+];
+
+// Active sources exposed to public discovery
+export const sources: MangaSource[] = [
+  ...builtInSources,
 ];
 
 export const sourceMap = new Map(sources.map((s) => [s.id, s]));
