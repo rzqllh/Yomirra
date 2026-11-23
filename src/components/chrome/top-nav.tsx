@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { UserCircle, SignOut, MagnifyingGlass, Globe, Question } from "@phosphor-icons/react";
+import { UserCircle, SignOut, MagnifyingGlass, Gear, Question } from "@phosphor-icons/react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
@@ -188,12 +188,12 @@ export function TopNav() {
             <div className="relative" ref={profileRef}>
               <button
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
-                aria-label="Profil Pengguna"
+                aria-label="Profil pengguna"
                 aria-expanded={isProfileOpen}
-                className="flex items-center justify-center size-9 sm:size-10 rounded-xl bg-surface-raised hover:scale-105 active:scale-95 transition-all outline-none border border-border-subtle hover:border-accent/40 overflow-hidden cursor-pointer"
+                className="flex items-center justify-center size-9 sm:size-10 rounded-xl bg-surface-raised transition-colors motion-reduce:transition-none outline-none focus-visible:outline-2 focus-visible:outline-accent border border-border-subtle hover:border-accent/40 overflow-hidden cursor-pointer"
               >
                 {user.photoURL ? (
-                  <img src={user.photoURL} alt="User" className="object-cover size-full rounded-xl" referrerPolicy="no-referrer" />
+                  <img src={user.photoURL} alt="" className="object-cover size-full rounded-xl" referrerPolicy="no-referrer" />
                 ) : (
                   <UserCircle size={24} weight="regular" className="text-accent" />
                 )}
@@ -223,18 +223,15 @@ export function TopNav() {
                       </Link>
 
                       <Link
-                        href="/settings#general"
+                        href="/settings"
                         onClick={() => setIsProfileOpen(false)}
-                        className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors text-left"
+                        className="flex min-h-11 items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors text-left"
                       >
-                        <div className="flex items-center gap-2.5">
-                          <Globe size={18} weight="regular" /> Bahasa
-                        </div>
-                        <span className="text-xs text-text-muted font-medium">Indonesia</span>
+                        <Gear size={18} weight="regular" /> Pengaturan
                       </Link>
 
                       <Link
-                        href="/settings#about"
+                        href="/help"
                         onClick={() => setIsProfileOpen(false)}
                         className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors text-left"
                       >
@@ -256,7 +253,7 @@ export function TopNav() {
               </AnimatePresence>
             </div>
           ) : (
-            <button onClick={loginWithGoogle} aria-label="Masuk" className="flex items-center justify-center bg-surface-raised border border-border-subtle shadow-xs hover:bg-surface-hover active:scale-95 transition-all rounded-xl px-4 h-9 sm:h-10 gap-2 outline-none cursor-pointer">
+            <button onClick={loginWithGoogle} aria-label="Masuk" className="flex items-center justify-center bg-surface-raised border border-border-subtle shadow-xs hover:bg-surface-hover transition-colors motion-reduce:transition-none rounded-xl px-4 h-9 sm:h-10 gap-2 outline-none focus-visible:outline-2 focus-visible:outline-accent cursor-pointer">
               <UserCircle size={20} weight="regular" className="text-text-secondary" />
               <span className="text-sm font-semibold text-text-primary">Masuk</span>
             </button>

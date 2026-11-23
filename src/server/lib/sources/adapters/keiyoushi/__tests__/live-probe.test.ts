@@ -30,10 +30,11 @@ describeLive("Manual live upstream verification (opt-in only)", () => {
         ]);
         expect(res).toBeDefined();
         expect(Array.isArray(res.mangas)).toBe(true);
+        expect(res.mangas.length).toBeGreaterThan(0);
         console.log(`[LIVE SUCCESS] ${s.name}: fetched ${res.mangas.length} titles`);
       } catch (err: any) {
         console.log(`[LIVE NOTICE] ${s.name} upstream live query: ${err.message}`);
-        expect(err).toBeInstanceOf(Error);
+        throw err; // A failed probe must fail verification, not count as PASS.
       }
     }, 15000);
   }
@@ -53,6 +54,7 @@ describeLive("Manual live upstream verification (opt-in only)", () => {
 
     const chapters = await adapter!.getChapters(targetManga.id);
     expect(Array.isArray(chapters)).toBe(true);
+    expect(chapters.length).toBeGreaterThan(0);
     console.log(`[E2E] Chapters fetched: ${chapters.length} chapters.`);
 
     if (chapters.length > 0) {
