@@ -51,3 +51,4 @@ Jangan mempertahankan dokumentasi yang sudah tidak sesuai hanya karena pernah be
 - Jangan klaim browser/PWA behavior hanya dari unit test.
 - Jangan tulis credential, private URL, cookie, token, atau secret header.
 - Update docs dalam PR yang sama saat public contract berubah.
+- Hindari pembandingan dengan merek atau produk lain dalam copy publik. Pertahankan nama teknologi, kanal login, atribusi, dan lisensi jika dibutuhkan untuk akurasi atau kepatuhan.
