@@ -366,7 +366,7 @@ export function MangaCard({
     const effChapterId = chapterId || historyItem?.chapterId || "";
     const effChapterTitle = chapterTitle || historyItem?.chapterTitle || (effChapterId ? "Chapter" : "Detail");
     const readerHref = effChapterId ? getReaderHref(sourceId, manga.id, effChapterId, fullPath) : getMangaDetailHref(sourceId, manga.id, fullPath);
-    const detailHref = getMangaDetailHref(sourceId, manga.id, fullPath);
+    const detailHref = canonicalDetailHref ?? getMangaDetailHref(sourceId, manga.id, fullPath);
 
     const updateItem =
       (historyItem?.savedTitleId ? updateStore.items[historyItem.savedTitleId] : undefined) ||
@@ -428,18 +428,20 @@ export function MangaCard({
           className
         )}
       >
-        <Link
-          href={readerHref}
-          prefetch={false}
-          onClick={() => beginNavigationIntent(readerHref)}
+        <div
           className={cn(
-            "flex flex-1 min-h-24 sm:min-h-26 gap-3.5 p-3 sm:p-3.5 focus-visible:ring-inset rounded-xl",
+            "flex flex-1 min-h-24 sm:min-h-26 gap-3.5 p-3 sm:p-3.5 rounded-xl",
             mangaCardInteraction.link
           )}
-          aria-label={`Lanjut baca ${manga.title}, ${effChapterTitle}`}
         >
           {/* Cover Frame: Squircle rounded-lg, crisp aspect-ratio */}
-          <div className="relative aspect-[2/3] w-18 sm:w-20 shrink-0 overflow-hidden rounded-lg border border-border-subtle bg-surface-muted shadow-2xs">
+          <Link
+            href={detailHref}
+            prefetch={false}
+            onClick={() => beginNavigationIntent(detailHref)}
+            aria-label={`Buka katalog ${manga.title}`}
+            className="relative aspect-[2/3] w-18 sm:w-20 shrink-0 overflow-hidden rounded-lg border border-border-subtle bg-surface-muted shadow-2xs focus-visible:outline-2 focus-visible:outline-accent"
+          >
             <MangaCover
               src={manga.coverUrl}
               sourceId={sourceId}
@@ -449,7 +451,7 @@ export function MangaCard({
               className="w-full h-full"
               imageClassName={cn("w-full h-full object-cover", mangaCardInteraction.coverImage)}
             />
-          </div>
+          </Link>
 
           {/* Content Body: Clear 2-tier hierarchy */}
           <div className="flex flex-col flex-1 min-w-0 justify-between py-0.5">
@@ -466,12 +468,15 @@ export function MangaCard({
                 )}
               </div>
 
-              <h3
-                className="text-xs sm:text-sm font-bold leading-snug text-text-primary line-clamp-2 transition-colors duration-200 group-hover:text-accent motion-reduce:transition-none"
-                title={manga.title}
-              >
-                {manga.title}
-              </h3>
+              <Link href={detailHref} prefetch={false} onClick={() => beginNavigationIntent(detailHref)}
+                className="block rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-accent">
+                <h3
+                  className="text-xs sm:text-sm font-bold leading-snug text-text-primary line-clamp-2 transition-colors duration-200 group-hover:text-accent motion-reduce:transition-none"
+                  title={manga.title}
+                >
+                  {manga.title}
+                </h3>
+              </Link>
             </div>
 
             {/* Bottom Tier: Unified Reading Progress & Squircle CTA */}
@@ -495,16 +500,20 @@ export function MangaCard({
                 </div>
 
                 {/* Squircle CTA Button (< xl, rounded-lg, 10px, non-pill) */}
-                <span
+                <Link
+                  href={readerHref}
+                  prefetch={false}
+                  onClick={() => beginNavigationIntent(readerHref)}
+                  aria-label={`Lanjut baca ${manga.title}, ${effChapterTitle}`}
                   className={cn(
                     "shrink-0 inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all shadow-2xs",
-                    "bg-accent text-accent-on hover:bg-accent-hover active:scale-95",
+                    "bg-accent text-accent-on hover:bg-accent-hover active:scale-95 focus-visible:outline-2 focus-visible:outline-accent",
                     "h-7 text-xs"
                   )}
                 >
                   <Play size={10} weight="fill" />
                   <span>Lanjut</span>
-                </span>
+                </Link>
               </div>
 
               {/* Integrated Progress Bar */}
@@ -523,7 +532,7 @@ export function MangaCard({
               </div>
             </div>
           </div>
-        </Link>
+        </div>
 
         {/* Compact Dropdown Options Button: 44px Apple HIG touch target on mobile, hover-revealed on desktop */}
         <div className="absolute right-1 top-1 z-20">

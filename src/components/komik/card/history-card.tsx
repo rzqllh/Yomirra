@@ -7,10 +7,11 @@ import type { HistoryItem } from "@/shared/store/history-store";
 export interface HistoryCardProps {
   item: HistoryItem;
   className?: string;
+  canonicalDetailHref?: string;
   onDeleteOverride?: (sourceId: string, mangaId: string, title: string) => void;
 }
 
-export function HistoryCard({ item, className, onDeleteOverride }: HistoryCardProps) {
+export function HistoryCard({ item, className, canonicalDetailHref, onDeleteOverride }: HistoryCardProps) {
   const calculatedSeriesProgress =
     item.seriesProgressPercent ??
     (item.totalChapters && item.totalChapters > 0
@@ -40,6 +41,7 @@ export function HistoryCard({ item, className, onDeleteOverride }: HistoryCardPr
       progressPercent={calculatedSeriesProgress ?? item.progressPercent ?? 0}
       chapterTitle={item.chapterTitle || `Ch. ${item.chapterId}`}
       chapterId={item.chapterId}
+      canonicalDetailHref={canonicalDetailHref}
       className={className}
       onDeleteOverride={onDeleteOverride}
     />

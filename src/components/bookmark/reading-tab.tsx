@@ -7,7 +7,7 @@ import { EmptyState } from "@/components/states/empty-state";
 import { Button } from "@/components/ui/button";
 import { SearchInput } from "@/components/ui/search-input";
 import { HistoryCard } from "@/components/komik/card/history-card";
-import { getLibraryHref, getSearchHref } from "@/shared/lib/routes";
+import { getLibraryHref, getSearchHref, getCanonicalSavedDetailHref } from "@/shared/lib/routes";
 import { getRelativeTime } from "@/shared/utils/date";
 
 export { getRelativeTime };
@@ -131,6 +131,7 @@ export function ReadingTab({
               <HistoryCard
                 key={`${group.sourceId}::${group.mangaId}`}
                 item={item}
+                canonicalDetailHref={getCanonicalSavedDetailHref(`${item.sourceId}::${item.mangaId}`)}
                 className="bg-surface-raised border border-border-subtle hover:border-border-default shadow-xs w-full max-w-none snap-none"
                 onDeleteOverride={(sourceId, mangaId, title) => onRemoveHistory(sourceId, mangaId, title)}
               />
