@@ -29,6 +29,16 @@ describe("Phase 4 — Canonical Search Deduplication & Failure Isolation", () =>
     ]);
   });
 
+  it("never merges explicit safe and adult records into one search card", () => {
+    const clusters = clusterCanonicalResults([
+      { sourceId: "mangadex", manga: { id: "safe", title: "Similar Title", coverUrl: "/safe.jpg", contentRating: "safe" } },
+      { sourceId: "shinigami", manga: { id: "adult", title: "Similar Title", coverUrl: "/adult.jpg", contentRating: "erotica", isNsfw: true } },
+    ]);
+    expect(clusters).toHaveLength(2);
+    expect(clusters[0].sourceBindings).toHaveLength(1);
+    expect(clusters[1].sourceBindings[0]).toMatchObject({ isNsfw: true, contentRating: "erotica" });
+  });
+
   it("does not claim HIGH_CONFIDENCE for a work seen in only one source", () => {
     const clusters = clusterCanonicalResults([
       { sourceId: "komiku", manga: { id: "only", title: "Unique Work", coverUrl: "/only.jpg" } },

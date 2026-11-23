@@ -288,7 +288,8 @@ export function MangaCard({
 
   const effectiveBindings = (sourceBindings || (manga as any)?.sourceBindings || []) as SourceBinding[];
   const availableBindings = effectiveBindings.filter((binding) =>
-    isCanonicalBindingAvailable(binding, disabledSources)
+    isCanonicalBindingAvailable(binding, disabledSources) &&
+    (!hideNsfw || classifyContent(binding) !== "NSFW")
   );
   const isMultiSource = availableBindings.length > 1;
   const noEligibleSource =

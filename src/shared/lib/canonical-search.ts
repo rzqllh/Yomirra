@@ -1,4 +1,5 @@
 import { MangaItem } from "@/shared/sources/source-types";
+import { classifyContent } from "@/shared/sources/content-policy";
 import {
   matchTitles,
   matchAgainstAlternates,
@@ -16,6 +17,8 @@ export interface SourceBinding {
   language?: string;
   format?: string;
   score?: number | string;
+  isNsfw?: boolean;
+  contentRating?: MangaItem["contentRating"];
 }
 
 export interface CanonicalSearchResult {
@@ -58,6 +61,8 @@ export function clusterCanonicalResults(
       language: manga.language ?? (sourceId === "mangadex" ? "id" : undefined),
       format: manga.format,
       score: manga.score,
+      ...(manga.isNsfw !== undefined ? { isNsfw: manga.isNsfw } : {}),
+      ...(manga.contentRating !== undefined ? { contentRating: manga.contentRating } : {}),
     };
 
     const candidateForMatching: TitleCandidate = {
@@ -78,6 +83,12 @@ export function clusterCanonicalResults(
       }
 
       const clusterPrimary = cluster.primaryResult;
+      // Do not let a known adult item borrow an otherwise safe cover/card
+      // through heuristic cross-provider title matching.
+      const leftSafety = classifyContent(manga);
+      const rightSafety = classifyContent(clusterPrimary);
+      if ((leftSafety === "SAFE" && rightSafety === "NSFW") ||
+          (leftSafety === "NSFW" && rightSafety === "SAFE")) continue;
       // Matching title/author is insufficient when known media types conflict:
       // a novel and a manga adaptation must remain distinct catalog entries.
       if (
