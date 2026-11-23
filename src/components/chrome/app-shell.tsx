@@ -12,7 +12,7 @@ import { DesktopRail } from "./desktop-rail"
 import { CommandMenu } from "@/components/overlays/command-menu"
 import { PageTransition } from "@/components/motion/page-transition"
 import { StatusBarBlur } from "@/components/ui/status-bar-blur"
-import { AnimatePresence, motion } from "motion/react"
+import { AnimatePresence, motion, useReducedMotion } from "motion/react"
 import { useDelayedFlag } from "@/shared/hooks/use-delayed-flag"
 import { navigationTiming, transitions } from "@/shared/lib/motion/tokens"
 import {
@@ -25,6 +25,7 @@ import { useSidebarStore } from "@/shared/store/sidebar-store"
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const reducedMotion = useReducedMotion()
   const isReader = pathname?.includes("/read/")
   const isLab = pathname?.startsWith("/lab")
   const isAdmin = pathname?.startsWith("/admin")
@@ -97,17 +98,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         {showNavigationProgress && pendingHref && (
           <motion.div
             key={pendingHref}
-            className="fixed left-0 right-0 z-[var(--z-progress)] h-0.5 origin-left bg-accent"
+            className="fixed left-0 right-0 z-[var(--z-progress)] h-0.5 overflow-hidden bg-border-subtle"
             style={{ top: "var(--safe-top, 0px)" }}
-            initial={{ scaleX: 0.04, opacity: 1 }}
-            animate={{ scaleX: 0.72, opacity: 1 }}
-            exit={{ scaleX: 1, opacity: 0 }}
-            transition={{
-              scaleX: { duration: 0.9, ease: transitions.page.ease },
-              opacity: { duration: 0.16 },
-            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={reducedMotion ? { duration: 0 } : transitions.gentle}
+            role="status"
+            aria-label="Memuat halaman"
             data-testid="navigation-progress-bar"
-          />
+          >
+            <motion.div
+              aria-hidden="true"
+              className="h-full w-1/3 bg-accent"
+              initial={false}
+              animate={reducedMotion ? { x: "100%" } : { x: ["-100%", "300%"] }}
+              transition={reducedMotion ? { duration: 0 } : { duration: 1.2, ease: "linear", repeat: Infinity }}
+            />
+          </motion.div>
         )}
       </AnimatePresence>
 

@@ -367,7 +367,7 @@ export function ReaderShell({
             <div className="w-full pt-[calc(var(--safe-top)+10px)] pb-3 px-3 flex items-center justify-center pointer-events-none">
               <header
                 className={cn(
-                  "yomirra-chrome pointer-events-auto relative overflow-hidden grid grid-cols-[84px_1fr_84px] sm:grid-cols-[96px_1fr_96px] items-center w-full max-w-lg md:max-w-2xl h-14 sm:h-14.5 px-2 sm:px-3 rounded-2xl transition-all duration-200 text-text-primary shadow-lg"
+                  "yomirra-chrome pointer-events-auto relative overflow-hidden grid grid-cols-[84px_1fr_84px] sm:grid-cols-[96px_1fr_96px] items-center w-full max-w-lg md:max-w-2xl h-14 sm:h-14.5 px-2 sm:px-3 rounded-2xl transition-colors duration-200 text-text-primary bg-surface-overlay shadow-none"
                 )}
               >
                 {/* Left Cluster: Back to Detail + Home Navigation */}
