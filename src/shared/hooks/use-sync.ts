@@ -307,7 +307,7 @@ export function useSync(options = { autoSync: true }) {
       try {
         const cloudPrefs = await pullSourcePreferences(); cloudPrefsResult = cloudPrefs;
         if (isCurrentUser() && cloudPrefs) {
-          useSourcePreferencesStore.getState().syncWithCloud(cloudPrefs.disabledSources, cloudPrefs.hiddenFromHomeSources);
+          useSourcePreferencesStore.getState().syncWithCloud(cloudPrefs.disabledSources, cloudPrefs.hiddenFromHomeSources, cloudPrefs.policyVersion);
         }
       } catch (error) {
         console.error("Failed to pull source preferences during sync", error);

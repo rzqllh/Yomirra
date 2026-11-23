@@ -25,6 +25,7 @@ import {
   isDiscoverySourceSystemEligible,
 } from "@/shared/sources/discovery-source-policy"
 import { cn } from "@/shared/utils/cn"
+import { DEFAULT_DISABLED_SOURCE_IDS } from "@/shared/sources/source-defaults"
 
 interface SourceCardProps {
   source: SourceMetadata
@@ -225,7 +226,9 @@ export function SourceCard({ source, onUpdate }: SourceCardProps) {
               {source.maintenance ? "Dijeda" : !source.isEnabled ? "Dinonaktifkan pengelola" : isPreferenceEnabled ? "Aktif" : "Nonaktif"}
             </p>
             <p className="truncate text-2xs text-text-muted">
-              Preferensi penjelajahan
+              {!isPreferenceEnabled && DEFAULT_DISABLED_SOURCE_IDS.some(id => id === source.id)
+                ? "Belum lulus uji baca lengkap"
+                : "Pengaturan sumber untuk Jelajah"}
             </p>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { pushSourcePreferences } from "@/shared/lib/sync-utils";
+import { DEFAULT_DISABLED_SOURCE_IDS, applyDefaultDisabledSources, SOURCE_PREFERENCE_POLICY_VERSION } from "@/shared/sources/source-defaults";
 
 interface SourcePreferencesState {
   disabledSources: string[];
@@ -10,14 +11,14 @@ interface SourcePreferencesState {
   isSourceDisabled: (sourceId: string) => boolean;
   toggleHomeSource: (sourceId: string) => void;
   isSourceHiddenFromHome: (sourceId: string) => boolean;
-  syncWithCloud: (cloudDisabledSources: string[], cloudHiddenFromHomeSources?: string[]) => void;
+  syncWithCloud: (cloudDisabledSources: string[], cloudHiddenFromHomeSources?: string[], policyVersion?: number) => void;
   clearPreferences: () => void;
 }
 
 export const useSourcePreferencesStore = create<SourcePreferencesState>()(
   persist(
     (set, get) => ({
-      disabledSources: [],
+      disabledSources: [...DEFAULT_DISABLED_SOURCE_IDS],
       hiddenFromHomeSources: [],
 
       toggleSource: (sourceId: string) => set((state) => {
@@ -60,22 +61,35 @@ export const useSourcePreferencesStore = create<SourcePreferencesState>()(
         return get().hiddenFromHomeSources.includes(sourceId);
       },
 
-      syncWithCloud: (cloudDisabledSources: string[], cloudHiddenFromHomeSources: string[] = []) => {
+      syncWithCloud: (cloudDisabledSources: string[], cloudHiddenFromHomeSources: string[] = [], policyVersion = 0) => {
+        const disabled = policyVersion >= SOURCE_PREFERENCE_POLICY_VERSION
+          ? cloudDisabledSources : applyDefaultDisabledSources(cloudDisabledSources);
         if (typeof document !== 'undefined') {
-          document.cookie = `yomirra-disabled-sources=${encodeURIComponent(JSON.stringify(cloudDisabledSources))}; path=/; max-age=31536000`;
+          document.cookie = `yomirra-disabled-sources=${encodeURIComponent(JSON.stringify(disabled))}; path=/; max-age=31536000`;
         }
-        set({ disabledSources: cloudDisabledSources, hiddenFromHomeSources: cloudHiddenFromHomeSources })
+        set({ disabledSources: disabled, hiddenFromHomeSources: cloudHiddenFromHomeSources })
       },
 
       clearPreferences: () => {
         if (typeof document !== 'undefined') {
-          document.cookie = `yomirra-disabled-sources=[]; path=/; max-age=31536000`;
+          document.cookie = `yomirra-disabled-sources=${encodeURIComponent(JSON.stringify(DEFAULT_DISABLED_SOURCE_IDS))}; path=/; max-age=31536000`;
         }
-        set({ disabledSources: [], hiddenFromHomeSources: [] });
+        set({ disabledSources: [...DEFAULT_DISABLED_SOURCE_IDS], hiddenFromHomeSources: [] });
+        void pushSourcePreferences([...DEFAULT_DISABLED_SOURCE_IDS], []);
       },
     }),
     {
       name: "yomirra-source-preferences",
+      version: 2,
+      migrate: (stored: unknown, version) => {
+        const old = (stored && typeof stored === "object" ? stored : {}) as Partial<SourcePreferencesState>;
+        return {
+          ...old,
+          disabledSources: version < 2
+            ? applyDefaultDisabledSources(Array.isArray(old.disabledSources) ? old.disabledSources : [])
+            : (Array.isArray(old.disabledSources) ? old.disabledSources : [...DEFAULT_DISABLED_SOURCE_IDS]),
+        } as SourcePreferencesState;
+      },
       onRehydrateStorage: () => (state) => {
         // Ensure cookie is set on initial load if it exists in local storage
         if (state && typeof document !== 'undefined') {
