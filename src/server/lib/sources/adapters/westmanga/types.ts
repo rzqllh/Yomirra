@@ -58,4 +58,8 @@ export interface WestMangaApiResponse<T> {
   status?: boolean;
   message?: string;
   data: T;
+  paginator?: {
+    current_page: number;
+    last_page: number;
+  };
 }

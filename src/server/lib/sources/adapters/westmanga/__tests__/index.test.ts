@@ -110,6 +110,16 @@ describe("WestMangaSource", () => {
       expect(res.hasNextPage).toBe(false);
     });
 
+    it("resolves relative cover URLs and uses upstream pagination", async () => {
+      vi.spyOn(mockHttpClient, "get").mockResolvedValueOnce({
+        data: [{ id: 1, slug: "sample", title: "Sample", cover: "/covers/sample.webp" }],
+        paginator: { current_page: 1, last_page: 3 },
+      });
+      const result = await source.getPopular(1);
+      expect(result.hasNextPage).toBe(true);
+      expect(result.mangas[0].coverUrl).toBe("https://v1.westmanga.my/covers/sample.webp");
+    });
+
     it("search sends query and returns results", async () => {
       const getSpy = vi.spyOn(mockHttpClient, "get").mockResolvedValueOnce({
         data: [

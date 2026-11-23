@@ -20,12 +20,30 @@ import type {
   WestMangaReaderData,
 } from "./types";
 
+function resolveMediaUrl(raw: string | undefined | null): string {
+  if (!raw?.trim()) return "";
+  try {
+    const url = new URL(raw, "https://v1.westmanga.my");
+    return url.protocol === "https:" ? url.toString() : "";
+  } catch {
+    return "";
+  }
+}
+
+function hasNextPage(
+  response: { paginator?: { current_page: number; last_page: number } },
+  listLength: number
+): boolean {
+  const pagination = response?.paginator;
+  return pagination ? pagination.current_page < pagination.last_page : listLength >= 20;
+}
+
 function normalizeMangaItem(item: WestMangaItem): MangaItem {
   const statusLower = item.status?.toLowerCase();
   return {
     id: item.slug || String(item.id),
     title: item.title,
-    coverUrl: item.cover,
+    coverUrl: resolveMediaUrl(item.cover),
     description: item.sinopsis ? normalizeSynopsis(item.sinopsis) : undefined,
     status:
       statusLower === "ongoing" || statusLower === "publishing"
@@ -175,7 +193,7 @@ export class WestMangaSource implements MangaSource {
 
     return {
       mangas,
-      hasNextPage: mangas.length >= 20,
+      hasNextPage: hasNextPage(res, mangas.length),
     };
   }
 
@@ -193,7 +211,7 @@ export class WestMangaSource implements MangaSource {
 
     return {
       mangas,
-      hasNextPage: mangas.length >= 20,
+      hasNextPage: hasNextPage(res, mangas.length),
     };
   }
 
@@ -222,7 +240,7 @@ export class WestMangaSource implements MangaSource {
 
     return {
       mangas,
-      hasNextPage: mangas.length >= 20,
+      hasNextPage: hasNextPage(res, mangas.length),
     };
   }
 
@@ -276,7 +294,7 @@ export class WestMangaSource implements MangaSource {
     const urls = res?.data?.images || [];
     const pages: PageItem[] = urls.map((url, idx) => ({
       index: idx,
-      url,
+      url: resolveMediaUrl(url),
       referer: "https://v1.westmanga.my/",
     }));
 
