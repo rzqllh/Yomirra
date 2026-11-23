@@ -205,6 +205,28 @@ describe("library-store Phase 1 Identity & Relinking", () => {
     const resolvedFromNew = useLibraryStore.getState().resolveBySourceRef("komiku", "frieren-indo");
     expect(resolvedFromNew?.id).toBe(savedTitleId);
   });
+  it("never treats an unverified alternate source as bookmarked or deletes its separate record", () => {
+    const now = new Date().toISOString();
+    useLibraryStore.getState().addToLibrary({
+      id: "title-a", sourceId: "mangadex", mangaId: "title-a",
+      title: "Same title", addedAt: now, updatedAt: now,
+      linkedSources: [{
+        sourceId: "komiku", mangaId: "title-b", addedAt: Date.now(),
+        matchConfidence: "HIGH_CONFIDENCE",
+      }],
+    });
+    expect(useLibraryStore.getState().isInLibrary("komiku", "title-b")).toBe(false);
+    expect(useLibraryStore.getState().resolveBySourceRef("komiku", "title-b")).toBeUndefined();
+
+    useLibraryStore.getState().addToLibrary({
+      id: "title-b", sourceId: "komiku", mangaId: "title-b",
+      title: "Same title", addedAt: now, updatedAt: now,
+    });
+    expect(Object.keys(useLibraryStore.getState().items)).toHaveLength(2);
+    useLibraryStore.getState().removeFromLibrary("mangadex", "title-a");
+    expect(useLibraryStore.getState().isInLibrary("komiku", "title-b")).toBe(true);
+  });
+
   it("treats linked providers as the same saved title", () => {
     useLibraryStore.getState().addToLibrary({
       id: "saved-frieren",

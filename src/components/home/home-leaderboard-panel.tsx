@@ -6,7 +6,7 @@ import { ArrowRight } from "@phosphor-icons/react";
 import { LeaderboardRow } from "@/components/komik/card/leaderboard-row";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
-import { normalizeTitle } from "@/shared/lib/title-matcher";
+import { selectSourceLeaderboardEntries } from "./home-feed-selection";
 import { cn } from "@/shared/utils/cn";
 import type { HomeFeedManga } from "./home-feed-selection";
 
@@ -66,24 +66,10 @@ export function HomeLeaderboardPanel({
   const activeSourceName =
     availableSources.find((source) => source.id === activeSourceId)?.name ?? "Sumber";
 
-  const displayItems = React.useMemo(() => {
-    if (!activeSourceId) return [];
-
-    const seen = new Set<string>();
-    const result: HomeFeedManga[] = [];
-
-    for (const item of items) {
-      if (item.sourceId !== activeSourceId) continue;
-      const norm = normalizeTitle(item.title);
-      const key = norm || item.id;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      result.push(item);
-      if (result.length >= 5) break;
-    }
-
-    return result;
-  }, [items, activeSourceId]);
+  const displayItems = React.useMemo(
+    () => activeSourceId ? selectSourceLeaderboardEntries(items, activeSourceId) : [],
+    [items, activeSourceId]
+  );
 
   const targetSeeAllHref = activeSourceId
     ? `/sources/${activeSourceId}?sort=popular`

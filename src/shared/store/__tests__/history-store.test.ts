@@ -118,6 +118,29 @@ describe('history-store', () => {
     expect(continueReading[0].savedTitleId).toBe('canonical');
   });
 
+  it('preserves each provider cursor when a legacy savedTitleId is shared by multiple sources', () => {
+    useHistoryStore.setState({
+      items: {
+        first: {
+          sourceId: 'provider-a', mangaId: 'work-a', chapterId: 'chapter-a',
+          mangaTitle: 'Work', savedTitleId: 'legacy-shared', readAt: 10,
+          pageIndex: 4, totalPages: 10,
+        },
+        second: {
+          sourceId: 'provider-b', mangaId: 'work-b', chapterId: 'chapter-b',
+          mangaTitle: 'Work', savedTitleId: 'legacy-shared', readAt: 20,
+          pageIndex: 7, totalPages: 15,
+        },
+      },
+    });
+
+    expect(useHistoryStore.getState().getContinueReading()).toHaveLength(1);
+    const bySource = useHistoryStore.getState().getContinueReadingBySource();
+    expect(bySource).toHaveLength(2);
+    expect(bySource.map(item => item.chapterId).sort()).toEqual(['chapter-a', 'chapter-b']);
+    expect(Object.keys(useHistoryStore.getState().items)).toHaveLength(2);
+  });
+
   it('safely handles resolveSavedTitleId when library is not yet hydrated or resolved', () => {
     const store = useHistoryStore.getState();
     const resolved = store.resolveSavedTitleId('unknownSource', 'unknownManga');

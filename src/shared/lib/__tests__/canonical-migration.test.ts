@@ -27,7 +27,7 @@ describe("Phase 4.4 & 4.5 — Persistent Canonical Catalog & Migration", () => {
           title: "Solo Leveling",
           linkedSources: [
             { sourceId: "shinigami", mangaId: "sl-shini", addedAt: Date.now(), matchConfidence: "CONFIRMED" },
-            { sourceId: "komiku", mangaId: "sl-komiku", addedAt: Date.now(), matchConfidence: "HIGH_CONFIDENCE" },
+            { sourceId: "komiku", mangaId: "sl-komiku", addedAt: Date.now(), matchConfidence: "CONFIRMED" },
           ],
           addedAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -57,6 +57,34 @@ describe("Phase 4.4 & 4.5 — Persistent Canonical Catalog & Migration", () => {
     // 4. Verify backfill
     const history = useHistoryStore.getState().items;
     expect(history["komiku::sl-komiku"].savedTitleId).toBe("canonical:solo-leveling");
+  });
+
+  it("does not migrate progress through a heuristic-only cross-source link", () => {
+    useLibraryStore.setState({
+      items: {
+        "saved-work": {
+          id: "saved-work", sourceId: "provider-a", mangaId: "a", title: "Same title",
+          linkedSources: [{
+            sourceId: "provider-b", mangaId: "b", addedAt: Date.now(),
+            matchConfidence: "HIGH_CONFIDENCE",
+          }],
+          addedAt: new Date().toISOString(), updatedAt: new Date().toISOString(), isBookmarked: true,
+        },
+      },
+    });
+    useHistoryStore.setState({
+      items: {
+        "provider-b::b::chapter": {
+          sourceId: "provider-b", mangaId: "b", chapterId: "chapter",
+          mangaTitle: "Same title", readAt: 1,
+        },
+      },
+    });
+    const before = useHistoryStore.getState().items;
+    const result = executeCanonicalMigration();
+    expect(result.historyChanged).toBe(false);
+    expect(useHistoryStore.getState().items).toEqual(before);
+    expect(useHistoryStore.getState().items["provider-b::b::chapter"].savedTitleId).toBeUndefined();
   });
 
   it("merges legacy memberships and reading status into canonical key additively", () => {

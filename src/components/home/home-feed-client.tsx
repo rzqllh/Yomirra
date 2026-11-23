@@ -2,7 +2,14 @@
 
 import * as React from "react";
 import { useReducedMotion } from "motion/react";
-import { useHistoryStore } from "@/shared/store/history-store";
+import { useHistoryStore, type HistoryItem } from "@/shared/store/history-store";
+import { useLibraryStore } from "@/shared/store/library-store";
+import {
+  canonicalSourceKey, groupVerifiedCatalogEntries, indexVerifiedGroups,
+  canonicalGroupPreferenceKey, canonicalGroupPreferenceAliases,
+} from "@/shared/lib/canonical-identity";
+import { resolveCanonicalResume } from "@/shared/lib/canonical-resume";
+import { getCanonicalSavedDetailHref, getMangaDetailHref, getReaderHref } from "@/shared/lib/routes";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useNsfwSourceIds } from "@/shared/hooks/use-nsfw-source-ids";
@@ -16,10 +23,10 @@ import { SectionStack } from "@/components/ui/section-stack";
 import { HomeHero } from "./home-hero";
 import {
   selectHeroCandidates,
+  selectRecentlyUpdatedItems,
   selectSpotlightItems,
   type HomeFeedManga,
 } from "./home-feed-selection";
-import { normalizeTitle } from "@/shared/lib/title-matcher";
 import { ShelfCard } from "@/components/komik/card";
 import { CompactCard } from "@/components/komik/card/compact-card";
 import { ViewModeToggle } from "@/components/komik/view-mode-toggle";
@@ -45,7 +52,9 @@ export function HomeFeedClient({
   React.useEffect(() => setIsMounted(true), []);
 
   const historyItemsMap = useHistoryStore((state) => state.items);
-  const getContinueReading = useHistoryStore((state) => state.getContinueReading);
+  const getContinueReadingBySource = useHistoryStore((state) => state.getContinueReadingBySource);
+  const savedLibraryMap = useLibraryStore((state) => state.items);
+  const perTitlePrefs = useSettingsStore((state) => state.perTitleSourcePreferences);
 
   const { isSourceDisabled } = useSourcePreferencesStore();
   const hideNsfw = useSettingsStore((state) => state.hideNsfw);
@@ -69,7 +78,13 @@ export function HomeFeedClient({
   const historyItems = React.useMemo(() => {
     if (!isMounted || !historyItemsMap) return [];
 
-    const rawHistoryItems = getContinueReading(50);
+    const explicitNsfwRefs = new Set([
+      ...Object.values(savedLibraryMap),
+      ...Object.values(historyItemsMap),
+    ].filter(value => value.isNsfw === true).map(value =>
+      canonicalSourceKey(value.sourceId, value.mangaId)
+    ));
+    const rawHistoryItems = getContinueReadingBySource(50);
     let result = rawHistoryItems.filter((item) => {
       const mangaKey = `${item.sourceId}::${item.mangaId}` as MangaKey;
       if (readingStatusByManga[mangaKey] === "completed") return false;
@@ -85,30 +100,103 @@ export function HomeFeedClient({
         result = [];
       } else {
         result = result.filter(
-          (item) => !isFromNsfwSource(item.sourceId, item.isNsfw)
+          (item) => !isFromNsfwSource(item.sourceId, item.isNsfw) &&
+            !explicitNsfwRefs.has(canonicalSourceKey(item.sourceId, item.mangaId))
         );
       }
     }
 
-    return result.slice(0, 10);
+    const verifiedGroups = groupVerifiedCatalogEntries(
+      Object.values(savedLibraryMap).filter(item => item.isBookmarked !== false),
+    );
+    const lookup = indexVerifiedGroups(verifiedGroups);
+    const byKey = new Map(verifiedGroups.map(group => [group.displayKey, group]));
+    const seen = new Set<string>();
+    const cards: Array<HistoryItem & {
+      canonicalDetailHref?: string;
+      resumeHref?: string;
+    }> = [];
+
+    for (const item of result) {
+      const refKey = canonicalSourceKey(item.sourceId, item.mangaId);
+      const catalogKey = lookup.get(refKey) ?? refKey;
+      if (seen.has(catalogKey)) continue;
+      seen.add(catalogKey);
+
+      const group = byKey.get(catalogKey);
+      if (!group) {
+        cards.push({
+          ...item,
+          canonicalDetailHref: getCanonicalSavedDetailHref(`${item.sourceId}::${item.mangaId}`),
+        });
+        continue;
+      }
+
+      const bindings = group.sourceBindings.filter(ref =>
+        !hideNsfw || (nsfwStatus === "KNOWN" &&
+          !isFromNsfwSource(ref.sourceId) &&
+          !explicitNsfwRefs.has(canonicalSourceKey(ref.sourceId, ref.mangaId))
+        )
+      );
+      if (!bindings.length) continue;
+
+      const aliases = canonicalGroupPreferenceAliases(group);
+      const preferenceKey = canonicalGroupPreferenceKey(group);
+      const choice = perTitlePrefs[preferenceKey];
+      const legacyChoices = aliases.map(key => perTitlePrefs[key]).filter(Boolean);
+      const hasConflict = !choice && new Set(legacyChoices).size > 1;
+      const preferredSourceId = choice ?? legacyChoices[0];
+
+      const missing = bindings.filter(ref => {
+        const source = dynamicSourceRegistry.get(ref.sourceId);
+        return source?.status === "unavailable" || source?.status === "in-fix";
+      }).map(ref => ref.sourceId);
+
+      const decision = !hasConflict
+        ? resolveCanonicalResume({
+            bindings,
+            preferredSourceId,
+            // The shelf is pre-grouped by savedTitleId. Read from the full
+            // source-specific history store so preferred-source cursors survive.
+            lastRead: Object.values(historyItemsMap).filter(history =>
+              bindings.some(ref =>
+                ref.sourceId === history.sourceId && ref.mangaId === history.mangaId
+              )
+            ).map(history => ({
+              sourceId: history.sourceId,
+              mangaId: history.mangaId,
+              chapterId: history.chapterId,
+              readAt: Number(history.readAt) || 0,
+            })),
+            disabledSourceIds: bindings.filter(ref => isSourceDisabled(ref.sourceId))
+              .map(ref => ref.sourceId),
+            unavailableSourceIds: missing,
+          })
+        : { action: "pick-source" as const };
+      const linkId = group.members[0].id ??
+        `${group.members[0].sourceId}::${group.members[0].mangaId}`;
+      const canonicalDetailHref = getCanonicalSavedDetailHref(linkId);
+      const resumeHref = decision.action === "resume"
+        ? decision.chapterId
+          ? getReaderHref(decision.source.sourceId, decision.source.mangaId, decision.chapterId, "/")
+          : getMangaDetailHref(decision.source.sourceId, decision.source.mangaId, "/")
+        : canonicalDetailHref;
+      cards.push({ ...item, canonicalDetailHref, resumeHref });
+    }
+
+    return cards.slice(0, 10);
   }, [
     isMounted,
     historyItemsMap,
-    getContinueReading,
+    getContinueReadingBySource,
     readingStatusByManga,
     isSourceDisabled,
     hideNsfw,
     nsfwStatus,
+    savedLibraryMap,
+    perTitlePrefs,
     isFromNsfwSource,
   ]);
-
-  const personalizedIds = React.useMemo(() => {
-    const ids = new Set<string>();
-    historyItems.forEach((item) =>
-      ids.add(`${item.sourceId}-${item.mangaId}`)
-    );
-    return ids;
-  }, [historyItems]);
 
   const filteredPopular = React.useMemo(() => {
     return unifiedPopular.filter((manga) => {
@@ -139,21 +227,35 @@ export function HomeFeedClient({
   const discoveryItems =
     filteredLatest.length > 0 ? filteredLatest : filteredPopular;
 
+  const verifiedDiscoveryIndex = React.useMemo(
+    () => indexVerifiedGroups(groupVerifiedCatalogEntries(
+      Object.values(savedLibraryMap).filter(item => item.isBookmarked !== false),
+    )),
+    [savedLibraryMap],
+  );
+
+  const personalizedKeys = React.useMemo(() => new Set(
+    historyItems.map(item => {
+      const ref = canonicalSourceKey(item.sourceId, item.mangaId);
+      return verifiedDiscoveryIndex.get(ref) ?? ref;
+    })
+  ), [historyItems, verifiedDiscoveryIndex]);
+
   const spotlightItems = React.useMemo(
-    () => selectSpotlightItems(discoveryItems, 10),
-    [discoveryItems]
+    () => selectSpotlightItems(discoveryItems, 10, verifiedDiscoveryIndex),
+    [discoveryItems, verifiedDiscoveryIndex]
   );
 
   const heroCandidates = React.useMemo(
     () =>
-      selectHeroCandidates(discoveryItems, spotlightItems, 15).map((item) => ({
+      selectHeroCandidates(discoveryItems, spotlightItems, 15, verifiedDiscoveryIndex).map((item) => ({
         coverUrl: item.coverUrl,
         title: item.title,
         sourceId: item.sourceId,
         contentRating: item.contentRating,
         isNsfw: item.isNsfw,
       })),
-    [discoveryItems, spotlightItems]
+    [discoveryItems, spotlightItems, verifiedDiscoveryIndex]
   );
 
   const [spotlightIndex, setSpotlightIndex] = React.useState(0);
@@ -225,25 +327,10 @@ export function HomeFeedClient({
   const currentSpotlight =
     spotlightItems[spotlightIndex] ?? spotlightItems[0];
 
-  const updateHariIni = React.useMemo(() => {
-    const seenTitles = new Set<string>();
-    const result: HomeFeedManga[] = [];
-
-    for (const item of filteredLatest) {
-      if (personalizedIds.has(`${item.sourceId}-${item.id}`)) continue;
-
-      const norm = normalizeTitle(item.title);
-      const dedupeKey = norm || `${item.sourceId}-${item.id}`;
-
-      if (seenTitles.has(dedupeKey)) continue;
-      seenTitles.add(dedupeKey);
-      result.push(item);
-
-      if (result.length >= 50) break;
-    }
-
-    return result;
-  }, [filteredLatest, personalizedIds]);
+  const updateHariIni = React.useMemo(
+    () => selectRecentlyUpdatedItems(filteredLatest, personalizedKeys, 50, verifiedDiscoveryIndex),
+    [filteredLatest, personalizedKeys, verifiedDiscoveryIndex]
+  );
 
   return (
     <SectionStack level="page">

@@ -45,6 +45,7 @@ interface HistoryState {
   getLatestForManga: (sourceId: string, mangaId: string) => HistoryItem | undefined;
   getHighestMilestoneForManga: (sourceId: string, mangaId: string) => HistoryItem | undefined;
   getContinueReading: (limit?: number) => HistoryItem[];
+  getContinueReadingBySource: (limit?: number) => HistoryItem[];
   getHistoryList: () => HistoryItem[];
   markChapterProgress: (sourceId: string, mangaId: string, chapterId: string, pageIndex: number, totalPages: number, scrollPercent?: number) => void;
   saveProgress: (sourceId: string, mangaId: string, chapterId: string, pageIndex: number, pageOffset?: number) => void;
@@ -425,6 +426,30 @@ export const useHistoryStore = create<HistoryState>()(
         return limit ? sorted.slice(0, limit) : sorted;
       },
       
+      /**
+       * Canonical presentation requires an independent cursor for every
+       * source binding before verified identity grouping. Do not collapse
+       * an unverified legacy savedTitleId here.
+       */
+      getContinueReadingBySource: (limit) => {
+        const grouped = new Map<string, { items: HistoryItem[]; latestActivity: number }>();
+        for (const item of Object.values(get().items)) {
+          const key = JSON.stringify([item.sourceId, item.mangaId]);
+          const existing = grouped.get(key);
+          if (existing) {
+            existing.items.push(item);
+            existing.latestActivity = Math.max(existing.latestActivity, item.readAt);
+          } else {
+            grouped.set(key, { items: [item], latestActivity: item.readAt });
+          }
+        }
+        const sorted = Array.from(grouped.values())
+          .sort((a, b) => b.latestActivity - a.latestActivity)
+          .map(group => chooseReadingMilestone(group.items) ??
+            [...group.items].sort((a, b) => b.readAt - a.readAt)[0]);
+        return limit ? sorted.slice(0, limit) : sorted;
+      },
+
       getHistoryList: () => {
         const toTimestamp = (val: unknown) => {
           if (typeof val === 'number' && !isNaN(val)) return val;

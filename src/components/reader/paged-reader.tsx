@@ -429,8 +429,9 @@ export function PagedReader({
             onRefreshUrl={async () => {
               if (onRefreshChapter) {
                 const freshPages = await onRefreshChapter();
-                if (freshPages && freshPages[currentPageIndex]) {
-                  return freshPages[currentPageIndex].url;
+                const replacement = freshPages?.find(page => page.index === currentPage.index);
+                if (replacement) {
+                  return replacement.url;
                 }
               }
               return null;

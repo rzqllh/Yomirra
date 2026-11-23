@@ -24,3 +24,5 @@ export const sources: MangaSource[] = [
 
 export const sourceMap = new Map(sources.map((s) => [s.id, s]));
 
+// Explicitly retain only the nine existing, public built-ins.
+export const builtInSources: MangaSource[] = sources;

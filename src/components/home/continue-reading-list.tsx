@@ -9,7 +9,7 @@ import type { HistoryItem } from "@/shared/store/history-store";
 import { cn } from "@/shared/utils/cn";
 
 export interface ContinueReadingListProps {
-  items: HistoryItem[];
+  items: Array<HistoryItem & { canonicalDetailHref?: string; resumeHref?: string }>;
   variant?: string; // Kept for backward compatibility
   className?: string;
 }
@@ -53,6 +53,8 @@ export function ContinueReadingList({
           <HistoryCard
             key={`${item.sourceId}-${item.mangaId}-${item.chapterId}`}
             item={item}
+            canonicalDetailHref={item.canonicalDetailHref}
+            resumeHref={item.resumeHref}
             className="shrink-0 snap-start w-10/12 max-w-xs sm:w-auto sm:max-w-none sm:shadow-sm"
           />
         ))}

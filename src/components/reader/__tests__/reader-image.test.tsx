@@ -24,6 +24,7 @@ describe("ReaderImage - Failure Recovery", () => {
   
   afterEach(() => {
     vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
   const defaultProps = {
@@ -306,6 +307,55 @@ describe("ReaderImage - Failure Recovery", () => {
     });
 
     expect(onError).not.toHaveBeenCalled();
+  });
+
+  it("keeps other decoded pages available when one page fails offline", () => {
+    vi.spyOn(window.navigator, "onLine", "get").mockReturnValue(false);
+    const refreshUrl = vi.fn();
+    const onFailed = vi.fn();
+
+    render(
+      <div>
+        <ReaderImage
+          {...defaultProps}
+          onRefreshUrl={refreshUrl}
+          onPermanentFailure={onFailed}
+        />
+        <ReaderImage
+          {...defaultProps}
+          pageIndex={1}
+          pageUrl="http://example.com/page-2.jpg"
+        />
+      </div>
+    );
+
+    fireEvent.error(screen.getByRole("img", { name: "Page 1" }));
+
+    expect(screen.getByText("Halaman 1 gagal dimuat")).toBeTruthy();
+    expect(screen.getByRole("img", { name: "Page 2" })).toBeTruthy();
+    expect(onFailed).toHaveBeenCalledWith(0);
+
+    act(() => { vi.runAllTimers(); });
+    expect(refreshUrl).not.toHaveBeenCalled();
+    expect(defaultProps.onError).toHaveBeenCalledWith(0);
+  });
+
+  it("retries only the failed page after connectivity returns", () => {
+    const online = vi.spyOn(window.navigator, "onLine", "get").mockReturnValue(false);
+    render(
+      <div>
+        <ReaderImage {...defaultProps} />
+        <ReaderImage {...defaultProps} pageIndex={1} pageUrl="http://example.com/page-2.jpg" />
+      </div>
+    );
+    fireEvent.error(screen.getByRole("img", { name: "Page 1" }));
+    const unaffectedPage = screen.getByRole("img", { name: "Page 2" });
+
+    online.mockReturnValue(true);
+    fireEvent.click(screen.getByRole("button", { name: /Coba lagi/i }));
+
+    expect(screen.getByRole("img", { name: "Page 1" })).toBeTruthy();
+    expect(screen.getByRole("img", { name: "Page 2" })).toBe(unaffectedPage);
   });
 
 });

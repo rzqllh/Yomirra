@@ -10,7 +10,6 @@ import { SegmentedControl } from "@/components/ui/segmented-control";
 import { BookmarkSkeleton } from "@/components/skeletons/bookmark-skeleton";
 import { useBookmarkReading } from "@/shared/hooks/use-bookmark-reading";
 import { useBookmarkCollection } from "@/shared/hooks/use-bookmark-collection";
-import { useLibraryStore } from "@/shared/store/library-store";
 import { useUpdateStore } from "@/shared/store/update-store";
 import { ReadingTab } from "./reading-tab";
 import { CollectionTab } from "./collection-tab";
@@ -31,9 +30,7 @@ export function BookmarkPageView() {
 
   const reading = useBookmarkReading();
   const collection = useBookmarkCollection();
-  const libraryItemCount = useLibraryStore((state) =>
-    Object.values(state.items).filter((i) => i.isBookmarked !== false).length
-  );
+  const libraryItemCount = collection.visibleCatalogCount;
   const rawUnread = useUpdateStore((state) => state.getUnreadCount());
   const unreadCount = typeof rawUnread === "function" ? (rawUnread as () => number)() : (Number(rawUnread) || 0);
 
@@ -64,7 +61,7 @@ export function BookmarkPageView() {
       <PageContainer hasMobileHeader>
         <PageHeader
           title="Library"
-          subtitle="Lanjutkan bacaan dan kelola komik yang kamu simpan."
+          subtitle="Bacaan dan komik yang kamu simpan."
           icon={<Books size={24} weight="regular" />}
           hideDesktop={true}
         />
@@ -73,7 +70,7 @@ export function BookmarkPageView() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 w-full">
           <SegmentedControl
             options={[
-              { value: "reading", label: "Sedang Dibaca" },
+              { value: "reading", label: "Sedang dibaca" },
               {
                 value: "collection",
                 label: `Tersimpan${libraryItemCount > 0 ? ` (${libraryItemCount})` : ""}`,
@@ -92,7 +89,7 @@ export function BookmarkPageView() {
           >
             <span className="flex items-center gap-2">
               <CalendarBlank size={16} weight="regular" className="text-text-muted" />
-              <span>Jadwal Rilis Mingguan</span>
+              <span>Jadwal rilis mingguan</span>
             </span>
             {unreadCount > 0 && (
               <span className="text-2xs px-1.5 py-0.5 rounded-md bg-status-error-bg text-status-error-fg font-bold">

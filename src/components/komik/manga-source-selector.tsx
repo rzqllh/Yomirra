@@ -5,6 +5,7 @@ import { Compass, Star, ArrowRight } from "@phosphor-icons/react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useLibraryStore } from "@/shared/store/library-store";
+import { canonicalSourceKey, groupVerifiedCatalogEntries, canonicalGroupPreferenceKey, canonicalGroupPreferenceAliases } from "@/shared/lib/canonical-identity";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { getSourceMetadata } from "@/shared/sources/source-registry";
 import { toast } from "sonner";
@@ -33,12 +34,30 @@ export function MangaSourceSelector({
 }: MangaSourceSelectorProps) {
   const [isOpen, setIsOpen] = React.useState(false);
 
+  const savedItems = useLibraryStore((state) => state.items);
   const libraryItem = useLibraryStore((state) =>
     state.getLibraryItem(sourceId, mangaId) || state.resolveBySourceRef(sourceId, mangaId)
   );
-
-  const titleKey = libraryItem?.id || `${sourceId}::${mangaId}`;
-  const perTitlePref = useSettingsStore((state) => state.perTitleSourcePreferences[titleKey]);
+  const verifiedGroup = React.useMemo(() =>
+    groupVerifiedCatalogEntries(Object.values(savedItems)).find(group =>
+      group.sourceBindings.some(ref =>
+        canonicalSourceKey(ref.sourceId, ref.mangaId) === canonicalSourceKey(sourceId, mangaId)
+      )
+    ),
+  [savedItems, sourceId, mangaId]);
+  const titleKey = verifiedGroup
+    ? canonicalGroupPreferenceKey(verifiedGroup)
+    : libraryItem?.id || `${sourceId}::${mangaId}`;
+  const preferenceAliases = verifiedGroup
+    ? canonicalGroupPreferenceAliases(verifiedGroup)
+    : [titleKey];
+  const prefs = useSettingsStore((state) => state.perTitleSourcePreferences);
+  const hideNsfw = useSettingsStore((state) => state.hideNsfw);
+  const explicitNsfwRefs = new Set(Object.values(savedItems)
+    .filter(item => item.isNsfw === true)
+    .map(item => canonicalSourceKey(item.sourceId, item.mangaId)));
+  const perTitlePref = prefs[titleKey] ??
+    preferenceAliases.map(key => prefs[key]).find(Boolean);
   const setPerTitleSourcePreference = useSettingsStore((state) => state.setPerTitleSourcePreference);
   const clearPerTitleSourcePreference = useSettingsStore((state) => state.clearPerTitleSourcePreference);
   const disabledSources = useSourcePreferencesStore((state) => state.disabledSources);
@@ -47,9 +66,16 @@ export function MangaSourceSelector({
   const isCurrentPreferred = perTitlePref ? perTitlePref === sourceId : false;
 
   const linkedSources = (libraryItem?.linkedSources || []).filter((linked) => {
+    // A heuristic match is not an identity binding and must never become
+    // another selectable preferred source without explicit confirmation.
+    if (linked.matchConfidence !== "CONFIRMED") return false;
     if (linked.sourceId === sourceId && linked.mangaId === mangaId) return false;
     const source = getSourceMetadata(linked.sourceId);
     if (!source || disabledSources.includes(linked.sourceId)) return false;
+    if (hideNsfw && (
+      source.isNsfw === true ||
+      explicitNsfwRefs.has(canonicalSourceKey(linked.sourceId, linked.mangaId))
+    )) return false;
     return (
       source.isEnabled !== false &&
       source.isInstalled !== false &&
@@ -105,7 +131,7 @@ export function MangaSourceSelector({
               <span>Sumber Bacaan</span>
             </DialogTitle>
             <DialogDescription className="text-xs text-text-muted">
-              Pilih sumber utama untuk judul ini.
+              Pilih sumber utama untuk judul ini. Preferensi berlaku untuk semua sumber yang terverifikasi sebagai karya yang sama.
             </DialogDescription>
           </DialogHeader>
 

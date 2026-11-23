@@ -95,10 +95,13 @@ function ReaderContent({
   }, [currentChapter, downloadId, initialDetail, initialPages, initialPagesScope, isDownloaded, isLockedChapter, offlineSafe, readScope]);
 
   // Fallback fetching if SSR did not supply pages for the active scope.
-  const { data: chapterPages, isLoading: isQueryLoading, error, refetch } = useQuery({
+  const { data: chapterPages, isLoading: isQueryLoading, refetch } = useQuery({
     ...apiClient.pagesQuery(sourceId, mangaId, chapterId),
     enabled: !initialPages && !isLockedChapter && !isCheckingOffline && !offlinePages,
     initialData: initialPages ? { chapterId, pages: initialPages } : undefined,
+    // Never amplify a weak mobile connection with automatic chapter metadata retries.
+    retry: false,
+    refetchOnReconnect: false,
   });
 
   const chapterTitle = initialChapters?.find(c => c.id === chapterId)?.title || "Chapter";
@@ -190,6 +193,18 @@ function ReaderContent({
       createdUrls.forEach(url => URL.revokeObjectURL(url));
     };
   }, [isDownloaded, downloadId]);
+
+  const [isDeviceOffline, setIsDeviceOffline] = useState(false);
+  useEffect(() => {
+    const updateConnectivity = () => setIsDeviceOffline(navigator.onLine === false);
+    updateConnectivity();
+    window.addEventListener("online", updateConnectivity);
+    window.addEventListener("offline", updateConnectivity);
+    return () => {
+      window.removeEventListener("online", updateConnectivity);
+      window.removeEventListener("offline", updateConnectivity);
+    };
+  }, []);
 
   const isLoading = isCheckingOffline || (!offlinePages && !initialPages && isQueryLoading);
   const pagesToRender = offlinePages || initialPages || chapterPages?.pages;
@@ -293,13 +308,14 @@ function ReaderContent({
     );
   }
 
-  if (error || !pagesToRender || pagesToRender.length === 0) {
+  // A failed revalidation must not replace a chapter with pages already available.
+  if (!pagesToRender || pagesToRender.length === 0) {
     return (
       <ReaderShell
         mangaTitle={initialDetail?.title}
         coverUrl={initialDetail?.coverUrl}
         isNsfw={initialDetail?.isNsfw}
-        chapterTitle="Error"
+        chapterTitle={chapterTitle}
         currentChapterId={chapterId}
         sourceId={sourceId}
         mangaId={mangaId}
@@ -307,17 +323,16 @@ function ReaderContent({
         <div className="flex min-h-screen items-center justify-center pt-16">
           <EmptyState
             icon={<WarningCircle size={48} weight="duotone" className="text-text-muted" />}
-            title="Gagal Memuat Halaman"
-            description={isDownloaded
-              ? "Halaman unduhan tidak tersedia. Sambungkan perangkat ke internet dan coba lagi."
-              : "Tidak dapat mengambil halaman chapter dari server saat ini."}
+            title={isDeviceOffline ? "Koneksi internet terputus" : "Halaman belum bisa dimuat"}
+            description={isDeviceOffline
+              ? "Periksa sinyal atau Wi-Fi. Gambar yang sudah diunduh tetap tersedia offline."
+              : isDownloaded
+                ? "Halaman unduhan belum tersedia. Periksa koneksi lalu coba lagi."
+                : "Daftar halaman chapter belum dapat diambil. Periksa koneksi lalu coba lagi."}
             action={
               <div className="flex flex-col sm:flex-row items-center gap-2 mt-2">
-                <Button onClick={() => refetch()} variant="outline" className="min-h-11 rounded-sm shadow-sm font-bold w-full sm:w-auto">
-                  Coba Lagi
-                </Button>
-                <Button onClick={alternateSource.openAndSearch} variant="secondary" className="min-h-11 rounded-sm shadow-sm font-bold w-full sm:w-auto">
-                  Cari Sumber Alternatif
+                <Button onClick={() => void refetch()} disabled={isDeviceOffline} variant="outline" className="min-h-11 rounded-sm shadow-sm font-bold w-full sm:w-auto">
+                  Coba lagi
                 </Button>
               </div>
             }
