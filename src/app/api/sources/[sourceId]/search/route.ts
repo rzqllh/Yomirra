@@ -15,7 +15,7 @@ export async function GET(
 ) {
   const rateLimit = await checkRateLimit(request);
   if (!rateLimit.success) {
-    return NextResponse.json({ error: { message: "Too Many Requests" } }, { status: 429, headers: rateLimit.headers });
+    return NextResponse.json({ error: { code: "RATE_LIMITED", message: "Terlalu banyak permintaan. Coba lagi nanti." } }, { status: 429, headers: rateLimit.headers });
   }
 
   const paramValidation = sourceParamsSchema.safeParse(await params);

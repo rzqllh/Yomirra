@@ -8,7 +8,7 @@ import { isSourceContentVisible } from "@/shared/sources/content-policy";
 export async function GET(request: NextRequest) {
   const rateLimit = await checkRateLimit(request);
   if (!rateLimit.success) {
-    return NextResponse.json({ error: { message: "Too Many Requests" } }, { status: 429, headers: rateLimit.headers });
+    return NextResponse.json({ error: { code: "RATE_LIMITED", message: "Terlalu banyak permintaan. Coba lagi nanti." } }, { status: 429, headers: rateLimit.headers });
   }
 
   const [sources, options] = await Promise.all([getDiscoveryRuntimeSources(), getVerifiedRequestReadOptions(request)]);
