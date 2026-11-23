@@ -4,6 +4,8 @@
 > **Version:** 0.1 — foundation pass
 > **Date:** 2026-09-28
 > **Scope:** Information architecture, design language, interaction logic, reusable UI system, responsive behavior, search/source model, library/bookcase semantics, downloads, settings, comic detail, and reader experience.
+
+> **Terminologi produk (kontrak navigasi aktif):** **Jelajah** (`/library`) adalah katalog lintas sumber; **Library** (`/bookmark`) adalah bacaan tersimpan pribadi; **Cari** (`/search`) adalah pencarian langsung. Nama folder, jenis data internal, dan cuplikan kode teknis tetap mengikuti kontrak implementasi masing-masing. Hindari merek pembaca lain dalam UI dan copy publik, kecuali atribusi lisensi wajib.
 >
 > This document is the design source of truth for Yomirra. It is intentionally more specific than a visual style guide: it defines what each page is for, which data belongs there, how source aggregation and normalization behave, how repeated UI is composed, and which decisions are locked versus still open.
 
@@ -69,10 +71,10 @@ The main pages correspond to different levels of intent:
 | Page | User intent | Primary question |
 |---|---|---|
 | **Beranda** | passive discovery + resume | "Apa yang menarik dan apa yang mau gue lanjutkan?" |
-| **Library** | everyday browsing | "Apa yang tersedia dari sumber yang sudah gue pilih?" |
+| **Jelajah** | everyday browsing | "Apa yang tersedia dari sumber yang sudah gue pilih?" |
 | **Cari** | explicit global lookup | "Komik ini ada di mana?" |
 | **Populer** | popularity-led discovery | "Apa yang sedang populer dari sumber pilihan gue?" |
-| **Rak Buku** | personal reading state | "Apa yang sedang gue baca / simpan?" |
+| **Library** | personal reading state | "Apa yang sedang gue baca / simpan?" |
 | **Sumber** | provider personalization + diagnostics | "Sumber apa yang mau ikut pengalaman harian gue dan apakah sumbernya sehat?" |
 | **Unduhan** | offline content management | "Apa yang tersimpan di perangkat gue?" |
 | **Pengaturan** | preferences and data management | "Bagaimana Yomirra bekerja untuk gue?" |
@@ -90,9 +92,9 @@ This distinction is fundamental. Pages may reuse the same card primitives, but t
 The toggle on the **Sumber** page controls whether that source participates in the user's everyday discovery surfaces:
 
 - ON → included in **Beranda** discovery.
-- ON → included in **Library**.
+- ON → included in **Jelajah**.
 - ON → included in **Populer**.
-- OFF → excluded from **Beranda**, **Library**, and **Populer**.
+- OFF → excluded from **Beranda**, **Jelajah**, and **Populer**.
 - Search remains able to access the source regardless of this toggle, as long as the source is runtime-enabled, installed, available, and supports Search.
 
 User preference and system eligibility are separate. A source may remain selected by the user while temporarily unavailable or disabled by runtime configuration; the UI must not present that as healthy participation.
@@ -105,7 +107,7 @@ Therefore the generic label `Enabled` is semantically wrong. OFF does **not** me
 
 Use contextual discovery copy:
 
-- `Tampil di Beranda, Library & Populer`
+- `Tampil di Beranda, Jelajah & Populer`
 - `Disembunyikan dari penjelajahan`
 - `Tidak tersedia untuk penjelajahan` when runtime/system eligibility prevents participation
 
@@ -184,7 +186,7 @@ Raw IDs are allowed only in developer/debug surfaces.
 
 **LOCKED**
 
-Library and Search must normalize equivalent comics across sources.
+Jelajah and Cari must preserve distinct works: title similarity alone is never sufficient to merge source records.
 
 The user should primarily see one work, not a wall of provider duplicates.
 
@@ -245,7 +247,7 @@ Do not place a row of provider logos on every catalog card unless it materially 
 
 **RECOMMENDED — confirm before implementation if current behavior differs**
 
-Library should not force a provider-selection modal on every title click. That would make Library behave like Global Search.
+Jelajah should not force a provider-selection modal on every title click. That would make Library behave like Global Search.
 
 Suggested resolver order:
 
@@ -278,8 +280,8 @@ The Next.js development indicator is not part of the product UI.
 Primary group:
 
 - Beranda
+- Jelajah
 - Library
-- Rak Buku
 - Cari
 - Populer
 
@@ -322,17 +324,17 @@ Search is currently the most important interaction to formalize because Yomirra 
 
 They must remain distinct.
 
-### A. Library local search
+### A. Jelajah local search
 
-Searches the already constructed Library catalog from sources included by the user.
+Searches the already constructed Jelajah catalog from sources included by the user.
 
 It is a local/filtering intent.
 
 Recommended placeholder:
 
-`Cari di Library…`
+`Cari di Jelajah…`
 
-Do not use `Cari di rak bacaan…` because `Rak Buku` is a separate personal domain.
+Do not use `Cari di Library…` for this catalog search because `Library` is the personal saved-reading domain.
 
 ### B. Global Search page
 
@@ -364,7 +366,7 @@ Behavior:
 - it never silently filters the current page;
 - on `/search`, `⌘K` focuses the main Search input instead of opening a redundant second search UI.
 
-On Library, the header launcher and Library's own search can coexist because their scope is different.
+On Jelajah, the header launcher and Jelajah's own search can coexist because their scope is different.
 
 ## 7.2 Search page initial state
 
@@ -501,7 +503,7 @@ The outer frame owns:
 - page-bottom spacing;
 - no nested full-page scroll.
 
-This applies to Beranda, Library, Cari, Rak Buku, Populer, Sumber, Unduhan, and Pengaturan.
+This applies to Beranda, Jelajah, Cari, Library, Populer, Sumber, Unduhan, and Pengaturan.
 
 ## 8.1 Inner content lanes
 
@@ -519,7 +521,7 @@ Do not use a narrower `PageContainer` to make an entire destination page jump in
 
 ## 8.2 Page usage
 
-- **Beranda / Library / Cari / Rak Buku / Populer** — full outer frame; content uses the full lane unless a component has its own density rule.
+- **Beranda / Jelajah / Cari / Library / Populer** — full outer frame; content uses the full lane unless a component has its own density rule.
 - **Sumber** — full outer frame; source guidance, search, and source grid share one edge.
 - **Unduhan** — full outer frame with a focused inner lane for storage/task content.
 - **Pengaturan** — full outer frame with a management inner lane and explicit two-column desktop stacks.
@@ -563,8 +565,8 @@ A giant duplicate H1 is optional and often unnecessary.
 Applies to:
 
 - Cari
+- Jelajah
 - Library
-- Rak Buku
 
 ### Section heading
 
@@ -689,25 +691,25 @@ Avoid redundant metadata that does not help continuation.
 
 ---
 
-# 11. Library
+# 11. Jelajah
 
 ## Purpose
 
 **LOCKED**
 
-Library is the user's everyday catalog built from sources included on the Sumber page.
+Jelajah is the user's everyday catalog built from sources included on the Sumber page.
 
-It is not the user's personal saved collection. That role belongs to Rak Buku.
+It is not the user's personal saved collection. That role belongs to Library.
 
 ## Data scope
 
-- only sources participating in everyday discovery (Beranda, Library, and Populer);
+- only sources participating in everyday discovery (Beranda, Jelajah, and Populer);
 - normalized/merged across those sources;
 - source failures degrade the catalog gracefully rather than crashing the page.
 
 ## Recommended structure
 
-1. Library toolbar
+1. Jelajah toolbar
    - local search
    - optional filter
    - view toggle
@@ -717,11 +719,11 @@ It is not the user's personal saved collection. That role belongs to Rak Buku.
 
 ## Search
 
-Library search is local to the Library catalog.
+Jelajah search is local to the Library catalog.
 
 Preferred placeholder:
 
-`Cari di Library…`
+`Cari di Jelajah…`
 
 ## Filters
 
@@ -734,7 +736,7 @@ Format chips may include:
 
 Do not hard-code formats as presentation if the underlying source metadata cannot support them reliably. Unknown remains a valid metadata state.
 
-Search and Library use the same filter-drawer shell. On mobile the drawer opens at a compact half-height snap point and expands toward full height when the user scrolls or drags upward.
+Cari and Jelajah use the same filter-drawer shell. On mobile the drawer opens at a compact half-height snap point and expands toward full height when the user scrolls or drags upward.
 
 Provider-specific duplicate labels, catch-all values, and compound genre aliases should be normalized before presentation. Keep the provider's raw value only for the outgoing adapter payload.
 
@@ -751,10 +753,10 @@ The provider should not visually dominate the card. If multiple providers exist,
 If no sources are included:
 
 Title:
-`Library belum punya sumber.`
+`Jelajah belum punya sumber.`
 
 Body:
-`Pilih sumber yang mau tampil di Library dan Populer.`
+`Pilih sumber yang mau tampil di Jelajah dan Populer.`
 
 Primary action:
 `Atur sumber`
@@ -767,11 +769,11 @@ If sources exist but produce no catalog content, use a different state; do not i
 
 ## Purpose
 
-Global multi-source lookup for users who cannot find a title through their personalized Library or who intentionally want broader coverage.
+Global multi-source lookup for users who cannot find a title through their personalized Jelajah or who intentionally want broader coverage.
 
 ## Data scope
 
-All available sources are eligible regardless of Library/Populer inclusion.
+All available sources are eligible regardless of Jelajah/Populer inclusion.
 
 ## Page order
 
@@ -834,7 +836,7 @@ Do not imply mathematical precision that the data does not provide.
 
 ---
 
-# 14. Rak Buku
+# 14. Library
 
 ## Purpose
 
@@ -915,7 +917,7 @@ Current banner copy is too technical and conflates concepts.
 
 Recommended intent:
 
-`Pilih sumber yang ingin tampil di Library dan Populer. Semua sumber tetap bisa digunakan lewat Cari.`
+`Pilih sumber yang ingin tampil di Jelajah dan Populer. Semua sumber tetap bisa digunakan lewat Cari.`
 
 This describes behavior without implementation jargon.
 
@@ -1542,8 +1544,8 @@ Avoid this.
 
 Use shared internal primitives but separate semantic compositions:
 
-- `CatalogCard` — Library/Search/appropriate Popular views
-- `ReadingCard` — Rak Buku/Lanjut Baca
+- `CatalogCard` — Jelajah/Cari/appropriate Popular views
+- `ReadingCard` — Library/Lanjut Baca
 - `RankingItem` — rankings
 - `HeroFeature` — spotlight
 
@@ -1630,9 +1632,9 @@ An empty state should answer:
 
 Examples:
 
-### Library without selected sources
+### Jelajah without selected sources
 
-`Library belum punya sumber.`
+`Jelajah belum punya sumber.`
 `Pilih sumber yang mau tampil di sini.`
 `Atur sumber`
 
@@ -1735,8 +1737,8 @@ Responsive design is part of the reusable pattern definition, not a later page-s
 Primary bottom navigation:
 
 - Beranda
+- Jelajah
 - Library
-- Rak Buku
 - Cari
 - Populer
 
@@ -1848,17 +1850,17 @@ Bad:
 
 Better for current product logic:
 
-`Tampilkan di Library & Populer`
+`Tampilkan di Jelajah & Populer`
 
 Terminology must be consistent across pages:
 
-- `Library` = everyday aggregated catalog
-- `Rak Buku` = personal saved/reading space
+- `Jelajah` = everyday aggregated catalog
+- `Library` = personal saved/reading space
 - `Sumber` = provider
 - `Cari` = global multi-source search
 - `Unduhan` = offline content
 
-Do not use `rak bacaan` as a synonym for Library.
+Do not use `rak bacaan` as a synonym for Jelajah.
 
 ---
 
@@ -1893,7 +1895,7 @@ Rules:
 
 Recommended placement:
 
-- inside the main results toolbar/header for Library, Search, and other catalog surfaces.
+- inside the main results toolbar/header for Jelajah, Cari, and other catalog surfaces.
 
 ---
 
