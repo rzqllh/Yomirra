@@ -38,9 +38,8 @@ import { ToggleSwitch } from "@/components/ui/toggle-switch";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { PageContainer, ContentLane } from "@/components/ui/layout";
 import { Surface } from "@/components/ui/surface";
-import { PageHeader } from "@/components/chrome/header";
+import { PageHeader, DestinationHeader } from "@/components/chrome/header";
 import { SegmentedControl } from "@/components/ui/segmented-control";
-import { Gear } from "@phosphor-icons/react/dist/ssr";
 import { toast } from "sonner";
 import { ConfirmationModal } from "@/components/ui/confirmation-modal";
 import { cn } from "@/shared/utils/cn";
@@ -330,7 +329,7 @@ export function SettingsView({ isOverlay: _isOverlay = false, onClose: _onClose 
             wrapOnMobile
             icon={<IconWrapper><Clock size={19} weight="regular" /></IconWrapper>}
             title="Jeda pengecekan"
-            description="Frekuensi interval pemeriksaan chapter baru saat aplikasi aktif dibuka."
+            description="Jeda antar pemeriksaan chapter baru saat aplikasi aktif."
             right={
               <CustomSelect
                 label="Jeda pengecekan"
@@ -421,7 +420,7 @@ export function SettingsView({ isOverlay: _isOverlay = false, onClose: _onClose 
             wrapOnMobile
             icon={<IconWrapper><BookOpen size={19} weight="regular" /></IconWrapper>}
             title="Latar kanvas Reader"
-            description="Warna kanvas saat membaca komik (independen dari tema aplikasi). Default: Hitam OLED."
+            description="Warna latar saat membaca, terpisah dari tema aplikasi. Default: hitam OLED."
             right={
               mounted ? (
                 <CustomSelect
@@ -459,7 +458,7 @@ export function SettingsView({ isOverlay: _isOverlay = false, onClose: _onClose 
           <SettingsItem
             icon={<IconWrapper><WifiHigh size={19} weight="regular" /></IconWrapper>}
             title="Mode hemat data"
-            description="Muat gambar berkualitas kompresi lebih hemat jika didukung oleh sumber."
+            description="Muat gambar dengan ukuran data lebih kecil jika didukung oleh sumber."
             right={
               <ToggleSwitch
                 id="data-saver"
@@ -778,11 +777,7 @@ export function SettingsView({ isOverlay: _isOverlay = false, onClose: _onClose 
               </>
             ) : (
               <>
-                <PageHeader
-                  title="Pengaturan"
-                  subtitle="Atur akun, tampilan, bacaan, dan penyimpanan Yomirra."
-                  icon={<Gear size={24} weight="regular" />}
-                />
+                <DestinationHeader destination="settings" />
                 <ContentLane variant="management">
                   {settingsContent}
                 </ContentLane>

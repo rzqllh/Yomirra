@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { PageHeader } from "@/components/chrome/header";
+import { DestinationHeader } from "@/components/chrome/header";
 import { PageContainer } from "@/components/ui/layout";
 import { useAuth } from "@/shared/hooks/use-auth";
 import { useSync } from "@/shared/hooks/use-sync";
@@ -101,12 +101,7 @@ export default function AccountPage() {
       <GuestMergeDialog />
 
       <PageContainer hasMobileHeader>
-        <PageHeader
-          title="Akun & Sinkronisasi"
-          showBack={true}
-          backHref="/settings"
-          description="Kelola akun dan sinkronisasi bacaanmu."
-        />
+        <DestinationHeader destination="account" />
 
         <main className="w-full space-y-6 md:space-y-8">
           {/* Profile Card */}
@@ -127,9 +122,9 @@ export default function AccountPage() {
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
-                  <h1 className="text-xl font-bold text-text-primary truncate">
+                  <h2 className="text-xl font-bold text-text-primary truncate">
                     {user.displayName || "Pembaca Yomirra"}
-                  </h1>
+                  </h2>
                   <span className="inline-flex items-center gap-1 text-2xs font-bold uppercase tracking-wider bg-accent/15 text-accent px-2 py-0.5 rounded-md border border-accent/25">
                     <ShieldCheck size={12} weight="regular" /> Terhubung dengan Google
                   </span>

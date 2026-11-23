@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { CalendarBlank, Books } from "@phosphor-icons/react";
+import { CalendarBlank } from "@phosphor-icons/react";
 import { PageContainer } from "@/components/ui/layout";
 import { Surface } from "@/components/ui/surface";
 import { SegmentedControl } from "@/components/ui/segmented-control";

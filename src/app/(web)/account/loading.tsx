@@ -1,4 +1,4 @@
-import { PageHeader } from "@/components/chrome/header";
+import { DestinationHeader } from "@/components/chrome/header";
 import { PageContainer } from "@/components/ui/layout";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -6,12 +6,7 @@ export default function Loading() {
   return (
     <div className="min-h-screen bg-surface-base pb-28 md:pb-10">
       <PageContainer hasMobileHeader>
-        <PageHeader
-          title="Akun & Sinkronisasi"
-          showBack
-          backHref="/settings"
-          description="Kelola akun dan sinkronisasi bacaanmu."
-        />
+        <DestinationHeader destination="account" />
         <div className="space-y-6 md:space-y-8">
           <div className="flex flex-col items-center gap-5 rounded-xl border border-border-glass bg-surface-glass p-6 sm:flex-row sm:items-start">
             <Skeleton className="size-20 shrink-0 rounded-xl" />

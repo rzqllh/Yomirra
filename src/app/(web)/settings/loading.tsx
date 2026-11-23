@@ -1,18 +1,13 @@
-import { PageHeader } from "@/components/chrome/header";
+import { DestinationHeader } from "@/components/chrome/header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageContainer, ContentLane } from "@/components/ui/layout";
 import { Surface } from "@/components/ui/surface";
-import { Gear } from "@phosphor-icons/react/dist/ssr";
 
 export default function Loading() {
   return (
     <Surface variant="base" className="min-h-screen">
       <PageContainer hasMobileHeader>
-        <PageHeader
-          title="Pengaturan"
-          subtitle="Atur tampilan, bacaan, dan data Yomirra."
-          icon={<Gear size={24} weight="regular" />}
-        />
+        <DestinationHeader destination="settings" />
 
         <ContentLane variant="management">
           <div className="grid gap-6 xl:grid-cols-2 xl:items-start">

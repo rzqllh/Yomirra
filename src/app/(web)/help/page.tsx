@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { HelpTopicLink } from "./help-topic-link";
-import { PageHeader } from "@/components/chrome/header";
+import { DestinationHeader } from "@/components/chrome/header";
 import { ContentLane, PageContainer } from "@/components/ui/layout";
 import { Surface } from "@/components/ui/surface";
 
@@ -52,12 +52,7 @@ export default function HelpPage() {
   return (
     <Surface variant="base" className="min-h-screen">
       <PageContainer variant="management" hasMobileHeader>
-        <PageHeader
-          title="Pusat Bantuan"
-          subtitle="Panduan singkat saat mencari, membaca dan menyimpan komik."
-          showBack
-          backHref="/"
-        />
+        <DestinationHeader destination="help" />
         <ContentLane variant="focused" className="space-y-6 pb-36 md:pb-14">
           <section className="space-y-2">
             <h1 className="text-xl font-bold tracking-tight text-text-primary md:text-2xl">Ada yang tidak berjalan semestinya?</h1>
