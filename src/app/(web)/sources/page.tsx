@@ -16,14 +16,22 @@ import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry"
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { useMounted } from "@/shared/hooks/use-mounted";
 import { useSettingsStore } from "@/shared/store/settings-store";
+import { useAuth } from "@/shared/hooks/use-auth";
+import { useVerifiedAge } from "@/shared/hooks/use-verified-age";
 import { cn } from "@/shared/utils/cn";
+import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
+import { isSourceActiveForDisplay, sortSourcesForDisplay } from "@/shared/sources/source-sort";
 
 const HEALTH_MAX_AGE_MS = 12 * 60 * 60 * 1000;
 
 export default function SourcesPage() {
   const isMounted = useMounted();
+  const { user } = useAuth();
+  const verifiedAge = useVerifiedAge(user);
   const hideNsfw = useSettingsStore(state => state.hideNsfw);
   const setHideNsfw = useSettingsStore(state => state.setHideNsfw);
+  const disabledSources = useSourcePreferencesStore(state => state.disabledSources);
+  const disabledSourceIds = React.useMemo(() => new Set(disabledSources), [disabledSources]);
   const [filter, setFilter] = React.useState("");
   const [localSources, setLocalSources] = React.useState<import("@/shared/sources/source-types").SourceMetadata[]>([]);
 
@@ -94,14 +102,16 @@ export default function SourcesPage() {
 
   const filteredSources = React.useMemo(() => {
     let result = allSources;
-    if (!isMounted || hideNsfw) {
+    if (!isMounted || hideNsfw || verifiedAge !== "verified") {
       result = result.filter(s => !s.isNsfw);
     }
 
-    if (!filter.trim()) return result;
-    const lower = filter.toLowerCase();
-    return result.filter(s => s.name.toLowerCase().includes(lower) || s.language?.toLowerCase().includes(lower));
-  }, [allSources, filter, hideNsfw, isMounted]);
+    if (filter.trim()) {
+      const lower = filter.toLowerCase();
+      result = result.filter(s => s.name.toLowerCase().includes(lower) || s.language?.toLowerCase().includes(lower));
+    }
+    return sortSourcesForDisplay(result, disabledSourceIds);
+  }, [allSources, filter, hideNsfw, verifiedAge, isMounted, disabledSourceIds]);
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>
@@ -116,7 +126,7 @@ export default function SourcesPage() {
           {/* Source Mental Model Guidance Banner */}
           <div className="p-3.5 rounded-xl bg-surface-glass border border-border-subtle text-xs text-text-muted flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
             <p className="leading-relaxed">
-              Pengaturan ini berlaku untuk Beranda, Jelajah, dan Populer. Pencarian tetap dapat memakai sumber yang tersedia meski dinonaktifkan di sini.
+              Sumber nonaktif tidak dipakai di Beranda, Jelajah, dan Populer. Kamu tetap bisa memilihnya secara manual saat mencari.
             </p>
           </div>
 
@@ -127,20 +137,23 @@ export default function SourcesPage() {
               placeholder="Cari sumber…"
               containerClassName="rounded-xl max-w-md w-full"
             />
-            {isMounted && !hideNsfw && nsfwCount > 0 ? (
+            {isMounted && verifiedAge === "verified" && !hideNsfw && nsfwCount > 0 ? (
               <button
                 type="button"
-                onClick={() => setHideNsfw(!hideNsfw)}
+                onClick={() => {
+                  setHideNsfw(true);
+                  void fetch("/api/auth/adult-session", { method: "DELETE" }).catch(() => undefined);
+                }}
                 className={cn(
                   "inline-flex items-center gap-1.5 self-start sm:self-auto rounded-xl border px-3 py-2 text-xs transition-colors shrink-0",
                   hideNsfw
                     ? "border-border-subtle bg-surface-muted/60 text-text-muted hover:border-border-strong hover:text-text-primary"
                     : "border-semantic-error/40 bg-semantic-error/10 text-semantic-error font-semibold"
                 )}
-                title={hideNsfw ? "Tampilkan sumber 18+" : "Sembunyikan sumber 18+"}
+                title="Sembunyikan sumber 18+"
               >
                 <ShieldWarning size={16} weight={hideNsfw ? "regular" : "regular"} />
-                <span>{hideNsfw ? `18+ Disembunyikan (${nsfwCount})` : "18+ Ditampilkan"}</span>
+                <span>18+ Ditampilkan</span>
               </button>
             ) : null}
           </div>
@@ -152,7 +165,7 @@ export default function SourcesPage() {
               variant="compact"
               icon={<HardDrives size={40} className="text-semantic-error" weight="duotone" />}
               title="Sumber gagal dimuat"
-              description="Daftar sumber belum bisa dimuat. Coba lagi sebentar."
+              description="Daftar sumber belum bisa dimuat. Coba lagi nanti."
               className="bg-surface-overlay rounded-xl border border-semantic-error/20 py-16"
             />
           ) : filteredSources.length === 0 ? (
@@ -165,32 +178,22 @@ export default function SourcesPage() {
             />
           ) : (
             <div className="space-y-6 pb-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                {filteredSources.filter(s => s.status !== 'in-fix' && s.status !== 'in-dev').map((source) => (
-                  <SourceCard key={source.id} source={source} onUpdate={loadLocalSources} />
-                ))}
-              </div>
-
-              {filteredSources.some(s => s.status === 'in-fix') && (
-                <div className="pt-2">
-                  <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-4 px-1">Under Maintenance</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {filteredSources.filter(s => s.status === 'in-fix').map((source) => (
-                      <SourceCard key={source.id} source={source} onUpdate={loadLocalSources} />
-                    ))}
-                  </div>
+              {filteredSources.some(s => isSourceActiveForDisplay(s, disabledSourceIds)) && (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                  {filteredSources.filter(s => isSourceActiveForDisplay(s, disabledSourceIds)).map(source => (
+                    <SourceCard key={source.id} source={source} onUpdate={loadLocalSources} />
+                  ))}
                 </div>
               )}
-
-              {filteredSources.some(s => s.status === 'in-dev') && (
-                <div className="pt-2">
-                  <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-4 px-1">Dalam Pengembangan</h3>
+              {filteredSources.some(s => !isSourceActiveForDisplay(s, disabledSourceIds)) && (
+                <section className="pt-2" aria-label="Sumber nonaktif">
+                  <h3 className="text-sm font-bold text-text-muted uppercase tracking-wider mb-4 px-1">Nonaktif</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                    {filteredSources.filter(s => s.status === 'in-dev').map((source) => (
+                    {filteredSources.filter(s => !isSourceActiveForDisplay(s, disabledSourceIds)).map(source => (
                       <SourceCard key={source.id} source={source} onUpdate={loadLocalSources} />
                     ))}
                   </div>
-                </div>
+                </section>
               )}
             </div>
           )}

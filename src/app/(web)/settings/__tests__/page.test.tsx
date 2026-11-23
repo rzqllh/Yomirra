@@ -10,7 +10,12 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
-let mockUser: any = { uid: "test-user-1", email: "test@example.com", displayName: "Tester" };
+let mockUser: any = { uid: "test-user-1", email: "test@example.com", displayName: "Tester", getIdToken: vi.fn(async () => "firebase-id-token") };
+let mockAgeStatus: "verified" | "unverified" = "verified";
+
+vi.mock("@/shared/hooks/use-verified-age", () => ({
+  useVerifiedAge: () => mockAgeStatus,
+}));
 
 // Mock hooks
 vi.mock("@/shared/hooks/use-auth", () => ({
@@ -34,7 +39,9 @@ vi.mock("@/components/ui/directional-transition", () => ({
 describe("SettingsPage - Update Checker UI", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockUser = { uid: "test-user-1", email: "test@example.com", displayName: "Tester" };
+    mockAgeStatus = "verified";
+    mockUser = { uid: "test-user-1", email: "test@example.com", displayName: "Tester", getIdToken: vi.fn(async () => "firebase-id-token") };
+    vi.stubGlobal("fetch", vi.fn(async () => ({ ok: true })));
     useSettingsStore.setState({
       checkOnAppStart: true,
       minimumCheckIntervalMinutes: 360,
@@ -55,7 +62,7 @@ describe("SettingsPage - Update Checker UI", () => {
     useSettingsStore.setState({ hideNsfw: true });
     await renderWithMount();
 
-    const toggle = screen.getByRole("checkbox", { name: "Tampilkan NSFW" }) as HTMLInputElement;
+    const toggle = screen.getByRole("checkbox", { name: "Tampilkan konten 18+" }) as HTMLInputElement;
     expect(toggle.checked).toBe(false);
 
     await act(async () => { fireEvent.click(toggle); });
@@ -123,11 +130,18 @@ describe("SettingsPage - Update Checker UI", () => {
     expect(useSettingsStore.getState().minimumCheckIntervalMinutes).toBe(180);
   });
 
+  it("locks the adult-content toggle for authenticated accounts without age proof", async () => {
+    mockAgeStatus = "unverified";
+    await renderWithMount();
+    expect(screen.queryByRole("checkbox", { name: "Tampilkan konten 18+" })).toBeNull();
+    expect(screen.getByText("Terkunci")).toBeDefined();
+  });
+
   it("restricts NSFW toggle when user is not logged in", async () => {
     mockUser = null;
     await renderWithMount();
 
-    expect(screen.queryByRole("checkbox", { name: "Tampilkan NSFW" })).toBeNull();
+    expect(screen.queryByRole("checkbox", { name: "Tampilkan konten 18+" })).toBeNull();
     expect(screen.getByText("Terkunci")).toBeDefined();
     expect(screen.getByRole("link", { name: /Masuk/i })).toBeDefined();
   });

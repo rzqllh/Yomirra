@@ -22,6 +22,7 @@ import {
 } from "@phosphor-icons/react";
 import { BackupRestoreView } from "@/components/settings/backup-restore-modal";
 import { useAuth } from "@/shared/hooks/use-auth";
+import { useVerifiedAge } from "@/shared/hooks/use-verified-age";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
@@ -59,6 +60,7 @@ export interface SettingsViewProps {
 
 export function SettingsView({ isOverlay: _isOverlay = false, onClose: _onClose }: SettingsViewProps) {
   const { user, logout } = useAuth();
+  const verifiedAge = useVerifiedAge(user);
   const clearHistory = useHistoryStore((state) => state.clearHistory);
   const clearLibrary = useLibraryStore((state) => state.clearLibrary);
   const clearDownloadsStore = useDownloadStore((state) => state.clearDownloads);
@@ -116,12 +118,35 @@ export function SettingsView({ isOverlay: _isOverlay = false, onClose: _onClose 
     }
   }, [mounted, refreshStorage]);
 
-  // Enforce auth requirement: guest users cannot turn NSFW ON
+  // Never retain adult opt-in after logout or when age verification is missing.
   React.useEffect(() => {
-    if (mounted && !user && !hideNsfw) {
+    if (mounted && verifiedAge !== "verified" && !hideNsfw) {
       setHideNsfw(true);
     }
-  }, [mounted, user, hideNsfw, setHideNsfw]);
+  }, [mounted, verifiedAge, hideNsfw, setHideNsfw]);
+
+  const changeAdultVisibility = async (showAdult: boolean) => {
+    if (!showAdult) {
+      setHideNsfw(true);
+      await fetch("/api/auth/adult-session", { method: "DELETE" }).catch(() => undefined);
+      return;
+    }
+    if (!user || verifiedAge !== "verified") return;
+    try {
+      const token = await user.getIdToken(true);
+      const response = await fetch("/api/auth/adult-session", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error("Age session rejected");
+      setHideNsfw(false);
+    } catch {
+      setHideNsfw(true);
+      toast.error("Konten 18+ belum bisa ditampilkan", {
+        description: "Sesi verifikasi usia gagal. Coba masuk kembali.",
+      });
+    }
+  };
 
   const handleClearAutomaticCache = async () => {
     setIsClearingCache(true);
@@ -487,21 +512,25 @@ export function SettingsView({ isOverlay: _isOverlay = false, onClose: _onClose 
           <div className="p-3">
             <SettingsItem
               icon={<IconWrapper variant="danger"><ShieldWarning size={19} weight="regular" /></IconWrapper>}
-              title="Tampilkan Konten 18+ (NSFW)"
+              title="Konten 18+"
               description={
-                user
-                  ? !hideNsfw
-                    ? "Sedang aktif. Sumber dan komik bertanda 18+ dapat diakses di seluruh aplikasi."
-                    : "Nonaktif (default). Sumber dan komik bertanda 18+ disembunyikan dari katalog."
-                  : "Fitur ini hanya dapat diaktifkan jika kamu sudah masuk dengan akun Google untuk verifikasi usia."
+                !user
+                  ? "Masuk untuk melihat apakah akunmu sudah terverifikasi usia."
+                  : verifiedAge === "checking"
+                    ? "Memeriksa status verifikasi usia."
+                    : verifiedAge !== "verified"
+                      ? "Usia akun belum terverifikasi. Konten 18+ disembunyikan."
+                      : hideNsfw
+                        ? "Konten 18+ disembunyikan."
+                        : "Konten 18+ ditampilkan untuk akun ini."
               }
               right={
-                user ? (
+                user && verifiedAge === "verified" ? (
                   <ToggleSwitch
                     id="nsfw-toggle"
                     checked={mounted ? !hideNsfw : false}
-                    onCheckedChange={(showNsfw) => setHideNsfw(!showNsfw)}
-                    label="Tampilkan NSFW"
+                    onCheckedChange={(showNsfw) => void changeAdultVisibility(showNsfw)}
+                    label="Tampilkan konten 18+"
                   />
                 ) : (
                   <span className="inline-flex items-center px-2 py-1 rounded-md bg-surface-muted text-2xs font-bold text-text-muted border border-border-subtle">
@@ -514,7 +543,7 @@ export function SettingsView({ isOverlay: _isOverlay = false, onClose: _onClose 
             {!user && (
               <div className="mt-2.5 flex items-center justify-between gap-3 p-2.5 rounded-sm bg-surface-muted/60 border border-border-subtle">
                 <p className="text-xs text-text-muted leading-relaxed">
-                  Masuk dengan akun Google untuk mengaktifkan konten dewasa (18+).
+                  Masuk untuk memeriksa status usia. Login saja tidak membuka konten 18+.
                 </p>
                 <Link
                   href="/account"

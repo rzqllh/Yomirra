@@ -60,6 +60,13 @@ describe("ReaderShell Header & Progress Bar", () => {
     useLibraryStore.setState({ items: {} });
   });
 
+  it("uses a dark contrast scope for dark reader chrome", () => {
+    const { container } = render(
+      <ReaderShell sourceId="srcA" mangaId="m1"><div>Content</div></ReaderShell>
+    );
+    expect(container.querySelector(".reader-contrast-scope.dark")).not.toBeNull();
+  });
+
   it("returns to detail with the logical parent without pushing a reader route behind it", () => {
     window.history.replaceState(
       {},

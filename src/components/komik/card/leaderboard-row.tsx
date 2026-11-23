@@ -129,7 +129,7 @@ export function LeaderboardRow({
             </div>
           ) : null}
           <MangaCardMeta className="max-w-28 truncate text-2xs text-text-muted sm:max-w-36 sm:text-xs">
-            {manga.latestChapter || "Katalog diperbarui"}
+            {manga.latestChapter || "Bab terbaru belum tersedia"}
           </MangaCardMeta>
         </div>
       </div>

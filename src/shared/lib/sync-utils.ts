@@ -243,6 +243,7 @@ export async function pushSourcePreferences(disabledSources: string[], hiddenFro
     await setDoc(doc(db, `users/${user.uid}/preferences`, "sources"), {
       disabledSources,
       hiddenFromHomeSources,
+      policyVersion: 1,
       updatedAt: new Date().toISOString()
     });
   } catch (e) {
@@ -250,7 +251,7 @@ export async function pushSourcePreferences(disabledSources: string[], hiddenFro
   }
 }
 
-export async function pullSourcePreferences(): Promise<{ disabledSources: string[], hiddenFromHomeSources: string[] } | null> {
+export async function pullSourcePreferences(): Promise<{ disabledSources: string[], hiddenFromHomeSources: string[], policyVersion: number } | null> {
   const { auth, db } = await initFirebase();
   if (!auth || !db) return null;
   const user = auth.currentUser;
@@ -262,7 +263,8 @@ export async function pullSourcePreferences(): Promise<{ disabledSources: string
       const data = snapshot.data();
       return {
         disabledSources: Array.isArray(data.disabledSources) ? data.disabledSources : [],
-        hiddenFromHomeSources: Array.isArray(data.hiddenFromHomeSources) ? data.hiddenFromHomeSources : []
+        hiddenFromHomeSources: Array.isArray(data.hiddenFromHomeSources) ? data.hiddenFromHomeSources : [],
+        policyVersion: Number.isInteger(data.policyVersion) ? data.policyVersion : 0
       };
     }
     return null;

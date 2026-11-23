@@ -333,7 +333,7 @@ export function ReaderShell({
   return (
     <div
       className={cn(
-        "relative min-h-screen w-full transition-[padding,background-color] duration-150",
+        "reader-contrast-scope relative min-h-screen w-full transition-[padding,background-color] duration-150",
         isDesktopPanelOpen && "md:pr-80",
         isLightReader ? "light" : "dark"
       )}

@@ -6,6 +6,7 @@ import { useHistoryStore } from "@/shared/store/history-store";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
+import { DEFAULT_DISABLED_SOURCE_IDS } from "@/shared/sources/source-defaults";
 import { useStatsStore } from "@/shared/store/stats-store";
 import { useUpdateStore } from "@/shared/store/update-store";
 
@@ -86,7 +87,7 @@ describe("shared-device cleanup", () => {
     expect(useCollectionStore.getState().collections).toEqual([]);
     expect(useUpdateStore.getState().items).toEqual({});
     expect(useStatsStore.getState().totalReadingTimeMs).toBe(0);
-    expect(useSourcePreferencesStore.getState().disabledSources).toEqual([]);
+    expect(useSourcePreferencesStore.getState().disabledSources).toEqual([...DEFAULT_DISABLED_SOURCE_IDS]);
     expect(useDownloadStore.getState().downloads).toEqual({});
 
     expect(useSettingsStore.getState().lastSyncedAt).toBeNull();

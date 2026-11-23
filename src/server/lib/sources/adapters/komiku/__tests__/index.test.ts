@@ -36,9 +36,10 @@ describe("KomikuSource", () => {
       </div>
     `;
 
-    vi.spyOn(source["client"], "getHtml").mockResolvedValue(mockHtml);
+    vi.spyOn(source["catalogClient"], "getHtml").mockResolvedValue(mockHtml);
 
     const result = await source.getPopular(1);
+    expect(source["catalogClient"].getHtml).toHaveBeenCalledWith("/other/hot/?orderby=meta_value_num");
     expect(result.mangas).toHaveLength(1);
     expect(result.mangas[0]).toEqual({
       id: "solo-leveling",
@@ -59,11 +60,52 @@ describe("KomikuSource", () => {
       </div>
     `;
 
-    vi.spyOn(source["client"], "getHtml").mockResolvedValue(mockHtml);
+    vi.spyOn(source["catalogClient"], "getHtml").mockResolvedValue(mockHtml);
 
     const result = await source.getPopular(1);
     expect(result.mangas).toHaveLength(1);
     expect(result.mangas[0].coverUrl).toBe("https://thumbnail.komiku.org/real-cover.webp");
+  });
+
+  it("uses the dedicated latest API catalog route", async () => {
+    const mock = vi.spyOn(source["catalogClient"], "getHtml").mockResolvedValue(
+      '<div class="bge"><div class="kan"><a href="/manga/example/"><h3>Example</h3></a></div><img src="https://img.komiku.org/cover.webp"></div>'
+    );
+    const result = await source.getLatest(2);
+    expect(mock).toHaveBeenCalledWith("/manga/page/2?orderby=modified");
+    expect(result.mangas[0]?.id).toBe("example");
+  });
+
+  it("normalizes absolute API links to safe manga slugs", async () => {
+    vi.spyOn(source["catalogClient"], "getHtml").mockResolvedValue(
+      '<div class="bge"><a href="https://api.komiku.org/manga/valid-slug/"><h3>Valid</h3></a><img src="https://cdn.komiku.org/cover.webp"></div>'
+    );
+    const result = await source.getPopular(1);
+    expect(result.mangas[0]?.id).toBe("valid-slug");
+  });
+
+  it("rejects untrusted absolute links", async () => {
+    vi.spyOn(source["catalogClient"], "getHtml").mockResolvedValue(
+      '<div class="bge"><a href="https://untrusted.example/manga/invalid/"><h3>Invalid</h3></a></div>'
+    );
+    expect((await source.getPopular(1)).mangas).toEqual([]);
+  });
+
+  it("searches through maintained API catalog with pagination", async () => {
+    const get = vi.spyOn(source["catalogClient"], "getHtml").mockResolvedValue(
+      '<div class="bge"><div class="kan"><a href="/manga/search-result/"><h3>Result</h3></a></div></div>'
+    );
+    const result = await source.search("hello", 2);
+    expect(get).toHaveBeenCalledWith("/manga/page/2", { s: "hello" });
+    expect(result.mangas[0]?.id).toBe("search-result");
+  });
+
+  it("prefers real page image data-src over lazy placeholder src", async () => {
+    vi.spyOn(source["client"], "getHtml").mockResolvedValue(
+      '<div id="Baca_Komik"><img src="/assets/lazy.jpg" data-src="https://img.komiku.org/real.webp"></div>'
+    );
+    const result = await source.getPages("chapter");
+    expect(result.pages[0]?.url).toBe("https://img.komiku.org/real.webp");
   });
 
   it("should parse manga detail HTML correctly", async () => {

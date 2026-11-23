@@ -7,9 +7,9 @@ export const sourceRegistry: SourceMetadata[] = [
     name: "Shinigami",
     description: "Indonesian translation source for manga and manhwa.",
     language: "id",
-    baseUrl: "https://shinigami.asia",
-    healthCheckUrl: "https://api.shngm.io/v1/manga/list?page=1&page_size=1",
-    icon: "https://s2.googleusercontent.com/s2/favicons?domain=shinigami.asia&sz=128",
+    baseUrl: "https://s1.shinigami.mx",
+    healthCheckUrl: "https://api.shinigami.io/v1/manga/list?offset=0&limit=1&sort=popularity",
+    icon: "https://s2.googleusercontent.com/s2/favicons?domain=s1.shinigami.mx&sz=128",
     version: "1.0.0",
     isEnabled: true,
     isInstalled: true,
@@ -50,7 +50,7 @@ export const sourceRegistry: SourceMetadata[] = [
       lastChecked: "Belum diperiksa",
       message: "Status sumber belum diperiksa."
     },
-    isNsfw: false,
+    isNsfw: true,
     capabilities: {
       popular: true,
       latest: true,
@@ -207,7 +207,7 @@ export const sourceRegistry: SourceMetadata[] = [
       lastChecked: "Belum diperiksa",
       message: "Status sumber belum diperiksa."
     },
-    isNsfw: false,
+    isNsfw: true,
     capabilities: {
       popular: true,
       latest: true,
@@ -257,8 +257,8 @@ export const sourceRegistry: SourceMetadata[] = [
     description: "Baca manga, manhwa & manhua online terlengkap bahasa Indonesia",
     language: "id",
     baseUrl: "https://v1.westmanga.my",
-    upstreamDomain: "data.mantweh.online",
-    healthCheckUrl: "https://data.mantweh.online/api/framework/config",
+    upstreamDomain: "v1.westmanga.my",
+    healthCheckUrl: "https://v1.westmanga.my/api/visit-token",
     icon: "https://s2.googleusercontent.com/s2/favicons?domain=westmanga.site&sz=128",
     version: "1.0.0",
     adapterVersion: "1.0.0",

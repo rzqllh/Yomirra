@@ -6,7 +6,7 @@ import { withCache, CACHE_TTL } from "@/server/lib/cache/redis-cache";
 
 import { createHash } from "crypto";
 
-import { assertSourceAccess, contentCacheKey, getRequestReadOptions } from "@/server/lib/sources/content-access";
+import { assertSourceAccess, contentCacheKey, getVerifiedRequestReadOptions } from "@/server/lib/sources/content-access";
 import { isContentVisible } from "@/shared/sources/content-policy";
 import { SourceError } from "@/server/lib/sources/error";
 import { loadSourceUpstream } from "@/server/lib/sources/source-upstream";
@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
   const sourcesParam = searchParams.get("sources");
   const pageParam = searchParams.get("page");
   const page = pageParam ? Number(pageParam) : 1;
-  const readOptions = getRequestReadOptions(req);
+  const readOptions = await getVerifiedRequestReadOptions(req);
   if (!Number.isInteger(page) || page < 1) return limitedJson({ error: { message: "Invalid page" } }, { status: 400 });
 
   const filters: Record<string, string | string[]> = {};

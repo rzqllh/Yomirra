@@ -52,6 +52,12 @@ describe("MangaCover", () => {
     expect(screen.getByText("Broken Manga")).not.toBeNull();
   });
 
+  it("explains a missing cover with a readable title", () => {
+    render(<MangaCover src="" alt="Test Title" fallbackTitle="Test Title" />);
+    expect(screen.getByText("Sampul tidak tersedia")).not.toBeNull();
+    expect(screen.getByText("Test Title").className).toContain("text-xs");
+  });
+
   it("loads a new cover URL after a provider image fails", () => {
     const { rerender } = render(<MangaCover src="https://uploads.mangadex.org/old.jpg" alt="Manga" />);
     fireEvent.error(screen.getByRole("img", { name: "Manga" }));

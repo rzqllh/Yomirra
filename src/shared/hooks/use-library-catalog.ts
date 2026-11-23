@@ -343,6 +343,7 @@ export function useLibraryCatalog() {
     data,
     isLoading,
     isError,
+    error,
     isFetching,
     refetch,
   } = useQuery({
@@ -498,7 +499,11 @@ export function useLibraryCatalog() {
     changeSource: (sourceId: string) => {
       const isAllowed = sourceId === "all" || eligibleSources.some((source) => source.id === sourceId);
       if (!isAllowed || sourceId === activeSourceId) return;
-      setSourceChangeNotice(sourceId === "all" ? "Menampilkan semua sumber aktif." : "Sumber berubah. Filter khusus sumber direset.");
+      const hadSourceFilters =
+        selectedGenres.length > 0 || excludedGenres.length > 0 ||
+        selectedFormats.length > 0 || selectedStatuses.length > 0 ||
+        sort !== "popular";
+      setSourceChangeNotice(hadSourceFilters ? "Filter sumber direset." : "");
       const params = new URLSearchParams(searchParams.toString());
       params.set("source", sourceId);
       params.delete("page");
@@ -521,6 +526,7 @@ export function useLibraryCatalog() {
     isDisabled,
     isLoading,
     isError,
+    error,
     isFetching,
     refetch,
     data,

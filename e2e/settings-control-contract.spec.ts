@@ -9,7 +9,7 @@ test("Settings controls persist preferences and expose honest, accessible states
   // Guests cannot enable restricted content; authenticated opt-in is a separate auth-gated flow.
   await expect(page.getByText("Terkunci", { exact: true })).toBeVisible();
   await expect(page.getByRole("checkbox", { name: "Tampilkan NSFW", exact: true })).toHaveCount(0);
-  await expect(page.getByText(/Masuk dengan akun Google untuk mengaktifkan konten dewasa/)).toBeVisible();
+  await expect(page.getByText("Masuk untuk memeriksa status usia. Login saja tidak membuka konten 18+.")).toBeVisible();
   await expect(page.getByRole("checkbox", { name: "Hemat data", exact: true })).not.toBeChecked();
   await page.locator('label[for="data-saver"]').click();
   await expect(page.getByRole("checkbox", { name: "Hemat data", exact: true })).toBeChecked();

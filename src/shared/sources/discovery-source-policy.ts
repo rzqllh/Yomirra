@@ -1,11 +1,12 @@
 import type { SourceMetadata } from "@/shared/sources/source-types";
 import { isSourceContentVisible } from "./content-policy";
+import { DEFAULT_DISABLED_SOURCE_IDS } from "./source-defaults";
 
 // A monitoring outage must not become an automatic access kill-switch.
 const NON_OPERATIONAL_STATUSES = new Set(["in-fix", "in-dev"]);
 
 export function parseDisabledSourceIdsCookie(value?: string): string[] {
-  if (!value) return [];
+  if (!value) return [...DEFAULT_DISABLED_SOURCE_IDS];
 
   try {
     const parsed = JSON.parse(decodeURIComponent(value));

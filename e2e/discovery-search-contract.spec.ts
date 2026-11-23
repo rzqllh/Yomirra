@@ -3,7 +3,18 @@ import { test, expect, type Page } from "./fixtures";
 // Fixture-backed requests must reach Playwright routing. The PWA suite exercises the real worker.
 test.use({ serviceWorkers: "block" });
 async function prepareDiscovery(page: Page) {
+  // These fixtures test explicitly selected sources, including providers
+  // that are intentionally disabled by default for ordinary users.
+  await page.context().addCookies([{
+    name: "yomirra-disabled-sources",
+    value: encodeURIComponent("[]"),
+    url: process.env.BASE_URL || "http://localhost:3000",
+  }]);
   await page.addInitScript(() => {
+    localStorage.setItem("yomirra-source-preferences", JSON.stringify({
+      state: { disabledSources: [], hiddenFromHomeSources: [] },
+      version: 2,
+    }));
     localStorage.setItem("yomirra-onboarding", JSON.stringify({ state: { hasCompletedOnboarding: true, _hasHydrated: true }, version: 0 }));
     localStorage.setItem("yomirra-search-filters", JSON.stringify({ state: { selectedSources: ["komiku"], hasCustomizedSources: true, genres: [], formats: [], status: "", sort: "popular" }, version: 2 }));
   });

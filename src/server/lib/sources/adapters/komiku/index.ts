@@ -39,6 +39,14 @@ export class KomikuSource implements MangaSource {
     Referer: "https://komiku.org/",
   });
 
+  // Catalog endpoints are separate from the reader HTML domain.
+  private catalogClient = new HttpClient({
+    baseUrl: "https://api.komiku.org",
+    allowedHosts: ["api.komiku.org"],
+    timeoutMs: 10000,
+    defaultHeaders: { "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7" },
+  });
+
   private extractCoverUrl($img: any): string {
     if (!$img || !$img.length) return "";
     const rawSrc = $img.attr("src") || "";
@@ -61,7 +69,7 @@ export class KomikuSource implements MangaSource {
     const mangas: any[] = [];
     const seenIds = new Set<string>();
 
-    $(".ls4j, .ls12v, .ls4, .ls12, .bmaster, .manga-card, div[class*='ls'], article").each((_, el) => {
+    $(".bge, .ls4j, .ls12v, .ls4, .ls12, .bmaster, .manga-card, div[class*='ls'], article").each((_, el) => {
       const $el = $(el);
       const title =
         $el.find("h4 a, h3 a").first().text().trim() ||
@@ -69,19 +77,23 @@ export class KomikuSource implements MangaSource {
         $el.find("a[href*='/manga/'], a[href*='/komik/']").text().trim() ||
         $el.find("img").attr("alt")?.replace(/^baca\s+/i, "").trim() ||
         "";
-      const a = $el.find("h4 a, h3 a, a[href*='/manga/'], a[href*='/komik/']").first();
+      const a = $el.find("h4 a, h3 a, .kan a:has(h3), .bgei a, a[href*='/manga/'], a[href*='/komik/']").first();
       const href = a.attr("href") || "";
       const coverUrl = this.extractCoverUrl($el.find("img").first());
-      const latestChapter = $el.find(".ls4l, .ls2l, .ch").first().text().trim();
+      const latestChapter = $el.find(".ls4l, .ls2l, .ch, .new1").first().text().trim();
       const scoreRaw = $el.find(".rating, .score, .skor, .num, i[class*='star']").first().text().replace(/[^\d.]/g, "").trim();
       const score = parseFloat(scoreRaw) || undefined;
 
       if (href && title && (href.includes("/manga/") || href.includes("/komik/"))) {
-        const id = href
-          .replace(/https?:\/\/komiku\.org/g, "")
-          .replace(/^\/manga\//, "")
-          .replace(/^\/komik\//, "")
-          .replace(/\//g, "");
+        let id = "";
+        try {
+          const link = new URL(href, this.baseUrl);
+          if (["komiku.org", "api.komiku.org"].includes(link.hostname)) {
+            id = link.pathname.match(/^\/(?:manga|komik)\/([^/]+)\/?$/i)?.[1] ?? "";
+          }
+        } catch {
+          // Ignore invalid links in upstream HTML.
+        }
 
         if (id && !seenIds.has(id)) {
           seenIds.add(id);
@@ -122,93 +134,34 @@ export class KomikuSource implements MangaSource {
     }
 
     const hasNextPage =
-      $(".pagination a[href*='halaman='], .pagination a.next").length > 0 ||
-      mangas.length >= 20;
+      $(".pagination a[href*='halaman='], .pagination a.next, span[hx-get]").length > 0 ||
+      mangas.length >= 10;
 
     return { mangas, hasNextPage };
   }
 
   async getPopular(page: number): Promise<MangaPageResult> {
-    const html = await this.client.getHtml(`/daftar-komik/?halaman=${page}`);
+    const path = page <= 1 ? "/other/hot/?orderby=meta_value_num"
+      : `/other/hot/page/${page}/?orderby=meta_value_num`;
+    const html = await this.catalogClient.getHtml(path);
     return this.parseMangaList(html);
   }
 
   async getLatest(page: number): Promise<MangaPageResult> {
-    const url = page === 1 ? "/" : `/daftar-komik/?halaman=${page}`;
-    const html = await this.client.getHtml(url);
+    const path = page <= 1 ? "/manga?orderby=modified"
+      : `/manga/page/${page}?orderby=modified`;
+    const html = await this.catalogClient.getHtml(path);
     return this.parseMangaList(html);
   }
 
   async search(
     query: string,
     page: number,
-    filters?: Record<string, string | string[]>
+    _filters?: Record<string, string | string[]>
   ): Promise<MangaPageResult> {
-    if (!query || query.trim().length === 0) {
-      return this.getPopular(page);
-    }
-
-    try {
-      const apiRes = await fetch(
-        `https://api.komiku.org/?s=${encodeURIComponent(query.trim())}`,
-        {
-          headers: {
-            "User-Agent":
-              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-            Referer: "https://komiku.org/",
-          },
-          signal: AbortSignal.timeout(8000),
-        }
-      );
-
-      if (apiRes.ok) {
-        const html = await apiRes.text();
-        const $ = cheerio.load(html);
-        const mangas: any[] = [];
-        const seenIds = new Set<string>();
-
-        $(".bge").each((_, el) => {
-          const $el = $(el);
-          const a = $el.find(".kan a, .bgei a").first();
-          const href = a.attr("href") || "";
-          const title = $el.find(".kan h3, h3").first().text().trim();
-          const coverUrl = this.extractCoverUrl($el.find("img").first());
-          const latestChapter = $el.find(".new1").last().text().replace(/\s+/g, " ").trim();
-
-          if (
-            href &&
-            title &&
-            title !== "Untitled" &&
-            (href.includes("/manga/") || href.includes("/komik/"))
-          ) {
-            const id = href
-              .replace(/https?:\/\/komiku\.org/g, "")
-              .replace(/^\/manga\//, "")
-              .replace(/^\/komik\//, "")
-              .replace(/\//g, "");
-
-            if (id && !seenIds.has(id)) {
-              seenIds.add(id);
-              mangas.push({
-                id,
-                title,
-                coverUrl,
-                latestChapter: latestChapter || undefined,
-                format: "Manga",
-              });
-            }
-          }
-        });
-
-        if (mangas.length > 0) {
-          return { mangas, hasNextPage: false };
-        }
-      }
-    } catch {
-      // Fallback to standard html search if API endpoint fails
-    }
-
-    const html = await this.client.getHtml(`/?s=${encodeURIComponent(query.trim())}`);
+    if (!query?.trim()) return this.getPopular(page);
+    const path = page <= 1 ? "/manga" : `/manga/page/${page}`;
+    const html = await this.catalogClient.getHtml(path, { s: query.trim() });
     return this.parseMangaList(html);
   }
 
@@ -303,9 +256,9 @@ export class KomikuSource implements MangaSource {
     $("#Baca_Komik img, #baca_komik img, .baca-komik img, #pembaca img").each((_, el) => {
       if ($(el).parent().is("a")) return;
       let src =
-        $(el).attr("src") ||
         $(el).attr("data-src") ||
         $(el).attr("lazy-src") ||
+        $(el).attr("src") ||
         "";
       if (!src || src.includes(".gif")) return;
       src = src.trim().startsWith("//") ? `https:${src.trim()}` : src.trim();

@@ -9,6 +9,6 @@ describe("public source restriction classification", () => {
 
   it("keeps source-level restricted counting driven by registry metadata", () => {
     const restricted = sourceRegistry.filter((source) => source.isNsfw);
-    expect(restricted).toHaveLength(1);
+    expect(restricted.map((source) => source.id).sort()).toEqual(["doujindesu", "komikindo", "komiknesia"]);
   });
 });

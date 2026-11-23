@@ -340,3 +340,34 @@ export async function requireAdminAuth(req: Request): Promise<AdminAuthGuard> {
     };
   }
 }
+
+
+// The claim is issued only by a trusted age-verification administrator.
+// Firebase login or email_verified alone does not prove the account holder's age.
+export const ADULT_SESSION_COOKIE = "yomirra_adult_session";
+const ADULT_SESSION_MS = 60 * 60 * 1000;
+
+export async function createVerifiedAdultSession(idToken: string): Promise<string | null> {
+  if (!idToken || !isFirebaseAdminConfigured()) return null;
+  const auth = await getAdminAuth();
+  if (!auth) return null;
+  try {
+    const decoded = await auth.verifyIdToken(idToken, true);
+    if (!decoded.uid || decoded.age_verified !== true) return null;
+    return await auth.createSessionCookie(idToken, { expiresIn: ADULT_SESSION_MS });
+  } catch {
+    return null;
+  }
+}
+
+export async function verifyVerifiedAdultSession(session: string | null | undefined): Promise<boolean> {
+  if (!session || !isFirebaseAdminConfigured()) return false;
+  const auth = await getAdminAuth();
+  if (!auth) return false;
+  try {
+    const decoded = await auth.verifySessionCookie(session, true);
+    return Boolean(decoded.uid) && decoded.age_verified === true;
+  } catch {
+    return false;
+  }
+}

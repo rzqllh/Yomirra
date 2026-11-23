@@ -15,8 +15,8 @@ const mockFeeds: PopularSourceFeed[] = [
     loadFailed: false,
   },
   {
-    sourceId: "komikindo",
-    sourceName: "Komikindo",
+    sourceId: "komiku-ii",
+    sourceName: "Komiku II",
     mangas: [
       { id: "m3", title: "One Piece", coverUrl: "/op.jpg", latestChapter: "1100" },
     ],
@@ -52,7 +52,7 @@ describe("PopularPageView (Unified Popular Architecture - D-03)", () => {
     render(<PopularPageView feeds={mockFeeds} />);
     expect(screen.getByRole("group", { name: "Filter sumber komik" })).toBeTruthy();
     expect(screen.queryByRole("tablist")).toBeNull();
-    const source = screen.getByRole("button", { name: /Komikindo/i });
+    const source = screen.getByRole("button", { name: /Komiku II/i });
     fireEvent.click(source);
     expect(source.getAttribute("aria-pressed")).toBe("true");
   });
@@ -66,7 +66,7 @@ describe("PopularPageView (Unified Popular Architecture - D-03)", () => {
     // Check Source filter pills
     expect(screen.getByRole("button", { name: /Semua Sumber/i })).toBeTruthy();
     expect(screen.getByRole("button", { name: /Shinigami/i })).toBeTruthy();
-    expect(screen.getByRole("button", { name: /Komikindo/i })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Komiku II/i })).toBeTruthy();
 
     // Broken source has 'Down' badge
     expect(screen.getByText("Down")).toBeTruthy();
@@ -79,11 +79,11 @@ describe("PopularPageView (Unified Popular Architecture - D-03)", () => {
   it("filters to single source when clicking that source's pill", () => {
     render(<PopularPageView feeds={mockFeeds} mal={mockMalFeed} />);
 
-    // Click Komikindo pill
-    const komikindoButton = screen.getByRole("button", { name: /Komikindo/i });
-    fireEvent.click(komikindoButton);
+    // Click Komiku II pill
+    const komikuIiButton = screen.getByRole("button", { name: /Komiku II/i });
+    fireEvent.click(komikuIiButton);
 
-    expect(screen.getByRole("heading", { name: "Populer di Komikindo" })).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Populer di Komiku II" })).toBeTruthy();
     expect(screen.getByText("One Piece")).toBeTruthy();
     expect(screen.queryByText("Peringkat lintas sumber")).toBeNull();
   });

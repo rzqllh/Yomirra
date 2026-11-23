@@ -28,8 +28,15 @@ describe("DomainResolver (D-001)", () => {
   it("resolves separate frontend and API domains for sources like Shinigami", async () => {
     const frontend = await domainResolver.resolveDomain("shinigami", "frontend");
     const api = await domainResolver.resolveDomain("shinigami", "api");
-    expect(frontend).toBe("https://shinigami.asia");
-    expect(api).toBe("https://api.shngm.io");
+    expect(frontend).toBe("https://s1.shinigami.mx");
+    expect(api).toBe("https://api.shinigami.io");
+  });
+
+  it("rejects migrated Shinigami and WestManga legacy cached hosts", async () => {
+    await domainResolver.recordWorkingDomain("shinigami", "https://api.shngm.io", "api");
+    await domainResolver.recordWorkingDomain("westmanga", "https://data.mantweh.online", "api");
+    expect(await domainResolver.resolveDomain("shinigami", "api")).toBe("https://api.shinigami.io");
+    expect(await domainResolver.resolveDomain("westmanga", "api")).toBe("https://v1.westmanga.my");
   });
 
   it("records working domain in cache and returns cached domain on subsequent resolutions", async () => {

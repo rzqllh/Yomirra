@@ -38,11 +38,11 @@ export const SOURCE_DOMAINS: Record<string, SourceDomainConfig> = {
   shinigami: {
     sourceId: "shinigami",
     frontend: {
-      defaultDomain: "https://shinigami.asia",
-      mirrors: ["https://11.shinigami.asia", "https://c.shinigami.asia"],
+      defaultDomain: "https://s1.shinigami.mx",
+      mirrors: [],
     },
     api: {
-      defaultDomain: "https://api.shngm.io",
+      defaultDomain: "https://api.shinigami.io",
       mirrors: [],
     },
   },
@@ -119,7 +119,7 @@ export const SOURCE_DOMAINS: Record<string, SourceDomainConfig> = {
       mirrors: ["https://v1.westmanga.top"],
     },
     api: {
-      defaultDomain: "https://data.mantweh.online",
+      defaultDomain: "https://v1.westmanga.my",
       mirrors: [],
     },
   },
@@ -166,7 +166,15 @@ export class DomainResolver {
 
     const cached = await this.getCachedDomain(normalizedId, role);
     if (cached && cached.status === "verified") {
-      return cached.currentHost;
+      // These two adapters migrated to new fixed upstream API contracts.
+      // Reject stale cached hosts from before the migration without touching
+      // unrelated source mirrors or administrator environment overrides.
+      const contractMigrated = normalizedId === "shinigami" || normalizedId === "westmanga";
+      const curatedHosts = [targetConfig.defaultDomain, ...targetConfig.mirrors]
+        .map(host => host.replace(/\/+$/, "").toLowerCase());
+      if (!contractMigrated || curatedHosts.includes(cached.currentHost.toLowerCase())) {
+        return cached.currentHost;
+      }
     }
 
     // 3 & 4. Return default domain from configuration

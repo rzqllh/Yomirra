@@ -3,7 +3,7 @@ import { z } from "zod";
 import { applyRateLimitHeaders, checkRateLimitPolicy, createRateLimitRejection } from "@/server/lib/security/rate-limit";
 import { readBoundedJson } from "@/server/lib/security/read-bounded-json";
 import { rankSearchIntelligence } from "@/server/lib/search/search-intelligence-service";
-import { getRequestReadOptions } from "@/server/lib/sources/content-access";
+import { getVerifiedRequestReadOptions } from "@/server/lib/sources/content-access";
 
 export const dynamic = "force-dynamic";
 
@@ -77,6 +77,6 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const result = await rankSearchIntelligence({ ...parsed.data, hideNsfw: getRequestReadOptions(request).hideNsfw !== false });
+  const result = await rankSearchIntelligence({ ...parsed.data, hideNsfw: (await getVerifiedRequestReadOptions(request)).hideNsfw !== false });
   return applyRateLimitHeaders(NextResponse.json({ data: result }), rateLimit);
 }

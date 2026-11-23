@@ -30,11 +30,13 @@ import {
 import { cn } from "@/shared/utils/cn";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
+import { getCatalogErrorMessage } from "@/shared/sources/catalog-error-message";
 
 export interface LibraryResultsProps {
   isDisabled: boolean;
   isLoading: boolean;
   isError: boolean;
+  error?: unknown;
   isFetching: boolean;
   refetch: () => void;
   mangas: any[];
@@ -63,6 +65,7 @@ export function LibraryResults({
   isDisabled,
   isLoading,
   isError,
+  error,
   isFetching,
   refetch,
   mangas,
@@ -137,7 +140,7 @@ export function LibraryResults({
       <EmptyState
         icon={<SmileySad size={40} className="text-text-muted" weight="duotone" />}
         title="Katalog gagal dimuat"
-        description="Data dari sumber ini belum bisa dimuat. Coba lagi sebentar."
+        description={getCatalogErrorMessage(error)}
         action={
           <Button onClick={() => refetch()} variant="outline" className="mt-4 rounded-xl shadow-sm font-bold">
             Coba lagi
