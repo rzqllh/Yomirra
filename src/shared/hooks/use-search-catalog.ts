@@ -21,7 +21,8 @@ import { sourceQueryOptions } from "@/shared/sources/source-query-options";
 import { clusterCanonicalResults, filterVerifiedSourceBindings, reconcileCatalogRows, verifiedCatalogKey } from "@/shared/lib/canonical-search";
 import { classifyContent } from "@/shared/sources/content-policy";
 import { useLibraryStore } from "@/shared/store/library-store";
-import { groupVerifiedCatalogEntries, indexVerifiedGroups } from "@/shared/lib/canonical-identity";
+import { groupVerifiedCatalogEntries, } from "@/shared/lib/canonical-identity";
+import { indexDiscoveryCatalog } from "@/shared/lib/reviewed-catalog";
 import {
   applySearchTagsToFilters,
   buildHardFilterTags,
@@ -102,7 +103,7 @@ export function useSearchCatalog() {
 
   const hideNsfw = useSettingsStore((state) => state.hideNsfw);
   const savedLibraryMap = useLibraryStore((state) => state.items);
-  const verifiedSourceIndex = React.useMemo(() => indexVerifiedGroups(
+  const verifiedSourceIndex = React.useMemo(() => indexDiscoveryCatalog(
     groupVerifiedCatalogEntries(Object.values(savedLibraryMap).filter(item => item.isBookmarked !== false))
   ), [savedLibraryMap]);
 

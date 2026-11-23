@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { UserCircle, SignOut, MagnifyingGlass, Gear, Question } from "@phosphor-icons/react";
+import { UserCircle, SignOut, MagnifyingGlass, Question } from "@phosphor-icons/react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
@@ -220,14 +220,6 @@ export function TopNav() {
                         className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors text-left"
                       >
                         <UserCircle size={18} weight="regular" /> Akun & Sinkronisasi
-                      </Link>
-
-                      <Link
-                        href="/settings"
-                        onClick={() => setIsProfileOpen(false)}
-                        className="flex min-h-11 items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary hover:bg-surface-hover transition-colors text-left"
-                      >
-                        <Gear size={18} weight="regular" /> Pengaturan
                       </Link>
 
                       <Link

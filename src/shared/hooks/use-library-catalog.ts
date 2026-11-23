@@ -17,7 +17,8 @@ import { useLibraryStore } from "@/shared/store/library-store";
 import { useCollectionStore } from "@/shared/store/collection-store";
 import type { MangaKey } from "@/shared/types/collection";
 import type { MangaItem } from "@/shared/sources/source-types";
-import { canonicalSourceKey, groupVerifiedCatalogEntries, indexVerifiedGroups } from "@/shared/lib/canonical-identity";
+import { canonicalSourceKey, groupVerifiedCatalogEntries, } from "@/shared/lib/canonical-identity";
+import { indexDiscoveryCatalog } from "@/shared/lib/reviewed-catalog";
 import { clusterCanonicalResults, type SourceBinding } from "@/shared/lib/canonical-search";
 
 type CatalogManga = MangaItem & { sourceId?: string; sourceBindings?: SourceBinding[] };
@@ -69,7 +70,7 @@ export function useLibraryCatalog() {
   } = filterStore;
 
   const libraryItems = useLibraryStore(state => state.items);
-  const verifiedIndex = React.useMemo(() => indexVerifiedGroups(groupVerifiedCatalogEntries(Object.values(libraryItems).filter(item => item.isBookmarked !== false))), [libraryItems]);
+  const verifiedIndex = React.useMemo(() => indexDiscoveryCatalog(groupVerifiedCatalogEntries(Object.values(libraryItems).filter(item => item.isBookmarked !== false))), [libraryItems]);
   const {
     collections,
     membershipsByManga,

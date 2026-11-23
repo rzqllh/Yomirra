@@ -41,7 +41,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { CanonicalSourceDialog, isCanonicalBindingAvailable } from "../canonical-source-dialog";
+import { CanonicalSourceDialog, eligibleCanonicalBindings } from "../canonical-source-dialog";
 import type { SourceBinding } from "@/shared/lib/canonical-search";
 import type { MangaKey } from "@/shared/types/collection";
 import type { BaseCardProps } from "./types";
@@ -289,10 +289,7 @@ export function MangaCard({
   const isUnavailable = sourceObj?.status === "unavailable" || sourceObj?.status === "in-fix";
 
   const effectiveBindings = (sourceBindings || (manga as any)?.sourceBindings || []) as SourceBinding[];
-  const availableBindings = effectiveBindings.filter((binding) =>
-    isCanonicalBindingAvailable(binding, disabledSources) &&
-    (!hideNsfw || classifyContent(binding) !== "NSFW")
-  );
+  const availableBindings = eligibleCanonicalBindings(effectiveBindings, disabledSources, hideNsfw);
   const isMultiSource = availableBindings.length > 1;
   const noEligibleSource =
     (effectiveBindings.length > 0 && availableBindings.length === 0) ||

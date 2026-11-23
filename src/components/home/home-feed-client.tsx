@@ -9,6 +9,7 @@ import {
   canonicalGroupPreferenceKey, canonicalGroupPreferenceAliases,
 } from "@/shared/lib/canonical-identity";
 import { resolveCanonicalResume } from "@/shared/lib/canonical-resume";
+import { indexDiscoveryCatalog } from "@/shared/lib/reviewed-catalog";
 import { getCanonicalSavedDetailHref, getMangaDetailHref, getReaderHref } from "@/shared/lib/routes";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { useSettingsStore } from "@/shared/store/settings-store";
@@ -228,7 +229,7 @@ export function HomeFeedClient({
     filteredLatest.length > 0 ? filteredLatest : filteredPopular;
 
   const verifiedDiscoveryIndex = React.useMemo(
-    () => indexVerifiedGroups(groupVerifiedCatalogEntries(
+    () => indexDiscoveryCatalog(groupVerifiedCatalogEntries(
       Object.values(savedLibraryMap).filter(item => item.isBookmarked !== false),
     )),
     [savedLibraryMap],

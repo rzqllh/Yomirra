@@ -13,6 +13,9 @@ import {
 } from "@/shared/lib/popular-ranking";
 
 import type { MalPopularFeed } from "@/shared/types/mal";
+import { useLibraryStore } from "@/shared/store/library-store";
+import { groupVerifiedCatalogEntries } from "@/shared/lib/canonical-identity";
+import { indexDiscoveryCatalog } from "@/shared/lib/reviewed-catalog";
 import { MalPopularSection } from "./mal-popular-section";
 
 interface PopularPageViewProps {
@@ -24,7 +27,9 @@ export function PopularPageView({ feeds, mal }: PopularPageViewProps) {
   const [mode, setMode] = React.useState<"local" | "mal">("local");
   const [selectedSourceId, setSelectedSourceId] = React.useState<string>("all");
 
-  const aggregated = React.useMemo(() => aggregatePopularFeeds(feeds), [feeds]);
+  const saved = useLibraryStore(state => state.items);
+  const verifiedIndex = React.useMemo(() => indexDiscoveryCatalog(groupVerifiedCatalogEntries(Object.values(saved).filter(item => item.isBookmarked !== false))), [saved]);
+  const aggregated = React.useMemo(() => aggregatePopularFeeds(feeds, verifiedIndex), [feeds, verifiedIndex]);
   const successfulFeeds = React.useMemo(
     () => feeds.filter((feed) => !feed.loadFailed && feed.mangas.length > 0),
     [feeds]
@@ -65,7 +70,7 @@ export function PopularPageView({ feeds, mal }: PopularPageViewProps) {
         />
         {mode === "local" && (
           <p className="text-xs leading-relaxed text-text-muted sm:max-w-md sm:text-right">
-            Urutan gabungan menghitung posisi peringkat di setiap sumber aktif, bukan menyamakan metrik angka mentah.
+            Peringkat gabungan menggunakan posisi komik di setiap sumber aktif.
           </p>
         )}
       </div>
@@ -108,7 +113,7 @@ export function PopularPageView({ feeds, mal }: PopularPageViewProps) {
                     Peringkat lintas sumber
                   </h2>
                   <p className="mt-0.5 text-xs text-text-muted">
-                    Menampilkan komik teratas melalui agregasi Reciprocal Rank Fusion (RRF) dari seluruh katalog sumber aktif.
+                    Komik dari beberapa sumber digabung hanya jika identitas karyanya terverifikasi.
                   </p>
                 </div>
 

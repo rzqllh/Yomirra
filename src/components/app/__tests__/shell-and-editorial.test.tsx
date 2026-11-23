@@ -133,7 +133,7 @@ describe('App Shell & Navigation Deduplication Pass', () => {
 
       render(<TopNav />);
 
-      const profileBtn = screen.getByRole('button', { name: 'Profil Pengguna' });
+      const profileBtn = screen.getByRole('button', { name: 'Profil pengguna' });
       fireEvent.click(profileBtn);
 
       // Akun & Sinkronisasi is present
@@ -143,6 +143,8 @@ describe('App Shell & Navigation Deduplication Pass', () => {
 
       // Pengaturan is REMOVED from profile dropdown (Sidebar owns it!)
       expect(screen.queryByRole('link', { name: /pengaturan/i })).toBeNull();
+      expect(screen.queryByRole('link', { name: /bahasa/i })).toBeNull();
+      expect(screen.getByRole('link', { name: /pusat bantuan/i }).getAttribute('href')).toBe('/help');
     });
   });
 
