@@ -158,7 +158,7 @@ export const useSettingsStore = create<SettingsState>()(
         syncReadPreferenceCookie(state?.hideNsfw !== false);
         if (state) syncOtherReadCookies(state);
       },
-      version: 3,
+      version: 4,
       migrate: (persistedState: any, version: number) => {
         if (version === 0) {
           persistedState.checkOnAppStart = true;
@@ -177,11 +177,15 @@ export const useSettingsStore = create<SettingsState>()(
             persistedState.minimumCheckIntervalMinutes = 360;
           }
         }
+        if (version < 4) {
+          // An older local preference is not proof of age; require a fresh opt-in.
+          persistedState.hideNsfw = true;
+        }
         return persistedState as SettingsState;
       },
       partialize: (state) => {
-        // Remove transient states from persistence
-        return state;
+        // Adult visibility is session-scoped: every new app session starts hidden.
+        return { ...state, hideNsfw: true };
       },
     }
   )

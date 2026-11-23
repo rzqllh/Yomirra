@@ -80,8 +80,8 @@ describe("PopularPageView (Unified Popular Architecture - D-03)", () => {
     render(<PopularPageView feeds={mockFeeds} mal={mockMalFeed} />);
 
     // Click Komiku II pill
-    const komiku-iiButton = screen.getByRole("button", { name: /Komiku II/i });
-    fireEvent.click(komiku-iiButton);
+    const komikuIiButton = screen.getByRole("button", { name: /Komiku II/i });
+    fireEvent.click(komikuIiButton);
 
     expect(screen.getByRole("heading", { name: "Populer di Komiku II" })).toBeTruthy();
     expect(screen.getByText("One Piece")).toBeTruthy();
