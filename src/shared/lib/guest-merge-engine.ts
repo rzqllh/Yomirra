@@ -3,6 +3,9 @@ export type { MilestoneComparison } from "@/shared/lib/milestone-comparator";
 export { commitMergedDataToFirestore, commitMergedDataSequentially, PartialBatchCommitError, getMergeRecoveryJournal, clearMergeRecoveryJournal } from "@/shared/lib/firestore-merge-committer";
 export type { MergeRecoveryJournal } from "@/shared/lib/firestore-merge-committer";
 import { compareMilestones } from "@/shared/lib/milestone-comparator";
+import { planPreferredSourceMerge, type PreferredSourceConflict } from "@/shared/lib/canonical-preference-merge";
+import { readCanonicalPreferredSources, commitCanonicalPreferredSources } from "@/shared/lib/canonical-preference-cloud";
+import { useSettingsStore } from "@/shared/store/settings-store";
 import { commitMergedDataToFirestore } from "@/shared/lib/firestore-merge-committer";
 import type { LibraryItem } from "@/shared/store/library-store";
 import type { HistoryItem } from "@/shared/store/history-store";
@@ -14,6 +17,7 @@ import { setLocalDataOwnerUid } from "@/shared/lib/local-data-owner";
 export interface GuestSnapshot {
   library: Record<string, LibraryItem>;
   history: Record<string, HistoryItem>;
+  preferredSources?: Record<string, string>;
 }
 
 export interface TombstoneRecord {
@@ -24,6 +28,7 @@ export interface TombstoneRecord {
 export interface CloudSnapshot {
   library: Record<string, LibraryItem>;
   history: Record<string, HistoryItem>;
+  preferredSources?: Record<string, string>;
   libraryTombstones?: Record<string, TombstoneRecord>;
   historyTombstones?: Record<string, TombstoneRecord>;
 }
@@ -48,6 +53,7 @@ export interface MergeDiff {
   guestOnlyHistoryCount: number;
   cloudOnlyHistoryCount: number;
   conflictingHistoryCount: number;
+  conflictingPreferredSources: PreferredSourceConflict[];
   totalMergedLibraryCount: number;
   totalMergedHistoryCount: number;
 }
@@ -80,7 +86,7 @@ function getSafeTime(val: string | number | undefined | null): number {
 export function shouldPromptGuestMerge(guest: GuestSnapshot): boolean {
   const libCount = Object.keys(guest?.library || {}).length;
   const histCount = Object.keys(guest?.history || {}).length;
-  return libCount > 0 || histCount > 0;
+  return libCount > 0 || histCount > 0 || Object.keys(guest?.preferredSources || {}).length > 0;
 }
 
 export async function fetchCloudSnapshot(uid: string): Promise<CloudSnapshot> {
@@ -134,9 +140,12 @@ export async function fetchCloudSnapshot(uid: string): Promise<CloudSnapshot> {
     throw error;
   }
 
+  const preferredSources = await readCanonicalPreferredSources(uid);
+
   return {
     library,
     history,
+    preferredSources,
     libraryTombstones,
     historyTombstones,
   };
@@ -197,16 +206,18 @@ export function computeMergeDiff(
 
   const totalMergedLibraryCount = new Set([...guestLibKeys, ...cloudLibKeys]).size;
   const totalMergedHistoryCount = new Set([...guestHistKeys, ...cloudHistKeys]).size;
+  const prefPlan = planPreferredSourceMerge(guest.preferredSources ?? {}, cloud.preferredSources ?? {});
 
   return {
-    hasGuestData: guestLibKeys.length > 0 || guestHistKeys.length > 0,
-    hasCloudData: cloudLibKeys.length > 0 || cloudHistKeys.length > 0,
+    hasGuestData: guestLibKeys.length > 0 || guestHistKeys.length > 0 || Object.keys(guest.preferredSources ?? {}).length > 0,
+    hasCloudData: cloudLibKeys.length > 0 || cloudHistKeys.length > 0 || Object.keys(cloud.preferredSources ?? {}).length > 0,
     guestOnlyLibrary,
     cloudOnlyLibrary,
     conflictingLibrary,
     guestOnlyHistoryCount,
     cloudOnlyHistoryCount,
     conflictingHistoryCount,
+    conflictingPreferredSources: prefPlan.conflicts,
     totalMergedLibraryCount,
     totalMergedHistoryCount,
   };
@@ -358,6 +369,7 @@ export interface ExecuteGuestMergeParams {
   strategy: MergeStrategy;
   guestSnapshot: GuestSnapshot;
   cloudSnapshot: CloudSnapshot;
+  preferenceDecisions?: Record<string, string>;
   customCommitToFirestore?: (params: {
     uid: string;
     library: Record<string, LibraryItem>;
@@ -374,11 +386,17 @@ export async function executeGuestMerge({
   strategy,
   guestSnapshot,
   cloudSnapshot,
+  preferenceDecisions = {},
   customCommitToFirestore,
   commitToFirestore,
 }: ExecuteGuestMergeParams): Promise<MergeExecutionResult> {
   const previousLocalLib = useLibraryStore.getState().items;
   const previousLocalHist = useHistoryStore.getState().items;
+  const previousPrefs = useSettingsStore.getState().perTitleSourcePreferences;
+  const prefPlan = planPreferredSourceMerge(
+    guestSnapshot.preferredSources ?? {}, cloudSnapshot.preferredSources ?? {}, preferenceDecisions,
+  );
+  if (!prefPlan.canCommit) throw new Error("CANONICAL_PREFERENCE_UNRESOLVED");
   let backupKey: string | undefined;
 
   try {
@@ -458,9 +476,20 @@ export async function executeGuestMerge({
       }
     }
 
+    // Preference choices are committed with a cloud version check. An outdated
+    // snapshot fails closed; source preference conflicts are never auto-resolved.
+    if (Object.keys(prefPlan.resolved).length > 0 || Object.keys(cloudSnapshot.preferredSources ?? {}).length > 0) {
+      await commitCanonicalPreferredSources(uid, prefPlan.resolved, cloudSnapshot.preferredSources ?? {});
+    }
+
     // 3. Apply to local stores ONLY after cloud write succeeds!
     useLibraryStore.setState({ items: finalLibrary });
     useHistoryStore.setState({ items: retainHistory(finalHistory) });
+    useSettingsStore.setState({
+      perTitleSourcePreferences: prefPlan.resolved,
+      pendingCanonicalSourcePrefs: {},
+      pendingCanonicalOwnerUid: uid,
+    });
 
     // 4. Update owner UID
     setLocalDataOwnerUid(uid);
@@ -484,6 +513,7 @@ export async function executeGuestMerge({
     // Transactional rollback of local stores on failure
     useLibraryStore.setState({ items: previousLocalLib });
     useHistoryStore.setState({ items: previousLocalHist });
+    useSettingsStore.setState({ perTitleSourcePreferences: previousPrefs });
     throw error;
   }
 }

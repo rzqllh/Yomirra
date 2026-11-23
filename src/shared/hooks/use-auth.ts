@@ -69,7 +69,11 @@ async function handleAuthStateTransition(currentUser: User | null) {
     // Guest transition!
     const guestLib = useLibraryStore.getState().items || {};
     const guestHist = useHistoryStore.getState().items || {};
-    const guestSnapshot = { library: guestLib, history: guestHist };
+    const guestSnapshot = {
+      library: guestLib,
+      history: guestHist,
+      preferredSources: { ...useSettingsStore.getState().perTitleSourcePreferences },
+    };
 
     if (shouldPromptGuestMerge(guestSnapshot)) {
       try {
@@ -97,6 +101,7 @@ async function handleAuthStateTransition(currentUser: User | null) {
         } else {
           // Cloud is empty, seamless safe adoption
           setLocalDataOwnerUid(newUid);
+          useSettingsStore.getState().markCanonicalSourcePrefsPending(newUid);
           useSyncDiagnosticsStore.getState().handleUserSwitch(newUid);
         }
       } catch (e: any) {
@@ -119,6 +124,7 @@ async function handleAuthStateTransition(currentUser: User | null) {
       }
     } else {
       setLocalDataOwnerUid(newUid);
+      useSettingsStore.getState().markCanonicalSourcePrefsPending(newUid);
       useSyncDiagnosticsStore.getState().handleUserSwitch(newUid);
     }
   } else {
