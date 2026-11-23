@@ -28,6 +28,7 @@ export interface ReadingTabProps {
     latestReadAt: number;
     chapters: Array<any>;
     preferenceKey?: string;
+    preferenceAliases?: string[];
   }>;
   pendingDeletions: Set<string>;
   onRemoveHistory: (sourceId: string, mangaId: string, mangaTitle: string) => void;
@@ -152,14 +153,21 @@ export function ReadingTab({
               canonicalSourceKey(ch.sourceId, ch.mangaId),
               { sourceId: ch.sourceId as string, mangaId: ch.mangaId as string },
             ])).values());
-            const preferredSourceId = (group.preferenceKey ? perTitlePrefs[group.preferenceKey] : undefined)
-              ?? group.chapters.map(ch => perTitlePrefs[`${ch.sourceId}::${ch.mangaId}`]).find(Boolean);
+            const aliases = group.preferenceAliases ?? group.chapters.map(ch => `${ch.sourceId}::${ch.mangaId}`);
+            const observed = aliases.map(key => perTitlePrefs[key]).filter(Boolean);
+            const preferredSourceId = group.preferenceKey ? perTitlePrefs[group.preferenceKey]
+              ?? observed[0] : observed[0];
+            const hasPreferenceConflict = !(
+              group.preferenceKey && perTitlePrefs[group.preferenceKey]
+            ) && new Set(observed).size > 1;
             const staleSources = bindings.filter(ref => {
               const source = dynamicSourceRegistry.get(ref.sourceId) ?? getSourceMetadata(ref.sourceId);
               return !source || source.isEnabled === false || source.isInstalled === false ||
                 source.status === "unavailable" || source.status === "in-fix";
             }).map(ref => ref.sourceId);
-            const decision = resolveCanonicalResume({
+            const decision = hasPreferenceConflict
+              ? { action: "pick-source" as const, reason: "preference-conflict" as const }
+              : resolveCanonicalResume({
               bindings,
               preferredSourceId,
               disabledSourceIds: disabledSources,

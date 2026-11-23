@@ -153,6 +153,7 @@ describe("useBookmarkReading - Chapter Progress Alignment", () => {
     expect(result.current.groupedHistory).toHaveLength(1);
     expect(result.current.groupedHistory[0].chapters).toHaveLength(2);
     expect(result.current.groupedHistory[0].sourceId).toBe("asurascans");
+    expect(result.current.groupedHistory[0].preferenceKey).toBe("a");
     expect(Object.keys(useHistoryStore.getState().items)).toHaveLength(2);
   });
 

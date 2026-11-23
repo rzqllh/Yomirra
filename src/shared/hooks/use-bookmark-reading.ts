@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useHistoryStore } from "@/shared/store/history-store";
 import { useLibraryStore } from "@/shared/store/library-store";
-import { canonicalSourceKey, groupVerifiedCatalogEntries, indexVerifiedGroups } from "@/shared/lib/canonical-identity";
+import { canonicalSourceKey, groupVerifiedCatalogEntries, indexVerifiedGroups, canonicalGroupPreferenceKey, canonicalGroupPreferenceAliases } from "@/shared/lib/canonical-identity";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useNsfwSourceIds } from "@/shared/hooks/use-nsfw-source-ids";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
@@ -51,12 +51,17 @@ export function useBookmarkReading() {
     }
   }
 
-  const verifiedIndex = React.useMemo(() => {
-    // Only exact source references and user-confirmed provenance may group titles.
-    // The original per-source records remain unmodified.
-    const saved = Object.values(savedLibraryItems).filter(item => item.isBookmarked !== false);
-    return indexVerifiedGroups(groupVerifiedCatalogEntries(saved));
+  const verifiedGroups = React.useMemo(() => {
+    // Original source-specific cursor rows remain unmodified.
+    return groupVerifiedCatalogEntries(Object.values(savedLibraryItems)
+      .filter(item => item.isBookmarked !== false));
   }, [savedLibraryItems]);
+  const verifiedIndex = React.useMemo(() => indexVerifiedGroups(verifiedGroups), [verifiedGroups]);
+  const preferenceAliasesByGroup = React.useMemo(() =>
+    new Map(verifiedGroups.map(group => [
+      group.displayKey, canonicalGroupPreferenceAliases(group),
+    ])),
+  [verifiedGroups]);
 
   const groupedHistory = React.useMemo(() => {
     const getTimestamp = (val: unknown): number => {
@@ -81,12 +86,14 @@ export function useBookmarkReading() {
         sourceName?: string;
         latestReadAt: number;
         chapters: typeof historyItems;
+        preferenceKey?: string;
+        preferenceAliases?: string[];
       }
     > = {};
 
     historyItems.forEach((item) => {
-      const key = verifiedIndex.get(canonicalSourceKey(item.sourceId, item.mangaId))
-        ?? canonicalSourceKey(item.sourceId, item.mangaId);
+      const canonicalKey = verifiedIndex.get(canonicalSourceKey(item.sourceId, item.mangaId));
+      const key = canonicalKey ?? canonicalSourceKey(item.sourceId, item.mangaId);
       const itemTimestamp = getTimestamp(item.readAt);
       const normalizedItem = { ...item, readAt: itemTimestamp };
 
@@ -99,6 +106,12 @@ export function useBookmarkReading() {
           sourceName: item.sourceName,
           latestReadAt: itemTimestamp,
           chapters: [],
+          preferenceKey: canonicalKey
+            ? preferenceAliasesByGroup.get(canonicalKey)?.[0]
+            : `${item.sourceId}::${item.mangaId}`,
+          preferenceAliases: canonicalKey
+            ? preferenceAliasesByGroup.get(canonicalKey)
+            : [`${item.sourceId}::${item.mangaId}`],
         };
       }
       groups[key].chapters.push(normalizedItem);
@@ -122,7 +135,7 @@ export function useBookmarkReading() {
     });
 
     return Object.values(groups).sort((a, b) => b.latestReadAt - a.latestReadAt);
-  }, [historyItems, verifiedIndex]);
+  }, [historyItems, verifiedIndex, preferenceAliasesByGroup]);
 
   // Undo / delete state
   const [pendingDeletions, setPendingDeletions] = React.useState<Set<string>>(new Set());
