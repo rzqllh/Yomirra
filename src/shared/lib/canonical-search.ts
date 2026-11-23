@@ -39,8 +39,16 @@ export interface CanonicalSearchResult {
  * - MangaDex language binding is stored as metadata on the binding, not a separate source.
  * - Stable, deterministic ordering is preserved.
  */
+export interface CanonicalSearchOptions {
+  /** Preserve the legacy heuristic mode for callers that explicitly use it. */
+  mergePolicy?: "heuristic" | "verified-only";
+  /** Indexed exact provider references from CONFIRMED canonical provenance. */
+  verifiedIndex?: ReadonlyMap<string, string>;
+}
+
 export function clusterCanonicalResults(
-  items: Array<{ manga: MangaItem; sourceId: string }>
+  items: Array<{ manga: MangaItem; sourceId: string }>,
+  options: CanonicalSearchOptions = {},
 ): CanonicalSearchResult[] {
   const clusters: CanonicalSearchResult[] = [];
   const seenSourceReferences = new Set<string>();
@@ -134,8 +142,17 @@ export function clusterCanonicalResults(
         }
       }
 
-      // Strict merge gate: only merge when HIGH_CONFIDENCE
-      if (match.confidence === "HIGH_CONFIDENCE") {
+      // The user-facing canonical path may merge only identical verified
+      // work identities; title/author heuristics are insufficient evidence.
+      const verifiedKey = options.verifiedIndex?.get(sourceReference);
+      const verified = Boolean(verifiedKey && cluster.sourceBindings.some(ref =>
+        options.verifiedIndex?.get(JSON.stringify([ref.sourceId, ref.mangaId])) === verifiedKey
+      ));
+      if (
+        options.mergePolicy === "verified-only"
+          ? verified
+          : match.confidence === "HIGH_CONFIDENCE"
+      ) {
         matchedCluster = cluster;
         break;
       }
@@ -146,7 +163,8 @@ export function clusterCanonicalResults(
       matchedCluster.primaryResult.sourceBindings = matchedCluster.sourceBindings;
       // Confidence describes an observed cross-provider identity match,
       // not merely the presence of a single provider result.
-      matchedCluster.matchConfidence = "HIGH_CONFIDENCE";
+      matchedCluster.matchConfidence = options.mergePolicy === "verified-only"
+        ? "CONFIRMED" : "HIGH_CONFIDENCE";
     } else {
       const normalizedTitle = normalizeTitle(manga.title) || `${sourceId}-${manga.id}`;
       const normalizedAuthor = normalizeTitle(manga.author || "");

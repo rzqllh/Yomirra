@@ -19,6 +19,8 @@ import {
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { sourceQueryOptions } from "@/shared/sources/source-query-options";
 import { clusterCanonicalResults } from "@/shared/lib/canonical-search";
+import { useLibraryStore } from "@/shared/store/library-store";
+import { groupVerifiedCatalogEntries, indexVerifiedGroups } from "@/shared/lib/canonical-identity";
 import {
   applySearchTagsToFilters,
   buildHardFilterTags,
@@ -98,6 +100,10 @@ export function useSearchCatalog() {
   const { data: sourcesData } = useQuery(sourceQueryOptions);
 
   const hideNsfw = useSettingsStore((state) => state.hideNsfw);
+  const savedLibraryMap = useLibraryStore((state) => state.items);
+  const verifiedSourceIndex = React.useMemo(() => indexVerifiedGroups(
+    groupVerifiedCatalogEntries(Object.values(savedLibraryMap).filter(item => item.isBookmarked !== false))
+  ), [savedLibraryMap]);
 
   const searchableSources = React.useMemo(() => {
     // The shell may warm this query before the streamed search route hydrates.
@@ -427,13 +433,16 @@ export function useSearchCatalog() {
       }
     }
 
-    return clusterCanonicalResults(flattened).map((cluster) => ({
+    return clusterCanonicalResults(flattened, {
+      mergePolicy: "verified-only",
+      verifiedIndex: verifiedSourceIndex,
+    }).map((cluster) => ({
       canonicalKey: cluster.canonicalKey,
       manga: cluster.primaryResult,
       sourceId: cluster.primaryResult.sourceId,
       sourceBindings: cluster.sourceBindings,
     }));
-  }, [resultsBySource]);
+  }, [resultsBySource, verifiedSourceIndex]);
 
   const intelligenceCandidates = React.useMemo<SearchCatalogCandidate[]>(
     () =>

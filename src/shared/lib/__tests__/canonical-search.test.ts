@@ -39,6 +39,27 @@ describe("Phase 4 — Canonical Search Deduplication & Failure Isolation", () =>
     expect(clusters[1].sourceBindings[0]).toMatchObject({ isNsfw: true, contentRating: "erotica" });
   });
 
+  it("keeps same-title works distinct in verified-only mode until source mapping is confirmed", () => {
+    const input: Array<{ sourceId: string; manga: MangaItem }> = [
+      { sourceId: "provider-a", manga: { id: "one", title: "The Hero", coverUrl: "/a.jpg" } },
+      { sourceId: "provider-b", manga: { id: "two", title: "The Hero", coverUrl: "/b.jpg" } },
+    ];
+    const unverified = clusterCanonicalResults(input, { mergePolicy: "verified-only" });
+    expect(unverified).toHaveLength(2);
+    expect(unverified.every(group => group.matchConfidence === "NO_MATCH")).toBe(true);
+
+    const verifiedIndex = new Map([
+      [JSON.stringify(["provider-a", "one"]), "confirmed-work"],
+      [JSON.stringify(["provider-b", "two"]), "confirmed-work"],
+    ]);
+    const confirmed = clusterCanonicalResults(input, {
+      mergePolicy: "verified-only", verifiedIndex,
+    });
+    expect(confirmed).toHaveLength(1);
+    expect(confirmed[0].sourceBindings).toHaveLength(2);
+    expect(confirmed[0].matchConfidence).toBe("CONFIRMED");
+  });
+
   it("does not claim HIGH_CONFIDENCE for a work seen in only one source", () => {
     const clusters = clusterCanonicalResults([
       { sourceId: "komiku", manga: { id: "only", title: "Unique Work", coverUrl: "/only.jpg" } },
