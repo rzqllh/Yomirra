@@ -81,8 +81,9 @@ test("History cover opens canonical detail but Lanjut honors preferred provider"
   await expect(page.getByText("1 bacaan aktif")).toBeVisible({ timeout: 15000 });
   const cover = page.getByRole("link", { name: "Buka katalog Canonical Demo Work" });
   await expect(cover).toBeVisible();
+  await expect(cover).toHaveAttribute("href", /\/catalog\/saved\/saved-a$/);
   await cover.click();
-  await expect(page).toHaveURL(/\/catalog\/saved\//);
+  await expect(page).toHaveURL(/\/catalog\/saved\/saved-a/);
   await expect(page.getByRole("heading", { name: "Canonical Demo Work" })).toBeVisible();
 
   await page.goto("/bookmark", { waitUntil: "domcontentloaded" });
