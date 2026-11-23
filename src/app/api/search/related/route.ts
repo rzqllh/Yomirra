@@ -3,7 +3,7 @@ import { z } from "zod";
 import { checkRateLimit } from "@/server/lib/security/rate-limit";
 import { readBoundedJson } from "@/server/lib/security/read-bounded-json";
 import { findRelatedSearchTitles } from "@/server/lib/search/search-intelligence-service";
-import { getRequestReadOptions } from "@/server/lib/sources/content-access";
+import { getVerifiedRequestReadOptions } from "@/server/lib/sources/content-access";
 
 export const dynamic = "force-dynamic";
 
@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
   const results = await findRelatedSearchTitles(
     parsed.data.target,
     parsed.data.limit ?? 8,
-    getRequestReadOptions(request).hideNsfw !== false,
+    await getVerifiedRequestReadOptions(request).hideNsfw !== false,
     async () => (await checkRateLimit(request, 12, 60, true, "search-related-embedding")).success
   );
   return NextResponse.json({ data: results });

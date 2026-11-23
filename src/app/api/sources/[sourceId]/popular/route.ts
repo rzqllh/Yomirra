@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 import { checkRateLimit } from "@/server/lib/security/rate-limit";
 import { NextRequest, NextResponse } from "next/server";
-import { getRequestReadOptions, loadSourceCatalog, sourceErrorResponse } from "@/server/lib/sources/content-access";
+import { getVerifiedRequestReadOptions, loadSourceCatalog, sourceErrorResponse } from "@/server/lib/sources/content-access";
 import { sourceManager } from "@/server/lib/sources/source-manager";
 import { paginationSchema, sourceParamsSchema } from "@/server/lib/validation/api";
 
@@ -29,7 +29,7 @@ export async function GET(
 
   try {
     const source = await sourceManager.getSource(sourceId, request.nextUrl.searchParams.get("manifestUrl"));
-    const data = await loadSourceCatalog(source, "popular", page, getRequestReadOptions(request));
+    const data = await loadSourceCatalog(source, "popular", page, await getVerifiedRequestReadOptions(request));
 
     return NextResponse.json({ data });
   } catch (error: unknown) {

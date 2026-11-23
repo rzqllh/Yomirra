@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 import { checkRateLimit } from "@/server/lib/security/rate-limit";
 import { NextRequest, NextResponse } from "next/server";
-import { getRequestReadOptions, loadSourceChapters, loadSourceDetail, sourceErrorResponse } from "@/server/lib/sources/content-access";
+import { getVerifiedRequestReadOptions, loadSourceChapters, loadSourceDetail, sourceErrorResponse } from "@/server/lib/sources/content-access";
 import { sourceManager } from "@/server/lib/sources/source-manager";
 import { mangaParamsSchema } from "@/server/lib/validation/api";
 
@@ -22,7 +22,7 @@ export async function GET(
 
   try {
     const source = await sourceManager.getSource(sourceId, request.nextUrl.searchParams.get("manifestUrl"));
-    const options = getRequestReadOptions(request);
+    const options = await getVerifiedRequestReadOptions(request);
     const [data] = await Promise.all([
       loadSourceChapters(source, mangaId, options),
       loadSourceDetail(source, mangaId, options),

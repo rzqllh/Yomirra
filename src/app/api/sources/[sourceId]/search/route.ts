@@ -3,7 +3,7 @@ import { createHash } from "crypto";
 import { checkRateLimit } from "@/server/lib/security/rate-limit";
 import { loadSourceUpstream } from "@/server/lib/sources/source-upstream";
 import { NextRequest, NextResponse } from "next/server";
-import { assertSourceAccess, contentCacheKey, getRequestReadOptions, sourceErrorResponse } from "@/server/lib/sources/content-access";
+import { assertSourceAccess, contentCacheKey, getVerifiedRequestReadOptions, sourceErrorResponse } from "@/server/lib/sources/content-access";
 import { isContentVisible } from "@/shared/sources/content-policy";
 import { sourceManager } from "@/server/lib/sources/source-manager";
 import { withCache, CACHE_TTL } from "@/server/lib/cache/redis-cache";
@@ -39,7 +39,7 @@ export async function GET(
     const source = await sourceManager.getSource(sourceId, request.nextUrl.searchParams.get("manifestUrl"));
     
     // Extract filters from search parameters
-    const readOptions = getRequestReadOptions(request);
+    const readOptions = await getVerifiedRequestReadOptions(request);
     assertSourceAccess(source, readOptions);
     const filters: Record<string, string | string[]> = {};
     searchParams.forEach((value, key) => {
