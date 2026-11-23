@@ -9,6 +9,12 @@ import {
 import { useLibraryStore, LibraryItem } from "@/shared/store/library-store";
 import { useHistoryStore, HistoryItem } from "@/shared/store/history-store";
 import { getLocalDataOwnerUid, clearLocalDataOwnerUid } from "@/shared/lib/local-data-owner";
+import { commitCanonicalPreferredSources } from "@/shared/lib/canonical-preference-cloud";
+
+vi.mock("@/shared/lib/canonical-preference-cloud", () => ({
+  readCanonicalPreferredSources: vi.fn(async () => ({})),
+  commitCanonicalPreferredSources: vi.fn(async () => undefined),
+}));
 
 describe("GuestMergeEngine (Q64 Engine)", () => {
   beforeEach(() => {
@@ -290,6 +296,28 @@ describe("GuestMergeEngine (Q64 Engine)", () => {
       const finalItems = useLibraryStore.getState().items;
       expect(finalItems["guest-only"]).toBeUndefined();
       expect(finalItems["cloud-only"]).toBeDefined();
+    });
+
+    it("requires a fresh cloud reconciliation after a post-library preference write failure", async () => {
+      const before = { local: {
+        sourceId: "mangadex", mangaId: "local", title: "Local",
+        addedAt: "2026-11-20T00:00:00.000Z", updatedAt: "2026-11-20T00:00:00.000Z",
+      } as LibraryItem };
+      useLibraryStore.setState({ items: before });
+      const committer = vi.fn(async () => undefined);
+      vi.mocked(commitCanonicalPreferredSources).mockRejectedValueOnce(new Error("cloud conflict"));
+
+      await expect(executeGuestMerge({
+        uid: "guest-owner",
+        strategy: "merge",
+        guestSnapshot: { library: before, history: {}, preferredSources: { local: "mangadex" } },
+        cloudSnapshot: { library: {}, history: {}, preferredSources: {} },
+        commitToFirestore: committer,
+      })).rejects.toThrow("CANONICAL_PREFERENCE_RECONCILE_REQUIRED");
+
+      expect(committer).toHaveBeenCalledTimes(1);
+      expect(useLibraryStore.getState().items).toEqual(before);
+      expect(getLocalDataOwnerUid()).toBeNull();
     });
 
     it("rolls back local store to pre-merge state when Firestore commit fails", async () => {

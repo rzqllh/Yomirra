@@ -268,10 +268,13 @@ export function GuestMergeDialog() {
         toast.error("Sinkronisasi Cloud Belum Tuntas", {
           description: `${err.completedBatches} dari ${err.totalBatches} batch tersimpan. Data lokal tidak diganti; cloud perlu diperiksa ulang.`,
         });
-      } else if (err instanceof Error && err.message.includes("CANONICAL_PREFERENCE_STALE_SNAPSHOT")) {
+      } else if (err instanceof Error && (
+        err.message.includes("CANONICAL_PREFERENCE_STALE_SNAPSHOT") ||
+        err.message.includes("CANONICAL_PREFERENCE_RECONCILE_REQUIRED")
+      )) {
         setRequiresCloudRefresh(true);
         toast.error("Pilihan Sumber Berubah di Cloud", {
-          description: "Data cloud perlu diperiksa ulang sebelum penggabungan dapat dilanjutkan.",
+          description: "Penyimpanan Library atau History mungkin sudah berhasil. Periksa ulang cloud sebelum mencoba lagi agar tidak menimpa data baru.",
         });
       } else {
         toast.error("Penyelarasan Gagal", {

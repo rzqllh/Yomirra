@@ -479,7 +479,17 @@ export async function executeGuestMerge({
     // Preference choices are committed with a cloud version check. An outdated
     // snapshot fails closed; source preference conflicts are never auto-resolved.
     if (Object.keys(prefPlan.resolved).length > 0 || Object.keys(cloudSnapshot.preferredSources ?? {}).length > 0) {
-      await commitCanonicalPreferredSources(uid, prefPlan.resolved, cloudSnapshot.preferredSources ?? {});
+      try {
+        await commitCanonicalPreferredSources(uid, prefPlan.resolved, cloudSnapshot.preferredSources ?? {});
+      } catch (error) {
+        // Library/history batches may already have reached Firestore. This is
+        // not a full rollback. Require a fresh cloud snapshot before retrying.
+        if (strategy === "merge" && actualCloudWrites > 0) {
+          const details = error instanceof Error ? error.message : "unknown error";
+          throw new Error(`CANONICAL_PREFERENCE_RECONCILE_REQUIRED: ${details}`);
+        }
+        throw error;
+      }
     }
 
     // 3. Apply to local stores ONLY after cloud write succeeds!
