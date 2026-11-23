@@ -85,7 +85,7 @@ test("History cover opens canonical detail but Lanjut honors preferred provider"
 
   await page.goto("/bookmark", { waitUntil: "domcontentloaded" });
   await expect(page.getByText("1 bacaan aktif")).toBeVisible({ timeout: 15000 });
-  const resume = page.getByRole("link", { name: "Lanjut membaca Canonical Demo Work" });
+  const resume = page.getByRole("link", { name: "Lanjut baca Canonical Demo Work" });
   await expect(resume).toHaveAttribute("href", /\/manga\/mangadex\/work-a\/read\/chapter-a/);
 });
 
@@ -98,6 +98,6 @@ test("Home dedupes confirmed reading sources and resumes explicit preferred prov
   await expect(shelf.getByRole("heading", { name: "Canonical Demo Work" })).toHaveCount(1);
   const catalog = shelf.getByRole("link", { name: "Buka katalog Canonical Demo Work" });
   await expect(catalog).toHaveAttribute("href", /\/catalog\/saved\/saved-a/);
-  const resume = shelf.getByRole("link", { name: "Lanjut membaca Canonical Demo Work" });
+  const resume = shelf.getByRole("link", { name: "Lanjut baca Canonical Demo Work" });
   await expect(resume).toHaveAttribute("href", /\/manga\/mangadex\/work-a\/read\/chapter-a/);
 });
