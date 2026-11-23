@@ -148,7 +148,11 @@ export function ReadingTab({
               mangaTitle: chapter.mangaTitle || group.mangaTitle,
               coverUrl: chapter.coverUrl || group.coverUrl,
             };
-            const canonicalHref = getCanonicalSavedDetailHref(`${item.sourceId}::${item.mangaId}`);
+            // Use the verified saved-title identity when available. A source pair
+            // is only a fallback for history-only works with no saved identity.
+            const canonicalHref = getCanonicalSavedDetailHref(
+              group.preferenceKey ?? `${item.sourceId}::${item.mangaId}`
+            );
             const bindings = Array.from(new Map(group.chapters.map(ch => [
               canonicalSourceKey(ch.sourceId, ch.mangaId),
               { sourceId: ch.sourceId as string, mangaId: ch.mangaId as string },
