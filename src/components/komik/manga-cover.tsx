@@ -67,13 +67,12 @@ export function MangaCover({
           loading={priority ? "eager" : "lazy"}
         />
       ) : alt || fallbackTitle ? (
-        <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center text-text-muted/50 p-2">
-          <ImageBroken size={iconSize} weight="duotone" className="mb-1" />
-          {fallbackTitle && (
-            <span className="text-2xs font-medium text-center line-clamp-2 px-1 text-text-muted">
-              {fallbackTitle}
-            </span>
-          )}
+        <div className="absolute inset-0 flex h-full w-full flex-col items-center justify-center gap-2 px-3 py-4 text-center">
+          <ImageBroken size={Math.min(iconSize, 28)} aria-hidden="true" className="shrink-0 text-text-muted" />
+          <span className="line-clamp-3 text-xs font-semibold leading-relaxed text-text-secondary">
+            {fallbackTitle || alt}
+          </span>
+          <span className="text-2xs text-text-muted">Sampul tidak tersedia</span>
         </div>
       ) : null}
     </div>
