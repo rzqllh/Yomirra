@@ -62,15 +62,14 @@ export function useBookmarkCollection() {
       }
     }
 
-    result = result.filter((item) => {
-      if (isSourceDisabled(item.sourceId)) return false;
-      const source = dynamicSourceRegistry.get(item.sourceId);
-      return source?.status !== "unavailable";
-    });
-
+    // Saved membership must survive an unavailable/disabled primary provider.
+    // Only content visibility, never health status, can hide a saved work.
     if (hideNsfw && nsfwStatus !== "KNOWN") return [];
     const eligible = hideNsfw
-      ? result.filter((item) => !isFromNsfwSource(item.sourceId, item.isNsfw))
+      ? result.filter((item) => {
+          const source = dynamicSourceRegistry.get(item.sourceId) ?? getSourceMetadata(item.sourceId);
+          return !isFromNsfwSource(item.sourceId, item.isNsfw) && source?.isNsfw !== true;
+        })
       : result;
 
     // Presentation projection only: keep every original library record and
