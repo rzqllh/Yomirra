@@ -245,7 +245,7 @@ export function MangaCard({
   latestChapterTime,
   historyItem,
   progressPercent,
-  progressKind = "series",
+  progressKind,
   chapterTitle,
   chapterId,
   onDeleteOverride,
@@ -483,9 +483,9 @@ export function MangaCard({
                         ? "text-status-success-fg status-success"
                         : "text-accent"
                     )}
-                    title={progressKind === "series" ? "Perkiraan progres seluruh judul" : "Posisi baca chapter"}
+                    title={progressKind === "series" ? "Perkiraan progres seluruh judul" : progressKind === "chapter" ? "Posisi baca chapter" : undefined}
                   >
-                    {progress > 0 ? `${progress}% ${progressKind === "series" ? "judul" : "chapter"}` : "Baru mulai"}
+                    {progress > 0 ? `${progress}%${progressKind ? ` ${progressKind === "series" ? "judul" : "chapter"}` : ""}` : "Baru mulai"}
                   </span>
                 </div>
 
@@ -511,7 +511,7 @@ export function MangaCard({
                   )}
                   style={{ width: `${progress}%` }}
                   role="progressbar"
-                  aria-label={progressKind === "series" ? "Perkiraan progres judul" : "Posisi baca chapter"}
+                  aria-label={progressKind === "series" ? "Perkiraan progres judul" : progressKind === "chapter" ? "Posisi baca chapter" : undefined}
                   aria-valuenow={progress}
                   aria-valuemin={0}
                   aria-valuemax={100}

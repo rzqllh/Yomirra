@@ -81,10 +81,10 @@ describe("BookmarkPageView hierarchy & standardization", () => {
   it("renders SegmentedControl and trailing Jadwal Rilis utility link", () => {
     render(<BookmarkPageView />);
 
-    expect(screen.getByText("Sedang Dibaca")).toBeTruthy();
+    expect(screen.getByText("Sedang dibaca")).toBeTruthy();
     expect(screen.getByText("Tersimpan")).toBeTruthy();
 
-    const updateLink = screen.getByRole("link", { name: /Jadwal Rilis Mingguan/i });
+    const updateLink = screen.getByRole("link", { name: /Jadwal rilis mingguan/i });
     expect(updateLink).toBeTruthy();
     expect(updateLink.getAttribute("href")).toBe("/updates");
     expect(screen.getByText("5 baru")).toBeTruthy();
