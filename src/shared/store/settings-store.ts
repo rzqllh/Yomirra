@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { getLocalDataOwnerUid } from "@/shared/lib/local-data-owner";
 import { CONTENT_PREFERENCE_COOKIE, DATA_SAVER_COOKIE, LANGUAGE_PREFERENCE_COOKIE } from "@/shared/sources/content-policy";
 import { clearAutomaticAppCaches } from "@/shared/lib/pwa-cache-policy";
 
@@ -68,6 +69,11 @@ interface SettingsState {
   perTitleSourcePreferences: Record<string, string>;
   setPerTitleSourcePreference: (titleKey: string, sourceId: string) => void;
   clearPerTitleSourcePreference: (titleKey: string) => void;
+  pendingCanonicalSourcePrefs: Record<string, string | null>;
+  pendingCanonicalOwnerUid: string | null;
+  acknowledgeCanonicalSourcePref: (uid: string, titleKey: string, value: string | null) => void;
+  applyCloudCanonicalSourcePrefs: (uid: string, sourcePrefs: Record<string, string>) => void;
+  markCanonicalSourcePrefsPending: (uid: string) => void;
 
   listingViewMode: "grid" | "compact";
   setListingViewMode: (mode: "grid" | "compact") => void;
@@ -120,17 +126,69 @@ export const useSettingsStore = create<SettingsState>()(
       preferredLanguages: DEFAULT_PREFERRED_LANGUAGES,
       setPreferredLanguages: (langs) => { set({ preferredLanguages: langs }); syncOtherReadCookies(get()); },
       perTitleSourcePreferences: {},
-      setPerTitleSourcePreference: (titleKey, sourceId) => set((state) => ({
-        perTitleSourcePreferences: {
-          ...state.perTitleSourcePreferences,
-          [titleKey]: sourceId,
+      pendingCanonicalSourcePrefs: {},
+      pendingCanonicalOwnerUid: null,
+      acknowledgeCanonicalSourcePref: (uid, titleKey, value) => set(state => {
+        if (state.pendingCanonicalOwnerUid !== uid ||
+            !Object.hasOwn(state.pendingCanonicalSourcePrefs, titleKey) ||
+            state.pendingCanonicalSourcePrefs[titleKey] !== value) return state;
+        const pending = { ...state.pendingCanonicalSourcePrefs };
+        delete pending[titleKey];
+        return { pendingCanonicalSourcePrefs: pending };
+      }),
+      applyCloudCanonicalSourcePrefs: (uid, sourcePrefs) => set(state => {
+        if (getLocalDataOwnerUid() !== uid) return state;
+        const next = { ...sourcePrefs };
+        const pending = state.pendingCanonicalOwnerUid === uid
+          ? state.pendingCanonicalSourcePrefs : {};
+        for (const [key, sourceId] of Object.entries(pending)) {
+          if (sourceId === null) delete next[key];
+          else next[key] = sourceId;
         }
-      })),
-      clearPerTitleSourcePreference: (titleKey) => set((state) => {
-        const next = { ...state.perTitleSourcePreferences };
-        delete next[titleKey];
         return { perTitleSourcePreferences: next };
       }),
+      markCanonicalSourcePrefsPending: (uid) => set(state => ({
+        pendingCanonicalOwnerUid: uid,
+        pendingCanonicalSourcePrefs: Object.fromEntries(
+          Object.entries(state.perTitleSourcePreferences).map(([key, value]) => [key, value]),
+        ),
+      })),
+      setPerTitleSourcePreference: (titleKey, sourceId) => {
+        const uid = getLocalDataOwnerUid();
+        set(state => ({
+          perTitleSourcePreferences: { ...state.perTitleSourcePreferences, [titleKey]: sourceId },
+          ...(uid ? {
+            pendingCanonicalOwnerUid: uid,
+            pendingCanonicalSourcePrefs: { ...state.pendingCanonicalSourcePrefs, [titleKey]: sourceId },
+          } : {}),
+        }));
+        if (uid) {
+          void import("@/shared/lib/canonical-preference-cloud")
+            .then(api => api.writeCanonicalPreferredSource(uid, titleKey, sourceId))
+            .then(() => get().acknowledgeCanonicalSourcePref(uid, titleKey, sourceId))
+            .catch(error => console.warn("Canonical source choice saved locally; cloud sync pending", error));
+        }
+      },
+      clearPerTitleSourcePreference: (titleKey) => {
+        const uid = getLocalDataOwnerUid();
+        set(state => {
+          const prefs = { ...state.perTitleSourcePreferences };
+          delete prefs[titleKey];
+          return {
+            perTitleSourcePreferences: prefs,
+            ...(uid ? {
+              pendingCanonicalOwnerUid: uid,
+              pendingCanonicalSourcePrefs: { ...state.pendingCanonicalSourcePrefs, [titleKey]: null },
+            } : {}),
+          };
+        });
+        if (uid) {
+          void import("@/shared/lib/canonical-preference-cloud")
+            .then(api => api.writeCanonicalPreferredSource(uid, titleKey, null))
+            .then(() => get().acknowledgeCanonicalSourcePref(uid, titleKey, null))
+            .catch(error => console.warn("Canonical source reset saved locally; cloud sync pending", error));
+        }
+      },
 
       listingViewMode: "grid",
       setListingViewMode: (mode) => set({ listingViewMode: mode }),
