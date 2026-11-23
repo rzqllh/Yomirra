@@ -15,7 +15,7 @@ import { useNsfwSourceIds } from "@/shared/hooks/use-nsfw-source-ids";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { getSourceMetadata } from "@/shared/sources/source-registry";
 import { getMangaDetailHref, getReaderHref } from "@/shared/lib/routes";
-import { canonicalSourceKey, groupVerifiedCatalogEntries } from "@/shared/lib/canonical-identity";
+import { canonicalSourceKey, groupVerifiedCatalogEntries, canonicalGroupPreferenceKey, canonicalGroupPreferenceAliases } from "@/shared/lib/canonical-identity";
 import { resolveCanonicalResume } from "@/shared/lib/canonical-resume";
 
 export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: string }) {
@@ -42,10 +42,31 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
     };
   }, []);
 
-  const groups = React.useMemo(
-    () => groupVerifiedCatalogEntries(Object.values(libraryItems)),
-    [libraryItems],
-  );
+  const groups = React.useMemo(() => {
+    // Include history-only works: viewing a canonical History cover must not
+    // silently require the work to be bookmarked first.
+    const latestHistory = new Map<string, {
+      sourceId: string; mangaId: string; title: string; coverUrl?: string;
+      isNsfw?: boolean; readAt: number;
+    }>();
+    for (const item of Object.values(historyItems)) {
+      const key = canonicalSourceKey(item.sourceId, item.mangaId);
+      const previous = latestHistory.get(key);
+      const readAt = typeof item.readAt === "number"
+        ? item.readAt : new Date(String(item.readAt)).getTime() || 0;
+      if (!previous || readAt > previous.readAt) {
+        latestHistory.set(key, {
+          sourceId: item.sourceId, mangaId: item.mangaId,
+          title: item.mangaTitle, coverUrl: item.coverUrl,
+          isNsfw: item.isNsfw, readAt,
+        });
+      }
+    }
+    return groupVerifiedCatalogEntries([
+      ...Object.values(libraryItems),
+      ...Array.from(latestHistory.values()),
+    ]);
+  }, [libraryItems, historyItems]);
   const group = groups.find(candidate => candidate.members.some(member =>
     member.id === savedTitleId || `${member.sourceId}::${member.mangaId}` === savedTitleId
   ));
@@ -77,8 +98,16 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
       Boolean(source && source.isEnabled !== false && source.isInstalled !== false &&
         source.status !== "unavailable" && source.status !== "in-fix");
   });
-  const preferredSourceId = perTitlePrefs[savedTitleId] ??
-    visibleMembers.map(member => perTitlePrefs[member.id ?? ""]).find(Boolean);
+  const preferenceKey = canonicalGroupPreferenceKey(group);
+  const preferenceAliases = canonicalGroupPreferenceAliases(group);
+  const legacyChoices = preferenceAliases
+    .map(key => perTitlePrefs[key])
+    .filter((value): value is string => Boolean(value));
+  // Disagreeing old per-source preferences require explicit choice, not
+  // arbitrary member ordering or last-write-wins.
+  const legacyConflict = !perTitlePrefs[preferenceKey] && new Set(legacyChoices).size > 1;
+  const preferredSourceId = perTitlePrefs[preferenceKey] ??
+    preferenceAliases.map(key => perTitlePrefs[key]).find(Boolean);
   const referenceSet = new Set(safeBindings.map(ref => canonicalSourceKey(ref.sourceId, ref.mangaId)));
   const lastRead = Object.values(historyItems)
     .filter(item => referenceSet.has(canonicalSourceKey(item.sourceId, item.mangaId)))
@@ -91,14 +120,16 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
   const missing = safeBindings.filter(ref => !available.some(ok =>
     ok.sourceId === ref.sourceId && ok.mangaId === ref.mangaId
   ));
-  const decision = resolveCanonicalResume({
-    bindings: safeBindings,
-    preferredSourceId,
-    lastRead,
-    disabledSourceIds: disabledSources,
-    unavailableSourceIds: missing.map(ref => ref.sourceId),
-    deviceOffline: offline,
-  });
+  const decision = legacyConflict
+    ? { action: "pick-source" as const, reason: "preference-conflict" as const }
+    : resolveCanonicalResume({
+        bindings: safeBindings,
+        preferredSourceId,
+        lastRead,
+        disabledSourceIds: disabledSources,
+        unavailableSourceIds: missing.map(ref => ref.sourceId),
+        deviceOffline: offline,
+      });
   const resume = () => {
     if (decision.action === "resume") {
       const href = decision.chapterId
@@ -144,7 +175,10 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
             </Button>
           </div>
           {offline && <p className="text-xs text-status-warning-fg">Perangkat sedang offline. Ketersediaan sumber belum bisa dipastikan.</p>}
-          {preferredSourceId && decision.action === "pick-source" &&
+          {legacyConflict && <p className="text-xs text-status-warning-fg">
+            Ada beberapa sumber utama dari riwayat lama. Pilih satu untuk katalog ini.
+          </p>}
+          {!legacyConflict && preferredSourceId && decision.action === "pick-source" &&
             <p className="text-xs text-status-warning-fg">Sumber utama belum tersedia. Pilihan utama tetap disimpan.</p>}
         </div>
       </section>
@@ -182,7 +216,7 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
                     {recent ? "Lanjut" : "Buka"}
                   </Link>
                   {!isPreferred && <Button type="button" variant="outline" size="sm"
-                    onClick={() => setPreferred(savedTitleId, ref.sourceId)}>Jadikan utama</Button>}
+                    onClick={() => setPreferred(preferenceKey, ref.sourceId)}>Jadikan utama</Button>}
                 </div>
               </div>
             );
