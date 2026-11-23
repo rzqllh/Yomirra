@@ -42,6 +42,9 @@ vi.mock("next/navigation", () => ({
 
 let mockHistoryState = {
   items: {} as Record<string, any>,
+  // The Home shelf now reads source-specific cursors before canonical grouping.
+  // Keep the test fixture tied to the mutable getter used by each scenario.
+  getContinueReadingBySource: () => mockHistoryState.getContinueReading(),
   getContinueReading: () => [
     {
       sourceId: "source-a",
