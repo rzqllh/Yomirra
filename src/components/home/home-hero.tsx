@@ -327,7 +327,7 @@ export function HomeHero({ className, candidates = EMPTY_CANDIDATES }: HomeHeroP
         </h1>
 
         <p className="mb-3.5 text-xs sm:text-sm text-text-muted font-medium leading-relaxed max-w-md">
-          Jelajahi ribuan komik dari berbagai sumber dalam satu antarmuka yang cepat dan terpadu.
+          Cari manga, manhwa, dan manhua dari berbagai sumber.
         </p>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full max-w-lg">

@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
   const results = await findRelatedSearchTitles(
     parsed.data.target,
     parsed.data.limit ?? 8,
-    await getVerifiedRequestReadOptions(request).hideNsfw !== false,
+    (await getVerifiedRequestReadOptions(request)).hideNsfw !== false,
     async () => (await checkRateLimit(request, 12, 60, true, "search-related-embedding")).success
   );
   return NextResponse.json({ data: results });

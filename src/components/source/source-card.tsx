@@ -40,12 +40,12 @@ type ReaderHealth = {
 function getReaderHealth(status: string): ReaderHealth {
   if (status === "online") return { label: "Normal", variant: "success" }
   if (status === "slow") return { label: "Lambat", variant: "warning" }
-  if (status === "degraded") return { label: "Probe tidak stabil", variant: "warning" }
+  if (status === "degraded") return { label: "Pemeriksaan tidak stabil", variant: "warning" }
   if (status === "in-fix") return { label: "Maintenance", variant: "warning" }
   if (status === "in-dev") return { label: "Dalam pengembangan", variant: "muted" }
   if (status === "disabled") return { label: "Nonaktif oleh pengelola", variant: "warning" }
-  if (status === "unknown") return { label: "Belum terukur", variant: "muted" }
-  return { label: "Probe gagal berulang", variant: "error" }
+  if (status === "unknown") return { label: "Belum diperiksa", variant: "muted" }
+  return { label: "Pemeriksaan belum berhasil", variant: "error" }
 }
 
 export function SourceCard({ source, onUpdate }: SourceCardProps) {
@@ -186,7 +186,7 @@ export function SourceCard({ source, onUpdate }: SourceCardProps) {
                 )}>
                   {source.maintenance?.reason || source.healthStats?.message || (isUnavailable
                     ? "Sumber sedang dibatasi pengelola."
-                    : "Pemeriksaan terganggu; reader mungkin tetap dapat digunakan.")}
+                    : "Pemeriksaan gagal, tetapi sumber mungkin masih bisa dibaca.")}
                 </p>
                 {source.healthStats?.lastChecked && source.healthStats.lastChecked !== "Belum diperiksa" && (
                   <p className="mt-1 text-2xs text-text-muted">Diperiksa: {source.healthStats.lastChecked}</p>

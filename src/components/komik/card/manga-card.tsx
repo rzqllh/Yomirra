@@ -834,7 +834,7 @@ export function MangaCard({
             {/* Row 2: Capped Badge Row to prevent height shifts */}
             <div className="flex min-h-5 items-center gap-2 mt-1">
               <MangaCardMeta className="truncate font-semibold shrink-0">
-                {manga.latestChapter || "Katalog diperbarui"}
+                {manga.latestChapter || "Bab terbaru belum tersedia"}
               </MangaCardMeta>
               <CollapsibleBadgeRow badges={badgesList} maxVisible={2} />
             </div>
@@ -1073,7 +1073,7 @@ export function MangaCard({
           {/* Bottom Row - keep geometry stable when optional chapter/rating data is absent. */}
           <div className="mt-auto flex min-h-5 items-center justify-between">
             <MangaCardMeta className="max-w-3/4 truncate font-semibold sm:text-sm">
-              {manga.latestChapter || "Katalog diperbarui"}
+              {manga.latestChapter || "Bab terbaru belum tersedia"}
             </MangaCardMeta>
             {Number(scoreToDisplay) > 0 ? (
               <span className="flex shrink-0 items-center gap-1 text-xs font-bold tracking-tight text-text-secondary sm:text-sm">

@@ -77,6 +77,6 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const result = await rankSearchIntelligence({ ...parsed.data, hideNsfw: await getVerifiedRequestReadOptions(request).hideNsfw !== false });
+  const result = await rankSearchIntelligence({ ...parsed.data, hideNsfw: (await getVerifiedRequestReadOptions(request)).hideNsfw !== false });
   return applyRateLimitHeaders(NextResponse.json({ data: result }), rateLimit);
 }

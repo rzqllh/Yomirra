@@ -197,7 +197,7 @@ export function PopularPageView({ feeds, mal }: PopularPageViewProps) {
               <EmptyState
                 icon={<WarningCircle size={40} weight="duotone" />}
                 title="Semua sumber belum memberikan data peringkat"
-                description="Katalog populer dari sumber aktif sedang tidak tersedia. Kamu tetap dapat mencari judul secara langsung melalui pencarian."
+                description="Daftar populer belum tersedia. Kamu masih bisa mencari judul secara langsung."
               />
             </div>
           )}

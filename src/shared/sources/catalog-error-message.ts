@@ -5,22 +5,22 @@ export function getCatalogErrorMessage(error: unknown): string {
 
   switch (code) {
     case "UPSTREAM_BLOCKED":
-      return "Situs sumber menolak akses dari server Yomirra. Coba sumber lain sementara; mengulang permintaan belum tentu berhasil.";
+      return "Sumber ini menolak permintaan Yomirra. Pilih sumber lain untuk sementara.";
     case "UPSTREAM_TIMEOUT":
-      return "Situs sumber terlalu lama merespons. Coba lagi nanti atau pilih sumber lain.";
+      return "Sumber terlalu lama merespons. Coba lagi nanti.";
     case "SOURCE_DOWN":
-      return "Server sumber sedang bermasalah. Coba lagi nanti atau pilih sumber lain.";
+      return "Katalog sumber sedang bermasalah. Coba lagi nanti.";
     case "RATE_LIMITED":
-      return "Batas permintaan sumber sedang tercapai. Jangan coba berulang kali; tunggu sebelum memuat ulang.";
+      return "Batas permintaan tercapai. Coba lagi nanti.";
     case "PARSER_BROKEN":
     case "SCHEMA_CHANGED":
     case "ROUTE_CHANGED":
-      return "Struktur katalog sumber berubah dan belum kompatibel. Adapter perlu diperbarui.";
+      return "Format data sumber berubah. Katalog belum bisa ditampilkan.";
     case "CONTENT_RESTRICTED":
-      return "Sumber dibatasi oleh pengaturan konten.";
+      return "Konten ini hanya tersedia untuk akun dengan usia terverifikasi.";
     case "SOURCE_DISABLED":
-      return "Sumber ini tidak tersedia karena dinonaktifkan pengelola.";
+      return "Sumber sedang dinonaktifkan. Pilih sumber lain.";
     default:
-      return "Data dari sumber ini belum bisa dimuat. Coba lagi sebentar.";
+      return "Katalog belum bisa dimuat. Coba lagi nanti.";
   }
 }

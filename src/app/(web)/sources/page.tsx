@@ -126,7 +126,7 @@ export default function SourcesPage() {
           {/* Source Mental Model Guidance Banner */}
           <div className="p-3.5 rounded-xl bg-surface-glass border border-border-subtle text-xs text-text-muted flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
             <p className="leading-relaxed">
-              Pengaturan ini berlaku untuk Beranda, Jelajah, dan Populer. Pencarian tetap dapat memakai sumber yang tersedia meski dinonaktifkan di sini.
+              Sumber nonaktif tidak dipakai di Beranda, Jelajah, dan Populer. Kamu tetap bisa memilihnya secara manual saat mencari.
             </p>
           </div>
 
