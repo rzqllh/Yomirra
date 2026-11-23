@@ -131,6 +131,7 @@ export function ReadingTab({
               <HistoryCard
                 key={`${group.sourceId}::${group.mangaId}`}
                 item={item}
+                clarifyProgress
                 className="bg-surface-raised border border-border-subtle hover:border-border-default shadow-xs w-full max-w-none snap-none"
                 onDeleteOverride={(sourceId, mangaId, title) => onRemoveHistory(sourceId, mangaId, title)}
               />
