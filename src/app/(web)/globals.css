@@ -995,12 +995,19 @@ body.reader-active section[aria-label*="Notifications" i] {
   }
 }
 
+/* Reader-only dark chrome: visible boundaries without changing app-wide colors. */
+.reader-contrast-scope.dark {
+  --border-subtle: rgb(255 255 255 / 22%);
+  --border-default: rgb(255 255 255 / 30%);
+  --border-strong: rgb(255 255 255 / 47%);
+  --border-glass: rgb(255 255 255 / 24%);
+}
 /* Page scrubber keeps a 44px gesture target with an 8px track and a visible thumb. */
 .reader-page-range { appearance: none; -webkit-appearance: none; touch-action: pan-x; }
-.reader-page-range::-webkit-slider-runnable-track { height: 8px; border-radius: 999px; background: color-mix(in srgb, var(--text-primary) 15%, transparent); }
-.reader-page-range::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; margin-top: -7px; border-radius: 50%; background: var(--accent); border: 2px solid var(--surface-base); }
-.reader-page-range::-moz-range-track { height: 8px; border-radius: 999px; background: color-mix(in srgb, var(--text-primary) 15%, transparent); }
-.reader-page-range::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: var(--accent); border: 2px solid var(--surface-base); }
+.reader-page-range::-webkit-slider-runnable-track { height: 8px; border-radius: 999px; background: color-mix(in srgb, var(--text-primary) 40%, var(--surface-base)); }
+.reader-page-range::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; margin-top: -7px; border-radius: 50%; background: var(--color-accent); border: 2px solid var(--surface-base); }
+.reader-page-range::-moz-range-track { height: 8px; border-radius: 999px; background: color-mix(in srgb, var(--text-primary) 40%, var(--surface-base)); }
+.reader-page-range::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: var(--color-accent); border: 2px solid var(--surface-base); }
 
 .chapter-scroll-viewport {
   max-height: min(60dvh, 520px);

@@ -343,6 +343,7 @@ export function useLibraryCatalog() {
     data,
     isLoading,
     isError,
+    error,
     isFetching,
     refetch,
   } = useQuery({
@@ -521,6 +522,7 @@ export function useLibraryCatalog() {
     isDisabled,
     isLoading,
     isError,
+    error,
     isFetching,
     refetch,
     data,

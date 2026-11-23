@@ -74,6 +74,7 @@ export function LibraryPageView() {
           isDisabled={catalog.isDisabled}
           isLoading={catalog.isLoading}
           isError={catalog.isError}
+          error={catalog.error}
           isFetching={catalog.isFetching}
           refetch={catalog.refetch}
           mangas={catalog.mangas}
