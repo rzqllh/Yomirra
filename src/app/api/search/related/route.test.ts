@@ -7,7 +7,7 @@ vi.mock("@/server/lib/search/semantic-catalog", () => ({
   getRecentSearchCatalogRecords: getRecent,
 }));
 vi.mock("@/server/lib/sources/content-access", () => ({
-  getRequestReadOptions: () => ({ hideNsfw: true }),
+  getVerifiedRequestReadOptions: async () => ({ hideNsfw: true }),
 }));
 vi.mock("@/server/lib/sources/runtime-sources", () => ({ getRuntimeSources: vi.fn() }));
 vi.mock("@/server/lib/site/site-config-service", () => ({ getSiteConfig: vi.fn() }));

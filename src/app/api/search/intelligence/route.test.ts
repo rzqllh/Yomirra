@@ -5,7 +5,7 @@ const rank = vi.hoisted(() => vi.fn().mockResolvedValue({
   semanticAvailable: false, scores: {}, catalogMatches: [],
 }));
 vi.mock("@/server/lib/search/search-intelligence-service", () => ({ rankSearchIntelligence: rank }));
-vi.mock("@/server/lib/sources/content-access", () => ({ getRequestReadOptions: () => ({ hideNsfw: true }) }));
+vi.mock("@/server/lib/sources/content-access", () => ({ getVerifiedRequestReadOptions: async () => ({ hideNsfw: true }) }));
 vi.mock("@/server/lib/security/rate-limit", () => ({
   checkRateLimitPolicy: async () => ({ success: true }),
   applyRateLimitHeaders: (response: Response) => response,

@@ -145,7 +145,7 @@ describe("ShinigamiSource — reliability hardening", () => {
       expect(result.pages).toHaveLength(2);
       expect(result.pages[0].url).toBe("https://cdn.x.com/vol1/ch1/001.jpg");
       expect(result.pages[1].url).toBe("https://cdn.x.com/vol1/ch1/002.jpg");
-      expect(result.pages[0].referer).toBe("https://c.shinigami.asia");
+      expect(result.pages[0].referer).toBe("https://s1.shinigami.mx");
       expect(result.pages[0].index).toBe(0);
     });
   });

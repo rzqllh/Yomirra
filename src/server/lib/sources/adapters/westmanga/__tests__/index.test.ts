@@ -136,8 +136,8 @@ describe("WestMangaSource", () => {
       const res = await source.search("dragon", 1);
       expect(getSpy).toHaveBeenCalledWith(
         "/api/contents",
-        { page: 1, q: "dragon" },
-        expect.any(Object)
+        { page: 1, per_page: 20, type: "Comic", q: "dragon" },
+        { headers: { "X-WM-Visit": "fixture-token" } }
       );
       expect(res.mangas[0].status).toBe("COMPLETED");
     });

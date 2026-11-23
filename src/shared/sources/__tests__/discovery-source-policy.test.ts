@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { SourceMetadata } from "@/shared/sources/source-types";
+import { DEFAULT_DISABLED_SOURCE_IDS } from "../source-defaults";
 import {
   isDiscoverySourceSelected,
   isDiscoverySourceSystemEligible,
@@ -87,7 +88,7 @@ describe("discovery source policy", () => {
   });
 
   it("parses the persisted disabled-source cookie defensively", () => {
-    expect(parseDisabledSourceIdsCookie()).toEqual([]);
+    expect(parseDisabledSourceIdsCookie()).toEqual([...DEFAULT_DISABLED_SOURCE_IDS]);
     expect(parseDisabledSourceIdsCookie("not-json")).toEqual([]);
     expect(
       parseDisabledSourceIdsCookie(

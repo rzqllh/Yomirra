@@ -60,7 +60,7 @@ describe("KomikuSource", () => {
       </div>
     `;
 
-    vi.spyOn(source["client"], "getHtml").mockResolvedValue(mockHtml);
+    vi.spyOn(source["catalogClient"], "getHtml").mockResolvedValue(mockHtml);
 
     const result = await source.getPopular(1);
     expect(result.mangas).toHaveLength(1);
