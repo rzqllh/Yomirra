@@ -6,7 +6,7 @@ Mulai dari langkah yang mempertahankan data: periksa koneksi, catat pesan, lalu 
 
 ## Sumber atau pencarian tidak tersedia
 
-Periksa **Sumber**. Toggle penjelajahan tidak membuat sumber maintenance menjadi sehat. Search global memakai sumber yang tersedia terlepas dari toggle Beranda/Library/Populer.
+Periksa **Sumber**. Toggle penjelajahan tidak membuat sumber maintenance menjadi sehat. Cari global memakai sumber yang tersedia terlepas dari toggle penjelajahan Beranda/Jelajah/Populer.
 
 Jika satu sumber gagal tetapi yang lain bekerja, coba sumber lain atau judul alternatif. Jika hasil kosong, kurangi filter dan periksa bahasa/ejaan. Tidak semua sumber mendukung filter atau menyediakan judul yang sama. Saat akses dibatasi, tunggu; hindari request cepat berulang atau upaya melewati pembatasan sumber.
 
@@ -51,7 +51,7 @@ Gunakan JSON hasil ekspor Yomirra, bukan ZIP chapter atau cadangan aplikasi lain
 
 **AI wajib?** Tidak. Pencarian leksikal dan rekomendasi utama berjalan tanpa AI. Semantic ranking opsional pada deployment yang mengonfigurasinya.
 
-**Apakah fitur sama persis dengan aplikasi native?** Yomirra dirancang khusus sebagai antarmuka web/PWA modern yang mandiri. Kapabilitas fitur beroperasi dalam standar web terbuka tanpa ketergantungan pada ekstensi atau format aplikasi pihak ketiga.
+**Apa batasan penggunaan Yomirra di perangkat berbeda?** Yomirra berjalan melalui web/PWA. Ketersediaan offline, kontrol baca, dan penyimpanan bergantung pada browser, perangkat, dan dukungan sumber.
 
 ## Melaporkan bug
 
