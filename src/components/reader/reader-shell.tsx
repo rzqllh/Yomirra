@@ -150,9 +150,9 @@ export function ReaderShell({
     })
     const toastId = `bookmark-toggle-${sourceId}-${mangaId}`
     if (wasInLibrary) {
-      toast.info("Dihapus dari Bookmark", { id: toastId })
+      toast.info("Dihapus dari Library", { id: toastId, duration: 2200 })
     } else {
-      toast.success("Disimpan ke Bookmark", { id: toastId })
+      toast.success("Disimpan ke Library", { id: toastId, duration: 2200 })
     }
   }
 
@@ -182,7 +182,7 @@ export function ReaderShell({
     const showSuggestion = () => {
       if (useLibraryStore.getState().isInLibrary(sourceId, mangaId) || !takeBookmarkSuggestion(sourceId, mangaId)) return;
       toast.info("Simpan bacaan ini ke Library?", {
-        id, description: "Sudah lebih dari 3 chapter. Bookmark komik ini supaya mudah dilanjutkan.", duration: 10_000,
+        id, description: "Sudah membaca lebih dari 3 chapter. Simpan judul ini agar mudah dilanjutkan.", duration: 8_000,
         action: { label: "Simpan", onClick: () => {
           if (useLibraryStore.getState().isInLibrary(sourceId, mangaId)) return;
           toggleLibrary({ sourceId, mangaId, title: mangaTitle || "Komik", coverUrl: getResolvedCoverUrl(), isNsfw, addedAt: new Date().toISOString(), updatedAt: new Date().toISOString() });
@@ -422,7 +422,7 @@ export function ReaderShell({
                 {/* Right Cluster: Bookmark Action with Symmetrical Width */}
                 <div className="flex items-center justify-end shrink-0">
                   <motion.button
-                    aria-label={isSaved ? "Hapus dari bookmark" : "Simpan ke bookmark"}
+                    aria-label={isSaved ? "Hapus dari Library" : "Simpan ke Library"}
                     whileTap={reducedMotion ? undefined : { scale: 0.95 }}
                     className={cn(
                       "yomirra-chrome-control flex size-9 sm:size-10 items-center justify-center rounded-xl transition-all shrink-0 cursor-pointer outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",

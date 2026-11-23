@@ -18,7 +18,7 @@ import { useReaderScroll } from "@/shared/hooks/use-reader-scroll"
 
 
 import { useReadingTimer } from "@/shared/hooks/use-reading-timer"
-import { CaretLeft, CaretRight, Flag, BookOpen, Warning } from "@phosphor-icons/react"
+import { CaretLeft, CaretRight, Flag, BookOpen } from "@phosphor-icons/react"
 import { ReportSheet } from "@/components/shared/report-sheet"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/shared/utils/cn"
@@ -413,9 +413,9 @@ export function ContinuousVerticalReader({
         setIsRestored(true);
       });
 
-      toast(`Melanjutkan ke gambar ${targetIndex + 1}`, {
+      toast(`Lanjut dari gambar ${targetIndex + 1}`, {
         id: "resume-reading",
-        duration: 2500,
+        duration: 2000,
         position: "top-center",
         icon: <BookOpen size={15} weight="fill" className="text-accent shrink-0" />,
       });
@@ -484,17 +484,6 @@ export function ContinuousVerticalReader({
       onPointerUp={handlePointerUp}
       className="flex min-h-screen w-full flex-col items-center select-none pb-[calc(var(--safe-bottom)+180px)] bg-transparent"
     >
-      {/* Chapter Degraded Recovery Banner */}
-      {failedPageIndices.size > 0 && (
-        <div className="fixed top-[calc(var(--mobile-header-height)+var(--safe-top)+10px)] z-40 max-w-md w-[calc(100%-32px)] mx-auto left-0 right-0 p-3 rounded-full bg-surface-raised/95 backdrop-blur-xl border border-semantic-warning/30 shadow-lg flex items-center justify-between gap-3 text-xs animate-in fade-in slide-in-from-top-2 duration-200">
-          <div className="flex items-center gap-2 text-semantic-warning font-medium">
-            <Warning size={18} weight="fill" className="shrink-0" />
-            <span>{failedPageIndices.size} halaman gagal dimuat</span>
-          </div>
-          <span className="text-text-muted text-right">Coba lagi pada gambar yang gagal</span>
-        </div>
-      )}
-
       <div
         ref={comicContainerRef}
         className="flex w-full max-w-4xl flex-col items-center pt-[calc(var(--mobile-header-height)+var(--safe-top))]"
@@ -566,8 +555,8 @@ export function ContinuousVerticalReader({
 
       <div className="w-full max-w-70 h-px bg-gradient-to-r from-transparent via-border-subtle to-transparent my-2 relative z-10" />
 
-      {/* End of Chapter Section (Combined Variant 3 Milestone + 10 Unified Dock on Pure Black Canvas) */}
-      <div className="w-full max-w-md mx-auto px-4 pt-4 pb-[calc(5rem+env(safe-area-inset-bottom))] flex flex-col items-center gap-4 relative z-10 select-none">
+      {/* End-of-chapter actions; outer Reader padding already reserves space for the dock. */}
+      <div className="w-full max-w-md mx-auto px-4 pt-4 pb-4 flex flex-col items-center gap-4 relative z-10 select-none">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-85 h-50 bg-accent/12 rounded-full blur-3xl pointer-events-none -z-10" />
 
         {/* Milestone Card Dock */}
@@ -610,7 +599,7 @@ export function ContinuousVerticalReader({
                 )}
                 onClick={handleNextChapter}
               >
-                <span>{_prevChapterId ? "Selanjutnya" : "Lanjut Bab Berikutnya"}</span>
+                <span>{_prevChapterId ? "Selanjutnya" : "Lanjut chapter berikutnya"}</span>
                 <CaretRight size={16} weight="regular" />
               </Button>
             ) : (
