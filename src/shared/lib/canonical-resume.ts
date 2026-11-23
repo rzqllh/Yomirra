@@ -29,8 +29,11 @@ export function resolveCanonicalResume(options: {
   } = options;
   const disabled = new Set(disabledSourceIds);
   const unavailable = new Set(unavailableSourceIds);
+  // Provider health is not proof of unavailability while the device is
+  // offline. Keep eligible cached bindings; explicit user disables still win.
   const available = bindings.filter(binding =>
-    !disabled.has(binding.sourceId) && !unavailable.has(binding.sourceId)
+    !disabled.has(binding.sourceId) &&
+    (deviceOffline || !unavailable.has(binding.sourceId))
   );
   const cached = new Set(cachedSourceRefs.map(ref => canonicalSourceKey(ref.sourceId, ref.mangaId)));
   const eligible = deviceOffline

@@ -25,6 +25,24 @@ describe("canonical smart resume", () => {
       action: "offline", reason: "no-cached-preferred",
     });
   });
+  it("uses an explicitly cached preferred source offline even when remote health is stale", () => {
+    expect(resolveCanonicalResume({
+      bindings,
+      preferredSourceId: "shinigami",
+      unavailableSourceIds: ["shinigami"],
+      deviceOffline: true,
+      cachedSourceRefs: [bindings[0]],
+    })).toEqual({ action: "resume", source: bindings[0], reason: "preferred", chapterId: undefined });
+  });
+  it("never bypasses a source disabled by the user simply because it is cached", () => {
+    expect(resolveCanonicalResume({
+      bindings,
+      preferredSourceId: "shinigami",
+      disabledSourceIds: ["shinigami"],
+      deviceOffline: true,
+      cachedSourceRefs: [bindings[0]],
+    })).toEqual({ action: "pick-source", reason: "preferred-unavailable" });
+  });
   it("resumes an offline cached preferred source", () => {
     expect(resolveCanonicalResume({ bindings, preferredSourceId: "shinigami", deviceOffline: true, cachedSourceRefs: [bindings[0]] })).toEqual({
       action: "resume", source: bindings[0], reason: "preferred", chapterId: undefined,
