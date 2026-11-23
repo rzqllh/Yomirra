@@ -34,14 +34,14 @@ Yomirra adalah *web-first comic reader interface* modern yang dirancang untuk me
 
 ---
 
-### 2.2 Rak Buku & Manajemen Koleksi (Library Management)
+### 2.2 Library & Manajemen Koleksi
 
 | Kemampuan | Status | Catatan & Implementasi Teknis |
 |---|---|---|
-| **Penyimpanan Bookmark** | **Tersedia** | Satu klik untuk menyimpan ke Rak Buku pribadi tanpa memicu rating publik. |
+| **Penyimpanan Bookmark** | **Tersedia** | Satu klik untuk menyimpan ke Library pribadi tanpa memicu rating publik. |
 | **Koleksi Kustom (Custom Categories)** | **Tersedia** | Pengguna dapat membuat, mengubah nama, dan mengorganisasi komik ke dalam folder koleksi dinamis. |
 | **Smart Collections** | **Tersedia** | Koleksi terhitung otomatis: *Lanjut Dibaca*, *Belum Dibaca*, dan *Selesai*. |
-| **Persentase Progres Seri** | **Tersedia** | Dihitung proporsional terhadap total chapter komik yang tersedia dan divisualisasikan dengan progress bar. |
+| **Persentase Progres Seri** | **Tersedia** | Estimasi berdasarkan metadata bab yang tersedia; indikator ini bukan bukti setiap bab selesai dibaca. |
 | **Mode Tampilan Katalog** | **Tersedia** | Toggle tampilan Grid Normal, Grid Padat, dan Baris List dengan geometri terstandarisasi. |
 | **Pengurutan & Filter Fleksibel** | **Tersedia** | Filter chip dan dropdown terpadu untuk sumber, format, status rilis, dan urutan pembaruan. |
 
@@ -65,9 +65,9 @@ Yomirra adalah *web-first comic reader interface* modern yang dirancang untuk me
 
 | Kemampuan | Status | Catatan & Implementasi Teknis |
 |---|---|---|
-| **Manajemen Sumber Aktif** | **Tersedia** | Toggle aktivasi sumber untuk mengatur keterlibatan dalam katalog Beranda, Library, dan Populer. |
-| **Deteksi Status Layanan (Health Check)** | **Tersedia** | Indikator visual real-time untuk sumber yang beroperasi normal atau sedang dalam perawatan (*Under Maintenance*). |
-| **Migrasi Sumber Otomatis (Relink)** | **Tersedia** | Fitur *Cari Sumber Alternatif* pada halaman pemulihan judul yang mati atau gagal muat, memetakan kembali riwayat baca ke sumber pengganti. |
+| **Manajemen Sumber Aktif** | **Tersedia** | Toggle aktivasi sumber untuk mengatur keterlibatan dalam katalog Beranda, Jelajah, dan Populer. |
+| **Deteksi Status Layanan (Health Check)** | **Tersedia** | Indikator berdasarkan pemeriksaan sumber terakhir; status tidak menjamin ketersediaan real-time. |
+| **Pemilihan Sumber Alternatif (Relink)** | **Tersedia** | Fitur *Cari Sumber Alternatif* pada halaman pemulihan judul yang mati atau gagal muat, memungkinkan pemilihan sumber pengganti; pemetaan progres hanya dilakukan bila dapat diverifikasi. |
 | **Isolasi Keamanan Sumber** | **Tersedia** | Sumber dijalankan di lapisan backend/API terisolasi tanpa eksekusi kode pihak ketiga di peramban pengguna. |
 
 ---
@@ -87,10 +87,10 @@ Yomirra adalah *web-first comic reader interface* modern yang dirancang untuk me
 
 | Kemampuan | Status | Catatan & Implementasi Teknis |
 |---|---|---|
-| **Ekspor Cadangan JSON Lokal** | **Tersedia** | Ekspor berkas cadangan terenkripsi/tervalidasi skema v1–v3 yang mencakup riwayat, bookmark, preferensi, dan koleksi. |
+| **Ekspor Cadangan JSON Lokal** | **Tersedia** | Ekspor JSON schema v3 untuk riwayat, bookmark, preferensi, dan koleksi; impor menerima schema v1–v3. Berkas ekspor tidak dienkripsi dan harus disimpan secara privat. |
 | **Pemulihan Cadangan (Restore)** | **Tersedia** | Opsi penggabungan cerdas (*Merge*) atau penimpaan penuh (*Replace*) dengan pratinjau validasi berkas. |
-| **Sinkronisasi Cloud Multidevice** | **Tersedia (Opsional)** | Sinkronisasi nirkabel via akun Google/Firebase untuk bookmark, riwayat baca, dan preferensi lintas perangkat. |
-| **Pembersihan Perangkat Bersama** | **Tersedia** | Fitur satu-klik untuk membersihkan seluruh jejak cache, akun, bookmark, dan riwayat saat menggunakan perangkat umum. |
+| **Sinkronisasi Cloud Multidevice** | **Tersedia (Opsional)** | Sinkronisasi berbasis akun untuk bookmark, riwayat baca, dan preferensi yang didukung. Uji lintas dua perangkat nyata tetap diperlukan. |
+| **Pembersihan Perangkat Bersama** | **Tersedia** | Alur keluar akun dan pembersihan data baca, unduhan, serta cache lokal pada perangkat bersama; hasilnya perlu diperiksa. |
 
 ---
 
