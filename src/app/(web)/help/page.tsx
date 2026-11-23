@@ -79,6 +79,9 @@ export default function HelpPage() {
             ))}
           </section>
           <p className="text-xs leading-relaxed text-text-muted">
+            Pencocokan metadata, jika diaktifkan, menggunakan <a className="text-accent underline" href="https://mangabaka.org/">MangaBaka</a> berdasarkan <a className="text-accent underline" href="https://mangabaka.org/about/data-license">ketentuan lisensi data</a>. Hasil pencocokan diadaptasi untuk tampilan katalog Yomirra.
+          </p>
+          <p className="text-xs leading-relaxed text-text-muted">
             Jika masalah berulang, catat judul, sumber, chapter, waktu kejadian dan perangkat. Jangan bagikan kata sandi, token atau tautan login pribadi.
           </p>
         </ContentLane>

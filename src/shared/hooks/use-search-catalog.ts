@@ -23,6 +23,7 @@ import { classifyContent } from "@/shared/sources/content-policy";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { groupVerifiedCatalogEntries, } from "@/shared/lib/canonical-identity";
 import { indexDiscoveryCatalog } from "@/shared/lib/reviewed-catalog";
+import { projectMetadataCatalogRows } from "@/shared/lib/metadata-catalog";
 import {
   applySearchTagsToFilters,
   buildHardFilterTags,
@@ -553,8 +554,11 @@ export function useSearchCatalog() {
   }, [intelligenceQuery.data?.catalogMatches, eligibleSourceIds, verifiedSourceIndex, hideNsfw]);
 
   const combinedResults = React.useMemo(
-    () => reconcileCatalogRows(rawSearchMangas, catalogMatches, verifiedSourceIndex),
-    [rawSearchMangas, catalogMatches, verifiedSourceIndex]
+    () => projectMetadataCatalogRows(
+      reconcileCatalogRows(rawSearchMangas, catalogMatches, verifiedSourceIndex),
+      intelligenceQuery.data?.metadataWorks ?? [],
+    ),
+    [rawSearchMangas, catalogMatches, verifiedSourceIndex, intelligenceQuery.data?.metadataWorks]
   );
 
   const searchMangas = React.useMemo(() => {

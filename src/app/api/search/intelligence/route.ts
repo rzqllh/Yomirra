@@ -4,6 +4,7 @@ import { applyRateLimitHeaders, checkRateLimitPolicy, createRateLimitRejection }
 import { readBoundedJson } from "@/server/lib/security/read-bounded-json";
 import { rankSearchIntelligence } from "@/server/lib/search/search-intelligence-service";
 import { getVerifiedRequestReadOptions } from "@/server/lib/sources/content-access";
+import { matchMangaBakaWorks } from "@/server/lib/metadata/mangabaka";
 
 export const dynamic = "force-dynamic";
 
@@ -77,6 +78,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const result = await rankSearchIntelligence({ ...parsed.data, hideNsfw: (await getVerifiedRequestReadOptions(request)).hideNsfw !== false });
-  return applyRateLimitHeaders(NextResponse.json({ data: result }), rateLimit);
+  const hideNsfw = (await getVerifiedRequestReadOptions(request)).hideNsfw !== false;
+  const [result, metadataWorks] = await Promise.all([
+    rankSearchIntelligence({ ...parsed.data, hideNsfw }),
+    matchMangaBakaWorks(parsed.data.query),
+  ]);
+  return applyRateLimitHeaders(NextResponse.json({ data: { ...result, ...(metadataWorks.length ? { metadataWorks } : {}) } }), rateLimit);
 }
