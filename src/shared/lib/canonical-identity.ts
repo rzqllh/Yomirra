@@ -95,7 +95,11 @@ export function groupVerifiedCatalogEntries<T extends CanonicalEvidenceEntry>(
     return {
       // Stable for a given set of confirmed bindings. Not a persistent ID.
       displayKey: `verified-display:${keys[0] ?? "unknown"}`,
-      representative: members[0],
+      representative: [...members].sort((a, b) =>
+        (a.id ?? canonicalSourceKey(a.sourceId, a.mangaId)).localeCompare(
+          b.id ?? canonicalSourceKey(b.sourceId, b.mangaId)
+        )
+      )[0],
       members,
       sourceBindings: Array.from(refs.values()),
     };

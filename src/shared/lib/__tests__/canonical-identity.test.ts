@@ -66,4 +66,18 @@ describe("verified canonical grouping (non-destructive)", () => {
     ]));
   });
 
+  it("chooses a stable cover representative regardless of source insert order", () => {
+    const a = entry("shinigami", "a", {
+      id: "z-local",
+      coverUrl: "/shinigami-cover.png",
+      linkedSources: [{ sourceId: "komiku", mangaId: "b", matchConfidence: "CONFIRMED" }],
+    });
+    const b = entry("komiku", "b", { id: "a-cloud", coverUrl: "/komiku-cover.png" });
+    const forward = groupVerifiedCatalogEntries([a, b])[0];
+    const reverse = groupVerifiedCatalogEntries([b, a])[0];
+    expect(forward.representative.id).toBe("a-cloud");
+    expect(reverse.representative.id).toBe(forward.representative.id);
+    expect(forward.representative.coverUrl).toBe(reverse.representative.coverUrl);
+  });
+
 });
