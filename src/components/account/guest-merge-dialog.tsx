@@ -263,11 +263,15 @@ export function GuestMergeDialog() {
       );
     } catch (err: any) {
       console.error("Failed to execute guest merge", err);
-      if ((err instanceof PartialBatchCommitError && err.completedBatches > 0) ||
-          (err instanceof Error && err.message.includes("CANONICAL_PREFERENCE_STALE_SNAPSHOT"))) {
+      if (err instanceof PartialBatchCommitError && err.completedBatches > 0) {
         setRequiresCloudRefresh(true);
         toast.error("Sinkronisasi Cloud Belum Tuntas", {
           description: `${err.completedBatches} dari ${err.totalBatches} batch tersimpan. Data lokal tidak diganti; cloud perlu diperiksa ulang.`,
+        });
+      } else if (err instanceof Error && err.message.includes("CANONICAL_PREFERENCE_STALE_SNAPSHOT")) {
+        setRequiresCloudRefresh(true);
+        toast.error("Pilihan Sumber Berubah di Cloud", {
+          description: "Data cloud perlu diperiksa ulang sebelum penggabungan dapat dilanjutkan.",
         });
       } else {
         toast.error("Penyelarasan Gagal", {
