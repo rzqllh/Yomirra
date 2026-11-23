@@ -5,7 +5,7 @@ import { HttpClient } from "../../base/http-client";
 function makeAdapter() {
   const mockClient = {
     get: vi.fn(),
-    getBaseUrl: vi.fn().mockReturnValue("https://api.shngm.io"),
+    getBaseUrl: vi.fn().mockReturnValue("https://api.shinigami.io"),
     setBaseUrl: vi.fn(),
     getConfig: vi.fn(),
   } as unknown as HttpClient;
@@ -15,6 +15,22 @@ function makeAdapter() {
 
 describe("ShinigamiSource — reliability hardening", () => {
   describe("getPopular", () => {
+    it("uses the updated host and offset/limit contract", async () => {
+      const { source, get } = makeAdapter();
+      get.mockResolvedValue({ data: [], meta: { has_next: false } });
+      await source.getPopular(2);
+      expect(source.upstreamDomain).toBe("api.shinigami.io");
+      expect(get).toHaveBeenCalledWith("/v1/manga/list", {
+        offset: 24, limit: 24, sort: "popularity",
+      });
+    });
+
+    it("understands cursor metadata instead of legacy page counters", async () => {
+      const { source, get } = makeAdapter();
+      get.mockResolvedValue({ data: [], meta: { has_next: true, next_cursor: "abc" } });
+      expect((await source.getPopular(1)).hasNextPage).toBe(true);
+    });
+
     it("returns empty list when API data is null", async () => {
       const { source, get } = makeAdapter();
       get.mockResolvedValue({ data: null, meta: {} });
@@ -60,6 +76,28 @@ describe("ShinigamiSource — reliability hardening", () => {
       get.mockResolvedValue({ data: null });
       const result = await source.getChapters("manga-id");
       expect(result).toEqual([]);
+    });
+
+    it("retrieves all cursor-based chapter pages and stops after has_next=false", async () => {
+      const { source, get } = makeAdapter();
+      get.mockResolvedValueOnce({
+        data: [{ chapter_id: "a", chapter_number: 1, chapter_title: "One", release_date: "2026-11-01" }],
+        meta: { has_next: true, next_cursor: "next-a" },
+      }).mockResolvedValueOnce({
+        data: [{ chapter_id: "b", chapter_number: 2, chapter_title: "Two", release_date: "2026-11-02" }],
+        meta: { has_next: false, next_cursor: null },
+      });
+      const chapters = await source.getChapters("series");
+      expect(chapters.map(ch => ch.id)).toEqual(["a", "b"]);
+      expect(get).toHaveBeenNthCalledWith(1, "/v1/chapter/series/list", undefined);
+      expect(get).toHaveBeenNthCalledWith(2, "/v1/chapter/series/list", { cursor: "next-a" });
+    });
+
+    it("rejects repeated upstream cursors instead of looping indefinitely", async () => {
+      const { source, get } = makeAdapter();
+      get.mockResolvedValue({ data: [], meta: { has_next: true, next_cursor: "loop" } });
+      await expect(source.getChapters("series")).rejects.toThrow(/cursor/);
+      expect(get).toHaveBeenCalledTimes(2);
     });
 
     it("maps chapters correctly", async () => {
@@ -176,7 +214,7 @@ describe("ShinigamiSource — reliability hardening", () => {
       const { source } = makeAdapter();
       expect(source.id).toBe("shinigami");
       expect(source.adapterVersion).toBe("1.1.0");
-      expect(source.upstreamDomain).toBe("api.shngm.io");
+      expect(source.upstreamDomain).toBe("api.shinigami.io");
       expect(source.supportedLanguages).toEqual(["id"]);
       expect(source.capabilities.search).toBe(true);
       expect(source.capabilities.popular).toBe(true);

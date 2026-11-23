@@ -1,8 +1,12 @@
 export interface ShinigamiPaginationMeta {
-  page: number;
-  page_size: number;
-  total_page: number;
-  total_data: number;
+  /** Cursor pagination used by the current upstream API. */
+  has_next?: boolean;
+  next_cursor?: string | null;
+  /** Previous releases used page-based metadata; supported only as a fallback. */
+  page?: number;
+  page_size?: number;
+  total_page?: number;
+  total_data?: number;
 }
 
 export interface ShinigamiMangaItem {
@@ -59,6 +63,7 @@ export interface ShinigamiChapterItem {
 
 export interface ShinigamiChapterListResponse {
   data: ShinigamiChapterItem[];
+  meta?: ShinigamiPaginationMeta;
 }
 
 export interface ShinigamiChapterData {

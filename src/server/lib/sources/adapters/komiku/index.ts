@@ -39,6 +39,11 @@ export class KomikuSource implements MangaSource {
     Referer: "https://komiku.org/",
   });
 
+  // Catalog endpoints are separate from the reader HTML domain.
+  private catalogClient = new HttpClient("https://api.komiku.org", {
+    "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+  });
+
   private extractCoverUrl($img: any): string {
     if (!$img || !$img.length) return "";
     const rawSrc = $img.attr("src") || "";
@@ -61,7 +66,7 @@ export class KomikuSource implements MangaSource {
     const mangas: any[] = [];
     const seenIds = new Set<string>();
 
-    $(".ls4j, .ls12v, .ls4, .ls12, .bmaster, .manga-card, div[class*='ls'], article").each((_, el) => {
+    $(".bge, .ls4j, .ls12v, .ls4, .ls12, .bmaster, .manga-card, div[class*='ls'], article").each((_, el) => {
       const $el = $(el);
       const title =
         $el.find("h4 a, h3 a").first().text().trim() ||
@@ -69,10 +74,10 @@ export class KomikuSource implements MangaSource {
         $el.find("a[href*='/manga/'], a[href*='/komik/']").text().trim() ||
         $el.find("img").attr("alt")?.replace(/^baca\s+/i, "").trim() ||
         "";
-      const a = $el.find("h4 a, h3 a, a[href*='/manga/'], a[href*='/komik/']").first();
+      const a = $el.find("h4 a, h3 a, .kan a:has(h3), .bgei a, a[href*='/manga/'], a[href*='/komik/']").first();
       const href = a.attr("href") || "";
       const coverUrl = this.extractCoverUrl($el.find("img").first());
-      const latestChapter = $el.find(".ls4l, .ls2l, .ch").first().text().trim();
+      const latestChapter = $el.find(".ls4l, .ls2l, .ch, .new1").first().text().trim();
       const scoreRaw = $el.find(".rating, .score, .skor, .num, i[class*='star']").first().text().replace(/[^\d.]/g, "").trim();
       const score = parseFloat(scoreRaw) || undefined;
 
@@ -129,13 +134,16 @@ export class KomikuSource implements MangaSource {
   }
 
   async getPopular(page: number): Promise<MangaPageResult> {
-    const html = await this.client.getHtml(`/daftar-komik/?halaman=${page}`);
+    const path = page <= 1 ? "/other/hot/?orderby=meta_value_num"
+      : `/other/hot/page/${page}/?orderby=meta_value_num`;
+    const html = await this.catalogClient.getHtml(path);
     return this.parseMangaList(html);
   }
 
   async getLatest(page: number): Promise<MangaPageResult> {
-    const url = page === 1 ? "/" : `/daftar-komik/?halaman=${page}`;
-    const html = await this.client.getHtml(url);
+    const path = page <= 1 ? "/manga?orderby=modified"
+      : `/manga/page/${page}?orderby=modified`;
+    const html = await this.catalogClient.getHtml(path);
     return this.parseMangaList(html);
   }
 

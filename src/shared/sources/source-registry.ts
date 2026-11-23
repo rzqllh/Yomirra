@@ -8,7 +8,7 @@ export const sourceRegistry: SourceMetadata[] = [
     description: "Indonesian translation source for manga and manhwa.",
     language: "id",
     baseUrl: "https://shinigami.asia",
-    healthCheckUrl: "https://api.shngm.io/v1/manga/list?page=1&page_size=1",
+    healthCheckUrl: "https://api.shinigami.io/v1/manga/list?offset=0&limit=1&sort=popularity",
     icon: "https://s2.googleusercontent.com/s2/favicons?domain=shinigami.asia&sz=128",
     version: "1.0.0",
     isEnabled: true,

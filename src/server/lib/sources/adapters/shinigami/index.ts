@@ -19,14 +19,21 @@ import type {
   ShinigamiMangaListResponse,
 } from "./types";
 
+function hasNext(meta?: ShinigamiMangaListResponse["meta"]): boolean {
+  if (typeof meta?.has_next === "boolean") return meta.has_next;
+  return typeof meta?.page === "number" && typeof meta?.total_page === "number"
+    ? meta.page < meta.total_page
+    : false;
+}
+
 export class ShinigamiSource implements MangaSource {
   public readonly id = "shinigami";
   public readonly name = "Shinigami";
   public readonly description = "Indonesian translation source for manga and manhwa.";
   public readonly language = "id";
   public readonly baseUrl = "https://shinigami.asia";
-  public readonly healthCheckUrl = "https://api.shngm.io/v1/manga/list?page=1&page_size=1";
-  public readonly upstreamDomain = "api.shngm.io";
+  public readonly healthCheckUrl = "https://api.shinigami.io/v1/manga/list?offset=0&limit=1&sort=popularity";
+  public readonly upstreamDomain = "api.shinigami.io";
   public readonly supportedLanguages = ["id"];
   public readonly version = "1.0.0";
   public readonly adapterVersion = "1.1.0";
@@ -58,7 +65,7 @@ export class ShinigamiSource implements MangaSource {
     return uas[Math.floor(Math.random() * uas.length)];
   }
 
-  private apiBaseUrl = "https://api.shngm.io";
+  private apiBaseUrl = "https://api.shinigami.io";
   private client: HttpClient;
 
   constructor(apiBaseUrl?: string, client?: HttpClient) {
@@ -68,11 +75,11 @@ export class ShinigamiSource implements MangaSource {
     this.client = client ?? new HttpClient({
       baseUrl: this.apiBaseUrl,
       timeoutMs: 15000,
-      allowedHosts: ["api.shngm.io"],
+      allowedHosts: ["api.shinigami.io"],
       defaultHeaders: {
         "User-Agent": this.getRandomUA(),
-        "Referer": "https://c.shinigami.asia/",
-        "Origin": "https://c.shinigami.asia",
+        "Accept": "application/json",
+        "Sec-GPC": "1",
         "DNT": "1",
       },
     });
@@ -83,11 +90,11 @@ export class ShinigamiSource implements MangaSource {
     this.client = new HttpClient({
       baseUrl: this.apiBaseUrl,
       timeoutMs: 15000,
-      allowedHosts: ["api.shngm.io"],
+      allowedHosts: ["api.shinigami.io"],
       defaultHeaders: {
         "User-Agent": this.getRandomUA(),
-        "Referer": "https://c.shinigami.asia/",
-        "Origin": "https://c.shinigami.asia",
+        "Accept": "application/json",
+        "Sec-GPC": "1",
         "DNT": "1",
       },
     });
@@ -97,42 +104,42 @@ export class ShinigamiSource implements MangaSource {
   /** One-title functional probe instead of a 24-title catalog request. */
   async getHealthSample(): Promise<MangaPageResult> {
     const res = await this.client.get<ShinigamiMangaListResponse>("/v1/manga/list", {
-      page: 1,
-      page_size: 1,
+      offset: 0,
+      limit: 1,
       sort: "popularity",
     });
     const items = Array.isArray(res?.data) ? res.data : [];
     return {
       mangas: items.map(normalizeMangaItem),
-      hasNextPage: (res?.meta?.page ?? 0) < (res?.meta?.total_page ?? 0),
+      hasNextPage: hasNext(res?.meta),
     };
   }
 
   async getPopular(page: number): Promise<MangaPageResult> {
     const res = await this.client.get<ShinigamiMangaListResponse>("/v1/manga/list", {
-      page,
-      page_size: 24,
+      offset: (Math.max(1, page) - 1) * 24,
+      limit: 24,
       sort: "popularity",
     });
 
     const items = Array.isArray(res?.data) ? res.data : [];
     return {
       mangas: items.map(normalizeMangaItem),
-      hasNextPage: (res?.meta?.page ?? 0) < (res?.meta?.total_page ?? 0),
+      hasNextPage: hasNext(res?.meta),
     };
   }
 
   async getLatest(page: number): Promise<MangaPageResult> {
     const res = await this.client.get<ShinigamiMangaListResponse>("/v1/manga/list", {
-      page,
-      page_size: 24,
+      offset: (Math.max(1, page) - 1) * 24,
+      limit: 24,
       sort: "latest",
     });
 
     const latestItems = Array.isArray(res?.data) ? res.data : [];
     return {
       mangas: latestItems.map(normalizeMangaItem),
-      hasNextPage: (res?.meta?.page ?? 0) < (res?.meta?.total_page ?? 0),
+      hasNextPage: hasNext(res?.meta),
     };
   }
 
@@ -153,8 +160,8 @@ export class ShinigamiSource implements MangaSource {
     }
 
     const params: Record<string, string | string[] | number> = {
-      page,
-      page_size: 24,
+      offset: (Math.max(1, page) - 1) * 24,
+      limit: 24,
     };
     if (cleanQuery) params.q = cleanQuery;
     
@@ -207,7 +214,7 @@ export class ShinigamiSource implements MangaSource {
 
     return {
       mangas: filteredData.map(normalizeMangaItem),
-      hasNextPage: (res?.meta?.page ?? 0) < (res?.meta?.total_page ?? 0),
+      hasNextPage: hasNext(res?.meta),
     };
   }
 
@@ -222,12 +229,26 @@ export class ShinigamiSource implements MangaSource {
   }
 
   async getChapters(mangaId: string): Promise<Chapter[]> {
-    const res = await this.client.get<ShinigamiChapterListResponse>(
-      `/v1/chapter/${mangaId}/list`,
-      { page_size: 3000 }
-    );
-    const chapters = Array.isArray(res?.data) ? res.data : [];
-    return chapters.map((c) => normalizeChapter(c, mangaId));
+    const all: Chapter[] = [];
+    const visited = new Set<string>();
+    let cursor: string | undefined;
+    // Bound enumeration to prevent a broken cursor from creating unbounded upstream traffic.
+    for (let batch = 0; batch < 60; batch++) {
+      const res = await this.client.get<ShinigamiChapterListResponse>(
+        `/v1/chapter/${mangaId}/list`,
+        cursor ? { cursor } : undefined
+      );
+      const chapters = Array.isArray(res?.data) ? res.data : [];
+      all.push(...chapters.map(c => normalizeChapter(c, mangaId)));
+      if (!res?.meta?.has_next) return all;
+      const next = res.meta.next_cursor?.trim();
+      if (!next || visited.has(next)) {
+        throw new Error("Shinigami chapter cursor is missing or repeated");
+      }
+      visited.add(next);
+      cursor = next;
+    }
+    throw new Error("Shinigami chapter pagination exceeded safe request budget");
   }
 
   async getPages(chapterId: string): Promise<ChapterPages> {
