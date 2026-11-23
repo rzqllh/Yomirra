@@ -69,10 +69,14 @@ export function MangaCover({
       ) : alt || fallbackTitle ? (
         <div className="absolute inset-0 flex h-full w-full flex-col items-center justify-center gap-2 px-3 py-4 text-center">
           <ImageBroken size={Math.min(iconSize, 28)} aria-hidden="true" className="shrink-0 text-text-muted" />
-          <span className="line-clamp-3 text-xs font-semibold leading-relaxed text-text-secondary">
-            {fallbackTitle || alt}
-          </span>
-          <span className="text-2xs text-text-muted">Sampul tidak tersedia</span>
+          {fallbackTitle && (
+            <>
+              <span className="line-clamp-3 text-xs font-semibold leading-relaxed text-text-secondary">
+                {fallbackTitle}
+              </span>
+              <span className="text-2xs text-text-muted">Sampul tidak tersedia</span>
+            </>
+          )}
         </div>
       ) : null}
     </div>
