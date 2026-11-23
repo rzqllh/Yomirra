@@ -155,7 +155,8 @@ export function CollectionTab({
 
   const uniqueTitlesCount = React.useMemo(() => {
     const list = scopedItems ?? [];
-    return new Set(list.map((m) => m.title?.toLowerCase().trim() || m.mangaId)).size;
+    // Already deduplicated by verified identity, not by possibly colliding titles.
+    return list.length;
   }, [scopedItems]);
 
   const getMangaCount = (collectionId: string) => {
@@ -166,7 +167,7 @@ export function CollectionTab({
         const memberships = membershipsByManga[key] || membershipsByManga[legacyKey] || [];
         return memberships.includes(collectionId);
       });
-      return new Set(matching.map((m) => m.title?.toLowerCase().trim() || m.mangaId)).size;
+      return matching.length;
     }
     return Object.values(membershipsByManga).filter((ids) => ids.includes(collectionId)).length;
   };

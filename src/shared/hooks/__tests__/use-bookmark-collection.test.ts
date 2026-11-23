@@ -101,4 +101,22 @@ describe("useBookmarkCollection smart filters", () => {
     expect(result.current.selectedCollectionId).toBeNull();
     expect(result.current.selectedSmartCollectionId).toBeNull();
   });
+  it("shows a single saved card for confirmed source bindings and keeps unverified collision separate", () => {
+    const now = "2026-09-29T00:00:00.000Z";
+    useLibraryStore.setState({ items: {
+      a: { id: "a", sourceId: "source-a", mangaId: "a", title: "Same title", addedAt: now, updatedAt: now,
+        linkedSources: [{ sourceId: "source-b", mangaId: "b", matchConfidence: "CONFIRMED", addedAt: 1 }] },
+      b: { id: "b", sourceId: "source-b", mangaId: "b", title: "Same title", addedAt: now, updatedAt: now },
+      c: { id: "c", sourceId: "source-c", mangaId: "c", title: "Same title", addedAt: now, updatedAt: now },
+    } });
+    const { result } = renderHook(() => useBookmarkCollection());
+    expect(result.current.totalLibraryItemsCount).toBe(2);
+    expect(result.current.filteredAndSortedLibraryItems.map(item => item.id)).toEqual(["a", "c"]);
+    expect(Object.keys(useLibraryStore.getState().items)).toHaveLength(3);
+
+    act(() => result.current.setSourceFilter("source-b"));
+    expect(result.current.filteredAndSortedLibraryItems).toHaveLength(1);
+    expect(result.current.filteredAndSortedLibraryItems[0].id).toBe("a");
+  });
+
 });
