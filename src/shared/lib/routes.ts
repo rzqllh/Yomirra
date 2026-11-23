@@ -33,6 +33,11 @@ export function getAccountHref(): string {
   return `/account`;
 }
 
+/** Stable entry point for a user's verified saved-title catalog identity. */
+export function getCanonicalSavedDetailHref(savedTitleId: string): string {
+  return `/catalog/saved/${encodeURIComponent(savedTitleId)}`;
+}
+
 export function getMangaDetailHref(sourceId: string, mangaId: string, returnTo?: string): string {
   const base = `/manga/${encodeURIComponent(sourceId)}/${encodeURIComponent(mangaId)}`;
   if (returnTo) {

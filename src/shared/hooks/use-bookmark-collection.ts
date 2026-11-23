@@ -222,8 +222,18 @@ export function useBookmarkCollection() {
   const totalPages = Math.max(1, Math.ceil(filteredAndSortedLibraryItems.length / ITEMS_PER_PAGE));
   const paginatedCollection = React.useMemo(() => {
     const start = (collectionPage - 1) * ITEMS_PER_PAGE;
-    return filteredAndSortedLibraryItems.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredAndSortedLibraryItems, collectionPage]);
+    return filteredAndSortedLibraryItems.slice(start, start + ITEMS_PER_PAGE).map(item => {
+      const group = groupForItem(item);
+      // The binding list belongs to display navigation only; this never rewrites
+      // saved Library entries or their source-specific history.
+      return {
+        ...item,
+        sourceBindings: (group?.sourceBindings ?? [])
+          .filter(ref => mayExposeSource(ref.sourceId))
+          .map(ref => ({ ...ref, title: item.title })),
+      };
+    });
+  }, [filteredAndSortedLibraryItems, collectionPage, groupForItem, mayExposeSource]);
 
   const toggleSelectItem = (key: string) => {
     setSelectedItems((prev) => {

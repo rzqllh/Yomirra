@@ -12,7 +12,7 @@ import { CollectionToolbar } from "./collection-toolbar";
 import { CollectionSelectionToolbar } from "./collection-selection-toolbar";
 import { ConfirmationModal } from "@/components/ui/confirmation-modal";
 import { CreateCollectionModal, RenameCollectionModal } from "@/components/collection/collection-modals";
-import { getLibraryHref, getSearchHref } from "@/shared/lib/routes";
+import { getLibraryHref, getSearchHref, getCanonicalSavedDetailHref } from "@/shared/lib/routes";
 import { toast } from "sonner";
 import {
   Pagination,
@@ -452,6 +452,9 @@ export function CollectionTab({
                         status: manga.status,
                       }}
                       sourceId={manga.sourceId}
+                      sourceBindings={manga.sourceBindings}
+                      canonicalDetailHref={getCanonicalSavedDetailHref(manga.id ?? `${manga.sourceId}::${manga.mangaId}`)}
+                      showBookmarkAction={false}
                       showSourceBadge={true}
                     />
                   </div>

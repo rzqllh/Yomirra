@@ -219,6 +219,8 @@ export interface MangaCardProps extends BaseCardProps {
   viewMode?: "grid" | "compact";
   showSourceBadge?: boolean;
   sourceBindings?: SourceBinding[];
+  canonicalDetailHref?: string;
+  showBookmarkAction?: boolean;
   rank?: number;
   latestChapterTime?: string;
   historyItem?: HistoryItem;
@@ -240,6 +242,8 @@ export function MangaCard({
   displayScore,
   showSourceBadge = false,
   sourceBindings,
+  canonicalDetailHref,
+  showBookmarkAction = true,
   rank,
   latestChapterTime,
   historyItem,
@@ -300,30 +304,34 @@ export function MangaCard({
   const cardSource = dynamicSourceRegistry.get(cardSourceId) || sourceRegistry.find((s) => s.id === cardSourceId);
   const sourceName = showSourceBadge ? (cardSource?.name || getSourceDisplayName(cardSourceId)) : null;
   // A filtered canonical card must not navigate through a disabled primary binding.
-  const cardDetailHref = getMangaDetailHref(
+  const cardDetailHref = canonicalDetailHref ?? getMangaDetailHref(
     cardSourceId,
     cardMangaId,
     fullPath
   );
+  const allowCatalogNavigation = Boolean(canonicalDetailHref);
+  const opensSourcePicker = isMultiSource && !allowCatalogNavigation;
   const [isSourceDialogOpen, setIsSourceDialogOpen] = React.useState(false);
   const [isFallbackDialogOpen, setIsFallbackDialogOpen] = React.useState(false);
 
   const handleCardOpen = (event: React.MouseEvent<HTMLAnchorElement>) => {
-    if (noEligibleSource) {
+    if (noEligibleSource && !allowCatalogNavigation) {
       event.preventDefault();
       setIsFallbackDialogOpen(true);
       return;
     }
-    if (isMultiSource) {
+    if (opensSourcePicker) {
       event.preventDefault();
       setIsSourceDialogOpen(true);
     }
   };
-  const cardAriaLabel = noEligibleSource
-    ? `Sumber tidak aktif untuk ${manga.title}. Klik untuk cari di sumber lain.`
-    : isMultiSource
-      ? `Pilih sumber untuk ${manga.title}`
-      : `Lihat ${manga.title}`;
+  const cardAriaLabel = allowCatalogNavigation
+    ? `Lihat katalog ${manga.title}`
+    : noEligibleSource
+      ? `Sumber tidak aktif untuk ${manga.title}. Klik untuk cari di sumber lain.`
+      : isMultiSource
+        ? `Pilih sumber untuk ${manga.title}`
+        : `Lihat ${manga.title}`;
 
   const mangaKey = `${sourceId}::${manga.id}` as MangaKey;
   const readingStatus = readingStatusByManga[mangaKey];
@@ -591,16 +599,16 @@ export function MangaCard({
         style={vtStyle}
       >
         <Link
-          href={noEligibleSource ? "#" : cardDetailHref}
+          href={noEligibleSource && !allowCatalogNavigation ? "#" : cardDetailHref}
           prefetch={false}
           className={cn(
             mangaCardInteraction.link,
             "flex min-w-0 flex-1 gap-2.5 rounded-l-md",
-            noEligibleSource ? "cursor-not-allowed opacity-60" : "cursor-pointer"
+            noEligibleSource && !allowCatalogNavigation ? "cursor-not-allowed opacity-60" : "cursor-pointer"
           )}
           aria-label={noEligibleSource || isMultiSource ? cardAriaLabel : `Baca ${manga.title}`}
-          aria-disabled={noEligibleSource || undefined}
-          aria-haspopup={isMultiSource ? "dialog" : undefined}
+          aria-disabled={(noEligibleSource && !allowCatalogNavigation) || undefined}
+          aria-haspopup={opensSourcePicker ? "dialog" : undefined}
           onClick={handleCardOpen}
         >
           {/* Cover Frame with Ranking Badge Overlay */}
@@ -674,7 +682,7 @@ export function MangaCard({
 
         {/* Bookmark & Rating Column */}
         <div className="relative flex w-13 shrink-0 flex-col items-center justify-center gap-2 bg-transparent">
-          <BookmarkButton sourceId={cardSourceId} manga={cardManga} className="size-11" />
+          {showBookmarkAction && <BookmarkButton sourceId={cardSourceId} manga={cardManga} className="size-11" />}
           <div className="h-px w-6 bg-border-subtle" />
           {Number(scoreToDisplay) > 0 ? (
             <div className="flex flex-col items-center gap-0.5 text-semantic-warning">
@@ -686,7 +694,7 @@ export function MangaCard({
           ) : null}
         </div>
 
-        {isMultiSource && (
+        {opensSourcePicker && (
           <CanonicalSourceDialog
             open={isSourceDialogOpen}
             onOpenChange={setIsSourceDialogOpen}
@@ -696,7 +704,7 @@ export function MangaCard({
           />
         )}
 
-        {noEligibleSource && (
+        {noEligibleSource && !allowCatalogNavigation && (
           <DeadSourceFallbackDialog
             open={isFallbackDialogOpen}
             onOpenChange={setIsFallbackDialogOpen}
@@ -783,12 +791,12 @@ export function MangaCard({
           className="w-21 shrink-0 sm:w-24 md:w-26"
         >
           <Link
-            href={noEligibleSource ? "#" : cardDetailHref}
+            href={noEligibleSource && !allowCatalogNavigation ? "#" : cardDetailHref}
           prefetch={false}
-            className={cn("block h-full rounded-sm outline-none", noEligibleSource ? "cursor-not-allowed opacity-60" : "cursor-pointer")}
+            className={cn("block h-full rounded-sm outline-none", noEligibleSource && !allowCatalogNavigation ? "cursor-not-allowed opacity-60" : "cursor-pointer")}
             aria-label={cardAriaLabel}
-            aria-disabled={noEligibleSource || undefined}
-            aria-haspopup={isMultiSource ? "dialog" : undefined}
+            aria-disabled={(noEligibleSource && !allowCatalogNavigation) || undefined}
+            aria-haspopup={opensSourcePicker ? "dialog" : undefined}
             onClick={handleCardOpen}
           >
             <MangaCardCoverFrame className="vt-hover h-full w-full rounded-sm shadow-xs border-border-subtle/60">
@@ -809,12 +817,12 @@ export function MangaCard({
           <div>
             <div className="flex items-start justify-between gap-2">
               <Link
-                href={noEligibleSource ? "#" : cardDetailHref}
+                href={noEligibleSource && !allowCatalogNavigation ? "#" : cardDetailHref}
           prefetch={false}
-                className={cn(mangaCardInteraction.link, "min-w-0 flex-1 rounded-sm", noEligibleSource && "cursor-not-allowed opacity-60")}
+                className={cn(mangaCardInteraction.link, "min-w-0 flex-1 rounded-sm", noEligibleSource && !allowCatalogNavigation && "cursor-not-allowed opacity-60")}
                 aria-label={cardAriaLabel}
-                aria-disabled={noEligibleSource || undefined}
-                aria-haspopup={isMultiSource ? "dialog" : undefined}
+                aria-disabled={(noEligibleSource && !allowCatalogNavigation) || undefined}
+                aria-haspopup={opensSourcePicker ? "dialog" : undefined}
                 onClick={handleCardOpen}
               >
                 <MangaCardTitle lines={1} className={cn("vt-title-hover", mangaCardInteraction.title)} title={manga.title}>
@@ -877,7 +885,7 @@ export function MangaCard({
           </div>
         </div>
 
-        {isMultiSource && (
+        {opensSourcePicker && (
           <CanonicalSourceDialog
             open={isSourceDialogOpen}
             onOpenChange={setIsSourceDialogOpen}
@@ -887,7 +895,7 @@ export function MangaCard({
           />
         )}
 
-        {noEligibleSource && (
+        {noEligibleSource && !allowCatalogNavigation && (
           <DeadSourceFallbackDialog
             open={isFallbackDialogOpen}
             onOpenChange={setIsFallbackDialogOpen}
@@ -932,13 +940,13 @@ export function MangaCard({
       style={vtStyle}
     >
       <Link
-        href={noEligibleSource ? "#" : cardDetailHref}
+        href={noEligibleSource && !allowCatalogNavigation ? "#" : cardDetailHref}
           prefetch={false}
         transitionTypes={["nav-forward"]}
-        className={cn(mangaCardInteraction.link, "group flex flex-col rounded-xs", noEligibleSource && "cursor-not-allowed opacity-60")}
+        className={cn(mangaCardInteraction.link, "group flex flex-col rounded-xs", noEligibleSource && !allowCatalogNavigation && "cursor-not-allowed opacity-60")}
         aria-label={cardAriaLabel}
-        aria-disabled={noEligibleSource || undefined}
-        aria-haspopup={isMultiSource ? "dialog" : undefined}
+        aria-disabled={(noEligibleSource && !allowCatalogNavigation) || undefined}
+        aria-haspopup={opensSourcePicker ? "dialog" : undefined}
         onClick={handleCardOpen}
       >
         <motion.div
@@ -1088,10 +1096,10 @@ export function MangaCard({
       </Link>
 
       <div className="absolute right-2 top-2 z-20 flex items-center justify-center">
-        <BookmarkButton sourceId={cardSourceId} manga={cardManga} className="size-8.5 sm:size-9 rounded-lg" />
+        {showBookmarkAction && <BookmarkButton sourceId={cardSourceId} manga={cardManga} className="size-8.5 sm:size-9 rounded-lg" />}
       </div>
 
-      {isMultiSource && (
+      {opensSourcePicker && (
         <CanonicalSourceDialog
           open={isSourceDialogOpen}
           onOpenChange={setIsSourceDialogOpen}
@@ -1101,7 +1109,7 @@ export function MangaCard({
         />
       )}
 
-      {noEligibleSource && (
+      {noEligibleSource && !allowCatalogNavigation && (
         <DeadSourceFallbackDialog
           open={isFallbackDialogOpen}
           onOpenChange={setIsFallbackDialogOpen}
