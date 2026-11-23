@@ -84,6 +84,14 @@ export class SourceManager {
       }
     }
 
+    // Keiyoushi ports are NOT public sources. Only an explicit diagnostic
+    // caller may resolve a staged HTML adapter. They are never added to the
+    // built-in sourceMap or discovery registry.
+    if (!source && options?.allowDisabled) {
+      const { getStagedKeiyoushiSource } = await import("./adapters/keiyoushi");
+      source = getStagedKeiyoushiSource(normalizedId);
+    }
+
     if (!source) {
       throw new Error(`Source ${id} not found`);
     }

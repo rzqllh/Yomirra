@@ -21,7 +21,8 @@ describe("manga card partial-data contract", () => {
   });
 
   it("keeps combined Popular source selection source-correct", () => {
-    expect(source).toContain('aria-haspopup={isMultiSource ? "dialog" : undefined}');
+    expect(source).toContain('const opensSourcePicker = isMultiSource && !allowCatalogNavigation;');
+    expect(source).toContain('aria-haspopup={opensSourcePicker ? "dialog" : undefined}');
     expect(source).toContain("setIsSourceDialogOpen(true)");
     expect(source).toContain("sourceBindings={availableBindings}");
   });

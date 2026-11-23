@@ -17,29 +17,29 @@ interface ReaderSettingsDrawerProps {
 const BACKGROUNDS = [
   { name: 'Gelap', value: 'black', color: '#000000', border: 'border-border-subtle' },
   { name: 'Terang', value: 'mist', color: '#f9f9fb', border: 'border-border-subtle' },
-  { name: 'Ikuti Sistem', value: 'system', color: '', border: 'border-border-default' }
+  { name: 'Ikuti tema aplikasi', value: 'system', color: '', border: 'border-border-default' }
 ] as const;
 
 const IMAGE_FITS = [
-  { id: 'contained', label: 'Muat Layar' },
-  { id: 'width', label: 'Penuhi Lebar' },
+  { id: 'contained', label: 'Muat layar' },
+  { id: 'width', label: 'Penuhi lebar' },
 ] as const;
 
 const PAGE_GAPS = [
-  { id: 'none', label: 'Tanpa Jarak' },
+  { id: 'none', label: 'Tanpa jarak' },
   { id: 'small', label: 'Sedikit' },
-  { id: 'comfortable', label: 'Jauh' }
+  { id: 'comfortable', label: 'Renggang' }
 ] as const;
 
 const TOOLBAR_BEHAVIORS = [
   { id: 'auto-hide', label: 'Sembunyikan otomatis' },
-  { id: 'always-visible', label: 'Selalu Tampil' },
+  { id: 'always-visible', label: 'Selalu tampil' },
 ] as const;
 
 const PRELOAD_INTENSITIES = [
   { id: 'light', label: 'Hemat (+1)' },
   { id: 'balanced', label: 'Standar (+3)' },
-  { id: 'aggressive', label: 'Cepat (Semua)' },
+  { id: 'aggressive', label: 'Cepat (maks. 8)' },
 ] as const;
 
 interface ReaderSettingsOptionProps<T extends string> {
@@ -70,6 +70,7 @@ function ReaderSettingsOption<T extends string>({
           <button
             key={mode.id}
             onClick={() => onChange(mode.id)}
+            aria-pressed={value === mode.id}
             className={cn(
               "flex-1 py-2 px-1 text-xs font-bold rounded-lg transition-colors outline-none",
               value === mode.id
@@ -103,11 +104,11 @@ export function ReaderSettingsDrawer({ isOpen, onClose, sourceId, mangaId }: Rea
 
   // Effective preferences:
   const preferences = React.useMemo(() => {
-    if (isPerTitleContext && perTitlePrefs) {
+    if (scope === "title" && isPerTitleContext && perTitlePrefs) {
       return { ...globalPrefs, ...perTitlePrefs };
     }
     return globalPrefs;
-  }, [isPerTitleContext, globalPrefs, perTitlePrefs]);
+  }, [scope, isPerTitleContext, globalPrefs, perTitlePrefs]);
 
   const handleUpdate = React.useCallback(
     (patch: Partial<Parameters<typeof updatePreferences>[0]>) => {
@@ -156,7 +157,7 @@ export function ReaderSettingsDrawer({ isOpen, onClose, sourceId, mangaId }: Rea
       {isPerTitleContext && (
         <div className="p-3 bg-surface-raised rounded-xl border border-border-subtle space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-text-secondary">Cakupan Pengaturan</span>
+            <span className="text-xs font-bold text-text-secondary">Cakupan pengaturan</span>
             {hasPerTitleOverride && (
               <button
                 type="button"
@@ -206,13 +207,13 @@ export function ReaderSettingsDrawer({ isOpen, onClose, sourceId, mangaId }: Rea
 
       {/* Tampilan */}
       <div className="space-y-3">
-        <div className="text-xs font-bold uppercase tracking-wider text-text-muted px-1 flex items-center gap-1.5">
-          <Layout size={14} weight="regular" /> Tampilan & Tema
+        <div className="text-xs font-bold tracking-wide text-text-muted px-1 flex items-center gap-1.5">
+          <Layout size={14} weight="regular" /> Tampilan & tema
         </div>
 
         {/* Warna Latar Belakang */}
         <div className="p-4 bg-surface-base rounded-xl border border-border-subtle flex flex-col gap-3">
-          <span className="text-sm font-bold text-text-primary">Warna Latar Belakang</span>
+          <span className="text-sm font-bold text-text-primary">Warna latar belakang</span>
           <div className="grid grid-cols-3 gap-2">
             {BACKGROUNDS.map((bg) => {
               const isSelected = preferences.background === bg.value;
@@ -253,8 +254,8 @@ export function ReaderSettingsDrawer({ isOpen, onClose, sourceId, mangaId }: Rea
 
       {/* Mode Baca & Gambar */}
       <div className="space-y-3">
-        <div className="text-xs font-bold uppercase tracking-wider text-text-muted px-1 flex items-center gap-1.5">
-          <ImageSquare size={14} weight="regular" /> Penyesuaian Gambar
+        <div className="text-xs font-bold tracking-wide text-text-muted px-1 flex items-center gap-1.5">
+          <ImageSquare size={14} weight="regular" /> Penyesuaian gambar
         </div>
 
         <div className="bg-surface-base rounded-xl border border-border-subtle divide-y divide-border-subtle">
@@ -280,8 +281,8 @@ export function ReaderSettingsDrawer({ isOpen, onClose, sourceId, mangaId }: Rea
 
       {/* Kontrol & Performa */}
       <div className="space-y-3">
-        <div className="text-xs font-bold uppercase tracking-wider text-text-muted px-1 flex items-center gap-1.5">
-          <Lightning size={14} weight="regular" /> Kontrol & Performa
+        <div className="text-xs font-bold tracking-wide text-text-muted px-1 flex items-center gap-1.5">
+          <Lightning size={14} weight="regular" /> Kontrol & performa
         </div>
 
         <div className="bg-surface-base rounded-xl border border-border-subtle divide-y divide-border-subtle">
@@ -295,7 +296,7 @@ export function ReaderSettingsDrawer({ isOpen, onClose, sourceId, mangaId }: Rea
 
           <ReaderSettingsOption
             icon={<Lightning size={18} className="text-accent" weight="regular" />}
-            title="Muat awal gambar"
+            title="Gambar berikutnya"
             options={PRELOAD_INTENSITIES}
             value={preferences.preloadIntensity}
             onChange={(val) => handleUpdate({ preloadIntensity: val })}

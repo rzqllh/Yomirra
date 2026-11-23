@@ -43,7 +43,12 @@ class ApiClient {
       useSourceHealthStore.getState().recordSuccess(sourceId, latency);
       return result;
     } catch (error: any) {
+      // Local transport failures and client-side 4xx responses are not evidence of source health.
+      // A weak signal must not mark an upstream source as degraded/offline in the UI.
       if (error?.name === "AbortError" || options?.signal?.aborted ||
+          error instanceof TypeError ||
+          (typeof navigator !== "undefined" && navigator.onLine === false) ||
+          (error instanceof ApiRequestError && error.status >= 400 && error.status < 500) ||
           ["CONTENT_RESTRICTED", "MAPPING_UNAVAILABLE", "CHAPTER_UNAVAILABLE", "CONTENT_NOT_FOUND", "SOURCE_DISABLED"].includes(error?.code)) throw error;
       const { useSourceHealthStore } = await import("@/shared/store/source-health-store");
       useSourceHealthStore.getState().recordError(sourceId, error);

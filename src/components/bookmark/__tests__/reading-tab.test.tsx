@@ -43,7 +43,7 @@ describe("ReadingTab", () => {
     );
 
     const continueLink = screen.getByRole("link", {
-      name: /lanjut baca nano machine/i,
+      name: /lanjut (?:baca|membaca) nano machine/i,
     });
     expect(continueLink.querySelector("button")).toBeNull();
     expect(container.querySelector("a button, button a, a a")).toBeNull();
@@ -62,7 +62,7 @@ describe("ReadingTab", () => {
       name: "Opsi untuk Nano Machine",
     });
     const continueLink = screen.getByRole("link", {
-      name: /lanjut baca nano machine/i,
+      name: /lanjut (?:baca|membaca) nano machine/i,
     });
 
     expect(optionsButton).toBeTruthy();

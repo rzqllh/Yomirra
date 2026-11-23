@@ -6,18 +6,19 @@ import { cn } from "@/shared/utils/cn"
 interface PageImageErrorProps {
   index: number;
   onRetry: () => void;
+  offline?: boolean;
   onReport?: (pageIndex: number) => void;
   onSwitchSource?: () => void;
   className?: string;
 }
 
-export function PageImageError({ index, onRetry, onReport, onSwitchSource, className }: PageImageErrorProps) {
+export function PageImageError({ index, onRetry, onReport, onSwitchSource, offline = false, className }: PageImageErrorProps) {
   return (
     <div className={cn("absolute inset-0 flex flex-col items-center justify-center w-full h-full bg-surface-base/80 backdrop-blur-md p-6 text-center z-10", className)}>
       <div className="bg-surface-overlay/90 backdrop-blur-xl rounded-xl p-6 flex flex-col items-center max-w-70 border border-border-subtle">
         <WarningCircle size={40} className="text-semantic-error mb-3 drop-shadow-md" weight="duotone" />
         <h4 className="text-sm font-bold text-text-primary mb-1 drop-shadow-sm">Halaman {index + 1} gagal dimuat</h4>
-        <p className="text-2xs text-text-muted mb-5 leading-tight">Coba muat ulang. Jika masih gagal, kirim laporan.</p>
+        <p className="text-2xs text-text-muted mb-5 leading-tight">{offline ? "Koneksi terputus. Periksa sinyal atau Wi-Fi, lalu coba lagi." : "Coba muat ulang gambar ini. Jika masih gagal, kirim laporan."}</p>
 
         <div className="flex flex-col gap-2 w-full">
           <div className="flex gap-2 w-full">

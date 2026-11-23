@@ -24,6 +24,8 @@ export function clearUserScopedReadingState(): void {
     lastSyncedAt: null,
     mutedMangaKeys: [],
     perTitleSourcePreferences: {},
+    pendingCanonicalSourcePrefs: {},
+    pendingCanonicalOwnerUid: null,
     guestBannerSnoozedUntil: null,
     guestBannerDismissCount: 0,
   });

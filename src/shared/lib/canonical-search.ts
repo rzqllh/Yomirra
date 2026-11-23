@@ -1,4 +1,5 @@
 import { MangaItem } from "@/shared/sources/source-types";
+import { classifyContent } from "@/shared/sources/content-policy";
 import {
   matchTitles,
   matchAgainstAlternates,
@@ -16,6 +17,8 @@ export interface SourceBinding {
   language?: string;
   format?: string;
   score?: number | string;
+  isNsfw?: boolean;
+  contentRating?: MangaItem["contentRating"];
 }
 
 export interface CanonicalSearchResult {
@@ -36,8 +39,16 @@ export interface CanonicalSearchResult {
  * - MangaDex language binding is stored as metadata on the binding, not a separate source.
  * - Stable, deterministic ordering is preserved.
  */
+export interface CanonicalSearchOptions {
+  /** Preserve the legacy heuristic mode for callers that explicitly use it. */
+  mergePolicy?: "heuristic" | "verified-only";
+  /** Indexed exact provider references from CONFIRMED canonical provenance. */
+  verifiedIndex?: ReadonlyMap<string, string>;
+}
+
 export function clusterCanonicalResults(
-  items: Array<{ manga: MangaItem; sourceId: string }>
+  items: Array<{ manga: MangaItem; sourceId: string }>,
+  options: CanonicalSearchOptions = {},
 ): CanonicalSearchResult[] {
   const clusters: CanonicalSearchResult[] = [];
   const seenSourceReferences = new Set<string>();
@@ -58,6 +69,8 @@ export function clusterCanonicalResults(
       language: manga.language ?? (sourceId === "mangadex" ? "id" : undefined),
       format: manga.format,
       score: manga.score,
+      ...(manga.isNsfw !== undefined ? { isNsfw: manga.isNsfw } : {}),
+      ...(manga.contentRating !== undefined ? { contentRating: manga.contentRating } : {}),
     };
 
     const candidateForMatching: TitleCandidate = {
@@ -78,6 +91,12 @@ export function clusterCanonicalResults(
       }
 
       const clusterPrimary = cluster.primaryResult;
+      // Do not let a known adult item borrow an otherwise safe cover/card
+      // through heuristic cross-provider title matching.
+      const leftSafety = classifyContent(manga);
+      const rightSafety = classifyContent(clusterPrimary);
+      if ((leftSafety === "SAFE" && rightSafety === "NSFW") ||
+          (leftSafety === "NSFW" && rightSafety === "SAFE")) continue;
       // Matching title/author is insufficient when known media types conflict:
       // a novel and a manga adaptation must remain distinct catalog entries.
       if (
@@ -123,8 +142,17 @@ export function clusterCanonicalResults(
         }
       }
 
-      // Strict merge gate: only merge when HIGH_CONFIDENCE
-      if (match.confidence === "HIGH_CONFIDENCE") {
+      // The user-facing canonical path may merge only identical verified
+      // work identities; title/author heuristics are insufficient evidence.
+      const verifiedKey = options.verifiedIndex?.get(sourceReference);
+      const verified = Boolean(verifiedKey && cluster.sourceBindings.some(ref =>
+        options.verifiedIndex?.get(JSON.stringify([ref.sourceId, ref.mangaId])) === verifiedKey
+      ));
+      if (
+        options.mergePolicy === "verified-only"
+          ? verified
+          : match.confidence === "HIGH_CONFIDENCE"
+      ) {
         matchedCluster = cluster;
         break;
       }
@@ -135,7 +163,8 @@ export function clusterCanonicalResults(
       matchedCluster.primaryResult.sourceBindings = matchedCluster.sourceBindings;
       // Confidence describes an observed cross-provider identity match,
       // not merely the presence of a single provider result.
-      matchedCluster.matchConfidence = "HIGH_CONFIDENCE";
+      matchedCluster.matchConfidence = options.mergePolicy === "verified-only"
+        ? "CONFIRMED" : "HIGH_CONFIDENCE";
     } else {
       const normalizedTitle = normalizeTitle(manga.title) || `${sourceId}-${manga.id}`;
       const normalizedAuthor = normalizeTitle(manga.author || "");
@@ -186,4 +215,26 @@ export function deduplicateResultsBySource(
   }
 
   return clusterCanonicalResults(flattened);
+}
+
+/**
+ * A cached search-intelligence candidate may have inherited heuristic source
+ * links from an older index. Only keep alternates with the same verified work
+ * identity as the selected source; otherwise expose that one source alone.
+ */
+export function filterVerifiedSourceBindings<T extends { sourceId: string; mangaId: string }>(
+  candidates: readonly T[],
+  selected: T,
+  verifiedIndex: ReadonlyMap<string, string>,
+): T[] {
+  const selectedRef = JSON.stringify([selected.sourceId, selected.mangaId]);
+  const verifiedWork = verifiedIndex.get(selectedRef);
+  const seen = new Set<string>();
+  const safe = [selected, ...candidates].filter(candidate => {
+    const ref = JSON.stringify([candidate.sourceId, candidate.mangaId]);
+    if (seen.has(ref)) return false;
+    seen.add(ref);
+    return ref === selectedRef || Boolean(verifiedWork && verifiedIndex.get(ref) === verifiedWork);
+  });
+  return safe;
 }

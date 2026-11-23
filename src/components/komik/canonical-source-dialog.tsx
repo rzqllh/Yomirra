@@ -12,6 +12,8 @@ import {
 } from "@/components/ui/dialog";
 import type { SourceBinding } from "@/shared/lib/canonical-search";
 import { getMangaDetailHref } from "@/shared/lib/routes";
+import { classifyContent } from "@/shared/sources/content-policy";
+import { useSettingsStore } from "@/shared/store/settings-store";
 import { getSourceMetadata } from "@/shared/sources/source-registry";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { useSourceHealthStore, type SourceHealth } from "@/shared/store/source-health-store";
@@ -84,11 +86,15 @@ export function CanonicalSourceDialog({
   returnTo,
 }: CanonicalSourceDialogProps) {
   const disabledSources = useSourcePreferencesStore((state) => state.disabledSources);
+  const hideNsfw = useSettingsStore((state) => state.hideNsfw);
   const healthBySource = useSourceHealthStore((state) => state.healthBySource);
   const historyItems = useHistoryStore((state) => state.items);
   const availableBindings = React.useMemo(
-    () => sourceBindings.filter((binding) => isCanonicalBindingAvailable(binding, disabledSources)),
-    [sourceBindings, disabledSources]
+    () => sourceBindings.filter((binding) =>
+      isCanonicalBindingAvailable(binding, disabledSources) &&
+      (!hideNsfw || classifyContent(binding) !== "NSFW")
+    ),
+    [sourceBindings, disabledSources, hideNsfw]
   );
   const lastUsedSourceId = React.useMemo(() => {
     const refs = new Set(availableBindings.map((binding) => JSON.stringify([binding.sourceId, binding.mangaId])));

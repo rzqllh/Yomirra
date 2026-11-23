@@ -63,14 +63,14 @@ export function ReaderPageScrubber({
         onTouchStart={handleStartScrubbing}
       >
         <div className="flex items-center justify-between text-xs font-semibold text-text-muted px-2.5">
-          <label htmlFor="reader-webtoon-range">Progress</label>
+          <label htmlFor="reader-webtoon-range">Posisi baca</label>
           <output htmlFor="reader-webtoon-range" aria-live="off" className="text-text-primary font-bold font-mono">
             {format?.toLowerCase() === "manga" ? (
               <>
                 {progressPercent}% <span className="font-normal text-text-muted text-2xs">(Hal. {page} / {total})</span>
               </>
             ) : (
-              `${progressPercent}% dibaca`
+              `${progressPercent}%`
             )}
           </output>
         </div>
@@ -82,7 +82,7 @@ export function ReaderPageScrubber({
             max={100}
             step={1}
             value={progressPercent}
-            aria-label="Progress membaca"
+            aria-label="Posisi baca"
             aria-valuetext={`${progressPercent}%`}
             className="reader-page-range relative z-10 h-10 w-full cursor-pointer bg-transparent accent-accent focus-visible:outline-2 focus-visible:outline-accent"
             onPointerDown={handleStartScrubbing}

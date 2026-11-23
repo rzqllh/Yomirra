@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { useLibraryStore } from "@/shared/store/library-store";
+import { useLibraryStore, type LibraryItem } from "@/shared/store/library-store";
+import { canonicalSourceKey, groupVerifiedCatalogEntries } from "@/shared/lib/canonical-identity";
 import { useSettingsStore } from "@/shared/store/settings-store";
 import { useNsfwSourceIds } from "@/shared/hooks/use-nsfw-source-ids";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
@@ -21,7 +22,11 @@ const ITEMS_PER_PAGE = 24;
 export function useBookmarkCollection() {
   const isMounted = useMounted();
   const libraryItemsMap = useLibraryStore((state) => state.items);
-  const libraryItems = Object.values(libraryItemsMap);
+  const libraryItems = React.useMemo(() => Object.values(libraryItemsMap), [libraryItemsMap]);
+  const explicitNsfwRefs = React.useMemo(() => new Set(
+    libraryItems.filter(item => item.isNsfw === true)
+      .map(item => canonicalSourceKey(item.sourceId, item.mangaId))
+  ), [libraryItems]);
   const historyItemsMap = useHistoryStore((state) => state.items);
   const removeFromLibrary = useLibraryStore((state) => state.removeFromLibrary);
   const hideNsfw = useSettingsStore((state) => state.hideNsfw);
@@ -46,12 +51,12 @@ export function useBookmarkCollection() {
     [nsfwSourceIds]
   );
 
-  const visibleLibraryItems = React.useMemo(() => {
+  const visibleCatalogGroups = React.useMemo(() => {
     if (!isMounted) return [];
 
     // ponytail: one canonical visible item per saved source reference.
     const seen = new Set<string>();
-    let result: typeof libraryItems = [];
+    const result: typeof libraryItems = [];
     for (const item of libraryItems) {
       if (item.isBookmarked === false) continue;
       const key = item.id ?? `${item.sourceId}::${item.mangaId}`;
@@ -61,31 +66,55 @@ export function useBookmarkCollection() {
       }
     }
 
-    result = result.filter((item) => {
-      if (isSourceDisabled(item.sourceId)) return false;
-      const source = dynamicSourceRegistry.get(item.sourceId);
-      return source?.status !== "unavailable";
-    });
+    // Saved membership must survive an unavailable/disabled primary provider.
+    // Only content visibility, never health status, can hide a saved work.
+    if (hideNsfw && nsfwStatus !== "KNOWN") return [];
+    const eligible = hideNsfw
+      ? result.filter((item) => {
+          const source = dynamicSourceRegistry.get(item.sourceId) ?? getSourceMetadata(item.sourceId);
+          return !isFromNsfwSource(item.sourceId, item.isNsfw) && source?.isNsfw !== true;
+        })
+      : result;
 
-    if (!hideNsfw) return result;
-    if (nsfwStatus !== "KNOWN") return [];
-
-    return result.filter(
-      (item) => !isFromNsfwSource(item.sourceId, item.isNsfw)
-    );
+    // Presentation projection only: keep every original library record and
+    // aggregate only source bindings whose identity was explicitly confirmed.
+    return groupVerifiedCatalogEntries(eligible);
   }, [
     hideNsfw,
     isFromNsfwSource,
     isMounted,
-    isSourceDisabled,
     libraryItems,
     nsfwStatus,
   ]);
 
+  const visibleLibraryItems = React.useMemo(
+    () => visibleCatalogGroups.map(group => group.representative),
+    [visibleCatalogGroups],
+  );
+
+  const groupForItem = React.useCallback((item: LibraryItem) =>
+    visibleCatalogGroups.find(group => group.representative === item),
+  [visibleCatalogGroups]);
+
+  const mayExposeSource = React.useCallback((sourceId: string, mangaId?: string) => {
+    if (isSourceDisabled(sourceId)) return false;
+    if (hideNsfw && mangaId && explicitNsfwRefs.has(canonicalSourceKey(sourceId, mangaId))) return false;
+    const source = dynamicSourceRegistry.get(sourceId) ?? getSourceMetadata(sourceId);
+    if (source?.status === "unavailable" || source?.status === "in-fix") return false;
+    if (hideNsfw && (nsfwStatus !== "KNOWN" || nsfwSourceIds.has(sourceId) || source?.isNsfw)) return false;
+    return true;
+  }, [isSourceDisabled, hideNsfw, nsfwStatus, nsfwSourceIds, explicitNsfwRefs]);
+
+  const itemMatchesSource = React.useCallback((item: LibraryItem, sourceId: string) => {
+    const group = groupForItem(item);
+    return group?.sourceBindings.some(ref => ref.sourceId === sourceId && mayExposeSource(ref.sourceId, ref.mangaId))
+      ?? item.sourceId === sourceId;
+  }, [groupForItem, mayExposeSource]);
+
   const scopedItems = React.useMemo(() => {
     if (!sourceFilter) return visibleLibraryItems;
-    return visibleLibraryItems.filter((item) => item.sourceId === sourceFilter);
-  }, [visibleLibraryItems, sourceFilter]);
+    return visibleLibraryItems.filter(item => itemMatchesSource(item, sourceFilter));
+  }, [visibleLibraryItems, sourceFilter, itemMatchesSource]);
 
   const smartCollections = React.useMemo(
     () =>
@@ -121,20 +150,21 @@ export function useBookmarkCollection() {
 
   const availableSources = React.useMemo(() => {
     const map = new Map<string, string>();
-    for (const item of visibleLibraryItems) {
-      if (!map.has(item.sourceId)) {
-        const meta = getSourceMetadata(item.sourceId);
-        map.set(item.sourceId, meta?.name || item.sourceName || getSourceDisplayName(item.sourceId));
+    for (const group of visibleCatalogGroups) {
+      for (const ref of group.sourceBindings) {
+        if (!mayExposeSource(ref.sourceId, ref.mangaId) || map.has(ref.sourceId)) continue;
+        const meta = getSourceMetadata(ref.sourceId);
+        map.set(ref.sourceId, meta?.name || group.representative.sourceName || getSourceDisplayName(ref.sourceId));
       }
     }
     return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
-  }, [visibleLibraryItems]);
+  }, [visibleCatalogGroups, mayExposeSource]);
 
   const filteredAndSortedLibraryItems = React.useMemo(() => {
     let result = [...visibleLibraryItems];
 
     if (sourceFilter) {
-      result = result.filter((item) => item.sourceId === sourceFilter);
+      result = result.filter((item) => itemMatchesSource(item, sourceFilter));
     }
 
     if (selectedSmartCollectionId) {
@@ -153,11 +183,13 @@ export function useBookmarkCollection() {
 
     if (selectedCollectionId) {
       result = result.filter((item) => {
-        const key = item.id ?? `${item.sourceId}::${item.mangaId}`;
-        const legacyKey = `${item.sourceId}::${item.mangaId}`;
-        const memberships =
-          membershipsByManga[key] || membershipsByManga[legacyKey] || [];
-        return memberships.includes(selectedCollectionId);
+        const group = groupForItem(item);
+        return (group?.members ?? [item]).some(member => {
+          const key = member.id ?? `${member.sourceId}::${member.mangaId}`;
+          const legacyKey = `${member.sourceId}::${member.mangaId}`;
+          const memberships = membershipsByManga[key] || membershipsByManga[legacyKey] || [];
+          return memberships.includes(selectedCollectionId);
+        });
       });
     }
 
@@ -183,6 +215,8 @@ export function useBookmarkCollection() {
     sortBy,
     sourceFilter,
     visibleLibraryItems,
+    itemMatchesSource,
+    groupForItem,
   ]);
 
   // Reset pagination when search, sort, or collection filter changes
@@ -193,8 +227,18 @@ export function useBookmarkCollection() {
   const totalPages = Math.max(1, Math.ceil(filteredAndSortedLibraryItems.length / ITEMS_PER_PAGE));
   const paginatedCollection = React.useMemo(() => {
     const start = (collectionPage - 1) * ITEMS_PER_PAGE;
-    return filteredAndSortedLibraryItems.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredAndSortedLibraryItems, collectionPage]);
+    return filteredAndSortedLibraryItems.slice(start, start + ITEMS_PER_PAGE).map(item => {
+      const group = groupForItem(item);
+      // The binding list belongs to display navigation only; this never rewrites
+      // saved Library entries or their source-specific history.
+      return {
+        ...item,
+        sourceBindings: (group?.sourceBindings ?? [])
+          .filter(ref => mayExposeSource(ref.sourceId, ref.mangaId))
+          .map(ref => ({ ...ref, title: item.title })),
+      };
+    });
+  }, [filteredAndSortedLibraryItems, collectionPage, groupForItem, mayExposeSource]);
 
   const toggleSelectItem = (key: string) => {
     setSelectedItems((prev) => {
@@ -220,12 +264,20 @@ export function useBookmarkCollection() {
 
   const handleConfirmBulkDelete = () => {
     const count = selectedItems.size;
-    selectedItems.forEach((key) => {
-      const [sourceId, mangaId] = key.split("::");
-      if (sourceId && mangaId) {
-        removeFromLibrary(sourceId, mangaId);
+    const sourceRefs = new Map<string, { sourceId: string; mangaId: string }>();
+    selectedItems.forEach(key => {
+      const group = visibleCatalogGroups.find(candidate =>
+        candidate.members.some(member => `${member.sourceId}::${member.mangaId}` === key)
+      );
+      for (const member of group?.members ?? []) {
+        sourceRefs.set(canonicalSourceKey(member.sourceId, member.mangaId), {
+          sourceId: member.sourceId, mangaId: member.mangaId,
+        });
       }
     });
+    for (const ref of sourceRefs.values()) {
+      removeFromLibrary(ref.sourceId, ref.mangaId);
+    }
     setSelectedItems(new Set());
     setIsSelectionMode(false);
     setIsDeleteDialogOpen(false);
@@ -248,6 +300,7 @@ export function useBookmarkCollection() {
     collectionPage,
     setCollectionPage,
     totalPages,
+    visibleCatalogCount: visibleLibraryItems.length,
     totalLibraryItemsCount: scopedItems.length,
     scopedItems,
     filteredAndSortedLibraryItems,
