@@ -40,8 +40,11 @@ export class KomikuSource implements MangaSource {
   });
 
   // Catalog endpoints are separate from the reader HTML domain.
-  private catalogClient = new HttpClient("https://api.komiku.org", {
-    "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7",
+  private catalogClient = new HttpClient({
+    baseUrl: "https://api.komiku.org",
+    allowedHosts: ["api.komiku.org"],
+    timeoutMs: 10000,
+    defaultHeaders: { "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7" },
   });
 
   private extractCoverUrl($img: any): string {
@@ -131,8 +134,8 @@ export class KomikuSource implements MangaSource {
     }
 
     const hasNextPage =
-      $(".pagination a[href*='halaman='], .pagination a.next").length > 0 ||
-      mangas.length >= 20;
+      $(".pagination a[href*='halaman='], .pagination a.next, span[hx-get]").length > 0 ||
+      mangas.length >= 10;
 
     return { mangas, hasNextPage };
   }
