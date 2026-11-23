@@ -46,6 +46,7 @@ export function CanonicalSavedDetailView({ savedTitleId }: { savedTitleId: strin
     // Include history-only works: viewing a canonical History cover must not
     // silently require the work to be bookmarked first.
     const latestHistory = new Map<string, {
+      id?: string; author?: string;
       sourceId: string; mangaId: string; title: string; coverUrl?: string;
       isNsfw?: boolean; readAt: number;
     }>();
