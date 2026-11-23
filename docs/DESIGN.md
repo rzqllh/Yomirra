@@ -2114,8 +2114,8 @@ Do not implement inventory components only because a generic design system list 
 2. Library is an everyday catalog built from user-selected sources.
 3. Search is global and can use all sources regardless of Sumber toggle state.
 4. The Sumber toggle controls inclusion in Library and Populer.
-5. Library and Search both normalize equivalent works across providers.
-6. Rak Buku is the personal saved/reading-state surface.
+5. Jelajah dan Cari mempertahankan identitas karya yang berbeda; penggabungan lintas sumber memerlukan bukti identitas terverifikasi.
+6. Library adalah ruang pribadi untuk judul tersimpan dan keadaan membacanya.
 7. Source health is separate from source inclusion.
 8. Raw provider IDs must not leak into normal UI.
 9. Design-system cleanup must prioritize reusable primitives, compounds, patterns, and domain components rather than page-specific styling.
