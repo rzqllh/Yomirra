@@ -26,11 +26,13 @@ test.beforeEach(async ({ page }) => {
       "history-a": {
         sourceId: "mangadex", mangaId: "work-a", mangaTitle: "Canonical Demo Work",
         chapterId: "chapter-a", chapterTitle: "Chapter A", readAt: 100,
+        savedTitleId: "saved-a",
         pageIndex: 2, totalPages: 10, isNsfw: false,
       },
       "history-b": {
         sourceId: "komiku", mangaId: "work-b", mangaTitle: "Canonical Demo Work",
         chapterId: "chapter-b", chapterTitle: "Chapter B", readAt: 200,
+        savedTitleId: "saved-a",
         pageIndex: 5, totalPages: 12, isNsfw: false,
       },
     };
