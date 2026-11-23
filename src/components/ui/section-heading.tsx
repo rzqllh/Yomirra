@@ -21,13 +21,13 @@ export const SectionHeading = React.forwardRef<HTMLDivElement, SectionHeadingPro
       >
         <div className="flex flex-col min-w-0 flex-1">
           <div className="flex items-center gap-2.5">
-            <h2 className="text-xl md:text-2xl font-bold tracking-tight text-text-primary truncate">
+            <h2 className="text-lg md:text-xl font-bold tracking-tight text-text-primary min-w-0 break-words">
               {title}
             </h2>
             {badge && <div className="shrink-0">{badge}</div>}
           </div>
           {subtitle && (
-            <p className="text-xs md:text-sm text-text-muted mt-0.5 font-medium truncate">
+            <p className="text-xs md:text-sm text-text-secondary mt-1 leading-relaxed break-words">
               {subtitle}
             </p>
           )}

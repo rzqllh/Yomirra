@@ -7,6 +7,7 @@ import { motion, AnimatePresence, useReducedMotion } from "motion/react"
 import { IconButton } from "@/components/ui/icon-button"
 import { HeaderActions } from "./header-actions"
 import { cn } from "@/shared/utils/cn"
+import { transitions } from "@/shared/lib/motion/tokens"
 
 export interface PageHeaderProps {
   /** Main section title */
@@ -187,13 +188,13 @@ export function PageHeader({
       <header
         style={{ top: "var(--announcement-height, 0px)" }}
         className={cn(
-          "md:hidden fixed left-0 right-0 z-[var(--z-sticky)] flex w-full flex-col justify-end px-4 pt-[calc(var(--safe-top,0px)+8px)] pb-2 transition-[background-color,border-color,box-shadow,backdrop-filter,top] duration-200 ease-out pointer-events-none",
+          "md:hidden fixed left-0 right-0 z-[var(--z-sticky)] flex w-full flex-col justify-end px-4 pt-[calc(var(--safe-top,0px)+8px)] pb-2 transition-[background-color,border-color,top] duration-200 ease-out motion-reduce:transition-none pointer-events-none",
           isGlass && "yomirra-chrome border-x-0 border-t-0 rounded-none",
           isTransparent && "bg-transparent border-transparent shadow-none backdrop-blur-none",
           className
         )}
       >
-        <div className="flex items-center justify-between w-full transition-all duration-300 ease-out pointer-events-auto h-11">
+        <div className="flex items-center justify-between w-full pointer-events-auto h-11">
           <div className="flex items-center flex-1 min-w-0 overflow-hidden">
             <AnimatePresence initial={false}>
               {heroSearchAnchorId && heroSearchPast ? (
@@ -205,7 +206,7 @@ export function PageHeader({
                   transition={
                     shouldReduceMotion
                       ? { duration: 0 }
-                      : { type: "spring", stiffness: 420, damping: 28 }
+                      : transitions.layout
                   }
                   className="flex-1 min-w-0 pr-1"
                 >
@@ -235,7 +236,7 @@ export function PageHeader({
                   transition={
                     shouldReduceMotion
                       ? { duration: 0 }
-                      : { duration: 0.18, ease: "easeOut" }
+                      : transitions.page
                   }
                   className="flex items-center gap-2.5 flex-1 min-w-0"
                 >
@@ -264,7 +265,7 @@ export function PageHeader({
 
                   <div
                     className={cn(
-                      "flex flex-col min-w-0 flex-1 transition-all duration-300 ease-out",
+                      "flex flex-col min-w-0 flex-1 transition-[opacity,transform] duration-200 ease-out motion-reduce:transition-none",
                       !isTitleVisible
                         ? "opacity-0 pointer-events-none -translate-y-1"
                         : "opacity-100 translate-y-0"
@@ -281,7 +282,7 @@ export function PageHeader({
                       )}
                     </div>
                     {sub && (
-                      <p title={typeof sub === "string" ? sub : undefined} className="text-2xs font-medium text-text-muted truncate leading-snug mt-0.5 select-none">
+                      <p title={typeof sub === "string" ? sub : undefined} className="text-xs font-medium text-text-secondary truncate leading-snug mt-0.5 select-none">
                         {sub}
                       </p>
                     )}
@@ -311,7 +312,7 @@ export function PageHeader({
       {mode !== "detail" && !hideDesktop && (
         <div
           className={cn(
-            "hidden md:block relative border-b border-border-subtle px-0 pt-1 pb-6 mb-7",
+            "hidden md:block relative border-b border-border-subtle px-0 pt-1 pb-4 mb-5",
             className
           )}
         >
@@ -324,7 +325,7 @@ export function PageHeader({
               )}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-3">
-                  <h1 title={title} className="text-2xl lg:text-3xl font-black tracking-tight text-text-primary truncate">
+                  <h1 title={title} className="text-2xl lg:text-3xl font-bold tracking-tight text-text-primary truncate">
                     {title}
                   </h1>
                   {meta && (
@@ -334,7 +335,7 @@ export function PageHeader({
                   )}
                 </div>
                 {sub && (
-                  <p title={typeof sub === "string" ? sub : undefined} className="text-text-muted mt-1 text-sm md:text-base max-w-2xl font-medium leading-relaxed">
+                  <p title={typeof sub === "string" ? sub : undefined} className="text-text-secondary mt-1 text-sm max-w-2xl leading-relaxed">
                     {sub}
                   </p>
                 )}

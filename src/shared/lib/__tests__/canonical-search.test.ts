@@ -3,10 +3,36 @@ import {
   clusterCanonicalResults,
   deduplicateResultsBySource,
   filterVerifiedSourceBindings,
+  reconcileCatalogRows,
 } from "../canonical-search";
 import type { MangaItem } from "@/shared/sources/source-types";
 
 describe("Phase 4 — Canonical Search Deduplication & Failure Isolation", () => {
+  it("keeps verified-only keys stable across arrival order and separates same-title works", () => {
+    const a = { sourceId: "a", manga: { id: "1", title: "Same title", coverUrl: "/a" } };
+    const b = { sourceId: "b", manga: { id: "2", title: "Same title", coverUrl: "/b" } };
+    const forward = clusterCanonicalResults([a, b], { mergePolicy: "verified-only" });
+    const reverse = clusterCanonicalResults([b, a], { mergePolicy: "verified-only" });
+    expect(forward).toHaveLength(2);
+    expect(forward[0].canonicalKey).not.toBe(forward[1].canonicalKey);
+    expect(forward.map(row => row.canonicalKey).sort()).toEqual(reverse.map(row => row.canonicalKey).sort());
+  });
+
+  it("reconciles live and cached rows by provider identity rather than legacy title keys", () => {
+    const live = { canonicalKey: "legacy:same-title", sourceId: "a", manga: { id: "1", title: "Live" } };
+    const stale = { canonicalKey: "old-cache-key", sourceId: "a", manga: { id: "1", title: "Stale" } };
+    const distinct = { canonicalKey: "legacy:same-title", sourceId: "b", manga: { id: "2", title: "Distinct" } };
+    const result = reconcileCatalogRows([live], [stale, distinct]);
+    expect(result.map(row => row.manga.title)).toEqual(["Live", "Distinct"]);
+    expect(new Set(result.map(row => row.canonicalKey)).size).toBe(2);
+  });
+
+  it("recognizes a cached provider already present in a confirmed live group", () => {
+    const live = { canonicalKey: "verified:work", sourceId: "a", manga: { id: "1" },
+      sourceBindings: [{ sourceId: "a", mangaId: "1" }, { sourceId: "b", mangaId: "2" }] };
+    const cached = { canonicalKey: "old", sourceId: "b", manga: { id: "2" }, sourceBindings: [] };
+    expect(reconcileCatalogRows([live], [cached])).toEqual([live]);
+  });
   it("does not resurrect an unverified alternative from legacy cached semantic catalog", () => {
     const a = { sourceId: "shinigami", mangaId: "first" };
     const b = { sourceId: "asurascans", mangaId: "second" };

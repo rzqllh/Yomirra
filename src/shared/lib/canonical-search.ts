@@ -46,6 +46,45 @@ export interface CanonicalSearchOptions {
   verifiedIndex?: ReadonlyMap<string, string>;
 }
 
+/** Stable catalog identity. Display titles are not work IDs. */
+export function verifiedCatalogKey(
+  sourceId: string,
+  mangaId: string,
+  verifiedIndex?: ReadonlyMap<string, string>,
+): string {
+  const ref = JSON.stringify([sourceId, mangaId]);
+  const verified = verifiedIndex?.get(ref);
+  return verified ? `verified:${verified}` : `source:${sourceId}:${mangaId}`;
+}
+
+/** Live metadata takes precedence over cache. Legacy title keys cannot
+ * collapse independent provider records. This never mutates stored data.
+ */
+export function reconcileCatalogRows<T extends {
+  canonicalKey: string;
+  sourceId: string;
+  manga: { id: string };
+  sourceBindings?: readonly { sourceId: string; mangaId: string }[];
+}>(live: readonly T[], cached: readonly T[]): T[] {
+  const refs = new Set<string>();
+  const keys = new Set<string>();
+  const output: T[] = [];
+  for (const row of [...live, ...cached]) {
+    const primaryRef = JSON.stringify([row.sourceId, row.manga.id]);
+    const rowRefs = [primaryRef, ...(row.sourceBindings ?? []).map(
+      binding => JSON.stringify([binding.sourceId, binding.mangaId])
+    )];
+    if (refs.has(primaryRef)) continue;
+    const canonicalKey = keys.has(row.canonicalKey)
+      ? `${row.canonicalKey}:source:${primaryRef}`
+      : row.canonicalKey;
+    keys.add(canonicalKey);
+    rowRefs.forEach(ref => refs.add(ref));
+    output.push(canonicalKey === row.canonicalKey ? row : { ...row, canonicalKey });
+  }
+  return output;
+}
+
 export function clusterCanonicalResults(
   items: Array<{ manga: MangaItem; sourceId: string }>,
   options: CanonicalSearchOptions = {},
@@ -168,9 +207,11 @@ export function clusterCanonicalResults(
     } else {
       const normalizedTitle = normalizeTitle(manga.title) || `${sourceId}-${manga.id}`;
       const normalizedAuthor = normalizeTitle(manga.author || "");
-      const baseKey = normalizedAuthor
-        ? `canonical:${normalizedTitle}:author:${normalizedAuthor}`
-        : `canonical:${normalizedTitle}`;
+      const baseKey = options.mergePolicy === "verified-only"
+        ? verifiedCatalogKey(sourceId, manga.id, options.verifiedIndex)
+        : normalizedAuthor
+          ? `canonical:${normalizedTitle}:author:${normalizedAuthor}`
+          : `canonical:${normalizedTitle}`;
       const canonicalKey = clusters.some((cluster) => cluster.canonicalKey === baseKey)
         ? `${baseKey}:source:${sourceId}:${manga.id}`
         : baseKey;

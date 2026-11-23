@@ -18,7 +18,8 @@ import {
 } from "@/shared/utils/filter-helpers";
 import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry";
 import { sourceQueryOptions } from "@/shared/sources/source-query-options";
-import { clusterCanonicalResults, filterVerifiedSourceBindings } from "@/shared/lib/canonical-search";
+import { clusterCanonicalResults, filterVerifiedSourceBindings, reconcileCatalogRows, verifiedCatalogKey } from "@/shared/lib/canonical-search";
+import { classifyContent } from "@/shared/sources/content-policy";
 import { useLibraryStore } from "@/shared/store/library-store";
 import { groupVerifiedCatalogEntries, indexVerifiedGroups } from "@/shared/lib/canonical-identity";
 import {
@@ -460,6 +461,8 @@ export function useSearchCatalog() {
         status: item.manga.status,
         score: item.manga.score,
         sourceBindings: item.sourceBindings,
+        isNsfw: item.manga.isNsfw,
+        contentRating: item.manga.contentRating,
       })),
     [rawSearchMangas]
   );
@@ -510,8 +513,12 @@ export function useSearchCatalog() {
             coverUrl: candidate.coverUrl,
           }
         : undefined;
-      const primaryBinding = availableBindings[0] ?? fallbackBinding;
-      if (!primaryBinding) return [];
+      // Cached metadata belongs to the candidate's own provider reference.
+      // Never promote an unrelated cached alternate to primary.
+      if (!fallbackBinding || (hideNsfw && classifyContent(candidate) === "NSFW")) return [];
+      const primaryBinding = availableBindings.find(binding =>
+        binding.sourceId === fallbackBinding.sourceId && binding.mangaId === fallbackBinding.mangaId
+      ) ?? fallbackBinding;
       const safeBindings = filterVerifiedSourceBindings(
         availableBindings,
         primaryBinding,
@@ -520,7 +527,7 @@ export function useSearchCatalog() {
 
       return [
         {
-          canonicalKey: candidate.canonicalKey,
+          canonicalKey: verifiedCatalogKey(primaryBinding.sourceId, primaryBinding.mangaId, verifiedSourceIndex),
           sourceId: primaryBinding.sourceId,
           sourceBindings: safeBindings,
           manga: {
@@ -534,23 +541,20 @@ export function useSearchCatalog() {
             format: candidate.format,
             status: candidate.status,
             score: candidate.score,
+            isNsfw: candidate.isNsfw,
+            contentRating: candidate.contentRating,
             sourceId: primaryBinding.sourceId,
             sourceBindings: safeBindings,
           },
         },
       ];
     });
-  }, [intelligenceQuery.data?.catalogMatches, eligibleSourceIds, verifiedSourceIndex]);
+  }, [intelligenceQuery.data?.catalogMatches, eligibleSourceIds, verifiedSourceIndex, hideNsfw]);
 
-  const combinedResults = React.useMemo(() => {
-    const merged = new Map(
-      rawSearchMangas.map((item) => [item.canonicalKey, item])
-    );
-    catalogMatches.forEach((item) => {
-      if (!merged.has(item.canonicalKey)) merged.set(item.canonicalKey, item);
-    });
-    return Array.from(merged.values());
-  }, [rawSearchMangas, catalogMatches]);
+  const combinedResults = React.useMemo(
+    () => reconcileCatalogRows(rawSearchMangas, catalogMatches),
+    [rawSearchMangas, catalogMatches]
+  );
 
   const searchMangas = React.useMemo(() => {
     const results = [...combinedResults];

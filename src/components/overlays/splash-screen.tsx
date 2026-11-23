@@ -12,7 +12,7 @@ const BOOT_RECOVERY_TIMEOUT_MS = 2000;
 
 export function SplashScreen({ onComplete }: { onComplete: () => void }) {
   const { loading: authLoading } = useAuth();
-  const hasHydrated = useOnboardingStore((state) => state._hasHydrated);
+  const { _hasHydrated: hasHydrated } = useOnboardingStore();
   const reducedMotion = useReducedMotion();
   const completed = React.useRef(false);
 

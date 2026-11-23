@@ -19,7 +19,7 @@ export const YomirraSection = React.forwardRef<HTMLElement, YomirraSectionProps>
         {(title || action) && (
           <div className="flex items-end justify-between gap-4 px-4 md:px-0">
             {title && (
-              <h2 className={cn("text-xl md:text-2xl font-bold tracking-tight text-text-primary", titleClassName)}>
+              <h2 className={cn("text-lg md:text-xl font-bold tracking-tight text-text-primary", titleClassName)}>
                 {title}
               </h2>
             )}

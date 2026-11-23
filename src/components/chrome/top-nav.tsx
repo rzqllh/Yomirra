@@ -12,6 +12,7 @@ import { cn } from "@/shared/utils/cn";
 import { useSidebarStore } from "@/shared/store/sidebar-store";
 import { usePlatformShortcut } from "@/shared/hooks/use-platform-shortcut";
 import { useMounted } from "@/shared/hooks/use-mounted";
+import { transitions } from "@/shared/lib/motion/tokens";
 import { Button } from "@/components/ui/button";
 import { Surface } from "@/components/ui/surface";
 
@@ -151,7 +152,7 @@ export function TopNav() {
                 transition={
                   shouldReduceMotion
                     ? { duration: 0 }
-                    : { type: "spring", stiffness: 420, damping: 28 }
+                    : transitions.layout
                 }
                 className="hidden md:flex h-9 w-52 lg:w-72 xl:w-80 shrink-0 items-center justify-end"
               >
@@ -205,11 +206,11 @@ export function TopNav() {
                       initial={{ opacity: 0, y: 8, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                      transition={{ duration: 0.15, ease: "easeOut" }}
+                      transition={shouldReduceMotion ? { duration: 0 } : transitions.gentle}
                       className="absolute right-0 top-12 w-60 border border-border-subtle rounded-xl p-1.5 z-[var(--z-popover)] flex flex-col gap-0.5 select-none"
                     >
                       <div className="px-3 py-2 border-b border-border-subtle/70 mb-1">
-                        <p className="text-sm font-bold text-text-primary truncate">{user.displayName || "User"}</p>
+                        <p className="text-sm font-bold text-text-primary truncate">{user.displayName || "Pengguna"}</p>
                         <p className="text-xs text-text-muted truncate mt-0.5">{user.email || ""}</p>
                       </div>
 
