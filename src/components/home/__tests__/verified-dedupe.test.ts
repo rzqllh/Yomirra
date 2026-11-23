@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { selectHeroCandidates, selectRecentlyUpdatedItems, selectSpotlightItems, type HomeFeedManga } from "../home-feed-selection";
+import { selectHeroCandidates, selectRecentlyUpdatedItems, selectSourceLeaderboardEntries, selectSpotlightItems, type HomeFeedManga } from "../home-feed-selection";
 import { canonicalSourceKey } from "@/shared/lib/canonical-identity";
 
 const first = { id: "first", sourceId: "source-a", sourceName: "A",
@@ -43,5 +43,13 @@ describe("verified-only Home discovery projection", () => {
       [canonicalSourceKey(second.sourceId, second.id), "verified-work"],
     ]);
     expect(selectRecentlyUpdatedItems([first, second], new Set(["verified-work"]), 50, verified)).toEqual([]);
+  });
+  it("keeps different same-title titles in per-source rankings", () => {
+    const collision = { ...first, id: "unrelated-id" };
+    expect(selectSourceLeaderboardEntries([first, collision], first.sourceId)).toEqual([first, collision]);
+  });
+  it("does not show duplicate exact source records in per-source rankings", () => {
+    expect(selectSourceLeaderboardEntries([first, { ...first }], first.sourceId)).toEqual([first]);
+    expect(selectSourceLeaderboardEntries([first, second], first.sourceId)).toEqual([first]);
   });
 });

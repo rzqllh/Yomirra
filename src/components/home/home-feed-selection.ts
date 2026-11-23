@@ -64,6 +64,26 @@ function isVerifiedHomeDuplicate(
   return Boolean(a && b && a === b);
 }
 
+/** Preserve different provider IDs even when titles are identical. */
+export function selectSourceLeaderboardEntries(
+  items: HomeFeedManga[],
+  sourceId: string,
+  limit = 5,
+): HomeFeedManga[] {
+  if (limit <= 0) return [];
+  const seen = new Set<string>();
+  const result: HomeFeedManga[] = [];
+  for (const item of items) {
+    if (item.sourceId !== sourceId) continue;
+    const ref = canonicalSourceKey(item.sourceId, item.id);
+    if (seen.has(ref)) continue;
+    seen.add(ref);
+    result.push(item);
+    if (result.length >= limit) break;
+  }
+  return result;
+}
+
 /**
  * The recently-updated shelf must not merge distinct works just because their
  * titles match. Only exact source refs or verified saved provenance dedupe.
