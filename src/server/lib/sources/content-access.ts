@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { ADULT_SESSION_COOKIE, verifyVerifiedAdultSession } from "@/server/lib/auth/admin-auth";
 import type { NextRequest } from "next/server";
 import { CACHE_TTL, getSourceCacheKey, withCache } from "@/server/lib/cache/redis-cache";
 import { CONTENT_PREFERENCE_COOKIE, DATA_SAVER_COOKIE, LANGUAGE_PREFERENCE_COOKIE, isContentVisible, isSourceContentVisible, shouldHideNsfw, sourceReadScope } from "@/shared/sources/content-policy";
@@ -7,26 +8,35 @@ import type { Chapter, MangaSource, SourceReadOptions } from "@/shared/sources/s
 import { SourceError } from "./error";
 import { loadSourceUpstream } from "./source-upstream";
 
+/** Public request options are always safe. Do not treat a browser cookie as age proof. */
 export function getRequestReadOptions(request: NextRequest): SourceReadOptions {
   const params = request.nextUrl.searchParams;
   const languages = parseLanguages(params.get("languages") ?? request.cookies?.get(LANGUAGE_PREFERENCE_COOKIE)?.value);
-  // URL parameters can make the content filter stricter but cannot opt a
-  // visitor into adult content without their own persisted cookie.
-  const cookieHideNsfw = shouldHideNsfw(request.cookies?.get(CONTENT_PREFERENCE_COOKIE)?.value);
-  const queryHideNsfw = params.get("hideNsfw");
   return {
-    hideNsfw: cookieHideNsfw || (queryHideNsfw !== null && queryHideNsfw !== "false"),
+    hideNsfw: true,
     preferredLanguages: languages?.length ? languages.slice(0, 5) : undefined,
     dataSaver: (params.get("dataSaver") ?? request.cookies?.get(DATA_SAVER_COOKIE)?.value) === "true",
   };
 }
 
+/** Server-verifiable consent requires both opt-in and a signed age-verified session. */
+export async function getVerifiedRequestReadOptions(request: NextRequest): Promise<SourceReadOptions> {
+  const safe = getRequestReadOptions(request);
+  const requested = !shouldHideNsfw(request.cookies?.get(CONTENT_PREFERENCE_COOKIE)?.value);
+  const query = request.nextUrl.searchParams.get("hideNsfw");
+  if (!requested || (query !== null && query !== "false")) return safe;
+  const verified = await verifyVerifiedAdultSession(request.cookies?.get(ADULT_SESSION_COOKIE)?.value);
+  return { ...safe, hideNsfw: !verified };
+}
+
 export async function getServerReadOptions(): Promise<SourceReadOptions> {
-  const cookieStore = await cookies();
+  const store = await cookies();
+  const requested = !shouldHideNsfw(store.get(CONTENT_PREFERENCE_COOKIE)?.value);
+  const verified = requested && await verifyVerifiedAdultSession(store.get(ADULT_SESSION_COOKIE)?.value);
   return {
-    hideNsfw: shouldHideNsfw(cookieStore.get(CONTENT_PREFERENCE_COOKIE)?.value),
-    preferredLanguages: parseLanguages(cookieStore.get(LANGUAGE_PREFERENCE_COOKIE)?.value),
-    dataSaver: cookieStore.get(DATA_SAVER_COOKIE)?.value === "true",
+    hideNsfw: !verified,
+    preferredLanguages: parseLanguages(store.get(LANGUAGE_PREFERENCE_COOKIE)?.value),
+    dataSaver: store.get(DATA_SAVER_COOKIE)?.value === "true",
   };
 }
 
@@ -53,7 +63,7 @@ export function assertSourceAccess(source: MangaSource, options: SourceReadOptio
 
 /** A new namespace separates safe responses from old unclassified cache entries. */
 export function contentCacheKey(source: MangaSource, operation: string, params: string, options: SourceReadOptions = {}): string {
-  return getSourceCacheKey(source, operation, `content-v1:${sourceReadScope(options)}:${params}`);
+  return getSourceCacheKey(source, operation, `content-v2:${sourceReadScope(options)}:${params}`);
 }
 
 export async function loadSourceCatalog(source: MangaSource, operation: "popular" | "latest", page: number, options: SourceReadOptions = {}) {

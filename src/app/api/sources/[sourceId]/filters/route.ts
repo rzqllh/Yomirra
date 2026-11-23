@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 import { checkRateLimit } from "@/server/lib/security/rate-limit";
 import { NextRequest, NextResponse } from "next/server";
 import { sourceManager } from "@/server/lib/sources/source-manager";
+import { assertSourceAccess, getVerifiedRequestReadOptions, sourceErrorResponse } from "@/server/lib/sources/content-access";
 
 export async function GET(
   request: NextRequest,
@@ -15,6 +16,7 @@ export async function GET(
   try {
     const { sourceId } = await params;
     const source = await sourceManager.getSource(sourceId, request.nextUrl.searchParams.get("manifestUrl"));
+    assertSourceAccess(source, await getVerifiedRequestReadOptions(request));
     
     if (!source) {
       return NextResponse.json({ 
@@ -31,12 +33,9 @@ export async function GET(
     const filters = await source.getFilters();
     return NextResponse.json({ data: filters });
   } catch (error: unknown) {
-    console.error(`[API] Error fetching filters:`, error);
-    // Graceful fallback for upstream provider timeouts or temporary network failures
-    return NextResponse.json({
-      data: { genres: [], formats: [], statuses: [], sorts: [] },
-      warning: error instanceof Error ? error.message : "Failed to fetch upstream filters",
-    });
+    const sourceId = (await params).sourceId;
+    const response = sourceErrorResponse(error, sourceId, "search");
+    return NextResponse.json(response.body, { status: response.status, headers: response.headers });
   }
 }
 

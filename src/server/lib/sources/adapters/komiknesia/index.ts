@@ -64,7 +64,7 @@ export class KomikNesiaSource implements MangaSource {
   public readonly adapterVersion = "1.0.0";
   public readonly isEnabled = true;
   public readonly isInstalled = true;
-  public readonly isNsfw = false;
+  public readonly isNsfw = true;
   public readonly isDynamic = false;
   public readonly status = "online" as const;
 

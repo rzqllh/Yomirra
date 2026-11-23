@@ -50,7 +50,7 @@ export const sourceRegistry: SourceMetadata[] = [
       lastChecked: "Belum diperiksa",
       message: "Status sumber belum diperiksa."
     },
-    isNsfw: false,
+    isNsfw: true,
     capabilities: {
       popular: true,
       latest: true,
@@ -207,7 +207,7 @@ export const sourceRegistry: SourceMetadata[] = [
       lastChecked: "Belum diperiksa",
       message: "Status sumber belum diperiksa."
     },
-    isNsfw: false,
+    isNsfw: true,
     capabilities: {
       popular: true,
       latest: true,
