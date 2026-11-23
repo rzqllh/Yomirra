@@ -507,7 +507,7 @@ export function MangaCard({
                   href={readerHref}
                   prefetch={false}
                   onClick={() => beginNavigationIntent(readerHref)}
-                  aria-label={resumeHref ? `Lanjut membaca ${manga.title}` : `Lanjut baca ${manga.title}, ${effChapterTitle}`}
+                  aria-label={resumeHref ? `Lanjut baca ${manga.title}` : `Lanjut baca ${manga.title}, ${effChapterTitle}`}
                   className={cn(
                     "shrink-0 inline-flex items-center justify-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all shadow-2xs",
                     "bg-accent text-accent-on hover:bg-accent-hover active:scale-95 focus-visible:outline-2 focus-visible:outline-accent",
