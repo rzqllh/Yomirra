@@ -53,6 +53,17 @@ let mockHistoryState = {
       progressPercent: 50,
     },
   ],
+  getContinueReadingBySource: () => [
+    {
+      sourceId: "source-a",
+      mangaId: "solo-leveling",
+      mangaTitle: "Solo Leveling",
+      chapterId: "100",
+      chapterTitle: "Chapter 100",
+      coverUrl: "https://example.com/cover.jpg",
+      progressPercent: 50,
+    },
+  ],
   removeMangaHistory: vi.fn(),
 };
 
