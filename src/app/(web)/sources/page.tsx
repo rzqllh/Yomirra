@@ -16,6 +16,8 @@ import { dynamicSourceRegistry } from "@/shared/sources/dynamic-source-registry"
 import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import { useMounted } from "@/shared/hooks/use-mounted";
 import { useSettingsStore } from "@/shared/store/settings-store";
+import { useAuth } from "@/shared/hooks/use-auth";
+import { useVerifiedAge } from "@/shared/hooks/use-verified-age";
 import { cn } from "@/shared/utils/cn";
 import { useSourcePreferencesStore } from "@/shared/store/source-preferences-store";
 import { isSourceActiveForDisplay, sortSourcesForDisplay } from "@/shared/sources/source-sort";
@@ -24,6 +26,8 @@ const HEALTH_MAX_AGE_MS = 12 * 60 * 60 * 1000;
 
 export default function SourcesPage() {
   const isMounted = useMounted();
+  const { user } = useAuth();
+  const verifiedAge = useVerifiedAge(user);
   const hideNsfw = useSettingsStore(state => state.hideNsfw);
   const setHideNsfw = useSettingsStore(state => state.setHideNsfw);
   const disabledSources = useSourcePreferencesStore(state => state.disabledSources);
@@ -98,7 +102,7 @@ export default function SourcesPage() {
 
   const filteredSources = React.useMemo(() => {
     let result = allSources;
-    if (!isMounted || hideNsfw) {
+    if (!isMounted || hideNsfw || verifiedAge !== "verified") {
       result = result.filter(s => !s.isNsfw);
     }
 
@@ -107,7 +111,7 @@ export default function SourcesPage() {
       result = result.filter(s => s.name.toLowerCase().includes(lower) || s.language?.toLowerCase().includes(lower));
     }
     return sortSourcesForDisplay(result, disabledSourceIds);
-  }, [allSources, filter, hideNsfw, isMounted, disabledSourceIds]);
+  }, [allSources, filter, hideNsfw, verifiedAge, isMounted, disabledSourceIds]);
 
   return (
     <PullToRefresh onRefresh={handleRefresh}>
@@ -133,20 +137,23 @@ export default function SourcesPage() {
               placeholder="Cari sumber…"
               containerClassName="rounded-xl max-w-md w-full"
             />
-            {isMounted && !hideNsfw && nsfwCount > 0 ? (
+            {isMounted && verifiedAge === "verified" && !hideNsfw && nsfwCount > 0 ? (
               <button
                 type="button"
-                onClick={() => setHideNsfw(!hideNsfw)}
+                onClick={() => {
+                  setHideNsfw(true);
+                  void fetch("/api/auth/adult-session", { method: "DELETE" }).catch(() => undefined);
+                }}
                 className={cn(
                   "inline-flex items-center gap-1.5 self-start sm:self-auto rounded-xl border px-3 py-2 text-xs transition-colors shrink-0",
                   hideNsfw
                     ? "border-border-subtle bg-surface-muted/60 text-text-muted hover:border-border-strong hover:text-text-primary"
                     : "border-semantic-error/40 bg-semantic-error/10 text-semantic-error font-semibold"
                 )}
-                title={hideNsfw ? "Tampilkan sumber 18+" : "Sembunyikan sumber 18+"}
+                title="Sembunyikan sumber 18+"
               >
                 <ShieldWarning size={16} weight={hideNsfw ? "regular" : "regular"} />
-                <span>{hideNsfw ? `18+ Disembunyikan (${nsfwCount})` : "18+ Ditampilkan"}</span>
+                <span>18+ Ditampilkan</span>
               </button>
             ) : null}
           </div>

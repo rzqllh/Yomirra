@@ -49,6 +49,10 @@ async function handleAuthStateTransition(currentUser: User | null) {
   currentProcessingUid = newUid;
 
   if (!newUid) {
+    useSettingsStore.getState().setHideNsfw(true);
+    if (typeof window !== "undefined") {
+      void fetch("/api/auth/adult-session", { method: "DELETE" }).catch(() => undefined);
+    }
     globalUser = null;
     globalLoading = false;
     useGuestMergeStore.getState().cancelMergeReview();
@@ -211,6 +215,8 @@ export function useAuth() {
     if (!auth) return;
     const { signOut } = await import("firebase/auth");
     try {
+      useSettingsStore.getState().setHideNsfw(true);
+      await fetch("/api/auth/adult-session", { method: "DELETE" }).catch(() => undefined);
       await signOut(auth);
       useGuestMergeStore.getState().cancelMergeReview();
       useSyncDiagnosticsStore.getState().handleUserSwitch(null);
