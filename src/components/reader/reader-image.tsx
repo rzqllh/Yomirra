@@ -51,7 +51,6 @@ export const ReaderImage = React.memo(function ReaderImage({
   pageHeight,
   imageFit = 'width',
   onReport,
-  onSwitchSource: _onSwitchSource,
   dataIndex,
   totalPages
 }: ReaderImageProps) {
