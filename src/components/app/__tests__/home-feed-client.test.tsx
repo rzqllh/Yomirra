@@ -40,11 +40,13 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
+// Reuse each test's mutable legacy getter for the new per-source selector.
+function readMockHistoryBySource(): any[] {
+  return mockHistoryState.getContinueReading();
+}
+
 let mockHistoryState = {
   items: {} as Record<string, any>,
-  // The Home shelf now reads source-specific cursors before canonical grouping.
-  // Keep the test fixture tied to the mutable getter used by each scenario.
-  getContinueReadingBySource: () => mockHistoryState.getContinueReading(),
   getContinueReading: () => [
     {
       sourceId: "source-a",
@@ -56,17 +58,7 @@ let mockHistoryState = {
       progressPercent: 50,
     },
   ],
-  getContinueReadingBySource: () => [
-    {
-      sourceId: "source-a",
-      mangaId: "solo-leveling",
-      mangaTitle: "Solo Leveling",
-      chapterId: "100",
-      chapterTitle: "Chapter 100",
-      coverUrl: "https://example.com/cover.jpg",
-      progressPercent: 50,
-    },
-  ],
+  getContinueReadingBySource: readMockHistoryBySource,
   removeMangaHistory: vi.fn(),
 };
 
